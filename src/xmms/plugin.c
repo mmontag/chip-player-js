@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.4 2002-07-27 21:40:21 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.5 2003-03-19 20:48:48 dmierzej Exp $
  */
 
 #include "xmp-plugin.h"
@@ -548,6 +548,7 @@ static void *play_loop (void *arg)
 	_D("--- pthread_exit");
 
 	pthread_exit(NULL);
+	return NULL;
 }
 
 
