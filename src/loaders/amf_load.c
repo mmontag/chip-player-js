@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.1 2005-02-19 13:14:45 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.2 2005-02-20 13:16:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,16 +18,13 @@
 #include "load.h"
 #include "period.h"
 
-static uint8 fx[] =
-{
-};
-
 
 int amf_load(FILE * f)
 {
-	int c, r, i, j;
+	int i, j;
 	struct xxm_event *event;
 	uint8 buf[1024];
+	int *trkmap, newtrk;
 	int ver;
 
 	LOAD_INIT();
@@ -74,16 +71,13 @@ int amf_load(FILE * f)
 	if (V(0))
 		report ("Stored patterns: %d ", xxh->pat);
 
-	xxp = calloc(sizeof(struct xxm_pattern *), xxh->pat);
-	xxh->trk = 0;
+	xxp = calloc(sizeof(struct xxm_pattern *), xxh->pat + 1);
 
 	for (i = 0; i < xxh->pat; i++) {
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
 		for (j = 0; j < xxh->chn; j++) {
 			uint16 t = read16l(f);
-			if (t > xxh->trk)
-				xxh->trk = t;
 			xxp[i]->info[j].index = t;
 		}
 		if (V(0)) report (".");
@@ -123,6 +117,7 @@ int amf_load(FILE * f)
 
 		if (ver < 0x0a) {
 			xxs[i].lps = read16l(f);
+			xxs[i].lpe = xxs[i].len - 1;
 		} else {
 			xxs[i].lps = read32l(f);
 			xxs[i].lpe = read32l(f);
@@ -136,20 +131,94 @@ int amf_load(FILE * f)
 				'L' : ' ', xxi[i][0].vol, c2spd);
 		}
 	}
-	
+				
 
 	/* Tracks */
 
-	if (V(0)) report("\nStored tracks  : %d ", xxh->trk);
+	trkmap = calloc(sizeof(int), xxh->trk);
+	newtrk = 0;
+
+	for (i = 0; i < xxh->trk; i++) {		/* read track table */
+		uint16 t;
+		t = read16l(f);
+		trkmap[i] = t - 1;
+		if (t > newtrk) newtrk = t;
+/*printf("%d -> %d\n", i, t);*/
+	}
+
+	for (i = 0; i < xxh->pat; i++) {		/* read track table */
+		for (j = 0; j < xxh->chn; j++) {
+			int k = xxp[i]->info[j].index - 1;
+			xxp[i]->info[j].index = trkmap[k];
+		}
+	}
+
+	xxh->trk = newtrk;
+	free(trkmap);
+
+	if (V(0)) report("Stored tracks  : %d ", xxh->trk);
 	xxt = calloc (sizeof (struct xxm_track *), xxh->trk);
 
 	for (i = 0; i < xxh->trk; i++) {
-		xxt[w] = calloc(sizeof(struct xxm_track) +
-			sizeof(struct xxm_event) * 64, 1);
-		xxt[w]->rows = 64;
+		uint8 t1, t2, t3;
+		int size;
 
+		xxt[i] = calloc(sizeof(struct xxm_track) +
+			sizeof(struct xxm_event) * 64 - 1, 1);
+		xxt[i]->rows = 64;
 
+		size = read24l(f);
+/*printf("TRACK %d SIZE %d\n", i, size);*/
+
+		for (j = 0; j < size; j++) {
+			t1 = read8(f);			/* row */
+			t2 = read8(f);			/* type */
+			t3 = read8(f);			/* parameter */
+/*printf("track %d row %d: %02x %02x %02x\n", i, t1, t1, t2, t3);*/
+
+			if (t1 == 0xff && t2 == 0xff && t3 == 0xff)
+				break;
+
+			event = &xxt[i]->event[t1];
+
+			if (t2 < 0x7f) {		/* note */
+				if (t2 > 12)
+					event->note = t2 + 1 - 12;
+			} else if (t2 == 0x7f) {	/* copy previous */
+				memcpy(event, &xxt[i]->event[t1 - 1],
+					sizeof(struct xxm_event));
+			} else if (t2 == 0x80) {	/* instrument */
+				event->ins = t3 + 1;
+			} else  {			/* effects */
+				uint8 fxp, fxt;
+
+				fxp = fxt = 0;
+
+				switch (t2) {
+				case 0x81:
+					break;
+				}
+
+				event->fxt = fxt;
+				event->fxp = fxp;
+			}
+
+		}
+		if (V(0) & !(i % 4)) report(".");
 	}
+	if (V(0)) report("\n");
+
+
+	/* Samples */
+
+	if (V(0)) report ("Stored samples : %d ", xxh->smp);
+
+	for (i = 0; i < xxh->ins; i++) {
+		xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate,
+			XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
+		if (V(0)) report (".");
+	}
+	if (V(0)) report ("\n");
 
 	return 0;
 }
