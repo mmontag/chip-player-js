@@ -48,7 +48,7 @@ void xmp_init (int argc, char **argv, struct xmp_control *ctl)
     /* Set defaults */
     ctl->freq = 44100;
     ctl->mix = 80;
-    ctl->outfmt = XMP_FMT_MONO;
+    ctl->outfmt = 0;
     ctl->resol = 16;					/* Was 0. why? */
     ctl->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER;	/* Default mode */
 

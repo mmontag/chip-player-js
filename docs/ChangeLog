@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.17 2005-02-24 12:52:12 cmatsuoka Exp $
+$Id: ChangeLog,v 1.18 2005-02-24 21:21:39 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -21,6 +21,7 @@ Stable versions
 	  now plays correctly)
 	- updated OPL emulation (by Mike Gorchak)
 	- default verbosity level changed to 1
+	- default sound mode set to stereo
 	- disabled MED loader (nonportable, didn't work well)
 
 2.1.0 (unreleased)
