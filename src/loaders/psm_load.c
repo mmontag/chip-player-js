@@ -1,5 +1,6 @@
 /* Epic Megagames PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
+ * Based on the PSM loader from Modplug by Olivier Lapicque
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -12,11 +13,46 @@
 
 #include "load.h"
 #include "iff.h"
-#include "psm.h"
+
+
+struct psm_hdr {
+	int8 songname[8];		/* "MAINSONG" */
+	uint8 reserved1;
+	uint8 reserved2;
+	uint8 channels;
+} PACKED;
+
+struct psm_pat {
+	uint32 size;
+	uint32 name;
+	uint16 rows;
+	uint16 reserved1;
+	uint8 data;
+} PACKED;
+
+struct psm_ins {
+	uint8 flags;
+	int8 songname[8];
+	uint32 smpid;
+	int8 samplename[34];
+	uint32 reserved1;
+	uint8 reserved2;
+	uint8 insno;
+	uint8 reserved3;
+	uint32 length;
+	uint32 loopstart;
+	uint32 loopend;
+	uint16 reserved4;
+	uint8 defvol;
+	uint32 reserved5;
+	uint32 samplerate;
+	uint8 reserved6[19];
+} PACKED;
 
 
 static int cur_pat;
 static int cur_ins;
+uint32 *pnam;
 
 
 static void get_oplh(int size, uint16 *buffer)
@@ -105,6 +141,7 @@ static void get_pbod (int size, void *buffer)
 	int rows, pos, len;
 
 	i = cur_pat;
+	pnam[i] = pp->name;
 
 	PATTERN_ALLOC(i);
 	xxp[i]->rows = pp->rows;
@@ -115,8 +152,12 @@ static void get_pbod (int size, void *buffer)
 	rows = xxp[i]->rows;
 	pos = 0;
 
-	for (r = 0; r < rows; ) {
+	size -= sizeof(struct psm_pat) - 1;
+
+	for (r = 0; r < rows && pos < size; ) {
 		f = p[pos++];
+		if (f == 0x00)
+			break;
 		c = p[pos++];
 
 		if (((f & 0xf0) == 0x10) && (c <= c2)) {
@@ -206,6 +247,8 @@ static void get_song (int size, char *buffer)
 	struct psm_hdr *ph = (struct psm_hdr *)buffer;
 
 	xxh->chn = ph->channels;
+	if (*xmp_ctl->name == 0)
+		strncpy(xmp_ctl->name, ph->songname, 8);
 }
 
 int psm_load (FILE *f)
@@ -229,20 +272,21 @@ int psm_load (FILE *f)
 	offset = ftell(f);
 
 	/* IFF chunk IDs */
-	iff_register ("TITL", get_titl);
-	iff_register ("SDFT", get_sdft);
-	iff_register ("SONG", get_song);
-	iff_register ("DSMP", get_dsmp_cnt);
-	iff_register ("PBOD", get_pbod_cnt);
+	iff_register("TITL", get_titl);
+	iff_register("SDFT", get_sdft);
+	iff_register("SONG", get_song);
+	iff_register("DSMP", get_dsmp_cnt);
+	iff_register("PBOD", get_pbod_cnt);
 	iff_setflag(IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
 	while (!feof (f))
-		iff_chunk (f);
+		iff_chunk(f);
 
-	iff_release ();
+	iff_release();
 
 	xxh->trk = xxh->pat * xxh->chn;
+	pnam = malloc(xxh->pat * sizeof(uint32));	/* pattern names */
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
@@ -255,19 +299,20 @@ int psm_load (FILE *f)
 
 	fseek(f, offset, SEEK_SET);
 
-	iff_register ("DSMP", get_dsmp);
-	iff_register ("PBOD", get_pbod);
-	iff_register ("OPLH", get_oplh);
+	iff_register("DSMP", get_dsmp);
+	iff_register("PBOD", get_pbod);
+	iff_register("OPLH", get_oplh);
 	iff_setflag(IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
 	while (!feof (f))
-		iff_chunk (f);
+		iff_chunk(f);
 
 	iff_release ();
+	free(pnam);
 
 	if (V(0))
-		report ("\n");
+		report("\n");
 
 	return 0;
 }
