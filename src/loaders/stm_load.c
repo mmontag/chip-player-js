@@ -16,6 +16,15 @@
 
 #define FX_NONE		0xff
 
+/*
+ * Skaven's note from http://www.futurecrew.com/skaven/oldies_music.html
+ *
+ * FYI for the tech-heads: In the old Scream Tracker 2 the Arpeggio command
+ * (Jxx), if used in a single row with a 0x value, caused the note to skip
+ * the specified amount of halftones upwards halfway through the row. I used
+ * this in some songs to give the lead some character. However, when played
+ * in ModPlug Tracker, this effect doesn't work the way it did back then.
+ */
 
 static uint8 fx[] =
 {
