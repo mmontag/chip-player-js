@@ -1,8 +1,9 @@
 # Extended Module player lib/Makefile
-# $Id: Makefile,v 1.1 2001-06-02 20:25:44 cmatsuoka Exp $
+# $Id: Makefile,v 1.2 2001-11-09 00:53:27 cmatsuoka Exp $
 
+SONAME	= `echo $(VERSION)|cut -d. -f-2`
 DFILES	= Makefile
-CFILES	= $(MYLIB) $(MYSHLIB) $(MYSHLIB).$(VERSION) drivers/*
+CFILES	= $(MYLIB) $(MYSHLIB) $(MYSHLIB).$(SONAME) drivers/*
 DCFILES	= 
 MYLIB	= libxmp.a
 MYSHLIB	= $(MYLIB:.a=.so)
@@ -23,23 +24,23 @@ endif
 install::
 ifdef DYNDRV
 	[ -d $(LIB_DIR)/xmp/drivers ] || mkdir -p $(LIB_DIR)/xmp/drivers
-	$(INSTALL) -m644 $(MYSHLIB).$(VERSION) $(LIB_DIR)/xmp
+	$(INSTALL) -m644 $(MYSHLIB).$(SONAME) $(LIB_DIR)
 	$(INSTALL) -m644 drivers/*.so $(LIB_DIR)/xmp/drivers
+	ldconfig
 endif
 
-shared: $(MYSHLIB).$(VERSION)
+shared: $(MYSHLIB).$(SONAME)
 
-$(MYSHLIB).$(VERSION): $(MYLIB)
+$(MYSHLIB).$(SONAME): $(MYLIB)
 	rm -f $(MYSHLIB)* *.o
 	$(AR) xv $(MYLIB)
-	ld -shared -o $(MYSHLIB).$(VERSION) *.o
+	ld -shared -soname=$(SONAME) -o $(MYSHLIB).$(SONAME) *.o
 	rm -f *.o
-	ln -s $(MYSHLIB).$(VERSION) $(MYSHLIB)
 	
 static_install:
 	@echo Installing libraries in $(LIB_DIR)...
 	@[ -d $(LIB_DIR) ] || mkdir -p $(LIB_DIR)
-	$(INSTALL) -m755 $(MYLIB) $(LIB_DIR)
+	$(INSTALL) -m644 $(MYLIB) $(LIB_DIR)
 	$(STRIP) -g $(LIB_DIR)/$(MYLIB)
 
 

@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.1 2001-06-02 20:25:15 cmatsuoka Exp $
+# $Id: Makefile,v 1.2 2001-11-09 00:53:27 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -45,8 +45,6 @@ install::
 	@echo
 	@echo "  Installation complete. To customize, copy /etc/xmp.conf to"
 	@echo "  \$$HOME/.xmp/xmp.conf and /etc/xmp-modules.conf to \$$HOME/.xmp/modules.conf"
-	@echo
-	@echo "  Please report bugs to xmp-bugs@helllabs.org."
 	@echo
 
 uninstall:
