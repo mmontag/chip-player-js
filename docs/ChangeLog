@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.10 2005-02-09 19:24:41 cmatsuoka Exp $
+$Id: ChangeLog,v 1.11 2005-02-14 19:17:33 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -7,10 +7,12 @@ Stable versions
 	- added more module format specs
 	- added MO3 unpacking support
 	- added file detection to the XMMS plugin
+	- added Beep Media Player support to the XMMS plugin
+	- added Epic Megagames PSM module loader
 	- fixed recursive decrunching of module files
 	- fixed QNX6 portability issues (by Mike Gorchak)
 	- fixed heavy memory leak in the XMMS plugin
-	- updated OPL emulation
+	- updated OPL emulation (by Mike Gorchak)
 	- disabled MED loader (nonportable, didn't work well)
 
 2.1.0 (unreleased)

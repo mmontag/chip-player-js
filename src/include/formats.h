@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.h,v 1.2 2001-11-10 10:43:30 cmatsuoka Exp $
+ * $Id: formats.h,v 1.3 2005-02-14 19:17:33 cmatsuoka Exp $
  */
 
 #ifndef __FORMATS_H
@@ -58,6 +58,7 @@ int pm20_load (FILE *);
 int pm40_load (FILE *);
 int pru1_load (FILE *);
 int pru2_load (FILE *);
+int psm_load (FILE *);
 int pt3_load (FILE *);
 int ptm_load (FILE *);
 int rad_load (FILE *);

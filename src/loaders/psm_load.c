@@ -13,6 +13,7 @@
 
 #include "load.h"
 #include "iff.h"
+#include "period.h"
 
 
 struct psm_hdr {
@@ -144,11 +145,15 @@ static void get_pbod (int size, void *buffer)
 		f = p[pos++];
 		if (f == 0x00)
 			break;
+
+		if (f & 0x80)
+			break;
+
 		c = p[pos++];
 
 		if (((f & 0xf0) == 0x10) && (c <= c2)) {
 			if ((pos + 1 < len) && (!(p[pos] & 0x0f))
-		    	    /*&& (p[pos + 1] < that->m_nChannels)*/) {
+		    	    && (p[pos + 1] < xxh->chn)) {
 		    		r++;
 		    		c2 = c;
 		    		continue;
