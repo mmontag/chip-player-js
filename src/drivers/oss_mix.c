@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.2 2002-07-27 18:29:07 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.3 2004-09-15 19:01:48 cmatsuoka Exp $
  */
 
 /*
@@ -232,7 +232,7 @@ static void bufdump (int i)
     while (i) {
 	if ((j = write (audio_fd, b, i)) > 0) {
 	    i -= j;
-	    (char *)b += j;
+	    b = (char *)b + j;
 	} else
 	    break;
     };

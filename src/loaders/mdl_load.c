@@ -1,9 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2004 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
+ *
+ * $Id: mdl_load.c,v 1.2 2004-09-15 19:01:48 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -130,7 +132,8 @@ static unsigned int get_bits (char i, uint8 **buf)
     unsigned int x;
 
     if (i == 0) {
-	b = *((uint32 *)(*buf))++;
+	b = *((uint32 *)(*buf));
+	*buf += 4;
 	n = 32;
 	return 0;
     }
@@ -268,7 +271,8 @@ static void get_chunk_pa (int size, uint8 *buffer)
 
 	buffer += 16;		/* Skip pattern name */
 	for (j = 0; j < chn; j++) {
-	    x16 = *((uint16 *)buffer)++;
+	    x16 = *((uint16 *)buffer);
+	    buffer += 2;
 	    L_ENDIAN16 (x16);
 	    xxp[i]->info[j].index = x16;
 	}
@@ -297,7 +301,8 @@ static void get_chunk_p0 (int size, uint8 *buffer)
 	xxp[i]->rows = 64;
 
 	for (j = 0; j < 32; j++) {
-	    x16 = *((uint16 *)buffer)++;
+	    x16 = *((uint16 *)buffer);
+	    buffer += 2;
 	    L_ENDIAN16 (x16);
 	    if (j < xxh->chn)
 		xxp[i]->info[j].index = x16;
@@ -315,7 +320,8 @@ static void get_chunk_tr (int size, uint8 *buffer)
     int i, j, k, row, len;
     struct xxm_track *track;
 
-    xxh->trk = *((uint16 *) buffer)++ + 1;
+    xxh->trk = *((uint16 *) buffer) + 1;
+    buffer += 2;
 
     if (V (0))
 	report ("Stored tracks  : %d ", xxh->trk);
@@ -330,7 +336,8 @@ static void get_chunk_tr (int size, uint8 *buffer)
 
     for (i = 1; i < xxh->trk; i++) {
 	/* Length of the track in bytes */
-	len = *((uint16 *) buffer)++;
+	len = *((uint16 *) buffer);
+	buffer += 2;
 
 	memset (track, 0, sizeof (struct xxm_track) +
             sizeof (struct xxm_event) * 256);
@@ -449,7 +456,7 @@ static void get_chunk_ii (int size, uint8 *buffer)
 		xxih[i].rls = *(uint16 *)buffer;
 		L_ENDIAN32 (xxih[i].rls);
 	    }
-	    ((uint16 *)buffer)++;
+	    buffer += 2;
 
 	    xxi[i][j].vra = *buffer++;
 	    xxi[i][j].vde = *buffer++;
@@ -498,11 +505,11 @@ static void get_chunk_is (int size, uint8 *buffer)
 	buffer += 32;			/* Sample name */
 	buffer += 8;			/* Sample filename */
 
-	c2spd[i] = *((uint32 *)buffer)++;
+	c2spd[i] = *((uint32 *)buffer); buffer += 4;
 
-	xxs[i].len = *((uint32 *)buffer)++;
-	xxs[i].lps = *((uint32 *)buffer)++;
-	xxs[i].lpe = *((uint32 *)buffer)++;
+	xxs[i].len = *((uint32 *)buffer); buffer += 4;
+	xxs[i].lps = *((uint32 *)buffer); buffer += 4;
+	xxs[i].lpe = *((uint32 *)buffer); buffer += 4;
 
 	L_ENDIAN32 (xxs[i].len);
 	L_ENDIAN32 (xxs[i].lps);
@@ -579,12 +586,12 @@ static void get_chunk_i0 (int size, uint8 *buffer)
 	buffer += 32;			/* Sample name */
 	buffer += 8;			/* Sample filename */
 
-	c2spd[i] = *((uint16 *)buffer)++;
+	c2spd[i] = *((uint16 *)buffer); buffer += 2;
 	L_ENDIAN16 (c2spd[i]);
 
-	xxs[i].len = *((uint32 *)buffer)++;
-	xxs[i].lps = *((uint32 *)buffer)++;
-	xxs[i].lpe = *((uint32 *)buffer)++;
+	xxs[i].len = *((uint32 *)buffer); buffer += 4;
+	xxs[i].lps = *((uint32 *)buffer); buffer += 4;
+	xxs[i].lpe = *((uint32 *)buffer); buffer += 4;
 
 	L_ENDIAN32 (xxs[i].len);
 	L_ENDIAN32 (xxs[i].lps);
@@ -648,12 +655,12 @@ static void get_chunk_sa (int size, uint8 *buffer)
 	    buffer += xxs[i].len;
 	    break;
 	case 1: 
-	    len = *((uint32 *)buffer)++;
+	    len = *((uint32 *)buffer); buffer += 4;
 	    unpack_sample8 (smpbuf, buffer, xxs[i].len);
 	    buffer += len;
 	    break;
 	case 2:
-	    len = *((uint32 *)buffer)++;
+	    len = *((uint32 *)buffer); buffer += 4;
 	    unpack_sample16 ((uint16 *)smpbuf, buffer, xxs[i].len >> 1);
 	    buffer += len;
 	    break;

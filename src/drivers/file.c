@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2004 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.1 2001-06-02 20:25:54 cmatsuoka Exp $
+ * $Id: file.c,v 1.2 2004-09-15 19:01:47 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -91,7 +91,7 @@ static void bufdump (int i)
     while (i) {
 	if ((j = write (audio_fd, b, i)) > 0) {
 	    i -= j;
-	    (char *)b += j;
+	    b = (char *)b + j;
 	} else
 	    break;
     }
