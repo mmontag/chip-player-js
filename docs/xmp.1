@@ -1,0 +1,249 @@
+.TH "XMP" "1" "Version 2\&.0\&.5" "Jan 2001" "Extended Module Player" 
+.PP 
+.SH "NAME" 
+xmp, xxmp - Extended Module Player
+.PP 
+.SH "SYNOPSIS" 
+\fBxmp\fP
+[\fB-8, --8bit\fP]
+[\fB--big-endian\fP]
+[\fB-b, --bits\fP \fIbits\fP]
+[\fB-c, --stdout\fP]
+[\fB--chorus\fP \fIdepth\fP]
+[\fB-D\fP \fIdevice-specific parameters\fP]
+[\fB-d, --driver\fP \fIdriver\fP]
+[\fB--fix-sample-loop\fP]
+[\fB-f, --frequency\fP \fIrate\fP]
+[\fB-h, --help\fP]
+[\fB-i, --interpolate\fP]
+[\fB--load-only\fP]
+[\fB-l, --loop\fP]
+[\fB--little-endian\fP]
+[\fB-M, --mute\fP \fIchannel-list\fP]
+[\fB-m, --mono\fP]
+[\fB--nocmd\fP]
+[\fB--nofilter\fP]
+[\fB--nopan\fP]
+[\fB--norc\fP]
+[\fB-o, --output-file\fP \fIfilename\fP]
+[\fB-P, --pan\fP \fIpan\fP]
+[\fB--probe-only\fP]
+[\fB-R --random\fP]
+[\fB-r --reverse\fP]
+[\fB--reverb\fP \fIdepth\fP]
+[\fB--realtime\fP]
+[\fB-S, --solo\fP \fIchannel-list\fP]
+[\fB-s, --start\fP \fIpos\fP]
+[\fB--stereo\fP]
+[\fB-T, --tempo\fP \fIbpm\fP]
+[\fB-t, --time\fP \fItime\fP]
+[\fB-u, --unsigned\fP]
+[\fB-V, --version\fP]
+[\fB-v, --verbose\fP]
+\fImodules\fP
+.PP 
+.SH "DESCRIPTION" 
+\fBxmp\fP is a tracked music module player\&. It recognizes dozens of
+module formats including Fasttracker II (XM), Noise/Fast/Protracker (MOD),
+Scream Tracker 3 (S3M) and Impulse Tracker (IT)\&. Use \f(CWxmp --help\fP
+for a complete list of supported formats\&.
+.PP 
+\fBxmp\fP can play through several output devices including the Open
+Sound System sequencer, linear and ulaw PCM audio devices or mixing
+to a file\&.
+.PP 
+.SH "OPTIONS" 
+.IP "\fB-8, --8bit\fP" 
+Convert 16 bit samples to 8 bit\&. You may want to use this mode to
+save memory in the sound device (AWE cards will ignore this mode and
+always work with 16 bit samples)\&.
+.IP "\fB--big-endian\fP" 
+Tell the software mixer to work with big-endian samples when using
+the software mixer (default is the machine byte ordering)\&.
+.IP "\fB-b, --bits\fP \fIbits\fP" 
+Set the software mixer resolution (8 or 16 bits)\&. If ommited,
+The audio device will be opened at the highest resolution available\&.
+.IP "\fB-c, --stdout\fP" 
+Mix the module to stdout\&.
+.IP "\fB--chorus\fP \fIdepth\fP" 
+Set chorus depth (if available)\&.
+.IP "\fB-D\fP \fIdevice-specific parameter\fP" 
+Pass a configuration parameter to the device driver\&. See the
+\fBDEVICE DRIVER PARAMETERS\fP section below for a
+list of known parameters\&. 
+.IP "\fB-d, --driver\fP \fIdriver\fP" 
+Select the output driver\&. If not specified, \fBxmp\fP will try to
+probe each available driver\&.
+.IP "\fB--fix-sample-loop\fP" 
+Force sample loop start in samples instead of 16-bit words\&. This
+option affects only MOD files\&.
+.IP "\fB-f, --frequency\fP \fIrate\fP" 
+Set the software mixer sampling rate in hertz\&.
+.IP "\fB-h, --help\fP" 
+Show a short summary of command-line options\&.
+.IP "\fB-i, --interpolate\fP" 
+Enable or disable the software mixer interpolation routines\&.
+.IP "\fB-l, --load-only\fP" 
+Exit after loading the module&.
+.IP "\fB-l, --loop\fP" 
+Enable module looping and backward pattern jumps\&.
+.IP "\fB--little-endian\fP" 
+Tell the software mixer to work with big-endian samples when using
+the software mixer (default is the machine byte ordering)\&.
+.IP "\fB-M, --mute\fP \fIchannel-list\fP" 
+Mute the specified channels\&. \fIchannel-list\fP is a comma-separated
+list of decimal channel ranges\&. Example: 0,2-4,8-16\&.
+.IP "\fB-m, --mono\fP" 
+Force mono output (default is stereo in stereo-capable devices)\&.
+.IP "\fB--nocmd\fP" 
+Disable interactive commands\&.
+.IP "\fB--nofilter\fP" 
+Disable IT filters\&. When using the software mixer, IT filters can
+significantly increase CPU usage on slow machines\&. In this case,
+disable filtering with this option\&.
+.IP "\fB--nopan\fP" 
+Disable dynamic panning\&. This option can be used to prevent
+clicking when playing in AWE32 cards\&. Module formats that rely only
+in dynamic pan setting to produce stereo output (e\&.g\&. XM) will use
+the MOD channel panning (LRRL)\&.
+.IP "\fB--norc\fP" 
+Don't read the configuration files\&.
+.IP "\fB-o, --output-file\fP \fIfilename\fP" 
+Mix the module to a file\&. If \'-\' is given as the file name, the
+output will be sent to stdout\&.
+.IP "\fB-P, --pan\fP \fInum\fP" 
+Set the percentual panning amplitude\&.
+.IP "\fB-l, --probe-only\fP" 
+Exit after probing the audio device\&.
+.IP "\fB-R, --random\fP" 
+Play modules in random order\&.
+.IP "\fB--realtime\fP" 
+Play modules in realtime priority (available for FreeBSD)\&.
+.IP "\fB-r, --reverse\fP" 
+Reverse the left/right stereo channels\&.
+.IP "\fB--reverb\fP \fIdepth\fP" 
+Set reverb depth (if available)\&.
+.IP "\fB-S, --solo\fP \fIchannel-list\fP" 
+Play only the specified channels\&. \fIchannel-list\fP is a
+comma-separated list of decimal channel ranges\&. Example: 0,2-4,8-16\&.
+.IP "\fB-s, --start\fP \fIpos\fP" 
+Start playing the module from the position \fIpos\fP\&.
+.IP "\fB--stereo\fP" 
+Force stereo output\&.
+.IP "\fB-t, --tempo\fP \fIbpm\fP" 
+Set the initial tempo in beats per minute (default is 125)\&.
+.IP "\fB-t, --time\fP \fItime\fP" 
+Specifies the maximum playing time to \fItime\fP seconds\&.
+.IP "\fB-u, --unsigned\fP" 
+Tell the software mixer to use unsigned samples when mixing to
+a file (default is signed)\&.
+.IP "\fB-V, --version\fP" 
+Print version information\&.
+.IP "\fB-v, --verbose\fP" 
+Verbose mode (incremental)\&. If specified more than once, the
+verbosity level will be increased\&. (no messages will be displayed
+when the player runs in background)
+.PP 
+.SH "DEVICE DRIVER PARAMETERS" 
+Use the option \fB-D\fP to send parameters directly to the device
+drivers\&. Multiple \fB-D\fP options can be specified in the command line\&.
+.PP 
+OSS sequencer:
+.IP "\fB-D\fP \fIawechorus=mode\fP" 
+Set the chorus mode in AWE cards. Valid modes range from 0 to 7
+(CHORUS_1, CHORUS_2, CHORUS_3, CHORUS_4, FEEDBACK, FLANGER,
+SHORTDELAY, SHORTDELAY2)\&.
+.IP "\fB-D\fP \fIawereverb=mode\fP" 
+Set the reverb mode in AWE cards\&. Valid modes range from 0 to 7
+(ROOM1, ROOM2, ROOM3, HALL1, HALL2, PLATE, DELAY, PANNINGDELAY)\&.
+.IP "\fB-D\fP \fIopl2\fP" 
+Open the sequencer in OPL2 FM mode instead of sample mode\&. This
+parameter is required to play modules with FM instruments (RAD,
+AMD, S3M)\&.
+.IP "\fB-D\fP \fIdev=device_name\fP" 
+Set the sequencer device to open\&. Default is /dev/sequencer\&.
+.PP 
+OSS software mixing:
+.IP "\fB-D\fP \fIfrag=num,size\fP" 
+Set the maximum number of fragments to \fInum\fP and the size of
+each fragment to \fIsize\fP bytes (must be a power of two)\&.
+The number and size of fragments set a tradeoff between the buffering
+latency and sensibility to system load\&. To get better synchronization,
+reduce the values\&. To avoid gaps in the sound playback, increase
+the values\&.
+.IP "\fB-D\fP \fIdev=device_name\fP" 
+Set the audio device to open\&. Default is /dev/dsp\&.
+.IP "\fB-D\fP \fInosync\fP" 
+Don\'t sync the OSS audio device between modules\&.
+.PP 
+HP-UX and Solaris audio:
+.IP "\fB-Dgain=\fP\fIgain\fP" 
+Set the audio gain\&. Valid values go from 0 to 255\&.
+The default value is 128\&.
+.IP "\fB-Dport=\fP\fI{s|h|l}\fP" 
+Set the audio port\&. Valid arguments are \fIs\fP for the internal
+speaker, \fIh\fP for headphones and \fIl\fP for line out\&. The default
+is the internal speaker\&.
+.IP "\fB-Dbuffer=\fP\fIsize\fP" 
+Set the size in bytes of the audio buffer\&. The default value is 32 Kb\&.
+.PP 
+.SH "INTERACTIVE COMMANDS" 
+The following single key commands can be used when playing modules:
+.IP "\fBq\fP" 
+Stop the currently playing module and quit the player\&.
+.IP "\fBf\fP" 
+Jump to the next pattern\&.
+.IP "\fBb\fP" 
+Jump to the previous pattern\&.
+.IP "\fBn\fP" 
+Jump to the next module\&.
+.IP "\fBp\fP" 
+Jump to the previous module\&.
+.IP "\fBSPACE\fP" 
+Pause the module\&.
+.IP "\fB1\fP, \fB2\fP, \fB3\fP, \fB4\fP, \fB5\fP, \fB6\fP, \fB7\fP, \fB8\fP, \fB9\fP, \fB0\fP" 
+Mute/unmute channels 1 to 10\&.
+.IP "\fB!\fP" 
+Unmute all channels\&.
+.PP 
+Interactive mode can be disabled using the \fB--nocmd\fP command
+line option\&.
+.PP 
+.SH "EXAMPLES" 
+Play module muting channels 0 to 3 and 6:
+.IP "" 
+\f(CWxmp --mute=0-3,6 module\&.mod\&.gz\fP
+.PP 
+Play modules in /dev/dsp using the default device settings (unsigned 8bit,
+8 kHz mono):
+.IP "" 
+\f(CWxmp -o/dev/dsp -f8000 -m -b8 -u module\&.lha\fP
+.PP 
+Play all XM modules in the /mod directory and all subdirectories in
+random order, ignoring any configuration set in the xmp\&.conf file:
+.IP "" 
+\f(CWxmp --norc -R `find /mod -name "*\&.xm*" -print`\fP
+.PP 
+.SH "BUGS" 
+.IP o 
+Handling of multi-file modules is confuse\&.
+.IP o 
+Instruments with big-endian 16 bit samples will not load correctly\&.
+.IP o 
+Command line options \fB-M\fP and \fB-S\fP don\'t work correctly with xxmp\&.
+.PP 
+.SH "FILES" 
+\f(CW/etc/xmp\&.conf, /etc/xmp-modules\&.conf, $HOME/\&.xmp/xmp\&.conf,
+$HOME/\&.xmp/xmp-modules\&.conf\fP
+.PP 
+.SH "ENVIRONMENT VARIABLES" 
+.IP "XMP_DRIVER_PATH"
+Path to the dynamically linked drivers (only used if xmp was compiled
+with --enable-dynamic).
+.PP 
+.SH "AUTHOR" 
+Claudio Matsuoka <\fIclaudio@helllabs\&.org\fP> and Hipolito
+Carraro Jr <\fIhipolito@onda\&.com\&.br\fP>. Portions of code
+used in xmp have been contributed by several other authors,
+check docs/CREDITS for the complete list.
+.PP 

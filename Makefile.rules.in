@@ -1,0 +1,109 @@
+# Extended Module Player Makefile.rules.in
+# $Id: Makefile.rules.in,v 1.1 2001-06-02 20:25:17 cmatsuoka Exp $
+
+VERSION	= 2.0.5pre4
+DATE	= Sun Mar  4 17:54:02 BRT 2001
+
+DEST_DIR=
+prefix	= $(DEST_DIR)@prefix@
+exec_prefix= $(DEST_DIR)@prefix@
+BIN_DIR	= @bindir@
+LIB_DIR = @libdir@
+MAN_DIR	= @mandir@/man1
+
+CC	= @CC@
+CFLAGS	= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG
+LD	= @CC@
+LDFLAGS	= -o$@ @LDFLAGS@
+RANLIB	= @RANLIB@
+INSTALL	= @INSTALL@
+
+# IRIX 6.5.10 note by Johan Hattne <hattne@ibg.uu.se>
+# (Thu, 15 Feb 2001 20:20:38 +0100)
+#
+# I moved -laudio from just after -lXext to after -lm. It seems gcc
+# [2.95.2 as supplied by the freeware.sgi.com site] has problems
+# resolving the audio-symbols otherwise.
+
+# LIBS	= @LIBS@ $(XLIBS)
+LIBS	= $(XLIBS) @LIBS@
+SHELL	= /bin/sh
+PLATFORM= @PLATFORM@
+
+DRIVERS	= @DRIVERS@
+MIXER	= @MIXER@
+PLUGIN	= @PLUGIN@
+DYNDRV	= @DYNDRV@
+
+X_INC	= @X_CFLAGS@
+X_LIB	= @X_LIBS@ @X_EXTRA_LIBS@
+X_XMP	= @X_XMP@
+
+.SUFFIXES: .c .o .a .S .so
+
+.c.o:
+	$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<
+
+.S.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+.o.so:
+	ld -shared -o $*.so $<
+
+dummy:
+
+$(LIB): $(LIB)($(OBJS) $(XOBJS))
+	$(RANLIB) $(LIB)
+
+depend:
+	@echo Building dependencies...
+	@$(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $(OBJS:.o=.c) $(XDEPS:.o=.c) >$@
+
+clean distclean::
+	rm -f *.o core errlist depend $(CFILES)
+ifdef DDIRS
+	@for i in $(DDIRS); do \
+		(cd $$i; [ -f Makefile ] && $(MAKE) $@) \
+	done; true
+endif
+
+distclean::
+	rm -f $(DCFILES)
+
+install::
+ifdef DDIRS
+	@for i in $(DDIRS); do \
+		(cd $$i; [ -f Makefile ] && $(MAKE) $@) \
+	done; true 
+endif
+
+whatsout::
+	@rlog -R -L RCS/* | sed 's/.*\/\([^\/]*\),v/\1/'
+ifdef DDIRS
+	@for i in $(DDIRS); do \
+		( cd $$i; \
+		if [ -f Makefile ]; then \
+			$(MAKE) whatsout; \
+		else
+			@rlog -R -L RCS/* | sed 's/.*\/\([^\/]*\),v/\1/'; \
+		fi; ) \
+	done
+endif
+
+subdist::
+	cp -dp $(DFILES) $(DISTDIR)
+ifdef DDIRS
+	for i in $(DDIRS); do \
+		mkdir $(DISTDIR)/$$i; \
+		( cd $$i; \
+		if [ -f Makefile ]; then \
+			$(MAKE) VERSION=$(VERSION) DISTDIR=../$(DISTDIR)/$$i \
+			subdist; \
+		else \
+			for j in *; do \
+				[ -f $$j ] && cp -dp $$j ../$(DISTDIR)/$$i; \
+			done; \
+		fi; ) \
+	done
+endif
+

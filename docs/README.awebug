@@ -1,0 +1,53 @@
+
+When playing Necros' "Ascent Of The Cloud Eagle" using an AWE32
+with xmp I noticed that awedrv 0.4.2c does not play notes higher
+than C7. The problem happens in the following track (order 29,
+pattern 47, channel 5, rows 0x16 to 0x1d). 
+
+	 16 |G-7 07 .. 000 000 |
+	 17 |A-7 07 .. 000 000 |
+	 18 |F#7 07 .. 000 000 |
+	 19 |... .. .. 000 000 |
+	 1A |D-7 07 .. 000 000 |
+	 1B |E-7 07 .. 000 000 |
+	 1C |F#7 07 .. 000 000 |
+	 1D |... .. .. 000 000 |
+	 1F |G-7 07 .. 000 000 |
+	 20 |G-6 07 .. 000 000 |
+	 21 |C-7 07 .. 000 000 |
+	 22 |B-6 07 .. 303 000 |
+	 23 |C-7 07 .. 300 000 |
+	 24 |... .. .. 300 000 |
+	 
+Awedrv sets rec->high to 'freq_to_note (patch.high_note) / 100'
+clipping to an upper value of 12799:
+
+awedrv/awe_wave.c:
+   3345         rec->root = note / 100;
+   3346         rec->tune = -(note % 100);
+   3347         rec->low = freq_to_note(patch.low_note) / 100;
+   3348         rec->high = freq_to_note(patch.high_note) / 100;
+
+    899 /* convert frequency mHz to abstract cents (= midi key * 100) */
+    900 static int
+    901 freq_to_note(int mHz)
+    902 {
+    (...)
+    915         freq = mHz;
+    916         note = 0;
+    917         for (base = 8176 * 2; freq >= base; base *= 2) {
+    918                 note += 12;
+    919                 if (note >= 128) /* over maximum */
+    920                         return 12799;
+
+xmp/src/player/driver.c:
+    299     patch->base_note = C4_FREQ;
+    300     patch->base_freq = basefreq;
+    301     patch->high_note = 0x7fffffff;
+    302     patch->low_note = 0;
+
+
+The range in note numbers for octave 7 is 84 to 95, and awedrv's
+limit should be 127. The module is correctly played using a GUS
+or the software mixer.
+

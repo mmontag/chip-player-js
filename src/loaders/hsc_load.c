@@ -1,0 +1,198 @@
+/* Extended Module Player
+ * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * This file is part of the Extended Module Player and is distributed
+ * under the terms of the GNU General Public License. See doc/COPYING
+ * for more information.
+ *
+ * $Id: hsc_load.c,v 1.1 2001-06-02 20:27:00 cmatsuoka Exp $
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "load.h"
+
+/* Based on the HSC File Format Spec, by Simon Peter <dn.tlp@gmx.net>
+ * 
+ * "Although the format is most commonly known through the HSC-Tracker by
+ *  Electronic Rats, it was originally developed by Hannes Seifert of NEO
+ *  Software for use in their commercial game productions in the time of
+ *  1991 - 1994. ECR just ripped his player and coded an editor around it."
+ */
+
+int hsc_load (FILE *f)
+{
+    int p, i, r, c;
+    struct xxm_event *event;
+    uint8 *x, *sid, e[2], buf[128 * 12];
+
+    LOAD_INIT ();
+
+    fread (buf, 1, 128 * 12, f);
+
+    x = buf;
+    for (i = 0; i < 128; i++, x += 12) {
+	if (x[9] & ~0x3 || x[10] & ~0x3)	/* Test waveform register */
+	    break;
+	if (x[8] & ~0xf)			/* Test feedback & algorithm */
+	    break;
+    }
+
+    xxh->ins = i;
+
+    fread (buf, 1, 51, f);
+    for (p = i = 0; i < 51; i++) {
+	if (buf[i] == 0xff)
+	    break;
+	if (buf[i] > p)
+	    p = buf[i];
+    }
+    if (!i || !p || i > 50 || p > 50)		/* Test number of patterns */
+	return -1;		
+
+    for (i = 0; i < p; i++) {
+	fread (buf, 1, 64 * 9 * 2, f);
+	for (r = 0; r < 64; r++) {
+	    for (c = 0; c < 9; c++) {
+		uint8 n = buf[r * 9 * 2 + c * 2];
+		uint8 m = buf[r * 9 * 2 + c * 2 + 1];
+		if (m > 0x06 && m < 0x10 && n != 0x80)	/* Test effects 07..0f */
+		    return -1;
+		if (MSN(m) > 6 && MSN(m) < 10)	/* Test effects 7x .. 9x */
+		    return -1;
+	    }
+	}
+    }
+
+    fseek (f, 0, SEEK_SET);
+
+    xxh->chn = 9;
+    xxh->bpm = 125;
+    xxh->tpo = 6;
+    xxh->smp = 0;
+
+    sprintf (tracker_name, "HSC-Tracker");
+    MODULE_INFO ();
+
+    if (V (1)) {
+	report (
+"               Modulator                       Carrier             Common\n"
+"     Char Fr LS OL At De Su Re WS   Char Fr LS OL At De Su Re WS   Fbk Alg Fin\n");
+    }
+
+    /* Read instruments */
+    INSTRUMENT_INIT ();
+
+    fread (buf, 1, 128 * 12, f);
+    sid = buf;
+    for (i = 0; i < xxh->ins; i++, sid += 12) {
+	xmp_cvt_hsc2sbi (sid);
+
+	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	xxih[i].nsm = 1;
+	xxi[i][0].vol = 0x40;
+	xxi[i][0].fin = (int8)sid[11];
+	xxi[i][0].pan = 0x80;
+	xxi[i][0].xpo = 0;
+	xxi[i][0].sid = i;
+
+	if (V (1)) {
+	    int j, x;
+
+	    for (j = x = 0; j < 12; j++)
+		x |= sid[j];
+
+	    if (!x)
+		goto skip;
+
+	    report ("[%2X] ", i);
+
+	    report ("%c%c%c%c %2d ",
+		sid[0] & 0x80 ? 'a' : '-', sid[0] & 0x40 ? 'v' : '-',
+		sid[0] & 0x20 ? 's' : '-', sid[0] & 0x10 ? 'e' : '-',
+		sid[0] & 0x0f);
+	    report ("%2d %2d ", sid[2] >> 6, sid[2] & 0x3f);
+	    report ("%2d %2d ", sid[4] >> 4, sid[4] & 0x0f);
+	    report ("%2d %2d ", sid[6] >> 4, sid[6] & 0x0f);
+	    report ("%2d   ", sid[8]);
+
+	    report ("%c%c%c%c %2d ",
+		sid[1] & 0x80 ? 'a' : '-', sid[1] & 0x40 ? 'v' : '-',
+		sid[1] & 0x20 ? 's' : '-', sid[1] & 0x10 ? 'e' : '-',
+		sid[1] & 0x0f);
+	    report ("%2d %2d ", sid[3] >> 6, sid[3] & 0x3f);
+	    report ("%2d %2d ", sid[5] >> 4, sid[5] & 0x0f);
+	    report ("%2d %2d ", sid[7] >> 4, sid[7] & 0x0f);
+	    report ("%2d   ", sid[9]);
+
+	    report ("%2d  %2d  %02x\n", sid[10] >> 1, sid[10] & 0x01, sid[11]);
+	}
+skip:
+	xmp_drv_loadpatch (f, i, 0, 0, NULL, sid);
+    }
+
+    /* Read orders */
+    for (p = i = 0; i < 51; i++) {
+	fread (&xxo[i], 1, 1, f);
+	if (xxo[i] & 0x80)
+	    break;			/* FIXME: jump line */
+	if (xxo[i] > p)
+	    p = xxo[i];
+    }
+    fseek (f, 50 - i, SEEK_CUR);
+    xxh->len = i;
+    xxh->pat = p + 1;
+    xxh->trk = xxh->pat * xxh->chn;
+
+    if (V (0)) {
+	report ("Module length  : %d patterns\n", xxh->len);
+	report ("Instruments    : %d\n", xxh->ins);
+	report ("Stored patterns: %d ", xxh->pat);
+    }
+    PATTERN_INIT ();
+
+    /* Read and convert patterns */
+    for (i = 0; i < xxh->pat; i++) {
+	int ins[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+	PATTERN_ALLOC (i);
+	xxp[i]->rows = 64;
+	TRACK_ALLOC (i);
+        for (r = 0; r < xxp[i]->rows; r++) {
+            for (c = 0; c < 9; c++) {
+	        fread (e, 1, 2, f);
+	        event = &EVENT (i, c, r);
+		if (e[0] & 0x80) {
+		    ins[c] = e[1] + 1;
+		} else if (e[0] == 0x7f) {
+		    event->note = XMP_KEY_OFF;
+		} else if (e[0] > 0) {
+		    event->note = e[0] + 12;
+		    event->ins = ins[c];
+		}
+
+		event->fxt = 0;
+		event->fxp = 0;
+
+		if (e[1] == 0x01) {
+		    event->fxt = 0x0d;
+		    event->fxp = 0;
+		}
+	    }
+	}
+	if (V (0))
+	    report (".");
+    }
+    if (V (0))
+	report ("\n");
+
+    for (i = 0; i < xxh->chn; i++) {
+	xxc[i].pan = 0x80;
+	xxc[i].flg = XXM_CHANNEL_FM;
+    }
+
+    return 0;
+}
+

@@ -1,0 +1,410 @@
+/* Extended Module Player
+ * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * This file is part of the Extended Module Player and is distributed
+ * under the terms of the GNU General Public License. See doc/COPYING
+ * for more information.
+ */
+
+/*
+ * Fri, 26 Jun 1998 17:45:59 +1000  Andrew Leahy <alf@cit.nepean.uws.edu.au>
+ * Finally got it working on the DEC Alpha running DEC UNIX! In the pattern
+ * reading loop I found I was getting "0" for (p-patbuf) and "0" for
+ * xph.datasize, the next if statement (where it tries to read the patbuf)
+ * would then cause a seg_fault.
+ *
+ * Sun Sep 27 12:07:12 EST 1998  Claudio Matsuoka <claudio@pos.inf.ufpr.br>
+ * Extended Module 1.02 stores data in a different order, we must handle
+ * this accordingly. MAX_SAMP used as a workaround to check the number of
+ * samples recognized by the player.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "load.h"
+#include "xm.h"
+
+#define MAX_SAMP 1024
+
+
+int xm_load (FILE * f)
+{
+    int i, j, r;
+    int instr_no = 0;
+    uint8 *patbuf, *p, b;
+    struct xxm_event *event;
+    struct xm_file_header xfh;
+    struct xm_pattern_header xph;
+    struct xm_pattern_header_0102 xph0102;
+    struct xm_instrument_header xih;
+    struct xm_instrument xi;
+    struct xm_sample_header xsh[16];
+
+    LOAD_INIT ();
+
+    fread (&xfh, sizeof (xfh), 1, f);
+    if (strncmp ((char *) xfh.id, "Extended Module: ", 17))
+	return -1;
+    strncpy (xmp_ctl->name, (char *) xfh.name, 20);
+
+    L_ENDIAN16 (xfh.version);
+
+    sprintf (xmp_ctl->type, "Extended Module %d.%02d",
+	xfh.version >> 8, xfh.version & 0xff);
+
+    L_ENDIAN32 (xfh.headersz);
+    L_ENDIAN16 (xfh.songlen);
+    L_ENDIAN16 (xfh.restart);
+    L_ENDIAN16 (xfh.channels);
+    L_ENDIAN16 (xfh.patterns);
+    L_ENDIAN16 (xfh.instruments);
+    L_ENDIAN16 (xfh.tempo);
+    L_ENDIAN16 (xfh.bpm);
+    L_ENDIAN16 (xfh.flags);
+
+    xxh->len = xfh.songlen;
+    xxh->rst = xfh.restart;
+    xxh->chn = xfh.channels;
+    xxh->pat = xfh.patterns;
+    xxh->trk = xxh->chn * xxh->pat + 1;
+    xxh->ins = xfh.instruments;
+    xxh->tpo = xfh.tempo;
+    xxh->bpm = xfh.bpm;
+    xxh->flg = xfh.flags & XM_LINEAR_PERIOD_MODE ? XXM_FLG_LINEAR : 0;
+    memcpy (xxo, xfh.order, xxh->len);
+    sprintf (tracker_name, "%-20.20s", xfh.tracker);
+
+    MODULE_INFO ();
+
+    /* XM 1.02/1.03 has a different structure. This is a nasty kludge to
+     * re-order the loader and recognize 1.02 files correctly.
+     */
+    if (xfh.version <= 0x0103)
+	goto load_instruments;
+
+load_patterns:
+    PATTERN_INIT ();
+
+    if (V (0))
+	report ("Stored patterns: %d ", xxh->pat);
+
+    /* Endianism fixed by Miodrag Vallat <miodrag@multimania.com>
+     * Mon, 04 Jan 1999 11:17:20 +0100
+     */
+    for (i = 0; i < xxh->pat; i++) {
+	if (xfh.version > 0x0102) {
+	    fread (&xph, sizeof (xph), 1, f);
+	    L_ENDIAN32 (xph.length);
+	    L_ENDIAN16 (xph.rows);
+	    L_ENDIAN16 (xph.datasize);
+	} else {
+	    fread (&xph0102, sizeof (xph0102), 1, f);
+	    L_ENDIAN32 (xph0102.length);
+	    L_ENDIAN16 (xph0102.datasize);
+	    xph.length = xph0102.length;
+	    xph.packing = xph0102.packing;
+	    xph.rows = xph0102.rows + 1;
+	    xph.datasize = xph0102.datasize;
+	}
+
+	PATTERN_ALLOC (i);
+	if (!(r = xxp[i]->rows = xph.rows))
+	    r = xxp[i]->rows = 0x100;
+	TRACK_ALLOC (i);
+
+	if (xph.datasize) {
+	    p = patbuf = calloc (1, xph.datasize);
+	    fread (patbuf, 1, xph.datasize, f);
+	    for (j = 0; j < (xxh->chn * r); j++) {
+		if ((p - patbuf) >= xph.datasize)
+		    break;
+		event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+		if ((b = *p++) & XM_EVENT_PACKING) {
+		    if (b & XM_EVENT_NOTE_FOLLOWS)
+			event->note = *p++;
+		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS) {
+			if (*p & XM_END_OF_SONG)
+			    break;
+			event->ins = *p++;
+		    }
+		    if (b & XM_EVENT_VOLUME_FOLLOWS)
+			event->vol = *p++;
+		    if (b & XM_EVENT_FXTYPE_FOLLOWS) {
+			event->fxt = *p++;
+#if 0
+			if (event->fxt == FX_GLOBALVOL)
+			    event->fxt = FX_TRK_VOL;
+			if (event->fxt == FX_G_VOLSLIDE)
+			    event->fxt = FX_TRK_VSLIDE;
+#endif
+		    }
+		    if (b & XM_EVENT_FXPARM_FOLLOWS)
+			event->fxp = *p++;
+		} else {
+		    event->note = b;
+		    event->ins = *p++;
+		    event->vol = *p++;
+		    event->fxt = *p++;
+		    event->fxp = *p++;
+		}
+		if (!event->vol)
+		    continue;
+
+		/* Volume set */
+		if ((event->vol >= 0x10) && (event->vol <= 0x50)) {
+		    event->vol -= 0x0f;
+		    continue;
+		}
+		/* Volume column effects */
+		switch (event->vol >> 4) {
+		case 0x06:	/* Volume slide down */
+		    event->f2t = FX_VOLSLIDE_2;
+		    event->f2p = event->vol - 0x60;
+		    break;
+		case 0x07:	/* Volume slide up */
+		    event->f2t = FX_VOLSLIDE_2;
+		    event->f2p = (event->vol - 0x70) << 4;
+		    break;
+		case 0x08:	/* Fine volume slide down */
+		    event->f2t = FX_EXTENDED;
+		    event->f2p = (EX_F_VSLIDE_DN << 4) | (event->vol - 0x80);
+		    break;
+		case 0x09:	/* Fine volume slide up */
+		    event->f2t = FX_EXTENDED;
+		    event->f2p = (EX_F_VSLIDE_UP << 4) | (event->vol - 0x90);
+		    break;
+		case 0x0a:	/* Set vibrato speed */
+		    event->f2t = FX_VIBRATO;
+		    event->f2p = (event->vol - 0xa0) << 4;
+		    break;
+		case 0x0b:	/* Vibrato */
+		    event->f2t = FX_VIBRATO;
+		    event->f2p = event->vol - 0xb0;
+		    break;
+		case 0x0c:	/* Set panning */
+		    event->f2t = FX_SETPAN;
+		    event->f2p = ((event->vol - 0xc0) << 4) + 8;
+		    break;
+		case 0x0d:	/* Pan slide left */
+		    event->f2t = FX_PANSLIDE;
+		    event->f2p = (event->vol - 0xd0) << 4;
+		    break;
+		case 0x0e:	/* Pan slide right */
+		    event->f2t = FX_PANSLIDE;
+		    event->f2p = event->vol - 0xe0;
+		    break;
+		case 0x0f:	/* Tone portamento */
+		    event->f2t = FX_TONEPORTA;
+		    event->f2p = (event->vol - 0xf0) << 4;
+		    break;
+		}
+		event->vol = 0;
+	    }
+	    free (patbuf);
+	    if (V (0))
+		report (".");
+	}
+    }
+
+    PATTERN_ALLOC (i);
+
+    xxp[i]->rows = 64;
+    xxt[i * xxh->chn] = calloc (1, sizeof (struct xxm_track) +
+	sizeof (struct xxm_event) * 64);
+    xxt[i * xxh->chn]->rows = 64;
+    for (j = 0; j < xxh->chn; j++)
+	xxp[i]->info[j].index = i * xxh->chn;
+
+    if (xfh.version <= 0x0103) {
+	if (V (0))
+	    report ("\n");
+	goto load_samples;
+    }
+    if (V (0))
+	report ("\n");
+
+load_instruments:
+    if (V (0))
+	report ("Instruments    : %d ", xxh->ins);
+    if (V (1))
+	report ("\n");
+
+    /* ESTIMATED value! We don't know the actual value at this point */
+    xxh->smp = MAX_SAMP;
+
+    INSTRUMENT_INIT ();
+
+    for (i = 0; i < xxh->ins; i++) {
+	fread (&xih, sizeof (xih), 1, f);
+
+	L_ENDIAN32 (xih.size);
+	L_ENDIAN16 (xih.samples);
+	L_ENDIAN32 (xih.sh_size);
+
+	strncpy (xxih[i].name, xih.name, 22);
+	str_adj (xxih[i].name);
+	xxih[i].nsm = xih.samples;
+	if (xxih[i].nsm > 16)
+	    xxih[i].nsm = 16;
+
+	if (V (1) && (strlen ((char *) xxih[i].name) || xxih[i].nsm))
+	    report ("[%2X] %-22.22s %2d ", i, xxih[i].name, xxih[i].nsm);
+
+	if (xxih[i].nsm) {
+	    xxi[i] = calloc (sizeof (struct xxm_instrument), xxih[i].nsm);
+	    fread (&xi, sizeof (xi) , 1, f);
+	    /* Skip reserved space */
+	    fseek (f, xih.size - sizeof (xih) - sizeof (xi), SEEK_CUR);
+	    for (j = 0; j < 24; j++) {
+		L_ENDIAN16 (xi.v_env[j]);
+		L_ENDIAN16 (xi.p_env[j]);
+	    }
+	    L_ENDIAN16 (xi.v_fade);
+
+	    /* Envelope */
+	    xxih[i].rls = xi.v_fade;
+	    xxih[i].aei.npt = xi.v_pts;
+	    xxih[i].aei.sus = xi.v_sus;
+	    xxih[i].aei.lps = xi.v_start;
+	    xxih[i].aei.lpe = xi.v_end;
+	    xxih[i].aei.flg = xi.v_type;
+	    xxih[i].pei.npt = xi.p_pts;
+	    xxih[i].pei.sus = xi.p_sus;
+	    xxih[i].pei.lps = xi.p_start;
+	    xxih[i].pei.lpe = xi.p_end;
+	    xxih[i].pei.flg = xi.p_type;
+	    if (xxih[i].aei.npt)
+		xxae[i] = calloc (4, xxih[i].aei.npt);
+	    else
+		xxih[i].aei.flg &= ~XXM_ENV_ON;
+	    if (xxih[i].pei.npt)
+		xxpe[i] = calloc (4, xxih[i].pei.npt);
+	    else
+		xxih[i].pei.flg &= ~XXM_ENV_ON;
+	    memcpy (xxae[i], xi.v_env, xxih[i].aei.npt * 4);
+	    memcpy (xxpe[i], xi.p_env, xxih[i].pei.npt * 4);
+
+	    memcpy (&xxim[i], xi.sample, 96);
+	    for (j = 0; j < 96; j++) {
+		if (xxim[i].ins[j] >= xxih[i].nsm)
+		    xxim[i].ins[j] = (uint8) XMP_DEF_MAXPAT;
+	    }
+
+	    for (j = 0; j < xxih[i].nsm; j++, instr_no++) {
+		fread (&xsh[j], sizeof (xsh[j]), 1, f);
+
+		L_ENDIAN32 (xsh[j].length);
+		L_ENDIAN32 (xsh[j].loop_start);
+		L_ENDIAN32 (xsh[j].loop_length);
+		xxi[i][j].vol = xsh[j].volume;
+		xxi[i][j].pan = xsh[j].pan;
+		xxi[i][j].xpo = xsh[j].relnote;
+		xxi[i][j].fin = xsh[j].finetune;
+		xxi[i][j].vwf = xi.y_wave;
+		xxi[i][j].vde = xi.y_depth;
+		xxi[i][j].vra = xi.y_rate;
+		xxi[i][j].vsw = xi.y_sweep;
+		xxi[i][j].sid = instr_no;
+		if (instr_no >= MAX_SAMP)
+		    continue;
+		strncpy (xxs[instr_no].name, xsh[j].name, 22);
+		str_adj (xxs[instr_no].name);
+		xxs[instr_no].len = xsh[j].length;
+		xxs[instr_no].lps = xsh[j].loop_start;
+		xxs[instr_no].lpe = xsh[j].loop_start + xsh[j].loop_length;
+		xxs[instr_no].flg = xsh[j].type & XM_SAMPLE_16BIT ?
+		    WAVE_16_BITS : 0;
+		xxs[instr_no].flg |= xsh[j].type & XM_LOOP_FORWARD ?
+		    WAVE_LOOPING : 0;
+		xxs[instr_no].flg |= xsh[j].type & XM_LOOP_PINGPONG ?
+		    WAVE_LOOPING | WAVE_BIDIR_LOOP : 0;
+	    }
+	    for (j = 0; j < xxih[i].nsm; j++) {
+		if (instr_no >= MAX_SAMP)
+		    continue;
+		if ((V (1)) && xsh[j].length)
+		    report ("%s[%1x] %05x%c%05x %05x %c "
+			"V%02x F%+04d P%02x R%+03d",
+			j ? "\n\t\t\t\t" : "\t", j,
+			xxs[xxi[i][j].sid].len,
+			xxs[xxi[i][j].sid].flg & WAVE_16_BITS ? '+' : ' ',
+			xxs[xxi[i][j].sid].lps,
+			xxs[xxi[i][j].sid].lpe,
+			xxs[xxi[i][j].sid].flg & WAVE_BIDIR_LOOP ? 'B' :
+			xxs[xxi[i][j].sid].flg & WAVE_LOOPING ? 'L' : ' ',
+			xsh[j].volume, xsh[j].finetune,
+			xsh[j].pan, xsh[j].relnote);
+
+		if (xfh.version > 0x0103)
+		    xmp_drv_loadpatch (f, xxi[i][j].sid, xmp_ctl->c4rate,
+			XMP_SMP_DIFF, &xxs[xxi[i][j].sid], NULL);
+	    }
+	    if (xmp_ctl->verbose == 1)
+		report (".");
+	} else {
+	    /* The sample size is a field of struct xm_instrument_header that
+	     * should be in struct xm_instrument according to the (official)
+	     * format description. xmp puts the field in the header because
+	     * Fasttracker writes the modules this way. BUT there's some
+	     * other tracker or conversor out there following the specs
+	     * verbatim and thus creating modules incompatible with those
+	     * created by Fasttracker. The following piece of code is a
+	     * workaround for this problem (allowing xmp to play "Braintomb"
+	     * by Jazztiz/ART). (seek -4)
+	     */
+
+	    /* Umm, Cyke O'Path <cyker@heatwave.co.uk> sent me a couple of
+	     * mods ("Breath of the Wind" and "Broken Dimension") that
+	     * reserve the instrument data space after the instrument header
+	     * even if the number of instruments is set to 0. In these modules
+	     * the instrument header size is marked as 263. The following
+	     * generalization should take care of both cases.
+	     */
+
+	     fseek (f, xih.size - sizeof (xih), SEEK_CUR);
+	}
+
+	if ((V (1)) && (strlen ((char *) xxih[i].name) || xih.samples))
+	    report ("\n");
+    }
+    xxh->smp = instr_no;
+    xxs = realloc (xxs, sizeof (struct xxm_sample) * xxh->smp);
+
+    if (xfh.version <= 0x0103) {
+	if (xmp_ctl->verbose > 0 && xmp_ctl->verbose < 2)
+	    report ("\n");
+	goto load_patterns;
+    }
+load_samples:
+    if ((V (0) && xfh.version <= 0x0103) || V (1))
+	report ("Stored samples : %d ", xxh->smp);
+
+    /* XM 1.02 stores all samples after the patterns */
+
+    if (xfh.version <= 0x0103) {
+	for (i = 0; i < xxh->ins; i++) {
+	    for (j = 0; j < xxih[i].nsm; j++) {
+		xmp_drv_loadpatch (f, xxi[i][j].sid, xmp_ctl->c4rate,
+		    XMP_SMP_DIFF, &xxs[xxi[i][j].sid], NULL);
+		if (V (0))
+		    report (".");
+	    }
+	}
+    }
+    if (V (0))
+	report ("\n");
+
+    /* If dynamic pan is disabled, XM modules will use the standard
+     * MOD channel panning (LRRL). Moved to module_play () --Hipolito.
+     */
+
+    for (i = 0; i < xxh->chn; i++)
+        xxc[i].pan = xmp_ctl->fetch & XMP_CTL_DYNPAN ?
+            0x80 : (((i + 1) / 2) % 2) * 0xff;
+
+    xmp_ctl->fetch |= XMP_MODE_FT2;
+
+    return 0;
+}

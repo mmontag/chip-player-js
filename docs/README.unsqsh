@@ -1,0 +1,20 @@
+Short:    portable unpack source for XPK-SQSH
+Author:   jah@fh-zwickau.de
+Uploader: jah@fh-zwickau.de
+Type:     dev/misc
+Version:  0.1
+
+because I have burned my mods some time ago and my brother wants to hear them
+on his i486 linux machine I have written this quick and dirty piece of source
+by reassembling the appropriate xpk library and converted the stuff to nearly
+unreadable c.
+
+I have tested it a while and it seems to work clearly. It should compile on 
+every standard c compiler.
+
+This  program  is  distributed  in  the  hope that it will be useful, but
+WITHOUT  ANY  WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.
+
+Thanks and greetings are going to John Hendrikx for creating SQSH.
+

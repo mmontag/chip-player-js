@@ -1,0 +1,16 @@
+/*
+ * DFSG-compliant dummy replacement for the Powerpacker decruncher
+ *
+ * $Id: depack.c-dfsg,v 1.1 2001-06-02 20:28:01 cmatsuoka Exp $
+ */
+
+#include <stdio.h>
+#include "xmpi.h"
+
+int xmpi_decrunch_pp (FILE *f, FILE *fo)
+{
+    report ("Powerpacker decruncher missing. This file can't be decrunched\n");
+
+    return -1;
+}
+

@@ -1,0 +1,179 @@
+/* Extended Module Player
+ * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * This file is part of the Extended Module Player and is distributed
+ * under the terms of the GNU General Public License. See doc/COPYING
+ * for more information.
+ *
+ * $Id: aix.c,v 1.1 2001-06-02 20:26:02 cmatsuoka Exp $
+ */
+
+/*
+ * Based on the AIX XMMS output plugin by Peter Alm, Thomas Nilsson
+ * and Olle Hallnas.
+ *
+ * Fixed by <put your name here>, <date>
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/audio.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+
+#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "xmpi.h"
+#include "driver.h"
+#include "mixer.h"
+
+static int audio_fd;
+static audio_control control; 
+static audio_change change;
+
+static int init (struct xmp_control *);
+static int setaudio (struct xmp_control *);
+static void bufdump (int);
+static void shutdown (void);
+
+static void dummy () { }
+
+static char *help[] = {
+    "gain=val", "Audio output gain (0 to 255)",
+/*  "buffer=val", "Audio buffer size (default is 32768)", */
+    NULL
+};
+
+struct xmp_drv_info drv_bsd = {
+    "aix",		/* driver ID */
+    "AIX PCM audio",	/* driver description */
+    help,		/* help */
+    init,		/* init */
+    shutdown,		/* shutdown */
+    xmp_smix_numvoices,	/* numvoices */
+    dummy,		/* voicepos */
+    xmp_smix_echoback,	/* echoback */
+    dummy,		/* setpatch */
+    xmp_smix_setvol,	/* setvol */
+    dummy,		/* setnote */
+    xmp_smix_setpan,	/* setpan */
+    dummy,		/* setbend */
+    dummy,		/* seteffect */
+    dummy,		/* starttimer */
+    dummy,		/* stctlimer */
+    dummy,		/* reset */
+    bufdump,		/* bufdump */
+    dummy,		/* bufwipe */
+    dummy,		/* clearmem */
+    dummy,		/* sync */
+    xmp_smix_writepatch,/* writepatch */
+    xmp_smix_getmsg,	/* getmsg */
+    NULL
+};
+
+
+#define AUDIO_MIN_GAIN 0
+#define AUDIO_MAX_GAIN 100
+
+static int setaudio (struct xmp_control *ctl)
+{
+    audio_init ainit;
+    int gain = 128;
+    int bsize = 32 * 1024;
+    char *token;
+    char **parm = ctl->parm;
+
+    parm_init ();
+    chkparm1 ("gain", gain = atoi (token));
+    /* chkparm1 ("buffer", bsize = atoi (token)); */
+    parm_end ();
+
+    if (gain < AUDIO_MIN_GAIN)
+	gain = AUDIO_MIN_GAIN;
+    if (gain > AUDIO_MAX_GAIN)
+	gain = AUDIO_MAX_GAIN;
+
+    init.mode = PCM;  			/* audio format */
+    init.srate = ctl->freq;		/* sample rate */
+    init.operation = PLAY;		/* PLAY or RECORD */
+    init.channels = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
+    init.bits_per_sample = ctl->resol;	/* bits per sample */
+    init.flags = BIG_ENDIAN | TWOS_COMPLEMENT;
+   
+    if (ioctl (audio_fd, AUDIO_INIT, &init) < 0) {
+	close (audio_fd);
+	return XMP_ERR_DINIT;
+    }
+
+    /* full blast; range: 0-0x7fffffff */
+    change.volume = 0x7fffffff * (1.0 * gain / 200.0);
+    change.monitor = AUDIO_IGNORE;	/* monitor what's recorded ?*/
+    change.input = AUDIO_IGNORE;	/* input to record from */
+    change.output = OUTPUT_1;		/* line-out */
+    change.balance = 0x3FFFFFFF;
+
+    control.ioctl_request = AUDIO_CHANGE;
+    control.request_info = (char *) &change;
+    if (ioctl (audio_fd, AUDIO_CONTROL, &control) < 0) {
+	close (audio_fd);
+	return XMP_ERR_DINIT;
+    }
+
+    /* start playback - won't actually start until write() calls occur */
+    control.ioctl_request = AUDIO_START;
+    control.position = 0;
+    if (ioctl (audio_fd, AUDIO_CONTROL, &control) < 0) {
+	close (audio_fd);
+	return XMP_ERR_DINIT;
+    }
+
+    return XMP_OK;
+}
+
+
+static int init (struct xmp_control *ctl)
+{
+    if ((audio_fd = open ("/dev/paud0/1", O_WRONLY)) == -1)
+	return XMP_ERR_DINIT;
+
+    if (setaudio (ctl) != XMP_OK)
+	return XMP_ERR_DINIT;
+
+    return xmp_smix_on (ctl);
+}
+
+
+/* Build and write one tick (one PAL frame or 1/50 s in standard vblank
+ * timed mods) of audio data to the output device.
+ */
+static void bufdump (int i)
+{
+    int j;
+    void *b;
+
+    b = xmp_smix_buffer ();
+    while (i) {
+	if ((j = write (audio_fd, b, i)) > 0) {
+	    i -= j;
+	    (char *)b += j;
+	} else
+	    break;
+    };
+}
+
+
+static void shutdown ()
+{
+    xmp_smix_off ();
+    control.ioctl_request = AUDIO_STOP;
+    ioctl (audio_fd, AUDIO_CONTROL, &control);
+    close (audio_fd);
+}
+
