@@ -1,7 +1,7 @@
-/* Epic Megagames PSM loader for xmp
+/* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.17 2005-02-20 18:51:03 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.18 2005-02-21 02:29:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,6 +13,36 @@
  * fixed comparing the One Must Fall! PSMs with Kenny Chou's MTM files.
  */
 
+/*
+ * From EPICTEST Readme.1st:
+ *
+ * The Music And Sound Interface, MASI, is the basis behind all new Epic
+ * games. MASI uses its own proprietary file format, PSM, for storing
+ * its music.
+ */
+
+/*
+ * kode54's comment on Sinaria PSMs in the foo_dumb hydrogenaudio forum:
+ *
+ * "The Sinaria variant uses eight character pattern and instrument IDs,
+ * the sample headers are laid out slightly different, and the patterns
+ * use a different format for the note values, and also different effect
+ * scales for certain commands.
+ *
+ * [Epic] PSM uses high nibble for octave and low nibble for note, for
+ * a valid range up to 0x7F, for a range of D-1 through D#9 compared to
+ * IT. (...) Sinaria PSM uses plain note values, from 1 - 83, for a
+ * range of C-3 through B-9.
+ *
+ * [Epic] PSM also uses an effect scale for portamento, volume slides,
+ * and vibrato that is about four times as sensitive as the IT equivalents.
+ * Sinaria does not. This seems to coincide with the MOD/S3M to PSM
+ * converter that Joshua Jensen released in the EPICTEST.ZIP file which
+ * can still be found on a few FTP sites. It converted effects literally,
+ * even though the bundled players behaved as the libraries used with
+ * Epic's games did and made the effects sound too strong."
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -22,40 +52,6 @@
 #include "period.h"
 
 static int sinaria;
-
-
-struct psm_hdr {
-	int8 songname[8];		/* "MAINSONG" */
-	uint8 reserved1;
-	uint8 reserved2;
-	uint8 channels;
-} PACKED;
-
-struct psm_pat {			/* standard patterns in Epic games */
-	uint32 size;
-	char name[4];			/* Sinaria has 8-character names */
-	uint16 rows;
-} PACKED;
-
-struct psm_ins {
-	/*uint8 flags;
-	int8 songname[8];
-	uint32 smpid;*/
-	int8 samplename[34];
-	uint32 reserved1;
-	uint8 reserved2;
-	uint8 insno;
-	uint8 reserved3;
-	uint32 length;
-	uint32 loopstart;
-	uint32 loopend;
-	uint16 reserved4;
-	uint8 defvol;
-	uint32 reserved5;
-	uint32 samplerate;
-	uint8 reserved6[19];
-} PACKED;
-
 
 
 static int cur_pat;
@@ -89,8 +85,7 @@ static void get_pbod_cnt(int size, uint8 *buffer)
 
 static void get_dsmp(int size, void *buffer)
 {
-	int i;
-	struct psm_ins *pi;
+	int i, srate;
 	uint8 *p;
 
 	p = buffer;
@@ -99,6 +94,7 @@ static void get_dsmp(int size, void *buffer)
 	p += 8;			/* songname */
 	p += sinaria ? 8 : 4;	/* smpid */
 
+#if 0
 	pi = (struct psm_ins *)p;
 
 	L_ENDIAN32(pi->length);
@@ -109,32 +105,44 @@ static void get_dsmp(int size, void *buffer)
 	/* for jjxmas95 xm3 */
 	if ((int)pi->loopend == -1)
 		pi->loopend = 0;
+#endif
 
 	if (V(1) && cur_ins == 0)
 	    report("\n     Instrument name                   Len  LBeg  LEnd  L Vol C2Spd");
+
 	i = cur_ins;
-	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
-	xxs[i].len = pi->length;
+	xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+
+	strncpy((char *)xxih[i].name, p, 32); p += 34;
+	str_adj ((char *)xxih[i].name);
+	p += 5;
+	p++;		/* insno */
+	p++;
+	xxs[i].len = readbuf32l(p); p += 4;
 	xxih[i].nsm = !!(xxs[i].len);
-	xxs[i].lps = pi->loopstart;
-	xxs[i].lpe = pi->loopend;
-	xxs[i].flg = pi->loopend > 2 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = pi->defvol / 2 + 1;
+	xxs[i].lps = readbuf32l(p); p += 4;
+	xxs[i].lpe = readbuf32l(p); p += 4;
+	xxs[i].flg = xxs[i].lpe > 2 ? WAVE_LOOPING : 0;
+	p += 2;
+
+	if (sinaria) p++;
+
+	xxi[i][0].vol = *p++ / 2 + 1;
+	p += 4;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	c2spd_to_note(pi->samplerate, &xxi[i][0].xpo, &xxi[i][0].fin);
+	srate = readbuf32l(p);
 
-	strncpy ((char *)xxih[i].name, pi->samplename, 32);
-	str_adj ((char *)xxih[i].name);
+	c2spd_to_note(srate, &xxi[i][0].xpo, &xxi[i][0].fin);
 
 	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
 	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %5d", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, pi->samplerate);
+		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, srate);
 
 	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate,
 		XMP_SMP_NOLOAD | XMP_SMP_8BDIFF, &xxs[i],
-		(uint8 *)buffer + sizeof(struct psm_ins));
+		(uint8 *)buffer + 96);
 
 	cur_ins++;
 }
@@ -193,7 +201,10 @@ if (f & 0x0f) printf("p%d r%d c%d: unknown flag %02x\n", i, r, c, f);
 			if (f & 0x80) {
 				uint8 note = p[pos++];
 				rowlen--;
-				note = (note >> 4) * 12 + (note & 0x0f) + 2;
+				if (sinaria)
+					note += 25;
+				else
+					note = (note >> 4) * 12 + (note & 0x0f) + 2;
 				event->note = note;
 			}
 
@@ -300,11 +311,9 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, c, fxt, fxp);
 
 static void get_song(int size, char *buffer)
 {
-	struct psm_hdr *ph = (struct psm_hdr *)buffer;
-
-	xxh->chn = ph->channels;
+	xxh->chn = *(buffer + 8 + 2);
 	if (*xmp_ctl->name == 0)
-		strncpy(xmp_ctl->name, ph->songname, 8);
+		strncpy(xmp_ctl->name, buffer, 8);
 }
 
 static void get_song_2(int size, char *buffer)
@@ -375,7 +384,6 @@ int psm_load(FILE *f)
 		return -1;
 
 	sinaria = 0;
-	strcpy (xmp_ctl->type, "Epic Megagames (PSM)");
 
 	fseek(f, 8, SEEK_CUR);		/* skip file size and FILE */
 	xxh->smp = xxh->ins = 0;
@@ -400,6 +408,9 @@ int psm_load(FILE *f)
 	xxh->trk = xxh->pat * xxh->chn;
 	pnam = malloc(xxh->pat * 8);		/* pattern names */
 	pord = malloc(255 * 8);			/* pattern orders */
+
+	strcpy (xmp_ctl->type, sinaria ?
+		"Sinaria MASI (PSM)" : "Epic Megagames MASI (PSM)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();

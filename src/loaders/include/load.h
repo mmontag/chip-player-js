@@ -83,6 +83,6 @@ uint32	read24l		(FILE *);
 uint32	read24b		(FILE *);
 uint32	read32l		(FILE *);
 uint32	read32b		(FILE *);
-
+uint32	readbuf32l	(uint8 *);
 
 #endif
