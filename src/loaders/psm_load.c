@@ -1,10 +1,14 @@
 /* Epic Megagames PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
- * Based on the PSM loader from Modplug by Olivier Lapicque
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
+ */
+
+/*
+ * Based on the PSM loader from Modplug by Olivier Lapicque and
+ * fixed comparing the One Must Fall! PSMs with Kenny Chou's MTM files.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -188,21 +192,36 @@ static void get_pbod (int size, void *buffer)
 
 			switch (fxt) {
 			case 0x01:		/* 01: fine volslide up */
-				fxt = FX_VOLSLIDE;
-				fxp |= 0x0f;
+				fxt = FX_EXTENDED;
+				fxp = (EX_F_VSLIDE_UP << 4)|((fxp / 2) & 0x0f);
 				break;
-			case 0x04: 		/* 04: fine volslide down */
+			case 0x02:		/* 02: volslide up */
 				fxt = FX_VOLSLIDE;
-				fxp >>= 1;
-				/*fxp |= 0xf0;*/
+				fxp = (fxp / 2) << 4;
+				break;
+			case 0x03:		/* 03: fine volslide down */
+				fxt = FX_EXTENDED;
+				fxp = (EX_F_VSLIDE_DN << 4)|((fxp / 2) & 0x0f);
+				break;
+			case 0x04: 		/* 04: volslide down */
+				fxt = FX_VOLSLIDE;
+				fxp /= 2;
 				break;
 		    	case 0x0C:		/* 0C: portamento up */
 				fxt = FX_PORTA_UP;
-				fxp = (fxp + 1) / 2;
+				fxp = (fxp - 1) / 2;
 				break;
 			case 0x0E:		/* 0E: portamento down */
 				fxt = FX_PORTA_DN;
-				fxp = (fxp + 1) / 2;
+				fxp = (fxp - 1) / 2;
+				break;
+			case 0x0f:		/* 0F: tone portamento */
+				fxt = FX_TONEPORTA;
+				fxp /= 4;
+				break;
+			case 0x15:		/* 15: Vibrato */
+				fxt = FX_VIBRATO;
+				/* fxp remains the same */
 				break;
 			case 0x33:		/* 33: Position Jump */
 				fxt = FX_JUMP;
