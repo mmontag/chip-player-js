@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.2 2002-07-27 18:18:22 cmatsuoka Exp $
+ * $Id: player.c,v 1.3 2005-02-21 02:44:17 cmatsuoka Exp $
  */
 
 /*
@@ -706,7 +706,7 @@ static void module_play (int chn, int t)
 int xmpi_player_start ()
 {
     int r, o, t, e;		/* rows, order, tick, end point */
-    int playing_time;
+    double playing_time;
 
     if (!xmp_ctl)
 	return XMP_ERR_DINIT;
