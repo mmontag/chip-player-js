@@ -53,11 +53,8 @@ struct psm_ins {
 static int cur_pat;
 static int cur_ins;
 uint32 *pnam;
+uint32 *pord;
 
-
-static void get_oplh(int size, uint16 *buffer)
-{
-}
 
 static void get_sdft(int size, uint16 *buffer)
 {
@@ -241,8 +238,7 @@ static void get_pbod (int size, void *buffer)
 	cur_pat++;
 }
 
-
-static void get_song (int size, char *buffer)
+static void get_song(int size, char *buffer)
 {
 	struct psm_hdr *ph = (struct psm_hdr *)buffer;
 
@@ -251,10 +247,23 @@ static void get_song (int size, char *buffer)
 		strncpy(xmp_ctl->name, ph->songname, 8);
 }
 
-int psm_load (FILE *f)
+static void get_song_2(int size, char *buffer)
+{
+	char *p;
+
+	xxh->len = 0;
+
+	for (p = buffer + 0x3e; *p == 0x01; p += 5) {
+		uint32 pat = *(uint32 *)(p + 1);
+		pord[xxh->len++] = pat;
+	}
+}
+
+int psm_load(FILE *f)
 {
 	char magic[4];
 	int offset;
+	int i, j;
 
 	LOAD_INIT ();
 
@@ -287,6 +296,7 @@ int psm_load (FILE *f)
 
 	xxh->trk = xxh->pat * xxh->chn;
 	pnam = malloc(xxh->pat * sizeof(uint32));	/* pattern names */
+	pord = malloc(255 * sizeof(uint32));		/* pattern orders */
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
@@ -299,9 +309,9 @@ int psm_load (FILE *f)
 
 	fseek(f, offset, SEEK_SET);
 
+	iff_register("SONG", get_song_2);
 	iff_register("DSMP", get_dsmp);
 	iff_register("PBOD", get_pbod);
-	iff_register("OPLH", get_oplh);
 	iff_setflag(IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
@@ -309,7 +319,21 @@ int psm_load (FILE *f)
 		iff_chunk(f);
 
 	iff_release ();
+
+	for (i = 0; i < xxh->len; i++) {
+		for (j = 0; j < xxh->pat; j++) {
+			if (pord[i] == pnam[j]) {
+				xxo[i] = j;
+				break;
+			}
+		}
+
+		if (j == xxh->pat)
+			break;
+	}
+
 	free(pnam);
+	free(pord);
 
 	if (V(0))
 		report("\n");
