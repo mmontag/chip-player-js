@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.4 2002-05-30 23:19:51 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.5 2002-07-27 14:58:28 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT(src/include/xmp.h)
@@ -68,6 +68,10 @@ AC_ARG_WITH(oss,
 AC_ARG_WITH(esd,
     [  --with-esd=<path>       ESD prefix (optional)],
     esd_path="$withval")
+
+AC_ARG_WITH(nas,
+    [  --with-nas=<path>       NAS prefix (optional)],
+    nas_path="$withval")
 
 AC_ARG_WITH(xmms,
     [  --with-xmms=<path>      XMMS prefix (optional)],
@@ -190,6 +194,10 @@ dnl -----------------------------------------------------------------------
 
 if test "$esd_path" != ""; then
     CINCS="${CINCS} -I${esd_path}/include"
+fi
+
+if test "$nas_path" != ""; then
+    CINCS="${CINCS} -I${nas_path}/include"
 fi
 
 CPPFLAGS="${CINCS}"
