@@ -1,4 +1,4 @@
-/* Extended Module Player
+/* ALSA 0.5 driver for xmp
  * Copyright (C) 1996-2000 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa_mix.c,v 1.2 2003-06-24 23:33:04 dmierzej Exp $
+ * $Id: alsa05.c,v 1.1 2005-02-23 17:07:57 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -49,8 +49,8 @@ static char *help[] = {
 };
 
 struct xmp_drv_info drv_alsa_mix = {
-    "alsa_mix",		/* driver ID */
-    "ALSA PCM audio",	/* driver description */
+    "alsa05",		/* driver ID */
+    "ALSA 0.5 PCM audio",/* driver description */
     help,		/* help */
     init,		/* init */
     dshutdown,		/* shutdown */

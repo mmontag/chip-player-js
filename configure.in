@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.6 2002-07-27 18:18:22 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.7 2005-02-23 17:07:50 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT(src/include/xmp.h)
@@ -206,7 +206,7 @@ AC_CHECK_HEADERS(strings.h getopt.h sys/select.h sys/param.h \
     sys/soundcard.h machine/soundcard.h \
     sys/ultrasound.h linux/ultrasound.h machine/ultrasound.h \
     awe_voice.h sys/awe_voice.h linux/awe_voice.h \
-    sys/asoundlib.h esd.h audio/audiolib.h audio/soundlib.h)
+    alsa/asoundlib.h esd.h audio/audiolib.h audio/soundlib.h)
 
 dnl -----------------------------------------------------------------------
 dnl Check OS/architecture independent drivers
@@ -231,11 +231,11 @@ if test "${ac_cv_header_sys_soundcard_h}" = "yes" || \
     fi
 fi 
 
-if test "${ac_cv_header_sys_asoundlib_h}" = "yes"; then
+if test "${ac_cv_header_alsa_asoundlib_h}" = "yes"; then
     AC_CHECK_LIB(asound, snd_ctl_open, [
     if test "${enable_alsa}" != "no"; then
 	LIBS="${LIBS} -lasound"
-	DRIVERS="${DRIVERS} alsa_mix.o"
+	DRIVERS="${DRIVERS} alsa.o"
 	AC_DEFINE(DRIVER_ALSA_MIX)
     fi])
 else

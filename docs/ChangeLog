@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.15 2005-02-21 21:08:02 cmatsuoka Exp $
+$Id: ChangeLog,v 1.16 2005-02-23 17:07:54 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -12,6 +12,7 @@ Stable versions
 	- added Epic Megagames old PSM (Silverball) module support
 	- added DSMI/DMP Advanced Module Format support
 	- added support to Ultimate Soundtracker modules
+	- added ALSA 0.9/1.0 sound output support
 	- fixed recursive decrunching of module files
 	- fixed QNX6 portability issues (by Mike Gorchak)
 	- fixed heavy memory leak in the XMMS plugin
