@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.5 2003-03-19 20:48:48 dmierzej Exp $
+ * $Id: plugin.c,v 1.6 2005-02-09 19:24:44 cmatsuoka Exp $
  */
 
 #include "xmp-plugin.h"
@@ -336,33 +336,89 @@ static void init(void)
 }
 
 
-static int is_our_file (char *filename)
+static int check_common_files(char *filename)
+{
+	char buf[4096], *x;
+	FILE *f;
+
+	if ((f = fopen(filename, "rb")) == NULL)
+		return 0;
+
+	fread(buf, 4096, 1, f);
+
+	/* Check Protracker files */
+	x = buf + 1080;
+	if (!memcmp(x, "M.K.", 4))
+		return 1;
+	if (!memcmp(x, "M!K!", 4))
+		return 1;
+	if (!memcmp(x, "M&K!", 4))
+		return 1;
+	if (!memcmp(x, "N.T.", 4))
+		return 1;
+	if (!memcmp(x, "CD81", 4))
+		return 1;
+
+	/* Check FastTracker files */
+	if (isdigit(*x) && !memcmp(x + 1, "CHN", 4))
+		return 1;
+	if (isdigit(*x) && isdigit(*(x + 1)) && !memcmp(x + 2, "CH", 4))
+		return 1;
+
+	/* Check Fasttracker II files */
+	if (!memcmp(buf, "Extended module: ", 17))
+		return 1;
+
+	/* Check Scream Tracker 2 files */
+	if (!memcmp(buf + 20, "!Scream!", 8))
+		return 1;
+
+	/* Check Scream Tracker 3 files */
+	if (!memcmp(buf + 44, "SCRM", 4))
+		return 1;
+
+	/* Check Impulse tracker files */
+	if (!memcmp(buf, "IMPM", 4))
+		return 1;
+
+	/* Check MTM files */
+	if (!memcmp(buf, "MTM", 3))
+		return 1;
+
+	fclose(f);
+
+	return 0;
+}
+
+
+static int is_our_file(char *filename)
 {
 	int i;
 
-	/* Checking files by extension is braindead, we should check
-	 * by file magic instead. But the xmp interface is also braindead
-	 * in the point that it doesn't allow us to load a module before
-	 * the audio device selecion. Yuck.
-	 *
-	 * Additionally, xmp 2.0 can't load a module while another module
-	 * is playing, so it can't check if the module is valid or not.
-	 * In this case, we'll blindly accept the file.
+	/* Check some common module files by file magic. If not detected,
+	 * try to load and discard file. But xmp can't load a module while
+	 * another module is playing, so it can't check if the module is
+	 * valid or not. In this case, we'll blindly accept the file.
 	 */
+
+	if (check_common_files(filename))
+		return 1;
 
 	if (xmp_going)
 		return 1;
 
 	pthread_mutex_lock (&load_mutex);
 
+	/* xmp needs the audio device to be set before loading a file */
 	ctl.maxvoc = 16;
 	ctl.verbose = 0;
 	ctl.memavl = 0;
-	xmp_drv_set (&ctl);
+	xmp_drv_set(&ctl);
 
 	_D("checking: %s", filename);
 	i = xmp_load_module (filename) >= 0;
 	_D("  returned %d", i);
+	xmp_release_module();		/* Fixes memory leak */
 
 	pthread_mutex_unlock (&load_mutex);
 
@@ -541,8 +597,9 @@ static void play_file (char *filename)
 
 static void *play_loop (void *arg)
 {
-	xmp_play_module ();
-	xmp_close_audio ();
+	xmp_play_module();
+	xmp_release_module();
+	xmp_close_audio();
 	xmp_going = 0;
 
 	_D("--- pthread_exit");

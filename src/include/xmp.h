@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.2 2002-07-27 21:40:20 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.3 2005-02-09 19:24:42 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -238,6 +238,7 @@ int	xmp_player_ctl			(int, int);
 int	xmp_open_audio			(struct xmp_control *);
 void	xmp_close_audio			(void);
 int	xmp_play_module			(void);
+void	xmp_release_module		(void);
 int	xmp_tell_parent			(void);
 int	xmp_wait_parent			(void);
 int	xmp_check_parent		(int);

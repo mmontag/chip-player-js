@@ -52,6 +52,7 @@ int main (int argc, char **argv)
 	xmp_get_module_info (&mi);
 	printf ("%s (%s)\n", mi.name, mi.type);
 	t = xmp_play_module ();
+	xmp_release_module();
 	printf ("\n");
     }
     xmp_close_audio ();

@@ -155,7 +155,7 @@ int xmp_player_ctl (int cmd, int arg)
 int xmp_play_module ()
 {
     time_t t0, t1;
-    int t, i;
+    int t;
 
     time (&t0);
     xmpi_player_start ();
@@ -163,6 +163,16 @@ int xmp_play_module ()
     t = difftime (t1, t0);
 
     xmp_ctl->start = 0;
+
+    return t;
+}
+
+
+void xmp_release_module ()
+{
+    int i;
+
+    _D (_D_INFO "Freeing memory");
 
     if (med_vol_table) {
 	for (i = 0; i < xxh->ins; i++)
@@ -177,8 +187,6 @@ int xmp_play_module ()
 		free (med_wav_table[i]);
 	free (med_wav_table);
     }
-
-    _D (_D_INFO "Freeing memory");
 
     for (i = 0; i < xxh->trk; i++)
 	free (xxt[i]);
@@ -201,8 +209,6 @@ int xmp_play_module ()
     free (xxpe);
     free (xxae);
     free (xxh);
-
-    return t;
 }
 
 

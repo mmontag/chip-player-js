@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: main.c,v 1.4 2004-09-16 00:38:44 cmatsuoka Exp $
+ * $Id: main.c,v 1.5 2005-02-09 19:24:42 cmatsuoka Exp $
  */
 
 /*
@@ -550,6 +550,8 @@ int main (int argc, char **argv)
 	    goto skip_play;
 
 	t = xmp_play_module ();
+
+	xmp_release_module();
 
 	if (opt.verbose && !background) {
 	    fprintf (stderr,

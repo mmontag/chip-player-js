@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.9 2005-02-09 18:21:05 cmatsuoka Exp $
+$Id: ChangeLog,v 1.10 2005-02-09 19:24:41 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -6,8 +6,10 @@ Stable versions
 2.1.1 ()
 	- added more module format specs
 	- added MO3 unpacking support
+	- added file detection to the XMMS plugin
 	- fixed recursive decrunching of module files
 	- fixed QNX6 portability issues (by Mike Gorchak)
+	- fixed heavy memory leak in the XMMS plugin
 	- updated OPL emulation
 	- disabled MED loader (nonportable, didn't work well)
 
