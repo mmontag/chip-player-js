@@ -7,7 +7,7 @@
  */
 
 /*
- * Based on the PSM loader from Modplug by Olivier Lapicque and
+ * Originally based on the PSM loader from Modplug by Olivier Lapicque and
  * fixed comparing the One Must Fall! PSMs with Kenny Chou's MTM files.
  */
 
@@ -31,8 +31,6 @@ struct psm_pat {
 	uint32 size;
 	uint32 name;
 	uint16 rows;
-	uint16 reserved1;
-	uint8 data;
 } PACKED;
 
 struct psm_ins {
@@ -133,8 +131,8 @@ static void get_pbod (int size, void *buffer)
 	struct xxm_event *event, dummy;
 	struct psm_pat *pp = (struct psm_pat *)buffer;
 	char *p;
-	uint8 f, c, c2;
-	int rows, pos, len;
+	uint8 f, c;
+	int rows, pos, len, rowlen;
 
 	i = cur_pat;
 	pnam[i] = pp->name;
@@ -143,113 +141,116 @@ static void get_pbod (int size, void *buffer)
 	xxp[i]->rows = pp->rows;
 	TRACK_ALLOC(i);
 
-	p = &pp->data;
+	p = buffer + sizeof(struct psm_pat);
 	len = pp->size;
 	rows = xxp[i]->rows;
 	pos = 0;
 
-	size -= sizeof(struct psm_pat) - 1;
-
-	for (r = 0; r < rows && pos < size; ) {
-		f = p[pos++];
-		if ((f & 0x7f) == 0x00)
-			break;
-
-		c = p[pos++];
-
-		if (((f & 0xf0) == 0x10) && (c <= c2)) {
-			if ((pos + 1 < len) && (!(p[pos] & 0x0f))
-		    	    && (p[pos + 1] < xxh->chn)) {
-		    		r++;
-		    		c2 = c;
-		    		continue;
+	r = 0;
+	do {
+		rowlen = 256 * p[pos + 1] + p[pos] - 2;
+		pos += 2;
+		while (rowlen > 0) {
+	
+			f = p[pos++];
+	
+			if (rowlen == 1)
+				break;
+	
+			c = p[pos++];
+			rowlen -= 2;
+	
+			event = c < xxh->chn ? &EVENT(i, c, r) : &dummy;
+	
+			if (f & 0x40) {
+				uint8 note = p[pos++];
+				uint8 ins = p[pos++];
+				rowlen -= 2;
+	
+				note = (note >> 4) * 12 + (note & 0x0f) + 2;
+				event->note = note;
+				event->ins = ins + 1;
+			}
+	
+			if (f & 0x20) {
+				event->vol = p[pos++] / 2;
+				rowlen--;
+			}
+	
+			if (f & 0x10) {
+				uint8 fxt = p[pos++];
+				uint8 fxp = p[pos++];
+				rowlen -= 2;
+	
+				if ((fxt & 0xf0) == 0x40) {
+					uint8 note;
+					note = (fxt>>4)*12 + (fxt & 0x0f) + 2;
+					event->note = note;
+					fxt = FX_TONEPORTA;
+					fxp = (fxp + 1) * 2;
+				} else
+				switch (fxt) {
+				case 0x01:		/* fine volslide up */
+					fxt = FX_EXTENDED;
+					fxp = (EX_F_VSLIDE_UP << 4) |
+						((fxp / 2) & 0x0f);
+					break;
+				case 0x02:		/* volslide up */
+					fxt = FX_VOLSLIDE;
+					fxp = (fxp / 2) << 4;
+					break;
+				case 0x03:		/* fine volslide down */
+					fxt = FX_EXTENDED;
+					fxp = (EX_F_VSLIDE_DN << 4) |
+						((fxp / 2) & 0x0f);
+					break;
+				case 0x04: 		/* volslide down */
+					fxt = FX_VOLSLIDE;
+					fxp /= 2;
+					break;
+			    	case 0x0C:		/* portamento up */
+					fxt = FX_PORTA_UP;
+					fxp = (fxp - 1) / 2;
+					break;
+				case 0x0E:		/* portamento down */
+					fxt = FX_PORTA_DN;
+					fxp = (fxp - 1) / 2;
+					break;
+				case 0x0f:		/* tone portamento */
+					fxt = FX_TONEPORTA;
+					fxp /= 4;
+					break;
+				case 0x15:		/* Vibrato */
+					fxt = FX_VIBRATO;
+					/* fxp remains the same */
+					break;
+				case 0x33:		/* Position Jump */
+					fxt = FX_JUMP;
+					break;
+			    	case 0x34:		/* Pattern break */
+					fxt = FX_BREAK;
+					break;
+				case 0x3D:		/* speed */
+					fxt = FX_TEMPO;
+					break;
+				case 0x3E:		/* tempo */
+					fxt = FX_TEMPO;
+					break;
+				case 0x52:		/* retrig note */
+					fxt = FX_EXTENDED;
+					fxp = (EX_RETRIG << 4) | fxp / 14;
+					break;
+				default:
+printf("p%d r%d c%d: %02x %02x\n", i, r, c, fxt, fxp);
+					fxt = fxp = 0;
+				}
+	
+				event->fxt = fxt;
+				event->fxp = fxp;
 			}
 		}
-
-		if ((pos >= len) || (r >= rows))
-			break;
-
-		if (!(f & 0xf0)) {
-			r++;
-			c2 = c;
-			continue;
-		}
-
-		event = c < xxh->chn ? &EVENT(i, c, r) : &dummy;
-
-		if ((f & 0x40) && (pos + 1 < len)) {
-			uint8 note = p[pos++];
-			uint8 ins = p[pos++];
-
-			note = (note >> 4) * 12 + (note & 0x0f) + 2;
-			event->note = note;
-			event->ins = ins + 1;
-		}
-
-		if ((f & 0x20) && (pos < len)) {
-			event->vol = p[pos++] / 2;
-		}
-
-		if ((f & 0x10) && (pos + 1 < len)) {
-			uint8 fxt = p[pos++];
-			uint8 fxp = p[pos++];
-
-			switch (fxt) {
-			case 0x01:		/* 01: fine volslide up */
-				fxt = FX_EXTENDED;
-				fxp = (EX_F_VSLIDE_UP << 4)|((fxp / 2) & 0x0f);
-				break;
-			case 0x02:		/* 02: volslide up */
-				fxt = FX_VOLSLIDE;
-				fxp = (fxp / 2) << 4;
-				break;
-			case 0x03:		/* 03: fine volslide down */
-				fxt = FX_EXTENDED;
-				fxp = (EX_F_VSLIDE_DN << 4)|((fxp / 2) & 0x0f);
-				break;
-			case 0x04: 		/* 04: volslide down */
-				fxt = FX_VOLSLIDE;
-				fxp /= 2;
-				break;
-		    	case 0x0C:		/* 0C: portamento up */
-				fxt = FX_PORTA_UP;
-				fxp = (fxp - 1) / 2;
-				break;
-			case 0x0E:		/* 0E: portamento down */
-				fxt = FX_PORTA_DN;
-				fxp = (fxp - 1) / 2;
-				break;
-			case 0x0f:		/* 0F: tone portamento */
-				fxt = FX_TONEPORTA;
-				fxp /= 4;
-				break;
-			case 0x15:		/* 15: Vibrato */
-				fxt = FX_VIBRATO;
-				/* fxp remains the same */
-				break;
-			case 0x33:		/* 33: Position Jump */
-				fxt = FX_JUMP;
-				break;
-		    	case 0x34:		/* 34: Pattern break */
-				fxt = FX_BREAK;
-				break;
-			case 0x3D:		/* 3D: speed */
-				fxt = FX_TEMPO;
-				break;
-			case 0x3E:		/* 3E: tempo */
-				fxt = FX_TEMPO;
-				break;
-			default:
-				fxt = fxp = 0;
-			}
-
-			event->fxt = fxt;
-			event->fxp = fxp;
-		}
-
-/*printf("%02x:%02x[%02x %02x %02x %02x] ", r, c, event->note, event->ins, event->fxt, event->fxp);*/
-	    c2 = c;
-	}
+		r++;
+	} while (r < rows);
 
 	cur_pat++;
 }
