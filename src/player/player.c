@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.3 2005-02-21 02:44:17 cmatsuoka Exp $
+ * $Id: player.c,v 1.4 2005-02-22 23:21:34 cmatsuoka Exp $
  */
 
 /*
@@ -315,9 +315,11 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 	    }
         } else if (flg & NEW_INS) {
             xins = ins;
+	    RESET (KEYOFF);
         } else {
             ins = xc->insdef;
             flg |= IS_READY;
+	    RESET (KEYOFF);
         }
     }
     if (!key || key >= XMP_KEY_OFF)
