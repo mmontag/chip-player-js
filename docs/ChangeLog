@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.14 2005-02-21 02:44:44 cmatsuoka Exp $
+$Id: ChangeLog,v 1.15 2005-02-21 21:08:02 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,6 +9,7 @@ Stable versions
 	- added file detection to the XMMS plugin
 	- added Beep Media Player support to the XMMS plugin
 	- added Epic Megagames PSM module support
+	- added Epic Megagames old PSM (Silverball) module support
 	- added DSMI/DMP Advanced Module Format support
 	- added support to Ultimate Soundtracker modules
 	- fixed recursive decrunching of module files

@@ -1,7 +1,7 @@
 /* Silverball MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.2 2005-02-21 14:52:57 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.3 2005-02-21 21:10:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -113,28 +113,27 @@ int svb_load (FILE * f)
 
 	fseek(f, p_pat, SEEK_SET);
 	for (i = 0; i < xxh->pat; i++) {
-		uint16 len;
+		int len;
 		uint8 b, rows, chan;
-
-		PATTERN_ALLOC (i);
-		xxp[i]->rows = 64;
-		TRACK_ALLOC (i);
 
 		len = read16l(f);
 		rows = read8(f);
 		chan = read8(f);
-printf("len = %d rows = %d chan = %d\n", len, rows, chan);
+		len -= 4;
+
+		PATTERN_ALLOC (i);
+		xxp[i]->rows = rows;
+		TRACK_ALLOC (i);
 
 		for (r = 0; r < rows; r++) {
-printf("row %d\n", r);
 			while (len > 0) {
 				b = read8(f);
+				len--;
+
 				if (b == 0)
-					break;;
+					break;
 	
 				c = b & 0x0f;
-printf("  chan %d: %02x\n", c, b);
-	
 	
 				event = &EVENT(i, c, r);
 	
@@ -153,29 +152,31 @@ printf("  chan %d: %02x\n", c, b);
 					event->fxt = read8(f);
 					event->fxp = read8(f);
 					len -= 2;
+printf("p%d r%d c%d: %02x %02x\n", i, r, c, event->fxt, event->fxp);
 				}
 			}
 		}
+
+		if (len > 0)
+			fseek(f, len, SEEK_CUR);
+
+		if (V(0)) report(".");
+	}
+	if (V(0)) report("\n");
+
+
+	/* Read samples */
+
+	if (V(0)) report ("Stored samples : %d ", xxh->smp);
+
+	for (i = 0; i < xxh->ins; i++) {
+		fseek(f, p_smp[i], SEEK_SET);
+		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
+			XMP_SMP_DIFF, &xxs[xxi[i][0].sid], NULL);
 		if (V(0)) report (".");
 	}
-	if (V(0)) report ("\n");
-#if 0
+	if (V(0)) report("\n");
 
-    /* Read samples */
-    if (V (0))
-	report ("Stored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->ins; i++) {
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
-    }
-    if (V (0))
-	report ("\n");
-
-    xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
-#endif
-
-    return 0;
+	return 0;
 }
 
