@@ -1,9 +1,13 @@
-$Id: ChangeLog,v 1.5 2002-05-30 23:27:39 cmatsuoka Exp $
+$Id: ChangeLog,v 1.6 2005-02-08 16:54:51 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.1.0 ()
+2.1.1 ()
+	- added more module format specs
+	- added MO3 unpacking support
+
+2.1.0 (unreleased)
 	- Added Takuya Ooura's FFT code
 	- Added scope/spectrum analyser modes to xxmp
 	- Fixed dynamic driver loading to honour the configuration prefix

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: it_load.c,v 1.2 2001-11-09 22:47:35 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.3 2005-02-08 16:54:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -260,8 +260,12 @@ int it_load (FILE * f)
 	    ifh.cwt >> 12);
     }
 
-    sprintf (tracker_name + strlen (tracker_name), " %d.%02x",
-	(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+    if (ifh.cwt) {
+	sprintf(tracker_name + strlen (tracker_name), " %d.%02x",
+	    (ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+    } else {
+	strcat(tracker_name, " (unmo3)");
+    }
 
     MODULE_INFO ();
 

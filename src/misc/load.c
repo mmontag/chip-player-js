@@ -67,6 +67,9 @@ static int decrunch (FILE **f, char **s)
     } else if (b[0] == 'B' && b[1] == 'Z' && b[2] == 'h') {
 	packer = "bzip2";
 	cmd = "bzip2 -dc \"%s\"";
+    } else if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
+	packer = "MO3";
+	cmd = "unmo3 -s \"%s\" STDOUT";
     } else if (b[0] == 31 && b[1] == 157) {
 	packer = "compress";
 #ifdef __EMX__

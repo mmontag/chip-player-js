@@ -1,4 +1,4 @@
-$Id: README,v 1.4 2001-11-30 11:03:21 cmatsuoka Exp $
+$Id: README,v 1.5 2005-02-08 16:54:51 cmatsuoka Exp $
 
 
 
@@ -9,7 +9,7 @@ $Id: README,v 1.4 2001-11-30 11:03:21 cmatsuoka Exp $
                               \_/     \/|_|    
                 E x t e n d e d   M o d u l e   P l a y e r
 
-			     Version 2.0.5
+			     Version 2.x.y
 
 
 OVERVIEW
@@ -22,8 +22,8 @@ advantage of the  OSS sequencer to play modules  with virtually no system
 load.  Using software mixing, xmp plays at rates up to 48 kHz with 32 bit
 linear interpolation.
 
-Modules compressed with  gzip, bzip2, compress, MMCMP, Powerpack, SQSH or
-ADPCM encoded samples (used in MDZ files)  are handled transparently, and
+Modules  compressed  with  gzip, bzip2,  compress, MO3, MMCMP, Powerpack,
+SQSH  or ADPCM samples (used in MDZ files) are handled transparently, and
 the first  file in a zip or lha archive will be played (the  zip unpacker
 skips files with non-module suffixes like .com, .exe, .diz or .txt common
 in DOS archives). Some loaders  (mostly packed mods) check the file  size
@@ -34,9 +34,11 @@ Impulse Tracker filter envelopes and  Imago Orpheus chorus/reverb effects
 are now supported using AWE cards with the OSS sequencer.  Many thanks to
 Davi Lima for donating an AWE card!
 
-The  latest  version is available at http://xmp.helllabs.org. Please send
-bug reports to  xmp-bugs@helllabs.org. Patches,  comments and suggestions
-are welcome.
+The latest version and bug tracker are available at http://xmp.sf.net.
+
+
+
+EXAMPLE MODULES
 
 The following modules can be found in modules/ directory:
 
@@ -202,7 +204,7 @@ for description of the command line arguments recognized by xmp.)
 
 LICENSE
 
-Extended Module Player (C)1996-2001 Claudio Matsuoka, Hipolito Carraro Jr
+Extended Module Player (C)1996-2005 Claudio Matsuoka, Hipolito Carraro Jr
 AWE-specific portions of oss_seq.c Copyright (C) 1996,1997 Takashi Iwai
 ulaw encoding function Copyright (C) 1989 Rich Gopstein and Harris Corp
 XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn
