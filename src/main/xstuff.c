@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.2 2002-05-30 12:10:51 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.3 2005-02-23 14:25:50 cmatsuoka Exp $
  */
 
 /*
@@ -18,8 +18,6 @@
  * It is possible to get xxmp to compile under FreeBSD. In the file xstuff.c
  * add #include<sys/types.h> before #include<sys/ipc.h>.
  */
-
-#ifndef XMMS_PLUGIN
 
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -48,7 +46,6 @@ static Window window, root;
 static XShmSegmentInfo shminfo;
 
 #define alloc_color(d,c,x) XAllocColor(d,c,x)
-#endif /* XMMS_PLUGIN */
 
 static unsigned long __color;
 static XColor color[20];
@@ -292,8 +289,6 @@ void setpalette (char **bg)
 }
 
 
-#ifndef XMMS_PLUGIN
-
 void putimage (int x, int y, int w, int h)
 {
     XShmPutImage (display, window, gc, ximage, x, y, x, y, w, h, 0);
@@ -455,4 +450,3 @@ int create_window (char *s, char *c, int w, int h, int argc, char **argv)
     return 0;
 }
 
-#endif /* !XMMS_PLUGIN */

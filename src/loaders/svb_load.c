@@ -1,7 +1,7 @@
 /* Silverball MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.3 2005-02-21 21:10:13 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.4 2005-02-23 14:25:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,7 @@
 #include "load.h"
 #include "period.h"
 
+/* FIXME: effects translation */
 
 int svb_load (FILE * f)
 {
@@ -138,8 +139,8 @@ int svb_load (FILE * f)
 				event = &EVENT(i, c, r);
 	
 				if (b & 0x80) {
-					event->note = read8(f) + 1;
-					event->ins = read8(f) + 1;
+					event->note = read8(f) + 24 + 1;
+					event->ins = read8(f);
 					len -= 2;
 				}
 	
@@ -152,7 +153,7 @@ int svb_load (FILE * f)
 					event->fxt = read8(f);
 					event->fxp = read8(f);
 					len -= 2;
-printf("p%d r%d c%d: %02x %02x\n", i, r, c, event->fxt, event->fxp);
+/* printf("p%d r%d c%d: %02x %02x\n", i, r, c, event->fxt, event->fxp); */
 				}
 			}
 		}

@@ -1,11 +1,11 @@
-/* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+/* File details panel for the BMP/XMMS plugin
+ * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.5 2005-02-23 14:25:50 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.1 2005-02-23 14:25:50 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -22,8 +22,6 @@
 #include "config.h"
 #endif
 
-#include "bg1.xpm"
-#include "bg3.xpm"
 #include "bg2.xpm"
 
 #define rightmsg(f,x,y,s,c,b) \
@@ -51,6 +49,12 @@ extern int skip;
 static char **bg;
 
 void rdft(int, int, float *, int *, float *);
+
+
+int new_module = 0;
+#define xmp_check_parent(i) (new_module)
+#define xmp_wait_parent() do { if (!new_module) return 1; } while (0)
+#define xmp_tell_parent() do { new_module = 0; } while (0)
 
 
 void volume_bars (int mode)
@@ -241,10 +245,7 @@ void shadowmsg (struct font_header *f, int x, int y, char *s, int c, int b)
 
 void set_palette ()
 {
-    char **_bg[] =
-    {bg1, bg2, bg3};
-
-    bg = _bg[rand () % 3];
+    bg = bg2;
     setpalette (bg);
 }
 
@@ -454,9 +455,7 @@ int panel_loop ()
 	}
 
 	if (ii->pause || ii->mi.chn == 0) {
-	    update_display ();
-	    if (!xmp_check_parent (125))
-		return 1;
+	    return 1;
 	}
 
 	put_rectangle (177, 106, 15, 13, p);
