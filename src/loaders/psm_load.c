@@ -161,7 +161,7 @@ static void get_pbod (int size, void *buffer)
 			c = p[pos++];
 			rowlen -= 2;
 	
-if (f & 0x0f) printf("%d: %d: %d: %02x\n", i, r, c, f);
+if (f & 0x0f) printf("p%d r%d c%d: unknown flag %02x\n", i, r, c, f);
 
 			event = c < xxh->chn ? &EVENT(i, c, r) : &dummy;
 	
@@ -199,7 +199,7 @@ if (f & 0x0f) printf("%d: %d: %d: %02x\n", i, r, c, f);
 						fxp = (fxp + 1) * 2;
 						break; }
 					default:
-printf("comp: %d %d %d: %02x %02x\n", i, r, c, fxt, fxp);
+printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, c, fxt, fxp);
 					}
 				} else
 				switch (fxt) {
@@ -241,6 +241,11 @@ printf("comp: %d %d %d: %02x %02x\n", i, r, c, fxt, fxp);
 					fxt = FX_EXTENDED;
 					fxp = (EX_RETRIG << 4) | (fxp & 0x0f); 
 					break;
+				case 0x29:		/* unknown */
+printf("\np%d r%d c%d: effect 0x29: %02x %02x %02x %02x", i, r, c, fxt, fxp, p[pos], p[pos + 1]);
+					pos += 2;
+					rowlen -= 2;
+					break;
 				case 0x33:		/* position Jump */
 					fxt = FX_JUMP;
 					break;
@@ -254,7 +259,7 @@ printf("comp: %d %d %d: %02x %02x\n", i, r, c, fxt, fxp);
 					fxt = FX_TEMPO;
 					break;
 				default:
-printf("p%d r%d c%d: %02x %02x\n", i, r, c, fxt, fxp);
+printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, c, fxt, fxp);
 					fxt = fxp = 0;
 				}
 	
