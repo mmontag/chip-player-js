@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.3 2002-05-30 23:19:52 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.4 2002-07-27 21:40:21 cmatsuoka Exp $
  */
 
 #include "xmp-plugin.h"
@@ -407,14 +407,12 @@ void *catch_info (void *arg)
 }
 
 
-static void play_file(char *filename)
+static void play_file (char *filename)
 {
 	int channelcnt = 1;
 	int format = FMT_U8;
 	FILE *f;
 	char *info;
-	//char *temp;
-	//int fd;
 	
 	_D("play_file: %s", filename);
 

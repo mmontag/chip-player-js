@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.1 2001-06-02 20:26:09 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.2 2002-07-27 21:40:20 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -235,7 +235,6 @@ void	xmp_register_driver_callback	(void (*)(void *, int));
 void	xmp_init_callback		(struct xmp_control *,
 					 void (*)(void *, int));
 int	xmp_player_ctl			(int, int);
-
 int	xmp_open_audio			(struct xmp_control *);
 void	xmp_close_audio			(void);
 int	xmp_play_module			(void);

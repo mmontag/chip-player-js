@@ -178,6 +178,8 @@ int xmp_play_module ()
 	free (med_wav_table);
     }
 
+    _D (_D_INFO "Freeing memory");
+
     for (i = 0; i < xxh->trk; i++)
 	free (xxt[i]);
     for (i = 0; i < xxh->pat; i++)
@@ -227,7 +229,7 @@ int xmp_verbosity_level (int i)
 int xmp_seek_time (int time)
 {
     int i, t;
-    _D("seek to %d, total %d", time, xmp_cfg.time);
+    /* _D("seek to %d, total %d", time, xmp_cfg.time); */
 
     time *= 1000;
     for (i = 0; i < xxh->len; i++) {

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.1 2001-06-02 20:27:44 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.2 2002-07-27 21:40:21 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -181,7 +181,7 @@ void spectrum_analyser (int mode, int *buf, int n)
     int x, y, w, k, r, i, v;
     static float a[128], ww[128 * 5 / 4];
     static int ip[18] = { 0 };
-    static old_value[FRQ];
+    static int old_value[FRQ];
 
     if (n == 0)
 	return;

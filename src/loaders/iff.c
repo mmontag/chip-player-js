@@ -17,8 +17,8 @@
 #include "iff.h"
 
 static struct iff_info *iff_head = NULL;
-static __id_size;
-static __flags;
+static int __id_size;
+static int __flags;
 
 void iff_chunk (FILE *f)
 {
