@@ -190,7 +190,7 @@ static dword readbits (byte b)
 /* gets block of compressed data from file */
 
 static int readblock (FILE *f)
-{				
+{
     word size;
 
     if (!fread (&size, 2, 1, f))	/* block layout: word size, <size> bytes data */
@@ -224,7 +224,7 @@ static int freeblock ()
 /*  decompression routines                                                */
 /* ---------------------------------------------------------------------- */
 
-/* decompresses 8-bit sample (params : file, outbuffer, lenght of 
+/* decompresses 8-bit sample (params : file, outbuffer, length of
  *                                     uncompressed sample, IT2.15
  *                                     compression flag
  *                            returns: status                     )
@@ -308,7 +308,7 @@ int itsex_decompress8 (FILE *module, void *dst, int len, int it215)
 
 	}
 
-	/* now subtract block lenght from total length and go on */
+	/* now subtract block length from total length and go on */
 	freeblock ();
 	len -= blklen;
     }
@@ -317,7 +317,7 @@ int itsex_decompress8 (FILE *module, void *dst, int len, int it215)
 }
 
 
-/* decompresses 16-bit sample (params : file, outbuffer, lenght of
+/* decompresses 16-bit sample (params : file, outbuffer, length of
  *                                      uncompressed sample, IT2.15
  *                                      compression flag
  *                             returns: status                     )
@@ -404,7 +404,7 @@ int itsex_decompress16 (FILE *module, void *dst, int len, int it215)
 	    blkpos++;
 	}
 
-	/* now subtract block lenght from total length and go on */
+	/* now subtract block length from total length and go on */
 	freeblock ();
 	len -= blklen;
 
