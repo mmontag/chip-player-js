@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.2 2002-07-27 21:40:21 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.3 2004-09-16 00:38:44 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -409,7 +409,7 @@ void x11_event_callback (long i)
 }
 
 
-void *display_loop (void *arg)
+void display_loop ()
 {
     panel_setup ();
     while (42)

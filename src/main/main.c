@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: main.c,v 1.3 2002-07-27 21:40:20 cmatsuoka Exp $
+ * $Id: main.c,v 1.4 2004-09-16 00:38:44 cmatsuoka Exp $
  */
 
 /*
@@ -537,7 +537,7 @@ int main (int argc, char **argv)
 		    exit (-1);
 		set_palette ();
 		prepare_screen ();
-		display_loop (0);
+		display_loop ();
 	    }
 	}
 	xmp_tell_child ();  /* We have module_info */
