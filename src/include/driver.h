@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.1 2001-06-02 20:26:06 cmatsuoka Exp $
+ * $Id: driver.h,v 1.2 2001-11-07 23:14:23 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -59,10 +59,11 @@ struct patch_info {
 	token = strtok (*parm, ":="); token = strtok (NULL, "");
 #define parm_end() }
 #define parm_error() { \
-	fprintf (stderr, "xmp: incorrect parameters in -c %s\n", *parm); \
+	fprintf (stderr, "xmp: incorrect parameters in -D %s\n", *parm); \
 	exit (-4); }
-#define chkparm0(x,y) { if (!strcmp (*parm,x)) { y; } }
-#define chkparm1(x,y) { if (!strcmp (*parm,x)) { y; } }
+#define chkparm1(x,y) { \
+	if (!strcmp (*parm,x)) { \
+	    if (token == NULL) parm_error ()  else { y; } } }
 #define chkparm2(x,y,z,w) { if (!strcmp (*parm,x)) { \
 	if (2 > sscanf (token, y, z, w)) parm_error (); } }
 
