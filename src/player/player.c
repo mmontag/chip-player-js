@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.1 2001-06-02 20:28:17 cmatsuoka Exp $
+ * $Id: player.c,v 1.2 2002-07-27 18:18:22 cmatsuoka Exp $
  */
 
 /*
@@ -289,21 +289,30 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
     }
 
     if (key) {
+
         if (key == XMP_KEY_FADE) {
             SET (FADEOUT);
 	    flg &= ~(RESET_VOL | RESET_ENV);
         } else if (key == XMP_KEY_CUT) {
             xmp_drv_resetchannel (chn);
         } else if (key == XMP_KEY_OFF) {
-            SET (RELEASE);
+            SET (RELEASE | KEYOFF);
 	    flg &= ~(RESET_VOL | RESET_ENV);
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
 	    /* This test should fix portamento behaviour in 7spirits.s3m */
 	    if (xmp_ctl->fetch & XMP_CTL_RTGINS && e->ins && xc->ins != ins) {
 		flg |= NEW_INS;
 		xins = ins;
-	    } else
+	    } else if (TEST (KEYOFF)) {
+		/* When a toneporta is issued after a keyoff event,
+		 * retrigger the instrument (xr-nc.xm, bug #586377)
+		 */
+		RESET (KEYOFF);
+		flg |= NEW_INS;
+		xins = ins;
+	    } else {
         	key = 0;
+	    }
         } else if (flg & NEW_INS) {
             xins = ins;
         } else {

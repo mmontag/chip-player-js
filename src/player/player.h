@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.1 2001-06-02 20:28:19 cmatsuoka Exp $
+ * $Id: player.h,v 1.2 2002-07-27 18:18:22 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -73,6 +73,7 @@ struct flow_control {
 #define IS_READY	0x01000000
 #define FADEOUT		0x02000000
 #define RELEASE		0x04000000
+#define KEYOFF		0x08000000
 
 /* Prefixes: 
  * a_ for arpeggio

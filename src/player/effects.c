@@ -26,9 +26,6 @@ static struct retrig_t rval[] = {
     {   0,  0,  1 }	/* Note cut */
 };
     
-/*
- * gotos are wonderful if you know what you're doing
- */
 
 void
 process_fx (int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
