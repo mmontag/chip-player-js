@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.3 2005-02-25 13:33:12 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.4 2005-02-25 13:36:57 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -411,7 +411,6 @@ static void get_chunk_tr(int size, FILE *f)
 static void get_chunk_ii(int size, FILE *f)
 {
     int i, j;
-    char *instr;
 
     xxh->ins = read8(f);
 
@@ -427,8 +426,10 @@ static void get_chunk_ii(int size, FILE *f)
 	str_adj(xxih[i].name);
 	fseek(f, 8, SEEK_CUR);
 
-	if (V (1) && (strlen ((char *) xxih[i].name) || xxih[i].nsm))
-	    report ("\n[%2X] %-32.32s %2d ", i_index[i], instr, xxih[i].nsm);
+	if (V (1) && (strlen ((char *) xxih[i].name) || xxih[i].nsm)) {
+	    report ("\n[%2X] %-32.32s %2d ", i_index[i], xxih[i].name,
+		xxih[i].nsm);
+	}
 
 	xxi[i] = calloc (sizeof (struct xxm_instrument), xxih[i].nsm);
 
