@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.4 2005-02-20 15:19:22 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.5 2005-02-20 17:46:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -54,6 +54,9 @@ int amf_load(FILE * f)
 
 	if (ver >= 0x0d) {
 		fread(buf, 1, 32, f);		/* panning table */
+		for (i = 0; i < 32; i++) {
+			xxc->pan = 0x80 + 2 * (int8)buf[i];
+		}
 		xxh->bpm = read8(f);
 		xxh->tpo = read8(f);
 	} else if (ver >= 0x0b) {
@@ -213,10 +216,10 @@ int amf_load(FILE * f)
 					break;
 				case 0x84:
 					if ((int8)t3 > 0) {
-						fxt = FX_PORTA_UP;
+						fxt = FX_PORTA_DN;
 						fxp = t3;
 					} else {
-						fxt = FX_PORTA_DN;
+						fxt = FX_PORTA_UP;
 						fxp = -(int8)t3;
 					}
 					break;
@@ -289,10 +292,10 @@ int amf_load(FILE * f)
 					break;
 				case 0x92:
 					if ((int8)t3 > 0) {
-						fxt = FX_PORTA_UP;
+						fxt = FX_PORTA_DN;
 						fxp = 0xf0 | (fxp & 0x0f);
 					} else {
-						fxt = FX_PORTA_DN;
+						fxt = FX_PORTA_UP;
 						fxp = 0xf0 | (fxp & 0x0f);
 					}
 					break;
@@ -312,16 +315,17 @@ int amf_load(FILE * f)
 					break;
 				case 0x96:
 					if ((int8)t3 > 0) {
-						fxt = FX_PORTA_UP;
+						fxt = FX_PORTA_DN;
 						fxp = 0xe0 | (fxp & 0x0f);
 					} else {
-						fxt = FX_PORTA_DN;
+						fxt = FX_PORTA_UP;
 						fxp = 0xe0 | (fxp & 0x0f);
 					}
 					break;
 				case 0x97:
+					fxt = FX_SETPAN;
+					fxp = 0x80 + 2 * (int8)t3;
 					break;
-					
 				}
 
 				event->fxt = fxt;
