@@ -5,7 +5,11 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.1 2001-06-02 20:25:57 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.2 2002-07-27 18:29:07 cmatsuoka Exp $
+ */
+
+/*
+ * devfs /dev/sound/dsp support by Dirk Jagdmann
  */
 
 #ifdef HAVE_CONFIG_H
@@ -79,7 +83,6 @@ struct xmp_drv_info drv_oss_mix = {
     NULL
 };
 
-static char *dev_audio = "/dev/dsp";
 static int fragnum, fragsize;
 static int do_sync = 1;
 #ifdef HAVE_AUDIO_BUF_INFO
@@ -168,6 +171,8 @@ static void setaudio (struct xmp_control *ctl)
 
 static int init (struct xmp_control *ctl)
 {
+    char *dev_audio[] = { "/dev/dsp", "/dev/sound/dsp" };
+
 #ifdef HAVE_AUDIO_BUF_INFO
     audio_buf_info info;
     static char buf[80];
@@ -177,7 +182,7 @@ static int init (struct xmp_control *ctl)
 
     parm_init ();
     chkparm2 ("frag", "%d,%d", &fragnum, &i);
-    chkparm1 ("dev", dev_audio = token);
+    chkparm1 ("dev", dev_audio[0] = token);
 #ifdef HAVE_AUDIO_BUF_INFO
     chkparm1 ("voxware", voxware = 1);
 #endif
@@ -190,8 +195,11 @@ static int init (struct xmp_control *ctl)
     if (fragnum > 1)
 	fragnum--;
 
-    if ((audio_fd = open (dev_audio, O_WRONLY)) == -1)
-	return XMP_ERR_DINIT;
+    for(i=0; i<sizeof(dev_audio)/sizeof(dev_audio[0]); i++)
+      if ((audio_fd = open (dev_audio[i], O_WRONLY)) >= 0)
+	break;
+    if(audio_fd<0)
+      return XMP_ERR_DINIT;
 
     setaudio (ctl);
 

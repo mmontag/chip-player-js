@@ -53,6 +53,9 @@ The Authors
 * Takashi Iwai <iwai@ww.uni-erlangen.de>
 - AWE sequencer support
 
+* Dirk Jagdmann <doj@users.sourceforge.net>
+- devfs sound device support
+
 * Priit Jarv
 - FreeBSD port of xmp 1.0.1
 
