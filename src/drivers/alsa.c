@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa.c,v 1.2 2005-02-24 12:52:12 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.3 2005-02-24 16:09:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -77,14 +77,14 @@ static snd_pcm_t *pcm_handle;
 
 static int frag_num = 4;
 static size_t frag_size = 4096;
-static char *mybuffer = NULL;  /* malloc'd */
-static char *mybuffer_nextfree = NULL;
+static char *buf = NULL;  /* malloc'd */
+static char *buf_nextfree = NULL;
 
 
 static int init (struct xmp_control *ctl)
 {
 	snd_pcm_hw_params_t *hwparams;
-	int retcode;
+	int ret;
 	char *token, **parm; /* used by parm_init...chkparm...parm_end */
 	unsigned int channels, rate;
 	unsigned int btime, ptime;
@@ -99,22 +99,18 @@ static int init (struct xmp_control *ctl)
 	chkparm1("card", card_name = token);	/* NB: macro */
 	parm_end();				/* NB: macro */
 
-	if (mybuffer) {
-		free(mybuffer),
-		mybuffer = mybuffer_nextfree = NULL;
-	}
-	mybuffer = malloc(frag_size);
-
-	if (mybuffer) {
-		mybuffer_nextfree = mybuffer;
-	} else {
+	if ((buf = malloc(frag_size)) == NULL) {
 		printf("Unable to allocate memory for ALSA mixer buffer\n");
 		return XMP_ERR_DINIT;
 	}
 
-	if ((retcode = snd_pcm_open(&pcm_handle, card_name,
-		SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK)) < 0) {
-		printf("Unable to initialize ALSA pcm device: %s\n", snd_strerror(retcode));
+	buf_nextfree = buf;
+
+	if ((ret = snd_pcm_open(&pcm_handle, card_name,
+		SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
+		printf("Unable to initialize ALSA pcm device: %s\n",
+			snd_strerror(ret));
+		free(buf);
 		return XMP_ERR_DINIT;
 	}
 
@@ -123,36 +119,39 @@ static int init (struct xmp_control *ctl)
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_hw_params_any(pcm_handle, hwparams);
-	snd_pcm_nonblock(pcm_handle, 0);
 	snd_pcm_hw_params_set_access(pcm_handle, hwparams,
 		SND_PCM_ACCESS_RW_INTERLEAVED);
 	snd_pcm_hw_params_set_format(pcm_handle, hwparams, to_fmt(ctl));
 	snd_pcm_hw_params_set_rate_near(pcm_handle, hwparams, &rate, 0);
 	snd_pcm_hw_params_set_channels_near(pcm_handle, hwparams, &channels);
+#if 0
 	snd_pcm_hw_params_set_buffer_time_near(pcm_handle, hwparams, &btime, 0);
 	snd_pcm_hw_params_set_period_time_near(pcm_handle, hwparams, &ptime, 0);
+#endif
 	
-	if ((retcode = snd_pcm_hw_params(pcm_handle, hwparams)) < 0) {
+	if ((ret = snd_pcm_hw_params(pcm_handle, hwparams)) < 0) {
 		printf("Unable to set ALSA output parameters: %s\n",
-			snd_strerror(retcode));
+			snd_strerror(ret));
 		return XMP_ERR_DINIT;
 	}
 
 	if (prepare_driver() < 0)
 		return XMP_ERR_DINIT;
   
+	ctl->freq = rate;
+
 	return xmp_smix_on(ctl);
 }
 
 
 static int prepare_driver(void)
 {
-	int retcode;
+	int ret;
 
-	if ((retcode = snd_pcm_prepare(pcm_handle)) < 0 ) {
+	if ((ret = snd_pcm_prepare(pcm_handle)) < 0 ) {
 		printf("Unable to prepare ALSA plugin: %s\n",
-			snd_strerror(retcode));
-		return retcode;
+			snd_strerror(ret));
+		return ret;
 	}
 
 	return 0;
@@ -191,34 +190,43 @@ static int to_fmt(struct xmp_control *ctl)
 
 static void bufwipe (void)
 {
-	mybuffer_nextfree = mybuffer;
+	buf_nextfree = buf;
 }
 
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump (int i)
+static void bufdump(int i)
 {
 	void *b;
 
-	b = xmp_smix_buffer ();
+	b = xmp_smix_buffer();
 
-	while (i>0) {
-		size_t f = (frag_size) - (mybuffer_nextfree - mybuffer);
+#if 0
+	while (i > 0) {
+		size_t f = (frag_size) - (buf_nextfree - buf);
 		size_t to_copy = (f<i) ? f : i;
-		memcpy(mybuffer_nextfree, b, to_copy);
+		memcpy(buf_nextfree, b, to_copy);
 		b += to_copy;
-		mybuffer_nextfree += to_copy;
+		buf_nextfree += to_copy;
 		f -= to_copy;
 		i -= to_copy;
 		if (f == 0) {
 			int frames;
 			frames = snd_pcm_bytes_to_frames(pcm_handle, frag_size);
-			snd_pcm_writei(pcm_handle, mybuffer, frames);
-			mybuffer_nextfree = mybuffer;
+			snd_pcm_writei(pcm_handle, buf, frames);
+			buf_nextfree = buf;
 		}
 	}
+#endif
+
+	{
+		int frames;
+		frames = snd_pcm_bytes_to_frames(pcm_handle, i);
+		snd_pcm_writei(pcm_handle, buf, frames);
+	}
+
 }
 
 
