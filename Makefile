@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.2 2001-11-09 00:53:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.3 2001-11-09 21:45:08 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -151,8 +151,23 @@ rpm:
 deb:
 	fakeroot debian/rules binary
 
+graph: delgraph callgraph.ps
+
+delgraph:
+	rm -f callgraph.ps
+
+callgraph.ps:
+	cflow -gAP -Isrc/include src/*/*c 2>/dev/null | \
+		scripts/cflow2dot.pl > callgraph.dot
+	dot -Tps -o$@ callgraph.dot
+
 Makefile.rules: Makefile.rules.in
-	./config.status
+	if [ -f config.status ]; then \
+	    ./config.status; \
+	else \
+	    [ -f configure ] || autoconf; \
+	    ./configure; \
+	fi
 
 $(OBJS): Makefile
 
