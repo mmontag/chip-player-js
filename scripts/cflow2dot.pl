@@ -1,11 +1,12 @@
 #!/usr/bin/perl
 #
-# $Id: cflow2dot.pl,v 1.2 2001-11-09 22:15:32 cmatsuoka Exp $
+# $Id: cflow2dot.pl,v 1.3 2001-11-10 19:09:18 cmatsuoka Exp $
 
 $driver   = "color=red";
 $fmopl    = "color=orange";
 $mixer    = "color=green";
 $player   = "color=blue";
+$loader   = "color=purple";
 
 $api      = "shape=box";
 $resource = "style=filled";
@@ -22,18 +23,22 @@ while (<>) {
 	#
 	$x = $_;
 	if (/\t*(\w+) {.*\/(\w+)\.c/) {
-		(my $x, $_) = ($1, $2);
-		/_load/    && print "\t$x [$loader];\n";
-		/^fmopl/   && print "\t$x [$fmopl];\n";
-		/^driver/  && print "\t$x [$driver];\n";
-		/^mixer/   && print "\t$x [$mixer];\n";
-		/^mix_/    && print "\t$x [$mixer];\n";
-		/^effects/ && print "\t$x [$player];\n";
-		/^period/  && print "\t$x [$player];\n";
-		/^player/  && print "\t$x [$player];\n";
-		/^scan/    && print "\t$x [$player];\n";
+		my ($func, $file) = ($1, $2);
 
-		($x =~ /^xmp_/) && print "\t$x [$api];\n";
+		set_color ($func, "^fmopl",   $fmopl,   $file);
+		set_color ($func, "^driver",  $driver,  $file);
+		set_color ($func, "^mixer",   $mixer,   $file);
+		set_color ($func, "^mix_",    $mixer,   $file);
+		set_color ($func, "^player",  $player,  $file);
+		set_color ($func, "^scan",    $player,  $file);
+		set_color ($func, "^effects", $player,  $file);
+		set_color ($func, "^period",  $player,  $file);
+		set_color ($func, "^load",    $loader,  $file);
+		set_color ($func, "^depack",  $loader,  $file);
+		set_color ($func, "^unsqsh",  $loader,  $file);
+		set_color ($func, "^mmcmp",   $loader,  $file);
+
+		($func =~ /^xmp_/) && print "\t$func [$api];\n";
 	}
 	$_ = $x;
 
@@ -62,3 +67,13 @@ while (<>) {
 
 print "}\n";
 
+
+sub set_color {
+	my ($func, $re, $color, $file) = @_;
+
+	if ($file =~ /$re/) {
+		print "\t$func [$color];\n";
+		$edge{$func} = $color;
+	}
+M
+}

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: ims_load.c,v 1.1 2001-11-10 10:43:30 cmatsuoka Exp $
+ * $Id: ims_load.c,v 1.2 2001-11-10 19:09:19 cmatsuoka Exp $
  */
 
 /* Loader for Images Music System modules based on the EP replayer.
@@ -40,7 +40,7 @@
 
 struct ims_instrument {
     uint8 name[20];
-    int16 finetune;
+    int16 finetune;		/* Causes squeaks in beast-busters1! */
     uint16 size;
     uint8 unknown;
     uint8 volume;
@@ -65,7 +65,7 @@ int ims_load (FILE *f)
     struct xxm_event *event;
     struct ims_header ih;
     uint8 ims_event[3];
-    int xpo = 24;		/* Wild guess */
+    int xpo = 21;		/* Tuned against UADE */
 
     LOAD_INIT ();
 
@@ -127,7 +127,7 @@ int ims_load (FILE *f)
 	xxs[i].len = 2 * ih.ins[i].size;
 	xxs[i].lpe = xxs[i].lps + 2 * ih.ins[i].loop_size;
 	xxs[i].flg = ih.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = ih.ins[i].finetune;
+	xxi[i][0].fin = 0; /* ih.ins[i].finetune; */
 	xxi[i][0].vol = ih.ins[i].volume;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
