@@ -47,6 +47,11 @@ The Authors
 * Terry Glass <tglass@bigfoot.com>
 - esd driver fixes
 
+* Mike Gorchak <mike@malva.ua>
+- QNX6 portability fix
+- updated OPL emulation
+- misc hacks
+
 * Keith Hargrove <Keith.Hargrove@Eng.Sun.COM>
 - Solaris driver fixes
 
@@ -78,7 +83,8 @@ The Authors
 - NetBSD and OpenBSD enhanced drivers
 
 * Dominik Mierzejewski <dmierzej@elka.pw.edu.pl>
-- Fixes for gcc 2.96/glibc 2.2
+- fixes for gcc 2.96/glibc 2.2
+- package maintenance
 
 * Griff Miller II <griff.miller@positron.com>
 - fix for XMMS plugin in big-endian machines
