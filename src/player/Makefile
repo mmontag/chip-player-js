@@ -1,5 +1,5 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.1 2001-06-02 20:28:03 cmatsuoka Exp $
+# $Id: Makefile,v 1.2 2001-11-30 11:03:21 cmatsuoka Exp $
 
 XCFLAGS	= -I../include -DLIBDIR='"$(LIB_DIR)"'
 OBJS	= convert.o driver.o formats.o misc.o period.o player.o \
@@ -8,7 +8,7 @@ OBJS	= convert.o driver.o formats.o misc.o period.o player.o \
 XOBJS	= version.o $(MIXER)
 XDEPS	=
 DFILES	= Makefile $(OBJS:.o=.c) effects.c mixer.c player.h mix_all.c \
-	  fmopl.h synth.h fmopl.c-dfsg fmopl.h-dfsg
+	  fmopl.h synth.h
 DDIRS	=
 LIB	= ../../lib/libxmp.a
 CFILES	= $(LIB) version.c $(DRIVERS)

@@ -1,142 +1,142 @@
 
 The Authors
 
-- Rob Adamson <R.Adamson@fitz.cam.ac.uk>
-  * ALSA 0.5 driver fixes
+* Rob Adamson <R.Adamson@fitz.cam.ac.uk>
+- ALSA 0.5 driver fixes
 
-- Tijs van Bakel <smoke@casema.net>
-  * ALSA 0.5 driver fixes
+* Tijs van Bakel <smoke@casema.net>
+- ALSA 0.5 driver fixes
 
-- Marc R. Boyns <boyns@sdsu.edu>
-  * --nocmd command line option
+* Marc R. Boyns <boyns@sdsu.edu>
+- --nocmd command line option
 
-- Frederic Bujon <lvdl@bigfoot.com>
-  * XM pan fix
+* Frederic Bujon <lvdl@bigfoot.com>
+- XM pan fix
 
-- Douglas Carmichael <dcarmich@mcs.com>
-  * RT priority in FreeBSD
+* Douglas Carmichael <dcarmich@mcs.com>
+- RT priority in FreeBSD
 
-- Hipolito Carraro Jr <hipolito@onda.com.br>
-  * main player coding
-  * software mixer
-  * virtual channel system design and implementation
+* Hipolito Carraro Jr <hipolito@onda.com.br>
+- main player coding
+- software mixer
+- virtual channel system design and implementation
 
-- Rudolf Cejka <cejkar@dcse.fee.vutbr.cz>
-  * MED loader alignment and endianism fixes
-  * XM loader endianism fixes
-  * S3M loader fixes
+* Rudolf Cejka <cejkar@dcse.fee.vutbr.cz>
+- MED loader alignment and endianism fixes
+- XM loader endianism fixes
+- S3M loader fixes
 
-- Chris Cox <cox.family@sk.sympatico.ca>
-  * fixes for OpenBSD 2.8
-  * S3M loader fixes
-  * option parsing fixes
+* Chris Cox <cox.family@sk.sympatico.ca>
+- fixes for OpenBSD 2.8
+- S3M loader fixes
+- option parsing fixes
 
-- Michael Doering <mldoering@gmx.net>
-  * RAR unpacking support
-  * PP20 decrunching fixes
+* Michael Doering <mldoering@gmx.net>
+- RAR unpacking support
+- PP20 decrunching fixes
 
-- Brian Downing <bdowning@wolfram.com>
-  * SGI and endianism fixes
+* Brian Downing <bdowning@wolfram.com>
+- SGI and endianism fixes
 
-- Rune Elvemo <relvemo@grm.hia.no>
-  * fixes for endianism problems in Linux/PPC
+* Rune Elvemo <relvemo@grm.hia.no>
+- fixes for endianism problems in Linux/PPC
 
-- Nils Faerber <Nils.Faerber@unix-ag.org>
-  * fixed OSS sequencer timing in Alpha
+* Nils Faerber <Nils.Faerber@unix-ag.org>
+- fixed OSS sequencer timing in Alpha
 
-- Terry Glass <tglass@bigfoot.com>
-  * esd driver fixes
+* Terry Glass <tglass@bigfoot.com>
+- esd driver fixes
 
-- Keith Hargrove <Keith.Hargrove@Eng.Sun.COM>
-  * Solaris driver fixes
+* Keith Hargrove <Keith.Hargrove@Eng.Sun.COM>
+- Solaris driver fixes
 
-- Takashi Iwai <iwai@ww.uni-erlangen.de>
-  * AWE sequencer support
+* Takashi Iwai <iwai@ww.uni-erlangen.de>
+- AWE sequencer support
 
-- Priit Jarv
-  * FreeBSD port of xmp 1.0.1
+* Priit Jarv
+- FreeBSD port of xmp 1.0.1
 
-- John v/d Kamp <blade_@dds.nl>
-  * 15 bpp support for xxmp
+* John v/d Kamp <blade_@dds.nl>
+- 15 bpp support for xxmp
 
-- Kevin Langman <langman@earthling.net>
-  * OS/2 port and OS/2 DART drivers
+* Kevin Langman <langman@earthling.net>
+- OS/2 port and OS/2 DART drivers
 
-- Andrew "Alf" Leahy <a.leahy@cit.nepean.uws.edu.au>
-  * fixes for Digital UNIX
+* Andrew "Alf" Leahy <a.leahy@cit.nepean.uws.edu.au>
+- fixes for Digital UNIX
 
-- Claudio Matsuoka <claudio@helllabs.org>
-  * main player coding
-  * module loaders
-  * sound drivers
+* Claudio Matsuoka <claudio@helllabs.org>
+- main player coding
+- module loaders
+- sound drivers
 
-- Michael <skumle@grin.dk>
-  * NetBSD port fixes
-  * NetBSD and OpenBSD enhanced drivers
+* Michael <skumle@grin.dk>
+- NetBSD port fixes
+- NetBSD and OpenBSD enhanced drivers
 
-- Dominik Mierzejewski <dmierzej@elka.pw.edu.pl>
-  * Fixes for gcc 2.96/glibc 2.2
+* Dominik Mierzejewski <dmierzej@elka.pw.edu.pl>
+- Fixes for gcc 2.96/glibc 2.2
 
-- Griff Miller II <griff.miller@positron.com>
-  * fix for XMMS plugin in big-endian machines
+* Griff Miller II <griff.miller@positron.com>
+- fix for XMMS plugin in big-endian machines
 
-- Pavel Pavlov <Simon.Says@iname.com>
-  * esd driver fixes
+* Pavel Pavlov <Simon.Says@iname.com>
+- esd driver fixes
 
-- Geoff Reedy <vader21@imsa.edu>
-  * xxmp window title patch
+* Geoff Reedy <vader21@imsa.edu>
+- xxmp window title patch
 
-- Attila Sipos <h430827@stud.u-szeged.hu>
-  * SQSH decruncher checksum
+* Attila Sipos <h430827@stud.u-szeged.hu>
+- SQSH decruncher checksum
 
-- Miodrag Vallat <miod@mikmod.darkorb.net>
-  * 669 loader fixes
-  * XM loader endianism fixes
+* Miodrag Vallat <miod@mikmod.darkorb.net>
+- 669 loader fixes
+- XM loader endianism fixes
 
 
 Reused code
 
-- Sylvain Chipaux
-  * P60A loader
+* Sylvain Chipaux
+- P60A loader
 
-- Martin Denn <mdenn@unix-ag.uni-kl.de>
-  * portions of the NAS driver
+* Martin Denn <mdenn@unix-ag.uni-kl.de>
+- portions of the NAS driver
 
-- Marc Espie
-  * PowerPack decruncher
+* Marc Espie
+- PowerPack decruncher
 
-- Bert Jahn <jah@fh-zwickau.de>
-  * SQSH decruncher
+* Bert Jahn <jah@fh-zwickau.de>
+- SQSH decruncher
 
-- Tammo Hinrichs <kb@nwn.de>
-  * IT sample decruncher
+* Tammo Hinrichs <kb@nwn.de>
+- IT sample decruncher
 
-- Olivier Lapicque <olivierl@jps.net>
-  * 4-bit ADPCM decruncher
-  * MMCMP decruncher
-  * IT resonant filters
+* Olivier Lapicque <olivierl@jps.net>
+- 4-bit ADPCM decruncher
+- MMCMP decruncher
+- IT resonant filters
 
-- Tony Million
-  * portions of the win32 driver
+* Tony Million
+- portions of the win32 driver
 
-- Arturo R. Montesinos <arami@fi.upm.es>
-  * water effect algorithm
+* Arturo R. Montesinos <arami@fi.upm.es>
+- water effect eye-candy algorithm
 
-- Takuya Ooura <ooura@mmm.t.u-tokyo.ac.jp>
-  * FFT code
+* Takuya Ooura <ooura@mmm.t.u-tokyo.ac.jp>
+- FFT code
 
-- Tatsuyuki Satoh
-  * YM3812 emulator
+* Tatsuyuki Satoh
+- YM3812 emulator
 
 
 Other contributors
 
-- Testing and bug reports:
+* Testing and bug reports:
   Antti Huovilainen, Michael Janson, Matthias Leonhardt, Andy Eltsov,
   Davi Lima, Geoff Reedy, Sipos Attila, Bjoern Fisher, Matus Telgarsky,
   Bernhard März, Cyke O'Path, Rudolf Cejka and Igor Krpanic.
 
-- Module format specs and information:
+* Module format specs and information:
   Kilian Hekhuis (PTM), Arnaud Hasenfratz (RTM), Aley Keptr (ALM),
   Adi Sapir (LIQ), Sylvain "Asle" Chipaux (packed modules), Michael
   Schwendt (UST), Bjorn Wesen (Startrekker), Martin Willers (MOD tricks),
@@ -144,17 +144,17 @@ Other contributors
   Bernhard März (DPP), Laurent Clevy (Sound/Noise/Protracker details),
   Michael Doering (MED3/MED4)
 
-- Module samples
+* Module samples
   Sylvain Chipaux, Bert Jahn, Miod Vallat, Adi Sapir, Jools "BuZz" Smyth,
   Martin Jeppesen, Stuart Caie, Bernhard März.
 
-- Hardware
+* Hardware
   Davi Lima (AWE32 card with 2Mb RAM), Miod "Pitr" Vallat (Mach 3 rasoir,
   lames, baume après-rasage, pansements antiseptiques).
 
-- RPM packaging
+* RPM packaging
   Dominik Mierzejewski
 
-- Web space
+* Web space
   Robinson Mioshi (1996-97), Eric Bouquerel (1997-98)
 

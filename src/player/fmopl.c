@@ -22,9 +22,13 @@
 #include "driver.h"		/* use M.A.M.E. */
 
 /*** For xmp ***/
+/*
+ * This is the YM3812 emulator from MAME relicensed to LGPL in the
+ * Adplug adlib player, http://adplug.sourceforge.net/.
+ */
 #define HAS_YM3812 1
 #define INLINE inline
-/* $Id: fmopl.c,v 1.1 2001-06-02 20:28:27 cmatsuoka Exp $ */
+/* $Id: fmopl.c,v 1.2 2001-11-30 11:03:21 cmatsuoka Exp $ */
 
 #include "fmopl.h"
 

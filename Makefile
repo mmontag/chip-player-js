@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.4 2001-11-09 22:15:32 cmatsuoka Exp $
+# $Id: Makefile,v 1.5 2001-11-30 11:03:21 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -99,7 +99,7 @@ dist-dfsg:
 	$(MAKE) dist-post
 
 dist-wipenonfree:
-	cp $(FILE) `echo $(FILE)|sed 's/-dfsg$$//'`
+	mv $(FILE) `echo $(FILE)|sed 's/-dfsg$$//'`
 
 bz2: dist
 	@zcat $(DIST).tar.gz | bzip2 > $(DIST).tar.bz2

@@ -1,4 +1,4 @@
-$Id: README,v 1.3 2001-11-15 09:59:53 cmatsuoka Exp $
+$Id: README,v 1.4 2001-11-30 11:03:21 cmatsuoka Exp $
 
 
 
@@ -235,23 +235,4 @@ Original PowerPacker algorithm by Nico Francois.  THIS SOURCE-CODE CAN BE
 USED FOR NON COMMERCIAL  PURPOSES ONLY,  IN PPDECRUNCH OR TRACKER. PLEASE
 CONTACT Nico Francois (nico.francois@scala.com) FOR ANY OTHER USES.
 
-
-YM3812 emulator Copyright (C) 1999 Tatsuyuki Satoh
-
-The YM3812 emulator is part of MAME, the  Multi-Arcade Machine  Emulator.
-MAME is  strictly a no profit project. Its main purpose is to be a refer-
-ence to the inner workings of the emulated arcade machines. 
-
-If you distribute the binary, you should also distribute the source code.
-If you can't  do that, you  must provide a  pointer  to a place where the
-source can be obtained.
-
-The source code cannot be used in a commercial  product without a written
-authorization of the authors.  Use in non commercial  products is allowed
-and indeed  encouraged;  however if you use portions of the  MAME  source
-code in your program, you must make the full source code freely available
-as well.  Usage of the _information_ contained in the source code is free
-for any use.  However, given  the  amount of time and energy it  took  to
-collect this information,  we would appreciate if you made the additional
-information you might have freely available as well.
 
