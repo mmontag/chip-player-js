@@ -13,7 +13,7 @@
  * claudio's note: I don't care if it's a mess. My attempt to write a p60a
  *	depacker produced cleaner code that didn't work (tp_load.c).
  *
- * $Id: p60a_load.c,v 1.1 2001-06-02 20:27:02 cmatsuoka Exp $
+ * $Id: p60a_load.c,v 1.2 2003-06-24 23:31:41 dmierzej Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,6 +22,11 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
 /* #include "prowiz.h" */
 
 #include "load.h"
