@@ -58,3 +58,55 @@ void disable_continue_fx (struct xxm_event *event)
     }
 }
 
+uint8 read8(FILE *f)
+{
+	uint8 b;
+
+	fread(&b, 1, 1, f);
+
+	return b;
+}
+
+uint16 read16l(FILE *f)
+{
+	uint16 w;
+
+	fread(&w, 1, 2, f);
+	L_ENDIAN16(w);
+
+	return w;
+}
+
+uint16 read16b(FILE *f)
+{
+	uint16 w;
+
+	fread(&w, 1, 2, f);
+	B_ENDIAN16(w);
+
+	return w;
+}
+
+uint32 read32l(FILE *f)
+{
+	uint32 w;
+
+	fread(&w, 1, 4, f);
+	B_ENDIAN32(w);
+
+	return w;
+}
+
+uint32 read32b(FILE *f)
+{
+	uint16 w;
+
+	fread(&w, 1, 4, f);
+	B_ENDIAN32(w);
+
+	return w;
+}
+
+
+
+

@@ -6,6 +6,8 @@
  * for more information.
  */
 
+#ifndef __XMP_LOAD_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,3 +74,13 @@ void	disable_continue_fx	(struct xxm_event *);
 	xxt[i * xxh->chn + j]->rows = xxp[i]->rows; \
     } \
 }
+
+
+uint8	read8		(FILE *);
+uint16	read16l		(FILE *);
+uint16	read16b		(FILE *);
+uint32	read32l		(FILE *);
+uint32	read32b		(FILE *);
+
+
+#endif
