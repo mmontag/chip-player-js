@@ -145,6 +145,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
+#include "xmpi.h"
+
 
 /* ---------------------------------------------------------------------- */
 /*  some helpful typedefs which are lame, but so am I :)                  */
@@ -195,6 +198,9 @@ static int readblock (FILE *f)
 
     if (!fread (&size, 2, 1, f))	/* block layout: word size, <size> bytes data */
 	return 0;
+
+    L_ENDIAN16 (size);
+
     sourcebuffer = calloc (4, (size >> 2) + 2);
     if (!sourcebuffer)
 	return 0;
@@ -202,6 +208,10 @@ static int readblock (FILE *f)
 	free (sourcebuffer);
 	return 0;
     }
+
+    for (size = (size >> 2) + 2; size; size--)
+	L_ENDIAN32 (sourcebuffer[size - 1]);
+
     srcpos = sourcebuffer;
     srcrembits = 32;
     return 1;
@@ -334,6 +344,7 @@ int itsex_decompress16 (FILE *module, void *dst, int len, int it215)
     sword d1, d2;		/* integrator buffers (d2 for it2.15) */
     sword *destpos;		/* position in output buffer */
     sword v;			/* sample value */
+    int orig_len = len;		/* length of destination buffer, in words */
 
     destbuf = (sword *) dst;
     if (!destbuf)
@@ -409,6 +420,9 @@ int itsex_decompress16 (FILE *module, void *dst, int len, int it215)
 	len -= blklen;
 
     }
+
+    for (destpos = destbuf; orig_len > 0; orig_len--, destpos++)
+	L_ENDIAN16 (*destpos);
 
     return 1;
 }

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.3 2003-06-24 23:29:29 dmierzej Exp $
+ * $Id: options.c,v 1.4 2003-06-26 10:28:22 dmierzej Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -230,7 +230,7 @@ static void usage (char *s, struct xmp_control *opt)
 void get_options (int argc, char **argv, struct xmp_control *opt)
 {
     int optidx = 0;
-#define OPTIONS "8Bb:cD:d:f:hilLM:mo:P:qRrS:s:T:t:uVv"
+#define OPTIONS "8b:cD:d:f:hilLM:mo:P:qRrS:s:T:t:uVv"
     static struct option lopt[] =
     {
 	{ "8bit",		 0, 0, '8' },
@@ -282,7 +282,7 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	case '8':
 	    opt->flags |= XMP_CTL_8BIT;
 	    break;
-	case 'B':
+	case OPT_BIGENDIAN:
 	    opt->flags |= XMP_CTL_BIGEND;
 	    break;
 	case 'b':

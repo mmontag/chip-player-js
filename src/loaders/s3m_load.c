@@ -156,6 +156,7 @@ int s3m_load (FILE * f)
     L_ENDIAN16 (sfh.insnum);
     L_ENDIAN16 (sfh.patnum);
     L_ENDIAN16 (sfh.ffi);
+    L_ENDIAN16 (sfh.version);
     str_adj ((char *) sfh.name);
     strcpy (xmp_ctl->name, (char *) sfh.name);
     xxh->len = sfh.ordnum;

@@ -143,9 +143,9 @@ int stx_load (FILE * f)
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek (f, pp_ins[i] << 4, SEEK_SET);
 	fread (&sih, 1, sizeof (struct stx_instrument_header), f);
-	L_ENDIAN16 (sih.length);
-	L_ENDIAN16 (sih.loopbeg);
-	L_ENDIAN16 (sih.loopend);
+	L_ENDIAN32 (sih.length);
+	L_ENDIAN32 (sih.loopbeg);
+	L_ENDIAN32 (sih.loopend);
 	L_ENDIAN16 (sih.c2spd);
 	xxih[i].nsm = !!(xxs[i].len = sih.length);
 	xxs[i].lps = sih.loopbeg;
