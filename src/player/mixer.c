@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mixer.c,v 1.1 2001-06-02 20:28:14 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.2 2001-11-12 02:48:37 hipolito Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -322,6 +322,10 @@ static int softmixer ()
 		if (vi->end > vi->pos)
 		    smp_cnt = 0;
 
+	    /* Ok, this shouldn't happens, but in 'Languede.mod'... */
+	    if (smp_cnt < 0)
+		smp_cnt = 0;
+	    
 	    /* ...inside the tick boundaries */
 	    if (smp_cnt > tic_cnt)
 		smp_cnt = tic_cnt;
