@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: main.c,v 1.5 2005-02-09 19:24:42 cmatsuoka Exp $
+ * $Id: main.c,v 1.6 2005-02-21 12:28:34 cmatsuoka Exp $
  */
 
 /*
@@ -404,7 +404,7 @@ int main (int argc, char **argv)
 
     if (opt.verbose) {
 	fprintf (stderr, "Extended Module Player %s %s\n"
-	"Copyright (C) 1996-2002 Claudio Matsuoka and Hipolito Carraro Jr\n",
+	"Copyright (C) 1996-2005 Claudio Matsuoka and Hipolito Carraro Jr\n",
 	    xmp_version, xmp_date);
 #ifdef __EMX__
 	fprintf(stderr, "OS/2 Port by Kevin Langman (langman@earthling.net)\n" );

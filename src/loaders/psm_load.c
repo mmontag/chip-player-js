@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.18 2005-02-21 02:29:20 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.19 2005-02-21 12:28:33 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -42,6 +42,8 @@
  * even though the bundled players behaved as the libraries used with
  * Epic's games did and made the effects sound too strong."
  */
+
+/* FIXME: TODO: sinaria effects */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

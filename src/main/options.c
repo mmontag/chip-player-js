@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.4 2003-06-26 10:28:22 dmierzej Exp $
+ * $Id: options.c,v 1.5 2005-02-21 12:28:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -93,7 +93,7 @@ static void copyright_header ()
     printf ("Extended Module Player %s %s\n", xmp_version, xmp_date);
     printf 
     (
-"Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr\n"
+"Copyright (C) 1996-2005 Claudio Matsuoka and Hipolito Carraro Jr\n"
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1989 Rich Gopstein and\n"
 "Harris Corporation, (C) 1995 Marc Espie, (C) 1998 Tammo Hinrichs, (C) 1997\n"
 "Bert Jahn, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh,\n"
