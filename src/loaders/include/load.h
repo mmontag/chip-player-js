@@ -28,6 +28,22 @@ void	cvt_pt_event		(struct xxm_event *, uint8 *);
 void	disable_continue_fx	(struct xxm_event *);
 
 
+/* Endianism fixup */
+#define FIX_ENDIANISM_16(x)	(x=((((x)&0xff00)>>8)|(((x)&0xff)<<8)))
+#define FIX_ENDIANISM_32(x)	(x=(((x)&0xff000000)>>24)|(((x)&0xff0000)>>8)|\
+				  (((x)&0xff00)<<8)|(((x)&0xff)<<24))
+#ifdef WORDS_BIGENDIAN
+#define L_ENDIAN16(x)	FIX_ENDIANISM_16(x)
+#define L_ENDIAN32(x)	FIX_ENDIANISM_32(x)
+#define B_ENDIAN16(x)	(x=x)
+#define B_ENDIAN32(x)	(x=x)
+#else
+#define L_ENDIAN16(x)	(x=x)
+#define L_ENDIAN32(x)	(x=x)
+#define B_ENDIAN16(x)	FIX_ENDIANISM_16(x)
+#define B_ENDIAN32(x)	FIX_ENDIANISM_32(x)
+#endif
+
 #define LOAD_INIT() { \
     fseek (f, 0, SEEK_SET); \
     *tracker_name = *author_name = 0; \

@@ -99,22 +99,6 @@ typedef unsigned int uint32;
 #define _D(args...) do {} while (0)
 #endif
 
-/* Endianism fixup */
-#define FIX_ENDIANISM_16(x)	(x=((((x)&0xff00)>>8)|(((x)&0xff)<<8)))
-#define FIX_ENDIANISM_32(x)	(x=(((x)&0xff000000)>>24)|(((x)&0xff0000)>>8)|\
-				  (((x)&0xff00)<<8)|(((x)&0xff)<<24))
-#ifdef WORDS_BIGENDIAN
-#define L_ENDIAN16(x)	FIX_ENDIANISM_16(x)
-#define L_ENDIAN32(x)	FIX_ENDIANISM_32(x)
-#define B_ENDIAN16(x)	(x=x)
-#define B_ENDIAN32(x)	(x=x)
-#else
-#define L_ENDIAN16(x)	(x=x)
-#define L_ENDIAN32(x)	(x=x)
-#define B_ENDIAN16(x)	FIX_ENDIANISM_16(x)
-#define B_ENDIAN32(x)	FIX_ENDIANISM_32(x)
-#endif
-
 #define V(x) (xmp_ctl->verbose > (x))
 
 struct xmp_ord_info {

@@ -146,7 +146,8 @@
 #include <string.h>
 
 #include "config.h"
-#include "xmpi.h"
+#define __XMP_LOADERS_COMMON
+#include "load.h"
 
 
 /* ---------------------------------------------------------------------- */

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.1 2001-06-02 20:28:03 cmatsuoka Exp $
+ * $Id: convert.c,v 1.2 2005-02-25 16:29:34 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -219,8 +219,12 @@ void xmp_cvt_hsc2sbi (char *a)
     char b[11];
     int i;
 
-    for (i = 0; i < 10; i += 2)
-	FIX_ENDIANISM_16 (*(uint16 *)&a[i]);
+    for (i = 0; i < 10; i += 2) {
+	uint8 x;
+ 	x = a[i];
+	a[i] = a[i + 1];
+	a[i] = x;
+    }
 
     memcpy (b, a, 11);
     a[8] = b[10];

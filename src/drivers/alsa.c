@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa.c,v 1.4 2005-02-24 17:25:32 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.5 2005-02-25 16:29:34 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -110,6 +110,7 @@ static int init(struct xmp_control *ctl)
 	snd_pcm_hw_params_set_channels_near(pcm_handle, hwparams, &channels);
 	snd_pcm_hw_params_set_buffer_time_near(pcm_handle, hwparams, &btime, 0);
 	snd_pcm_hw_params_set_period_time_near(pcm_handle, hwparams, &ptime, 0);
+	snd_pcm_nonblock(pcm_handle, 0);
 	
 	if ((ret = snd_pcm_hw_params(pcm_handle, hwparams)) < 0) {
 		printf("Unable to set ALSA output parameters: %s\n",
