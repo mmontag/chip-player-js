@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.6 2002-05-30 12:34:24 cmatsuoka Exp $
+# $Id: Makefile,v 1.7 2002-05-30 23:19:51 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -63,12 +63,7 @@ uninstall:
 # 'diff' creates a diff file
 # 'rpm' generates a RPM package
 
-dist: docs Makefile dist-dfsg dist-nonfree
-	$(MAKE) diff OLDVER=$(VERSION) VERSION=$(VERSION)-nonfree
-	mv $(DIST)_$(VERSION)-nonfree.diff.gz $(DIST)-nonfree.patch.gz
-	rm $(DIST)-nonfree.tar.gz
-
-dist-pre:
+dist:
 	if [ -x /usr/bin/dh_clean ]; then dh_clean; fi
 	rm -Rf $(DIST) $(DIST).tar.gz
 	mkdir $(DIST)
@@ -78,28 +73,12 @@ dist-pre:
 	mv -f Makefile.rules.in Makefile.rules.old
 	cp $(DIST)/Makefile.rules.in .
 	chmod -R u+w $(DIST)/*
-
-dist-post:
 	tar cvf - $(DIST) | gzip -9c > $(DIST).tar.gz
 	rm -Rf $(DIST)
 	./config.status
 	touch -r Makefile.rules.old Makefile.rules.in Makefile.rules
 	sync
 	ls -l $(DIST).tar.gz
-
-dist-nonfree:
-	$(MAKE) dist-pre dist-post DIST=$(DIST)-nonfree
-
-dist-dfsg:
-	$(MAKE) dist-pre
-	find $(DIST)/src -name "*-dfsg" -exec $(MAKE) dist-wipenonfree FILE={} \;
-	(cd $(DIST); a=`grep -n "^59 Temple Place" README`; \
-	 mv README README.old; head -$${a%:*} README.old > README; \
-	 echo >> README; rm README.old)
-	$(MAKE) dist-post
-
-dist-wipenonfree:
-	mv $(FILE) `echo $(FILE)|sed 's/-dfsg$$//'`
 
 bz2: dist
 	@zcat $(DIST).tar.gz | bzip2 > $(DIST).tar.bz2

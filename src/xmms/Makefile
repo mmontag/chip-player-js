@@ -1,5 +1,5 @@
 # Extended Module Player src/xmms/Makefile
-# $Id: Makefile,v 1.1 2001-06-02 20:28:29 cmatsuoka Exp $
+# $Id: Makefile,v 1.2 2002-05-30 23:19:52 cmatsuoka Exp $
 
 XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `xmms-config --cflags` -DXMMS_PLUGIN -D_REENTRANT #-DDEBUG
 DFILES	= Makefile README xmp-plugin.h $(OBJS:.o=.c)
@@ -13,7 +13,10 @@ default: all
 
 include ../../Makefile.rules
 
-all: driver.c plugin
+all:
+	@[ "x$(XMMS)" != "x" ] && $(MAKE) all-xmms || :
+
+all-xmms: driver.c plugin
 
 plugin: $(OBJS) $(LINKS) $(DYNDRV)
 	$(LD) -shared -o xmp-plugin.so $(OBJS) -L../../lib/ -lxmp

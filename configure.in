@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.3 2002-05-30 12:34:24 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.4 2002-05-30 23:19:51 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT(src/include/xmp.h)
@@ -32,8 +32,8 @@ DYNDRV=""
 AC_SUBST(MIXER)
 MIXER="mix_all.o"
 
-AC_SUBST(XMMS_DIR)
-XMMS_DIR=""
+AC_SUBST(XMMS)
+XMMS=""
 
 dnl -----------------------------------------------------------------------
 dnl Config arguments
@@ -155,7 +155,7 @@ fi
 if test "${enable_xmms}" != "no"; then
     CPPFLAGS="${CINCS} `xmms-config --cflags`"
     AC_CHECK_HEADERS(xmms/plugin.h)
-    XMMS_DIR="xmms"
+    XMMS="xmms"
 fi
 
 if test "${ac_cv_header_xmms_plugin_h}" = "yes"; then

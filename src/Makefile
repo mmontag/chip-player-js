@@ -2,7 +2,7 @@
 
 DFILES	= Makefile
 _DIRS	= drivers include loaders player misc main
-DDIRS	= $(_DIRS) os2 $(XMMS_DIR)
+DDIRS	= $(_DIRS) os2 xmms
 CFILES	=
 DCFILES	=
 

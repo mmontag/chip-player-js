@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.2 2001-11-09 22:47:35 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.3 2002-05-30 23:19:52 cmatsuoka Exp $
  */
 
 #include "xmp-plugin.h"
@@ -342,8 +342,8 @@ static int is_our_file (char *filename)
 
 	/* Checking files by extension is braindead, we should check
 	 * by file magic instead. But the xmp interface is also braindead
-	 * in the point that it doesn't allow us to load a module while
-	 * the audio device isn't selected. Yuck.
+	 * in the point that it doesn't allow us to load a module before
+	 * the audio device selecion. Yuck.
 	 *
 	 * Additionally, xmp 2.0 can't load a module while another module
 	 * is playing, so it can't check if the module is valid or not.
