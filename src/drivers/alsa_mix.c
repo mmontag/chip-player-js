@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa_mix.c,v 1.1 2001-06-02 20:25:52 cmatsuoka Exp $
+ * $Id: alsa_mix.c,v 1.2 2003-06-24 23:33:04 dmierzej Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -223,22 +223,22 @@ static int to_fmt (struct xmp_control *ctl)
       fmt = SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_S16_BE | SND_PCM_SFMT_U16_LE | SND_PCM_SFMT_U16_BE;
 
       if (ctl->outfmt & XMP_FMT_BIGEND) {
-	fprintf(stderr, "to_fmt 4\n");
+/*	fprintf(stderr, "to_fmt 4\n"); */
 	fmt &= SND_PCM_SFMT_S16_BE | SND_PCM_SFMT_U16_BE;
       } else {
-	fprintf(stderr, "to_fmt 5\n");
+/*	fprintf(stderr, "to_fmt 5\n"); */
 	fmt &= SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_U16_LE;
       }
     }
     if (ctl->outfmt & XMP_FMT_UNS) {
-      fprintf(stderr, "to_fmt 6\n");
+/*      fprintf(stderr, "to_fmt 6\n"); */
       fmt &= SND_PCM_SFMT_U8 | SND_PCM_SFMT_U16_LE | SND_PCM_SFMT_U16_BE;
     } else {
-      fprintf(stderr, "to_fmt 7\n");
+/*      fprintf(stderr, "to_fmt 7\n"); */
       fmt &= SND_PCM_SFMT_S8 | SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_S16_BE;
     }
 
-    fprintf(stderr, "to_fmt - returning %x\n", fmt);
+/*    fprintf(stderr, "to_fmt - returning %x\n", fmt); */
 
     return fmt;
 }
@@ -328,7 +328,7 @@ static void dshutdown ()
 
 static void flush ()
 {
-  fprintf (stderr, "alsa_mix.flush called\n");
+/*  fprintf (stderr, "alsa_mix.flush called\n"); */
   snd_pcm_plugin_flush (pcm_handle, SND_PCM_CHANNEL_PLAYBACK);
   prepare_driver ();
 }
