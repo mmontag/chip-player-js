@@ -98,7 +98,7 @@ static void get_dsmp(int size, void *buffer)
 	xxs[i].lps = pi->loopstart;
 	xxs[i].lpe = pi->loopend;
 	xxs[i].flg = pi->loopend > 2 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = pi->defvol;
+	xxi[i][0].vol = pi->defvol / 2 + 1;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
 	c2spd_to_note(pi->samplerate, &xxi[i][0].xpo, &xxi[i][0].fin);
@@ -111,8 +111,9 @@ static void get_dsmp(int size, void *buffer)
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, pi->samplerate);
 
-	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate, XMP_SMP_NOLOAD,
-		&xxs[i], (uint8 *)buffer + sizeof(struct psm_hdr));
+	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate,
+		XMP_SMP_NOLOAD | XMP_SMP_8BDIFF, &xxs[i],
+		(uint8 *)buffer + sizeof(struct psm_ins));
 
 	cur_ins++;
 }
@@ -146,9 +147,6 @@ static void get_pbod (int size, void *buffer)
 		if (f == 0x00)
 			break;
 
-		if (f & 0x80)
-			break;
-
 		c = p[pos++];
 
 		if (((f & 0xf0) == 0x10) && (c <= c2)) {
@@ -175,10 +173,9 @@ static void get_pbod (int size, void *buffer)
 			uint8 note = p[pos++];
 			uint8 ins = p[pos++];
 
-			if (note && (note < 0x80))
-				note = (note >> 4) * 12 + (note & 0x0f) + 12 + 1;
+			note = (note >> 4) * 12 + (note & 0x0f) + 2;
 			event->note = note;
-			event->ins = ins;
+			event->ins = ins + 1;
 		}
 
 		if ((f & 0x20) && (pos < len)) {
@@ -196,8 +193,8 @@ static void get_pbod (int size, void *buffer)
 				break;
 			case 0x04: 		/* 04: fine volslide down */
 				fxt = FX_VOLSLIDE;
-				fxp >>= 4;
-				fxp |= 0xf0;
+				fxp >>= 1;
+				/*fxp |= 0xf0;*/
 				break;
 		    	case 0x0C:		/* 0C: portamento up */
 				fxt = FX_PORTA_UP;
@@ -217,15 +214,17 @@ static void get_pbod (int size, void *buffer)
 				fxt = FX_TEMPO;
 				break;
 			case 0x3E:		/* 3E: tempo */
-				fxt = FX_S3M_TEMPO;
+				fxt = FX_TEMPO;
 				break;
 			default:
 				fxt = fxp = 0;
+			}
+
+			event->fxt = fxt;
+			event->fxp = fxp;
 		}
 
-		event->fxt = fxt;
-		event->fxp = fxp;
-	    }
+/*printf("%02x:%02x[%02x %02x %02x %02x] ", r, c, event->note, event->ins, event->fxt, event->fxp);*/
 	    c2 = c;
 	}
 
