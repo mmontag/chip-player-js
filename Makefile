@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.3 2001-11-09 21:45:08 cmatsuoka Exp $
+# $Id: Makefile,v 1.4 2001-11-09 22:15:32 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -157,7 +157,7 @@ delgraph:
 	rm -f callgraph.ps
 
 callgraph.ps:
-	cflow -gAP -Isrc/include src/*/*c 2>/dev/null | \
+	cflow -gAP -Isrc/include src/{player,misc}/*c 2>/dev/null | \
 		scripts/cflow2dot.pl > callgraph.dot
 	dot -Tps -o$@ callgraph.dot
 
