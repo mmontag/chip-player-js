@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.3 2005-02-09 17:12:55 cmatsuoka Exp $
+ * $Id: formats.c,v 1.4 2005-02-13 18:03:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,6 +57,7 @@ void xmp_init_formats ()
     register_fmt ("MDL", "Digitrakker", mdl_load);
     register_fmt ("ULT", "Ultra Tracker", ult_load);
     register_fmt ("LIQ", "Liquid Tracker", liq_load);
+    register_fmt ("PSM", "Protracker Studio Module", psm_load);
 #if 0
     register_fmt ("MMD", "OctaMED", med_load);
     register_fmt ("MED2/3", "MED 1.1/2.0", med2_load);
