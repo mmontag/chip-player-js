@@ -1,5 +1,5 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.1 2001-06-02 20:27:11 cmatsuoka Exp $
+# $Id: Makefile,v 1.2 2001-11-09 16:43:21 cmatsuoka Exp $
 
 XCFLAGS	= -I../include $(X_INC)
 OBJS	= getopt.o getopt1.o options.o
@@ -10,7 +10,7 @@ XLIBS	= -L../../lib -lxmp -lm #-lefence
 X11LIBS	= -lX11 -lXext
 XPMS	= bg1.xpm bg2.xpm bg3.xpm
 DFILES	= Makefile $(OBJS:.o=.c) $(X11OBJS:.o=.c) main.c xpanel.h $(XPMS) \
-	  simple.c
+	  simple.c mod2mp3.c
 DDIRS	=
 CFILES	= $(BINS)
 DCFILES	=
@@ -41,6 +41,9 @@ install:: $(BINS)
 $(OBJS): ../../Makefile.rules Makefile
 
 simple: simple.o
+	$(LD) $(LDFLAGS) $+ $(LIBS)
+
+mod2mp3: mod2mp3.o
 	$(LD) $(LDFLAGS) $+ $(LIBS)
 
 dump: dump.o
