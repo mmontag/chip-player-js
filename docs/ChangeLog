@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.7 2005-02-08 23:14:24 cmatsuoka Exp $
+$Id: ChangeLog,v 1.8 2005-02-09 17:12:55 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -7,6 +7,7 @@ Stable versions
 	- added more module format specs
 	- added MO3 unpacking support
 	- fixed recursive decrunching of module files
+	- disabled MED loader (nonportable, didn't work well)
 
 2.1.0 (unreleased)
 	- Added Takuya Ooura's FFT code

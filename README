@@ -1,4 +1,4 @@
-$Id: README,v 1.5 2005-02-08 16:54:51 cmatsuoka Exp $
+$Id: README,v 1.6 2005-02-09 17:12:54 cmatsuoka Exp $
 
 
 
@@ -28,14 +28,14 @@ the first  file in a zip or lha archive will be played (the  zip unpacker
 skips files with non-module suffixes like .com, .exe, .diz or .txt common
 in DOS archives). Some loaders  (mostly packed mods) check the file  size
 before playing so they will not recognize modules inside a multi-file zip
-or lha archive.
+or lha archive. To read MO3 files, you  must have unmo3 installed, get it
+from http://www.un4seen.com/.
 
 Impulse Tracker filter envelopes and  Imago Orpheus chorus/reverb effects
 are now supported using AWE cards with the OSS sequencer.  Many thanks to
 Davi Lima for donating an AWE card!
 
 The latest version and bug tracker are available at http://xmp.sf.net.
-
 
 
 EXAMPLE MODULES
@@ -46,7 +46,6 @@ The following modules can be found in modules/ directory:
 "Fourth Symmetriad" IT module by Skaven (makes extensive use of filters)
 "Fairlight" powerpacked NoisePacker v2 module by Zoef/FLT
 "First Adlib Attempt" Adlib S3M by Skaven/FC (uses YM3812 synth)
-
 
 
 SUPPORTED FORMATS
@@ -105,7 +104,7 @@ The current version recognizes the following module formats:
   KRIS	****+	ChipTracker		KRIS
   MODL	****+	Protracker 3.59		PTDT
   MED	*	MED		 	MED3, MED4
-  MED	**	OctaMED			MMD0, MMD1, MMD2, MMD3
+  MED	* 	OctaMED			MMD0, MMD1, MMD2, MMD3
   MTN	****	ST 2.6, Ice Tracker	MTN, IT10
   OKTA	***	Oktalyzer		-
   SFX	***	SoundFX			1.3, 2.0?
