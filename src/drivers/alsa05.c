@@ -1,5 +1,5 @@
 /* ALSA 0.5 driver for xmp
- * Copyright (C) 1996-2000 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 2000 Tijs van Bakel and Rob Adamson
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.1 2005-02-23 17:07:57 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.2 2005-02-23 17:23:30 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H

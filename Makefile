@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.8 2003-06-24 23:29:29 dmierzej Exp $
+# $Id: Makefile,v 1.9 2005-02-23 17:23:28 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -13,7 +13,7 @@ RPMRC	= etc/rpmrc
 MODULES	=
 DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
-DDIRS	= lib docs etc src scripts debian modules
+DDIRS	= lib docs etc src scripts debian #modules
 CFILES	=
 DCFILES	= Makefile.rules.old config.log config.status config.cache
 
