@@ -1,7 +1,7 @@
 /* Silverball MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.1 2005-02-21 12:28:34 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.2 2005-02-21 14:52:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,6 +13,7 @@
 #endif
 
 #include "load.h"
+#include "period.h"
 
 
 int svb_load (FILE * f)
@@ -20,7 +21,8 @@ int svb_load (FILE * f)
 	int c, r, i;
 	struct xxm_event *event;
 	uint8 buf[1024];
-	uint32 p_ord, p_chn, p_pat, p_smp;
+	uint32 p_ord, p_chn, p_pat, p_ins;
+	uint32 p_smp[64];
  
 	LOAD_INIT ();
 
@@ -52,130 +54,112 @@ int svb_load (FILE * f)
 	p_ord = read32l(f);
 	p_chn = read32l(f);
 	p_pat = read32l(f);
-	p_smp = read32l(f);
+	p_ins = read32l(f);
 
 	MODULE_INFO ();
 
+	fseek(f, p_ord, SEEK_SET);
+	fread(xxo, 1, xxh->len, f);
+
+	fseek(f, p_chn, SEEK_SET);
+	fread(buf, 1, 16, f);
+
+	INSTRUMENT_INIT ();
+
+	if (V(1)) report("     Sample name            Len  LBeg LEnd L Vol C2Spd\n");
+
+	fseek(f, p_ins, SEEK_SET);
+	for (i = 0; i < xxh->ins; i++) {
+		uint16 flags, c2spd;
+
+		xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+
+		fread(buf, 1, 13, f);
+		fread(buf, 1, 22, f);
+		strncpy((char *)xxih[i].name, buf, 22);
+		str_adj((char *)xxih[i].name);
+		read16l(f);
+		p_smp[i] = read32l(f);
+		read32l(f);
+		read8(f);
+		flags = read16l(f);
+		xxs[i].len = read32l(f); 
+		xxs[i].lps = read32l(f);
+		xxs[i].lpe = read32l(f);
+		read8(f);
+		xxi[i][0].vol = read8(f);
+		c2spd = read16l(f);
+
+		c2spd = 8363 * c2spd / 8448;
+
+		xxi[i][0].pan = 0x80;
+		xxi[i][0].sid = i;
+		xxih[i].nsm = !!xxs[i].len;
+		xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+
+		if (V(1) && (strlen((char *)xxih[i].name) || (xxs[i].len > 1))) {
+			report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %5d\n",
+				i, xxih[i].name, xxs[i].len, xxs[i].lps,
+				xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ?
+				'L' : ' ', xxi[i][0].vol, c2spd);
+		}
+	}
+	
+
+	PATTERN_INIT ();
+
+	if (V(0)) report ("Stored patterns: %d ", xxh->pat);
+
+	fseek(f, p_pat, SEEK_SET);
+	for (i = 0; i < xxh->pat; i++) {
+		uint16 len;
+		uint8 b, rows, chan;
+
+		PATTERN_ALLOC (i);
+		xxp[i]->rows = 64;
+		TRACK_ALLOC (i);
+
+		len = read16l(f);
+		rows = read8(f);
+		chan = read8(f);
+printf("len = %d rows = %d chan = %d\n", len, rows, chan);
+
+		for (r = 0; r < rows; r++) {
+printf("row %d\n", r);
+			while (len > 0) {
+				b = read8(f);
+				if (b == 0)
+					break;;
+	
+				c = b & 0x0f;
+printf("  chan %d: %02x\n", c, b);
+	
+	
+				event = &EVENT(i, c, r);
+	
+				if (b & 0x80) {
+					event->note = read8(f) + 1;
+					event->ins = read8(f) + 1;
+					len -= 2;
+				}
+	
+				if (b & 0x40) {
+					event->vol = read8(f) + 1;
+					len--;
+				}
+	
+				if (b & 0x20) {
+					event->fxt = read8(f);
+					event->fxp = read8(f);
+					len -= 2;
+				}
+			}
+		}
+		if (V(0)) report (".");
+	}
+	if (V(0)) report ("\n");
 #if 0
- 
-    /* Read orders */
-    for (i = 0; i < xxh->len; i++) {
-	fread (&xxo[i], 1, 1, f);
-	fseek (f, 4, SEEK_CUR);
-    }
- 
-    INSTRUMENT_INIT ();
-
-    /* Read and convert instruments and samples */
-
-    if (V (1))
-	report ("     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
-
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fseek (f, pp_ins[i] << 4, SEEK_SET);
-	fread (&sih, 1, sizeof (struct svb_instrument_header), f);
-	L_ENDIAN32 (sih.length);
-	L_ENDIAN32 (sih.loopbeg);
-	L_ENDIAN32 (sih.loopend);
-	L_ENDIAN16 (sih.c2spd);
-	xxih[i].nsm = !!(xxs[i].len = sih.length);
-	xxs[i].lps = sih.loopbeg;
-	xxs[i].lpe = sih.loopend;
-	if (xxs[i].lpe == 0xffff)
-	    xxs[i].lpe = 0;
-	xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = sih.vol;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, sih.name, 12);
-	str_adj ((char *) xxih[i].name);
-	if (V (1) &&
-	    (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
-	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
-		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, sih.c2spd);
-	}
-
-	sih.c2spd = 8363 * sih.c2spd / 8448;
-	c2spd_to_note (sih.c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
-    }
-
-    PATTERN_INIT ();
-
-    /* Read and convert patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
-
-    for (i = 0; i < xxh->pat; i++) {
-	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
-
-	if (!pp_pat[i])
-	    continue;
-
-	fseek (f, pp_pat[i] * 16, SEEK_SET);
-	if (broken)
-	    fseek (f, 2, SEEK_CUR);
-
-	for (r = 0; r < 64; ) {
-	    fread (&b, 1, 1, f);
-
-	    if (b == S3M_EOR) {
-		r++;
-		continue;
-	    }
-
-	    c = b & S3M_CH_MASK;
-	    event = c >= xxh->chn ? &dummy : &EVENT (i, c, r);
-
-	    if (b & S3M_NI_FOLLOW) {
-		fread (&n, 1, 1, f);
-
-		switch (n) {
-		case 255:
-		    n = 0;
-		    break;	/* Empty note */
-		case 254:
-		    n = 0x61;
-		    break;	/* Key off */
-		default:
-		    n = 25 + 12 * MSN (n) + LSN (n);
-		}
-
-		event->note = n;
-		fread (&n, 1, 1, f);
-		event->ins = n;
-	    }
-
-	    if (b & S3M_VOL_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->vol = n + 1;
-	    }
-
-	    if (b & S3M_FX_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->fxt = fx[n];
-		fread (&n, 1, 1, f);
-		event->fxp = n;
-		switch (event->fxt) {
-		case FX_TEMPO:
-		    event->fxp = MSN (event->fxp);
-		    break;
-		case FX_NONE:
-		    event->fxp = event->fxt = 0;
-		    break;
-		}
-	    }
-	}
-
-	if (V (0))
-	    report (".");
-    }
-
-    if (V (0))
-	report ("\n");
 
     /* Read samples */
     if (V (0))
