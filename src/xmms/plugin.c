@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.13 2005-02-11 12:32:04 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.14 2005-02-11 12:51:04 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1112,6 +1112,7 @@ static void file_info_box_build ()
 #ifdef BMP_PLUGIN
 	textbuf1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text1));
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1), GTK_WRAP_NONE);
+	gtk_widget_set_usize(info_scrw1, -1, 160);
 #else
 	gtk_text_set_line_wrap (GTK_TEXT(text1), FALSE);
 	gtk_widget_set (text1, "height", 160, "width", 290, NULL);
