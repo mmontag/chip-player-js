@@ -1,0 +1,77 @@
+Version    Date   Programmers                 Release  
+---------------------------------------------------------------------
+0.89 BETA  05.90  Amiga Freelancers           release for Crusaders
+1.0A       08.90  Amiga Freelancers           first public release
+1.0B       09.90  Amiga Freelancers           bugfix
+1.0C       10.90  Amiga Freelancers           bugfix
+1.1A       12.90  Amiga Freelancers           The Party release
+1.1B       08.91  Amiga Freelancers           bugfix
+1.2        ??.91  Amiga Freelancers           kickstart 2.0 version
+1.2C       ??.??  Raul Sobon                  parallel version
+1.2D       ??.??  Raul Sobon                  parallel version
+1.2E       ??.??  Raul Sobon                  parallel version
+1.2F       ??.??  Raul Sobon                  parallel version
+1.3A BETA  ??.92  Amiga Freelancers           some bugs
+1.3B       05.92  Amiga Freelancers           bugfix
+1.8        ??.94  Bagittman / SCL             parallel version
+2.0        ??.91  Amiga Freelancers           based on V1.2 (commercial)
+2.1A       04.92  Mushroom Studios / Noxious  based on V1.0C
+2.2A       ??.92  Mushroom Studios / Noxious  many new functions
+2.3A       01.93  Mushroom Studios / Noxious  bugfix, 100 patterns
+2.3A       09.93  Mushroom Studios / Noxious  config fix (Pc Pay)
+2.3A       04.94  Mushroom Studios / Noxious  AGA+config fix (Duke/SYNTEX)
+2.3D       ??.94  Mushroom Studios / Noxious  AGA and 1200 fixed (Dentron)
+2.57       ??.??  Apogee Technologies         kickstart 3.0 version (unr.)
+2.95       ??.93  Apogee Technologies         kickstart 2.0 version
+3.00 BETA  01.93  Cryptoburners               rewritten, many bugs
+3.01       ??.93  Cryptoburners               release for AM/FM magazine
+3.10 BETA  05.93  Cryptoburners               release for AmigaFormat
+3.14B      ??.93  Cryptoburners               supported DYN samples
+3.15       06.93  Cryptoburners               bugfix
+3.18       ??.93  Cryptoburners               release for Audiomonster
+3.30       02.96  Tom Beyer / Osiris          based on V3.15
+3.30 BETA  02.96  Tom Beyer / Osiris          bugfix
+3.31       02.96  Tom Beyer / Osiris          bugfix
+3.32-34    03.96  Tom Beyer / Osiris          bugfix
+3.50, B    03.96  Tom Beyer / Osiris          buggy and fixed version
+3.50C-D    04.96  Tom Beyer / Osiris          bugfix
+3.51       04.96  Tom Beyer / Osiris          bugfix
+3.52-53    05.96  Tom Beyer / Osiris          bugfix
+3.54-58    06.96  Tom Beyer / Osiris          bugfix
+3.59-60A   07.96  Tom Beyer / Osiris          bugfix
+3.61 BETA  07.96  Tom Beyer / Osiris          bugfix
+3.61       08.96  Tom Beyer / Osiris          final release
+3.62       10.97  Tom Beyer / Osiris          pattern-load fix (Jan Poruba)
+3.62       09.98  Tom Beyer / Osiris          XPK fix (Jan Poruba)
+4.0 BETA2  02.97  Tom Beyer / Osiris          bugfix
+4.0 BETA2  10.97  Tom Beyer / Osiris          pattern-load fix (Jan Poruba)
+
+
+
+Releases          Group                       Programmers
+---------------------------------------------------------------------
+0.89-1.2 (2.0)    Amiga Freelancers           Lars "ZAP" Hamre
+                                              Anders Hamre
+                                              Sven Vahsen
+                                              Rune Johnsrud
+
+2.1A-2.3A         Mushroom Studios / Noxious  Peter "Crayon" Henning
+                                              Anders "Dolphi" Ramsay
+
+3.00-3.18         Cryptoburners               Ivar Just Olsen
+                                              Bjarte Andreassen
+                                              Tom Bech
+                                              PUW (DYN samples)
+
+3.30-4.0          Tom Beyers / Osiris         Tom Beyers
+
+
+
+Notes
+---------------------------------------------------------------------
+I don't know whether the release of "Apogee Technologies" was a fake or
+did really exist, I found their helpfile of V2.95 (!) among an PT V2.3A
+archive from Noxious (The Duke/SYNTEX' AGA+config fix), where they also
+announced version 2.57 to support kickstart 3.0 (strange, eh?).
+
+                                            Sky AKA Bernhard Lukas
