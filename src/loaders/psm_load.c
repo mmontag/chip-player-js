@@ -98,6 +98,8 @@ static void get_dsmp(int size, void *buffer)
 	if ((int)pi->loopend == -1)
 		pi->loopend = 0;
 
+	if (V(1) && cur_ins == 0)
+	    report("\n     Instrument name                   Len  LBeg  LEnd  L Vol C2Spd");
 	i = cur_ins;
 	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 	xxs[i].len = pi->length;
