@@ -79,6 +79,8 @@ void	disable_continue_fx	(struct xxm_event *);
 uint8	read8		(FILE *);
 uint16	read16l		(FILE *);
 uint16	read16b		(FILE *);
+uint32	read24l		(FILE *);
+uint32	read24b		(FILE *);
 uint32	read32l		(FILE *);
 uint32	read32b		(FILE *);
 

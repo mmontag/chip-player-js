@@ -1,7 +1,7 @@
 /* Epic Megagames PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.15 2005-02-18 16:33:56 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.16 2005-02-20 15:24:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -32,20 +32,14 @@ struct psm_hdr {
 
 struct psm_pat {			/* standard patterns in Epic games */
 	uint32 size;
-	char name[4];
-	uint16 rows;
-} PACKED;
-
-struct psm_pat2 {			/* Sinaria has 8-character names */
-	uint32 size;
-	char name[8];
+	char name[4];			/* Sinaria has 8-character names */
 	uint16 rows;
 } PACKED;
 
 struct psm_ins {
-	uint8 flags;
+	/*uint8 flags;
 	int8 songname[8];
-	uint32 smpid;
+	uint32 smpid;*/
 	int8 samplename[34];
 	uint32 reserved1;
 	uint8 reserved2;
@@ -94,14 +88,20 @@ static void get_dsmp(int size, void *buffer)
 {
 	int i;
 	struct psm_ins *pi;
+	uint8 *p;
 
-	pi = (struct psm_ins *)buffer;
+	p = buffer;
+
+	p++;			/* flags */
+	p += 8;			/* songname */
+	p += sinaria ? 8 : 4;	/* smpid */
+
+	pi = (struct psm_ins *)p;
 
 	L_ENDIAN32(pi->length);
 	L_ENDIAN32(pi->loopstart);
 	L_ENDIAN32(pi->loopend);
 	L_ENDIAN32(pi->samplerate);
-	L_ENDIAN32(pi->smpid);
 
 	/* for jjxmas95 xm3 */
 	if ((int)pi->loopend == -1)

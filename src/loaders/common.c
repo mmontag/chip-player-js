@@ -87,6 +87,28 @@ uint16 read16b(FILE *f)
 	return w;
 }
 
+uint32 read24l(FILE *f)
+{
+	int a, b, c;
+
+	a = read8(f);
+	b = read8(f);
+	c = read8(f);
+
+	return (c << 16) | (b << 8) | a;
+}
+
+uint32 read24b(FILE *f)
+{
+	int a, b, c;
+
+	a = read8(f);
+	b = read8(f);
+	c = read8(f);
+
+	return (a << 16) | (b << 8) | c;
+}
+
 uint32 read32l(FILE *f)
 {
 	uint32 d;
