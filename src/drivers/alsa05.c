@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.2 2005-02-23 17:23:30 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.3 2005-02-24 12:52:12 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,6 @@
 #include "mixer.h"
 
 static int init (struct xmp_control *);
-static int init2 (struct xmp_control *);
 static int prepare_driver (void);
 static void dshutdown (void);
 static int to_fmt (struct xmp_control *);
@@ -84,15 +83,8 @@ static char *mybuffer_nextfree = NULL;
 static char *card_name;
 
 
-static int init (struct xmp_control *ctl)
-{
-  int r = init2 (ctl);
-  if (r<0) return r;
-  return xmp_smix_on (ctl);
-}
 
-
-static int init2 (struct xmp_control *ctl)
+static int init(struct xmp_control *ctl)
 {
   /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
      only default values are supported and music sounds chunky */
@@ -191,7 +183,7 @@ static int init2 (struct xmp_control *ctl)
       return XMP_ERR_DINIT;
     }
   
-  return 0;
+  return xmp_smix_on (ctl);
 }
 
 

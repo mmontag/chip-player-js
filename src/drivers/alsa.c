@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa.c,v 1.1 2005-02-23 17:07:56 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.2 2005-02-24 12:52:12 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,6 @@
 #include "mixer.h"
 
 static int init (struct xmp_control *);
-static int init2 (struct xmp_control *);
 static int prepare_driver (void);
 static void dshutdown (void);
 static int to_fmt (struct xmp_control *);
@@ -80,24 +79,16 @@ static int frag_num = 4;
 static size_t frag_size = 4096;
 static char *mybuffer = NULL;  /* malloc'd */
 static char *mybuffer_nextfree = NULL;
-static char *card_name;
 
 
 static int init (struct xmp_control *ctl)
-{
-	int r = init2(ctl);
-	if (r<0) return r;
-	return xmp_smix_on(ctl);
-}
-
-
-static int init2 (struct xmp_control *ctl)
 {
 	snd_pcm_hw_params_t *hwparams;
 	int retcode;
 	char *token, **parm; /* used by parm_init...chkparm...parm_end */
 	unsigned int channels, rate;
 	unsigned int btime, ptime;
+	char *card_name = "default";
 
 	parm_init();  		/* NB: this is a macro */
 	chkparm2("frag", "%d,%d", &frag_num, &frag_size); /* NB: macro */
@@ -136,8 +127,8 @@ static int init2 (struct xmp_control *ctl)
 	snd_pcm_hw_params_set_access(pcm_handle, hwparams,
 		SND_PCM_ACCESS_RW_INTERLEAVED);
 	snd_pcm_hw_params_set_format(pcm_handle, hwparams, to_fmt(ctl));
-	snd_pcm_hw_params_set_channels_near(pcm_handle, hwparams, &channels);
 	snd_pcm_hw_params_set_rate_near(pcm_handle, hwparams, &rate, 0);
+	snd_pcm_hw_params_set_channels_near(pcm_handle, hwparams, &channels);
 	snd_pcm_hw_params_set_buffer_time_near(pcm_handle, hwparams, &btime, 0);
 	snd_pcm_hw_params_set_period_time_near(pcm_handle, hwparams, &ptime, 0);
 	
@@ -150,7 +141,7 @@ static int init2 (struct xmp_control *ctl)
 	if (prepare_driver() < 0)
 		return XMP_ERR_DINIT;
   
-	return 0;
+	return xmp_smix_on(ctl);
 }
 
 

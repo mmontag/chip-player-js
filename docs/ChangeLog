@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.16 2005-02-23 17:07:54 cmatsuoka Exp $
+$Id: ChangeLog,v 1.17 2005-02-24 12:52:12 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -17,7 +17,10 @@ Stable versions
 	- fixed QNX6 portability issues (by Mike Gorchak)
 	- fixed heavy memory leak in the XMMS plugin
 	- fixed --time command-line parameter
+	- fixed portamento-after-keyoff bug (Jeronen Tel's "Nine One One"
+	  now plays correctly)
 	- updated OPL emulation (by Mike Gorchak)
+	- default verbosity level changed to 1
 	- disabled MED loader (nonportable, didn't work well)
 
 2.1.0 (unreleased)

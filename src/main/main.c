@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: main.c,v 1.6 2005-02-21 12:28:34 cmatsuoka Exp $
+ * $Id: main.c,v 1.7 2005-02-24 12:52:12 cmatsuoka Exp $
  */
 
 /*
@@ -352,6 +352,7 @@ int main (int argc, char **argv)
 #endif
 
     xmp_init (argc, argv, &opt);
+    opt.verbose = 1;
     get_options (argc, argv, &opt);
 
     if (!(probeonly || argv[optind])) {
