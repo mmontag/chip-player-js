@@ -53,6 +53,7 @@ struct psm_ins {
 } PACKED;
 
 
+
 static int cur_pat;
 static int cur_ins;
 uint32 *pnam;
@@ -160,16 +161,20 @@ static void get_pbod (int size, void *buffer)
 			c = p[pos++];
 			rowlen -= 2;
 	
+if (f & 0x0f) printf("%d: %d: %d: %02x\n", i, r, c, f);
+
 			event = c < xxh->chn ? &EVENT(i, c, r) : &dummy;
 	
-			if (f & 0x40) {
+			if (f & 0x80) {
 				uint8 note = p[pos++];
-				uint8 ins = p[pos++];
-				rowlen -= 2;
-	
+				rowlen--;
 				note = (note >> 4) * 12 + (note & 0x0f) + 2;
 				event->note = note;
-				event->ins = ins + 1;
+			}
+
+			if (f & 0x40) {
+				event->ins = p[pos++] + 1;
+				rowlen--;
 			}
 	
 			if (f & 0x20) {
@@ -182,12 +187,20 @@ static void get_pbod (int size, void *buffer)
 				uint8 fxp = p[pos++];
 				rowlen -= 2;
 	
-				if ((fxt & 0xf0) == 0x40) {
-					uint8 note;
-					note = (fxt>>4)*12 + (fxt & 0x0f) + 2;
-					event->note = note;
-					fxt = FX_TONEPORTA;
-					fxp = (fxp + 1) * 2;
+				/* compressed events */
+				if (fxt >= 0x40) {
+					switch (fxp >> 4) {
+					case 0x0: {
+						uint8 note;
+						note = (fxt>>4)*12 +
+							(fxt & 0x0f) + 2;
+						event->note = note;
+						fxt = FX_TONEPORTA;
+						fxp = (fxp + 1) * 2;
+						break; }
+					default:
+printf("comp: %d %d %d: %02x %02x\n", i, r, c, fxt, fxp);
+					}
 				} else
 				switch (fxt) {
 				case 0x01:		/* fine volslide up */
@@ -220,14 +233,18 @@ static void get_pbod (int size, void *buffer)
 					fxt = FX_TONEPORTA;
 					fxp /= 4;
 					break;
-				case 0x15:		/* Vibrato */
+				case 0x15:		/* vibrato */
 					fxt = FX_VIBRATO;
 					/* fxp remains the same */
 					break;
-				case 0x33:		/* Position Jump */
+				case 0x2a:		/* retrig note */
+					fxt = FX_EXTENDED;
+					fxp = (EX_RETRIG << 4) | (fxp & 0x0f); 
+					break;
+				case 0x33:		/* position Jump */
 					fxt = FX_JUMP;
 					break;
-			    	case 0x34:		/* Pattern break */
+			    	case 0x34:		/* pattern break */
 					fxt = FX_BREAK;
 					break;
 				case 0x3D:		/* speed */
@@ -235,10 +252,6 @@ static void get_pbod (int size, void *buffer)
 					break;
 				case 0x3E:		/* tempo */
 					fxt = FX_TEMPO;
-					break;
-				case 0x52:		/* retrig note */
-					fxt = FX_EXTENDED;
-					fxp = (EX_RETRIG << 4) | fxp / 14;
 					break;
 				default:
 printf("p%d r%d c%d: %02x %02x\n", i, r, c, fxt, fxp);
@@ -268,6 +281,7 @@ static void get_song_2(int size, char *buffer)
 {
 	char *p;
 	uint32 oplh_size;
+	int i;
 
 	xxh->len = 0;
 
@@ -286,14 +300,32 @@ static void get_song_2(int size, char *buffer)
 	L_ENDIAN32(oplh_size);
 	p += 4;
 
-	/* Get patterns by moving to the end of the OPLH chunk and
-	 * get back checking for 0x01. Certainly not the way it
-	 * was designed to work, but enough to play jjrabit psms.
-	 * Must fix this later!
-	 */
-	for (p += oplh_size - 9; *p == 1; p -= 5);
+	p += 9;		/* unknown data */
+	
+	for (i = 0; *p != 0x01; ) {
+		switch (*p++) {
+		case 0x07:
+			xxh->tpo = *(uint8 *)p++;
+			p++;		/* 08 */
+			xxh->bpm = *(uint8 *)p++;
+			break;
+		case 0x0d:
+			p++;		/* channel number? */
+			xxc[i].pan = *(uint8 *)p++;
+			p++;		/* flags? */
+			i++;
+			break;
+		case 0x0e:
+			p++;		/* channel number? */
+			p++;		/* ? */
+			break;
+		default:
+printf("channel %d: %02x %02x\n", i, *(p - 1), *p);
 
-	for (p += 5; *p == 0x01; p += 5) {
+		}
+	}
+
+	for (; *p == 0x01; p += 5) {
 		uint32 pat = *(uint32 *)(p + 1);
 		pord[xxh->len++] = pat;
 	}
