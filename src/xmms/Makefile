@@ -1,7 +1,7 @@
 # Extended Module Player src/xmms/Makefile
-# $Id: Makefile,v 1.4 2002-09-03 10:47:46 dmierzej Exp $
+# $Id: Makefile,v 1.5 2005-02-10 00:51:27 cmatsuoka Exp $
 
-XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `xmms-config --cflags` -DXMMS_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
+XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` -DXMMS_PLUGIN -DBMP_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
 DFILES	= Makefile README xmp-plugin.h $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
 INSTDIR	= $(DEST_DIR)`xmms-config --input-plugin-dir`
@@ -25,7 +25,7 @@ dyndrv:
 	make -C ../../lib shared
 
 driver.c:
-	ln -sf ../player/$@ .
+	ln -sf ../player/driver.c .
 
 $(LINKS):
 	ln -sf ../main/$@ .

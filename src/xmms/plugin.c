@@ -3,12 +3,29 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.6 2005-02-09 19:24:44 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.7 2005-02-10 00:51:27 cmatsuoka Exp $
  */
 
-#include "xmp-plugin.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <limits.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <ctype.h>
+
+
+#ifdef BMP_PLUGIN
+#include <bmp/configfile.h>
+#include <bmp/util.h>
+#include <bmp/plugin.h>
+#else
 #include <xmms/configfile.h>
 #include <xmms/util.h>
+#include <xmms/plugin.h>
+#endif
+
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <X11/Xlib.h>
@@ -19,8 +36,6 @@
 #include "formats.h"
 #include "xpanel.h"
 
-#include <sys/types.h>
-#include <unistd.h>
 
 static void	init		(void);
 static int	is_our_file	(char *);
@@ -41,10 +56,44 @@ static struct xmp_control ctl;
 static pthread_t decode_thread;
 static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+
+
+#ifdef __EMX__
+#define PATH_MAX _POSIX_PATH_MAX
+#endif
+
+#define FREQ_SAMPLE_44 0
+#define FREQ_SAMPLE_22 1
+#define FREQ_SAMPLE_11 2
+
+extern InputPlugin xmp_ip;
+
+typedef struct {
+	gint mixing_freq;
+	gint force8bit;
+	gint force_mono;
+	gint interpolation;
+	gint filter;
+	gint convert8bit;
+	gint fixloops;
+	gint loop;
+	gint modrange;
+	gint pan_amplitude;
+	gint time;
+	struct xmp_module_info mod_info;
+} XMPConfig;
+
+extern XMPConfig xmp_cfg;
+
+extern struct xmp_drv_info drv_xmms;
+
+
+
 XMPConfig xmp_cfg;
 static gboolean xmp_xmms_audio_error = FALSE;
 extern InputPlugin xmp_ip;
 extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
+
 
 /* module parameters */
 gboolean xmp_going = 0;
@@ -305,7 +354,12 @@ static void init(void)
 
 #define CFGREADINT(x) xmms_cfg_read_int (cfg, "XMP", #x, &xmp_cfg.x)
 
+#ifdef BMP_PLUGIN
+	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
+#else
 	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
+#endif
+
 	if ((cfg = xmms_cfg_open_file(filename))) {
 		CFGREADINT (mixing_freq);
 		CFGREADINT (force8bit);
@@ -451,8 +505,12 @@ void *catch_info (void *arg)
 
     while (!feof (f)) {
         fgets (buf, 100, f);
+#ifdef BMP_PLUGIN
+#warning FIXME
+#else
 	gtk_text_insert (GTK_TEXT(text1), font,
 	    color_black, color_white, buf, strlen(buf));
+#endif
 	if (!strncmp (buf, "Estimated time :", 16))
 	    break;
     }
@@ -480,9 +538,13 @@ static void play_file (char *filename)
 	}
 	fclose(f);
 
+#ifdef BMP_PLUGIN
+#warning FIXME
+#else
 	gtk_text_set_point (GTK_TEXT(text1), 0);
 	gtk_text_forward_delete (GTK_TEXT(text1),
 		gtk_text_get_length (GTK_TEXT(text1)));
+#endif
 	
 
 	xmp_xmms_audio_error = FALSE;
@@ -544,7 +606,6 @@ static void play_file (char *filename)
 	    //return xmp_smix_on (ctl);
 	}
 
-	xmp_cfg.time = xmpi_scan_module ();
 	xmp_open_audio (&ctl);
 
 	pipe (fd_info);
@@ -564,13 +625,18 @@ static void play_file (char *filename)
 	pthread_join (catch_thread, NULL);
 	_D("joined");
 	dup2 (fileno (stderr), fd_old2);
+#ifdef BMP_PLUGIN
+#warning FIXME
+#else
 	gtk_adjustment_set_value (GTK_TEXT(text1)->vadj, 0.0);
+#endif
 
 	close (fd_info[0]);
 	close (fd_info[1]);
 
 	_D ("before panel update");
 
+	xmp_cfg.time = xmpi_scan_module ();
 	xmp_get_module_info (&ii->mi);
 	strcpy (ii->filename, "");
 
@@ -636,7 +702,12 @@ static void configure()
 		gdk_window_raise(xmp_conf_window->window);
 		return;
 	}
+#ifdef BMP_PLUGIN
+	xmp_conf_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+#else
 	xmp_conf_window = gtk_window_new(GTK_WINDOW_DIALOG);
+#endif
+
 	gtk_object_set_data(GTK_OBJECT(xmp_conf_window),
 		"xmp_conf_window", xmp_conf_window);
 	gtk_window_set_title(GTK_WINDOW(xmp_conf_window), "XMP Configuration");
@@ -965,9 +1036,13 @@ static void file_info_box_build ()
 	gtk_handle_box_set_handle_position (GTK_HANDLE_BOX(frame1), GTK_POS_LEFT);
 	gtk_box_pack_start(GTK_BOX(dialog_vbox1), frame1, TRUE, TRUE, 0);
 
-	image = gdk_image_new (GDK_IMAGE_FASTEST, visual, 300, 128);
+	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
 	ximage = GDK_IMAGE_XIMAGE(image);
-	image1 = gtk_image_new (image, NULL);
+#ifdef BMP_PLUGIN
+	image1 = gtk_image_new_from_image(image, NULL);
+#else
+	image1 = gtk_image_new(image, NULL);
+#endif
 	gtk_object_set_data(GTK_OBJECT(image1), "image1", image1);
 	gtk_container_add (GTK_CONTAINER(frame1), image1);
 	gtk_widget_set_events (frame1, GDK_BUTTON_PRESS_MASK | GDK_KEY_PRESS_MASK);
@@ -1019,6 +1094,9 @@ static void file_info_box_build ()
 
 	gtk_box_pack_start(GTK_BOX(dialog_action_area1), scrw1, TRUE, TRUE, 0);
 
+#ifdef BMP_PLUGIN
+#warning FIXME
+#else
 	text1 = gtk_text_new(NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
 	gtk_text_set_line_wrap (GTK_TEXT(text1), FALSE);
@@ -1026,6 +1104,7 @@ static void file_info_box_build ()
 	gtk_container_add (GTK_CONTAINER(scrw1), text1);
 
 	gtk_widget_realize (text1);
+#endif
 	gtk_widget_realize (image1);
 	//gtk_widget_show_all (dialog_vbox1);
 	//gtk_widget_show_all (dialog_action_area1);
@@ -1124,7 +1203,9 @@ void update_display ()
     e.area.height = 1;
     e.count = 0;
 
+#ifdef FIXME_BMP
     gdk_event_put ((GdkEvent *)&e);
+#endif
 
     //XSync (display, False);
 }
