@@ -14,7 +14,7 @@ Requirements:
 
 	4. Module Files (http://www.scene.org)
 
-See the XMP Home Page @ http://xmp.helllabs.org/
+See the XMP Home Page @ http://xmp.sourceforge.net/
 
 Notes:
 	1. When using the -b 8 or --bits 8 option

@@ -1,11 +1,11 @@
 # Extended Module Player doc/Makefile
-# $Id: Makefile,v 1.1 2001-06-02 20:25:28 cmatsuoka Exp $
+# $Id: Makefile,v 1.2 2005-02-21 02:44:44 cmatsuoka Exp $
 
 DOCS	= xmp.1
 HTMLS	=
 DFILES	= Makefile COPYING CREDITS README.awebug README.ppunpack \
 	  README.unsqsh README.fixloop README.trackers ChangeLog xmp.1 xxmp.1 \
-	  README.os2 README.win32
+	  README.os2
 DDIRS	= formats
 CFILES	=
 DCFILES	=

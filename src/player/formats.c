@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.6 2005-02-19 13:14:45 cmatsuoka Exp $
+ * $Id: formats.c,v 1.7 2005-02-21 02:44:44 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +57,7 @@ void xmp_init_formats ()
     register_fmt ("MDL", "Digitrakker", mdl_load);
     register_fmt ("ULT", "Ultra Tracker", ult_load);
     register_fmt ("LIQ", "Liquid Tracker", liq_load);
-    register_fmt ("PSM", "Epic Megagames", psm_load);
+    register_fmt ("PSM", "Epic Megagames MASI", psm_load);
     register_fmt ("AMF", "DSMI (DMP)", amf_load);
 #if 0
     register_fmt ("MMD", "OctaMED", med_load);

@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.13 2005-02-20 13:38:52 cmatsuoka Exp $
+$Id: ChangeLog,v 1.14 2005-02-21 02:44:44 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -14,6 +14,7 @@ Stable versions
 	- fixed recursive decrunching of module files
 	- fixed QNX6 portability issues (by Mike Gorchak)
 	- fixed heavy memory leak in the XMMS plugin
+	- fixed --time command-line parameter
 	- updated OPL emulation (by Mike Gorchak)
 	- disabled MED loader (nonportable, didn't work well)
 
@@ -29,7 +30,6 @@ Stable versions
 	  IRIX 6.5.10/gcc 2.95.2 (reported by Johan Hattne <hattne@ibg.uu.se>)
 	- Added aRts driver
 	- Added NAS driver (based on Martin Denn's mpg123 NAS driver)
-	- Package only DFSG-compliant files, provide extra files as a patch
 	- Added experimental QNX4 driver based on Mike Gorchak's nspmod port
 	- Added experimental win32 driver based on Tony Million's mpg123 driver
 	- Added NEO Software/Electronic Rats HSC module loader

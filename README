@@ -1,4 +1,4 @@
-$Id: README,v 1.8 2005-02-20 13:38:51 cmatsuoka Exp $
+$Id: README,v 1.9 2005-02-21 02:44:44 cmatsuoka Exp $
 
 
 
@@ -72,7 +72,7 @@ The current version recognizes the following module formats:
   Packed modules:
 
   AC1D  ****+	AC1D Packer		-
-  AMF	***	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
+  AMF	**+	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
   CRB	****+	Heatseeker		mc1.0
   DI	****+	Digital Illusions	-
   FC-M	****+	FC-M Packer		1.0
@@ -85,7 +85,7 @@ The current version recognizes the following module formats:
   PP10	****+	Pha Packer		-
   PROM	***	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
-  PSM	*** 	Epic Megagames		epic, sinaria
+  PSM	*** 	Epic Megagames MASI	epic, sinaria
   STIM	****+	Slamtilt		-
   UNIC	***	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
