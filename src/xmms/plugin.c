@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.9 2005-02-10 20:14:30 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.10 2005-02-11 00:46:28 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -115,7 +115,6 @@ static GtkObject *pansep_adj;
 static GtkWidget *xmp_conf_window = NULL;
 static GtkWidget *about_window = NULL;
 static GtkWidget *info_window = NULL;
-static gint expose_event (GtkWidget *, GdkEventExpose *);
 
 struct ipc_info _ii, *ii = &_ii;
 int skip = 0;
@@ -250,7 +249,6 @@ static void aboutbox ()
 	gtk_widget_show_all(about_window);
 }
 
-//static GdkGC *gdkgc;
 static GdkImage *image;
 static GtkWidget *image1;
 static GtkWidget *frame1;
@@ -523,7 +521,6 @@ void *catch_info (void *arg)
     while (!feof (f)) {
         fgets (buf, 100, f);
 #ifdef BMP_PLUGIN
-#warning FIXME
 	gtk_text_buffer_get_end_iter(textbuf1, &end);
 	/*tag = gtk_text_buffer_create_tag(textbuf1, NULL,
 		"foreground", color_black, "background", color_white, NULL);
@@ -564,7 +561,6 @@ static void play_file (char *filename)
 	fclose(f);
 
 #ifdef BMP_PLUGIN
-#warning FIXME
 	gtk_text_buffer_get_bounds(textbuf1, &start, &end);
 	gtk_text_buffer_delete(textbuf1, &start, &end);
 #else
@@ -993,26 +989,18 @@ static void button_cycle (GtkWidget *widget, GdkEvent *event)
 static void button_mute (GtkWidget *widget, GdkEvent *event)
 {
 	int i;
+	static int mute = 1;
 
 	if (!xmp_going)
 		return;
 
-	xmp_channel_mute (0, 64, 1);
+	xmp_channel_mute (0, 64, mute);
 	for (i = 0; i < ii->mi.chn; i++)
-		ii->mute[i] = 1;
+		ii->mute[i] = mute;
+
+	mute = !mute;
 }
 
-static void button_unmute (GtkWidget *widget, GdkEvent *event)
-{
-	int i;
-
-	if (!xmp_going)
-		return;
-
-	xmp_channel_mute (0, 64, 0);
-	for (i = 0; i < ii->mi.chn; i++)
-		ii->mute[i] = 0;
-}
 
 static int image1_clicked_x = 0;
 static int image1_clicked_y = 0;
@@ -1032,8 +1020,7 @@ static void file_info_box_build ()
 {
 	GtkWidget *dialog_vbox1;
 	GtkWidget *hbox1;
-	GtkWidget *info_exit, *info_cycle, *info_mute;
-	GtkWidget *info_unmute, *info_about;
+	GtkWidget *info_exit, *info_cycle, *info_mute, *info_about;
 	GtkWidget *scrw1;
 	GdkVisual *visual;
 	GtkWidget *dialog_action_area1;
@@ -1057,10 +1044,14 @@ static void file_info_box_build ()
 
 	visual = gdk_visual_get_system ();
 
+#if 0
 	frame1 = gtk_handle_box_new  ();
 	gtk_handle_box_set_shadow_type (GTK_HANDLE_BOX(frame1), GTK_SHADOW_IN);
 	gtk_object_set_data(GTK_OBJECT(frame1), "frame1", frame1);
 	gtk_handle_box_set_handle_position (GTK_HANDLE_BOX(frame1), GTK_POS_LEFT);
+#else
+	frame1 = gtk_event_box_new();
+#endif
 	gtk_box_pack_start(GTK_BOX(dialog_vbox1), frame1, TRUE, TRUE, 0);
 
 	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
@@ -1097,12 +1088,6 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(info_mute), "info_mute", info_mute);
 	gtk_box_pack_start(GTK_BOX(hbox1), info_mute, TRUE, TRUE, 0);
 
-	info_unmute = gtk_button_new_with_label("Unmute");
-	gtk_signal_connect (GTK_OBJECT (info_unmute), "clicked",
-                            (GtkSignalFunc) button_unmute, NULL);
-	gtk_object_set_data(GTK_OBJECT(info_unmute), "info_unmute", info_unmute);
-	gtk_box_pack_start(GTK_BOX(hbox1), info_unmute, TRUE, TRUE, 0);
-
 	info_about = gtk_button_new_with_label("About");
 	gtk_signal_connect_object(GTK_OBJECT(info_about), "clicked",
 			(GtkSignalFunc) aboutbox, NULL);
@@ -1125,7 +1110,6 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
 
 #ifdef BMP_PLUGIN
-#warning FIXME
 	textbuf1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text1));
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1), GTK_WRAP_NONE);
 #else
@@ -1212,88 +1196,20 @@ static void init_visual (GdkVisual *visual)
 
 void putimage (int x, int y, int w, int h)
 {
-    //gdk_draw_image (image1->parent->window, gdkgc, image, x, y, x, y, w, h);
-}
+    GdkRectangle rect;
 
-
-static gint expose_event (GtkWidget *widget, GdkEventExpose *event)
-{
-     return 0;
+    rect.x = x;
+    rect.y = y;
+    rect.width = w;
+    rect.height = h;
+ 
+    gdk_window_invalidate_rect(image1->window, &rect, FALSE);
 }
 
 void update_display ()
 {
-    GdkEventExpose e;
-
-    e.type = GDK_EXPOSE;
-    e.window = image1->window;
-    e.send_event = TRUE;
-    e.area.x = 10;
-    e.area.y = 10;
-    e.area.width = 1;
-    e.area.height = 1;
-    e.count = 0;
-
-#ifdef FIXME_BMP
-    gdk_event_put ((GdkEvent *)&e);
-#endif
-
-    //XSync (display, False);
+    gdk_window_process_updates(image1->window, TRUE);
 }
-
-
-#if 0
-void setpalette (char **bg)
-{
-    int i;
-    unsigned long rgb;
-
-    _D ("setting image palette");
-
-	mask_r = 0xf00000;
-	mask_g = 0x00f800;
-	mask_b = 0x0000f0;
-	draw_rectangle = draw_rectangle_rgb16;
-	erase_rectangle = erase_rectangle_rgb16;
-	//indexed = 0;
-
-    color[0].red = color[0].green = color[0].blue = 0x02;
-    color[1].red = color[1].green = color[1].blue = 0xfe;
-    color[2].red = color[2].green = color[2].blue = 0xd0;
-
-    for (i = 4; i < 12; i++) {
-	rgb = strtoul (&bg[i - 3][5], NULL, 16);
-	color[i].red = (rgb & mask_r) >> 16;
-	color[i].green = (rgb & mask_g) >> 8;
-	color[i].blue = rgb & mask_b;
-	color[i + 8].red = color[i].red >> 1;
-	color[i + 8].green = color[i].green >> 1;
-	color[i + 8].blue = color[i].blue >> 1;
-    }
-
-    for (i = 0; i < 20; i++) {
-	color[i].red <<= 8;
-	color[i].green <<= 8;
-	color[i].blue <<= 8;
-	//if (!XAllocColor (display, colormap, &color[i]))
-	 //   fprintf (stderr, "cannot allocte color cell\n");
-	if (!gdk_colormap_alloc_color (colormap, (GdkColor *)&color[i], TRUE, TRUE))
-	    fprintf (stderr, "cannot allocte color cell\n");
-    }
-
-#if 0
-    if (indexed) {
-	for (i = 0; i < 3; i++)
-	    pmap[color[i].pixel] = color[i].pixel;
-	for (i = 4; i < 12; i++)
-	    pmap[color[i].pixel] = color[i + 8].pixel;
-	for (i = 12; i < 20; i++)
-	    pmap[color[i].pixel] = color[i - 8].pixel;
-    }
-#endif
-}
-#endif
-
 
 
 int process_events (int *x, int *y)
@@ -1312,5 +1228,4 @@ int process_events (int *x, int *y)
 void settitle (char *title)
 {
 }
-
 
