@@ -242,7 +242,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, c, fxt, fxp);
 					fxp = (EX_RETRIG << 4) | (fxp & 0x0f); 
 					break;
 				case 0x29:		/* unknown */
-printf("\np%d r%d c%d: effect 0x29: %02x %02x %02x %02x", i, r, c, fxt, fxp, p[pos], p[pos + 1]);
+/*printf("\np%d r%d c%d: effect 0x29: %02x %02x %02x %02x", i, r, c, fxt, fxp, p[pos], p[pos + 1]);*/
 					pos += 2;
 					rowlen -= 2;
 					break;

@@ -1,4 +1,4 @@
-$Id: README,v 1.6 2005-02-09 17:12:54 cmatsuoka Exp $
+$Id: README,v 1.7 2005-02-17 02:32:38 cmatsuoka Exp $
 
 
 
@@ -65,7 +65,7 @@ The current version recognizes the following module formats:
 
   CHN	****+	Fast/Taketracker	xCHN, xxCH
   EXO	*** 	Startrekker/ADSC	FLT4/8, EXO4/8 (AM unsupported)
-  M15	****	Soundtracker		2.2 (UST unsupported)
+  M15	****	Soundtracker		2.2, UST
   MOD	****+	Sound/Noise/Protracker	M.K., M!K!, M&K!, N.T., CD81
   WOW	****+	Mod's Grave		M.K.
 
@@ -84,6 +84,7 @@ The current version recognizes the following module formats:
   PP10	****+	Pha Packer		-
   PROM	***	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
+  PSM	***+	Epic Megagames		-
   STIM	****+	Slamtilt		-
   UNIC	***	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
