@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa.c,v 1.5 2005-02-25 16:29:34 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.6 2005-02-25 22:30:43 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -127,7 +127,7 @@ static int init(struct xmp_control *ctl)
 }
 
 
-static int prepare_driver(void)
+static int prepare_driver()
 {
 	int ret;
 
@@ -181,7 +181,9 @@ static void bufdump(int i)
 
 	b = xmp_smix_buffer();
 	frames = snd_pcm_bytes_to_frames(pcm_handle, i);
-	snd_pcm_writei(pcm_handle, b, frames);
+	if (snd_pcm_writei(pcm_handle, b, frames) < 0) {
+		snd_pcm_prepare(pcm_handle)
+	}
 }
 
 
