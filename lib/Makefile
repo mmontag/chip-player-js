@@ -1,5 +1,5 @@
 # Extended Module player lib/Makefile
-# $Id: Makefile,v 1.5 2002-05-30 23:27:39 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2002-09-03 10:51:53 dmierzej Exp $
 
 SONAME	= 2.1
 DFILES	= Makefile
@@ -24,8 +24,8 @@ endif
 install::
 ifdef DYNDRV
 	[ -d $(LIB_DIR)/xmp/drivers ] || mkdir -p $(LIB_DIR)/xmp/drivers
-	$(INSTALL) -m644 $(MYSHLIB).$(SONAME) $(LIB_DIR)
-	$(INSTALL) -m644 drivers/*.so $(LIB_DIR)/xmp/drivers
+	$(INSTALL) -m755 $(MYSHLIB).$(SONAME) $(LIB_DIR)
+	$(INSTALL) -m755 drivers/*.so $(LIB_DIR)/xmp/drivers
 	ldconfig
 endif
 

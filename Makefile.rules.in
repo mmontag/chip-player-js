@@ -1,15 +1,15 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.6 2002-05-30 23:19:51 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.7 2002-09-03 10:51:53 dmierzej Exp $
 
 VERSION	= 2.1.0
 DATE	= Thu May 30 20:13:06 BRT 2002
 
-DEST_DIR=
+DEST_DIR =
 prefix	= $(DEST_DIR)@prefix@
 exec_prefix= $(DEST_DIR)@prefix@
-BIN_DIR	= @bindir@
-LIB_DIR = @libdir@
-MAN_DIR	= @mandir@/man1
+BIN_DIR	= $(DEST_DIR)@bindir@
+LIB_DIR = $(DEST_DIR)@libdir@
+MAN_DIR	= $(DEST_DIR)@mandir@/man1
 
 CC	= @CC@
 CFLAGS	= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG
