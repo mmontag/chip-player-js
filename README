@@ -1,4 +1,4 @@
-$Id: README,v 1.1 2001-06-02 20:25:18 cmatsuoka Exp $
+$Id: README,v 1.2 2001-11-10 10:43:29 cmatsuoka Exp $
 
 
 
@@ -58,7 +58,7 @@ all files in the same directory (ALM, Protracker songs, Startrekker AM).
 
 The current version recognizes the following module formats:
 
-  Type  Rating	Tracker/packer		Recognized versions
+  Type  Rating	Tracker/packer		Recognized variants
 
   Protracker and variants:
 
@@ -74,6 +74,7 @@ The current version recognizes the following module formats:
   CRB	****+	Heatseeker		mc1.0
   DI	****+	Digital Illusions	-
   FC-M	****+	FC-M Packer		1.0
+  IMS	**	Images Music System	?
   KSM	****+	Kefrens Sound Machine	-
   MP	****+	Module Protector	-
   NP	****+	NoisePacker		1.0, 2.0, 3.0

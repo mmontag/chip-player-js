@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.1 2001-06-02 20:28:10 cmatsuoka Exp $
+ * $Id: formats.c,v 1.2 2001-11-10 10:43:30 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -74,6 +74,7 @@ void xmp_init_formats ()
     register_fmt ("STIM", "Slamtilt", stim_load);
     register_fmt ("FC-M", "FC-M Packer", fcm_load);
     register_fmt ("KSM", "Kefrens Sound Machine", ksm_load);
+    register_fmt ("IMS", "Images Music System", ims_load);
     register_fmt ("WN", "Wanton Packer", wn_load);
     register_fmt ("PM", "Power Music", pm_load);
     register_fmt ("KRIS", "ChipTracker", kris_load);
