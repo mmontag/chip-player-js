@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.11 2005-02-11 01:50:46 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.12 2005-02-11 11:24:02 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -115,6 +115,9 @@ static GtkObject *pansep_adj;
 static GtkWidget *xmp_conf_window = NULL;
 static GtkWidget *about_window = NULL;
 static GtkWidget *info_window = NULL;
+
+static GtkWidget *info_scrw1;
+static int visible_details = 0;
 
 struct ipc_info _ii, *ii = &_ii;
 int skip = 0;
@@ -1001,6 +1004,16 @@ static void button_mute (GtkWidget *widget, GdkEvent *event)
 	mute = !mute;
 }
 
+static void button_info(GtkWidget *widget, GdkEvent *event)
+{
+	if (visible_details) {
+		gtk_widget_hide_all(info_scrw1);
+	} else {
+		gtk_widget_show_all(info_scrw1);
+	}
+
+	visible_details = !visible_details;
+}
 
 static int image1_clicked_x = 0;
 static int image1_clicked_y = 0;
@@ -1011,7 +1024,7 @@ static void image1_clicked (GtkWidget *widget, GdkEventButton *event)
 	if (!xmp_going || image1_clicked_ok)
 		return;
 
-	image1_clicked_x = event->x - 10;	/* mumble */
+	image1_clicked_x = event->x;
 	image1_clicked_y = event->y;
 	image1_clicked_ok = 1;
 }
@@ -1020,8 +1033,7 @@ static void file_info_box_build ()
 {
 	GtkWidget *dialog_vbox1;
 	GtkWidget *hbox1;
-	GtkWidget *info_exit, *info_cycle, *info_mute, *info_about;
-	GtkWidget *scrw1;
+	GtkWidget *info_exit, *info_cycle, *info_mute, *info_details;
 	GdkVisual *visual;
 
 	info_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -1043,14 +1055,7 @@ static void file_info_box_build ()
 
 	visual = gdk_visual_get_system ();
 
-#if 0
-	frame1 = gtk_handle_box_new  ();
-	gtk_handle_box_set_shadow_type (GTK_HANDLE_BOX(frame1), GTK_SHADOW_IN);
-	gtk_object_set_data(GTK_OBJECT(frame1), "frame1", frame1);
-	gtk_handle_box_set_handle_position (GTK_HANDLE_BOX(frame1), GTK_POS_LEFT);
-#else
 	frame1 = gtk_event_box_new();
-#endif
 	gtk_box_pack_start(GTK_BOX(dialog_vbox1), frame1, TRUE, TRUE, 0);
 
 	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
@@ -1070,7 +1075,7 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(hbox1), "hbox1", hbox1);
 	gtk_box_pack_start(GTK_BOX(dialog_vbox1), hbox1, TRUE, TRUE, 0);
 
-	info_cycle = gtk_button_new_with_label("Cycle");
+	info_cycle = gtk_button_new_with_label("Mode");
 	gtk_signal_connect (GTK_OBJECT (info_cycle), "clicked",
                             (GtkSignalFunc) button_cycle, NULL);
 	gtk_object_set_data(GTK_OBJECT(info_cycle), "info_cycle", info_cycle);
@@ -1082,11 +1087,10 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(info_mute), "info_mute", info_mute);
 	gtk_box_pack_start(GTK_BOX(hbox1), info_mute, TRUE, TRUE, 0);
 
-	info_about = gtk_button_new_with_label("About");
-	gtk_signal_connect_object(GTK_OBJECT(info_about), "clicked",
-			(GtkSignalFunc) aboutbox, NULL);
-	gtk_object_set_data(GTK_OBJECT(info_about), "info_about", info_about);
-	gtk_box_pack_start(GTK_BOX(hbox1), info_about, TRUE, TRUE, 0);
+	info_details = gtk_button_new_with_label("Info");
+	/* signal connect below, after info_scrw1 definition */
+	gtk_object_set_data(GTK_OBJECT(info_details), "info_details", info_details);
+	gtk_box_pack_start(GTK_BOX(hbox1), info_details, TRUE, TRUE, 0);
 
 	info_exit = gtk_button_new_with_label("Close");
 	gtk_signal_connect_object(GTK_OBJECT(info_exit), "clicked",
@@ -1094,12 +1098,15 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(info_exit), "info_exit", info_exit);
 	gtk_box_pack_start(GTK_BOX(hbox1), info_exit, TRUE, TRUE, 0);
 
-	scrw1 = gtk_scrolled_window_new (NULL, NULL);
-	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
-	gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrw1), GTK_SHADOW_IN);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
+	info_scrw1 = gtk_scrolled_window_new (NULL, NULL);
+	gtk_object_set_data(GTK_OBJECT(info_scrw1), "info_scrw1", info_scrw1);
+	gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(info_scrw1), GTK_SHADOW_IN);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (info_scrw1), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
-	gtk_box_pack_start(GTK_BOX(dialog_vbox1/*dialog_action_area1*/), scrw1, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(dialog_vbox1), info_scrw1, TRUE, TRUE, 0);
+
+	gtk_signal_connect_object(GTK_OBJECT(info_details), "clicked",
+		GTK_SIGNAL_FUNC(button_info), GTK_OBJECT(info_scrw1));
 
 	text1 = gtk_text_view_new();
 	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
@@ -1113,12 +1120,10 @@ static void file_info_box_build ()
 #endif
 	gtk_widget_set (text1, "editable", FALSE, NULL);
 
-	gtk_container_add (GTK_CONTAINER(scrw1), text1);
+	gtk_container_add (GTK_CONTAINER(info_scrw1), text1);
 
 	gtk_widget_realize (text1);
 	gtk_widget_realize (image1);
-	//gtk_widget_show_all (dialog_vbox1);
-	//gtk_widget_show_all (dialog_action_area1);
 
 	display = GDK_WINDOW_XDISPLAY (info_window->window);
 	window = GDK_WINDOW_XWINDOW (info_window->window);
@@ -1128,9 +1133,7 @@ static void file_info_box_build ()
 	gdk_color_black (colormap, color_black);
 	gdk_color_white (colormap, color_white);
 
-
 	init_visual (visual);
-
 
 	set_palette ();
 	clear_screen ();
@@ -1147,6 +1150,9 @@ static void file_info_box (char *filename)
 	_D ("Info box");
 
 	gtk_widget_show_all(info_window);
+	if (!visible_details)
+		gtk_widget_hide_all(info_scrw1);
+
 	gdk_window_raise(info_window->window);
 }
 
