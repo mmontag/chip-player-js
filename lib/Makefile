@@ -1,7 +1,7 @@
 # Extended Module player lib/Makefile
-# $Id: Makefile,v 1.4 2001-11-15 09:59:54 cmatsuoka Exp $
+# $Id: Makefile,v 1.5 2002-05-30 23:27:39 cmatsuoka Exp $
 
-SONAME	= 2.0
+SONAME	= 2.1
 DFILES	= Makefile
 CFILES	= $(MYLIB) $(MYSHLIB) $(MYSHLIB).$(SONAME) drivers/*
 DCFILES	= 

@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.4 2002-05-30 23:19:52 cmatsuoka Exp $
+$Id: ChangeLog,v 1.5 2002-05-30 23:27:39 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -23,7 +23,6 @@ Stable versions
 	- Added callback driver for plugins
 	- XMMS plugin changed to use the callback driver
 	- Added Images Music System support
-	- Changed the YM3812 emulator to a LGPL-licensed version from adplug
 
 2.0.4 (20010119):
 	- Added driver for synthesized sounds
