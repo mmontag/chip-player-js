@@ -1,5 +1,5 @@
-/* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+/* Epic Megagames PSM loader for xmp
+ * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -11,195 +11,264 @@
 #endif
 
 #include "load.h"
-#include "period.h"
+#include "iff.h"
+#include "psm.h"
 
 
+static int cur_pat;
+static int cur_ins;
 
-static uint8 fx[] =
+
+static void get_oplh(int size, uint16 *buffer)
 {
-};
+}
 
+static void get_sdft(int size, uint16 *buffer)
+{
+}
+
+static void get_titl(int size, uint16 *buffer)
+{
+	strncpy(xmp_ctl->name, (char *)buffer, size > 32 ? 32 : size);
+}
+
+static void get_dsmp_cnt(int size, uint16 *buffer)
+{
+	xxh->ins++;
+	xxh->smp = xxh->ins;
+}
+
+static void get_pbod_cnt(int size, uint16 *buffer)
+{
+	xxh->pat++;
+}
+
+
+static void get_dsmp(int size, void *buffer)
+{
+	int i;
+	struct psm_ins *pi;
+
+	pi = (struct psm_ins *)buffer;
+
+	L_ENDIAN32(pi->length);
+	L_ENDIAN32(pi->loopstart);
+	L_ENDIAN32(pi->loopend);
+	L_ENDIAN32(pi->samplerate);
+	L_ENDIAN32(pi->smpid);
+
+	i = cur_ins;
+	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
+	xxs[i].len = pi->length;
+	xxih[i].nsm = !!(xxs[i].len);
+	xxs[i].lps = pi->loopstart;
+	xxs[i].lpe = pi->loopend;
+	xxs[i].flg = pi->loopend > 2 ? WAVE_LOOPING : 0;
+	xxi[i][0].vol = pi->defvol;
+	xxi[i][0].pan = 0x80;
+	xxi[i][0].sid = i;
+
+	strncpy ((char *)xxih[i].name, pi->samplename, 32);
+	str_adj ((char *)xxih[i].name);
+
+	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
+	    report ("[%2X] %-32.32s %05x %05x %05x %c V%02x\n", i,
+		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
+		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol);
+
+	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate, XMP_SMP_NOLOAD,
+		&xxs[i], (uint8 *)buffer + sizeof(struct psm_hdr));
+
+	cur_ins++;
+}
+
+#if 0
+struct psm_ins
+{   
+    uint8 flags;
+    int8 songname[8];
+    uint32 smpid;
+    int8 samplename[34];
+    uint8 insno;
+    uint32 samplerate;
+} PACKED;
+#endif
+
+
+static void get_pbod (int size, void *buffer)
+{
+	int i, r;
+	struct xxm_event *event;
+	struct psm_pat *pp = (struct psm_pat *)buffer;
+	char *p;
+	uint8 f, c, c2;
+	int rows, pos, len;
+
+	i = cur_pat;
+
+	PATTERN_ALLOC(i);
+	xxp[i]->rows = pp->rows;
+	TRACK_ALLOC(i);
+
+	p = &pp->data;
+	len = pp->size;
+	rows = xxp[i]->rows;
+	pos = 0;
+
+	for (r = 0; r < rows; ) {
+		f = p[pos++];
+		c = p[pos++];
+
+		if (((f & 0xf0) == 0x10) && (c <= c2)) {
+			if ((pos + 1 < len) && (!(p[pos] & 0x0f))
+		    	    /*&& (p[pos + 1] < that->m_nChannels)*/) {
+		    		r++;
+		    		c2 = c;
+		    		continue;
+			}
+		}
+
+		if ((pos >= len) || (r >= rows))
+			break;
+
+		if (!(f & 0xf0)) {
+			r++;
+			c2 = c;
+			continue;
+		}
+
+		event = &EVENT(i, c, r);
+
+		if ((f & 0x40) && (pos + 1 < len)) {
+			uint8 note = p[pos++];
+			uint8 ins = p[pos++];
+
+			if (note && (note < 0x80))
+				note = (note >> 4) * 12 + (note & 0x0f) + 12 + 1;
+			event->note = note;
+			event->ins = ins;
+		}
+
+		if ((f & 0x20) && (pos < len)) {
+			event->vol = p[pos++] / 2;
+		}
+
+		if ((f & 0x10) && (pos + 1 < len)) {
+			uint8 fxt = p[pos++];
+			uint8 fxp = p[pos++];
+
+			switch (fxt) {
+			case 0x01:		/* 01: fine volslide up */
+				fxt = FX_VOLSLIDE;
+				fxp |= 0x0f;
+				break;
+			case 0x04: 		/* 04: fine volslide down */
+				fxt = FX_VOLSLIDE;
+				fxp >>= 4;
+				fxp |= 0xf0;
+				break;
+		    	case 0x0C:		/* 0C: portamento up */
+				fxt = FX_PORTA_UP;
+				fxp = (fxp + 1) / 2;
+				break;
+			case 0x0E:		/* 0E: portamento down */
+				fxt = FX_PORTA_DN;
+				fxp = (fxp + 1) / 2;
+				break;
+			case 0x33:		/* 33: Position Jump */
+				fxt = FX_JUMP;
+				break;
+		    	case 0x34:		/* 34: Pattern break */
+				fxt = FX_BREAK;
+				break;
+			case 0x3D:		/* 3D: speed */
+				fxt = FX_TEMPO;
+				break;
+			case 0x3E:		/* 3E: tempo */
+				fxt = FX_S3M_TEMPO;
+				break;
+			default:
+				fxt = fxp = 0;
+		}
+
+		event->fxt = fxt;
+		event->fxp = fxp;
+	    }
+	    c2 = c;
+	}
+
+	cur_pat++;
+}
+
+
+static void get_song (int size, char *buffer)
+{
+	struct psm_hdr *ph = (struct psm_hdr *)buffer;
+
+	xxh->chn = ph->channels;
+}
 
 int psm_load (FILE *f)
 {
-	struct xxm_event *event;
-	uint8 c, b, n, buf[256];
-	uint8 songver, patver, flags;
-	int ord_ofs, pan_ofs, pat_ofs, smp_ofs, com_ofs, *sdt_ofs;
-	int patsize;
+	char magic[4];
 	int offset;
-	int i;
 
 	LOAD_INIT ();
 
-	offset = ftell(f);
-
-	fread(buf, 1, 4, f);
-	if (buf[0] != 'P' || buf[1] != 'S' || buf[2] != 'M' || buf[3] != 0xfe)
+	/* Check magic */
+	fread(magic, 1, 4, f);
+	if (strncmp (magic, "PSM ", 4))
 		return -1;
 
-	fread(buf, 1, 60, f);
+	strcpy (xmp_ctl->type, "Epic Megagames (PSM)");
 
-	flags = read8(f);
+	fseek(f, 8, SEEK_CUR);		/* skip file size and FILE */
+	xxh->smp = xxh->ins = 0;
+	cur_pat = 0;
+	cur_ins = 0;
+	offset = ftell(f);
 
-	if (flags & 1) return -1;		/* Song not supported */
+	/* IFF chunk IDs */
+	iff_register ("TITL", get_titl);
+	iff_register ("SDFT", get_sdft);
+	iff_register ("SONG", get_song);
+	iff_register ("DSMP", get_dsmp_cnt);
+	iff_register ("PBOD", get_pbod_cnt);
+	iff_setflag(IFF_LITTLE_ENDIAN);
 
-	strncpy (xmp_ctl->name, buf, 59);
-	sprintf (xmp_ctl->type, "Protracker Studio Module (PSM)");
-	/* sprintf (tracker_name, ""); */
+	/* Load IFF chunks */
+	while (!feof (f))
+		iff_chunk (f);
 
-	if (~flags & 2)
-		xxh->flg |= XXM_FLG_MODRNG;
-
-	songver = read8(f);			/* song version */
-	patver = read8(f);			/* pattern version */
-	xxh->tpo = read8(f);
-	xxh->bpm = read8(f);
-	xxh->gvl = read8(f) << 2;
-	read16l(f);				/* length */
-	xxh->len = read16l(f);			/* number of orders */
-	xxh->pat = read16l(f);
-	xxh->ins = read16l(f);
-	xxh->chn = read16l(f);
-	read16l(f);				/* channels to process */
+	iff_release ();
 
 	xxh->trk = xxh->pat * xxh->chn;
-	xxh->smp = xxh->ins;
 
-	/* xmp_ctl->c4rate = C4_NTSC_RATE; */
-
-	MODULE_INFO ();
-
-	ord_ofs = read32l(f);
-	pan_ofs = read32l(f);
-	pat_ofs = read32l(f);
-	smp_ofs = read32l(f);
-	com_ofs = read32l(f);
-	patsize = read32l(f);
-
-	sdt_ofs = malloc(xxh->ins * sizeof(int));
-	
-	/* Read orders */
-
-	fseek(f, offset + ord_ofs, SEEK_SET);
-	fread (&xxo[i], 1, xxh->len, f);
-	
-
-	/* Read patterns */
-
-	fseek(f, offset + pat_ofs, SEEK_SET);
-
+	MODULE_INFO();
+	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	if (V(0))
-		report ("Stored patterns: %d ", xxh->pat);
-
-	for (i = 0; i < xxh->pat; i++) {
-		int r, x;
-
-		PATTERN_ALLOC (i);
-
-		x = read16l(f);
-		read8(f);		/* number of rows */
-		read8(f);		/* number of channels */
-
-		xxp[i]->rows = 64;
-		TRACK_ALLOC (i);
-
-		for (r = 0; r < 64; r++) {
-			b = read8(f);
-
-			if (b == 0)		/* end of row */
-				continue;
-
-			c = b & 0x1f;		/* channel */
-
-			if (b & 0x80) {
-				n = read8(f);
-				event->note = n;
-				n = read8(f);
-				event->ins = n;
-			}
-
-			if (b & 0x40) {
-				n = read8(f);
-				event->vol = n;		/* + 1 */
-			}
-
-			if (b & 0x20) {
-				n = read8(f);
-				event->fxt = fx[n];
-				n = read8(f);
-				event->fxp = n;
-			}
-		}
-
-		if (V (0))
-			report (".");
-
+	if (V(0)) {
+	    report("Stored patterns: %d\n", xxh->pat);
+	    report("Stored samples : %d\n", xxh->smp);
 	}
 
-	/* Load instruments */
- 
-	fseek(f, offset + pat_ofs, SEEK_SET);
+	fseek(f, offset, SEEK_SET);
 
-	INSTRUMENT_INIT();
+	iff_register ("DSMP", get_dsmp);
+	iff_register ("PBOD", get_pbod);
+	iff_register ("OPLH", get_oplh);
+	iff_setflag(IFF_LITTLE_ENDIAN);
 
-	if (V(1))
-		report ("     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
+	/* Load IFF chunks */
+	while (!feof (f))
+		iff_chunk (f);
 
-	for (i = 0; i < xxh->ins; i++) {
-		int c2spd;
-
-		xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-		fread (buf, 1, 37, f);		/* name + description */
-		sdt_ofs[i] = read32l(f);
-		read32l(f);			/* memory offset */
-		read16l(f);			/* sample number */
-		flags = read8(f);
-		xxs[i].len = read32l(f);
-		xxih[i].nsm = !!xxs[i].len;
-		xxs[i].lps = read32l(f);
-		xxs[i].lpe = read32l(f);
-		xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-		xxi[i][0].fin = read8(f);
-		xxi[i][0].vol = read8(f);
-		xxi[i][0].pan = 0x80;
-		xxi[i][0].sid = i;
-
-		c2spd = read16l(f);
-		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
-
-		strncpy((char *)xxih[i].name, buf, 12);
-		str_adj((char *)xxih[i].name);
-		if (V(1) && (strlen((char *)xxih[i].name)||(xxs[i].len > 1))) {
-			report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n",
-			i, xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-			xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol,
-			c2spd);
-		}
-	}
+	iff_release ();
 
 	if (V(0))
 		report ("\n");
-
-	/* Read samples */
-	if (V (0))
-		report ("Stored samples : %d ", xxh->smp);
-
-	for (i = 0; i < xxh->ins; i++) {
-		fseek(f, offset + sdt_ofs[i], SEEK_SET);
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-			XMP_SMP_DIFF, &xxs[xxi[i][0].sid], NULL);
-
-		if (V (0))
-			report (".");
-	}
-
-	if (V (0))
-		report ("\n");
-
-	xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
 
 	return 0;
 }
+
