@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.8 2005-02-10 13:36:28 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.9 2005-02-10 20:14:30 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -189,9 +189,9 @@ static void aboutbox ()
 
 	label1 = gtk_label_new(
 		"Extended Module Player " VERSION "\n"
-		"http://xmp.helllabs.org/\n"
-		"Written by Claudio Matsuoka <claudio@helllabe.org>\n"
-		"and Hipolito Carraro Jr. <hipolito@onda.com.br>\n"
+		"http://xmp.sourceforge.net/\n"
+		"Written by Claudio Matsuoka and\n"
+		"Hipolito Carraro Jr.\n"
 		"\n"
 		"Portions Copyright 1998,2000 Olivier Lapicque,\n"
 		"1998 Tammo Hinrichs, 1997 Bert Jahn,\n"
@@ -207,7 +207,11 @@ static void aboutbox ()
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll1),
 		GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
 	gtk_object_set_data(GTK_OBJECT(scroll1), "scroll1", scroll1);
+#ifdef BMP_PLUGIN
+#warning FIXME
+#else
 	gtk_widget_set (scroll1, "height", 48, NULL);
+#endif
 	gtk_box_pack_start(GTK_BOX(dialog_vbox1), scroll1, TRUE, TRUE, 0);
 
 	xmp_get_fmt_info (&fmt);
@@ -250,7 +254,14 @@ static void aboutbox ()
 static GdkImage *image;
 static GtkWidget *image1;
 static GtkWidget *frame1;
+
 static GtkWidget *text1;
+#ifdef BMP_PLUGIN
+static GtkTextBuffer *textbuf1;
+static GtkTextIter start, end;
+/*static GtkTextTag *tag;*/
+#endif
+
 static GdkFont *font;
 static GdkColor *color_black;
 static GdkColor *color_white;
@@ -455,6 +466,9 @@ static int is_our_file(char *filename)
 	 * valid or not. In this case, we'll blindly accept the file.
 	 */
 
+	if (strncmp("file://", filename, 7) == 0)
+		filename += 7;
+
 	if (check_common_files(filename))
 		return 1;
 
@@ -470,19 +484,22 @@ static int is_our_file(char *filename)
 	xmp_drv_set(&ctl);
 
 	_D("checking: %s", filename);
-	i = xmp_load_module (filename) >= 0;
+	if ((i = xmp_load_module (filename)) >= 0)
+		xmp_release_module();		/* Fixes memory leak */
 	_D("  returned %d", i);
-	xmp_release_module();		/* Fixes memory leak */
 
 	pthread_mutex_unlock (&load_mutex);
 
-	return i;
+	return i >= 0 ? 1 : 0;
 }
 
 
 static void get_song_info(char *filename, char **title, int *length)
 {
 	char *x;
+
+	if (strncmp("file://", filename, 7) == 0)
+		filename += 7;
 
 	/* Ugh. xmp doesn't allow me to load and scan a module while
 	 * playing. Must fix this.
@@ -507,8 +524,13 @@ void *catch_info (void *arg)
         fgets (buf, 100, f);
 #ifdef BMP_PLUGIN
 #warning FIXME
+	gtk_text_buffer_get_end_iter(textbuf1, &end);
+	/*tag = gtk_text_buffer_create_tag(textbuf1, NULL,
+		"foreground", color_black, "background", color_white, NULL);
+	gtk_text_buffer_insert_with_tags(textbuf1, end, buf, -1, tag, NULL);*/
+	gtk_text_buffer_insert(textbuf1, &end, buf, -1);
 #else
-	gtk_text_insert (GTK_TEXT(text1), font,
+	gtk_text_insert(GTK_TEXT(text1), font,
 	    color_black, color_white, buf, strlen(buf));
 #endif
 	if (!strncmp (buf, "Estimated time :", 16))
@@ -532,6 +554,9 @@ static void play_file (char *filename)
 
 	stop ();	/* sanity check */
 
+	if (strncmp("file://", filename, 7) == 0)
+		filename += 7;
+
 	if(!(f = fopen(filename,"rb"))) {
 		xmp_going = 0;
 		return;
@@ -540,6 +565,8 @@ static void play_file (char *filename)
 
 #ifdef BMP_PLUGIN
 #warning FIXME
+	gtk_text_buffer_get_bounds(textbuf1, &start, &end);
+	gtk_text_buffer_delete(textbuf1, &start, &end);
 #else
 	gtk_text_set_point (GTK_TEXT(text1), 0);
 	gtk_text_forward_delete (GTK_TEXT(text1),
@@ -1094,17 +1121,21 @@ static void file_info_box_build ()
 
 	gtk_box_pack_start(GTK_BOX(dialog_action_area1), scrw1, TRUE, TRUE, 0);
 
+	text1 = gtk_text_view_new();
+	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
+
 #ifdef BMP_PLUGIN
 #warning FIXME
+	textbuf1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text1));
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1), GTK_WRAP_NONE);
 #else
-	text1 = gtk_text_new(NULL, NULL);
-	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
 	gtk_text_set_line_wrap (GTK_TEXT(text1), FALSE);
 	gtk_widget_set (text1, "height", 160, "width", 290, NULL);
+#endif
+
 	gtk_container_add (GTK_CONTAINER(scrw1), text1);
 
 	gtk_widget_realize (text1);
-#endif
 	gtk_widget_realize (image1);
 	//gtk_widget_show_all (dialog_vbox1);
 	//gtk_widget_show_all (dialog_action_area1);
