@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.1 2001-06-02 20:25:28 cmatsuoka Exp $
+$Id: ChangeLog,v 1.2 2001-11-15 09:59:54 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -16,13 +16,14 @@ Stable versions
 	- Added aRts driver
 	- Added NAS driver (based on Martin Denn's mpg123 NAS driver)
 	- Package only DFSG-compliant files, provide extra files as a patch
-	- Added experimental QNX driver based on Mike Gorchak's QNX4 nspmod port
+	- Added experimental QNX4 driver based on Mike Gorchak's nspmod port
 	- Added experimental win32 driver based on Tony Million's mpg123 driver
 	- Added NEO Software/Electronic Rats HSC module loader
 	- Added Liquid Tracker module 0.0 and 1.0 support
-	- Added water effect eye-candy in xxmp (to waste CPU cycles)
+	- Added eye-candy in xxmp (to waste CPU cycles)
 	- Added callback driver for plugins
 	- XMMS plugin changed to use the callback driver
+	- Added Images Music System support
 
 2.0.4 (20010119):
 	- Added driver for synthesized sounds

@@ -23,9 +23,9 @@
 
 extern struct xmp_fmt_info *__fmt_head;
 
-int xmpi_decrunch_sqsh (FILE *, FILE *);
-int xmpi_decrunch_pp (FILE *, FILE *);
-int xmpi_decrunch_mmcmp (FILE *, FILE *);
+int decrunch_sqsh (FILE *, FILE *);
+int decrunch_pp (FILE *, FILE *);
+int decrunch_mmcmp (FILE *, FILE *);
 
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
@@ -143,13 +143,13 @@ static int decrunch (FILE **f, char **s)
 	pclose (p);
     } else switch (builtin) {
     case BUILTIN_PP:    
-	res = xmpi_decrunch_pp (*f, t);
+	res = decrunch_pp (*f, t);
 	break;
     case BUILTIN_SQSH:    
-	res = xmpi_decrunch_sqsh (*f, t);
+	res = decrunch_sqsh (*f, t);
 	break;
     case BUILTIN_MMCMP:    
-	res = xmpi_decrunch_mmcmp (*f, t);
+	res = decrunch_mmcmp (*f, t);
 	break;
     }
 

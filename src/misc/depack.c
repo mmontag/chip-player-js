@@ -4,7 +4,7 @@
  * Modified by Claudio Matsuoka for use in xmp.
  * small modifications by mld for use with uade
  *
- * $Id: depack.c,v 1.1 2001-06-02 20:27:55 cmatsuoka Exp $
+ * $Id: depack.c,v 1.2 2001-11-15 09:59:54 cmatsuoka Exp $
  */
 
 /* part of libdecr.a for uade
@@ -147,7 +147,7 @@ ppdepack (uint8 *packed, uint8 *depacked, uint32 plen, uint32 unplen)
 }
 
 
-int xmpi_decrunch_pp (FILE *f, FILE *fo)
+int decrunch_pp (FILE *f, FILE *fo)
 {
     uint8 *packed, *unpacked;
     int plen, unplen;

@@ -1,5 +1,5 @@
 # Extended Module player lib/Makefile
-# $Id: Makefile,v 1.3 2001-11-09 08:24:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.4 2001-11-15 09:59:54 cmatsuoka Exp $
 
 SONAME	= 2.0
 DFILES	= Makefile
@@ -34,7 +34,7 @@ shared: $(MYSHLIB).$(SONAME)
 $(MYSHLIB).$(SONAME): $(MYLIB)
 	rm -f $(MYSHLIB)* *.o
 	$(AR) xv $(MYLIB)
-	ld -shared -soname=$(SONAME) -o $(MYSHLIB).$(SONAME) *.o
+	ld -shared -soname=$@ -o $@ *.o
 	rm -f *.o
 	
 static_install:

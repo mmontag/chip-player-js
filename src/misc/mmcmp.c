@@ -307,7 +307,7 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 }
 
 
-int xmpi_decrunch_mmcmp (FILE *f, FILE *fo)                          
+int decrunch_mmcmp (FILE *f, FILE *fo)                          
 {                                                          
 	struct stat st;
 	uint8 *buf;

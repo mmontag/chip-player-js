@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Id: cflow2dot.pl,v 1.3 2001-11-10 19:09:18 cmatsuoka Exp $
+# $Id: cflow2dot.pl,v 1.4 2001-11-15 09:59:54 cmatsuoka Exp $
 
 $driver   = "color=red";
 $fmopl    = "color=orange";
@@ -38,7 +38,8 @@ while (<>) {
 		set_color ($func, "^unsqsh",  $loader,  $file);
 		set_color ($func, "^mmcmp",   $loader,  $file);
 
-		($func =~ /^xmp_/) && print "\t$func [$api];\n";
+		($func =~ /^xmp_/) &&
+			push @{$attrlist{$func}}, "\t$func [$api];\n";
 	}
 	$_ = $x;
 
@@ -56,13 +57,26 @@ while (<>) {
 		|| /[^\w]((PATTERN|TRACK)_ALLOC|EVENT|MODULE_INFO)[^\w]/
 		|| /[^\w](memset|feof|strtok|atoi|atol|abs|tolower)[^\w]/
 		|| /[^\w](rand|srand|sin|cos|atan|log10|pow)[^\w]/
+		|| /[^\w](strtoul|fseek|ftell|abort|fgetc|difftime)[^\w]/
+		|| /[^\w](mkstemp|strstr)[^\w]/
+		|| /[^\w](select|shm(get|at|dt|ctl))[^\w]/
+		|| /[^\w](Log|CALC_FCSLOT)[^\w]/
+		|| /[^\w](OPL_|set_ar_|set_ksl_|set_mul|set_sl_)/
+		|| /[^\w](CSMKey|set_algor[iy]thm)/
 		|| /[^\w](gtk_|gdk_|GTK_)/
-		|| /[^\w](strtoul|fseek|ftell|abort|fgetc)[^\w]/) && next;
+		) && next;
+
+	$listed{@m[$i - 1]} = 1;
+	$listed{@m[$i]} = 1;
 
 	$edge{@m[$i - 1]} &&
 		($_ = "\tedge [$edge{@m[$i - 1]}];\n$_\tedge [$def_edge];\n");
 
 	print;
+
+	foreach $i (keys %attrlist) {
+		print @{$attrlist{$i}} if $listed{$i};
+	}
 }
 
 print "}\n";
@@ -72,8 +86,7 @@ sub set_color {
 	my ($func, $re, $color, $file) = @_;
 
 	if ($file =~ /$re/) {
-		print "\t$func [$color];\n";
+		push @{$attrlist{$func}}, "\t$func [$color];\n";
 		$edge{$func} = $color;
 	}
-M
 }

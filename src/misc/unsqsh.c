@@ -518,7 +518,7 @@ data_a3	dc.l	$2030405
 */
 
 
-int xmpi_decrunch_sqsh (FILE *f, FILE *fo)
+int decrunch_sqsh (FILE *f, FILE *fo)
 {
     if (fo == NULL)
         return -1;
