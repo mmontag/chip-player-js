@@ -1,6 +1,8 @@
 /* Epic Megagames PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
+ * $Id: psm_load.c,v 1.15 2005-02-18 16:33:56 cmatsuoka Exp $
+ *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
@@ -19,6 +21,7 @@
 #include "iff.h"
 #include "period.h"
 
+static int sinaria;
 
 struct psm_hdr {
 	int8 songname[8];		/* "MAINSONG" */
@@ -27,9 +30,15 @@ struct psm_hdr {
 	uint8 channels;
 } PACKED;
 
-struct psm_pat {
+struct psm_pat {			/* standard patterns in Epic games */
 	uint32 size;
-	uint32 name;
+	char name[4];
+	uint16 rows;
+} PACKED;
+
+struct psm_pat2 {			/* Sinaria has 8-character names */
+	uint32 size;
+	char name[8];
 	uint16 rows;
 } PACKED;
 
@@ -56,8 +65,8 @@ struct psm_ins {
 
 static int cur_pat;
 static int cur_ins;
-uint32 *pnam;
-uint32 *pord;
+uint8 *pnam;
+uint8 *pord;
 
 
 static void get_sdft(int size, uint16 *buffer)
@@ -132,24 +141,35 @@ static void get_pbod (int size, void *buffer)
 {
 	int i, r;
 	struct xxm_event *event, dummy;
-	struct psm_pat *pp = (struct psm_pat *)buffer;
 	char *p;
 	uint8 f, c;
-	int rows, pos, len, rowlen;
+	uint32 len;
+	int rows, pos, rowlen;
 
 	i = cur_pat;
-	pnam[i] = pp->name;
+	p = buffer;
+
+	len = *(uint32 *)p;
+	p += 4;
+	L_ENDIAN32(len);
+	if (sinaria) {
+		memcpy(pnam + i * 8, p, 8);
+		p += 8;
+	} else {
+		memcpy(pnam + i * 8, p, 4);
+		p += 4;
+	}
+
+	rows = 256 * p[1] + p[0];
+	p += 2;
 
 	PATTERN_ALLOC(i);
-	xxp[i]->rows = pp->rows;
+	xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
-	p = buffer + sizeof(struct psm_pat);
-	len = pp->size;
-	rows = xxp[i]->rows;
 	pos = 0;
-
 	r = 0;
+
 	do {
 		rowlen = 256 * p[pos + 1] + p[pos] - 2;
 		pos += 2;
@@ -278,10 +298,24 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, c, fxt, fxp);
 static void get_song(int size, char *buffer)
 {
 	struct psm_hdr *ph = (struct psm_hdr *)buffer;
+	char *p;
 
 	xxh->chn = ph->channels;
 	if (*xmp_ctl->name == 0)
 		strncpy(xmp_ctl->name, ph->songname, 8);
+
+	p = buffer + 11;
+
+	while (strncmp(p, "DATE", 4)) {
+		int skip;
+		p += 4;
+		skip = *(uint32 *)p;
+		L_ENDIAN32(skip);
+		p += 4 + skip;
+	}
+
+	if (p + 12 < buffer + size && !strncmp(p + 8, "940906", 6))
+		sinaria = 1;
 }
 
 static void get_song_2(int size, char *buffer)
@@ -332,9 +366,9 @@ printf("channel %d: %02x %02x\n", i, *(p - 1), *p);
 		}
 	}
 
-	for (; *p == 0x01; p += 5) {
-		uint32 pat = *(uint32 *)(p + 1);
-		pord[xxh->len++] = pat;
+	for (; *p == 0x01; p += 1 + (sinaria ? 8 : 4)) {
+		memcpy(pord + xxh->len * 8, p + 1, sinaria ? 8 : 4);
+		xxh->len++;
 	}
 }
 
@@ -351,6 +385,7 @@ int psm_load(FILE *f)
 	if (strncmp (magic, "PSM ", 4))
 		return -1;
 
+	sinaria = 0;
 	strcpy (xmp_ctl->type, "Epic Megagames (PSM)");
 
 	fseek(f, 8, SEEK_CUR);		/* skip file size and FILE */
@@ -374,8 +409,8 @@ int psm_load(FILE *f)
 	iff_release();
 
 	xxh->trk = xxh->pat * xxh->chn;
-	pnam = malloc(xxh->pat * sizeof(uint32));	/* pattern names */
-	pord = malloc(255 * sizeof(uint32));		/* pattern orders */
+	pnam = malloc(xxh->pat * 8);		/* pattern names */
+	pord = malloc(255 * 8);			/* pattern orders */
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
@@ -401,7 +436,7 @@ int psm_load(FILE *f)
 
 	for (i = 0; i < xxh->len; i++) {
 		for (j = 0; j < xxh->pat; j++) {
-			if (pord[i] == pnam[j]) {
+			if (!memcmp(pord + i * 8, pnam + j * 8, sinaria ? 8 : 4)) {
 				xxo[i] = j;
 				break;
 			}
