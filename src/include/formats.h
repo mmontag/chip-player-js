@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.h,v 1.3 2005-02-14 19:17:33 cmatsuoka Exp $
+ * $Id: formats.h,v 1.4 2005-02-19 13:14:45 cmatsuoka Exp $
  */
 
 #ifndef __FORMATS_H
@@ -17,6 +17,7 @@ void xmp_init_formats (void);
 int ac1d_load (FILE *);
 int alm_load (FILE *);
 int amd_load (FILE *);
+int amf_load (FILE *);
 int amf_load (FILE *);
 int aon_load (FILE *);
 int crb_load (FILE *);

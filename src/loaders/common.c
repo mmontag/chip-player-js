@@ -89,22 +89,22 @@ uint16 read16b(FILE *f)
 
 uint32 read32l(FILE *f)
 {
-	uint32 w;
+	uint32 d;
 
-	fread(&w, 1, 4, f);
-	B_ENDIAN32(w);
+	fread(&d, 1, 4, f);
+	L_ENDIAN32(d);
 
-	return w;
+	return d;
 }
 
 uint32 read32b(FILE *f)
 {
-	uint16 w;
+	uint32 d;
 
-	fread(&w, 1, 4, f);
-	B_ENDIAN32(w);
+	fread(&d, 1, 4, f);
+	B_ENDIAN32(d);
 
-	return w;
+	return d;
 }
 
 
