@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.19 2005-02-25 12:15:45 cmatsuoka Exp $
+$Id: ChangeLog,v 1.20 2005-02-25 13:33:12 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -20,6 +20,7 @@ Stable versions
 	- fixed portamento-after-keyoff bug (Jeronen Tel's "Nine One One"
 	  now plays correctly)
 	- fixed IFF file loading to avoid data alignment errors
+	- fixed endianism issues in MDL loader
 	- updated OPL emulation (by Mike Gorchak)
 	- default verbosity level changed to 1
 	- default sound mode set to stereo

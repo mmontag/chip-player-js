@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.2 2004-09-15 19:01:48 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.3 2005-02-25 13:33:12 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -21,10 +21,24 @@
 
 #include "load.h"
 #include "iff.h"
-#include "mdl.h"
 #include "period.h"
 
-static struct dev_info *dinfo;
+
+#define MDL_NOTE_FOLLOWS	0x04
+#define MDL_INSTRUMENT_FOLLOWS	0x08
+#define MDL_VOLUME_FOLLOWS	0x10
+#define MDL_EFFECT_FOLLOWS	0x20
+#define MDL_PARAMETER1_FOLLOWS	0x40
+#define MDL_PARAMETER2_FOLLOWS	0x80
+
+
+struct mdl_envelope {
+    uint8 num;
+    uint8 data[30];
+    uint8 sus;
+    uint8 loop;
+};
+
 static int i_map[16];
 static int *i_index;
 static int *s_index;
@@ -224,40 +238,39 @@ static void unpack_sample16 (uint16 *t, uint8 *f, int l)
  * IFF chunk handlers
  */
 
-static void get_chunk_in (int size, struct mdl_in_chunk *buffer)
+static void get_chunk_in (int size, FILE *f)
 {
     int i;
 
-    strncpy (xmp_ctl->name, buffer->name, 32);
-    strncpy (author_name, buffer->author, 20);
+    fread(xmp_ctl->name, 1, 32, f);
+    fread(author_name, 1, 20, f);
 
-    L_ENDIAN16 (buffer->length);
-    L_ENDIAN16 (buffer->restart);
-
-    xxh->len = buffer->length;
-    xxh->rst = buffer->restart;
-    xxh->tpo = buffer->tempo;
-    xxh->bpm = buffer->bpm;
+    xxh->len = read16l(f);
+    xxh->rst = read16l(f);
+    read8(f);			/* gvol */
+    xxh->tpo = read8(f);
+    xxh->bpm = read8(f);
 
     for (i = 0; i < 32; i++) {
-	if (buffer->chinfo[i] & 0x80)
+	uint8 chinfo = read8(f);
+	if (chinfo & 0x80)
 	    break;
-	xxc[i].pan = buffer->chinfo[i] << 1;
+	xxc[i].pan = chinfo << 1;
     }
     xxh->chn = i;
+    fseek(f, 32 - i, SEEK_CUR);
 
-    memcpy (xxo, buffer->orders, xxh->len);
+    fread(xxo, 1, xxh->len, f);
 
     MODULE_INFO ();
 }
 
 
-static void get_chunk_pa (int size, uint8 *buffer)
+static void get_chunk_pa(int size, FILE *f)
 {
     int i, j, chn;
-    uint16 x16;
 
-    xxh->pat = *buffer++;
+    xxh->pat = read8(f);
     xxh->trk = xxh->pat * xxh->chn;	/* Max */
 
     PATTERN_INIT ();
@@ -266,30 +279,24 @@ static void get_chunk_pa (int size, uint8 *buffer)
 
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	chn = *buffer++;
-	xxp[i]->rows = (int) (*buffer++) + 1;
+	chn = read8(f);
+	xxp[i]->rows = (int)read8(f) + 1;
 
-	buffer += 16;		/* Skip pattern name */
-	for (j = 0; j < chn; j++) {
-	    x16 = *((uint16 *)buffer);
-	    buffer += 2;
-	    L_ENDIAN16 (x16);
-	    xxp[i]->info[j].index = x16;
-	}
-	if (V (0))
-	    report (".");
+	fseek(f, 16, SEEK_CUR);		/* Skip pattern name */
+	for (j = 0; j < chn; j++)
+	    xxp[i]->info[j].index = read16l(f);
+	if (V(0)) report(".");
     }
-    if (V (0))
-	report ("\n");
+    if (V(0)) report("\n");
 }
 
 
-static void get_chunk_p0 (int size, uint8 *buffer)
+static void get_chunk_p0(int size, FILE *f)
 {
     int i, j;
     uint16 x16;
 
-    xxh->pat = *buffer++;
+    xxh->pat = read8(f);
     xxh->trk = xxh->pat * xxh->chn;	/* Max */
 
     PATTERN_INIT ();
@@ -301,27 +308,22 @@ static void get_chunk_p0 (int size, uint8 *buffer)
 	xxp[i]->rows = 64;
 
 	for (j = 0; j < 32; j++) {
-	    x16 = *((uint16 *)buffer);
-	    buffer += 2;
-	    L_ENDIAN16 (x16);
+	    x16 = read16l(f);
 	    if (j < xxh->chn)
 		xxp[i]->info[j].index = x16;
 	}
-	if (V (0))
-	    report (".");
+	if (V(0)) report(".");
     }
-    if (V (0))
-	report ("\n");
+    if (V(0)) report("\n");
 }
 
 
-static void get_chunk_tr (int size, uint8 *buffer)
+static void get_chunk_tr(int size, FILE *f)
 {
     int i, j, k, row, len;
     struct xxm_track *track;
 
-    xxh->trk = *((uint16 *) buffer) + 1;
-    buffer += 2;
+    xxh->trk = read16l(f) + 1;
 
     if (V (0))
 	report ("Stored tracks  : %d ", xxh->trk);
@@ -336,14 +338,13 @@ static void get_chunk_tr (int size, uint8 *buffer)
 
     for (i = 1; i < xxh->trk; i++) {
 	/* Length of the track in bytes */
-	len = *((uint16 *) buffer);
-	buffer += 2;
+	len = read16l(f);
 
 	memset (track, 0, sizeof (struct xxm_track) +
             sizeof (struct xxm_event) * 256);
 
 	for (row = 0; len;) {
-	    j = *buffer++;
+	    j = read8(f);
 	    len--;
 	    switch (j & 0x03) {
 	    case 0:
@@ -361,20 +362,20 @@ static void get_chunk_tr (int size, uint8 *buffer)
 		break;
 	    case 3:
 		if (j & MDL_NOTE_FOLLOWS)
-		    len--, track->event[row].note = *buffer++;
+		    len--, track->event[row].note = read8(f);
 		if (j & MDL_INSTRUMENT_FOLLOWS)
-		    len--, track->event[row].ins = *buffer++;
+		    len--, track->event[row].ins = read8(f);
 		if (j & MDL_VOLUME_FOLLOWS)
-		    len--, track->event[row].vol = *buffer++;
+		    len--, track->event[row].vol = read8(f);
 		if (j & MDL_EFFECT_FOLLOWS) {
-		    len--, k = *buffer++;
+		    len--, k = read8(f);
 		    track->event[row].fxt = LSN (k);
 		    track->event[row].f2t = MSN (k);
 		}
 		if (j & MDL_PARAMETER1_FOLLOWS)
-		    len--, track->event[row].fxp = *buffer++;
+		    len--, track->event[row].fxp = read8(f);
 		if (j & MDL_PARAMETER2_FOLLOWS)
-		    len--, track->event[row].f2p = *buffer++;
+		    len--, track->event[row].f2p = read8(f);
 		break;
 	    }
 
@@ -407,12 +408,12 @@ static void get_chunk_tr (int size, uint8 *buffer)
 }
 
 
-static void get_chunk_ii (int size, uint8 *buffer)
+static void get_chunk_ii(int size, FILE *f)
 {
     int i, j;
     char *instr;
 
-    xxh->ins = *buffer++;
+    xxh->ins = read8(f);
 
     if (V (0))
 	report ("Instruments    : %d ", xxh->ins);
@@ -420,13 +421,11 @@ static void get_chunk_ii (int size, uint8 *buffer)
     INSTRUMENT_INIT ();
 
     for (i = 0; i < xxh->ins; i++) {
-	i_index[i] = *buffer++;
-	xxih[i].nsm = *buffer++;
-	instr = buffer;
-	*(instr + 31) = 0;
-	str_adj (instr);
-	strncpy (xxih[i].name, buffer, 24);
-	buffer += 32;
+	i_index[i] = read8(f);
+	xxih[i].nsm = read8(f);
+	fread(xxih[i].name, 1, 24, f);
+	str_adj(xxih[i].name);
+	fseek(f, 8, SEEK_CUR);
 
 	if (V (1) && (strlen ((char *) xxih[i].name) || xxih[i].nsm))
 	    report ("\n[%2X] %-32.32s %2d ", i_index[i], instr, xxih[i].nsm);
@@ -434,36 +433,35 @@ static void get_chunk_ii (int size, uint8 *buffer)
 	xxi[i] = calloc (sizeof (struct xxm_instrument), xxih[i].nsm);
 
 	for (j = 0; j < xxih[i].nsm; j++) {
-	    xxi[i][j].sid = *buffer++;
-	    i_map[j] = *buffer++;
-	    xxi[i][j].vol = *buffer++;
+	    uint8 x;
 
+	    xxi[i][j].sid = read8(f);
+	    i_map[j] = read8(f);
+	    xxi[i][j].vol = read8(f);
+
+	    x = read8(f);
 	    if (j == 0)
-		v_index[i] = *buffer & 0x80 ? *buffer & 0x3f : -1;
-	    if (~*buffer & 0x40)
+		v_index[i] = x & 0x80 ? x & 0x3f : -1;
+	    if (~x & 0x40)
 		xxi[i][j].vol = 0xff;
-	    buffer++;
 
-	    xxi[i][j].pan = *buffer++ << 1;
+	    xxi[i][j].pan = read8(f) << 1;
+
+	    x = read8(f);
+	    if (j == 0)
+		p_index[i] = x & 0x80 ? x & 0x3f : -1;
+	    if (~x & 0x40)
+		xxi[i][j].pan = 0x80;
 
 	    if (j == 0)
-		p_index[i] = *buffer & 0x80 ? *buffer & 0x3f : -1;
-	    if (~*buffer & 0x40)
-		xxi[i][j].pan = 0x80;
-	    buffer++;
+		xxih[i].rls = read16l(f);
 
-	    if (j == 0) {
-		xxih[i].rls = *(uint16 *)buffer;
-		L_ENDIAN32 (xxih[i].rls);
-	    }
-	    buffer += 2;
-
-	    xxi[i][j].vra = *buffer++;
-	    xxi[i][j].vde = *buffer++;
-	    xxi[i][j].vsw = *buffer++;
-	    xxi[i][j].vwf = *buffer++;
-	    buffer++;		/* Reserved */
-	    buffer++;		/* Pitch envelope */
+	    xxi[i][j].vra = read8(f);
+	    xxi[i][j].vde = read8(f);
+	    xxi[i][j].vsw = read8(f);
+	    xxi[i][j].vwf = read8(f);
+	    read8(f);		/* Reserved */
+	    read8(f);		/* Pitch envelope */
 
 	    if (V (1)) {
 		report ("%s[%1x] V%02x S%02x ",
@@ -485,11 +483,13 @@ static void get_chunk_ii (int size, uint8 *buffer)
 }
 
 
-static void get_chunk_is (int size, uint8 *buffer)
+static void get_chunk_is (int size, FILE *f)
 {
     int i;
+    char buf[64];
+    uint8 x;
 
-    xxh->smp = *buffer++;
+    xxh->smp = read8(f);
     xxs = calloc (sizeof (struct xxm_sample), xxh->smp);
     packinfo = calloc (sizeof (int), xxh->smp);
 
@@ -497,32 +497,27 @@ static void get_chunk_is (int size, uint8 *buffer)
 	report ("Sample infos   : %d ", xxh->smp);
 
     for (i = 0; i < xxh->smp; i++) {
-	s_index[i] = *buffer++;		/* Sample number */
-	*(buffer + 31) = 0;
-	str_adj (buffer);
+	s_index[i] = read8(f);		/* Sample number */
+	fread(buf, 1, 32, f);
+	str_adj(buf);
 	if (V (2))
-	    report ("\n[%2X] %-32.32s ", s_index[i], (char *)buffer);
-	buffer += 32;			/* Sample name */
-	buffer += 8;			/* Sample filename */
+	    report ("\n[%2X] %-32.32s ", s_index[i],buf);
+	fseek(f, 8, SEEK_CUR);		/* Sample filename */
 
-	c2spd[i] = *((uint32 *)buffer); buffer += 4;
+	c2spd[i] = read32l(f);
 
-	xxs[i].len = *((uint32 *)buffer); buffer += 4;
-	xxs[i].lps = *((uint32 *)buffer); buffer += 4;
-	xxs[i].lpe = *((uint32 *)buffer); buffer += 4;
-
-	L_ENDIAN32 (xxs[i].len);
-	L_ENDIAN32 (xxs[i].lps);
-	L_ENDIAN32 (xxs[i].lpe);
+	xxs[i].len = read32l(f);
+	xxs[i].lps = read32l(f);
+	xxs[i].lpe = read32l(f);
 
 	xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
 	xxs[i].lpe = xxs[i].lps + xxs[i].lpe;
 
-	buffer++;			/* Volume in DMDL 0.0 */
-	xxs[i].flg |= (*buffer & 0x01) ? WAVE_16_BITS : 0;
-	xxs[i].flg |= (*buffer & 0x02) ? WAVE_BIDIR_LOOP : 0;
-	packinfo[i] = (*buffer & 0x0c) >> 2;
-	buffer++;
+	read8(f);			/* Volume in DMDL 0.0 */
+	x = read8(f);
+	xxs[i].flg |= (x & 0x01) ? WAVE_16_BITS : 0;
+	xxs[i].flg |= (x & 0x02) ? WAVE_BIDIR_LOOP : 0;
+	packinfo[i] = (x & 0x0c) >> 2;
 
 #if 0
 	if (xxs[i].flg & WAVE_16_BITS) {
@@ -560,11 +555,13 @@ static void get_chunk_is (int size, uint8 *buffer)
 }
 
 
-static void get_chunk_i0 (int size, uint8 *buffer)
+static void get_chunk_i0(int size, FILE *f)
 {
     int i;
+    char buf[64];
+    uint8 x;
 
-    xxh->ins = xxh->smp = *buffer++;
+    xxh->ins = xxh->smp = read8(f);
 
     if (V (0))
 	report ("Instruments    : %d ", xxh->ins);
@@ -577,36 +574,30 @@ static void get_chunk_i0 (int size, uint8 *buffer)
     for (i = 0; i < xxh->ins; i++) {
 	xxih[i].nsm = 1;
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxi[i][0].sid = i_index[i] = s_index[i] = *buffer++;
+	xxi[i][0].sid = i_index[i] = s_index[i] = read8(f);
 
-	*(buffer + 31) = 0;
-	str_adj (buffer);
+	fread(buf, 1, 32, f);
+	str_adj(buf);			/* Sample name */
 	if (V (1))
-	    report ("\n[%2X] %-32.32s ", i_index[i], (char *)buffer);
-	buffer += 32;			/* Sample name */
-	buffer += 8;			/* Sample filename */
+	    report ("\n[%2X] %-32.32s ", i_index[i], buf);
+	fseek(f, 8, SEEK_CUR);		/* Sample filename */
 
-	c2spd[i] = *((uint16 *)buffer); buffer += 2;
-	L_ENDIAN16 (c2spd[i]);
+	c2spd[i] = read16l(f);
 
-	xxs[i].len = *((uint32 *)buffer); buffer += 4;
-	xxs[i].lps = *((uint32 *)buffer); buffer += 4;
-	xxs[i].lpe = *((uint32 *)buffer); buffer += 4;
-
-	L_ENDIAN32 (xxs[i].len);
-	L_ENDIAN32 (xxs[i].lps);
-	L_ENDIAN32 (xxs[i].lpe);
+	xxs[i].len = read32l(f);
+	xxs[i].lps = read32l(f);
+	xxs[i].lpe = read32l(f);
 
 	xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
 	xxs[i].lpe = xxs[i].lps + xxs[i].lpe;
 
-	xxi[i][0].vol = *buffer++;	/* Volume */
+	xxi[i][0].vol = read8(f);	/* Volume */
 	xxi[i][0].pan = 0x80;
 
-	xxs[i].flg |= (*buffer & 0x01) ? WAVE_16_BITS : 0;
-	xxs[i].flg |= (*buffer & 0x02) ? WAVE_BIDIR_LOOP : 0;
-	packinfo[i] = (*buffer & 0x0c) >> 2;
-	buffer++;
+	x = read8(f);
+	xxs[i].flg |= (x & 0x01) ? WAVE_16_BITS : 0;
+	xxs[i].flg |= (x & 0x02) ? WAVE_BIDIR_LOOP : 0;
+	packinfo[i] = (x & 0x0c) >> 2;
 
 	if (V (1)) {
 	    report ("%5d V%02x %05x%c %05x %05x ",
@@ -637,10 +628,10 @@ static void get_chunk_i0 (int size, uint8 *buffer)
 }
 
 
-static void get_chunk_sa (int size, uint8 *buffer)
+static void get_chunk_sa(int size, FILE *f)
 {
     int i, len;
-    char *smpbuf;
+    char *smpbuf, *buf;
 
     if (V (0))
 	report ("Stored samples : %d ", xxh->smp);
@@ -651,18 +642,21 @@ static void get_chunk_sa (int size, uint8 *buffer)
 
 	switch (packinfo[i]) {
 	case 0:
-	    memcpy (smpbuf, buffer, xxs[i].len);
-	    buffer += xxs[i].len;
+	    fread(smpbuf, 1, xxs[i].len, f);
 	    break;
 	case 1: 
-	    len = *((uint32 *)buffer); buffer += 4;
-	    unpack_sample8 (smpbuf, buffer, xxs[i].len);
-	    buffer += len;
+	    len = read32l(f);
+	    buf = malloc(len);
+	    fread(buf, 1, len, f);
+	    unpack_sample8(smpbuf, buf, xxs[i].len);
+	    free(buf);
 	    break;
 	case 2:
-	    len = *((uint32 *)buffer); buffer += 4;
-	    unpack_sample16 ((uint16 *)smpbuf, buffer, xxs[i].len >> 1);
-	    buffer += len;
+	    len = read32l(f);
+	    buf = malloc(len);
+	    fread(buf, 1, len, f);
+	    unpack_sample16((uint16 *)smpbuf, buf, xxs[i].len >> 1);
+	    free(buf);
 	    break;
 	}
 	
@@ -678,33 +672,49 @@ static void get_chunk_sa (int size, uint8 *buffer)
 }
 
 
-static void get_chunk_ve (int size, uint8 *buffer)
+static void get_chunk_ve(int size, FILE *f)
 {
-    if ((v_envnum = *buffer++) == 0)
+    int i;
+
+    if ((v_envnum = read8(f)) == 0)
 	return;
 
     if (V (1))
 	report ("Vol envelopes  : %d\n", v_envnum);
 
-    v_env = calloc (v_envnum, sizeof (struct mdl_envelope));
-    memcpy (v_env, buffer, v_envnum * sizeof (struct mdl_envelope));
+    v_env = calloc(v_envnum, sizeof (struct mdl_envelope));
+
+    for (i = 0; i < v_envnum; i++) {
+	v_env[i].num = read8(f);
+	fread(v_env[i].data, 1, 30, f);
+	v_env[i].sus = read8(f);
+	v_env[i].loop = read8(f);
+    }
 }
 
 
-static void get_chunk_pe (int size, uint8 *buffer)
+static void get_chunk_pe(int size, FILE *f)
 {
-    if ((p_envnum = *buffer++) == 0)
+    int i;
+
+    if ((p_envnum = read8(f)) == 0)
 	return;
 
     if (V (1))
 	report ("Pan envelopes  : %d\n", p_envnum);
 
     p_env = calloc (p_envnum, sizeof (struct mdl_envelope));
-    memcpy (p_env, buffer, p_envnum * sizeof (struct mdl_envelope));
+
+    for (i = 0; i < p_envnum; i++) {
+	p_env[i].num = read8(f);
+	fread(p_env[i].data, 1, 30, f);
+	p_env[i].sus = read8(f);
+	p_env[i].loop = read8(f);
+    }
 }
 
 
-int mdl_load (FILE *f, struct dev_info *d)
+int mdl_load(FILE *f)
 {
     int i, j, k, l;
     char buf[8];
@@ -742,7 +752,6 @@ int mdl_load (FILE *f, struct dev_info *d)
 
     sprintf (xmp_ctl->type, "DMDL %d.%d", MSN (*buf), LSN (*buf));
 
-    dinfo = d;
     xmp_ctl->volbase = 0xff;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
