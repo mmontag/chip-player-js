@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.1 2001-06-02 20:25:17 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.2 2001-11-09 00:26:10 cmatsuoka Exp $
 
 VERSION	= 2.0.5pre4
 DATE	= Sun Mar  4 17:54:02 BRT 2001
@@ -63,7 +63,9 @@ clean distclean::
 	rm -f *.o core errlist depend $(CFILES)
 ifdef DDIRS
 	@for i in $(DDIRS); do \
-		(cd $$i; [ -f Makefile ] && $(MAKE) $@) \
+		if [ -d $$i ]; then \
+			(cd $$i; [ -f Makefile ] && $(MAKE) $@) \
+		fi \
 	done; true
 endif
 
