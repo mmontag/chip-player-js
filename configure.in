@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.2 2001-11-09 08:24:27 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.3 2002-05-30 12:34:24 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT(src/include/xmp.h)
@@ -31,6 +31,9 @@ DYNDRV=""
 
 AC_SUBST(MIXER)
 MIXER="mix_all.o"
+
+AC_SUBST(XMMS_DIR)
+XMMS_DIR=""
 
 dnl -----------------------------------------------------------------------
 dnl Config arguments
@@ -139,19 +142,20 @@ dnl -----------------------------------------------------------------------
 if test "${enable_xmms}" != "no"; then
     xmms_cflags="`xmms-config --cflags 2>/dev/null`"
     if test ! -z "${xmms_cflags}"; then
-	AC_CHECKING([for XMMS flags... ${xmms_cflags}])
+        AC_CHECKING([for XMMS flags... ${xmms_cflags}])
     else
-	if test "${enable_xmms}" = "yes"; then
-	    AC_MSG_ERROR(Can't find XMMS files (is xmms-config in PATH?))
-	fi
+        if test "${enable_xmms}" = "yes"; then
+            AC_MSG_ERROR(Can't find XMMS files (is xmms-config in PATH?))
+        fi
         AC_MSG_WARN(xmms-config not found)
-	enable_xmms="no"
+        enable_xmms="no"
     fi
 fi
 
 if test "${enable_xmms}" != "no"; then
     CPPFLAGS="${CINCS} `xmms-config --cflags`"
     AC_CHECK_HEADERS(xmms/plugin.h)
+    XMMS_DIR="xmms"
 fi
 
 if test "${ac_cv_header_xmms_plugin_h}" = "yes"; then

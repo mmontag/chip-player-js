@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.5 2001-11-30 11:03:21 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2002-05-30 12:34:24 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -162,7 +162,7 @@ callgraph.ps:
 	dot -Tps -o$@ callgraph.dot
 
 Makefile.rules: Makefile.rules.in
-	if [ -f config.status ]; then \
+	@if [ -f config.status ]; then \
 	    ./config.status; \
 	else \
 	    [ -f configure ] || autoconf; \

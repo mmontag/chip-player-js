@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.4 2001-11-30 11:03:21 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.5 2002-05-30 12:34:24 cmatsuoka Exp $
 
 VERSION	= 2.1.0
 DATE	= Fri Nov 30 08:44:30 BRST 2001
@@ -17,6 +17,8 @@ LD	= @CC@
 LDFLAGS	= -o$@ @LDFLAGS@
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
+
+XMMS_DIR= @XMMS_DIR@
 
 # IRIX 6.5.10 note by Johan Hattne <hattne@ibg.uu.se>
 # (Thu, 15 Feb 2001 20:20:38 +0100)
