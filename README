@@ -1,4 +1,4 @@
-$Id: README,v 1.7 2005-02-17 02:32:38 cmatsuoka Exp $
+$Id: README,v 1.8 2005-02-20 13:38:51 cmatsuoka Exp $
 
 
 
@@ -9,7 +9,7 @@ $Id: README,v 1.7 2005-02-17 02:32:38 cmatsuoka Exp $
                               \_/     \/|_|    
                 E x t e n d e d   M o d u l e   P l a y e r
 
-			     Version 2.x.y
+			     Version 2.1.1
 
 
 OVERVIEW
@@ -72,6 +72,7 @@ The current version recognizes the following module formats:
   Packed modules:
 
   AC1D  ****+	AC1D Packer		-
+  AMF	***	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
   CRB	****+	Heatseeker		mc1.0
   DI	****+	Digital Illusions	-
   FC-M	****+	FC-M Packer		1.0
@@ -84,7 +85,7 @@ The current version recognizes the following module formats:
   PP10	****+	Pha Packer		-
   PROM	***	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
-  PSM	***+	Epic Megagames		-
+  PSM	*** 	Epic Megagames		epic, sinaria
   STIM	****+	Slamtilt		-
   UNIC	***	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
@@ -137,15 +138,16 @@ Ratings:
   *	Broken or nonfunctional loader
 
 Format descriptions of packed modules sent by Sylvain "Asle" Chipaux. PTM
-specs and info by Kilian Hekhuis.  Soundtracker format details by Michael
-Schwendt and Sylvain Chipaux.
+specs and info by Kilian Hekhuis.  AMF specs by Miod Vallat. Soundtracker
+format details by Michael Schwendt and Sylvain Chipaux.
 
 
 FRONT-ENDS
 
-xmp can be used stand-alone,  as a plugin for XMMS  or as a  back-end for
-GQmpeg, xhippo and others. Get them in the following URLs:
+xmp can be used stand-alone, as a plugin for BMP or XMMS or as a back-end
+for GQmpeg, xhippo and others. Get them in the following URLs:
 
+  BeepMP:  http://beepmp.sf.net
   XMMS:    http://xmms.org
   GQmpeg:  http://www.netpedia.net/hosting/gqview/mpeg-index.html
   xhippo:  http://freshmeat.net/projects/gnuxhippo/homepage/

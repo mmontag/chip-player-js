@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.2 2005-02-20 13:16:48 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.3 2005-02-20 13:38:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -196,7 +196,118 @@ int amf_load(FILE * f)
 
 				switch (t2) {
 				case 0x81:
+					fxt = FX_TEMPO;
+					fxp = t3;
 					break;
+				case 0x82:
+					if ((int8)t3 > 0) {
+						fxt = FX_VOLSLIDE;
+						fxp = t3 << 4;
+					} else {
+						fxt = FX_VOLSLIDE;
+						fxp = -(int8)t3 & 0x0f;
+					}
+					break;
+				case 0x83:
+					/* set track vol -- later */
+					break;
+				case 0x84:
+					if ((int8)t3 > 0) {
+						fxt = FX_PORTA_UP;
+						fxp = t3;
+					} else {
+						fxt = FX_PORTA_DN;
+						fxp = -(int8)t3;
+					}
+					break;
+				case 0x85:
+					/* porta abs -- unknown */
+					break;
+				case 0x86:
+					fxt = FX_TONEPORTA;
+					fxp = t3;
+					break;
+				case 0x87:
+					fxt = FX_TREMOR;
+					fxp = t3;
+					break;
+				case 0x88:
+					fxt = FX_ARPEGGIO;
+					fxp = t3;
+					break;
+				case 0x89:
+					fxt = FX_VIBRATO;
+					fxp = t3;
+					break;
+				case 0x8a:
+					if ((int8)t3 > 0) {
+						fxt = FX_TONE_VSLIDE;
+						fxp = t3 << 4;
+					} else {
+						fxt = FX_TONE_VSLIDE;
+						fxp = -(int8)t3 & 0x0f;
+					}
+					break;
+				case 0x8b:
+					if ((int8)t3 > 0) {
+						fxt = FX_VIBRA_VSLIDE;
+						fxp = t3 << 4;
+					} else {
+						fxt = FX_VIBRA_VSLIDE;
+						fxp = -(int8)t3 & 0x0f;
+					}
+					break;
+				case 0x8c:
+					fxt = FX_BREAK;
+					fxp = t3;
+					break;
+				case 0x8d:
+					fxt = FX_JUMP;
+					fxp = (t3 >> 4) * 10 + (t3 & 0x0f);
+					break;
+				case 0x8e:
+					/* sync -- unknown */
+					break;
+				case 0x8f:
+					fxt = FX_EXTENDED;
+					fxp = (EX_RETRIG << 4) | (t3 & 0x0f);
+					break;
+				case 0x90:
+					fxt = FX_OFFSET;
+					fxp = t3;
+					break;
+				case 0x91:
+					if ((int8)t3 > 0) {
+						fxt = FX_EXTENDED;
+						fxp = (EX_F_VSLIDE_UP << 4) |
+							(t3 & 0x0f);
+					} else {
+						fxt = FX_EXTENDED;
+						fxp = (EX_F_VSLIDE_DN << 4) |
+							(t3 & 0x0f);
+					}
+					break;
+				case 0x92:
+					break;
+				case 0x93:
+					fxt = FX_EXTENDED;
+					fxp = (EX_DELAY << 4) | (t3 & 0x0f);
+					break;
+				case 0x94:
+					fxt = FX_EXTENDED;
+					fxp = (EX_CUT << 4) | (t3 & 0x0f);
+					break;
+				case 0x95:
+					fxt = FX_TEMPO;
+					if (t3 < 0x21)
+						t3 = 0x21;
+					fxp = t3;
+					break;
+				case 0x96:
+					break;
+				case 0x97:
+					break;
+					
 				}
 
 				event->fxt = fxt;
