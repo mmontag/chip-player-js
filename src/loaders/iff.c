@@ -16,6 +16,9 @@
 #include "xmpi.h"
 #include "iff.h"
 
+#define __XMP_LOADERS_COMMON
+#include "load.h"
+
 static struct iff_info *iff_head = NULL;
 static int __id_size;
 static int __flags;
@@ -27,14 +30,12 @@ void iff_chunk (FILE *f)
 
     if (fread (id, 1, __id_size, f) != __id_size)
 	return;
-    if (fread (&size, 1, 4, f) != 4)
-	return;
-    if (__flags & IFF_LITTLE_ENDIAN)
-	L_ENDIAN32 (size);
-    else
-	B_ENDIAN32 (size);
+
+    size = (__flags & IFF_LITTLE_ENDIAN) ? read32l(f) : read32b(f);
+
     if (__flags & IFF_FULL_CHUNK_SIZE)
 	size -= __id_size + 4;
+
     iff_process (id, size, f);
 }
 
@@ -76,21 +77,22 @@ void iff_release ()
 }
 
 
-int iff_process (char *id, long size, FILE *f)
+int iff_process(char *id, long size, FILE *f)
 {
-    char *buffer;
     struct iff_info *i;
+    int pos;
 
-    if ((buffer = malloc (size + 2)) == NULL)
-	return -1;
-    fread (buffer, 1, size, f);
+    pos = ftell(f);
+
     for (i = iff_head; i; i = i->next) {
 	if (id && !strncmp (id, i->id, __id_size)) {
-	    i->loader (size, buffer);
+	    i->loader(size, f);
 	    break;
 	}
     }
-    free (buffer);
+
+    fseek(f, pos + size, SEEK_SET);
+
     return 0;
 }
 

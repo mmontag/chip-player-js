@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.18 2005-02-24 21:21:39 cmatsuoka Exp $
+$Id: ChangeLog,v 1.19 2005-02-25 12:15:45 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -19,6 +19,7 @@ Stable versions
 	- fixed --time command-line parameter
 	- fixed portamento-after-keyoff bug (Jeronen Tel's "Nine One One"
 	  now plays correctly)
+	- fixed IFF file loading to avoid data alignment errors
 	- updated OPL emulation (by Mike Gorchak)
 	- default verbosity level changed to 1
 	- default sound mode set to stereo

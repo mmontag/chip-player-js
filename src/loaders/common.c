@@ -129,15 +129,4 @@ uint32 read32b(FILE *f)
 	return d;
 }
 
-uint32 readbuf32l(uint8 *b)
-{
-	uint32 d;
-
-	d = *(uint32 *)b;
-	L_ENDIAN32(d);
-
-	return d;
-}
-
-
 

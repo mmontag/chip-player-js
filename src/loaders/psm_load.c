@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.20 2005-02-21 14:52:56 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.21 2005-02-25 12:15:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -62,52 +62,42 @@ uint8 *pnam;
 uint8 *pord;
 
 
-static void get_sdft(int size, uint16 *buffer)
+static void get_sdft(int size, FILE *f)
 {
 }
 
-static void get_titl(int size, uint16 *buffer)
+static void get_titl(int size, FILE *f)
 {
-	strncpy(xmp_ctl->name, (char *)buffer, size > 32 ? 32 : size);
+	char buf[40];
+	
+	fread(buf, 1, 40, f);
+	strncpy(xmp_ctl->name, buf, size > 32 ? 32 : size);
 }
 
-static void get_dsmp_cnt(int size, uint16 *buffer)
+static void get_dsmp_cnt(int size, FILE *f)
 {
 	xxh->ins++;
 	xxh->smp = xxh->ins;
 }
 
-static void get_pbod_cnt(int size, uint8 *buffer)
+static void get_pbod_cnt(int size, FILE *f)
 {
+	char buf[20];
+
 	xxh->pat++;
-	if (buffer[9] != 0 && buffer[13] == 0)
+	fread(buf, 1, 20, f);
+	if (buf[9] != 0 && buf[13] == 0)
 		sinaria = 1;
 }
 
 
-static void get_dsmp(int size, void *buffer)
+static void get_dsmp(int size, FILE *f)
 {
 	int i, srate;
-	uint8 *p;
 
-	p = buffer;
-
-	p++;			/* flags */
-	p += 8;			/* songname */
-	p += sinaria ? 8 : 4;	/* smpid */
-
-#if 0
-	pi = (struct psm_ins *)p;
-
-	L_ENDIAN32(pi->length);
-	L_ENDIAN32(pi->loopstart);
-	L_ENDIAN32(pi->loopend);
-	L_ENDIAN32(pi->samplerate);
-
-	/* for jjxmas95 xm3 */
-	if ((int)pi->loopend == -1)
-		pi->loopend = 0;
-#endif
+	read8(f);				/* flags */
+	fseek(f, 8, SEEK_CUR);			/* songname */
+	fseek(f, sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	if (V(1) && cur_ins == 0)
 	    report("\n     Instrument name                   Len  LBeg  LEnd  L Vol C2Spd");
@@ -115,25 +105,28 @@ static void get_dsmp(int size, void *buffer)
 	i = cur_ins;
 	xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-	strncpy((char *)xxih[i].name, p, 32); p += 34;
-	str_adj ((char *)xxih[i].name);
-	p += 5;
-	p++;		/* insno */
-	p++;
-	xxs[i].len = readbuf32l(p); p += 4;
+	fread(&xxih[i].name, 1, 34, f);
+	str_adj((char *)xxih[i].name);
+	fseek(f, 5, SEEK_CUR);
+	read8(f);		/* insno */
+	read8(f);
+	xxs[i].len = read32l(f);
 	xxih[i].nsm = !!(xxs[i].len);
-	xxs[i].lps = readbuf32l(p); p += 4;
-	xxs[i].lpe = readbuf32l(p); p += 4;
+	xxs[i].lps = read32l(f);
+	xxs[i].lpe = read32l(f);
 	xxs[i].flg = xxs[i].lpe > 2 ? WAVE_LOOPING : 0;
-	p += 2;
+	read16l(f);
 
-	if (sinaria) p++;
+	if ((int32)xxs[i].lpe < 0)
+		xxs[i].lpe = 0;
 
-	xxi[i][0].vol = *p++ / 2 + 1;
-	p += 4;
+	if (sinaria) read8(f);
+
+	xxi[i][0].vol = read8(f) / 2 + 1;
+	read32l(f);
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	srate = readbuf32l(p);
+	srate = read32l(f);
 
 	srate = 8363 * srate / 8448;
 
@@ -144,66 +137,49 @@ static void get_dsmp(int size, void *buffer)
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, srate);
 
-	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate,
-		XMP_SMP_NOLOAD | XMP_SMP_8BDIFF, &xxs[i],
-		(uint8 *)buffer + 96);
+	fseek(f, 16, SEEK_CUR);
+	xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, XMP_SMP_8BDIFF, &xxs[i], NULL);
 
 	cur_ins++;
 }
 
 
-static void get_pbod (int size, void *buffer)
+static void get_pbod(int size, FILE *f)
 {
 	int i, r;
 	struct xxm_event *event, dummy;
-	char *p;
-	uint8 f, c;
+	uint8 flag, chan;
 	uint32 len;
-	int rows, pos, rowlen;
+	int rows, rowlen;
 
 	i = cur_pat;
-	p = buffer;
 
-	len = *(uint32 *)p;
-	p += 4;
-	L_ENDIAN32(len);
-	if (sinaria) {
-		memcpy(pnam + i * 8, p, 8);
-		p += 8;
-	} else {
-		memcpy(pnam + i * 8, p, 4);
-		p += 4;
-	}
+	len = read32l(f);
+	fread(pnam + i * 8, 1, sinaria ? 8 : 4, f);
 
-	rows = 256 * p[1] + p[0];
-	p += 2;
+	rows = read16l(f);
 
 	PATTERN_ALLOC(i);
 	xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
-	pos = 0;
 	r = 0;
 
 	do {
-		rowlen = 256 * p[pos + 1] + p[pos] - 2;
-		pos += 2;
+		rowlen = read16l(f) - 2;
 		while (rowlen > 0) {
-	
-			f = p[pos++];
+			flag = read8(f);
 	
 			if (rowlen == 1)
 				break;
 	
-			c = p[pos++];
+			chan = read8(f);
 			rowlen -= 2;
 	
-if (f & 0x0f) printf("p%d r%d c%d: unknown flag %02x\n", i, r, c, f);
-
-			event = c < xxh->chn ? &EVENT(i, c, r) : &dummy;
+			event = chan < xxh->chn ? &EVENT(i, chan, r) : &dummy;
 	
-			if (f & 0x80) {
-				uint8 note = p[pos++];
+			if (flag & 0x80) {
+				uint8 note = read8(f);
 				rowlen--;
 				if (sinaria)
 					note += 25;
@@ -212,19 +188,19 @@ if (f & 0x0f) printf("p%d r%d c%d: unknown flag %02x\n", i, r, c, f);
 				event->note = note;
 			}
 
-			if (f & 0x40) {
-				event->ins = p[pos++] + 1;
+			if (flag & 0x40) {
+				event->ins = read8(f) + 1;
 				rowlen--;
 			}
 	
-			if (f & 0x20) {
-				event->vol = p[pos++] / 2;
+			if (flag & 0x20) {
+				event->vol = read8(f) / 2;
 				rowlen--;
 			}
 	
-			if (f & 0x10) {
-				uint8 fxt = p[pos++];
-				uint8 fxp = p[pos++];
+			if (flag & 0x10) {
+				uint8 fxt = read8(f);
+				uint8 fxp = read8(f);
 				rowlen -= 2;
 	
 				/* compressed events */
@@ -239,7 +215,7 @@ if (f & 0x0f) printf("p%d r%d c%d: unknown flag %02x\n", i, r, c, f);
 						fxp = (fxp + 1) * 2;
 						break; }
 					default:
-printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, c, fxt, fxp);
+printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					}
 				} else
 				switch (fxt) {
@@ -282,8 +258,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, c, fxt, fxp);
 					fxp = (EX_RETRIG << 4) | (fxp & 0x0f); 
 					break;
 				case 0x29:		/* unknown */
-/*printf("\np%d r%d c%d: effect 0x29: %02x %02x %02x %02x", i, r, c, fxt, fxp, p[pos], p[pos + 1]);*/
-					pos += 2;
+					read16l(f);
 					rowlen -= 2;
 					break;
 				case 0x33:		/* position Jump */
@@ -299,7 +274,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, c, fxt, fxp);
 					fxt = FX_TEMPO;
 					break;
 				default:
-printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, c, fxt, fxp);
+printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 					fxt = fxp = 0;
 				}
 	
@@ -313,63 +288,62 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, c, fxt, fxp);
 	cur_pat++;
 }
 
-static void get_song(int size, char *buffer)
+static void get_song(int size, FILE *f)
 {
-	xxh->chn = *(buffer + 8 + 2);
+	fseek(f, 10, SEEK_CUR);
+	xxh->chn = read8(f);
 	if (*xmp_ctl->name == 0)
-		strncpy(xmp_ctl->name, buffer, 8);
+		fread(&xmp_ctl->name, 1, 8, f);
 }
 
-static void get_song_2(int size, char *buffer)
+static void get_song_2(int size, FILE *f)
 {
-	char *p;
+	char buf[100], c;
 	uint32 oplh_size;
 	int i;
 
 	xxh->len = 0;
 
-	p = buffer + 11;		/* Point to first sub-chunk */
+	fseek(f, 11, SEEK_CUR);		/* Point to first sub-chunk */
 
-	while (strncmp(p, "OPLH", 4)) {
+	fread(buf, 1, 4, f);
+	while (strncmp(buf, "OPLH", 4)) {
 		int skip;
-		p += 4;
-		skip = *(uint32 *)p;
-		L_ENDIAN32(skip);
-		p += 4 + skip;
+		skip = read32l(f);;
+		fseek(f, skip, SEEK_CUR);
+		fread(buf, 1, 4, f);
 	}
 
-	p += 4;
-	oplh_size = *(uint32 *)p;
-	L_ENDIAN32(oplh_size);
-	p += 4;
+	oplh_size = read32l(f);
 
-	p += 9;		/* unknown data */
+	fseek(f, 9, SEEK_CUR);		/* unknown data */
 	
-	for (i = 0; *p != 0x01; ) {
-		switch (*p++) {
+	c = read8(f);
+	for (i = 0; c != 0x01; c = read8(f)) {
+		switch (c) {
 		case 0x07:
-			xxh->tpo = *(uint8 *)p++;
-			p++;		/* 08 */
-			xxh->bpm = *(uint8 *)p++;
+			xxh->tpo = read8(f);
+			read8(f);		/* 08 */
+			xxh->bpm = read8(f);
 			break;
 		case 0x0d:
-			p++;		/* channel number? */
-			xxc[i].pan = *(uint8 *)p++;
-			p++;		/* flags? */
+			read8(f);		/* channel number? */
+			xxc[i].pan = read8(f);
+			read8(f);		/* flags? */
 			i++;
 			break;
 		case 0x0e:
-			p++;		/* channel number? */
-			p++;		/* ? */
+			read8(f);		/* channel number? */
+			read8(f);		/* ? */
 			break;
 		default:
-printf("channel %d: %02x %02x\n", i, *(p - 1), *p);
+printf("channel %d: %02x %02x\n", i, c, read8(f));
 
 		}
 	}
 
-	for (; *p == 0x01; p += 1 + (sinaria ? 8 : 4)) {
-		memcpy(pord + xxh->len * 8, p + 1, sinaria ? 8 : 4);
+	for (; c == 0x01; c = read8(f)) {
+		fread(pord + xxh->len * 8, 1, sinaria ? 8 : 4, f);
 		xxh->len++;
 	}
 }

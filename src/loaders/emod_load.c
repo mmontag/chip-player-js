@@ -1,5 +1,7 @@
-/* Extended Module Player
+/* Quadra Composer module loader for xmp
  * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: emod_load.c,v 1.2 2005-02-25 12:15:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,67 +16,22 @@
 #include "load.h"
 #include "iff.h"
 
-struct emod_ins {
-    uint8 num;
-    uint8 vol;
-    uint16 len;
-    char name[20];
-    uint8 flg;
-    uint8 fin;
-    uint16 loop_start;
-    uint16 loop_len;
-    uint32 ptr;
-} PACKED;
-
-struct emod_pat {
-    uint8 num;
-    uint8 len;
-    char name[20];
-    uint32 ptr;
-} PACKED;
-
-struct emod_emic {
-    uint16 version;
-    char name[20];
-    char author[20];
-    uint8 tempo;
-    uint8 nins;
-    struct emod_ins ins[1];
-} PACKED;
-
-struct emod_emic2 {
-    uint8 pad;
-    uint8 pat;
-    struct emod_pat pinfo[1];
-} PACKED;
-
-struct emod_emic3 {
-    uint8 len;
-    uint8 ord[1];
-} PACKED;
-
 
 static int *reorder;
-static int pat;
 
 
-static void get_emic (int size, void *buffer)
+static void get_emic (int size, FILE *f)
 {
-    struct emod_emic *emic;
-    struct emod_emic2 *emic2;
-    struct emod_emic3 *emic3;
-    int i;
+    int i, ver;
 
-    emic = (struct emod_emic *)buffer;
-    B_ENDIAN16 (emic->version);
-
-    xxh->bpm = emic->tempo;
-    xxh->ins = emic->nins;
+    ver = read16b(f);
+    fread(xmp_ctl->name, 1, 20, f);
+    fread(author_name, 1, 20, f);
+    xxh->bpm = read8(f);
+    xxh->ins = read8(f);
     xxh->smp = xxh->ins;
 
-    strncpy (xmp_ctl->name, emic->name, 20);
-    sprintf (xmp_ctl->type, "EMOD v%d (Quadra Composer)", emic->version);
-    strncpy (author_name, emic->author, 20);
+    sprintf (xmp_ctl->type, "EMOD v%d (Quadra Composer)", ver);
     MODULE_INFO ();
 
     INSTRUMENT_INIT ();
@@ -84,82 +41,78 @@ static void get_emic (int size, void *buffer)
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	B_ENDIAN16 (emic->ins[i].len);
-	B_ENDIAN16 (emic->ins[i].loop_start);
-	B_ENDIAN16 (emic->ins[i].loop_len);
-	xxih[i].nsm = 1;
-	strncpy (xxih[i].name, emic->ins[i].name, 20);
-	xxi[i][0].vol = emic->ins[i].vol;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].fin = emic->ins[i].fin;
-	xxi[i][0].sid = i;
-	xxs[i].len = 2 * emic->ins[i].len;
-	xxs[i].lps = 2 * emic->ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * emic->ins[i].loop_len;
-	xxs[i].flg = emic->ins[i].flg & 1 ? WAVE_LOOPING : 0;
 
-	if (V (1) && (strlen ((char *) xxih[i].name) ||
-	    (xxs[i].len > 2)))
+	read8(f);		/* num */
+	xxi[i][0].vol = read8(f);
+	xxs[i].len = 2 * read16b(f);
+	fread(xxih[i].name, 1, 20, f);
+	xxs[i].flg = read8(f) & 1 ? WAVE_LOOPING : 0;
+	xxi[i][0].fin = read8(f);
+	xxs[i].lps = 2 * read16b(f);
+	xxs[i].lpe = xxs[i].lps + 2 * read16b(f);
+	read32b(f);		/* ptr */
+
+	xxih[i].nsm = 1;
+	xxi[i][0].pan = 0x80;
+	xxi[i][0].sid = i;
+
+	if (V(1) && (strlen ((char *)xxih[i].name) || (xxs[i].len > 2))) {
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x %+d\n",
 		i, xxih[i].name, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, emic->ins[i].flg & 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		xxi[i][0].vol, (char)xxi[i][0].fin >> 4);
+	}
     }
 
-    emic2 = (struct emod_emic2 *)(buffer + sizeof (struct emod_emic) +
-	(xxh->ins - 1) * sizeof (struct emod_ins));
-
-    pat = xxh->pat = emic2->pat;
-
-    emic3 = (struct emod_emic3 *)((char *)emic2 + sizeof (struct emod_emic2) +
-	(pat - 1) * sizeof (struct emod_pat));
-
-    xxh->len = emic3->len;
-
-    if (V (0))
-	report ("Module length  : %d\n", xxh->len);
-
-    for (i = 0; i < xxh->len; i++) {
-	xxo[i] = emic3->ord[i];
-	if (xxh->pat <= xxo[i])
-	    xxh->pat = xxo[i] + 1;
-    }
+    read8(f);			/* pad */
+    xxh->pat = read8(f);
 
     xxh->trk = xxh->pat * xxh->chn;
 
     PATTERN_INIT ();
 
-    reorder = calloc (4, pat);
+    reorder = calloc (4, xxh->pat);
 
-    for (i = 0; i < pat; i++) {
-	reorder[i] = emic2->pinfo[i].num;
-	PATTERN_ALLOC (reorder[i]);
-	B_ENDIAN32 (emic2->pinfo[i].ptr);
-	xxp[reorder[i]]->rows = emic2->pinfo[i].len + 1;
+    for (i = 0; i < xxh->pat; i++) {
+	reorder[i] = read8(f);
+	PATTERN_ALLOC(reorder[i]);
+	xxp[reorder[i]]->rows = read8(f) + 1;
 	TRACK_ALLOC (reorder[i]);
+	fseek(f, 20, SEEK_CUR);		/* skip name */
+	read32b(f);			/* ptr */
+    }
+
+    xxh->len = read8(f);
+
+    if (V (0))
+	report ("Module length  : %d\n", xxh->len);
+
+    for (i = 0; i < xxh->len; i++) {
+	xxo[i] = read8(f);
+	if (xxh->pat <= xxo[i])
+	    xxh->pat = xxo[i] + 1;
     }
 }
 
 
-static void get_patt (int size, void *buffer)
+static void get_patt(int size, FILE *f)
 {
     int i, j, k;
     struct xxm_event *event;
-    uint8 *c;
 
     if (V (0))
-        report ("Stored patterns: %d ", pat);
+        report ("Stored patterns: %d ", xxh->pat);
 
-    for (c = buffer, i = 0; i < pat; i++) {
+    for (i = 0; i < xxh->pat; i++) {
 	for (j = 0; j < xxp[reorder[i]]->rows; j++) {
 	    for (k = 0; k < xxh->chn; k++) {
-		event = &EVENT (reorder[i], k, j);
-		event->ins = *c++;
-		event->note = *c++ + 1;
+		event = &EVENT(reorder[i], k, j);
+		event->ins = read8(f);
+		event->note = read8(f) + 1;
 		if (event->note != 0)
 		    event->note += 36;
-		event->fxt = *c++ & 0x0f;
-		event->fxp = *c++;
+		event->fxt = read8(f) & 0x0f;
+		event->fxp = read8(f);
 
 		if (!event->fxp) {
 		    switch (event->fxt) {
@@ -177,15 +130,13 @@ static void get_patt (int size, void *buffer)
 		}                                
 	    }
 	}
-	if (V (0))
-	    report (".");
+	if (V(0)) report(".");
     }
-    if (V (0))
-	report ("\n");
+    if (V(0)) report("\n");
 }
 
 
-static void get_8smp (int size, void *buffer)
+static void get_8smp (int size, FILE *f)
 {
     int i;
 
@@ -193,15 +144,10 @@ static void get_8smp (int size, void *buffer)
 	report ("Stored samples : %d ", xxh->smp);
 
     for (i = 0; i < xxh->smp; i++) {
-	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate, XMP_SMP_NOLOAD,
-	    &xxs[i], (char *)buffer);
-	buffer += xxs[i].len;
-	
-	if (V (0))
-	    report (".");
+	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+	if (V(0)) report (".");
     }
-    if (V (0))
-	report ("\n");
+    if (V(0)) report ("\n");
 }
 
 

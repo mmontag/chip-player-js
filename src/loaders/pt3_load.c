@@ -1,5 +1,7 @@
-/* Extended Module Player
+/* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: pt3_load.c,v 1.2 2005-02-25 12:15:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -43,7 +45,7 @@ struct pt3_chunk_info {
     uint16 dmin;
     uint16 dsec;
     uint16 dmsc;
-} PACKED;
+};
 
 struct pt3_chunk_inst {
     char name[32];
@@ -55,66 +57,69 @@ struct pt3_chunk_inst {
 } PACKED;
 
 
-static FILE *__f;
 int ptdt_load (FILE *);
 
 
-static void get_vers (int size, void *buffer)
+static void get_vers(int size, FILE *f)
 {
-    sprintf (xmp_ctl->type, "%-6.6s (Protracker IFFMODL)", (char *)buffer + 4);
+    char buf[20];
+
+    fread(buf, 1, 10, f);
+    sprintf (xmp_ctl->type, "%-6.6s (Protracker IFFMODL)", buf + 4);
 
     /* Workaround for PT3.61 bug (?) */
-    fseek (__f, 10 - size, SEEK_CUR);
+    fseek (f, 10 - size, SEEK_CUR);
 }
 
 
-static void get_info (int size, void *buffer)
+static void get_info(int size, FILE *f)
 {
-    struct pt3_chunk_info *i;
+    struct pt3_chunk_info i;
 
-    i = (struct pt3_chunk_info *)buffer;
-
-    sprintf (xmp_ctl->name, "%-32.32s", i->name);
-    B_ENDIAN16 (i->cday);
-    B_ENDIAN16 (i->cmon);
-    B_ENDIAN16 (i->cyea);
-    B_ENDIAN16 (i->chrs);
-    B_ENDIAN16 (i->cmin);
-    B_ENDIAN16 (i->csec);
-    B_ENDIAN16 (i->dhrs);
-    B_ENDIAN16 (i->dmin);
-    B_ENDIAN16 (i->dsec);
+    fread(xmp_ctl->name, 1, 32, f);
+    i.nins = read16b(f);
+    i.npos = read16b(f);
+    i.npat = read16b(f);
+    i.gvol = read16b(f);
+    i.dbpm = read16b(f);
+    i.flgs = read16b(f);
+    i.cday = read16b(f);
+    i.cmon = read16b(f);
+    i.cyea = read16b(f);
+    i.chrs = read16b(f);
+    i.cmin = read16b(f);
+    i.csec = read16b(f);
+    i.dhrs = read16b(f);
+    i.dmin = read16b(f);
+    i.dsec = read16b(f);
+    i.dmsc = read16b(f);
 
     MODULE_INFO ();
 
-    if (V (0)) {
-	report ("Creation date  : %02d/%02d/%02d %02d:%02d:%02d\n",
-	    i->cmon, i->cday, i->cyea, i->chrs, i->cmin, i->csec);
-	report ("Playing time   : %02d:%02d:%02d\n",
-	    i->dhrs, i->dmin, i->dsec);
+    if (V(0)) {
+	report("Creation date  : %02d/%02d/%02d %02d:%02d:%02d\n",
+	    i.cmon, i.cday, i.cyea, i.chrs, i.cmin, i.csec);
+	report("Playing time   : %02d:%02d:%02d\n", i.dhrs, i.dmin, i.dsec);
     }
 }
 
 
-static void get_cmnt (int size, uint16 *buffer)
+static void get_cmnt(int size, FILE *f)
 {
-    if (V (0))
-	report ("Comment size   : %d\n", size);
+    if (V(0))
+	report("Comment size   : %d\n", size);
 }
 
 
-static void get_ptdt (int size, uint16 *buffer)
+static void get_ptdt (int size, FILE *f)
 {
-    fseek (__f, -size, SEEK_CUR);
-    ptdt_load (__f);
+    ptdt_load (f);
 }
 
 
 int pt3_load (FILE *f)
 {
     struct iff_header h;
-
-    __f = f;
 
     LOAD_INIT ();
 
