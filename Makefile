@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.7 2002-05-30 23:19:51 cmatsuoka Exp $
+# $Id: Makefile,v 1.8 2003-06-24 23:29:29 dmierzej Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -43,8 +43,8 @@ install-plugin:
 
 install::
 	@echo
-	@echo "  Installation complete. To customize, copy /etc/xmp.conf to"
-	@echo "  \$$HOME/.xmp/xmp.conf and /etc/xmp-modules.conf to \$$HOME/.xmp/modules.conf"
+	@echo "  Installation complete. To customize, copy /etc/xmp/xmp.conf to"
+	@echo "  \$$HOME/.xmp/xmp.conf and /etc/xmp/xmp-modules.conf to \$$HOME/.xmp/modules.conf"
 	@echo
 
 uninstall:
@@ -52,7 +52,7 @@ uninstall:
 	rm -f $(BIN_DIR)/xxmp
 	rm -f $(MAN_DIR)/xmp.1
 	rm -f $(MAN_DIR)/xxmp.1
-	rm -f /etc/xmp.conf /etc/xmp-modules.conf
+	rm -f /etc/xmp/xmp.conf /etc/xmp/xmp-modules.conf
 
 
 # Extra targets:

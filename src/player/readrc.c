@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.1 2001-06-02 20:28:19 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.2 2003-06-24 23:29:29 dmierzej Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -58,7 +58,7 @@ int xmpi_read_rc (struct xmp_control *ctl)
     if ((rc = fopen (myrc2, "r")) == NULL) {
 	if ((rc = fopen (myrc, "r")) == NULL) {
 #ifndef __EMX__
-	    if ((rc = fopen ("/etc/xmp.conf", "r")) == NULL) {
+	    if ((rc = fopen ("/etc/xmp/xmp.conf", "r")) == NULL) {
 #else
 	    if ((rc = fopen ("xmp.conf", "r")) == NULL) {
 #endif
@@ -206,7 +206,7 @@ void xmpi_read_modconf (struct xmp_control *ctl, unsigned crc, unsigned size)
     myrc = malloc ((home ? strlen (home) : 0) + 20);
 #ifndef __EMX__
     sprintf (myrc, "%s/.xmp/modules.conf", home);
-    parse_modconf (ctl, "/etc/xmp-modules.conf", crc, size);
+    parse_modconf (ctl, "/etc/xmp/xmp-modules.conf", crc, size);
 #else
     sprintf (myrc, "%s\\.xmp\\modules.conf", home);
     parse_modconf (ctl, "xmp-modules.conf", crc, size);

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.2 2002-05-30 12:10:51 cmatsuoka Exp $
+ * $Id: options.c,v 1.3 2003-06-24 23:29:29 dmierzej Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -182,7 +182,7 @@ static void usage (char *s, struct xmp_control *opt)
 "   -M --mute ch-list      Mute the specified channels\n"
 "   --modrange             Limit the octave range to 3 octaves in MOD files\n"
 "   --nocmd                Disable interactive commands\n"
-"   --norc                 Don't read /etc/xmprc or $HOME/.xmprc\n"
+"   --norc                 Don't read /etc/xmp/xmp.conf or $HOME/.xmp/xmp.conf\n"
 "   -R --random            Random order playing\n"
 #ifdef HAVE_SYS_RTPRIO_H
 "   --realtime             Run in real-time priority\n" 
