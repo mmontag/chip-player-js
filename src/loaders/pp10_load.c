@@ -226,6 +226,7 @@ int pha_load (FILE *f)
 		    case 0x0a:
 			event->fxt = 0x00;
 		    case 0x0f:
+			break;
 		    }
 		}
 
