@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.10 2005-02-11 00:46:28 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.11 2005-02-11 01:50:46 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1023,9 +1023,8 @@ static void file_info_box_build ()
 	GtkWidget *info_exit, *info_cycle, *info_mute, *info_about;
 	GtkWidget *scrw1;
 	GdkVisual *visual;
-	GtkWidget *dialog_action_area1;
 
-	info_window = gtk_dialog_new();
+	info_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_object_set_data(GTK_OBJECT(info_window),
 		"info_window", info_window);
 	gtk_window_set_title(GTK_WINDOW(info_window),"Extended Module Player");
@@ -1036,11 +1035,11 @@ static void file_info_box_build ()
 	gtk_container_border_width(GTK_CONTAINER(info_window), 0);
 	gtk_widget_realize (info_window);
 
-	dialog_vbox1 = GTK_DIALOG(info_window)->vbox;
-	gtk_object_set_data(GTK_OBJECT(info_window),
+	dialog_vbox1 = gtk_vbox_new(FALSE, 0);
+	gtk_object_set_data(GTK_OBJECT(dialog_vbox1),
 			"dialog_vbox1", dialog_vbox1);
 	gtk_container_border_width(GTK_CONTAINER(dialog_vbox1), 4);
-
+        gtk_container_add(GTK_CONTAINER(info_window), dialog_vbox1);
 
 	visual = gdk_visual_get_system ();
 
@@ -1066,11 +1065,6 @@ static void file_info_box_build ()
 	gtk_widget_set_events (frame1, GDK_BUTTON_PRESS_MASK | GDK_KEY_PRESS_MASK);
 	gtk_signal_connect (GTK_OBJECT (frame1), "button_press_event",
 		(GtkSignalFunc) image1_clicked, NULL);
-
-	dialog_action_area1 = GTK_DIALOG(info_window)->action_area;
-	gtk_object_set_data(GTK_OBJECT(info_window),
-		"dialog_action_area1", dialog_action_area1);
-	gtk_container_border_width(GTK_CONTAINER(dialog_action_area1), 0);
 
 	hbox1 = gtk_hbox_new (TRUE, 0);
 	gtk_object_set_data(GTK_OBJECT(hbox1), "hbox1", hbox1);
@@ -1102,9 +1096,10 @@ static void file_info_box_build ()
 
 	scrw1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
+	gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrw1), GTK_SHADOW_IN);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
-	gtk_box_pack_start(GTK_BOX(dialog_action_area1), scrw1, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(dialog_vbox1/*dialog_action_area1*/), scrw1, TRUE, TRUE, 0);
 
 	text1 = gtk_text_view_new();
 	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
@@ -1116,6 +1111,7 @@ static void file_info_box_build ()
 	gtk_text_set_line_wrap (GTK_TEXT(text1), FALSE);
 	gtk_widget_set (text1, "height", 160, "width", 290, NULL);
 #endif
+	gtk_widget_set (text1, "editable", FALSE, NULL);
 
 	gtk_container_add (GTK_CONTAINER(scrw1), text1);
 
