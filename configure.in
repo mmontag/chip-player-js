@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.1 2001-06-02 20:25:20 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.2 2001-11-09 08:24:27 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT(src/include/xmp.h)
@@ -24,7 +24,7 @@ AC_SUBST(X_XMP)
 X_XMP="xxmp"
 
 AC_SUBST(DRIVERS)
-DRIVERS=""
+DRIVERS="wav.o"
 
 AC_SUBST(DYNDRV)
 DYNDRV=""

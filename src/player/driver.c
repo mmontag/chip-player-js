@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.1 2001-06-02 20:28:07 cmatsuoka Exp $
+ * $Id: driver.c,v 1.2 2001-11-09 08:24:27 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -59,6 +59,8 @@ void (*_driver_callback)(void *, int) = NULL;
 extern struct xmp_drv_info drv_file;
 
 #ifndef DYNAMIC_DRV
+
+extern struct xmp_drv_info drv_wav;
 
 #ifdef DRIVER_SOLARIS
 extern struct xmp_drv_info drv_solaris;
