@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.11 2005-02-14 19:17:33 cmatsuoka Exp $
+$Id: ChangeLog,v 1.12 2005-02-15 18:20:57 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,6 +9,7 @@ Stable versions
 	- added file detection to the XMMS plugin
 	- added Beep Media Player support to the XMMS plugin
 	- added Epic Megagames PSM module loader
+	- added support to Ultimate Soundtracker modules
 	- fixed recursive decrunching of module files
 	- fixed QNX6 portability issues (by Mike Gorchak)
 	- fixed heavy memory leak in the XMMS plugin

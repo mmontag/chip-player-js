@@ -250,8 +250,26 @@ int st_load (FILE *f)
     /* Perform the necessary conversions for Ultimate Soundtracker */
     if (ust) {
 	/* Fix restart & bpm */
+	xxh->bpm = xxh->rst;
+	xxh->rst = 0;
+
 	/* Fix sample loops */
-	/* Fix effects */
+	for (i = 0; i < xxh->ins; i++) {
+	    /* FIXME */	
+	}
+
+	/* Fix effects (arpeggio and pitchbending) */
+	for (i = 0; i < xxh->pat; i++) {
+	    for (j = 0; j < (64 * xxh->chn); j++) {
+		event = &EVENT(i, j % xxh->chn, j / xxh->chn);
+		if (event->fxt == 1)
+		    event->fxt = 0;
+		else if (event->fxt == 2 && (event->fxp & 0xf0) == 0)
+		    event->fxt = 1;
+		else if (event->fxt == 2 && (event->fxp & 0x0f) == 0)
+		    event->fxp >>= 4;
+	    }
+	}
     }
 
     /* Load samples */
