@@ -1,11 +1,11 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.3 2002-05-30 12:10:51 cmatsuoka Exp $
+# $Id: Makefile,v 1.4 2002-07-27 14:43:34 cmatsuoka Exp $
 
 XCFLAGS	= -I../include $(X_INC)
 OBJS	= getopt.o getopt1.o options.o
 X11OBJS	= xpanel.o xstuff.o font1.o font2.o fft4g.o
 XDEPS	=
-BINS	= xmp $(X_XMP)
+BINS	= xmp $(X_XMP) mod2mp3
 XLIBS	= -L../../lib -lxmp -lm #-lefence
 X11LIBS	= -lX11 -lXext
 XPMS	= bg1.xpm bg2.xpm bg3.xpm

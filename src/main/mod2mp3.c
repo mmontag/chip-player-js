@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "xmp.h"
 
 static struct xmp_module_info mi;
@@ -33,8 +34,9 @@ static void process_echoback (unsigned long i)
 
 int main (int argc, char **argv)
 {
-    int i, t;
+    int t;
     FILE *p;
+    char *cmd, *enc = "lame -r -s44.1 -x -h -";
 
     xmp_init (argc, argv, &opt);
     opt.verbose = 0;
@@ -46,7 +48,11 @@ int main (int argc, char **argv)
 
     xmp_register_event_callback (process_echoback);
 
-    p = popen ("lame -r -s44.1 -x -h - xmp.mp3", "w");
+    cmd = malloc (strlen (enc) + strlen (argv[1]) + 10);
+    sprintf (cmd, "%s %s.mp3", enc, argv[1]);
+    p = popen (cmd, "w");
+    free (cmd);
+
     close (STDOUT_FILENO);
     dup2 (fileno (p), STDOUT_FILENO);
 
@@ -55,18 +61,15 @@ int main (int argc, char **argv)
 	return -1;
     }
 
-    for (i = 1; i < argc; i++) {
-	if (xmp_load_module (argv[i]) < 0) {
-	    fprintf (stderr, "%s: error loading %s\n", argv[0], argv[i]);
-	    continue;
-	}
-	xmp_get_module_info (&mi);
-	fprintf (stderr, "%s (%s)\n", mi.name, mi.type);
-	t = xmp_play_module ();
-	fprintf (stderr, "\n");
+    if (xmp_load_module (argv[1]) < 0) {
+        fprintf (stderr, "%s: error loading %s\n", argv[0], argv[1]);
+	return -1;
     }
+    xmp_get_module_info (&mi);
+    fprintf (stderr, "%s (%s)\n", mi.name, mi.type);
+    t = xmp_play_module ();
+    fprintf (stderr, "\n");
     xmp_close_audio ();
-
     pclose (p);
 
     return 0;
