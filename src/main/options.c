@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.1 2001-06-02 20:27:43 cmatsuoka Exp $
+ * $Id: options.c,v 1.2 2002-05-30 12:10:51 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,7 +32,6 @@ extern int nocmd;
 #ifdef HAVE_SYS_RTPRIO_H
 extern int rt;
 #endif
-extern int candy;
 
 #define OPT_CHORUS	0x100
 #define OPT_REVERB	0x101
@@ -231,7 +230,7 @@ static void usage (char *s, struct xmp_control *opt)
 void get_options (int argc, char **argv, struct xmp_control *opt)
 {
     int optidx = 0;
-#define OPTIONS "8Bb:cD:d:ef:hilLM:mo:P:qRrS:s:T:t:uVv"
+#define OPTIONS "8Bb:cD:d:f:hilLM:mo:P:qRrS:s:T:t:uVv"
     static struct option lopt[] =
     {
 	{ "8bit",		 0, 0, '8' },
@@ -240,7 +239,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
 	{ "driver",		 1, 0, 'd' },
-	{ "eye-candy",		 0, 0, 'e' },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
 	{ "frequency",		 1, 0, 'f' },
 	{ "offset-bug-emulation",0, 0, OPT_FX9BUG },
@@ -306,9 +304,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	    break;
 	case 'd':
 	    opt->drv_id = optarg;
-	    break;
-	case 'e':
-	    candy = 1;
 	    break;
 	case OPT_FIXLOOP:
 	    opt->fetch |= XMP_CTL_FIXLOOP;

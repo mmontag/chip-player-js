@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: main.c,v 1.1 2001-06-02 20:27:40 cmatsuoka Exp $
+ * $Id: main.c,v 1.2 2002-05-30 12:10:51 cmatsuoka Exp $
  */
 
 /*
@@ -62,7 +62,6 @@ int nocmd = 0;
 #ifdef HAVE_SYS_RTPRIO_H
 int rt = 0;
 #endif
-int candy = 0;
 
 #ifdef XXMP
 static pid_t pid = 0;

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.1 2001-06-02 20:27:46 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.2 2002-05-30 12:10:51 cmatsuoka Exp $
  */
 
 /*
@@ -43,7 +43,7 @@ static XSetWindowAttributes attributes;
 static unsigned long attribute_mask;
 static int depth;
 static GC gc;
-static XImage *ximage, *ximage_fluid;
+static XImage *ximage;
 static Window window, root;
 static XShmSegmentInfo shminfo;
 
@@ -59,10 +59,6 @@ static int indexed;
 static int mask_r = 0xfe0000;
 static int mask_g = 0x00fe00;
 static int mask_b = 0x0000fe;
-
-extern int candy;
-void fluid_init (int, int);
-void fluid_main (XImage *, XImage *);
 
 void (*draw_rectangle) ();
 void (*erase_rectangle) ();
@@ -300,7 +296,7 @@ void setpalette (char **bg)
 
 void putimage (int x, int y, int w, int h)
 {
-    XShmPutImage (display, window, gc, ximage_fluid, x, y, x, y, w, h, 0);
+    XShmPutImage (display, window, gc, ximage, x, y, x, y, w, h, 0);
 }
 
 
@@ -314,11 +310,6 @@ void settitle (char *title)
 
 void update_display ()
 {
-    if (candy) {
-	fluid_main (ximage_fluid, ximage);
-	XShmPutImage (display, window, gc, ximage_fluid, 0, 0,
-		0, 0, ximage_fluid->width, ximage_fluid->height, 0);
-    }
     XSync (display, False);
 }
 
@@ -327,9 +318,6 @@ void close_window ()
 {
     XSync (display, False);
     XShmDetach (display, &shminfo);
-    if (candy) {
-	XDestroyImage (ximage_fluid);
-    }
     XDestroyImage (ximage);
     XCloseDisplay (display);
     shmctl (shminfo.shmid, IPC_RMID, NULL);
@@ -346,7 +334,7 @@ int process_events (int *x, int *y)
 	XNextEvent (display, &event);
 	switch (event.type) {
 	case Expose:
-	    XShmPutImage (display, window, gc, ximage_fluid,
+	    XShmPutImage (display, window, gc, ximage,
 		event.xexpose.x, event.xexpose.y,
 		event.xexpose.x, event.xexpose.y,
 		event.xexpose.width, event.xexpose.height, 0);
@@ -439,32 +427,23 @@ int create_window (char *s, char *c, int w, int h, int argc, char **argv)
 
     gc = XCreateGC (display, window, 0, NULL);
 
-    (candy ? ximage_fluid : ximage) = XShmCreateImage (display, visual,
-	depth, ZPixmap, NULL, &shminfo, w, h);
+    ximage = XShmCreateImage (display, visual, depth, ZPixmap,
+	NULL, &shminfo, w, h);
 
-    if (!candy)
-	ximage_fluid = ximage;
-
-    if (!ximage_fluid) {
+    if (!ximage) {
 	fprintf (stderr, "can't create image\n");
 	return -1;
     }
-    shminfo.shmid = shmget (IPC_PRIVATE, ximage_fluid->bytes_per_line *
-	(ximage_fluid->height + 1), IPC_CREAT | 0600);
+    shminfo.shmid = shmget (IPC_PRIVATE, ximage->bytes_per_line *
+	(ximage->height + 1), IPC_CREAT | 0600);
 
     if (shminfo.shmid == -1) {
 	fprintf (stderr, "can't allocate X shared memory\n");
 	return -1;
     }
-    shminfo.shmaddr = ximage_fluid->data = shmat (shminfo.shmid, 0, 0);
+    shminfo.shmaddr = ximage->data = shmat (shminfo.shmid, 0, 0);
     shminfo.readOnly = 0;
     XShmAttach (display, &shminfo);
-
-    if (candy) {
-	ximage = XCreateImage (display, visual, depth, ZPixmap, 0, 0, w, h, 8, 0);
-	ximage->data = calloc (ximage->height, ximage->bytes_per_line);
-	fluid_init (w, h);
-    }
 
     XMapWindow (display, window);
     XSetWindowBackground (display, window, BlackPixel (display, screen));
