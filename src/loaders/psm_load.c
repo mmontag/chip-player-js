@@ -1,7 +1,7 @@
 /* Epic Megagames PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.16 2005-02-20 15:24:11 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.17 2005-02-20 18:51:03 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,6 +22,7 @@
 #include "period.h"
 
 static int sinaria;
+
 
 struct psm_hdr {
 	int8 songname[8];		/* "MAINSONG" */
@@ -78,9 +79,11 @@ static void get_dsmp_cnt(int size, uint16 *buffer)
 	xxh->smp = xxh->ins;
 }
 
-static void get_pbod_cnt(int size, uint16 *buffer)
+static void get_pbod_cnt(int size, uint8 *buffer)
 {
 	xxh->pat++;
+	if (buffer[9] != 0 && buffer[13] == 0)
+		sinaria = 1;
 }
 
 
@@ -298,24 +301,10 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, c, fxt, fxp);
 static void get_song(int size, char *buffer)
 {
 	struct psm_hdr *ph = (struct psm_hdr *)buffer;
-	char *p;
 
 	xxh->chn = ph->channels;
 	if (*xmp_ctl->name == 0)
 		strncpy(xmp_ctl->name, ph->songname, 8);
-
-	p = buffer + 11;
-
-	while (strncmp(p, "DATE", 4)) {
-		int skip;
-		p += 4;
-		skip = *(uint32 *)p;
-		L_ENDIAN32(skip);
-		p += 4 + skip;
-	}
-
-	if (p + 12 < buffer + size && !strncmp(p + 8, "940906", 6))
-		sinaria = 1;
 }
 
 static void get_song_2(int size, char *buffer)
