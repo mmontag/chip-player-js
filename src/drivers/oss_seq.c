@@ -1,12 +1,12 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2004 Claudio Matsuoka and Hipolito Carraro Jr
  * AWE32 support Copyright (C) 1996, 1997 Takashi Iwai
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.1 2001-06-02 20:25:59 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.2 2004-09-16 00:56:36 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -316,7 +316,7 @@ static void seq_sync (double next_time)
     if (next_time > this_time) {
 #ifdef HZ
 	/* Nils Faerber's hack */
-	SEQ_WAIT_TIME (next_time * HZ / 100);
+	SEQ_WAIT_TIME (next_time * HZ / 10);	/* CM: was 100 */
 #else
 	SEQ_WAIT_TIME (next_time);
 #endif
