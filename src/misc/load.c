@@ -44,6 +44,7 @@ static int decrunch (FILE **f, char **s)
     builtin = res = 0;
     temp = strdup ("/tmp/xmp_XXXXXX");
 
+    fseek (*f, 0, SEEK_SET);
     fread (b, 1, 64, *f);
 
     if (b[0] == 'P' && b[1] == 'K') {
@@ -106,7 +107,6 @@ static int decrunch (FILE **f, char **s)
 	report ("failed\n");
 	return -1;
     }
-    unlink (temp);
 
     if ((t = fdopen (fd, "w+b")) == NULL) {
 	report ("failed\n");
@@ -126,6 +126,7 @@ static int decrunch (FILE **f, char **s)
 		report ("failed\n");
 	    fclose (t);
 	    free (line);
+            unlink (temp);
 	    free (temp);
 	    return -1;
 	}
@@ -134,6 +135,7 @@ static int decrunch (FILE **f, char **s)
 	if ((buf = malloc (BSIZE)) == NULL) {
 	    if (xmp_ctl->verbose)
 		report ("failed\n");
+            unlink (temp);
 	    free (temp);
 	    pclose (p);
 	    fclose (t);
@@ -144,16 +146,18 @@ static int decrunch (FILE **f, char **s)
 	} 
 	free (buf);
 	pclose (p);
-    } else switch (builtin) {
-    case BUILTIN_PP:    
-	res = decrunch_pp (*f, t);
-	break;
-    case BUILTIN_SQSH:    
-	res = decrunch_sqsh (*f, t);
-	break;
-    case BUILTIN_MMCMP:    
-	res = decrunch_mmcmp (*f, t);
-	break;
+    } else {
+	switch (builtin) {
+	case BUILTIN_PP:    
+	    res = decrunch_pp (*f, t);
+	    break;
+	case BUILTIN_SQSH:    
+	    res = decrunch_sqsh (*f, t);
+	    break;
+	case BUILTIN_MMCMP:    
+	    res = decrunch_mmcmp (*f, t);
+	    break;
+	}
     }
 
     if (res < 0) {
@@ -171,8 +175,8 @@ static int decrunch (FILE **f, char **s)
     *f = t;
  
     temp2 = strdup (temp);
-    if (decrunch (f, &temp))
-	unlink (temp2);
+    decrunch(f, &temp);
+    unlink (temp2);
     free (temp2);
     free (temp);
 
