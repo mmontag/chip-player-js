@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.3 2005-02-20 13:38:52 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.4 2005-02-20 15:19:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -115,7 +115,7 @@ int amf_load(FILE * f)
 		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
 		xxi[i][0].vol = read8(f);
 
-		if (ver < 0x0a) {
+		if (ver <= 0x0a) {
 			xxs[i].lps = read16l(f);
 			xxs[i].lpe = xxs[i].len - 1;
 		} else {
@@ -288,6 +288,13 @@ int amf_load(FILE * f)
 					}
 					break;
 				case 0x92:
+					if ((int8)t3 > 0) {
+						fxt = FX_PORTA_UP;
+						fxp = 0xf0 | (fxp & 0x0f);
+					} else {
+						fxt = FX_PORTA_DN;
+						fxp = 0xf0 | (fxp & 0x0f);
+					}
 					break;
 				case 0x93:
 					fxt = FX_EXTENDED;
@@ -304,6 +311,13 @@ int amf_load(FILE * f)
 					fxp = t3;
 					break;
 				case 0x96:
+					if ((int8)t3 > 0) {
+						fxt = FX_PORTA_UP;
+						fxp = 0xe0 | (fxp & 0x0f);
+					} else {
+						fxt = FX_PORTA_DN;
+						fxp = 0xe0 | (fxp & 0x0f);
+					}
 					break;
 				case 0x97:
 					break;
@@ -330,6 +344,8 @@ int amf_load(FILE * f)
 		if (V(0)) report (".");
 	}
 	if (V(0)) report ("\n");
+
+	xmp_ctl->fetch |= XMP_CTL_FINEFX;
 
 	return 0;
 }
