@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa.c,v 1.3 2005-02-24 16:09:59 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.4 2005-02-24 17:25:32 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -34,14 +34,13 @@ static int prepare_driver (void);
 static void dshutdown (void);
 static int to_fmt (struct xmp_control *);
 static void bufdump (int);
-static void bufwipe (void);
 static void flush (void);
-static void dsync (double);
 
 static void dummy () { }
 
 static char *help[] = {
-	"frag=num,size", "Set the number and size (bytes) of fragments",
+	"buffer=num", "Set the ALSA buffer time in milliseconds",
+	"period=num", "Set the ALSA period time in milliseconds",
 	"card <name>", "Select sound card to use",
 	NULL
 };
@@ -65,9 +64,9 @@ struct xmp_drv_info drv_alsa_mix = {
 	flush,			/* stctlimer */
 	dummy,			/* reset */
 	bufdump,		/* bufdump */
-	bufwipe,		/* bufwipe */
+	dummy,			/* bufwipe */
 	dummy,			/* clearmem */
-	dsync,			/* sync */
+	dummy,			/* sync */
 	xmp_smix_writepatch,	/* writepatch */
 	xmp_smix_getmsg,	/* getmsg */
 	NULL
@@ -75,42 +74,27 @@ struct xmp_drv_info drv_alsa_mix = {
 
 static snd_pcm_t *pcm_handle;
 
-static int frag_num = 4;
-static size_t frag_size = 4096;
-static char *buf = NULL;  /* malloc'd */
-static char *buf_nextfree = NULL;
 
-
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_control *ctl)
 {
 	snd_pcm_hw_params_t *hwparams;
 	int ret;
-	char *token, **parm; /* used by parm_init...chkparm...parm_end */
+	char *token, **parm;
 	unsigned int channels, rate;
-	unsigned int btime, ptime;
+	unsigned int btime = 2000000;	/* 2s */
+	unsigned int ptime = 100000;	/* 100ms */
 	char *card_name = "default";
 
-	parm_init();  		/* NB: this is a macro */
-	chkparm2("frag", "%d,%d", &frag_num, &frag_size); /* NB: macro */
-	if (frag_num > 8) frag_num = 8;
-	if (frag_num < 0) frag_num = 4;
-	if (frag_size > 65536) frag_size = 65536;
-	if (frag_size < 16) frag_size = 16;
-	chkparm1("card", card_name = token);	/* NB: macro */
-	parm_end();				/* NB: macro */
-
-	if ((buf = malloc(frag_size)) == NULL) {
-		printf("Unable to allocate memory for ALSA mixer buffer\n");
-		return XMP_ERR_DINIT;
-	}
-
-	buf_nextfree = buf;
+	parm_init();  
+	chkparm1("buffer", btime = 1000 * strtoul(token, NULL, 0));
+	chkparm1("period", btime = 1000 * strtoul(token, NULL, 0));
+	chkparm1("card", card_name = token);
+	parm_end();
 
 	if ((ret = snd_pcm_open(&pcm_handle, card_name,
 		SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
 		printf("Unable to initialize ALSA pcm device: %s\n",
 			snd_strerror(ret));
-		free(buf);
 		return XMP_ERR_DINIT;
 	}
 
@@ -124,10 +108,8 @@ static int init (struct xmp_control *ctl)
 	snd_pcm_hw_params_set_format(pcm_handle, hwparams, to_fmt(ctl));
 	snd_pcm_hw_params_set_rate_near(pcm_handle, hwparams, &rate, 0);
 	snd_pcm_hw_params_set_channels_near(pcm_handle, hwparams, &channels);
-#if 0
 	snd_pcm_hw_params_set_buffer_time_near(pcm_handle, hwparams, &btime, 0);
 	snd_pcm_hw_params_set_period_time_near(pcm_handle, hwparams, &ptime, 0);
-#endif
 	
 	if ((ret = snd_pcm_hw_params(pcm_handle, hwparams)) < 0) {
 		printf("Unable to set ALSA output parameters: %s\n",
@@ -188,65 +170,30 @@ static int to_fmt(struct xmp_control *ctl)
 }
 
 
-static void bufwipe (void)
-{
-	buf_nextfree = buf;
-}
-
-
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
 static void bufdump(int i)
 {
 	void *b;
+	int frames;
 
 	b = xmp_smix_buffer();
-
-#if 0
-	while (i > 0) {
-		size_t f = (frag_size) - (buf_nextfree - buf);
-		size_t to_copy = (f<i) ? f : i;
-		memcpy(buf_nextfree, b, to_copy);
-		b += to_copy;
-		buf_nextfree += to_copy;
-		f -= to_copy;
-		i -= to_copy;
-		if (f == 0) {
-			int frames;
-			frames = snd_pcm_bytes_to_frames(pcm_handle, frag_size);
-			snd_pcm_writei(pcm_handle, buf, frames);
-			buf_nextfree = buf;
-		}
-	}
-#endif
-
-	{
-		int frames;
-		frames = snd_pcm_bytes_to_frames(pcm_handle, i);
-		snd_pcm_writei(pcm_handle, buf, frames);
-	}
-
+	frames = snd_pcm_bytes_to_frames(pcm_handle, i);
+	snd_pcm_writei(pcm_handle, b, frames);
 }
 
 
-static void dsync(double t) {  /* t is number of centiseconds? */
-	//printf("sync(%f) ", t);
-	//  usleep(5000);
-}
-
-static void dshutdown ()
+static void dshutdown()
 {
-	/* fprintf(stderr, "alsa_mix.dshutdown called\n"); */
 	xmp_smix_off();
 	snd_pcm_close(pcm_handle);
 }
 
 
-static void flush ()
+static void flush()
 {
-#if 0
-	snd_pcm_plugin_flush(pcm_handle, SND_PCM_CHANNEL_PLAYBACK);
-#endif
+	snd_pcm_drain(pcm_handle);
 	prepare_driver();
 }
+
