@@ -1,5 +1,5 @@
 # Extended Module Player src/xmms/Makefile
-# $Id: Makefile,v 1.8 2005-02-23 17:07:58 cmatsuoka Exp $
+# $Id: Makefile,v 1.9 2005-02-23 17:17:13 cmatsuoka Exp $
 
 XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` -DBMP_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
 DFILES	= Makefile README $(OBJS:.o=.c)
@@ -17,7 +17,7 @@ all:
 
 all-xmms: plugin
 
-plugin: $(OBJS) $(LINKS) $(DYNDRV)
+plugin: $(OBJS) $(DYNDRV)
 	$(LD) -shared -o xmp-plugin.so $(OBJS) -L../../lib/ -lxmp
 
 dyndrv:
@@ -28,8 +28,6 @@ install::
 	$(INSTALL) -s -m755 xmp-plugin.so $(INSTDIR)
 
 $(OBJS): Makefile
-
-depend: driver.c $(LINKS)
 
 include depend
 
