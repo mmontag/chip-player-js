@@ -100,32 +100,21 @@ static void get_dsmp(int size, void *buffer)
 	xxi[i][0].vol = pi->defvol;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
+	c2spd_to_note(pi->samplerate, &xxi[i][0].xpo, &xxi[i][0].fin);
 
 	strncpy ((char *)xxih[i].name, pi->samplename, 32);
 	str_adj ((char *)xxih[i].name);
 
 	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
-	    report ("[%2X] %-32.32s %05x %05x %05x %c V%02x\n", i,
+	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %5d", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol);
+		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, pi->samplerate);
 
 	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate, XMP_SMP_NOLOAD,
 		&xxs[i], (uint8 *)buffer + sizeof(struct psm_hdr));
 
 	cur_ins++;
 }
-
-#if 0
-struct psm_ins
-{   
-    uint8 flags;
-    int8 songname[8];
-    uint32 smpid;
-    int8 samplename[34];
-    uint8 insno;
-    uint32 samplerate;
-} PACKED;
-#endif
 
 
 static void get_pbod (int size, void *buffer)
@@ -250,10 +239,22 @@ static void get_song(int size, char *buffer)
 static void get_song_2(int size, char *buffer)
 {
 	char *p;
+	uint32 oplh_size;
 
 	xxh->len = 0;
 
-	for (p = buffer + 0x3e; *p == 0x01; p += 5) {
+	p = buffer + 29;
+	oplh_size = *(uint32 *)p;
+	L_ENDIAN32(oplh_size);
+
+	/* Get patterns by moving to the end of the OPLH chunk and
+	 * get back checking for 0x01. Certainly not the way it
+	 * was designed to work, but enough to play jjrabit psms.
+	 * Must fix this later!
+	 */
+	for (p = buffer + 33 + oplh_size - 9; *p == 1; p -= 5);
+
+	for (p += 5; *p == 0x01; p += 5) {
 		uint32 pat = *(uint32 *)(p + 1);
 		pord[xxh->len++] = pat;
 	}
@@ -304,7 +305,7 @@ int psm_load(FILE *f)
 
 	if (V(0)) {
 	    report("Stored patterns: %d\n", xxh->pat);
-	    report("Stored samples : %d\n", xxh->smp);
+	    report("Stored samples : %d", xxh->smp);
 	}
 
 	fseek(f, offset, SEEK_SET);
