@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.12 2005-02-11 11:24:02 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.13 2005-02-11 12:32:04 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -260,7 +260,7 @@ static GtkWidget *text1;
 #ifdef BMP_PLUGIN
 static GtkTextBuffer *textbuf1;
 static GtkTextIter start, end;
-/*static GtkTextTag *tag;*/
+static GtkTextTag *tag;
 #endif
 
 static GdkFont *font;
@@ -525,10 +525,8 @@ void *catch_info (void *arg)
         fgets (buf, 100, f);
 #ifdef BMP_PLUGIN
 	gtk_text_buffer_get_end_iter(textbuf1, &end);
-	/*tag = gtk_text_buffer_create_tag(textbuf1, NULL,
-		"foreground", color_black, "background", color_white, NULL);
-	gtk_text_buffer_insert_with_tags(textbuf1, end, buf, -1, tag, NULL);*/
-	gtk_text_buffer_insert(textbuf1, &end, buf, -1);
+	tag = gtk_text_buffer_create_tag(textbuf1, NULL, "font", "fixed", NULL);
+	gtk_text_buffer_insert_with_tags(textbuf1, &end, buf, -1, tag, NULL);
 #else
 	gtk_text_insert(GTK_TEXT(text1), font,
 	    color_black, color_white, buf, strlen(buf));
