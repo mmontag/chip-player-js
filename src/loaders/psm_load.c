@@ -95,6 +95,10 @@ static void get_dsmp(int size, void *buffer)
 	L_ENDIAN32(pi->samplerate);
 	L_ENDIAN32(pi->smpid);
 
+	/* for jjxmas95 xm3 */
+	if ((int)pi->loopend == -1)
+		pi->loopend = 0;
+
 	i = cur_ins;
 	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 	xxs[i].len = pi->length;
@@ -126,7 +130,7 @@ static void get_dsmp(int size, void *buffer)
 static void get_pbod (int size, void *buffer)
 {
 	int i, r;
-	struct xxm_event *event;
+	struct xxm_event *event, dummy;
 	struct psm_pat *pp = (struct psm_pat *)buffer;
 	char *p;
 	uint8 f, c, c2;
@@ -148,7 +152,7 @@ static void get_pbod (int size, void *buffer)
 
 	for (r = 0; r < rows && pos < size; ) {
 		f = p[pos++];
-		if (f == 0x00)
+		if ((f & 0x7f) == 0x00)
 			break;
 
 		c = p[pos++];
@@ -171,7 +175,7 @@ static void get_pbod (int size, void *buffer)
 			continue;
 		}
 
-		event = &EVENT(i, c, r);
+		event = c < xxh->chn ? &EVENT(i, c, r) : &dummy;
 
 		if ((f & 0x40) && (pos + 1 < len)) {
 			uint8 note = p[pos++];
@@ -266,16 +270,27 @@ static void get_song_2(int size, char *buffer)
 
 	xxh->len = 0;
 
-	p = buffer + 29;
+	p = buffer + 11;		/* Point to first sub-chunk */
+
+	while (strncmp(p, "OPLH", 4)) {
+		int skip;
+		p += 4;
+		skip = *(uint32 *)p;
+		L_ENDIAN32(skip);
+		p += 4 + skip;
+	}
+
+	p += 4;
 	oplh_size = *(uint32 *)p;
 	L_ENDIAN32(oplh_size);
+	p += 4;
 
 	/* Get patterns by moving to the end of the OPLH chunk and
 	 * get back checking for 0x01. Certainly not the way it
 	 * was designed to work, but enough to play jjrabit psms.
 	 * Must fix this later!
 	 */
-	for (p = buffer + 33 + oplh_size - 9; *p == 1; p -= 5);
+	for (p += oplh_size - 9; *p == 1; p -= 5);
 
 	for (p += 5; *p == 0x01; p += 5) {
 		uint32 pat = *(uint32 *)(p + 1);
