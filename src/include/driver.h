@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.2 2001-11-07 23:14:23 cmatsuoka Exp $
+ * $Id: driver.h,v 1.3 2002-09-03 10:47:46 dmierzej Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -14,7 +14,7 @@
 #include "xmpi.h"
 
 #define XMP_PATCH_FM	-1
-#define DYNDRV_PREFIX	LIBDIR "/xmp/"
+#define DYNDRV_PREFIX	LIBDIR "/xmp"
 
 #if !defined(DRIVER_OSS_SEQ) && !defined(DRIVER_OSS_MIX)
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.2 2001-11-09 08:24:27 cmatsuoka Exp $
+ * $Id: driver.c,v 1.3 2002-09-03 10:47:46 dmierzej Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -144,7 +144,7 @@ static int load_drivers (char *p)
     char buf[256];
 
     n = scandir (p, &file, select_file, alphasort);
-    if (!n)
+    if (n<=0)
 	return -1;
 
     for (i = 0; i < n; i++) {
@@ -222,7 +222,7 @@ void xmp_init_drivers ()
     snprintf (p, MAXPATHLEN, "%s/drivers/", getenv ("XMP_LIB_PATH"));
 
     if (load_drivers (p) < 0)
-        load_drivers (DYNDRV_PREFIX "/drivers/");
+        load_drivers (DYNDRV_PREFIX "/drivers");
 
     free (p);
 }
