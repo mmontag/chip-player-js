@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.7 2005-02-10 00:51:27 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.8 2005-02-10 13:36:28 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -193,10 +193,10 @@ static void aboutbox ()
 		"Written by Claudio Matsuoka <claudio@helllabe.org>\n"
 		"and Hipolito Carraro Jr. <hipolito@onda.com.br>\n"
 		"\n"
-		"Portions Copyright ©1998,2000 Olivier Lapicque,\n"
-		"©1998 Tammo Hinrichs, ©1997 Bert Jahn,\n"
-		"©1998 Sylvain Chipaux, ©1995 Marc Espie\n"
-		"©1999 Tatsuyuki Satoh, ©1996-1999 Takuya Ooura\n"
+		"Portions Copyright 1998,2000 Olivier Lapicque,\n"
+		"1998 Tammo Hinrichs, 1997 Bert Jahn,\n"
+		"1998 Sylvain Chipaux, 1995 Marc Espie\n"
+		"1999 Tatsuyuki Satoh, 1996-1999 Takuya Ooura\n"
 		"\n"
 		"Supported module formats:"
 	);
@@ -811,7 +811,7 @@ static void configure()
 	if (xmp_cfg.mixing_freq == FREQ_SAMPLE_44)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(Sample_44),TRUE);
 
-	Sample_22 = gtk_radio_button_new_with_label(sample_group, "22 kHz)");
+	Sample_22 = gtk_radio_button_new_with_label(sample_group, "22 kHz");
 	sample_group = gtk_radio_button_group(GTK_RADIO_BUTTON(Sample_22));
 	gtk_object_set_data(GTK_OBJECT(xmp_conf_window), "Sample_22",Sample_22);
 	gtk_widget_show(Sample_22);

@@ -1,5 +1,5 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.4 2002-07-27 14:43:34 cmatsuoka Exp $
+# $Id: Makefile,v 1.5 2005-02-10 13:36:26 cmatsuoka Exp $
 
 XCFLAGS	= -I../include $(X_INC)
 OBJS	= getopt.o getopt1.o options.o
@@ -48,5 +48,8 @@ mod2mp3: mod2mp3.o
 
 dump: dump.o
 	$(LD) $(LDFLAGS) $+
+
+clean::
+	rm -f simple
 
 include depend

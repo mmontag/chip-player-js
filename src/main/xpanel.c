@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.3 2004-09-16 00:38:44 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.4 2005-02-10 13:36:27 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -429,7 +429,7 @@ void panel_setup ()
     b = malloc (22 * 13 * sizeof (int));
     q = malloc (22 * 13 * sizeof (int));
 
-    n = (RES_X - 16) / ii->mi.chn;
+    n = (RES_X - 16) / (ii->mi.chn ? ii->mi.chn : 1);
     r = ((RES_X - 16) - n * ii->mi.chn) >> 1;
 
     get_rectangle (177, 106, 15, 13, p);

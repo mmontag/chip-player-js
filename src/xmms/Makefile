@@ -1,8 +1,8 @@
 # Extended Module Player src/xmms/Makefile
-# $Id: Makefile,v 1.5 2005-02-10 00:51:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2005-02-10 13:36:28 cmatsuoka Exp $
 
 XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` -DXMMS_PLUGIN -DBMP_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
-DFILES	= Makefile README xmp-plugin.h $(OBJS:.o=.c)
+DFILES	= Makefile README $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
 INSTDIR	= $(DEST_DIR)`xmms-config --input-plugin-dir`
 LINKS	= xpanel.c fft4g.c font1.c font2.c
