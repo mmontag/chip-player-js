@@ -11,13 +11,9 @@ Description: Common files for xmp, xxmp and the xmp XMMS plugin
  (including the OSS PCM audio and sequencer drivers) for xmp, xmp-x11 and
  xmp-xmms.
 
-Package: libxmp2
+Package: libxmp2.0
 Architecture: any
  This package contains the xmp mod player library.
-
-Package: libxmp2-dev
-Architecture: any
- This package contains the development files for the xmp mod player library.
 
 Package: xmp
 Architecture: any

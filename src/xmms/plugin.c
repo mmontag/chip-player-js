@@ -3,12 +3,12 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.1 2001-06-02 20:28:33 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.2 2001-11-09 22:47:35 cmatsuoka Exp $
  */
 
 #include "xmp-plugin.h"
-#include "xmms/configfile.h"
-#include "xmms/util.h"
+#include <xmms/configfile.h>
+#include <xmms/util.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <X11/Xlib.h>
@@ -303,7 +303,7 @@ static void init(void)
 	xmp_cfg.filter = TRUE;
 	xmp_cfg.pan_amplitude = 80;
 
-#define CFGREADINT(x) xmms_cfg_read_int (cfg, "XMP", #x, &xmp_cfg.##x)
+#define CFGREADINT(x) xmms_cfg_read_int (cfg, "XMP", #x, &xmp_cfg.x)
 
 	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
 	if ((cfg = xmms_cfg_open_file(filename))) {
@@ -711,7 +711,7 @@ static void configure()
 	gtk_object_set_data(GTK_OBJECT(xmp_conf_window), #w, w);	\
 	gtk_widget_show(w);						\
 	gtk_box_pack_start(GTK_BOX(vbox6), w, TRUE, TRUE, 0);		\
-	if (xmp_cfg.##o == 1)						\
+	if (xmp_cfg.o == 1)						\
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), TRUE); \
 }
 
@@ -811,7 +811,7 @@ static void config_ok (GtkWidget *widget, gpointer data)
 	if (!cfg)
 		cfg = xmms_cfg_new();
 
-#define CFGWRITEINT(x) xmms_cfg_write_int (cfg, "XMP", #x, xmp_cfg.##x)
+#define CFGWRITEINT(x) xmms_cfg_write_int (cfg, "XMP", #x, xmp_cfg.x)
 
 	CFGWRITEINT (mixing_freq);
 	CFGWRITEINT (force8bit);

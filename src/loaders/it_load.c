@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: it_load.c,v 1.1 2001-06-02 20:26:25 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.2 2001-11-09 22:47:35 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -327,14 +327,14 @@ int it_load (FILE * f)
 
 #define BUILD_ENV(X) { \
 	    fread (&env, 1, sizeof (env), f); \
-	    xxih[i].##X##ei.flg = env.flg & IT_ENV_ON ? XXM_ENV_ON : 0; \
-	    xxih[i].##X##ei.flg |= env.flg & IT_ENV_LOOP ? XXM_ENV_LOOP : 0; \
-	    xxih[i].##X##ei.flg |= env.flg & IT_ENV_SLOOP ? XXM_ENV_SUS : 0; \
-	    xxih[i].##X##ei.npt = env.num; \
-	    xxih[i].##X##ei.sus = env.slb; \
-	    xxih[i].##X##ei.sue = env.sle; \
-	    xxih[i].##X##ei.lps = env.lpb; \
-	    xxih[i].##X##ei.lpe = env.lpe; \
+	    xxih[i].X##ei.flg = env.flg & IT_ENV_ON ? XXM_ENV_ON : 0; \
+	    xxih[i].X##ei.flg |= env.flg & IT_ENV_LOOP ? XXM_ENV_LOOP : 0; \
+	    xxih[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? XXM_ENV_SUS : 0; \
+	    xxih[i].X##ei.npt = env.num; \
+	    xxih[i].X##ei.sus = env.slb; \
+	    xxih[i].X##ei.sue = env.sle; \
+	    xxih[i].X##ei.lps = env.lpb; \
+	    xxih[i].X##ei.lpe = env.lpe; \
 	    if (env.num) xx##X##e[i] = calloc (4, env.num); \
 	    for (j = 0; j < env.num; j++) { \
 		L_ENDIAN16 (env.node[j].x); \

@@ -8,7 +8,7 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 	# Add here commands to compile the package.
-	./configure --enable-dynamic --enable-alsa --enable-esd --enable-xmms --enable-nas --enable-arts
+	./configure --enable-dynamic --disable-alsa --enable-esd --enable-xmms --enable-nas --enable-arts
 	$(MAKE)
 	touch build-stamp
 
@@ -30,8 +30,8 @@ binary-arch: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean
-	dh_installdirs -plibxmp2 usr/lib
-	dh_installdirs -plibxmp2 usr/lib usr/include
+	dh_installdirs -plibxmp2.0 usr/lib
+	dh_installdirs -plibxmp2.0 usr/lib usr/include
 	dh_installdirs -pxmp usr/bin
 	dh_installdirs -pxmp-x11 usr/bin
 	dh_installdirs -pxmp-common etc usr/bin usr/lib/xmp/drivers
@@ -45,10 +45,7 @@ binary-arch: build-stamp
 	install -s -m755 src/main/xxmp $(shell pwd)/debian/xmp-x11/usr/bin
 	install -s -m644 src/xmms/xmp-plugin.so \
 		$(shell pwd)/debian/xmp-xmms/usr/lib/xmms/Input
-	install -s -m644 lib/libxmp.so.* $(shell pwd)/debian/libxmp2/usr/lib
-	install -s -m644 lib/libxmp.so $(shell pwd)/debian/libxmp2-dev/usr/lib
-	install -s -m644 lib/libxmp.a $(shell pwd)/debian/libxmp2-dev/usr/lib
-	install -s -m644 include/xmp.h $(shell pwd)/debian/libxmp2-dev/usr/include
+	install -s -m644 lib/libxmp.so.* $(shell pwd)/debian/libxmp2.0/usr/lib
 	install -s -m644 lib/drivers/oss_seq.so $(shell pwd)/debian/tmp/usr/lib/xmp/drivers
 	install -s -m644 lib/drivers/oss_mix.so $(shell pwd)/debian/tmp/usr/lib/xmp/drivers
 	install -s -m644 lib/drivers/esd.so $(shell pwd)/debian/xmp-esd/usr/lib/xmp/drivers
