@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: synth.c,v 1.1 2001-06-02 20:28:29 cmatsuoka Exp $
+ * $Id: synth.c,v 1.2 2003-06-24 23:36:22 dmierzej Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -94,8 +94,6 @@ static int ym3812_note[] = {
     0x2ae
 };
 
-static FM_OPL *ym3812;
-
 #define NUM_SYNTH_CHANNEL 9
 static int voc2ch[NUM_SYNTH_CHANNEL];
 
@@ -117,7 +115,7 @@ static int voc2ch[NUM_SYNTH_CHANNEL];
  *  port thirty-five times after writing to the data port.
  */
 
-static inline int opl_write (FM_OPL *opl, int a, int v)
+static inline int opl_write (int a, int v)
 {
 #ifdef DEBUG_ADLIB 
     outb (a, 0x388);
@@ -126,13 +124,13 @@ static inline int opl_write (FM_OPL *opl, int a, int v)
     DELAY (35);
     return 0;
 #else
-    OPLWrite (opl, 0x388, a);
-    return OPLWrite (opl, 0x389, v);
+    YM3812Write (0, 0, a);
+    return YM3812Write (0, 1, v);
 #endif
 }
 
 
-static inline uint8 opl_read (FM_OPL *opl, int a)
+static inline uint8 opl_read (int a)
 {
 #ifdef DEBUG_ADLIB
     int x;
@@ -143,8 +141,8 @@ static inline uint8 opl_read (FM_OPL *opl, int a)
     DELAY (35);
     return x;
 #else
-    OPLWrite (opl, 0x388, a);
-    return OPLRead (opl, 0x389);
+    YM3812Write (0, 0, a);
+    return YM3812Read (0, 1);
 #endif
 }
 
@@ -187,11 +185,11 @@ void synth_setpatch (int c, uint8 *data)
 	return;
 
     for (i = 0; i < 10; i++)
-	opl_write (ym3812, register_base[i] + register_offset[i % 2][c], data[i]); 
-    opl_write (ym3812, register_base[10] + c, data[10]);
+	opl_write (register_base[i] + register_offset[i % 2][c], data[i]); 
+    opl_write (register_base[10] + c, data[10]);
 
-    x = opl_read (ym3812, 0xb0 + c);
-    opl_write (ym3812, 0xb0 + c, x & ~0x20);
+    x = opl_read (0xb0 + c);
+    opl_write (0xb0 + c, x & ~0x20);
 }
 
 /*
@@ -228,9 +226,8 @@ void synth_setnote (int c, int note, int bend)
     if (o < 0)
 	o = 0;
 
-    opl_write (ym3812, 0xa0 + c, f & 0xff);
-    opl_write (ym3812, 0xb0 + c,
-	0x20 | ((o << 2) & 0x1c) | ((f >> 8) & 0x03));
+    opl_write (0xa0 + c, f & 0xff);
+    opl_write (0xb0 + c, 0x20 | ((o << 2) & 0x1c) | ((f >> 8) & 0x03));
 }
 
 
@@ -239,10 +236,9 @@ int synth_init (int freq)
 #ifdef DEBUG_ADLIB
    ioperm (0x388, 2, 1);
 #endif
-    ym3812 = OPLCreate (OPL_TYPE_IO, 3600000, freq);
     synth_chreset ();
 
-    return ym3812 != NULL;
+    return YM3812Init (1, 3579545, freq);
 }
 
 
@@ -254,7 +250,7 @@ int synth_reset ()
     for (i = 0; i < 9; i++)
 	opl_write (ym3812, 0xb0 + i, 0);
 #else
-    OPLResetChip (ym3812);
+    YM3812ResetChip (0);
 #endif
     synth_chreset ();
 
@@ -265,7 +261,7 @@ int synth_reset ()
 int synth_deinit ()
 {
     synth_reset ();
-    OPLDestroy (ym3812);
+    YM3812Shutdown();
 
     return 0;
 }
@@ -276,6 +272,6 @@ void synth_mixer (int* tmp_bk, int count, int vl, int vr, int stereo)
     if (!tmp_bk)
 	return;
 
-    YM3812UpdateOne (ym3812, tmp_bk, count, vl, vr, stereo);
+    YM3812UpdateOne (0, tmp_bk, count, vl, vr, stereo);
 }
 
