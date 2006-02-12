@@ -1,13 +1,13 @@
 /* ALSA driver for xmp
- * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 2005-2006 Claudio Matsuoka and Hipolito Carraro Jr
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
+ *
+ * $Id: alsa.c,v 1.7 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: alsa.c,v 1.6 2005-02-25 22:30:43 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -182,7 +182,7 @@ static void bufdump(int i)
 	b = xmp_smix_buffer();
 	frames = snd_pcm_bytes_to_frames(pcm_handle, i);
 	if (snd_pcm_writei(pcm_handle, b, frames) < 0) {
-		snd_pcm_prepare(pcm_handle)
+		snd_pcm_prepare(pcm_handle);
 	}
 }
 

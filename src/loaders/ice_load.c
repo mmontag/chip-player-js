@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: ice_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,7 +16,6 @@
 
 #include "load.h"
 
-
 struct ice_ins {
     char name[22];		/* Instrument name */
     uint16 len;			/* Sample length / 2 */
@@ -22,7 +23,7 @@ struct ice_ins {
     uint8 volume;		/* Volume (0-63) */
     uint16 loop_start;		/* Sample loop start in file */
     uint16 loop_size;		/* Loop size / 2 */
-} PACKED;
+};
 
 struct ice_header {
     char title[20];
@@ -31,7 +32,7 @@ struct ice_header {
     uint8 trk;			/* Number of tracks */
     uint8 ord[128][4];
     uint8 magic[4];		/* 'MTN\0', 'IT10' */
-} PACKED;
+};
 
 
 int ice_load (FILE *f)
@@ -44,7 +45,19 @@ int ice_load (FILE *f)
 
     LOAD_INIT ();
 
-    fread (&ih, 1, sizeof (ih), f);
+    fread(&ih.title, 20, 1, f);
+    for (i = 0; i < 31; i++) {
+	fread(&ih.ins[i].name, 22, 1, f);
+	ih.ins[i].len = read16b(f);
+	ih.ins[i].finetune = read8(f);
+	ih.ins[i].volume = read8(f);
+	ih.ins[i].loop_start = read16b(f);
+	ih.ins[i].loop_size = read16b(f);
+    }
+    ih.len = read8(f);
+    ih.trk = read8(f);
+    fread(&ih.ord, 128 * 4, 1, f);
+    fread(&ih.magic, 4, 1, f);
 
     if (ih.magic[0] == 'I' && ih.magic[1] == 'T' && ih.magic[2] == '1' &&
 	ih.magic[3] == '0')
@@ -65,12 +78,6 @@ int ice_load (FILE *f)
     strcpy (xmp_ctl->type, "MnemoTroN Soundtracker 2.6");
     strcpy (tracker_name, tracker);
     MODULE_INFO ();
-
-    for (i = 0; i < xxh->ins; i++) {
-	B_ENDIAN16 (ih.ins[i].len);
-	B_ENDIAN16 (ih.ins[i].loop_size);
-	B_ENDIAN16 (ih.ins[i].loop_start);
-    }
 
     INSTRUMENT_INIT ();
 

@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: fnk_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,7 +26,7 @@ struct fnk_instrument {
     uint8 shifter;		/* Portamento and offset shift */
     uint8 wavsallorm;		/* Vibrato and tremolo wavsallorms */
     uint8 retrig;		/* Retrig and arpeggio speed */
-} PACKED;
+};
 
 struct fnk_header {
     uint8 marker[4];		/* 'Funk' */
@@ -35,7 +37,7 @@ struct fnk_header {
     uint8 order[256];		/* Order list */
     uint8 pbrk[128];		/* Break list for patterns */
     struct fnk_instrument fih[64];	/* Instruments */
-} PACKED;
+};
 
 
 #if 0
@@ -65,7 +67,25 @@ int fnk_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&ffh, 1, sizeof (ffh), f);
+    fread(&ffh.marker, 4, 1, f);
+    fread(&ffh.info, 4, 1, f);
+    ffh.filesize = read32l(f);
+    fread(&ffh.format, 4, 1, f);
+    ffh.loop = read8(f);
+    fread(&ffh.order, 256, 1, f);
+    fread(&ffh.pbrk, 128, 1, f);
+
+    for (i = 0; i < 64; i++) {
+	fread(&ffh.fih[i].name, 19, 1, f);
+	ffh.fih[i].loop_start = read32l(f);
+	ffh.fih[i].length = read32l(f);
+	ffh.fih[i].volume = read8(f);
+	ffh.fih[i].pan = read8(f);
+	ffh.fih[i].shifter = read8(f);
+	ffh.fih[i].wavsallorm = read8(f);
+	ffh.fih[i].retrig = read8(f);
+    }
+
     if (strncmp ((char *) ffh.marker, "Funk", 4) ||
 	strncmp ((char *) ffh.format, "F2", 2))
 	return -1;
@@ -89,7 +109,7 @@ int fnk_load (FILE * f)
 	xxh->bpm = -(xxh->bpm & 63);
     xxh->bpm += 125;
     xxh->smp = xxh->ins;
-    strcpy (xmp_ctl->type, "Funktracker");
+    strcpy(xmp_ctl->type, "Funktracker");
 
     MODULE_INFO ();
 
@@ -98,8 +118,6 @@ int fnk_load (FILE * f)
     /* Convert instruments */
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	L_ENDIAN32 (ffh.fih[i].length);
-	L_ENDIAN32 (ffh.fih[i].loop_start);
 	xxih[i].nsm = !!(xxs[i].len = ffh.fih[i].length);
 	xxs[i].lps = ffh.fih[i].loop_start;
 	if (xxs[i].lps == -1)
@@ -109,8 +127,9 @@ int fnk_load (FILE * f)
 	xxi[i][0].vol = ffh.fih[i].volume;
 	xxi[i][0].pan = ffh.fih[i].pan;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, ffh.fih[i].name, 19);
-	str_adj ((char *) xxih[i].name);
+
+	copy_adjust(xxih[i].name, ffh.fih[i].name, 19);
+
 	if ((V (1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 2)))
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x\n", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,

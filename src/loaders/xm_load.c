@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: xm_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -37,32 +39,34 @@ int xm_load (FILE * f)
     struct xxm_event *event;
     struct xm_file_header xfh;
     struct xm_pattern_header xph;
-    struct xm_pattern_header_0102 xph0102;
     struct xm_instrument_header xih;
     struct xm_instrument xi;
     struct xm_sample_header xsh[16];
 
     LOAD_INIT ();
 
-    fread (&xfh, sizeof (xfh), 1, f);
+    fread(&xfh.id, 17, 1, f);		/* ID text */
+    fread(&xfh.name, 20, 1, f);		/* Module name */
+    read8(f);				/* 0x1a */
+    fread(&xfh.tracker, 20, 1, f);	/* Tracker name */
+    xfh.version = read16l(f);		/* Version number, minor-major */
+    xfh.headersz = read32l(f);		/* Header size */
+    xfh.songlen = read16l(f);		/* Song length */
+    xfh.restart = read16l(f);		/* Restart position */
+    xfh.channels = read16l(f);		/* Number of channels */
+    xfh.patterns = read16l(f);		/* Number of patterns */
+    xfh.instruments = read16l(f);	/* Number of instruments */
+    xfh.flags = read16l(f);		/* 0=Amiga freq table, 1=Linear */
+    xfh.tempo = read16l(f);		/* Default tempo */
+    xfh.bpm = read16l(f);		/* Default BPM */
+    fread(&xfh.order, 256, 1, f);	/* Pattern order table */
+
     if (strncmp ((char *) xfh.id, "Extended Module: ", 17))
 	return -1;
     strncpy (xmp_ctl->name, (char *) xfh.name, 20);
 
-    L_ENDIAN16 (xfh.version);
-
     sprintf (xmp_ctl->type, "Extended Module %d.%02d",
 	xfh.version >> 8, xfh.version & 0xff);
-
-    L_ENDIAN32 (xfh.headersz);
-    L_ENDIAN16 (xfh.songlen);
-    L_ENDIAN16 (xfh.restart);
-    L_ENDIAN16 (xfh.channels);
-    L_ENDIAN16 (xfh.patterns);
-    L_ENDIAN16 (xfh.instruments);
-    L_ENDIAN16 (xfh.tempo);
-    L_ENDIAN16 (xfh.bpm);
-    L_ENDIAN16 (xfh.flags);
 
     xxh->len = xfh.songlen;
     xxh->rst = xfh.restart;
@@ -94,20 +98,10 @@ load_patterns:
      * Mon, 04 Jan 1999 11:17:20 +0100
      */
     for (i = 0; i < xxh->pat; i++) {
-	if (xfh.version > 0x0102) {
-	    fread (&xph, sizeof (xph), 1, f);
-	    L_ENDIAN32 (xph.length);
-	    L_ENDIAN16 (xph.rows);
-	    L_ENDIAN16 (xph.datasize);
-	} else {
-	    fread (&xph0102, sizeof (xph0102), 1, f);
-	    L_ENDIAN32 (xph0102.length);
-	    L_ENDIAN16 (xph0102.datasize);
-	    xph.length = xph0102.length;
-	    xph.packing = xph0102.packing;
-	    xph.rows = xph0102.rows + 1;
-	    xph.datasize = xph0102.datasize;
-	}
+	xph.length = read32l(f);
+	xph.packing = read8(f);
+	xph.rows = xfh.version > 0x0102 ? read16l(f) : read8(f) + 1;
+	xph.datasize = read16l(f);
 
 	PATTERN_ALLOC (i);
 	if (!(r = xxp[i]->rows = xph.rows))
@@ -237,14 +231,14 @@ load_instruments:
     INSTRUMENT_INIT ();
 
     for (i = 0; i < xxh->ins; i++) {
-	fread (&xih, sizeof (xih), 1, f);
+	xih.size = read32l(f);			/* Instrument size */
+	fread(&xih.name, 22, 1, f);		/* Instrument name */
+	xih.type = read8(f);			/* Instrument type (always 0) */
+	xih.samples = read16l(f);		/* Number of samples */
+	xih.sh_size = read32l(f);		/* Sample header size */
 
-	L_ENDIAN32 (xih.size);
-	L_ENDIAN16 (xih.samples);
-	L_ENDIAN32 (xih.sh_size);
+	copy_adjust(xxih[i].name, xih.name, 22);
 
-	strncpy (xxih[i].name, xih.name, 22);
-	str_adj (xxih[i].name);
 	xxih[i].nsm = xih.samples;
 	if (xxih[i].nsm > 16)
 	    xxih[i].nsm = 16;
@@ -254,14 +248,30 @@ load_instruments:
 
 	if (xxih[i].nsm) {
 	    xxi[i] = calloc (sizeof (struct xxm_instrument), xxih[i].nsm);
-	    fread (&xi, sizeof (xi) , 1, f);
+
+	    fread(&xi.sample, 96, 1, f);	/* Sample map */
+	    for (j = 0; j < 24; j++)
+		xi.v_env[j] = read16l(f);	/* Points for volume envelope */
+	    for (j = 0; j < 24; j++)
+		xi.p_env[j] = read16l(f);	/* Points for pan envelope */
+	    xi.v_pts = read8(f);		/* Number of volume points */
+	    xi.p_pts = read8(f);		/* Number of pan points */
+	    xi.v_sus = read8(f);		/* Volume sustain point */
+	    xi.v_start = read8(f);		/* Volume loop start point */
+	    xi.v_end = read8(f);		/* Volume loop end point */
+	    xi.p_sus = read8(f);		/* Pan sustain point */
+	    xi.p_start = read8(f);		/* Pan loop start point */
+	    xi.p_end = read8(f);		/* Pan loop end point */
+	    xi.v_type = read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
+	    xi.p_type = read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
+	    xi.y_wave = read8(f);		/* Vibrato waveform */
+	    xi.y_sweep = read8(f);		/* Vibrato sweep */
+	    xi.y_depth = read8(f);		/* Vibrato depth */
+	    xi.y_rate = read8(f);		/* Vibrato rate */
+	    xi.v_fade = read16l(f);		/* Volume fadeout */
+
 	    /* Skip reserved space */
 	    fseek (f, xih.size - sizeof (xih) - sizeof (xi), SEEK_CUR);
-	    for (j = 0; j < 24; j++) {
-		L_ENDIAN16 (xi.v_env[j]);
-		L_ENDIAN16 (xi.p_env[j]);
-	    }
-	    L_ENDIAN16 (xi.v_fade);
 
 	    /* Envelope */
 	    xxih[i].rls = xi.v_fade;
@@ -293,11 +303,18 @@ load_instruments:
 	    }
 
 	    for (j = 0; j < xxih[i].nsm; j++, instr_no++) {
-		fread (&xsh[j], sizeof (xsh[j]), 1, f);
 
-		L_ENDIAN32 (xsh[j].length);
-		L_ENDIAN32 (xsh[j].loop_start);
-		L_ENDIAN32 (xsh[j].loop_length);
+		xsh[j].length = read32l(f);	/* Sample length */
+		xsh[j].loop_start = read32l(f);	/* Sample loop start */
+		xsh[j].loop_length = read32l(f);/* Sample loop length */
+		xsh[j].volume = read8(f);	/* Volume */
+		xsh[j].finetune = read8(f);	/* Finetune (-128..+127) */
+		xsh[j].type = read8(f);		/* Flags */
+		xsh[j].pan = read8(f);		/* Panning (0-255) */
+		xsh[j].relnote = read8(f);	/* Relative note number */
+		xsh[j].reserved = read8(f);
+		fread(&xsh[j].name, 22, 1, f);	/* Sample_name */
+
 		xxi[i][j].vol = xsh[j].volume;
 		xxi[i][j].pan = xsh[j].pan;
 		xxi[i][j].xpo = xsh[j].relnote;
@@ -309,8 +326,9 @@ load_instruments:
 		xxi[i][j].sid = instr_no;
 		if (instr_no >= MAX_SAMP)
 		    continue;
-		strncpy (xxs[instr_no].name, xsh[j].name, 22);
-		str_adj (xxs[instr_no].name);
+
+		copy_adjust(xxs[instr_no].name, xsh[j].name, 22);
+
 		xxs[instr_no].len = xsh[j].length;
 		xxs[instr_no].lps = xsh[j].loop_start;
 		xxs[instr_no].lpe = xsh[j].loop_start + xsh[j].loop_length;

@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: ims_load.c,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: ims_load.c,v 1.2 2001-11-10 19:09:19 cmatsuoka Exp $
  */
 
 /* Loader for Images Music System modules based on the EP replayer.
@@ -46,7 +46,7 @@ struct ims_instrument {
     uint8 volume;
     uint16 loop_start;
     uint16 loop_size;
-} PACKED;
+};
 
 struct ims_header {
     uint8 title[20];			/* LAX has no title */
@@ -55,7 +55,7 @@ struct ims_header {
     uint8 zero;
     uint8 orders[128];
     uint8 magic[4];
-} PACKED;
+};
 
 
 int ims_load (FILE *f)
@@ -73,17 +73,25 @@ int ims_load (FILE *f)
     xxh->smp = xxh->ins;
     smp_size = 0;
 
-    fread ((uint8 *)&ih, 1, sizeof (struct ims_header), f);
+    fread (&ih.title, 20, 1, f);		/* LAX has no title */
 
+    for (i = 0; i < 31; i++) {
+	fread (&ih.ins[i].name, 20, 1, f);
+	ih.ins[i].finetune = read16b(f);	/* FIXME: int16 */
+	ih.ins[i].size = read16b(f);
+	ih.ins[i].unknown = read8(f);
+	ih.ins[i].volume = read8(f);
+	ih.ins[i].loop_start = read16b(f);
+	ih.ins[i].loop_size = read16b(f);
+    }
+
+    ih.len = read8(f);
+    ih.zero = read8(f);
+    fread (&ih.orders, 128, 1, f);
+    fread (&ih.magic, 4, 1, f);
+  
     if (ih.magic[3] != 0x3c)
 	return -1;
-
-    for (i = 0; i < xxh->ins; i++) {
-	B_ENDIAN16 (ih.ins[i].finetune);
-	B_ENDIAN16 (ih.ins[i].size);
-	B_ENDIAN16 (ih.ins[i].loop_start);
-	B_ENDIAN16 (ih.ins[i].loop_size);
-    }
 
     if (ih.len > 0x7f)
 	return -1;
@@ -133,8 +141,8 @@ int ims_load (FILE *f)
 	xxi[i][0].sid = i;
 	xxih[i].nsm = !!(xxs[i].len);
 	xxih[i].rls = 0xfff;
-	strncpy (xxih[i].name, ih.ins[i].name, 20);
-	str_adj (xxih[i].name);
+
+	copy_adjust(xxih[i].name, ih.ins[i].name, 20);
 
 	if (V (1) &&
 		(strlen ((char *) xxih[i].name) || (xxs[i].len > 2))) {

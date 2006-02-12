@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: mod_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -79,7 +81,7 @@ static int is_st_ins (char *s)
 static int module_load (FILE *f, int ptdt)
 {
     int i, j;
-    int smp_size, hdr_size, pat_size, wow, ptsong = 0;
+    int smp_size, pat_size, wow, ptsong = 0;
     struct xxm_event *event;
     struct mod_header mh;
     uint8 mod_event[4];
@@ -95,13 +97,23 @@ static int module_load (FILE *f, int ptdt)
     xxh->chn = ptdt ? 4 : 0;
     smp_size = 0;
     pat_size = 0;
-    hdr_size = 0;
 
     if (xxh->chn == 4)
 	xxh->flg |= XXM_FLG_MODRNG;
 
-    hdr_size = sizeof (struct mod_header);
-    fread (&mh, 1, sizeof (struct mod_header), f);
+    fread(&mh.name, 20, 1, f);
+    for (i = 0; i < 31; i++) {
+	fread(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	mh.ins[i].size = read16b(f);		/* Length in 16-bit words */
+	mh.ins[i].finetune = read8(f);		/* Finetune (signed nibble) */
+	mh.ins[i].volume = read8(f);		/* Linear playback volume */
+	mh.ins[i].loop_start = read16b(f);	/* Loop start in 16-bit words */
+	mh.ins[i].loop_size = read16b(f);	/* Loop size in 16-bit words */
+    }
+    mh.len = read8(f);
+    mh.restart = read8(f);
+    fread(&mh.order, 128, 1, f);
+    fread(&mh.magic, 4, 1, f);
 
     for (i = 0; mod_magic[i].ch; i++) {
 	if (!(strncmp ((char *) mh.magic, mod_magic[i].magic, 4))) {
@@ -155,9 +167,6 @@ static int module_load (FILE *f, int ptdt)
     INSTRUMENT_INIT ();
 
     for (i = 0; i < xxh->ins; i++) {
-	B_ENDIAN16 (mh.ins[i].size);
-	B_ENDIAN16 (mh.ins[i].loop_start);
-	B_ENDIAN16 (mh.ins[i].loop_size);
 	smp_size += 2 * mh.ins[i].size;
 
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -171,8 +180,7 @@ static int module_load (FILE *f, int ptdt)
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
 	xxih[i].nsm = !!(xxs[i].len);
-	strncpy (xxih[i].name, mh.ins[i].name, 22);
-	str_adj (xxih[i].name);
+	copy_adjust(xxih[i].name, mh.ins[i].name, 22);
     }
 
     /* Experimental tracker-detection routine
@@ -261,7 +269,7 @@ static int module_load (FILE *f, int ptdt)
 	    }
 
 	    for (i = 0; i < 31; i++) {
-	        if (is_st_ins (mh.ins[i].name))
+	        if (is_st_ins((char *)mh.ins[i].name))
 		    break;
 	    }
 	    if (i == 31) {	/* No st- instruments */
@@ -286,17 +294,17 @@ static int module_load (FILE *f, int ptdt)
 	    }
 	} else {	/* Has loops with 0 size */
 	    for (i = 15; i < 31; i++) {
-	        if (strlen (mh.ins[i].name) || mh.ins[i].size > 0)
+	        if (strlen((char *)mh.ins[i].name) || mh.ins[i].size > 0)
 		    break;
 	    }
-	    if (i == 31 && is_st_ins(mh.ins[14].name)) {
+	    if (i == 31 && is_st_ins((char *)mh.ins[14].name)) {
 		tracker = "converted 15 instrument";
 		goto skip_test;
 	    }
 
 	    /* Assume that Fast Tracker modules won't have ST- instruments */
 	    for (i = 0; i < 31; i++) {
-	        if (is_st_ins (mh.ins[i].name))
+	        if (is_st_ins((char *)mh.ins[i].name))
 		    break;
 	    }
 	    if (i < 31) {

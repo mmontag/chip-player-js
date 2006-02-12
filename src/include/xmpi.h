@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: xmpi.h,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,12 +57,6 @@ typedef unsigned int uint32;
  *	   (perhaps a #pragma), but there is no standard method.  See also
  *	   question 17.2.
  */
-
-#ifdef HAVE_ATTRIBUTE_PACKED
-#   define PACKED __attribute__((packed))
-#else
-#   define PACKED
-#endif
 
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
@@ -140,6 +136,7 @@ int	report		(char *, ...);
 #endif
 int	ulaw_encode		(int);
 char	*str_adj		(char *);
+char	*copy_adjust		(uint8 *, uint8 *, int);
 int	xmpi_scan_module	(void);
 int	xmpi_player_start	(void);
 int	xmpi_tell_wait		(void);

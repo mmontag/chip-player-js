@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.9 2005-02-25 12:15:45 cmatsuoka Exp $
+ * $Id: formats.c,v 1.10 2006-02-12 16:58:48 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -74,6 +74,7 @@ void xmp_init_formats ()
     register_fmt ("OKT", "Oktalyzer", okt_load);
     register_fmt ("SFX", "SoundFX 1.3", sfx_load);
     register_fmt ("FAR", "Farandole Composer", far_load);
+#if 0
     register_fmt ("STIM", "Slamtilt", stim_load);
     register_fmt ("FC-M", "FC-M Packer", fcm_load);
     register_fmt ("KSM", "Kefrens Sound Machine", ksm_load);
@@ -97,12 +98,15 @@ void xmp_init_formats ()
     register_fmt ("NP", "NoisePacker", np_load);
     register_fmt ("DI", "Digital Illusions", di_load);
     register_fmt ("MP", "Module Protector", mp_load);
+#endif
     register_fmt ("669", "Composer 669", ssn_load);
     register_fmt ("FNK", "Funktracker", fnk_load);
     register_fmt ("AMD", "Amusic Adlib Tracker", amd_load);
     register_fmt ("RAD", "Reality Adlib Tracker", rad_load);
     register_fmt ("HSC", "HSC-Tracker", hsc_load);
+#if 0
     register_fmt ("CRB", "Heatseeker", crb_load);
+#endif
     register_fmt ("ALM", "Aley Keptr", alm_load);
 }
 

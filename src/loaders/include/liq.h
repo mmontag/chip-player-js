@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: liq.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: liq.h,v 1.1 2001-06-02 20:27:06 cmatsuoka Exp $
  */
 
 struct liq_header {
@@ -25,7 +25,7 @@ struct liq_header {
     uint16 ins;			/* Number of instruments */
     uint16 len;			/* Module length */
     uint16 hdrsz;		/* Header size */
-} PACKED;
+};
 
 struct liq_instrument {
 #if 0
@@ -52,7 +52,7 @@ struct liq_instrument {
     uint8 midi_ch;		/* MIDI channel */
     uint8 rsvd[11];		/* Reserved */
     uint8 filename[25];		/* DOS file name */
-} PACKED;
+};
 
 struct liq_pattern {
 #if 0
@@ -62,5 +62,5 @@ struct liq_pattern {
     uint16 rows;		/* Number of rows */
     uint32 size;		/* Size of packed pattern */
     uint32 reserved;		/* Reserved */
-} PACKED;
+};
 

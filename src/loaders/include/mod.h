@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: mod.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,7 +16,7 @@ struct mod_instrument {
     int8 volume;		/* Linear playback volume */
     uint16 loop_start;		/* Loop start in 16-bit words */
     uint16 loop_size;		/* Loop length in 16-bit words */
-} PACKED;
+};
 
 struct mod_header {
     uint8 name[20];
@@ -26,7 +28,7 @@ struct mod_header {
 				 */
     uint8 order[128];
     uint8 magic[4];
-} PACKED;
+};
 
 
 /* Soundtracker 15-instrument module header */
@@ -37,5 +39,5 @@ struct st_header {
     uint8 len;
     uint8 restart;
     uint8 order[128];
-} PACKED;
+};
 

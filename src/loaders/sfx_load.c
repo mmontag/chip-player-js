@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: sfx_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,19 +33,19 @@ struct sfx_ins {
     uint8 volume;		/* Volume (0-63) */
     uint16 loop_start;		/* Sample loop start in bytes */
     uint16 loop_length;		/* Sample loop length in words */
-} PACKED;
+};
 
 struct sfx_header {
     uint8 magic[4];		/* 'SONG' */
     uint16 delay;		/* Delay value (tempo), default is 0x38e5 */
     uint16 unknown[7];		/* ? */
-} PACKED;
+};
 
 struct sfx_header2 {
     uint8 len;			/* Song length */
     uint8 restart;		/* Restart pos (?) */
     uint8 order[128];		/* Order list */
-} PACKED;
+};
 
 
 static int sfx_13_20_load (FILE *, int);
@@ -70,27 +72,31 @@ static int sfx_13_20_load (FILE *f, int nins)
     LOAD_INIT ();
 
     for (i = 0; i < nins; i++)
-	fread (&ins_size[i], 1, 4, f);
+	ins_size[i] = read32b(f);
 
-    fread (&sfx, 1, sizeof (sfx), f);
+    fread(&sfx.magic, 4, 1, f);
+    sfx.delay = read16b(f);
+    fread(&sfx.unknown, 7, 1, f);
+
     if (strncmp ((char *) sfx.magic, "SONG", 4))
 	return -1;
-
-    B_ENDIAN16 (sfx.delay);
 
     xxh->ins = nins;
     xxh->smp = xxh->ins;
     xxh->bpm = 14565 * 122 / sfx.delay;
 
     for (i = 0; i < xxh->ins; i++) {
-	fread (&ins[i], 1, sizeof(struct sfx_ins), f);
-	B_ENDIAN32 (ins_size[i]);
-	B_ENDIAN16 (ins[i].len);
-	B_ENDIAN16 (ins[i].loop_start);
-	B_ENDIAN16 (ins[i].loop_length);
+	fread(&ins[i].name, 22, 1, f);
+	ins[i].len = read16b(f);
+	ins[i].finetune = read8(f);
+	ins[i].volume = read8(f);
+	ins[i].loop_start = read16b(f);
+	ins[i].loop_length = read16b(f);
     }
 
-    fread (&sfx2, 1, sizeof (sfx2), f);
+    sfx2.len = read8(f);
+    sfx2.restart = read8(f);
+    fread(&sfx2.order, 128, 1, f);
 
     xxh->len = sfx2.len;
     if (xxh->len > 0x7f)
@@ -123,7 +129,9 @@ static int sfx_13_20_load (FILE *f, int nins)
 	xxi[i][0].fin = (int8)(ins[i].finetune << 4); 
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, ins[i].name, 22);
+
+	copy_adjust(xxih[i].name, ins[i].name, 22);
+
 	if ((V (1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 2)))
 	    report ("[%2X] %-22.22s %04x %04x %04x %c  %02x %+d\n",
 		i, xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,

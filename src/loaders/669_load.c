@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: 669_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,14 +24,14 @@ struct ssn_file_header {
     uint8 order[128];		/* Order list */
     uint8 tempo[128];		/* Tempo list for patterns */
     uint8 pbrk[128];		/* Break list for patterns */
-} PACKED;
+};
 
 struct ssn_instrument_header {
     uint8 name[13];		/* ASCIIZ instrument name */
     uint32 length;		/* Instrument length */
     uint32 loop_start;		/* Instrument loop start */
     uint32 loopend;		/* Instrument loop end */
-} PACKED;
+};
 
 
 #define NONE 0xff
@@ -58,7 +60,15 @@ int ssn_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&sfh, 1, sizeof (sfh), f);
+    fread(&sfh.marker, 2, 1, f);	/* 'if'=standard, 'JN'=extended */
+    fread(&sfh.message, 108, 1, f);	/* Song message */
+    sfh.nos = read8(f);			/* Number of samples (0-64) */
+    sfh.nop = read8(f);			/* Number of patterns (0-128) */
+    sfh.loop = read8(f);		/* Loop order number */
+    fread(&sfh.order, 128, 1, f);	/* Order list */
+    fread(&sfh.tempo, 128, 1, f);	/* Tempo list for patterns */
+    fread(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
+
     if (strncmp ((char *) sfh.marker, "if", 2) && strncmp ((char *) sfh.marker, "JN", 2))
 	return -1;
     if (sfh.order[127] != 0xff)
@@ -101,10 +111,12 @@ int ssn_load (FILE * f)
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fread (&sih, 1, sizeof (sih), f);
-	L_ENDIAN32 (sih.length);
-	L_ENDIAN32 (sih.loop_start);
-	L_ENDIAN32 (sih.loopend);
+
+	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
+	sih.length = read32l(f);		/* Instrument size */
+	sih.loop_start = read32l(f);		/* Instrument loop start */
+	sih.loopend = read32l(f);		/* Instrument loop end */
+
 	xxih[i].nsm = !!(xxs[i].len = sih.length);
 	xxs[i].lps = sih.loop_start;
 	xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
@@ -112,8 +124,9 @@ int ssn_load (FILE * f)
 	xxi[i][0].vol = 0x40;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, sih.name, 13);
-	str_adj ((char *) xxih[i].name);
+
+	copy_adjust(xxih[i].name, sih.name, 13);
+
 	if ((V (1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 2)))
 	    report ("[%2X] %-14.14s %04x %04x %04x %c\n", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,

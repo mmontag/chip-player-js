@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.4 2005-02-25 13:36:57 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.5 2006-02-12 16:58:48 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -424,6 +424,7 @@ static void get_chunk_ii(int size, FILE *f)
 	xxih[i].nsm = read8(f);
 	fread(xxih[i].name, 1, 24, f);
 	str_adj(xxih[i].name);
+
 	fseek(f, 8, SEEK_CUR);
 
 	if (V (1) && (strlen ((char *) xxih[i].name) || xxih[i].nsm)) {

@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: xm.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -43,21 +45,14 @@ struct xm_file_header {
     uint16 tempo;		/* Default tempo */
     uint16 bpm;			/* Default BPM */
     uint8 order[256];		/* Pattern order table */
-} PACKED;
+};
 
 struct xm_pattern_header {
     uint32 length;		/* Pattern header length */
     uint8 packing;		/* Packing type (always 0) */
     uint16 rows;		/* Number of rows in pattern (1..256) */
     uint16 datasize;		/* Packed patterndata size */
-} PACKED;
-
-struct xm_pattern_header_0102 {
-    uint32 length;		/* Pattern header length */
-    uint8 packing;		/* Packing type (always 0) */
-    uint8 rows;			/* Number of rows in pattern (1..256) */
-    uint16 datasize;		/* Packed patterndata size */
-} PACKED;
+};
 
 struct xm_instrument_header {
     uint32 size;		/* Instrument size */
@@ -65,7 +60,7 @@ struct xm_instrument_header {
     uint8 type;			/* Instrument type (always 0) */
     uint16 samples;		/* Number of samples in instrument */
     uint32 sh_size;		/* Sample header size */
-} PACKED;
+};
 
 struct xm_instrument {
     uint8 sample[96];		/* Sample number for all notes */
@@ -89,7 +84,7 @@ struct xm_instrument {
 #if 0
     uint8 reserved[22];		/* Reserved; 2 bytes in specs, 22 in 1.04 */
 #endif
-} PACKED;
+};
 
 struct xm_sample_header {
     uint32 length;		/* Sample length */
@@ -102,7 +97,7 @@ struct xm_sample_header {
     int8 relnote;		/* Relative note number (signed byte) */
     uint8 reserved;		/* Reserved */
     uint8 name[22];		/* Sample_name */
-} PACKED;
+};
 
 struct xm_event {
     uint8 note;			/* Note (0-71, 0 = C-0) */
@@ -110,4 +105,4 @@ struct xm_event {
     uint8 volume;		/* Volume column byte */
     uint8 fx_type;		/* Effect type */
     uint8 fx_parm;		/* Effect parameter */
-} PACKED;
+};

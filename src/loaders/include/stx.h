@@ -1,11 +1,12 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: stx.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  */
-
 
 struct stx_file_header {
     uint8 name[20];		/* Song name */
@@ -28,7 +29,7 @@ struct stx_file_header {
     uint16 unknown7;		/* Version? */
     uint16 unknown8;		/* Ffi? */
     uint8 magic2[4];		/* 'SCRM' */
-} PACKED;
+};
 
 struct stx_instrument_header {
     uint8 type;			/* Instrument type */
@@ -49,5 +50,5 @@ struct stx_instrument_header {
     uint32 int_last;		/* Internal - SB index */
     uint8 name[28];		/* Instrument name */
     uint8 magic[4];		/* Reserved (for 'SCRS') */
-} PACKED;
+};
 

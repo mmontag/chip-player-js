@@ -1,8 +1,5 @@
 /* $Id */
 
-/* Define HAVE_ATTRIBUTE_PACKED if gcc understands __attribute__((packed)) */
-#undef HAVE_ATTRIBUTE_PACKED
-
 /* Define DYNAMIC_DRV if you want to use dynamically loaded drivers */
 #undef DYNAMIC_DRV
 

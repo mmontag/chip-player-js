@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: rad_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: rad_load.c,v 1.1 2001-06-02 20:26:46 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,13 +18,13 @@
 struct rad_instrument {
     uint8 num;			/* Number of instruments that follows */
     uint8 reg[11];		/* Adlib registers */
-} PACKED;
+};
 
 struct rad_file_header {
     uint8 magic[16];		/* 'RAD by REALiTY!!' */
     uint8 version;		/* Version in BCD */
     uint8 flags;		/* bit 7=descr,6=slow-time,4..0=tempo */
-} PACKED;
+};
 
 
 int rad_load (FILE * f)
@@ -38,7 +38,10 @@ int rad_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&rfh, 1, sizeof (rfh), f);
+    fread(&rfh.magic, 16, 1, f);
+    rfh.version = read8(f);
+    rfh.flags = read8(f);
+    
     if (strncmp ((char *) rfh.magic, "RAD by REALiTY!!", 16))
 	return -1;
 
@@ -59,7 +62,7 @@ int rad_load (FILE * f)
     if (rfh.flags & 0x80) {
 	if (V (1))
 	    report ("|");
-	for (j = 0; fread (&b, 1, 1, f) && b;)
+	for (j = 0; fread(&b, 1, 1, f) && b;)
 	    if (V (1)) {
 		if (!j && (b == 1)) {
 		    report ("\n|");
@@ -87,8 +90,8 @@ int rad_load (FILE * f)
 	if (!b)
 	    break;
 	xxh->ins = b;
-	fread (sid, 1, 11, f);
-	xmp_cvt_hsc2sbi (sid);
+	fread(sid, 1, 11, f);
+	xmp_cvt_hsc2sbi((char *)sid);
 	if (V (1)) {
 	    report ("[%2X] ", b - 1);
 
@@ -112,7 +115,7 @@ int rad_load (FILE * f)
 
 	    report ("%2d  %2d\n", sid[10] >> 1, sid[10] & 0x01);
 	}
-	xmp_drv_loadpatch (f, b - 1, 0, 0, NULL, sid);
+	xmp_drv_loadpatch (f, b - 1, 0, 0, NULL, (char *)sid);
     }
 
     INSTRUMENT_INIT ();
@@ -134,8 +137,7 @@ int rad_load (FILE * f)
 
     /* Read pattern pointers */
     for (xxh->pat = i = 0; i < 32; i++) {
-	fread (&ppat[i], 1, 2, f);
-	L_ENDIAN16 (ppat[i]);
+	ppat[i] = read16l(f);
 	if (ppat[i])
 	    xxh->pat++;
     }

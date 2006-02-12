@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: far_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -50,14 +52,28 @@ int far_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&ffh, 1, sizeof (ffh), f);
+    fread(&ffh.magic, 4, 1, f);		/* File magic: 'FAR\xfe' */
+    fread(&ffh.name, 40, 1, f);		/* Song name */
+    fread(&ffh.crlf, 3, 1, f);		/* 0x0d 0x0a 0x1A */
+    ffh.headersize = read16l(f);	/* Remaining header size in bytes */
+    ffh.version = read8(f);		/* Version MSN=major, LSN=minor */
+    fread(&ffh.ch_on, 16, 1, f);	/* Channel on/off switches */
+    fread(&ffh.rsvd1, 9, 1, f);		/* Current editing values */
+    ffh.tempo = read8(f);		/* Default tempo */
+    fread(&ffh.pan, 16, 1, f);		/* Channel pan definitions */
+    read32l(f);				/* Grid, mode (for editor) */
+    ffh.textlen = read16l(f);		/* Length of embedded text */
+
     if (strncmp ((char *) ffh.magic, "FAR", 3) || (ffh.magic[3] != 0xfe))
 	return -1;
 
-    L_ENDIAN16 (ffh.textlen);
+    fseek(f, ffh.textlen, SEEK_CUR);	/* Skip song text */
 
-    fseek (f, ffh.textlen, SEEK_CUR);		/* Skip song text */
-    fread (&ffh2, 1, sizeof (ffh2), f);
+    fread(&ffh2.order, 256, 1, f);	/* Orders */
+    ffh2.patterns = read8(f);		/* Number of stored patterns (?) */
+    ffh2.songlen = read8(f);		/* Song length in patterns */
+    ffh2.restart = read8(f);		/* Restart pos */
+    fread(&ffh2.patsize, 256, 1, f);	/* Size of each pattern in bytes */
 
     xxh->chn = 16;
     /*xxh->pat=ffh2.patterns; (Error in specs? --claudio) */
@@ -67,15 +83,14 @@ int far_load (FILE * f)
     memcpy (xxo, ffh2.order, xxh->len);
 
     for (xxh->pat = i = 0; i < 256; i++) {
-	L_ENDIAN16 (ffh2.patsize[i]);
 	if (ffh2.patsize[i])
 	    xxh->pat = i + 1;
     }
 
     xxh->trk = xxh->chn * xxh->pat;
 
-    strncpy (xmp_ctl->name, ffh.name, 40);
-    sprintf (xmp_ctl->type, "Farandole Composer %d.%d",
+    strncpy(xmp_ctl->name, (char *)ffh.name, 40);
+    sprintf(xmp_ctl->type, "Farandole Composer %d.%d",
 	MSN (ffh.version), LSN (ffh.version));
 
     MODULE_INFO ();
@@ -90,7 +105,6 @@ int far_load (FILE * f)
 
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	L_ENDIAN16 (ffh2.patsize[i]);
 	if (!ffh2.patsize[i])
 	    continue;
 	xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
@@ -152,10 +166,16 @@ int far_load (FILE * f)
 	report ("\nInstruments    : %d ", xxh->ins);
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fread (&fih, 1, sizeof (fih), f);
-	L_ENDIAN32 (fih.length);
-	L_ENDIAN32 (fih.loop_start);
-	L_ENDIAN32 (fih.loopend);
+
+	fread(&fih.name, 32, 1, 0);	/* Instrument name */
+	fih.length = read32l(f);	/* Length of sample (up to 64Kb) */
+	fih.finetune = read8(f);	/* Finetune (unsuported) */
+	fih.volume = read8(f);		/* Volume (unsuported?) */
+	fih.loop_start = read32l(f);	/* Loop start */
+	fih.loopend = read32l(f);	/* Loop end */
+	fih.sampletype = read8(f);	/* 1=16 bit sample */
+	fih.loopmode = read8(f);
+
 	fih.length &= 0xffff;
 	fih.loop_start &= 0xffff;
 	fih.loopend &= 0xffff;
@@ -166,9 +186,11 @@ int far_load (FILE * f)
 	xxs[i].flg |= fih.loopmode ? WAVE_LOOPING : 0;
 	xxi[i][0].vol = 0xff; /* fih.volume; */
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, fih.name, 24);
+
+	copy_adjust(xxih[i].name, fih.name, 24);
+
 	fih.length = 0;
-	str_adj ((char *) fih.name);
+
 	if ((V (1)) && (strlen ((char *) fih.name) || xxs[i].len))
 	    report ("\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 		i, fih.name, xxs[i].len, xxs[i].lps, xxs[i].lpe,

@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: stm.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +25,7 @@ struct stm_instrument_header {
     uint16 c2spd;		/* C4 speed */
     uint32 rsvd3;		/* Reserved */
     uint16 paralen;		/* Length in paragraphs */
-} PACKED;
+};
 
 struct stm_file_header {
     uint8 name[20];		/* ASCIIZ song name */
@@ -37,5 +39,5 @@ struct stm_file_header {
     uint8 gvol;			/* Global volume */
     uint8 rsvd2[13];		/* Reserved */
     struct stm_instrument_header ins[31];
-} PACKED;
+};
 

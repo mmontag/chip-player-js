@@ -1,11 +1,12 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: far.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  */
-
 
 struct far_header {
     uint8 magic[4];		/* File magic: 'FAR\xfe' */
@@ -19,7 +20,7 @@ struct far_header {
     uint8 pan[16];		/* Channel pan definitions */
     uint8 rsvd2[4];		/* Grid, mode (for editor) */
     uint16 textlen;		/* Length of embedded text */
-} PACKED;
+};
 
 struct far_header2 {
     uint8 order[256];		/* Orders */
@@ -27,7 +28,7 @@ struct far_header2 {
     uint8 songlen;		/* Song length in patterns */
     uint8 restart;		/* Restart pos */
     uint16 patsize[256];	/* Size of each pattern in bytes */
-} PACKED;
+};
 
 struct far_instrument {
     uint8 name[32];		/* Instrument name */
@@ -38,12 +39,13 @@ struct far_instrument {
     uint32 loopend;		/* Loop end */
     uint8 sampletype;		/* 1=16 bit sample */
     uint8 loopmode;
-} PACKED;
+};
 
 struct far_event {
     uint8 note;
     uint8 instrument;
     uint8 volume;		/* In reverse nibble order? */
     uint8 effect;
-} PACKED;
+};
+
 

@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: stm_load.c,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -47,7 +49,31 @@ int stm_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&sfh, 1, sizeof (sfh), f);
+    fread(&sfh.name, 20, 1, f);			/* ASCIIZ song name */
+    fread(&sfh.magic, 8, 1, f);			/* '!Scream!' */
+    sfh.rsvd1 = read8(f);			/* '\x1a' */
+    sfh.type = read8(f);			/* 1=song, 2=module */
+    sfh.vermaj = read8(f);			/* Major version number */
+    sfh.vermin = read8(f);			/* Minor version number */
+    sfh.tempo = read8(f);			/* Playback tempo */
+    sfh.patterns = read8(f);			/* Number of patterns */
+    sfh.gvol = read8(f);			/* Global volume */
+    fread(&sfh.rsvd2, 13, 1, f);		/* Reserved */
+
+    for (i = 0; i < 31; i++) {
+	fread(&sfh.ins[i].name, 12, 1, f);	/* ASCIIZ instrument name */
+	sfh.ins[i].id = read8(f);		/* Id=0 */
+	sfh.ins[i].idisk = read8(f);		/* Instrument disk */
+	sfh.ins[i].rsvd1 = read16l(f);		/* Reserved */
+	sfh.ins[i].length = read16l(f);		/* Sample length */
+	sfh.ins[i].loopbeg = read16l(f);	/* Loop begin */
+	sfh.ins[i].loopend = read16l(f);	/* Loop end */
+	sfh.ins[i].volume = read8(f);		/* Playback volume */
+	sfh.ins[i].rsvd2 = read8(f);		/* Reserved */
+	sfh.ins[i].c2spd = read16l(f);		/* C4 speed */
+	sfh.ins[i].rsvd3 = read32l(f);		/* Reserved */
+	sfh.ins[i].paralen = read16l(f);	/* Length in paragraphs */
+    }
 
     if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
@@ -65,8 +91,8 @@ int stm_load (FILE * f)
     xxh->smp = xxh->ins;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
-    strncpy (xmp_ctl->name, sfh.name, 20);
-    sprintf (xmp_ctl->type, "!Scream! (STM)");
+    strncpy(xmp_ctl->name, (char *)sfh.name, 20);
+    sprintf(xmp_ctl->type, "!Scream! (STM)");
     if (bmod2stm)
 	sprintf (tracker_name, "BMOD2STM (%d.%02d)", sfh.vermaj, sfh.vermin);
     else
@@ -82,10 +108,6 @@ int stm_load (FILE * f)
     /* Read and convert instruments and samples */
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	L_ENDIAN16 (sfh.ins[i].length);
-	L_ENDIAN16 (sfh.ins[i].loopbeg);
-	L_ENDIAN16 (sfh.ins[i].loopend);
-	L_ENDIAN16 (sfh.ins[i].c2spd);
 	xxih[i].nsm = !!(xxs[i].len = sfh.ins[i].length);
 	xxs[i].lps = sfh.ins[i].loopbeg;
 	xxs[i].lpe = sfh.ins[i].loopend;
@@ -95,8 +117,9 @@ int stm_load (FILE * f)
 	xxi[i][0].vol = sfh.ins[i].volume;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, sfh.ins[i].name, 12);
-	str_adj ((char *) xxih[i].name);
+
+	copy_adjust(xxih[i].name, sfh.ins[i].name, 12);
+
 	if ((V (1)) &&
 	    (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,

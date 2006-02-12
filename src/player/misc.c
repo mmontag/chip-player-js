@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: misc.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -39,6 +41,25 @@ int report (char *fmt,...)
 
 #endif
 
+
+char *copy_adjust(uint8 *s, uint8 *r, int n)
+{
+    int i;
+
+    if (n > strlen(r))
+	n = strlen(r);
+
+    strncpy(s, r, n);
+
+    for (i = 0; i < n; i++)
+	if (!isprint (s[i]) || ((uint8) s[i] > 127))
+	    s[i] = ' ';
+
+    while (*s && (s[strlen (s) - 1] == ' '))
+	s[strlen (s) - 1] = 0;
+
+    return s;
+}
 
 char *str_adj (char *s)
 {

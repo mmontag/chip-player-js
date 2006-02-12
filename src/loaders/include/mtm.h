@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: mtm.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: mtm.h,v 1.1 2001-06-02 20:27:07 cmatsuoka Exp $
  */
 
 struct mtm_file_header {
@@ -21,7 +21,7 @@ struct mtm_file_header {
     uint8 rows;			/* Number rows per track */
     uint8 channels;		/* Number of tracks per pattern */
     uint8 pan[32];		/* Pan positions for each channel */
-} PACKED;
+};
 
 struct mtm_instrument_header {
     uint8 name[22];		/* Instrument name */
@@ -31,5 +31,5 @@ struct mtm_instrument_header {
     uint8 finetune;		/* Finetune */
     uint8 volume;		/* Playback volume */
     uint8 attr;			/* &0x01: 16bit sample */
-} PACKED;
+};
 

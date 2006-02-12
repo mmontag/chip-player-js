@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: mtm_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,13 +26,21 @@ int mtm_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&mfh, 1, sizeof (mfh), f);
+    fread(&mfh.magic, 3, 1, f);		/* "MTM" */
+    mfh.version = read8(f);		/* MSN=major, LSN=minor */
+    fread(&mfh.name, 20, 1, f);		/* ASCIIZ Module name */
+    mfh.tracks = read16l(f);		/* Number of tracks saved */
+    mfh.patterns = read8(f);		/* Number of patterns saved */
+    mfh.modlen = read8(f);		/* Module length */
+    mfh.extralen = read16l(f);		/* Length of the comment field */
+    mfh.samples = read8(f);		/* Number of samples */
+    mfh.attr = read8(f);		/* Always zero */
+    mfh.rows = read8(f);		/* Number rows per track */
+    mfh.channels = read8(f);		/* Number of tracks per pattern */
+    fread(&mfh.pan, 32, 1, f);		/* Pan positions for each channel */
 
     if (strncmp ((char *) mfh.magic, "MTM", 3))
 	return -1;
-
-    L_ENDIAN16 (mfh.tracks);
-    L_ENDIAN16 (mfh.extralen);
 
     xxh->trk = mfh.tracks + 1;
     xxh->pat = mfh.patterns + 1;
@@ -41,9 +51,9 @@ int mtm_load (FILE * f)
     xxh->tpo = 6;
     xxh->bpm = 125;
 
-    strncpy (xmp_ctl->name, mfh.name, 20);
-    sprintf (xmp_ctl->type, "MTM");
-    sprintf (tracker_name, "MultiTracker %d.%02d",
+    strncpy(xmp_ctl->name, (char *)mfh.name, 20);
+    sprintf(xmp_ctl->type, "MTM");
+    sprintf(tracker_name, "MultiTracker %d.%02d",
 	MSN (mfh.version), LSN (mfh.version));
 
     MODULE_INFO ();
@@ -53,10 +63,15 @@ int mtm_load (FILE * f)
     /* Read and convert instruments */
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fread (&mih, 1, sizeof (mih), f);
-	L_ENDIAN32 (mih.length);
-	L_ENDIAN32 (mih.loop_start);
-	L_ENDIAN32 (mih.loopend);
+
+	fread(&mih.name, 22, 1, f);		/* Instrument name */
+	mih.length = read32l(f);		/* Instrument length in bytes */
+	mih.loop_start = read32l(f);		/* Sample loop start */
+	mih.loopend = read32l(f);		/* Sample loop end */
+	mih.finetune = read8(f);		/* Finetune */
+	mih.volume = read8(f);			/* Playback volume */
+	mih.attr = read8(f);			/* &0x01: 16bit sample */
+
 	xxih[i].nsm = !!(xxs[i].len = mih.length);
 	xxs[i].lps = mih.loop_start;
 	xxs[i].lpe = mih.loopend;
@@ -66,8 +81,9 @@ int mtm_load (FILE * f)
 	xxi[i][0].fin = 0x80 + (int8)(mih.finetune << 4);
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, mih.name, 22);
-	str_adj ((char *) xxih[i].name);
+
+	copy_adjust(xxih[i].name, mih.name, 22);
+
 	if ((V (1)) && (strlen ((char *) xxih[i].name) || xxs[i].len))
 	    report ("[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
 		xxih[i].name, xxs[i].len, xxs[i].flg & WAVE_16_BITS ? '+' : ' ',

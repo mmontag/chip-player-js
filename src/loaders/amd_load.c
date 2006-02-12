@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: amd_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,7 +17,7 @@
 struct amd_instrument {
     uint8 name[23];		/* Instrument name */
     uint8 reg[11];		/* Adlib registers */
-} PACKED;
+};
 
 
 struct amd_file_header {
@@ -27,7 +29,7 @@ struct amd_file_header {
     uint8 order[128];		/* Orders */
     uint8 magic[9];		/* 3c 6f ef 51 55 ee 52 6f 52 */
     uint8 version;		/* 0x10=normal module, 0x11=packed */
-} PACKED;
+};
 
 static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
@@ -43,7 +45,18 @@ int amd_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&afh, 1, sizeof (afh), f);
+    fread(&afh.name, 24, 1, f);
+    fread(&afh.author, 24, 1, f);
+    for (i = 0; i < 26; i++) {
+	fread(&afh.ins[i].name, 23, 1, f);
+	fread(&afh.ins[i].reg, 11, 1, f);
+    }
+    afh.len = read8(f);
+    afh.pat = read8(f);
+    fread(&afh.order, 128, 1, f);
+    fread(&afh.magic, 9, 1, f);
+    afh.version = read8(f);
+
     if (strncmp ((char *) afh.magic, "<o", 2) ||
 	strncmp ((char *) afh.magic + 6, "RoR", 3)) {
 	return -1;
@@ -58,9 +71,9 @@ int amd_load (FILE * f)
     xxh->smp = 0;
     memcpy (xxo, afh.order, xxh->len);
 
-    strcpy (xmp_ctl->type, "Amusic");
-    strncpy (xmp_ctl->name, afh.name, 24);
-    strncpy (author_name, afh.author, 24);
+    strcpy(xmp_ctl->type, "Amusic");
+    strncpy(xmp_ctl->name, (char *)afh.name, 24);
+    strncpy(author_name, (char *)afh.author, 24);
 
     MODULE_INFO ();
 
@@ -72,8 +85,9 @@ int amd_load (FILE * f)
     /* Load instruments */
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	strncpy ((char *) xxih[i].name, afh.ins[i].name, 23);
-	str_adj ((char *) xxih[i].name);
+
+	copy_adjust(xxih[i].name, afh.ins[i].name, 23);
+
 	xxih[i].nsm = 1;
 	xxi[i][0].vol = 0x40;
 	xxi[i][0].pan = 0x80;
@@ -110,8 +124,7 @@ int amd_load (FILE * f)
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	for (j = 0; j < 9; j++) {
-	    fread (&w, 1, 2, f);
-	    L_ENDIAN16 (w);
+	    w = read16l(f);
 	    xxp[i]->info[j].index = w;
 	    if (w > xxh->trk)
 		xxh->trk = w;
@@ -122,26 +135,26 @@ int amd_load (FILE * f)
     }
     xxh->trk++;
 
-    fread (&w, 1, 2, f);
+    w = read16l(f);
     if (V (0))
 	report ("\nStored tracks  : %d ", w);
     xxt = calloc (sizeof (struct xxm_track *), xxh->trk);
     xxh->trk = w;
 
     for (i = 0; i < xxh->trk; i++) {
-	fread (&w, 1, 2, f);
+	w = read16l(f);
 	xxt[w] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * 64, 1);
 	xxt[w]->rows = 64;
 	for (r = 0; r < 64; r++) {
 	    event = &xxt[w]->event[r];
-	    fread (&b, 1, 1, f);	/* Effect parameter */
+	    b = read8(f);		/* Effect parameter */
 	    if (b & 0x80) {
 		r += (b & 0x7f) - 1;
 		continue;
 	    }
 	    event->fxp = b;
-	    fread (&b, 1, 1, f);	/* Instrument + effect type */
+	    b = read8(f);		/* Instrument + effect type */
 	    event->ins = MSN (b);
 	    switch (b = LSN (b)) {
 	    case 0:		/* Arpeggio */
@@ -174,7 +187,7 @@ int amd_load (FILE * f)
 		break;
 	    }
 	    event->fxt = b;
-	    fread (&b, 1, 1, f);	/* Note + octave + instrument */
+	    b = read8(f);	/* Note + octave + instrument */
 	    event->ins |= (b & 1) << 4;
 	    if ((event->note = MSN (b)))
 		event->note += (1 + ((b & 0xe) >> 1)) * 12;

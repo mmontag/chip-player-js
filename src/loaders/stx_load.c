@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: stx_load.c,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -58,7 +60,26 @@ int stx_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&sfh, 1, sizeof (sfh), f);
+    fread(&sfh.name, 20, 1, f);
+    fread(&sfh.magic, 8, 1, f);
+    sfh.psize = read16l(f);
+    sfh.unknown1 = read16l(f);
+    sfh.pp_pat = read16l(f);
+    sfh.pp_ins = read16l(f);
+    sfh.pp_chn = read16l(f);
+    sfh.unknown2 = read16l(f);
+    sfh.unknown3 = read16l(f);
+    sfh.gvol = read8(f);
+    sfh.tempo = read8(f);
+    sfh.unknown4 = read16l(f);
+    sfh.unknown5 = read16l(f);
+    sfh.patnum = read16l(f);
+    sfh.insnum = read16l(f);
+    sfh.ordnum = read16l(f);
+    sfh.unknown6 = read16l(f);
+    sfh.unknown7 = read16l(f);
+    sfh.unknown8 = read16l(f);
+    fread(&sfh.magic, 4, 1, f);
 
     /* BMOD2STM does not convert pitch */
     if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
@@ -67,14 +88,6 @@ int stx_load (FILE * f)
     if ((strncmp ((char *) sfh.magic, "!Scream!", 8) &&
 	!bmod2stm) || strncmp ((char *) sfh.magic2, "SCRM", 4))
 	return -1;
-
-    L_ENDIAN16 (sfh.psize);
-    L_ENDIAN16 (sfh.pp_pat);
-    L_ENDIAN16 (sfh.pp_ins);
-    L_ENDIAN16 (sfh.pp_chn);
-    L_ENDIAN16 (sfh.patnum);
-    L_ENDIAN16 (sfh.insnum);
-    L_ENDIAN16 (sfh.ordnum);
 
     xxh->ins = sfh.insnum;
     xxh->pat = sfh.patnum;
@@ -88,19 +101,17 @@ int stx_load (FILE * f)
      * length encoded in the first two bytes of the pattern (like S3M).
      */
     fseek (f, sfh.pp_pat << 4, SEEK_SET);
-    fread (&x16, 2, 1, f);
-    L_ENDIAN16 (x16);
+    x16 = read16l(f);
     fseek (f, x16 << 4, SEEK_SET);
-    fread (&x16, 2, 1, f);
-    L_ENDIAN16 (x16);
+    x16 = read16l(f);
     if (x16 == sfh.psize)
 	broken = 1;
 
-    strncpy (xmp_ctl->name, sfh.name, 20);
-    sprintf (xmp_ctl->type, "STMIK 0.2 (STX)");
-    sprintf (tracker_name, "STM2STX 1.%d", broken ? 0 : 1);
+    strncpy(xmp_ctl->name, (char *)sfh.name, 20);
+    sprintf(xmp_ctl->type, "STMIK 0.2 (STX)");
+    sprintf(tracker_name, "STM2STX 1.%d", broken ? 0 : 1);
     if (bmod2stm)
-	strcat (tracker_name, " (BMOD2STM)");
+	strcat(tracker_name, " (BMOD2STM)");
 
     MODULE_INFO ();
  
@@ -109,19 +120,13 @@ int stx_load (FILE * f)
 
     /* Read pattern pointers */
     fseek (f, sfh.pp_pat << 4, SEEK_SET);
-    for (i = 0; i < xxh->pat; i++) {
-	fread (&x16, 2, 1, f);
-	L_ENDIAN16 (x16);
-	pp_pat[i] = x16;
-    }
+    for (i = 0; i < xxh->pat; i++)
+	pp_pat[i] = read16l(f);
 
     /* Read instrument pointers */
     fseek (f, sfh.pp_ins << 4, SEEK_SET);
-    for (i = 0; i < xxh->ins; i++) {
-	fread (&x16, 2, 1, f);
-	L_ENDIAN16 (x16);
-	pp_ins[i] = x16;
-    }
+    for (i = 0; i < xxh->ins; i++)
+	pp_ins[i] = read16l(f);
 
     /* Skip channel table (?) */
     fseek (f, (sfh.pp_chn << 4) + 32, SEEK_SET);
@@ -142,11 +147,26 @@ int stx_load (FILE * f)
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek (f, pp_ins[i] << 4, SEEK_SET);
-	fread (&sih, 1, sizeof (struct stx_instrument_header), f);
-	L_ENDIAN32 (sih.length);
-	L_ENDIAN32 (sih.loopbeg);
-	L_ENDIAN32 (sih.loopend);
-	L_ENDIAN16 (sih.c2spd);
+
+	sih.type = read8(f);
+	fread(&sih.dosname, 13, 1, f);
+	sih.memseg = read16l(f);
+	sih.length = read32l(f);
+	sih.loopbeg = read32l(f);
+	sih.loopend = read32l(f);
+	sih.vol = read8(f);
+	sih.rsvd1 = read8(f);
+	sih.pack = read8(f);
+	sih.flags = read8(f);
+	sih.c2spd = read16l(f);
+	sih.rsvd2 = read16l(f);
+	fread(&sih.rsvd3, 4, 1, f);
+	sih.int_gp = read16l(f);
+	sih.int_512 = read16l(f);
+	sih.int_last = read32l(f);
+	fread(&sih.name, 28, 1, f);
+	fread(&sih.magic, 4, 1, f);
+
 	xxih[i].nsm = !!(xxs[i].len = sih.length);
 	xxs[i].lps = sih.loopbeg;
 	xxs[i].lpe = sih.loopend;
@@ -156,8 +176,9 @@ int stx_load (FILE * f)
 	xxi[i][0].vol = sih.vol;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, sih.name, 12);
-	str_adj ((char *) xxih[i].name);
+
+	copy_adjust(xxih[i].name, sih.name, 12);
+
 	if (V (1) &&
 	    (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,

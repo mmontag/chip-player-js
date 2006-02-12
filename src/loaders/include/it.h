@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: it.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -73,7 +75,7 @@ struct it_file_header {
     uint8 rsvd2[4];		/* Reserved */
     uint8 chpan[64];		/* Channel pan settings */
     uint8 chvol[64];		/* Channel volume settings */
-} PACKED;
+};
 
 struct it_instrument1_header {
     uint8 magic[4];		/* 'IMPI' */
@@ -96,7 +98,7 @@ struct it_instrument1_header {
     uint8 keys[240];
     uint8 epoint[200];
     uint8 enode[50];
-} PACKED;
+};
 
 struct it_instrument2_header {
     uint8 magic[4];		/* 'IMPI' */
@@ -122,12 +124,12 @@ struct it_instrument2_header {
     uint8 mpr;			/* MIDI program */
     uint16 mbnk;		/* MIDI bank */
     uint8 keys[240];
-} PACKED;
+};
 
 struct it_envelope_node {
     int8 y;
     uint16 x;
-} PACKED;
+};
 
 struct it_envelope {
     uint8 flg;			/* Flags */
@@ -138,7 +140,7 @@ struct it_envelope {
     uint8 sle;			/* Sustain loop end */
     struct it_envelope_node node[25];
     uint8 unused;
-} PACKED;
+};
 
 struct it_sample_header {
     uint8 magic[4];		/* 'IMPS' */
@@ -161,5 +163,5 @@ struct it_sample_header {
     uint8 vid;			/* Vibrato depth */
     uint8 vir;			/* Vibrato rate */
     uint8 vit;			/* Vibrato waveform */
-} PACKED;
+};
 

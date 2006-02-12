@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: s3m_load.c,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -143,22 +145,36 @@ int s3m_load (FILE * f)
     struct s3m_instrument_header sih;
     int pat_len;
     uint8 n, b, x8, tmp[80];
-    uint16 x16;
-
 
     LOAD_INIT ();
 
-    /* Load and convert header */
-    fread (&sfh, 1, sizeof (sfh), f);
+    fread(&sfh.name, 28, 1, f);		/* Song name */
+    read8(f);				/* 0x1a */
+    sfh.type = read8(f);		/* File type */
+    read16l(f);				/* Reserved */
+    sfh.ordnum = read16l(f);		/* Number of orders (must be even) */
+    sfh.insnum = read16l(f);		/* Number of instruments */
+    sfh.patnum = read16l(f);		/* Number of patterns */
+    sfh.flags = read16l(f);		/* Flags */
+    sfh.version = read16l(f);		/* Tracker ID and version */
+    sfh.ffi = read16l(f);		/* File format information */
+    fread(&sfh.magic, 4, 1, f);		/* 'SCRM' */
+    sfh.gv = read8(f);			/* Global volume */
+    sfh.is = read8(f);			/* Initial speed */
+    sfh.it = read8(f);			/* Initial tempo */
+    sfh.mv = read8(f);			/* Master volume */
+    sfh.uc = read8(f);			/* Ultra click removal */
+    sfh.dp = read8(f);			/* Default pan positions if 0xfc */
+    fread(&sfh.rsvd2[8], 8, 1, f);	/* Reserved */
+    sfh.special = read16l(f);		/* Ptr to special custom data */
+    fread(&sfh.chset[32], 32, 1, f);	/* Channel settings */
+
     if (strncmp ((char *) sfh.magic, "SCRM", 4))
 	return -1;
-    L_ENDIAN16 (sfh.ordnum);
-    L_ENDIAN16 (sfh.insnum);
-    L_ENDIAN16 (sfh.patnum);
-    L_ENDIAN16 (sfh.ffi);
-    L_ENDIAN16 (sfh.version);
-    str_adj ((char *) sfh.name);
-    strcpy (xmp_ctl->name, (char *) sfh.name);
+
+    copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 28);
+
+    /* Load and convert header */
     xxh->len = sfh.ordnum;
     xxh->ins = sfh.insnum;
     xxh->smp = xxh->ins;
@@ -196,18 +212,15 @@ int s3m_load (FILE * f)
 	xxh->len--;
 #endif
 
-    for (i = 0; i < xxh->ins; i++) {
-	fread (&pp_ins[i], 2, 1, f);
-	L_ENDIAN16 (pp_ins[i]);
-    }
-    for (i = 0; i < xxh->pat; i++) {
-	fread (&pp_pat[i], 2, 1, f);
-	L_ENDIAN16 (pp_pat[i]);
-    }
+    for (i = 0; i < xxh->ins; i++)
+	pp_ins[i] = read16l(f);
+ 
+    for (i = 0; i < xxh->pat; i++)
+	pp_pat[i] = read16l(f);
 
     /* Default pan positions */
-    for (i = 0, sfh.dp -= 0xfc; !sfh.dp && n && (i < 32); i++) {
-	fread (tmp, 1, 1, f);
+    for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */ && (i < 32); i++) {
+	tmp[0] = read8(f);
 	if (tmp[0] && S3M_PAN_SET)
 	    xxc[i].pan = (tmp[0] << 4) & 0xff;
     }
@@ -259,17 +272,14 @@ int s3m_load (FILE * f)
 
 	fseek (f, pp_pat[i] * 16, SEEK_SET);
 	r = 0;
-	fread (&x16, 2, 1, f);
-	pat_len = x16;
-	L_ENDIAN16 (pat_len);
-	pat_len -= 2;
+	pat_len = read16l(f) - 2;
 
 	/* Used to be (--pat_len >= 0). Replaced by Rudolf Cejka
 	 * <cejkar@dcse.fee.vutbr.cz>, fixes hunt.s3m
 	 * ftp://us.aminet.net/pub/aminet/mods/8voic/s3m_hunt.lha
 	 */
 	while (r < xxp[i]->rows) {
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 
 	    if (b == S3M_EOR) {
 		r++;
@@ -280,9 +290,7 @@ int s3m_load (FILE * f)
 	    event = c >= xxh->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
-		fread (&n, 1, 1, f);
-
-		switch (n) {
+		switch(n = read8(f)) {
 		case 255:
 		    n = 0;
 		    break;	/* Empty note */
@@ -292,24 +300,19 @@ int s3m_load (FILE * f)
 		default:
 		    n = 1 + 12 * MSN (n) + LSN (n);
 		}
-
 		event->note = n;
-		fread (&n, 1, 1, f);
-		event->ins = n;
+		event->ins = read8(f);
 		pat_len -= 2;
 	    }
 
 	    if (b & S3M_VOL_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->vol = n + 1;
+		event->vol = read8(f) + 1;
 		pat_len--;
 	    }
 
 	    if (b & S3M_FX_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->fxt = n;
-		fread (&n, 1, 1, f);
-		event->fxp = n;
+		event->fxt = read8(f);
+		event->fxp = read8(f);
 		xlat_fx (c, event);
 		pat_len -= 2;
 	    }
@@ -337,19 +340,31 @@ int s3m_load (FILE * f)
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek (f, pp_ins[i] * 16, SEEK_SET);
-	fread (&x8, 1, 1, f);
+	x8 = read8(f);
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
 
 	if (x8 >= 2) {
 	    /* OPL2 FM instrument */
-	    fread (&sah, 1, sizeof (sah), f);
-	    if (strncmp (sah.magic, "SCRI", 4))
+
+	    fread(&sah.dosname, 12, 1, f);	/* DOS file name */
+	    fread(&sah.rsvd1, 3, 1, f);		/* 0x00 0x00 0x00 */
+	    fread(&sah.reg, 12, 1, f);		/* Adlib registers */
+	    sah.vol = read8(f);
+	    sah.dsk = read8(f);
+	    read16l(f);
+	    sah.c2spd = read16l(f);		/* C 4 speed */
+	    read16l(f);
+	    fread(&sah.rsvd4, 12, 1, f);	/* Reserved */
+	    fread(&sah.name, 28, 1, f);		/* Instrument name */
+	    fread(&sah.magic, 4, 1, f);		/* 'SCRI' */
+
+	    if (strncmp ((char *)sah.magic, "SCRI", 4))
 		return -2;
-	    L_ENDIAN16 (sah.c2spd);
 	    sah.magic[0] = 0;
-	    str_adj ((char *) sah.name);
-	    strncpy ((char *) xxih[i].name, sah.name, 24);
+
+	    copy_adjust(xxih[i].name, sah.name, 24);
+
 	    xxih[i].nsm = 1;
 	    xxi[i][0].vol = sah.vol;
 	    c2spd_to_note (sah.c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
@@ -366,16 +381,27 @@ int s3m_load (FILE * f)
 
 	    continue;
 	}
-	fread (&sih, 1, sizeof (sih), f);
 
-	if ((x8 == 1) && strncmp (sih.magic, "SCRS", 4))
+	fread(&sih.dosname, 13, 1, f);		/* DOS file name */
+	sih.memseg = read16l(f);		/* Pointer to sample data */
+	sih.length = read32l(f);		/* Length */
+	sih.loopbeg = read32l(f);		/* Loop begin */
+	sih.loopend = read32l(f);		/* Loop end */
+	sih.vol = read8(f);			/* Volume */
+	sih.rsvd1 = read8(f);			/* Reserved */
+	sih.pack = read8(f);			/* Packing type (not used) */
+	sih.flags = read8(f);		/* Loop/stereo/16bit samples flags */
+	sih.c2spd = read16l(f);			/* C 4 speed */
+	sih.rsvd2 = read16l(f);			/* Reserved */
+	fread(&sih.rsvd3, 4, 1, f);		/* Reserved */
+	sih.int_gp = read16l(f);		/* Internal - GUS pointer */
+	sih.int_512 = read16l(f);		/* Internal - SB pointer */
+	sih.int_last = read32l(f);		/* Internal - SB index */
+	fread(&sih.name, 28, 1, f);		/* Instrument name */
+	fread(&sih.magic, 4, 1, f);		/* 'SCRS' */
+
+	if ((x8 == 1) && strncmp((char *)sih.magic, "SCRS", 4))
 	    return -2;
-
-	L_ENDIAN16 (sih.memseg);
-	L_ENDIAN32 (sih.length);
-	L_ENDIAN32 (sih.loopbeg);
-	L_ENDIAN32 (sih.loopend);
-	L_ENDIAN16 (sih.c2spd);
 
 	xxih[i].nsm = !!(xxs[i].len = sih.length);
 	xxs[i].lps = sih.loopbeg;
@@ -385,8 +411,8 @@ int s3m_load (FILE * f)
 	xxs[i].flg |= sih.flags & 4 ? WAVE_16_BITS : 0;
 	xxi[i][0].vol = sih.vol;
 	sih.magic[0] = 0;
-	str_adj ((char *) sih.name);
-	strncpy ((char *) xxih[i].name, sih.name, 24);
+
+	copy_adjust(xxih[i].name, sih.name, 24);
 
 	if ((V (1)) && (strlen ((char *) sih.name) || xxs[i].len))
 	    report ("\n[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d ",
@@ -412,3 +438,4 @@ int s3m_load (FILE * f)
 
     return 0;
 }
+

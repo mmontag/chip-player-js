@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.8 2006-02-12 10:43:41 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.9 2006-02-12 16:58:48 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -497,19 +497,8 @@ for sound_hdr in awe_voice.h sys/awe_voice.h linux/awe_voice.h; do
     fi
 done
 
-if test "${GCC-no}" = yes; then
-    XMP_CACHED_TRY_COMPILE(whether gcc understands __attribute__((packed)),
-	ac_cv_c_attribute_packed,
-        ,struct foo{int bar;}__attribute__((packed));,
-        AC_DEFINE(HAVE_ATTRIBUTE_PACKED)
-        PACKED=yes,PACKED=no)
-else
-    dnl These two are for the XL C compiler
-    XMP_CACHED_TRY_RUN(whether the compiler needs -qalign=packed,
-        ac_cv_c_flag_q_align_packed,-qalign=packed,[
-        struct foobar{char foo;int bar;};
-        main(){return(sizeof(struct foobar)-5);}],
-	PACKED=yes,PACKED=no)
+if test "${GCC-no}" != yes; then
+    dnl For the XL C compiler
     XMP_CACHED_TRY_RUN(whether the compiler needs -qchars=signed,
         ac_cv_c_flag_q_chars_signed,,[
         main(){char foo=0xff;return(foo<0);}],

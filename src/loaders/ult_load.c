@@ -28,13 +28,13 @@ struct ult_header {
     uint8 magic[15];		/* 'MAS_UTrack_V00x' */
     uint8 name[32];		/* Song name */
     uint8 msgsize;		/* ver < 1.4: zero */
-} PACKED;
+};
 
 struct ult_header2 {
     uint8 order[256];		/* Orders */
     uint8 channels;		/* Number of channels - 1 */
     uint8 patterns;		/* Number of patterns - 1 */
-} PACKED;
+};
 
 struct ult_instrument {
     uint8 name[32];		/* Instrument name */
@@ -47,7 +47,7 @@ struct ult_instrument {
     uint8 bidiloop;		/* Sample loop flags */
     uint16 finetune;		/* Finetune */
     uint16 c2spd;		/* C2 frequency */
-} PACKED;
+};
 
 struct ult_event {
     /* uint8 note; */
@@ -55,7 +55,7 @@ struct ult_event {
     uint8 fxt;			/* MSN = fxt, LSN = f2t */
     uint8 f2p;			/* Secondary comes first -- little endian! */
     uint8 fxp;
-} PACKED;
+};
 
 
 int ult_load (FILE * f)
@@ -71,21 +71,23 @@ int ult_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&ufh, 1, sizeof (ufh), f);
+    fread(&ufh.magic, 15, 1, f);
+    fread(&ufh.name, 32, 1, f);
+    ufh.msgsize = read8(f);
+
     if (strncmp ((char *) ufh.magic, "MAS_UTrack_V000", 14))
 	return -1;
 
     ver = ufh.magic[14] - '0';
-    strncpy (xmp_ctl->name, ufh.name, 32);
+    strncpy(xmp_ctl->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
-    sprintf (xmp_ctl->type, "Ultra Tracker V%04d", ver);
+    sprintf(xmp_ctl->type, "Ultra Tracker V%04d", ver);
 
     MODULE_INFO ();
 
     fseek (f, ufh.msgsize * 32, SEEK_CUR);
 
-    fread (&x8, 1, 1, f);
-    xxh->ins = xxh->smp = x8;
+    xxh->ins = xxh->smp = read8(f);
     /* xxh->flg |= XXM_FLG_LINEAR; */
 
     /* Read and convert instruments */
@@ -97,14 +99,17 @@ int ult_load (FILE * f)
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	uih.c2spd = 0;
-	fread (&uih, 1, sizeof (uih) - 2 * (ver < 4), f);
-	L_ENDIAN32 (uih.loop_start);
-	L_ENDIAN32 (uih.loopend);
-	L_ENDIAN32 (uih.sizestart);
-	L_ENDIAN32 (uih.sizeend);
-	L_ENDIAN32 (uih.finetune);
-	L_ENDIAN32 (uih.c2spd);
+
+	fread(&uih.name, 32, 1, f);
+	uih.loop_start = read32l(f);
+	uih.loopend = read32l(f);
+	uih.sizestart = read32l(f);
+	uih.sizeend = read32l(f);
+	uih.volume = read8(f);
+	uih.bidiloop = read8(f);
+	uih.finetune = read16l(f);
+	uih.c2spd = read16l(f);
+
 	if (ver > 3) {			/* Incorrect in ult_form.txt */
 	    uih.c2spd ^= uih.finetune;
 	    uih.finetune ^= uih.c2spd;
@@ -135,9 +140,9 @@ int ult_load (FILE * f)
 	xxi[i][0].vol = uih.volume;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, uih.name, 24);
-	uih.dosname[0] = 0;
-	str_adj ((char *) uih.name);
+
+	copy_adjust(xxih[i].name, uih.name, 24);
+
 	if ((V (1)) && (strlen ((char *) uih.name) || xxs[i].len)) {
 	    report ("\n[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, xxs[i].len,
@@ -154,7 +159,10 @@ int ult_load (FILE * f)
     if (V (1))
 	report ("\n");
 
-    fread (&ufh2, 1, sizeof (ufh2), f);
+    fread(&ufh2.order, 256, 1, f);
+    ufh2.channels = read8(f);
+    ufh2.patterns = read8(f);
+
     for (i = 0; i < 256; i++) {
 	if (ufh2.order[i] == 0xff)
 	    break;
@@ -169,7 +177,7 @@ int ult_load (FILE * f)
 
     for (i = 0; i < xxh->chn; i++) {
 	if (ver >= 3) {
-	    fread (&x8, 1, 1, f);
+	    x8 = read8(f);
 	    xxc[i].pan = 255 * x8 / 15;
 	} else {
 	    xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */

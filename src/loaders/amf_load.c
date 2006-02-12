@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.5 2005-02-20 17:46:52 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.6 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -38,7 +38,7 @@ int amf_load(FILE * f)
 		return -1;
 
 	fread(buf, 1, 32, f);
-	strncpy(xmp_ctl->name, buf, 32);
+	strncpy(xmp_ctl->name, (char *)buf, 32);
 	sprintf(xmp_ctl->type, "DSMI (DMP) %d.%d", ver / 10, ver % 10);
 
 	xxh->ins = read8(f);
@@ -105,8 +105,7 @@ int amf_load(FILE * f)
 		xxih[i].nsm = b ? 1 : 0;
 
 		fread(buf, 1, 32, f);
-		strncpy(xxih[i].name, buf, 32);
-		str_adj((char *) xxih[i].name);
+		copy_adjust(xxih[i].name, buf, 32);
 
 		fread(buf, 1, 13, f);	/* sample name */
 		read32l(f);		/* sample index */

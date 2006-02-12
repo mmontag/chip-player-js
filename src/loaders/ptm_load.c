@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: ptm_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -41,13 +43,26 @@ int ptm_load (FILE * f)
     LOAD_INIT ();
 
     /* Load and convert header */
-    fread (&pfh, 1, sizeof (pfh), f);
+
+    fread(&pfh.name, 28, 1, f);		/* Song name */
+    pfh.doseof = read8(f);		/* 0x1a */
+    pfh.vermin = read8(f);		/* Minor version */
+    pfh.vermaj = read8(f);		/* Major type */
+    pfh.rsvd1 = read8(f);		/* Reserved */
+    pfh.ordnum = read16l(f);		/* Number of orders (must be even) */
+    pfh.insnum = read16l(f);		/* Number of instruments */
+    pfh.patnum = read16l(f);		/* Number of patterns */
+    pfh.chnnum = read16l(f);		/* Number of channels */
+    pfh.flags = read16l(f);		/* Flags (set to 0) */
+    pfh.rsvd2 = read16l(f);		/* Reserved */
+    fread(&pfh.magic, 4, 1, f);		/* 'PTMF' */
+    fread(&pfh.rsvd3, 16, 1, f);	/* Reserved */
+    fread(&pfh.chset, 32, 1, f);	/* Channel settings */
+    fread(&pfh.order, 256, 1, f);	/* Orders */
+    fread(&pfh.patseg, 128, 1, f);
+
     if (strncmp ((char *) pfh.magic, "PTMF", 4))
 	return -1;
-    L_ENDIAN16 (pfh.ordnum);
-    L_ENDIAN16 (pfh.insnum);
-    L_ENDIAN16 (pfh.patnum);
-    L_ENDIAN16 (pfh.chnnum);
     strcpy (xmp_ctl->name, (char *) pfh.name);
     xxh->len = pfh.ordnum;
     xxh->ins = pfh.insnum;
@@ -63,8 +78,8 @@ int ptm_load (FILE * f)
 
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
-    strncpy (xmp_ctl->name, pfh.name, 28);
-    sprintf (xmp_ctl->type, "PTMF %d.%02x (PTM)",
+    strncpy(xmp_ctl->name, (char *)pfh.name, 28);
+    sprintf(xmp_ctl->type, "PTMF %d.%02x (PTM)",
 	pfh.vermaj, pfh.vermin);
 
     MODULE_INFO ();
@@ -79,18 +94,31 @@ int ptm_load (FILE * f)
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fread (&pih, 1, sizeof (pih), f);
+
+	fread(&pih, 1, sizeof (pih), f);
+	pih.type = read8(f);			/* Sample type */
+	fread(&pih.dosname, 12, 1, f);		/* DOS file name */
+	pih.vol = read8(f);			/* Volume */
+	pih.c4spd = read16l(f);			/* C4 speed */
+	pih.smpseg = read16l(f);		/* Sample segment (not used) */
+	pih.smpofs = read32l(f);		/* Sample offset */
+	pih.length = read32l(f);		/* Length */
+	pih.loopbeg = read32l(f);		/* Loop begin */
+	pih.loopend = read32l(f);		/* Loop end */
+	pih.gusbeg = read32l(f);		/* GUS begin address */
+	pih.guslps = read32l(f);		/* GUS loop start address */
+	pih.guslpe = read32l(f);		/* GUS loop end address */
+	pih.gusflg = read8(f);			/* GUS loop flags */
+	pih.rsvd1 = read8(f);			/* Reserved */
+	fread(&pih.name, 28, 1, f);		/* Instrument name */
+	fread(&pih.magic, 4, 1, f);		/* 'PTMS' */
+
 	if ((pih.type & 3) != 1)
 	    continue;
 #if 0
 	if (strncmp (pih.magic, "PTMS", 4))
 	    return -2;
 #endif
-	L_ENDIAN16 (pih.c4spd);
-	L_ENDIAN32 (pih.smpofs);
-	L_ENDIAN32 (pih.length);
-	L_ENDIAN32 (pih.loopbeg);
-	L_ENDIAN32 (pih.loopend);
 	smp_ofs[i] = pih.smpofs;
 	xxih[i].nsm = !!(xxs[i].len = pih.length);
 	xxs[i].lps = pih.loopbeg;
@@ -102,8 +130,9 @@ int ptm_load (FILE * f)
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
 	pih.magic[0] = 0;
-	str_adj ((char *) pih.name);
-	strncpy ((char *) xxih[i].name, pih.name, 24);
+
+	copy_adjust(xxih[i].name, pih.name, 24);
+
 	if ((V (1)) && (strlen ((char *) pih.name) || xxs[i].len))
 	    report ("[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d\n",
 		i, pih.name, xxs[i].len, pih.type & 0x10 ? '+' : ' ', xxs[i].lps,

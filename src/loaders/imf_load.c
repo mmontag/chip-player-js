@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: imf_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -130,23 +132,38 @@ int imf_load (FILE *f)
     struct imf_sample is;
     int pat_len, smp_num;
     uint8 n, b;
-    uint16 x16;
 
     LOAD_INIT ();
 
     /* Load and convert header */
-    fread (&ih, 1, sizeof (ih), f);
+    fread(&ih.name, 32, 1, f);
+    ih.len = read16l(f);
+    ih.pat = read16l(f);
+    ih.ins = read16l(f);
+    ih.flg = read16l(f);
+    fread(&ih.unused1, 8, 1, f);
+    ih.tpo = read8(f);
+    ih.bpm = read8(f);
+    ih.vol = read8(f);
+    ih.amp = read8(f);
+    fread(&ih.unused2, 8, 1, f);
+    fread(&ih.magic, 4, 1, f);
+
+    for (i = 0; i < 32; i++) {
+	fread(&ih.chn[i].name, 12, 1, f);
+	ih.chn[i].status = read8(f);
+	ih.chn[i].pan = read8(f);
+	ih.chn[i].chorus = read8(f);
+	ih.chn[i].reverb = read8(f);
+    }
+
+    fread(&ih.pos, 256, 1, f);
+
     if (ih.magic[0] != 'I' || ih.magic[1] != 'M' || ih.magic[2] != '1' ||
 	ih.magic[3] != '0')
 	return -1;
 
-    L_ENDIAN16 (ih.len);
-    L_ENDIAN16 (ih.pat);
-    L_ENDIAN16 (ih.ins);
-    L_ENDIAN16 (ih.flg);
-
-    str_adj ((char *) ih.name);
-    strcpy (xmp_ctl->name, (char *) ih.name);
+    copy_adjust((uint8 *)xmp_ctl->name, (uint8 *)ih.name, 32);
 
     xxh->len = ih.len;
     xxh->ins = ih.ins;
@@ -195,13 +212,8 @@ int imf_load (FILE *f)
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 
-	fread (&x16, 2, 1, f);
-	L_ENDIAN16 (x16);
-	pat_len = x16 - 4;
-
-	fread (&x16, 2, 1, f);
-	L_ENDIAN16 (x16);
-	xxp[i]->rows = x16;
+	pat_len = read16l(f) - 4;
+	xxp[i]->rows = read16l(f);
 	TRACK_ALLOC (i);
 
 	r = 0;
@@ -218,7 +230,7 @@ int imf_load (FILE *f)
 	    event = c >= xxh->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & IMF_NI_FOLLOW) {
-		fread (&n, 1, 1, f);
+		n = read8(f);
 		switch (n) {
 		case 255:
 		case 160:	/* ??!? */
@@ -229,23 +241,18 @@ int imf_load (FILE *f)
 		}
 
 		event->note = n;
-		fread (&n, 1, 1, f);
-		event->ins = n;
+		event->ins = read8(f);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_FX_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->fxt = n;
-		fread (&n, 1, 1, f);
-		event->fxp = n;
+		event->fxt = read8(f);
+		event->fxp = read8(f);
 		xlat_fx (c, &event->fxt, &event->fxp);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_F2_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->f2t = n;
-		fread (&n, 1, 1, f);
-		event->f2p = n;
+		event->f2t = read8(f);
+		event->f2p = read8(f);
 		xlat_fx (c, &event->f2t, &event->f2p);
 		pat_len -= 2;
 	    }
@@ -270,12 +277,30 @@ int imf_load (FILE *f)
 "\n     Instrument name                NSm Fade Env Smp# Len   Start End   C2Spd");
 
     for (smp_num = i = 0; i < xxh->ins; i++) {
-	fread (&ii, 1, sizeof (ii), f);
-	if (strncmp (ii.magic, "II10", 4))
-	    return -2;
 
-	L_ENDIAN16 (ii.fadeout);
-	L_ENDIAN16 (ii.nsm);
+	fread(&ii.name, 32, 1, f);
+	fread(&ii.map, 120, 1, f);
+	fread(&ii.unused, 8, 1, f);
+	for (i = 0; i < 32; i++)
+		ii.vol_env[i] = read16l(f);
+	for (i = 0; i < 32; i++)
+		ii.pan_env[i] = read16l(f);
+	for (i = 0; i < 32; i++)
+		ii.pitch_env[i] = read16l(f);
+	for (i = 0; i < 3; i++) {
+	    ii.env[i].npt = read8(f);
+	    ii.env[i].sus = read8(f);
+	    ii.env[i].lps = read8(f);
+	    ii.env[i].lpe = read8(f);
+	    ii.env[i].flg = read8(f);
+	    fread(&ii.env[i].unused, 3, 1, f);
+	}
+	ii.fadeout = read16l(f);
+	ii.nsm = read16l(f);
+	fread(&ii.magic, 4, 1, f);
+
+	if (strncmp((char *)ii.magic, "II10", 4))
+	    return -2;
 
         if (ii.nsm)
  	    xxi[i] = calloc (sizeof (struct xxm_instrument), ii.nsm);
@@ -305,20 +330,27 @@ int imf_load (FILE *f)
 	    xxae[i] = calloc (4, xxih[i].aei.npt);
 
 	for (j = 0; j < xxih[i].aei.npt; j++) {
-	    x16 = ii.vol_env[j * 2];
-	    L_ENDIAN16 (x16);
-	    xxae[i][j * 2] = x16;
-	    x16 = ii.vol_env[j * 2 + 1];
-	    L_ENDIAN16 (x16);
-	    xxae[i][j * 2 + 1] = x16;
+	    xxae[i][j * 2] = ii.vol_env[j * 2];
+	    xxae[i][j * 2 + 1] = ii.vol_env[j * 2 + 1];
 	}
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {
-	    fread (&is, 1, sizeof (is), f);
-	    L_ENDIAN32 (is.len);
-	    L_ENDIAN32 (is.lps);
-	    L_ENDIAN32 (is.lpe);
-	    L_ENDIAN32 (is.rate);
+
+	    fread(&is.name, 13, 1, f);
+	    fread(&is.unused1, 3, 1, f);
+	    is.len = read32l(f);
+	    is.lps = read32l(f);
+	    is.lpe = read32l(f);
+	    is.rate = read32l(f);
+	    is.vol = read8(f);
+	    is.pan = read8(f);
+	    fread(&is.unused2, 14, 1, f);
+	    is.flg = read8(f);
+	    fread(&is.unused3, 5, 1, f);
+	    is.ems = read16l(f);
+	    is.dram = read32l(f);
+	    fread(&is.magic, 4, 1, f);
+
 	    xxi[i][j].sid = smp_num;
 	    xxi[i][j].vol = is.vol;
 	    xxi[i][j].pan = is.pan;

@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: imf.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +20,7 @@ struct imf_channel {
     uint8 pan;			/* Pan positions */
     uint8 chorus;		/* Default chorus */
     uint8 reverb;		/* Default reverb */
-} PACKED;
+};
 
 struct imf_header {
     char name[32];		/* Songname (ASCIIZ-String, max. 31 chars) */
@@ -31,11 +33,11 @@ struct imf_header {
     uint8 bpm;			/* Default beats per minute (BPM) (32..255) */
     uint8 vol;			/* Default mastervolume (0..64) */
     uint8 amp;			/* Amplification factor (4..127) */
-    uint8 unsused2[8];
+    uint8 unused2[8];
     uint8 magic[4];		/* 'IM10' */
     struct imf_channel chn[32];	/* Channel settings */
     uint8 pos[256];		/* Order list */
-} PACKED;
+};
 
 struct imf_env {
     uint8 npt;			/* Number of envelope points */
@@ -44,7 +46,7 @@ struct imf_env {
     uint8 lpe;			/* Envelope loop end point */
     uint8 flg;			/* Envelope flags */
     uint8 unused[3];
-} PACKED;
+};
 
 struct imf_instrument {
     char name[32];		/* Inst. name (ASCIIZ-String, max. 31 chars) */
@@ -57,7 +59,7 @@ struct imf_instrument {
     uint16 fadeout;		/* Fadeout rate (0...0FFFH) */
     uint16 nsm;			/* Number of samples in instrument */
     uint8 magic[4];		/* 'II10' */
-} PACKED;
+};
 
 struct imf_sample {
     char name[13];		/* Sample filename (12345678.ABC) */
@@ -74,5 +76,5 @@ struct imf_sample {
     uint16 ems;			/* Reserved for internal usage */
     uint32 dram;		/* Reserved for internal usage */
     uint8 magic[4];		/* 'IS10' */
-} PACKED;
+};
 
