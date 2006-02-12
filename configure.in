@@ -2,10 +2,11 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.7 2005-02-23 17:07:50 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.8 2006-02-12 10:43:41 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
-AC_INIT(src/include/xmp.h)
+AC_INIT
+AC_CONFIG_SRCDIR([src/include/xmp.h])
 AC_CONFIG_HEADER(src/include/config.h)
 AC_CONFIG_AUX_DIR(./scripts)
 
@@ -146,7 +147,7 @@ dnl -----------------------------------------------------------------------
 if test "${enable_xmms}" != "no"; then
     xmms_cflags="`xmms-config --cflags 2>/dev/null`"
     if test ! -z "${xmms_cflags}"; then
-        AC_CHECKING([for XMMS flags... ${xmms_cflags}])
+        AS_MESSAGE(checking for XMMS flags... ${xmms_cflags}...)
     else
         if test "${enable_xmms}" = "yes"; then
             AC_MSG_ERROR(Can't find XMMS files (is xmms-config in PATH?))
@@ -173,7 +174,7 @@ dnl -----------------------------------------------------------------------
 if test "${enable_arts}" != "no"; then
     arts_cflags="`artsc-config --cflags 2>/dev/null`"
     if test ! -z "${arts_cflags}"; then
-	AC_CHECKING([for aRts flags... ${arts_cflags}])
+	AS_MESSAGE(checking for aRts flags... ${arts_cflags}...)
     else
 	if test "${enable_arts}" = "yes"; then
 	    AC_MSG_ERROR(Can't find aRts files (is artsc-config in PATH?))
@@ -206,7 +207,13 @@ AC_CHECK_HEADERS(strings.h getopt.h sys/select.h sys/param.h \
     sys/soundcard.h machine/soundcard.h \
     sys/ultrasound.h linux/ultrasound.h machine/ultrasound.h \
     awe_voice.h sys/awe_voice.h linux/awe_voice.h \
-    alsa/asoundlib.h esd.h audio/audiolib.h audio/soundlib.h)
+    alsa/asoundlib.h esd.h)
+
+AC_CHECK_HEADERS(audio/audiolib.h audio/soundlib.h,,,
+[[#if HAVE_AUDIO_AUDIOLIB_H
+#include <audio/audiolib.h>
+#endif
+]])
 
 dnl -----------------------------------------------------------------------
 dnl Check OS/architecture independent drivers
@@ -430,7 +437,7 @@ dnl -----------------------------------------------------------------------
 
 dnl XMP_CACHED_TRY_COMPILE(<message>,<cache-var>,<headers>,<body>,<ifyes>,<ifno>)
 define(XMP_CACHED_TRY_COMPILE,[
-    AC_CACHE_CHECK([$1],[$2],[AC_TRY_COMPILE([$3],[$4],[$2=yes],[$2=no])])
+    AC_CACHE_CHECK([$1],[$2],[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[$3]], [[$4]])],[$2=yes],[$2=no])])
     if test "x$$2" = xyes; then
         true
         $5
@@ -445,7 +452,7 @@ define(XMP_CACHED_TRY_RUN,[
 	AC_CACHE_CHECK([$1],[$2],[
             oldcflags="${CFLAGS}"
 	    CFLAGS="${CFLAGS} $3"
-	    AC_TRY_RUN($4,[$2=yes],[$2=no],true)
+	    AC_RUN_IFELSE([AC_LANG_SOURCE([[$4]])],[$2=yes],[$2=no],[true])
 	    CFLAGS="${oldcflags}"])
 	if test "x$$2" = xyes; then
 	    CFLAGS="${CFLAGS} $3"
@@ -526,5 +533,6 @@ if test "$no_x" = yes; then
      X_XMP=""
 fi
 
-AC_OUTPUT(Makefile.rules)
+AC_CONFIG_FILES([Makefile.rules])
+AC_OUTPUT
 
