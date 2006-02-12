@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.3 2006-02-12 20:57:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -73,7 +73,8 @@ int far_load (FILE * f)
     ffh2.patterns = read8(f);		/* Number of stored patterns (?) */
     ffh2.songlen = read8(f);		/* Song length in patterns */
     ffh2.restart = read8(f);		/* Restart pos */
-    fread(&ffh2.patsize, 256, 1, f);	/* Size of each pattern in bytes */
+    for (i = 0; i < 256; i++)
+	ffh2.patsize[i] = read16l(f);	/* Size of each pattern in bytes */
 
     xxh->chn = 16;
     /*xxh->pat=ffh2.patterns; (Error in specs? --claudio) */
@@ -167,7 +168,7 @@ int far_load (FILE * f)
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
-	fread(&fih.name, 32, 1, 0);	/* Instrument name */
+	fread(&fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = read32l(f);	/* Length of sample (up to 64Kb) */
 	fih.finetune = read8(f);	/* Finetune (unsuported) */
 	fih.volume = read8(f);		/* Volume (unsuported?) */
@@ -188,8 +189,6 @@ int far_load (FILE * f)
 	xxi[i][0].sid = i;
 
 	copy_adjust(xxih[i].name, fih.name, 24);
-
-	fih.length = 0;
 
 	if ((V (1)) && (strlen ((char *) fih.name) || xxs[i].len))
 	    report ("\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",

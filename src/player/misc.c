@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: misc.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: misc.c,v 1.3 2006-02-12 20:57:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -49,6 +49,7 @@ char *copy_adjust(uint8 *s, uint8 *r, int n)
     if (n > strlen(r))
 	n = strlen(r);
 
+    memset(s, 0, n);
     strncpy(s, r, n);
 
     for (i = 0; i < n; i++)

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.4 2006-02-12 20:57:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -79,7 +79,7 @@ int stx_load (FILE * f)
     sfh.unknown6 = read16l(f);
     sfh.unknown7 = read16l(f);
     sfh.unknown8 = read16l(f);
-    fread(&sfh.magic, 4, 1, f);
+    fread(&sfh.magic2, 4, 1, f);
 
     /* BMOD2STM does not convert pitch */
     if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
