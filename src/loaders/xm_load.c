@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.3 2006-02-12 19:38:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -271,7 +271,7 @@ load_instruments:
 	    xi.v_fade = read16l(f);		/* Volume fadeout */
 
 	    /* Skip reserved space */
-	    fseek (f, xih.size - sizeof (xih) - sizeof (xi), SEEK_CUR);
+	    fseek (f, xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
 
 	    /* Envelope */
 	    xxih[i].rls = xi.v_fade;
@@ -308,10 +308,10 @@ load_instruments:
 		xsh[j].loop_start = read32l(f);	/* Sample loop start */
 		xsh[j].loop_length = read32l(f);/* Sample loop length */
 		xsh[j].volume = read8(f);	/* Volume */
-		xsh[j].finetune = read8(f);	/* Finetune (-128..+127) */
+		xsh[j].finetune = read8s(f);	/* Finetune (-128..+127) */
 		xsh[j].type = read8(f);		/* Flags */
 		xsh[j].pan = read8(f);		/* Panning (0-255) */
-		xsh[j].relnote = read8(f);	/* Relative note number */
+		xsh[j].relnote = read8s(f);	/* Relative note number */
 		xsh[j].reserved = read8(f);
 		fread(&xsh[j].name, 22, 1, f);	/* Sample_name */
 
@@ -381,7 +381,7 @@ load_instruments:
 	     * generalization should take care of both cases.
 	     */
 
-	     fseek (f, xih.size - sizeof (xih), SEEK_CUR);
+	     fseek (f, xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
 
 	if ((V (1)) && (strlen ((char *) xxih[i].name) || xih.samples))

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.7 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: load.h,v 1.8 2006-02-12 19:38:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -94,6 +94,7 @@ void	disable_continue_fx	(struct xxm_event *);
     } \
 }
 
+#define read8s(x)	( (int8)((read8((x)) + 128) & 0xff) - 128 )
 
 uint8	read8		(FILE *);
 uint16	read16l		(FILE *);

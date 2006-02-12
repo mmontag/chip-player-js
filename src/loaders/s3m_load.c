@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.4 2006-02-12 19:38:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -165,7 +165,7 @@ int s3m_load (FILE * f)
     sfh.mv = read8(f);			/* Master volume */
     sfh.uc = read8(f);			/* Ultra click removal */
     sfh.dp = read8(f);			/* Default pan positions if 0xfc */
-    fread(&sfh.rsvd2[8], 8, 1, f);	/* Reserved */
+    fread(&sfh.rsvd2, 8, 1, f);		/* Reserved */
     sfh.special = read16l(f);		/* Ptr to special custom data */
     fread(&sfh.chset[32], 32, 1, f);	/* Channel settings */
 

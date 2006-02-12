@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.9 2006-02-12 16:58:48 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.10 2006-02-12 19:38:06 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -50,16 +50,16 @@ AC_ARG_ENABLE(alsa,
     [  --disable-alsa          Don't compile ALSA support])
 
 AC_ARG_ENABLE(arts,
-    [  --disable-arts          Don't compile aRts support])
+    [  --enable-arts           Compile aRts support])
 
 AC_ARG_ENABLE(arts,
-    [  --disable-nas           Don't compile NAS support])
+    [  --enable-nas            Compile NAS support])
 
 AC_ARG_ENABLE(xmms,
     [  --disable-xmms          Don't build the XMMS plugin])
 
 AC_ARG_ENABLE(esd,
-    [  --disable-esd           Don't compile ESD support])
+    [  --enable-esd            Compile ESD support])
 
 AC_ARG_WITH(oss,
     [  --with-oss=<path>       OSS prefix (optional)],
@@ -253,35 +253,37 @@ else
     enable_alsa="no"
 fi
 
-if test "${ac_cv_header_esd_h}" = "yes"; then
-    if test "$esd_path" != ""; then
-	LIBS="${LIBS} -L${esd_path}/lib"
+if test "${enable_esd}" = "yes"; then
+    if test "${ac_cv_header_esd_h}" = "yes"; then
+        if test "$esd_path" != ""; then
+            LIBS="${LIBS} -L${esd_path}/lib"
+        fi
+        AC_CHECK_LIB(esd, esd_play_stream, [
+            if test "${enable_dynamic}" != "yes"; then
+                LIBS="${LIBS} -lesd"
+            fi
+            DRIVERS="${DRIVERS} esd.o"
+            AC_DEFINE(DRIVER_ESD)
+        ])
+    else
+        AC_MSG_ERROR(Can't find EsounD header files)
     fi
-    AC_CHECK_LIB(esd, esd_play_stream, [
-    if test "${enable_esd}" != no; then
-	if test "${enable_dynamic}" != "yes"; then
-	    LIBS="${LIBS} -lesd"
-	fi
-	DRIVERS="${DRIVERS} esd.o"
-	AC_DEFINE(DRIVER_ESD)
-    fi])
 else
-    if test "${enable_esd}" = "yes"; then
-	AC_MSG_ERROR(Can't find EsounD header files)
-    fi
-    AC_MSG_WARN(EsounD suport disabled)
     enable_esd="no"
 fi
 
-if test "${ac_cv_header_artsc_h}" = "yes"; then
-    AC_CHECK_LIB(artsc, arts_init, [
-    if test "${enable_arts}" != no; then
-	if test "${enable_dynamic}" != "yes"; then
-	    LIBS="${LIBS} `artsc-config --libs`"
-	fi
-	DRIVERS="${DRIVERS} arts.o"
-	AC_DEFINE(DRIVER_ARTS)
-    fi])
+if test "${enable_arts}" = yes; then
+    if test "${ac_cv_header_artsc_h}" = "yes"; then
+        AC_CHECK_LIB(artsc, arts_init, [
+            if test "${enable_dynamic}" != "yes"; then
+                LIBS="${LIBS} `artsc-config --libs`"
+            fi
+            DRIVERS="${DRIVERS} arts.o"
+            AC_DEFINE(DRIVER_ARTS)
+        ])
+    fi
+else
+    enable_arts="no"
 fi
 
 if test "${ac_cv_header_audio_audiolib_h}" = "yes" && \
@@ -289,7 +291,7 @@ if test "${ac_cv_header_audio_audiolib_h}" = "yes" && \
     OLDLIBS="${LIBS}"
     LIBS="-L${ac_x_libraries} -lXt -lX11"
     AC_CHECK_LIB(audio, AuOpenServer, [
-    if test "${enable_nas}" != no; then
+    if test "${enable_nas}" = yes; then
 	if test "${enable_dynamic}" != "yes"; then
 	    OLDLIBS="${OLDLIBS} -laudio -L${ac_x_libraries} -lXt -lX11"
 	fi
