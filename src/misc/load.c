@@ -26,15 +26,18 @@ extern struct xmp_fmt_info *__fmt_head;
 int decrunch_sqsh (FILE *, FILE *);
 int decrunch_pp (FILE *, FILE *);
 int decrunch_mmcmp (FILE *, FILE *);
+int decrunch_pw (FILE *, FILE *);
+int pw_check(unsigned char *, int);
 
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
 #define BUILTIN_MMCMP	0x03
+#define BUILTIN_PW	0x04
 
 
 static int decrunch (FILE **f, char **s)
 {
-    unsigned char b[64];
+    unsigned char b[1024];
     char *cmd;
     FILE *t;
     int fd, builtin, res;
@@ -45,7 +48,7 @@ static int decrunch (FILE **f, char **s)
     temp = strdup ("/tmp/xmp_XXXXXX");
 
     fseek (*f, 0, SEEK_SET);
-    fread (b, 1, 64, *f);
+    fread (b, 1, 1024, *f);
 
     if (b[0] == 'P' && b[1] == 'K') {
 	packer = "Zip";
@@ -93,6 +96,9 @@ static int decrunch (FILE **f, char **s)
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
+    } else if (pw_check(b, 1024)) {
+	packer = "ProWizard";
+	builtin = BUILTIN_PW;
     }
 
     fseek (*f, 0, SEEK_SET);
@@ -157,6 +163,8 @@ static int decrunch (FILE **f, char **s)
 	case BUILTIN_MMCMP:    
 	    res = decrunch_mmcmp (*f, t);
 	    break;
+	case BUILTIN_PW:
+	    res = decrunch_pw(*f, t);
 	}
     }
 
