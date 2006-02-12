@@ -1,9 +1,15 @@
-$Id: ChangeLog,v 1.20 2005-02-25 13:33:12 cmatsuoka Exp $
+$Id: ChangeLog,v 1.21 2006-02-12 20:00:35 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.1.1 ()
+2.2.0 ()
+	- don't use packed structures anymore
+	- fixed issues with OpenBSD
+	- fixed issues with 64-bit machines
+	- using Asle's Prowizard to handle packed MODs
+
+2.1.1 (unreleased)
 	- added more module format specs
 	- added MO3 unpacking support
 	- added file detection to the XMMS plugin

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.3 2006-02-12 20:00:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -281,19 +281,19 @@ int imf_load (FILE *f)
 	fread(&ii.name, 32, 1, f);
 	fread(&ii.map, 120, 1, f);
 	fread(&ii.unused, 8, 1, f);
-	for (i = 0; i < 32; i++)
-		ii.vol_env[i] = read16l(f);
-	for (i = 0; i < 32; i++)
-		ii.pan_env[i] = read16l(f);
-	for (i = 0; i < 32; i++)
-		ii.pitch_env[i] = read16l(f);
-	for (i = 0; i < 3; i++) {
-	    ii.env[i].npt = read8(f);
-	    ii.env[i].sus = read8(f);
-	    ii.env[i].lps = read8(f);
-	    ii.env[i].lpe = read8(f);
-	    ii.env[i].flg = read8(f);
-	    fread(&ii.env[i].unused, 3, 1, f);
+	for (j = 0; j < 32; j++)
+		ii.vol_env[j] = read16l(f);
+	for (j = 0; j < 32; j++)
+		ii.pan_env[j] = read16l(f);
+	for (j = 0; j < 32; j++)
+		ii.pitch_env[j] = read16l(f);
+	for (j = 0; j < 3; j++) {
+	    ii.env[j].npt = read8(f);
+	    ii.env[j].sus = read8(f);
+	    ii.env[j].lps = read8(f);
+	    ii.env[j].lpe = read8(f);
+	    ii.env[j].flg = read8(f);
+	    fread(&ii.env[j].unused, 3, 1, f);
 	}
 	ii.fadeout = read16l(f);
 	ii.nsm = read16l(f);
