@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Modified by Claudio Matsuoka for xmp
  *
- * $Id: prowiz.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.2 2006-02-12 22:47:52 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -130,7 +130,7 @@ int pw_wizardry (int in, int out)
 	else
 		in_size = st.st_size;
 
-	printf ("input file size : %d\n", in_size);
+	/* printf ("input file size : %d\n", in_size); */
 	if (in_size < MIN_FILE_LENGHT)
 		return -2;
 

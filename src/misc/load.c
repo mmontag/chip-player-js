@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: load.c,v 1.6 2006-02-12 22:47:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -96,7 +98,7 @@ static int decrunch (FILE **f, char **s)
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
-    } else if (pw_check(b, 1024)) {
+    } else if (pw_check(b, 1024) == 0) {
 	packer = "ProWizard";
 	builtin = BUILTIN_PW;
     }

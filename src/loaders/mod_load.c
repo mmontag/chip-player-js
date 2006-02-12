@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.3 2006-02-12 22:47:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -45,6 +45,7 @@ struct {
     { "6CHN", "6 channel MOD", 0, "Fast Tracker", 6 },
     { "8CHN", "8 channel MOD", 0, "Fast Tracker", 8 },
     { "CD81", "8 channel MOD", 1, "Octalyser", 8 }, /* Atari STe/Falcon */
+    { "PWIZ", "Packed module", 1, "Pro-Wizard", 4 },
     { "", 0 }
 };
 
@@ -88,6 +89,7 @@ static int module_load (FILE *f, int ptdt)
     char *x, pathname[256] = "", *id = "", *tracker = "";
     int lps_mult = xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
+    char idbuffer[32];
 
     if (!ptdt)
 	LOAD_INIT ();
@@ -123,6 +125,14 @@ static int module_load (FILE *f, int ptdt)
 	    detected = mod_magic[i].flag;
 	    break;
 	}
+    }
+
+    if (memcmp(mh.magic, "PWIZ", 4) == 0) {
+	int pos = ftell(f);
+	fseek(f, -22, SEEK_END);
+	fread(idbuffer, 1, 22, f);
+	id = idbuffer;
+	fseek(f, pos, SEEK_SET);
     }
 
     if (!xxh->chn) {
