@@ -1,4 +1,4 @@
-$Id: README,v 1.10 2005-02-21 12:28:32 cmatsuoka Exp $
+$Id: README,v 1.11 2006-02-12 23:15:44 cmatsuoka Exp $
 
 
 
@@ -197,14 +197,14 @@ for description of the command line arguments recognized by xmp.)
 
 LICENSE
 
-Extended Module Player (C)1996-2005 Claudio Matsuoka, Hipolito Carraro Jr
+Extended Module Player (C)1996-2006 Claudio Matsuoka, Hipolito Carraro Jr
 AWE-specific portions of oss_seq.c Copyright (C) 1996,1997 Takashi Iwai
 ulaw encoding function Copyright (C) 1989 Rich Gopstein and Harris Corp
 XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn
+ProWizard-PC decruncher Copyright (C) 1998 Sylvain Chipaux
 IT sample decompression routine Copyright (C) 1998 Tammo Hinrichs
 MMCMP and IT lowpass filter routines Copyright (C) 1998 Olivier Lapicque
 OS/2-specific portions and DART driver Copyright (C) 1999 Kevin Langman
-The Player 6.0a loader Copyright (C) 1998 Sylvain Chipaux
 FFT routine Copyright (C) 1996-1999 Takuya Ooura
 Portions of NAS driver Copyright (C) 1999 Martin Denn
 

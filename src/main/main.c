@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: main.c,v 1.8 2006-02-12 23:15:44 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: main.c,v 1.7 2005-02-24 12:52:12 cmatsuoka Exp $
  */
 
 /*
@@ -405,7 +405,7 @@ int main (int argc, char **argv)
 
     if (opt.verbose) {
 	fprintf (stderr, "Extended Module Player %s %s\n"
-	"Copyright (C) 1996-2005 Claudio Matsuoka and Hipolito Carraro Jr\n",
+	"Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr\n",
 	    xmp_version, xmp_date);
 #ifdef __EMX__
 	fprintf(stderr, "OS/2 Port by Kevin Langman (langman@earthling.net)\n" );

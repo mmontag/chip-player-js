@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.5 2005-02-21 12:28:49 cmatsuoka Exp $
+ * $Id: options.c,v 1.6 2006-02-12 23:15:44 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,6 +20,10 @@
 #include <getopt.h>
 
 #include "xmp.h"
+#include "../prowizard/list.h"
+#include "../prowizard/prowiz.h"
+
+extern struct list_head format_list;
 
 extern char *optarg;
 static int o, i;
@@ -129,6 +133,8 @@ static void usage (char *s, struct xmp_control *opt)
 {
     struct xmp_fmt_info *f, *fmt;
     struct xmp_drv_info *d, *drv;
+    struct list_head *tmp;
+    struct pw_format *format;
     char **hlp, buf[80];
     int i;
 
@@ -144,6 +150,14 @@ static void usage (char *s, struct xmp_control *opt)
         sprintf (buf, "%s (%s)", f->suffix, f->tracker);
         list_wrap (buf, 3, 0, 1);
     }
+
+    list_for_each(tmp, &format_list) {
+	format = list_entry(tmp, struct pw_format, list);
+        sprintf (buf, "%s (%s)", format->id, format->name);
+        list_wrap (buf, 3, 0, 1);
+	i++;
+    }
+
     sprintf (buf, "[%d known formats]", i);
     list_wrap (buf, 3, 0, 0);
     printf ("\n");

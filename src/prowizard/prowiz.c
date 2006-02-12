@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Modified by Claudio Matsuoka for xmp
  *
- * $Id: prowiz.c,v 1.2 2006-02-12 22:47:52 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.3 2006-02-12 23:15:44 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@ static struct _xmp_depacker depacker_pw = {
 };
 #endif
 
-static LIST_HEAD(format_list);
+LIST_HEAD(format_list);
 
 
 int pw_register (struct pw_format *f)
