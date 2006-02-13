@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.3 2006-02-13 02:55:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -59,7 +59,8 @@ int ptm_load (FILE * f)
     fread(&pfh.rsvd3, 16, 1, f);	/* Reserved */
     fread(&pfh.chset, 32, 1, f);	/* Channel settings */
     fread(&pfh.order, 256, 1, f);	/* Orders */
-    fread(&pfh.patseg, 128, 1, f);
+    for (i = 0; i < 128; i++)
+	pfh.patseg[i] = read16l(f);
 
     if (strncmp ((char *) pfh.magic, "PTMF", 4))
 	return -1;
@@ -95,7 +96,6 @@ int ptm_load (FILE * f)
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
-	fread(&pih, 1, sizeof (pih), f);
 	pih.type = read8(f);			/* Sample type */
 	fread(&pih.dosname, 12, 1, f);		/* DOS file name */
 	pih.vol = read8(f);			/* Volume */

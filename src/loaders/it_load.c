@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: it_load.c,v 1.3 2005-02-08 16:54:52 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.4 2006-02-13 02:55:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -186,19 +186,38 @@ int it_load (FILE * f)
     LOAD_INIT ();
 
     /* Load and convert header */
-    fread (&ifh, 1, sizeof (ifh), f);
+    fread(&ifh.magic, 4, 1, f);
+
     if (strncmp ((char *) ifh.magic, "IMPM", 4))
 	return -1;
-    L_ENDIAN16 (ifh.ordnum);
-    L_ENDIAN16 (ifh.insnum);
-    L_ENDIAN16 (ifh.smpnum);
-    L_ENDIAN16 (ifh.patnum);
-    L_ENDIAN16 (ifh.cwt);
-    L_ENDIAN16 (ifh.cmwt);
-    L_ENDIAN16 (ifh.flags);
-    L_ENDIAN16 (ifh.special);
-    L_ENDIAN16 (ifh.msglen);
-    L_ENDIAN32 (ifh.msgofs);
+
+    fread(&ifh.name, 26, 1, f);
+    fread(&ifh.rsvd1, 2, 1, f);
+
+    ifh.ordnum = read16l(f);
+    ifh.insnum = read16l(f);
+    ifh.smpnum = read16l(f);
+    ifh.patnum = read16l(f);
+
+    ifh.cwt = read16l(f);
+    ifh.cmwt = read16l(f);
+    ifh.flags = read16l(f);
+    ifh.special = read16l(f);
+
+    ifh.gv = read8(f);
+    ifh.mv = read8(f);
+    ifh.is = read8(f);
+    ifh.it = read8(f);
+    ifh.sep = read8(f);
+    ifh.zero = read8(f);
+
+    ifh.msglen = read16l(f);
+    ifh.msgofs = read32l(f);
+
+    fread(&ifh.rsvd2, 4, 1, f);
+    fread(&ifh.chpan, 64, 1, f);
+    fread(&ifh.chvol, 64, 1, f);
+
     strcpy (xmp_ctl->name, (char *) ifh.name);
     xxh->len = ifh.ordnum;
     xxh->ins = ifh.insnum;
@@ -232,18 +251,12 @@ int it_load (FILE * f)
 	    memcpy (&xxo[i], &xxo[i + 1], xxh->len - i - 1);
 	    xxh->len--;
 	}
-    for (i = 0; i < xxh->ins; i++) {
-	fread (&pp_ins[i], 4, 1, f);
-	L_ENDIAN32 (pp_ins[i]);
-    }
-    for (i = 0; i < xxh->smp; i++) {
-	fread (&pp_smp[i], 4, 1, f);
-	L_ENDIAN32 (pp_smp[i]);
-    }
-    for (i = 0; i < xxh->pat; i++) {
-	fread (&pp_pat[i], 4, 1, f);
-	L_ENDIAN32 (pp_pat[i]);
-    }
+    for (i = 0; i < xxh->ins; i++)
+	pp_ins[i] = read32l(f);
+    for (i = 0; i < xxh->smp; i++)
+	pp_smp[i] = read32l(f);
+    for (i = 0; i < xxh->pat; i++)
+	pp_pat[i] = read32l(f);
 
     xmp_ctl->c4rate = C4_NTSC_RATE;
     xmp_ctl->fetch |= XMP_CTL_FINEFX | XMP_CTL_ENVFADE;
@@ -319,18 +332,51 @@ int it_load (FILE * f)
 	if ((ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200)) {
 	    /* New instrument format */
 	    fseek (f, pp_ins[i], SEEK_SET);
-	    fread (&i2h, 1, sizeof (i2h), f);
-	    L_ENDIAN16 (i2h.fadeout);
-	    L_ENDIAN16 (i2h.trkvers);
-	    L_ENDIAN16 (i2h.mbnk);
-	    str_adj ((char *) i2h.name);
-	    strncpy ((char *) xxih[i].name, i2h.name, 24);
+
+	    fread(&i2h.magic, 4, 1, f);
+	    fread(&i2h.dosname, 12, 1, f);
+	    i2h.zero = read8(f);
+	    i2h.nna = read8(f);
+	    i2h.dct = read8(f);
+	    i2h.dca = read8(f);
+	    i2h.fadeout = read16l(f);
+
+	    i2h.pps = read8(f);
+	    i2h.ppc = read8(f);
+	    i2h.gbv = read8(f);
+	    i2h.dfp = read8(f);
+	    i2h.rv = read8(f);
+	    i2h.rp = read8(f);
+	    i2h.trkvers = read16l(f);
+
+	    i2h.nos = read8(f);
+	    i2h.rsvd1 = read8(f);
+	    fread(&i2h.name, 26, 1, f);
+
+	    i2h.ifc = read8(f);
+	    i2h.ifr = read8(f);
+	    i2h.mch = read8(f);
+	    i2h.mpr = read8(f);
+	    i2h.mbnk = read16l(f);
+	    fread(&i2h.keys, 240, 1, f);
+
+	    copy_adjust(xxih[i].name, i2h.name, 24);
 	    xxih[i].rls = i2h.fadeout << 6;
 
 	    /* Envelopes */
 
 #define BUILD_ENV(X) { \
-	    fread (&env, 1, sizeof (env), f); \
+            env.flg = read8(f); \
+            env.num = read8(f); \
+            env.lpb = read8(f); \
+            env.lpe = read8(f); \
+            env.slb = read8(f); \
+            env.sle = read8(f); \
+            for (j = 0; j < 25; j++) { \
+            	env.node[j].y = read8(f); \
+            	env.node[j].x = read16l(f); \
+            } \
+            env.unused = read8(f); \
 	    xxih[i].X##ei.flg = env.flg & IT_ENV_ON ? XXM_ENV_ON : 0; \
 	    xxih[i].X##ei.flg |= env.flg & IT_ENV_LOOP ? XXM_ENV_LOOP : 0; \
 	    xxih[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? XXM_ENV_SUS : 0; \
@@ -428,12 +474,33 @@ int it_load (FILE * f)
 	} else if (ifh.flags & IT_USE_INST) {
 /* Old instrument format */
 	    fseek (f, pp_ins[i], SEEK_SET);
-	    fread (&i1h, 1, sizeof (i1h), f);
-	    L_ENDIAN16 (i1h.rsvd1);
-	    L_ENDIAN16 (i1h.fadeout);
-	    L_ENDIAN16 (i1h.trkvers);
-	    str_adj ((char *) i1h.name);
-	    strncpy ((char *) xxih[i].name, i1h.name, 24);
+
+	    fread(&i1h.magic, 4, 1, f);
+	    fread(&i1h.dosname, 12, 1, f);
+
+	    i1h.zero = read8(f);
+	    i1h.flags = read8(f);
+	    i1h.vls = read8(f);
+	    i1h.vle = read8(f);
+	    i1h.sls = read8(f);
+	    i1h.sle = read8(f);
+	    i1h.rsvd1 = read16l(f);
+	    i1h.fadeout = read16l(f);
+
+	    i1h.nna = read8(f);
+	    i1h.dnc = read8(f);
+	    i1h.trkvers = read16l(f);
+	    i1h.nos = read8(f);
+	    i1h.rsvd2 = read8(f);
+
+	    fread(&i1h.name, 26, 1, f);
+	    fread(&i1h.rsvd3, 6, 1, f);
+	    fread(&i1h.keys, 240, 1, f);
+	    fread(&i1h.epoint, 200, 1, f);
+	    fread(&i1h.enode, 50, 1, f);
+
+	    copy_adjust(xxih[i].name, i1h.name, 24);
+
 	    xxih[i].rls = i1h.fadeout << 7;
 
 	    xxih[i].aei.flg = i1h.flags & IT_ENV_ON ? XXM_ENV_ON : 0;
@@ -516,16 +583,32 @@ int it_load (FILE * f)
 	if (~ifh.flags & IT_USE_INST)
 	    xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek (f, pp_smp[i], SEEK_SET);
-	fread (&ish, 1, sizeof (ish), f);
-	if (strncmp (ish.magic, "IMPS", 4))
+
+	fread(&ish.magic, 4, 1, f);
+	fread(&ish.dosname, 12, 1, f);
+	ish.zero = read8(f);
+	ish.gvl = read8(f);
+	ish.flags = read8(f);
+	ish.vol = read8(f);
+	fread(&ish.name, 26, 1, f);
+
+	ish.convert = read8(f);
+	ish.dfp = read8(f);
+	ish.length = read32l(f);
+	ish.loopbeg = read32l(f);
+	ish.loopend = read32l(f);
+	ish.c5spd = read32l(f);
+	ish.sloopbeg = read32l(f);
+	ish.sloopend = read32l(f);
+	ish.sample_ptr = read32l(f);
+
+	ish.vis = read8(f);
+	ish.vid = read8(f);
+	ish.vir = read8(f);
+	ish.vit = read8(f);
+
+	if (strncmp((char*)ish.magic, "IMPS", 4))
 	    return -1;
-	L_ENDIAN32 (ish.length);
-	L_ENDIAN32 (ish.loopbeg);
-	L_ENDIAN32 (ish.loopend);
-	L_ENDIAN32 (ish.c5spd);
-	L_ENDIAN32 (ish.sloopbeg);
-	L_ENDIAN32 (ish.sloopend);
-	L_ENDIAN32 (ish.sample_ptr);
 	
 	xxs[i].len = ish.length * (1 + !!(ish.flags & IT_SMP_16BIT));
 	xxs[i].lps = ish.loopbeg * (1 + !!(ish.flags & IT_SMP_16BIT));
@@ -540,8 +623,8 @@ int it_load (FILE * f)
 	    xxi[i][0].pan = 0x80;
 	    xxi[i][0].sid = i;
 	    xxih[i].nsm = !!(xxs[i].len);
-	    str_adj ((char *) ish.name);
-	    strncpy ((char *) xxih[i].name, ish.name, 24);
+
+	    copy_adjust(xxih[i].name, ish.name, 24);
 	}
 
 	if (V (2) || (~ifh.flags & IT_USE_INST && V (1))) {
@@ -625,12 +708,8 @@ int it_load (FILE * f)
 	    continue;
 	}
 	fseek (f, pp_pat[i], SEEK_SET);
-	fread (&x16, 2, 1, f);
-	L_ENDIAN16 (x16);
-	pat_len = x16 /* - 4*/;
-	fread (&x16, 2, 1, f);
-	L_ENDIAN16 (x16);
-	xxp[i]->rows = x16;
+	pat_len = read16l(f) /* - 4*/;
+	xxp[i]->rows = read16l(f);
 	TRACK_ALLOC (i);
 	memset (mask, 0, L_CHANNELS);
 	fread (&x16, 2, 1, f);

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.3 2006-02-12 22:47:51 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.4 2006-02-13 02:55:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -45,7 +45,7 @@ struct {
     { "6CHN", "6 channel MOD", 0, "Fast Tracker", 6 },
     { "8CHN", "8 channel MOD", 0, "Fast Tracker", 8 },
     { "CD81", "8 channel MOD", 1, "Octalyser", 8 }, /* Atari STe/Falcon */
-    { "PWIZ", "Packed module", 1, "Pro-Wizard", 4 },
+    { "PWIZ", "Packed module", 1, "converted with ProWizard", 4 },
     { "", 0 }
 };
 
@@ -129,13 +129,13 @@ static int module_load (FILE *f, int ptdt)
 
     if (memcmp(mh.magic, "PWIZ", 4) == 0) {
 	int pos = ftell(f);
-	fseek(f, -22, SEEK_END);
+	fseek(f, -30, SEEK_END);
+	fread(&mh.magic, 4, 1, f);
+	fseek(f, 4, SEEK_CUR);
 	fread(idbuffer, 1, 22, f);
 	id = idbuffer;
 	fseek(f, pos, SEEK_SET);
-    }
-
-    if (!xxh->chn) {
+    } else if (!xxh->chn) {
 	if (!strncmp ((char *) mh.magic + 2, "CH", 2) &&
 	    isdigit (*mh.magic) && isdigit (mh.magic[1])) {
 	    if ((xxh->chn = (*mh.magic - '0') *
@@ -337,7 +337,7 @@ skip_test:
     xxh->trk = xxh->chn * xxh->pat;
 
     if (!ptdt) {
-	sprintf (xmp_ctl->type, "%4.4s (%s)", mh.magic, id);
+	sprintf (xmp_ctl->type, "%-.4s (%s)", mh.magic, id);
 	strcpy (tracker_name, tracker);
 	MODULE_INFO ();
     }

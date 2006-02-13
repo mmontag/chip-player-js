@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Modified by Claudio Matsuoka for xmp
  *
- * $Id: prowiz.c,v 1.4 2006-02-13 00:21:46 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.5 2006-02-13 02:55:59 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -70,7 +70,7 @@ int pw_init (int i)
 	pw_register (&pw_pru1);
 	pw_register (&pw_pru2);
 	pw_register (&pw_pha);
-	pw_register (&pw_stim);
+	/* pw_register (&pw_stim); */
 	pw_register (&pw_wn);
 	pw_register (&pw_unic_id);
 
@@ -109,7 +109,7 @@ int pw_init (int i)
 	return 0;
 }
 
-static struct list_head *checked_format = &format_list;
+struct list_head *checked_format = &format_list;
 
 int pw_wizardry (int in, int out)
 {

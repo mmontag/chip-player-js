@@ -27,7 +27,7 @@ struct stim_instrument {
     uint8 volume;			/* Volume (as ptk) */
     uint16 loop_start;			/* Loop start (/2) */
     uint16 loop_size;			/* Loop lenght (/2) */
-} PACKED;
+};
 
 struct stim_header {
     uint8 id[4];			/* "STIM" ID string */
@@ -38,7 +38,7 @@ struct stim_header {
     uint16 pat;				/* Number of patterns saved */
     uint8 order[128];			/* Pattern list */
     uint32 pataddr[64];			/* Pattern addresses (add 0xc) */
-} PACKED;
+};
 
 
 int stim_load (FILE *f)
@@ -51,20 +51,19 @@ int stim_load (FILE *f)
 
     LOAD_INIT ();
 
-    fread (&sh, 1, sizeof (struct stim_header), f);
+    fread(&sh.id, 4, 1, f);
+    sh.smpaddr = read32b(f);
+    read32b(f);
+    read32b(f);
+    sh.nos = read16b(f);
+    sh.len = read16b(f);
+    sh.pat = read16b(f);
+    fread(&sh.order, 128, 1, f);
+    for (i = 0; i < 64; i++)
+	sh.pataddr[i] = read32b(f) + 0x0c;
 
     if (sh.id[0] != 'S' || sh.id[1] != 'T' || sh.id[2] != 'I' || sh.id[3] != 'M')
 	return -1;
-
-    B_ENDIAN32 (sh.smpaddr);
-    B_ENDIAN16 (sh.nos);
-    B_ENDIAN16 (sh.len);
-    B_ENDIAN16 (sh.pat);
-
-    for (i = 0; i < 64; i++) {
-	B_ENDIAN32 (sh.pataddr[i]);
-	sh.pataddr[i] += 0x0c;
-    }
 
     xxh->len = sh.len;
     xxh->pat = sh.pat;
@@ -140,11 +139,11 @@ int stim_load (FILE *f)
     fseek (f, sh.smpaddr + xxh->smp * 4, SEEK_SET);
 
     for (i = 0; i < xxh->smp; i++) {
-	fread (&si, sizeof (si), 1, f);
-
-	B_ENDIAN16 (si.size);
-	B_ENDIAN16 (si.loop_start);
-	B_ENDIAN16 (si.loop_size);
+	si.size = read16b(f);
+	si.finetune = read8(f);
+	si.volume = read8(f);
+	si.loop_start = read16b(f);
+	si.loop_size = read16b(f);
 
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	xxs[i].len = 2 * si.size;

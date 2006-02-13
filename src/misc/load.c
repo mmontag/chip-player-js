@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.7 2006-02-13 00:21:46 cmatsuoka Exp $
+ * $Id: load.c,v 1.8 2006-02-13 02:55:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,6 +25,11 @@
 
 extern struct xmp_fmt_info *__fmt_head;
 
+#include "../prowizard/list.h"
+#include "../prowizard/prowiz.h"
+
+extern struct list_head *checked_format;
+
 int decrunch_sqsh (FILE *, FILE *);
 int decrunch_pp (FILE *, FILE *);
 int decrunch_mmcmp (FILE *, FILE *);
@@ -36,6 +41,7 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_MMCMP	0x03
 #define BUILTIN_PW	0x04
 
+#define TEST_CHUNK	4096
 
 static int decrunch (FILE **f, char **s)
 {
@@ -50,8 +56,8 @@ static int decrunch (FILE **f, char **s)
     temp = strdup ("/tmp/xmp_XXXXXX");
 
     fseek (*f, 0, SEEK_SET);
-    b = malloc(1024);
-    fread (b, 1, 1024, *f);
+    b = malloc(TEST_CHUNK);
+    fread (b, 1, TEST_CHUNK, *f);
 
     if (b[0] == 'P' && b[1] == 'K') {
 	packer = "Zip";
@@ -101,7 +107,7 @@ static int decrunch (FILE **f, char **s)
 	    "-x*.exe -x*.com \"%s\"";
     } else {
 	int extra;
-	int s = 1024;
+	int s = TEST_CHUNK;
 
 	while ((extra = pw_check(b, s)) > 0) {
 	    realloc(b, s + extra);
@@ -110,7 +116,10 @@ static int decrunch (FILE **f, char **s)
 	}
 
 	if (extra == 0) {
-	    packer = "ProWizard";
+	    struct pw_format *format;
+
+	    format = list_entry(checked_format, struct pw_format, list);
+	    packer = format->name;
 	    builtin = BUILTIN_PW;
 	}
     }
