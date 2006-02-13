@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.3 2006-02-13 16:48:21 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.4 2006-02-13 16:51:56 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,7 +62,6 @@ int xmpi_read_rc (struct xmp_control *ctl)
 #else
 	    if ((rc = fopen ("xmp.conf", "r")) == NULL) {
 #endif
-		free (myrc);
 		return -1;
 	    }
 	}
@@ -209,6 +208,5 @@ void xmpi_read_modconf (struct xmp_control *ctl, unsigned crc, unsigned size)
     parse_modconf (ctl, "xmp-modules.conf", crc, size);
 #endif
     parse_modconf (ctl, myrc, crc, size);
-    free (myrc);
 }
 
