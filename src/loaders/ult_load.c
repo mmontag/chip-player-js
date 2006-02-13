@@ -101,6 +101,7 @@ int ult_load (FILE * f)
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
 	fread(&uih.name, 32, 1, f);
+	fread(&uih.dosname, 12, 1, f);
 	uih.loop_start = read32l(f);
 	uih.loopend = read32l(f);
 	uih.sizestart = read32l(f);
@@ -108,7 +109,7 @@ int ult_load (FILE * f)
 	uih.volume = read8(f);
 	uih.bidiloop = read8(f);
 	uih.finetune = read16l(f);
-	uih.c2spd = read16l(f);
+	uih.c2spd = ver < 4 ? 0 : read16l(f);
 
 	if (ver > 3) {			/* Incorrect in ult_form.txt */
 	    uih.c2spd ^= uih.finetune;
