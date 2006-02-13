@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: alm_load.c,v 1.2 2006-02-13 12:50:34 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,7 +37,7 @@ struct alm_file_header {
     uint8 length;		/* Length of module */
     uint8 restart;		/* Restart position */
     uint8 order[128];		/* Pattern sequence */
-} PACKED;
+};
 
 
 int alm_load (FILE *f)
@@ -56,12 +58,17 @@ int alm_load (FILE *f)
     strcpy (modulename, xmp_ctl->filename);
     basename = strtok (modulename, ".");
 
-    fread (&afh, 1, sizeof (afh), f);
+    fread(&afh.id, 7, 1, f);
 
     if (!strncmp ((char *) afh.id, "ALEYMOD", 7))	/* Version 1.0 */
 	xxh->tpo = afh.speed / 2;
     else if (strncmp (afh.id, "ALEY MO", 7))	/* Versions 1.1 and 1.2 */
 	return -1;
+
+    afh.speed = read8(f);
+    afh.length = read8(f);
+    afh.restart = read8(f);
+    fread(&afh.order, 128, 1, f);
 
     xxh->len = afh.length;
     xxh->rst = afh.restart;
@@ -122,12 +129,8 @@ int alm_load (FILE *f)
 	xxs[i].len = stat.st_size - 5 * !b;
 
 	if (!b) {		/* Instrument with header */
-	    fread (&w, 1, 2, s);
-	    L_ENDIAN16 (w);
-	    xxs[i].lps = w;
-	    fread (&w, 1, 2, s);
-	    L_ENDIAN16 (w);
-	    xxs[i].lpe = w;
+	    xxs[i].lps = read16l(f);
+	    xxs[i].lpe = read16l(f);
 	    xxs[i].flg = xxs[i].lpe > xxs[i].lps ? WAVE_LOOPING : 0;
 	} else
 	    fseek (s, 0, SEEK_SET);

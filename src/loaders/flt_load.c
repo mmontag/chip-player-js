@@ -25,7 +25,19 @@ int flt_load (FILE *f)
 
     LOAD_INIT ();
 
-    fread (&mh, 1, sizeof (struct mod_header), f);
+    fread(&mh.name, 20, 1, f);
+    for (i = 0; i < 31; i++) {
+	fread(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	mh.ins[i].size = read16b(f);		/* Length in 16-bit words */
+	mh.ins[i].finetune = read8(f);		/* Finetune (signed nibble) */
+	mh.ins[i].volume = read8(f);		/* Linear playback volume */
+	mh.ins[i].loop_start = read16b(f);	/* Loop start in 16-bit words */
+	mh.ins[i].loop_size = read16b(f);	/* Loop size in 16-bit words */
+    }
+    mh.len = read8(f);
+    mh.restart = read8(f);
+    fread(&mh.order, 128, 1, f);
+    fread(&mh.magic, 4, 1, f);
 
     if (mh.magic[0] == 'F' && mh.magic[1] == 'L' && mh.magic[2] == 'T')
 	tracker = "Startrekker";
@@ -66,10 +78,6 @@ int flt_load (FILE *f)
 	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; i < xxh->ins; i++) {
-	B_ENDIAN16 (mh.ins[i].size);
-	B_ENDIAN16 (mh.ins[i].loop_start);
-	B_ENDIAN16 (mh.ins[i].loop_size);
-
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	xxs[i].len = 2 * mh.ins[i].size;
 	xxs[i].lps = 2 * mh.ins[i].loop_start;
@@ -81,8 +89,8 @@ int flt_load (FILE *f)
 	xxi[i][0].sid = i;
 	xxih[i].nsm = !!(xxs[i].len);
 	xxih[i].rls = 0xfff;
-	strncpy (xxih[i].name, mh.ins[i].name, 22);
-	str_adj (xxih[i].name);
+
+	copy_adjust(xxih[i].name, mh.ins[i].name, 22);
 
 	if ((V (1)) && (strlen ((char *) xxih[i].name) ||
 	    xxs[i].len > 2))

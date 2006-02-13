@@ -1,14 +1,19 @@
 /* DSMI Advanced Module Format loader for xmp
- * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 2005-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.6 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.7 2006-02-13 12:50:34 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  */
 
-/* Based on the format specification by Miodrag Vallat.
+/* AMF loader written based on the format specs by Miodrag Vallat.
+ *
+ * The AMF format is the internal format used by DSMI, the DOS Sound and Music
+ * Interface, which is the engine of DMP. As DMP was able to play more and more
+ * module formats, the format evolved to support more features. There were 5
+ * official formats, numbered from 10 (AMF 1.0) to 14 (AMF 1.4).
  */
 
 #ifdef HAVE_CONFIG_H

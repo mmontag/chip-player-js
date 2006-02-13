@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Modified by Claudio Matsuoka for xmp
  *
- * $Id: prowiz.c,v 1.5 2006-02-13 02:55:59 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.6 2006-02-13 12:50:34 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -89,6 +89,7 @@ int pw_init (int i)
 	pw_register (&pw_unic2);
 	pw_register (&pw_crb);
 	pw_register (&pw_tdd);
+	pw_register (&pw_gmc);
 
 #if 0
 	while ((o = _xmp_parse (XMP_DEPACKER, (xmp_component *)&depacker_pw,

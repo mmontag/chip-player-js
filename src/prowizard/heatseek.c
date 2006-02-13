@@ -6,7 +6,7 @@
  *
  * note: There's a good job ! .. gosh !.
  *
- * $Id: heatseek.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: heatseek.c,v 1.2 2006-02-13 12:50:34 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -232,7 +232,7 @@ static int test_crb (uint8 *data, int s)
 		ssize += j;
 	}
 
-printf ("3\n");
+/* printf ("3\n"); */
 	if (ssize <= 4)
 		return -1;
 

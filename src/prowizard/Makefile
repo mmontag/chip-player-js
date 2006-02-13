@@ -1,11 +1,11 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.4 2006-02-13 02:55:59 cmatsuoka Exp $
+# $Id: Makefile,v 1.5 2006-02-13 12:50:34 cmatsuoka Exp $
 
 XCFLAGS	= -I../include -DLIBDIR='"$(LIB_DIR)"'
 OBJS	= prowiz.o ptktable.o tuning.o \
-	  ac1d.o di.o eureka.o fc-m.o fuchs.o fuzzac.o heatseek.o kris.o \
-	  ksm.o mp.o np1.o np2.o np3.o p60a.o pm10c.o pm18a.o pha.o prun1.o \
-	  prun2.o tdd.o unic.o unic2.o wn.o zen.o
+	  ac1d.o di.o eureka.o fc-m.o fuchs.o fuzzac.o gmc.o heatseek.o \
+	  kris.o ksm.o mp.o np1.o np2.o np3.o p60a.o pm10c.o pm18a.o pha.o \
+	  prun1.o prun2.o tdd.o unic.o unic2.o wn.o zen.o
 OBJS2	= gmc.o hrt.o noiserun.o p40.o p41a.o p50a.o p61a.o pm.o pm01.o \
 	  pm20.o pm40.o pp10.o pp21.o pp30.o skyt.o starpack.o tp1.o \
 	  tp2.o tp3.o ptk.o soundtk.o
