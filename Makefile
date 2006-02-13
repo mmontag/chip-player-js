@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.10 2006-02-12 16:58:48 cmatsuoka Exp $
+# $Id: Makefile,v 1.11 2006-02-13 16:09:51 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -20,7 +20,7 @@ DCFILES	= Makefile.rules.old config.log config.status config.cache
 all: xmp
 
 xmp:
-	cd src; $(MAKE)
+	cd src && $(MAKE)
 
 include Makefile.rules
 

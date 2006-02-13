@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.2 2004-09-15 19:01:48 cmatsuoka Exp $
+ * $Id: wav.c,v 1.3 2006-02-13 16:09:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -59,6 +59,35 @@ struct xmp_drv_info drv_wav = {
     NULL
 };
 
+
+static void write16l(int fd, uint16 v)
+{
+	uint8 x;
+
+	x = v & 0xff;
+	write(fd, &x, 1);
+
+	x = v >> 8;
+	write(fd, &x, 1);
+}
+
+static void write32l(int fd, uint32 v)
+{
+	uint8 x;
+
+	x = v & 0xff;
+	write(fd, &x, 1);
+
+	x = (v >> 8) & 0xff;
+	write(fd, &x, 1);
+
+	x = (v >> 16) & 0xff;
+	write(fd, &x, 1);
+
+	x = (v >> 24) & 0xff;
+	write(fd, &x, 1);
+}
+
 static int init (struct xmp_control *ctl)
 {
     char *buf;
@@ -81,9 +110,9 @@ static int init (struct xmp_control *ctl)
 	len = -1;
     }
 
-    write (audio_fd, "RIFF", 4);
-    write (audio_fd, &len, 4);
-    write (audio_fd, "WAVE", 4);
+    write(audio_fd, "RIFF", 4);
+    write(audio_fd, &len, 4);
+    write(audio_fd, "WAVE", 4);
 
     flen = 0x10;
     u16 = 1;
@@ -93,25 +122,17 @@ static int init (struct xmp_control *ctl)
     bytes_per_sample = bits_per_sample / 8;
     bytes_per_second = sampling_rate * chan * bytes_per_sample;
 
-    L_ENDIAN32(flen);
-    L_ENDIAN16(u16);
-    L_ENDIAN16(chan);
-    L_ENDIAN32(sampling_rate);
-    L_ENDIAN32(bytes_per_second);
-    L_ENDIAN16(bytes_per_sample);
-    L_ENDIAN16(bits_per_sample);
+    write(audio_fd, "fmt ", 4);
+    write32l(audio_fd, flen);
+    write16l(audio_fd, u16);
+    write16l(audio_fd, chan);
+    write32l(audio_fd, sampling_rate);
+    write32l(audio_fd, bytes_per_second);
+    write16l(audio_fd, bytes_per_sample);
+    write16l(audio_fd, bits_per_sample);
 
-    write (audio_fd, "fmt ", 4);
-    write (audio_fd, &flen, 4);
-    write (audio_fd, &u16, 2);
-    write (audio_fd, &chan, 2);
-    write (audio_fd, &sampling_rate, 4);
-    write (audio_fd, &bytes_per_second, 4);
-    write (audio_fd, &bytes_per_sample, 2);
-    write (audio_fd, &bits_per_sample, 2);
-
-    write (audio_fd, "data", 4);
-    write (audio_fd, &len, 4);
+    write(audio_fd, "data", 4);
+    write32l(audio_fd, len);
 
     size = 0;
 
@@ -143,14 +164,12 @@ static void shutdown ()
     xmp_smix_off ();
 
     len = size;
-    L_ENDIAN32(len);
-    lseek (audio_fd, 40, SEEK_SET);
-    write (audio_fd, &len, 4);
+    lseek(audio_fd, 40, SEEK_SET);
+    write32l(audio_fd, len);
 
     len = size + 40;
-    L_ENDIAN32(len);
-    lseek (audio_fd, 4, SEEK_SET);
-    write (audio_fd, &len, 4);
+    lseek(audio_fd, 4, SEEK_SET);
+    write32l(audio_fd, len);
 
     if (audio_fd)
 	close (audio_fd);
