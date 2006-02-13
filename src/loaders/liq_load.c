@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: liq_load.c,v 1.1 2001-06-02 20:26:30 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.2 2006-02-13 03:49:57 cmatsuoka Exp $
  */
 
 /* Liquid Tracker module loader based on the format description written
@@ -157,21 +157,27 @@ int liq_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&lh, 1, sizeof (lh), f);
+    fread(&lh.magic, 14, 1, f);
+
     if (strncmp ((char *) lh.magic, "Liquid Module:", 14))
 	return -1;
 
-    L_ENDIAN16 (lh.version);
-    L_ENDIAN16 (lh.speed);
-    L_ENDIAN16 (lh.bpm);
-    L_ENDIAN16 (lh.low);
-    L_ENDIAN16 (lh.high);
-    L_ENDIAN16 (lh.chn);
-    L_ENDIAN32 (lh.flags);
-    L_ENDIAN16 (lh.pat);
-    L_ENDIAN16 (lh.ins);
-    L_ENDIAN16 (lh.len);
-    L_ENDIAN16 (lh.hdrsz);
+    fread(&lh.name, 30, 1, f);
+    fread(&lh.author, 20, 1, f);
+    read8(f);
+    fread(&lh.tracker, 20, 1, f);
+
+    lh.version = read16l(f);
+    lh.speed = read16l(f);
+    lh.bpm = read16l(f);
+    lh.low = read16l(f);
+    lh.high = read16l(f);
+    lh.chn = read16l(f);
+    lh.flags = read32l(f);
+    lh.pat = read16l(f);
+    lh.ins = read16l(f);
+    lh.len = read16l(f);
+    lh.hdrsz = read16l(f);
 
     if ((lh.version >> 8) == 0) {
 	lh.hdrsz = lh.len;
@@ -188,10 +194,10 @@ int liq_load (FILE * f)
     xxh->trk = xxh->chn * xxh->pat;
     xxh->flg = XXM_FLG_INSVOL;
 
-    strncpy (xmp_ctl->name, lh.name, 30);
-    strncpy (tracker_name, lh.tracker, 20);
-    strncpy (author_name, lh.author, 20);
-    sprintf (xmp_ctl->type, "Liquid module %d.%02d",
+    strncpy(xmp_ctl->name, (char *)lh.name, 30);
+    strncpy(tracker_name, (char *)lh.tracker, 20);
+    strncpy(author_name, (char *)lh.author, 20);
+    sprintf(xmp_ctl->type, "Liquid module %d.%02d",
 	lh.version >> 8, lh.version & 0x00ff);
 
 if (lh.version > 0) {
@@ -243,9 +249,12 @@ if (lh.version > 0) {
 	
 	_D(_D_WARN "\n\nPATTERN %d: %c %c %02x %02x",
 		i, pmag[0], pmag[1], pmag[2], pmag[3]);
-	fread (&lp, sizeof (struct liq_pattern), 1, f);
-	L_ENDIAN16 (lp.rows);
-	L_ENDIAN32 (lp.size);
+
+	fread(&lp.name, 30, 1, f);
+	lp.rows = read16l(f);
+	lp.size = read32l(f);
+	lp.reserved = read32l(f);
+
 	_D(_D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
 	xxp[i]->rows = lp.rows;
 	TRACK_ALLOC (i);
@@ -415,13 +424,32 @@ next_pattern:
 	assert (b[0] == 'L' && b[1] == 'D' && b[2] == 'S' && b[3] == 'S');
 	_D(_D_WARN "INS %d: %c %c %c %c", i, b[0], b[1], b[2], b[3]);
 
-	fread (&li, 1, sizeof (struct liq_instrument), f);
-	L_ENDIAN32 (li.length);
-	L_ENDIAN32 (li.loopstart);
-	L_ENDIAN32 (li.loopend);
-	L_ENDIAN32 (li.c2spd);
-	L_ENDIAN16 (li.hdrsz);
-	L_ENDIAN16 (li.comp);
+	li.version = read16l(f);
+	fread(&li.name, 30, 1, f);
+	fread(&li.editor, 20, 1, f);
+	fread(&li.author, 20, 1, f);
+	li.hw_id = read8(f);
+
+	li.length = read32l(f);
+	li.loopstart = read32l(f);
+	li.loopend = read32l(f);
+	li.c2spd = read32l(f);
+
+	li.vol = read8(f);
+	li.flags = read8(f);
+	li.pan = read8(f);
+	li.midi_ins = read8(f);
+	li.gvl = read8(f);
+	li.chord = read8(f);
+
+	li.hdrsz = read16l(f);
+	li.comp = read16l(f);
+	li.crc = read32l(f);
+
+	li.midi_ch = read8(f);
+	fread(&li.rsvd, 11, 1, f);
+	fread(&li.filename, 25, 1, f);
+
 	xxih[i].nsm = !!(li.length);
 	xxih[i].vol = 0x40;
 	xxs[i].len = li.length;
@@ -444,8 +472,9 @@ next_pattern:
 	xxi[i][0].gvl = li.gvl;
 	xxi[i][0].pan = li.pan;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, li.name, 24);
-	str_adj ((char *) li.name);
+
+	copy_adjust(xxih[i].name, li.name, 24);
+
 	if ((V (1)) && (strlen ((char *) li.name) || xxs[i].len)) {
 	    report ("\n[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d ",
 		i, li.name, xxs[i].len,
