@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: digi_load.c,v 1.2 2006-02-13 04:00:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -44,7 +46,7 @@ struct digi_header {
     uint8 fin[31];		/* Finetunes */
     uint8 title[32];		/* Song name */
     uint8 insname[31][30];	/* Instrument names */
-} PACKED;
+};
 
 
 int digi_load (FILE * f)
@@ -57,10 +59,35 @@ int digi_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread (&dh, 1, sizeof (dh), f);
+    fread(&dh.id, 20, 1, f);
 
     if (strncmp ((char *) dh.id, "DIGI Booster module", 19))
 	return -1;
+
+    fread(&dh.vstr, 4, 1, f);
+    dh.ver = read8(f);
+    dh.chn = read8(f);
+    dh.pack = read8(f);
+    fread(&dh.unknown, 19, 1, f);
+    dh.pat = read8(f);
+    dh.len = read8(f);
+    fread(&dh.ord, 128, 1, f);
+
+    for (i = 0; i < 31; i++)
+	dh.slen[i] = read32b(f);
+    for (i = 0; i < 31; i++)
+	dh.sloop[i] = read32b(f);
+    for (i = 0; i < 31; i++)
+	dh.sllen[i] = read32b(f);
+    for (i = 0; i < 31; i++)
+	dh.vol[i] = read8(f);
+    for (i = 0; i < 31; i++)
+	dh.fin[i] = read8(f);
+
+    fread(&dh.title, 32, 1, f);
+
+    for (i = 0; i < 31; i++)
+        fread(&dh.insname[i], 30, 1, f);
 
     xxh->ins = 31;
     xxh->smp = xxh->ins;
@@ -70,8 +97,8 @@ int digi_load (FILE * f)
     xxh->len = dh.len + 1;
     xxh->flg |= XXM_FLG_MODRNG;
 
-    strncpy (xmp_ctl->name, dh.title, 32);
-    sprintf (xmp_ctl->type, "DIGI Booster %-4.4s", dh.vstr);
+    copy_adjust((uint8 *)xmp_ctl->name, dh.title, 32);
+    sprintf(xmp_ctl->type, "DIGI Booster %-4.4s", dh.vstr);
 
     MODULE_INFO ();
  
@@ -87,9 +114,6 @@ int digi_load (FILE * f)
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	B_ENDIAN32 (dh.slen[i]);
-	B_ENDIAN32 (dh.sloop[i]);
-	B_ENDIAN32 (dh.sllen[i]);
 	xxih[i].nsm = !!(xxs[i].len = dh.slen[i]);
 	xxs[i].lps = dh.sloop[i];
 	xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
@@ -98,8 +122,9 @@ int digi_load (FILE * f)
 	xxi[i][0].fin = dh.fin[i];
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, dh.insname[i], 30);
-	str_adj ((char *) xxih[i].name);
+
+	copy_adjust(xxih[i].name, dh.insname[i], 30);
+
 	if (V (1) &&
 	    (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
 	    report ("[%2X] %-30.30s %04x %04x %04x %c V%02x\n", i,
@@ -120,9 +145,7 @@ int digi_load (FILE * f)
 	TRACK_ALLOC (i);
 
 	if (dh.pack) {
-	    fread (&w, 2, 1, f);
-	    B_ENDIAN16 (w);
-	    w = (w - 64) >> 2;
+	    w = (read16b(f) - 64) >> 2;
 	    fread (chn_table, 1, 64, f);
 	} else {
 	    w = 64 * xxh->chn;

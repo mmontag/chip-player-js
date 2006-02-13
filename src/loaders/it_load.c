@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2000 Claudio Matsuoka and Hipolito Carraro Jr.
+ * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr.
+ *
+ * $Id: it_load.c,v 1.5 2006-02-13 04:00:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: it_load.c,v 1.4 2006-02-13 02:55:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
