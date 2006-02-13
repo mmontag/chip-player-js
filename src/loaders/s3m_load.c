@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.4 2006-02-12 19:38:09 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.5 2006-02-13 16:48:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -228,23 +228,23 @@ int s3m_load (FILE * f)
     xmp_ctl->c4rate = C4_NTSC_RATE;
     xmp_ctl->fetch |= XMP_CTL_FINEFX;
 
-    sprintf (xmp_ctl->type, "SCRM (S3M)");
+    strcpy(xmp_ctl->type, "SCRM (S3M)");
     if (sfh.version == 0x1300)
 	xmp_ctl->fetch |= XMP_CTL_VSALL;
 
     switch (sfh.version >> 12) {
     case 1:
-	sprintf (tracker_name, "Scream Tracker");
+	strcpy(tracker_name, "Scream Tracker");
 	xmp_ctl->fetch |= XMP_CTL_ST3GVOL;
 	break;
     case 2:
-	sprintf (tracker_name, "Imago Orpheus");
+	strcpy(tracker_name, "Imago Orpheus");
 	break;
     case 3:
-	sprintf (tracker_name, "Impulse Tracker");
+	strcpy(tracker_name, "Impulse Tracker");
 	break;
     default:
-	sprintf (tracker_name, "unknown (%d) version",
+	snprintf(tracker_name, 80, "unknown (%d) version",
 	    sfh.version >> 12);
     }
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.8 2006-02-12 23:15:44 cmatsuoka Exp $
+ * $Id: main.c,v 1.9 2006-02-13 16:48:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -509,8 +509,9 @@ int main (int argc, char **argv)
 		continue;
 	    case -3: {
 		char *line;
-		line = malloc (strlen (*argv) + strlen (argv[optind]) + 10);
-		sprintf (line, "%s: %s", *argv, argv[optind]);
+		int lsize = strlen(*argv) + strlen(argv[optind]) + 10;
+		line = malloc(lsize);
+		snprintf(line, lsize, "%s: %s", *argv, argv[optind]);
 		perror (line);
 		getprevious = skipprev;
 		continue; }

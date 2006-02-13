@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.6 2006-02-12 23:15:44 cmatsuoka Exp $
+ * $Id: options.c,v 1.7 2006-02-13 16:48:21 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -147,22 +147,22 @@ static void usage (char *s, struct xmp_control *opt)
     xmp_get_fmt_info (&fmt);
     list_wrap (NULL, 3, 78, 1);
     for (i = 0, f = fmt; f; i++, f = f->next) {
-        sprintf (buf, "%s (%s)", f->suffix, f->tracker);
-        list_wrap (buf, 3, 0, 1);
+        snprintf(buf, 80, "%s (%s)", f->suffix, f->tracker);
+        list_wrap(buf, 3, 0, 1);
     }
 
     list_for_each(tmp, &format_list) {
 	format = list_entry(tmp, struct pw_format, list);
-        sprintf (buf, "%s (%s)", format->id, format->name);
-        list_wrap (buf, 3, 0, 1);
+        snprintf(buf, 80, "%s (%s)", format->id, format->name);
+        list_wrap(buf, 3, 0, 1);
 	i++;
     }
 
-    sprintf (buf, "[%d known formats]", i);
-    list_wrap (buf, 3, 0, 0);
+    snprintf(buf, 80, "[%d known formats]", i);
+    list_wrap(buf, 3, 0, 0);
     printf ("\n");
 
-    printf ("\nAvailable drivers "
+    printf("\nAvailable drivers "
 #ifdef DYNAMIC_DRV
 	"(dynamically linked)"
 #else
@@ -173,11 +173,11 @@ static void usage (char *s, struct xmp_control *opt)
     xmp_get_drv_info (&drv);
     list_wrap (NULL, 3, 78, 1);
     for (d = drv; d; d = d->next) {
-        sprintf (buf, "%s (%s)", d->id, d->description);
-        list_wrap (buf, 3, 0, 1);
+        snprintf(buf, 80, "%s (%s)", d->id, d->description);
+        list_wrap(buf, 3, 0, 1);
     }
 
-  printf ("\n");
+    printf("\n");
 
     for (d = drv; d; d = d->next) {
 	if (d->help)

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.2 2003-06-24 23:29:29 dmierzej Exp $
+ * $Id: readrc.c,v 1.3 2006-02-13 16:48:21 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/param.h>
 #include "xmpi.h"
 
 static char drive_id[32];
@@ -42,18 +43,17 @@ static int get_yesno (char *s)
 int xmpi_read_rc (struct xmp_control *ctl)
 {
     FILE *rc;
-    char *myrc, *myrc2, *home = getenv ("HOME");
+    char myrc[MAXPATHLEN], myrc2[MAXPATHLEN];
+    char *home = getenv ("HOME");
     char *hash, *var, *val, line[256];
-    char *cparm;
+    char cparm[512];
 
-    myrc = malloc ((home ? strlen (home) : 0) + 16);
-    myrc2 = malloc ((home ? strlen (home) : 0) + 16);
 #ifndef __EMX__
-    sprintf (myrc, "%s/.xmp/xmp.conf", home);
-    sprintf (myrc2, "%s/.xmprc", home);
+    snprintf(myrc, MAXPATHLEN, "%s/.xmp/xmp.conf", home);
+    snprintf(myrc2, MAXPATHLEN, "%s/.xmprc", home);
 #else
-    sprintf (myrc, "%s\\.xmp\\xmp.conf", home);
-    sprintf (myrc2, "%s\\.xmprc", home);    
+    snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\xmp.conf", home);
+    snprintf(myrc2, MAXPATHLEN, "%s\\.xmprc", home);    
 #endif
     if ((rc = fopen (myrc2, "r")) == NULL) {
 	if ((rc = fopen (myrc, "r")) == NULL) {
@@ -67,8 +67,6 @@ int xmpi_read_rc (struct xmp_control *ctl)
 	    }
 	}
     }
-    free (myrc);
-    free (myrc2);
 
     while (!feof (rc)) {
 	memset (line, 0, 256);
@@ -128,8 +126,7 @@ int xmpi_read_rc (struct xmp_control *ctl)
 	/* If the line does not match any of the previous parameter,
 	 * send it to the device driver
 	 */
-	cparm = calloc (1, strlen (var) + strlen (val) + 2);
-	sprintf (cparm, "%s=%s", var, val);
+	snprintf(cparm, 512, "%s=%s", var, val);
 	xmp_set_driver_parameter (ctl, cparm);
     }
 
@@ -201,14 +198,14 @@ static void parse_modconf (struct xmp_control *ctl, char *fn,
 
 void xmpi_read_modconf (struct xmp_control *ctl, unsigned crc, unsigned size)
 {
-    char *myrc, *home = getenv ("HOME");
+    char myrc[MAXPATHLEN];
+    char *home = getenv ("HOME");
 
-    myrc = malloc ((home ? strlen (home) : 0) + 20);
 #ifndef __EMX__
-    sprintf (myrc, "%s/.xmp/modules.conf", home);
+    snprintf(myrc, MAXPATHLEN, "%s/.xmp/modules.conf", home);
     parse_modconf (ctl, "/etc/xmp/xmp-modules.conf", crc, size);
 #else
-    sprintf (myrc, "%s\\.xmp\\modules.conf", home);
+    snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\modules.conf", home);
     parse_modconf (ctl, "xmp-modules.conf", crc, size);
 #endif
     parse_modconf (ctl, myrc, crc, size);

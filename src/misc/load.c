@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.8 2006-02-13 02:55:59 cmatsuoka Exp $
+ * $Id: load.c,v 1.9 2006-02-13 16:48:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -145,12 +145,13 @@ static int decrunch (FILE **f, char **s)
     }
 
     if (cmd) {
-	int n;
+	int n, lsize;
 	char *line, *buf;
 	FILE *p;
 
-	line = malloc (strlen (cmd) + strlen (*s) + 16);
-	sprintf (line, cmd, *s);
+	lsize = strlen(cmd) + strlen(*s) + 16;
+	line = malloc(lsize);
+	snprintf (line, lsize, cmd, *s);
 
 	if ((p = popen (line, "r")) == NULL) {
 	    if (xmp_ctl->verbose)

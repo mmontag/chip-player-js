@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.4 2006-02-13 02:55:59 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.5 2006-02-13 16:48:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -337,8 +337,8 @@ skip_test:
     xxh->trk = xxh->chn * xxh->pat;
 
     if (!ptdt) {
-	sprintf (xmp_ctl->type, "%-.4s (%s)", mh.magic, id);
-	strcpy (tracker_name, tracker);
+	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "%-.4s (%s)", mh.magic, id);
+	strcpy(tracker_name, tracker);
 	MODULE_INFO ();
     }
 
@@ -401,7 +401,7 @@ skip_test:
 	if (ptsong) {
 	    FILE *s;
 	    char sn[256];
-	    sprintf (sn, "%s%s", pathname, xxih[i].name);
+	    snprintf(sn, XMP_DEF_NAMESIZE, "%s%s", pathname, xxih[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
 	        xmp_drv_loadpatch (s, xxi[i][0].sid, xmp_ctl->c4rate, 0,

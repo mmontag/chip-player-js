@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.2 2004-09-15 19:01:47 cmatsuoka Exp $
+ * $Id: file.c,v 1.3 2006-02-13 16:48:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -61,15 +61,17 @@ struct xmp_drv_info drv_file = {
 static int init (struct xmp_control *ctl)
 {
     char *buf;
+    int bsize;
 
     if (!ctl->outfile)
 	ctl->outfile = "xmp.out";
 
     audio_fd = strcmp (ctl->outfile, "-") ? creat (ctl->outfile, 0644) : 1;
 
-    buf = malloc (strlen (drv_file.description) + strlen (ctl->outfile) + 8);
+    bsize = strlen(drv_file.description) + strlen (ctl->outfile) + 8;
+    buf = malloc(bsize);
     if (strcmp (ctl->outfile, "-")) {
-	sprintf (buf, "%s: %s", drv_file.description, ctl->outfile);
+	snprintf(buf, bsize, "%s: %s", drv_file.description, ctl->outfile);
 	drv_file.description = buf;
     } else {
 	drv_file.description = "Output to stdout";

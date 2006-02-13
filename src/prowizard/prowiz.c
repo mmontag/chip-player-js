@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Modified by Claudio Matsuoka for xmp
  *
- * $Id: prowiz.c,v 1.6 2006-02-13 12:50:34 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.7 2006-02-13 16:48:21 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -807,7 +807,7 @@ void pw_crap (struct pw_format *f, FILE *file_out)
   char _b[40];				\
   fseek (file_out, offset, SEEK_SET);	\
   memset (_b, 0, 40);			\
-  sprintf (_b, "%s", msg);		\
+  snprintf(_b, 40, "%s", msg);		\
   fwrite (_b, 1, 22, file_out); } while (0)
 
 	_D ("packer: %s", f->name);
@@ -817,7 +817,7 @@ void pw_crap (struct pw_format *f, FILE *file_out)
 		fseek (file_out, 0x438, SEEK_SET);
 		fwrite ("PWIZ", 1, 4, file_out);
 		fseek (file_out, 0, SEEK_END);
-  		sprintf (buf, "%-8.8s%-.22s", f->id, f->name);
+  		snprintf(buf, 40, "%-8.8s%-.22s", f->id, f->name);
 		for (i = 0; i < 8; i++) {
 			if (buf[i] == ' ')
 				buf[i] = 0;

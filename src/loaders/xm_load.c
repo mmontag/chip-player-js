@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.3 2006-02-12 19:38:09 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.4 2006-02-13 16:48:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -65,7 +65,7 @@ int xm_load (FILE * f)
 	return -1;
     strncpy (xmp_ctl->name, (char *) xfh.name, 20);
 
-    sprintf (xmp_ctl->type, "Extended Module %d.%02d",
+    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "Extended Module %d.%02d",
 	xfh.version >> 8, xfh.version & 0xff);
 
     xxh->len = xfh.songlen;
@@ -78,7 +78,7 @@ int xm_load (FILE * f)
     xxh->bpm = xfh.bpm;
     xxh->flg = xfh.flags & XM_LINEAR_PERIOD_MODE ? XXM_FLG_LINEAR : 0;
     memcpy (xxo, xfh.order, xxh->len);
-    sprintf (tracker_name, "%-20.20s", xfh.tracker);
+    snprintf(tracker_name, 80, "%-20.20s", xfh.tracker);
 
     MODULE_INFO ();
 
