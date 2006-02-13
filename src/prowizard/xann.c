@@ -18,7 +18,7 @@
  */
 
 /*
- * $Id: xann.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: xann.c,v 1.2 2006-02-13 00:21:46 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -380,6 +380,7 @@ static int test_XANN (uint8 *data, int s)
 			return -1;
 	}
 
+#if 0
 	/* test #7  first pattern data .. */
 	for (j = 0; j < 256; j++) {
 #if 0
@@ -391,6 +392,7 @@ static int test_XANN (uint8 *data, int s)
 		if (data[start + j * 4 + 1085] & 1)
 			return -1;
 	}
+#endif
 
 	return 0;
 }

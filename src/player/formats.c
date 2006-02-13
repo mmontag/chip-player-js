@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.10 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: formats.c,v 1.11 2006-02-13 00:21:46 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -93,7 +93,9 @@ void xmp_init_formats ()
     register_fmt ("PM40", "Promizer 4.0", pm40_load);
     register_fmt ("AC1D", "AC1D Packer", ac1d_load);
     register_fmt ("PP10", "Pha Packer", pha_load);
+#endif
     register_fmt ("XANN", "XANN Packer", xann_load);
+#if 0
     register_fmt ("ZEN", "Zen Packer", zen_load);
     register_fmt ("NP", "NoisePacker", np_load);
     register_fmt ("DI", "Digital Illusions", di_load);

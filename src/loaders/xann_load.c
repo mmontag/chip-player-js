@@ -26,14 +26,14 @@ struct xann_instrument {
     uint32 ptr;
     uint16 size;
     uint16 unknown;
-} PACKED;
+};
 
 struct xann_header {
     uint32 ptr[128];
     uint8 unknown[6];
     struct xann_instrument ins[31];
     uint8 unknown2[0x46];
-} PACKED;
+};
 
 
 /* XANN to Protracker/XM effect translation table */
@@ -61,10 +61,22 @@ int xann_load (FILE *f)
 
     LOAD_INIT ();
 
-    fread (&xh, 1, sizeof (struct xann_header), f);
+    for (i = 0; i < 128; i++) {
+	xh.ptr[i] = read32b(f);
+    }
+    fread(&xh.unknown, 6, 1, f);
+    for (i = 0; i < 31; i++) {
+	xh.ins[i].finetune = read8(f);
+	xh.ins[i].volume = read8(f);
+	xh.ins[i].loop_start = read32b(f);
+	xh.ins[i].loop_size = read16b(f);
+	xh.ins[i].ptr = read32b(f);
+	xh.ins[i].size = read16b(f);
+	xh.ins[i].unknown = read16b(f);
+    }
+    fread(&xh.unknown2, 0x46, 1, f);
 
     for (xxh->pat = xxh->len = i = 0; i < 128; i++) {
-	B_ENDIAN32 (xh.ptr[i]);
 	if (!xh.ptr[i])
 	    break;
 	xxo[i] = (xh.ptr[i] - 0x043c) >> 10;
@@ -75,15 +87,10 @@ int xann_load (FILE *f)
     xxh->pat++;
     xxh->trk = xxh->pat * xxh->chn;
 
-    for (smp_size = i = 0; i < xxh->ins; i++) {
-	B_ENDIAN16 (xh.ins[i].size);
-	B_ENDIAN32 (xh.ins[i].loop_start);
-	B_ENDIAN16 (xh.ins[i].loop_size);
-	B_ENDIAN32 (xh.ins[i].ptr);
+    for (smp_size = i = 0; i < xxh->ins; i++)
 	smp_size += 2 * xh.ins[i].size;
-    }
 
-    if (sizeof (struct xann_header) + 0x400 * xxh->pat + smp_size !=
+    if (1084 /*sizeof(struct xann_header)*/ + 0x400 * xxh->pat + smp_size !=
 	xmp_ctl->size)
 	return -1;
 

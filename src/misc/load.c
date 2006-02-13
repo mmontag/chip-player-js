@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.6 2006-02-12 22:47:51 cmatsuoka Exp $
+ * $Id: load.c,v 1.7 2006-02-13 00:21:46 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -39,7 +39,7 @@ int pw_check(unsigned char *, int);
 
 static int decrunch (FILE **f, char **s)
 {
-    unsigned char b[1024];
+    unsigned char *b;
     char *cmd;
     FILE *t;
     int fd, builtin, res;
@@ -50,6 +50,7 @@ static int decrunch (FILE **f, char **s)
     temp = strdup ("/tmp/xmp_XXXXXX");
 
     fseek (*f, 0, SEEK_SET);
+    b = malloc(1024);
     fread (b, 1, 1024, *f);
 
     if (b[0] == 'P' && b[1] == 'K') {
@@ -98,10 +99,23 @@ static int decrunch (FILE **f, char **s)
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
-    } else if (pw_check(b, 1024) == 0) {
-	packer = "ProWizard";
-	builtin = BUILTIN_PW;
+    } else {
+	int extra;
+	int s = 1024;
+
+	while ((extra = pw_check(b, s)) > 0) {
+	    realloc(b, s + extra);
+	    fread(b + s, extra, 1, *f);
+	    s += extra;
+	}
+
+	if (extra == 0) {
+	    packer = "ProWizard";
+	    builtin = BUILTIN_PW;
+	}
     }
+
+    free(b);
 
     fseek (*f, 0, SEEK_SET);
 

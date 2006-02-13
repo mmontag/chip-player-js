@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1997-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1997-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: mixer.c,v 1.3 2006-02-13 00:21:46 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: mixer.c,v 1.2 2001-11-12 02:48:37 hipolito Exp $
  */
 
 #ifdef HAVE_CONFIG_H

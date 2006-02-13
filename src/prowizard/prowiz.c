@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Modified by Claudio Matsuoka for xmp
  *
- * $Id: prowiz.c,v 1.3 2006-02-12 23:15:44 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.4 2006-02-13 00:21:46 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -19,9 +19,10 @@
 #include "prowiz.h"
 
 static int check (unsigned char *, int);
-static int decrunch (int, int);
 
 #if 0
+static int decrunch (int, int);
+
 static struct _xmp_depacker depacker_pw = {
 	"Pro-Wizard v1.45c1 depacker",
 	"Copyright (C) 1997-1999 Sylvain Chipaux",
@@ -50,14 +51,14 @@ int pw_unregister (struct pw_format *f)
 
 int pw_init (int i)
 {
-	char *o;
+	/* char *o; */
 
 	if (!i)
 		return 0;
 
 	/* With signature */
 	pw_register (&pw_ac1d);
-	pw_register (&pw_emod);
+	/* pw_register (&pw_emod); */
 	pw_register (&pw_fchs);
 	pw_register (&pw_fcm);
 	pw_register (&pw_fuzz);
@@ -74,7 +75,7 @@ int pw_init (int i)
 	pw_register (&pw_unic_id);
 
 	/* No signature */
-	pw_register (&pw_xann);
+	/* pw_register (&pw_xann); */
 	pw_register (&pw_mp_noid);	/* Must check before Heatseeker */
 	pw_register (&pw_di);
 	pw_register (&pw_eu);
