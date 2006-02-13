@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.10 2006-02-12 19:38:06 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.11 2006-02-13 12:46:34 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -83,7 +83,7 @@ dnl -----------------------------------------------------------------------
 dnl Check platform.
 dnl -----------------------------------------------------------------------
 
-if test "${target}" = NONE; then
+if [ -z "${target}" ]; then
     target=${host}
     target_cpu=${host_cpu}
     target_vendor=${host_vendor}
