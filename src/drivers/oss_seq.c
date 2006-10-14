@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.2 2004-09-16 00:56:36 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.3 2006-10-14 14:11:25 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,7 +62,7 @@
 
 SEQ_DEFINEBUF(2048);
 
-static int seqfd = -1;
+static int seqfd = -1, hz;
 static int echo_msg;
 
 static int numvoices	(int);
@@ -314,12 +314,7 @@ static void seq_sync (double next_time)
 	return;
 
     if (next_time > this_time) {
-#ifdef HZ
-	/* Nils Faerber's hack */
-	SEQ_WAIT_TIME (next_time * HZ / 10);	/* CM: was 100 */
-#else
-	SEQ_WAIT_TIME (next_time);
-#endif
+	SEQ_WAIT_TIME (next_time * hz / 10);
 	this_time = next_time;
     }
 }
@@ -429,6 +424,8 @@ static int init (struct xmp_control *ctl)
 	return XMP_ERR_DINIT;
     }
 
+    hz = 0;
+    ioctl(seqfd, SNDCTL_SEQ_CTRLRATE, &hz);
     SEQ_VOLUME_MODE (dev, VOL_METHOD_LINEAR);
     bufdump ();
     ioctl (seqfd, SNDCTL_SEQ_SYNC, 0);
