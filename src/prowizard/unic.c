@@ -12,7 +12,7 @@
  */
 
 /*
- * $Id: unic.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: unic.c,v 1.2 2006-10-14 14:12:08 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -184,10 +184,7 @@ static int depack_unic (uint8 *data, FILE *out)
 	/* pattern data */
 	for (i = 0; i < Max; i++) {
 		for (j = 0; j < 256; j++) {
-			ins =
-				((data[w +
-						  j *
-						  3] >> 2) & 0x10) |
+			ins = ((data[w + j * 3] >> 2) & 0x10) |
 				((data[w + j * 3 + 1] >> 4) & 0x0f);
 			note = data[w + j * 3] & 0x3f;
 			fxt = data[w + j * 3 + 1] & 0x0f;
