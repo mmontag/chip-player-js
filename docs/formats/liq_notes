@@ -1,7 +1,7 @@
-$Id: liq_notes,v 1.1 2001-06-02 20:25:42 cmatsuoka Exp $
+$Id: liq_notes,v 1.2 2007-08-04 23:06:55 cmatsuoka Exp $
 
 Liquid Tracker notes
-Claudio Matsuoka <claudio@helllabs.org>
+Claudio Matsuoka <cmatsuoka@gmail.com>
 
 A few notes regarding the Liquid Tracker module format details that
 are not described in the official spec written by the author (Nir Oren).
@@ -198,6 +198,5 @@ pattern decoding and loading. Here's what I implemented in xmp:
   each event.
 - Unpacked events may contain only note if instrument > 100. In this
   case the instrument value is a new event bitmask.
-
 
 

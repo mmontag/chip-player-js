@@ -5,7 +5,7 @@
  * option) any later version.
  *
  * Author: Olivier Lapicque <olivierl@jps.net>
- * Modified by Claudio Matsuoka <claudio@helllabs.org> for xmp
+ * Modified by Claudio Matsuoka for xmp
  */
 
 #ifdef HAVE_CONFIG_H

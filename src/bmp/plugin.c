@@ -1,9 +1,9 @@
 /*
  * XMP plugin for XMMS
- * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
+ * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.1 2006-02-13 22:58:42 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.2 2007-08-04 23:06:55 cmatsuoka Exp $
  */
 
 #include <stdlib.h>

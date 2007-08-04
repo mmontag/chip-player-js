@@ -11,7 +11,7 @@
 
 /*
 
-  modified by Claudio Matsuoka <claudio@helllabs.org> for use with xmp
+  modified by Claudio Matsuoka for use with xmp
   checksum added by Sipos Attila <h430827@stud.u-szeged.hu>
 
 */

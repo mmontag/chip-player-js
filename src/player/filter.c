@@ -8,11 +8,11 @@
  */
 
 /*
- * Modified for xmp 2.0 by Claudio Matsuoka <claudio@helllabs.org>
+ * Modified for xmp 2.0 by Claudio Matsuoka
  * (optimized, removed all math functions, added precalculated tables)
  * Mon Dec 25 10:49:19 BRST 2000
  *
- * $Id: filter.c,v 1.1 2001-06-02 20:28:21 cmatsuoka Exp $
+ * $Id: filter.c,v 1.2 2007-08-04 23:06:55 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
