@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.4 2005-02-22 23:21:34 cmatsuoka Exp $
+ * $Id: player.c,v 1.5 2007-08-04 20:08:15 cmatsuoka Exp $
  */
 
 /*
@@ -471,13 +471,13 @@ static void module_play (int chn, int t)
 	}
 
     vol_envelope = XXIH.aei.flg & XXM_ENV_ON ?
-	get_envelope (XXAE, XXIH.aei.npt, xc->v_idx) : 64;
+	get_envelope((int16 *)XXAE, XXIH.aei.npt, xc->v_idx) : 64;
 
     pan_envelope = XXIH.pei.flg & XXM_ENV_ON ?
-	get_envelope (XXPE, XXIH.pei.npt, xc->p_idx) : 32;
+	get_envelope((int16 *)XXPE, XXIH.pei.npt, xc->p_idx) : 32;
 
     frq_envelope = XXIH.fei.flg & XXM_ENV_ON ?
-        (int16)get_envelope (XXFE, XXIH.fei.npt, xc->f_idx) : 0;
+        (int16)get_envelope((int16 *)XXFE, XXIH.fei.npt, xc->f_idx) : 0;
 
     /* Update envelopes */
     if (do_envelope (&XXIH.aei, XXAE, &xc->v_idx, DOENV_RELEASE, chn))

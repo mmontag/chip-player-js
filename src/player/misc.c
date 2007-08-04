@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: misc.c,v 1.3 2006-02-12 20:57:09 cmatsuoka Exp $
+ * $Id: misc.c,v 1.4 2007-08-04 20:08:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,20 +46,20 @@ char *copy_adjust(uint8 *s, uint8 *r, int n)
 {
     int i;
 
-    if (n > strlen(r))
-	n = strlen(r);
+    if (n > strlen((char *)r))
+	n = strlen((char *)r);
 
     memset(s, 0, n);
-    strncpy(s, r, n);
+    strncpy((char *)s, (char *)r, n);
 
     for (i = 0; i < n; i++)
-	if (!isprint (s[i]) || ((uint8) s[i] > 127))
+	if (!isprint(s[i]) || ((uint8) s[i] > 127))
 	    s[i] = ' ';
 
-    while (*s && (s[strlen (s) - 1] == ' '))
-	s[strlen (s) - 1] = 0;
+    while (*s && (s[strlen((char *)s) - 1] == ' '))
+	s[strlen((char *)s) - 1] = 0;
 
-    return s;
+    return (char *)s;
 }
 
 char *str_adj (char *s)

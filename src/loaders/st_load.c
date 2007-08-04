@@ -139,8 +139,8 @@ int st_load (FILE *f)
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
 	xxih[i].nsm = !!(xxs[i].len);
-	strncpy (xxih[i].name, mh.ins[i].name, 22);
-	str_adj (xxih[i].name);
+	strncpy((char *)xxih[i].name, (char *)mh.ins[i].name, 22);
+	str_adj((char *)xxih[i].name);
     }
 
 #if 0

@@ -1,7 +1,7 @@
 /* Silverball MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.4 2005-02-23 14:25:50 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.5 2007-08-04 20:08:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,7 +33,7 @@ int svb_load (FILE * f)
 		return -1;
 
 	fread(buf, 1, 60, f);
-	strncpy(xmp_ctl->name, buf, 32);
+	strncpy(xmp_ctl->name, (char *)buf, 32);
 	sprintf (xmp_ctl->type, "Silverball MASI (PSM)");
 
 	read8(f);
@@ -77,7 +77,7 @@ int svb_load (FILE * f)
 
 		fread(buf, 1, 13, f);
 		fread(buf, 1, 22, f);
-		strncpy((char *)xxih[i].name, buf, 22);
+		strncpy((char *)xxih[i].name, (char *)buf, 22);
 		str_adj((char *)xxih[i].name);
 		read16l(f);
 		p_smp[i] = read32l(f);

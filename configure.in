@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.12 2006-10-14 14:31:58 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.13 2007-08-04 20:08:15 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -470,7 +470,7 @@ define(XMP_CACHED_TRY_RUN,[
 AC_C_BIGENDIAN
 
 if test "${GCC-no}" = yes; then
-    CFLAGS="${CFLAGS} -Wall -fno-pointer-sign -finline-functions"
+    CFLAGS="${CFLAGS} -Wall -finline-functions"
     XMP_CACHED_TRY_RUN(whether gcc needs -fsigned-char,
         ac_cv_c_flag_f_signed_char,,[
         main(){char foo=0xff;return(foo<0);}],

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.5 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.6 2007-08-04 20:08:15 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -423,7 +423,7 @@ static void get_chunk_ii(int size, FILE *f)
 	i_index[i] = read8(f);
 	xxih[i].nsm = read8(f);
 	fread(xxih[i].name, 1, 24, f);
-	str_adj(xxih[i].name);
+	str_adj((char *)xxih[i].name);
 
 	fseek(f, 8, SEEK_CUR);
 
@@ -633,7 +633,7 @@ static void get_chunk_i0(int size, FILE *f)
 static void get_chunk_sa(int size, FILE *f)
 {
     int i, len;
-    char *smpbuf, *buf;
+    uint8 *smpbuf, *buf;
 
     if (V (0))
 	report ("Stored samples : %d ", xxh->smp);
@@ -662,7 +662,8 @@ static void get_chunk_sa(int size, FILE *f)
 	    break;
 	}
 	
-	xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate, XMP_SMP_NOLOAD, &xxs[i], smpbuf);
+	xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate, XMP_SMP_NOLOAD, &xxs[i],
+					(char *)smpbuf);
 
 	free (smpbuf);
 

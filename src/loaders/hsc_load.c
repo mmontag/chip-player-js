@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.1 2001-06-02 20:27:00 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.2 2007-08-04 20:08:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -88,7 +88,7 @@ int hsc_load (FILE *f)
     fread (buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < xxh->ins; i++, sid += 12) {
-	xmp_cvt_hsc2sbi (sid);
+	xmp_cvt_hsc2sbi((char *)sid);
 
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	xxih[i].nsm = 1;
@@ -130,7 +130,7 @@ int hsc_load (FILE *f)
 	    report ("%2d  %2d  %02x\n", sid[10] >> 1, sid[10] & 0x01, sid[11]);
 	}
 skip:
-	xmp_drv_loadpatch (f, i, 0, 0, NULL, sid);
+	xmp_drv_loadpatch(f, i, 0, 0, NULL, (char *)sid);
     }
 
     /* Read orders */

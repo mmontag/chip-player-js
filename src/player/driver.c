@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.3 2002-09-03 10:47:46 dmierzej Exp $
+ * $Id: driver.c,v 1.4 2007-08-04 20:08:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -957,7 +957,8 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 	    fseek (f, 5, SEEK_CUR);	/* Skip "ADPCM" */
 	    fread (table, 1, 16, f);
 	    fread (patch->data + x2, 1, x2, f);
-	    adpcm4_decoder (patch->data + x2, patch->data, table, xxs->len);
+	    adpcm4_decoder((uint8 *)patch->data + x2, (uint8 *)patch->data,
+						table, xxs->len);
 	} else
 	    fread (patch->data, 1, xxs->len, f);
     }

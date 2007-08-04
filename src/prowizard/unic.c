@@ -12,7 +12,7 @@
  */
 
 /*
- * $Id: unic.c,v 1.2 2006-10-14 14:12:08 cmatsuoka Exp $
+ * $Id: unic.c,v 1.3 2007-08-04 20:08:15 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -171,8 +171,8 @@ static int depack_unic (uint8 *data, FILE *out)
 
 	/* verify UNIC ID */
 	w = start + 1080;
-	if ((strncmp (&data[w], "M.K.", 4) == 0) ||
-		(strncmp (&data[w], "UNIC", 4) == 0) ||
+	if ((strncmp((char *)&data[w], "M.K.", 4) == 0) ||
+		(strncmp((char *)&data[w], "UNIC", 4) == 0) ||
 		((data[w] == 0x00) && (data[w + 1] == 0x00)
 			&& (data[w + 2] == 0x00)
 			&& (data[w + 3] == 0x00)))

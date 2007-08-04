@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.3 2006-02-13 00:21:46 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.4 2007-08-04 20:08:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -427,7 +427,7 @@ static void smix_setpatch (int voc, int smp, int ramp)
 	    vi->fidx |= FLAG_STEREO;
 	}
 
-	synth_setpatch (voc, pi->data);
+	synth_setpatch(voc, (uint8 *)pi->data);
 
 	return;
     }
