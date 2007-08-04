@@ -1,12 +1,13 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.11 2006-02-13 16:09:51 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.12 2007-08-04 23:51:48 cmatsuoka Exp $
 
 VERSION	= 2.2.0
-DATE	= Sun Feb 12 14:28:51 BRST 2006
+DATE	= Sat Aug  4 19:53:02 BRT 2007
 
 DEST_DIR =
 prefix	= $(DEST_DIR)@prefix@
 exec_prefix= $(DEST_DIR)@prefix@
+datarootdir = $(DEST_DIR)@datarootdir@
 BIN_DIR	= $(DEST_DIR)@bindir@
 LIB_DIR = $(DEST_DIR)@libdir@
 MAN_DIR	= $(DEST_DIR)@mandir@/man1
