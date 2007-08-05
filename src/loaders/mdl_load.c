@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.6 2007-08-04 20:08:15 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.7 2007-08-05 03:57:55 pabs3 Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -140,14 +140,14 @@ static void xlat_fx2 (uint8 *t, uint8 *p)
 }
 
 
-static unsigned int get_bits (char i, uint8 **buf)
+static unsigned int get_bits (char i, uint8 **buf, int* len)
 {
     static uint32 b = 0, n = 32;
     unsigned int x;
 
     if (i == 0) {
 	b = *((uint32 *)(*buf));
-	*buf += 4;
+	*buf += 4; *len -= 4;
 	n = 32;
 	return 0;
     }
@@ -156,7 +156,7 @@ static unsigned int get_bits (char i, uint8 **buf)
     b >>= i;
     if ((n -= i) <= 24) {
 	b |= (uint32)(*(*buf)++) << n;
-	n += 8;
+	n += 8; (*len)--;
     }
 
     return x;
@@ -182,22 +182,22 @@ static unsigned int get_bits (char i, uint8 **buf)
  *	xxx1s => byte = <xxx>; if s=1 then byte = byte xor 255
  */
 
-static void unpack_sample8 (uint8 *t, uint8 *f, int l)
+static void unpack_sample8 (uint8 *t, uint8 *f, int len, int l)
 {
     int i, s;
     uint8 b, d;
 
-    get_bits (0, &f);
+    get_bits (0, &f, &len);
 
     for (i = b = d = 0; i < l; i++) {
-	s = get_bits (1, &f);
-	if (get_bits (1, &f)) {
-	    b = get_bits (3, &f);
+	s = get_bits (1, &f, &len);
+	if (get_bits (1, &f, &len)) {
+	    b = get_bits (3, &f, &len);
 	} else {
             b = 8;
-	    while (!get_bits (1, &f))
+	    while (len >= 0 && !get_bits (1, &f, &len))
 		b += 16;
-	    b += get_bits (4, &f);
+	    b += get_bits (4, &f, &len);
 	}
 
 	if (s)
@@ -209,21 +209,21 @@ static void unpack_sample8 (uint8 *t, uint8 *f, int l)
 }
 
 
-static void unpack_sample16 (uint16 *t, uint8 *f, int l)
+static void unpack_sample16 (uint16 *t, uint8 *f, int len, int l)
 {
     int i, lo, s;
     uint8 b, d;
 
     for (i = lo = b = d = 0; i < l; i++) {
-	lo = get_bits (8, &f);
-	s = get_bits (1, &f);
-	if (get_bits (1, &f)) {
-	    b = get_bits (3, &f);
+	lo = get_bits (8, &f, &len);
+	s = get_bits (1, &f, &len);
+	if (get_bits (1, &f, &len)) {
+	    b = get_bits (3, &f, &len);
 	} else {
             b = 8;
-	    while (!get_bits (1, &f))
+	    while (len >= 0 && !get_bits (1, &f, &len))
 		b += 16;
-	    b += get_bits (4, &f);
+	    b += get_bits (4, &f, &len);
 	}
 
 	if (s)
@@ -650,14 +650,14 @@ static void get_chunk_sa(int size, FILE *f)
 	    len = read32l(f);
 	    buf = malloc(len);
 	    fread(buf, 1, len, f);
-	    unpack_sample8(smpbuf, buf, xxs[i].len);
+	    unpack_sample8(smpbuf, buf, len, xxs[i].len);
 	    free(buf);
 	    break;
 	case 2:
 	    len = read32l(f);
 	    buf = malloc(len);
 	    fread(buf, 1, len, f);
-	    unpack_sample16((uint16 *)smpbuf, buf, xxs[i].len >> 1);
+	    unpack_sample16((uint16 *)smpbuf, buf, len, xxs[i].len >> 1);
 	    free(buf);
 	    break;
 	}
