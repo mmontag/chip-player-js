@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -277,9 +277,13 @@ ex_f_vslide_dn:
 		tick_time = xmp_ctl->rrate / (xmp_bpm = fxp);
 	}
 	break;
-    case FX_S3M_TEMPO:
+    case FX_S3M_TEMPO:				/* Set S3M tempo */
 	if (fxp)
 	    tempo = fxp;
+	break;
+    case FX_S3M_BPM:				/* Set S3M BPM */
+	if (fxp >= 0x20)	/* Panic uses 0x14 */
+	    tick_time = xmp_ctl->rrate / (xmp_bpm = fxp);
 	break;
     case FX_GLOBALVOL:				/* Set global volume */
 	xmp_ctl->volume = fxp > xmp_ctl->volbase ? xmp_ctl->volbase : fxp;

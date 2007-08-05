@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1997-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,7 +14,7 @@
 
 #define SMIX_NUMVOC	64	/* default number of softmixer voices */
 #define SMIX_MAXRAT	48000	/* max sampling rate (Hz) */
-#define SMIX_MINBPM	0x21	/* min BPM */
+#define SMIX_MINBPM	0x20	/* min BPM */
 #define SMIX_RESMAX	(sizeof (int16))	/* max output resolution */
 
 #define SMIX_VOL_FT	4

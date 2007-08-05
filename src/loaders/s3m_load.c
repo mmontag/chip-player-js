@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.5 2006-02-13 16:48:21 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.6 2007-08-05 03:08:34 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -67,7 +67,7 @@ static uint8 fx[] =
     NONE,		NONE,
     FX_OFFSET,		NONE,
     FX_MULTI_RETRIG,	FX_TREMOLO,
-    FX_S3M_EXTENDED,	FX_TEMPO,
+    FX_S3M_EXTENDED,	FX_S3M_BPM, /*FX_TEMPO,*/
     NONE,		FX_GLOBALVOL,
     NONE,		NONE,
     NONE,		NONE

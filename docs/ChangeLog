@@ -1,9 +1,10 @@
-$Id: ChangeLog,v 1.21 2006-02-12 20:00:35 cmatsuoka Exp $
+$Id: ChangeLog,v 1.22 2007-08-05 03:08:34 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.2.0 ()
+	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- don't use packed structures anymore
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines

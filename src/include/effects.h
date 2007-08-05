@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -70,7 +70,7 @@
 /* Extra effects */
 #define FX_VOLSLIDE_UP	0xa0	/* SFX */
 #define FX_VOLSLIDE_DN	0xa1
-#define FX_S3M_TEMPO	0xa3
+#define FX_S3M_TEMPO	0xa3	/* S3M */
 #define FX_VOLSLIDE_2	0xa4
 #define FX_F_VSLIDE	0xa5	/* IMF/MDL */
 #define FX_FINETUNE	0xa6
@@ -78,5 +78,6 @@
 #define FX_NSLIDE_DN	0xa8	/* IMF/PTM */
 #define FX_CHORUS	0xa9	/* IMF */
 #define FX_REVERB	0xaa	/* IMF */
+#define FX_S3M_BPM	0xab	/* S3M */
 
 #endif /* __EFFECTS_H */
