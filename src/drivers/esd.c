@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: esd.c,v 1.1 2001-06-02 20:25:52 cmatsuoka Exp $
+ * $Id: esd.c,v 1.2 2007-08-05 19:55:59 cmatsuoka Exp $
  */
 
 /* Based on esdcat.c from the Enlightened Sound Daemon 0.2 for Linux
@@ -115,5 +115,3 @@ static void myshutdown ()
     if (audio_fd)
 	close (audio_fd);
 }
-
-XMP_DRV_REGISTER(drv_esd)

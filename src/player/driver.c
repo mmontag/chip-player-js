@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr.
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.4 2007-08-04 20:08:15 cmatsuoka Exp $
+ * $Id: driver.c,v 1.5 2007-08-05 19:55:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -14,11 +14,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef DYNAMIC_DRV
-#include <dlfcn.h>
-#include <dirent.h>
-#include <sys/param.h>
-#endif
 #include "driver.h"
 #include "convert.h"
 #include "mixer.h"
@@ -57,8 +52,6 @@ void (*_driver_callback)(void *, int) = NULL;
 #ifndef XMMS_PLUGIN
 
 extern struct xmp_drv_info drv_file;
-
-#ifndef DYNAMIC_DRV
 
 extern struct xmp_drv_info drv_wav;
 
@@ -114,53 +107,11 @@ extern struct xmp_drv_info drv_qnx;
 extern struct xmp_drv_info drv_win32;
 #endif
 
-#endif /* DYNAMIC_DRV */
-
 #endif /* XMMS_PLUGIN */
 
 void (*xmp_event_callback) (unsigned long);
 
 #include "../player/mixer.c"
-
-
-#ifdef DYNAMIC_DRV
-
-static int select_file (const struct dirent *d)
-{
-    char *f = d->d_name;
-    int i = strlen (f);
-
-    return (f[i - 3] == '.' && f[i - 2] == 's' && f[i - 1] == 'o');
-} 
-
-
-static int load_drivers (char *p)
-{
-    /*
-     * Dynamic component loading backported from xmp 2.1
-     */
-    int i, n;
-    struct dirent **file;
-    char buf[256];
-
-    n = scandir (p, &file, select_file, alphasort);
-    if (n<=0)
-	return -1;
-
-    for (i = 0; i < n; i++) {
-	snprintf (buf, 255, "%s/%s", p, file[i]->d_name);
-	/* fprintf (stderr, "loading driver: %s\n", buf); */
-
-	if (dlopen (buf, RTLD_NOW) == NULL) {
-	    fprintf (stderr, "can't load driver %s: %s\n",
-		file[i]->d_name, dlerror());
-	}
-    }
-
-    return 0;
-}
-
-#endif /* DYNAMIC_DRV */
 
 
 void xmp_init_drivers ()
@@ -169,8 +120,6 @@ void xmp_init_drivers ()
 
     /* Output to file will be always available -- except in the plugin ;) */
     xmp_drv_register (&drv_file);
-
-#ifndef DYNAMIC_DRV
 
 #ifdef DRIVER_ARTS
     xmp_drv_register (&drv_arts);
@@ -214,19 +163,6 @@ void xmp_init_drivers ()
 #ifdef DRIVER_OS2DART
     xmp_drv_register (&drv_os2dart);
 #endif
-
-#else
-{
-    char *p = malloc (MAXPATHLEN);
-
-    snprintf (p, MAXPATHLEN, "%s/drivers/", getenv ("XMP_LIB_PATH"));
-
-    if (load_drivers (p) < 0)
-        load_drivers (DYNDRV_PREFIX "/drivers");
-
-    free (p);
-}
-#endif /* DYNAMIC_DRV */
 
 #endif /* XMMS_PLUGIN */
 }

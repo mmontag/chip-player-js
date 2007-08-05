@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.3 2002-09-03 10:47:46 dmierzej Exp $
+ * $Id: driver.h,v 1.4 2007-08-05 19:55:59 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -68,13 +68,6 @@ struct patch_info {
 	if (2 > sscanf (token, y, z, w)) parm_error (); } }
 
 
-#ifdef DYNAMIC_DRV
-#define XMP_DRV_REGISTER(drv) \
-void _init () { xmp_drv_register (&(drv)); }
-#else
-#define XMP_DRV_REGISTER(drv)
-#endif
-
 /* PROTOTYPES */
 
 void	xmp_drv_register	(struct xmp_drv_info *);
@@ -109,8 +102,8 @@ void	xmp_drv_setsmp		(int, int);
 void	xmp_drv_clearmem	(void);
 void	xmp_drv_starttimer	(void);
 void	xmp_drv_echoback	(int);
-void	xmp_drv_bufwipe	(void);
-void	xmp_drv_bufdump	(void);
+void	xmp_drv_bufwipe		(void);
+void	xmp_drv_bufdump		(void);
 int	xmp_drv_loadpatch 	(FILE *, int, int, int, struct xxm_sample *,
 				 char *);
 

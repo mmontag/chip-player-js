@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.1 2001-06-02 20:26:02 cmatsuoka Exp $
+ * $Id: win32.c,v 1.2 2007-08-05 19:55:59 cmatsuoka Exp $
  */
 
 /*
@@ -222,7 +222,3 @@ static void shutdown ()
     DeleteCriticalSection(&cs);
     nBlocks = 0;
 }
-
-
-XMP_DRV_REGISTER(drv_win32);
-
