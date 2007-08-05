@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.1 2007-08-04 23:34:53 cmatsuoka Exp $
+ * $Id: osx.c,v 1.2 2007-08-05 03:02:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,6 +28,9 @@ static void shutdown(void);
 static void dummy () { }
 
 static char *help[] = {
+	"bpf", "Bytes per frame",
+	"bpp", "Bytes per packet",
+	"fpp", "Frames per packet",
 	NULL
 };
 
@@ -61,29 +64,56 @@ struct xmp_drv_info drv_bsd = {
 
 static int init (struct xmp_control *ctl)
 {
-	AudioStreamBasicDescription a;
-	//char *token;
-	//char **parm = ctl->parm;
+	AudioStreamBasicDescription ad;
+	Component comp;
+	ComponentDescription cd;
+	ComponentInstance ci;
+	AURenderCallbackStruct renderCallback;
+	OSStatus err;
+
+	char *token;
+	char **parm = ctl->parm;
+	int bpf, bpp, fpp;
+
+	bpf = bpp = fpp = 0;
 
 	parm_init();
-	//chkparm1("gain", gain = atoi (token));
-	//chkparm1("buffer", bsize = atoi (token));
+	chkparm1("bpf", bpf = atoi(token));
+	chkparm1("bpp", bpp = atoi(token));
+	chkparm1("fpp", fpp = atoi(token));
 	parm_end();
 
-	a.mSampleRate = ctl->freq;
-	a.mFormatID = kAudioFormatLinearPCM;
-	a.mFormatFlags = kAudioFormatFlagIsPacked;
+	ad.mSampleRate = ctl->freq;
+	ad.mFormatID = kAudioFormatLinearPCM;
+	ad.mFormatFlags = kAudioFormatFlagIsPacked;
 	if (~ctl->outfmt & XMP_FMT_UNS)
-		a.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
+		ad.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
 	if (~ctl->outfmt & XMP_FMT_BIGEND)
-		a.mFormatFlags |= kAudioFormatFlagIsBigEndian;
-	a.mChannelsPerFrame = ctl->outfmy & XMP_FMT_MONO ? 1 : 2;
-	a.mBitsPerChannel = ctl->resol;
+		ad.mFormatFlags |= kAudioFormatFlagIsBigEndian;
+	ad.mChannelsPerFrame = ctl->outfmy & XMP_FMT_MONO ? 1 : 2;
+	ad.mBitsPerChannel = ctl->resol;
 
-	a.mBytesPerFrame    = 0;
-	a.mBytesPerPacket   = 0;
-	a.mFramesPerPacket  = 0;
+	ad.mBytesPerFrame = bpf;
+	ad.mBytesPerPacket = bpp;
+	ad.mFramesPerPacket = fpp;
 
+	cd.componentType = kAudioUnitType_Output;
+	cd.componentSubType = kAudioUnitSubType_DefaultOutput;
+	cd.componentManufacturer = kAudioUnitManufacturer_Apple;
+	cd.componentFlags = 0;
+	cd.componentFlagsMask = 0;
+
+	if ((comp = FindNextComponent(NULL, &cd)) == NULL)
+		return XMP_ERR_DINIT;
+
+	if (OpenAComponent(comp, &ci))
+		return XMP_ERR_DINIT;
+
+	if (AudioUnitInitialize(ci))
+		return XMP_ERR_DINIT;
+
+	if (AudioUnitSetProperty(ci, kAudioUnitProperty_StreamFormat,
+			kAudioUnitScope_Input, 0, &cd, sizeof(cd));
 	return xmp_smix_on(ctl);
 }
 
