@@ -5,7 +5,7 @@
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: pha.c,v 1.2 2007-08-05 00:36:59 pabs3 Exp $
  */
 
 #include <string.h>
@@ -88,7 +88,7 @@ static int depack_pha (FILE *in, FILE *out)
 
 		fseek (in, 4, SEEK_CUR);
 		fread (&c1, 1, 1, in);
-		c1 = (c1 != 0x00) ? (c1 += 0x0b) : 0x00;
+		if(c1 != 0x00) c1 += 0x0b;
 		fseek (out, -6, 1);	/* SEEK_END */
 		fwrite (&c1, 1, 1, out);
 		fseek (out, 0, 2);	/* SEEK_END */

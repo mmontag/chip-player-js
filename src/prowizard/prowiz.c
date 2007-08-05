@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Modified by Claudio Matsuoka for xmp
  *
- * $Id: prowiz.c,v 1.8 2006-02-13 16:51:56 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.9 2007-08-05 00:36:59 pabs3 Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -117,7 +117,7 @@ int pw_wizardry (int in, int out)
 	struct list_head *tmp;
 	struct pw_format *format;
 	struct stat st;
-	int size, in_size;
+	int size = -1, in_size;
 	uint8 *data;
 	FILE *file_in, *file_out;
 
