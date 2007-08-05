@@ -1,9 +1,11 @@
-$Id: ChangeLog,v 1.22 2007-08-05 03:08:34 cmatsuoka Exp $
+$Id: ChangeLog,v 1.23 2007-08-05 19:57:09 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.2.0 ()
+	- enabled WAV writer
+	- removed broken shared lib generation
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- don't use packed structures anymore
 	- fixed issues with OpenBSD

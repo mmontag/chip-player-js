@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.5 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: driver.c,v 1.6 2007-08-05 19:57:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -120,6 +120,7 @@ void xmp_init_drivers ()
 
     /* Output to file will be always available -- except in the plugin ;) */
     xmp_drv_register (&drv_file);
+    xmp_drv_register (&drv_wav);
 
 #ifdef DRIVER_ARTS
     xmp_drv_register (&drv_arts);
