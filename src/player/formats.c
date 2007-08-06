@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.13 2006-02-13 12:50:34 cmatsuoka Exp $
+ * $Id: formats.c,v 1.14 2007-08-06 02:13:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -60,8 +60,8 @@ void xmp_init_formats ()
     register_fmt ("PSM", "Epic Megagames MASI", psm_load);
     register_fmt ("PSM", "Silverball MASI", svb_load);
     register_fmt ("AMF", "DSMI (DMP)", amf_load);
+    register_fmt ("MMD0/1", "OctaMED", mmd1_load);
 #if 0
-    register_fmt ("MMD", "OctaMED", med_load);
     register_fmt ("MED2/3", "MED 1.1/2.0", med2_load);
     register_fmt ("MED4", "MED 3.22", med4_load);
 #endif

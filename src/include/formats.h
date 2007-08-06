@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.h,v 1.5 2005-02-21 12:28:33 cmatsuoka Exp $
+ * $Id: formats.h,v 1.6 2007-08-06 02:13:19 cmatsuoka Exp $
  */
 
 #ifndef __FORMATS_H
@@ -42,7 +42,8 @@ int kris_load (FILE *);
 int ksm_load (FILE *);
 int liq_load (FILE *);
 int mdl_load (FILE *);
-int med_load (FILE *);
+int mmd1_load (FILE *);
+int mmd3_load (FILE *);
 int med2_load (FILE *);
 int med4_load (FILE *);
 int mod_load (FILE *);

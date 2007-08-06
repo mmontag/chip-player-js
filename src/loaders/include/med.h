@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med.h,v 1.1 2001-06-02 20:27:07 cmatsuoka Exp $
+ * $Id: med.h,v 1.2 2007-08-06 02:13:19 cmatsuoka Exp $
  */
 
 #include "xmpi.h"
@@ -37,7 +37,7 @@ struct MMD0sample {
     UBYTE midipreset;		/* offs: 5(s) */
     UBYTE svol;			/* offs: 6(s) */
     BYTE strans;		/* offs: 7(s) */
-} PACKED; 
+}; 
 
 
 struct MMD0song {
@@ -64,7 +64,7 @@ struct MMD0song {
     UBYTE trkvol[16];		/* offs: 770 */
     UBYTE mastervol;		/* offs: 786 */
     UBYTE numsamples;		/* offs: 787 */
-} PACKED;			/* length = 788 bytes */
+};				/* length = 788 bytes */
 
 
 /* This structure is exactly as long as the MMDsong structure. Common fields
@@ -102,7 +102,7 @@ struct MMD2song {
     UBYTE pad1[16];		/* used to be trackvols, in MMD2 reserved */
     UBYTE mastervol;
     UBYTE numsamples;
-} PACKED;			/* length = 788 bytes */
+};				/* length = 788 bytes */
 
 
 struct MMD0 {
@@ -126,19 +126,19 @@ struct MMD0 {
     WORD actplayline;
     UBYTE counter;
     UBYTE extra_songs;			/* number of songs - 1 */
-} PACKED;				/* length = 52 bytes */
+};					/* length = 52 bytes */
 
 
 struct MMD0Block {                                                          
     UBYTE numtracks, lines;                                                  
-} PACKED;                     
+};                     
 
 
 struct BlockCmdPageTable {                                                      
     UWORD num_pages;                                                      
     UWORD reserved;                                                       
     UWORD *page[1];                                                       
-} PACKED;
+};
 
 
 struct BlockInfo {
@@ -147,14 +147,14 @@ struct BlockInfo {
     ULONG blocknamelen;
     struct BlockCmdPageTable *pagetable;
     ULONG reserved[5];
-} PACKED;
+};
 
 
 struct MMD1Block {
     UWORD numtracks;
     UWORD lines;
     struct BlockInfo *info;
-} PACKED;
+};
 
 
 struct InstrHdr {
@@ -163,13 +163,13 @@ struct InstrHdr {
 #define STEREO 0x20			/* Stereo sample, not interleaved */
     WORD type;
     /* Followed by actual data */
-} PACKED;
+};
 
 
 struct SynthWF {                                                
     UWORD length;			/* length in words */
     BYTE  wfdata[1];			/* the waveform */
-} PACKED;          
+};          
 
 
 struct SynthInstr {
@@ -187,7 +187,7 @@ struct SynthInstr {
     UBYTE voltbl[128];			/* offs: 22 */
     UBYTE wftbl[128];			/* offs: 150 */
     struct SynthWF *wf[64];		/* offs: 278 */
-} PACKED;
+};
 
 
 struct InstrExt {
@@ -195,7 +195,7 @@ struct InstrExt {
     UBYTE decay;
     UBYTE suppress_midi_off;
     BYTE  finetune;
-} PACKED;
+};
 
 
 struct MMDInfo {
@@ -204,7 +204,7 @@ struct MMDInfo {
     UWORD type;				/* data type (1 = ASCII) */
     ULONG length;			/* data length in bytes */
     /* data follows... */                                         
-} PACKED;                                        
+};                                        
 
 
 struct MMDARexxTrigCmd {                                      
@@ -218,7 +218,7 @@ struct MMDARexxTrigCmd {
 					 * term. 0) */
     UWORD port_len;			/* length of 'port' string (without
 					 * term. 0) */
-} PACKED; /* current (V7) structure size: 20 */             
+};		/* current (V7) structure size: 20 */             
 
 
 struct MMDARexx {
@@ -226,7 +226,7 @@ struct MMDARexx {
     UWORD trigcmdlen;			/* size of trigcmd entries             
 					 * (MUST be used!!) */                 
     struct MMDARexxTrigCmd *trigcmd;	/* chain of MMDARexxTrigCmds or NULL */
-} PACKED;                                               
+};                                               
 
 
 struct MMDMIDICmd3x {                                         
@@ -236,7 +236,7 @@ struct MMDMIDICmd3x {
 					 * (currently set to 15) */
     UBYTE *ctrlr_types;			/* controller types */                  
     UWORD *ctrlr_numbers;		/* controller numbers */
-} PACKED;                                             
+};                                             
 
 
 struct MMD0exp {
@@ -261,7 +261,7 @@ struct MMD0exp {
     struct MMDMIDICmd3x *mmdcmd3x;	/* settings for command 3x */
     ULONG reserved2[3];			/* future expansion fields */
     ULONG tag_end;
-} PACKED;
+};
 
 
 struct NotationInfo {
@@ -274,13 +274,13 @@ struct NotationInfo {
     UBYTE trkghost[16];			/* tracks ghosted */
     BYTE notetr[63];			/* note transpose for each instrument */
     UBYTE pad;
-} PACKED;
+};
 
 
 struct MMDDumpData {
     UWORD numdumps;
     UWORD reserved[3];
-} PACKED;
+};
 
 
 struct MMDDump {
@@ -289,5 +289,5 @@ struct MMDDump {
     UWORD ext_len;			/* MMDDump struct extension length */
     /* if ext_len >= 20: */
     UBYTE name[20];			/* name of the dump */
-} PACKED;
+};
 
