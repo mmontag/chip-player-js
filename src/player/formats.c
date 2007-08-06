@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.15 2007-08-06 20:39:27 cmatsuoka Exp $
+ * $Id: formats.c,v 1.16 2007-08-06 22:22:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -66,6 +66,7 @@ void xmp_init_formats ()
     register_fmt ("MED2/3", "MED 1.1/2.0", med2_load);
     register_fmt ("MED4", "MED 3.22", med4_load);
 #endif
+    register_fmt ("RTM", "Real Tracker", rtm_load);
     register_fmt ("PTM", "Poly Tracker", ptm_load);
     register_fmt ("DIGI", "DIGI Booster", digi_load);
 #if 0

@@ -19,7 +19,7 @@ struct ObjectHeader {
     char eof;			/* "\x1A" */
     WORD version;		/* version of the format (actual : 0x110) */
     WORD headerSize;		/* object header size */
-} PACKED;
+};
 
 struct RTMMHeader {		/* Real Tracker Music Module */
     char software[20];		/* software used for saving the module */
@@ -35,19 +35,19 @@ struct RTMMHeader {		/* Real Tracker Music Module */
     BYTE tempo;			/* initial tempo */
     char panning[32];		/* initial pannings (for S3M compatibility) */
     DWORD extraDataSize;	/* length of data after the header */
-} PACKED;
+};
 
 struct RTNDHeader {		/* Real Tracker Note Data */
     WORD flags;			/* Always 1 */
     BYTE ntrack;
     WORD nrows;
     DWORD datasize;		/* Size of packed data */
-} PACKED;
+};
 
 struct EnvelopePoint {
     long x;
     long y;
-} PACKED;
+};
 
 struct Envelope {
     BYTE npoint;
@@ -57,7 +57,7 @@ struct Envelope {
     BYTE loopend;
     WORD flags;			/* bit 0 : enable envelope,
 				   bit 1 : sustain, bit 2 : loop */
-} PACKED;
+};
 
 struct RTINHeader {		/* Real Tracker Instrument */
     BYTE nsample;
@@ -74,7 +74,7 @@ struct RTINHeader {		/* Real Tracker Instrument */
     BYTE midiChannel;
     BYTE midiProgram;
     BYTE midiEnable;
-} PACKED;
+};
 
 struct RTSMHeader {		/* Real Tracker Sample */
     WORD flags;			/* bit 1 : 16 bits,
