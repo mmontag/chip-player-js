@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.4 2007-08-06 02:11:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -88,8 +88,8 @@ typedef unsigned int uint32;
 #define _D_CRIT "\x1b[31m"
 #define _D_WARN "\x1b[36m"
 #define _D(args...) do { \
-	printf("\x1b[33m" __PRETTY_FUNCTION__ " \x1b[37m[" __FILE__ \
-	":%d] " _D_INFO, __LINE__); printf (args); printf ("\x1b[0m\n"); \
+	printf("\x1b[33m%s \x1b[37m[%s:%d] " _D_INFO, __PRETTY_FUNCTION__, \
+		__FILE__, __LINE__); printf (args); printf ("\x1b[0m\n"); \
 	} while (0)
 #else
 #define _D(args...) do {} while (0)
