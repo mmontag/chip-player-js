@@ -28,13 +28,9 @@
 #define XPKERR_CHKSUM 1
 #define XPKERR_UNKNOWNTYPE 2
 
-typedef unsigned char byte;
-typedef unsigned long int ULONG;
-typedef unsigned short int UWORD;
- 
 static volatile int xpkerrno;
 
-static int unpack(byte *src, byte *dst, int len);
+static int unpack(uint8 *src, uint8 *dst, int len);
 
 static int unsqsh(FILE *in, FILE *out)
 {
@@ -87,18 +83,18 @@ static int unsqsh(FILE *in, FILE *out)
   return 0;
 }
 
-static UWORD xchecksum(ULONG* ptr, ULONG count)
+static uint16 xchecksum(uint32* ptr, uint32 count)
 {
-  register ULONG sum=0;
+  register uint32 sum=0;
 
   while(count-- > 0){
     sum ^= *ptr++;
    }
 
-  return (UWORD) (sum ^ (sum >> 16));
+  return (uint16) (sum ^ (sum >> 16));
 }
 
-static int bfextu(byte *p,int bo,int bc)
+static int bfextu(uint8 *p,int bo,int bc)
 {
   int r;
   
@@ -115,7 +111,7 @@ static int bfextu(byte *p,int bo,int bc)
   return r;
 }
 
-static int bfexts(byte *p,int bo,int bc)
+static int bfexts(uint8 *p,int bo,int bc)
 {
   int r;
   
@@ -149,16 +145,16 @@ static int bfexts(byte *p,int bo,int bc)
 ;   10	LABEL	bitstream...
 */
 
-static int unpack(byte *src, byte *dst, int len) {
+static int unpack(uint8 *src, uint8 *dst, int len) {
   int decrunched=0;
-  /*byte *osrc=src-16;*/
+  /*uint8 *osrc=src-16;*/
   int type, hchk;
   int d0,d1,d2,d3,d4,d5,d6,a2,a5;
   int u, cp, cup1;
   int lchk;
-  byte *a4,*a6,*c;
-  byte  bc1, bc2, bc3;
-  byte a3[] = { 2,3,4,5,6,7,8,0,3,2,4,5,6,7,8,0,4,3,5,2,6,7,8,0,5,4,
+  uint8 *a4,*a6,*c;
+  uint8  bc1, bc2, bc3;
+  uint8 a3[] = { 2,3,4,5,6,7,8,0,3,2,4,5,6,7,8,0,4,3,5,2,6,7,8,0,5,4,
         6,2,3,7,8,0,6,5,7,2,3,4,8,0,7,6,8,2,3,4,5,0,8,7,6,2,3,4,5,0 };
   
    
@@ -170,14 +166,14 @@ static int unpack(byte *src, byte *dst, int len) {
 #if 0
     u = (*c++); u |= (*c++)<<8;		/* checksum */
 #endif
-    u = *(UWORD*)c; c+=2;
+    u = *(uint16*)c; c+=2;
     cp = *c++; cp <<= 8; cp |= *c++;		/* packed */
     cup1 = *c++; cup1 <<= 8; cup1 |= *c++;	/* unpacked */
 
     src = c+2;
     bc1=c[cp+2];bc2=c[cp+1];bc3=c[cp];
     c[cp+2]=0;c[cp+1]=0;c[cp]=0;
-	lchk=xchecksum((ULONG*)(c),(cp+3)>>2);
+	lchk=xchecksum((uint32*)(c),(cp+3)>>2);
     c[cp+2]=bc1;c[cp+1]=bc2;c[cp]=bc3;
 	/*fprintf(stderr,"c=%x type=%02x chk=%04x cp=%04x cup1=%04x chk=%04x\n",c-osrc-8,type,u,cp,cup1,lchk);*/
 	if (lchk != u) {
