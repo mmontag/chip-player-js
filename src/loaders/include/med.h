@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med.h,v 1.2 2007-08-06 02:13:19 cmatsuoka Exp $
+ * $Id: med.h,v 1.3 2007-08-06 12:57:08 cmatsuoka Exp $
  */
 
 #include "xmpi.h"
@@ -238,6 +238,10 @@ struct MMDMIDICmd3x {
     UWORD *ctrlr_numbers;		/* controller numbers */
 };                                             
 
+
+struct MMDInstrInfo {
+    UBYTE name[40];
+};
 
 struct MMD0exp {
     struct MMD0 *nextmod;		/* pointer to the next module */

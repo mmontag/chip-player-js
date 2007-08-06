@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.2 2007-08-06 02:34:55 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.3 2007-08-06 12:57:07 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,7 +31,7 @@ static char *inst_type[] = {
 
 static int bpmon, bpmlen;
 
-static void xlat_fx(uint8 * fxt, uint8 * fxp)
+static void xlat_fx(uint8 *fxt, uint8 *fxp)
 {
 	switch (*fxt) {
 	case 0x05:		/* Old vibrato */
@@ -88,13 +88,14 @@ static void xlat_fx(uint8 * fxt, uint8 * fxp)
 	}
 }
 
-int mmd1_load(FILE * f)
+int mmd1_load(FILE *f)
 {
 	int i, j, k;
 	struct MMD0 header;
 	struct MMD0song song;
 	struct MMD1Block block;
 	struct InstrHdr instr;
+	struct InstrExt exp_smp;
 	//struct SynthInstr *synth;
 	//struct SynthWF *synthwf;
 	struct MMD0exp expdata;
@@ -109,6 +110,7 @@ int mmd1_load(FILE * f)
 	int expdata_offset;
 	int expsmp_offset;
 	int songname_offset;
+	int iinfo_offset;
 
 	LOAD_INIT();
 
@@ -179,7 +181,7 @@ int mmd1_load(FILE * f)
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
 	xmp_ctl->fetch |= bpmon ? 0 : XMP_CTL_MEDBPM;
 
-#warning FIXME: med tempos are incorrectly handled
+	/* FIXME: med tempos are incorrectly handled */
 	xxh->tpo = song.tempo2;
 	xxh->bpm = bpmon ? song.deftempo * bpmlen / 4 : song.deftempo;
 	if (!bpmon && xxh->bpm <= 10)
@@ -190,6 +192,7 @@ int mmd1_load(FILE * f)
 	xxh->rst = 0;
 	xxh->chn = 0;
 	memcpy(xxo, song.playseq, xxh->len);
+	xmp_ctl->name[0] = 0;
 
 	/*
 	 * expdata
@@ -200,15 +203,16 @@ int mmd1_load(FILE * f)
 		read32b(f);
 		expsmp_offset = read32b(f);
 		_D(_D_INFO "expsmp_offset = 0x%08x", expsmp_offset);
-		read16b(f);
-		read16b(f);
-		read8(f);
+		expdata.s_ext_entries = read16b(f);
+		expdata.s_ext_entrsz = read16b(f);
 		read32b(f);
 		read32b(f);
-		read16b(f);
-		read16b(f);
+		iinfo_offset = read32b(f);
+		_D(_D_INFO "iinfo_offset = 0x%08x", iinfo_offset);
+		expdata.i_ext_entries = read16b(f);
+		expdata.i_ext_entrsz = read16b(f);
 		read32b(f);
-		read16b(f);
+		read32b(f);
 		read32b(f);
 		read32b(f);
 		songname_offset = read32b(f);
@@ -216,15 +220,16 @@ int mmd1_load(FILE * f)
 		expdata.songnamelen = read32b(f);
 		fseek(f, songname_offset, SEEK_SET);
 		_D(_D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
-		for (i = 0; i < expdata.songnamelen && i < XMP_DEF_NAMESIZE;
-		     i++)
+		for (i = 0; i < expdata.songnamelen; i++) {
+			if (i >= XMP_DEF_NAMESIZE)
+				break;
 			xmp_ctl->name[i] = read8(f);
+		}
 	}
 
 	/*
 	 * Quickly scan patterns to check the number of channels
 	 */
-
 	_D(_D_WARN "find number of channels");
 
 	for (i = 0; i < xxh->pat; i++) {
@@ -268,9 +273,7 @@ int mmd1_load(FILE * f)
 	/*
 	 * Read and convert patterns
 	 */
-
 	_D(_D_WARN "read patterns");
-
 	PATTERN_INIT();
 
 	for (i = 0; i < xxh->pat; i++) {
@@ -341,19 +344,19 @@ int mmd1_load(FILE * f)
 	if (V(0))
 		report("\n");
 
-	_D(_D_WARN "read instruments");
-	INSTRUMENT_INIT();
-
 	/*
 	 * Read and convert instruments and samples
 	 */
+	_D(_D_WARN "read instruments");
+	INSTRUMENT_INIT();
 
 	if (V(0))
 		report("Instruments    : %d ", xxh->ins);
 
-	if (V(1))
+	if (V(1)) {
 		report("\n     Instrument name                          "
 		       "Typ Len   LBeg  LEnd  Vl Xp Ft");
+	}
 
 	for (smp_idx = i = 0; i < xxh->ins; i++) {
 		int smpl_offset;
@@ -367,29 +370,32 @@ int mmd1_load(FILE * f)
 		instr.length = read32b(f);
 		instr.type = read16b(f);
 
+		if (V(1)) {
+			char name[40] = "";
+			if (expdata_offset && i < expdata.i_ext_entries) {
+				fseek(f, iinfo_offset +
+					i * expdata.i_ext_entrsz, SEEK_SET);
+				fread(name, 40, 1, f);
+			}
+
+			report("\n[%2x] %-40.40s %s ", i, name,
+				instr.type + 2 <= NUM_INST_TYPES ?
+					inst_type[instr.type + 2] : "???");
+		}
+
+		if (expdata_offset && i < expdata.s_ext_entries) {
+			fseek(f, expsmp_offset + i * expdata.s_ext_entrsz,
+							SEEK_SET);
+			exp_smp.hold = read8(f);
+			exp_smp.decay = read8(f);
+			exp_smp.suppress_midi_off = read8(f);
+			exp_smp.finetune = read8(f);
+
+		}
+
 		if (instr.type != 0)
 			continue;
-		if (V(1)) {
-			report("\n[%2x] ", i);
-#if 0
-			report("%-40.40s ",
-			       expdata
-			       && expdata.iinfo ? mmd +
-			       (uint32) expdata->iinfo +
-			       expdata.i_ext_entrsz * i : "");
-			report("%s ",
-			       instr.type + 2 <=
-			       NUM_INST_TYPES ? inst_type[instr.type +
-							  2] : "???");
-#endif
-		}
-#if 0
-		if (expdata)
-			instrext =
-			    (struct InstrExt *)(mmd +
-						(uint32) expdata->exp_smp);
 
-#endif
 		/* instr type is sample */
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 		xxih[i].nsm = 1;
@@ -397,9 +403,7 @@ int mmd1_load(FILE * f)
 		xxi[i][0].vol = song.sample[i].svol;
 		xxi[i][0].xpo = song.sample[i].strans;
 		xxi[i][0].sid = smp_idx;
-#if 0
-		xxi[i][0].fin = expdata ? instrext->finetune << 4 : 0;
-#endif
+		xxi[i][0].fin = expdata_offset ? exp_smp.finetune << 4 : 0;
 
 		xxs[smp_idx].len = instr.length;
 		xxs[smp_idx].lps = 2 * song.sample[i].rep;
@@ -414,6 +418,7 @@ int mmd1_load(FILE * f)
 			       (uint8) xxi[i][0].xpo, xxi[i][0].fin >> 4);
 		}
 
+		fseek(f, smpl_offset + 6, SEEK_SET);
 		xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate, 0,
 				  &xxs[smp_idx], NULL);
 
