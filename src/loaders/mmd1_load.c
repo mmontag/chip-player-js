@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.1 2007-08-06 02:13:19 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.2 2007-08-06 02:34:55 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -127,13 +127,13 @@ int mmd1_load(FILE * f)
 	read16b(f);
 	blockarr_offset = read32b(f);
 	_D(_D_INFO "blockarr_offset = 0x%08x", blockarr_offset);
-	read8(f);
+	read32b(f);
 	smplarr_offset = read32b(f);
 	_D(_D_INFO "smplarr_offset = 0x%08x", smplarr_offset);
-	read32l(f);
+	read32b(f);
 	expdata_offset = read32b(f);
 	_D(_D_INFO "expdata_offset = 0x%08x", expdata_offset);
-	read32l(f);
+	read32b(f);
 	header.pstate = read16b(f);
 	header.pblock = read16b(f);
 	header.pline = read16b(f);
@@ -220,56 +220,10 @@ int mmd1_load(FILE * f)
 		     i++)
 			xmp_ctl->name[i] = read8(f);
 	}
-#if 0
+
 	/*
-	 * load instruments
+	 * Quickly scan patterns to check the number of channels
 	 */
-	for (i = 0; i < song.numsamples; i++) {
-		int smpl_offset;
-		fseek(f, smplarr_offset + i * 4, SEEK_SET);
-		smpl_offset = read32b(f);
-		if (!smpl_offset)
-			continue;
-		fseek(f, smpl_offset, SEEK_SET);
-		instr.length = read32b(f);
-		instr.type = read16b(f);
-		if (instr.type != 0)
-			continue;
-	}
-#endif
-
-#if 0
-	/* We can have more samples than instruments -- each synth instrument
-	 * can have up to 64 samples!
-	 */
-	for (i = 0; i < xxh->ins; i++) {
-		bytecopy(&instr, mmd + (uint32) header->smplarr + i * 4, 4);
-		B_ENDIAN32((uint32) instr);
-		if (!instr)
-			continue;
-		instr = (struct InstrHdr *)(mmd + (uint32) instr);
-		synth = (struct SynthInstr *)instr;
-
-		switch (instr->type) {
-		case -1:	/* Synth */
-			xxh->smp += synth->wforms;
-			break;
-		case -2:	/* Hybrid */
-		case 0:	/* Sample */
-			xxh->smp++;
-			break;
-		case 1:	/* IFF5OCT */
-		case 2:	/* IFF3OCT */
-		case 3:	/* IFF2OCT */
-		case 4:	/* IFF4OCT */
-		case 5:	/* IFF6OCT */
-		case 6:	/* IFF7OCT */
-			break;
-		}
-	}
-#endif
-
-	/* Quickly scan patterns to check the number of channels */
 
 	_D(_D_WARN "find number of channels");
 
@@ -278,7 +232,7 @@ int mmd1_load(FILE * f)
 
 		fseek(f, blockarr_offset + i * 4, SEEK_SET);
 		block_offset = read32b(f);
-		_D(_D_INFO "block %d offset = 0x%08x", i, block_offset);
+		_D(_D_INFO "block %d block_offset = 0x%08x", i, block_offset);
 		if (block_offset == 0)
 			continue;
 		fseek(f, block_offset, SEEK_SET);
@@ -311,7 +265,9 @@ int mmd1_load(FILE * f)
 		report("Stored patterns: %d ", xxh->pat);
 	}
 
-	/* Read and convert patterns */
+	/*
+	 * Read and convert patterns
+	 */
 
 	_D(_D_WARN "read patterns");
 
@@ -388,12 +344,9 @@ int mmd1_load(FILE * f)
 	_D(_D_WARN "read instruments");
 	INSTRUMENT_INIT();
 
-#if 0
-	med_vol_table = calloc(sizeof(uint8 *), xxh->ins);
-	med_wav_table = calloc(sizeof(uint8 *), xxh->ins);
-#endif
-
-	/* Read and convert instruments and samples */
+	/*
+	 * Read and convert instruments and samples
+	 */
 
 	if (V(0))
 		report("Instruments    : %d ", xxh->ins);
@@ -406,7 +359,8 @@ int mmd1_load(FILE * f)
 		int smpl_offset;
 		fseek(f, smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = read32b(f);
-		if (!smpl_offset)
+		//_D(_D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
+		if (smpl_offset == 0)
 			continue;
 
 		fseek(f, smpl_offset, SEEK_SET);
