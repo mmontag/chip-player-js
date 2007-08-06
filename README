@@ -1,4 +1,4 @@
-$Id: README,v 1.12 2007-08-04 23:06:55 cmatsuoka Exp $
+$Id: README,v 1.13 2007-08-06 18:25:27 cmatsuoka Exp $
 
 
 
@@ -14,13 +14,10 @@ $Id: README,v 1.12 2007-08-04 23:06:55 cmatsuoka Exp $
 
 OVERVIEW
 
-This is the Extended Module Player, an open source module player for UNIX
-distributed under the terms of the GNU GPL. xmp currently runs on several
-platforms, including Linux with ALSA and OSS, SunOS, NetBSD, HP-UX, OS/2,
-FreeBSD and Solaris. On PC class machines with GUS or AWE cards xmp takes
-advantage of the  OSS sequencer to play modules  with virtually no system
-load.  Using software mixing, xmp plays at rates up to 48 kHz with 32 bit
-linear interpolation.
+This is the Extended Module Player, a module player for Unix-like systems
+that runs on Linux with ALSA and OSS, SunOS, NetBSD, HP-UX, OS/2, FreeBSD
+and Solaris. Xmp plays over 60 mainstream and obscure module formats from
+Amiga and PC.
 
 Modules  compressed  with  gzip, bzip2,  compress, MO3, MMCMP, Powerpack,
 SQSH  or ADPCM samples (used in MDZ files) are handled transparently, and
@@ -28,14 +25,7 @@ the first  file in a zip or lha archive will be played (the  zip unpacker
 skips files with non-module suffixes like .com, .exe, .diz or .txt common
 in DOS archives). Some loaders  (mostly packed mods) check the file  size
 before playing so they will not recognize modules inside a multi-file zip
-or lha archive. To read MO3 files, you  must have unmo3 installed, get it
-from http://www.un4seen.com/.
-
-Impulse Tracker filter envelopes and  Imago Orpheus chorus/reverb effects
-are now supported using AWE cards with the OSS sequencer.  Many thanks to
-Davi Lima for donating an AWE card!
-
-The latest version and bug tracker are available at http://xmp.sf.net.
+or lha archive. To read MO3 files, you  must have unmo3 installed.
 
 
 SUPPORTED FORMATS
@@ -155,7 +145,7 @@ follwing devices are supported:
   Name		Description
 
   aix		AIX audio library (not tested, possibly broken)
-  alsa_mix	Advanced Linux Sound Architecture (ALSA) PCM
+  alsa		Advanced Linux Sound Architecture (ALSA) PCM
   arts		aRts (KDE sound server)
   bsd		BSD generic audio device
   dart		OS/2 Direct Audio Real Time (DART)
@@ -172,10 +162,7 @@ follwing devices are supported:
   solaris	Solaris audio device (linear and ulaw)
   win32		Win32 sound (experimental -- not tested)
   xmms		XMMS sound drivers (using the XMMS plugin)
-
-The drivers can be statically built into the player or dinamically linked
-if the OS supports dlopen.  Modular drivers are  useful to reduce package
-dependencies in vendor-bundled packages.
+  wav		WAV file writer
 
 
 INTERACTIVE COMMANDS
@@ -229,5 +216,4 @@ original powerpacker decruncher code, copyright (c) Nico Francois.
 Original PowerPacker algorithm by Nico Francois.  THIS SOURCE-CODE CAN BE
 USED FOR NON COMMERCIAL  PURPOSES ONLY,  IN PPDECRUNCH OR TRACKER. PLEASE
 CONTACT Nico Francois (nico.francois@scala.com) FOR ANY OTHER USES.
-
 
