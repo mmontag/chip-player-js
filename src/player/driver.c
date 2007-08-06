@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.6 2007-08-05 19:57:09 cmatsuoka Exp $
+ * $Id: driver.c,v 1.7 2007-08-06 16:46:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -52,7 +52,6 @@ void (*_driver_callback)(void *, int) = NULL;
 #ifndef XMMS_PLUGIN
 
 extern struct xmp_drv_info drv_file;
-
 extern struct xmp_drv_info drv_wav;
 
 #ifdef DRIVER_SOLARIS
@@ -185,7 +184,9 @@ static int drv_select (struct xmp_control *ctl)
 		    break;
     } else {
 	tmp = XMP_ERR_DSPEC;
-	for (drv = drv_array->next; drv; drv = drv->next) {
+	drv = drv_array->next;	/* skip file */
+	drv = drv->next;	/* skip wav */
+	for (; drv; drv = drv->next) {
 	    if (ctl->verbose > 2)
 		report ("Probing %s... ", drv->description);
 	    if (drv->init (ctl) == XMP_OK) {
