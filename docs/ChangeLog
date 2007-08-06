@@ -1,10 +1,10 @@
-$Id: ChangeLog,v 1.24 2007-08-06 02:51:00 cmatsuoka Exp $
+$Id: ChangeLog,v 1.25 2007-08-06 20:39:25 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.2.0 ()
-	- added portable, 64bit safe MMD1 MED loader
+	- added portable, 64bit safe MMD0/1/2/3 MED loader
 	- enabled WAV writer
 	- removed broken shared lib generation
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
