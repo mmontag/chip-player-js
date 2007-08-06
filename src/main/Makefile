@@ -1,5 +1,5 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.6 2005-02-26 01:12:35 cmatsuoka Exp $
+# $Id: Makefile,v 1.7 2007-08-06 16:07:27 cmatsuoka Exp $
 
 XCFLAGS	= -I../include $(X_INC)
 OBJS	= getopt.o getopt1.o options.o
@@ -24,10 +24,10 @@ bins: $(BINS)
 dyndrv:
 	make -C ../../lib shared
 
-xmp: $(OBJS) main.o ../../lib/libxmp.a $(DYNDRV)
+xmp: $(OBJS) main.o ../../lib/libxmp.a
 	$(LD) $(LDFLAGS) $(OBJS) main.o $(LIBS)
 
-xxmp: $(OBJS) xmain.o $(X11OBJS) ../../lib/libxmp.a $(DYNDRV)
+xxmp: $(OBJS) xmain.o $(X11OBJS) ../../lib/libxmp.a
 	$(LD) $(LDFLAGS) $(OBJS) $(X11OBJS) xmain.o $(X_LIB) $(X11LIBS) $(LIBS)
 
 xmain.o: main.c xpanel.h

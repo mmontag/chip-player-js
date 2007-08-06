@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.12 2007-08-04 23:51:48 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.13 2007-08-06 16:07:27 cmatsuoka Exp $
 
 VERSION	= 2.2.0
 DATE	= Sat Aug  4 19:53:02 BRT 2007
@@ -37,7 +37,6 @@ PLATFORM= @PLATFORM@
 DRIVERS	= @DRIVERS@
 MIXER	= @MIXER@
 PLUGIN	= @PLUGIN@
-DYNDRV	= @DYNDRV@
 
 X_INC	= @X_CFLAGS@
 X_LIB	= @X_LIBS@ @X_EXTRA_LIBS@

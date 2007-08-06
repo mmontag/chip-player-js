@@ -1,5 +1,5 @@
 # Extended Module Player src/drivers/Makefile
-# $Id: Makefile,v 1.4 2005-02-24 12:53:31 cmatsuoka Exp $
+# $Id: Makefile,v 1.5 2007-08-06 16:07:27 cmatsuoka Exp $
 
 XCFLAGS	= -I../include
 OBJS	= file.o callback.o
@@ -17,13 +17,7 @@ all: $(LIB) library
 
 include ../../Makefile.rules
 
-ifeq ($(strip $(DYNDRV)),)
 library: $(LIB)($(DRIVERS))
-else
-library: $(DRIVERS:.o=.so)
-	[ -d $(DRVDIR) ] || mkdir -p $(DRVDIR)
-	$(INSTALL) -m644 $+ $(DRVDIR)
-endif
 
 $(DRV:.c=.o): Makefile
 
