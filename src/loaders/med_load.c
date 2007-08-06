@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med_load.c,v 1.1 2001-06-02 20:26:35 cmatsuoka Exp $
+ * $Id: med_load.c,v 1.2 2007-08-06 02:51:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -100,21 +100,26 @@ int med_load (FILE *f)
 {
     int i, j, k;
     char *mmd, m[4];
-    struct MMD0 *header;
-    struct MMD0song *song;
-    struct MMD2song *song2;
+    struct MMD0 header;
+    //struct MMD0song song;
+    struct MMD2song song;
     struct MMD0Block *block0;
     struct MMD1Block *block1;
     struct PlaySeq **playseq;
-    struct InstrHdr *instr;
+    struct InstrHdr instr;
     struct SynthInstr *synth;
     struct SynthWF *synthwf;
-    struct MMD0exp *expdata;
+    struct MMD0exp expdata;
     struct InstrExt *instrext = NULL;
     struct xxm_event *event;
     int ver = 0;
     int smp_idx = 0;
     uint8 *e;
+    int song_offset;
+    int blockarr_offset;
+    int smplarr_offset;
+    int expdata_offset;
+    int playseqtable_offset;
 
     LOAD_INIT ();
 
@@ -131,71 +136,91 @@ int med_load (FILE *f)
 	return -1;
     }
 
-    mmd = calloc (1, xmp_ctl->size);
-    fread (mmd, 1, xmp_ctl->size, f);	/* Slurp module to memory */
+    header.modlen = read32b(f);
+    song_offset = read32b(f);
+    header.psecnum = read16b(f);
+    header.pseq = read16b(f);
+    blockarr_offset = read32b(f);
+    read8(f);
+    smplarr_offset = read32b(f);
+    read32l(f);
+    expdata_offset = read32b(f);
+    read32l(f);
+    header.pstate = read16b(f);
+    header.pblock = read16b(f);
+    header.pline = read16b(f);
+    header.pseqnum = read16b(f);
+    header.actplayline = read16b(f);
+    header.counter = read8(f);
+    header.extra_songs = read8(f);
 
-    header = (struct MMD0 *)mmd;
-
-    B_ENDIAN32 ((uint32)header->modlen);
-    B_ENDIAN32 ((uint32)header->song);
-    B_ENDIAN32 ((uint32)header->blockarr);
-    B_ENDIAN32 ((uint32)header->smplarr);
-    B_ENDIAN32 ((uint32)header->expdata);
-
-    song = (struct MMD0song *)(mmd + (uint32)header->song);
-    song2 = (struct MMD2song *)(mmd + (uint32)header->song);
-    expdata = header->expdata ? (struct MMD0exp *)(mmd +
-	(uint32)header->expdata) : NULL;
-
-    if (expdata) {
-	B_ENDIAN32 ((uint32)expdata->nextmod);
-	B_ENDIAN32 ((uint32)expdata->exp_smp);
-	B_ENDIAN16 ((uint16)expdata->s_ext_entries);
-	B_ENDIAN16 ((uint16)expdata->s_ext_entrsz);
-	B_ENDIAN32 ((uint32)expdata->annotxt);
-	B_ENDIAN32 ((uint32)expdata->annolen);
-	B_ENDIAN32 ((uint32)expdata->iinfo);
-	B_ENDIAN16 ((uint16)expdata->i_ext_entries);
-	B_ENDIAN16 ((uint16)expdata->i_ext_entrsz);
-	B_ENDIAN32 ((uint32)expdata->jumpmask);
-	B_ENDIAN32 ((uint32)expdata->rgbtable);
-	B_ENDIAN32 ((uint32)expdata->n_info);
-	B_ENDIAN32 ((uint32)expdata->songname);
-	B_ENDIAN32 ((uint32)expdata->songnamelen);
-	B_ENDIAN32 ((uint32)expdata->dumps);
+    /*
+     * song structure
+     */
+    fseek(f, song_offset, SEEK_SET);
+    for (i = 0; i < 64; i++) {
+	song.sample[i].rep = read16b(f);
+	song.sample[i].replen = read16b(f);
+	song.sample[i].midich = read8(f);
+	song.sample[i].midipreset = read8(f);
+	song.sample[i].midisvol = read8(f);
+	song.sample[i].strans = read8(f);
     }
+    song.numblocks = read16b(f);
+    song.songlen = read16b(f);
+    playseqtable_offset = read32(f);
+    song.deftempo = read16b(f);
+    song.playtransp = read8(f);
+    song.flags = read8(f);
+    song.flags2 = read8(f);
+    song.tempo2 = read8(f);
+    for (i = 0; i < 16; i++)
+	song.trkvol[i] = read8(f);
+    song.mastervol = read8(f);
+    song.numsamples = read8(f);
 
-    for (i = 0; i < 63; i++) {
-	B_ENDIAN16 (song->sample[i].rep);
-	B_ENDIAN16 (song->sample[i].replen);
-    }
-
-    B_ENDIAN16 (song->numblocks);
-    B_ENDIAN16 (song->songlen);
-    B_ENDIAN16 (song->deftempo);
-
+    /*
+     * convert header
+     */
     xmp_ctl->c4rate = C4_NTSC_RATE;
-    xmp_ctl->fetch |= song->flags & FLAG_STSLIDE ? 0 : XMP_CTL_VSALL;
-    bpmon = song->flags2 & FLAG2_BPM;
-    bpmlen = 1 + (song->flags2 & FLAG2_BMASK);
+    xmp_ctl->fetch |= song.flags & FLAG_STSLIDE ? 0 : XMP_CTL_VSALL;
+    bpmon = song.flags2 & FLAG2_BPM;
+    bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
     xmp_ctl->fetch |= bpmon ? 0 : XMP_CTL_MEDBPM;
 
 #warning FIXME: med tempos are incorrectly handled
-    xxh->tpo = song->tempo2;
-    xxh->bpm = bpmon ? song->deftempo * bpmlen / 4 : song->deftempo;
+    xxh->tpo = song.tempo2;
+    xxh->bpm = bpmon ? song.deftempo * bpmlen / 4 : song.deftempo;
     if (!bpmon && xxh->bpm <= 10)
 	xxh->bpm = xxh->bpm * 33 / 6;
-    xxh->pat = song->numblocks;
-    xxh->ins = song->numsamples;
+    xxh->pat = song.numblocks;
+    xxh->ins = song.numsamples;
     if (ver < 2)
-	xxh->len = song->songlen;
+	xxh->len = song.songlen;
     xxh->rst = 0;
     xxh->chn = 0;
 
+    /*
+     * load instruments
+     */
+    for (i = 0; i < song.numsamples; i++) {
+	int smpl_offset;
+        fseek(f, smplarr_offset + i * 4, SEEK_SET);
+	smpl_offset = read32b(f);
+	if (!smpl_offset)
+	    continue;
+	fseek(f, smpl_offset, SEEK_SET);
+	instr.length = read32b(f);
+	instr.type = read16b(f);
+	if (instr.type != 0)
+	    continue;
+    }
+    
+
+#if 0
     /* We can have more samples than instruments -- each synth instrument
      * can have up to 64 samples!
      */
-
     for (i = 0; i < xxh->ins; i++) {
 	bytecopy(&instr, mmd + (uint32)header->smplarr + i * 4, 4);
 	B_ENDIAN32 ((uint32)instr);
@@ -221,11 +246,15 @@ int med_load (FILE *f)
 	    break;
 	}
     }
+#endif
 
+    /*
+     * sequence
+     */
     if (ver < 2) {
-	memcpy (xxo, song->playseq, xxh->len);
+	memcpy(xxo, song.playseq, xxh->len);
     } else {
-	B_ENDIAN32 ((uint32)song2->playseqtable);
+
 	playseq = (struct PlaySeq **)(mmd + (uint32)song2->playseqtable);
 	B_ENDIAN32 ((uint32)playseq[0]);
 	playseq[0] = (struct PlaySeq *)(mmd + (uint32)playseq[0]);

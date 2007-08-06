@@ -1,9 +1,9 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.2 2001-11-30 11:03:21 cmatsuoka Exp $
+# $Id: Makefile,v 1.3 2007-08-06 02:51:00 cmatsuoka Exp $
 
 XCFLAGS	= -I../include -DLIBDIR='"$(LIB_DIR)"'
 OBJS	= convert.o driver.o formats.o misc.o period.o player.o \
-	  readrc.o scan.o ulaw.o med_synth.o cruncher.o filter.o \
+	  readrc.o scan.o ulaw.o cruncher.o med_synth.o filter.o \
 	  fmopl.o synth.o
 XOBJS	= version.o $(MIXER)
 XDEPS	=
