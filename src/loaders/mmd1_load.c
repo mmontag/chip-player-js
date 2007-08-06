@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.3 2007-08-06 12:57:07 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.4 2007-08-06 16:24:56 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -96,10 +96,7 @@ int mmd1_load(FILE *f)
 	struct MMD1Block block;
 	struct InstrHdr instr;
 	struct InstrExt exp_smp;
-	//struct SynthInstr *synth;
-	//struct SynthWF *synthwf;
 	struct MMD0exp expdata;
-	//struct InstrExt *instrext = NULL;
 	struct xxm_event *event;
 	int ver = 0;
 	int smp_idx = 0;
@@ -198,6 +195,12 @@ int mmd1_load(FILE *f)
 	 * expdata
 	 */
 	_D(_D_WARN "load expdata");
+	expdata.s_ext_entries = 0;
+	expdata.s_ext_entrsz = 0;
+	expdata.i_ext_entries = 0;
+	expdata.i_ext_entrsz = 0;
+	expsmp_offset = 0;
+	iinfo_offset = 0;
 	if (expdata_offset) {
 		fseek(f, expdata_offset, SEEK_SET);
 		read32b(f);
@@ -383,6 +386,7 @@ int mmd1_load(FILE *f)
 					inst_type[instr.type + 2] : "???");
 		}
 
+		exp_smp.finetune = 0;
 		if (expdata_offset && i < expdata.s_ext_entries) {
 			fseek(f, expsmp_offset + i * expdata.s_ext_entrsz,
 							SEEK_SET);
@@ -403,7 +407,7 @@ int mmd1_load(FILE *f)
 		xxi[i][0].vol = song.sample[i].svol;
 		xxi[i][0].xpo = song.sample[i].strans;
 		xxi[i][0].sid = smp_idx;
-		xxi[i][0].fin = expdata_offset ? exp_smp.finetune << 4 : 0;
+		xxi[i][0].fin = exp_smp.finetune << 4;
 
 		xxs[smp_idx].len = instr.length;
 		xxs[smp_idx].lps = 2 * song.sample[i].rep;
