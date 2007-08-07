@@ -1,4 +1,4 @@
-$Id: README,v 1.14 2007-08-06 20:39:25 cmatsuoka Exp $
+$Id: README,v 1.15 2007-08-07 01:42:09 cmatsuoka Exp $
 
 
 
@@ -30,7 +30,7 @@ or lha archive. To read MO3 files, you  must have unmo3 installed.
 
 SUPPORTED FORMATS
 
-xmp 2.0 tries to  accurately  emulate Protracker, Fast Tracker II, Scream
+xmp 2.2 tries to  accurately  emulate Protracker, Fast Tracker II, Scream
 Tracker 3 and Impulse Tracker event handling algorithms to play M.K., XM,
 S3M and IT modules. By default, Sound/Noise/Protracker modules are played
 in  Protracker 3.15 style  and  multichannel mutations in Fast Tracker II
