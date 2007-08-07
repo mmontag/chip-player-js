@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rtm_load.c,v 1.4 2007-08-07 16:17:38 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.5 2007-08-07 21:29:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,6 +13,7 @@
 #endif
 
 #include "load.h"
+#include "period.h"
 #include "rtm.h"
 
 #define MAX_SAMP 1024
@@ -122,7 +123,7 @@ int rtm_load(FILE *f)
 					event = &EVENT(i, j, r);
 				}
 				if (c & 0x02)		/* read note */
-					event->note = read8(f) - 12;
+					event->note = read8(f);
 				if (c & 0x04)		/* read instrument */
 					event->ins = read8(f);
 				if (c & 0x08)		/* read effect */
@@ -167,7 +168,7 @@ int rtm_load(FILE *f)
 
 		if (oh.headerSize == 0) {
 			if (V(1) && strlen((char *)xxih[i].name)) {
-				report("[%2X] %-30.30s %2d ", i, xxih[i].name,
+				report("[%2X] %-26.26s %2d ", i, xxih[i].name,
 								xxih[i].nsm);
 			}
 			ri.nsample = 0;
@@ -212,14 +213,17 @@ int rtm_load(FILE *f)
 		//ri.midiProgram = read8(f);
 		//ri.midiEnable = read8(f);
 
+		xxih[i].nsm = ri.nsample;
 		if (V(1) && (strlen((char *)xxih[i].name) || ri.nsample)) {
-			report("[%2X] %-30.30s %2d ", i, xxih[i].name,
+			report("[%2X] %-26.26s %2d ", i, xxih[i].name,
 							xxih[i].nsm);
 		}
-		xxih[i].nsm = ri.nsample;
 		if (xxih[i].nsm > 16)
 			xxih[i].nsm = 16;
 		xxi[i] = calloc(sizeof (struct xxm_instrument), xxih[i].nsm);
+
+		for (j = 0; j < 96; j++)
+			xxim->ins[j] = ri.table[j + 12];
 
 		/* Envelope */
 		xxih[i].rls = ri.volfade;
@@ -241,8 +245,15 @@ int rtm_load(FILE *f)
 			xxpe[i] = calloc(4, xxih[i].pei.npt);
 		else
 			xxih[i].pei.flg &= ~XXM_ENV_ON;
-		//memcpy(xxae[i], xi.v_env, xxih[i].aei.npt * 4);
-		//memcpy(xxpe[i], xi.p_env, xxih[i].pei.npt * 4);
+
+		for (j = 0; j < xxih[i].aei.npt; j++) {
+			xxae[i][j * 2 + 0] = ri.volumeEnv.point[j].x;
+			xxae[i][j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
+		}
+		for (j = 0; j < xxih[i].pei.npt; j++) {
+			xxpe[i][j * 2 + 0] = ri.panningEnv.point[j].x;
+			xxpe[i][j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
+		}
 
 		/* For each sample */
 		for (j = 0; j < xxih[i].nsm; j++, smpnum++) {
@@ -259,10 +270,12 @@ int rtm_load(FILE *f)
 			rs.basenote = read8(f);
 			rs.panning = read8(f);
 
-			xxi[i][j].vol = rs.basevolume;
-			xxi[i][j].pan = rs.panning;
-			xxi[i][j].xpo = rs.basenote;
-			xxi[i][j].fin = 0;	/* FIXME */
+			c2spd_to_note(rs.basefreq,
+					&xxi[i][0].xpo, &xxi[i][0].fin);
+			xxi[i][j].xpo += 48 - rs.basenote;
+
+			xxi[i][j].vol = rs.defaultvolume * rs.basevolume / 0x40;
+			xxi[i][j].pan = 0x80 + rs.panning * 2;
 			xxi[i][j].vwf = ri.vibflg;
 			xxi[i][j].vde = ri.vibdepth;
 			xxi[i][j].vra = ri.vibrate;
@@ -285,16 +298,16 @@ int rtm_load(FILE *f)
 
 			if ((V(1)) && rs.length) {
 				report ("%s[%1x] %05x%c%05x %05x %c "
-						"V%02x P%02x R%+03d",
-					j ? "\n\t\t\t\t\t" : "\t", j,
+						"V%02x F%+04d P%02x R%+03d",
+					j ? "\n\t\t\t\t    " : " ", j,
 					xxs[xxi[i][j].sid].len,
 					xxs[xxi[i][j].sid].flg & WAVE_16_BITS ? '+' : ' ',
 					xxs[xxi[i][j].sid].lps,
 					xxs[xxi[i][j].sid].lpe,
 					xxs[xxi[i][j].sid].flg & WAVE_BIDIR_LOOP ? 'B' :
 					xxs[xxi[i][j].sid].flg & WAVE_LOOPING ? 'L' : ' ',
-					rs.basevolume, rs.panning & 0x0ff,
-					rs.basenote);
+					xxi[i][j].vol, xxi[i][j].fin,
+					xxi[i][j].pan, xxi[i][j].xpo);
 
 			}
 
