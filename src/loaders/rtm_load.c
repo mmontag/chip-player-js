@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rtm_load.c,v 1.3 2007-08-07 13:27:17 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.4 2007-08-07 16:17:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -65,7 +65,7 @@ int rtm_load(FILE *f)
 	fread(&rh.panning, 32, 1, f);
 	rh.extraDataSize = read32l(f);
 	for (i = 0; i < rh.nposition; i++)
-		xxo[i] = read8(f);
+		xxo[i] = read16l(f);
 	
 	strncpy(xmp_ctl->name, oh.name, 20);
 	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "Real Tracker Module %d.%02d",
