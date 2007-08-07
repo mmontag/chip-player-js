@@ -1,9 +1,10 @@
-$Id: ChangeLog,v 1.25 2007-08-06 20:39:25 cmatsuoka Exp $
+$Id: ChangeLog,v 1.26 2007-08-07 13:27:17 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.2.0 ()
+	- added Real Tracker module loader
 	- added portable, 64bit safe MMD0/1/2/3 MED loader
 	- enabled WAV writer
 	- removed broken shared lib generation

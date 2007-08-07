@@ -53,7 +53,7 @@ struct Envelope {
     BYTE npoint;
     struct EnvelopePoint point[12];
     BYTE sustain;
-    BYTE loop_start;
+    BYTE loopstart;
     BYTE loopend;
     WORD flags;			/* bit 0 : enable envelope,
 				   bit 1 : sustain, bit 2 : loop */
