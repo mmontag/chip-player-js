@@ -1,7 +1,7 @@
-/* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+/* Fasttracker II module loader for xmp
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.4 2006-02-13 16:48:21 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.5 2007-08-08 02:25:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -343,7 +343,7 @@ load_instruments:
 		if (instr_no >= MAX_SAMP)
 		    continue;
 		if ((V (1)) && xsh[j].length)
-		    report ("%s[%1x] %05x%c%05x %05x %c "
+		    report ("%s[%1x] %06x%c%06x %06x %c "
 			"V%02x F%+04d P%02x R%+03d",
 			j ? "\n\t\t\t\t" : "\t", j,
 			xxs[xxi[i][j].sid].len,

@@ -1,7 +1,7 @@
-/* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+/* Protracker module loader for xmp
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.5 2006-02-13 16:48:21 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.6 2007-08-08 02:25:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
  * - Fasttracker II/Take Tracker ?CHN and ??CH
  * - M.K. with ADPCM samples (MDZ)
  * - Mod's Grave M.K. w/ 8 channels (WOW)
- * - Atari Octalyser CD81 (not tested)
+ * - Atari Octalyser CD61 and CD81
  */
 
 #ifdef HAVE_CONFIG_H
@@ -44,6 +44,7 @@ struct {
     { "N.T.", "4 channel MOD", 1, "Noisetracker", 4 },
     { "6CHN", "6 channel MOD", 0, "Fast Tracker", 6 },
     { "8CHN", "8 channel MOD", 0, "Fast Tracker", 8 },
+    { "CD61", "6 channel MOD", 1, "Octalyser", 6 }, /* Atari STe/Falcon */
     { "CD81", "8 channel MOD", 1, "Octalyser", 8 }, /* Atari STe/Falcon */
     { "PWIZ", "Packed module", 1, "converted with ProWizard", 4 },
     { "", 0 }
@@ -127,6 +128,7 @@ static int module_load (FILE *f, int ptdt)
 	}
     }
 
+    /* Prowizard hack */
     if (memcmp(mh.magic, "PWIZ", 4) == 0) {
 	int pos = ftell(f);
 	fseek(f, -30, SEEK_END);
@@ -193,11 +195,34 @@ static int module_load (FILE *f, int ptdt)
 	copy_adjust(xxih[i].name, mh.ins[i].name, 22);
     }
 
-    /* Experimental tracker-detection routine
+    /*
+     * Experimental tracker-detection routine
      */ 
 
     if (detected)
 	goto skip_test;
+
+    /* Test for Flextrax modules
+     *
+     * FlexTrax is a soundtracker for Atari Falcon030 compatible computers.
+     * FlexTrax supports the standard MOD file format (up to eight channels)
+     * for compatibility reasons but also features a new enhanced module
+     * format FLX. The FLX format is an extended version of the standard
+     * MOD file format with support for real-time sound effects like reverb
+     * and delay.
+     */
+
+    if (0x43c + xxh->pat * 4 * xxh->chn * 0x40 + smp_size < xmp_ctl->size) {
+	int pos = ftell(f);
+	fseek(f, 0x43c + xxh->pat * 4 * xxh->chn * 0x40 + smp_size, SEEK_SET);
+	fread(idbuffer, 1, 4, f);
+	fseek(f, pos, SEEK_SET);
+
+	if (!memcmp(idbuffer, "FLEX", 4)) {
+	    tracker = "Flextrax";
+	    goto skip_test;
+	}
+    }
 
     /* Test for Mod's Grave WOW modules
      *

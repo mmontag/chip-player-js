@@ -1,4 +1,4 @@
-$Id: README,v 1.15 2007-08-07 01:42:09 cmatsuoka Exp $
+$Id: README,v 1.16 2007-08-08 02:25:09 cmatsuoka Exp $
 
 
 
@@ -45,6 +45,7 @@ The current version recognizes the following module formats:
 
   CHN	****+	Fast/Taketracker	xCHN, xxCH
   EXO	*** 	Startrekker/ADSC	FLT4/8, EXO4/8 (AM unsupported)
+  FLX	****	Flextrax		M.K., xCHN (no dsp effects)
   M15	****	Soundtracker		2.2, UST
   MOD	****+	Sound/Noise/Protracker	M.K., M!K!, M&K!, N.T., CD81
   WOW	****+	Mod's Grave		M.K.
@@ -104,6 +105,7 @@ The current version recognizes the following module formats:
   MDL	**	Digitrakker		0.0, 1.0, 1.1
   MTM	****+	Multitracker		1.0
   PTM	***	Poly Tracker		2.03
+  RTM	**	Real Tracker		1.00
   S3M	**** 	Scream Tracker 3	3.00, 3.01+
   STM	****+	Scream Tracker 2	!Scream!, BMOD2STM
   STX	****+	ST Music Interface Kit	1.0, 1.1
