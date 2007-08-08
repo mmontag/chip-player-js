@@ -123,6 +123,7 @@ Reused code
 * Olivier Lapicque <olivierl@jps.net>
 - 4-bit ADPCM decruncher
 - MMCMP decruncher
+- DMF sample decompressor
 - IT resonant filters
 
 * Tony Million

@@ -1,7 +1,8 @@
 /* X-Tracker DMF loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
+ * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.2 2007-08-08 00:46:51 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.3 2007-08-08 12:50:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -12,11 +13,127 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
+
 #include "load.h"
 #include "iff.h"
 #include "period.h"
 
 static int ver;
+static uint8 packtype[256];
+
+
+struct hnode {
+	short int left, right;
+	uint8 value;
+};
+
+struct htree {
+	uint8 *ibuf, *ibufmax;
+	uint32 bitbuf;
+	int bitnum;
+	int lastnode, nodecount;
+	struct hnode nodes[256];
+};
+
+
+static uint8 read_bits(struct htree *tree, int nbits)
+{
+	uint8 x = 0, bitv = 1;
+	while (nbits--) {
+		if (tree->bitnum) {
+			tree->bitnum--;
+		} else {
+			tree->bitbuf = (tree->ibuf < tree->ibufmax) ?
+							*(tree->ibuf++) : 0;
+			tree->bitnum = 7;
+		}
+		if (tree->bitbuf & 1) x |= bitv;
+		bitv <<= 1;
+		tree->bitbuf >>= 1;
+	}
+	return x;
+}
+
+/* tree: [8-bit value][12-bit index][12-bit index] = 32-bit */
+static void new_node(struct htree *tree)
+{
+	uint8 isleft, isright;
+	int actnode;
+
+	actnode = tree->nodecount;
+
+	if (actnode > 255)
+		return;
+
+	tree->nodes[actnode].value = read_bits(tree, 7);
+	isleft = read_bits(tree, 1);
+	isright = read_bits(tree, 1);
+	actnode = tree->lastnode;
+
+	if (actnode > 255)
+		return;
+
+	tree->nodecount++;
+	tree->lastnode = tree->nodecount;
+
+	if (isleft) {
+		tree->nodes[actnode].left = tree->lastnode;
+		new_node(tree);
+	} else {
+		tree->nodes[actnode].left = -1;
+	}
+
+	tree->lastnode = tree->nodecount;
+
+	if (isright) {
+		tree->nodes[actnode].right = tree->lastnode;
+		new_node(tree);
+	} else {
+		tree->nodes[actnode].right = -1;
+	}
+}
+
+static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
+{
+	struct htree tree;
+	int i, actnode;
+	uint8 value, sign, delta = 0;
+	
+	memset(&tree, 0, sizeof(tree));
+	tree.ibuf = ibuf;
+	tree.ibufmax = ibufmax;
+	new_node(&tree);
+	value = 0;
+
+	for (i = 0; i < maxlen; i++) {
+		actnode = 0;
+		sign = read_bits(&tree, 1);
+
+		do {
+			if (read_bits(&tree, 1))
+				actnode = tree.nodes[actnode].right;
+			else
+				actnode = tree.nodes[actnode].left;
+			if (actnode > 255) break;
+			delta = tree.nodes[actnode].value;
+			if ((tree.ibuf >= tree.ibufmax) && (!tree.bitnum)) break;
+		} while ((tree.nodes[actnode].left >= 0) &&
+					(tree.nodes[actnode].right >= 0));
+
+		if (sign)
+			delta ^= 0xff;
+		value += delta;
+		psample[i] = (i) ? value : 0;
+	}
+
+	return tree.ibuf - ibuf;
+}
+
+
+/*
+ * IFF chunk handlers
+ */
 
 static void get_sequ(int size, FILE *f)
 {
@@ -120,8 +237,8 @@ static void get_smpi(int size, FILE *f)
 
 	INSTRUMENT_INIT();
 
-	if (V(1))
-		report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
+	if (V(0))
+		report("Instruments    : %d\n", xxh->ins);
 
 	for (i = 0; i < xxh->ins; i++) {
 		int x;
@@ -135,23 +252,24 @@ static void get_smpi(int size, FILE *f)
 		while (x--)
 			read8(f);
 
-
 		xxs[i].len = read32l(f);
 		xxs[i].lps = read32l(f);
 		xxs[i].lpe = read32l(f);
 		c3spd = read16l(f);
-		xxi[i][0].vol = read8(f);
+		xxi[i][0].vol = read8(f) / 4;
 		flag = read8(f);
 		if (ver >= 8)
 			fseek(f, 8, SEEK_CUR);	/* library name */
 		read16l(f);	/* reserved -- specs say 1 byte only*/
 		read32l(f);	/* sampledata crc32 */
 
-		if (V(1) & (strlen((char *)xxih[i].name) || (xxs[i].len > 1))) {
-			report("[%2X] %-30.30s %05x %05x %05x %c %5d V%02x\n",
+		packtype[i] = (flag & 0x0c) >> 2;
+		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
+			report("[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x\n",
 				i, name, xxs[i].len, xxs[i].lps & 0xfffff,
 				xxs[i].lpe & 0xfffff,
 				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				'0' + packtype[i],
 				c3spd, xxi[i][0].vol);
 		}
 	}
@@ -159,6 +277,49 @@ static void get_smpi(int size, FILE *f)
 
 static void get_smpd(int size, FILE *f)
 {
+	int i;
+	int smpsize;
+	uint8 *data, *ibuf;
+
+	if (V(0))
+		report("Stored samples : %d ", xxh->ins);
+
+	for (smpsize = i = 0; i < xxh->smp; i++) {
+		if (xxs[i].len > smpsize)
+			smpsize = xxs[i].len;
+	}
+
+	/* why didn't we mmap this? */
+	data = malloc(smpsize);
+	assert(data != NULL);
+	ibuf = malloc(smpsize);
+	assert(ibuf != NULL);
+
+	for (i = 0; i < xxh->smp; i++) {
+		smpsize = read32l(f);
+		if (smpsize == 0)
+			continue;
+
+		switch (packtype[i]) {
+		case 0:
+			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
+						0, &xxs[xxi[i][0].sid], NULL);
+			break;
+		case 1:
+			fread(ibuf, smpsize, 1, f);
+			unpack(data, ibuf, ibuf + smpsize, xxs[i].len);
+			xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate,
+					XMP_SMP_NOLOAD, &xxs[i], (char *)data);
+			break;
+		default:
+			fseek(f, smpsize, SEEK_CUR);
+		}
+		if (V(0)) report(packtype[i] ? "c" : ".");
+	}
+	if (V(0)) report("\n");
+
+	free(ibuf);
+	free(data);
 }
 
 int dmf_load(FILE *f)
