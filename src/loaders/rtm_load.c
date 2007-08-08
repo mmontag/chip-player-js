@@ -1,7 +1,7 @@
 /* Real Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: rtm_load.c,v 1.6 2007-08-07 22:10:29 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.7 2007-08-08 00:46:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -320,6 +320,8 @@ int rtm_load(FILE *f)
 		if ((V(1)) && (strlen((char *) xxih[i].name) || ri.nsample))
 			report ("\n");
 	}
+	if (xmp_ctl->verbose == 1)
+		report ("\n");
 
 	xxh->smp = smpnum;
 	xxs = realloc (xxs, sizeof (struct xxm_sample) * xxh->smp);

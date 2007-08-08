@@ -35,8 +35,6 @@ which should be really easy to use. The following chunks exist:
 |----------+------------------------------------------------------+-----------|
 | 05h      | Tracker software name                                | 8 Chars   |
 |----------+------------------------------------------------------+-----------|
-| 05h      | Tracker software name                                | 8 Chars   |
-|----------+------------------------------------------------------+-----------|
 | 0dh      | Song name - fill unused chars with 0                 | 30 Chars  |
 |----------+------------------------------------------------------+-----------|
 | 2bh      | Composer name - fill unused chars with 0             | 20 Chars  |
