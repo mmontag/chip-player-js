@@ -27,15 +27,19 @@ Offset	Size	Description			Example
 0008e	1	song length			0x41
 0008f	1	unknown				0x00
 00090	2	unknown				0x00
-00092	16*8	instrument names
+00092	Repeat 16:
+	8	instrument names
 00112	32	unknown
-00132	p*512	pattern data
+00132	Repeat p:
+	512	pattern data
 +p*512	4	size of the sample data		0x00017d91
-+4	16*4	volume for each instrument	0xff000000 ...
++4	Repeat 16:
+	4	volume for each instrument	0xff000000 ...
 +64	4	unknown				0x000000d4
-+4	16*4	size of each sample		0x0000182a ...
-+64	16*4	unknown				0x000045b0 ...
-+64	4	unknown				0x00000001
++4	Repeat 16:
+	4	size of each sample		0x0000182a
+	4	unknown (loop?) 		0x00001bb9
++128	4	unknown				0x00000001
 +4	4	unknown				0xffffffff
 +4	4	unknown				0x00000000
 +4		sample data (unsigned)		0x80 0x80 ...
