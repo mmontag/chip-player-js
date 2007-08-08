@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.1 2007-08-08 19:54:59 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.2 2007-08-08 21:24:34 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -93,17 +93,14 @@ int tcb_load(FILE * f)
 					event = &EVENT (i, k, j);
 	
 					b = read8(f);
-					event->note = b & 0x0f;
-					if (event->note) {
-						event->note += 24;
-						event->note += 12 * (b >> 4);
+					if (b) {
+						event->note = 12 * (b >> 4);
+						event->note += (b & 0xf) + 24;
 					}
 					b = read8(f);
 					event->ins = b >> 4;
-					if (event->ins) {
-						//printf("%02x\n", event->ins);
+					if (event->ins)
 						event->ins += 1;
-					}
 				}
 		
 		}
@@ -133,11 +130,13 @@ int tcb_load(FILE * f)
 
 	read32b(f);
 
-	for (i = 0; i < xxh->ins; i++)
+	for (i = 0; i < xxh->ins; i++) {
 		xxs[i].len = read32b(f);
-
-	for (i = 0; i < xxh->ins; i++)
 		read32b(f);
+	}
+
+	//for (i = 0; i < xxh->ins; i++)
+	//	read32b(f);
 
 	read32b(f);
 	read32b(f);
@@ -166,6 +165,7 @@ int tcb_load(FILE * f)
 	if (V(0))
 		report("Stored samples : %d ", xxh->smp);
 	for (i = 0; i < xxh->ins; i++) {
+//printf("offset sample %d = %x\n", i, ftell(f));
 		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
 				XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
 		if (V(0))
