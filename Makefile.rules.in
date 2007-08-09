@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.13 2007-08-06 16:07:27 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.14 2007-08-09 20:45:57 cmatsuoka Exp $
 
 VERSION	= 2.2.0
-DATE	= Sat Aug  4 19:53:02 BRT 2007
+DATE	= Thu Aug  9 15:32:31 BRT 2007
 
 DEST_DIR =
 prefix	= $(DEST_DIR)@prefix@
@@ -15,7 +15,7 @@ MAN_DIR	= $(DEST_DIR)@mandir@/man1
 CC	= @CC@
 CFLAGS	= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG
 LD	= @CC@
-LDFLAGS	= -o$@ @LDFLAGS@
+LDFLAGS	= -o $@ @LDFLAGS@
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
 

@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.3 2007-08-09 12:11:19 cmatsuoka Exp $
+ * $Id: osx.c,v 1.4 2007-08-09 20:45:57 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,6 +15,8 @@
 
 #include <string.h>
 #include <CoreAudio/CoreAudio.h>
+#include <AudioUnit/AudioUnit.h>
+#include <AudioToolbox/AudioToolbox.h>
 
 #include "xmpi.h"
 #include "driver.h"
@@ -69,10 +71,39 @@ struct xmp_drv_info drv_osx = {
 static AudioUnit au;
 static int paused;
 static uint8 *buffer;
+static int buffer_len;
 static int buf_write_pos;
 static int buf_read_pos;
-static int buf_len;
+static int num_chunks;
 static int chunk_size;
+static int packet_size;
+
+/* stop playing, keep buffers (for pause) */
+static void audio_pause()
+{
+	/* stop callback */
+	AudioOutputUnitStop(au);
+        paused = 1;
+}
+
+/* resume playing, after audio_pause() */
+static void audio_resume()
+{
+        if (paused) {
+                /* start callback */
+                AudioOutputUnitStart(au);
+                paused = 0;
+        }
+}
+
+/* set variables and buffer to initial state */
+static void reset()
+{
+        audio_pause();
+        /* reset ring-buffer state */
+        buf_read_pos = 0;
+        buf_write_pos = 0;
+}
 
 /* return minimum number of free bytes in buffer, value may change between
  * two immediately following calls, and the real number of free bytes
@@ -106,7 +137,7 @@ static int write_buffer(unsigned char *data, int len)
 	if (first_len > len)
 		first_len = len;
 	// till end of buffer
-	memcpy(buffer[buf_write_pos], data, first_len);
+	memcpy(&buffer[buf_write_pos], data, first_len);
 	if (len > first_len) {	// we have to wrap around
 		// remaining part from beginning of buffer
 		memcpy(buffer, &data[first_len], len - first_len);
@@ -126,7 +157,7 @@ static int read_buffer(unsigned char *data, int len)
 	if (first_len > len)
 		first_len = len;
 	// till end of buffer
-	memcpy(data, &buffer[ao->buf_read_pos], first_len);
+	memcpy(data, &buffer[buf_read_pos], first_len);
 	if (len > first_len) {	// we have to wrap around
 		// remaining part from beginning of buffer
 		memcpy(&data[first_len], buffer, len - first_len);
@@ -136,13 +167,13 @@ static int read_buffer(unsigned char *data, int len)
 	return len;
 }
 
-static OSStatus render_proc(void *inRefCon,
+OSStatus render_proc(void *inRefCon,
 		AudioUnitRenderActionFlags *inActionFlags,
 		const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber,
 		UInt32 inNumFrames, AudioBufferList *ioData)
 {
 	int amt = buf_used();
-	int req = (inNumFrames) * ao->packetSize;
+	int req = (inNumFrames) * packet_size;
 
 	if (amt > req)
 		amt = req;
@@ -157,33 +188,6 @@ static OSStatus render_proc(void *inRefCon,
         return noErr;
 }
 
-/* stop playing, keep buffers (for pause) */
-static void audio_pause()
-{
-	/* stop callback */
-	AudioOutputUnitStop(au);
-        paused = 1;
-}
-
-/* resume playing, after audio_pause() */
-static void audio_resume()
-{
-        if (paused) {
-                /* start callback */
-                AudioOutputUnitStart(au);
-                paused = 0;
-        }
-}
-
-/* set variables and buffer to initial state */
-static void reset()
-{
-        audio_pause();
-        /* reset ring-buffer state */
-        buf_read_pos = 0;
-        buf_write_pos = 0;
-}
-
 /*
  * end of CoreAudio helpers
  */
@@ -195,13 +199,13 @@ static int init (struct xmp_control *ctl)
 	Component comp;
 	ComponentDescription cd;
 	AURenderCallbackStruct rc;
-	OSStatus err;
 
 	char *token;
 	char **parm = ctl->parm;
 	int bpf, bpp, fpp;
 
-	bpf = bpp = fpp = 0;
+	bpf = bpp = 0;
+	fpp = 1;
 
 	parm_init();
 	chkparm1("bpf", bpf = atoi(token));
@@ -216,12 +220,15 @@ static int init (struct xmp_control *ctl)
 		ad.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
 	if (~ctl->outfmt & XMP_FMT_BIGEND)
 		ad.mFormatFlags |= kAudioFormatFlagIsBigEndian;
-	ad.mChannelsPerFrame = ctl->outfmy & XMP_FMT_MONO ? 1 : 2;
+	ad.mChannelsPerFrame = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
 	ad.mBitsPerChannel = ctl->resol;
 
 	ad.mBytesPerFrame = bpf;
 	ad.mBytesPerPacket = bpp;
 	ad.mFramesPerPacket = fpp;
+
+        packet_size = ad.mFramesPerPacket * ad.mChannelsPerFrame *
+						(ad.mBitsPerChannel / 8);
 
 	cd.componentType = kAudioUnitType_Output;
 	cd.componentSubType = kAudioUnitSubType_DefaultOutput;
@@ -244,9 +251,9 @@ static int init (struct xmp_control *ctl)
 
         num_chunks = (ctl->freq * bpf + chunk_size - 1) / chunk_size;
         buffer_len = (num_chunks + 1) * chunk_size;
-        ao->buffer = calloc(num_chunks + 1, chunk_size);
+        buffer = calloc(num_chunks + 1, chunk_size);
 
-	rc.inputProc = render_callback;
+	rc.inputProc = render_proc;
 	rc.inputProcRefCon = 0;
 
 	if (AudioUnitSetProperty(au, kAudioUnitProperty_SetRenderCallback,
@@ -264,14 +271,14 @@ static int init (struct xmp_control *ctl)
  */
 static void bufdump(int i)
 {
-	void *b;
+	uint8 *b;
 	int j = 0;
 
 	b = xmp_smix_buffer();
 	while (i) {
         	if ((j = write_buffer(b, i)) > 0) {
 			i -= j;
-			(char *)b += j;
+			b += j;
 		} else
 			break;
 	}

@@ -1,5 +1,5 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.5 2006-02-13 12:50:34 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2007-08-09 20:45:57 cmatsuoka Exp $
 
 XCFLAGS	= -I../include -DLIBDIR='"$(LIB_DIR)"'
 OBJS	= prowiz.o ptktable.o tuning.o \
@@ -12,7 +12,7 @@ OBJS2	= gmc.o hrt.o noiserun.o p40.o p41a.o p50a.o p61a.o pm.o pm01.o \
 DUPES	= qc.o xann.o stim.o
 XOBJS	=
 XDEPS	=
-DFILES	= Makefile $(OBJS:.o=.c) $(OBJS2:.o=.c) $(DUPES:.o=.c)
+DFILES	= Makefile $(OBJS:.o=.c) $(OBJS2:.o=.c) $(DUPES:.o=.c) prowiz.h list.h
 DDIRS	=
 LIB	= ../../lib/libxmp.a
 CFILES	= $(LIB) version.c $(DRIVERS)

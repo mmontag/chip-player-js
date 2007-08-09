@@ -1,11 +1,11 @@
 # Extended Module Player src/drivers/Makefile
-# $Id: Makefile,v 1.5 2007-08-06 16:07:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2007-08-09 20:45:57 cmatsuoka Exp $
 
 XCFLAGS	= -I../include
 OBJS	= file.o callback.o
 DRV	= file.c oss_mix.c hpux.c bsd.c solaris.c oss_seq.c alsa.c alsa05.c \
 	  esd.c sgi.c os2_dart.c netbsd.c openbsd.c aix.c nas.c arts.c qnx.c \
-	  win32.c callback.c wav.c
+	  win32.c callback.c wav.c osx.c
 DFILES	= Makefile $(DRV) debug.c
 DDIRS	=
 LIB	= ../../lib/libxmp.a
