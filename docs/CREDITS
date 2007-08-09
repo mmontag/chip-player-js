@@ -138,6 +138,9 @@ Reused code
 * Tatsuyuki Satoh
 - YM3812 emulator
 
+* Timothy J. Wood
+- OSX CoreAudio helpers from libao
+
 
 Other contributors
 

@@ -1,11 +1,12 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ * CoreAudio helpers (C) 2000 Timothy J. Wood
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.2 2007-08-05 03:02:01 cmatsuoka Exp $
+ * $Id: osx.c,v 1.3 2007-08-09 12:11:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,7 +20,6 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int audio_fd;
 
 static int init(struct xmp_control *);
 static void bufdump(int);
@@ -34,9 +34,9 @@ static char *help[] = {
 	NULL
 };
 
-struct xmp_drv_info drv_bsd = {
+struct xmp_drv_info drv_osx = {
 	"osx",			/* driver ID */
-	"OSX audio",		/* driver description */
+	"OSX CoreAudio",	/* driver description */
 	help,			/* help */
 	init,			/* init */
 	shutdown,		/* shutdown */
@@ -62,13 +62,139 @@ struct xmp_drv_info drv_bsd = {
 };
 
 
+/*
+ * CoreAudio helpers from mplayer/libao
+ */
+
+static AudioUnit au;
+static int paused;
+static uint8 *buffer;
+static int buf_write_pos;
+static int buf_read_pos;
+static int buf_len;
+static int chunk_size;
+
+/* return minimum number of free bytes in buffer, value may change between
+ * two immediately following calls, and the real number of free bytes
+ * might actually be larger!  */
+static int buf_free()
+{
+	int free = buf_read_pos - buf_write_pos - chunk_size;
+	if (free < 0)
+		free += buffer_len;
+	return free;
+}
+
+/* return minimum number of buffered bytes, value may change between
+ * two immediately following calls, and the real number of buffered bytes
+ * might actually be larger! */
+static int buf_used()
+{
+	int used = buf_write_pos - buf_read_pos;
+	if (used < 0)
+		used += buffer_len;
+	return used;
+}
+
+/* add data to ringbuffer */
+static int write_buffer(unsigned char *data, int len)
+{
+	int first_len = buffer_len - buf_write_pos;
+	int free = buf_free();
+	if (len > free)
+		len = free;
+	if (first_len > len)
+		first_len = len;
+	// till end of buffer
+	memcpy(buffer[buf_write_pos], data, first_len);
+	if (len > first_len) {	// we have to wrap around
+		// remaining part from beginning of buffer
+		memcpy(buffer, &data[first_len], len - first_len);
+	}
+	buf_write_pos = (buf_write_pos + len) % buffer_len;
+
+	return len;
+}
+
+/* remove data from ringbuffer */
+static int read_buffer(unsigned char *data, int len)
+{
+	int first_len = buffer_len - buf_read_pos;
+	int buffered = buf_used();
+	if (len > buffered)
+		len = buffered;
+	if (first_len > len)
+		first_len = len;
+	// till end of buffer
+	memcpy(data, &buffer[ao->buf_read_pos], first_len);
+	if (len > first_len) {	// we have to wrap around
+		// remaining part from beginning of buffer
+		memcpy(&data[first_len], buffer, len - first_len);
+	}
+	buf_read_pos = (buf_read_pos + len) % buffer_len;
+
+	return len;
+}
+
+static OSStatus render_proc(void *inRefCon,
+		AudioUnitRenderActionFlags *inActionFlags,
+		const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber,
+		UInt32 inNumFrames, AudioBufferList *ioData)
+{
+	int amt = buf_used();
+	int req = (inNumFrames) * ao->packetSize;
+
+	if (amt > req)
+		amt = req;
+
+	if (amt)
+		read_buffer((unsigned char *)ioData->mBuffers[0].mData, amt);
+	else
+		audio_pause();
+
+	ioData->mBuffers[0].mDataByteSize = amt;
+
+        return noErr;
+}
+
+/* stop playing, keep buffers (for pause) */
+static void audio_pause()
+{
+	/* stop callback */
+	AudioOutputUnitStop(au);
+        paused = 1;
+}
+
+/* resume playing, after audio_pause() */
+static void audio_resume()
+{
+        if (paused) {
+                /* start callback */
+                AudioOutputUnitStart(au);
+                paused = 0;
+        }
+}
+
+/* set variables and buffer to initial state */
+static void reset()
+{
+        audio_pause();
+        /* reset ring-buffer state */
+        buf_read_pos = 0;
+        buf_write_pos = 0;
+}
+
+/*
+ * end of CoreAudio helpers
+ */
+
+
 static int init (struct xmp_control *ctl)
 {
 	AudioStreamBasicDescription ad;
 	Component comp;
 	ComponentDescription cd;
-	ComponentInstance ci;
-	AURenderCallbackStruct renderCallback;
+	AURenderCallbackStruct rc;
 	OSStatus err;
 
 	char *token;
@@ -106,14 +232,29 @@ static int init (struct xmp_control *ctl)
 	if ((comp = FindNextComponent(NULL, &cd)) == NULL)
 		return XMP_ERR_DINIT;
 
-	if (OpenAComponent(comp, &ci))
+	if (OpenAComponent(comp, &au))
 		return XMP_ERR_DINIT;
 
-	if (AudioUnitInitialize(ci))
+	if (AudioUnitInitialize(au))
 		return XMP_ERR_DINIT;
 
-	if (AudioUnitSetProperty(ci, kAudioUnitProperty_StreamFormat,
-			kAudioUnitScope_Input, 0, &cd, sizeof(cd));
+	if (AudioUnitSetProperty(au, kAudioUnitProperty_StreamFormat,
+			kAudioUnitScope_Input, 0, &ad, sizeof(ad)))
+		return XMP_ERR_DINIT;
+
+        num_chunks = (ctl->freq * bpf + chunk_size - 1) / chunk_size;
+        buffer_len = (num_chunks + 1) * chunk_size;
+        ao->buffer = calloc(num_chunks + 1, chunk_size);
+
+	rc.inputProc = render_callback;
+	rc.inputProcRefCon = 0;
+
+	if (AudioUnitSetProperty(au, kAudioUnitProperty_SetRenderCallback,
+			kAudioUnitScope_Input, 0, &rc, sizeof(rc)))
+		return XMP_ERR_DINIT;
+	
+	reset();
+
 	return xmp_smix_on(ctl);
 }
 
@@ -121,26 +262,29 @@ static int init (struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump (int i)
+static void bufdump(int i)
 {
-#if 0
-	int j;
 	void *b;
+	int j = 0;
 
-	b = xmp_smix_buffer ();
+	b = xmp_smix_buffer();
 	while (i) {
-		if ((j = write (audio_fd, b, i)) > 0) {
-		i -= j;
-		(char *)b += j;
-	} else
-		break;
-    }
-#endif
+        	if ((j = write_buffer(b, i)) > 0) {
+			i -= j;
+			(char *)b += j;
+		} else
+			break;
+	}
+
+        audio_resume();
 }
 
 
 static void shutdown ()
 {
 	xmp_smix_off();
-	//close(audio_fd);
+        AudioOutputUnitStop(au);
+	AudioUnitUninitialize(au);
+	CloseComponent(au);
+	free(buffer);
 }
