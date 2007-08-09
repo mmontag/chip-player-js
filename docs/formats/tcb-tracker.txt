@@ -65,7 +65,8 @@ where
 Sample data
 -----------
 
-Each sample is stored in unsigned 8-bit PCM data.
+Each sample is stored in unsigned 8-bit PCM data. Read from the offsets
+specified earlier.
 
 
 References
