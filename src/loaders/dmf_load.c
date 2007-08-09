@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.3 2007-08-08 12:50:08 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.4 2007-08-09 00:51:23 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -124,7 +124,7 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
 		if (sign)
 			delta ^= 0xff;
 		value += delta;
-		psample[i] = (i) ? value : 0;
+		psample[i] = i ? value : 0;
 	}
 
 	return tree.ibuf - ibuf;
@@ -202,7 +202,7 @@ static void get_patt(int size, FILE *f)
 					if (b & 0x40)
 						event->ins = read8(f);
 					if (b & 0x20)
-						event->note = read8(f);
+						event->note = 24 + read8(f);
 					if (b & 0x10)
 						event->vol = read8(f);
 					if (b & 0x08) {	/* instrument effect */
@@ -222,9 +222,9 @@ static void get_patt(int size, FILE *f)
 				}
 			}
 		}
-		if (V(0)) report(".");
+		reportv(0, ".");
 	}
-	if (V(0)) report("\n");
+	reportv(0, "\n");
 }
 
 static void get_smpi(int size, FILE *f)
@@ -232,13 +232,11 @@ static void get_smpi(int size, FILE *f)
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
 
-	xxh->ins = read8(f);
-	xxh->smp = xxh->ins;
+	xxh->ins = xxh->smp = read8(f);
 
 	INSTRUMENT_INIT();
 
-	if (V(0))
-		report("Instruments    : %d\n", xxh->ins);
+	reportv(0, "Instruments    : %d\n", xxh->ins);
 
 	for (i = 0; i < xxh->ins; i++) {
 		int x;
@@ -255,9 +253,14 @@ static void get_smpi(int size, FILE *f)
 		xxs[i].len = read32l(f);
 		xxs[i].lps = read32l(f);
 		xxs[i].lpe = read32l(f);
+		xxih[i].nsm = !!xxs[i].len;
 		c3spd = read16l(f);
+		c2spd_to_note(c3spd / 2, &xxi[i][0].xpo, &xxi[i][0].fin);
 		xxi[i][0].vol = read8(f) / 4;
+		xxi[i][0].pan = 0x80;
+		xxi[i][0].sid = i;
 		flag = read8(f);
+		xxs[i].flg = flag & 0x01 ? WAVE_LOOPING : 0;
 		if (ver >= 8)
 			fseek(f, 8, SEEK_CUR);	/* library name */
 		read16l(f);	/* reserved -- specs say 1 byte only*/
@@ -281,8 +284,7 @@ static void get_smpd(int size, FILE *f)
 	int smpsize;
 	uint8 *data, *ibuf;
 
-	if (V(0))
-		report("Stored samples : %d ", xxh->ins);
+	reportv(0, "Stored samples : %d ", xxh->ins);
 
 	for (smpsize = i = 0; i < xxh->smp; i++) {
 		if (xxs[i].len > smpsize)
@@ -314,9 +316,9 @@ static void get_smpd(int size, FILE *f)
 		default:
 			fseek(f, smpsize, SEEK_CUR);
 		}
-		if (V(0)) report(packtype[i] ? "c" : ".");
+		reportv(0, packtype[i] ? "c" : ".");
 	}
-	if (V(0)) report("\n");
+	reportv(0, "\n");
 
 	free(ibuf);
 	free(data);
@@ -344,8 +346,6 @@ int dmf_load(FILE *f)
 	fread(composer, 20, 1, f);
 	fread(date, 3, 1, f);
 	
-	xxh->smp = xxh->ins = 0;
-
 	MODULE_INFO();
 	if (V(0)) {
 		report("Composer name  : %s\n", composer);
