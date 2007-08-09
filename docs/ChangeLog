@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.31 2007-08-09 12:11:19 cmatsuoka Exp $
+$Id: ChangeLog,v 1.32 2007-08-09 22:00:04 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -10,7 +10,7 @@ Stable versions
 	- added Real Tracker module loader
 	- added TCB Tracker module loader
 	- added X-Tracker module loader
-	- added portable, 64bit safe MMD0/1/2/3 MED loader
+	- added portable, 64bit-safe MMD0/1/2/3 MED loader
 	- added OSX CoreAudio driver
 	- enabled WAV writer
 	- removed broken shared lib generation

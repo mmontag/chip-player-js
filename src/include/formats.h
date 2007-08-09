@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.h,v 1.7 2007-08-08 19:54:59 cmatsuoka Exp $
+ * $Id: formats.h,v 1.8 2007-08-09 22:00:04 cmatsuoka Exp $
  */
 
 #ifndef __FORMATS_H
@@ -27,6 +27,7 @@ int digi_load (FILE *);
 int dmf_load (FILE *);
 int dpp_load (FILE *);
 int dss_load (FILE *);
+int dt_load (FILE *);
 int emod_load (FILE *);
 int far_load (FILE *);
 int fcm_load (FILE *);
