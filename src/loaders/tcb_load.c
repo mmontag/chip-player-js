@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.2 2007-08-08 21:24:34 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.3 2007-08-09 00:00:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,6 +28,7 @@ int tcb_load(FILE * f)
 	struct xxm_event *event;
 	int i, j, k;
 	uint8 buffer[10];
+	int base_offs, soffs[16];
 
 	LOAD_INIT();
 
@@ -66,7 +67,6 @@ int tcb_load(FILE * f)
 		copy_adjust(xxih[i].name, buffer, 8);
 	}
 
-//printf("offset = %x\n", ftell(f));
 	read16b(f);	/* ? */
 	for (i = 0; i < 5; i++)
 		read16b(f);
@@ -77,73 +77,59 @@ int tcb_load(FILE * f)
 
 	PATTERN_INIT();
 
-//printf("offset = %x\n", ftell(f));
 	/* Read and convert patterns */
-	if (V(0))
-		report("Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", xxh->pat);
 
 	for (i = 0; i < xxh->pat; i++) {
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-			for (j = 0; j < 64; j++) {
-				for (k = 0; k < 4; k++) {
-					int b;
-					event = &EVENT (i, k, j);
-	
-					b = read8(f);
-					if (b) {
-						event->note = 12 * (b >> 4);
-						event->note += (b & 0xf) + 24;
-					}
-					b = read8(f);
-					event->ins = b >> 4;
-					if (event->ins)
-						event->ins += 1;
+		for (j = 0; j < 64; j++) {
+			for (k = 0; k < 4; k++) {
+				int b;
+				event = &EVENT (i, k, j);
+
+				b = read8(f);
+				if (b) {
+					event->note = 12 * (b >> 4);
+					event->note += (b & 0xf) + 24;
 				}
-		
+				b = read8(f);
+				event->ins = b >> 4;
+				if (event->ins)
+					event->ins += 1;
+			}
 		}
-
-		if (V(0))
-			report(".");
+		reportv(0, ".");
 	}
+	reportv(0, "\n");
 
-	if (V(0))
-		report("\n");
+	base_offs = ftell(f);
+	read32b(f);	/* remaining size */
 
-	read16b(f);
-	read16b(f);
-
-//printf("offset = %x\n", ftell(f));
 	/* Read instrument data */
-	if (V(1))
-		report
-		    ("     Name      Len  LBeg LEnd L Vol\n");
+	reportv(1, "     Name      Len  LBeg LEnd L Vol\n");
 
 	for (i = 0; i < xxh->ins; i++) {
-		xxi[i][0].vol = read8(f) / 4;
+		xxi[i][0].vol = read8(f) / 2;
 		read8(f);
 		read8(f);
 		read8(f);
 	}
 
-	read32b(f);
 
 	for (i = 0; i < xxh->ins; i++) {
+		soffs[i] = read32b(f);
 		xxs[i].len = read32b(f);
-		read32b(f);
 	}
 
-	//for (i = 0; i < xxh->ins; i++)
-	//	read32b(f);
-
+	read32b(f);
 	read32b(f);
 	read32b(f);
 	read32b(f);
 
 	for (i = 0; i < xxh->ins; i++) {
-
 		xxih[i].nsm = !!(xxs[i].len);
 		xxs[i].lps = 0;
 		xxs[i].lpe = 0;
@@ -160,19 +146,15 @@ int tcb_load(FILE * f)
 		}
 	}
 
-//printf("offset = %x\n", ftell(f));
 	/* Read samples */
-	if (V(0))
-		report("Stored samples : %d ", xxh->smp);
+	reportv(0, "Stored samples : %d ", xxh->smp);
 	for (i = 0; i < xxh->ins; i++) {
-//printf("offset sample %d = %x\n", i, ftell(f));
+		fseek(f, base_offs + soffs[i], SEEK_SET);
 		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
 				XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
-		if (V(0))
-			report(".");
+		reportv(0, ".");
 	}
-	if (V(0))
-		report("\n");
+	reportv(0, "\n");
 
 	return 0;
 }

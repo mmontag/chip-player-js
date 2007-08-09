@@ -26,7 +26,7 @@ Offset	Size	Description			Example
 0000e	128	pattern sequence
 0008e	1	song length			0x41
 0008f	1	unknown				0x00
-00090	2	unknown				0x00
+00090	2	unknown				0x0000
 00092	Repeat 16:
 	8	instrument names
 00112	32	unknown
@@ -34,21 +34,42 @@ Offset	Size	Description			Example
 	512	pattern data
 +p*512	4	size of the sample data		0x00017d91
 +4	Repeat 16:
-	4	volume for each instrument	0xff000000 ...
+	1	volume for each instrument	0x7f
+	1	unknown (sped?)			0x00
+	1	unknown	(spes?)			0x00
+	1	unknown	(tran?)			0x00
 +64	4	unknown				0x000000d4
 +4	Repeat 16:
 	4	size of each sample		0x0000182a
-	4	unknown (loop?) 		0x00001bb9
+	4	offset from end of patterns	0x00001bb9
 +128	4	unknown				0x00000001
 +4	4	unknown				0xffffffff
 +4	4	unknown				0x00000000
-+4		sample data (unsigned)		0x80 0x80 ...
-
-Pattern data:
++4		sample data 			0x80 0x80 ...
 
 
+Pattern data
+------------
 
-References:
+Each pattern has 64 rows and 4 channels. Each channel event has
+the format
+
+	xy zw
+
+where
+	x: octave
+	y: note (C = 0, D = 1, etc)
+	z: instrument
+	w: effect?
+
+Sample data
+-----------
+
+Each sample is stored in unsigned 8-bit PCM data.
+
+
+References
+----------
 
 http://www.tscc.de/ucm24/tcb2pro.html
 
