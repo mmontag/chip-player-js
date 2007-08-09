@@ -1,7 +1,7 @@
 TCB Tracker reverse engineering effort (based on ONE module)
 Claudio Matsuoka, 08/2007
 
-TCB Tracker is an Atari tracker written by Anders Nilsson (AN COOL) in
+TCB Tracker is an Atari tracker written by Anders Nilsson (AN Cool) in
 1990-1991. TCB Tracker modules are generally hard to find because they
 were not highly regarded as a good module format and it was widespread
 pratice to convert TCB Tracker modules to standard Protracker modules
@@ -35,9 +35,9 @@ Offset	Size	Description			Example
 +p*512	4	size of the sample data		0x00017d91
 +4	Repeat 16:
 	1	volume for each instrument	0x7f
-	1	unknown (sped?)			0x00
-	1	unknown	(spes?)			0x00
-	1	unknown	(tran?)			0x00
+	1	unknown (tran?)			0x00
+	1	unknown	(sped/spes?)		0x00
+	1	unknown	(sped/spes?)		0x00
 +64	4	unknown				0x000000d4
 +4	Repeat 16:
 	4	size of each sample		0x0000182a
@@ -66,7 +66,7 @@ Sample data
 -----------
 
 Each sample is stored in unsigned 8-bit PCM data. Read from the offsets
-specified earlier.
+specified earlier to skip padding.
 
 
 References

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.2 2007-08-07 22:10:29 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.3 2007-08-09 17:16:22 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -156,7 +156,7 @@ int mmd3_load(FILE *f)
 		song.sample[i].midich = read8(f);
 		song.sample[i].midipreset = read8(f);
 		song.sample[i].svol = read8(f);
-		song.sample[i].strans = read8(f);
+		song.sample[i].strans = read8s(f);
 	}
 	song.numblocks = read16b(f);
 	song.songlen = read16b(f);

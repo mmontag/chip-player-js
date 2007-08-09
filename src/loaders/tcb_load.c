@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.3 2007-08-09 00:00:17 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.4 2007-08-09 17:16:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,6 +29,7 @@ int tcb_load(FILE * f)
 	int i, j, k;
 	uint8 buffer[10];
 	int base_offs, soffs[16];
+	uint8 unk1[16], unk2[16], unk3[16];
 
 	LOAD_INIT();
 
@@ -99,6 +100,9 @@ int tcb_load(FILE * f)
 				event->ins = b >> 4;
 				if (event->ins)
 					event->ins += 1;
+				if (b &= 0x0f) {
+					printf("---> %02x\n", b);
+				}
 			}
 		}
 		reportv(0, ".");
@@ -109,13 +113,13 @@ int tcb_load(FILE * f)
 	read32b(f);	/* remaining size */
 
 	/* Read instrument data */
-	reportv(1, "     Name      Len  LBeg LEnd L Vol\n");
+	reportv(1, "     Name      Len  LBeg LEnd L Vol  ?? ?? ??\n");
 
 	for (i = 0; i < xxh->ins; i++) {
 		xxi[i][0].vol = read8(f) / 2;
-		read8(f);
-		read8(f);
-		read8(f);
+		unk1[i] = read8(f);
+		unk2[i] = read8(f);
+		unk3[i] = read8(f);
 	}
 
 
@@ -139,10 +143,11 @@ int tcb_load(FILE * f)
 		xxi[i][0].sid = i;
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
-			report("[%2X] %-8.8s  %04x %04x %04x %c V%02x\n", i,
+			report("[%2X] %-8.8s  %04x %04x %04x %c "
+						"V%02x  %02x %02x %02x\n", i,
 			       xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
 			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			       xxi[i][0].vol);
+			       xxi[i][0].vol, unk1[i], unk2[i], unk3[i]);
 		}
 	}
 
