@@ -60,7 +60,8 @@ where
 	x: octave
 	y: note (C = 0, D = 1, etc)
 	z: instrument
-	w: effect?
+	w: effect
+		D = pattern break
 
 Sample data
 -----------
@@ -73,5 +74,4 @@ References
 ----------
 
 http://www.tscc.de/ucm24/tcb2pro.html
-
 

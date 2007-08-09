@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.4 2007-08-09 17:16:22 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.5 2007-08-09 21:11:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,8 +13,7 @@
  * There are two different TCB-Tracker module formats. Older format and
  * newer format. They have different headers "AN COOL." and "AN COOL!".
  *
- * we only have victor2.mod to test, so we'll support only the older
- * format --claudio
+ * We only support the old format --claudio
  */
 
 #ifdef HAVE_CONFIG_H
@@ -101,7 +100,14 @@ int tcb_load(FILE * f)
 				if (event->ins)
 					event->ins += 1;
 				if (b &= 0x0f) {
-					printf("---> %02x\n", b);
+					switch (b) {
+					case 0xd:
+						event->fxt = FX_BREAK;
+						event->fxp = 0;
+						break;
+					default:
+						printf("---> %02x\n", b);
+					}
 				}
 			}
 		}
