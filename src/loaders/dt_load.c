@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.3 2007-08-10 02:58:09 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.4 2007-08-10 03:52:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,11 +19,12 @@
 #include "period.h"
 
 static int pflag, sflag;
+static int realpat;
 
 static void get_patt(int size, FILE *f)
 {
 	xxh->chn = read16b(f);
-	xxh->pat = read16b(f);
+	realpat = read16b(f);
 	xxh->trk = xxh->chn * xxh->pat;
 }
 
@@ -78,27 +79,33 @@ static void get_inst(int size, FILE *f)
 
 static void get_dapt(int size, FILE *f)
 {
-	int i, j, k;
+	int pat, i, j, k;
 	struct xxm_event *event;
+	static int last_pat = 0;
+	int rows;
 
 	if (!pflag) {
-		reportv(0, "Stored patterns: %d ", xxh->pat);
+		reportv(0, "Stored patterns: %d ", realpat);
 		pflag = 1;
 		PATTERN_INIT();
 	}
 
 	read32b(f);	/* 0xffffffff */
-	i = read16b(f);
+	i = pat = read16b(f);
+	rows = read16b(f);
 
-	PATTERN_ALLOC(i);
-	xxp[i]->rows = read16b(f);
-	TRACK_ALLOC(i);
+	for (i = last_pat; i <= pat; i++) {
+		PATTERN_ALLOC(i);
+		xxp[i]->rows = rows;
+		TRACK_ALLOC(i);
+	}
+	last_pat = pat + 1;
 
 	for (j = 0; j < 64; j++) {
 		for (k = 0; k < xxh->chn; k++) {
 			uint8 a, b, c, d;
 			int x;
-			event = &EVENT(i, k, j);
+			event = &EVENT(pat, k, j);
 			a = read8(f);
 			b = read8(f);
 			c = read8(f);
@@ -137,7 +144,7 @@ static void get_dait(int size, FILE *f)
 
 int dt_load(FILE *f)
 {
-	int i;
+	int i, maxpat;
 	char magic[4];
 
 	LOAD_INIT ();
@@ -166,8 +173,12 @@ int dt_load(FILE *f)
 	read16b(f);
 	read16b(f);
 
-	for (i = 0; i < 128; i++)
+	for (maxpat = i = 0; i < 128; i++) {
 		xxo[i] = read8(f);
+		if (xxo[i] > maxpat)
+			maxpat = xxo[i];
+	}
+	xxh->pat = maxpat + 1;
 
 	strcpy(xmp_ctl->type, "Digital Tracker module");
 	MODULE_INFO();
