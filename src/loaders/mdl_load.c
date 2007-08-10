@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2004 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.7 2007-08-05 03:57:55 pabs3 Exp $
+ * $Id: mdl_load.c,v 1.8 2007-08-10 21:19:33 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -56,23 +56,25 @@ static struct mdl_envelope *p_env;
  * column, G-L (volume-effects) only in the second column.
  */
 
-static void xlat_fx1 (uint8 *t, uint8 *p)
+static void xlat_fx_common(uint8 *t, uint8 *p)
 {
     switch (*t) {
-    case 0x05:			/* Arpeggio */
-	*t = FX_ARPEGGIO;
-	break;
-    case 0x06:			/* 6 - Not used */
-    case 0x0a:			/* 6 - Not used */
-    case 0x09:			/* Set envelope -- not supported */
-	*t = *p = 0x00;
-	break;
-    case 0x07:			/* Set BPM */
+    case 0x07:			/* 7 - Set BPM */
 	*t = FX_TEMPO;
 	if (*p < 0x20)
 	    *p = 0x20;
 	break;
-    case 0x0e:			/* Extended */
+    case 0x08:			/* 8 - Set pan */
+    case 0x09:			/* 9 - Set envelope -- not supported */
+    case 0x0a:			/* A - Not used */
+	*t = *p = 0x00;
+	break;
+    case 0x0b:			/* B - Position jump */
+    case 0x0c:			/* C - Set volume */
+    case 0x0d:			/* D - Pattern break */
+	/* Like protracker */
+	break;
+    case 0x0e:			/* E - Extended */
 	switch (MSN (*p)) {
 	case 0x0:		/* E0 - not used */
 	case 0x3:		/* E3 - not used */
@@ -96,47 +98,45 @@ static void xlat_fx1 (uint8 *t, uint8 *p)
     }
 }
 
-
-static void xlat_fx2 (uint8 *t, uint8 *p)
+static void xlat_fx1(uint8 *t, uint8 *p)
 {
     switch (*t) {
-    case 0x06:			/* L - Not used */
-    case 0x09:			/* Set envelope -- not supported */
+    case 0x05:			/* 5 - Arpeggio */
+	*t = FX_ARPEGGIO;
+	break;
+    case 0x06:			/* 6 - Not used */
 	*t = *p = 0x00;
-	break;
-    case 0x07:			/* Set BPM */
-	*t = FX_TEMPO;
-	if (*p < 0x20)
-	    *p = 0x20;
-	break;
-	*t = *p = 0x00;
-    case 0x03:			/* Multi-retrig */
-	*t = FX_MULTI_RETRIG;
-	break;
-    case 0x04:			/* Tremolo */
-	*t = FX_TREMOLO;
-	break;
-    case 0x05:			/* Tremor */
-	*t = FX_TREMOR;
-	break;
-    case 0x0e:			/* Extended */
-	switch (MSN (*p)) {
-	case 0x0:		/* E0 - not used */
-	case 0x3:		/* E3 - not used */
-	case 0x8:		/* Set sample status -- unsupported */
-	    *t = *p = 0x00;
-	    break;
-	case 0x1:		/* Pan slide left */
-	    *t = FX_PANSLIDE;
-	    *p <<= 4;
-	    break;
-	case 0x2:		/* Pan slide right */
-	    *t = FX_PANSLIDE;
-	    *p &= 0x0f;
-	    break;
-	}
 	break;
     }
+
+    xlat_fx_common(t, p);
+}
+
+
+static void xlat_fx2(uint8 *t, uint8 *p)
+{
+    switch (*t) {
+    case 0x01:			/* G - Volume slide up */
+	*t = FX_VOLSLIDE_UP;
+	break;
+    case 0x02:			/* H - Volume slide down */
+	*t = FX_VOLSLIDE_DN;
+	break;
+    case 0x03:			/* I - Multi-retrig */
+	*t = FX_MULTI_RETRIG;
+	break;
+    case 0x04:			/* J - Tremolo */
+	*t = FX_TREMOLO;
+	break;
+    case 0x05:			/* K - Tremor */
+	*t = FX_TREMOR;
+	break;
+    case 0x06:			/* L - Not used */
+	*t = *p = 0x00;
+	break;
+    }
+
+    xlat_fx_common(t, p);
 }
 
 
@@ -274,8 +274,7 @@ static void get_chunk_pa(int size, FILE *f)
     xxh->trk = xxh->pat * xxh->chn;	/* Max */
 
     PATTERN_INIT ();
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -285,9 +284,9 @@ static void get_chunk_pa(int size, FILE *f)
 	fseek(f, 16, SEEK_CUR);		/* Skip pattern name */
 	for (j = 0; j < chn; j++)
 	    xxp[i]->info[j].index = read16l(f);
-	if (V(0)) report(".");
+	reportv(0, ".");
     }
-    if (V(0)) report("\n");
+    reportv(0, "\n");
 }
 
 
@@ -300,8 +299,7 @@ static void get_chunk_p0(int size, FILE *f)
     xxh->trk = xxh->pat * xxh->chn;	/* Max */
 
     PATTERN_INIT ();
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -312,9 +310,9 @@ static void get_chunk_p0(int size, FILE *f)
 	    if (j < xxh->chn)
 		xxp[i]->info[j].index = x16;
 	}
-	if (V(0)) report(".");
+	reportv(0, ".");
     }
-    if (V(0)) report("\n");
+    reportv(0, "\n");
 }
 
 
@@ -325,8 +323,7 @@ static void get_chunk_tr(int size, FILE *f)
 
     xxh->trk = read16l(f) + 1;
 
-    if (V (0))
-	report ("Stored tracks  : %d ", xxh->trk);
+    reportv(0, "Stored tracks  : %d ", xxh->trk);
 
     track = calloc (1, sizeof (struct xxm_track) +
 	sizeof (struct xxm_event) * 256);
@@ -403,8 +400,7 @@ static void get_chunk_tr(int size, FILE *f)
 
     free (track);
 
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 }
 
 
@@ -414,8 +410,7 @@ static void get_chunk_ii(int size, FILE *f)
 
     xxh->ins = read8(f);
 
-    if (V (0))
-	report ("Instruments    : %d ", xxh->ins);
+    reportv(0, "Instruments    : %d ", xxh->ins);
 
     INSTRUMENT_INIT ();
 
@@ -480,8 +475,7 @@ static void get_chunk_ii(int size, FILE *f)
 		report (".");
 	}
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 }
 
 
@@ -495,15 +489,13 @@ static void get_chunk_is (int size, FILE *f)
     xxs = calloc (sizeof (struct xxm_sample), xxh->smp);
     packinfo = calloc (sizeof (int), xxh->smp);
 
-    if (V (1))
-	report ("Sample infos   : %d ", xxh->smp);
+    reportv(1, "Sample infos   : %d ", xxh->smp);
 
     for (i = 0; i < xxh->smp; i++) {
 	s_index[i] = read8(f);		/* Sample number */
 	fread(buf, 1, 32, f);
 	str_adj(buf);
-	if (V (2))
-	    report ("\n[%2X] %-32.32s ", s_index[i],buf);
+	reportv(2, "\n[%2X] %-32.32s ", s_index[i],buf);
 	fseek(f, 8, SEEK_CUR);		/* Sample filename */
 
 	c2spd[i] = read32l(f);
@@ -549,11 +541,9 @@ static void get_chunk_is (int size, FILE *f)
 	    }
 	}
 
-	if (V (1))
-	    report (".");
+	reportv(1, ".");
     }
-    if (V (1))
-	report ("\n");
+    reportv(1, "\n");
 }
 
 
@@ -565,8 +555,7 @@ static void get_chunk_i0(int size, FILE *f)
 
     xxh->ins = xxh->smp = read8(f);
 
-    if (V (0))
-	report ("Instruments    : %d ", xxh->ins);
+    reportv(0, "Instruments    : %d ", xxh->ins);
 
     INSTRUMENT_INIT ();
 
@@ -580,8 +569,7 @@ static void get_chunk_i0(int size, FILE *f)
 
 	fread(buf, 1, 32, f);
 	str_adj(buf);			/* Sample name */
-	if (V (1))
-	    report ("\n[%2X] %-32.32s ", i_index[i], buf);
+	reportv(1, "\n[%2X] %-32.32s ", i_index[i], buf);
 	fseek(f, 8, SEEK_CUR);		/* Sample filename */
 
 	c2spd[i] = read16l(f);
@@ -622,11 +610,9 @@ static void get_chunk_i0(int size, FILE *f)
 	    }
 	}
 
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 }
 
 
@@ -635,8 +621,7 @@ static void get_chunk_sa(int size, FILE *f)
     int i, len;
     uint8 *smpbuf, *buf;
 
-    if (V (0))
-	report ("Stored samples : %d ", xxh->smp);
+    reportv(0, "Stored samples : %d ", xxh->smp);
 
     for (i = 0; i < xxh->smp; i++) {
 	smpbuf = calloc (1, xxs[i].flg & WAVE_16_BITS ?
@@ -667,11 +652,9 @@ static void get_chunk_sa(int size, FILE *f)
 
 	free (smpbuf);
 
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 }
 
 
@@ -682,8 +665,7 @@ static void get_chunk_ve(int size, FILE *f)
     if ((v_envnum = read8(f)) == 0)
 	return;
 
-    if (V (1))
-	report ("Vol envelopes  : %d\n", v_envnum);
+    reportv(1, "Vol envelopes  : %d\n", v_envnum);
 
     v_env = calloc(v_envnum, sizeof (struct mdl_envelope));
 
@@ -703,8 +685,7 @@ static void get_chunk_pe(int size, FILE *f)
     if ((p_envnum = read8(f)) == 0)
 	return;
 
-    if (V (1))
-	report ("Pan envelopes  : %d\n", p_envnum);
+    reportv(1, "Pan envelopes  : %d\n", p_envnum);
 
     p_env = calloc (p_envnum, sizeof (struct mdl_envelope));
 

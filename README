@@ -1,4 +1,4 @@
-$Id: README,v 1.18 2007-08-10 16:50:31 cmatsuoka Exp $
+$Id: README,v 1.19 2007-08-10 21:19:33 cmatsuoka Exp $
 
 
 
@@ -105,7 +105,7 @@ The current version recognizes the following module formats:
   IMF	*** 	Imago Orpheus		1.0
   IT	****-	Impulse Tracker		1.00, 2.00, 2.14, 2.15
   LIQ	**	Liquid Tracker		0.0, 1.0
-  MDL	**	Digitrakker		0.0, 1.0, 1.1
+  MDL	***	Digitrakker		0.0, 1.0, 1.1
   MTM	****+	Multitracker		1.0
   PTM	***	Poly Tracker		2.03
   RTM	**	Real Tracker		1.00

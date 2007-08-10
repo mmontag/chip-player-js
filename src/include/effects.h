@@ -68,7 +68,7 @@
 #define FX_SETPITCH	0x91
 
 /* Extra effects */
-#define FX_VOLSLIDE_UP	0xa0	/* SFX */
+#define FX_VOLSLIDE_UP	0xa0	/* SFX, MDL */
 #define FX_VOLSLIDE_DN	0xa1
 #define FX_S3M_TEMPO	0xa3	/* S3M */
 #define FX_VOLSLIDE_2	0xa4
