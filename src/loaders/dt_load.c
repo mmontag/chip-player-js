@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.2 2007-08-10 01:13:03 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.3 2007-08-10 02:58:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,6 +23,7 @@ static int pflag, sflag;
 static void get_patt(int size, FILE *f)
 {
 	xxh->chn = read16b(f);
+	xxh->pat = read16b(f);
 	xxh->trk = xxh->chn * xxh->pat;
 }
 
@@ -87,16 +88,28 @@ static void get_dapt(int size, FILE *f)
 	}
 
 	read32b(f);	/* 0xffffffff */
+	i = read16b(f);
 
-	for (i = 0; i < xxh->pat; i++) {
-		PATTERN_ALLOC(i);
-                xxp[i]->rows = 64;
-                TRACK_ALLOC(i);
+	PATTERN_ALLOC(i);
+	xxp[i]->rows = read16b(f);
+	TRACK_ALLOC(i);
 
-		for (j = 0; j < 64; j++) {
-			for (k = 0; k < xxh->chn; k++) {
-				event = &EVENT(i, k, j);
-			}
+	for (j = 0; j < 64; j++) {
+		for (k = 0; k < xxh->chn; k++) {
+			uint8 a, b, c, d;
+			int x;
+			event = &EVENT(i, k, j);
+			a = read8(f);
+			b = read8(f);
+			c = read8(f);
+			d = read8(f);
+			if (a)
+				event->note = 12 * (a >> 4) + (a & 0x0f);
+			x = ((int)b << 4) + (c >> 4);
+			if (x)
+				event->ins = x;
+			event->fxt = c & 0xf;
+			event->fxp = d;
 		}
 	}
 
@@ -105,12 +118,21 @@ static void get_dapt(int size, FILE *f)
 
 static void get_dait(int size, FILE *f)
 {
+	static int i = 0;
+
 	if (!sflag) {
 		reportv(0, "\nStored samples : %d ", xxh->smp);
 		sflag = 1;
+		i = 0;
 	}
 
-	reportv(0, ".");
+	if (size > 2) {
+		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
+						&xxs[xxi[i][0].sid], NULL);
+		reportv(0, ".");
+	}
+
+	i++;
 }
 
 int dt_load(FILE *f)
@@ -140,7 +162,7 @@ int dt_load(FILE *f)
 	read16b(f);
 	read16b(f);
 	xxh->len = read16b(f);
-	xxh->pat = read16b(f);
+	read16b(f);
 	read16b(f);
 	read16b(f);
 

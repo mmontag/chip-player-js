@@ -1,0 +1,88 @@
+Digital Tracker DTM module format
+by Claudio Matsuoka, 08/2007
+
+This is based on reverse engineering of some DTM modules. The unknown
+fields could be easily clarified creating a few test modules with the
+tracker.
+
+
+Offset	Size	Description
+-------	-------	-----------------------
+0000	4	magic ID, "D.T."
+0004	4	?
+0008	4	?
+000c	4	?
+0010	2	?
+0012	4	?
+0016	18	title
+0028	2	?
+002a	4	"S.Q."
+002e	2	?
+0030	2	?
+0032	2	song length
+0034	2	?
+0036	2	?
+0038	2	?
+003a	128	pattern sequence
+00ba	...	IFF chunks
+
+
+'PATT' chunk
+
+Offset	Size	Description
+-------	-------	-----------------------
+0000	2	number of channels
+0002	2	number of patterns
+
+
+'INST' chunk
+
+Offset	Size	Description
+-------	-------	-----------------------
+0000	2	number of instruments
+0002	...	instruments
+
+Instrument structure:
+
+0000	4	?
+0004	4	sample size
+0008	1	?
+0009	1	volume
+000a	4	loop start
+000e	4	loop size
+0012	22	instrument name
+0028	2	?
+002a	2	? (always 0030?)
+002c	4	? (always 00000000?)
+0030	4	s3m-style c2spd
+
+
+'DAPT' chunk
+
+Offset	Size	Description
+-------	-------	-----------------------
+0000	4	? (always ffffffff?)
+0004	2	number of this pattern
+0006	2	rows in this pattern
+0008	...	pattern data
+
+Pattern data:
+
+rows * channels repetitions of event XX YY YZ WW where
+
+	XX  = octave and note
+	YYY = instrument
+	Z   = effect type
+	WW  = effect parameter
+
+
+'DAIT' chunk
+
+Offset	Size	Description
+-------	-------	-----------------------
+0000	...	sample data
+
+Sample data:
+
+Raw 8-bit signed PCM samples.
+
