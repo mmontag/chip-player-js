@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka <claudio@helllabs.org>, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.16 2005-02-23 14:25:50 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.17 2007-08-10 16:50:32 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -197,8 +197,8 @@ static void aboutbox ()
 		"\n"
 		"Portions Copyright 1998,2000 Olivier Lapicque,\n"
 		"1998 Tammo Hinrichs, 1997 Bert Jahn,\n"
-		"1998 Sylvain Chipaux, 1995 Marc Espie\n"
-		"1999 Tatsuyuki Satoh, 1996-1999 Takuya Ooura\n"
+		"1998 Sylvain Chipaux, 1999 Tatsuyuki Satoh,\n"
+		"1996-1999 Takuya Ooura\n"
 		"\n"
 		"Supported module formats:"
 	);

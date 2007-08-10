@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.13 2007-08-10 12:02:25 cmatsuoka Exp $
+# $Id: Makefile,v 1.14 2007-08-10 16:50:31 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -57,7 +57,6 @@ uninstall:
 
 # Extra targets:
 # 'dist' prepares a distribution package
-# 'dist-dfsg' prepares a DFSG-compliant distribution package
 # 'mark' marks the last RCS revision with the package version number
 # 'whatsout' lists the locked files
 # 'diff' creates a diff file

@@ -1,4 +1,4 @@
-$Id: README,v 1.17 2007-08-10 13:58:24 cmatsuoka Exp $
+$Id: README,v 1.18 2007-08-10 16:50:31 cmatsuoka Exp $
 
 
 
@@ -19,13 +19,10 @@ that runs on Linux with ALSA and OSS, SunOS, NetBSD, HP-UX, OS/2, FreeBSD
 and Solaris. Xmp plays over 60 mainstream and obscure module formats from
 Amiga and PC.
 
-Modules  compressed  with  gzip, bzip2,  compress, MO3, MMCMP, Powerpack,
-SQSH  or ADPCM samples (used in MDZ files) are handled transparently, and
-the first  file in a zip or lha archive will be played (the  zip unpacker
-skips files with non-module suffixes like .com, .exe, .diz or .txt common
-in DOS archives). Some loaders  (mostly packed mods) check the file  size
-before playing so they will not recognize modules inside a multi-file zip
-or lha archive. To read MO3 files, you  must have unmo3 installed.
+Many compressed module formats are supported, including popular Unix, DOS
+and Amiga file packers such as gzip, bzip2, SQSH, Powerpack, etc. Certain
+module-specific compressed formats such as MO3 are handled transparently.
+To read MO3 files you must have unmo3 installed.
 
 
 SUPPORTED FORMATS
@@ -214,14 +211,4 @@ GNU General Public License for more details.
 You  should  have received a copy of the GNU General Public License along
 with this program;  if not, write to the  Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
-
-Powerpacker decruncher Copyright (C) 1995 Marc Espie
-
-This code is copyright (c) Marc Espie, 1995.  It is loosely  based on the
-original powerpacker decruncher code, copyright (c) Nico Francois.
-
-Original PowerPacker algorithm by Nico Francois.  THIS SOURCE-CODE CAN BE
-USED FOR NON COMMERCIAL  PURPOSES ONLY,  IN PPDECRUNCH OR TRACKER. PLEASE
-CONTACT Nico Francois (nico.francois@scala.com) FOR ANY OTHER USES.
 

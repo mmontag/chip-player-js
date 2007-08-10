@@ -108,11 +108,11 @@ Reused code
 * Sylvain Chipaux
 - P60A loader
 
+* Stuart Caie <kyzer@4u.net>
+- PowerPack decruncher
+
 * Martin Denn <mdenn@unix-ag.uni-kl.de>
 - portions of the NAS driver
-
-* Marc Espie
-- PowerPack decruncher
 
 * Bert Jahn <jah@fh-zwickau.de>
 - SQSH decruncher

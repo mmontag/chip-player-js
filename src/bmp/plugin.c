@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.2 2007-08-04 23:06:55 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.3 2007-08-10 16:50:32 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -190,13 +190,13 @@ static void aboutbox ()
 	label1 = gtk_label_new(
 		"Extended Module Player " VERSION "\n"
 		"http://xmp.helllabs.org/\n"
-		"Written by Claudio Matsuoka <claudio@helllabe.org>\n"
-		"and Hipolito Carraro Jr. <hipolito@onda.com.br>\n"
+		"Written by Claudio Matsuoka and \n"
+		"Hipolito Carraro Jr.\n"
 		"\n"
 		"Portions Copyright ©1998,2000 Olivier Lapicque,\n"
 		"©1998 Tammo Hinrichs, ©1997 Bert Jahn,\n"
-		"©1998 Sylvain Chipaux, ©1995 Marc Espie\n"
-		"©1999 Tatsuyuki Satoh, ©1996-1999 Takuya Ooura\n"
+		"©1998 Sylvain Chipaux, ©1999 Tatsuyuki Satoh,\n"
+		"©1996-1999 Takuya Ooura\n"
 		"\n"
 		"Supported module formats:"
 	);

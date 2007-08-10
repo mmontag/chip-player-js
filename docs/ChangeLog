@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.34 2007-08-10 13:58:24 cmatsuoka Exp $
+$Id: ChangeLog,v 1.35 2007-08-10 16:50:32 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -16,6 +16,7 @@ Stable versions
 	- enabled WAV writer
 	- removed broken shared lib generation
 	- removed packed structures anymore
+	- replaced non-free PowerPack depacker with Kyzer's PD version
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
