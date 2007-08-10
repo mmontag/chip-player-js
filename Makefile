@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.12 2007-08-04 20:08:51 cmatsuoka Exp $
+# $Id: Makefile,v 1.13 2007-08-10 12:02:25 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -10,10 +10,10 @@ TEST_XM	=
 DIST	= xmp-$(VERSION)
 RPMSPEC	= etc/xmp.spec
 RPMRC	= etc/rpmrc
-MODULES	=
-DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
+MODULES	= ode2ptk.zip
+DFILES	= README configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
-DDIRS	= lib docs etc src scripts debian #modules
+DDIRS	= lib docs etc src scripts
 CFILES	=
 DCFILES	= Makefile.rules.old config.log config.status config.cache
 

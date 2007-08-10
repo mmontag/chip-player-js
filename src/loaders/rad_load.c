@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.3 2007-08-10 12:02:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -48,7 +48,7 @@ int rad_load (FILE * f)
     xxh->chn = 9;
     xxh->bpm = 125;
     xxh->tpo = rfh.flags & 0x1f;
-#warning FIXME: tempo setting in RAD modules
+    /* FIXME: tempo setting in RAD modules */
     if (xxh->tpo <= 2)
 	xxh->tpo = 6;
     xxh->smp = 0;
