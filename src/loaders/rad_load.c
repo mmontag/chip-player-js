@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.3 2007-08-10 12:02:25 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.4 2007-08-10 13:58:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -173,7 +173,7 @@ int rad_load (FILE * f)
 		if ((event->fxt = LSN (b))) {
 		    fread (&b, 1, 1, f);	/* Effect parameter */
 		    event->fxp = b;
-#warning FIXME: tempo setting in RAD modules
+		    /* FIXME: tempo setting in RAD modules */
 		    if (event->fxt == 0x0f && event->fxp <= 2)
 			event->fxp = 6;
 		}

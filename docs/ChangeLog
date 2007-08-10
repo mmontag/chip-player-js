@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.33 2007-08-10 03:52:51 cmatsuoka Exp $
+$Id: ChangeLog,v 1.34 2007-08-10 13:58:24 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -19,6 +19,7 @@ Stable versions
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
+	- fixed loading of big-endian 16-bit samples
 	- using Asle's Prowizard to handle packed MODs
 
 2.1.1 (unreleased)

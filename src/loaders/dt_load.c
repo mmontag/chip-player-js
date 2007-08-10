@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.6 2007-08-10 12:10:45 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.7 2007-08-10 13:58:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -178,8 +178,8 @@ static void get_dait(int size, FILE *f)
 	}
 
 	if (size > 2) {
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-						&xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_BIGEND, &xxs[xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 

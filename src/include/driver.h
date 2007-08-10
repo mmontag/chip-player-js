@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.5 2007-08-06 16:07:27 cmatsuoka Exp $
+ * $Id: driver.h,v 1.6 2007-08-10 13:58:24 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -45,6 +45,7 @@ struct patch_info {
 #define XMP_SMP_7BIT		0x08
 #define XMP_SMP_NOLOAD		0x10
 #define XMP_SMP_8X		0x20
+#define XMP_SMP_BIGEND		0x40
 
 #define XMP_ACT_CUT		XXM_NNA_CUT
 #define XMP_ACT_CONT		XXM_NNA_CONT

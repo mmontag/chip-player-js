@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.7 2007-08-06 16:46:00 cmatsuoka Exp $
+ * $Id: driver.c,v 1.8 2007-08-10 13:58:25 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -901,13 +901,15 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 	    fread (patch->data, 1, xxs->len, f);
     }
 
+    if (xxs->flg & WAVE_16_BITS) {
 #ifdef WORDS_BIGENDIAN
-    if (xxs->flg & WAVE_16_BITS && !(xmp_ctl->fetch & XMP_CTL_BIGEND))
-	xmp_cvt_sex (xxs->len, patch->data);
+	if ((flags & XMP_SMP_BIGEND) || (~xmp_ctl->fetch & XMP_CTL_BIGEND))
+	   xmp_cvt_sex (xxs->len, patch->data);
 #else
-    if (xxs->flg & WAVE_16_BITS && (xmp_ctl->fetch & XMP_CTL_BIGEND))
-	xmp_cvt_sex (xxs->len, patch->data);
+	if ((flags & XMP_SMP_BIGEND) || (xmp_ctl->fetch & XMP_CTL_BIGEND))
+	    xmp_cvt_sex (xxs->len, patch->data);
 #endif
+    }
     if (flags & XMP_SMP_7BIT)
 	xmp_cvt_2xsmp (xxs->len, patch->data);
     if (flags & XMP_SMP_DIFF)
