@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.1 2007-08-09 22:00:05 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.2 2007-08-10 01:13:03 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,25 +18,104 @@
 #include "iff.h"
 #include "period.h"
 
+static int pflag, sflag;
 
 static void get_patt(int size, FILE *f)
 {
+	xxh->chn = read16b(f);
+	xxh->trk = xxh->chn * xxh->pat;
 }
 
 static void get_inst(int size, FILE *f)
 {
+	int i, c2spd;
+	uint8 name[30];
+
+	xxh->ins = xxh->smp = read16b(f);
+	reportv(0, "Instruments    : %d ", xxh->ins);
+
+	INSTRUMENT_INIT();
+
+	for (i = 0; i < xxh->ins; i++) {
+		int c, g;
+
+		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+
+		read32b(f);
+		xxih[i].nsm = !!(xxs[i].len = read32b(f));
+		c = read8(f);
+		xxi[i][0].vol = read8(f);
+		xxs[i].lps = read32b(f);
+		xxs[i].lpe = xxs[i].lps + read32b(f);
+
+		fread(name, 22, 1, f);
+		copy_adjust(xxih[i].name, name, 22);
+
+		g = read16b(f);
+		read16b(f);		/* 0x0030 */
+		read32b(f);		/* 0x00000000 */
+		c2spd = read16b(f);
+		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+		xxi[i][0].sid = i;
+
+		if (strlen((char *)xxih[i].name) || xxs[i].len > 0) {
+			if (V(1))
+				report("\n[%2X] %-22.22s %05x %05x %05x V%02x %02x %04x %5d",
+					i, xxih[i].name,
+					xxs[i].len,
+					xxs[i].lps,
+					xxs[i].lpe,
+					xxi[i][0].vol,
+					c,
+					g, c2spd);
+			else
+				report(".");
+		}
+	}
+	reportv(0, "\n");
 }
 
 static void get_dapt(int size, FILE *f)
 {
+	int i, j, k;
+	struct xxm_event *event;
+
+	if (!pflag) {
+		reportv(0, "Stored patterns: %d ", xxh->pat);
+		pflag = 1;
+		PATTERN_INIT();
+	}
+
+	read32b(f);	/* 0xffffffff */
+
+	for (i = 0; i < xxh->pat; i++) {
+		PATTERN_ALLOC(i);
+                xxp[i]->rows = 64;
+                TRACK_ALLOC(i);
+
+		for (j = 0; j < 64; j++) {
+			for (k = 0; k < xxh->chn; k++) {
+				event = &EVENT(i, k, j);
+			}
+		}
+	}
+
+	reportv(0, ".");
 }
 
 static void get_dait(int size, FILE *f)
 {
+	if (!sflag) {
+		reportv(0, "\nStored samples : %d ", xxh->smp);
+		sflag = 1;
+	}
+
+	reportv(0, ".");
 }
 
 int dt_load(FILE *f)
 {
+	int i;
 	char magic[4];
 
 	LOAD_INIT ();
@@ -46,8 +125,6 @@ int dt_load(FILE *f)
 	if (strncmp(magic, "D.T.", 4))
 		return -1;
 
-	strcpy(xmp_ctl->type, "Digital Tracker module");
-	
 	read32b(f);
 	read32b(f);
 	read32b(f);
@@ -55,8 +132,25 @@ int dt_load(FILE *f)
 	read32b(f);
 
 	fread(xmp_ctl->name, 18, 1, f);
+	read16b(f);
+	fread(magic, 1, 4, f);
+	if (strncmp(magic, "S.Q.", 4))
+		return -1;
 
+	read16b(f);
+	read16b(f);
+	xxh->len = read16b(f);
+	xxh->pat = read16b(f);
+	read16b(f);
+	read16b(f);
+
+	for (i = 0; i < 128; i++)
+		xxo[i] = read8(f);
+
+	strcpy(xmp_ctl->type, "Digital Tracker module");
 	MODULE_INFO();
+
+	pflag = sflag = 0;
 	
 	/* IFF chunk IDs */
 	iff_register("PATT", get_patt);
@@ -68,7 +162,10 @@ int dt_load(FILE *f)
 	while (!feof(f))
 		iff_chunk(f);
 
+	reportv(0, "\n");
+
 	iff_release();
 
 	return 0;
 }
+
