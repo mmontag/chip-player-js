@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.4 2007-08-10 03:52:51 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.5 2007-08-10 11:49:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,6 +21,38 @@
 static int pflag, sflag;
 static int realpat;
 
+
+static void get_d_t_(int size, FILE *f)
+{
+	read16b(f);	/* type */
+	read16b(f);	/* 0xff then mono */
+	read16b(f);	/* reserved */
+	xxh->tpo = read16b(f);
+	xxh->bpm = read16b(f);
+	read32b(f);	/* undocumented */
+
+	fread(xmp_ctl->name, 32, 1, f);
+	strcpy(xmp_ctl->type, "Digital Tracker (DTM)");
+
+	MODULE_INFO();
+}
+
+static void get_s_q_(int size, FILE *f)
+{
+	int i, maxpat;
+
+	xxh->len = read16b(f);
+	xxh->rst = read16b(f);
+	read32b(f);	/* reserved */
+
+	for (maxpat = i = 0; i < 128; i++) {
+		xxo[i] = read8(f);
+		if (xxo[i] > maxpat)
+			maxpat = xxo[i];
+	}
+	xxh->pat = maxpat + 1;
+}
+
 static void get_patt(int size, FILE *f)
 {
 	xxh->chn = read16b(f);
@@ -38,38 +70,47 @@ static void get_inst(int size, FILE *f)
 
 	INSTRUMENT_INIT();
 
+	reportv(1, "\n     Instrument name        Len   LBeg  LSize LS Res Vol Fine C2Spd");
 	for (i = 0; i < xxh->ins; i++) {
-		int c, g;
+		int fine, replen, flag;
 
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-		read32b(f);
-		xxih[i].nsm = !!(xxs[i].len = read32b(f));
-		c = read8(f);
+		read32b(f);		/* reserved */
+		xxs[i].len = read32b(f);
+		xxih[i].nsm = !!xxs[i].len;
+		fine = read8s(f);	/* finetune */
 		xxi[i][0].vol = read8(f);
 		xxs[i].lps = read32b(f);
-		xxs[i].lpe = xxs[i].lps + read32b(f);
+		replen = read32b(f);
+		xxs[i].lpe = xxs[i].lps + replen - 1;
+		xxs[i].flg = replen > 2 ?  WAVE_LOOPING : 0;
 
 		fread(name, 22, 1, f);
 		copy_adjust(xxih[i].name, name, 22);
 
-		g = read16b(f);
-		read16b(f);		/* 0x0030 */
-		read32b(f);		/* 0x00000000 */
-		c2spd = read16b(f);
+		flag = read16b(f);	/* bit 0-7:resol 8:stereo */
+		xxs[i].flg |= (flag & 0xff) > 8 ? WAVE_16_BITS : 0;
+
+		read32b(f);		/* midi note (0x00300000) */
+		c2spd = read32b(f);	/* frequency */
 		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
 		xxi[i][0].sid = i;
 
 		if (strlen((char *)xxih[i].name) || xxs[i].len > 0) {
 			if (V(1))
-				report("\n[%2X] %-22.22s %05x %05x %05x V%02x %02x %04x %5d",
+				report("\n[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
 					i, xxih[i].name,
 					xxs[i].len,
+					xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 					xxs[i].lps,
-					xxs[i].lpe,
+					replen,
+					xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+					flag & 0x100 ? 'S' : ' ',
+					flag & 0xff,
 					xxi[i][0].vol,
-					c,
-					g, c2spd);
+					fine,
+					c2spd);
 			else
 				report(".");
 		}
@@ -104,7 +145,7 @@ static void get_dapt(int size, FILE *f)
 	for (j = 0; j < 64; j++) {
 		for (k = 0; k < xxh->chn; k++) {
 			uint8 a, b, c, d;
-			int x;
+
 			event = &EVENT(pat, k, j);
 			a = read8(f);
 			b = read8(f);
@@ -112,9 +153,8 @@ static void get_dapt(int size, FILE *f)
 			d = read8(f);
 			if (a)
 				event->note = 12 * (a >> 4) + (a & 0x0f);
-			x = ((int)b << 4) + (c >> 4);
-			if (x)
-				event->ins = x;
+			event->vol = (b & 0xfc) >> 2;
+			event->ins = ((b & 0x03) << 4) + (c >> 4);
 			event->fxt = c & 0xf;
 			event->fxp = d;
 		}
@@ -144,7 +184,6 @@ static void get_dait(int size, FILE *f)
 
 int dt_load(FILE *f)
 {
-	int i, maxpat;
 	char magic[4];
 
 	LOAD_INIT ();
@@ -154,38 +193,13 @@ int dt_load(FILE *f)
 	if (strncmp(magic, "D.T.", 4))
 		return -1;
 
-	read32b(f);
-	read32b(f);
-	read32b(f);
-	read16b(f);
-	read32b(f);
-
-	fread(xmp_ctl->name, 18, 1, f);
-	read16b(f);
-	fread(magic, 1, 4, f);
-	if (strncmp(magic, "S.Q.", 4))
-		return -1;
-
-	read16b(f);
-	read16b(f);
-	xxh->len = read16b(f);
-	read16b(f);
-	read16b(f);
-	read16b(f);
-
-	for (maxpat = i = 0; i < 128; i++) {
-		xxo[i] = read8(f);
-		if (xxo[i] > maxpat)
-			maxpat = xxo[i];
-	}
-	xxh->pat = maxpat + 1;
-
-	strcpy(xmp_ctl->type, "Digital Tracker module");
-	MODULE_INFO();
+	fseek(f, 0, SEEK_SET);
 
 	pflag = sflag = 0;
 	
 	/* IFF chunk IDs */
+	iff_register("D.T.", get_d_t_);
+	iff_register("S.Q.", get_s_q_);
 	iff_register("PATT", get_patt);
 	iff_register("INST", get_inst);
 	iff_register("DAPT", get_dapt);
