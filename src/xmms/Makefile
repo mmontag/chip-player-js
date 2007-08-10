@@ -1,6 +1,7 @@
 # Extended Module Player src/xmms/Makefile
-# $Id: Makefile,v 1.10 2007-08-06 16:07:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.11 2007-08-10 20:02:17 cmatsuoka Exp $
 
+TOPDIR	= ../..
 XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` -DBMP_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
 DFILES	= Makefile README $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
@@ -10,7 +11,7 @@ OBJS	= plugin.o xpanel.o fft4g.o font1.o font2.o
 
 default: all
 
-include ../../Makefile.rules
+include $(TOPDIR)/Makefile.rules
 
 all:
 	@[ "x$(XMMS)" != "x" ] && $(MAKE) all-xmms || :

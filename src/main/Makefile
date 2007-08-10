@@ -1,12 +1,13 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.7 2007-08-06 16:07:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.8 2007-08-10 20:02:17 cmatsuoka Exp $
 
+TOPDIR	= ../..
 XCFLAGS	= -I../include $(X_INC)
 OBJS	= getopt.o getopt1.o options.o
 X11OBJS	= xpanel.o xstuff.o font1.o font2.o fft4g.o
 XDEPS	=
 BINS	= xmp
-XLIBS	= -L../../lib -lxmp -lm #-lefence
+XLIBS	= -L$(TOPDIR)/lib -lxmp -lm #-lefence
 X11LIBS	= -lX11 -lXext
 XPMS	= bg1.xpm bg2.xpm bg3.xpm
 DFILES	= Makefile $(OBJS:.o=.c) $(X11OBJS:.o=.c) main.c xpanel.h $(XPMS) \
@@ -17,17 +18,17 @@ DCFILES	=
 
 all: bins
 
-include ../../Makefile.rules
+include $(TOPDIR)/Makefile.rules
 
 bins: $(BINS)
 
 dyndrv:
-	make -C ../../lib shared
+	make -C $(TOPDIR)/lib shared
 
 xmp: $(OBJS) main.o ../../lib/libxmp.a
 	$(LD) $(LDFLAGS) $(OBJS) main.o $(LIBS)
 
-xxmp: $(OBJS) xmain.o $(X11OBJS) ../../lib/libxmp.a
+xxmp: $(OBJS) xmain.o $(X11OBJS) $(TOPDIR)/lib/libxmp.a
 	$(LD) $(LDFLAGS) $(OBJS) $(X11OBJS) xmain.o $(X_LIB) $(X11LIBS) $(LIBS)
 
 xmain.o: main.c xpanel.h
@@ -38,7 +39,7 @@ install:: $(BINS)
 	@[ -d $(BIN_DIR) ] || mkdir -p $(BIN_DIR)
 	$(INSTALL) -s -m755 $(BINS) $(BIN_DIR)
 
-$(OBJS): ../../Makefile.rules Makefile
+$(OBJS): $(TOPDIR)/Makefile.rules Makefile
 
 simple: simple.o
 	$(LD) $(LDFLAGS) $+ $(LIBS)

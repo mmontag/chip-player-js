@@ -1,6 +1,7 @@
 # Extended Module Player src/drivers/Makefile
-# $Id: Makefile,v 1.6 2007-08-09 20:45:57 cmatsuoka Exp $
+# $Id: Makefile,v 1.7 2007-08-10 20:02:16 cmatsuoka Exp $
 
+TOPDIR	= ../..
 XCFLAGS	= -I../include
 OBJS	= file.o callback.o
 DRV	= file.c oss_mix.c hpux.c bsd.c solaris.c oss_seq.c alsa.c alsa05.c \
@@ -8,14 +9,14 @@ DRV	= file.c oss_mix.c hpux.c bsd.c solaris.c oss_seq.c alsa.c alsa05.c \
 	  win32.c callback.c wav.c osx.c
 DFILES	= Makefile $(DRV) debug.c
 DDIRS	=
-LIB	= ../../lib/libxmp.a
+LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	=
 DCFILES	=
-DRVDIR	= ../../lib/drivers
+DRVDIR	= $(TOPDIR)/lib/drivers
 
 all: $(LIB) library
 
-include ../../Makefile.rules
+include $(TOPDIR)/Makefile.rules
 
 library: $(LIB)($(DRIVERS))
 

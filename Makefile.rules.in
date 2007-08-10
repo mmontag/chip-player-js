@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.14 2007-08-09 20:45:57 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.15 2007-08-10 20:02:16 cmatsuoka Exp $
 
 VERSION	= 2.2.0
 DATE	= Thu Aug  9 15:32:31 BRT 2007
@@ -42,15 +42,20 @@ X_INC	= @X_CFLAGS@
 X_LIB	= @X_LIBS@ @X_EXTRA_LIBS@
 X_XMP	= @X_XMP@
 
-.SUFFIXES: .c .o .a .S .so
+LOBJS	= $(OBJS:.o=.lo)
+
+.SUFFIXES: .c .o .lo .a .S .so
 
 .c.o:
 	$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<
 
+.c.lo:
+	$(CC) $(CFLAGS) -fPIC $(XCFLAGS) -o $*.lo $<
+
 .S.o:
 	$(CC) $(CFLAGS) -o $*.o $<
 
-.o.so:
+.lo.so:
 	ld -shared -o $*.so $<
 
 dummy:

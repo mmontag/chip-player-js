@@ -1,6 +1,7 @@
-# Extended Module Player src/xmms/Makefile
-# $Id: Makefile,v 1.1 2006-02-13 22:58:42 cmatsuoka Exp $
+# Extended Module Player src/bmp/Makefile
+# $Id: Makefile,v 1.2 2007-08-10 20:02:16 cmatsuoka Exp $
 
+TOPDIR	= ../..
 XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` -DXMMS_PLUGIN -DBMP_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
 DFILES	= Makefile README xmp-plugin.h $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
@@ -11,7 +12,7 @@ OBJS	= plugin.o driver.o $(LINKS:.c=.o)
 
 default: all
 
-include ../../Makefile.rules
+include $(TOPDIR)Makefile.rules
 
 all:
         @[ "x$(XMMS)" != "x" ] && $(MAKE) all-xmms || :
@@ -22,7 +23,7 @@ plugin: $(OBJS)
 	$(LD) -shared -o xmp-plugin.so $(OBJS) -L../../lib/ -lxmp
 
 dyndrv:
-	make -C ../../lib shared
+	make -C $(TOPDIR)/lib shared
 
 driver.c:
 	ln -sf ../player/driver.c .

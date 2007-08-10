@@ -1,17 +1,18 @@
 # Extended Module player lib/Makefile
-# $Id: Makefile,v 1.7 2007-08-05 19:55:59 cmatsuoka Exp $
+# $Id: Makefile,v 1.8 2007-08-10 20:02:16 cmatsuoka Exp $
 
+TOPDIR	= ..
 DFILES	= Makefile
 CFILES	= $(MYLIB)
 DCFILES	= 
 MYLIB	= libxmp.a
 
-all: $(MYLIB) dynamic
+all: $(MYLIB)
 
-include ../Makefile.rules
+include $(TOPDIR)/Makefile.rules
 
 $(MYLIB):
-	$(MAKE) -C ../src
+	$(MAKE) -C $(TOPDIR)/src
 
 install::
 

@@ -1,6 +1,7 @@
 # Extended Module Player src/loaders/Makefile
-# $Id: Makefile,v 1.17 2007-08-10 01:56:21 cmatsuoka Exp $
+# $Id: Makefile,v 1.18 2007-08-10 20:02:16 cmatsuoka Exp $
 
+TOPDIR	= ../..
 XCFLAGS	= -I../include -Iinclude
 LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  mtm_load.o ptm_load.o okt_load.o alm_load.o amd_load.o rad_load.o \
@@ -17,12 +18,17 @@ OBJS	= common.o iff.o itsex.o $(LOADERS)
 DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c tp_load.c dbm_load.c med2_load.c \
 	  med4_load.c med_load.c $(LATER:.o=.c)
 DDIRS	= include
-LIB	= ../../lib/libxmp.a
+LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	=
 DCFILES	= 
 
 all: $(LIB)
 
-include ../../Makefile.rules
+test:
+	@echo $(LOBJS)
+
+include $(TOPDIR)/Makefile.rules
+
+shared: $(LOBJS)
 
 include depend

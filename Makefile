@@ -1,10 +1,11 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.14 2007-08-10 16:50:31 cmatsuoka Exp $
+# $Id: Makefile,v 1.15 2007-08-10 20:02:15 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
 # DDIRS		standard distribution directories
 
+TOPDIR	= .
 XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)

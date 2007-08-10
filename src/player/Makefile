@@ -1,6 +1,7 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.3 2007-08-06 02:51:00 cmatsuoka Exp $
+# $Id: Makefile,v 1.4 2007-08-10 20:02:17 cmatsuoka Exp $
 
+TOPDIR	= ../..
 XCFLAGS	= -I../include -DLIBDIR='"$(LIB_DIR)"'
 OBJS	= convert.o driver.o formats.o misc.o period.o player.o \
 	  readrc.o scan.o ulaw.o cruncher.o med_synth.o filter.o \
@@ -10,17 +11,17 @@ XDEPS	=
 DFILES	= Makefile $(OBJS:.o=.c) effects.c mixer.c player.h mix_all.c \
 	  fmopl.h synth.h
 DDIRS	=
-LIB	= ../../lib/libxmp.a
+LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	= $(LIB) version.c $(DRIVERS)
 DCFILES	=
 
 all: $(LIB)
 
-include ../../Makefile.rules
+include $(TOPDIR)/Makefile.rules
 
 mix_i386.o: mix_i386.S
 
-version.c: $(DFILES) ../../Makefile.rules
+version.c: $(DFILES) $(TOPDIR)/Makefile.rules
 	@echo "Creating version id..."; \
 	printf "char *xmp_version = \"$(VERSION)\";\n">$@; \
 	printf "char *xmp_date = \"$(DATE)\";\n">>$@; \

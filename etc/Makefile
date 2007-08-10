@@ -1,6 +1,7 @@
 # Extended Module Player etc/Makefile
-# $Id: Makefile,v 1.2 2003-06-24 23:29:29 dmierzej Exp $
+# $Id: Makefile,v 1.3 2007-08-10 20:02:16 cmatsuoka Exp $
 
+TOPDIR	= ..
 DFILES	= Makefile magic xmp.conf xmp.spec xmp.lsm xmp-modules.conf
 DDIRS	=
 CFILES	=
@@ -10,7 +11,7 @@ all:
 
 subdist:: all
 
-include ../Makefile.rules
+include $(TOPDIR)/Makefile.rules
 
 install::
 	@echo Installing xmp.conf and xmp-modules.conf in /etc/xmp...

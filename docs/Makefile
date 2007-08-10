@@ -1,6 +1,7 @@
 # Extended Module Player doc/Makefile
-# $Id: Makefile,v 1.5 2007-08-10 16:50:32 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2007-08-10 20:02:16 cmatsuoka Exp $
 
+TOPDIR	= ..
 DOCS	= xmp.1
 HTMLS	=
 DFILES	= Makefile COPYING CREDITS README.awebug \
@@ -14,7 +15,7 @@ all: docs
 
 subdist:: docs html
 
-include ../Makefile.rules
+include $(TOPDIR)/Makefile.rules
 
 docs: $(DOCS)
 

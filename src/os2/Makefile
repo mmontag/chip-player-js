@@ -6,6 +6,7 @@
 # I don't know if the "+del version.o" will work with GNU Make!
 #
 
+TOPDIR	= ../..
 VERSION	= 2.0.2
 DATE	= Wed Feb 23 09:14:49 BRST 2000
 
