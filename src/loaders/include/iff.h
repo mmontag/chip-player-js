@@ -1,7 +1,8 @@
 
-
 #ifndef __IFF_H
 #define __IFF_H
+
+#include "list.h"
 
 #define IFF_NOBUFFER 0x0001
 
@@ -16,9 +17,8 @@ struct iff_header {
 
 struct iff_info {
     char id[5];
-    void (*loader) ();
-    struct iff_info *next;
-    struct iff_info *prev;
+    void (*loader)();
+    struct list_head list;
 };
 
 void iff_chunk (FILE *);

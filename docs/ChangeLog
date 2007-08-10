@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.35 2007-08-10 16:50:32 cmatsuoka Exp $
+$Id: ChangeLog,v 1.36 2007-08-10 17:53:20 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -17,6 +17,7 @@ Stable versions
 	- removed broken shared lib generation
 	- removed packed structures anymore
 	- replaced non-free PowerPack depacker with Kyzer's PD version
+	- replaced list management in IFF loader with kernel list helpers
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines

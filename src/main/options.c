@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.10 2007-08-10 16:50:32 cmatsuoka Exp $
+ * $Id: options.c,v 1.11 2007-08-10 17:53:21 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,7 +20,7 @@
 #include <getopt.h>
 
 #include "xmp.h"
-#include "../prowizard/list.h"
+#include "list.h"
 #include "../prowizard/prowiz.h"
 
 extern struct list_head format_list;

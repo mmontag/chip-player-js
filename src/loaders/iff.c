@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1997 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,12 +14,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include "xmpi.h"
+#include "list.h"
 #include "iff.h"
 
 #define __XMP_LOADERS_COMMON
 #include "load.h"
 
-static struct iff_info *iff_head = NULL;
+LIST_HEAD(iff_list);
+
 static int __id_size;
 static int __flags;
 
@@ -40,52 +42,46 @@ void iff_chunk (FILE *f)
 }
 
 
-void iff_register (char *id, void (*loader) ())
+void iff_register(char *id, void (*loader)())
 {
     struct iff_info *f;
 
     __id_size = 4;
     __flags = 0;
-    f = malloc (sizeof (struct iff_info));
+
+    f = malloc(sizeof (struct iff_info));
     strcpy (f->id, id);
     f->loader = loader;
-    if (!iff_head) {
-	iff_head = f;
-	f->prev = NULL;
-    } else {
-	struct iff_info *i;
-	for (i = iff_head; i->next; i = i->next);
-	i->next = f;
-	f->prev = i;
-    }
-    f->next = NULL;
+
+    list_add_tail(&f->list, &iff_list);
 }
 
 
 void iff_release ()
 {
+    struct list_head *tmp;
     struct iff_info *i;
 
-    for (i = iff_head; i->next; i = i->next);
-    while (i->prev) {
-	i = i->prev;
-	free (i->next);
-	i->next = NULL;
+    list_for_each(tmp, &iff_list) {
+	i = list_entry(tmp, struct iff_info, list);
+	list_del(&i->list);
+	free(i);
     }
-    free (iff_head);
-    iff_head = NULL;
+
 }
 
 
 int iff_process(char *id, long size, FILE *f)
 {
+    struct list_head *tmp;
     struct iff_info *i;
     int pos;
 
     pos = ftell(f);
 
-    for (i = iff_head; i; i = i->next) {
-	if (id && !strncmp (id, i->id, __id_size)) {
+    list_for_each(tmp, &iff_list) {
+	i = list_entry(tmp, struct iff_info, list);
+	if (id && !strncmp(id, i->id, __id_size)) {
 	    i->loader(size, f);
 	    break;
 	}
