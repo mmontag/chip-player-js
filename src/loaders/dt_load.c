@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.5 2007-08-10 11:49:32 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.6 2007-08-10 12:10:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -95,6 +95,10 @@ static void get_inst(int size, FILE *f)
 		read32b(f);		/* midi note (0x00300000) */
 		c2spd = read32b(f);	/* frequency */
 		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+
+		/* It's strange that we have both c2spd and finetune */
+		xxi[i][0].fin += fine;
+
 		xxi[i][0].sid = i;
 
 		if (strlen((char *)xxih[i].name) || xxs[i].len > 0) {
