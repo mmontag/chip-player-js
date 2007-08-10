@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.19 2007-08-09 22:00:05 cmatsuoka Exp $
+ * $Id: formats.c,v 1.20 2007-08-10 01:29:46 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -117,5 +117,6 @@ void xmp_init_formats ()
     register_fmt ("CRB", "Heatseeker", crb_load);
 #endif
     register_fmt ("ALM", "Aley Keptr", alm_load);
+    register_fmt ("4V", "Quartet", quartet_load);
 }
 

@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.4 2007-08-09 00:51:23 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.5 2007-08-10 01:29:46 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -202,7 +202,7 @@ static void get_patt(int size, FILE *f)
 					if (b & 0x40)
 						event->ins = read8(f);
 					if (b & 0x20)
-						event->note = 24 + read8(f);
+						event->note = 12 + read8(f);
 					if (b & 0x10)
 						event->vol = read8(f);
 					if (b & 0x08) {	/* instrument effect */
@@ -255,7 +255,7 @@ static void get_smpi(int size, FILE *f)
 		xxs[i].lpe = read32l(f);
 		xxih[i].nsm = !!xxs[i].len;
 		c3spd = read16l(f);
-		c2spd_to_note(c3spd / 2, &xxi[i][0].xpo, &xxi[i][0].fin);
+		c2spd_to_note(c3spd, &xxi[i][0].xpo, &xxi[i][0].fin);
 		xxi[i][0].vol = read8(f) / 4;
 		xxi[i][0].pan = 0x80;
 		xxi[i][0].sid = i;

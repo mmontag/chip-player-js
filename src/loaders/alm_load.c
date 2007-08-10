@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.3 2007-08-04 20:08:15 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.4 2007-08-10 01:29:46 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -11,12 +11,10 @@
 /* ALM (Aley's Module) is a module format used on 8bit computers. It was
  * designed to be usable on Sam Coupe (CPU Z80 6MHz) and PC XT. The ALM file
  * format is very simple and it have no special effects, so every computer
- * can play the ALMs. [Yes, even Unix workstations with GUS]
+ * can play the ALMs.
  *
- * Technically speaking, Aley's Modules are not modules -- they don't
- * pack the sequencing information and the sound samples in a single
- * file. xmp's module loading mechanism was not designed to load samples
- * from different files so I kludged char *module into a global variable.
+ * Note: xmp's module loading mechanism was not designed to load samples
+ * from different files. Using *module into a global variable is a hack.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,9 +22,7 @@
 #endif
 
 #include "load.h"
-#ifdef __EMX__
 #include <sys/types.h>
-#endif
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -39,6 +35,7 @@ struct alm_file_header {
     uint8 order[128];		/* Pattern sequence */
 };
 
+#define NAME_SIZE 255
 
 int alm_load (FILE *f)
 {
@@ -48,13 +45,13 @@ int alm_load (FILE *f)
     struct stat stat;
     uint8 b;
     char *basename;
-    char filename[80];
-    char modulename[80];
+    char filename[NAME_SIZE];
+    char modulename[NAME_SIZE];
     FILE *s;
 
     LOAD_INIT ();
 
-    strcpy (modulename, xmp_ctl->filename);
+    strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
     basename = strtok (modulename, ".");
 
     fread(&afh.id, 7, 1, f);
@@ -89,8 +86,7 @@ int alm_load (FILE *f)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -104,22 +100,19 @@ int alm_load (FILE *f)
 	    fread (&b, 1, 1, f);
 	    event->ins = b;
 	}
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     INSTRUMENT_INIT ();
 
     /* Read and convert instruments and samples */
 
-    if (V (0))
-	report ("Loading samples: %d ", xxh->ins);
+    reportv(0, "Loading samples: %d ", xxh->ins);
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	sprintf (filename, "%s.%d", basename, i + 1);
+	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = fopen (filename, "rb");
 	if (!(xxih[i].nsm = (s != NULL)))
 	    continue;
@@ -148,11 +141,9 @@ int alm_load (FILE *f)
 	xmp_drv_loadpatch (s, xxi[i][0].sid, xmp_ctl->c4rate,
 	    XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
 
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     /* ALM is LRLR, not LRRL */
     for (i = 0; i < xxh->chn; i++)
