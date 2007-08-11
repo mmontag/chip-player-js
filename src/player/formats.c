@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.21 2007-08-10 01:56:21 cmatsuoka Exp $
+ * $Id: formats.c,v 1.22 2007-08-11 00:17:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,28 +62,23 @@ void xmp_init_formats ()
     register_fmt ("AMF", "DSMI (DMP)", amf_load);
     register_fmt ("MMD0/1", "OctaMED", mmd1_load);
     register_fmt ("MMD2/3", "OctaMED", mmd3_load);
-#if 0
-    register_fmt ("MED2/3", "MED 1.1/2.0", med2_load);
-    register_fmt ("MED4", "MED 3.22", med4_load);
-#endif
+    //register_fmt ("MED2/3", "MED 1.1/2.0", med2_load);
+    //register_fmt ("MED4", "MED 3.22", med4_load);
     register_fmt ("DMF", "X-Tracker", dmf_load);
     register_fmt ("RTM", "Real Tracker", rtm_load);
     register_fmt ("PTM", "Poly Tracker", ptm_load);
     register_fmt ("TCB", "TCB Tracker", tcb_load);
     register_fmt ("DTM", "Digital Tracker", dt_load);
+    register_fmt ("GTK", "Graoumf Tracker", gtk_load);
     register_fmt ("DIGI", "DIGI Booster", digi_load);
-#if 0
-    register_fmt ("DBM", "DigiBooster Pro", dbm_load);
-#endif
+    //register_fmt ("DBM", "DigiBooster Pro", dbm_load);
     register_fmt ("EMOD", "Quadra Composer", emod_load);
     register_fmt ("OKT", "Oktalyzer", okt_load);
     register_fmt ("SFX", "SoundFX 1.3", sfx_load);
     register_fmt ("FAR", "Farandole Composer", far_load);
     register_fmt ("STIM", "Slamtilt", stim_load);
-#if 0
-    register_fmt ("FC-M", "FC-M Packer", fcm_load);
-    register_fmt ("KSM", "Kefrens Sound Machine", ksm_load);
-#endif
+    //register_fmt ("FC-M", "FC-M Packer", fcm_load);
+    //register_fmt ("KSM", "Kefrens Sound Machine", ksm_load);
     register_fmt ("IMS", "Images Music System", ims_load);
 #if 0
     register_fmt ("WN", "Wanton Packer", wn_load);
@@ -113,9 +108,7 @@ void xmp_init_formats ()
     register_fmt ("AMD", "Amusic Adlib Tracker", amd_load);
     register_fmt ("RAD", "Reality Adlib Tracker", rad_load);
     register_fmt ("HSC", "HSC-Tracker", hsc_load);
-#if 0
-    register_fmt ("CRB", "Heatseeker", crb_load);
-#endif
+    //register_fmt ("CRB", "Heatseeker", crb_load);
     register_fmt ("ALM", "Aley Keptr", alm_load);
 }
 

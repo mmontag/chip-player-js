@@ -349,19 +349,19 @@ End chunk (v3)
 Structure des infos samples :
 ¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹¹
 
-	rsreset
-name_s:	rs.b	28	; Nom du sample
-	rs.w	7	; Libre (enfin, r‚serv‚ pour des am‚liorations futures)
-			; Doit ˆtre mis … 0 !
+		rsreset
+name_s:		rs.b	28	; Nom du sample
+		rs.w	7	; Libre (enfin, r‚serv‚ pour des am‚liorations futures)
+				; Doit ˆtre mis … 0 !
 autobal_s:	rs.w	1	; Balance automatique, -1 = rien
 nbits_s:	rs.w	1	; 1 = 8 bits, 2 = 16 bits
-fech_s:	rs.w	1	; Fr‚quence d'‚chantillonnage du sample (8363 Hz par d‚faut)
+fech_s:		rs.w	1	; Fr‚quence d'‚chantillonnage du sample (8363 Hz par d‚faut)
 length_s:	rs.l	1	; Longueur du sample, paire
 repeat_s:	rs.l	1	; Point de bouclage, pair
 replen_s:	rs.l	1	; Longueur de boucle, paire
-vol_s:	rs.w	1	; Volume ($0 … $100)
+vol_s:		rs.w	1	; Volume ($0 … $100)
 ftune_s:	rs.w	1	; Finetune (-8 … +7)
-size_s:	rs	1	; Total : 64 octets
+size_s:		rs	1	; Total : 64 octets
 
 ***    Toutes les valeurs sont au format Motorola et non Intel :     ***
 ***    l'octet de poids fort en premier, et l'octet de poids faible  ***
@@ -380,23 +380,23 @@ Structure du module :
 
 Nom	Offset		Taille		Fonction
 gtk_id:	    0		  3		Identificateur "GTK"
-form_num:	    3		  1		Num‚ro de format : le num‚ro 3
+form_num:   3		  1		Num‚ro de format : le num‚ro 3
 name:	    4		 32		Nom ASCII (pas de z‚ro)
-comment:	   36		160		Commentaire ASCII (pas de z‚ro)
+comment:   36		160		Commentaire ASCII (pas de z‚ro)
 n_spl:	  196		  2		Nombre d'instruments (0 … 255)
-n_lines:	  198		  2		Nombre de lignes/pattern (1 … 256)
+n_lines:  198		  2		Nombre de lignes/pattern (1 … 256)
 n_trk:	  200		  2		Nombre de voies/pattern (1 … 32 ?? ou + ??)
-songlen:	  202		  2		Longueur de la song (1 … 256)
-songrep:	  204		  2		Point de bouclage dans la song (0 … songlen-1)
-infos_s:	  206		n_spl*size_s	Descriptif des instruments (… partir du num‚ro 1)
+songlen:  202		  2		Longueur de la song (1 … 256)
+songrep:  204		  2		Point de bouclage dans la song (0 … songlen-1)
+infos_s:  206		n_spl*size_s	Descriptif des instruments (… partir du num‚ro 1)
 ...
 song:	  n_spl*size_s	256*2		La song (1 mot = 1 pattern), de la position 0 jusqu'… 255
 	+ 206
 ...
-patterns:	  n_spl*size_s	(npatmax+1)*n_l*n_t*?	Les patterns, de 0 … npatmax.
+patterns:  n_spl*size_s	(npatmax+1)*n_l*n_t*?	Les patterns, de 0 … npatmax.
 	+ 718				? peut ˆtre 4 (v3) ou 5 (v4)
 ...
-samples:	  n_spl*size_s			Les samples, 8 ou 16 bits sign‚s
+samples:  n_spl*size_s			Les samples, 8 ou 16 bits sign‚s
 	+ (npatmax+1)*n_l*n_t*?
 	+ 718
 
