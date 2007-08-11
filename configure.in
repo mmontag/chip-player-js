@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.14 2007-08-05 19:55:59 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.15 2007-08-11 12:56:15 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -316,6 +316,16 @@ linux*)
     alpha)
         ;;
     esac
+    ;;
+dnl
+dnl	Test for OSX
+dnl
+darwin*)
+    AC_CHECK_HEADERS(CoreAudio/CoreAudio.h)
+    if test "${ac_cv_header_CoreAudio_CoreAudio_h}" = "yes"; then
+	DRIVERS="${DRIVERS} osx.o"
+	AC_DEFINE(DRIVER_OSX)
+    fi
     ;;
 dnl
 dnl	Test for HP-UX

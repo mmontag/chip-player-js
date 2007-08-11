@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.8 2007-08-10 13:58:25 cmatsuoka Exp $
+ * $Id: driver.c,v 1.9 2007-08-11 12:56:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -54,6 +54,9 @@ void (*_driver_callback)(void *, int) = NULL;
 extern struct xmp_drv_info drv_file;
 extern struct xmp_drv_info drv_wav;
 
+#ifdef DRIVER_OSX
+extern struct xmp_drv_info drv_osx;
+#endif
 #ifdef DRIVER_SOLARIS
 extern struct xmp_drv_info drv_solaris;
 #endif
@@ -121,14 +124,8 @@ void xmp_init_drivers ()
     xmp_drv_register (&drv_file);
     xmp_drv_register (&drv_wav);
 
-#ifdef DRIVER_ARTS
-    xmp_drv_register (&drv_arts);
-#endif
-#ifdef DRIVER_ESD
-    xmp_drv_register (&drv_esd);
-#endif
-#ifdef DRIVER_NAS
-    xmp_drv_register (&drv_nas);
+#ifdef DRIVER_OSX
+    xmp_drv_register (&drv_osx);
 #endif
 #ifdef DRIVER_SOLARIS
     xmp_drv_register (&drv_solaris);
@@ -162,6 +159,15 @@ void xmp_init_drivers ()
 #endif
 #ifdef DRIVER_OS2DART
     xmp_drv_register (&drv_os2dart);
+#endif
+#ifdef DRIVER_ARTS
+    xmp_drv_register (&drv_arts);
+#endif
+#ifdef DRIVER_ESD
+    xmp_drv_register (&drv_esd);
+#endif
+#ifdef DRIVER_NAS
+    xmp_drv_register (&drv_nas);
 #endif
 
 #endif /* XMMS_PLUGIN */
