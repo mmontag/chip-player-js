@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -106,6 +106,17 @@ int flt_load (FILE *f)
     if (V (0))
 	report ("Stored patterns: %d ", xxh->pat);
 
+    /* The format you are looking for is FLT8, and the ONLY two differences
+     * are: It says FLT8 instead of FLT4 or M.K., AND, the patterns are PAIRED.
+     * I thought this was the easiest 8 track format possible, since it can be
+     * loaded in a normal 4 channel tracker if you should want to rip sounds or
+     * patterns. So, in a 8 track FLT8 module, patterns 00 and 01 is "really"
+     * pattern 00. Patterns 02 and 03 together is "really" pattern 01. Thats
+     * it. Oh well, I didnt have the time to implement all effect commands
+     * either, so some FLT8 modules would play back badly (I think especially
+     * the portamento command uses a different "scale" than the normal
+     * portamento command, that would be hard to patch).
+     */
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	xxp[i]->rows = 64;
