@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.15 2007-08-11 12:56:15 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.16 2007-08-11 15:20:33 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -77,7 +77,7 @@ dnl -----------------------------------------------------------------------
 dnl Check platform.
 dnl -----------------------------------------------------------------------
 
-if [ -z "${target}" ]; then
+if test -z "${target}"; then
     target=${host}
     target_cpu=${host_cpu}
     target_vendor=${host_vendor}
@@ -324,6 +324,7 @@ darwin*)
     AC_CHECK_HEADERS(CoreAudio/CoreAudio.h)
     if test "${ac_cv_header_CoreAudio_CoreAudio_h}" = "yes"; then
 	DRIVERS="${DRIVERS} osx.o"
+	LIBS="${LIBS} -framework AudioToolbox -framework AudioUnit -framework CoreServices"
 	AC_DEFINE(DRIVER_OSX)
     fi
     ;;

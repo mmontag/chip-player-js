@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.4 2007-08-09 20:45:57 cmatsuoka Exp $
+ * $Id: osx.c,v 1.5 2007-08-11 15:20:36 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -193,25 +193,19 @@ OSStatus render_proc(void *inRefCon,
  */
 
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_control *ctl)
 {
 	AudioStreamBasicDescription ad;
 	Component comp;
 	ComponentDescription cd;
 	AURenderCallbackStruct rc;
+	//char *token;
+	//char **parm = ctl->parm;
+	OSStatus err;
+	UInt32 size, max_frames;
 
-	char *token;
-	char **parm = ctl->parm;
-	int bpf, bpp, fpp;
-
-	bpf = bpp = 0;
-	fpp = 1;
-
-	parm_init();
-	chkparm1("bpf", bpf = atoi(token));
-	chkparm1("bpp", bpp = atoi(token));
-	chkparm1("fpp", fpp = atoi(token));
-	parm_end();
+	//parm_init();
+	//parm_end();
 
 	ad.mSampleRate = ctl->freq;
 	ad.mFormatID = kAudioFormatLinearPCM;
@@ -223,9 +217,9 @@ static int init (struct xmp_control *ctl)
 	ad.mChannelsPerFrame = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
 	ad.mBitsPerChannel = ctl->resol;
 
-	ad.mBytesPerFrame = bpf;
-	ad.mBytesPerPacket = bpp;
-	ad.mFramesPerPacket = fpp;
+	ad.mBytesPerFrame = ctl->resol / 8 * ad.mChannelsPerFrame;
+	ad.mBytesPerPacket = ad.mBytesPerFrame;
+	ad.mFramesPerPacket = 1;
 
         packet_size = ad.mFramesPerPacket * ad.mChannelsPerFrame *
 						(ad.mBitsPerChannel / 8);
@@ -236,29 +230,57 @@ static int init (struct xmp_control *ctl)
 	cd.componentFlags = 0;
 	cd.componentFlagsMask = 0;
 
-	if ((comp = FindNextComponent(NULL, &cd)) == NULL)
+	if ((comp = FindNextComponent(NULL, &cd)) == NULL) {
+		fprintf(stderr, "error: FindNextComponent\n");
 		return XMP_ERR_DINIT;
+	}
 
-	if (OpenAComponent(comp, &au))
+	if ((err = OpenAComponent(comp, &au))) {
+		fprintf(stderr, "error: OpenAComponent (%ld)\n", err);
 		return XMP_ERR_DINIT;
+	}
 
-	if (AudioUnitInitialize(au))
+	if ((err = AudioUnitInitialize(au))) {
+		fprintf(stderr, "error: AudioUnitInitialize (%ld)\n", err);
 		return XMP_ERR_DINIT;
+	}
 
-	if (AudioUnitSetProperty(au, kAudioUnitProperty_StreamFormat,
-			kAudioUnitScope_Input, 0, &ad, sizeof(ad)))
+	if ((err = AudioUnitSetProperty(au, kAudioUnitProperty_StreamFormat,
+			kAudioUnitScope_Input, 0, &ad, sizeof(ad)))) {
+		fprintf(stderr, "error: AudioUnitSetProperty: StreamFormat (%ld)\n", err);
+		fprintf(stderr, "mSampleRate = %lf\n", ad.mSampleRate);
+		fprintf(stderr, "mFormatID = 0x%lx\n", ad.mFormatID);
+		fprintf(stderr, "mFormatFlags = 0x%lx\n", ad.mFormatFlags);
+		fprintf(stderr, "mChannelsPerFrame = %ld\n", ad.mChannelsPerFrame);
+		fprintf(stderr, "mBitsPerChannel = %ld\n", ad.mBitsPerChannel);
+		fprintf(stderr, "mBytesPerFrame = %ld\n", ad.mBytesPerFrame);
+		fprintf(stderr, "mBytesPerPacket = %ld\n", ad.mBytesPerPacket);
+		fprintf(stderr, "mFramesPerPacket = %ld\n", ad.mFramesPerPacket);
+
 		return XMP_ERR_DINIT;
+	}
 
-        num_chunks = (ctl->freq * bpf + chunk_size - 1) / chunk_size;
+	size = sizeof(UInt32);
+        if ((err = AudioUnitGetProperty(au, kAudioDevicePropertyBufferSize,
+			kAudioUnitScope_Input, 0, &max_frames, &size))) {
+		fprintf(stderr, "error: AudioUnitGetProperty: BufferSize (%ld)\n", err);
+		return XMP_ERR_DINIT;
+	}
+
+	chunk_size = max_frames;
+        num_chunks = (ctl->freq * ad.mBytesPerFrame + chunk_size - 1) /
+								chunk_size;
         buffer_len = (num_chunks + 1) * chunk_size;
         buffer = calloc(num_chunks + 1, chunk_size);
 
 	rc.inputProc = render_proc;
 	rc.inputProcRefCon = 0;
 
-	if (AudioUnitSetProperty(au, kAudioUnitProperty_SetRenderCallback,
-			kAudioUnitScope_Input, 0, &rc, sizeof(rc)))
+	if ((err = AudioUnitSetProperty(au, kAudioUnitProperty_SetRenderCallback,
+			kAudioUnitScope_Input, 0, &rc, sizeof(rc)))) {
+		fprintf(stderr, "error: AudioUnitSetProperty: SetRenderCallback (%ld)\n", err);
 		return XMP_ERR_DINIT;
+	}
 	
 	reset();
 

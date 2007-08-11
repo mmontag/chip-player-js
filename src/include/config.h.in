@@ -4,6 +4,9 @@
 #undef DRIVER_OSS_SEQ
 #undef DRIVER_OSS_MIX
 
+/* Define to enable OSX CoreAudio support */
+#undef DRIVER_OSX
+
 /* Define to enable HP-UX audio support */
 #undef DRIVER_HPUX
 
