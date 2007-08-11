@@ -1,4 +1,4 @@
-$Id: README,v 1.19 2007-08-10 21:19:33 cmatsuoka Exp $
+$Id: README,v 1.20 2007-08-11 01:42:06 cmatsuoka Exp $
 
 
 
@@ -92,8 +92,8 @@ The current version recognizes the following module formats:
   Other (Atari):
 
   CDx1	****+	Octalyser		CD61, CD81
-  DTM	**	Digital Tracker		1.9
-  FLX	***	Flextrax		M.K., xCHN (no dsp effects)
+  DTM	***	Digital Tracker		1.9
+  FLX	****	Flextrax		M.K., xCHN (no dsp effects)
   MOD	***	TCB Tracker		'AN COOL.'
 
   Other (PC):

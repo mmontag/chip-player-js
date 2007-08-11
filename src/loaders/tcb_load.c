@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.5 2007-08-09 21:11:15 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.6 2007-08-11 01:42:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -85,8 +85,8 @@ int tcb_load(FILE * f)
 		xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		for (j = 0; j < 64; j++) {
-			for (k = 0; k < 4; k++) {
+		for (j = 0; j < xxp[i]->rows; j++) {
+			for (k = 0; k < xxh->chn; k++) {
 				int b;
 				event = &EVENT (i, k, j);
 

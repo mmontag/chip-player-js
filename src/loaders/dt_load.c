@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.7 2007-08-10 13:58:25 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.8 2007-08-11 01:42:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,12 +24,15 @@ static int realpat;
 
 static void get_d_t_(int size, FILE *f)
 {
-	read16b(f);	/* type */
-	read16b(f);	/* 0xff then mono */
-	read16b(f);	/* reserved */
+	int b;
+
+	read16b(f);			/* type */
+	read16b(f);			/* 0xff then mono */
+	read16b(f);			/* reserved */
 	xxh->tpo = read16b(f);
-	xxh->bpm = read16b(f);
-	read32b(f);	/* undocumented */
+	if ((b = read16b(f)) > 0)	/* RAMBO.DTM has bpm 0 */
+		xxh->bpm = b;
+	read32b(f);			/* undocumented */
 
 	fread(xmp_ctl->name, 32, 1, f);
 	strcpy(xmp_ctl->type, "Digital Tracker (DTM)");
@@ -126,12 +129,13 @@ static void get_dapt(int size, FILE *f)
 {
 	int pat, i, j, k;
 	struct xxm_event *event;
-	static int last_pat = 0;
+	static int last_pat;
 	int rows;
 
 	if (!pflag) {
-		reportv(0, "Stored patterns: %d ", realpat);
+		reportv(0, "Stored patterns: %d (%d) ", realpat, xxh->pat);
 		pflag = 1;
+		last_pat = 0;
 		PATTERN_INIT();
 	}
 
@@ -146,7 +150,7 @@ static void get_dapt(int size, FILE *f)
 	}
 	last_pat = pat + 1;
 
-	for (j = 0; j < 64; j++) {
+	for (j = 0; j < rows; j++) {
 		for (k = 0; k < xxh->chn; k++) {
 			uint8 a, b, c, d;
 
