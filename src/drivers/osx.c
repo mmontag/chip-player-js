@@ -6,17 +6,17 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.5 2007-08-11 15:20:36 cmatsuoka Exp $
+ * $Id: osx.c,v 1.6 2007-08-11 19:25:36 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include <string.h>
 #include <CoreAudio/CoreAudio.h>
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
+#include <unistd.h>
 
 #include "xmpi.h"
 #include "driver.h"
@@ -29,17 +29,10 @@ static void shutdown(void);
 
 static void dummy () { }
 
-static char *help[] = {
-	"bpf", "Bytes per frame",
-	"bpp", "Bytes per packet",
-	"fpp", "Frames per packet",
-	NULL
-};
-
 struct xmp_drv_info drv_osx = {
 	"osx",			/* driver ID */
 	"OSX CoreAudio",	/* driver description */
-	help,			/* help */
+	NULL,			/* help */
 	init,			/* init */
 	shutdown,		/* shutdown */
 	xmp_smix_numvoices,	/* numvoices */
@@ -66,6 +59,7 @@ struct xmp_drv_info drv_osx = {
 
 /*
  * CoreAudio helpers from mplayer/libao
+ * The player fills a ring buffer, OSX retrieves data from the buffer
  */
 
 static AudioUnit au;
@@ -78,32 +72,6 @@ static int num_chunks;
 static int chunk_size;
 static int packet_size;
 
-/* stop playing, keep buffers (for pause) */
-static void audio_pause()
-{
-	/* stop callback */
-	AudioOutputUnitStop(au);
-        paused = 1;
-}
-
-/* resume playing, after audio_pause() */
-static void audio_resume()
-{
-        if (paused) {
-                /* start callback */
-                AudioOutputUnitStart(au);
-                paused = 0;
-        }
-}
-
-/* set variables and buffer to initial state */
-static void reset()
-{
-        audio_pause();
-        /* reset ring-buffer state */
-        buf_read_pos = 0;
-        buf_write_pos = 0;
-}
 
 /* return minimum number of free bytes in buffer, value may change between
  * two immediately following calls, and the real number of free bytes
@@ -132,15 +100,17 @@ static int write_buffer(unsigned char *data, int len)
 {
 	int first_len = buffer_len - buf_write_pos;
 	int free = buf_free();
+
 	if (len > free)
 		len = free;
 	if (first_len > len)
 		first_len = len;
-	// till end of buffer
-	memcpy(&buffer[buf_write_pos], data, first_len);
-	if (len > first_len) {	// we have to wrap around
-		// remaining part from beginning of buffer
-		memcpy(buffer, &data[first_len], len - first_len);
+
+	/* till end of buffer */
+	memcpy(buffer + buf_write_pos, data, first_len);
+	if (len > first_len) {	/* we have to wrap around */
+		/* remaining part from beginning of buffer */
+		memcpy(buffer, data + first_len, len - first_len);
 	}
 	buf_write_pos = (buf_write_pos + len) % buffer_len;
 
@@ -152,15 +122,17 @@ static int read_buffer(unsigned char *data, int len)
 {
 	int first_len = buffer_len - buf_read_pos;
 	int buffered = buf_used();
+
 	if (len > buffered)
 		len = buffered;
 	if (first_len > len)
 		first_len = len;
-	// till end of buffer
-	memcpy(data, &buffer[buf_read_pos], first_len);
-	if (len > first_len) {	// we have to wrap around
-		// remaining part from beginning of buffer
-		memcpy(&data[first_len], buffer, len - first_len);
+
+	/* till end of buffer */
+	memcpy(data, buffer + buf_read_pos, first_len);
+	if (len > first_len) {	/* we have to wrap around */
+		/* remaining part from beginning of buffer */
+		memcpy(data + first_len, buffer, len - first_len);
 	}
 	buf_read_pos = (buf_read_pos + len) % buffer_len;
 
@@ -173,16 +145,12 @@ OSStatus render_proc(void *inRefCon,
 		UInt32 inNumFrames, AudioBufferList *ioData)
 {
 	int amt = buf_used();
-	int req = (inNumFrames) * packet_size;
+	int req = inNumFrames * packet_size;
 
 	if (amt > req)
 		amt = req;
 
-	if (amt)
-		read_buffer((unsigned char *)ioData->mBuffers[0].mData, amt);
-	else
-		audio_pause();
-
+	read_buffer((unsigned char *)ioData->mBuffers[0].mData, amt);
 	ioData->mBuffers[0].mDataByteSize = amt;
 
         return noErr;
@@ -276,14 +244,16 @@ static int init(struct xmp_control *ctl)
 	rc.inputProc = render_proc;
 	rc.inputProcRefCon = 0;
 
+        buf_read_pos = 0;
+        buf_write_pos = 0;
+	paused = 1;
+
 	if ((err = AudioUnitSetProperty(au, kAudioUnitProperty_SetRenderCallback,
 			kAudioUnitScope_Input, 0, &rc, sizeof(rc)))) {
 		fprintf(stderr, "error: AudioUnitSetProperty: SetRenderCallback (%ld)\n", err);
 		return XMP_ERR_DINIT;
 	}
 	
-	reset();
-
 	return xmp_smix_on(ctl);
 }
 
@@ -296,7 +266,12 @@ static void bufdump(int i)
 	uint8 *b;
 	int j = 0;
 
+	/* block until we have enough free space in the buffer */
+	while (buf_free() < i)
+		usleep(100000);
+
 	b = xmp_smix_buffer();
+
 	while (i) {
         	if ((j = write_buffer(b, i)) > 0) {
 			i -= j;
@@ -305,7 +280,10 @@ static void bufdump(int i)
 			break;
 	}
 
-        audio_resume();
+	if (paused) {
+		AudioOutputUnitStart(au);
+		paused = 0;
+	}
 }
 
 
