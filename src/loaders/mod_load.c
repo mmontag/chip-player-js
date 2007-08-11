@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.7 2007-08-11 00:17:49 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.8 2007-08-11 20:18:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -215,7 +215,6 @@ static int module_load (FILE *f, int ptdt)
     if (0x43c + xxh->pat * 4 * xxh->chn * 0x40 + smp_size < xmp_ctl->size) {
 	int pos = ftell(f);
 	fseek(f, 0x43c + xxh->pat * 4 * xxh->chn * 0x40 + smp_size, SEEK_SET);
-printf("pos = %x\n", ftell(f));
 	fread(idbuffer, 1, 4, f);
 	fseek(f, pos, SEEK_SET);
 

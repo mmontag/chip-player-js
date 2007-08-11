@@ -1,5 +1,5 @@
 # Extended Module Player src/prowizard/Makefile
-# $Id: Makefile,v 1.7 2007-08-10 20:02:17 cmatsuoka Exp $
+# $Id: Makefile,v 1.8 2007-08-11 20:18:05 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -DLIBDIR='"$(LIB_DIR)"'
@@ -13,7 +13,7 @@ OBJS2	= gmc.o hrt.o noiserun.o p40.o p41a.o p50a.o p61a.o pm.o pm01.o \
 DUPES	= qc.o xann.o stim.o
 XOBJS	=
 XDEPS	=
-DFILES	= Makefile $(OBJS:.o=.c) $(OBJS2:.o=.c) $(DUPES:.o=.c) prowiz.h list.h
+DFILES	= Makefile $(OBJS:.o=.c) $(OBJS2:.o=.c) $(DUPES:.o=.c) prowiz.h
 DDIRS	=
 LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	= $(LIB) version.c $(DRIVERS)
