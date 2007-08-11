@@ -1,9 +1,12 @@
 
 MOD REPLAYING NOTES
 Hipolito Carraro Jr. <hipolito@brhs.com.br>
-Claudio Matsuoka <claudio@helllabs.org>
+Claudio Matsuoka <cmatsuoka@gmail.com>
 
-Last update: Sun May 16 13:43:42 EST 1999
+Created: Sun May 16 13:43:42 EST 1999
+
+Sat Aug 11 08:04:52 BRT 2007
+- added Digitrakker 3.2
 
 
 1. Event fetch
@@ -31,13 +34,13 @@ ST3	= Scream Tracker 3.21 (Future Crew, 1994)
 IO10	= Imago Orpheus 1.0 (Lutz Roeder, 1994)
 IT(s)	= Impulse Tracker 2.14, sample mode (Jeffrey Lim)
 IT(i)	= Impulse Tracker 2.14, instrument mode (Jeffrey Lim)
+DT32	= Digitrakker 3.2 (Jörn Mik (Prodatron), 1997)
 
-Protrackers downloaded from Aminet and Warlock's ADF archive and tested
-with UAE 0.8.6 on Linux 2.1.130. Startrekker 1.2, Soundtracker 2.5 and
-Noisetracker 1.0/1.2/2.0 don't run in this version of UAE (or at least I
-couldn't make them run).
+Protrackers downloaded from Aminet and Warlock's ADF archive and tested with
+UAE 0.8.6. Startrekker 1.2, Soundtracker 2.5 and Noisetracker 1.0/ 1.2/2.0
+don't run in this version of UAE (or at least I couldn't make them run).
 
-Behaviours:
+Behaviors:
 
 Play	= Play new note with new default volume
 Trig	= Play new note with old default volume
@@ -63,6 +66,7 @@ FT2		Switch	Play	Play	Cut	<=
 ST3		Switch	Play	Play	Switch
 IT(s)		Switch	Play	Play	?
 IT(i)		Switch	Play	Play	Cont
+DT32		Play	Play	Play	Cut
 
 
 Case 2: New instrument (no note)
@@ -79,6 +83,7 @@ FT2		-	OldVol 	OldVol	OldVol
 ST3		-	NewVol	NewVol	Cont
 IT(s)		-	NewVol	NewVol	Cont
 IT(i)		-	NewVol#	Play	Cont
+DT32		-	NewVol#	NewVol#	Cut
 
 
 Case 3: Tone portamento
@@ -95,6 +100,7 @@ FT2		Cont	OldVol	OldVol	OldVol
 ST3		Cont	NewVol	NewVol	Cont
 IT(s)		Cont	NewVol	NewVol	Cont
 IT(i) @		Cont	NewVol	NewVol	Cont
+DT32		Cont	NewVol	NewVol	Cut
 
 
   # Don't reset envelope.
@@ -283,6 +289,7 @@ Using the "OK" sample from ST-02
 05 --- 00 000		MTM	: kay - okay - okay - okay
 06 C-2 01 000		FT2	: kay - okay - okay - okay
 07 --- 00 000		IT	: kay - okay - okay - okay
+			DT32	: kay - okay - okay - okay
 
 So it seems that the bug was fixed somewhere between Protracker 2.3d and
 3.15. The problem is that there's no way to know if the bug emulation is
@@ -378,8 +385,8 @@ Reference: Necros' "Mechanism Eight", pattern 93, channels 0 to 2, row 02.
 11. Cut effect
 
 When the cut effect is used with parameter 0 (cut after 0 frames) Protracker,
-Fast Tracker and Impulse Tracker don't start to play the sample. Scream
-Tracker and Imago Orpheus ignore the effect and don't cut the instrument.
+Fast Tracker, Impulse Tracker and Digitrakker don't start to play the sample.
+Scream Tracker and Imago Orpheus ignore the effect and don't cut the instrument.
 
 Subsequent note events with no instrument set are not played in Protracker.
 (must check in other trackers)

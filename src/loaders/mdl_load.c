@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.8 2007-08-10 21:19:33 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.9 2007-08-11 17:25:39 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -42,14 +42,17 @@ struct mdl_envelope {
 static int i_map[16];
 static int *i_index;
 static int *s_index;
-static int *v_index;
-static int *p_index;
+static int *v_index;	/* volume envelope */
+static int *p_index;	/* pan envelope */
+static int *f_index;	/* pitch envelope */
 static int *c2spd;
 static int *packinfo;
 static int v_envnum;
 static int p_envnum;
+static int f_envnum;
 static struct mdl_envelope *v_env;
 static struct mdl_envelope *p_env;
+static struct mdl_envelope *f_env;
 
 
 /* Effects 1-6 (note effects) can only be entered in the first effect
@@ -258,7 +261,7 @@ static void get_chunk_in (int size, FILE *f)
 	xxc[i].pan = chinfo << 1;
     }
     xxh->chn = i;
-    fseek(f, 32 - i, SEEK_CUR);
+    fseek(f, 32 - i - 1, SEEK_CUR);
 
     fread(xxo, 1, xxh->len, f);
 
@@ -436,7 +439,7 @@ static void get_chunk_ii(int size, FILE *f)
 	    i_map[j] = read8(f);
 	    xxi[i][j].vol = read8(f);
 
-	    x = read8(f);
+	    x = read8(f);		/* Volume envelope */
 	    if (j == 0)
 		v_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
@@ -444,7 +447,7 @@ static void get_chunk_ii(int size, FILE *f)
 
 	    xxi[i][j].pan = read8(f) << 1;
 
-	    x = read8(f);
+	    x = read8(f);		/* Pan envelope */
 	    if (j == 0)
 		p_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
@@ -453,26 +456,33 @@ static void get_chunk_ii(int size, FILE *f)
 	    if (j == 0)
 		xxih[i].rls = read16l(f);
 
-	    xxi[i][j].vra = read8(f);
-	    xxi[i][j].vde = read8(f);
-	    xxi[i][j].vsw = read8(f);
-	    xxi[i][j].vwf = read8(f);
-	    read8(f);		/* Reserved */
-	    read8(f);		/* Pitch envelope */
+	    xxi[i][j].vra = read8(f);	/* vibrato rate */
+	    xxi[i][j].vde = read8(f);	/* vibrato delay */
+	    xxi[i][j].vsw = read8(f);	/* vibrato sweep */
+	    xxi[i][j].vwf = read8(f);	/* vibrato waveform */
+	    read8(f);			/* Reserved */
+
+	    x = read8(f);		/* Pitch envelope */
+	    if (j == 0)
+		f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
 	    if (V (1)) {
-		report ("%s[%1x] V%02x S%02x ",
+		report("%s[%1x] V%02x S%02x ",
 		    j ? "\n\t\t\t\t" : "\t", j, xxi[i][j].vol, xxi[i][j].sid);
-		if (v_index[i] > 0)
-		    report ("v%02x ", v_index[i]);
+		if (v_index[i] >= 0)
+		    report("v%02x ", v_index[i]);
 		else
-		    report ("v-- ");
-		if (p_index[i] > 0)
-		    report ("p%02x ", p_index[i]);
+		    report("v-- ");
+		if (p_index[i] >= 0)
+		    report("p%02x ", p_index[i]);
 		else
-		    report ("p-- ");
-	    } else if (V (0) == 1)
-		report (".");
+		    report("p-- ");
+		if (f_index[i] >= 0)
+		    report("p%02x ", f_index[i]);
+		else
+		    report("f-- ");
+	    } else if (V(0) == 1)
+		report(".");
 	}
     }
     reportv(0, "\n");
@@ -698,6 +708,26 @@ static void get_chunk_pe(int size, FILE *f)
 }
 
 
+static void get_chunk_fe(int size, FILE *f)
+{
+    int i;
+
+    if ((f_envnum = read8(f)) == 0)
+	return;
+
+    reportv(1, "Pitch envelopes: %d\n", f_envnum);
+
+    f_env = calloc (f_envnum, sizeof (struct mdl_envelope));
+
+    for (i = 0; i < f_envnum; i++) {
+	f_env[i].num = read8(f);
+	fread(f_env[i].data, 1, 30, f);
+	f_env[i].sus = read8(f);
+	f_env[i].loop = read8(f);
+    }
+}
+
+
 int mdl_load(FILE *f)
 {
     int i, j, k, l;
@@ -717,6 +747,7 @@ int mdl_load(FILE *f)
     iff_register ("SA", get_chunk_sa);	/* Sampled data */
     iff_register ("VE", get_chunk_ve);	/* Volume envelopes */
     iff_register ("PE", get_chunk_pe);	/* Pan envelopes */
+    iff_register ("FE", get_chunk_fe);	/* Pitch envelopes */
 
     if (MSN (*buf)) {
 	iff_register ("II", get_chunk_ii);	/* Instruments */
@@ -742,9 +773,14 @@ int mdl_load(FILE *f)
     v_envnum = 0;
     s_index = calloc (256, sizeof (int));
     i_index = calloc (256, sizeof (int));
-    v_index = calloc (256, sizeof (int));
-    p_index = calloc (256, sizeof (int));
+    v_index = malloc (256 * sizeof (int));
+    p_index = malloc (256 * sizeof (int));
+    f_index = malloc (256 * sizeof (int));
     c2spd = calloc (256, sizeof (int));
+
+    for (i = 0; i < 256; i++) {
+	v_index[i] = p_index[i] = f_index[i] = -1;
+    }
 
     /* Load IFFoid chunks */
     while (!feof (f))
@@ -764,8 +800,11 @@ int mdl_load(FILE *f)
 		    }
 
     for (i = 0; i < xxh->ins; i++) {
-	/* Envelopes */
-	if (v_index[i] > 0) {
+
+	/* FIXME: envelope timing is wrong */
+
+	/* volume envelopes */
+	if (v_index[i] >= 0) {
 	    xxih[i].aei.flg = XXM_ENV_ON;
 	    xxih[i].aei.npt = 16;
 	    xxae[i] = calloc (4, xxih[i].aei.npt);
@@ -779,10 +818,11 @@ int mdl_load(FILE *f)
 		    xxih[i].aei.lpe = v_env[j].loop & 0xf0;
 		    xxae[i][0] = 0;
 		    for (k = 1; k < xxih[i].aei.npt; k++) {
-			if ((xxae[i][k * 2] = v_env[j].data[(k - 1) * 2]) == 0)
+			xxae[i][k * 2] = xxae[i][(k - 1) * 2] +
+						v_env[j].data[(k - 1) * 2];
+			if (v_env[j].data[k * 2] == 0)
 			    break;
-			xxae[i][k * 2] += xxae[i][(k - 1) * 2];
-			xxae[i][k * 2 + 1] = v_env[j].data[k * 2];
+			xxae[i][k * 2 + 1] = v_env[j].data[(k - 1) * 2 + 1];
 		    }
 		    xxih[i].aei.npt = k;
 		    break;
@@ -790,10 +830,11 @@ int mdl_load(FILE *f)
 	    }
 	}
 
-	if (p_index[i] > 0) {
+	/* pan envelopes */
+	if (p_index[i] >= 0) {
 	    xxih[i].pei.flg = XXM_ENV_ON;
 	    xxih[i].pei.npt = 16;
-	    xxae[i] = calloc (4, xxih[i].pei.npt);
+	    xxpe[i] = calloc (4, xxih[i].pei.npt);
 
 	    for (j = 0; j < p_envnum; j++) {
 		if (p_index[i] == j) {
@@ -802,14 +843,46 @@ int mdl_load(FILE *f)
 		    xxih[i].pei.sus = p_env[j].sus & 0x0f;
 		    xxih[i].pei.lps = p_env[j].loop & 0x0f;
 		    xxih[i].pei.lpe = p_env[j].loop & 0xf0;
-		    xxae[i][0] = 0;
+		    xxpe[i][0] = 0;
+
 		    for (k = 1; k < xxih[i].pei.npt; k++) {
-			if ((xxae[i][k * 2] = p_env[j].data[(k - 1) * 2]) == 0)
+			xxpe[i][k * 2] = xxpe[i][(k - 1) * 2] +
+						p_env[j].data[(k - 1) * 2];
+			if (p_env[j].data[k * 2] == 0)
 			    break;
-			xxae[i][k * 2] += xxae[i][(k - 1) * 2];
-			xxae[i][k * 2 + 1] = p_env[j].data[k * 2];
+			xxpe[i][k * 2 + 1] = p_env[j].data[(k - 1) * 2 + 1];
 		    }
 		    xxih[i].pei.npt = k;
+		    break;
+		}
+	    }
+	}
+
+	/* pitch envelopes */
+	if (f_index[i] >= 0) {
+	    xxih[i].fei.flg = XXM_ENV_ON;
+	    xxih[i].fei.npt = 16;
+	    xxfe[i] = calloc (4, xxih[i].fei.npt);
+
+	    for (j = 0; j < f_envnum; j++) {
+		if (f_index[i] == j) {
+		    xxih[i].fei.flg |= f_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
+		    xxih[i].fei.flg |= f_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
+		    xxih[i].fei.sus = f_env[j].sus & 0x0f;
+		    xxih[i].fei.lps = f_env[j].loop & 0x0f;
+		    xxih[i].fei.lpe = f_env[j].loop & 0xf0;
+		    xxfe[i][0] = 0;
+		    xxfe[i][1] = 32;
+
+		    for (k = 1; k < xxih[i].fei.npt; k++) {
+			xxfe[i][k * 2] = xxfe[i][(k - 1) * 2] +
+						f_env[j].data[(k - 1) * 2];
+			if (f_env[j].data[k * 2] == 0)
+			    break;
+			xxfe[i][k * 2 + 1] = f_env[j].data[(k - 1) * 2 + 1] * 4;
+		    }
+
+		    xxih[i].fei.npt = k;
 		    break;
 		}
 	    }
@@ -825,6 +898,7 @@ int mdl_load(FILE *f)
     }
 
     free (c2spd);
+    free (f_index);
     free (p_index);
     free (v_index);
     free (i_index);
@@ -834,6 +908,8 @@ int mdl_load(FILE *f)
 	free (v_env);
     if (p_envnum)
 	free (p_env);
+    if (f_envnum)
+	free (f_env);
 
     xmp_ctl->fetch |= XMP_CTL_FINEFX;
 
