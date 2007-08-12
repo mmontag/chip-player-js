@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.39 2007-08-12 03:54:32 cmatsuoka Exp $
+$Id: ChangeLog,v 1.40 2007-08-12 19:23:54 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -13,6 +13,7 @@ Stable versions
 	- added X-Tracker module loader
 	- added portable, 64bit-safe MMD0/1/2/3 MED loader
 	- added Graoumf Tracker GTK module loader
+	- added old Liquid Tracker "NO" module loader
 	- added OSX CoreAudio driver
 	- enabled WAV writer
 	- removed broken shared lib generation
@@ -21,6 +22,7 @@ Stable versions
 	- replaced list management in IFF loader with kernel list helpers
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- fixed effects, pattern order and memory corruption problems in MDL
+	- fixed MDL 16-bit sample loading (reported by Paul Wise)
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
 	- fixed loading of big-endian 16-bit samples
