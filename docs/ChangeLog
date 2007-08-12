@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.37 2007-08-10 21:19:33 cmatsuoka Exp $
+$Id: ChangeLog,v 1.38 2007-08-12 02:29:36 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -12,10 +12,11 @@ Stable versions
 	- added Real Tracker module loader
 	- added X-Tracker module loader
 	- added portable, 64bit-safe MMD0/1/2/3 MED loader
+	- added Graoumf Tracker GTK module loader
 	- added OSX CoreAudio driver
 	- enabled WAV writer
 	- removed broken shared lib generation
-	- removed packed structures anymore
+	- removed packed structures
 	- replaced non-free PowerPack depacker with Kyzer's PD version
 	- replaced list management in IFF loader with kernel list helpers
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly

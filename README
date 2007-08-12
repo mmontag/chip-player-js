@@ -1,4 +1,4 @@
-$Id: README,v 1.20 2007-08-11 01:42:06 cmatsuoka Exp $
+$Id: README,v 1.21 2007-08-12 02:29:36 cmatsuoka Exp $
 
 
 
@@ -94,12 +94,14 @@ The current version recognizes the following module formats:
   CDx1	****+	Octalyser		CD61, CD81
   DTM	***	Digital Tracker		1.9
   FLX	****	Flextrax		M.K., xCHN (no dsp effects)
+  GTK	**	Graoumf Tracker		GTK1, GTK4
   MOD	***	TCB Tracker		'AN COOL.'
 
   Other (PC):
 
   669	***	Composer 669/UNIS 669	if, JN
   ALM   ****+	Aley Keptr		1.0, 1.1, 1.2
+  DMF	**	X-Tracker		7, 8
   FAR	***	Farandole Composer	1.0
   FNK	**	Funktracker		?
   IMF	*** 	Imago Orpheus		1.0

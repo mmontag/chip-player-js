@@ -1,7 +1,7 @@
 /* Graoumf Tracker GTK module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: gtk_load.c,v 1.1 2007-08-11 00:17:49 cmatsuoka Exp $
+ * $Id: gtk_load.c,v 1.2 2007-08-12 02:29:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -39,12 +39,11 @@ int gtk_load(FILE * f)
 	xxh->chn = read16b(f);
 	xxh->len = read16b(f);
 	xxh->rst = read16b(f);
-	//xxh->flg |= XXM_FLG_MODRNG;
 
 	MODULE_INFO();
 
 	reportv(0, "Instruments    : %d ", xxh->ins);
-	reportv(1, "\n     Name                          Len   LBeg  LSiz  L Vol");
+	reportv(1, "\n     Name                          Len   LBeg  LSiz  L Vol Fin  C2spd");
 
 	INSTRUMENT_INIT();
 	for (i = 0; i < xxh->ins; i++) {
@@ -62,6 +61,7 @@ int gtk_load(FILE * f)
 			read16b(f);
 			xxi[i][0].vol = 0x40;
 			bits = 1;
+			c2spd = 8363;
 		} else {
 			fseek(f, 14, SEEK_CUR);
 			read16b(f);		/* autobal */
@@ -72,23 +72,28 @@ int gtk_load(FILE * f)
 			xxs[i].lps = read32b(f);
 			size = read32b(f);
 			xxs[i].lpe = xxs[i].lps + size - 1;
-			xxi[i][0].vol = read32b(f) / 4;
+			xxi[i][0].vol = read16b(f) / 4;
 			read8(f);
 			xxi[i][0].fin = read8s(f);
 		}
 
 		xxih[i].nsm = !!xxs[i].len;
 		xxi[i][0].sid = i;
-		xxs[i].flg = bits > 1 ? WAVE_16_BITS : 0;
+		xxs[i].flg = size > 2 ? WAVE_LOOPING : 0;
+		xxs[i].flg |= bits > 1 ? WAVE_16_BITS : 0;
 
 		if (strlen((char*)xxih[i].name) || (xxs[i].len > 1)) {
 			if (V(1)) {
-				report("\n[%2X] %-28.28s  %05x %05x %05x %c "
-						"V%02x", i,
+				report("\n[%2X] %-28.28s  %05x%c%05x %05x %c "
+						"V%02x F%+03d %5d", i,
 			 		xxih[i].name,
-					xxs[i].len, xxs[i].lps, size,
+					xxs[i].len,
+					bits > 1 ? '+' : ' ',
+					xxs[i].lps,
+					size,
 					xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-					xxi[i][0].vol);
+					xxi[i][0].vol, xxi[i][0].fin,
+					c2spd);
 			} else {
 				report(".");
 			}
@@ -97,7 +102,7 @@ int gtk_load(FILE * f)
 	reportv(0, "\n");
 
 	for (i = 0; i < 256; i++)
-		xxo[i] = read8(f);
+		xxo[i] = read16b(f);
 
 	for (patmax = i = 0; i < xxh->len; i++) {
 		if (xxo[i] > patmax)
@@ -123,8 +128,18 @@ int gtk_load(FILE * f)
 
 				event->note = read8(f);
 				event->ins = read8(f);
-				read8(f);
-				read8(f);
+				event->fxt = read8(f);
+				event->fxp = read8(f);
+				if (ver >= 4) {
+					event->vol = read8(f);
+				}
+
+				/* Ignore extended effects */
+				if (event->fxt > 0x0f || event->fxt == 0x0e ||
+						event->fxt == 0x0c) {
+					event->fxt = 0;
+					event->fxp = 0;
+				}
 			}
 		}
 		reportv(0, ".");
