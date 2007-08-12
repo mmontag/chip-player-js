@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.10 2007-08-12 03:54:32 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.11 2007-08-12 19:19:46 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -164,6 +164,9 @@ static unsigned int get_bits (char i, uint8 **buf, int* len)
 
 /* From the Digitrakker docs:
  *
+ * The description of the sample-packmethode (1) [8bit packing]:...
+ * ----------------------------------------------------------------
+ *
  * The method is based on the Huffman algorithm. It's easy and very fast
  * and effective on samples. The packed sample is a bit stream:
  *
@@ -182,7 +185,7 @@ static unsigned int get_bits (char i, uint8 **buf, int* len)
  *	xxx1s => byte = <xxx>; if s=1 then byte = byte xor 255
  */
 
-static void unpack_sample8 (uint8 *t, uint8 *f, int len, int l)
+static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
 {
     int i, s;
     uint8 b, d;
@@ -208,11 +211,24 @@ static void unpack_sample8 (uint8 *t, uint8 *f, int len, int l)
     }
 }
 
+/*
+ * The description of the sample-packmethode (2) [16bit packing]:...
+ * ----------------------------------------------------------------
+ *
+ * It works as methode (1) but it only crunches every 2nd byte (the high-
+ * bytes of 16 bit samples). So when you depack 16 bit samples, you have to
+ * read 8 bits from the data-stream first. They present the lowbyte of the
+ * sample-word. Then depack the highbyte in the descripted way (methode [1]).
+ * Only the highbytes are delta-values. So take the lowbytes as they are.
+ * Go on this way for the whole sample!
+ */
 
-static void unpack_sample16 (uint16 *t, uint8 *f, int len, int l)
+static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
 {
     int i, lo, s;
     uint8 b, d;
+
+    get_bits (0, &f, &len);
 
     for (i = lo = b = d = 0; i < l; i++) {
 	lo = get_bits (8, &f, &len);
@@ -228,9 +244,10 @@ static void unpack_sample16 (uint16 *t, uint8 *f, int len, int l)
 
 	if (s)
 	    b ^= 0xff;
-
 	d += b;
-	*t++ = ((uint32)d << 8) | lo;
+
+	*t++ = lo;
+	*t++ = d;
     }
 }
 
@@ -648,7 +665,7 @@ static void get_chunk_sa(int size, FILE *f)
 	    len = read32l(f);
 	    buf = malloc(len);
 	    fread(buf, 1, len, f);
-	    unpack_sample16((uint16 *)smpbuf, buf, len, xxs[i].len >> 1);
+	    unpack_sample16(smpbuf, buf, len, xxs[i].len >> 1);
 	    free(buf);
 	    break;
 	}
