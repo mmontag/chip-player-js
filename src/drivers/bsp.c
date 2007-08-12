@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: bsp.c,v 1.2 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: bsp.c,v 1.3 2007-08-12 20:50:42 cmatsuoka Exp $
  */
 
 /*
@@ -40,8 +40,8 @@ static char *help[] = {
 };
 
 struct xmp_drv_info drv_arts = {
-    "QNX",		/* driver ID */
-    "QNX PCM audio",	/* driver description */
+    "BeOS",		/* driver ID */
+    "BeOS PCM audio",	/* driver description */
     NULL,		/* help */
     init,		/* init */
     myshutdown,		/* shutdown */
@@ -76,7 +76,6 @@ static void bufferproc (void *, void *buffer, size_t size, const
     release_sem (startsem);
     acquire_sem (endsem);
 }
-
 
 static void beos_replay (struct frame *fr, int startFrame, int numframes,
 	bool verbose, bool doublespeed) {
@@ -136,7 +135,6 @@ static void beos_replay (struct frame *fr, int startFrame, int numframes,
     delete_sem(endsem);
 }
 
-
 static int init (struct xmp_control *ctl)
 {
     int rc, rate, bits, stereo, bsize;
@@ -157,7 +155,6 @@ static int init (struct xmp_control *ctl)
     return xmp_smix_on (ctl);
 }
 
-
 static void bufdump (int i)
 {
     int j;
@@ -173,13 +170,11 @@ static void bufdump (int i)
     } while (i);
 }
 
-
 static void myshutdown ()
 {
     xmp_smix_off ();
     close (fd_audio);
 }
-
 
 static void mysync ()
 {
