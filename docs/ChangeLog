@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.38 2007-08-12 02:29:36 cmatsuoka Exp $
+$Id: ChangeLog,v 1.39 2007-08-12 03:54:32 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -20,10 +20,10 @@ Stable versions
 	- replaced non-free PowerPack depacker with Kyzer's PD version
 	- replaced list management in IFF loader with kernel list helpers
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
+	- fixed effects, pattern order and memory corruption problems in MDL
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
 	- fixed loading of big-endian 16-bit samples
-	- fixed volume slide effects in MDL ("Breaking the Walls" now ok)
 	- using Asle's Prowizard to handle packed MODs
 
 2.1.1 (unreleased)

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.9 2007-08-11 17:25:39 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.10 2007-08-12 03:54:32 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -63,9 +63,7 @@ static void xlat_fx_common(uint8 *t, uint8 *p)
 {
     switch (*t) {
     case 0x07:			/* 7 - Set BPM */
-	*t = FX_TEMPO;
-	if (*p < 0x20)
-	    *p = 0x20;
+	*t = FX_S3M_BPM;
 	break;
     case 0x08:			/* 8 - Set pan */
     case 0x09:			/* 9 - Set envelope -- not supported */
@@ -95,8 +93,7 @@ static void xlat_fx_common(uint8 *t, uint8 *p)
 	}
 	break;
     case 0x0f:
-	if (*p >= 0x20)
-	    *t = FX_S3M_TEMPO;
+	*t = FX_S3M_TEMPO;
 	break;
     }
 }
@@ -237,6 +234,7 @@ static void unpack_sample16 (uint16 *t, uint8 *f, int len, int l)
     }
 }
 
+
 /*
  * IFF chunk handlers
  */
@@ -268,10 +266,10 @@ static void get_chunk_in (int size, FILE *f)
     MODULE_INFO ();
 }
 
-
 static void get_chunk_pa(int size, FILE *f)
 {
     int i, j, chn;
+    int x;
 
     xxh->pat = read8(f);
     xxh->trk = xxh->pat * xxh->chn;	/* Max */
@@ -285,13 +283,15 @@ static void get_chunk_pa(int size, FILE *f)
 	xxp[i]->rows = (int)read8(f) + 1;
 
 	fseek(f, 16, SEEK_CUR);		/* Skip pattern name */
-	for (j = 0; j < chn; j++)
-	    xxp[i]->info[j].index = read16l(f);
+	for (j = 0; j < chn; j++) {
+	    x = read16l(f);
+	    if (j < xxh->chn)
+		xxp[i]->info[j].index = x;
+	}
 	reportv(0, ".");
     }
     reportv(0, "\n");
 }
-
 
 static void get_chunk_p0(int size, FILE *f)
 {
@@ -317,7 +317,6 @@ static void get_chunk_p0(int size, FILE *f)
     }
     reportv(0, "\n");
 }
-
 
 static void get_chunk_tr(int size, FILE *f)
 {
@@ -406,7 +405,6 @@ static void get_chunk_tr(int size, FILE *f)
     reportv(0, "\n");
 }
 
-
 static void get_chunk_ii(int size, FILE *f)
 {
     int i, j;
@@ -433,7 +431,7 @@ static void get_chunk_ii(int size, FILE *f)
 	xxi[i] = calloc (sizeof (struct xxm_instrument), xxih[i].nsm);
 
 	for (j = 0; j < xxih[i].nsm; j++) {
-	    uint8 x;
+	    int x;
 
 	    xxi[i][j].sid = read8(f);
 	    i_map[j] = read8(f);
@@ -453,8 +451,9 @@ static void get_chunk_ii(int size, FILE *f)
 	    if (~x & 0x40)
 		xxi[i][j].pan = 0x80;
 
+	    x = read16l(f);
 	    if (j == 0)
-		xxih[i].rls = read16l(f);
+		xxih[i].rls = x;
 
 	    xxi[i][j].vra = read8(f);	/* vibrato rate */
 	    xxi[i][j].vde = read8(f);	/* vibrato delay */
@@ -467,8 +466,8 @@ static void get_chunk_ii(int size, FILE *f)
 		f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
 	    if (V (1)) {
-		report("%s[%1x] V%02x S%02x ",
-		    j ? "\n\t\t\t\t" : "\t", j, xxi[i][j].vol, xxi[i][j].sid);
+		report("%s[%2x] V%02x S%02x  ",
+		    j ? "\n\t\t\t\t\t " : "", j, xxi[i][j].vol, xxi[i][j].sid);
 		if (v_index[i] >= 0)
 		    report("v%02x ", v_index[i]);
 		else
@@ -487,7 +486,6 @@ static void get_chunk_ii(int size, FILE *f)
     }
     reportv(0, "\n");
 }
-
 
 static void get_chunk_is (int size, FILE *f)
 {
@@ -532,30 +530,29 @@ static void get_chunk_is (int size, FILE *f)
 #endif
 
 	if (V (2)) {
-	    report ("%5d %05x%c %05x %05x ", c2spd[i],
+	    report ("%6d %05x%c %05x %05x ", c2spd[i],
 		xxs[i].len, xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		xxs[i].lps, xxs[i].lpe);
 	    switch (packinfo[i]) {
 	    case 0:
-		report ("[nopack] ");
+		report ("[nopack]");
 		break;
 	    case 1:
-		report ("[pack8]  ");
+		report ("[pack08]");
 		break;
 	    case 2:
-		report ("[pack16] ");
+		report ("[pack16]");
 		break;
 	    case 3:
-		report ("[error]  ");
+		report ("[error ]");
 		break;
 	    }
+	} else {
+	    reportv(1, ".");
 	}
-
-	reportv(1, ".");
     }
     reportv(1, "\n");
 }
-
 
 static void get_chunk_i0(int size, FILE *f)
 {
@@ -606,25 +603,24 @@ static void get_chunk_i0(int size, FILE *f)
 		xxs[i].lps, xxs[i].lpe);
 	    switch (packinfo[i]) {
 	    case 0:
-		report ("[nopack] ");
+		report ("[nopack]");
 		break;
 	    case 1:
-		report ("[pack8]  ");
+		report ("[pack08]");
 		break;
 	    case 2:
-		report ("[pack16] ");
+		report ("[pack16]");
 		break;
 	    case 3:
-		report ("[error]  ");
+		report ("[error ]");
 		break;
 	    }
+	} else {
+	    reportv(0, ".");
 	}
-
-	reportv(0, ".");
     }
     reportv(0, "\n");
 }
-
 
 static void get_chunk_sa(int size, FILE *f)
 {
@@ -667,7 +663,6 @@ static void get_chunk_sa(int size, FILE *f)
     reportv(0, "\n");
 }
 
-
 static void get_chunk_ve(int size, FILE *f)
 {
     int i;
@@ -687,7 +682,6 @@ static void get_chunk_ve(int size, FILE *f)
     }
 }
 
-
 static void get_chunk_pe(int size, FILE *f)
 {
     int i;
@@ -706,7 +700,6 @@ static void get_chunk_pe(int size, FILE *f)
 	p_env[i].loop = read8(f);
     }
 }
-
 
 static void get_chunk_fe(int size, FILE *f)
 {
@@ -770,7 +763,7 @@ int mdl_load(FILE *f)
     xmp_ctl->volbase = 0xff;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
-    v_envnum = 0;
+    v_envnum = p_envnum = f_envnum = 0;
     s_index = calloc (256, sizeof (int));
     i_index = calloc (256, sizeof (int));
     v_index = malloc (256 * sizeof (int));
@@ -905,11 +898,11 @@ int mdl_load(FILE *f)
     free (s_index);
 
     if (v_envnum)
-	free (v_env);
+	free(v_env);
     if (p_envnum)
-	free (p_env);
+	free(p_env);
     if (f_envnum)
-	free (f_env);
+	free(f_env);
 
     xmp_ctl->fetch |= XMP_CTL_FINEFX;
 
