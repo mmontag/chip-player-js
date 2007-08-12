@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.40 2007-08-12 19:23:54 cmatsuoka Exp $
+$Id: ChangeLog,v 1.41 2007-08-12 21:31:53 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -23,6 +23,7 @@ Stable versions
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- fixed effects, pattern order and memory corruption problems in MDL
 	- fixed MDL 16-bit sample loading (reported by Paul Wise)
+	- fixed XM and MDL sample loop size
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
 	- fixed loading of big-endian 16-bit samples

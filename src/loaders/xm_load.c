@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.5 2007-08-08 02:25:09 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.6 2007-08-12 21:31:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -332,6 +332,8 @@ load_instruments:
 		xxs[instr_no].len = xsh[j].length;
 		xxs[instr_no].lps = xsh[j].loop_start;
 		xxs[instr_no].lpe = xsh[j].loop_start + xsh[j].loop_length;
+		if (xxs[instr_no].lpe > 0)
+			xxs[instr_no].lpe--;
 		xxs[instr_no].flg = xsh[j].type & XM_SAMPLE_16BIT ?
 		    WAVE_16_BITS : 0;
 		xxs[instr_no].flg |= xsh[j].type & XM_LOOP_FORWARD ?

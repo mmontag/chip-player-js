@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.11 2007-08-12 19:19:46 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.12 2007-08-12 21:31:53 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -530,21 +530,13 @@ static void get_chunk_is (int size, FILE *f)
 	xxs[i].lpe = read32l(f);
 
 	xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-	xxs[i].lpe = xxs[i].lps + xxs[i].lpe;
+	xxs[i].lpe = xxs[i].lps + xxs[i].lpe - 1;
 
 	read8(f);			/* Volume in DMDL 0.0 */
 	x = read8(f);
 	xxs[i].flg |= (x & 0x01) ? WAVE_16_BITS : 0;
 	xxs[i].flg |= (x & 0x02) ? WAVE_BIDIR_LOOP : 0;
 	packinfo[i] = (x & 0x0c) >> 2;
-
-#if 0
-	if (xxs[i].flg & WAVE_16_BITS) {
-	    xxs[i].len <<= 1;
-	    xxs[i].lps <<= 1;
-	    xxs[i].lpe <<= 1;
-	}
-#endif
 
 	if (V (2)) {
 	    report ("%6d %05x%c %05x %05x ", c2spd[i],
