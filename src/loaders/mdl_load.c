@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.13 2007-08-13 02:23:42 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.14 2007-08-13 12:41:03 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -376,8 +376,11 @@ static void get_chunk_tr(int size, FILE *f)
 		    sizeof (struct xxm_event));
 		break;
 	    case 3:
-		if (j & MDL_NOTE_FOLLOWS)
-		    len--, track->event[row].note = read8(f);
+		if (j & MDL_NOTE_FOLLOWS) {
+		    uint8 b = read8(f);
+		    len--;
+		    track->event[row].note = b == 0xff ? XMP_KEY_OFF : b;
+		}
 		if (j & MDL_INSTRUMENT_FOLLOWS)
 		    len--, track->event[row].ins = read8(f);
 		if (j & MDL_VOLUME_FOLLOWS)
@@ -452,8 +455,8 @@ static void get_chunk_ii(int size, FILE *f)
 	    map = read8(f);
 	    xxi[i][j].vol = read8(f);
 	    for (k = last_map; k <= map; k++) {
-		if (k >= 12)
-		    xxim[i].ins[k - 12] = j;
+		if (k < 96)
+		    xxim[i].ins[k] = j;
 	    }
 	    last_map = map + 1;
 
