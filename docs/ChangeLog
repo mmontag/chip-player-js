@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.42 2007-08-13 02:23:42 cmatsuoka Exp $
+$Id: ChangeLog,v 1.43 2007-08-13 12:58:39 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -24,8 +24,9 @@ Stable versions
 	- fixed MDL effects translation
 	- fixed MDL pattern order loading missing first pattern
 	- fixed MDL memory corruption in envelope initialization
-	- fixed MDL 16-bit sample loading (reported by Paul Wise)
+	- fixed MDL 16-bit sample depacking (reported by Paul Wise)
 	- fixed MDL multisampled instrument mapping
+	- fixed MDL note event keyoff (gothlord.mdl plays better)
 	- fixed XM and MDL sample loop size
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
