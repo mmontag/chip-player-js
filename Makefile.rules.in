@@ -1,16 +1,16 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.17 2007-08-13 17:18:17 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.18 2007-08-13 20:47:19 cmatsuoka Exp $
 
 VERSION	= 2.2.0-pre3
 DATE	= Mon Aug 13 13:47:04 BRT 2007
 
-DEST_DIR =
-prefix	= $(DEST_DIR)@prefix@
-exec_prefix= $(DEST_DIR)@prefix@
-datarootdir = $(DEST_DIR)@datarootdir@
-BIN_DIR	= $(DEST_DIR)@bindir@
-LIB_DIR = $(DEST_DIR)@libdir@
-MAN_DIR	= $(DEST_DIR)@mandir@/man1
+DESTDIR	=
+prefix	= $(DESTDIR)@prefix@
+exec_prefix= $(DESTDIR)@prefix@
+datarootdir = $(DESTDIR)@datarootdir@
+BIN_DIR	= $(DESTDIR)@bindir@
+LIB_DIR = $(DESTDIR)@libdir@
+MAN_DIR	= $(DESTDIR)@mandir@/man1
 
 CC	= @CC@
 CFLAGS	= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG
