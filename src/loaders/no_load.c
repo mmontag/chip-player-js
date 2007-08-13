@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.1 2007-08-12 19:23:55 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.2 2007-08-13 19:17:42 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,6 +17,25 @@
 /* Nir Oren's Liquid Tracker old "NO" format. I have only one NO module,
  * Moti Radomski's "Time after time" from ftp.modland.com.
  */
+
+static uint8 fx[] = {
+	FX_ARPEGGIO,
+	0,
+	FX_BREAK,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+};
+
 
 int no_load(FILE * f)
 {
@@ -119,24 +138,34 @@ int no_load(FILE * f)
 	reportv(0, "Stored patterns: %d ", xxh->pat);
 
 	for (i = 0; i < xxh->pat; i++) {
-printf("%d  %x\n", i, ftell(f));
+//printf("%d  %x\n", i, ftell(f));
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < xxp[i]->rows; j++) {
 			for (k = 0; k < xxh->chn; k++) {
-				int b;
+				uint32 x, note, ins, vol, fxt, fxp;
+
 				event = &EVENT (i, k, j);
 
-				b = read8(f);
-				if (b != 0xff)
-					event->note = b;
-				b = read8(f);
-				if (b != 0xff)
-					event->ins = b;
-				b = read8(f);
-				b = read8(f);
+				x = read32l(f);
+				note = x & 0x0000003f;
+				ins = (x & 0x00001fc0) >> 6;
+				vol = (x & 0x000fe000) >> 13;
+				fxt = (x & 0x00f00000) >> 20;
+				fxp = (x & 0xff000000) >> 24;
+
+				if (note != 0x3f)
+					event->note = 24 + note;
+				if (ins != 0x7f)
+					event->ins = 1 + ins;
+				if (vol != 0x7f)
+					event->vol = vol;
+				if (fxt != 0x0f) {
+					event->fxt = fx[fxt];
+					event->fxp = fxp;
+				}
 			}
 		}
 		reportv(0, ".");
@@ -146,6 +175,8 @@ printf("%d  %x\n", i, ftell(f));
 	/* Read samples */
 	reportv(0, "Stored samples : %d ", xxh->smp);
 	for (i = 0; i < xxh->ins; i++) {
+		if (xxs[i].len == 0)
+			continue;
 		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
 				XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
 		reportv(0, ".");
