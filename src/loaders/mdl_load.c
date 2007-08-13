@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.12 2007-08-12 21:31:53 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.13 2007-08-13 02:23:42 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -39,7 +39,6 @@ struct mdl_envelope {
     uint8 loop;
 };
 
-static int i_map[16];
 static int *i_index;
 static int *s_index;
 static int *v_index;	/* volume envelope */
@@ -424,7 +423,8 @@ static void get_chunk_tr(int size, FILE *f)
 
 static void get_chunk_ii(int size, FILE *f)
 {
-    int i, j;
+    int i, j, k;
+    int map, last_map;
 
     xxh->ins = read8(f);
 
@@ -435,10 +435,8 @@ static void get_chunk_ii(int size, FILE *f)
     for (i = 0; i < xxh->ins; i++) {
 	i_index[i] = read8(f);
 	xxih[i].nsm = read8(f);
-	fread(xxih[i].name, 1, 24, f);
+	fread(xxih[i].name, 1, 32, f);
 	str_adj((char *)xxih[i].name);
-
-	fseek(f, 8, SEEK_CUR);
 
 	if (V (1) && (strlen ((char *) xxih[i].name) || xxih[i].nsm)) {
 	    report ("\n[%2X] %-32.32s %2d ", i_index[i], xxih[i].name,
@@ -447,12 +445,17 @@ static void get_chunk_ii(int size, FILE *f)
 
 	xxi[i] = calloc (sizeof (struct xxm_instrument), xxih[i].nsm);
 
-	for (j = 0; j < xxih[i].nsm; j++) {
+	for (last_map = j = 0; j < xxih[i].nsm; j++) {
 	    int x;
 
 	    xxi[i][j].sid = read8(f);
-	    i_map[j] = read8(f);
+	    map = read8(f);
 	    xxi[i][j].vol = read8(f);
+	    for (k = last_map; k <= map; k++) {
+		if (k >= 12)
+		    xxim[i].ins[k - 12] = j;
+	    }
+	    last_map = map + 1;
 
 	    x = read8(f);		/* Volume envelope */
 	    if (j == 0)
@@ -539,9 +542,13 @@ static void get_chunk_is (int size, FILE *f)
 	packinfo[i] = (x & 0x0c) >> 2;
 
 	if (V (2)) {
-	    report ("%6d %05x%c %05x %05x ", c2spd[i],
-		xxs[i].len, xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
-		xxs[i].lps, xxs[i].lpe);
+	    report ("%05x%c%05x %05x %c %6d ",
+		xxs[i].len,
+		xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		xxs[i].lps,
+		xxs[i].lpe,
+		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		c2spd[i]);
 	    switch (packinfo[i]) {
 	    case 0:
 		report ("[nopack]");
