@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.5 2007-08-14 00:03:17 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.6 2007-08-14 02:32:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -110,22 +110,19 @@ static void decode_event(uint8 x1, struct xxm_event *event, FILE *f)
 	else
 	    event->note = x2 + 1 + 24;
     }
-    if (x1 & 0x02) {
-	x2 = read8(f);
-	event->ins = x2 + 1;
-    }
-    if (x1 & 0x04) {
-	x2 = read8(f);
-	event->vol = x2;
-    }
-    if (x1 & 0x08) {
-	x2 = read8(f);
-	event->fxt = x2 - 'A';
-    }
-    if (x1 & 0x10) {
-	x2 = read8(f);
-	event->fxp = x2;
-    }
+
+    if (x1 & 0x02)
+	event->ins = read8(f) + 1;
+
+    if (x1 & 0x04)
+	event->vol = read8(f);
+
+    if (x1 & 0x08)
+	event->fxt = read8(f) - 'A';
+
+    if (x1 & 0x10)
+	event->fxp = read8(f);
+
     _D(_D_INFO "  event: %02x %02x %02x %02x %02x",
 	event->note, event->ins, event->vol, event->fxt, event->fxp);
 
@@ -142,7 +139,8 @@ int liq_load (FILE *f)
     struct liq_header lh;
     struct liq_instrument li;
     struct liq_pattern lp;
-    uint8 x1, x2, pmag[4];
+    uint8 x1, x2;
+    uint32 pmag;
 
     LOAD_INIT ();
 
@@ -190,17 +188,13 @@ int liq_load (FILE *f)
 	lh.version >> 8, lh.version & 0x00ff);
 
     if (lh.version > 0) {
-	for (i = 0; i < xxh->chn; i++) {
-	    fread (&x1, 1, 1, f);
-	    xxc[i].pan = x1 << 2;
-	}
+	for (i = 0; i < xxh->chn; i++)
+	    xxc[i].pan = read8(f) << 2;
 
-	for (i = 0; i < xxh->chn; i++) {
-	    fread (&x1, 1, 1, f);
-	    xxc[i].vol = x1;
-	}
+	for (i = 0; i < xxh->chn; i++)
+	    xxc[i].vol = read8(f);
 
-	fread (xxo, 1, xxh->len, f);
+	fread(xxo, 1, xxh->len, f);
 
 	/* Skip 1.01 echo pools */
 	fseek (f, lh.hdrsz - (0x6d + xxh->chn * 2 + xxh->len), SEEK_CUR);
@@ -223,22 +217,18 @@ int liq_load (FILE *f)
 
     /* Read and convert patterns */
 
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     x2 = 0;
     for (i = 0; i < xxh->pat; i++) {
 	int row, channel, count;
 
 	PATTERN_ALLOC (i);
-	fread (pmag, 1, 4, f);
-	if (pmag[0] == '!' && pmag[1] == '!' && pmag[2] == '!' && pmag[3] == '!')
+	pmag = read32b(f);
+	if (pmag == 0x21212121)		/* !!!! */
 	    continue;
-	assert (pmag[0] == 'L' && pmag[1] == 'P' && !pmag[2] && !pmag[3]);
+	assert(pmag == 0x4c500000);	/* LP\0\0 */
 	
-	_D(_D_WARN "\n\nPATTERN %d: %c %c %02x %02x",
-		i, pmag[0], pmag[1], pmag[2], pmag[3]);
-
 	fread(&lp.name, 30, 1, f);
 	lp.rows = read16l(f);
 	lp.size = read32l(f);
@@ -387,21 +377,17 @@ next_row:
 	goto read_event;
 
 next_pattern:
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
     /* Read and convert instruments */
 
     INSTRUMENT_INIT ();
 
-    if (V (0))
-	report ("\nInstruments    : %d ", xxh->ins);
+    reportv(0, "\nInstruments    : %d ", xxh->ins);
 
-    if (V(1)) {
-	report ("\n"
+    reportv(1, "\n"
 "     Instrument name                Size  Start End Loop Vol   Ver  C2Spd");
-    }
 
     for (i = 0; i < xxh->ins; i++) {
 	unsigned char b[4];
@@ -479,11 +465,9 @@ next_pattern:
 	if (!xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0, &xxs[i], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     return 0;
 }
