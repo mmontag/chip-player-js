@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.7 2007-08-14 12:02:16 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.8 2007-08-14 13:11:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -277,7 +277,7 @@ test_event:
 	    channel += x1;
 	    _D(_D_INFO "  [skip %d channels]", x1);
 	    /* fall thru */
-	case 0xa0			/* next channel */
+	case 0xa0:			/* next channel */
 	    _D(_D_INFO "  [next channel]");
 	    channel++;
 	    if (channel >= xxh->chn) {
