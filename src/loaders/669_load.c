@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.3 2007-08-14 03:33:53 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.4 2007-08-14 03:35:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -149,7 +149,7 @@ int ssn_load (FILE * f)
 	    event = &EVENT (i, j % 8, j / 8);
 	    fread (&ev, 1, 3, f);
 	    if ((ev[0] & 0xfe) != 0xfe) {
-		event->note = 1 + 36 + (ev[0] >> 2);
+		event->note = 1 + 24 + (ev[0] >> 2);
 		event->ins = 1 + MSN (ev[1]) + ((ev[0] & 0x03) << 4);
 	    }
 	    if (ev[0] != 0xff)
