@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.3 2006-02-12 20:57:08 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.4 2007-08-14 03:33:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -100,8 +100,8 @@ int far_load (FILE * f)
 
     /* Read and convert patterns */
     if (V (0)) {
-	report ("Comment bytes  : %d\n", ffh.textlen);
-	report ("Stored patterns: %d ", xxh->pat);
+	report("Comment bytes  : %d\n", ffh.textlen);
+	report("Stored patterns: %d ", xxh->pat);
     }
 
     for (i = 0; i < xxh->pat; i++) {
@@ -148,8 +148,7 @@ int far_load (FILE * f)
 		break;
 	    }
 	}
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
     fread (sample_map, 1, 8, f);
@@ -163,8 +162,8 @@ int far_load (FILE * f)
     INSTRUMENT_INIT ();
 
     /* Read and convert instruments and samples */
-    if (V (0))
-	report ("\nInstruments    : %d ", xxh->ins);
+    reportv(0, "\nInstruments    : %d ", xxh->ins);
+
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
@@ -190,17 +189,15 @@ int far_load (FILE * f)
 
 	copy_adjust(xxih[i].name, fih.name, 24);
 
-	if ((V (1)) && (strlen ((char *) fih.name) || xxs[i].len))
+	if ((V(1)) && (strlen((char *)xxih[i].name) || xxs[i].len))
 	    report ("\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 		i, fih.name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
 		fih.loopmode ? 'L' : ' ', xxi[i][0].vol);
 	if (sample_map[i / 8] & (1 << (i % 8)))
 	    xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0, &xxs[i], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     xmp_ctl->volbase = 0xff;
 
