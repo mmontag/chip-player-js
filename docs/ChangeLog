@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.43 2007-08-13 12:58:39 cmatsuoka Exp $
+$Id: ChangeLog,v 1.44 2007-08-14 00:03:17 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -28,6 +28,7 @@ Stable versions
 	- fixed MDL multisampled instrument mapping
 	- fixed MDL note event keyoff (gothlord.mdl plays better)
 	- fixed XM and MDL sample loop size
+	- fixed LIQ effects and 16-bit sample loading
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
 	- fixed loading of big-endian 16-bit samples

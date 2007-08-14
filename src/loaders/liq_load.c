@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.4 2007-08-07 01:42:09 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.5 2007-08-14 00:03:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,52 +23,42 @@
 
 #define NONE 0xff
 
-// static uint8 arpeggio_val[64];
 
 static uint8 fx[] = {
-    NONE,
-    FX_TEMPO,		FX_VIBRATO,
-    FX_BREAK,		FX_PORTA_DN,
-    FX_PORTA_UP,	NONE /* F: reserved */,
-    FX_ARPEGGIO,	NONE /* H: reserved */,
-    NONE,		FX_JUMP,
-    FX_TREMOLO,		FX_VOLSLIDE,
-    FX_EXTENDED,	FX_TONEPORTA,
-    FX_OFFSET,		NONE,
-    NONE,		NONE,
-    NONE,		NONE,
-    NONE,		NONE,
-    NONE,		NONE,
-    NONE,		NONE
+	FX_ARPEGGIO,
+	FX_S3M_BPM,
+	FX_BREAK,
+	FX_PORTA_DN,
+	NONE,
+	NONE,			/* Fine vibrato */
+	NONE,
+	NONE,
+	NONE,
+	FX_JUMP,
+	NONE,
+	FX_VOLSLIDE,
+	FX_EXTENDED,
+	FX_TONEPORTA,
+	FX_OFFSET,
+	NONE,			/* FIXME: Pan */
+	NONE,
+	NONE, /*FX_MULTI_RETRIG,*/
+	FX_S3M_TEMPO,
+	FX_TREMOLO,
+	FX_PORTA_UP,
+	FX_VIBRATO,
+	NONE,
+	FX_TONE_VSLIDE,
+	FX_VIBRA_VSLIDE,
 };
 
 
 /* Effect translation */
-static void xlat_fx (int c, struct xxm_event *e)
+static void xlat_fx(int c, struct xxm_event *e)
 {
-#if 0
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
 
-    e->fxt = e->fxp = 0;
-    return;
-#endif
-
     switch (e->fxt = fx[e->fxt]) {
-    case FX_ARPEGGIO:			/* Arpeggio */
-#if 0
-	if (e->fxp)
-	    arpeggio_val[c] = e->fxp;
-	else
-	    e->fxp = arpeggio_val[c];
-	break;
-    case FX_TEMPO:
-	if (e->fxp < 0x20)
-	    e->fxp = 0x20;
-	break;
-    case FX_S3M_TEMPO:
-	if (e->fxp < 0x20)
-	    e->fxt = FX_TEMPO;
-	break;
     case FX_EXTENDED:			/* Extended effects */
 	switch (h) {
 	case 0x3:			/* Glissando */
@@ -100,7 +90,6 @@ static void xlat_fx (int c, struct xxm_event *e)
 	    break;
 	}
 	break;
-#endif
     case NONE:				/* No effect */
 	e->fxt = e->fxp = 0;
 	break;
@@ -108,33 +97,33 @@ static void xlat_fx (int c, struct xxm_event *e)
 }
 
 
-static void decode_event (uint8 x1, struct xxm_event *event, FILE *f)
+static void decode_event(uint8 x1, struct xxm_event *event, FILE *f)
 {
     uint8 x2;
 
     memset (event, 0, sizeof (struct xxm_event));
 
     if (x1 & 0x01) {
-        fread (&x2, 1, 1, f);
+	x2 = read8(f);
 	if (x2 == 0xfe)
 	    event->note = XMP_KEY_OFF;
 	else
 	    event->note = x2 + 1 + 24;
     }
     if (x1 & 0x02) {
-        fread (&x2, 1, 1, f);
+	x2 = read8(f);
 	event->ins = x2 + 1;
     }
     if (x1 & 0x04) {
-        fread (&x2, 1, 1, f);
+	x2 = read8(f);
 	event->vol = x2;
     }
     if (x1 & 0x08) {
-        fread (&x2, 1, 1, f);
-	event->fxt = x2 + 1 - 'A';
+	x2 = read8(f);
+	event->fxt = x2 - 'A';
     }
     if (x1 & 0x10) {
-        fread (&x2, 1, 1, f);
+	x2 = read8(f);
 	event->fxp = x2;
     }
     _D(_D_INFO "  event: %02x %02x %02x %02x %02x",
@@ -146,7 +135,7 @@ static void decode_event (uint8 x1, struct xxm_event *event, FILE *f)
     assert (event->fxt <= 26);
 }
 
-int liq_load (FILE * f)
+int liq_load (FILE *f)
 {
     int i;
     struct xxm_event *event = NULL;
@@ -200,32 +189,32 @@ int liq_load (FILE * f)
     sprintf(xmp_ctl->type, "Liquid module %d.%02d",
 	lh.version >> 8, lh.version & 0x00ff);
 
-if (lh.version > 0) {
-    for (i = 0; i < xxh->chn; i++) {
-	fread (&x1, 1, 1, f);
-	xxc[i].pan = x1 << 2;
+    if (lh.version > 0) {
+	for (i = 0; i < xxh->chn; i++) {
+	    fread (&x1, 1, 1, f);
+	    xxc[i].pan = x1 << 2;
+	}
+
+	for (i = 0; i < xxh->chn; i++) {
+	    fread (&x1, 1, 1, f);
+	    xxc[i].vol = x1;
+	}
+
+	fread (xxo, 1, xxh->len, f);
+
+	/* Skip 1.01 echo pools */
+	fseek (f, lh.hdrsz - (0x6d + xxh->chn * 2 + xxh->len), SEEK_CUR);
+    } else {
+	fseek (f, 0xf0, SEEK_SET);
+	fread (xxo, 1, 256, f);
+	fseek (f, lh.hdrsz, SEEK_SET);
+
+	for (i = 0; i < 256; i++) {
+	    if (xxo[i] == 0xff)
+		break;
+	}
+	xxh->len = i;
     }
-
-    for (i = 0; i < xxh->chn; i++) {
-	fread (&x1, 1, 1, f);
-	xxc[i].vol = x1;
-    }
-
-    fread (xxo, 1, xxh->len, f);
-
-    /* Skip 1.01 echo pools */
-    fseek (f, lh.hdrsz - (0x6d + xxh->chn * 2 + xxh->len), SEEK_CUR);
-} else {
-    fseek (f, 0xf0, SEEK_SET);
-    fread (xxo, 1, 256, f);
-    fseek (f, lh.hdrsz, SEEK_SET);
-
-    for (i = 0; i < 256; i++) {
-	if (xxo[i] == 0xff)
-	    break;
-    }
-    xxh->len = i;
-}
 
     MODULE_INFO ();
 
@@ -272,7 +261,7 @@ if (lh.version > 0) {
  */
 
 read_event:
-	event = &EVENT (i, channel, row);
+	event = &EVENT(i, channel, row);
 
 	if (x2) {
 	    decode_event (x1, event, f);
@@ -281,10 +270,10 @@ read_event:
 	    goto next_row;	
 	}
 
-	fread (&x1, 1, 1, f);
+	x1 = read8(f);
 
 test_event:
-	event = &EVENT (i, channel, row);
+	event = &EVENT(i, channel, row);
 	_D(_D_INFO "* count=%ld chan=%d row=%d event=%02x",
 		ftell(f) - count, channel, row, x1);
 
@@ -294,7 +283,7 @@ test_event:
 	    assert (ftell (f) - count == lp.size);
 	    goto next_pattern;
 	case 0xe1:
-	    fread (&x1, 1, 1, f);
+	    x1 = read8(f);
 	    channel += x1;
 	    _D(_D_INFO "  [skip %d channels]", x1);
 	    /* fall thru */
@@ -308,7 +297,7 @@ test_event:
 	    row = -1;
 	    goto next_row;
 	case 0xe0:
-	    fread (&x1, 1, 1, f);
+	    x1 = read8(f);
 	    _D(_D_INFO "  [skip %d rows]", x1);
 	    row += x1;
 	    /* fall thru */
@@ -325,7 +314,7 @@ test_event:
 	}
 
 	if (x1 > 0xa0 && x1 < 0xc0) {
-	    fread (&x2, 1, 1, f);
+	    x2 = read8(f);
 	    _D(_D_INFO "  [packed data - repeat %d times]", x2);
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
@@ -333,7 +322,7 @@ test_event:
 	}
 
 	if (x1 > 0x80 && x1 < 0xa0) {
-	    fread (&x2, 1, 1, f);
+	    x2 = read8(f);
 	    _D(_D_INFO "  [packed data - repeat %d times, keep note]", x2);
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
@@ -351,26 +340,28 @@ test_event:
 	else if (x1 == 0xff)
 	    event->note = XMP_KEY_OFF;
 
-	fread (&x1, 1, 1, f);
+	x1 = read8(f);
 	if (x1 > 100) {
 	    row++;
 	    goto test_event;
 	}
-	if (++x1)
-	    event->ins = x1;
+	if (x1 != 0xff)
+	    event->ins = x1 + 1;
 
-	fread (&x1, 1, 1, f);
-	if (++x1)
+	x1 = read8(f);
+	if (x1 != 0xff)
 	    event->vol = x1;
 
-	fread (&x1, 1, 1, f);
-	if (++x1)
+	x1 = read8(f);
+	if (x1 != 0xff)
 	    event->fxt = x1 - 'A';
 
-	fread (&x1, 1, 1, f);
+	x1 = read8(f);
 	event->fxp = x1;
 
-	xlat_fx (channel, event); 
+	assert(event->fxt <= 26);
+
+	xlat_fx(channel, event); 
 
 	_D(_D_INFO "  event: %02x %02x %02x %02x %02x\n",
 	    event->note, event->ins, event->vol, event->fxt, event->fxp);
@@ -378,7 +369,6 @@ test_event:
 	assert (event->note <= 107 || event->note == XMP_KEY_OFF);
 	assert (event->ins <= 100);
 	assert (event->vol <= 65);
-	assert (event->fxt <= 26);
 
 next_row:
 	row++;
@@ -390,7 +380,7 @@ next_row:
 
 	if (channel >= xxh->chn) {
 	    _D(_D_CRIT "bad channel number!");
-	    fread (&x1, 1, 1, f);
+	    x1 = read8(f);
 	    goto test_event;
 	}
 
@@ -456,10 +446,8 @@ next_pattern:
 	xxs[i].lps = li.loopstart;
 	xxs[i].lpe = li.loopend;
 
-	if (li.flags & 0x01) {
+	if (li.flags & 0x01)
 	    xxs[i].flg = WAVE_16_BITS;
-	    xxs[i].len <<= 1;
-	}
 
 	if (li.loopend > 0)
 	    xxs[i].flg = WAVE_LOOPING;
@@ -473,11 +461,11 @@ next_pattern:
 	xxi[i][0].pan = li.pan;
 	xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, li.name, 24);
+	copy_adjust(xxih[i].name, li.name, 32);
 
-	if ((V (1)) && (strlen ((char *) li.name) || xxs[i].len)) {
+	if ((V (1)) && (strlen ((char *)xxih[i].name) || xxs[i].len)) {
 	    report ("\n[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d ",
-		i, li.name, xxs[i].len,
+		i, xxih[i].name, xxs[i].len,
 		xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		xxs[i].lps, xxs[i].lpe,
 		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
