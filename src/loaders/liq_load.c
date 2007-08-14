@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.6 2007-08-14 02:32:02 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.7 2007-08-14 12:02:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -265,19 +265,19 @@ read_event:
 test_event:
 	event = &EVENT(i, channel, row);
 	_D(_D_INFO "* count=%ld chan=%d row=%d event=%02x",
-		ftell(f) - count, channel, row, x1);
+				ftell(f) - count, channel, row, x1);
 
 	switch (x1) {
-	case 0xc0:
+	case 0xc0:			/* end of pattern */
 	    _D(_D_WARN "- end of pattern");
 	    assert (ftell (f) - count == lp.size);
 	    goto next_pattern;
-	case 0xe1:
+	case 0xe1:			/* skip channels */
 	    x1 = read8(f);
 	    channel += x1;
 	    _D(_D_INFO "  [skip %d channels]", x1);
 	    /* fall thru */
-	case 0xa0:
+	case 0xa0			/* next channel */
 	    _D(_D_INFO "  [next channel]");
 	    channel++;
 	    if (channel >= xxh->chn) {
@@ -286,24 +286,24 @@ test_event:
 	    }
 	    row = -1;
 	    goto next_row;
-	case 0xe0:
+	case 0xe0:			/* skip rows */
 	    x1 = read8(f);
 	    _D(_D_INFO "  [skip %d rows]", x1);
 	    row += x1;
 	    /* fall thru */
-	case 0x80:
+	case 0x80:			/* next row */
 	    _D(_D_INFO "  [next row]");
 	    goto next_row;
 	}
 
-	if (x1 > 0xc0 && x1 < 0xe0) {
+	if (x1 > 0xc0 && x1 < 0xe0) {	/* packed data */
 	    _D(_D_INFO "  [packed data]");
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
 	    goto next_row;
 	}
 
-	if (x1 > 0xa0 && x1 < 0xc0) {
+	if (x1 > 0xa0 && x1 < 0xc0) {	/* packed data repeat */
 	    x2 = read8(f);
 	    _D(_D_INFO "  [packed data - repeat %d times]", x2);
 	    decode_event (x1, event, f);
@@ -311,23 +311,24 @@ test_event:
 	    goto next_row;
 	}
 
-	if (x1 > 0x80 && x1 < 0xa0) {
+	if (x1 > 0x80 && x1 < 0xa0) {	/* packed data repeat, keep note */
 	    x2 = read8(f);
 	    _D(_D_INFO "  [packed data - repeat %d times, keep note]", x2);
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
 	    while (x2) {
-	        row ++;
-		memcpy (&EVENT (i, channel, row), event, sizeof (struct xxm_event));
+	        row++;
+		memcpy(&EVENT(i, channel, row), event, sizeof (struct xxm_event));
 		x2--;
 	    }
 	    goto next_row;
 	}
 
+	/* unpacked data */
 	_D (_D_INFO "  [unpacked data]");
-	if (++x1)
-	    event->note = x1 + 24;
-	else if (x1 == 0xff)
+	if (x1 != 0xff)
+	    event->note = 1 + 24 + x1;
+	else if (x1 == 0xfe)
 	    event->note = XMP_KEY_OFF;
 
 	x1 = read8(f);
