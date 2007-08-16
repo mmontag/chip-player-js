@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.16 2007-08-11 15:20:33 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.17 2007-08-16 13:22:06 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -89,6 +89,7 @@ PLATFORM="${target}"
 
 case ${target_os} in
 *win32* | cygwin* | mingw*)
+    is_win32=yes
     CFLAGS="${CFLAGS} -D_WIN32"
     X_XMP=""
     enable_arts=no
@@ -218,7 +219,7 @@ AC_PATH_XTRA
 
 if test "${ac_cv_header_sys_soundcard_h}" = "yes" || \
     test "${ac_cv_header_machine_soundcard_h}" = "yes"; then
-    if test "${enable_oss}" != "no"; then
+    if test "${enable_oss}" != "no" && test -z "$is_win32"; then
 	DRIVERS="${DRIVERS} oss_seq.o oss_mix.o"
 	AC_DEFINE(DRIVER_OSS_SEQ)
 	AC_DEFINE(DRIVER_OSS_MIX)
@@ -417,9 +418,9 @@ dnl
 cygwin*)
     AC_CHECK_HEADERS(mmsystem.h)
     if test "${ac_cv_header_mmsystem_h}" = "yes"; then
-	RANLIB=i386-cygwin-ranlib
+	RANLIB=ranlib
 	DRIVERS="${DRIVERS} win32.o"
-	LIBS="${LIBS} -lcygwin"
+	LIBS="${LIBS} -lcygwin -luser32 -lgdi32 -lwinmm"
 	AC_DEFINE(DRIVER_WIN32)
     fi
     ;;
