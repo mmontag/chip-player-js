@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.17 2007-08-16 13:22:06 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.18 2007-08-17 12:48:00 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -86,6 +86,13 @@ fi
 
 AC_SUBST(PLATFORM)
 PLATFORM="${target}"
+
+case ${target_cpu} in
+powerpc64)
+    CFLAGS="${CFLAGS} -m64"
+    LDFLAGS="${LDFLAGS} -m64"
+    ;;
+esac
 
 case ${target_os} in
 *win32* | cygwin* | mingw*)
