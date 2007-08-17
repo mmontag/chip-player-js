@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.4 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: wav.c,v 1.5 2007-08-17 12:28:27 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -142,18 +142,11 @@ static int init (struct xmp_control *ctl)
 
 static void bufdump (int i)
 {
-    int j;
-    void *b;
+    int16 *b;
 
-    b = xmp_smix_buffer ();
-    while (i) {
-	if ((j = write (audio_fd, b, i)) > 0) {
-	    i -= j;
-	    b = (char *)b + j;
-	    size += j;
-	} else
-	    break;
-    }
+    b = xmp_smix_buffer();
+    for (i >>= 1; i; i--)
+	write16l(audio_fd, *b++);
 }
 
 
