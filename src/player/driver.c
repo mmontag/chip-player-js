@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.11 2007-08-17 23:35:27 cmatsuoka Exp $
+ * $Id: driver.c,v 1.12 2007-08-19 19:28:31 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -104,9 +104,6 @@ extern struct xmp_drv_info drv_os2dart;
 #endif
 #ifdef DRIVER_QNX
 extern struct xmp_drv_info drv_qnx;
-#endif
-#ifdef DRIVER_WIN32
-extern struct xmp_drv_info drv_win32;
 #endif
 
 #endif /* XMMS_PLUGIN */

@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.8 2007-08-17 14:12:51 cmatsuoka Exp $
+ * $Id: osx.c,v 1.9 2007-08-19 19:28:31 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -177,9 +177,13 @@ static int init(struct xmp_control *ctl)
 
 	ad.mSampleRate = ctl->freq;
 	ad.mFormatID = kAudioFormatLinearPCM;
-	ad.mFormatFlags = kAudioFormatFlagIsPacked
-				| kAudioFormatFlagIsSignedInteger
-				| kAudioFormatFlagNativeEndian;
+	ad.mFormatFlags = kAudioFormatFlagIsPacked |
+					kAudioFormatFlagIsSignedInteger;
+#ifdef WORDS_BIGENDIAN
+	ad.mFormatFlags |= kAudioFormatFlagIsBigEndian;
+#else
+	ad.mFormatFlags &= ~kAudioFormatFlagIsBigEndian;
+#endif
 	ad.mChannelsPerFrame = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
 	ad.mBitsPerChannel = ctl->resol;
 
