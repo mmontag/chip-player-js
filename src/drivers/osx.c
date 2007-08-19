@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.10 2007-08-19 20:25:44 cmatsuoka Exp $
+ * $Id: osx.c,v 1.11 2007-08-19 20:49:51 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -180,13 +180,11 @@ static int init(struct xmp_control *ctl)
 	ad.mFormatID = kAudioFormatLinearPCM;
 	ad.mFormatFlags = kAudioFormatFlagIsPacked |
 					kAudioFormatFlagIsSignedInteger;
-	/* Can't test for WORDS_BIGENDIAN, doesn't work for fat binaries */
-	x = 0x0001;
-	if (*(uint8 *)&x == 0x00) {
-		ad.mFormatFlags |= kAudioFormatFlagIsBigEndian;
-	} else {
-		ad.mFormatFlags &= ~kAudioFormatFlagIsBigEndian;
-	}
+#ifdef WORDS_BIGENDIAN
+	ad.mFormatFlags |= kAudioFormatFlagIsBigEndian;
+#else
+	ad.mFormatFlags &= ~kAudioFormatFlagIsBigEndian;
+#endif
 	ad.mChannelsPerFrame = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
 	ad.mBitsPerChannel = ctl->resol;
 
