@@ -1,0 +1,53 @@
+4-D. Special commands.
+
+  There are six special commands you can enter. To enter a special command hit
+  Backspace in the pattern edit screen, enter a letter (a-f) then a number
+  (1-F). The first 5 commands alter the way the note will be played, the
+  sixth, 'f', changes the tempo in the pattern and has no effect on the note
+  being played. All commands except 'c' can be specified as part of a note or
+  alone. If they are specified alone, their effect starts where they were
+  placed, not when the note was struck. If no instrument is playing on the
+  channel where the command was encountered, there will be no effect (except
+  for command 'f', it always changes the tempo). The commands continue to
+  affect the way the instrument is played untill another note or command
+  is encountered in the pattern (an 'f' command will cancel the effects of
+  any previous command, but nothing cancels the effect of the 'f' command).
+  The format of the commands is c#, where c is the command and # is the
+  command value which is the user defined parameter for how much the command
+  will affect the instrument. The commands are:
+
+    a - Portamento up - This command will cause the frequency of the note to
+         increase over time, the command value indicates how fast the pitch
+         will increase. (For those of you who know what this means, the port
+         is linear, not logarithmic).
+
+    b - Portamento down - Same as 'a' but in the other direction.
+
+    c - Port to note - This is the only command that requires there to be a
+         note on the same line. This commands sets the note to portamento at
+         the speed defined by the command value towards the note on the line.
+         The instrument value of the note is ignored, but the volume is set
+         to the volume in the note on this line. When the note reaches the
+         destination note, the portamento is stopped and it continues playing
+         at the destination note frequency.
+
+    d - Frequency adjust - This command adjusts the frequency of the note
+         currently playing a little bit. This is useful for when you have 2
+         notes playing at the same pitch using the same instrument, use this
+         command to adjust the frequency of one of the notes to make it sound
+         a little more harmonic.
+
+    e - Frequency vibrato - This command sets the frequency of the note that
+         is playing to vibrate. The command value specifies how much to
+         vibrato the note by.
+
+Note: A command value of 0 on any of the previous commands cancels the effect
+  of any previous command and sets the note to play normally.
+
+    f - Set tempo - Usually you will set the tempo for the patterns through
+         their basic tempo. But there are times when you may want to change
+         the tempo within a pattern. Use this command to do it. The tempo will
+         remain at this tempo untill another set tempo command or untill
+         another pattern is reached in the order list (even the same pattern
+         that is playing now).
+
