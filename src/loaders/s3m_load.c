@@ -1,7 +1,7 @@
-/* Extended Module Player
+/* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.6 2007-08-05 03:08:34 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.7 2007-08-20 22:02:34 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -144,7 +144,7 @@ int s3m_load (FILE * f)
     struct s3m_file_header sfh;
     struct s3m_instrument_header sih;
     int pat_len;
-    uint8 n, b, x8, tmp[80];
+    uint8 n, b, x8;
 
     LOAD_INIT ();
 
@@ -167,7 +167,7 @@ int s3m_load (FILE * f)
     sfh.dp = read8(f);			/* Default pan positions if 0xfc */
     fread(&sfh.rsvd2, 8, 1, f);		/* Reserved */
     sfh.special = read16l(f);		/* Ptr to special custom data */
-    fread(&sfh.chset[32], 32, 1, f);	/* Channel settings */
+    fread(sfh.chset, 32, 1, f);		/* Channel settings */
 
     if (strncmp ((char *) sfh.magic, "SCRM", 4))
 	return -1;
@@ -190,12 +190,17 @@ int s3m_load (FILE * f)
     xxh->bpm = sfh.it;
 
     for (i = 0; i < 32; i++) {
-	if (sfh.chset[i] != S3M_CH_OFF)
-	    xxh->chn = i + 1;
-	else
+	if (sfh.chset[i] == S3M_CH_OFF)
 	    continue;
-	xxc[i].pan = sfh.mv & 0x80 ?
-		(((sfh.chset[i] & S3M_CH_PAN) >> 3) * 0xff) & 0xff : 0x80;
+
+	xxh->chn = i + 1;
+
+	if (sfh.mv & 0x80) {	/* stereo */
+		int x = sfh.chset[i] & S3M_CH_PAN;
+		xxc[i].pan = (x & 0x0f) < 8 ? 0x00 : 0xff;
+	} else {
+		xxc[i].pan = 0x80;
+	}
     }
     xxh->trk = xxh->pat * xxh->chn;
 
@@ -219,10 +224,13 @@ int s3m_load (FILE * f)
 	pp_pat[i] = read16l(f);
 
     /* Default pan positions */
+
     for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */ && (i < 32); i++) {
-	tmp[0] = read8(f);
-	if (tmp[0] && S3M_PAN_SET)
-	    xxc[i].pan = (tmp[0] << 4) & 0xff;
+	uint8 x = read8(f);
+	if (x & S3M_PAN_SET)
+	    xxc[i].pan = (x << 4) & 0xff;
+	else
+	    xxc[i].pan = sfh.mv % 0x80 ? 0x30 + 0xa0 * (i & 1) : 0x80;
     }
 
     xmp_ctl->c4rate = C4_NTSC_RATE;
@@ -326,7 +334,7 @@ int s3m_load (FILE * f)
 	report ("\n");
 
     if (V (1)) {
-	report ("Stereo enabled : %s\n", sfh.mv % 0x80 ? "yes" : "no");
+	report ("Stereo enabled : %s\n", sfh.mv & 0x80 ? "yes" : "no");
 	report ("Pan settings   : %s\n", sfh.dp ? "no" : "yes");
     }
 
