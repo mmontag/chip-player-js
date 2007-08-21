@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.21 2007-08-21 12:02:18 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.22 2007-08-21 17:16:02 cmatsuoka Exp $
 
 VERSION	= 2.2.0-pre4
 DATE	= Tue Aug 21 09:02:59 BRT 2007
@@ -19,7 +19,7 @@ LDFLAGS	= -o $@ @LDFLAGS@
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
 
-PLUGIN	= @BMP_PLUGIN@
+PLUGIN	= @PLUGIN@
 
 
 # IRIX 6.5.10 note by Johan Hattne <hattne@ibg.uu.se>

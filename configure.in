@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.19 2007-08-21 12:02:18 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.20 2007-08-21 17:16:02 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -30,8 +30,6 @@ DRIVERS="wav.o"
 AC_SUBST(MIXER)
 MIXER="mix_all.o"
 
-AC_SUBST(BMP_PLUGIN)
-BMP_PLUGIN=""
 
 dnl -----------------------------------------------------------------------
 dnl Config arguments
@@ -69,7 +67,7 @@ AC_ARG_WITH(nas,
     nas_path="$withval")
 
 AC_ARG_WITH(bmp,
-    [  --with-bmo=<path>       Beep Media Player prefix (optional)],
+    [  --with-bmp=<path>       Beep Media Player prefix (optional)],
     bmp_path="$withval",
     bmp_path="/usr")
 
@@ -146,7 +144,7 @@ dnl -----------------------------------------------------------------------
 dnl Check for Beep Media Player
 dnl -----------------------------------------------------------------------
 
-if test "${enable_bmp_plugin}" != "no"; then
+if test "${enable_bmp_plugin}" = "yes"; then
     bmp_cflags="`pkg-config bmp --cflags 2>/dev/null`"
     if test ! -z "${bmp_cflags}"; then
         AS_MESSAGE(checking for Beep Media Player flags... ${bmp_cflags}...)
@@ -159,10 +157,9 @@ if test "${enable_bmp_plugin}" != "no"; then
     fi
 fi
 
-if test "${enable_bmp_plugin}" != "no"; then
+if test "${enable_bmp_plugin}" = "yes"; then
     CPPFLAGS="${CINCS} `pkg-config bmp --cflags`"
     AC_CHECK_HEADERS(bmp/plugin.h)
-    BMP_PLUGIN="bmp"
 
     if test "${ac_cv_header_bmp_plugin_h}" = "yes"; then
         PLUGIN="bmp"
@@ -173,7 +170,7 @@ dnl -----------------------------------------------------------------------
 dnl Check for aRts
 dnl -----------------------------------------------------------------------
 
-if test "${enable_arts}" != "no"; then
+if test "${enable_arts}" = "yes"; then
     arts_cflags="`artsc-config --cflags 2>/dev/null`"
     if test ! -z "${arts_cflags}"; then
 	AS_MESSAGE(checking for aRts flags... ${arts_cflags}...)
@@ -186,7 +183,7 @@ if test "${enable_arts}" != "no"; then
     fi
 fi
 
-if test "${enable_arts}" != "no"; then
+if test "${enable_arts}" = "yes"; then
     CPPFLAGS="${CINCS} `artsc-config --cflags`"
     AC_CHECK_HEADERS(artsc.h)
 fi
@@ -265,7 +262,7 @@ else
     enable_esd="no"
 fi
 
-if test "${enable_arts}" = yes; then
+if test "${enable_arts}" = "yes"; then
     if test "${ac_cv_header_artsc_h}" = "yes"; then
         AC_CHECK_LIB(artsc, arts_init, [
             LIBS="${LIBS} `artsc-config --libs`"
@@ -293,12 +290,6 @@ fi
 dnl -----------------------------------------------------------------------
 dnl OS/Architecture dependent options
 dnl -----------------------------------------------------------------------
-
-dnl case ${target_cpu} in
-dnl i386|i486|i586|i686)
-dnl     MIXER="mix_i386.o"
-dnl     ;;
-dnl esac
 
 case ${target_os} in
 dnl
