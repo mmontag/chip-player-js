@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.3 2006-02-12 20:00:36 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.4 2007-08-21 03:16:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,24 +29,42 @@ static uint8 arpeggio_val[32];
 /* Effect conversion table */
 static uint8 fx[] =
 {
-    NONE,		FX_S3M_TEMPO,
-    FX_TEMPO,		FX_TONEPORTA,
-    FX_TONE_VSLIDE,	FX_VIBRATO,
-    FX_VIBRA_VSLIDE,	NONE /* fine vibrato */,
-    FX_TREMOLO,		FX_ARPEGGIO,
-    FX_SETPAN,		FX_PANSLIDE,
-    FX_VOLSET,		FX_VOLSLIDE,
-    FX_F_VSLIDE,	FX_FINETUNE,
-    FX_NSLIDE_UP,	FX_NSLIDE_DN,
-    FX_PORTA_UP,	FX_PORTA_DN,
-    FX_IMF_FPORTA_UP,	FX_IMF_FPORTA_DN,
-    NONE /*FX_FLT_CUTOFF*/,	NONE /*FX_FLT_RESN*/,
-    FX_OFFSET,		NONE /* fine offset */,
-    FX_KEYOFF,		FX_MULTI_RETRIG,
-    FX_TREMOR,		FX_JUMP,
-    FX_BREAK,		FX_GLOBALVOL,
-    FX_G_VOLSLIDE,	FX_EXTENDED,
-    FX_CHORUS,		FX_REVERB
+	NONE,
+	FX_S3M_TEMPO,
+	FX_S3M_BPM,
+	FX_TONEPORTA,
+	FX_TONE_VSLIDE,
+	FX_VIBRATO,
+	FX_VIBRA_VSLIDE,
+	FX_FINE4_VIBRA,
+	FX_TREMOLO,
+	FX_ARPEGGIO,
+	FX_SETPAN,
+	FX_PANSLIDE,
+	FX_VOLSET,
+	FX_VOLSLIDE,
+	FX_F_VSLIDE,
+	FX_FINETUNE,
+	FX_NSLIDE_UP,
+	FX_NSLIDE_DN,
+	FX_PORTA_UP,
+	FX_PORTA_DN,
+	FX_IMF_FPORTA_UP,
+	FX_IMF_FPORTA_DN,
+	FX_FLT_CUTOFF,
+	FX_FLT_RESN,
+	FX_OFFSET,
+	NONE /* fine offset */,
+	FX_KEYOFF,
+	FX_MULTI_RETRIG,
+	FX_TREMOR,
+	FX_JUMP,
+	FX_BREAK,
+	FX_GLOBALVOL,
+	FX_G_VOLSLIDE,
+	FX_EXTENDED,
+	FX_CHORUS,
+	FX_REVERB
 };
 
 
@@ -61,14 +79,6 @@ static void xlat_fx (int c, uint8 *fxt, uint8 *fxp)
 	    arpeggio_val[c] = *fxp;
 	else
 	    *fxp = arpeggio_val[c];
-	break;
-    case FX_TEMPO:
-	if (*fxp < 0x21)
-	    *fxp = 0x21;
-	break;
-    case FX_S3M_TEMPO:
-	if (*fxp <= 0x20)
-	    *fxt = FX_TEMPO;
 	break;
     case FX_IMF_FPORTA_UP:
 	*fxt = FX_PORTA_UP;
@@ -384,7 +394,7 @@ int imf_load (FILE *f)
     if (V (0))
 	report ("\n");
 
-    xmp_ctl->fetch |= XMP_MODE_ST3;
+    xmp_ctl->fetch |= XMP_MODE_ST3 | XMP_CTL_FILTER;
 
     return 0;
 }

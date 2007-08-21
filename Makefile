@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.16 2007-08-12 19:23:54 cmatsuoka Exp $
+# $Id: Makefile,v 1.17 2007-08-21 03:16:58 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -11,7 +11,7 @@ TEST_XM	=
 DIST	= xmp-$(VERSION)
 RPMSPEC	= etc/xmp.spec
 RPMRC	= etc/rpmrc
-MODULES	= chip_zone.mdl
+MODULES	= inspiration.s3m
 DFILES	= README configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
 DDIRS	= lib docs etc src scripts

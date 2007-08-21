@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.3 2006-02-13 02:55:59 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.4 2007-08-21 03:16:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -196,7 +196,7 @@ int ptm_load (FILE * f)
 		    event->fxt = FX_MULTI_RETRIG;
 		    break;
 		case 0x12:	/* Fine vibrato */
-		    event->fxt = FX_VIBRATO;
+		    event->fxt = FX_FINE4_VIBRA;
 		    break;
 		case 0x13:
 		case 0x14:

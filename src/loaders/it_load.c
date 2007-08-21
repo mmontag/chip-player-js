@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.5 2006-02-13 04:00:52 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.6 2007-08-21 03:16:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,25 +27,39 @@ static uint32 *pp_pat;		/* Pointers to patterns */
 static uint8 arpeggio_val[64];
 
 static uint8 fx[] = {
-    /*   */ FX_NONE,		/* A */ FX_S3M_TEMPO,
-    /* B */ FX_JUMP,		/* C */ FX_BREAK,
-    /* D */ FX_VOLSLIDE,	/* E */ FX_PORTA_DN,
-    /* F */ FX_PORTA_UP,	/* G */ FX_TONEPORTA,
-    /* H */ FX_VIBRATO,		/* I */ FX_TREMOR,
-    /* J */ FX_ARPEGGIO,	/* K */ FX_VIBRA_VSLIDE,
-    /* L */ FX_TONE_VSLIDE,	/* M */ FX_TRK_VOL,
-    /* N */ FX_TRK_VSLIDE,	/* O */ FX_OFFSET,
-    /* P */ FX_NONE,		/* Q */ FX_MULTI_RETRIG,
-    /* R */ FX_TREMOLO,		/* S */ FX_XTND,
-    /* T */ FX_TEMPO,		/* U */ FX_NONE,
-    /* V */ FX_GLOBALVOL,	/* W */ FX_G_VOLSLIDE,
-    /* X */ FX_NONE,		/* Y */ FX_NONE,
-    /* Z */ FX_FLT_CUTOFF
+	/*   */ FX_NONE,
+	/* A */ FX_S3M_TEMPO,
+	/* B */ FX_JUMP,
+	/* C */ FX_BREAK,
+	/* D */ FX_VOLSLIDE,
+	/* E */ FX_PORTA_DN,
+	/* F */ FX_PORTA_UP,
+	/* G */ FX_TONEPORTA,
+	/* H */ FX_VIBRATO,
+	/* I */ FX_TREMOR,
+	/* J */ FX_ARPEGGIO,
+	/* K */ FX_VIBRA_VSLIDE,
+	/* L */ FX_TONE_VSLIDE,
+	/* M */ FX_TRK_VOL,
+	/* N */ FX_TRK_VSLIDE,
+	/* O */ FX_OFFSET,
+	/* P */ FX_NONE,
+	/* Q */ FX_MULTI_RETRIG,
+	/* R */ FX_TREMOLO,
+	/* S */ FX_XTND,
+	/* T */ FX_S3M_BPM,
+	/* U */ FX_NONE,
+	/* V */ FX_GLOBALVOL,
+	/* W */ FX_G_VOLSLIDE,
+	/* X */ FX_NONE,
+	/* Y */ FX_NONE,
+	/* Z */ FX_FLT_CUTOFF
 };
 
 static char *nna[] = { "cut", "cont", "off", "fade" };
 static char *dct[] = { "off", "note", "smp", "inst" };
 static int dca2nna[] = { 0, 2, 3 };
+static int new_fx;
 
 int itsex_decompress8 (FILE *, void *, int, int);
 int itsex_decompress16 (FILE *, void *, int, int);
@@ -62,13 +76,9 @@ static void xlat_fx (int c, struct xxm_event *e)
 	else
 	    e->fxp = arpeggio_val[c];
 	break;
-    case FX_TEMPO:
-	if (e->fxp < 0x21)
-	    e->fxp = 0x21;
-	break;
-    case FX_S3M_TEMPO:
-	if (e->fxp <= 0x20)
-	    e->fxt = FX_TEMPO;
+    case FX_VIBRATO:		/* Old or new vibrato */
+	if (new_fx)
+	    e->fxt = FX_FINE2_VIBRA;
 	break;
     case FX_XTND:		/* Extended effect */
 	e->fxt = FX_EXTENDED;
@@ -244,6 +254,8 @@ int it_load (FILE * f)
 	    ((int) ifh.chpan[i] * 0x80 >> 5) & 0xff : 0x80;
     }
     fread (xxo, 1, xxh->len, f);
+
+    new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
     /* S3M skips pattern 0xfe */
     for (i = 0; i < (xxh->len - 1); i++)

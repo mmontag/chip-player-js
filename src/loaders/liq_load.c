@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.8 2007-08-14 13:11:57 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.9 2007-08-21 03:16:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -30,7 +30,7 @@ static uint8 fx[] = {
 	FX_BREAK,
 	FX_PORTA_DN,
 	NONE,
-	NONE,			/* Fine vibrato */
+	FX_FINE4_VIBRA,
 	NONE,
 	NONE,
 	NONE,
@@ -76,13 +76,13 @@ static void xlat_fx(int c, struct xxm_event *e)
 	case 0x7:			/* Tremolo wave */
 	    e->fxp = l | (EX_TREMOLO_WF << 4);
 	    break;
-	case 0xc:			/* Tremolo wave */
+	case 0xc:			/* Cut */
 	    e->fxp = l | (EX_CUT << 4);
 	    break;
-	case 0xd:			/* Tremolo wave */
+	case 0xd:			/* Delay */
 	    e->fxp = l | (EX_DELAY << 4);
 	    break;
-	case 0xe:			/* Tremolo wave */
+	case 0xe:			/* Pattern delay */
 	    e->fxp = l | (EX_PATT_DELAY << 4);
 	    break;
 	default:			/* Ignore */

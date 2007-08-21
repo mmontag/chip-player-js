@@ -62,6 +62,7 @@
 #define FX_IT_INSTFUNC	0x83
 #define FX_FLT_CUTOFF	0x84
 #define FX_FLT_RESN	0x85
+#define FX_FINE2_VIBRA	0x86
 
 /* MED effects */
 #define FX_HOLD_DECAY	0x90
@@ -79,5 +80,6 @@
 #define FX_CHORUS	0xa9	/* IMF */
 #define FX_REVERB	0xaa	/* IMF */
 #define FX_S3M_BPM	0xab	/* S3M */
+#define FX_FINE4_VIBRA	0xac	/* S3M/PTM/IMF/LIQ */
 
 #endif /* __EFFECTS_H */

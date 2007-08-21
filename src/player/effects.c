@@ -100,9 +100,23 @@ fx_porta_dn:
     case FX_VIBRATO:				/* Vibrato */
 	SET (VIBRATO);
 	if (LSN (fxp))
-	    xc->y_depth = LSN (fxp);
+	    xc->y_depth = LSN (fxp) * 4;
 	if (MSN (fxp))
 	    xc->y_rate = MSN (fxp);
+	break;
+    case FX_FINE2_VIBRA:			/* Fine vibrato (2x) */
+	SET(VIBRATO);
+	if (LSN(fxp))
+	    xc->y_depth = LSN(fxp) * 2;
+	if (MSN(fxp))
+	    xc->y_rate = MSN(fxp);
+	break;
+    case FX_FINE4_VIBRA:			/* Fine vibrato (4x) */
+	SET(VIBRATO);
+	if (LSN(fxp))
+	    xc->y_depth = LSN(fxp);
+	if (MSN(fxp))
+	    xc->y_rate = MSN(fxp);
 	break;
     case FX_TONE_VSLIDE:			/* Toneporta + vol slide */
 	if (!TEST (IS_VALID))

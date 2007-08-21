@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.5 2007-08-04 20:08:15 cmatsuoka Exp $
+ * $Id: player.c,v 1.6 2007-08-21 03:16:59 cmatsuoka Exp $
  */
 
 /*
@@ -522,7 +522,7 @@ static void module_play (int chn, int t)
      * Each unit in the envelope scale is 1/25 semitone.
      */
     xc->pitchbend = period_to_bend (xc->period + (TEST (VIBRATO) ?
-	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 8 : 0) +
+	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10 : 0) +
 	waveform[XXI->vwf][xc->insvib_idx] * XXI->vde / (1024 *
 	(1 + xc->insvib_swp)),
 	xc->note,

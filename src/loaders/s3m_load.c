@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.8 2007-08-21 00:57:47 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.9 2007-08-21 03:16:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -64,20 +64,33 @@ static uint8 arpeggio_val[32];
 /* Effect conversion table */
 static uint8 fx[] =
 {
-    NONE,
-    FX_S3M_TEMPO,	FX_JUMP,
-    FX_BREAK,		FX_VOLSLIDE,
-    FX_PORTA_DN,	FX_PORTA_UP,
-    FX_TONEPORTA,	FX_VIBRATO,
-    FX_TREMOR,		FX_ARPEGGIO,
-    FX_VIBRA_VSLIDE,	FX_TONE_VSLIDE,
-    NONE,		NONE,
-    FX_OFFSET,		NONE,
-    FX_MULTI_RETRIG,	FX_TREMOLO,
-    FX_S3M_EXTENDED,	FX_S3M_BPM, /*FX_TEMPO,*/
-    NONE,		FX_GLOBALVOL,
-    NONE,		NONE,
-    NONE,		NONE
+	NONE,
+	FX_S3M_TEMPO,		/* A */
+	FX_JUMP,		/* B */
+	FX_BREAK,		/* C */
+	FX_VOLSLIDE,		/* D */
+	FX_PORTA_DN,		/* E */
+	FX_PORTA_UP,		/* F */
+	FX_TONEPORTA,		/* G */
+	FX_VIBRATO,		/* H */
+	FX_TREMOR,		/* I */
+	FX_ARPEGGIO,		/* J */
+	FX_VIBRA_VSLIDE,	/* K */
+	FX_TONE_VSLIDE,		/* L */
+	NONE,
+	NONE,
+	FX_OFFSET,		/* O */
+	NONE,
+	FX_MULTI_RETRIG,	/* Q */
+	FX_TREMOLO,		/* R */
+	FX_S3M_EXTENDED,	/* S */
+	FX_S3M_BPM,		/* T */
+	FX_FINE4_VIBRA,		/* U */
+	FX_GLOBALVOL,		/* V */
+	NONE,
+	NONE,
+	NONE,
+	NONE
 };
 
 
