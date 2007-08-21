@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.7 2007-08-20 22:02:34 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.8 2007-08-21 00:57:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,6 +35,13 @@
  * It appears that xmp has issues loading/playing a specific instrument
  * used in LUCCA.S3M.
  * (Fixed by Hipolito in xmp-2.0.0dev34)
+ */
+
+/* From http://code.pui.ch/2007/02/18/turn-demoscene-modules-into-mp3s/
+ * The only flaw I noticed [in xmp] is a problem with portamento in Purple
+ * Motion's second reality soundtrack (1:06-1:17)
+ * (Claudio's note: that's in channels 6,7 starting at pos12, caused by
+ * pitchbending - effect F25)
  */
 
 #ifdef HAVE_CONFIG_H
