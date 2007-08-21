@@ -1,4 +1,4 @@
-$Id: README,v 1.21 2007-08-12 02:29:36 cmatsuoka Exp $
+$Id: README,v 1.22 2007-08-21 21:12:35 cmatsuoka Exp $
 
 
 
@@ -17,7 +17,7 @@ OVERVIEW
 This is the Extended Module Player, a module player for Unix-like systems
 that runs on Linux with ALSA and OSS, SunOS, NetBSD, HP-UX, OS/2, FreeBSD
 and Solaris. Xmp plays over 60 mainstream and obscure module formats from
-Amiga and PC.
+Amiga, Atari and PC.
 
 Many compressed module formats are supported, including popular Unix, DOS
 and Amiga file packers such as gzip, bzip2, SQSH, Powerpack, etc. Certain
