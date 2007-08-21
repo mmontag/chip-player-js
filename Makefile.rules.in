@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.20 2007-08-21 00:57:47 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.21 2007-08-21 12:02:18 cmatsuoka Exp $
 
 VERSION	= 2.2.0-pre4
-DATE	= Sun Aug 19 18:16:01 BRT 2007
+DATE	= Tue Aug 21 09:02:59 BRT 2007
 
 DESTDIR	=
 prefix	= $(DESTDIR)@prefix@
@@ -19,7 +19,7 @@ LDFLAGS	= -o $@ @LDFLAGS@
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
 
-XMMS	= @XMMS@
+PLUGIN	= @BMP_PLUGIN@
 
 
 # IRIX 6.5.10 note by Johan Hattne <hattne@ibg.uu.se>

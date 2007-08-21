@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.17 2007-08-21 03:16:58 cmatsuoka Exp $
+# $Id: Makefile,v 1.18 2007-08-21 12:02:18 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -33,14 +33,11 @@ configure: configure.in
 
 check: test
 
-dust:
-	@echo "<cough, cough>"
-
 test: xmp
 	time -v player/xmp -vvv $(MODULES)
 
 install-plugin:
-	$(MAKE) -C src/xmms install
+	$(MAKE) -C src/bmp install
 
 install::
 	@echo
@@ -58,7 +55,7 @@ uninstall:
 
 # Extra targets:
 # 'dist' prepares a distribution package
-# 'mark' marks the last RCS revision with the package version number
+# 'mark' marks the last CVS revision with the package version number
 # 'whatsout' lists the locked files
 # 'diff' creates a diff file
 # 'rpm' generates a RPM package
@@ -103,8 +100,7 @@ _bindist2: xmp
 	cat src/main/xxmp | gzip -9c > ../xxmp-$(VERSION)_$(PLATFORM).gz
 
 mark:
-	ID=`echo $(VERSION) | sed 's/\./_/g'`; \
-	cvs tag release_$$ID
+	cvs tag r`echo $(VERSION) | tr .- _`
 
 chkoldver:
 	@if [ "$(OLDVER)" = "" ]; then \
@@ -123,12 +119,6 @@ diff: chkoldver
 	    rm -Rf xmp-$(OLDVER) xmp-$(VERSION); \
 	    sync; \
 	fi
-
-rpm:
-	rpm -ba $(RPMSPEC)
-
-deb:
-	fakeroot debian/rules binary
 
 graph: delgraph callgraph.ps
 

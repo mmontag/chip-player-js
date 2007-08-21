@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.46 2007-08-21 03:18:50 cmatsuoka Exp $
+$Id: ChangeLog,v 1.47 2007-08-21 12:02:18 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -22,6 +22,7 @@ Stable versions
 	- removed packed structures
 	- replaced non-free PowerPack depacker with Kyzer's PD version
 	- replaced list management in IFF loader with kernel list helpers
+	- replaced XMMS plugin with Beep Media Player plugin
 	- fixed long-standing bug in S3M BPM handling, "Panic" plays correctly
 	- fixed MDL effects translation
 	- fixed MDL pattern order loading missing first pattern
