@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.3 2007-08-09 17:16:22 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.4 2007-08-21 13:49:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -215,6 +215,7 @@ int mmd3_load(FILE *f)
 		xxh->bpm = xxh->bpm * 33 / 6;
 	xxh->pat = song.numblocks;
 	xxh->ins = song.numsamples;
+	xxh->smp = xxh->ins;
 	xxh->rst = 0;
 	xxh->chn = 0;
 	xmp_ctl->name[0] = 0;
