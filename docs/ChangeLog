@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.45 2007-08-20 22:02:34 cmatsuoka Exp $
+$Id: ChangeLog,v 1.46 2007-08-21 03:18:50 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -15,7 +15,9 @@ Stable versions
 	- added Graoumf Tracker GTK module loader
 	- added old Liquid Tracker "NO" module loader
 	- added OSX CoreAudio driver
+	- added S3M/PTM/IMF/LIQ/IT fine vibrato effect
 	- enabled WAV writer
+	- enabled IMF filter effects
 	- removed broken shared lib generation
 	- removed packed structures
 	- replaced non-free PowerPack depacker with Kyzer's PD version
