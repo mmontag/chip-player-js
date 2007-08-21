@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.9 2007-08-21 03:16:59 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.10 2007-08-21 12:38:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -37,11 +37,13 @@
  * (Fixed by Hipolito in xmp-2.0.0dev34)
  */
 
-/* From http://code.pui.ch/2007/02/18/turn-demoscene-modules-into-mp3s/
+/*
+ * From http://code.pui.ch/2007/02/18/turn-demoscene-modules-into-mp3s/
  * The only flaw I noticed [in xmp] is a problem with portamento in Purple
  * Motion's second reality soundtrack (1:06-1:17)
- * (Claudio's note: that's in channels 6,7 starting at pos12, caused by
- * pitchbending - effect F25)
+ *
+ * Claudio's note: that's a dissonant beating between channels 6 and 7
+ * starting at pos12, caused by pitchbending effect F25.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -65,28 +67,28 @@ static uint8 arpeggio_val[32];
 static uint8 fx[] =
 {
 	NONE,
-	FX_S3M_TEMPO,		/* A */
-	FX_JUMP,		/* B */
-	FX_BREAK,		/* C */
-	FX_VOLSLIDE,		/* D */
-	FX_PORTA_DN,		/* E */
-	FX_PORTA_UP,		/* F */
-	FX_TONEPORTA,		/* G */
-	FX_VIBRATO,		/* H */
-	FX_TREMOR,		/* I */
-	FX_ARPEGGIO,		/* J */
-	FX_VIBRA_VSLIDE,	/* K */
-	FX_TONE_VSLIDE,		/* L */
+	FX_S3M_TEMPO,		/* Axx  Set speed to xx (the default is 06) */
+	FX_JUMP,		/* Bxx  Jump to order xx (hexadecimal) */
+	FX_BREAK,		/* Cxx  Break pattern to row xx (decimal) */
+	FX_VOLSLIDE,		/* Dxy  Volume slide down by y/up by x */
+	FX_PORTA_DN,		/* Exx  Slide down by xx */
+	FX_PORTA_UP,		/* Fxx  Slide up by xx */
+	FX_TONEPORTA,		/* Gxx  Tone portamento with speed xx */
+	FX_VIBRATO,		/* Hxy  Vibrato with speed x and depth y */
+	FX_TREMOR,		/* Ixy  Tremor with ontime x and offtime y */
+	FX_ARPEGGIO,		/* Jxy  Arpeggio with halfnote additions */
+	FX_VIBRA_VSLIDE,	/* Kxy  Dual command: H00 and Dxy */
+	FX_TONE_VSLIDE,		/* Lxy  Dual command: G00 and Dxy */
 	NONE,
 	NONE,
-	FX_OFFSET,		/* O */
+	FX_OFFSET,		/* Oxy  Set sample offset */
 	NONE,
-	FX_MULTI_RETRIG,	/* Q */
-	FX_TREMOLO,		/* R */
-	FX_S3M_EXTENDED,	/* S */
-	FX_S3M_BPM,		/* T */
-	FX_FINE4_VIBRA,		/* U */
-	FX_GLOBALVOL,		/* V */
+	FX_MULTI_RETRIG,	/* Qxy  Retrig (+volumeslide) note */
+	FX_TREMOLO,		/* Rxy  Tremolo with speed x and depth y */
+	FX_S3M_EXTENDED,	/* Sxx  (misc effects) */
+	FX_S3M_BPM,		/* Txx  Tempo = xx (hex) */
+	FX_FINE4_VIBRA,		/* Uxx  Fine vibrato */
+	FX_GLOBALVOL,		/* Vxx  Set global volume */
 	NONE,
 	NONE,
 	NONE,
