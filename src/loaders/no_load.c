@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.3 2007-08-13 20:42:31 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.4 2007-08-21 12:43:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -51,7 +51,7 @@ int no_load(FILE * f)
 	if (id != 0x4e4f0000)		/* NO 0x00 0x00 */
 		return -1;
 
-	strcpy(xmp_ctl->type, "Liquid module (old)");
+	strcpy(xmp_ctl->type, "NO (old LIQ)");
 
 	nsize = read8(f);
 	for (i = 0; i < nsize; i++) {
