@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.2 2007-08-22 21:20:00 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.3 2007-08-22 23:02:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -135,7 +135,7 @@ static void get_patt(int size, FILE *f)
 
 	if (!pflag) {
 		reportv(0, "Stored patterns: %d ", xxh->pat);
-		pflag = 1;
+	pflag = 1;
 		i = 0;
 		xxh->trk = xxh->pat * xxh->chn;
 		PATTERN_INIT();
@@ -147,15 +147,15 @@ static void get_patt(int size, FILE *f)
 
 	for (j = 0; j < rows[i]; j++) {
 		for (k = 0; k < xxh->chn; k++) {
-			uint a;
-
 			event = &EVENT(i, k, j);
-			a = read8(f);
-			if (a)
-				event->note = 24 + a;
-			event->ins = read8(f);
-			event->fxt = read8(f);
+
 			event->fxp = read8(f);
+			event->fxt = read8(f);
+			event->ins = read8(f);
+			event->note = read8(f);
+
+			if (event->note)
+				event->note += 24;
 
 			fix_effect(event);
 		}
@@ -173,7 +173,7 @@ static void get_samp(int size, FILE *f)
 		xxh->smp = xxh->ins = 36;
 		INSTRUMENT_INIT();
 		reportv(0, "\nInstruments    : %d ", xxh->ins);
-	        reportv(1, "\n     Instrument name      Len   LBeg  LSize L Vol");
+	        reportv(1, "\n     Instrument name      Len   LBeg  LEnd  L Vol");
 		sflag = 1;
 		i = 0;
 	}
@@ -193,13 +193,18 @@ static void get_samp(int size, FILE *f)
 	xxs[i].lps = read32l(f);
 	read32l(f);	/* RLEN */
 	read32l(f);
-	xxs[i].lps = read32l(f);
+	xxs[i].lpe = read32l(f);
 	read32l(f);	/* SDAT */
 	read32l(f);
 
 	xxih[i].nsm = 1;
 	xxi[i][0].sid = i;
 	xxi[i][0].pan = 0x80;
+
+	if (xxs[i].lpe > 2) {
+		xxs[i].flg = WAVE_LOOPING;
+		xxs[i].lpe = xxs[i].lps + xxs[i].lpe;
+	}
 
 	xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
 					&xxs[xxi[i][0].sid], NULL);
