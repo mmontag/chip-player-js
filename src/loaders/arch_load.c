@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.1 2007-08-22 13:26:26 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.2 2007-08-22 21:20:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,9 +17,54 @@
 #include "period.h"
 
 static int year, month, day;
-static int rows, pflag, sflag;
-static uint8 ster[8];
+static int pflag, sflag;
+static uint8 ster[8], rows[64];
 
+static void fix_effect(struct xxm_event *e)
+{
+	switch (e->fxt) {
+	case 0x00:			/* 00 xy Normal play or Arpeggio */
+		e->fxt = FX_ARPEGGIO;
+		/* x: first halfnote to add
+		   y: second halftone to subtract */
+		break;
+	case 0x01:			/* 01 xx Slide Up */
+		e->fxt = FX_PORTA_UP;
+		break;
+	case 0x02:			/* 02 xx Slide Down */
+		e->fxt = FX_PORTA_DN;
+		break;
+	case 0x0b:			/* 0B xx Break Pattern */
+		e->fxt = FX_BREAK;
+		break;
+	case 0x0e:			/* 0E xy Set Stereo */
+		e->fxt = e->fxp = 0;
+		/* y: stereo position (1-7,ignored). 1=left 4=center 7=right */
+		break;
+	case 0x10:			/* 10 xx Volume Slide Up */
+		e->fxt = FX_VOLSLIDE_UP;
+		break;
+	case 0x11:			/* 11 xx Volume Slide Down */
+		e->fxt = FX_VOLSLIDE_DN;
+		break;
+	case 0x13:			/* 13 xx Position Jump */
+		e->fxt = FX_JUMP;
+		break;
+	case 0x15:			/* 15 xy Line Jump. (not in manual) */
+		e->fxt = e->fxp = 0;
+		/* Jump to line 10*x+y in same pattern. (10*x+y>63 ignored) */
+		break;
+	case 0x1c:			/* 1C xy Set Speed */
+		e->fxt = FX_TEMPO;
+		break;
+	case 0x1f:			/* 1F xx Set Volume */
+		e->vol = e->fxp;
+		e->fxp = e->fxt = 0;
+		break;
+	default:
+		e->fxt = e->fxp = 0;
+	}
+}
 
 static void get_tinf(int size, FILE *f)
 {
@@ -69,7 +114,7 @@ static void get_pnum(int size, FILE *f)
 
 static void get_plen(int size, FILE *f)
 {
-	rows = read32l(f);
+	fread(rows, 1, 64, f);
 }
 
 static void get_sequ(int size, FILE *f)
@@ -84,20 +129,95 @@ static void get_sequ(int size, FILE *f)
 
 static void get_patt(int size, FILE *f)
 {
+	static int i = 0;
+	int j, k;
+	struct xxm_event *event;
+
 	if (!pflag) {
 		reportv(0, "Stored patterns: %d ", xxh->pat);
 		pflag = 1;
+		i = 0;
 		xxh->trk = xxh->pat * xxh->chn;
 		PATTERN_INIT();
 	}
+
+	PATTERN_ALLOC(i);
+	xxp[i]->rows = rows[i];
+	TRACK_ALLOC(i);
+
+	for (j = 0; j < rows[i]; j++) {
+		for (k = 0; k < xxh->chn; k++) {
+			uint a;
+
+			event = &EVENT(i, k, j);
+			a = read8(f);
+			if (a)
+				event->note = 24 + a;
+			event->ins = read8(f);
+			event->fxt = read8(f);
+			event->fxp = read8(f);
+
+			fix_effect(event);
+		}
+	}
+
+	i++;
+	reportv(0, ".");
 }
 
 static void get_samp(int size, FILE *f)
 {
+	static int i = 0;
+
 	if (!sflag) {
-		reportv(0, "\nStored samples : %d ", xxh->smp);
+		xxh->smp = xxh->ins = 36;
+		INSTRUMENT_INIT();
+		reportv(0, "\nInstruments    : %d ", xxh->ins);
+	        reportv(1, "\n     Instrument name      Len   LBeg  LSize L Vol");
 		sflag = 1;
+		i = 0;
 	}
+
+	xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+	read32l(f);	/* SNAM */
+	read32l(f);
+	fread(xxih[i].name, 1, 20, f);
+	read32l(f);	/* SVOL */
+	read32l(f);
+	xxi[i][0].vol = read32l(f) >> 2;
+	read32l(f);	/* SLEN */
+	read32l(f);
+	xxs[i].len = read32l(f);
+	read32l(f);	/* ROFS */
+	read32l(f);
+	xxs[i].lps = read32l(f);
+	read32l(f);	/* RLEN */
+	read32l(f);
+	xxs[i].lps = read32l(f);
+	read32l(f);	/* SDAT */
+	read32l(f);
+
+	xxih[i].nsm = 1;
+	xxi[i][0].sid = i;
+	xxi[i][0].pan = 0x80;
+
+	xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
+					&xxs[xxi[i][0].sid], NULL);
+
+	if (strlen((char *)xxih[i].name) || xxs[i].len > 0) {
+		if (V(1))
+			report("\n[%2X] %-20.20s %05x %05x %05x %c V%02x",
+				i, xxih[i].name,
+				xxs[i].len,
+				xxs[i].lps,
+				xxs[i].lpe,
+				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				xxi[i][0].vol);
+		else
+			report(".");
+	}
+
+	i++;
 }
 
 int arch_load(FILE *f)

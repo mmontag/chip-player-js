@@ -1,4 +1,4 @@
-$Id: README,v 1.23 2007-08-22 13:26:25 cmatsuoka Exp $
+$Id: README,v 1.24 2007-08-22 21:20:00 cmatsuoka Exp $
 
 
 
@@ -96,6 +96,10 @@ The current version recognizes the following module formats:
   FLX	****	Flextrax		M.K., xCHN (no dsp effects)
   GTK	**	Graoumf Tracker		GTK1, GTK4
   MOD	***	TCB Tracker		'AN COOL.'
+
+  Other (Acorn):
+
+  ARCH	*	Archimedes Tracker	V1.0+++
 
   Other (PC):
 
