@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.47 2007-08-21 12:02:18 cmatsuoka Exp $
+$Id: ChangeLog,v 1.48 2007-08-22 01:23:11 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -31,6 +31,7 @@ Stable versions
 	- fixed MDL multisampled instrument mapping
 	- fixed MDL note event keyoff (gothlord.mdl plays better)
 	- fixed XM and MDL sample loop size
+	- fixed XM BPM setting (speedup.xm plays correctly)
 	- fixed LIQ effects and 16-bit sample loading
 	- fixed S3M pan settings
 	- fixed issues with OpenBSD

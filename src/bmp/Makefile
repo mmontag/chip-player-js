@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.4 2007-08-21 17:16:03 cmatsuoka Exp $
+# $Id: Makefile,v 1.5 2007-08-22 01:23:11 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` -DXMMS_PLUGIN -DBMP_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
@@ -32,8 +32,10 @@ $(LINKS):
 	ln -sf ../main/$@ .
 
 install::
-	@[ -d $(INSTDIR) ] || mkdir -p $(INSTDIR)
-	$(INSTALL) -s -m755 xmp-plugin.so $(INSTDIR)
+	@if [ "x$(PLUGIN)" = "xbmp" ]; then \
+		[ -d $(INSTDIR) ] || mkdir -p $(INSTDIR); \
+		$(INSTALL) -s -m755 xmp-plugin.so $(INSTDIR); \
+	fi
 
 $(OBJS): Makefile
 

@@ -285,7 +285,7 @@ ex_f_vslide_dn:
 	break;
     case FX_TEMPO:				/* Set tempo */
 	if (fxp) {
-	    if (fxp <= 0x20)
+	    if (fxp < 0x20)	/* speedup.xm needs BPM = 20 */
 		tempo = fxp;
 	    else
 		tick_time = xmp_ctl->rrate / (xmp_bpm = fxp);
