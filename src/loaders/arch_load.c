@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.4 2007-08-23 03:50:18 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.5 2007-08-23 13:47:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -142,7 +142,7 @@ static void get_sequ(int size, FILE *f)
 {
 	fread(xxo, 1, 128, f);
 
-	strcpy(xmp_ctl->type, "Archimedes Tracker");
+	strcpy(xmp_ctl->type, "MUSX (Archimedes Tracker)");
 
 	MODULE_INFO();
 	reportv(0, "Creation date  : %02d/%02d/%04d\n", day, month, year);
