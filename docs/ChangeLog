@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.48 2007-08-22 01:23:11 cmatsuoka Exp $
+$Id: ChangeLog,v 1.49 2007-08-23 03:50:18 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -16,6 +16,7 @@ Stable versions
 	- added old Liquid Tracker "NO" module loader
 	- added OSX CoreAudio driver
 	- added S3M/PTM/IMF/LIQ/IT fine vibrato effect
+	- added Archimedes Tracker loader
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation

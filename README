@@ -1,4 +1,4 @@
-$Id: README,v 1.24 2007-08-22 21:20:00 cmatsuoka Exp $
+$Id: README,v 1.25 2007-08-23 03:50:18 cmatsuoka Exp $
 
 
 
@@ -99,7 +99,7 @@ The current version recognizes the following module formats:
 
   Other (Acorn):
 
-  ARCH	*	Archimedes Tracker	V1.0+++
+  ARCH	***	Archimedes Tracker	V1.0+++
 
   Other (PC):
 
