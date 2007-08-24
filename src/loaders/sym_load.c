@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.2 2007-08-24 11:48:32 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.3 2007-08-24 20:05:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@ int sym_load(FILE * f)
 	struct xxm_event *event;
 	int i, j, k;
 	uint32 a, b;
-	int ver;
+	int ver, sn[64];
 
 	LOAD_INIT();
 
@@ -36,9 +36,7 @@ int sym_load(FILE * f)
 	xxh->chn = read8(f);
 	xxh->len = read16l(f);
 	xxh->pat = read16l(f);
-	read8(f);
-	read8(f);
-	read8(f);
+	read24l(f);
 
 	xxh->ins = xxh->smp = 63;
 
@@ -50,6 +48,24 @@ int sym_load(FILE * f)
 	for (i = 0; i < xxh->ins; i++) {
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
+		sn[i] = read8(f);	/* sample name length */
+
+		if (~sn[i] & 0x80)
+			xxs[i].len = read24l(f);
+	}
+
+	a = read8(f);			/* track name length */
+	fread(xmp_ctl->name, 1, a, f);
+	fseek(f, 8, SEEK_CUR);		/* skip effects table */
+
+	/* Sequence */
+	a = read8(f);			/* packing */
+	printf("Packing = %d\n", a);
+	for (i = 0; i < xxh->len; i++) {
+		xxo[i] = read16l(f);
+	}
+
+	for (i = 0; i < xxh->ins; i++) {
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
 			report("[%2X] %-8.8s  %04x %04x %04x %c V%02x\n", i,
 			       xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,

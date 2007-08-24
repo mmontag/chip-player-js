@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.11 2007-08-10 17:53:21 cmatsuoka Exp $
+ * $Id: options.c,v 1.12 2007-08-24 20:05:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -100,7 +100,8 @@ static void copyright_header ()
 "Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr\n"
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1988 Tammo Hinrichs,\n"
 "(C) 1989 Rich Gopstein and Harris Corporation, (C) 1997 Bert Jahn, (C) 1998\n"
-"Sylvain Chipaux, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh\n\n"
+"Sylvain Chipaux, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh,\n"
+"(C) 2001-2006 Russell Marks\n\n"
     );
 }
 

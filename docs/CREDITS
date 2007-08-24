@@ -126,6 +126,9 @@ Reused code
 - DMF sample decompressor
 - IT resonant filters
 
+* Russell Marks
+- Decompression routines from nomarch
+
 * Tony Million
 - portions of the win32 driver
 
