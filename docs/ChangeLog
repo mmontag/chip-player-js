@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.50 2007-08-24 13:50:41 cmatsuoka Exp $
+$Id: ChangeLog,v 1.51 2007-08-24 22:03:16 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -17,6 +17,7 @@ Stable versions
 	- added OSX CoreAudio driver
 	- added S3M/PTM/IMF/LIQ/IT fine vibrato effect
 	- added Archimedes Tracker loader
+	- added Arc/Spark depacker
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.11 2007-08-10 17:53:21 cmatsuoka Exp $
+ * $Id: load.c,v 1.12 2007-08-24 22:03:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -30,6 +30,7 @@ extern struct xmp_fmt_info *__fmt_head;
 
 extern struct list_head *checked_format;
 
+int decrunch_arc (FILE *, FILE *);
 int decrunch_sqsh (FILE *, FILE *);
 int decrunch_pp (FILE *, FILE *);
 int decrunch_mmcmp (FILE *, FILE *);
@@ -40,6 +41,7 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_SQSH	0x02
 #define BUILTIN_MMCMP	0x03
 #define BUILTIN_PW	0x04
+#define BUILTIN_ARC	0x05
 
 #define TEST_CHUNK	4096
 
@@ -97,6 +99,27 @@ static int decrunch (FILE **f, char **s)
 	b[8] == 'S' && b[9] == 'Q' && b[10] == 'S' && b[11] == 'H') {
 	packer = "SQSH";
 	builtin = BUILTIN_SQSH;
+    } else if (b[0] == 0x1a && ((b[1] & 0x7f) == 1 || ((b[1] & 0x7f) == 2))) {
+	packer = "Arc stored";
+	builtin = BUILTIN_ARC;
+    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 3) {
+	packer = "Arc packed";
+	builtin = BUILTIN_ARC;
+    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 4) {
+	packer = "Arc squeezed";
+	builtin = BUILTIN_ARC;
+    } else if (b[0] == 0x1a && ((b[1] & 0x7f) == 5 || ((b[1] & 0x7f) == 6))) {
+	packer = "Arc crunched";
+	builtin = BUILTIN_ARC;
+    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 8) {
+	packer = "Arc Crunched";
+	builtin = BUILTIN_ARC;
+    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 9) {
+	packer = "Arc Squashed";
+	builtin = BUILTIN_ARC;
+    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 0x7f) {
+	packer = "Spark";
+	builtin = BUILTIN_ARC;
     } else if (b[0] == 'z' && b[1] == 'i' && b[2] == 'R' && b[3] == 'C' &&
 	b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
 	packer = "MMCMP";
@@ -181,13 +204,16 @@ static int decrunch (FILE **f, char **s)
     } else {
 	switch (builtin) {
 	case BUILTIN_PP:    
-	    res = decrunch_pp (*f, t);
+	    res = decrunch_pp(*f, t);
+	    break;
+	case BUILTIN_ARC:
+	    res = decrunch_arc(*f, t);
 	    break;
 	case BUILTIN_SQSH:    
-	    res = decrunch_sqsh (*f, t);
+	    res = decrunch_sqsh(*f, t);
 	    break;
 	case BUILTIN_MMCMP:    
-	    res = decrunch_mmcmp (*f, t);
+	    res = decrunch_mmcmp(*f, t);
 	    break;
 	case BUILTIN_PW:
 	    res = decrunch_pw(*f, t);
