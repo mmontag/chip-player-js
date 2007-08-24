@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.10 2007-08-09 17:16:22 cmatsuoka Exp $
+ * $Id: load.h,v 1.11 2007-08-24 11:48:33 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,23 +28,6 @@ static char author_name[80];
 void	set_xxh_defaults	(struct xxm_header *);
 void	cvt_pt_event		(struct xxm_event *, uint8 *);
 void	disable_continue_fx	(struct xxm_event *);
-
-
-/* Endianism fixup */
-#define FIX_ENDIANISM_16(x)	(x=((((x)&0xff00)>>8)|(((x)&0xff)<<8)))
-#define FIX_ENDIANISM_32(x)	(x=(((x)&0xff000000)>>24)|(((x)&0xff0000)>>8)|\
-				  (((x)&0xff00)<<8)|(((x)&0xff)<<24))
-#ifdef WORDS_BIGENDIAN
-#define L_ENDIAN16(x)	FIX_ENDIANISM_16(x)
-#define L_ENDIAN32(x)	FIX_ENDIANISM_32(x)
-#define B_ENDIAN16(x)	(x=x)
-#define B_ENDIAN32(x)	(x=x)
-#else
-#define L_ENDIAN16(x)	(x=x)
-#define L_ENDIAN32(x)	(x=x)
-#define B_ENDIAN16(x)	FIX_ENDIANISM_16(x)
-#define B_ENDIAN32(x)	FIX_ENDIANISM_32(x)
-#endif
 
 
 #define LOAD_INIT() do { \

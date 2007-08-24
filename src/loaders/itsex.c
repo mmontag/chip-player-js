@@ -196,22 +196,17 @@ static dword readbits (byte b)
 static int readblock (FILE *f)
 {
     word size;
+    int i;
 
-    if (!fread (&size, 2, 1, f))	/* block layout: word size, <size> bytes data */
-	return 0;
+    /* block layout: word size, <size> bytes data */
+    size = (read16l(f) >> 2) + 2;
 
-    L_ENDIAN16 (size);
-
-    sourcebuffer = calloc (4, (size >> 2) + 2);
+    sourcebuffer = calloc (4, size);
     if (!sourcebuffer)
 	return 0;
-    if (!fread (sourcebuffer, 1, size, f)) {
-	free (sourcebuffer);
-	return 0;
-    }
 
-    for (size = (size >> 2) + 2; size; size--)
-	L_ENDIAN32 (sourcebuffer[size - 1]);
+    for (i = 0; i < size; i++)
+	sourcebuffer[i] = read32l(f);
 
     srcpos = sourcebuffer;
     srcrembits = 32;
@@ -345,7 +340,7 @@ int itsex_decompress16 (FILE *module, void *dst, int len, int it215)
     sword d1, d2;		/* integrator buffers (d2 for it2.15) */
     sword *destpos;		/* position in output buffer */
     sword v;			/* sample value */
-    int orig_len = len;		/* length of destination buffer, in words */
+    //int orig_len = len;	/* length of destination buffer, in words */
 
     destbuf = (sword *) dst;
     if (!destbuf)
@@ -419,11 +414,10 @@ int itsex_decompress16 (FILE *module, void *dst, int len, int it215)
 	/* now subtract block length from total length and go on */
 	freeblock ();
 	len -= blklen;
-
     }
 
-    for (destpos = destbuf; orig_len > 0; orig_len--, destpos++)
-	L_ENDIAN16 (*destpos);
+    /*for (destpos = destbuf; orig_len > 0; orig_len--, destpos++)
+	ENDIAN16 (*destpos);*/
 
     return 1;
 }

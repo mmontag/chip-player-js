@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.1 2007-08-24 01:17:41 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.2 2007-08-24 11:48:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -36,6 +36,11 @@ int sym_load(FILE * f)
 	xxh->chn = read8(f);
 	xxh->len = read16l(f);
 	xxh->pat = read16l(f);
+	read8(f);
+	read8(f);
+	read8(f);
+
+	xxh->ins = xxh->smp = 63;
 
 	MODULE_INFO();
 

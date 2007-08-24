@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.4 2007-08-21 03:16:58 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.5 2007-08-24 11:48:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,15 +55,17 @@ int ptm_load (FILE * f)
     pfh.chnnum = read16l(f);		/* Number of channels */
     pfh.flags = read16l(f);		/* Flags (set to 0) */
     pfh.rsvd2 = read16l(f);		/* Reserved */
+
     fread(&pfh.magic, 4, 1, f);		/* 'PTMF' */
+    if (strncmp((char *)pfh.magic, "PTMF", 4))
+	return -1;
+
     fread(&pfh.rsvd3, 16, 1, f);	/* Reserved */
     fread(&pfh.chset, 32, 1, f);	/* Channel settings */
     fread(&pfh.order, 256, 1, f);	/* Orders */
     for (i = 0; i < 128; i++)
 	pfh.patseg[i] = read16l(f);
 
-    if (strncmp ((char *) pfh.magic, "PTMF", 4))
-	return -1;
     strcpy (xmp_ctl->name, (char *) pfh.name);
     xxh->len = pfh.ordnum;
     xxh->ins = pfh.insnum;
@@ -74,8 +76,6 @@ int ptm_load (FILE * f)
     xxh->tpo = 6;
     xxh->bpm = 125;
     memcpy (xxo, pfh.order, 256);
-    for (i = 0; i < pfh.patnum; i++)
-	L_ENDIAN16 (pfh.patseg[i]);
 
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
