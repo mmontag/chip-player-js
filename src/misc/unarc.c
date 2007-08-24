@@ -203,7 +203,7 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 		return -1;
 
 	/* We don't files named 'From?' */
-	if (!strcmp(hdr.name, "From?")) {
+	while (!strcmp(hdr.name, "From?") || *hdr.name == '!') {
 		if (!skip_file_data(in,&hdr))
 			return -1;
 		if (!read_file_header(in, &hdr))

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.13 2007-08-24 22:40:14 cmatsuoka Exp $
+ * $Id: load.c,v 1.14 2007-08-24 23:59:23 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -121,7 +121,7 @@ static int decrunch (FILE **f, char **s)
 	packer = "Arc Squashed";
 	builtin = BUILTIN_ARC;
     } else if (b[0] == 0x1a && (b[1] & 0x7f) == 0x7f) {
-	packer = "Spark";
+	packer = "!Spark";
 	builtin = BUILTIN_ARC;
     } else if (b[0] == 'z' && b[1] == 'i' && b[2] == 'R' && b[3] == 'C' &&
 	b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
