@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.12 2007-08-24 22:03:16 cmatsuoka Exp $
+ * $Id: load.c,v 1.13 2007-08-24 22:40:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -82,6 +82,9 @@ static int decrunch (FILE **f, char **s)
     } else if (b[0] == 'B' && b[1] == 'Z' && b[2] == 'h') {
 	packer = "bzip2";
 	cmd = "bzip2 -dc \"%s\"";
+    } else if (b[0] == 0x5d && b[1] == 0 && b[2] == 0 && b[3] == 0x80) {
+	packer = "lzma";
+	cmd = "lzma -dc \"%s\"";
     } else if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
 	packer = "MO3";
 	cmd = "unmo3 -s \"%s\" STDOUT";
