@@ -36,14 +36,6 @@
 #include "readhuff.h"
 #include "readlzw.h"
 
-char *archive_filename = NULL;
-char **archive_matchstrs = NULL;	/* NULL, or points to argv+N */
-int num_matchstrs = 0;
-
-int opt_list = 0, opt_print = 0, opt_test = 0, opt_verbose = 0;
-int opt_preservecase = 0;
-
-int quiet = 0;
 
 struct archived_file_header_tag {
 	unsigned char method;
@@ -55,14 +47,6 @@ struct archived_file_header_tag {
 	int has_crc;
 };
 
-static int maybe_downcase(int c)
-{
-	if (opt_preservecase)
-		return (c);
-
-	return (tolower(c));
-}
-
 /* there is no overall header for the archive, but there's a header
  * for each file stored in it.
  * returns zero if we couldn't get a header.
@@ -73,7 +57,7 @@ static int read_file_header(FILE * in, struct archived_file_header_tag *hdrp)
 	unsigned char buf[4 + 2 + 2 + 2 + 4];	/* used to read size1/date/time/crc/size2 */
 	int bufsiz = sizeof(buf);
 	int method_high;
-	int c, f;
+	int c;
 
 	hdrp->method = 0xff;
 	if (fgetc(in) != 0x1a)
@@ -115,9 +99,11 @@ static int read_file_header(FILE * in, struct archived_file_header_tag *hdrp)
 /* make *sure* name is asciiz */
 	hdrp->name[12] = 0;
 
+#if 0
 /* strip top bits, and lowercase the name */
 	for (f = 0; f < strlen(hdrp->name); f++)
 		hdrp->name[f] = maybe_downcase(hdrp->name[f] & 127);
+#endif
 
 /* lose the possible extra bytes in spark archives */
 	if (method_high) {
@@ -192,6 +178,19 @@ static unsigned char *read_file_data(FILE * in,
 	return (data);
 }
 
+/* variant which just skips past the data */
+static int skip_file_data(FILE *in,struct archived_file_header_tag *hdrp)
+{
+	int siz = hdrp->compressed_size;
+	int f;
+
+	for(f = 0; f < siz; f++)
+		if (fgetc(in) == EOF)
+			return 0;
+
+	return 1;
+}
+
 static int arc_extract_or_test(FILE * in, FILE * out)
 {
 	struct archived_file_header_tag hdr;
@@ -202,6 +201,14 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 
 	if (!skip_sfx_header(in) || !read_file_header(in, &hdr))
 		return -1;
+
+	/* We don't files named 'From?' */
+	if (!strcmp(hdr.name, "From?")) {
+		if (!skip_file_data(in,&hdr))
+			return -1;
+		if (!read_file_header(in, &hdr))
+			return -1;
+	}
 
 	/* extract a single file */
 	/* do { */
@@ -294,12 +301,10 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 
 	if (orig_data == NULL) {
 		if (supported)
-			fprintf(quiet ? stderr : stdout,
-				"error extracting file");
+			fprintf(stderr, "error extracting file");
 		else
-			fprintf(quiet ? stderr : stdout,
-				"unsupported compression method %d\n",
-				hdr.method);
+			fprintf(stderr, "unsupported compression method %d\n",
+							hdr.method);
 		exitval = 1;
 	} else {
 		char *ptr;
@@ -309,8 +314,7 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 			*ptr = '_';
 
 		if (fwrite(orig_data, 1, hdr.orig_size, out) != hdr.orig_size) {
-			fprintf(quiet ? stderr : stdout,
-				"error, %s\n", strerror(errno));
+			fprintf(stderr, "error, %s\n", strerror(errno));
 			exitval = 1;
 		}
 
