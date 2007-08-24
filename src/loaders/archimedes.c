@@ -1,7 +1,11 @@
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
 #define __XMP_LOADERS_COMMON
 #include "load.h"
+
 #include "archimedes.h"
 
 static int8 table[128] = {
