@@ -1,5 +1,5 @@
-/* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+/* Soundtracker 15 instrument loader for xmp
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -43,8 +43,20 @@ int st_load (FILE *f)
     //lps_mult = 1;
 
     hdr_size = sizeof (struct st_header);
-    fread (&mh, 1, sizeof (struct st_header), f);
 
+    fread(mh.name, 1, 20, f);
+    for (i = 0; i < 15; i++) {
+	fread(mh.ins[i].name, 1, 22, f);
+	mh.ins[i].size = read16b(f);
+	mh.ins[i].finetune = read8(f);
+	mh.ins[i].volume = read8(f);
+	mh.ins[i].loop_start = read16b(f);
+	mh.ins[i].loop_size = read16b(f);
+    }
+    mh.len = read8(f);
+    mh.restart = read8(f);
+    fread(mh.order, 1, 128, f);
+	
     xxh->len = mh.len;
     xxh->rst = mh.restart;
 
@@ -52,11 +64,6 @@ int st_load (FILE *f)
 
     if (xxh->rst < 0x20)
 	ust = 0;
-
-#if 0
-    if (xxh->rst == 0x78)	/* Is it correct? */
-	nt = 1;
-#endif
 
     if (xxh->rst >= xxh->len)
 	xxh->rst = 0;
@@ -73,10 +80,6 @@ int st_load (FILE *f)
     pat_size = 256 * xxh->chn * xxh->pat;
 
     for (i = 0; i < xxh->ins; i++) {
-	B_ENDIAN16 (mh.ins[i].size);
-	B_ENDIAN16 (mh.ins[i].loop_start);
-	B_ENDIAN16 (mh.ins[i].loop_size);
-
 	if (mh.ins[i].volume > 0x40)
 	    return -1;
 

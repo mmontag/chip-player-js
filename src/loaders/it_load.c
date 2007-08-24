@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr.
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.6 2007-08-21 03:16:58 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.7 2007-08-24 01:03:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -399,7 +399,6 @@ int it_load (FILE * f)
 	    xxih[i].X##ei.lpe = env.lpe; \
 	    if (env.num) xx##X##e[i] = calloc (4, env.num); \
 	    for (j = 0; j < env.num; j++) { \
-		L_ENDIAN16 (env.node[j].x); \
 		xx##X##e[i][j * 2] = env.node[j].x; \
 		xx##X##e[i][j * 2 + 1] = env.node[j].y; \
 	    } \

@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.8 2007-08-09 17:16:22 cmatsuoka Exp $
+ * $Id: common.c,v 1.9 2007-08-24 01:03:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -80,27 +80,27 @@ int8 read8s(FILE *f)
 
 uint16 read16l(FILE *f)
 {
-	uint16 w;
+	uint32 a, b;
 
-	fread(&w, 1, 2, f);
-	L_ENDIAN16(w);
+	a = read8(f);
+	b = read8(f);
 
-	return w;
+	return (b << 8) | a;
 }
 
 uint16 read16b(FILE *f)
 {
-	uint16 w;
+	uint32 a, b;
 
-	fread(&w, 1, 2, f);
-	B_ENDIAN16(w);
+	a = read8(f);
+	b = read8(f);
 
-	return w;
+	return (a << 8) | b;
 }
 
 uint32 read24l(FILE *f)
 {
-	int a, b, c;
+	uint32 a, b, c;
 
 	a = read8(f);
 	b = read8(f);
@@ -111,7 +111,7 @@ uint32 read24l(FILE *f)
 
 uint32 read24b(FILE *f)
 {
-	int a, b, c;
+	uint32 a, b, c;
 
 	a = read8(f);
 	b = read8(f);
@@ -122,22 +122,25 @@ uint32 read24b(FILE *f)
 
 uint32 read32l(FILE *f)
 {
-	uint32 d;
+	uint32 a, b, c, d;
 
-	fread(&d, 1, 4, f);
-	L_ENDIAN32(d);
+	a = read8(f);
+	b = read8(f);
+	c = read8(f);
+	d = read8(f);
 
-	return d;
+	return (d << 24) | (c << 16) | (b << 8) | a;
 }
 
 uint32 read32b(FILE *f)
 {
-	uint32 d;
+	uint32 a, b, c, d;
 
-	fread(&d, 1, 4, f);
-	B_ENDIAN32(d);
+	a = read8(f);
+	b = read8(f);
+	c = read8(f);
+	d = read8(f);
 
-	return d;
+	return (a << 24) | (b << 16) | (c << 8) | d;
 }
-
 

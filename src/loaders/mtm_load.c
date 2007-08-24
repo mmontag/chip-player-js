@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mtm_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: mtm_load.c,v 1.3 2007-08-24 01:03:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -126,18 +126,16 @@ int mtm_load (FILE * f)
 	report ("\n");
 
     /* Read patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat - 1);
+    reportv(0, "Stored patterns: %d ", xxh->pat - 1);
+
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	xxp[i]->rows = 64;
-	fread (&mp, 2, 32, f);
-	for (j = 0; j < xxh->chn; j++) {
-	    L_ENDIAN16 (mp[j]);
+	for (j = 0; j < 32; j++)
+	    mp[j] = read16l(f);
+	for (j = 0; j < xxh->chn; j++)
 	    xxp[i]->info[j].index = mp[j];
-	}
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
     /* Comments */
