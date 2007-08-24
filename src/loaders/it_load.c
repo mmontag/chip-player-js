@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.7 2007-08-24 01:03:22 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.8 2007-08-24 13:50:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -240,7 +240,8 @@ int it_load (FILE * f)
     xxh->tpo = ifh.is;
     xxh->bpm = ifh.it;
     xxh->flg = ifh.flags & IT_LINEAR_FREQ ? XXM_FLG_LINEAR : 0;
-    xxh->flg |= ifh.flags & IT_USE_INST ? XXM_FLG_INSVOL : 0;
+    xxh->flg |= (ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200) ?
+					XXM_FLG_INSVOL : 0;
     for (i = 0; i < 64; i++)
 	xxc[i].vol = ifh.chvol[i];
     for (i = 0; i < 64; i++) {
@@ -674,7 +675,7 @@ int it_load (FILE * f)
 	if (ish.flags & IT_SMP_SAMPLE && xxs[i].len > 1) {
 	    fseek (f, ish.sample_ptr, SEEK_SET);
 
-	    /* Handle compressed samples using Timmo Hinrichs' routine */
+	    /* Handle compressed samples using Tammo Hinrichs' routine */
 	    if (ish.flags & IT_SMP_COMP) {
 		char *buf;
 		buf = calloc (1, xxs[i].len);
@@ -687,12 +688,13 @@ int it_load (FILE * f)
 		xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate,
 		    XMP_SMP_NOLOAD, &xxs[i], buf);
 		free (buf);
-	    } else
+	    } else {
 		xmp_drv_loadpatch (f, i, xmp_ctl->c4rate,
-		    ish.convert & IT_CVT_SIGNED ?  0 : XMP_SMP_UNS,
+		    ish.convert & IT_CVT_SIGNED ? 0 : XMP_SMP_UNS,
 		    &xxs[i], NULL);
-	    if (V (0))
-		report (".");
+	    }
+
+	    reportv(0, ".");
 	}
     }
 
