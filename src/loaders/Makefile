@@ -1,5 +1,5 @@
 # Extended Module Player src/loaders/Makefile
-# $Id: Makefile,v 1.21 2007-08-22 13:26:26 cmatsuoka Exp $
+# $Id: Makefile,v 1.22 2007-08-24 00:28:10 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -Iinclude
@@ -15,7 +15,7 @@ LATER	= pru1_load.o pru2_load.o kris_load.o ac1d_load.o fcm_load.o \
 	  unic_load.o pp10_load.o pm10_load.o np_load.o \
 	  pm20_load.o pm01_load.o wn_load.o pm_load.o \
 	  di_load.o mp_load.o ksm_load.o zen_load.o crb_load.o p60a_load.o
-OBJS	= common.o iff.o itsex.o $(LOADERS)
+OBJS	= common.o iff.o itsex.o archimedes.o $(LOADERS)
 DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c tp_load.c dbm_load.c med2_load.c \
 	  med4_load.c med_load.c $(LATER:.o=.c)
 DDIRS	= include
