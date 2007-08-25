@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.8 2007-08-25 21:35:55 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.9 2007-08-25 22:37:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -232,8 +232,6 @@ static void get_samp(int size, FILE *f)
 
 int arch_load(FILE *f)
 {
-	int i;
-
 	LOAD_INIT ();
 
 	/* Check magic */

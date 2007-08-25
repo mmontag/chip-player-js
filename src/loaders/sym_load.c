@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.5 2007-08-25 21:35:55 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.6 2007-08-25 22:37:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,21 +18,100 @@
 static void fix_effect(struct xxm_event *e, int parm)
 {
 	switch (e->fxt) {
-	case 0x03:		/* 03 xyy Tone Portamento */
-	case 0x04:		/* 04 xyz Vibrato */
-	case 0x05:		/* 05 xyz Tone Portamento + Volume Slide */
-	case 0x06:		/* 06 xyz Vibrato + Volume Slide */
-	case 0x07:		/* 07 xyz Tremolo */
+	case 0x00:	/* 00 xyz Normal play or Arpeggio + Volume Slide Up */
+	case 0x01:	/* 01 xyy Slide Up + Volume Slide Up */
+	case 0x02:	/* 01 xyy Slide Up + Volume Slide Up */
+		e->fxp = parm & 0xff;
+		e->f2t = FX_VOLSLIDE_UP;
+		e->f2p = parm >> 8;
+		break;
+	case 0x03:	/* 03 xyy Tone Portamento */
+	case 0x04:	/* 04 xyz Vibrato */
+	case 0x05:	/* 05 xyz Tone Portamento + Volume Slide */
+	case 0x06:	/* 06 xyz Vibrato + Volume Slide */
+	case 0x07:	/* 07 xyz Tremolo */
 		e->fxp = parm;
 		break;
-	case 0x0b:		/* 0B xxx Position Jump */
-	case 0x0c:		/* 0C xyy Set Volume */
-	case 0x0d:		/* 0D xyy Pattern Break */
-	case 0x0f:		/* 0F xxx Set Speed */
+	case 0x09:	/* 09 xxx Set Sample Offset */
+		e->fxp = parm >> 1;
+		break;
+	case 0x0a:	/* 0A xyz Volume Slide + Fine Slide Up */
+		e->fxp = parm & 0xff;
+		e->f2t = FX_EXTENDED;
+		e->f2p = (EX_F_PORTA_UP << 4) | ((parm & 0xf00) >> 8);
+		break;
+	case 0x0b:	/* 0B xxx Position Jump */
+	case 0x0c:	/* 0C xyy Set Volume */
+	case 0x0d:	/* 0D xyy Pattern Break */
+	case 0x0f:	/* 0F xxx Set Speed */
 		e->fxp = parm;
 		break;
+	case 0x11:	/* 11 xyy Fine Slide Up + Fine Volume Slide Up */
+	case 0x12:	/* 12 xyy Fine Slide Down + Fine Volume Slide Up */
+		e->fxt = 0;
+		break;
+	case 0x13:	/* 13 xxy Glissando Control */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_GLISS << 4) | (parm & 0x0f);
+		break;
+	case 0x14:	/* 14 xxy Set Vibrato Waveform */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_VIBRATO_WF << 4) | (parm & 0x0f);
+		break;
+	case 0x15:	/* 15 xxy Set Fine Tune */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_FINETUNE << 4) | (parm & 0x0f);
+		break;
+	case 0x16:	/* 16 xxx Jump to Loop */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_PATTERN_LOOP << 4) | (parm & 0x0f);
+		break;
+	case 0x17:	/* 17 xxy Set Tremolo Waveform */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_TREMOLO_WF << 4) | (parm & 0x0f);
+		break;
+	case 0x19:	/* 19 xxx Retrig Note */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_RETRIG << 4) | (parm & 0x0f);
+		break;
+	case 0x1a:	/* 1A xyy Fine Slide Up + Fine Volume Slide Down */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_F_PORTA_UP << 4) | (parm & 0x0f);
+		break;
+	case 0x1b:	/* 1B xyy Fine Slide Down + Fine Volume Slide Down */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_F_PORTA_DN << 4) | (parm & 0x0f);
+		break;
+	case 0x1c:	/* 1C xxx Note Cut */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_CUT << 4) | (parm & 0x0f);
+		break;
+	case 0x1d:	/* 1D xxx Note Delay */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_DELAY << 4) | (parm & 0x0f);
+		break;
+	case 0x1e:	/* 1E xxx Pattern Delay */
+		e->fxt = FX_EXTENDED;
+		e->fxp = (EX_PATT_DELAY << 4) | (parm & 0x0f);
+		break;
+	case 0x1f:	/* 1F xxy Invert Loop */
+		e->fxt = 0;
+		break;
+	case 0x20:	/* 20 xyz Normal play or Arpeggio + Volume Slide Down */
+	case 0x21:	/* 21 xyy Slide Up + Volume Slide Down */
+	case 0x22:	/* 22 xyy Slide Down + Volume Slide Down */
+		e->fxp = parm & 0xff;
+		e->f2t = FX_VOLSLIDE_DN;
+		e->f2p = parm >> 8;
+		break;
+	case 0x2a:	/* 2A xyz Volume Slide + Fine Slide Down */
+	case 0x2b:	/* 2B xyy Line Jump */
+	case 0x2f:	/* 2F xxx Set Tempo */
+	case 0x30:	/* 30 xxy Set Stereo */
+	case 0x31:	/* 31 xxx Song Upcall */
+	case 0x32:	/* 32 xxx Unset Sample Repeat */
 	default:
-		e->fxp = 0;
+		e->fxt = 0;
 	}
 }
 
