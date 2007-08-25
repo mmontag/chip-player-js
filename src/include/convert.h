@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,7 @@ void xmp_cvt_diff2abs (int, int, char *);
 void xmp_cvt_sig2uns (int, int, char *);
 void xmp_cvt_sex (int, char *);
 void xmp_cvt_2xsmp (int, char *);
+void xmp_cvt_vdic (int, char *);
 void xmp_cvt_to8bit (void);
 void xmp_cvt_to16bit (void);
 void xmp_cvt_bid2und (void);

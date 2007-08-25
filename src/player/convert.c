@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.2 2005-02-25 16:29:34 cmatsuoka Exp $
+ * $Id: convert.c,v 1.3 2007-08-25 21:33:38 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,6 +20,38 @@
 #include "driver.h"
 
 extern struct patch_info **patch_array;
+
+
+/*
+ * From the Audio File Formats (version 2.5)
+ * Submitted-by: Guido van Rossum <guido@cwi.nl>
+ * Last-modified: 27-Aug-1992
+ *
+ * The Acorn Archimedes uses a variation on U-LAW with the bit order
+ * reversed and the sign bit in bit 0.  Being a 'minority' architecture,
+ * Arc owners are quite adept at converting sound/image formats from
+ * other machines, and it is unlikely that you'll ever encounter sound in
+ * one of the Arc's own formats (there are several).
+ */
+static int8 vdic_table[128] = {
+	/*   0 */	  0,   0,   0,   0,   0,   0,   0,   0,
+	/*   8 */	  0,   0,   0,   0,   0,   0,   0,   0,
+	/*  16 */	  0,   0,   0,   0,   0,   0,   0,   0,
+	/*  24 */	  1,   1,   1,   1,   1,   1,   1,   1,
+	/*  32 */	  1,   1,   1,   1,   2,   2,   2,   2,
+	/*  40 */	  2,   2,   2,   2,   3,   3,   3,   3,
+	/*  48 */	  3,   3,   4,   4,   4,   4,   5,   5,
+	/*  56 */	  5,   5,   6,   6,   6,   6,   7,   7,
+	/*  64 */	  7,   8,   8,   9,   9,  10,  10,  11,
+	/*  72 */	 11,  12,  12,  13,  13,  14,  14,  15,
+	/*  80 */	 15,  16,  17,  18,  19,  20,  21,  22,
+	/*  88 */	 23,  24,  25,  26,  27,  28,  29,  30,
+	/*  96 */	 31,  33,  34,  36,  38,  40,  42,  44,
+	/* 104 */	 46,  48,  50,  52,  54,  56,  58,  60,
+	/* 112 */	 62,  65,  68,  72,  77,  80,  84,  91,
+	/* 120 */	 95,  98, 103, 109, 114, 120, 126, 127
+};
+
 
 
 /* Convert differential to absolute sample data */
@@ -75,6 +107,21 @@ void xmp_cvt_sex (int l, char *p)
 void xmp_cvt_2xsmp (int l, char *p)
 {
     for (; l--; *p++ <<= 1);
+}
+
+
+/* Convert Archimedes VIDC samples to linear */
+void xmp_cvt_vidc(int l, char *p)
+{
+	int i;
+	uint8 x;
+
+	for (i = 0; i < l; i++) {
+		x = p[i];
+		p[i] = vdic_table[x >> 1];
+		if (x & 0x01)
+			p[i] *= -1;
+	}
 }
 
 
