@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.18 2007-08-21 12:02:18 cmatsuoka Exp $
+# $Id: Makefile,v 1.19 2007-08-25 21:39:27 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -56,7 +56,6 @@ uninstall:
 # Extra targets:
 # 'dist' prepares a distribution package
 # 'mark' marks the last CVS revision with the package version number
-# 'whatsout' lists the locked files
 # 'diff' creates a diff file
 # 'rpm' generates a RPM package
 

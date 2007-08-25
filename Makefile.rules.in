@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.23 2007-08-21 21:12:35 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.24 2007-08-25 21:39:27 cmatsuoka Exp $
 
 VERSION	= 2.2.0-pre5
 DATE	= Tue Aug 21 09:02:59 BRT 2007
@@ -87,19 +87,6 @@ ifdef DDIRS
 			(cd $$i && [ -f Makefile ] && $(MAKE) $@) \
 		fi \
 	done; true 
-endif
-
-whatsout::
-	@rlog -R -L RCS/* | sed 's/.*\/\([^\/]*\),v/\1/'
-ifdef DDIRS
-	@for i in $(DDIRS); do \
-		( cd $$i; \
-		if [ -f Makefile ]; then \
-			$(MAKE) whatsout; \
-		else
-			@rlog -R -L RCS/* | sed 's/.*\/\([^\/]*\),v/\1/'; \
-		fi; ) \
-	done
 endif
 
 subdist::
