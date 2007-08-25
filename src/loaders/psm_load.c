@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.21 2005-02-25 12:15:45 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.22 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -53,8 +53,11 @@
 #include "iff.h"
 #include "period.h"
 
-static int sinaria;
+#define MAGIC_PSM_	MAGIC4('P','S','M',' ')
+#define MAGIC_OPLH	MAGIC4('O','P','L','H')
 
+
+static int sinaria;
 
 static int cur_pat;
 static int cur_ins;
@@ -100,7 +103,7 @@ static void get_dsmp(int size, FILE *f)
 	fseek(f, sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	if (V(1) && cur_ins == 0)
-	    report("\n     Instrument name                   Len  LBeg  LEnd  L Vol C2Spd");
+	    report("\n     Instrument name                  Len   LBeg  LEnd  L Vol C2Spd");
 
 	i = cur_ins;
 	xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -298,23 +301,23 @@ static void get_song(int size, FILE *f)
 
 static void get_song_2(int size, FILE *f)
 {
-	char buf[100], c;
-	uint32 oplh_size;
+	uint32 magic;
+	char c;
 	int i;
 
 	xxh->len = 0;
 
 	fseek(f, 11, SEEK_CUR);		/* Point to first sub-chunk */
 
-	fread(buf, 1, 4, f);
-	while (strncmp(buf, "OPLH", 4)) {
+	magic = read32b(f);
+	while (magic != MAGIC_OPLH) {
 		int skip;
 		skip = read32l(f);;
 		fseek(f, skip, SEEK_CUR);
-		fread(buf, 1, 4, f);
+		magic = read32b(f);
 	}
 
-	oplh_size = read32l(f);
+	read32l(f);	/* chunk size */
 
 	fseek(f, 9, SEEK_CUR);		/* unknown data */
 	
@@ -337,8 +340,7 @@ static void get_song_2(int size, FILE *f)
 			read8(f);		/* ? */
 			break;
 		default:
-printf("channel %d: %02x %02x\n", i, c, read8(f));
-
+			printf("channel %d: %02x %02x\n", i, c, read8(f));
 		}
 	}
 
@@ -350,15 +352,13 @@ printf("channel %d: %02x %02x\n", i, c, read8(f));
 
 int psm_load(FILE *f)
 {
-	char magic[4];
 	int offset;
 	int i, j;
 
 	LOAD_INIT ();
 
 	/* Check magic */
-	fread(magic, 1, 4, f);
-	if (strncmp (magic, "PSM ", 4))
+	if (read32b(f) != MAGIC_PSM_)
 		return -1;
 
 	sinaria = 0;
@@ -427,8 +427,7 @@ int psm_load(FILE *f)
 	free(pnam);
 	free(pord);
 
-	if (V(0))
-		report("\n");
+	reportv(0, "\n");
 
 	return 0;
 }

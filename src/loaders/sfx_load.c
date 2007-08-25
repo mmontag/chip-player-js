@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.3 2006-06-28 12:20:38 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.4 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,6 +25,8 @@
 #include "period.h"
 #include "load.h"
 
+#define MAGIC_SONG	MAGIC4('S','O','N','G')
+
 
 struct sfx_ins {
     uint8 name[22];		/* Instrument name */
@@ -36,7 +38,7 @@ struct sfx_ins {
 };
 
 struct sfx_header {
-    uint8 magic[4];		/* 'SONG' */
+    uint32 magic;		/* 'SONG' */
     uint16 delay;		/* Delay value (tempo), default is 0x38e5 */
     uint16 unknown[7];		/* ? */
 };
@@ -74,11 +76,11 @@ static int sfx_13_20_load (FILE *f, int nins)
     for (i = 0; i < nins; i++)
 	ins_size[i] = read32b(f);
 
-    fread(&sfx.magic, 4, 1, f);
+    sfx.magic = read32b(f);
     sfx.delay = read16b(f);
     fread(&sfx.unknown, 14, 1, f);
 
-    if (strncmp ((char *) sfx.magic, "SONG", 4))
+    if (sfx.magic != MAGIC_SONG)
 	return -1;
 
     xxh->ins = nins;

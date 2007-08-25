@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.11 2007-08-24 11:48:33 cmatsuoka Exp $
+ * $Id: load.h,v 1.12 2007-08-25 10:38:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,6 +29,8 @@ void	set_xxh_defaults	(struct xxm_header *);
 void	cvt_pt_event		(struct xxm_event *, uint8 *);
 void	disable_continue_fx	(struct xxm_event *);
 
+#define MAGIC4(a,b,c,d) \
+    (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
 #define LOAD_INIT() do { \
     fseek (f, 0, SEEK_SET); \

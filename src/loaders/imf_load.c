@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.4 2007-08-21 03:16:58 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.5 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,6 +19,9 @@
 #include "load.h"
 #include "imf.h"
 #include "period.h"
+
+#define MAGIC_IM10	MAGIC4('I','M','1','0')
+#define MAGIC_II10	MAGIC4('I','I','1','0')
 
 #define NONE 0xff
 #define FX_IMF_FPORTA_UP 0xfe
@@ -157,7 +160,7 @@ int imf_load (FILE *f)
     ih.vol = read8(f);
     ih.amp = read8(f);
     fread(&ih.unused2, 8, 1, f);
-    fread(&ih.magic, 4, 1, f);
+    ih.magic = read32b(f);
 
     for (i = 0; i < 32; i++) {
 	fread(&ih.chn[i].name, 12, 1, f);
@@ -169,8 +172,7 @@ int imf_load (FILE *f)
 
     fread(&ih.pos, 256, 1, f);
 
-    if (ih.magic[0] != 'I' || ih.magic[1] != 'M' || ih.magic[2] != '1' ||
-	ih.magic[3] != '0')
+    if (ih.magic != MAGIC_IM10)
 	return -1;
 
     copy_adjust((uint8 *)xmp_ctl->name, (uint8 *)ih.name, 32);
@@ -307,9 +309,9 @@ int imf_load (FILE *f)
 	}
 	ii.fadeout = read16l(f);
 	ii.nsm = read16l(f);
-	fread(&ii.magic, 4, 1, f);
+	ii.magic = read32b(f);
 
-	if (strncmp((char *)ii.magic, "II10", 4))
+	if (ii.magic != MAGIC_II10)
 	    return -2;
 
         if (ii.nsm)
@@ -359,7 +361,7 @@ int imf_load (FILE *f)
 	    fread(&is.unused3, 5, 1, f);
 	    is.ems = read16l(f);
 	    is.dram = read32l(f);
-	    fread(&is.magic, 4, 1, f);
+	    is.magic = read32b(f);
 
 	    xxi[i][j].sid = smp_num;
 	    xxi[i][j].vol = is.vol;

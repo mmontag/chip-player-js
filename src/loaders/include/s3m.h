@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: s3m.h,v 1.3 2007-08-25 10:38:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,7 +55,7 @@ struct s3m_file_header {
     uint16 flags;		/* Flags */
     uint16 version;		/* Tracker ID and version */
     uint16 ffi;			/* File format information */
-    uint8 magic[4];		/* 'SCRM' */
+    uint32 magic;		/* 'SCRM' */
     uint8 gv;			/* Global volume */
     uint8 is;			/* Initial speed */
     uint8 it;			/* Initial tempo */
@@ -84,7 +84,7 @@ struct s3m_instrument_header {
     uint16 int_512;		/* Internal - SB pointer */
     uint32 int_last;		/* Internal - SB index */
     uint8 name[28];		/* Instrument name */
-    uint8 magic[4];		/* 'SCRS' */
+    uint32 magic;		/* 'SCRS' */
 };
 
 struct s3m_adlib_header {
@@ -98,5 +98,5 @@ struct s3m_adlib_header {
     uint16 rsvd3;		/* Reserved */
     uint8 rsvd4[12];		/* Reserved */
     uint8 name[28];		/* Instrument name */
-    uint8 magic[4];		/* 'SCRI' */
+    uint32 magic;		/* 'SCRI' */
 };

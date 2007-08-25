@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.10 2007-08-21 12:38:32 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.11 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -54,9 +54,12 @@
 #include "s3m.h"
 #include "period.h"
 
+#define MAGIC_SCRM	MAGIC4('S','C','R','M')
+#define MAGIC_SCRI	MAGIC4('S','C','R','I')
+#define MAGIC_SCRS	MAGIC4('S','C','R','S')
 
-#define NONE 0xff
-#define FX_S3M_EXTENDED 0xfe
+#define NONE		0xff
+#define FX_S3M_EXTENDED	0xfe
 
 
 static uint16 *pp_ins;		/* Parapointers to instruments */
@@ -180,18 +183,19 @@ int s3m_load (FILE * f)
     sfh.flags = read16l(f);		/* Flags */
     sfh.version = read16l(f);		/* Tracker ID and version */
     sfh.ffi = read16l(f);		/* File format information */
-    fread(&sfh.magic, 4, 1, f);		/* 'SCRM' */
+    sfh.magic = read32b(f);		/* 'SCRM' */
     sfh.gv = read8(f);			/* Global volume */
     sfh.is = read8(f);			/* Initial speed */
     sfh.it = read8(f);			/* Initial tempo */
     sfh.mv = read8(f);			/* Master volume */
     sfh.uc = read8(f);			/* Ultra click removal */
     sfh.dp = read8(f);			/* Default pan positions if 0xfc */
-    fread(&sfh.rsvd2, 8, 1, f);		/* Reserved */
+    read32l(f);				/* Reserved */
+    read32l(f);				/* Reserved */
     sfh.special = read16l(f);		/* Ptr to special custom data */
     fread(sfh.chset, 32, 1, f);		/* Channel settings */
 
-    if (strncmp ((char *) sfh.magic, "SCRM", 4))
+    if (sfh.magic != MAGIC_SCRM)
 	return -1;
 
     copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 28);
@@ -274,8 +278,7 @@ int s3m_load (FILE * f)
 	strcpy(tracker_name, "Impulse Tracker");
 	break;
     default:
-	snprintf(tracker_name, 80, "unknown (%d) version",
-	    sfh.version >> 12);
+	snprintf(tracker_name, 80, "unknown (%d) version", sfh.version >> 12);
     }
 
     sprintf (tracker_name + strlen (tracker_name), " %d.%02x",
@@ -287,8 +290,7 @@ int s3m_load (FILE * f)
 
     /* Read patterns */
 
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     memset (arpeggio_val, 0, 32);
 
@@ -347,25 +349,18 @@ int s3m_load (FILE * f)
 		pat_len -= 2;
 	    }
 	}
-
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
+    reportv(0, "\n");
 
-    if (V (0))
-	report ("\n");
-
-    if (V (1)) {
-	report ("Stereo enabled : %s\n", sfh.mv & 0x80 ? "yes" : "no");
-	report ("Pan settings   : %s\n", sfh.dp ? "no" : "yes");
-    }
+    reportv(1, "Stereo enabled : %s\n", sfh.mv & 0x80 ? "yes" : "no");
+    reportv(1, "Pan settings   : %s\n", sfh.dp ? "no" : "yes");
 
     INSTRUMENT_INIT ();
 
     /* Read and convert instruments and samples */
 
-    if (V (0))
-	report ("Instruments    : %d ", xxh->ins);
+    reportv(0, "Instruments    : %d ", xxh->ins);
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -387,13 +382,13 @@ int s3m_load (FILE * f)
 	    read16l(f);
 	    fread(&sah.rsvd4, 12, 1, f);	/* Reserved */
 	    fread(&sah.name, 28, 1, f);		/* Instrument name */
-	    fread(&sah.magic, 4, 1, f);		/* 'SCRI' */
+	    sah.magic = read32b(f);		/* 'SCRI' */
 
-	    if (strncmp ((char *)sah.magic, "SCRI", 4))
+	    if (sah.magic != MAGIC_SCRI)
 		return -2;
-	    sah.magic[0] = 0;
+	    sah.magic = 0;
 
-	    copy_adjust(xxih[i].name, sah.name, 24);
+	    copy_adjust(xxih[i].name, sah.name, 28);
 
 	    xxih[i].nsm = 1;
 	    xxi[i][0].vol = sah.vol;
@@ -402,7 +397,7 @@ int s3m_load (FILE * f)
 	    xmp_drv_loadpatch (f, xxi[i][0].sid, 0, 0, NULL, (char *) &sah.reg);
 	    if (V (0)) {
 	        if (V (1)) {
-		    report ("\n[%2X] %-28.28s ", i, sah.name);
+		    report ("\n[%2X] %-28.28s ", i, xxih[i].name);
 	            for (j = 0; j < 11; j++)
 		        report ("%02x ", (uint8) sah.reg[j]);
 		} else
@@ -428,9 +423,9 @@ int s3m_load (FILE * f)
 	sih.int_512 = read16l(f);		/* Internal - SB pointer */
 	sih.int_last = read32l(f);		/* Internal - SB index */
 	fread(&sih.name, 28, 1, f);		/* Instrument name */
-	fread(&sih.magic, 4, 1, f);		/* 'SCRS' */
+	sih.magic = read32b(f);			/* 'SCRS' */
 
-	if ((x8 == 1) && strncmp((char *)sih.magic, "SCRS", 4))
+	if (x8 == 1 && sih.magic != MAGIC_SCRS)
 	    return -2;
 
 	xxih[i].nsm = !!(xxs[i].len = sih.length);
@@ -440,13 +435,13 @@ int s3m_load (FILE * f)
 	xxs[i].flg = sih.flags & 1 ? WAVE_LOOPING : 0;
 	xxs[i].flg |= sih.flags & 4 ? WAVE_16_BITS : 0;
 	xxi[i][0].vol = sih.vol;
-	sih.magic[0] = 0;
+	sih.magic = 0;
 
-	copy_adjust(xxih[i].name, sih.name, 24);
+	copy_adjust(xxih[i].name, sih.name, 28);
 
 	if ((V (1)) && (strlen ((char *) sih.name) || xxs[i].len))
 	    report ("\n[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d ",
-		i, sih.name, xxs[i].len, xxs[i].flg & WAVE_16_BITS ?'+' :
+		i, xxih[i].name, xxs[i].len, xxs[i].flg & WAVE_16_BITS ?'+' :
 		' ', xxs[i].lps, xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ?
 		'L' : ' ', xxi[i][0].vol, sih.c2spd);
 
@@ -457,12 +452,9 @@ int s3m_load (FILE * f)
 	fseek (f, 16L * sih.memseg, SEEK_SET);
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &xxs[i], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     xmp_ctl->fetch |= XMP_MODE_ST3;
 

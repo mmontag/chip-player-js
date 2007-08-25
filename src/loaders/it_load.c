@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.8 2007-08-24 13:50:41 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.9 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,9 @@
 #include "load.h"
 #include "it.h"
 #include "period.h"
+
+#define MAGIC_IMPM	MAGIC4('I','M','P','M')
+#define MAGIC_IMPS	MAGIC4('I','M','P','S')
 
 #define	FX_NONE	0xff
 #define FX_XTND 0xfe
@@ -196,9 +199,7 @@ int it_load (FILE * f)
     LOAD_INIT ();
 
     /* Load and convert header */
-    fread(&ifh.magic, 4, 1, f);
-
-    if (strncmp ((char *) ifh.magic, "IMPM", 4))
+    if (read32b(f) != MAGIC_IMPM)
 	return -1;
 
     fread(&ifh.name, 26, 1, f);
@@ -346,7 +347,7 @@ int it_load (FILE * f)
 	    /* New instrument format */
 	    fseek (f, pp_ins[i], SEEK_SET);
 
-	    fread(&i2h.magic, 4, 1, f);
+	    i2h.magic = read32b(f);
 	    fread(&i2h.dosname, 12, 1, f);
 	    i2h.zero = read8(f);
 	    i2h.nna = read8(f);
@@ -487,7 +488,7 @@ int it_load (FILE * f)
 /* Old instrument format */
 	    fseek (f, pp_ins[i], SEEK_SET);
 
-	    fread(&i1h.magic, 4, 1, f);
+	    i1h.magic = read32b(f);
 	    fread(&i1h.dosname, 12, 1, f);
 
 	    i1h.zero = read8(f);
@@ -596,7 +597,7 @@ int it_load (FILE * f)
 	    xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek (f, pp_smp[i], SEEK_SET);
 
-	fread(&ish.magic, 4, 1, f);
+	ish.magic = read32b(f);
 	fread(&ish.dosname, 12, 1, f);
 	ish.zero = read8(f);
 	ish.gvl = read8(f);
@@ -619,8 +620,8 @@ int it_load (FILE * f)
 	ish.vir = read8(f);
 	ish.vit = read8(f);
 
-	if (strncmp((char*)ish.magic, "IMPS", 4))
-	    return -1;
+	if (ish.magic != MAGIC_IMPS)
+	    return -2;
 	
 	xxs[i].len = ish.length * (1 + !!(ish.flags & IT_SMP_16BIT));
 	xxs[i].lps = ish.loopbeg * (1 + !!(ish.flags & IT_SMP_16BIT));

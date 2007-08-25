@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.9 2007-08-24 01:03:22 cmatsuoka Exp $
+ * $Id: common.c,v 1.10 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -60,22 +60,14 @@ void disable_continue_fx (struct xxm_event *event)
     }
 }
 
-uint8 read8(FILE *f)
+inline uint8 read8(FILE *f)
 {
-	uint8 b;
-
-	fread(&b, 1, 1, f);
-
-	return b;
+	return (uint8)fgetc(f);
 }
 
-int8 read8s(FILE *f)
+inline int8 read8s(FILE *f)
 {
-	int8 b;
-
-	fread(&b, 1, 1, f);
-
-	return b;
+	return (int8)fgetc(f);
 }
 
 uint16 read16l(FILE *f)

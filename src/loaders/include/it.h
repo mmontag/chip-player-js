@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: it.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: it.h,v 1.3 2007-08-25 10:38:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -53,7 +53,7 @@
 
 
 struct it_file_header {
-    uint8 magic[4];		/* 'IMPM' */
+    uint32 magic;		/* 'IMPM' */
     uint8 name[26];		/* ASCIIZ Song name */
     uint8 rsvd1[2];		/* Reserved */
     uint16 ordnum;		/* Number of orders (must be even) */
@@ -78,7 +78,7 @@ struct it_file_header {
 };
 
 struct it_instrument1_header {
-    uint8 magic[4];		/* 'IMPI' */
+    uint32 magic;		/* 'IMPI' */
     uint8 dosname[12];		/* DOS filename */
     uint8 zero;			/* Always zero */
     uint8 flags;		/* Instrument flags */
@@ -101,7 +101,7 @@ struct it_instrument1_header {
 };
 
 struct it_instrument2_header {
-    uint8 magic[4];		/* 'IMPI' */
+    uint32 magic;		/* 'IMPI' */
     uint8 dosname[12];		/* DOS filename */
     uint8 zero;			/* Always zero */
     uint8 nna;			/* New Note Action */
@@ -143,7 +143,7 @@ struct it_envelope {
 };
 
 struct it_sample_header {
-    uint8 magic[4];		/* 'IMPS' */
+    uint32 magic;		/* 'IMPS' */
     uint8 dosname[12];		/* DOS filename */
     uint8 zero;			/* Always zero */
     uint8 gvl;			/* Global volume for instrument */

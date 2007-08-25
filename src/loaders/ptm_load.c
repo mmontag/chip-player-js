@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.5 2007-08-24 11:48:32 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.6 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,8 @@
 #include "load.h"
 #include "ptm.h"
 #include "period.h"
+
+#define MAGIC_PTMF	MAGIC4('P','T','M','F')
 
 
 /* PTM volume table formula (approximated):
@@ -55,9 +57,9 @@ int ptm_load (FILE * f)
     pfh.chnnum = read16l(f);		/* Number of channels */
     pfh.flags = read16l(f);		/* Flags (set to 0) */
     pfh.rsvd2 = read16l(f);		/* Reserved */
+    pfh.magic = read32b(f); 		/* 'PTMF' */
 
-    fread(&pfh.magic, 4, 1, f);		/* 'PTMF' */
-    if (strncmp((char *)pfh.magic, "PTMF", 4))
+    if (pfh.magic != MAGIC_PTMF)
 	return -1;
 
     fread(&pfh.rsvd3, 16, 1, f);	/* Reserved */
@@ -111,14 +113,11 @@ int ptm_load (FILE * f)
 	pih.gusflg = read8(f);			/* GUS loop flags */
 	pih.rsvd1 = read8(f);			/* Reserved */
 	fread(&pih.name, 28, 1, f);		/* Instrument name */
-	fread(&pih.magic, 4, 1, f);		/* 'PTMS' */
+	pih.magic = read32b(f);			/* 'PTMS' */
 
 	if ((pih.type & 3) != 1)
 	    continue;
-#if 0
-	if (strncmp (pih.magic, "PTMS", 4))
-	    return -2;
-#endif
+
 	smp_ofs[i] = pih.smpofs;
 	xxih[i].nsm = !!(xxs[i].len = pih.length);
 	xxs[i].lps = pih.loopbeg;
@@ -129,15 +128,15 @@ int ptm_load (FILE * f)
 	xxi[i][0].vol = pih.vol;
 	xxi[i][0].pan = 0x80;
 	xxi[i][0].sid = i;
-	pih.magic[0] = 0;
+	pih.magic = 0;
 
-	copy_adjust(xxih[i].name, pih.name, 24);
+	copy_adjust(xxih[i].name, pih.name, 28);
 
-	if ((V (1)) && (strlen ((char *) pih.name) || xxs[i].len))
+	if ((V(1)) && (strlen((char *)xxih[i].name) || xxs[i].len))
 	    report ("[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d\n",
-		i, pih.name, xxs[i].len, pih.type & 0x10 ? '+' : ' ', xxs[i].lps,
-		xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol,
-		pih.c4spd);
+		i, xxih[i].name, xxs[i].len, pih.type & 0x10 ? '+' : ' ',
+		xxs[i].lps, xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		xxi[i][0].vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */
 	c2spd_to_note (pih.c4spd, &xxi[i][0].xpo, &xxi[i][0].fin);

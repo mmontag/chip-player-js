@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: imf.h,v 1.3 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -34,7 +34,7 @@ struct imf_header {
     uint8 vol;			/* Default mastervolume (0..64) */
     uint8 amp;			/* Amplification factor (4..127) */
     uint8 unused2[8];
-    uint8 magic[4];		/* 'IM10' */
+    uint32 magic;		/* 'IM10' */
     struct imf_channel chn[32];	/* Channel settings */
     uint8 pos[256];		/* Order list */
 };
@@ -58,7 +58,7 @@ struct imf_instrument {
     struct imf_env env[3];
     uint16 fadeout;		/* Fadeout rate (0...0FFFH) */
     uint16 nsm;			/* Number of samples in instrument */
-    uint8 magic[4];		/* 'II10' */
+    uint32 magic;		/* 'II10' */
 };
 
 struct imf_sample {
@@ -75,6 +75,6 @@ struct imf_sample {
     uint8 unused3[5];
     uint16 ems;			/* Reserved for internal usage */
     uint32 dram;		/* Reserved for internal usage */
-    uint8 magic[4];		/* 'IS10' */
+    uint32 magic;		/* 'IS10' */
 };
 

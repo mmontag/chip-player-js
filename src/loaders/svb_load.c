@@ -1,7 +1,7 @@
 /* Silverball MASI PSM loader for xmp
  * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.5 2007-08-04 20:08:15 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.6 2007-08-25 10:38:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,9 @@
 #include "load.h"
 #include "period.h"
 
+#define MAGIC_PSM_	MAGIC4('P','S','M',0xfe)
+
+
 /* FIXME: effects translation */
 
 int svb_load (FILE * f)
@@ -27,9 +30,7 @@ int svb_load (FILE * f)
  
 	LOAD_INIT ();
 
-	fread (buf, 1, 4, f);
-
-	if (buf[0] != 'P' || buf[1] != 'S' || buf[2] != 'M' || buf[3] != 0xfe)
+	if (read32b(f) != MAGIC_PSM_)
 		return -1;
 
 	fread(buf, 1, 60, f);
@@ -67,7 +68,7 @@ int svb_load (FILE * f)
 
 	INSTRUMENT_INIT ();
 
-	if (V(1)) report("     Sample name            Len  LBeg LEnd L Vol C2Spd\n");
+	reportv(1, "     Sample name           Len   LBeg LEnd L Vol C2Spd\n");
 
 	fseek(f, p_ins, SEEK_SET);
 	for (i = 0; i < xxh->ins; i++) {
@@ -110,7 +111,7 @@ int svb_load (FILE * f)
 
 	PATTERN_INIT ();
 
-	if (V(0)) report ("Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", xxh->pat);
 
 	fseek(f, p_pat, SEEK_SET);
 	for (i = 0; i < xxh->pat; i++) {
@@ -161,22 +162,22 @@ int svb_load (FILE * f)
 		if (len > 0)
 			fseek(f, len, SEEK_CUR);
 
-		if (V(0)) report(".");
+		reportv(0, ".");
 	}
-	if (V(0)) report("\n");
+	reportv(0, "\n");
 
 
 	/* Read samples */
 
-	if (V(0)) report ("Stored samples : %d ", xxh->smp);
+	reportv(0, "Stored samples : %d ", xxh->smp);
 
 	for (i = 0; i < xxh->ins; i++) {
 		fseek(f, p_smp[i], SEEK_SET);
 		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
 			XMP_SMP_DIFF, &xxs[xxi[i][0].sid], NULL);
-		if (V(0)) report (".");
+		reportv(0, ".");
 	}
-	if (V(0)) report("\n");
+	reportv(0, "\n");
 
 	return 0;
 }

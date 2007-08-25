@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: ptm.h,v 1.3 2007-08-25 10:38:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,7 +25,7 @@ struct ptm_file_header {
     uint16 chnnum;		/* Number of channels */
     uint16 flags;		/* Flags (set to 0) */
     uint16 rsvd2;		/* Reserved */
-    uint8 magic[4];		/* 'PTMF' */
+    uint32 magic;		/* 'PTMF' */
     uint8 rsvd3[16];		/* Reserved */
     uint8 chset[32];		/* Channel settings */
     uint8 order[256];		/* Orders */
@@ -48,5 +48,5 @@ struct ptm_instrument_header {
     uint8 gusflg;		/* GUS loop flags */
     uint8 rsvd1;		/* Reserved */
     uint8 name[28];		/* Instrument name */
-    uint8 magic[4];		/* 'PTMS' */
+    uint32 magic;		/* 'PTMS' */
 };
