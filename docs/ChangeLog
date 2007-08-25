@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.51 2007-08-24 22:03:16 cmatsuoka Exp $
+$Id: ChangeLog,v 1.52 2007-08-25 11:46:19 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -37,6 +37,7 @@ Stable versions
 	- fixed LIQ effects and 16-bit sample loading
 	- fixed S3M pan settings
 	- fixed IT old instrument volume mode setting
+	- fixed Sinaria sample size and finetune
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines
 	- fixed loading of big-endian 16-bit samples
