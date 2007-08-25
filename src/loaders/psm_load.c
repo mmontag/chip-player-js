@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
- * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.22 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.23 2007-08-25 11:45:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -41,6 +41,14 @@
  * can still be found on a few FTP sites. It converted effects literally,
  * even though the bundled players behaved as the libraries used with
  * Epic's games did and made the effects sound too strong."
+ */
+
+/*
+ * Claudio's note: Sinaria seems to have a finetune byte just before
+ * volume, slightly different sample size (subtract 2 bytes?) and some
+ * kind of (stereo?) interleaved sample, with 16-byte frames (see Sinaria
+ * songs 5 and 8). Sinaria song 10 sounds ugly, possibly caused by wrong
+ * pitchbendings (see note above).
  */
 
 /* FIXME: TODO: sinaria effects */
@@ -97,13 +105,14 @@ static void get_pbod_cnt(int size, FILE *f)
 static void get_dsmp(int size, FILE *f)
 {
 	int i, srate;
+	int finetune;
 
 	read8(f);				/* flags */
 	fseek(f, 8, SEEK_CUR);			/* songname */
 	fseek(f, sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	if (V(1) && cur_ins == 0)
-	    report("\n     Instrument name                  Len   LBeg  LEnd  L Vol C2Spd");
+	    report("\n     Instrument name                  Len   LBeg  LEnd  L Vol Fine C2Spd");
 
 	i = cur_ins;
 	xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -123,7 +132,15 @@ static void get_dsmp(int size, FILE *f)
 	if ((int32)xxs[i].lpe < 0)
 		xxs[i].lpe = 0;
 
-	if (sinaria) read8(f);
+	finetune = 0;
+	if (sinaria) {
+		if (xxs[i].len > 2)
+			xxs[i].len -= 2;
+		if (xxs[i].lpe > 2)
+			xxs[i].lpe -= 2;
+
+		finetune = (int8)(read8s(f) << 4);
+	}
 
 	xxi[i][0].vol = read8(f) / 2 + 1;
 	read32l(f);
@@ -131,14 +148,14 @@ static void get_dsmp(int size, FILE *f)
 	xxi[i][0].sid = i;
 	srate = read32l(f);
 
-	srate = 8363 * srate / 8448;
-
-	c2spd_to_note(srate, &xxi[i][0].xpo, &xxi[i][0].fin);
-
 	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
-	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %5d", i,
+	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, srate);
+		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, finetune, srate);
+
+	srate = 8363 * srate / 8448;
+	c2spd_to_note(srate, &xxi[i][0].xpo, &xxi[i][0].fin);
+	xxi[i][0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
 	xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, XMP_SMP_8BDIFF, &xxs[i], NULL);
@@ -253,7 +270,8 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					fxp /= 4;
 					break;
 				case 0x15:		/* vibrato */
-					fxt = FX_VIBRATO;
+					fxt = sinaria ?
+						FX_VIBRATO : FX_FINE4_VIBRA;
 					/* fxp remains the same */
 					break;
 				case 0x2a:		/* retrig note */

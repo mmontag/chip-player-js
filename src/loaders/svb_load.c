@@ -1,7 +1,7 @@
 /* Silverball MASI PSM loader for xmp
- * Copyright (C) 2005 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.6 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.7 2007-08-25 11:45:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
