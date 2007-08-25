@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.52 2007-08-25 11:46:19 cmatsuoka Exp $
+$Id: ChangeLog,v 1.53 2007-08-25 21:35:55 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -18,6 +18,8 @@ Stable versions
 	- added S3M/PTM/IMF/LIQ/IT fine vibrato effect
 	- added Archimedes Tracker loader
 	- added Arc/Spark depacker
+	- added Archimedes VIDC sample converter
+	- added Archimeded Symphony loader
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation

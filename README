@@ -1,4 +1,4 @@
-$Id: README,v 1.27 2007-08-24 20:05:17 cmatsuoka Exp $
+$Id: README,v 1.28 2007-08-25 21:35:55 cmatsuoka Exp $
 
 
 
@@ -100,6 +100,7 @@ The current version recognizes the following module formats:
   Other (Acorn):
 
   MUSX	***	Archimedes Tracker	V1.0+++
+  BASS  **	Symphony		0
 
   Other (PC):
 

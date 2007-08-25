@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.7 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.8 2007-08-25 21:35:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,7 +14,6 @@
 
 #include "load.h"
 #include "iff.h"
-#include "archimedes.h"
 
 #define MAGIC_MUSX	MAGIC4('M','U','S','X')
 
@@ -22,7 +21,6 @@
 static int year, month, day;
 static int pflag, sflag, max_ins;
 static uint8 ster[8], rows[64];
-static int8 *sbuf[36];
 
 static void fix_effect(struct xxm_event *e)
 {
@@ -212,12 +210,8 @@ static void get_samp(int size, FILE *f)
 		xxs[i].lpe = xxs[i].lps + xxs[i].lpe;
 	}
 
-	sbuf[i] = malloc(xxs[i].len);
-	fread(sbuf[i], 1, xxs[i].len, f);
-	arc2linear(sbuf[i], xxs[i].len);
-
-	xmp_drv_loadpatch(NULL, xxi[i][0].sid, xmp_ctl->c4rate,XMP_SMP_NOLOAD,
-					&xxs[xxi[i][0].sid], (char *)sbuf[i]);
+	xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, XMP_SMP_VIDC,
+					&xxs[xxi[i][0].sid], NULL);
 
 	if (strlen((char *)xxih[i].name) || xxs[i].len > 0) {
 		if (V(1))
@@ -272,9 +266,6 @@ int arch_load(FILE *f)
 	reportv(0, "\n");
 
 	iff_release();
-
-	for (i = 0; i < max_ins; i++)
-		free(sbuf[i]);
 
 	return 0;
 }
