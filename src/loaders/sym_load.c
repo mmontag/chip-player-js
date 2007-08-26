@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.8 2007-08-26 15:07:52 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.9 2007-08-26 17:23:46 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -160,7 +160,9 @@ int sym_load(FILE * f)
 
 	MODULE_INFO();
 
-	PATTERN_INIT();
+	/* PATTERN_INIT - alloc extra track*/
+	xxt = calloc(sizeof (struct xxm_track *), xxh->trk + 1);
+	xxp = calloc(sizeof (struct xxm_pattern *), xxh->pat + 1);
 
 	/* Sequence */
 	a = read8(f);			/* packing */
@@ -170,7 +172,10 @@ int sym_load(FILE * f)
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
 		for (j = 0; j < xxh->chn; j++) {
-			xxp[i]->info[j].index = read16l(f);			
+			xxp[i]->info[j].index = read16l(f);
+
+			if (xxp[i]->info[j].index == 0x1000) /* empty track */
+				xxp[i]->info[j].index = xxh->trk;
 		}
 		xxo[i] = i;
 	}
@@ -208,10 +213,14 @@ int sym_load(FILE * f)
 
 			fix_effect(event, parm);
 		}
-		if (V(0) && (i % xxh->chn) == 0)
-			report(".");
+		reportv(0, ".");
 	}
 	reportv(0, "\n");
+
+	/* Extra track */
+	xxt[i] = calloc(sizeof(struct xxm_track) +
+				sizeof(struct xxm_event) * 64 - 1, 1);
+	xxt[i]->rows = 64;
 
 	/* Load and convert instruments */
 

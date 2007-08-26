@@ -253,18 +253,16 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 	case 5:		/* "crunched" (12-bit static LZW) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 0, 0,
-						hdr.
-						compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size);
 		break;
 
 	case 6:		/* "crunched" (RLE+12-bit static LZW) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 0, 1,
-						hdr.
-						compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size);
 		break;
 
-	case 7:		/* PKPAK docs call this one "internal to SEA" */
+	case 7:	/* PKPAK docs call this one "internal to SEA" */
 		/* it looks like this one was only used by a development version
 		 * of SEA ARC, so chances are it can be safely ignored.
 		 * OTOH, it's just method 6 with a slightly different hash,
@@ -273,25 +271,22 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 		break;
 
 	case 8:		/* "Crunched" [sic]
-				 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
+			 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 12, 1,
-						hdr.
-						compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size);
 		break;
 
 	case 9:		/* "Squashed" (9-to-13-bit, no RLE) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 13, 0,
-						hdr.
-						compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size);
 		break;
 
-	case 127:		/* "Compress" (9-to-16-bit, no RLE) ("Spark" only) */
+	case 127:	/* "Compress" (9-to-16-bit, no RLE) ("Spark" only) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 16, 0,
-						hdr.
-						compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size);
 		break;
 	}
 
