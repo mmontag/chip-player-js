@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.27 2007-08-26 02:03:08 cmatsuoka Exp $
+ * $Id: formats.c,v 1.28 2007-08-26 15:07:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -71,6 +71,7 @@ void xmp_init_formats ()
     register_fmt ("TCB", "TCB Tracker", tcb_load);
     register_fmt ("DTM", "Digital Tracker", dt_load);
     register_fmt ("GTK", "Graoumf Tracker", gtk_load);
+    register_fmt ("DTT", "Desktop Tracker", dtt_load);
     register_fmt ("MUSX", "Archimedes Tracker", arch_load);
     register_fmt ("DSYM", "Digital Symphony", sym_load);
     register_fmt ("DIGI", "DIGI Booster", digi_load);

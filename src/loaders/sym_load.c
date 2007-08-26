@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.7 2007-08-26 02:03:08 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.8 2007-08-26 15:07:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -154,6 +154,7 @@ int sym_load(FILE * f)
 	}
 
 	a = read8(f);			/* track name length */
+
 	fread(xmp_ctl->name, 1, a, f);
 	fseek(f, 8, SEEK_CUR);		/* skip effects table */
 
@@ -164,6 +165,7 @@ int sym_load(FILE * f)
 	/* Sequence */
 	a = read8(f);			/* packing */
 	reportv(0, "Packed sequence: %s\n", a ? "yes" : "no");
+
 	for (i = 0; i < xxh->len; i++) {
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
@@ -178,6 +180,12 @@ int sym_load(FILE * f)
 	a = read8(f);
 	reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
 	reportv(0, "Stored tracks  : %d ", xxh->trk);
+
+	if (a) {
+		/* Also we're leaking memory here */
+		reportv(0, "\nFIXME: LZW depacking not implemented\n");
+		return -1;
+	}
 
 	for (i = 0; i < xxh->trk; i++) {
 		xxt[i] = calloc(sizeof(struct xxm_track) +
