@@ -1,7 +1,7 @@
-/* Archimedes Tracker module loader for xmp
+/* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.6 2007-08-25 22:37:06 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.7 2007-08-26 02:03:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -121,7 +121,7 @@ int sym_load(FILE * f)
 	struct xxm_event *event;
 	int i, j;
 	uint32 a, b;
-	int ver, sn[64];
+	int ver, infolen, sn[64];
 
 	LOAD_INIT();
 
@@ -133,12 +133,12 @@ int sym_load(FILE * f)
 
 	ver = read8(f);
 
-	sprintf(xmp_ctl->type, "BASSTRAK v%d (Archimedes Symphony)", ver);
+	sprintf(xmp_ctl->type, "BASSTRAK v%d (Digital Symphony)", ver);
 
 	xxh->chn = read8(f);
 	xxh->len = xxh->pat = read16l(f);
 	xxh->trk = read16l(f);	/* Symphony patterns are actually tracks */
-	read24l(f);
+	infolen = read24l(f);
 
 	xxh->ins = xxh->smp = 63;
 
@@ -183,6 +183,8 @@ int sym_load(FILE * f)
 		xxt[i] = calloc(sizeof(struct xxm_track) +
 				sizeof(struct xxm_event) * 64 - 1, 1);
 		xxt[i]->rows = 64;
+
+		/* TODO: If packed data, unpack */
 
 		for (j = 0; j < xxt[i]->rows; j++) {
 			event = &xxt[i]->event[j];
