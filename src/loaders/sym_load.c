@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.16 2007-08-27 18:10:58 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.17 2007-08-27 18:41:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,7 +46,7 @@ static void fix_effect(struct xxm_event *e, int parm)
 	case 0x0c:	/* 0C xyy Set Volume */
 	case 0x0d:	/* 0D xyy Pattern Break */
 	case 0x0f:	/* 0F xxx Set Speed */
-		e->fxp = parm >> 3;	/* Guess based on Crystal */
+		e->fxp = parm;
 		break;
 	case 0x11:	/* 11 xyy Fine Slide Up + Fine Volume Slide Up */
 	case 0x12:	/* 12 xyy Fine Slide Down + Fine Volume Slide Up */
