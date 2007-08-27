@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.16 2007-08-27 03:21:27 cmatsuoka Exp $
+ * $Id: driver.c,v 1.17 2007-08-27 13:10:45 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -855,12 +855,11 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
+int xmp_drv_loadpatch (FILE *f, int id, int basefreq, int flags,
     struct xxm_sample *xxs, char *buffer)
 {
     struct patch_info *patch;
     char s[5];
-    int pos;
 
     /* FM patches
      */
@@ -887,11 +886,10 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 		xxs->len + sizeof (int))))
 	  return XMP_ERR_ALLOC;
 
-    pos = ftell(f);
-
     if (flags & XMP_SMP_NOLOAD)
 	memcpy (patch->data, buffer, xxs->len);
     else {
+	int pos = ftell(f);
 	fread (s, 1, 5, f);
 	fseek (f, pos, SEEK_SET);
 
@@ -908,12 +906,6 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 	    fread (patch->data, 1, xxs->len, f);
     }
 
-    if (flags & XMP_SMP_LZW13) {
-	xmp_cvt_lzw13(xxs->len, patch);
-	if (~flags & XMP_SMP_NOLOAD) {
-	    fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
-	}
-    }
     if (xxs->flg & WAVE_16_BITS) {
 #ifdef WORDS_BIGENDIAN
 	if ((flags & XMP_SMP_BIGEND) || (~xmp_ctl->fetch & XMP_CTL_BIGEND))

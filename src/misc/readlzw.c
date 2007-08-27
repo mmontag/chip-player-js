@@ -3,6 +3,7 @@
  *
  * Modified for xmp by Claudio Matsuoka, Aug 2007
  * - add quirks for Digital Symphony LZW packing
+ * - add wrapper to read data from stream
  *
  * readlzw.c - read (RLE+)LZW-compressed files.
  *
@@ -54,7 +55,7 @@ static int maxstr;
 
 static int st_oldverhashlinks[4096];	/* only used for 12-bit types */
 
-int nomarch_input_size;			/* hack for xmp, will fix later */
+static int nomarch_input_size;		/* hack for xmp, will fix later */
 
 /* prototypes */
 void code_resync(int old);
@@ -65,6 +66,28 @@ void outputstring(int code);
 void outputchr(int chr);
 int findfirstchr(int code);
 
+
+unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
+			unsigned long in_len, unsigned long orig_len, int q)
+{
+	uint8 *buf2, *b;
+	int pos;
+	int size;
+
+	if ((buf2 = malloc(in_len)) == NULL)
+		perror(__FUNCTION__), exit(1);
+	pos = ftell(f);
+	fread(buf2, 1, in_len, f);
+	b = convert_lzw_dynamic(buf2, max_bits, use_rle, in_len, orig_len, q);
+	memcpy(buf, b, orig_len);
+	size = q & NOMARCH_QUIRK_ALIGN4 ? ALIGN4(nomarch_input_size) :
+						nomarch_input_size;
+	fseek(f, pos + size, SEEK_SET);
+	free(b);
+	free(buf2);
+
+	return buf;
+}
 
 unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                    int max_bits,int use_rle,
@@ -107,16 +130,16 @@ nomarch_input_size = 0;
 
 while(1)
   {
-printf("input_size = %d\n", nomarch_input_size);
+//printf("input_size = %d\n", nomarch_input_size);
   if(!readcode(&newcode,csize)) {
-printf("readcode failed!\n");
+//printf("readcode failed!\n");
     break;
 }
-printf("newcode = %x\n", newcode);
+//printf("newcode = %x\n", newcode);
 
   if (quirk & NOMARCH_QUIRK_END101) {
     if (newcode == 0x101 /* data_out_point>=data_out_max */) {
-printf("end\n");
+//printf("end\n");
       break;
     }
   }
@@ -307,7 +330,7 @@ return(hashval);
 int addstring(int oldcode,int chr)
 {
 int idx;
-printf("oldcode = %02x\n", oldcode);
+//printf("oldcode = %02x\n", oldcode);
 
 st_last++;
 if((st_last&maxstr))
@@ -317,7 +340,7 @@ if((st_last&maxstr))
   }
 
 idx=st_last;
-printf("addstring idx=%x, oldcode=%02x, chr=%02x\n", idx, oldcode, chr);
+//printf("addstring idx=%x, oldcode=%02x, chr=%02x\n", idx, oldcode, chr);
 
 if(oldver)
   {
@@ -416,7 +439,7 @@ static void rawoutput(int byte)
 {
 if(data_out_point<data_out_max)
   *data_out_point++=byte;
-printf(" output = %02x\n", byte);
+//printf(" output = %02x\n", byte);
 }
 
 

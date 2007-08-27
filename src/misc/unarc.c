@@ -22,6 +22,10 @@
 
 #define NOMARCH_VER	"1.4"
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -32,6 +36,7 @@
 #include <utime.h>
 #include <unistd.h>
 
+#include "xmpi.h"
 #include "readrle.h"
 #include "readhuff.h"
 #include "readlzw.h"

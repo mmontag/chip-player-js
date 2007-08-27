@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.14 2007-08-27 10:57:49 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.15 2007-08-27 13:10:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -146,7 +146,7 @@ int sym_load(FILE * f)
 	uint32 a, b;
 	int ver, infolen, sn[64];
 	uint8 *buf;
-	int pos, size;
+	int size;
 
 	LOAD_INIT();
 
@@ -196,17 +196,11 @@ int sym_load(FILE * f)
 
 	size = xxh->len * xxh->chn * 2;
 	buf = malloc(size);
-	pos = ftell(f);
-	fread(buf, 1, size, f);
 
 	if (a) {
-		uint8 *buf2;
-		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
-							XMP_LZW_QUIRK_DSYM);
-		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
-		//printf("input_size = %d\n", nomarch_input_size);
-		free(buf);
-		buf = buf2;
+		read_lzw_dynamic(f, buf, 13, 0, size, size, XMP_LZW_QUIRK_DSYM);
+	} else {
+		fread(buf, 1, size, f);
 	}
 
 	for (i = 0; i < xxh->len; i++) {
@@ -235,16 +229,11 @@ int sym_load(FILE * f)
 
 	size = 64 * xxh->trk * 4;
 	buf = malloc(size);
-	pos = ftell(f);
-	fread(buf, 1, size, f);
 
 	if (a) {
-		uint8 *buf2;
-		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
-							XMP_LZW_QUIRK_DSYM);
-		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
-		free(buf);
-		buf = buf2;
+		read_lzw_dynamic(f, buf, 13, 0, size, size, XMP_LZW_QUIRK_DSYM);
+	} else {
+		fread(buf, 1, size, f);
 	}
 
 	for (i = 0; i < xxh->trk; i++) {
@@ -315,16 +304,24 @@ int sym_load(FILE * f)
 			       xxi[i][0].vol);
 		}
 
-		if (~sn[i] & 0x80) {
-			int flags;
+		if (sn[i] & 0x80)
+			continue;
 
-			a = read8(f);
-			assert(a == 0 || a == 1);
-			flags = a ? XMP_SMP_LZW13 : XMP_SMP_VIDC;
+		a = read8(f);
+		assert(a == 0 || a == 1);
 
+		if (a) {
+			uint8 *b = malloc(xxs[i].len);
+			read_lzw_dynamic(f, b, 13, 0, xxs[i].len, xxs[i].len,
+							XMP_LZW_QUIRK_DSYM);
+			xmp_drv_loadpatch(NULL, xxi[i][0].sid, xmp_ctl->c4rate,
+				 XMP_SMP_NOLOAD, &xxs[xxi[i][0].sid], (char*)b);
+			free(b);
+			reportv(0, "c");
+		} else {
 			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-					flags, &xxs[xxi[i][0].sid], NULL);
-			reportv(0, a ? "c" : ".");
+				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);
+			reportv(0, ".");
 		}
 	}
 	reportv(0, "\n");

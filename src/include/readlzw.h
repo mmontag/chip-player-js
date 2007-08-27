@@ -10,17 +10,21 @@
 
 /* Digital Symphony LZW quirk */
 #define XMP_LZW_QUIRK_DSYM	(NOMARCH_QUIRK_END101|NOMARCH_QUIRK_NOCHK| \
-				 NOMARCH_QUIRK_NOSYNC|NOMARCH_QUIRK_START101)
+				 NOMARCH_QUIRK_NOSYNC|NOMARCH_QUIRK_START101| \
+				 NOMARCH_QUIRK_ALIGN4)
 
 #define NOMARCH_QUIRK_END101	(1L << 0)	/* code 0x101 is end mark */
 #define NOMARCH_QUIRK_NOCHK	(1L << 1)	/* don't check input size */
 #define NOMARCH_QUIRK_NOSYNC	(1L << 2)	/* don't resync */
 #define NOMARCH_QUIRK_START101	(1L << 3)	/* start at 0x101 not 0x100 */
+#define NOMARCH_QUIRK_ALIGN4	(1L << 4)	/* input buffer size aligned */
 
-extern int nomarch_input_size;		/* Hack for xmp/dsym */
-
-extern unsigned char *convert_lzw_dynamic(unsigned char *data_in,
+unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                           int bits,int use_rle,
                                           unsigned long in_len,
                                           unsigned long orig_len,
 					  int q);
+
+uint8 *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
+                        unsigned long in_len, unsigned long orig_len, int q);
+

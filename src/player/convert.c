@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.6 2007-08-27 10:57:49 cmatsuoka Exp $
+ * $Id: convert.c,v 1.7 2007-08-27 13:10:45 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,7 +18,6 @@
 #include "xmpi.h"
 #include "convert.h"
 #include "driver.h"
-#include "readlzw.h"
 
 extern struct patch_info **patch_array;
 
@@ -123,17 +122,6 @@ void xmp_cvt_vidc(int l, char *p)
 		if (x & 0x01)
 			p[i] *= -1;
 	}
-}
-
-
-void xmp_cvt_lzw13(int len, struct patch_info *p)
-{
-	uint8 *buf2;
-
-	buf2 = convert_lzw_dynamic((uint8 *)p->data, 13, 0, len, len,
-						XMP_LZW_QUIRK_DSYM);
-	memcpy(&p->data, buf2, len);
-	free(buf2);
 }
 
 
