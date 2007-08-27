@@ -6,7 +6,7 @@
  * readlzw.h
  */
 
-#define ALIGN4(x) ((((x) + 3) >> 2) << 2)
+#define ALIGN4(x) (((x) + 3) & ~3L)
 
 #define NOMARCH_QUIRK_DSYM	1	/* Digital Symphony LZW quirk */
 

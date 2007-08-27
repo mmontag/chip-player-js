@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.12 2007-08-27 02:23:06 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.13 2007-08-27 03:21:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -204,7 +204,7 @@ int sym_load(FILE * f)
 		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
 							NOMARCH_QUIRK_DSYM);
 		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
-printf("input_size = %d\n", nomarch_input_size);
+		//printf("input_size = %d\n", nomarch_input_size);
 		free(buf);
 		buf = buf2;
 	}
@@ -219,10 +219,10 @@ printf("input_size = %d\n", nomarch_input_size);
 			if (xxp[i]->info[j].index == 0x1000) /* empty track */
 				xxp[i]->info[j].index = xxh->trk;
 
-			printf("%04x ", xxp[i]->info[j].index);
+			//printf("%04x ", xxp[i]->info[j].index);
 		}
 		xxo[i] = i;
-		printf("\n");
+		//printf("\n");
 	}
 	free(buf);
 
@@ -230,7 +230,7 @@ printf("input_size = %d\n", nomarch_input_size);
 
 	a = read8(f);
 	assert(a == 0 || a == 1);
-	reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
+	//reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
 	reportv(0, "Stored tracks  : %d ", xxh->trk);
 
 	size = 64 * xxh->trk * 4;
@@ -243,7 +243,6 @@ printf("input_size = %d\n", nomarch_input_size);
 		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
 							NOMARCH_QUIRK_DSYM);
 		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
-printf("size = %d, input_size = %d\n", size, nomarch_input_size);
 		free(buf);
 		buf = buf2;
 	}
@@ -287,11 +286,11 @@ printf("size = %d, input_size = %d\n", size, nomarch_input_size);
 	reportv(0, "Instruments    : %d ", xxh->ins);
 	reportv(1, "\n     Instrument Name                  Len   LBeg  LEnd  L Vol");
 
-printf("offset = %x\n", ftell(f));
 	for (i = 0; i < xxh->ins; i++) {
 		uint8 buf[128];
 
 		memset(buf, 0, 128);
+//printf("offset = %x\n", ftell(f));
 		fread(buf, 1, sn[i] & 0x7f, f);
 		copy_adjust(xxih[i].name, buf, 32);
 
@@ -317,12 +316,11 @@ printf("offset = %x\n", ftell(f));
 		}
 
 		if (~sn[i] & 0x80) {
-			int flags = XMP_SMP_VIDC;
+			int flags;
 
 			a = read8(f);
 			assert(a == 0 || a == 1);
-			if (a)
-				flags |= XMP_SMP_LZW13;
+			flags = a ? XMP_SMP_LZW13 : XMP_SMP_VIDC;
 
 			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
 					flags, &xxs[xxi[i][0].sid], NULL);

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.15 2007-08-27 02:23:07 cmatsuoka Exp $
+ * $Id: driver.c,v 1.16 2007-08-27 03:21:27 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -887,10 +887,11 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 		xxs->len + sizeof (int))))
 	  return XMP_ERR_ALLOC;
 
+    pos = ftell(f);
+
     if (flags & XMP_SMP_NOLOAD)
 	memcpy (patch->data, buffer, xxs->len);
     else {
-	pos = ftell (f);
 	fread (s, 1, 5, f);
 	fseek (f, pos, SEEK_SET);
 
@@ -907,6 +908,12 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 	    fread (patch->data, 1, xxs->len, f);
     }
 
+    if (flags & XMP_SMP_LZW13) {
+	xmp_cvt_lzw13(xxs->len, patch);
+	if (~flags & XMP_SMP_NOLOAD) {
+	    fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
+	}
+    }
     if (xxs->flg & WAVE_16_BITS) {
 #ifdef WORDS_BIGENDIAN
 	if ((flags & XMP_SMP_BIGEND) || (~xmp_ctl->fetch & XMP_CTL_BIGEND))
@@ -922,12 +929,6 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 	xmp_cvt_diff2abs (xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
     else if (flags & XMP_SMP_8BDIFF)
 	xmp_cvt_diff2abs (xxs->len, 0, patch->data);
-    if (flags & XMP_SMP_LZW13) {
-	xmp_cvt_lzw13(xxs->len, patch);
-	if (~flags & XMP_SMP_NOLOAD) {
-	    fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
-	}
-    }
     if (flags & XMP_SMP_VIDC)
 	xmp_cvt_vidc(xxs->len, patch->data);
 
