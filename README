@@ -1,4 +1,4 @@
-$Id: README,v 1.28 2007-08-25 21:35:55 cmatsuoka Exp $
+$Id: README,v 1.29 2007-08-27 14:05:26 cmatsuoka Exp $
 
 
 
@@ -100,7 +100,7 @@ The current version recognizes the following module formats:
   Other (Acorn):
 
   MUSX	***	Archimedes Tracker	V1.0+++
-  BASS  **	Symphony		0
+  DSYM  ***	Digital Symphony	0
 
   Other (PC):
 
@@ -141,7 +141,6 @@ xmp can be used stand-alone, as a plugin for BMP or XMMS or as a back-end
 for GQmpeg, xhippo and others. Get them in the following URLs:
 
   BeepMP:  http://beepmp.sf.net
-  XMMS:    http://xmms.org
   GQmpeg:  http://www.netpedia.net/hosting/gqview/mpeg-index.html
   xhippo:  http://freshmeat.net/projects/gnuxhippo/homepage/
 
@@ -170,11 +169,13 @@ follwing devices are supported:
   openbsd	OpenBSD audio device
   oss_mix	Open Sound System (OSS) PCM
   oss_seq	Open Sound System (OSS) sequencer
+  osx		MacOS X CoreAudio
   qnx		QNX audio device
   solaris	Solaris audio device (linear and ulaw)
   win32		Win32 sound (experimental -- not tested)
   xmms		XMMS sound drivers (using the XMMS plugin)
   wav		WAV file writer
+  win32		Windows WinMM
 
 
 INTERACTIVE COMMANDS
