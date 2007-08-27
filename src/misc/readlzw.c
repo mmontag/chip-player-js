@@ -107,13 +107,16 @@ nomarch_input_size = 0;
 
 while(1)
   {
-  if(!readcode(&newcode,csize))
+printf("input_size = %d\n", nomarch_input_size);
+  if(!readcode(&newcode,csize)) {
+printf("readcode failed!\n");
     break;
+}
+printf("newcode = %x\n", newcode);
 
   if (quirk & NOMARCH_QUIRK_END101) {
     if (newcode == 0x101 /* data_out_point>=data_out_max */) {
-printf("newcode = %x\n", newcode);
-//printf("end\n");
+printf("end\n");
       break;
     }
   }
@@ -304,6 +307,7 @@ return(hashval);
 int addstring(int oldcode,int chr)
 {
 int idx;
+printf("oldcode = %02x\n", oldcode);
 
 st_last++;
 if((st_last&maxstr))
@@ -313,7 +317,7 @@ if((st_last&maxstr))
   }
 
 idx=st_last;
-//printf("addstring idx=%x, oldcode=%02x, chr=%02x\n", idx, oldcode, chr);
+printf("addstring idx=%x, oldcode=%02x, chr=%02x\n", idx, oldcode, chr);
 
 if(oldver)
   {
@@ -412,7 +416,7 @@ static void rawoutput(int byte)
 {
 if(data_out_point<data_out_max)
   *data_out_point++=byte;
-//printf(" output = %02x\n", byte);
+printf(" output = %02x\n", byte);
 }
 
 
