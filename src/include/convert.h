@@ -19,6 +19,7 @@ void xmp_cvt_sig2uns (int, int, char *);
 void xmp_cvt_sex (int, char *);
 void xmp_cvt_2xsmp (int, char *);
 void xmp_cvt_vdic (int, char *);
+void xmp_cvt_lzw13 (struct patch_info *);
 void xmp_cvt_to8bit (void);
 void xmp_cvt_to16bit (void);
 void xmp_cvt_bid2und (void);

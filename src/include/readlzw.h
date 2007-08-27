@@ -6,7 +6,11 @@
  * readlzw.h
  */
 
+#define ALIGN4(x) ((((x) + 3) >> 2) << 2)
+
 #define NOMARCH_QUIRK_DSYM	1	/* Digital Symphony LZW quirk */
+
+extern int nomarch_input_size;		/* Hack for xmp/dsym */
 
 extern unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                           int bits,int use_rle,

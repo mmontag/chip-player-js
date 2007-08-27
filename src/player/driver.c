@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.13 2007-08-25 21:33:38 cmatsuoka Exp $
+ * $Id: driver.c,v 1.14 2007-08-27 01:42:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,6 +18,7 @@
 #include "convert.h"
 #include "mixer.h"
 #include "period.h"
+#include "readlzw.h"
 
 #define	FREE	-1
 
@@ -859,6 +860,7 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 {
     struct patch_info *patch;
     char s[5];
+    int pos;
 
     /* FM patches
      */
@@ -888,11 +890,9 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
     if (flags & XMP_SMP_NOLOAD)
 	memcpy (patch->data, buffer, xxs->len);
     else {
-	int x;
-
-	x = ftell (f);
+	pos = ftell (f);
 	fread (s, 1, 5, f);
-	fseek (f, x, SEEK_SET);
+	fseek (f, pos, SEEK_SET);
 
 	if (!strncmp (s, "ADPCM", 5)) {
 	    int x2 = xxs->len >> 1;
@@ -922,6 +922,12 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
 	xmp_cvt_diff2abs (xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
     else if (flags & XMP_SMP_8BDIFF)
 	xmp_cvt_diff2abs (xxs->len, 0, patch->data);
+    if (flags & XMP_SMP_LZW13) {
+	xmp_cvt_lzw13(patch);
+	if (~flags & XMP_SMP_NOLOAD) {
+	    fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
+	}
+    }
     if (flags & XMP_SMP_VIDC)
 	xmp_cvt_vidc(xxs->len, patch->data);
 

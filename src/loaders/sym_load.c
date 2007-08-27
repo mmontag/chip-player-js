@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.10 2007-08-27 00:35:01 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.11 2007-08-27 01:42:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -116,6 +116,27 @@ static void fix_effect(struct xxm_event *e, int parm)
 	}
 }
 
+static uint32 readptr32l(uint8 *p)
+{
+	uint32 a, b, c, d;
+
+	a = *p++;
+	b = *p++;
+	c = *p++;
+	d = *p++;
+
+	return (d << 24) | (c << 16) | (b << 8) | a;
+}
+
+static uint32 readptr16l(uint8 *p)
+{
+	uint32 a, b;
+
+	a = *p++;
+	b = *p++;
+
+	return (b << 8) | a;
+}
 
 int sym_load(FILE * f)
 {
@@ -180,7 +201,7 @@ int sym_load(FILE * f)
 		uint8 *buf2;
 		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
 							NOMARCH_QUIRK_DSYM);
-		fseek(f, pos, SEEK_SET);
+		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
 		free(buf);
 		buf = buf2;
 	}
@@ -190,7 +211,7 @@ int sym_load(FILE * f)
 		xxp[i]->rows = 64;
 		for (j = 0; j < xxh->chn; j++) {
 			int idx = 2 * (i * xxh->chn + j);
-			xxp[i]->info[j].index = 256 * buf[idx + 1] + buf[idx];
+			xxp[i]->info[j].index = readptr16l(&buf[idx]);
 
 			if (xxp[i]->info[j].index == 0x1000) /* empty track */
 				xxp[i]->info[j].index = xxh->trk;
@@ -208,10 +229,18 @@ int sym_load(FILE * f)
 	reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
 	reportv(0, "Stored tracks  : %d ", xxh->trk);
 
+	size = 64 * xxh->trk * 4;
+	buf = malloc(size);
+	pos = ftell(f);
+	fread(buf, 1, size, f);
+
 	if (a) {
-		/* Also we're leaking memory here */
-		reportv(0, "\nFIXME: LZW depacking not implemented\n");
-		return -1;
+		uint8 *buf2;
+		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
+							NOMARCH_QUIRK_DSYM);
+		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
+		free(buf);
+		buf = buf2;
 	}
 
 	for (i = 0; i < xxh->trk; i++) {
@@ -219,13 +248,12 @@ int sym_load(FILE * f)
 				sizeof(struct xxm_event) * 64 - 1, 1);
 		xxt[i]->rows = 64;
 
-		/* TODO: If packed data, unpack */
-
 		for (j = 0; j < xxt[i]->rows; j++) {
-			event = &xxt[i]->event[j];
 			int parm;
 
-			b = read32l(f);
+			event = &xxt[i]->event[j];
+
+			b = readptr32l(&buf[4 * (i * 64 + j)]);
 			event->note = b & 0x0000003f;
 			if (event->note)
 				event->note += 36;
@@ -237,10 +265,12 @@ int sym_load(FILE * f)
 		}
 		if (V(0)) {
 			if (i % xxh->chn == 0)
-				report(".");
+				report(a ? "c" : ".");
 		}
 	}
 	reportv(0, "\n");
+
+	free(buf);
 
 	/* Extra track */
 	xxt[i] = calloc(sizeof(struct xxm_track) +
@@ -249,7 +279,8 @@ int sym_load(FILE * f)
 
 	/* Load and convert instruments */
 
-	reportv(1, "     Instrument Name                  Len   LBeg  LEnd  L Vol\n");
+	reportv(0, "Instruments    : %d ", xxh->ins);
+	reportv(1, "\n     Instrument Name                  Len   LBeg  LEnd  L Vol");
 	for (i = 0; i < xxh->ins; i++) {
 		uint8 buf[128];
 
@@ -269,23 +300,28 @@ int sym_load(FILE * f)
 			xxi[i][0].vol = read8(f);
 			xxi[i][0].fin = (int8)(read8(f) << 4);
 			xxi[i][0].sid = i;
-			a = read8(f);
-	
-			if (a != 0) abort();
 		}
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
-			report("[%2X] %-32.32s %05x %05x %05x %c V%02x\n", i,
+			report("\n[%2X] %-32.32s %05x %05x %05x %c V%02x ", i,
 			       xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
 			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			       xxi[i][0].vol);
 		}
 
 		if (~sn[i] & 0x80) {
+			int flags = XMP_SMP_VIDC;
+
+			a = read8(f);
+			if (a)
+				flags |= XMP_SMP_LZW13;
+
 			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);
+					flags, &xxs[xxi[i][0].sid], NULL);
+			reportv(0, a ? "c" : ".");
 		}
 	}
+	reportv(0, "\n");
 
 	return 0;
 }

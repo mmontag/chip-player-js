@@ -49,6 +49,7 @@ static int maxstr;
 
 static int st_oldverhashlinks[4096];	/* only used for 12-bit types */
 
+int nomarch_input_size;			/* hack for xmp, will fix later */
 
 /* prototypes */
 void code_resync(int old);
@@ -97,12 +98,20 @@ if(max_bits==12)
 if(max_bits==16)
   maxstr=(1<<*data_in_point++);	  /* but compress-type *may* change it (!) */
 
+nomarch_input_size = 0;
+
 while(1)
   {
   if(!readcode(&newcode,csize))
     break;
-
 //printf("newcode = %x\n", newcode);
+
+  if (quirk == NOMARCH_QUIRK_DSYM) {
+    if (newcode == 0x100) {		/* DSym uses 0x100 as end mark */
+      break;
+    }
+  }
+
   noadd=0;
   if(first)
     {
@@ -169,12 +178,13 @@ while(1)
   oldcode=newcode;
   }
 
-/* junk it on error */
-if(data_in_point!=data_in_max)
-  {
-  free(data_out);
-  return(NULL);
+if (quirk != NOMARCH_QUIRK_DSYM) {
+  /* junk it on error */
+  if(data_in_point!=data_in_max) {
+    free(data_out);
+    return(NULL);
   }
+}
 
 return(data_out);
 }
@@ -338,6 +348,7 @@ while(bitsfilled<numbits)
       return(0);
     dc_bitbox=*data_in_point++;
     dc_bitsleft=8;
+    nomarch_input_size++;	/* hack for xmp/dsym */
     }
   if(dc_bitsleft<numbits-bitsfilled)
     got=dc_bitsleft;
