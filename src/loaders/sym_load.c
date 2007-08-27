@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.9 2007-08-26 17:23:46 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.10 2007-08-27 00:35:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,6 +13,7 @@
 #endif
 
 #include "load.h"
+#include "readlzw.h"
 
 
 static void fix_effect(struct xxm_event *e, int parm)
@@ -122,6 +123,8 @@ int sym_load(FILE * f)
 	int i, j;
 	uint32 a, b;
 	int ver, infolen, sn[64];
+	uint8 *buf;
+	int pos, size;
 
 	LOAD_INIT();
 
@@ -168,17 +171,36 @@ int sym_load(FILE * f)
 	a = read8(f);			/* packing */
 	reportv(0, "Packed sequence: %s\n", a ? "yes" : "no");
 
+	size = xxh->len * xxh->chn * 2;
+	buf = malloc(size);
+	pos = ftell(f);
+	fread(buf, 1, size, f);
+
+	if (a) {
+		uint8 *buf2;
+		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
+							NOMARCH_QUIRK_DSYM);
+		fseek(f, pos, SEEK_SET);
+		free(buf);
+		buf = buf2;
+	}
+
 	for (i = 0; i < xxh->len; i++) {
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
 		for (j = 0; j < xxh->chn; j++) {
-			xxp[i]->info[j].index = read16l(f);
+			int idx = 2 * (i * xxh->chn + j);
+			xxp[i]->info[j].index = 256 * buf[idx + 1] + buf[idx];
 
 			if (xxp[i]->info[j].index == 0x1000) /* empty track */
 				xxp[i]->info[j].index = xxh->trk;
+
+			//printf("%04x ", xxp[i]->info[j].index);
 		}
 		xxo[i] = i;
+		//printf("\n");
 	}
+	free(buf);
 
 	/* Read and convert patterns */
 
@@ -213,7 +235,10 @@ int sym_load(FILE * f)
 
 			fix_effect(event, parm);
 		}
-		reportv(0, ".");
+		if (V(0)) {
+			if (i % xxh->chn == 0)
+				report(".");
+		}
 	}
 	reportv(0, "\n");
 

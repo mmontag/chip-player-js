@@ -1,6 +1,9 @@
 /* nomarch 1.4 - extract old `.arc' archives.
  * Copyright (C) 2001-2006 Russell Marks. See main.c for license details.
  *
+ * Modified for xmp by Claudio Matsuoka, Aug 2007
+ * - add Digital Symphony LZW quirk
+ *
  * readlzw.c - read (RLE+)LZW-compressed files.
  *
  * This is based on zgv's GIF reader. The LZW stuff is much the same, but
@@ -40,6 +43,7 @@ static unsigned char *data_out_point,*data_out_max;
 
 static int codeofs;
 static int global_use_rle,oldver;
+static int quirk;
 
 static int maxstr;
 
@@ -59,13 +63,14 @@ int findfirstchr(int code);
 unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                    int max_bits,int use_rle,
                                    unsigned long in_len,
-                                   unsigned long orig_len)
+                                   unsigned long orig_len, int q)
 {
 unsigned char *data_out;
 int csize,orgcsize;
 int newcode,oldcode,k=0;
 int first=1,noadd;
 
+quirk = q;
 global_use_rle=use_rle;
 maxstr=(1<<max_bits);
 
@@ -97,6 +102,7 @@ while(1)
   if(!readcode(&newcode,csize))
     break;
 
+//printf("newcode = %x\n", newcode);
   noadd=0;
   if(first)
     {
@@ -217,6 +223,9 @@ else
   for(f=0;f<numcols;f++)
     st_chr[f]=f;
   st_last=numcols-1;      /* last occupied slot */
+
+  if (quirk == NOMARCH_QUIRK_DSYM)	/* CM: Digital symphony quirk */
+    st_last++;
   }
 }
 
@@ -285,6 +294,7 @@ if((st_last&maxstr))
   }
 
 idx=st_last;
+//printf("addstring idx=%x, oldcode=%02x, chr=%02x\n", idx, oldcode, chr);
 
 if(oldver)
   {
@@ -382,6 +392,7 @@ static void rawoutput(int byte)
 {
 if(data_out_point<data_out_max)
   *data_out_point++=byte;
+//printf(" output = %02x\n", byte);
 }
 
 

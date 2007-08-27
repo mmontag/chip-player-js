@@ -253,13 +253,13 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 	case 5:		/* "crunched" (12-bit static LZW) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 0, 0,
-					hdr.compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 6:		/* "crunched" (RLE+12-bit static LZW) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 0, 1,
-					hdr.compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 7:	/* PKPAK docs call this one "internal to SEA" */
@@ -274,19 +274,19 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 			 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 12, 1,
-					hdr.compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 9:		/* "Squashed" (9-to-13-bit, no RLE) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 13, 0,
-					hdr.compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 127:	/* "Compress" (9-to-16-bit, no RLE) ("Spark" only) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 16, 0,
-					hdr.compressed_size, hdr.orig_size);
+					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 	}
 
