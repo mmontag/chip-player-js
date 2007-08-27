@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.15 2007-08-27 13:10:45 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.16 2007-08-27 18:10:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,7 +46,7 @@ static void fix_effect(struct xxm_event *e, int parm)
 	case 0x0c:	/* 0C xyy Set Volume */
 	case 0x0d:	/* 0D xyy Pattern Break */
 	case 0x0f:	/* 0F xxx Set Speed */
-		e->fxp = parm;
+		e->fxp = parm >> 3;	/* Guess based on Crystal */
 		break;
 	case 0x11:	/* 11 xyy Fine Slide Up + Fine Volume Slide Up */
 	case 0x12:	/* 12 xyy Fine Slide Down + Fine Volume Slide Up */
@@ -315,7 +315,7 @@ int sym_load(FILE * f)
 			read_lzw_dynamic(f, b, 13, 0, xxs[i].len, xxs[i].len,
 							XMP_LZW_QUIRK_DSYM);
 			xmp_drv_loadpatch(NULL, xxi[i][0].sid, xmp_ctl->c4rate,
-				 XMP_SMP_NOLOAD, &xxs[xxi[i][0].sid], (char*)b);
+				XMP_SMP_NOLOAD, &xxs[xxi[i][0].sid], (char*)b);
 			free(b);
 			reportv(0, "c");
 		} else {

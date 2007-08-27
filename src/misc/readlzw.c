@@ -158,6 +158,9 @@ while(1)
      * This took fscking forever to work out... :-(
      */
     st_last=255;
+
+    if (quirk & NOMARCH_QUIRK_START101)	/* CM: Digital symphony quirk */
+      st_last++;
     
     /* XXX do we need a resync if there's a reset when *already* csize==9?
      * (er, assuming that can ever happen?)
