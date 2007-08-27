@@ -107,7 +107,8 @@ while(1)
 //printf("newcode = %x\n", newcode);
 
   if (quirk == NOMARCH_QUIRK_DSYM) {
-    if (newcode == 0x100) {		/* DSym uses 0x100 as end mark */
+    if (data_out_point>=data_out_max) {
+//printf("end\n");
       break;
     }
   }
@@ -199,6 +200,9 @@ return(data_out);
 void code_resync(int old)
 {
 int tmp;
+
+if (quirk == NOMARCH_QUIRK_DSYM)
+  return;
 
 while(codeofs)
   if(!readcode(&tmp,old))

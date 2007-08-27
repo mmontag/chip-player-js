@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.11 2007-08-27 01:42:52 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.12 2007-08-27 02:23:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -12,6 +12,7 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include "load.h"
 #include "readlzw.h"
 
@@ -190,6 +191,7 @@ int sym_load(FILE * f)
 
 	/* Sequence */
 	a = read8(f);			/* packing */
+	assert(a == 0 || a == 1);
 	reportv(0, "Packed sequence: %s\n", a ? "yes" : "no");
 
 	size = xxh->len * xxh->chn * 2;
@@ -202,6 +204,7 @@ int sym_load(FILE * f)
 		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
 							NOMARCH_QUIRK_DSYM);
 		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
+printf("input_size = %d\n", nomarch_input_size);
 		free(buf);
 		buf = buf2;
 	}
@@ -216,16 +219,17 @@ int sym_load(FILE * f)
 			if (xxp[i]->info[j].index == 0x1000) /* empty track */
 				xxp[i]->info[j].index = xxh->trk;
 
-			//printf("%04x ", xxp[i]->info[j].index);
+			printf("%04x ", xxp[i]->info[j].index);
 		}
 		xxo[i] = i;
-		//printf("\n");
+		printf("\n");
 	}
 	free(buf);
 
 	/* Read and convert patterns */
 
 	a = read8(f);
+	assert(a == 0 || a == 1);
 	reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
 	reportv(0, "Stored tracks  : %d ", xxh->trk);
 
@@ -239,6 +243,7 @@ int sym_load(FILE * f)
 		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
 							NOMARCH_QUIRK_DSYM);
 		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
+printf("size = %d, input_size = %d\n", size, nomarch_input_size);
 		free(buf);
 		buf = buf2;
 	}
@@ -281,6 +286,8 @@ int sym_load(FILE * f)
 
 	reportv(0, "Instruments    : %d ", xxh->ins);
 	reportv(1, "\n     Instrument Name                  Len   LBeg  LEnd  L Vol");
+
+printf("offset = %x\n", ftell(f));
 	for (i = 0; i < xxh->ins; i++) {
 		uint8 buf[128];
 
@@ -313,6 +320,7 @@ int sym_load(FILE * f)
 			int flags = XMP_SMP_VIDC;
 
 			a = read8(f);
+			assert(a == 0 || a == 1);
 			if (a)
 				flags |= XMP_SMP_LZW13;
 

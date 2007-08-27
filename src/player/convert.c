@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.4 2007-08-27 01:42:52 cmatsuoka Exp $
+ * $Id: convert.c,v 1.5 2007-08-27 02:23:07 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -126,10 +126,9 @@ void xmp_cvt_vidc(int l, char *p)
 }
 
 
-void xmp_cvt_lzw13(struct patch_info *p)
+void xmp_cvt_lzw13(int len, struct patch_info *p)
 {
 	uint8 *buf2;
-	int len = p->len;
 
 	buf2 = convert_lzw_dynamic((uint8 *)p->data, 13, 0, len, len,
 						NOMARCH_QUIRK_DSYM);

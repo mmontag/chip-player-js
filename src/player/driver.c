@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.14 2007-08-27 01:42:52 cmatsuoka Exp $
+ * $Id: driver.c,v 1.15 2007-08-27 02:23:07 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -923,7 +923,7 @@ int xmp_drv_loadpatch (FILE * f, int id, int basefreq, int flags,
     else if (flags & XMP_SMP_8BDIFF)
 	xmp_cvt_diff2abs (xxs->len, 0, patch->data);
     if (flags & XMP_SMP_LZW13) {
-	xmp_cvt_lzw13(patch);
+	xmp_cvt_lzw13(xxs->len, patch);
 	if (~flags & XMP_SMP_NOLOAD) {
 	    fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
 	}
