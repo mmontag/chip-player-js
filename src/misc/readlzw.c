@@ -2,7 +2,7 @@
  * Copyright (C) 2001-2006 Russell Marks. See main.c for license details.
  *
  * Modified for xmp by Claudio Matsuoka, Aug 2007
- * - add Digital Symphony LZW quirk
+ * - add quirks for Digital Symphony LZW packing
  *
  * readlzw.c - read (RLE+)LZW-compressed files.
  *
@@ -11,12 +11,17 @@
  * wall therapy. %-(
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include "readrle.h"
 
+#include "xmpi.h"
 #include "readlzw.h"
 
 
@@ -43,7 +48,7 @@ static unsigned char *data_out_point,*data_out_max;
 
 static int codeofs;
 static int global_use_rle,oldver;
-static int quirk;
+static uint32 quirk;
 
 static int maxstr;
 
@@ -104,10 +109,10 @@ while(1)
   {
   if(!readcode(&newcode,csize))
     break;
-//printf("newcode = %x\n", newcode);
 
-  if (quirk == NOMARCH_QUIRK_DSYM) {
-    if (data_out_point>=data_out_max) {
+  if (quirk & NOMARCH_QUIRK_END101) {
+    if (newcode == 0x101 /* data_out_point>=data_out_max */) {
+printf("newcode = %x\n", newcode);
 //printf("end\n");
       break;
     }
@@ -179,7 +184,7 @@ while(1)
   oldcode=newcode;
   }
 
-if (quirk != NOMARCH_QUIRK_DSYM) {
+if (~quirk & NOMARCH_QUIRK_NOCHK) {
   /* junk it on error */
   if(data_in_point!=data_in_max) {
     free(data_out);
@@ -201,7 +206,7 @@ void code_resync(int old)
 {
 int tmp;
 
-if (quirk == NOMARCH_QUIRK_DSYM)
+if (quirk & NOMARCH_QUIRK_NOSYNC)
   return;
 
 while(codeofs)
@@ -238,7 +243,7 @@ else
     st_chr[f]=f;
   st_last=numcols-1;      /* last occupied slot */
 
-  if (quirk == NOMARCH_QUIRK_DSYM)	/* CM: Digital symphony quirk */
+  if (quirk & NOMARCH_QUIRK_START101)	/* CM: Digital symphony quirk */
     st_last++;
   }
 }

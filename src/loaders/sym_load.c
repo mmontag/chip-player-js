@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.13 2007-08-27 03:21:27 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.14 2007-08-27 10:57:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -202,7 +202,7 @@ int sym_load(FILE * f)
 	if (a) {
 		uint8 *buf2;
 		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
-							NOMARCH_QUIRK_DSYM);
+							XMP_LZW_QUIRK_DSYM);
 		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
 		//printf("input_size = %d\n", nomarch_input_size);
 		free(buf);
@@ -241,7 +241,7 @@ int sym_load(FILE * f)
 	if (a) {
 		uint8 *buf2;
 		buf2 = convert_lzw_dynamic(buf, 13, 0, size, size,
-							NOMARCH_QUIRK_DSYM);
+							XMP_LZW_QUIRK_DSYM);
 		fseek(f, pos + ALIGN4(nomarch_input_size), SEEK_SET);
 		free(buf);
 		buf = buf2;

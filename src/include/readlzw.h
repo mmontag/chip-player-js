@@ -8,7 +8,14 @@
 
 #define ALIGN4(x) (((x) + 3) & ~3L)
 
-#define NOMARCH_QUIRK_DSYM	1	/* Digital Symphony LZW quirk */
+/* Digital Symphony LZW quirk */
+#define XMP_LZW_QUIRK_DSYM	(NOMARCH_QUIRK_END101|NOMARCH_QUIRK_NOCHK| \
+				 NOMARCH_QUIRK_NOSYNC|NOMARCH_QUIRK_START101)
+
+#define NOMARCH_QUIRK_END101	(1L << 0)	/* code 0x101 is end mark */
+#define NOMARCH_QUIRK_NOCHK	(1L << 1)	/* don't check input size */
+#define NOMARCH_QUIRK_NOSYNC	(1L << 2)	/* don't resync */
+#define NOMARCH_QUIRK_START101	(1L << 3)	/* start at 0x101 not 0x100 */
 
 extern int nomarch_input_size;		/* Hack for xmp/dsym */
 
