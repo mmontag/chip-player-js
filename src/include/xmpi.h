@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.5 2007-08-09 00:00:17 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.6 2007-08-28 18:52:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -145,5 +145,14 @@ int	xmpi_select_read	(int, int);
 int	xmpi_read_rc		(struct xmp_control *);
 void	xmpi_read_modconf	(struct xmp_control *, unsigned, unsigned);
 int	cksum			(FILE *);
+
+int8	read8s			(FILE *);
+uint8	read8			(FILE *);
+uint16	read16l			(FILE *);
+uint16	read16b			(FILE *);
+uint32	read24l			(FILE *);
+uint32	read24b			(FILE *);
+uint32	read32l			(FILE *);
+uint32	read32b			(FILE *);
 
 #endif /* __XMPI_H */

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.14 2007-08-24 23:59:23 cmatsuoka Exp $
+ * $Id: load.c,v 1.15 2007-08-28 18:52:44 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,6 +31,7 @@ extern struct xmp_fmt_info *__fmt_head;
 extern struct list_head *checked_format;
 
 int decrunch_arc (FILE *, FILE *);
+int decrunch_arcfs (FILE *, FILE *);
 int decrunch_sqsh (FILE *, FILE *);
 int decrunch_pp (FILE *, FILE *);
 int decrunch_mmcmp (FILE *, FILE *);
@@ -42,6 +43,8 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_MMCMP	0x03
 #define BUILTIN_PW	0x04
 #define BUILTIN_ARC	0x05
+#define BUILTIN_ARCFS	0x06
+#define BUILTIN_S404	0x07
 
 #define TEST_CHUNK	4096
 
@@ -102,6 +105,9 @@ static int decrunch (FILE **f, char **s)
 	b[8] == 'S' && b[9] == 'Q' && b[10] == 'S' && b[11] == 'H') {
 	packer = "SQSH";
 	builtin = BUILTIN_SQSH;
+    } else if (!memcmp(b, "Archive\0", 8)) {
+	packer = "ArcFS";
+	builtin = BUILTIN_ARCFS;
     } else if (b[0] == 0x1a && ((b[1] & 0x7f) == 1 || ((b[1] & 0x7f) == 2))) {
 	packer = "Arc stored";
 	builtin = BUILTIN_ARC;
@@ -211,6 +217,9 @@ static int decrunch (FILE **f, char **s)
 	    break;
 	case BUILTIN_ARC:
 	    res = decrunch_arc(*f, t);
+	    break;
+	case BUILTIN_ARCFS:
+	    res = decrunch_arcfs(*f, t);
 	    break;
 	case BUILTIN_SQSH:    
 	    res = decrunch_sqsh(*f, t);

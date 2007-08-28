@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.10 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: common.c,v 1.11 2007-08-28 18:52:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -58,81 +58,5 @@ void disable_continue_fx (struct xxm_event *event)
 	    event->fxt = 0x00;
 	}
     }
-}
-
-inline uint8 read8(FILE *f)
-{
-	return (uint8)fgetc(f);
-}
-
-inline int8 read8s(FILE *f)
-{
-	return (int8)fgetc(f);
-}
-
-uint16 read16l(FILE *f)
-{
-	uint32 a, b;
-
-	a = read8(f);
-	b = read8(f);
-
-	return (b << 8) | a;
-}
-
-uint16 read16b(FILE *f)
-{
-	uint32 a, b;
-
-	a = read8(f);
-	b = read8(f);
-
-	return (a << 8) | b;
-}
-
-uint32 read24l(FILE *f)
-{
-	uint32 a, b, c;
-
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
-
-	return (c << 16) | (b << 8) | a;
-}
-
-uint32 read24b(FILE *f)
-{
-	uint32 a, b, c;
-
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
-
-	return (a << 16) | (b << 8) | c;
-}
-
-uint32 read32l(FILE *f)
-{
-	uint32 a, b, c, d;
-
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
-	d = read8(f);
-
-	return (d << 24) | (c << 16) | (b << 8) | a;
-}
-
-uint32 read32b(FILE *f)
-{
-	uint32 a, b, c, d;
-
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
-	d = read8(f);
-
-	return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
