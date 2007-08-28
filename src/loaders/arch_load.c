@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.9 2007-08-25 22:37:06 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.10 2007-08-28 21:22:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -223,7 +223,7 @@ static void get_samp(int size, FILE *f)
 				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 				xxi[i][0].vol);
 		else
-			report(".");
+			reportv(0, ".");
 	}
 
 	i++;

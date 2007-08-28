@@ -1,3 +1,15 @@
+/* ArcFS depacker for xmp
+ * Copyright (C) 2007 Claudio Matsuoka
+ *
+ * Based on the nomarch .arc depacker from nomarch
+ * Copyright (C) 2001-2006 Russell Marks
+ *
+ * $Id: arcfs.c,v 1.2 2007-08-28 21:22:47 cmatsuoka Exp $
+ *
+ * This file is part of the Extended Module Player and is distributed
+ * under the terms of the GNU General Public License. See doc/COPYING
+ * for more information.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -53,6 +65,7 @@ static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 		if (x == 0)			/* end? */
 			break;
 
+		hdrp->method = x & 0x7f;
 		fread(hdrp->name, 1, 11, in);
 		hdrp->name[12] = 0;
 		hdrp->orig_size = read32l(in);
@@ -62,6 +75,9 @@ static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 		hdrp->compressed_size = read32l(in);
 		hdrp->offset = read32l(in);
 
+		reportv(0, "'%s' ", hdrp->name);
+
+		//printf("method = %d\n", hdrp->method);
 		//printf("name = %s\n", hdrp->name);
 		//printf("orig_size = %d\n", hdrp->orig_size);
 		//printf("compressed_size = %d\n", hdrp->compressed_size);
@@ -125,9 +141,16 @@ static int arcfs_extract(FILE *in, FILE *out)
 	/* int done = 0; */
 	unsigned char *data, *orig_data;
 	int exitval = 0;
+	int supported;
 
 	if (!read_file_header(in, &hdr))
 		return -1;
+
+	if (hdr.method == 0) {	/* EOF */
+		/* done = 1;
+		continue; */
+		return -1;
+	}
 
 	if ((data = read_file_data(in, &hdr)) == NULL) {
 		fprintf(stderr, "nomarch: error reading data (hit EOF)\n");
@@ -140,8 +163,72 @@ fwrite(data, 1, hdr.compressed_size, out);
 fclose(out);
 #endif
 
-	orig_data = convert_lzw_dynamic(data, hdr.bits + 1, 1,
+	orig_data = NULL;
+	supported = 0;
+
+	/* FWIW, most common types are (by far) 8/9 and 2.
+	 * (127 is the most common in Spark archives, but only those.)
+	 * 3 and 4 crop up occasionally. 5 and 6 are very, very rare.
+	 * And I don't think I've seen a *single* file with 1 or 7 yet.
+	 */
+	switch (hdr.method) {
+	case 1:
+	case 2:		/* no compression */
+		supported = 1;
+		orig_data = data;
+		break;
+
+	case 3:		/* "packed" (RLE) */
+		supported = 1;
+		orig_data =
+		    convert_rle(data, hdr.compressed_size, hdr.orig_size);
+		break;
+
+	case 4:		/* "squeezed" (Huffman, like CP/M `SQ') */
+		supported = 1;
+		orig_data =
+		    convert_huff(data, hdr.compressed_size, hdr.orig_size);
+		break;
+
+	case 5:		/* "crunched" (12-bit static LZW) */
+		supported = 1;
+		orig_data = convert_lzw_dynamic(data, 0, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
+		break;
+
+	case 6:		/* "crunched" (RLE+12-bit static LZW) */
+		supported = 1;
+		orig_data = convert_lzw_dynamic(data, 0, 1,
+					hdr.compressed_size, hdr.orig_size, 0);
+		break;
+
+	case 7:	/* PKPAK docs call this one "internal to SEA" */
+		/* it looks like this one was only used by a development version
+		 * of SEA ARC, so chances are it can be safely ignored.
+		 * OTOH, it's just method 6 with a slightly different hash,
+		 * so I presume it wouldn't be *that* hard to add... :-)
+		 */
+		break;
+
+	case 8:		/* "Crunched" [sic]
+			 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
+		supported = 1;
+		orig_data = convert_lzw_dynamic(data, hdr.bits, 1,
+					hdr.compressed_size, hdr.orig_size, 0);
+		break;
+
+	case 9:		/* "Squashed" (9-to-13-bit, no RLE) */
+		supported = 1;
+		orig_data = convert_lzw_dynamic(data, hdr.bits, 0,
+					hdr.compressed_size, hdr.orig_size, 0);
+		break;
+
+	case 127:	/* "Compress" (9-to-16-bit, no RLE) ("Spark" only) */
+		supported = 1;
+		orig_data = convert_lzw_dynamic(data, hdr.bits, 0,
+					hdr.compressed_size, hdr.orig_size, 0);
+		break;
+	}
 
 
 	if (orig_data == NULL) {

@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.19 2007-08-28 11:40:17 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.20 2007-08-28 21:22:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -258,7 +258,7 @@ int sym_load(FILE * f)
 		}
 		if (V(0)) {
 			if (i % xxh->chn == 0)
-				report(".");
+				reportv(0, ".");
 		}
 	}
 	reportv(0, "\n");

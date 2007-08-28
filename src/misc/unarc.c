@@ -196,7 +196,7 @@ static int skip_file_data(FILE *in,struct archived_file_header_tag *hdrp)
 	return 1;
 }
 
-static int arc_extract_or_test(FILE * in, FILE * out)
+static int arc_extract(FILE * in, FILE * out)
 {
 	struct archived_file_header_tag hdr;
 	/* int done = 0; */
@@ -227,6 +227,8 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 		fprintf(stderr, "nomarch: error reading data (hit EOF)\n");
 		return -1;
 	}
+
+	reportv(0, "'%s' ", hdr.name);
 
 	orig_data = NULL;
 	supported = 0;
@@ -279,7 +281,8 @@ static int arc_extract_or_test(FILE * in, FILE * out)
 			 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
 		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 12, 1,
-					hdr.compressed_size, hdr.orig_size, 0);
+					hdr.compressed_size, hdr.orig_size,
+					NOMARCH_QUIRK_SKIPMAX);
 		break;
 
 	case 9:		/* "Squashed" (9-to-13-bit, no RLE) */
@@ -343,7 +346,7 @@ int decrunch_arc(FILE * f, FILE * fo)
 	if (fo == NULL)
 		return -1;
 
-	ret = arc_extract_or_test(f, fo);
+	ret = arc_extract(f, fo);
 	if (ret < 0)
 		return -1;
 

@@ -18,6 +18,7 @@
 #define NOMARCH_QUIRK_NOSYNC	(1L << 2)	/* don't resync */
 #define NOMARCH_QUIRK_START101	(1L << 3)	/* start at 0x101 not 0x100 */
 #define NOMARCH_QUIRK_ALIGN4	(1L << 4)	/* input buffer size aligned */
+#define NOMARCH_QUIRK_SKIPMAX	(1L << 5)	/* skip max code size */
 
 unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                           int bits,int use_rle,

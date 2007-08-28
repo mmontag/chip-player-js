@@ -99,6 +99,7 @@ int csize,orgcsize;
 int newcode,oldcode,k=0;
 int first=1,noadd;
 
+//printf("in_len = %d, orig_len = %d\n", in_len, orig_len);
 quirk = q;
 global_use_rle=use_rle;
 maxstr=(1<<max_bits);
@@ -120,7 +121,7 @@ orgcsize=csize;
 inittable(orgcsize);
 
 oldcode=newcode=0;
-if(max_bits==12)
+if(quirk & NOMARCH_QUIRK_SKIPMAX)
   data_in_point++;	/* skip type 8 max. code size, always 12 */
 
 if(max_bits==16)
@@ -130,7 +131,7 @@ nomarch_input_size = 0;
 
 while(1)
   {
-//printf("input_size = %d\n", nomarch_input_size);
+//printf("input_size = %d        csize = %d\n", nomarch_input_size, csize);
   if(!readcode(&newcode,csize)) {
 //printf("readcode failed!\n");
     break;
@@ -383,8 +384,10 @@ while(bitsfilled<numbits)
   {
   if(dc_bitsleft==0)        /* have we run out of bits? */
     {
-    if(data_in_point>=data_in_max)
+    if(data_in_point>=data_in_max) {
+//printf("data_in_point=%p >= data_in_max=%p\n", data_in_point, data_in_max);
       return(0);
+    }
     dc_bitbox=*data_in_point++;
     dc_bitsleft=8;
     nomarch_input_size++;	/* hack for xmp/dsym */
@@ -411,7 +414,10 @@ while(bitsfilled<numbits)
     }
   }
 
-if((*newcode)<0 || (*newcode)>maxstr-1) return(0);
+if((*newcode)<0 || (*newcode)>maxstr-1) {
+//printf("*newcode (= %d) < 0 || *newcode (= %d) > maxstr (= %d) - 1\n", newcode, newcode, maxstr);
+  return(0);
+}
 
 /* yuck... see code_resync() for explanation */
 codeofs++;
@@ -440,9 +446,10 @@ while(ptr>buf)
 
 static void rawoutput(int byte)
 {
+//static int i = 0;
 if(data_out_point<data_out_max)
   *data_out_point++=byte;
-//printf(" output = %02x\n", byte);
+//printf(" output = %02x <================ %06x\n", byte, i++);
 }
 
 
