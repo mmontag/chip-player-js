@@ -79,6 +79,7 @@
        (   ( sy bytes Data:
        (   (          Packing=0 : logarithmic (sy= sample length)
        (   (          Packing=1 : 13-bit LZW applied to sample data
+       (   (                      differences (yy multiple of 4)
 
       If il>0 then
         ( 1 byte    Packing system for information text
@@ -106,46 +107,6 @@
        C-1 to B-1 : 01 to 12
        C-2 to B-2 : 13 to 24
        C-3 to B-3 : 25 to 36 
-
-
-     Pattern file format (Filetype &FFD)
-     -----------------------------------
-
-       Field length Contents
-       ------------ --------
-          8 bytes   The string "BASSPTRN". Byte value= ASCII code - 64
-          1 byte    Version number (currently 0)
-          1 byte    Contents: 0 for a sequence, 1 for some patterns
-        0-1 byte    Number of sequence lines (only if Contents=0): z
-          2 bytes   Length: number of sequence positions
-                    or number of patterns: xx
-         yy bytes   Data:
-                    Contents=0 : For each line
-                                     For xx positions
-                                         Pattern number (2 bytes each)
-                                 (yy=2*xx*z)
-                    Contents=1 : patterns data (yy=256*xx) 
-
-
-     Sample file format (Filetype &10A)
-     ----------------------------------
-
-       Field length Contents
-       ------------ --------
-
-          8 bytes   The string "BASSSAMP". Byte value= ASCII code - 64
-          1 byte    Version number (currently 0)
-          1 byte    Name length: xx
-         xx bytes   Name
-          3 bytes   Length DIV 2
-          3 bytes   Repeat offset DIV 2
-          3 bytes   Repeat length DIV 2
-          1 byte    Packing system (0= not packed, 1= packed)
-         yy bytes   Data:
-                    Packing=0 : logarithmic (yy=length)
-                    Packing=1 : 13-bit LZW applied to sample data
-                                differences (yy multiple of 4)
-        0-3 bytes   Zero's to fill last file word 
 
 
    Archimedes Symphony V1.00 Effect Commands
