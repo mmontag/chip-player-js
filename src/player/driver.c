@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.17 2007-08-27 13:10:45 cmatsuoka Exp $
+ * $Id: driver.c,v 1.18 2007-08-28 02:00:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -905,6 +905,16 @@ int xmp_drv_loadpatch (FILE *f, int id, int basefreq, int flags,
 	} else
 	    fread (patch->data, 1, xxs->len, f);
     }
+
+#if 0
+    /* dump patch to file */
+    if (id == 1) {
+	printf("dump patch\n");
+	FILE *f = fopen("patch_data", "w");
+	fwrite(patch->data, 1, xxs->len, f);
+	fclose(f);
+    }
+#endif
 
     if (xxs->flg & WAVE_16_BITS) {
 #ifdef WORDS_BIGENDIAN

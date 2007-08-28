@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.17 2007-08-27 18:41:58 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.18 2007-08-28 02:00:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -224,7 +224,7 @@ int sym_load(FILE * f)
 
 	a = read8(f);
 	assert(a == 0 || a == 1);
-	//reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
+	reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
 	reportv(0, "Stored tracks  : %d ", xxh->trk);
 
 	size = 64 * xxh->trk * 4;
@@ -258,7 +258,7 @@ int sym_load(FILE * f)
 		}
 		if (V(0)) {
 			if (i % xxh->chn == 0)
-				report(a ? "c" : ".");
+				report(".");
 		}
 	}
 	reportv(0, "\n");
@@ -273,7 +273,7 @@ int sym_load(FILE * f)
 	/* Load and convert instruments */
 
 	reportv(0, "Instruments    : %d ", xxh->ins);
-	reportv(1, "\n     Instrument Name                  Len   LBeg  LEnd  L Vol");
+	reportv(1, "\n     Instrument Name        Len   LBeg  LEnd  L Vol Fin");
 
 	for (i = 0; i < xxh->ins; i++) {
 		uint8 buf[128];
@@ -298,10 +298,11 @@ int sym_load(FILE * f)
 		}
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
-			report("\n[%2X] %-32.32s %05x %05x %05x %c V%02x ", i,
-			       xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			       xxi[i][0].vol);
+			report("\n[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d ",
+				i, xxih[i].name, xxs[i].len,
+				xxs[i].lps, xxs[i].lpe,
+				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				xxi[i][0].vol, xxi[i][0].fin);
 		}
 
 		if (sn[i] & 0x80)
@@ -315,7 +316,8 @@ int sym_load(FILE * f)
 			read_lzw_dynamic(f, b, 13, 0, xxs[i].len, xxs[i].len,
 							XMP_LZW_QUIRK_DSYM);
 			xmp_drv_loadpatch(NULL, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_NOLOAD, &xxs[xxi[i][0].sid], (char*)b);
+				XMP_SMP_NOLOAD | XMP_SMP_DIFF,
+				&xxs[xxi[i][0].sid], (char*)b);
 			free(b);
 			reportv(0, "c");
 		} else {
