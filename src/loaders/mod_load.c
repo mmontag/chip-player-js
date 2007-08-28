@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.8 2007-08-11 20:18:05 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.9 2007-08-28 11:09:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,6 +19,7 @@
  * - M.K. with ADPCM samples (MDZ)
  * - Mod's Grave M.K. w/ 8 channels (WOW)
  * - Atari Octalyser CD61 and CD81
+ * - Digital Tracker FA04, FA06 and FA08
  */
 
 #ifdef HAVE_CONFIG_H
@@ -46,6 +47,9 @@ struct {
     { "8CHN", "8 channel MOD", 0, "Fast Tracker", 8 },
     { "CD61", "6 channel MOD", 1, "Octalyser", 6 }, /* Atari STe/Falcon */
     { "CD81", "8 channel MOD", 1, "Octalyser", 8 }, /* Atari STe/Falcon */
+    { "FA04", "4 channel MOD", 1, "Digital Tracker", 4 }, /* Atari Falcon */
+    { "FA06", "6 channel MOD", 1, "Digital Tracker", 6 }, /* Atari Falcon */
+    { "FA08", "8 channel MOD", 1, "Digital Tracker", 8 }, /* Atari Falcon */
     { "PWIZ", "Packed module", 1, "converted with ProWizard", 4 },
     { "", 0 }
 };

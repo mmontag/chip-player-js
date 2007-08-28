@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.54 2007-08-27 14:05:26 cmatsuoka Exp $
+$Id: ChangeLog,v 1.55 2007-08-28 11:10:00 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,6 +9,7 @@ Stable versions
 	- added Flextrax FLX module detection
 	- added TCB Tracker module loader
 	- added Digital Tracker DTM module loader
+	- added Digital Tracker FA04/6/8 module support
 	- added Real Tracker module loader
 	- added X-Tracker module loader
 	- added portable, 64bit-safe MMD0/1/2/3 MED loader
