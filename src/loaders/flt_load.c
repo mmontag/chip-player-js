@@ -39,6 +39,7 @@ int flt_load (FILE *f)
     fread(&mh.order, 128, 1, f);
     fread(&mh.magic, 4, 1, f);
 
+    /* Also RASP? */
     if (mh.magic[0] == 'F' && mh.magic[1] == 'L' && mh.magic[2] == 'T')
 	tracker = "Startrekker";
     else if (mh.magic[0] == 'E' && mh.magic[1] == 'X' && mh.magic[2] == 'O')

@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.18 2007-08-28 02:00:10 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.19 2007-08-28 11:40:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -279,7 +279,7 @@ int sym_load(FILE * f)
 		uint8 buf[128];
 
 		memset(buf, 0, 128);
-//printf("offset = %x\n", ftell(f));
+//printf(" offset = %x\n", ftell(f));
 		fread(buf, 1, sn[i] & 0x7f, f);
 		copy_adjust(xxih[i].name, buf, 32);
 
@@ -309,9 +309,10 @@ int sym_load(FILE * f)
 			continue;
 
 		a = read8(f);
-		assert(a == 0 || a == 1);
+//printf(" a = %d\n", a);
+		assert(a == 0 || a == 1 || a == 4);
 
-		if (a) {
+		if (a == 1) {
 			uint8 *b = malloc(xxs[i].len);
 			read_lzw_dynamic(f, b, 13, 0, xxs[i].len, xxs[i].len,
 							XMP_LZW_QUIRK_DSYM);
@@ -320,6 +321,10 @@ int sym_load(FILE * f)
 				&xxs[xxi[i][0].sid], (char*)b);
 			free(b);
 			reportv(0, "c");
+		} else if (a == 4) {
+			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);
+			reportv(0, "C");
 		} else {
 			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
 				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);

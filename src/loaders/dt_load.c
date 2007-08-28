@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.8 2007-08-11 01:42:06 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.9 2007-08-28 11:40:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,7 +35,7 @@ static void get_d_t_(int size, FILE *f)
 	read32b(f);			/* undocumented */
 
 	fread(xmp_ctl->name, 32, 1, f);
-	strcpy(xmp_ctl->type, "Digital Tracker (DTM)");
+	strcpy(xmp_ctl->type, "DTM (Digital Tracker)");
 
 	MODULE_INFO();
 }
