@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.21 2007-08-29 02:56:44 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.22 2007-08-29 03:03:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -157,6 +157,9 @@ int sym_load(FILE * f)
 		return -1;
 
 	ver = read8(f);
+
+	if (ver > 0)		// FIXME
+		return -1;
 
 	sprintf(xmp_ctl->type, "BASSTRAK v%d (Digital Symphony)", ver);
 
