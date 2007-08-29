@@ -1,4 +1,4 @@
-$Id: README,v 1.29 2007-08-27 14:05:26 cmatsuoka Exp $
+$Id: README,v 1.30 2007-08-29 00:50:12 cmatsuoka Exp $
 
 
 
@@ -22,7 +22,6 @@ Amiga, Atari, Acorn and PC.
 Many compressed module formats are supported, including popular Unix, DOS
 and Amiga file packers such as gzip, bzip2, SQSH, Powerpack, etc. Certain
 module-specific compressed formats such as MO3 are handled transparently.
-To read MO3 files you must have unmo3 installed.
 
 
 SUPPORTED FORMATS
@@ -93,6 +92,7 @@ The current version recognizes the following module formats:
 
   CDx1	****+	Octalyser		CD61, CD81
   DTM	***	Digital Tracker		1.9
+  FA0x	****+	Digital Tracker		FA04, FA06, FA08
   FLX	****	Flextrax		M.K., xCHN (no dsp effects)
   GTK	**	Graoumf Tracker		GTK1, GTK4
   MOD	***	TCB Tracker		'AN COOL.'
@@ -133,6 +133,29 @@ Ratings:
 Format descriptions of packed modules sent by Sylvain "Asle" Chipaux. PTM
 specs and info by Kilian Hekhuis.  AMF specs by Miod Vallat. Soundtracker
 format details by Michael Schwendt and Sylvain Chipaux.
+
+
+SUPPORTED PACKERS
+
+The following compressed formats are recognized, some of them need helpers
+to be installed on the system:
+
+  Format	Helper		Native environment
+
+  bz2		bzip2		Linux, Unix
+  gz		gzip		Linux, Unix
+  lha		lha		Amiga, DOS
+  lzma		lzma		Linux, Unix
+  MO3		unmo3		DOS?
+  rar		unrar		DOS
+  Z		compress	Unix
+  zip		unzip		DOS
+  ArcFS		built-in	Acorn
+  arc		built-in	Acorn, DOS
+  MMCMP		built-in	DOS?
+  PowerPack	built-in	Amiga
+  !Spark	built-in	Acorn
+  SQSH		built-in	Amiga
 
 
 FRONT-ENDS
@@ -207,7 +230,7 @@ MMCMP and IT lowpass filter routines Copyright (C) 1998 Olivier Lapicque
 OS/2-specific portions and DART driver Copyright (C) 1999 Kevin Langman
 FFT routine Copyright (C) 1996-1999 Takuya Ooura
 Portions of NAS driver Copyright (C) 1999 Martin Denn
-LZW decoding functions Copyright (C) 2001-2006 Russell Marks
+LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks
 
 This program is free software;  you can redistribute it  and/or modify it
 under  the terms of  the GNU General Public License  as published  by the
