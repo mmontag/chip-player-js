@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.22 2007-08-29 03:03:10 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.23 2007-08-29 21:58:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -296,7 +296,9 @@ int sym_load(FILE * f)
 			xxs[i].lpe = xxs[i].lps + looplen;
 			xxih[i].nsm = 1;
 			xxi[i][0].vol = read8(f);
-			xxi[i][0].fin = (int8)(read8(f) << 4);
+			/* finetune adjusted comparing DSym and S3M versions
+			 * of "inside out" */
+			xxi[i][0].fin = (int8)(read8(f) << 3);
 			xxi[i][0].sid = i;
 		}
 
