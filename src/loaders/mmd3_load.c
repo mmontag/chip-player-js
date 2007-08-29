@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.4 2007-08-21 13:49:52 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.5 2007-08-29 02:37:24 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -437,9 +437,16 @@ int mmd3_load(FILE *f)
 	for (i = 0; i < xxh->chn; i++)
 		xxc[i].vol = read8(f);;
 
-	fseek(f, trackpans_offset, SEEK_SET);
-	for (i = 0; i < xxh->chn; i++)
-		xxc[i].pan = read8(f);
+	if (trackpans_offset) {
+		fseek(f, trackpans_offset, SEEK_SET);
+		for (i = 0; i < xxh->chn; i++) {
+			int p = 8 * read8s(f);
+			xxc[i].pan = 0x80 + (p > 127 ? 127 : p);
+		}
+	} else {
+		for (i = 0; i < xxh->chn; i++)
+			xxc[i].pan = 0x80;
+	}
 
 	return 0;
 }
