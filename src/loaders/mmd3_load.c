@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.5 2007-08-29 02:37:24 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.6 2007-08-29 03:23:58 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -403,6 +403,7 @@ int mmd3_load(FILE *f)
 		xxih[i].nsm = 1;
 
 		xxi[i][0].vol = song.sample[i].svol;
+		xxi[i][0].pan = 0x80;
 		xxi[i][0].xpo = song.sample[i].strans;
 		xxi[i][0].sid = smp_idx;
 		xxi[i][0].fin = exp_smp.finetune << 4;

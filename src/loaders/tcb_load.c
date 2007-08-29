@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.6 2007-08-11 01:42:06 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.7 2007-08-29 03:23:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -123,6 +123,7 @@ int tcb_load(FILE * f)
 
 	for (i = 0; i < xxh->ins; i++) {
 		xxi[i][0].vol = read8(f) / 2;
+		xxi[i][0].pan = 0x80;
 		unk1[i] = read8(f);
 		unk2[i] = read8(f);
 		unk3[i] = read8(f);

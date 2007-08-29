@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.2 2007-08-29 00:52:06 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.3 2007-08-29 03:23:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -67,6 +67,7 @@ int dtt_load(FILE *f)
 			return -1;
 		read8(f);	/* note */
 		xxi[i][0].vol = read8(f);
+		xxi[i][0].pan = 0x80;
 		read16l(f);	/* not used */
 		read32l(f);	/* period */
 		read32l(f);	/* sustain start */

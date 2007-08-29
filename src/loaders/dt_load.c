@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.9 2007-08-28 11:40:17 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.10 2007-08-29 03:23:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -84,6 +84,7 @@ static void get_inst(int size, FILE *f)
 		xxih[i].nsm = !!xxs[i].len;
 		fine = read8s(f);	/* finetune */
 		xxi[i][0].vol = read8(f);
+		xxi[i][0].pan = 0x80;
 		xxs[i].lps = read32b(f);
 		replen = read32b(f);
 		xxs[i].lpe = xxs[i].lps + replen - 1;
