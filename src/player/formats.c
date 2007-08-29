@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.28 2007-08-26 15:07:52 cmatsuoka Exp $
+ * $Id: formats.c,v 1.29 2007-08-29 00:52:06 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,7 +40,7 @@ static void register_fmt (char *suffix, char *tracker, int (*loader) ())
 }
 
 
-void xmp_init_formats ()
+void xmp_init_formats()
 {
     register_fmt ("XM", "Fast Tracker II", xm_load);
     register_fmt ("MOD", "Noise/Fast/Protracker", mod_load);
@@ -72,6 +72,7 @@ void xmp_init_formats ()
     register_fmt ("DTM", "Digital Tracker", dt_load);
     register_fmt ("GTK", "Graoumf Tracker", gtk_load);
     register_fmt ("DTT", "Desktop Tracker", dtt_load);
+    register_fmt ("MGT", "Megatracker", mgt_load);
     register_fmt ("MUSX", "Archimedes Tracker", arch_load);
     register_fmt ("DSYM", "Digital Symphony", sym_load);
     register_fmt ("DIGI", "DIGI Booster", digi_load);

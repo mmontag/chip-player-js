@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.h,v 1.15 2007-08-26 15:07:52 cmatsuoka Exp $
+ * $Id: formats.h,v 1.16 2007-08-29 00:52:06 cmatsuoka Exp $
  */
 
 #ifndef __FORMATS_H
@@ -50,6 +50,7 @@ int mmd1_load (FILE *);
 int mmd3_load (FILE *);
 int med2_load (FILE *);
 int med4_load (FILE *);
+int mgt_load (FILE *);
 int mod_load (FILE *);
 int mp_load (FILE *);
 int mtm_load (FILE *);
