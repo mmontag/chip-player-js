@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.23 2007-08-29 21:58:12 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.24 2007-08-30 00:33:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -189,8 +189,8 @@ int sym_load(FILE * f)
 	MODULE_INFO();
 
 	/* PATTERN_INIT - alloc extra track*/
-	xxt = calloc(sizeof (struct xxm_track *), xxh->trk + 1);
-	xxp = calloc(sizeof (struct xxm_pattern *), xxh->pat + 1);
+	xxt = calloc(sizeof(struct xxm_track *), xxh->trk + 1);
+	xxp = calloc(sizeof(struct xxm_pattern *), xxh->pat + 1);
 
 	/* Sequence */
 	a = read8(f);			/* packing */
@@ -296,6 +296,7 @@ int sym_load(FILE * f)
 			xxs[i].lpe = xxs[i].lps + looplen;
 			xxih[i].nsm = 1;
 			xxi[i][0].vol = read8(f);
+			xxi[i][0].pan = 0x80;
 			/* finetune adjusted comparing DSym and S3M versions
 			 * of "inside out" */
 			xxi[i][0].fin = (int8)(read8(f) << 3);
