@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.12 2007-08-24 20:05:17 cmatsuoka Exp $
+ * $Id: options.c,v 1.13 2007-08-30 12:06:33 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -102,29 +102,6 @@ static void copyright_header ()
 "(C) 1989 Rich Gopstein and Harris Corporation, (C) 1997 Bert Jahn, (C) 1998\n"
 "Sylvain Chipaux, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh,\n"
 "(C) 2001-2006 Russell Marks\n\n"
-    );
-}
-
-
-static void license ()
-{
-    copyright_header ();
-
-    printf 
-    (
-"This program is free software; you can redistribute it and/or modify\n"
-"it under the terms of the GNU General Public License as published by\n"
-"the Free Software Foundation; either version 2 of the License, or\n"
-"(at your option) any later version.\n\n"
-
-"This program is distributed in the hope that it will be useful,\n"
-"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-"GNU General Public License for more details.\n\n"
-
-"You should have received a copy of the GNU General Public License\n"
-"along with this program; if not, write to the Free Software\n"
-"Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.\n"
     );
 }
 
@@ -238,7 +215,7 @@ static void usage (char *s, struct xmp_control *opt)
 void get_options (int argc, char **argv, struct xmp_control *opt)
 {
     int optidx = 0;
-#define OPTIONS "8b:cD:d:f:hilLM:mo:P:qRrS:s:T:t:uVv"
+#define OPTIONS "8b:cD:d:f:hilM:mo:P:qRrS:s:T:t:uVv"
     static struct option lopt[] =
     {
 	{ "8bit",		 0, 0, '8' },
@@ -255,7 +232,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	{ "little-endian",	 0, 0, OPT_LILENDIAN },
 	{ "load-only",	 	 0, 0, OPT_LOADONLY },
 	{ "loop",		 0, 0, 'l' },
-	{ "license",		 0, 0, 'L' },
 	{ "mute",		 1, 0, 'M' },
 	{ "mono",		 0, 0, 'm' },
 	{ "nocmd",		 0, 0, OPT_NOCMD },
@@ -328,9 +304,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	case 'l':
 	    opt->flags |= XMP_CTL_LOOP;
 	    break;
-	case 'L':
-	    license ();
-	    exit (0);
 	case OPT_LILENDIAN:
 	    opt->flags &= ~XMP_CTL_BIGEND;
 	    break;
