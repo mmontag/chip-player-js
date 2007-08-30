@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.2 2005-02-25 12:15:45 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.3 2007-08-30 01:41:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -68,6 +68,7 @@ static void get_samp(int size, FILE *f)
 
     INSTRUMENT_INIT ();
 
+    reportv(1, "     Instrument name      Len   Lbeg  Lend  L Vol Mod\n");
     for (j = i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
