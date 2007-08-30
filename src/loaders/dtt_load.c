@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.3 2007-08-29 03:23:57 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.4 2007-08-30 19:20:31 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,6 +26,7 @@ int dtt_load(FILE *f)
 	uint32 flags;
 	uint32 pofs[256];
 	uint8 plen[256];
+	int sdata[64];
 
 	LOAD_INIT();
 
@@ -47,6 +48,7 @@ int dtt_load(FILE *f)
 	xxh->rst = read32l(f);
 	xxh->pat = read32l(f);
 	xxh->ins = xxh->smp = read32l(f);
+	xxh->trk = xxh->pat * xxh->chn;
 	
 	fread(xxo, 1, (xxh->len + 3) & ~3L, f);
 
@@ -60,34 +62,34 @@ int dtt_load(FILE *f)
 	INSTRUMENT_INIT();
 
 	/* Read instrument names */
-	reportv(1, "     Name      Len  LBeg LEnd L Vol  ?? ?? ??\n");
+	reportv(1, "     Name                              Len  LBeg LEnd L Vol\n");
 	for (i = 0; i < xxh->ins; i++) {
+		int c2spd;
+
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
-		if (read32l(f) != MAGIC_DskS)
-			return -1;
-		read8(f);	/* note */
-		xxi[i][0].vol = read8(f);
+		read8(f);			/* note */
+		xxi[i][0].vol = read8(f) >> 1;
 		xxi[i][0].pan = 0x80;
-		read16l(f);	/* not used */
-		read32l(f);	/* period */
-		read32l(f);	/* sustain start */
-		read32l(f);	/* sustain length */
+		read16l(f);			/* not used */
+		c2spd = read32l(f);		/* period */
+		read32l(f);			/* sustain start */
+		read32l(f);			/* sustain length */
 		xxs[i].lps = read32l(f);
 		xxs[i].lpe = read32l(f);	/* repeat length */
 		xxs[i].len = read32l(f);	/* sample length */
 		fread(buf, 1, 32, f);
 		copy_adjust(xxih[i].name, (uint8 *)buf, 32);
+		sdata[i] = read32l(f);
 
 		xxih[i].nsm = !!(xxs[i].len);
 		xxi[i][0].sid = i;
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
-			report("[%2X] %-8.8s  %04x %04x %04x %c V%02x\n", i,
+			report("[%2X] %-32.32s  %04x %04x %04x %c V%02x\n", i,
 			       xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
 			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			       xxi[i][0].vol);
 		}
-
 	}
 
 	PATTERN_INIT();
@@ -97,12 +99,34 @@ int dtt_load(FILE *f)
 
 	for (i = 0; i < xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = 64;
+		xxp[i]->rows = plen[i];
 		TRACK_ALLOC(i);
+
+		fseek(f, pofs[i], SEEK_SET);
 
 		for (j = 0; j < xxp[i]->rows; j++) {
 			for (k = 0; k < xxh->chn; k++) {
+				uint32 x;
+
 				event = &EVENT (i, k, j);
+				x = read32l(f);
+
+				event->ins  = (x & 0x0000003f);
+				event->note = (x & 0x00000fc0) >> 6;
+				event->fxt  = (x & 0x0001f000) >> 12;
+
+				if (event->note)
+					event->note += 24;
+
+				/* sorry, we only have room for two effects */
+				if (x & (0x1f << 17)) {
+					event->f2p = (x & 0x003e0000) >> 17;
+					x = read32l(f);
+					event->fxp = (x & 0x000000ff);
+					event->f2p = (x & 0x0000ff00) >> 8;
+				} else {
+					event->fxp = (x & 0xfc000000) >> 18;
+				}
 			}
 		}
 		reportv(0, ".");
@@ -112,8 +136,9 @@ int dtt_load(FILE *f)
 	/* Read samples */
 	reportv(0, "Stored samples : %d ", xxh->smp);
 	for (i = 0; i < xxh->ins; i++) {
-		/* xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);*/
+		fseek(f, sdata[i], SEEK_SET);
+		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
+						&xxs[xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 	reportv(0, "\n");
