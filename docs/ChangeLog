@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.56 2007-08-28 18:52:43 cmatsuoka Exp $
+$Id: ChangeLog,v 1.57 2007-08-30 17:57:44 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -21,7 +21,8 @@ Stable versions
 	- added Arc/!Spark depacker
 	- added ArcFS depacker
 	- added Archimedes VIDC sample converter
-	- added Digital Symphony loader
+	- added Digital Symphony module loader
+	- added Megatracker module loader
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation

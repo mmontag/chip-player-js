@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.4 2007-08-30 12:58:08 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.5 2007-08-30 17:57:44 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -156,6 +156,7 @@ int mgt_load(FILE *f)
 			b = read8(f);
 			j += b & 0x03;
 
+			note = 0;
 			event = &xxt[i]->event[j];
 			if (b & 0x04)
 				note = read8(f);
@@ -175,10 +176,32 @@ int mgt_load(FILE *f)
 			else if (note > 13)
 				event->note = note - 13;
 
+			/* effects */
+			if (event->fxt < 0x10)
+				/* like amiga */ ;
+			else switch (event->fxt) {
+			case 0x13: 
+			case 0x14: 
+			case 0x15: 
+			case 0x17: 
+			case 0x1c: 
+			case 0x1d: 
+			case 0x1e: 
+				event->fxt = FX_EXTENDED;
+				event->fxp = ((event->fxt & 0x0f) << 4) |
+							(event->fxp & 0x0f);
+				break;
+			default:
+				event->fxt = event->fxp = 0;
+			}
+
 			/* volume and volume column effects */
 			if ((event->vol >= 0x10) && (event->vol <= 0x50)) {
 				event->vol -= 0x0f;
-			} else switch (event->vol >> 4) {
+				continue;
+			}
+
+			switch (event->vol >> 4) {
 			case 0x06:	/* Volume slide down */
 				event->f2t = FX_VOLSLIDE_2;
 				event->f2p = event->vol - 0x60;
@@ -221,15 +244,10 @@ int mgt_load(FILE *f)
 				event->f2t = FX_TONEPORTA;
 				event->f2p = (event->vol - 0xf0) << 4;
 				break;
-			default:
-				event->vol = 0;
 			}
 	
-			if (event->fxt > 0x0f)
-				event->fxt = event->fxp = 0;
+			event->vol = 0;
 
-			//event->fxt = event->fxp = 0;
-			//event->f2t = event->f2p = 0;
 			/*printf("%02x  %02x %02x %02x %02x %02x\n",
 				j, event->note, event->ins, event->vol,
 				event->fxt, event->fxp);*/

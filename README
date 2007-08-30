@@ -1,4 +1,4 @@
-$Id: README,v 1.31 2007-08-30 01:39:19 cmatsuoka Exp $
+$Id: README,v 1.32 2007-08-30 17:57:44 cmatsuoka Exp $
 
 
 
@@ -95,6 +95,7 @@ The current version recognizes the following module formats:
   FA0x	****+	Digital Tracker		FA04, FA06, FA08
   FLX	****	Flextrax		M.K., xCHN (no dsp effects)
   GTK	**	Graoumf Tracker		GTK1, GTK4
+  MGT	**	Megatracker		1.1
   MOD	***	TCB Tracker		'AN COOL.'
 
   Other (Acorn):
