@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.4 2007-08-30 19:20:31 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.5 2007-08-30 20:03:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -64,19 +64,21 @@ int dtt_load(FILE *f)
 	/* Read instrument names */
 	reportv(1, "     Name                              Len  LBeg LEnd L Vol\n");
 	for (i = 0; i < xxh->ins; i++) {
-		int c2spd;
+		int c2spd, looplen;
 
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 		read8(f);			/* note */
 		xxi[i][0].vol = read8(f) >> 1;
 		xxi[i][0].pan = 0x80;
 		read16l(f);			/* not used */
-		c2spd = read32l(f);		/* period */
+		c2spd = read32l(f);		/* period? */
 		read32l(f);			/* sustain start */
 		read32l(f);			/* sustain length */
 		xxs[i].lps = read32l(f);
-		xxs[i].lpe = read32l(f);	/* repeat length */
-		xxs[i].len = read32l(f);	/* sample length */
+		looplen = read32l(f);
+		xxs[i].flg = looplen > 0 ? WAVE_LOOPING : 0;
+		xxs[i].lpe = xxs[i].lps + looplen;
+		xxs[i].len = read32l(f);
 		fread(buf, 1, 32, f);
 		copy_adjust(xxih[i].name, (uint8 *)buf, 32);
 		sdata[i] = read32l(f);
@@ -85,10 +87,11 @@ int dtt_load(FILE *f)
 		xxi[i][0].sid = i;
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
-			report("[%2X] %-32.32s  %04x %04x %04x %c V%02x\n", i,
-			       xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			       xxi[i][0].vol);
+			report("[%2X] %-32.32s  %04x %04x %04x %c V%02x\n",
+				i, xxih[i].name, xxs[i].len,
+				xxs[i].lps, xxs[i].lpe,
+				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				xxi[i][0].vol, c2spd);
 		}
 	}
 
@@ -116,7 +119,7 @@ int dtt_load(FILE *f)
 				event->fxt  = (x & 0x0001f000) >> 12;
 
 				if (event->note)
-					event->note += 24;
+					event->note += 36;
 
 				/* sorry, we only have room for two effects */
 				if (x & (0x1f << 17)) {
@@ -137,8 +140,8 @@ int dtt_load(FILE *f)
 	reportv(0, "Stored samples : %d ", xxh->smp);
 	for (i = 0; i < xxh->ins; i++) {
 		fseek(f, sdata[i], SEEK_SET);
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-						&xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 	reportv(0, "\n");

@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.57 2007-08-30 17:57:44 cmatsuoka Exp $
+$Id: ChangeLog,v 1.58 2007-08-30 20:03:13 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -23,6 +23,7 @@ Stable versions
 	- added Archimedes VIDC sample converter
 	- added Digital Symphony module loader
 	- added Megatracker module loader
+	- added Desktop Tracker module loader
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation

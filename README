@@ -1,4 +1,4 @@
-$Id: README,v 1.32 2007-08-30 17:57:44 cmatsuoka Exp $
+$Id: README,v 1.33 2007-08-30 20:03:13 cmatsuoka Exp $
 
 
 
@@ -102,6 +102,7 @@ The current version recognizes the following module formats:
 
   MUSX	***	Archimedes Tracker	V1.0+++
   DSYM  ***	Digital Symphony	0
+  DTT	**	Desktop Tracker		-
 
   Other (PC):
 
