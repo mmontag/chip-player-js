@@ -1,7 +1,7 @@
 /* Silverball MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.7 2007-08-25 11:45:17 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.8 2007-08-30 01:39:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,6 +27,7 @@ int svb_load (FILE * f)
 	uint8 buf[1024];
 	uint32 p_ord, p_chn, p_pat, p_ins;
 	uint32 p_smp[64];
+	int ver;
  
 	LOAD_INIT ();
 
@@ -35,21 +36,23 @@ int svb_load (FILE * f)
 
 	fread(buf, 1, 60, f);
 	strncpy(xmp_ctl->name, (char *)buf, 32);
-	sprintf (xmp_ctl->type, "Silverball MASI (PSM)");
 
-	read8(f);
-	read8(f);
-	read8(f);
+	read8(f);		/* song type */
+	ver = read8(f);		/* song version */
+	read8(f);		/* pattern version */
+
+	sprintf(xmp_ctl->type, "PSM %d.%02d (Protracker Studio)",
+						MSN(ver), LSN(ver));
 
 	xxh->tpo = read8(f);
 	xxh->bpm = read8(f);
-	read8(f);
+	read8(f);		/* master volume */
 	read16l(f);
 	xxh->len = read16l(f);
 	xxh->pat = read16l(f);
 	xxh->ins = read16l(f);
 	xxh->chn = read16l(f);
-	read16l(f);			/* channels used */
+	read16l(f);		/* channels used */
 	xxh->smp = xxh->ins;
 	xxh->trk = xxh->pat * xxh->chn;
 
@@ -73,22 +76,22 @@ int svb_load (FILE * f)
 	fseek(f, p_ins, SEEK_SET);
 	for (i = 0; i < xxh->ins; i++) {
 		uint16 flags, c2spd;
+		int finetune;
 
 		xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
-		fread(buf, 1, 13, f);
-		fread(buf, 1, 22, f);
-		strncpy((char *)xxih[i].name, (char *)buf, 22);
+		fread(buf, 1, 13, f);		/* sample filename */
+		fread(buf, 1, 24, f);		/* sample description */
+		strncpy((char *)xxih[i].name, (char *)buf, 24);
 		str_adj((char *)xxih[i].name);
-		read16l(f);
 		p_smp[i] = read32l(f);
-		read32l(f);
-		read8(f);
-		flags = read16l(f);
+		read32l(f);			/* memory location */
+		read16l(f);			/* sample number */
+		flags = read8(f);		/* sample type */
 		xxs[i].len = read32l(f); 
 		xxs[i].lps = read32l(f);
 		xxs[i].lpe = read32l(f);
-		read8(f);
+		finetune = (int8)(read8(f) << 4);
 		xxi[i][0].vol = read8(f);
 		c2spd = read16l(f);
 
@@ -99,6 +102,7 @@ int svb_load (FILE * f)
 		xxih[i].nsm = !!xxs[i].len;
 		xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
 		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+		xxi[i][0].fin += finetune;
 
 		if (V(1) && (strlen((char *)xxih[i].name) || (xxs[i].len > 1))) {
 			report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %5d\n",
@@ -165,7 +169,6 @@ int svb_load (FILE * f)
 		reportv(0, ".");
 	}
 	reportv(0, "\n");
-
 
 	/* Read samples */
 

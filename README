@@ -1,4 +1,4 @@
-$Id: README,v 1.30 2007-08-29 00:50:12 cmatsuoka Exp $
+$Id: README,v 1.31 2007-08-30 01:39:19 cmatsuoka Exp $
 
 
 
@@ -62,7 +62,7 @@ The current version recognizes the following module formats:
   PROM	***	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
   PSM	*** 	Epic Megagames MASI	epic, sinaria
-  PSM	*** 	Silverball MASI		-
+  PSM	*** 	Protracker Studio	0.01, 1.00
   STIM	****+	Slamtilt		-
   UNIC	***	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
