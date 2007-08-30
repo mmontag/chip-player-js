@@ -1,7 +1,7 @@
-/* Silverball MASI PSM loader for xmp
+/* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.8 2007-08-30 01:39:19 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.9 2007-08-30 02:55:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,7 +27,7 @@ int svb_load (FILE * f)
 	uint8 buf[1024];
 	uint32 p_ord, p_chn, p_pat, p_ins;
 	uint32 p_smp[64];
-	int ver;
+	int type, ver, mode;
  
 	LOAD_INIT ();
 
@@ -37,9 +37,12 @@ int svb_load (FILE * f)
 	fread(buf, 1, 60, f);
 	strncpy(xmp_ctl->name, (char *)buf, 32);
 
-	read8(f);		/* song type */
+	type = read8(f);	/* song type */
 	ver = read8(f);		/* song version */
-	read8(f);		/* pattern version */
+	mode = read8(f);	/* pattern version */
+
+	if (type & 0x01)	/* song mode not supported */
+		return -1;
 
 	sprintf(xmp_ctl->type, "PSM %d.%02d (Protracker Studio)",
 						MSN(ver), LSN(ver));
@@ -47,7 +50,7 @@ int svb_load (FILE * f)
 	xxh->tpo = read8(f);
 	xxh->bpm = read8(f);
 	read8(f);		/* master volume */
-	read16l(f);
+	read16l(f);		/* song length */
 	xxh->len = read16l(f);
 	xxh->pat = read16l(f);
 	xxh->ins = read16l(f);
@@ -60,6 +63,9 @@ int svb_load (FILE * f)
 	p_chn = read32l(f);
 	p_pat = read32l(f);
 	p_ins = read32l(f);
+
+	/* should be this way but fails with Silverball song 6 */
+	//xxh->flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
 
 	MODULE_INFO ();
 
@@ -93,14 +99,12 @@ int svb_load (FILE * f)
 		xxs[i].lpe = read32l(f);
 		finetune = (int8)(read8(f) << 4);
 		xxi[i][0].vol = read8(f);
-		c2spd = read16l(f);
-
-		c2spd = 8363 * c2spd / 8448;
-
+		c2spd = 8363 * read16l(f) / 8448;
 		xxi[i][0].pan = 0x80;
 		xxi[i][0].sid = i;
 		xxih[i].nsm = !!xxs[i].len;
-		xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+		xxs[i].flg = flags & 0x80 ? WAVE_LOOPING : 0;
+		xxs[i].flg |= flags & 0x20 ? WAVE_BIDIR_LOOP : 0;
 		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
 		xxi[i][0].fin += finetune;
 
@@ -122,10 +126,9 @@ int svb_load (FILE * f)
 		int len;
 		uint8 b, rows, chan;
 
-		len = read16l(f);
+		len = read16l(f) - 4;
 		rows = read8(f);
 		chan = read8(f);
-		len -= 4;
 
 		PATTERN_ALLOC (i);
 		xxp[i]->rows = rows;
@@ -140,7 +143,6 @@ int svb_load (FILE * f)
 					break;
 	
 				c = b & 0x0f;
-	
 				event = &EVENT(i, c, r);
 	
 				if (b & 0x80) {
