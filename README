@@ -1,4 +1,4 @@
-$Id: README,v 1.33 2007-08-30 20:03:13 cmatsuoka Exp $
+$Id: README,v 1.34 2007-08-31 22:50:27 cmatsuoka Exp $
 
 
 
@@ -152,6 +152,7 @@ to be installed on the system:
   rar		unrar		DOS
   Z		compress	Unix
   zip		unzip		DOS
+  zoo		zoo		Amiga?
   ArcFS		built-in	Acorn
   arc		built-in	Acorn, DOS
   MMCMP		built-in	DOS?
