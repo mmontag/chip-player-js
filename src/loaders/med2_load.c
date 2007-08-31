@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.2 2007-08-31 21:18:10 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.3 2007-08-31 22:22:10 cmatsuoka Exp $
  */
 
 /*
@@ -22,15 +22,16 @@
 
 #include "load.h"
 
-#define MAGIC_MED2	MAGIC4('M','E','D',3)
-#define MAGIC_MED3	MAGIC4('M','E','D',4)
+#define MAGIC_MED2	MAGIC4('M','E','D',2)
+#define MAGIC_MED3	MAGIC4('M','E','D',3)
+#define MASK		0x80000000
 
 
 int med2_load(FILE * f)
 {
 	int i, j;
 	struct xxm_event *event;
-	uint32 ver, flags;
+	uint32 ver, flags, mask, m;
 
 	LOAD_INIT();
 
@@ -44,35 +45,50 @@ int med2_load(FILE * f)
 
 	/* read instrument names */
 	for (i = 0; i < 32; i++) {
-		uint8 buf[40];
-		fread(buf, 1, 40, f);
-		copy_adjust(xxih[i].name, buf, 40);
+		uint8 c, buf[40];
+		for (j = 0; j < 40; j++) {
+			c = read8(f);
+			buf[j] = c;
+			if (c == 0)
+				break;
+		}
+		copy_adjust(xxih[i].name, buf, 32);
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	}
 
 	/* read instrument volumes */
-	for (i = 0; i < 32; i++) {
-		xxi[i][0].vol = read8(f) >> 2;
+	mask = read32b(f);
+	for (i = 0, m = mask; i < 32; i++, m <<= 1) {
+		xxi[i][0].vol = m & MASK ? read8(f) : 0;
 		xxi[i][0].pan = 0x80;
 		xxi[i][0].fin = 0;
 		xxi[i][0].sid = i;
 	}
 
+	fseek(f, 8, SEEK_CUR);	/* skip something */
+
+	xxh->pat = read16b(f);
+	xxh->len = read16b(f);
+	xxh->chn = 4;
+	xxh->trk = xxh->chn * xxh->pat;
+
+	fread(xxo, 1, xxh->len, f);
+
 	/* read instrument loops */
 	for (i = 0; i < 32; i++) {
-		xxs[i].lps = read32l(f);
+		xxs[i].lps = xxih[i].name[0] ? read16l(f) : 0;
 	}
 
 	/* read instrument loop length */
 	for (i = 0; i < 32; i++) {
-		uint32 lsiz = read32l(f);
+		uint32 lsiz = xxih[i].name[0] ? read16l(f) : 0;
 		xxs[i].len = xxs[i].lps + lsiz;
 		xxs[i].lpe = xxs[i].lps + lsiz;
 		xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
 		xxih[i].nsm = !!(xxs[i].len);
 	}
 	
-	xxh->chn = 4;
+#if 0
 	xxh->pat = read16b(f);
 	fread(xxo, 1, 100, f);
 	xxh->len = read16b(f);
@@ -99,6 +115,7 @@ int med2_load(FILE * f)
 		fseek(f, 32, SEEK_CUR);	/* skip MIDI channels */
 		fseek(f, 32, SEEK_CUR);	/* skip MIDI presets */
 	}
+#endif
 
 	MODULE_INFO();
 
