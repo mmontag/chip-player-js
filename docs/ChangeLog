@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.58 2007-08-30 20:03:13 cmatsuoka Exp $
+$Id: ChangeLog,v 1.59 2007-08-31 22:49:31 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -24,6 +24,7 @@ Stable versions
 	- added Digital Symphony module loader
 	- added Megatracker module loader
 	- added Desktop Tracker module loader
+	- added Zoo depacker
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation
