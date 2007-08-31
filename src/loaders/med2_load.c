@@ -1,11 +1,19 @@
-/* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+/* MED2/MED3 loader for xmp
+ * Copyright (C) 2007 Claudio Matsuoka
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.1 2001-06-02 20:27:00 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.2 2007-08-31 21:18:10 cmatsuoka Exp $
+ */
+
+/*
+ * MED 1.12 is in Fish disk #255
+ * MED 2.00 is in Fish disk #349 and has a couple of demo modules
+ *
+ * ftp://ftp.funet.fi/pub/amiga/fish/201-300/ff255
+ * ftp://ftp.funet.fi/pub/amiga/fish/301-400/ff349
  */
 
 #ifdef HAVE_CONFIG_H
@@ -13,161 +21,143 @@
 #endif
 
 #include "load.h"
-#include "med2.h"
+
+#define MAGIC_MED2	MAGIC4('M','E','D',3)
+#define MAGIC_MED3	MAGIC4('M','E','D',4)
 
 
-int med2_load (FILE *f)
+int med2_load(FILE * f)
 {
-    int i /* , j */;
-    //struct xxm_event *event;
-    struct Song m2h;
-    char id[4], *nameptr;
+	int i, j;
+	struct xxm_event *event;
+	uint32 ver, flags;
 
-    LOAD_INIT ();
+	LOAD_INIT();
 
-    fread (id, 1, 4, f);
-    if (id[0] != 'M' || id[1] != 'E' || id[2] != 'D')
-	return -1;
+	ver = read32b(f);
 
-    switch (id[3]) {
-    case 0x02:
-	strcpy (xmp_ctl->type, "MED2");
-	strcpy (tracker_name, "MED 1.11/1.12");
-        fread (&m2h, 1, 32 * 40 + 32 + 64 + 64, f);
-	goto header_2;
-	break;
-    case 0x03:
-	strcpy (xmp_ctl->type, "MED3");
-	strcpy (tracker_name, "MED 2.00");
-	break;
-    default:
-	return -1;
-    }
+	if (ver != MAGIC_MED2 && ver != MAGIC_MED3)
+		return -1;
 
-    /* read instrument names */
-    for (i = 0; i < 32; i++) {
-	nameptr = &m2h.instrument[i][0];
-	//fread (nameptr, 1, 1, f);
-	for(; ; ) {
-	    fread (nameptr, 1, 1, f);
-	    if (!*nameptr++)
-		break;
+	xxh->ins = xxh->smp = 32;
+	INSTRUMENT_INIT();
+
+	/* read instrument names */
+	for (i = 0; i < 32; i++) {
+		uint8 buf[40];
+		fread(buf, 1, 40, f);
+		copy_adjust(xxih[i].name, buf, 40);
+		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	}
-    }
 
-    /* read instrument volumes */
-    MED2_MASK_LOAD (32, m2h.instrument_volume, 1, f);
+	/* read instrument volumes */
+	for (i = 0; i < 32; i++) {
+		xxi[i][0].vol = read8(f) >> 2;
+		xxi[i][0].pan = 0x80;
+		xxi[i][0].fin = 0;
+		xxi[i][0].sid = i;
+	}
 
-    /* read instrument loop start */
-    MED2_MASK_LOAD (32, m2h.loop, 2, f);
+	/* read instrument loops */
+	for (i = 0; i < 32; i++) {
+		xxs[i].lps = read32l(f);
+	}
 
-    /* read instrument loop length */
-    MED2_MASK_LOAD (32, m2h.loop_length, 2, f);
+	/* read instrument loop length */
+	for (i = 0; i < 32; i++) {
+		uint32 lsiz = read32l(f);
+		xxs[i].len = xxs[i].lps + lsiz;
+		xxs[i].lpe = xxs[i].lps + lsiz;
+		xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
+		xxih[i].nsm = !!(xxs[i].len);
+	}
+	
+	xxh->chn = 4;
+	xxh->pat = read16b(f);
+	fread(xxo, 1, 100, f);
+	xxh->len = read16b(f);
+	xxh->tpo = read16b(f);
+	xxh->trk = xxh->chn * xxh->pat;
 
-header_2:
+	if (ver == MAGIC_MED2) {
+		/* MED2 header */
+		strcpy(xmp_ctl->type, "MED2");
+		strcpy(tracker_name, "MED 1.11/1.12");
+		flags = read16b(f);
+		read16b(f);		/* sliding (5 or 6) */
+		read32b(f);		/* jump mask */
+		fseek(f, 16, SEEK_CUR);	/* skip rgb */
+	} else {
+		/* MED3 header */
+		strcpy(xmp_ctl->type, "MED3");
+		strcpy(tracker_name, "MED 2.00");
+		read8(f);	/* playtranspose */
+		flags = read8(f);
+		read16b(f);		/* sliding (5 or 6) */
+		read32b(f);		/* jump mask */
+		fseek(f, 16, SEEK_CUR);	/* skip rgb */
+		fseek(f, 32, SEEK_CUR);	/* skip MIDI channels */
+		fseek(f, 32, SEEK_CUR);	/* skip MIDI presets */
+	}
 
-    fread (&m2h.patterns, 1, 2, f);
-    fread (&m2h.song_length, 1, 2, f);
-    B_ENDIAN16 (m2h.patterns);
-    B_ENDIAN16 (m2h.song_length);
+	MODULE_INFO();
 
-    fread (&m2h.sequence, 1, m2h.song_length, f);
-    fread (&m2h.tempo, 1, 2, f);
-    B_ENDIAN16 (m2h.tempo);
+	reportv(0, "Instruments    : %d\n", xxh->ins);
+	reportv(1, "     Instrument name                  Len  LBeg LEnd L Vol Fin\n");
+
+	for (i = 0; i < xxh->ins; i++) {
+		if ((V(1)) && (strlen((char *)xxih[i].name) || xxs[i].len > 2))
+			report("[%2X] %-32.32s %04x %04x %04x %c V%02x %+d\n",
+			       i, xxih[i].name, xxs[i].len, xxs[i].lps,
+			       xxs[i].lpe,
+			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+			       xxi[i][0].vol, (char)xxi[i][0].fin >> 4);
+	}
+
+	PATTERN_INIT();
+
+	/* Load and convert patterns */
+	reportv(0, "Stored patterns: %d ", xxh->pat);
 
 #if 0
-    fread (&m2h.flags, 1, 1, f);
-    fread (&m2h.sliding, 1, 2, f);
-    fread (&m2h.jump_mask, 1, 2, f);
-    B_ENDIAN16 (m2h.sliding);
-    B_ENDIAN32 (m2h.jump_mask);
-#endif
+	for (i = 0; i < xxh->pat; i++) {
+		PATTERN_ALLOC(i);
+		xxp[i]->rows = 64;
+		TRACK_ALLOC(i);
+		for (j = 0; j < (64 * 4); j++) {
+			event = &EVENT(i, j % 4, j / 4);
+			fread(mod_event, 1, 4, f);
+			cvt_pt_event(event, mod_event);
+		}
+		if (xxh->chn > 4) {
+			for (j = 0; j < (64 * 4); j++) {
+				event = &EVENT(i, (j % 4) + 4, j / 4);
+				fread(mod_event, 1, 4, f);
+				cvt_pt_event(event, mod_event);
+			}
+		}
 
-    xxh->ins = 32;
-    xxh->len = m2h.song_length;
-    xxh->pat = m2h.patterns;
-    memcpy (xxo, m2h.sequence, xxh->len);
-    xxh->trk = xxh->chn * xxh->pat;
-
-    //strncpy (xmp_ctl->name, (char *) mh.name, 20);
-    MODULE_INFO ();
-
-    INSTRUMENT_INIT ();
-
-    if (V (1))
-	report ("     Instrument name                  Len  LBeg LEnd L Vol Fin\n");
-
-    for (i = 0; i < xxh->ins; i++) {
-	B_ENDIAN16 (m2h.loop[i]);
-	B_ENDIAN16 (m2h.loop_length[i]);
-
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxs[i].len = m2h.loop[i] + m2h.loop_length[i];
-	xxs[i].lps = m2h.loop[i];
-	xxs[i].lpe = m2h.loop[i] + m2h.loop_length[i];
-	xxs[i].flg = m2h.loop_length[i] > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = 0;
-	xxi[i][0].vol = m2h.instrument_volume[i];
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
-	strncpy (xxih[i].name, m2h.instrument[i], 32);
-	str_adj (xxih[i].name);
-
-	if ((V (1)) && (strlen ((char *) xxih[i].name) ||
-	    xxs[i].len > 2))
-	    report ("[%2X] %-32.32s %04x %04x %04x %c V%02x %+d\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
-    }
-
-    PATTERN_INIT ();
-
-    /* Load and convert patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
-
-#if 0
-    for (i = 0; i < xxh->pat; i++) {
-	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
-	for (j = 0; j < (64 * 4); j++) {
-	    event = &EVENT (i, j % 4, j / 4);
-	    fread (mod_event, 1, 4, f);
-	    cvt_pt_event (event, mod_event);
-	}
-	if (xxh->chn > 4) {
-	    for (j = 0; j < (64 * 4); j++) {
-		event = &EVENT (i, (j % 4) + 4, j / 4);
-		fread (mod_event, 1, 4, f);
-		cvt_pt_event (event, mod_event);
-	    }
+		if (V(0))
+			report(".");
 	}
 
-	if (V (0))
-	    report (".");
-    }
+	xxh->flg |= XXM_FLG_MODRNG;
 
-    xxh->flg |= XXM_FLG_MODRNG;
+	/* Load samples */
 
-    /* Load samples */
-
-    if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
-	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
-    }
-    if (V (0))
-	report ("\n");
+	if (V(0))
+		report("\nStored samples : %d ", xxh->smp);
+	for (i = 0; i < xxh->smp; i++) {
+		if (!xxs[i].len)
+			continue;
+		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
+				  &xxs[xxi[i][0].sid], NULL);
+		if (V(0))
+			report(".");
+	}
+	if (V(0))
+		report("\n");
 #endif
 
-    return 0;
+	return 0;
 }
