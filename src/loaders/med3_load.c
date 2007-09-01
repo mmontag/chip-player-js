@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.5 2007-09-01 14:44:11 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.1 2007-09-01 15:05:38 cmatsuoka Exp $
  */
 
 /*
@@ -25,7 +25,6 @@
 #include <assert.h>
 #include "load.h"
 
-#define MAGIC_MED2	MAGIC4('M','E','D',2)
 #define MAGIC_MED3	MAGIC4('M','E','D',3)
 #define MASK		0x80000000
 
@@ -89,7 +88,7 @@ static void unpack_block(uint16 bnum, uint8 *from)
 			fxptr = &fxmsk1;
 		}
 
-		if (*lmptr & 0x80000000) {
+		if (*lmptr & MASK) {
 			lmsk = get_nibbles(fromst, &fromn, (uint8)(trkn / 4));
 			lmsk <<= (16 - trkn);
 			tmpto = to;
@@ -106,7 +105,7 @@ static void unpack_block(uint16 bnum, uint8 *from)
 			}
 		}
 
-		if (*fxptr & 0x80000000) {
+		if (*fxptr & MASK) {
 			lmsk = get_nibbles(fromst,&fromn,(uint8)(trkn / 4));
 			lmsk <<= (16 - trkn);
 			tmpto = to;
@@ -133,18 +132,18 @@ static void unpack_block(uint16 bnum, uint8 *from)
 
 
 
-int med2_load(FILE * f)
+int med3_load(FILE * f)
 {
 	int i, j;
 	struct xxm_event *event;
-	uint32 ver, mask;
+	uint32 mask;
 
 	LOAD_INIT();
 
-	ver = read32b(f);
-
-	if (ver != MAGIC_MED2 && ver != MAGIC_MED3)
+	if (read32b(f) !=  MAGIC_MED3)
 		return -1;
+
+	strcpy(xmp_ctl->type, "MED3 (MED 2.00)");
 
 	xxh->ins = xxh->smp = 32;
 	INSTRUMENT_INIT();
@@ -195,26 +194,18 @@ int med2_load(FILE * f)
 
 	xxh->trk = xxh->chn * xxh->pat;
 
-	if (ver == MAGIC_MED2) {
-		/* MED2 header */
-		strcpy(xmp_ctl->type, "MED2 (MED 1.12)");
-	} else {
-		/* MED3 header */
-		strcpy(xmp_ctl->type, "MED3 (MED 2.00)");
+	/* read midi channels */
+	mask = read32b(f);
+	for (i = 0; i < 32; i++, mask <<= 1) {
+		if (mask & MASK)
+			read8(f);
+	}
 
-		/* read midi channels */
-		mask = read32b(f);
-		for (i = 0; i < 32; i++, mask <<= 1) {
-			if (mask & MASK)
-				read8(f);
-		}
-	
-		/* read midi programs */
-		mask = read32b(f);
-		for (i = 0; i < 32; i++, mask <<= 1) {
-			if (mask & MASK)
-				read8(f);
-		}
+	/* read midi programs */
+	mask = read32b(f);
+	for (i = 0; i < 32; i++, mask <<= 1) {
+		if (mask & MASK)
+			read8(f);
 	}
 	
 	MODULE_INFO();

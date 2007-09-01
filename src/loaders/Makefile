@@ -1,5 +1,5 @@
 # Extended Module Player src/loaders/Makefile
-# $Id: Makefile,v 1.27 2007-08-31 21:18:10 cmatsuoka Exp $
+# $Id: Makefile,v 1.28 2007-09-01 15:05:38 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -Iinclude
@@ -10,14 +10,9 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  ice_load.o hsc_load.o liq_load.o ims_load.o psm_load.o amf_load.o \
 	  xann_load.o svb_load.o stim_load.o mmd1_load.o mmd3_load.o \
 	  rtm_load.o dmf_load.o tcb_load.o dt_load.o gtk_load.o no_load.o \
-	  arch_load.o sym_load.o dtt_load.o mgt_load.o med2_load.o
-LATER	= pru1_load.o pru2_load.o kris_load.o ac1d_load.o fcm_load.o \
-	  unic_load.o pp10_load.o pm10_load.o np_load.o \
-	  pm20_load.o pm01_load.o wn_load.o pm_load.o \
-	  di_load.o mp_load.o ksm_load.o zen_load.o crb_load.o p60a_load.o
+	  arch_load.o sym_load.o dtt_load.o mgt_load.o med3_load.o
 OBJS	= common.o iff.o itsex.o $(LOADERS)
-DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c tp_load.c dbm_load.c med2_load.c \
-	  med4_load.c med_load.c $(LATER:.o=.c)
+DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c tp_load.c dbm_load.c
 DDIRS	= include
 LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	=
