@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.6 2007-08-29 03:23:58 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.7 2007-09-01 01:42:50 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -283,7 +283,7 @@ int mmd3_load(FILE *f)
 
 	xxh->trk = xxh->pat * xxh->chn;
 
-	sprintf(xmp_ctl->type, "MMD%c (MED)", '0' + ver);
+	sprintf(xmp_ctl->type, "MMD%c (OctaMED Soundstudio)", '0' + ver);
 	MODULE_INFO();
 
 	if (V(0)) {
