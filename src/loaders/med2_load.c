@@ -1,11 +1,13 @@
 /* MED2/MED3 loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
+ * Pattern unpacking code by Teijo Kinnunen, 1990
+ *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.4 2007-09-01 01:23:28 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.5 2007-09-01 14:44:11 cmatsuoka Exp $
  */
 
 /*
@@ -20,11 +22,115 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include "load.h"
 
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 #define MAGIC_MED3	MAGIC4('M','E','D',3)
 #define MASK		0x80000000
+
+#define M0F_LINEMSK0F	0x01
+#define M0F_LINEMSK1F	0x02
+#define M0F_FXMSK0F	0x04
+#define M0F_FXMSK1F	0x08
+#define M0F_LINEMSK00	0x10
+#define M0F_LINEMSK10	0x20
+#define M0F_FXMSK00	0x40
+#define M0F_FXMSK10	0x80
+
+
+
+/*
+ * From the MED 2.00 file loading/saving routines by Teijo Kinnunen, 1990
+ */
+
+static uint8 get_nibble(uint8 *mem,uint16 *nbnum)
+{
+	uint8 *mloc = mem + (*nbnum / 2),res;
+
+	if(*nbnum & 0x1)
+		res = *mloc & 0x0f;
+	else
+		res = *mloc >> 4;
+	(*nbnum)++;
+
+	return res;
+}
+
+static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
+{
+	uint16 res = 0;
+
+	while (nbs--) {
+		res <<= 4;
+		res |= get_nibble(mem,nbnum);
+	}
+
+	return res;
+}
+
+static void unpack_block(uint16 bnum, uint8 *from)
+{
+	uint32 linemsk0 = *((uint32 *)from), linemsk1 = *((uint32 *)from + 1);
+	uint32 fxmsk0 = *((uint32 *)from + 2), fxmsk1 = *((uint32 *)from + 3);
+	uint32 *lmptr = &linemsk0, *fxptr = &fxmsk0;
+	uint16 fromn = 0, lmsk;
+	uint8 *fromst = from + 16, bcnt, *tmpto;
+	uint8 *patbuf, *to;
+	int i, trkn = xxh->chn;
+
+	from += 16;
+	patbuf = to = malloc(2048);
+	assert(to);
+
+	for (i = 0; i < 64; i++) {
+		if (i == 32) {
+			lmptr = &linemsk1;
+			fxptr = &fxmsk1;
+		}
+
+		if (*lmptr & 0x80000000) {
+			lmsk = get_nibbles(fromst, &fromn, (uint8)(trkn / 4));
+			lmsk <<= (16 - trkn);
+			tmpto = to;
+
+			for (bcnt = 0; bcnt < trkn; bcnt++) {
+				if (lmsk & 0x8000) {
+					*tmpto = (uint8)get_nibbles(fromst,
+						&fromn,2);
+					*(tmpto + 1) = (get_nibble(fromst,
+							&fromn) << 4);
+				}
+				lmsk <<= 1;
+				tmpto += 3;
+			}
+		}
+
+		if (*fxptr & 0x80000000) {
+			lmsk = get_nibbles(fromst,&fromn,(uint8)(trkn / 4));
+			lmsk <<= (16 - trkn);
+			tmpto = to;
+
+			for (bcnt = 0; bcnt < trkn; bcnt++) {
+				if (lmsk & 0x8000) {
+					*(tmpto+1) |= get_nibble(fromst,
+							&fromn);
+					*(tmpto+2) = (uint8)get_nibbles(fromst,
+							&fromn,2);
+				}
+				lmsk <<= 1;
+				tmpto += 3;
+			}
+		}
+		to += 3 * trkn;
+		*lmptr <<= 1;
+		*fxptr <<= 1;
+	}
+
+	free(patbuf);
+}
+
+
 
 
 int med2_load(FILE * f)
@@ -91,7 +197,7 @@ int med2_load(FILE * f)
 
 	if (ver == MAGIC_MED2) {
 		/* MED2 header */
-		strcpy(xmp_ctl->type, "MED2 (MED 1.11)");
+		strcpy(xmp_ctl->type, "MED2 (MED 1.12)");
 	} else {
 		/* MED3 header */
 		strcpy(xmp_ctl->type, "MED3 (MED 2.00)");
@@ -131,41 +237,54 @@ int med2_load(FILE * f)
 	reportv(0, "Stored patterns: %d ", xxh->pat);
 
 	for (i = 0; i < xxh->pat; i++) {
-		uint8 b;
-		uint16 sz;
-		uint32 x;
+		uint32 *conv;
+		uint8 b, tracks;
+		uint16 convsz;
 
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		read8(f);
+		tracks = read8(f);
 
 		b = read8(f);
-		sz = read16b(f);
+		convsz = read16b(f);
+		conv = calloc(1, convsz + 64);
+		assert(conv);
 
-		if (b & 0x10) {
-			x = 0;
-		} else if (b & 0x01) {
-			x = 0xffffffff;
-		} else {
-			x = read32b(f);
-		}
-	
-#if 0
-		for (j = 0; j < (64 * 4); j++) {
-			event = &EVENT(i, j % 4, j / 4);
-			fread(mod_event, 1, 4, f);
-			cvt_pt_event(event, mod_event);
-		}
-		if (xxh->chn > 4) {
-			for (j = 0; j < (64 * 4); j++) {
-				event = &EVENT(i, (j % 4) + 4, j / 4);
-				fread(mod_event, 1, 4, f);
-				cvt_pt_event(event, mod_event);
-			}
-		}
-#endif
+                if (b & M0F_LINEMSK00)
+			*conv = 0L;
+                else if (b & M0F_LINEMSK0F)
+			*conv = 0xffffffff;
+                else
+			*conv = read32b(f);
+
+                if (b & M0F_LINEMSK10)
+			*(conv + 1) = 0L;
+                else if (b & M0F_LINEMSK1F)
+			*(conv + 1) = 0xffffffff;
+                else
+			*(conv + 1) = read32b(f);
+
+                if (b & M0F_FXMSK00)
+			*(conv + 2) = 0L;
+                else if (b & M0F_FXMSK0F)
+			*(conv + 2) = 0xffffffff;
+                else
+			*(conv + 2) = read32b(f);
+
+                if (b & M0F_FXMSK10)
+			*(conv + 3) = 0L;
+                else if (b & M0F_FXMSK1F)
+			*(conv + 3) = 0xffffffff;
+                else
+			*(conv + 3) = read32b(f);
+
+		*(conv + 4) = read32b(f);
+
+                unpack_block(i, (uint8 *)conv);
+
+		free(conv);
 
 		reportv(0, ".");
 	}
