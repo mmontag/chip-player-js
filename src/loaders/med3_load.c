@@ -1,4 +1,4 @@
-/* MED2/MED3 loader for xmp
+/* MED3 loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
  * Pattern unpacking code by Teijo Kinnunen, 1990
@@ -7,15 +7,12 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.1 2007-09-01 15:05:38 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.2 2007-09-01 15:24:29 cmatsuoka Exp $
  */
 
 /*
- * MED 1.12 is in Fish disk #255
- * MED 2.00 is in Fish disk #349 and has a couple of demo modules
- *
- * ftp://ftp.funet.fi/pub/amiga/fish/201-300/ff255
- * ftp://ftp.funet.fi/pub/amiga/fish/301-400/ff349
+ * MED 2.00 is in Fish disk #349 and has a couple of demo modules, get it
+ * from ftp://ftp.funet.fi/pub/amiga/fish/301-400/ff349
  */
 
 #ifdef HAVE_CONFIG_H
@@ -126,6 +123,19 @@ static void unpack_block(uint16 bnum, uint8 *from)
 		*fxptr <<= 1;
 	}
 
+	for (i = 0; i < 64; i++) {
+		int j;
+		printf("%02x] ", i);
+		for (j = 0; j < 4; j++) {
+			printf("%02x %02x %02x %02x  ",
+				patbuf[i * 4 * 4 + j * 4 + 0],
+				patbuf[i * 4 * 4 + j * 4 + 1],
+				patbuf[i * 4 * 4 + j * 4 + 2],
+				patbuf[i * 4 * 4 + j * 4 + 3]);
+		}
+		printf("\n");
+	}
+	printf("\n");
 	free(patbuf);
 }
 
