@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: bsp.c,v 1.3 2007-08-12 20:50:42 cmatsuoka Exp $
+ * $Id: bsp.c,v 1.4 2007-09-01 02:04:52 cmatsuoka Exp $
  */
 
 /*
@@ -40,7 +40,7 @@ static char *help[] = {
 };
 
 struct xmp_drv_info drv_arts = {
-    "BeOS",		/* driver ID */
+    "beos",		/* driver ID */
     "BeOS PCM audio",	/* driver description */
     NULL,		/* help */
     init,		/* init */

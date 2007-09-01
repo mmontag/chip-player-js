@@ -1,4 +1,4 @@
-$Id: README,v 1.34 2007-08-31 22:50:27 cmatsuoka Exp $
+$Id: README,v 1.35 2007-09-01 02:04:52 cmatsuoka Exp $
 
 
 
@@ -15,9 +15,9 @@ $Id: README,v 1.34 2007-08-31 22:50:27 cmatsuoka Exp $
 OVERVIEW
 
 This is the Extended Module Player, a module player for Unix-like systems
-that runs on Linux with ALSA and OSS, SunOS, NetBSD, HP-UX, OS/2, FreeBSD
-and Solaris. Xmp plays over 60 mainstream and obscure module formats from
-Amiga, Atari, Acorn and PC.
+that runs on Linux with ALSA and OSS, Free/Open/NetBSD, AIX, OS/2, HP-UX,
+MacOS X, SunOS, QNX and Solaris. Xmp plays over 70 mainstream and obscure
+module formats from Amiga, Atari, Acorn and PC.
 
 Many compressed module formats are supported, including popular Unix, DOS
 and Amiga file packers such as gzip, bzip2, SQSH, Powerpack, etc. Certain
@@ -82,7 +82,7 @@ The current version recognizes the following module formats:
   EMOD  ***	Quadra Composer		0001
   KRIS	****+	ChipTracker		KRIS
   MODL	****+	Protracker 3.59		PTDT
-  MED	*	MED		 	MED3, MED4
+  MED	*	MED		 	MED2, MED3, MED4
   MED	**	OctaMED			MMD0, MMD1, MMD2, MMD3
   MTN	****	ST 2.6, Ice Tracker	MTN, IT10
   OKTA	***	Oktalyzer		-
@@ -184,6 +184,7 @@ follwing devices are supported:
   aix		AIX audio library (not tested, possibly broken)
   alsa		Advanced Linux Sound Architecture (ALSA) PCM
   arts		aRts (KDE sound server)
+  beos		BeOS BSoundPlayer (not tested)
   bsd		BSD generic audio device
   dart		OS/2 Direct Audio Real Time (DART)
   esd		Enlightened Sound Daemon
@@ -198,7 +199,7 @@ follwing devices are supported:
   osx		MacOS X CoreAudio
   qnx		QNX audio device
   solaris	Solaris audio device (linear and ulaw)
-  win32		Win32 sound (experimental -- not tested)
+  win32		Win32 sound (experimental, unstable)
   xmms		XMMS sound drivers (using the XMMS plugin)
   wav		WAV file writer
   win32		Windows WinMM
