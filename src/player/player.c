@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.6 2007-08-21 03:16:59 cmatsuoka Exp $
+ * $Id: player.c,v 1.7 2007-09-02 16:55:43 cmatsuoka Exp $
  */
 
 /*
@@ -610,7 +610,7 @@ static void module_play (int chn, int t)
     /* "Fine" sliding effects are processed in the first frame of each row,
      * and standard slides in the rest of the frames.
      */
-    if (t % tempo) {
+    if (t % tempo || xmp_ctl->fetch & XMP_CTL_PBALL) {
 	/* Do pan and pitch sliding */
 	if (TEST (PAN_SLIDE)) {
 	    xc->pan += xc->p_val;
@@ -626,7 +626,9 @@ static void module_play (int chn, int t)
 	/* Workaround for panic.s3m (from Toru Egashira's NSPmod) */
 	if (xc->period <= 8)
 	    xc->volume = 0;
-    } else {
+    }
+
+    if (t % tempo == 0) {
 	/* Process "fine" effects */
 	if (TEST (FINE_VOLS))
             xc->volume += xc->v_fval;

@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.4 2007-09-02 14:45:56 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.5 2007-09-02 16:55:43 cmatsuoka Exp $
  */
 
 /*
@@ -78,7 +78,7 @@ static void unpack_block(uint16 bnum, uint8 *from)
 	int i, j, trkn = xxh->chn;
 
 	from += 16;
-	patbuf = to = malloc(2048);
+	patbuf = to = calloc(3, 4 * 64);
 	assert(to);
 
 	for (i = 0; i < 64; i++) {
@@ -138,7 +138,7 @@ static void unpack_block(uint16 bnum, uint8 *from)
 			event->fxt  = patbuf[i * 12 + j * 3 + 1] & 0x0f;
 			event->fxp  = patbuf[i * 12 + j * 3 + 2];
 
-			switch(event->fxt) {
+			switch (event->fxt) {
 			case 0x00:	/* arpeggio */
 			case 0x01:	/* slide up */
 			case 0x02:	/* slide down */
@@ -161,9 +161,18 @@ static void unpack_block(uint16 bnum, uint8 *from)
 					event->vol = 1;
 				} else if (event->fxp == 0xfe) {
 					event->fxp = event->fxt = 0;
+				} else if (event->fxp == 0xf1) {
+					event->fxt = FX_EXTENDED;
+					event->fxp = (EX_RETRIG << 4) | 3;
+				} else if (event->fxp == 0xf2) {
+					event->fxt = FX_EXTENDED;
+					event->fxp = (EX_CUT << 4) | 3;
+				} else if (event->fxp == 0xf3) {
+					event->fxt = FX_EXTENDED;
+					event->fxp = (EX_DELAY << 4) | 3;
 				} else if (event->fxp > 10) {
 					event->fxt = FX_S3M_BPM;
-					event->fxp *= 4;
+					event->fxp = event->fxp * 4 - 7;
 				}
 				break;
 			default:
@@ -180,7 +189,7 @@ int med3_load(FILE * f)
 {
 	int i, j;
 	uint32 mask;
-	int transp;
+	int transp, sliding;
 
 	LOAD_INIT();
 
@@ -237,12 +246,12 @@ int med3_load(FILE * f)
 	fread(xxo, 1, xxh->len, f);
 	xxh->tpo = read16b(f);
 	if (xxh->tpo > 10) {
-		xxh->bpm = xxh->tpo * 4;
+		xxh->bpm = xxh->tpo * 4 - 7;
 		xxh->tpo = 6;
 	}
 	transp = read8s(f);
 	read8(f);			/* flags */
-	read16b(f);			/* sliding */
+	sliding = read16b(f);		/* sliding */
 	read32b(f);			/* jumping mask */
 	fseek(f, 16, SEEK_CUR);		/* rgb */
 
@@ -261,6 +270,15 @@ int med3_load(FILE * f)
 	}
 	
 	MODULE_INFO();
+
+	reportv(0, "Sliding        : %d\n", sliding);
+	reportv(0, "Play transpose : %d\n", transp);
+
+	if (sliding == 6)
+		xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
+
+	for (i = 0; i < 32; i++)
+		xxi[i][0].xpo = transp;
 
 	PATTERN_INIT();
 

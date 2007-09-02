@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.3 2005-02-09 19:24:42 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.4 2007-09-02 16:55:43 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -137,7 +137,8 @@ struct xmp_control {
 #define XMP_CTL_VSALL	0x00200000	/* Volume slides in all frames */
 #define XMP_CTL_FIXLOOP	0x00400000	/* Fix sample loop start */
 #define XMP_CTL_RTGINS	0x00800000	/* Retrig instrument on toneporta */
-#define XMP_CTL_FILTER  0x01000000	/* IT lowpass filter */
+#define XMP_CTL_FILTER	0x01000000	/* IT lowpass filter */
+#define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
     int flags;		/* xmp internal control flags, set default mode */
     int fetch;		/* Fetch mode control per module, copy from flags */
     int size;		/* File size */
