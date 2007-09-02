@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.3 2007-09-02 06:14:49 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.4 2007-09-02 14:45:56 cmatsuoka Exp $
  */
 
 /*
@@ -23,6 +23,7 @@
 #include "load.h"
 
 #define MAGIC_MED3	MAGIC4('M','E','D',3)
+
 #define MASK		0x80000000
 
 #define M0F_LINEMSK0F	0x01
@@ -74,7 +75,7 @@ static void unpack_block(uint16 bnum, uint8 *from)
 	uint16 fromn = 0, lmsk;
 	uint8 *fromst = from + 16, bcnt, *tmpto;
 	uint8 *patbuf, *to;
-	int i, trkn = xxh->chn;
+	int i, j, trkn = xxh->chn;
 
 	from += 16;
 	patbuf = to = malloc(2048);
@@ -124,18 +125,9 @@ static void unpack_block(uint16 bnum, uint8 *from)
 		*fxptr <<= 1;
 	}
 
-	//printf("=== %d ===\n", bnum);
-
 	for (i = 0; i < 64; i++) {
-		int j;
-		//printf("%02x] ", i);
 		for (j = 0; j < 4; j++) {
 			event = &EVENT(bnum, j, i);
-
-			/*printf("%02x %02x %02x  ",
-				patbuf[i * 3 * 4 + j * 3 + 0],
-				patbuf[i * 3 * 4 + j * 3 + 1],
-				patbuf[i * 3 * 4 + j * 3 + 2]); */
 
 			event->note = patbuf[i * 12 + j * 3 + 0];
 			if (event->note)
@@ -164,20 +156,24 @@ static void unpack_block(uint16 bnum, uint8 *from)
 			case 0x0f:	/* tempo/break */
 				if (event->fxp == 0)
 					event->fxt = FX_BREAK;
+				if (event->fxp == 0xff) {
+					event->fxp = event->fxt = 0;
+					event->vol = 1;
+				} else if (event->fxp == 0xfe) {
+					event->fxp = event->fxt = 0;
+				} else if (event->fxp > 10) {
+					event->fxt = FX_S3M_BPM;
+					event->fxp *= 4;
+				}
 				break;
 			default:
 				event->fxp = event->fxt = 0;
 			}
 		}
-
-		//printf("\n");
 	}
 
-	//printf("\n");
 	free(patbuf);
 }
-
-
 
 
 int med3_load(FILE * f)
@@ -240,6 +236,10 @@ int med3_load(FILE * f)
 	xxh->len = read16b(f);
 	fread(xxo, 1, xxh->len, f);
 	xxh->tpo = read16b(f);
+	if (xxh->tpo > 10) {
+		xxh->bpm = xxh->tpo * 4;
+		xxh->tpo = 6;
+	}
 	transp = read8s(f);
 	read8(f);			/* flags */
 	read16b(f);			/* sliding */
@@ -280,7 +280,6 @@ int med3_load(FILE * f)
 
 		b = read8(f);
 		convsz = read16b(f);
-//printf("tracks = %d, b = %02x, convsz = %d\n", tracks, b, convsz);
 		conv = calloc(1, convsz + 16);
 		assert(conv);
 
