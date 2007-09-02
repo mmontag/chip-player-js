@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.2 2007-09-01 15:24:29 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.3 2007-09-02 06:14:49 cmatsuoka Exp $
  */
 
 /*
@@ -40,7 +40,7 @@
  * From the MED 2.00 file loading/saving routines by Teijo Kinnunen, 1990
  */
 
-static uint8 get_nibble(uint8 *mem,uint16 *nbnum)
+static uint8 get_nibble(uint8 *mem, uint16 *nbnum)
 {
 	uint8 *mloc = mem + (*nbnum / 2),res;
 
@@ -67,6 +67,7 @@ static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
 
 static void unpack_block(uint16 bnum, uint8 *from)
 {
+	struct xxm_event *event;
 	uint32 linemsk0 = *((uint32 *)from), linemsk1 = *((uint32 *)from + 1);
 	uint32 fxmsk0 = *((uint32 *)from + 2), fxmsk1 = *((uint32 *)from + 3);
 	uint32 *lmptr = &linemsk0, *fxptr = &fxmsk0;
@@ -123,19 +124,56 @@ static void unpack_block(uint16 bnum, uint8 *from)
 		*fxptr <<= 1;
 	}
 
+	//printf("=== %d ===\n", bnum);
+
 	for (i = 0; i < 64; i++) {
 		int j;
-		printf("%02x] ", i);
+		//printf("%02x] ", i);
 		for (j = 0; j < 4; j++) {
-			printf("%02x %02x %02x %02x  ",
-				patbuf[i * 4 * 4 + j * 4 + 0],
-				patbuf[i * 4 * 4 + j * 4 + 1],
-				patbuf[i * 4 * 4 + j * 4 + 2],
-				patbuf[i * 4 * 4 + j * 4 + 3]);
+			event = &EVENT(bnum, j, i);
+
+			/*printf("%02x %02x %02x  ",
+				patbuf[i * 3 * 4 + j * 3 + 0],
+				patbuf[i * 3 * 4 + j * 3 + 1],
+				patbuf[i * 3 * 4 + j * 3 + 2]); */
+
+			event->note = patbuf[i * 12 + j * 3 + 0];
+			if (event->note)
+				event->note += 36;
+			event->ins  = patbuf[i * 12 + j * 3 + 1] >> 4;
+			if (event->ins)
+				event->ins++;
+			event->fxt  = patbuf[i * 12 + j * 3 + 1] & 0x0f;
+			event->fxp  = patbuf[i * 12 + j * 3 + 2];
+
+			switch(event->fxt) {
+			case 0x00:	/* arpeggio */
+			case 0x01:	/* slide up */
+			case 0x02:	/* slide down */
+				break;
+			case 0x03:	/* vibrato */
+				event->fxt = FX_VIBRATO;
+				break;
+			case 0x0c:	/* set volume (BCD) */
+				event->fxp = MSN(event->fxp) * 10 +
+							LSN(event->fxp);
+				break;
+			case 0x0d:	/* volume slides */
+				event->fxt = FX_VOLSLIDE;
+				break;
+			case 0x0f:	/* tempo/break */
+				if (event->fxp == 0)
+					event->fxt = FX_BREAK;
+				break;
+			default:
+				event->fxp = event->fxt = 0;
+			}
 		}
-		printf("\n");
+
+		//printf("\n");
 	}
-	printf("\n");
+
+	//printf("\n");
 	free(patbuf);
 }
 
@@ -145,8 +183,8 @@ static void unpack_block(uint16 bnum, uint8 *from)
 int med3_load(FILE * f)
 {
 	int i, j;
-	struct xxm_event *event;
 	uint32 mask;
+	int transp;
 
 	LOAD_INIT();
 
@@ -193,16 +231,20 @@ int med3_load(FILE * f)
 		xxs[i].len = xxs[i].lps + lsiz;
 		xxs[i].lpe = xxs[i].lps + lsiz;
 		xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
-		xxih[i].nsm = !!(xxs[i].len);
 	}
 
 	xxh->chn = 4;
 	xxh->pat = read16b(f);
+	xxh->trk = xxh->chn * xxh->pat;
+
 	xxh->len = read16b(f);
 	fread(xxo, 1, xxh->len, f);
 	xxh->tpo = read16b(f);
-
-	xxh->trk = xxh->chn * xxh->pat;
+	transp = read8s(f);
+	read8(f);			/* flags */
+	read16b(f);			/* sliding */
+	read32b(f);			/* jumping mask */
+	fseek(f, 16, SEEK_CUR);		/* rgb */
 
 	/* read midi channels */
 	mask = read32b(f);
@@ -219,18 +261,6 @@ int med3_load(FILE * f)
 	}
 	
 	MODULE_INFO();
-
-	reportv(0, "Instruments    : %d\n", xxh->ins);
-	reportv(1, "     Instrument name                  Len  LBeg LEnd L Vol\n");
-
-	for (i = 0; i < xxh->ins; i++) {
-		if ((V(1)) && (strlen((char *)xxih[i].name) || xxs[i].len > 2))
-			report("[%2X] %-32.32s %04x %04x %04x %c V%02x\n",
-			       i, xxih[i].name, xxs[i].len, xxs[i].lps,
-			       xxs[i].lpe,
-			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			       xxi[i][0].vol);
-	}
 
 	PATTERN_INIT();
 
@@ -250,7 +280,8 @@ int med3_load(FILE * f)
 
 		b = read8(f);
 		convsz = read16b(f);
-		conv = calloc(1, convsz + 64);
+//printf("tracks = %d, b = %02x, convsz = %d\n", tracks, b, convsz);
+		conv = calloc(1, convsz + 16);
 		assert(conv);
 
                 if (b & M0F_LINEMSK00)
@@ -281,7 +312,7 @@ int med3_load(FILE * f)
                 else
 			*(conv + 3) = read32b(f);
 
-		*(conv + 4) = read32b(f);
+		fread(conv + 4, 1, convsz, f);
 
                 unpack_block(i, (uint8 *)conv);
 
@@ -289,14 +320,30 @@ int med3_load(FILE * f)
 
 		reportv(0, ".");
 	}
+	reportv(0, "\n");
 
 	/* Load samples */
 
-	if (V(0))
-		report("\nStored samples : %d ", xxh->smp);
-	for (i = 0; i < xxh->smp; i++) {
-		if (!xxs[i].len)
+	reportv(0, "Instruments    : %d ", xxh->ins);
+	reportv(1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
+
+	mask = read32b(f);
+	for (i = 0; i < 32; i++, mask <<= 1) {
+		if (~mask & MASK)
 			continue;
+
+		xxs[i].len = read32b(f);
+		if (read16b(f))		/* type */
+			continue;
+
+		xxih[i].nsm = !!(xxs[i].len);
+
+		reportv(1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
+			i, xxih[i].name, xxs[i].len, xxs[i].lps,
+			xxs[i].lpe,
+			xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+			xxi[i][0].vol);
+
 		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
 				  &xxs[xxi[i][0].sid], NULL);
 		reportv(0, ".");

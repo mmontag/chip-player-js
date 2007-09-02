@@ -52,7 +52,7 @@ How to do smooth slides?
 Maybe you want to create a smooth slide from A-2 to F-3.
 A-2's period is 254, F-3's 160. So, you'll have to decrease the period
 254 - 160 = 94 steps. Because the command will decrease the period
-6 * databyte, the databyte has to be 94 / 6 = 15.666666... = appx. 16.
+6 * databyte, the databyte has to be 94 / 6 = 15.666666... = appx. 16.
 If you wanted to do the slide in one note (fast), the databyte should
 be 10, because 16 = hex 10.
 			Or slower:
