@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.5 2006-02-12 22:47:51 cmatsuoka Exp $
+ * $Id: control.c,v 1.6 2007-09-03 19:33:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,7 +55,7 @@ void xmp_init (int argc, char **argv, struct xmp_control *ctl)
     ctl->mix = 80;
     ctl->outfmt = 0;
     ctl->resol = 16;					/* Was 0. why? */
-    ctl->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER;	/* Default mode */
+    ctl->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
 
     /* Turn on channel mute control, alloc default 64 max track control */
     xmp_drv_mutelloc (64);
