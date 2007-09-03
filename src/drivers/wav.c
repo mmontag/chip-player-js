@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.5 2007-08-17 12:28:27 cmatsuoka Exp $
+ * $Id: wav.c,v 1.6 2007-09-03 22:13:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -145,8 +145,10 @@ static void bufdump (int i)
     int16 *b;
 
     b = xmp_smix_buffer();
-    for (i >>= 1; i; i--)
-	write16l(audio_fd, *b++);
+#ifdef WORDS_BIGENDIAN
+    xmp_cvt_sex(b, i);
+#endif
+    write(audio_fd, b, i);
 }
 
 
