@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.11 2007-09-03 17:05:24 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.12 2007-09-03 17:41:33 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -632,7 +632,6 @@ int it_load (FILE * f)
 	    xxs[i].len = ish.length;
 	    xxs[i].lps = ish.loopbeg;
 	    xxs[i].lpe = ish.loopend;
-	    xxs[i].flg = WAVE_16_BITS;
 	}
 
 	xxs[i].flg |= ish.flags & IT_SMP_LOOP ? WAVE_LOOPING : 0;
