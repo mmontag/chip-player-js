@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.9 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.10 2007-09-03 04:28:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -623,9 +623,9 @@ int it_load (FILE * f)
 	if (ish.magic != MAGIC_IMPS)
 	    return -2;
 	
-	xxs[i].len = ish.length * (1 + !!(ish.flags & IT_SMP_16BIT));
-	xxs[i].lps = ish.loopbeg * (1 + !!(ish.flags & IT_SMP_16BIT));
-	xxs[i].lpe = ish.loopend * (1 + !!(ish.flags & IT_SMP_16BIT));
+	xxs[i].len = ish.length;
+	xxs[i].lps = ish.loopbeg;
+	xxs[i].lpe = ish.loopend;
 	xxs[i].flg = ish.flags & IT_SMP_16BIT ? WAVE_16_BITS : 0;
 	xxs[i].flg |= ish.flags & IT_SMP_LOOP ? WAVE_LOOPING : 0;
 	xxs[i].flg |= ish.flags & IT_SMP_BLOOP ? WAVE_BIDIR_LOOP : 0;
