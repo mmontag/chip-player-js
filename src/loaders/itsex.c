@@ -1,25 +1,13 @@
-/*
- * IT 2.14/2.15 sample decompression routines
- * Copyright (C) 1998 Tammo Hinrichs <kb@nwn.de>
+/* OpenCP Module Player
+ * copyright (c) '94-'05 Niklas Beisert <nbeisert@physik.tu-muenchen.de>
  *
- * Modified by Claudio Matsuoka in oct 1998 for inclusion in xmp.
- * Based on the version distributed with the OpenCP Module Player kb980717
- * Copyright (C) 1994-1998 Niklas Beisert <nbeisert@physik.tu-muenchen.de>
- * OpenCP is available at http://www.cubic.org/player
- *
- * - Original comments have been preserved.
- * - Source code reindented
- * - C++ code changed to C
- * - CP-specific code removed
- * - Minor changes to compile with gcc (types etc)
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- */
-
-/*
  * IT 2.14/2.15 sample decompression routines.
+ *
+ * revision history: (please note changes here)
+ *  -kb980717    Tammo Hinrichs <kb@nwn.de>
+ *    -first release
+ *
+ * Minor changes for xmp 2.2.0 by Claudio Matsuoka
  *
  * Well.
  * The existance of this file, and the fact that you're just reading this
@@ -65,8 +53,8 @@
  * - if we differentiate this sum, we get a sum of (a(f)*f)*cos(f*t). Due to
  *   f being scaled to the nyquist of the sample frequency, it's always
  *   between 0 and 1, and we get just what we want - we decrease the ampli-
- *   tude of the low frequencies (and shift the signal's phase by 90ø, but
- *   that's just a side-effect that doesn't have to interest us)
+ *   tude of the low frequencies (and shift the signal's phase by 90 degrees,
+ *   but that's just a side-effect that doesn't have to interest us)
  * - the backwards way is simple integrating over the data and is completely
  *   lossless. good.
  * - so how to differentiate or integrate a sample stream? the solution is
@@ -121,8 +109,9 @@
  * - The starting bit width is 9 [17]
  * - IT2.15 compression simply doubles the differentiation/integration
  *   of the signal, thus eliminating low frequencies some more and turning
- *   the signal phase to 180ø instead of 90ø which can eliminate some sig-
- *   nal peaks here and there - all resulting in a somewhat better ratio.
+ *   the signal phase to 180 degrees instead of 90 degrees which can eliminate
+ *   some signal peaks here and there - all resulting in a somewhat better
+ *   ratio.
  *
  * ok, but now lets start... but think before you easily somehow misuse
  * this code, the algorithm is (C) Jeffrey Lim aka Pulse... and my only
@@ -133,291 +122,287 @@
  * which did, let's just not be mainstream, but open-minded. Thanks.
  *
  *                    Tammo Hinrichs [ KB / T.O.M / PuRGE / Smash Designs ]
+ *
+ * ----------------------------------------------------------------------
+ *  includes...
+ * ----------------------------------------------------------------------
  */
 
-
-
-/* ---------------------------------------------------------------------- */
-/*  includes...                                                           */
-/* ---------------------------------------------------------------------- */
-
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
 #define __XMP_LOADERS_COMMON
 #include "load.h"
 
+/* ----------------------------------------------------------------------
+ *  some helpful typedefs which are lame, but so am I :)
+ * ----------------------------------------------------------------------
+ */
 
-/* ---------------------------------------------------------------------- */
-/*  some helpful typedefs which are lame, but so am I :)                  */
-/* ---------------------------------------------------------------------- */
+typedef uint8 byte;
+typedef int8 sbyte;
+typedef uint16 word;
+typedef int16 sword;
+typedef uint32 dword;
 
-typedef unsigned char byte;
-typedef signed char sbyte;
-typedef unsigned short word;
-typedef signed short sword;
-typedef unsigned int dword;
+/* ----------------------------------------------------------------------
+ *  auxiliary routines to get bits from the input stream
+ * ----------------------------------------------------------------------
+ */
 
+static uint8 *sourcebuffer = NULL;
+static uint8 *ibuf = NULL;	/* actual reading position */
+static uint32 bitlen;
+static uint8 bitnum;
 
-/* ---------------------------------------------------------------------- */
-/*  auxiliary routines to get bits from the input stream                  */
-/* ---------------------------------------------------------------------- */
-
-static dword *sourcebuffer = NULL;	/* source buffer */
-static dword *srcpos = NULL;		/* actual reading position */
-static byte srcrembits = 0;		/* bits remaining in read dword */
-
-/* reads b bits from the stream */
-
-static dword readbits (byte b)
-{				
-    dword value;
-
-    if (b <= srcrembits) {
-	value = *srcpos & ((1 << b) - 1);
-	*srcpos >>= b;
-	srcrembits -= b;
-    } else {
-	dword nbits = b - srcrembits;
-	value = *srcpos++;
-	value |= ((*srcpos & ((1 << nbits) - 1)) << srcrembits);
-	*srcpos >>= nbits;
-	srcrembits = 32 - nbits;
-    }
-
-    return value;
-}
-
-
-/* gets block of compressed data from file */
-
-static int readblock (FILE *f)
+static inline uint32 readbits(uint8 n)
 {
-    word size;
-    int i;
+	uint32 retval = 0;
+	int offset = 0;
+	while (n) {
+		int m = n;
 
-    /* block layout: word size, <size> bytes data */
-    size = (read16l(f) >> 2) + 2;
+		if (!bitlen) {
+			fprintf(stderr, "readbits: ran out of buffer\n");
+			return 0;
+		}
 
-    sourcebuffer = calloc (4, size);
-    if (!sourcebuffer)
-	return 0;
-
-    for (i = 0; i < size; i++)
-	sourcebuffer[i] = read32l(f);
-
-    srcpos = sourcebuffer;
-    srcrembits = 32;
-    return 1;
+		if (m > bitnum)
+			m = bitnum;
+		retval |= (*ibuf & ((1L << m) - 1)) << offset;
+		*ibuf >>= m;
+		n -= m;
+		offset += m;
+		if (!(bitnum -= m)) {
+			bitlen--;
+			ibuf++;
+			bitnum = 8;
+		}
+	}
+	return retval;
 }
 
+static int readblock(FILE * f)
+{				/* gets block of compressed data from file */
+	uint16 size;
 
-/* frees that block again */
+	size = read16l(f);
 
-static int freeblock ()
-{	
-    if (sourcebuffer)
-	free (sourcebuffer);
-    sourcebuffer = NULL;
+	if (!size)
+		return 0;
+	if (!(sourcebuffer = malloc(size)))
+		return 0;
 
-    return 1;
+	if (fread(sourcebuffer, size, 1, f) != 1) {
+		free(sourcebuffer);
+		sourcebuffer = NULL;	/* Just looks better to have it present */
+		return 0;
+	}
+	ibuf = sourcebuffer;
+	bitnum = 8;
+	bitlen = size;
+	return 1;
 }
 
+static int freeblock(void)
+{				/* frees that block again */
+	if (sourcebuffer)
+		free(sourcebuffer);
+	sourcebuffer = NULL;
+	return 1;
+}
 
-/* ---------------------------------------------------------------------- */
-/*  decompression routines                                                */
-/* ---------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------
+ *  decompression routines
+ * ----------------------------------------------------------------------
 
-/* decompresses 8-bit sample (params : file, outbuffer, length of
+ * decompresses 8-bit sample (params : file, outbuffer, lenght of
  *                                     uncompressed sample, IT2.15
  *                                     compression flag
  *                            returns: status                     )
  */
 
-int itsex_decompress8 (FILE *module, void *dst, int len, int it215)
+int itsex_decompress8(FILE *module, void *dst, int len, char it215)
 {
-    sbyte *destbuf;		/* destination buffer which will be returned */
-    word blklen;		/* length of compressed data block in samples */
-    word blkpos;		/* position in block */
-    byte width;			/* actual "bit width" */
-    word value;			/* value read from file to be processed */
-    sbyte d1, d2;		/* integrator buffers (d2 for it2.15) */
-    sbyte *destpos;		/* position in output buffer */
-    sbyte v;			/* sample value */
+	sbyte *destbuf;		/* the destination buffer which will be returned */
 
-    destbuf = (sbyte *) dst;
-    if (!destbuf)
-	return 0;
+	word blklen;		/* length of compressed data block in samples */
+	word blkpos;		/* position in block */
+	byte width;		/* actual "bit width" */
+	word value;		/* value read from file to be processed */
+	sbyte d1, d2;		/* integrator buffers (d2 for it2.15) */
+	sbyte *destpos;
 
-    memset (destbuf, 0, len);
-    destpos = destbuf;		
-
-    /* now unpack data till the dest buffer is full */
-    while (len) {
-	/* read a new block of compressed data and reset variables */
-	if (!readblock (module))
-	    return 0;
-	blklen = (len < 0x8000) ? len : 0x8000;
-	blkpos = 0;
-
-	width = 9;		/* start with width of 9 bits */
-	d1 = d2 = 0;		/* reset integrator buffers */
-
-	/* now uncompress the data block */
-	while (blkpos < blklen) {
-	    value = readbits (width);			/* read bits */
-
-	    if (width < 7) {				/* method 1 (1-6 bits) */
-		if (value == (1 << (width - 1))) {	/* check for "100..." */
-		    value = readbits (3) + 1;		/* yes -> read new width; */
-		    width = (value < width) ? value : value + 1;
-							/* and expand it */
-		    continue;				/* ... next value */
-		}
-	    } else if (width < 9) {			/* method 2 (7-8 bits) */
-		byte border = (0xFF >> (9 - width)) - 4;
-							/* lower border for width chg */
-
-		if (value > border && value <= (border + 8)) {
-		    value -= border;			/* convert width to 1-8 */
-		    width = (value < width) ? value : value + 1;
-							/* and expand it */
-		    continue;				/* ... next value */
-		}
-	    } else if (width == 9) {			/* method 3 (9 bits) */
-		if (value & 0x100) {			/* bit 8 set? */
-		    width = (value + 1) & 0xff;		/* new width... */
-		    continue;				/* ... and next value */
-		}
-	    } else {					/* illegal width, abort */
-		freeblock ();
+	destbuf = (sbyte *) dst;
+	if (!destbuf)
 		return 0;
-	    }
 
-	    /* now expand value to signed byte */
-	    if (width < 8) {
-		byte shift = 8 - width;
-		v = (value << shift);
-		v >>= shift;
-	    } else
-		v = (sbyte) value;
+	memset(destbuf, 0, len);
+	destpos = destbuf;	/* position in output buffer */
 
-	    /* integrate upon the sample values */
-	    d1 += v;
-	    d2 += d1;
+	/* now unpack data till the dest buffer is full */
+	while (len) {
+		/* read a new block of compressed data and reset variables */
 
-	    /* ... and store it into the buffer */
-	    *(destpos++) = it215 ? d2 : d1;
-	    blkpos++;
+		if (!readblock(module))
+			return 0;
+		blklen = (len < 0x8000) ? len : 0x8000;
+		blkpos = 0;
 
+		width = 9;	/* start with width of 9 bits */
+		d1 = d2 = 0;	/* reset integrator buffers */
+
+		/* now uncompress the data block */
+		while (blkpos < blklen) {
+			sbyte v;
+
+			value = readbits(width);	/* read bits */
+
+			if (width < 7) {	/* method 1 (1-6 bits) */
+				if (value == (1 << (width - 1))) {	/* check for "100..." */
+					value = readbits(3) + 1;	/* yes -> read new width; */
+					width = (value < width) ? value : value + 1;	/* and expand it */
+					continue;	/* ... next value */
+				}
+			} else if (width < 9) {	/* method 2 (7-8 bits) */
+				byte border = (0xFF >> (9 - width)) - 4;	/* lower border for width chg */
+
+				if (value > border && value <= (border + 8)) {
+					value -= border;	/* convert width to 1-8 */
+					width = (value < width) ? value : value + 1;	/* and expand it */
+					continue;	/* ... next value */
+				}
+			} else if (width == 9) {	/* method 3 (9 bits) */
+				if (value & 0x100) {	/* bit 8 set? */
+					width = (value + 1) & 0xff;	/* new width... */
+					continue;	/* ... and next value */
+				}
+			} else {	/* illegal width, abort */
+				freeblock();
+				return 0;
+			}
+
+			/* now expand value to signed byte */
+			/*      sbyte v;  // sample value */
+			if (width < 8) {
+				byte shift = 8 - width;
+				v = (value << shift);
+				v >>= shift;
+			} else
+				v = (sbyte) value;
+
+			/* integrate upon the sample values */
+			d1 += v;
+			d2 += d1;
+
+			/* ... and store it into the buffer */
+			*(destpos++) = it215 ? d2 : d1;
+			blkpos++;
+
+		}
+
+		/* now subtract block lenght from total length and go on */
+		freeblock();
+		len -= blklen;
 	}
 
-	/* now subtract block length from total length and go on */
-	freeblock ();
-	len -= blklen;
-    }
-
-    return 1;
+	return 1;
 }
 
-
-/* decompresses 16-bit sample (params : file, outbuffer, length of
+/* decompresses 16-bit sample (params : file, outbuffer, lenght of
  *                                      uncompressed sample, IT2.15
  *                                      compression flag
  *                             returns: status                     )
  */
-
-int itsex_decompress16 (FILE *module, void *dst, int len, int it215)
+int itsex_decompress16(FILE *module, void *dst, int len, char it215)
 {
-    sword *destbuf;		/* the destination buffer which will be returned */
+	sword *destbuf;		/* the destination buffer which will be returned */
 
-    word blklen;		/* length of compressed data block in samples */
-    word blkpos;		/* position in block */
-    byte width;			/* actual "bit width" */
-    dword value;		/* value read from file to be processed */
-    sword d1, d2;		/* integrator buffers (d2 for it2.15) */
-    sword *destpos;		/* position in output buffer */
-    sword v;			/* sample value */
-    //int orig_len = len;	/* length of destination buffer, in words */
+	word blklen;		/* length of compressed data block in samples */
+	word blkpos;		/* position in block */
+	byte width;		/* actual "bit width" */
+	dword value;		/* value read from file to be processed */
+	sword d1, d2;		/* integrator buffers (d2 for it2.15) */
+	sword *destpos;
 
-    destbuf = (sword *) dst;
-    if (!destbuf)
-	return 0;
-
-    memset (destbuf, 0, len << 1);
-    destpos = destbuf;
-
-    /* now unpack data till the dest buffer is full */
-    while (len) {
-
-	/* read a new block of compressed data and reset variables */
-
-	if (!readblock (module))
-	    return 0;
-	blklen = (len < 0x4000) ? len : 0x4000;
-				/* 0x4000 samples => 0x8000 bytes again */
-	blkpos = 0;
-
-	width = 17;		/* start with width of 17 bits */
-	d1 = d2 = 0;		/* reset integrator buffers */
-
-	/* now uncompress the data block */
-	while (blkpos < blklen) {
-	    value = readbits (width);			/* read bits */
-
-	    if (width < 7) {				/* method 1 (1-6 bits) */
-		if (value == (1 << (width - 1))) {	/* check for "100..." */
-		    value = readbits (4) + 1;		/* yes -> read new width; */
-		    width = (value < width) ? value : value + 1;
-							/* and expand it */
-		    continue;				/* ... next value */
-		}
-	    } else if (width < 17) {			/* method 2 (7-16 bits) */
-		word border = (0xFFFF >> (17 - width)) - 8;
-							/* lower border for width chg */
-
-		if (value > border && value <= (border + 16)) {
-		    value -= border;			/* convert width to 1-8 */
-		    width = (value < width) ? value : value + 1;
-							/* and expand it */
-		    continue;				/* ... next value */
-		}
-	    } else if (width == 17) {			/* method 3 (17 bits) */
-		if (value & 0x10000) {			/* bit 16 set? */
-		    width = (value + 1) & 0xff;		/* new width... */
-		    continue;				/* ... and next value */
-		}
-	    } else {					/* illegal width, abort */
-		freeblock ();
+	destbuf = (sword *) dst;
+	if (!destbuf)
 		return 0;
-	    }
 
-	    /* now expand value to signed word */
-	    if (width < 16) {
-		byte shift = 16 - width;
-		v = (value << shift);
-		v >>= shift;
-	    } else
-		v = (sword) value;
+	memset(destbuf, 0, len << 1);
+	destpos = destbuf;	/* position in output buffer */
 
-	    /* integrate upon the sample values */
-	    d1 += v;
-	    d2 += d1;
+	/* now unpack data till the dest buffer is full */
+	while (len) {
 
-	    /* ... and store it into the buffer */
-	    *(destpos++) = it215 ? d2 : d1;
-	    blkpos++;
+		/* read a new block of compressed data and reset variables */
+
+		if (!readblock(module))
+			return 0;
+		blklen = (len < 0x4000) ? len : 0x4000;	/* 0x4000 samples => 0x8000 bytes again */
+		blkpos = 0;
+
+		width = 17;	/* start with width of 17 bits */
+		d1 = d2 = 0;	/* reset integrator buffers */
+
+		/* now uncompress the data block */
+		while (blkpos < blklen) {
+			sword v;
+
+			value = readbits(width);	/* read bits */
+
+			if (width < 7) {	/* method 1 (1-6 bits) */
+				if (value == (1 << (width - 1))) {	/* check for "100..." */
+					value = readbits(4) + 1;	/* yes -> read new width; */
+					width = (value < width) ? value : value + 1;	/* and expand it */
+					continue;	/* ... next value */
+				}
+			} else if (width < 17) {	/* method 2 (7-16 bits) */
+				word border = (0xFFFF >> (17 - width)) - 8;	/* lower border for width chg */
+
+				if (value > border && value <= (border + 16)) {
+					value -= border;	/* convert width to 1-8 */
+					width = (value < width) ? value : value + 1;	/* and expand it */
+					continue;	/* ... next value */
+				}
+			} else if (width == 17) {	/* method 3 (17 bits) */
+				if (value & 0x10000) {	/* bit 16 set? */
+					width = (value + 1) & 0xff;	/* new width... */
+					continue;	/* ... and next value */
+				}
+			} else {	/* illegal width, abort */
+				freeblock();
+				return 0;
+			}
+
+			/* now expand value to signed word */
+			/* sword v; // sample value */
+			if (width < 16) {
+				byte shift = 16 - width;
+				v = (value << shift);
+				v >>= shift;
+			} else
+				v = (sword) value;
+
+			/* integrate upon the sample values */
+			d1 += v;
+			d2 += d1;
+
+			/* ... and store it into the buffer */
+			*(destpos++) = it215 ? d2 : d1;
+			blkpos++;
+		}
+
+		/* now subtract block lenght from total length and go on */
+		freeblock();
+		len -= blklen;
 	}
 
-	/* now subtract block length from total length and go on */
-	freeblock ();
-	len -= blklen;
-    }
-
-    /*for (destpos = destbuf; orig_len > 0; orig_len--, destpos++)
-	ENDIAN16 (*destpos);*/
-
-    return 1;
+	return 1;
 }
