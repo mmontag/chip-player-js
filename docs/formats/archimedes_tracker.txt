@@ -1,3 +1,6 @@
+(Excerpt from documentation by Bernard Jungen and Gil Damoiseaux)
+
+
    Archimedes Tracker V1.0+++ File Formats
    ---------------------------------------
     
