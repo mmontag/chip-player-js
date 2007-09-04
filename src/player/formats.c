@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.38 2007-09-03 23:31:29 cmatsuoka Exp $
+ * $Id: formats.c,v 1.39 2007-09-04 00:25:31 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -63,7 +63,7 @@ void xmp_init_formats()
     register_fmt ("AMF", "DSMI (DMP)", amf_load);
     register_fmt ("MMD0/1", "OctaMED/OctaMED Pro", mmd1_load);
     register_fmt ("MMD2/3", "OctaMED Soundstudio", mmd3_load);
-    register_fmt ("MED2", "MED 1.12", med2_load);
+    //register_fmt ("MED2", "MED 1.12", med2_load);
     register_fmt ("MED3", "MED 2.00", med3_load);
     register_fmt ("MED4", "MED 2.10/3.00", med4_load);
     register_fmt ("DMF", "X-Tracker", dmf_load);
