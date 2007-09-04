@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.2 2007-09-03 21:59:04 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.3 2007-09-04 01:24:11 cmatsuoka Exp $
  */
 
 /*
@@ -189,32 +189,38 @@ static void unpack_block(uint16 bnum, uint8 *from)
 int med4_load(FILE * f)
 {
 	int i, j;
-	uint32 mask;
-	int transp, sliding;
+	uint32 m, mask;
+	int transp;
+	uint8 trkvol[16];
 
 	LOAD_INIT();
 
 	if (read32b(f) !=  MAGIC_MED4)
 		return -1;
 
-	strcpy(xmp_ctl->type, "MED4 (MED 2.10/3.00)");
+	strcpy(xmp_ctl->type, "MED4 (MED 2.10)");
 
 	xxh->ins = xxh->smp = 32;
 	INSTRUMENT_INIT();
 
-	mask = read8(f);
-	for (i = 0; i < 8; i++, mask <<= 1) {
-		if (mask & 0x80)
-			read8(f);
+	m = read8(f);
+	for (mask = i = 0; i < 8; i++, m <<= 1) {
+		if (m & 0x80) {
+			mask <<= 8;
+			mask |= read8(f);
+		}
 	}
 
 	/* read instrument names */
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < 32; i++, mask <<= 1) {
 		uint8 c, size, buf[40];
 
+		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+
+		if (~mask & MASK)
+			continue;
+
 		c = read8(f);
-		if (c == 0)
-			break;
 
 		size = read8(f);
 		for (j = 0; j < size; j++)
@@ -235,10 +241,27 @@ int med4_load(FILE * f)
 			read32b(f);
 
 		copy_adjust(xxih[i].name, buf, 32);
-printf("%d = %s\n", i, xxih[i].name);
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+//printf("%d = %s\n", i, xxih[i].name);
 	}
 
+	xxh->chn = 4;
+	xxh->pat = read16b(f);
+	xxh->trk = xxh->chn * xxh->pat;
+
+	xxh->len = read16b(f);
+	fread(xxo, 1, xxh->len, f);
+	xxh->bpm = read16b(f);
+        transp = read8s(f);
+        read8s(f);
+        read8s(f);
+	xxh->tpo = read8(f);
+
+	read16b(f);
+	xxh->tpo = read16b(f);
+	fread(trkvol, 1, 16, f);
+	read8(f);		/* master vol */
+
+#if 0
 	/* read instrument volumes */
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
@@ -263,18 +286,6 @@ printf("%d = %s\n", i, xxih[i].name);
 		xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
 	}
 
-	xxh->chn = 4;
-	xxh->pat = read16b(f);
-	xxh->trk = xxh->chn * xxh->pat;
-
-	xxh->len = read16b(f);
-	fread(xxo, 1, xxh->len, f);
-	xxh->tpo = read16b(f);
-	if (xxh->tpo > 10) {
-		xxh->bpm = xxh->tpo * 4 - 7;
-		xxh->tpo = 6;
-	}
-	transp = read8s(f);
 	read8(f);			/* flags */
 	sliding = read16b(f);		/* sliding */
 	read32b(f);			/* jumping mask */
@@ -293,14 +304,11 @@ printf("%d = %s\n", i, xxih[i].name);
 		if (mask & MASK)
 			read8(f);
 	}
+#endif
 	
 	MODULE_INFO();
 
-	reportv(0, "Sliding        : %d\n", sliding);
 	reportv(0, "Play transpose : %d\n", transp);
-
-	if (sliding == 6)
-		xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
 
 	for (i = 0; i < 32; i++)
 		xxi[i][0].xpo = transp;

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.9 2007-09-01 01:42:50 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.10 2007-09-04 01:24:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -261,7 +261,7 @@ int mmd1_load(FILE *f)
 	xxh->trk = xxh->pat * xxh->chn;
 
 	strcpy(xmp_ctl->type, ver == 0 ?
-				"MMD0 (OctaMED)" : "MMD1 (OctaMED Pro)");
+				"MMD0 (MED 3.00)" : "MMD1 (OctaMED Pro)");
 	
 	MODULE_INFO();
 
