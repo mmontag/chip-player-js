@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.3 2007-09-04 01:24:11 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.4 2007-09-04 13:46:24 cmatsuoka Exp $
  */
 
 /*
@@ -190,7 +190,7 @@ int med4_load(FILE * f)
 {
 	int i, j;
 	uint32 m, mask;
-	int transp;
+	int transp, size;
 	uint8 trkvol[16];
 
 	LOAD_INIT();
@@ -256,10 +256,13 @@ int med4_load(FILE * f)
         read8s(f);
 	xxh->tpo = read8(f);
 
-	read16b(f);
-	xxh->tpo = read16b(f);
+	fseek(f, 20, SEEK_CUR);
+
 	fread(trkvol, 1, 16, f);
 	read8(f);		/* master vol */
+
+	size = read8(f);	/* extended data? */
+	fseek(f, size, f);
 
 #if 0
 	/* read instrument volumes */
@@ -290,22 +293,8 @@ int med4_load(FILE * f)
 	sliding = read16b(f);		/* sliding */
 	read32b(f);			/* jumping mask */
 	fseek(f, 16, SEEK_CUR);		/* rgb */
-
-	/* read midi channels */
-	mask = read32b(f);
-	for (i = 0; i < 32; i++, mask <<= 1) {
-		if (mask & MASK)
-			read8(f);
-	}
-
-	/* read midi programs */
-	mask = read32b(f);
-	for (i = 0; i < 32; i++, mask <<= 1) {
-		if (mask & MASK)
-			read8(f);
-	}
 #endif
-	
+
 	MODULE_INFO();
 
 	reportv(0, "Play transpose : %d\n", transp);
@@ -326,8 +315,6 @@ int med4_load(FILE * f)
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
-
-		tracks = read8(f);
 
 		b = read8(f);
 		convsz = read16b(f);
