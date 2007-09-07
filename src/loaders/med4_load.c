@@ -1,13 +1,11 @@
 /* MED4 loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * Pattern unpacking code by Teijo Kinnunen, 1990
- *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.4 2007-09-04 13:46:24 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.5 2007-09-07 12:10:26 cmatsuoka Exp $
  */
 
 /*
@@ -24,181 +22,58 @@
 #include "load.h"
 
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
-
-#define MASK		0x80000000
-
-#define M0F_LINEMSK0F	0x01
-#define M0F_LINEMSK1F	0x02
-#define M0F_FXMSK0F	0x04
-#define M0F_FXMSK1F	0x08
-#define M0F_LINEMSK00	0x10
-#define M0F_LINEMSK10	0x20
-#define M0F_FXMSK00	0x40
-#define M0F_FXMSK10	0x80
+#define MAGIC_MEDV	MAGIC4('M','E','D','V')
 
 
-
-/*
- * From the MED 2.00 file loading/saving routines by Teijo Kinnunen, 1990
- */
-
-static uint8 get_nibble(uint8 *mem, uint16 *nbnum)
+static inline uint8 read4(FILE *f)
 {
-	uint8 *mloc = mem + (*nbnum / 2),res;
+	static uint8 b = 0;
+	static int ctl = 0;
+	uint8 ret;
 
-	if(*nbnum & 0x1)
-		res = *mloc & 0x0f;
-	else
-		res = *mloc >> 4;
-	(*nbnum)++;
-
-	return res;
-}
-
-static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
-{
-	uint16 res = 0;
-
-	while (nbs--) {
-		res <<= 4;
-		res |= get_nibble(mem,nbnum);
+	if (ctl & 0x01) {
+		ret = b & 0x0f;
+	} else {
+		b = read8(f);
+		ret = b >> 4;
 	}
 
-	return res;
+	ctl ^= 0x01;
+
+	return ret;
 }
 
-static void unpack_block(uint16 bnum, uint8 *from)
+static inline uint16 read12b(FILE *f)
 {
-	struct xxm_event *event;
-	uint32 linemsk0 = *((uint32 *)from), linemsk1 = *((uint32 *)from + 1);
-	uint32 fxmsk0 = *((uint32 *)from + 2), fxmsk1 = *((uint32 *)from + 3);
-	uint32 *lmptr = &linemsk0, *fxptr = &fxmsk0;
-	uint16 fromn = 0, lmsk;
-	uint8 *fromst = from + 16, bcnt, *tmpto;
-	uint8 *patbuf, *to;
-	int i, j, trkn = xxh->chn;
+	uint32 a, b, c;
 
-	from += 16;
-	patbuf = to = calloc(3, 4 * 64);
-	assert(to);
+	a = read4(f);
+	b = read4(f);
+	c = read4(f);
 
-	for (i = 0; i < 64; i++) {
-		if (i == 32) {
-			lmptr = &linemsk1;
-			fxptr = &fxmsk1;
-		}
-
-		if (*lmptr & MASK) {
-			lmsk = get_nibbles(fromst, &fromn, (uint8)(trkn / 4));
-			lmsk <<= (16 - trkn);
-			tmpto = to;
-
-			for (bcnt = 0; bcnt < trkn; bcnt++) {
-				if (lmsk & 0x8000) {
-					*tmpto = (uint8)get_nibbles(fromst,
-						&fromn,2);
-					*(tmpto + 1) = (get_nibble(fromst,
-							&fromn) << 4);
-				}
-				lmsk <<= 1;
-				tmpto += 3;
-			}
-		}
-
-		if (*fxptr & MASK) {
-			lmsk = get_nibbles(fromst,&fromn,(uint8)(trkn / 4));
-			lmsk <<= (16 - trkn);
-			tmpto = to;
-
-			for (bcnt = 0; bcnt < trkn; bcnt++) {
-				if (lmsk & 0x8000) {
-					*(tmpto+1) |= get_nibble(fromst,
-							&fromn);
-					*(tmpto+2) = (uint8)get_nibbles(fromst,
-							&fromn,2);
-				}
-				lmsk <<= 1;
-				tmpto += 3;
-			}
-		}
-		to += 3 * trkn;
-		*lmptr <<= 1;
-		*fxptr <<= 1;
-	}
-
-	for (i = 0; i < 64; i++) {
-		for (j = 0; j < 4; j++) {
-			event = &EVENT(bnum, j, i);
-
-			event->note = patbuf[i * 12 + j * 3 + 0];
-			if (event->note)
-				event->note += 36;
-			event->ins  = patbuf[i * 12 + j * 3 + 1] >> 4;
-			if (event->ins)
-				event->ins++;
-			event->fxt  = patbuf[i * 12 + j * 3 + 1] & 0x0f;
-			event->fxp  = patbuf[i * 12 + j * 3 + 2];
-
-			switch (event->fxt) {
-			case 0x00:	/* arpeggio */
-			case 0x01:	/* slide up */
-			case 0x02:	/* slide down */
-				break;
-			case 0x03:	/* vibrato */
-				event->fxt = FX_VIBRATO;
-				break;
-			case 0x0c:	/* set volume (BCD) */
-				event->fxp = MSN(event->fxp) * 10 +
-							LSN(event->fxp);
-				break;
-			case 0x0d:	/* volume slides */
-				event->fxt = FX_VOLSLIDE;
-				break;
-			case 0x0f:	/* tempo/break */
-				if (event->fxp == 0)
-					event->fxt = FX_BREAK;
-				if (event->fxp == 0xff) {
-					event->fxp = event->fxt = 0;
-					event->vol = 1;
-				} else if (event->fxp == 0xfe) {
-					event->fxp = event->fxt = 0;
-				} else if (event->fxp == 0xf1) {
-					event->fxt = FX_EXTENDED;
-					event->fxp = (EX_RETRIG << 4) | 3;
-				} else if (event->fxp == 0xf2) {
-					event->fxt = FX_EXTENDED;
-					event->fxp = (EX_CUT << 4) | 3;
-				} else if (event->fxp == 0xf3) {
-					event->fxt = FX_EXTENDED;
-					event->fxp = (EX_DELAY << 4) | 3;
-				} else if (event->fxp > 10) {
-					event->fxt = FX_S3M_BPM;
-					event->fxp = event->fxp * 4 - 7;
-				}
-				break;
-			default:
-				event->fxp = event->fxt = 0;
-			}
-		}
-	}
-
-	free(patbuf);
+	return (a << 8) | (b << 4) | c;
 }
-
 
 int med4_load(FILE * f)
 {
-	int i, j;
+	int i, j, k;
 	uint32 m, mask;
-	int transp, size;
+	int transp;
+	int pos, ver;
 	uint8 trkvol[16];
+	struct xxm_event *event;
 
 	LOAD_INIT();
 
 	if (read32b(f) !=  MAGIC_MED4)
 		return -1;
 
-	strcpy(xmp_ctl->type, "MED4 (MED 2.10)");
+	pos = ftell(f);
+	fseek(f, -11, SEEK_END);
+	ver = read32b(f) == MAGIC_MEDV ? 3 : 2;
+	fseek(f, pos, SEEK_SET);
+
+	sprintf(xmp_ctl->type, "MED4 (MED %s)", ver > 2 ? "3.00" : "2.10");
 
 	xxh->ins = xxh->smp = 32;
 	INSTRUMENT_INIT();
@@ -217,7 +92,7 @@ int med4_load(FILE * f)
 
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-		if (~mask & MASK)
+		if (~mask & 0x80000000)
 			continue;
 
 		c = read8(f);
@@ -261,40 +136,6 @@ int med4_load(FILE * f)
 	fread(trkvol, 1, 16, f);
 	read8(f);		/* master vol */
 
-	size = read8(f);	/* extended data? */
-	fseek(f, size, f);
-
-#if 0
-	/* read instrument volumes */
-	mask = read32b(f);
-	for (i = 0; i < 32; i++, mask <<= 1) {
-		xxi[i][0].vol = mask & MASK ? read8(f) : 0;
-		xxi[i][0].pan = 0x80;
-		xxi[i][0].fin = 0;
-		xxi[i][0].sid = i;
-	}
-
-	/* read instrument loops */
-	mask = read32b(f);
-	for (i = 0; i < 32; i++, mask <<= 1) {
-		xxs[i].lps = mask & MASK ? read16b(f) : 0;
-	}
-
-	/* read instrument loop length */
-	mask = read32b(f);
-	for (i = 0; i < 32; i++, mask <<= 1) {
-		uint32 lsiz = mask & MASK ? read16b(f) : 0;
-		xxs[i].len = xxs[i].lps + lsiz;
-		xxs[i].lpe = xxs[i].lps + lsiz;
-		xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
-	}
-
-	read8(f);			/* flags */
-	sliding = read16b(f);		/* sliding */
-	read32b(f);			/* jumping mask */
-	fseek(f, 16, SEEK_CUR);		/* rgb */
-#endif
-
 	MODULE_INFO();
 
 	reportv(0, "Play transpose : %d\n", transp);
@@ -308,52 +149,115 @@ int med4_load(FILE * f)
 	reportv(0, "Stored patterns: %d ", xxh->pat);
 
 	for (i = 0; i < xxh->pat; i++) {
-		uint32 *conv;
-		uint8 b, tracks;
-		uint16 convsz;
+		int size, plen;
+		uint8 ctl, chmsk;
+		uint32 linemsk0, fxmsk0, linemsk1, fxmsk1, x;
 
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		b = read8(f);
-		convsz = read16b(f);
-		conv = calloc(1, convsz + 16);
-		assert(conv);
+		size = read8(f);	/* pattern control block */
+		read16b(f);		/* 0x3f 0x04 */
+		plen = read16b(f);
+		ctl = read8(f);
 
-                if (b & M0F_LINEMSK00)
-			*conv = 0L;
-                else if (b & M0F_LINEMSK0F)
-			*conv = 0xffffffff;
-                else
-			*conv = read32b(f);
+		printf("size = %02x\n", size);
+		printf("pen  = %04x\n", plen);
+		printf("ctl  = %02x\n", ctl);
 
-                if (b & M0F_LINEMSK10)
-			*(conv + 1) = 0L;
-                else if (b & M0F_LINEMSK1F)
-			*(conv + 1) = 0xffffffff;
-                else
-			*(conv + 1) = read32b(f);
+		linemsk0 = fxmsk0 = ctl & 0x80 ? 0xffffffff : 0x00000000;
+		linemsk1 = fxmsk1 = ctl & 0x80 ? 0xffffffff : 0x00000000;
 
-                if (b & M0F_FXMSK00)
-			*(conv + 2) = 0L;
-                else if (b & M0F_FXMSK0F)
-			*(conv + 2) = 0xffffffff;
-                else
-			*(conv + 2) = read32b(f);
+		if (~ctl & 0x80) {
+			if (~ctl & 0x40)
+				linemsk0 = read32b(f);
+			if (~ctl & 0x10)
+				fxmsk0   = read32b(f);
+		}
+		if (~ctl & 0x08) {
+			if (~ctl & 0x04)
+				linemsk1 = read32b(f);
+			if (~ctl & 0x01)
+				fxmsk1   = read32b(f);
+		}
 
-                if (b & M0F_FXMSK10)
-			*(conv + 3) = 0L;
-                else if (b & M0F_FXMSK1F)
-			*(conv + 3) = 0xffffffff;
-                else
-			*(conv + 3) = read32b(f);
+		printf("linemsk0 = %08x\n", linemsk0);
+		printf("fxmsk0   = %08x\n", fxmsk0);
+		printf("linemsk1 = %08x\n", linemsk1);
+		printf("fxmsk1   = %08x\n", fxmsk1);
 
-		fread(conv + 4, 1, convsz, f);
+		read8(f);		/* 0xff */
 
-                unpack_block(i, (uint8 *)conv);
+		for (j = 0; j < 32; j++, linemsk0 <<= 1, fxmsk0 <<= 1) {
+			if (linemsk0 & 0x80000000) {
+				chmsk = read4(f);
+				for (k = 0; k < 4; k++, chmsk <<= 1) {
+					event = &EVENT(i, k, j);
 
-		free(conv);
+					if (chmsk & 0x08) {
+						x = read12b(f);
+						event->note = x >> 4;
+						if (event->note)
+							event->note += 36;
+						event->ins  = x & 0x0f;
+					}
+				}
+			}
+
+			if (fxmsk0 & 0x80000000) {
+				chmsk = read4(f);
+				for (k = 0; k < 4; k++, chmsk <<= 1) {
+					event = &EVENT(i, k, j);
+
+					if (chmsk & 0x08) {
+						x = read12b(f);
+						event->fxt = x >> 8;
+						event->fxp = x & 0xff;
+					}
+				}
+			}
+
+			printf("%03d ", j);
+			for (k = 0; k < 4; k++) {
+				event = &EVENT(i, k, j);
+				if (event->note)
+					printf("%03d", event->note);
+				else
+					printf("---");
+				printf(" %1x%1x%02x ",
+					event->ins, event->fxt, event->fxp);
+			}
+			printf("\n");
+		}
+
+		for (j = 32; j < 64; j++, linemsk1 <<= 1, fxmsk1 <<= 1) {
+			if (linemsk1 & 0x80000000) {
+				chmsk = read4(f);
+				for (k = 0; k < 4; k++, chmsk <<= 1) {
+					event = &EVENT(i, k, j);
+
+					if (chmsk & 0x08) {
+						x = read12b(f);
+						event->note = x >> 4;
+						event->ins  = x & 0x0f;
+					}
+				}
+			}
+
+			if (fxmsk1 & 0x80000000) {
+				chmsk = read4(f);
+				for (k = 0; k < 4; k++, chmsk <<= 1) {
+					event = &EVENT(i, k, j);
+
+					if (chmsk & 0x08) {
+						x = read12b(f);
+						event->fxt = x >> 8;
+						event->fxp = x & 0xff;
+					}
+				}
+			}
+		}
 
 		reportv(0, ".");
 	}
@@ -366,7 +270,7 @@ int med4_load(FILE * f)
 
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		if (~mask & MASK)
+		if (~mask & 0x80000000)
 			continue;
 
 		xxs[i].len = read32b(f);
