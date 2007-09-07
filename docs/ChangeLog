@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.61 2007-09-03 04:28:11 cmatsuoka Exp $
+$Id: ChangeLog,v 1.62 2007-09-07 22:03:47 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -26,6 +26,7 @@ Stable versions
 	- added Desktop Tracker module loader
 	- added Zoo depacker
 	- added MED3 module loader
+	- added MED4 module loader
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation

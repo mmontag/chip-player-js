@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.6 2007-09-07 21:11:48 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.7 2007-09-07 22:03:47 cmatsuoka Exp $
  */
 
 /*
@@ -22,7 +22,6 @@
 #include "load.h"
 
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
-#define MAGIC_MEDV	MAGIC4('M','E','D','V')
 
 
 static int read4_ctl;
@@ -104,8 +103,8 @@ int med4_load(FILE * f)
 	int i, j, k;
 	uint32 m, mask;
 	int transp;
-	int pos, ver;
-	uint8 trkvol[16];
+	int pos, vermaj, vermin;
+	uint8 trkvol[16], buf[1024];
 	struct xxm_event *event;
 
 	LOAD_INIT();
@@ -114,11 +113,23 @@ int med4_load(FILE * f)
 		return -1;
 
 	pos = ftell(f);
-	fseek(f, -11, SEEK_END);
-	ver = read32b(f) == MAGIC_MEDV ? 3 : 2;
+	fseek(f, 0, SEEK_END);
+	fseek(f, -1023, SEEK_CUR);
+	fread(buf, 1, 1024, f);
 	fseek(f, pos, SEEK_SET);
 
-	sprintf(xmp_ctl->type, "MED4 (MED %s)", ver > 2 ? "3.00" : "2.10");
+	vermaj = 2;
+	vermin = 10;
+
+	for (i = 0; i < 1012; i++) {
+		if (!memcmp(buf + i, "MEDV\000\000\000\004", 8)) {
+			vermaj = *(buf + i + 10);
+			vermin = *(buf + i + 11);
+			break;
+		}
+	}
+
+	sprintf(xmp_ctl->type, "MED4 (MED %d.%02d)", vermaj, vermin);
 
 	xxh->ins = xxh->smp = 32;
 	INSTRUMENT_INIT();

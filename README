@@ -1,4 +1,4 @@
-$Id: README,v 1.38 2007-09-04 01:24:11 cmatsuoka Exp $
+$Id: README,v 1.39 2007-09-07 22:03:47 cmatsuoka Exp $
 
 
 
@@ -82,7 +82,7 @@ The current version recognizes the following module formats:
   EMOD  ***	Quadra Composer		0001
   KRIS	****+	ChipTracker		KRIS
   MODL	****+	Protracker 3.59		PTDT
-  MED	***	MED 2.00	 	MED3
+  MED	***	MED 2.10/3.00	 	MED3, MED4
   MED	***	MED 3.00/OctaMED	MMD0, MMD1, MMD2, MMD3
   MTN	****	ST 2.6, Ice Tracker	MTN, IT10
   OKTA	***	Oktalyzer		-
