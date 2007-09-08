@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.5 2007-09-02 16:55:43 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.6 2007-09-08 04:49:56 cmatsuoka Exp $
  */
 
 /*
@@ -172,7 +172,7 @@ static void unpack_block(uint16 bnum, uint8 *from)
 					event->fxp = (EX_DELAY << 4) | 3;
 				} else if (event->fxp > 10) {
 					event->fxt = FX_S3M_BPM;
-					event->fxp = event->fxp * 4 - 7;
+					event->fxp = 125 * event->fxp / 33;
 				}
 				break;
 			default:
@@ -246,7 +246,7 @@ int med3_load(FILE * f)
 	fread(xxo, 1, xxh->len, f);
 	xxh->tpo = read16b(f);
 	if (xxh->tpo > 10) {
-		xxh->bpm = xxh->tpo * 4 - 7;
+		xxh->bpm = 125 * xxh->tpo / 33;
 		xxh->tpo = 6;
 	}
 	transp = read8s(f);
@@ -272,7 +272,7 @@ int med3_load(FILE * f)
 	MODULE_INFO();
 
 	reportv(0, "Sliding        : %d\n", sliding);
-	reportv(0, "Play transpose : %d\n", transp);
+	reportv(0, "Play transpose : %d semitones\n", transp);
 
 	if (sliding == 6)
 		xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;

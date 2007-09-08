@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.8 2007-09-08 01:40:40 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.9 2007-09-08 04:49:57 cmatsuoka Exp $
  */
 
 /*
@@ -62,7 +62,7 @@ static void fix_effect(struct xxm_event *event)
 			event->fxp = (EX_DELAY << 4) | 3;
 		} else if (event->fxp > 10) {
 			event->fxt = FX_S3M_BPM;
-			event->fxp = event->fxp * 4 - 7;
+			event->fxp = 125 * event->fxp / 33;
 		}
 		break;
 	default:
@@ -106,6 +106,7 @@ int med4_load(FILE * f)
 	int pos, vermaj, vermin;
 	uint8 trkvol[16], buf[1024];
 	struct xxm_event *event;
+	int flags, hexvol = 0;
 
 	LOAD_INIT();
 
@@ -165,8 +166,8 @@ int med4_load(FILE * f)
 			buf[j] = read8(f);
 		buf[j] = 0;
 
-		xxs[i].lps    = c & 0x01 ? 0 : read16b(f);
-		loop_len      = c & 0x02 ? 0 : read16b(f);
+		xxs[i].lps    = c & 0x01 ? 0 : read16b(f) << 1;
+		loop_len      = c & 0x02 ? 0 : read16b(f) << 1;
 		xxi[i][0].vol = c & 0x20 ? 0x40 : read8(f);
 		xxi[i][0].xpo = c & 0x40 ? 0x00 : read8(f);
 
@@ -184,11 +185,21 @@ int med4_load(FILE * f)
 
 	xxh->len = read16b(f);
 	fread(xxo, 1, xxh->len, f);
-	xxh->bpm = read16b(f) * 4 - 7;
+	xxh->bpm = 125 * read16b(f) / 33;
         transp = read8s(f);
         read8s(f);
-        read8s(f);
+        flags = read8s(f);
 	xxh->tpo = read8(f);
+
+	if (~flags & 0x20)	/* sliding */
+		xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
+
+	if (flags & 0x10)	/* dec/hex volumes */
+		hexvol = 1;	/* not implemented */
+
+	/* This is just a guess... */
+	if (vermaj == 2)	/* Happy.med has tempo 5 but loads as 6 */
+		xxh->tpo = flags & 0x20 ? 5 : 6;
 
 	fseek(f, 20, SEEK_CUR);
 
@@ -197,7 +208,7 @@ int med4_load(FILE * f)
 
 	MODULE_INFO();
 
-	reportv(0, "Play transpose : %d\n", transp);
+	reportv(0, "Play transpose : %d semitones\n", transp);
 
 	for (i = 0; i < 32; i++)
 		xxi[i][0].xpo += transp;
@@ -216,8 +227,8 @@ int med4_load(FILE * f)
 		xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		//printf("\n===== PATTERN %d =====\n", i);
-		//printf("offset = %lx\n", ftell(f));
+		/*printf("\n===== PATTERN %d =====\n", i);
+		printf("offset = %lx\n", ftell(f));*/
 
 		size = read8(f);	/* pattern control block */
 		x = read16b(f);		/* 0x043f */
