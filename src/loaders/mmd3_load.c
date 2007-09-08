@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.7 2007-09-01 01:42:50 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.8 2007-09-08 12:53:22 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,11 +31,11 @@ static char *inst_type[] = {
 
 static int bpmon, bpmlen;
 
-static void xlat_fx(uint8 *fxt, uint8 *fxp)
+static void xlat_fx(struct xxm_event *event)
 {
-	switch (*fxt) {
+	switch (event->fxt) {
 	case 0x05:		/* Old vibrato */
-		*fxp = (LSN(*fxp) << 4) | MSN(*fxp);
+		event->fxp = (LSN(event->fxp) << 4) | MSN(event->fxp);
 		break;
 	case 0x06:		/* Not defined in MED 3.2 */
 	case 0x07:		/* Not defined in MED 3.2 */
@@ -43,46 +43,50 @@ static void xlat_fx(uint8 *fxt, uint8 *fxp)
 	case 0x08:		/* Set hold/decay */
 		break;
 	case 0x09:		/* Set secondary tempo */
-		*fxt = 0x0f;
+		event->fxt = FX_TEMPO;
 		break;
 	case 0x0d:		/* Volume slide */
-		*fxt = 0x0a;
+		event->fxt = FX_VOLSLIDE;
 		break;
 	case 0x0e:		/* Synth JMP */
 		break;
 	case 0x0f:
-		if (*fxp == 0x00) {	/* Jump to next block */
-			*fxt = 0x0d;
+		if (event->fxp == 0x00) {	/* Jump to next block */
+			event->fxt = 0x0d;
 			break;
-		} else if (*fxp <= 0x0a) {
+		} else if (event->fxp <= 0x0a) {
 			break;
-		} else if (*fxp <= 0xf0) {
-			if (*fxp < 0x21)
-				*fxp = 0x21;
+		} else if (event->fxp <= 0xf0) {
+			event->fxt = FX_S3M_BPM;
 			break;
 		}
-		switch (*fxp) {
+		switch (event->fxp) {
 		case 0xf1:	/* Play note twice */
+			event->fxt = FX_EXTENDED;
+			event->fxp = (EX_RETRIG << 4) | 3;
 			break;
 		case 0xf2:	/* Delay note */
+			event->fxt = FX_EXTENDED;
+			event->fxp = (EX_DELAY << 4) | 3;
 			break;
 		case 0xf3:	/* Play note three times */
+			event->fxt = FX_EXTENDED;
+			event->fxp = (EX_RETRIG << 4) | 2;
 			break;
 		case 0xf8:	/* Turn filter off */
 		case 0xf9:	/* Turn filter on */
 		case 0xfa:	/* MIDI pedal on */
 		case 0xfb:	/* MIDI pedal off */
-			*fxt = *fxp = 0;
-			break;
 		case 0xfd:	/* Set pitch */
-			*fxt = *fxp = 0;
-			break;
 		case 0xfe:	/* End of song */
-			*fxt = *fxp = 0;
+			event->fxt = event->fxp = 0;
 			break;
 		case 0xff:	/* Note cut */
-			*fxt = *fxp = 0;
+			event->fxt = FX_EXTENDED;
+			event->fxp = (EX_CUT << 4) | 3;
 			break;
+		default:
+			event->fxt = event->fxp = 0;
 		}
 		break;
 	}
@@ -335,7 +339,7 @@ int mmd3_load(FILE *f)
 				event->ins = e[1] & 0x3f;
 				event->fxt = e[2];
 				event->fxp = e[3];
-				xlat_fx(&event->fxt, &event->fxp);
+				xlat_fx(event);
 			}
 		}
 
