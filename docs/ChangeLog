@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.62 2007-09-07 22:03:47 cmatsuoka Exp $
+$Id: ChangeLog,v 1.63 2007-09-08 02:46:42 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -47,6 +47,7 @@ Stable versions
 	- fixed S3M pan settings
 	- fixed IT old instrument volume mode setting
 	- fixed IT 16-bit sample loading (reported by Henrik Pauli)
+	- fixed infinite loop scan (reported by Zbigniew Luszpinski)
 	- fixed Sinaria sample size and finetune
 	- fixed issues with OpenBSD
 	- fixed issues with 64-bit machines

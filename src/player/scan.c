@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -117,6 +117,16 @@ int xmpi_scan_module ()
 
 	last_row = xxp[xxo[ord]]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
+
+	    /* Date: Sat, 8 Sep 2007 04:01:06 +0200
+	     * Reported by Zbigniew Luszpinski <zbiggy@o2.pl>
+	     * The scan routine falls into infinite looping and doesn't let
+	     * xmp play jos-dr4k.xm.
+	     * Claudio's workaround: we'll break infinite loops here.
+	     */
+	    if (cnt_row > 255)
+		goto end_module;
+
 	    if (!loop_flg && tab_cnt[ord][row]) {
 		cnt_row--;
 		goto end_module;
