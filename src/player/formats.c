@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.40 2007-09-04 01:24:11 cmatsuoka Exp $
+ * $Id: formats.c,v 1.41 2007-09-08 15:13:12 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -61,7 +61,7 @@ void xmp_init_formats()
     register_fmt ("PSM", "Epic Megagames MASI", psm_load);
     register_fmt ("PSM", "Protracker Studio", svb_load);
     register_fmt ("AMF", "DSMI (DMP)", amf_load);
-    register_fmt ("MMD0/1", "MED 3.00/OctaMED Pro", mmd1_load);
+    register_fmt ("MMD0/1", "MED 3.00/OctaMED", mmd1_load);
     register_fmt ("MMD2/3", "OctaMED Soundstudio", mmd3_load);
     //register_fmt ("MED2", "MED 1.12", med2_load);
     register_fmt ("MED3", "MED 2.00", med3_load);
