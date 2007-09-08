@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.7 2007-09-07 22:03:47 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.8 2007-09-08 01:40:40 cmatsuoka Exp $
  */
 
 /*
@@ -102,7 +102,7 @@ int med4_load(FILE * f)
 {
 	int i, j, k;
 	uint32 m, mask;
-	int transp;
+	int transp, masksz;
 	int pos, vermaj, vermin;
 	uint8 trkvol[16], buf[1024];
 	struct xxm_event *event;
@@ -112,15 +112,17 @@ int med4_load(FILE * f)
 	if (read32b(f) !=  MAGIC_MED4)
 		return -1;
 
+	vermaj = 2;
+	vermin = 10;
+
+	/*
+	 * Check if we have a MEDV chunk at the end of the file
+	 */
 	pos = ftell(f);
 	fseek(f, 0, SEEK_END);
 	fseek(f, -1023, SEEK_CUR);
 	fread(buf, 1, 1024, f);
 	fseek(f, pos, SEEK_SET);
-
-	vermaj = 2;
-	vermin = 10;
-
 	for (i = 0; i < 1012; i++) {
 		if (!memcmp(buf + i, "MEDV\000\000\000\004", 8)) {
 			vermaj = *(buf + i + 10);
@@ -131,20 +133,25 @@ int med4_load(FILE * f)
 
 	sprintf(xmp_ctl->type, "MED4 (MED %d.%02d)", vermaj, vermin);
 
-	xxh->ins = xxh->smp = 32;
-	INSTRUMENT_INIT();
-
 	m = read8(f);
-	for (mask = i = 0; i < 8; i++, m <<= 1) {
+
+	mask = masksz = 0;
+	for (i = 0; i < 8; i++, m <<= 1) {
 		if (m & 0x80) {
 			mask <<= 8;
 			mask |= read8(f);
+			masksz++;
 		}
 	}
+	mask <<= (32 - masksz * 8);
+
+	xxh->ins = xxh->smp = 32;
+	INSTRUMENT_INIT();
 
 	/* read instrument names */
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		uint8 c, size, buf[40];
+		uint16 loop_len;
 
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
@@ -158,16 +165,14 @@ int med4_load(FILE * f)
 			buf[j] = read8(f);
 		buf[j] = 0;
 
+		xxs[i].lps    = c & 0x01 ? 0 : read16b(f);
+		loop_len      = c & 0x02 ? 0 : read16b(f);
 		xxi[i][0].vol = c & 0x20 ? 0x40 : read8(f);
+		xxi[i][0].xpo = c & 0x40 ? 0x00 : read8(f);
 
-		if (c == 0x4c) {
-			read32b(f);
-		}
-		if (c == 0x4d) {
-			read32b(f);
-		}
-		if (c == 0x6c)
-			read32b(f);
+		xxs[i].lpe = xxs[i].lps + loop_len;
+		if (loop_len > 0)
+			xxs[i].flg |= WAVE_LOOPING;
 
 		copy_adjust(xxih[i].name, buf, 32);
 		//printf("%d = %s\n", i, xxih[i].name);
@@ -179,7 +184,7 @@ int med4_load(FILE * f)
 
 	xxh->len = read16b(f);
 	fread(xxo, 1, xxh->len, f);
-	xxh->bpm = read16b(f);
+	xxh->bpm = read16b(f) * 4 - 7;
         transp = read8s(f);
         read8s(f);
         read8s(f);
@@ -195,7 +200,7 @@ int med4_load(FILE * f)
 	reportv(0, "Play transpose : %d\n", transp);
 
 	for (i = 0; i < 32; i++)
-		xxi[i][0].xpo = transp;
+		xxi[i][0].xpo += transp;
 
 	PATTERN_INIT();
 
@@ -292,6 +297,8 @@ int med4_load(FILE * f)
 					if (chmsk & 0x08) {
 						x = read12b(f);
 						event->note = x >> 4;
+						if (event->note)
+							event->note += 36;
 						event->ins  = x & 0x0f;
 					}
 				}
@@ -331,7 +338,7 @@ int med4_load(FILE * f)
 	/* Load samples */
 
 	reportv(0, "Instruments    : %d ", xxh->ins);
-	reportv(1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
+	reportv(1, "\n     Instrument name                  Len  LBeg LEnd L Vol Xpo");
 
 	mask = read32b(f);
 
@@ -351,11 +358,11 @@ int med4_load(FILE * f)
 		xxi[i][0].sid = i;
 		xxih[i].nsm = !!(xxs[i].len);
 
-		reportv(1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
+		reportv(1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x %+03d ",
 			i, xxih[i].name, xxs[i].len, xxs[i].lps,
 			xxs[i].lpe,
 			xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			xxi[i][0].vol);
+			xxi[i][0].vol, xxi[i][0].xpo);
 
 		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
 				  &xxs[xxi[i][0].sid], NULL);
