@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.1 2007-09-09 16:40:10 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.2 2007-09-09 22:35:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,14 +26,40 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "load.h"
+
+#define NAME_SIZE 255
+
+
+static void split_name(char *s, char **d, char **b)
+{
+	if ((*b = strrchr(s, '/'))) {
+		**b = 0;
+		(*b)++;
+		*d = s;
+	} else {
+		*d = "";
+		*b = s;
+	}
+}
+
 
 int ssmt_load(FILE * f)
 {
 	struct xxm_event *event;
 	int i, j, k;
-	uint8 buffer[10];
+	uint8 buffer[25];
 	int blocksize;
+	char *dirname, *basename;
+	char filename[NAME_SIZE];
+	char modulename[NAME_SIZE];
+	struct stat stat;
+	FILE *s;
 
 	LOAD_INIT();
 
@@ -46,12 +72,13 @@ int ssmt_load(FILE * f)
 	else
 		return -1;
 
+	strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
+	split_name(modulename, &dirname, &basename);
+
 	blocksize = read16b(f);
 	xxh->tpo = read16b(f);
 	fseek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
-	MODULE_INFO();
-
 	xxh->ins = xxh->smp = 15;
 	INSTRUMENT_INIT();
 
@@ -69,8 +96,11 @@ int ssmt_load(FILE * f)
 		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
 	}
 
-	xxh->len = read16b(f);
+	xxh->len = read8(f) & 0x7f;
+	read8(f);
 	fread(xxo, 1, 128, f);
+
+	MODULE_INFO();
 
 	fseek(f, 600, SEEK_SET);
 
@@ -127,6 +157,16 @@ int ssmt_load(FILE * f)
 	reportv(1, "\n     Name                   Len  LBeg LEnd L Vol");
 
 	for (i = 0; i < xxh->ins; i++) {
+		if (!xxih[i].name[0])
+			continue;
+
+		snprintf(filename, NAME_SIZE, "%s/%s\n", dirname, xxih[i].name);
+
+		s = fopen(filename, "rb");
+		fstat(fileno(s), &stat);
+		fread(&b, 1, stat.st_size, s);
+		fclose(s);
+
 #if 0
 		xxih[i].nsm = !!(xxs[i].len);
 		xxs[i].lps = 0;
@@ -138,7 +178,7 @@ int ssmt_load(FILE * f)
 #endif
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
-			report("[%2X] %-8.8s  %04x %04x %04x %c V%02x", i,
+			report("\n[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
 				xxih[i].name,
 				xxs[i].len, xxs[i].lps, xxs[i].lpe,
 				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',

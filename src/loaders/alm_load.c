@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.4 2007-08-10 01:29:46 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.5 2007-09-09 22:35:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -51,15 +51,15 @@ int alm_load (FILE *f)
 
     LOAD_INIT ();
 
-    strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
-    basename = strtok (modulename, ".");
-
     fread(&afh.id, 7, 1, f);
 
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))	/* Version 1.0 */
 	xxh->tpo = afh.speed / 2;
     else if (strncmp((char *)afh.id, "ALEY MO", 7)) /* Versions 1.1 and 1.2 */
 	return -1;
+
+    strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
+    basename = strtok (modulename, ".");
 
     afh.speed = read8(f);
     afh.length = read8(f);
@@ -112,10 +112,12 @@ int alm_load (FILE *f)
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
-	s = fopen (filename, "rb");
+
 	if (!(xxih[i].nsm = (s != NULL)))
 	    continue;
+
+	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
+	s = fopen (filename, "rb");
 	fstat (fileno (s), &stat);
 	fread (&b, 1, 1, s);	/* Get first octet */
 	xxs[i].len = stat.st_size - 5 * !b;
@@ -140,6 +142,8 @@ int alm_load (FILE *f)
 
 	xmp_drv_loadpatch (s, xxi[i][0].sid, xmp_ctl->c4rate,
 	    XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
+
+	fclose(s);
 
 	reportv(0, ".");
     }

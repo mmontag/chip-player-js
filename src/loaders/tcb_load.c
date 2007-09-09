@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.8 2007-09-09 16:40:10 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.9 2007-09-09 22:35:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 #include "load.h"
 
-int tcb_load(FILE * f)
+int tcb_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
