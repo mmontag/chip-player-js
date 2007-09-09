@@ -14,7 +14,7 @@
 
 #define SMIX_NUMVOC	64	/* default number of softmixer voices */
 #define SMIX_MAXRAT	48000	/* max sampling rate (Hz) */
-#define SMIX_MINBPM	0x20	/* min BPM */
+#define SMIX_MINBPM	0x10	/* min BPM */
 #define SMIX_RESMAX	(sizeof (int16))	/* max output resolution */
 
 #define SMIX_VOL_FT	4
