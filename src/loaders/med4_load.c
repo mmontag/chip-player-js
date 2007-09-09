@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.9 2007-09-08 04:49:57 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.10 2007-09-09 14:28:10 cmatsuoka Exp $
  */
 
 /*
@@ -179,9 +179,7 @@ int med4_load(FILE * f)
 		//printf("%d = %s\n", i, xxih[i].name);
 	}
 
-	xxh->chn = 4;
 	xxh->pat = read16b(f);
-	xxh->trk = xxh->chn * xxh->pat;
 
 	xxh->len = read16b(f);
 	fread(xxo, 1, xxh->len, f);
@@ -213,6 +211,11 @@ int med4_load(FILE * f)
 	for (i = 0; i < 32; i++)
 		xxi[i][0].xpo += transp;
 
+	read8(f);
+	xxh->chn = read8(f);;
+	fseek(f, -2, SEEK_CUR);
+	xxh->trk = xxh->chn * xxh->pat;
+
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
@@ -220,20 +223,21 @@ int med4_load(FILE * f)
 
 	for (i = 0; i < xxh->pat; i++) {
 		int size, plen;
-		uint8 ctl, chmsk;
+		uint8 ctl, chmsk, chn, rows;
 		uint32 linemsk0, fxmsk0, linemsk1, fxmsk1, x;
-
-		PATTERN_ALLOC(i);
-		xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
 
 		/*printf("\n===== PATTERN %d =====\n", i);
 		printf("offset = %lx\n", ftell(f));*/
 
 		size = read8(f);	/* pattern control block */
-		x = read16b(f);		/* 0x043f */
+		chn = read8(f);
+		rows = read8(f) + 1;
 		plen = read16b(f);
 		ctl = read8(f);
+
+		PATTERN_ALLOC(i);
+		xxp[i]->rows = rows;
+		TRACK_ALLOC(i);
 
 		linemsk0 = ctl & 0x80 ? ~0 : ctl & 0x40 ? 0 : read32b(f);
 		fxmsk0   = ctl & 0x20 ? ~0 : ctl & 0x10 ? 0 : read32b(f);
@@ -241,15 +245,14 @@ int med4_load(FILE * f)
 		fxmsk1   = ctl & 0x02 ? ~0 : ctl & 0x01 ? 0 : read32b(f);
 
 		/*printf("size = %02x\n", size);
-		printf("x    = %02x\n", x);
+		printf("chn  = %01x\n", chn);
+		printf("rows = %01x\n", rows);
 		printf("plen = %04x\n", plen);
 		printf("ctl  = %02x\n", ctl);
 		printf("linemsk0 = %08x\n", linemsk0);
 		printf("fxmsk0   = %08x\n", fxmsk0);
 		printf("linemsk1 = %08x\n", linemsk1);
 		printf("fxmsk1   = %08x\n", fxmsk1);*/
-
-		assert(x == 0x043f);
 
 		x = read8(f);		/* 0xff */
 		//printf("blk end  = %02x\n\n", x);
