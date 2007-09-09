@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.7 2007-08-29 03:23:58 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.8 2007-09-09 16:40:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -151,10 +151,11 @@ int tcb_load(FILE * f)
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
 			report("[%2X] %-8.8s  %04x %04x %04x %c "
-						"V%02x  %02x %02x %02x\n", i,
-			       xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-			       xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			       xxi[i][0].vol, unk1[i], unk2[i], unk3[i]);
+						"V%02x  %02x %02x %02x\n",
+				i, xxih[i].name,
+				xxs[i].len, xxs[i].lps, xxs[i].lpe,
+				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				xxi[i][0].vol, unk1[i], unk2[i], unk3[i]);
 		}
 	}
 
