@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.5 2007-09-09 22:35:14 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.6 2007-09-10 11:23:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -112,12 +112,12 @@ int alm_load (FILE *f)
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
+	s = fopen (filename, "rb");
 
 	if (!(xxih[i].nsm = (s != NULL)))
 	    continue;
 
-	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
-	s = fopen (filename, "rb");
 	fstat (fileno (s), &stat);
 	fread (&b, 1, 1, s);	/* Get first octet */
 	xxs[i].len = stat.st_size - 5 * !b;

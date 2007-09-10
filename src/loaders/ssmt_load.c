@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.2 2007-09-09 22:35:14 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.3 2007-09-10 11:23:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -164,7 +164,6 @@ int ssmt_load(FILE * f)
 
 		s = fopen(filename, "rb");
 		fstat(fileno(s), &stat);
-		fread(&b, 1, stat.st_size, s);
 		fclose(s);
 
 #if 0
