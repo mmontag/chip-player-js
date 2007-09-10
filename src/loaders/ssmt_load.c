@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.4 2007-09-10 11:40:37 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.5 2007-09-10 18:38:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,11 +27,8 @@
 #endif
 
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
 #include "load.h"
+#include "asif.h"
 
 #define NAME_SIZE 255
 
@@ -58,7 +55,6 @@ int mtp_load(FILE * f)
 	char *dirname, *basename;
 	char filename[NAME_SIZE];
 	char modulename[NAME_SIZE];
-	struct stat stat;
 	FILE *s;
 
 	LOAD_INIT();
@@ -75,8 +71,8 @@ int mtp_load(FILE * f)
 	strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
 	split_name(modulename, &dirname, &basename);
 
-	blocksize = read16b(f);
-	xxh->tpo = read16b(f);
+	blocksize = read16l(f);
+	xxh->tpo = read16l(f);
 	fseek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
 	xxh->ins = xxh->smp = 15;
@@ -90,7 +86,7 @@ int mtp_load(FILE * f)
 			buffer[buffer[0] + 1] = 0;
 			copy_adjust(xxih[i].name, buffer + 1, 22);
 		}
-		read16b(f);		/* skip 2 reserved bytes */
+		read16l(f);		/* skip 2 reserved bytes */
 		xxi[i][0].vol = read8(f);
 		xxi[i][0].pan = 0x80;
 		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
@@ -160,10 +156,13 @@ int mtp_load(FILE * f)
 		if (!xxih[i].name[0])
 			continue;
 
-		snprintf(filename, NAME_SIZE, "%s/%s\n", dirname, xxih[i].name);
+		strncpy(filename, dirname, NAME_SIZE);
+		if (*filename)
+			strncat(filename, "/", NAME_SIZE);
+		strncat(filename, (char *)xxih[i].name, NAME_SIZE);
 
 		s = fopen(filename, "rb");
-		fstat(fileno(s), &stat);
+		asif_load(s, i);
 		fclose(s);
 
 #if 0
@@ -184,6 +183,7 @@ int mtp_load(FILE * f)
 				xxi[i][0].vol);
 		}
 	}
+	reportv(0, "\n");
 
 #if 0
 	/* Read samples */
