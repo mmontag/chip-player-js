@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.3 2007-09-10 11:23:18 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.4 2007-09-10 11:40:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -49,7 +49,7 @@ static void split_name(char *s, char **d, char **b)
 }
 
 
-int ssmt_load(FILE * f)
+int mtp_load(FILE * f)
 {
 	struct xxm_event *event;
 	int i, j, k;

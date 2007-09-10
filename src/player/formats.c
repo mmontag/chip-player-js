@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.42 2007-09-09 16:40:10 cmatsuoka Exp $
+ * $Id: formats.c,v 1.43 2007-09-10 11:40:37 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -83,7 +83,7 @@ void xmp_init_formats()
     register_fmt ("SFX", "SoundFX 1.3", sfx_load);
     register_fmt ("FAR", "Farandole Composer", far_load);
     register_fmt ("STIM", "Slamtilt", stim_load);
-    register_fmt ("SSMT", "SoundSmith/MegaTracker", ssmt_load);
+    register_fmt ("MTP", "SoundSmith/MegaTracker", mtp_load);
     //register_fmt ("FC-M", "FC-M Packer", fcm_load);
     //register_fmt ("KSM", "Kefrens Sound Machine", ksm_load);
     register_fmt ("IMS", "Images Music System", ims_load);
