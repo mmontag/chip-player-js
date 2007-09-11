@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.7 2007-09-11 17:19:20 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.8 2007-09-11 17:52:02 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -115,7 +115,7 @@ static GtkObject *pansep_adj;
 static GtkWidget *xmp_conf_window = NULL;
 static GtkWidget *about_window = NULL;
 static GtkWidget *info_window = NULL;
-static gint expose_event (GtkWidget *, GdkEventExpose *);
+//static gint expose_event (GtkWidget *, GdkEventExpose *);
 
 struct ipc_info _ii, *ii = &_ii;
 int skip = 0;
@@ -155,9 +155,8 @@ static void init_visual (GdkVisual *);
 
 static void aboutbox ()
 {
-	GtkWidget *dialog_vbox1;
+	GtkWidget *vbox1, *hbox1;
 	GtkWidget *label1;
-	GtkWidget *dialog_action_area1;
 	GtkWidget *about_exit;
 	GtkWidget *scroll1;
 	GtkWidget *table1;
@@ -170,22 +169,21 @@ static void aboutbox ()
 		return;
 	}
 
-	about_window = gtk_dialog_new();
+	about_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_object_set_data(GTK_OBJECT(about_window),
 		"about_window", about_window);
 	gtk_window_set_title(GTK_WINDOW(about_window),"About the XMP Plugin");
 	gtk_window_set_policy(GTK_WINDOW(about_window), FALSE, FALSE, FALSE);
-	//gtk_window_set_position(GTK_WINDOW(about_window), GTK_WIN_POS_MOUSE);
 	gtk_signal_connect(GTK_OBJECT(about_window), "destroy",
 		GTK_SIGNAL_FUNC(gtk_widget_destroyed), &about_window);
 	gtk_container_border_width(GTK_CONTAINER(about_window), 10);
 	gtk_widget_realize(about_window);
 
-	dialog_vbox1 = GTK_DIALOG(about_window)->vbox;
-	gtk_object_set_data(GTK_OBJECT(about_window),
-			"dialog_vbox1", dialog_vbox1);
-	gtk_widget_show(dialog_vbox1);
-	gtk_container_border_width(GTK_CONTAINER(dialog_vbox1), 10);
+	vbox1 = gtk_vbox_new(FALSE, 4);
+	gtk_container_add(GTK_CONTAINER(about_window), vbox1);
+	gtk_object_set_data(GTK_OBJECT(about_window), "vbox1", vbox1);
+	gtk_widget_show(vbox1);
+	gtk_container_border_width(GTK_CONTAINER(vbox1), 10);
 
 	label1 = gtk_label_new(
 		"Extended Module Player " VERSION "\n"
@@ -199,14 +197,15 @@ static void aboutbox ()
 		"Supported module formats:"
 	);
 	gtk_object_set_data(GTK_OBJECT(label1), "label1", label1);
-	gtk_box_pack_start(GTK_BOX(dialog_vbox1), label1, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox1), label1, TRUE, TRUE, 0);
 
 	scroll1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll1),
 		GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+	gtk_widget_set_usize(scroll1, 290, 100);
 	gtk_object_set_data(GTK_OBJECT(scroll1), "scroll1", scroll1);
 	gtk_widget_set (scroll1, "height", 100, NULL);
-	gtk_box_pack_start(GTK_BOX(dialog_vbox1), scroll1, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox1), scroll1, TRUE, TRUE, 0);
 
 	xmp_get_fmt_info (&fmt);
 	table1 = gtk_table_new (100, 2, FALSE);
@@ -221,25 +220,17 @@ static void aboutbox ()
 			label_trk, 1, 2, i, i + 1);
 	}
 	gtk_table_resize (GTK_TABLE (table1), i + 1, 3);
-	//gtk_table_set_row_spacings (GTK_TABLE (table1), 1);
-	//gtk_table_set_col_spacing (GTK_TABLE (table1), 0, 2);
-	//gtk_table_set_col_spacing (GTK_TABLE (table1), 1, 2);
 	gtk_object_set_data(GTK_OBJECT(table1), "table1", table1);
 	
-	gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scroll1), table1);
-
-	dialog_action_area1 = GTK_DIALOG(about_window)->action_area;
-	gtk_object_set_data(GTK_OBJECT(about_window),
-		"dialog_action_area1", dialog_action_area1);
-	gtk_container_border_width(GTK_CONTAINER(dialog_action_area1), 10);
+	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll1),
+								table1);
 
 	about_exit = gtk_button_new_with_label("Ok");
 	gtk_signal_connect_object(GTK_OBJECT(about_exit), "clicked",
 		GTK_SIGNAL_FUNC(gtk_widget_destroy), GTK_OBJECT(about_window));
 
 	gtk_object_set_data(GTK_OBJECT(about_window), "about_exit", about_exit);
-	gtk_box_pack_start(GTK_BOX(dialog_action_area1),
-		about_exit, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox1), about_exit, FALSE, FALSE, 0);
 
 	gtk_widget_show_all(about_window);
 }
@@ -321,22 +312,23 @@ static int get_time (void)
 }
 
 
-InputPlugin *get_iplugin_info (void)
+InputPlugin *get_iplugin_info()
 {
 	return &xmp_ip;
 }
 
 
-static void driver_callback (void *b, int i)
+static void driver_callback(void *b, int i)
 {
-    xmp_ip.add_vis_pcm (xmp_ip.output->written_time(),
-	xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
-	xmp_cfg.force_mono ? 1 : 2, i, b);
+	xmp_ip.add_vis_pcm (xmp_ip.output->written_time(),
+			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
+			xmp_cfg.force_mono ? 1 : 2, i, b);
 	
-    while(xmp_ip.output->buffer_free() < i && xmp_going)
-	xmms_usleep(10000);
-    if(xmp_going)
-        xmp_ip.output->write_audio(b, i);
+	while (xmp_ip.output->buffer_free() < i && xmp_going)
+		xmms_usleep(10000);
+
+	if(xmp_going)
+		xmp_ip.output->write_audio(b, i);
 }
 
 
@@ -911,7 +903,7 @@ static void configure()
 }
 
 
-static void config_ok (GtkWidget *widget, gpointer data)
+static void config_ok(GtkWidget *widget, gpointer data)
 {
 	ConfigFile *cfg;
 	gchar *filename;
@@ -1010,7 +1002,7 @@ static void image1_clicked (GtkWidget *widget, GdkEventButton *event)
 	image1_clicked_ok = 1;
 }
 
-static void file_info_box_build ()
+static void file_info_box_build()
 {
 	GtkWidget *hbox1, *vbox1;
 	GtkWidget *info_exit, *info_cycle, *info_mute;
@@ -1105,7 +1097,7 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
-	gtk_widget_set_usize(scrw1, 290, 200);
+	gtk_widget_set_usize(scrw1, 290, 250);
 
 	gtk_container_add (GTK_CONTAINER(expander), scrw1);
 
@@ -1206,10 +1198,12 @@ void putimage (int x, int y, int w, int h)
 }
 
 
+#if 0
 static gint expose_event (GtkWidget *widget, GdkEventExpose *event)
 {
 	return 0;
 }
+#endif
 
 void update_display ()
 {
