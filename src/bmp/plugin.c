@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.6 2007-09-11 12:48:28 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.7 2007-09-11 17:19:20 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1012,38 +1012,37 @@ static void image1_clicked (GtkWidget *widget, GdkEventButton *event)
 
 static void file_info_box_build ()
 {
-	GtkWidget *dialog_vbox1;
-	GtkWidget *hbox1;
+	GtkWidget *hbox1, *vbox1;
 	GtkWidget *info_exit, *info_cycle, *info_mute;
 	GtkWidget *info_unmute, *info_about;
 	GtkWidget *scrw1;
+	GtkWidget *expander;
 	GdkVisual *visual;
-	GtkWidget *dialog_action_area1;
 
-	info_window = gtk_dialog_new();
+	info_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_object_set_data(GTK_OBJECT(info_window),
-		"info_window", info_window);
+					"info_window", info_window);
 	gtk_window_set_title(GTK_WINDOW(info_window),"Extended Module Player");
 	gtk_window_set_policy(GTK_WINDOW(info_window), FALSE, FALSE, TRUE);
-	//gtk_window_set_position(GTK_WINDOW(info_window), GTK_WIN_POS_MOUSE);
 	gtk_signal_connect(GTK_OBJECT(info_window), "destroy",
 		GTK_SIGNAL_FUNC(gtk_widget_destroyed), &info_window);
 	gtk_container_border_width(GTK_CONTAINER(info_window), 0);
 	gtk_widget_realize (info_window);
 
-	dialog_vbox1 = GTK_DIALOG(info_window)->vbox;
-	gtk_object_set_data(GTK_OBJECT(info_window),
-			"dialog_vbox1", dialog_vbox1);
-	gtk_container_border_width(GTK_CONTAINER(dialog_vbox1), 4);
-
+	vbox1 = gtk_vbox_new(FALSE, 0);
+	gtk_container_add(GTK_CONTAINER(info_window), vbox1);
+	gtk_object_set_data(GTK_OBJECT(vbox1), "vbox1", vbox1);
+	gtk_container_border_width(GTK_CONTAINER(vbox1), 4);
 
 	visual = gdk_visual_get_system ();
 
-	frame1 = gtk_handle_box_new  ();
-	gtk_handle_box_set_shadow_type (GTK_HANDLE_BOX(frame1), GTK_SHADOW_IN);
+	/*
+	 * Image
+	 */
+
+	frame1 = gtk_event_box_new();
 	gtk_object_set_data(GTK_OBJECT(frame1), "frame1", frame1);
-	gtk_handle_box_set_handle_position (GTK_HANDLE_BOX(frame1), GTK_POS_LEFT);
-	gtk_box_pack_start(GTK_BOX(dialog_vbox1), frame1, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox1), frame1, TRUE, TRUE, 0);
 
 	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
 	ximage = GDK_IMAGE_XIMAGE(image);
@@ -1058,14 +1057,13 @@ static void file_info_box_build ()
 	gtk_signal_connect (GTK_OBJECT (frame1), "button_press_event",
 		(GtkSignalFunc) image1_clicked, NULL);
 
-	dialog_action_area1 = GTK_DIALOG(info_window)->action_area;
-	gtk_object_set_data(GTK_OBJECT(info_window),
-		"dialog_action_area1", dialog_action_area1);
-	gtk_container_border_width(GTK_CONTAINER(dialog_action_area1), 0);
+	/*
+	 * Buttons
+	 */
 
 	hbox1 = gtk_hbox_new (TRUE, 0);
 	gtk_object_set_data(GTK_OBJECT(hbox1), "hbox1", hbox1);
-	gtk_box_pack_start(GTK_BOX(dialog_vbox1), hbox1, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox1), hbox1, TRUE, FALSE, 0);
 
 	info_cycle = gtk_button_new_with_label("Mode");
 	gtk_signal_connect (GTK_OBJECT (info_cycle), "clicked",
@@ -1097,11 +1095,21 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(info_exit), "info_exit", info_exit);
 	gtk_box_pack_start(GTK_BOX(hbox1), info_exit, TRUE, TRUE, 0);
 
+	/*
+	 * Info area
+	 */
+
+	expander = gtk_expander_new("Module information");
+
 	scrw1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
-	gtk_box_pack_start(GTK_BOX(dialog_action_area1), scrw1, TRUE, TRUE, 0);
+	gtk_widget_set_usize(scrw1, 290, 200);
+
+	gtk_container_add (GTK_CONTAINER(expander), scrw1);
+
+	gtk_box_pack_start(GTK_BOX(vbox1), expander, TRUE, TRUE, 0);
 
 #ifdef BMP_PLUGIN
 	text1b = gtk_text_buffer_new(NULL);
@@ -1109,7 +1117,6 @@ static void file_info_box_build ()
 	//gtk_object_set_data(GTK_OBJECT(text1b), "text1b", text1b);
 	gtk_object_set_data(GTK_OBJECT(text1v), "text1v", text1v);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1v), GTK_WRAP_NONE);
-	//gtk_widget_set(text1v, "height", 160, "width", 290, NULL);
 	gtk_container_add (GTK_CONTAINER(scrw1), text1v);
 	gtk_widget_realize (text1v);
 #else
@@ -1122,8 +1129,6 @@ static void file_info_box_build ()
 #endif
 
 	gtk_widget_realize (image1);
-	//gtk_widget_show_all (dialog_vbox1);
-	//gtk_widget_show_all (dialog_action_area1);
 
 	display = GDK_WINDOW_XDISPLAY (info_window->window);
 	window = GDK_WINDOW_XWINDOW (info_window->window);
