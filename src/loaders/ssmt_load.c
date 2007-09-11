@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.5 2007-09-10 18:38:45 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.6 2007-09-11 00:15:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -87,7 +87,7 @@ int mtp_load(FILE * f)
 			copy_adjust(xxih[i].name, buffer + 1, 22);
 		}
 		read16l(f);		/* skip 2 reserved bytes */
-		xxi[i][0].vol = read8(f);
+		xxi[i][0].vol = read8(f) >> 2;
 		xxi[i][0].pan = 0x80;
 		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
 	}
@@ -117,10 +117,10 @@ int mtp_load(FILE * f)
 
 		for (j = 0; j < xxp[i]->rows; j++) {
 			for (k = 0; k < xxh->chn; k++) {
-				event = &EVENT (i, k, j);
+				event = &EVENT(i, k, j);
 				event->note = read8(f);;
 				if (event->note)
-					event->note += 36;
+					event->note += 12;
 			}
 		}
 		reportv(0, ".");
@@ -130,17 +130,19 @@ int mtp_load(FILE * f)
 	for (i = 0; i < xxh->pat; i++) {
 		for (j = 0; j < xxp[i]->rows; j++) {
 			for (k = 0; k < xxh->chn; k++) {
-				event = &EVENT (i, k, j);
-				event->fxt = read8(f);;
+				event = &EVENT(i, k, j);
+				event->ins = read8(f);;
+				event->fxt = event->ins & 0x0f;
+				event->ins >>= 4;
 			}
 		}
 	}
 
-	/* Load fx1 */
+	/* Load fx2 */
 	for (i = 0; i < xxh->pat; i++) {
 		for (j = 0; j < xxp[i]->rows; j++) {
 			for (k = 0; k < xxh->chn; k++) {
-				event = &EVENT (i, k, j);
+				event = &EVENT(i, k, j);
 				event->fxp = read8(f);;
 			}
 		}
