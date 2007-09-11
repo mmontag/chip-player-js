@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.4 2007-08-24 20:05:17 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.5 2007-09-11 11:47:29 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -189,14 +189,12 @@ static void aboutbox ()
 
 	label1 = gtk_label_new(
 		"Extended Module Player " VERSION "\n"
-		"http://xmp.helllabs.org/\n"
-		"Written by Claudio Matsuoka and \n"
-		"Hipolito Carraro Jr.\n"
+		"Written by Claudio Matsuoka and Hipolito Carraro Jr.\n"
 		"\n"
-		"Portions Copyright ©1998,2000 Olivier Lapicque,\n"
-		"©1998 Tammo Hinrichs, ©1997 Bert Jahn,\n"
-		"©1998 Sylvain Chipaux, ©1999 Tatsuyuki Satoh,\n"
-		"©1996-1999 Takuya Ooura, ©2001-2006 Russell Marks\n"
+		"Portions Copyright (C) 1998,2000 Olivier Lapicque,\n"
+		"(C) 1998 Tammo Hinrichs, (C) 1998 Sylvain Chipaux,\n"
+		"(C) 1997 Bert Jahn, (C) 1999 Tatsuyuki Satoh, (C)\n"
+		"1996-1999 Takuya Ooura, (C) 2001-2006 Russell Marks\n"
 		"\n"
 		"Supported module formats:"
 	);
@@ -207,7 +205,7 @@ static void aboutbox ()
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll1),
 		GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
 	gtk_object_set_data(GTK_OBJECT(scroll1), "scroll1", scroll1);
-	gtk_widget_set (scroll1, "height", 48, NULL);
+	gtk_widget_set (scroll1, "height", 100, NULL);
 	gtk_box_pack_start(GTK_BOX(dialog_vbox1), scroll1, TRUE, TRUE, 0);
 
 	xmp_get_fmt_info (&fmt);
@@ -250,7 +248,12 @@ static void aboutbox ()
 static GdkImage *image;
 static GtkWidget *image1;
 static GtkWidget *frame1;
+#ifdef BMP_PLUGIN
+static GtkWidget *text1v;
+static GtkTextBuffer *text1b;
+#else
 static GtkWidget *text1;
+#endif
 static GdkFont *font;
 static GdkColor *color_black;
 static GdkColor *color_white;
@@ -498,26 +501,32 @@ static pthread_t catch_thread;
 
 void *catch_info (void *arg)
 {
-    FILE *f;
-    char buf[100];
+	FILE *f;
+	char buf[100];
+	GtkTextIter end;
+	GtkTextTag *tag;
 
-    f = fdopen (fd_info[0], "r");
+	f = fdopen(fd_info[0], "r");
 
-    while (!feof (f)) {
-        fgets (buf, 100, f);
+	while (!feof (f)) {
+		fgets (buf, 100, f);
 #ifdef BMP_PLUGIN
-#warning FIXME
+		gtk_text_buffer_get_end_iter(text1b, &end);
+		tag = gtk_text_buffer_create_tag(text1b, NULL,
+						"foreground", "black", NULL);
+		gtk_text_buffer_insert_with_tags(text1b, &end, buf, -1,
+								tag, NULL);
 #else
-	gtk_text_insert (GTK_TEXT(text1), font,
-	    color_black, color_white, buf, strlen(buf));
+		gtk_text_insert(GTK_TEXT(text1), font,
+			color_black, color_white, buf, strlen(buf));
 #endif
-	if (!strncmp (buf, "Estimated time :", 16))
-	    break;
-    }
+		if (!strncmp(buf, "Estimated time :", 16))
+			break;
+	}
 
-    fclose (f);
+	fclose (f);
 
-    pthread_exit (NULL);
+	pthread_exit (NULL);
 }
 
 
@@ -530,23 +539,22 @@ static void play_file (char *filename)
 	
 	_D("play_file: %s", filename);
 
-	stop ();	/* sanity check */
+	stop();		/* sanity check */
 
-	if(!(f = fopen(filename,"rb"))) {
+	if ((f = fopen(filename,"rb")) == 0) {
 		xmp_going = 0;
 		return;
 	}
 	fclose(f);
 
 #ifdef BMP_PLUGIN
-#warning FIXME
+	gtk_text_buffer_set_text(text1b, 0, -1);
 #else
 	gtk_text_set_point (GTK_TEXT(text1), 0);
 	gtk_text_forward_delete (GTK_TEXT(text1),
 		gtk_text_get_length (GTK_TEXT(text1)));
 #endif
 	
-
 	xmp_xmms_audio_error = FALSE;
 	xmp_going = 1;
 
@@ -625,10 +633,11 @@ static void play_file (char *filename)
 	pthread_join (catch_thread, NULL);
 	_D("joined");
 	dup2 (fileno (stderr), fd_old2);
+
 #ifdef BMP_PLUGIN
-#warning FIXME
+	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1v)->vadjustment, 0.0);
 #else
-	gtk_adjustment_set_value (GTK_TEXT(text1)->vadj, 0.0);
+	gtk_adjustment_set_value(GTK_TEXT(text1)->vadj, 0.0);
 #endif
 
 	close (fd_info[0]);
@@ -1095,16 +1104,23 @@ static void file_info_box_build ()
 	gtk_box_pack_start(GTK_BOX(dialog_action_area1), scrw1, TRUE, TRUE, 0);
 
 #ifdef BMP_PLUGIN
-#warning FIXME
+	text1b = gtk_text_buffer_new(NULL);
+	text1v = gtk_text_view_new_with_buffer(text1b);
+	//gtk_object_set_data(GTK_OBJECT(text1b), "text1b", text1b);
+	gtk_object_set_data(GTK_OBJECT(text1v), "text1v", text1v);
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1v), GTK_WRAP_NONE);
+	//gtk_widget_set(text1v, "height", 160, "width", 290, NULL);
+	gtk_container_add (GTK_CONTAINER(scrw1), text1v);
+	gtk_widget_realize (text1v);
 #else
 	text1 = gtk_text_new(NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
 	gtk_text_set_line_wrap (GTK_TEXT(text1), FALSE);
 	gtk_widget_set (text1, "height", 160, "width", 290, NULL);
 	gtk_container_add (GTK_CONTAINER(scrw1), text1);
-
 	gtk_widget_realize (text1);
 #endif
+
 	gtk_widget_realize (image1);
 	//gtk_widget_show_all (dialog_vbox1);
 	//gtk_widget_show_all (dialog_action_area1);
@@ -1187,7 +1203,7 @@ void putimage (int x, int y, int w, int h)
 
 static gint expose_event (GtkWidget *widget, GdkEventExpose *event)
 {
-     return 0;
+	return 0;
 }
 
 void update_display ()
@@ -1199,8 +1215,8 @@ void update_display ()
     e.send_event = TRUE;
     e.area.x = 10;
     e.area.y = 10;
-    e.area.width = 1;
-    e.area.height = 1;
+    e.area.width = 10;
+    e.area.height = 10;
     e.count = 0;
 
 #ifdef FIXME_BMP

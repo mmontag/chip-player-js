@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.11 2007-09-08 12:53:22 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.12 2007-09-11 11:47:30 cmatsuoka Exp $
  */
 
 /*
@@ -269,7 +269,7 @@ int mmd1_load(FILE *f)
 	xxh->trk = xxh->pat * xxh->chn;
 
 	strcpy(xmp_ctl->type, ver == 0 ? xxh->chn > 4 ? "MMD0 (OctaMED 2.00)" :
-			"MMD0 (MED 3.00/Octamed 2.00)" : "MMD1 (OctaMED 4.00)");
+			"MMD0 (MED 3.00)" : "MMD1 (OctaMED 4.00)");
 	
 	MODULE_INFO();
 
