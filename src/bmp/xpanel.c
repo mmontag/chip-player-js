@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.1 2006-02-13 22:58:42 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.2 2007-09-11 18:31:57 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -22,10 +22,6 @@
 #include "config.h"
 #endif
 
-#ifndef XMMS_PLUGIN
-#include "bg1.xpm"
-#include "bg3.xpm"
-#endif
 #include "bg2.xpm"
 
 #define rightmsg(f,x,y,s,c,b) \
@@ -55,12 +51,10 @@ static char **bg;
 void rdft(int, int, float *, int *, float *);
 
 
-#ifdef XMMS_PLUGIN
 int new_module = 0;
 #define xmp_check_parent(i) (new_module)
 #define xmp_wait_parent() do { if (!new_module) return 1; } while (0)
 #define xmp_tell_parent() do { new_module = 0; } while (0)
-#endif
 
 
 void volume_bars (int mode)
@@ -251,14 +245,7 @@ void shadowmsg (struct font_header *f, int x, int y, char *s, int c, int b)
 
 void set_palette ()
 {
-#ifndef XMMS_PLUGIN
-    char **_bg[] =
-    {bg1, bg2, bg3};
-
-    bg = _bg[rand () % 3];
-#else
     bg = bg2;
-#endif
     setpalette (bg);
 }
 
@@ -470,13 +457,7 @@ int panel_loop ()
 	}
 
 	if (ii->pause || ii->mi.chn == 0) {
-#ifndef XMMS_PLUGIN 
-	    update_display ();
-	    if (!xmp_check_parent (125))
-		return 1;
-#else
 	    return 1;
-#endif
 	}
 
 	put_rectangle (177, 106, 15, 13, p);

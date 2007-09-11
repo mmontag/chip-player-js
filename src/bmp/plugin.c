@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.8 2007-09-11 17:52:02 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.9 2007-09-11 18:31:57 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -155,7 +155,7 @@ static void init_visual (GdkVisual *);
 
 static void aboutbox ()
 {
-	GtkWidget *vbox1, *hbox1;
+	GtkWidget *vbox1;
 	GtkWidget *label1;
 	GtkWidget *about_exit;
 	GtkWidget *scroll1;
@@ -202,7 +202,7 @@ static void aboutbox ()
 	scroll1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll1),
 		GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
-	gtk_widget_set_usize(scroll1, 290, 100);
+	gtk_widget_set_size_request(scroll1, 290, 100);
 	gtk_object_set_data(GTK_OBJECT(scroll1), "scroll1", scroll1);
 	gtk_widget_set (scroll1, "height", 100, NULL);
 	gtk_box_pack_start(GTK_BOX(vbox1), scroll1, TRUE, TRUE, 0);
@@ -997,7 +997,8 @@ static void image1_clicked (GtkWidget *widget, GdkEventButton *event)
 	if (!xmp_going || image1_clicked_ok)
 		return;
 
-	image1_clicked_x = event->x - 10;	/* mumble */
+printf("x = %f\n", event->x);
+	image1_clicked_x = event->x;
 	image1_clicked_y = event->y;
 	image1_clicked_ok = 1;
 }
@@ -1034,7 +1035,8 @@ static void file_info_box_build()
 
 	frame1 = gtk_event_box_new();
 	gtk_object_set_data(GTK_OBJECT(frame1), "frame1", frame1);
-	gtk_box_pack_start(GTK_BOX(vbox1), frame1, TRUE, TRUE, 0);
+	gtk_widget_set_size_request(frame1, 300, 128);
+	gtk_box_pack_start(GTK_BOX(vbox1), frame1, FALSE, FALSE, 0);
 
 	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
 	ximage = GDK_IMAGE_XIMAGE(image);
@@ -1047,7 +1049,7 @@ static void file_info_box_build()
 	gtk_container_add (GTK_CONTAINER(frame1), image1);
 	gtk_widget_set_events (frame1, GDK_BUTTON_PRESS_MASK | GDK_KEY_PRESS_MASK);
 	gtk_signal_connect (GTK_OBJECT (frame1), "button_press_event",
-		(GtkSignalFunc) image1_clicked, NULL);
+			(GtkSignalFunc)image1_clicked, NULL);
 
 	/*
 	 * Buttons
@@ -1097,7 +1099,7 @@ static void file_info_box_build()
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
-	gtk_widget_set_usize(scrw1, 290, 250);
+	gtk_widget_set_size_request(scrw1, 290, 250);
 
 	gtk_container_add (GTK_CONTAINER(expander), scrw1);
 
