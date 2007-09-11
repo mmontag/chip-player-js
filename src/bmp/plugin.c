@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.5 2007-09-11 11:47:29 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.6 2007-09-11 12:48:28 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1067,7 +1067,7 @@ static void file_info_box_build ()
 	gtk_object_set_data(GTK_OBJECT(hbox1), "hbox1", hbox1);
 	gtk_box_pack_start(GTK_BOX(dialog_vbox1), hbox1, TRUE, TRUE, 0);
 
-	info_cycle = gtk_button_new_with_label("Cycle");
+	info_cycle = gtk_button_new_with_label("Mode");
 	gtk_signal_connect (GTK_OBJECT (info_cycle), "clicked",
                             (GtkSignalFunc) button_cycle, NULL);
 	gtk_object_set_data(GTK_OBJECT(info_cycle), "info_cycle", info_cycle);
@@ -1208,22 +1208,31 @@ static gint expose_event (GtkWidget *widget, GdkEventExpose *event)
 
 void update_display ()
 {
-    GdkEventExpose e;
+#ifdef BMP_PLUGIN
+	GdkRectangle area;
 
-    e.type = GDK_EXPOSE;
-    e.window = image1->window;
-    e.send_event = TRUE;
-    e.area.x = 10;
-    e.area.y = 10;
-    e.area.width = 10;
-    e.area.height = 10;
-    e.count = 0;
+	area.x = 0;
+	area.y = 0;
+	area.width = 300;
+	area.height = 128;
 
-#ifdef FIXME_BMP
-    gdk_event_put ((GdkEvent *)&e);
+	gdk_window_invalidate_rect(image1->window, &area, FALSE);
+#else
+	GdkEventExpose e;
+
+	e.type = GDK_EXPOSE;
+	e.window = image1->window;
+	e.send_event = TRUE;
+	e.area.x = 10;
+	e.area.y = 10;
+	e.area.width = 10;
+	e.area.height = 10;
+	e.count = 0;
+
+	gdk_event_put((GdkEvent *)&e);
+	//XSync (display, False);
 #endif
 
-    //XSync (display, False);
 }
 
 
