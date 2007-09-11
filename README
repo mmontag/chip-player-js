@@ -1,4 +1,4 @@
-$Id: README,v 1.41 2007-09-09 22:35:13 cmatsuoka Exp $
+$Id: README,v 1.42 2007-09-11 01:19:48 cmatsuoka Exp $
 
 
 
@@ -106,7 +106,7 @@ The current version recognizes the following module formats:
 
   IIgs formats:
 
-  SSMT	***	SoundSmith/Megatracker	SONGOK, IAN92a
+  MTP	**	SoundSmith/Megatracker	SONGOK, IAN92a
 
   PC formats:
 

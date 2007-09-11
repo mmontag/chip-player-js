@@ -255,7 +255,7 @@ ex_f_porta_dn:
 	    xc->t_type = fxp & 3;
 	    break;
 	case EX_RETRIG:				/* Retrig note */
-	    xc->retrig = xc->rcount = fxp ? fxp + 1 : xc->rval;
+	    xc->retrig = xc->rcount = fxp ? fxp : xc->rval;
 	    xc->rval = xc->retrig;
 	    xc->rtype = 0;
 	    break;
@@ -331,7 +331,7 @@ ex_f_vslide_dn:
 	    xc->p_val = MSN (fxp) - LSN (fxp);
 	break;
     case FX_MULTI_RETRIG:			/* Multi retrig */
-	xc->retrig = xc->rcount = LSN (fxp) ? LSN (fxp) + 1 : xc->rval;
+	xc->retrig = xc->rcount = LSN (fxp) ? LSN (fxp) : xc->rval;
 	xc->rval = xc->retrig;
 	xc->rtype = MSN (fxp);
 	break;
