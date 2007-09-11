@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.2 2007-09-11 18:31:57 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.3 2007-09-11 19:35:42 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -266,11 +266,7 @@ void prepare_screen ()
 
     draw_xpm (bg, RES_X, RES_Y);
 
-#ifdef HAVE_SNPRINTF
-    snprintf (buf, 80, "%s", ii->mi.name);
-#else
-    sprintf (buf, "%s", ii->mi.name);
-#endif
+    strncpy(buf, ii->mi.name, 80);
 
     if (writemsg (&font1, 0, 0, buf, -1, 0) > RES_X) {
 	while (writemsg (&font1, 0, 0, buf, -1, 0) > RES_X - 16)

@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.9 2007-09-11 18:31:57 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.10 2007-09-11 19:35:42 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -992,13 +992,12 @@ static int image1_clicked_x = 0;
 static int image1_clicked_y = 0;
 static int image1_clicked_ok = 0;
 
-static void image1_clicked (GtkWidget *widget, GdkEventButton *event)
+static void image1_clicked(GtkWidget *widget, GdkEventButton *event)
 {
 	if (!xmp_going || image1_clicked_ok)
 		return;
 
-printf("x = %f\n", event->x);
-	image1_clicked_x = event->x;
+	image1_clicked_x = event->x - (frame1->allocation.width - 300) / 2;
 	image1_clicked_y = event->y;
 	image1_clicked_ok = 1;
 }
@@ -1212,7 +1211,7 @@ void update_display ()
 #ifdef BMP_PLUGIN
 	GdkRectangle area;
 
-	area.x = 0;
+	area.x = (frame1->allocation.width - 300) / 2;
 	area.y = 0;
 	area.width = 300;
 	area.height = 128;
@@ -1294,10 +1293,10 @@ void setpalette (char **bg)
 int process_events (int *x, int *y)
 {
 	if (image1_clicked_ok) {
-            *x = image1_clicked_x;
-            *y = image1_clicked_y;
-	    image1_clicked_ok = 0;
-	    return -1;
+		*x = image1_clicked_x;
+		*y = image1_clicked_y;
+		image1_clicked_ok = 0;
+		return -1;
 	}
 
 	return 0;
