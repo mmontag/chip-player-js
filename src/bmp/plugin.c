@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.10 2007-09-11 19:35:42 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.11 2007-09-11 21:16:19 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1010,6 +1010,7 @@ static void file_info_box_build()
 	GtkWidget *scrw1;
 	GtkWidget *expander;
 	GdkVisual *visual;
+	PangoFontDescription *desc;
 
 	info_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_object_set_data(GTK_OBJECT(info_window),
@@ -1096,7 +1097,8 @@ static void file_info_box_build()
 
 	scrw1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1),
+				GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
 	gtk_widget_set_size_request(scrw1, 290, 250);
 
@@ -1107,6 +1109,10 @@ static void file_info_box_build()
 #ifdef BMP_PLUGIN
 	text1b = gtk_text_buffer_new(NULL);
 	text1v = gtk_text_view_new_with_buffer(text1b);
+	desc = pango_font_description_new();
+	pango_font_description_set_family(desc, "Monospace");
+	gtk_widget_modify_font(text1v, desc);
+	pango_font_description_free(desc);
 	//gtk_object_set_data(GTK_OBJECT(text1b), "text1b", text1b);
 	gtk_object_set_data(GTK_OBJECT(text1v), "text1v", text1v);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1v), GTK_WRAP_NONE);
