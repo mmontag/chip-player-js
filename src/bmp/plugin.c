@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.17 2007-09-12 22:37:37 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.18 2007-09-12 23:38:17 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -48,12 +48,14 @@
 
 #if defined PLUGIN_XMMS || defined PLUGIN_BMP
 #define IPB
+#define IPB_short(x) short x
+#define IPB_int(x) int x
 #endif
 #ifdef PLUGIN_AUDACIOUS
 #define IPB InputPlayback *ipb
-#endif
 #define IPB_short(x) IPB, short x
 #define IPB_int(x) IPB, int x
+#endif
 
 static void	init		(void);
 static int	is_our_file	(char *);
@@ -357,7 +359,6 @@ static void driver_callback(void *b, int i)
 static void init(void)
 {
 	ConfigFile *cfg;
-	ConfigDb *cfg;
 	gchar *filename;
 
 	xmp_cfg.mixing_freq = 0;
@@ -625,7 +626,7 @@ static void play_file(InputPlayback *ipb)
 #ifdef PLUGIN_XMMS
 	gtk_text_set_point (GTK_TEXT(text1), 0);
 	gtk_text_forward_delete (GTK_TEXT(text1),
-		gtk_text_get_length (GTK_TEXT(text1)));
+			gtk_text_get_length (GTK_TEXT(text1)));
 #endif
 	
 	xmp_xmms_audio_error = FALSE;
@@ -1018,17 +1019,8 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	xmp_cfg.pan_amplitude = (guchar)GTK_ADJUSTMENT(pansep_adj)->value;
         ctl.mix = xmp_cfg.pan_amplitude;
 
-#ifdef PLUGIN_XMMS
-	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
-	cfg = xmms_cfg_open_file(filename);
-	if (!cfg)
-		cfg = xmms_cfg_new();
-
-#define CFGWRITEINT(x) xmms_cfg_write_int (cfg, "XMP", #x, xmp_cfg.x)
-#endif
-
-#ifdef PLUGIN_BMP
-	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
+	filename = g_strconcat(g_get_home_dir(), CONFIG_FILE, NULL);
 	cfg = xmms_cfg_open_file(filename);
 	if (!cfg)
 		cfg = xmms_cfg_new();
@@ -1354,61 +1346,6 @@ void update_display ()
 #endif
 
 }
-
-
-#if 0
-void setpalette (char **bg)
-{
-    int i;
-    unsigned long rgb;
-
-    _D ("setting image palette");
-
-	mask_r = 0xf00000;
-	mask_g = 0x00f800;
-	mask_b = 0x0000f0;
-	draw_rectangle = draw_rectangle_rgb16;
-	erase_rectangle = erase_rectangle_rgb16;
-	//indexed = 0;
-
-    color[0].red = color[0].green = color[0].blue = 0x02;
-    color[1].red = color[1].green = color[1].blue = 0xfe;
-    color[2].red = color[2].green = color[2].blue = 0xd0;
-
-    for (i = 4; i < 12; i++) {
-	rgb = strtoul (&bg[i - 3][5], NULL, 16);
-	color[i].red = (rgb & mask_r) >> 16;
-	color[i].green = (rgb & mask_g) >> 8;
-	color[i].blue = rgb & mask_b;
-	color[i + 8].red = color[i].red >> 1;
-	color[i + 8].green = color[i].green >> 1;
-	color[i + 8].blue = color[i].blue >> 1;
-    }
-
-    for (i = 0; i < 20; i++) {
-	color[i].red <<= 8;
-	color[i].green <<= 8;
-	color[i].blue <<= 8;
-	//if (!XAllocColor (display, colormap, &color[i]))
-	 //   fprintf (stderr, "cannot allocte color cell\n");
-	if (!gdk_colormap_alloc_color (colormap, (GdkColor *)&color[i], TRUE, TRUE))
-	    fprintf (stderr, "cannot allocte color cell\n");
-    }
-
-#if 0
-    if (indexed) {
-	for (i = 0; i < 3; i++)
-	    pmap[color[i].pixel] = color[i].pixel;
-	for (i = 4; i < 12; i++)
-	    pmap[color[i].pixel] = color[i + 8].pixel;
-	for (i = 12; i < 20; i++)
-	    pmap[color[i].pixel] = color[i - 8].pixel;
-    }
-#endif
-}
-#endif
-
-
 
 int process_events (int *x, int *y)
 {
