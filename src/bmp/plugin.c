@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin
  *
- * $Id: plugin.c,v 1.11 2007-09-11 21:16:19 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.12 2007-09-12 01:23:18 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -491,7 +491,7 @@ static void get_song_info(char *filename, char **title, int *length)
 static int fd_old2, fd_info[2];
 static pthread_t catch_thread;
 
-void *catch_info (void *arg)
+void *catch_info(void *arg)
 {
 	FILE *f;
 	char buf[100];
@@ -522,12 +522,15 @@ void *catch_info (void *arg)
 }
 
 
-static void play_file (char *filename)
+static void play_file(char *filename)
 {
 	int channelcnt = 1;
 	int format = FMT_U8;
 	FILE *f;
 	char *info;
+#ifdef BMP_PLUGIN
+	GtkTextIter start, end;
+#endif
 	
 	_D("play_file: %s", filename);
 
@@ -540,7 +543,9 @@ static void play_file (char *filename)
 	fclose(f);
 
 #ifdef BMP_PLUGIN
-	gtk_text_buffer_set_text(text1b, 0, -1);
+	gtk_text_buffer_get_start_iter(text1b, &start);
+	gtk_text_buffer_get_end_iter(text1b, &end);
+	gtk_text_buffer_delete(text1b, &start, &end);
 #else
 	gtk_text_set_point (GTK_TEXT(text1), 0);
 	gtk_text_forward_delete (GTK_TEXT(text1),
@@ -1100,7 +1105,7 @@ static void file_info_box_build()
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1),
 				GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
-	gtk_widget_set_size_request(scrw1, 290, 250);
+	gtk_widget_set_size_request(scrw1, 290, 200);
 
 	gtk_container_add (GTK_CONTAINER(expander), scrw1);
 
