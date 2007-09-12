@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.6 2007-09-03 19:33:41 cmatsuoka Exp $
+ * $Id: control.c,v 1.7 2007-09-12 19:32:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -104,16 +104,18 @@ inline void xmp_register_event_callback (void (*cb)())
 }
 
 
-void xmp_channel_mute (int from, int num, int on)
+void xmp_channel_mute(int from, int num, int on)
 {
     from += num - 1;
-    if (num > 0)
+
+    if (num > 0) {
 	while (num--)
-	    xmp_drv_mute (from - num, on);
+	    xmp_drv_mute(from - num, on);
+    }
 }
 
 
-int xmp_player_ctl (int cmd, int arg)
+int xmp_player_ctl(int cmd, int arg)
 {
     switch (cmd) {
     case XMP_ORD_PREV:

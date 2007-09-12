@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.15 2007-09-12 17:42:47 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.16 2007-09-12 19:32:15 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -113,7 +113,7 @@ extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
 
 
 /* module parameters */
-gboolean xmp_going = 0;
+gboolean playing = 0;
 
 static GtkWidget *Res_16;
 static GtkWidget *Res_8;
@@ -279,7 +279,7 @@ static void stop (void)
 static void stop (InputPlayback *ipb)
 #endif
 {
-	if (!xmp_going)
+	if (!playing)
 		return;
 
 	_D("*** stop!");
@@ -343,7 +343,7 @@ static int get_time(InputPlayback *ipb)
 {
 	if (xmp_xmms_audio_error)
 		return -2;
-	if (!xmp_going)
+	if (!playing)
 		return -1;
 
 	return xmp_ip.output->output_time();
@@ -362,10 +362,10 @@ static void driver_callback(void *b, int i)
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, i, b);
 	
-	while (xmp_ip.output->buffer_free() < i && xmp_going)
+	while (xmp_ip.output->buffer_free() < i && playing)
 		xmms_usleep(10000);
 
-	if(xmp_going)
+	if (playing)
 		xmp_ip.output->write_audio(b, i);
 }
 
@@ -536,7 +536,7 @@ static int is_our_file(char *filename)
 	if (check_common_files(filename))
 		return 1;
 
-	if (xmp_going)
+	if (playing)
 		return 1;
 
 	pthread_mutex_lock (&load_mutex);
@@ -634,7 +634,7 @@ static void play_file(InputPlayback *ipb)
 #endif
 
 	if ((f = fopen(filename,"rb")) == 0) {
-		xmp_going = 0;
+		playing = 0;
 		return;
 	}
 	fclose(f);
@@ -652,7 +652,7 @@ static void play_file(InputPlayback *ipb)
 #endif
 	
 	xmp_xmms_audio_error = FALSE;
-	xmp_going = 1;
+	playing = 1;
 
 	pthread_mutex_lock (&load_mutex);
 	ctl.resol = 8;
@@ -706,11 +706,10 @@ static void play_file(InputPlayback *ipb)
 	    }
 	
 	    audio_open = TRUE;
-	
-	    //return xmp_smix_on (ctl);
 	}
 
-	xmp_open_audio (&ctl);
+	xmp_open_audio(&ctl);
+	xmp_drv_mutelloc(64);	/* fixes mute after stop */
 
 	pipe (fd_info);
 	fd_old2 = dup (fileno (stderr));
@@ -721,7 +720,7 @@ static void play_file(InputPlayback *ipb)
 	_D("*** loading: %s", filename);
 	if (xmp_load_module (filename) < 0) {
 		xmp_ip.set_info_text("Error loading mod");
-		xmp_going = 0;
+		playing = 0;
 		return;
 	}
 
@@ -773,7 +772,7 @@ static void *play_loop (void *arg)
 	xmp_play_module();
 	xmp_release_module();
 	xmp_close_audio();
-	xmp_going = 0;
+	playing = 0;
 
 	_D("--- pthread_exit");
 
@@ -1090,32 +1089,32 @@ static void config_ok(GtkWidget *widget, gpointer data)
 }
 
 
-static void button_cycle (GtkWidget *widget, GdkEvent *event)
+static void button_cycle(GtkWidget *widget, GdkEvent *event)
 {
      ii->mode++;
      ii->mode %= 3;
 }
 
-static void button_mute (GtkWidget *widget, GdkEvent *event)
+static void button_mute(GtkWidget *widget, GdkEvent *event)
 {
 	int i;
 
-	if (!xmp_going)
+	if (!playing)
 		return;
 
-	xmp_channel_mute (0, 64, 1);
+	xmp_channel_mute(0, 64, 1);
 	for (i = 0; i < ii->mi.chn; i++)
 		ii->mute[i] = 1;
 }
 
-static void button_unmute (GtkWidget *widget, GdkEvent *event)
+static void button_unmute(GtkWidget *widget, GdkEvent *event)
 {
 	int i;
 
-	if (!xmp_going)
+	if (!playing)
 		return;
 
-	xmp_channel_mute (0, 64, 0);
+	xmp_channel_mute(0, 64, 0);
 	for (i = 0; i < ii->mi.chn; i++)
 		ii->mute[i] = 0;
 }
@@ -1126,7 +1125,7 @@ static int image1_clicked_ok = 0;
 
 static void image1_clicked(GtkWidget *widget, GdkEventButton *event)
 {
-	if (!xmp_going || image1_clicked_ok)
+	if (!playing || image1_clicked_ok)
 		return;
 
 	image1_clicked_x = event->x - (frame1->allocation.width - 300) / 2;

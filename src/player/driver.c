@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.22 2007-09-12 14:36:45 cmatsuoka Exp $
+ * $Id: driver.c,v 1.23 2007-09-12 19:32:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -248,7 +248,7 @@ void xmp_drv_register (struct xmp_drv_info *drv)
 }
 
 
-int xmp_drv_mutelloc (int num)
+int xmp_drv_mutelloc(int num)
 {
     if ((cmute_array = calloc (num, sizeof (int))) == NULL)
 	  return XMP_ERR_ALLOC;
@@ -258,7 +258,7 @@ int xmp_drv_mutelloc (int num)
 }
 
 
-int xmp_drv_open (struct xmp_control *ctl)
+int xmp_drv_open(struct xmp_control *ctl)
 {
     int status;
 
@@ -450,9 +450,10 @@ static int drv_allocvoice (int chn)
 }
 
 
-void xmp_drv_mute (int chn, int status)
+void xmp_drv_mute(int chn, int status)
 {
     chn += numusr;
+
     if ((uint32) chn >= nummte)
 	return;
 
@@ -463,7 +464,7 @@ void xmp_drv_mute (int chn, int status)
 }
 
 
-void xmp_drv_setvol (int chn, int vol)
+void xmp_drv_setvol(int chn, int vol)
 {
     int voc;
 
