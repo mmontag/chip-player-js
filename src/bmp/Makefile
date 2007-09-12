@@ -1,11 +1,11 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.6 2007-09-12 14:36:45 cmatsuoka Exp $
+# $Id: Makefile,v 1.7 2007-09-12 14:49:48 cmatsuoka Exp $
 
 TOPDIR	= ../..
-XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` $(PLUGFLAGS) -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
+XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" $(PLUGFLAGS) -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
 DFILES	= Makefile README xmp-plugin.h $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
-INSTDIR	= $(DESTDIR)`pkg-config bmp --input-plugin-dir`
+INSTDIR	= $(DESTDIR)$(PLUGINST)
 LINKS	= xpanel.c fft4g.c font1.c font2.c
 OBJS	= plugin.o driver.o $(LINKS:.c=.o)
 

@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.21 2007-09-12 14:36:45 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.22 2007-09-12 14:49:48 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -17,6 +17,9 @@ CINCS="${CPPFLAGS}"
 
 AC_SUBST(PLUGDIR)
 PLUGDIR=""
+
+AC_SUBST(PLUGINST)
+PLUGINST=""
 
 AC_SUBST(PLUGFLAGS)
 PLUGFLAGS=""
@@ -157,7 +160,7 @@ dnl Check for Beep Media Player
 dnl -----------------------------------------------------------------------
 
 if test "${enable_bmp_plugin}" = "yes"; then
-    bmp_cflags="`pkg-config bmp --cflags 2>/dev/null`"
+    bmp_cflags="`pkg-config --cflags bmp 2>/dev/null`"
     if test ! -z "${bmp_cflags}"; then
         AS_MESSAGE(checking for Beep Media Player flags... ${bmp_cflags}...)
     else
@@ -170,12 +173,13 @@ if test "${enable_bmp_plugin}" = "yes"; then
 fi
 
 if test "${enable_bmp_plugin}" = "yes"; then
-    CPPFLAGS="${CINCS} `pkg-config bmp --cflags`"
+    CPPFLAGS="${CINCS} `pkg-config --cflags bmp`"
     AC_CHECK_HEADERS(bmp/plugin.h)
 
     if test "${ac_cv_header_bmp_plugin_h}" = "yes"; then
         PLUGDIR="bmp"
-	PLUGFLAGS="-DENABLE_PLUGIN -DPLUGIN_BMP"
+	PLUGFLAGS="`pkg-config --cflags bmp` -DENABLE_PLUGIN -DPLUGIN_BMP"
+	PLUGINST="`pkg-config --variable=input_plugin_dir bmp`"
     fi
 fi
 
@@ -184,11 +188,11 @@ dnl Check for Audacious
 dnl -----------------------------------------------------------------------
 
 if test "${enable_audacious_plugin}" = "yes"; then
-    audacious_cflags="`pkg-config audacious --cflags 2>/dev/null`"
+    audacious_cflags="`pkg-config --cflags audacious 2>/dev/null`"
     if test ! -z "${audacious_cflags}"; then
         AS_MESSAGE(checking for Audacious flags... ${audacious_cflags}...)
     else
-        if test "${enable_bmp_plugin}" = "yes"; then
+        if test "${enable_audacious_plugin}" = "yes"; then
             AC_MSG_ERROR(Can't find Audacious files)
         fi
         AC_MSG_WARN(not found)
@@ -197,12 +201,13 @@ if test "${enable_audacious_plugin}" = "yes"; then
 fi
 
 if test "${enable_audacious_plugin}" = "yes"; then
-    CPPFLAGS="${CINCS} `pkg-config audacious --cflags`"
+    CPPFLAGS="${CINCS} `pkg-config --cflags audacious`"
     AC_CHECK_HEADERS(audacious/plugin.h)
 
     if test "${ac_cv_header_audacious_plugin_h}" = "yes"; then
         PLUGDIR="bmp"
-	PLUGFLAGS="-DENABLE_PLUGIN -DPLUGIN_AUDACIOUS"
+	PLUGFLAGS="`pkg-config --cflags audacious` -DENABLE_PLUGIN -DPLUGIN_AUDACIOUS"
+	PLUGINST="`pkg-config --variable=input_plugin_dir audacious`"
     fi
 fi
 

@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.27 2007-09-12 14:36:45 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.28 2007-09-12 14:49:48 cmatsuoka Exp $
 
 VERSION		= 2.2.0-pre7
 DATE		= Sat Sep  8 12:14:50 BRT 2007
@@ -21,6 +21,7 @@ INSTALL		= @INSTALL@
 
 PLUGDIR		= @PLUGDIR@
 PLUGFLAGS	= @PLUGFLAGS@
+PLUGINST	= @PLUGINST@
 
 
 # IRIX 6.5.10 note by Johan Hattne <hattne@ibg.uu.se>

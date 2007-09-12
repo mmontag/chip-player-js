@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.13 2007-09-12 14:36:45 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.14 2007-09-12 14:49:48 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -23,7 +23,7 @@
 #endif
 
 #ifdef PLUGIN_AUDACIOUS
-#include <audacious/configfile.h>
+#include <audacious/configdb.h>
 #include <audacious/util.h>
 #include <audacious/plugin.h>
 #endif
