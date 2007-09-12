@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.1 2006-02-13 22:58:42 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.2 2007-09-12 14:36:45 cmatsuoka Exp $
  */
 
 /*
@@ -19,7 +19,7 @@
  * add #include<sys/types.h> before #include<sys/ipc.h>.
  */
 
-#ifndef XMMS_PLUGIN
+#ifndef ENABLE_PLUGIN
 
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -48,7 +48,7 @@ static Window window, root;
 static XShmSegmentInfo shminfo;
 
 #define alloc_color(d,c,x) XAllocColor(d,c,x)
-#endif /* XMMS_PLUGIN */
+#endif /* ENABLE_PLUGIN */
 
 static unsigned long __color;
 static XColor color[20];
@@ -292,7 +292,7 @@ void setpalette (char **bg)
 }
 
 
-#ifndef XMMS_PLUGIN
+#ifndef ENABLE_PLUGIN
 
 void putimage (int x, int y, int w, int h)
 {
@@ -455,4 +455,4 @@ int create_window (char *s, char *c, int w, int h, int argc, char **argv)
     return 0;
 }
 
-#endif /* !XMMS_PLUGIN */
+#endif /* !ENABLE_PLUGIN */

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.21 2007-09-03 17:05:24 cmatsuoka Exp $
+ * $Id: driver.c,v 1.22 2007-09-12 14:36:45 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +50,7 @@ static inline void drv_resetvoice (int, int);
 
 void (*_driver_callback)(void *, int) = NULL;
 
-#ifndef XMMS_PLUGIN
+#ifndef ENABLE_PLUGIN
 
 extern struct xmp_drv_info drv_file;
 extern struct xmp_drv_info drv_wav;
@@ -107,7 +107,7 @@ extern struct xmp_drv_info drv_os2dart;
 extern struct xmp_drv_info drv_qnx;
 #endif
 
-#endif /* XMMS_PLUGIN */
+#endif /* ENABLE_PLUGIN */
 
 void (*xmp_event_callback) (unsigned long);
 
@@ -116,7 +116,7 @@ void (*xmp_event_callback) (unsigned long);
 
 void xmp_init_drivers ()
 {
-#ifndef XMMS_PLUGIN
+#ifndef ENABLE_PLUGIN
 
     /* Output to file will be always available -- except in the plugin ;) */
     xmp_drv_register (&drv_file);
@@ -171,7 +171,7 @@ void xmp_init_drivers ()
     xmp_drv_register (&drv_nas);
 #endif
 
-#endif /* XMMS_PLUGIN */
+#endif /* ENABLE_PLUGIN */
 }
 
 
@@ -288,7 +288,7 @@ int xmp_drv_open (struct xmp_control *ctl)
 }
 
 
-/* Kludgy funcion for the XMMS plugin */
+/* for the XMMS/BMP/Audacious plugin */
 int xmp_drv_set (struct xmp_control *ctl)
 {
     struct xmp_drv_info *drv;

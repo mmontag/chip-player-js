@@ -1,5 +1,5 @@
 # Extended Module Player src/Makefile
-# $Id: Makefile,v 1.11 2007-08-10 20:02:16 cmatsuoka Exp $
+# $Id: Makefile,v 1.12 2007-09-12 14:36:45 cmatsuoka Exp $
 
 TOPDIR	= ../
 DFILES	= Makefile
@@ -9,7 +9,7 @@ CFILES	=
 DCFILES	=
 
 all install::
-	@for i in $(_DIRS) $(PLUGIN); do	\
+	@for i in $(_DIRS) $(PLUGDIR); do	\
 		(cd $$i && $(MAKE) $@)	\
 	done
 

@@ -1,8 +1,8 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.5 2007-08-22 01:23:11 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2007-09-12 14:36:45 cmatsuoka Exp $
 
 TOPDIR	= ../..
-XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` -DXMMS_PLUGIN -DBMP_PLUGIN -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
+XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" `pkg-config bmp --cflags` $(PLUGFLAGS) -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
 DFILES	= Makefile README xmp-plugin.h $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
 INSTDIR	= $(DESTDIR)`pkg-config bmp --input-plugin-dir`
@@ -15,7 +15,7 @@ default: all
 include $(TOPDIR)/Makefile.rules
 
 all:
-	@[ "x$(PLUGIN)" = "xbmp" ] && $(MAKE) all-bmp || :
+	@[ "x$(PLUGDIR)" = "xbmp" ] && $(MAKE) all-bmp || :
 
 all-bmp: driver.c plugin
 

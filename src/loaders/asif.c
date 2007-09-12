@@ -76,6 +76,8 @@ int asif_load(FILE *f, int i)
 			read8(f);			/* UpdateRate */
 		
 			xxih[i].nsm = 1;
+			xxi[i][0].vol = 0x40;
+			xxi[i][0].pan = 0x80;
 			xxi[i][0].sid = i;
 
 			chunk++;

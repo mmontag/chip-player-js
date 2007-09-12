@@ -1,25 +1,26 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.26 2007-09-09 11:25:31 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.27 2007-09-12 14:36:45 cmatsuoka Exp $
 
-VERSION	= 2.2.0-pre7
-DATE	= Sat Sep  8 12:14:50 BRT 2007
+VERSION		= 2.2.0-pre7
+DATE		= Sat Sep  8 12:14:50 BRT 2007
 
-DESTDIR	=
-prefix	= $(DESTDIR)@prefix@
-exec_prefix= $(DESTDIR)@prefix@
-datarootdir = $(DESTDIR)@datarootdir@
-BIN_DIR	= $(DESTDIR)@bindir@
-LIB_DIR = $(DESTDIR)@libdir@
-MAN_DIR	= $(DESTDIR)@mandir@/man1
+DESTDIR		=
+prefix		= $(DESTDIR)@prefix@
+exec_prefix	= $(DESTDIR)@prefix@
+datarootdir	= $(DESTDIR)@datarootdir@
+BIN_DIR		= $(DESTDIR)@bindir@
+LIB_DIR		= $(DESTDIR)@libdir@
+MAN_DIR		= $(DESTDIR)@mandir@/man1
 
-CC	= @CC@
-CFLAGS	= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG
-LD	= @CC@
-LDFLAGS	= -o $@ @LDFLAGS@
-RANLIB	= @RANLIB@
-INSTALL	= @INSTALL@
+CC		= @CC@
+CFLAGS		= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG
+LD		= @CC@
+LDFLAGS		= -o $@ @LDFLAGS@
+RANLIB		= @RANLIB@
+INSTALL		= @INSTALL@
 
-PLUGIN	= @PLUGIN@
+PLUGDIR		= @PLUGDIR@
+PLUGFLAGS	= @PLUGFLAGS@
 
 
 # IRIX 6.5.10 note by Johan Hattne <hattne@ibg.uu.se>
@@ -28,19 +29,19 @@ PLUGIN	= @PLUGIN@
 # I moved -laudio from just after -lXext to after -lm. It seems gcc
 # [2.95.2 as supplied by the freeware.sgi.com site] has problems
 # resolving the audio-symbols otherwise.
+#
+# LIBS		= @LIBS@ $(XLIBS)
 
-# LIBS	= @LIBS@ $(XLIBS)
-LIBS	= $(XLIBS) @LIBS@
-SHELL	= /bin/sh
-PLATFORM= @PLATFORM@
+LIBS		= $(XLIBS) @LIBS@
+SHELL		= /bin/sh
+PLATFORM	= @PLATFORM@
 
-DRIVERS	= @DRIVERS@
-MIXER	= @MIXER@
-PLUGIN	= @PLUGIN@
+DRIVERS		= @DRIVERS@
+MIXER		= @MIXER@
 
-X_INC	= @X_CFLAGS@
-X_LIB	= @X_LIBS@ @X_EXTRA_LIBS@
-X_XMP	= @X_XMP@
+X_INC		= @X_CFLAGS@
+X_LIB		= @X_LIBS@ @X_EXTRA_LIBS@
+X_XMP		= @X_XMP@
 
 LOBJS	= $(OBJS:.o=.lo)
 

@@ -1,9 +1,9 @@
 /*
- * XMP plugin for XMMS
+ * XMP plugin for XMMS/Beep/Audacious
  * Written by Claudio Matsuoka, 2000-04-30
- * Based on J. Nick Koston's MikMod plugin
+ * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.12 2007-09-12 01:23:18 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.13 2007-09-12 14:36:45 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -16,11 +16,19 @@
 #include <ctype.h>
 
 
-#ifdef BMP_PLUGIN
+#ifdef PLUGIN_BMP
 #include <bmp/configfile.h>
 #include <bmp/util.h>
 #include <bmp/plugin.h>
-#else
+#endif
+
+#ifdef PLUGIN_AUDACIOUS
+#include <audacious/configfile.h>
+#include <audacious/util.h>
+#include <audacious/plugin.h>
+#endif
+
+#ifdef PLUGIN_XMMS
 #include <xmms/configfile.h>
 #include <xmms/util.h>
 #include <xmms/plugin.h>
@@ -239,12 +247,14 @@ static void aboutbox ()
 static GdkImage *image;
 static GtkWidget *image1;
 static GtkWidget *frame1;
-#ifdef BMP_PLUGIN
+
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 static GtkWidget *text1v;
 static GtkTextBuffer *text1b;
 #else
 static GtkWidget *text1;
 #endif
+
 static GdkFont *font;
 static GdkColor *color_black;
 static GdkColor *color_white;
@@ -349,9 +359,15 @@ static void init(void)
 
 #define CFGREADINT(x) xmms_cfg_read_int (cfg, "XMP", #x, &xmp_cfg.x)
 
-#ifdef BMP_PLUGIN
+#ifdef PLUGIN_BMP
 	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
-#else
+#endif
+
+#ifdef PLUGIN_AUDACIOUS
+	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
+#endif
+
+#ifdef PLUGIN_XMMS
 	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
 #endif
 
@@ -502,13 +518,15 @@ void *catch_info(void *arg)
 
 	while (!feof (f)) {
 		fgets (buf, 100, f);
-#ifdef BMP_PLUGIN
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 		gtk_text_buffer_get_end_iter(text1b, &end);
 		tag = gtk_text_buffer_create_tag(text1b, NULL,
 						"foreground", "black", NULL);
 		gtk_text_buffer_insert_with_tags(text1b, &end, buf, -1,
 								tag, NULL);
-#else
+#endif
+
+#ifdef PLUGIN_XMMS
 		gtk_text_insert(GTK_TEXT(text1), font,
 			color_black, color_white, buf, strlen(buf));
 #endif
@@ -528,7 +546,7 @@ static void play_file(char *filename)
 	int format = FMT_U8;
 	FILE *f;
 	char *info;
-#ifdef BMP_PLUGIN
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	GtkTextIter start, end;
 #endif
 	
@@ -542,11 +560,13 @@ static void play_file(char *filename)
 	}
 	fclose(f);
 
-#ifdef BMP_PLUGIN
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gtk_text_buffer_get_start_iter(text1b, &start);
 	gtk_text_buffer_get_end_iter(text1b, &end);
 	gtk_text_buffer_delete(text1b, &start, &end);
-#else
+#endif
+
+#ifdef PLUGIN_XMMS
 	gtk_text_set_point (GTK_TEXT(text1), 0);
 	gtk_text_forward_delete (GTK_TEXT(text1),
 		gtk_text_get_length (GTK_TEXT(text1)));
@@ -631,9 +651,11 @@ static void play_file(char *filename)
 	_D("joined");
 	dup2 (fileno (stderr), fd_old2);
 
-#ifdef BMP_PLUGIN
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1v)->vadjustment, 0.0);
-#else
+#endif
+
+#ifdef PLUGIN_XMMS
 	gtk_adjustment_set_value(GTK_TEXT(text1)->vadj, 0.0);
 #endif
 
@@ -708,11 +730,8 @@ static void configure()
 		gdk_window_raise(xmp_conf_window->window);
 		return;
 	}
-#ifdef BMP_PLUGIN
+
 	xmp_conf_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-#else
-	xmp_conf_window = gtk_window_new(GTK_WINDOW_DIALOG);
-#endif
 
 	gtk_object_set_data(GTK_OBJECT(xmp_conf_window),
 		"xmp_conf_window", xmp_conf_window);
@@ -1045,9 +1064,11 @@ static void file_info_box_build()
 
 	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
 	ximage = GDK_IMAGE_XIMAGE(image);
-#ifdef BMP_PLUGIN
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	image1 = gtk_image_new_from_image(image, NULL);
-#else
+#endif
+
+#if defined PLUGIN_XMMS
 	image1 = gtk_image_new(image, NULL);
 #endif
 	gtk_object_set_data(GTK_OBJECT(image1), "image1", image1);
@@ -1111,7 +1132,7 @@ static void file_info_box_build()
 
 	gtk_box_pack_start(GTK_BOX(vbox1), expander, TRUE, TRUE, 0);
 
-#ifdef BMP_PLUGIN
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	text1b = gtk_text_buffer_new(NULL);
 	text1v = gtk_text_view_new_with_buffer(text1b);
 	desc = pango_font_description_new();
@@ -1123,7 +1144,9 @@ static void file_info_box_build()
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1v), GTK_WRAP_NONE);
 	gtk_container_add (GTK_CONTAINER(scrw1), text1v);
 	gtk_widget_realize (text1v);
-#else
+#endif
+
+#ifdef PLUGIN_XMMS
 	text1 = gtk_text_new(NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
 	gtk_text_set_line_wrap (GTK_TEXT(text1), FALSE);
@@ -1219,7 +1242,7 @@ static gint expose_event (GtkWidget *widget, GdkEventExpose *event)
 
 void update_display ()
 {
-#ifdef BMP_PLUGIN
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	GdkRectangle area;
 
 	area.x = (frame1->allocation.width - 300) / 2;
@@ -1228,7 +1251,9 @@ void update_display ()
 	area.height = 128;
 
 	gdk_window_invalidate_rect(image1->window, &area, FALSE);
-#else
+#endif
+
+#ifdef PLUGIN_XMMS
 	GdkEventExpose e;
 
 	e.type = GDK_EXPOSE;
