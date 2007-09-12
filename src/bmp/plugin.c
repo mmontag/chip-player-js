@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.16 2007-09-12 19:32:15 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.17 2007-09-12 22:37:37 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -20,6 +20,7 @@
 #include <bmp/configfile.h>
 #include <bmp/util.h>
 #include <bmp/plugin.h>
+#define CONFIG_FILE "/.bmp/config"
 #endif
 
 #ifdef PLUGIN_AUDACIOUS
@@ -32,6 +33,7 @@
 #include <xmms/configfile.h>
 #include <xmms/util.h>
 #include <xmms/plugin.h>
+#define CONFIG_FILE "/.xmms/config"
 #endif
 
 #include <gtk/gtk.h>
@@ -44,23 +46,22 @@
 #include "formats.h"
 #include "xpanel.h"
 
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
+#define IPB
+#endif
+#ifdef PLUGIN_AUDACIOUS
+#define IPB InputPlayback *ipb
+#endif
+#define IPB_short(x) IPB, short x
+#define IPB_int(x) IPB, int x
 
 static void	init		(void);
 static int	is_our_file	(char *);
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
-static void	play_file	(char *);
-static void	stop		(void);
-static void	mod_pause	(short);
-static void	seek		(int);
-static int	get_time	(void);
-#endif
-#if defined PLUGIN_AUDACIOUS
-static void	play_file	(InputPlayback *);
-static void	stop		(InputPlayback *);
-static void	mod_pause	(InputPlayback *, short);
-static void	seek		(InputPlayback *, int);
-static int	get_time	(InputPlayback *);
-#endif
+static void	play_file	(IPB);
+static void	stop		(IPB);
+static void	mod_pause	(IPB_short(p));
+static void	seek		(IPB_int(time));
+static int	get_time	(IPB);
 static void	*play_loop	(void *);
 static void	aboutbox	(void);
 static void	get_song_info	(char *, char **, int *);
@@ -272,12 +273,8 @@ static XImage *ximage;
 static Display *display;
 static Window window;
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
-static void stop (void)
-#endif
-#ifdef PLUGIN_AUDACIOUS
-static void stop (InputPlayback *ipb)
-#endif
+
+static void stop(IPB)
 {
 	if (!playing)
 		return;
@@ -295,12 +292,7 @@ static void stop (InputPlayback *ipb)
 }
 
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
-static void seek(int time)
-#endif
-#ifdef PLUGIN_AUDACIOUS
-static void seek(InputPlayback *ipb, int time)
-#endif
+static void seek(IPB_int(time))
 {
 	int i, t;
 	_D("seek to %d, total %d", time, xmp_cfg.time);
@@ -322,24 +314,14 @@ static void seek(InputPlayback *ipb, int time)
 	}
 }
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
-static void mod_pause(short p)
-#endif
-#ifdef PLUGIN_AUDACIOUS
-static void mod_pause(InputPlayback *ipb, short p)
-#endif
+static void mod_pause(IPB_short(p))
 {
 	ii->pause = p;
 	xmp_ip.output->pause(p);
 }
 
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
-static int get_time()
-#endif
-#ifdef PLUGIN_AUDACIOUS
-static int get_time(InputPlayback *ipb)
-#endif
+static int get_time(IPB)
 {
 	if (xmp_xmms_audio_error)
 		return -2;
@@ -390,12 +372,7 @@ static void init(void)
 
 #define CFGREADINT(x) xmms_cfg_read_int (cfg, "XMP", #x, &xmp_cfg.x)
 
-#ifdef PLUGIN_BMP
-	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
-#endif
-#ifdef PLUGIN_XMMS
-	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
-#endif
+	filename = g_strconcat(g_get_home_dir(), CONFIG_FILE, NULL);
 
 	if ((cfg = xmms_cfg_open_file(filename))) {
 		CFGREADINT(mixing_freq);
