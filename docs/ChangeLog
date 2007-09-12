@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.65 2007-09-11 01:19:48 cmatsuoka Exp $
+$Id: ChangeLog,v 1.66 2007-09-12 17:42:47 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -29,6 +29,7 @@ Stable versions
 	- added MED4 module loader
 	- added IIgs ASIF sample converter
 	- added IIgs SoundSmith/MegaTracker loader
+	- added Audacious plugin
 	- enabled WAV writer
 	- enabled IMF filter effects
 	- removed broken shared lib generation

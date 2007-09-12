@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.14 2007-09-12 14:49:48 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.15 2007-09-12 17:42:47 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -47,12 +47,21 @@
 
 static void	init		(void);
 static int	is_our_file	(char *);
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 static void	play_file	(char *);
-static int	get_time	(void);
 static void	stop		(void);
-static void	*play_loop	(void *);
 static void	mod_pause	(short);
-static void	seek		(int time);
+static void	seek		(int);
+static int	get_time	(void);
+#endif
+#if defined PLUGIN_AUDACIOUS
+static void	play_file	(InputPlayback *);
+static void	stop		(InputPlayback *);
+static void	mod_pause	(InputPlayback *, short);
+static void	seek		(InputPlayback *, int);
+static int	get_time	(InputPlayback *);
+#endif
+static void	*play_loop	(void *);
 static void	aboutbox	(void);
 static void	get_song_info	(char *, char **, int *);
 static void	configure	(void);
@@ -263,7 +272,12 @@ static XImage *ximage;
 static Display *display;
 static Window window;
 
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 static void stop (void)
+#endif
+#ifdef PLUGIN_AUDACIOUS
+static void stop (InputPlayback *ipb)
+#endif
 {
 	if (!xmp_going)
 		return;
@@ -281,7 +295,12 @@ static void stop (void)
 }
 
 
-static void seek (int time)
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
+static void seek(int time)
+#endif
+#ifdef PLUGIN_AUDACIOUS
+static void seek(InputPlayback *ipb, int time)
+#endif
 {
 	int i, t;
 	_D("seek to %d, total %d", time, xmp_cfg.time);
@@ -303,15 +322,24 @@ static void seek (int time)
 	}
 }
 
-
-static void mod_pause (short p)
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
+static void mod_pause(short p)
+#endif
+#ifdef PLUGIN_AUDACIOUS
+static void mod_pause(InputPlayback *ipb, short p)
+#endif
 {
 	ii->pause = p;
 	xmp_ip.output->pause(p);
 }
 
 
-static int get_time (void)
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
+static int get_time()
+#endif
+#ifdef PLUGIN_AUDACIOUS
+static int get_time(InputPlayback *ipb)
+#endif
 {
 	if (xmp_xmms_audio_error)
 		return -2;
@@ -342,9 +370,12 @@ static void driver_callback(void *b, int i)
 }
 
 
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
+
 static void init(void)
 {
 	ConfigFile *cfg;
+	ConfigDb *cfg;
 	gchar *filename;
 
 	xmp_cfg.mixing_freq = 0;
@@ -362,43 +393,79 @@ static void init(void)
 #ifdef PLUGIN_BMP
 	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
 #endif
-
-#ifdef PLUGIN_AUDACIOUS
-	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
-#endif
-
 #ifdef PLUGIN_XMMS
 	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
 #endif
 
 	if ((cfg = xmms_cfg_open_file(filename))) {
-		CFGREADINT (mixing_freq);
-		CFGREADINT (force8bit);
-		CFGREADINT (convert8bit);
-		CFGREADINT (modrange);
-		CFGREADINT (fixloops);
-		CFGREADINT (force_mono);
-		CFGREADINT (interpolation);
-		CFGREADINT (filter);
-		CFGREADINT (pan_amplitude);
+		CFGREADINT(mixing_freq);
+		CFGREADINT(force8bit);
+		CFGREADINT(convert8bit);
+		CFGREADINT(modrange);
+		CFGREADINT(fixloops);
+		CFGREADINT(force_mono);
+		CFGREADINT(interpolation);
+		CFGREADINT(filter);
+		CFGREADINT(pan_amplitude);
 
 		xmms_cfg_free(cfg);
 	}
 
-	file_info_box_build ();
-
-	//xmp_drv_register (&drv_xmms);
-	//xmp_init_formats ();
+	file_info_box_build();
 
 	memset (&ctl, 0, sizeof (struct xmp_control));
 	xmp_init_callback (&ctl, driver_callback);
 	xmp_register_event_callback (x11_event_callback);
 
-	//xmp_drv_mutelloc (64);
+	memset (ii, 0, sizeof (ii));
+	ii->wresult = 42;
+}
+
+#endif
+
+#ifdef PLUGIN_AUDACIOUS
+
+static void init(void)
+{
+	ConfigDb *cfg;
+
+	xmp_cfg.mixing_freq = 0;
+	xmp_cfg.convert8bit = 0;
+	xmp_cfg.fixloops = 0;
+	xmp_cfg.modrange = 0;
+	xmp_cfg.force8bit = 0;
+	xmp_cfg.force_mono = 0;
+	xmp_cfg.interpolation = TRUE;
+	xmp_cfg.filter = TRUE;
+	xmp_cfg.pan_amplitude = 80;
+
+#define CFGREADINT(x) bmp_cfg_db_get_int (cfg, "XMP", #x, &xmp_cfg.x)
+
+	if ((cfg = bmp_cfg_db_open())) {
+		CFGREADINT(mixing_freq);
+		CFGREADINT(force8bit);
+		CFGREADINT(convert8bit);
+		CFGREADINT(modrange);
+		CFGREADINT(fixloops);
+		CFGREADINT(force_mono);
+		CFGREADINT(interpolation);
+		CFGREADINT(filter);
+		CFGREADINT(pan_amplitude);
+
+		bmp_cfg_db_close(cfg);
+	}
+
+	file_info_box_build();
+
+	memset (&ctl, 0, sizeof (struct xmp_control));
+	xmp_init_callback (&ctl, driver_callback);
+	xmp_register_event_callback (x11_event_callback);
 
 	memset (ii, 0, sizeof (ii));
 	ii->wresult = 42;
 }
+
+#endif
 
 
 static int check_common_files(char *filename)
@@ -540,8 +607,15 @@ void *catch_info(void *arg)
 }
 
 
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 static void play_file(char *filename)
 {
+#endif
+#ifdef PLUGIN_AUDACIOUS
+static void play_file(InputPlayback *ipb)
+{
+	char *filename = ipb->filename;
+#endif
 	int channelcnt = 1;
 	int format = FMT_U8;
 	FILE *f;
@@ -552,7 +626,12 @@ static void play_file(char *filename)
 	
 	_D("play_file: %s", filename);
 
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	stop();		/* sanity check */
+#endif
+#ifdef PLUGIN_AUDACIOUS
+	stop(ipb);	/* sanity check */
+#endif
 
 	if ((f = fopen(filename,"rb")) == 0) {
 		xmp_going = 0;
@@ -929,8 +1008,13 @@ static void configure()
 
 static void config_ok(GtkWidget *widget, gpointer data)
 {
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	ConfigFile *cfg;
 	gchar *filename;
+#endif
+#if defined PLUGIN_AUDACIOUS
+	ConfigDb *cfg;
+#endif
 
 	if (GTK_TOGGLE_BUTTON(Res_16)->active)
 		xmp_cfg.force8bit = 0;
@@ -958,12 +1042,29 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	xmp_cfg.pan_amplitude = (guchar)GTK_ADJUSTMENT(pansep_adj)->value;
         ctl.mix = xmp_cfg.pan_amplitude;
 
+#ifdef PLUGIN_XMMS
 	filename = g_strconcat(g_get_home_dir(), "/.xmms/config", NULL);
 	cfg = xmms_cfg_open_file(filename);
 	if (!cfg)
 		cfg = xmms_cfg_new();
 
 #define CFGWRITEINT(x) xmms_cfg_write_int (cfg, "XMP", #x, xmp_cfg.x)
+#endif
+
+#ifdef PLUGIN_BMP
+	filename = g_strconcat(g_get_home_dir(), "/.bmp/config", NULL);
+	cfg = xmms_cfg_open_file(filename);
+	if (!cfg)
+		cfg = xmms_cfg_new();
+
+#define CFGWRITEINT(x) xmms_cfg_write_int (cfg, "XMP", #x, xmp_cfg.x)
+#endif
+
+#ifdef PLUGIN_AUDACIOUS
+	cfg = bmp_cfg_db_open();
+
+#define CFGWRITEINT(x) bmp_cfg_db_set_int (cfg, "XMP", #x, xmp_cfg.x)
+#endif
 
 	CFGWRITEINT (mixing_freq);
 	CFGWRITEINT (force8bit);
@@ -975,9 +1076,16 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	CFGWRITEINT (filter);
 	CFGWRITEINT (pan_amplitude);
 
+#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	xmms_cfg_write_file(cfg, filename);
 	xmms_cfg_free(cfg);
 	g_free(filename);
+#endif
+
+#ifdef PLUGIN_AUDACIOUS
+	bmp_cfg_db_close(cfg);
+#endif
+
 	gtk_widget_destroy(xmp_conf_window);
 }
 
