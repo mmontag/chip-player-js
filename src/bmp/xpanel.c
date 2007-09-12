@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.3 2007-09-11 19:35:42 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.4 2007-09-12 19:48:48 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -118,7 +118,6 @@ void volume_bars (int mode)
 }
 
 
-#warning FIXME: scope updates on the screen
 void scope (int mode, int *buf, int n)
 {
     int i, idx, step;
@@ -254,9 +253,7 @@ void clear_screen ()
 {
     draw_xpm (bg, RES_X, RES_Y);
     putimage (0, 0, RES_X, RES_Y);
-#ifdef FIXME_BMP
     update_display ();
-#endif
 }
 
 
