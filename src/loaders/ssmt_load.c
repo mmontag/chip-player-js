@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.6 2007-09-11 00:15:51 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.7 2007-09-12 03:20:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -130,10 +130,28 @@ int mtp_load(FILE * f)
 	for (i = 0; i < xxh->pat; i++) {
 		for (j = 0; j < xxp[i]->rows; j++) {
 			for (k = 0; k < xxh->chn; k++) {
+				uint8 x;
 				event = &EVENT(i, k, j);
-				event->ins = read8(f);;
-				event->fxt = event->ins & 0x0f;
-				event->ins >>= 4;
+				x = read8(f);;
+				event->ins = x >> 4;
+
+				switch (x & 0x0f) {
+				case 0x00:
+					event->fxt = FX_ARPEGGIO;
+					break;
+				case 0x03:
+					event->fxt = FX_VOLSET;
+					break;
+				case 0x05:
+					event->fxt = FX_VOLSLIDE_DN;
+					break;
+				case 0x06:
+					event->fxt = FX_VOLSLIDE_UP;
+					break;
+				case 0x0f:
+					event->fxt = FX_TEMPO;
+					break;
+				}
 			}
 		}
 	}
@@ -144,6 +162,13 @@ int mtp_load(FILE * f)
 			for (k = 0; k < xxh->chn; k++) {
 				event = &EVENT(i, k, j);
 				event->fxp = read8(f);;
+
+				switch (event->fxt) {
+				case FX_VOLSET:
+				case FX_VOLSLIDE_DN:
+				case FX_VOLSLIDE_UP:
+					event->fxp >>= 2;
+				}
 			}
 		}
 	}
@@ -168,13 +193,11 @@ int mtp_load(FILE * f)
 		fclose(s);
 
 #if 0
-		xxih[i].nsm = !!(xxs[i].len);
 		xxs[i].lps = 0;
 		xxs[i].lpe = 0;
 		xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
 		xxi[i][0].fin = 0;
 		xxi[i][0].pan = 0x80;
-		xxi[i][0].sid = i;
 #endif
 
 		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
@@ -186,18 +209,6 @@ int mtp_load(FILE * f)
 		}
 	}
 	reportv(0, "\n");
-
-#if 0
-	/* Read samples */
-	reportv(0, "Stored samples : %d ", xxh->smp);
-	for (i = 0; i < xxh->ins; i++) {
-		fseek(f, base_offs + soffs[i], SEEK_SET);
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
-		reportv(0, ".");
-	}
-	reportv(0, "\n");
-#endif
 
 	return 0;
 }
