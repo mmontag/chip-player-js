@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.18 2007-09-12 23:38:17 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.19 2007-09-13 10:49:54 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -687,7 +687,6 @@ static void play_file(InputPlayback *ipb)
 	}
 
 	xmp_open_audio(&ctl);
-	xmp_drv_mutelloc(64);	/* fixes mute after stop */
 
 	pipe (fd_info);
 	fd_old2 = dup (fileno (stderr));

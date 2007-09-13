@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.9 2007-08-27 13:10:45 cmatsuoka Exp $
+ * $Id: driver.h,v 1.10 2007-09-13 10:49:56 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -77,7 +77,6 @@ int	xmp_drv_set		(struct xmp_control *);
 void	xmp_drv_close		(void);
 int	xmp_drv_on		(int);
 void	xmp_drv_off		(void);
-int	xmp_drv_mutelloc	(int);
 void	xmp_drv_mute		(int, int);
 int	xmp_drv_flushpatch	(int);
 int	xmp_drv_writepatch	(struct patch_info *);

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.7 2007-09-12 19:32:15 cmatsuoka Exp $
+ * $Id: control.c,v 1.8 2007-09-13 10:49:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,7 +35,6 @@ void xmp_init_callback (struct xmp_control *ctl, void (*callback)(void *, int))
     xmp_drv_register (&drv_callback);
     xmp_init_formats ();
     xmp_register_driver_callback (callback);
-    xmp_drv_mutelloc (64);
     ctl->drv_id = "callback";
 }
 
@@ -56,9 +55,6 @@ void xmp_init (int argc, char **argv, struct xmp_control *ctl)
     ctl->outfmt = 0;
     ctl->resol = 16;					/* Was 0. why? */
     ctl->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
-
-    /* Turn on channel mute control, alloc default 64 max track control */
-    xmp_drv_mutelloc (64);
 
     /* Set max number of voices per channel */
     ctl->maxvoc = 16;

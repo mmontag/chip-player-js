@@ -1,8 +1,8 @@
 # Extended Module Player src/prowizard/Makefile
-# $Id: Makefile,v 1.8 2007-08-11 20:18:05 cmatsuoka Exp $
+# $Id: Makefile,v 1.9 2007-09-13 10:49:57 cmatsuoka Exp $
 
 TOPDIR	= ../..
-XCFLAGS	= -I../include -DLIBDIR='"$(LIB_DIR)"'
+XCFLAGS	= -I../include
 OBJS	= prowiz.o ptktable.o tuning.o \
 	  ac1d.o di.o eureka.o fc-m.o fuchs.o fuzzac.o gmc.o heatseek.o \
 	  kris.o ksm.o mp.o np1.o np2.o np3.o p60a.o pm10c.o pm18a.o pha.o \

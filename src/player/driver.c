@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.23 2007-09-12 19:32:15 cmatsuoka Exp $
+ * $Id: driver.c,v 1.24 2007-09-13 10:49:57 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -248,16 +248,6 @@ void xmp_drv_register (struct xmp_drv_info *drv)
 }
 
 
-int xmp_drv_mutelloc(int num)
-{
-    if ((cmute_array = calloc (num, sizeof (int))) == NULL)
-	  return XMP_ERR_ALLOC;
-    nummte = num;
-
-    return XMP_OK;
-}
-
-
 int xmp_drv_open(struct xmp_control *ctl)
 {
     int status;
@@ -275,11 +265,16 @@ int xmp_drv_open(struct xmp_control *ctl)
     if ((status = drv_select (ctl)) != XMP_OK)
 	return status;
 
-    if ((patch_array = calloc (XMP_DEF_MAXPAT,
-		sizeof (struct patch_info *))) == NULL) {
+    if ((patch_array = calloc(XMP_DEF_MAXPAT,
+		sizeof(struct patch_info *))) == NULL) {
 	driver->shutdown ();
 	return XMP_ERR_ALLOC;
     }
+
+    if ((cmute_array = calloc(64, sizeof (int))) == NULL)
+	  return XMP_ERR_ALLOC;
+
+    nummte = 64;
 
     synth_init (ctl->freq);
     synth_reset ();
