@@ -1,13 +1,12 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.8 2007-09-13 00:45:05 cmatsuoka Exp $
+# $Id: Makefile,v 1.9 2007-09-13 01:42:42 cmatsuoka Exp $
 
 TOPDIR	= ../..
-XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" $(PLUGFLAGS) -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
-DFILES	= Makefile README xmp-plugin.h $(OBJS:.o=.c)
+XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" $(PLUGFLAGS) -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
+DFILES	= Makefile README xmp-plugin.h xpanel.h xstuff.c bg2.xpm $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
 INSTDIR	= $(DESTDIR)$(PLUGINST)
-LINKS	= xpanel.c fft4g.c font1.c font2.c
-OBJS	= plugin.o driver.o $(LINKS:.c=.o)
+OBJS	= plugin.o driver.o xpanel.o fft4g.o font1.o font2.o
 
 
 default: all
@@ -17,19 +16,13 @@ include $(TOPDIR)/Makefile.rules
 all:
 	@[ "x$(PLUGDIR)" = "xbmp" ] && $(MAKE) all-bmp || :
 
-all-bmp: driver.c plugin
+all-bmp: plugin
 
 plugin: $(OBJS)
 	$(LD) -shared -o xmp-plugin.so $(OBJS) -L../../lib/ -lxmp
 
 dyndrv:
 	make -C $(TOPDIR)/lib shared
-
-driver.c:
-	ln -sf ../player/driver.c .
-
-$(LINKS):
-	ln -sf ../main/$@ .
 
 install::
 	@if [ "x$(PLUGDIR)" = "xbmp" ]; then \
@@ -38,8 +31,6 @@ install::
 	fi
 
 $(OBJS): Makefile
-
-depend: driver.c $(LINKS)
 
 include depend
 
