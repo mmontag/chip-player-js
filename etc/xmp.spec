@@ -1,34 +1,30 @@
 Name: xmp
 Version: 2.2.0
-Release: %mkrel 0.pre6
+Release: 1
 Summary: A multi-format module player
 Group: Sound
-Source: %{name}-%{version}-pre6.tar.gz
+Source: %{name}-%{version}.tar.gz
 License: GPL
 URL: http://xmp.sourceforge.net/
-Buildrequires: libalsa2-devel >= 1.0.12
+Buildrequires: libalsa-devel >= 1.0.12, audacious-devel
 BuildRoot: %{_tmppath}/%{name}-buildroot
 
 %description
 The Extended Module Player is a modplayer for Unix-like systems that plays
-over 70 mainstream and obscure module formats from Amiga, Atari, Acorn and
-PC, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM)
-and Impulse Tracker (IT) files.
+over 70 mainstream and obscure module formats from Amiga, Atari, Acorn,
+Apple IIgs and PC, including Protracker (MOD), Scream Tracker 3 (S3M), Fast
+Tracker II (XM) and Impulse Tracker (IT) files.
 
 %prep
 %setup -q -n %{name}-%{version}-pre4
 
 %build
-%configure
+%configure --enable audacious-plugin
 %make
 
 %install
 rm -rf %buildroot
-#make install DESTDIR=%{buildroot}
-install -D src/main/xmp %{buildroot}%{_bindir}/xmp
-install -D etc/xmp.conf %{buildroot}%{_sysconfdir}/xmp/xmp.conf
-install -D etc/xmp-modules.conf %{buildroot}%{_sysconfdir}/xmp/xmp-modules.conf
-install -D docs/xmp.1 %{buildroot}%{_mandir}/man1/xmp.1
+make install DESTDIR=%{buildroot}
 
 %clean
 rm -rf %buildroot
@@ -40,4 +36,3 @@ rm -rf %buildroot
 %{_sysconfdir}/*
 %{_mandir}/*
 %doc README docs/COPYING docs/README.* docs/ChangeLog docs/CREDITS
-
