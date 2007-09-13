@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.22 2007-09-12 14:49:48 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.23 2007-09-13 00:45:05 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -26,9 +26,6 @@ PLUGFLAGS=""
 
 AC_SUBST(LDFLAGS)
 LDFLAGS=""
-
-AC_SUBST(X_XMP)
-X_XMP="xxmp"
 
 AC_SUBST(DRIVERS)
 DRIVERS="wav.o"
@@ -110,7 +107,6 @@ case ${target_os} in
 *win32* | cygwin* | mingw*)
     is_win32=yes
     CFLAGS="${CFLAGS} -D_WIN32"
-    X_XMP=""
     enable_arts=no
     enable_bmp_plugin=no
     enable_audacious_plugin=no
@@ -555,10 +551,6 @@ AC_PROG_GCC_TRADITIONAL
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(select getopt_long snprintf)
-
-if test "$no_x" = yes; then
-     X_XMP=""
-fi
 
 AC_CONFIG_FILES([Makefile.rules])
 AC_OUTPUT

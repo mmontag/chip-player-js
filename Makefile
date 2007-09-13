@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.19 2007-08-25 21:39:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.20 2007-09-13 00:45:04 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -60,7 +60,6 @@ uninstall:
 # 'rpm' generates a RPM package
 
 dist:
-	if [ -x /usr/bin/dh_clean ]; then dh_clean; fi
 	rm -Rf $(DIST) $(DIST).tar.gz
 	mkdir $(DIST)
 	$(MAKE) DISTDIR=$(DIST) subdist

@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.28 2007-09-12 14:49:48 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.29 2007-09-13 00:45:05 cmatsuoka Exp $
 
-VERSION		= 2.2.0-pre7
-DATE		= Sat Sep  8 12:14:50 BRT 2007
+VERSION		= 2.2.0-rc1
+DATE		= Wed Sep 12 21:44:19 BRT 2007
 
 DESTDIR		=
 prefix		= $(DESTDIR)@prefix@
@@ -39,10 +39,6 @@ PLATFORM	= @PLATFORM@
 
 DRIVERS		= @DRIVERS@
 MIXER		= @MIXER@
-
-X_INC		= @X_CFLAGS@
-X_LIB		= @X_LIBS@ @X_EXTRA_LIBS@
-X_XMP		= @X_XMP@
 
 LOBJS	= $(OBJS:.o=.lo)
 

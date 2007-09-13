@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.7 2007-09-12 14:49:48 cmatsuoka Exp $
+# $Id: Makefile,v 1.8 2007-09-13 00:45:05 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I../main -DVERSION=\"$(VERSION)\" $(PLUGFLAGS) -D_REENTRANT -DLIBDIR='"$(LIB_DIR)"' #-D_DEBUG
@@ -32,7 +32,7 @@ $(LINKS):
 	ln -sf ../main/$@ .
 
 install::
-	@if [ "x$(PLUGIN)" = "xbmp" ]; then \
+	@if [ "x$(PLUGDIR)" = "xbmp" ]; then \
 		[ -d $(INSTDIR) ] || mkdir -p $(INSTDIR); \
 		$(INSTALL) -s -m755 xmp-plugin.so $(INSTDIR); \
 	fi
