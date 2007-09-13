@@ -1,7 +1,7 @@
-.TH "XMP" "1" "Version 2\&.1\&.1" "Feb 2005" "Extended Module Player" 
+.TH "XMP" "1" "Version 2\&.2\&.0" "Sep 2007" "Extended Module Player" 
 .PP 
 .SH "NAME" 
-xmp, xxmp - Extended Module Player
+xmp - Extended Module Player
 .PP 
 .SH "SYNOPSIS" 
 \fBxmp\fP
@@ -224,25 +224,12 @@ random order, ignoring any configuration set in the xmp\&.conf file:
 .IP "" 
 \f(CWxmp --norc -R `find /mod -name "*\&.xm*" -print`\fP
 .PP 
-.SH "BUGS" 
-.IP o 
-Handling of multi-file modules is confuse\&.
-.IP o 
-Instruments with big-endian 16 bit samples will not load correctly\&.
-.IP o 
-Command line options \fB-M\fP and \fB-S\fP don\'t work correctly with xxmp\&.
-.PP 
 .SH "FILES" 
 \f(CW/etc/xmp/xmp\&.conf, /etc/xmp/xmp-modules\&.conf, $HOME/\&.xmp/xmp\&.conf,
 $HOME/\&.xmp/xmp-modules\&.conf\fP
 .PP 
-.SH "ENVIRONMENT VARIABLES" 
-.IP "XMP_DRIVER_PATH"
-Path to the dynamically linked drivers (only used if xmp was compiled
-with --enable-dynamic).
-.PP 
 .SH "AUTHOR" 
 Claudio Matsuoka and Hipolito Carraro Jr. Portions of code
 used in xmp have been contributed by several other authors,
-check docs/CREDITS for the complete list.
+see docs/CREDITS for the complete list.
 .PP 
