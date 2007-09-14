@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.20 2007-09-13 00:45:04 cmatsuoka Exp $
+# $Id: Makefile,v 1.21 2007-09-14 01:06:23 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -9,8 +9,6 @@ TOPDIR	= .
 XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)
-RPMSPEC	= etc/xmp.spec
-RPMRC	= etc/rpmrc
 MODULES	= inspiration.s3m
 DFILES	= README configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
@@ -30,11 +28,6 @@ distclean::
 
 configure: configure.in
 	autoconf
-
-check: test
-
-test: xmp
-	time -v player/xmp -vvv $(MODULES)
 
 install-plugin:
 	$(MAKE) -C src/bmp install
@@ -56,7 +49,6 @@ uninstall:
 # Extra targets:
 # 'dist' prepares a distribution package
 # 'mark' marks the last CVS revision with the package version number
-# 'diff' creates a diff file
 # 'rpm' generates a RPM package
 
 dist:
@@ -75,58 +67,8 @@ dist:
 	sync
 	ls -l $(DIST).tar.gz
 
-bz2: dist
-	@zcat $(DIST).tar.gz | bzip2 > $(DIST).tar.bz2
-	@ls -l $(DIST).tar.bz2
-	@sync
-
-bindist:
-	$(MAKE) _bindist1 CONFIGURE="./configure"
-
-binpkg: bindist $(PORTS)
-
-_bindist1:
-	rm -Rf $(DIST)
-	gzip -dc $(DIST).tar.gz | tar xvf -
-	cd $(DIST); $(CONFIGURE); $(MAKE) _bindist2
-	rm -Rf $(DIST)
-	sync
-
-_bindist2: xmp
-	strip src/main/xmp src/main/xxmp
-	cat src/main/xmp | gzip -9c > ../xmp-$(VERSION)_$(PLATFORM).gz
-	cat src/main/xxmp | gzip -9c > ../xxmp-$(VERSION)_$(PLATFORM).gz
-
 mark:
 	cvs tag r`echo $(VERSION) | tr .- _`
-
-chkoldver:
-	@if [ "$(OLDVER)" = "" ]; then \
-	    echo "parameter missing: OLDVER=<old_version>"; \
-	    false; \
-	fi
-
-diff: chkoldver
-	@if [ "$(OLDVER)" != "none" ]; then \
-	    echo "Creating diff from $(OLDVER) to $(VERSION)"; \
-	    rm -Rf xmp-$(OLDVER) xmp-$(VERSION); \
-	    tar xzf xmp-$(OLDVER).tar.gz; \
-	    tar xzf xmp-$(VERSION).tar.gz; \
-	    diff -rud --new-file xmp-$(OLDVER) xmp-$(VERSION) | gzip -9c > \
-		xmp-$(OLDVER)_$(VERSION).diff.gz; \
-	    rm -Rf xmp-$(OLDVER) xmp-$(VERSION); \
-	    sync; \
-	fi
-
-graph: delgraph callgraph.ps
-
-delgraph:
-	rm -f callgraph.ps
-
-callgraph.ps:
-	cflow -gAP -Isrc/include src/{player,misc}/*c 2>/dev/null | \
-		scripts/cflow2dot.pl > callgraph.dot
-	dot -Tps -o$@ callgraph.dot
 
 Makefile.rules: Makefile.rules.in
 	@if [ -f config.status ]; then \
