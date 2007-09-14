@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.15 2007-09-14 17:48:20 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.16 2007-09-14 18:00:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -708,7 +708,7 @@ int it_load (FILE * f)
 
 		if (ish.flags & IT_SMP_16BIT) {
 		    itsex_decompress16 (f, buf, xxs[i].len >> 1, 
-			ifh.cmwt >= 0x0215);
+					ish.convert & IT_CVT_DIFF);
 		} else {
 		    itsex_decompress8(f, buf, xxs[i].len, ifh.cmwt == 0x0215);
 		}
