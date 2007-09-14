@@ -221,7 +221,7 @@ static int freeblock(void)
 /* ----------------------------------------------------------------------
  *  decompression routines
  * ----------------------------------------------------------------------
-
+ *
  * decompresses 8-bit sample (params : file, outbuffer, lenght of
  *                                     uncompressed sample, IT2.15
  *                                     compression flag

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.14 2007-09-14 13:49:33 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.15 2007-09-14 17:48:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,6 +28,7 @@ static uint32 *pp_ins;		/* Pointers to instruments */
 static uint32 *pp_smp;		/* Pointers to samples */
 static uint32 *pp_pat;		/* Pointers to patterns */
 static uint8 arpeggio_val[64];
+static uint8 last_h[64], last_fxp[64];
 
 static uint8 fx[] = {
 	/*   */ FX_NONE,
@@ -71,7 +72,6 @@ int itsex_decompress16 (FILE *, void *, int, int);
 static void xlat_fx (int c, struct xxm_event *e)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
-    static uint8 last_h = 0, last_fxp = 0;
 
     switch (e->fxt = fx[e->fxt]) {
     case FX_ARPEGGIO:		/* Arpeggio */
@@ -88,11 +88,11 @@ static void xlat_fx (int c, struct xxm_event *e)
 	e->fxt = FX_EXTENDED;
 
 	if (h == 0 && e->fxp == 0) {
-	    h = last_h;
-	    e->fxp = last_fxp;
+	    h = last_h[c];
+	    e->fxp = last_fxp[c];
 	} else {
-	    last_h = h;
-	    last_fxp = e->fxp;
+	    last_h[c] = h;
+	    last_fxp[c] = e->fxp;
 	}
 
 	switch (h) {
@@ -125,9 +125,6 @@ static void xlat_fx (int c, struct xxm_event *e)
 	case 0x9:		/* 0x91 = set surround -- NOT IMPLEMENTED */
 	    e->fxt = e->fxp = 0;
 	    break;
-	case 0xa:		/* Not defined */
-	    e->fxt = e->fxp = 0;
-	    break;
 	case 0xb:		/* Pattern loop */
 	    e->fxp = 0x60 | l;
 	    break;
@@ -135,6 +132,8 @@ static void xlat_fx (int c, struct xxm_event *e)
 	case 0xd:		/* Note delay */
 	case 0xe:		/* Pattern delay */
 	    break;
+	default:
+	    e->fxt = e->fxp = 0;
 	}
 	break;
     case FX_FLT_CUTOFF:
@@ -603,7 +602,7 @@ int it_load (FILE * f)
 
     if (V (2) || (~ifh.flags & IT_USE_INST && V (1)))
 	report (
-"\n     Sample name                Len   LBeg  LEnd  SBeg  SEnd  Fl Vl Gv C5Spd"
+"\n     Sample name                Len   LBeg  LEnd  SBeg  SEnd  FlCv VlGv C5Spd"
 	);
     
     for (i = 0; i < xxh->smp; i++) {
@@ -665,13 +664,13 @@ int it_load (FILE * f)
 	    if (strlen ((char *) ish.name) || xxs[i].len > 1) {
 		report (
 		    "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
-		    "%02x %02x %02x %5d ",
+		    "%02x%02x %02x%02x %5d ",
 		    i, ish.name,
 		    xxs[i].len,
 		    ish.flags & IT_SMP_16BIT ? '+' : ' ',
 		    xxs[i].lps, xxs[i].lpe,
 		    ish.sloopbeg, ish.sloopend,
-		    ish.flags,
+		    ish.flags, ish.convert,
 		    ish.vol, ish.gvl, ish.c5spd
 		);
 	    }
@@ -701,8 +700,6 @@ int it_load (FILE * f)
 
 	    if (~ish.convert & IT_CVT_SIGNED)
 		cvt |= XMP_SMP_UNS;
-	    if (ish.convert & IT_CVT_DIFF)	/* NOT safe to ignore! */
-		cvt |= XMP_SMP_DIFF;
 
 	    /* Handle compressed samples using Tammo Hinrichs' routine */
 	    if (ish.flags & IT_SMP_COMP) {
@@ -711,7 +708,7 @@ int it_load (FILE * f)
 
 		if (ish.flags & IT_SMP_16BIT) {
 		    itsex_decompress16 (f, buf, xxs[i].len >> 1, 
-			ifh.cmwt == 0x0215);
+			ifh.cmwt >= 0x0215);
 		} else {
 		    itsex_decompress8(f, buf, xxs[i].len, ifh.cmwt == 0x0215);
 		}
@@ -732,7 +729,9 @@ int it_load (FILE * f)
 	report ("\nStored Patterns: %d ", xxh->pat);
 
     xxh->trk = xxh->pat * xxh->chn;
-    memset (arpeggio_val, 0, 64);
+    memset(arpeggio_val, 0, 64);
+    memset(last_h, 0, 64);
+    memset(last_fxp, 0, 64);
 
     PATTERN_INIT ();
 

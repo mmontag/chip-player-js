@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.25 2007-09-14 13:49:33 cmatsuoka Exp $
+ * $Id: driver.c,v 1.26 2007-09-14 17:48:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -34,13 +34,13 @@ static struct voice_info *voice_array = NULL;
 static struct xmp_drv_info *drv_array = NULL;
 static struct xmp_drv_info *driver = NULL;
 
-static int *cmute_array = NULL;
+#define nummte 64		/* number of channels in cmute_array */
+static int cmute_array[nummte];
 
 static int numusr;		/* number of user channels */
 static int numvoc;		/* number of soundcard voices */
 static int numchn;		/* number of channels need to play one module */
 static int numtrk;		/* number of tracks in module */
-static int nummte;		/* number of channels in cmute_array */
 static int maxvoc;		/* */
 static int agevoc;		/* */
 static int extern_drv;		/* set output to driver other than mixer */
@@ -271,11 +271,6 @@ int xmp_drv_open(struct xmp_control *ctl)
 	return XMP_ERR_ALLOC;
     }
 
-    if ((cmute_array = calloc(64, sizeof (int))) == NULL)
-	  return XMP_ERR_ALLOC;
-
-    nummte = 64;
-
     synth_init (ctl->freq);
     synth_reset ();
 
@@ -309,12 +304,10 @@ int xmp_drv_set (struct xmp_control *ctl)
 void xmp_drv_close ()
 {
     xmp_drv_off ();
-    free (cmute_array);
+    memset(cmute_array, 0, nummte * sizeof(int));
     free (patch_array);
     driver->shutdown ();
-    cmute_array = NULL;
     xmp_ctl = NULL;
-    nummte = 0;
 
     synth_deinit ();
 }
@@ -904,7 +897,7 @@ int xmp_drv_loadpatch (FILE *f, int id, int basefreq, int flags,
 
 #if 0
     /* dump patch to file */
-    if (id == 8) {
+    if (id == 13) {
 	printf("dump patch\n");
 	FILE *f = fopen("patch_data", "w");
 	fwrite(patch->data, 1, xxs->len, f);

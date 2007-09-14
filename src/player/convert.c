@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.7 2007-08-27 13:10:45 cmatsuoka Exp $
+ * $Id: convert.c,v 1.8 2007-09-14 17:48:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -60,16 +60,17 @@ void xmp_cvt_diff2abs (int l, int r, char *p)
     uint16* w = (uint16*) p;
     uint16 abs = 0;
 
-    if (r)
+    if (r) {
 	for (l >>= 1; l--;) {
 	    abs = *w + abs;
 	    *w++ = abs;
 	}
-    else
+    } else {
 	for (; l--;) {
 	    abs = *p + abs;
 	    *p++ = (uint8) abs;
 	}
+    }
 }
 
 
