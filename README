@@ -1,4 +1,3 @@
-$Id: README,v 1.43 2007-09-12 17:42:46 cmatsuoka Exp $
 
 
 
@@ -17,7 +16,7 @@ OVERVIEW
 This is the Extended Module Player, a module player for Unix-like systems
 that runs on Linux with ALSA and OSS, Free/Open/NetBSD, AIX, OS/2, HP-UX,
 MacOS X, SunOS, QNX and Solaris. Xmp plays over 70 mainstream and obscure
-module formats from Amiga, Atari, Acorn, IIgs and PC.
+module formats from Amiga, Atari, Acorn, Apple IIgs and PC.
 
 Many compressed module formats are supported, including popular Unix, DOS
 and Amiga file packers such as gzip, bzip2, SQSH, Powerpack, etc. Certain
@@ -45,10 +44,9 @@ The current version recognizes the following module formats:
   MOD	****+	Sound/Noise/Protracker	M.K., M!K!, M&K!, N.T., CD81
   WOW	****+	Mod's Grave		M.K.
 
-  Packed modules:
+  Amiga packed formats:
 
   AC1D  ****+	AC1D Packer		-
-  AMF	**+	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
   CRB	****+	Heatseeker		mc1.0
   DI	****+	Digital Illusions	-
   FC-M	****+	FC-M Packer		1.0
@@ -61,20 +59,11 @@ The current version recognizes the following module formats:
   PP10	****+	Pha Packer		-
   PROM	***	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
-  PSM	*** 	Epic Megagames MASI	epic, sinaria
-  PSM	*** 	Protracker Studio	0.01, 1.00
   STIM	****+	Slamtilt		-
   UNIC	***	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
   XANN	****+	XANN Packer		-
   ZEN	****+	Zen Packer		-
-
-  YM3812 (Adlib) modules:
-
-  AMD	***	Amusic Adlib Tracker	-
-  RAD	***	Reality Adlib Tracker	-
-  HSC	**	NEO soft/HSC-Tracker	1.5
-  S3M	**** 	Scream Tracker 3	3.00, 3.01+
 
   Other Amiga formats:
 
@@ -112,6 +101,7 @@ The current version recognizes the following module formats:
 
   669	***	Composer 669/UNIS 669	if, JN
   ALM   ****+	Aley Keptr		1.0, 1.1, 1.2
+  AMF	**+	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
   DMF	**	X-Tracker		7, 8
   FAR	***	Farandole Composer	1.0
   FNK	**	Funktracker		?
@@ -120,6 +110,8 @@ The current version recognizes the following module formats:
   LIQ	***	Liquid Tracker		0.0, 1.0
   MDL	***	Digitrakker		0.0, 1.0, 1.1
   MTM	****+	Multitracker		1.0
+  PSM	*** 	Epic Megagames MASI	epic, sinaria
+  PSM	*** 	Protracker Studio	0.01, 1.00
   PTM	***	Poly Tracker		2.03
   RTM	**	Real Tracker		1.00
   S3M	**** 	Scream Tracker 3	3.00, 3.01+
@@ -127,6 +119,13 @@ The current version recognizes the following module formats:
   STX	****+	ST Music Interface Kit	1.0, 1.1
   ULT	***	Ultra Tracker		V0001, V0002, V0003, V0004
   XM	**** 	Fast Tracker II		1.02, 1.03, 1.04
+
+  YM3812 (Adlib) formats:
+
+  AMD	***	Amusic Adlib Tracker	-
+  RAD	***	Reality Adlib Tracker	-
+  HSC	**	NEO soft/HSC-Tracker	1.5
+  S3M	**** 	Scream Tracker 3	3.00, 3.01+
 
 Ratings:
 
@@ -170,9 +169,9 @@ FRONT-ENDS
 xmp can be used stand-alone, as a plugin for BMP or Audacious or as a back
 end for GQmpeg, xhippo and others. Get them in the following URLs:
 
-  BeepMP:    http://beepmp.sf.net
+  BeepMP:    http://beepmp.sourceforge.net
   Audacious: http://audacious-media-player.org
-  GQmpeg:    http://www.netpedia.net/hosting/gqview/mpeg-index.html
+  GQmpeg:    http://gqmpeg.sourceforge.net
   xhippo:    http://freshmeat.net/projects/gnuxhippo/homepage/
 
 WARNING: When using the XMMS plugin, it's advisable to disable the mikmod
@@ -252,4 +251,3 @@ GNU General Public License for more details.
 You  should  have received a copy of the GNU General Public License along
 with this program;  if not, write to the  Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
