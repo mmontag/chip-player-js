@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.12 2007-09-03 17:41:33 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.13 2007-09-14 12:06:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -675,31 +675,33 @@ int it_load (FILE * f)
 		if (xxi[j][k].sid == i) {
 		    xxi[j][k].vol = ish.vol;
 		    xxi[j][k].gvl = ish.gvl;
-		    c2spd_to_note (ish.c5spd, &xxi[j][k].xpo, &xxi[j][k].fin);
+		    c2spd_to_note(ish.c5spd, &xxi[j][k].xpo, &xxi[j][k].fin);
 		}
 	    }
 	}
 
 	if (ish.flags & IT_SMP_SAMPLE && xxs[i].len > 1) {
-	    fseek (f, ish.sample_ptr, SEEK_SET);
+	    fseek(f, ish.sample_ptr, SEEK_SET);
 
 	    /* Handle compressed samples using Tammo Hinrichs' routine */
 	    if (ish.flags & IT_SMP_COMP) {
 		char *buf;
-		buf = calloc (1, xxs[i].len);
-		if (ish.flags & IT_SMP_16BIT)
+		buf = calloc(1, xxs[i].len);
+
+		if (ish.flags & IT_SMP_16BIT) {
 		    itsex_decompress16 (f, buf, xxs[i].len >> 1, 
 			ifh.cmwt == 0x0215);
-		else
-		    itsex_decompress8 (f, buf, xxs[i].len,
-			ifh.cmwt == 0x0215);
-		xmp_drv_loadpatch (NULL, i, xmp_ctl->c4rate,
+		} else {
+		    itsex_decompress8(f, buf, xxs[i].len, ifh.cmwt == 0x0215);
+		}
+
+		xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate,
 		    XMP_SMP_NOLOAD, &xxs[i], buf);
 		free (buf);
 	    } else {
-		xmp_drv_loadpatch (f, i, xmp_ctl->c4rate,
-		    ish.convert & IT_CVT_SIGNED ? 0 : XMP_SMP_UNS,
-		    &xxs[i], NULL);
+		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate,
+		   	 	ish.convert & IT_CVT_SIGNED ? 0 : XMP_SMP_UNS,
+		    		&xxs[i], NULL);
 	    }
 
 	    reportv(0, ".");

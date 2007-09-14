@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Game Music Creator format and saves in ptk.
  *
- * $Id: gmc.c,v 1.2 2006-02-13 12:50:34 cmatsuoka Exp $
+ * $Id: gmc.c,v 1.3 2007-09-14 12:06:28 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -23,13 +23,14 @@ struct pw_format pw_gmc = {
 	depack_GMC
 };
 
-static int depack_GMC(FILE * in, FILE * out)
+static int depack_GMC(FILE *in, FILE *out)
 {
 	uint8 *tmp;
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
+	uint8 c1, c2, c3;
 	uint8 ptable[128];
 	uint8 Max = 0x00;
 	uint8 PatPos;
+	uint16 len, looplen;
 	long ssize = 0;
 	long i = 0, j = 0;
 	// FILE *in,*out;
@@ -56,20 +57,26 @@ static int depack_GMC(FILE * in, FILE * out)
 		/* bypass 4 address bytes */
 		fseek(in, 4, 1);
 		/* size */
-		fread(&c1, 1, 1, in);
-		fread(&c2, 1, 1, in);
-		fwrite(&c1, 1, 1, out);
-		fwrite(&c2, 1, 1, out);
-		ssize += (((c1 << 8) + c2) * 2);
+		len = read16b(in);
+		write16b(out, len);
+		ssize += len * 2;
 		/* finetune */
 		fseek(in, 1, 1);
-		c1 = 0x00;
-		fwrite(&c1, 1, 1, out);
+		write8(out, 0);
 		/* volume */
-		fread(&c1, 1, 1, in);
-		fwrite(&c1, 1, 1, out);
+		write8(out, read8(in));
+
 		/* bypass 4 address bytes */
 		fseek(in, 4, 1);
+#if 1
+		/* loop size */
+		looplen = read16b(in);
+		write16b(out, looplen > 2 ? len - looplen : 0);
+		write16b(out, looplen);
+
+		read16b(in);
+
+#else
 		/* loop size */
 		fread(&c1, 1, 1, in);
 		fread(&c2, 1, 1, in);
@@ -102,6 +109,7 @@ static int depack_GMC(FILE * in, FILE * out)
 			c2 = 0x01;
 		fwrite(&c1, 1, 1, out);
 		fwrite(&c2, 1, 1, out);
+#endif
 	}
 	free(tmp);
 	tmp = (uint8 *) malloc(30);
@@ -118,8 +126,7 @@ static int depack_GMC(FILE * in, FILE * out)
 	fwrite(&PatPos, 1, 1, out);
 
 	/* ntk byte */
-	c1 = 0x7f;
-	fwrite(&c1, 1, 1, out);
+	write8(out, 0x7f);
 
 	/* read and write size of pattern list */
 	/*printf ( "Creating the pattern table ... " ); */
@@ -199,17 +206,17 @@ static int depack_GMC(FILE * in, FILE * out)
 #if 0
 	/* crap */
 	Crap("GMC:Game Music Creator", -1, -1, out);
-#endif
 
 	fflush(in);
 	fflush(out);
+#endif
 
 	/* printf ("done\n"); */
 
 	return 0;
 }
 
-static int test_GMC(uint8 * data, int s)
+static int test_GMC(uint8 *data, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0;
@@ -268,7 +275,7 @@ static int test_GMC(uint8 * data, int s)
 		k = ((data[start + 244 + n * 2] << 8) +
 		     data[start + 245 + n * 2]);
 		if (((k / 1024) * 1024) != k) {
-/*printf ( "#4 Start:%ld (k:%ld)\n" , start , k);*/
+/*printf ( "#4 Start:%d (k:%d)\n" , start , k);*/
 			return -1;
 		}
 		l = ((k / 1024) > l) ? k / 1024 : l;
@@ -285,52 +292,44 @@ static int test_GMC(uint8 * data, int s)
 	o = data[start + 243];
 	for (k = 0; k < l; k++) {
 		for (n = 0; n < 256; n++) {
-			if ((data[start + 444 + k * 1024 + n * 4] > 0x03)
-			    || ((data[start + 444 +
-				      k * 1024 + n * 4 + 2] & 0x0f) >= 0x90)) {
-/*printf ( "#5,0 Start:%ld (k:%ld)\n" , start , k);*/
+			int offset = start + 444 + k * 1024 + n * 4;
+			uint8 *d = &data[offset];
+
+			if (offset > (PW_TEST_CHUNK - 4))
+				return -1;
+				
+			/* First test fails with Jumping Jackson */
+			if (/*(d[0] > 0x03) ||*/ ((d[2] & 0x0f) >= 0x90)) {
+/*printf ( "#5,0 Start:%d (k:%d) %02x %02x\n" , start , k, d[0], d[2]);*/
 				return -1;
 			}
-			if (((data[start + 444 + k * 1024 +
-				   n * 4 + 2] & 0xf0) >> 4) > j) {
-/*printf ( "#5,1 Start:%ld (j:%ld) (where:%ld) (value:%x)\n"
-         , start , j , start+444+k*1024+n*4+2
-         , ((data[start+444+k*1024+n*4+2]&0xf0)>>4) );*/
+#if 0
+			/* Test fails with Jumping Jackson */
+			if (((d[2] & 0xf0) >> 4) > j) {
+printf ( "#5,1 Start:%d (j:%d) (where:%d) (value:%x)\n"
+         , start , j , offset + 2
+         , ((data[offset + 2]&0xf0)>>4) );
 				return -1;
 			}
-			if (((data[start + 444 + k * 1024 +
-				   n * 4 + 2] & 0x0f) == 3)
-			    && (data[start + 444 +
-				     k * 1024 + n * 4 + 3] > 0x40)) {
-/*printf ( "#5,2 Start:%ld (j:%ld)\n" , start , j);*/
+#endif
+			if (((d[2] & 0x0f) == 3) && (d[3] > 0x40)) {
+//printf ( "#5,2 Start:%d (j:%d)\n" , start , j);
 				return -1;
 			}
-			if (((data[start + 444 + k * 1024 +
-				   n * 4 + 2] & 0x0f) == 4)
-			    && (data[start + 444 +
-				     k * 1024 + n * 4 + 3] > 0x63)) {
-/*printf ( "#5,3 Start:%ld (j:%ld)\n" , start , j);*/
+			if (((d[2] & 0x0f) == 4) && (d[3] > 0x63)) {
+//printf ( "#5,3 Start:%d (j:%d)\n" , start , j);
 				return -1;
 			}
-			if (((data[start + 444 + k * 1024 +
-				   n * 4 + 2] & 0x0f) == 5)
-			    && (data[start + 444 +
-				     k * 1024 + n * 4 + 3] > o + 1)) {
-/*printf ( "#5,4 Start:%ld (effect:5)(o:%ld)(4th note byte:%x)\n" , start , j , data[start+444+k*1024+n*4+3]);*/
+			if (((d[2] & 0x0f) == 5) && (d[3] > o + 1)) {
+//printf ( "#5,4 Start:%d (effect:5)(o:%d)(4th note byte:%x)\n" , start , j , data[start+444+k*1024+n*4+3]);
 				return -1;
 			}
-			if (((data[start + 444 + k * 1024 +
-				   n * 4 + 2] & 0x0f) == 6)
-			    && (data[start + 444 +
-				     k * 1024 + n * 4 + 3] >= 0x02)) {
-/*printf ( "#5,5 Start:%ld (at:%ld)\n" , start , start+444+k*1024+n*4+3 );*/
+			if (((d[2] & 0x0f) == 6) && (d[3] >= 0x02)) {
+//printf ( "#5,5 Start:%d (at:%d)\n" , start , start+444+k*1024+n*4+3 );
 				return -1;
 			}
-			if (((data[start + 444 + k * 1024 +
-				   n * 4 + 2] & 0x0f) == 7)
-			    && (data[start + 444 +
-				     k * 1024 + n * 4 + 3] >= 0x02)) {
-/*printf ( "#5,6 Start:%ld (at:%ld)\n" , start , start+444+k*1024+n*4+3 );*/
+			if (((d[2] & 0x0f) == 7) && (d[3] >= 0x02)) {
+//printf ( "#5,6 Start:%d (at:%d)\n" , start , start+444+k*1024+n*4+3 );
 				return -1;
 			}
 		}

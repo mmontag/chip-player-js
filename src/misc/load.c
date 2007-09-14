@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.16 2007-08-31 22:49:32 cmatsuoka Exp $
+ * $Id: load.c,v 1.17 2007-09-14 12:06:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,7 +46,6 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_ARCFS	0x06
 #define BUILTIN_S404	0x07
 
-#define TEST_CHUNK	4096
 
 static int decrunch (FILE **f, char **s)
 {
@@ -61,8 +60,8 @@ static int decrunch (FILE **f, char **s)
     temp = strdup ("/tmp/xmp_XXXXXX");
 
     fseek (*f, 0, SEEK_SET);
-    b = malloc(TEST_CHUNK);
-    fread (b, 1, TEST_CHUNK, *f);
+    b = malloc(PW_TEST_CHUNK);
+    fread (b, 1, PW_TEST_CHUNK, *f);
 
     if (b[0] == 'P' && b[1] == 'K') {
 	packer = "Zip";
@@ -142,7 +141,7 @@ static int decrunch (FILE **f, char **s)
 	    "-x*.exe -x*.com \"%s\"";
     } else {
 	int extra;
-	int s = TEST_CHUNK;
+	int s = PW_TEST_CHUNK;
 
 	while ((extra = pw_check(b, s)) > 0) {
 	    b = realloc(b, s + extra);

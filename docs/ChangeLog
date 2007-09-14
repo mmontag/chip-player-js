@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.66 2007-09-12 17:42:47 cmatsuoka Exp $
+$Id: ChangeLog,v 1.67 2007-09-14 12:06:28 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -32,6 +32,7 @@ Stable versions
 	- added Audacious plugin
 	- enabled WAV writer
 	- enabled IMF filter effects
+	- enabled Game Music Creator prowizard converter
 	- removed broken shared lib generation
 	- removed packed structures
 	- replaced non-free PowerPack depacker with Kyzer's PD version

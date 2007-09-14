@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.6 2007-08-28 18:52:43 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.7 2007-09-14 12:06:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -154,5 +154,8 @@ uint32	read24l			(FILE *);
 uint32	read24b			(FILE *);
 uint32	read32l			(FILE *);
 uint32	read32b			(FILE *);
+void	write8			(FILE *, uint8);
+void	write16l		(FILE *, uint16);
+void	write16b		(FILE *, uint16);
 
 #endif /* __XMPI_H */

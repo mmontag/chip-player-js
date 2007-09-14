@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: readdata.c,v 1.1 2007-08-28 18:52:44 cmatsuoka Exp $
+ * $Id: readdata.c,v 1.2 2007-09-14 12:06:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -90,4 +90,24 @@ uint32 read32b(FILE *f)
 
 	return (a << 24) | (b << 16) | (c << 8) | d;
 }
+
+
+
+inline void write8(FILE *f, uint8 b)
+{
+	fputc(b, f);
+}
+
+void write16l(FILE *f, uint16 w)
+{
+	write8(f, w & 0x00ff);
+	write8(f, (w & 0xff00) >> 8);
+}
+
+void write16b(FILE *f, uint16 w)
+{
+	write8(f, (w & 0xff00) >> 8);
+	write8(f, w & 0x00ff);
+}
+
 

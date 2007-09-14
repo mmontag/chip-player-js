@@ -8,6 +8,9 @@
 
 #define MIN_FILE_LENGHT 2048
 
+#define PW_TEST_CHUNK   0x10000
+
+
 #ifndef __XMP_H
 typedef unsigned char uint8;
 typedef unsigned short uint16;
