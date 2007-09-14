@@ -11,7 +11,7 @@
  */
 
 /*
- * $Id: unic2.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: unic2.c,v 1.2 2007-09-14 18:40:58 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -22,7 +22,7 @@ static int test_unic2 (uint8 *, int);
 static int depack_unic2 (uint8 *, FILE *);
 
 struct pw_format pw_unic2 = {
-	"unic2",
+	"UNIC2",
 	"Unic Tracker 2",
 	0x00,
 	test_unic2,

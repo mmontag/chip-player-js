@@ -7,7 +7,7 @@
  *                 reduced to only one FREAD.
  *                 Speed-up and Binary smaller.
  *
- * $Id: np3.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: np3.c,v 1.2 2007-09-14 18:40:58 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -18,7 +18,7 @@ static int test_np3 (uint8 *, int);
 static int depack_np3 (FILE *, FILE *);
 
 struct pw_format pw_np3 = {
-	"np3",
+	"NP3",
 	"Noisepacker v3",
 	0x00,
 	test_np3,
