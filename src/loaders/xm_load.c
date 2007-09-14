@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.6 2007-08-12 21:31:53 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.7 2007-09-14 19:48:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -42,8 +42,9 @@ int xm_load (FILE * f)
     struct xm_instrument_header xih;
     struct xm_instrument xi;
     struct xm_sample_header xsh[16];
+    int fix_loop = 0;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&xfh.id, 17, 1, f);		/* ID text */
     fread(&xfh.name, 20, 1, f);		/* Module name */
@@ -80,7 +81,10 @@ int xm_load (FILE * f)
     memcpy (xxo, xfh.order, xxh->len);
     snprintf(tracker_name, 80, "%-20.20s", xfh.tracker);
 
-    MODULE_INFO ();
+    if (!strncmp(tracker_name, "FastTracker v 2.00", 18))
+	fix_loop = 1;		/* for Breath of the Wind */
+
+    MODULE_INFO();
 
     /* XM 1.02/1.03 has a different structure. This is a nasty kludge to
      * re-order the loader and recognize 1.02 files correctly.
@@ -89,10 +93,9 @@ int xm_load (FILE * f)
 	goto load_instruments;
 
 load_patterns:
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     /* Endianism fixed by Miodrag Vallat <miodrag@multimania.com>
      * Mon, 04 Jan 1999 11:17:20 +0100
@@ -332,8 +335,8 @@ load_instruments:
 		xxs[instr_no].len = xsh[j].length;
 		xxs[instr_no].lps = xsh[j].loop_start;
 		xxs[instr_no].lpe = xsh[j].loop_start + xsh[j].loop_length;
-		if (xxs[instr_no].lpe > 0)
-			xxs[instr_no].lpe--;
+		if (!fix_loop && xxs[instr_no].lpe > 0)
+		    xxs[instr_no].lpe--;
 		xxs[instr_no].flg = xsh[j].type & XM_SAMPLE_16BIT ?
 		    WAVE_16_BITS : 0;
 		xxs[instr_no].flg |= xsh[j].type & XM_LOOP_FORWARD ?
