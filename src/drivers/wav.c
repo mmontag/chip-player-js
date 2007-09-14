@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.6 2007-09-03 22:13:00 cmatsuoka Exp $
+ * $Id: wav.c,v 1.7 2007-09-14 16:19:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -60,7 +60,7 @@ struct xmp_drv_info drv_wav = {
 };
 
 
-static void write16l(int fd, uint16 v)
+static void writeval_16l(int fd, uint16 v)
 {
 	uint8 x;
 
@@ -71,7 +71,7 @@ static void write16l(int fd, uint16 v)
 	write(fd, &x, 1);
 }
 
-static void write32l(int fd, uint32 v)
+static void writeval_32l(int fd, uint32 v)
 {
 	uint8 x;
 
@@ -123,16 +123,16 @@ static int init (struct xmp_control *ctl)
     bytes_per_second = sampling_rate * chan * bytes_per_sample;
 
     write(audio_fd, "fmt ", 4);
-    write32l(audio_fd, flen);
-    write16l(audio_fd, u16);
-    write16l(audio_fd, chan);
-    write32l(audio_fd, sampling_rate);
-    write32l(audio_fd, bytes_per_second);
-    write16l(audio_fd, bytes_per_sample);
-    write16l(audio_fd, bits_per_sample);
+    writeval_32l(audio_fd, flen);
+    writeval_16l(audio_fd, u16);
+    writeval_16l(audio_fd, chan);
+    writeval_32l(audio_fd, sampling_rate);
+    writeval_32l(audio_fd, bytes_per_second);
+    writeval_16l(audio_fd, bytes_per_sample);
+    writeval_16l(audio_fd, bits_per_sample);
 
     write(audio_fd, "data", 4);
-    write32l(audio_fd, len);
+    writeval_32l(audio_fd, len);
 
     size = 0;
 
@@ -160,11 +160,11 @@ static void shutdown ()
 
     len = size;
     lseek(audio_fd, 40, SEEK_SET);
-    write32l(audio_fd, len);
+    writeval_32l(audio_fd, len);
 
     len = size + 40;
     lseek(audio_fd, 4, SEEK_SET);
-    write32l(audio_fd, len);
+    writeval_32l(audio_fd, len);
 
     if (audio_fd)
 	close (audio_fd);
