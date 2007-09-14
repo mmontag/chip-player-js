@@ -1,13 +1,9 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- */
-
-/* The reserved fields are there to allow binary compatability with
- * newer versions, or so we hope
  */
 
 #ifndef __XXM_H
@@ -29,7 +25,6 @@ struct xxm_header {
     int len;				/* Module length in patterns */
     int rst;				/* Restart position */
     int gvl;				/* Global volume */
-    int reserved[16];
 };
 
 struct xxm_channel {
@@ -40,7 +35,6 @@ struct xxm_channel {
     int flg;
     int cho;
     int rvb;
-    int reserved[16];
 };
 
 struct xxm_trackinfo {
@@ -91,7 +85,6 @@ struct xxm_instrument_header {
     struct xxm_envinfo fei;		/* Frequency envelope info */
     int vts;				/* Volume table speed -- for MED */
     int wts;				/* Waveform table speed -- for MED */
-    int reserved[16];
 };
 
 struct xxm_instrument_map {
@@ -128,7 +121,6 @@ struct xxm_instrument {
     int ifc;				/* Initial filter cutoff -- for IT */
     int ifr;				/* Initial filter resonance -- for IT */
     int hld;				/* Hold -- for MED */
-    int reserved[16];
 };
 
 struct xxm_sample {
