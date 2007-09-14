@@ -5,7 +5,7 @@
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.2 2007-08-05 00:36:59 pabs3 Exp $
+ * $Id: pha.c,v 1.3 2007-09-14 20:11:31 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -24,9 +24,9 @@ struct pw_format pw_pha = {
 	depack_pha
 };
 
-static int depack_pha (FILE *in, FILE *out)
+static int depack_pha(FILE *in, FILE *out)
 {
-	uint8 c1, c2, c3, c4;
+	uint8 c1, c2, c3;
 	uint8 pnum[128];
 	uint8 pnum1[128];
 	uint8 NOP;
@@ -56,7 +56,7 @@ static int depack_pha (FILE *in, FILE *out)
 	bzero (ocpt, 4 * 2);
 
 	for (i = 0; i < 20; i++)	/* title */
-		fwrite (&c1, 1, 1, out);
+		write8(out, 0);
 
 	fseek (in, 0, SEEK_SET);	/* useless */
 	for (i = 0; i < 31; i++) {
@@ -99,13 +99,8 @@ static int depack_pha (FILE *in, FILE *out)
 	/* bypass those unknown 14 bytes */
 	fseek (in, 14, 1);	/* SEEK_CUR */
 
-	for (i = 0; i < 128; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		paddr[i] = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
-	}
+	for (i = 0; i < 128; i++)
+		paddr[i] = read32b(in);
 
 	/* ordering of patterns addresses */
 

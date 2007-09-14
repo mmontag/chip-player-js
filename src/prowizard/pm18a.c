@@ -8,7 +8,7 @@
  *
  * claudio's note: this code asks for heavy optimization. maybe later
  *
- * $Id: pm18a.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: pm18a.c,v 1.2 2007-09-14 20:11:31 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -62,15 +62,14 @@ static int depack_p18a (FILE *in, FILE *out)
     bzero (paddr, 128 * 4);
 
     for (i = 0; i < 20; i++)    /* title */
-	fwrite (&c1, 1, 1, out);
+	write8(out, 0);
 
     /* bypass replaycode routine */
     fseek (in, 4464, 0);    /* SEEK_SET */
 
     for (i = 0; i < 31; i++) {
-	c1 = 0x00;
 	for (j = 0; j < 22; j++)    /*sample name */
-	    fwrite (&c1, 1, 1, out);
+	    write8(out, 0);
 
 	fread (&c1, 1, 1, in);    /* size */
 	fread (&c2, 1, 1, in);
@@ -104,13 +103,8 @@ static int depack_p18a (FILE *in, FILE *out)
     c1 = 0x7f;
     fwrite (&c1, 1, 1, out);
 
-    for (i = 0; i < 128; i++) {
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	paddr[i] = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
-    }
+    for (i = 0; i < 128; i++)
+	paddr[i] = read32b(in);
 
     /* ordering of patterns addresses */
 

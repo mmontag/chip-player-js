@@ -8,7 +8,7 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: prun2.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.2 2007-09-14 20:11:31 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -46,7 +46,7 @@ static int depack_pru2 (uint8 *data, FILE *out)
 	bzero (ptable, 128);
 
 	for (i = 0; i < 20; i++)	/* title */
-		fwrite (&c1, 1, 1, out);
+		write8(out, 0);
 
 	w += 4;
 	c1 = data[w++];
