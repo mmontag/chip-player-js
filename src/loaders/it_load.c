@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.13 2007-09-14 12:06:28 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.14 2007-09-14 13:49:33 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -71,6 +71,7 @@ int itsex_decompress16 (FILE *, void *, int, int);
 static void xlat_fx (int c, struct xxm_event *e)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
+    static uint8 last_h = 0, last_fxp = 0;
 
     switch (e->fxt = fx[e->fxt]) {
     case FX_ARPEGGIO:		/* Arpeggio */
@@ -85,6 +86,15 @@ static void xlat_fx (int c, struct xxm_event *e)
 	break;
     case FX_XTND:		/* Extended effect */
 	e->fxt = FX_EXTENDED;
+
+	if (h == 0 && e->fxp == 0) {
+	    h = last_h;
+	    e->fxp = last_fxp;
+	} else {
+	    last_h = h;
+	    last_fxp = e->fxp;
+	}
+
 	switch (h) {
 	case 0x1:		/* Glissando */
 	    e->fxp = 0x30 | l;
@@ -120,6 +130,10 @@ static void xlat_fx (int c, struct xxm_event *e)
 	    break;
 	case 0xb:		/* Pattern loop */
 	    e->fxp = 0x60 | l;
+	    break;
+	case 0xc:		/* Note cut */
+	case 0xd:		/* Note delay */
+	case 0xe:		/* Pattern delay */
 	    break;
 	}
 	break;
@@ -681,7 +695,14 @@ int it_load (FILE * f)
 	}
 
 	if (ish.flags & IT_SMP_SAMPLE && xxs[i].len > 1) {
+	    int cvt = 0;
+
 	    fseek(f, ish.sample_ptr, SEEK_SET);
+
+	    if (~ish.convert & IT_CVT_SIGNED)
+		cvt |= XMP_SMP_UNS;
+	    if (ish.convert & IT_CVT_DIFF)	/* NOT safe to ignore! */
+		cvt |= XMP_SMP_DIFF;
 
 	    /* Handle compressed samples using Tammo Hinrichs' routine */
 	    if (ish.flags & IT_SMP_COMP) {
@@ -696,15 +717,14 @@ int it_load (FILE * f)
 		}
 
 		xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate,
-		    XMP_SMP_NOLOAD, &xxs[i], buf);
+				XMP_SMP_NOLOAD | cvt, &xxs[i], buf);
 		free (buf);
+		reportv(0, "c");
 	    } else {
-		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate,
-		   	 	ish.convert & IT_CVT_SIGNED ? 0 : XMP_SMP_UNS,
-		    		&xxs[i], NULL);
-	    }
+		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, cvt, &xxs[i], NULL);
 
-	    reportv(0, ".");
+		reportv(0, ".");
+	    }
 	}
     }
 
