@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.69 2007-09-14 17:48:20 cmatsuoka Exp $
+$Id: ChangeLog,v 1.70 2007-09-14 18:01:42 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -51,7 +51,7 @@ Stable versions
 	- fixed S3M pan settings
 	- fixed IT old instrument volume mode setting
 	- fixed IT 16-bit sample loading (reported by Henrik Pauli)
-	- fixed IT effect S00 and 2.16 sample loading (fixes O4UFRDMX.IT)
+	- fixed IT effect S00 and delta sample loading (fixes O4UFRDMX.IT)
 	- fixed multi-retrig effect (reported by Henrik Pauli)
 	- fixed infinite loop scan (reported by Zbigniew Luszpinski)
 	- fixed Sinaria sample size and finetune
