@@ -1,9 +1,9 @@
-$Id: ChangeLog,v 1.70 2007-09-14 18:01:42 cmatsuoka Exp $
+$Id: ChangeLog,v 1.71 2007-09-14 22:40:03 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.2.0 ()
+2.2.0 (20070915)
 	- added more module format specs
 	- added CD61 Octalyser module support
 	- added Flextrax FLX module detection
