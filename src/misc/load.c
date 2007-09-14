@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.17 2007-09-14 12:06:28 cmatsuoka Exp $
+ * $Id: load.c,v 1.18 2007-09-14 12:33:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -60,7 +60,7 @@ static int decrunch (FILE **f, char **s)
     temp = strdup ("/tmp/xmp_XXXXXX");
 
     fseek (*f, 0, SEEK_SET);
-    b = malloc(PW_TEST_CHUNK);
+    b = calloc(1, PW_TEST_CHUNK);
     fread (b, 1, PW_TEST_CHUNK, *f);
 
     if (b[0] == 'P' && b[1] == 'K') {
