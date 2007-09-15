@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.10 2007-09-13 10:49:49 cmatsuoka Exp $
+# $Id: Makefile,v 1.11 2007-09-15 15:03:38 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" $(PLUGFLAGS) -D_REENTRANT
@@ -20,7 +20,7 @@ all:
 all-bmp: $(PLUGIN)
 
 $(PLUGIN): $(OBJS)
-	$(LD) -shared -o $@ $(OBJS) -L../../lib/ -lxmp
+	$(LD) -shared -o $@ $(OBJS) -L../../lib/ -lxmp-pic
 
 install::
 	@if [ "x$(PLUGDIR)" = "xbmp" ]; then \

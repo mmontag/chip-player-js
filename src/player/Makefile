@@ -1,5 +1,5 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.5 2007-09-13 10:49:57 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2007-09-15 15:03:38 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
@@ -12,7 +12,7 @@ DFILES	= Makefile $(OBJS:.o=.c) effects.c mixer.c player.h mix_all.c \
 	  fmopl.h synth.h
 DDIRS	=
 LIB	= $(TOPDIR)/lib/libxmp.a
-CFILES	= $(LIB) version.c $(DRIVERS)
+CFILES	= version.c $(DRIVERS)
 DCFILES	=
 
 all: $(LIB)
@@ -32,7 +32,5 @@ server: ../bin/server
 
 ../bin/server: server.o
 	$(LD) $(LFLAGS) $+
-
-$(LIB): $(OBJS)
 
 include depend

@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.31 2007-09-14 01:06:23 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.32 2007-09-15 15:03:38 cmatsuoka Exp $
 
-VERSION		= 2.2.0
-DATE		= Thu Sep 13 21:37:15 BRT 2007
+VERSION		= 2.2.1
+DATE		= Fri Sep 14 19:41:13 BRT 2007
 
 DESTDIR		=
 prefix		= $(DESTDIR)@prefix@
@@ -22,6 +22,12 @@ INSTALL		= @INSTALL@
 PLUGDIR		= @PLUGDIR@
 PLUGFLAGS	= @PLUGFLAGS@
 PLUGINST	= @PLUGINST@
+
+ifneq ($(PLUGDIR),)
+LOBJS		= $(OBJS:.o=.lo)
+XLOBJS		= $(XOBJS:.o=.lo)
+LLIB		= $(LIB:.a=.la)
+endif
 
 
 # IRIX 6.5.10 note by Johan Hattne <hattne@ibg.uu.se>
@@ -58,15 +64,18 @@ LOBJS	= $(OBJS:.o=.lo)
 
 dummy:
 
-$(LIB): $(LIB)($(OBJS) $(XOBJS))
+$(LIB): $(LIB)($(OBJS) $(XOBJS)) $(LLIB)
 	$(RANLIB) $(LIB)
+
+$(LLIB): $(LLIB)($(LOBJS) $(XLOBJS))
+	$(RANLIB) $(LLIB)
 
 depend:
 	@echo Building dependencies...
 	@$(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $(OBJS:.o=.c) $(XDEPS:.o=.c) >$@
 
 clean distclean::
-	rm -f *.o core errlist depend $(CFILES)
+	rm -f *.o *.lo core errlist depend $(CFILES)
 ifdef DDIRS
 	@for i in $(DDIRS); do \
 		if [ -d $$i ]; then \
