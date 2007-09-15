@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.32 2007-09-15 15:03:38 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.33 2007-09-15 15:39:12 cmatsuoka Exp $
 
 VERSION		= 2.2.1
-DATE		= Fri Sep 14 19:41:13 BRT 2007
+DATE		= Sat Sep 15 12:13:04 BRT 2007
 
 DESTDIR		=
 prefix		= $(DESTDIR)@prefix@
@@ -20,7 +20,7 @@ RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 
 PLUGDIR		= @PLUGDIR@
-PLUGFLAGS	= @PLUGFLAGS@
+PLUGFLAGS	= -fPIC @PLUGFLAGS@
 PLUGINST	= @PLUGINST@
 
 ifneq ($(PLUGDIR),)
