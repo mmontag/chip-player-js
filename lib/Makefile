@@ -1,5 +1,5 @@
 # Extended Module player lib/Makefile
-# $Id: Makefile,v 1.10 2007-09-15 15:07:30 cmatsuoka Exp $
+# $Id: Makefile,v 1.11 2007-09-15 15:12:42 cmatsuoka Exp $
 
 TOPDIR	= ..
 DFILES	= Makefile
@@ -11,7 +11,7 @@ all: $(MYLIB)
 
 include $(TOPDIR)/Makefile.rules
 
-$(MYLIB) $(MYLLIB):
+$(MYLIB):
 	$(MAKE) -C $(TOPDIR)/src
 
 install::
