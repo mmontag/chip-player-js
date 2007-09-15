@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.33 2007-09-15 15:39:12 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.34 2007-09-15 16:16:38 cmatsuoka Exp $
 
 VERSION		= 2.2.1
-DATE		= Sat Sep 15 12:13:04 BRT 2007
+DATE		= Sat Sep 15 13:14:47 BRT 2007
 
 DESTDIR		=
 prefix		= $(DESTDIR)@prefix@
@@ -26,7 +26,7 @@ PLUGINST	= @PLUGINST@
 ifneq ($(PLUGDIR),)
 LOBJS		= $(OBJS:.o=.lo)
 XLOBJS		= $(XOBJS:.o=.lo)
-LLIB		= $(LIB:.a=.la)
+LLIB		= $(LIB:.a=-pic.a)
 endif
 
 
