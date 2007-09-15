@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.7 2007-09-14 19:48:40 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.8 2007-09-15 21:59:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -34,7 +34,7 @@
 int xm_load (FILE * f)
 {
     int i, j, r;
-    int instr_no = 0;
+    int sample_num = 0;
     uint8 *patbuf, *p, b;
     struct xxm_event *event;
     struct xm_file_header xfh;
@@ -305,7 +305,7 @@ load_instruments:
 		    xxim[i].ins[j] = (uint8) XMP_DEF_MAXPAT;
 	    }
 
-	    for (j = 0; j < xxih[i].nsm; j++, instr_no++) {
+	    for (j = 0; j < xxih[i].nsm; j++, sample_num++) {
 
 		xsh[j].length = read32l(f);	/* Sample length */
 		xsh[j].loop_start = read32l(f);	/* Sample loop start */
@@ -326,26 +326,26 @@ load_instruments:
 		xxi[i][j].vde = xi.y_depth;
 		xxi[i][j].vra = xi.y_rate;
 		xxi[i][j].vsw = xi.y_sweep;
-		xxi[i][j].sid = instr_no;
-		if (instr_no >= MAX_SAMP)
+		xxi[i][j].sid = sample_num;
+		if (sample_num >= MAX_SAMP)
 		    continue;
 
-		copy_adjust(xxs[instr_no].name, xsh[j].name, 22);
+		copy_adjust(xxs[sample_num].name, xsh[j].name, 22);
 
-		xxs[instr_no].len = xsh[j].length;
-		xxs[instr_no].lps = xsh[j].loop_start;
-		xxs[instr_no].lpe = xsh[j].loop_start + xsh[j].loop_length;
-		if (!fix_loop && xxs[instr_no].lpe > 0)
-		    xxs[instr_no].lpe--;
-		xxs[instr_no].flg = xsh[j].type & XM_SAMPLE_16BIT ?
+		xxs[sample_num].len = xsh[j].length;
+		xxs[sample_num].lps = xsh[j].loop_start;
+		xxs[sample_num].lpe = xsh[j].loop_start + xsh[j].loop_length;
+		if (!fix_loop && xxs[sample_num].lpe > 0)
+		    xxs[sample_num].lpe--;
+		xxs[sample_num].flg = xsh[j].type & XM_SAMPLE_16BIT ?
 		    WAVE_16_BITS : 0;
-		xxs[instr_no].flg |= xsh[j].type & XM_LOOP_FORWARD ?
+		xxs[sample_num].flg |= xsh[j].type & XM_LOOP_FORWARD ?
 		    WAVE_LOOPING : 0;
-		xxs[instr_no].flg |= xsh[j].type & XM_LOOP_PINGPONG ?
+		xxs[sample_num].flg |= xsh[j].type & XM_LOOP_PINGPONG ?
 		    WAVE_LOOPING | WAVE_BIDIR_LOOP : 0;
 	    }
 	    for (j = 0; j < xxih[i].nsm; j++) {
-		if (instr_no >= MAX_SAMP)
+		if (sample_num >= MAX_SAMP)
 		    continue;
 		if ((V (1)) && xsh[j].length)
 		    report ("%s[%1x] %06x%c%06x %06x %c "
@@ -392,7 +392,7 @@ load_instruments:
 	if ((V (1)) && (strlen ((char *) xxih[i].name) || xih.samples))
 	    report ("\n");
     }
-    xxh->smp = instr_no;
+    xxh->smp = sample_num;
     xxs = realloc (xxs, sizeof (struct xxm_sample) * xxh->smp);
 
     if (xfh.version <= 0x0103) {
@@ -400,6 +400,7 @@ load_instruments:
 	    report ("\n");
 	goto load_patterns;
     }
+
 load_samples:
     if ((V (0) && xfh.version <= 0x0103) || V (1))
 	report ("Stored samples : %d ", xxh->smp);
@@ -411,13 +412,11 @@ load_samples:
 	    for (j = 0; j < xxih[i].nsm; j++) {
 		xmp_drv_loadpatch (f, xxi[i][j].sid, xmp_ctl->c4rate,
 		    XMP_SMP_DIFF, &xxs[xxi[i][j].sid], NULL);
-		if (V (0))
-		    report (".");
+		reportv(0, ".");
 	    }
 	}
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     /* If dynamic pan is disabled, XM modules will use the standard
      * MOD channel panning (LRRL). Moved to module_play () --Hipolito.

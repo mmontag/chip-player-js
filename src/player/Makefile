@@ -1,5 +1,5 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.6 2007-09-15 15:03:38 cmatsuoka Exp $
+# $Id: Makefile,v 1.7 2007-09-15 21:59:56 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
@@ -19,18 +19,10 @@ all: $(LIB)
 
 include $(TOPDIR)/Makefile.rules
 
-mix_i386.o: mix_i386.S
-
 version.c: $(DFILES) $(TOPDIR)/Makefile.rules
 	@echo "Creating version id..."; \
 	printf "char *xmp_version = \"$(VERSION)\";\n">$@; \
 	printf "char *xmp_date = \"$(DATE)\";\n">>$@; \
 	printf "char *xmp_build=\"Compiled by `whoami`@`hostname` `date` (`uname -sr`)\";\n">>$@
-
-server: ../bin/server
-	@ls -l $+
-
-../bin/server: server.o
-	$(LD) $(LFLAGS) $+
 
 include depend

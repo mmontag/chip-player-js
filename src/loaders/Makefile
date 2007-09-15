@@ -1,5 +1,5 @@
 # Extended Module Player src/loaders/Makefile
-# $Id: Makefile,v 1.34 2007-09-10 18:38:45 cmatsuoka Exp $
+# $Id: Makefile,v 1.35 2007-09-15 21:59:56 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -Iinclude
@@ -21,11 +21,6 @@ DCFILES	=
 
 all: $(LIB)
 
-test:
-	@echo $(LOBJS)
-
 include $(TOPDIR)/Makefile.rules
-
-shared: $(LOBJS)
 
 include depend

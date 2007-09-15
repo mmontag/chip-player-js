@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.7 2007-09-14 12:06:28 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.8 2007-09-15 21:59:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -11,7 +11,18 @@
 #ifndef __XMPI_H
 #define __XMPI_H
 
-#define XMP_DEF_MAXPAT	0xff		/* max number of samples in driver */
+/*
+ * Sat, 15 Sep 2007 10:39:41 -0600
+ * Reported by Jon Rafkind <workmin@ccs.neu.edu>
+ * In megaman.xm there should be a tempo change at position 1 but in
+ * xmp tempo and bpm remain the same.
+ *
+ * Claudio's fix: megaman has many (unused) samples, raise XMP_DEF_MAXPAT
+ * from 256 to 1024. Otherwise, xmp ignores any event containing a sample
+ * number above the limit.
+ */
+
+#define XMP_DEF_MAXPAT	0x400		/* max number of samples in driver */
 #define XMP_DEF_MAXORD	0x100		/* max number of patterns in module */
 #define XMP_DEF_MAXROW	0x100		/* pattern loop stack size */
 #define XMP_DEF_MAXVOL	(0x400 * 0x7fff)

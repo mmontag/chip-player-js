@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.7 2007-09-02 16:55:43 cmatsuoka Exp $
+ * $Id: player.c,v 1.8 2007-09-15 21:59:56 cmatsuoka Exp $
  */
 
 /*
@@ -22,7 +22,7 @@
  * command Kxx [where xx is # of ticks into row to give a noteoff to the
  * sample]), ft2 will set the volume of playback of the sample to 00h.
  *
- * (claudio's note: ok, implementing effect K)
+ * Claudio's fix: implementing effect K
  */
 
 #ifdef HAVE_CONFIG_H
@@ -344,7 +344,7 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
     }
 
     if (smp >= 0) {
-	if (chn_copy (xmp_drv_setpatch (chn, ins, smp, note,
+	if (chn_copy(xmp_drv_setpatch(chn, ins, smp, note,
 	    xxi[ins][xxim[ins].ins[key]].nna,
 	    xxi[ins][xxim[ins].ins[key]].dct,
 	    xxi[ins][xxim[ins].ins[key]].dca, ctl), chn) < 0)
@@ -375,8 +375,8 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
     /* Secondary effect is processed _first_ and can be overriden
      * by the primary effect.
      */
-    process_fx (chn, e->note, e->f2t, e->f2p, xc);
-    process_fx (chn, e->note, e->fxt, e->fxp, xc);
+    process_fx(chn, e->note, e->f2t, e->f2p, xc);
+    process_fx(chn, e->note, e->fxt, e->fxp, xc);
 
     if (!TEST (IS_VALID)) {
 	xc->volume = 0;
@@ -707,7 +707,7 @@ static void module_play (int chn, int t)
 }
 
 
-int xmpi_player_start ()
+int xmpi_player_start()
 {
     int r, o, t, e;		/* rows, order, tick, end point */
     double playing_time;
@@ -812,15 +812,15 @@ next_order:
 
 		if (!t) {
 		    gvol_flag = 0;
-		    chn_fetch (xxo[o], flow.row_cnt);
+		    chn_fetch(xxo[o], flow.row_cnt);
 
-		    xmp_drv_echoback ((tempo << 12)|(xmp_bpm << 4)|
+		    xmp_drv_echoback((tempo << 12)|(xmp_bpm << 4)|
 			XMP_ECHO_BPM);
-		    xmp_drv_echoback ((xmp_ctl->volume << 4) | XMP_ECHO_GVL);
-		    xmp_drv_echoback ((xxo[o] << 12)|(o << 4) | XMP_ECHO_ORD);
-		    xmp_drv_echoback ((xmp_ctl->numvoc << 4) | XMP_ECHO_NCH);
-		    xmp_drv_echoback (((xxp[xxo[o]]->rows - 1) << 12) |
-			(flow.row_cnt << 4)|XMP_ECHO_ROW);
+		    xmp_drv_echoback((xmp_ctl->volume << 4) | XMP_ECHO_GVL);
+		    xmp_drv_echoback((xxo[o] << 12)|(o << 4) | XMP_ECHO_ORD);
+		    xmp_drv_echoback((xmp_ctl->numvoc << 4) | XMP_ECHO_NCH);
+		    xmp_drv_echoback(((xxp[xxo[o]]->rows - 1) << 12) |
+					(flow.row_cnt << 4)|XMP_ECHO_ROW);
 		}
 		xmp_drv_echoback ((t << 4) | XMP_ECHO_FRM);
 		chn_refresh (t);
