@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.8 2007-09-15 21:59:56 cmatsuoka Exp $
+ * $Id: player.c,v 1.9 2007-09-16 02:45:38 cmatsuoka Exp $
  */
 
 /*
@@ -212,7 +212,7 @@ static inline void chn_reset ()
     for (i = xmp_ctl->numtrk; i--; ) {
 	xc = &xc_data[i];
 	xc->masterpan = xxc[i].pan;
-	xc->mastervol = 0x40;
+	xc->mastervol = xxc[i].vol; //0x40;
         xc->cutoff = 0xff;
     }
 }

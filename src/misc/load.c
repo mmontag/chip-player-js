@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.19 2007-09-14 18:40:58 cmatsuoka Exp $
+ * $Id: load.c,v 1.20 2007-09-16 02:45:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -371,6 +371,7 @@ int xmp_load_module (char *s)
 	xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
 	xxc[i].cho = xmp_ctl->chorus;
 	xxc[i].rvb = xmp_ctl->reverb;
+	xxc[i].vol = 0x40;
     }
 
     for (i = 0, fmt = __fmt_head; fmt; fmt = fmt->next) {

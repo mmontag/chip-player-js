@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.73 2007-09-16 02:03:11 cmatsuoka Exp $
+$Id: ChangeLog,v 1.74 2007-09-16 02:45:37 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -7,6 +7,8 @@ Stable versions
 	- build plugin files as PIC
 	- raised sample number limit from 255 to 1024 (fixes megaman.xm
 	  tempo and missing instruments reported by Jon Rafkind)
+	- enable per-track volumes (fixes znm-believe.it problems reported
+	  by Jon Rafkind)
 	- added IT tracker fingerprinting
 
 2.2.0 (20070915)
