@@ -15,12 +15,25 @@ over 70 mainstream and obscure module formats from Amiga, Atari, Acorn,
 Apple IIgs and PC, including Protracker (MOD), Scream Tracker 3 (S3M), Fast
 Tracker II (XM) and Impulse Tracker (IT) files.
 
+%package audacious
+Summary: xmp plugin for Audacious
+Group: Sound
+Requires: audacious
+
+%description audacious
+The Extended Module Player is a modplayer for Unix-like systems that plays
+over 70 mainstream and obscure module formats from Amiga, Atari, Acorn,
+Apple IIgs and PC, including Protracker (MOD), Scream Tracker 3 (S3M), Fast
+Tracker II (XM) and Impulse Tracker (IT) files.
+
+This package contains the xmp plugin for the Audacious media player.
+
 %prep
 %setup -q -n %{name}-%{version}
 
 %build
-%configure --enable audacious-plugin
-%make
+./configure --prefix=/usr --enable-audacious-plugin
+make
 
 %install
 rm -rf %buildroot
@@ -35,4 +48,10 @@ rm -rf %buildroot
 %defattr(0644,root,root,0755)
 %config %{_sysconfdir}/*
 %{_mandir}/*
+%doc README docs/COPYING docs/README.* docs/ChangeLog docs/CREDITS
+
+%files audacious
+%defattr(0755,root,root,0755)
+%{_libdir}/audacious/Input/*
+%defattr(0644,root,root,0755)
 %doc README docs/COPYING docs/README.* docs/ChangeLog docs/CREDITS
