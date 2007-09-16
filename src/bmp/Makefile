@@ -1,9 +1,9 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.11 2007-09-15 15:03:38 cmatsuoka Exp $
+# $Id: Makefile,v 1.12 2007-09-16 05:11:45 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" $(PLUGFLAGS) -D_REENTRANT
-DFILES	= Makefile README xmp-plugin.h xpanel.h xstuff.c bg2.xpm $(OBJS:.o=.c)
+DFILES	= Makefile xpanel.h xstuff.c bg2.xpm $(OBJS:.o=.c)
 CFILES	= xmp-plugin.so
 INSTDIR	= $(DESTDIR)$(PLUGINST)
 OBJS	= plugin.o driver.o xpanel.o fft4g.o font1.o font2.o
