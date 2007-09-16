@@ -1,8 +1,8 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.7 2007-09-15 21:59:56 cmatsuoka Exp $
+# $Id: Makefile,v 1.8 2007-09-16 03:20:05 cmatsuoka Exp $
 
 TOPDIR	= ../..
-XCFLAGS	= -I../include
+XCFLAGS	= -I../include -DETC_DIR=\"$(ETC_DIR)\"
 OBJS	= convert.o driver.o formats.o misc.o period.o player.o \
 	  readrc.o scan.o ulaw.o cruncher.o med_synth.o filter.o \
 	  fmopl.o synth.o

@@ -95,6 +95,9 @@ The Authors
 * Geoff Reedy <vader21@imsa.edu>
 - xxmp window title patch
 
+* Adam Sampson <ats@offog.org>
+- buildsystem and configuration file location fixes
+
 * Attila Sipos <h430827@stud.u-szeged.hu>
 - SQSH decruncher checksum
 

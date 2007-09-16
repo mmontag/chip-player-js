@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.17 2007-09-16 02:03:11 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.18 2007-09-16 03:20:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -256,28 +256,31 @@ int it_load (FILE * f)
     xxh->flg = ifh.flags & IT_LINEAR_FREQ ? XXM_FLG_LINEAR : 0;
     xxh->flg |= (ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200) ?
 					XXM_FLG_INSVOL : 0;
-    for (i = 0; i < 64; i++)
-	xxc[i].vol = ifh.chvol[i];
     for (i = 0; i < 64; i++) {
 	if (ifh.chpan[i] == 100)
 	    ifh.chpan[i] = 32;
+
 	if (~ifh.chpan[i] & 0x80)
 	    xxh->chn = i + 1;
 	else
 	    ifh.chvol[i] = 0;
+
 	xxc[i].pan = ifh.flags & IT_STEREO ?
 	    ((int) ifh.chpan[i] * 0x80 >> 5) & 0xff : 0x80;
+
+	xxc[i].vol = ifh.chvol[i];
     }
     fread (xxo, 1, xxh->len, f);
 
     new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
     /* S3M skips pattern 0xfe */
-    for (i = 0; i < (xxh->len - 1); i++)
+    for (i = 0; i < (xxh->len - 1); i++) {
 	if (xxo[i] == 0xfe) {
 	    memcpy (&xxo[i], &xxo[i + 1], xxh->len - i - 1);
 	    xxh->len--;
 	}
+    }
     for (i = 0; i < xxh->ins; i++)
 	pp_ins[i] = read32l(f);
     for (i = 0; i < xxh->smp; i++)
