@@ -4,7 +4,7 @@
  *
  * Converts TDD packed MODs back to PTK MODs
  *
- * $Id: tdd.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: tdd.c,v 1.2 2007-09-16 05:10:22 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -16,7 +16,7 @@ static int test_tdd (uint8 *, int);
 static int depack_tdd (FILE *, FILE *);
 
 struct pw_format pw_tdd = {
-	"tdd",
+	"TDD",
 	"The Dark Demon",
 	0x00,
 	test_tdd,

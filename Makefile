@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.22 2007-09-16 03:20:05 cmatsuoka Exp $
+# $Id: Makefile,v 1.23 2007-09-16 05:10:17 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -34,16 +34,14 @@ install-plugin:
 
 install::
 	@echo
-	@echo "  Installation complete. To customize, copy $(ETC_DIR)/xmp.conf to"
-	@echo "  \$$HOME/.xmp/xmp.conf and $(ETC_DIR)/xmp-modules.conf to \$$HOME/.xmp/modules.conf"
+	@echo "  Installation complete. To customize, copy $(SYSCONFDIR)/xmp.conf to"
+	@echo "  \$$HOME/.xmp/xmp.conf and $(SYSCONFDIR)/xmp-modules.conf to \$$HOME/.xmp/modules.conf"
 	@echo
 
 uninstall:
-	rm -f $(BIN_DIR)/xmp
-	rm -f $(BIN_DIR)/xxmp
-	rm -f $(MAN_DIR)/xmp.1
-	rm -f $(MAN_DIR)/xxmp.1
-	rm -f /etc/xmp/xmp.conf /etc/xmp/xmp-modules.conf
+	rm -f $(BINDIR)/xmp
+	rm -f $(MANDIR)/xmp.1
+	rm -f $(SYSCONFDIR)/xmp.conf $(SYSCONFDIR)/xmp-modules.conf
 
 
 # Extra targets:

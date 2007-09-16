@@ -1,17 +1,17 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.35 2007-09-16 03:20:05 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.36 2007-09-16 05:10:18 cmatsuoka Exp $
 
 VERSION		= 2.2.1
-DATE		= Sat Sep 15 13:16:50 BRT 2007
+DATE		= Sun Sep 16 01:29:15 BRT 2007
 
 DESTDIR		=
 prefix		= @prefix@
 exec_prefix	= @prefix@
 datarootdir	= @datarootdir@
-BIN_DIR		= @bindir@
-LIB_DIR		= @libdir@
-MAN_DIR		= @mandir@/man1
-ETC_DIR		= @sysconfdir@/xmp
+BINDIR		= @bindir@
+LIBDIR		= @libdir@
+MANDIR		= @mandir@/man1
+SYSCONFDIR	= @sysconfdir@/xmp
 
 CC		= @CC@
 CFLAGS		= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG

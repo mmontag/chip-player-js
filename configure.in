@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.23 2007-09-13 00:45:05 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.24 2007-09-16 05:10:21 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -78,9 +78,27 @@ AC_ARG_WITH(bmp,
     bmp_path="/usr")
 
 AC_ARG_WITH(audacious,
-    [  --with-audacious=<path> Beep Media Player prefix (optional)],
+    [  --with-audacious=<path> Audacious prefix (optional)],
     audacious_path="$withval",
     audacious_path="/usr")
+
+dnl -----------------------------------------------------------------------
+dnl Sanitize prefixes
+dnl -----------------------------------------------------------------------
+
+dnl Don't use things like /usr/etc or /usr/var
+
+fix_prefix=no
+if test "x$prefix" = xNONE; then
+    fix_prefix=yes
+elif test "x$prefix" = x/usr -o "x$prefix" = x/usr/local; then
+    fix_prefix=yes
+fi
+
+if test $fix_prefix = yes; then
+    sysconfdir=/etc
+    localstatedir=/var
+fi
 
 dnl -----------------------------------------------------------------------
 dnl Check platform.

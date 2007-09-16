@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.5 2007-09-16 03:20:05 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.6 2007-09-16 05:10:22 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -58,9 +58,9 @@ int xmpi_read_rc (struct xmp_control *ctl)
     if ((rc = fopen (myrc2, "r")) == NULL) {
 	if ((rc = fopen (myrc, "r")) == NULL) {
 #ifndef __EMX__
-	    if ((rc = fopen (ETC_DIR "/xmp.conf", "r")) == NULL) {
+	    if ((rc = fopen(SYSCONFDIR "/xmp.conf", "r")) == NULL) {
 #else
-	    if ((rc = fopen ("xmp.conf", "r")) == NULL) {
+	    if ((rc = fopen("xmp.conf", "r")) == NULL) {
 #endif
 		return -1;
 	    }
@@ -202,11 +202,11 @@ void xmpi_read_modconf (struct xmp_control *ctl, unsigned crc, unsigned size)
 
 #ifndef __EMX__
     snprintf(myrc, MAXPATHLEN, "%s/.xmp/modules.conf", home);
-    parse_modconf (ctl, ETC_DIR "/xmp-modules.conf", crc, size);
+    parse_modconf(ctl, SYSCONFDIR "/xmp-modules.conf", crc, size);
 #else
     snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\modules.conf", home);
-    parse_modconf (ctl, "xmp-modules.conf", crc, size);
+    parse_modconf(ctl, "xmp-modules.conf", crc, size);
 #endif
-    parse_modconf (ctl, myrc, crc, size);
+    parse_modconf(ctl, myrc, crc, size);
 }
 

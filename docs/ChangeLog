@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.74 2007-09-16 02:45:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.75 2007-09-16 05:10:21 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -10,6 +10,7 @@ Stable versions
 	- enable per-track volumes (fixes znm-believe.it problems reported
 	  by Jon Rafkind)
 	- added IT tracker fingerprinting
+	- added Adam Sampson's fixes for DESTDIR and config file location
 
 2.2.0 (20070915)
 	- added more module format specs

@@ -1,5 +1,5 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.11 2007-09-16 03:20:05 cmatsuoka Exp $
+# $Id: Makefile,v 1.12 2007-09-16 05:10:22 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
@@ -25,9 +25,9 @@ xmp: $(OBJS) main.o ../../lib/libxmp.a
 	$(LD) $(LDFLAGS) $(OBJS) main.o $(LIBS)
 
 install:: $(BINS)
-	@echo Installing binaries in $(DESTDIR)$(BIN_DIR)...
-	@[ -d $(DESTDIR)$(BIN_DIR) ] || mkdir -p $(DESTDIR)$(BIN_DIR)
-	$(INSTALL) -s -m755 $(BINS) $(DESTDIR)$(BIN_DIR)
+	@echo Installing binaries in $(DESTDIR)$(BINDIR)...
+	@[ -d $(DESTDIR)$(BINDIR) ] || mkdir -p $(DESTDIR)$(BINDIR)
+	$(INSTALL) -s -m755 $(BINS) $(DESTDIR)$(BINDIR)
 
 $(OBJS): $(TOPDIR)/Makefile.rules Makefile
 
