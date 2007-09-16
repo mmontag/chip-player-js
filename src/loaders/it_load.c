@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.16 2007-09-14 18:00:13 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.17 2007-09-16 02:03:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -289,22 +289,34 @@ int it_load (FILE * f)
     xmp_ctl->fetch |= XMP_CTL_FINEFX | XMP_CTL_ENVFADE;
 
     sprintf (xmp_ctl->type, "IMPM %d.%02x (IT)",
-	ifh.cmwt >> 8, ifh.cmwt & 0xff);
+			ifh.cmwt >> 8, ifh.cmwt & 0xff);
 
-    switch (ifh.cwt >> 12) {
-    case 0:
-	sprintf (tracker_name, "Impulse Tracker");
+    switch (ifh.cwt >> 8) {
+    case 0x00:
+	sprintf(tracker_name, "unmo3");
+	break;
+    case 0x01:
+    case 0x02:
+	if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0217) {
+	    sprintf(tracker_name, "ModPlug Tracker 1.16");
+	} else if (ifh.cwt == 0x0216) {
+	    sprintf(tracker_name, "Impulse Tracker 2.14v3");
+	} else if (ifh.cwt == 0x0217) {
+	    sprintf(tracker_name, "Impulse Tracker 2.14v5");
+	} else {
+	    sprintf(tracker_name, "Impulse Tracker %d.%02x",
+			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+	}
+	break;
+    case 0x08:
+	if (ifh.cwt == 0x0888) {
+	    sprintf(tracker_name, "ModPlug Tracker >= 1.17");
+	} else {
+	    sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
+	}
 	break;
     default:
-	sprintf (tracker_name, "unknown (%d) version",
-	    ifh.cwt >> 12);
-    }
-
-    if (ifh.cwt) {
-	sprintf(tracker_name + strlen (tracker_name), " %d.%02x",
-	    (ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
-    } else {
-	strcat(tracker_name, " (unmo3)");
+	sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
     }
 
     MODULE_INFO ();
