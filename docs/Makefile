@@ -1,5 +1,5 @@
 # Extended Module Player doc/Makefile
-# $Id: Makefile,v 1.8 2007-09-16 03:20:05 cmatsuoka Exp $
+# $Id: Makefile,v 1.9 2007-09-16 13:12:41 cmatsuoka Exp $
 
 TOPDIR	= ..
 DOCS	= xmp.1
@@ -22,6 +22,6 @@ docs: $(DOCS)
 html: $(HTMLS)
 
 install:: docs
-	@echo Installing manpages in $(DESTDIR)$(MAN_DIR)...
-	@[ -d $(DESTDIR)$(MAN_DIR) ] || mkdir -p $(DESTDIR)$(MAN_DIR)
-	$(INSTALL) -m644 xmp.1 $(DESTDIR)$(MAN_DIR)
+	@echo Installing manpages in $(DESTDIR)$(MANDIR)...
+	@[ -d $(DESTDIR)$(MANDIR) ] || mkdir -p $(DESTDIR)$(MANDIR)
+	$(INSTALL) -m644 xmp.1 $(DESTDIR)$(MANDIR)
