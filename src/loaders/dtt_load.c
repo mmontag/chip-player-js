@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.5 2007-08-30 20:03:13 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.6 2007-09-17 19:18:33 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@ int dtt_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
-	uint buf[100];
+	uint8 buf[100];
 	uint32 flags;
 	uint32 pofs[256];
 	uint8 plen[256];
