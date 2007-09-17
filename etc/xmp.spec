@@ -29,6 +29,8 @@ Tracker II (XM) and Impulse Tracker (IT) files.
 This package contains the xmp plugin for the Audacious media player.
 
 %prep
+rm -rf %{buildroot}
+
 %setup -q -n %{name}-%{version}
 
 %build
@@ -36,22 +38,20 @@ This package contains the xmp plugin for the Audacious media player.
 make
 
 %install
-rm -rf %buildroot
+rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
 
 %clean
-rm -rf %buildroot
+rm -rf %{buildroot}
 
 %files
-%defattr(0755,root,root,0755)
-%{_bindir}/*
-%defattr(0644,root,root,0755)
-%config %{_sysconfdir}/*
-%{_mandir}/*
+%defattr(-,root,root)
 %doc README docs/COPYING docs/README.* docs/ChangeLog docs/CREDITS
+%config(noreplace) %{_sysconfdir}/*
+%{_bindir}/*
+%{_mandir}/man1/xmp.1*
 
 %files audacious
-%defattr(0755,root,root,0755)
-%{_libdir}/audacious/Input/*
-%defattr(0644,root,root,0755)
+%defattr(-,root,root)
 %doc README docs/COPYING docs/ChangeLog docs/CREDITS
+%{_libdir}/audacious/Input/*
