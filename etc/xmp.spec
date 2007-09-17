@@ -6,7 +6,7 @@ Group: Sound
 Source: %{name}-%{version}.tar.gz
 License: GPL
 URL: http://xmp.sourceforge.net/
-Buildrequires: libalsa-devel >= 1.0.12, audacious-devel
+Buildrequires: libalsa-devel, audacious-devel
 BuildRoot: %{_tmppath}/%{name}-buildroot
 
 %description
