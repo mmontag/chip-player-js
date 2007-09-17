@@ -54,4 +54,4 @@ rm -rf %buildroot
 %defattr(0755,root,root,0755)
 %{_libdir}/audacious/Input/*
 %defattr(0644,root,root,0755)
-%doc README docs/COPYING docs/README.* docs/ChangeLog docs/CREDITS
+%doc README docs/COPYING docs/ChangeLog docs/CREDITS

@@ -1,9 +1,9 @@
-$Id: ChangeLog,v 1.77 2007-09-17 00:39:35 cmatsuoka Exp $
+$Id: ChangeLog,v 1.78 2007-09-17 01:24:09 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.2.1 ()
+2.2.1 (20070917)
 	- added IT tracker fingerprinting
 	- enabled track volumes (fixes znm-believe.it, reported by Jon Rafkind)
 	- fixed DESTDIR and config file location (by Adam Sampson)
