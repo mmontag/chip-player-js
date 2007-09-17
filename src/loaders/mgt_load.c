@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.5 2007-08-30 17:57:44 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.6 2007-09-17 00:14:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -63,7 +63,7 @@ int mgt_load(FILE *f)
 	xxh->rst = read16b(f);
 	xxh->bpm = read8(f);
 	xxh->tpo = read8(f);
-	xxh->gvl = read16b(f);
+	read16b(f);			/* global volume */
 	read8(f);			/* master L */
 	read8(f);			/* master R */
 
@@ -173,8 +173,8 @@ int mgt_load(FILE *f)
 
 			if (note == 1)
 				event->note = XMP_KEY_OFF;
-			else if (note > 13)
-				event->note = note - 13;
+			else if (note > 11) /* adjusted to play codeine.mgt */
+				event->note = note - 11;
 
 			/* effects */
 			if (event->fxt < 0x10)

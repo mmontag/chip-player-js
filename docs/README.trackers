@@ -10,6 +10,7 @@ Sat Aug 11 08:04:52 BRT 2007
 
 Fri Sep 14 16:09:18 BRT 2007
 - added info about "FastTracker v 2.00" loops
+- IT tracker fingerprint
 
 
 1. Event fetch
@@ -424,7 +425,7 @@ Other IMF notes:
 - Filter settings are not reset in new events!
 
 
-12. Tracker tracking
+12. Tracker fingerprinting
 
 Restart pos in M.K.:
   0x7f = Protracker or clone (including ST3)
@@ -441,6 +442,11 @@ S3M tracker codes:
   2 = Imago Orpheus
   3 = Impulse Tracker
 
+IT version codes:
+  0216 = Impulse Tracker 2.14v3
+  0217 = Impulse Tracker 2.14v5
+  0217 and format 0200 = ModPlug Tracker 1.16
+  0888 = ModPlug Tracker 1.17
 
 12. Misc effects 
 

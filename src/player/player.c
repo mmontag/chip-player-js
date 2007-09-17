@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.9 2007-09-16 02:45:38 cmatsuoka Exp $
+ * $Id: player.c,v 1.10 2007-09-17 00:14:52 cmatsuoka Exp $
  */
 
 /*
@@ -267,7 +267,7 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 		xins = xc->insdef;
 		RESET (IS_READY);
 	    }
-	} else if ((uint32)ins < xxh->ins && xxih[ins].nsm) {
+	} else if ((uint32)ins < xxh->ins && xxih[ins].nsm) {	/* valid ins */
 	    if (!key && xmp_ctl->fetch & XMP_CTL_INSPRI) {
 		if (xins == ins)
 		    flg = NEW_INS | RESET_VOL;
@@ -275,9 +275,9 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 		    key = xc->key + 1;
 	    }
 	    xins = ins;
-	} else {
-	    if (!(xmp_ctl->fetch & XMP_CTL_NCWINS))
-		xmp_drv_resetchannel (chn);
+	} else {					/* invalid ins */
+	    if (~xmp_ctl->fetch & XMP_CTL_NCWINS)
+		xmp_drv_resetchannel(chn);
 
 	    if (xmp_ctl->fetch & XMP_CTL_IGNWINS) {
 		ins = -1;

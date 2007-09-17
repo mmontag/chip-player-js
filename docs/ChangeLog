@@ -1,16 +1,16 @@
-$Id: ChangeLog,v 1.75 2007-09-16 05:10:21 cmatsuoka Exp $
+$Id: ChangeLog,v 1.76 2007-09-17 00:14:52 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.2.1 ()
-	- build plugin files as PIC
+	- added IT tracker fingerprinting
+	- enabled track volumes (fixes znm-believe.it, reported by Jon Rafkind)
+	- fixed DESTDIR and config file location (by Adam Sampson)
+	- fixed volume overdrive in the Megatracker loader
 	- raised sample number limit from 255 to 1024 (fixes megaman.xm
 	  tempo and missing instruments reported by Jon Rafkind)
-	- enable per-track volumes (fixes znm-believe.it problems reported
-	  by Jon Rafkind)
-	- added IT tracker fingerprinting
-	- added Adam Sampson's fixes for DESTDIR and config file location
+	- build plugin files as PIC
 
 2.2.0 (20070915)
 	- added more module format specs
