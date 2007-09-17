@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.76 2007-09-17 00:14:52 cmatsuoka Exp $
+$Id: ChangeLog,v 1.77 2007-09-17 00:39:35 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -8,6 +8,7 @@ Stable versions
 	- enabled track volumes (fixes znm-believe.it, reported by Jon Rafkind)
 	- fixed DESTDIR and config file location (by Adam Sampson)
 	- fixed volume overdrive in the Megatracker loader
+	- fixed probing order of PW-packed and Arc
 	- raised sample number limit from 255 to 1024 (fixes megaman.xm
 	  tempo and missing instruments reported by Jon Rafkind)
 	- build plugin files as PIC

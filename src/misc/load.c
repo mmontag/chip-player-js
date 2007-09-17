@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.20 2007-09-16 02:45:38 cmatsuoka Exp $
+ * $Id: load.c,v 1.21 2007-09-17 00:39:35 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -110,28 +110,6 @@ static int decrunch (FILE **f, char **s)
     } else if (!memcmp(b, "Archive\0", 8)) {
 	packer = "ArcFS";
 	builtin = BUILTIN_ARCFS;
-    } else if (b[0] == 0x1a && ((b[1] & 0x7f) == 1 || ((b[1] & 0x7f) == 2))) {
-	packer = "Arc stored";
-	builtin = BUILTIN_ARC;
-    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 3) {
-	packer = "Arc packed";
-	builtin = BUILTIN_ARC;
-    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 4) {
-	packer = "Arc squeezed";
-	builtin = BUILTIN_ARC;
-    } else if (b[0] == 0x1a && ((b[1] & 0x7f) == 5 || ((b[1] & 0x7f) == 6))) {
-	packer = "Arc crunched";
-	builtin = BUILTIN_ARC;
-    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 8) {
-	packer = "Arc Crunched";
-	builtin = BUILTIN_ARC;
-    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 9) {
-	packer = "Arc Squashed";
-	builtin = BUILTIN_ARC;
-    } else if (b[0] == 0x1a && (b[1] & 0x7f) == 0x7f &&
-		b[2] != 0xac && b[3] != 0x1d) {		/* not AC1D packer */
-	packer = "!Spark";
-	builtin = BUILTIN_ARC;
     } else if (b[0] == 'z' && b[1] == 'i' && b[2] == 'R' && b[3] == 'C' &&
 		b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
 	packer = "MMCMP";
@@ -156,6 +134,18 @@ static int decrunch (FILE **f, char **s)
 	    format = list_entry(checked_format, struct pw_format, list);
 	    packer = format->name;
 	    builtin = BUILTIN_PW;
+	}
+    }
+
+    /* Test Arc after prowizard to prevent misidentification */
+    if (packer == 0 && b[0] == 0x1a) {
+	int x = b[1] & 0x7f;
+	if (x >= 1 && x <= 9 && x != 7) {
+	    packer = "Arc";
+	    builtin = BUILTIN_ARC;
+	} else if (x == 0x7f) {
+	    packer = "!Spark";
+	    builtin = BUILTIN_ARC;
 	}
     }
 
