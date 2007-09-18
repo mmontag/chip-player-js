@@ -1,10 +1,10 @@
 /*
  * gmc.c    Copyright (C) 1997 Sylvain "Asle" Chipaux
- *          Modified by Claudio Matsuoka
+ *          Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks musics in the Game Music Creator format and saves in ptk.
  *
- * $Id: gmc.c,v 1.3 2007-09-14 12:06:28 cmatsuoka Exp $
+ * $Id: gmc.c,v 1.4 2007-09-18 02:28:50 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -26,48 +26,32 @@ struct pw_format pw_gmc = {
 static int depack_GMC(FILE *in, FILE *out)
 {
 	uint8 *tmp;
-	uint8 c1, c2, c3;
 	uint8 ptable[128];
 	uint8 Max = 0x00;
 	uint8 PatPos;
 	uint16 len, looplen;
 	long ssize = 0;
 	long i = 0, j = 0;
-	// FILE *in,*out;
 
 	bzero(ptable, 128);
 
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
-
 	/* title */
-	tmp = (uint8 *) malloc(20);
-	bzero(tmp, 20);
-	fwrite(tmp, 20, 1, out);
-	free(tmp);
+	for (i = 0; i < 20; i++)
+		write8(out, 0);
 
 	/* read and write whole header */
 	/*printf ( "Converting sample headers ... " ); */
-	tmp = (uint8 *) malloc(22);
-	bzero(tmp, 22);
 	for (i = 0; i < 15; i++) {
-		/* write name */
-		fwrite(tmp, 22, 1, out);
-		/* bypass 4 address bytes */
-		fseek(in, 4, 1);
-		/* size */
-		len = read16b(in);
-		write16b(out, len);
+		for (j = 0; j < 22; j++)	/* write name */
+			write8(out, 0);
+		read32b(in);			/* bypass 4 address bytes */
+		write16b(out, len = read16b(in));	/* size */
 		ssize += len * 2;
-		/* finetune */
-		fseek(in, 1, 1);
-		write8(out, 0);
-		/* volume */
-		write8(out, read8(in));
+		read8(in);
+		write8(out, 0);			/* finetune */
+		write8(out, read8(in));		/* volume */
 
-		/* bypass 4 address bytes */
-		fseek(in, 4, 1);
+		read32b(in);			/* bypass 4 address bytes */
 #if 1
 		/* loop size */
 		looplen = read16b(in);
@@ -111,30 +95,22 @@ static int depack_GMC(FILE *in, FILE *out)
 		fwrite(&c2, 1, 1, out);
 #endif
 	}
-	free(tmp);
-	tmp = (uint8 *) malloc(30);
+
+	tmp = (uint8 *)malloc(30);
 	bzero(tmp, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
 		fwrite(tmp, 30, 1, out);
 	free(tmp);
-	/*printf ( "ok\n" ); */
 
-	/* pattern list size */
 	fseek(in, 0xf3, 0);
-	fread(&PatPos, 1, 1, in);
-	fwrite(&PatPos, 1, 1, out);
-
-	/* ntk byte */
-	write8(out, 0x7f);
+	write8(out, PatPos = read8(in));	/* pattern list size */
+	write8(out, 0x7f);			/* ntk byte */
 
 	/* read and write size of pattern list */
 	/*printf ( "Creating the pattern table ... " ); */
-	for (i = 0; i < 100; i++) {
-		fread(&c1, 1, 1, in);
-		fread(&c2, 1, 1, in);
-		ptable[i] = ((c1 << 8) + c2) / 1024;
-	}
+	for (i = 0; i < 100; i++)
+		ptable[i] = read16b(in) / 1024;
 	fwrite(ptable, 128, 1, out);
 
 	/* get number of pattern */
@@ -143,16 +119,9 @@ static int depack_GMC(FILE *in, FILE *out)
 		if (ptable[i] > Max)
 			Max = ptable[i];
 	}
-	/*printf ( "ok\n" ); */
 
 	/* write ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite(&c1, 1, 1, out);
-	fwrite(&c2, 1, 1, out);
-	fwrite(&c3, 1, 1, out);
-	fwrite(&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* pattern data */
 	/*printf ( "Converting pattern datas " ); */
@@ -190,28 +159,13 @@ static int depack_GMC(FILE *in, FILE *out)
 		/*fflush ( stdout ); */
 	}
 	free(tmp);
-	/*printf ( " ok\n" ); */
-	/*fflush ( stdout ); */
 
 	/* sample data */
-	/*printf ( "Saving sample data ... " ); */
-	tmp = (uint8 *) malloc(ssize);
+	tmp = (uint8 *)malloc(ssize);
 	bzero(tmp, ssize);
 	fread(tmp, ssize, 1, in);
 	fwrite(tmp, ssize, 1, out);
 	free(tmp);
-	/*printf ( "ok\n" ); */
-	/*fflush ( stdout ); */
-
-#if 0
-	/* crap */
-	Crap("GMC:Game Music Creator", -1, -1, out);
-
-	fflush(in);
-	fflush(out);
-#endif
-
-	/* printf ("done\n"); */
 
 	return 0;
 }
