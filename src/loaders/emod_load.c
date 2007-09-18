@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.2 2005-02-25 12:15:45 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.3 2007-09-18 11:28:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,11 +16,14 @@
 #include "load.h"
 #include "iff.h"
 
+#define MAGIC_FORM	MAGIC4('F','O','R','M')
+#define MAGIC_EMOD	MAGIC4('E','M','O','D')
+
 
 static int *reorder;
 
 
-static void get_emic (int size, FILE *f)
+static void get_emic(int size, FILE *f)
 {
     int i, ver;
 
@@ -31,13 +34,13 @@ static void get_emic (int size, FILE *f)
     xxh->ins = read8(f);
     xxh->smp = xxh->ins;
 
-    sprintf (xmp_ctl->type, "EMOD v%d (Quadra Composer)", ver);
+    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE,
+				"EMOD v%d (Quadra Composer)", ver);
     MODULE_INFO ();
 
     INSTRUMENT_INIT ();
 
-    if (V (1))
-	report ("     Instrument name      Len  LBeg LEnd L Vol Fin\n");
+    reportv(1, "     Instrument name      Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -58,9 +61,9 @@ static void get_emic (int size, FILE *f)
 
 	if (V(1) && (strlen ((char *)xxih[i].name) || (xxs[i].len > 2))) {
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x %+d\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		xxi[i][0].vol, (char)xxi[i][0].fin >> 4);
+			i, xxih[i].name, xxs[i].len, xxs[i].lps,
+			xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+			xxi[i][0].vol, (char)xxi[i][0].fin >> 4);
 	}
     }
 
@@ -71,27 +74,23 @@ static void get_emic (int size, FILE *f)
 
     PATTERN_INIT ();
 
-    reorder = calloc (4, xxh->pat);
+    reorder = calloc(sizeof(int), 256);
 
     for (i = 0; i < xxh->pat; i++) {
-	reorder[i] = read8(f);
-	PATTERN_ALLOC(reorder[i]);
-	xxp[reorder[i]]->rows = read8(f) + 1;
-	TRACK_ALLOC (reorder[i]);
+	reorder[read8(f)] = i;
+	PATTERN_ALLOC(i);
+	xxp[i]->rows = read8(f) + 1;
+	TRACK_ALLOC(i);
 	fseek(f, 20, SEEK_CUR);		/* skip name */
 	read32b(f);			/* ptr */
     }
 
     xxh->len = read8(f);
 
-    if (V (0))
-	report ("Module length  : %d\n", xxh->len);
+    reportv(0, "Module length  : %d\n", xxh->len);
 
-    for (i = 0; i < xxh->len; i++) {
-	xxo[i] = read8(f);
-	if (xxh->pat <= xxo[i])
-	    xxh->pat = xxo[i] + 1;
-    }
+    for (i = 0; i < xxh->len; i++)
+	xxo[i] = reorder[read8(f)];
 }
 
 
@@ -100,13 +99,12 @@ static void get_patt(int size, FILE *f)
     int i, j, k;
     struct xxm_event *event;
 
-    if (V (0))
-        report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     for (i = 0; i < xxh->pat; i++) {
-	for (j = 0; j < xxp[reorder[i]]->rows; j++) {
+	for (j = 0; j < xxp[i]->rows; j++) {
 	    for (k = 0; k < xxh->chn; k++) {
-		event = &EVENT(reorder[i], k, j);
+		event = &EVENT(i, k, j);
 		event->ins = read8(f);
 		event->note = read8(f) + 1;
 		if (event->note != 0)
@@ -130,51 +128,51 @@ static void get_patt(int size, FILE *f)
 		}                                
 	    }
 	}
-	if (V(0)) report(".");
+	reportv(0, ".");
     }
-    if (V(0)) report("\n");
+    reportv(0, "\n");
 }
 
 
-static void get_8smp (int size, FILE *f)
+static void get_8smp(int size, FILE *f)
 {
     int i;
 
-    if (V (0))
-	report ("Stored samples : %d ", xxh->smp);
+    reportv(0, "Stored samples : %d ", xxh->smp);
 
     for (i = 0; i < xxh->smp; i++) {
 	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &xxs[i], NULL);
-	if (V(0)) report (".");
+	reportv(0, ".");
     }
-    if (V(0)) report ("\n");
+    reportv(0, "\n");
 }
 
 
-int emod_load (FILE *f)
+int emod_load(FILE *f)
 {
-    struct iff_header h;
-
     LOAD_INIT ();
 
     /* Check magic */
-    fread (&h, 1, sizeof (struct iff_header), f);
-    if (h.form[0] != 'F' || h.form[1] != 'O' || h.form[2] != 'R' ||
-	h.form[3] != 'M' || h.id[0] != 'E' || h.id[1] != 'M' || h.id[2]
-	!= 'O' || h.id[3] != 'D')
+    if (read32b(f) != MAGIC_FORM)
+	return -1;
+
+    read32b(f);
+
+    if (read32b(f) != MAGIC_EMOD)
 	return -1;
 
     /* IFF chunk IDs */
-    iff_register ("EMIC", get_emic);
-    iff_register ("PATT", get_patt);
-    iff_register ("8SMP", get_8smp);
+    iff_register("EMIC", get_emic);
+    iff_register("PATT", get_patt);
+    iff_register("8SMP", get_8smp);
 
     /* Load IFF chunks */
-    while (!feof (f))
-	iff_chunk (f);
+    while (!feof(f))
+	iff_chunk(f);
 
-    iff_release ();
-    free (reorder);
+    iff_release();
+
+    free(reorder);
 
     return 0;
 }
