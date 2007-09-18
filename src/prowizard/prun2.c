@@ -1,6 +1,6 @@
 /*
  * ProRunner2.c   Copyright (C) 1996-1999 Asle / ReDoX
- *                Modified by Claudio Matsuoka
+ *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts ProRunner v2 packed MODs back to Protracker
  ********************************************************
@@ -8,16 +8,16 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: prun2.c,v 1.2 2007-09-14 20:11:31 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.3 2007-09-18 21:27:46 cmatsuoka Exp $
  */
 
 #include <string.h>
 #include <stdlib.h>
 #include "prowiz.h"
 
-
 static int test_pru2 (uint8 *, int);
 static int depack_pru2 (uint8 *, FILE *);
+
 
 struct pw_format pw_pru2 = {
 	"PRU2",
@@ -31,18 +31,18 @@ struct pw_format pw_pru2 = {
 
 static int depack_pru2 (uint8 *data, FILE *out)
 {
-	uint8 Header[2048];
+	uint8 header[2048];
 	uint8 c1, c2, c3, c4;
-	uint8 npat = 0x00;
+	uint8 npat;
 	uint8 ptable[128];
-	uint8 Max = 0x00;
+	uint8 max = 0;
 	uint8 v[4][4];
 	int ssize = 0;
-	int i = 0, j = 0;
+	int i, j;
 	int start = 0;
 	int w = start;	/* main pointer to prevent fread() */
 
-	bzero (Header, 2048);
+	bzero (header, 2048);
 	bzero (ptable, 128);
 
 	for (i = 0; i < 20; i++)	/* title */
@@ -58,87 +58,69 @@ static int depack_pru2 (uint8 *data, FILE *out)
 	i += c4;
 
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
 		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
+			write8(out, 0);
 
-		c1 = data[w++];	/* size */
+		c1 = data[w++];		/* size */
 		c2 = data[w++];
 		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		c1 = data[w++];	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		c1 = data[w++];	/* volume */
-		fwrite (&c1, 1, 1, out);
-		c1 = data[w++];	/* loop start */
+		write8(out, c1);
+		write8(out, c2);
+		write8(out, data[w++]);	/* finetune */
+		write8(out, data[w++]);	/* volume */
+		c1 = data[w++];		/* loop start */
 		c2 = data[w++];
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		c1 = data[w++];	/* loop size */
+		write8(out, c1);
+		write8(out, c2);
+		c1 = data[w++];		/* loop size */
 		c2 = data[w++];
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write8(out, c1);
+		write8(out, c2);
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	npat = data[w++];
-	fwrite (&npat, 1, 1, out);
-	/*printf ( "Size of pattern list : %d\n" , npat ); */
+	write8(out, npat = data[w++]);
 
 	/* noisetracker byte */
 	c1 = data[w++];
 	fwrite (&c1, 1, 1, out);
 
 	for (i = 0; i < 128; i++) {
-		c1 = data[w++];
-		fwrite (&c1, 1, 1, out);
-		Max = (c1 > Max) ? c1 : Max;
+		write8(out, c1 = data[w++]);
+		max = (c1 > max) ? c1 : max;
 	}
-	/*printf ( "Number of pattern : %d\n" , Max ); */
 
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* pattern data stuff */
 	w = start + 770;
-	for (i = 0; i <= Max; i++) {
+	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 256; j++) {
-			c1 = c2 = c3 = c4 = 0x00;
-			Header[0] = data[w++];
-			if (Header[0] == 0x80) {
-				fwrite (&c1, 1, 1, out);
-				fwrite (&c1, 1, 1, out);
-				fwrite (&c1, 1, 1, out);
-				fwrite (&c1, 1, 1, out);
-			} else if (Header[0] == 0xC0) {
-				fwrite (v[0], 4, 1, out);
+			c1 = c2 = c3 = c4 = 0;
+			header[0] = data[w++];
+			if (header[0] == 0x80) {
+				write32b(out, 0);
+			} else if (header[0] == 0xC0) {
+				fwrite(v[0], 4, 1, out);
 				c1 = v[0][0];
 				c2 = v[0][1];
 				c3 = v[0][2];
 				c4 = v[0][3];
-			} else if ((Header[0] != 0xC0) && (Header[0] != 0xC0)) {
-				Header[1] = data[w++];
-				Header[2] = data[w++];
+			} else if ((header[0] != 0xC0) && (header[0] != 0xC0)) {
+				header[1] = data[w++];
+				header[2] = data[w++];
 
-				c1 = (Header[1] & 0x80) >> 3;
-				c1 |= ptk_table[(Header[0] >> 1)][0];
-				c2 = ptk_table[(Header[0] >> 1)][1];
-				c3 = (Header[1] & 0x70) << 1;
-				c3 |= (Header[0] & 0x01) << 4;
-				c3 |= (Header[1] & 0x0f);
-				c4 = Header[2];
+				c1 = (header[1] & 0x80) >> 3;
+				c1 |= ptk_table[(header[0] >> 1)][0];
+				c2 = ptk_table[(header[0] >> 1)][1];
+				c3 = (header[1] & 0x70) << 1;
+				c3 |= (header[0] & 0x01) << 4;
+				c3 |= (header[1] & 0x0f);
+				c4 = header[2];
 
-				fwrite (&c1, 1, 1, out);
-				fwrite (&c2, 1, 1, out);
-				fwrite (&c3, 1, 1, out);
-				fwrite (&c4, 1, 1, out);
+				write8(out, c1);
+				write8(out, c2);
+				write8(out, c3);
+				write8(out, c4);
 			}
 
 			/* rol previous values */
