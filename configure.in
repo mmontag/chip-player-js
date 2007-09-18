@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.24 2007-09-16 05:10:21 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.25 2007-09-18 00:50:22 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -516,8 +516,6 @@ define(XMP_CACHED_TRY_RUN,[
     else
 	echo "not checking $1 (cross-compiling)"
     fi])
-
-AC_C_BIGENDIAN
 
 if test "${GCC-no}" = yes; then
     CFLAGS="${CFLAGS} -Wall -finline-functions"

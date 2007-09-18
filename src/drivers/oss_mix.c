@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.4 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.5 2007-09-18 00:50:22 cmatsuoka Exp $
  */
 
 /*
@@ -100,11 +100,8 @@ static int to_fmt (struct xmp_control *ctl)
     if (ctl->resol == 8)
 	fmt = AFMT_U8 | AFMT_S8;
     else {
-#ifdef WORDS_BIGENDIAN
-	fmt = AFMT_S16_BE | AFMT_U16_BE;
-#else
-	fmt = AFMT_S16_LE | AFMT_U16_LE;
-#endif
+	fmt = big_endian ? AFMT_S16_BE | AFMT_U16_BE :
+			   AFMT_S16_LE | AFMT_U16_LE;
     }
     if (ctl->outfmt & XMP_FMT_UNS)
 	fmt &= AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE;

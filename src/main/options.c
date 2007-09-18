@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.14 2007-09-16 03:20:05 cmatsuoka Exp $
+ * $Id: options.c,v 1.15 2007-09-18 00:50:23 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -267,7 +267,7 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	    opt->flags |= XMP_CTL_8BIT;
 	    break;
 	case OPT_BIGENDIAN:
-	    opt->flags |= XMP_CTL_BIGEND;
+	    opt->outfmt |= XMP_FMT_BIGEND;
 	    break;
 	case 'b':
 	    opt->resol = atoi (optarg);
@@ -305,7 +305,7 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	    opt->flags |= XMP_CTL_LOOP;
 	    break;
 	case OPT_LILENDIAN:
-	    opt->flags &= ~XMP_CTL_BIGEND;
+	    opt->outfmt &= ~XMP_FMT_BIGEND;
 	    break;
 	case OPT_LOADONLY:
 	    loadonly = 1;

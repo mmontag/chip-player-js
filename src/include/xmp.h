@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.4 2007-09-02 16:55:43 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.5 2007-09-18 00:50:23 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -116,7 +116,6 @@ struct xmp_control {
 #define XMP_CTL_ITPT	0x00000001	/* Mixer interpolation */
 #define XMP_CTL_REVERSE	0x00000002	/* Reverse stereo */
 #define XMP_CTL_8BIT	0x00000004	/* Convert 16 bit samples to 8 bit */
-#define	XMP_CTL_BIGEND	0x00000008	/* Big-endian samples (input) */
 #define XMP_CTL_LOOP	0x00000010	/* Enable module looping */
 #define XMP_CTL_VIRTUAL	0x00000040	/* Enable virtual channels */
 #define XMP_CTL_DYNPAN	0x00000080	/* Enable dynamic pan */

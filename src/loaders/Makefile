@@ -1,5 +1,5 @@
 # Extended Module Player src/loaders/Makefile
-# $Id: Makefile,v 1.35 2007-09-15 21:59:56 cmatsuoka Exp $
+# $Id: Makefile,v 1.36 2007-09-18 00:50:23 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -Iinclude
@@ -13,7 +13,7 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  arch_load.o sym_load.o dtt_load.o mgt_load.o med3_load.o med4_load.o \
 	  ssmt_load.o
 OBJS	= common.o iff.o itsex.o asif.o $(LOADERS)
-DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c tp_load.c dbm_load.c med2_load.c
+DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c dbm_load.c med2_load.c
 DDIRS	= include
 LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	=

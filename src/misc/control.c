@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.8 2007-09-13 10:49:57 cmatsuoka Exp $
+ * $Id: control.c,v 1.9 2007-09-18 00:50:23 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,6 +27,7 @@
 static int drv_parm = 0;
 extern struct xmp_drv_info drv_callback;
 extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
+int big_endian;
 
 int pw_init(int);
 
@@ -41,9 +42,13 @@ void xmp_init_callback (struct xmp_control *ctl, void (*callback)(void *, int))
 void xmp_init (int argc, char **argv, struct xmp_control *ctl)
 {
     int num;
+    uint16 w;
 
-    xmp_init_drivers ();
-    xmp_init_formats ();
+    w = 0x00ff;
+    big_endian = (*(char *)&w == 0x00);
+
+    xmp_init_drivers();
+    xmp_init_formats();
     pw_init(1);
 
     memset (ctl, 0, sizeof (struct xmp_control));
@@ -52,24 +57,22 @@ void xmp_init (int argc, char **argv, struct xmp_control *ctl)
     /* Set defaults */
     ctl->freq = 44100;
     ctl->mix = 80;
-    ctl->outfmt = 0;
     ctl->resol = 16;					/* Was 0. why? */
     ctl->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
+    ctl->outfmt |= big_endian ? XMP_FMT_BIGEND : 0;
 
     /* Set max number of voices per channel */
     ctl->maxvoc = 16;
 
-    /* Okay, this is kludgy. But I must parse this _before_ loading
-     * the rc file.
-     */
+    /* must be parsed before loading the rc file. */
     for (num = 1; num < argc; num++) {
 	if (!strcmp (argv[num], "--norc"))
 	    break;
     }
     if (num >= argc)
-	xmpi_read_rc (ctl);
+	xmpi_read_rc(ctl);
 
-    xmpi_tell_wait ();
+    xmpi_tell_wait();
 }
 
 

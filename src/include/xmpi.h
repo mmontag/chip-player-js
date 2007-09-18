@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.8 2007-09-15 21:59:56 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.9 2007-09-18 00:50:23 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -131,6 +131,7 @@ extern uint16 **xxpe;
 extern uint16 **xxfe;
 extern struct xxm_channel xxc[64]; 
 extern uint8 xxo[XMP_DEF_MAXORD];
+extern int big_endian;
 
 extern uint8 **med_vol_table;
 extern uint8 **med_wav_table;

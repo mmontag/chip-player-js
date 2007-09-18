@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.7 2007-09-14 16:19:19 cmatsuoka Exp $
+ * $Id: wav.c,v 1.8 2007-09-18 00:50:22 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,6 +22,7 @@
 #include "xmpi.h"
 #include "driver.h"
 #include "mixer.h"
+#include "convert.h"
 
 static int audio_fd;
 static uint32 size;
@@ -145,9 +146,8 @@ static void bufdump (int i)
     int16 *b;
 
     b = xmp_smix_buffer();
-#ifdef WORDS_BIGENDIAN
-    xmp_cvt_sex(b, i);
-#endif
+    if (big_endian)
+	xmp_cvt_sex(i, (char *)b);
     write(audio_fd, b, i);
 }
 

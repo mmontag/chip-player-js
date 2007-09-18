@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.26 2007-09-14 17:48:20 cmatsuoka Exp $
+ * $Id: driver.c,v 1.27 2007-09-18 00:50:23 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -254,9 +254,6 @@ int xmp_drv_open(struct xmp_control *ctl)
 
     if (!ctl)
 	return XMP_ERR_NCTRL;
-
-    if(ctl->flags & XMP_CTL_BIGEND)
-        ctl->outfmt |= XMP_FMT_BIGEND;
 
     xmp_ctl = ctl;
     ctl->memavl = 0;
@@ -906,20 +903,15 @@ int xmp_drv_loadpatch (FILE *f, int id, int basefreq, int flags,
 #endif
 
     if (xxs->flg & WAVE_16_BITS) {
-#ifdef WORDS_BIGENDIAN
-	if ((flags & XMP_SMP_BIGEND) || (~xmp_ctl->fetch & XMP_CTL_BIGEND))
-	   xmp_cvt_sex (xxs->len, patch->data);
-#else
-	if ((flags & XMP_SMP_BIGEND) || (xmp_ctl->fetch & XMP_CTL_BIGEND))
-	    xmp_cvt_sex (xxs->len, patch->data);
-#endif
+	if (big_endian ^ (flags & XMP_SMP_BIGEND))
+	    xmp_cvt_sex(xxs->len, patch->data);
     }
     if (flags & XMP_SMP_7BIT)
-	xmp_cvt_2xsmp (xxs->len, patch->data);
+	xmp_cvt_2xsmp(xxs->len, patch->data);
     if (flags & XMP_SMP_DIFF)
-	xmp_cvt_diff2abs (xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
+	xmp_cvt_diff2abs(xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
     else if (flags & XMP_SMP_8BDIFF)
-	xmp_cvt_diff2abs (xxs->len, 0, patch->data);
+	xmp_cvt_diff2abs(xxs->len, 0, patch->data);
     if (flags & XMP_SMP_VIDC)
 	xmp_cvt_vidc(xxs->len, patch->data);
 

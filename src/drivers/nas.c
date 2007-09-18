@@ -4,7 +4,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: nas.c,v 1.2 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: nas.c,v 1.3 2007-09-18 00:50:22 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -175,15 +175,13 @@ static int init (struct xmp_control *ctl)
 	    AuFormatLinearUnsigned8 :
 	    AuFormatLinearSigned8;
     } else {
-#ifdef WORDS_BIGENDIAN
-	format = ctl->outfmt & XMP_FMT_UNS ?
-	    AuFormatLinearUnsigned16MSB :
-	    AuFormatLinearSigned16MSB;
-#else
-	format = ctl->outfmt & XMP_FMT_UNS ?
-	    AuFormatLinearUnsigned16LSB :
-	    AuFormatLinearSigned16LSB;
-#endif
+	if (big_endian) {
+	    format = ctl->outfmt & XMP_FMT_UNS ? AuFormatLinearUnsigned16MSB :
+						 AuFormatLinearSigned16MSB;
+	} else {
+	    format = ctl->outfmt & XMP_FMT_UNS ? AuFormatLinearUnsigned16LSB :
+						 AuFormatLinearSigned16LSB;
+	}
     }
 
     if (ctl->outfmt & XMP_FMT_MONO)
