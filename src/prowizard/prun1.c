@@ -1,10 +1,10 @@
 /*
  * ProRunner1.c   Copyright (C) 1996 Asle / ReDoX
- *                Modified by Claudio Matsuoka
+ *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * Converts MODs converted with Prorunner packer v1.0
+ * Converts MODs packed with Prorunner v1.0
  *
- * $Id: prun1.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: prun1.c,v 1.2 2007-09-18 21:19:56 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -24,89 +24,77 @@ struct pw_format pw_pru1 = {
 	depack_pru1
 };
 
-static int depack_pru1 (FILE * in, FILE * out)
+
+static int depack_pru1 (FILE *in, FILE *out)
 {
-	uint8 Header[2048];
+	uint8 header[2048];
 	uint8 *tmp;
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
+	uint8 c1, c2, c3, c4;
 	uint8 npat = 0x00;
 	uint8 ptable[128];
-	uint8 Max = 0x00;
-	long ssize = 0;
-	long i = 0, j = 0;
+	uint8 max = 0x00;
+	int ssize = 0;
+	int i, j;
 
-	bzero (Header, 2048);
-	bzero (ptable, 128);
+	bzero(header, 2048);
+	bzero(ptable, 128);
 
 	/* read and write whole header */
-	fseek (in, 0, SEEK_SET);
-	fread (Header, 950, 1, in);
-	fwrite (Header, 950, 1, out);
+	fread(header, 950, 1, in);
+	fwrite(header, 950, 1, out);
 
 	/* get whole sample size */
 	for (i = 0; i < 31; i++) {
-		ssize +=
-			(((Header[42 + i * 30] << 8) + Header[43 +
-			     i * 30]) * 2);
+		ssize += ((header[42 + i * 30] << 8) +
+			   header[43 + i * 30]) * 2;
 	}
-	/*printf ( "Whole sanple size : %ld\n" , ssize ); */
 
 	/* read and write size of pattern list */
-	fread (&npat, 1, 1, in);
-	fwrite (&npat, 1, 1, out);
-	/*printf ( "Size of pattern list : %d\n" , npat ); */
+	write8(out, npat = read8(in));
 
-	bzero (Header, 2048);
+	bzero(header, 2048);
 
 	/* read and write ntk byte and pattern list */
-	fread (Header, 129, 1, in);
-	fwrite (Header, 129, 1, out);
+	fread(header, 129, 1, in);
+	fwrite(header, 129, 1, out);
 
 	/* write ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* get number of pattern */
-	Max = 0x00;
+	max = 0;
 	for (i = 1; i < 129; i++) {
-		if (Header[i] > Max)
-			Max = Header[i];
+		if (header[i] > max)
+			max = header[i];
 	}
-	/*printf ( "Number of pattern : %d\n" , Max ); */
 
 	/* pattern data */
 	fseek (in, 1084, SEEK_SET);
-	for (i = 0; i <= Max; i++) {
+	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 256; j++) {
-			fread (&Header[0], 1, 1, in);
-			fread (&Header[1], 1, 1, in);
-			fread (&Header[2], 1, 1, in);
-			fread (&Header[3], 1, 1, in);
-			c1 = Header[0] & 0xf0;
-			c3 = (Header[0] & 0x0f) << 4;
-			c3 |= Header[2];
-			c4 = Header[3];
-			c1 |= ptk_table[Header[1]][0];
-			c2 = ptk_table[Header[1]][1];
-			fwrite (&c1, 1, 1, out);
-			fwrite (&c2, 1, 1, out);
-			fwrite (&c3, 1, 1, out);
-			fwrite (&c4, 1, 1, out);
+			header[0] = read8(in);
+			header[1] = read8(in);
+			header[2] = read8(in);
+			header[3] = read8(in);
+			c1 = header[0] & 0xf0;
+			c3 = (header[0] & 0x0f) << 4;
+			c3 |= header[2];
+			c4 = header[3];
+			c1 |= ptk_table[header[1]][0];
+			c2 = ptk_table[header[1]][1];
+			write8(out, c1);
+			write8(out, c2);
+			write8(out, c3);
+			write8(out, c4);
 		}
 	}
 
-
 	/* sample data */
-	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	tmp = (uint8 *)malloc(ssize);
+	bzero(tmp, ssize);
+	fread(tmp, ssize, 1, in);
+	fwrite(tmp, ssize, 1, out);
+	free(tmp);
 
 	return 0;
 }
