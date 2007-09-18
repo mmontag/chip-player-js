@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.3 2007-09-18 11:28:50 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.4 2007-09-18 11:46:33 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 #define MAGIC_EMOD	MAGIC4('E','M','O','D')
 
 
-static int *reorder;
+static uint8 *reorder;
 
 
 static void get_emic(int size, FILE *f)
@@ -74,7 +74,7 @@ static void get_emic(int size, FILE *f)
 
     PATTERN_INIT ();
 
-    reorder = calloc(sizeof(int), 256);
+    reorder = calloc(1, 256);
 
     for (i = 0; i < xxh->pat; i++) {
 	reorder[read8(f)] = i;
@@ -98,6 +98,7 @@ static void get_patt(int size, FILE *f)
 {
     int i, j, k;
     struct xxm_event *event;
+    uint8 x;
 
     reportv(0, "Stored patterns: %d ", xxh->pat);
 
@@ -112,20 +113,20 @@ static void get_patt(int size, FILE *f)
 		event->fxt = read8(f) & 0x0f;
 		event->fxp = read8(f);
 
-		if (!event->fxp) {
-		    switch (event->fxt) {
-		    case 0x05:
-			event->fxt = 0x03;
-			break;
-		    case 0x06:
-			event->fxt = 0x04;
-			break;
-		    case 0x01:
-		    case 0x02:
-		    case 0x0a:
-			event->fxt = 0x00;
-		    }
-		}                                
+		/* Fix effects */
+		switch (event->fxt) {
+		case 0x04:
+		    x = event->fxp;
+		    event->fxp = (x & 0xf0) | ((x << 1) & 0x0f);
+		    break;
+		case 0x09:
+		    event->fxt <<= 1;
+		    break;
+		case 0x0b:
+		    x = event->fxt;
+		    event->fxt = 16 * (x / 10) + x % 10;
+		    break;
+		}
 	    }
 	}
 	reportv(0, ".");
