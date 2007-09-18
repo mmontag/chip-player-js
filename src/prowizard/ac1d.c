@@ -6,7 +6,7 @@
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
  *
- * $Id: ac1d.c,v 1.2 2007-09-18 01:43:16 cmatsuoka Exp $
+ * $Id: ac1d.c,v 1.3 2007-09-18 02:15:05 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -59,9 +59,8 @@ static int depack_AC1D (FILE *in, FILE *out)
 		for (j = 0; j < 22; j++)
 			write8(out, 0);
 
-		size = read16b(in);		/* size */
+		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
-		write16b(out, size);
 
 		write8(out, read8(in));		/* finetune */
 		write8(out, read8(in));		/* volume */

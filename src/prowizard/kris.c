@@ -1,10 +1,10 @@
 /*
  * Kris_tracker.c   Copyright (C) 1997 Asle / ReDoX
- *                  Modified by Claudio Matsuoka
+ *                  Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Kris Tracker to Protracker.
  *
- * $Id: kris.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: kris.c,v 1.2 2007-09-18 02:15:05 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -15,7 +15,7 @@ static int test_kris (uint8 *, int);
 static int depack_kris (FILE *, FILE *);
 
 struct pw_format pw_kris = {
-	"kris",
+	"KRIS",
 	"Kris Tracker",
 	0x00,
 	test_kris,
@@ -27,93 +27,68 @@ struct pw_format pw_kris = {
 static int depack_kris (FILE *in, FILE *out)
 {
 	uint8 tmp[1025];
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00;
-	uint8 npat = 0x00;
+	uint8 c1, c2, c3;
+	uint8 npat;
 	uint8 ptable[128];
-	uint8 Max = 0x00;
+	uint8 Max;
 	uint8 note, ins, fxt, fxp;
 	uint8 tdata[512][256];
 	uint8 *sdata;
 	short taddr[128][4];
 	short maxtaddr = 0;
-	int i = 0, j = 0, k = 0;
-	int ssize = 0;
+	int i, j, k;
+	int size, ssize = 0;
 
-	bzero (tmp, 1025);
-	bzero (ptable, 128);
-	bzero (taddr, 128 * 4 * 2);
-	bzero (tdata, 512 << 8);
+	bzero(tmp, 1025);
+	bzero(ptable, 128);
+	bzero(taddr, 128 * 4 * 2);
+	bzero(tdata, 512 << 8);
 
 	/* title */
-	fseek (in, 0, SEEK_SET);
-	fread (tmp, 20, 1, in);
-	fwrite (tmp, 20, 1, out);
-	fseek (in, 2, 1);	/* SEEK_CUR */
+	fread(tmp, 20, 1, in);
+	fwrite(tmp, 20, 1, out);
+	fseek(in, 2, SEEK_CUR);
 
 	/* 31 samples */
 	for (i = 0; i < 31; i++) {
 		/* sample name */
-		fread (tmp, 22, 1, in);
+		fread(tmp, 22, 1, in);
 		if (tmp[0] == 0x01)
 			tmp[0] = 0x00;
-		fwrite (tmp, 22, 1, out);
+		fwrite(tmp, 22, 1, out);
 
-		/* size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		ssize += (((c1 << 8) + c2) * 2);
-
-		/* fine */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-
-		/* volume */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
+		write16b(out, size = read16b(in));	/* size */
+		ssize += size * 2;
+		write8(out, read8(in));		/* fine */
+		write8(out, read8(in));		/* volume */
 
 		/* loop start */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
+		c1 = read8(in);
+		c2 = read8(in);
 		c3 = c1 / 2;
 		c2 = c2 / 2;
 		if ((c3 * 2) != c1)
 			c2 += 1;
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write8(out, c3);
+		write8(out, c2);
 
-		/* loop size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write16b(out, read16b(in));	/* loop size */
 	}
 	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* bypass ID "KRIS" */
-	fseek (in, 4, 1);	/* SEEK_CUR */
-
-	/* number of pattern in pattern list */
-	fread (&npat, 1, 1, in);
-	fwrite (&npat, 1, 1, out);
-
-	/* Noisetracker restart byte */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
+	read32b(in);			/* bypass ID "KRIS" */
+	write8(out, npat = read8(in));	/* number of pattern in pattern list */
+	write8(out, read8(in));		/* Noisetracker restart byte */
 
 	/* pattern table (read,count and write) */
 	c3 = 0x00;
 	k = 0;
 	for (i = 0; i < 128; i++, k++) {
 		for (j = 0; j < 4; j++) {
-			fread (&c1, 1, 1, in);
-			fread (&c2, 1, 1, in);
-			taddr[k][j] = (c1 << 8) + c2;
+			taddr[k][j] = read16b(in);
 			if (taddr[k][j] > maxtaddr)
 				maxtaddr = taddr[k][j];
 		}
-		j = 0;
 		for (j = 0; j < k; j++) {
 			if ((taddr[j][0] == taddr[k][0])
 				&& (taddr[j][1] == taddr[k][1])
@@ -128,28 +103,20 @@ static int depack_kris (FILE *in, FILE *out)
 			ptable[i] = c3;
 			c3 += 0x01;
 		}
-		fwrite (&ptable[i], 1, 1, out);
+		write8(out, ptable[i]);
 	}
 
 	Max = c3 - 0x01;
 	/*printf ( "Number of patterns : %d\n" , Max ); */
 
-	/* ptk ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);	/* ptk ID */
 
-	/* bypass two unknown bytes */
-	fseek (in, 2, 1);	/* SEEK_CUR */
+	read16b(in);			/* bypass two unknown bytes */
 
 	/* Track data ... */
 	for (i = 0; i <= (maxtaddr / 256); i += 1) {
-		bzero (tmp, 1025);
-		fread (tmp, 256, 1, in);
+		bzero(tmp, 1025);
+		fread(tmp, 256, 1, in);
 
 		for (j = 0; j < 64; j++) {
 			note = tmp[j * 4];
@@ -200,10 +167,10 @@ static int depack_kris (FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	sdata = (uint8 *) malloc (ssize);
-	fread (sdata, ssize, 1, in);
-	fwrite (sdata, ssize, 1, out);
-	free (sdata);
+	sdata = (uint8 *)malloc(ssize);
+	fread(sdata, ssize, 1, in);
+	fwrite(sdata, ssize, 1, out);
+	free(sdata);
 
 	return 0;
 }

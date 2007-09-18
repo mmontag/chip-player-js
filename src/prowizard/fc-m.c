@@ -4,7 +4,7 @@
  *
  * Converts back to ptk FC-M packed MODs
  *
- * $Id: fc-m.c,v 1.2 2007-09-18 01:59:13 cmatsuoka Exp $
+ * $Id: fc-m.c,v 1.3 2007-09-18 02:15:05 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -52,9 +52,8 @@ static int depack_fcm(FILE *in, FILE *out)
 		for (j = 0; j < 22; j++)	/*sample name */
 			write8(out, 0);
 
-		size = read16b(in);		/* size */
+		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
-		write16b(out, size);
 		write8(out, read8(in));		/* finetune */
 		write8(out, read8(in));		/* volume */
 		write16b(out, read16b(in));	/* loop start */
