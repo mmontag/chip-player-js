@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.10 2007-09-17 00:14:52 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.11 2007-09-18 03:36:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -329,7 +329,13 @@ static int module_load (FILE *f, int ptdt)
 		    }
 	        }
 
-	    	tracker = "Maybe Protracker";
+		if (xxh->chn == 4) {
+	    	    tracker = "Maybe Protracker";
+		} else if (xxh->chn == 6 || xxh->chn == 8) {
+	    	    tracker = "FastTracker 1.01?";
+		} else {
+	    	    tracker = "Unknown";
+		}
 	    }
 	} else {	/* Has loops with 0 size */
 	    for (i = 15; i < 31; i++) {
