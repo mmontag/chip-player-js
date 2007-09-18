@@ -1,13 +1,10 @@
 /*
  * Kefrens_Sound_Machine.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
- *                           Modified by Claudio Matsuoka
+ *                           Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
  *
- * NOTE: some lines will work ONLY on IBM-PC !!!. Check the lines
- *      with the warning note to get this code working on 68k machines.
- *
- * $Id: ksm.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: ksm.c,v 1.2 2007-09-18 13:50:04 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -35,7 +32,7 @@ static int depack_ksm (FILE *in, FILE *out)
 {
 	uint8 *tmp;
 	uint8 *address;
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c5;
+	uint8 c1, c2, c5;
 	uint8 PatternList[128];
 	uint8 Track_Numbers[128][4];
 	uint8 Track_Numbers_Real[128][4];
@@ -43,31 +40,31 @@ static int depack_ksm (FILE *in, FILE *out)
 	uint8 Max = 0x00;
 	uint8 PatPos;
 	uint8 Status = ON;
-	long ssize = 0;
-	long i = 0, j = 0, k = 0;
+	int ssize = 0;
+	int i, j, k;
 
-	bzero (PatternList, 128);
-	bzero (Track_Numbers, 128 * 4);
-	bzero (Track_Numbers_Real, 128 * 4);
+	bzero(PatternList, 128);
+	bzero(Track_Numbers, 128 * 4);
+	bzero(Track_Numbers_Real, 128 * 4);
 
 	/* title */
-	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
-	fseek (in, 2, 0);
-	fread (tmp, 13, 1, in);
-	fwrite (tmp, 20, 1, out);
-	free (tmp);
+	tmp = (uint8 *)malloc(20);
+	bzero(tmp, 20);
+	fseek(in, 2, 0);
+	fread(tmp, 13, 1, in);
+	fwrite(tmp, 20, 1, out);
+	free(tmp);
 
 	/* read and write whole header */
 	/*printf ( "Converting sample headers ... " ); */
-	fseek (in, 32, 0);
-	tmp = (uint8 *) malloc (22);
-	bzero (tmp, 22);
+	fseek(in, 32, 0);
+	tmp = (uint8 *)malloc(22);
+	bzero(tmp, 22);
 	for (i = 0; i < 15; i++) {
 		/* write name */
-		fwrite (tmp, 22, 1, out);
+		fwrite(tmp, 22, 1, out);
 		/* bypass 16 unknown bytes and 4 address bytes */
-		fseek (in, 20, 1);
+		fseek(in, 20, 1);
 		/* size */
 		fread (&c1, 1, 1, in);
 		fread (&c2, 1, 1, in);
@@ -85,14 +82,11 @@ static int depack_ksm (FILE *in, FILE *out)
 		c1 /= 2;
 		fwrite (&c1, 1, 1, out);
 		fwrite (&c2, 1, 1, out);
-		/* finetune */
-		c1 = 0x00;
-		fwrite (&c1, 1, 1, out);
-		/* volume */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		/* bypass 1 unknown byte */
-		fseek (in, 1, 1);
+
+		write8(out, 0);			/* finetune */
+		write8(out, read8(in));		/* volume */
+		read8(in);			/* bypass 1 unknown byte */
+
 		/* loop start */
 		fread (&c1, 1, 1, in);
 		fread (&c2, 1, 1, in);
@@ -110,34 +104,18 @@ static int depack_ksm (FILE *in, FILE *out)
 		fwrite (&c1, 1, 1, out);
 		fwrite (&c2, 1, 1, out);
 
-		if (j != k) {
-			/* write loop size */
-			/* WARNING !!! WORKS ONLY ON PC !!!       */
-			/* 68k machines code : c1 = *(address+2); */
-			/* 68k machines code : c2 = *(address+3); */
-			j /= 2;
-			address = (uint8 *) & j;
-			c1 = *(address + 1);
-			c2 = *address;
-			fwrite (&c1, 1, 1, out);
-			fwrite (&c2, 1, 1, out);
-		} else {
-			c1 = 0x00;
-			c2 = 0x01;
-			fwrite (&c1, 1, 1, out);
-			fwrite (&c2, 1, 1, out);
-		}
-		/* bypass 6 unknown bytes */
-		fseek (in, 6, 1);
+		/* write loop size */
+		write16b(out, j != k ? j / 2 : 0x0001);
+
+		fseek(in, 6, 1);	/* bypass 6 unknown bytes */
 	}
-	free (tmp);
+	free(tmp);
 	tmp = (uint8 *) malloc (30);
 	bzero (tmp, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
 		fwrite (tmp, 30, 1, out);
 	free (tmp);
-	/*printf ( "ok\n" ); */
 
 	/* pattern list */
 	/*printf ( "creating the pattern list ... " ); */
@@ -159,12 +137,8 @@ static int depack_ksm (FILE *in, FILE *out)
 			Max = Track_Numbers[PatPos][3];
 	}
 
-	/* write patpos */
-	fwrite (&PatPos, 1, 1, out);
-
-	/* ntk byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	write8(out, PatPos);		/* write patpos */
+	write8(out, 0x7f);		/* ntk byte */
 
 	/* sort tracks numbers */
 	c5 = 0x00;
@@ -226,31 +200,23 @@ static int depack_ksm (FILE *in, FILE *out)
 
 	/* write pattern list */
 	fwrite (PatternList, 128, 1, out);
-	/*printf ( "ok\n" ); */
 
-	/* write ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);	/* write ID */
 
 	/* pattern data */
 	/*printf ( "Converting pattern datas " ); */
 	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i < c5; i++) {
-		bzero (tmp, 1024);
-		bzero (Track_Datas, 192 * 4);
-		fseek (in, 1536 + 192 * Track_Numbers_Real[i][0], 0);
-		fread (Track_Datas[0], 192, 1, in);
-		fseek (in, 1536 + 192 * Track_Numbers_Real[i][1], 0);
-		fread (Track_Datas[1], 192, 1, in);
-		fseek (in, 1536 + 192 * Track_Numbers_Real[i][2], 0);
-		fread (Track_Datas[2], 192, 1, in);
-		fseek (in, 1536 + 192 * Track_Numbers_Real[i][3], 0);
-		fread (Track_Datas[3], 192, 1, in);
+		bzero(tmp, 1024);
+		bzero(Track_Datas, 192 * 4);
+		fseek(in, 1536 + 192 * Track_Numbers_Real[i][0], 0);
+		fread(Track_Datas[0], 192, 1, in);
+		fseek(in, 1536 + 192 * Track_Numbers_Real[i][1], 0);
+		fread(Track_Datas[1], 192, 1, in);
+		fseek(in, 1536 + 192 * Track_Numbers_Real[i][2], 0);
+		fread(Track_Datas[2], 192, 1, in);
+		fseek(in, 1536 + 192 * Track_Numbers_Real[i][3], 0);
+		fread(Track_Datas[3], 192, 1, in);
 
 		for (j = 0; j < 64; j++) {
 			tmp[j * 16] = ptk_table[Track_Datas[0][j * 3]][0];
@@ -284,17 +250,16 @@ static int depack_ksm (FILE *in, FILE *out)
 			tmp[j * 16 + 15] = Track_Datas[3][j * 3 + 2];
 		}
 
-
-		fwrite (tmp, 1024, 1, out);
+		fwrite(tmp, 1024, 1, out);
 	}
-	free (tmp);
+	free(tmp);
 
 	/* sample data */
-	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
-	fseek (in, 1536 + (192 * (Max + 1)), 0);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
+	tmp = (uint8 *)malloc(ssize);
+	bzero(tmp, ssize);
+	fseek(in, 1536 + (192 * (Max + 1)), 0);
+	fread(tmp, ssize, 1, in);
+	fwrite(tmp, ssize, 1, out);
 	free (tmp);
 
 	return 0;
