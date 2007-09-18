@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.11 2007-09-18 03:36:37 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.12 2007-09-18 12:18:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -316,7 +316,7 @@ static int module_load (FILE *f, int ptdt)
 		    if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1) {
 			switch (xxh->chn) {
 			case 4:
-		            tracker = "old Noisetracker";
+		            tracker = "old Noisetracker/Octalyzer";
 			    break;
 			case 6:
 			case 8:
