@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.79 2007-09-18 00:50:22 cmatsuoka Exp $
+$Id: ChangeLog,v 1.80 2007-09-18 01:43:15 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -7,6 +7,7 @@ Stable versions
 	- runtime endianism detection (to help generation of fat binaries)
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
 	- fixed semantics of options --big-endian and --little-endian
+	- prowizard code cleanup
 
 2.2.1 (20070917)
 	- added IT tracker fingerprinting

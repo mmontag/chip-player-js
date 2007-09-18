@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: readdata.c,v 1.2 2007-09-14 12:06:28 cmatsuoka Exp $
+ * $Id: readdata.c,v 1.3 2007-09-18 01:43:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -108,6 +108,22 @@ void write16b(FILE *f, uint16 w)
 {
 	write8(f, (w & 0xff00) >> 8);
 	write8(f, w & 0x00ff);
+}
+
+void write32l(FILE *f, uint32 w)
+{
+	write8(f, w & 0x000000ff);
+	write8(f, (w & 0x0000ff00) >> 8);
+	write8(f, (w & 0x00ff0000) >> 16);
+	write8(f, (w & 0xff000000) >> 24);
+}
+
+void write32b(FILE *f, uint32 w)
+{
+	write8(f, (w & 0xff000000) >> 24);
+	write8(f, (w & 0x00ff0000) >> 16);
+	write8(f, (w & 0x0000ff00) >> 8);
+	write8(f, w & 0x000000ff);
 }
 
 
