@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.12 2007-09-18 00:50:22 cmatsuoka Exp $
+ * $Id: osx.c,v 1.13 2007-09-18 22:22:22 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -171,7 +171,6 @@ static int init(struct xmp_control *ctl)
 	//char **parm = ctl->parm;
 	OSStatus err;
 	UInt32 size, max_frames;
-	uint16 x;
 
 	//parm_init();
 	//parm_end();
