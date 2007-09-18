@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.24 2007-09-17 10:39:57 cmatsuoka Exp $
+# $Id: Makefile,v 1.25 2007-09-18 00:57:32 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -9,7 +9,7 @@ TOPDIR	= .
 XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)
-MODULES	= inspiration.s3m
+MODULES	= intromuz-1hb.mod
 DFILES	= README configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
 DDIRS	= lib docs etc src scripts

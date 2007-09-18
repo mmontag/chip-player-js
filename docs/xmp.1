@@ -1,4 +1,4 @@
-.TH "XMP" "1" "Version 2\&.2\&.0" "Sep 2007" "Extended Module Player" 
+.TH "XMP" "1" "Version 2\&.3\&.0" "Sep 2007" "Extended Module Player" 
 .PP 
 .SH "NAME" 
 xmp - Extended Module Player
@@ -58,8 +58,8 @@ Convert 16 bit samples to 8 bit\&. You may want to use this mode to
 save memory in the sound device (AWE cards will ignore this mode and
 always work with 16 bit samples)\&.
 .IP "\fB--big-endian\fP" 
-Tell the software mixer to work with big-endian samples when using
-the software mixer (default is the machine byte ordering)\&.
+Tell the software mixer to generate big-endian 16-bit samples
+(default is the machine byte ordering)\&.
 .IP "\fB-b, --bits\fP \fIbits\fP" 
 Set the software mixer resolution (8 or 16 bits)\&. If ommited,
 The audio device will be opened at the highest resolution available\&.
@@ -88,8 +88,8 @@ Exit after loading the module&.
 .IP "\fB-l, --loop\fP" 
 Enable module looping and backward pattern jumps\&.
 .IP "\fB--little-endian\fP" 
-Tell the software mixer to work with big-endian samples when using
-the software mixer (default is the machine byte ordering)\&.
+Tell the software mixer to generate little-endian 16-bit samples
+(default is the machine byte ordering)\&.
 .IP "\fB-M, --mute\fP \fIchannel-list\fP" 
 Mute the specified channels\&. \fIchannel-list\fP is a comma-separated
 list of decimal channel ranges\&. Example: 0,2-4,8-16\&.
