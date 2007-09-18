@@ -1,10 +1,10 @@
 /*
  * FC-M_Packer.c   Copyright (C) 1997 Asle / ReDoX
- *                 Modified by Claudio Matsuoka
+ *                 Copyright (c) 2006-2007 Claudio Matsuoka
  *
  * Converts back to ptk FC-M packed MODs
  *
- * $Id: fc-m.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: fc-m.c,v 1.2 2007-09-18 01:59:13 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -24,124 +24,89 @@ struct pw_format pw_fcm = {
 };
 
 
-static int depack_fcm (FILE * in, FILE * out)
+static int depack_fcm(FILE *in, FILE *out)
 {
-	uint8 c1, c2, c3;
+	uint8 c1;
 	uint8 ptable[128];
 	uint8 pat_pos;
 	uint8 pat_max = 0x00;
 	uint8 *tmp;
-	uint8 Pattern[1024];
-	long i = 0, j = 0;
-	long ssize = 0;
+	uint8 pat_data[1024];
+	int i = 0, j = 0;
+	int size, ssize = 0;
 
 	bzero (ptable, 128);
 
-	/* bypass "FC-M" ID */
-	fseek (in, 4, 0);
-
-	/* bypass what looks like the version number .. */
-	fseek (in, 2, 1);
-
-	/* bypass "NAME" chunk */
-	fseek (in, 4, 1);
+	read32b(in);	/* bypass "FC-M" ID */
+	read16b(in);	/* bypass what looks like the version number .. */
+	read32b(in);	/* bypass "NAME" chunk */
 
 	/* read and write title */
-	for (i = 0; i < 20; i++) {
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-	}
+	for (i = 0; i < 20; i++)
+		write8(out, read8(in));
 
-	/* bypass "INST" chunk */
-	fseek (in, 4, 1);
+	read32b(in);	/* bypass "INST" chunk */
 
 	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
 		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
+			write8(out, 0);
 
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		if ((c1 == 0x00) && (c2 == 0x00))
-			c2 = 0x01;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		size = read16b(in);		/* size */
+		ssize += size * 2;
+		write16b(out, size);
+		write8(out, read8(in));		/* finetune */
+		write8(out, read8(in));		/* volume */
+		write16b(out, read16b(in));	/* loop start */
+		size = read16b(in);		/* loop size */
+		if (size == 0)
+			size = 1;
+		write16b(out, size);
 	}
 	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* bypass "LONG" chunk */
-	fseek (in, 4, 1);	/* SEEK_CUR */
+	read32b(in);	/* bypass "LONG" chunk */
 
 	/* read and write pattern table lenght */
-	fread (&pat_pos, 1, 1, in);
-	fwrite (&pat_pos, 1, 1, out);
+	write8(out, pat_pos = read8(in));
 	/*printf ( "Size of pattern list : %d\n" , pat_pos ); */
 
 	/* read and write NoiseTracker byte */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
+	write8(out, read8(in));
 
-	/* bypass "PATT" chunk */
-	fseek (in, 4, 1);
+	read32b(in);	/* bypass "PATT" chunk */
 
 	/* read and write pattern list and get highest patt number */
 	for (i = 0; i < pat_pos; i++) {
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
+		write8(out, c1 = read8(in));
 		if (c1 > pat_max)
 			pat_max = c1;
 	}
-	c2 = 0x00;
-	while (i < 128) {
-		fwrite (&c2, 1, 1, out);
-		i += 1;
-	}
+	for (; i < 128; i++)
+		write8(out, 0);
 	/*printf ( "Number of pattern : %d\n" , pat_max + 1 ); */
 
 	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
-	/* bypass "SONG" chunk */
-	fseek (in, 4, 1);
+	read32b(in);	/* bypass "SONG" chunk */
 
 	/* pattern data */
 	for (i = 0; i <= pat_max; i++) {
-		bzero (Pattern, 1024);
-		fread (Pattern, 1024, 1, in);
-		fwrite (Pattern, 1024, 1, out);
+		fread(pat_data, 1024, 1, in);
+		fwrite(pat_data, 1024, 1, out);
 		/*printf ( "+" ); */
 	}
 	/*printf ( "\n" ); */
 
 
-	/* bypass "SAMP" chunk */
-	fseek (in, 4, 1);
+	read32b(in);	/* bypass "SAMP" chunk */
 
 	/* sample data */
-	tmp = (uint8 *) malloc (ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	tmp = (uint8 *)malloc(ssize);
+	fread(tmp, ssize, 1, in);
+	fwrite(tmp, ssize, 1, out);
+	free(tmp);
 
 	return 0;
 }
