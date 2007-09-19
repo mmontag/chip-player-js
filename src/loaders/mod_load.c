@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.12 2007-09-18 12:18:45 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.13 2007-09-19 22:05:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -50,7 +50,7 @@ struct {
     { "FA04", "4 channel MOD", 1, "Digital Tracker", 4 }, /* Atari Falcon */
     { "FA06", "6 channel MOD", 1, "Digital Tracker", 6 }, /* Atari Falcon */
     { "FA08", "8 channel MOD", 1, "Digital Tracker", 8 }, /* Atari Falcon */
-    { "PWIZ", "Packed module", 1, "converted with ProWizard", 4 },
+    { "PWIZ", "Packed module", 1, "", 4 },
     { "", 0 }
 };
 
