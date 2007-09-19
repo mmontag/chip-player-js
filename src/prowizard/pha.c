@@ -5,7 +5,7 @@
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.3 2007-09-14 20:11:31 cmatsuoka Exp $
+ * $Id: pha.c,v 1.4 2007-09-19 18:27:06 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -26,73 +26,60 @@ struct pw_format pw_pha = {
 
 static int depack_pha(FILE *in, FILE *out)
 {
-	uint8 c1, c2, c3;
+	uint8 c1, c2;
 	uint8 pnum[128];
 	uint8 pnum1[128];
-	uint8 NOP;
+	uint8 nop;
 	uint8 *pdata;
 	uint8 *pat;
 	uint8 *sdata;
 	uint8 onote[4][4];
 	uint8 note, ins, fxt, fxp;
 	uint8 npat = 0x00;
-	long paddr[128];
-	long i = 0, j = 0, k = 0;
-	long paddr1[128];
-	long paddr2[128];
-	long tmp_ptr, tmp1, tmp2;
-	long Start_Pat_Address;
-	long psize;
-	long ssize = 0;
-	long sdata_Address;
+	int paddr[128];
+	int i, j, k;
+	int paddr1[128];
+	int paddr2[128];
+	int tmp_ptr, tmp1, tmp2;
+	int Start_Pat_Address;
+	int psize;
+	int size, ssize = 0;
+	int sdata_Address;
 	short ocpt[4];
 
-	bzero (paddr, 128 * 4);
-	bzero (paddr1, 128 * 4);
-	bzero (paddr2, 128 * 4);
-	bzero (pnum, 128);
-	bzero (pnum1, 128);
-	bzero (onote, 4 * 4);
-	bzero (ocpt, 4 * 2);
+	bzero(paddr, 128 * 4);
+	bzero(paddr1, 128 * 4);
+	bzero(paddr2, 128 * 4);
+	bzero(pnum, 128);
+	bzero(pnum1, 128);
+	bzero(onote, 4 * 4);
+	bzero(ocpt, 4 * 2);
 
 	for (i = 0; i < 20; i++)	/* title */
 		write8(out, 0);
 
-	fseek (in, 0, SEEK_SET);	/* useless */
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
 		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
+			write8(out, 0);
 
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		c1 = 0x00;	/* finetune byte in ptk's case .. */
-		fwrite (&c1, 1, 1, out);
-		fseek (in, 1, 1);	/* SEEK_SET */
+		write16b(out, size = read16b(in));	/* size */
+		ssize += size * 2;
+		read8(in);
+		write8(out, 0);		/* finetune byte in ptk's case .. */
 
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
+		write8(out, read8(in));		/* volume */
+		write16b(out, read16b(in));	/* loop start */
+		write16b(out, read16b(in));	/* loop size */
 
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		read32b(in);
 
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
-		fseek (in, 4, SEEK_CUR);
-		fread (&c1, 1, 1, in);
-		if(c1 != 0x00) c1 += 0x0b;
-		fseek (out, -6, 1);	/* SEEK_END */
-		fwrite (&c1, 1, 1, out);
-		fseek (out, 0, 2);	/* SEEK_END */
-		fseek (in, 1, 1);	/* SEEK_CUR */
+		c1 = read8(in);
+		if(c1 != 0x00)
+			c1 += 0x0b;
+		fseek(out, -6, SEEK_END);
+		write8(out, c1);
+		fseek(out, 0, SEEK_END);
+		fseek(in, 1, SEEK_CUR);
 	}
 	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
@@ -183,41 +170,31 @@ restart:
 	}
 
 	/* try to get the number of pattern in pattern list */
-	for (NOP = 128; NOP > 0x00; NOP--)
-		if (pnum[NOP - 1] != 0x00)
+	for (nop = 128; nop > 0x00; nop--)
+		if (pnum[nop - 1] != 0x00)
 			break;
 
 	/* write this value */
-	fwrite (&NOP, 1, 1, out);
+	write8(out, nop);
 
 	/* get highest pattern number */
-	for (i = 0; i < NOP; i++)
+	for (i = 0; i < nop; i++)
 		if (pnum[i] > npat)
 			npat = pnum[i];
 
 	/*printf ( "Highest pattern number : %d\n" , npat ); */
 
-	/* ntk restart byte */
-	c2 = 0x7f;
-	fwrite (&c2, 1, 1, out);
-
+	write8(out, 0x7f);	/* ntk restart byte */
 
 	/* write pattern list */
 	for (i = 0; i < 128; i++)
-		fwrite (&pnum[i], 1, 1, out);
-
+		write8(out, pnum[i]);
 
 	/* ID string */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
-	sdata_Address = ftell (in);
-	fseek (in, Start_Pat_Address, 0);
+	sdata_Address = ftell(in);
+	fseek(in, Start_Pat_Address, SEEK_SET);
 
 	/* pattern datas */
 	/* read ALL pattern data */
@@ -231,10 +208,10 @@ restart:
 #endif
 	psize = npat * 1024;
 	pdata = (uint8 *) malloc (psize);
-	fread (pdata, 1, psize, in);
+	fread(pdata, 1, psize, in);
 	npat += 1;		/* coz first value is $00 */
-	pat = (uint8 *) malloc (npat * 1024);
-	bzero (pat, npat * 1024);
+	pat = (uint8 *)malloc(npat * 1024);
+	bzero(pat, npat * 1024);
 
 	j = 0;
 	for (i = 0; j < (npat * 1024); i++) {
@@ -279,16 +256,16 @@ restart:
 		k += 1;
 		j += 4;
 	}
-	fwrite (pat, npat * 1024, 1, out);
-	free (pdata);
-	free (pat);
+	fwrite(pat, npat * 1024, 1, out);
+	free(pdata);
+	free(pat);
 
 	/* Sample data */
-	fseek (in, sdata_Address, 0);	/* SEEK_SET */
+	fseek (in, sdata_Address, SEEK_SET);
 	sdata = (uint8 *) malloc (ssize);
-	fread (sdata, ssize, 1, in);
-	fwrite (sdata, ssize, 1, out);
-	free (sdata);
+	fread(sdata, ssize, 1, in);
+	fwrite(sdata, ssize, 1, out);
+	free(sdata);
 
 	return 0;
 }
