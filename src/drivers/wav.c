@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.8 2007-09-18 00:50:22 cmatsuoka Exp $
+ * $Id: wav.c,v 1.9 2007-09-19 21:54:48 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -111,6 +111,8 @@ static int init (struct xmp_control *ctl)
 	len = -1;
     }
 
+    ctl->outfmt &= ~XMP_FMT_BIGEND;	/* RIFF is little-endian */
+
     write(audio_fd, "RIFF", 4);
     write(audio_fd, &len, 4);
     write(audio_fd, "WAVE", 4);
@@ -146,8 +148,6 @@ static void bufdump (int i)
     int16 *b;
 
     b = xmp_smix_buffer();
-    if (big_endian)
-	xmp_cvt_sex(i, (char *)b);
     write(audio_fd, b, i);
 }
 
