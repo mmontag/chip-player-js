@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.9 2007-08-30 02:55:47 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.10 2007-09-19 13:02:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,7 +35,7 @@ int svb_load (FILE * f)
 		return -1;
 
 	fread(buf, 1, 60, f);
-	strncpy(xmp_ctl->name, (char *)buf, 32);
+	strncpy(xmp_ctl->name, (char *)buf, XMP_DEF_NAMESIZE);
 
 	type = read8(f);	/* song type */
 	ver = read8(f);		/* song version */

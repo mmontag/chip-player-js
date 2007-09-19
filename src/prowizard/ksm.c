@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
  *
- * $Id: ksm.c,v 1.3 2007-09-18 22:22:22 cmatsuoka Exp $
+ * $Id: ksm.c,v 1.4 2007-09-19 13:02:12 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -32,19 +32,19 @@ static int depack_ksm (FILE *in, FILE *out)
 {
 	uint8 *tmp;
 	uint8 c1, c2, c5;
-	uint8 PatternList[128];
-	uint8 Track_Numbers[128][4];
-	uint8 Track_Numbers_Real[128][4];
-	uint8 Track_Datas[4][192];
+	uint8 plist[128];
+	uint8 trknum[128][4];
+	uint8 real_tnum[128][4];
+	uint8 tdata[4][192];
 	uint8 Max = 0x00;
 	uint8 PatPos;
 	uint8 Status = ON;
 	int ssize = 0;
 	int i, j, k;
 
-	bzero(PatternList, 128);
-	bzero(Track_Numbers, 128 * 4);
-	bzero(Track_Numbers_Real, 128 * 4);
+	bzero(plist, 128);
+	bzero(trknum, 128 * 4);
+	bzero(real_tnum, 128 * 4);
 
 	/* title */
 	tmp = (uint8 *)malloc(20);
@@ -65,8 +65,8 @@ static int depack_ksm (FILE *in, FILE *out)
 		/* bypass 16 unknown bytes and 4 address bytes */
 		fseek(in, 20, 1);
 		/* size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
+		fread(&c1, 1, 1, in);
+		fread(&c2, 1, 1, in);
 		k = (c1 << 8) + c2;
 		ssize += k;
 		c2 /= 2;
@@ -79,16 +79,16 @@ static int depack_ksm (FILE *in, FILE *out)
 			}
 		}
 		c1 /= 2;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		fwrite(&c1, 1, 1, out);
+		fwrite(&c2, 1, 1, out);
 
 		write8(out, 0);			/* finetune */
 		write8(out, read8(in));		/* volume */
 		read8(in);			/* bypass 1 unknown byte */
 
 		/* loop start */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
+		fread(&c1, 1, 1, in);
+		fread(&c2, 1, 1, in);
 		j = k - ((c1 << 8) + c2);
 		c2 /= 2;
 		if ((c1 / 2) * 2 != c1) {
@@ -100,8 +100,8 @@ static int depack_ksm (FILE *in, FILE *out)
 			}
 		}
 		c1 /= 2;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		fwrite(&c1, 1, 1, out);
+		fwrite(&c2, 1, 1, out);
 
 		/* write loop size */
 		write16b(out, j != k ? j / 2 : 0x0001);
@@ -113,27 +113,27 @@ static int depack_ksm (FILE *in, FILE *out)
 	bzero (tmp, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
-		fwrite (tmp, 30, 1, out);
+		fwrite(tmp, 30, 1, out);
 	free (tmp);
 
 	/* pattern list */
 	/*printf ( "creating the pattern list ... " ); */
 	fseek (in, 512, 0);
 	for (PatPos = 0x00; PatPos < 128; PatPos++) {
-		fread (&Track_Numbers[PatPos][0], 1, 1, in);
-		fread (&Track_Numbers[PatPos][1], 1, 1, in);
-		fread (&Track_Numbers[PatPos][2], 1, 1, in);
-		fread (&Track_Numbers[PatPos][3], 1, 1, in);
-		if (Track_Numbers[PatPos][0] == 0xFF)
+		fread(&trknum[PatPos][0], 1, 1, in);
+		fread(&trknum[PatPos][1], 1, 1, in);
+		fread(&trknum[PatPos][2], 1, 1, in);
+		fread(&trknum[PatPos][3], 1, 1, in);
+		if (trknum[PatPos][0] == 0xFF)
 			break;
-		if (Track_Numbers[PatPos][0] > Max)
-			Max = Track_Numbers[PatPos][0];
-		if (Track_Numbers[PatPos][1] > Max)
-			Max = Track_Numbers[PatPos][1];
-		if (Track_Numbers[PatPos][2] > Max)
-			Max = Track_Numbers[PatPos][2];
-		if (Track_Numbers[PatPos][3] > Max)
-			Max = Track_Numbers[PatPos][3];
+		if (trknum[PatPos][0] > Max)
+			Max = trknum[PatPos][0];
+		if (trknum[PatPos][1] > Max)
+			Max = trknum[PatPos][1];
+		if (trknum[PatPos][2] > Max)
+			Max = trknum[PatPos][2];
+		if (trknum[PatPos][3] > Max)
+			Max = trknum[PatPos][3];
 	}
 
 	write8(out, PatPos);		/* write patpos */
@@ -143,63 +143,61 @@ static int depack_ksm (FILE *in, FILE *out)
 	c5 = 0x00;
 	for (i = 0; i < PatPos; i++) {
 		if (i == 0) {
-			PatternList[0] = c5;
+			plist[0] = c5;
 			c5 += 0x01;
 			continue;
 		}
 		for (j = 0; j < i; j++) {
 			Status = ON;
 			for (k = 0; k < 4; k++) {
-				if (Track_Numbers[j][k] !=
-					Track_Numbers[i][k]) {
+				if (trknum[j][k] !=
+					trknum[i][k]) {
 					Status = OFF;
 					break;
 				}
 			}
 			if (Status == ON) {
-				PatternList[i] = PatternList[j];
+				plist[i] = plist[j];
 				break;
 			}
 		}
 		if (Status == OFF) {
-			PatternList[i] = c5;
+			plist[i] = c5;
 			c5 += 0x01;
 		}
 		Status = ON;
 	}
 	/* c5 is the Max pattern number */
 
-	/* create a real list of tracks numbers for the really existing patterns */
+	/* create real list of tracks numbers for really existing patterns */
 	c1 = 0x00;
 	for (i = 0; i < PatPos; i++) {
 		if (i == 0) {
-			Track_Numbers_Real[c1][0] = Track_Numbers[i][0];
-			Track_Numbers_Real[c1][1] = Track_Numbers[i][1];
-			Track_Numbers_Real[c1][2] = Track_Numbers[i][2];
-			Track_Numbers_Real[c1][3] = Track_Numbers[i][3];
+			real_tnum[c1][0] = trknum[i][0];
+			real_tnum[c1][1] = trknum[i][1];
+			real_tnum[c1][2] = trknum[i][2];
+			real_tnum[c1][3] = trknum[i][3];
 			c1 += 0x01;
 			continue;
 		}
 		for (j = 0; j < i; j++) {
 			Status = ON;
-			if (PatternList[i] == PatternList[j]) {
+			if (plist[i] == plist[j]) {
 				Status = OFF;
 				break;
 			}
 		}
 		if (Status == OFF)
 			continue;
-		Track_Numbers_Real[c1][0] = Track_Numbers[i][0];
-		Track_Numbers_Real[c1][1] = Track_Numbers[i][1];
-		Track_Numbers_Real[c1][2] = Track_Numbers[i][2];
-		Track_Numbers_Real[c1][3] = Track_Numbers[i][3];
+		real_tnum[c1][0] = trknum[i][0];
+		real_tnum[c1][1] = trknum[i][1];
+		real_tnum[c1][2] = trknum[i][2];
+		real_tnum[c1][3] = trknum[i][3];
 		c1 += 0x01;
 		Status = ON;
 	}
 
-	/* write pattern list */
-	fwrite (PatternList, 128, 1, out);
-
+	fwrite(plist, 128, 1, out);	/* write pattern list */
 	write32b(out, 0x4E2E4B2E);	/* write ID */
 
 	/* pattern data */
@@ -207,46 +205,46 @@ static int depack_ksm (FILE *in, FILE *out)
 	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i < c5; i++) {
 		bzero(tmp, 1024);
-		bzero(Track_Datas, 192 * 4);
-		fseek(in, 1536 + 192 * Track_Numbers_Real[i][0], 0);
-		fread(Track_Datas[0], 192, 1, in);
-		fseek(in, 1536 + 192 * Track_Numbers_Real[i][1], 0);
-		fread(Track_Datas[1], 192, 1, in);
-		fseek(in, 1536 + 192 * Track_Numbers_Real[i][2], 0);
-		fread(Track_Datas[2], 192, 1, in);
-		fseek(in, 1536 + 192 * Track_Numbers_Real[i][3], 0);
-		fread(Track_Datas[3], 192, 1, in);
+		bzero(tdata, 192 * 4);
+		fseek(in, 1536 + 192 * real_tnum[i][0], 0);
+		fread(tdata[0], 192, 1, in);
+		fseek(in, 1536 + 192 * real_tnum[i][1], 0);
+		fread(tdata[1], 192, 1, in);
+		fseek(in, 1536 + 192 * real_tnum[i][2], 0);
+		fread(tdata[2], 192, 1, in);
+		fseek(in, 1536 + 192 * real_tnum[i][3], 0);
+		fread(tdata[3], 192, 1, in);
 
 		for (j = 0; j < 64; j++) {
-			tmp[j * 16] = ptk_table[Track_Datas[0][j * 3]][0];
-			tmp[j * 16 + 1] = ptk_table[Track_Datas[0][j * 3]][1];
-			if ((Track_Datas[0][j * 3 + 1] & 0x0f) == 0x0D)
-				Track_Datas[0][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 2] = Track_Datas[0][j * 3 + 1];
-			tmp[j * 16 + 3] = Track_Datas[0][j * 3 + 2];
+			tmp[j * 16] = ptk_table[tdata[0][j * 3]][0];
+			tmp[j * 16 + 1] = ptk_table[tdata[0][j * 3]][1];
+			if ((tdata[0][j * 3 + 1] & 0x0f) == 0x0D)
+				tdata[0][j * 3 + 1] -= 0x03;
+			tmp[j * 16 + 2] = tdata[0][j * 3 + 1];
+			tmp[j * 16 + 3] = tdata[0][j * 3 + 2];
 
-			tmp[j * 16 + 4] = ptk_table[Track_Datas[1][j * 3]][0];
-			tmp[j * 16 + 5] = ptk_table[Track_Datas[1][j * 3]][1];
-			if ((Track_Datas[1][j * 3 + 1] & 0x0f) == 0x0D)
-				Track_Datas[1][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 6] = Track_Datas[1][j * 3 + 1];
-			tmp[j * 16 + 7] = Track_Datas[1][j * 3 + 2];
+			tmp[j * 16 + 4] = ptk_table[tdata[1][j * 3]][0];
+			tmp[j * 16 + 5] = ptk_table[tdata[1][j * 3]][1];
+			if ((tdata[1][j * 3 + 1] & 0x0f) == 0x0D)
+				tdata[1][j * 3 + 1] -= 0x03;
+			tmp[j * 16 + 6] = tdata[1][j * 3 + 1];
+			tmp[j * 16 + 7] = tdata[1][j * 3 + 2];
 
-			tmp[j * 16 + 8] = ptk_table[Track_Datas[2][j * 3]][0];
-			tmp[j * 16 + 9] = ptk_table[Track_Datas[2][j * 3]][1];
-			if ((Track_Datas[2][j * 3 + 1] & 0x0f) == 0x0D)
-				Track_Datas[2][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 10] = Track_Datas[2][j * 3 + 1];
-			tmp[j * 16 + 11] = Track_Datas[2][j * 3 + 2];
+			tmp[j * 16 + 8] = ptk_table[tdata[2][j * 3]][0];
+			tmp[j * 16 + 9] = ptk_table[tdata[2][j * 3]][1];
+			if ((tdata[2][j * 3 + 1] & 0x0f) == 0x0D)
+				tdata[2][j * 3 + 1] -= 0x03;
+			tmp[j * 16 + 10] = tdata[2][j * 3 + 1];
+			tmp[j * 16 + 11] = tdata[2][j * 3 + 2];
 
 			tmp[j * 16 + 12] =
-				ptk_table[Track_Datas[3][j * 3]][0];
+				ptk_table[tdata[3][j * 3]][0];
 			tmp[j * 16 + 13] =
-				ptk_table[Track_Datas[3][j * 3]][1];
-			if ((Track_Datas[3][j * 3 + 1] & 0x0f) == 0x0D)
-				Track_Datas[3][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 14] = Track_Datas[3][j * 3 + 1];
-			tmp[j * 16 + 15] = Track_Datas[3][j * 3 + 2];
+				ptk_table[tdata[3][j * 3]][1];
+			if ((tdata[3][j * 3 + 1] & 0x0f) == 0x0D)
+				tdata[3][j * 3 + 1] -= 0x03;
+			tmp[j * 16 + 14] = tdata[3][j * 3 + 1];
+			tmp[j * 16 + 15] = tdata[3][j * 3 + 2];
 		}
 
 		fwrite(tmp, 1024, 1, out);

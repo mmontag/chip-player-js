@@ -1,6 +1,6 @@
 /*
  * Zen_Packer.c   Copyright (C) 1998 Asle / ReDoX
- *                Modified by Claudio Matsuoka
+ *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts ZEN packed MODs back to PTK MODs
  ********************************************************
@@ -8,7 +8,7 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: zen.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: zen.c,v 1.2 2007-09-19 13:02:12 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -28,35 +28,31 @@ struct pw_format pw_zen = {
 	NULL
 };
 
-static int depack_zen (uint8 *data, FILE *out)
+static int depack_zen(uint8 *data, FILE *out)
 {
-	uint8 c1, c2, c3, c4, c5, c6;
+	uint8 c1, c2, c3, c4;
 	uint8 finetune, vol;
 	uint8 pat_pos;
 	uint8 pat_max;
-	uint8 *tmp;
 	uint8 note, ins, fxt, fxp;
 	uint8 pat[1024];
 	uint8 ptable[128];
-	long ssize = 0;
-	long paddr[128];
-	long paddr_Real[128];
-	long ptable_addr;
-	long sdata_addr = 999999l;
-	long i, j, k;
-	long start = 0;
-	long where = start;	/* main pointer to prevent fread() */
+	int size, ssize = 0;
+	int paddr[128];
+	int paddr_Real[128];
+	int ptable_addr;
+	int sdata_addr = 999999l;
+	int i, j, k;
+	int start = 0;
+	int where = start;	/* main pointer to prevent fread() */
 
-	bzero (paddr, 128 * 4);
-	bzero (paddr_Real, 128 * 4);
-	bzero (ptable, 128);
+	bzero(paddr, 128 * 4);
+	bzero(paddr_Real, 128 * 4);
+	bzero(ptable, 128);
 
 	/* read pattern table address */
-	c1 = data[where++];
-	c2 = data[where++];
-	c3 = data[where++];
-	c4 = data[where++];
-	ptable_addr = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
+	ptable_addr = readmem32b(data + where);
+	where += 4;
 
 	/* read patmax */
 	pat_max = data[where++];
@@ -66,105 +62,67 @@ static int depack_zen (uint8 *data, FILE *out)
 	/*printf ( "Size of pattern list : %d\n" , pat_pos ); */
 
 	/* write title */
-	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
-	fwrite (tmp, 20, 1, out);
-	free (tmp);
+	for (i = 0; i < 20; i++)
+		write8(out, 0);
 
 	for (i = 0; i < 31; i++) {
 		c1 = 0x00;
 		fwrite (&c1, 1, 22, out);
 
 		/* read finetune */
-		c1 = data[where++];
-		c2 = data[where++];
-		finetune = ((c1 << 8) + c2) / 0x48;
+		finetune = readmem16b(data + where) / 0x48;
+		where += 2;
 
 		/* read volume */
 		where += 1;
 		vol = data[where++];
 
 		/* read sample size */
-		c1 = data[where++];
-		c2 = data[where++];
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write16b(out, size = readmem16b(data + where));
+		where += 2;
+		ssize += size * 2;
 
-		/* write fine */
-		fwrite (&finetune, 1, 1, out);
-
-		/* write volume */
-		fwrite (&vol, 1, 1, out);
+		write8(out, finetune);	/* write fine */
+		write8(out, vol);	/* write volume */
 
 		/* read loop size */
-		c5 = data[where++];
-		c6 = data[where++];
+		size = readmem16b(data + where);
+		where += 2;
 
 		/* read sample start address */
-		c1 = data[where++];
-		c2 = data[where++];
-		c3 = data[where++];
-		c4 = data[where++];
-		k =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
+		k = readmem32b(data + where);
+		where += 4;
 		if (k < sdata_addr)
 			sdata_addr = k;
 
 		/* read loop start address */
-		c1 = data[where++];
-		c2 = data[where++];
-		c3 = data[where++];
-		c4 = data[where++];
-		j =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
+		j = readmem32b(data + where);
+		where += 4;
 		j -= k;
 		j /= 2;
 
-		/* write loop start */
-		/* WARNING !!! WORKS ONLY ON 80X86 computers ! */
-		/* 68k machines code : c3 = *(tmp+2); */
-		/* 68k machines code : c4 = *(tmp+3); */
-		tmp = (uint8 *) & j;
-		c3 = *(tmp + 1);
-		c4 = *tmp;
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c4, 1, 1, out);
-
-		/* write loop size */
-		fwrite (&c5, 1, 1, out);
-		fwrite (&c6, 1, 1, out);
+		write16b(out, j);	/* write loop start */
+		write16b(out, size);	/* write loop size */
 	}
 	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* write size of pattern list */
-	fwrite (&pat_pos, 1, 1, out);
-
-	/* write ntk byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	write8(out, pat_pos);	/* write size of pattern list */
+	write8(out, 0x7f);	/* write ntk byte */
 
 	/* read pattern table .. */
 	where = start + ptable_addr;
 	for (i = 0; i < pat_pos; i++) {
-		c1 = data[where++];
-		c2 = data[where++];
-		c3 = data[where++];
-		c4 = data[where++];
-		paddr[i] =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
+		paddr[i] = readmem32b(data + where);
+		where += 4;
 	}
 
 	/* deduce pattern list */
-	c4 = 0x00;
+	c4 = 0;
 	for (i = 0; i < pat_pos; i++) {
 		if (i == 0) {
-			ptable[0] = 0x00;
+			ptable[0] = 0;
 			paddr_Real[0] = paddr[0];
-			c4 += 0x01;
+			c4++;
 			continue;
 		}
 		for (j = 0; j < i; j++) {
@@ -176,43 +134,29 @@ static int depack_zen (uint8 *data, FILE *out)
 		if (j == i) {
 			paddr_Real[c4] = paddr[i];
 			ptable[i] = c4;
-			c4 = c4 + 0x01;
+			c4++;
 		}
 	}
 	/*printf ( "Number of pattern : %d\n" , pat_max ); */
 
-	/* write pattern table */
-	fwrite (ptable, 128, 1, out);
-
-	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	fwrite(ptable, 128, 1, out);	/* write pattern table */
+	write32b(out, 0x4E2E4B2E);	/* write ptk's ID */
 
 	/* pattern data */
 	/*printf ( "converting pattern datas " ); */
 	for (i = 0; i <= pat_max; i++) {
 		bzero (pat, 1024);
 		where = start + paddr_Real[i];
-/*fprintf ( info , "\n\npat %ld:\n" , i );*/
 		for (j = 0; j < 256; j++) {
 			c1 = data[where++];
 			c2 = data[where++];
 			c3 = data[where++];
 			c4 = data[where++];
-/*fprintf ( info , "%2d: %2x, %2x, %2x" , c1,c2,c3,c4 );*/
 
 			note = (c2 & 0x7f) / 2;
 			fxp = c4;
 			ins = ((c2 << 4) & 0x10) | ((c3 >> 4) & 0x0f);
 			fxt = c3 & 0x0f;
-
-/*fprintf ( info , "<-- note:%-2x  smp:%-2x  fx:%-2x  fxval:%-2x\n"
-               , note,ins,fxt,fxp );*/
 
 			k = c1;
 			pat[k * 4] = ins & 0xf0;
@@ -228,14 +172,13 @@ static int depack_zen (uint8 *data, FILE *out)
 	/*printf ( " ok\n" ); */
 
 	/* sample data */
-	fwrite (&data[start + sdata_addr],
-		ssize, 1, out);
+	fwrite(&data[start + sdata_addr], ssize, 1, out);
 
 	return 0;
 }
 
 
-static int test_zen (uint8 *data, int s)
+static int test_zen(uint8 *data, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;

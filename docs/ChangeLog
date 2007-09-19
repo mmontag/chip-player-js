@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.83 2007-09-18 13:50:04 cmatsuoka Exp $
+$Id: ChangeLog,v 1.84 2007-09-19 13:02:11 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,7 +9,7 @@ Stable versions
 	- fixed semantics of options --big-endian and --little-endian
 	- fixed memory corruption in Quadra Composer module loader
 	- fixed Quadra Composer effects
-	- fixed endianism problem in KSM loader
+	- fixed endianism problem in KSM and Zen Packer loaders
 	- prowizard code cleanup
 
 2.2.1 (20070917)
