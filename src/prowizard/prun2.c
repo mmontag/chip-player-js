@@ -8,7 +8,7 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: prun2.c,v 1.3 2007-09-18 21:27:46 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.4 2007-09-19 16:52:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -37,52 +37,36 @@ static int depack_pru2 (uint8 *data, FILE *out)
 	uint8 ptable[128];
 	uint8 max = 0;
 	uint8 v[4][4];
-	int ssize = 0;
+	int size, ssize = 0;
 	int i, j;
 	int start = 0;
-	int w = start;	/* main pointer to prevent fread() */
+	int w = start;
 
 	bzero (header, 2048);
 	bzero (ptable, 128);
 
-	for (i = 0; i < 20; i++)	/* title */
+	for (i = 0; i < 20; i++)			/* title */
 		write8(out, 0);
 
-	w += 4;
-	c1 = data[w++];
-	c2 = data[w++];
-	c3 = data[w++];
-	c4 = data[w++];
-	i = c3;
-	i *= 256;
-	i += c4;
+	w += 8;
 
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)	/*sample name */
+		for (j = 0; j < 22; j++)		/*sample name */
 			write8(out, 0);
 
-		c1 = data[w++];		/* size */
-		c2 = data[w++];
-		ssize += (((c1 << 8) + c2) * 2);
-		write8(out, c1);
-		write8(out, c2);
-		write8(out, data[w++]);	/* finetune */
-		write8(out, data[w++]);	/* volume */
-		c1 = data[w++];		/* loop start */
-		c2 = data[w++];
-		write8(out, c1);
-		write8(out, c2);
-		c1 = data[w++];		/* loop size */
-		c2 = data[w++];
-		write8(out, c1);
-		write8(out, c2);
+		write16b(out, size = readmem16b(data + w));	/* size */
+		w += 2;
+		ssize += size * 2;
+		write8(out, data[w++]);			/* finetune */
+		write8(out, data[w++]);			/* volume */
+		write16b(out, readmem16b(data + w));	/* loop start */
+		w += 2;
+		write16b(out, readmem16b(data + w));	/* loop size */
+		w += 2;
 	}
 
-	write8(out, npat = data[w++]);
-
-	/* noisetracker byte */
-	c1 = data[w++];
-	fwrite (&c1, 1, 1, out);
+	write8(out, npat = data[w++]);			/* number of patterns */
+	write8(out, data[w++]);				/* noisetracker byte */
 
 	for (i = 0; i < 128; i++) {
 		write8(out, c1 = data[w++]);
@@ -147,7 +131,7 @@ static int depack_pru2 (uint8 *data, FILE *out)
 	}
 
 	/* sample data */
-	fwrite (&data[w], ssize, 1, out);
+	fwrite(&data[w], ssize, 1, out);
 
 	return 0;
 }
@@ -158,7 +142,7 @@ static int test_pru2 (uint8 *data, int s)
 	int k;
 	int start = 0;
 
-	PW_REQUEST_DATA (s, 12 + 31 * 8);
+	PW_REQUEST_DATA(s, 12 + 31 * 8);
 
 	if (data[0]!='S' || data[1]!='N' || data[2]!='T' || data[3]!='!')
 		return -1;

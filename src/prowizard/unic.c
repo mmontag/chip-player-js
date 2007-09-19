@@ -1,7 +1,6 @@
 /*
  * Unic_Tracker.c   Copyright (C) 1997 Asle / ReDoX
- *                  Modified by Claudio Matsuoka
- *
+ *		    Copyright (C) 2006-2007 Claudio Matsuoka
  * 
  * Unic tracked MODs to Protracker
  * both with or without ID Unic files will be converted
@@ -12,7 +11,7 @@
  */
 
 /*
- * $Id: unic.c,v 1.4 2007-09-14 18:40:58 cmatsuoka Exp $
+ * $Id: unic.c,v 1.5 2007-09-19 16:52:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -27,7 +26,7 @@ static int depack_unic (uint8 *, FILE *);
 
 struct pw_format pw_unic_id = {
 	"UNIC",
-	"Unic Tracker/M.K.",
+	"Unic Tracker M.K.",
 	0x00,
 	test_unic_id,
 	depack_unic,
@@ -36,7 +35,7 @@ struct pw_format pw_unic_id = {
 
 struct pw_format pw_unic_noid = {
 	"UNIC_noid",
-	"UNIC Tracker/no ID",
+	"UNIC Tracker",
 	0x00,
 	test_unic_noid,
 	depack_unic,
@@ -45,7 +44,7 @@ struct pw_format pw_unic_noid = {
 
 struct pw_format pw_unic_emptyid = {
 	"unic_eid",
-	"UNIC Tracker/ID0",
+	"UNIC Tracker ID0",
 	0x00,
 	test_unic_emptyid,
 	depack_unic,
@@ -59,27 +58,27 @@ struct pw_format pw_unic_emptyid = {
 static int depack_unic (uint8 *data, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
-	uint8 npat = 0x00;
-	uint8 Max = 0x00;
+	uint8 npat;
+	uint8 max = 0;
 	uint8 ins, note, fxt, fxp;
-	uint8 fine = 0x00;
+	uint8 fine;
 	uint8 pat[1025];
-	uint8 LOOP_START_STATUS = OFF;	/* standard /2 */
+	uint8 loop_status = OFF;	/* standard /2 */
 	int i = 0, j = 0, k = 0, l = 0;
 	int ssize = 0;
 	int w = 0;		/* main pointer to prevent fread() */
 	int start = 0;
 
 	/* title */
-	fwrite (&data[w], 20, 1, out);
+	fwrite(&data[w], 20, 1, out);
 	w += 20;
 
 	for (i = 0; i < 31; i++) {
 		/* sample name */
-		fwrite (&data[w], 20, 1, out);
+		fwrite(&data[w], 20, 1, out);
 		c1 = 0x00;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
+		write8(out, c1);
+		write8(out, c1);
 		w += 20;
 
 		/* fine on ? */
@@ -92,22 +91,16 @@ static int depack_unic (uint8 *data, FILE *out)
 			else
 				fine = 0x100 - c2;
 		} else
-			fine = 0x00;
+			fine = 0;
 
 		/* smp size */
-		c1 = data[w++];
-		c2 = data[w++];
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		l = ((c1 << 8) + c2) * 2;
-		ssize += l;
+		write16b(out, l = readmem16b(data + w));
+		w += 2;
+		ssize += l * 2;
 
-		/* fine */
 		w += 1;
-		fwrite (&fine, 1, 1, out);
-
-		/* vol */
-		fwrite (&data[w++], 1, 1, out);
+		write8(out, fine);		/* fine */
+		write8(out, data[w++]);		/* vol */
 
 		/* loop start */
 		c1 = data[w++];
@@ -120,7 +113,7 @@ static int depack_unic (uint8 *data, FILE *out)
 		j = ((c1 << 8) + c2) * 2;
 		k = ((c3 << 8) + c4) * 2;
 		if ((((j * 2) + k) <= l) && (j != 0)) {
-			LOOP_START_STATUS = ON;
+			loop_status = ON;
 			c1 *= 2;
 			j = c2 * 2;
 			if (j > 256)
@@ -128,46 +121,35 @@ static int depack_unic (uint8 *data, FILE *out)
 			c2 *= 2;
 		}
 
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write8(out, c1);
+		write8(out, c2);
 
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c4, 1, 1, out);
+		write8(out, c3);
+		write8(out, c4);
 	}
 
 
 /*  printf ( "whole sample size : %ld\n" , ssize );*/
 /*
-  if ( LOOP_START_STATUS == ON )
+  if ( loop_status == ON )
     printf ( "!! Loop start value was /4 !\n" );
 */
-	/* number of pattern */
-	npat = data[w++];
-	fwrite (&npat, 1, 1, out);
-
-	/* noisetracker byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	write8(out, npat = data[w++]);		/* number of pattern */
+	write8(out, 0x7f);			/* noisetracker byte */
 	w += 1;
 
 	/* pat table */
-	fwrite (&data[w], 128, 1, out);
+	fwrite(&data[w], 128, 1, out);
 	w += 128;
 
 	/* get highest pattern number */
 	for (i = 0; i < 128; i++) {
-		if (data[start + 952 + i] > Max)
-			Max = data[start + 952 + i];
+		if (data[start + 952 + i] > max)
+			max = data[start + 952 + i];
 	}
-	Max += 1;		/* coz first is $00 */
+	max += 1;		/* coz first is $00 */
 
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* verify UNIC ID */
 	w = start + 1080;
@@ -182,7 +164,7 @@ static int depack_unic (uint8 *data, FILE *out)
 
 
 	/* pattern data */
-	for (i = 0; i < Max; i++) {
+	for (i = 0; i < max; i++) {
 		for (j = 0; j < 256; j++) {
 			ins = ((data[w + j * 3] >> 2) & 0x10) |
 				((data[w + j * 3 + 1] >> 4) & 0x0f);
@@ -205,12 +187,12 @@ static int depack_unic (uint8 *data, FILE *out)
 			pat[j * 4 + 2] = ((ins << 4) & 0xf0) | fxt;
 			pat[j * 4 + 3] = fxp;
 		}
-		fwrite (pat, 1024, 1, out);
+		fwrite(pat, 1024, 1, out);
 		w += 768;
 	}
 
 	/* sample data */
-	fwrite (&data[w], ssize, 1, out);
+	fwrite(&data[w], ssize, 1, out);
 
 	return 0;
 }
