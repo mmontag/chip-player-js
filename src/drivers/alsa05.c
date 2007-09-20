@@ -1,5 +1,6 @@
 /* ALSA 0.5 driver for xmp
  * Copyright (C) 2000 Tijs van Bakel and Rob Adamson
+ * Copyright (C) 2007 Claudio Matsuoka
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -8,9 +9,21 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.4 2007-09-20 21:29:13 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.5 2007-09-20 22:04:00 cmatsuoka Exp $
  */
 
+/* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
+ * only default values are supported and music sounds chunky
+ */
+
+/* Better ALSA 0.5 support, Rob Adamson, 16 Mar 2000.
+ * Again, hard-wired fragment size & number and sample rate,
+ * but it plays smoothly now.
+ */
+
+/* Now uses specified options - Rob Adamson, 20 Mar 2000 */
+
+  
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -33,7 +46,6 @@ static int init (struct xmp_control *);
 static int prepare_driver (void);
 static void dshutdown (void);
 static int to_fmt (struct xmp_control *);
-/*static void from_fmt (struct xmp_control *, int outfmt);*/
 static void bufdump (int);
 static void bufwipe (void);
 static void flush (void);
@@ -86,23 +98,12 @@ static char *card_name;
 
 static int init(struct xmp_control *ctl)
 {
-  /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
-     only default values are supported and music sounds chunky */
-
-  /* Better ALSA 0.5 support, Rob Adamson, 16 Mar 2000.
-     Again, hard-wired fragment size & number and sample rate,
-     but it plays smoothly now. */
-
-  /* Now uses specified options - Rob Adamson, 20 Mar 2000 */
-  
-  //  snd_pcm_format_t format;
   snd_pcm_channel_params_t params;
   snd_pcm_channel_setup_t setup;
   
   int card = 0;
   int dev = 0;
   int retcode;
-
   char *token, **parm; /* used by parm_init...chkparm...parm_end */
 
   parm_init ();  /* NB: this is a macro */
@@ -262,7 +263,6 @@ static void from_fmt (struct xmp_control *ctl, int outfmt)
 
 static void bufwipe (void)
 {
-  //  fprintf(stderr, "alsa_mix.bufwipe called\n");
   mybuffer_nextfree = mybuffer;
 }
 
@@ -272,10 +272,7 @@ static void bufwipe (void)
  */
 static void bufdump (int i)
 {
-  //    int j;
     void *b;
-
-    //    printf("bufdump(%d) ", i);
 
     b = xmp_smix_buffer ();
     /* Note this assumes a fragment size of (frag_size) */
@@ -305,14 +302,14 @@ static void bufdump (int i)
 }
 
 
-static void dsync(double t) {  /* t is number of centiseconds? */
+static void dsync(double t)	/* t is number of centiseconds? */
+{
   //printf("sync(%f) ", t);
   //  usleep(5000);
 }
 
 static void dshutdown ()
 {
-  //  fprintf(stderr, "alsa_mix.dshutdown called\n");
   xmp_smix_off ();
   snd_pcm_close (pcm_handle);
 }
@@ -320,7 +317,6 @@ static void dshutdown ()
 
 static void flush ()
 {
-/*  fprintf (stderr, "alsa_mix.flush called\n"); */
   snd_pcm_plugin_flush (pcm_handle, SND_PCM_CHANNEL_PLAYBACK);
   prepare_driver ();
 }
