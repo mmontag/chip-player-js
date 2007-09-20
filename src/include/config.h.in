@@ -44,6 +44,9 @@
 #undef DRIVER_ALSA_SEQ
 #undef DRIVER_ALSA_MIX
 
+/* Define to enable ALSA 0.5 support */
+#undef DRIVER_ALSA05
+
 /* Define if you don't have vprintf but do have _doprnt.  */
 #undef HAVE_DOPRNT
 

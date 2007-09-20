@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.27 2007-09-18 00:50:23 cmatsuoka Exp $
+ * $Id: driver.c,v 1.28 2007-09-20 21:29:13 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -88,6 +88,9 @@ extern struct xmp_drv_info drv_oss_mix;
 #ifdef DRIVER_ALSA_MIX
 extern struct xmp_drv_info drv_alsa_mix;
 #endif
+#ifdef DRIVER_ALSA05
+extern struct xmp_drv_info drv_alsa05;
+#endif
 #ifdef DRIVER_NET
 extern struct xmp_drv_info drv_net;
 #endif
@@ -154,6 +157,9 @@ void xmp_init_drivers ()
 #endif
 #ifdef DRIVER_ALSA_MIX
     xmp_drv_register (&drv_alsa_mix);
+#endif
+#ifdef DRIVER_ALSA05
+    xmp_drv_register (&drv_alsa05);
 #endif
 #ifdef DRIVER_NET
     xmp_drv_register (&drv_net);

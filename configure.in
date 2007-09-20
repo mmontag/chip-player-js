@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.25 2007-09-18 00:50:22 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.26 2007-09-20 21:29:13 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -467,6 +467,17 @@ qnx*)
     if test "${ac_cv_header_sys_audio_h}" = "yes"; then
 	DRIVERS="${DRIVERS} qnx.o"
 	AC_DEFINE(DRIVER_QNX)
+    fi
+    ;;
+dnl
+dnl	Test for QNX 6
+dnl
+nto-qnx*)
+    AC_CHECK_HEADERS(sys/asoundlib.h)
+    if test "${ac_cv_header_sys_asoundlib_h}" = "yes"; then
+	DRIVERS="${DRIVERS} alsa05.o"
+	AC_DEFINE(DRIVER_ALSA05)
+	LIBS="${LIBS} -lasound"
     fi
     ;;
 dnl

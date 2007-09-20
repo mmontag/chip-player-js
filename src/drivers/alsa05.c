@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.3 2005-02-24 12:52:12 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.4 2007-09-20 21:29:13 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,7 +47,7 @@ static char *help[] = {
     NULL
 };
 
-struct xmp_drv_info drv_alsa_mix = {
+struct xmp_drv_info drv_alsa05 = {
     "alsa05",		/* driver ID */
     "ALSA 0.5 PCM audio",/* driver description */
     help,		/* help */

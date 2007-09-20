@@ -17,7 +17,7 @@
 #ifndef _WIN32
 #  include <sys/ipc.h>
 
-#  ifndef __EMX__
+#  if !defined __EMX__ && !defined __QNXNTO__
 #    include <sys/shm.h>
 #  endif
 #endif
@@ -50,7 +50,7 @@ void shmdt(char *memptr){
 #endif
 
 
-#ifndef _WIN32
+#if !defined _WIN32 && !defined __QNXNTO__
 
 /* shared memory */
 static int shmid;
