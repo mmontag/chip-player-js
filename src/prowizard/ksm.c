@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
  *
- * $Id: ksm.c,v 1.4 2007-09-19 13:02:12 cmatsuoka Exp $
+ * $Id: ksm.c,v 1.5 2007-09-20 01:59:02 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -65,43 +65,16 @@ static int depack_ksm (FILE *in, FILE *out)
 		/* bypass 16 unknown bytes and 4 address bytes */
 		fseek(in, 20, 1);
 		/* size */
-		fread(&c1, 1, 1, in);
-		fread(&c2, 1, 1, in);
-		k = (c1 << 8) + c2;
+		write16b(out, (k = read16b(in)) / 2);
 		ssize += k;
-		c2 /= 2;
-		if ((c1 / 2) * 2 != c1) {
-			if (c2 < 0x80)
-				c2 += 0x80;
-			else {
-				c2 -= 0x80;
-				c1 += 0x01;
-			}
-		}
-		c1 /= 2;
-		fwrite(&c1, 1, 1, out);
-		fwrite(&c2, 1, 1, out);
 
 		write8(out, 0);			/* finetune */
 		write8(out, read8(in));		/* volume */
 		read8(in);			/* bypass 1 unknown byte */
 
 		/* loop start */
-		fread(&c1, 1, 1, in);
-		fread(&c2, 1, 1, in);
-		j = k - ((c1 << 8) + c2);
-		c2 /= 2;
-		if ((c1 / 2) * 2 != c1) {
-			if (c2 < 0x80)
-				c2 += 0x80;
-			else {
-				c2 -= 0x80;
-				c1 += 0x01;
-			}
-		}
-		c1 /= 2;
-		fwrite(&c1, 1, 1, out);
-		fwrite(&c2, 1, 1, out);
+		write16b(out, (j = read16b(in)) / 2);
+		j = k - j;
 
 		/* write loop size */
 		write16b(out, j != k ? j / 2 : 0x0001);

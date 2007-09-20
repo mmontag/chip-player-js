@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.10 2007-09-09 14:28:10 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.11 2007-09-20 01:59:01 cmatsuoka Exp $
  */
 
 /*
@@ -180,7 +180,6 @@ int med4_load(FILE * f)
 	}
 
 	xxh->pat = read16b(f);
-
 	xxh->len = read16b(f);
 	fread(xxo, 1, xxh->len, f);
 	xxh->bpm = 125 * read16b(f) / 33;

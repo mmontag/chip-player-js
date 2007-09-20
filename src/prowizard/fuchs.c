@@ -1,10 +1,10 @@
 /*
  * FuchsTracker.c   Copyright (C) 1999 Sylvain "Asle" Chipaux
- *                  Modified by Claudio Matsuoka
+ *                  Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks Fuchs Tracker modules
  *
- * $Id: fuchs.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: fuchs.c,v 1.2 2007-09-20 01:59:02 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -25,176 +25,105 @@ struct pw_format pw_fchs = {
 };
 
 
-static int depack_fuchs (FILE * in, FILE * out)
+static int depack_fuchs(FILE *in, FILE *out)
 {
 	uint8 *tmp;
-	uint8 c1, c2, c3, c4;
-	uint8 PatMax = 0x00;
-	long ssize = 0;
-	long SampleSizes[16];
-	long LoopStart[16];
-	long i = 0, j = 0;
+	uint8 c1;
+	uint8 pmax = 0;
+	int ssize = 0;
+	int SampleSizes[16];
+	int LoopStart[16];
+	int i, j;
 
-	bzero (SampleSizes, 16 * 4);
-	bzero (LoopStart, 16 * 4);
+	bzero(SampleSizes, 16 * 4);
+	bzero(LoopStart, 16 * 4);
 
 	/* write ptk header */
 	tmp = (uint8 *) malloc (1080);
-	bzero (tmp, 1080);
-	fwrite (tmp, 1080, 1, out);
-	free (tmp);
+	bzero(tmp, 1080);
+	fwrite(tmp, 1080, 1, out);
+	free(tmp);
 
 	/* read/write title */
-	fseek (out, 0, 0);
-	for (i = 0; i < 10; i++) {
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-	}
+	fseek(out, 0, SEEK_SET);
+	for (i = 0; i < 10; i++)
+		write8(out, read8(in));
 
 	/* read all sample data size */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	ssize = ((c1 << 24) +
-		(c2 << 16) + (c3 << 8) + c4);
-/*  printf ( "Whole Sample Size : %ld\n" , ssize );*/
+	ssize = read32b(in);
 
 	/* read/write sample sizes */
-	/* have to halve these :( */
 	for (i = 0; i < 16; i++) {
-		fseek (out, 42 + i * 30, 0);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		SampleSizes[i] = (c3 << 8) + c4;
-		c4 /= 2;
-		if ((c3 / 2) * 2 != c3) {
-			if (c4 < 0x80)
-				c4 += 0x80;
-			else {
-				c4 -= 0x80;
-				c3 += 0x01;
-			}
-		}
-		c3 /= 2;
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c4, 1, 1, out);
+		fseek(out, 42 + i * 30, SEEK_SET);
+		write16b(out, (SampleSizes[i] = read16b(in)) / 2);
 	}
 
 	/* read/write volumes */
 	for (i = 0; i < 16; i++) {
-		fseek (out, 45 + i * 30, 0);
-		fseek (in, 1, 1);
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
+		fseek(out, 45 + i * 30, SEEK_SET);
+		fseek(in, 1, SEEK_CUR);
+		write8(out, read8(in));
 	}
 
 	/* read/write loop start */
-	/* have to halve these :( */
 	for (i = 0; i < 16; i++) {
-		fseek (out, 46 + i * 30, 0);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		LoopStart[i] = (c3 << 8) + c4;
-		c4 /= 2;
-		if ((c3 / 2) * 2 != c3) {
-			if (c4 < 0x80)
-				c4 += 0x80;
-			else {
-				c4 -= 0x80;
-				c3 += 0x01;
-			}
-		}
-		c3 /= 2;
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c4, 1, 1, out);
+		fseek(out, 46 + i * 30, SEEK_SET);
+		write8(out, (LoopStart[i] = read16b(in)) / 2);
 	}
 
 	/* write replen */
-	/* have to halve these :( */
-	c3 = 0x01;
-	c4 = 0x00;
 	for (i = 0; i < 16; i++) {
-		fseek (out, 48 + i * 30, 0);
+		fseek(out, 48 + i * 30, SEEK_SET);
 		j = SampleSizes[i] - LoopStart[i];
-		if ((j == 0) || (LoopStart[i] == 0)) {
-			fwrite (&c4, 1, 1, out);
-			fwrite (&c3, 1, 1, out);
-			continue;
-		}
-
-		j /= 2;
-    /*****************************************************/
-		/* BEWARE: it's PC only code here !!!                */
-		/* 68k machines code : c1 = *(tmp+2);           */
-		/* 68k machines code : c2 = *(tmp+3);           */
-    /*****************************************************/
-		tmp = (uint8 *) & j;
-		c1 = *(tmp + 1);
-		c2 = *tmp;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		if ((j == 0) || (LoopStart[i] == 0))
+			write16b(out, 0x0001);
+		else
+			write16b(out, j / 2);
 	}
 
 
 	/* fill replens up to 31st sample wiz $0001 */
 	for (i = 16; i < 31; i++) {
-		fseek (out, 48 + i * 30, 0);
-		/* rmq: c4 = 0x00 */
-		/* rmq: c3 = 0x01 */
-		fwrite (&c4, 1, 1, out);
-		fwrite (&c3, 1, 1, out);
+		fseek(out, 48 + i * 30, SEEK_SET);
+		write16b(out, 0x0001);
 	}
 
 	/* that's it for the samples ! */
 	/* now, the pattern list */
 
 	/* read number of pattern to play */
-	fseek (out, 950, 0);
+	fseek(out, 950, SEEK_SET);
 	/* bypass empty byte (saved wiz a WORD ..) */
-	fseek (in, 1, 1);
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
+	fseek(in, 1, SEEK_CUR);
+	write8(out, read8(in));
 
 	/* write ntk byte */
-	c2 = 0x7f;
-	fwrite (&c2, 1, 1, out);
+	write8(out, 0x7f);
 
 	/* read/write pattern list */
-	PatMax = 0;
+	pmax = 0;
 	for (i = 0; i < 40; i++) {
-		fseek (in, 1, 1);
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		if (c1 > PatMax)
-			PatMax = c1;
+		fseek(in, 1, SEEK_CUR);
+		write8(out, c1 = read8(in));
+		if (c1 > pmax)
+			pmax = c1;
 	}
 
 	/* write ptk's ID */
-	fseek (out, 0, 2);
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	fseek(out, 0, SEEK_END);
+	write32b(out, 0x4E2E4B2E);
 
 	/* now, the pattern data */
 
 	/* bypass the "SONG" ID */
-	fseek (in, 4, 1);
+	fseek(in, 4, 1);
 
 	/* read pattern data size */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	j = ((c1 << 24) + (c2 << 16) + (c3 << 8) + c4);
+	j = read32b(in);
 
 	/* read pattern data */
-	tmp = (uint8 *) malloc (j);
-	fread (tmp, j, 1, in);
+	tmp = (uint8 *)malloc(j);
+	fread(tmp, j, 1, in);
 
 	/* convert shits */
 	for (i = 0; i < j; i += 4) {
@@ -234,16 +163,16 @@ static int depack_fuchs (FILE * in, FILE * out)
 	}
 
 	/* write pattern data */
-	fwrite (tmp, j, 1, out);
-	free (tmp);
+	fwrite(tmp, j, 1, out);
+	free(tmp);
 
 	/* read/write sample data */
-	fseek (in, 4, 1);	/* bypass "INST" Id */
+	fseek (in, 4, SEEK_CUR);	/* bypass "INST" Id */
 	for (i = 0; i < 16; i++) {
 		if (SampleSizes[i] != 0) {
-			tmp = (uint8 *) malloc (SampleSizes[i]);
-			fread (tmp, SampleSizes[i], 1, in);
-			fwrite (tmp, SampleSizes[i], 1, out);
+			tmp = (uint8 *)malloc(SampleSizes[i]);
+			fread(tmp, SampleSizes[i], 1, in);
+			fwrite(tmp, SampleSizes[i], 1, out);
 			free (tmp);
 		}
 	}
