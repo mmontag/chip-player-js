@@ -1,6 +1,6 @@
 /*
  * Unic_Tracker_2.c   Copyright (C) 1997 Asle / ReDoX
- *                    Modified by Claudio Matsuoka
+ *                    Copyright 2006-2007 Claudio Matsuoka
  *
  * 
  * Unic tracked 2 MODs to Protracker
@@ -11,7 +11,7 @@
  */
 
 /*
- * $Id: unic2.c,v 1.2 2007-09-14 18:40:58 cmatsuoka Exp $
+ * $Id: unic2.c,v 1.3 2007-09-20 02:57:50 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -38,7 +38,7 @@ static int depack_unic2 (uint8 *data, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npat = 0x00;
-	uint8 Max = 0x00;
+	uint8 maxpat = 0x00;
 	uint8 ins, note, fxt, fxp;
 	uint8 fine = 0x00;
 	uint8 pat[1025];
@@ -48,17 +48,15 @@ static int depack_unic2 (uint8 *data, FILE *out)
 	int start = 0, w = 0;
 
 	/* title */
-	c1 = 0x00;
 	for (i = 0; i < 20; i++)
-		fwrite (&c1, 1, 1, out);
+		write8(out, 0);
 
 	for (i = 0; i < 31; i++) {
 		/* sample name */
-		fwrite (&data[w], 20, 1, out);
-		c1 = 0x00;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
+		fwrite(data + w, 20, 1, out);
 		w += 20;
+		write8(out, 0);
+		write8(out, 0);
 
 		/* fine on ? */
 		c1 = data[w++];
@@ -73,83 +71,55 @@ static int depack_unic2 (uint8 *data, FILE *out)
 			fine = 0x00;
 
 		/* smp size */
-		c1 = data[w++];
-		c2 = data[w++];
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		l = ((c1 << 8) + c2) * 2;
-		ssize += l;
+		write16b(out, l = readmem16b(data + w));
+		w += 2;
+		ssize += l * 2;
 
-		/* fine */
 		w += 1;
-		fwrite (&fine, 1, 1, out);
+		write8(out, fine);		/* fine */
+		write8(out, data[w++]);		/* vol */
 
-		/* vol */
-		fwrite (&data[w++], 1, 1, out);
+		j = readmem16b(data + w);	/* loop start */
+		w += 2;
+		k = readmem16b(data + w);	/* loop size */
+		w += 2;
 
-		/* loop start */
-		c1 = data[w++];
-		c2 = data[w++];
-
-		/* loop size */
-		c3 = data[w++];
-		c4 = data[w++];
-
-		j = ((c1 << 8) + c2) * 2;
-		k = ((c3 << 8) + c4) * 2;
 		if ((((j * 2) + k) <= l) && (j != 0)) {
 			LOOP_START_STATUS = ON;
-			c1 *= 2;
-			j = c2 * 2;
-			if (j > 256)
-				c1 += 1;
-			c2 *= 2;
+			j *= 2;
 		}
 
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c4, 1, 1, out);
+		write16b(out, j);
+		write16b(out, k);
 	}
 
-	/* number of pattern */
-	npat = data[w++];
-	fwrite (&npat, 1, 1, out);
+	write8(out, npat = data[w++]);		/* number of pattern */
+	write8(out, 0x7f);			/* noisetracker byte */
+	w++;
 
-	/* noisetracker byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
-	w += 1;
-
-	/* pat table */
-	fwrite (&data[w], 128, 1, out);
+	fwrite(&data[w], 128, 1, out);		/* pat table */
 	w += 128;
 
 	/* get highest pattern number */
-	for (i = 0; i < 128; i++) {
-		if (data[start + 932 + i] > Max)
-			Max = data[start + 932 + i];
+	for (maxpat = i = 0; i < 128; i++) {
+		if (data[start + 932 + i] > maxpat)
+			maxpat = data[start + 932 + i];
 	}
-	Max += 1;		/* coz first is $00 */
-	/*printf ( "Number of pat : %d\n" , Max ); */
+	maxpat += 1;		/* coz first is $00 */
+	/*printf ( "Number of pat : %d\n" , maxpat ); */
 
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* pattern data */
-	for (i = 0; i < Max; i++) {
+	for (i = 0; i < maxpat; i++) {
 		for (j = 0; j < 256; j++) {
-			ins = ((data[w + j * 3] >> 2) & 0x10) |
-				((data[w + j * 3 + 1] >> 4) & 0x0f);
-			note = data[w + j * 3] & 0x3f;
-			fxt = data[w + j * 3 + 1] & 0x0f;
-			fxp = data[w + j * 3 + 2];
+			int x = w + j * 3;
+
+			ins = ((data[x] >> 2) & 0x10) |
+					((data[x + 1] >> 4) & 0x0f);
+			note = data[x] & 0x3f;
+			fxt = data[x + 1] & 0x0f;
+			fxp = data[x + 2];
 			if (fxt == 0x0d) {	/* pattern break */
 				c4 = fxp % 10;
 				c3 = fxp / 10;
@@ -164,12 +134,12 @@ static int depack_unic2 (uint8 *data, FILE *out)
 			pat[j * 4 + 2] = ((ins << 4) & 0xf0) | fxt;
 			pat[j * 4 + 3] = fxp;
 		}
-		fwrite (pat, 1024, 1, out);
+		fwrite(pat, 1024, 1, out);
 		w += 768;
 	}
 
 	/* sample data */
-	fwrite (&data[w], ssize, 1, out);
+	fwrite(&data[w], ssize, 1, out);
 
 	return 0;
 }
