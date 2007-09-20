@@ -1,10 +1,10 @@
 /*
- * TDD.c   Copyright (C) 1999 Asle / ReDoX
- *         Modified by Claudio Matsuoka
+ * tdd.c   Copyright (C) 1999 Asle / ReDoX
+ *         Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts TDD packed MODs back to PTK MODs
  *
- * $Id: tdd.c,v 1.2 2007-09-16 05:10:22 cmatsuoka Exp $
+ * $Id: tdd.c,v 1.3 2007-09-20 02:38:29 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -27,148 +27,98 @@ struct pw_format pw_tdd = {
 
 static int depack_tdd (FILE *in, FILE *out)
 {
-	uint8 c1, c2, c3, c4;
 	uint8 *tmp;
 	uint8 pat[1024];
-	uint8 pmax = 0x00;
-	int i = 0, j = 0, k = 0;
-	int ssize = 0;
+	uint8 pmax;
+	int i, j, k;
+	int size, ssize = 0;
 	int saddr[31];
 	int ssizes[31];
 
-	bzero (saddr, 31 * 4);
-	bzero (ssizes, 31 * 4);
+	bzero(saddr, 31 * 4);
+	bzero(ssizes, 31 * 4);
 
 	/* write ptk header */
 	tmp = (uint8 *) malloc (1080);
-	bzero (tmp, 1080);
-	fwrite (tmp, 1080, 1, out);
-	free (tmp);
+	bzero(tmp, 1080);
+	fwrite(tmp, 1080, 1, out);
+	free(tmp);
 
 	/* read/write pattern list + size and ntk byte */
 	tmp = (uint8 *) malloc (130);
-	bzero (tmp, 130);
-	fseek (out, 950, 0);
-	fread (tmp, 130, 1, in);
-	fwrite (tmp, 130, 1, out);
-	pmax = 0x00;
-	for (i = 0; i < 128; i++)
+	bzero(tmp, 130);
+	fseek(out, 950, 0);
+	fread(tmp, 130, 1, in);
+	fwrite(tmp, 130, 1, out);
+
+	for (pmax = i = 0; i < 128; i++)
 		if (tmp[i + 2] > pmax)
 			pmax = tmp[i + 2];
-	free (tmp);
+	free(tmp);
 
 	/* sample descriptions */
 	for (i = 0; i < 31; i++) {
-		fseek (out, 42 + (i * 30), 0);
+		fseek(out, 42 + (i * 30), SEEK_SET);
 		/* sample address */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		saddr[i] = ((c1 << 24) +
-			(c2 << 16) + (c3 << 8) + c4);
+		saddr[i] = read32b(in);
 
 		/* read/write size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		ssizes[i] = (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write16b(out, size = read16b(in));
+		ssize += size;
+		ssizes[i] = size;
 
-		/* read/write finetune */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-
-		/* read/write volume */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-
-		/* read loop start address */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		j = ((c1 << 24) +
-			(c2 << 16) + (c3 << 8) + c4);
-		j -= saddr[i];
-		j /= 2;
-    /*****************************************************/
-		/* BEWARE: it's PC only code here !!!                */
-		/* 68k machines code : c1 = *(tmp+2);           */
-		/* 68k machines code : c2 = *(tmp+3);           */
-    /*****************************************************/
-		tmp = (uint8 *) & j;
-		c1 = *(tmp + 1);
-		c2 = *tmp;
-
-		/* write loop start */
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
-		/* read/write replen */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write8(out, read8(in));		/* read/write finetune */
+		write8(out, read8(in));		/* read/write volume */
+		/* read/write loop start */
+		write16b(out, (read32b(in) - saddr[i]) / 2);
+		write16b(out, read16b(in));	/* read/write replen */
 	}
 
 	/* bypass Samples datas */
-	fseek (in, ssize, 1);	/* SEEK_CUR */
+	fseek(in, ssize, SEEK_CUR);
 
 	/* write ptk's ID string */
 	fseek (out, 0, 2);
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* read/write pattern data */
-	tmp = (uint8 *) malloc (1024);
+	tmp = (uint8 *)malloc(1024);
 	for (i = 0; i <= pmax; i++) {
-		bzero (tmp, 1024);
-		bzero (pat, 1024);
-		fread (tmp, 1024, 1, in);
+		bzero(tmp, 1024);
+		bzero(pat, 1024);
+		fread(tmp, 1024, 1, in);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
+				int x = j * 16 + k * 4;
+
 				/* fx arg */
-				pat[j * 16 + k * 4 + 3] =
-					tmp[j * 16 + k * 4 + 3];
+				pat[x + 3] = tmp[x + 3];
 
 				/* fx */
-				pat[j * 16 + k * 4 + 2] =
-					tmp[j * 16 + k * 4 + 2] & 0x0f;
+				pat[x + 2] = tmp[x + 2] & 0x0f;
 
 				/* smp */
-				pat[j * 16 + k * 4] =
-					tmp[j * 16 + k * 4] & 0xf0;
-				pat[j * 16 + k * 4 + 2] |=
-					(tmp[j * 16 + k * 4] << 4) & 0xf0;
+				pat[x] = tmp[x] & 0xf0;
+				pat[x + 2] |= (tmp[x] << 4) & 0xf0;
 
 				/* note */
-				pat[j * 16 + k * 4] |= ptk_table[tmp[j *
-					16 + k * 4 + 1] / 2][0];
-				pat[j * 16 + k * 4 + 1] = ptk_table[tmp[j *
-					16 + k * 4 + 1] / 2][1];
+				pat[x] |= ptk_table[tmp[x + 1] / 2][0];
+				pat[x + 1] = ptk_table[tmp[x + 1] / 2][1];
 			}
 		}
-		fwrite (pat, 1024, 1, out);
+		fwrite(pat, 1024, 1, out);
 	}
-	free (tmp);
+	free(tmp);
 
 	/* Sample data */
 	for (i = 0; i < 31; i++) {
-		if (ssizes[i] == 0l) {
+		if (ssizes[i] == 0)
 			continue;
-		}
-		fseek (in, saddr[i], 0);
+		fseek(in, saddr[i], SEEK_SET);
 		tmp = (uint8 *) malloc (ssizes[i]);
-		fread (tmp, ssizes[i], 1, in);
-		fwrite (tmp, ssizes[i], 1, out);
-		free (tmp);
+		fread(tmp, ssizes[i], 1, in);
+		fwrite(tmp, ssizes[i], 1, out);
+		free(tmp);
 	}
 
 	return 0;

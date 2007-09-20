@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
  *
- * $Id: ksm.c,v 1.5 2007-09-20 01:59:02 cmatsuoka Exp $
+ * $Id: ksm.c,v 1.6 2007-09-20 02:38:29 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -31,7 +31,7 @@ struct pw_format pw_ksm = {
 static int depack_ksm (FILE *in, FILE *out)
 {
 	uint8 *tmp;
-	uint8 c1, c2, c5;
+	uint8 c1, c5;
 	uint8 plist[128];
 	uint8 trknum[128][4];
 	uint8 real_tnum[128][4];

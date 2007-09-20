@@ -11,7 +11,7 @@
  */
 
 /*
- * $Id: unic.c,v 1.5 2007-09-19 16:52:18 cmatsuoka Exp $
+ * $Id: unic.c,v 1.6 2007-09-20 02:38:29 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -76,9 +76,8 @@ static int depack_unic (uint8 *data, FILE *out)
 	for (i = 0; i < 31; i++) {
 		/* sample name */
 		fwrite(&data[w], 20, 1, out);
-		c1 = 0x00;
-		write8(out, c1);
-		write8(out, c1);
+		write8(out, 0);
+		write8(out, 0);
 		w += 20;
 
 		/* fine on ? */
@@ -101,31 +100,18 @@ static int depack_unic (uint8 *data, FILE *out)
 		w += 1;
 		write8(out, fine);		/* fine */
 		write8(out, data[w++]);		/* vol */
+		j = readmem16b(data + w);	/* loop start */
+		w += 2;
+		k = readmem16b(data + w);	/* loop size */
+		w += 2;
 
-		/* loop start */
-		c1 = data[w++];
-		c2 = data[w++];
-
-		/* loop size */
-		c3 = data[w++];
-		c4 = data[w++];
-
-		j = ((c1 << 8) + c2) * 2;
-		k = ((c3 << 8) + c4) * 2;
 		if ((((j * 2) + k) <= l) && (j != 0)) {
 			loop_status = ON;
-			c1 *= 2;
-			j = c2 * 2;
-			if (j > 256)
-				c1 += 1;
-			c2 *= 2;
+			j *= 2;
 		}
 
-		write8(out, c1);
-		write8(out, c2);
-
-		write8(out, c3);
-		write8(out, c4);
+		write16b(out, j);
+		write16b(out, k);
 	}
 
 
@@ -213,13 +199,12 @@ static int test_unic_id (uint8 *data, int s)
 	/* test 2 */
 	ssize = 0;
 	for (k = 0; k < 31; k++) {
-		j = (((data[start + 42 + k * 30] << 8) +
-			data[start + 43 + k * 30]) * 2);
+		int x = start + k * 30;
+
+		j = (((data[x + 42] << 8) + data[x + 43]) * 2);
 		ssize += j;
-		n = (((data[start + 46 + k * 30] << 8) +
-			data[start + 47 + k * 30]) * 2) +
-			(((data[start + 48 + k * 30] << 8) +
-			data[start + 49 + k * 30]) * 2);
+		n = (((data[x + 46] << 8) + data[x + 47]) * 2) +
+			(((data[x + 48] << 8) + data[x + 49]) * 2);
 		if ((j + 2) < n)
 			return -1;
 	}
@@ -229,8 +214,9 @@ static int test_unic_id (uint8 *data, int s)
 
 	/* test #3  finetunes & volumes */
 	for (k = 0; k < 31; k++) {
-		if (data[start + 44 + k * 30] > 0x0f ||
-			data[start + 45 + k * 30] > 0x40)
+		int x = start + k * 30;
+
+		if (data[x + 44] > 0x0f || data[x + 45] > 0x40)
 			return -1;
 	}
 
@@ -293,12 +279,11 @@ static int test_unic_emptyid (uint8 *data, int s)
 	ssize = 0;
 	o = 0;
 	for (k = 0; k < 31; k++) {
-		j = (((data[start + 42 + k * 30] << 8) +
-			data[start + 43 + k * 30]) * 2);
-		m = (((data[start + 46 + k * 30] << 8) +
-			 data[start + 47 + k * 30]) * 2);
-		n = (((data[start + 48 + k * 30] << 8) +
-			 data[start + 49 + k * 30]) * 2);
+		int x = start + k * 30;
+
+		j = (((data[x + 42] << 8) + data[x + 43]) * 2);
+		m = (((data[x + 46] << 8) + data[x + 47]) * 2);
+		n = (((data[x + 48] << 8) + data[x + 49]) * 2);
 		ssize += j;
 
 		if (n != 0 && (j + 2) < (m + n))
@@ -307,23 +292,20 @@ static int test_unic_emptyid (uint8 *data, int s)
 		if (j > 0xffff || m > 0xffff || n > 0xffff)
 			return -1;
 
-		if (data[start + 45 + k * 30] > 0x40)
+		if (data[x + 45] > 0x40)
 			return -1;
 
 		/* finetune ... */
-		if ((((data[start + 40 + k * 30] << 8) +
-			data[start + 41 + k * 30]) != 0 && j == 0)
-			|| ((data[start + 40 + k * 30] * 256 +
-			data[start + 41 + k * 30] > 8)
-			&& (data[start + 40 + k * 30] * 256 +
-			data[start + 41 + k * 30]) < 247))
+		if ((((data[x + 40] << 8) + data[x + 41]) != 0 && j == 0)
+			|| ((data[x + 40] * 256 + data[x + 41] > 8)
+			&& (data[x + 40] * 256 + data[x + 41]) < 247))
 			return -1;
 
 		/* loop start but no replen ? */
 		if (m != 0 && n <= 2)
 			return -1;
 
-		if (data[start + 45 + k * 30] != 0 && j == 0)
+		if (data[x + 45] != 0 && j == 0)
 			return -1;
 
 		/* get the highest !0 sample */
@@ -367,26 +349,28 @@ static int test_unic_emptyid (uint8 *data, int s)
 	PW_REQUEST_DATA (s, 1084 + k * 256 * 3 + 2);
 
 	for (j = 0; j < (k << 8); j++) {
+		int y = start + 1084 + j * 3;
+
 		/* relative note number + last bit of sample > $34 ? */
-		if (data[start + 1084 + j * 3] > 0x74)
+		if (data[y] > 0x74)
 			return -1;
 
-		if ((data[start + 1084 + j * 3] & 0x3F) > 0x24)
+		if ((data[y] & 0x3F) > 0x24)
 			return -1;
 
-		if ((data[start + 1084 + j * 3 + 1] & 0x0F) == 0x0C
-			&& data[start + 1084 + j * 3 + 2] > 0x40)
+		if ((data[y + 1] & 0x0F) == 0x0C
+			&& data[y + 2] > 0x40)
 			return -1;
 
-		if ((data[start + 1084 + j * 3 + 1] & 0x0F) == 0x0B
-			&& data[start + 1084 + j * 3 + 2] > 0x7F)
+		if ((data[y + 1] & 0x0F) == 0x0B
+			&& data[y + 2] > 0x7F)
 			return -1;
 
-		if ((data[start + 1084 + j * 3 + 1] & 0x0F) == 0x0D
-			&& data[start + 1084 + j * 3 + 2] > 0x40)
+		if ((data[y + 1] & 0x0F) == 0x0D
+			&& data[y + 2] > 0x40)
 			return -1;
 
-		n = ((data[start + 1084 + j * 3] >> 2) & 0x30) |
+		n = ((data[y] >> 2) & 0x30) |
 			((data[start + 1085 + j * 3 + 1] >> 4) & 0x0F);
 
 		if (n > o)
@@ -414,12 +398,11 @@ static int test_unic_noid (uint8 *data, int s)
 	ssize = 0;
 	o = 0;
 	for (k = 0; k < 31; k++) {
-		j = (((data[start + 42 + k * 30] << 8) +
-			data[start + 43 + k * 30]) * 2);
-		m = (((data[start + 46 + k * 30] << 8) +
-			 data[start + 47 + k * 30]) * 2);
-		n = (((data[start + 48 + k * 30] << 8) +
-			 data[start + 49 + k * 30]) * 2);
+		int x = start + k * 30;
+
+		j = (((data[x + 42] << 8) + data[x + 43]) * 2);
+		m = (((data[x + 46] << 8) + data[x + 47]) * 2);
+		n = (((data[x + 48] << 8) + data[x + 49]) * 2);
 
 		ssize += j;
 		if (n != 0 && (j + 2) < (m + n))
@@ -430,23 +413,20 @@ static int test_unic_noid (uint8 *data, int s)
 			return -1;
 
 		/* volume too big */
-		if (data[start + 45 + k * 30] > 0x40)
+		if (data[x + 45] > 0x40)
 			return -1;
 
 		/* finetune ... */
-		if (((data[start + 40 + k * 30] * 256 +
-			data[start + 41 + k * 30]) != 0 && j == 0)
-			|| ((data[start + 40 + k * 30] * 256 +
-			data[start + 41 + k * 30]) > 8 &&
-			data[start + 40 + k * 30] * 256 +
-			data[start + 41 + k * 30] < 247))
+		if (((data[x + 40] * 256 + data[x + 41]) != 0 && j == 0)
+			|| ((data[x + 40] * 256 + data[x + 41]) > 8 &&
+			data[x + 40] * 256 + data[x + 41] < 247))
 			return -1;
 
 		/* loop start but no replen ? */
 		if (m != 0 && n <= 2)
 			return -1;
 
-		if (data[start + 45 + k * 30] != 0 && j == 0)
+		if (data[x + 45] != 0 && j == 0)
 			return -1;
 
 		/* get the highest !0 sample */
@@ -493,25 +473,23 @@ static int test_unic_noid (uint8 *data, int s)
 	PW_REQUEST_DATA (s, 1080 + k * 256 * 3 + 2);
 
 	for (j = 0; j < (k << 8); j++) {
+		int y = start + 1080 + j * 3;
+
 		/* relative note number + last bit of sample > $34 ? */
-		if (data[start + 1080 + j * 3] > 0x74)
+		if (data[y] > 0x74)
 			return -1;
-		if ((data[start + 1080 + j * 3] & 0x3F) > 0x24)
+		if ((data[y] & 0x3F) > 0x24)
 			return -1;
-		if ((data[start + 1080 + j * 3 + 1] & 0x0F) == 0x0C
-			&& data[start + 1080 + j * 3 + 2] > 0x40)
-			return -1;
-		}
-
-		if ((data[start + 1080 + j * 3 + 1] & 0x0F) == 0x0B
-			&& data[start + 1080 + j * 3 + 2] > 0x7F) {
+		if ((data[y + 1] & 0x0F) == 0x0C && data[y + 2] > 0x40)
 			return -1;
 
-		if ((data[start + 1080 + j * 3 + 1] & 0x0F) == 0x0D
-			&& data[start + 1080 + j * 3 + 2] > 0x40)
+		if ((data[y + 1] & 0x0F) == 0x0B && data[y + 2] > 0x7F)
 			return -1;
 
-		n = ((data[start + 1080 + j * 3] >> 2) & 0x30) |
+		if ((data[y + 1] & 0x0F) == 0x0D && data[y + 2] > 0x40)
+			return -1;
+
+		n = ((data[y] >> 2) & 0x30) |
 			((data[start + 1081 + j * 3 + 1] >> 4) & 0x0F);
 
 		if (n > o)
