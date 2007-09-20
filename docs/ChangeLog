@@ -1,15 +1,16 @@
-$Id: ChangeLog,v 1.84 2007-09-19 13:02:11 cmatsuoka Exp $
+$Id: ChangeLog,v 1.85 2007-09-20 04:01:05 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.3.0 ()
-	- runtime endianism detection (to help generation of fat binaries)
+	- added runtime endianism detection
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
 	- fixed semantics of options --big-endian and --little-endian
 	- fixed memory corruption in Quadra Composer module loader
-	- fixed Quadra Composer effects
+	- fixed Quadra Composer vibrato, offset and jump effects
 	- fixed endianism problem in KSM and Zen Packer loaders
+	- fixed transposition of Digital Tracker module notes
 	- prowizard code cleanup
 
 2.2.1 (20070917)

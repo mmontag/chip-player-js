@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.10 2007-08-29 03:23:57 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.11 2007-09-20 04:01:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -160,8 +160,10 @@ static void get_dapt(int size, FILE *f)
 			b = read8(f);
 			c = read8(f);
 			d = read8(f);
-			if (a)
+			if (a) {
+				a--;
 				event->note = 12 * (a >> 4) + (a & 0x0f);
+			}
 			event->vol = (b & 0xfc) >> 2;
 			event->ins = ((b & 0x03) << 4) + (c >> 4);
 			event->fxt = c & 0xf;
