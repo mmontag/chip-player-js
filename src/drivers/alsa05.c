@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.6 2007-09-20 23:42:28 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.7 2007-09-21 19:48:04 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -154,8 +154,8 @@ static int init(struct xmp_control *ctl)
 	if (frag_size < 16)
 		frag_size = 16;
 	chkparm1("card", card_name = token);
-	//  card = snd_card_name (card_name); /* ? */
-	//  dev = snd_defaults_pcm_device (); /* ? */
+	//  card = snd_card_name(card_name); /* ? */
+	//  dev = snd_defaults_pcm_device(); /* ? */
 	parm_end();
 
 	mybuffer = malloc(frag_size);
@@ -249,6 +249,7 @@ static void dshutdown()
 {
 	xmp_smix_off();
 	snd_pcm_close(pcm_handle);
+	free(mybuffer);
 }
 
 static void flush()
