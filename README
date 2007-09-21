@@ -226,6 +226,11 @@ for description of the command line arguments recognized by xmp.)
 	'm' (xxmp)	=>	cycle through display modes
 
 
+FEEDBACK
+
+Send your comments and bug reports to xmp-devel@lists.sourceforge.net.
+
+
 LICENSE
 
 Extended Module Player (C)1996-2007 Claudio Matsuoka, Hipolito Carraro Jr
