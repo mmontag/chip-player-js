@@ -1,8 +1,8 @@
 # Extended Module Player etc/Makefile
-# $Id: Makefile,v 1.9 2007-09-16 13:24:04 cmatsuoka Exp $
+# $Id: Makefile,v 1.10 2007-09-22 12:49:04 cmatsuoka Exp $
 
 TOPDIR	= ..
-DFILES	= Makefile xmp.conf xmp-modules.conf xmp.spec
+DFILES	= Makefile xmp.conf xmp-modules.conf
 DDIRS	=
 CFILES	=
 DCFILES	=

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.18 2007-09-16 03:20:05 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.19 2007-09-22 12:49:04 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -291,9 +291,6 @@ int it_load (FILE * f)
     xmp_ctl->c4rate = C4_NTSC_RATE;
     xmp_ctl->fetch |= XMP_CTL_FINEFX | XMP_CTL_ENVFADE;
 
-    sprintf (xmp_ctl->type, "IMPM %d.%02x (IT)",
-			ifh.cmwt >> 8, ifh.cmwt & 0xff);
-
     switch (ifh.cwt >> 8) {
     case 0x00:
 	sprintf(tracker_name, "unmo3");
@@ -302,6 +299,7 @@ int it_load (FILE * f)
     case 0x02:
 	if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0217) {
 	    sprintf(tracker_name, "ModPlug Tracker 1.16");
+	    ifh.cmwt = 0x214;	/* ModPlug Tracker files aren't IMPM 2.00 */
 	} else if (ifh.cwt == 0x0216) {
 	    sprintf(tracker_name, "Impulse Tracker 2.14v3");
 	} else if (ifh.cwt == 0x0217) {
@@ -321,6 +319,9 @@ int it_load (FILE * f)
     default:
 	sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
     }
+
+    sprintf (xmp_ctl->type, "IMPM %d.%02x (IT)",
+			ifh.cmwt >> 8, ifh.cmwt & 0xff);
 
     MODULE_INFO ();
 
