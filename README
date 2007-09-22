@@ -57,15 +57,14 @@ The current version recognizes the following module formats:
   TP    ****	The Player		6.0a
   PM	***	Power Music		-
   PP10	****+	Pha Packer		-
-  PROM	***	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
+  PROM	****	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
-  STIM	****+	Slamtilt		-
-  UNIC	***	Unic Tracker		1.0, 2.0
+  UNIC	****	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
   XANN	****+	XANN Packer		-
   ZEN	****+	Zen Packer		-
 
-  Other Amiga formats:
+  Other Amiga tracker formats:
 
   DIGI	***	DIGI Booster		1.4, 1.5, 1.6, 1.7
   EMOD  ****	Quadra Composer		0001
@@ -77,7 +76,7 @@ The current version recognizes the following module formats:
   OKTA	***	Oktalyzer		-
   SFX	***	SoundFX			1.3, 2.0?
 
-  Atari formats:
+  Atari tracker formats:
 
   CDx1	****+	Octalyser		CD61, CD81
   DTM	***	Digital Tracker		1.9
@@ -87,17 +86,17 @@ The current version recognizes the following module formats:
   MGT	**	Megatracker		1.1
   TCB	***	TCB Tracker		'AN COOL.'
 
-  Acorn formats:
+  Acorn tracker formats:
 
   MUSX	***	Archimedes Tracker	V1.0+++
   DSYM  ***	Digital Symphony	0
   DTT	**	Desktop Tracker		-
 
-  IIgs formats:
+  IIgs tracker formats:
 
   MTP	**	SoundSmith		SONGOK, IAN92a
 
-  PC formats:
+  PC tracker formats:
 
   669	***	Composer 669/UNIS 669	if, JN
   ALM   ****+	Aley Keptr		1.0, 1.1, 1.2
@@ -106,12 +105,10 @@ The current version recognizes the following module formats:
   FAR	***	Farandole Composer	1.0
   FNK	**	Funktracker		?
   IMF	*** 	Imago Orpheus		1.0
-  IT	****-	Impulse Tracker		1.00, 2.00, 2.14, 2.15
+  IT	**** 	Impulse Tracker		1.00, 2.00, 2.14, 2.15
   LIQ	***	Liquid Tracker		0.0, 1.0
   MDL	***	Digitrakker		0.0, 1.0, 1.1
   MTM	****+	Multitracker		1.0
-  PSM	*** 	Epic Megagames MASI	epic, sinaria
-  PSM	*** 	Protracker Studio	0.01, 1.00
   PTM	***	Poly Tracker		2.03
   RTM	**	Real Tracker		1.00
   S3M	**** 	Scream Tracker 3	3.00, 3.01+
@@ -119,6 +116,14 @@ The current version recognizes the following module formats:
   STX	****+	ST Music Interface Kit	1.0, 1.1
   ULT	***	Ultra Tracker		V0001, V0002, V0003, V0004
   XM	**** 	Fast Tracker II		1.02, 1.03, 1.04
+
+  Game formats:
+
+  GMC	****+	Game Music Creator	-
+  PSM	*** 	Epic Megagames MASI	epic, sinaria
+  PSM	*** 	Protracker Studio	0.01, 1.00
+  STIM	****+	Slamtilt		-
+  UMX	****+	Epic Games Unreal/UT	IT, S3M, MOD, XM
 
   YM3812 (Adlib) formats:
 
@@ -187,9 +192,11 @@ follwing devices are supported:
 
   aix		AIX audio library (not tested, possibly broken)
   alsa		Advanced Linux Sound Architecture (ALSA) PCM
+  alsa05	ALSA 0.5 / QNX Neutrino 6 sound system
   arts		aRts (KDE sound server)
   beos		BeOS BSoundPlayer (not tested)
   bsd		BSD generic audio device
+  callback	Callback sound driver (for plugins)
   dart		OS/2 Direct Audio Real Time (DART)
   esd		Enlightened Sound Daemon
   file		File/stdout output
@@ -201,10 +208,9 @@ follwing devices are supported:
   oss_mix	Open Sound System (OSS) PCM
   oss_seq	Open Sound System (OSS) sequencer
   osx		MacOS X CoreAudio
-  qnx		QNX audio device
+  qnx		QNX Neutrino 4 audio device
   solaris	Solaris audio device (linear and ulaw)
   win32		Win32 sound (experimental, unstable)
-  xmms		XMMS sound drivers (using the XMMS plugin)
   wav		WAV file writer
   win32		Windows WinMM
 
