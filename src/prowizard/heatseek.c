@@ -1,12 +1,12 @@
 /*
  * Heatseeker_mc1.0.c   Copyright (C) 1997 Asle / ReDoX
- *			Modified by Claudio Matsuoka
+ *			Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts back to ptk Heatseeker packed MODs
  *
  * note: There's a good job ! .. gosh !.
  *
- * $Id: heatseek.c,v 1.2 2006-02-13 12:50:34 cmatsuoka Exp $
+ * $Id: heatseek.c,v 1.3 2007-09-22 12:48:25 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -27,158 +27,110 @@ struct pw_format pw_crb = {
 };
 
 
-static int depack_crb (FILE * in, FILE * out)
+static int depack_crb (FILE *in, FILE *out)
 {
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
+	uint8 c1, c2, c3, c4;
 	uint8 ptable[128];
 	uint8 pat_pos;
-	uint8 pat_max = 0x00;
+	uint8 pat_max = 0;
 	uint8 *tmp;
 	uint8 pat[1024];
-	long taddr[512];
-	long i = 0, j = 0, k = 0, l = 0, m;
-	long ssize = 0;
+	int taddr[512];
+	int i, j, k, l, m;
+	int size, ssize = 0;
 
-	bzero (ptable, 128);
-	bzero (taddr, 512 * 4);
+	bzero(ptable, 128);
+	bzero(taddr, 512 * 4);
 
 	/* write title */
 	for (i = 0; i < 20; i++)
-		fwrite (&c1, 1, 1, out);
+		write8(out, 0);
 
 	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
+		for (j = 0; j < 22; j++)		/*sample name */
+			write8(out, 0);
 
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		if ((c1 == 0x00) && (c2 == 0x00))
-			c2 = 0x01;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write16b(out, size = read16b(in));	/* size */
+		ssize += size * 2;
+		write8(out, read8(in));			/* finetune */
+		write8(out, read8(in));			/* volume */
+		write16b(out, read16b(in));		/* loop start */
+		size = read16b(in);			/* loop size */
+		write16b(out, size ? size : 0x0001);
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* read and write pattern table lenght */
-	fread (&pat_pos, 1, 1, in);
-	fwrite (&pat_pos, 1, 1, out);
-	/*printf ( "Size of pattern list : %d\n" , pat_pos ); */
-
-	/* read and write NoiseTracker byte */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
+	write8(out, pat_pos = read8(in));		/* pat table length */
+	write8(out, read8(in)); 			/* NoiseTracker byte */
 
 	/* read and write pattern list and get highest patt number */
 	for (i = 0; i < 128; i++) {
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
+		write8(out, c1 = read8(in));
 		if (c1 > pat_max)
 			pat_max = c1;
 	}
-	pat_max += 1;
-	/*printf ( "Number of pattern : %d\n" , pat_max ); */
+	pat_max++;
 
 	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* pattern data */
 	for (i = 0; i < pat_max; i++) {
-/*fprintf ( info , "\n\n\npat %ld :\n" , i );*/
-		bzero (pat, 1024);
+		bzero(pat, 1024);
 		for (j = 0; j < 4; j++) {
-			taddr[i * 4 + j] = ftell (in);
-/*fprintf ( info , "Voice %ld (at:%ld):\n" , j , taddr[i*4+j]);*/
+			taddr[i * 4 + j] = ftell(in);
 			for (k = 0; k < 64; k++) {
-				fread (&c1, 1, 1, in);
-/*fprintf ( info , "%2ld: %2x , " , k , c1 );*/
+				int y = k * 16 + j * 4;
+
+				c1 = read8(in);
 				if (c1 == 0x80) {
-					fread (&c2, 1, 1, in);
-					fread (&c3, 1, 1, in);
-					fread (&c4, 1, 1, in);
-/*fprintf ( info , "%2x , %2x , %2x !!! (%ld)\n" , c2 , c3 , c4 ,ftell (in ));*/
+					c2 = read8(in);
+					c3 = read8(in);
+					c4 = read8(in);
 					k += c4;
 					continue;
 				}
 				if (c1 == 0xc0) {
-					fread (&c2, 1, 1, in);
-					fread (&c3, 1, 1, in);
-					fread (&c4, 1, 1, in);
-					l = ftell (in);
-					fseek (in,
-						taddr[((c3 << 8) +
-								c4) / 4], 0);
-/*fprintf ( info , "now at %ld (voice : %d)\n" , ftell ( in ) , ((c3*256)+c4)/4 );*/
+					c2 = read8(in);
+					c3 = read8(in);
+					c4 = read8(in);
+					l = ftell(in);
+					fseek(in, taddr[((c3 << 8) + c4) / 4],
+								SEEK_SET);
 					for (m = 0; m < 64; m++) {
-						fread (&c1, 1, 1, in);
-/*fprintf ( info , "%2ld: %2x , " , k , c1 );*/
+						int x = m * 16 + j * 4;
+
+						c1 = read8(in);
 						if (c1 == 0x80) {
-							fread (&c2, 1, 1, in);
-							fread (&c3, 1, 1, in);
-							fread (&c4, 1, 1, in);
-/*fprintf ( info , "%2x , %2x , %2x !!! (%ld)\n" , c2 , c3 , c4 ,ftell (in ));*/
+							c2 = read8(in);
+							c3 = read8(in);
+							c4 = read8(in);
 							m += c4;
 							continue;
 						}
-						fread (&c2, 1, 1, in);
-						fread (&c3, 1, 1, in);
-						fread (&c4, 1, 1, in);
-/*fprintf ( info , "%2x , %2x , %2x  (%ld)\n" , c2 , c3 , c4 ,ftell (in));*/
-						pat[m * 16 + j * 4] = c1;
-						pat[m * 16 + j * 4 + 1] =
-							c2;
-						pat[m * 16 + j * 4 + 2] =
-							c3;
-						pat[m * 16 + j * 4 + 3] =
-							c4;
+						pat[x] = c1;
+						pat[x + 1] = read8(in);
+						pat[x + 2] = read8(in);
+						pat[x + 3] = read8(in);
 					}
-/*fprintf ( info , "%2x , %2x , %2x ??? (%ld)\n" , c2 , c3 , c4 ,ftell (in ));*/
 					fseek (in, l, 0);	/* SEEK_SET */
 					k += 100;
 					continue;
 				}
-				fread (&c2, 1, 1, in);
-				fread (&c3, 1, 1, in);
-				fread (&c4, 1, 1, in);
-/*fprintf ( info , "%2x , %2x , %2x  (%ld)\n" , c2 , c3 , c4 ,ftell (in));*/
-				pat[k * 16 + j * 4] = c1;
-				pat[k * 16 + j * 4 + 1] = c2;
-				pat[k * 16 + j * 4 + 2] = c3;
-				pat[k * 16 + j * 4 + 3] = c4;
+				pat[y] = c1;
+				pat[y + 1] = read8(in);
+				pat[y + 2] = read8(in);
+				pat[y + 3] = read8(in);
 			}
 		}
 		fwrite (pat, 1024, 1, out);
-		/*printf ( "+" ); */
-		/*fflush ( stdout ); */
 	}
-	/*printf ( "\n" ); */
 
 	/* sample data */
-/*printf ( "where : %ld  (wholesamplesize : %ld)\n" , ftell ( in ) , ssize );*/
-	tmp = (uint8 *) malloc (ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	tmp = (uint8 *)malloc(ssize);
+	fread(tmp, ssize, 1, in);
+	fwrite(tmp, ssize, 1, out);
+	free(tmp);
 
 	return 0;
 }
@@ -209,17 +161,11 @@ static int test_crb (uint8 *data, int s)
 		if (data[start + 3 + k * 8] > 0x40)
 			return -1;
 
-		/* size */
-		j = (data[start + k * 8] << 8) + data[start + 1 + k * 8];
-		/* loop start */
-		m = (data[start + k * 8 + 4] << 8) + data[start + 5 + k * 8];
-		/* loop size */
-		n = (data[start + k * 8 + 6] << 8) + data[start + 7 + k * 8];
-		j *= 2;
-		m *= 2;
-		n *= 2;
+		j = readmem16b(data + start + k * 8) * 2;	/* size */
+		m = readmem16b(data + start + k * 8 + 4) * 2;	/* loop start */
+		n = readmem16b(data + start + k * 8 + 6) * 2;	/* loop size */
 
-		if (j > 0xFFFF || m > 0xFFFF || n > 0xFFFF)
+		if (j > 0xffff || m > 0xffff || n > 0xffff)
 			return -1;
 
 		/* n != 2 test added by claudio -- asle, please check! */
