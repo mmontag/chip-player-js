@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.4 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.5 2007-09-22 00:41:33 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -314,7 +314,7 @@ static void seq_sync (double next_time)
 	return;
 
     if (next_time > this_time) {
-	SEQ_WAIT_TIME (next_time * hz / 10);
+	SEQ_WAIT_TIME(next_time * hz / 100);
 	this_time = next_time;
     }
 }

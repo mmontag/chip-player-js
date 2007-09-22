@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.86 2007-09-20 21:29:13 cmatsuoka Exp $
+$Id: ChangeLog,v 1.87 2007-09-22 00:41:33 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -12,6 +12,7 @@ Stable versions
 	- fixed endianism problem in KSM and Zen Packer loaders
 	- fixed transposition of Digital Tracker module notes
 	- fixed build for QNX Neutrino 6.3.2
+	- fixed OSS sequencer driver timing (reported by Reynir Stefansson)
 	- prowizard code cleanup
 
 2.2.1 (20070917)

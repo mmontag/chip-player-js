@@ -1,4 +1,4 @@
-/* $Id */
+/* $Id: config.h.in,v 1.7 2007-09-22 00:41:33 cmatsuoka Exp $ */
 
 /* Define DRIVER_OSS_* to enable OSS /dev/sequencer and /dev/audio support */
 #undef DRIVER_OSS_SEQ
