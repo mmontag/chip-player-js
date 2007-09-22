@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.21 2007-09-17 00:39:35 cmatsuoka Exp $
+ * $Id: load.c,v 1.22 2007-09-22 20:28:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,6 +35,7 @@ int decrunch_arcfs (FILE *, FILE *);
 int decrunch_sqsh (FILE *, FILE *);
 int decrunch_pp (FILE *, FILE *);
 int decrunch_mmcmp (FILE *, FILE *);
+int decrunch_umx (FILE *, FILE *);
 int decrunch_pw (FILE *, FILE *);
 int pw_check(unsigned char *, int);
 
@@ -45,9 +46,10 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_ARC	0x05
 #define BUILTIN_ARCFS	0x06
 #define BUILTIN_S404	0x07
+#define BUILTIN_UMX	0x08
 
 
-static int decrunch (FILE **f, char **s)
+static int decrunch(FILE **f, char **s)
 {
     unsigned char *b;
     char *cmd;
@@ -118,6 +120,9 @@ static int decrunch (FILE **f, char **s)
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
+    } else if (b[0] == 0xc1 && b[1] == 0x83 && b[2] == 0x2a && b[3] == 0x9e) {
+	packer = "UMX";
+	builtin = BUILTIN_UMX;
     } else {
 	int extra;
 	int s = PW_TEST_CHUNK;
@@ -157,7 +162,7 @@ static int decrunch (FILE **f, char **s)
 	return 0;
 
     if (xmp_ctl->verbose)
-	report ("Decrunching %s file... ", packer);
+	report ("Depacking %s file... ", packer);
 
     if ((fd = mkstemp (temp)) < 0) {
 	report ("failed\n");
@@ -220,8 +225,12 @@ static int decrunch (FILE **f, char **s)
 	case BUILTIN_MMCMP:    
 	    res = decrunch_mmcmp(*f, t);
 	    break;
+	case BUILTIN_UMX:
+	    res = decrunch_umx(*f, t);
+	    break;
 	case BUILTIN_PW:
 	    res = decrunch_pw(*f, t);
+	    break;
 	}
     }
 

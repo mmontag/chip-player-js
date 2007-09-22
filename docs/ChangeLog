@@ -1,10 +1,11 @@
-$Id: ChangeLog,v 1.88 2007-09-22 17:34:46 cmatsuoka Exp $
+$Id: ChangeLog,v 1.89 2007-09-22 20:28:56 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.3.0 ()
 	- added runtime endianism detection
+	- added extractor for Epic Games' Unreal UMX files
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
 	- fixed semantics of options --big-endian and --little-endian
 	- fixed memory corruption in Quadra Composer module loader
@@ -14,6 +15,7 @@ Stable versions
 	- fixed build for QNX Neutrino 6.3.2
 	- fixed OSS sequencer driver timing (reported by Reynir Stefansson)
 	- fixed BMP/Audacious plugin to build also as XMMS plugin
+	- fixed Impulse Tracker identification in S3M loader
 	- prowizard code cleanup
 
 2.2.1 (20070917)

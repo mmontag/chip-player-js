@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.19 2007-09-22 12:49:04 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.20 2007-09-22 20:28:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -299,7 +299,8 @@ int it_load (FILE * f)
     case 0x02:
 	if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0217) {
 	    sprintf(tracker_name, "ModPlug Tracker 1.16");
-	    ifh.cmwt = 0x214;	/* ModPlug Tracker files aren't IMPM 2.00 */
+	    /* ModPlug Tracker files aren't really IMPM 2.00 */
+	    ifh.cmwt = ifh.flags & IT_USE_INST ? 0x214 : 0x100;	
 	} else if (ifh.cwt == 0x0216) {
 	    sprintf(tracker_name, "Impulse Tracker 2.14v3");
 	} else if (ifh.cwt == 0x0217) {

@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.11 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.12 2007-09-22 20:28:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -268,21 +268,27 @@ int s3m_load (FILE * f)
 
     switch (sfh.version >> 12) {
     case 1:
-	strcpy(tracker_name, "Scream Tracker");
+	sprintf(tracker_name, "Scream Tracker %d.%02x",
+		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	xmp_ctl->fetch |= XMP_CTL_ST3GVOL;
 	break;
     case 2:
-	strcpy(tracker_name, "Imago Orpheus");
+	sprintf(tracker_name, "Imago Orpheus %d.%02x",
+		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	break;
     case 3:
-	strcpy(tracker_name, "Impulse Tracker");
+	if (sfh.version == 0x3216) {
+		strcpy(tracker_name, "Impulse Tracker 2.14v3");
+	} else if (sfh.version == 0x3217) {
+		strcpy(tracker_name, "Impulse Tracker 2.14v5");
+	} else {
+		sprintf(tracker_name, "Impulse Tracker %d.%02x",
+			(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+	}
 	break;
     default:
-	snprintf(tracker_name, 80, "unknown (%d) version", sfh.version >> 12);
+	snprintf(tracker_name, 80, "unknown (%04x)", sfh.version);
     }
-
-    sprintf (tracker_name + strlen (tracker_name), " %d.%02x",
-	(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 
     MODULE_INFO ();
 
