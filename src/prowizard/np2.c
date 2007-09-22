@@ -1,10 +1,10 @@
 /*
  * NoisePacker_v2.c   Copyright (C) 1997 Asle / ReDoX
- *                    Modified by Claudio Matsuoka
+ *                    Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts NoisePacked MODs back to ptk
  *
- * $Id: np2.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: np2.c,v 1.2 2007-09-22 14:40:33 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -30,177 +30,117 @@ static int depack_np2 (FILE *in, FILE *out)
 	uint8 npos;
 	uint8 nsmp;
 	uint8 ptable[128];
-	uint8 npat = 0x00;
-	long Max_Add = 0;
-	long ssize = 0;
-	long tsize;
-	long trk_addr[128][4];
-	long x;
-	long i = 0, j = 0, k;
-	long trk_start;
+	uint8 npat;
+	int max_addr = 0;
+	int size, ssize = 0;
+	int tsize;
+	int trk_addr[128][4];
+	int i = 0, j = 0, k;
+	int trk_start;
 
-	bzero (ptable, 128);
-	bzero (trk_addr, 128 * 4 * 4);
+	bzero(ptable, 128);
+	bzero(trk_addr, 128 * 4 * 4);
 
-	/* read number of sample */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
+	c1 = read8(in);			/* read number of sample */
+	c2 = read8(in);
 	nsmp = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
-	/*printf ( "Number of sample : %d (%x)\n" , nsmp , nsmp ); */
 
-	/* write title */
-	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
-	fwrite (tmp, 20, 1, out);
-	free (tmp);
+	for (i = 0; i < 20; i++)	/* write title */
+		write8(out, 0);
 
-	/* read size of pattern list */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	npos = c2 / 2;
-	/*printf ( "Size of pattern list : %d\n" , npos ); */
-
-	/* read 2 unknown bytes which size seem to be of some use ... */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	x = (c1 << 8) + c2;
-
-	/* read track data size */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	tsize = (c1 << 8) + c2;
-	/*printf ( "tsize : %ld\n" , tsize ); */
+	read8(in);
+	npos = read8(in) / 2;		/* read size of pattern list */
+	read16b(in);			/* 2 unknown bytes */
+	tsize = read16b(in);		/* read track data size */
 
 	/* read sample descriptions */
-	tmp = (uint8 *) malloc (22);
-	bzero (tmp, 22);
+	tmp = (uint8 *)malloc(22);
+	bzero(tmp, 22);
 	for (i = 0; i < nsmp; i++) {
-		/* bypass 4 unknown bytes */
-		fseek (in, 4, 1);
-		/* sample name */
-		fwrite (tmp, 22, 1, out);
-		/* size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		ssize += (((c1 << 8) + c2) * 2);
-		/* finetune */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		/* volume */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		/* bypass 4 unknown bytes */
-		fseek (in, 4, 1);
-		/* read loop size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		/* read loop start */
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		/* write loop start */
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c4, 1, 1, out);
-		/* write loop size */
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		read32b(in);			/* bypass 4 unknown bytes */
+		fwrite(tmp, 22, 1, out);		/* sample name */
+		write16b(out, size = read16b(in));	/* size */
+		ssize += size * 2;
+		write8(out, read8(in));			/* finetune */
+		write8(out, read8(in));			/* volume */
+		read32b(in);			/* bypass 4 unknown bytes */
+		size = read16b(in);			/* read loop size */
+		write16b(out, read16b(in));		/* loop start */
+		write16b(out, size);			/* write loop size */
 	}
-	/* printf ( "Whole sample size : %ld\n" , ssize ); */
+	free (tmp);
 
 	/* fill up to 31 samples */
-	free (tmp);
-	tmp = (uint8 *) malloc (30);
-	bzero (tmp, 30);
+	tmp = (uint8 *)malloc(30);
+	bzero(tmp, 30);
 	tmp[29] = 0x01;
-	while (i != 31) {
-		fwrite (tmp, 30, 1, out);
-		i += 1;
-	}
-	free (tmp);
+	for (; i != 31; i++)
+		fwrite(tmp, 30, 1, out);
+	free(tmp);
 
-	/* write size of pattern list */
-	fwrite (&npos, 1, 1, out);
-
-	/* write noisetracker byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	write8(out, npos);		/* write size of pattern list */
+	write8(out, 0x7f);		/* write noisetracker byte */
 
 	/* bypass 2 bytes ... seems always the same as in $02 */
-	fseek (in, 2, 1);
+	fseek(in, 2, SEEK_CUR);
 
 	/* bypass 2 other bytes which meaning is beside me */
-	fseek (in, 2, 1);
+	fseek (in, 2, SEEK_CUR);
 
 	/* read pattern table */
-	npat = 0x00;
-	for (i = 0; i < npos; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		ptable[i] = ((c1 << 8) + c2) / 8;
+	for (npat = i = 0; i < npos; i++) {
+		ptable[i] = read16b(in) / 8;
 		if (ptable[i] > npat)
 			npat = ptable[i];
 	}
-	npat += 1;
-	/*printf ( "Number of pattern : %d\n" , npat ); */
+	npat++;
 
 	/* write pattern table */
-	fwrite (ptable, 128, 1, out);
+	fwrite(ptable, 128, 1, out);
 
 	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);
 
 	/* read tracks addresses per pattern */
 	for (i = 0; i < npat; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		trk_addr[i][0] = (c1 << 8) + c2;
-		if (trk_addr[i][0] > Max_Add)
-			Max_Add = trk_addr[i][0];
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		trk_addr[i][1] = (c1 << 8) + c2;
-		if (trk_addr[i][1] > Max_Add)
-			Max_Add = trk_addr[i][1];
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		trk_addr[i][2] = (c1 << 8) + c2;
-		if (trk_addr[i][2] > Max_Add)
-			Max_Add = trk_addr[i][2];
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		trk_addr[i][3] = (c1 << 8) + c2;
-		if (trk_addr[i][3] > Max_Add)
-			Max_Add = trk_addr[i][3];
+		trk_addr[i][0] = read16b(in);
+		if (trk_addr[i][0] > max_addr)
+			max_addr = trk_addr[i][0];
+		trk_addr[i][1] = read16b(in);
+		if (trk_addr[i][1] > max_addr)
+			max_addr = trk_addr[i][1];
+		trk_addr[i][2] = read16b(in);
+		if (trk_addr[i][2] > max_addr)
+			max_addr = trk_addr[i][2];
+		trk_addr[i][3] = read16b(in);
+		if (trk_addr[i][3] > max_addr)
+			max_addr = trk_addr[i][3];
 	}
 	trk_start = ftell (in);
 
 	/* the track data now ... */
-	tmp = (uint8 *) malloc (1024);
+	tmp = (uint8 *)malloc(1024);
 	for (i = 0; i < npat; i++) {
-		bzero (tmp, 1024);
+		bzero(tmp, 1024);
 		for (j = 0; j < 4; j++) {
-			fseek (in,
-				trk_start +
-				trk_addr[i][3 - j], 0);
+			fseek (in, trk_start + trk_addr[i][3 - j], SEEK_SET);
 			for (k = 0; k < 64; k++) {
-				fread (&c1, 1, 1, in);
-				fread (&c2, 1, 1, in);
-				fread (&c3, 1, 1, in);
-				tmp[k * 16 + j * 4] = (c1 << 4) & 0x10;
-				c4 = (c1 & 0xFE) / 2;
-				tmp[k * 16 + j * 4] |= ptk_table[c4][0];
-				tmp[k * 16 + j * 4 + 1] = ptk_table[c4][1];
+				int x = k * 16 + j * 4;
+
+				c1 = read8(in);
+				c2 = read8(in);
+				c3 = read8(in);
+
+				tmp[x] = (c1 << 4) & 0x10;
+
+				c4 = (c1 & 0xfe) / 2;
+				tmp[x] |= ptk_table[c4][0];
+				tmp[x + 1] = ptk_table[c4][1];
+
 				if ((c2 & 0x0f) == 0x08)
 					c2 &= 0xf0;
 				if ((c2 & 0x0f) == 0x07) {
-					c2 = (c2 & 0xf0) + 0x0A;
+					c2 = (c2 & 0xf0) + 0x0a;
 					if (c3 > 0x80)
 						c3 = 0x100 - c3;
 					else
@@ -225,8 +165,8 @@ static int depack_np2 (FILE *in, FILE *out)
 					c3 += 0x04;
 					c3 /= 2;
 				}
-				tmp[k * 16 + j * 4 + 2] = c2;
-				tmp[k * 16 + j * 4 + 3] = c3;
+				tmp[x + 2] = c2;
+				tmp[x + 3] = c3;
 			}
 		}
 		fwrite (tmp, 1024, 1, out);
@@ -234,12 +174,11 @@ static int depack_np2 (FILE *in, FILE *out)
 	free (tmp);
 
 	/* sample data */
-	fseek (in, Max_Add + 192 + trk_start, 0);
-	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	fseek(in, max_addr + 192 + trk_start, SEEK_SET);
+	tmp = (uint8 *)malloc(ssize);
+	fread(tmp, ssize, 1, in);
+	fwrite(tmp, ssize, 1, out);
+	free(tmp);
 
 	return 0;
 }
@@ -272,7 +211,7 @@ static int test_np2 (uint8 *data, int s)
 
 	/* l is the number of samples */
 	l = ((data[start] << 4) & 0xf0) | ((data[start + 1] >> 4) & 0x0f);
-	if (l > 0x1F || l == 0)
+	if (l > 0x1f || l == 0)
 		return -1;
 
 	/* test volumes */
@@ -284,14 +223,13 @@ static int test_np2 (uint8 *data, int s)
 	/* test sample sizes */
 	ssize = 0;
 	for (k = 0; k < l; k++) {
-		o = 2 * ((data[start + k * 16 + 12] << 8) +
-			data[start + k * 16 + 13]);
-		m = 2 * ((data[start + k * 16 + 20] << 8) +
-			data[start + k * 16 + 21]);
-		n = 2 * ((data[start + k * 16 + 22] << 8) +
-			data[start + k * 16 + 23]);
+		int x = start + k * 16;
 
-		if (o > 0xFFFF || m > 0xFFFF || n > 0xFFFF)
+		o = 2 * ((data[x + 12] << 8) + data[x + 13]);
+		m = 2 * ((data[x + 20] << 8) + data[x + 21]);
+		n = 2 * ((data[x + 22] << 8) + data[x + 23]);
+
+		if (o > 0xffff || m > 0xffff || n > 0xffff)
 			return -1;
 
 		if ((m + n) > (o + 2))
