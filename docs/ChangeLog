@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.87 2007-09-22 00:41:33 cmatsuoka Exp $
+$Id: ChangeLog,v 1.88 2007-09-22 17:34:46 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -13,6 +13,7 @@ Stable versions
 	- fixed transposition of Digital Tracker module notes
 	- fixed build for QNX Neutrino 6.3.2
 	- fixed OSS sequencer driver timing (reported by Reynir Stefansson)
+	- fixed BMP/Audacious plugin to build also as XMMS plugin
 	- prowizard code cleanup
 
 2.2.1 (20070917)

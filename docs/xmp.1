@@ -43,7 +43,7 @@ xmp - Extended Module Player
 \fImodules\fP
 .PP 
 .SH "DESCRIPTION" 
-\fBxmp\fP is a tracked music module player\&. It recognizes dozens of
+\fBxmp\fP is a tracked music module player\&. It plays many
 module formats including Fasttracker II (XM), Noise/Fast/Protracker (MOD),
 Scream Tracker 3 (S3M) and Impulse Tracker (IT)\&. Use \f(CWxmp --help\fP
 for a complete list of supported formats\&.
@@ -209,6 +209,10 @@ Unmute all channels\&.
 Interactive mode can be disabled using the \fB--nocmd\fP command
 line option\&.
 .PP 
+.SH "NOTES" 
+When using the OSS sequencer with an AWE card, xmp will wipe out any
+soundfonts already loaded in the card\&.
+.PP
 .SH "EXAMPLES" 
 Play module muting channels 0 to 3 and 6:
 .IP "" 

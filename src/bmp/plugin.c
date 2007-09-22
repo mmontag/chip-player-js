@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.20 2007-09-14 18:40:58 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.21 2007-09-22 17:34:46 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -229,7 +229,9 @@ static void aboutbox ()
 	scroll1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll1),
 		GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gtk_widget_set_size_request(scroll1, 290, 100);
+#endif
 	gtk_object_set_data(GTK_OBJECT(scroll1), "scroll1", scroll1);
 	gtk_widget_set (scroll1, "height", 100, NULL);
 	gtk_box_pack_start(GTK_BOX(vbox1), scroll1, TRUE, TRUE, 0);
@@ -284,7 +286,8 @@ static GtkWidget *frame1;
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 static GtkWidget *text1v;
 static GtkTextBuffer *text1b;
-#else
+#endif
+#ifdef PLUGIN_XMMS
 static GtkWidget *text1;
 #endif
 
@@ -581,8 +584,10 @@ void *catch_info(void *arg)
 {
 	FILE *f;
 	char buf[100];
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	GtkTextIter end;
 	GtkTextTag *tag;
+#endif
 
 	f = fdopen(fd_info[0], "r");
 
@@ -1013,7 +1018,7 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	ConfigFile *cfg;
 	gchar *filename;
 #endif
-#if defined PLUGIN_AUDACIOUS
+#ifdef PLUGIN_AUDACIOUS
 	ConfigDb *cfg;
 #endif
 
@@ -1134,7 +1139,9 @@ static void file_info_box_build()
 	GtkWidget *scrw1;
 	GtkWidget *expander;
 	GdkVisual *visual;
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	PangoFontDescription *desc;
+#endif
 
 	info_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_object_set_data(GTK_OBJECT(info_window),
@@ -1159,7 +1166,9 @@ static void file_info_box_build()
 
 	frame1 = gtk_event_box_new();
 	gtk_object_set_data(GTK_OBJECT(frame1), "frame1", frame1);
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gtk_widget_set_size_request(frame1, 300, 128);
+#endif
 	gtk_box_pack_start(GTK_BOX(vbox1), frame1, FALSE, FALSE, 0);
 
 	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
@@ -1168,7 +1177,7 @@ static void file_info_box_build()
 	image1 = gtk_image_new_from_image(image, NULL);
 #endif
 
-#if defined PLUGIN_XMMS
+#ifdef PLUGIN_XMMS
 	image1 = gtk_image_new(image, NULL);
 #endif
 	gtk_object_set_data(GTK_OBJECT(image1), "image1", image1);
@@ -1219,14 +1228,21 @@ static void file_info_box_build()
 	 * Info area
 	 */
 
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	expander = gtk_expander_new("Module information");
+#endif
+#ifdef PLUGIN_XMMS
+	expander = gtk_frame_new("Module information");
+#endif
 
 	scrw1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1),
 				GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gtk_widget_set_size_request(scrw1, 290, 200);
+#endif
 
 	gtk_container_add (GTK_CONTAINER(expander), scrw1);
 
@@ -1332,17 +1348,16 @@ void putimage (int x, int y, int w, int h)
     //gdk_draw_image (image1->parent->window, gdkgc, image, x, y, x, y, w, h);
 }
 
-
 #if 0
+
 static gint expose_event (GtkWidget *widget, GdkEventExpose *event)
 {
 	return 0;
 }
 #endif
 
-void update_display ()
+void update_display()
 {
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	GdkRectangle area;
 
 	area.x = (frame1->allocation.width - 300) / 2;
@@ -1350,28 +1365,17 @@ void update_display ()
 	area.width = 300;
 	area.height = 128;
 
+#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gdk_window_invalidate_rect(image1->window, &area, FALSE);
 #endif
 
 #ifdef PLUGIN_XMMS
-	GdkEventExpose e;
-
-	e.type = GDK_EXPOSE;
-	e.window = image1->window;
-	e.send_event = TRUE;
-	e.area.x = 10;
-	e.area.y = 10;
-	e.area.width = 10;
-	e.area.height = 10;
-	e.count = 0;
-
-	gdk_event_put((GdkEvent *)&e);
-	//XSync (display, False);
+	gtk_widget_draw(image1, &area);
 #endif
 
 }
 
-int process_events (int *x, int *y)
+int process_events(int *x, int *y)
 {
 	if (image1_clicked_ok) {
 		*x = image1_clicked_x;
