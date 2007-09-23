@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa_seq.c,v 1.2 2007-09-23 15:51:37 cmatsuoka Exp $
+ * $Id: alsa_seq.c,v 1.3 2007-09-23 21:04:56 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -14,23 +14,19 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
+#include <alsa/asoundlib.h>
+#include <math.h>
 
 #include "xmpi.h"
 #include "driver.h"
 
-#define SEQ_NUM_VOICES	32
 
-
-static seq_context_t seq;
+static snd_seq_t *seq;
 static int queue;
-static int port;
 static int echo_msg;
+static int my_client, my_port;
+static int dest_client, dest_port;
+static int nvoices;
 
 static int numvoices	(int);
 static void voicepos	(int, int);
@@ -84,16 +80,23 @@ struct xmp_drv_info drv_alsa_seq = {
 	NULL
 };
 
-static int dev;
-static struct synth_info si;
-static int chorusmode = 0;
-static int reverbmode = 0;
+//static int chorusmode = 0;
+//static int reverbmode = 0;
 
+
+static void midi_send(snd_seq_event_t *ev)
+{
+	snd_seq_ev_set_direct(ev);
+	snd_seq_ev_set_source(ev, my_port);
+	snd_seq_ev_set_dest(ev, dest_client, dest_port);
+	snd_seq_event_output(seq, ev);
+	snd_seq_drain_output(seq);
+}
 
 
 static int numvoices(int num)
 {
-	return SEQ_NUM_VOICES;
+	return nvoices;
 }
 
 
@@ -113,9 +116,8 @@ static void setpatch(int ch, int smp)
 {
 	snd_seq_event_t ev;
 
-	snd_seq_ev_clear(&ev);
 	snd_seq_ev_set_pgmchange(&ev, ch, smp);
-	snd_seq_event_output(seq, &ev);
+	midi_send(&ev);
 }
 
 
@@ -123,9 +125,8 @@ static void setvol(int ch, int vol)
 {
 	snd_seq_event_t ev;
 
-	snd_seq_ev_clear(&ev);
 	snd_seq_ev_set_noteon(&ev, ch, 255, vol);	/* 255 works here? */
-	snd_seq_event_output(seq, &ev);
+	midi_send(&ev);
 }
 
 
@@ -133,9 +134,8 @@ static void setnote(int ch, int note)
 {
 	snd_seq_event_t ev;
 
-	snd_seq_ev_clear(&ev);
 	snd_seq_ev_set_noteon(&ev, ch, note, 0);
-	snd_seq_event_output(seq, &ev);
+	midi_send(&ev);
 }
 
 
@@ -143,14 +143,14 @@ static void seteffect(int ch, int type, int val)
 {
 	snd_seq_event_t ev;
 
-	snd_seq_ev_clear(&ev);
-
 	switch (type) {
 	case XMP_FX_CHORUS:
-		//snd_seq_ev_set_controller(&ev, ch, , val);
+		snd_seq_ev_set_controller(&ev, ch,
+					MIDI_CTL_E3_CHORUS_DEPTH, val);
 		break;
 	case XMP_FX_REVERB:
-		//snd_seq_ev_set_controller(&ev, ch, , val);
+		snd_seq_ev_set_controller(&ev, ch,
+					MIDI_CTL_E1_REVERB_DEPTH, val);
 		break;
 	case XMP_FX_CUTOFF:
 		//snd_seq_ev_set_controller(&ev, ch, , val);
@@ -160,7 +160,7 @@ static void seteffect(int ch, int type, int val)
 		break;
 	}
 
-	snd_seq_event_output(seq, &ev);
+	midi_send(&ev);
 }
 
 
@@ -168,9 +168,8 @@ static void setpan(int ch, int pan)
 {
 	snd_seq_event_t ev;
 
-	snd_seq_ev_clear(&ev);
-	snd_seq_ev_set_controller(&ev, ch, , pan);
-	snd_seq_event_output(seq, &ev);
+	snd_seq_ev_set_controller(&ev, ch, MIDI_CTL_MSB_PAN, pan);
+	midi_send(&ev);
 }
 
 
@@ -178,10 +177,9 @@ static void setbend(int ch, int bend)
 {
 	snd_seq_event_t ev;
 
-	snd_seq_ev_clear(&ev);
 	/* pitch bend; zero centered from -8192 to 8191 */
 	snd_seq_ev_set_pitchbend(&ev, ch, bend);
-	snd_seq_event_output(seq, &ev);
+	midi_send(&ev);
 }
 
 
@@ -284,21 +282,14 @@ static void clearmem()
 
 static void seq_sync(double next_time)
 {
-	//snd_seq_ev_schedule_tick(&ev, q, 1, )
-#if 0
-    static double this_time = 0;
+	snd_seq_real_time_t t;
+	snd_seq_event_t ev;
+	double iptr;
 
-    if (next_time == 0)
-	this_time = 0;
-
-    if (next_time - this_time < 1.0)
-	return;
-
-    if (next_time > this_time) {
-	SEQ_WAIT_TIME(next_time * hz / 100);
-	this_time = next_time;
-    }
-#endif
+	t.tv_sec = next_time / 100;
+	t.tv_nsec = modf(next_time / 100, &iptr) * 1e9;
+	snd_seq_ev_schedule_tick(&ev, queue, 0, &t);
+	midi_send(&ev);
 }
 
 
@@ -332,44 +323,69 @@ static int writepatch(struct patch_info *patch)
 }
 
 
-static int getmsg ()
+static int getmsg()
 {
+	return 0;
 	//return echo_msg;
 }
 
 
 static int init (struct xmp_control *ctl)
 {
+	snd_seq_addr_t d;
 	char *token, **parm;
-
-	buf = calloc(1, 256);
+	char *addr;
+	int err;
 
 	parm_init();
 	parm_end();
 
-	if (snd_seq_open(&seq, "hw", SND_SEQ_OPEN_DUPLEX, 0) < 0) {
+	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_DUPLEX, 0) < 0) {
 		if (ctl->verbose > 2) {
 			fprintf(stderr, "xmp: can't open sequencer: %s",
 						snd_strerror(errno));
 		}
-
 		return XMP_ERR_DINIT;
 	}
 
+        if (snd_seq_parse_address(seq, &d, addr) < 0) {
+		fprintf(stderr, "xmp: can't parse address: %s", addr);
+		goto error;
+	}
+
+	
+	dest_client = d.client;
+	dest_port = d.port;
+
+	my_client = snd_seq_client_id(seq);
+	snd_seq_set_client_name(seq, "xmp");
+
 	queue = snd_seq_alloc_queue(seq);
 	
-	port = snd_seq_create_simple_port(seq, NULL,
+	my_port = snd_seq_create_simple_port(seq, NULL,
 		SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE |
 		SND_SEQ_PORT_CAP_READ, SND_SEQ_PORT_TYPE_MIDI_GENERIC);
 
-	if (port < 0) {
+	if (my_port < 0) {
 		fprintf(stderr, "xmp: can't create port: %s",
 						snd_strerror(errno));
+		goto error;
 	}
+
+        err = snd_seq_connect_to(seq, my_port, dest_client, dest_port);
+        if (err < 0) {
+                fprintf(stderr, "xmp: can't connect to %d:%d (%s)\n",
+				dest_client, dest_port, strerror(-err));
+		goto error;
+        }
 
 	bufdump ();
 
 	return XMP_OK;
+
+error:
+	snd_seq_close(seq);
+	return XMP_ERR_DINIT;
 }
 
 
