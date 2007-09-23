@@ -1,7 +1,7 @@
 /* Extended Module Player UMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: umx.c,v 1.1 2007-09-22 20:28:57 cmatsuoka Exp $
+ * $Id: umx.c,v 1.2 2007-09-23 01:53:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,7 +46,7 @@ int decrunch_umx(FILE *f, FILE *fo)
 		id = readmem32b(b);
 
 		if (!memcmp(b, "Extended Module:", 16)) {
-			offset = 0;
+			offset = i;
 			break;
 		}
 		if (id == MAGIC_IMPM) { 
