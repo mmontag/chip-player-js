@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa_seq.c,v 1.1 2007-09-23 13:10:03 cmatsuoka Exp $
+ * $Id: alsa_seq.c,v 1.2 2007-09-23 15:51:37 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,6 @@
 static seq_context_t seq;
 static int queue;
 static int port;
-static snd_seq_event_t ev;
 static int echo_msg;
 
 static int numvoices	(int);
@@ -54,46 +53,41 @@ static int init		(struct xmp_control *);
 static int getmsg	(void);
 static void shutdown	(void);
 
-#define seqbuf_dump bufdump
-
 static char *help[] = {
-    NULL
+	NULL
 };
 
 struct xmp_drv_info drv_alsa_seq = {
-    "alsa_seq",		/* driver ID */
-    "ALSA sequencer",	/* driver description */
-    help,		/* help */
-    init,		/* init */
-    shutdown,		/* shutdown */
-    numvoices,		/* numvoices */
-    voicepos,		/* voicepos */
-    echoback,		/* echoback */
-    setpatch,		/* setpatch */
-    setvol,		/* setvol */
-    setnote,		/* setnote */
-    setpan,		/* setpan */
-    setbend,		/* setbend */
-    seteffect,		/* seteffect */
-    starttimer,		/* settimer */
-    stoptimer,		/* stoptimer */
-    resetvoices,	/* resetvoices */
-    bufdump,		/* bufdump */
-    bufwipe,		/* bufwipe */
-    clearmem,		/* clearmem */
-    seq_sync,		/* sync */
-    writepatch,		/* writepatch */
-    getmsg,		/* getmsg */
-    NULL
+	"alsa_seq",		/* driver ID */
+	"ALSA sequencer",	/* driver description */
+	help,			/* help */
+	init,			/* init */
+	shutdown,		/* shutdown */
+	numvoices,		/* numvoices */
+	voicepos,		/* voicepos */
+	echoback,		/* echoback */
+	setpatch,		/* setpatch */
+	setvol,			/* setvol */
+	setnote,		/* setnote */
+	setpan,			/* setpan */
+	setbend,		/* setbend */
+	seteffect,		/* seteffect */
+	starttimer,		/* settimer */
+	stoptimer,		/* stoptimer */
+	resetvoices,		/* resetvoices */
+	bufdump,		/* bufdump */
+	bufwipe,		/* bufwipe */
+	clearmem,		/* clearmem */
+	seq_sync,		/* sync */
+	writepatch,		/* writepatch */
+	getmsg,			/* getmsg */
+	NULL
 };
 
 static int dev;
 static struct synth_info si;
 static int chorusmode = 0;
 static int reverbmode = 0;
-
-
-
 
 
 
@@ -105,84 +99,110 @@ static int numvoices(int num)
 
 static void voicepos(int ch, int pos)
 {
-    GUS_VOICE_POS (dev, ch, pos);
+	//GUS_VOICE_POS (dev, ch, pos);
 }
 
 
 static void echoback(int msg)
 {
-    SEQ_ECHO_BACK (msg);
+	//SEQ_ECHO_BACK (msg);
 }
 
 
 static void setpatch(int ch, int smp)
 {
-	snd_seq_ev_set_pgmchange(ev, ch, smp);
+	snd_seq_event_t ev;
+
+	snd_seq_ev_clear(&ev);
+	snd_seq_ev_set_pgmchange(&ev, ch, smp);
+	snd_seq_event_output(seq, &ev);
 }
 
 
 static void setvol(int ch, int vol)
 {
-	snd_seq_ev_set_noteon(ev, ch, 255, vol);	/* 255 works here? */
+	snd_seq_event_t ev;
+
+	snd_seq_ev_clear(&ev);
+	snd_seq_ev_set_noteon(&ev, ch, 255, vol);	/* 255 works here? */
+	snd_seq_event_output(seq, &ev);
 }
 
 
 static void setnote(int ch, int note)
 {
-	snd_seq_ev_set_noteon(ev, ch, note, 0);
+	snd_seq_event_t ev;
+
+	snd_seq_ev_clear(&ev);
+	snd_seq_ev_set_noteon(&ev, ch, note, 0);
+	snd_seq_event_output(seq, &ev);
 }
 
 
 static void seteffect(int ch, int type, int val)
 {
+	snd_seq_event_t ev;
+
+	snd_seq_ev_clear(&ev);
+
 	switch (type) {
 	case XMP_FX_CHORUS:
-		snd_seq_ev_set_controller(ev, ch, , val);
+		//snd_seq_ev_set_controller(&ev, ch, , val);
 		break;
 	case XMP_FX_REVERB:
-		snd_seq_ev_set_controller(ev, ch, , val);
+		//snd_seq_ev_set_controller(&ev, ch, , val);
 		break;
 	case XMP_FX_CUTOFF:
-		snd_seq_ev_set_controller(ev, ch, , val);
+		//snd_seq_ev_set_controller(&ev, ch, , val);
 		break;
 	case XMP_FX_RESONANCE:
-		snd_seq_ev_set_controller(ev, ch, , val);
+		//snd_seq_ev_set_controller(&ev, ch, , val);
 		break;
 	}
-    }
+
+	snd_seq_event_output(seq, &ev);
 }
 
 
 static void setpan(int ch, int pan)
 {
-	snd_seq_ev_set_controller(ev, ch, , pan);
+	snd_seq_event_t ev;
+
+	snd_seq_ev_clear(&ev);
+	snd_seq_ev_set_controller(&ev, ch, , pan);
+	snd_seq_event_output(seq, &ev);
 }
 
 
 static void setbend(int ch, int bend)
 {
+	snd_seq_event_t ev;
+
+	snd_seq_ev_clear(&ev);
 	/* pitch bend; zero centered from -8192 to 8191 */
-	snd_seq_ev_set_pitchbend(ch, ch, bend);
+	snd_seq_ev_set_pitchbend(&ev, ch, bend);
+	snd_seq_event_output(seq, &ev);
 }
 
 
 static void starttimer ()
 {
-    SEQ_START_TIMER ();
-    seq_sync (0);
-    bufdump ();
+	snd_seq_start_queue(seq, queue, 0);
+	seq_sync(0);
+	bufdump();
 }
 
 
 static void stoptimer ()
 {
-    SEQ_STOP_TIMER ();
-    bufdump ();
+	snd_seq_stop_queue(seq, queue, 0);
+	bufdump();
 }
 
 
 static void resetvoices ()
 {
+#if 0
     int i;
 
 #ifdef AWE_DEVICE
@@ -200,19 +220,23 @@ static void resetvoices ()
 	SEQ_PANNING (dev, i, 0);
 	bufdump ();
     }
+#endif
 }
 
 
 static void bufwipe ()
 {
+#if 0
     bufdump ();
     ioctl (seqfd, SNDCTL_SEQ_RESET, 0);
     _seqbufptr = 0;
+#endif
 }
 
 
 static void bufdump ()
 {
+#if 0
     int i, j;
     fd_set rfds, wfds;
 
@@ -244,19 +268,24 @@ static void bufdump ()
 		_seqbufptr = 0;
 	}
     } while (_seqbufptr);
+#endif
 }
 
 
-static void clearmem ()
+static void clearmem()
 {
+#if 0
     int i = dev;
 
     ioctl (seqfd, SNDCTL_SEQ_RESETSAMPLES, &i);
+#endif
 }
 
 
-static void seq_sync (double next_time)
+static void seq_sync(double next_time)
 {
+	//snd_seq_ev_schedule_tick(&ev, q, 1, )
+#if 0
     static double this_time = 0;
 
     if (next_time == 0)
@@ -269,11 +298,13 @@ static void seq_sync (double next_time)
 	SEQ_WAIT_TIME(next_time * hz / 100);
 	this_time = next_time;
     }
+#endif
 }
 
 
-static int writepatch (struct patch_info *patch)
+static int writepatch(struct patch_info *patch)
 {
+#if 0
     struct sbi_instrument sbi;
 
     if (!patch) {
@@ -295,6 +326,7 @@ static int writepatch (struct patch_info *patch)
 	return XMP_OK;
     }
     SEQ_WRPATCH (patch, sizeof (struct patch_info) + patch->len - 1);
+#endif
 
     return XMP_OK;
 }
@@ -302,7 +334,7 @@ static int writepatch (struct patch_info *patch)
 
 static int getmsg ()
 {
-    return echo_msg;
+	//return echo_msg;
 }
 
 
