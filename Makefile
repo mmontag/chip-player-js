@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.25 2007-09-18 00:57:32 cmatsuoka Exp $
+# $Id: Makefile,v 1.26 2007-09-23 13:13:27 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -10,7 +10,7 @@ XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)
 MODULES	= intromuz-1hb.mod
-DFILES	= README configure configure.in Makefile Makefile.rules.in \
+DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
 DDIRS	= lib docs etc src scripts
 CFILES	=
