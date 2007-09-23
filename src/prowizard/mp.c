@@ -1,14 +1,10 @@
 /*
  * Module_Protector.c   Copyright (C) 1997 Asle / ReDoX
- *                      Modified by Claudio Matsuoka
+ *                      Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts MP packed MODs back to PTK MODs
- * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
- * would not exist !!!
  *
- * NOTE: It takes care of both MP packed files with or without ID !
- *
- * $Id: mp.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: mp.c,v 1.2 2007-09-23 22:08:24 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -29,7 +25,7 @@ struct pw_format pw_mp_id = {
 };
 
 struct pw_format pw_mp_noid = {
-	"MP",
+	"MP_noid",
 	"Module Protector (no ID)",
 	0x00,
 	test_MP_noID,
@@ -40,100 +36,59 @@ struct pw_format pw_mp_noid = {
 
 static int depack_MP (FILE *in, FILE *out)
 {
-	uint8 c1, c2, c3, c4;
+	uint8 c1;
 	uint8 ptable[128];
-	uint8 max = 0x00;
+	uint8 max;
 	uint8 *t;
-	long i = 0, j = 0;
-	long ssize = 0;
+	int i, j;
+	int size, ssize = 0;
 
-	bzero (ptable, 128);
+	bzero(ptable, 128);
 
-	for (i = 0; i < 20; i++)	/* title */
-		fwrite (&c1, 1, 1, out);
+	for (i = 0; i < 20; i++)			/* title */
+		write8(out, 0);
 
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	if (c1 != 'T' || c2 != 'R' || c3 != 'K' || c4 != '1')
-		fseek (in, -4, SEEK_CUR);
+	if (read32b(in) != 0x54524B31)			/* TRK1 */
+		fseek(in, -4, SEEK_CUR);
 
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
+		for (j = 0; j < 22; j++)		/*sample name */
+			write8(out, 0);
 
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write16b(out, size = read16b(in));	/* size */
+		ssize += size * 2;
+		write8(out, read8(in));			/* finetune */
+		write8(out, read8(in));			/* volume */
+		write16b(out, read16b(in));		/* loop start */
+		write16b(out, read16b(in));		/* loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* pattern table lenght */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
-	/*printf ( "Size of pattern list : %d\n" , c1 ); */
+	write16b(out, read16b(in));		/* pattern table length */
+	write16b(out, read16b(in));		/* NoiseTracker restart byte */
 
-	/* NoiseTracker restart byte */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
-
-	max = 0x00;
-	for (i = 0; i < 128; i++) {
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
+	for (max = i = 0; i < 128; i++) {
+		write8(out, c1 = read8(in));
 		if (c1 > max)
 			max = c1;
 	}
-	/*printf ( "Number of pattern : %d\n" , max+1 ); */
 
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
+	write32b(out, 0x4E2E4B2E);		/* M.K. */
 
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-
-	/* bypass 4 unknown empty bytes */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	if ((c1 != 0x00) || (c2 != 0x00) || (c3 != 0x00) || (c4 != 0x00)) {
-		fseek (in, -4, 1);	/* SEEK_CUR */
-	}
-	/*else */
-	/*printf ( "! four empty bytes bypassed at the beginning of the pattern data\n" ); */
+	if (read32b(in) != 0)			/* bypass unknown empty bytes */
+		fseek (in, -4, SEEK_CUR);
 
 	/* pattern data */
-	t = (uint8 *) malloc ((max + 1) * 1024);
-	bzero (t, (max + 1) * 1024);
-	fread (t, (max + 1) * 1024, 1, in);
-	fwrite (t, (max + 1) * 1024, 1, out);
-	free (t);
+	t = (uint8 *)malloc((max + 1) * 1024);
+	bzero(t, (max + 1) * 1024);
+	fread(t, (max + 1) * 1024, 1, in);
+	fwrite(t, (max + 1) * 1024, 1, out);
+	free(t);
 
 	/* sample data */
-	t = (uint8 *) malloc (ssize);
-	fread (t, ssize, 1, in);
-	fwrite (t, ssize, 1, out);
-	free (t);
+	t = (uint8 *)malloc(ssize);
+	fread(t, ssize, 1, in);
+	fwrite(t, ssize, 1, out);
+	free(t);
 
 	return 0;
 }
@@ -156,19 +111,15 @@ static int test_MP_noID (uint8 *data, int s)
 	/* test #2 */
 	l = 0;
 	for (j = 0; j < 31; j++) {
-		/* size */
-		k = (((data[start + 8 * j] << 8) +
-			 data[start + 1 + 8 * j]) * 2);
-		/* loop start */
-		m = (((data[start + 4 + 8 * j] << 8) +
-			 data[start + 5 + 8 * j]) * 2);
-		/* loop size */
-		n = (((data[start + 6 + 8 * j] << 8) +
-			 data[start + 7 + 8 * j]) * 2);
+		int x = start + 8 * j;
+
+		k = readmem16b(data + x) * 2;		/* size */
+		m = readmem16b(data + x + 4) * 2;	/* loop start */
+		n = readmem16b(data + x + 6) * 2;	/* loop size */
 		l += k;
 
 		/* finetune > 0x0f ? */
-		if (data[start + 2 + 8 * j] > 0x0f)
+		if (data[x + 2] > 0x0f)
 			return -1;
 
 		/* loop start+replen > size ? */
@@ -214,13 +165,15 @@ static int test_MP_noID (uint8 *data, int s)
 	/* test #5  ptk notes .. gosh ! (testing all patterns !) */
 	/* k contains the number of pattern saved */
 	for (j = 0; j < (256 * k); j++) {
-		l = data[start + 378 + j * 4];
-		if (l > 19)
+		int x = start + j * 4;
+
+		l = data[x + 378];
+		if (l > 19 && l != 74)		/* MadeInCroatia has l == 74 */
 			return -1;
 
-		ssize = data[start + 378 + j * 4] & 0x0f;
+		ssize = data[x + 378] & 0x0f;
 		ssize *= 256;
-		ssize += data[start + 379 + j * 4];
+		ssize += data[x + 379];
 
 		if (ssize > 0 && ssize < 0x71)
 			return -1;
@@ -228,12 +181,11 @@ static int test_MP_noID (uint8 *data, int s)
 
 	/* test #6  (loopStart+LoopSize > Sample ? ) */
 	for (j = 0; j < 31; j++) {
-		k = (((data[start + j * 8] << 8) +
-			 data[start + 1 + j * 8]) * 2);
-		l = (((data[start + 4 + j * 8] << 8) +
-			 data[start + 5 + j * 8]) * 2) +
-			(((data[start + 6 + j * 8] << 8) +
-			data[start + 7 + j * 8]) * 2);
+		int x = start + j * 8;
+
+		k = readmem16b(data + x) * 2;
+		l = (readmem16b(data + x + 4) + readmem16b(data + x + 6)) * 2;
+
 		if (l > (k + 2))
 			return -1;
 	}
@@ -248,7 +200,7 @@ static int test_MP_ID (uint8 *data, int s)
 	int start = 0;
 
 	/* "TRK1" Module Protector */
-	if (data[0]!='T' || data[1]!='R' || data[2]!='K' || data[3]!='1')
+	if (readmem32b(data) != 0x54524B31)
 		return -1;
 
 	/* test #1 */
