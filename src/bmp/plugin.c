@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.21 2007-09-22 17:34:46 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.22 2007-09-23 00:36:48 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -226,9 +226,9 @@ static void aboutbox ()
 	gtk_object_set_data(GTK_OBJECT(label1), "label1", label1);
 	gtk_box_pack_start(GTK_BOX(vbox1), label1, TRUE, TRUE, 0);
 
-	scroll1 = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll1),
-		GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+	scroll1 = gtk_scrolled_window_new(NULL, NULL);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll1),
+			GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gtk_widget_set_size_request(scroll1, 290, 100);
 #endif
@@ -236,8 +236,8 @@ static void aboutbox ()
 	gtk_widget_set (scroll1, "height", 100, NULL);
 	gtk_box_pack_start(GTK_BOX(vbox1), scroll1, TRUE, TRUE, 0);
 
-	xmp_get_fmt_info (&fmt);
-	table1 = gtk_table_new (100, 2, FALSE);
+	xmp_get_fmt_info(&fmt);
+	table1 = gtk_table_new(100, 2, FALSE);
 	for (i = 0, f = fmt; f; i++, f = f->next) {
 		label_fmt = gtk_label_new(f->suffix);
 		label_trk = gtk_label_new(f->tracker);
@@ -283,15 +283,14 @@ static GdkImage *image;
 static GtkWidget *image1;
 static GtkWidget *frame1;
 
+static GtkWidget *text1;
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-static GtkWidget *text1v;
 static GtkTextBuffer *text1b;
 #endif
 #ifdef PLUGIN_XMMS
-static GtkWidget *text1;
+static GdkFont *font;
 #endif
 
-static GdkFont *font;
 static GdkColor *color_black;
 static GdkColor *color_white;
 static GdkColormap *colormap;
@@ -654,9 +653,9 @@ static void play_file(InputPlayback *ipb)
 #endif
 
 #ifdef PLUGIN_XMMS
-	gtk_text_set_point (GTK_TEXT(text1), 0);
-	gtk_text_forward_delete (GTK_TEXT(text1),
-			gtk_text_get_length (GTK_TEXT(text1)));
+	gtk_text_set_point(GTK_TEXT(text1), 0);
+	gtk_text_forward_delete(GTK_TEXT(text1),
+			gtk_text_get_length(GTK_TEXT(text1)));
 #endif
 	
 	xmp_xmms_audio_error = FALSE;
@@ -737,7 +736,7 @@ static void play_file(InputPlayback *ipb)
 	dup2 (fileno (stderr), fd_old2);
 
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1v)->vadjustment, 0.0);
+	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1)->vadjustment, 0.0);
 #endif
 
 #ifdef PLUGIN_XMMS
@@ -1235,41 +1234,35 @@ static void file_info_box_build()
 	expander = gtk_frame_new("Module information");
 #endif
 
-	scrw1 = gtk_scrolled_window_new (NULL, NULL);
+	scrw1 = gtk_scrolled_window_new(NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrw1),
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrw1),
 				GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
 
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gtk_widget_set_size_request(scrw1, 290, 200);
-#endif
-
-	gtk_container_add (GTK_CONTAINER(expander), scrw1);
-
+	gtk_container_add(GTK_CONTAINER(expander), scrw1);
 	gtk_box_pack_start(GTK_BOX(vbox1), expander, TRUE, TRUE, 0);
 
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
+	gtk_widget_set_size_request(scrw1, 290, 200);
 	text1b = gtk_text_buffer_new(NULL);
-	text1v = gtk_text_view_new_with_buffer(text1b);
+	text1 = gtk_text_view_new_with_buffer(text1b);
 	desc = pango_font_description_new();
 	pango_font_description_set_family(desc, "Monospace");
-	gtk_widget_modify_font(text1v, desc);
+	gtk_widget_modify_font(text1, desc);
 	pango_font_description_free(desc);
-	//gtk_object_set_data(GTK_OBJECT(text1b), "text1b", text1b);
-	gtk_object_set_data(GTK_OBJECT(text1v), "text1v", text1v);
-	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1v), GTK_WRAP_NONE);
-	gtk_container_add (GTK_CONTAINER(scrw1), text1v);
-	gtk_widget_realize (text1v);
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1), GTK_WRAP_NONE);
 #endif
 
 #ifdef PLUGIN_XMMS
+	gtk_widget_set(scrw1, "width", 290, "height", 160, NULL);
 	text1 = gtk_text_new(NULL, NULL);
-	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
-	gtk_text_set_line_wrap (GTK_TEXT(text1), FALSE);
-	gtk_widget_set (text1, "height", 160, "width", 290, NULL);
-	gtk_container_add (GTK_CONTAINER(scrw1), text1);
-	gtk_widget_realize (text1);
+	font = gdk_font_load("fixed");
+	gtk_text_set_line_wrap(GTK_TEXT(text1), FALSE);
 #endif
+
+	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
+	gtk_container_add(GTK_CONTAINER(scrw1), text1);
+	gtk_widget_realize(text1);
 
 	gtk_widget_realize (image1);
 
@@ -1277,25 +1270,22 @@ static void file_info_box_build()
 	window = GDK_WINDOW_XWINDOW (info_window->window);
     	colormap = gdk_colormap_get_system ();
 
-	font = gdk_font_load ("fixed");
-	gdk_color_black (colormap, color_black);
-	gdk_color_white (colormap, color_white);
+	gdk_color_black(colormap, color_black);
+	gdk_color_white(colormap, color_white);
 
+	init_visual(visual);
 
-	init_visual (visual);
-
-
-	set_palette ();
-	clear_screen ();
+	set_palette();
+	clear_screen();
 
 	ii->wresult = 0;
 
-	panel_setup ();
-	gtk_timeout_add (50, (GtkFunction)panel_loop, NULL);
+	panel_setup();
+	gtk_timeout_add(50, (GtkFunction)panel_loop, NULL);
 }
 
 
-static void file_info_box (char *filename)
+static void file_info_box(char *filename)
 {
 	_D ("Info box");
 
