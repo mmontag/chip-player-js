@@ -1,18 +1,31 @@
 /*
- *   TrackerPacker_v3.c   1998 (c) Asle / ReDoX
+ *   TrackerPacker_v3.c   Copyright (C) 1998 Asle / ReDoX
+ *                        Copyright (C) 2007 Claudio Matsuoka
  *
- * Converts TP3 packed MODs back to PTK MODs
- ********************************************************
- * 13 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
- *     It speeds-up the process quite a bit :).
+ * Converts tp3 packed MODs back to PTK MODs
  *
-*/
+ * $Id: tp3.c,v 1.2 2007-09-24 18:30:29 cmatsuoka Exp $
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-void Depack_TP3 (FILE * in, FILE * out)
+
+static int depack_tp3 (uint8 *, FILE *);
+static int test_tp3 (uint8 *, int);
+
+struct pw_format pw_tp3 = {
+        "TP3",
+        "Trackerpacker 3",
+        0x00,
+        test_tp3,
+        depack_tp3,
+        NULL
+};
+
+
+static int depack_tp3 (uint8 *data, FILE *out)
 {
 	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
 	uint8 ptk_table[37][2];
@@ -22,24 +35,16 @@ void Depack_TP3 (FILE * in, FILE * out)
 	uint8 note, ins, fxt, fxp;
 	uint8 PatMax = 0x00;
 	uint8 PatPos;
-	long Track_Address[128][4];
-	long i = 0, j = 0, k;
-	long Start_Pat_Address = 999999l;
-	long Whole_Sample_Size = 0;
-	long Max_Track_Address = 0;
-	long Where = start;	/* main pointer to prevent fread() */
-	// FILE *out;
+	int Track_Address[128][4];
+	int i = 0, j = 0, k;
+	int Start_Pat_Address = 999999l;
+	int Whole_Sample_Size = 0;
+	int Max_Track_Address = 0;
+	int start = 0;
+	int Where = start;
 
-#include "ptktable.h"
-
-	if (Save_Status == BAD)
-		return;
-
-	bzero (Track_Address, 128 * 4 * 4);
-	bzero (pnum, 128);
-
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
+	bzero(Track_Address, 128 * 4 * 4);
+	bzero(pnum, 128);
 
 	/* title */
 	Where += 8;
@@ -51,7 +56,6 @@ void Depack_TP3 (FILE * in, FILE * out)
 	c2 = data[Where++];
 	j = (c1 << 8) + c2;
 	j /= 8;
-	/*printf ( "number of sample : %ld\n" , j ); */
 
 	for (i = 0; i < j; i++) {
 		c1 = 0x00;
@@ -137,7 +141,6 @@ void Depack_TP3 (FILE * in, FILE * out)
 	/* write pattern list */
 	fwrite (pnum, 128, 1, out);
 
-
 	/* ID string */
 	c1 = 'M';
 	c2 = '.';
@@ -158,8 +161,7 @@ void Depack_TP3 (FILE * in, FILE * out)
 		bzero (Pattern, 1024);
 		for (j = 0; j < 4; j++) {
 /*fprintf ( info , "track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );*/
-			Where =
-				start + Track_Address[i][j] +
+			Where = start + Track_Address[i][j] +
 				Start_Pat_Address;
 			for (k = 0; k < 64; k++) {
 				c1 = data[Where++];
@@ -249,106 +251,78 @@ void Depack_TP3 (FILE * in, FILE * out)
 	fwrite (&data[start + Max_Track_Address],
 		Whole_Sample_Size, 1, out);
 
-	Crap ("TP3:Tracker Packer 3", BAD, BAD, out);
-
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
-#include <string.h>
-#include <stdlib.h>
 
-void testTP3 (void)
+static int test_tp3(uint8 *data, int s)
 {
+	int start = 0;
+	int j, k, l, m, n;
+	int ssize;
 
-	start = i;
+	PW_REQUEST_DATA(s, 1024);
+
+	if (memcmp(data, "CPLX_TP3", 8))
+		return -1;
 
 	/* number of sample */
-	l = ((data[start + 28] << 8) +
-		data[start + 29]);
-	if ((((l / 8) * 8) != l) || (l == 0)) {
-/*printf ( "#2 Start: %ld\n" , start );*/
-		Test = BAD;
-		return;
-	}
+	l = ((data[start + 28] << 8) + data[start + 29]);
+
+	if ((((l / 8) * 8) != l) || (l == 0))
+		return -1;
+
 	l /= 8;
+
 	/* l is the number of sample */
 
 	/* test finetunes */
 	for (k = 0; k < l; k++) {
-		if (data[start + 30 + k * 8] > 0x0f) {
-/*printf ( "#3 Start: %ld\n" , start );*/
-			Test = BAD;
-			return;
-		}
+		if (data[start + 30 + k * 8] > 0x0f)
+			return -1;
 	}
 
 	/* test volumes */
 	for (k = 0; k < l; k++) {
-		if (data[start + 31 + k * 8] > 0x40) {
-/*printf ( "#4 Start: %ld\n" , start );*/
-			Test = BAD;
-			return;
-		}
+		if (data[start + 31 + k * 8] > 0x40)
+			return - 1;
 	}
 
 	/* test sample sizes */
 	ssize = 0;
 	for (k = 0; k < l; k++) {
 		/* size */
-		j =
-			(data[start + k * 8 + 32] << 8) +
-			data[start + k * 8 + 33];
+		j = (data[start + k * 8 + 32] << 8) + data[start + k * 8 + 33];
 		/* loop start */
-		m =
-			(data[start + k * 8 + 34] << 8) +
-			data[start + k * 8 + 35];
+		m = (data[start + k * 8 + 34] << 8) + data[start + k * 8 + 35];
 		/* loop size */
-		n =
-			(data[start + k * 8 + 36] << 8) +
-			data[start + k * 8 + 37];
+		n = (data[start + k * 8 + 36] << 8) + data[start + k * 8 + 37];
 		j *= 2;
 		m *= 2;
 		n *= 2;
-		if ((j > 0xFFFF) || (m > 0xFFFF) || (n > 0xFFFF)) {
-/*printf ( "#5 Start:%ld\n" , start );*/
-			ssize = 0;
-			Test = BAD;
-			return;
-		}
-		if ((m + n) > (j + 2)) {
-/*printf ( "#5,1 Start:%ld\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
-		}
-		if ((m != 0) && (n == 0)) {
-/*printf ( "#5,2 Start:%ld\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
-		}
+		if ((j > 0xFFFF) || (m > 0xFFFF) || (n > 0xFFFF))
+			return -1;
+
+		if ((m + n) > (j + 2))
+			return -1;
+
+		if ((m != 0) && (n == 0))
+			return -1;
+
 		ssize += j;
 	}
-	if (ssize <= 4) {
-/*printf ( "#5,3 Start:%ld\n" , start );*/
-		Test = BAD;
-		ssize = 0;
-		return;
-	}
+
+	if (ssize <= 4)
+		return -1;
 
 	/* pattern list size */
 	j = data[start + l * 8 + 31];
-	if ((l == 0) || (l > 128)) {
-/*printf ( "#6 Start:%ld\n" , start );*/
-		Test = BAD;
-		return;
-	}
+	if ((l == 0) || (l > 128))
+		return -1;
 
 	/* j is the size of the pattern list */
 	/* l is the number of sample */
 	/* ssize is the sample data size */
-	Test = GOOD;
+
+	return 0;
 }

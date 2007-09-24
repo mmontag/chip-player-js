@@ -8,7 +8,7 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: zen.c,v 1.2 2007-09-19 13:02:12 cmatsuoka Exp $
+ * $Id: zen.c,v 1.3 2007-09-24 18:30:29 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -66,8 +66,8 @@ static int depack_zen(uint8 *data, FILE *out)
 		write8(out, 0);
 
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		fwrite (&c1, 1, 22, out);
+		for (j = 0; j < 22; j++)
+			write8(out, 0);
 
 		/* read finetune */
 		finetune = readmem16b(data + where) / 0x48;

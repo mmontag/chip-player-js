@@ -1,11 +1,11 @@
 /*
  * PhaPacker.c   Copyright (C) 1996-1999 Asle / ReDoX
- *               Modified by Claudio Matsuoka
+ *               Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.5 2007-09-24 01:19:48 cmatsuoka Exp $
+ * $Id: pha.c,v 1.6 2007-09-24 18:30:28 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -17,7 +17,7 @@ static int depack_pha (FILE *, FILE *);
 
 struct pw_format pw_pha = {
 	"PHA",
-	"Phenomena Packer",
+	"Pha Packer",
 	0x00,
 	test_pha,
 	NULL,
