@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa_seq.c,v 1.4 2007-09-24 11:15:57 cmatsuoka Exp $
+ * $Id: alsa_seq.c,v 1.5 2007-09-24 11:36:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 
 static snd_seq_t *seq;
 static int queue;
-static int echo_msg;
+//static int echo_msg;
 static int my_client, my_port;
 static int dest_client, dest_port;
 static int nvoices;
@@ -365,7 +365,7 @@ static void seq_sync(double next_time)
 
 	t.tv_sec = next_time / 100;
 	t.tv_nsec = modf(next_time / 100, &iptr) * 1e9;
-	snd_seq_ev_schedule_tick(&ev, queue, 0, &t);
+	snd_seq_ev_schedule_real(&ev, queue, 0, &t);
 	midi_send(&ev);
 }
 
@@ -428,8 +428,6 @@ static int init (struct xmp_control *ctl)
 	my_client = snd_seq_client_id(seq);
 	snd_seq_set_client_name(seq, "xmp");
 
-	queue = snd_seq_alloc_queue(seq);
-	
 	my_port = snd_seq_create_simple_port(seq, NULL,
 		SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE |
 		SND_SEQ_PORT_CAP_READ, SND_SEQ_PORT_TYPE_MIDI_GENERIC);
@@ -447,6 +445,8 @@ static int init (struct xmp_control *ctl)
 		goto error;
         }
 
+	queue = snd_seq_alloc_queue(seq);
+	
 	bufdump ();
 
 	return XMP_OK;
@@ -459,5 +459,7 @@ error:
 
 static void shutdown ()
 {
-	
+	snd_seq_free_queue(seq, queue);
+	snd_hwdep_close(hwdep);
+	snd_seq_close(seq);
 }
