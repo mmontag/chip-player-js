@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.28 2007-09-24 19:57:06 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.29 2007-09-24 20:22:38 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -317,17 +317,20 @@ dnl Needed by NAS
 AC_PATH_XTRA
 
 dnl Don't use NetBSD's Linux OSS emulation
+case ${target_os} in
+netbsd*)
+    if test "${enable_oss}" != "yes"; then
+	enable_oss=no
+    fi
+    ;;
+esac
+
 if test "${ac_cv_header_sys_soundcard_h}" = "yes" || \
     test "${ac_cv_header_machine_soundcard_h}" = "yes"; then
     if test "${enable_oss}" != "no" && test -z "$is_win32"; then
-        case ${target_os} in
-	netbsd*)
-	    ;;
-	*)
-	    DRIVERS="${DRIVERS} oss_seq.o oss_mix.o"
-	    AC_DEFINE(DRIVER_OSS_SEQ)
-	    AC_DEFINE(DRIVER_OSS_MIX)
-	esac
+	DRIVERS="${DRIVERS} oss_seq.o oss_mix.o"
+	AC_DEFINE(DRIVER_OSS_SEQ)
+	AC_DEFINE(DRIVER_OSS_MIX)
     fi
 fi 
 
