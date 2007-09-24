@@ -4,7 +4,7 @@
  *
  * Converts tp3 packed MODs back to PTK MODs
  *
- * $Id: tp3.c,v 1.2 2007-09-24 18:30:29 cmatsuoka Exp $
+ * $Id: tp3.c,v 1.3 2007-09-24 20:24:02 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -38,83 +38,58 @@ static int depack_tp3 (uint8 *data, FILE *out)
 	int Track_Address[128][4];
 	int i = 0, j = 0, k;
 	int Start_Pat_Address = 999999l;
-	int Whole_Sample_Size = 0;
+	int size, ssize = 0;
 	int Max_Track_Address = 0;
 	int start = 0;
-	int Where = start;
+	int where = start;
 
 	bzero(Track_Address, 128 * 4 * 4);
 	bzero(pnum, 128);
 
 	/* title */
-	Where += 8;
-	fwrite (&data[Where], 20, 1, out);
-	Where += 20;
+	where += 8;
+	fwrite (&data[where], 20, 1, out);
+	where += 20;
 
 	/* number of sample */
-	c1 = data[Where++];
-	c2 = data[Where++];
-	j = (c1 << 8) + c2;
-	j /= 8;
+	j = readmem16b(data + where) / 8;
+	where += 2;
 
 	for (i = 0; i < j; i++) {
-		c1 = 0x00;
 		for (k = 0; k < 22; k++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
+			write8(out, 0);
 
-		/* read fine */
-		c3 = data[Where++];
+		c3 = data[where++];		/* read fine */
+		c4 = data[where++];		/* read volume */
 
-		/* read volume */
-		c4 = data[Where++];
+		write16b(out, size = readmem16b(data + where)); /* size */
+		ssize += size * 2;
+		where += 2;
 
-		/* size */
-		c1 = data[Where++];
-		c2 = data[Where++];
-		Whole_Sample_Size += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write8(out, c3);		/* write finetune */
+		write8(out, c4);		/* write volume */
 
-		/* write finetune */
-		fwrite (&c3, 1, 1, out);
-
-		/* write volume */
-		fwrite (&c4, 1, 1, out);
-
-		c1 = data[Where++];	/* loop start */
-		c2 = data[Where++];
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
-		c1 = data[Where++];	/* loop size */
-		c2 = data[Where++];
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
+		write16b(out, readmem16b(data + where)); /* loop start */
+		where += 2;
+		write16b(out, readmem16b(data + where)); /* loop size */
+		where += 2;
 	}
-	tmp = (uint8 *) malloc (30);
-	bzero (tmp, 30);
+
+	tmp = (uint8 *)malloc(30);
+	bzero(tmp, 30);
 	tmp[29] = 0x01;
-	while (i != 31) {
-		fwrite (tmp, 30, 1, out);
-		i++;
-	}
-	/*printf ( "Whole sample size : %ld\n" , Whole_Sample_Size ); */
+	for (; i != 31; i++)
+		fwrite(tmp, 30, 1, out);
 
 	/* read size of pattern table */
-	c1 = data[Where++];
-	c2 = data[Where++];
-	PatPos = c2;
-	fwrite (&PatPos, 1, 1, out);
+	where++;
+	write8(out, PatPos = data[where++]);
 
-	/* ntk byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	write8(out, 0x7f);			/* ntk byte */
 
 	for (i = 0; i < PatPos; i++) {
-		c3 = data[Where++];
-		c4 = data[Where++];
-		pnum[i] = ((c3 << 8) + c4) / 8;
+		pnum[i] = readmem16b(data + where) / 8;
+		where += 2;
 		if (pnum[i] > PatMax)
 			PatMax = pnum[i];
 /*fprintf ( info , "%3ld: %ld\n" , i,paddr[i] );*/
@@ -123,11 +98,12 @@ static int depack_tp3 (uint8 *data, FILE *out)
 	/* read tracks addresses */
 	/* bypass 4 bytes or not ?!? */
 	/* Here, I choose not :) */
+
 /*fprintf ( info , "track addresses :\n" );*/
 	for (i = 0; i <= PatMax; i++) {
 		for (j = 0; j < 4; j++) {
-			c1 = data[Where++];
-			c2 = data[Where++];
+			c1 = data[where++];
+			c2 = data[where++];
 			Track_Address[i][j] = (c1 << 8) + c2;
 			if (Track_Address[i][j] > Max_Track_Address)
 				Max_Track_Address = Track_Address[i][j];
@@ -138,33 +114,25 @@ static int depack_tp3 (uint8 *data, FILE *out)
 
 	/*printf ( "Highest pattern number : %d\n" , PatMax ); */
 
-	/* write pattern list */
-	fwrite (pnum, 128, 1, out);
+	fwrite(pnum, 128, 1, out);		/* write pattern list */
 
-	/* ID string */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, 0x4E2E4B2E);		/* ID string */
 
-	Start_Pat_Address = Where + 2;
-	/*printf ( "address of the first pattern : %ld\n" , Start_Pat_Address ); */
-/*fprintf ( info , "address of the first pattern : %x\n" , Start_Pat_Address );*/
+	Start_Pat_Address = where + 2;
+
+printf( "address of the first pattern : %ld\n" , Start_Pat_Address ); 
 
 	/* pattern datas */
-	/*printf ( "converting pattern data " ); */
+printf( "converting pattern data " );
 	for (i = 0; i <= PatMax; i++) {
-/*fprintf ( info , "\npattern %ld:\n\n" , i );*/
+printf("\npattern %ld:\n\n" , i );
 		bzero (Pattern, 1024);
 		for (j = 0; j < 4; j++) {
-/*fprintf ( info , "track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );*/
-			Where = start + Track_Address[i][j] +
+printf("track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );
+			where = start + Track_Address[i][j] +
 				Start_Pat_Address;
 			for (k = 0; k < 64; k++) {
-				c1 = data[Where++];
+				c1 = data[where++];
 /*fprintf ( info , "%ld: %2x," , k , c1 );*/
 				if ((c1 & 0xC0) == 0xC0) {
 /*fprintf ( info , " <--- %d empty lines\n" , (0x100-c1) );*/
@@ -173,7 +141,7 @@ static int depack_tp3 (uint8 *data, FILE *out)
 					continue;
 				}
 				if ((c1 & 0xC0) == 0x80) {
-					c2 = data[Where++];
+					c2 = data[where++];
 /*fprintf ( info , "%2x ,\n" , c2 );*/
 					fxt = (c1 >> 1) & 0x0f;
 					fxp = c2;
@@ -193,7 +161,7 @@ static int depack_tp3 (uint8 *data, FILE *out)
 					continue;
 				}
 
-				c2 = data[Where++];
+				c2 = data[where++];
 /*fprintf ( info , "%2x, " , c2 );*/
 				ins = ((c2 >> 4) & 0x0f) | ((c1 >> 2) & 0x10);
 				if ((c1 & 0x40) == 0x40)
@@ -213,7 +181,7 @@ static int depack_tp3 (uint8 *data, FILE *out)
 					Pattern[k * 16 + j * 4 + 2] |= fxt;
 					continue;
 				}
-				c3 = data[Where++];
+				c3 = data[where++];
 /*fprintf ( info , "%2x\n" , c3 );*/
 				if (fxt == 0x08)
 					fxt = 0x00;
@@ -234,8 +202,8 @@ static int depack_tp3 (uint8 *data, FILE *out)
 				Pattern[k * 16 + j * 4 + 2] |= fxt;
 				Pattern[k * 16 + j * 4 + 3] = fxp;
 			}
-			if (Where > Max_Track_Address)
-				Max_Track_Address = Where;
+			if (where > Max_Track_Address)
+				Max_Track_Address = where;
 /*fprintf ( info , "%6ld, " , Max_Track_Address );*/
 		}
 		fwrite (Pattern, 1024, 1, out);
@@ -249,7 +217,7 @@ static int depack_tp3 (uint8 *data, FILE *out)
 	if (((Max_Track_Address / 2) * 2) != Max_Track_Address)
 		Max_Track_Address += 1;
 	fwrite (&data[start + Max_Track_Address],
-		Whole_Sample_Size, 1, out);
+		ssize, 1, out);
 
 	return 0;
 }
