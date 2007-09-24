@@ -56,10 +56,10 @@ The current version recognizes the following module formats:
   NP	****+	NoisePacker		1.0, 2.0, 3.0
   TP    ****	The Player		6.0a
   PM	***	Power Music		-
-  PP10	****+	Pha Packer		-
-  PROM	****	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
+  PHA	***	Phenomena Packer	-
+  PROM	****+	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
-  UNIC	****	Unic Tracker		1.0, 2.0
+  UNIC	****+	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
   XANN	****+	XANN Packer		-
   ZEN	****+	Zen Packer		-

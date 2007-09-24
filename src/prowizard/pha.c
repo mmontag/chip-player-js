@@ -5,7 +5,7 @@
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.4 2007-09-19 18:27:06 cmatsuoka Exp $
+ * $Id: pha.c,v 1.5 2007-09-24 01:19:48 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -17,7 +17,7 @@ static int depack_pha (FILE *, FILE *);
 
 struct pw_format pw_pha = {
 	"PHA",
-	"Pha Packer",
+	"Phenomena Packer",
 	0x00,
 	test_pha,
 	NULL,
@@ -55,7 +55,7 @@ static int depack_pha(FILE *in, FILE *out)
 	bzero(onote, 4 * 4);
 	bzero(ocpt, 4 * 2);
 
-	for (i = 0; i < 20; i++)	/* title */
+	for (i = 0; i < 20; i++)		/* title */
 		write8(out, 0);
 
 	for (i = 0; i < 31; i++) {
@@ -65,8 +65,7 @@ static int depack_pha(FILE *in, FILE *out)
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		read8(in);
-		write8(out, 0);		/* finetune byte in ptk's case .. */
-
+		write8(out, 0);			/* finetune byte */
 		write8(out, read8(in));		/* volume */
 		write16b(out, read16b(in));	/* loop start */
 		write16b(out, read16b(in));	/* loop size */
@@ -81,10 +80,8 @@ static int depack_pha(FILE *in, FILE *out)
 		fseek(out, 0, SEEK_END);
 		fseek(in, 1, SEEK_CUR);
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* bypass those unknown 14 bytes */
-	fseek (in, 14, 1);	/* SEEK_CUR */
+	fseek(in, 14, SEEK_CUR);		/* bypass unknown 14 bytes */
 
 	for (i = 0; i < 128; i++)
 		paddr[i] = read32b(in);
@@ -154,14 +151,14 @@ restart:
 		}
 	}
 
-	for (c1 = 0x00; c1 < 128; c1++) {
-		for (c2 = 0x00; c2 < 128; c2++)
+	for (c1 = 0; c1 < 128; c1++) {
+		for (c2 = 0; c2 < 128; c2++)
 			if (paddr[c1] == paddr1[c2]) {
 				pnum1[c1] = c2;
 			}
 	}
 
-	bzero (pnum, 128);
+	bzero(pnum, 128);
 	Start_Pat_Address = 999999l;
 	for (i = 0; i < 128; i++) {
 		pnum[i] = pnum1[i];
@@ -170,9 +167,10 @@ restart:
 	}
 
 	/* try to get the number of pattern in pattern list */
-	for (nop = 128; nop > 0x00; nop--)
-		if (pnum[nop - 1] != 0x00)
+	for (nop = 128; nop > 0; nop--) {
+		if (pnum[nop - 1] != 0)
 			break;
+	}
 
 	/* write this value */
 	write8(out, nop);
@@ -182,16 +180,12 @@ restart:
 		if (pnum[i] > npat)
 			npat = pnum[i];
 
-	/*printf ( "Highest pattern number : %d\n" , npat ); */
+	write8(out, 0x7f);			/* ntk restart byte */
 
-	write8(out, 0x7f);	/* ntk restart byte */
-
-	/* write pattern list */
-	for (i = 0; i < 128; i++)
+	for (i = 0; i < 128; i++)		/* write pattern list */
 		write8(out, pnum[i]);
 
-	/* ID string */
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, 0x4E2E4B2E);		/* ID string */
 
 	sdata_Address = ftell(in);
 	fseek(in, Start_Pat_Address, SEEK_SET);
