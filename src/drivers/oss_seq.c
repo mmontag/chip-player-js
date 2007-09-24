@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.5 2007-09-22 00:41:33 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.6 2007-09-24 11:15:58 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -58,7 +58,7 @@
 #define AWE_DEVICE
 #endif
 
-#define SEQ_NUM_VOICES	32			/* #?# **** FIXME **** */
+#define SEQ_NUM_VOICES	32	/* FIXME? */
 
 SEQ_DEFINEBUF(2048);
 
@@ -130,7 +130,7 @@ static int reverbmode = 0;
 static char *dev_sequencer = "/dev/sequencer";
 
 
-static int numvoices (int num)
+static int numvoices(int num)
 {
     switch (si.synth_subtype) {
     case SAMPLE_TYPE_GUS:
@@ -149,37 +149,37 @@ static int numvoices (int num)
 }
 
 
-static void voicepos (int ch, int pos)
+static void voicepos(int ch, int pos)
 {
     GUS_VOICE_POS (dev, ch, pos);
 }
 
 
-static void echoback (int msg)
+static void echoback(int msg)
 {
     SEQ_ECHO_BACK (msg);
 }
 
 
-static void setpatch (int ch, int smp)
+static void setpatch(int ch, int smp)
 {
     SEQ_SET_PATCH (dev, ch, smp);
 }
 
 
-static void setvol (int ch, int vol)
+static void setvol(int ch, int vol)
 {
     SEQ_START_NOTE (dev, ch, 255, vol);
 }
 
 
-static void setnote (int ch, int note)
+static void setnote(int ch, int note)
 {
     SEQ_START_NOTE (dev, ch, note, 0);
 }
 
 
-static void seteffect (int ch, int type, int val)
+static void seteffect(int ch, int type, int val)
 {
 #ifdef AWE_DEVICE
     if (si.synth_subtype == SAMPLE_TYPE_AWE32) {
@@ -202,34 +202,34 @@ static void seteffect (int ch, int type, int val)
 }
 
 
-static void setpan (int ch, int pan)
+static void setpan(int ch, int pan)
 {
-    GUS_VOICEBALA (dev, ch, (pan + 0x80) >> 4)
+    GUS_VOICEBALA(dev, ch, (pan + 0x80) >> 4)
 }
 
 
-static void setbend (int ch, int bend)
+static void setbend(int ch, int bend)
 {
-    SEQ_PITCHBEND (dev, ch, bend);
+    SEQ_PITCHBEND(dev, ch, bend);
 }
 
 
-static void starttimer ()
+static void starttimer()
 {
-    SEQ_START_TIMER ();
-    seq_sync (0);
-    bufdump ();
+    SEQ_START_TIMER();
+    seq_sync(0);
+    bufdump();
 }
 
 
-static void stoptimer ()
+static void stoptimer()
 {
-    SEQ_STOP_TIMER ();
-    bufdump ();
+    SEQ_STOP_TIMER();
+    bufdump();
 }
 
 
-static void resetvoices ()
+static void resetvoices()
 {
     int i;
 
@@ -240,40 +240,40 @@ static void resetvoices ()
     }
 #endif
     for (i = 0; i < SEQ_NUM_VOICES; i++) {
-	SEQ_STOP_NOTE (dev, i, 255, 0);
-	SEQ_EXPRESSION (dev, i, 255);
-	SEQ_MAIN_VOLUME (dev, i, 100);
-	SEQ_CONTROL (dev, i, CTRL_PITCH_BENDER_RANGE, 8191);
-	SEQ_BENDER (dev, i, 0);
-	SEQ_PANNING (dev, i, 0);
-	bufdump ();
+	SEQ_STOP_NOTE(dev, i, 255, 0);
+	SEQ_EXPRESSION(dev, i, 255);
+	SEQ_MAIN_VOLUME(dev, i, 100);
+	SEQ_CONTROL(dev, i, CTRL_PITCH_BENDER_RANGE, 8191);
+	SEQ_BENDER(dev, i, 0);
+	SEQ_PANNING(dev, i, 0);
+	bufdump();
     }
 }
 
 
-static void bufwipe ()
+static void bufwipe()
 {
-    bufdump ();
-    ioctl (seqfd, SNDCTL_SEQ_RESET, 0);
+    bufdump();
+    ioctl(seqfd, SNDCTL_SEQ_RESET, 0);
     _seqbufptr = 0;
 }
 
 
-static void bufdump ()
+static void bufdump()
 {
     int i, j;
     fd_set rfds, wfds;
 
-    FD_ZERO (&rfds);
-    FD_ZERO (&wfds);
+    FD_ZERO(&rfds);
+    FD_ZERO(&wfds);
 
     do {
-	FD_SET (seqfd, &rfds);
-	FD_SET (seqfd, &wfds);
-	select (seqfd + 1, &rfds, &wfds, NULL, NULL);
+	FD_SET(seqfd, &rfds);
+	FD_SET(seqfd, &wfds);
+	select(seqfd + 1, &rfds, &wfds, NULL, NULL);
 
 	if (FD_ISSET (seqfd, &rfds)) {
-	    if ((read (seqfd, &echo_msg, 4) == 4) &&
+	    if ((read(seqfd, &echo_msg, 4) == 4) &&
 		((echo_msg & 0xff) == SEQ_ECHO)) {
 		echo_msg >>= 8;
 		xmp_event_callback (echo_msg);
@@ -281,13 +281,13 @@ static void bufdump ()
 		echo_msg = 0;		/* ECHO_NONE */
 	}
 
-	if (FD_ISSET (seqfd, &wfds) && ((j = _seqbufptr) != 0)) {
+	if (FD_ISSET(seqfd, &wfds) && ((j = _seqbufptr) != 0)) {
 	    if ((i = write (seqfd, _seqbuf, _seqbufptr)) == -1) {
 		fprintf (stderr, "xmp: can't write to sequencer\n");
 		exit (-4);
 	    } else if (i < j) {
 		_seqbufptr -= i;
-		memmove (_seqbuf, _seqbuf + i, _seqbufptr);
+		memmove(_seqbuf, _seqbuf + i, _seqbufptr);
 	    } else
 		_seqbufptr = 0;
 	}
@@ -295,7 +295,7 @@ static void bufdump ()
 }
 
 
-static void clearmem ()
+static void clearmem()
 {
     int i = dev;
 
@@ -303,7 +303,7 @@ static void clearmem ()
 }
 
 
-static void seq_sync (double next_time)
+static void seq_sync(double next_time)
 {
     static double this_time = 0;
 
@@ -320,7 +320,7 @@ static void seq_sync (double next_time)
 }
 
 
-static int writepatch (struct patch_info *patch)
+static int writepatch(struct patch_info *patch)
 {
     struct sbi_instrument sbi;
 
@@ -342,32 +342,32 @@ static int writepatch (struct patch_info *patch)
 
 	return XMP_OK;
     }
-    SEQ_WRPATCH (patch, sizeof (struct patch_info) + patch->len - 1);
+    SEQ_WRPATCH(patch, sizeof (struct patch_info) + patch->len - 1);
 
     return XMP_OK;
 }
 
 
-static int getmsg ()
+static int getmsg()
 {
     return echo_msg;
 }
 
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_control *ctl)
 {
     int found;
     char *buf, *token;
     char **parm;
 
-    buf = calloc (1, 256);
+    buf = calloc(1, 256);
 
-    parm_init ();
-    chkparm1 ("awechorus", chorusmode = strtoul (token, NULL, 0));
-    chkparm1 ("awereverb", reverbmode = strtoul (token, NULL, 0));
-    chkparm1 ("opl2", ctl->outfmt |= XMP_FMT_FM);
-    chkparm1 ("dev", dev_sequencer = token);
-    parm_end ();
+    parm_init();
+    chkparm1("awechorus", chorusmode = strtoul (token, NULL, 0));
+    chkparm1("awereverb", reverbmode = strtoul (token, NULL, 0));
+    chkparm1("opl2", ctl->outfmt |= XMP_FMT_FM);
+    chkparm1("dev", dev_sequencer = token);
+    parm_end();
 
     if ((seqfd = open (dev_sequencer, O_RDWR)) != -1) {
 	if ((seqfd != -1) && (ioctl (seqfd, SNDCTL_SEQ_NRSYNTHS, &dev) == -1)) {
@@ -400,14 +400,14 @@ static int init (struct xmp_control *ctl)
 		ctl->memavl = i;
 	    }
 
-	    sprintf (buf, "%s [%s]", drv_oss_seq.description, si.name);
+	    sprintf(buf, "%s [%s]", drv_oss_seq.description, si.name);
 #ifdef AWE_DEVICE
 	    if (si.synth_subtype == SAMPLE_TYPE_AWE32) {
 		strcat (buf,
 		    "\nAWE support Copyright (C) 1996,1997 Takashi Iwai");
 
 #ifdef HAVE_AWE_MD_NEW_VOLUME_CALC
-		AWE_MISC_MODE (dev, AWE_MD_NEW_VOLUME_CALC, 0);
+		AWE_MISC_MODE(dev, AWE_MD_NEW_VOLUME_CALC, 0);
 #endif
 	    }
 
@@ -420,15 +420,15 @@ static int init (struct xmp_control *ctl)
     }
 
     if (!found) {
-	close (seqfd);
+	close(seqfd);
 	return XMP_ERR_DINIT;
     }
 
     hz = 0;
-    ioctl(seqfd, SNDCTL_SEQ_CTRLRATE, &hz);
-    SEQ_VOLUME_MODE (dev, VOL_METHOD_LINEAR);
-    bufdump ();
-    ioctl (seqfd, SNDCTL_SEQ_SYNC, 0);
+    ioctl(seqfd, SNDCTL_SEQ_CTRLRATE, &hz);	/* Always 100 in ALSA */
+    SEQ_VOLUME_MODE(dev, VOL_METHOD_LINEAR);
+    bufdump();
+    ioctl(seqfd, SNDCTL_SEQ_SYNC, 0);
 
     return XMP_OK;
 }
@@ -436,5 +436,5 @@ static int init (struct xmp_control *ctl)
 
 static void shutdown ()
 {
-    close (seqfd);
+    close(seqfd);
 }

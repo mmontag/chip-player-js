@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa_seq.c,v 1.3 2007-09-23 21:04:56 cmatsuoka Exp $
+ * $Id: alsa_seq.c,v 1.4 2007-09-24 11:15:57 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
+#include <linux/awe_voice.h>
 #include <math.h>
 
 #include "xmpi.h"
@@ -27,6 +28,7 @@ static int echo_msg;
 static int my_client, my_port;
 static int dest_client, dest_port;
 static int nvoices;
+static snd_hwdep_t *hwdep;
 
 static int numvoices	(int);
 static void voicepos	(int, int);
@@ -50,6 +52,7 @@ static int getmsg	(void);
 static void shutdown	(void);
 
 static char *help[] = {
+	"addr=port", "Set ALSA sequencer port",
 	NULL
 };
 
@@ -82,6 +85,83 @@ struct xmp_drv_info drv_alsa_seq = {
 
 //static int chorusmode = 0;
 //static int reverbmode = 0;
+
+
+/* From Takashi Iwai's asfxload */
+
+#define SNDRV_EMUX_HWDEP_NAME   "Emux WaveTable"
+
+/* Shouldn't these be in a system header? */
+struct sndrv_emux_misc_mode {
+	int port;       /* -1 = all */
+	int mode;
+	int value;
+	int value2;     /* reserved */
+};
+
+enum {
+	SNDRV_EMUX_IOCTL_VERSION = _IOR('H', 0x80, unsigned int),
+	SNDRV_EMUX_IOCTL_LOAD_PATCH = _IOWR('H', 0x81, awe_patch_info),
+	SNDRV_EMUX_IOCTL_RESET_SAMPLES = _IO('H', 0x82),
+	SNDRV_EMUX_IOCTL_REMOVE_LAST_SAMPLES = _IO('H', 0x83),
+	SNDRV_EMUX_IOCTL_MEM_AVAIL = _IOW('H', 0x84, int),
+	SNDRV_EMUX_IOCTL_MISC_MODE = _IOWR('H', 0x84,
+						struct sndrv_emux_misc_mode),
+};
+
+static int try_open_emux(char *name)
+{
+	snd_hwdep_info_t *info;
+	unsigned int version;
+
+	if (snd_hwdep_open(&hwdep, name, 0) < 0)
+		return -1;
+
+	snd_hwdep_info_alloca(&info);
+
+	if (snd_hwdep_info(hwdep, info) < 0)
+		goto error;
+
+	if (strcmp(snd_hwdep_info_get_name(info), SNDRV_EMUX_HWDEP_NAME))
+		goto error;
+
+	if (snd_hwdep_ioctl(hwdep, SNDRV_EMUX_IOCTL_VERSION, &version) < 0)
+		goto error;
+
+	if ((version >> 16) != 0x01) /* version 1 compatible */
+		goto error;
+
+	return 0;
+
+error:
+	snd_hwdep_close(hwdep);
+	hwdep = NULL;
+	return -1;
+}
+
+static int open_emux(char *name)
+{
+	char tmpname[32];
+	int i;
+
+	if (name == NULL || ! *name) {
+		for (i = 0; i < 8; i++) {
+			sprintf(tmpname, "hw:%d,2", i);
+			if (try_open_emux(tmpname) == 0)
+				return 0;
+		}
+	} else {
+		if (try_open_emux(name) == 0)
+			return 0;
+	}
+
+	return -1;
+}
+
+
+
+
+
 
 
 static void midi_send(snd_seq_event_t *ev)
@@ -200,6 +280,7 @@ static void stoptimer ()
 
 static void resetvoices ()
 {
+	snd_hwdep_ioctl(hwdep, SNDRV_EMUX_IOCTL_RESET_SAMPLES, NULL);	// ??
 #if 0
     int i;
 
@@ -272,11 +353,7 @@ static void bufdump ()
 
 static void clearmem()
 {
-#if 0
-    int i = dev;
-
-    ioctl (seqfd, SNDCTL_SEQ_RESETSAMPLES, &i);
-#endif
+	snd_hwdep_ioctl(hwdep, SNDRV_EMUX_IOCTL_REMOVE_LAST_SAMPLES, NULL);
 }
 
 
@@ -293,33 +370,18 @@ static void seq_sync(double next_time)
 }
 
 
+/* FIXME: convert GUS patch to AWE patch */
 static int writepatch(struct patch_info *patch)
 {
-#if 0
-    struct sbi_instrument sbi;
+	awe_patch_info *p;
 
-    if (!patch) {
-	clearmem ();
-	return XMP_OK;
-    }
-
-    if ((!!(xmp_ctl->outfmt & XMP_FMT_FM)) ^ (patch->len == XMP_PATCH_FM))
-	return XMP_ERR_PATCH;
-
-    patch->device_no = dev;
-    if (patch->len == XMP_PATCH_FM) {
-	sbi.key = FM_PATCH;
-	sbi.device = dev;
-	sbi.channel = patch->instr_no;
-	memcpy (&sbi.operators, patch->data, 11);
-	write (seqfd, &sbi, sizeof (sbi));
+	p = (awe_patch_info*)patch;
+	p->key = AWE_PATCH;
+	p->device_no = 0;
+	p->sf_id = 0;
+	snd_hwdep_ioctl(hwdep, SNDRV_EMUX_IOCTL_LOAD_PATCH, p);
 
 	return XMP_OK;
-    }
-    SEQ_WRPATCH (patch, sizeof (struct patch_info) + patch->len - 1);
-#endif
-
-    return XMP_OK;
 }
 
 
@@ -334,10 +396,11 @@ static int init (struct xmp_control *ctl)
 {
 	snd_seq_addr_t d;
 	char *token, **parm;
-	char *addr;
+	char *addr = "";
 	int err;
 
 	parm_init();
+	chkparm1("addr", addr = token);
 	parm_end();
 
 	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_DUPLEX, 0) < 0) {
@@ -348,12 +411,17 @@ static int init (struct xmp_control *ctl)
 		return XMP_ERR_DINIT;
 	}
 
+	// FIXME
+	if (open_emux(addr) < 0) {
+		fprintf(stderr, "xmp: no Emux synth hwdep device found\n");
+		goto error;
+	}
+
         if (snd_seq_parse_address(seq, &d, addr) < 0) {
 		fprintf(stderr, "xmp: can't parse address: %s", addr);
 		goto error;
 	}
 
-	
 	dest_client = d.client;
 	dest_port = d.port;
 
