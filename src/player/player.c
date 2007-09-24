@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.10 2007-09-17 00:14:52 cmatsuoka Exp $
+ * $Id: player.c,v 1.11 2007-09-24 01:13:33 cmatsuoka Exp $
  */
 
 /*
@@ -714,6 +714,9 @@ int xmpi_player_start()
 
     if (!xmp_ctl)
 	return XMP_ERR_DINIT;
+
+    if (xxh->len == 0 || xxh->chn == 0)
+	return XMP_OK;
 
     if (xmp_event_callback == NULL)
 	xmp_event_callback = dummy;

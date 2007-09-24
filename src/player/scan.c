@@ -42,19 +42,20 @@ extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
 extern int xmp_scan_row, xmp_scan_ord, xmp_scan_num;
 
 
-int xmpi_scan_module ()
+int xmpi_scan_module()
 {
     int prm, gvol_slide, f1, f2, ord, ord2;
     int row, last_row, break_row, cnt_row;
     int gvl, bpm, tempo, base_time, chn;
     int alltmp, clock, clock_rst, medbpm;
-
     int loop_chn, loop_flg;
     int* loop_stk;
     int* loop_row;
-
     char** tab_cnt;
     struct xxm_event* event;
+
+    if (xxh->len == 0)
+	return 0;
 
     medbpm = xmp_ctl->fetch & XMP_CTL_MEDBPM;
 
