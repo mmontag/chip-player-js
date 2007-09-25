@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.13 2007-09-19 22:05:51 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.14 2007-09-25 23:35:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -94,7 +94,7 @@ static int module_load (FILE *f, int ptdt)
     char *x, pathname[256] = "", *id = "", *tracker = "";
     int lps_mult = xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
-    char idbuffer[32];
+    char magic[8], idbuffer[32];
 
     if (!ptdt)
 	LOAD_INIT ();
@@ -120,10 +120,11 @@ static int module_load (FILE *f, int ptdt)
     mh.len = read8(f);
     mh.restart = read8(f);
     fread(&mh.order, 128, 1, f);
-    fread(&mh.magic, 4, 1, f);
+    memset(magic, 0, 8);
+    fread(magic, 4, 1, f);
 
     for (i = 0; mod_magic[i].ch; i++) {
-	if (!(strncmp ((char *) mh.magic, mod_magic[i].magic, 4))) {
+	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
 	    xxh->chn = mod_magic[i].ch;
 	    id = mod_magic[i].id;
 	    tracker = mod_magic[i].tracker;
@@ -133,23 +134,22 @@ static int module_load (FILE *f, int ptdt)
     }
 
     /* Prowizard hack */
-    if (memcmp(mh.magic, "PWIZ", 4) == 0) {
+    if (memcmp(magic, "PWIZ", 4) == 0) {
 	int pos = ftell(f);
-	fseek(f, -30, SEEK_END);
-	fread(&mh.magic, 4, 1, f);
-	fseek(f, 4, SEEK_CUR);
-	fread(idbuffer, 1, 22, f);
+	fseek(f, -40, SEEK_END);
+	fread(magic, 8, 1, f);
+	fread(idbuffer, 1, 32, f);
 	id = idbuffer;
 	fseek(f, pos, SEEK_SET);
     } else if (!xxh->chn) {
-	if (!strncmp ((char *) mh.magic + 2, "CH", 2) &&
-	    isdigit (*mh.magic) && isdigit (mh.magic[1])) {
-	    if ((xxh->chn = (*mh.magic - '0') *
-		10 + mh.magic[1] - '0') > 32)
+	if (!strncmp(magic + 2, "CH", 2) &&
+	    isdigit(*magic) && isdigit(magic[1])) {
+	    if ((xxh->chn = (*magic - '0') *
+		10 + magic[1] - '0') > 32)
 		return -1;
-	} else if (!strncmp ((char *) mh.magic + 1, "CHN", 3) &&
-	    isdigit (*mh.magic)) {
-	    if (!(xxh->chn = (*mh.magic - '0')))
+	} else if (!strncmp(magic + 1, "CHN", 3) &&
+	    isdigit(*magic)) {
+	    if (!(xxh->chn = (*magic - '0')))
 		return -1;
 	} else
 	    return -1;
@@ -237,7 +237,7 @@ static int module_load (FILE *f, int ptdt)
      * the module is an 8 channel WOW.
      */
 
-    if ((wow = (!strncmp ((char *) mh.magic, "M.K.", 4) &&
+    if ((wow = (!strncmp(magic, "M.K.", 4) &&
 		(0x43c + xxh->pat * 32 * 0x40 + smp_size == xmp_ctl->size)))) {
 	xxh->chn = 8;
 	id = "WOW M.K. 8 channel MOD";
@@ -261,7 +261,7 @@ static int module_load (FILE *f, int ptdt)
 
     /* Test for Protracker song files
      */
-    else if ((ptsong = (!strncmp ((char *) mh.magic, "M.K.", 4) &&
+    else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
 		(0x43c + xxh->pat * 0x400 == xmp_ctl->size)))) {
 	id = "4 channel song";
 	tracker = "Protracker";
@@ -372,7 +372,7 @@ skip_test:
     xxh->trk = xxh->chn * xxh->pat;
 
     if (!ptdt) {
-	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "%-.4s (%s)", mh.magic, id);
+	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "%s (%s)", magic, id);
 	strcpy(tracker_name, tracker);
 	MODULE_INFO ();
     }
