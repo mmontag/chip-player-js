@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.12 2007-09-24 18:30:28 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.13 2007-09-25 00:02:33 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -55,6 +55,7 @@ int pw_init (int i)
 	/* pw_register (&pw_stim); */
 	pw_register (&pw_wn);
 	pw_register (&pw_unic_id);
+	pw_register (&pw_tp3);
 
 	/* No signature */
 	/* pw_register (&pw_xann); */
@@ -72,7 +73,6 @@ int pw_init (int i)
 	pw_register (&pw_crb);
 	pw_register (&pw_tdd);
 	pw_register (&pw_gmc);
-	pw_register (&pw_tp3);
 
 	return 0;
 }
@@ -122,22 +122,10 @@ int pw_wizardry (int in, int out)
 	list_for_each(tmp, &format_list) {
 		format = list_entry(tmp, struct pw_format, list);
 		_D ("checking format: %s", format->name);
-		if (format->test (data, in_size) >= 0) {
-			fseek (file_in, 0, SEEK_SET);
-			if (format->depackb)
-				size = format->depackb (data, file_out);
-			else if (format->depackf) 
-				size = format->depackf (file_in, file_out);
-
-			if (size < 0)
-				return -1;
-			format->flags |= PW_MARK;
-			pw_crap(format, file_out);
-			fflush (file_out);
-			break;
-		}
+		if (format->test (data, in_size) >= 0)
+			goto done;
 	}
-	goto done;
+	return -1;
 
 checked:
 	format = list_entry(checked_format, struct pw_format, list);
@@ -168,19 +156,11 @@ done:
 	return 0;
 }
 
-
 /* writfile_ing craps in converted MODs */
 void pw_crap (struct pw_format *f, FILE *file_out)
 {
-	int i, p, l;
+	int i;
 	char buf[40];
-
-#define add_crap(offset,msg...) do {	\
-  char _b[40];				\
-  fseek (file_out, offset, SEEK_SET);	\
-  memset (_b, 0, 40);			\
-  snprintf(_b, 40, "%s", msg);		\
-  fwrite (_b, 1, 22, file_out); } while (0)
 
 	_D ("packer: %s", f->name);
 	i = ftell (file_out);
@@ -196,29 +176,8 @@ void pw_crap (struct pw_format *f, FILE *file_out)
 		}
 		fwrite (buf, 1, 30, file_out);
 	}
-
-	add_crap (560, "[   Converted with   ]");
-	add_crap (590, "[ ProWizard for UNIX ]");
-	add_crap (620, "[  written by Asle!  ]");
-	add_crap (650, "[        ----        ]");
-	add_crap (680, "[  Original format:  ]");
-	add_crap (710, "[                    ]");
-
-	l = strlen (f->name);
-	if (l > 20)
-		l = 20;
-	p = (22 - l) / 2;
-	if (p < 0)
-		p = 0;
-	fseek (file_out, 710 + p, SEEK_SET);
-	fwrite (f->name, 1, l, file_out);
-	fseek (file_out, i, SEEK_SET);
 }
 
-
-/*
- * xmp plugfile_in API
- */
 
 static struct list_head *shortcut = &format_list;
 static int check (unsigned char *b, int s)
