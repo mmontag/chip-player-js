@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.12 2007-09-16 05:11:45 cmatsuoka Exp $
+# $Id: Makefile,v 1.13 2007-09-25 12:45:04 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" $(PLUGFLAGS) -D_REENTRANT
@@ -19,7 +19,7 @@ all:
 
 all-bmp: $(PLUGIN)
 
-$(PLUGIN): $(OBJS)
+$(PLUGIN): $(OBJS) $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -o $@ $(OBJS) -L../../lib/ -lxmp-pic
 
 install::

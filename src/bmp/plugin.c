@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.23 2007-09-25 11:23:29 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.24 2007-09-25 12:45:05 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -75,8 +75,6 @@ static struct xmp_control ctl;
 static pthread_t decode_thread;
 static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-
-int pw_init(int);
 
 #ifdef __EMX__
 #define PATH_MAX _POSIX_PATH_MAX
@@ -173,8 +171,6 @@ InputPlugin xmp_ip = {
 static void file_info_box_build (void);
 static void init_visual (GdkVisual *);
 
-extern struct list_head format_list;
-
 static void aboutbox ()
 {
 	GtkWidget *vbox1;
@@ -239,9 +235,9 @@ static void aboutbox ()
 		gtk_label_set_justify (GTK_LABEL (label_fmt), GTK_JUSTIFY_LEFT);
 		gtk_label_set_justify (GTK_LABEL (label_trk), GTK_JUSTIFY_LEFT);
 		gtk_table_attach_defaults (GTK_TABLE (table1),
-			label_fmt, 0, 1, i, i + 1);
+						label_fmt, 0, 1, i, i + 1);
 		gtk_table_attach_defaults (GTK_TABLE (table1),
-			label_trk, 1, 2, i, i + 1);
+						label_trk, 1, 2, i, i + 1);
 	}
 
 	gtk_table_resize (GTK_TABLE (table1), i + 1, 3);
@@ -376,8 +372,6 @@ static void init(void)
 	xmp_cfg.filter = TRUE;
 	xmp_cfg.pan_amplitude = 80;
 
-	pw_init(1);
-
 #define CFGREADINT(x) xmms_cfg_read_int (cfg, "XMP", #x, &xmp_cfg.x)
 
 	filename = g_strconcat(g_get_home_dir(), CONFIG_FILE, NULL);
@@ -423,8 +417,6 @@ static void init(void)
 	xmp_cfg.interpolation = TRUE;
 	xmp_cfg.filter = TRUE;
 	xmp_cfg.pan_amplitude = 80;
-
-	pw_init(1);
 
 #define CFGREADINT(x) bmp_cfg_db_get_int (cfg, "XMP", #x, &xmp_cfg.x)
 

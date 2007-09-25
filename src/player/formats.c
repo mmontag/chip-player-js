@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.44 2007-09-25 11:23:30 cmatsuoka Exp $
+ * $Id: formats.c,v 1.45 2007-09-25 12:45:05 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -99,34 +99,14 @@ void xmp_init_formats()
     register_loader("OKT", "Oktalyzer", okt_load);
     register_loader("SFX", "SoundFX 1.3", sfx_load);
     register_loader("FAR", "Farandole Composer", far_load);
+
+    /* not technically a module format, but people think it is */
+    register_format("UMX", "Epic Games Unreal/UT");
+
     register_loader("STIM", "Slamtilt", stim_load);
     register_loader("MTP", "SoundSmith/MegaTracker", mtp_load);
-    //register_loader("FC-M", "FC-M Packer", fcm_load);
-    //register_loader("KSM", "Kefrens Sound Machine", ksm_load);
     register_loader("IMS", "Images Music System", ims_load);
-#if 0
-    register_loader("WN", "Wanton Packer", wn_load);
-    register_loader("PM", "Power Music", pm_load);
-    register_loader("KRIS", "ChipTracker", kris_load);
-    register_loader("UNIC", "Unic Tracker", unic_load);
-    register_loader("P60A", "The Player 6.0a", p60a_load);
-    register_loader("PRU1", "ProRunner 1.0", pru1_load);
-    register_loader("PRU2", "ProRunner 2.0", pru2_load);
-    register_loader("PM01", "Promizer 0.1", pm01_load);
-    register_loader("PM10", "Promizer 1.0c", pm10_load);
-    register_loader("PM18", "Promizer 1.8a", pm18_load);
-    register_loader("PM20", "Promizer 2.0", pm20_load);
-    register_loader("PM40", "Promizer 4.0", pm40_load);
-    register_loader("AC1D", "AC1D Packer", ac1d_load);
-    register_loader("PP10", "Pha Packer", pha_load);
-#endif
     register_loader("XANN", "XANN Packer", xann_load);
-#if 0
-    register_loader("ZEN", "Zen Packer", zen_load);
-    register_loader("NP", "NoisePacker", np_load);
-    register_loader("DI", "Digital Illusions", di_load);
-    register_loader("MP", "Module Protector", mp_load);
-#endif
     register_loader("669", "Composer 669", ssn_load);
     register_loader("FNK", "Funktracker", fnk_load);
     register_loader("AMD", "Amusic Adlib Tracker", amd_load);

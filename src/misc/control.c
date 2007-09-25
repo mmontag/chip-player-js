@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.9 2007-09-18 00:50:23 cmatsuoka Exp $
+ * $Id: control.c,v 1.10 2007-09-25 12:45:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,12 +29,13 @@ extern struct xmp_drv_info drv_callback;
 extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
 int big_endian;
 
-int pw_init(int);
+int pw_init(void);
 
-void xmp_init_callback (struct xmp_control *ctl, void (*callback)(void *, int))
+void xmp_init_callback(struct xmp_control *ctl, void (*callback)(void *, int))
 {
-    xmp_drv_register (&drv_callback);
-    xmp_init_formats ();
+    xmp_drv_register(&drv_callback);
+    xmp_init_formats();
+    pw_init();
     xmp_register_driver_callback (callback);
     ctl->drv_id = "callback";
 }
@@ -49,7 +50,7 @@ void xmp_init (int argc, char **argv, struct xmp_control *ctl)
 
     xmp_init_drivers();
     xmp_init_formats();
-    pw_init(1);
+    pw_init();
 
     memset (ctl, 0, sizeof (struct xmp_control));
     xmp_event_callback = NULL;

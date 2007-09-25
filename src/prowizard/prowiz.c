@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.14 2007-09-25 11:23:30 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.15 2007-09-25 12:45:05 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -35,11 +35,8 @@ int pw_unregister (struct pw_format *f)
 	return 0;
 }
 
-int pw_init (int i)
+int pw_init ()
 {
-	if (!i)
-		return 0;
-
 	/* With signature */
 	pw_register (&pw_ac1d);
 	/* pw_register (&pw_emod); */
