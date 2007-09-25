@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.90 2007-09-24 01:13:33 cmatsuoka Exp $
+$Id: ChangeLog,v 1.91 2007-09-25 00:32:40 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -18,6 +18,7 @@ Stable versions
 	- fixed Impulse Tracker identification in S3M loader
 	- fixed Module Protector test to recognize mods from "Made In Croatia"
 	- fixed crash when scanning modules with length zero (bug #1800766)
+	- fixed driver detection in NetBSD (don't try to build OSS driver)
 	- prowizard code cleanup
 
 2.2.1 (20070917)

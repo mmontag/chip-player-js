@@ -4,7 +4,7 @@
  *
  * Converts tp3 packed MODs back to PTK MODs
  *
- * $Id: tp3.c,v 1.3 2007-09-24 20:24:02 cmatsuoka Exp $
+ * $Id: tp3.c,v 1.4 2007-09-25 00:32:40 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -17,7 +17,7 @@ static int test_tp3 (uint8 *, int);
 
 struct pw_format pw_tp3 = {
         "TP3",
-        "Trackerpacker 3",
+        "Tracker Packer v3",
         0x00,
         test_tp3,
         depack_tp3,
@@ -27,10 +27,10 @@ struct pw_format pw_tp3 = {
 
 static int depack_tp3 (uint8 *data, FILE *out)
 {
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
+	uint8 c1, c2, c3, c4;
 	uint8 ptk_table[37][2];
 	uint8 pnum[128];
-	uint8 Pattern[1024];
+	uint8 pdata[1024];
 	uint8 *tmp;
 	uint8 note, ins, fxt, fxp;
 	uint8 PatMax = 0x00;
@@ -48,7 +48,7 @@ static int depack_tp3 (uint8 *data, FILE *out)
 
 	/* title */
 	where += 8;
-	fwrite (&data[where], 20, 1, out);
+	fwrite(data + where, 20, 1, out);
 	where += 20;
 
 	/* number of sample */
@@ -59,7 +59,7 @@ static int depack_tp3 (uint8 *data, FILE *out)
 		for (k = 0; k < 22; k++)	/*sample name */
 			write8(out, 0);
 
-		c3 = data[where++];		/* read fine */
+		c3 = data[where++];		/* read finetune */
 		c4 = data[where++];		/* read volume */
 
 		write16b(out, size = readmem16b(data + where)); /* size */
@@ -102,9 +102,8 @@ static int depack_tp3 (uint8 *data, FILE *out)
 /*fprintf ( info , "track addresses :\n" );*/
 	for (i = 0; i <= PatMax; i++) {
 		for (j = 0; j < 4; j++) {
-			c1 = data[where++];
-			c2 = data[where++];
-			Track_Address[i][j] = (c1 << 8) + c2;
+			Track_Address[i][j] = readmem16b(data + where);
+			where += 2;
 			if (Track_Address[i][j] > Max_Track_Address)
 				Max_Track_Address = Track_Address[i][j];
 /*fprintf ( info , "%6ld, " , Track_Address[i][j] );*/
@@ -120,27 +119,31 @@ static int depack_tp3 (uint8 *data, FILE *out)
 
 	Start_Pat_Address = where + 2;
 
-printf( "address of the first pattern : %ld\n" , Start_Pat_Address ); 
+/*printf("address of the first pattern : %ld\n" , Start_Pat_Address);*/
 
 	/* pattern datas */
-printf( "converting pattern data " );
 	for (i = 0; i <= PatMax; i++) {
-printf("\npattern %ld:\n\n" , i );
-		bzero (Pattern, 1024);
+/*printf("\npattern %ld:\n\n" , i );*/
+		bzero(pdata, 1024);
+
 		for (j = 0; j < 4; j++) {
-printf("track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );
-			where = start + Track_Address[i][j] +
-				Start_Pat_Address;
+/*printf("track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address);*/
+			where = start + Start_Pat_Address + Track_Address[i][j];
+
 			for (k = 0; k < 64; k++) {
+				int x = k * 16 + j * 4;
+
 				c1 = data[where++];
 /*fprintf ( info , "%ld: %2x," , k , c1 );*/
-				if ((c1 & 0xC0) == 0xC0) {
+				if ((c1 & 0xc0) == 0xc0) {
 /*fprintf ( info , " <--- %d empty lines\n" , (0x100-c1) );*/
-					k += (0x100 - c1);
-					k -= 1;
+					//k += (0x100 - c1);
+					//k -= 1;
+					k += 0x80 - (c1 & 0x3f);
 					continue;
 				}
-				if ((c1 & 0xC0) == 0x80) {
+
+				if ((c1 & 0xc0) == 0x80) {
 					c2 = data[where++];
 /*fprintf ( info , "%2x ,\n" , c2 );*/
 					fxt = (c1 >> 1) & 0x0f;
@@ -150,14 +153,12 @@ printf("track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );
 						if (fxp > 0x80)
 							fxp = 0x100 - fxp;
 						else if (fxp <= 0x80)
-							fxp =
-								(fxp << 4) &
-								0xf0;
+							fxp = (fxp << 4) & 0xf0;
 					}
 					if (fxt == 0x08)
 						fxt = 0x00;
-					Pattern[k * 16 + j * 4 + 2] = fxt;
-					Pattern[k * 16 + j * 4 + 3] = fxp;
+					pdata[k * 16 + j * 4 + 2] = fxt;
+					pdata[k * 16 + j * 4 + 3] = fxp;
 					continue;
 				}
 
@@ -167,20 +168,19 @@ printf("track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );
 				if ((c1 & 0x40) == 0x40)
 					note = 0x7f - c1;
 				else
-					note = c1 & 0x3F;
-				fxt = c2 & 0x0F;
+					note = c1 & 0x3f;
+				fxt = c2 & 0x0f;
+
 				if (fxt == 0x00) {
 /*fprintf ( info , " <--- No FX !!\n" );*/
-					Pattern[k * 16 + j * 4] = ins & 0xf0;
-					Pattern[k * 16 + j * 4] |=
-						ptk_table[note][0];
-					Pattern[k * 16 + j * 4 + 1] =
-						ptk_table[note][1];
-					Pattern[k * 16 + j * 4 + 2] =
-						(ins << 4) & 0xf0;
-					Pattern[k * 16 + j * 4 + 2] |= fxt;
+					pdata[x] = ins & 0xf0;
+					pdata[x] |= ptk_table[note][0];
+					pdata[x + 1] = ptk_table[note][1];
+					pdata[x + 2] = (ins << 4) & 0xf0;
+					pdata[x + 2] |= fxt;
 					continue;
 				}
+
 				c3 = data[where++];
 /*fprintf ( info , "%2x\n" , c3 );*/
 				if (fxt == 0x08)
@@ -194,19 +194,18 @@ printf("track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );
 						fxp = (fxp << 4) & 0xf0;
 				}
 
-				Pattern[k * 16 + j * 4] = ins & 0xf0;
-				Pattern[k * 16 + j * 4] |= ptk_table[note][0];
-				Pattern[k * 16 + j * 4 + 1] = ptk_table[note][1];
-				Pattern[k * 16 + j * 4 + 2] =
-					(ins << 4) & 0xf0;
-				Pattern[k * 16 + j * 4 + 2] |= fxt;
-				Pattern[k * 16 + j * 4 + 3] = fxp;
+				pdata[x] = ins & 0xf0;
+				pdata[x] |= ptk_table[note][0];
+				pdata[x + 1] = ptk_table[note][1];
+				pdata[x + 2] = (ins << 4) & 0xf0;
+				pdata[x + 2] |= fxt;
+				pdata[x + 3] = fxp;
 			}
 			if (where > Max_Track_Address)
 				Max_Track_Address = where;
 /*fprintf ( info , "%6ld, " , Max_Track_Address );*/
 		}
-		fwrite (Pattern, 1024, 1, out);
+		fwrite (pdata, 1024, 1, out);
 		/*printf ( "." ); */
 	}
 	/*printf ( " ok\n" ); */
