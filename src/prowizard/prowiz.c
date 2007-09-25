@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.13 2007-09-25 00:02:33 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.14 2007-09-25 11:23:30 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -15,15 +15,17 @@
 
 #include "prowiz.h"
 
+void register_format (char *, char *);
+
 static int check (unsigned char *, int);
 
-
-LIST_HEAD(format_list);
+static LIST_HEAD(pw_format_list);
 
 
 int pw_register (struct pw_format *f)
 {
-	list_add_tail (&f->list, &format_list);
+	list_add_tail(&f->list, &pw_format_list);
+	register_format(f->id, f->name);
 	return 0;
 }
 
@@ -77,7 +79,7 @@ int pw_init (int i)
 	return 0;
 }
 
-struct list_head *checked_format = &format_list;
+struct list_head *checked_format = &pw_format_list;
 
 int pw_wizardry (int in, int out)
 {
@@ -116,10 +118,10 @@ int pw_wizardry (int in, int out)
   /**************************   SEARCH   ******************************/
   /********************************************************************/
 
-	if (checked_format != &format_list)
+	if (checked_format != &pw_format_list)
 		goto checked;
 
-	list_for_each(tmp, &format_list) {
+	list_for_each(tmp, &pw_format_list) {
 		format = list_entry(tmp, struct pw_format, list);
 		_D ("checking format: %s", format->name);
 		if (format->test (data, in_size) >= 0)
@@ -130,7 +132,7 @@ int pw_wizardry (int in, int out)
 checked:
 	format = list_entry(checked_format, struct pw_format, list);
 	_D (_D_WARN "checked format: %s", format->name);
-	checked_format = &format_list;
+	checked_format = &pw_format_list;
 
 done:
 	fseek (file_in, 0, SEEK_SET);
@@ -179,7 +181,7 @@ void pw_crap (struct pw_format *f, FILE *file_out)
 }
 
 
-static struct list_head *shortcut = &format_list;
+static struct list_head *shortcut = &pw_format_list;
 static int check (unsigned char *b, int s)
 {
 	struct list_head *tmp;
@@ -187,7 +189,7 @@ static int check (unsigned char *b, int s)
 	int extra;
 
 	list_for_each(tmp, shortcut) {
-		if (tmp == &format_list)
+		if (tmp == &pw_format_list)
 			break;
 		format = list_entry(tmp, struct pw_format, list);
 		_D ("checking format [%d]: %s", s, format->name);
@@ -199,12 +201,12 @@ static int check (unsigned char *b, int s)
 		if (extra == 0) {
 			_D ("format ok: %s", format->id);
 			checked_format = tmp;
-			shortcut = &format_list;
+			shortcut = &pw_format_list;
 			return 0;
 		}
 	}
 
-	shortcut = &format_list;
+	shortcut = &pw_format_list;
 	return -1;
 }
 

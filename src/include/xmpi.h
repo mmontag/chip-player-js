@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.11 2007-09-19 13:02:11 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.12 2007-09-25 11:23:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,6 +46,7 @@
 
 #include <stdio.h>
 #include <signal.h>
+#include "list.h"
 
 typedef signed char int8;
 typedef signed short int int16;
@@ -114,6 +115,13 @@ struct xmp_ord_info {
     int tempo;
     int gvl;
     int time;
+};
+
+struct xmp_loader_info {
+    struct list_head list;
+    char *suffix;
+    char *tracker;
+    int (*loader)();
 };
 
 

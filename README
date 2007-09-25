@@ -48,7 +48,6 @@ The current version recognizes the following module formats:
 
   AC1D  ****+	AC1D Packer		-
   CRB	****+	Heatseeker		mc1.0
-  DI	****+	Digital Illusions	-
   FC-M	****+	FC-M Packer		1.0
   IMS	***	Images Music System	?
   KSM	****+	Kefrens Sound Machine	-
@@ -56,7 +55,7 @@ The current version recognizes the following module formats:
   NP	****+	NoisePacker		1.0, 2.0, 3.0
   TP    ****	The Player		6.0a
   PM	***	Power Music		-
-  PHA	***	Phenomena Packer	-
+  PHA	***	Pha Packer		-
   PROM	****+	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
   UNIC	****+	Unic Tracker		1.0, 2.0
@@ -119,6 +118,7 @@ The current version recognizes the following module formats:
 
   Game formats:
 
+  DI	****+	Digital Illusions	-
   GMC	****+	Game Music Creator	-
   PSM	*** 	Epic Megagames MASI	epic, sinaria
   PSM	*** 	Protracker Studio	0.01, 1.00

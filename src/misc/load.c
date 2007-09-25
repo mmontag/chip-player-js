@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.22 2007-09-22 20:28:57 cmatsuoka Exp $
+ * $Id: load.c,v 1.23 2007-09-25 11:23:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,11 +23,10 @@
 #include "driver.h"
 #include "convert.h"
 
-extern struct xmp_fmt_info *__fmt_head;
-
 #include "list.h"
 #include "../prowizard/prowiz.h"
 
+extern struct list_head loader_list;
 extern struct list_head *checked_format;
 
 int decrunch_arc (FILE *, FILE *);
@@ -320,7 +319,8 @@ int xmp_load_module (char *s)
 {
     FILE *f;
     int i, t;
-    struct xmp_fmt_info *fmt;
+    struct xmp_loader_info *li;
+    struct list_head *head;
     struct stat st;
     unsigned int crc;
 
@@ -373,9 +373,11 @@ int xmp_load_module (char *s)
 	xxc[i].vol = 0x40;
     }
 
-    for (i = 0, fmt = __fmt_head; fmt; fmt = fmt->next) {
-	if (fmt->loader && ((i = fmt->loader (f)) != -1))
+    list_for_each(head, &loader_list) {
+	li = list_entry(head, struct xmp_loader_info, list);
+	if (li->loader && ((i = li->loader(f)) != -1))
 	    break;
+	
     }
 
     fclose (f);

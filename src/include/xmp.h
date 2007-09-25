@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.5 2007-09-18 00:50:23 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.6 2007-09-25 11:23:30 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -168,7 +168,6 @@ struct xmp_control {
 struct xmp_fmt_info {
     char *suffix;
     char *tracker;
-    int (*loader)();
     struct xmp_fmt_info *next;
 };
 

@@ -20,7 +20,7 @@
 #define __XMP_LOADERS_COMMON
 #include "load.h"
 
-LIST_HEAD(iff_list);
+static LIST_HEAD(iff_list);
 
 static int __id_size;
 static int __flags;

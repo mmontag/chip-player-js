@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.15 2007-09-18 00:50:23 cmatsuoka Exp $
+ * $Id: options.c,v 1.16 2007-09-25 11:23:30 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,10 +20,6 @@
 #include <getopt.h>
 
 #include "xmp.h"
-#include "list.h"
-#include "../prowizard/prowiz.h"
-
-extern struct list_head format_list;
 
 extern char *optarg;
 static int o, i;
@@ -110,8 +106,6 @@ static void usage (char *s, struct xmp_control *opt)
 {
     struct xmp_fmt_info *f, *fmt;
     struct xmp_drv_info *d, *drv;
-    struct list_head *tmp;
-    struct pw_format *format;
     char **hlp, buf[80];
     int i;
 
@@ -123,16 +117,10 @@ static void usage (char *s, struct xmp_control *opt)
     printf ("\nSupported module formats:\n");
     xmp_get_fmt_info (&fmt);
     list_wrap (NULL, 3, 78, 1);
+
     for (i = 0, f = fmt; f; i++, f = f->next) {
         snprintf(buf, 80, "%s (%s)", f->suffix, f->tracker);
         list_wrap(buf, 3, 0, 1);
-    }
-
-    list_for_each(tmp, &format_list) {
-	format = list_entry(tmp, struct pw_format, list);
-        snprintf(buf, 80, "%s (%s)", format->id, format->name);
-        list_wrap(buf, 3, 0, 1);
-	i++;
     }
 
     snprintf(buf, 80, "[%d known formats]", i);

@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.22 2007-09-23 00:36:48 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.23 2007-09-25 11:23:29 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -14,9 +14,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <ctype.h>
-
-#include "list.h"
-#include "../prowizard/prowiz.h"
 
 #ifdef PLUGIN_BMP
 #include <bmp/configfile.h>
@@ -187,8 +184,6 @@ static void aboutbox ()
 	GtkWidget *table1;
 	GtkWidget *label_fmt, *label_trk;
 	struct xmp_fmt_info *f, *fmt;
-	struct list_head *tmp;
-	struct pw_format *format;
 	int i;
 
 	if (about_window) {
@@ -247,19 +242,6 @@ static void aboutbox ()
 			label_fmt, 0, 1, i, i + 1);
 		gtk_table_attach_defaults (GTK_TABLE (table1),
 			label_trk, 1, 2, i, i + 1);
-	}
-
-	list_for_each(tmp, &format_list) {
-		format = list_entry(tmp, struct pw_format, list);
-		label_fmt = gtk_label_new(format->id);
-		label_trk = gtk_label_new(format->name);
-		gtk_label_set_justify (GTK_LABEL (label_fmt), GTK_JUSTIFY_LEFT);
-		gtk_label_set_justify (GTK_LABEL (label_trk), GTK_JUSTIFY_LEFT);
-		gtk_table_attach_defaults (GTK_TABLE (table1),
-			label_fmt, 0, 1, i, i + 1);
-		gtk_table_attach_defaults (GTK_TABLE (table1),
-			label_trk, 1, 2, i, i + 1);
-		i++;
 	}
 
 	gtk_table_resize (GTK_TABLE (table1), i + 1, 3);
