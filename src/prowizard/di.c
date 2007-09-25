@@ -1,12 +1,10 @@
 /*
  * Digital_Illusion.c   Copyright (C) 1997 Asle / ReDoX
- *			Modified by Claudio Matsuoka
+ *			Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts DI packed MODs back to PTK MODs
- * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
- * would not exist !!!
  *
- * $Id: di.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: di.c,v 1.2 2007-09-25 01:34:34 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -18,7 +16,7 @@ static int depack_DI (FILE *, FILE *);
 
 struct pw_format pw_di = {
 	"DI",
-	"Digital Illusion",
+	"Digital Illusions",
 	0x00,
 	test_DI,
 	NULL,
@@ -28,153 +26,86 @@ struct pw_format pw_di = {
 
 static int depack_DI (FILE * in, FILE * out)
 {
-	uint8 c1, c2, c3, c4;
+	uint8 c1, c2, c3;
 	uint8 note, ins, fxt, fxp;
 	uint8 ptk_tab[5];
-	uint8 npat = 0x00;
+	uint8 npat;
 	uint8 ptable[128];
 	uint8 Max = 0x00;
 	uint8 *t;
-	long i = 0, k = 0;
+	int i, k;
 	uint16 paddr[128];
 	short nins = 0;
-	long Add_Pattern_Table = 0;
-	long Add_Pattern_Data = 0;
-	long Add_Sample_Data = 0;
-	long tmp_long;
-	long ssize = 0;
+	int seq_offs, pat_offs, smp_offs;
+	int tmp;
+	int size, ssize = 0;
 
-	bzero (ptable, 128);
-	bzero (ptk_tab, 5);
-	bzero (paddr, 128);
+	bzero(ptable, 128);
+	bzero(ptk_tab, 5);
+	bzero(paddr, 128);
 
 	/* title */
-	t = (uint8 *) malloc (20);
-	bzero (t, 20);
-	fwrite (t, 20, 1, out);
-	free (t);
+	for (k = 0; k < 20; k++)
+		write8(out, 0);
 
-	fseek (in, 0, 0);
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	nins = (c1 << 8) + c2;
-	/*printf ( "Number of sample : %d\n" , nins ); */
+	nins = read16b(in);
+	seq_offs = read32b(in);
+	pat_offs = read32b(in);
+	smp_offs = read32b(in);
 
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	Add_Pattern_Table = ((c2 << 8) << 8) + (c3 << 8) + c4;
-	/*printf ( "Pattern table address : %ld\n" , Add_Pattern_Table ); */
-
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	Add_Pattern_Data = ((c2 << 8) << 8) + (c3 << 8) + c4;
-	/*printf ( "Pattern data address : %ld\n" , Add_Pattern_Data ); */
-
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	Add_Sample_Data = ((c2 << 8) << 8) + (c3 << 8) + c4;
-	/*printf ( "Sample data address : %ld\n" , Add_Sample_Data ); */
-
-
-	t = (uint8 *) malloc (22);
-	bzero (t, 22);
 	for (i = 0; i < nins; i++) {
-		fwrite (t, 22, 1, out);
+		for (k = 0; k < 22; k++)
+			write8(out, 0);
 
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write16b(out, size = read16b(in));	/* size */
+		ssize += size * 2;
+		write8(out, read8(in));			/* finetune */
+		write8(out, read8(in));			/* volume */
+		write16b(out, read16b(in));		/* loop start */
+		write16b(out, read16b(in));		/* loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	c1 = 0x00;
-	c2 = 0x01;
-	for (i = nins; i < 31; i++) {
-		fwrite (t, 22, 1, out);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-	}
-	free (t);
+	t = calloc(30, 1);
+	t[29] = 0x01;
+	for (i = nins; i < 31; i++)
+		fwrite(t, 30, 1, out);
+	free(t);
 
-	tmp_long = ftell (in);
+	tmp = ftell(in);
 
-	fseek (in, Add_Pattern_Table, 0);
+	fseek (in, seq_offs, 0);
+
 	i = 0;
 	do {
-		fread (&c1, 1, 1, in);
-		ptable[i] = c1;
-		i += 1;
+		c1 = read8(in);
+		ptable[i++] = c1;
 	} while (c1 != 0xff);
-	ptable[i - 1] = 0x00;
-	npat = i - 1;
-	fwrite (&npat, 1, 1, out);
 
-	c2 = 0x7f;
-	fwrite (&c2, 1, 1, out);
+	ptable[i - 1] = 0;
+	write8(out, npat = i - 1);
 
-	Max = 0;
-	for (i = 0; i < 128; i++) {
-		fwrite (&ptable[i], 1, 1, out);
+	write8(out, 0x7f);
+
+	for (Max = i = 0; i < 128; i++) {
+		write8(out, ptable[i]);
 		if (ptable[i] > Max)
 			Max = ptable[i];
 	}
 
-	/*printf ( "Number of pattern : %d\n" , npat ); */
-	/*printf ( "Highest pattern number : %d\n" , Max ); */
+	write32b(out, 0x4E2E4B2E);
 
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-
-
-	fseek (in, tmp_long, 0);
-	for (i = 0; i <= Max; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		paddr[i] = (c1 << 8) + c2;
-	}
+	fseek(in, tmp, 0);
+	for (i = 0; i <= Max; i++)
+		paddr[i] = read16b(in);
 
 	for (i = 0; i <= Max; i++) {
 		fseek (in, paddr[i], 0);
 		for (k = 0; k < 256; k++) {	/* 256 = 4 voices * 64 rows */
 			bzero (ptk_tab, 5);
-			fread (&c1, 1, 1, in);
+			c1 = read8(in);
 			if ((c1 & 0x80) == 0) {
-				fread (&c2, 1, 1, in);
-				note =
-					(((c1 << 4) & 0x30) | ((c2 >> 4) &
-						 0x0f));
+				c2 = read8(in);
+				note = ((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f);
 				ptk_tab[0] = ptk_table[note][0];
 				ptk_tab[1] = ptk_table[note][1];
 				ins = (c1 >> 2) & 0x1f;
@@ -192,8 +123,8 @@ static int depack_DI (FILE * in, FILE * out)
 				fwrite (ptk_tab, 4, 1, out);
 				continue;
 			}
-			fread (&c2, 1, 1, in);
-			fread (&c3, 1, 1, in);
+			c2 = read8(in);
+			c3 = read8(in);
 			note = (((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f));
 			ptk_tab[0] = ptk_table[note][0];
 			ptk_tab[1] = ptk_table[note][1];
@@ -204,17 +135,16 @@ static int depack_DI (FILE * in, FILE * out)
 			ptk_tab[2] |= fxt;
 			fxp = c3;
 			ptk_tab[3] = fxp;
-			fwrite (ptk_tab, 4, 1, out);
+			fwrite(ptk_tab, 4, 1, out);
 		}
 	}
 
+	fseek(in, smp_offs, 0);
 
-	fseek (in, Add_Sample_Data, 0);
-
-	t = (uint8 *) malloc (ssize);
-	fread (t, ssize, 1, in);
-	fwrite (t, ssize, 1, out);
-	free (t);
+	t = (uint8 *)malloc(ssize);
+	fread(t, ssize, 1, in);
+	fwrite(t, ssize, 1, out);
+	free(t);
 
 	return 0;
 }
