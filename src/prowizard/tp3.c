@@ -4,7 +4,7 @@
  *
  * Converts tp3 packed MODs back to PTK MODs
  *
- * $Id: tp3.c,v 1.5 2007-09-26 03:12:11 cmatsuoka Exp $
+ * $Id: tp3.c,v 1.6 2007-09-26 11:36:20 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -12,7 +12,7 @@
 #include "prowiz.h"
 
 
-static int depack_tp3 (uint8 *, FILE *);
+static int depack_tp3 (FILE *, FILE *);
 static int test_tp3 (uint8 *, int);
 
 struct pw_format pw_tp3 = {
@@ -20,122 +20,104 @@ struct pw_format pw_tp3 = {
         "Tracker Packer v3",
         0x00,
         test_tp3,
-        depack_tp3,
-        NULL
+        NULL,
+        depack_tp3
 };
 
 
-static int depack_tp3 (uint8 *data, FILE *out)
+static int depack_tp3 (FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 pnum[128];
 	uint8 pdata[1024];
 	uint8 *tmp;
 	uint8 note, ins, fxt, fxp;
-	uint8 PatMax = 0x00;
-	uint8 PatPos;
-	int Track_Address[128][4];
+	uint8 npat, nsmp;
+	uint8 len;
+	int trk_ofs[128][4];
 	int i = 0, j = 0, k;
-	int Start_Pat_Address = 999999l;
+	int pat_ofs = 999999;
 	int size, ssize = 0;
-	int Max_Track_Address = 0;
-	int start = 0;
-	int where = start;
+	int max_trk_ofs = 0;
+	uint8 *buf;
 
-	bzero(Track_Address, 128 * 4 * 4);
+	bzero(trk_ofs, 128 * 4 * 4);
 	bzero(pnum, 128);
 
 	/* title */
-	where += 8;
-	fwrite(data + where, 20, 1, out);
-	where += 20;
+	fseek(in, 8, SEEK_CUR);
+	for (i = 0; i < 20; i++)
+		write8(out, read8(in));
 
 	/* number of sample */
-	j = readmem16b(data + where) / 8;
-	where += 2;
+	nsmp = read16b(in) / 8;
 
-	for (i = 0; i < j; i++) {
+	for (i = 0; i < nsmp; i++) {
 		for (k = 0; k < 22; k++)	/*sample name */
 			write8(out, 0);
 
-		c3 = data[where++];		/* read finetune */
-		c4 = data[where++];		/* read volume */
+		c3 = read8(in);			/* read finetune */
+		c4 = read8(in);			/* read volume */
 
-		write16b(out, size = readmem16b(data + where)); /* size */
+		write16b(out, size = read16b(in)); /* size */
 		ssize += size * 2;
-		where += 2;
 
 		write8(out, c3);		/* write finetune */
 		write8(out, c4);		/* write volume */
 
-		write16b(out, readmem16b(data + where)); /* loop start */
-		where += 2;
-		write16b(out, readmem16b(data + where)); /* loop size */
-		where += 2;
+		write16b(out, read16b(in));	/* loop start */
+		write16b(out, read16b(in));	/* loop size */
 	}
 
-	tmp = (uint8 *)malloc(30);
+	tmp = malloc(30);
 	bzero(tmp, 30);
 	tmp[29] = 0x01;
-	for (; i != 31; i++)
+
+	for (; i < 31; i++)
 		fwrite(tmp, 30, 1, out);
 
 	/* read size of pattern table */
-	where++;
-	write8(out, PatPos = data[where++]);
-
+	read8(in);
+	write8(out, len = read8(in));		/* sequence length */
 	write8(out, 0x7f);			/* ntk byte */
 
-	for (i = 0; i < PatPos; i++) {
-		pnum[i] = readmem16b(data + where) / 8;
-		where += 2;
-		if (pnum[i] > PatMax)
-			PatMax = pnum[i];
-/*fprintf ( info , "%3ld: %ld\n" , i,paddr[i] );*/
+	for (npat = i = 0; i < len; i++) {
+		pnum[i] = read16b(in) / 8;
+		if (pnum[i] > npat)
+			npat = pnum[i];
 	}
 
 	/* read tracks addresses */
 	/* bypass 4 bytes or not ?!? */
 	/* Here, I choose not :) */
 
-/*fprintf ( info , "track addresses :\n" );*/
-	for (i = 0; i <= PatMax; i++) {
+	for (i = 0; i <= npat; i++) {
 		for (j = 0; j < 4; j++) {
-			Track_Address[i][j] = readmem16b(data + where);
-			where += 2;
-			if (Track_Address[i][j] > Max_Track_Address)
-				Max_Track_Address = Track_Address[i][j];
-/*fprintf ( info , "%6ld, " , Track_Address[i][j] );*/
+			trk_ofs[i][j] = read16b(in);
+			if (trk_ofs[i][j] > max_trk_ofs)
+				max_trk_ofs = trk_ofs[i][j];
 		}
-/*fprintf ( info , "  (%x)\n" , Max_Track_Address );*/
 	}
 
-	/*printf ( "Highest pattern number : %d\n" , PatMax ); */
-
 	fwrite(pnum, 128, 1, out);		/* write pattern list */
+	write32b(out, PW_MOD_MAGIC);		/* ID string */
 
-	write32b(out, 0x4E2E4B2E);		/* ID string */
-
-	Start_Pat_Address = where + 2;
-
-/*printf("address of the first pattern : %ld\n" , Start_Pat_Address);*/
+	pat_ofs = ftell(in) + 2;
 
 	/* pattern datas */
-	for (i = 0; i <= PatMax; i++) {
-/*printf("\npattern %ld:\n\n" , i );*/
+	for (i = 0; i <= npat; i++) {
 		bzero(pdata, 1024);
 
 		for (j = 0; j < 4; j++) {
-/*printf("track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address);*/
-			where = start + Start_Pat_Address + Track_Address[i][j];
+			int where;
+
+			fseek(in, pat_ofs + trk_ofs[i][j], SEEK_SET);
 
 			for (k = 0; k < 64; k++) {
 				int x = k * 16 + j * 4;
 
-				c1 = data[where++];
-/*fprintf ( info , "%ld: %2x," , k , c1 );*/
+				c1 = read8(in);
 				if ((c1 & 0xc0) == 0xc0) {
-/*fprintf ( info , " <--- %d empty lines\n" , (0x100-c1) );*/
 					//k += (0x100 - c1);
 					//k -= 1;
 					k += 0x80 - (c1 & 0x3f);
@@ -143,8 +125,7 @@ static int depack_tp3 (uint8 *data, FILE *out)
 				}
 
 				if ((c1 & 0xc0) == 0x80) {
-					c2 = data[where++];
-/*fprintf ( info , "%2x ,\n" , c2 );*/
+					c2 = read8(in);
 					fxt = (c1 >> 1) & 0x0f;
 					fxp = c2;
 					if ((fxt == 0x05) || (fxt == 0x06)
@@ -161,29 +142,30 @@ static int depack_tp3 (uint8 *data, FILE *out)
 					continue;
 				}
 
-				c2 = data[where++];
-/*fprintf ( info , "%2x, " , c2 );*/
+				c2 = read8(in);
+
 				ins = ((c2 >> 4) & 0x0f) | ((c1 >> 2) & 0x10);
+
 				if ((c1 & 0x40) == 0x40)
 					note = 0x7f - c1;
 				else
 					note = c1 & 0x3f;
+
 				fxt = c2 & 0x0f;
 
 				if (fxt == 0x00) {
-/*fprintf ( info , " <--- No FX !!\n" );*/
 					pdata[x] = ins & 0xf0;
 					pdata[x] |= ptk_table[note][0];
 					pdata[x + 1] = ptk_table[note][1];
 					pdata[x + 2] = (ins << 4) & 0xf0;
-					pdata[x + 2] |= fxt;
 					continue;
 				}
 
-				c3 = data[where++];
-/*fprintf ( info , "%2x\n" , c3 );*/
+				c3 = read8(in);
+
 				if (fxt == 0x08)
 					fxt = 0x00;
+
 				fxp = c3;
 				if ((fxt == 0x05) || (fxt == 0x06)
 					|| (fxt == 0x0A)) {
@@ -200,22 +182,22 @@ static int depack_tp3 (uint8 *data, FILE *out)
 				pdata[x + 2] |= fxt;
 				pdata[x + 3] = fxp;
 			}
-			if (where > Max_Track_Address)
-				Max_Track_Address = where;
-/*fprintf ( info , "%6ld, " , Max_Track_Address );*/
+			where = ftell(in);
+			if (where > max_trk_ofs)
+				max_trk_ofs = where;
 		}
-		fwrite (pdata, 1024, 1, out);
-		/*printf ( "." ); */
+		fwrite(pdata, 1024, 1, out);
 	}
-	/*printf ( " ok\n" ); */
-
-	/*printf ( "sample data address : %ld\n" , Max_Track_Address ); */
 
 	/* Sample data */
-	if (((Max_Track_Address / 2) * 2) != Max_Track_Address)
-		Max_Track_Address += 1;
-	fwrite (&data[start + Max_Track_Address],
-		ssize, 1, out);
+	if (((max_trk_ofs / 2) * 2) != max_trk_ofs)
+		max_trk_ofs += 1;
+
+	fseek(in, max_trk_ofs, SEEK_SET);
+	buf = malloc(ssize);
+	fread(buf, 1, ssize, in);
+	fwrite(buf, 1, ssize, out);
+	free(buf);
 
 	return 0;
 }

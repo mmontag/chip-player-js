@@ -30,7 +30,8 @@ Tracker 3 and Impulse Tracker event handling algorithms to play M.K., XM,
 S3M and IT modules. By default, Sound/Noise/Protracker modules are played
 in  Protracker 3.15 style  and  multichannel mutations in Fast Tracker II
 style -- see doc/README.trackers for details. Multifile formats must have
-all files in the same directory (ALM, Protracker songs, Startrekker AM).
+all files in the same directory (Protracker song, Soundsmith, Startrekker
+AM, ALM).
 
 The current version recognizes the following module formats:
 
@@ -53,7 +54,8 @@ The current version recognizes the following module formats:
   KSM	****+	Kefrens Sound Machine	-
   MP	****+	Module Protector	-
   NP	****+	NoisePacker		1.0, 2.0, 3.0
-  TP    ****	The Player		6.0a
+  Pxx	****	The Player		6.0a
+  TP	***	Tracker Packer		3
   PM	***	Power Music		-
   PHA	***	Pha Packer		-
   PROM	****+	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
