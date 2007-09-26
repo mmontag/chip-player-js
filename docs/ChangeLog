@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.93 2007-09-26 03:12:10 cmatsuoka Exp $
+$Id: ChangeLog,v 1.94 2007-09-26 19:27:23 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -20,6 +20,7 @@ Stable versions
 	- fixed Module Protector test to recognize mods from "Made In Croatia"
 	- fixed crash when scanning modules with length zero (bug #1800766)
 	- fixed driver detection in NetBSD (don't try to build OSS driver)
+	- fixed crash when restart value is invalid (reported by Ralf Hoffmann)
 	- format management code cleanup
 	- prowizard code cleanup
 

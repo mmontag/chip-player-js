@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.23 2007-09-25 11:23:30 cmatsuoka Exp $
+ * $Id: load.c,v 1.24 2007-09-26 19:27:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -391,6 +391,13 @@ int xmp_load_module (char *s)
     }
 
     xmp_drv_flushpatch (crunch_ratio (i));
+
+    /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
+     * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
+     * Ralf Hoffmann <ralf@boomerangsworld.de>)
+     */
+    if (xxh->rst >= xxh->len)
+	xxh->rst = 0;
 
     str_adj (xmp_ctl->name);
     if (!*xmp_ctl->name)
