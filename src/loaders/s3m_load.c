@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.12 2007-09-22 20:28:57 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.13 2007-09-26 20:49:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,6 +46,19 @@
  * starting at pos12, caused by pitchbending effect F25.
  */
 
+/*
+ * From: Ralf Hoffmann <ralf@boomerangsworld.de>
+ * Date: Wed, 26 Sep 2007 17:12:41 +0200
+ * ftp://ftp.scenesp.org/pub/compilations/modplanet/normal/bonuscd/artists/
+ * Iq/return%20of%20litmus.s3m doesn't start playing, just uses 100% cpu,
+ * the number of patterns is unusually high
+ *
+ * Claudio's fix: this module seems to be a bad conversion, bad rip or
+ * simply corrupted since it has many instances of 0x87 instead of 0x00
+ * in the module and instrument headers. I'm adding a simple workaround
+ * to be able to load/play the module as is, see the fix87() macro below.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -61,6 +74,10 @@
 #define NONE		0xff
 #define FX_S3M_EXTENDED	0xfe
 
+#define fix87(x) do { \
+	int i; for (i = 0; i < sizeof(x); i++) { \
+		if (*((uint8 *)&x + i) == 0x87) *((uint8 *)&x + i) = 0; } \
+	} while (0)
 
 static uint16 *pp_ins;		/* Parapointers to instruments */
 static uint16 *pp_pat;		/* Parapointers to patterns */
@@ -164,12 +181,12 @@ int s3m_load (FILE * f)
 {
     int c, r, i, j;
     struct s3m_adlib_header sah;
-
     struct xxm_event *event = 0, dummy;
     struct s3m_file_header sfh;
     struct s3m_instrument_header sih;
     int pat_len;
     uint8 n, b, x8;
+    int quirk87 = 0;
 
     LOAD_INIT ();
 
@@ -197,6 +214,15 @@ int s3m_load (FILE * f)
 
     if (sfh.magic != MAGIC_SCRM)
 	return -1;
+
+    /* S3M anomaly in return_of_litmus.s3m */
+    if (sfh.version == 0x1301 && sfh.name[27] == 0x87)
+	quirk87 = 1;
+
+    if (quirk87) {
+	fix87(sfh.patnum);
+	fix87(sfh.flags);
+    }
 
     copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 28);
 
@@ -433,6 +459,13 @@ int s3m_load (FILE * f)
 
 	if (x8 == 1 && sih.magic != MAGIC_SCRS)
 	    return -2;
+
+	if (quirk87) {
+	    fix87(sih.length);
+	    fix87(sih.loopbeg);
+	    fix87(sih.loopend);
+	    fix87(sih.flags);
+	}
 
 	xxih[i].nsm = !!(xxs[i].len = sih.length);
 	xxs[i].lps = sih.loopbeg;

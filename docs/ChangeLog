@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.94 2007-09-26 19:27:23 cmatsuoka Exp $
+$Id: ChangeLog,v 1.95 2007-09-26 20:49:13 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -6,6 +6,8 @@ Stable versions
 2.3.0 ()
 	- added runtime endianism detection
 	- added extractor for Epic Games' Unreal UMX files
+	- added workaround for S3M "Return of Litmus" 0x87 quirk (reported
+	  by Ralf Hoffmann)
 	- enabled Tracker Packer 3 prowizard loader
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
 	- fixed semantics of options --big-endian and --little-endian
