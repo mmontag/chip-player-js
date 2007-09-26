@@ -4,7 +4,7 @@
  *
  * Converts tp3 packed MODs back to PTK MODs
  *
- * $Id: tp3.c,v 1.4 2007-09-25 00:32:40 cmatsuoka Exp $
+ * $Id: tp3.c,v 1.5 2007-09-26 03:12:11 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -28,7 +28,6 @@ struct pw_format pw_tp3 = {
 static int depack_tp3 (uint8 *data, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
-	uint8 ptk_table[37][2];
 	uint8 pnum[128];
 	uint8 pdata[1024];
 	uint8 *tmp;
@@ -157,8 +156,8 @@ static int depack_tp3 (uint8 *data, FILE *out)
 					}
 					if (fxt == 0x08)
 						fxt = 0x00;
-					pdata[k * 16 + j * 4 + 2] = fxt;
-					pdata[k * 16 + j * 4 + 3] = fxp;
+					pdata[x + 2] = fxt;
+					pdata[x + 3] = fxp;
 					continue;
 				}
 
@@ -258,15 +257,12 @@ static int test_tp3(uint8 *data, int s)
 	/* test sample sizes */
 	ssize = 0;
 	for (k = 0; k < l; k++) {
-		/* size */
-		j = (data[start + k * 8 + 32] << 8) + data[start + k * 8 + 33];
-		/* loop start */
-		m = (data[start + k * 8 + 34] << 8) + data[start + k * 8 + 35];
-		/* loop size */
-		n = (data[start + k * 8 + 36] << 8) + data[start + k * 8 + 37];
-		j *= 2;
-		m *= 2;
-		n *= 2;
+		int x = start + k * 8;
+
+		j = ((data[x + 32] << 8) + data[x + 33]) * 2;	/* size */
+		m = ((data[x + 34] << 8) + data[x + 35]) * 2;	/* loop start */
+		n = ((data[x + 36] << 8) + data[x + 37]) * 2;	/* loop size */
+
 		if ((j > 0xFFFF) || (m > 0xFFFF) || (n > 0xFFFF))
 			return -1;
 

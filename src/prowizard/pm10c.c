@@ -6,7 +6,7 @@
  *
  * claudio's note: Now this one can be *heavily* optimized...
  *
- * $Id: pm10c.c,v 1.3 2007-09-23 01:37:43 cmatsuoka Exp $
+ * $Id: pm10c.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -154,7 +154,7 @@ restart:
 	for (c1 = 0x00; c1 < 128; c1++)
 		fwrite(&pnum[c1], 1, 1, out);
 
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* a little pre-calc code ... no other way to deal with these unknown
 	 * pattern data sizes ! :(

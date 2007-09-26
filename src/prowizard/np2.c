@@ -4,7 +4,7 @@
  *
  * Converts NoisePacked MODs back to ptk
  *
- * $Id: np2.c,v 1.2 2007-09-22 14:40:33 cmatsuoka Exp $
+ * $Id: np2.c,v 1.3 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -99,7 +99,7 @@ static int depack_np2 (FILE *in, FILE *out)
 	fwrite(ptable, 128, 1, out);
 
 	/* write ptk's ID */
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* read tracks addresses per pattern */
 	for (i = 0; i < npat; i++) {

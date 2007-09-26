@@ -8,7 +8,7 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: zen.c,v 1.3 2007-09-24 18:30:29 cmatsuoka Exp $
+ * $Id: zen.c,v 1.4 2007-09-26 03:12:11 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -140,7 +140,7 @@ static int depack_zen(uint8 *data, FILE *out)
 	/*printf ( "Number of pattern : %d\n" , pat_max ); */
 
 	fwrite(ptable, 128, 1, out);	/* write pattern table */
-	write32b(out, 0x4E2E4B2E);	/* write ptk's ID */
+	write32b(out, PW_MOD_MAGIC);	/* write ptk's ID */
 
 	/* pattern data */
 	/*printf ( "converting pattern datas " ); */

@@ -11,7 +11,7 @@
  */
 
 /*
- * $Id: unic.c,v 1.8 2007-09-25 23:35:32 cmatsuoka Exp $
+ * $Id: unic.c,v 1.9 2007-09-26 03:12:11 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -135,7 +135,7 @@ static int depack_unic (uint8 *data, FILE *out)
 	}
 	max += 1;		/* coz first is $00 */
 
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* verify UNIC ID */
 	w = start + 1080;

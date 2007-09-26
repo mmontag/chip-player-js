@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
  *
- * $Id: ksm.c,v 1.6 2007-09-20 02:38:29 cmatsuoka Exp $
+ * $Id: ksm.c,v 1.7 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -171,7 +171,7 @@ static int depack_ksm (FILE *in, FILE *out)
 	}
 
 	fwrite(plist, 128, 1, out);	/* write pattern list */
-	write32b(out, 0x4E2E4B2E);	/* write ID */
+	write32b(out, PW_MOD_MAGIC);	/* write ID */
 
 	/* pattern data */
 	/*printf ( "Converting pattern datas " ); */

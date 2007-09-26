@@ -4,7 +4,7 @@
  *
  * Kris Tracker to Protracker.
  *
- * $Id: kris.c,v 1.2 2007-09-18 02:15:05 cmatsuoka Exp $
+ * $Id: kris.c,v 1.3 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -109,7 +109,7 @@ static int depack_kris (FILE *in, FILE *out)
 	Max = c3 - 0x01;
 	/*printf ( "Number of patterns : %d\n" , Max ); */
 
-	write32b(out, 0x4E2E4B2E);	/* ptk ID */
+	write32b(out, PW_MOD_MAGIC);	/* ptk ID */
 
 	read16b(in);			/* bypass two unknown bytes */
 

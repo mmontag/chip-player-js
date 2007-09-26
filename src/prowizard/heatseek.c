@@ -6,7 +6,7 @@
  *
  * note: There's a good job ! .. gosh !.
  *
- * $Id: heatseek.c,v 1.3 2007-09-22 12:48:25 cmatsuoka Exp $
+ * $Id: heatseek.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -72,7 +72,7 @@ static int depack_crb (FILE *in, FILE *out)
 	pat_max++;
 
 	/* write ptk's ID */
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
 	for (i = 0; i < pat_max; i++) {

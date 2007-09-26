@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.92 2007-09-25 11:23:29 cmatsuoka Exp $
+$Id: ChangeLog,v 1.93 2007-09-26 03:12:10 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -6,6 +6,7 @@ Stable versions
 2.3.0 ()
 	- added runtime endianism detection
 	- added extractor for Epic Games' Unreal UMX files
+	- enabled Tracker Packer 3 prowizard loader
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
 	- fixed semantics of options --big-endian and --little-endian
 	- fixed memory corruption in Quadra Composer module loader

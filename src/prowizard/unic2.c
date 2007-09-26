@@ -11,7 +11,7 @@
  */
 
 /*
- * $Id: unic2.c,v 1.3 2007-09-20 02:57:50 cmatsuoka Exp $
+ * $Id: unic2.c,v 1.4 2007-09-26 03:12:11 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -108,7 +108,7 @@ static int depack_unic2 (uint8 *data, FILE *out)
 	maxpat += 1;		/* coz first is $00 */
 	/*printf ( "Number of pat : %d\n" , maxpat ); */
 
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
 	for (i = 0; i < maxpat; i++) {

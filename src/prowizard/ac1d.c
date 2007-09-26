@@ -6,7 +6,7 @@
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
  *
- * $Id: ac1d.c,v 1.3 2007-09-18 02:15:05 cmatsuoka Exp $
+ * $Id: ac1d.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -91,7 +91,7 @@ static int depack_AC1D (FILE *in, FILE *out)
 		write8(out, read8(in));
 
 	/* write ID */
-	write32b(out, 0x422E4B2E);	/* M.K. */
+	write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
 	/* pattern data */
 	tmp = (uint8 *) malloc (1024);

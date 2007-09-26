@@ -4,7 +4,7 @@
  *
  * Converts MODs packed with Prorunner v1.0
  *
- * $Id: prun1.c,v 1.2 2007-09-18 21:19:56 cmatsuoka Exp $
+ * $Id: prun1.c,v 1.3 2007-09-26 03:12:11 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -59,7 +59,7 @@ static int depack_pru1 (FILE *in, FILE *out)
 	fwrite(header, 129, 1, out);
 
 	/* write ID */
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* get number of pattern */
 	max = 0;

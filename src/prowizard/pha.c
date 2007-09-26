@@ -5,7 +5,7 @@
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.6 2007-09-24 18:30:28 cmatsuoka Exp $
+ * $Id: pha.c,v 1.7 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -185,7 +185,7 @@ restart:
 	for (i = 0; i < 128; i++)		/* write pattern list */
 		write8(out, pnum[i]);
 
-	write32b(out, 0x4E2E4B2E);		/* ID string */
+	write32b(out, PW_MOD_MAGIC);		/* ID string */
 
 	sdata_Address = ftell(in);
 	fseek(in, Start_Pat_Address, SEEK_SET);

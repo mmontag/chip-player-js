@@ -4,7 +4,7 @@
  *
  * Converts TDD packed MODs back to PTK MODs
  *
- * $Id: tdd.c,v 1.3 2007-09-20 02:38:29 cmatsuoka Exp $
+ * $Id: tdd.c,v 1.4 2007-09-26 03:12:11 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -79,7 +79,7 @@ static int depack_tdd (FILE *in, FILE *out)
 
 	/* write ptk's ID string */
 	fseek (out, 0, 2);
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* read/write pattern data */
 	tmp = (uint8 *)malloc(1024);

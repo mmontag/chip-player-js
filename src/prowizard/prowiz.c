@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.16 2007-09-25 23:35:32 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.17 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -165,9 +165,9 @@ void pw_crap (struct pw_format *f, FILE *file_out)
 	i = ftell (file_out);
 
 	if (f->flags & PW_MARK) {
-		fseek (file_out, 0x438, SEEK_SET);
-		fwrite ("PWIZ", 1, 4, file_out);
-		fseek (file_out, 0, SEEK_END);
+		fseek(file_out, 0x438, SEEK_SET);
+		fwrite("PWIZ", 1, 4, file_out);
+		fseek(file_out, 0, SEEK_END);
   		snprintf(buf, 40, "%-8.8s%-.32s", f->id, f->name);
 		for (i = 0; i < 8; i++) {
 			if (buf[i] == ' ')

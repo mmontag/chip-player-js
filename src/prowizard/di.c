@@ -4,7 +4,7 @@
  *
  * Converts DI packed MODs back to PTK MODs
  *
- * $Id: di.c,v 1.2 2007-09-25 01:34:34 cmatsuoka Exp $
+ * $Id: di.c,v 1.3 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -92,7 +92,7 @@ static int depack_DI (FILE * in, FILE * out)
 			Max = ptable[i];
 	}
 
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	fseek(in, tmp, 0);
 	for (i = 0; i <= Max; i++)

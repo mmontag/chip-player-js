@@ -21,6 +21,8 @@ typedef unsigned int uint32;
 #define PW_DELTA	0x0002
 #define PW_PACKED	0x0004
 
+#define PW_MOD_MAGIC	0x4d2e4b2e
+
 #define PW_REQUEST_DATA(s,n) \
 	do { if ((s)<(n)) return ((n)-(s)); } while (0)
 

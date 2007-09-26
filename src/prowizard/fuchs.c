@@ -4,7 +4,7 @@
  *
  * Depacks Fuchs Tracker modules
  *
- * $Id: fuchs.c,v 1.2 2007-09-20 01:59:02 cmatsuoka Exp $
+ * $Id: fuchs.c,v 1.3 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -111,7 +111,7 @@ static int depack_fuchs(FILE *in, FILE *out)
 
 	/* write ptk's ID */
 	fseek(out, 0, SEEK_END);
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* now, the pattern data */
 

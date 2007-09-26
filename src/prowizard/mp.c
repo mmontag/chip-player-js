@@ -4,7 +4,7 @@
  *
  * Converts MP packed MODs back to PTK MODs
  *
- * $Id: mp.c,v 1.4 2007-09-25 23:35:32 cmatsuoka Exp $
+ * $Id: mp.c,v 1.5 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -72,7 +72,7 @@ static int depack_MP (FILE *in, FILE *out)
 			max = c1;
 	}
 
-	write32b(out, 0x4E2E4B2E);		/* M.K. */
+	write32b(out, PW_MOD_MAGIC);		/* M.K. */
 
 	if (read32b(in) != 0)			/* bypass unknown empty bytes */
 		fseek (in, -4, SEEK_CUR);

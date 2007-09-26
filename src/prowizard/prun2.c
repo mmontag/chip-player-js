@@ -8,7 +8,7 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: prun2.c,v 1.4 2007-09-19 16:52:18 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.5 2007-09-26 03:12:11 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -73,7 +73,7 @@ static int depack_pru2 (uint8 *data, FILE *out)
 		max = (c1 > max) ? c1 : max;
 	}
 
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data stuff */
 	w = start + 770;

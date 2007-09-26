@@ -4,7 +4,7 @@
  *
  * Converts back to ptk FC-M packed MODs
  *
- * $Id: fc-m.c,v 1.3 2007-09-18 02:15:05 cmatsuoka Exp $
+ * $Id: fc-m.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -86,7 +86,7 @@ static int depack_fcm(FILE *in, FILE *out)
 	/*printf ( "Number of pattern : %d\n" , pat_max + 1 ); */
 
 	/* write ptk's ID */
-	write32b(out, 0x4E2E4B2E);
+	write32b(out, PW_MOD_MAGIC);
 
 	read32b(in);	/* bypass "SONG" chunk */
 
