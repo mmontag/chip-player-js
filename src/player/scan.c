@@ -33,9 +33,10 @@
 #include "xmpi.h"
 #include "effects.h"
 
-#define S3M_END         0xff
-#define TIME            6
-#define MAX_GVL         0x40
+#define S3M_END		0xff
+#define S3M_SKIP	0xff
+#define TIME		6
+#define MAX_GVL		0x40
 
 extern int xxo_fstrow[XMP_DEF_MAXORD];
 extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
@@ -83,12 +84,14 @@ int xmpi_scan_module()
 	if ((uint32)++ord >= xxh->len) {
 	    if ((uint32)++ord >= xxh->len)
 		ord = ((uint32)xxh->rst > xxh->len ||
-		    (uint32)xxo[xxh->rst] >= xxh->pat) ? 0 : xxh->rst;
-		if (xxo[ord] == S3M_END)
-		    break;
-	    }
+			(uint32)xxo[xxh->rst] >= xxh->pat) ? 0 : xxh->rst;
+	    if (xxo[ord] == S3M_END)
+		break;
+	} 
 
 	if ((uint32)xxo[ord] >= xxh->pat) {
+	    if (xxo[ord] == S3M_SKIP)
+		ord++;
 	    if (xxo[ord] == S3M_END)
 		ord = xxh->len;
 	    continue;
@@ -100,6 +103,7 @@ int xmpi_scan_module()
 	xxo_info[ord].gvl = gvl;
 	xxo_info[ord].bpm = bpm;
 	xxo_info[ord].tempo = tempo;
+
 	if (medbpm)
 	    xxo_info[ord].time = (clock + 132 * alltmp / 5 / bpm) / 10;
 	else

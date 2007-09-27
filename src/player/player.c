@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.11 2007-09-24 01:13:33 cmatsuoka Exp $
+ * $Id: player.c,v 1.12 2007-09-27 00:17:35 cmatsuoka Exp $
  */
 
 /*
@@ -723,7 +723,10 @@ int xmpi_player_start()
 
     gvol_slide = 0;
     gvol_base = xmp_ctl->volbase;
-    xmp_ctl->volume = xxo_info[o = xmp_ctl->start].gvl;
+    o = xmp_ctl->start;
+    while (xxo[o] == 254)	/* S3M skip in first pattern (gaming.s3m) */
+	o++;
+    xmp_ctl->volume = xxo_info[o].gvl;
     tick_time = xmp_ctl->rrate / (xmp_bpm = xxo_info[o].bpm);
     flow.jumpline = xxo_fstrow[o];
     tempo = xxo_info[o].tempo;
@@ -755,6 +758,8 @@ next_order:
 		break;
 	}
 	if (xxo[o] >= xxh->pat) {
+	    if (xxo[o] == 0xfe)		/* S3M skips pattern 0xfe */
+		continue;
 	    if (xxo[o] == 0xff)		/* S3M uses 0xff as end mark */
 		o = xxh->len;
 	    continue;
