@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.13 2007-09-26 20:49:13 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.14 2007-09-27 23:29:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -220,6 +220,7 @@ int s3m_load (FILE * f)
 	quirk87 = 1;
 
     if (quirk87) {
+	fix87(sfh.name);
 	fix87(sfh.patnum);
 	fix87(sfh.flags);
     }
