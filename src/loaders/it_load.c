@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.20 2007-09-22 20:28:56 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.21 2007-09-27 01:34:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -316,6 +316,9 @@ int it_load (FILE * f)
 	} else {
 	    sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
 	}
+    case 0x10:
+	sprintf(tracker_name, "Schism Tracker %d.%02x",
+			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
 	break;
     default:
 	sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
