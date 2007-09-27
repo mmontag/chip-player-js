@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2004 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.3 2006-02-13 16:48:20 cmatsuoka Exp $
+ * $Id: file.c,v 1.4 2007-09-27 00:18:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,8 +22,10 @@
 #include "xmpi.h"
 #include "driver.h"
 #include "mixer.h"
+#include "convert.h"
 
-static int audio_fd;
+static int fd;
+static int endian;
 
 static int init (struct xmp_control *);
 static void bufdump (int);
@@ -31,10 +33,16 @@ static void shutdown ();
 
 static void dummy () { }
 
+static char *help[] = {
+    "big-endian", "Generate big-endian 16-bit samples",
+    "little-endian", "Generate little-endian 16-bit samples",
+    NULL
+};
+
 struct xmp_drv_info drv_file = {
     "file",		/* driver ID */
     "file",		/* driver description */
-    NULL,		/* help */
+    help,		/* help */
     init,		/* init */
     shutdown,		/* shutdown */
     xmp_smix_numvoices,	/* numvoices */
@@ -58,15 +66,22 @@ struct xmp_drv_info drv_file = {
     NULL
 };
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_control *ctl)
 {
     char *buf;
     int bsize;
+    char *token, **parm;
+
+    endian = 0;
+    parm_init ();
+    chkparm1 ("big-endian", endian = 1);
+    chkparm1 ("little-endian", endian = -1);
+    parm_end ();
 
     if (!ctl->outfile)
 	ctl->outfile = "xmp.out";
 
-    audio_fd = strcmp (ctl->outfile, "-") ? creat (ctl->outfile, 0644) : 1;
+    fd = strcmp (ctl->outfile, "-") ? creat (ctl->outfile, 0644) : 1;
 
     bsize = strlen(drv_file.description) + strlen (ctl->outfile) + 8;
     buf = malloc(bsize);
@@ -87,11 +102,14 @@ static void bufdump (int i)
     void *b;
 
     /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
-    /* for (; i -= write (audio_fd, xmp_smix_buffer (), i); ); */
+    /* for (; i -= write (fd, xmp_smix_buffer (), i); ); */
 
     b = xmp_smix_buffer ();
+    if ((big_endian && endian == -1) || (!big_endian && endian == 1))
+	xmp_cvt_sex(i, b);
+
     while (i) {
-	if ((j = write (audio_fd, b, i)) > 0) {
+	if ((j = write (fd, b, i)) > 0) {
 	    i -= j;
 	    b = (char *)b + j;
 	} else
@@ -104,6 +122,6 @@ static void shutdown ()
 {
     xmp_smix_off ();
 
-    if (audio_fd)
-	close (audio_fd);
+    if (fd)
+	close (fd);
 }

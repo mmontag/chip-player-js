@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.4 2007-08-04 20:08:15 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.5 2007-09-27 00:18:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -610,10 +610,10 @@ void *xmp_smix_buffer ()
     else
 	act = OUT_SU8NORM;
 
-/* The mixer works with multiple buffers -- this is useless when using
- * multi-buffered sound output (e.g. OSS fragments) but can be useful for
- * DMA transfers in DOS.
- */
+    /* The mixer works with multiple buffers -- this is useless when using
+     * multi-buffered sound output (e.g. OSS fragments) but can be useful for
+     * DMA transfers in DOS.
+     */
     if (++outbuf >= smix_numbuf)
 	outbuf = 0;
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.5 2007-09-18 00:50:22 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.6 2007-09-27 00:18:16 cmatsuoka Exp $
  */
 
 /*
@@ -128,11 +128,6 @@ static void from_fmt (struct xmp_control *ctl, int outfmt)
 	ctl->outfmt |= XMP_FMT_UNS;
     else
 	ctl->outfmt &= ~XMP_FMT_UNS;
-
-    if (outfmt & (AFMT_S16_BE | AFMT_U16_BE))
-	ctl->outfmt |= XMP_FMT_BIGEND;
-    else
-	ctl->outfmt &= ~XMP_FMT_BIGEND;
 }
 
 

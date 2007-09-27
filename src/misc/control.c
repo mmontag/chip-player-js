@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.10 2007-09-25 12:45:05 cmatsuoka Exp $
+ * $Id: control.c,v 1.11 2007-09-27 00:18:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -58,9 +58,8 @@ void xmp_init (int argc, char **argv, struct xmp_control *ctl)
     /* Set defaults */
     ctl->freq = 44100;
     ctl->mix = 80;
-    ctl->resol = 16;					/* Was 0. why? */
+    ctl->resol = 16;
     ctl->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
-    ctl->outfmt |= big_endian ? XMP_FMT_BIGEND : 0;
 
     /* Set max number of voices per channel */
     ctl->maxvoc = 16;

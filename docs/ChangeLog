@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.95 2007-09-26 20:49:13 cmatsuoka Exp $
+$Id: ChangeLog,v 1.96 2007-09-27 00:18:16 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -10,7 +10,7 @@ Stable versions
 	  by Ralf Hoffmann)
 	- enabled Tracker Packer 3 prowizard loader
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
-	- fixed semantics of options --big-endian and --little-endian
+	- fixed semantics of big/little endian options, moved to file driver
 	- fixed memory corruption in Quadra Composer module loader
 	- fixed Quadra Composer vibrato, offset and jump effects
 	- fixed endianism problem in KSM and Zen Packer loaders
@@ -23,6 +23,7 @@ Stable versions
 	- fixed crash when scanning modules with length zero (bug #1800766)
 	- fixed driver detection in NetBSD (don't try to build OSS driver)
 	- fixed crash when restart value is invalid (reported by Ralf Hoffmann)
+	- fixed handling of S3M pattern 0xfe (reported by Ralf Hoffmann)
 	- format management code cleanup
 	- prowizard code cleanup
 

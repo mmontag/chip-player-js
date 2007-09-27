@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.6 2007-09-25 11:23:30 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.7 2007-09-27 00:18:16 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -108,7 +108,6 @@ struct xmp_control {
 #define XMP_FMT_FM	0x00000001	/* Active mode FM */
 #define XMP_FMT_UNS	0x00000002	/* Unsigned samples */
 #define XMP_FMT_MONO	0x00000004	/* Mono output */
-#define XMP_FMT_BIGEND	0x00000008	/* Big-endian samples (output) */
     int outfmt;		/* Software mixing output data format */
     int resol;		/* Software mixing resolution output */
     int freq;		/* Software mixing rate (Hz) */

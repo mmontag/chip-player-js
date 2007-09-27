@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.8 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.9 2007-09-27 00:18:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -152,7 +152,7 @@ static int to_fmt(struct xmp_control *ctl)
 		fmt = SND_PCM_FORMAT_U8 | SND_PCM_FORMAT_S8;
 		break;
 	default:
-		if (ctl->outfmt & XMP_FMT_BIGEND) {
+		if (big_endian) {
 			fmt = SND_PCM_FORMAT_S16_BE | SND_PCM_FORMAT_U16_BE;
 		} else {
 			fmt = SND_PCM_FORMAT_S16_LE | SND_PCM_FORMAT_U16_LE;

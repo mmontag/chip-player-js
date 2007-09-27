@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.9 2007-09-19 21:54:48 cmatsuoka Exp $
+ * $Id: wav.c,v 1.10 2007-09-27 00:18:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 #include "mixer.h"
 #include "convert.h"
 
-static int audio_fd;
+static int fd;
 static uint32 size;
 
 static int init (struct xmp_control *);
@@ -100,7 +100,7 @@ static int init (struct xmp_control *ctl)
     if (!ctl->outfile)
 	ctl->outfile = "xmp.wav";
 
-    audio_fd = strcmp (ctl->outfile, "-") ? creat (ctl->outfile, 0644) : 1;
+    fd = strcmp (ctl->outfile, "-") ? creat (ctl->outfile, 0644) : 1;
 
     buf = malloc (strlen (drv_wav.description) + strlen (ctl->outfile) + 8);
     if (strcmp (ctl->outfile, "-")) {
@@ -111,11 +111,9 @@ static int init (struct xmp_control *ctl)
 	len = -1;
     }
 
-    ctl->outfmt &= ~XMP_FMT_BIGEND;	/* RIFF is little-endian */
-
-    write(audio_fd, "RIFF", 4);
-    write(audio_fd, &len, 4);
-    write(audio_fd, "WAVE", 4);
+    write(fd, "RIFF", 4);
+    write(fd, &len, 4);
+    write(fd, "WAVE", 4);
 
     flen = 0x10;
     u16 = 1;
@@ -125,17 +123,17 @@ static int init (struct xmp_control *ctl)
     bytes_per_sample = bits_per_sample / 8;
     bytes_per_second = sampling_rate * chan * bytes_per_sample;
 
-    write(audio_fd, "fmt ", 4);
-    writeval_32l(audio_fd, flen);
-    writeval_16l(audio_fd, u16);
-    writeval_16l(audio_fd, chan);
-    writeval_32l(audio_fd, sampling_rate);
-    writeval_32l(audio_fd, bytes_per_second);
-    writeval_16l(audio_fd, bytes_per_sample);
-    writeval_16l(audio_fd, bits_per_sample);
+    write(fd, "fmt ", 4);
+    writeval_32l(fd, flen);
+    writeval_16l(fd, u16);
+    writeval_16l(fd, chan);
+    writeval_32l(fd, sampling_rate);
+    writeval_32l(fd, bytes_per_second);
+    writeval_16l(fd, bytes_per_sample);
+    writeval_16l(fd, bits_per_sample);
 
-    write(audio_fd, "data", 4);
-    writeval_32l(audio_fd, len);
+    write(fd, "data", 4);
+    writeval_32l(fd, len);
 
     size = 0;
 
@@ -148,7 +146,9 @@ static void bufdump (int i)
     int16 *b;
 
     b = xmp_smix_buffer();
-    write(audio_fd, b, i);
+    if (big_endian)
+	xmp_cvt_sex(i, b);
+    write(fd, b, i);
 }
 
 
@@ -159,13 +159,13 @@ static void shutdown ()
     xmp_smix_off ();
 
     len = size;
-    lseek(audio_fd, 40, SEEK_SET);
-    writeval_32l(audio_fd, len);
+    lseek(fd, 40, SEEK_SET);
+    writeval_32l(fd, len);
 
     len = size + 40;
-    lseek(audio_fd, 4, SEEK_SET);
-    writeval_32l(audio_fd, len);
+    lseek(fd, 4, SEEK_SET);
+    writeval_32l(fd, len);
 
-    if (audio_fd)
-	close (audio_fd);
+    if (fd)
+	close (fd);
 }

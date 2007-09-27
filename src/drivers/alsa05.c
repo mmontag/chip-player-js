@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.7 2007-09-21 19:48:04 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.8 2007-09-27 00:18:16 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -118,7 +118,7 @@ static int to_fmt(struct xmp_control *ctl)
 		fmt = SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_S16_BE |
 		      SND_PCM_SFMT_U16_LE | SND_PCM_SFMT_U16_BE;
 
-		if (ctl->outfmt & XMP_FMT_BIGEND) {
+		if (big_endian) {
 			fmt &= SND_PCM_SFMT_S16_BE | SND_PCM_SFMT_U16_BE;
 		} else {
 			fmt &= SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_U16_LE;

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.16 2007-09-25 11:23:30 cmatsuoka Exp $
+ * $Id: options.c,v 1.17 2007-09-27 00:18:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,8 +40,6 @@ extern int rt;
 #define OPT_NORC	0x104
 #define OPT_FX9BUG	0x105
 #define OPT_PROBEONLY	0x106
-#define OPT_BIGENDIAN	0x107
-#define OPT_LILENDIAN	0x108
 #define OPT_STDOUT	0x109
 #define OPT_STEREO	0x10a
 #define OPT_NOCMD	0x10b
@@ -207,7 +205,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
     static struct option lopt[] =
     {
 	{ "8bit",		 0, 0, '8' },
-	{ "big-endian",		 0, 0, OPT_BIGENDIAN },
 	{ "bits",		 1, 0, 'b' },
 	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
@@ -217,7 +214,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	{ "offset-bug-emulation",0, 0, OPT_FX9BUG },
 	{ "help",		 0, 0, 'h' },
 	{ "interpolate",	 0, 0, 'i' },
-	{ "little-endian",	 0, 0, OPT_LILENDIAN },
 	{ "load-only",	 	 0, 0, OPT_LOADONLY },
 	{ "loop",		 0, 0, 'l' },
 	{ "mute",		 1, 0, 'M' },
@@ -254,9 +250,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	case '8':
 	    opt->flags |= XMP_CTL_8BIT;
 	    break;
-	case OPT_BIGENDIAN:
-	    opt->outfmt |= XMP_FMT_BIGEND;
-	    break;
 	case 'b':
 	    opt->resol = atoi (optarg);
 	    if (opt->resol != 8 && opt->resol != 16)
@@ -291,9 +284,6 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	    break;
 	case 'l':
 	    opt->flags |= XMP_CTL_LOOP;
-	    break;
-	case OPT_LILENDIAN:
-	    opt->outfmt &= ~XMP_FMT_BIGEND;
 	    break;
 	case OPT_LOADONLY:
 	    loadonly = 1;

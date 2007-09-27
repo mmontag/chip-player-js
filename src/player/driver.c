@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.28 2007-09-20 21:29:13 cmatsuoka Exp $
+ * $Id: driver.c,v 1.29 2007-09-27 00:18:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -414,7 +414,7 @@ void xmp_drv_resetchannel (int chn)
 }
 
 
-static int drv_allocvoice (int chn)
+static int drv_allocvoice(int chn)
 {
     int voc, vfree;
     uint32 age;
@@ -650,62 +650,63 @@ void xmp_drv_voicepos (int chn, int pos)
     pi = patch_array[voice_array[voc].smp];
 
     if (pi->base_note != C4_FREQ)	/* process crunching samples */
-	pos = ((long long) pos << SMIX_SFT_FT) / (int)
-	    (((long long) pi->base_note << SMIX_SFT_FT) / C4_FREQ);
+	pos = ((long long)pos << SMIX_SFT_FT) / (int)
+	    (((long long)pi->base_note << SMIX_SFT_FT) / C4_FREQ);
 
     if (pos > pi->len)	/* Attempt to set offset beyond the end of sample */
 	return;
 
-    smix_voicepos (voc, pos, 0);
+    smix_voicepos(voc, pos, 0);
     if (extern_drv)
 	driver->voicepos (voc, pos << !!(pi->mode & WAVE_16_BITS));
 }
 
 
-int xmp_drv_cstat (int chn)
+int xmp_drv_cstat(int chn)
 {
     int voc;
 
     chn += numusr;
-    if ((uint32) chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
+    if ((uint32) chn >= numchn || (uint32)(voc = ch2vo_array[chn]) >= numvoc)
 	return XMP_CHN_DUMB;
 
     return chn < numtrk ? XMP_CHN_ACTIVE : voice_array[voc].act;
 }
 
 
-inline void xmp_drv_echoback (int msg)
+inline void xmp_drv_echoback(int msg)
 {
-    driver->echoback (msg);
+    driver->echoback(msg);
 }
 
 
-inline int xmp_drv_getmsg ()
+inline int xmp_drv_getmsg()
 {
-    return driver->getmsg ();
+    return driver->getmsg();
 }
 
 
 extern int **xmp_mix_buffer;
 int hold_buffer[256];
 int hold_enabled = 0;
-inline void xmp_drv_bufdump ()
+inline void xmp_drv_bufdump()
 {
-    int i = softmixer ();
+    int i = softmixer();
     if (hold_enabled)
-	memcpy (hold_buffer, *xmp_mix_buffer, 256 * sizeof (int));
-    driver->bufdump (i);
+	memcpy(hold_buffer, *xmp_mix_buffer, 256 * sizeof (int));
+
+    driver->bufdump(i);
 }
 
 
-inline void xmp_drv_starttimer ()
+inline void xmp_drv_starttimer()
 {
-    xmp_drv_sync (0);
-    driver->starttimer ();
+    xmp_drv_sync(0);
+    driver->starttimer();
 }
 
 
-void xmp_drv_stoptimer ()
+void xmp_drv_stoptimer()
 {
     int voc;
 
