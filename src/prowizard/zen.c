@@ -3,12 +3,8 @@
  *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts ZEN packed MODs back to PTK MODs
- ********************************************************
- * 13 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
- *     It speeds-up the process quite a bit :).
  *
- * $Id: zen.c,v 1.4 2007-09-26 03:12:11 cmatsuoka Exp $
+ * $Id: zen.c,v 1.5 2007-09-27 20:29:53 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -17,18 +13,18 @@
 
 
 static int test_zen (uint8 *, int);
-static int depack_zen (uint8 *, FILE *);
+static int depack_zen (FILE *, FILE *);
 
 struct pw_format pw_zen = {
 	"ZEN",
 	"Zen Packer",
 	0x00,
 	test_zen,
-	depack_zen,
-	NULL
+	NULL,
+	depack_zen
 };
 
-static int depack_zen(uint8 *data, FILE *out)
+static int depack_zen(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 finetune, vol;
@@ -43,23 +39,15 @@ static int depack_zen(uint8 *data, FILE *out)
 	int ptable_addr;
 	int sdata_addr = 999999l;
 	int i, j, k;
-	int start = 0;
-	int where = start;	/* main pointer to prevent fread() */
+	uint8 *buf;
 
 	bzero(paddr, 128 * 4);
 	bzero(paddr_Real, 128 * 4);
 	bzero(ptable, 128);
 
-	/* read pattern table address */
-	ptable_addr = readmem32b(data + where);
-	where += 4;
-
-	/* read patmax */
-	pat_max = data[where++];
-
-	/* read size of pattern table */
-	pat_pos = data[where++];
-	/*printf ( "Size of pattern list : %d\n" , pat_pos ); */
+	ptable_addr = read32b(in);	/* read pattern table address */
+	pat_max = read8(in);		/* read patmax */
+	pat_pos = read8(in);		/* read size of pattern table */
 
 	/* write title */
 	for (i = 0; i < 20; i++)
@@ -69,52 +57,37 @@ static int depack_zen(uint8 *data, FILE *out)
 		for (j = 0; j < 22; j++)
 			write8(out, 0);
 
-		/* read finetune */
-		finetune = readmem16b(data + where) / 0x48;
-		where += 2;
+		finetune = read16b(in) / 0x48;		/* read finetune */
 
-		/* read volume */
-		where += 1;
-		vol = data[where++];
+		read8(in);
+		vol = read8(in);			/* read volume */
 
-		/* read sample size */
-		write16b(out, size = readmem16b(data + where));
-		where += 2;
+		write16b(out, size = read16b(in));	/* read sample size */
 		ssize += size * 2;
 
-		write8(out, finetune);	/* write fine */
-		write8(out, vol);	/* write volume */
+		write8(out, finetune);			/* write finetune */
+		write8(out, vol);			/* write volume */
 
-		/* read loop size */
-		size = readmem16b(data + where);
-		where += 2;
+		size = read16b(in);			/* read loop size */
 
-		/* read sample start address */
-		k = readmem32b(data + where);
-		where += 4;
+		k = read32b(in);			/* sample start addr */
 		if (k < sdata_addr)
 			sdata_addr = k;
 
 		/* read loop start address */
-		j = readmem32b(data + where);
-		where += 4;
-		j -= k;
-		j /= 2;
+		j = (read32b(in) - k) / 2;
 
 		write16b(out, j);	/* write loop start */
 		write16b(out, size);	/* write loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	write8(out, pat_pos);	/* write size of pattern list */
-	write8(out, 0x7f);	/* write ntk byte */
+	write8(out, pat_pos);		/* write size of pattern list */
+	write8(out, 0x7f);		/* write ntk byte */
 
 	/* read pattern table .. */
-	where = start + ptable_addr;
-	for (i = 0; i < pat_pos; i++) {
-		paddr[i] = readmem32b(data + where);
-		where += 4;
-	}
+	fseek(in, ptable_addr, SEEK_SET);
+	for (i = 0; i < pat_pos; i++)
+		paddr[i] = read32b(in);
 
 	/* deduce pattern list */
 	c4 = 0;
@@ -137,21 +110,20 @@ static int depack_zen(uint8 *data, FILE *out)
 			c4++;
 		}
 	}
-	/*printf ( "Number of pattern : %d\n" , pat_max ); */
 
-	fwrite(ptable, 128, 1, out);	/* write pattern table */
-	write32b(out, PW_MOD_MAGIC);	/* write ptk's ID */
+	fwrite(ptable, 128, 1, out);		/* write pattern table */
+	write32b(out, PW_MOD_MAGIC);		/* write ptk's ID */
 
 	/* pattern data */
 	/*printf ( "converting pattern datas " ); */
 	for (i = 0; i <= pat_max; i++) {
 		bzero (pat, 1024);
-		where = start + paddr_Real[i];
+		fseek(in, paddr_Real[i], SEEK_SET);
 		for (j = 0; j < 256; j++) {
-			c1 = data[where++];
-			c2 = data[where++];
-			c3 = data[where++];
-			c4 = data[where++];
+			c1 = read8(in);
+			c2 = read8(in);
+			c3 = read8(in);
+			c4 = read8(in);
 
 			note = (c2 & 0x7f) / 2;
 			fxp = c4;
@@ -172,7 +144,11 @@ static int depack_zen(uint8 *data, FILE *out)
 	/*printf ( " ok\n" ); */
 
 	/* sample data */
-	fwrite(&data[start + sdata_addr], ssize, 1, out);
+	fseek(in, sdata_addr, SEEK_SET);
+	buf = malloc(ssize);
+	fread(buf, ssize, 1, in);
+	fwrite(buf, ssize, 1, out);
+	free(buf);
 
 	return 0;
 }

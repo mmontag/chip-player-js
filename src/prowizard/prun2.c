@@ -3,12 +3,8 @@
  *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts ProRunner v2 packed MODs back to Protracker
- ********************************************************
- * 12 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
- *     It speeds-up the process quite a bit :).
  *
- * $Id: prun2.c,v 1.5 2007-09-26 03:12:11 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.6 2007-09-27 20:29:53 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -16,7 +12,7 @@
 #include "prowiz.h"
 
 static int test_pru2 (uint8 *, int);
-static int depack_pru2 (uint8 *, FILE *);
+static int depack_pru2 (FILE *, FILE *);
 
 
 struct pw_format pw_pru2 = {
@@ -24,12 +20,12 @@ struct pw_format pw_pru2 = {
 	"Prorunner 2.0",
 	0x00,
 	test_pru2,
-	depack_pru2,
-	NULL
+	NULL,
+	depack_pru2
 };
 
 
-static int depack_pru2 (uint8 *data, FILE *out)
+static int depack_pru2(FILE *in, FILE *out)
 {
 	uint8 header[2048];
 	uint8 c1, c2, c3, c4;
@@ -39,48 +35,45 @@ static int depack_pru2 (uint8 *data, FILE *out)
 	uint8 v[4][4];
 	int size, ssize = 0;
 	int i, j;
-	int start = 0;
-	int w = start;
+	uint8 *buf;
 
-	bzero (header, 2048);
-	bzero (ptable, 128);
+	bzero(header, 2048);
+	bzero(ptable, 128);
 
 	for (i = 0; i < 20; i++)			/* title */
 		write8(out, 0);
 
-	w += 8;
+	fseek(in, 8, SEEK_SET);
 
 	for (i = 0; i < 31; i++) {
 		for (j = 0; j < 22; j++)		/*sample name */
 			write8(out, 0);
 
-		write16b(out, size = readmem16b(data + w));	/* size */
-		w += 2;
+		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, data[w++]);			/* finetune */
-		write8(out, data[w++]);			/* volume */
-		write16b(out, readmem16b(data + w));	/* loop start */
-		w += 2;
-		write16b(out, readmem16b(data + w));	/* loop size */
-		w += 2;
+		write8(out, read8(in));			/* finetune */
+		write8(out, read8(in));			/* volume */
+		write16b(out, read16b(in));		/* loop start */
+		write16b(out, read16b(in));		/* loop size */
 	}
 
-	write8(out, npat = data[w++]);			/* number of patterns */
-	write8(out, data[w++]);				/* noisetracker byte */
+	write8(out, npat = read8(in));			/* number of patterns */
+	write8(out, read8(in));				/* noisetracker byte */
 
 	for (i = 0; i < 128; i++) {
-		write8(out, c1 = data[w++]);
+		write8(out, c1 = read8(in));
 		max = (c1 > max) ? c1 : max;
 	}
 
 	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data stuff */
-	w = start + 770;
+	fseek(in, 770, SEEK_SET);
+
 	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 256; j++) {
 			c1 = c2 = c3 = c4 = 0;
-			header[0] = data[w++];
+			header[0] = read8(in);
 			if (header[0] == 0x80) {
 				write32b(out, 0);
 			} else if (header[0] == 0xC0) {
@@ -89,9 +82,9 @@ static int depack_pru2 (uint8 *data, FILE *out)
 				c2 = v[0][1];
 				c3 = v[0][2];
 				c4 = v[0][3];
-			} else if ((header[0] != 0xC0) && (header[0] != 0xC0)) {
-				header[1] = data[w++];
-				header[2] = data[w++];
+			} else if (header[0] != 0xC0 && header[0] != 0xC0) {
+				header[1] = read8(in);
+				header[2] = read8(in);
 
 				c1 = (header[1] & 0x80) >> 3;
 				c1 |= ptk_table[(header[0] >> 1)][0];
@@ -131,7 +124,10 @@ static int depack_pru2 (uint8 *data, FILE *out)
 	}
 
 	/* sample data */
-	fwrite(&data[w], ssize, 1, out);
+	buf = malloc(ssize);
+	fread(buf, ssize, 1, in);
+	fwrite(buf, ssize, 1, out);
+	free(buf);
 
 	return 0;
 }
