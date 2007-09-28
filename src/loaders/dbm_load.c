@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.6 2007-09-28 21:35:42 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.7 2007-09-28 23:47:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,7 @@
 
 #include "load.h"
 #include "iff.h"
+#include "period.h"
 
 #define MAGIC_DBM0	MAGIC4('D','B','M','0')
 
@@ -62,7 +63,7 @@ static void get_inst(int size, FILE *f)
 
 	reportv(0, "Instruments    : %d\n", xxh->ins);
 
-	reportv(1, "     Instrument name                LBeg  LSize L Vol Pan\n");
+	reportv(1, "     Instrument name                Smp Vol Pan C2Spd\n");
 
 	for (i = 0; i < xxh->ins; i++) {
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -70,7 +71,7 @@ static void get_inst(int size, FILE *f)
 		xxih[i].nsm = 1;
 		fread(buffer, 30, 1, f);
 		copy_adjust(xxih[i].name, buffer, 30);
-		snum = read16b(f);
+		snum = read16b(f) - 1;
 		if (snum >= xxh->smp)
 			continue;
 		xxi[i][0].sid = snum;
@@ -81,14 +82,13 @@ static void get_inst(int size, FILE *f)
 		xxi[i][0].pan = read16b(f);
 		flags = read16b(f);
 		xxs[snum].flg = flags & 0x03 ? WAVE_LOOPING : 0;
-		xxs[snum].flg = flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
+		xxs[snum].flg |= flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
 
-		if (V(1) && (*xxih[i].name || (xxs[i].len > 1))) {
-			report("[%2X] %-30.30s %05x %05x %c V%02x P%02x\n", i,
-				xxih[i].name, xxs[snum].lps, xxs[snum].lpe,
-				xxs[snum].flg & WAVE_LOOPING ? 'L' : ' ',
-				xxi[i][0].vol, xxi[i][0].pan);
-		}
+		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+
+		reportv(1, "[%2X] %-30.30s #%02X V%02x P%02x %5d\n",
+			i, xxih[i].name, snum,
+			xxi[i][0].vol, xxi[i][0].pan, c2spd);
 	}
 }
 
@@ -108,15 +108,16 @@ static void get_patt(int size, FILE *f)
 		TRACK_ALLOC(i);
 
 		sz = read32b(f);
-printf("rows = %d, size = %d\n", xxp[i]->rows, sz);
+		//printf("rows = %d, size = %d\n", xxp[i]->rows, sz);
 
 		r = 0;
 		c = -1;
 
 		while (sz > 0) {
-printf("  offset=%x,  sz = %d, ", ftell(f), sz);
-			sz--, n = read8(f);
-printf("n = %02x\n", n);
+			//printf("  offset=%x,  sz = %d, ", ftell(f), sz);
+			n = read8(f);
+			if (--sz <= 0) break;
+			//printf("n = %02x\n", n);
 
 			if (n == 0) {
 				r++;
@@ -124,32 +125,36 @@ printf("n = %02x\n", n);
 				continue;
 			}
 
-			sz--, c = read8(f);
-printf("    channel = %d\n", c);
+			c = read8(f);
+			if (--sz <= 0) break;
+			//printf("    channel = %d\n", c);
 
 			event = c >= xxh->chn ? &dummy : &EVENT(i, c, r);
 
 			if (n & 0x01) {
 				x = read8(f);
-				sz--, event->note = MSN(x) * 12 + LSN(x);
+				event->note = 60 + MSN(x) * 12 + LSN(x);
+				if (--sz <= 0) break;
 			}
 			if (n & 0x02) {
-				sz--, event->ins = read8(f) + 1;
+				event->ins = read8(f);
+				if (--sz <= 0) break;
 			}
 			if (n & 0x04) {
-				sz--, event->fxt = read8(f);
+				event->fxt = read8(f);
+				if (--sz <= 0) break;
 			}
 			if (n & 0x08) {
-				sz--, event->fxp = read8(f);
+				event->fxp = read8(f);
+				if (--sz <= 0) break;
 			}
 			if (n & 0x10) {
-				sz--, event->f2t = read8(f);
+				event->f2t = read8(f);
+				if (--sz <= 0) break;
 			}
 			if (n & 0x20) {
-				sz--, event->f2p = read8(f);
-			}
-			if (n & 0x40) {
-				break;
+				event->f2p = read8(f);
+				if (--sz <= 0) break;
 			}
 		}
 		reportv(0, ".");
@@ -163,11 +168,26 @@ static void get_smpl(int size, FILE *f)
 
 	reportv(0, "Stored samples : %d ", xxh->smp);
 
+	reportv(2, "\n     Len   LBeg  LEnd  L");
+
 	for (i = 0; i < xxh->smp; i++) {
 		flags = read32b(f);
 		xxs[i].len = read32b(f);
 
-		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, flags, &xxs[i], NULL);
+		if (flags & 0x02)
+			xxs[i].flg |= WAVE_16_BITS;
+		if (flags & 0x04 || ~flags & 0x01)
+			continue;
+		
+		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+
+		reportv(2, "\n[%2X] %05x%c%05x %05x %c ",
+			i, xxs[i].len,
+			xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+			xxs[i].lps, xxs[i].lpe,
+			xxs[i].flg & WAVE_LOOPING ?
+			(xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' : 'L') : ' ');
+
 		reportv(0, ".");
 	}
 	reportv(0, "\n");
@@ -214,8 +234,6 @@ int dbm_load(FILE *f)
 		iff_chunk(f);
 
 	iff_release();
-
-	reportv(0, "\n");
 
 	return 0;
 }

@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.96 2007-09-27 00:18:16 cmatsuoka Exp $
+$Id: ChangeLog,v 1.97 2007-09-28 23:47:59 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -8,6 +8,7 @@ Stable versions
 	- added extractor for Epic Games' Unreal UMX files
 	- added workaround for S3M "Return of Litmus" 0x87 quirk (reported
 	  by Ralf Hoffmann)
+	- added DigiBooster Pro module loader
 	- enabled Tracker Packer 3 prowizard loader
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
 	- fixed semantics of big/little endian options, moved to file driver
