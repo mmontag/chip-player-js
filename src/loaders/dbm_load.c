@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.3 2007-09-28 12:55:33 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.4 2007-09-28 14:44:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -56,7 +56,7 @@ static void get_song(int size, FILE *f)
 static void get_inst(int size, FILE *f)
 {
 	int i;
-	int c2spd;
+	int c2spd, flags, snum;
 	uint8 buffer[50];
 
 	reportv(0, "Instruments    : %d", xxh->ins);
@@ -67,18 +67,23 @@ static void get_inst(int size, FILE *f)
 		xxih[i].nsm = 1;
 		fread(buffer, 30, 1, f);
 		copy_adjust(xxih[i].name, buffer, 30);
-		xxi[i][0].sid = read16b(f);
+		snum = read16b(f);
+		if (snum >= xxh->smp)
+			continue;
+		xxi[i][0].sid = snum;
 		xxi[i][0].vol = read16b(f);
 		c2spd = read32b(f);
-		xxs[i].lps = read32b(f);
-		xxs[i].lpe = xxs[i].lps + read32b(f);
-		/*xxs[i].flg = inst[i].looplen > 2 ? WAVE_LOOPING : 0; */
+		xxs[snum].lps = read32b(f);
+		xxs[snum].lpe = xxs[i].lps + read32b(f);
 		xxi[i][0].pan = read16b(f);
+		flags = read16b(f);
+		xxs[snum].flg = flags & 0x03 ? WAVE_LOOPING : 0;
+		xxs[snum].flg = flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
 
 		if (V(1) && (*xxih[i].name || (xxs[i].len > 1))) {
 			report("\n[%2X] %-30.30s %05x %05x %c %02x %02x", i,
-				xxih[i].name, xxs[i].lps, xxs[i].lpe,
-				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				xxih[i].name, xxs[snum].lps, xxs[snum].lpe,
+				xxs[snum].flg & WAVE_LOOPING ? 'L' : ' ',
 				xxi[i][0].vol, xxi[i][0].pan);
 		}
 	}
@@ -107,19 +112,18 @@ static void get_patt(int size, FILE *f)
 		c = -1;
 
 		while (sz >= 0) {
-			n = read8(f);
-			sz--;
+			sz--, n = read8(f);
+
 			if (n == 0) {
 				r++;
 				c = -1;
 				continue;
 			}
-			x = read8(f);
-			if (c >= x)
-				r++;
-			c = read8(f);
-			sz--;
+
+			sz--, c = read8(f);
+
 			event = c >= xxh->chn ? &dummy : &EVENT(i, c, r);
+
 			if (n & 0x01) {
 				x = read8(f);
 				event->note = MSN(x) * 12 + LSN(x);
@@ -140,29 +144,24 @@ static void get_patt(int size, FILE *f)
 	}
 }
 
-#if 0
-static void get_sbod(int size, char *buffer)
+static void get_smpl(int size, FILE *f)
 {
-	int flags;
+	int i, flags, len;
 
-	if (sample >= xxh->ins)
-		return;
+	reportv(0, "Stored samples : %d ", xxh->smp);
 
-	if (!sample && V(0))
-		report("\nStored samples : %d ", xxh->smp);
+	for (i = 0; i < xxh->smp; i++) {
+		flags = read32b(f);
+		len = read32b(f);
 
-	flags = XMP_SMP_NOLOAD;
-	if (mode[idx[sample]] == OKT_MODE8)
-		flags |= XMP_SMP_7BIT;
-	if (mode[idx[sample]] == OKT_MODEB)
-		flags |= XMP_SMP_7BIT;
-	xmp_drv_loadpatch(NULL, sample, xmp_ctl->c4rate, flags,
-			  &xxs[idx[sample]], buffer);
-	if (V(0))
-		report(".");
-	sample++;
+		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, flags,
+						&xxs[xxi[i][0].sid], NULL);
+	}
 }
-#endif
+
+static void get_venv(int size, FILE *f)
+{
+}
 
 int dbm_load(FILE *f)
 {
@@ -186,10 +185,8 @@ int dbm_load(FILE *f)
 	iff_register("SONG", get_song);
 	iff_register("INST", get_inst);
 	iff_register("PATT", get_patt);
-#if 0
 	iff_register("SMPL", get_smpl);
 	iff_register("VENV", get_venv);
-#endif
 
 	strncpy(xmp_ctl->name, name, XMP_DEF_NAMESIZE);
 	strcpy(xmp_ctl->type, "DBM0 (DigiBooster Pro)");
