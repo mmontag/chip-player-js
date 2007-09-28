@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.5 2007-09-28 19:34:47 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.6 2007-09-28 21:35:42 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -114,7 +114,9 @@ printf("rows = %d, size = %d\n", xxp[i]->rows, sz);
 		c = -1;
 
 		while (sz > 0) {
+printf("  offset=%x,  sz = %d, ", ftell(f), sz);
 			sz--, n = read8(f);
+printf("n = %02x\n", n);
 
 			if (n == 0) {
 				r++;
@@ -123,23 +125,32 @@ printf("rows = %d, size = %d\n", xxp[i]->rows, sz);
 			}
 
 			sz--, c = read8(f);
+printf("    channel = %d\n", c);
 
 			event = c >= xxh->chn ? &dummy : &EVENT(i, c, r);
 
 			if (n & 0x01) {
-				sz--, x = read8(f);
-				event->note = MSN(x) * 12 + LSN(x);
+				x = read8(f);
+				sz--, event->note = MSN(x) * 12 + LSN(x);
 			}
-			if (n & 0x02)
+			if (n & 0x02) {
 				sz--, event->ins = read8(f) + 1;
-			if (n & 0x04)
+			}
+			if (n & 0x04) {
 				sz--, event->fxt = read8(f);
-			if (n & 0x08)
+			}
+			if (n & 0x08) {
 				sz--, event->fxp = read8(f);
-			if (n & 0x10)
+			}
+			if (n & 0x10) {
 				sz--, event->f2t = read8(f);
-			if (n & 0x20)
+			}
+			if (n & 0x20) {
 				sz--, event->f2p = read8(f);
+			}
+			if (n & 0x40) {
+				break;
+			}
 		}
 		reportv(0, ".");
 	}
