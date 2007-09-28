@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.46 2007-09-28 01:25:01 cmatsuoka Exp $
+ * $Id: formats.c,v 1.47 2007-09-28 13:07:40 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -99,10 +99,7 @@ void xmp_init_formats()
     register_loader("OKT", "Oktalyzer", okt_load);
     register_loader("SFX", "SoundFX 1.3", sfx_load);
     register_loader("FAR", "Farandole Composer", far_load);
-
-    /* not technically a module format, but people think it is */
     register_format("UMX", "Epic Games Unreal/UT");
-
     register_loader("STIM", "Slamtilt", stim_load);
     register_loader("MTP", "SoundSmith/MegaTracker", mtp_load);
     register_loader("IMS", "Images Music System", ims_load);
@@ -112,7 +109,6 @@ void xmp_init_formats()
     register_loader("AMD", "Amusic Adlib Tracker", amd_load);
     register_loader("RAD", "Reality Adlib Tracker", rad_load);
     register_loader("HSC", "HSC-Tracker", hsc_load);
-    //register_loader("CRB", "Heatseeker", crb_load);
     register_loader("ALM", "Aley Keptr", alm_load);
 }
 

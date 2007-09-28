@@ -11,7 +11,7 @@
  */
 
 /*
- * $Id: unic.c,v 1.9 2007-09-26 03:12:11 cmatsuoka Exp $
+ * $Id: unic.c,v 1.10 2007-09-28 13:07:40 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -34,8 +34,8 @@ struct pw_format pw_unic_id = {
 };
 
 struct pw_format pw_unic_noid = {
-	"UNIC_noid",
-	"UNIC Tracker",
+	"UNICn",
+	"UNIC Tracker noid",
 	0x00,
 	test_unic_noid,
 	depack_unic,
@@ -43,8 +43,8 @@ struct pw_format pw_unic_noid = {
 };
 
 struct pw_format pw_unic_emptyid = {
-	"UNIC_id0",
-	"UNIC Tracker",
+	"UNIC0",
+	"UNIC Tracker id0",
 	0x00,
 	test_unic_emptyid,
 	depack_unic,
