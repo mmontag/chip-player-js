@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.45 2007-09-25 12:45:05 cmatsuoka Exp $
+ * $Id: formats.c,v 1.46 2007-09-28 01:25:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -94,7 +94,7 @@ void xmp_init_formats()
     register_loader("MUSX", "Archimedes Tracker", arch_load);
     register_loader("DSYM", "Digital Symphony", sym_load);
     register_loader("DIGI", "DIGI Booster", digi_load);
-    //register_loader("DBM", "DigiBooster Pro", dbm_load);
+    register_loader("DBM", "DigiBooster Pro", dbm_load);
     register_loader("EMOD", "Quadra Composer", emod_load);
     register_loader("OKT", "Oktalyzer", okt_load);
     register_loader("SFX", "SoundFX 1.3", sfx_load);
