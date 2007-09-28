@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.4 2007-09-28 14:44:08 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.5 2007-09-28 19:34:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,6 +27,7 @@ static void get_info(int size, FILE *f)
 {
 	xxh->ins = read16b(f);
 	xxh->smp = read16b(f);
+	read16b(f);			/* Songs */
 	xxh->pat = read16b(f);
 	xxh->chn = read16b(f);
 
@@ -59,7 +60,9 @@ static void get_inst(int size, FILE *f)
 	int c2spd, flags, snum;
 	uint8 buffer[50];
 
-	reportv(0, "Instruments    : %d", xxh->ins);
+	reportv(0, "Instruments    : %d\n", xxh->ins);
+
+	reportv(1, "     Instrument name                LBeg  LSize L Vol Pan\n");
 
 	for (i = 0; i < xxh->ins; i++) {
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -81,7 +84,7 @@ static void get_inst(int size, FILE *f)
 		xxs[snum].flg = flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
 
 		if (V(1) && (*xxih[i].name || (xxs[i].len > 1))) {
-			report("\n[%2X] %-30.30s %05x %05x %c %02x %02x", i,
+			report("[%2X] %-30.30s %05x %05x %c V%02x P%02x\n", i,
 				xxih[i].name, xxs[snum].lps, xxs[snum].lpe,
 				xxs[snum].flg & WAVE_LOOPING ? 'L' : ' ',
 				xxi[i][0].vol, xxi[i][0].pan);
@@ -91,27 +94,26 @@ static void get_inst(int size, FILE *f)
 
 static void get_patt(int size, FILE *f)
 {
-	int i, c, r, n, rows, sz;
+	int i, c, r, n, sz;
 	struct xxm_event *event, dummy;
 	uint8 x;
 
 	PATTERN_INIT();
 
-	reportv(0, "\nStored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", xxh->pat);
 
 	for (i = 0; i < xxh->pat; i++) {
-		rows = read16b(f);
-
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = rows;
+		xxp[i]->rows = read16b(f);
 		TRACK_ALLOC(i);
 
 		sz = read32b(f);
+printf("rows = %d, size = %d\n", xxp[i]->rows, sz);
 
 		r = 0;
 		c = -1;
 
-		while (sz >= 0) {
+		while (sz > 0) {
 			sz--, n = read8(f);
 
 			if (n == 0) {
@@ -125,9 +127,8 @@ static void get_patt(int size, FILE *f)
 			event = c >= xxh->chn ? &dummy : &EVENT(i, c, r);
 
 			if (n & 0x01) {
-				x = read8(f);
+				sz--, x = read8(f);
 				event->note = MSN(x) * 12 + LSN(x);
-				sz--;
 			}
 			if (n & 0x02)
 				sz--, event->ins = read8(f) + 1;
@@ -142,21 +143,23 @@ static void get_patt(int size, FILE *f)
 		}
 		reportv(0, ".");
 	}
+	reportv(0, "\n");
 }
 
 static void get_smpl(int size, FILE *f)
 {
-	int i, flags, len;
+	int i, flags;
 
 	reportv(0, "Stored samples : %d ", xxh->smp);
 
 	for (i = 0; i < xxh->smp; i++) {
 		flags = read32b(f);
-		len = read32b(f);
+		xxs[i].len = read32b(f);
 
-		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, flags,
-						&xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, flags, &xxs[i], NULL);
+		reportv(0, ".");
 	}
+	reportv(0, "\n");
 }
 
 static void get_venv(int size, FILE *f)
