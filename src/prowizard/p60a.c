@@ -13,7 +13,7 @@
  * claudio's note: I don't care if it's a mess. My attempt to write a p60a
  *	depacker produced cleaner code that didn't work.
  *
- * $Id: p60a.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: p60a.c,v 1.2 2007-09-29 17:01:33 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -432,7 +432,7 @@ static int depack_p60a (FILE * in, FILE * out)
 }
 
 
-static int test_p60a (uint8 *data, int s)
+static int test_p60a(uint8 *data, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;

@@ -10,6 +10,8 @@
 
 #define PW_TEST_CHUNK   0x10000
 
+#define MAGIC4(a,b,c,d) \
+    (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
 #ifndef __XMP_H
 typedef unsigned char uint8;
@@ -21,7 +23,7 @@ typedef unsigned int uint32;
 #define PW_DELTA	0x0002
 #define PW_PACKED	0x0004
 
-#define PW_MOD_MAGIC	0x4d2e4b2e
+#define PW_MOD_MAGIC	MAGIC4('M','.','K','.')
 
 #define PW_REQUEST_DATA(s,n) \
 	do { if ((s)<(n)) return ((n)-(s)); } while (0)
@@ -67,13 +69,14 @@ extern struct pw_format pw_mp_noid;
 extern struct pw_format pw_np1;
 extern struct pw_format pw_np2;
 extern struct pw_format pw_np3;
-extern struct pw_format pw_p50a;
-extern struct pw_format pw_p60a;
 extern struct pw_format pw_p01;
 extern struct pw_format pw_p10c;
 extern struct pw_format pw_p18a;
 extern struct pw_format pw_p20;
 extern struct pw_format pw_p40;
+extern struct pw_format pw_p41a;
+extern struct pw_format pw_p50a;
+extern struct pw_format pw_p60a;
 extern struct pw_format pw_pha;
 extern struct pw_format pw_pru1;
 extern struct pw_format pw_pru2;

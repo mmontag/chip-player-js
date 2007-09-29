@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.99 2007-09-29 14:00:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.100 2007-09-29 17:01:33 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -10,6 +10,7 @@ Stable versions
 	  by Ralf Hoffmann)
 	- added DigiBooster Pro module loader
 	- enabled Tracker Packer 3 prowizard loader
+	- enabled The Player 4.1A prowizard loader
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND
 	- fixed semantics of big/little endian options, moved to file driver
 	- fixed memory corruption in Quadra Composer module loader

@@ -9,7 +9,7 @@
  *      certainly wont dare to beat Gryzor on the ground :). His Prowiz IS
  *      the converter to use !!!.
  *
- * $Id: p40.c,v 1.2 2007-09-29 15:56:46 cmatsuoka Exp $
+ * $Id: p40.c,v 1.3 2007-09-29 17:01:33 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -29,9 +29,6 @@ struct pw_format pw_p40 = {
 };
 
 
-#define ON  1
-#define OFF 2
-
 struct smp {
 	uint8 name[22];
 	int addy;
@@ -50,8 +47,6 @@ static int depack_p40 (FILE *in, FILE *out)
 	uint8 PatMax = 0x00;
 	uint8 Nbr_Sample = 0x00;
 	uint8 sample, mynote, note[2];
-	uint8 p40A = OFF;
-	uint8 p40B = OFF;
 	uint8 Track_Data[512][256];
 	short Track_Addresses[128][4];
 	int Track_Data_Address = 0;
@@ -63,14 +58,10 @@ static int depack_p40 (FILE *in, FILE *out)
 	int i, j, k, l, a, b, c;
 	struct smp ins;
 
-	bzero (Track_Addresses, 128 * 4 * 2);
-	bzero (Track_Data, 512 << 8);
-	bzero (SampleAddress, 31 * 4);
-	bzero (SampleSize, 31 * 4);
-
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
+	bzero(Track_Addresses, 128 * 4 * 2);
+	bzero(Track_Data, 512 << 8);
+	bzero(SampleAddress, 31 * 4);
+	bzero(SampleSize, 31 * 4);
 
 	/* read check ID */
 	fread (&c1, 1, 1, in);
@@ -78,9 +69,9 @@ static int depack_p40 (FILE *in, FILE *out)
 	fread (&c3, 1, 1, in);
 	fread (&c4, 1, 1, in);
 	if (c4 == 'A')
-		p40A = ON;
-	if (c4 == 'B')
-		p40B = ON;
+		pw_p40.name = "The Player 4.0A";
+	else if (c4 == 'B')
+		pw_p40.name = "The Player 4.0B";
 
 	/* read Real number of pattern */
 	fread (&PatMax, 1, 1, in);
@@ -469,13 +460,6 @@ for ( i=0 ; i<PatPos*4 ; i++ )
 		free (tmp);
 	}
 	/*printf ( "ok\n" ); */
-
-	if (p40A == ON) {
-		pw_p40.name = "The Player 4.0A";
-	}
-	if (p40B == ON) {
-		pw_p40.name = "The Player 4.0B";
-	}
 
 	return 0;
 }
