@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.17 2007-09-27 00:18:16 cmatsuoka Exp $
+ * $Id: options.c,v 1.18 2007-09-29 20:38:28 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -175,12 +175,10 @@ static void usage (char *s, struct xmp_control *opt)
 "   --stereo               Stereo output\n"
 
 "\nSoftware mixer options:\n"
-"   --big-endian           Use big-endian 16 bit samples\n"
 "   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
 "   -c --stdout            Mix the module to stdout\n"
 "   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
 "   -i --interpolate       Enable/disable interpolation (default %s)\n"
-"   --little-endian        Use little-endian 16 bit samples\n"
 "   -o --output-file name  Mix the module to file ('-' for stdout)\n"
 "   -u --unsigned          Set the mixer to use unsigned samples\n"
 

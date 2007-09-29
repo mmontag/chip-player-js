@@ -9,7 +9,7 @@
  *      certainly wont dare to beat Gryzor on the ground :). His Prowiz IS
  *      the converter to use !!!.
  *
- * $Id: p40.c,v 1.4 2007-09-29 19:32:55 cmatsuoka Exp $
+ * $Id: p40.c,v 1.5 2007-09-29 20:38:28 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -66,10 +66,16 @@ static int depack_p4x (FILE *in, FILE *out)
 	bzero(SampleSize, 31 * 4);
 
 	id = read32b(in);
-	if (id == MAGIC_P40A || id == MAGIC_P40B)
-		pw_p4x.name = "The Player 4.0";
-	else
-		pw_p4x.name = "The Player 4.1";
+	if (id == MAGIC_P40A) {
+		pw_p4x.id = "P40A";
+		pw_p4x.name = "The Player 4.0A";
+	} else if (id == MAGIC_P40B) {
+		pw_p4x.id = "P40B";
+		pw_p4x.name = "The Player 4.0B";
+	} else {
+		pw_p4x.id = "P41A";
+		pw_p4x.name = "The Player 4.1A";
+	}
 
 	npat = read8(in);		/* read Real number of pattern */
 	len = read8(in);		/* read number of pattern in list */
