@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.15 2007-09-29 17:17:14 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.16 2007-09-29 19:32:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -138,6 +138,7 @@ static int module_load (FILE *f, int ptdt)
 	fread(magic, 8, 1, f);
 	fread(idbuffer, 1, 32, f);
 	fseek(f, pos, SEEK_SET);
+	tracker = idbuffer;
     } else if (!xxh->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
 	    isdigit(*magic) && isdigit(magic[1])) {

@@ -15,7 +15,7 @@ OVERVIEW
 
 This is the Extended Module Player, a module player for Unix-like systems
 that runs on Linux with ALSA and OSS, Free/Open/NetBSD, AIX, OS/2, HP-UX,
-MacOS X, SunOS, QNX and Solaris. Xmp plays over 70 mainstream and obscure
+MacOS X, SunOS, QNX and Solaris. Xmp plays over 80 mainstream and obscure
 module formats from Amiga, Atari, Acorn, Apple IIgs and PC.
 
 Many compressed module formats are supported, including popular Unix, DOS
@@ -54,7 +54,7 @@ The current version recognizes the following module formats:
   KSM	****+	Kefrens Sound Machine	-
   MP	****+	Module Protector	-
   NP	****+	NoisePacker		1.0, 2.0, 3.0
-  Pxx	****	The Player		4.1a, 6.0a
+  Pxx	****	The Player		4.x, 6.0a
   TP	***	Tracker Packer		3
   PM	***	Power Music		-
   PHA	***	Pha Packer		-

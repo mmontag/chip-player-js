@@ -11,7 +11,7 @@ BuildRoot: %{_tmppath}/%{name}-buildroot
 
 %description
 The Extended Module Player is a modplayer for Unix-like systems that plays
-over 70 mainstream and obscure module formats from Amiga, Atari, Acorn,
+over 80 mainstream and obscure module formats from Amiga, Atari, Acorn,
 Apple IIgs and PC, including Protracker (MOD), Scream Tracker 3 (S3M), Fast
 Tracker II (XM) and Impulse Tracker (IT) files.
 
