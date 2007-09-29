@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.9 2007-09-29 02:31:48 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.10 2007-09-29 12:07:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,6 +23,7 @@
 #define MAGIC_DBM0	MAGIC4('D','B','M','0')
 
 static int have_song;
+
 
 static void get_info(int size, FILE *f)
 {
@@ -168,23 +169,17 @@ static void get_patt(int size, FILE *f)
 				if (--sz <= 0) break;
 			}
 
-			if (event->fxt == 0x14) {
-				event->note = XMP_KEY_OFF;
-				event->fxt = event->fxp = 0;
-			}
+			if (event->fxt == 0x1c)
+				event->fxt = FX_S3M_BPM;
 
-			if (event->f2t == 0x14) {
-				event->note = XMP_KEY_OFF;
+			if (event->fxt > 0x1c)
+				event->fxt = event->f2p = 0;
+
+			if (event->f2t == 0x1c)
+				event->f2t = FX_S3M_BPM;
+
+			if (event->f2t > 0x1c)
 				event->f2t = event->f2p = 0;
-			}
-
-			/* FIXME */
-			if (event->fxt > 0x0f)
-				event->fxt = event->fxp = 0;
-
-			if (event->f2t > 0x0f)
-				event->f2t = event->f2p = 0;
-
 		}
 		reportv(0, ".");
 	}
@@ -224,7 +219,33 @@ static void get_smpl(int size, FILE *f)
 
 static void get_venv(int size, FILE *f)
 {
-	/* FIXME */
+	int i, j, nenv, ins;
+
+	nenv = read16b(f);
+
+	reportv(0, "Vol envelopes  : %d ", nenv);
+
+	for (i = 0; i < xxh->ins; i++) {
+		xxae[i] = calloc(4, 32);
+	}
+
+	for (i = 0; i < nenv; i++) {
+		ins = read16b(f);
+		xxih[ins].aei.flg = read8(f) & 0x07;
+		xxih[ins].aei.npt = read8(f);
+		xxih[ins].aei.sus = read8(f);
+		xxih[ins].aei.lps = read8(f);
+		xxih[ins].aei.lpe = read8(f);
+		read8(f);	/* 2nd sustain */
+		//read8(f);	/* reserved */
+
+		for (j = 0; j < 32; j++) {
+			xxae[ins][j * 2 + 0] = read16b(f);
+			xxae[ins][j * 2 + 1] = read16b(f);
+		}
+		reportv(0, ".");
+	}
+	reportv(0, "\n");
 }
 
 int dbm_load(FILE *f)

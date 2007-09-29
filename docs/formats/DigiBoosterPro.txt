@@ -136,6 +136,8 @@ Example:
     04 - instrument number
 
 
+[ **NOTE**  Description above is incorrect, channel number comes first ]
+
 
 
 Digiboost-effect parameters:
