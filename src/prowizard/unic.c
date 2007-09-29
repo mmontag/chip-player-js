@@ -4,33 +4,30 @@
  * 
  * Unic tracked MODs to Protracker
  * both with or without ID Unic files will be converted
- ********************************************************
- * 13 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
- *     It speeds-up the process quite a bit :).
- */
-
-/*
- * $Id: unic.c,v 1.10 2007-09-28 13:07:40 cmatsuoka Exp $
+ *
+ * $Id: unic.c,v 1.11 2007-09-29 22:15:26 cmatsuoka Exp $
  */
 
 #include <string.h>
 #include <stdlib.h>
 #include "prowiz.h"
 
+#define MAGIC_UNIC	MAGIC4('U','N','I','C')
+#define MAGIC_M_K_	MAGIC4('M','.','K','.')
+
 
 static int test_unic_id (uint8 *, int);
 static int test_unic_noid (uint8 *, int);
 static int test_unic_emptyid (uint8 *, int);
-static int depack_unic (uint8 *, FILE *);
+static int depack_unic (FILE *, FILE *);
 
 struct pw_format pw_unic_id = {
 	"UNIC",
 	"UNIC Tracker",
 	0x00,
 	test_unic_id,
-	depack_unic,
-	NULL
+	NULL,
+	depack_unic
 };
 
 struct pw_format pw_unic_noid = {
@@ -38,8 +35,8 @@ struct pw_format pw_unic_noid = {
 	"UNIC Tracker noid",
 	0x00,
 	test_unic_noid,
-	depack_unic,
-	NULL
+	NULL,
+	depack_unic
 };
 
 struct pw_format pw_unic_emptyid = {
@@ -47,63 +44,61 @@ struct pw_format pw_unic_emptyid = {
 	"UNIC Tracker id0",
 	0x00,
 	test_unic_emptyid,
-	depack_unic,
-	NULL
+	NULL,
+	depack_unic
 };
 
 
 #define ON 1
 #define OFF 2
 
-static int depack_unic (uint8 *data, FILE *out)
+static int depack_unic (FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npat;
 	uint8 max = 0;
 	uint8 ins, note, fxt, fxp;
 	uint8 fine;
-	uint8 pat[1025];
+	uint8 tmp[1025];
 	uint8 loop_status = OFF;	/* standard /2 */
 	int i = 0, j = 0, k = 0, l = 0;
 	int ssize = 0;
-	int w = 0;		/* main pointer to prevent fread() */
-	int start = 0;
+	uint32 id;
+	uint8 *p;
 
 	/* title */
-	fwrite(&data[w], 20, 1, out);
-	w += 20;
+	for (i = 0; i < 20; i++)
+		write8(out, read8(in));
 
 	for (i = 0; i < 31; i++) {
 		/* sample name */
-		fwrite(&data[w], 20, 1, out);
+		for (j = 0; j < 20; j++)
+			write8(out, read8(in));
 		write8(out, 0);
 		write8(out, 0);
-		w += 20;
 
 		/* fine on ? */
-		c1 = data[w++];
-		c2 = data[w++];
+		c1 = read8(in);
+		c2 = read8(in);
 		j = (c1 << 8) + c2;
 		if (j != 0) {
 			if (j < 256)
 				fine = 0x10 - c2;
 			else
 				fine = 0x100 - c2;
-		} else
+		} else {
 			fine = 0;
+		}
 
 		/* smp size */
-		write16b(out, l = readmem16b(data + w));
-		w += 2;
+		write16b(out, l = read16b(in));
 		ssize += l * 2;
 
-		w += 1;
+		read8(in);
 		write8(out, fine);		/* fine */
-		write8(out, data[w++]);		/* vol */
-		j = readmem16b(data + w);	/* loop start */
-		w += 2;
-		k = readmem16b(data + w);	/* loop size */
-		w += 2;
+		write8(out, read8(in));		/* vol */
+		j = read16b(in);		/* loop start */
+		k = read16b(in);		/* loop size */
 
 		if ((((j * 2) + k) <= l) && (j != 0)) {
 			loop_status = ON;
@@ -114,71 +109,61 @@ static int depack_unic (uint8 *data, FILE *out)
 		write16b(out, k);
 	}
 
-
-/*  printf ( "whole sample size : %ld\n" , ssize );*/
-/*
-  if ( loop_status == ON )
-    printf ( "!! Loop start value was /4 !\n" );
-*/
-	write8(out, npat = data[w++]);		/* number of pattern */
+	write8(out, npat = read8(in));		/* number of pattern */
 	write8(out, 0x7f);			/* noisetracker byte */
-	w += 1;
+	read8(in);
 
-	/* pat table */
-	fwrite(&data[w], 128, 1, out);
-	w += 128;
+	fread(tmp, 128, 1, in);			/* pat table */
+	fwrite(tmp, 128, 1, out);
 
 	/* get highest pattern number */
 	for (i = 0; i < 128; i++) {
-		if (data[start + 952 + i] > max)
-			max = data[start + 952 + i];
+		if (tmp[i] > max)
+			max = tmp[i];
 	}
-	max += 1;		/* coz first is $00 */
+	max++;		/* coz first is $00 */
 
 	write32b(out, PW_MOD_MAGIC);
 
 	/* verify UNIC ID */
-	w = start + 1080;
-	if ((strncmp((char *)&data[w], "M.K.", 4) == 0) ||
-		(strncmp((char *)&data[w], "UNIC", 4) == 0) ||
-		((data[w] == 0x00) && (data[w + 1] == 0x00)
-			&& (data[w + 2] == 0x00)
-			&& (data[w + 3] == 0x00)))
-		w = start + 1084l;
-	else
-		w = start + 1080l;
+	fseek(in, 1080, SEEK_SET);
+	id = read32b(in);
 
+	if (id && id != MAGIC_M_K_ && id != MAGIC_UNIC)
+		fseek(in, -4, SEEK_CUR);
 
 	/* pattern data */
 	for (i = 0; i < max; i++) {
 		for (j = 0; j < 256; j++) {
-			ins = ((data[w + j * 3] >> 2) & 0x10) |
-				((data[w + j * 3 + 1] >> 4) & 0x0f);
-			note = data[w + j * 3] & 0x3f;
-			fxt = data[w + j * 3 + 1] & 0x0f;
-			fxp = data[w + j * 3 + 2];
+			c1 = read8(in);
+			c2 = read8(in);
+			c3 = read8(in);
+
+			ins = ((c1 >> 2) & 0x10) | ((c2 >> 4) & 0x0f);
+			note = c1 & 0x3f;
+			fxt = c2 & 0x0f;
+			fxp = c3;
 
 			if (fxt == 0x0d) {	/* pattern break */
-/*        printf ( "!! [%x] -> " , fxp );*/
-				c4 = fxp % 10;
 				c3 = fxp / 10;
-				fxp = 16;
-				fxp *= c3;
-				fxp += c4;
+				c4 = fxp % 10;
+				fxp = 16 * c3 + c4;
 			}
 
-			pat[j * 4] = (ins & 0xf0);
-			pat[j * 4] |= ptk_table[note][0];
-			pat[j * 4 + 1] = ptk_table[note][1];
-			pat[j * 4 + 2] = ((ins << 4) & 0xf0) | fxt;
-			pat[j * 4 + 3] = fxp;
+			tmp[j * 4] = (ins & 0xf0);
+			tmp[j * 4] |= ptk_table[note][0];
+			tmp[j * 4 + 1] = ptk_table[note][1];
+			tmp[j * 4 + 2] = ((ins << 4) & 0xf0) | fxt;
+			tmp[j * 4 + 3] = fxp;
 		}
-		fwrite(pat, 1024, 1, out);
-		w += 768;
+		fwrite(tmp, 1024, 1, out);
 	}
 
 	/* sample data */
-	fwrite(&data[w], ssize, 1, out);
+	p = malloc(ssize);
+	fread(p, ssize, 1, in);
+	fwrite(p, ssize, 1, out);
+	free(p);
 
 	return 0;
 }

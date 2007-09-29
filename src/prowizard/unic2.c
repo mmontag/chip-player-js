@@ -2,16 +2,9 @@
  * Unic_Tracker_2.c   Copyright (C) 1997 Asle / ReDoX
  *                    Copyright 2006-2007 Claudio Matsuoka
  *
- * 
- * Unic tracked 2 MODs to Protracker
- ********************************************************
- * 13 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
- *     It speeds-up the process quite a bit :).
- */
-
-/*
- * $Id: unic2.c,v 1.4 2007-09-26 03:12:11 cmatsuoka Exp $
+ * Convert Unic Tracker 2 MODs to Protracker
+ *
+ * $Id: unic2.c,v 1.5 2007-09-29 22:15:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -19,33 +12,32 @@
 #include "prowiz.h"
 
 static int test_unic2 (uint8 *, int);
-static int depack_unic2 (uint8 *, FILE *);
+static int depack_unic2 (FILE *, FILE *);
 
 struct pw_format pw_unic2 = {
 	"UNIC2",
 	"Unic Tracker 2",
 	0x00,
 	test_unic2,
-	depack_unic2,
-	NULL
+	NULL,
+	depack_unic2
 };
 
 
 #define ON 1
 #define OFF 2
 
-static int depack_unic2 (uint8 *data, FILE *out)
+static int depack_unic2(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
-	uint8 npat = 0x00;
-	uint8 maxpat = 0x00;
+	uint8 npat, maxpat;
 	uint8 ins, note, fxt, fxp;
-	uint8 fine = 0x00;
-	uint8 pat[1025];
-	uint8 LOOP_START_STATUS = OFF;	/* standard /2 */
-	int i = 0, j = 0, k = 0, l = 0;
+	uint8 fine = 0;
+	uint8 tmp[1025];
+	uint8 loop_status = OFF;	/* standard /2 */
+	int i, j, k, l;
 	int ssize = 0;
-	int start = 0, w = 0;
+	uint8 *p;
 
 	/* title */
 	for (i = 0; i < 20; i++)
@@ -53,39 +45,37 @@ static int depack_unic2 (uint8 *data, FILE *out)
 
 	for (i = 0; i < 31; i++) {
 		/* sample name */
-		fwrite(data + w, 20, 1, out);
-		w += 20;
+		for (j = 0; j < 20; j++)
+			write8(out, read8(in));
 		write8(out, 0);
 		write8(out, 0);
 
 		/* fine on ? */
-		c1 = data[w++];
-		c2 = data[w++];
+		c1 = read8(in);
+		c2 = read8(in);
 		j = (c1 << 8) + c2;
 		if (j != 0) {
 			if (j < 256)
 				fine = 0x10 - c2;
 			else
 				fine = 0x100 - c2;
-		} else
-			fine = 0x00;
+		} else {
+			fine = 0;
+		}
 
 		/* smp size */
-		write16b(out, l = readmem16b(data + w));
-		w += 2;
+		write16b(out, l = read16b(in));
 		ssize += l * 2;
 
-		w += 1;
+		read8(in);
 		write8(out, fine);		/* fine */
-		write8(out, data[w++]);		/* vol */
+		write8(out, read8(in));		/* vol */
 
-		j = readmem16b(data + w);	/* loop start */
-		w += 2;
-		k = readmem16b(data + w);	/* loop size */
-		w += 2;
+		j = read16b(in);		/* loop start */
+		k = read16b(in);		/* loop size */
 
 		if ((((j * 2) + k) <= l) && (j != 0)) {
-			LOOP_START_STATUS = ON;
+			loop_status = ON;
 			j *= 2;
 		}
 
@@ -93,53 +83,54 @@ static int depack_unic2 (uint8 *data, FILE *out)
 		write16b(out, k);
 	}
 
-	write8(out, npat = data[w++]);		/* number of pattern */
+	write8(out, npat = read8(in));		/* number of pattern */
 	write8(out, 0x7f);			/* noisetracker byte */
-	w++;
+	read8(in);
 
-	fwrite(&data[w], 128, 1, out);		/* pat table */
-	w += 128;
+	fread(tmp, 128, 1, in);
+	fwrite(tmp, 128, 1, out);		/* pat table */
 
 	/* get highest pattern number */
 	for (maxpat = i = 0; i < 128; i++) {
-		if (data[start + 932 + i] > maxpat)
-			maxpat = data[start + 932 + i];
+		if (tmp[i] > maxpat)
+			maxpat = tmp[i];
 	}
-	maxpat += 1;		/* coz first is $00 */
-	/*printf ( "Number of pat : %d\n" , maxpat ); */
+	maxpat++;		/* coz first is $00 */
 
 	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
 	for (i = 0; i < maxpat; i++) {
 		for (j = 0; j < 256; j++) {
-			int x = w + j * 3;
+			c1 = read8(in);
+			c2 = read8(in);
+			c3 = read8(in);
 
-			ins = ((data[x] >> 2) & 0x10) |
-					((data[x + 1] >> 4) & 0x0f);
-			note = data[x] & 0x3f;
-			fxt = data[x + 1] & 0x0f;
-			fxp = data[x + 2];
+			ins = ((c1 >> 2) & 0x10) | ((c2 >> 4) & 0x0f);
+			note = c1 & 0x3f;
+			fxt = c2 & 0x0f;
+			fxp = c3;
+
 			if (fxt == 0x0d) {	/* pattern break */
 				c4 = fxp % 10;
 				c3 = fxp / 10;
-				fxp = 16;
-				fxp *= c3;
-				fxp += c4;
+				fxp = 16 * c3 + c4;
 			}
 
-			pat[j * 4] = (ins & 0xf0);
-			pat[j * 4] |= ptk_table[note][0];
-			pat[j * 4 + 1] = ptk_table[note][1];
-			pat[j * 4 + 2] = ((ins << 4) & 0xf0) | fxt;
-			pat[j * 4 + 3] = fxp;
+			tmp[j * 4] = (ins & 0xf0);
+			tmp[j * 4] |= ptk_table[note][0];
+			tmp[j * 4 + 1] = ptk_table[note][1];
+			tmp[j * 4 + 2] = ((ins << 4) & 0xf0) | fxt;
+			tmp[j * 4 + 3] = fxp;
 		}
-		fwrite(pat, 1024, 1, out);
-		w += 768;
+		fwrite(tmp, 1024, 1, out);
 	}
 
 	/* sample data */
-	fwrite(&data[w], ssize, 1, out);
+	p = malloc(ssize);
+	fread(p, ssize, 1, in);
+	fwrite(p, ssize, 1, out);
+	free(p);
 
 	return 0;
 }
@@ -162,12 +153,11 @@ static int test_unic2 (uint8 *data, int s)
 	o = 0;
 	ssize = 0;
 	for (k = 0; k < 31; k++) {
-		j = ((data[start + 22 + k * 30] * 256 +
-			 data[start + 23 + k * 30]) * 2);
-		m = ((data[start + 26 + k * 30] * 256 +
-			 data[start + 27 + k * 30]) * 2);
-		n = ((data[start + 28 + k * 30] * 256 +
-			 data[start + 29 + k * 30]) * 2);
+		int x = start + k * 30;
+
+		j = readmem16b(data + x + 22) * 2;
+		m = readmem16b(data + x + 26) * 2;
+		n = readmem16b(data + x + 28) * 2;
 		ssize += j;
 
 		if (j + 2 < m + n)
@@ -176,14 +166,13 @@ static int test_unic2 (uint8 *data, int s)
 		if (j > 0xffff || m > 0xffff || n > 0xffff)
 			return -1;
 
-		if (data[start + 25 + k * 30] > 0x40)
+		if (data[x + 25] > 0x40)
 			return -1;
 
-		if (data[start + 20 + k * 30] * 256 + data[start + 21 + k * 30]
-			&& j == 0)
+		if (readmem16b(data + x + 20) && j == 0)
 			return -1;
 
-		if (data[start + 25 + k * 30] != 0 && j == 0)
+		if (data[x + 25] != 0 && j == 0)
 			return -1;
 
 		/* get the highest !0 sample */
@@ -231,23 +220,22 @@ static int test_unic2 (uint8 *data, int s)
 	PW_REQUEST_DATA (s, 1060 + k * 256 * 3 + 2);
 
 	for (j = 0; j < (k << 8); j++) {
+		int y = start + 1060 + j * 3;
+
 		/* relative note number + last bit of sample > $34 ? */
-		if (data[start + 1060 + j * 3] > 0x74)
+		if (data[y] > 0x74)
 			return -1;
-		if ((data[start + 1060 + j * 3] & 0x3F) > 0x24)
+		if ((data[y] & 0x3F) > 0x24)
 			return -1;
-		if ((data[start + 1060 + j * 3 + 1] & 0x0F) == 0x0C
-			&& data[start + 1060 + j * 3 + 2] > 0x40)
+		if ((data[y + 1] & 0x0F) == 0x0C && data[y + 2] > 0x40)
 			return -1;
-		if ((data[start + 1060 + j * 3 + 1] & 0x0F) == 0x0B
-			&& data[start + 1060 + j * 3 + 2] > 0x7F)
+		if ((data[y + 1] & 0x0F) == 0x0B && data[y + 2] > 0x7F)
 			return -1;
-		if ((data[start + 1060 + j * 3 + 1] & 0x0F) == 0x0D
-			&& data[start + 1060 + j * 3 + 2] > 0x40)
+		if ((data[y + 1] & 0x0F) == 0x0D && data[y + 2] > 0x40)
 			return -1;
 
-		n = ((data[start + 1060 + j * 3] >> 2) & 0x30) |
-			((data[start + 1061 + j * 3 + 1] >> 4) & 0x0F);
+		n = ((data[y] >> 2) & 0x30) | ((data[y + 2] >> 4) & 0x0f);
+
 		if (n > o)
 			return -1;
 	}
