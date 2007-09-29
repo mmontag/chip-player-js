@@ -1,5 +1,6 @@
 /*
- *   The_Player_4.0.c   1997 (c) Asle / ReDoX
+ * The_Player_4.0.c   Copyright (C) 1997 Asle / ReDoX
+ *                    Copyright (C) 2007 Claudio Matsuoka
  *
  * The Player 4.0a and 4.0b to Protracker.
  *
@@ -8,58 +9,64 @@
  *      certainly wont dare to beat Gryzor on the ground :). His Prowiz IS
  *      the converter to use !!!.
  *
-*/
+ * $Id: p40.c,v 1.2 2007-09-29 15:56:46 cmatsuoka Exp $
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
+
+static int test_p40(uint8 *, int);
+static int depack_p40 (FILE *, FILE *);
+
+struct pw_format pw_p40 = {
+	"P40",
+	"The Player 4.0",
+	0x00,
+	test_p40,
+	NULL,
+	depack_p40
+};
+
 
 #define ON  1
 #define OFF 2
 
-void Depack_P40 (FILE * in, FILE * out)
+struct smp {
+	uint8 name[22];
+	int addy;
+	uint8 size[2];
+	int loop_addy;
+	uint8 loop_size[2];
+	uint16 fine;
+	uint8 vol;
+};
+
+static int depack_p40 (FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4, c5;
 	uint8 *tmp;
 	uint8 PatPos = 0x00;
 	uint8 PatMax = 0x00;
 	uint8 Nbr_Sample = 0x00;
-	uint8 ptk_table[37][2];
-	uint8 sample, note, note[2];
+	uint8 sample, mynote, note[2];
 	uint8 p40A = OFF;
 	uint8 p40B = OFF;
 	uint8 Track_Data[512][256];
 	short Track_Addresses[128][4];
-	long Track_Data_Address = 0;
-	long Track_Table_Address = 0;
-	long Sample_Data_Address = 0;
-	long ssize = 0;
-	long SampleAddress[31];
-	long SampleSize[31];
-	long i = 0, j, k, l, a, b, c;
-	// FILE *in,*out;
-	struct smp
-	{
-		uint8 name[22];
-		long addy;
-		uint8 size[2];
-		long loop_addy;
-		uint8 loop_size[2];
-		uint16 fine;
-		uint8 vol;
-	};
-	struct smp *ins;
-
-	if (Save_Status == BAD)
-		return;
+	int Track_Data_Address = 0;
+	int Track_Table_Address = 0;
+	int Sample_Data_Address = 0;
+	int ssize = 0;
+	int SampleAddress[31];
+	int SampleSize[31];
+	int i, j, k, l, a, b, c;
+	struct smp ins;
 
 	bzero (Track_Addresses, 128 * 4 * 2);
 	bzero (Track_Data, 512 << 8);
 	bzero (SampleAddress, 31 * 4);
 	bzero (SampleSize, 31 * 4);
-
-	ins = (struct smp *) malloc (sizeof (struct smp));
-
-#include "ptktable.h"
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -122,68 +129,63 @@ void Depack_P40 (FILE * in, FILE * out)
 	free (tmp);
 
 	/* sample headers stuff */
-	bzero (ins->name, 22);
+	bzero(ins.name, 22);
 	for (i = 0; i < Nbr_Sample; i++) {
 		/* read sample data address */
 		fread (&c1, 1, 1, in);
 		fread (&c2, 1, 1, in);
 		fread (&c3, 1, 1, in);
 		fread (&c4, 1, 1, in);
-		ins->addy =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
-		SampleAddress[i] = ins->addy;
+		ins.addy = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
+		SampleAddress[i] = ins.addy;
 
 		/* write sample name */
-		fwrite (ins->name, 22, 1, out);
+		fwrite (ins.name, 22, 1, out);
 
 		/* read sample size */
-		fread (&ins->size[0], 1, 1, in);
-		fread (&ins->size[1], 1, 1, in);
-		ssize +=
-			(((ins->size[0] << 8) + ins->size[1]) * 2);
-		SampleSize[i] = (((ins->size[0]) << 8) + ins->size[1]) * 2;
+		fread (&ins.size[0], 1, 1, in);
+		fread (&ins.size[1], 1, 1, in);
+		ssize += (((ins.size[0] << 8) + ins.size[1]) * 2);
+		SampleSize[i] = (((ins.size[0]) << 8) + ins.size[1]) * 2;
 
 		/* loop start */
 		fread (&c1, 1, 1, in);
 		fread (&c2, 1, 1, in);
 		fread (&c3, 1, 1, in);
 		fread (&c4, 1, 1, in);
-		ins->loop_addy =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
+		ins.loop_addy = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
 
 		/* loop size */
-		fread (&ins->loop_size[0], 1, 1, in);
-		fread (&ins->loop_size[1], 1, 1, in);
+		fread (&ins.loop_size[0], 1, 1, in);
+		fread (&ins.loop_size[1], 1, 1, in);
 
 		/* fine */
 		fread (&c1, 1, 1, in);
 		fread (&c2, 1, 1, in);
-		ins->fine = (c1 << 8) + c2;
+		ins.fine = (c1 << 8) + c2;
 
 		/* bypass 00h */
 		fseek (in, 1, 1);
 
 		/* read vol */
-		fread (&ins->vol, 1, 1, in);
+		fread (&ins.vol, 1, 1, in);
 
 		/* writing now */
-		fwrite (ins->size, 2, 1, out);
-		c1 = ins->fine / 74;
+		fwrite (ins.size, 2, 1, out);
+		c1 = ins.fine / 74;
 		fwrite (&c1, 1, 1, out);
-		fwrite (&ins->vol, 1, 1, out);
-		ins->loop_addy -= ins->addy;
-		ins->loop_addy /= 2;
+		fwrite (&ins.vol, 1, 1, out);
+		ins.loop_addy -= ins.addy;
+		ins.loop_addy /= 2;
 		/* WARNING !!! WORKS ONLY ON 80X86 computers ! */
 		/* 68k machines code : c3 = *(tmp+2); */
 		/* 68k machines code : c4 = *(tmp+3); */
-		tmp = (uint8 *) & ins->loop_addy;
+		tmp = (uint8 *) & ins.loop_addy;
 		c3 = *(tmp + 1);
 		c4 = *tmp;
 		fwrite (&c3, 1, 1, out);
 		fwrite (&c4, 1, 1, out);
-		fwrite (ins->loop_size, 2, 1, out);
+		fwrite (ins.loop_size, 2, 1, out);
 	}
 
 	/* go up to 31 samples */
@@ -261,9 +263,9 @@ void Depack_P40 (FILE * in, FILE * out)
 						((c1 << 4) & 0x10) | ((c2 >>
 						       4) & 0x0f);
 					bzero (note, 2);
-					note = c1 & 0x7f;
-					note[0] = ptk_table[(note / 2)][0];
-					note[1] = ptk_table[(note / 2)][1];
+					mynote = c1 & 0x7f;
+					note[0] = ptk_table[mynote / 2][0];
+					note[1] = ptk_table[mynote / 2][1];
 					switch (c2 & 0x0f) {
 					case 0x08:
 						c2 -= 0x08;
@@ -287,7 +289,7 @@ void Depack_P40 (FILE * in, FILE * out)
 
 					if ((c4 > 0x00) && (c4 < 0x80))
 						k += c4;
-					if ((c4 > 0x7f) && (c4 <= 0xff)) {
+					if ((c4 > 0x7f)) {
 						k += 1;
 						for (l = 256; l > c4; l--) {
 							Track_Data[i * 4 +
@@ -331,9 +333,9 @@ void Depack_P40 (FILE * in, FILE * out)
 							((c1 << 4) & 0x10) |
 							((c2 >> 4) & 0x0f);
 						bzero (note, 2);
-						note = c1 & 0x7f;
-						note[0] = ptk_table[(note / 2)][0];
-						note[1] = ptk_table[(note / 2)][1];
+						mynote = c1 & 0x7f;
+						note[0] = ptk_table[mynote / 2][0];
+						note[1] = ptk_table[mynote / 2][1];
 						switch (c2 & 0x0f) {
 						case 0x08:
 							c2 -= 0x08;
@@ -363,8 +365,7 @@ void Depack_P40 (FILE * in, FILE * out)
 						if ((c4 > 0x00)
 							&& (c4 < 0x80)) k +=
 								c4;
-						if ((c4 > 0x7f)
-							&& (c4 <= 0xff)) {
+						if ((c4 > 0x7f)) {
 							k += 1;
 							for (l = 256; l > c4;
 								l--) {
@@ -470,44 +471,39 @@ for ( i=0 ; i<PatPos*4 ; i++ )
 	/*printf ( "ok\n" ); */
 
 	if (p40A == ON) {
-		Crap ("P40A:The Player 4.0A", BAD, BAD, out);
+		pw_p40.name = "The Player 4.0A";
 	}
 	if (p40B == ON) {
-		Crap ("P40B:The Player 4.0B", BAD, BAD, out);
+		pw_p40.name = "The Player 4.0B";
 	}
 
-	free (ins);
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
 
-void testP40A (void)
+static int test_p40(uint8 *data, int s)
 {
-	start = i;
+	int j, k, l, o, n;
+	int start, ssize;
+
+	start = 0;
 
 	/* number of pattern (real) */
 	j = data[start + 4];
 	if (j > 0x7f) {
-		Test = BAD;
-		return;
+		return -1;
 	}
 
 	/* number of sample */
 	k = data[start + 6];
 	if ((k > 0x1F) || (k == 0)) {
-		Test = BAD;
-		return;
+		return -1;
 	}
 
 	/* test volumes */
 	for (l = 0; l < k; l++) {
 		if (data[start + 35 + l * 16] > 0x40) {
-			Test = BAD;
-			return;
+			return -1;
 		}
 	}
 
@@ -515,34 +511,28 @@ void testP40A (void)
 	ssize = 0;
 	for (l = 0; l < k; l++) {
 		/* size */
-		o =
-			(data[start + 24 + l * 16] << 8) +
+		o = (data[start + 24 + l * 16] << 8) +
 			data[start + 25 + l * 16];
 		/* loop size */
-		n =
-			(data[start + 30 + l * 16] << 8) +
+		n = (data[start + 30 + l * 16] << 8) +
 			data[start + 31 + l * 16];
 		o *= 2;
 		n *= 2;
 
 		if ((o > 0xFFFF) || (n > 0xFFFF)) {
-			Test = BAD;
-			return;
+			return -1;
 		}
 
 		if (n > (o + 2)) {
-			Test = BAD;
-			return;
+			return -1;
 		}
 		ssize += o;
 	}
 	if (ssize <= 4) {
-		ssize = 0;
-		Test = BAD;
-		return;
+		return - 1;
 	}
 
 	/* ssize is the size of the sample data .. WRONG !! */
 	/* k is the number of samples */
-	Test = GOOD;
+	return 0;
 }

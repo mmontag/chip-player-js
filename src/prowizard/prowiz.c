@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.17 2007-09-26 03:12:10 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.18 2007-09-29 15:56:46 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -61,6 +61,7 @@ int pw_init ()
 	pw_register (&pw_mp_noid);	/* Must check before Heatseeker */
 	pw_register (&pw_di);
 	pw_register (&pw_eu);
+	pw_register (&pw_p40);
 	pw_register (&pw_p60a);
 	pw_register (&pw_np2);
 	pw_register (&pw_np1);
