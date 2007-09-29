@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.98 2007-09-29 13:12:25 cmatsuoka Exp $
+$Id: ChangeLog,v 1.99 2007-09-29 14:00:37 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -25,8 +25,9 @@ Stable versions
 	- fixed driver detection in NetBSD (don't try to build OSS driver)
 	- fixed crash when restart value is invalid (reported by Ralf Hoffmann)
 	- fixed handling of S3M pattern 0xfe (reported by Ralf Hoffmann)
-	- fixed MMD3 pattern sequence loading
-	- fixed MMD1/MMD3 effect translation
+	- fixed data size in MMD3 pattern sequence loading
+	- fixed MMD1/MMD3 invalid/unhandled effect translation
+	- fixed MMD1/MMD3 mixing buffer size setting (for PrivInv.med)
 	- format management code cleanup
 	- prowizard code cleanup
 

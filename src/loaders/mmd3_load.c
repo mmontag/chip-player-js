@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.9 2007-09-29 13:12:25 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.10 2007-09-29 14:00:38 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -217,6 +217,20 @@ int mmd3_load(FILE *f)
 	bpmon = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
 	xmp_ctl->fetch |= bpmon ? 0 : XMP_CTL_MEDBPM;
+
+	/* From the OctaMEDv4 documentation:
+	 *
+	 * In 8-channel mode, you can control the playing speed more
+	 * accurately (to techies: by changing the size of the mix buffer).
+	 * This can be done with the left tempo gadget (values 1-10; the
+	 * lower, the faster). Values 11-240 are equivalent to 10.
+	 */
+
+	/* Just a half-assed implementation of the spec above for tempo 1
+	 * in PrivInv.med
+	 */
+	if (!bpmon && song.deftempo < 10)
+		song.deftempo = 0x35 - song.deftempo * 2;
 
 	/* FIXME: med tempos are incorrectly handled */
 	xxh->tpo = song.tempo2;
