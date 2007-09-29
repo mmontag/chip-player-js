@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.8 2007-09-29 02:15:13 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.9 2007-09-29 02:31:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -104,6 +104,11 @@ static void get_patt(int size, FILE *f)
 
 	reportv(0, "Stored patterns: %d ", xxh->pat);
 
+	/*
+	 * Note: channel and flag bytes are inverted in the format
+	 * description document
+	 */
+
 	for (i = 0; i < xxh->pat; i++) {
 		PATTERN_ALLOC(i);
 		xxp[i]->rows = read16b(f);
@@ -139,7 +144,7 @@ static void get_patt(int size, FILE *f)
 
 			if (n & 0x01) {
 				x = read8(f);
-				event->note = 13 + MSN(x) * 12 + LSN(x);
+				event->note = 1 + MSN(x) * 12 + LSN(x);
 				if (--sz <= 0) break;
 			}
 			if (n & 0x02) {
@@ -219,6 +224,7 @@ static void get_smpl(int size, FILE *f)
 
 static void get_venv(int size, FILE *f)
 {
+	/* FIXME */
 }
 
 int dbm_load(FILE *f)
