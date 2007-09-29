@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.9 2007-08-21 03:16:58 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.10 2007-09-29 23:04:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -219,7 +219,7 @@ int liq_load (FILE *f)
 
     reportv(0, "Stored patterns: %d ", xxh->pat);
 
-    x2 = 0;
+    x1 = x2 = 0;
     for (i = 0; i < xxh->pat; i++) {
 	int row, channel, count;
 

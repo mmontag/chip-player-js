@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.40 2007-09-27 20:29:53 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.41 2007-09-29 23:04:43 cmatsuoka Exp $
 
-VERSION		= 2.3.0-pre3
-DATE		= Mon Sep 24 21:32:49 BRT 2007
+VERSION		= 2.3.0
+DATE		= Sat Sep 29 19:42:33 BRT 2007
 
 DESTDIR		=
 prefix		= @prefix@
@@ -25,9 +25,9 @@ PLUGFLAGS	= -fPIC @PLUGFLAGS@
 PLUGINST	= @PLUGINST@
 
 ifneq ($(PLUGDIR),)
-LOBJS		= $(OBJS:.o=.lo)
-XLOBJS		= $(XOBJS:.o=.lo)
-LLIB		= $(LIB:.a=-pic.a)
+PIC_OBJS	= $(OBJS:.o=.lo)
+PIC_XOBJS	= $(XOBJS:.o=.lo)
+PIC_LIB		= $(LIB:.a=-pic.a)
 endif
 
 
@@ -47,8 +47,6 @@ PLATFORM	= @PLATFORM@
 DRIVERS		= @DRIVERS@
 MIXER		= @MIXER@
 
-LOBJS	= $(OBJS:.o=.lo)
-
 .SUFFIXES: .c .o .lo .a .S .so
 
 .c.o:
@@ -65,11 +63,11 @@ LOBJS	= $(OBJS:.o=.lo)
 
 dummy:
 
-$(LIB): $(LIB)($(OBJS) $(XOBJS)) $(LLIB)
+$(LIB): $(LIB)($(OBJS) $(XOBJS)) $(PIC_LIB)
 	$(RANLIB) $(LIB)
 
-$(LLIB): $(LLIB)($(LOBJS) $(XLOBJS))
-	$(RANLIB) $(LLIB)
+$(PIC_LIB): $(PIC_LIB)($(PIC_OBJS) $(PIC_XOBJS))
+	$(RANLIB) $(PIC_LIB)
 
 depend:
 	@echo Building dependencies...
