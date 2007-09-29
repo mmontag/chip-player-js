@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.20 2007-09-29 19:32:55 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.21 2007-09-29 22:25:17 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -51,7 +51,6 @@ int pw_init ()
 	pw_register (&pw_pru1);
 	pw_register (&pw_pru2);
 	pw_register (&pw_pha);
-	/* pw_register (&pw_stim); */
 	pw_register (&pw_wn);
 	pw_register (&pw_unic_id);
 	pw_register (&pw_tp3);

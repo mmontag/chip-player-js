@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: stim_load.c,v 1.3 2007-09-29 22:25:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -94,7 +96,7 @@ int stim_load (FILE *f)
 	for (j = 0; j < 4; j++) {
 	    for (k = 0; k < 64; k++) {
 		event = &EVENT (i, j, k);
-		fread (&b1, 1, 1, f);
+		b1 = read8(f);
 
 		if (b1 & 0x80) {
 		    k += b1 & 0x7f;
@@ -114,8 +116,8 @@ int stim_load (FILE *f)
 		 *  Description bit set to 0.
 		 */
 
-		fread (&b2, 1, 1, f);
-		fread (&b3, 1, 1, f);
+		b2 = read8(f);
+		b3 = read8(f);
 
 		if ((event->note = b2 & 0x3f) != 0)
 		    event->note += 35;
