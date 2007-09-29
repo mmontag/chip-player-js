@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.7 2007-09-28 23:47:59 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.8 2007-09-29 02:15:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -39,6 +39,7 @@ static void get_info(int size, FILE *f)
 
 static void get_song(int size, FILE *f)
 {
+	int i;
 	char buffer[50];
 
 	if (have_song)
@@ -52,7 +53,8 @@ static void get_song(int size, FILE *f)
 
 	xxh->len = read16b(f);
 	reportv(0, "Song length    : %d patterns\n", xxh->len);
-	fread(xxo, xxh->len, 1, f);
+	for (i = 0; i < xxh->len; i++)
+		xxo[i] = read16b(f);
 }
 
 static void get_inst(int size, FILE *f)
@@ -71,10 +73,10 @@ static void get_inst(int size, FILE *f)
 		xxih[i].nsm = 1;
 		fread(buffer, 30, 1, f);
 		copy_adjust(xxih[i].name, buffer, 30);
-		snum = read16b(f) - 1;
-		if (snum >= xxh->smp)
+		snum = read16b(f);
+		if (snum == 0 || snum > xxh->smp)
 			continue;
-		xxi[i][0].sid = snum;
+		xxi[i][0].sid = --snum;
 		xxi[i][0].vol = read16b(f);
 		c2spd = read32b(f);
 		xxs[snum].lps = read32b(f);
@@ -115,25 +117,29 @@ static void get_patt(int size, FILE *f)
 
 		while (sz > 0) {
 			//printf("  offset=%x,  sz = %d, ", ftell(f), sz);
-			n = read8(f);
+			c = read8(f);
 			if (--sz <= 0) break;
-			//printf("n = %02x\n", n);
+			//printf("c = %02x\n", c);
 
-			if (n == 0) {
+			if (c == 0) {
 				r++;
 				c = -1;
 				continue;
 			}
+			c--;
 
-			c = read8(f);
+			n = read8(f);
 			if (--sz <= 0) break;
-			//printf("    channel = %d\n", c);
+			//printf("    n = %d\n", n);
 
-			event = c >= xxh->chn ? &dummy : &EVENT(i, c, r);
+			if (c >= xxh->chn || r >= xxp[i]->rows)
+				event = &dummy;
+			else
+				event = &EVENT(i, c, r);
 
 			if (n & 0x01) {
 				x = read8(f);
-				event->note = 60 + MSN(x) * 12 + LSN(x);
+				event->note = 13 + MSN(x) * 12 + LSN(x);
 				if (--sz <= 0) break;
 			}
 			if (n & 0x02) {
@@ -156,6 +162,24 @@ static void get_patt(int size, FILE *f)
 				event->f2p = read8(f);
 				if (--sz <= 0) break;
 			}
+
+			if (event->fxt == 0x14) {
+				event->note = XMP_KEY_OFF;
+				event->fxt = event->fxp = 0;
+			}
+
+			if (event->f2t == 0x14) {
+				event->note = XMP_KEY_OFF;
+				event->f2t = event->f2p = 0;
+			}
+
+			/* FIXME */
+			if (event->fxt > 0x0f)
+				event->fxt = event->fxp = 0;
+
+			if (event->f2t > 0x0f)
+				event->f2t = event->f2p = 0;
+
 		}
 		reportv(0, ".");
 	}
