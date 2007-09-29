@@ -158,11 +158,9 @@ int st_load (FILE *f)
     strncpy (xmp_ctl->name, (char *) mh.name, 20);
 
     if (nt)
-	strcpy (tracker_name, "Sound/Noisetracker");
+        strcpy (xmp_ctl->type, "ST (Sound/Noisetracker)");
     else 
-	strcpy (tracker_name, "old Soundtracker");
-
-    strcpy (xmp_ctl->type, "15 instrument module");
+        strcpy (xmp_ctl->type, "ST (old Soundtracker)");
 
     MODULE_INFO ();
 
