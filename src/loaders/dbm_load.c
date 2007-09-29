@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.10 2007-09-29 12:07:58 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.11 2007-09-29 13:12:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -64,9 +64,9 @@ static void get_inst(int size, FILE *f)
 	int c2spd, flags, snum;
 	uint8 buffer[50];
 
-	reportv(0, "Instruments    : %d\n", xxh->ins);
+	reportv(0, "Instruments    : %d ", xxh->ins);
 
-	reportv(1, "     Instrument name                Smp Vol Pan C2Spd\n");
+	reportv(1, "\n     Instrument name                Smp Vol Pan C2Spd");
 
 	for (i = 0; i < xxh->ins; i++) {
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -89,10 +89,13 @@ static void get_inst(int size, FILE *f)
 
 		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
 
-		reportv(1, "[%2X] %-30.30s #%02X V%02x P%02x %5d\n",
+		reportv(1, "\n[%2X] %-30.30s #%02X V%02x P%02x %5d ",
 			i, xxih[i].name, snum,
 			xxi[i][0].vol, xxi[i][0].pan, c2spd);
+
+		reportv(0, ".");
 	}
+	reportv(0, "\n");
 }
 
 static void get_patt(int size, FILE *f)

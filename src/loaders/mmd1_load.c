@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.12 2007-09-11 11:47:30 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.13 2007-09-29 13:12:25 cmatsuoka Exp $
  */
 
 /*
@@ -37,6 +37,11 @@ static int bpmon, bpmlen;
 
 static void xlat_fx(struct xxm_event *event)
 {
+	if (event->fxt > 0x0f) {
+		event->fxt = event->fxp = 0;
+		return;
+	}
+
 	switch (event->fxt) {
 	case 0x05:		/* Old vibrato */
 		event->fxp = (LSN(event->fxp) << 4) | MSN(event->fxp);

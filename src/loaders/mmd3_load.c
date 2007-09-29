@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.8 2007-09-08 12:53:22 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.9 2007-09-29 13:12:25 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -33,6 +33,11 @@ static int bpmon, bpmlen;
 
 static void xlat_fx(struct xxm_event *event)
 {
+	if (event->fxt > 0x0f) {
+		event->fxt = event->fxp = 0;
+		return;
+	}
+
 	switch (event->fxt) {
 	case 0x05:		/* Old vibrato */
 		event->fxp = (LSN(event->fxp) << 4) | MSN(event->fxp);
@@ -201,7 +206,8 @@ int mmd3_load(FILE *f)
 	read32b(f);
 	read32b(f);
 	xxh->len = read16b(f);
-	fread(xxo, xxh->len, 1, f);
+	for (i = 0; i < xxh->len; i++)
+		xxo[i] = read16b(f);
 
 	/*
 	 * convert header
