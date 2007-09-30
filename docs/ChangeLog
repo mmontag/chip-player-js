@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.101 2007-09-29 19:32:55 cmatsuoka Exp $
+$Id: ChangeLog,v 1.102 2007-09-30 23:13:25 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,6 +9,7 @@ Stable versions
 	- added workaround for S3M "Return of Litmus" 0x87 quirk (reported
 	  by Ralf Hoffmann)
 	- added DigiBooster Pro module loader
+	- added Fmod OXM depacker (depends on oggdec)
 	- enabled Tracker Packer 3 prowizard loader
 	- enabled The Player 4.x prowizard loader
 	- removed reverse-endian sample reading options and XMP_CTL_BIGEND

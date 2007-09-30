@@ -1,7 +1,7 @@
 /* Extended Module Player OMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: oxm.c,v 1.2 2007-09-30 19:04:12 cmatsuoka Exp $
+ * $Id: oxm.c,v 1.3 2007-09-30 23:13:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,10 +17,18 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "xmpi.h"
 
+#define MAGIC_OGGS	0x4f676753
+
+
+struct xm_instrument {
+	uint32 len;
+	uint8 buf[36];
+};
 
 static void move_data(FILE *out, FILE *in, int len)
 {
@@ -37,10 +45,11 @@ static void move_data(FILE *out, FILE *in, int len)
 
 int test_oxm(FILE *f)
 {
-	int i;
+	int i, j;
 	int hlen, npat, len, plen;
-	int nins;
-	uint8 buf[20];
+	int nins, nsmp, ilen;
+	int slen[256];
+	uint8 buf[1024];
 
 	fseek(f, 0, SEEK_SET);
 	fread(buf, 16, 1, f);
@@ -52,6 +61,9 @@ int test_oxm(FILE *f)
 	fseek(f, 6, SEEK_CUR);
 	npat = read16l(f);
 	nins = read16l(f);
+
+	if (npat > 256 || nins > 128)
+		return -1;
 	
 	fseek(f, 60 + hlen, SEEK_SET);
 
@@ -62,58 +74,125 @@ int test_oxm(FILE *f)
 		fseek(f, len - 9 + plen, SEEK_CUR);
 	}
 
-	fseek(f, 26, SEEK_CUR);
-	if (read8(f) != 0x3f)
-		return -1;
+	for (i = 0; i < nins; i++) {
+		ilen = read32l(f);
+		if (ilen > 263)
+			return -1;
+		fseek(f, -4, SEEK_CUR);
+		fread(buf, ilen, 1, f);		/* instrument header */
+		nsmp = readmem16l(buf + 27);
 
-	return 0;
+		if (nsmp > 255)
+			return -1;
+		if (nsmp == 0)
+			continue;
+
+		/* Read instrument data */
+		for (j = 0; j < nsmp; j++) {
+			slen[j] = read32l(f);
+			fseek(f, 36, SEEK_CUR);
+		}
+
+		/* Read samples */
+		for (j = 0; j < nsmp; j++) {
+			read32b(f);
+			if (read32b(f) == 0x4f676753)
+				return 0;
+			fseek(f, slen[j] - 8, SEEK_CUR);
+		}
+	}
+
+	return -1;
 }
 
-static char *oggdec(FILE *f, int len, int *newlen)
+/*
+ * Invoke oggdec to decode our vorbis file to a temporary file,
+ * then read that back when writing to our depacked XM file
+ */
+static char *oggdec(FILE *f, int len, int res, int *newlen)
 {
-	char line[256];
 	char buf[1024];
-	char *temp, *pcm;
-	FILE *p;
-	int fd, l;
+	char *temp;
+	int i, fd, l;
 	struct stat st;
+	int8 *pcm;
+	int16 *pcm16;
+	uint32 id;
+	int status, p[2];
 
+	read32b(f);
+	id = read32b(f);
+	fseek(f, -8, SEEK_CUR);
+
+	if (id != MAGIC_OGGS) {		/* copy input data if not Ogg file */
+		if ((pcm = malloc(len)) == NULL)
+			return NULL;
+		fread(pcm, 1, len, f);
+		*newlen = len;
+		return (char *)pcm;
+	}
+	
 	temp = strdup("/tmp/xmp_oxm_XXXXXX");
 
 	if ((fd = mkstemp(temp)) < 0)
 		goto err1;
 
-	snprintf(line, 256, "oggdec -Q -b16 -e0 -R -s1 -o%s -", temp);
-	p = popen(line, "w");
+	if (pipe(p) < 0)
+		goto err1;
 
-	do {
+	if (fork() == 0) {		/* child process runs oggdec */
+		char b[10];
+
+		close(p[1]);
+		dup2(p[0], STDIN_FILENO);
+		dup2(fd, STDOUT_FILENO);
+
+		snprintf(b, 10, "-b%d", res);
+		execlp("oggdec", "oggdec", "-Q", b, "-e0", "-R", "-s1",
+							"-o-", "-", NULL);
+	}
+
+	close(p[0]);
+
+	do {				/* write vorbis data to oggdec */
 		l = len > 1024 ? 1024 : len;
 		fread(buf, 1, l, f);
-		fwrite(buf, 1, l, p);
+		write(p[1], buf, l);
 		len -= l;
 	} while (l > 0 && len > 0);
-	fclose(p);
 
-	p = fopen(temp, "r");
+	close(p[1]);
+	wait(&status);
 
-	if (fstat(fileno(p), &st) < 0)
+	if (fstat(fd, &st) < 0)
 		goto err2;
 
 	if ((pcm = malloc(st.st_size)) == NULL)
 		goto err2;
 
-	fread(pcm, 1, st.st_size, p);
+	pcm16 = (int16 *)pcm;
+	lseek(fd, 0, SEEK_SET);
+	read(fd, pcm, st.st_size);
+	close(fd);
 
-	*newlen = st.st_size / 2;
+	/* Convert to delta */
+	if (res == 8) {
+		for (i = st.st_size - 1; i > 0; i--)
+			pcm[i] -= pcm[i - 1];
+		*newlen = st.st_size;
+	} else {
+		for (i = st.st_size / 2 - 1; i > 0; i--)
+			pcm16[i] -= pcm16[i - 1];
+		*newlen = st.st_size / 2;
+	}
 
-	fclose(p);
 	unlink(temp);
 	free(temp);
 
-	return pcm;
+	return (char *)pcm;
 
 err2:
-	fclose(p);
+	close(fd);
 	unlink(temp);
 err1:
 	free(temp);
@@ -124,10 +203,11 @@ int decrunch_oxm(FILE *f, FILE *fo)
 {
 	int i, j, pos;
 	int hlen, npat, len, plen;
-	int nins, nsmp, ilen, slen[256];
+	int nins, nsmp, ilen;
 	uint8 buf[1024];
-	char *pcm;
-	int newlen;
+	struct xm_instrument xi[256];
+	char *pcm[256];
+	int newlen = 0;
 
 	fseek(f, 60, SEEK_SET);
 	hlen = read32l(f);
@@ -150,7 +230,6 @@ int decrunch_oxm(FILE *f, FILE *fo)
 
 	for (i = 0; i < nins; i++) {
 		ilen = read32l(f);
-		//printf("%lx: inst %d: len %x\n", ftell(f), i, ilen);
 		if (ilen > 1024)
 			return -1;
 		fseek(f, -4, SEEK_CUR);
@@ -162,19 +241,35 @@ int decrunch_oxm(FILE *f, FILE *fo)
 		if (nsmp == 0)
 			continue;
 
+		/* Read sample headers */
 		for (j = 0; j < nsmp; j++) {
-			slen[j] = read32l(f);
-			//printf("%lx: %x\n", ftell(f), slen[j]);
-			fseek(f, -4, SEEK_CUR);
-			fread(buf, 40, 1, f);
-			fwrite(buf, 40, 1, fo);
+			xi[j].len = read32l(f);
+			fread(xi[j].buf, 1, 36, f);
 		}
 
+		/* Read samples */
 		for (j = 0; j < nsmp; j++) {
-			pcm = oggdec(f, slen[j], &newlen);
-			if (pcm == NULL)
-				continue;
-			fwrite(pcm, 1, slen[j], fo);
+			if (xi[j].len > 0) {
+				int res = 8;
+				if (xi[j].buf[10] & 0x10)
+					res = 16;
+				pcm[j] = oggdec(f, xi[j].len, res, &newlen);
+				xi[j].len = newlen;
+			}
+		}
+
+		/* Write sample headers */
+		for (j = 0; j < nsmp; j++) {
+			write32l(fo, xi[j].len);
+			fwrite(xi[j].buf, 1, 36, fo);
+		}
+
+		/* Write samples */
+		for (j = 0; j < nsmp; j++) {
+			if (xi[j].len > 0) {
+				fwrite(pcm[j], 1, xi[j].len, fo);
+				free(pcm[j]);
+			}
 		}
 	}
 
