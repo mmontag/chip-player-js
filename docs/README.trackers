@@ -321,9 +321,10 @@ the sample header structure. Modules converted with MED2XM or created with
 other trackers can have the size of instrument data plus the size of the
 sample header data in this field. There is a version of "<unnamed>"
 (Counterpoint 2.0, untitled.xm) with 245 in this field. In this module the
-instrument type ("always 0" according to xm.txt) is 0xda. This module is
-marked as 1.04 made with "FastTracker v 2.00". Note that authentic
-FT2 modules are marked as "FastTracker v2.00".
+instrument type ("always 0" according to xm.txt) is 0xda. This module was
+created using an old version of ModPlug Tracker (marked as 1.04 made with
+"FastTracker v 2.00", note that authentic FT2 modules are marked as
+"FastTracker v2.00").
 
 Other "FastTracker v 2.00" differences: loop size is one sample larger
 than standard FT2 modules, check Breath of the Wind by DipA.

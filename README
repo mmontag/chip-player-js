@@ -159,7 +159,7 @@ to be installed on the system:
   gz		gzip		Linux, Unix
   lha		lha		Amiga, DOS
   lzma		lzma		Linux, Unix
-  MO3		unmo3		DOS?
+  mo3		unmo3		DOS?
   rar		unrar		DOS
   Z		compress	Unix
   zip		unzip		DOS
