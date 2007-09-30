@@ -4,7 +4,7 @@
  *
  * Converts ZEN packed MODs back to PTK MODs
  *
- * $Id: zen.c,v 1.5 2007-09-27 20:29:53 cmatsuoka Exp $
+ * $Id: zen.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -20,7 +20,6 @@ struct pw_format pw_zen = {
 	"Zen Packer",
 	0x00,
 	test_zen,
-	NULL,
 	depack_zen
 };
 

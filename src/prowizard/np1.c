@@ -4,7 +4,7 @@
  *
  * Converts NoisePacked MODs back to ptk
  *
- * $Id: np1.c,v 1.2 2007-09-14 18:40:58 cmatsuoka Exp $
+ * $Id: np1.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -19,7 +19,6 @@ struct pw_format pw_np1 = {
 	"NoisePacker v1",
 	0x00,
 	test_np1,
-	NULL,
 	depack_np1
 };
 

@@ -4,7 +4,7 @@
  *
  * Converts QC MODs back to PTK MODs
  *
- * $Id: qc.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
+ * $Id: qc.c,v 1.2 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -19,7 +19,6 @@ struct pw_format pw_emod = {
 	"QuadraComposer",
 	0x00,
 	test_emod,
-	NULL,
 	depack_emod
 };
 

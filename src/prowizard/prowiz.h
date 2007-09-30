@@ -43,8 +43,7 @@ struct pw_format {
 	char *name;
 	int flags;
 	int (*test)(uint8 *, int);
-	int (*depackb)(uint8 *, FILE *);
-	int (*depackf)(FILE *, FILE *);
+	int (*depack)(FILE *, FILE *);
 	struct list_head list;
 };
 

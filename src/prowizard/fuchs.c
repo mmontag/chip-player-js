@@ -4,7 +4,7 @@
  *
  * Depacks Fuchs Tracker modules
  *
- * $Id: fuchs.c,v 1.3 2007-09-26 03:12:10 cmatsuoka Exp $
+ * $Id: fuchs.c,v 1.4 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -20,7 +20,6 @@ struct pw_format pw_fchs = {
 	"Fuchs Tracker",
 	0x00,
 	test_fuchs,
-	NULL,
 	depack_fuchs
 };
 
@@ -29,7 +28,7 @@ static int depack_fuchs(FILE *in, FILE *out)
 {
 	uint8 *tmp;
 	uint8 c1;
-	uint8 pmax = 0;
+	uint8 pmax;
 	int ssize = 0;
 	int SampleSizes[16];
 	int LoopStart[16];

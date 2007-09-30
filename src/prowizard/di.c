@@ -4,34 +4,32 @@
  *
  * Converts DI packed MODs back to PTK MODs
  *
- * $Id: di.c,v 1.3 2007-09-26 03:12:10 cmatsuoka Exp $
+ * $Id: di.c,v 1.4 2007-09-30 00:08:18 cmatsuoka Exp $
  */
 
 #include <string.h>
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_DI (uint8 *, int);
-static int depack_DI (FILE *, FILE *);
+static int test_di (uint8 *, int);
+static int depack_di (FILE *, FILE *);
 
 struct pw_format pw_di = {
 	"DI",
 	"Digital Illusions",
 	0x00,
-	test_DI,
-	NULL,
-	depack_DI
+	test_di,
+	depack_di
 };
 
 
-static int depack_DI (FILE * in, FILE * out)
+static int depack_di (FILE * in, FILE * out)
 {
 	uint8 c1, c2, c3;
 	uint8 note, ins, fxt, fxp;
 	uint8 ptk_tab[5];
-	uint8 npat;
+	uint8 npat, max;
 	uint8 ptable[128];
-	uint8 Max = 0x00;
 	uint8 *t;
 	int i, k;
 	uint16 paddr[128];
@@ -86,19 +84,19 @@ static int depack_DI (FILE * in, FILE * out)
 
 	write8(out, 0x7f);
 
-	for (Max = i = 0; i < 128; i++) {
+	for (max = i = 0; i < 128; i++) {
 		write8(out, ptable[i]);
-		if (ptable[i] > Max)
-			Max = ptable[i];
+		if (ptable[i] > max)
+			max = ptable[i];
 	}
 
 	write32b(out, PW_MOD_MAGIC);
 
 	fseek(in, tmp, 0);
-	for (i = 0; i <= Max; i++)
+	for (i = 0; i <= max; i++)
 		paddr[i] = read16b(in);
 
-	for (i = 0; i <= Max; i++) {
+	for (i = 0; i <= max; i++) {
 		fseek (in, paddr[i], 0);
 		for (k = 0; k < 256; k++) {	/* 256 = 4 voices * 64 rows */
 			bzero (ptk_tab, 5);
@@ -150,7 +148,7 @@ static int depack_DI (FILE * in, FILE * out)
 }
 
 
-static int test_DI (uint8 *data, int s)
+static int test_di (uint8 *data, int s)
 {
 	int ssize, start = 0;
 	int j, k, l, m, n, o;

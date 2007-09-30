@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.21 2007-09-29 22:25:17 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.22 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -121,7 +121,7 @@ int pw_wizardry (int in, int out)
 	list_for_each(tmp, &pw_format_list) {
 		format = list_entry(tmp, struct pw_format, list);
 		_D ("checking format: %s", format->name);
-		if (format->test (data, in_size) >= 0)
+		if (format->test(data, in_size) >= 0)
 			goto done;
 	}
 	return -1;
@@ -134,10 +134,8 @@ checked:
 done:
 	fseek (file_in, 0, SEEK_SET);
 	size = -1;	/* paranoia setting */
-	if (format->depackb)
-		size = format->depackb (data, file_out);
-	else if (format->depackf) 
-		size = format->depackf (file_in, file_out);
+	if (format->depack) 
+		size = format->depack(file_in, file_out);
 
 	if (size < 0)
 		return -1;

@@ -4,7 +4,7 @@
  *
  * Converts back to ptk FC-M packed MODs
  *
- * $Id: fc-m.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
+ * $Id: fc-m.c,v 1.5 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -19,7 +19,6 @@ struct pw_format pw_fcm = {
 	"FC-M Packer",
 	0x00,
 	test_fcm,
-	NULL,
 	depack_fcm
 };
 
@@ -29,7 +28,7 @@ static int depack_fcm(FILE *in, FILE *out)
 	uint8 c1;
 	uint8 ptable[128];
 	uint8 pat_pos;
-	uint8 pat_max = 0x00;
+	uint8 pat_max;
 	uint8 *tmp;
 	uint8 pat_data[1024];
 	int i = 0, j = 0;
@@ -76,7 +75,7 @@ static int depack_fcm(FILE *in, FILE *out)
 	read32b(in);	/* bypass "PATT" chunk */
 
 	/* read and write pattern list and get highest patt number */
-	for (i = 0; i < pat_pos; i++) {
+	for (pat_max = i = 0; i < pat_pos; i++) {
 		write8(out, c1 = read8(in));
 		if (c1 > pat_max)
 			pat_max = c1;

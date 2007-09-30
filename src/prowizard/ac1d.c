@@ -6,7 +6,7 @@
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
  *
- * $Id: ac1d.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
+ * $Id: ac1d.c,v 1.5 2007-09-30 00:08:18 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -21,7 +21,6 @@ struct pw_format pw_ac1d = {
 	"AC1D Packer",
 	0x00,
 	test_AC1D,
-	NULL,
 	depack_AC1D
 };
 

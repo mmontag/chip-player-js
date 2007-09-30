@@ -4,7 +4,7 @@
  *
  * Converts tp3 packed MODs back to PTK MODs
  *
- * $Id: tp3.c,v 1.6 2007-09-26 11:36:20 cmatsuoka Exp $
+ * $Id: tp3.c,v 1.7 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -20,12 +20,11 @@ struct pw_format pw_tp3 = {
         "Tracker Packer v3",
         0x00,
         test_tp3,
-        NULL,
         depack_tp3
 };
 
 
-static int depack_tp3 (FILE *in, FILE *out)
+static int depack_tp3(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 pnum[128];

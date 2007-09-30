@@ -4,7 +4,7 @@
  *
  * Converts MODs packed with Prorunner v1.0
  *
- * $Id: prun1.c,v 1.3 2007-09-26 03:12:11 cmatsuoka Exp $
+ * $Id: prun1.c,v 1.4 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -20,7 +20,6 @@ struct pw_format pw_pru1 = {
 	"Prorunner 1.0",
 	0x00,
 	test_pru1,
-	NULL,
 	depack_pru1
 };
 
@@ -30,9 +29,8 @@ static int depack_pru1 (FILE *in, FILE *out)
 	uint8 header[2048];
 	uint8 *tmp;
 	uint8 c1, c2, c3, c4;
-	uint8 npat = 0x00;
+	uint8 npat, max;
 	uint8 ptable[128];
-	uint8 max = 0x00;
 	int ssize = 0;
 	int i, j;
 

@@ -1,5 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ *
+ * $Id: wn_load.c,v 1.2 2007-09-30 00:08:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +23,7 @@ struct wn_ins {
     uint8 volume;		/* Volume (0-63) */
     uint16 loop_start;		/* Sample loop start in bytes */
     uint16 loop_length;		/* Sample loop length in words */
-} PACKED;
+};
 
 struct wn_header {
     uint8 name[20];		/* Title */
@@ -31,7 +33,7 @@ struct wn_header {
     uint8 order[128];		/* Order list */
     uint8 magic[3];		/* 'W', 'N', 0x00 */
     uint8 pat;			/* Number of patterns */
-} PACKED;
+};
 
 
 int wn_load (FILE * f)

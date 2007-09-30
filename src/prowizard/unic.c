@@ -5,7 +5,7 @@
  * Unic tracked MODs to Protracker
  * both with or without ID Unic files will be converted
  *
- * $Id: unic.c,v 1.11 2007-09-29 22:15:26 cmatsuoka Exp $
+ * $Id: unic.c,v 1.12 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -26,7 +26,6 @@ struct pw_format pw_unic_id = {
 	"UNIC Tracker",
 	0x00,
 	test_unic_id,
-	NULL,
 	depack_unic
 };
 
@@ -35,7 +34,6 @@ struct pw_format pw_unic_noid = {
 	"UNIC Tracker noid",
 	0x00,
 	test_unic_noid,
-	NULL,
 	depack_unic
 };
 
@@ -44,7 +42,6 @@ struct pw_format pw_unic_emptyid = {
 	"UNIC Tracker id0",
 	0x00,
 	test_unic_emptyid,
-	NULL,
 	depack_unic
 };
 

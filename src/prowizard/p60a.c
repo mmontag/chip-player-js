@@ -13,7 +13,7 @@
  * claudio's note: I don't care if it's a mess. My attempt to write a p60a
  *	depacker produced cleaner code that didn't work.
  *
- * $Id: p60a.c,v 1.2 2007-09-29 17:01:33 cmatsuoka Exp $
+ * $Id: p60a.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -29,7 +29,6 @@ struct pw_format pw_p60a = {
 	"The Player 6.0a",
 	0x00,
 	test_p60a,
-	NULL,
 	depack_p60a
 };
 

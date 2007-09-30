@@ -9,7 +9,7 @@
  *      certainly wont dare to beat Gryzor on the ground :). His Prowiz IS
  *      the converter to use !!!.
  *
- * $Id: p40.c,v 1.5 2007-09-29 20:38:28 cmatsuoka Exp $
+ * $Id: p40.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -29,7 +29,6 @@ struct pw_format pw_p4x = {
 	"The Player 4.x",
 	0x00,
 	test_p4x,
-	NULL,
 	depack_p4x
 };
 

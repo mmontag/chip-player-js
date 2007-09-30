@@ -6,7 +6,7 @@
  *
  * claudio's note: Now this one can be *heavily* optimized...
  *
- * $Id: pm10c.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
+ * $Id: pm10c.c,v 1.5 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -21,7 +21,6 @@ struct pw_format pw_p10c = {
 	"Promizer 1.0c",
 	0x00,
 	test_p10c,
-	NULL,
 	depack_p10c
 };
 

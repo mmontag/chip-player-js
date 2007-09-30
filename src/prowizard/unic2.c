@@ -4,7 +4,7 @@
  *
  * Convert Unic Tracker 2 MODs to Protracker
  *
- * $Id: unic2.c,v 1.5 2007-09-29 22:15:26 cmatsuoka Exp $
+ * $Id: unic2.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -19,7 +19,6 @@ struct pw_format pw_unic2 = {
 	"Unic Tracker 2",
 	0x00,
 	test_unic2,
-	NULL,
 	depack_unic2
 };
 

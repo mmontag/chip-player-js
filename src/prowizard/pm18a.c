@@ -8,7 +8,7 @@
  *
  * claudio's note: this code asks for heavy optimization. maybe later
  *
- * $Id: pm18a.c,v 1.2 2007-09-14 20:11:31 cmatsuoka Exp $
+ * $Id: pm18a.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -24,7 +24,6 @@ struct pw_format pw_p18a = {
 	"Promizer 1.8a",
 	0x00,
 	test_p18a,
-	NULL,
 	depack_p18a
 };
 

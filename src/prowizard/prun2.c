@@ -4,7 +4,7 @@
  *
  * Converts ProRunner v2 packed MODs back to Protracker
  *
- * $Id: prun2.c,v 1.6 2007-09-27 20:29:53 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.7 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -20,7 +20,6 @@ struct pw_format pw_pru2 = {
 	"Prorunner 2.0",
 	0x00,
 	test_pru2,
-	NULL,
 	depack_pru2
 };
 

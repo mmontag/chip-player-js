@@ -6,7 +6,7 @@
  *
  * note: There's a good job ! .. gosh !.
  *
- * $Id: heatseek.c,v 1.4 2007-09-26 03:12:10 cmatsuoka Exp $
+ * $Id: heatseek.c,v 1.5 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -22,7 +22,6 @@ struct pw_format pw_crb = {
 	"Heatseeker 1.0",
 	0x00,
 	test_crb,
-	NULL,
 	depack_crb
 };
 

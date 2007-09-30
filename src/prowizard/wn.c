@@ -1,16 +1,10 @@
 /*
  * Wanton_Packer.c   Copyright (C) 1997 Asle / ReDoX
- *                   Modified by Claudio Matsuoka
+ *                   Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts MODs converted with Wanton packer
- ********************************************************
- * 13 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
- *     It speeds-up the process quite a bit :).
- */
-
-/*
- * $Id: wn.c,v 1.2 2007-09-14 18:40:58 cmatsuoka Exp $
+ *
+ * $Id: wn.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -19,84 +13,74 @@
 
 
 static int test_wn (uint8 *, int);
-static int depack_wn (uint8 *, FILE *);
+static int depack_wn (FILE *, FILE *);
 
 struct pw_format pw_wn = {
 	"WN",
 	"Wanton Packer",
 	0x00,
 	test_wn,
-	depack_wn,
-	NULL
+	depack_wn
 };
 
 
-static int depack_wn (uint8 *data, FILE * out)
+static int depack_wn (FILE *in, FILE * out)
 {
 	uint8 c1, c2, c3, c4;
-	uint8 npat = 0x00;
-	uint8 Max = 0x00;
+	uint8 npat, max;
+	uint tmp[1024];
 	int ssize = 0;
-	int i = 0, j = 0;
-	int start = 0;
-	int w = start;		/* main pointer to prevent fread() */
+	int i, j;
+	uint8 *p;
 
 	/* read header */
-	fwrite (&data[w], 950, 1, out);
+	fread(tmp, 950, 1, in);
+	fwrite(tmp, 950, 1, out);
 
 	/* get whole sample size */
 	for (i = 0; i < 31; i++) {
-		ssize += (((data[w + 42 + i * 30] << 8) +
-		     data[w + 43 + i * 30]) << 1);
+		fseek(in, 42 + i * 30, SEEK_SET);
+		ssize += read16b(in) * 2;
 	}
 
 	/* read size of pattern list */
-	w = start + 950;
-	npat = data[w++];
-	fwrite (&npat, 1, 1, out);
+	fseek(in, 950, SEEK_SET);
+	write8(out, npat = read8(in));
 
-	i = w;
-	fwrite (&data[w], 129, 1, out);
-	w += 129;
+	fread(tmp, 129, 1, in);
+	fwrite(tmp, 129, 1, out);
 
 	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, PW_MOD_MAGIC);
 
 	/* get highest pattern number */
-	Max = 0x00;
-	for (i = 0; i < 128; i++) {
-		if (data[start + 952 + i] > Max)
-			Max = data[start + 952 + i];
+	for (max = i = 0; i < 128; i++) {
+		if (tmp[i + 1] > max)
+			max = tmp[i + 1];
 	}
-	Max += 1;
+	max++;
 
 	/* pattern data */
-	w = start + 1084;
-	for (i = 0; i < Max; i++) {
+	fseek(in, 1084, SEEK_SET);
+	for (i = 0; i < max; i++) {
 		for (j = 0; j < 256; j++) {
-			c1 = data[w + 1] & 0xf0;
-			c1 |= ptk_table[(data[w] / 2)][0];
-			c2 = ptk_table[(data[w] / 2)][1];
-			c3 = (data[w + 1] << 4) & 0xf0;
-			c3 |= data[w + 2];
-			c4 = data[w + 3];
+			c1 = read8(in);
+			c2 = read8(in);
+			c3 = read8(in);
+			c4 = read8(in);
 
-			fwrite (&c1, 1, 1, out);
-			fwrite (&c2, 1, 1, out);
-			fwrite (&c3, 1, 1, out);
-			fwrite (&c4, 1, 1, out);
-			w += 4;
+			write8(out, c1 * 0xf0 | ptk_table[c1 / 2][0]);
+			write8(out, ptk_table[c1 / 2][1]);
+			write8(out, ((c2 << 4) & 0xf0) | c3);
+			write8(out, c4);
 		}
 	}
 
 	/* sample data */
-	fwrite (&data[w], ssize, 1, out);
+	p = malloc(ssize);
+	fread(p, ssize, 1, in);
+	fwrite(p, ssize, 1, out);
+	free(p);
 
 	return 0;
 }

@@ -4,7 +4,7 @@
  *
  * Converts MODs packed with Eureka packer back to ptk
  *
- * $Id: eureka.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: eureka.c,v 1.2 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -19,7 +19,6 @@ struct pw_format pw_eu = {
 	"Eureka Packer",
 	0x00,
 	test_eu,
-	NULL,
 	depack_eu
 };
 

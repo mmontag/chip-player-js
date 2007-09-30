@@ -12,7 +12,7 @@
  *      Dont know why I did it for this depacker because I've but one
  *      exemple file ! :)
  *
- * $Id: fuzzac.c,v 1.1 2006-02-12 22:04:42 cmatsuoka Exp $
+ * $Id: fuzzac.c,v 1.2 2007-09-30 00:08:19 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -28,7 +28,6 @@ struct pw_format pw_fuzz = {
 	"Fuzzac Packer",
 	0x00,
 	test_fuzz,
-	NULL,
 	depack_fuzz
 };
 
@@ -37,7 +36,7 @@ struct pw_format pw_fuzz = {
 #define OFF 2
 
 
-static int depack_fuzz (FILE * in, FILE * out)
+static int depack_fuzz(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4, c5;
 	uint8 PatPos;
@@ -52,9 +51,9 @@ static int depack_fuzz (FILE * in, FILE * out)
 	long ssize = 0;
 	long i, j, k, l;
 
-	bzero (Track_Numbers, 128 * 16);
-	bzero (Track_Numbers_Real, 128 * 4);
-	bzero (PatternList, 128);
+	bzero(Track_Numbers, 128 * 16);
+	bzero(Track_Numbers_Real, 128 * 4);
+	bzero(PatternList, 128);
 
 	/* bypass ID */
 	fseek (in, 4, 0);	/* SEEK_SET */
