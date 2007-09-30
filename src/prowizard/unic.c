@@ -5,7 +5,7 @@
  * Unic tracked MODs to Protracker
  * both with or without ID Unic files will be converted
  *
- * $Id: unic.c,v 1.12 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: unic.c,v 1.13 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -61,16 +61,11 @@ static int depack_unic (FILE *in, FILE *out)
 	int i = 0, j = 0, k = 0, l = 0;
 	int ssize = 0;
 	uint32 id;
-	uint8 *p;
 
-	/* title */
-	for (i = 0; i < 20; i++)
-		write8(out, read8(in));
+	pw_move_data(out, in, 20);		/* title */
 
 	for (i = 0; i < 31; i++) {
-		/* sample name */
-		for (j = 0; j < 20; j++)
-			write8(out, read8(in));
+		pw_move_data(out, in, 20);	/* sample name */
 		write8(out, 0);
 		write8(out, 0);
 
@@ -157,10 +152,7 @@ static int depack_unic (FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	p = malloc(ssize);
-	fread(p, ssize, 1, in);
-	fwrite(p, ssize, 1, out);
-	free(p);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

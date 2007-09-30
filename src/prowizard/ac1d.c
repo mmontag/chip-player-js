@@ -6,7 +6,7 @@
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
  *
- * $Id: ac1d.c,v 1.5 2007-09-30 00:08:18 cmatsuoka Exp $
+ * $Id: ac1d.c,v 1.6 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -31,8 +31,8 @@ static int depack_AC1D (FILE *in, FILE *out)
 	uint8 c1, c2, c3, c4;
 	uint8 npos;
 	uint8 ntk_byte;
-	uint8 *tmp;
-	uint8 num_pat;
+	uint8 tmp[1024];
+	uint8 npat;
 	uint8 note, ins, fxt, fxp;
 	int size;
 	int saddr;
@@ -42,67 +42,57 @@ static int depack_AC1D (FILE *in, FILE *out)
 	int tsize1, tsize2, tsize3;
 	int i, j, k;
 
-	bzero (paddr, 128 * 4);
-	bzero (psize, 128 * 4);
+	bzero(paddr, 128 * 4);
+	bzero(psize, 128 * 4);
 
 	npos = read8(in);
 	ntk_byte = read8(in);
-	read16b(in);		/* bypass ID */
-	saddr = read32b(in);	/* sample data address */
+	read16b(in);			/* bypass ID */
+	saddr = read32b(in);		/* sample data address */
 
-	/* write title */
-	for (i = 0; i < 20; i++)
-		write8(out, 0);
+	pw_write_zero(out, 20);		/* write title */
 
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)
-			write8(out, 0);
-
+		pw_write_zero(out, 22);		/* name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
-
 		write8(out, read8(in));		/* finetune */
 		write8(out, read8(in));		/* volume */
 		write16b(out, read16b(in));	/* loop start */
 		write16b(out, read16b(in));	/* loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
 	/* pattern addresses */
-	for (num_pat = 0; num_pat < 128; num_pat++) {
-		paddr[num_pat] = read32b(in);
-		if (paddr[num_pat] == 0)
+	for (npat = 0; npat < 128; npat++) {
+		paddr[npat] = read32b(in);
+		if (paddr[npat] == 0)
 			break;
 	}
-	num_pat--;
-	/*printf ( "Number of pattern saved : %d\n" , num_pat ); */
+	npat--;
 
-	for (i = 0; i < (num_pat - 1); i++)
+	for (i = 0; i < (npat - 1); i++)
 		psize[i] = paddr[i + 1] - paddr[i];
 
 	write8(out, npos);		/* write number of pattern pos */
 	write8(out, ntk_byte);		/* write "noisetracker" byte */
 
 	fseek(in, 0x300, SEEK_SET);	/* go to pattern table .. */
-
-	/* pattern table */
-	for (i = 0; i < 128; i++)
-		write8(out, read8(in));
-
-	/* write ID */
+	pw_move_data(out, in, 128);	/* pattern table */
+	
 	write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
 	/* pattern data */
-	tmp = (uint8 *) malloc (1024);
-	for (i = 0; i < num_pat; i++) {
+	for (i = 0; i < npat; i++) {
 		fseek(in, paddr[i], SEEK_SET);
 		tsize1 = read32b(in);
 		tsize2 = read32b(in);
 		tsize3 = read32b(in);
 
-		bzero (tmp, 1024);
+		bzero(tmp, 1024);
 		for (k = 0; k < 4; k++) {
 			for (j = 0; j < 64; j++) {
+				int x = j * 16 + k * 4;
+
 				note = ins = fxt = fxp = 0x00;
 				c1 = read8(in);
 				if ((c1 & 0x80) == 0x80) {
@@ -121,41 +111,32 @@ static int depack_AC1D (FILE *in, FILE *out)
 					note -= 0x0b;
 				if (note == 0x00)
 					note += 0x01;
-				tmp[j * 16 + k * 4] = ins & 0xf0;
+				tmp[x] = ins & 0xf0;
 				if (note != NO_NOTE) {
-					tmp[j * 16 + k * 4] |=
-						ptk_table[note][0];
-					tmp[j * 16 + k * 4 + 1] =
-						ptk_table[note][1];
+					tmp[x] |= ptk_table[note][0];
+					tmp[x + 1] = ptk_table[note][1];
 				}
 				if ((c2 & 0x0f) == 0x07) {
 					fxt = 0x00;
 					fxp = 0x00;
-					tmp[j * 16 + k * 4 + 2] =
-						(ins << 4) & 0xf0;
+					tmp[x + 2] = (ins << 4) & 0xf0;
 					continue;
 				}
 
 				c3 = read8(in);
 				fxt = c2 & 0x0f;
 				fxp = c3;
-				tmp[j * 16 + k * 4 + 2] = ((ins << 4) & 0xf0);
-				tmp[j * 16 + k * 4 + 2] |= fxt;
-				tmp[j * 16 + k * 4 + 3] = fxp;
+				tmp[x + 2] = ((ins << 4) & 0xf0);
+				tmp[x + 2] |= fxt;
+				tmp[x + 3] = fxp;
 			}
 		}
 		fwrite(tmp, 1024, 1, out);
-		/*printf ( "+" ); */
 	}
-	free (tmp);
-	/*printf ( "\n" ); */
 
 	/* sample data */
-	fseek (in, saddr, 0);
-	tmp = (uint8 *) malloc (ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	fseek(in, saddr, 0);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

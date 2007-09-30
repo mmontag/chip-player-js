@@ -4,7 +4,7 @@
  *
  * Converts ZEN packed MODs back to PTK MODs
  *
- * $Id: zen.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: zen.c,v 1.7 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -38,7 +38,6 @@ static int depack_zen(FILE *in, FILE *out)
 	int ptable_addr;
 	int sdata_addr = 999999l;
 	int i, j, k;
-	uint8 *buf;
 
 	bzero(paddr, 128 * 4);
 	bzero(paddr_Real, 128 * 4);
@@ -48,13 +47,10 @@ static int depack_zen(FILE *in, FILE *out)
 	pat_max = read8(in);		/* read patmax */
 	pat_pos = read8(in);		/* read size of pattern table */
 
-	/* write title */
-	for (i = 0; i < 20; i++)
-		write8(out, 0);
+	pw_write_zero(out, 20);		/* write title */
 
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)
-			write8(out, 0);
+		pw_write_zero(out, 22);			/* sample name */
 
 		finetune = read16b(in) / 0x48;		/* read finetune */
 
@@ -144,10 +140,7 @@ static int depack_zen(FILE *in, FILE *out)
 
 	/* sample data */
 	fseek(in, sdata_addr, SEEK_SET);
-	buf = malloc(ssize);
-	fread(buf, ssize, 1, in);
-	fwrite(buf, ssize, 1, out);
-	free(buf);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

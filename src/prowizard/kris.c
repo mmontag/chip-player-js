@@ -4,7 +4,7 @@
  *
  * Kris Tracker to Protracker.
  *
- * $Id: kris.c,v 1.4 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: kris.c,v 1.5 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -23,16 +23,14 @@ struct pw_format pw_kris = {
 };
 
 
-static int depack_kris (FILE *in, FILE *out)
+static int depack_kris(FILE *in, FILE *out)
 {
 	uint8 tmp[1025];
-	uint8 c1, c2, c3;
-	uint8 npat;
+	uint8 c3;
+	uint8 npat, max;
 	uint8 ptable[128];
-	uint8 Max;
 	uint8 note, ins, fxt, fxp;
 	uint8 tdata[512][256];
-	uint8 *sdata;
 	short taddr[128][4];
 	short maxtaddr = 0;
 	int i, j, k;
@@ -43,9 +41,7 @@ static int depack_kris (FILE *in, FILE *out)
 	bzero(taddr, 128 * 4 * 2);
 	bzero(tdata, 512 << 8);
 
-	/* title */
-	fread(tmp, 20, 1, in);
-	fwrite(tmp, 20, 1, out);
+	pw_move_data(out, in, 20);			/* title */
 	fseek(in, 2, SEEK_CUR);
 
 	/* 31 samples */
@@ -58,29 +54,18 @@ static int depack_kris (FILE *in, FILE *out)
 
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, read8(in));		/* fine */
-		write8(out, read8(in));		/* volume */
-
-		/* loop start */
-		c1 = read8(in);
-		c2 = read8(in);
-		c3 = c1 / 2;
-		c2 = c2 / 2;
-		if ((c3 * 2) != c1)
-			c2 += 1;
-		write8(out, c3);
-		write8(out, c2);
-
-		write16b(out, read16b(in));	/* loop size */
+		write8(out, read8(in));			/* fine */
+		write8(out, read8(in));			/* volume */
+		write16b(out, read16b(in) / 2);		/* loop start */
+		write16b(out, read16b(in));		/* loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
 	read32b(in);			/* bypass ID "KRIS" */
 	write8(out, npat = read8(in));	/* number of pattern in pattern list */
 	write8(out, read8(in));		/* Noisetracker restart byte */
 
 	/* pattern table (read,count and write) */
-	c3 = 0x00;
+	c3 = 0;
 	k = 0;
 	for (i = 0; i < 128; i++, k++) {
 		for (j = 0; j < 4; j++) {
@@ -105,8 +90,7 @@ static int depack_kris (FILE *in, FILE *out)
 		write8(out, ptable[i]);
 	}
 
-	Max = c3 - 0x01;
-	/*printf ( "Number of patterns : %d\n" , Max ); */
+	max = c3 - 0x01;
 
 	write32b(out, PW_MOD_MAGIC);	/* ptk ID */
 
@@ -124,8 +108,6 @@ static int depack_kris (FILE *in, FILE *out)
 			fxp = tmp[j * 4 + 3];
 
 			tdata[i][j * 4] = (ins & 0xf0);
-			/*if ( (note < 0x46) || (note > 0xa8) ) */
-			/*printf ( "!! note value : %x  (beside ptk 3 octaves limit)\n" , note ); */
 
 			if (note != 0xa8) {
 				tdata[i][j * 4] |=
@@ -139,7 +121,7 @@ static int depack_kris (FILE *in, FILE *out)
 		}
 	}
 
-	for (i = 0; i <= Max; i++) {
+	for (i = 0; i <= max; i++) {
 		bzero (tmp, 1025);
 		for (j = 0; j < 64; j++) {
 			tmp[j * 16] = tdata[taddr[i][0] / 256][j * 4];
@@ -166,10 +148,7 @@ static int depack_kris (FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	sdata = (uint8 *)malloc(ssize);
-	fread(sdata, ssize, 1, in);
-	fwrite(sdata, ssize, 1, out);
-	free(sdata);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

@@ -4,7 +4,7 @@
  *
  * Converts NoisePacked MODs back to ptk
  *
- * $Id: np2.c,v 1.4 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: np2.c,v 1.5 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -24,17 +24,17 @@ struct pw_format pw_np2 = {
 
 static int depack_np2(FILE *in, FILE *out)
 {
-	uint8 *tmp;
+	uint8 tmp[1024];
 	uint8 c1, c2, c3, c4;
 	uint8 npos;
 	uint8 nsmp;
 	uint8 ptable[128];
 	uint8 npat;
-	int max_addr = 0;
+	int max_addr;
 	int size, ssize = 0;
 	int tsize;
 	int trk_addr[128][4];
-	int i = 0, j = 0, k;
+	int i, j, k;
 	int trk_start;
 
 	bzero(ptable, 128);
@@ -44,8 +44,7 @@ static int depack_np2(FILE *in, FILE *out)
 	c2 = read8(in);
 	nsmp = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
 
-	for (i = 0; i < 20; i++)	/* write title */
-		write8(out, 0);
+	pw_write_zero(out, 20);		/* write title */
 
 	read8(in);
 	npos = read8(in) / 2;		/* read size of pattern list */
@@ -53,11 +52,9 @@ static int depack_np2(FILE *in, FILE *out)
 	tsize = read16b(in);		/* read track data size */
 
 	/* read sample descriptions */
-	tmp = (uint8 *)malloc(22);
-	bzero(tmp, 22);
 	for (i = 0; i < nsmp; i++) {
 		read32b(in);			/* bypass 4 unknown bytes */
-		fwrite(tmp, 22, 1, out);		/* sample name */
+		pw_write_zero(out, 22);		/* sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, read8(in));			/* finetune */
@@ -67,24 +64,18 @@ static int depack_np2(FILE *in, FILE *out)
 		write16b(out, read16b(in));		/* loop start */
 		write16b(out, size);			/* write loop size */
 	}
-	free (tmp);
 
 	/* fill up to 31 samples */
-	tmp = (uint8 *)malloc(30);
 	bzero(tmp, 30);
 	tmp[29] = 0x01;
 	for (; i != 31; i++)
 		fwrite(tmp, 30, 1, out);
-	free(tmp);
 
 	write8(out, npos);		/* write size of pattern list */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
-	/* bypass 2 bytes ... seems always the same as in $02 */
-	fseek(in, 2, SEEK_CUR);
-
-	/* bypass 2 other bytes which meaning is beside me */
-	fseek (in, 2, SEEK_CUR);
+	fseek(in, 2, SEEK_CUR);		/* always $02? */
+	fseek(in, 2, SEEK_CUR);		/* unknown */
 
 	/* read pattern table */
 	for (npat = i = 0; i < npos; i++) {
@@ -94,14 +85,11 @@ static int depack_np2(FILE *in, FILE *out)
 	}
 	npat++;
 
-	/* write pattern table */
-	fwrite(ptable, 128, 1, out);
-
-	/* write ptk's ID */
-	write32b(out, PW_MOD_MAGIC);
+	fwrite(ptable, 128, 1, out);	/* write pattern table */
+	write32b(out, PW_MOD_MAGIC);	/* write ptk ID */
 
 	/* read tracks addresses per pattern */
-	for (i = 0; i < npat; i++) {
+	for (max_addr = i = 0; i < npat; i++) {
 		trk_addr[i][0] = read16b(in);
 		if (trk_addr[i][0] > max_addr)
 			max_addr = trk_addr[i][0];
@@ -118,7 +106,6 @@ static int depack_np2(FILE *in, FILE *out)
 	trk_start = ftell (in);
 
 	/* the track data now ... */
-	tmp = (uint8 *)malloc(1024);
 	for (i = 0; i < npat; i++) {
 		bzero(tmp, 1024);
 		for (j = 0; j < 4; j++) {
@@ -170,14 +157,10 @@ static int depack_np2(FILE *in, FILE *out)
 		}
 		fwrite (tmp, 1024, 1, out);
 	}
-	free (tmp);
 
 	/* sample data */
 	fseek(in, max_addr + 192 + trk_start, SEEK_SET);
-	tmp = (uint8 *)malloc(ssize);
-	fread(tmp, ssize, 1, in);
-	fwrite(tmp, ssize, 1, out);
-	free(tmp);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

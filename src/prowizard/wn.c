@@ -4,7 +4,7 @@
  *
  * Converts MODs converted with Wanton packer
  *
- * $Id: wn.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: wn.c,v 1.4 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -31,11 +31,9 @@ static int depack_wn (FILE *in, FILE * out)
 	uint tmp[1024];
 	int ssize = 0;
 	int i, j;
-	uint8 *p;
 
 	/* read header */
-	fread(tmp, 950, 1, in);
-	fwrite(tmp, 950, 1, out);
+	pw_move_data(out, in, 950);
 
 	/* get whole sample size */
 	for (i = 0; i < 31; i++) {
@@ -77,10 +75,7 @@ static int depack_wn (FILE *in, FILE * out)
 	}
 
 	/* sample data */
-	p = malloc(ssize);
-	fread(p, ssize, 1, in);
-	fwrite(p, ssize, 1, out);
-	free(p);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

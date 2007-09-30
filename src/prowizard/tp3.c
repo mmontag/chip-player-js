@@ -1,10 +1,10 @@
 /*
- *   TrackerPacker_v3.c   Copyright (C) 1998 Asle / ReDoX
- *                        Copyright (C) 2007 Claudio Matsuoka
+ * TrackerPacker_v3.c   Copyright (C) 1998 Asle / ReDoX
+ *                      Copyright (C) 2007 Claudio Matsuoka
  *
  * Converts tp3 packed MODs back to PTK MODs
  *
- * $Id: tp3.c,v 1.7 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: tp3.c,v 1.8 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -29,7 +29,7 @@ static int depack_tp3(FILE *in, FILE *out)
 	uint8 c1, c2, c3, c4;
 	uint8 pnum[128];
 	uint8 pdata[1024];
-	uint8 *tmp;
+	uint8 tmp[50];
 	uint8 note, ins, fxt, fxp;
 	uint8 npat, nsmp;
 	uint8 len;
@@ -38,22 +38,16 @@ static int depack_tp3(FILE *in, FILE *out)
 	int pat_ofs = 999999;
 	int size, ssize = 0;
 	int max_trk_ofs = 0;
-	uint8 *buf;
 
 	bzero(trk_ofs, 128 * 4 * 4);
 	bzero(pnum, 128);
 
-	/* title */
 	fseek(in, 8, SEEK_CUR);
-	for (i = 0; i < 20; i++)
-		write8(out, read8(in));
-
-	/* number of sample */
-	nsmp = read16b(in) / 8;
+	pw_move_data(out, in, 20);		/* title */
+	nsmp = read16b(in) / 8;			/* number of sample */
 
 	for (i = 0; i < nsmp; i++) {
-		for (k = 0; k < 22; k++)	/*sample name */
-			write8(out, 0);
+		pw_write_zero(out, 22);		/*sample name */
 
 		c3 = read8(in);			/* read finetune */
 		c4 = read8(in);			/* read volume */
@@ -68,7 +62,6 @@ static int depack_tp3(FILE *in, FILE *out)
 		write16b(out, read16b(in));	/* loop size */
 	}
 
-	tmp = malloc(30);
 	bzero(tmp, 30);
 	tmp[29] = 0x01;
 
@@ -193,10 +186,7 @@ static int depack_tp3(FILE *in, FILE *out)
 		max_trk_ofs += 1;
 
 	fseek(in, max_trk_ofs, SEEK_SET);
-	buf = malloc(ssize);
-	fread(buf, 1, ssize, in);
-	fwrite(buf, 1, ssize, out);
-	free(buf);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

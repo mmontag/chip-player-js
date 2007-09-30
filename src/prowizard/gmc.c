@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Game Music Creator format and saves in ptk.
  *
- * $Id: gmc.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: gmc.c,v 1.7 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -24,7 +24,7 @@ struct pw_format pw_gmc = {
 
 static int depack_GMC(FILE *in, FILE *out)
 {
-	uint8 *tmp;
+	uint8 tmp[1024];
 	uint8 ptable[128];
 	uint8 max;
 	uint8 PatPos;
@@ -34,31 +34,23 @@ static int depack_GMC(FILE *in, FILE *out)
 
 	bzero(ptable, 128);
 
-	/* title */
-	for (i = 0; i < 20; i++)
-		write8(out, 0);
+	pw_write_zero(out, 20);			/* title */
 
-	/* read and write whole header */
-	/*printf ( "Converting sample headers ... " ); */
 	for (i = 0; i < 15; i++) {
-		for (j = 0; j < 22; j++)	/* write name */
-			write8(out, 0);
+		pw_write_zero(out, 22);		/* name */
 		read32b(in);			/* bypass 4 address bytes */
 		write16b(out, len = read16b(in));	/* size */
 		ssize += len * 2;
 		read8(in);
 		write8(out, 0);			/* finetune */
 		write8(out, read8(in));		/* volume */
-
 		read32b(in);			/* bypass 4 address bytes */
 #if 1
 		/* loop size */
 		looplen = read16b(in);
 		write16b(out, looplen > 2 ? len - looplen : 0);
 		write16b(out, looplen);
-
 		read16b(in);
-
 #else
 		/* loop size */
 		fread(&c1, 1, 1, in);
@@ -95,12 +87,10 @@ static int depack_GMC(FILE *in, FILE *out)
 #endif
 	}
 
-	tmp = (uint8 *)malloc(30);
 	bzero(tmp, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
 		fwrite(tmp, 30, 1, out);
-	free(tmp);
 
 	fseek(in, 0xf3, 0);
 	write8(out, PatPos = read8(in));	/* pattern list size */
@@ -122,8 +112,6 @@ static int depack_GMC(FILE *in, FILE *out)
 	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
-	/*printf ( "Converting pattern datas " ); */
-	tmp = (uint8 *) malloc(1024);
 	fseek(in, 444, SEEK_SET);
 	for (i = 0; i <= max; i++) {
 		bzero(tmp, 1024);
@@ -153,17 +141,10 @@ static int depack_GMC(FILE *in, FILE *out)
 			}
 		}
 		fwrite(tmp, 1024, 1, out);
-		/*printf ( "." ); */
-		/*fflush ( stdout ); */
 	}
-	free(tmp);
 
 	/* sample data */
-	tmp = (uint8 *)malloc(ssize);
-	bzero(tmp, ssize);
-	fread(tmp, ssize, 1, in);
-	fwrite(tmp, ssize, 1, out);
-	free(tmp);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

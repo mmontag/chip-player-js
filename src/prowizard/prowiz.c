@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.22 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.23 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -22,20 +22,49 @@ static int check (unsigned char *, int);
 static LIST_HEAD(pw_format_list);
 
 
-int pw_register (struct pw_format *f)
+int pw_register(struct pw_format *f)
 {
 	list_add_tail(&f->list, &pw_format_list);
 	register_format(f->id, f->name);
 	return 0;
 }
 
-int pw_unregister (struct pw_format *f)
+int pw_unregister(struct pw_format *f)
 {
 	list_del (&f->list);
 	return 0;
 }
 
-int pw_init ()
+int pw_move_data(FILE *out, FILE *in, int len)
+{
+	uint8 buf[1024];
+	int l;
+
+	do {
+		l = fread(buf, 1, len > 1024 ? 1024 : len, in);
+		fwrite(buf, 1, l, out);
+		len -= l;
+	} while (l > 0 && len > 0);
+
+	return 0;
+}
+
+int pw_write_zero(FILE *out, int len)
+{
+	uint8 buf[1024];
+	int l;
+	
+	do {
+		l = len > 1024 ? 1024 : len;
+		memset(buf, 0, l);
+		fwrite(buf, 1, l, out);
+		len -= l;
+	} while (l > 0 && len > 0);
+
+	return 0;
+}
+
+int pw_init()
 {
 	/* With signature */
 	pw_register (&pw_ac1d);
@@ -217,3 +246,4 @@ int decrunch_pw(FILE *f1, FILE *f2)
 
 	return 0;
 }
+

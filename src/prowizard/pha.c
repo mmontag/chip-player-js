@@ -5,7 +5,7 @@
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.8 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: pha.c,v 1.9 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -31,7 +31,6 @@ static int depack_pha(FILE *in, FILE *out)
 	uint8 nop;
 	uint8 *pdata;
 	uint8 *pat;
-	uint8 *sdata;
 	uint8 onote[4][4];
 	uint8 note, ins, fxt, fxp;
 	uint8 npat = 0x00;
@@ -54,20 +53,17 @@ static int depack_pha(FILE *in, FILE *out)
 	bzero(onote, 4 * 4);
 	bzero(ocpt, 4 * 2);
 
-	for (i = 0; i < 20; i++)		/* title */
-		write8(out, 0);
+	pw_write_zero(out, 20);			/* title */
 
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)	/*sample name */
-			write8(out, 0);
-
+		pw_write_zero(out, 22);			/*sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		read8(in);
-		write8(out, 0);			/* finetune byte */
-		write8(out, read8(in));		/* volume */
-		write16b(out, read16b(in));	/* loop start */
-		write16b(out, read16b(in));	/* loop size */
+		write8(out, 0);				/* finetune byte */
+		write8(out, read8(in));			/* volume */
+		write16b(out, read16b(in));		/* loop start */
+		write16b(out, read16b(in));		/* loop size */
 
 		read32b(in);
 
@@ -90,7 +86,7 @@ static int depack_pha(FILE *in, FILE *out)
 	tmp_ptr = 0;
 	for (i = 0; i < 128; i++) {
 		if (i == 0) {
-			pnum[0] = 0x00;
+			pnum[0] = 0;
 			tmp_ptr++;
 			continue;
 		}
@@ -255,10 +251,7 @@ restart:
 
 	/* Sample data */
 	fseek (in, sdata_Address, SEEK_SET);
-	sdata = (uint8 *) malloc (ssize);
-	fread(sdata, ssize, 1, in);
-	fwrite(sdata, ssize, 1, out);
-	free(sdata);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

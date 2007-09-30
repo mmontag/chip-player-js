@@ -4,7 +4,7 @@
  *
  * Convert Unic Tracker 2 MODs to Protracker
  *
- * $Id: unic2.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: unic2.c,v 1.7 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -36,16 +36,11 @@ static int depack_unic2(FILE *in, FILE *out)
 	uint8 loop_status = OFF;	/* standard /2 */
 	int i, j, k, l;
 	int ssize = 0;
-	uint8 *p;
 
-	/* title */
-	for (i = 0; i < 20; i++)
-		write8(out, 0);
+	pw_write_zero(out, 20);		/* title */
 
 	for (i = 0; i < 31; i++) {
-		/* sample name */
-		for (j = 0; j < 20; j++)
-			write8(out, read8(in));
+		pw_move_data(out, in, 20);	/* sample name */
 		write8(out, 0);
 		write8(out, 0);
 
@@ -126,10 +121,7 @@ static int depack_unic2(FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	p = malloc(ssize);
-	fread(p, ssize, 1, in);
-	fwrite(p, ssize, 1, out);
-	free(p);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

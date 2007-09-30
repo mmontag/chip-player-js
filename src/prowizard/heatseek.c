@@ -4,9 +4,9 @@
  *
  * Converts back to ptk Heatseeker packed MODs
  *
- * note: There's a good job ! .. gosh !.
+ * Asle's note: There's a good job ! .. gosh !.
  *
- * $Id: heatseek.c,v 1.5 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: heatseek.c,v 1.6 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -30,9 +30,7 @@ static int depack_crb (FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 ptable[128];
-	uint8 pat_pos;
-	uint8 pat_max = 0;
-	uint8 *tmp;
+	uint8 pat_pos, pat_max;
 	uint8 pat[1024];
 	int taddr[512];
 	int i, j, k, l, m;
@@ -41,29 +39,25 @@ static int depack_crb (FILE *in, FILE *out)
 	bzero(ptable, 128);
 	bzero(taddr, 512 * 4);
 
-	/* write title */
-	for (i = 0; i < 20; i++)
-		write8(out, 0);
+	pw_write_zero(out, 20);				/* write title */
 
 	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)		/*sample name */
-			write8(out, 0);
-
+		pw_write_zero(out, 22);			/*sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, read8(in));			/* finetune */
 		write8(out, read8(in));			/* volume */
 		write16b(out, read16b(in));		/* loop start */
 		size = read16b(in);			/* loop size */
-		write16b(out, size ? size : 0x0001);
+		write16b(out, size ? size : 1);
 	}
 
 	write8(out, pat_pos = read8(in));		/* pat table length */
 	write8(out, read8(in)); 			/* NoiseTracker byte */
 
 	/* read and write pattern list and get highest patt number */
-	for (i = 0; i < 128; i++) {
+	for (pat_max = i = 0; i < 128; i++) {
 		write8(out, c1 = read8(in));
 		if (c1 > pat_max)
 			pat_max = c1;
@@ -126,10 +120,7 @@ static int depack_crb (FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	tmp = (uint8 *)malloc(ssize);
-	fread(tmp, ssize, 1, in);
-	fwrite(tmp, ssize, 1, out);
-	free(tmp);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

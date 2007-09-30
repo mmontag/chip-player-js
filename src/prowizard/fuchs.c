@@ -4,13 +4,12 @@
  *
  * Depacks Fuchs Tracker modules
  *
- * $Id: fuchs.c,v 1.4 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: fuchs.c,v 1.5 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <string.h>
 #include <stdlib.h>
 #include "prowiz.h"
-
 
 static int test_fuchs (uint8 *, int);
 static int depack_fuchs (FILE *, FILE *);
@@ -37,19 +36,10 @@ static int depack_fuchs(FILE *in, FILE *out)
 	bzero(SampleSizes, 16 * 4);
 	bzero(LoopStart, 16 * 4);
 
-	/* write ptk header */
-	tmp = (uint8 *) malloc (1080);
-	bzero(tmp, 1080);
-	fwrite(tmp, 1080, 1, out);
-	free(tmp);
-
-	/* read/write title */
+	pw_write_zero(out, 1080);		/* write ptk header */
 	fseek(out, 0, SEEK_SET);
-	for (i = 0; i < 10; i++)
-		write8(out, read8(in));
-
-	/* read all sample data size */
-	ssize = read32b(in);
+	pw_move_data(out, in, 10);		/* read/write title */
+	ssize = read32b(in);			/* read all sample data size */
 
 	/* read/write sample sizes */
 	for (i = 0; i < 16; i++) {
@@ -80,7 +70,6 @@ static int depack_fuchs(FILE *in, FILE *out)
 			write16b(out, j / 2);
 	}
 
-
 	/* fill replens up to 31st sample wiz $0001 */
 	for (i = 16; i < 31; i++) {
 		fseek(out, 48 + i * 30, SEEK_SET);
@@ -100,8 +89,7 @@ static int depack_fuchs(FILE *in, FILE *out)
 	write8(out, 0x7f);
 
 	/* read/write pattern list */
-	pmax = 0;
-	for (i = 0; i < 40; i++) {
+	for (pmax = i = 0; i < 40; i++) {
 		fseek(in, 1, SEEK_CUR);
 		write8(out, c1 = read8(in));
 		if (c1 > pmax)
@@ -157,7 +145,6 @@ static int depack_fuchs(FILE *in, FILE *out)
 				tmp[i + 3] = (c1 - 36);
 				continue;
 			}
-/*      printf ( "error:vol arg:%x (at:%ld)\n" , c1 , i+200 );*/
 		}
 	}
 
@@ -168,12 +155,8 @@ static int depack_fuchs(FILE *in, FILE *out)
 	/* read/write sample data */
 	fseek (in, 4, SEEK_CUR);	/* bypass "INST" Id */
 	for (i = 0; i < 16; i++) {
-		if (SampleSizes[i] != 0) {
-			tmp = (uint8 *)malloc(SampleSizes[i]);
-			fread(tmp, SampleSizes[i], 1, in);
-			fwrite(tmp, SampleSizes[i], 1, out);
-			free (tmp);
-		}
+		if (SampleSizes[i] != 0)
+			pw_move_data(out, in, SampleSizes[i]);
 	}
 
 	return 0;

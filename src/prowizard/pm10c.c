@@ -6,7 +6,7 @@
  *
  * claudio's note: Now this one can be *heavily* optimized...
  *
- * $Id: pm10c.c,v 1.5 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: pm10c.c,v 1.6 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -41,12 +41,11 @@ static int depack_p10c(FILE *in, FILE *out)
 	short pptr[64][256];
 	uint8 NOP = 0x00;	/* number of pattern */
 	uint8 *reftab;
-	uint8 *sdata;
 	uint8 pat[128][1024];
 	int i, j, k, l;
 	int size, ssize = 0;
-	int psize = 0l;
-	int SDAV = 0l;
+	int psize;
+	int SDAV;
 	uint8 FLAG = OFF;
 	uint8 fin[31];
 	uint8 oldins[4];
@@ -64,15 +63,13 @@ static int depack_p10c(FILE *in, FILE *out)
 	for (i = 0; i < 128; i++)
 		paddr2[i] = 9999L;
 
-	for (i = 0; i < 20; i++)			/* title */
-		write8(out, 0);
+	pw_write_zero(out, 20);				/* title */
 
 	/* bypass replaycode routine */
 	fseek(in, 4460, SEEK_SET);
 
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)		/*sample name */
-			write8(out, 0);
+		pw_write_zero(out, 22);			/*sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, fin[i] = read8(in));	/* fin */
@@ -339,14 +336,7 @@ restart:
 	SDAV = read32b(in);
 	fseek(in, 4456 + SDAV, SEEK_SET);
 
-	/* Now, it's sample data ... though, VERY quickly handled :) */
-	/* thx GCC ! (GNU C COMPILER). */
-
-	/*printf ( "Total sample size : %ld\n" , ssize ); */
-	sdata = (uint8 *)malloc(ssize);
-	fread(sdata, ssize, 1, in);
-	fwrite(sdata, ssize, 1, out);
-	free(sdata);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

@@ -4,7 +4,7 @@
  *
  * Converts ProRunner v2 packed MODs back to Protracker
  *
- * $Id: prun2.c,v 1.7 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.8 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -34,20 +34,16 @@ static int depack_pru2(FILE *in, FILE *out)
 	uint8 v[4][4];
 	int size, ssize = 0;
 	int i, j;
-	uint8 *buf;
 
 	bzero(header, 2048);
 	bzero(ptable, 128);
 
-	for (i = 0; i < 20; i++)			/* title */
-		write8(out, 0);
+	pw_write_zero(out, 20);				/* title */
 
 	fseek(in, 8, SEEK_SET);
 
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)		/*sample name */
-			write8(out, 0);
-
+		pw_write_zero(out, 22);			/*sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, read8(in));			/* finetune */
@@ -123,10 +119,7 @@ static int depack_pru2(FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	buf = malloc(ssize);
-	fread(buf, ssize, 1, in);
-	fwrite(buf, ssize, 1, out);
-	free(buf);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

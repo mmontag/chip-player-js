@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
  *
- * $Id: ksm.c,v 1.8 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: ksm.c,v 1.9 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -29,13 +29,13 @@ struct pw_format pw_ksm = {
 
 static int depack_ksm (FILE *in, FILE *out)
 {
-	uint8 *tmp;
+	uint8 tmp[1024];
 	uint8 c1, c5;
 	uint8 plist[128];
 	uint8 trknum[128][4];
 	uint8 real_tnum[128][4];
 	uint8 tdata[4][192];
-	uint8 Max = 0x00;
+	uint8 Max;
 	uint8 PatPos;
 	uint8 Status = ON;
 	int ssize = 0;
@@ -46,52 +46,35 @@ static int depack_ksm (FILE *in, FILE *out)
 	bzero(real_tnum, 128 * 4);
 
 	/* title */
-	tmp = (uint8 *)malloc(20);
-	bzero(tmp, 20);
-	fseek(in, 2, 0);
-	fread(tmp, 13, 1, in);
-	fwrite(tmp, 20, 1, out);
-	free(tmp);
+	fseek(in, 2, SEEK_SET);
+	pw_move_data(out, in, 13);
+	pw_write_zero(out, 7);
 
 	/* read and write whole header */
 	/*printf ( "Converting sample headers ... " ); */
-	fseek(in, 32, 0);
-	tmp = (uint8 *)malloc(22);
-	bzero(tmp, 22);
+	fseek(in, 32, SEEK_SET);
 	for (i = 0; i < 15; i++) {
-		/* write name */
-		fwrite(tmp, 22, 1, out);
-		/* bypass 16 unknown bytes and 4 address bytes */
-		fseek(in, 20, 1);
-		/* size */
-		write16b(out, (k = read16b(in)) / 2);
+		pw_write_zero(out, 22);		/* write name */
+		fseek(in, 20, SEEK_CUR);	/* 16 unknown/4 addr bytes */
+		write16b(out, (k = read16b(in)) / 2); /* size */
 		ssize += k;
-
 		write8(out, 0);			/* finetune */
 		write8(out, read8(in));		/* volume */
 		read8(in);			/* bypass 1 unknown byte */
-
-		/* loop start */
-		write16b(out, (j = read16b(in)) / 2);
+		write16b(out, (j = read16b(in)) / 2);	/* loop start */
 		j = k - j;
-
-		/* write loop size */
-		write16b(out, j != k ? j / 2 : 0x0001);
-
-		fseek(in, 6, 1);	/* bypass 6 unknown bytes */
+		write16b(out, j != k ? j / 2 : 1);	/* loop size */
+		fseek(in, 6, SEEK_CUR);		/* bypass 6 unknown bytes */
 	}
-	free(tmp);
-	tmp = (uint8 *) malloc (30);
+
 	bzero (tmp, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
 		fwrite(tmp, 30, 1, out);
-	free (tmp);
 
 	/* pattern list */
-	/*printf ( "creating the pattern list ... " ); */
 	fseek (in, 512, 0);
-	for (PatPos = 0x00; PatPos < 128; PatPos++) {
+	for (Max = PatPos = 0; PatPos < 128; PatPos++) {
 		fread(&trknum[PatPos][0], 1, 1, in);
 		fread(&trknum[PatPos][1], 1, 1, in);
 		fread(&trknum[PatPos][2], 1, 1, in);
@@ -173,63 +156,56 @@ static int depack_ksm (FILE *in, FILE *out)
 	write32b(out, PW_MOD_MAGIC);	/* write ID */
 
 	/* pattern data */
-	/*printf ( "Converting pattern datas " ); */
-	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i < c5; i++) {
 		bzero(tmp, 1024);
 		bzero(tdata, 192 * 4);
-		fseek(in, 1536 + 192 * real_tnum[i][0], 0);
+		fseek(in, 1536 + 192 * real_tnum[i][0], SEEK_SET);
 		fread(tdata[0], 192, 1, in);
-		fseek(in, 1536 + 192 * real_tnum[i][1], 0);
+		fseek(in, 1536 + 192 * real_tnum[i][1], SEEK_SET);
 		fread(tdata[1], 192, 1, in);
-		fseek(in, 1536 + 192 * real_tnum[i][2], 0);
+		fseek(in, 1536 + 192 * real_tnum[i][2], SEEK_SET);
 		fread(tdata[2], 192, 1, in);
-		fseek(in, 1536 + 192 * real_tnum[i][3], 0);
+		fseek(in, 1536 + 192 * real_tnum[i][3], SEEK_SET);
 		fread(tdata[3], 192, 1, in);
 
 		for (j = 0; j < 64; j++) {
-			tmp[j * 16] = ptk_table[tdata[0][j * 3]][0];
-			tmp[j * 16 + 1] = ptk_table[tdata[0][j * 3]][1];
-			if ((tdata[0][j * 3 + 1] & 0x0f) == 0x0D)
+			int x = j * 16;
+
+			tmp[x] = ptk_table[tdata[0][j * 3]][0];
+			tmp[x + 1] = ptk_table[tdata[0][j * 3]][1];
+			if ((tdata[0][j * 3 + 1] & 0x0f) == 0x0d)
 				tdata[0][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 2] = tdata[0][j * 3 + 1];
-			tmp[j * 16 + 3] = tdata[0][j * 3 + 2];
+			tmp[x + 2] = tdata[0][j * 3 + 1];
+			tmp[x + 3] = tdata[0][j * 3 + 2];
 
-			tmp[j * 16 + 4] = ptk_table[tdata[1][j * 3]][0];
-			tmp[j * 16 + 5] = ptk_table[tdata[1][j * 3]][1];
-			if ((tdata[1][j * 3 + 1] & 0x0f) == 0x0D)
+			tmp[x + 4] = ptk_table[tdata[1][j * 3]][0];
+			tmp[x + 5] = ptk_table[tdata[1][j * 3]][1];
+			if ((tdata[1][j * 3 + 1] & 0x0f) == 0x0d)
 				tdata[1][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 6] = tdata[1][j * 3 + 1];
-			tmp[j * 16 + 7] = tdata[1][j * 3 + 2];
+			tmp[x + 6] = tdata[1][j * 3 + 1];
+			tmp[x + 7] = tdata[1][j * 3 + 2];
 
-			tmp[j * 16 + 8] = ptk_table[tdata[2][j * 3]][0];
-			tmp[j * 16 + 9] = ptk_table[tdata[2][j * 3]][1];
-			if ((tdata[2][j * 3 + 1] & 0x0f) == 0x0D)
+			tmp[x + 8] = ptk_table[tdata[2][j * 3]][0];
+			tmp[x + 9] = ptk_table[tdata[2][j * 3]][1];
+			if ((tdata[2][j * 3 + 1] & 0x0f) == 0x0d)
 				tdata[2][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 10] = tdata[2][j * 3 + 1];
-			tmp[j * 16 + 11] = tdata[2][j * 3 + 2];
+			tmp[x + 10] = tdata[2][j * 3 + 1];
+			tmp[x + 11] = tdata[2][j * 3 + 2];
 
-			tmp[j * 16 + 12] =
-				ptk_table[tdata[3][j * 3]][0];
-			tmp[j * 16 + 13] =
-				ptk_table[tdata[3][j * 3]][1];
-			if ((tdata[3][j * 3 + 1] & 0x0f) == 0x0D)
+			tmp[x + 12] = ptk_table[tdata[3][j * 3]][0];
+			tmp[x + 13] = ptk_table[tdata[3][j * 3]][1];
+			if ((tdata[3][j * 3 + 1] & 0x0f) == 0x0d)
 				tdata[3][j * 3 + 1] -= 0x03;
-			tmp[j * 16 + 14] = tdata[3][j * 3 + 1];
-			tmp[j * 16 + 15] = tdata[3][j * 3 + 2];
+			tmp[x + 14] = tdata[3][j * 3 + 1];
+			tmp[x + 15] = tdata[3][j * 3 + 2];
 		}
 
 		fwrite(tmp, 1024, 1, out);
 	}
-	free(tmp);
 
 	/* sample data */
-	tmp = (uint8 *)malloc(ssize);
-	bzero(tmp, ssize);
-	fseek(in, 1536 + (192 * (Max + 1)), 0);
-	fread(tmp, ssize, 1, in);
-	fwrite(tmp, ssize, 1, out);
-	free (tmp);
+	fseek(in, 1536 + (192 * (Max + 1)), SEEK_SET);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

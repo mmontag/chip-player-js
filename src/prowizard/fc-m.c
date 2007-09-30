@@ -4,7 +4,7 @@
  *
  * Converts back to ptk FC-M packed MODs
  *
- * $Id: fc-m.c,v 1.5 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: fc-m.c,v 1.6 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -29,28 +29,20 @@ static int depack_fcm(FILE *in, FILE *out)
 	uint8 ptable[128];
 	uint8 pat_pos;
 	uint8 pat_max;
-	uint8 *tmp;
-	uint8 pat_data[1024];
-	int i = 0, j = 0;
+	int i;
 	int size, ssize = 0;
 
-	bzero (ptable, 128);
+	bzero(ptable, 128);
 
-	read32b(in);	/* bypass "FC-M" ID */
-	read16b(in);	/* bypass what looks like the version number .. */
-	read32b(in);	/* bypass "NAME" chunk */
-
-	/* read and write title */
-	for (i = 0; i < 20; i++)
-		write8(out, read8(in));
-
-	read32b(in);	/* bypass "INST" chunk */
+	read32b(in);				/* bypass "FC-M" ID */
+	read16b(in);				/* version number? */
+	read32b(in);				/* bypass "NAME" chunk */
+	pw_move_data(out, in, 20);		/* read and write title */
+	read32b(in);				/* bypass "INST" chunk */
 
 	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)	/*sample name */
-			write8(out, 0);
-
+		pw_write_zero(out, 22);		/*sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, read8(in));		/* finetune */
@@ -61,18 +53,11 @@ static int depack_fcm(FILE *in, FILE *out)
 			size = 1;
 		write16b(out, size);
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	read32b(in);	/* bypass "LONG" chunk */
-
-	/* read and write pattern table lenght */
-	write8(out, pat_pos = read8(in));
-	/*printf ( "Size of pattern list : %d\n" , pat_pos ); */
-
-	/* read and write NoiseTracker byte */
-	write8(out, read8(in));
-
-	read32b(in);	/* bypass "PATT" chunk */
+	read32b(in);				/* bypass "LONG" chunk */
+	write8(out, pat_pos = read8(in));	/* pattern table lenght */
+	write8(out, read8(in));			/* NoiseTracker byte */
+	read32b(in);				/* bypass "PATT" chunk */
 
 	/* read and write pattern list and get highest patt number */
 	for (pat_max = i = 0; i < pat_pos; i++) {
@@ -82,29 +67,15 @@ static int depack_fcm(FILE *in, FILE *out)
 	}
 	for (; i < 128; i++)
 		write8(out, 0);
-	/*printf ( "Number of pattern : %d\n" , pat_max + 1 ); */
 
-	/* write ptk's ID */
-	write32b(out, PW_MOD_MAGIC);
+	write32b(out, PW_MOD_MAGIC);		/* write ptk ID */
+	read32b(in);				/* bypass "SONG" chunk */
 
-	read32b(in);	/* bypass "SONG" chunk */
+	for (i = 0; i <= pat_max; i++)		/* pattern data */
+		pw_move_data(out, in, 1024);
 
-	/* pattern data */
-	for (i = 0; i <= pat_max; i++) {
-		fread(pat_data, 1024, 1, in);
-		fwrite(pat_data, 1024, 1, out);
-		/*printf ( "+" ); */
-	}
-	/*printf ( "\n" ); */
-
-
-	read32b(in);	/* bypass "SAMP" chunk */
-
-	/* sample data */
-	tmp = (uint8 *)malloc(ssize);
-	fread(tmp, ssize, 1, in);
-	fwrite(tmp, ssize, 1, out);
-	free(tmp);
+	read32b(in);				/* bypass "SAMP" chunk */
+	pw_move_data(out, in, ssize);		/* sample data */
 
 	return 0;
 }

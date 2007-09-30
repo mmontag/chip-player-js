@@ -4,7 +4,7 @@
  *
  * Converts MODs packed with Prorunner v1.0
  *
- * $Id: prun1.c,v 1.4 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: prun1.c,v 1.5 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -27,7 +27,6 @@ struct pw_format pw_pru1 = {
 static int depack_pru1 (FILE *in, FILE *out)
 {
 	uint8 header[2048];
-	uint8 *tmp;
 	uint8 c1, c2, c3, c4;
 	uint8 npat, max;
 	uint8 ptable[128];
@@ -88,11 +87,7 @@ static int depack_pru1 (FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	tmp = (uint8 *)malloc(ssize);
-	bzero(tmp, ssize);
-	fread(tmp, ssize, 1, in);
-	fwrite(tmp, ssize, 1, out);
-	free(tmp);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

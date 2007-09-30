@@ -4,7 +4,7 @@
  *
  * Converts DI packed MODs back to PTK MODs
  *
- * $Id: di.c,v 1.4 2007-09-30 00:08:18 cmatsuoka Exp $
+ * $Id: di.c,v 1.5 2007-09-30 11:22:17 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -23,28 +23,25 @@ struct pw_format pw_di = {
 };
 
 
-static int depack_di (FILE * in, FILE * out)
+static int depack_di(FILE * in, FILE * out)
 {
 	uint8 c1, c2, c3;
 	uint8 note, ins, fxt, fxp;
 	uint8 ptk_tab[5];
-	uint8 npat, max;
+	uint8 nins, npat, max;
 	uint8 ptable[128];
-	uint8 *t;
-	int i, k;
 	uint16 paddr[128];
-	short nins = 0;
+	uint8 tmp[50];
+	int i, k;
 	int seq_offs, pat_offs, smp_offs;
-	int tmp;
+	int pos;
 	int size, ssize = 0;
 
 	bzero(ptable, 128);
 	bzero(ptk_tab, 5);
 	bzero(paddr, 128);
 
-	/* title */
-	for (k = 0; k < 20; k++)
-		write8(out, 0);
+	pw_write_zero(out, 20);			/* title */
 
 	nins = read16b(in);
 	seq_offs = read32b(in);
@@ -52,9 +49,7 @@ static int depack_di (FILE * in, FILE * out)
 	smp_offs = read32b(in);
 
 	for (i = 0; i < nins; i++) {
-		for (k = 0; k < 22; k++)
-			write8(out, 0);
-
+		pw_write_zero(out, 22);			/* name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, read8(in));			/* finetune */
@@ -63,14 +58,11 @@ static int depack_di (FILE * in, FILE * out)
 		write16b(out, read16b(in));		/* loop size */
 	}
 
-	t = calloc(30, 1);
-	t[29] = 0x01;
+	tmp[29] = 0x01;
 	for (i = nins; i < 31; i++)
-		fwrite(t, 30, 1, out);
-	free(t);
+		fwrite(tmp, 30, 1, out);
 
-	tmp = ftell(in);
-
+	pos = ftell(in);
 	fseek (in, seq_offs, 0);
 
 	i = 0;
@@ -92,7 +84,7 @@ static int depack_di (FILE * in, FILE * out)
 
 	write32b(out, PW_MOD_MAGIC);
 
-	fseek(in, tmp, 0);
+	fseek(in, pos, 0);
 	for (i = 0; i <= max; i++)
 		paddr[i] = read16b(in);
 
@@ -138,11 +130,7 @@ static int depack_di (FILE * in, FILE * out)
 	}
 
 	fseek(in, smp_offs, 0);
-
-	t = (uint8 *)malloc(ssize);
-	fread(t, ssize, 1, in);
-	fwrite(t, ssize, 1, out);
-	free(t);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }

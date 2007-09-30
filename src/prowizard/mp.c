@@ -4,55 +4,54 @@
  *
  * Converts MP packed MODs back to PTK MODs
  *
- * $Id: mp.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: mp.c,v 1.7 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include "prowiz.h"
 
-static int depack_MP (FILE *, FILE *);
-static int test_MP_ID (uint8 *, int);
-static int test_MP_noID (uint8 *, int);
+#define MAGIC_TRK1	MAGIC4('T','R','K','1')
+
+
+static int depack_mp (FILE *, FILE *);
+static int test_mp_id (uint8 *, int);
+static int test_mp_noid (uint8 *, int);
 
 struct pw_format pw_mp_id = {
 	"MP",
 	"Module Protector",
 	0x00,
-	test_MP_ID,
-	depack_MP
+	test_mp_id,
+	depack_mp
 };
 
 struct pw_format pw_mp_noid = {
 	"MP_noid",
 	"Module Protector",
 	0x00,
-	test_MP_noID,
-	depack_MP
+	test_mp_noid,
+	depack_mp
 };
 
 
-static int depack_MP (FILE *in, FILE *out)
+static int depack_mp(FILE *in, FILE *out)
 {
 	uint8 c1;
 	uint8 ptable[128];
 	uint8 max;
-	uint8 *t;
-	int i, j;
+	int i;
 	int size, ssize = 0;
 
 	bzero(ptable, 128);
 
-	for (i = 0; i < 20; i++)			/* title */
-		write8(out, 0);
+	pw_write_zero(out, 20);				/* title */
 
-	if (read32b(in) != 0x54524B31)			/* TRK1 */
+	if (read32b(in) != MAGIC_TRK1)			/* TRK1 */
 		fseek(in, -4, SEEK_CUR);
 
 	for (i = 0; i < 31; i++) {
-		for (j = 0; j < 22; j++)		/*sample name */
-			write8(out, 0);
-
+		pw_write_zero(out, 22);			/* sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, read8(in));			/* finetune */
@@ -69,30 +68,21 @@ static int depack_MP (FILE *in, FILE *out)
 		if (c1 > max)
 			max = c1;
 	}
+	max++;
 
 	write32b(out, PW_MOD_MAGIC);		/* M.K. */
 
 	if (read32b(in) != 0)			/* bypass unknown empty bytes */
 		fseek (in, -4, SEEK_CUR);
 
-	/* pattern data */
-	t = (uint8 *)malloc((max + 1) * 1024);
-	bzero(t, (max + 1) * 1024);
-	fread(t, (max + 1) * 1024, 1, in);
-	fwrite(t, (max + 1) * 1024, 1, out);
-	free(t);
-
-	/* sample data */
-	t = (uint8 *)malloc(ssize);
-	fread(t, ssize, 1, in);
-	fwrite(t, ssize, 1, out);
-	free(t);
+	pw_move_data(out, in, 1024 * max);	/* pattern data */
+	pw_move_data(out, in, ssize);		/* sample data */
 
 	return 0;
 }
 
 
-static int test_MP_noID (uint8 *data, int s)
+static int test_mp_noid(uint8 *data, int s)
 {
 	int start, ssize;
 	int j, k, l, m, n;
@@ -192,13 +182,13 @@ static int test_MP_noID (uint8 *data, int s)
 }
 
 
-static int test_MP_ID (uint8 *data, int s)
+static int test_mp_id(uint8 *data, int s)
 {
 	int j, l, k;
 	int start = 0;
 
 	/* "TRK1" Module Protector */
-	if (readmem32b(data) != 0x54524B31)
+	if (readmem32b(data) != MAGIC_TRK1)
 		return -1;
 
 	/* test #1 */

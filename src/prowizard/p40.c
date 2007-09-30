@@ -4,12 +4,7 @@
  *
  * The Player 4.0a and 4.0b to Protracker.
  *
- * note: It's a REAL mess !. It's VERY badly coded, I know. Just dont forget
- *      it was mainly done to test the description I made of P40* format. I
- *      certainly wont dare to beat Gryzor on the ground :). His Prowiz IS
- *      the converter to use !!!.
- *
- * $Id: p40.c,v 1.6 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: p40.c,v 1.7 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -84,9 +79,7 @@ static int depack_p4x (FILE *in, FILE *out)
 	trktab_ofs = read32b(in);	/* read track table address */
 	smp_ofs = read32b(in);		/* read sample data address */
 
-	/* write title */
-	for (i = 0; i < 20; i++)
-		write8(out, 0);
+	pw_write_zero(out, 20);		/* write title */
 
 	/* sample headers stuff */
 	for (i = 0; i < nsmp; i++) {
@@ -106,8 +99,7 @@ static int depack_p4x (FILE *in, FILE *out)
 			ins.fine = read16b(in);	/* finetune */
 
 		/* writing now */
-		for (j = 0; j < 22; j++)	/* write sample name */
-			write8(out, 0);
+		pw_write_zero(out, 22);		/* sample name */
 		write16b(out, ins.size);
 		write8(out, ins.fine / 74);
 		write8(out, ins.vol);
@@ -124,7 +116,7 @@ static int depack_p4x (FILE *in, FILE *out)
 	write8(out, len);		/* write size of pattern list */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
-	fseek (in, trktab_ofs + 4, SEEK_SET);
+	fseek(in, trktab_ofs + 4, SEEK_SET);
 
 	for (c1 = 0; c1 < len; c1++)	/* write pattern list */
 		write8(out, c1);
@@ -138,7 +130,7 @@ static int depack_p4x (FILE *in, FILE *out)
 			track_addr[i][j] = read16b(in) + trkdat_ofs + 4;
 	}
 
-	fseek (in, trkdat_ofs + 4, SEEK_SET);
+	fseek(in, trkdat_ofs + 4, SEEK_SET);
 
 	for (i = 0; i < len; i++) {	/* rewrite the track data */
 		for (j = 0; j < 4; j++) {
@@ -203,7 +195,7 @@ static int depack_p4x (FILE *in, FILE *out)
 				c5 = c2;
 				b = (c3 << 8) + c4 + trkdat_ofs + 4;
 
-				fseek (in, b, SEEK_SET);
+				fseek(in, b, SEEK_SET);
 
 				for (c = 0; c <= c5; c++) {
 					c1 = read8(in);
@@ -255,14 +247,14 @@ static int depack_p4x (FILE *in, FILE *out)
 					k++;
 				}
 				k--;
-				fseek (in, a, SEEK_SET);
+				fseek(in, a, SEEK_SET);
 			}
 		}
 	}
 
 	/* write pattern data */
 	for (i = 0; i < len; i++) {
-		bzero (tmp, 1024);
+		bzero(tmp, 1024);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				int x = j * 16 + k * 4;
@@ -274,22 +266,13 @@ static int depack_p4x (FILE *in, FILE *out)
 				tmp[x + 3] = tr[y][j * 4 + 3];
 			}
 		}
-		fwrite (tmp, 1024, 1, out);
+		fwrite(tmp, 1024, 1, out);
 	}
-
-	/* go to sample data address */
-	fseek (in, smp_ofs + 4, 0);	/* SEEK_SET */
 
 	/* read and write sample data */
 	for (i = 0; i < nsmp; i++) {
-		uint8 *tmp;
-
-		fseek (in, SampleAddress[i] + smp_ofs, 0);
-		tmp = (uint8 *) malloc (SampleSize[i]);
-		bzero (tmp, SampleSize[i]);
-		fread (tmp, SampleSize[i], 1, in);
-		fwrite (tmp, SampleSize[i], 1, out);
-		free (tmp);
+		fseek(in, SampleAddress[i] + smp_ofs, SEEK_SET);
+		pw_move_data(out, in, SampleSize[i]);
 	}
 
 	return 0;
