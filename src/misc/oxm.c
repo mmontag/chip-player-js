@@ -1,7 +1,7 @@
 /* Extended Module Player OMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: oxm.c,v 1.3 2007-09-30 23:13:25 cmatsuoka Exp $
+ * $Id: oxm.c,v 1.4 2007-09-30 23:29:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -150,6 +150,8 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 		snprintf(b, 10, "-b%d", res);
 		execlp("oggdec", "oggdec", "-Q", b, "-e0", "-R", "-s1",
 							"-o-", "-", NULL);
+		sleep(1);
+		exit(1);
 	}
 
 	close(p[0]);
@@ -163,6 +165,9 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 
 	close(p[1]);
 	wait(&status);
+
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+		goto err2;
 
 	if (fstat(fd, &st) < 0)
 		goto err2;
@@ -255,6 +260,9 @@ int decrunch_oxm(FILE *f, FILE *fo)
 					res = 16;
 				pcm[j] = oggdec(f, xi[j].len, res, &newlen);
 				xi[j].len = newlen;
+
+				if (pcm[j] == NULL)
+					return -1;
 			}
 		}
 
