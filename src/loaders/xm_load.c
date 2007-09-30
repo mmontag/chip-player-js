@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.8 2007-09-15 21:59:56 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.9 2007-09-30 16:26:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -64,7 +64,7 @@ int xm_load (FILE * f)
 
     if (strncmp ((char *) xfh.id, "Extended Module: ", 17))
 	return -1;
-    strncpy (xmp_ctl->name, (char *) xfh.name, 20);
+    strncpy(xmp_ctl->name, (char *)xfh.name, 20);
 
     snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "Extended Module %d.%02d",
 	xfh.version >> 8, xfh.version & 0xff);
@@ -81,8 +81,10 @@ int xm_load (FILE * f)
     memcpy (xxo, xfh.order, xxh->len);
     snprintf(tracker_name, 80, "%-20.20s", xfh.tracker);
 
-    if (!strncmp(tracker_name, "FastTracker v 2.00", 18))
+    if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
+	strcpy(tracker_name, "old ModPlug Tracker");
 	fix_loop = 1;		/* for Breath of the Wind */
+    }
 
     MODULE_INFO();
 
