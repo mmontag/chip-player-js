@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.15 2007-08-13 12:58:39 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.16 2007-10-01 14:21:56 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -779,7 +779,7 @@ int mdl_load(FILE *f)
     iff_idsize (2);
     iff_setflag (IFF_LITTLE_ENDIAN);
 
-    sprintf (xmp_ctl->type, "DMDL %d.%d", MSN (*buf), LSN (*buf));
+    sprintf (xmp_ctl->type, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
 
     xmp_ctl->volbase = 0xff;
     xmp_ctl->c4rate = C4_NTSC_RATE;

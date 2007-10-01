@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.6 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.7 2007-10-01 14:21:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -82,7 +82,7 @@ int ptm_load (FILE * f)
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
     strncpy(xmp_ctl->name, (char *)pfh.name, 28);
-    sprintf(xmp_ctl->type, "PTMF %d.%02x (PTM)",
+    sprintf(xmp_ctl->type, "PTMF %d.%02x (Poly Tracker)",
 	pfh.vermaj, pfh.vermin);
 
     MODULE_INFO ();
