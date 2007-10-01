@@ -22,17 +22,18 @@
 #include "period.h"
 
 
-int st_load (FILE *f)
+int st_load(FILE *f)
 {
     int i, j;
-    int smp_size, hdr_size, pat_size;
-    struct xxm_event *event;
+    int smp_size, pat_size;
+    struct xxm_event ev, *event;
     struct st_header mh;
     uint8 mod_event[4];
     int ust = 1, nt = 0, serr = 0;
     /* int lps_mult = xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2; */
     char *modtype;
     int fxused;
+    int pos;
 
     LOAD_INIT ();
 
@@ -40,9 +41,6 @@ int st_load (FILE *f)
     xxh->smp = xxh->ins;
     smp_size = 0;
     pat_size = 0;
-    //lps_mult = 1;
-
-    hdr_size = sizeof (struct st_header);
 
     fread(mh.name, 1, 20, f);
     for (i = 0; i < 15; i++) {
@@ -62,7 +60,7 @@ int st_load (FILE *f)
 
     /* UST: The byte at module offset 471 is BPM, not the song restart */
 
-    if (xxh->rst < 0x20)
+    if (xxh->rst > 0x20)
 	ust = 0;
 
     if (xxh->rst >= xxh->len)
@@ -157,58 +155,27 @@ int st_load (FILE *f)
 
     strncpy (xmp_ctl->name, (char *) mh.name, 20);
 
-    if (nt)
-        strcpy (xmp_ctl->type, "ST (Sound/Noisetracker)");
-    else 
-        strcpy (xmp_ctl->type, "ST (old Soundtracker)");
-
-    MODULE_INFO ();
-
-    if (serr && V(0))
-	report ("File size error: %d\n", serr);
-
-    PATTERN_INIT ();
-
-    /* Load and convert patterns */
-
+    /* Scan patterns for tracker detection */
     fxused = 0;
-
-    if (V(0))
-	report ("Stored patterns: %d ", xxh->pat);
+    pos = ftell(f);
 
     for (i = 0; i < xxh->pat; i++) {
-	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
 	for (j = 0; j < (64 * xxh->chn); j++) {
-	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
 	    fread (mod_event, 1, 4, f);
 
-	    cvt_pt_event (event, mod_event);
+	    cvt_pt_event (&ev, mod_event);
 
-	    if (event->fxt)
-		fxused |= 1 << event->fxt;
-	    else if (event->fxp)
+	    if (ev.fxt)
+		fxused |= 1 << ev.fxt;
+	    else if (ev.fxp)
 		fxused |= 1;
 	    
 	    /* UST: Only effects 1 (arpeggio) and 2 (pitchbend) are
 	     * available.
 	     */
-	    if (event->fxt != 1 && event->fxp != 2)
+	    if (ev.fxt != 1 && ev.fxp != 2)
 		ust = 0;
-
-	    /* Special translation for e8 (set panning) effect.
-	     * This is not an official Protracker effect but DMP uses
-	     * it for panning, and a couple of modules follow this
-	     * "standard".
-	     */
-	    if ((event->fxt == 0x0e) && ((event->fxp & 0xf0) == 0x80)) {
-		event->fxt = FX_SETPAN;
-		event->fxp <<= 4;
-	    }
 	}
-	if (V (0))
-	    report (".");
     }
 
     if (fxused == 0)
@@ -227,16 +194,41 @@ int st_load (FILE *f)
 	modtype = "Noisetracker 2.0";
     else if ((fxused & ~0xfeff) == 0)
 	modtype = "Protracker";
+    else if (nt)
+	modtype = "Sound/Noisetracker";
     else
-	modtype = NULL;
+	modtype = "old Soundtracker";
 
-    if (V (0)) {
-	if (modtype)
-	    report ("\nCompatibility  : %s\n", modtype);
+    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "ST (%s)", modtype);
+
+    MODULE_INFO ();
+
+    if (serr && V(2))
+	report ("File size error: %d\n", serr);
+
+    fseek(f, pos, SEEK_SET);
+
+    PATTERN_INIT ();
+
+    /* Load and convert patterns */
+
+    reportv(0, "Stored patterns: %d ", xxh->pat);
+
+    for (i = 0; i < xxh->pat; i++) {
+	PATTERN_ALLOC (i);
+	xxp[i]->rows = 64;
+	TRACK_ALLOC (i);
+	for (j = 0; j < (64 * xxh->chn); j++) {
+	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+	    fread (mod_event, 1, 4, f);
+
+	    cvt_pt_event(event, mod_event);
+	}
+	reportv(0, ".");
     }
+    reportv(0, "\n");
 
-    if (V (1))
-	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
+    reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; (V (1)) && (i < xxh->ins); i++) {
 	if ((strlen ((char *) xxih[i].name) || (xxs[i].len > 2)))
@@ -275,8 +267,8 @@ int st_load (FILE *f)
 
     /* Load samples */
 
-    if (V (0))
-	report ("Stored samples : %d ", xxh->smp);
+    reportv(0, "Stored samples : %d ", xxh->smp);
+
     for (i = 0; i < xxh->smp; i++) {
 	if (!xxs[i].len)
 	    continue;
