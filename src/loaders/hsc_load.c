@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.2 2007-08-04 20:08:15 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.3 2007-10-01 14:08:50 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -73,7 +73,7 @@ int hsc_load (FILE *f)
     xxh->tpo = 6;
     xxh->smp = 0;
 
-    sprintf (tracker_name, "HSC-Tracker");
+    sprintf(xmp_ctl->type, "HSC (HSC-Tracker)");
     MODULE_INFO ();
 
     if (V (1)) {

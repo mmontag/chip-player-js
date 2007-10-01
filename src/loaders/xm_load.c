@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.9 2007-09-30 16:26:20 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.10 2007-10-01 14:08:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -42,6 +42,7 @@ int xm_load (FILE * f)
     struct xm_instrument_header xih;
     struct xm_instrument xi;
     struct xm_sample_header xsh[16];
+    char tracker_name[21];
     int fix_loop = 0;
 
     LOAD_INIT();
@@ -66,9 +67,6 @@ int xm_load (FILE * f)
 	return -1;
     strncpy(xmp_ctl->name, (char *)xfh.name, 20);
 
-    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "Extended Module %d.%02d",
-	xfh.version >> 8, xfh.version & 0xff);
-
     xxh->len = xfh.songlen;
     xxh->rst = xfh.restart;
     xxh->chn = xfh.channels;
@@ -79,12 +77,25 @@ int xm_load (FILE * f)
     xxh->bpm = xfh.bpm;
     xxh->flg = xfh.flags & XM_LINEAR_PERIOD_MODE ? XXM_FLG_LINEAR : 0;
     memcpy (xxo, xfh.order, xxh->len);
-    snprintf(tracker_name, 80, "%-20.20s", xfh.tracker);
+    tracker_name[20] = 0;
+    snprintf(tracker_name, 20, "%-20.20s", xfh.tracker);
+    for (i = 20; i >= 0; i--) {
+	if (tracker_name[i] == 0x20)
+	    tracker_name[i] = 0;
+	if (tracker_name[i])
+	    break;
+    }
+
+    if (*tracker_name == 0)
+	strcpy(tracker_name, "Digitrakker");	/* best guess */
 
     if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
 	strcpy(tracker_name, "old ModPlug Tracker");
 	fix_loop = 1;		/* for Breath of the Wind */
     }
+
+    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "XM %d.%02d (%s)",
+			xfh.version >> 8, xfh.version & 0xff, tracker_name);
 
     MODULE_INFO();
 

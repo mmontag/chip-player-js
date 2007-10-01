@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ice_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: ice_load.c,v 1.3 2007-10-01 14:08:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,10 @@
 #endif
 
 #include "load.h"
+
+#define MAGIC_MTN_	MAGIC4('M','T','N',0)
+#define MAGIC_IT10	MAGIC4('I','T','1','0')
+
 
 struct ice_ins {
     char name[22];		/* Instrument name */
@@ -31,7 +35,7 @@ struct ice_header {
     uint8 len;			/* Size of the pattern list */
     uint8 trk;			/* Number of tracks */
     uint8 ord[128][4];
-    uint8 magic[4];		/* 'MTN\0', 'IT10' */
+    uint32 magic;		/* 'MTN\0', 'IT10' */
 };
 
 
@@ -41,7 +45,6 @@ int ice_load (FILE *f)
     struct xxm_event *event;
     struct ice_header ih;
     uint8 ev[4];
-    char *tracker;
 
     LOAD_INIT ();
 
@@ -57,14 +60,12 @@ int ice_load (FILE *f)
     ih.len = read8(f);
     ih.trk = read8(f);
     fread(&ih.ord, 128 * 4, 1, f);
-    fread(&ih.magic, 4, 1, f);
+    ih.magic = read32b(f);
 
-    if (ih.magic[0] == 'I' && ih.magic[1] == 'T' && ih.magic[2] == '1' &&
-	ih.magic[3] == '0')
-	tracker = "Ice Tracker";
-    else if (ih.magic[0] == 'M' && ih.magic[1] == 'T' && ih.magic[2] == 'N' &&
-	ih.magic[3] == 0)
-	tracker = "Soundtracker";
+    if (ih.magic == MAGIC_IT10)
+        strcpy(xmp_ctl->type, "IT10 (Ice Tracker)");
+    else if (ih.magic == MAGIC_MTN_)
+        strcpy(xmp_ctl->type, "MTN (Soundtracker 2.6)");
     else
 	return -1;
 
@@ -75,14 +76,11 @@ int ice_load (FILE *f)
     xxh->trk = ih.trk;
 
     strncpy (xmp_ctl->name, (char *) ih.title, 20);
-    strcpy (xmp_ctl->type, "MnemoTroN Soundtracker 2.6");
-    strcpy (tracker_name, tracker);
     MODULE_INFO ();
 
     INSTRUMENT_INIT ();
 
-    if (V (1))
-	report ("     Instrument name        Len  LBeg LEnd L Vl Ft\n");
+    reportv(1, "     Instrument name        Len  LBeg LEnd L Vl Ft\n");
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -101,7 +99,6 @@ int ice_load (FILE *f)
 		xxi[i][0].fin >> 4);
     }
 
-
     PATTERN_INIT ();
 
     if (V (0))
@@ -115,12 +112,10 @@ int ice_load (FILE *f)
 	}
 	xxo[i] = i;
 
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
-    if (V (0))
-	report ("\nStored tracks  : %d ", xxh->trk);
+    reportv(0, "\nStored tracks  : %d ", xxh->trk);
 
     for (i = 0; i < xxh->trk; i++) {
 	xxt[i] = calloc (sizeof (struct xxm_track) + sizeof
@@ -140,18 +135,15 @@ int ice_load (FILE *f)
 
     /* Read samples */
 
-    if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", xxh->smp);
 
     for (i = 0; i < xxh->ins; i++) {
 	if (xxs[i].len <= 4)
 	    continue;
 	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &xxs[i], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     return 0;
 }

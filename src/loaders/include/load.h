@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.13 2007-08-28 18:52:44 cmatsuoka Exp $
+ * $Id: load.h,v 1.14 2007-10-01 14:08:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,6 @@
 
 
 #ifndef __XMP_LOADERS_COMMON
-static char tracker_name[80];
 static char author_name[80];
 #endif
 
@@ -34,7 +33,7 @@ void	disable_continue_fx	(struct xxm_event *);
 
 #define LOAD_INIT() do { \
     fseek (f, 0, SEEK_SET); \
-    *tracker_name = *author_name = 0; \
+    *author_name = 0; \
     med_vol_table = med_wav_table = NULL; \
     set_xxh_defaults (xxh); \
 } while (0)
@@ -43,7 +42,6 @@ void	disable_continue_fx	(struct xxm_event *);
     if (xmp_ctl->verbose) { \
 	if (*xmp_ctl->name) report ("Module title   : %s\n", xmp_ctl->name); \
         if (*xmp_ctl->type) report ("Module type    : %s\n", xmp_ctl->type); \
-	if (*tracker_name) report ("Tracker name   : %s\n", tracker_name); \
 	if (*author_name) report ("Author name    : %s\n", author_name); \
         if (xxh->len) report ("Module length  : %d patterns\n", xxh->len); \
     } \

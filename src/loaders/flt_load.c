@@ -69,8 +69,7 @@ int flt_load (FILE *f)
     xxh->trk = xxh->chn * xxh->pat;
 
     strncpy (xmp_ctl->name, (char *) mh.name, 20);
-    sprintf (xmp_ctl->type, "%4.4s (%d channel MOD)", mh.magic, xxh->chn);
-    sprintf (tracker_name, tracker);
+    sprintf (xmp_ctl->type, "%4.4s (%s)", mh.magic, tracker);
     MODULE_INFO ();
 
     INSTRUMENT_INIT ();

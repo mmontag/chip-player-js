@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.21 2007-09-27 01:34:19 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.22 2007-10-01 14:08:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -208,6 +208,7 @@ int it_load (FILE * f)
     uint16 x16;
     int max_ch, flag;
     int inst_map[120], inst_rmap[96];
+    char tracker_name[80];
 
     LOAD_INIT ();
 
@@ -324,8 +325,8 @@ int it_load (FILE * f)
 	sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
     }
 
-    sprintf (xmp_ctl->type, "IMPM %d.%02x (IT)",
-			ifh.cmwt >> 8, ifh.cmwt & 0xff);
+    sprintf (xmp_ctl->type, "IMPM %d.%02x (%s)",
+			ifh.cmwt >> 8, ifh.cmwt & 0xff, tracker_name);
 
     MODULE_INFO ();
 

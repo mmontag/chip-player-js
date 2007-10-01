@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.10 2007-09-29 23:04:43 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.11 2007-10-01 14:08:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -141,6 +141,7 @@ int liq_load (FILE *f)
     struct liq_pattern lp;
     uint8 x1, x2;
     uint32 pmag;
+    char tracker_name[80];
 
     LOAD_INIT ();
 
@@ -184,8 +185,8 @@ int liq_load (FILE *f)
     strncpy(xmp_ctl->name, (char *)lh.name, 30);
     strncpy(tracker_name, (char *)lh.tracker, 20);
     strncpy(author_name, (char *)lh.author, 20);
-    sprintf(xmp_ctl->type, "Liquid module %d.%02d",
-	lh.version >> 8, lh.version & 0x00ff);
+    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "LIQ %d.%02d (%s)",
+		lh.version >> 8, lh.version & 0x00ff, tracker_name);
 
     if (lh.version > 0) {
 	for (i = 0; i < xxh->chn; i++)
