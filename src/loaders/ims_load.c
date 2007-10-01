@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ims_load.c,v 1.3 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: ims_load.c,v 1.4 2007-10-01 22:03:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -124,7 +124,7 @@ int ims_load (FILE *f)
 	return -1;
 
     strncpy (xmp_ctl->name, (char *) ih.title, 20);
-    sprintf (xmp_ctl->type, "Images Music System");
+    sprintf (xmp_ctl->type, "IMS (Images Music System)");
 
     MODULE_INFO ();
 

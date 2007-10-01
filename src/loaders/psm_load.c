@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.23 2007-08-25 11:45:17 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.24 2007-10-01 22:03:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -406,7 +406,7 @@ int psm_load(FILE *f)
 	pord = malloc(255 * 8);			/* pattern orders */
 
 	strcpy (xmp_ctl->type, sinaria ?
-		"Sinaria MASI (PSM)" : "Epic Megagames MASI (PSM)");
+		"MASI (Sinaria PSM)" : "MASI (Epic Megagames PSM)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();

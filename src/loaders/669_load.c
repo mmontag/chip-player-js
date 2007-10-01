@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.5 2007-10-01 14:21:56 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.6 2007-10-01 22:03:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -88,8 +88,8 @@ int ssn_load (FILE * f)
     xxh->smp = xxh->ins;
     xxh->flg |= XXM_FLG_LINEAR;
 
-    strcpy (xmp_ctl->type, strncmp ((char *) sfh.marker, "if", 2) ?
-	"Extended 669 (UNIS 669)" : "669 (Composer 669)");
+    strcpy(xmp_ctl->type, strncmp((char *)sfh.marker, "if", 2) ?
+				"669 (UNIS 669)" : "669 (Composer 669)");
 
     MODULE_INFO ();
 

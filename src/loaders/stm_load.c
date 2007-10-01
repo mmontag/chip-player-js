@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.4 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.5 2007-10-01 22:03:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -92,8 +92,12 @@ int stm_load (FILE * f)
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
     strncpy(xmp_ctl->name, (char *)sfh.name, 20);
-    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "!Scream! (%s %d.%02d)",
-	bmod2stm ? "BMOD2STM" : "Scream Tracker", sfh.vermaj, sfh.vermin);
+    if (bmod2stm) {
+	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "!Scream! (BMOD2STM)");
+    } else {
+	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "!Scream! "
+			"(Scream Tracker %d.%02d)", sfh.vermaj, sfh.vermin);
+    }
 
     MODULE_INFO ();
 

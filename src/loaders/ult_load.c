@@ -58,6 +58,11 @@ struct ult_event {
 };
 
 
+static char *verstr[4] = {
+    "< 1.4", "1.4", "1.5", "1.6"
+};
+
+
 int ult_load (FILE * f)
 {
     int i, j, k, ver, cnt;
@@ -79,9 +84,12 @@ int ult_load (FILE * f)
 	return -1;
 
     ver = ufh.magic[14] - '0';
+    if (ver < 1 || ver > 4)
+	return -1;
     strncpy(xmp_ctl->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
-    sprintf(xmp_ctl->type, "Ultra Tracker V%04d", ver);
+    sprintf(xmp_ctl->type, "UTrack_V%04d (Ultra Tracker %s)",
+						ver, verstr[ver - 1]);
 
     MODULE_INFO ();
 
