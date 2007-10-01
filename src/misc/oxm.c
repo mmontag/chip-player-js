@@ -1,7 +1,7 @@
 /* Extended Module Player OMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: oxm.c,v 1.4 2007-09-30 23:29:30 cmatsuoka Exp $
+ * $Id: oxm.c,v 1.5 2007-10-01 01:11:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -142,6 +142,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 
 	if (fork() == 0) {		/* child process runs oggdec */
 		char b[10];
+		int l;
 
 		close(p[1]);
 		dup2(p[0], STDIN_FILENO);
@@ -150,7 +151,11 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 		snprintf(b, 10, "-b%d", res);
 		execlp("oggdec", "oggdec", "-Q", b, "-e0", "-R", "-s1",
 							"-o-", "-", NULL);
-		sleep(1);
+
+		do {			/* drain input data */
+			l = read(STDIN_FILENO, buf, 1024);
+		} while (l == 1024);
+
 		exit(1);
 	}
 
