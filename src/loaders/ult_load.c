@@ -88,7 +88,7 @@ int ult_load (FILE * f)
 	return -1;
     strncpy(xmp_ctl->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
-    sprintf(xmp_ctl->type, "UTrack_V%04d (Ultra Tracker %s)",
+    sprintf(xmp_ctl->type, "ULT V%04d (Ultra Tracker %s)",
 						ver, verstr[ver - 1]);
 
     MODULE_INFO ();

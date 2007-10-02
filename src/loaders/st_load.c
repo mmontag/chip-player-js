@@ -58,13 +58,12 @@ int st_load(FILE *f)
     xxh->len = mh.len;
     xxh->rst = mh.restart;
 
-    /* UST: The byte at module offset 471 is BPM, not the song restart */
-
-    if (xxh->rst > 0x20)
+    /* UST: The byte at module offset 471 is BPM, not the song restart
+     *      The default for UST modules is 0x78 = 120 BPM = 48 Hz.
+     */
+    if (xxh->rst < 0x40)	/* should be 0x20 */
 	ust = 0;
 
-    if (xxh->rst >= xxh->len)
-	xxh->rst = 0;
     memcpy (xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++)
@@ -173,17 +172,25 @@ int st_load(FILE *f)
 	    /* UST: Only effects 1 (arpeggio) and 2 (pitchbend) are
 	     * available.
 	     */
-	    if (ev.fxt != 1 && ev.fxp != 2)
+	    if (ev.fxt && ev.fxt != 1 && ev.fxt != 2)
 		ust = 0;
+
+	    if (ev.fxt == 1) {		/* unlikely arpeggio */
+		if ((ev.fxp & 0x0f) == 0 || (ev.fxp & 0xf0) == 0)
+		    ust = 0;
+	    }
+
+	    if (ev.fxt == 2) {		/* bend up and down at same time? */
+		if ((ev.fxp & 0x0f) != 0 && (ev.fxp & 0xf0) != 0)
+		    ust = 0;
+	    }
 	}
     }
 
-    if (fxused == 0)
-	modtype = "MasterSoundtracker 1.1";
-    else if ((fxused & ~0x0006) == 0)
+    if (ust && (fxused & ~0x0006) == 0)
 	modtype = "Ultimate Soundtracker";
     else if ((fxused & ~0xd007) == 0)
-	modtype = "Soundtracker IX";
+	modtype = "Soundtracker IX";	/* or MasterSoundtracker? */
     else if ((fxused & ~0xf807) == 0)
 	modtype = "D.O.C. Soundtracker";
     else if ((fxused & ~0xfc07) == 0)
@@ -192,12 +199,8 @@ int st_load(FILE *f)
 	modtype = "Noisetracker 1.0/1.2";
     else if ((fxused & ~0xfcbf) == 0)
 	modtype = "Noisetracker 2.0";
-    else if ((fxused & ~0xfeff) == 0)
-	modtype = "Protracker";
-    else if (nt)
-	modtype = "Sound/Noisetracker";
     else
-	modtype = "old Soundtracker";
+	modtype = "unknown tracker";
 
     snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "ST (%s)", modtype);
 
@@ -263,6 +266,9 @@ int st_load(FILE *f)
 		    event->fxp >>= 4;
 	    }
 	}
+    } else {
+	if (xxh->rst >= xxh->len)
+	    xxh->rst = 0;
     }
 
     /* Load samples */

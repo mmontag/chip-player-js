@@ -1,9 +1,9 @@
-$Id: ChangeLog,v 1.102 2007-09-30 23:13:25 cmatsuoka Exp $
+$Id: ChangeLog,v 1.103 2007-10-02 02:31:09 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.3.0 ()
+2.3.0 (20071002)
 	- added runtime endianism detection
 	- added extractor for Epic Games' Unreal UMX files
 	- added workaround for S3M "Return of Litmus" 0x87 quirk (reported
@@ -30,6 +30,7 @@ Stable versions
 	- fixed data size in MMD3 pattern sequence loading
 	- fixed MMD1/MMD3 invalid/unhandled effect translation
 	- fixed MMD1/MMD3 mixing buffer size setting (for PrivInv.med)
+	- fixed Soundtracker 15-instrument module tracker fingerprinting
 	- format management code cleanup
 	- prowizard code cleanup
 
