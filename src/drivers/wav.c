@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.11 2007-09-29 23:04:43 cmatsuoka Exp $
+ * $Id: wav.c,v 1.12 2007-10-02 13:16:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -112,7 +112,7 @@ static int init (struct xmp_control *ctl)
     }
 
     write(fd, "RIFF", 4);
-    write(fd, &len, 4);
+    writeval_32l(fd, len);
     write(fd, "WAVE", 4);
 
     flen = 0x10;
@@ -149,22 +149,19 @@ static void bufdump (int i)
     if (big_endian)
 	xmp_cvt_sex(i, b);
     write(fd, b, i);
+    size += i;
 }
 
 
 static void shutdown ()
 {
-    uint32 len;
+    xmp_smix_off();
 
-    xmp_smix_off ();
-
-    len = size;
     lseek(fd, 40, SEEK_SET);
-    writeval_32l(fd, len);
+    writeval_32l(fd, size);
 
-    len = size + 40;
     lseek(fd, 4, SEEK_SET);
-    writeval_32l(fd, len);
+    writeval_32l(fd, size + 40);
 
     if (fd)
 	close (fd);

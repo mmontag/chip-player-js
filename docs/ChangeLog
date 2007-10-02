@@ -1,7 +1,11 @@
-$Id: ChangeLog,v 1.103 2007-10-02 02:31:09 cmatsuoka Exp $
+$Id: ChangeLog,v 1.104 2007-10-02 13:16:52 cmatsuoka Exp $
 
 Stable versions
 ---------------
+
+2.3.1 ()
+	- fixed output filename setting in wav output
+	- fixed size field setting in wav driver
 
 2.3.0 (20071002)
 	- added runtime endianism detection

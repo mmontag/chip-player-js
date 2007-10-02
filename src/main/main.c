@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.10 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: main.c,v 1.11 2007-10-02 13:16:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -367,7 +367,7 @@ int main (int argc, char **argv)
     if (randomize)
 	shuffle (argc - optind + 1, &argv[optind - 1]);
 
-    if (opt.outfile)
+    if (opt.outfile && strcmp(opt.drv_id, "wav"))
 	opt.drv_id = "file";
 
     if ((background = (tcgetpgrp (0) == getppid ()))) {
