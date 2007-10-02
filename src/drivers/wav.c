@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.12 2007-10-02 13:16:52 cmatsuoka Exp $
+ * $Id: wav.c,v 1.13 2007-10-02 23:59:30 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -92,10 +92,10 @@ static void writeval_32l(int fd, uint32 v)
 static int init (struct xmp_control *ctl)
 {
     char *buf;
-    uint32 len = 0, flen;
-    uint16 u16, chan;
+    uint32 len = 0;
+    uint16 chan;
     uint32 sampling_rate, bytes_per_second;
-    uint16 bytes_per_sample, bits_per_sample;
+    uint16 bytes_per_frame, bits_per_sample;
 
     if (!ctl->outfile)
 	ctl->outfile = "xmp.wav";
@@ -115,21 +115,19 @@ static int init (struct xmp_control *ctl)
     writeval_32l(fd, len);
     write(fd, "WAVE", 4);
 
-    flen = 0x10;
-    u16 = 1;
     chan = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
     sampling_rate = ctl->freq;
     bits_per_sample = ctl->resol;
-    bytes_per_sample = bits_per_sample / 8;
-    bytes_per_second = sampling_rate * chan * bytes_per_sample;
+    bytes_per_frame = chan * bits_per_sample / 8;
+    bytes_per_second = sampling_rate * bytes_per_frame;
 
     write(fd, "fmt ", 4);
-    writeval_32l(fd, flen);
-    writeval_16l(fd, u16);
+    writeval_32l(fd, 16);
+    writeval_16l(fd, 1);
     writeval_16l(fd, chan);
     writeval_32l(fd, sampling_rate);
     writeval_32l(fd, bytes_per_second);
-    writeval_16l(fd, bytes_per_sample);
+    writeval_16l(fd, bytes_per_frame);
     writeval_16l(fd, bits_per_sample);
 
     write(fd, "data", 4);
