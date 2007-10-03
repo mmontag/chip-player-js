@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.7 2007-10-01 14:21:56 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.8 2007-10-03 13:22:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,13 +19,7 @@
 #define MAGIC_PTMF	MAGIC4('P','T','M','F')
 
 
-/* PTM volume table formula (approximated):
- *
- *   64 * (10 ** ((23362 + 598 * (64 + 20 * log10 (x / 64)) - 64E3) / 20E3))
- */
-
-static int ptm_vol[] =
-{
+static int ptm_vol[] = {
      0,  5,  8, 10, 12, 14, 15, 17, 18, 20, 21, 22, 23, 25, 26,
     27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 37, 38, 39, 40,
     41, 42, 42, 43, 44, 45, 46, 46, 47, 48, 49, 49, 50, 51, 51,
@@ -91,9 +85,7 @@ int ptm_load (FILE * f)
 
     /* Read and convert instruments and samples */
 
-    if (V (1))
-	    report (
-"     Instrument name              Len   LBeg  LEnd  L Vol C4Spd\n");
+    reportv(1, "     Instrument name              Len   LBeg  LEnd  L Vol C4Spd\n");
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -145,8 +137,8 @@ int ptm_load (FILE * f)
     PATTERN_INIT ();
 
     /* Read patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
+
     for (i = 0; i < xxh->pat; i++) {
 	if (!pfh.patseg[i])
 	    continue;
@@ -186,10 +178,13 @@ int ptm_load (FILE * f)
 		event->fxp = n;
 		switch (event->fxt) {
 		case 0x0e:	/* Pan set */
-		    if (MSN (event->fxp) == 0x8) {
+		    if (MSN(event->fxp) == 0x8) {
 			event->fxt = FX_SETPAN;
 			event->fxp = LSN (event->fxp) << 4;
 		    }
+		    break;
+		case 0x10:	/* Set global volume */
+		    event->fxt = FX_GLOBALVOL;
 		    break;
 		case 0x11:	/* Multi retrig */
 		    event->fxt = FX_MULTI_RETRIG;
@@ -205,7 +200,7 @@ int ptm_load (FILE * f)
 		    event->fxt = event->fxp = 0;
 		    break;
 		}
-		if (event->fxt > 0x16)
+		if (event->fxt > 0x17)
 		    event->fxt = event->fxp = 0;
 	    }
 	    if (b & PTM_VOL_FOLLOWS) {
@@ -213,12 +208,11 @@ int ptm_load (FILE * f)
 		event->vol = n + 1;
 	    }
 	}
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
-    if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", xxh->smp);
+
     for (i = 0; i < xxh->smp; i++) {
 	if (!xxs[i].len)
 	    continue;
@@ -226,13 +220,11 @@ int ptm_load (FILE * f)
 	/*xxs[xxi[i][0].sid].len--; */
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate,
 	    XMP_SMP_8BDIFF, &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
-    xmp_ctl->vol_xlat = (int *) &ptm_vol;
+    xmp_ctl->vol_xlat = ptm_vol;
 
     for (i = 0; i < xxh->chn; i++)
 	xxc[i].pan = pfh.chset[i] << 4;
