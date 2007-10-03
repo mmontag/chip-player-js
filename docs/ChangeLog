@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.105 2007-10-03 19:58:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.106 2007-10-03 20:40:37 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -7,6 +7,8 @@ Stable versions
 	- fixed output filename setting in wav output
 	- fixed size field setting in wav driver
 	- fixed configure option --sysconfdir (reported by Douglas Carmichael)
+	- fixed major bug in anticlick routine generating clicks in the
+	  right audio channel (reported by Douglas Carmichael)
 
 2.3.0 (20071002)
 	- added runtime endianism detection
