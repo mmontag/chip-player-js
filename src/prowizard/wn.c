@@ -4,7 +4,7 @@
  *
  * Converts MODs converted with Wanton packer
  *
- * $Id: wn.c,v 1.4 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: wn.c,v 1.5 2007-10-03 19:44:52 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -24,11 +24,11 @@ struct pw_format pw_wn = {
 };
 
 
-static int depack_wn (FILE *in, FILE * out)
+static int depack_wn(FILE *in, FILE * out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npat, max;
-	uint tmp[1024];
+	uint8 tmp[1024];
 	int ssize = 0;
 	int i, j;
 
@@ -80,7 +80,7 @@ static int depack_wn (FILE *in, FILE * out)
 	return 0;
 }
 
-static int test_wn (uint8 *data, int s)
+static int test_wn(uint8 *data, int s)
 {
 	int start = 0;
 

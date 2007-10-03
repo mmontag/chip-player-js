@@ -1,4 +1,3 @@
-
 The Authors
 
 * Rob Adamson <R.Adamson@fitz.cam.ac.uk>
@@ -13,8 +12,9 @@ The Authors
 * Frederic Bujon <lvdl@bigfoot.com>
 - XM pan fix
 
-* Douglas Carmichael <dcarmich@mcs.com>
+* Douglas Carmichael <dcarmich@dcarmichael.net>
 - RT priority in FreeBSD
+- OSX portability fixes
 
 * Hipolito Carraro Jr <hipolito@onda.com.br>
 - main player coding
