@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.104 2007-10-02 13:16:52 cmatsuoka Exp $
+$Id: ChangeLog,v 1.105 2007-10-03 19:58:37 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -6,6 +6,7 @@ Stable versions
 2.3.1 ()
 	- fixed output filename setting in wav output
 	- fixed size field setting in wav driver
+	- fixed configure option --sysconfdir (reported by Douglas Carmichael)
 
 2.3.0 (20071002)
 	- added runtime endianism detection

@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.29 2007-09-24 20:22:38 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.30 2007-10-03 19:58:37 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -103,7 +103,7 @@ elif test "x$prefix" = x/usr -o "x$prefix" = x/usr/local; then
     fix_prefix=yes
 fi
 
-if test $fix_prefix = yes; then
+if test $fix_prefix = yes -a $sysconfdir = '${prefix}/etc'; then
     sysconfdir=/etc
     localstatedir=/var
 fi
