@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.13 2007-10-02 23:59:30 cmatsuoka Exp $
+ * $Id: wav.c,v 1.14 2007-10-03 21:12:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -96,13 +96,28 @@ static int init (struct xmp_control *ctl)
     uint16 chan;
     uint32 sampling_rate, bytes_per_second;
     uint16 bytes_per_frame, bits_per_sample;
+    char *f, filename[260];
 
-    if (!ctl->outfile)
-	ctl->outfile = "xmp.wav";
+    if (!ctl->outfile) {
+	if (ctl->filename) {
+	    if ((f = strrchr(ctl->filename, '/')) != NULL)
+		strncpy(filename, f + 1, 255);
+	    else
+		strncpy(filename, ctl->filename, 255);
+	} else {
+	    strcpy(filename, "xmp");
+	}
 
-    fd = strcmp (ctl->outfile, "-") ? creat (ctl->outfile, 0644) : 1;
+	strncat(filename, ".wav", 260);
 
-    buf = malloc (strlen (drv_wav.description) + strlen (ctl->outfile) + 8);
+	ctl->outfile = filename;
+    }
+
+    fd = strcmp(ctl->outfile, "-") ? creat(ctl->outfile, 0644) : 1;
+    if (fd < 0)
+	return -1;
+
+    buf = malloc(strlen (drv_wav.description) + strlen (ctl->outfile) + 8);
     if (strcmp (ctl->outfile, "-")) {
 	sprintf (buf, "%s: %s", drv_wav.description, ctl->outfile);
 	drv_wav.description = buf;

@@ -1,4 +1,4 @@
-.TH "XMP" "1" "Version 2\&.3\&.0" "Oct 2007" "Extended Module Player" 
+.TH "XMP" "1" "Version 2\&.3\&.1" "Oct 2007" "Extended Module Player" 
 .PP 
 .SH "NAME" 
 xmp - Extended Module Player
@@ -48,7 +48,7 @@ for a complete list of supported formats\&.
 .PP 
 \fBxmp\fP can play through several output devices including the Open
 Sound System sequencer, linear and ulaw PCM audio devices or mixing
-to a file\&.
+to a raw or WAV file\&.
 .PP 
 .SH "OPTIONS" 
 .IP "\fB-8, --8bit\fP" 
@@ -101,8 +101,8 @@ the MOD channel panning (LRRL)\&.
 .IP "\fB--norc\fP" 
 Don't read the configuration files\&.
 .IP "\fB-o, --output-file\fP \fIfilename\fP" 
-Mix the module to a file\&. If \'-\' is given as the file name, the
-output will be sent to stdout\&.
+Set the output file name when mixing to raw or WAV files\&. If \'-\' is
+given as the file name, the output will be sent to stdout\&.
 .IP "\fB-P, --pan\fP \fInum\fP" 
 Set the percentual panning amplitude\&.
 .IP "\fB-l, --probe-only\fP" 

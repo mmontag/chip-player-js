@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.11 2007-10-02 13:16:52 cmatsuoka Exp $
+ * $Id: main.c,v 1.12 2007-10-03 21:12:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -369,6 +369,8 @@ int main (int argc, char **argv)
 
     if (opt.outfile && strcmp(opt.drv_id, "wav"))
 	opt.drv_id = "file";
+
+    opt.filename = argv[optind];
 
     if ((background = (tcgetpgrp (0) == getppid ()))) {
 	verb = opt.verbose;

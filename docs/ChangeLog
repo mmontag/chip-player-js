@@ -1,14 +1,15 @@
-$Id: ChangeLog,v 1.106 2007-10-03 20:40:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.107 2007-10-03 21:12:16 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.3.1 ()
+2.3.1 (20071004)
 	- fixed output filename setting in wav output
 	- fixed size field setting in wav driver
 	- fixed configure option --sysconfdir (reported by Douglas Carmichael)
 	- fixed major bug in anticlick routine generating clicks in the
 	  right audio channel (reported by Douglas Carmichael)
+	- changed default file name when writing to WAV to <modname>.wav
 
 2.3.0 (20071002)
 	- added runtime endianism detection
