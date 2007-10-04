@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.7 2007-10-04 01:41:57 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.8 2007-10-04 02:37:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -186,6 +186,7 @@ inline static void smix_resetvar()
 }
 
 
+#if 0
 /* Hipolito's softmixer with rampdown anticlick */
 static void smix_rampdown(int voc, int32 *buf, int cnt)
 {
@@ -257,6 +258,7 @@ static void smix_anticlick(int voc, int vol, int pan, int *buf, int cnt)
 	smix_rampdown(voc, buf, cnt);
     }
 }
+#endif
 
 
 /* Fill the output buffer calling one of the handlers. The buffer contains
@@ -272,15 +274,17 @@ static int softmixer()
     int synth = 1;
     int* buf_pos;
 
+#if 0
     if (!extern_drv)
 	smix_rampdown (-1, NULL, TURN_OFF);	/* Anti-click */
+#endif
 
     for (voc = numvoc; voc--; ) {
 	vi = &voice_array[voc];
 	if (vi->chn < 0)
 	    continue;
 	if (vi->period < 1) {
-	    drv_resetvoice (voc, TURN_ON);
+	    drv_resetvoice (voc, 1);
 	    continue;
 	}
 	buf_pos = smix_buf32b;
@@ -359,8 +363,8 @@ static int softmixer()
 
 	    /* Single shot sample */
             if (!(vi->fidx ^= vi->fxor) || lpsta >= lpend) {
-		smix_anticlick(voc, TURN_OFF, TURN_OFF, buf_pos, tic_cnt);
-		drv_resetvoice(voc, TURN_OFF);
+		//smix_anticlick(voc, 0, 0, buf_pos, tic_cnt);
+		drv_resetvoice(voc, 0);
 		tic_cnt = 0;
 		continue;
 	    }
@@ -404,18 +408,19 @@ static void smix_voicepos(int voc, int pos, int itp)
 	vi->end = lpend;
 	if (vi->fidx & FLAG_BACKWARD)
 	    vi->fidx ^= vi->fxor;
-    } else
-	drv_resetvoice (voc, TURN_ON);		/* Bad data, reset voice */
+    } else {
+	drv_resetvoice(voc, TURN_ON);		/* Bad data, reset voice */
+    }
 }
 
 
 static void smix_setpatch(int voc, int smp)
 {
-    struct voice_info* vi = &voice_array[voc];
-    struct patch_info* pi = patch_array[smp];
+    struct voice_info *vi = &voice_array[voc];
+    struct patch_info *pi = patch_array[smp];
 
     vi->smp = smp;
-    vi->vol = TURN_OFF;
+    vi->vol = 0;
     vi->freq = (long long) C4_FREQ * pi->base_freq / xmp_ctl->freq;
     
     if (pi->len == XMP_PATCH_FM) {
@@ -483,8 +488,8 @@ static inline void smix_setbend(int voc, int bend)
 void xmp_smix_setvol(int voc, int vol)
 {
     struct voice_info *vi = &voice_array[voc];
-
-    smix_anticlick(voc, vol, vi->pan, NULL, 0);
+ 
+    //smix_anticlick(voc, vol, vi->pan, NULL, 0);
     vi->vol = vol;
 }
 

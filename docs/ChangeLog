@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.107 2007-10-03 21:12:16 cmatsuoka Exp $
+$Id: ChangeLog,v 1.108 2007-10-04 02:37:53 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -7,9 +7,10 @@ Stable versions
 	- fixed output filename setting in wav output
 	- fixed size field setting in wav driver
 	- fixed configure option --sysconfdir (reported by Douglas Carmichael)
-	- fixed major bug in anticlick routine generating clicks in the
-	  right audio channel (reported by Douglas Carmichael)
+	- fixed  major bug in anticlick routine generating clicks in the right
+	  audio channel (reported by Douglas Carmichael)
 	- changed default file name when writing to WAV to <modname>.wav
+	- disabled Hipolito's rampdown anticlick
 
 2.3.0 (20071002)
 	- added runtime endianism detection
