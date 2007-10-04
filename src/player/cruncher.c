@@ -32,11 +32,11 @@
 #include "mixer.h"
 
 #define INTERPOLATE() \
-    if (itpt >> SMIX_SFT_FT) { \
-	cur_bk += itpt >> SMIX_SFT_FT; \
+    if (itpt >> SMIX_SHIFT) { \
+	cur_bk += itpt >> SMIX_SHIFT; \
 	smp_x1 = in_bk[cur_bk]; \
 	smp_dt = in_bk[cur_bk + 1] - smp_x1; \
-	itpt &= SMIX_AND_FT; \
+	itpt &= SMIX_MASK; \
     }
 
 #define CRUNCHER() \
@@ -45,7 +45,7 @@
     smp_x1 = smp_dt = 0; \
     while (count--) { \
 	INTERPOLATE (); \
-	*(out_bk++) = smp_x1 + ((itpt * smp_dt) >> SMIX_SFT_FT); \
+	*(out_bk++) = smp_x1 + ((itpt * smp_dt) >> SMIX_SHIFT); \
 	itpt += itpt_inc; \
     }
 
@@ -95,11 +95,11 @@ int xmp_cvt_crunch (struct patch_info **patch, unsigned int ratio)
     if (ratio < 0x10000 && smp_len < XMP_DEF_MINLEN)
 	return 0x10000;
 
-    base_note = ((long long) ((*patch)->base_note) << SMIX_SFT_FT) / ratio;
-    itpt_inc = ((long long) base_note << SMIX_SFT_FT) / (*patch)->base_note;
-    smp_len = ((long long) smp_len << SMIX_SFT_FT) / itpt_inc;
-    loop_end = ((long long) loop_end << SMIX_SFT_FT) / itpt_inc;
-    loop_dt = ((long long) loop_dt << SMIX_SFT_FT) / itpt_inc;
+    base_note = ((long long) ((*patch)->base_note) << SMIX_SHIFT) / ratio;
+    itpt_inc = ((long long) base_note << SMIX_SHIFT) / (*patch)->base_note;
+    smp_len = ((long long) smp_len << SMIX_SHIFT) / itpt_inc;
+    loop_end = ((long long) loop_end << SMIX_SHIFT) / itpt_inc;
+    loop_dt = ((long long) loop_dt << SMIX_SHIFT) / itpt_inc;
 
     pi = calloc (1, sizeof (struct patch_info) + (smp_len << type) +
 	sizeof (int));

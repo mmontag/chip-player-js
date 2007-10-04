@@ -17,9 +17,8 @@
 #define SMIX_MINBPM	0x10	/* min BPM */
 #define SMIX_RESMAX	(sizeof (int16))	/* max output resolution */
 
-#define SMIX_VOL_FT	4
-#define SMIX_SFT_FT	16
-#define SMIX_AND_FT	0xffff
+#define SMIX_SHIFT	16
+#define SMIX_MASK	0xffff
 
 #define OUT_MAXLEN	(5 * 2 * SMIX_MAXRAT * SMIX_RESMAX / SMIX_MINBPM / 3)
 

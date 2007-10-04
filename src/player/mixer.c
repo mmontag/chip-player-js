@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.8 2007-10-04 02:37:53 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.9 2007-10-04 12:52:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -288,8 +288,8 @@ static int softmixer()
 	    continue;
 	}
 	buf_pos = smix_buf32b;
-	vol_r = (vi->vol * (0x80 - vi->pan)) >> SMIX_VOL_FT;
-	vol_l = (vi->vol * (0x80 + vi->pan)) >> SMIX_VOL_FT;
+	vol_r = (vi->vol * (0x80 - vi->pan)) >> 4;
+	vol_l = (vi->vol * (0x80 + vi->pan)) >> 4;
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {
@@ -300,7 +300,7 @@ static int softmixer()
 	    continue;
 	}
 
-	itp_inc = ((long long) vi->pbase << SMIX_SFT_FT) / vi->period;
+	itp_inc = ((long long) vi->pbase << SMIX_SHIFT) / vi->period;
 
 	pi = patch_array[vi->smp];
 
@@ -315,7 +315,7 @@ static int softmixer()
 	for (tic_cnt = smix_ticksize; tic_cnt; ) {
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
-	    smp_cnt = 1 + (((long long) (vi->end - vi->pos) << SMIX_SFT_FT)
+	    smp_cnt = 1 + (((long long) (vi->end - vi->pos) << SMIX_SHIFT)
 		- vi->itpt) / itp_inc;
 
 	    if (itp_inc > 0) {
@@ -354,8 +354,8 @@ static int softmixer()
 	    }
 
 	    vi->itpt += itp_inc * smp_cnt;
-	    vi->pos += vi->itpt >> SMIX_SFT_FT;
-	    vi->itpt &= SMIX_AND_FT;
+	    vi->pos += vi->itpt >> SMIX_SHIFT;
+	    vi->itpt &= SMIX_MASK;
 
 	    /* No more samples in this tick */
 	    if (!(tic_cnt -= smp_cnt))
@@ -373,8 +373,8 @@ static int softmixer()
 		vi->pos -= lpend - lpsta;
 	    } else {
 		vi->itpt += (itp_inc = -itp_inc);
-		vi->pos += vi->itpt >> SMIX_SFT_FT;
-		vi->itpt &= SMIX_AND_FT;
+		vi->pos += vi->itpt >> SMIX_SHIFT;
+		vi->itpt &= SMIX_MASK;
 		vi->end = itp_inc > 0 ? lpend : lpsta;
 	    }
 	}

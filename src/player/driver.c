@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.30 2007-10-04 01:41:57 cmatsuoka Exp $
+ * $Id: driver.c,v 1.31 2007-10-04 12:52:41 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -652,8 +652,8 @@ void xmp_drv_voicepos (int chn, int pos)
     pi = patch_array[voice_array[voc].smp];
 
     if (pi->base_note != C4_FREQ)	/* process crunching samples */
-	pos = ((long long)pos << SMIX_SFT_FT) / (int)
-	    (((long long)pi->base_note << SMIX_SFT_FT) / C4_FREQ);
+	pos = ((long long)pos << SMIX_SHIFT) / (int)
+	    (((long long)pi->base_note << SMIX_SHIFT) / C4_FREQ);
 
     if (pos > pi->len)	/* Attempt to set offset beyond the end of sample */
 	return;

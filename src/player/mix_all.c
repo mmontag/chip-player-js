@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-2001 Claudio Matsuoka and Hipolito Carraro Jr.
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: mix_all.c,v 1.1 2001-06-02 20:28:11 cmatsuoka Exp $
+ * $Id: mix_all.c,v 1.2 2007-10-04 12:52:41 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -25,17 +25,17 @@
  * and number of channels.
  */
 #define INTERPOLATE() do { \
-    if (itpt >> SMIX_SFT_FT) { \
-	cur_bk += itpt >> SMIX_SFT_FT; \
+    if (itpt >> SMIX_SHIFT) { \
+	cur_bk += itpt >> SMIX_SHIFT; \
 	smp_x1 = in_bk[cur_bk]; \
 	smp_dt = in_bk[cur_bk + 1] - smp_x1; \
-	itpt &= SMIX_AND_FT; \
+	itpt &= SMIX_MASK; \
     } \
-    smp_in = smp_x1 + ((itpt * smp_dt) >> SMIX_SFT_FT); \
+    smp_in = smp_x1 + ((itpt * smp_dt) >> SMIX_SHIFT); \
 } while (0)
 
 #define DONT_INTERPOLATE() do { \
-    smp_in = in_bk[itpt >> SMIX_SFT_FT]; \
+    smp_in = in_bk[itpt >> SMIX_SHIFT]; \
 } while (0)
 
 #define DO_FILTER() do { \
@@ -67,10 +67,12 @@
     register int smp_in; \
     x *in_bk = vi->sptr; \
     int cur_bk = vi->pos - 1; \
-    int itpt = vi->itpt + (1 << SMIX_SFT_FT)
+    int itpt = vi->itpt + (1 << SMIX_SHIFT)
+
 #define VAR_ITPT(x) \
     VAR_NORM(x); \
     int smp_x1 = 0, smp_dt = 0
+
 #define VAR_FILT \
     int fx1 = vi->flt_X1, fx2 = vi->flt_X2
 
@@ -85,7 +87,7 @@ SMIX_MIXER(smix_st8itpt)
 
     vl <<= 8;
     vr <<= 8;
-    while (count--) { INTERPOLATE (); MIX_STEREO (); }
+    while (count--) { INTERPOLATE(); MIX_STEREO(); }
 }
 
 
@@ -94,7 +96,7 @@ SMIX_MIXER(smix_st8itpt)
 SMIX_MIXER(smix_st16itpt)
 {
     VAR_ITPT(int16);
-    while (count--) { INTERPOLATE (); MIX_STEREO (); }
+    while (count--) { INTERPOLATE(); MIX_STEREO(); }
 }
 
 
@@ -107,7 +109,7 @@ SMIX_MIXER(smix_st8norm)
     vl <<= 8;
     vr <<= 8;
     in_bk += cur_bk;
-    while (count--) { DONT_INTERPOLATE (); MIX_STEREO (); }
+    while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
 
 
@@ -118,7 +120,7 @@ SMIX_MIXER(smix_st16norm)
     VAR_NORM(int16);
 
     in_bk += cur_bk;
-    while (count--) { DONT_INTERPOLATE (); MIX_STEREO (); }
+    while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
 
 
@@ -129,7 +131,7 @@ SMIX_MIXER(smix_mn8itpt)
     VAR_ITPT(int8);
 
     vl <<= 9;
-    while (count--) { INTERPOLATE (); MIX_MONO (); }
+    while (count--) { INTERPOLATE(); MIX_MONO(); }
 }
 
 
@@ -140,7 +142,7 @@ SMIX_MIXER(smix_mn16itpt)
     VAR_ITPT(int16);
 
     vl <<= 1;
-    while (count--) { INTERPOLATE (); MIX_MONO (); }
+    while (count--) { INTERPOLATE(); MIX_MONO(); }
 }
 
 
@@ -152,7 +154,7 @@ SMIX_MIXER(smix_mn8norm)
 
     vl <<= 9;
     in_bk += cur_bk;
-    while (count--) { DONT_INTERPOLATE (); MIX_MONO (); }
+    while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
 
 
@@ -164,7 +166,7 @@ SMIX_MIXER(smix_mn16norm)
 
     vl <<= 1;
     in_bk += cur_bk;
-    while (count--) { DONT_INTERPOLATE (); MIX_MONO (); }
+    while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
 
 /*
@@ -180,7 +182,7 @@ SMIX_MIXER(smix_st8itpt_flt)
 
     vl <<= 8;
     vr <<= 8;
-    while (count--) { INTERPOLATE (); DO_FILTER (); MIX_STEREO (); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO(); }
     SAVE_FILTER();
 }
 
@@ -192,7 +194,7 @@ SMIX_MIXER(smix_st16itpt_flt)
     VAR_ITPT(int16);
     VAR_FILT;
 
-    while (count--) { INTERPOLATE (); DO_FILTER (); MIX_STEREO (); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO(); }
     SAVE_FILTER();
 }
 
@@ -205,7 +207,7 @@ SMIX_MIXER(smix_mn8itpt_flt)
     VAR_FILT;
 
     vl <<= 9;
-    while (count--) { INTERPOLATE (); DO_FILTER (); MIX_MONO (); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO(); }
     SAVE_FILTER();
 }
 
@@ -218,7 +220,7 @@ SMIX_MIXER(smix_mn16itpt_flt)
     VAR_FILT;
 
     vl <<= 1;
-    while (count--) { INTERPOLATE (); DO_FILTER (); MIX_MONO (); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO(); }
     SAVE_FILTER();
 }
 
