@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.7 2007-10-04 14:45:00 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.8 2007-10-04 18:23:27 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,7 +21,7 @@
 static char drive_id[32];
 
 
-static void delete_spaces (char *l)
+static void delete_spaces(char *l)
 {
     char *s;
 
@@ -34,13 +34,13 @@ static void delete_spaces (char *l)
 }
 
 
-static int get_yesno (char *s)
+static int get_yesno(char *s)
 {
     return !(strncmp (s, "y", 1) && strncmp (s, "o", 1));
 }
 
 
-int xmpi_read_rc (struct xmp_control *ctl)
+int xmpi_read_rc(struct xmp_control *ctl)
 {
     FILE *rc;
     char myrc[MAXPATHLEN], myrc2[MAXPATHLEN];
@@ -101,7 +101,6 @@ int xmpi_read_rc (struct xmp_control *ctl)
 	getval_yn (flags, "fx9bug", XMP_CTL_FX9BUG);
 #endif
 	getval_yn (outfmt, "mono", XMP_FMT_MONO);
-	getval_no ("anticlick", ctl->aclick);
 	getval_no ("mix", ctl->mix);
 	getval_no ("crunch", ctl->crunch);
 	getval_no ("chorus", ctl->chorus);
@@ -136,7 +135,7 @@ int xmpi_read_rc (struct xmp_control *ctl)
 }
 
 
-static void parse_modconf (struct xmp_control *ctl, char *fn,
+static void parse_modconf(struct xmp_control *ctl, char *fn,
 	unsigned crc, unsigned size)
 {
     FILE *rc;
