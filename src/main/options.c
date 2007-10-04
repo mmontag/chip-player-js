@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.18 2007-09-29 20:38:28 cmatsuoka Exp $
+ * $Id: options.c,v 1.19 2007-10-04 14:25:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -175,6 +175,7 @@ static void usage (char *s, struct xmp_control *opt)
 "   --stereo               Stereo output\n"
 
 "\nSoftware mixer options:\n"
+"   -a --anticlick         Anti-click filter strength (0 to 2)\n"
 "   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
 "   -c --stdout            Mix the module to stdout\n"
 "   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
@@ -199,10 +200,11 @@ static void usage (char *s, struct xmp_control *opt)
 void get_options (int argc, char **argv, struct xmp_control *opt)
 {
     int optidx = 0;
-#define OPTIONS "8b:cD:d:f:hilM:mo:P:qRrS:s:T:t:uVv"
+#define OPTIONS "8a:b:cD:d:f:hilM:mo:P:qRrS:s:T:t:uVv"
     static struct option lopt[] =
     {
 	{ "8bit",		 0, 0, '8' },
+	{ "anticlick",		 1, 0, 'a' },
 	{ "bits",		 1, 0, 'b' },
 	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
@@ -247,6 +249,9 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	switch (o) {
 	case '8':
 	    opt->flags |= XMP_CTL_8BIT;
+	    break;
+	case 'a':
+	    opt->aclick = atoi(optarg);
 	    break;
 	case 'b':
 	    opt->resol = atoi (optarg);
@@ -304,7 +309,7 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	    opt->outfile = optarg;
 	    break;
 	case 'P':
-	    opt->mix = atoi (optarg);
+	    opt->mix = atoi(optarg);
 	    if (opt->mix < 0)
 		opt->mix = 0;
 	    if (opt->mix > 100)

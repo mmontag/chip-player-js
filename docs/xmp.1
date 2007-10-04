@@ -6,6 +6,7 @@ xmp - Extended Module Player
 .SH "SYNOPSIS" 
 \fBxmp\fP
 [\fB-8, --8bit\fP]
+[\fB-a, --anticlick\fP \fIlevel\fp]
 [\fB-b, --bits\fP \fIbits\fP]
 [\fB-c, --stdout\fP]
 [\fB--chorus\fP \fIdepth\fP]
@@ -55,6 +56,9 @@ to a raw or WAV file\&.
 Convert 16 bit samples to 8 bit\&. You may want to use this mode to
 save memory in the sound device (AWE cards will ignore this mode and
 always work with 16 bit samples)\&.
+.IP "\fB-a, --anticlick\fP \fIlevel\fP" 
+Set the anticlick level\&. Valid values are 0, 1 and 2, setting it to 0
+disables anticlick\&. Higher anticlick levels reduce sound brightness\&.
 .IP "\fB-b, --bits\fP \fIbits\fP" 
 Set the software mixer resolution (8 or 16 bits)\&. If ommited,
 The audio device will be opened at the highest resolution available\&.

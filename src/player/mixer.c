@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.9 2007-10-04 12:52:41 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.10 2007-10-04 14:25:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -108,62 +108,93 @@ static void (*out_fn[])() = {
     out_su16norm
 };
 
+static int smix_p1, smix_p2;
 
-/* Handler 32bit samples to 8bit, signed or unsigned, mono or stereo output */
+#define ACLICK_0() do { \
+    *dest = smp; \
+} while (0)
+
+#define ACLICK_1() do { \
+    smp = (smp + smix_p1) / 2; \
+    *dest = smp; \
+    smix_p1 = smp; \
+} while (0)
+
+#define ACLICK_2() do { \
+    smp = (smp + smix_p1 + smix_p2) / 3; \
+    *dest = smp; \
+    smix_p2 = smix_p1; \
+    smix_p1 = smp; \
+} while (0)
+
+#define DOWNMIX_8(x) do { \
+    for (; num--; ++src, ++dest) { \
+	smp = *src >> (LIM_FT + 8); \
+	smp = smp > LIM8_HI ? lhi : smp < LIM8_LO ? llo : smp + offs; \
+	ACLICK_##x(); \
+    } \
+} while (0)
+
+/* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
 static void out_su8norm(char *dest, int *src, int num, int cod)
 {
-    int smp, lhi, llo, left, offs;
+    int smp, lhi, llo, offs;
 
-    offs = 0;
-    left = LIM_FT + 8;
-    if (cod & XMP_FMT_UNS)
-	offs = 0x80;
+    offs = (cod & XMP_FMT_UNS) ? 0x80 : 0;
 
-    lhi = LIM8_HI;
-    llo = LIM8_LO;
+    lhi = LIM8_HI + offs;
+    llo = LIM8_LO + offs;
 
-    for (; num--; ++src, ++dest) {
-	smp = *src >> left;
-	smp = smp > lhi ? lhi + offs : smp < llo ? llo + offs : smp + offs;
-	*dest = smp;
+    switch (xmp_ctl->aclick) {
+    case 0 : DOWNMIX_8(0); break;
+    case 1 : DOWNMIX_8(1); break;
+    default: DOWNMIX_8(2);
     }
 }
 
+#define DOWNMIX_16(x) do { \
+    for (; num--; ++src, ++dest) { \
+	smp = *src >> LIM_FT; \
+	smp = smp > LIM16_HI ? lhi : smp < LIM16_LO ? llo : smp + offs; \
+	ACLICK_##x(); \
+    } \
+} while (0)
 
-/* Handler 32bit samples to 16bit, signed or unsigned, mono or stereo output */
+/* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
 static void out_su16norm(int16 *dest, int *src, int num, int cod)
 {
-    int smp, lhi, llo, left, offs;
+    int smp, lhi, llo, offs;
 
-    offs = 0;
-    left = LIM_FT;
-    if (cod & XMP_FMT_UNS)
-	offs = 0x8000;
+    offs = (cod & XMP_FMT_UNS) ? 0x8000 : 0;
 
-    lhi = LIM16_HI;
-    llo = LIM16_LO;
+    lhi = LIM16_HI + offs;
+    llo = LIM16_LO + offs;
 
-    for (; num--; ++src, ++dest) {
-	smp = *src >> left;
-	smp = smp > lhi ? lhi + offs : smp < llo ? llo + offs : smp + offs;
-	*dest = smp;
+    switch (xmp_ctl->aclick) {
+    case 0 : DOWNMIX_16(0); break;
+    case 1 : DOWNMIX_16(1); break;
+    default: DOWNMIX_16(2);
     }
 }
 
+#define DOWNMIX_ULAW(x) do { \
+    for (; num--; ++src, ++dest) { \
+	smp = *src >> (LIM_FT + 4); \
+	smp = smp > LIM12_HI ? ulaw_encode(LIM12_HI) : \
+	      smp < LIM12_LO ? ulaw_encode(LIM12_LO) : ulaw_encode (smp); \
+	ACLICK_##x(); \
+    } \
+} while (0)
 
-/* Handler 32bit samples to 8bit, unsigned ulaw, mono or stereo output */
+/* Downmix 32bit samples to 8bit, unsigned ulaw, mono or stereo output */
 static void out_u8ulaw(char *dest, int *src, int num, int cod)
 {
-    int smp, lhi, llo, left;
+    int smp;
 
-    lhi = LIM12_HI;
-    llo = LIM12_LO;
-    left = LIM_FT + 4;
-
-    for (; num--; ++src, ++dest) {
-	smp = *src >> left;
-	*dest = smp > lhi ? ulaw_encode (lhi) :
-	      smp < llo ? ulaw_encode (llo) : ulaw_encode (smp);
+    switch (xmp_ctl->aclick) {
+    case 0 : DOWNMIX_ULAW(0); break;
+    case 1 : DOWNMIX_ULAW(1); break;
+    default: DOWNMIX_ULAW(2);
     }
 }
 
@@ -575,6 +606,7 @@ int xmp_smix_on(struct xmp_control *ctl)
     if (!(smix_buffer && smix_buf32b))
 	return XMP_ERR_ALLOC;
 
+    smix_p1 = smix_p2 = 0;
     while (cnt--) {
 	if (!(smix_buffer[cnt] = calloc (SMIX_RESMAX, OUT_MAXLEN)))
 	    return XMP_ERR_ALLOC;

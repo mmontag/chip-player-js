@@ -13,14 +13,14 @@
 #define SMIX_C4NOTE	6864
 
 #define SMIX_NUMVOC	64	/* default number of softmixer voices */
-#define SMIX_MAXRAT	48000	/* max sampling rate (Hz) */
+#define SMIX_MAXRATE	48000	/* max sampling rate (Hz) */
 #define SMIX_MINBPM	0x10	/* min BPM */
 #define SMIX_RESMAX	(sizeof (int16))	/* max output resolution */
 
 #define SMIX_SHIFT	16
 #define SMIX_MASK	0xffff
 
-#define OUT_MAXLEN	(5 * 2 * SMIX_MAXRAT * SMIX_RESMAX / SMIX_MINBPM / 3)
+#define OUT_MAXLEN	(5 * 2 * SMIX_MAXRATE * SMIX_RESMAX / SMIX_MINBPM / 3)
 
 #define FILTER_PRECISION (1<<12)
 struct voice_info {
@@ -66,6 +66,6 @@ void	xmp_smix_starttimer	(void);
 void	xmp_smix_stoptimer	(void);
 int	xmp_smix_writepatch	(struct patch_info *);
 int	xmp_smix_getmsg		(void);
-void *	xmp_smix_buffer		(void);
+void    *xmp_smix_buffer	(void);
 
 #endif /* __MIXER_H */
