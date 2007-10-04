@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.29 2007-09-27 00:18:16 cmatsuoka Exp $
+ * $Id: driver.c,v 1.30 2007-10-04 01:41:57 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -224,7 +224,7 @@ static int drv_select (struct xmp_control *ctl)
 }
 
 
-static void drv_resetvoice (int voc, int mute)
+static void drv_resetvoice(int voc, int mute)
 {
     if ((uint32) voc >= numvoc)
 	return;
@@ -235,7 +235,7 @@ static void drv_resetvoice (int voc, int mute)
     xmp_ctl->numvoc--;
     ch2vo_count[voice_array[voc].root]--;
     ch2vo_array[voice_array[voc].chn] = FREE;
-    memset (&voice_array[voc], 0, sizeof (struct voice_info));
+    memset(&voice_array[voc], 0, sizeof (struct voice_info));
     voice_array[voc].chn = voice_array[voc].root = FREE;
 }
 
@@ -336,9 +336,9 @@ int xmp_drv_on (int num)
 
     num = numvoc = driver->numvoices (num);
 
-    voice_array = calloc (numvoc, sizeof (struct voice_info));
-    ch2vo_array = calloc (numchn, sizeof (int));
-    ch2vo_count = calloc (numchn, sizeof (int));
+    voice_array = calloc(numvoc, sizeof (struct voice_info));
+    ch2vo_array = calloc(numchn, sizeof (int));
+    ch2vo_count = calloc(numchn, sizeof (int));
     if (!(voice_array && ch2vo_array && ch2vo_count))
 	return XMP_ERR_ALLOC;
 
@@ -365,43 +365,43 @@ void xmp_drv_off ()
     xmp_ctl->numvoc = numvoc = 0;
     xmp_ctl->numchn = numchn = 0;
     numtrk = 0;
-    free (ch2vo_count);
-    free (ch2vo_array);
-    free (voice_array);
+    free(ch2vo_count);
+    free(ch2vo_array);
+    free(voice_array);
 }
 
 
-/*inline*/ void xmp_drv_clearmem ()
+/*inline*/ void xmp_drv_clearmem()
 {
-    driver->clearmem ();
+    driver->clearmem();
 }
 
 
-void xmp_drv_reset ()
+void xmp_drv_reset()
 {
     int num;
 
     if (numchn < 1)
 	return;
 
-    driver->numvoices (driver->numvoices (43210));
-    driver->reset ();
-    driver->numvoices (num = numvoc);
+    driver->numvoices(driver->numvoices (43210));
+    driver->reset();
+    driver->numvoices(num = numvoc);
 
-    memset (ch2vo_count, 0, numchn * sizeof (int));
-    memset (voice_array, 0, numvoc * sizeof (struct voice_info));
+    memset(ch2vo_count, 0, numchn * sizeof (int));
+    memset(voice_array, 0, numvoc * sizeof (struct voice_info));
     for (; num--; voice_array[num].chn = voice_array[num].root = FREE);
     for (num = numchn; num--; ch2vo_array[num] = FREE);
     xmp_ctl->numvoc = agevoc = 0;
 }
 
 
-void xmp_drv_resetchannel (int chn)
+void xmp_drv_resetchannel(int chn)
 {
     int voc;
 
     chn += numusr;
-    if ((uint32) chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
+    if ((uint32)chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
 	return;
 
     driver->setvol (voc, 0);
@@ -430,9 +430,10 @@ static int drv_allocvoice(int chn)
 
 	return voc;
     }
-    for (voc = numvoc, vfree = age = FREE; voc--;)
+    for (voc = numvoc, vfree = age = FREE; voc--;) {
 	if (voice_array[voc].root == chn && voice_array[voc].age < age)
 	    age = voice_array[vfree = voc].age;
+    }
 
     ch2vo_array[voice_array[vfree].chn] = FREE;
     voice_array[vfree].age = agevoc;
@@ -460,20 +461,20 @@ void xmp_drv_setvol(int chn, int vol)
     int voc;
 
     chn += numusr;
-    if ((uint32) chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
+    if ((uint32)chn >= numchn || (uint32)(voc = ch2vo_array[chn]) >= numvoc)
 	return;
 
     if (nummte > voice_array[voc].root && cmute_array[voice_array[voc].root])
 	vol = TURN_OFF;
 
-    driver->setvol (voc, vol);
+    driver->setvol(voc, vol);
 
     if (!(vol || chn < numtrk))
-	drv_resetvoice (voc, TURN_ON);
+	drv_resetvoice(voc, TURN_ON);
 }
 
 
-void xmp_drv_setpan (int chn, int pan)
+void xmp_drv_setpan(int chn, int pan)
 {
     int voc;
 
@@ -481,11 +482,11 @@ void xmp_drv_setpan (int chn, int pan)
     if ((uint32) chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
 	return;
 
-    driver->setpan (voc, pan);
+    driver->setpan(voc, pan);
 }
 
 
-void xmp_drv_seteffect (int chn, int type, int val)
+void xmp_drv_seteffect(int chn, int type, int val)
 {
     int voc;
 
@@ -493,37 +494,37 @@ void xmp_drv_seteffect (int chn, int type, int val)
     if ((uint32) chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
 	return;
 
-    driver->seteffect (voc, type, val);
+    driver->seteffect(voc, type, val);
 }
 
 
-void xmp_drv_setsmp (int chn, int smp)
+void xmp_drv_setsmp(int chn, int smp)
 {
     int voc, pos, itp;
     struct voice_info *vi;
 
     chn += numusr;
-    if ((uint32) chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
+    if ((uint32)chn >= numchn || (uint32)(voc = ch2vo_array[chn]) >= numvoc)
 	return;
 
     vi = &voice_array[voc];
-    if ((uint32) smp >= XMP_DEF_MAXPAT || !patch_array[smp] || vi->smp == smp)
+    if ((uint32)smp >= XMP_DEF_MAXPAT || !patch_array[smp] || vi->smp == smp)
 	return;
 
     pos = vi->pos;
     itp = vi->itpt;
 
-    smix_setpatch (voc, smp, TURN_ON);
-    smix_voicepos (voc, pos, itp);
+    smix_setpatch(voc, smp);
+    smix_voicepos(voc, pos, itp);
     if (extern_drv) {
-	driver->setpatch (voc, smp);
-	driver->setnote (voc, vi->note);
-	driver->voicepos (voc, pos << !!(patch_array[smp]->mode& WAVE_16_BITS));
+	driver->setpatch(voc, smp);
+	driver->setnote(voc, vi->note);
+	driver->voicepos(voc, pos << !!(patch_array[smp]->mode& WAVE_16_BITS));
     }
 }
 
 
-int xmp_drv_setpatch (int chn, int ins, int smp, int note, int nna,
+int xmp_drv_setpatch(int chn, int ins, int smp, int note, int nna,
 	int dct, int dca, int flg) {
     int voc, vfree;
 
@@ -556,8 +557,9 @@ int xmp_drv_setpatch (int chn, int ins, int smp, int note, int nna,
 		voice_array[voc].chn = --chn;
 		ch2vo_array[chn] = voc;
 		voc = vfree;
-	    } else if (flg)
+	    } else if (flg) {
 		return -numusr - 1;
+	    }
 	}
     } else {
 	if ((voc = drv_allocvoice (chn)) < 0)
@@ -570,8 +572,8 @@ int xmp_drv_setpatch (int chn, int ins, int smp, int note, int nna,
 	drv_resetvoice (voc, TURN_ON);
 	return -numusr - 1;
     }
-    smix_setpatch (voc, smp, TURN_ON);
-    smix_setnote (voc, note);
+    smix_setpatch(voc, smp);
+    smix_setnote(voc, note);
     voice_array[voc].ins = ins;
     voice_array[voc].act = nna;
     if (extern_drv) {
