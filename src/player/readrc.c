@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.6 2007-09-16 05:10:22 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.7 2007-10-04 14:45:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -101,6 +101,7 @@ int xmpi_read_rc (struct xmp_control *ctl)
 	getval_yn (flags, "fx9bug", XMP_CTL_FX9BUG);
 #endif
 	getval_yn (outfmt, "mono", XMP_FMT_MONO);
+	getval_no ("anticlick", ctl->aclick);
 	getval_no ("mix", ctl->mix);
 	getval_no ("crunch", ctl->crunch);
 	getval_no ("chorus", ctl->chorus);

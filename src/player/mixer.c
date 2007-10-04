@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.10 2007-10-04 14:25:15 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.11 2007-10-04 14:45:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -43,9 +43,6 @@ static int smix_mode;			/* mode = 0:OFF, 1:MONO, 2:STEREO */
 static int smix_resol;			/* resolution output 0:8bit, 1:16bit */
 static int smix_ticksize;
 int **xmp_mix_buffer = &smix_buf32b;
-
-static int smix_dtright;		/* anticlick control, right channel */
-static int smix_dtleft;			/* anticlick control, left channel */
 
 static int echo_msg;
 
@@ -210,86 +207,9 @@ inline static void smix_resetvar()
 	xmp_ctl->freq * xmp_ctl->rrate * 33 / xmp_bpm / 12500 :
     	xmp_ctl->freq * xmp_ctl->rrate / xmp_bpm / 100;
 
-    if (smix_buf32b) {
-	smix_dtright = smix_dtleft = TURN_OFF;
+    if (smix_buf32b)
 	memset(smix_buf32b, 0, smix_ticksize * smix_mode * sizeof (int));
-    }
 }
-
-
-#if 0
-/* Hipolito's softmixer with rampdown anticlick */
-static void smix_rampdown(int voc, int32 *buf, int cnt)
-{
-    int stereo;
-    int smp_l, smp_r;
-    int dec_l, dec_r;
-
-    if (voc < 0) {
-	smp_r = smix_dtright;
-	smp_l = smix_dtleft;
-    } else {
-	smp_r = voice_array[voc].sright;
-	smp_l = voice_array[voc].sleft;
-	voice_array[voc].sright = voice_array[voc].sleft = TURN_OFF;
-    }
-
-    if (!smp_l && !smp_r)
-	return;
-
-    if (!buf) {
-	buf = smix_buf32b;
-	cnt = smix_ticksize;
-    }
-    if (!cnt)
-	return;
-
-    stereo = !(xmp_ctl->outfmt & XMP_FMT_MONO);
-    dec_r = smp_r / cnt;
-    dec_l = smp_l / cnt;
-
-    while ((smp_r || smp_l) && cnt--) {
-	if (dec_r > 0)
-	    *(buf++) += smp_r > dec_r ? (smp_r -= dec_r) : (smp_r = 0);
-	else
-	    *(buf++) += smp_r < dec_r ? (smp_r -= dec_r) : (smp_r = 0);
-
-	if (dec_l > 0)
-	    *(buf++) += smp_l > dec_l ? (smp_l -= dec_l) : (smp_l = 0);
-	else
-	    *(buf++) += smp_l < dec_l ? (smp_l -= dec_l) : (smp_l = 0);
-    }
-}
-
-
-/* Ok, it's messy, but it works :-) Hipolito */
-static void smix_anticlick(int voc, int vol, int pan, int *buf, int cnt)
-{
-    int oldvol, newvol;
-    struct voice_info *vi = &voice_array[voc];
-
-    if (extern_drv)
-	return;			/* Anticlick is useful for softmixer only */
-
-    if (vi->vol) {
-	oldvol = vi->vol * (0x80 - vi->pan);
-	newvol = vol * (0x80 - pan);
-	vi->sright -= vi->sright / oldvol * newvol;
-
-	oldvol = vi->vol * (0x80 + vi->pan);
-	newvol = vol * (0x80 + pan);
-	vi->sleft -= vi->sleft / oldvol * newvol;
-    }
-
-    if (!buf) {
-	smix_dtright += vi->sright;
-	smix_dtleft += vi->sleft;
-	vi->sright = vi->sleft = TURN_OFF;
-    } else {
-	smix_rampdown(voc, buf, cnt);
-    }
-}
-#endif
 
 
 /* Fill the output buffer calling one of the handlers. The buffer contains
@@ -301,14 +221,8 @@ static int softmixer()
     struct patch_info* pi;
     int smp_cnt, tic_cnt, lpsta, lpend;
     int vol_l, vol_r, itp_inc, voc;
-    int prv_l, prv_r;
     int synth = 1;
     int* buf_pos;
-
-#if 0
-    if (!extern_drv)
-	smix_rampdown (-1, NULL, TURN_OFF);	/* Anti-click */
-#endif
 
     for (voc = numvoc; voc--; ) {
 	vi = &voice_array[voc];
@@ -367,10 +281,6 @@ static int softmixer()
 	    if (vi->vol) {
 		int mixer = vi->fidx & FIDX_FLAGMASK;
 
-		/* Something for Hipolito's anticlick routine */
-		prv_r = buf_pos[smix_mode * smp_cnt - 2];
-		prv_l = buf_pos[smix_mode * smp_cnt - 1];
-
 		/* "Beautiful Ones" apparently uses 0xfe as 'no filter' :\ */
 		if (vi->cutoff >= 0xfe)
 		    mixer &= ~FLAG_FILTER;
@@ -378,10 +288,6 @@ static int softmixer()
 		/* Call the output handler */
 		mix_fn[mixer](vi, buf_pos, smp_cnt, vol_l, vol_r, itp_inc);
 		buf_pos += smix_mode * smp_cnt;
-
-		/* More stuff for Hipolito's anticlick routine */
-		vi->sright = buf_pos[-2] - prv_r;
-		vi->sleft = buf_pos[-1] - prv_l;
 	    }
 
 	    vi->itpt += itp_inc * smp_cnt;
@@ -394,7 +300,6 @@ static int softmixer()
 
 	    /* Single shot sample */
             if (!(vi->fidx ^= vi->fxor) || lpsta >= lpend) {
-		//smix_anticlick(voc, 0, 0, buf_pos, tic_cnt);
 		drv_resetvoice(voc, 0);
 		tic_cnt = 0;
 		continue;
@@ -426,7 +331,7 @@ static void smix_voicepos(int voc, int pos, int itp)
 
     res = !!(pi->mode & WAVE_16_BITS);
     mde = (pi->mode & WAVE_LOOPING) && !(pi->mode & WAVE_BIDIR_LOOP);
-    mde = (mde << res) + res + 1;	/* Ugh, look for xmp_cvt_anticlick! */
+    mde = (mde << res) + res + 1;	/* see xmp_cvt_anticlick */
 
     lpend = pi->len - mde;
     if (pi->mode & WAVE_LOOPING)
@@ -520,7 +425,6 @@ void xmp_smix_setvol(int voc, int vol)
 {
     struct voice_info *vi = &voice_array[voc];
  
-    //smix_anticlick(voc, vol, vi->pan, NULL, 0);
     vi->vol = vol;
 }
 
