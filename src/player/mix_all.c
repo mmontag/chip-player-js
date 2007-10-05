@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: mix_all.c,v 1.2 2007-10-04 12:52:41 cmatsuoka Exp $
+ * $Id: mix_all.c,v 1.3 2007-10-05 01:49:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -59,10 +59,6 @@
     itpt += itpt_inc; \
 } while (0)
 
-#define MIX_LOOP(x) do { \
-    while (count--) { x } \
-} while (0)
-
 #define VAR_NORM(x) \
     register int smp_in; \
     x *in_bk = vi->sptr; \
@@ -78,6 +74,7 @@
 
 #define SMIX_MIXER(f) void f(struct voice_info *vi, int* tmp_bk, \
     int count, int vl, int vr, int itpt_inc)
+
 
 /* Handler for 8 bit samples, interpolated stereo output
  */
@@ -229,6 +226,6 @@ SMIX_MIXER(smix_mn16itpt_flt)
  */
 SMIX_MIXER(smix_synth)
 {
-    synth_mixer (tmp_bk, count, vl << 1, vr << 1, itpt_inc);
+    synth_mixer(tmp_bk, count, vl << 1, vr << 1, itpt_inc);
 }
 

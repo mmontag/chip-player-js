@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.8 2007-10-04 14:25:14 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.9 2007-10-05 01:49:17 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -160,7 +160,6 @@ struct xmp_control {
     int volume;		/* Global volume */
     int volbase;	/* Volume base */
     int *vol_xlat;	/* Volume translation table */
-    int aclick;		/* Anti-click level */
     char *parm[64];	/* Driver parameter data */
 };
 

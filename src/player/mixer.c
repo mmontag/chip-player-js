@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.12 2007-10-04 18:23:27 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.13 2007-10-05 01:49:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -180,7 +180,6 @@ inline static void smix_resetvar()
 /* Hipolito's rampdown anticlick */
 static void smix_rampdown(int voc, int32 *buf, int cnt)
 {
-    int stereo;
     int smp_l, smp_r;
     int dec_l, dec_r;
 
@@ -203,7 +202,6 @@ static void smix_rampdown(int voc, int32 *buf, int cnt)
     if (!cnt)
 	return;
 
-    stereo = !(xmp_ctl->outfmt & XMP_FMT_MONO);
     dec_r = smp_r / cnt;
     dec_l = smp_l / cnt;
 
