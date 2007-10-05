@@ -23,6 +23,7 @@
 #define OUT_MAXLEN	(5 * 2 * SMIX_MAXRATE * SMIX_RESMAX / SMIX_MINBPM / 3)
 
 #define FILTER_PRECISION (1<<12)
+
 struct voice_info {
     int chn;			/* channel link */
     int root;			/* */

@@ -1,14 +1,17 @@
-$Id: ChangeLog,v 1.110 2007-10-04 18:23:27 cmatsuoka Exp $
+$Id: ChangeLog,v 1.111 2007-10-05 00:18:43 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.3.1 ()
+2.3.1 (20071005)
+	- added PTM global volume effect
 	- fixed output filename setting in wav output
 	- fixed size field setting in wav driver
 	- fixed configure option --sysconfdir (reported by Douglas Carmichael)
 	- fixed major bug in anticlick routine generating clicks in the
 	  right audio channel (reported by Douglas Carmichael)
+	- changed rampdown time in Hipolito's anticlick algorithm (removes
+	  clicks from PM's 2nd Reality, reported by Douglas Carmichael)
 	- changed default file name when writing to WAV to <modname>.wav
 
 2.3.0 (20071002)

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.12 2007-09-27 00:17:35 cmatsuoka Exp $
+ * $Id: player.c,v 1.13 2007-10-05 00:18:44 cmatsuoka Exp $
  */
 
 /*
@@ -686,24 +686,24 @@ static void module_play (int chn, int t)
     /* Adjust pitch and pan, than play the note */
     finalpan = xmp_ctl->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * xmp_ctl->mix / 100;
-    xmp_drv_setbend (chn, (xc->pitchbend + xc->a_val[xc->a_idx]));
-    xmp_drv_setpan (chn, xmp_ctl->fetch & XMP_CTL_REVERSE ?
+    xmp_drv_setbend(chn, (xc->pitchbend + xc->a_val[xc->a_idx]));
+    xmp_drv_setpan(chn, xmp_ctl->fetch & XMP_CTL_REVERSE ?
 	-finalpan : finalpan);
-    xmp_drv_setvol (chn, finalvol >> 2);
+    xmp_drv_setvol(chn, finalvol >> 2);
 
     if (cutoff < 0xff && (xmp_ctl->fetch & XMP_CTL_FILTER)) {
-	filter_setup (xc, cutoff);
-	xmp_drv_seteffect (chn, XMP_FX_FILTER_B0, xc->flt_B0);
-	xmp_drv_seteffect (chn, XMP_FX_FILTER_B1, xc->flt_B1);
-	xmp_drv_seteffect (chn, XMP_FX_FILTER_B2, xc->flt_B2);
+	filter_setup(xc, cutoff);
+	xmp_drv_seteffect(chn, XMP_FX_FILTER_B0, xc->flt_B0);
+	xmp_drv_seteffect(chn, XMP_FX_FILTER_B1, xc->flt_B1);
+	xmp_drv_seteffect(chn, XMP_FX_FILTER_B2, xc->flt_B2);
     } else {
 	cutoff = 0xff;
     }
 
-    xmp_drv_seteffect (chn, XMP_FX_RESONANCE, xc->resonance);
-    xmp_drv_seteffect (chn, XMP_FX_CUTOFF, cutoff);
-    xmp_drv_seteffect (chn, XMP_FX_CHORUS, xxc[chn].cho);
-    xmp_drv_seteffect (chn, XMP_FX_REVERB, xxc[chn].rvb);
+    xmp_drv_seteffect(chn, XMP_FX_RESONANCE, xc->resonance);
+    xmp_drv_seteffect(chn, XMP_FX_CUTOFF, cutoff);
+    xmp_drv_seteffect(chn, XMP_FX_CHORUS, xxc[chn].cho);
+    xmp_drv_seteffect(chn, XMP_FX_REVERB, xxc[chn].rvb);
 }
 
 

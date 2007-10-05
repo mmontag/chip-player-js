@@ -12,7 +12,7 @@
  * (optimized, removed all math functions, added precalculated tables)
  * Mon Dec 25 10:49:19 BRST 2000
  *
- * $Id: filter.c,v 1.2 2007-08-04 23:06:55 cmatsuoka Exp $
+ * $Id: filter.c,v 1.3 2007-10-05 00:18:44 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -100,7 +100,7 @@ int dmpfac[] = {
 /*
  * Simple 2-poles resonant filter
  */
-void filter_setup (struct xmp_channel *xc, int cutoff)
+void filter_setup(struct xmp_channel *xc, int cutoff)
 {
 	/* [0-255] => [100Hz-8000Hz] */
 	float fc = (float)filter_cutoff[cutoff];

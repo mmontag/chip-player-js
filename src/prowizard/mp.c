@@ -4,7 +4,7 @@
  *
  * Converts MP packed MODs back to PTK MODs
  *
- * $Id: mp.c,v 1.8 2007-10-01 12:44:10 cmatsuoka Exp $
+ * $Id: mp.c,v 1.9 2007-10-05 00:18:44 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -27,7 +27,7 @@ struct pw_format pw_mp_id = {
 };
 
 struct pw_format pw_mp_noid = {
-	"MPn",
+	"MP",
 	"Module Protector noID",
 	0x00,
 	test_mp_noid,

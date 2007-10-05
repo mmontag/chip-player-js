@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.22 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.23 2007-10-05 00:18:44 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -856,8 +856,7 @@ int it_load (FILE * f)
 		event->fxp = lastevent[c].fxp;
 	    }
 	}
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
 
 	/* Sweep channels, look for unused tracks */
 	for (c = xxh->chn - 1; c >= max_ch; c--) {
@@ -878,8 +877,7 @@ int it_load (FILE * f)
     xmp_ctl->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
     xmp_ctl->fetch |= XMP_CTL_VIRTUAL | (xmp_ctl->flags & XMP_CTL_FILTER);
 
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     return XMP_OK;
 }
