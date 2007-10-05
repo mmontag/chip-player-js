@@ -1,5 +1,5 @@
 # Extended Module Player src/drivers/Makefile
-# $Id: Makefile,v 1.9 2007-09-23 13:13:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.10 2007-10-05 23:31:01 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
@@ -17,6 +17,9 @@ DRVDIR	= $(TOPDIR)/lib/drivers
 all: $(LIB) library
 
 include $(TOPDIR)/Makefile.rules
+
+bsp.o: bsp.c
+	g++ -c $(XCFLAGS) -o bsp.o bsp.c
 
 library: $(LIB)($(DRIVERS))
 

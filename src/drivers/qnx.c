@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: qnx.c,v 1.2 2007-08-05 19:55:59 cmatsuoka Exp $
+ * $Id: qnx.c,v 1.3 2007-10-05 23:31:01 cmatsuoka Exp $
  */
 
 /*
@@ -37,7 +37,7 @@ static char *help[] = {
     NULL
 };
 
-struct xmp_drv_info drv_arts = {
+struct xmp_drv_info drv_qnx = {
     "QNX",		/* driver ID */
     "QNX PCM audio",	/* driver description */
     NULL,		/* help */

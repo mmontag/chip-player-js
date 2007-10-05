@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.30 2007-10-03 19:58:37 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.31 2007-10-05 23:31:01 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -523,6 +523,16 @@ nto-qnx*)
 	DRIVERS="${DRIVERS} alsa05.o"
 	AC_DEFINE(DRIVER_ALSA05)
 	LIBS="${LIBS} -lasound"
+    fi
+    ;;
+dnl
+dnl	Test for BeOS
+dnl
+beos*)
+    AC_CHECK_HEADERS(SoundPlayer.h)
+    if test "${ac_cv_header_SoundPlayer_h}" = "yes"; then
+	DRIVERS="${DRIVERS}"	# bsp.o not ready
+	AC_DEFINE(DRIVER_BEOS)
     fi
     ;;
 dnl

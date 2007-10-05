@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.31 2007-10-04 12:52:41 cmatsuoka Exp $
+ * $Id: driver.c,v 1.32 2007-10-05 23:31:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -109,6 +109,9 @@ extern struct xmp_drv_info drv_os2dart;
 #ifdef DRIVER_QNX
 extern struct xmp_drv_info drv_qnx;
 #endif
+#ifdef DRIVER_BEOS
+extern struct xmp_drv_info drv_bsp;
+#endif
 
 #endif /* ENABLE_PLUGIN */
 
@@ -126,55 +129,61 @@ void xmp_init_drivers ()
     xmp_drv_register (&drv_wav);
 
 #ifdef DRIVER_OSX
-    xmp_drv_register (&drv_osx);
+    xmp_drv_register(&drv_osx);
 #endif
 #ifdef DRIVER_WIN32
-    xmp_drv_register (&drv_win32);
+    xmp_drv_register(&drv_win32);
 #endif
 #ifdef DRIVER_SOLARIS
-    xmp_drv_register (&drv_solaris);
+    xmp_drv_register(&drv_solaris);
 #endif
 #ifdef DRIVER_HPUX
-    xmp_drv_register (&drv_hpux);
+    xmp_drv_register(&drv_hpux);
 #endif
 #ifdef DRIVER_BSD
-    xmp_drv_register (&drv_bsd);
+    xmp_drv_register(&drv_bsd);
 #endif
 #ifdef DRIVER_NETBSD
-    xmp_drv_register (&drv_netbsd);
+    xmp_drv_register(&drv_netbsd);
 #endif
 #ifdef DRIVER_OPENBSD
-    xmp_drv_register (&drv_openbsd);
+    xmp_drv_register(&drv_openbsd);
 #endif
 #ifdef DRIVER_SGI
-    xmp_drv_register (&drv_sgi);
+    xmp_drv_register(&drv_sgi);
 #endif
 #ifdef DRIVER_OSS_SEQ
-    xmp_drv_register (&drv_oss_seq);
+    xmp_drv_register(&drv_oss_seq);
 #endif
 #ifdef DRIVER_OSS_MIX
-    xmp_drv_register (&drv_oss_mix);
+    xmp_drv_register(&drv_oss_mix);
 #endif
 #ifdef DRIVER_ALSA_MIX
-    xmp_drv_register (&drv_alsa_mix);
+    xmp_drv_register(&drv_alsa_mix);
 #endif
 #ifdef DRIVER_ALSA05
-    xmp_drv_register (&drv_alsa05);
+    xmp_drv_register(&drv_alsa05);
+#endif
+#ifdef DRIVER_QNX
+    xmp_drv_register(&drv_qnx);
+#endif
+#ifdef DRIVER_BEOS
+    xmp_drv_register(&drv_bsp);
 #endif
 #ifdef DRIVER_NET
-    xmp_drv_register (&drv_net);
+    xmp_drv_register(&drv_net);
 #endif
 #ifdef DRIVER_OS2DART
-    xmp_drv_register (&drv_os2dart);
+    xmp_drv_register(&drv_os2dart);
 #endif
 #ifdef DRIVER_ARTS
-    xmp_drv_register (&drv_arts);
+    xmp_drv_register(&drv_arts);
 #endif
 #ifdef DRIVER_ESD
-    xmp_drv_register (&drv_esd);
+    xmp_drv_register(&drv_esd);
 #endif
 #ifdef DRIVER_NAS
-    xmp_drv_register (&drv_nas);
+    xmp_drv_register(&drv_nas);
 #endif
 
 #endif /* ENABLE_PLUGIN */

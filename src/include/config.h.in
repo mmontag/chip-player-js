@@ -1,4 +1,4 @@
-/* $Id: config.h.in,v 1.7 2007-09-22 00:41:33 cmatsuoka Exp $ */
+/* $Id: config.h.in,v 1.8 2007-10-05 23:31:01 cmatsuoka Exp $ */
 
 /* Define DRIVER_OSS_* to enable OSS /dev/sequencer and /dev/audio support */
 #undef DRIVER_OSS_SEQ
@@ -27,6 +27,9 @@
 
 /* Define to enable QNX audio support */
 #undef DRIVER_QNX
+
+/* Define to enable BeOS audio support */
+#undef DRIVER_BEOS
 
 /* Define to enable Win32 audio support */
 #undef DRIVER_WIN32
