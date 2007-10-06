@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.24 2007-10-06 02:10:32 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.25 2007-10-06 02:16:23 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -209,7 +209,7 @@ int it_load (FILE * f)
     int max_ch, flag;
     int inst_map[120], inst_rmap[96];
     char tracker_name[80];
-    int mpt = 0;	/* ModPlug Tracker is quirky */
+    int mpt = 0;	/* ModPlug Tracker has quirks */
 
     LOAD_INIT ();
 
@@ -332,17 +332,16 @@ int it_load (FILE * f)
 
     MODULE_INFO ();
 
-    if (V (0))
-	report ("Instr/FX mode  : %s/%s",
-	    ifh.flags & IT_USE_INST ? ifh.cmwt >= 0x200 ?
-	    "new" : "old" : "sample",
-	    ifh.flags & IT_OLD_FX ? "old" : "IT");
+    reportv(0, "Instr/FX mode  : %s/%s",
+			ifh.flags & IT_USE_INST ? ifh.cmwt >= 0x200 ?
+			"new" : "old" : "sample",
+			ifh.flags & IT_OLD_FX ? "old" : "IT");
 
     if (~ifh.flags & IT_USE_INST)
 	xxh->ins = xxh->smp;
 
-    if (V (2) && ifh.special & IT_HAS_MSG) {
-	report ("\nMessage length : %d\n| ", ifh.msglen);
+    if (V(2) && ifh.special & IT_HAS_MSG) {
+	report("\nMessage length : %d\n| ", ifh.msglen);
 	i = ftell (f);
 	fseek (f, ifh.msgofs, SEEK_SET);
 	for (j = 0; j < ifh.msglen; j++) {
@@ -360,7 +359,7 @@ int it_load (FILE * f)
 
     INSTRUMENT_INIT ();
 
-    if (xxh->ins && V (0) && (ifh.flags & IT_USE_INST)) {
+    if (xxh->ins && V(0) && (ifh.flags & IT_USE_INST)) {
 	report ("\nInstruments    : %d ", xxh->ins);
 	if (V (1)) {
 	    if (ifh.cmwt >= 0x200)
@@ -498,8 +497,7 @@ int it_load (FILE * f)
 	        }
 	    }
 
-	    if (V (1))
-		report ("\n[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
+	    reportv(1, "\n[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
 			"%02x %c%c%c %3d %02x %02x ",
 		i, i2h.name,
 		i2h.nna < 4 ? nna[i2h.nna] : "none",
@@ -516,9 +514,7 @@ int it_load (FILE * f)
 		i2h.ifc,
 		i2h.ifr
 	    );
-
-	    if (V (0))
-		report (".");
+	    reportv(0, ".");
 
 	} else if (ifh.flags & IT_USE_INST) {
 /* Old instrument format */
@@ -601,8 +597,7 @@ int it_load (FILE * f)
 	        }
 	    }
 
-	    if (V (1))
-		report ("\n[%2X] %-26.26s %-4.4s %-4.4s %4d  "
+	    reportv(1, "\n[%2X] %-26.26s %-4.4s %-4.4s %4d  "
 			"%2d %c%c%c %3d ",
 		i, i1h.name,
 		i1h.nna < 4 ? nna[i1h.nna] : "none",
@@ -614,16 +609,14 @@ int it_load (FILE * f)
 		xxih[i].aei.flg & XXM_ENV_SUS ? 'S' : '-',
 		xxih[i].nsm
 	    );
-
-	    if (V (0))
-		report (".");
+	    reportv(0, ".");
 	}
     }
 
-    if (V (0))
+    if (V(0))
 	report ("\nStored Samples : %d ", xxh->smp);
 
-    if (V (2) || (~ifh.flags & IT_USE_INST && V (1)))
+    if (V(2) || (~ifh.flags & IT_USE_INST && V (1)))
 	report (
 "\n     Sample name                Len   LBeg  LEnd  SBeg  SEnd  FlCv VlGv C5Spd"
 	);

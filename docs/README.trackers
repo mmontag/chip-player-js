@@ -313,7 +313,7 @@ and the sample header size field: the document says that it belongs to the
 sample header data, but in XM files created by Fast Tracker II it is in
 the instrument. "Braintomb" by Jazztiz/ART (jz-btomb.xm) has this field
 in the sample header data. "Braintomb" is marked as 1.04 and the tracker
-name field is empty.
+name field is empty (probably created using Digitrakker).
 
 The instrument size field is 33 for XM files created with Fast Tracker II.
 "Braintomb" has 29 in this field, because the sample header size is in
