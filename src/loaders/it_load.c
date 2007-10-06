@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.25 2007-10-06 02:16:23 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.26 2007-10-06 02:46:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -279,7 +279,7 @@ int it_load (FILE * f)
     /* S3M skips pattern 0xfe */
     for (i = 0; i < (xxh->len - 1); i++) {
 	if (xxo[i] == 0xfe) {
-	    memcpy (&xxo[i], &xxo[i + 1], xxh->len - i - 1);
+	    memmove(&xxo[i], &xxo[i + 1], xxh->len - i - 1);
 	    xxh->len--;
 	}
     }

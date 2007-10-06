@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.13 2007-10-05 01:49:17 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.14 2007-10-06 02:46:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -96,7 +96,7 @@ static void (*mix_fn[])() = {
     smix_st8norm,
     smix_st8itpt_flt,
     smix_st16norm,
-    smix_st16itpt_flt,
+    smix_st16itpt_flt
 };
 
 #define OUT_U8ULAW	0

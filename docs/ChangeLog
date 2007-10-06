@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.112 2007-10-06 02:10:32 cmatsuoka Exp $
+$Id: ChangeLog,v 1.113 2007-10-06 02:46:20 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -6,6 +6,7 @@ Stable versions
 2.3.2 ():
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
 	  speech in "Deep In Her Eyes Remake", reported by Douglas Carmichael)
+	- fixed copy of overlapping memory areas in IT loader
 
 2.3.1 (20071005):
 	- added PTM global volume effect
