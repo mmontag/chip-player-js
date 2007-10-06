@@ -26,7 +26,7 @@ The Authors
 - XM loader endianism fixes
 - S3M loader fixes
 
-* Chris Cox <cox.family@sk.sympatico.ca>
+* Chris Cox <cox.christopher@gmail.com>
 - fixes for OpenBSD 2.8
 - S3M loader fixes
 - option parsing fixes

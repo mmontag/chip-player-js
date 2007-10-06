@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.31 2007-10-05 23:31:01 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.32 2007-10-06 11:12:38 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -28,7 +28,7 @@ AC_SUBST(LDFLAGS)
 LDFLAGS=""
 
 AC_SUBST(DRIVERS)
-DRIVERS="wav.o"
+DRIVERS=""
 
 AC_SUBST(MIXER)
 MIXER="mix_all.o"
@@ -531,7 +531,7 @@ dnl
 beos*)
     AC_CHECK_HEADERS(SoundPlayer.h)
     if test "${ac_cv_header_SoundPlayer_h}" = "yes"; then
-	DRIVERS="${DRIVERS}"	# bsp.o not ready
+	DRIVERS="${DRIVERS} beos.o"
 	AC_DEFINE(DRIVER_BEOS)
     fi
     ;;

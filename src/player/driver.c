@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.32 2007-10-05 23:31:01 cmatsuoka Exp $
+ * $Id: driver.c,v 1.33 2007-10-06 11:12:39 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,70 +50,29 @@ static inline void drv_resetvoice (int, int);
 
 void (*_driver_callback)(void *, int) = NULL;
 
-#ifndef ENABLE_PLUGIN
-
 extern struct xmp_drv_info drv_file;
 extern struct xmp_drv_info drv_wav;
 
-#ifdef DRIVER_OSX
 extern struct xmp_drv_info drv_osx;
-#endif
-#ifdef DRIVER_SOLARIS
 extern struct xmp_drv_info drv_solaris;
-#endif
-#ifdef DRIVER_HPUX
 extern struct xmp_drv_info drv_hpux;
-#endif
-#ifdef DRIVER_BSD
 extern struct xmp_drv_info drv_bsd;
-#endif
-#ifdef DRIVER_NETBSD
 extern struct xmp_drv_info drv_netbsd;
-#endif
-#ifdef DRIVER_OPENBSD
 extern struct xmp_drv_info drv_openbsd;
-#endif
-#ifdef DRIVER_SGI
 extern struct xmp_drv_info drv_sgi;
-#endif
-#ifdef DRIVER_AIX
 extern struct xmp_drv_info drv_aix;
-#endif
-#ifdef DRIVER_OSS_SEQ
 extern struct xmp_drv_info drv_oss_seq;
-#endif
-#ifdef DRIVER_OSS_MIX
 extern struct xmp_drv_info drv_oss_mix;
-#endif
-#ifdef DRIVER_ALSA_MIX
 extern struct xmp_drv_info drv_alsa_mix;
-#endif
-#ifdef DRIVER_ALSA05
 extern struct xmp_drv_info drv_alsa05;
-#endif
-#ifdef DRIVER_NET
 extern struct xmp_drv_info drv_net;
-#endif
-#ifdef DRIVER_ESD
 extern struct xmp_drv_info drv_esd;
-#endif
-#ifdef DRIVER_ARTS
 extern struct xmp_drv_info drv_arts;
-#endif
-#ifdef DRIVER_NAS
 extern struct xmp_drv_info drv_nas;
-#endif
-#ifdef DRIVER_OS2DART
 extern struct xmp_drv_info drv_os2dart;
-#endif
-#ifdef DRIVER_QNX
 extern struct xmp_drv_info drv_qnx;
-#endif
-#ifdef DRIVER_BEOS
-extern struct xmp_drv_info drv_bsp;
-#endif
+extern struct xmp_drv_info drv_beos;
 
-#endif /* ENABLE_PLUGIN */
 
 void (*xmp_event_callback) (unsigned long);
 
@@ -168,7 +127,7 @@ void xmp_init_drivers ()
     xmp_drv_register(&drv_qnx);
 #endif
 #ifdef DRIVER_BEOS
-    xmp_drv_register(&drv_bsp);
+    xmp_drv_register(&drv_beos);
 #endif
 #ifdef DRIVER_NET
     xmp_drv_register(&drv_net);
@@ -201,9 +160,10 @@ static int drv_select (struct xmp_control *ctl)
     if (ctl->drv_id) {
 	tmp = XMP_ERR_NODRV;
 	for (drv = drv_array; drv; drv = drv->next)
-	    if (!strcmp (drv->id, ctl->drv_id))
+	    if (!strcmp (drv->id, ctl->drv_id)) {
 		if ((tmp = drv->init (ctl)) == XMP_OK)
 		    break;
+	    }
     } else {
 	tmp = XMP_ERR_DSPEC;
 	drv = drv_array->next;	/* skip file */
@@ -251,9 +211,9 @@ static void drv_resetvoice(int voc, int mute)
 
 void xmp_drv_register (struct xmp_drv_info *drv)
 {
-    if (!drv_array)
+    if (!drv_array) {
 	drv_array = drv;
-    else {
+    } else {
 	struct xmp_drv_info *tmp;
 
 	for (tmp = drv_array; tmp->next; tmp = tmp->next);
