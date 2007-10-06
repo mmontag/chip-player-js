@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.13 2007-09-18 22:22:22 cmatsuoka Exp $
+ * $Id: osx.c,v 1.14 2007-10-06 13:01:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -56,13 +56,14 @@ struct xmp_drv_info drv_osx = {
 	NULL
 };
 
+static AudioUnit au;
+
 
 /*
  * CoreAudio helpers from mplayer/libao
  * The player fills a ring buffer, OSX retrieves data from the buffer
  */
 
-static AudioUnit au;
 static int paused;
 static uint8 *buffer;
 static int buffer_len;
