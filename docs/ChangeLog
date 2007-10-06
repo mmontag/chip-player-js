@@ -1,9 +1,13 @@
-$Id: ChangeLog,v 1.111 2007-10-05 00:18:43 cmatsuoka Exp $
+$Id: ChangeLog,v 1.112 2007-10-06 02:10:32 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.3.1 (20071005)
+2.3.2 ():
+	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
+	  speech in "Deep In Her Eyes Remake", reported by Douglas Carmichael)
+
+2.3.1 (20071005):
 	- added PTM global volume effect
 	- fixed output filename setting in wav output
 	- fixed size field setting in wav driver
@@ -14,7 +18,7 @@ Stable versions
 	  clicks from PM's 2nd Reality, reported by Douglas Carmichael)
 	- changed default file name when writing to WAV to <modname>.wav
 
-2.3.0 (20071002)
+2.3.0 (20071002):
 	- added runtime endianism detection
 	- added extractor for Epic Games' Unreal UMX files
 	- added workaround for S3M "Return of Litmus" 0x87 quirk (reported
@@ -45,7 +49,7 @@ Stable versions
 	- format management code cleanup
 	- prowizard code cleanup
 
-2.2.1 (20070917)
+2.2.1 (20070917):
 	- added IT tracker fingerprinting
 	- enabled track volumes (fixes znm-believe.it, reported by Jon Rafkind)
 	- fixed DESTDIR and config file location (by Adam Sampson)
@@ -55,7 +59,7 @@ Stable versions
 	  tempo and missing instruments reported by Jon Rafkind)
 	- build plugin files as PIC
 
-2.2.0 (20070915)
+2.2.0 (20070915):
 	- added more module format specs
 	- added CD61 Octalyser module support
 	- added Flextrax FLX module detection
@@ -112,7 +116,7 @@ Stable versions
 	- fixed loading of big-endian 16-bit samples
 	- using Asle's Prowizard to handle packed MODs
 
-2.1.1 (unreleased)
+2.1.1 (unreleased):
 	- added more module format specs
 	- added MO3 unpacking support
 	- added file detection to the XMMS plugin
@@ -135,7 +139,7 @@ Stable versions
 	- default sound mode set to stereo
 	- disabled MED loader (nonportable, didn't work well)
 
-2.1.0 (unreleased)
+2.1.0 (unreleased):
 	- Added Takuya Ooura's FFT code
 	- Added scope/spectrum analyser modes to xxmp
 	- Fixed dynamic driver loading to honour the configuration prefix

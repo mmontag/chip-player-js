@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.23 2007-10-05 00:18:44 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.24 2007-10-06 02:10:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -209,6 +209,7 @@ int it_load (FILE * f)
     int max_ch, flag;
     int inst_map[120], inst_rmap[96];
     char tracker_name[80];
+    int mpt = 0;	/* ModPlug Tracker is quirky */
 
     LOAD_INIT ();
 
@@ -302,6 +303,7 @@ int it_load (FILE * f)
 	    sprintf(tracker_name, "ModPlug Tracker 1.16");
 	    /* ModPlug Tracker files aren't really IMPM 2.00 */
 	    ifh.cmwt = ifh.flags & IT_USE_INST ? 0x214 : 0x100;	
+	    mpt = 1;
 	} else if (ifh.cwt == 0x0216) {
 	    sprintf(tracker_name, "Impulse Tracker 2.14v3");
 	} else if (ifh.cwt == 0x0217) {
@@ -634,7 +636,7 @@ int it_load (FILE * f)
 	ish.magic = read32b(f);
 	fread(&ish.dosname, 12, 1, f);
 	ish.zero = read8(f);
-	ish.gvl = read8(f);
+	ish.gvl = mpt ? read8(f),0x40 : read8(f);
 	ish.flags = read8(f);
 	ish.vol = read8(f);
 	fread(&ish.name, 26, 1, f);
