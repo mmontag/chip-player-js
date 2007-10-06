@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.2 2007-10-06 13:01:15 cmatsuoka Exp $
+ * $Id: beos.c,v 1.3 2007-10-06 14:08:13 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -14,9 +14,12 @@
 
 #include <Application.h>
 #include <SoundPlayer.h>
+
+extern "C" {
 #include "xmpi.h"
 #include "driver.h"
 #include "mixer.h"
+}
 
 static int init(struct xmp_control *);
 static void bufdump(int);
@@ -164,6 +167,9 @@ static int init(struct xmp_control *ctl)
 	char *token;
 	char **parm = ctl->parm;
 
+	be_app = new BApplication("application/x-vnd.101-xmp");
+	be_app->Run();
+
 	bsize = 4096;
 
 	parm_init();
@@ -225,10 +231,4 @@ static void myshutdown()
 	be_app->Quit();
 }
 
-status_t init_bapp(void *)
-{
-	be_app = new BApplication("application/x-vnd.101-xmp");
-	be_app->Run();
-	return B_OK;
-}
 
