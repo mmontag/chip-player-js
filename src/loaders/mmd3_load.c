@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.10 2007-09-29 14:00:38 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.11 2007-10-07 14:14:27 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -362,12 +362,9 @@ int mmd3_load(FILE *f)
 				xlat_fx(event);
 			}
 		}
-
-		if (V(0))
-			report(".");
+		reportv(0, ".");
 	}
-	if (V(0))
-		report("\n");
+	reportv(0, "\n");
 
 	/*
 	 * Read and convert instruments and samples
@@ -375,13 +372,8 @@ int mmd3_load(FILE *f)
 	_D(_D_WARN "read instruments");
 	INSTRUMENT_INIT();
 
-	if (V(0))
-		report("Instruments    : %d ", xxh->ins);
-
-	if (V(1)) {
-		report("\n     Instrument name                          "
-		       "Typ Len   LBeg  LEnd  Vl Xp Ft");
-	}
+	reportv(0, "Instruments    : %d ", xxh->ins);
+	reportv(1, "\n     Instrument name                          Typ Len   LBeg  LEnd  Vl Xp Ft");
 
 	for (smp_idx = i = 0; i < xxh->ins; i++) {
 		int smpl_offset;
@@ -438,12 +430,10 @@ int mmd3_load(FILE *f)
 						song.sample[i].replen;
 		xxs[smp_idx].flg = song.sample[i].replen > 1 ? WAVE_LOOPING : 0;
 
-		if (V(1)) {
-			report("%05x %05x %05x %02x %02x %+1d ",
+		reportv(1, "%05x %05x %05x %02x %02x %+1d ",
 			       xxs[smp_idx].len, xxs[smp_idx].lps,
 			       xxs[smp_idx].lpe, xxi[i][0].vol,
 			       (uint8) xxi[i][0].xpo, xxi[i][0].fin >> 4);
-		}
 
 		fseek(f, smpl_offset + 6, SEEK_SET);
 		xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate, 0,
@@ -455,8 +445,7 @@ int mmd3_load(FILE *f)
 		smp_idx++;
 	}
 
-	if (V(0))
-		report("\n");
+	reportv(0, "\n");
 
 	fseek(f, trackvols_offset, SEEK_SET);
 	for (i = 0; i < xxh->chn; i++)
