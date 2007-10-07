@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.12 2007-10-07 16:43:02 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.13 2007-10-07 23:33:06 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -560,6 +560,9 @@ int mmd3_load(FILE *f)
 
 			continue;
 		}
+
+		if (instr.type != 0)
+			continue;
 
 		/* instr type is sample */
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);

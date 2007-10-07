@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.16 2007-10-07 16:43:02 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.17 2007-10-07 23:33:06 cmatsuoka Exp $
  */
 
 /*
@@ -568,6 +568,9 @@ int mmd1_load(FILE *f)
 
 			continue;
 		}
+
+		if (instr.type != 0)
+			continue;
 
 		/* instr type is sample */
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
