@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.9 2007-10-07 00:26:29 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.10 2007-10-07 00:29:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -113,7 +113,9 @@ int ptm_load (FILE * f)
 	smp_ofs[i] = pih.smpofs;
 	xxih[i].nsm = !!(xxs[i].len = pih.length);
 	xxs[i].lps = pih.loopbeg;
-	xxs[i].lpe = pih.loopend - 1;
+	xxs[i].lpe = pih.loopend;
+	if (xxs[i].lpe)
+		xxs[i].lpe--;
 	xxs[i].flg = pih.type & 0x04 ? WAVE_LOOPING : 0;
 	xxs[i].flg |= pih.type & 0x08 ? WAVE_LOOPING | WAVE_BIDIR_LOOP : 0;
 	xxs[i].flg |= pih.type & 0x10 ? WAVE_16_BITS : 0;
