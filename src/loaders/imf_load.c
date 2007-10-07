@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.5 2007-08-25 10:38:10 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.6 2007-10-07 22:54:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -216,10 +216,9 @@ int imf_load (FILE *f)
 
     /* Read patterns */
 
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
-    memset (arpeggio_val, 0, 32);
+    memset(arpeggio_val, 0, 32);
 
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -269,23 +268,17 @@ int imf_load (FILE *f)
 		pat_len -= 2;
 	    }
 	}
-
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     INSTRUMENT_INIT ();
 
     /* Read and convert instruments and samples */
 
-    if (V (0))
-	report ("Instruments    : %d ", xxh->ins);
+    reportv(0, "Instruments    : %d ", xxh->ins);
 
-    if (V (1))
-	report (
+    reportv(1, 
 "\n     Instrument name                NSm Fade Env Smp# Len   Start End   C2Spd");
 
     for (smp_num = i = 0; i < xxh->ins; i++) {
@@ -386,17 +379,15 @@ int imf_load (FILE *f)
 	    xmp_drv_loadpatch (f, xxi[i][j].sid, xmp_ctl->c4rate, 0,
 		&xxs[xxi[i][j].sid], NULL);
 
-	    if (V (0))
-		report (".");
+	    reportv(0, ".");
 	}
     }
     xxh->smp = smp_num;
     xxs = realloc (xxs, sizeof (struct xxm_sample) * xxh->smp);
 
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
-    xmp_ctl->fetch |= XMP_MODE_ST3 | XMP_CTL_FILTER;
+    xmp_ctl->fetch |= XMP_MODE_ST3 | (xmp_ctl->flags & XMP_CTL_FILTER);
 
     return 0;
 }
