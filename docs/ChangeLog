@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.117 2007-10-07 16:43:02 cmatsuoka Exp $
+$Id: ChangeLog,v 1.118 2007-10-07 22:51:43 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -12,6 +12,8 @@ Stable versions
 	- fixed initialization of channel flags before loading module
 	- fixed PTM sample loop size (tested with abnormality.ptm)
 	- fixed PTM effects translation (PTM-specific effects were ignored)
+	- fixed effects settings in AIX and OSX CoreAudio drivers (reported
+	  by Douglas Carmichael and Chris Cox)
 
 2.3.1 (20071005):
 	- added PTM global volume effect
