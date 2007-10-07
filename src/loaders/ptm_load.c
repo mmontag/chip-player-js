@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.11 2007-10-07 11:46:50 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.12 2007-10-07 11:54:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -62,7 +62,6 @@ int ptm_load (FILE * f)
     for (i = 0; i < 128; i++)
 	pfh.patseg[i] = read16l(f);
 
-    strcpy (xmp_ctl->name, (char *) pfh.name);
     xxh->len = pfh.ordnum;
     xxh->ins = pfh.insnum;
     xxh->pat = pfh.patnum;
@@ -75,7 +74,7 @@ int ptm_load (FILE * f)
 
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
-    strncpy(xmp_ctl->name, (char *)pfh.name, 28);
+    copy_adjust((uint8 *)xmp_ctl->name, pfh.name, 28);
     sprintf(xmp_ctl->type, "PTMF %d.%02x (Poly Tracker)",
 	pfh.vermaj, pfh.vermin);
 
