@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.13 2007-10-05 00:18:44 cmatsuoka Exp $
+ * $Id: player.c,v 1.14 2007-10-07 11:46:50 cmatsuoka Exp $
  */
 
 /*
@@ -44,7 +44,7 @@ static int gvol_flag;
 static int gvol_base;
 static double tick_time;
 static struct flow_control flow;
-static struct xmp_channel* xc_data;
+static struct xmp_channel *xc_data;
 static int* fetch_ctl;
 
 int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
@@ -218,36 +218,38 @@ static inline void chn_reset ()
 }
 
 
-static inline void chn_fetch (int ord, int row)
+static inline void chn_fetch(int ord, int row)
 {
     int count, chn;
 
     count = 0;
-    for (chn = 0; chn < xxh->chn; chn++)
-	if (module_fetch (&EVENT (ord, chn, row), chn, 1) != XMP_OK) {
+    for (chn = 0; chn < xxh->chn; chn++) {
+	if (module_fetch(&EVENT (ord, chn, row), chn, 1) != XMP_OK) {
 	    fetch_ctl[chn]++;
 	    count++;
 	}
+    }
 
-    for (chn = 0; count; chn++)
+    for (chn = 0; count; chn++) {
 	if (fetch_ctl[chn]) {
-	    module_fetch (&EVENT (ord, chn, row), chn, 0);
+	    module_fetch(&EVENT (ord, chn, row), chn, 0);
 	    fetch_ctl[chn] = 0;
 	    count--;
 	}
+    }
 }
 
 
-static inline void chn_refresh (int tick)
+static inline void chn_refresh(int tick)
 { 
     int num;
 
     for (num = xmp_ctl->numchn; num--;)
-	module_play (num, tick);
+	module_play(num, tick);
 }
 
 
-static int module_fetch (struct xxm_event *e, int chn, int ctl)
+static int module_fetch(struct xxm_event *e, int chn, int ctl)
 {
     int xins, ins, smp, note, key, flg;
     struct xmp_channel *xc;
@@ -263,9 +265,9 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 	flg = NEW_INS | RESET_VOL | RESET_ENV;
 
 	if (xmp_ctl->fetch & XMP_CTL_OINSMOD) {
-	    if (TEST (IS_READY)) {
+	    if (TEST(IS_READY)) {
 		xins = xc->insdef;
-		RESET (IS_READY);
+		RESET(IS_READY);
 	    }
 	} else if ((uint32)ins < xxh->ins && xxih[ins].nsm) {	/* valid ins */
 	    if (!key && xmp_ctl->fetch & XMP_CTL_INSPRI) {
@@ -291,23 +293,23 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
     if (key) {
 
         if (key == XMP_KEY_FADE) {
-            SET (FADEOUT);
+            SET(FADEOUT);
 	    flg &= ~(RESET_VOL | RESET_ENV);
         } else if (key == XMP_KEY_CUT) {
             xmp_drv_resetchannel (chn);
         } else if (key == XMP_KEY_OFF) {
-            SET (RELEASE | KEYOFF);
+            SET(RELEASE | KEYOFF);
 	    flg &= ~(RESET_VOL | RESET_ENV);
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
 	    /* This test should fix portamento behaviour in 7spirits.s3m */
 	    if (xmp_ctl->fetch & XMP_CTL_RTGINS && e->ins && xc->ins != ins) {
 		flg |= NEW_INS;
 		xins = ins;
-	    } else if (TEST (KEYOFF)) {
+	    } else if (TEST(KEYOFF)) {
 		/* When a toneporta is issued after a keyoff event,
 		 * retrigger the instrument (xr-nc.xm, bug #586377)
 		 */
-		RESET (KEYOFF);
+		RESET(KEYOFF);
 		flg |= NEW_INS;
 		xins = ins;
 	    } else {
@@ -315,11 +317,11 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 	    }
         } else if (flg & NEW_INS) {
             xins = ins;
-	    RESET (KEYOFF);
+	    RESET(KEYOFF);
         } else {
             ins = xc->insdef;
             flg |= IS_READY;
-	    RESET (KEYOFF);
+	    RESET(KEYOFF);
         }
     }
     if (!key || key >= XMP_KEY_OFF)
@@ -336,40 +338,44 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 		note = key + xxi[ins][xxim[ins].ins[key]].xpo +
 		    xxim[ins].xpo[key];
 		smp = xxi[ins][xxim[ins].ins[key]].sid;
-	    } else
+	    } else {
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS);
-	} else
+	    }
+	} else {
 	    if (!(xmp_ctl->fetch & XMP_CTL_CUTNWI))
 		xmp_drv_resetchannel (chn);
+	}
     }
 
     if (smp >= 0) {
 	if (chn_copy(xmp_drv_setpatch(chn, ins, smp, note,
-	    xxi[ins][xxim[ins].ins[key]].nna,
-	    xxi[ins][xxim[ins].ins[key]].dct,
-	    xxi[ins][xxim[ins].ins[key]].dca, ctl), chn) < 0)
+		 	xxi[ins][xxim[ins].ins[key]].nna,
+	    		xxi[ins][xxim[ins].ins[key]].dct,
+	    		xxi[ins][xxim[ins].ins[key]].dca, ctl), chn) < 0) {
 	    return XMP_ERR_VIRTC;
+	}
 	xc->smp = smp;
     }
 
-    xc->delay = xc->retrig = 0;         /**** Reset flags ****/
+    /* Reset flags */
+    xc->delay = xc->retrig = 0;
     xc->a_idx = xc->a_val[1] = xc->a_val[2] = 0;
     xc->flags = flg | (xc->flags & 0xff000000);
 
     if ((uint32)xins >= xxh->ins || !xxih[xins].nsm)
-	RESET (IS_VALID);
+	RESET(IS_VALID);
     else
-	SET (IS_VALID);
+	SET(IS_VALID);
     xc->ins = xins;
 
     /* Process new volume */
     if (e->vol) {
 	xc->volume = e->vol - 1;
-	RESET (RESET_VOL);
-	SET (NEW_VOL);
+	RESET(RESET_VOL);
+	SET(NEW_VOL);
     }
 
-    if (TEST (NEW_INS) || (xmp_ctl->fetch & XMP_CTL_OFSRST))
+    if (TEST(NEW_INS) || (xmp_ctl->fetch & XMP_CTL_OFSRST))
 	xc->offset = 0;
 
     /* Secondary effect is processed _first_ and can be overriden
@@ -378,7 +384,7 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
     process_fx(chn, e->note, e->f2t, e->f2p, xc);
     process_fx(chn, e->note, e->fxt, e->fxp, xc);
 
-    if (!TEST (IS_VALID)) {
+    if (!TEST(IS_VALID)) {
 	xc->volume = 0;
 	return XMP_OK;
     }
@@ -387,31 +393,31 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 	xc->note = note;
 
 	xmp_drv_voicepos (chn, xc->offset);
-	if (TEST (OFFSET) && (xmp_ctl->fetch & XMP_CTL_FX9BUG))
+	if (TEST(OFFSET) && (xmp_ctl->fetch & XMP_CTL_FX9BUG))
 	    xc->offset <<= 1;
-	RESET (OFFSET);
+	RESET(OFFSET);
 
 	/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
-	if (!TEST (NEW_PAN))
+	if (!TEST(NEW_PAN))
 	    xc->pan = xxi[ins][xxim[ins].ins[key]].pan;
 
-	if (!TEST (FINETUNE))
+	if (!TEST(FINETUNE))
 	    xc->finetune = xxi[ins][xxim[ins].ins[key]].fin;
 
-	xc->s_end = xc->period = note_to_period (note, xxh->flg & XXM_FLG_LINEAR);
+	xc->s_end = xc->period = note_to_period(note, xxh->flg & XXM_FLG_LINEAR);
 
 
 	xc->y_idx = xc->t_idx = 0;              /* #?# Onde eu coloco isso? */
 
-	SET (ECHOBACK);
+	SET(ECHOBACK);
     }
 
     if (xc->key == 0xff || XXIM.ins[xc->key] == 0xff)
         return XMP_OK;
 
-    if (TEST (RESET_ENV)) {
+    if (TEST(RESET_ENV)) {
         xc->fadeout = 0x10000;
-        RESET (RELEASE | FADEOUT);
+        RESET(RELEASE | FADEOUT);
         xc->gvl = XXI[XXIM.ins[xc->key]].gvl;   /* #?# Onde eu coloco isso? */
         xc->insvib_swp = XXI->vsw;              /* #?# Onde eu coloco isso? */
         xc->insvib_idx = 0;                     /* #?# Onde eu coloco isso? */
@@ -420,33 +426,33 @@ static int module_fetch (struct xxm_event *e, int chn, int ctl)
 	xc->resonance = XXI->ifr & 0x80 ? (XXI->ifr - 0x80) * 2 : 0;
     }
 
-    if (TEST (RESET_VOL)) {
+    if (TEST(RESET_VOL)) {
         xc->volume = XXI[XXIM.ins[xc->key]].vol;
-        SET (ECHOBACK | NEW_VOL);
+        SET(ECHOBACK | NEW_VOL);
     }
 
-    if ((xmp_ctl->fetch & XMP_CTL_ST3GVOL) && TEST (NEW_VOL))
+    if ((xmp_ctl->fetch & XMP_CTL_ST3GVOL) && TEST(NEW_VOL))
 	xc->volume = xc->volume * xmp_ctl->volume / xmp_ctl->volbase;
 
     return XMP_OK;
 }
 
 
-static void module_play (int chn, int t)
+static void module_play(int chn, int t)
 {
     struct xmp_channel *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
     uint16 vol_envelope;
 
-    if ((act = xmp_drv_cstat (chn)) == XMP_CHN_DUMB)
+    if ((act = xmp_drv_cstat(chn)) == XMP_CHN_DUMB)
 	return;
 
     xc = &xc_data[chn];
 
     if (!t && act != XMP_CHN_ACTIVE) {
-	if (!TEST (IS_VALID) || act == XMP_ACT_CUT) {
-	    xmp_drv_resetchannel (chn);
+	if (!TEST(IS_VALID) || act == XMP_ACT_CUT) {
+	    xmp_drv_resetchannel(chn);
 	    return;
 	}
 	xc->a_val[1] = xc->a_val[2] = 0;
@@ -454,21 +460,22 @@ static void module_play (int chn, int t)
 	xc->flags &= (0xff000000 | IS_VALID);
     }
 
-    if (!TEST (IS_VALID))
+    if (!TEST(IS_VALID))
 	return;
 
     /* Process MED synth instruments */
-    xmp_med_synth (chn, xc, !t && TEST (NEW_INS));
+    xmp_med_synth(chn, xc, !t && TEST(NEW_INS));
 
-    if (TEST (RELEASE) && !(XXIH.aei.flg & XXM_ENV_ON))
+    if (TEST(RELEASE) && !(XXIH.aei.flg & XXM_ENV_ON))
 	xc->fadeout = 0;
 
-    if (TEST (FADEOUT | RELEASE) || act == XMP_ACT_FADE || act == XMP_ACT_OFF)
+    if (TEST(FADEOUT | RELEASE) || act == XMP_ACT_FADE || act == XMP_ACT_OFF) {
 	if (!(xc->fadeout = xc->fadeout > XXIH.rls ?
 	    xc->fadeout - XXIH.rls : 0)) {
-	    xmp_drv_resetchannel (chn);
+	    xmp_drv_resetchannel(chn);
 	    return;
 	}
+    }
 
     vol_envelope = XXIH.aei.flg & XXM_ENV_ON ?
 	get_envelope((int16 *)XXAE, XXIH.aei.npt, xc->v_idx) : 64;
@@ -480,15 +487,24 @@ static void module_play (int chn, int t)
         (int16)get_envelope((int16 *)XXFE, XXIH.fei.npt, xc->f_idx) : 0;
 
     /* Update envelopes */
-    if (do_envelope (&XXIH.aei, XXAE, &xc->v_idx, DOENV_RELEASE, chn))
-	SET (FADEOUT);
-    do_envelope (&XXIH.pei, XXPE, &xc->p_idx, DOENV_RELEASE, -1323);
-    do_envelope (&XXIH.fei, XXFE, &xc->f_idx, DOENV_RELEASE, -1137);
+    if (do_envelope(&XXIH.aei, XXAE, &xc->v_idx, DOENV_RELEASE, chn))
+	SET(FADEOUT);
+    do_envelope(&XXIH.pei, XXPE, &xc->p_idx, DOENV_RELEASE, -1323);
+    do_envelope(&XXIH.fei, XXFE, &xc->f_idx, DOENV_RELEASE, -1137);
+
+    /* Do note slide */
+    if (TEST(NOTE_SLIDE)) {
+	if (!--xc->ns_count) {
+	    xc->note += xc->ns_val;
+	    xc->period = note_to_period(xc->note, xxh->flg & XXM_FLG_LINEAR);
+	    xc->ns_count = xc->ns_speed;
+	}
+    }
 
     /* Do cut/retrig */
     if (xc->retrig) {
 	if (!--xc->rcount) {
-	    xmp_drv_retrig (chn);
+	    xmp_drv_retrig(chn);
 	    xc->volume += rval[xc->rtype].s;
 	    xc->volume *= rval[xc->rtype].m;
 	    xc->volume /= rval[xc->rtype].d;
@@ -498,7 +514,7 @@ static void module_play (int chn, int t)
 
     finalvol = xc->volume;
 
-    if (TEST (TREMOLO))
+    if (TEST(TREMOLO))
 	finalvol += waveform[xc->t_type][xc->t_idx] * xc->t_depth / 512;
     if (finalvol > gvol_base)
 	finalvol = gvol_base;
@@ -521,7 +537,7 @@ static void module_play (int chn, int t)
     /* IT pitch envelopes are always linear, even in Amiga period mode.
      * Each unit in the envelope scale is 1/25 semitone.
      */
-    xc->pitchbend = period_to_bend (xc->period + (TEST (VIBRATO) ?
+    xc->pitchbend = period_to_bend(xc->period + (TEST(VIBRATO) ?
 	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10 : 0) +
 	waveform[XXI->vwf][xc->insvib_idx] * XXI->vde / (1024 *
 	(1 + xc->insvib_swp)),
@@ -553,7 +569,7 @@ static void module_play (int chn, int t)
     if (chn < xmp_ctl->numtrk) {
 	xmp_drv_echoback ((finalpan << 12)|(chn << 4)|XMP_ECHO_CHN);
 
-	if (TEST (ECHOBACK | PITCHBEND | TONEPORTA)) {
+	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA)) {
 	    xmp_drv_echoback ((xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
 	    xmp_drv_echoback ((xc->volume << 4) * 0x40 / gvol_base |
 		XMP_ECHO_VOL);
@@ -583,7 +599,7 @@ static void module_play (int chn, int t)
     /* Do keyoff */
     if (xc->keyoff) {
 	if (!--xc->keyoff)
-	    SET (RELEASE);
+	    SET(RELEASE);
     }
 
     /* Volume slides happen in all frames but the first, except when the
@@ -597,13 +613,13 @@ static void module_play (int chn, int t)
 	    else if (xmp_ctl->volume > gvol_base)
 		xmp_ctl->volume = gvol_base;
 	}
-	if (TEST (VOL_SLIDE))
+	if (TEST(VOL_SLIDE))
 	    xc->volume += xc->v_val;
 
-	if (TEST (VOL_SLIDE_2))
+	if (TEST(VOL_SLIDE_2))
 	    xc->volume += xc->v_val2;
 
-	if (TEST (TRK_VSLIDE))
+	if (TEST(TRK_VSLIDE))
 	    xc->mastervol += xc->trk_val;
     }
 
@@ -612,7 +628,7 @@ static void module_play (int chn, int t)
      */
     if (t % tempo || xmp_ctl->fetch & XMP_CTL_PBALL) {
 	/* Do pan and pitch sliding */
-	if (TEST (PAN_SLIDE)) {
+	if (TEST(PAN_SLIDE)) {
 	    xc->pan += xc->p_val;
 	    if (xc->pan < 0)
 		xc->pan = 0;
@@ -620,7 +636,7 @@ static void module_play (int chn, int t)
 		xc->pan = 0xff;
 	}
 
-	if (TEST (PITCHBEND))
+	if (TEST(PITCHBEND))
 	    xc->period += xc->f_val;
 
 	/* Workaround for panic.s3m (from Toru Egashira's NSPmod) */
@@ -630,11 +646,11 @@ static void module_play (int chn, int t)
 
     if (t % tempo == 0) {
 	/* Process "fine" effects */
-	if (TEST (FINE_VOLS))
+	if (TEST(FINE_VOLS))
             xc->volume += xc->v_fval;
-	if (TEST (FINE_BEND))
+	if (TEST(FINE_BEND))
 	    xc->period = (4 * xc->period + xc->f_fval) / 4;
-	if (TEST (TRK_FVSLIDE))
+	if (TEST(TRK_FVSLIDE))
             xc->mastervol += xc->trk_fval;
     }
 
@@ -661,11 +677,11 @@ static void module_play (int chn, int t)
     }
 
     /* Do tone portamento */
-    if (TEST (TONEPORTA)) {
+    if (TEST(TONEPORTA)) {
 	xc->period += (xc->s_sgn * xc->s_val);
 	if ((xc->s_sgn * xc->s_end) <= (xc->s_sgn * xc->period)) {
 	    xc->period = xc->s_end;
-	    RESET (TONEPORTA);
+	    RESET(TONEPORTA);
 	}
     }
 
@@ -830,8 +846,8 @@ next_order:
 		    xmp_drv_echoback(((xxp[xxo[o]]->rows - 1) << 12) |
 					(flow.row_cnt << 4)|XMP_ECHO_ROW);
 		}
-		xmp_drv_echoback ((t << 4) | XMP_ECHO_FRM);
-		chn_refresh (t);
+		xmp_drv_echoback((t << 4) | XMP_ECHO_FRM);
+		chn_refresh(t);
 
 		if (xmp_ctl->time && (xmp_ctl->time < playing_time))
 		    goto end_module;
@@ -841,9 +857,9 @@ next_order:
 		if (xmp_ctl->fetch & XMP_CTL_MEDBPM)
 		    xmp_drv_sync (tick_time * 33 / 125);
 		else
-		    xmp_drv_sync (tick_time);
+		    xmp_drv_sync(tick_time);
 
-		xmp_drv_bufdump ();
+		xmp_drv_bufdump();
 	    }
 
 	    flow.delay = 0;

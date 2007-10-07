@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.115 2007-10-07 00:26:29 cmatsuoka Exp $
+$Id: ChangeLog,v 1.116 2007-10-07 11:46:49 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -6,9 +6,11 @@ Stable versions
 2.3.2 ():
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
 	  speech in "Deep In Her Eyes Remake", reported by Douglas Carmichael)
+	- added PTM/IMF note slide effects and PTM note slide + retrig effect
 	- fixed copy of overlapping memory areas in IT loader
 	- fixed initialization of channel flags before loading module
 	- fixed PTM sample loop size (tested with abnormality.ptm)
+	- fixed PTM effects translation (PTM-specific effects were ignored)
 
 2.3.1 (20071005):
 	- added PTM global volume effect

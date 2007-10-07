@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.10 2007-10-07 00:29:30 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.11 2007-10-07 11:46:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -155,9 +155,11 @@ int ptm_load (FILE * f)
 		r++;
 		continue;
 	    }
+
 	    c = b & PTM_CH_MASK;
 	    if (c >= xxh->chn)
 		continue;
+
 	    event = &EVENT (i, c, r);
 	    if (b & PTM_NI_FOLLOW) {
 		fread (&n, 1, 1, f);
@@ -174,13 +176,15 @@ int ptm_load (FILE * f)
 		event->ins = n;
 	    }
 	    if (b & PTM_FX_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->fxt = n;
-		fread (&n, 1, 1, f);
-		event->fxp = n;
+		event->fxt = read8(f);
+		event->fxp = read8(f);
+
+		if (event->fxt > 0x17)
+			event->fxt = event->fxp = 0;
+
 		switch (event->fxt) {
-		case 0x0e:	/* Pan set */
-		    if (MSN(event->fxp) == 0x8) {
+		case 0x0e:	/* Extended effect */
+		    if (MSN(event->fxp) == 0x8) {	/* Pan set */
 			event->fxt = FX_SETPAN;
 			event->fxp = LSN (event->fxp) << 4;
 		    }
@@ -194,20 +198,25 @@ int ptm_load (FILE * f)
 		case 0x12:	/* Fine vibrato */
 		    event->fxt = FX_FINE4_VIBRA;
 		    break;
-		case 0x13:
-		case 0x14:
-		case 0x15:
-		case 0x16:	/* Note slide */
+		case 0x13:	/* Note slide down */
+		    event->fxt = FX_NSLIDE_DN;
+		    break;
+		case 0x14:	/* Note slide up */
+		    event->fxt = FX_NSLIDE_UP;
+		    break;
+		case 0x15:	/* Note slide down + retrig */
+		    event->fxt = FX_NSLIDE_R_DN;
+		    break;
+		case 0x16:	/* Note slide up + retrig */
+		    event->fxt = FX_NSLIDE_R_UP;
+		    break;
 		case 0x17:	/* Reverse sample */
 		    event->fxt = event->fxp = 0;
 		    break;
 		}
-		if (event->fxt > 0x17)
-		    event->fxt = event->fxp = 0;
 	    }
 	    if (b & PTM_VOL_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->vol = n + 1;
+		event->vol = read8(f) + 1;
 	    }
 	}
 	reportv(0, ".");
@@ -219,9 +228,8 @@ int ptm_load (FILE * f)
 	if (!xxs[i].len)
 	    continue;
 	fseek (f, smp_ofs[xxi[i][0].sid], SEEK_SET);
-	/*xxs[xxi[i][0].sid].len--; */
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate,
-	    XMP_SMP_8BDIFF, &xxs[xxi[i][0].sid], NULL);
+			XMP_SMP_8BDIFF, &xxs[xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

@@ -58,7 +58,7 @@ fx_porta_up:
 		    goto fx_porta_up;
 	    }
 	}
-	SET (PITCHBEND);
+	SET(PITCHBEND);
 	if ((xc->porta = fxp) != 0)
 	    xc->f_val = -fxp;
 	else if (xc->f_val > 0)
@@ -83,7 +83,7 @@ fx_porta_dn:
 		    goto fx_porta_dn;
 	    }
 	}
-	SET (PITCHBEND);
+	SET(PITCHBEND);
 	if ((xc->porta = fxp) != 0)
 	    xc->f_val = fxp;
 	else if (xc->f_val < 0)
@@ -95,10 +95,10 @@ fx_porta_dn:
 	DO_TONEPORTA ();
 	if (fxp)
 	    xc->s_val = fxp;
-	SET (TONEPORTA);
+	SET(TONEPORTA);
 	break;
     case FX_VIBRATO:				/* Vibrato */
-	SET (VIBRATO);
+	SET(VIBRATO);
 	if (LSN (fxp))
 	    xc->y_depth = LSN (fxp) * 4;
 	if (MSN (fxp))
@@ -122,24 +122,24 @@ fx_porta_dn:
 	if (!TEST (IS_VALID))
 	    break;
 	DO_TONEPORTA ();
-	SET (TONEPORTA);
+	SET(TONEPORTA);
 	goto fx_volslide;
     case FX_VIBRA_VSLIDE:			/* Vibrato + vol slide */
-	SET (VIBRATO);
+	SET(VIBRATO);
 	goto fx_volslide;
     case FX_TREMOLO:				/* Tremolo */
-	SET (TREMOLO);
+	SET(TREMOLO);
 	if (MSN (fxp))
 	    xc->t_rate = MSN (fxp);
 	if (LSN (fxp))
 	    xc->t_depth = LSN (fxp);
 	break;
     case FX_SETPAN:				/* Set pan */
-	SET (NEW_PAN);
+	SET(NEW_PAN);
 	xc->pan = fxp;
 	break;
     case FX_OFFSET:				/* Set sample offset */
-	SET (OFFSET);
+	SET(OFFSET);
 	if (fxp)
 	    xc->offset = fxp << 8;
 	break;
@@ -169,25 +169,25 @@ fx_volslide:
 		    goto fx_volslide;
 	    }
 	}
-	SET (VOL_SLIDE);
+	SET(VOL_SLIDE);
 	if ((xc->volslide = fxp))
 	    xc->v_val = MSN (fxp) - LSN (fxp);
 	break;
     case FX_VOLSLIDE_2:				/* Secondary volume slide */
-	SET (VOL_SLIDE_2);
+	SET(VOL_SLIDE_2);
 	if (fxp)
 	    xc->v_val2 = MSN (fxp) - LSN (fxp);
 	break;
     case FX_VOLSLIDE_UP:			/* Vol slide with uint8 arg */
 	xc->v_val = fxp;
-	SET (VOL_SLIDE);
+	SET(VOL_SLIDE);
 	break;
     case FX_VOLSLIDE_DN:			/* Vol slide with uint8 arg */
 	xc->v_val = -fxp;
-	SET (VOL_SLIDE);
+	SET(VOL_SLIDE);
 	break;
     case FX_F_VSLIDE:				/* Fine volume slide */
-	SET (FINE_VOLS);
+	SET(FINE_VOLS);
 	if ((xc->fvolslide = fxp))
 	    xc->v_fval = MSN (fxp) - LSN (fxp);
 	break;
@@ -196,8 +196,8 @@ fx_volslide:
 	flow.jump = fxp;
 	break;
     case FX_VOLSET:				/* Volume set */
-	RESET (RESET_VOL);
-	SET (NEW_VOL);
+	RESET(RESET_VOL);
+	SET(NEW_VOL);
 	xc->volume = fxp;
 	break;
     case FX_BREAK:				/* Pattern break */
@@ -210,7 +210,7 @@ fx_volslide:
 	switch (fxt) {
 	case EX_F_PORTA_UP:			/* Fine portamento up */
 ex_f_porta_up:
-	    SET (FINE_BEND);
+	    SET(FINE_BEND);
 	    if (fxp)
 		xc->f_fval = -fxp * 4;
 	    else if (xc->f_val > 0)
@@ -218,7 +218,7 @@ ex_f_porta_up:
 	    break;
 	case EX_F_PORTA_DN:			/* Fine portamento down */
 ex_f_porta_dn:
-	    SET (FINE_BEND);
+	    SET(FINE_BEND);
 	    if (fxp)
 		xc->f_fval = fxp * 4;
 	    else if (xc->f_val < 0)
@@ -261,13 +261,13 @@ ex_f_porta_dn:
 	    break;
 	case EX_F_VSLIDE_UP:			/* Fine volume slide up */
 ex_f_vslide_up:
-	    SET (FINE_VOLS);
+	    SET(FINE_VOLS);
 	    if (fxp)
 		xc->v_fval = fxp;
 	    break;
 	case EX_F_VSLIDE_DN:			/* Fine volume slide down */
 ex_f_vslide_dn:
-	    SET (FINE_VOLS);
+	    SET(FINE_VOLS);
 	    if (fxp)
 		xc->v_fval = -fxp;
 	    break;
@@ -326,7 +326,7 @@ ex_f_vslide_dn:
 	xc->masterpan = fxp;
 	break;
     case FX_PANSLIDE:				/* Pan slide */
-	SET (PAN_SLIDE);
+	SET(PAN_SLIDE);
 	if (fxp)
 	    xc->p_val = MSN (fxp) - LSN (fxp);
 	break;
@@ -342,7 +342,7 @@ ex_f_vslide_dn:
 	break;
     case FX_XF_PORTA:				/* Extra fine portamento */
 fx_xf_porta:
-	SET (FINE_BEND);
+	SET(FINE_BEND);
 	switch (MSN (fxp)) {
 	case 1:
 	    xc->f_fval = -LSN (fxp);
@@ -382,19 +382,19 @@ fx_trk_vslide:
 		    goto fx_trk_vslide;
 	    }
 	}
-	SET (TRK_VSLIDE);
+	SET(TRK_VSLIDE);
 	if ((xc->trkvsld = fxp))
 	    xc->trk_val = MSN (fxp) - LSN (fxp);
 	break;
     case FX_TRK_FVSLIDE:			/* Track fine volume slide */
 fx_trk_fvslide:
-	SET (TRK_FVSLIDE);
+	SET(TRK_FVSLIDE);
 	if (fxp)
 	    xc->trk_fval = MSN (fxp) - LSN (fxp);
 	break;
     case FX_FINETUNE:
 fx_finetune:
-	SET (FINETUNE);
+	SET(FINETUNE);
 	xc->finetune = (int16)(fxp - 0x80);
 	break;
     case FX_IT_INSTFUNC:
@@ -437,6 +437,26 @@ fx_finetune:
 	break;
     case FX_REVERB:
 	xxc[chn].rvb = fxp;
+	break;
+    case FX_NSLIDE_R_DN:
+	xc->retrig = xc->rcount = MSN(fxp) ? MSN(fxp) : xc->rval;
+	xc->rval = xc->retrig;
+	xc->rtype = 0;
+	/* fall through */
+    case FX_NSLIDE_DN:
+	SET(NOTE_SLIDE);
+	xc->ns_val = -LSN(fxp);
+	xc->ns_count = xc->ns_speed = MSN(fxp);
+	break;
+    case FX_NSLIDE_R_UP:
+	xc->retrig = xc->rcount = MSN(fxp) ? MSN(fxp) : xc->rval;
+	xc->rval = xc->retrig;
+	xc->rtype = 0;
+	/* fall through */
+    case FX_NSLIDE_UP:
+	SET(NOTE_SLIDE);
+	xc->ns_val = LSN(fxp);
+	xc->ns_count = xc->ns_speed = MSN(fxp);
 	break;
     }
 }

@@ -68,6 +68,12 @@
 #define FX_HOLD_DECAY	0x90
 #define FX_SETPITCH	0x91
 
+/* PTM effects */
+#define FX_NSLIDE_DN	0x9c	/* IMF/PTM note slide down */
+#define FX_NSLIDE_UP	0x9d	/* IMF/PTM note slide up */
+#define FX_NSLIDE_R_UP	0x9e	/* PTM note slide down with retrigger */
+#define FX_NSLIDE_R_DN	0x9f	/* PTM note slide up with retrigger */
+
 /* Extra effects */
 #define FX_VOLSLIDE_UP	0xa0	/* SFX, MDL */
 #define FX_VOLSLIDE_DN	0xa1
@@ -75,8 +81,6 @@
 #define FX_VOLSLIDE_2	0xa4
 #define FX_F_VSLIDE	0xa5	/* IMF/MDL */
 #define FX_FINETUNE	0xa6
-#define FX_NSLIDE_UP	0xa7	/* IMF/PTM */
-#define FX_NSLIDE_DN	0xa8	/* IMF/PTM */
 #define FX_CHORUS	0xa9	/* IMF */
 #define FX_REVERB	0xaa	/* IMF */
 #define FX_S3M_BPM	0xab	/* S3M */

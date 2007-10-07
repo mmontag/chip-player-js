@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.2 2002-07-27 18:18:22 cmatsuoka Exp $
+ * $Id: player.h,v 1.3 2007-10-07 11:46:50 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -48,26 +48,27 @@ struct flow_control {
 };
 
 /* The following macros are used to set the flags for each channel */
-#define VOL_SLIDE	0x00001
-#define PAN_SLIDE	0x00002
-#define TONEPORTA	0x00004
-#define PITCHBEND	0x00008
-#define VIBRATO		0x00010
-#define TREMOLO		0x00020
-#define FINE_VOLS	0x00040
-#define FINE_BEND	0x00080
-#define NEW_PAN		0x00100
-#define FINETUNE	0x00200
-#define OFFSET		0x00400
-#define TRK_VSLIDE	0x00800
-#define TRK_FVSLIDE	0x01000
-#define RESET_VOL	0x02000
-#define RESET_ENV	0x04000
-#define IS_VALID	0x08000
-#define NEW_INS		0x10000
-#define NEW_VOL		0x20000
-#define ECHOBACK	0x40000
-#define VOL_SLIDE_2	0x80000
+#define VOL_SLIDE	0x00000001
+#define PAN_SLIDE	0x00000002
+#define TONEPORTA	0x00000004
+#define PITCHBEND	0x00000008
+#define VIBRATO		0x00000010
+#define TREMOLO		0x00000020
+#define FINE_VOLS	0x00000040
+#define FINE_BEND	0x00000080
+#define NEW_PAN		0x00000100
+#define FINETUNE	0x00000200
+#define OFFSET		0x00000400
+#define TRK_VSLIDE	0x00000800
+#define TRK_FVSLIDE	0x00001000
+#define RESET_VOL	0x00002000
+#define RESET_ENV	0x00004000
+#define IS_VALID	0x00008000
+#define NEW_INS		0x00010000
+#define NEW_VOL		0x00020000
+#define ECHOBACK	0x00040000
+#define VOL_SLIDE_2	0x00080000
+#define NOTE_SLIDE	0x00100000
 
 /* These need to be "persistent" between frames */
 #define IS_READY	0x01000000
@@ -143,6 +144,9 @@ struct xmp_channel {
     int insvib_idx;		/* Instrument vibrato index */
     int insvib_swp;		/* Instrument vibrato sweep */
     int offset;			/* Sample offset */
+    int ns_val;			/* PTM note slide amount */
+    int ns_speed;		/* PTM note slide speed */
+    int ns_count;		/* PTM note slide counter */
     int cutoff;			/* IT filter cutoff frequency */
     int cutoff2;		/* IT filter cutoff frequency (with envelope) */
     int resonance;		/* IT filter resonance */
