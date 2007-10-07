@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med.h,v 1.3 2007-08-06 12:57:08 cmatsuoka Exp $
+ * $Id: med.h,v 1.4 2007-10-07 16:43:02 cmatsuoka Exp $
  */
 
 #include "xmpi.h"
@@ -186,7 +186,7 @@ struct SynthInstr {
     UWORD wforms;			/* offs: 20 */
     UBYTE voltbl[128];			/* offs: 22 */
     UBYTE wftbl[128];			/* offs: 150 */
-    struct SynthWF *wf[64];		/* offs: 278 */
+    ULONG wf[64];			/* offs: 278 */
 };
 
 

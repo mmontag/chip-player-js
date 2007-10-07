@@ -71,8 +71,8 @@ The current version recognizes the following module formats:
   EMOD  ****	Quadra Composer		0001
   KRIS	****+	ChipTracker		KRIS
   MODL	****+	Protracker 3.59		PTDT
-  MED	**	MED 2.10/3.00	 	MED3, MED4
-  MED	**	MED 3.00/OctaMED	MMD0, MMD1, MMD2, MMD3
+  MED	***	MED 2.10/3.00	 	MED3, MED4
+  MED	***	MED 3.00/OctaMED	MMD0, MMD1, MMD2, MMD3
   MTN	****	ST 2.6, Ice Tracker	MTN, IT10
   OKT 	***	Oktalyzer		-
   SFX	***	SoundFX			1.3, 2.0?
@@ -84,7 +84,7 @@ The current version recognizes the following module formats:
   FA0x	****+	Digital Tracker		FA04, FA06, FA08
   FLX	****	Flextrax		M.K., xCHN (no dsp effects)
   GTK	**	Graoumf Tracker		GTK1, GTK4
-  MGT	**	Megatracker		1.1
+  MGT	***	Megatracker		1.1
   TCB	***	TCB Tracker		'AN COOL.'
 
   Acorn tracker formats:

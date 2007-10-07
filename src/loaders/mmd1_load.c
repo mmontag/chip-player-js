@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.15 2007-10-07 14:14:27 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.16 2007-10-07 16:43:02 cmatsuoka Exp $
  */
 
 /*
@@ -108,6 +108,7 @@ int mmd1_load(FILE *f)
 	struct MMD0song song;
 	struct MMD1Block block;
 	struct InstrHdr instr;
+	struct SynthInstr synth;
 	struct InstrExt exp_smp;
 	struct MMD0exp expdata;
 	struct xxm_event *event;
@@ -121,6 +122,7 @@ int mmd1_load(FILE *f)
 	int expsmp_offset;
 	int songname_offset;
 	int iinfo_offset;
+	int pos;
 
 	LOAD_INIT();
 
@@ -212,12 +214,34 @@ int mmd1_load(FILE *f)
 		xxh->bpm = xxh->bpm * 33 / 6;
 	xxh->pat = song.numblocks;
 	xxh->ins = song.numsamples;
-	xxh->smp = xxh->ins;
+	//xxh->smp = xxh->ins;
 	xxh->len = song.songlen;
 	xxh->rst = 0;
 	xxh->chn = 0;
 	memcpy(xxo, song.playseq, xxh->len);
 	xmp_ctl->name[0] = 0;
+
+	/*
+	 * Obtain number of samples from each instrument
+	 */
+	xxh->smp = 0;
+	for (i = 0; i < xxh->ins; i++) {
+		uint32 smpl_offset;
+		int16 type;
+		fseek(f, smplarr_offset + i * 4, SEEK_SET);
+		smpl_offset = read32b(f);
+		if (smpl_offset == 0)
+			continue;
+		fseek(f, smpl_offset, SEEK_SET);
+		read32b(f);				/* length */
+		type = read16b(f);
+		if (type == -1) {			/* type is synth? */
+			fseek(f, 14, SEEK_CUR);
+			xxh->smp += read16b(f);		/* wforms */
+		} else {
+			xxh->smp++;
+		}
+	}
 
 	/*
 	 * expdata
@@ -374,6 +398,9 @@ int mmd1_load(FILE *f)
 	}
 	reportv(0, "\n");
 
+	med_vol_table = calloc(sizeof(uint8 *), xxh->ins);
+	med_wav_table = calloc(sizeof(uint8 *), xxh->ins);
+
 	/*
 	 * Read and convert instruments and samples
 	 */
@@ -394,6 +421,8 @@ int mmd1_load(FILE *f)
 		fseek(f, smpl_offset, SEEK_SET);
 		instr.length = read32b(f);
 		instr.type = read16b(f);
+
+		pos = ftell(f);
 
 		if (V(1)) {
 			char name[40] = "";
@@ -419,8 +448,126 @@ int mmd1_load(FILE *f)
 
 		}
 
-		if (instr.type != 0)
+		fseek(f, pos, SEEK_SET);
+
+		if (instr.type == -2) {			/* Hybrid */
+			int length, type;
+			int pos = ftell(f);
+
+			synth.defaultdecay = read8(f);
+			fseek(f, 3, SEEK_CUR);
+			synth.rep = read16b(f);
+			synth.replen = read16b(f);
+			synth.voltbllen = read16b(f);
+			synth.wftbllen = read16b(f);
+			synth.volspeed = read8(f);
+			synth.wfspeed = read8(f);
+			synth.wforms = read16b(f);
+			fread(synth.voltbl, 1, 128, f);;
+			fread(synth.wftbl, 1, 128, f);;
+
+			fseek(f, pos - 6 + read32b(f), SEEK_SET);
+			length = read32b(f);
+			type = read16b(f);
+
+			xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+			xxih[i].nsm = 1;
+			xxih[i].vts = synth.volspeed;
+			xxih[i].wts = synth.wfspeed;
+			xxi[i][0].pan = 0x80;
+			xxi[i][0].vol = song.sample[i].svol;
+			xxi[i][0].xpo = song.sample[i].strans;
+			xxi[i][0].sid = smp_idx;
+			xxi[i][0].fin = exp_smp.finetune;
+			xxs[smp_idx].len = length;
+			xxs[smp_idx].lps = 2 * song.sample[i].rep;
+			xxs[smp_idx].lpe = xxs[smp_idx].lps +
+						2 * song.sample[i].replen;
+			xxs[smp_idx].flg = song.sample[i].replen > 1 ?
+						WAVE_LOOPING : 0;
+
+			reportv(1, "%05x %05x %05x %02x %02x %+1d ",
+				       xxs[smp_idx].len, xxs[smp_idx].lps,
+				       xxs[smp_idx].lpe, xxi[i][0].vol,
+				       (uint8) xxi[i][0].xpo,
+				       xxi[i][0].fin >> 4);
+
+			xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate, 0,
+					&xxs[smp_idx], NULL);
+
+			smp_idx++;
+
+			med_vol_table[i] = calloc(1, synth.voltbllen);
+			memcpy(med_vol_table[i], synth.voltbl, synth.voltbllen);
+
+			med_wav_table[i] = calloc(1, synth.wftbllen);
+			memcpy(med_wav_table[i], synth.wftbl, synth.wftbllen);
+
+			reportv(0, ".");
+
 			continue;
+		}
+
+		if (instr.type == -1) {			/* Synthetic */
+			int pos = ftell(f);
+
+			synth.defaultdecay = read8(f);
+			fseek(f, 3, SEEK_CUR);
+			synth.rep = read16b(f);
+			synth.replen = read16b(f);
+			synth.voltbllen = read16b(f);
+			synth.wftbllen = read16b(f);
+			synth.volspeed = read8(f);
+			synth.wfspeed = read8(f);
+			synth.wforms = read16b(f);
+			fread(synth.voltbl, 1, 128, f);;
+			fread(synth.wftbl, 1, 128, f);;
+			for (j = 0; j < 64; j++)
+				synth.wf[j] = read32b(f);
+
+			reportv(1, "VS:%02x WS:%02x WF:%02x %02x %02x %+1d ",
+					synth.volspeed, synth.wfspeed,
+					synth.wforms, song.sample[i].svol,
+					(uint8)song.sample[i].strans,
+					exp_smp.finetune);
+
+			xxi[i] = calloc(sizeof(struct xxm_instrument),
+							synth.wforms);
+			xxih[i].nsm = synth.wforms;
+			xxih[i].vts = synth.volspeed;
+			xxih[i].wts = synth.wfspeed;
+
+			for (j = 0; j < synth.wforms; j++) {
+				xxi[i][j].pan = 0x80;
+				xxi[i][j].vol = song.sample[i].svol;
+				xxi[i][j].xpo = song.sample[i].strans - 24;
+				xxi[i][j].sid = smp_idx;
+				xxi[i][j].fin = exp_smp.finetune;
+
+				fseek(f, pos - 6 + synth.wf[j], SEEK_SET);
+
+				xxs[smp_idx].len = read16b(f) * 2;
+				xxs[smp_idx].lps = 0;
+				xxs[smp_idx].lpe = xxs[smp_idx].len;
+				xxs[smp_idx].flg = WAVE_LOOPING;
+
+				xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate,
+					XMP_SMP_8X, &xxs[smp_idx], NULL);
+
+
+				smp_idx++;
+			}
+
+			med_vol_table[i] = calloc(1, synth.voltbllen);
+			memcpy(med_vol_table[i], synth.voltbl, synth.voltbllen);
+
+			med_wav_table[i] = calloc(1, synth.wftbllen);
+			memcpy(med_wav_table[i], synth.wftbl, synth.wftbllen);
+
+			reportv(0, ".");
+
+			continue;
+		}
 
 		/* instr type is sample */
 		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);

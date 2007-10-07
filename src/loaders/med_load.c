@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med_load.c,v 1.3 2007-10-07 14:14:27 cmatsuoka Exp $
+ * $Id: med_load.c,v 1.4 2007-10-07 16:43:02 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -418,6 +418,7 @@ int med_load(FILE * f)
 
 			xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 			xxih[i].nsm = 1;
+
 			xxih[i].vts = synth->volspeed;
 			xxih[i].wts = synth->wfspeed;
 
