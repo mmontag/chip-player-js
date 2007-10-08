@@ -1,5 +1,5 @@
 Name: xmp
-Version: 2.3.1
+Version: 2.3.2
 Release: 1
 Summary: A multi-format module player
 Group: Sound
