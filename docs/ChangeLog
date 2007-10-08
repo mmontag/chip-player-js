@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.118 2007-10-07 22:51:43 cmatsuoka Exp $
+$Id: ChangeLog,v 1.119 2007-10-08 01:38:41 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -14,6 +14,7 @@ Stable versions
 	- fixed PTM effects translation (PTM-specific effects were ignored)
 	- fixed effects settings in AIX and OSX CoreAudio drivers (reported
 	  by Douglas Carmichael and Chris Cox)
+	- decoupled PT3 PTDT and MOD loader
 
 2.3.1 (20071005):
 	- added PTM global volume effect

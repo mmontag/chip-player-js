@@ -55,7 +55,7 @@ int flt_load (FILE *f)
 
     xxh->len = mh.len;
     xxh->rst = mh.restart;
-    memcpy (xxo, mh.order, 128);
+    memcpy(xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++) {
 	if (xxh->chn > 4)
@@ -68,14 +68,13 @@ int flt_load (FILE *f)
 
     xxh->trk = xxh->chn * xxh->pat;
 
-    strncpy (xmp_ctl->name, (char *) mh.name, 20);
-    sprintf (xmp_ctl->type, "%4.4s (%s)", mh.magic, tracker);
+    strncpy(xmp_ctl->name, (char *) mh.name, 20);
+    sprintf(xmp_ctl->type, "%4.4s (%s)", mh.magic, tracker);
     MODULE_INFO();
 
     INSTRUMENT_INIT();
 
-    if (V (1))
-	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
+    reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -92,19 +91,18 @@ int flt_load (FILE *f)
 
 	copy_adjust(xxih[i].name, mh.ins[i].name, 22);
 
-	if ((V (1)) && (strlen ((char *) xxih[i].name) ||
-	    xxs[i].len > 2))
-	    report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+	if ((V (1)) && (strlen((char *)xxih[i].name) || xxs[i].len > 2)) {
+	    report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
+			i, xxih[i].name, xxs[i].len, xxs[i].lps,
+			xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
+			xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+	}
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     /* The format you are looking for is FLT8, and the ONLY two differences
      * are: It says FLT8 instead of FLT4 or M.K., AND, the patterns are PAIRED.
@@ -118,42 +116,37 @@ int flt_load (FILE *f)
      * portamento command, that would be hard to patch).
      */
     for (i = 0; i < xxh->pat; i++) {
-	PATTERN_ALLOC (i);
+	PATTERN_ALLOC(i);
 	xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+	TRACK_ALLOC(i);
 	for (j = 0; j < (64 * 4); j++) {
-	    event = &EVENT (i, j % 4, j / 4);
-	    fread (mod_event, 1, 4, f);
-	    cvt_pt_event (event, mod_event);
+	    event = &EVENT(i, j % 4, j / 4);
+	    fread(mod_event, 1, 4, f);
+	    cvt_pt_event(event, mod_event);
 	}
 	if (xxh->chn > 4) {
 	    for (j = 0; j < (64 * 4); j++) {
-		event = &EVENT (i, (j % 4) + 4, j / 4);
-		fread (mod_event, 1, 4, f);
-		cvt_pt_event (event, mod_event);
+		event = &EVENT(i, (j % 4) + 4, j / 4);
+		fread(mod_event, 1, 4, f);
+		cvt_pt_event(event, mod_event);
 	    }
 	}
-
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
     xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", xxh->smp);
     for (i = 0; i < xxh->smp; i++) {
 	if (!xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
+	xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
+					&xxs[xxi[i][0].sid], NULL);
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     return 0;
 }

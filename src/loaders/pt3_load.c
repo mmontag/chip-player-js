@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.4 2007-10-08 01:16:11 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.5 2007-10-08 01:38:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include "load.h"
+#include "mod.h"
 #include "iff.h"
 
 #define MAGIC_FORM	MAGIC4('F','O','R','M')
@@ -146,6 +147,102 @@ int pt3_load(FILE *f)
 	iff_chunk(f);
 
     iff_release();
+
+    return 0;
+}
+
+
+int ptdt_load(FILE *f)
+{
+    int i, j;
+    struct xxm_event *event;
+    struct mod_header mh;
+    uint8 mod_event[4];
+
+    fread(&mh.name, 20, 1, f);
+    for (i = 0; i < 31; i++) {
+	fread(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	mh.ins[i].size = read16b(f);		/* Length in 16-bit words */
+	mh.ins[i].finetune = read8(f);		/* Finetune (signed nibble) */
+	mh.ins[i].volume = read8(f);		/* Linear playback volume */
+	mh.ins[i].loop_start = read16b(f);	/* Loop start in 16-bit words */
+	mh.ins[i].loop_size = read16b(f);	/* Loop size in 16-bit words */
+    }
+    mh.len = read8(f);
+    mh.restart = read8(f);
+    fread(&mh.order, 128, 1, f);
+    fread(&mh.magic, 4, 1, f);
+
+    xxh->chn = 4;
+    xxh->len = mh.len;
+    xxh->rst = mh.restart;
+    memcpy (xxo, mh.order, 128);
+
+    for (i = 0; i < 128; i++) {
+	if (xxo[i] > xxh->pat)
+	    xxh->pat = xxo[i];
+    }
+
+    xxh->pat++;
+    xxh->trk = xxh->chn * xxh->pat;
+
+    INSTRUMENT_INIT();
+
+    reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
+
+    for (i = 0; i < xxh->ins; i++) {
+	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
+	xxs[i].len = 2 * mh.ins[i].size;
+	xxs[i].lps = 2 * mh.ins[i].loop_start;
+	xxs[i].lpe = xxs[i].lps + 2 * mh.ins[i].loop_size;
+	xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
+	xxi[i][0].vol = mh.ins[i].volume;
+	xxi[i][0].pan = 0x80;
+	xxi[i][0].sid = i;
+	xxih[i].nsm = !!(xxs[i].len);
+	xxih[i].rls = 0xfff;
+
+	copy_adjust(xxih[i].name, mh.ins[i].name, 22);
+
+	if ((V(1)) && (strlen((char *)xxih[i].name) || xxs[i].len > 2)) {
+	    report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
+			i, xxih[i].name, xxs[i].len, xxs[i].lps,
+			xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
+			xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+	}
+    }
+
+    PATTERN_INIT();
+
+    /* Load and convert patterns */
+    reportv(0, "Stored patterns: %d ", xxh->pat);
+
+    for (i = 0; i < xxh->pat; i++) {
+	PATTERN_ALLOC(i);
+	xxp[i]->rows = 64;
+	TRACK_ALLOC(i);
+	for (j = 0; j < (64 * 4); j++) {
+	    event = &EVENT(i, j % 4, j / 4);
+	    fread(mod_event, 1, 4, f);
+	    cvt_pt_event(event, mod_event);
+	}
+	reportv(0, ".");
+    }
+
+    xxh->flg |= XXM_FLG_MODRNG;
+
+    /* Load samples */
+    reportv(0, "\nStored samples : %d ", xxh->smp);
+
+    for (i = 0; i < xxh->smp; i++) {
+	if (!xxs[i].len)
+	    continue;
+	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
+					    &xxs[xxi[i][0].sid], NULL);
+	reportv(0, ".");
+    }
+    reportv(0, "\n");
 
     return 0;
 }

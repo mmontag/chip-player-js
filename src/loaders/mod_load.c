@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.17 2007-10-08 01:16:11 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.18 2007-10-08 01:38:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -53,21 +53,6 @@ struct {
     { "", 0 }
 };
 
-static int module_load (FILE *, int);
-
-
-int mod_load(FILE *f)
-{
-    return module_load (f, 0);
-}
-
-
-int ptdt_load(FILE *f)
-{
-    return module_load (f, 1);
-}
-
-
 static int is_st_ins (char *s)
 {
     if (s[0] != 's' && s[0] != 'S')
@@ -83,7 +68,7 @@ static int is_st_ins (char *s)
 }
 
 
-static int module_load (FILE *f, int ptdt)
+int mod_load(FILE *f)
 {
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;
@@ -95,17 +80,15 @@ static int module_load (FILE *f, int ptdt)
     int detected = 0;
     char magic[8], idbuffer[32];
 
-    if (!ptdt)
-	LOAD_INIT();
+    LOAD_INIT();
 
     xxh->ins = 31;
     xxh->smp = xxh->ins;
-    xxh->chn = ptdt ? 4 : 0;
+    xxh->chn = 0;
     smp_size = 0;
     pat_size = 0;
 
-    if (xxh->chn == 4)
-	xxh->flg |= XXM_FLG_MODRNG;
+    xxh->flg |= XXM_FLG_MODRNG;
 
     fread(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
@@ -156,8 +139,7 @@ static int module_load (FILE *f, int ptdt)
 	xxh->flg &= ~XXM_FLG_MODRNG;
     }
 
-    if (!ptdt)
-	strncpy (xmp_ctl->name, (char *) mh.name, 20);
+    strncpy (xmp_ctl->name, (char *) mh.name, 20);
 
     xxh->len = mh.len;
     /* xxh->rst = mh.restart; */
@@ -366,10 +348,8 @@ skip_test:
 
     xxh->trk = xxh->chn * xxh->pat;
 
-    if (!ptdt) {
-	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "%s (%s)", magic, tracker);
-	MODULE_INFO();
-    }
+    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "%s (%s)", magic, tracker);
+    MODULE_INFO();
 
     if (V (1)) {
 	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
