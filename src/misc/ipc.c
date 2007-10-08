@@ -14,7 +14,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#ifndef _WIN32
+#if !defined _WIN32 && !defined B_BEOS_VERSION
 #  include <sys/ipc.h>
 
 #  if !defined __EMX__ && !defined __QNXNTO__
@@ -50,7 +50,7 @@ void shmdt(char *memptr){
 #endif
 
 
-#if !defined _WIN32 && !defined __QNXNTO__
+#if !defined _WIN32 && !defined __QNXNTO__ && !defined B_BEOS_VERSION
 
 /* shared memory */
 static int shmid;
@@ -87,6 +87,14 @@ int xmpi_tell_wait ()
 }
 
 
+#ifdef B_BEOS_VERSION
+
+int xmpi_select_read (int fd, int msec)
+{
+	return 0;
+}
+
+#else
 int xmpi_select_read (int fd, int msec)
 {
     fd_set rfds;
@@ -140,4 +148,6 @@ int xmp_check_child (int msec)
 {
     return xmpi_select_read (pfd2[0], msec);
 }
+
+#endif
 

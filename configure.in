@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.32 2007-10-06 11:12:38 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.33 2007-10-08 16:38:28 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -32,6 +32,9 @@ DRIVERS=""
 
 AC_SUBST(MIXER)
 MIXER="mix_all.o"
+
+AC_SUBST(LIBM)
+LIBM="-lm"
 
 
 dnl -----------------------------------------------------------------------
@@ -467,7 +470,7 @@ irix*)
 dnl
 dnl	Test for AIX
 dnl
-irix*)
+aix*)
     AC_CHECK_HEADERS(audio.h)
     if test "${ac_cv_header_audio_h}" = "yes"; then
 	DRIVERS="${DRIVERS} aix.o"
@@ -492,7 +495,7 @@ netbsd*)
     ;;
 dnl
 dnl	Test for OpenBSD
-dnl	fixed by Chris Cox <cox.family@sk.sympatico.ca>
+dnl	fixed by Chris Cox <cox.christopher@gmail.com>
 dnl
 openbsd*)
     AC_CHECK_HEADERS(sys/audio.h sys/audioio.h)
@@ -533,6 +536,8 @@ beos*)
     if test "${ac_cv_header_SoundPlayer_h}" = "yes"; then
 	DRIVERS="${DRIVERS} beos.o"
 	AC_DEFINE(DRIVER_BEOS)
+	LIBS="${LIBS} -lmedia -lbe"
+	LIBM=""
     fi
     ;;
 dnl

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.47 2007-09-28 13:07:40 cmatsuoka Exp $
+ * $Id: formats.c,v 1.48 2007-10-08 16:38:29 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -16,6 +16,7 @@
 #include "xmpi.h"
 #include "list.h"
 #include "formats.h"
+#include "loader.h"
 
 struct xmp_fmt_info *__fmt_head;
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.12 2007-09-25 11:23:30 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.13 2007-10-08 16:38:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,14 +46,17 @@
 
 #include <stdio.h>
 #include <signal.h>
-#include "list.h"
 
+#ifdef B_BEOS_VERSION
+#include <SupportDefs.h>
+#else
 typedef signed char int8;
 typedef signed short int int16;
 typedef signed int int32;
 typedef unsigned char uint8;
 typedef unsigned short int uint16;
 typedef unsigned int uint32;
+#endif
 
 #include "xmp.h"
 #include "xxm.h"
@@ -116,14 +119,6 @@ struct xmp_ord_info {
     int gvl;
     int time;
 };
-
-struct xmp_loader_info {
-    struct list_head list;
-    char *suffix;
-    char *tracker;
-    int (*loader)();
-};
-
 
 /* Externs */
 

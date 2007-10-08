@@ -1,12 +1,12 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.12 2007-09-16 05:10:22 cmatsuoka Exp $
+# $Id: Makefile,v 1.13 2007-10-08 16:38:29 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
 OBJS	= getopt.o getopt1.o options.o
 XDEPS	=
 BINS	= xmp
-XLIBS	= -L$(TOPDIR)/lib -lxmp -lm #-lefence
+XLIBS	= -L$(TOPDIR)/lib -lxmp $(LIBM) #-lefence
 DFILES	= Makefile $(OBJS:.o=.c) main.c simple.c mod2mp3.c xstuff.c
 DDIRS	=
 CFILES	= $(BINS)

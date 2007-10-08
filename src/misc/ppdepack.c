@@ -20,7 +20,7 @@
  * You'll probably want to use ppcrack stand-alone to crack encrypted
  * powerpack files once instead of using brute force at each replay.
  *
- * $Id: ppdepack.c,v 1.1 2007-08-10 16:56:56 cmatsuoka Exp $
+ * $Id: ppdepack.c,v 1.2 2007-10-08 16:38:29 cmatsuoka Exp $
  *
  * Modified for xmp by Claudio Matsuoka, 08/2007
  * - merged mld's checks from the old depack sources. Original credits:
@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -325,7 +324,7 @@ return success;
 }
 
 
-static int ppdepack(uint8_t *src, size_t s, FILE *fo)
+static int ppdepack(uint8 *src, size_t s, FILE *fo)
 {
   int success;
   key_start = 0;

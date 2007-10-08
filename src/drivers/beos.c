@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.3 2007-10-06 14:08:13 cmatsuoka Exp $
+ * $Id: beos.c,v 1.4 2007-10-08 16:38:28 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,7 +15,13 @@
 #include <Application.h>
 #include <SoundPlayer.h>
 
+#define B_AUDIO_CHAR 1
+#define B_AUDIO_SHORT 2
+
 extern "C" {
+#include <string.h>
+#include <stdlib.h>
+
 #include "xmpi.h"
 #include "driver.h"
 #include "mixer.h"
@@ -35,13 +41,13 @@ static char *help[] = {
 	NULL
 };
 
-struct xmp_drv_info drv_arts = {
+struct xmp_drv_info drv_beos = {
 	"beos",				/* driver ID */
 	"BeOS PCM audio",		/* driver description */
 	NULL,				/* help */
 	(int (*)())init,		/* init */
 	(void (*)())myshutdown,		/* shutdown */
-	(void (*)())xmp_smix_numvoices,	/* numvoices */
+	(int (*)())xmp_smix_numvoices,	/* numvoices */
 	dummy,				/* voicepos */
 	(void (*)())xmp_smix_echoback,	/* echoback */
 	dummy,				/* setpatch */
@@ -63,7 +69,7 @@ struct xmp_drv_info drv_arts = {
 };
 
 static media_raw_audio_format fmt;
-static BSoundPlayer player;
+static BSoundPlayer *player;
 
 
 /*
@@ -156,7 +162,7 @@ void render_proc(void *theCookie, void *buffer, size_t req,
 { 
         int amt = buf_used();
 
-        read_buffer(buffer, amt > req ? req : amt);
+        read_buffer((unsigned char *)buffer, amt > req ? req : amt);
 }
 
 
@@ -181,10 +187,10 @@ static int init(struct xmp_control *ctl)
 	fmt.format = ctl->resol > 8 ? B_AUDIO_SHORT : B_AUDIO_CHAR;
 	fmt.byte_order = B_HOST_IS_LENDIAN ?
 				B_MEDIA_LITTLE_ENDIAN : B_MEDIA_BIG_ENDIAN;
-	format.buffer_size = bsize;
+	fmt.buffer_size = bsize;
 
 	buffer_len = bsize;
-	buffer = calloc(1, bsize);
+	buffer = (uint8 *)calloc(1, bsize);
 	buf_read_pos = 0;
 	buf_write_pos = 0;
 	paused = 1;
@@ -205,9 +211,9 @@ static void bufdump(int i)
 
 	/* block until we have enough free space in the buffer */
 	while (buf_free() < i)
-		usleep(100000);
+		/*nanosleep(1)*/;
 
-	b = xmp_smix_buffer();
+	b = (uint8 *)xmp_smix_buffer();
 
 	while (i) {
         	if ((j = write_buffer(b, i)) > 0) {
@@ -218,14 +224,15 @@ static void bufdump(int i)
 	}
 
 	if (paused) {
-		player.Start(); 
-		player.SetHasData(true);
+		player->Start(); 
+		player->SetHasData(true);
 		paused = 0;
 	}
 }
 
 static void myshutdown()
 {
+	player->Stop(); 
 	xmp_smix_off();
 	be_app->Lock();
 	be_app->Quit();
