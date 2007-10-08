@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.120 2007-10-08 16:38:28 cmatsuoka Exp $
+$Id: ChangeLog,v 1.121 2007-10-08 18:49:07 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -8,7 +8,7 @@ Stable versions
 	  speech in "Deep In Her Eyes Remake", reported by Douglas Carmichael)
 	- added PTM/IMF note slide effects and PTM note slide + retrig effect
 	- added partial support to MED synth sounds (ported from xmp 2.1.0)
-	- added new BeOS driver based on the CoreAudio driver (untested)
+	- added new BeOS driver based on the CoreAudio driver (experimental)
 	- fixed copy of overlapping memory areas in IT loader
 	- fixed initialization of channel flags before loading module
 	- fixed PTM sample loop size (tested with abnormality.ptm)

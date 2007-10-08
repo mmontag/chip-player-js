@@ -5,7 +5,11 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.4 2007-10-08 16:38:28 cmatsuoka Exp $
+ * $Id: beos.c,v 1.5 2007-10-08 18:49:07 cmatsuoka Exp $
+ */
+
+/*
+ * This is a very experimental BeOS driver. Fixes are welcome.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,7 +19,7 @@
 #include <Application.h>
 #include <SoundPlayer.h>
 
-#define B_AUDIO_CHAR 1
+#define B_AUDIO_CHAR 1		/* Should be defined in MediaDefs */
 #define B_AUDIO_SHORT 2
 
 extern "C" {
@@ -83,6 +87,7 @@ static int buffer_len;
 static int buf_write_pos;
 static int buf_read_pos;
 static int chunk_size;
+static int chunk_num;
 static int packet_size;
 
 
@@ -91,7 +96,7 @@ static int packet_size;
  * might actually be larger!  */
 static int buf_free()
 {
-	int free = buf_read_pos - buf_write_pos;
+	int free = buf_read_pos - buf_write_pos - chunk_size;
 	if (free < 0)
 		free += buffer_len;
 	return free;
@@ -168,15 +173,14 @@ void render_proc(void *theCookie, void *buffer, size_t req,
 
 static int init(struct xmp_control *ctl)
 {
-	int bsize;
 	char *dev;
 	char *token;
 	char **parm = ctl->parm;
 
 	be_app = new BApplication("application/x-vnd.101-xmp");
-	be_app->Run();
 
-	bsize = 4096;
+	chunk_size = 4096;
+	chunk_num = 20;
 
 	parm_init();
 	chkparm1("buffer", chunk_size = strtoul(token, NULL, 0));
@@ -187,10 +191,10 @@ static int init(struct xmp_control *ctl)
 	fmt.format = ctl->resol > 8 ? B_AUDIO_SHORT : B_AUDIO_CHAR;
 	fmt.byte_order = B_HOST_IS_LENDIAN ?
 				B_MEDIA_LITTLE_ENDIAN : B_MEDIA_BIG_ENDIAN;
-	fmt.buffer_size = bsize;
+	fmt.buffer_size = chunk_size * chunk_num;
 
-	buffer_len = bsize;
-	buffer = (uint8 *)calloc(1, bsize);
+	buffer_len = chunk_size * chunk_num;
+	buffer = (uint8 *)calloc(1, buffer_len);
 	buf_read_pos = 0;
 	buf_write_pos = 0;
 	paused = 1;
@@ -211,7 +215,7 @@ static void bufdump(int i)
 
 	/* block until we have enough free space in the buffer */
 	while (buf_free() < i)
-		/*nanosleep(1)*/;
+		snooze(100000);
 
 	b = (uint8 *)xmp_smix_buffer();
 
