@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.5 2007-10-08 01:38:41 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.6 2007-10-08 01:44:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -61,7 +61,7 @@ struct pt3_chunk_inst {
 };
 
 
-int ptdt_load (FILE *);
+static int ptdt_load(FILE *);
 
 
 static void get_vers(int size, FILE *f)
@@ -152,7 +152,7 @@ int pt3_load(FILE *f)
 }
 
 
-int ptdt_load(FILE *f)
+static int ptdt_load(FILE *f)
 {
     int i, j;
     struct xxm_event *event;
