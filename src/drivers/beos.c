@@ -5,11 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.5 2007-10-08 18:49:07 cmatsuoka Exp $
- */
-
-/*
- * This is a very experimental BeOS driver. Fixes are welcome.
+ * $Id: beos.c,v 1.6 2007-10-08 20:06:43 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,7 +15,7 @@
 #include <Application.h>
 #include <SoundPlayer.h>
 
-#define B_AUDIO_CHAR 1		/* Should be defined in MediaDefs */
+#define B_AUDIO_CHAR 1
 #define B_AUDIO_SHORT 2
 
 extern "C" {
@@ -40,8 +36,7 @@ static void dummy()
 }
 
 static char *help[] = {
-	"dev=<device_name>", "Audio device name (default is /dev/dsp)",
-	"buffer=val", "Audio buffer size (default is 32768)",
+	"buffer=num,size", "set the number and size of buffer fragments",
 	NULL
 };
 
@@ -165,9 +160,12 @@ static int read_buffer(unsigned char *data, int len)
 void render_proc(void *theCookie, void *buffer, size_t req, 
 				const media_raw_audio_format &format)
 { 
-        int amt = buf_used();
+        int amt;
 
-        read_buffer((unsigned char *)buffer, amt > req ? req : amt);
+	while ((amt = buf_used()) < req)
+		snooze(10000);
+
+        read_buffer((unsigned char *)buffer, req);
 }
 
 
@@ -176,6 +174,7 @@ static int init(struct xmp_control *ctl)
 	char *dev;
 	char *token;
 	char **parm = ctl->parm;
+	static char desc[80];
 
 	be_app = new BApplication("application/x-vnd.101-xmp");
 
@@ -183,8 +182,12 @@ static int init(struct xmp_control *ctl)
 	chunk_num = 20;
 
 	parm_init();
-	chkparm1("buffer", chunk_size = strtoul(token, NULL, 0));
+	chkparm2("buffer", "%d,%d", &chunk_num, &chunk_size);
 	parm_end();
+
+	snprintf(desc, 80, "%s [%d fragments of %d bytes]",
+			drv_beos.description, chunk_num, chunk_size);
+	drv_beos.description = desc;
 
 	fmt.frame_rate = ctl->freq;
 	fmt.channel_count = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
@@ -215,7 +218,7 @@ static void bufdump(int i)
 
 	/* block until we have enough free space in the buffer */
 	while (buf_free() < i)
-		snooze(100000);
+		snooze(10000);
 
 	b = (uint8 *)xmp_smix_buffer();
 
