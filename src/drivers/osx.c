@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.15 2007-10-07 22:51:43 cmatsuoka Exp $
+ * $Id: osx.c,v 1.16 2007-10-08 20:13:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -145,11 +145,11 @@ OSStatus render_proc(void *inRefCon,
 		const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber,
 		UInt32 inNumFrames, AudioBufferList *ioData)
 {
-	int amt = buf_used();
+	int amt;
 	int req = inNumFrames * packet_size;
 
-	if (amt > req)
-		amt = req;
+	while ((amt = buf_used()) < req)
+		usleep(100000);
 
 	read_buffer((unsigned char *)ioData->mBuffers[0].mData, amt);
 	ioData->mBuffers[0].mDataByteSize = amt;

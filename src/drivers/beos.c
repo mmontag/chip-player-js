@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.6 2007-10-08 20:06:43 cmatsuoka Exp $
+ * $Id: beos.c,v 1.7 2007-10-08 20:13:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,7 +21,6 @@
 extern "C" {
 #include <string.h>
 #include <stdlib.h>
-
 #include "xmpi.h"
 #include "driver.h"
 #include "mixer.h"
@@ -163,7 +162,7 @@ void render_proc(void *theCookie, void *buffer, size_t req,
         int amt;
 
 	while ((amt = buf_used()) < req)
-		snooze(10000);
+		snooze(100000);
 
         read_buffer((unsigned char *)buffer, req);
 }
@@ -218,7 +217,7 @@ static void bufdump(int i)
 
 	/* block until we have enough free space in the buffer */
 	while (buf_free() < i)
-		snooze(10000);
+		snooze(100000);
 
 	b = (uint8 *)xmp_smix_buffer();
 
