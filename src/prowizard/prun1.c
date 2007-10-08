@@ -4,7 +4,7 @@
  *
  * Converts MODs packed with Prorunner v1.0
  *
- * $Id: prun1.c,v 1.5 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: prun1.c,v 1.6 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -33,8 +33,8 @@ static int depack_pru1 (FILE *in, FILE *out)
 	int ssize = 0;
 	int i, j;
 
-	bzero(header, 2048);
-	bzero(ptable, 128);
+	memset(header, 0, 2048);
+	memset(ptable, 0, 128);
 
 	/* read and write whole header */
 	fread(header, 950, 1, in);
@@ -49,7 +49,7 @@ static int depack_pru1 (FILE *in, FILE *out)
 	/* read and write size of pattern list */
 	write8(out, npat = read8(in));
 
-	bzero(header, 2048);
+	memset(header, 0, 2048);
 
 	/* read and write ntk byte and pattern list */
 	fread(header, 129, 1, in);

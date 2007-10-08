@@ -31,8 +31,8 @@ void Depack_HRT (FILE * in, FILE * out)
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
 	// out = fdopen (fd_out, "w+b");
 
-	bzero (Header, 2048);
-	bzero (ptable, 128);
+	memset(Header, 0, 2048);
+	memset(ptable, 0, 128);
 
 	/* read header */
 	fread (Header, 950, 1, in);
@@ -62,7 +62,7 @@ void Depack_HRT (FILE * in, FILE * out)
 	/*printf ( "Size of pattern list : %d\n" , npat ); */
 
 	/* read noisetracker byte and pattern list */
-	bzero (Header, 2048);
+	memset(Header, 0, 2048);
 	fread (Header, 129, 1, in);
 	fwrite (Header, 129, 1, out);
 
@@ -113,7 +113,7 @@ void Depack_HRT (FILE * in, FILE * out)
 
 	/* sample data */
 	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
+	memset(tmp, 0, ssize);
 	fread (tmp, ssize, 1, in);
 	fwrite (tmp, ssize, 1, out);
 	free (tmp);

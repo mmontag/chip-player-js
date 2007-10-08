@@ -4,7 +4,7 @@
  *
  * Converts DI packed MODs back to PTK MODs
  *
- * $Id: di.c,v 1.5 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: di.c,v 1.6 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -37,9 +37,9 @@ static int depack_di(FILE * in, FILE * out)
 	int pos;
 	int size, ssize = 0;
 
-	bzero(ptable, 128);
-	bzero(ptk_tab, 5);
-	bzero(paddr, 128);
+	memset(ptable, 0, 128);
+	memset(ptk_tab, 0, 5);
+	memset(paddr, 0, 128);
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -91,7 +91,7 @@ static int depack_di(FILE * in, FILE * out)
 	for (i = 0; i <= max; i++) {
 		fseek (in, paddr[i], 0);
 		for (k = 0; k < 256; k++) {	/* 256 = 4 voices * 64 rows */
-			bzero (ptk_tab, 5);
+			memset(ptk_tab, 0, 5);
 			c1 = read8(in);
 			if ((c1 & 0x80) == 0) {
 				c2 = read8(in);
@@ -109,7 +109,7 @@ static int depack_di(FILE * in, FILE * out)
 				continue;
 			}
 			if (c1 == 0xff) {
-				bzero (ptk_tab, 5);
+				memset(ptk_tab, 0, 5);
 				fwrite (ptk_tab, 4, 1, out);
 				continue;
 			}

@@ -4,7 +4,7 @@
  *
  * Converts ProRunner v2 packed MODs back to Protracker
  *
- * $Id: prun2.c,v 1.8 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: prun2.c,v 1.9 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -35,8 +35,8 @@ static int depack_pru2(FILE *in, FILE *out)
 	int size, ssize = 0;
 	int i, j;
 
-	bzero(header, 2048);
-	bzero(ptable, 128);
+	memset(header, 0, 2048);
+	memset(ptable, 0, 128);
 
 	pw_write_zero(out, 20);				/* title */
 

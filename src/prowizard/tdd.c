@@ -4,7 +4,7 @@
  *
  * Converts TDD packed MODs back to PTK MODs
  *
- * $Id: tdd.c,v 1.6 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: tdd.c,v 1.7 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -34,15 +34,15 @@ static int depack_tdd (FILE *in, FILE *out)
 	int saddr[31];
 	int ssizes[31];
 
-	bzero(saddr, 31 * 4);
-	bzero(ssizes, 31 * 4);
+	memset(saddr, 0, 31 * 4);
+	memset(ssizes, 0, 31 * 4);
 
 	/* write ptk header */
 	pw_write_zero(out, 1080);
 
 	/* read/write pattern list + size and ntk byte */
 	tmp = (uint8 *)malloc(130);
-	bzero(tmp, 130);
+	memset(tmp, 0, 130);
 	fseek(out, 950, 0);
 	fread(tmp, 130, 1, in);
 	fwrite(tmp, 130, 1, out);
@@ -80,8 +80,8 @@ static int depack_tdd (FILE *in, FILE *out)
 	/* read/write pattern data */
 	tmp = (uint8 *)malloc(1024);
 	for (i = 0; i <= pmax; i++) {
-		bzero(tmp, 1024);
-		bzero(pat, 1024);
+		memset(tmp, 0, 1024);
+		memset(pat, 0, 1024);
 		fread(tmp, 1024, 1, in);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {

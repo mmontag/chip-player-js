@@ -13,7 +13,7 @@
  * claudio's note: I don't care if it's a mess. My attempt to write a p60a
  *	depacker produced cleaner code that didn't work.
  *
- * $Id: p60a.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: p60a.c,v 1.4 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -60,12 +60,12 @@ static int depack_p60a (FILE * in, FILE * out)
     long saddr[32];
     long unpacked_ssize;
 
-    bzero (taddr, 128 * 4 * 4);
-    bzero (tdata, 512 << 8);
-    bzero (ptable, 128);
-    bzero (smp_size, 31 * 4);
-    bzero (saddr, 32 * 4);
-    bzero (isize, 31 * 2);
+    memset(taddr, 0, 128 * 4 * 4);
+    memset(tdata, 0, 512 << 8);
+    memset(ptable, 0, 128);
+    memset(smp_size, 0, 31 * 4);
+    memset(saddr, 0, 32 * 4);
+    memset(isize, 0, 31 * 2);
     for (i = 0; i < 31; i++) {
 	PACK[i] = OFF;
 /*    DELTA[i] = OFF;*/
@@ -106,7 +106,7 @@ static int depack_p60a (FILE * in, FILE * out)
 
     /* write title */
     tmp = (uint8 *) malloc (21);
-    bzero (tmp, 21);
+    memset(tmp, 0, 21);
     fwrite (tmp, 20, 1, out);
     free (tmp);
 
@@ -176,7 +176,7 @@ static int depack_p60a (FILE * in, FILE * out)
 
     /* go up to 31 samples */
     tmp = (uint8 *) malloc (30);
-    bzero (tmp, 30);
+    memset(tmp, 0, 30);
     tmp[29] = 0x01;
     while (i != 31) {
 	fwrite (tmp, 30, 1, out);
@@ -388,7 +388,7 @@ static int depack_p60a (FILE * in, FILE * out)
 
     tmp = (uint8 *) malloc (1024);
     for (i = 0; i < PatMax; i++) {
-	bzero (tmp, 1024);
+	memset(tmp, 0, 1024);
 	for (j = 0; j < 64; j++) {
 	    for (k = 0; k < 4; k++) {
 		tmp[j * 16 + k * 4] = tdata[k + i * 4][j * 4];
@@ -408,7 +408,7 @@ static int depack_p60a (FILE * in, FILE * out)
     for (i = 0; i < nins; i++) {
 	fseek (in, sdata_addr + saddr[i + 1], 0);
 	insDataWork = (signed char *) malloc (smp_size[i]);
-	bzero (insDataWork, smp_size[i]);
+	memset(insDataWork, 0, smp_size[i]);
 	fread (insDataWork, smp_size[i], 1, in);
 	if (GLOBAL_DELTA == ON) {
 	    c1 = 0x00;

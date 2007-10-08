@@ -4,7 +4,7 @@
  *
  * Converts MP packed MODs back to PTK MODs
  *
- * $Id: mp.c,v 1.9 2007-10-05 00:18:44 cmatsuoka Exp $
+ * $Id: mp.c,v 1.10 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -43,7 +43,7 @@ static int depack_mp(FILE *in, FILE *out)
 	int i;
 	int size, ssize = 0;
 
-	bzero(ptable, 128);
+	memset(ptable, 0, 128);
 
 	pw_write_zero(out, 20);				/* title */
 

@@ -7,7 +7,7 @@
  *                 reduced to only one FREAD.
  *                 Speed-up and Binary smaller.
  *
- * $Id: np3.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: np3.c,v 1.4 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -45,8 +45,8 @@ static int depack_np3 (FILE *in, FILE *out)
 	int tdata;
 	int saddr = 0;
 
-	bzero (ptable, 128);
-	bzero (taddr, 128 * 4 * 4);
+	memset(ptable, 0, 128);
+	memset(taddr, 0, 128 * 4 * 4);
 
 	/* get input file size */
 	fseek (in, 0, 2);
@@ -55,7 +55,7 @@ static int depack_np3 (FILE *in, FILE *out)
 
 	/* read but once input file */
 	buffer = (uint8 *) malloc (filesize);
-	bzero (buffer, filesize);
+	memset(buffer, 0, filesize);
 	fread (buffer, filesize, 1, in);
 
 	/* read number of sample */
@@ -63,7 +63,7 @@ static int depack_np3 (FILE *in, FILE *out)
 
 	/* write title */
 	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
+	memset(tmp, 0, 20);
 	fwrite (tmp, 20, 1, out);
 	free (tmp);
 
@@ -79,7 +79,7 @@ static int depack_np3 (FILE *in, FILE *out)
 	/*printf ( "tsize : %ld\n" , tsize ); */
 	/* read sample descriptions */
 	tmp = (uint8 *) malloc (22);
-	bzero (tmp, 22);
+	memset(tmp, 0, 22);
 	OverallCpt = 8;
 	for (i = 0; i < nins; i++) {
 		/* sample name */
@@ -103,7 +103,7 @@ static int depack_np3 (FILE *in, FILE *out)
 	/* fill up to 31 samples */
 	free (tmp);
 	tmp = (uint8 *) malloc (30);
-	bzero (tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	while (i != 31) {
 		fwrite (tmp, 30, 1, out);
@@ -177,7 +177,7 @@ static int depack_np3 (FILE *in, FILE *out)
 	/* the track data now ... */
 	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i < pat_max; i++) {
-		bzero (tmp, 1024);
+		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			l = tdata + taddr[i][3 - j];
 			for (k = 0; k < 64; k++) {

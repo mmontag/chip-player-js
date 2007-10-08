@@ -49,12 +49,12 @@ void Depack_PM40 (FILE * in, FILE * out)
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
 	// out = fdopen (fd_out, "w+b");
 
-	bzero (pnum, 128);
-	bzero (pnum_tmp, 128);
-	bzero (pptr, 64 << 8);
-	bzero (Pattern, 128 * 1024);
-	bzero (paddr, 128 * 4);
-	bzero (paddr_tmp, 128 * 4);
+	memset(pnum, 0, 128);
+	memset(pnum_tmp, 0, 128);
+	memset(pptr, 0, 64 << 8);
+	memset(Pattern, 0, 128 * 1024);
+	memset(paddr, 0, 128 * 4);
+	memset(paddr_tmp, 0, 128 * 4);
 	for (i = 0; i < 128; i++)
 		paddr_tmp2[i] = 9999l;
 
@@ -226,7 +226,7 @@ void Depack_PM40 (FILE * in, FILE * out)
 	refmax += 1;		/* coz 1st value is 0 and will be empty in this table */
 	i = refmax * 4;	/* coz each block is 4 bytes long */
 	reftab = (uint8 *) malloc (i);
-	bzero (reftab, i);
+	memset(reftab, 0, i);
 	fread (&reftab[4], i, 1, in);
 
 	/* go back to pattern data starting address */

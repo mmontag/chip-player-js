@@ -4,7 +4,7 @@
  *
  * Kris Tracker to Protracker.
  *
- * $Id: kris.c,v 1.5 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: kris.c,v 1.6 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -36,10 +36,10 @@ static int depack_kris(FILE *in, FILE *out)
 	int i, j, k;
 	int size, ssize = 0;
 
-	bzero(tmp, 1025);
-	bzero(ptable, 128);
-	bzero(taddr, 128 * 4 * 2);
-	bzero(tdata, 512 << 8);
+	memset(tmp, 0, 1025);
+	memset(ptable, 0, 128);
+	memset(taddr, 0, 128 * 4 * 2);
+	memset(tdata, 0, 512 << 8);
 
 	pw_move_data(out, in, 20);			/* title */
 	fseek(in, 2, SEEK_CUR);
@@ -98,7 +98,7 @@ static int depack_kris(FILE *in, FILE *out)
 
 	/* Track data ... */
 	for (i = 0; i <= (maxtaddr / 256); i += 1) {
-		bzero(tmp, 1025);
+		memset(tmp, 0, 1025);
 		fread(tmp, 256, 1, in);
 
 		for (j = 0; j < 64; j++) {
@@ -122,7 +122,7 @@ static int depack_kris(FILE *in, FILE *out)
 	}
 
 	for (i = 0; i <= max; i++) {
-		bzero (tmp, 1025);
+		memset(tmp, 0, 1025);
 		for (j = 0; j < 64; j++) {
 			tmp[j * 16] = tdata[taddr[i][0] / 256][j * 4];
 			tmp[j * 16 + 1] = tdata[taddr[i][0] / 256][j * 4 + 1];

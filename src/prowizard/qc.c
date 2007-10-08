@@ -4,7 +4,7 @@
  *
  * Converts QC MODs back to PTK MODs
  *
- * $Id: qc.c,v 1.2 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: qc.c,v 1.3 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -39,10 +39,10 @@ static int depack_emod (FILE *in, FILE *out)
 	long paddr[128];
 	long i = 0, j = 0, k = 0;
 
-	bzero (iaddr, 32 * 4);
-	bzero (isize, 32 * 4);
-	bzero (paddr, 128 * 4);
-	bzero (nrow, 128);
+	memset(iaddr, 0, 32 * 4);
+	memset(isize, 0, 32 * 4);
+	memset(paddr, 0, 128 * 4);
+	memset(nrow, 0, 128);
 
 	/* bypass ID's and chunk sizes */
 	fseek (in, 22, 0);
@@ -61,7 +61,7 @@ static int depack_emod (FILE *in, FILE *out)
 
 	/* write empty 930 sample header */
 	tmp = (uint8 *) malloc (930);
-	bzero (tmp, 930);
+	memset(tmp, 0, 930);
 	/* puts some $01 for replen */
 	for (i = 0; i < 31; i++)
 		tmp[i * 30 + 29] = 0x01;
@@ -203,7 +203,7 @@ static int depack_emod (FILE *in, FILE *out)
 
 	/* pattern data */
 	for (i = 0; i <= Real_pat_max; i++) {
-		bzero (Pattern, 1024);
+		memset(Pattern, 0, 1024);
 		if (paddr[i] == 0l) {
 			fwrite (Pattern, 1024, 1, out);
 			printf ("-");
@@ -211,7 +211,7 @@ static int depack_emod (FILE *in, FILE *out)
 		}
 		fseek (in, paddr[i], 0);
 		for (j = 0; j <= nrow[i]; j++) {
-			bzero (Row, 16);
+			memset(Row, 0, 16);
 			fread (Row, 16, 1, in);
 			for (k = 0; k < 4; k++) {
 				/* fxt */

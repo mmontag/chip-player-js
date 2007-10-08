@@ -4,7 +4,7 @@
  *
  * Depacks Fuchs Tracker modules
  *
- * $Id: fuchs.c,v 1.5 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: fuchs.c,v 1.6 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -33,8 +33,8 @@ static int depack_fuchs(FILE *in, FILE *out)
 	int LoopStart[16];
 	int i, j;
 
-	bzero(SampleSizes, 16 * 4);
-	bzero(LoopStart, 16 * 4);
+	memset(SampleSizes, 0, 16 * 4);
+	memset(LoopStart, 0, 16 * 4);
 
 	pw_write_zero(out, 1080);		/* write ptk header */
 	fseek(out, 0, SEEK_SET);

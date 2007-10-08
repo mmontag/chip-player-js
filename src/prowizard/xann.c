@@ -18,7 +18,7 @@
  */
 
 /*
- * $Id: xann.c,v 1.2 2006-02-13 00:21:46 cmatsuoka Exp $
+ * $Id: xann.c,v 1.3 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -54,9 +54,9 @@ static int depack_XANN (uint8 *data, FILE *out)
 	long ssize = 0;
 	long Where = start;
 
-	bzero (tmp, 1025);
-	bzero (ptable, 128);
-	bzero (Pattern, 1025);
+	memset(tmp, 0, 1025);
+	memset(ptable, 0, 128);
+	memset(Pattern, 0, 1025);
 
 	/* title */
 	fwrite (tmp, 20, 1, out);

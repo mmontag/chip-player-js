@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
  *
- * $Id: ksm.c,v 1.9 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: ksm.c,v 1.10 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -41,9 +41,9 @@ static int depack_ksm (FILE *in, FILE *out)
 	int ssize = 0;
 	int i, j, k;
 
-	bzero(plist, 128);
-	bzero(trknum, 128 * 4);
-	bzero(real_tnum, 128 * 4);
+	memset(plist, 0, 128);
+	memset(trknum, 0, 128 * 4);
+	memset(real_tnum, 0, 128 * 4);
 
 	/* title */
 	fseek(in, 2, SEEK_SET);
@@ -67,7 +67,7 @@ static int depack_ksm (FILE *in, FILE *out)
 		fseek(in, 6, SEEK_CUR);		/* bypass 6 unknown bytes */
 	}
 
-	bzero (tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
 		fwrite(tmp, 30, 1, out);
@@ -157,8 +157,8 @@ static int depack_ksm (FILE *in, FILE *out)
 
 	/* pattern data */
 	for (i = 0; i < c5; i++) {
-		bzero(tmp, 1024);
-		bzero(tdata, 192 * 4);
+		memset(tmp, 0, 1024);
+		memset(tdata, 0, 192 * 4);
 		fseek(in, 1536 + 192 * real_tnum[i][0], SEEK_SET);
 		fread(tdata[0], 192, 1, in);
 		fseek(in, 1536 + 192 * real_tnum[i][1], SEEK_SET);

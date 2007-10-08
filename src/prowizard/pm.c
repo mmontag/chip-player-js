@@ -24,8 +24,8 @@ void Depack_PM (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (Header, 2048);
-	bzero (ptable, 128);
+	memset(Header, 0, 2048);
+	memset(ptable, 0, 128);
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -48,7 +48,7 @@ void Depack_PM (FILE * in, FILE * out)
 	fwrite (&npat, 1, 1, out);
 	/*printf ( "Size of pattern list : %d\n" , npat ); */
 
-	bzero (Header, 2048);
+	memset(Header, 0, 2048);
 
 	/* read and write ntk byte and pattern list */
 	fread (Header, 129, 1, in);
@@ -75,7 +75,7 @@ void Depack_PM (FILE * in, FILE * out)
 	/* pattern data */
 	fseek (in, 1084, SEEK_SET);
 	tmp = (uint8 *) malloc (Max * 1024);
-	bzero (tmp, Max * 1024);
+	memset(tmp, 0, Max * 1024);
 	fread (tmp, Max * 1024, 1, in);
 	fwrite (tmp, Max * 1024, 1, out);
 	free (tmp);
@@ -83,8 +83,8 @@ void Depack_PM (FILE * in, FILE * out)
 	/* sample data */
 	tmp = (signed char *) malloc (ssize);
 	ins_Data = (signed char *) malloc (ssize);
-	bzero (tmp, ssize);
-	bzero (ins_Data, ssize);
+	memset(tmp, 0, ssize);
+	memset(ins_Data, 0, ssize);
 	fread (tmp, ssize, 1, in);
 	ins_Data[0] = tmp[0];
 	for (i = 1; i < ssize - 1; i++) {

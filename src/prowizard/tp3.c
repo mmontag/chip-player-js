@@ -4,7 +4,7 @@
  *
  * Converts tp3 packed MODs back to PTK MODs
  *
- * $Id: tp3.c,v 1.8 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: tp3.c,v 1.9 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -39,8 +39,8 @@ static int depack_tp3(FILE *in, FILE *out)
 	int size, ssize = 0;
 	int max_trk_ofs = 0;
 
-	bzero(trk_ofs, 128 * 4 * 4);
-	bzero(pnum, 128);
+	memset(trk_ofs, 0, 128 * 4 * 4);
+	memset(pnum, 0, 128);
 
 	fseek(in, 8, SEEK_CUR);
 	pw_move_data(out, in, 20);		/* title */
@@ -62,7 +62,7 @@ static int depack_tp3(FILE *in, FILE *out)
 		write16b(out, read16b(in));	/* loop size */
 	}
 
-	bzero(tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 
 	for (; i < 31; i++)
@@ -98,7 +98,7 @@ static int depack_tp3(FILE *in, FILE *out)
 
 	/* pattern datas */
 	for (i = 0; i <= npat; i++) {
-		bzero(pdata, 1024);
+		memset(pdata, 0, 1024);
 
 		for (j = 0; j < 4; j++) {
 			int where;

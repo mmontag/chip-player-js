@@ -4,7 +4,7 @@
  *
  * Converts NoisePacked MODs back to ptk
  *
- * $Id: np1.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: np1.c,v 1.4 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -39,8 +39,8 @@ static int depack_np1 (FILE *in, FILE *out)
 	int i = 0, j = 0, k;
 	int tdata;
 
-	bzero (ptable, 128);
-	bzero (taddr, 128 * 4 * 4);
+	memset(ptable, 0, 128);
+	memset(taddr, 0, 128 * 4 * 4);
 
 	/* read number of sample */
 	fread (&c1, 1, 1, in);
@@ -50,7 +50,7 @@ static int depack_np1 (FILE *in, FILE *out)
 
 	/* write title */
 	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
+	memset(tmp, 0, 20);
 	fwrite (tmp, 20, 1, out);
 	free (tmp);
 
@@ -73,7 +73,7 @@ static int depack_np1 (FILE *in, FILE *out)
 
 	/* read sample descriptions */
 	tmp = (uint8 *) malloc (22);
-	bzero (tmp, 22);
+	memset(tmp, 0, 22);
 	for (i = 0; i < nins; i++) {
 		/* bypass 4 unknown bytes */
 		fseek (in, 4, 1);
@@ -121,7 +121,7 @@ static int depack_np1 (FILE *in, FILE *out)
 	/* fill up to 31 samples */
 	free (tmp);
 	tmp = (uint8 *) malloc (30);
-	bzero (tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	while (i != 31) {
 		fwrite (tmp, 30, 1, out);
@@ -194,7 +194,7 @@ static int depack_np1 (FILE *in, FILE *out)
 	/* the track data now ... */
 	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i < pat_max; i++) {
-		bzero (tmp, 1024);
+		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			fseek (in,
 				tdata +
@@ -243,7 +243,7 @@ static int depack_np1 (FILE *in, FILE *out)
 	/* sample data */
 	fseek (in, Max_Add + 192 + tdata, 0);
 	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
+	memset(tmp, 0, ssize);
 	fread (tmp, ssize, 1, in);
 	fwrite (tmp, ssize, 1, out);
 	free (tmp);

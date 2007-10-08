@@ -6,7 +6,7 @@
  *
  * claudio's note: Now this one can be *heavily* optimized...
  *
- * $Id: pm10c.c,v 1.6 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: pm10c.c,v 1.7 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -51,14 +51,14 @@ static int depack_p10c(FILE *in, FILE *out)
 	uint8 oldins[4];
 	short per;
 
-	bzero(pnum, 128);
-	bzero(pnum1, 128);
-	bzero(pptr, 64 << 8);
-	bzero(pat, 128 * 1024);
-	bzero(fin, 31);
-	bzero(oldins, 4);
-	bzero(paddr, 128 * 4);
-	bzero(paddr1, 128 * 4);
+	memset(pnum, 0, 128);
+	memset(pnum1, 0, 128);
+	memset(pptr, 0, 64 << 8);
+	memset(pat, 0, 128 * 1024);
+	memset(fin, 0, 31);
+	memset(oldins, 0, 4);
+	memset(paddr, 0, 128 * 4);
+	memset(paddr1, 0, 128 * 4);
 
 	for (i = 0; i < 128; i++)
 		paddr2[i] = 9999L;

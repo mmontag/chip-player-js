@@ -5,7 +5,7 @@
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
  *
- * $Id: pha.c,v 1.9 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: pha.c,v 1.10 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -45,13 +45,13 @@ static int depack_pha(FILE *in, FILE *out)
 	int sdata_Address;
 	short ocpt[4];
 
-	bzero(paddr, 128 * 4);
-	bzero(paddr1, 128 * 4);
-	bzero(paddr2, 128 * 4);
-	bzero(pnum, 128);
-	bzero(pnum1, 128);
-	bzero(onote, 4 * 4);
-	bzero(ocpt, 4 * 2);
+	memset(paddr, 0, 128 * 4);
+	memset(paddr1, 0, 128 * 4);
+	memset(paddr2, 0, 128 * 4);
+	memset(pnum, 0, 128);
+	memset(pnum1, 0, 128);
+	memset(onote, 0, 4 * 4);
+	memset(ocpt, 0, 4 * 2);
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -133,7 +133,7 @@ restart:
 	}
 
 	/* try to take care of unused patterns ... HARRRRRRD */
-	bzero (paddr1, 128 * 4);
+	memset(paddr1, 0, 128 * 4);
 	j = 0;
 	k = paddr[0];
 	/* 120 ... leaves 8 unused ptk_tableible patterns .. */
@@ -153,7 +153,7 @@ restart:
 			}
 	}
 
-	bzero(pnum, 128);
+	memset(pnum, 0, 128);
 	Start_Pat_Address = 999999l;
 	for (i = 0; i < 128; i++) {
 		pnum[i] = pnum1[i];
@@ -200,7 +200,7 @@ restart:
 	fread(pdata, 1, psize, in);
 	npat += 1;		/* coz first value is $00 */
 	pat = (uint8 *)malloc(npat * 1024);
-	bzero(pat, npat * 1024);
+	memset(pat, 0, npat * 1024);
 
 	j = 0;
 	for (i = 0; j < (npat * 1024); i++) {

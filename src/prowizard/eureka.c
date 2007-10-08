@@ -4,7 +4,7 @@
  *
  * Converts MODs packed with Eureka packer back to ptk
  *
- * $Id: eureka.c,v 1.2 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: eureka.c,v 1.3 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -34,11 +34,11 @@ static int depack_eu (FILE * in, FILE * out)
 	long Track_Address[128][4];
 	long i = 0, j = 0, k;
 
-	bzero (ptable, 128);
+	memset(ptable, 0, 128);
 
 	/* read header ... same as ptk */
 	tmp = (uint8 *) malloc (1080);
-	bzero (tmp, 1080);
+	memset(tmp, 0, 1080);
 	fread (tmp, 1080, 1, in);
 	fwrite (tmp, 1080, 1, out);
 
@@ -96,7 +96,7 @@ static int depack_eu (FILE * in, FILE * out)
 	/* the track data now ... */
 	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i < pat_max; i++) {
-		bzero (tmp, 1024);
+		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			fseek (in, Track_Address[i][j], 0);	/* SEEK_SET */
 			for (k = 0; k < 64; k++) {
@@ -143,7 +143,7 @@ static int depack_eu (FILE * in, FILE * out)
 
 	/* read sample data */
 	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
+	memset(tmp, 0, ssize);
 	fread (tmp, ssize, 1, in);
 	fwrite (tmp, ssize, 1, out);
 	free (tmp);

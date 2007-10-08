@@ -27,7 +27,7 @@ void Depack_SoundFX13 (FILE * in, FILE * out)
 
 	/* title */
 	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
+	memset(tmp, 0, 20);
 	fwrite (tmp, 20, 1, out);
 	free (tmp);
 
@@ -77,7 +77,7 @@ void Depack_SoundFX13 (FILE * in, FILE * out)
 	}
 	free (tmp);
 	tmp = (uint8 *) malloc (30);
-	bzero (tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
 		fwrite (tmp, 30, 1, out);
@@ -120,7 +120,7 @@ void Depack_SoundFX13 (FILE * in, FILE * out)
 	fseek (in, 0x294, 0);
 	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i <= Max; i++) {
-		bzero (tmp, 1024);
+		memset(tmp, 0, 1024);
 		fread (tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			if (tmp[(j * 4)] == 0xff) {
@@ -181,7 +181,7 @@ void Depack_SoundFX13 (FILE * in, FILE * out)
 
 	/* sample data */
 	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
+	memset(tmp, 0, ssize);
 	fread (tmp, ssize, 1, in);
 	fwrite (tmp, ssize, 1, out);
 	free (tmp);

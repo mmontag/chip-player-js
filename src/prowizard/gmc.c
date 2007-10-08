@@ -4,7 +4,7 @@
  *
  * Depacks musics in the Game Music Creator format and saves in ptk.
  *
- * $Id: gmc.c,v 1.7 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: gmc.c,v 1.8 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -32,7 +32,7 @@ static int depack_GMC(FILE *in, FILE *out)
 	long ssize = 0;
 	long i = 0, j = 0;
 
-	bzero(ptable, 128);
+	memset(ptable, 0, 128);
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -87,7 +87,7 @@ static int depack_GMC(FILE *in, FILE *out)
 #endif
 	}
 
-	bzero(tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	for (i = 0; i < 16; i++)
 		fwrite(tmp, 30, 1, out);
@@ -114,7 +114,7 @@ static int depack_GMC(FILE *in, FILE *out)
 	/* pattern data */
 	fseek(in, 444, SEEK_SET);
 	for (i = 0; i <= max; i++) {
-		bzero(tmp, 1024);
+		memset(tmp, 0, 1024);
 		fread(tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			switch (tmp[(j * 4) + 2] & 0x0f) {

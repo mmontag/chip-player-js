@@ -28,9 +28,9 @@ void Depack_PP21 (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (ptable, 128);
-	bzero (Tracks_Numbers, 4 * 128);
-	bzero (Tracks_PrePointers, 512 * 128);
+	memset(ptable, 0, 128);
+	memset(Tracks_Numbers, 0, 4 * 128);
+	memset(Tracks_PrePointers, 0, 512 * 128);
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -129,7 +129,7 @@ void Depack_PP21 (FILE * in, FILE * out)
 
 	/* NOW, the real shit takes place :) */
 	for (i = 0; i < NOP; i++) {
-		bzero (Pattern, 1024);
+		memset(Pattern, 0, 1024);
 		for (j = 0; j < 64; j++) {
 
 			Pattern[j * 16] =

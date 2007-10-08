@@ -23,7 +23,7 @@ void Depack_PP10 (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (Tracks_Numbers, 128 * 4);
+	memset(Tracks_Numbers, 0, 128 * 4);
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -101,7 +101,7 @@ void Depack_PP10 (FILE * in, FILE * out)
 
 	for (i = 0; i < pat_pos; i++) {
 /*fprintf ( info , "\n\n\nPattern %ld :\n" , i );*/
-		bzero (Pattern, 1024);
+		memset(Pattern, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			fseek (in, 762 + (Tracks_Numbers[j][i] << 8), 0);	/* SEEK_SET */
 /*fprintf ( info , "Voice %ld :\n" , j );*/

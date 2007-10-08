@@ -8,7 +8,7 @@
  *
  * claudio's note: this code asks for heavy optimization. maybe later
  *
- * $Id: pm18a.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: pm18a.c,v 1.4 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -53,12 +53,12 @@ static int depack_p18a (FILE *in, FILE *out)
     uint8 oins[4];
     short per;
 
-    bzero (pnum, 128);
-    bzero (pptr, 64 << 8);
-    bzero (pat, 128 * 1024);
-    bzero (fin, 31);
-    bzero (oins, 4);
-    bzero (paddr, 128 * 4);
+    memset(pnum, 0, 128);
+    memset(pptr, 0, 64 << 8);
+    memset(pat, 0, 128 * 1024);
+    memset(fin, 0, 31);
+    memset(oins, 0, 4);
+    memset(paddr, 0, 128 * 4);
 
     for (i = 0; i < 20; i++)    /* title */
 	write8(out, 0);

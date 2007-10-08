@@ -6,7 +6,7 @@
  *
  * Asle's note: There's a good job ! .. gosh !.
  *
- * $Id: heatseek.c,v 1.6 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: heatseek.c,v 1.7 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -36,8 +36,8 @@ static int depack_crb (FILE *in, FILE *out)
 	int i, j, k, l, m;
 	int size, ssize = 0;
 
-	bzero(ptable, 128);
-	bzero(taddr, 512 * 4);
+	memset(ptable, 0, 128);
+	memset(taddr, 0, 512 * 4);
 
 	pw_write_zero(out, 20);				/* write title */
 
@@ -69,7 +69,7 @@ static int depack_crb (FILE *in, FILE *out)
 
 	/* pattern data */
 	for (i = 0; i < pat_max; i++) {
-		bzero(pat, 1024);
+		memset(pat, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			taddr[i * 4 + j] = ftell(in);
 			for (k = 0; k < 64; k++) {

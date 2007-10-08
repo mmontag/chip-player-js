@@ -6,7 +6,7 @@
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
  *
- * $Id: ac1d.c,v 1.6 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: ac1d.c,v 1.7 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -42,8 +42,8 @@ static int depack_AC1D (FILE *in, FILE *out)
 	int tsize1, tsize2, tsize3;
 	int i, j, k;
 
-	bzero(paddr, 128 * 4);
-	bzero(psize, 128 * 4);
+	memset(paddr, 0, 128 * 4);
+	memset(psize, 0, 128 * 4);
 
 	npos = read8(in);
 	ntk_byte = read8(in);
@@ -88,7 +88,7 @@ static int depack_AC1D (FILE *in, FILE *out)
 		tsize2 = read32b(in);
 		tsize3 = read32b(in);
 
-		bzero(tmp, 1024);
+		memset(tmp, 0, 1024);
 		for (k = 0; k < 4; k++) {
 			for (j = 0; j < 64; j++) {
 				int x = j * 16 + k * 4;

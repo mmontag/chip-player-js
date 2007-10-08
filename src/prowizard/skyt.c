@@ -31,8 +31,8 @@ void Depack_SKYT (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (ptable, 128);
-	bzero (Track_Values, 128 * 4);
+	memset(ptable, 0, 128);
+	memset(Track_Values, 0, 128 * 4);
 
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
 	// out = fdopen (fd_out, "w+b");
@@ -114,7 +114,7 @@ void Depack_SKYT (FILE * in, FILE * out)
 
 	/* track data */
 	for (i = 0; i < pat_pos; i++) {
-		bzero (Pattern, 1024);
+		memset(Pattern, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			Where =
 				start + Track_Address +

@@ -4,7 +4,7 @@
  *
  * The Player 4.0a and 4.0b to Protracker.
  *
- * $Id: p40.c,v 1.7 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: p40.c,v 1.8 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -54,10 +54,10 @@ static int depack_p4x (FILE *in, FILE *out)
 	struct smp ins;
 	uint32 id;
 
-	bzero(track_addr, 128 * 4 * 2);
-	bzero(tr, 512 << 8);
-	bzero(SampleAddress, 31 * 4);
-	bzero(SampleSize, 31 * 4);
+	memset(track_addr, 0, 128 * 4 * 2);
+	memset(tr, 0, 512 << 8);
+	memset(SampleAddress, 0, 31 * 4);
+	memset(SampleSize, 0, 31 * 4);
 
 	id = read32b(in);
 	if (id == MAGIC_P40A) {
@@ -108,7 +108,7 @@ static int depack_p4x (FILE *in, FILE *out)
 	}
 
 	/* go up to 31 samples */
-	bzero(tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	for (; i < 31; i++)
 		fwrite (tmp, 30, 1, out);
@@ -147,7 +147,7 @@ static int depack_p4x (FILE *in, FILE *out)
 				if (c1 != 0x80) {
 					sample = ((c1 << 4) & 0x10) |
 							((c2 >> 4) & 0x0f);
-					bzero(note, 2);
+					memset(note, 0, 2);
 					mynote = c1 & 0x7f;
 					note[0] = ptk_table[mynote / 2][0];
 					note[1] = ptk_table[mynote / 2][1];
@@ -205,7 +205,7 @@ static int depack_p4x (FILE *in, FILE *out)
 
 					sample = ((c1 << 4) & 0x10) |
 						((c2 >> 4) & 0x0f);
-					bzero(note, 2);
+					memset(note, 0, 2);
 					mynote = c1 & 0x7f;
 					note[0] = ptk_table[mynote / 2][0];
 					note[1] = ptk_table[mynote / 2][1];
@@ -254,7 +254,7 @@ static int depack_p4x (FILE *in, FILE *out)
 
 	/* write pattern data */
 	for (i = 0; i < len; i++) {
-		bzero(tmp, 1024);
+		memset(tmp, 0, 1024);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				int x = j * 16 + k * 4;

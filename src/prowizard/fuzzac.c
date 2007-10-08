@@ -12,7 +12,7 @@
  *      Dont know why I did it for this depacker because I've but one
  *      exemple file ! :)
  *
- * $Id: fuzzac.c,v 1.2 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: fuzzac.c,v 1.3 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -51,9 +51,9 @@ static int depack_fuzz(FILE *in, FILE *out)
 	long ssize = 0;
 	long i, j, k, l;
 
-	bzero(Track_Numbers, 128 * 16);
-	bzero(Track_Numbers_Real, 128 * 4);
-	bzero(PatternList, 128);
+	memset(Track_Numbers, 0, 128 * 16);
+	memset(Track_Numbers_Real, 0, 128 * 4);
+	memset(PatternList, 0, 128);
 
 	/* bypass ID */
 	fseek (in, 4, 0);	/* SEEK_SET */
@@ -63,7 +63,7 @@ static int depack_fuzz(FILE *in, FILE *out)
 
 	/* write title */
 	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
+	memset(tmp, 0, 20);
 	fwrite (tmp, 20, 1, out);
 	free (tmp);
 
@@ -206,8 +206,8 @@ static int depack_fuzz(FILE *in, FILE *out)
 	/*fflush ( stdout ); */
 	l = 2118 + (PatPos * 16);
 	for (i = 0; i < c5; i++) {
-		bzero (Pattern, 1024);
-		bzero (Track_Datas, 4 << 8);
+		memset(Pattern, 0, 1024);
+		memset(Track_Datas, 0, 4 << 8);
 		fseek (in, l + (Track_Numbers_Real[i][0] << 8), 0);
 		fread (Track_Datas[0], 256, 1, in);
 		fseek (in, l + (Track_Numbers_Real[i][1] << 8), 0);

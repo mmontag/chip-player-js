@@ -8,7 +8,7 @@
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
  *
- * $Id: stim.c,v 1.3 2007-09-30 00:08:19 cmatsuoka Exp $
+ * $Id: stim.c,v 1.4 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -45,12 +45,12 @@ static int depack_stim (uint8 *data, FILE * out)
 	int start = 0;
 	int w = start;	/* main pointer to prevent fread() */
 
-	bzero (tmp, 1025);
-	bzero (ptable, 128);
-	bzero (pat, 1025);
-	bzero (paddr, 64 * 4);
-	bzero (idata_addr, 31 * 4);
-	bzero (isize, 31 * 4);
+	memset(tmp, 0, 1025);
+	memset(ptable, 0, 128);
+	memset(pat, 0, 1025);
+	memset(paddr, 0, 64 * 4);
+	memset(idata_addr, 0, 31 * 4);
+	memset(isize, 0, 31 * 4);
 
 	/* write title */
 	for (i = 0; i < 20; i++)
@@ -148,7 +148,7 @@ static int depack_stim (uint8 *data, FILE * out)
 			taddr[k] = (c1 << 8) + c2;
 		}
 
-		bzero (pat, 1025);
+		memset(pat, 0, 1025);
 		for (k = 0; k < 4; k++) {
 			w = start + paddr[i] + taddr[k];
 			for (j = 0; j < 64; j++) {

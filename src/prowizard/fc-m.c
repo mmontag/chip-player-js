@@ -4,7 +4,7 @@
  *
  * Converts back to ptk FC-M packed MODs
  *
- * $Id: fc-m.c,v 1.6 2007-09-30 11:22:17 cmatsuoka Exp $
+ * $Id: fc-m.c,v 1.7 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -32,7 +32,7 @@ static int depack_fcm(FILE *in, FILE *out)
 	int i;
 	int size, ssize = 0;
 
-	bzero(ptable, 128);
+	memset(ptable, 0, 128);
 
 	read32b(in);				/* bypass "FC-M" ID */
 	read16b(in);				/* version number? */

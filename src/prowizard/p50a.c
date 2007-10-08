@@ -43,12 +43,12 @@ void Depack_P50A (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (Track_Address, 128 * 4 * 4);
-	bzero (Track_Data, 512 << 8);
-	bzero (ptable, 128);
-	bzero (SampleSizes, 31 * 4);
-	bzero (SampleAddresses, 32 * 4);
-	bzero (isize, 31 * 2);
+	memset(Track_Address, 0, 128 * 4 * 4);
+	memset(Track_Data, 0, 512 << 8);
+	memset(ptable, 0, 128);
+	memset(SampleSizes, 0, 31 * 4);
+	memset(SampleAddresses, 0, 32 * 4);
+	memset(isize, 0, 31 * 2);
 
 #include "ptktable.h"
 
@@ -74,7 +74,7 @@ void Depack_P50A (FILE * in, FILE * out)
 
 	/* write title */
 	tmp = (uint8 *) malloc (21);
-	bzero (tmp, 21);
+	memset(tmp, 0, 21);
 	fwrite (tmp, 20, 1, out);
 	free (tmp);
 
@@ -144,7 +144,7 @@ void Depack_P50A (FILE * in, FILE * out)
 
 	/* go up to 31 samples */
 	tmp = (uint8 *) malloc (30);
-	bzero (tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	while (i != 31) {
 		fwrite (tmp, 30, 1, out);
@@ -494,7 +494,7 @@ void Depack_P50A (FILE * in, FILE * out)
 	/*fflush ( stdout ); */
 	tmp = (uint8 *) malloc (1024);
 	for (i = 0; i < PatMax; i++) {
-		bzero (tmp, 1024);
+		memset(tmp, 0, 1024);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				tmp[j * 16 + k * 4] =
@@ -527,7 +527,7 @@ void Depack_P50A (FILE * in, FILE * out)
 		fseek (in, Sample_Data_Address + SampleAddresses[i + 1], 0);
 /*fprintf ( debug , "%2ld: read %-6ld at %ld\n" , i , SampleSizes[i] , ftell ( in ));*/
 		insDataWork = (signed char *) malloc (SampleSizes[i]);
-		bzero (insDataWork, SampleSizes[i]);
+		memset(insDataWork, 0, SampleSizes[i]);
 		fread (insDataWork, SampleSizes[i], 1, in);
 		if (GLOBAL_DELTA == ON) {
 			c1 = insDataWork[0];

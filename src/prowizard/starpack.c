@@ -29,11 +29,11 @@ void Depack_STARPACK (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (pnum, 128);
-	bzero (pnum_tmp, 128);
-	bzero (paddr, 128 * 4);
-	bzero (paddr_tmp, 128 * 4);
-	bzero (paddr_tmp2, 128 * 4);
+	memset(pnum, 0, 128);
+	memset(pnum_tmp, 0, 128);
+	memset(paddr, 0, 128 * 4);
+	memset(paddr_tmp, 0, 128 * 4);
+	memset(paddr_tmp2, 0, 128 * 4);
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -197,7 +197,7 @@ fprintf ( info , "%x," , pnum_tmp[i] );
 fprintf ( info , "\n\n" );
 */
 
-	bzero (pnum, 128);
+	memset(pnum, 0, 128);
 	for (i = 0; i < pat_pos; i++) {
 		pnum[i] = pnum_tmp[i];
 	}
@@ -246,7 +246,7 @@ fprintf ( info , "\n\n" );
 	fseek (in, 0x314, 0);	/* SEEK_CUR */
 	PatMax += 1;
 	for (i = 0; i < PatMax; i++) {
-		bzero (Pattern, 1024);
+		memset(Pattern, 0, 1024);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				fread (&c1, 1, 1, in);
@@ -280,7 +280,7 @@ fprintf ( info , "\n\n" );
 	/* sample data */
 	fseek (in, sdataAddress, 0);
 	tmp = (uint8 *) malloc (ssize);
-	bzero (tmp, ssize);
+	memset(tmp, 0, ssize);
 	fread (tmp, ssize, 1, in);
 	fwrite (tmp, ssize, 1, out);
 	free (tmp);

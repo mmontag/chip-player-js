@@ -30,10 +30,10 @@ void Depack_PM01 (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (ptable, 128);
-	bzero (Pattern_Address, 128 * 4);
-	bzero (fin, 31);
-	bzero (Old_ins_Nbr, 4);
+	memset(ptable, 0, 128);
+	memset(Pattern_Address, 0, 128 * 4);
+	memset(fin, 0, 31);
+	memset(Old_ins_Nbr, 0, 4);
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -125,7 +125,7 @@ void Depack_PM01 (FILE * in, FILE * out)
 	/* read and XOR pattern data */
 	tmp = (uint8 *) malloc (j);
 	PatternData = (uint8 *) malloc (j);
-	bzero (tmp, j);
+	memset(tmp, 0, j);
 	fread (tmp, j, 1, in);
 	for (k = 0; k < j; k++) {
 		if (k % 4 == 3) {
@@ -140,7 +140,7 @@ void Depack_PM01 (FILE * in, FILE * out)
 	/* all right, now, let's take care of these 'finetuned' value ... pfff */
 	Old_ins_Nbr[0] = Old_ins_Nbr[1] = Old_ins_Nbr[2] = Old_ins_Nbr[3] =
 		0x1f;
-	bzero (tmp, j);
+	memset(tmp, 0, j);
 	for (i = 0; i < j / 4; i++) {
 		c1 = PatternData[i * 4] & 0x0f;
 		c2 = PatternData[i * 4 + 1];

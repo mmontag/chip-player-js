@@ -4,7 +4,7 @@
  *
  * Converts NoisePacked MODs back to ptk
  *
- * $Id: np2.c,v 1.5 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: np2.c,v 1.6 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -37,8 +37,8 @@ static int depack_np2(FILE *in, FILE *out)
 	int i, j, k;
 	int trk_start;
 
-	bzero(ptable, 128);
-	bzero(trk_addr, 128 * 4 * 4);
+	memset(ptable, 0, 128);
+	memset(trk_addr, 0, 128 * 4 * 4);
 
 	c1 = read8(in);			/* read number of sample */
 	c2 = read8(in);
@@ -66,7 +66,7 @@ static int depack_np2(FILE *in, FILE *out)
 	}
 
 	/* fill up to 31 samples */
-	bzero(tmp, 30);
+	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	for (; i != 31; i++)
 		fwrite(tmp, 30, 1, out);
@@ -107,7 +107,7 @@ static int depack_np2(FILE *in, FILE *out)
 
 	/* the track data now ... */
 	for (i = 0; i < npat; i++) {
-		bzero(tmp, 1024);
+		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			fseek (in, trk_start + trk_addr[i][3 - j], SEEK_SET);
 			for (k = 0; k < 64; k++) {

@@ -36,9 +36,9 @@ void Depack_Noiserunner (FILE * in, FILE * out)
 
 #include "ptktable.h"
 
-	bzero (tmp, 1025);
-	bzero (ptable, 128);
-	bzero (Pattern, 1025);
+	memset(tmp, 0, 1025);
+	memset(ptable, 0, 128);
+	memset(Pattern, 0, 1025);
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -185,7 +185,7 @@ void Depack_Noiserunner (FILE * in, FILE * out)
 	/* pattern data */
 	fseek (in, PAT_DATA_ADDRESS, 0);	/* SEEK_SET */
 	for (i = 0; i < Max; i++) {
-		bzero (Pattern, 1025);
+		memset(Pattern, 0, 1025);
 		fread (tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			ins = (tmp[j * 4 + 3] >> 3) & 0x1f;
@@ -267,7 +267,7 @@ void Depack_Noiserunner (FILE * in, FILE * out)
 
 	/* sample data */
 	sdata = (uint8 *) malloc (ssize);
-	bzero (sdata, ssize);
+	memset(sdata, 0, ssize);
 	fread (sdata, ssize, 1, in);
 	fwrite (sdata, ssize, 1, out);
 	free (sdata);

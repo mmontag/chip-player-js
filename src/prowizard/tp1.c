@@ -34,9 +34,9 @@ void Depack_TP1 (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	bzero (paddr, 128 * 4);
-	bzero (paddr_tmp, 128 * 4);
-	bzero (pnum, 128);
+	memset(paddr, 0, 128 * 4);
+	memset(paddr_tmp, 0, 128 * 4);
+	memset(pnum, 0, 128);
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -45,7 +45,7 @@ void Depack_TP1 (FILE * in, FILE * out)
 	/* title */
 	fseek (in, 8, 0);	/* SEEK_SET */
 	tmp = (uint8 *) malloc (20);
-	bzero (tmp, 20);
+	memset(tmp, 0, 20);
 	fread (tmp, 20, 1, in);
 	fwrite (tmp, 20, 1, out);
 	free (tmp);
@@ -174,7 +174,7 @@ void Depack_TP1 (FILE * in, FILE * out)
 	for (i = 0; i < PatMax; i++) {
 /*fprintf ( info , "\npattern %ld: (at: %ld)\n\n" , i,paddr_tmp[i] );*/
 		fseek (in, paddr_tmp[i], 0);
-		bzero (Pattern, 1024);
+		memset(Pattern, 0, 1024);
 		for (j = 0; j < 256; j++) {
 			fread (&c1, 1, 1, in);
 /*fprintf ( info , "%ld: %2x," , k , c1 );*/
