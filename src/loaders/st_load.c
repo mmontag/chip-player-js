@@ -35,7 +35,7 @@ int st_load(FILE *f)
     int fxused;
     int pos;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     xxh->ins = 15;
     xxh->smp = xxh->ins;
@@ -126,7 +126,7 @@ int st_load(FILE *f)
     if (abs (serr = xmp_ctl->size - (600 + xxh->pat*1024 + smp_size)) > 8192)
 	return -1;
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -204,14 +204,14 @@ int st_load(FILE *f)
 
     snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "ST (%s)", modtype);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     if (serr && V(2))
 	report ("File size error: %d\n", serr);
 
     fseek(f, pos, SEEK_SET);
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Load and convert patterns */
 

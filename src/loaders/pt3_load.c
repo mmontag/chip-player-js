@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.3 2005-02-25 13:33:12 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.4 2007-10-08 01:16:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,9 @@
 #include <stdio.h>
 #include "load.h"
 #include "iff.h"
+
+#define MAGIC_FORM	MAGIC4('F','O','R','M')
+#define MAGIC_MODL	MAGIC4('M','O','D','L')
 
 
 #define PT3_FLAG_CIA	0x0001	/* VBlank if not set */
@@ -106,28 +109,28 @@ static void get_info(int size, FILE *f)
 
 static void get_cmnt(int size, FILE *f)
 {
-    if (V(0))
-	report("Comment size   : %d\n", size);
+    reportv(0, "Comment size   : %d\n", size);
 }
 
 
-static void get_ptdt (int size, FILE *f)
+static void get_ptdt(int size, FILE *f)
 {
-    ptdt_load (f);
+    ptdt_load(f);
 }
 
 
-int pt3_load (FILE *f)
+int pt3_load(FILE *f)
 {
-    struct iff_header h;
+    uint32 form, id;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
+    form = read32b(f);
+    read32b(f);
+    id = read32b(f);
+    
     /* Check magic */
-    fread (&h, 1, sizeof (struct iff_header), f);
-    if (h.form[0] != 'F' || h.form[1] != 'O' || h.form[2] != 'R' ||
-	h.form[3] != 'M' || h.id[0] != 'M' || h.id[1] != 'O' || h.id[2]
-	!= 'D' || h.id[3] != 'L')
+    if (form != MAGIC_FORM || id != MAGIC_MODL)
 	return -1;
 
     /* IFF chunk IDs */
@@ -136,13 +139,13 @@ int pt3_load (FILE *f)
     iff_register ("CMNT", get_cmnt);
     iff_register ("PTDT", get_ptdt);
 
-    iff_setflag (IFF_FULL_CHUNK_SIZE);
+    iff_setflag(IFF_FULL_CHUNK_SIZE);
 
     /* Load IFF chunks */
-    while (!feof (f))
-	iff_chunk (f);
+    while (!feof(f))
+	iff_chunk(f);
 
-    iff_release ();
+    iff_release();
 
     return 0;
 }

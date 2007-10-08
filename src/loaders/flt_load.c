@@ -23,7 +23,7 @@ int flt_load (FILE *f)
     uint8 mod_event[4];
     char *tracker;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
@@ -70,9 +70,9 @@ int flt_load (FILE *f)
 
     strncpy (xmp_ctl->name, (char *) mh.name, 20);
     sprintf (xmp_ctl->type, "%4.4s (%s)", mh.magic, tracker);
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     if (V (1))
 	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
@@ -100,7 +100,7 @@ int flt_load (FILE *f)
 		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Load and convert patterns */
     if (V (0))

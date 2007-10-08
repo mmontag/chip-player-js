@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.13 2007-10-07 23:33:06 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.14 2007-10-08 01:16:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -589,8 +589,7 @@ int mmd3_load(FILE *f)
 		xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate, 0,
 				  &xxs[smp_idx], NULL);
 
-		if (V(0))
-			report(".");
+		reportv(0, ".");
 
 		smp_idx++;
 	}

@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.16 2007-09-29 19:32:55 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.17 2007-10-08 01:16:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -56,13 +56,13 @@ struct {
 static int module_load (FILE *, int);
 
 
-int mod_load (FILE *f)
+int mod_load(FILE *f)
 {
     return module_load (f, 0);
 }
 
 
-int ptdt_load (FILE *f)
+int ptdt_load(FILE *f)
 {
     return module_load (f, 1);
 }
@@ -96,7 +96,7 @@ static int module_load (FILE *f, int ptdt)
     char magic[8], idbuffer[32];
 
     if (!ptdt)
-	LOAD_INIT ();
+	LOAD_INIT();
 
     xxh->ins = 31;
     xxh->smp = xxh->ins;
@@ -177,7 +177,7 @@ static int module_load (FILE *f, int ptdt)
 
     pat_size = 256 * xxh->chn * xxh->pat;
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     for (i = 0; i < xxh->ins; i++) {
 	smp_size += 2 * mh.ins[i].size;
@@ -368,7 +368,7 @@ skip_test:
 
     if (!ptdt) {
 	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "%s (%s)", magic, tracker);
-	MODULE_INFO ();
+	MODULE_INFO();
     }
 
     if (V (1)) {
@@ -383,7 +383,7 @@ skip_test:
 	}
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Load and convert patterns */
     if (V (0))

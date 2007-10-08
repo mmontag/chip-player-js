@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.11 2007-09-20 04:01:05 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.12 2007-10-08 01:16:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -134,7 +134,7 @@ static void get_dapt(int size, FILE *f)
 	int rows;
 
 	if (!pflag) {
-		reportv(0, "Stored patterns: %d (%d) ", realpat, xxh->pat);
+		reportv(0, "Stored patterns: %d ", xxh->pat);
 		pflag = 1;
 		last_pat = 0;
 		PATTERN_INIT();
