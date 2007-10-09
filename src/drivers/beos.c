@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.7 2007-10-08 20:13:15 cmatsuoka Exp $
+ * $Id: beos.c,v 1.8 2007-10-09 00:03:56 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -175,7 +175,7 @@ static int init(struct xmp_control *ctl)
 	char **parm = ctl->parm;
 	static char desc[80];
 
-	be_app = new BApplication("application/x-vnd.101-xmp");
+	be_app = new BApplication("application/x-vnd.cm-xmp");
 
 	chunk_size = 4096;
 	chunk_num = 20;
@@ -243,5 +243,4 @@ static void myshutdown()
 	be_app->Lock();
 	be_app->Quit();
 }
-
 

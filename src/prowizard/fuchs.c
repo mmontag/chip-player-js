@@ -4,7 +4,7 @@
  *
  * Depacks Fuchs Tracker modules
  *
- * $Id: fuchs.c,v 1.6 2007-10-08 16:51:24 cmatsuoka Exp $
+ * $Id: fuchs.c,v 1.7 2007-10-09 00:03:56 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -177,7 +177,7 @@ static int test_fuchs (uint8 *data, int s)
 	start = i - 192;
 #endif
 
-	if (data[0]!='S' || data[1]!='O' || data [2]!='N' || data[3]!='G')
+	if (readmem32b(data + 192) != 0x534f4e47)	/* SONG */
 		return -1;
 
 	/* all sample size */
