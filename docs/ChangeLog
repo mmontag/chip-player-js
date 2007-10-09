@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.123 2007-10-09 00:03:56 cmatsuoka Exp $
+$Id: ChangeLog,v 1.124 2007-10-09 00:41:42 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -15,8 +15,9 @@ Stable versions
 	- fixed PTM effects translation (PTM-specific effects were ignored)
 	- fixed effects settings in AIX and OSX CoreAudio drivers (reported
 	  by Douglas Carmichael and Chris Cox)
-	- fixed flow control in the OSX CoreAudio driver
-	- fixed Fuchs Tracker prowizard loader
+	- fixed pause in OSX CoreAudio driver
+	- fixed Fuchs Tracker prowizard loader format detection
+	- fixed --time option time counter for MED files
 	- decoupled PT3 PTDT and MOD loader
 
 2.3.1 (20071005):

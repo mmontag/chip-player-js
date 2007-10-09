@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.14 2007-10-07 11:46:50 cmatsuoka Exp $
+ * $Id: player.c,v 1.15 2007-10-09 00:41:42 cmatsuoka Exp $
  */
 
 /*
@@ -838,13 +838,13 @@ next_order:
 		    gvol_flag = 0;
 		    chn_fetch(xxo[o], flow.row_cnt);
 
-		    xmp_drv_echoback((tempo << 12)|(xmp_bpm << 4)|
-			XMP_ECHO_BPM);
+		    xmp_drv_echoback((tempo << 12) | (xmp_bpm << 4)|
+							XMP_ECHO_BPM);
 		    xmp_drv_echoback((xmp_ctl->volume << 4) | XMP_ECHO_GVL);
 		    xmp_drv_echoback((xxo[o] << 12)|(o << 4) | XMP_ECHO_ORD);
 		    xmp_drv_echoback((xmp_ctl->numvoc << 4) | XMP_ECHO_NCH);
 		    xmp_drv_echoback(((xxp[xxo[o]]->rows - 1) << 12) |
-					(flow.row_cnt << 4)|XMP_ECHO_ROW);
+					(flow.row_cnt << 4) | XMP_ECHO_ROW);
 		}
 		xmp_drv_echoback((t << 4) | XMP_ECHO_FRM);
 		chn_refresh(t);
@@ -852,12 +852,14 @@ next_order:
 		if (xmp_ctl->time && (xmp_ctl->time < playing_time))
 		    goto end_module;
 
-		playing_time += xmp_ctl->rrate / (100 * xmp_bpm);
 
-		if (xmp_ctl->fetch & XMP_CTL_MEDBPM)
+		if (xmp_ctl->fetch & XMP_CTL_MEDBPM) {
 		    xmp_drv_sync (tick_time * 33 / 125);
-		else
+		    playing_time += xmp_ctl->rrate * 33 / (100 * xmp_bpm * 125);
+		} else {
 		    xmp_drv_sync(tick_time);
+		    playing_time += xmp_ctl->rrate / (100 * xmp_bpm);
+		}
 
 		xmp_drv_bufdump();
 	    }
