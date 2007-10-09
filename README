@@ -49,6 +49,7 @@ The current version recognizes the following module formats:
   AC1D  ****+	AC1D Packer		-
   CRB	****+	Heatseeker		mc1.0
   FC-M	****+	FC-M Packer		1.0
+  FCHS	****+	Fuchs Tracker		-
   IMS	***	Images Music System	?
   KSM	****+	Kefrens Sound Machine	-
   MP	****+	Module Protector	-
