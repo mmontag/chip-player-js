@@ -44,6 +44,25 @@ extern uint8 **med_wav_table;
 #define VT_SKIP xc->med_vp++
 #define WT_SKIP xc->med_wp++
 
+int get_med_arp(struct xmp_channel *xc)
+{
+	int arp;
+
+	if (xc->med_arp == 0)
+		return 0;
+
+	if (med_wav_table[xc->ins][xc->med_arp] == 0xfd) /* empty arpeggio */
+		return 0;
+
+	arp = med_wav_table[xc->ins][xc->med_aidx++];
+	if (arp == 0xfd) {
+		xc->med_aidx = xc->med_arp;
+		arp = med_wav_table[xc->ins][xc->med_aidx++];
+	}
+
+	return 100 * arp;
+}
+
 
 void xmp_med_synth(int chn, struct xmp_channel *xc, int rst)
 {
@@ -56,6 +75,7 @@ void xmp_med_synth(int chn, struct xmp_channel *xc, int rst)
 	return;
 
     if (rst) {
+	xc->med_arp = xc->med_aidx = 0;
 	xc->med_period = xc->period;
 	xc->med_vp = xc->med_vc = xc->med_vw = 0;
 	xc->med_wp = xc->med_wc = xc->med_ww = 0;
@@ -128,7 +148,10 @@ skip_vol:
 		xc->med_wp = WT;
 		loop = jump = 1;
 		break;
+	    case 0xfd:		/* ARE */
+		break;
 	    case 0xfc:		/* ARP */
+		xc->med_arp = xc->med_aidx = xc->med_wp;
 		while (WT != 0xfd);
 		break;
 	    case 0xfa:		/* JVS */
@@ -160,7 +183,7 @@ skip_vol:
 		break;
 	    default:
 		if (b < xxih[xc->ins].nsm && xxi[xc->ins][b].sid != xc->smp)
-		    xmp_drv_setsmp (chn, xc->smp = xxi[xc->ins][b].sid);
+		    xmp_drv_setsmp(chn, xc->smp = xxi[xc->ins][b].sid);
 	    }
 	}
 skip_wav:

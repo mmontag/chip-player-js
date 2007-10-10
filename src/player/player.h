@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.4 2007-10-10 19:07:34 cmatsuoka Exp $
+ * $Id: player.h,v 1.5 2007-10-10 23:49:38 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -29,6 +29,8 @@
 #define XXI xxi[xc->ins]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
+
+#define ARP_SIZE 4
 
 struct retrig_t {
     int s;
@@ -140,7 +142,7 @@ struct xmp_channel {
     int s_end;			/* Target period for tone portamento */
     int s_sgn;			/* Tone portamento up/down switch */
     int s_val;			/* Delta for tone portamento */
-    int a_val[16];		/* Arpeggio relative notes */
+    int a_val[ARP_SIZE];	/* Arpeggio relative notes */
     int a_idx;			/* Arpeggio index */
     int a_size;			/* Arpeggio size */
     int insvib_idx;		/* Instrument vibrato index */
@@ -163,6 +165,8 @@ struct xmp_channel {
     int med_wc;			/* MED synth waveform speed counter */
     int med_ww;			/* MED synth waveform wait counter */
     int med_period;		/* MED synth period for RES */
+    int med_arp;		/* MED synth arpeggio start */
+    int med_aidx;		/* MED synth arpeggio index */
 
     int flt_B0;			/* IT filter stuff */
     int flt_B1;
@@ -171,6 +175,7 @@ struct xmp_channel {
 
 void process_fx (int, uint8, uint8, uint8, struct xmp_channel *);
 void xmp_med_synth (int, struct xmp_channel *, int);
+int get_med_arp(struct xmp_channel *);
 void filter_setup (struct xmp_channel *, int);
 
 #endif /* __PLAYER_H */

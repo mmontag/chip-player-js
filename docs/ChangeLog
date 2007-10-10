@@ -1,9 +1,11 @@
-$Id: ChangeLog,v 1.126 2007-10-10 19:07:33 cmatsuoka Exp $
+$Id: ChangeLog,v 1.127 2007-10-10 23:49:38 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.3.3 ():
+	- added Oktalyzer arpeggio 3, arpeggio 4 and arpeggio 5 effects
+	- added MED synth arpeggio effect
 	- revert CoreAudio driver pause patch (fix memory management problem)
 	- reset MED synth program at each new note event
 

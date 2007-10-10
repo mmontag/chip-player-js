@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.16 2007-10-10 19:07:34 cmatsuoka Exp $
+ * $Id: player.c,v 1.17 2007-10-10 23:49:38 cmatsuoka Exp $
  */
 
 /*
@@ -360,10 +360,11 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
 
     /* Reset flags */
     xc->delay = xc->retrig = 0;
+    xc->flags = flg | (xc->flags & 0xff000000);
+
     xc->a_idx = 0;
     xc->a_size = 1;
     xc->a_val[0] = 0;
-    xc->flags = flg | (xc->flags & 0xff000000);
 
     if ((uint32)xins >= xxh->ins || !xxih[xins].nsm)
 	RESET(IS_VALID);
@@ -446,6 +447,7 @@ static void module_play(int chn, int t)
     struct xmp_channel *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
+    int med_arp;
     uint16 vol_envelope;
 
     if ((act = xmp_drv_cstat(chn)) == XMP_CHN_DUMB)
@@ -703,10 +705,13 @@ static void module_play(int chn, int t)
     xc->a_idx++;
     xc->a_idx %= xc->a_size;
 
+    /* Process MED synth arpeggio */
+    med_arp = get_med_arp(xc);
+
     /* Adjust pitch and pan, than play the note */
     finalpan = xmp_ctl->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * xmp_ctl->mix / 100;
-    xmp_drv_setbend(chn, (xc->pitchbend + xc->a_val[xc->a_idx]));
+    xmp_drv_setbend(chn, (xc->pitchbend + xc->a_val[xc->a_idx] + med_arp));
     xmp_drv_setpan(chn, xmp_ctl->fetch & XMP_CTL_REVERSE ?
 	-finalpan : finalpan);
     xmp_drv_setvol(chn, finalvol >> 2);
