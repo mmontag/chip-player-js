@@ -1,7 +1,10 @@
-$Id: ChangeLog,v 1.124 2007-10-09 00:41:42 cmatsuoka Exp $
+$Id: ChangeLog,v 1.125 2007-10-10 11:15:11 cmatsuoka Exp $
 
 Stable versions
 ---------------
+
+2.3.3 ():
+	- fixed memory management bug in OSX driver (reverse pause patch)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
