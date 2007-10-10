@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.3 2007-10-07 11:46:50 cmatsuoka Exp $
+ * $Id: player.h,v 1.4 2007-10-10 19:07:34 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -69,6 +69,7 @@ struct flow_control {
 #define ECHOBACK	0x00040000
 #define VOL_SLIDE_2	0x00080000
 #define NOTE_SLIDE	0x00100000
+#define NEW_NOTE	0x00200000
 
 /* These need to be "persistent" between frames */
 #define IS_READY	0x01000000
@@ -139,8 +140,9 @@ struct xmp_channel {
     int s_end;			/* Target period for tone portamento */
     int s_sgn;			/* Tone portamento up/down switch */
     int s_val;			/* Delta for tone portamento */
-    int a_val[3];		/* Arpeggio relative notes */
+    int a_val[16];		/* Arpeggio relative notes */
     int a_idx;			/* Arpeggio index */
+    int a_size;			/* Arpeggio size */
     int insvib_idx;		/* Instrument vibrato index */
     int insvib_swp;		/* Instrument vibrato sweep */
     int offset;			/* Sample offset */

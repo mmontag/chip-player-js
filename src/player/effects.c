@@ -36,8 +36,34 @@ process_fx (int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
     case FX_ARPEGGIO:
 	if (!fxp)
 	    break;
-	xc->a_val[1] = 100 * MSN (fxp);
-	xc->a_val[2] = 100 * LSN (fxp);
+	xc->a_val[0] = 0;
+	xc->a_val[1] = 100 * MSN(fxp);
+	xc->a_val[2] = 100 * LSN(fxp);
+	xc->a_size = 3;
+	break;
+    case FX_OKT_ARP3:
+	if (!fxp)
+	    break;
+	xc->a_val[0] = -100 * MSN(fxp);
+	xc->a_val[1] = 0;
+	xc->a_val[2] = 100 * LSN(fxp);;
+	xc->a_size = 3;
+    case FX_OKT_ARP4:
+	if (!fxp)
+	    break;
+	xc->a_val[0] = 0;
+	xc->a_val[1] = 100 * LSN(fxp);;
+	xc->a_val[2] = 0;
+	xc->a_val[3] = -100 * MSN(fxp);
+	xc->a_size = 4;
+	break;
+    case FX_OKT_ARP5:
+	if (!fxp)
+	    break;
+	xc->a_val[0] = 100 * LSN(fxp);;
+	xc->a_val[1] = 100 * LSN(fxp);;
+	xc->a_val[2] = 0;
+	xc->a_size = 3;
 	break;
     case FX_PORTA_UP:				/* Portamento up */
 fx_porta_up:

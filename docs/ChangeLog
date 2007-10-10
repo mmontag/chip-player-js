@@ -1,10 +1,11 @@
-$Id: ChangeLog,v 1.125 2007-10-10 11:15:11 cmatsuoka Exp $
+$Id: ChangeLog,v 1.126 2007-10-10 19:07:33 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.3.3 ():
-	- fixed memory management bug in OSX driver (reverse pause patch)
+	- revert CoreAudio driver pause patch (fix memory management problem)
+	- reset MED synth program at each new note event
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

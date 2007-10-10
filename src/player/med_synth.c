@@ -45,7 +45,7 @@ extern uint8 **med_wav_table;
 #define WT_SKIP xc->med_wp++
 
 
-void xmp_med_synth (int chn, struct xmp_channel *xc, int rst)
+void xmp_med_synth(int chn, struct xmp_channel *xc, int rst)
 {
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
 

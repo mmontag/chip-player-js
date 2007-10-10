@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.4 2007-10-01 14:21:56 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.5 2007-10-10 19:07:34 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,12 +33,39 @@ static int pattern = 0;
 static int sample = 0;
 
 
-static int fx[] =
-{
-    NONE, FX_PORTA_UP, FX_PORTA_DN, NONE, NONE, NONE, NONE, NONE,
-    NONE, NONE, FX_ARPEGGIO, FX_ARPEGGIO, FX_ARPEGGIO, NONE, NONE,
-    NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
-    FX_JUMP, NONE, NONE, FX_TEMPO, NONE, NONE, FX_VOLSET
+static int fx[] = {
+    NONE,
+    FX_PORTA_UP,	/*  1 */
+    FX_PORTA_DN,	/*  2 */
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    FX_OKT_ARP3,	/* 10 */
+    FX_OKT_ARP4,	/* 11 */
+    FX_OKT_ARP5,	/* 12 */
+    FX_NSLIDE_DN,	/* 13 */
+    NONE,
+    NONE,
+    NONE,
+    FX_NSLIDE_UP,	/* 17 */
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    NONE,
+    FX_JUMP,		/* 25 */
+    NONE,
+    NONE,
+    FX_TEMPO,		/* 28 */
+    NONE,
+    NONE,
+    FX_VOLSET		/* 31 */
 };
 
 
@@ -90,7 +117,7 @@ static void get_samp(int size, FILE *f)
 
 	idx[j] = i;
 
-	if ((V (1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
+	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
 	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, mode[i]);
@@ -117,8 +144,7 @@ static void get_slen(int size, FILE *f)
 static void get_plen(int size, FILE *f)
 {
     xxh->len = read16b(f);
-    if (V (0))
-	report ("Module length  : %d patterns\n", xxh->len);
+    reportv(0, "Module length  : %d patterns\n", xxh->len);
 }
 
 
@@ -139,8 +165,7 @@ static void get_pbod (int size, FILE *f)
 
     if (!pattern) {
 	PATTERN_INIT ();
-	if (V (0))
-	    report ("Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", xxh->pat);
     }
 
     rows = read16b(f);
@@ -186,8 +211,7 @@ static void get_pbod (int size, FILE *f)
 	if (event->fxt == NONE)
 	    event->fxt = event->fxp = 0;
     }
-    if (V (0))
-	report (".");
+    reportv(0, ".");
     pattern++;
 }
 
@@ -200,7 +224,7 @@ static void get_sbod (int size, FILE *f)
     if (sample >= xxh->ins)
 	return;
 
-    if (!sample && V (0))
+    if (!sample && V(0))
 	report ("\nStored samples : %d ", xxh->smp);
 
     i = idx[sample];
@@ -209,7 +233,7 @@ static void get_sbod (int size, FILE *f)
 
     xmp_drv_loadpatch(f, sample, xmp_ctl->c4rate, flags, &xxs[i], NULL);
 
-    if (V(0)) report(".");
+    reportv(0, ".");
 
     sample++;
 }
@@ -248,8 +272,7 @@ int okt_load (FILE *f)
 
     iff_release ();
 
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     return 0;
 }

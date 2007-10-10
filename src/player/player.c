@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.15 2007-10-09 00:41:42 cmatsuoka Exp $
+ * $Id: player.c,v 1.16 2007-10-10 19:07:34 cmatsuoka Exp $
  */
 
 /*
@@ -291,6 +291,7 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
     }
 
     if (key) {
+	flg |= NEW_NOTE;
 
         if (key == XMP_KEY_FADE) {
             SET(FADEOUT);
@@ -339,7 +340,7 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
 		    xxim[ins].xpo[key];
 		smp = xxi[ins][xxim[ins].ins[key]].sid;
 	    } else {
-		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS);
+		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
 	} else {
 	    if (!(xmp_ctl->fetch & XMP_CTL_CUTNWI))
@@ -359,7 +360,9 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
 
     /* Reset flags */
     xc->delay = xc->retrig = 0;
-    xc->a_idx = xc->a_val[1] = xc->a_val[2] = 0;
+    xc->a_idx = 0;
+    xc->a_size = 1;
+    xc->a_val[0] = 0;
     xc->flags = flg | (xc->flags & 0xff000000);
 
     if ((uint32)xins >= xxh->ins || !xxih[xins].nsm)
@@ -455,8 +458,9 @@ static void module_play(int chn, int t)
 	    xmp_drv_resetchannel(chn);
 	    return;
 	}
-	xc->a_val[1] = xc->a_val[2] = 0;
 	xc->delay = xc->retrig = xc->a_idx = 0;
+	xc->a_size = 1;
+	xc->a_val[0] = 0;
 	xc->flags &= (0xff000000 | IS_VALID);
     }
 
@@ -464,7 +468,7 @@ static void module_play(int chn, int t)
 	return;
 
     /* Process MED synth instruments */
-    xmp_med_synth(chn, xc, !t && TEST(NEW_INS));
+    xmp_med_synth(chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
 
     if (TEST(RELEASE) && !(XXIH.aei.flg & XXM_ENV_ON))
 	xc->fadeout = 0;
@@ -697,7 +701,7 @@ static void module_play(int chn, int t)
     xc->t_idx += xc->t_rate;
     xc->t_idx %= 64;
     xc->a_idx++;
-    xc->a_idx %= 3;
+    xc->a_idx %= xc->a_size;
 
     /* Adjust pitch and pan, than play the note */
     finalpan = xmp_ctl->outfmt & XMP_FMT_MONO ?

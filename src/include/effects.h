@@ -55,6 +55,11 @@
 #define EX_DELAY	0x0d
 #define EX_PATT_DELAY	0x0e
 
+/* Oktalyzer effects */
+#define FX_OKT_ARP3	0x70
+#define FX_OKT_ARP4	0x71
+#define FX_OKT_ARP5	0x72
+
 /* IT effects */
 #define FX_TRK_VOL      0x80
 #define FX_TRK_VSLIDE   0x81
