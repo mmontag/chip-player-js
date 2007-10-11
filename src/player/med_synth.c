@@ -151,7 +151,7 @@ skip_vol:
 	    case 0xfd:		/* ARE */
 		break;
 	    case 0xfc:		/* ARP */
-		xc->med_arp = xc->med_aidx = xc->med_wp;
+		xc->med_arp = xc->med_aidx = xc->med_wp++;
 		while (WT != 0xfd);
 		break;
 	    case 0xfa:		/* JVS */
@@ -182,8 +182,10 @@ skip_vol:
 		xc->med_ws = WT;
 		break;
 	    default:
-		if (b < xxih[xc->ins].nsm && xxi[xc->ins][b].sid != xc->smp)
-		    xmp_drv_setsmp(chn, xc->smp = xxi[xc->ins][b].sid);
+		if (b < xxih[xc->ins].nsm && xxi[xc->ins][b].sid != xc->smp) {
+		    xc->smp = xxi[xc->ins][b].sid;
+		    xmp_drv_setsmp(chn, xc->smp);
+		}
 	    }
 	}
 skip_wav:

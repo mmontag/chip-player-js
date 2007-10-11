@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.14 2007-10-06 02:46:20 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.15 2007-10-11 22:39:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -387,15 +387,14 @@ static void smix_voicepos(int voc, int pos, int itp)
 	lpend =  lpend > pi->loop_end ? pi->loop_end : lpend;
     lpend >>= res;
 
-    if (pos < lpend) {
-	vi->pos = pos;
-	vi->itpt = itp;
-	vi->end = lpend;
-	if (vi->fidx & FLAG_BACKWARD)
-	    vi->fidx ^= vi->fxor;
-    } else {
-	drv_resetvoice(voc, TURN_ON);		/* Bad data, reset voice */
-    }
+    if (pos >= lpend)			/* Used often in the MED synth */
+	pos = 0;
+
+    vi->pos = pos;
+    vi->itpt = itp;
+    vi->end = lpend;
+    if (vi->fidx & FLAG_BACKWARD)
+	vi->fidx ^= vi->fxor;
 }
 
 

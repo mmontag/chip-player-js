@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.17 2007-10-10 23:49:38 cmatsuoka Exp $
+ * $Id: player.c,v 1.18 2007-10-11 22:39:48 cmatsuoka Exp $
  */
 
 /*
@@ -288,6 +288,7 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
 	}
 
 	xc->insdef = ins;
+	xc->med_arp = xc->med_aidx = 0;
     }
 
     if (key) {
@@ -684,8 +685,8 @@ static void module_play(int chn, int t)
 
     /* Do tone portamento */
     if (TEST(TONEPORTA)) {
-	xc->period += (xc->s_sgn * xc->s_val);
-	if ((xc->s_sgn * xc->s_end) <= (xc->s_sgn * xc->period)) {
+	xc->period += xc->s_sgn * xc->s_val;
+	if ((xc->s_sgn * xc->s_end) < (xc->s_sgn * xc->period)) {
 	    xc->period = xc->s_end;
 	    RESET(TONEPORTA);
 	}
