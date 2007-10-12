@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.34 2007-10-11 22:39:48 cmatsuoka Exp $
+ * $Id: driver.c,v 1.35 2007-10-12 15:18:42 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -856,14 +856,15 @@ int xmp_drv_loadpatch(FILE *f, int id, int basefreq, int flags,
 	struct xxm_sample *xxs, char *buffer)
 {
     struct patch_info *patch;
+    int datasize;
     char s[5];
 
     /* FM patches
      */
     if (!xxs) {
-	if (!(patch = calloc (1, sizeof (struct patch_info) + 11)))
+	if ((patch = calloc(1, sizeof (struct patch_info) + 11)) == NULL)
 	      return XMP_ERR_ALLOC;
-	memcpy (patch->data, buffer, 11);
+	memcpy(patch->data, buffer, 11);
 	patch->instr_no = id;
 	patch->len = XMP_PATCH_FM;
 	patch->base_note = 60;
@@ -879,33 +880,41 @@ int xmp_drv_loadpatch(FILE *f, int id, int basefreq, int flags,
     }
     /* Patches with samples
      */
-    if (!(patch = calloc (1, sizeof (struct patch_info) +
-		xxs->len + sizeof (int))))
-	  return XMP_ERR_ALLOC;
+    datasize = sizeof (struct patch_info) + xxs->len + sizeof (int);
 
-    if (flags & XMP_SMP_NOLOAD)
-	memcpy (patch->data, buffer, xxs->len);
-    else {
+#if 0
+    /* Make room to unroll bidir loop */
+    if (xxs->flg & WAVE_BIDIR_LOOP)
+	datasize += xxs->lpe - xxs->lps + 1;
+#endif
+
+    if ((patch = calloc(1, datasize)) == NULL)
+	return XMP_ERR_ALLOC;
+
+    if (flags & XMP_SMP_NOLOAD) {
+	memcpy(patch->data, buffer, xxs->len);
+    } else {
 	int pos = ftell(f);
-	fread (s, 1, 5, f);
-	fseek (f, pos, SEEK_SET);
+	fread(s, 1, 5, f);
+	fseek(f, pos, SEEK_SET);
 
-	if (!strncmp (s, "ADPCM", 5)) {
+	if (!strncmp(s, "ADPCM", 5)) {
 	    int x2 = xxs->len >> 1;
 	    char table[16];
 
-	    fseek (f, 5, SEEK_CUR);	/* Skip "ADPCM" */
-	    fread (table, 1, 16, f);
-	    fread (patch->data + x2, 1, x2, f);
+	    fseek(f, 5, SEEK_CUR);	/* Skip "ADPCM" */
+	    fread(table, 1, 16, f);
+	    fread(patch->data + x2, 1, x2, f);
 	    adpcm4_decoder((uint8 *)patch->data + x2, (uint8 *)patch->data,
 						table, xxs->len);
-	} else
-	    fread (patch->data, 1, xxs->len, f);
+	} else {
+	    fread(patch->data, 1, xxs->len, f);
+	}
     }
 
 #if 0
     /* dump patch to file */
-    if (id == 13) {
+    if (id == 3) {
 	printf("dump patch\n");
 	FILE *f = fopen("patch_data", "w");
 	fwrite(patch->data, 1, xxs->len, f);
@@ -913,6 +922,31 @@ int xmp_drv_loadpatch(FILE *f, int id, int basefreq, int flags,
     }
 #endif
 
+#if 0
+    /* Unroll bidirectional samples */
+    if (xxs->flg & WAVE_BIDIR_LOOP) {
+	if (xxs->flg & WAVE_16_BITS) {
+	    int i, s = xxs->lpe - xxs->lps + 1;
+
+	    for (i = 0; i < s; i += 2) {
+		patch->data[xxs->len + i] = patch->data[xxs->len - 2 - i]; 
+		patch->data[xxs->len + i + 1] = patch->data[xxs->len - 2 - i + 1]; 
+	    }
+	    xxs->len += s;
+	    xxs->lpe += s;
+	} else {
+	    int i, s = xxs->lpe - xxs->lps + 1;
+
+	    for (i = 0; i < s; i++)
+		patch->data[xxs->len + i] = patch->data[xxs->len - 1 - i]; 
+	    xxs->len += s;
+	    xxs->lpe += s;
+	}
+	xxs->flg &= ~WAVE_BIDIR_LOOP;
+    }
+#endif
+
+    /* Fix endianism if needed */
     if (xxs->flg & WAVE_16_BITS) {
 	if (big_endian ^ (flags & XMP_SMP_BIGEND))
 	    xmp_cvt_sex(xxs->len, patch->data);
@@ -944,8 +978,8 @@ int xmp_drv_loadpatch(FILE *f, int id, int basefreq, int flags,
     patch->detuning = 0;
     patch->panning = 0;
 
-    xmp_cvt_crunch (&patch, flags & XMP_SMP_8X ? 0x80000 : 0x10000);
-    return xmp_drv_writepatch (patch);
+    xmp_cvt_crunch(&patch, flags & XMP_SMP_8X ? 0x80000 : 0x10000);
+    return xmp_drv_writepatch(patch);
 }
 
 

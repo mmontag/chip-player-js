@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.15 2007-10-11 22:39:48 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.16 2007-10-12 15:18:42 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -255,7 +255,7 @@ static int softmixer()
 {
     struct voice_info* vi;
     struct patch_info* pi;
-    int smp_cnt, tic_cnt, lpsta, lpend;
+    int smp_cnt, tic_cnt, lps, lpe;
     int vol_l, vol_r, itp_inc, voc;
     int prv_l, prv_r;
     int synth = 1;
@@ -285,7 +285,7 @@ static int softmixer()
 	    continue;
 	}
 
-	itp_inc = ((long long) vi->pbase << SMIX_SHIFT) / vi->period;
+	itp_inc = ((long long)vi->pbase << SMIX_SHIFT) / vi->period;
 
 	pi = patch_array[vi->smp];
 
@@ -294,8 +294,8 @@ static int softmixer()
 	    itp_inc = -itp_inc;
 
 	/* Sample loop processing. Offsets in samples, not bytes */
-	lpsta = pi->loop_start >> !!(vi->fidx & FLAG_16_BITS);
-	lpend = pi->loop_end >> !!(vi->fidx & FLAG_16_BITS);
+	lps = pi->loop_start >> !!(vi->fidx & FLAG_16_BITS);
+	lpe = pi->loop_end >> !!(vi->fidx & FLAG_16_BITS);
 
 	for (tic_cnt = smix_ticksize; tic_cnt; ) {
 	    /* How many samples we can write before the loop break or
@@ -306,9 +306,10 @@ static int softmixer()
 	    if (itp_inc > 0) {
 		if (vi->end < vi->pos)
 		    smp_cnt = 0;
-	    } else
+	    } else {
 		if (vi->end > vi->pos)
 		    smp_cnt = 0;
+	    }
 
 	    /* Ok, this shouldn't happen, but in 'Languede.mod'... */
 	    if (smp_cnt < 0)
@@ -347,7 +348,7 @@ static int softmixer()
 		continue;
 
 	    /* Single shot sample */
-            if (!(vi->fidx ^= vi->fxor) || lpsta >= lpend) {
+            if (!(vi->fidx ^= vi->fxor) || lps >= lpe) {
 		smix_anticlick(voc, 0, 0, buf_pos, tic_cnt);
 		drv_resetvoice(voc, 0);
 		tic_cnt = 0;
@@ -355,12 +356,12 @@ static int softmixer()
 	    }
 
 	    if (!(vi->fidx & FLAG_BACKWARD || vi->fxor)) {
-		vi->pos -= lpend - lpsta;
+		vi->pos -= lpe - lps;
 	    } else {
 		vi->itpt += (itp_inc = -itp_inc);
 		vi->pos += vi->itpt >> SMIX_SHIFT;
 		vi->itpt &= SMIX_MASK;
-		vi->end = itp_inc > 0 ? lpend : lpsta;
+		vi->end = itp_inc > 0 ? lpe : lps;
 	    }
 	}
     }
@@ -373,26 +374,27 @@ static void smix_voicepos(int voc, int pos, int itp)
 {
     struct voice_info *vi = &voice_array[voc];
     struct patch_info *pi = patch_array[vi->smp];
-    int lpend, res, mde;
+    int lpe, res, mode;
 
     if (pi->len == XMP_PATCH_FM)
 	return;
 
     res = !!(pi->mode & WAVE_16_BITS);
-    mde = (pi->mode & WAVE_LOOPING) && !(pi->mode & WAVE_BIDIR_LOOP);
-    mde = (mde << res) + res + 1;	/* see xmp_cvt_anticlick */
+    mode = (pi->mode & WAVE_LOOPING) && !(pi->mode & WAVE_BIDIR_LOOP);
+    mode = (mode << res) + res + 1;	/* see xmp_cvt_anticlick */
 
-    lpend = pi->len - mde;
+    lpe = pi->len - mode;
     if (pi->mode & WAVE_LOOPING)
-	lpend =  lpend > pi->loop_end ? pi->loop_end : lpend;
-    lpend >>= res;
+	lpe = lpe > pi->loop_end ? pi->loop_end : lpe;
+    lpe >>= res;
 
-    if (pos >= lpend)			/* Used often in the MED synth */
+    if (pos >= lpe)			/* Happens often in MED synth */
 	pos = 0;
 
     vi->pos = pos;
     vi->itpt = itp;
-    vi->end = lpend;
+    vi->end = lpe;
+
     if (vi->fidx & FLAG_BACKWARD)
 	vi->fidx ^= vi->fxor;
 }
@@ -425,7 +427,7 @@ static void smix_setpatch(int voc, int smp)
 
     vi->sptr = extern_drv ? NULL : pi->data;
     vi->fidx = xmp_ctl->fetch & XMP_CTL_ITPT ?
-	FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
+			FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
 
     if (xmp_ctl->outfmt & XMP_FMT_MONO) {
 	vi->pan = TURN_OFF;
@@ -441,7 +443,7 @@ static void smix_setpatch(int voc, int smp)
 	vi->fidx |= FLAG_FILTER;
 
     if (pi->mode & WAVE_LOOPING)
-	vi->fxor = !!(pi->mode & WAVE_BIDIR_LOOP) * FLAG_BACKWARD;
+	vi->fxor = pi->mode & WAVE_BIDIR_LOOP ? FLAG_BACKWARD : 0;
     else
 	vi->fxor = vi->fidx;
 
