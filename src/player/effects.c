@@ -484,5 +484,23 @@ fx_finetune:
 	xc->ns_val = LSN(fxp);
 	xc->ns_count = xc->ns_speed = MSN(fxp);
 	break;
+    case FX_NSLIDE2_DN:
+	SET(NOTE_SLIDE);
+	xc->ns_val = -fxp;
+	xc->ns_count = xc->ns_speed = 1;
+	break;
+    case FX_NSLIDE2_UP:
+	SET(NOTE_SLIDE);
+	xc->ns_val = fxp;
+	xc->ns_count = xc->ns_speed = 1;
+	break;
+    case FX_F_NSLIDE_DN:
+	SET(FINE_NSLIDE);
+	xc->ns_fval = -fxp;
+	break;
+    case FX_F_NSLIDE_UP:
+	SET(FINE_NSLIDE);
+	xc->ns_fval = fxp;
+	break;
     }
 }

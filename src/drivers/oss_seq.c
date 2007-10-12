@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.6 2007-09-24 11:15:58 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.7 2007-10-12 04:15:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -401,17 +401,12 @@ static int init(struct xmp_control *ctl)
 	    }
 
 	    sprintf(buf, "%s [%s]", drv_oss_seq.description, si.name);
-#ifdef AWE_DEVICE
-	    if (si.synth_subtype == SAMPLE_TYPE_AWE32) {
-		strcat (buf,
-		    "\nAWE support Copyright (C) 1996,1997 Takashi Iwai");
 
-#ifdef HAVE_AWE_MD_NEW_VOLUME_CALC
+#if defined AWE_DEVICE && defined HAVE_AWE_MD_NEW_VOLUME_CALC
+	    if (si.synth_subtype == SAMPLE_TYPE_AWE32)
 		AWE_MISC_MODE(dev, AWE_MD_NEW_VOLUME_CALC, 0);
 #endif
-	    }
 
-#endif
 	    drv_oss_seq.description = buf;
 
 	    found = 1;

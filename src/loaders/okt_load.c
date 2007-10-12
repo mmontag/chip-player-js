@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.5 2007-10-10 19:07:34 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.6 2007-10-12 04:15:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -49,22 +49,22 @@ static int fx[] = {
     FX_OKT_ARP5,	/* 12 */
     FX_NSLIDE_DN,	/* 13 */
     NONE,
-    NONE,
+    NONE, /* Filter */	/* 15 */
     NONE,
     FX_NSLIDE_UP,	/* 17 */
     NONE,
     NONE,
     NONE,
-    NONE,
+    FX_F_NSLIDE_DN,	/* 21 */
     NONE,
     NONE,
     NONE,
     FX_JUMP,		/* 25 */
     NONE,
-    NONE,
+    NONE, /* Release */	/* 27 */
     FX_TEMPO,		/* 28 */
     NONE,
-    NONE,
+    FX_F_NSLIDE_UP,	/* 30 */
     FX_VOLSET		/* 31 */
 };
 

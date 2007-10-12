@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.18 2007-10-11 22:39:48 cmatsuoka Exp $
+ * $Id: player.c,v 1.19 2007-10-12 04:15:19 cmatsuoka Exp $
  */
 
 /*
@@ -45,7 +45,7 @@ static int gvol_base;
 static double tick_time;
 static struct flow_control flow;
 static struct xmp_channel *xc_data;
-static int* fetch_ctl;
+static int *fetch_ctl;
 
 int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
 
@@ -242,10 +242,10 @@ static inline void chn_fetch(int ord, int row)
 
 static inline void chn_refresh(int tick)
 { 
-    int num;
+    int i;
 
-    for (num = xmp_ctl->numchn; num--;)
-	module_play(num, tick);
+    for (i = xmp_ctl->numchn; i--;)
+	module_play(i, tick);
 }
 
 
@@ -448,7 +448,7 @@ static void module_play(int chn, int t)
     struct xmp_channel *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
-    int med_arp;
+    int med_arp, med_vibrato;
     uint16 vol_envelope;
 
     if ((act = xmp_drv_cstat(chn)) == XMP_CHN_DUMB)
@@ -541,13 +541,15 @@ static void module_play(int chn, int t)
     if (xxh->flg & XXM_FLG_INSVOL)
 	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;
 
+    med_vibrato = get_med_vibrato(xc);
+
     /* IT pitch envelopes are always linear, even in Amiga period mode.
      * Each unit in the envelope scale is 1/25 semitone.
      */
     xc->pitchbend = period_to_bend(xc->period + (TEST(VIBRATO) ?
 	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10 : 0) +
 	waveform[XXI->vwf][xc->insvib_idx] * XXI->vde / (1024 *
-	(1 + xc->insvib_swp)),
+	(1 + xc->insvib_swp)) + med_vibrato,
 	xc->note,
 	xc->finetune,
 	xxh->flg & XXM_FLG_MODRNG,
@@ -659,6 +661,10 @@ static void module_play(int chn, int t)
 	    xc->period = (4 * xc->period + xc->f_fval) / 4;
 	if (TEST(TRK_FVSLIDE))
             xc->mastervol += xc->trk_fval;
+	if (TEST(FINE_NSLIDE)) {
+            xc->note += xc->ns_fval;
+	    xc->period = note_to_period(xc->note, xxh->flg & XXM_FLG_LINEAR);
+	}
     }
 
     if (xc->volume < 0)

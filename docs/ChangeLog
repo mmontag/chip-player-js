@@ -1,15 +1,17 @@
-$Id: ChangeLog,v 1.128 2007-10-11 22:39:47 cmatsuoka Exp $
+$Id: ChangeLog,v 1.129 2007-10-12 04:15:19 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.4.0 ():
+	- added Oktalyzer note slide and fine note slide effects
 	- added Oktalyzer arpeggio 3, arpeggio 4 and arpeggio 5 effects
-	- added MED synth arpeggio effect
+	- added MED synth programmable arpeggio commands ARP/ARE
+	- fixed MED synth volume slide commands CHD/CHU
 	- revert CoreAudio driver pause patch (fix memory management problem)
 	- reset MED synth program at each new note event
 	- don't reset channel on attempt to set invalid sample position
-	  (prevents sound cut when changing samples in the MED synth)
+	  (prevent sound cut when changing samples in the MED synth)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

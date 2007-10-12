@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -43,6 +43,11 @@ extern uint8 **med_wav_table;
 #define WT med_wav_table[xc->ins][xc->med_wp++]
 #define VT_SKIP xc->med_vp++
 #define WT_SKIP xc->med_wp++
+
+int get_med_vibrato(struct xmp_channel *xc)
+{
+	return 0;
+}
 
 int get_med_arp(struct xmp_channel *xc)
 {
@@ -128,6 +133,13 @@ void xmp_med_synth(int chn, struct xmp_channel *xc, int rst)
 		    xc->volume = b;
 	    }
 	}
+
+	xc->volume += xc->med_vv;
+	if (xc->volume < 0)
+	    xc->volume = 0;
+	if (xc->volume > 64)
+	    xc->volume = 64;
+
 skip_vol:
 
 	if (xc->med_ww > 0) {
@@ -158,16 +170,16 @@ skip_vol:
 		jws = WT;
 		break;
 	    case 0xf7:		/* VWF */
-		xc->y_type = WT;
+		xc->med_vwf = WT;
 		break;
 	    case 0xf6:		/* RES */
 		xc->period = xc->med_period;
 		break;
 	    case 0xf5:		/* VBS */
-		xc->y_rate = WT;
+		xc->med_vib_speed = WT;
 		break;
 	    case 0xf4:		/* VBD */
-		xc->y_depth = WT;
+		xc->med_vib_depth = WT;
 		break;
 	    case 0xf3:		/* CHU */
 		xc->med_wv = -WT;
@@ -189,13 +201,7 @@ skip_vol:
 	    }
 	}
 skip_wav:
-
-	xc->volume += xc->med_vv;
-	if (xc->volume < 0)
-	    xc->volume = 0;
-	if (xc->volume > 64)
-	    xc->volume = 64;
-
+	;
 	/* xc->period += xc->med_wv; */
     }
 

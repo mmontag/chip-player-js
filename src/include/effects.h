@@ -59,6 +59,10 @@
 #define FX_OKT_ARP3	0x70
 #define FX_OKT_ARP4	0x71
 #define FX_OKT_ARP5	0x72
+#define FX_NSLIDE2_DN	0x73
+#define FX_NSLIDE2_UP	0x74
+#define FX_F_NSLIDE_DN	0x75
+#define FX_F_NSLIDE_UP	0x76
 
 /* IT effects */
 #define FX_TRK_VOL      0x80

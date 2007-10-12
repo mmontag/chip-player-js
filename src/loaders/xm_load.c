@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.10 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.11 2007-10-12 04:15:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -236,10 +236,8 @@ load_patterns:
 	report ("\n");
 
 load_instruments:
-    if (V (0))
-	report ("Instruments    : %d ", xxh->ins);
-    if (V (1))
-	report ("\n");
+    reportv(0, "Instruments    : %d ", xxh->ins);
+    reportv(1, "\n     Instrument name            Smp Size   LStart LEnd   L Vol Fine  Pan Xpo\n");
 
     /* ESTIMATED value! We don't know the actual value at this point */
     xxh->smp = MAX_SAMP;
@@ -370,8 +368,8 @@ load_instruments:
 			xxs[xxi[i][j].sid].lpe,
 			xxs[xxi[i][j].sid].flg & WAVE_BIDIR_LOOP ? 'B' :
 			xxs[xxi[i][j].sid].flg & WAVE_LOOPING ? 'L' : ' ',
-			xsh[j].volume, xsh[j].finetune,
-			xsh[j].pan, xsh[j].relnote);
+			xxi[i][j].vol, xxi[i][j].fin,
+			xxi[i][j].pan, xxi[i][j].xpo);
 
 		if (xfh.version > 0x0103)
 		    xmp_drv_loadpatch (f, xxi[i][j].sid, xmp_ctl->c4rate,

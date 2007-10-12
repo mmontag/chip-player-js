@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: period.c,v 1.1 2001-06-02 20:28:14 cmatsuoka Exp $
+ * $Id: period.c,v 1.2 2007-10-12 04:15:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -87,7 +87,7 @@ int period_to_note (int p)
 
 
 /* Get pitchbend from base note and period */
-int period_to_bend (int p, int n, int f, int a, int g, int type)
+int period_to_bend(int p, int n, int f, int a, int g, int type)
 {
     int b, *t = period_amiga + MAX_NOTE;
 
@@ -100,11 +100,13 @@ int period_to_bend (int p, int n, int f, int a, int g, int type)
 	if (p < AMIGA_LIMIT_UPPER)
 	    p = AMIGA_LIMIT_UPPER;
     }
+
     if (type) {
 	b = (100 * (((120 - n) << 4) - p)) >> 4;	/* Linear */
 	b += f * 100 / 128;
 	return g ? b / 100 * 100 : b;
     }
+
     if (p < MIN_PERIOD_A)
 	p = MIN_PERIOD_A;
 

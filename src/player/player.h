@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.5 2007-10-10 23:49:38 cmatsuoka Exp $
+ * $Id: player.h,v 1.6 2007-10-12 04:15:19 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -71,7 +71,8 @@ struct flow_control {
 #define ECHOBACK	0x00040000
 #define VOL_SLIDE_2	0x00080000
 #define NOTE_SLIDE	0x00100000
-#define NEW_NOTE	0x00200000
+#define FINE_NSLIDE	0x00200000
+#define NEW_NOTE	0x00400000
 
 /* These need to be "persistent" between frames */
 #define IS_READY	0x01000000
@@ -149,11 +150,13 @@ struct xmp_channel {
     int insvib_swp;		/* Instrument vibrato sweep */
     int offset;			/* Sample offset */
     int ns_val;			/* PTM note slide amount */
+    int ns_fval;		/* OKT fine note slide amount */
     int ns_speed;		/* PTM note slide speed */
     int ns_count;		/* PTM note slide counter */
     int cutoff;			/* IT filter cutoff frequency */
     int cutoff2;		/* IT filter cutoff frequency (with envelope) */
     int resonance;		/* IT filter resonance */
+
     int med_vp;			/* MED synth volume sequence table pointer */
     int med_vv;			/* MED synth volume slide value */
     int med_vs;			/* MED synth volume speed */
@@ -167,6 +170,11 @@ struct xmp_channel {
     int med_period;		/* MED synth period for RES */
     int med_arp;		/* MED synth arpeggio start */
     int med_aidx;		/* MED synth arpeggio index */
+    int med_vwf;		/* MED synth vibrato waveform */
+    int med_vib_depth;		/* MED synth vibrato depth */
+    int med_vib_speed;		/* MED synth vibrato speed */
+    int med_vib_rate;		/* MED synth vibrato rate */
+    int med_vib_idx;		/* MED synth vibrato index */
 
     int flt_B0;			/* IT filter stuff */
     int flt_B1;
@@ -176,6 +184,7 @@ struct xmp_channel {
 void process_fx (int, uint8, uint8, uint8, struct xmp_channel *);
 void xmp_med_synth (int, struct xmp_channel *, int);
 int get_med_arp(struct xmp_channel *);
+int get_med_vibrato(struct xmp_channel *);
 void filter_setup (struct xmp_channel *, int);
 
 #endif /* __PLAYER_H */
