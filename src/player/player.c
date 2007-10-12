@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.19 2007-10-12 04:15:19 cmatsuoka Exp $
+ * $Id: player.c,v 1.20 2007-10-12 04:46:42 cmatsuoka Exp $
  */
 
 /*
@@ -410,7 +410,6 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
 	    xc->finetune = xxi[ins][xxim[ins].ins[key]].fin;
 
 	xc->s_end = xc->period = note_to_period(note, xxh->flg & XXM_FLG_LINEAR);
-
 
 	xc->y_idx = xc->t_idx = 0;              /* #?# Onde eu coloco isso? */
 

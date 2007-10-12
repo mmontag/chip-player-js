@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.6 2007-10-12 04:15:19 cmatsuoka Exp $
+ * $Id: player.h,v 1.7 2007-10-12 04:46:42 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -173,8 +173,8 @@ struct xmp_channel {
     int med_vwf;		/* MED synth vibrato waveform */
     int med_vib_depth;		/* MED synth vibrato depth */
     int med_vib_speed;		/* MED synth vibrato speed */
-    int med_vib_rate;		/* MED synth vibrato rate */
     int med_vib_idx;		/* MED synth vibrato index */
+    int med_vib_wf;		/* MED synth vibrato waveform */
 
     int flt_B0;			/* IT filter stuff */
     int flt_B1;

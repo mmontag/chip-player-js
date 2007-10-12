@@ -44,10 +44,35 @@ extern uint8 **med_wav_table;
 #define VT_SKIP xc->med_vp++
 #define WT_SKIP xc->med_wp++
 
+
+static int sine[32] = {
+       0,  49,  97, 141, 180, 212, 235, 250,
+     255, 250, 235, 212, 180, 141,  97,  49,
+       0, -49, -97,-141,-180,-212,-235,-250,
+    -255,-250,-235,-212,-180,-141, -97, -49
+};
+
 int get_med_vibrato(struct xmp_channel *xc)
 {
-	return 0;
+	int vib;
+
+#if 0
+	if (xc->med_vib_wf >= xxih[xc->ins].nsm)	/* invalid waveform */
+		return 0;
+
+	if (xxs[xxi[xc->ins][xc->med_vib_wf].sid].len != 32)
+		return 0;
+#endif
+
+	/* FIXME: always using sine waveform */
+
+	vib = (sine[xc->med_vib_idx >> 5] * xc->med_vib_depth) >> 10;
+	xc->med_vib_idx += xc->med_vib_speed;
+	xc->med_vib_idx %= (32 << 5);
+
+	return vib;
 }
+
 
 int get_med_arp(struct xmp_channel *xc)
 {
