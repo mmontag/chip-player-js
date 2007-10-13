@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.6 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.7 2007-10-13 20:52:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,28 @@
 /* Nir Oren's Liquid Tracker old "NO" format. I have only one NO module,
  * Moti Radomski's "Time after time" from ftp.modland.com.
  */
+
+
+static int no_test (FILE *, char *);
+static int no_load (FILE *);
+
+struct xmp_loader_info no_loader = {
+	"LIQ",
+	"Liquid Tracker (old)",
+	no_test,
+	no_load
+};
+
+static int no_test(FILE *f, char *t)
+{
+	if (read32b(f) != 0x4e4f0000)		/* NO 0x00 0x00 */
+		return -1;
+
+	read_title(f, t, read8(f));
+
+	return 0;
+}
+
 
 static uint8 fx[] = {
 	FX_ARPEGGIO,
@@ -42,14 +64,11 @@ int no_load(FILE * f)
 {
 	struct xxm_event *event;
 	int i, j, k;
-	uint32 id;
 	int nsize;
 
 	LOAD_INIT();
 
-	id = read32b(f);
-	if (id != 0x4e4f0000)		/* NO 0x00 0x00 */
-		return -1;
+	read32b(f);			/* NO 0x00 0x00 */
 
 	strcpy(xmp_ctl->type, "NO (old Liquid Tracker)");
 

@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.10 2007-09-19 13:02:11 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.11 2007-10-13 20:52:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,9 +18,30 @@
 #define MAGIC_PSM_	MAGIC4('P','S','M',0xfe)
 
 
+static int svb_test (FILE *, char *);
+static int svb_load (FILE *);
+
+struct xmp_loader_info svb_loader = {
+	"PSM",
+	"Protracker Studio",
+	svb_test,
+	svb_load
+};
+
+static int svb_test(FILE *f, char *t)
+{
+	if (read32b(f) != MAGIC_PSM_)
+		return -1;
+
+	read_title(f, t, 60);
+
+	return 0;
+}
+
+
 /* FIXME: effects translation */
 
-int svb_load (FILE * f)
+int svb_load(FILE *f)
 {
 	int c, r, i;
 	struct xxm_event *event;
@@ -31,8 +52,7 @@ int svb_load (FILE * f)
  
 	LOAD_INIT ();
 
-	if (read32b(f) != MAGIC_PSM_)
-		return -1;
+	read32b(f);
 
 	fread(buf, 1, 60, f);
 	strncpy(xmp_ctl->name, (char *)buf, XMP_DEF_NAMESIZE);
