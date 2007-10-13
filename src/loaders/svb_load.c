@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.11 2007-10-13 20:52:19 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.12 2007-10-13 21:17:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -41,7 +41,7 @@ static int svb_test(FILE *f, char *t)
 
 /* FIXME: effects translation */
 
-int svb_load(FILE *f)
+static int svb_load(FILE *f)
 {
 	int c, r, i;
 	struct xxm_event *event;

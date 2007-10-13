@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.17 2007-10-07 23:33:06 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.18 2007-10-13 21:17:12 cmatsuoka Exp $
  */
 
 /*
@@ -18,6 +18,32 @@
 
 #include "med.h"
 #include "load.h"
+
+
+static int mmd1_test(FILE *, char *);
+static int mmd1_load(FILE *);
+
+struct xmp_loader_info mmd1_loader = {
+	"MMD0/1",
+	"MED 3.00/OctaMED",
+	mmd1_test,
+	mmd1_load
+};
+
+static int mmd1_test(FILE * f, char *t)
+{
+	char id[4];
+
+	fread(id, 4, 1, f);
+
+	if (memcmp(id, "MMD0", 4) && memcmp(id, "MMD1", 4))
+		return -1;
+
+	read_title(f, t, 0);
+
+	return 0;
+}
+
 
 #define NUM_INST_TYPES 9
 static char *inst_type[] = {
@@ -101,7 +127,7 @@ static void xlat_fx(struct xxm_event *event)
 	}
 }
 
-int mmd1_load(FILE *f)
+static int mmd1_load(FILE *f)
 {
 	int i, j, k;
 	struct MMD0 header;
@@ -127,9 +153,6 @@ int mmd1_load(FILE *f)
 	LOAD_INIT();
 
 	fread(&header.id, 4, 1, f);
-
-	if (memcmp(&header.id, "MMD0", 4) && memcmp(&header.id, "MMD1", 4))
-		return -1;
 
 	ver = *((char *)&header.id + 3) - '1' + 1;
 

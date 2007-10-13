@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.14 2007-10-08 01:16:11 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.15 2007-10-13 21:17:12 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -14,6 +14,32 @@
 
 #include "med.h"
 #include "load.h"
+
+
+static int mmd3_test (FILE *, char *);
+static int mmd3_load (FILE *);
+
+struct xmp_loader_info mmd3_loader = {
+	"MMD2/3",
+	"OctaMED Soundstudio",
+	mmd3_test,
+	mmd3_load
+};
+
+static int mmd3_test(FILE *f, char *t)
+{
+	char id[4];
+
+	fread(id, 4, 1, f);
+
+	if (memcmp(id, "MMD2", 4) && memcmp(id, "MMD3", 4))
+		return -1;
+
+	read_title(f, t, 0);
+
+	return 0;
+}
+
 
 #define NUM_INST_TYPES 9
 static char *inst_type[] = {
@@ -97,7 +123,7 @@ static void xlat_fx(struct xxm_event *event)
 	}
 }
 
-int mmd3_load(FILE *f)
+static int mmd3_load(FILE *f)
 {
 	int i, j, k;
 	struct MMD0 header;
@@ -127,9 +153,6 @@ int mmd3_load(FILE *f)
 	LOAD_INIT();
 
 	fread(&header.id, 4, 1, f);
-
-	if (memcmp(&header.id, "MMD2", 4) && memcmp(&header.id, "MMD3", 4))
-		return -1;
 
 	ver = *((char *)&header.id + 3) - '1' + 1;
 

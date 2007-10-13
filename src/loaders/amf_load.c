@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.8 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.9 2007-10-13 21:17:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,7 +24,36 @@
 #include "period.h"
 
 
-int amf_load(FILE * f)
+static int amf_test(FILE *, char *);
+static int amf_load(FILE *);
+
+struct xmp_loader_info amf_loader = {
+	"AMF",
+	"DSMI (DMP)",
+	amf_test,
+	amf_load
+};
+
+static int amf_test(FILE * f, char *t)
+{
+	char buf[4];
+	int ver;
+
+	fread(buf, 1, 3, f);
+	if (buf[0] != 'A' || buf[1] != 'M' || buf[2] != 'F')
+		return -1;
+
+	ver = read8(f);
+	if (ver < 0x0a || ver > 0x0e)
+		return -1;
+
+	read_title(f, t, 32);
+
+	return 0;
+}
+
+
+int amf_load(FILE *f)
 {
 	int i, j;
 	struct xxm_event *event;
@@ -35,12 +64,7 @@ int amf_load(FILE * f)
 	LOAD_INIT();
 
 	fread(buf, 1, 3, f);
-	if (buf[0] != 'A' || buf[1] != 'M' || buf[2] != 'F')
-		return -1;
-
 	ver = read8(f);
-	if (ver < 0x0a || ver > 0x0e)
-		return -1;
 
 	fread(buf, 1, 32, f);
 	strncpy(xmp_ctl->name, (char *)buf, 32);

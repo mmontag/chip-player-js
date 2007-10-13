@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.25 2007-10-13 20:52:19 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.26 2007-10-13 21:17:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -388,7 +388,7 @@ static void get_song_2(int size, FILE *f)
 	}
 }
 
-int psm_load(FILE *f)
+static int psm_load(FILE *f)
 {
 	int offset;
 	int i, j;
@@ -467,4 +467,3 @@ int psm_load(FILE *f)
 
 	return 0;
 }
-

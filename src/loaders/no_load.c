@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.7 2007-10-13 20:52:19 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.8 2007-10-13 21:17:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -60,7 +60,7 @@ static uint8 fx[] = {
 };
 
 
-int no_load(FILE * f)
+static int no_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
