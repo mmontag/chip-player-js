@@ -1,7 +1,7 @@
 /* Real Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: rtm_load.c,v 1.8 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.9 2007-10-13 23:21:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,8 +16,35 @@
 #include "period.h"
 #include "rtm.h"
 
-#define MAX_SAMP 1024
 
+static int rtm_test(FILE *, char *);
+static int rtm_load(FILE *);
+
+struct xmp_loader_info rtm_loader = {
+	"RTM",
+	"Real Tracker",
+	rtm_test,
+	rtm_load
+};
+
+static int rtm_test(FILE *f, char *t)
+{
+	char buf[4];
+
+	fread(buf, 4, 1, f);
+	if (memcmp(buf, "RTMM", 4))
+		return -1;
+
+	if (read8(f) != 0x20)
+		return -1;
+
+	read_title(f, t, 32);
+
+	return 0;
+}
+
+
+#define MAX_SAMP 1024
 
 static int read_object_header(FILE *f, struct ObjectHeader *h)
 {
@@ -37,7 +64,7 @@ static int read_object_header(FILE *f, struct ObjectHeader *h)
 }
 
 
-int rtm_load(FILE *f)
+static int rtm_load(FILE *f)
 {
 	int i, j, r;
 	struct xxm_event *event;
@@ -51,8 +78,6 @@ int rtm_load(FILE *f)
 	LOAD_INIT();
 
 	read_object_header(f, &oh);
-	if (memcmp(oh.id, "RTMM", 4))
-		return -1;
 
 	fread(&rh.software, 1, 20, f);
 	fread(&rh.composer, 1, 32, f);

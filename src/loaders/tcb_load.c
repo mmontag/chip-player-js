@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.9 2007-09-09 22:35:14 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.10 2007-10-13 23:21:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,31 @@
 
 #include "load.h"
 
-int tcb_load(FILE *f)
+
+static int tcb_test(FILE *, char *);
+static int tcb_load(FILE *);
+
+struct xmp_loader_info tcb_loader = {
+	"TCB",
+	"TCB Tracker",
+	tcb_test,
+	tcb_load
+};
+
+static int tcb_test(FILE *f, char *t)
+{
+	uint8 buffer[10];
+
+	fread(buffer, 8, 1, f);
+	if (memcmp(buffer, "AN COOL.", 8) && memcmp(buffer, "AN COOL!", 8))
+		return -1;
+
+	read_title(f, t, 0);
+
+	return 0;
+}
+
+static int tcb_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
@@ -33,9 +57,6 @@ int tcb_load(FILE *f)
 	LOAD_INIT();
 
 	fread(buffer, 8, 1, f);
-
-	if (memcmp(buffer, "AN COOL.", 8) && memcmp(buffer, "AN COOL!", 8))
-		return -1;
 
 	sprintf(xmp_ctl->type, "%-8.8s (TCB Tracker)", buffer);
 

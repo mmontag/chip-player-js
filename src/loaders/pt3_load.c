@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.6 2007-10-08 01:44:37 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.7 2007-10-13 23:21:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,6 +19,33 @@
 
 #define MAGIC_FORM	MAGIC4('F','O','R','M')
 #define MAGIC_MODL	MAGIC4('M','O','D','L')
+
+
+static int pt3_test (FILE *, char *);
+static int pt3_load (FILE *);
+
+struct xmp_loader_info pt3_loader = {
+    "PTM",
+    "Protracker 3",
+    pt3_test,
+    pt3_load
+};
+
+static int pt3_test(FILE *f, char *t)
+{
+    uint32 form, id;
+
+    form = read32b(f);
+    read32b(f);
+    id = read32b(f);
+    
+    if (form != MAGIC_FORM || id != MAGIC_MODL)
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
 
 
 #define PT3_FLAG_CIA	0x0001	/* VBlank if not set */
@@ -120,20 +147,14 @@ static void get_ptdt(int size, FILE *f)
 }
 
 
-int pt3_load(FILE *f)
+static int pt3_load(FILE *f)
 {
-    uint32 form, id;
-
     LOAD_INIT();
 
-    form = read32b(f);
-    read32b(f);
-    id = read32b(f);
+    read32b(f);		/* form */
+    read32b(f);		/* size */
+    read32b(f);		/* id */
     
-    /* Check magic */
-    if (form != MAGIC_FORM || id != MAGIC_MODL)
-	return -1;
-
     /* IFF chunk IDs */
     iff_register ("VERS", get_vers);
     iff_register ("INFO", get_info);
