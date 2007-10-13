@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.12 2007-10-08 01:16:11 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.13 2007-10-13 23:33:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,6 +17,30 @@
 #include "load.h"
 #include "iff.h"
 #include "period.h"
+
+#define MAGIC_D_T_	MAGIC4('D','.','T','.')
+
+
+static int dt_test(FILE *, char *);
+static int dt_load(FILE *);
+
+struct xmp_loader_info dt_loader = {
+	"DTM",
+	"Digital Tracker",
+	dt_test,
+	dt_load
+};
+
+static int dt_test(FILE *f, char *t)
+{
+	if (read32b(f) != MAGIC_D_T_)
+		return -1;
+
+	read_title(f, t, 0);
+
+	return 0;
+}
+
 
 static int pflag, sflag;
 static int realpat;
@@ -193,18 +217,9 @@ static void get_dait(int size, FILE *f)
 	i++;
 }
 
-int dt_load(FILE *f)
+static int dt_load(FILE *f)
 {
-	char magic[4];
-
 	LOAD_INIT ();
-
-	/* Check magic */
-	fread(magic, 1, 4, f);
-	if (strncmp(magic, "D.T.", 4))
-		return -1;
-
-	fseek(f, 0, SEEK_SET);
 
 	pflag = sflag = 0;
 	

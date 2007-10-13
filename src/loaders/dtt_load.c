@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.6 2007-09-17 19:18:33 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.7 2007-10-13 23:33:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,27 @@
 #define MAGIC_DskS	MAGIC4('D','s','k','S')
 
 
-int dtt_load(FILE *f)
+static int dtt_test(FILE *, char *);
+static int dtt_load(FILE *);
+
+struct xmp_loader_info dtt_loader = {
+	"S3M",
+	"Scream Tracker 3",
+	dtt_test,
+	dtt_load
+};
+
+static int dtt_test(FILE *f, char *t)
+{
+	if (read32b(f) != MAGIC_DskT)
+		return -1;
+
+	read_title(f, t, 64);
+
+	return 0;
+}
+
+static int dtt_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
@@ -30,8 +50,7 @@ int dtt_load(FILE *f)
 
 	LOAD_INIT();
 
-	if (read32b(f) != MAGIC_DskT)
-		return -1;
+	read32b(f);
 
 	strcpy(xmp_ctl->type, "Desktop Tracker");
 

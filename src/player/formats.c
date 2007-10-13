@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.59 2007-10-13 23:21:26 cmatsuoka Exp $
+ * $Id: formats.c,v 1.60 2007-10-13 23:33:18 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,47 +62,47 @@ static void old_register_loader(char *id, char *name, int (*loader) ())
 	list_add_tail(&l->list, &old_loader_list);
 }
 
-#define LOADER(x) do { \
+#define REG_LOADER(x) do { \
 	extern struct xmp_loader_info x##_loader; \
 	register_loader(&x##_loader); \
 } while (0)
 
 void xmp_init_formats()
 {
-	LOADER(xm);
-	LOADER(mod);
-	LOADER(flt);
-	LOADER(st);
-	LOADER(it);
-	LOADER(s3m);
-	LOADER(stm);
-	LOADER(stx);
-	LOADER(mtm);
-	LOADER(ice);
-	LOADER(imf);
-	LOADER(ptm);
-	LOADER(mdl);
-	LOADER(ult);
-	LOADER(liq);
-	LOADER(no);
-	LOADER(psm);
-	LOADER(svb);
-	LOADER(amf);
-	LOADER(mmd1);
-	LOADER(mmd3);
-	LOADER(med3);
-	LOADER(med4);
-	LOADER(dmf);
-	LOADER(rtm);
-	LOADER(pt3);
-	LOADER(tcb);
+	REG_LOADER(xm);
+	REG_LOADER(mod);
+	REG_LOADER(flt);
+	REG_LOADER(st);
+	REG_LOADER(it);
+	REG_LOADER(s3m);
+	REG_LOADER(stm);
+	REG_LOADER(stx);
+	REG_LOADER(mtm);
+	REG_LOADER(ice);
+	REG_LOADER(imf);
+	REG_LOADER(ptm);
+	REG_LOADER(mdl);
+	REG_LOADER(ult);
+	REG_LOADER(liq);
+	REG_LOADER(no);
+	REG_LOADER(psm);
+	REG_LOADER(svb);
+	REG_LOADER(amf);
+	REG_LOADER(mmd1);
+	REG_LOADER(mmd3);
+	REG_LOADER(med3);
+	REG_LOADER(med4);
+	REG_LOADER(dmf);
+	REG_LOADER(rtm);
+	REG_LOADER(pt3);
+	REG_LOADER(tcb);
+	REG_LOADER(dt);
+	REG_LOADER(gtk);
+	REG_LOADER(dtt);
 
-	//old_register_loader("RTM", "Real Tracker", rtm_load);
-	//old_register_loader("PTM", "Protracker 3", pt3_load);
-	//old_register_loader("TCB", "TCB Tracker", tcb_load);
-	old_register_loader("DTM", "Digital Tracker", dt_load);
-	old_register_loader("GTK", "Graoumf Tracker", gtk_load);
-	old_register_loader("DTT", "Desktop Tracker", dtt_load);
+	//old_register_loader("DTM", "Digital Tracker", dt_load);
+	//old_register_loader("GTK", "Graoumf Tracker", gtk_load);
+	//old_register_loader("DTT", "Desktop Tracker", dtt_load);
 	old_register_loader("MGT", "Megatracker", mgt_load);
 	old_register_loader("MUSX", "Archimedes Tracker", arch_load);
 	old_register_loader("DSYM", "Digital Symphony", sym_load);

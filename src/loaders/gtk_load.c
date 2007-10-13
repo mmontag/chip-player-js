@@ -1,7 +1,7 @@
 /* Graoumf Tracker GTK module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: gtk_load.c,v 1.5 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: gtk_load.c,v 1.6 2007-10-13 23:33:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,7 +15,31 @@
 #include "load.h"
 #include "period.h"
 
-int gtk_load(FILE * f)
+
+static int gtk_test(FILE *, char *);
+static int gtk_load(FILE *);
+
+struct xmp_loader_info gtk_loader = {
+	"GTK",
+	"Graoumf Tracker",
+	gtk_test,
+	gtk_load
+};
+
+static int gtk_test(FILE * f, char *t)
+{
+	char buf[4];
+
+	fread(buf, 4, 1, f);
+	if (memcmp(buf, "GTK", 3) || buf[3] > 4)
+		return -1;
+
+	read_title(f, t, 32);
+
+	return 0;
+}
+
+static int gtk_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
@@ -26,8 +50,6 @@ int gtk_load(FILE * f)
 	LOAD_INIT();
 
 	fread(buffer, 4, 1, f);
-	if (memcmp(buffer, "GTK", 3) || buffer[3] > 4)
-		return -1;
 	ver = buffer[3];
 	fread(xmp_ctl->name, 32, 1, f);
 	sprintf(xmp_ctl->type, "GTK v%d (Graoumf Tracker)", ver);
