@@ -2,13 +2,15 @@
 #ifndef __XMP_LOADER_H
 #define __XMP_LOADER_H
 
+#include <stdio.h>
 #include "list.h"
 
 struct xmp_loader_info {
-    struct list_head list;
-    char *suffix;
-    char *tracker;
-    int (*loader)();
+	char *id;
+	char *name;
+	int (*test)(FILE *, char *);
+	int (*loader)(FILE *);
+	struct list_head list;
 };
 
 #endif

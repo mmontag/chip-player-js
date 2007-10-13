@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.24 2007-09-25 12:45:05 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.25 2007-10-13 13:27:37 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -73,7 +73,6 @@ static void	file_info_box	(char *);
 static struct xmp_control ctl;
 
 static pthread_t decode_thread;
-static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 #ifdef __EMX__
@@ -447,93 +446,12 @@ static void init(void)
 #endif
 
 
-static int check_common_files(char *filename)
-{
-	char buf[4096], *x;
-	FILE *f;
-
-	if ((f = fopen(filename, "rb")) == NULL)
-		return 0;
-
-	fread(buf, 4096, 1, f);
-
-	/* Check Protracker files */
-	x = buf + 1080;
-	if (!memcmp(x, "M.K.", 4))
-		return 1;
-	if (!memcmp(x, "M!K!", 4))
-		return 1;
-	if (!memcmp(x, "M&K!", 4))
-		return 1;
-	if (!memcmp(x, "N.T.", 4))
-		return 1;
-	if (!memcmp(x, "CD81", 4))
-		return 1;
-
-	/* Check FastTracker files */
-	if (isdigit(*x) && !memcmp(x + 1, "CHN", 4))
-		return 1;
-	if (isdigit(*x) && isdigit(*(x + 1)) && !memcmp(x + 2, "CH", 4))
-		return 1;
-
-	/* Check Fasttracker II files */
-	if (!memcmp(buf, "Extended module: ", 17))
-		return 1;
-
-	/* Check Scream Tracker 2 files */
-	if (!memcmp(buf + 20, "!Scream!", 8))
-		return 1;
-
-	/* Check Scream Tracker 3 files */
-	if (!memcmp(buf + 44, "SCRM", 4))
-		return 1;
-
-	/* Check Impulse tracker files */
-	if (!memcmp(buf, "IMPM", 4))
-		return 1;
-
-	/* Check MTM files */
-	if (!memcmp(buf, "MTM", 3))
-		return 1;
-
-	fclose(f);
-
-	return 0;
-}
-
-
 static int is_our_file(char *filename)
 {
-	int i;
-
-	/* Check some common module files by file magic. If not detected,
-	 * try to load and discard file. But xmp can't load a module while
-	 * another module is playing, so it can't check if the module is
-	 * valid or not. In this case, we'll blindly accept the file.
-	 */
-
-	if (check_common_files(filename))
+	if (xmp_test_file(filename) == 0)
 		return 1;
 
-	if (playing)
-		return 1;
-
-	pthread_mutex_lock (&load_mutex);
-
-	/* xmp needs the audio device to be set before loading a file */
-	ctl.maxvoc = 16;
-	ctl.verbose = 0;
-	ctl.memavl = 0;
-	xmp_drv_set(&ctl);
-
-	_D("checking: %s", filename);
-	if ((i = xmp_load_module(filename)) >= 0)
-		xmp_release_module();		/* Fixes memory leak */
-	_D("  returned %d", i);
-
-	pthread_mutex_unlock (&load_mutex);
-
-	return i;
+	return 0;
 }
 
 
@@ -635,7 +553,6 @@ static void play_file(InputPlayback *ipb)
 	xmp_xmms_audio_error = FALSE;
 	playing = 1;
 
-	pthread_mutex_lock (&load_mutex);
 	ctl.resol = 8;
 	ctl.verbose = 3;
 	ctl.drv_id = "callback";
@@ -731,8 +648,6 @@ static void play_file(InputPlayback *ipb)
 	_D("after panel update");
 
 	memcpy (&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
-
-	pthread_mutex_unlock (&load_mutex);
 
 	info = malloc (strlen (ii->mi.name) + strlen (ii->mi.type) + 20);
 	sprintf (info, "%s [%s, %d ch]", ii->mi.name, ii->mi.type, ii->mi.chn);

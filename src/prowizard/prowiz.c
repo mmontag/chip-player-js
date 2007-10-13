@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.23 2007-09-30 11:22:18 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.24 2007-10-13 13:27:37 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -161,7 +161,7 @@ checked:
 	checked_format = &pw_format_list;
 
 done:
-	fseek (file_in, 0, SEEK_SET);
+	fseek(file_in, 0, SEEK_SET);
 	size = -1;	/* paranoia setting */
 	if (format->depack) 
 		size = format->depack(file_in, file_out);
@@ -169,7 +169,6 @@ done:
 	if (size < 0)
 		return -1;
 
-	format->flags |= PW_MARK;
 	pw_crap(format, file_out);
 	fflush(file_out);
 
@@ -183,7 +182,7 @@ done:
 }
 
 /* writfile_ing craps in converted MODs */
-void pw_crap (struct pw_format *f, FILE *file_out)
+void pw_crap(struct pw_format *f, FILE *file_out)
 {
 	int i;
 	char buf[40];
@@ -191,22 +190,20 @@ void pw_crap (struct pw_format *f, FILE *file_out)
 	_D ("packer: %s", f->name);
 	i = ftell (file_out);
 
-	if (f->flags & PW_MARK) {
-		fseek(file_out, 0x438, SEEK_SET);
-		fwrite("PWIZ", 1, 4, file_out);
-		fseek(file_out, 0, SEEK_END);
-  		snprintf(buf, 40, "%-8.8s%-.32s", f->id, f->name);
-		for (i = 0; i < 8; i++) {
-			if (buf[i] == ' ')
-				buf[i] = 0;
-		}
-		fwrite (buf, 1, 40, file_out);
+	fseek(file_out, 0x438, SEEK_SET);
+	fwrite("PWIZ", 1, 4, file_out);
+	fseek(file_out, 0, SEEK_END);
+  	snprintf(buf, 40, "%-8.8s%-.32s", f->id, f->name);
+	for (i = 0; i < 8; i++) {
+		if (buf[i] == ' ')
+			buf[i] = 0;
 	}
+	fwrite (buf, 1, 40, file_out);
 }
 
 
 static struct list_head *shortcut = &pw_format_list;
-static int check (unsigned char *b, int s)
+static int check(unsigned char *b, int s)
 {
 	struct list_head *tmp;
 	struct pw_format *format;

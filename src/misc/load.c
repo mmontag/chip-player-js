@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.27 2007-10-08 16:38:29 cmatsuoka Exp $
+ * $Id: load.c,v 1.28 2007-10-13 13:27:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,6 +28,7 @@
 #include "../prowizard/prowiz.h"
 
 extern struct list_head loader_list;
+extern struct list_head old_loader_list;
 extern struct list_head *checked_format;
 
 int decrunch_arc (FILE *, FILE *);
@@ -267,7 +268,7 @@ static int decrunch(FILE **f, char **s)
 }
 
 
-static void get_smp_size (int awe, int *a, int *b)
+static void get_smp_size(int awe, int *a, int *b)
 {
     int i, len, smp_size, smp_4kb;
 
@@ -294,7 +295,7 @@ static void get_smp_size (int awe, int *a, int *b)
 }
 
 
-static int crunch_ratio (int awe)
+static int crunch_ratio(int awe)
 {
     int memavl, smp_size, ratio, smp_4kb;
 
@@ -325,7 +326,44 @@ static int crunch_ratio (int awe)
 }
 
 
-int xmp_load_module (char *s)
+int xmp_test_module(char *s)
+{
+    FILE *f;
+    struct xmp_loader_info *li;
+    struct list_head *head;
+    struct stat st;
+
+    if ((f = fopen(s, "rb")) == NULL)
+	return -3;
+
+    if (fstat(fileno(f), &st) < 0)
+	goto err;
+
+    if (S_ISDIR(st.st_mode))
+	goto err;
+
+    if (decrunch(&f, &s))
+	goto err;
+
+    if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
+	goto err;
+
+    list_for_each(head, &loader_list) {
+	li = list_entry(head, struct xmp_loader_info, list);
+	fseek(f, 0, SEEK_SET);
+	if (li->test(f, NULL) == 0) {
+	    fclose(f);
+	    return 0;
+	}
+    }
+
+err:
+    fclose (f);
+    return -1;
+}
+
+
+int xmp_load_module(char *s)
 {
     FILE *f;
     int i, t;
@@ -334,30 +372,28 @@ int xmp_load_module (char *s)
     struct stat st;
     unsigned int crc;
 
-    if ((f = fopen (s, "rb")) == NULL)
+    if ((f = fopen(s, "rb")) == NULL)
 	return -3;
 
-    if (fstat (fileno (f), &st) < 0)
-	return -3;
+    if (fstat(fileno (f), &st) < 0)
+	goto err;
 
-    if (S_ISDIR (st.st_mode))
-	return -1;
+    if (S_ISDIR(st.st_mode))
+	goto err;
 
-    if ((t = decrunch (&f, &s)) < 0) {
-	fclose (f);
-	return -1;
-    }
+    if ((t = decrunch(&f, &s)) < 0)
+	goto err;
 
-    if (fstat (fileno (f), &st) < 0)	/* get size after decrunch */
-	return -3;
+    if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
+	goto err;
 
-    crc = cksum (f);
+    crc = cksum(f);
 
-    xmp_drv_clearmem ();
+    xmp_drv_clearmem();
 
     /* Reset variables */
-    memset (xmp_ctl->name, 0, XMP_DEF_NAMESIZE);
-    memset (xmp_ctl->type, 0, XMP_DEF_NAMESIZE);
+    memset(xmp_ctl->name, 0, XMP_DEF_NAMESIZE);
+    memset(xmp_ctl->type, 0, XMP_DEF_NAMESIZE);
     xmp_ctl->filename = s;		/* For ALM */
     xmp_ctl->size = st.st_size;
     xmp_ctl->rrate = PAL_RATE;
@@ -368,7 +404,7 @@ int xmp_load_module (char *s)
     /* Reset control for next module */
     xmp_ctl->fetch = xmp_ctl->flags & ~XMP_CTL_FILTER;
 
-    xmpi_read_modconf (xmp_ctl, crc, st.st_size);
+    xmpi_read_modconf(xmp_ctl, crc, st.st_size);
 
     xxh = calloc (sizeof (struct xxm_header), 1);
     /* Set defaults */
@@ -386,10 +422,22 @@ int xmp_load_module (char *s)
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
-	if (li->loader && ((i = li->loader(f)) != -1))
+	fseek(f, 0, SEEK_SET);
+	if (li->test(f, NULL) == 0) {
+	    fseek(f, 0, SEEK_SET);
+	    if ((i = li->loader(f) == 0))
+		goto skip_old_loader;
+	}
+    }
+
+    list_for_each(head, &old_loader_list) {
+	li = list_entry(head, struct xmp_loader_info, list);
+	if (li->loader && ((i = li->loader(f)) == 0))
 	    break;
 	
     }
+
+skip_old_loader:
 
     fclose (f);
 
@@ -455,4 +503,8 @@ int xmp_load_module (char *s)
     }
 
     return t;
+
+err:
+    fclose(f);
+    return -1;
 }

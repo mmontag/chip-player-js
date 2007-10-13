@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.9 2007-10-05 01:49:17 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.10 2007-10-13 13:27:37 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -79,8 +79,9 @@
 #define xmp_timer_restart()     xmp_player_ctl (XMP_TIMER_RESTART, 0)
 #define xmp_gvol_inc()		xmp_player_ctl (XMP_GVOL_INC, 0)
 #define xmp_gvol_dec()		xmp_player_ctl (XMP_GVOL_DEC, 0)
-#define xmp_mod_load            xmp_load_module
-#define xmp_mod_play            xmp_play_module
+#define xmp_mod_load		xmp_load_module
+#define xmp_mod_test		xmp_test_module
+#define xmp_mod_play		xmp_play_module
 
 /* Error messages */
 #define XMP_ERR_NCTRL		-1
@@ -216,6 +217,7 @@ extern char *xmp_build;
 
 void	xmp_init			(int, char **, struct xmp_control *);
 int	xmp_load_module			(char *);
+int	xmp_test_module			(char *);
 struct xmp_module_info*
 	xmp_get_module_info		(struct xmp_module_info *);
 struct xmp_fmt_info*

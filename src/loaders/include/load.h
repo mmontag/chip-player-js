@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.14 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: load.h,v 1.15 2007-10-13 13:27:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,7 @@
 #include "effects.h"
 #include "driver.h"
 #include "convert.h"
+#include "loader.h"
 
 
 #ifndef __XMP_LOADERS_COMMON
