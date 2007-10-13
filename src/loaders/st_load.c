@@ -16,13 +16,102 @@
 
 #include <ctype.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #include "load.h"
 #include "mod.h"
 #include "period.h"
 
+static int st_test (FILE *, char *);
+static int st_load (FILE *);
 
-int st_load(FILE *f)
+struct xmp_loader_info st_loader = {
+    "ST",
+    "Soundtracker",
+    st_test,
+    st_load
+};
+
+static int st_test(FILE *f, char *t)
+{
+    int i, j;
+    int pat, smp_size;
+    struct st_header mh;
+    uint8 mod_event[4];
+    struct stat st;
+
+    fstat(fileno(f), &st);
+
+    smp_size = 0;
+
+    fseek(f, 20, SEEK_CUR);
+    for (i = 0; i < 15; i++) {
+	fread(mh.ins[i].name, 1, 22, f);
+	mh.ins[i].size = read16b(f);
+	mh.ins[i].finetune = read8(f);
+	mh.ins[i].volume = read8(f);
+	mh.ins[i].loop_start = read16b(f);
+	mh.ins[i].loop_size = read16b(f);
+    }
+    mh.len = read8(f);
+    mh.restart = read8(f);
+    fread(mh.order, 1, 128, f);
+	
+    for (pat = i = 0; i < 128; i++)
+	if (mh.order[i] > pat)
+	    pat = mh.order[i];
+    pat++;
+
+    if (pat > 0x7f || mh.len == 0 || mh.len > 0x7f)
+	return -1;
+
+    for (i = 0; i < 15; i++) {
+	if (mh.ins[i].volume > 0x40)
+	    return -1;
+
+	if (mh.ins[i].finetune > 0x0f)
+	    return -1;
+
+	if (mh.ins[i].size > 0x8000 || (mh.ins[i].loop_start >> 1) > 0x8000
+		|| mh.ins[i].loop_size > 0x8000)
+	    return -1;
+
+	if (mh.ins[i].loop_size > 1 && mh.ins[i].loop_size > mh.ins[i].size)
+	    return -1;
+
+	if ((mh.ins[i].loop_start >> 1) > mh.ins[i].size)
+	    return -1;
+
+	if (mh.ins[i].size && (mh.ins[i].loop_start >> 1) == mh.ins[i].size)
+	    return -1;
+
+	if (mh.ins[i].size == 0 && mh.ins[i].loop_start > 0)
+	    return -1;
+
+	smp_size += 2 * mh.ins[i].size;
+    }
+
+    if (smp_size < 8)
+	return -1;
+
+    if (st.st_size < (600 + pat * 1024 + smp_size))
+	return -1;
+
+    for (i = 0; i < xxh->pat; i++) {
+	for (j = 0; j < (64 * xxh->chn); j++) {
+	    fread (mod_event, 1, 4, f);
+
+	    if (MSN(mod_event[0]))	/* sample number > 15 */
+		return -1;
+
+	    if (LSN(mod_event[0]) > 8 || LSN(mod_event[0]) < 1)
+		return -1;
+	}
+    }
+    return 0;
+}
+
+static int st_load(FILE *f)
 {
     int i, j;
     int smp_size, pat_size;
@@ -71,39 +160,14 @@ int st_load(FILE *f)
 	    xxh->pat = xxo[i];
     xxh->pat++;
 
-    if (xxh->pat > 0x7f || xxh->len == 0 || xxh->len > 0x7f)
-	return -1;
-
     pat_size = 256 * xxh->chn * xxh->pat;
 
     for (i = 0; i < xxh->ins; i++) {
-	if (mh.ins[i].volume > 0x40)
-	    return -1;
-
-	if (mh.ins[i].finetune > 0x0f)
-	    return -1;
-
 	/* UST: Volume word does not contain a "Finetuning" value in its
 	 * high-byte.
 	 */
 	if (mh.ins[i].finetune)
 	    ust = 0;
-
-	if (mh.ins[i].size > 0x8000 || (mh.ins[i].loop_start >> 1) > 0x8000
-		|| mh.ins[i].loop_size > 0x8000)
-	    return -1;
-
-	if (mh.ins[i].loop_size > 1 && mh.ins[i].loop_size > mh.ins[i].size)
-	    return -1;
-
-	if ((mh.ins[i].loop_start >> 1) > mh.ins[i].size)
-	    return -1;
-
-	if (mh.ins[i].size && (mh.ins[i].loop_start >> 1) == mh.ins[i].size)
-	    return -1;
-
-	if (mh.ins[i].size == 0 && mh.ins[i].loop_start > 0)
-	    return -1;
 
 	if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1)
 	    nt = 1;
@@ -118,13 +182,6 @@ int st_load(FILE *f)
 
 	smp_size += 2 * mh.ins[i].size;
     }
-
-    if (smp_size < 8)
-	return -1;
-
-    /* Relaxed limit -- was 4 */
-    if (abs (serr = xmp_ctl->size - (600 + xxh->pat*1024 + smp_size)) > 8192)
-	return -1;
 
     INSTRUMENT_INIT();
 
@@ -142,13 +199,6 @@ int st_load(FILE *f)
 	strncpy((char *)xxih[i].name, (char *)mh.ins[i].name, 22);
 	str_adj((char *)xxih[i].name);
     }
-
-#if 0
-    /* Another filter for Soundtracker modules */
-    if (xxh->ins == 15 && sizeof (struct st_header) + pat_size
-	+ smp_size > xmp_ctl->size)
-	return -1;
-#endif
 
     xxh->trk = xxh->chn * xxh->pat;
 
@@ -280,11 +330,9 @@ int st_load(FILE *f)
 	    continue;
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
 	    &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     return 0;
 }
