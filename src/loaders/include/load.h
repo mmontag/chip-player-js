@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.15 2007-10-13 13:27:37 cmatsuoka Exp $
+ * $Id: load.h,v 1.16 2007-10-13 13:56:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,6 +25,7 @@
 static char author_name[80];
 #endif
 
+void	read_title		(FILE *, char *, int);
 void	set_xxh_defaults	(struct xxm_header *);
 void	cvt_pt_event		(struct xxm_event *, uint8 *);
 void	disable_continue_fx	(struct xxm_event *);

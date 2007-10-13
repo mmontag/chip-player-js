@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.15 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.16 2007-10-13 13:56:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -70,6 +70,30 @@
 #define MAGIC_SCRM	MAGIC4('S','C','R','M')
 #define MAGIC_SCRI	MAGIC4('S','C','R','I')
 #define MAGIC_SCRS	MAGIC4('S','C','R','S')
+
+static int s3m_test (FILE *, char *);
+static int s3m_load (FILE *);
+
+struct xmp_loader_info s3m_loader = {
+    "S3M",
+    "Scream Tracker 3",
+    s3m_test,
+    s3m_load
+};
+
+static int s3m_test(FILE *f, char *t)
+{
+    fseek(f, 44, SEEK_SET);
+    if (read32b(f) != MAGIC_SCRM)
+	return -1;
+
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 28);
+
+    return 0;
+}
+
+
 
 #define NONE		0xff
 #define FX_S3M_EXTENDED	0xfe
@@ -177,7 +201,7 @@ static void xlat_fx (int c, struct xxm_event *e)
 }
 
 
-int s3m_load (FILE * f)
+static int s3m_load(FILE *f)
 {
     int c, r, i, j;
     struct s3m_adlib_header sah;
@@ -189,7 +213,7 @@ int s3m_load (FILE * f)
     char tracker_name[80];
     int quirk87 = 0;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&sfh.name, 28, 1, f);		/* Song name */
     read8(f);				/* 0x1a */

@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.18 2007-10-08 01:38:41 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.19 2007-10-13 13:56:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -53,6 +53,37 @@ struct {
     { "", 0 }
 };
 
+
+static int mod_test (FILE *, char *);
+static int mod_load (FILE *);
+
+struct xmp_loader_info mod_loader = {
+    "MOD",
+    "Noise/Fast/Protracker",
+    mod_test,
+    mod_load
+};
+
+static int mod_test(FILE *f, char *t)
+{
+    int i;
+    char buf[4];
+
+    fseek(f, 1080, SEEK_SET);
+    fread(buf, 4, 1, f);
+
+    for (i = 0; mod_magic[i].ch; i++) {
+	if (!strcmp(buf, mod_magic[i].magic))
+	    return 0;
+    }
+
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 20);
+
+    return 0;
+}
+
+
 static int is_st_ins (char *s)
 {
     if (s[0] != 's' && s[0] != 'S')
@@ -68,7 +99,7 @@ static int is_st_ins (char *s)
 }
 
 
-int mod_load(FILE *f)
+static int mod_load(FILE *f)
 {
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;

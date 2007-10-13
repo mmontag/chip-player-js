@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.13 2007-10-13 13:27:37 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.14 2007-10-13 13:56:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -30,8 +30,8 @@
 
 #define MAX_SAMP 1024
 
-int xm_test (FILE *, char *);
-int xm_load (FILE *);
+static int xm_test (FILE *, char *);
+static int xm_load (FILE *);
 
 struct xmp_loader_info xm_loader = {
     "XM",
@@ -40,24 +40,20 @@ struct xmp_loader_info xm_loader = {
     xm_load
 };
 
-int xm_test(FILE *f, char *t)
+static int xm_test(FILE *f, char *t)
 {
     char buf[20];
 
     fread(buf, 17, 1, f);		/* ID text */
-
     if (memcmp(buf, "Extended Module: ", 17))
 	return -1;
 
-    if (t) {
-	fread(t, 20, 1, f);
-	t[20] = 0;
-    };
+    read_title(f, t, 20);
 
     return 0;
 }
 
-int xm_load(FILE *f)
+static int xm_load(FILE *f)
 {
     int i, j, r;
     int sample_num = 0;
