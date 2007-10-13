@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.16 2007-10-12 15:18:42 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.17 2007-10-13 02:46:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@
 #define FLAG_16_BITS	0x02
 #define FLAG_STEREO	0x04
 #define FLAG_FILTER	0x08
-#define FLAG_BACKWARD	0x10
+#define FLAG_REVLOOP	0x10
 #define FLAG_ACTIVE	0x20
 #define FLAG_SYNTH	0x40
 #define FIDX_FLAGMASK	(FLAG_ITPT | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
@@ -266,20 +266,23 @@ static int softmixer()
 
     for (voc = numvoc; voc--; ) {
 	vi = &voice_array[voc];
+
 	if (vi->chn < 0)
 	    continue;
+
 	if (vi->period < 1) {
 	    drv_resetvoice (voc, 1);
 	    continue;
 	}
+
 	buf_pos = smix_buf32b;
 	vol_r = (vi->vol * (0x80 - vi->pan)) >> 4;
 	vol_l = (vi->vol * (0x80 + vi->pan)) >> 4;
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {
-		smix_synth (vi, buf_pos, smix_ticksize, vol_l, vol_r,
-			     vi->fidx & FLAG_STEREO);
+		smix_synth(vi, buf_pos, smix_ticksize, vol_l, vol_r,
+						vi->fidx & FLAG_STEREO);
 	        synth = 0;
 	    }
 	    continue;
@@ -290,17 +293,22 @@ static int softmixer()
 	pi = patch_array[vi->smp];
 
 	/* This is for bidirectional sample loops */
-	if (vi->fidx & FLAG_BACKWARD)
+	if (vi->fidx & FLAG_REVLOOP)
 	    itp_inc = -itp_inc;
 
 	/* Sample loop processing. Offsets in samples, not bytes */
-	lps = pi->loop_start >> !!(vi->fidx & FLAG_16_BITS);
-	lpe = pi->loop_end >> !!(vi->fidx & FLAG_16_BITS);
+	if (vi->fidx & FLAG_16_BITS) {
+	    lps = pi->loop_start >> 1;
+	    lpe = pi->loop_end >> 1;
+	} else {
+	    lps = pi->loop_start;
+	    lpe = pi->loop_end;
+	}
 
 	for (tic_cnt = smix_ticksize; tic_cnt; ) {
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
-	    smp_cnt = 1 + (((long long) (vi->end - vi->pos) << SMIX_SHIFT)
+	    smp_cnt = 1 + (((long long)(vi->end - vi->pos) << SMIX_SHIFT)
 		- vi->itpt) / itp_inc;
 
 	    if (itp_inc > 0) {
@@ -347,19 +355,26 @@ static int softmixer()
 	    if (!(tic_cnt -= smp_cnt))
 		continue;
 
-	    /* Single shot sample */
-            if (!(vi->fidx ^= vi->fxor) || lps >= lpe) {
+	    vi->fidx ^= vi->fxor;
+
+	    /* Single sample loop run */
+            if (vi->fidx == 0 || lps >= lpe) {
 		smix_anticlick(voc, 0, 0, buf_pos, tic_cnt);
 		drv_resetvoice(voc, 0);
 		tic_cnt = 0;
 		continue;
 	    }
 
-	    if (!(vi->fidx & FLAG_BACKWARD || vi->fxor)) {
-		vi->pos -= lpe - lps;
+	    /* FIXME: sample size in bidirectional loops still not OK
+	     *        test with jt_xmas.xm
+	     */
+	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
+		vi->pos -= lpe - lps;			/* forward loop */
 	    } else {
-		vi->itpt += (itp_inc = -itp_inc);
-		vi->pos += vi->itpt >> SMIX_SHIFT;
+		itp_inc = -itp_inc;			/* invert dir */
+		vi->itpt += itp_inc;
+		/* keep bidir loop at the same size of forward loop */
+		vi->pos += (vi->itpt >> SMIX_SHIFT) + 1;
 		vi->itpt &= SMIX_MASK;
 		vi->end = itp_inc > 0 ? lpe : lps;
 	    }
@@ -395,7 +410,7 @@ static void smix_voicepos(int voc, int pos, int itp)
     vi->itpt = itp;
     vi->end = lpe;
 
-    if (vi->fidx & FLAG_BACKWARD)
+    if (vi->fidx & FLAG_REVLOOP)
 	vi->fidx ^= vi->fxor;
 }
 
@@ -443,7 +458,7 @@ static void smix_setpatch(int voc, int smp)
 	vi->fidx |= FLAG_FILTER;
 
     if (pi->mode & WAVE_LOOPING)
-	vi->fxor = pi->mode & WAVE_BIDIR_LOOP ? FLAG_BACKWARD : 0;
+	vi->fxor = pi->mode & WAVE_BIDIR_LOOP ? FLAG_REVLOOP : 0;
     else
 	vi->fxor = vi->fidx;
 

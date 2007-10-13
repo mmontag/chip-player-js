@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.35 2007-10-12 15:18:42 cmatsuoka Exp $
+ * $Id: driver.c,v 1.36 2007-10-13 02:46:32 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -783,8 +783,7 @@ int xmp_drv_flushpatch(int ratio)
 	    num++;
 
     if (extern_drv) {
-	if (xmp_ctl->verbose)
-	    report ("Uploading smps : %d ", num);
+	reportv(0, "Uploading smps : %d ", num);
 
 	for (smp = XMP_DEF_MAXPAT; smp--;) {
 	    if (!patch_array[smp])
@@ -792,8 +791,7 @@ int xmp_drv_flushpatch(int ratio)
 	    patch = patch_array[smp];
 
 	    if (patch->len == XMP_PATCH_FM) {
-	        if (xmp_ctl->verbose)
-		    report ("F");
+		reportv(0, "F");
 		continue;
 	    }
 
@@ -814,8 +812,7 @@ int xmp_drv_flushpatch(int ratio)
 		    "c" : crunch > 0x10000 ? "x" : ".");
 	    }
 	}
-	if (xmp_ctl->verbose)
-	    report ("\n");
+	reportv(0, "\n");
     } else {					/* Softmixer writepatch */
 	for (smp = XMP_DEF_MAXPAT; smp--;) {
 	    if (!patch_array[smp])
@@ -869,7 +866,7 @@ int xmp_drv_loadpatch(FILE *f, int id, int basefreq, int flags,
 	patch->len = XMP_PATCH_FM;
 	patch->base_note = 60;
 
-	return xmp_drv_writepatch (patch);
+	return xmp_drv_writepatch(patch);
     }
     /* Empty samples
      */
@@ -881,13 +878,6 @@ int xmp_drv_loadpatch(FILE *f, int id, int basefreq, int flags,
     /* Patches with samples
      */
     datasize = sizeof (struct patch_info) + xxs->len + sizeof (int);
-
-#if 0
-    /* Make room to unroll bidir loop */
-    if (xxs->flg & WAVE_BIDIR_LOOP)
-	datasize += xxs->lpe - xxs->lps + 1;
-#endif
-
     if ((patch = calloc(1, datasize)) == NULL)
 	return XMP_ERR_ALLOC;
 
@@ -919,30 +909,6 @@ int xmp_drv_loadpatch(FILE *f, int id, int basefreq, int flags,
 	FILE *f = fopen("patch_data", "w");
 	fwrite(patch->data, 1, xxs->len, f);
 	fclose(f);
-    }
-#endif
-
-#if 0
-    /* Unroll bidirectional samples */
-    if (xxs->flg & WAVE_BIDIR_LOOP) {
-	if (xxs->flg & WAVE_16_BITS) {
-	    int i, s = xxs->lpe - xxs->lps + 1;
-
-	    for (i = 0; i < s; i += 2) {
-		patch->data[xxs->len + i] = patch->data[xxs->len - 2 - i]; 
-		patch->data[xxs->len + i + 1] = patch->data[xxs->len - 2 - i + 1]; 
-	    }
-	    xxs->len += s;
-	    xxs->lpe += s;
-	} else {
-	    int i, s = xxs->lpe - xxs->lps + 1;
-
-	    for (i = 0; i < s; i++)
-		patch->data[xxs->len + i] = patch->data[xxs->len - 1 - i]; 
-	    xxs->len += s;
-	    xxs->lpe += s;
-	}
-	xxs->flg &= ~WAVE_BIDIR_LOOP;
     }
 #endif
 

@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.130 2007-10-12 04:46:42 cmatsuoka Exp $
+$Id: ChangeLog,v 1.131 2007-10-13 02:46:32 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,10 +9,12 @@ Stable versions
 	- added MED synth programmable arpeggio commands ARP and ARE
 	- added MED synth vibrato commands VBS, VBD and VWF
 	- fixed MED synth volume slide commands CHD and CHU
+	- fixed detuning in short samples with bidirectional loop by adjusting
+	  the loop size to match forward loop size
+	- fixed sound cut bug when changing samples in the MED synth (don't
+	  reset channel on attempt to set invalid sample position)
 	- revert CoreAudio driver pause patch (fix memory management problem)
 	- reset MED synth program at each new note event
-	- don't reset channel on attempt to set invalid sample position
-	  (prevent sound cut when changing samples in the MED synth)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
