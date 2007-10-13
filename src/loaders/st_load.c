@@ -32,9 +32,30 @@ struct xmp_loader_info st_loader = {
     st_load
 };
 
+static int period[] = {
+    856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480, 453,
+    428, 404, 381, 360, 339, 320, 302, 285, 269, 254, 240, 226,
+    214, 202, 190, 180, 170, 160, 151, 143, 135, 127, 120, 113,
+    -1
+};
+
+static int test_name(uint8 *s, int n)
+{
+    int i;
+
+    for (i = 0; i < n; i++) {
+	if (s[i] > 0x7f)
+	    return -1;
+	if (s[i] > 0 && s[i] < 32)
+	    return -1;
+    }
+
+    return 0;
+}
+
 static int st_test(FILE *f, char *t)
 {
-    int i, j;
+    int i, j, k;
     int pat, smp_size;
     struct st_header mh;
     uint8 mod_event[4];
@@ -44,7 +65,9 @@ static int st_test(FILE *f, char *t)
 
     smp_size = 0;
 
-    fseek(f, 20, SEEK_CUR);
+    fread(mh.name, 1, 20, f);
+    if (test_name(mh.name, 20) < 0)
+	return -1;
     for (i = 0; i < 15; i++) {
 	fread(mh.ins[i].name, 1, 22, f);
 	mh.ins[i].size = read16b(f);
@@ -57,23 +80,36 @@ static int st_test(FILE *f, char *t)
     mh.restart = read8(f);
     fread(mh.order, 1, 128, f);
 	
-    for (pat = i = 0; i < 128; i++)
+    for (pat = i = 0; i < 128; i++) {
+	if (mh.order[i] > 0x7f)
+	    return -1;
+	if (mh.order[i] && i > mh.len)
+	    return -1;
 	if (mh.order[i] > pat)
 	    pat = mh.order[i];
+    }
     pat++;
 
     if (pat > 0x7f || mh.len == 0 || mh.len > 0x7f)
 	return -1;
 
     for (i = 0; i < 15; i++) {
+	if (test_name(mh.ins[i].name, 22) < 0)
+	    return -1;
+
 	if (mh.ins[i].volume > 0x40)
 	    return -1;
 
 	if (mh.ins[i].finetune > 0x0f)
 	    return -1;
 
-	if (mh.ins[i].size > 0x8000 || (mh.ins[i].loop_start >> 1) > 0x8000
-		|| mh.ins[i].loop_size > 0x8000)
+	if (mh.ins[i].size > 0x8000)
+	    return -1;
+
+	if ((mh.ins[i].loop_start >> 1) > 0x8000)
+	    return -1;
+
+	if (mh.ins[i].loop_size > 0x8000)
 	    return -1;
 
 	if (mh.ins[i].loop_size > 1 && mh.ins[i].loop_size > mh.ins[i].size)
@@ -99,15 +135,25 @@ static int st_test(FILE *f, char *t)
 
     for (i = 0; i < xxh->pat; i++) {
 	for (j = 0; j < (64 * xxh->chn); j++) {
+	    int p;
+	
 	    fread (mod_event, 1, 4, f);
 
 	    if (MSN(mod_event[0]))	/* sample number > 15 */
 		return -1;
 
-	    if (LSN(mod_event[0]) > 8 || LSN(mod_event[0]) < 1)
+	    p = 256 * LSN(mod_event[0]) + mod_event[1];
+	    if (p == 0)
+		continue;
+	    for (k = 0; period[k] > 0; k++) {
+		if (p == period[k])
+		    break;
+	    }
+	    if (period[k] > 0)
 		return -1;
 	}
     }
+
     return 0;
 }
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ice_load.c,v 1.4 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: ice_load.c,v 1.5 2007-10-13 19:10:35 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,32 @@
 
 #define MAGIC_MTN_	MAGIC4('M','T','N',0)
 #define MAGIC_IT10	MAGIC4('I','T','1','0')
+
+
+static int ice_test (FILE *, char *);
+static int ice_load (FILE *);
+
+struct xmp_loader_info ice_loader = {
+    "MTN",
+    "Soundtracker 2.6/Ice Tracker",
+    ice_test,
+    ice_load
+};
+
+static int ice_test(FILE *f, char *t)
+{
+    uint32 magic;
+
+    fseek(f, 1464, SEEK_SET);
+    magic = read32b(f);
+    if (magic != MAGIC_MTN_ && magic != MAGIC_IT10)
+	return -1;
+
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 28);
+
+    return 0;
+}
 
 
 struct ice_ins {
@@ -39,7 +65,7 @@ struct ice_header {
 };
 
 
-int ice_load (FILE *f)
+static int ice_load(FILE *f)
 {
     int i, j;
     struct xxm_event *event;

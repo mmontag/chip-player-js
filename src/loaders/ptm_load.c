@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.12 2007-10-07 11:54:51 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.13 2007-10-13 19:10:35 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,6 +17,28 @@
 #include "period.h"
 
 #define MAGIC_PTMF	MAGIC4('P','T','M','F')
+
+
+static int ptm_test (FILE *, char *);
+static int ptm_load (FILE *);
+
+struct xmp_loader_info ptm_loader = {
+    "PTM",
+    "Poly Tracker",
+    ptm_test,
+    ptm_load
+};
+
+static int ptm_test(FILE *f, char *t)
+{
+    fseek(f, 44, SEEK_SET);
+    if (read32b(f) != MAGIC_PTMF)
+	return -1;
+
+    read_title(f, t, 28);
+
+    return 0;
+}
 
 
 static int ptm_vol[] = {
@@ -53,8 +75,10 @@ int ptm_load (FILE * f)
     pfh.rsvd2 = read16l(f);		/* Reserved */
     pfh.magic = read32b(f); 		/* 'PTMF' */
 
+#if 0
     if (pfh.magic != MAGIC_PTMF)
 	return -1;
+#endif
 
     fread(&pfh.rsvd3, 16, 1, f);	/* Reserved */
     fread(&pfh.chset, 32, 1, f);	/* Channel settings */

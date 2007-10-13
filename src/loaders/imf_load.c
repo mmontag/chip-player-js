@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.6 2007-10-07 22:54:56 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.7 2007-10-13 19:10:35 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,6 +23,27 @@
 #define MAGIC_IM10	MAGIC4('I','M','1','0')
 #define MAGIC_II10	MAGIC4('I','I','1','0')
 
+static int imf_test (FILE *, char *);
+static int imf_load (FILE *);
+
+struct xmp_loader_info imf_loader = {
+    "IMF",
+    "Imago Orpheus",
+    imf_test,
+    imf_load
+};
+
+static int imf_test(FILE *f, char *t)
+{
+    fseek(f, 60, SEEK_SET);
+    if (read32b(f) != MAGIC_IM10)
+	return -1;
+
+    read_title(f, t, 32);
+
+    return 0;
+}
+
 #define NONE 0xff
 #define FX_IMF_FPORTA_UP 0xfe
 #define FX_IMF_FPORTA_DN 0xfd
@@ -30,8 +51,7 @@
 static uint8 arpeggio_val[32];
 
 /* Effect conversion table */
-static uint8 fx[] =
-{
+static uint8 fx[] = {
 	NONE,
 	FX_S3M_TEMPO,
 	FX_S3M_BPM,
@@ -136,7 +156,7 @@ static void xlat_fx (int c, uint8 *fxt, uint8 *fxp)
 }
 
 
-int imf_load (FILE *f)
+static int imf_load(FILE *f)
 {
     int c, r, i, j;
     struct xxm_event *event = 0, dummy;
@@ -172,8 +192,10 @@ int imf_load (FILE *f)
 
     fread(&ih.pos, 256, 1, f);
 
+#if 0
     if (ih.magic != MAGIC_IM10)
 	return -1;
+#endif
 
     copy_adjust((uint8 *)xmp_ctl->name, (uint8 *)ih.name, 32);
 

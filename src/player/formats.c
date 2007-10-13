@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.53 2007-10-13 18:25:05 cmatsuoka Exp $
+ * $Id: formats.c,v 1.54 2007-10-13 19:10:35 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,6 +27,9 @@ extern struct xmp_loader_info s3m_loader;
 extern struct xmp_loader_info stm_loader;
 extern struct xmp_loader_info stx_loader;
 extern struct xmp_loader_info mtm_loader;
+extern struct xmp_loader_info ice_loader;
+extern struct xmp_loader_info imf_loader;
+extern struct xmp_loader_info ptm_loader;
 
 
 struct xmp_fmt_info *__fmt_head;
@@ -87,6 +90,9 @@ void xmp_init_formats()
     register_loader(&stm_loader);
     register_loader(&stx_loader);
     register_loader(&mtm_loader);
+    register_loader(&ice_loader);
+    register_loader(&imf_loader);
+    register_loader(&ptm_loader);
     //old_register_loader("XM", "Fast Tracker II", xm_load);
     //old_register_loader("MOD", "Noise/Fast/Protracker", mod_load);
     //old_register_loader("MOD", "Startrekker/Audio Sculpure", flt_load);
@@ -96,9 +102,9 @@ void xmp_init_formats()
     //old_register_loader("STM", "Scream Tracker 2", stm_load);
     //old_register_loader("STX", "STMIK 0.2", stx_load);
     //old_register_loader("MTM", "Multitracker", mtm_load);
-    old_register_loader("MTN", "Soundtracker 2.6/Ice Tracker", ice_load);
-    old_register_loader("IMF", "Imago Orpheus", imf_load);
-    old_register_loader("PTM", "Protracker 3", pt3_load);
+    //old_register_loader("MTN", "Soundtracker 2.6/Ice Tracker", ice_load);
+    //old_register_loader("IMF", "Imago Orpheus", imf_load);
+    //old_register_loader("PTM", "Poly Tracker", ptm_load);
     old_register_loader("MDL", "Digitrakker", mdl_load);
     old_register_loader("ULT", "Ultra Tracker", ult_load);
     old_register_loader("LIQ", "Liquid Tracker", liq_load);
@@ -113,7 +119,7 @@ void xmp_init_formats()
     old_register_loader("MED4", "MED 2.10", med4_load);
     old_register_loader("DMF", "X-Tracker", dmf_load);
     old_register_loader("RTM", "Real Tracker", rtm_load);
-    old_register_loader("PTM", "Poly Tracker", ptm_load);
+    old_register_loader("PTM", "Protracker 3", pt3_load);
     old_register_loader("TCB", "TCB Tracker", tcb_load);
     old_register_loader("DTM", "Digital Tracker", dt_load);
     old_register_loader("GTK", "Graoumf Tracker", gtk_load);
