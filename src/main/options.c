@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.20 2007-10-04 18:23:27 cmatsuoka Exp $
+ * $Id: options.c,v 1.21 2007-10-13 18:25:05 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -49,7 +49,7 @@ extern int rt;
 #define OPT_NOFILTER	0x10f
 
 
-static void list_wrap (char *s, int l, int r, int v)
+static void list_wrap(char *s, int l, int r, int v)
 {
     int i;
     static int c = 0;
@@ -58,45 +58,43 @@ static void list_wrap (char *s, int l, int r, int v)
 
     if (s == NULL) {
 	for (i = 0; i < l; i++)
-	    printf (" ");
+	    printf(" ");
 	c = l;
 	m = r;
 	return;
     } else if (c > l) {
 	c++;
-	printf (v ? "," : " ");
+	printf(v ? "," : " ");
     }
 
-    t = strtok (s, " ");
+    t = strtok(s, " ");
 
     while (t) {
-	if ((c + strlen (t) + 1) > m) {
+	if ((c + strlen(t) + 1) > m) {
 	    c = l;
-	    printf ("\n");
+	    printf("\n");
 	    for (i = 0; i < l; i++) {
 		printf (" ");
 	    }
 	} else if (c > l) {
-	    printf (" ");
+	    printf(" ");
 	}
-	c += strlen (t) + 1;
+	c += strlen(t) + 1;
 	printf ("%s", t);
-	t = strtok (NULL, " ");
+	t = strtok(NULL, " ");
     }
 }
 
 
-static void copyright_header ()
+static void copyright_header()
 {
-    printf ("Extended Module Player %s %s\n", xmp_version, xmp_date);
-    printf 
-    (
+    printf("Extended Module Player %s %s\n", xmp_version, xmp_date);
+    printf(
 "Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr\n"
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1988 Tammo Hinrichs,\n"
 "(C) 1989 Rich Gopstein and Harris Corporation, (C) 1997 Bert Jahn, (C) 1998\n"
 "Sylvain Chipaux, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh,\n"
-"(C) 2001-2006 Russell Marks\n\n"
-    );
+"(C) 2001-2006 Russell Marks\n\n");
 }
 
 

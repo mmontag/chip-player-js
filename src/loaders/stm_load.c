@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.5 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.6 2007-10-13 18:25:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,6 +16,42 @@
 #include "stm.h"
 #include "period.h"
 
+
+static int stm_test (FILE *, char *);
+static int stm_load (FILE *);
+
+struct xmp_loader_info stm_loader = {
+    "STM",
+    "Scream Tracker 2",
+    stm_test,
+    stm_load
+};
+
+static int stm_test(FILE *f, char *t)
+{
+    char buf[8];
+
+    fseek(f, 20, SEEK_SET);
+    fread(buf, 8, 1, f);
+    if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
+	return -1;
+
+    read8(f);
+
+    if (read8(f) != STM_TYPE_MODULE)
+	return -1;
+
+    if (read8(f) < 1)		/* We don't want STX files */
+	return -1;
+
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 20);
+
+    return 0;
+}
+
+
+
 #define FX_NONE		0xff
 
 /*
@@ -28,8 +64,7 @@
  * in ModPlug Tracker, this effect doesn't work the way it did back then.
  */
 
-static uint8 fx[] =
-{
+static uint8 fx[] = {
     FX_NONE,		FX_TEMPO,
     FX_JUMP,		FX_BREAK,
     FX_VOLSLIDE,	FX_PORTA_DN,
@@ -39,7 +74,7 @@ static uint8 fx[] =
 };
 
 
-int stm_load (FILE * f)
+static int stm_load(FILE *f)
 {
     int i, j;
     struct xxm_event *event;
@@ -75,15 +110,17 @@ int stm_load (FILE * f)
 	sfh.ins[i].paralen = read16l(f);	/* Length in paragraphs */
     }
 
-    if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
+    if (!strncmp ((char *)sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
 
-    if (strncmp ((char *) sfh.magic, "!Scream!", 8) && !bmod2stm)
+#if 0
+    if (strncmp ((char *)sfh.magic, "!Scream!", 8) && !bmod2stm)
 	return -1;
     if (sfh.type != STM_TYPE_MODULE)
 	return -1;
     if (sfh.vermaj < 1)		/* We don't want STX files */
 	return -1;
+#endif
 
     xxh->pat = sfh.patterns;
     xxh->trk = xxh->pat * xxh->chn;

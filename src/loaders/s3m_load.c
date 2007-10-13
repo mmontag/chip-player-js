@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.16 2007-10-13 13:56:01 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.17 2007-10-13 18:25:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -237,8 +237,10 @@ static int s3m_load(FILE *f)
     sfh.special = read16l(f);		/* Ptr to special custom data */
     fread(sfh.chset, 32, 1, f);		/* Channel settings */
 
+#if 0
     if (sfh.magic != MAGIC_SCRM)
 	return -1;
+#endif
 
     /* S3M anomaly in return_of_litmus.s3m */
     if (sfh.version == 0x1301 && sfh.name[27] == 0x87)

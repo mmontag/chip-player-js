@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.6 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.7 2007-10-13 18:25:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,14 +31,43 @@
 #include "s3m.h"
 #include "period.h"
 
-#define FX_NONE 0xff
 
+static int stx_test (FILE *, char *);
+static int stx_load (FILE *);
+
+struct xmp_loader_info stx_loader = {
+    "STX",
+    "STMIK 0.2",
+    stx_test,
+    stx_load
+};
+
+static int stx_test(FILE *f, char *t)
+{
+    char buf[8];
+
+    fseek(f, 20, SEEK_SET);
+    fread(buf, 8, 1, f);
+    if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
+	return -1;
+
+    fseek(f, 60, SEEK_SET);
+    fread(buf, 4, 1, f);
+    if (memcmp(buf, "SCRM", 4))
+	return -1;
+
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 20);
+
+    return 0;
+}
+
+#define FX_NONE 0xff
 
 static uint16 *pp_ins;		/* Parapointers to instruments */
 static uint16 *pp_pat;		/* Parapointers to patterns */
 
-static uint8 fx[] =
-{
+static uint8 fx[] = {
     FX_NONE,		FX_TEMPO,
     FX_JUMP,		FX_BREAK,
     FX_VOLSLIDE,	FX_PORTA_DN,
@@ -48,7 +77,7 @@ static uint8 fx[] =
 };
 
 
-int stx_load (FILE * f)
+static int stx_load(FILE *f)
 {
     int c, r, i, broken = 0;
     struct xxm_event *event = 0, dummy;
@@ -85,9 +114,11 @@ int stx_load (FILE * f)
     if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
 
+#if 0
     if ((strncmp ((char *) sfh.magic, "!Scream!", 8) &&
 	!bmod2stm) || strncmp ((char *) sfh.magic2, "SCRM", 4))
 	return -1;
+#endif
 
     xxh->ins = sfh.insnum;
     xxh->pat = sfh.patnum;

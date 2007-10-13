@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mtm_load.c,v 1.4 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: mtm_load.c,v 1.5 2007-10-13 18:25:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,8 +15,33 @@
 #include "load.h"
 #include "mtm.h"
 
+static int mtm_test (FILE *, char *);
+static int mtm_load (FILE *);
 
-int mtm_load (FILE * f)
+struct xmp_loader_info mtm_loader = {
+    "MTM",
+    "Multitracker",
+    mtm_test,
+    mtm_load
+};
+
+static int mtm_test(FILE *f, char *t)
+{
+    uint8 buf[4];
+
+    fread(buf, 1, 4, f);
+    if (memcmp(buf, "MTM", 3))
+	return -1;
+    if (buf[3] != 0x10)
+	return -1;
+
+    read_title(f, t, 20);
+
+    return 0;
+}
+
+
+static int mtm_load(FILE *f)
 {
     int i, j;
     struct mtm_file_header mfh;
@@ -39,8 +64,10 @@ int mtm_load (FILE * f)
     mfh.channels = read8(f);		/* Number of tracks per pattern */
     fread(&mfh.pan, 32, 1, f);		/* Pan positions for each channel */
 
-    if (strncmp ((char *) mfh.magic, "MTM", 3))
+#if 0
+    if (strncmp ((char *)mfh.magic, "MTM", 3))
 	return -1;
+#endif
 
     xxh->trk = mfh.tracks + 1;
     xxh->pat = mfh.patterns + 1;

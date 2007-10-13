@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.14 2007-10-13 13:56:01 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.15 2007-10-13 18:25:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -85,8 +85,11 @@ static int xm_load(FILE *f)
     xfh.bpm = read16l(f);		/* Default BPM */
     fread(&xfh.order, 256, 1, f);	/* Pattern order table */
 
+#if 0
     if (strncmp ((char *) xfh.id, "Extended Module: ", 17))
 	return -1;
+#endif
+
     strncpy(xmp_ctl->name, (char *)xfh.name, 20);
 
     xxh->len = xfh.songlen;

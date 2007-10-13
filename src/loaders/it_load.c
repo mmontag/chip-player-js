@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.27 2007-10-13 14:13:41 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.28 2007-10-13 18:25:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -236,8 +236,7 @@ static int it_load(FILE *f)
     LOAD_INIT ();
 
     /* Load and convert header */
-    if (read32b(f) != MAGIC_IMPM)
-	return -1;
+    read32b(f);		/* magic */
 
     fread(&ifh.name, 26, 1, f);
     fread(&ifh.rsvd1, 2, 1, f);
