@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.6 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.7 2007-10-13 22:59:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,31 @@
 #include "load.h"
 #include "iff.h"
 #include "period.h"
+
+#define MAGIC_DDMF	MAGIC4('D','D','M','F')
+
+
+static int dmf_test(FILE *, char *);
+static int dmf_load(FILE *);
+
+struct xmp_loader_info dmf_loader = {
+	"DMF",
+	"X-Tracker",
+	dmf_test,
+	dmf_load
+};
+
+static int dmf_test(FILE * f, char *t)
+{
+	if (read32b(f) != MAGIC_DDMF)
+		return -1;
+
+	fseek(f, 9, SEEK_CUR);
+	read_title(f, t, 30);
+
+	return 0;
+}
+
 
 static int ver;
 static uint8 packtype[256];
@@ -324,19 +349,15 @@ static void get_smpd(int size, FILE *f)
 	free(data);
 }
 
-int dmf_load(FILE *f)
+static int dmf_load(FILE *f)
 {
-	char magic[4];
 	char composer[XMP_DEF_NAMESIZE];
 	uint8 date[3];
 	char tracker_name[10];
 
 	LOAD_INIT ();
 
-	/* Check magic */
-	fread(magic, 1, 4, f);
-	if (strncmp(magic, "DDMF", 4))
-		return -1;
+	read32b(f);		/* DDMF */
 
 	ver = read8(f);
 	fread(tracker_name, 8, 1, f);
@@ -369,4 +390,3 @@ int dmf_load(FILE *f)
 
 	return 0;
 }
-

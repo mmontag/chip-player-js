@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.6 2007-09-08 04:49:56 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.7 2007-10-13 22:59:36 cmatsuoka Exp $
  */
 
 /*
@@ -23,6 +23,28 @@
 #include "load.h"
 
 #define MAGIC_MED3	MAGIC4('M','E','D',3)
+
+
+static int med3_test(FILE *, char *);
+static int med3_load(FILE *);
+
+struct xmp_loader_info med3_loader = {
+	"MED3",
+	"MED 2.00",
+	med3_test,
+	med3_load
+};
+
+static int med3_test(FILE *f, char *t)
+{
+	if (read32b(f) !=  MAGIC_MED3)
+		return -1;
+
+	read_title(f, t, 0);
+
+	return 0;
+}
+
 
 #define MASK		0x80000000
 
@@ -185,7 +207,7 @@ static void unpack_block(uint16 bnum, uint8 *from)
 }
 
 
-int med3_load(FILE * f)
+static int med3_load(FILE *f)
 {
 	int i, j;
 	uint32 mask;
@@ -193,8 +215,7 @@ int med3_load(FILE * f)
 
 	LOAD_INIT();
 
-	if (read32b(f) !=  MAGIC_MED3)
-		return -1;
+	read32b(f);
 
 	strcpy(xmp_ctl->type, "MED3 (MED 2.00)");
 

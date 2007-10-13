@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.11 2007-09-20 01:59:01 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.12 2007-10-13 22:59:36 cmatsuoka Exp $
  */
 
 /*
@@ -22,6 +22,27 @@
 #include "load.h"
 
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
+
+
+static int med4_test(FILE *, char *);
+static int med4_load(FILE *);
+
+struct xmp_loader_info med4_loader = {
+	"MED4",
+	"MED 2.10",
+	med4_test,
+	med4_load
+};
+
+static int med4_test(FILE *f, char *t)
+{
+	if (read32b(f) !=  MAGIC_MED4)
+		return -1;
+
+	read_title(f, t, 0);
+
+	return 0;
+}
 
 
 static int read4_ctl;
@@ -98,7 +119,7 @@ static inline uint16 read12b(FILE *f)
 	return (a << 8) | (b << 4) | c;
 }
 
-int med4_load(FILE * f)
+static int med4_load(FILE *f)
 {
 	int i, j, k;
 	uint32 m, mask;
@@ -110,8 +131,7 @@ int med4_load(FILE * f)
 
 	LOAD_INIT();
 
-	if (read32b(f) !=  MAGIC_MED4)
-		return -1;
+	read32b(f);
 
 	vermaj = 2;
 	vermin = 10;

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.57 2007-10-13 21:17:13 cmatsuoka Exp $
+ * $Id: formats.c,v 1.58 2007-10-13 22:59:36 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -39,6 +39,9 @@ extern struct xmp_loader_info svb_loader;
 extern struct xmp_loader_info amf_loader;
 extern struct xmp_loader_info mmd1_loader;
 extern struct xmp_loader_info mmd3_loader;
+extern struct xmp_loader_info med3_loader;
+extern struct xmp_loader_info med4_loader;
+extern struct xmp_loader_info dmf_loader;
 
 
 struct xmp_fmt_info *__fmt_head;
@@ -111,6 +114,9 @@ void xmp_init_formats()
     register_loader(&amf_loader);
     register_loader(&mmd1_loader);
     register_loader(&mmd3_loader);
+    register_loader(&med3_loader);
+    register_loader(&med4_loader);
+    register_loader(&dmf_loader);
     //old_register_loader("XM", "Fast Tracker II", xm_load);
     //old_register_loader("MOD", "Noise/Fast/Protracker", mod_load);
     //old_register_loader("MOD", "Startrekker/Audio Sculpure", flt_load);
@@ -133,9 +139,9 @@ void xmp_init_formats()
     //old_register_loader("MMD0/1", "MED 3.00/OctaMED", mmd1_load);
     //old_register_loader("MMD2/3", "OctaMED Soundstudio", mmd3_load);
     //old_register_loader("MED2", "MED 1.12", med2_load);
-    old_register_loader("MED3", "MED 2.00", med3_load);
-    old_register_loader("MED4", "MED 2.10", med4_load);
-    old_register_loader("DMF", "X-Tracker", dmf_load);
+    //old_register_loader("MED3", "MED 2.00", med3_load);
+    //old_register_loader("MED4", "MED 2.10", med4_load);
+    //old_register_loader("DMF", "X-Tracker", dmf_load);
     old_register_loader("RTM", "Real Tracker", rtm_load);
     old_register_loader("PTM", "Protracker 3", pt3_load);
     old_register_loader("TCB", "TCB Tracker", tcb_load);
