@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.12 2007-10-01 14:21:56 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.13 2007-10-13 19:39:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,6 +20,31 @@
 #include "period.h"
 #include "load.h"
 #include "liq.h"
+
+
+static int liq_test (FILE *, char *);
+static int liq_load (FILE *);
+
+struct xmp_loader_info liq_loader = {
+    "LIQ",
+    "Liquid Tracker",
+    liq_test,
+    liq_load
+};
+
+static int liq_test(FILE *f, char *t)
+{
+    char buf[15];
+
+    fread(buf, 1, 15, f);
+    if (memcmp(buf, "Liquid Module:", 14))
+	return -1;
+
+    read_title(f, t, 30);
+
+    return 0;
+}
+
 
 #define NONE 0xff
 
@@ -146,10 +171,6 @@ int liq_load (FILE *f)
     LOAD_INIT ();
 
     fread(&lh.magic, 14, 1, f);
-
-    if (strncmp ((char *) lh.magic, "Liquid Module:", 14))
-	return -1;
-
     fread(&lh.name, 30, 1, f);
     fread(&lh.author, 20, 1, f);
     read8(f);

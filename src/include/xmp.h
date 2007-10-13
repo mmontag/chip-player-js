@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.10 2007-10-13 13:27:37 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.11 2007-10-13 19:39:47 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -248,5 +248,6 @@ void*	xmp_get_shared_mem		(int);
 void	xmp_detach_shared_mem		(void *);
 int	xmp_verbosity_level		(int);
 int	xmp_seek_time			(int);
+void	xmp_init_formats		(void);
 
 #endif /* __XMP_H */

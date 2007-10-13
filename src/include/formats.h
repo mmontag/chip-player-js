@@ -5,14 +5,14 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.h,v 1.19 2007-09-10 11:40:36 cmatsuoka Exp $
+ * $Id: formats.h,v 1.20 2007-10-13 19:39:47 cmatsuoka Exp $
  */
 
 #ifndef __FORMATS_H
 #define __FORMATS_H
 
-void xmp_formats_list (const int);
-void xmp_init_formats (void);
+//void xmp_formats_list (const int);
+//void xmp_init_formats (void);
 
 int ac1d_load (FILE *);
 int alm_load (FILE *);

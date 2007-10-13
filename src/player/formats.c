@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.54 2007-10-13 19:10:35 cmatsuoka Exp $
+ * $Id: formats.c,v 1.55 2007-10-13 19:39:48 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,6 +30,9 @@ extern struct xmp_loader_info mtm_loader;
 extern struct xmp_loader_info ice_loader;
 extern struct xmp_loader_info imf_loader;
 extern struct xmp_loader_info ptm_loader;
+extern struct xmp_loader_info mdl_loader;
+extern struct xmp_loader_info ult_loader;
+extern struct xmp_loader_info liq_loader;
 
 
 struct xmp_fmt_info *__fmt_head;
@@ -93,6 +96,9 @@ void xmp_init_formats()
     register_loader(&ice_loader);
     register_loader(&imf_loader);
     register_loader(&ptm_loader);
+    register_loader(&mdl_loader);
+    register_loader(&ult_loader);
+    register_loader(&liq_loader);
     //old_register_loader("XM", "Fast Tracker II", xm_load);
     //old_register_loader("MOD", "Noise/Fast/Protracker", mod_load);
     //old_register_loader("MOD", "Startrekker/Audio Sculpure", flt_load);
@@ -105,9 +111,9 @@ void xmp_init_formats()
     //old_register_loader("MTN", "Soundtracker 2.6/Ice Tracker", ice_load);
     //old_register_loader("IMF", "Imago Orpheus", imf_load);
     //old_register_loader("PTM", "Poly Tracker", ptm_load);
-    old_register_loader("MDL", "Digitrakker", mdl_load);
-    old_register_loader("ULT", "Ultra Tracker", ult_load);
-    old_register_loader("LIQ", "Liquid Tracker", liq_load);
+    //old_register_loader("MDL", "Digitrakker", mdl_load);
+    //old_register_loader("ULT", "Ultra Tracker", ult_load);
+    //old_register_loader("LIQ", "Liquid Tracker", liq_load);
     old_register_loader("LIQ", "Liquid Tracker (old)", no_load);
     old_register_loader("PSM", "Epic Megagames MASI", psm_load);
     old_register_loader("PSM", "Protracker Studio", svb_load);

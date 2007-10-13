@@ -22,6 +22,34 @@
 #include "period.h"
 #include "load.h"
 
+
+static int ult_test (FILE *, char *);
+static int ult_load (FILE *);
+
+struct xmp_loader_info ult_loader = {
+    "ULT",
+    "Ultra Tracker",
+    ult_test,
+    ult_load
+};
+
+static int ult_test(FILE *f, char *t)
+{
+    char buf[15];
+
+    fread(buf, 1, 15, f);
+    if (memcmp(buf, "MAS_UTrack_V000", 14))
+	return -1;
+
+    if (buf[14] < '0' || buf[14] > '4')
+	return -1;
+
+    read_title(f, t, 32);
+
+    return 0;
+}
+
+
 #define KEEP_TONEPORTA 32	/* Rows to keep portamento effect */
 
 struct ult_header {
@@ -80,12 +108,8 @@ int ult_load (FILE * f)
     fread(&ufh.name, 32, 1, f);
     ufh.msgsize = read8(f);
 
-    if (strncmp ((char *) ufh.magic, "MAS_UTrack_V000", 14))
-	return -1;
-
     ver = ufh.magic[14] - '0';
-    if (ver < 1 || ver > 4)
-	return -1;
+
     strncpy(xmp_ctl->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
     sprintf(xmp_ctl->type, "ULT V%04d (Ultra Tracker %s)",

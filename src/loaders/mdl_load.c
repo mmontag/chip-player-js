@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.16 2007-10-01 14:21:56 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.17 2007-10-13 19:39:48 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -22,6 +22,29 @@
 #include "load.h"
 #include "iff.h"
 #include "period.h"
+
+#define MAGIC_DMDL	MAGIC4('D','M','D','L')
+
+
+static int mdl_test (FILE *, char *);
+static int mdl_load (FILE *);
+
+struct xmp_loader_info mdl_loader = {
+    "MDL",
+    "Digitrakker",
+    mdl_test,
+    mdl_load
+};
+
+static int mdl_test(FILE *f, char *t)
+{
+    if (read32b(f) != MAGIC_DMDL)
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
 
 
 #define MDL_NOTE_FOLLOWS	0x04
@@ -742,18 +765,16 @@ static void get_chunk_fe(int size, FILE *f)
 }
 
 
-int mdl_load(FILE *f)
+static int mdl_load(FILE *f)
 {
     int i, j, k, l;
     char buf[8];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     /* Check magic and get version */
-    fread (buf, 1, 4, f);
-    if (strncmp (buf, "DMDL", 4))
-	return -1;
-    fread (buf, 1, 1, f);
+    read32b(f);
+    fread(buf, 1, 1, f);
 
     /* IFFoid chunk IDs */
     iff_register ("IN", get_chunk_in);	/* Module info */
@@ -763,7 +784,7 @@ int mdl_load(FILE *f)
     iff_register ("PE", get_chunk_pe);	/* Pan envelopes */
     iff_register ("FE", get_chunk_fe);	/* Pitch envelopes */
 
-    if (MSN (*buf)) {
+    if (MSN(*buf)) {
 	iff_register ("II", get_chunk_ii);	/* Instruments */
 	iff_register ("PA", get_chunk_pa);	/* Patterns */
 	iff_register ("IS", get_chunk_is);	/* Sample info */
@@ -776,21 +797,21 @@ int mdl_load(FILE *f)
      * little endian 32 bit chunk size. There's only one chunk per data
      * type i.e. one huge chunk for all the sampled instruments.
      */
-    iff_idsize (2);
-    iff_setflag (IFF_LITTLE_ENDIAN);
+    iff_idsize(2);
+    iff_setflag(IFF_LITTLE_ENDIAN);
 
-    sprintf (xmp_ctl->type, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
+    sprintf(xmp_ctl->type, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
 
     xmp_ctl->volbase = 0xff;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
     v_envnum = p_envnum = f_envnum = 0;
-    s_index = calloc (256, sizeof (int));
-    i_index = calloc (256, sizeof (int));
-    v_index = malloc (256 * sizeof (int));
-    p_index = malloc (256 * sizeof (int));
-    f_index = malloc (256 * sizeof (int));
-    c2spd = calloc (256, sizeof (int));
+    s_index = calloc(256, sizeof (int));
+    i_index = calloc(256, sizeof (int));
+    v_index = malloc(256 * sizeof (int));
+    p_index = malloc(256 * sizeof (int));
+    f_index = malloc(256 * sizeof (int));
+    c2spd = calloc(256, sizeof (int));
 
     for (i = 0; i < 256; i++) {
 	v_index[i] = p_index[i] = f_index[i] = -1;
