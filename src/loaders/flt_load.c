@@ -14,8 +14,34 @@
 #include "mod.h"
 #include "period.h"
 
+static int flt_test (FILE *, char *);
+static int flt_load (FILE *);
 
-int flt_load (FILE *f)
+struct xmp_loader_info flt_loader = {
+    "MOD",
+    "Startrekker/Audio Sculpture",
+    flt_test,
+    flt_load
+};
+
+static int flt_test(FILE *f, char *t)
+{
+    int buf[4];
+
+    fseek(f, 1080, SEEK_SET);
+    fread(buf, 4, 1, f);
+
+    if (memcmp(buf, "FLT", 3) && memcmp(buf, "EXO", 3))
+	return -1;
+
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 28);
+
+    return 0;
+}
+
+
+static int flt_load (FILE *f)
 {
     int i, j;
     struct xxm_event *event;

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.50 2007-10-13 13:56:01 cmatsuoka Exp $
+ * $Id: formats.c,v 1.51 2007-10-13 14:13:41 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,6 +20,8 @@
 
 extern struct xmp_loader_info xm_loader;
 extern struct xmp_loader_info mod_loader;
+extern struct xmp_loader_info flt_loader;
+extern struct xmp_loader_info it_loader;
 extern struct xmp_loader_info s3m_loader;
 
 
@@ -52,6 +54,7 @@ void register_format(char *suffix, char *tracker)
 static void register_loader(struct xmp_loader_info *l)
 {
     list_add_tail(&l->list, &loader_list);
+    register_format(l->id, l->name);
 }
 
 static void old_register_loader(char *id, char *name, int (*loader)())
@@ -73,12 +76,14 @@ void xmp_init_formats()
 {
     register_loader(&xm_loader);
     register_loader(&mod_loader);
+    register_loader(&flt_loader);
+    register_loader(&it_loader);
     register_loader(&s3m_loader);
     //old_register_loader("XM", "Fast Tracker II", xm_load);
     //old_register_loader("MOD", "Noise/Fast/Protracker", mod_load);
-    old_register_loader("MOD", "Startrekker/Audio Sculpure", flt_load);
+    //old_register_loader("MOD", "Startrekker/Audio Sculpure", flt_load);
     old_register_loader("M15", "Soundtracker", st_load);
-    old_register_loader("IT", "Impulse Tracker", it_load);
+    //old_register_loader("IT", "Impulse Tracker", it_load);
     //old_register_loader("S3M", "Scream Tracker 3", s3m_load);
     old_register_loader("STM", "Scream Tracker 2", stm_load);
     old_register_loader("STX", "STMIK 0.2", stx_load);

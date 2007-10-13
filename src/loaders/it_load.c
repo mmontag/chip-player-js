@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.26 2007-10-06 02:46:20 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.27 2007-10-13 14:13:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,28 @@
 
 #define MAGIC_IMPM	MAGIC4('I','M','P','M')
 #define MAGIC_IMPS	MAGIC4('I','M','P','S')
+
+
+static int it_test (FILE *, char *);
+static int it_load (FILE *);
+
+struct xmp_loader_info it_loader = {
+    "IT",
+    "Impulse Tracker",
+    it_test,
+    it_load
+};
+
+static int it_test(FILE *f, char *t)
+{
+    if (read32b(f) != MAGIC_IMPM)
+	return -1;
+
+    read_title(f, t, 26);
+
+    return 0;
+}
+
 
 #define	FX_NONE	0xff
 #define FX_XTND 0xfe
@@ -69,7 +91,7 @@ int itsex_decompress8 (FILE *, void *, int, int);
 int itsex_decompress16 (FILE *, void *, int, int);
 
 
-static void xlat_fx (int c, struct xxm_event *e)
+static void xlat_fx(int c, struct xxm_event *e)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
 
@@ -151,7 +173,7 @@ static void xlat_fx (int c, struct xxm_event *e)
 }
 
 
-static void xlat_volfx (struct xxm_event *event)
+static void xlat_volfx(struct xxm_event *event)
 {
     int b;
 
@@ -195,7 +217,7 @@ static void xlat_volfx (struct xxm_event *event)
 }
 
 
-int it_load (FILE * f)
+static int it_load(FILE *f)
 {
     int r, c, i, j, k, pat_len;
     struct xxm_event *event, dummy, lastevent[L_CHANNELS];
