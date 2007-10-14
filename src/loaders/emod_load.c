@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.5 2007-10-14 03:17:17 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.6 2007-10-14 22:06:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,8 +24,8 @@ static int emod_test (FILE *, char *);
 static int emod_load (FILE *);
 
 struct xmp_loader_info emod_loader = {
-    "S3M",
-    "Scream Tracker 3",
+    "EMOD",
+    "Quadra Composer",
     emod_test,
     emod_load
 };

@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.7 2007-10-13 23:33:18 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.8 2007-10-14 22:06:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,8 +22,8 @@ static int dtt_test(FILE *, char *);
 static int dtt_load(FILE *);
 
 struct xmp_loader_info dtt_loader = {
-	"S3M",
-	"Scream Tracker 3",
+	"DTT",
+	"Desktop Tracker",
 	dtt_test,
 	dtt_load
 };
