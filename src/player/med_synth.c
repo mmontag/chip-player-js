@@ -66,7 +66,7 @@ int get_med_vibrato(struct xmp_channel *xc)
 
 	/* FIXME: always using sine waveform */
 
-	vib = (sine[xc->med_vib_idx >> 5] * xc->med_vib_depth) >> 10;
+	vib = (sine[xc->med_vib_idx >> 5] * xc->med_vib_depth) >> 11;
 	xc->med_vib_idx += xc->med_vib_speed;
 	xc->med_vib_idx %= (32 << 5);
 
