@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.6 2007-10-13 18:25:05 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.7 2007-10-14 22:45:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -113,22 +113,14 @@ static int stm_load(FILE *f)
     if (!strncmp ((char *)sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
 
-#if 0
-    if (strncmp ((char *)sfh.magic, "!Scream!", 8) && !bmod2stm)
-	return -1;
-    if (sfh.type != STM_TYPE_MODULE)
-	return -1;
-    if (sfh.vermaj < 1)		/* We don't want STX files */
-	return -1;
-#endif
-
     xxh->pat = sfh.patterns;
     xxh->trk = xxh->pat * xxh->chn;
     xxh->tpo = MSN (sfh.tempo);
     xxh->smp = xxh->ins;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
-    strncpy(xmp_ctl->name, (char *)sfh.name, 20);
+    copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 20);
+
     if (bmod2stm) {
 	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "!Scream! (BMOD2STM)");
     } else {
@@ -136,12 +128,11 @@ static int stm_load(FILE *f)
 			"(Scream Tracker %d.%02d)", sfh.vermaj, sfh.vermin);
     }
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
-    if (V (1))
-	report ("     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
+    reportv(1, "     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
 
     /* Read and convert instruments and samples */
     for (i = 0; i < xxh->ins; i++) {
@@ -158,8 +149,7 @@ static int stm_load(FILE *f)
 
 	copy_adjust(xxih[i].name, sfh.ins[i].name, 12);
 
-	if ((V (1)) &&
-	    (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
+	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, sfh.ins[i].c2spd);
@@ -169,7 +159,7 @@ static int stm_load(FILE *f)
 	c2spd_to_note (sfh.ins[i].c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
     }
 
-    fread (xxo, 1, 128, f);
+    fread(xxo, 1, 128, f);
 
     for (i = 0; i < 128; i++)
 	if (xxo[i] >= xxh->pat)
@@ -177,14 +167,13 @@ static int stm_load(FILE *f)
 
     xxh->len = i;
 
-    if (V (0))
-	report ("Module length  : %d patterns\n", xxh->len);
+    reportv(0, "Module length  : %d patterns\n", xxh->len);
 
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
+
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	xxp[i]->rows = 64;
@@ -224,21 +213,18 @@ static int stm_load(FILE *f)
 		}
 	    }
 	}
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
     /* Read samples */
-    if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", xxh->smp);
+
     for (i = 0; i < xxh->ins; i++) {
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
 	    &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
 

@@ -1,8 +1,8 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.48 2007-10-14 22:13:08 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.49 2007-10-14 22:45:17 cmatsuoka Exp $
 
-VERSION		= 2.4.0-pre2
-DATE		= Sun Oct 14 20:07:07 BRST 2007
+VERSION		= 2.4.0-pre3
+DATE		= Sun Oct 14 20:13:14 BRST 2007
 
 DESTDIR		=
 prefix		= @prefix@
