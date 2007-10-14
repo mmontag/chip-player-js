@@ -1,7 +1,7 @@
 /* DIGI Booster module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: digi_load.c,v 1.4 2007-10-01 14:21:56 cmatsuoka Exp $
+ * $Id: digi_load.c,v 1.5 2007-10-14 03:17:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,6 +29,36 @@
 
 #include "load.h"
 
+
+static int digi_test (FILE *, char *);
+static int digi_load (FILE *);
+
+struct xmp_loader_info digi_loader = {
+    "DIGI",
+    "DIGI Booster",
+    digi_test,
+    digi_load
+};
+
+static int digi_test(FILE *f, char *t)
+{
+    char buf[20];
+
+    fread(buf, 20, 1, f);
+
+    if (memcmp(buf, "DIGI Booster module", 19))
+	return -1;
+
+    fseek(f, 156, SEEK_CUR);
+    fseek(f, 3 * 4 * 32, SEEK_CUR);
+    fseek(f, 2 * 1 * 32, SEEK_CUR);
+
+    read_title(f, t, 32);
+
+    return 0;
+}
+
+
 struct digi_header {
     uint8 id[20];		/* ID: "DIGI Booster module\0" */
     uint8 vstr[4];		/* Version string: "Vx.y" */
@@ -49,7 +79,7 @@ struct digi_header {
 };
 
 
-int digi_load (FILE * f)
+static int digi_load (FILE *f)
 {
     struct xxm_event *event = 0;
     struct digi_header dh;
@@ -60,9 +90,6 @@ int digi_load (FILE * f)
     LOAD_INIT ();
 
     fread(&dh.id, 20, 1, f);
-
-    if (strncmp ((char *) dh.id, "DIGI Booster module", 19))
-	return -1;
 
     fread(&dh.vstr, 4, 1, f);
     dh.ver = read8(f);
@@ -125,8 +152,7 @@ int digi_load (FILE * f)
 
 	copy_adjust(xxih[i].name, dh.insname[i], 30);
 
-	if (V (1) &&
-	    (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
+	if (V(1) && (strlen((char *)xxih[i].name) || (xxs[i].len > 1))) {
 	    report ("[%2X] %-30.30s %04x %04x %04x %c V%02x\n", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol);
@@ -136,8 +162,7 @@ int digi_load (FILE * f)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     for (i = 0; i < xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -184,24 +209,18 @@ int digi_load (FILE * f)
 	if (w)
 	    report ("WARNING! Corrupted file (w = %d)", w);
 
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     /* Read samples */
-    if (V (0))
-	report ("Stored samples : %d ", xxh->smp);
+    reportv(0, "Stored samples : %d ", xxh->smp);
     for (i = 0; i < xxh->ins; i++) {
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
 	    &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     /* xmp_ctl->fetch |= 0; */
 

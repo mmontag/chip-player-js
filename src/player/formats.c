@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.60 2007-10-13 23:33:18 cmatsuoka Exp $
+ * $Id: formats.c,v 1.61 2007-10-14 03:17:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -99,16 +99,13 @@ void xmp_init_formats()
 	REG_LOADER(dt);
 	REG_LOADER(gtk);
 	REG_LOADER(dtt);
+	REG_LOADER(mgt);
+	REG_LOADER(arch);
+	REG_LOADER(sym);
+	REG_LOADER(digi);
+	REG_LOADER(dbm);
+	REG_LOADER(emod);
 
-	//old_register_loader("DTM", "Digital Tracker", dt_load);
-	//old_register_loader("GTK", "Graoumf Tracker", gtk_load);
-	//old_register_loader("DTT", "Desktop Tracker", dtt_load);
-	old_register_loader("MGT", "Megatracker", mgt_load);
-	old_register_loader("MUSX", "Archimedes Tracker", arch_load);
-	old_register_loader("DSYM", "Digital Symphony", sym_load);
-	old_register_loader("DIGI", "DIGI Booster", digi_load);
-	old_register_loader("DBM", "DigiBooster Pro", dbm_load);
-	old_register_loader("EMOD", "Quadra Composer", emod_load);
 	old_register_loader("OKT", "Oktalyzer", okt_load);
 	old_register_loader("SFX", "SoundFX 1.3", sfx_load);
 	old_register_loader("FAR", "Farandole Composer", far_load);

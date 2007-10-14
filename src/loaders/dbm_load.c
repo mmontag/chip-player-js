@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.13 2007-10-02 02:31:09 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.14 2007-10-14 03:17:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,6 +21,30 @@
 #include "period.h"
 
 #define MAGIC_DBM0	MAGIC4('D','B','M','0')
+
+
+static int dbm_test(FILE *, char *);
+static int dbm_load(FILE *);
+
+struct xmp_loader_info dbm_loader = {
+	"DBM",
+	"DigiBooster Pro",
+	dbm_test,
+	dbm_load
+};
+
+static int dbm_test(FILE * f, char *t)
+{
+	if (read32b(f) != MAGIC_DBM0)
+		return -1;
+
+	fseek(f, 12, SEEK_CUR);
+	read_title(f, t, 44);
+
+	return 0;
+}
+
+
 
 static int have_song;
 
@@ -251,16 +275,14 @@ static void get_venv(int size, FILE *f)
 	reportv(0, "\n");
 }
 
-int dbm_load(FILE *f)
+static int dbm_load(FILE *f)
 {
 	char name[44];
 	uint16 version;
 
 	LOAD_INIT();
 
-	/* Check magic */
-	if (read32b(f) != MAGIC_DBM0)
-		return -1;
+	read32b(f);		/* DBM0 */
 
 	have_song = 0;
 	version = read16b(f);

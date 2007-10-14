@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.24 2007-08-30 00:33:18 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.25 2007-10-14 03:17:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,49 @@
 #include <assert.h>
 #include "load.h"
 #include "readlzw.h"
+
+
+static int sym_test(FILE *, char *);
+static int sym_load(FILE *);
+
+struct xmp_loader_info sym_loader = {
+	"DSYM",
+	"Digital Symphony",
+	sym_test,
+	sym_load
+};
+
+static int sym_test(FILE * f, char *t)
+{
+	uint32 a, b;
+	int i, ver;
+
+	a = read32b(f);
+	b = read32b(f);
+
+	if (a != 0x02011313 || b != 0x1412010B)		/* BASSTRAK */
+		return -1;
+
+	ver = read8(f);
+
+	if (ver > 0)		// FIXME
+		return -1;
+
+	read8(f);		/* chn */
+	read16l(f);		/* pat */
+	read16l(f);		/* trk */
+	read24l(f);		/* infolen */
+
+	for (i = 0; i < 63; i++) {
+		if (~read8(f) & 0x80)
+			read24l(f);
+	}
+
+	read_title(f, t, read8(f));
+
+	return 0;
+}
+
 
 
 static void fix_effect(struct xxm_event *e, int parm)
@@ -139,28 +182,20 @@ static uint32 readptr16l(uint8 *p)
 	return (b << 8) | a;
 }
 
-int sym_load(FILE * f)
+static int sym_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j;
-	uint32 a, b;
 	int ver, infolen, sn[64];
+	uint32 a, b;
 	uint8 *buf;
 	int size;
 
 	LOAD_INIT();
 
-	a = read32b(f);
-	b = read32b(f);
-
-	if (a != 0x02011313 || b != 0x1412010B)		/* BASSTRAK */
-		return -1;
+	fseek(f, 8, SEEK_CUR);			/* BASSTRAK */
 
 	ver = read8(f);
-
-	if (ver > 0)		// FIXME
-		return -1;
-
 	sprintf(xmp_ctl->type, "BASSTRAK v%d (Digital Symphony)", ver);
 
 	xxh->chn = read8(f);

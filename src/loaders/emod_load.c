@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.4 2007-09-18 11:46:33 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.5 2007-10-14 03:17:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,32 @@
 
 #define MAGIC_FORM	MAGIC4('F','O','R','M')
 #define MAGIC_EMOD	MAGIC4('E','M','O','D')
+
+
+static int emod_test (FILE *, char *);
+static int emod_load (FILE *);
+
+struct xmp_loader_info emod_loader = {
+    "S3M",
+    "Scream Tracker 3",
+    emod_test,
+    emod_load
+};
+
+static int emod_test(FILE *f, char *t)
+{
+    if (read32b(f) != MAGIC_FORM)
+	return -1;
+
+    read32b(f);
+
+    if (read32b(f) != MAGIC_EMOD)
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
 
 
 static uint8 *reorder;
@@ -153,14 +179,9 @@ int emod_load(FILE *f)
 {
     LOAD_INIT ();
 
-    /* Check magic */
-    if (read32b(f) != MAGIC_FORM)
-	return -1;
-
+    read32b(f);		/* FORM */
     read32b(f);
-
-    if (read32b(f) != MAGIC_EMOD)
-	return -1;
+    read32b(f);		/* EMOD */
 
     /* IFF chunk IDs */
     iff_register("EMIC", get_emic);

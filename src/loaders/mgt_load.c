@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.6 2007-09-17 00:14:52 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.7 2007-10-14 03:17:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,36 @@
 #define MAGIC_MCS	MAGIC4(0xbd,'M','C','S')
 
 
-int mgt_load(FILE *f)
+static int mgt_test(FILE *, char *);
+static int mgt_load(FILE *);
+
+struct xmp_loader_info mgt_loader = {
+	"MGT",
+	"Megatracker",
+	mgt_test,
+	mgt_load
+};
+
+static int mgt_test(FILE *f, char *t)
+{
+	int sng_ptr;
+
+	if (read24b(f) != MAGIC_MGT)
+		return -1;
+	read8(f);
+	if (read32b(f) != MAGIC_MCS)
+		return -1;
+
+	fseek(f, 18, SEEK_CUR);
+	sng_ptr = read32b(f);
+	fseek(f, sng_ptr, SEEK_SET);
+
+	read_title(f, t, 32);
+	
+	return 0;
+}
+
+static int mgt_load(FILE *f)
 {
 	struct xxm_event *event;
 	int i, j;
@@ -29,11 +58,9 @@ int mgt_load(FILE *f)
 
 	LOAD_INIT();
 
-	if (read24b(f) != MAGIC_MGT)
-		return -1;
+	read24b(f);		/* MGT */
 	ver = read8(f);
-	if (read32b(f) != MAGIC_MCS)
-		return -1;
+	read32b(f);		/* MCS */
 
 	sprintf(xmp_ctl->type, "MGT v%d.%d (Megatracker)", MSN(ver), LSN(ver));
 
