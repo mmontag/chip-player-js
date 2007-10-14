@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.11 2007-10-13 19:39:47 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.12 2007-10-14 21:44:59 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -217,7 +217,7 @@ extern char *xmp_build;
 
 void	xmp_init			(int, char **, struct xmp_control *);
 int	xmp_load_module			(char *);
-int	xmp_test_module			(char *);
+int	xmp_test_module			(char *, char *);
 struct xmp_module_info*
 	xmp_get_module_info		(struct xmp_module_info *);
 struct xmp_fmt_info*

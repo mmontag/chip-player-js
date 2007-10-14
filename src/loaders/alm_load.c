@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.7 2007-10-14 19:08:14 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.8 2007-10-14 21:44:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,8 +31,8 @@ static int alm_test (FILE *, char *);
 static int alm_load (FILE *);
 
 struct xmp_loader_info alm_loader = {
-    "S3M",
-    "Scream Tracker 3",
+    "ALM",
+    "Aley Keptr",
     alm_test,
     alm_load
 };

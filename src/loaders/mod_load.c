@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.19 2007-10-13 13:56:01 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.20 2007-10-14 21:44:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -74,8 +74,10 @@ static int mod_test(FILE *f, char *t)
 
     for (i = 0; mod_magic[i].ch; i++) {
 	if (!strcmp(buf, mod_magic[i].magic))
-	    return 0;
+	    break;
     }
+    if (mod_magic[i].ch == 0)
+	return -1;
 
     fseek(f, 0, SEEK_SET);
     read_title(f, t, 20);

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.36 2007-10-13 02:46:32 cmatsuoka Exp $
+ * $Id: driver.c,v 1.37 2007-10-14 21:44:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -79,11 +79,13 @@ void (*xmp_event_callback) (unsigned long);
 #include "../player/mixer.c"
 
 
-void xmp_init_drivers ()
+void xmp_init_drivers()
 {
+#ifndef ENABLE_PLUGIN
+
     /* Output to file will be always available -- except in the plugin ;) */
-    xmp_drv_register (&drv_file);
-    xmp_drv_register (&drv_wav);
+    xmp_drv_register(&drv_file);
+    xmp_drv_register(&drv_wav);
 
 #ifdef DRIVER_OSX
     xmp_drv_register(&drv_osx);
@@ -142,6 +144,8 @@ void xmp_init_drivers ()
 #ifdef DRIVER_NAS
     xmp_drv_register(&drv_nas);
 #endif
+
+#endif	/* ENABLE_PLUGIN */
 }
 
 

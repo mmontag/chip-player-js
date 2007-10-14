@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.25 2007-10-13 13:27:37 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.26 2007-10-14 21:44:59 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -391,11 +391,11 @@ static void init(void)
 
 	file_info_box_build();
 
-	memset (&ctl, 0, sizeof (struct xmp_control));
-	xmp_init_callback (&ctl, driver_callback);
-	xmp_register_event_callback (x11_event_callback);
+	memset(&ctl, 0, sizeof (struct xmp_control));
+	xmp_init_callback(&ctl, driver_callback);
+	xmp_register_event_callback(x11_event_callback);
 
-	memset (ii, 0, sizeof (ii));
+	memset(ii, 0, sizeof (ii));
 	ii->wresult = 42;
 }
 
@@ -435,11 +435,11 @@ static void init(void)
 
 	file_info_box_build();
 
-	memset (&ctl, 0, sizeof (struct xmp_control));
-	xmp_init_callback (&ctl, driver_callback);
-	xmp_register_event_callback (x11_event_callback);
+	memset(&ctl, 0, sizeof (struct xmp_control));
+	xmp_init_callback(&ctl, driver_callback);
+	xmp_register_event_callback(x11_event_callback);
 
-	memset (ii, 0, sizeof (ii));
+	memset(ii, 0, sizeof (ii));
 	ii->wresult = 42;
 }
 
@@ -448,7 +448,15 @@ static void init(void)
 
 static int is_our_file(char *filename)
 {
-	if (xmp_test_file(filename) == 0)
+        /* xmp needs the audio device to be set before loading a file */
+	if (xmp_ctl == NULL) {
+		ctl.maxvoc = 16;
+		ctl.verbose = 0;
+		ctl.memavl = 0;
+		xmp_drv_set(&ctl);
+	}
+
+	if (xmp_test_module(filename, NULL) == 0)
 		return 1;
 
 	return 0;
@@ -458,15 +466,20 @@ static int is_our_file(char *filename)
 static void get_song_info(char *filename, char **title, int *length)
 {
 	char *x;
+	char name[XMP_DEF_NAMESIZE];
 
-	/* Ugh. xmp doesn't allow me to load and scan a module while
-	 * playing. Must fix this.
-	 */
-	_D("song_info: %s", filename);
-	if ((x = strrchr (filename, '/')))
-		filename = ++x;
-	*title = g_strdup (filename);
+	xmp_test_module(filename, name);
+
+	if (strlen(name)) {
+		*title = g_strdup(name);
+	} else {
+		_D("song_info: %s", filename);
+		if ((x = strrchr(filename, '/')))
+			filename = ++x;
+		*title = g_strdup(filename);
+	}
 }
+
 
 static int fd_old2, fd_info[2];
 static pthread_t catch_thread;
@@ -650,7 +663,7 @@ static void play_file(InputPlayback *ipb)
 	memcpy (&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
 
 	info = malloc (strlen (ii->mi.name) + strlen (ii->mi.type) + 20);
-	sprintf (info, "%s [%s, %d ch]", ii->mi.name, ii->mi.type, ii->mi.chn);
+	sprintf(info, "%s", ii->mi.name);
 
 	xmp_ip.set_info(info, xmp_cfg.time, 128 * 1000, ctl.freq, channelcnt);
 	free (info);

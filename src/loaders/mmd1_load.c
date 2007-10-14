@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.18 2007-10-13 21:17:12 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.19 2007-10-14 21:44:59 cmatsuoka Exp $
  */
 
 /*
@@ -30,7 +30,7 @@ struct xmp_loader_info mmd1_loader = {
 	mmd1_load
 };
 
-static int mmd1_test(FILE * f, char *t)
+static int mmd1_test(FILE *f, char *t)
 {
 	char id[4];
 

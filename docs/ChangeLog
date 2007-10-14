@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.133 2007-10-14 19:08:13 cmatsuoka Exp $
+$Id: ChangeLog,v 1.134 2007-10-14 21:44:59 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -8,7 +8,8 @@ Stable versions
 	- added Oktalyzer arpeggio 3, arpeggio 4 and arpeggio 5 effects
 	- added MED synth programmable arpeggio commands ARP and ARE
 	- added MED synth vibrato commands VBS, VBD and VWF
-	- added module probe method decoupled from the loader
+	- added module probe method without loading (Audacious plugin can
+	  test for files while a module is playing)
 	- fixed MED synth volume slide commands CHD and CHU
 	- fixed detuning in short samples with bidirectional loop by adjusting
 	  the loop size to match forward loop size

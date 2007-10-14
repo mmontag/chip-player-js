@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: misc.c,v 1.5 2007-08-14 00:03:17 cmatsuoka Exp $
+ * $Id: misc.c,v 1.6 2007-10-14 21:44:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,7 +27,7 @@
  */
 #ifndef HAVE_BROKEN_STDARG
 
-int report (char *fmt,...)
+int report(char *fmt,...)
 {
     va_list a;
     int n;

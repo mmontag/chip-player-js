@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.29 2007-10-14 19:08:14 cmatsuoka Exp $
+ * $Id: load.c,v 1.30 2007-10-14 21:44:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -150,7 +150,7 @@ static int decrunch(FILE **f, char **s)
     }
 
     /* Test Arc after prowizard to prevent misidentification */
-    if (packer == 0 && b[0] == 0x1a) {
+    if (packer == NULL && b[0] == 0x1a) {
 	int x = b[1] & 0x7f;
 	if (x >= 1 && x <= 9 && x != 7) {
 	    packer = "Arc";
@@ -165,19 +165,18 @@ static int decrunch(FILE **f, char **s)
 
     fseek (*f, 0, SEEK_SET);
 
-    if (!packer)
+    if (packer == NULL)
 	return 0;
 
-    if (xmp_ctl->verbose)
-	report ("Depacking %s file... ", packer);
+    reportv(0, "Depacking %s file... ", packer);
 
-    if ((fd = mkstemp (temp)) < 0) {
-	report ("failed\n");
+    if ((fd = mkstemp(temp)) < 0) {
+	reportv(0, "failed\n");
 	return -1;
     }
 
-    if ((t = fdopen (fd, "w+b")) == NULL) {
-	report ("failed\n");
+    if ((t = fdopen(fd, "w+b")) == NULL) {
+	reportv(0, "failed\n");
 	return -1;
     }
 
@@ -210,10 +209,10 @@ static int decrunch(FILE **f, char **s)
 	    fclose (t);
 	    return -1;
 	}
-	while ((n = fread (buf, 1, BSIZE, p)) > 0) {
-	    fwrite (buf, 1, n, t);
+	while ((n = fread(buf, 1, BSIZE, p)) > 0) {
+	    fwrite(buf, 1, n, t);
 	} 
-	free (buf);
+	free(buf);
 	pclose (p);
     } else {
 	switch (builtin) {
@@ -253,16 +252,16 @@ static int decrunch(FILE **f, char **s)
     }
 
     if (xmp_ctl->verbose)
-	report ("done\n");
+	report("done\n");
 
-    fclose (*f);
+    fclose(*f);
     *f = t;
  
-    temp2 = strdup (temp);
+    temp2 = strdup(temp);
     decrunch(f, &temp);
-    unlink (temp2);
-    free (temp2);
-    free (temp);
+    unlink(temp2);
+    free(temp2);
+    free(temp);
 
     return 1;
 }
@@ -326,7 +325,7 @@ static int crunch_ratio(int awe)
 }
 
 
-int xmp_test_module(char *s)
+int xmp_test_module(char *s, char *n)
 {
     FILE *f;
     struct xmp_loader_info *li;
@@ -342,7 +341,7 @@ int xmp_test_module(char *s)
     if (S_ISDIR(st.st_mode))
 	goto err;
 
-    if (decrunch(&f, &s))
+    if (decrunch(&f, &s) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -351,7 +350,7 @@ int xmp_test_module(char *s)
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
 	fseek(f, 0, SEEK_SET);
-	if (li->test(f, NULL) == 0) {
+	if (li->test(f, n) == 0) {
 	    fclose(f);
 	    return 0;
 	}
@@ -422,8 +421,10 @@ int xmp_load_module(char *s)
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
+	reportv(3, "Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
-	if (li->test(f, NULL) == 0) {
+	if ((i = li->test(f, NULL)) == 0) {
+	    reportv(3, "Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
 	    if ((i = li->loader(f) == 0))
 		break;
