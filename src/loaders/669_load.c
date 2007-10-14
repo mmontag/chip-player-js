@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.6 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.7 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,6 +13,35 @@
 #endif
 
 #include "load.h"
+
+
+static int ssn_test (FILE *, char *);
+static int ssn_load (FILE *);
+
+struct xmp_loader_info ssn_loader = {
+    "669",
+    "Composer 669",
+    ssn_test,
+    ssn_load
+};
+
+static int ssn_test(FILE *f, char *t)
+{
+    uint16 id;
+
+    id = read16b(f);
+    if (id != 0x6966 && id != 0x4a4e)
+	return -1;
+
+    fseek(f, 238, SEEK_CUR);
+    if (read8(f) != 0xff)
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
+
 
 
 struct ssn_file_header {
@@ -50,7 +79,7 @@ static uint8 fx[] = {
 };
 
 
-int ssn_load (FILE * f)
+static int ssn_load (FILE *f)
 {
     int i, j;
     struct xxm_event *event;
@@ -68,11 +97,6 @@ int ssn_load (FILE * f)
     fread(&sfh.order, 128, 1, f);	/* Order list */
     fread(&sfh.tempo, 128, 1, f);	/* Tempo list for patterns */
     fread(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
-
-    if (strncmp ((char *) sfh.marker, "if", 2) && strncmp ((char *) sfh.marker, "JN", 2))
-	return -1;
-    if (sfh.order[127] != 0xff)
-	return -1;
 
     xxh->chn = 8;
     xxh->ins = sfh.nos;

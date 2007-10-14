@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: fnk_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: fnk_load.c,v 1.3 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,6 +15,38 @@
 #endif
 
 #include "load.h"
+
+#define MAGIC_Funk	MAGIC4('F','u','n','k')
+
+
+static int fnk_test (FILE *, char *);
+static int fnk_load (FILE *);
+
+struct xmp_loader_info fnk_loader = {
+    "FNK",
+    "Funktracker",
+    fnk_test,
+    fnk_load
+};
+
+static int fnk_test(FILE *f, char *t)
+{
+    uint8 a, b;
+
+    if (read32b(f) != MAGIC_Funk)
+	return -1;
+
+    fseek(f, 8, SEEK_CUR);
+    a = read8(f);    
+    b = read8(f);    
+
+    if (a != 'F' || b != '2')
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
 
 
 struct fnk_instrument {
@@ -58,7 +90,7 @@ static uint8 fx[] = {
 #endif
 
 
-int fnk_load (FILE * f)
+static int fnk_load (FILE * f)
 {
     int i, j;
     struct xxm_event *event;

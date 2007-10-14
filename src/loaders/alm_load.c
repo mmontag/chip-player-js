@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.6 2007-09-10 11:23:18 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.7 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,6 +25,31 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+
+static int alm_test (FILE *, char *);
+static int alm_load (FILE *);
+
+struct xmp_loader_info alm_loader = {
+    "S3M",
+    "Scream Tracker 3",
+    alm_test,
+    alm_load
+};
+
+static int alm_test(FILE *f, char *t)
+{
+    char buf[7];
+
+    fread(buf, 1, 7, f);
+    if (memcmp(buf, "ALEYMOD", 7) && memcmp(buf, "ALEY MO", 7))
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
+
 
 
 struct alm_file_header {
@@ -53,10 +78,8 @@ int alm_load (FILE *f)
 
     fread(&afh.id, 7, 1, f);
 
-    if (!strncmp((char *)afh.id, "ALEYMOD", 7))	/* Version 1.0 */
+    if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
 	xxh->tpo = afh.speed / 2;
-    else if (strncmp((char *)afh.id, "ALEY MO", 7)) /* Versions 1.1 and 1.2 */
-	return -1;
 
     strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
     basename = strtok (modulename, ".");

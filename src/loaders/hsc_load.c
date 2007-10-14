@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.3 2007-10-01 14:08:50 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.4 2007-10-14 19:08:14 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,25 +22,23 @@
  *  1991 - 1994. ECR just ripped his player and coded an editor around it."
  */
 
-int hsc_load (FILE *f)
+
+static int hsc_test (FILE *, char *);
+static int hsc_load (FILE *);
+
+struct xmp_loader_info hsc_loader = {
+    "HSC",
+    "HSC-Tracker",
+    hsc_test,
+    hsc_load
+};
+
+static int hsc_test(FILE *f, char *t)
 {
     int p, i, r, c;
-    struct xxm_event *event;
-    uint8 *x, *sid, e[2], buf[128 * 12];
+    uint8 buf[1200];
 
-    LOAD_INIT ();
-
-    fread (buf, 1, 128 * 12, f);
-
-    x = buf;
-    for (i = 0; i < 128; i++, x += 12) {
-	if (x[9] & ~0x3 || x[10] & ~0x3)	/* Test waveform register */
-	    break;
-	if (x[8] & ~0xf)			/* Test feedback & algorithm */
-	    break;
-    }
-
-    xxh->ins = i;
+    fseek(f, 128 * 12, SEEK_CUR);
 
     fread (buf, 1, 51, f);
     for (p = i = 0; i < 51; i++) {
@@ -53,7 +51,7 @@ int hsc_load (FILE *f)
 	return -1;		
 
     for (i = 0; i < p; i++) {
-	fread (buf, 1, 64 * 9 * 2, f);
+	fread(buf, 1, 64 * 9 * 2, f);
 	for (r = 0; r < 64; r++) {
 	    for (c = 0; c < 9; c++) {
 		uint8 n = buf[r * 9 * 2 + c * 2];
@@ -66,6 +64,31 @@ int hsc_load (FILE *f)
 	}
     }
 
+    read_title(f, t, 0);
+
+    return 0;
+}
+
+static int hsc_load(FILE *f)
+{
+    int p, i, r, c;
+    struct xxm_event *event;
+    uint8 *x, *sid, e[2], buf[128 * 12];
+
+    LOAD_INIT ();
+
+    fread(buf, 1, 128 * 12, f);
+
+    x = buf;
+    for (i = 0; i < 128; i++, x += 12) {
+	if (x[9] & ~0x3 || x[10] & ~0x3)	/* Test waveform register */
+	    break;
+	if (x[8] & ~0xf)			/* Test feedback & algorithm */
+	    break;
+    }
+
+    xxh->ins = i;
+
     fseek (f, 0, SEEK_SET);
 
     xxh->chn = 9;
@@ -74,13 +97,12 @@ int hsc_load (FILE *f)
     xxh->smp = 0;
 
     sprintf(xmp_ctl->type, "HSC (HSC-Tracker)");
-    MODULE_INFO ();
 
-    if (V (1)) {
-	report (
+    MODULE_INFO();
+
+    reportv(1,
 "               Modulator                       Carrier             Common\n"
 "     Char Fr LS OL At De Su Re WS   Char Fr LS OL At De Su Re WS   Fbk Alg Fin\n");
-    }
 
     /* Read instruments */
     INSTRUMENT_INIT ();
@@ -182,11 +204,9 @@ skip:
 		}
 	    }
 	}
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     for (i = 0; i < xxh->chn; i++) {
 	xxc[i].pan = 0x80;

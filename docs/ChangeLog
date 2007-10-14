@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.132 2007-10-13 13:27:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.133 2007-10-14 19:08:13 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -14,8 +14,11 @@ Stable versions
 	  the loop size to match forward loop size
 	- fixed sound cut bug when changing samples in the MED synth (don't
 	  reset channel on attempt to set invalid sample position)
+	- fixed identification of IIgs MegaTracker modules
 	- revert CoreAudio driver pause patch (fix memory management problem)
 	- reset MED synth program at each new note event
+	- removed filesize-based module format detection
+	- replaced XANN loader with Prowizard XANN depacker
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

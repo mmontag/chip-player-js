@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.28 2007-10-13 13:27:37 cmatsuoka Exp $
+ * $Id: load.c,v 1.29 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -426,18 +426,9 @@ int xmp_load_module(char *s)
 	if (li->test(f, NULL) == 0) {
 	    fseek(f, 0, SEEK_SET);
 	    if ((i = li->loader(f) == 0))
-		goto skip_old_loader;
+		break;
 	}
     }
-
-    list_for_each(head, &old_loader_list) {
-	li = list_entry(head, struct xmp_loader_info, list);
-	if (li->loader && ((i = li->loader(f)) == 0))
-	    break;
-	
-    }
-
-skip_old_loader:
 
     fclose (f);
 

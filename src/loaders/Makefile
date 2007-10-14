@@ -1,5 +1,5 @@
 # Extended Module Player src/loaders/Makefile
-# $Id: Makefile,v 1.38 2007-09-29 22:25:17 cmatsuoka Exp $
+# $Id: Makefile,v 1.39 2007-10-14 19:08:14 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -Iinclude
@@ -8,7 +8,7 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  ult_load.o mdl_load.o it_load.o stx_load.o pt3_load.o sfx_load.o \
 	  flt_load.o st_load.o emod_load.o imf_load.o digi_load.o fnk_load.o \
 	  ice_load.o hsc_load.o liq_load.o ims_load.o psm_load.o amf_load.o \
-	  xann_load.o svb_load.o stim_load.o mmd1_load.o mmd3_load.o \
+	  svb_load.o stim_load.o mmd1_load.o mmd3_load.o \
 	  rtm_load.o dmf_load.o tcb_load.o dt_load.o gtk_load.o no_load.o \
 	  arch_load.o sym_load.o dtt_load.o mgt_load.o med3_load.o med4_load.o \
 	  ssmt_load.o dbm_load.o stim_load.o

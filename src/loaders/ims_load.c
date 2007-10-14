@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ims_load.c,v 1.4 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: ims_load.c,v 1.5 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -37,7 +37,6 @@
 #include "load.h"
 #include "period.h"
 
-
 struct ims_instrument {
     uint8 name[20];
     int16 finetune;		/* Causes squeaks in beast-busters1! */
@@ -49,7 +48,7 @@ struct ims_instrument {
 };
 
 struct ims_header {
-    uint8 title[20];			/* LAX has no title */
+    uint8 title[20];
     struct ims_instrument ins[31];
     uint8 len;
     uint8 zero;
@@ -58,7 +57,86 @@ struct ims_header {
 };
 
 
-int ims_load (FILE *f)
+static int ims_test (FILE *, char *);
+static int ims_load (FILE *);
+
+struct xmp_loader_info ims_loader = {
+    "IMS",
+    "Images Music System",
+    ims_test,
+    ims_load
+};
+
+static int ims_test(FILE *f, char *t)
+{
+    int i;
+    int smp_size, pat;
+    struct ims_header ih;
+
+    smp_size = 0;
+
+    fread(&ih.title, 20, 1, f);
+
+    for (i = 0; i < 31; i++) {
+	fread(&ih.ins[i].name, 20, 1, f);
+	ih.ins[i].finetune = (int16)read16b(f);
+	ih.ins[i].size = read16b(f);
+	ih.ins[i].unknown = read8(f);
+	ih.ins[i].volume = read8(f);
+	ih.ins[i].loop_start = read16b(f);
+	ih.ins[i].loop_size = read16b(f);
+
+	smp_size += ih.ins[i].size * 2;
+
+	if (test_name(ih.ins[i].name, 20) < 0)
+	    return -1;
+
+	if (ih.ins[i].volume > 0x40)
+	    return -1;
+
+	if (ih.ins[i].size > 0x8000)
+	    return -1;
+
+	if (ih.ins[i].loop_start > ih.ins[i].size)
+	    return -1;
+
+        if (ih.ins[i].size && ih.ins[i].loop_size > 2 * ih.ins[i].size)
+	    return -1;
+    }
+
+    if (smp_size < 8)
+	return -1;
+
+    ih.len = read8(f);
+    ih.zero = read8(f);
+    fread (&ih.orders, 128, 1, f);
+    fread (&ih.magic, 4, 1, f);
+  
+    if (ih.zero > 1)		/* not sure what this is */
+	return -1;
+
+    if (ih.magic[3] != 0x3c)
+	return -1;
+
+    if (ih.len > 0x7f)
+	return -1;
+
+    for (pat = i = 0; i < ih.len; i++)
+	if (ih.orders[i] > pat)
+	    pat = ih.orders[i];
+    pat++;
+
+    if (pat > 0x7f || ih.len == 0 || ih.len > 0x7f)
+	return -1;
+   
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 20);
+
+    return 0;
+}
+
+
+static int ims_load(FILE *f)
 {
     int i, j;
     int smp_size;
@@ -73,16 +151,18 @@ int ims_load (FILE *f)
     xxh->smp = xxh->ins;
     smp_size = 0;
 
-    fread (&ih.title, 20, 1, f);		/* LAX has no title */
+    fread (&ih.title, 20, 1, f);
 
     for (i = 0; i < 31; i++) {
 	fread (&ih.ins[i].name, 20, 1, f);
-	ih.ins[i].finetune = read16b(f);	/* FIXME: int16 */
+	ih.ins[i].finetune = (int16)read16b(f);
 	ih.ins[i].size = read16b(f);
 	ih.ins[i].unknown = read8(f);
 	ih.ins[i].volume = read8(f);
 	ih.ins[i].loop_start = read16b(f);
 	ih.ins[i].loop_size = read16b(f);
+
+	smp_size += ih.ins[i].size * 2;
     }
 
     ih.len = read8(f);
@@ -90,12 +170,6 @@ int ims_load (FILE *f)
     fread (&ih.orders, 128, 1, f);
     fread (&ih.magic, 4, 1, f);
   
-    if (ih.magic[3] != 0x3c)
-	return -1;
-
-    if (ih.len > 0x7f)
-	return -1;
-
     xxh->len = ih.len;
     memcpy (xxo, ih.orders, xxh->len);
 
@@ -106,29 +180,12 @@ int ims_load (FILE *f)
     xxh->pat++;
     xxh->trk = xxh->chn * xxh->pat;
 
-    if (1) {
-	for (i = 0; i < 31; i++)
-	    smp_size += ih.ins[i].size * 2;
-	i = xxh->pat * 0x300 + smp_size + sizeof (struct ims_header);
-	if ((xmp_ctl->size != (i - 4)) && (xmp_ctl->size != i))
-	    return -1;
+    strncpy(xmp_ctl->name, (char *)ih.title, 20);
+    sprintf(xmp_ctl->type, "IMS (Images Music System)");
 
-	if (xmp_ctl->size == i - 4) {		/* No magic */
-	    fseek (f, -4, SEEK_CUR);
-	    /* nomagic = 1; */
-	}
-    }
+    MODULE_INFO();
 
-    /* Corrputed mod? */
-    if (xxh->pat > 0x7f || xxh->len == 0 || xxh->len > 0x7f)
-	return -1;
-
-    strncpy (xmp_ctl->name, (char *) ih.title, 20);
-    sprintf (xmp_ctl->type, "IMS (Images Music System)");
-
-    MODULE_INFO ();
-
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     for (i = 0; i < xxh->ins; i++) {
 	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -153,16 +210,15 @@ int ims_load (FILE *f)
 	}
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Load and convert patterns */
-    if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", xxh->pat);
 
     for (i = 0; i < xxh->pat; i++) {
-	PATTERN_ALLOC (i);
+	PATTERN_ALLOC(i);
 	xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+	TRACK_ALLOC(i);
 	for (j = 0; j < 0x100; j++) {
 	    event = &EVENT (i, j & 0x3, j >> 2);
 	    fread (ims_event, 1, 3, f);
@@ -181,8 +237,8 @@ int ims_load (FILE *f)
 		event->note += xpo;
 	    else
 		event->note = 0;
-	    event->ins = ((ims_event[0] & 0x40) >> 2) | MSN (ims_event[1]);
-	    event->fxt = LSN (ims_event[1]);
+	    event->ins = ((ims_event[0] & 0x40) >> 2) | MSN(ims_event[1]);
+	    event->fxt = LSN(ims_event[1]);
 	    event->fxp = ims_event[2];
 
 	    disable_continue_fx (event);
@@ -191,31 +247,28 @@ int ims_load (FILE *f)
 	     * ``Just note that pattern break effect command (D**) uses
 	     * HEX value in UNIC format (while it is DEC values in PTK).
 	     * Thus, it has to be converted!''
+	     *
+	     * Is this valid for IMS as well? --claudio
 	     */
 	    if (event->fxt == 0x0d)
 		 event->fxp = (event->fxp / 10) << 4 | (event->fxp % 10);
 	}
-
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
 
     xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", xxh->smp);
     for (i = 0; i < xxh->smp; i++) {
 	if (!xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
 	    &xxs[xxi[i][0].sid], NULL);
-	if (V (0))
-	    report (".");
+	reportv(0, ".");
     }
-    if (V (0))
-	report ("\n");
+    reportv(0, "\n");
 
     return 0;
 }

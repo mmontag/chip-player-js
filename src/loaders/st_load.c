@@ -39,20 +39,6 @@ static int period[] = {
     -1
 };
 
-static int test_name(uint8 *s, int n)
-{
-    int i;
-
-    for (i = 0; i < n; i++) {
-	if (s[i] > 0x7f)
-	    return -1;
-	if (s[i] > 0 && s[i] < 32)
-	    return -1;
-    }
-
-    return 0;
-}
-
 static int st_test(FILE *f, char *t)
 {
     int i, j, k;

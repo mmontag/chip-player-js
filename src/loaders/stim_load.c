@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stim_load.c,v 1.4 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: stim_load.c,v 1.5 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,6 +22,30 @@
 
 #include "load.h"
 
+#define MAGIC_STIM	MAGIC4('S','T','I','M')
+
+
+static int stim_test (FILE *, char *);
+static int stim_load (FILE *);
+
+struct xmp_loader_info stim_loader = {
+    "STIM",
+    "Slamtilt",
+    stim_test,
+    stim_load
+};
+
+static int stim_test(FILE *f, char *t)
+{
+    if (read32b(f) != MAGIC_STIM)
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
+
+
 
 struct stim_instrument {
     uint16 size;			/* Lenght of the sample (/2) */
@@ -32,7 +56,7 @@ struct stim_instrument {
 };
 
 struct stim_header {
-    uint8 id[4];			/* "STIM" ID string */
+    uint32 id;				/* "STIM" ID string */
     uint32 smpaddr;			/* Address of the sample descriptions */
     uint32 unknown[2];
     uint16 nos;				/* Number of samples (?) */
@@ -43,7 +67,7 @@ struct stim_header {
 };
 
 
-int stim_load (FILE *f)
+static int stim_load (FILE *f)
 {
     int i, j, k;
     struct xxm_event *event;
@@ -53,7 +77,7 @@ int stim_load (FILE *f)
 
     LOAD_INIT ();
 
-    fread(&sh.id, 4, 1, f);
+    sh.id = read32b(f);
     sh.smpaddr = read32b(f);
     read32b(f);
     read32b(f);
@@ -63,9 +87,6 @@ int stim_load (FILE *f)
     fread(&sh.order, 128, 1, f);
     for (i = 0; i < 64; i++)
 	sh.pataddr[i] = read32b(f) + 0x0c;
-
-    if (sh.id[0] != 'S' || sh.id[1] != 'T' || sh.id[2] != 'I' || sh.id[3] != 'M')
-	return -1;
 
     xxh->len = sh.len;
     xxh->pat = sh.pat;

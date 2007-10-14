@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.6 2007-10-01 22:03:19 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.7 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,6 +13,30 @@
 #endif
 
 #include "load.h"
+
+
+static int rad_test (FILE *, char *);
+static int rad_load (FILE *);
+
+struct xmp_loader_info rad_loader = {
+    "RAD",
+    "Reality Adlib Tracker",
+    rad_test,
+    rad_load
+};
+
+static int rad_test(FILE *f, char *t)
+{
+    char buf[16];
+
+    fread(buf, 1, 16, f);
+    if (memcmp(buf, "RAD by REALiTY!!", 16))
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
 
 
 struct rad_instrument {
@@ -27,7 +51,7 @@ struct rad_file_header {
 };
 
 
-int rad_load (FILE * f)
+static int rad_load(FILE *f)
 {
     int i, j;
     struct rad_file_header rfh;
@@ -42,9 +66,6 @@ int rad_load (FILE * f)
     rfh.version = read8(f);
     rfh.flags = read8(f);
     
-    if (strncmp ((char *) rfh.magic, "RAD by REALiTY!!", 16))
-	return -1;
-
     xxh->chn = 9;
     xxh->bpm = 125;
     xxh->tpo = rfh.flags & 0x1f;

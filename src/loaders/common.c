@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.12 2007-10-13 13:56:01 cmatsuoka Exp $
+ * $Id: common.c,v 1.13 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,21 @@
 #include "xmpi.h"
 #include "period.h"
 #include "load.h"
+
+
+int test_name(uint8 *s, int n)
+{
+    int i;
+
+    for (i = 0; i < n; i++) {
+	if (s[i] > 0x7f)
+	    return -1;
+	if (s[i] > 0 && s[i] < 32)
+	    return -1;
+    }
+
+    return 0;
+}
 
 void read_title(FILE *f, char *t, int s)
 {

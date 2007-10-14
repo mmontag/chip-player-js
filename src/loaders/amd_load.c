@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amd_load.c,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: amd_load.c,v 1.3 2007-10-14 19:08:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -13,6 +13,35 @@
 #endif
 
 #include "load.h"
+
+
+static int amd_test (FILE *, char *);
+static int amd_load (FILE *);
+
+struct xmp_loader_info amd_loader = {
+    "AMD",
+    "Amusic Adlib Tracker",
+    amd_test,
+    amd_load
+};
+
+static int amd_test(FILE *f, char *t)
+{
+    char buf[9];
+
+    fseek(f, 1062, SEEK_SET);
+    fread(buf, 1, 9, f);
+
+    if (memcmp(buf, "<o", 2) || memcmp(buf + 6, "RoR", 3))
+	return -1;
+
+    fseek(f, 0, SEEK_SET);
+    read_title(f, t, 24);
+
+    return 0;
+}
+
+
 
 struct amd_instrument {
     uint8 name[23];		/* Instrument name */
@@ -56,11 +85,6 @@ int amd_load (FILE * f)
     fread(&afh.order, 128, 1, f);
     fread(&afh.magic, 9, 1, f);
     afh.version = read8(f);
-
-    if (strncmp ((char *) afh.magic, "<o", 2) ||
-	strncmp ((char *) afh.magic + 6, "RoR", 3)) {
-	return -1;
-    }
 
     xxh->chn = 9;
     xxh->bpm = 125;

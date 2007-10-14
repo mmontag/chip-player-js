@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.62 2007-10-14 03:29:02 cmatsuoka Exp $
+ * $Id: formats.c,v 1.63 2007-10-14 19:08:15 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,7 +21,6 @@
 struct xmp_fmt_info *__fmt_head;
 
 LIST_HEAD(loader_list);
-LIST_HEAD(old_loader_list);
 
 void register_format(char *suffix, char *tracker)
 {
@@ -46,20 +45,6 @@ static void register_loader(struct xmp_loader_info *l)
 {
 	list_add_tail(&l->list, &loader_list);
 	register_format(l->id, l->name);
-}
-
-static void old_register_loader(char *id, char *name, int (*loader) ())
-{
-	struct xmp_loader_info *l;
-
-	l = malloc(sizeof(struct xmp_loader_info));
-	l->id = id;
-	l->name = name;
-	l->loader = loader;
-
-	register_format(id, name);
-
-	list_add_tail(&l->list, &old_loader_list);
 }
 
 #define REG_LOADER(x) do { \
@@ -109,14 +94,13 @@ void xmp_init_formats()
 	REG_LOADER(sfx);
 	REG_LOADER(far);
 	register_format("UMX", "Epic Games Unreal/UT");
-	old_register_loader("STIM", "Slamtilt", stim_load);
-	old_register_loader("MTP", "SoundSmith/MegaTracker", mtp_load);
-	old_register_loader("IMS", "Images Music System", ims_load);
-	old_register_loader("XANN", "XANN Packer", xann_load);
-	old_register_loader("669", "Composer 669", ssn_load);
-	old_register_loader("FNK", "Funktracker", fnk_load);
-	old_register_loader("AMD", "Amusic Adlib Tracker", amd_load);
-	old_register_loader("RAD", "Reality Adlib Tracker", rad_load);
-	old_register_loader("HSC", "HSC-Tracker", hsc_load);
-	old_register_loader("ALM", "Aley Keptr", alm_load);
+	REG_LOADER(stim);
+	REG_LOADER(mtp);
+	REG_LOADER(ims);
+	REG_LOADER(ssn);
+	REG_LOADER(fnk);
+	REG_LOADER(amd);
+	REG_LOADER(rad);
+	REG_LOADER(hsc);
+	REG_LOADER(alm);
 }
