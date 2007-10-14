@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.5 2007-10-01 14:21:56 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.6 2007-10-14 03:29:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,13 +22,35 @@
 #include "load.h"
 #include "far.h"
 
+#define MAGIC_FAR	MAGIC4('F','A','R',0xfe)
+
+
+static int far_test (FILE *, char *);
+static int far_load (FILE *);
+
+struct xmp_loader_info far_loader = {
+    "FAR",
+    "Farandole Composer",
+    far_test,
+    far_load
+};
+
+static int far_test(FILE *f, char *t)
+{
+    if (read32b(f) != MAGIC_FAR)
+	return -1;
+
+    read_title(f, t, 40);
+
+    return 0;
+}
+
 
 #define NONE			0xff
 #define FX_FAR_SETVIBRATO	0xfe
 #define FX_FAR_F_VSLIDE_UP	0xfd
 
-static uint8 fx[] =
-{
+static uint8 fx[] = {
     NONE,		FX_PORTA_UP,
     FX_PORTA_DN,	FX_TONEPORTA,
     NONE,		FX_FAR_SETVIBRATO,
@@ -52,7 +74,7 @@ int far_load (FILE * f)
 
     LOAD_INIT ();
 
-    fread(&ffh.magic, 4, 1, f);		/* File magic: 'FAR\xfe' */
+    ffh.magic = read32b(f);		/* File magic: 'FAR\xfe' */
     fread(&ffh.name, 40, 1, f);		/* Song name */
     fread(&ffh.crlf, 3, 1, f);		/* 0x0d 0x0a 0x1A */
     ffh.headersize = read16l(f);	/* Remaining header size in bytes */
@@ -63,9 +85,6 @@ int far_load (FILE * f)
     fread(&ffh.pan, 16, 1, f);		/* Channel pan definitions */
     read32l(f);				/* Grid, mode (for editor) */
     ffh.textlen = read16l(f);		/* Length of embedded text */
-
-    if (strncmp ((char *) ffh.magic, "FAR", 3) || (ffh.magic[3] != 0xfe))
-	return -1;
 
     fseek(f, ffh.textlen, SEEK_CUR);	/* Skip song text */
 

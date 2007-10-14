@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far.h,v 1.2 2006-02-12 16:58:48 cmatsuoka Exp $
+ * $Id: far.h,v 1.3 2007-10-14 03:29:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -9,7 +9,7 @@
  */
 
 struct far_header {
-    uint8 magic[4];		/* File magic: 'FAR\xfe' */
+    uint32 magic;		/* File magic: 'FAR\xfe' */
     uint8 name[40];		/* Song name */
     uint8 crlf[3];		/* 0x0d 0x0a 0x1A */
     uint16 headersize;		/* Remaining header size in bytes */

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.5 2007-10-08 01:16:11 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.6 2007-10-14 03:29:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,6 +28,34 @@
 #define MAGIC_SONG	MAGIC4('S','O','N','G')
 
 
+static int sfx_test (FILE *, char *);
+static int sfx_load (FILE *);
+
+struct xmp_loader_info sfx_loader = {
+    "SFX",
+    "SoundFX",
+    sfx_test,
+    sfx_load
+};
+
+static int sfx_test(FILE *f, char *t)
+{
+    uint32 a, b;
+
+    fseek(f, 4 * 15, SEEK_CUR);
+    a = read32b(f);
+    fseek(f, 4 * 15, SEEK_CUR);
+    b = read32b(f);
+
+    if (a != MAGIC_SONG && b != MAGIC_SONG)
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
+
+
 struct sfx_ins {
     uint8 name[22];		/* Instrument name */
     uint16 len;			/* Sample length in words */
@@ -50,18 +78,7 @@ struct sfx_header2 {
 };
 
 
-static int sfx_13_20_load (FILE *, int);
-
-
-int sfx_load (FILE * f)
-{
-    if (sfx_13_20_load (f, 15) < 0)
-	return sfx_13_20_load (f, 31);
-    return 0;
-}
-
-
-static int sfx_13_20_load (FILE *f, int nins)
+static int sfx_13_20_load(FILE *f, int nins)
 {
     int i, j;
     struct xxm_event *event;
@@ -204,5 +221,13 @@ static int sfx_13_20_load (FILE *f, int nins)
     }
     reportv(0, "\n");
 
+    return 0;
+}
+
+
+static int sfx_load (FILE *f)
+{
+    if (sfx_13_20_load (f, 15) < 0)
+	return sfx_13_20_load (f, 31);
     return 0;
 }

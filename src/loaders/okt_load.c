@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.6 2007-10-12 04:15:19 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.7 2007-10-14 03:29:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,6 +19,30 @@
 
 #include "load.h"
 #include "iff.h"
+
+
+static int okt_test (FILE *, char *);
+static int okt_load (FILE *);
+
+struct xmp_loader_info okt_loader = {
+    "OKT",
+    "Oktalyzer",
+    okt_test,
+    okt_load
+};
+
+static int okt_test(FILE *f, char *t)
+{
+    char magic[8];
+
+    fread (magic, 1, 8, f);
+    if (strncmp (magic, "OKTASONG", 8))
+	return -1;
+
+    read_title(f, t, 0);
+
+    return 0;
+}
 
 
 #define OKT_MODE8 0x00		/* 7 bit samples */
@@ -239,16 +263,11 @@ static void get_sbod (int size, FILE *f)
 }
 
 
-int okt_load (FILE *f)
+static int okt_load (FILE *f)
 {
-    char magic[8];
-
     LOAD_INIT ();
 
-    /* Check magic */
-    fread (magic, 1, 8, f);
-    if (strncmp (magic, "OKTASONG", 8))
-	return -1;
+    fseek(f, 8, SEEK_CUR);	/* OKTASONG */
 
     pattern = sample = 0;
 

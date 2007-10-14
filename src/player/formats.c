@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.61 2007-10-14 03:17:17 cmatsuoka Exp $
+ * $Id: formats.c,v 1.62 2007-10-14 03:29:02 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -105,10 +105,9 @@ void xmp_init_formats()
 	REG_LOADER(digi);
 	REG_LOADER(dbm);
 	REG_LOADER(emod);
-
-	old_register_loader("OKT", "Oktalyzer", okt_load);
-	old_register_loader("SFX", "SoundFX 1.3", sfx_load);
-	old_register_loader("FAR", "Farandole Composer", far_load);
+	REG_LOADER(okt);
+	REG_LOADER(sfx);
+	REG_LOADER(far);
 	register_format("UMX", "Epic Games Unreal/UT");
 	old_register_loader("STIM", "Slamtilt", stim_load);
 	old_register_loader("MTP", "SoundSmith/MegaTracker", mtp_load);
