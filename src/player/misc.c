@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: misc.c,v 1.7 2007-10-15 00:25:26 cmatsuoka Exp $
+ * $Id: misc.c,v 1.8 2007-10-15 22:26:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -36,7 +36,7 @@ int reportv(int v, char *fmt, ...)
 	va_list a;
 	int n;
 
-	if (xmp_ctl->verbose <= v)
+	if (xmp_ctl == NULL || xmp_ctl->verbose <= v)
 		return 0;
 
 	va_start(a, fmt);

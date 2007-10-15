@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.28 2007-10-15 19:46:10 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.29 2007-10-15 22:26:18 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -455,14 +455,6 @@ static void init(void)
 
 static int is_our_file(char *filename)
 {
-        /* xmp needs the audio device to be set before loading a file */
-	if (xmp_ctl == NULL) {
-		ctl.maxvoc = 16;
-		ctl.verbose = 0;
-		ctl.memavl = 0;
-		xmp_drv_set(&ctl);
-	}
-
 	if (xmp_test_module(filename, NULL) == 0)
 		return 1;
 

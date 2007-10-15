@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.32 2007-10-15 19:19:22 cmatsuoka Exp $
+ * $Id: load.c,v 1.33 2007-10-15 22:26:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -186,22 +186,21 @@ static int decrunch(FILE **f, char **s)
 
 	lsize = strlen(cmd) + strlen(*s) + 16;
 	line = malloc(lsize);
-	snprintf (line, lsize, cmd, *s);
+	snprintf(line, lsize, cmd, *s);
 
 	if ((p = popen (line, "r")) == NULL) {
 	    if (xmp_ctl->verbose)
-		report ("failed\n");
-	    fclose (t);
-	    free (line);
-            unlink (temp);
-	    free (temp);
+		report("failed\n");
+	    fclose(t);
+	    free(line);
+            unlink(temp);
+	    free(temp);
 	    return -1;
 	}
 	free (line);
 #define BSIZE 0x4000
 	if ((buf = malloc (BSIZE)) == NULL) {
-	    if (xmp_ctl->verbose)
-		report ("failed\n");
+	    reportv(0, "failed\n");
             unlink (temp);
 	    free (temp);
 	    pclose (p);
@@ -243,15 +242,13 @@ static int decrunch(FILE **f, char **s)
     }
 
     if (res < 0) {
-	if (xmp_ctl->verbose)
-	    report ("failed\n");
-	unlink (temp);
-	free (temp);
+	reportv(0, "failed\n");
+	unlink(temp);
+	free(temp);
 	return -1;
     }
 
-    if (xmp_ctl->verbose)
-	report("done\n");
+    reportv(0, "done\n");
 
     fclose(*f);
     *f = t;
