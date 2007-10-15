@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -119,12 +119,12 @@ static int stm_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->smp = m->xxh->ins;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
-    copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 20);
+    copy_adjust((uint8 *)m->name, sfh.name, 20);
 
     if (bmod2stm) {
-	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "!Scream! (BMOD2STM)");
+	snprintf(m->type, XMP_DEF_NAMESIZE, "!Scream! (BMOD2STM)");
     } else {
-	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "!Scream! "
+	snprintf(m->type, XMP_DEF_NAMESIZE, "!Scream! "
 			"(Scream Tracker %d.%02d)", sfh.vermaj, sfh.vermin);
     }
 

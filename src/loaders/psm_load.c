@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.27 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.28 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -102,7 +102,7 @@ static void get_titl(struct xmp_mod_context *m, int size, FILE *f)
 	char buf[40];
 	
 	fread(buf, 1, 40, f);
-	strncpy(xmp_ctl->name, buf, size > 32 ? 32 : size);
+	strncpy(m->name, buf, size > 32 ? 32 : size);
 }
 
 static void get_dsmp_cnt(struct xmp_mod_context *m, int size, FILE *f)
@@ -333,8 +333,8 @@ static void get_song(struct xmp_mod_context *m, int size, FILE *f)
 {
 	fseek(f, 10, SEEK_CUR);
 	m->xxh->chn = read8(f);
-	if (*xmp_ctl->name == 0)
-		fread(&xmp_ctl->name, 1, 8, f);
+	if (*m->name == 0)
+		fread(&m->name, 1, 8, f);
 }
 
 static void get_song_2(struct xmp_mod_context *m, int size, FILE *f)
@@ -423,7 +423,7 @@ static int psm_load(struct xmp_mod_context *m, FILE *f)
 	pnam = malloc(m->xxh->pat * 8);		/* pattern names */
 	pord = malloc(255 * 8);			/* pattern orders */
 
-	strcpy (xmp_ctl->type, sinaria ?
+	strcpy (m->type, sinaria ?
 		"MASI (Sinaria PSM)" : "MASI (Epic Megagames PSM)");
 
 	MODULE_INFO();

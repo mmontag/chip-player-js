@@ -17,7 +17,6 @@
 #include "list.h"
 #include "iff.h"
 
-#define __XMP_LOADERS_COMMON
 #include "load.h"
 
 static LIST_HEAD(iff_list);

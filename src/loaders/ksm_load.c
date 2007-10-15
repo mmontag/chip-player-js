@@ -59,8 +59,8 @@ int ksm_load(struct xmp_mod_context *m, FILE *f)
 	(kh.id3 != 0xffffffff && kh.id3 !=0x00000000))
 	return -1;
 
-    strncpy (xmp_ctl->name, (char *)kh.title, 13);
-    strcpy (xmp_ctl->type, "Kefrens Sound Machine");
+    strncpy (m->name, (char *)kh.title, 13);
+    strcpy (m->type, "Kefrens Sound Machine");
     MODULE_INFO ();
 
     m->xxh->ins = 15;

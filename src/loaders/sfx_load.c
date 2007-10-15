@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.7 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.8 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -129,7 +129,7 @@ static int sfx_13_20_load(struct xmp_mod_context *m, FILE *f, int nins)
 
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-    strcpy (xmp_ctl->type, m->xxh->ins == 15 ? "SoundFX 1.3" : "SoundFX 2.0");
+    strcpy (m->type, m->xxh->ins == 15 ? "SoundFX 1.3" : "SoundFX 2.0");
 
     MODULE_INFO();
 

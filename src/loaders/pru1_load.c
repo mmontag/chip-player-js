@@ -34,8 +34,8 @@ int pru1_load(struct xmp_mod_context *m, FILE *f)
 	ph.magic[3] != '.')
 	return -1;
 
-    strncpy (xmp_ctl->name, ph.name, 20);
-    sprintf (xmp_ctl->type, "ProRunner v1");
+    strncpy (m->name, ph.name, 20);
+    sprintf (m->type, "ProRunner v1");
 
     MODULE_INFO ();
 

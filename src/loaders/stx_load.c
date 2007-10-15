@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -138,11 +138,11 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
     if (x16 == sfh.psize)
 	broken = 1;
 
-    strncpy(xmp_ctl->name, (char *)sfh.name, 20);
+    strncpy(m->name, (char *)sfh.name, 20);
     if (bmod2stm)
-	sprintf(xmp_ctl->type, "STMIK 0.2 (BMOD2STM)");
+	sprintf(m->type, "STMIK 0.2 (BMOD2STM)");
     else
-	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
+	snprintf(m->type, XMP_DEF_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
 							broken ? 0 : 1);
 
     MODULE_INFO ();

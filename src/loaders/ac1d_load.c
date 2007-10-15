@@ -66,7 +66,7 @@ int ac1d_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->len; i++)
 	m->xxo[i] = ah.order[i];
 
-    sprintf (xmp_ctl->type, "AC1D Packer");
+    sprintf (m->type, "AC1D Packer");
 
     MODULE_INFO ();
 

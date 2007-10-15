@@ -80,7 +80,7 @@ int crb_load(struct xmp_mod_context *m, FILE *f)
 	xmp_ctl->size)
 	return -1;
 
-    sprintf (xmp_ctl->type, "Heatseeker");
+    sprintf (m->type, "Heatseeker");
 
     MODULE_INFO ();
 

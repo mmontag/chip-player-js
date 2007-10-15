@@ -1,7 +1,7 @@
 /* DIGI Booster module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: digi_load.c,v 1.6 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: digi_load.c,v 1.7 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -124,8 +124,8 @@ static int digi_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->len = dh.len + 1;
     m->xxh->flg |= XXM_FLG_MODRNG;
 
-    copy_adjust((uint8 *)xmp_ctl->name, dh.title, 32);
-    sprintf(xmp_ctl->type, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
+    copy_adjust((uint8 *)m->name, dh.title, 32);
+    sprintf(m->type, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
 
     MODULE_INFO ();
  

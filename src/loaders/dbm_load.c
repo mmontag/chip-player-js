@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.15 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.16 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -298,8 +298,8 @@ static int dbm_load(struct xmp_mod_context *m, FILE *f)
 	iff_register("SMPL", get_smpl);
 	iff_register("VENV", get_venv);
 
-	strncpy(xmp_ctl->name, name, XMP_DEF_NAMESIZE);
-	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "DBM0 (DigiBooster Pro "
+	strncpy(m->name, name, XMP_DEF_NAMESIZE);
+	snprintf(m->type, XMP_DEF_NAMESIZE, "DBM0 (DigiBooster Pro "
 				"%d.%02x)", version >> 8, version & 0xff);
 	MODULE_INFO();
 

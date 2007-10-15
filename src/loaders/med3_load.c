@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  */
 
 /*
@@ -217,7 +217,7 @@ static int med3_load(struct xmp_mod_context *m, FILE *f)
 
 	read32b(f);
 
-	strcpy(xmp_ctl->type, "MED3 (MED 2.00)");
+	strcpy(m->type, "MED3 (MED 2.00)");
 
 	m->xxh->ins = m->xxh->smp = 32;
 	INSTRUMENT_INIT();

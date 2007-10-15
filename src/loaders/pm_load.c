@@ -63,7 +63,7 @@ int pm_load (FILE * f)
 
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-    strcpy (xmp_ctl->type, "Power Music");
+    strcpy (m->type, "Power Music");
 
     MODULE_INFO ();
 

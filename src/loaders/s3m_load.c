@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.18 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.19 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -252,7 +252,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 	fix87(sfh.flags);
     }
 
-    copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 28);
+    copy_adjust((uint8 *)m->name, sfh.name, 28);
 
     /* Load and convert header */
     m->xxh->len = sfh.ordnum;
@@ -343,7 +343,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 	snprintf(tracker_name, 80, "unknown (%04x)", sfh.version);
     }
 
-    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "SCRM (%s)", tracker_name);
+    snprintf(m->type, XMP_DEF_NAMESIZE, "SCRM (%s)", tracker_name);
 
     MODULE_INFO ();
 

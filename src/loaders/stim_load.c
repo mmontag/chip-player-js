@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stim_load.c,v 1.6 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: stim_load.c,v 1.7 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -97,7 +97,7 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->len; i++)
 	m->xxo[i] = sh.order[i];
 
-    sprintf(xmp_ctl->type, "STIM (Slamtilt)");
+    sprintf(m->type, "STIM (Slamtilt)");
 
     MODULE_INFO ();
 

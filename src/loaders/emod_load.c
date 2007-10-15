@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.7 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.8 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -54,13 +54,13 @@ static void get_emic(struct xmp_mod_context *m, int size, FILE *f)
     int i, ver;
 
     ver = read16b(f);
-    fread(xmp_ctl->name, 1, 20, f);
-    fread(author_name, 1, 20, f);
+    fread(m->name, 1, 20, f);
+    fread(m->author, 1, 20, f);
     m->xxh->bpm = read8(f);
     m->xxh->ins = read8(f);
     m->xxh->smp = m->xxh->ins;
 
-    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE,
+    snprintf(m->type, XMP_DEF_NAMESIZE,
 				"EMOD v%d (Quadra Composer)", ver);
     MODULE_INFO ();
 

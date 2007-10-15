@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.9 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.10 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -89,9 +89,9 @@ static int mtp_load(struct xmp_mod_context *m, FILE *f)
 	fread(buffer, 6, 1, f);
 
 	if (!memcmp(buffer, "SONGOK", 6))
-		strcpy(xmp_ctl->type, "IIgs SoundSmith");
+		strcpy(m->type, "IIgs SoundSmith");
 	else if (!memcmp(buffer, "IAN92a", 8))
-		strcpy(xmp_ctl->type, "IIgs MegaTracker");
+		strcpy(m->type, "IIgs MegaTracker");
 	else
 		return -1;
 

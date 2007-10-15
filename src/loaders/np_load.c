@@ -106,7 +106,7 @@ int np_load(struct xmp_mod_context *m, FILE *f)
 	+ nh.trksize + smp_size)
 	return -1;
 
-    sprintf (xmp_ctl->type, "NoisePacker v%d", ver);
+    sprintf (m->type, "NoisePacker v%d", ver);
 
     MODULE_INFO ();
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.16 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.17 2007-10-15 23:37:23 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -126,6 +126,10 @@ struct xmp_ord_info {
 #include "xxm.h"
 
 struct xmp_mod_context {
+    char name[XMP_DEF_NAMESIZE];	/* module name */
+    char type[XMP_DEF_NAMESIZE];	/* module type */
+    char author[XMP_DEF_NAMESIZE];	/* module author */
+
     struct xxm_header *xxh;
     struct xxm_pattern **xxp;		/* Patterns */
     struct xxm_track **xxt;		/* Tracks */
@@ -140,6 +144,7 @@ struct xmp_mod_context {
     struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
     int xxo_fstrow[XMP_DEF_MAXORD];
     uint8 xxo[XMP_DEF_MAXORD];		/* Orders */
+
     uint8 **med_vol_table;		/* MED volume sequence table */
     uint8 **med_wav_table;		/* MED waveform sequence table */
 };

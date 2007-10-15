@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.19 2007-10-15 19:19:22 cmatsuoka Exp $
+ * $Id: load.h,v 1.20 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,11 +20,6 @@
 #include "convert.h"
 #include "loader.h"
 
-
-#ifndef __XMP_LOADERS_COMMON
-static char author_name[80];
-#endif
-
 char	*copy_adjust		(uint8 *, uint8 *, int);
 int	test_name		(uint8 *, int);
 void	read_title		(FILE *, char *, int);
@@ -37,16 +32,15 @@ void	disable_continue_fx	(struct xxm_event *);
 
 #define LOAD_INIT() do { \
     fseek(f, 0, SEEK_SET); \
-    *author_name = 0; \
     m->med_vol_table = m->med_wav_table = NULL; \
     set_xxh_defaults(m->xxh); \
 } while (0)
 
 #define MODULE_INFO() do { \
     if (xmp_ctl->verbose) { \
-	if (*xmp_ctl->name) report("Module title   : %s\n", xmp_ctl->name); \
-        if (*xmp_ctl->type) report("Module type    : %s\n", xmp_ctl->type); \
-	if (*author_name) report("Author name    : %s\n", author_name); \
+	if (*m->name) report("Module title   : %s\n", m->name); \
+        if (*m->type) report("Module type    : %s\n", m->type); \
+	if (*m->author) report("Author name    : %s\n", m->author); \
         if (m->xxh->len) report("Module length  : %d patterns\n", m->xxh->len); \
     } \
 } while (0)

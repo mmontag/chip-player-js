@@ -53,7 +53,7 @@ int pru2_load(struct xmp_mod_context *m, FILE *f)
 	ph.magic[3] != '!')
 	return -1;
 
-    sprintf (xmp_ctl->type, "ProRunner v2");
+    sprintf (m->type, "ProRunner v2");
 
     MODULE_INFO ();
 

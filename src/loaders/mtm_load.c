@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mtm_load.c,v 1.6 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: mtm_load.c,v 1.7 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -78,8 +78,8 @@ static int mtm_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->tpo = 6;
     m->xxh->bpm = 125;
 
-    strncpy(xmp_ctl->name, (char *)mfh.name, 20);
-    sprintf(xmp_ctl->type, "MTM (MultiTracker %d.%02d)",
+    strncpy(m->name, (char *)mfh.name, 20);
+    sprintf(m->type, "MTM (MultiTracker %d.%02d)",
 				MSN(mfh.version), LSN(mfh.version));
 
     MODULE_INFO ();

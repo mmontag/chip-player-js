@@ -94,7 +94,7 @@ int xann_load(struct xmp_mod_context *m, FILE *f)
 	xmp_ctl->size)
 	return -1;
 
-    sprintf (xmp_ctl->type, "XANN Packer");
+    sprintf (m->type, "XANN Packer");
 
     MODULE_INFO ();
 

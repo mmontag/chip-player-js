@@ -110,9 +110,9 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
 
     ver = ufh.magic[14] - '0';
 
-    strncpy(xmp_ctl->name, (char *)ufh.name, 32);
+    strncpy(m->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
-    sprintf(xmp_ctl->type, "ULT V%04d (Ultra Tracker %s)",
+    sprintf(m->type, "ULT V%04d (Ultra Tracker %s)",
 						ver, verstr[ver - 1]);
 
     MODULE_INFO ();

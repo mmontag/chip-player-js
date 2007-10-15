@@ -57,8 +57,8 @@ int fcm_load(struct xmp_mod_context *m, FILE *f)
 	fh.magic[3] != 'M' || fh.name_id[0] != 'N')
 	return -1;
 
-    strncpy (xmp_ctl->name, fh.name, 20);
-    sprintf (xmp_ctl->type, "FC-M %d.%d", fh.vmaj, fh.vmin);
+    strncpy (m->name, fh.name, 20);
+    sprintf (m->type, "FC-M %d.%d", fh.vmaj, fh.vmin);
 
     MODULE_INFO ();
 

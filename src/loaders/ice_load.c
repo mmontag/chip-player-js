@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ice_load.c,v 1.6 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: ice_load.c,v 1.7 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -89,9 +89,9 @@ static int ice_load(struct xmp_mod_context *m, FILE *f)
     ih.magic = read32b(f);
 
     if (ih.magic == MAGIC_IT10)
-        strcpy(xmp_ctl->type, "IT10 (Ice Tracker)");
+        strcpy(m->type, "IT10 (Ice Tracker)");
     else if (ih.magic == MAGIC_MTN_)
-        strcpy(xmp_ctl->type, "MTN (Soundtracker 2.6)");
+        strcpy(m->type, "MTN (Soundtracker 2.6)");
     else
 	return -1;
 
@@ -101,7 +101,7 @@ static int ice_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->len = ih.len;
     m->xxh->trk = ih.trk;
 
-    strncpy (xmp_ctl->name, (char *) ih.title, 20);
+    strncpy (m->name, (char *) ih.title, 20);
     MODULE_INFO ();
 
     INSTRUMENT_INIT ();

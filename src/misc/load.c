@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.33 2007-10-15 22:26:18 cmatsuoka Exp $
+ * $Id: load.c,v 1.34 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -389,8 +389,9 @@ int xmp_load_module(xmp_context ctx, char *s)
     xmp_drv_clearmem();
 
     /* Reset variables */
-    memset(xmp_ctl->name, 0, XMP_DEF_NAMESIZE);
-    memset(xmp_ctl->type, 0, XMP_DEF_NAMESIZE);
+    memset(m->name, 0, XMP_DEF_NAMESIZE);
+    memset(m->type, 0, XMP_DEF_NAMESIZE);
+    memset(m->author, 0, XMP_DEF_NAMESIZE);
     xmp_ctl->filename = s;		/* For ALM */
     xmp_ctl->size = st.st_size;
     xmp_ctl->rrate = PAL_RATE;
@@ -448,9 +449,9 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (m->xxh->rst >= m->xxh->len)
 	m->xxh->rst = 0;
 
-    str_adj(xmp_ctl->name);
-    if (!*xmp_ctl->name)
-	strcpy(xmp_ctl->name, "(untitled)");
+    str_adj(m->name);
+    if (!*m->name)
+	strcpy(m->name, "(untitled)");
 
     if (xmp_ctl->verbose > 1) {
 	report("Module looping : %s\n",

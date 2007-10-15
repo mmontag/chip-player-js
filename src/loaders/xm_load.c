@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.16 2007-10-15 19:19:22 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.17 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -90,7 +90,7 @@ static int xm_load(struct xmp_mod_context *m, FILE *f)
 	return -1;
 #endif
 
-    strncpy(xmp_ctl->name, (char *)xfh.name, 20);
+    strncpy(m->name, (char *)xfh.name, 20);
 
     m->xxh->len = xfh.songlen;
     m->xxh->rst = xfh.restart;
@@ -119,7 +119,7 @@ static int xm_load(struct xmp_mod_context *m, FILE *f)
 	fix_loop = 1;		/* for Breath of the Wind */
     }
 
-    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "XM %d.%02d (%s)",
+    snprintf(m->type, XMP_DEF_NAMESIZE, "XM %d.%02d (%s)",
 			xfh.version >> 8, xfh.version & 0xff, tracker_name);
 
     MODULE_INFO();

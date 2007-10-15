@@ -54,8 +54,8 @@ int kris_load(struct xmp_mod_context *m, FILE *f)
 
     m->xxh->pat = m->xxh->len = kh.len;
 
-    strncpy (xmp_ctl->name, (char *) kh.title, 20);
-    sprintf (xmp_ctl->type, "ChipTracker");
+    strncpy (m->name, (char *) kh.title, 20);
+    sprintf (m->type, "ChipTracker");
 
     MODULE_INFO ();
 

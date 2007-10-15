@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.26 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.27 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -196,7 +196,7 @@ static int sym_load(struct xmp_mod_context *m, FILE *f)
 	fseek(f, 8, SEEK_CUR);			/* BASSTRAK */
 
 	ver = read8(f);
-	sprintf(xmp_ctl->type, "BASSTRAK v%d (Digital Symphony)", ver);
+	sprintf(m->type, "BASSTRAK v%d (Digital Symphony)", ver);
 
 	m->xxh->chn = read8(f);
 	m->xxh->len = m->xxh->pat = read16l(f);
@@ -218,7 +218,7 @@ static int sym_load(struct xmp_mod_context *m, FILE *f)
 
 	a = read8(f);			/* track name length */
 
-	fread(xmp_ctl->name, 1, a, f);
+	fread(m->name, 1, a, f);
 	fseek(f, 8, SEEK_CUR);		/* skip effects table */
 
 	MODULE_INFO();

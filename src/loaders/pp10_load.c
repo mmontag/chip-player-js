@@ -83,7 +83,7 @@ int pha_load(struct xmp_mod_context *m, FILE *f)
 	}
     }
 
-    sprintf (xmp_ctl->type, "Pha Packer");
+    sprintf (m->type, "Pha Packer");
 
     MODULE_INFO ();
 

@@ -72,7 +72,7 @@ int pm01_load(struct xmp_mod_context *m, FILE *f)
     if (sizeof (struct pm01_header) + ph.patt_size + smp_size != xmp_ctl->size)
 	return -1;
 
-    sprintf (xmp_ctl->type, "Promizer 0.1");
+    sprintf (m->type, "Promizer 0.1");
 
     MODULE_INFO ();
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.13 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.14 2007-10-15 23:37:24 cmatsuoka Exp $
  */
 
 /*
@@ -152,7 +152,7 @@ static int med4_load(struct xmp_mod_context *m, FILE *f)
 		}
 	}
 
-	sprintf(xmp_ctl->type, "MED4 (MED %d.%02d)", vermaj, vermin);
+	sprintf(m->type, "MED4 (MED %d.%02d)", vermaj, vermin);
 
 	m0 = read8(f);
 

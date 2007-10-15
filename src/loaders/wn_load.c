@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: wn_load.c,v 1.3 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: wn_load.c,v 1.4 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -61,8 +61,8 @@ int wn_load (FILE * f)
 
     memcpy (m->xxo, wn.order, m->xxh->len);
 
-    strncpy (xmp_ctl->name, wn.name, 20);
-    strcpy (xmp_ctl->type, "Wanton Packer");
+    strncpy (m->name, wn.name, 20);
+    strcpy (m->type, "Wanton Packer");
 
     MODULE_INFO ();
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -74,7 +74,7 @@ static int rad_load(struct xmp_mod_context *m, FILE *f)
 	m->xxh->tpo = 6;
     m->xxh->smp = 0;
 
-    sprintf(xmp_ctl->type, "RAD %d.%d (Reality Adlib Tracker)",
+    sprintf(m->type, "RAD %d.%d (Reality Adlib Tracker)",
 				MSN(rfh.version), LSN(rfh.version));
 
     MODULE_INFO ();

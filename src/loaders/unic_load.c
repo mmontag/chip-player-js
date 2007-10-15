@@ -134,15 +134,15 @@ static int _unic_load (FILE *f, int lax)
 	return -1;
 
     if (!lax) {
-	strncpy (xmp_ctl->name, (char *) uh.title, 20);
+	strncpy (m->name, (char *) uh.title, 20);
 	if (nomagic) {
-	    sprintf (xmp_ctl->type, "UNIC Tracker (no magic)");
+	    sprintf (m->type, "UNIC Tracker (no magic)");
 	} else {
-	    sprintf (xmp_ctl->type, "UNIC Tracker [%02X %02X %02X %02X]",
+	    sprintf (m->type, "UNIC Tracker [%02X %02X %02X %02X]",
 		uh.magic[0], uh.magic[1], uh.magic[2], uh.magic[3]);
 	}
     } else {
-	sprintf (xmp_ctl->type, "UNIC Tracker 2 (Laxity)");
+	sprintf (m->type, "UNIC Tracker 2 (Laxity)");
     }
 
     /*

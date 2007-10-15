@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -197,7 +197,7 @@ static int imf_load(struct xmp_mod_context *m, FILE *f)
 	return -1;
 #endif
 
-    copy_adjust((uint8 *)xmp_ctl->name, (uint8 *)ih.name, 32);
+    copy_adjust((uint8 *)m->name, (uint8 *)ih.name, 32);
 
     m->xxh->len = ih.len;
     m->xxh->ins = ih.ins;
@@ -210,7 +210,7 @@ static int imf_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->tpo = ih.tpo;
     m->xxh->bpm = ih.bpm;
 
-    sprintf (xmp_ctl->type, "IM10 (Imago Orpheus)");
+    sprintf (m->type, "IM10 (Imago Orpheus)");
 
     MODULE_INFO ();
 

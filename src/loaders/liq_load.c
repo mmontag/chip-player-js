@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.14 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.15 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -203,9 +203,9 @@ int liq_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
     m->xxh->flg = XXM_FLG_INSVOL;
 
-    strncpy(xmp_ctl->name, (char *)lh.name, 30);
+    strncpy(m->name, (char *)lh.name, 30);
     strncpy(tracker_name, (char *)lh.tracker, 20);
-    strncpy(author_name, (char *)lh.author, 20);
+    strncpy(m->author, (char *)lh.author, 20);
     tracker_name[20] = 0;
     for (i = 20; i >= 0; i--) {
 	if (tracker_name[i] == 0x20)
@@ -213,7 +213,7 @@ int liq_load(struct xmp_mod_context *m, FILE *f)
 	if (tracker_name[i])
 	   break;
     }
-    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "LIQ %d.%02d (%s)",
+    snprintf(m->type, XMP_DEF_NAMESIZE, "LIQ %d.%02d (%s)",
 		lh.version >> 8, lh.version & 0x00ff, tracker_name);
 
     if (lh.version > 0) {

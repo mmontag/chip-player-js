@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.21 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.22 2007-10-15 23:37:24 cmatsuoka Exp $
  */
 
 /*
@@ -254,7 +254,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 	m->xxh->rst = 0;
 	m->xxh->chn = 0;
 	memcpy(m->xxo, song.playseq, m->xxh->len);
-	xmp_ctl->name[0] = 0;
+	m->name[0] = 0;
 
 	/*
 	 * Obtain number of samples from each instrument
@@ -313,7 +313,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_DEF_NAMESIZE)
 				break;
-			xmp_ctl->name[i] = read8(f);
+			m->name[i] = read8(f);
 		}
 	}
 
@@ -346,7 +346,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-	strcpy(xmp_ctl->type, ver == 0 ? m->xxh->chn > 4 ? "MMD0 (OctaMED 2.00)" :
+	strcpy(m->type, ver == 0 ? m->xxh->chn > 4 ? "MMD0 (OctaMED 2.00)" :
 			"MMD0 (MED 3.00)" : "MMD1 (OctaMED 4.00)");
 	
 	MODULE_INFO();

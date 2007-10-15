@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.13 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.14 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -132,12 +132,12 @@ static void get_ster(struct xmp_mod_context *m, int size, FILE *f)
 
 static void get_mnam(struct xmp_mod_context *m, int size, FILE *f)
 {
-	fread(xmp_ctl->name, 1, 32, f);
+	fread(m->name, 1, 32, f);
 }
 
 static void get_anam(struct xmp_mod_context *m, int size, FILE *f)
 {
-	fread(author_name, 1, 32, f);
+	fread(m->author, 1, 32, f);
 }
 
 static void get_mlen(struct xmp_mod_context *m, int size, FILE *f)
@@ -159,7 +159,7 @@ static void get_sequ(struct xmp_mod_context *m, int size, FILE *f)
 {
 	fread(m->xxo, 1, 128, f);
 
-	strcpy(xmp_ctl->type, "MUSX (Archimedes Tracker)");
+	strcpy(m->type, "MUSX (Archimedes Tracker)");
 
 	MODULE_INFO();
 	reportv(0, "Creation date  : %02d/%02d/%04d\n", day, month, year);

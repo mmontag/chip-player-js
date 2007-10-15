@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.9 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.10 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -281,7 +281,7 @@ static int okt_load(struct xmp_mod_context *m, FILE *f)
     iff_register("PBOD", get_pbod);
     iff_register("SBOD", get_sbod);
 
-    strcpy (xmp_ctl->type, "OKT (Oktalyzer)");
+    strcpy (m->type, "OKT (Oktalyzer)");
 
     MODULE_INFO ();
 

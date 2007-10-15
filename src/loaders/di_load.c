@@ -79,7 +79,7 @@ int di_load(struct xmp_mod_context *m, FILE *f)
 	m->xxh->len++;
     }
 
-    strcpy (xmp_ctl->type, "Digital Illusions");
+    strcpy (m->type, "Digital Illusions");
 
     MODULE_INFO ();
 

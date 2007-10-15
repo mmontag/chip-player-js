@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amd_load.c,v 1.4 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: amd_load.c,v 1.5 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -95,9 +95,9 @@ static int amd_load(struct xmp_mod_context *m, FILE * f)
     m->xxh->smp = 0;
     memcpy (m->xxo, afh.order, m->xxh->len);
 
-    strcpy(xmp_ctl->type, "Amusic");
-    strncpy(xmp_ctl->name, (char *)afh.name, 24);
-    strncpy(author_name, (char *)afh.author, 24);
+    strcpy(m->type, "Amusic");
+    strncpy(m->name, (char *)afh.name, 24);
+    strncpy(m->author, (char *)afh.author, 24);
 
     MODULE_INFO ();
 

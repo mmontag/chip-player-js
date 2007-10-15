@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.19 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.20 2007-10-15 23:37:24 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -292,8 +292,8 @@ static void get_chunk_in(struct xmp_mod_context *m, int size, FILE *f)
 {
     int i;
 
-    fread(xmp_ctl->name, 1, 32, f);
-    fread(author_name, 1, 20, f);
+    fread(m->name, 1, 32, f);
+    fread(m->author, 1, 20, f);
 
     m->xxh->len = read16l(f);
     m->xxh->rst = read16l(f);
@@ -810,7 +810,7 @@ static int mdl_load(struct xmp_mod_context *m, FILE *f)
     iff_idsize(2);
     iff_setflag(IFF_LITTLE_ENDIAN);
 
-    sprintf(xmp_ctl->type, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
+    sprintf(m->type, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
 
     xmp_ctl->volbase = 0xff;
     xmp_ctl->c4rate = C4_NTSC_RATE;

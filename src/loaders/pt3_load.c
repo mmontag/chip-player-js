@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -96,7 +96,7 @@ static void get_vers(struct xmp_mod_context *m, int size, FILE *f)
     char buf[20];
 
     fread(buf, 1, 10, f);
-    sprintf (xmp_ctl->type, "%-6.6s (Protracker IFFMODL)", buf + 4);
+    sprintf (m->type, "%-6.6s (Protracker IFFMODL)", buf + 4);
 
     /* Workaround for PT3.61 bug (?) */
     fseek (f, 10 - size, SEEK_CUR);
@@ -107,7 +107,7 @@ static void get_info(struct xmp_mod_context *m, int size, FILE *f)
 {
     struct pt3_chunk_info i;
 
-    fread(xmp_ctl->name, 1, 32, f);
+    fread(m->name, 1, 32, f);
     i.nins = read16b(f);
     i.npos = read16b(f);
     i.npat = read16b(f);

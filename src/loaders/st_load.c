@@ -234,7 +234,7 @@ static int st_load(struct xmp_mod_context *m, FILE *f)
 
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-    strncpy (xmp_ctl->name, (char *) mh.name, 20);
+    strncpy (m->name, (char *) mh.name, 20);
 
     /* Scan patterns for tracker detection */
     fxused = 0;
@@ -284,7 +284,7 @@ static int st_load(struct xmp_mod_context *m, FILE *f)
     else
 	modtype = "unknown tracker";
 
-    snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "ST (%s)", modtype);
+    snprintf(m->type, XMP_DEF_NAMESIZE, "ST (%s)", modtype);
 
     MODULE_INFO();
 

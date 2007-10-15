@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  */
 
 /*
@@ -33,7 +33,7 @@ int med2_load(struct xmp_mod_context *m, FILE *f)
 	if (read32b(f) !=  MAGIC_MED2)
 		return -1;
 
-	strcpy(xmp_ctl->type, "MED2 (MED 1.12)");
+	strcpy(m->type, "MED2 (MED 1.12)");
 
 	m->xxh->ins = m->xxh->smp = 32;
 	INSTRUMENT_INIT();

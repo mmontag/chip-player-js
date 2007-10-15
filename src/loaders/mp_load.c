@@ -75,7 +75,7 @@ int mp_load (FILE * f)
     if (xmp_ctl->size != 378 + m->xxh->pat * 0x400 + smp_size)
 	return -1;
 
-    strcpy (xmp_ctl->type, "Module Protector");
+    strcpy (m->type, "Module Protector");
 
     MODULE_INFO ();
 

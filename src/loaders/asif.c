@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 
-#define __XMP_LOADERS_COMMON
 #include "load.h"
 #include "asif.h"
 

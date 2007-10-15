@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: fnk_load.c,v 1.4 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: fnk_load.c,v 1.5 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -141,7 +141,7 @@ static int fnk_load(struct xmp_mod_context *m, FILE * f)
 	m->xxh->bpm = -(m->xxh->bpm & 63);
     m->xxh->bpm += 125;
     m->xxh->smp = m->xxh->ins;
-    strcpy(xmp_ctl->type, "Funktracker");
+    strcpy(m->type, "Funktracker");
 
     MODULE_INFO ();
 

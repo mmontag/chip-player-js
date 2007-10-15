@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -62,7 +62,7 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 	ver = read8(f);
 	read32b(f);		/* MCS */
 
-	sprintf(xmp_ctl->type, "MGT v%d.%d (Megatracker)", MSN(ver), LSN(ver));
+	sprintf(m->type, "MGT v%d.%d (Megatracker)", MSN(ver), LSN(ver));
 
 	m->xxh->chn = read16b(f);
 	read16b(f);			/* number of songs */
@@ -84,7 +84,7 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 
 	fseek(f, sng_ptr, SEEK_SET);
 
-	fread(xmp_ctl->name, 1, 32, f);
+	fread(m->name, 1, 32, f);
 	seq_ptr = read32b(f);
 	m->xxh->len = read16b(f);
 	m->xxh->rst = read16b(f);

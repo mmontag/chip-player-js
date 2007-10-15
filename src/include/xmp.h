@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.14 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.15 2007-10-15 23:37:23 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -102,8 +102,10 @@ struct xmp_control {
     char **help;	/* Driver help info */
     char *outfile;	/* Output file name when mixing to file */
     char *filename;	/* Module file name */
+#if 0
     char name[XMP_DEF_NAMESIZE];	/* module name */
     char type[XMP_DEF_NAMESIZE];	/* module type */
+#endif
     int memavl;		/* Memory availble in the sound card */
     int verbose;	/* Verbosity level */
 #define XMP_FMT_FM	0x00000001	/* Active mode FM */

@@ -137,7 +137,6 @@
 #include "config.h"
 #endif
 
-#define __XMP_LOADERS_COMMON
 #include "load.h"
 
 /* ----------------------------------------------------------------------

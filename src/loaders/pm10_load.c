@@ -99,7 +99,7 @@ static int prom_10_18_load(struct xmp_mod_context *m, FILE *f)
     if (extra_size + 4 + ph.smp_ptr + smp_size != xmp_ctl->size)
 	return -1;
 
-    sprintf (xmp_ctl->type, "Promizer %s", ver);
+    sprintf (m->type, "Promizer %s", ver);
 
     MODULE_INFO ();
 

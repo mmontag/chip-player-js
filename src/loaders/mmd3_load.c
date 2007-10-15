@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.17 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.18 2007-10-15 23:37:24 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -279,7 +279,7 @@ static int mmd3_load(struct xmp_mod_context *m, FILE *f)
 	//m->xxh->smp = m->xxh->ins;
 	m->xxh->rst = 0;
 	m->xxh->chn = 0;
-	xmp_ctl->name[0] = 0;
+	m->name[0] = 0;
 
 	/*
 	 * Obtain number of samples from each instrument
@@ -338,7 +338,7 @@ static int mmd3_load(struct xmp_mod_context *m, FILE *f)
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_DEF_NAMESIZE)
 				break;
-			xmp_ctl->name[i] = read8(f);
+			m->name[i] = read8(f);
 		}
 	}
 
@@ -366,7 +366,7 @@ static int mmd3_load(struct xmp_mod_context *m, FILE *f)
 
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-	sprintf(xmp_ctl->type, "MMD%c (OctaMED Soundstudio)", '0' + ver);
+	sprintf(m->type, "MMD%c (OctaMED Soundstudio)", '0' + ver);
 	MODULE_INFO();
 
 	if (V(0)) {

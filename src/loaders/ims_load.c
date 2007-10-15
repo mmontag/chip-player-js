@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ims_load.c,v 1.6 2007-10-15 19:19:20 cmatsuoka Exp $
+ * $Id: ims_load.c,v 1.7 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -180,8 +180,8 @@ static int ims_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->pat++;
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-    strncpy(xmp_ctl->name, (char *)ih.title, 20);
-    sprintf(xmp_ctl->type, "IMS (Images Music System)");
+    strncpy(m->name, (char *)ih.title, 20);
+    sprintf(m->type, "IMS (Images Music System)");
 
     MODULE_INFO();
 

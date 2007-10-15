@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.11 2007-10-15 19:19:21 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.12 2007-10-15 23:37:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -58,7 +58,7 @@ static int tcb_load(struct xmp_mod_context *m, FILE *f)
 
 	fread(buffer, 8, 1, f);
 
-	sprintf(xmp_ctl->type, "%-8.8s (TCB Tracker)", buffer);
+	sprintf(m->type, "%-8.8s (TCB Tracker)", buffer);
 
 	read16b(f);	/* ? */
 	m->xxh->pat = read16b(f);
