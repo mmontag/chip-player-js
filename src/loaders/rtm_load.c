@@ -1,7 +1,7 @@
 /* Real Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: rtm_load.c,v 1.9 2007-10-13 23:21:26 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.10 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int rtm_test(FILE *, char *);
-static int rtm_load(FILE *);
+static int rtm_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info rtm_loader = {
 	"RTM",
@@ -64,7 +64,7 @@ static int read_object_header(FILE *f, struct ObjectHeader *h)
 }
 
 
-static int rtm_load(FILE *f)
+static int rtm_load(struct xmp_mod_context *m, FILE *f)
 {
 	int i, j, r;
 	struct xxm_event *event;
@@ -91,34 +91,34 @@ static int rtm_load(FILE *f)
 	fread(&rh.panning, 32, 1, f);
 	rh.extraDataSize = read32l(f);
 	for (i = 0; i < rh.nposition; i++)
-		xxo[i] = read16l(f);
+		m->xxo[i] = read16l(f);
 	
 	strncpy(xmp_ctl->name, oh.name, 20);
 	snprintf(xmp_ctl->type, XMP_DEF_NAMESIZE, "RTMM %d.%02d (%s)",
 			oh.version >> 8, oh.version & 0xff, rh.software);
 
-	xxh->len = rh.nposition;
-	xxh->pat = rh.npattern;
-	xxh->chn = rh.ntrack;
-	xxh->trk = xxh->chn * xxh->pat + 1;
-	xxh->ins = rh.ninstr;
-	xxh->tpo = rh.speed;
-	xxh->bpm = rh.tempo;
-	xxh->flg = rh.flags & 0x01 ? XXM_FLG_LINEAR : 0;
+	m->xxh->len = rh.nposition;
+	m->xxh->pat = rh.npattern;
+	m->xxh->chn = rh.ntrack;
+	m->xxh->trk = m->xxh->chn * m->xxh->pat + 1;
+	m->xxh->ins = rh.ninstr;
+	m->xxh->tpo = rh.speed;
+	m->xxh->bpm = rh.tempo;
+	m->xxh->flg = rh.flags & 0x01 ? XXM_FLG_LINEAR : 0;
 
 	MODULE_INFO();
 
-	for (i = 0; i < xxh->chn; i++)
-		xxc[i].pan = rh.panning[i] & 0xff;
+	for (i = 0; i < m->xxh->chn; i++)
+		m->xxc[i].pan = rh.panning[i] & 0xff;
 
 	PATTERN_INIT();
 
 	if (V(0))
-		report("Stored patterns: %d ", xxh->pat);
+		report("Stored patterns: %d ", m->xxh->pat);
 
 	offset = 42 + oh.headerSize + rh.extraDataSize;
 
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 		uint8 c;
 
 		fseek(f, offset, SEEK_SET);
@@ -133,7 +133,7 @@ static int rtm_load(FILE *f)
 		offset += 42 + oh.headerSize + rp.datasize;
 
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = rp.nrows;
+		m->xxp[i]->rows = rp.nrows;
 		TRACK_ALLOC(i);
 
 		for (r = 0; r < rp.nrows; r++) {
@@ -174,29 +174,29 @@ static int rtm_load(FILE *f)
 	 */
 
 	if (V(0))
-		report("Instruments    : %d ", xxh->ins);
+		report("Instruments    : %d ", m->xxh->ins);
 	if (V(1))
 		report("\n");
 
 	fseek(f, offset, SEEK_SET);
 
 	/* ESTIMATED value! We don't know the actual value at this point */
-	xxh->smp = MAX_SAMP;
+	m->xxh->smp = MAX_SAMP;
 
 	INSTRUMENT_INIT();
 
-	for (smpnum = i = 0; i < xxh->ins; i++) {
+	for (smpnum = i = 0; i < m->xxh->ins; i++) {
 		read_object_header(f, &oh);
 
-		copy_adjust(xxih[i].name, (uint8 *)&oh.name, 32);
+		copy_adjust(m->xxih[i].name, (uint8 *)&oh.name, 32);
 
 		if (oh.headerSize == 0) {
-			if (V(1) && strlen((char *)xxih[i].name)) {
-				report("[%2X] %-26.26s %2d ", i, xxih[i].name,
-								xxih[i].nsm);
+			if (V(1) && strlen((char *)m->xxih[i].name)) {
+				report("[%2X] %-26.26s %2d ", i, m->xxih[i].name,
+								m->xxih[i].nsm);
 			}
 			ri.nsample = 0;
-			if (V(1) && (strlen((char *)xxih[i].name) || xxih[i].nsm))
+			if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxih[i].nsm))
 				report("\n");
 			continue;
 		}
@@ -237,50 +237,50 @@ static int rtm_load(FILE *f)
 		//ri.midiProgram = read8(f);
 		//ri.midiEnable = read8(f);
 
-		xxih[i].nsm = ri.nsample;
-		if (V(1) && (strlen((char *)xxih[i].name) || ri.nsample)) {
-			report("[%2X] %-26.26s %2d ", i, xxih[i].name,
-							xxih[i].nsm);
+		m->xxih[i].nsm = ri.nsample;
+		if (V(1) && (strlen((char *)m->xxih[i].name) || ri.nsample)) {
+			report("[%2X] %-26.26s %2d ", i, m->xxih[i].name,
+							m->xxih[i].nsm);
 		}
-		if (xxih[i].nsm > 16)
-			xxih[i].nsm = 16;
-		xxi[i] = calloc(sizeof (struct xxm_instrument), xxih[i].nsm);
+		if (m->xxih[i].nsm > 16)
+			m->xxih[i].nsm = 16;
+		m->xxi[i] = calloc(sizeof (struct xxm_instrument), m->xxih[i].nsm);
 
 		for (j = 0; j < 96; j++)
-			xxim->ins[j] = ri.table[j + 12];
+			m->xxim->ins[j] = ri.table[j + 12];
 
 		/* Envelope */
-		xxih[i].rls = ri.volfade;
-		xxih[i].aei.npt = ri.volumeEnv.npoint;
-		xxih[i].aei.sus = ri.volumeEnv.sustain;
-		xxih[i].aei.lps = ri.volumeEnv.loopstart;
-		xxih[i].aei.lpe = ri.volumeEnv.loopend;
-		xxih[i].aei.flg = ri.volumeEnv.flags;
-		xxih[i].pei.npt = ri.panningEnv.npoint;
-		xxih[i].pei.sus = ri.panningEnv.sustain;
-		xxih[i].pei.lps = ri.panningEnv.loopstart;
-		xxih[i].pei.lpe = ri.panningEnv.loopend;
-		xxih[i].pei.flg = ri.panningEnv.flags;
-		if (xxih[i].aei.npt)
-			xxae[i] = calloc(4, xxih[i].aei.npt);
+		m->xxih[i].rls = ri.volfade;
+		m->xxih[i].aei.npt = ri.volumeEnv.npoint;
+		m->xxih[i].aei.sus = ri.volumeEnv.sustain;
+		m->xxih[i].aei.lps = ri.volumeEnv.loopstart;
+		m->xxih[i].aei.lpe = ri.volumeEnv.loopend;
+		m->xxih[i].aei.flg = ri.volumeEnv.flags;
+		m->xxih[i].pei.npt = ri.panningEnv.npoint;
+		m->xxih[i].pei.sus = ri.panningEnv.sustain;
+		m->xxih[i].pei.lps = ri.panningEnv.loopstart;
+		m->xxih[i].pei.lpe = ri.panningEnv.loopend;
+		m->xxih[i].pei.flg = ri.panningEnv.flags;
+		if (m->xxih[i].aei.npt)
+			m->xxae[i] = calloc(4, m->xxih[i].aei.npt);
 		else
-			xxih[i].aei.flg &= ~XXM_ENV_ON;
-		if (xxih[i].pei.npt)
-			xxpe[i] = calloc(4, xxih[i].pei.npt);
+			m->xxih[i].aei.flg &= ~XXM_ENV_ON;
+		if (m->xxih[i].pei.npt)
+			m->xxpe[i] = calloc(4, m->xxih[i].pei.npt);
 		else
-			xxih[i].pei.flg &= ~XXM_ENV_ON;
+			m->xxih[i].pei.flg &= ~XXM_ENV_ON;
 
-		for (j = 0; j < xxih[i].aei.npt; j++) {
-			xxae[i][j * 2 + 0] = ri.volumeEnv.point[j].x;
-			xxae[i][j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
+		for (j = 0; j < m->xxih[i].aei.npt; j++) {
+			m->xxae[i][j * 2 + 0] = ri.volumeEnv.point[j].x;
+			m->xxae[i][j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
 		}
-		for (j = 0; j < xxih[i].pei.npt; j++) {
-			xxpe[i][j * 2 + 0] = ri.panningEnv.point[j].x;
-			xxpe[i][j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
+		for (j = 0; j < m->xxih[i].pei.npt; j++) {
+			m->xxpe[i][j * 2 + 0] = ri.panningEnv.point[j].x;
+			m->xxpe[i][j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
 		}
 
 		/* For each sample */
-		for (j = 0; j < xxih[i].nsm; j++, smpnum++) {
+		for (j = 0; j < m->xxih[i].nsm; j++, smpnum++) {
 			read_object_header(f, &oh);
 
 			rs.flags = read16l(f);
@@ -295,60 +295,60 @@ static int rtm_load(FILE *f)
 			rs.panning = read8(f);
 
 			c2spd_to_note(rs.basefreq,
-					&xxi[i][0].xpo, &xxi[i][0].fin);
-			xxi[i][j].xpo += 48 - rs.basenote;
+					&m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+			m->xxi[i][j].xpo += 48 - rs.basenote;
 
-			xxi[i][j].vol = rs.defaultvolume * rs.basevolume / 0x40;
-			xxi[i][j].pan = 0x80 + rs.panning * 2;
-			xxi[i][j].vwf = ri.vibflg;
-			xxi[i][j].vde = ri.vibdepth;
-			xxi[i][j].vra = ri.vibrate;
-			xxi[i][j].vsw = ri.vibsweep;
-			xxi[i][j].sid = smpnum;
+			m->xxi[i][j].vol = rs.defaultvolume * rs.basevolume / 0x40;
+			m->xxi[i][j].pan = 0x80 + rs.panning * 2;
+			m->xxi[i][j].vwf = ri.vibflg;
+			m->xxi[i][j].vde = ri.vibdepth;
+			m->xxi[i][j].vra = ri.vibrate;
+			m->xxi[i][j].vsw = ri.vibsweep;
+			m->xxi[i][j].sid = smpnum;
 
 			if (smpnum >= MAX_SAMP) {
 				fseek(f, rs.length, SEEK_CUR);
 				continue;
 			}
 
-			copy_adjust(xxs[smpnum].name, (uint8 *)oh.name, 32);
+			copy_adjust(m->xxs[smpnum].name, (uint8 *)oh.name, 32);
 
-			xxs[smpnum].len = rs.length;
-			xxs[smpnum].lps = rs.loopbegin;
-			xxs[smpnum].lpe = rs.loopend;
-			xxs[smpnum].flg = rs.flags & 0x02 ?  WAVE_16_BITS : 0;
-			xxs[smpnum].flg |= rs.loop & 0x03 ?  WAVE_LOOPING : 0;
-			xxs[smpnum].flg |= rs.loop == 2 ? WAVE_BIDIR_LOOP : 0;
+			m->xxs[smpnum].len = rs.length;
+			m->xxs[smpnum].lps = rs.loopbegin;
+			m->xxs[smpnum].lpe = rs.loopend;
+			m->xxs[smpnum].flg = rs.flags & 0x02 ?  WAVE_16_BITS : 0;
+			m->xxs[smpnum].flg |= rs.loop & 0x03 ?  WAVE_LOOPING : 0;
+			m->xxs[smpnum].flg |= rs.loop == 2 ? WAVE_BIDIR_LOOP : 0;
 
 			if ((V(1)) && rs.length) {
 				report ("%s[%1x] %05x%c%05x %05x %c "
 						"V%02x F%+04d P%02x R%+03d",
 					j ? "\n\t\t\t\t    " : " ", j,
-					xxs[xxi[i][j].sid].len,
-					xxs[xxi[i][j].sid].flg & WAVE_16_BITS ? '+' : ' ',
-					xxs[xxi[i][j].sid].lps,
-					xxs[xxi[i][j].sid].lpe,
-					xxs[xxi[i][j].sid].flg & WAVE_BIDIR_LOOP ? 'B' :
-					xxs[xxi[i][j].sid].flg & WAVE_LOOPING ? 'L' : ' ',
-					xxi[i][j].vol, xxi[i][j].fin,
-					xxi[i][j].pan, xxi[i][j].xpo);
+					m->xxs[m->xxi[i][j].sid].len,
+					m->xxs[m->xxi[i][j].sid].flg & WAVE_16_BITS ? '+' : ' ',
+					m->xxs[m->xxi[i][j].sid].lps,
+					m->xxs[m->xxi[i][j].sid].lpe,
+					m->xxs[m->xxi[i][j].sid].flg & WAVE_BIDIR_LOOP ? 'B' :
+					m->xxs[m->xxi[i][j].sid].flg & WAVE_LOOPING ? 'L' : ' ',
+					m->xxi[i][j].vol, m->xxi[i][j].fin,
+					m->xxi[i][j].pan, m->xxi[i][j].xpo);
 
 			}
 
-			xmp_drv_loadpatch(f, xxi[i][j].sid, xmp_ctl->c4rate,
-				XMP_SMP_DIFF, &xxs[xxi[i][j].sid], NULL);
+			xmp_drv_loadpatch(f, m->xxi[i][j].sid, xmp_ctl->c4rate,
+				XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 		}
 		if (xmp_ctl->verbose == 1)
 			report (".");
 
-		if ((V(1)) && (strlen((char *) xxih[i].name) || ri.nsample))
+		if ((V(1)) && (strlen((char *) m->xxih[i].name) || ri.nsample))
 			report ("\n");
 	}
 	if (xmp_ctl->verbose == 1)
 		report ("\n");
 
-	xxh->smp = smpnum;
-	xxs = realloc (xxs, sizeof (struct xxm_sample) * xxh->smp);
+	m->xxh->smp = smpnum;
+	m->xxs = realloc(m->xxs, sizeof (struct xxm_sample) * m->xxh->smp);
 
 	xmp_ctl->fetch |= XMP_MODE_FT2;
 

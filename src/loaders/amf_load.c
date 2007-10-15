@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.9 2007-10-13 21:17:12 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.10 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,7 +25,7 @@
 
 
 static int amf_test(FILE *, char *);
-static int amf_load(FILE *);
+static int amf_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info amf_loader = {
 	"AMF",
@@ -53,7 +53,7 @@ static int amf_test(FILE * f, char *t)
 }
 
 
-int amf_load(FILE *f)
+int amf_load(struct xmp_mod_context *m, FILE *f)
 {
 	int i, j;
 	struct xxm_event *event;
@@ -70,13 +70,13 @@ int amf_load(FILE *f)
 	strncpy(xmp_ctl->name, (char *)buf, 32);
 	sprintf(xmp_ctl->type, "DSMI %d.%d (DMP)", ver / 10, ver % 10);
 
-	xxh->ins = read8(f);
-	xxh->len = read8(f);
-	xxh->trk = read16l(f);
-	xxh->chn = read8(f);
+	m->xxh->ins = read8(f);
+	m->xxh->len = read8(f);
+	m->xxh->trk = read16l(f);
+	m->xxh->chn = read8(f);
 
-	xxh->smp = xxh->ins;
-	xxh->pat = xxh->len;
+	m->xxh->smp = m->xxh->ins;
+	m->xxh->pat = m->xxh->len;
 
 	if (ver == 0x0a)
 		fread(buf, 1, 16, f);		/* channel remap table */
@@ -84,10 +84,10 @@ int amf_load(FILE *f)
 	if (ver >= 0x0d) {
 		fread(buf, 1, 32, f);		/* panning table */
 		for (i = 0; i < 32; i++) {
-			xxc->pan = 0x80 + 2 * (int8)buf[i];
+			m->xxc->pan = 0x80 + 2 * (int8)buf[i];
 		}
-		xxh->bpm = read8(f);
-		xxh->tpo = read8(f);
+		m->xxh->bpm = read8(f);
+		m->xxh->tpo = read8(f);
 	} else if (ver >= 0x0b) {
 		fread(buf, 1, 16, f);
 	}
@@ -97,24 +97,23 @@ int amf_load(FILE *f)
 
 	/* Orders */
 
-	for (i = 0; i < xxh->len; i++)
-		xxo[i] = i;
+	for (i = 0; i < m->xxh->len; i++)
+		m->xxo[i] = i;
 
-	if (V(0))
-		report ("Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-	xxp = calloc(sizeof(struct xxm_pattern *), xxh->pat + 1);
+	m->xxp = calloc(sizeof(struct xxm_pattern *), m->xxh->pat + 1);
 
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
-		for (j = 0; j < xxh->chn; j++) {
+		m->xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
+		for (j = 0; j < m->xxh->chn; j++) {
 			uint16 t = read16l(f);
-			xxp[i]->info[j].index = t;
+			m->xxp[i]->info[j].index = t;
 		}
-		if (V(0)) report (".");
+		reportv(0, ".");
 	}
-	printf("\n");
+	reportv(0, "\n");
 
 
 	/* Instruments */
@@ -124,52 +123,52 @@ int amf_load(FILE *f)
 	if (V(1))
 		report("     Sample name                      Len   LBeg  LEnd  L Vol C2Spd\n");
 
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		uint8 b;
 		int c2spd;
 
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
 		b = read8(f);
-		xxih[i].nsm = b ? 1 : 0;
+		m->xxih[i].nsm = b ? 1 : 0;
 
 		fread(buf, 1, 32, f);
-		copy_adjust(xxih[i].name, buf, 32);
+		copy_adjust(m->xxih[i].name, buf, 32);
 
 		fread(buf, 1, 13, f);	/* sample name */
 		read32l(f);		/* sample index */
 
-		xxi[i][0].sid = i;
-		xxi[i][0].pan = 0x80;
-		xxs[i].len = read32l(f);
+		m->xxi[i][0].sid = i;
+		m->xxi[i][0].pan = 0x80;
+		m->xxs[i].len = read32l(f);
 		c2spd = read16l(f);
-		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
-		xxi[i][0].vol = read8(f);
+		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+		m->xxi[i][0].vol = read8(f);
 
 		if (ver <= 0x0a) {
-			xxs[i].lps = read16l(f);
-			xxs[i].lpe = xxs[i].len - 1;
+			m->xxs[i].lps = read16l(f);
+			m->xxs[i].lpe = m->xxs[i].len - 1;
 		} else {
-			xxs[i].lps = read32l(f);
-			xxs[i].lpe = read32l(f);
+			m->xxs[i].lps = read32l(f);
+			m->xxs[i].lpe = read32l(f);
 		}
-		xxs[i].flg = xxs[i].lps > 0 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = m->xxs[i].lps > 0 ? WAVE_LOOPING : 0;
 
-		if (V(1) && (strlen((char *)xxih[i].name) || xxs[i].len)) {
+		if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
 			report ("[%2X] %-32.32s %05x %05x %05x %c V%02x %5d\n",
-				i, xxih[i].name, xxs[i].len, xxs[i].lps,
-				xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ?
-				'L' : ' ', xxi[i][0].vol, c2spd);
+				i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+				m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ?
+				'L' : ' ', m->xxi[i][0].vol, c2spd);
 		}
 	}
 				
 
 	/* Tracks */
 
-	trkmap = calloc(sizeof(int), xxh->trk);
+	trkmap = calloc(sizeof(int), m->xxh->trk);
 	newtrk = 0;
 
-	for (i = 0; i < xxh->trk; i++) {		/* read track table */
+	for (i = 0; i < m->xxh->trk; i++) {		/* read track table */
 		uint16 t;
 		t = read16l(f);
 		trkmap[i] = t - 1;
@@ -177,26 +176,26 @@ int amf_load(FILE *f)
 /*printf("%d -> %d\n", i, t);*/
 	}
 
-	for (i = 0; i < xxh->pat; i++) {		/* read track table */
-		for (j = 0; j < xxh->chn; j++) {
-			int k = xxp[i]->info[j].index - 1;
-			xxp[i]->info[j].index = trkmap[k];
+	for (i = 0; i < m->xxh->pat; i++) {		/* read track table */
+		for (j = 0; j < m->xxh->chn; j++) {
+			int k = m->xxp[i]->info[j].index - 1;
+			m->xxp[i]->info[j].index = trkmap[k];
 		}
 	}
 
-	xxh->trk = newtrk;
+	m->xxh->trk = newtrk;
 	free(trkmap);
 
-	if (V(0)) report("Stored tracks  : %d ", xxh->trk);
-	xxt = calloc (sizeof (struct xxm_track *), xxh->trk);
+	reportv(0, "Stored tracks  : %d ", m->xxh->trk);
+	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
 
-	for (i = 0; i < xxh->trk; i++) {
+	for (i = 0; i < m->xxh->trk; i++) {
 		uint8 t1, t2, t3;
 		int size;
 
-		xxt[i] = calloc(sizeof(struct xxm_track) +
+		m->xxt[i] = calloc(sizeof(struct xxm_track) +
 			sizeof(struct xxm_event) * 64 - 1, 1);
-		xxt[i]->rows = 64;
+		m->xxt[i]->rows = 64;
 
 		size = read24l(f);
 /*printf("TRACK %d SIZE %d\n", i, size);*/
@@ -210,13 +209,13 @@ int amf_load(FILE *f)
 			if (t1 == 0xff && t2 == 0xff && t3 == 0xff)
 				break;
 
-			event = &xxt[i]->event[t1];
+			event = &m->xxt[i]->event[t1];
 
 			if (t2 < 0x7f) {		/* note */
 				if (t2 > 12)
 					event->note = t2 + 1 - 12;
 			} else if (t2 == 0x7f) {	/* copy previous */
-				memcpy(event, &xxt[i]->event[t1 - 1],
+				memcpy(event, &m->xxt[i]->event[t1 - 1],
 					sizeof(struct xxm_event));
 			} else if (t2 == 0x80) {	/* instrument */
 				event->ins = t3 + 1;
@@ -363,19 +362,19 @@ int amf_load(FILE *f)
 		}
 		if (V(0) & !(i % 4)) report(".");
 	}
-	if (V(0)) report("\n");
+	reportv(0, "\n");
 
 
 	/* Samples */
 
-	if (V(0)) report ("Stored samples : %d ", xxh->smp);
+	if (V(0)) report ("Stored samples : %d ", m->xxh->smp);
 
-	for (i = 0; i < xxh->ins; i++) {
-		xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate,
-			XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
-		if (V(0)) report (".");
+	for (i = 0; i < m->xxh->ins; i++) {
+		xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+			XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
+		reportv(0, ".");
 	}
-	if (V(0)) report ("\n");
+	reportv(0, "\n");
 
 	xmp_ctl->fetch |= XMP_CTL_FINEFX;
 

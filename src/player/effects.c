@@ -9,10 +9,10 @@
 #define NOT_IMPLEMENTED
 
 #define DO_TONEPORTA() { \
-	if (note-- && note < 0x60 && (uint32)xc->ins < xxh->ins) \
+	if (note-- && note < 0x60 && (uint32)xc->ins < p->m.xxh->ins) \
 	    xc->s_end = note_to_period (note + XXI[XXIM.ins[note]].xpo + \
 		XXIM.xpo[note] /*, XXI[XXIM.ins[note]].fin*/, \
-	 	xxh->flg & XXM_FLG_LINEAR); \
+	 	p->m.xxh->flg & XXM_FLG_LINEAR); \
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 }
 
@@ -458,10 +458,10 @@ fx_finetune:
 	xc->resonance = fxp;
 	break;
     case FX_CHORUS:
-	xxc[chn].cho = fxp;
+	p->m.xxc[chn].cho = fxp;
 	break;
     case FX_REVERB:
-	xxc[chn].rvb = fxp;
+	p->m.xxc[chn].rvb = fxp;
 	break;
     case FX_NSLIDE_R_DN:
 	xc->retrig = xc->rcount = MSN(fxp) ? MSN(fxp) : xc->rval;

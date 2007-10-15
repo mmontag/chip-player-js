@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: fnk_load.c,v 1.3 2007-10-14 19:08:14 cmatsuoka Exp $
+ * $Id: fnk_load.c,v 1.4 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int fnk_test (FILE *, char *);
-static int fnk_load (FILE *);
+static int fnk_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info fnk_loader = {
     "FNK",
@@ -90,7 +90,7 @@ static uint8 fx[] = {
 #endif
 
 
-static int fnk_load (FILE * f)
+static int fnk_load(struct xmp_mod_context *m, FILE * f)
 {
     int i, j;
     struct xxm_event *event;
@@ -122,25 +122,25 @@ static int fnk_load (FILE * f)
 	strncmp ((char *) ffh.format, "F2", 2))
 	return -1;
 
-    xxh->chn = (ffh.format[2] < '0') || (ffh.format[2] > '9') ||
+    m->xxh->chn = (ffh.format[2] < '0') || (ffh.format[2] > '9') ||
 	(ffh.format[3] < '0') || (ffh.format[3] > '9') ? 8 :
 	(ffh.format[2] - '0') * 10 + ffh.format[3] - '0';
 
-    xxh->ins = 64;
+    m->xxh->ins = 64;
 
     for (i = 0; i < 256 && ffh.order[i] != 0xff; i++)
-	if (ffh.order[i] > xxh->pat)
-	    xxh->pat = i;
+	if (ffh.order[i] > m->xxh->pat)
+	    m->xxh->pat = i;
 
-    xxh->len = i;
-    xxh->trk = xxh->chn * xxh->pat;
-    memcpy (xxo, ffh.order, xxh->len);
-    xxh->tpo = 6;
-    xxh->bpm = ffh.info[3] >> 1;
-    if (xxh->bpm & 64)
-	xxh->bpm = -(xxh->bpm & 63);
-    xxh->bpm += 125;
-    xxh->smp = xxh->ins;
+    m->xxh->len = i;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    memcpy (m->xxo, ffh.order, m->xxh->len);
+    m->xxh->tpo = 6;
+    m->xxh->bpm = ffh.info[3] >> 1;
+    if (m->xxh->bpm & 64)
+	m->xxh->bpm = -(m->xxh->bpm & 63);
+    m->xxh->bpm += 125;
+    m->xxh->smp = m->xxh->ins;
     strcpy(xmp_ctl->type, "Funktracker");
 
     MODULE_INFO ();
@@ -148,38 +148,38 @@ static int fnk_load (FILE * f)
     INSTRUMENT_INIT ();
 
     /* Convert instruments */
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = !!(xxs[i].len = ffh.fih[i].length);
-	xxs[i].lps = ffh.fih[i].loop_start;
-	if (xxs[i].lps == -1)
-	    xxs[i].lps = 0;
-	xxs[i].lpe = ffh.fih[i].length;
-	xxs[i].flg = ffh.fih[i].loop_start != -1 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = ffh.fih[i].volume;
-	xxi[i][0].pan = ffh.fih[i].pan;
-	xxi[i][0].sid = i;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = !!(m->xxs[i].len = ffh.fih[i].length);
+	m->xxs[i].lps = ffh.fih[i].loop_start;
+	if (m->xxs[i].lps == -1)
+	    m->xxs[i].lps = 0;
+	m->xxs[i].lpe = ffh.fih[i].length;
+	m->xxs[i].flg = ffh.fih[i].loop_start != -1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].vol = ffh.fih[i].volume;
+	m->xxi[i][0].pan = ffh.fih[i].pan;
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, ffh.fih[i].name, 19);
+	copy_adjust(m->xxih[i].name, ffh.fih[i].name, 19);
 
-	if ((V (1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 2)))
+	if ((V (1)) && (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x\n", i,
-		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, xxi[i][0].pan);
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, m->xxi[i][0].pan);
     }
 
     PATTERN_INIT ();
 
     /* Read and convert patterns */
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
-    for (i = 0; i < xxh->pat; i++) {
+	report ("Stored patterns: %d ", m->xxh->pat);
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	EVENT (i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
-	for (j = 0; j < 64 * xxh->chn; j++) {
-	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+	for (j = 0; j < 64 * m->xxh->chn; j++) {
+	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread (&ev, 1, 3, f);
 	    switch (ev[0] >> 2) {
 	    case 0x3f:
@@ -217,19 +217,19 @@ static int fnk_load (FILE * f)
 
     /* Read samples */
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->ins; i++) {
-	if (xxs[i].len <= 2)
+	report ("\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->ins; i++) {
+	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }
     if (V (0))
 	report ("\n");
 
-    for (i = 0; i < xxh->chn; i++)
-	xxc[i].pan = (i % 2) * 0xff;
+    for (i = 0; i < m->xxh->chn; i++)
+	m->xxc[i].pan = (i % 2) * 0xff;
     xmp_ctl->volbase = 0x100;
 
     return 0;

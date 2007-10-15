@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.13 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.14 2007-10-15 19:19:20 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -221,10 +221,10 @@ void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
 
 void	xmp_init			(int, char **, struct xmp_control *);
-int	xmp_load_module			(char *, xmp_context);
+int	xmp_load_module			(xmp_context, char *);
 int	xmp_test_module			(char *, char *);
 struct xmp_module_info*
-	xmp_get_module_info		(struct xmp_module_info *);
+	xmp_get_module_info		(xmp_context, struct xmp_module_info *);
 struct xmp_fmt_info*
 	xmp_get_fmt_info		(struct xmp_fmt_info **);
 struct xmp_drv_info*
@@ -242,7 +242,7 @@ int	xmp_player_ctl			(xmp_context, int, int);
 int	xmp_open_audio			(struct xmp_control *);
 void	xmp_close_audio			(void);
 int	xmp_play_module			(xmp_context);
-void	xmp_release_module		(void);
+void	xmp_release_module		(xmp_context);
 int	xmp_tell_parent			(void);
 int	xmp_wait_parent			(void);
 int	xmp_check_parent		(int);

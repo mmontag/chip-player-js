@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.12 2007-10-13 21:17:12 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.13 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@
 
 
 static int svb_test (FILE *, char *);
-static int svb_load (FILE *);
+static int svb_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info svb_loader = {
 	"PSM",
@@ -41,7 +41,7 @@ static int svb_test(FILE *f, char *t)
 
 /* FIXME: effects translation */
 
-static int svb_load(FILE *f)
+static int svb_load(struct xmp_mod_context *m, FILE *f)
 {
 	int c, r, i;
 	struct xxm_event *event;
@@ -67,17 +67,17 @@ static int svb_load(FILE *f)
 	sprintf(xmp_ctl->type, "PSM %d.%02d (Protracker Studio)",
 						MSN(ver), LSN(ver));
 
-	xxh->tpo = read8(f);
-	xxh->bpm = read8(f);
+	m->xxh->tpo = read8(f);
+	m->xxh->bpm = read8(f);
 	read8(f);		/* master volume */
 	read16l(f);		/* song length */
-	xxh->len = read16l(f);
-	xxh->pat = read16l(f);
-	xxh->ins = read16l(f);
-	xxh->chn = read16l(f);
+	m->xxh->len = read16l(f);
+	m->xxh->pat = read16l(f);
+	m->xxh->ins = read16l(f);
+	m->xxh->chn = read16l(f);
 	read16l(f);		/* channels used */
-	xxh->smp = xxh->ins;
-	xxh->trk = xxh->pat * xxh->chn;
+	m->xxh->smp = m->xxh->ins;
+	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
 	p_ord = read32l(f);
 	p_chn = read32l(f);
@@ -85,12 +85,12 @@ static int svb_load(FILE *f)
 	p_ins = read32l(f);
 
 	/* should be this way but fails with Silverball song 6 */
-	//xxh->flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
+	//m->xxh->flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
 
 	MODULE_INFO ();
 
 	fseek(f, p_ord, SEEK_SET);
-	fread(xxo, 1, xxh->len, f);
+	fread(m->xxo, 1, m->xxh->len, f);
 
 	fseek(f, p_chn, SEEK_SET);
 	fread(buf, 1, 16, f);
@@ -100,49 +100,49 @@ static int svb_load(FILE *f)
 	reportv(1, "     Sample name           Len   LBeg LEnd L Vol C2Spd\n");
 
 	fseek(f, p_ins, SEEK_SET);
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		uint16 flags, c2spd;
 		int finetune;
 
-		xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+		m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
 		fread(buf, 1, 13, f);		/* sample filename */
 		fread(buf, 1, 24, f);		/* sample description */
-		strncpy((char *)xxih[i].name, (char *)buf, 24);
-		str_adj((char *)xxih[i].name);
+		strncpy((char *)m->xxih[i].name, (char *)buf, 24);
+		str_adj((char *)m->xxih[i].name);
 		p_smp[i] = read32l(f);
 		read32l(f);			/* memory location */
 		read16l(f);			/* sample number */
 		flags = read8(f);		/* sample type */
-		xxs[i].len = read32l(f); 
-		xxs[i].lps = read32l(f);
-		xxs[i].lpe = read32l(f);
+		m->xxs[i].len = read32l(f); 
+		m->xxs[i].lps = read32l(f);
+		m->xxs[i].lpe = read32l(f);
 		finetune = (int8)(read8(f) << 4);
-		xxi[i][0].vol = read8(f);
+		m->xxi[i][0].vol = read8(f);
 		c2spd = 8363 * read16l(f) / 8448;
-		xxi[i][0].pan = 0x80;
-		xxi[i][0].sid = i;
-		xxih[i].nsm = !!xxs[i].len;
-		xxs[i].flg = flags & 0x80 ? WAVE_LOOPING : 0;
-		xxs[i].flg |= flags & 0x20 ? WAVE_BIDIR_LOOP : 0;
-		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
-		xxi[i][0].fin += finetune;
+		m->xxi[i][0].pan = 0x80;
+		m->xxi[i][0].sid = i;
+		m->xxih[i].nsm = !!m->xxs[i].len;
+		m->xxs[i].flg = flags & 0x80 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg |= flags & 0x20 ? WAVE_BIDIR_LOOP : 0;
+		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+		m->xxi[i][0].fin += finetune;
 
-		if (V(1) && (strlen((char *)xxih[i].name) || (xxs[i].len > 1))) {
+		if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %5d\n",
-				i, xxih[i].name, xxs[i].len, xxs[i].lps,
-				xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ?
-				'L' : ' ', xxi[i][0].vol, c2spd);
+				i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+				m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ?
+				'L' : ' ', m->xxi[i][0].vol, c2spd);
 		}
 	}
 	
 
 	PATTERN_INIT ();
 
-	reportv(0, "Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
 	fseek(f, p_pat, SEEK_SET);
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 		int len;
 		uint8 b, rows, chan;
 
@@ -151,7 +151,7 @@ static int svb_load(FILE *f)
 		chan = read8(f);
 
 		PATTERN_ALLOC (i);
-		xxp[i]->rows = rows;
+		m->xxp[i]->rows = rows;
 		TRACK_ALLOC (i);
 
 		for (r = 0; r < rows; r++) {
@@ -194,12 +194,12 @@ static int svb_load(FILE *f)
 
 	/* Read samples */
 
-	reportv(0, "Stored samples : %d ", xxh->smp);
+	reportv(0, "Stored samples : %d ", m->xxh->smp);
 
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, p_smp[i], SEEK_SET);
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-			XMP_SMP_DIFF, &xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+			XMP_SMP_DIFF, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 	reportv(0, "\n");

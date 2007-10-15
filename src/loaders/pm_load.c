@@ -47,21 +47,21 @@ int pm_load (FILE * f)
     if (strncmp ((char *) pm.magic, "!PM!", 4))
 	return -1;
 
-    xxh->len = pm.len;
+    m->xxh->len = pm.len;
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	B_ENDIAN16 (pm.ins[i].len);
 	B_ENDIAN16 (pm.ins[i].loop_start);
 	B_ENDIAN16 (pm.ins[i].loop_length);
     }
 
-    memcpy (xxo, pm.order, xxh->len);
-    for (xxh->pat = i = 0; i < xxh->len; i++)
-	if (xxo[i] > xxh->pat)
-	    xxh->pat = xxo[i];
-    xxh->pat++;
+    memcpy (m->xxo, pm.order, m->xxh->len);
+    for (m->xxh->pat = i = 0; i < m->xxh->len; i++)
+	if (m->xxo[i] > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
+    m->xxh->pat++;
 
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     strcpy (xmp_ctl->type, "Power Music");
 
@@ -72,34 +72,34 @@ int pm_load (FILE * f)
     if (V (1))
 	report ("     Instrument name        Len  LBeg LEnd L Vol\n");
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = !!(xxs[i].len = 2 * pm.ins[i].len);
-	xxs[i].lps = 2 * pm.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * pm.ins[i].loop_length;
-	xxs[i].flg = pm.ins[i].loop_length > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = pm.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	strncpy ((char *) xxih[i].name, pm.ins[i].name, 22);
-	if ((V (1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 2)))
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = !!(m->xxs[i].len = 2 * pm.ins[i].len);
+	m->xxs[i].lps = 2 * pm.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * pm.ins[i].loop_length;
+	m->xxs[i].flg = pm.ins[i].loop_length > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].vol = pm.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	strncpy ((char *) m->xxih[i].name, pm.ins[i].name, 22);
+	if ((V (1)) && (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report ("[%2X] %-22.22s %04x %04x %04x %c %02x\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol);
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol);
     }
 
     PATTERN_INIT ();
 
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
-	for (j = 0; j < 64 * xxh->chn; j++) {
-	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+	for (j = 0; j < 64 * m->xxh->chn; j++) {
+	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread (ev, 1, 4, f);
 	    cvt_pt_event (event, ev);
 	}
@@ -110,19 +110,19 @@ int pm_load (FILE * f)
     /* Read samples */
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+	report ("\nStored samples : %d ", m->xxh->smp);
 
-    for (i = 0; i < xxh->ins; i++) {
-	if (xxs[i].len <= 2)
+    for (i = 0; i < m->xxh->ins; i++) {
+	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, XMP_SMP_DIFF, &xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, XMP_SMP_DIFF, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }
     if (V (0))
 	report ("\n");
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     return 0;
 }

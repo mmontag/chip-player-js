@@ -42,7 +42,7 @@ struct ksm_header {
 } PACKED;
 
 
-int ksm_load (FILE *f)
+int ksm_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     struct xxm_event *event;
@@ -63,20 +63,20 @@ int ksm_load (FILE *f)
     strcpy (xmp_ctl->type, "Kefrens Sound Machine");
     MODULE_INFO ();
 
-    xxh->ins = 15;
-    xxh->smp = xxh->ins;
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->ins = 15;
+    m->xxh->smp = m->xxh->ins;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
-    for (xxh->trk = j = i = 0; kh.trkidx[i] != 0xff; i++)
-	if (kh.trkidx[i] > xxh->trk)
-	    xxh->trk = kh.trkidx[i];
-    xxh->trk++;
-    xxh->pat = xxh->len = i >> 2;
+    for (m->xxh->trk = j = i = 0; kh.trkidx[i] != 0xff; i++)
+	if (kh.trkidx[i] > m->xxh->trk)
+	    m->xxh->trk = kh.trkidx[i];
+    m->xxh->trk++;
+    m->xxh->pat = m->xxh->len = i >> 2;
 
-    for (i = 0; i < xxh->len; i++)
-	xxo[i] = i;
+    for (i = 0; i < m->xxh->len; i++)
+	m->xxo[i] = i;
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	B_ENDIAN32 (kh.ins[i].addr);
 	B_ENDIAN16 (kh.ins[i].len);
 	B_ENDIAN16 (kh.ins[i].loop_start);
@@ -87,50 +87,50 @@ int ksm_load (FILE *f)
     if (V (1))
 	report ("     Len  LBeg LEnd L Vl Ft\n");
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = !!(xxs[i].len = kh.ins[i].len);
-	xxs[i].lps = kh.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].len;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = !!(m->xxs[i].len = kh.ins[i].len);
+	m->xxs[i].lps = kh.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].len;
 #if 0
-	xxs[i].flg = xxs[i].lpe - xxs[i].lps > 4 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = m->xxs[i].lpe - m->xxs[i].lps > 4 ? WAVE_LOOPING : 0;
 #endif
-	xxi[i][0].vol = kh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	if (V (1) && xxs[i].len > 2)
+	m->xxi[i][0].vol = kh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	if (V (1) && m->xxs[i].len > 2)
 	    report ("[%2X] %04x %04x %04x %c %02x %+01x\n",
-		i, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol,
-		xxi[i][0].fin >> 4);
+		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
+		m->xxi[i][0].fin >> 4);
     }
 
     PATTERN_INIT ();
 
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 
-	for (j = 0; j < xxh->chn; j++)
-	    xxp[i]->info[j].index = kh.trkidx[i * xxh->chn + j];
+	for (j = 0; j < m->xxh->chn; j++)
+	    m->xxp[i]->info[j].index = kh.trkidx[i * m->xxh->chn + j];
 
 	if (V (0))
 	    report (".");
     }
 
     if (V (0))
-	report ("\nStored tracks  : %d ", xxh->trk);
+	report ("\nStored tracks  : %d ", m->xxh->trk);
 
-    for (i = 0; i < xxh->trk; i++) {
-	xxt[i] = calloc (sizeof (struct xxm_track) +
+    for (i = 0; i < m->xxh->trk; i++) {
+	m->xxt[i] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * 64, 1);
-	xxt[i]->rows = 64;
+	m->xxt[i]->rows = 64;
 
 	for (j = 0; j < 64; j++) {
-	    event = &xxt[i]->event[j];
+	    event = &m->xxt[i]->event[j];
 	    fread (ev, 1, 3, f);
 	    if ((event->note = ev[0]))
 		event->note += 36;
@@ -140,20 +140,20 @@ int ksm_load (FILE *f)
 	    event->fxp = ev[2];
 	}
 
-	if (V (0) && !(i % xxh->chn))
+	if (V (0) && !(i % m->xxh->chn))
 	    report (".");
     }
 
     /* Read samples */
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+	report ("\nStored samples : %d ", m->xxh->smp);
 
-    for (i = 0; i < xxh->ins; i++) {
-	if (xxs[i].len <= 4)
+    for (i = 0; i < m->xxh->ins; i++) {
+	if (m->xxs[i].len <= 4)
 	    continue;
 	fseek (f, kh.ins[i].addr, SEEK_SET);
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }

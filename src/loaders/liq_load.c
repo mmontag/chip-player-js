@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.13 2007-10-13 19:39:48 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.14 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 
 
 static int liq_test (FILE *, char *);
-static int liq_load (FILE *);
+static int liq_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info liq_loader = {
     "LIQ",
@@ -157,7 +157,7 @@ static void decode_event(uint8 x1, struct xxm_event *event, FILE *f)
     assert (event->fxt <= 26);
 }
 
-int liq_load (FILE *f)
+int liq_load(struct xmp_mod_context *m, FILE *f)
 {
     int i;
     struct xxm_event *event = NULL;
@@ -194,14 +194,14 @@ int liq_load (FILE *f)
 	fseek (f, -2, SEEK_CUR);
     }
 
-    xxh->tpo = lh.speed;
-    xxh->bpm = lh.bpm;
-    xxh->chn = lh.chn;
-    xxh->pat = lh.pat;
-    xxh->ins = xxh->smp = lh.ins;
-    xxh->len = lh.len;
-    xxh->trk = xxh->chn * xxh->pat;
-    xxh->flg = XXM_FLG_INSVOL;
+    m->xxh->tpo = lh.speed;
+    m->xxh->bpm = lh.bpm;
+    m->xxh->chn = lh.chn;
+    m->xxh->pat = lh.pat;
+    m->xxh->ins = m->xxh->smp = lh.ins;
+    m->xxh->len = lh.len;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    m->xxh->flg = XXM_FLG_INSVOL;
 
     strncpy(xmp_ctl->name, (char *)lh.name, 30);
     strncpy(tracker_name, (char *)lh.tracker, 20);
@@ -217,26 +217,26 @@ int liq_load (FILE *f)
 		lh.version >> 8, lh.version & 0x00ff, tracker_name);
 
     if (lh.version > 0) {
-	for (i = 0; i < xxh->chn; i++)
-	    xxc[i].pan = read8(f) << 2;
+	for (i = 0; i < m->xxh->chn; i++)
+	    m->xxc[i].pan = read8(f) << 2;
 
-	for (i = 0; i < xxh->chn; i++)
-	    xxc[i].vol = read8(f);
+	for (i = 0; i < m->xxh->chn; i++)
+	    m->xxc[i].vol = read8(f);
 
-	fread(xxo, 1, xxh->len, f);
+	fread(m->xxo, 1, m->xxh->len, f);
 
 	/* Skip 1.01 echo pools */
-	fseek (f, lh.hdrsz - (0x6d + xxh->chn * 2 + xxh->len), SEEK_CUR);
+	fseek (f, lh.hdrsz - (0x6d + m->xxh->chn * 2 + m->xxh->len), SEEK_CUR);
     } else {
 	fseek (f, 0xf0, SEEK_SET);
-	fread (xxo, 1, 256, f);
+	fread (m->xxo, 1, 256, f);
 	fseek (f, lh.hdrsz, SEEK_SET);
 
 	for (i = 0; i < 256; i++) {
-	    if (xxo[i] == 0xff)
+	    if (m->xxo[i] == 0xff)
 		break;
 	}
-	xxh->len = i;
+	m->xxh->len = i;
     }
 
     MODULE_INFO ();
@@ -246,10 +246,10 @@ int liq_load (FILE *f)
 
     /* Read and convert patterns */
 
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
     x1 = x2 = 0;
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	int row, channel, count;
 
 	PATTERN_ALLOC (i);
@@ -264,7 +264,7 @@ int liq_load (FILE *f)
 	lp.reserved = read32l(f);
 
 	_D(_D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
-	xxp[i]->rows = lp.rows;
+	m->xxp[i]->rows = lp.rows;
 	TRACK_ALLOC (i);
 
 	row = 0;
@@ -309,7 +309,7 @@ test_event:
 	case 0xa0:			/* next channel */
 	    _D(_D_INFO "  [next channel]");
 	    channel++;
-	    if (channel >= xxh->chn) {
+	    if (channel >= m->xxh->chn) {
 		_D(_D_CRIT "uh-oh! bad channel number!");
 		channel--;
 	    }
@@ -392,13 +392,13 @@ test_event:
 
 next_row:
 	row++;
-	if (row >= xxp[i]->rows) {
+	if (row >= m->xxp[i]->rows) {
 	    row = 0;
 	    x2 = 0;
 	    channel++;
 	}
 
-	if (channel >= xxh->chn) {
+	if (channel >= m->xxh->chn) {
 	    _D(_D_CRIT "bad channel number!");
 	    x1 = read8(f);
 	    goto test_event;
@@ -414,15 +414,15 @@ next_pattern:
 
     INSTRUMENT_INIT ();
 
-    reportv(0, "\nInstruments    : %d ", xxh->ins);
+    reportv(0, "\nInstruments    : %d ", m->xxh->ins);
 
     reportv(1, "\n"
 "     Instrument name                Size  Start End Loop Vol   Ver  C2Spd");
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	unsigned char b[4];
 
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fread (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
@@ -456,45 +456,45 @@ next_pattern:
 	fread(&li.rsvd, 11, 1, f);
 	fread(&li.filename, 25, 1, f);
 
-	xxih[i].nsm = !!(li.length);
-	xxih[i].vol = 0x40;
-	xxs[i].len = li.length;
-	xxs[i].lps = li.loopstart;
-	xxs[i].lpe = li.loopend;
+	m->xxih[i].nsm = !!(li.length);
+	m->xxih[i].vol = 0x40;
+	m->xxs[i].len = li.length;
+	m->xxs[i].lps = li.loopstart;
+	m->xxs[i].lpe = li.loopend;
 
 	if (li.flags & 0x01)
-	    xxs[i].flg = WAVE_16_BITS;
+	    m->xxs[i].flg = WAVE_16_BITS;
 
 	if (li.loopend > 0)
-	    xxs[i].flg = WAVE_LOOPING;
+	    m->xxs[i].flg = WAVE_LOOPING;
 
 	/* FIXME: LDSS 1.0 have global vol == 0 ? */
 	/* if (li.gvl == 0) */
 	    li.gvl = 0x40;
 
-	xxi[i][0].vol = li.vol;
-	xxi[i][0].gvl = li.gvl;
-	xxi[i][0].pan = li.pan;
-	xxi[i][0].sid = i;
+	m->xxi[i][0].vol = li.vol;
+	m->xxi[i][0].gvl = li.gvl;
+	m->xxi[i][0].pan = li.pan;
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, li.name, 32);
+	copy_adjust(m->xxih[i].name, li.name, 32);
 
-	if ((V (1)) && (strlen ((char *)xxih[i].name) || xxs[i].len)) {
+	if ((V (1)) && (strlen ((char *)m->xxih[i].name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d ",
-		i, xxih[i].name, xxs[i].len,
-		xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
-		xxs[i].lps, xxs[i].lpe,
-		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		xxi[i][0].vol, xxi[i][0].gvl,
+		i, m->xxih[i].name, m->xxs[i].len,
+		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxi[i][0].vol, m->xxi[i][0].gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 	}
 
-	c2spd_to_note (li.c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+	c2spd_to_note (li.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 	fseek (f, li.hdrsz - 0x90, SEEK_CUR);
 
-	if (!xxs[i].len)
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

@@ -39,8 +39,8 @@
 extern uint8 **med_vol_table;
 extern uint8 **med_wav_table;
 
-#define VT med_vol_table[xc->ins][xc->med_vp++]
-#define WT med_wav_table[xc->ins][xc->med_wp++]
+#define VT p->m.med_vol_table[xc->ins][xc->med_vp++]
+#define WT p->m.med_wav_table[xc->ins][xc->med_wp++]
 #define VT_SKIP xc->med_vp++
 #define WT_SKIP xc->med_wp++
 
@@ -74,34 +74,34 @@ int get_med_vibrato(struct xmp_channel *xc)
 }
 
 
-int get_med_arp(struct xmp_channel *xc)
+int get_med_arp(struct xmp_player_context *p, struct xmp_channel *xc)
 {
 	int arp;
 
 	if (xc->med_arp == 0)
 		return 0;
 
-	if (med_wav_table[xc->ins][xc->med_arp] == 0xfd) /* empty arpeggio */
+	if (p->m.med_wav_table[xc->ins][xc->med_arp] == 0xfd) /* empty arpeggio */
 		return 0;
 
-	arp = med_wav_table[xc->ins][xc->med_aidx++];
+	arp = p->m.med_wav_table[xc->ins][xc->med_aidx++];
 	if (arp == 0xfd) {
 		xc->med_aidx = xc->med_arp;
-		arp = med_wav_table[xc->ins][xc->med_aidx++];
+		arp = p->m.med_wav_table[xc->ins][xc->med_aidx++];
 	}
 
 	return 100 * arp;
 }
 
 
-void xmp_med_synth(int chn, struct xmp_channel *xc, int rst)
+void xmp_med_synth(struct xmp_player_context *p, int chn, struct xmp_channel *xc, int rst)
 {
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
 
-    if (med_vol_table == NULL || med_wav_table == NULL)
+    if (p->m.med_vol_table == NULL || p->m.med_wav_table == NULL)
 	return;
 
-    if (med_vol_table[xc->ins] == NULL || med_wav_table[xc->ins] == NULL)
+    if (p->m.med_vol_table[xc->ins] == NULL || p->m.med_wav_table[xc->ins] == NULL)
 	return;
 
     if (rst) {
@@ -109,8 +109,8 @@ void xmp_med_synth(int chn, struct xmp_channel *xc, int rst)
 	xc->med_period = xc->period;
 	xc->med_vp = xc->med_vc = xc->med_vw = 0;
 	xc->med_wp = xc->med_wc = xc->med_ww = 0;
-	xc->med_vs = xxih[xc->ins].vts;
-	xc->med_ws = xxih[xc->ins].wts;
+	xc->med_vs = p->m.xxih[xc->ins].vts;
+	xc->med_ws = p->m.xxih[xc->ins].wts;
     }
 
     if (xc->med_vs > 0 && xc->med_vc-- == 0) {
@@ -219,8 +219,8 @@ skip_vol:
 		xc->med_ws = WT;
 		break;
 	    default:
-		if (b < xxih[xc->ins].nsm && xxi[xc->ins][b].sid != xc->smp) {
-		    xc->smp = xxi[xc->ins][b].sid;
+		if (b < p->m.xxih[xc->ins].nsm && p->m.xxi[xc->ins][b].sid != xc->smp) {
+		    xc->smp = p->m.xxi[xc->ins][b].sid;
 		    xmp_drv_setsmp(chn, xc->smp);
 		}
 	    }

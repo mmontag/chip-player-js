@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.7 2007-09-03 23:31:29 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
  */
 
 /*
@@ -22,7 +22,7 @@
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 
 
-int med2_load(FILE *f)
+int med2_load(struct xmp_mod_context *m, FILE *f)
 {
 	int i, j, k;
 	int sliding;
@@ -35,46 +35,46 @@ int med2_load(FILE *f)
 
 	strcpy(xmp_ctl->type, "MED2 (MED 1.12)");
 
-	xxh->ins = xxh->smp = 32;
+	m->xxh->ins = m->xxh->smp = 32;
 	INSTRUMENT_INIT();
 
 	/* read instrument names */
 	for (i = 0; i < 32; i++) {
 		uint8 buf[40];
 		fread(buf, 1, 40, f);
-		copy_adjust(xxih[i].name, buf, 32);
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		copy_adjust(m->xxih[i].name, buf, 32);
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	}
 
 	/* read instrument volumes */
 	for (i = 0; i < 32; i++) {
-		xxi[i][0].vol = read8(f);
-		xxi[i][0].pan = 0x80;
-		xxi[i][0].fin = 0;
-		xxi[i][0].sid = i;
+		m->xxi[i][0].vol = read8(f);
+		m->xxi[i][0].pan = 0x80;
+		m->xxi[i][0].fin = 0;
+		m->xxi[i][0].sid = i;
 	}
 
 	/* read instrument loops */
 	for (i = 0; i < 32; i++) {
-		xxs[i].lps = read16b(f);
+		m->xxs[i].lps = read16b(f);
 	}
 
 	/* read instrument loop length */
 	for (i = 0; i < 32; i++) {
 		uint32 lsiz = read16b(f);
-		xxs[i].len = xxs[i].lps + lsiz;
-		xxs[i].lpe = xxs[i].lps + lsiz;
-		xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
+		m->xxs[i].len = m->xxs[i].lps + lsiz;
+		m->xxs[i].lpe = m->xxs[i].lps + lsiz;
+		m->xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
 	}
 
-	xxh->chn = 4;
-	xxh->pat = read16b(f);
-	xxh->trk = xxh->chn * xxh->pat;
+	m->xxh->chn = 4;
+	m->xxh->pat = read16b(f);
+	m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-	fread(xxo, 1, 100, f);
-	xxh->len = read16b(f);
+	fread(m->xxo, 1, 100, f);
+	m->xxh->len = read16b(f);
 
-	xxh->tpo = 192 / read16b(f);
+	m->xxh->tpo = 192 / read16b(f);
 
 	read16b(f);			/* flags */
 	sliding = read16b(f);		/* sliding */
@@ -91,11 +91,11 @@ int med2_load(FILE *f)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	reportv(0, "Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = 64;
+		m->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		read32b(f);
@@ -136,24 +136,24 @@ int med2_load(FILE *f)
 
 	/* Load samples */
 
-	reportv(0, "Instruments    : %d ", xxh->ins);
+	reportv(0, "Instruments    : %d ", m->xxh->ins);
 	reportv(1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
 
 	for (i = 0; i < 32; i++) {
-		xxs[i].len = read32b(f);
+		m->xxs[i].len = read32b(f);
 		if (read16b(f))		/* type */
 			continue;
 
-		xxih[i].nsm = !!(xxs[i].len);
+		m->xxih[i].nsm = !!(m->xxs[i].len);
 
 		reportv(1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
-			i, xxih[i].name, xxs[i].len, xxs[i].lps,
-			xxs[i].lpe,
-			xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			xxi[i][0].vol);
+			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			m->xxs[i].lpe,
+			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+			m->xxi[i][0].vol);
 
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-				  &xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 	reportv(0, "\n");

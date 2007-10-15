@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.14 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: main.c,v 1.15 2007-10-15 19:19:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -495,10 +495,10 @@ int main (int argc, char **argv)
 
 	if (background) {
 	    verb = xmp_verbosity_level(0);
-	    t = xmp_load_module(argv[optind], ctx);
+	    t = xmp_load_module(ctx, argv[optind]);
 	    xmp_verbosity_level(verb);
 	} else {
-	    t = xmp_load_module(argv[optind], ctx);
+	    t = xmp_load_module(ctx, argv[optind]);
 	}
 
 	if (t < 0) {
@@ -533,25 +533,25 @@ int main (int argc, char **argv)
 	else
 	    fn++;
 
-	xmp_get_module_info (&ii->mi);
-	strncpy (ii->filename, fn, 80);
+	xmp_get_module_info(&ii->mi);
+	strncpy(ii->filename, fn, 80);
 
 	if (ii->wresult) {
 	    if (!(pid = fork ())) {
-		signal (SIGCONT, SIG_DFL);
-		signal (SIGTSTP, SIG_DFL);
+		signal(SIGCONT, SIG_DFL);
+		signal(SIGTSTP, SIG_DFL);
 		if ((ii->wresult = create_window
 			("xmp", "Xmp", RES_X, RES_Y, argc, argv)))
-		    exit (-1);
-		set_palette ();
-		prepare_screen ();
-		display_loop ();
+		    exit(-1);
+		set_palette();
+		prepare_screen();
+		display_loop();
 	    }
 	}
-	xmp_tell_child ();  /* We have module_info */
-	xmp_wait_child ();
+	xmp_tell_child();  /* We have module_info */
+	xmp_wait_child();
 #else
-	xmp_get_module_info (&mi);
+	xmp_get_module_info(ctx, &mi);
 #endif
 
 	if (loadonly)
@@ -559,7 +559,7 @@ int main (int argc, char **argv)
 
 	t = xmp_play_module(ctx);
 
-	xmp_release_module();
+	xmp_release_module(ctx);
 
 	if (opt.verbose && !background) {
 	    fprintf (stderr,

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amd_load.c,v 1.3 2007-10-14 19:08:14 cmatsuoka Exp $
+ * $Id: amd_load.c,v 1.4 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,7 +16,7 @@
 
 
 static int amd_test (FILE *, char *);
-static int amd_load (FILE *);
+static int amd_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info amd_loader = {
     "AMD",
@@ -63,7 +63,7 @@ struct amd_file_header {
 static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
 
-int amd_load (FILE * f)
+static int amd_load(struct xmp_mod_context *m, FILE * f)
 {
     int r, i, j, tmode = 1;
     struct amd_file_header afh;
@@ -86,14 +86,14 @@ int amd_load (FILE * f)
     fread(&afh.magic, 9, 1, f);
     afh.version = read8(f);
 
-    xxh->chn = 9;
-    xxh->bpm = 125;
-    xxh->tpo = 6;
-    xxh->len = afh.len;
-    xxh->pat = afh.pat + 1;
-    xxh->ins = 26;
-    xxh->smp = 0;
-    memcpy (xxo, afh.order, xxh->len);
+    m->xxh->chn = 9;
+    m->xxh->bpm = 125;
+    m->xxh->tpo = 6;
+    m->xxh->len = afh.len;
+    m->xxh->pat = afh.pat + 1;
+    m->xxh->ins = 26;
+    m->xxh->smp = 0;
+    memcpy (m->xxo, afh.order, m->xxh->len);
 
     strcpy(xmp_ctl->type, "Amusic");
     strncpy(xmp_ctl->name, (char *)afh.name, 24);
@@ -102,27 +102,27 @@ int amd_load (FILE * f)
     MODULE_INFO ();
 
     if (V (0))
-	report ("Instruments    : %d ", xxh->ins);
+	report ("Instruments    : %d ", m->xxh->ins);
 
     INSTRUMENT_INIT ();
 
     /* Load instruments */
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
-	copy_adjust(xxih[i].name, afh.ins[i].name, 23);
+	copy_adjust(m->xxih[i].name, afh.ins[i].name, 23);
 
-	xxih[i].nsm = 1;
-	xxi[i][0].vol = 0x40;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxi[i][0].xpo = -1;
+	m->xxih[i].nsm = 1;
+	m->xxi[i][0].vol = 0x40;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxi[i][0].xpo = -1;
 
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
 
 	if (V (1)) {
-	    report ("\n[%2X] %-23.23s ", i, xxih[i].name);
+	    report ("\n[%2X] %-23.23s ", i, m->xxih[i].name);
 	    if (regs[0] | regs[1] | regs[2] | regs[3] | regs[4] | regs[5] | regs[6]
 		| regs[7] | regs[8] | regs[9] | regs[10]) {
 		for (j = 0; j < 11; j++)
@@ -131,7 +131,7 @@ int amd_load (FILE * f)
 	}
 	if (V (0) == 1)
 	    report (".");
-	xmp_drv_loadpatch (f, xxi[i][0].sid, 0, 0, NULL, regs);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, 0, 0, NULL, regs);
     }
     if (V (0))
 	report ("\n");
@@ -142,36 +142,36 @@ int amd_load (FILE * f)
 	return -1;
     }
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
-    xxp = calloc (sizeof (struct xxm_pattern *), xxh->pat + 1);
+	report ("Stored patterns: %d ", m->xxh->pat);
+    m->xxp = calloc (sizeof (struct xxm_pattern *), m->xxh->pat + 1);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	for (j = 0; j < 9; j++) {
 	    w = read16l(f);
-	    xxp[i]->info[j].index = w;
-	    if (w > xxh->trk)
-		xxh->trk = w;
+	    m->xxp[i]->info[j].index = w;
+	    if (w > m->xxh->trk)
+		m->xxh->trk = w;
 	}
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	if (V (0))
 	    report (".");
     }
-    xxh->trk++;
+    m->xxh->trk++;
 
     w = read16l(f);
     if (V (0))
 	report ("\nStored tracks  : %d ", w);
-    xxt = calloc (sizeof (struct xxm_track *), xxh->trk);
-    xxh->trk = w;
+    m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
+    m->xxh->trk = w;
 
-    for (i = 0; i < xxh->trk; i++) {
+    for (i = 0; i < m->xxh->trk; i++) {
 	w = read16l(f);
-	xxt[w] = calloc (sizeof (struct xxm_track) +
+	m->xxt[w] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * 64, 1);
-	xxt[w]->rows = 64;
+	m->xxt[w]->rows = 64;
 	for (r = 0; r < 64; r++) {
-	    event = &xxt[w]->event[r];
+	    event = &m->xxt[w]->event[r];
 	    b = read8(f);		/* Effect parameter */
 	    if (b & 0x80) {
 		r += (b & 0x7f) - 1;
@@ -222,9 +222,9 @@ int amd_load (FILE * f)
     if (V (0))
 	report ("\n");
 
-    for (i = 0; i < xxh->chn; i++) {
-	xxc[i].pan = 0x80;
-	xxc[i].flg = XXM_CHANNEL_FM;
+    for (i = 0; i < m->xxh->chn; i++) {
+	m->xxc[i].pan = 0x80;
+	m->xxc[i].flg = XXM_CHANNEL_FM;
     }
     return 0;
 }

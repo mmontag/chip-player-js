@@ -1,7 +1,7 @@
 /* DIGI Booster module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: digi_load.c,v 1.5 2007-10-14 03:17:17 cmatsuoka Exp $
+ * $Id: digi_load.c,v 1.6 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,7 +31,7 @@
 
 
 static int digi_test (FILE *, char *);
-static int digi_load (FILE *);
+static int digi_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info digi_loader = {
     "DIGI",
@@ -79,7 +79,7 @@ struct digi_header {
 };
 
 
-static int digi_load (FILE *f)
+static int digi_load(struct xmp_mod_context *m, FILE *f)
 {
     struct xxm_event *event = 0;
     struct digi_header dh;
@@ -116,21 +116,21 @@ static int digi_load (FILE *f)
     for (i = 0; i < 31; i++)
         fread(&dh.insname[i], 30, 1, f);
 
-    xxh->ins = 31;
-    xxh->smp = xxh->ins;
-    xxh->pat = dh.pat + 1;
-    xxh->chn = dh.chn;
-    xxh->trk = xxh->pat * xxh->chn;
-    xxh->len = dh.len + 1;
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->ins = 31;
+    m->xxh->smp = m->xxh->ins;
+    m->xxh->pat = dh.pat + 1;
+    m->xxh->chn = dh.chn;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->xxh->len = dh.len + 1;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     copy_adjust((uint8 *)xmp_ctl->name, dh.title, 32);
     sprintf(xmp_ctl->type, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
 
     MODULE_INFO ();
  
-    for (i = 0; i < xxh->len; i++)
-	xxo[i] = dh.ord[i];
+    for (i = 0; i < m->xxh->len; i++)
+	m->xxo[i] = dh.ord[i];
  
     INSTRUMENT_INIT ();
 
@@ -139,46 +139,46 @@ static int digi_load (FILE *f)
     if (V (1))
 	report ("     Sample name                    Len  LBeg LEnd L Vol\n");
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = !!(xxs[i].len = dh.slen[i]);
-	xxs[i].lps = dh.sloop[i];
-	xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
-	xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = dh.vol[i];
-	xxi[i][0].fin = dh.fin[i];
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = !!(m->xxs[i].len = dh.slen[i]);
+	m->xxs[i].lps = dh.sloop[i];
+	m->xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
+	m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].vol = dh.vol[i];
+	m->xxi[i][0].fin = dh.fin[i];
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, dh.insname[i], 30);
+	copy_adjust(m->xxih[i].name, dh.insname[i], 30);
 
-	if (V(1) && (strlen((char *)xxih[i].name) || (xxs[i].len > 1))) {
+	if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 	    report ("[%2X] %-30.30s %04x %04x %04x %c V%02x\n", i,
-		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol);
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
+		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol);
 	}
     }
 
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	if (dh.pack) {
 	    w = (read16b(f) - 64) >> 2;
 	    fread (chn_table, 1, 64, f);
 	} else {
-	    w = 64 * xxh->chn;
+	    w = 64 * m->xxh->chn;
 	    memset (chn_table, 0xff, 64);
 	}
 
 	for (j = 0; j < 64; j++) {
-	    for (c = 0, k = 0x80; c < xxh->chn; c++, k >>= 1) {
+	    for (c = 0, k = 0x80; c < m->xxh->chn; c++, k >>= 1) {
 	        if (chn_table[j] & k) {
 		    fread (digi_event, 4, 1, f);
 		    event = &EVENT (i, c, j);
@@ -214,10 +214,10 @@ static int digi_load (FILE *f)
     reportv(0, "\n");
 
     /* Read samples */
-    reportv(0, "Stored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->ins; i++) {
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+    reportv(0, "Stored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->ins; i++) {
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

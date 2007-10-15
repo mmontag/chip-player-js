@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.7 2007-10-14 19:08:14 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,7 +16,7 @@
 
 
 static int rad_test (FILE *, char *);
-static int rad_load (FILE *);
+static int rad_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info rad_loader = {
     "RAD",
@@ -51,7 +51,7 @@ struct rad_file_header {
 };
 
 
-static int rad_load(FILE *f)
+static int rad_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     struct rad_file_header rfh;
@@ -66,13 +66,13 @@ static int rad_load(FILE *f)
     rfh.version = read8(f);
     rfh.flags = read8(f);
     
-    xxh->chn = 9;
-    xxh->bpm = 125;
-    xxh->tpo = rfh.flags & 0x1f;
+    m->xxh->chn = 9;
+    m->xxh->bpm = 125;
+    m->xxh->tpo = rfh.flags & 0x1f;
     /* FIXME: tempo setting in RAD modules */
-    if (xxh->tpo <= 2)
-	xxh->tpo = 6;
-    xxh->smp = 0;
+    if (m->xxh->tpo <= 2)
+	m->xxh->tpo = 6;
+    m->xxh->smp = 0;
 
     sprintf(xmp_ctl->type, "RAD %d.%d (Reality Adlib Tracker)",
 				MSN(rfh.version), LSN(rfh.version));
@@ -110,7 +110,7 @@ static int rad_load(FILE *f)
     for (; fread (&b, 1, 1, f) && b;) {
 	if (!b)
 	    break;
-	xxh->ins = b;
+	m->xxh->ins = b;
 	fread(sid, 1, 11, f);
 	xmp_cvt_hsc2sbi((char *)sid);
 	if (V (1)) {
@@ -140,41 +140,41 @@ static int rad_load(FILE *f)
     }
 
     INSTRUMENT_INIT ();
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = 1;
-	xxi[i][0].vol = 0x40;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].xpo = -1;
-	xxi[i][0].sid = i;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = 1;
+	m->xxi[i][0].vol = 0x40;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].xpo = -1;
+	m->xxi[i][0].sid = i;
     }
 
     /* Read orders */
     fread (&b, 1, 1, f);
-    for (i = 0, j = xxh->len = b; j--; i++) {
-	fread (&xxo[i], 1, 1, f);
-	xxo[i] &= 0x7f;		/* FIXME: jump line */
+    for (i = 0, j = m->xxh->len = b; j--; i++) {
+	fread (&m->xxo[i], 1, 1, f);
+	m->xxo[i] &= 0x7f;		/* FIXME: jump line */
     }
 
     /* Read pattern pointers */
-    for (xxh->pat = i = 0; i < 32; i++) {
+    for (m->xxh->pat = i = 0; i < 32; i++) {
 	ppat[i] = read16l(f);
 	if (ppat[i])
-	    xxh->pat++;
+	    m->xxh->pat++;
     }
-    xxh->trk = xxh->pat * xxh->chn;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
     if (V (0)) {
-	report ("Module length  : %d patterns\n", xxh->len);
-	report ("Instruments    : %d\n", xxh->ins);
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Module length  : %d patterns\n", m->xxh->len);
+	report ("Instruments    : %d\n", m->xxh->ins);
+	report ("Stored patterns: %d ", m->xxh->pat);
     }
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	fseek (f, ppat[i], SEEK_SET);
 	do {
@@ -183,7 +183,7 @@ static int rad_load(FILE *f)
 		report ("** Whoops! row = %d\n", r);
 	    do {
 		fread (&c, 1, 1, f);	/* Channel number */
-		if ((c & 0x7f) >= xxh->chn)
+		if ((c & 0x7f) >= m->xxh->chn)
 		    report ("** Whoops! channel = %d\n", c);
 		event = &EVENT (i, c & 0x7f, r & 0x7f);
 		fread (&b, 1, 1, f);	/* Note + Octave + Instrument */
@@ -206,9 +206,9 @@ static int rad_load(FILE *f)
     if (V (0))
 	report ("\n");
 
-    for (i = 0; i < xxh->chn; i++) {
-	xxc[i].pan = 0x80;
-	xxc[i].flg = XXM_CHANNEL_FM;
+    for (i = 0; i < m->xxh->chn; i++) {
+	m->xxc[i].pan = 0x80;
+	m->xxc[i].flg = XXM_CHANNEL_FM;
     }
 
     return 0;

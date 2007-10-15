@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.25 2007-10-14 03:17:17 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.26 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int sym_test(FILE *, char *);
-static int sym_load(FILE *);
+static int sym_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info sym_loader = {
 	"DSYM",
@@ -182,7 +182,7 @@ static uint32 readptr16l(uint8 *p)
 	return (b << 8) | a;
 }
 
-static int sym_load(FILE *f)
+static int sym_load(struct xmp_mod_context *m, FILE *f)
 {
 	struct xxm_event *event;
 	int i, j;
@@ -198,22 +198,22 @@ static int sym_load(FILE *f)
 	ver = read8(f);
 	sprintf(xmp_ctl->type, "BASSTRAK v%d (Digital Symphony)", ver);
 
-	xxh->chn = read8(f);
-	xxh->len = xxh->pat = read16l(f);
-	xxh->trk = read16l(f);	/* Symphony patterns are actually tracks */
+	m->xxh->chn = read8(f);
+	m->xxh->len = m->xxh->pat = read16l(f);
+	m->xxh->trk = read16l(f);	/* Symphony patterns are actually tracks */
 	infolen = read24l(f);
 
-	xxh->ins = xxh->smp = 63;
+	m->xxh->ins = m->xxh->smp = 63;
 
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < xxh->ins; i++) {
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+	for (i = 0; i < m->xxh->ins; i++) {
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
 		sn[i] = read8(f);	/* sample name length */
 
 		if (~sn[i] & 0x80)
-			xxs[i].len = read24l(f) << 1;
+			m->xxs[i].len = read24l(f) << 1;
 	}
 
 	a = read8(f);			/* track name length */
@@ -224,15 +224,15 @@ static int sym_load(FILE *f)
 	MODULE_INFO();
 
 	/* PATTERN_INIT - alloc extra track*/
-	xxt = calloc(sizeof(struct xxm_track *), xxh->trk + 1);
-	xxp = calloc(sizeof(struct xxm_pattern *), xxh->pat + 1);
+	m->xxt = calloc(sizeof(struct xxm_track *), m->xxh->trk + 1);
+	m->xxp = calloc(sizeof(struct xxm_pattern *), m->xxh->pat + 1);
 
 	/* Sequence */
 	a = read8(f);			/* packing */
 	assert(a == 0 || a == 1);
 	reportv(0, "Packed sequence: %s\n", a ? "yes" : "no");
 
-	size = xxh->len * xxh->chn * 2;
+	size = m->xxh->len * m->xxh->chn * 2;
 	buf = malloc(size);
 
 	if (a) {
@@ -241,19 +241,19 @@ static int sym_load(FILE *f)
 		fread(buf, 1, size, f);
 	}
 
-	for (i = 0; i < xxh->len; i++) {
+	for (i = 0; i < m->xxh->len; i++) {
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = 64;
-		for (j = 0; j < xxh->chn; j++) {
-			int idx = 2 * (i * xxh->chn + j);
-			xxp[i]->info[j].index = readptr16l(&buf[idx]);
+		m->xxp[i]->rows = 64;
+		for (j = 0; j < m->xxh->chn; j++) {
+			int idx = 2 * (i * m->xxh->chn + j);
+			m->xxp[i]->info[j].index = readptr16l(&buf[idx]);
 
-			if (xxp[i]->info[j].index == 0x1000) /* empty track */
-				xxp[i]->info[j].index = xxh->trk;
+			if (m->xxp[i]->info[j].index == 0x1000) /* empty track */
+				m->xxp[i]->info[j].index = m->xxh->trk;
 
-			//printf("%04x ", xxp[i]->info[j].index);
+			//printf("%04x ", m->xxp[i]->info[j].index);
 		}
-		xxo[i] = i;
+		m->xxo[i] = i;
 		//printf("\n");
 	}
 	free(buf);
@@ -263,9 +263,9 @@ static int sym_load(FILE *f)
 	a = read8(f);
 	assert(a == 0 || a == 1);
 	reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
-	reportv(0, "Stored tracks  : %d ", xxh->trk);
+	reportv(0, "Stored tracks  : %d ", m->xxh->trk);
 
-	size = 64 * xxh->trk * 4;
+	size = 64 * m->xxh->trk * 4;
 	buf = malloc(size);
 
 	if (a) {
@@ -274,15 +274,15 @@ static int sym_load(FILE *f)
 		fread(buf, 1, size, f);
 	}
 
-	for (i = 0; i < xxh->trk; i++) {
-		xxt[i] = calloc(sizeof(struct xxm_track) +
+	for (i = 0; i < m->xxh->trk; i++) {
+		m->xxt[i] = calloc(sizeof(struct xxm_track) +
 				sizeof(struct xxm_event) * 64 - 1, 1);
-		xxt[i]->rows = 64;
+		m->xxt[i]->rows = 64;
 
-		for (j = 0; j < xxt[i]->rows; j++) {
+		for (j = 0; j < m->xxt[i]->rows; j++) {
 			int parm;
 
-			event = &xxt[i]->event[j];
+			event = &m->xxt[i]->event[j];
 
 			b = readptr32l(&buf[4 * (i * 64 + j)]);
 			event->note = b & 0x0000003f;
@@ -295,7 +295,7 @@ static int sym_load(FILE *f)
 			fix_effect(event, parm);
 		}
 		if (V(0)) {
-			if (i % xxh->chn == 0)
+			if (i % m->xxh->chn == 0)
 				reportv(0, ".");
 		}
 	}
@@ -304,49 +304,49 @@ static int sym_load(FILE *f)
 	free(buf);
 
 	/* Extra track */
-	xxt[i] = calloc(sizeof(struct xxm_track) +
+	m->xxt[i] = calloc(sizeof(struct xxm_track) +
 				sizeof(struct xxm_event) * 64 - 1, 1);
-	xxt[i]->rows = 64;
+	m->xxt[i]->rows = 64;
 
 	/* Load and convert instruments */
 
-	reportv(0, "Instruments    : %d ", xxh->ins);
+	reportv(0, "Instruments    : %d ", m->xxh->ins);
 	reportv(1, "\n     Instrument Name        Len   LBeg  LEnd  L Vol Fin");
 
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		uint8 buf[128];
 
 		memset(buf, 0, 128);
 //printf(" offset = %x\n", ftell(f));
 		fread(buf, 1, sn[i] & 0x7f, f);
-		copy_adjust(xxih[i].name, buf, 32);
+		copy_adjust(m->xxih[i].name, buf, 32);
 
 		if (~sn[i] & 0x80) {
 			int looplen;
 
-			xxs[i].lps = read24l(f) << 1;
+			m->xxs[i].lps = read24l(f) << 1;
 			looplen = read24l(f) << 1;
 			if (looplen > 2)
-				xxs[i].flg |= WAVE_LOOPING;
-			xxs[i].lpe = xxs[i].lps + looplen;
-			xxih[i].nsm = 1;
-			xxi[i][0].vol = read8(f);
-			xxi[i][0].pan = 0x80;
+				m->xxs[i].flg |= WAVE_LOOPING;
+			m->xxs[i].lpe = m->xxs[i].lps + looplen;
+			m->xxih[i].nsm = 1;
+			m->xxi[i][0].vol = read8(f);
+			m->xxi[i][0].pan = 0x80;
 			/* finetune adjusted comparing DSym and S3M versions
 			 * of "inside out" */
-			xxi[i][0].fin = (int8)(read8(f) << 3);
-			xxi[i][0].sid = i;
+			m->xxi[i][0].fin = (int8)(read8(f) << 3);
+			m->xxi[i][0].sid = i;
 		}
 
-		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
+		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report("\n[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d ",
-				i, xxih[i].name, xxs[i].len,
-				xxs[i].lps, xxs[i].lpe,
-				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-				xxi[i][0].vol, xxi[i][0].fin);
+				i, m->xxih[i].name, m->xxs[i].len,
+				m->xxs[i].lps, m->xxs[i].lpe,
+				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxi[i][0].vol, m->xxi[i][0].fin);
 		}
 
-		if (sn[i] & 0x80 || xxs[i].len == 0)
+		if (sn[i] & 0x80 || m->xxs[i].len == 0)
 			continue;
 
 		a = read8(f);
@@ -354,21 +354,21 @@ static int sym_load(FILE *f)
 		assert(a == 0 || a == 1 || a == 4);
 
 		if (a == 1) {
-			uint8 *b = malloc(xxs[i].len);
-			read_lzw_dynamic(f, b, 13, 0, xxs[i].len, xxs[i].len,
+			uint8 *b = malloc(m->xxs[i].len);
+			read_lzw_dynamic(f, b, 13, 0, m->xxs[i].len, m->xxs[i].len,
 							XMP_LZW_QUIRK_DSYM);
-			xmp_drv_loadpatch(NULL, xxi[i][0].sid, xmp_ctl->c4rate,
+			xmp_drv_loadpatch(NULL, m->xxi[i][0].sid, xmp_ctl->c4rate,
 				XMP_SMP_NOLOAD | XMP_SMP_DIFF,
-				&xxs[xxi[i][0].sid], (char*)b);
+				&m->xxs[m->xxi[i][0].sid], (char*)b);
 			free(b);
 			reportv(0, "c");
 		} else if (a == 4) {
-			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);
+			xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 			reportv(0, "C");
 		} else {
-			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);
+			xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 			reportv(0, ".");
 		}
 	}

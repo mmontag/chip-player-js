@@ -57,7 +57,7 @@ struct unic_header {
 static int _unic_load (FILE *, int);
 
 
-int unic_load (FILE *f)
+int unic_load(struct xmp_mod_context *m, FILE *f)
 {
     return _unic_load (f, 0) ? _unic_load (f, 1) : 0;
 }
@@ -74,8 +74,8 @@ static int _unic_load (FILE *f, int lax)
 
     LOAD_INIT ();
 
-    xxh->ins = 31;
-    xxh->smp = xxh->ins;
+    m->xxh->ins = 31;
+    m->xxh->smp = m->xxh->ins;
     smp_size = 0;
     nomagic = 0;
     xpo = 36;
@@ -83,7 +83,7 @@ static int _unic_load (FILE *f, int lax)
     fread ((uint8 *)&uh + 20 * lax, 1,
 	sizeof (struct unic_header) - 20 * lax, f);
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	B_ENDIAN16 (uh.ins[i].finetune);
 	B_ENDIAN16 (uh.ins[i].size);
 	B_ENDIAN16 (uh.ins[i].loop_start);
@@ -93,15 +93,15 @@ static int _unic_load (FILE *f, int lax)
     if (uh.len > 0x7f)
 	return -1;
 
-    xxh->len = uh.len;
-    memcpy (xxo, uh.orders, xxh->len);
+    m->xxh->len = uh.len;
+    memcpy (m->xxo, uh.orders, m->xxh->len);
 
-    for (i = 0; i < xxh->len; i++)
-	if (xxo[i] > xxh->pat)
-	    xxh->pat = xxo[i];
+    for (i = 0; i < m->xxh->len; i++)
+	if (m->xxo[i] > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
 
-    xxh->pat++;
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->pat++;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     /* According to Asle:
      *
@@ -118,7 +118,7 @@ static int _unic_load (FILE *f, int lax)
     if (lax || strncmp ((char *)uh.magic, "UNIC", 4)) {
 	for (i = 0; i < 31; i++)
 	    smp_size += uh.ins[i].size * 2;
-	i = xxh->pat * 0x300 + smp_size + sizeof (struct unic_header) -
+	i = m->xxh->pat * 0x300 + smp_size + sizeof (struct unic_header) -
 	    20 * lax;
 	if ((xmp_ctl->size != (i - 4)) && (xmp_ctl->size != i))
 	    return -1;
@@ -130,7 +130,7 @@ static int _unic_load (FILE *f, int lax)
     }
 
     /* Corrputed mod? */
-    if (xxh->pat > 0x7f || xxh->len == 0 || xxh->len > 0x7f)
+    if (m->xxh->pat > 0x7f || m->xxh->len == 0 || m->xxh->len > 0x7f)
 	return -1;
 
     if (!lax) {
@@ -158,29 +158,29 @@ static int _unic_load (FILE *f, int lax)
 
     INSTRUMENT_INIT ();
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxs[i].len = 2 * uh.ins[i].size;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxs[i].len = 2 * uh.ins[i].size;
 	if (lax)
-	xxs[i].lps = (2 + (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 0 : 2)) *
+	m->xxs[i].lps = (2 + (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 0 : 2)) *
 	    uh.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * uh.ins[i].loop_size;
-	xxs[i].flg = uh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = uh.ins[i].finetune;
-	xxi[i][0].vol = uh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
-	strncpy (xxih[i].name, uh.ins[i].name, 20);
-	str_adj (xxih[i].name);
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * uh.ins[i].loop_size;
+	m->xxs[i].flg = uh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = uh.ins[i].finetune;
+	m->xxi[i][0].vol = uh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
+	strncpy (m->xxih[i].name, uh.ins[i].name, 20);
+	str_adj (m->xxih[i].name);
 
 	if (V (1) &&
-		(strlen ((char *) xxih[i].name) || (xxs[i].len > 2))) {
+		(strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2))) {
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x %+d\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, uh.ins[i].loop_size > 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, uh.ins[i].loop_size > 1 ? 'L' : ' ',
+		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
@@ -188,11 +188,11 @@ static int _unic_load (FILE *f, int lax)
 
     /* Load and convert patterns */
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	for (j = 0; j < 0x100; j++) {
 	    event = &EVENT (i, j & 0x3, j >> 2);
@@ -231,17 +231,17 @@ static int _unic_load (FILE *f, int lax)
 	    report (".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+	report ("\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");
     }

@@ -24,7 +24,7 @@
 
 
 static int ult_test (FILE *, char *);
-static int ult_load (FILE *);
+static int ult_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info ult_loader = {
     "ULT",
@@ -91,7 +91,7 @@ static char *verstr[4] = {
 };
 
 
-int ult_load (FILE * f)
+static int ult_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j, k, ver, cnt;
     struct xxm_event *event;
@@ -119,18 +119,18 @@ int ult_load (FILE * f)
 
     fseek (f, ufh.msgsize * 32, SEEK_CUR);
 
-    xxh->ins = xxh->smp = read8(f);
-    /* xxh->flg |= XXM_FLG_LINEAR; */
+    m->xxh->ins = m->xxh->smp = read8(f);
+    /* m->xxh->flg |= XXM_FLG_LINEAR; */
 
     /* Read and convert instruments */
 
     INSTRUMENT_INIT ();
 
     if (V (1))
-	report ("Instruments    : %d ", xxh->ins);
+	report ("Instruments    : %d ", m->xxh->ins);
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
 	fread(&uih.name, 32, 1, f);
 	fread(&uih.dosname, 12, 1, f);
@@ -148,45 +148,45 @@ int ult_load (FILE * f)
 	    uih.finetune ^= uih.c2spd;
 	    uih.c2spd ^= uih.finetune;
 	}
-	xxih[i].nsm = !!(xxs[i].len = uih.sizeend - uih.sizestart);
-	xxs[i].lps = uih.loop_start;
-	xxs[i].lpe = uih.loopend;
+	m->xxih[i].nsm = !!(m->xxs[i].len = uih.sizeend - uih.sizestart);
+	m->xxs[i].lps = uih.loop_start;
+	m->xxs[i].lpe = uih.loopend;
 
 	/* Claudio's note: I'm ignoring reverse playback for samples */
 	switch (uih.bidiloop) {
 	case 4:
-	    xxs[i].flg = WAVE_16_BITS;
-	    xxs[i].len <<= 1;
+	    m->xxs[i].flg = WAVE_16_BITS;
+	    m->xxs[i].len <<= 1;
 	    break;
 	case 8:
 	case 24:
-	    xxs[i].flg = WAVE_LOOPING;
+	    m->xxs[i].flg = WAVE_LOOPING;
 	    break;
 	case 12:
 	case 28:
-	    xxs[i].flg = WAVE_16_BITS | WAVE_LOOPING;
-	    xxs[i].len <<= 1;
+	    m->xxs[i].flg = WAVE_16_BITS | WAVE_LOOPING;
+	    m->xxs[i].len <<= 1;
 	    break;
 	}
 
 /* TODO: Add logarithmic volume support */
-	xxi[i][0].vol = uih.volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
+	m->xxi[i][0].vol = uih.volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, uih.name, 24);
+	copy_adjust(m->xxih[i].name, uih.name, 24);
 
-	if ((V (1)) && (strlen ((char *) uih.name) || xxs[i].len)) {
+	if ((V (1)) && (strlen ((char *) uih.name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
-		i, uih.name, xxs[i].len,
-		xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
-		xxs[i].lps, xxs[i].lpe,
-		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		xxi[i][0].vol, uih.finetune, uih.c2spd);
+		i, uih.name, m->xxs[i].len,
+		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxi[i][0].vol, uih.finetune, uih.c2spd);
 	}
 
 	if (ver > 3)
-	    c2spd_to_note (uih.c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+	    c2spd_to_note (uih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
 
     if (V (1))
@@ -199,21 +199,21 @@ int ult_load (FILE * f)
     for (i = 0; i < 256; i++) {
 	if (ufh2.order[i] == 0xff)
 	    break;
-	xxo[i] = ufh2.order[i];
+	m->xxo[i] = ufh2.order[i];
     }
-    xxh->len = i;
-    xxh->chn = ufh2.channels + 1;
-    xxh->pat = ufh2.patterns + 1;
-    xxh->tpo = 6;
-    xxh->bpm = 125;
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->len = i;
+    m->xxh->chn = ufh2.channels + 1;
+    m->xxh->pat = ufh2.patterns + 1;
+    m->xxh->tpo = 6;
+    m->xxh->bpm = 125;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-    for (i = 0; i < xxh->chn; i++) {
+    for (i = 0; i < m->xxh->chn; i++) {
 	if (ver >= 3) {
 	    x8 = read8(f);
-	    xxc[i].pan = 255 * x8 / 15;
+	    m->xxc[i].pan = 255 * x8 / 15;
 	} else {
-	    xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
+	    m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
 	}
     }
 
@@ -222,17 +222,17 @@ int ult_load (FILE * f)
     /* Read and convert patterns */
 
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
     /* Events are stored by channel */
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
     }
 
-    for (i = 0; i < xxh->chn; i++) {
-	for (j = 0; j < 64 * xxh->pat; ) {
+    for (i = 0; i < m->xxh->chn; i++) {
+	for (j = 0; j < 64 * m->xxh->pat; ) {
 	    cnt = 1;
 	    fread (&x8, 1, 1, f);	/* Read note or repeat code (0xfc) */
 	    if (x8 == 0xfc) {
@@ -309,18 +309,18 @@ int ult_load (FILE * f)
 		}
 
 	    }
-	    if (V (0) && (j % (64 * xxh->chn) == 0))
+	    if (V (0) && (j % (64 * m->xxh->chn) == 0))
 		report (".");
 	}
     }
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
+	report ("\nStored samples : %d ", m->xxh->smp);
 
-    for (i = 0; i < xxh->ins; i++) {
-	if (!xxs[i].len)
+    for (i = 0; i < m->xxh->ins; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }

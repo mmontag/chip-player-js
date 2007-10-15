@@ -9,7 +9,7 @@ struct xmp_loader_info {
 	char *id;
 	char *name;
 	int (*test)(FILE *, char *);
-	int (*loader)(FILE *);
+	int (*loader)(struct xmp_mod_context *, FILE *);
 	struct list_head list;
 };
 

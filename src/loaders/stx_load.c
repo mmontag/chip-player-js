@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.7 2007-10-13 18:25:05 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,7 +33,7 @@
 
 
 static int stx_test (FILE *, char *);
-static int stx_load (FILE *);
+static int stx_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info stx_loader = {
     "STX",
@@ -77,7 +77,7 @@ static uint8 fx[] = {
 };
 
 
-static int stx_load(FILE *f)
+static int stx_load(struct xmp_mod_context *m, FILE *f)
 {
     int c, r, i, broken = 0;
     struct xxm_event *event = 0, dummy;
@@ -120,12 +120,12 @@ static int stx_load(FILE *f)
 	return -1;
 #endif
 
-    xxh->ins = sfh.insnum;
-    xxh->pat = sfh.patnum;
-    xxh->trk = xxh->pat * xxh->chn;
-    xxh->len = sfh.ordnum;
-    xxh->tpo = MSN (sfh.tempo);
-    xxh->smp = xxh->ins;
+    m->xxh->ins = sfh.insnum;
+    m->xxh->pat = sfh.patnum;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->xxh->len = sfh.ordnum;
+    m->xxh->tpo = MSN (sfh.tempo);
+    m->xxh->smp = m->xxh->ins;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
     /* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
@@ -147,25 +147,25 @@ static int stx_load(FILE *f)
 
     MODULE_INFO ();
  
-    pp_pat = calloc (2, xxh->pat);
-    pp_ins = calloc (2, xxh->ins);
+    pp_pat = calloc (2, m->xxh->pat);
+    pp_ins = calloc (2, m->xxh->ins);
 
     /* Read pattern pointers */
     fseek (f, sfh.pp_pat << 4, SEEK_SET);
-    for (i = 0; i < xxh->pat; i++)
+    for (i = 0; i < m->xxh->pat; i++)
 	pp_pat[i] = read16l(f);
 
     /* Read instrument pointers */
     fseek (f, sfh.pp_ins << 4, SEEK_SET);
-    for (i = 0; i < xxh->ins; i++)
+    for (i = 0; i < m->xxh->ins; i++)
 	pp_ins[i] = read16l(f);
 
     /* Skip channel table (?) */
     fseek (f, (sfh.pp_chn << 4) + 32, SEEK_SET);
 
     /* Read orders */
-    for (i = 0; i < xxh->len; i++) {
-	fread (&xxo[i], 1, 1, f);
+    for (i = 0; i < m->xxh->len; i++) {
+	fread (&m->xxo[i], 1, 1, f);
 	fseek (f, 4, SEEK_CUR);
     }
  
@@ -176,8 +176,8 @@ static int stx_load(FILE *f)
     if (V (1))
 	report ("     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek (f, pp_ins[i] << 4, SEEK_SET);
 
 	sih.type = read8(f);
@@ -199,38 +199,38 @@ static int stx_load(FILE *f)
 	fread(&sih.name, 28, 1, f);
 	fread(&sih.magic, 4, 1, f);
 
-	xxih[i].nsm = !!(xxs[i].len = sih.length);
-	xxs[i].lps = sih.loopbeg;
-	xxs[i].lpe = sih.loopend;
-	if (xxs[i].lpe == 0xffff)
-	    xxs[i].lpe = 0;
-	xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = sih.vol;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len = sih.length);
+	m->xxs[i].lps = sih.loopbeg;
+	m->xxs[i].lpe = sih.loopend;
+	if (m->xxs[i].lpe == 0xffff)
+	    m->xxs[i].lpe = 0;
+	m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].vol = sih.vol;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, sih.name, 12);
+	copy_adjust(m->xxih[i].name, sih.name, 12);
 
 	if (V (1) &&
-	    (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
+	    (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
-		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, sih.c2spd);
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
+		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, sih.c2spd);
 	}
 
 	sih.c2spd = 8363 * sih.c2spd / 8448;
-	c2spd_to_note (sih.c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+	c2spd_to_note (sih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
 
     PATTERN_INIT ();
 
     /* Read and convert patterns */
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	if (!pp_pat[i])
@@ -249,7 +249,7 @@ static int stx_load(FILE *f)
 	    }
 
 	    c = b & S3M_CH_MASK;
-	    event = c >= xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->xxh->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
 		fread (&n, 1, 1, f);
@@ -300,10 +300,10 @@ static int stx_load(FILE *f)
 
     /* Read samples */
     if (V (0))
-	report ("Stored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->ins; i++) {
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	report ("Stored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->ins; i++) {
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");
     }

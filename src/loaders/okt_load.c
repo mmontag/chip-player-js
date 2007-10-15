@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.8 2007-10-15 02:02:58 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.9 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int okt_test (FILE *, char *);
-static int okt_load (FILE *);
+static int okt_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info okt_loader = {
     "OKT",
@@ -93,115 +93,115 @@ static int fx[] = {
 };
 
 
-static void get_cmod (int size, FILE *f)
+static void get_cmod(struct xmp_mod_context *m, int size, FILE *f)
 {
     int i, j, k;
 
-    xxh->chn = 0;
+    m->xxh->chn = 0;
     for (i = 0; i < 4; i++) {
 	j = read16b(f);
 	for (k = !!j; k >= 0; k--) {
-	    xxc[xxh->chn].pan = (((i + 1) / 2) % 2) * 0xff;
-	    xxh->chn++;
+	    m->xxc[m->xxh->chn].pan = (((i + 1) / 2) % 2) * 0xff;
+	    m->xxh->chn++;
 	}
     }
 }
 
 
-static void get_samp(int size, FILE *f)
+static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
 {
     int i, j;
     int looplen;
 
     /* Should be always 36 */
-    xxh->ins = size / 32;  /* sizeof(struct okt_instrument_header); */
-    xxh->smp = xxh->ins;
+    m->xxh->ins = size / 32;  /* sizeof(struct okt_instrument_header); */
+    m->xxh->smp = m->xxh->ins;
 
     INSTRUMENT_INIT ();
 
     reportv(1, "     Instrument name      Len   Lbeg  Lend  L Vol Mod\n");
-    for (j = i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
+    for (j = i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 
-	fread(xxih[i].name, 1, 20, f);
-	str_adj((char *)xxih[i].name);
+	fread(m->xxih[i].name, 1, 20, f);
+	str_adj((char *)m->xxih[i].name);
 
 	/* Sample size is always rounded down */
-	xxs[i].len = read32b(f) & ~1;
-	xxs[i].lps = read16b(f);
+	m->xxs[i].len = read32b(f) & ~1;
+	m->xxs[i].lps = read16b(f);
 	looplen = read16b(f);
-	xxs[i].lpe = xxs[i].lps + looplen;
-	xxi[i][0].vol = read16b(f);
+	m->xxs[i].lpe = m->xxs[i].lps + looplen;
+	m->xxi[i][0].vol = read16b(f);
 	mode[i] = read16b(f);
 
-	xxih[i].nsm = !!(xxs[i].len);
-	xxs[i].flg = looplen > 2 ? WAVE_LOOPING : 0;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = j;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxs[i].flg = looplen > 2 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = j;
 
 	idx[j] = i;
 
-	if ((V(1)) && (strlen((char *)xxih[i].name) || (xxs[i].len > 1)))
+	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
 	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
-		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, mode[i]);
-	if (xxih[i].nsm)
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
+		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, mode[i]);
+	if (m->xxih[i].nsm)
 	    j++;
     }
 }
 
 
-static void get_spee(int size, FILE *f)
+static void get_spee(struct xmp_mod_context *m, int size, FILE *f)
 {
-    xxh->tpo = read16b(f);
-    xxh->bpm = 125;
+    m->xxh->tpo = read16b(f);
+    m->xxh->bpm = 125;
 }
 
 
-static void get_slen(int size, FILE *f)
+static void get_slen(struct xmp_mod_context *m, int size, FILE *f)
 {
-    xxh->pat = read16b(f);
-    xxh->trk = xxh->pat * xxh->chn;
+    m->xxh->pat = read16b(f);
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
 }
 
 
-static void get_plen(int size, FILE *f)
+static void get_plen(struct xmp_mod_context *m, int size, FILE *f)
 {
-    xxh->len = read16b(f);
-    reportv(0, "Module length  : %d patterns\n", xxh->len);
+    m->xxh->len = read16b(f);
+    reportv(0, "Module length  : %d patterns\n", m->xxh->len);
 }
 
 
-static void get_patt (int size, FILE *f)
+static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
 {
-    fread(xxo, 1, xxh->len, f);
+    fread(m->xxo, 1, m->xxh->len, f);
 }
 
 
-static void get_pbod (int size, FILE *f)
+static void get_pbod(struct xmp_mod_context *m, int size, FILE *f)
 {
     int j;
     uint16 rows;
     struct xxm_event *event;
 
-    if (pattern >= xxh->pat)
+    if (pattern >= m->xxh->pat)
 	return;
 
     if (!pattern) {
 	PATTERN_INIT ();
-	reportv(0, "Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", m->xxh->pat);
     }
 
     rows = read16b(f);
 
     PATTERN_ALLOC (pattern);
-    xxp[pattern]->rows = rows;
+    m->xxp[pattern]->rows = rows;
     TRACK_ALLOC (pattern);
 
-    for (j = 0; j < rows * xxh->chn; j++) {
+    for (j = 0; j < rows * m->xxh->chn; j++) {
 	uint8 note, ins;
 
-	event = &EVENT(pattern, j % xxh->chn, j / xxh->chn);
+	event = &EVENT(pattern, j % m->xxh->chn, j / m->xxh->chn);
 	memset(event, 0, sizeof(struct xxm_event));
 
 	note = read8(f);
@@ -240,22 +240,22 @@ static void get_pbod (int size, FILE *f)
 }
 
 
-static void get_sbod (int size, FILE *f)
+static void get_sbod(struct xmp_mod_context *m, int size, FILE *f)
 {
     int flags = 0;
     int i;
 
-    if (sample >= xxh->ins)
+    if (sample >= m->xxh->ins)
 	return;
 
     if (!sample && V(0))
-	report ("\nStored samples : %d ", xxh->smp);
+	report ("\nStored samples : %d ", m->xxh->smp);
 
     i = idx[sample];
     if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
 	flags = XMP_SMP_7BIT;
 
-    xmp_drv_loadpatch(f, sample, xmp_ctl->c4rate, flags, &xxs[i], NULL);
+    xmp_drv_loadpatch(f, sample, xmp_ctl->c4rate, flags, &m->xxs[i], NULL);
 
     reportv(0, ".");
 
@@ -263,7 +263,7 @@ static void get_sbod (int size, FILE *f)
 }
 
 
-static int okt_load (FILE *f)
+static int okt_load(struct xmp_mod_context *m, FILE *f)
 {
     LOAD_INIT ();
 
@@ -272,22 +272,22 @@ static int okt_load (FILE *f)
     pattern = sample = 0;
 
     /* IFF chunk IDs */
-    iff_register ("CMOD", get_cmod);
-    iff_register ("SAMP", get_samp);
-    iff_register ("SPEE", get_spee);
-    iff_register ("SLEN", get_slen);
-    iff_register ("PLEN", get_plen);
-    iff_register ("PATT", get_patt);
-    iff_register ("PBOD", get_pbod);
-    iff_register ("SBOD", get_sbod);
+    iff_register("CMOD", get_cmod);
+    iff_register("SAMP", get_samp);
+    iff_register("SPEE", get_spee);
+    iff_register("SLEN", get_slen);
+    iff_register("PLEN", get_plen);
+    iff_register("PATT", get_patt);
+    iff_register("PBOD", get_pbod);
+    iff_register("SBOD", get_sbod);
 
     strcpy (xmp_ctl->type, "OKT (Oktalyzer)");
 
     MODULE_INFO ();
 
     /* Load IFF chunks */
-    while (!feof (f))
-	iff_chunk (f);
+    while (!feof(f))
+	iff_chunk(m, f);
 
     iff_release ();
 

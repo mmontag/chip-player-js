@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.13 2007-10-13 23:33:18 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.14 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int dt_test(FILE *, char *);
-static int dt_load(FILE *);
+static int dt_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info dt_loader = {
 	"DTM",
@@ -46,16 +46,16 @@ static int pflag, sflag;
 static int realpat;
 
 
-static void get_d_t_(int size, FILE *f)
+static void get_d_t_(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int b;
 
 	read16b(f);			/* type */
 	read16b(f);			/* 0xff then mono */
 	read16b(f);			/* reserved */
-	xxh->tpo = read16b(f);
+	m->xxh->tpo = read16b(f);
 	if ((b = read16b(f)) > 0)	/* RAMBO.DTM has bpm 0 */
-		xxh->bpm = b;
+		m->xxh->bpm = b;
 	read32b(f);			/* undocumented */
 
 	fread(xmp_ctl->name, 32, 1, f);
@@ -64,83 +64,83 @@ static void get_d_t_(int size, FILE *f)
 	MODULE_INFO();
 }
 
-static void get_s_q_(int size, FILE *f)
+static void get_s_q_(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i, maxpat;
 
-	xxh->len = read16b(f);
-	xxh->rst = read16b(f);
+	m->xxh->len = read16b(f);
+	m->xxh->rst = read16b(f);
 	read32b(f);	/* reserved */
 
 	for (maxpat = i = 0; i < 128; i++) {
-		xxo[i] = read8(f);
-		if (xxo[i] > maxpat)
-			maxpat = xxo[i];
+		m->xxo[i] = read8(f);
+		if (m->xxo[i] > maxpat)
+			maxpat = m->xxo[i];
 	}
-	xxh->pat = maxpat + 1;
+	m->xxh->pat = maxpat + 1;
 }
 
-static void get_patt(int size, FILE *f)
+static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
 {
-	xxh->chn = read16b(f);
+	m->xxh->chn = read16b(f);
 	realpat = read16b(f);
-	xxh->trk = xxh->chn * xxh->pat;
+	m->xxh->trk = m->xxh->chn * m->xxh->pat;
 }
 
-static void get_inst(int size, FILE *f)
+static void get_inst(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i, c2spd;
 	uint8 name[30];
 
-	xxh->ins = xxh->smp = read16b(f);
-	reportv(0, "Instruments    : %d ", xxh->ins);
+	m->xxh->ins = m->xxh->smp = read16b(f);
+	reportv(0, "Instruments    : %d ", m->xxh->ins);
 
 	INSTRUMENT_INIT();
 
 	reportv(1, "\n     Instrument name        Len   LBeg  LSize LS Res Vol Fine C2Spd");
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		int fine, replen, flag;
 
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
 		read32b(f);		/* reserved */
-		xxs[i].len = read32b(f);
-		xxih[i].nsm = !!xxs[i].len;
+		m->xxs[i].len = read32b(f);
+		m->xxih[i].nsm = !!m->xxs[i].len;
 		fine = read8s(f);	/* finetune */
-		xxi[i][0].vol = read8(f);
-		xxi[i][0].pan = 0x80;
-		xxs[i].lps = read32b(f);
+		m->xxi[i][0].vol = read8(f);
+		m->xxi[i][0].pan = 0x80;
+		m->xxs[i].lps = read32b(f);
 		replen = read32b(f);
-		xxs[i].lpe = xxs[i].lps + replen - 1;
-		xxs[i].flg = replen > 2 ?  WAVE_LOOPING : 0;
+		m->xxs[i].lpe = m->xxs[i].lps + replen - 1;
+		m->xxs[i].flg = replen > 2 ?  WAVE_LOOPING : 0;
 
 		fread(name, 22, 1, f);
-		copy_adjust(xxih[i].name, name, 22);
+		copy_adjust(m->xxih[i].name, name, 22);
 
 		flag = read16b(f);	/* bit 0-7:resol 8:stereo */
-		xxs[i].flg |= (flag & 0xff) > 8 ? WAVE_16_BITS : 0;
+		m->xxs[i].flg |= (flag & 0xff) > 8 ? WAVE_16_BITS : 0;
 
 		read32b(f);		/* midi note (0x00300000) */
 		c2spd = read32b(f);	/* frequency */
-		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 
 		/* It's strange that we have both c2spd and finetune */
-		xxi[i][0].fin += fine;
+		m->xxi[i][0].fin += fine;
 
-		xxi[i][0].sid = i;
+		m->xxi[i][0].sid = i;
 
-		if (strlen((char *)xxih[i].name) || xxs[i].len > 0) {
+		if (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 0) {
 			if (V(1))
 				report("\n[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
-					i, xxih[i].name,
-					xxs[i].len,
-					xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
-					xxs[i].lps,
+					i, m->xxih[i].name,
+					m->xxs[i].len,
+					m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+					m->xxs[i].lps,
 					replen,
-					xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+					m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 					flag & 0x100 ? 'S' : ' ',
 					flag & 0xff,
-					xxi[i][0].vol,
+					m->xxi[i][0].vol,
 					fine,
 					c2spd);
 			else
@@ -150,7 +150,7 @@ static void get_inst(int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static void get_dapt(int size, FILE *f)
+static void get_dapt(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int pat, i, j, k;
 	struct xxm_event *event;
@@ -158,7 +158,7 @@ static void get_dapt(int size, FILE *f)
 	int rows;
 
 	if (!pflag) {
-		reportv(0, "Stored patterns: %d ", xxh->pat);
+		reportv(0, "Stored patterns: %d ", m->xxh->pat);
 		pflag = 1;
 		last_pat = 0;
 		PATTERN_INIT();
@@ -170,13 +170,13 @@ static void get_dapt(int size, FILE *f)
 
 	for (i = last_pat; i <= pat; i++) {
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = rows;
+		m->xxp[i]->rows = rows;
 		TRACK_ALLOC(i);
 	}
 	last_pat = pat + 1;
 
 	for (j = 0; j < rows; j++) {
-		for (k = 0; k < xxh->chn; k++) {
+		for (k = 0; k < m->xxh->chn; k++) {
 			uint8 a, b, c, d;
 
 			event = &EVENT(pat, k, j);
@@ -198,26 +198,26 @@ static void get_dapt(int size, FILE *f)
 	reportv(0, ".");
 }
 
-static void get_dait(int size, FILE *f)
+static void get_dait(struct xmp_mod_context *m, int size, FILE *f)
 {
 	static int i = 0;
 
 	if (!sflag) {
-		reportv(0, "\nStored samples : %d ", xxh->smp);
+		reportv(0, "\nStored samples : %d ", m->xxh->smp);
 		sflag = 1;
 		i = 0;
 	}
 
 	if (size > 2) {
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_BIGEND, &xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_BIGEND, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 
 	i++;
 }
 
-static int dt_load(FILE *f)
+static int dt_load(struct xmp_mod_context *m, FILE *f)
 {
 	LOAD_INIT ();
 
@@ -233,7 +233,7 @@ static int dt_load(FILE *f)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(f);
+		iff_chunk(m, f);
 
 	reportv(0, "\n");
 

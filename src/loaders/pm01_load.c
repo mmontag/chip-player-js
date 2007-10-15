@@ -34,7 +34,7 @@ struct pm01_header {
 } PACKED;
 
 
-int pm01_load (FILE *f)
+int pm01_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j, k, l;
     struct xxm_event *event;
@@ -48,15 +48,15 @@ int pm01_load (FILE *f)
     B_ENDIAN32 (ph.patt_size);
     B_ENDIAN16 (ph.len);
 
-    xxh->len = ph.len >> 2;
+    m->xxh->len = ph.len >> 2;
 
-    if (xxh->len > 128)
+    if (m->xxh->len > 128)
 	return -1;
 
-    for (i = 0; i < xxh->len; i++)
+    for (i = 0; i < m->xxh->len; i++)
 	B_ENDIAN32 (ph.pptr[i]);
 
-    for (smp_size = i = 0; i < xxh->ins; i++) {
+    for (smp_size = i = 0; i < m->xxh->ins; i++) {
 	B_ENDIAN16 (ph.ins[i].size);
 	B_ENDIAN16 (ph.ins[i].loop_start);
 	B_ENDIAN16 (ph.ins[i].loop_size);
@@ -80,23 +80,23 @@ int pm01_load (FILE *f)
      * Find number of different pattern pointers == number of stored patterns
      */
     pptr[0] = ph.pptr[0];
-    for (xxh->pat = i = 0; i < xxh->len; i++) {
-	for (k = j = 0; j <= xxh->pat; j++) {
+    for (m->xxh->pat = i = 0; i < m->xxh->len; i++) {
+	for (k = j = 0; j <= m->xxh->pat; j++) {
 	    if (ph.pptr[i] == pptr[j]) {
 		k = 1;
 		break;
 	    }
 	}
 	if (!k) {
-	    pptr[++xxh->pat] = ph.pptr[i];
+	    pptr[++m->xxh->pat] = ph.pptr[i];
 	}
     }
 
     /*
      * Build a pattern pointer table...
      */
-    for (l = i = 0; i < xxh->pat; i++) {
-	for (k = 0x7fffffff, j = 0; j < xxh->len; j++) {
+    for (l = i = 0; i < m->xxh->pat; i++) {
+	for (k = 0x7fffffff, j = 0; j < m->xxh->len; j++) {
 	    if (ph.pptr[j] < k && ph.pptr[j] > l) {
 		k = ph.pptr[j];
 	    }
@@ -107,39 +107,39 @@ int pm01_load (FILE *f)
     /*
      * ...and the order table
      */
-    for (i = 0; i < xxh->len; i++) {
-	for (j = 0; j < xxh->pat; j++) {
+    for (i = 0; i < m->xxh->len; i++) {
+	for (j = 0; j < m->xxh->pat; j++) {
 	    if (ph.pptr[i] == pptr[j])
-		xxo[i] = j;
+		m->xxo[i] = j;
 	}
     }
 
-    xxh->trk = xxh->pat * xxh->chn;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
     INSTRUMENT_INIT ();
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxs[i].len = 2 * ph.ins[i].size;
-	xxs[i].lps = 2 * ph.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * ph.ins[i].loop_size;
-	xxs[i].flg = ph.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = (int8) ph.ins[i].finetune << 4;
-	xxi[i][0].vol = ph.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
-	if (xxi[i][0].fin > 48)
-	    xxi[i][0].xpo = -1;
-	if (xxi[i][0].fin < -48)
-	    xxi[i][0].xpo = 1;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxs[i].len = 2 * ph.ins[i].size;
+	m->xxs[i].lps = 2 * ph.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * ph.ins[i].loop_size;
+	m->xxs[i].flg = ph.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = (int8) ph.ins[i].finetune << 4;
+	m->xxi[i][0].vol = ph.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
+	if (m->xxi[i][0].fin > 48)
+	    m->xxi[i][0].xpo = -1;
+	if (m->xxi[i][0].fin < -48)
+	    m->xxi[i][0].xpo = 1;
 
-	if (V (1) && (strlen (xxih[i].name) || xxs[i].len > 2)) {
+	if (V (1) && (strlen (m->xxih[i].name) || m->xxs[i].len > 2)) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
-		i, xxs[i].len, xxs[i].lps, xxs[i].lpe,
+		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		ph.ins[i].loop_size > 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
@@ -148,11 +148,11 @@ int pm01_load (FILE *f)
     /* Load and convert patterns */
 
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64; j++) {
 	    for (k = 0; k < 4; k++) {
@@ -166,17 +166,17 @@ int pm01_load (FILE *f)
 	    report (".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+	report ("\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");
     }

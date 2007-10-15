@@ -23,7 +23,7 @@
 #include "period.h"
 
 static int st_test (FILE *, char *);
-static int st_load (FILE *);
+static int st_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info st_loader = {
     "ST",
@@ -119,8 +119,8 @@ static int st_test(FILE *f, char *t)
     if (st.st_size < (600 + pat * 1024 + smp_size))
 	return -1;
 
-    for (i = 0; i < xxh->pat; i++) {
-	for (j = 0; j < (64 * xxh->chn); j++) {
+    for (i = 0; i < pat; i++) {
+	for (j = 0; j < (64 * 4); j++) {
 	    int p;
 	
 	    fread (mod_event, 1, 4, f);
@@ -143,7 +143,7 @@ static int st_test(FILE *f, char *t)
     return 0;
 }
 
-static int st_load(FILE *f)
+static int st_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     int smp_size, pat_size;
@@ -158,8 +158,8 @@ static int st_load(FILE *f)
 
     LOAD_INIT();
 
-    xxh->ins = 15;
-    xxh->smp = xxh->ins;
+    m->xxh->ins = 15;
+    m->xxh->smp = m->xxh->ins;
     smp_size = 0;
     pat_size = 0;
 
@@ -176,25 +176,25 @@ static int st_load(FILE *f)
     mh.restart = read8(f);
     fread(mh.order, 1, 128, f);
 	
-    xxh->len = mh.len;
-    xxh->rst = mh.restart;
+    m->xxh->len = mh.len;
+    m->xxh->rst = mh.restart;
 
     /* UST: The byte at module offset 471 is BPM, not the song restart
      *      The default for UST modules is 0x78 = 120 BPM = 48 Hz.
      */
-    if (xxh->rst < 0x40)	/* should be 0x20 */
+    if (m->xxh->rst < 0x40)	/* should be 0x20 */
 	ust = 0;
 
-    memcpy (xxo, mh.order, 128);
+    memcpy (m->xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++)
-	if (xxo[i] > xxh->pat)
-	    xxh->pat = xxo[i];
-    xxh->pat++;
+	if (m->xxo[i] > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
+    m->xxh->pat++;
 
-    pat_size = 256 * xxh->chn * xxh->pat;
+    pat_size = 256 * m->xxh->chn * m->xxh->pat;
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	/* UST: Volume word does not contain a "Finetuning" value in its
 	 * high-byte.
 	 */
@@ -217,22 +217,22 @@ static int st_load(FILE *f)
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxs[i].len = 2 * mh.ins[i].size;
-	xxs[i].lps = mh.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * mh.ins[i].loop_size;
-	xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
-	xxi[i][0].vol = mh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	strncpy((char *)xxih[i].name, (char *)mh.ins[i].name, 22);
-	str_adj((char *)xxih[i].name);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxs[i].len = 2 * mh.ins[i].size;
+	m->xxs[i].lps = mh.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
+	m->xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->xxi[i][0].vol = mh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	strncpy((char *)m->xxih[i].name, (char *)mh.ins[i].name, 22);
+	str_adj((char *)m->xxih[i].name);
     }
 
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     strncpy (xmp_ctl->name, (char *) mh.name, 20);
 
@@ -240,8 +240,8 @@ static int st_load(FILE *f)
     fxused = 0;
     pos = ftell(f);
 
-    for (i = 0; i < xxh->pat; i++) {
-	for (j = 0; j < (64 * xxh->chn); j++) {
+    for (i = 0; i < m->xxh->pat; i++) {
+	for (j = 0; j < (64 * m->xxh->chn); j++) {
 	    fread (mod_event, 1, 4, f);
 
 	    cvt_pt_event (&ev, mod_event);
@@ -297,14 +297,14 @@ static int st_load(FILE *f)
 
     /* Load and convert patterns */
 
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < (64 * xxh->chn); j++) {
-	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+	for (j = 0; j < (64 * m->xxh->chn); j++) {
+	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread (mod_event, 1, 4, f);
 
 	    cvt_pt_event(event, mod_event);
@@ -315,31 +315,31 @@ static int st_load(FILE *f)
 
     reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
-    for (i = 0; (V (1)) && (i < xxh->ins); i++) {
-	if ((strlen ((char *) xxih[i].name) || (xxs[i].len > 2)))
+    for (i = 0; (V (1)) && (i < m->xxh->ins); i++) {
+	if ((strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
+		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Perform the necessary conversions for Ultimate Soundtracker */
     if (ust) {
 	/* Fix restart & bpm */
-	xxh->bpm = xxh->rst;
-	xxh->rst = 0;
+	m->xxh->bpm = m->xxh->rst;
+	m->xxh->rst = 0;
 
 	/* Fix sample loops */
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 	    /* FIXME */	
 	}
 
 	/* Fix effects (arpeggio and pitchbending) */
-	for (i = 0; i < xxh->pat; i++) {
-	    for (j = 0; j < (64 * xxh->chn); j++) {
-		event = &EVENT(i, j % xxh->chn, j / xxh->chn);
+	for (i = 0; i < m->xxh->pat; i++) {
+	    for (j = 0; j < (64 * m->xxh->chn); j++) {
+		event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
 		if (event->fxt == 1)
 		    event->fxt = 0;
 		else if (event->fxt == 2 && (event->fxp & 0xf0) == 0)
@@ -349,19 +349,19 @@ static int st_load(FILE *f)
 	    }
 	}
     } else {
-	if (xxh->rst >= xxh->len)
-	    xxh->rst = 0;
+	if (m->xxh->rst >= m->xxh->len)
+	    m->xxh->rst = 0;
     }
 
     /* Load samples */
 
-    reportv(0, "Stored samples : %d ", xxh->smp);
+    reportv(0, "Stored samples : %d ", m->xxh->smp);
 
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

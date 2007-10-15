@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.8 2007-10-14 22:06:20 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.9 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@
 
 
 static int dtt_test(FILE *, char *);
-static int dtt_load(FILE *);
+static int dtt_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info dtt_loader = {
 	"DTT",
@@ -38,7 +38,7 @@ static int dtt_test(FILE *f, char *t)
 	return 0;
 }
 
-static int dtt_load(FILE *f)
+static int dtt_load(struct xmp_mod_context *m, FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
@@ -60,74 +60,74 @@ static int dtt_load(FILE *f)
 	strncpy(author_name, (char *)buf, XMP_DEF_NAMESIZE);
 	
 	flags = read32l(f);
-	xxh->chn = read32l(f);
-	xxh->len = read32l(f);
+	m->xxh->chn = read32l(f);
+	m->xxh->len = read32l(f);
 	fread(buf, 1, 8, f);
-	xxh->tpo = read32l(f);
-	xxh->rst = read32l(f);
-	xxh->pat = read32l(f);
-	xxh->ins = xxh->smp = read32l(f);
-	xxh->trk = xxh->pat * xxh->chn;
+	m->xxh->tpo = read32l(f);
+	m->xxh->rst = read32l(f);
+	m->xxh->pat = read32l(f);
+	m->xxh->ins = m->xxh->smp = read32l(f);
+	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	
-	fread(xxo, 1, (xxh->len + 3) & ~3L, f);
+	fread(m->xxo, 1, (m->xxh->len + 3) & ~3L, f);
 
 	MODULE_INFO();
 
-	for (i = 0; i < xxh->pat; i++)
+	for (i = 0; i < m->xxh->pat; i++)
 		pofs[i] = read32l(f);
 
-	fread(plen, 1, ((xxh->pat + 3) >> 2) << 2, f);
+	fread(plen, 1, ((m->xxh->pat + 3) >> 2) << 2, f);
 
 	INSTRUMENT_INIT();
 
 	/* Read instrument names */
 	reportv(1, "     Name                              Len  LBeg LEnd L Vol\n");
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		int c2spd, looplen;
 
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 		read8(f);			/* note */
-		xxi[i][0].vol = read8(f) >> 1;
-		xxi[i][0].pan = 0x80;
+		m->xxi[i][0].vol = read8(f) >> 1;
+		m->xxi[i][0].pan = 0x80;
 		read16l(f);			/* not used */
 		c2spd = read32l(f);		/* period? */
 		read32l(f);			/* sustain start */
 		read32l(f);			/* sustain length */
-		xxs[i].lps = read32l(f);
+		m->xxs[i].lps = read32l(f);
 		looplen = read32l(f);
-		xxs[i].flg = looplen > 0 ? WAVE_LOOPING : 0;
-		xxs[i].lpe = xxs[i].lps + looplen;
-		xxs[i].len = read32l(f);
+		m->xxs[i].flg = looplen > 0 ? WAVE_LOOPING : 0;
+		m->xxs[i].lpe = m->xxs[i].lps + looplen;
+		m->xxs[i].len = read32l(f);
 		fread(buf, 1, 32, f);
-		copy_adjust(xxih[i].name, (uint8 *)buf, 32);
+		copy_adjust(m->xxih[i].name, (uint8 *)buf, 32);
 		sdata[i] = read32l(f);
 
-		xxih[i].nsm = !!(xxs[i].len);
-		xxi[i][0].sid = i;
+		m->xxih[i].nsm = !!(m->xxs[i].len);
+		m->xxi[i][0].sid = i;
 
-		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
+		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report("[%2X] %-32.32s  %04x %04x %04x %c V%02x\n",
-				i, xxih[i].name, xxs[i].len,
-				xxs[i].lps, xxs[i].lpe,
-				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-				xxi[i][0].vol, c2spd);
+				i, m->xxih[i].name, m->xxs[i].len,
+				m->xxs[i].lps, m->xxs[i].lpe,
+				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxi[i][0].vol, c2spd);
 		}
 	}
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(0, "Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = plen[i];
+		m->xxp[i]->rows = plen[i];
 		TRACK_ALLOC(i);
 
 		fseek(f, pofs[i], SEEK_SET);
 
-		for (j = 0; j < xxp[i]->rows; j++) {
-			for (k = 0; k < xxh->chn; k++) {
+		for (j = 0; j < m->xxp[i]->rows; j++) {
+			for (k = 0; k < m->xxh->chn; k++) {
 				uint32 x;
 
 				event = &EVENT (i, k, j);
@@ -156,11 +156,11 @@ static int dtt_load(FILE *f)
 	reportv(0, "\n");
 
 	/* Read samples */
-	reportv(0, "Stored samples : %d ", xxh->smp);
-	for (i = 0; i < xxh->ins; i++) {
+	reportv(0, "Stored samples : %d ", m->xxh->smp);
+	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, sdata[i], SEEK_SET);
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_VIDC, &xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 	reportv(0, "\n");

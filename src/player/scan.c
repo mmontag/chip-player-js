@@ -38,8 +38,8 @@
 #define TIME		6
 #define MAX_GVL		0x40
 
-extern int xxo_fstrow[XMP_DEF_MAXORD];
-extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
+//extern int xxo_fstrow[XMP_DEF_MAXORD];
+//extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
 
 
 int xmpi_scan_module(struct xmp_player_context *p)
@@ -53,62 +53,63 @@ int xmpi_scan_module(struct xmp_player_context *p)
     int* loop_row;
     char** tab_cnt;
     struct xxm_event* event;
+    struct xmp_mod_context *m = &p->m;
 
-    if (xxh->len == 0)
+    if (m->xxh->len == 0)
 	return 0;
 
     medbpm = xmp_ctl->fetch & XMP_CTL_MEDBPM;
 
-    tab_cnt = calloc (sizeof (char *), xxh->len);
-    for (ord = xxh->len; ord--;)
-	tab_cnt[ord] =
-	    calloc (1, xxo[ord] >= xxh->pat ? 1 : xxp[xxo[ord]]->rows ?
-		xxp[xxo[ord]]->rows : 1);
+    tab_cnt = calloc (sizeof (char *), m->xxh->len);
+    for (ord = m->xxh->len; ord--;)
+	tab_cnt[ord] = calloc(1, m->xxo[ord] >= m->xxh->pat ?  1 :
+		m->xxp[m->xxo[ord]]->rows ? m->xxp[m->xxo[ord]]->rows : 1);
 
-    loop_stk = calloc (sizeof (int), xxh->chn);
-    loop_row = calloc (sizeof (int), xxh->chn);
+    loop_stk = calloc(sizeof (int), m->xxh->chn);
+    loop_row = calloc(sizeof (int), m->xxh->chn);
     loop_chn = loop_flg = 0;
 
-    memset (xxo_fstrow, 0, XMP_DEF_MAXORD);
+    memset(m->xxo_fstrow, 0, XMP_DEF_MAXORD);
 
-    gvl = xxh->gvl;
-    bpm = xxh->bpm;
-    tempo = (tempo = xmp_ctl->tempo ? xmp_ctl->tempo : xxh->tpo) ? tempo : TIME;
+    gvl = m->xxh->gvl;
+    bpm = m->xxh->bpm;
+    tempo = (tempo = xmp_ctl->tempo ? xmp_ctl->tempo : m->xxh->tpo) ? tempo : TIME;
     base_time = xmp_ctl->rrate;
 
     ord2 = ord = -1;
     gvol_slide = break_row = cnt_row = alltmp = clock_rst = clock = 0;
 
     while (42) {
-	if ((uint32)++ord >= xxh->len) {
-	    if ((uint32)++ord >= xxh->len)
-		ord = ((uint32)xxh->rst > xxh->len ||
-			(uint32)xxo[xxh->rst] >= xxh->pat) ? 0 : xxh->rst;
-	    if (xxo[ord] == S3M_END)
+	if ((uint32)++ord >= m->xxh->len) {
+	    if ((uint32)++ord >= m->xxh->len)
+		ord = ((uint32)m->xxh->rst > m->xxh->len ||
+			(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
+			0 : m->xxh->rst;
+	    if (m->xxo[ord] == S3M_END)
 		break;
 	} 
 
-	if ((uint32)xxo[ord] >= xxh->pat) {
-	    if (xxo[ord] == S3M_SKIP)
+	if ((uint32)m->xxo[ord] >= m->xxh->pat) {
+	    if (m->xxo[ord] == S3M_SKIP)
 		ord++;
-	    if (xxo[ord] == S3M_END)
-		ord = xxh->len;
+	    if (m->xxo[ord] == S3M_END)
+		ord = m->xxh->len;
 	    continue;
 	}
 
 	if (tab_cnt[ord][break_row])
 	    break;
 
-	xxo_info[ord].gvl = gvl;
-	xxo_info[ord].bpm = bpm;
-	xxo_info[ord].tempo = tempo;
+	m->xxo_info[ord].gvl = gvl;
+	m->xxo_info[ord].bpm = bpm;
+	m->xxo_info[ord].tempo = tempo;
 
 	if (medbpm)
-	    xxo_info[ord].time = (clock + 132 * alltmp / 5 / bpm) / 10;
+	    m->xxo_info[ord].time = (clock + 132 * alltmp / 5 / bpm) / 10;
 	else
-	    xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
+	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
 
-	if (!xxo_fstrow[ord] && ord) {
+	if (!m->xxo_fstrow[ord] && ord) {
 	    if (ord == xmp_ctl->start && !(xmp_ctl->fetch & XMP_CTL_LOOP)) {
 		if (medbpm)
 	            clock_rst = clock + 132 * alltmp / 5 / bpm;
@@ -116,10 +117,10 @@ int xmpi_scan_module(struct xmp_player_context *p)
 		    clock_rst = clock + 100 * alltmp / bpm;
 	    }
 
-	    xxo_fstrow[ord] = break_row;
+	    m->xxo_fstrow[ord] = break_row;
 	}
 
-	last_row = xxp[xxo[ord]]->rows;
+	last_row = m->xxp[m->xxo[ord]]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
 
 	    /* Date: Sat, 8 Sep 2007 04:01:06 +0200
@@ -137,8 +138,8 @@ int xmpi_scan_module(struct xmp_player_context *p)
 	    }
 	    tab_cnt[ord][row]++;
 
-	    for (chn = 0; chn < xxh->chn; chn++) {
-		event = &EVENT (xxo[ord], chn, row);
+	    for (chn = 0; chn < m->xxh->chn; chn++) {
+		event = &EVENT(m->xxo[ord], chn, row);
 
 		f1 = event->fxt;
 		f2 = event->f2t;
@@ -248,7 +249,7 @@ end_module:
     free(loop_row);
     free(loop_stk);
 
-    for (ord = xxh->len; ord--; free (tab_cnt[ord]));
+    for (ord = m->xxh->len; ord--; free (tab_cnt[ord]));
     free(tab_cnt);
 
     clock -= clock_rst;

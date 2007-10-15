@@ -2,6 +2,7 @@
 #ifndef __IFF_H
 #define __IFF_H
 
+#include <stdio.h>
 #include "list.h"
 
 #define IFF_NOBUFFER 0x0001
@@ -17,15 +18,15 @@ struct iff_header {
 
 struct iff_info {
     char id[5];
-    void (*loader)();
+    void (*loader)(struct xmp_mod_context *, int, FILE *);
     struct list_head list;
 };
 
-void iff_chunk (FILE *);
-void iff_register (char *, void ());
+void iff_chunk (struct xmp_mod_context *m, FILE *);
+void iff_register (char *, void (struct xmp_mod_context *m, int size, FILE *f));
 void iff_idsize (int);
 void iff_setflag (int);
 void iff_release (void);
-int iff_process (char *, long, FILE *);
+int iff_process (struct xmp_mod_context *m, char *, long, FILE *);
 
 #endif /* __IFF_H */

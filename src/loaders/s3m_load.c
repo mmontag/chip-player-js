@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.17 2007-10-13 18:25:05 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.18 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -72,7 +72,7 @@
 #define MAGIC_SCRS	MAGIC4('S','C','R','S')
 
 static int s3m_test (FILE *, char *);
-static int s3m_load (FILE *);
+static int s3m_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info s3m_loader = {
     "S3M",
@@ -201,7 +201,7 @@ static void xlat_fx (int c, struct xxm_event *e)
 }
 
 
-static int s3m_load(FILE *f)
+static int s3m_load(struct xmp_mod_context *m, FILE *f)
 {
     int c, r, i, j;
     struct s3m_adlib_header sah;
@@ -255,52 +255,52 @@ static int s3m_load(FILE *f)
     copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 28);
 
     /* Load and convert header */
-    xxh->len = sfh.ordnum;
-    xxh->ins = sfh.insnum;
-    xxh->smp = xxh->ins;
-    xxh->pat = sfh.patnum;
-    pp_ins = calloc (2, xxh->ins);
-    pp_pat = calloc (2, xxh->pat);
+    m->xxh->len = sfh.ordnum;
+    m->xxh->ins = sfh.insnum;
+    m->xxh->smp = m->xxh->ins;
+    m->xxh->pat = sfh.patnum;
+    pp_ins = calloc (2, m->xxh->ins);
+    pp_pat = calloc (2, m->xxh->pat);
     if (sfh.flags & S3M_AMIGA_RANGE)
-	xxh->flg |= XXM_FLG_MODRNG;
+	m->xxh->flg |= XXM_FLG_MODRNG;
     if (sfh.flags & S3M_ST300_VOLS)
 	xmp_ctl->fetch |= XMP_CTL_VSALL;
     /* xmp_ctl->volbase = 4096 / sfh.gv; */
-    xxh->tpo = sfh.is;
-    xxh->bpm = sfh.it;
+    m->xxh->tpo = sfh.is;
+    m->xxh->bpm = sfh.it;
 
     for (i = 0; i < 32; i++) {
 	if (sfh.chset[i] == S3M_CH_OFF)
 	    continue;
 
-	xxh->chn = i + 1;
+	m->xxh->chn = i + 1;
 
 	if (sfh.mv & 0x80) {	/* stereo */
 		int x = sfh.chset[i] & S3M_CH_PAN;
-		xxc[i].pan = (x & 0x0f) < 8 ? 0x00 : 0xff;
+		m->xxc[i].pan = (x & 0x0f) < 8 ? 0x00 : 0xff;
 	} else {
-		xxc[i].pan = 0x80;
+		m->xxc[i].pan = 0x80;
 	}
     }
-    xxh->trk = xxh->pat * xxh->chn;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-    fread (xxo, 1, xxh->len, f);
+    fread (m->xxo, 1, m->xxh->len, f);
 
 #if 0
     /* S3M skips pattern 0xfe */
-    for (i = 0; i < (xxh->len - 1); i++)
-	if (xxo[i] == 0xfe) {
-	    memcpy (&xxo[i], &xxo[i + 1], xxh->len - i - 1);
-	    xxh->len--;
+    for (i = 0; i < (m->xxh->len - 1); i++)
+	if (m->xxo[i] == 0xfe) {
+	    memcpy (&m->xxo[i], &m->xxo[i + 1], m->xxh->len - i - 1);
+	    m->xxh->len--;
 	}
-    while (xxh->len && xxo[xxh->len - 1] == 0xff)
-	xxh->len--;
+    while (m->xxh->len && m->xxo[m->xxh->len - 1] == 0xff)
+	m->xxh->len--;
 #endif
 
-    for (i = 0; i < xxh->ins; i++)
+    for (i = 0; i < m->xxh->ins; i++)
 	pp_ins[i] = read16l(f);
  
-    for (i = 0; i < xxh->pat; i++)
+    for (i = 0; i < m->xxh->pat; i++)
 	pp_pat[i] = read16l(f);
 
     /* Default pan positions */
@@ -308,9 +308,9 @@ static int s3m_load(FILE *f)
     for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */ && (i < 32); i++) {
 	uint8 x = read8(f);
 	if (x & S3M_PAN_SET)
-	    xxc[i].pan = (x << 4) & 0xff;
+	    m->xxc[i].pan = (x << 4) & 0xff;
 	else
-	    xxc[i].pan = sfh.mv % 0x80 ? 0x30 + 0xa0 * (i & 1) : 0x80;
+	    m->xxc[i].pan = sfh.mv % 0x80 ? 0x30 + 0xa0 * (i & 1) : 0x80;
     }
 
     xmp_ctl->c4rate = C4_NTSC_RATE;
@@ -351,13 +351,13 @@ static int s3m_load(FILE *f)
 
     /* Read patterns */
 
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
     memset (arpeggio_val, 0, 32);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	if (!pp_pat[i])
@@ -371,7 +371,7 @@ static int s3m_load(FILE *f)
 	 * <cejkar@dcse.fee.vutbr.cz>, fixes hunt.s3m
 	 * ftp://us.aminet.net/pub/aminet/mods/8voic/s3m_hunt.lha
 	 */
-	while (r < xxp[i]->rows) {
+	while (r < m->xxp[i]->rows) {
 	    b = read8(f);
 
 	    if (b == S3M_EOR) {
@@ -380,7 +380,7 @@ static int s3m_load(FILE *f)
 	    }
 
 	    c = b & S3M_CH_MASK;
-	    event = c >= xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->xxh->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
 		switch(n = read8(f)) {
@@ -421,14 +421,14 @@ static int s3m_load(FILE *f)
 
     /* Read and convert instruments and samples */
 
-    reportv(0, "Instruments    : %d ", xxh->ins);
+    reportv(0, "Instruments    : %d ", m->xxh->ins);
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek (f, pp_ins[i] * 16, SEEK_SET);
 	x8 = read8(f);
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
 
 	if (x8 >= 2) {
 	    /* OPL2 FM instrument */
@@ -449,16 +449,16 @@ static int s3m_load(FILE *f)
 		return -2;
 	    sah.magic = 0;
 
-	    copy_adjust(xxih[i].name, sah.name, 28);
+	    copy_adjust(m->xxih[i].name, sah.name, 28);
 
-	    xxih[i].nsm = 1;
-	    xxi[i][0].vol = sah.vol;
-	    c2spd_to_note (sah.c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
-	    xxi[i][0].xpo += 12;
-	    xmp_drv_loadpatch (f, xxi[i][0].sid, 0, 0, NULL, (char *) &sah.reg);
+	    m->xxih[i].nsm = 1;
+	    m->xxi[i][0].vol = sah.vol;
+	    c2spd_to_note (sah.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	    m->xxi[i][0].xpo += 12;
+	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, 0, 0, NULL, (char *) &sah.reg);
 	    if (V (0)) {
 	        if (V (1)) {
-		    report ("\n[%2X] %-28.28s ", i, xxih[i].name);
+		    report ("\n[%2X] %-28.28s ", i, m->xxih[i].name);
 	            for (j = 0; j < 11; j++)
 		        report ("%02x ", (uint8) sah.reg[j]);
 		} else
@@ -496,30 +496,30 @@ static int s3m_load(FILE *f)
 	    fix87(sih.flags);
 	}
 
-	xxih[i].nsm = !!(xxs[i].len = sih.length);
-	xxs[i].lps = sih.loopbeg;
-	xxs[i].lpe = sih.loopend;
+	m->xxih[i].nsm = !!(m->xxs[i].len = sih.length);
+	m->xxs[i].lps = sih.loopbeg;
+	m->xxs[i].lpe = sih.loopend;
 
-	xxs[i].flg = sih.flags & 1 ? WAVE_LOOPING : 0;
-	xxs[i].flg |= sih.flags & 4 ? WAVE_16_BITS : 0;
-	xxi[i][0].vol = sih.vol;
+	m->xxs[i].flg = sih.flags & 1 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg |= sih.flags & 4 ? WAVE_16_BITS : 0;
+	m->xxi[i][0].vol = sih.vol;
 	sih.magic = 0;
 
-	copy_adjust(xxih[i].name, sih.name, 28);
+	copy_adjust(m->xxih[i].name, sih.name, 28);
 
-	if ((V (1)) && (strlen ((char *) sih.name) || xxs[i].len))
+	if ((V (1)) && (strlen ((char *) sih.name) || m->xxs[i].len))
 	    report ("\n[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d ",
-		i, xxih[i].name, xxs[i].len, xxs[i].flg & WAVE_16_BITS ?'+' :
-		' ', xxs[i].lps, xxs[i].lpe, xxs[i].flg & WAVE_LOOPING ?
-		'L' : ' ', xxi[i][0].vol, sih.c2spd);
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].flg & WAVE_16_BITS ?'+' :
+		' ', m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ?
+		'L' : ' ', m->xxi[i][0].vol, sih.c2spd);
 
-	c2spd_to_note (sih.c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+	c2spd_to_note (sih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 
-	if (!xxs[i].len)
+	if (!m->xxs[i].len)
 	    continue;
 	fseek (f, 16L * sih.memseg, SEEK_SET);
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate,
-	    (sfh.ffi - 1) * XMP_SMP_UNS, &xxs[i], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

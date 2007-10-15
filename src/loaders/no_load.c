@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.8 2007-10-13 21:17:12 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.9 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int no_test (FILE *, char *);
-static int no_load (FILE *);
+static int no_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info no_loader = {
 	"LIQ",
@@ -60,7 +60,7 @@ static uint8 fx[] = {
 };
 
 
-static int no_load(FILE *f)
+static int no_load(struct xmp_mod_context *m, FILE *f)
 {
 	struct xxm_event *event;
 	int i, j, k;
@@ -84,24 +84,24 @@ static int no_load(FILE *f)
 	read16l(f);
 	read16l(f);
 	read8(f);
-	xxh->pat = read8(f);
+	m->xxh->pat = read8(f);
 	read8(f);
-	xxh->chn = read8(f);
-	xxh->trk = xxh->pat * xxh->chn;
+	m->xxh->chn = read8(f);
+	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	read8(f);
 	read16l(f);
 	read16l(f);
 	read8(f);
-	xxh->ins = xxh->smp = 63;
+	m->xxh->ins = m->xxh->smp = 63;
 
 	for (i = 0; i < 256; i++) {
 		uint8 x = read8(f);
 		if (x == 0xff)
 			break;
-		xxo[i] = x;
+		m->xxo[i] = x;
 	}
 	fseek(f, 255 - i, SEEK_CUR);
-	xxh->len = i;
+	m->xxh->len = i;
 
 	MODULE_INFO();
 
@@ -109,10 +109,10 @@ static int no_load(FILE *f)
 	reportv(1, "     Instrument name         SLen SBeg SEnd L Vol C2spd\n");
 
 	/* Read instrument names */
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		int hasname, c2spd;
 
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
 		nsize = read8(f);
 		hasname = 0;
@@ -121,54 +121,54 @@ static int no_load(FILE *f)
 			if (x != 0x20)
 				hasname = 1;
 			if (j < 32)
-				xxih[i].name[j] = x;
+				m->xxih[i].name[j] = x;
 		}
 		if (!hasname)
-			xxih[i].name[0] = 0;
+			m->xxih[i].name[0] = 0;
 
 		read32l(f);
 		read32l(f);
-		xxi[i][0].vol = read8(f);
+		m->xxi[i][0].vol = read8(f);
 		c2spd = read16l(f);
-		xxs[i].len = read16l(f);
-		xxs[i].lps = read16l(f);
-		xxs[i].lpe = read16l(f);
+		m->xxs[i].len = read16l(f);
+		m->xxs[i].lps = read16l(f);
+		m->xxs[i].lpe = read16l(f);
 		read32l(f);
 		read16l(f);
 
-		xxih[i].nsm = !!(xxs[i].len);
-		xxs[i].lps = 0;
-		xxs[i].lpe = 0;
-		xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-		xxi[i][0].fin = 0;
-		xxi[i][0].pan = 0x80;
-		xxi[i][0].sid = i;
+		m->xxih[i].nsm = !!(m->xxs[i].len);
+		m->xxs[i].lps = 0;
+		m->xxs[i].lpe = 0;
+		m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+		m->xxi[i][0].fin = 0;
+		m->xxi[i][0].pan = 0x80;
+		m->xxi[i][0].sid = i;
 
-		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
+		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report("[%2X] %-22.22s  %04x %04x %04x %c V%02x %5d\n",
-				i, xxih[i].name,
-				xxs[i].len, xxs[i].lps, xxs[i].lpe,
-				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-				xxi[i][0].vol, c2spd);
+				i, m->xxih[i].name,
+				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxi[i][0].vol, c2spd);
 		}
 
 		c2spd = 8363 * c2spd / 8448;
-		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 	}
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(0, "Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 //printf("%d  %x\n", i, ftell(f));
 		PATTERN_ALLOC(i);
-		xxp[i]->rows = 64;
+		m->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		for (j = 0; j < xxp[i]->rows; j++) {
-			for (k = 0; k < xxh->chn; k++) {
+		for (j = 0; j < m->xxp[i]->rows; j++) {
+			for (k = 0; k < m->xxh->chn; k++) {
 				uint32 x, note, ins, vol, fxt, fxp;
 
 				event = &EVENT (i, k, j);
@@ -197,12 +197,12 @@ static int no_load(FILE *f)
 	reportv(0, "\n");
 
 	/* Read samples */
-	reportv(0, "Stored samples : %d ", xxh->smp);
-	for (i = 0; i < xxh->ins; i++) {
-		if (xxs[i].len == 0)
+	reportv(0, "Stored samples : %d ", m->xxh->smp);
+	for (i = 0; i < m->xxh->ins; i++) {
+		if (m->xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-				XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 	reportv(0, "\n");

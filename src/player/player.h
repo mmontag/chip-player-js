@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.8 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: player.h,v 1.9 2007-10-15 19:19:22 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -21,12 +21,12 @@
 #define MODULE_ABORT	0x0004 
 #define MODULE_RESTART	0x0008 
 
-#define XXIH xxih[xc->ins]
-#define XXIM xxim[xc->ins]
-#define XXAE xxae[xc->ins]
-#define XXPE xxpe[xc->ins]
-#define XXFE xxfe[xc->ins]
-#define XXI xxi[xc->ins]
+#define XXIH p->m.xxih[xc->ins]
+#define XXIM p->m.xxim[xc->ins]
+#define XXAE p->m.xxae[xc->ins]
+#define XXPE p->m.xxpe[xc->ins]
+#define XXFE p->m.xxfe[xc->ins]
+#define XXI p->m.xxi[xc->ins]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
 
@@ -172,9 +172,9 @@ struct xmp_channel {
 
 
 void process_fx(struct xmp_player_context *, int, uint8, uint8, uint8, struct xmp_channel *);
-void xmp_med_synth (int, struct xmp_channel *, int);
-int get_med_arp(struct xmp_channel *);
+void xmp_med_synth(struct xmp_player_context *, int, struct xmp_channel *, int);
+int get_med_arp(struct xmp_player_context *, struct xmp_channel *);
 int get_med_vibrato(struct xmp_channel *);
-void filter_setup (struct xmp_channel *, int);
+void filter_setup(struct xmp_channel *, int);
 
 #endif /* __PLAYER_H */

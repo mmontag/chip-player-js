@@ -38,7 +38,7 @@ struct ac1d_header {
 } PACKED;
 
 
-int ac1d_load (FILE *f)
+int ac1d_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j, k;
     struct xxm_event *event;
@@ -59,12 +59,12 @@ int ac1d_load (FILE *f)
 	    break;
     }
 
-    xxh->pat = i;
-    xxh->trk = xxh->pat * xxh->chn;
-    xxh->len = ah.len;
+    m->xxh->pat = i;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->xxh->len = ah.len;
 
-    for (i = 0; i < xxh->len; i++)
-	xxo[i] = ah.order[i];
+    for (i = 0; i < m->xxh->len; i++)
+	m->xxo[i] = ah.order[i];
 
     sprintf (xmp_ctl->type, "AC1D Packer");
 
@@ -72,27 +72,27 @@ int ac1d_load (FILE *f)
 
     INSTRUMENT_INIT ();
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	B_ENDIAN16 (ah.ins[i].size);
 	B_ENDIAN16 (ah.ins[i].loop_start);
 	B_ENDIAN16 (ah.ins[i].loop_size);
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxs[i].len = 2 * ah.ins[i].size;
-	xxs[i].lps = 2 * ah.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * ah.ins[i].loop_size;
-	xxs[i].flg = ah.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = (int8) ah.ins[i].finetune << 4;
-	xxi[i][0].vol = ah.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxs[i].len = 2 * ah.ins[i].size;
+	m->xxs[i].lps = 2 * ah.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * ah.ins[i].loop_size;
+	m->xxs[i].flg = ah.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = (int8) ah.ins[i].finetune << 4;
+	m->xxi[i][0].vol = ah.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
 
-	if (V (1) && xxs[i].len > 2) {
+	if (V (1) && m->xxs[i].len > 2) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
-		i, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, ah.ins[i].loop_size > 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		i, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, ah.ins[i].loop_size > 1 ? 'L' : ' ',
+		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
@@ -100,11 +100,11 @@ int ac1d_load (FILE *f)
 
     /* Load and convert patterns */
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	if (ftell (f) & 1)		/* Patterns are 16-bit aligned */
 	    fread (&x8, 1, 1, f);
@@ -160,17 +160,17 @@ int ac1d_load (FILE *f)
 	    report (".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+	report ("\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");
     }

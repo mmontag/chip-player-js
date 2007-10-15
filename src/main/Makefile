@@ -1,12 +1,12 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.14 2007-10-15 15:19:03 cmatsuoka Exp $
+# $Id: Makefile,v 1.15 2007-10-15 19:19:22 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
 OBJS	= getopt.o getopt1.o options.o
 XDEPS	=
 BINS	= xmp
-XLIBS	= -L$(TOPDIR)/lib -lxmp $(LIBM) -lefence
+XLIBS	= -L$(TOPDIR)/lib -lxmp $(LIBM)
 DFILES	= Makefile $(OBJS:.o=.c) main.c simple.c mod2mp3.c xstuff.c
 DDIRS	=
 CFILES	= $(BINS)
@@ -22,7 +22,7 @@ dyndrv:
 	make -C $(TOPDIR)/lib shared
 
 xmp: $(OBJS) main.o ../../lib/libxmp.a
-	$(LD) $(LDFLAGS) $(OBJS) main.o $(LIBS)
+	$(LD) $(LDFLAGS) $(OBJS) main.o $(LIBS) #-lefence
 
 install:: $(BINS)
 	@echo Installing binaries in $(DESTDIR)$(BINDIR)...

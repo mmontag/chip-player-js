@@ -15,7 +15,7 @@
 #include "period.h"
 
 static int flt_test (FILE *, char *);
-static int flt_load (FILE *);
+static int flt_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info flt_loader = {
     "MOD",
@@ -41,7 +41,7 @@ static int flt_test(FILE *f, char *t)
 }
 
 
-static int flt_load (FILE *f)
+static int flt_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     struct xxm_event *event;
@@ -74,25 +74,25 @@ static int flt_load (FILE *f)
 	return -1;
 
     if (mh.magic[3] == '4')
-	xxh->chn = 4;
+	m->xxh->chn = 4;
     else if (mh.magic[3] == '8') 
-	xxh->chn = 8;
+	m->xxh->chn = 8;
     else return -1;
 
-    xxh->len = mh.len;
-    xxh->rst = mh.restart;
-    memcpy(xxo, mh.order, 128);
+    m->xxh->len = mh.len;
+    m->xxh->rst = mh.restart;
+    memcpy(m->xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++) {
-	if (xxh->chn > 4)
-	    xxo[i] >>= 1;
-	if (xxo[i] > xxh->pat)
-	    xxh->pat = xxo[i];
+	if (m->xxh->chn > 4)
+	    m->xxo[i] >>= 1;
+	if (m->xxo[i] > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
     }
 
-    xxh->pat++;
+    m->xxh->pat++;
 
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     strncpy(xmp_ctl->name, (char *) mh.name, 20);
     sprintf(xmp_ctl->type, "%4.4s (%s)", mh.magic, tracker);
@@ -102,33 +102,33 @@ static int flt_load (FILE *f)
 
     reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxs[i].len = 2 * mh.ins[i].size;
-	xxs[i].lps = 2 * mh.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * mh.ins[i].loop_size;
-	xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
-	xxi[i][0].vol = mh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxs[i].len = 2 * mh.ins[i].size;
+	m->xxs[i].lps = 2 * mh.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
+	m->xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->xxi[i][0].vol = mh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
 
-	copy_adjust(xxih[i].name, mh.ins[i].name, 22);
+	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
 
-	if ((V (1)) && (strlen((char *)xxih[i].name) || xxs[i].len > 2)) {
+	if ((V (1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2)) {
 	    report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
-			i, xxih[i].name, xxs[i].len, xxs[i].lps,
-			xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
+			m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
     /* The format you are looking for is FLT8, and the ONLY two differences
      * are: It says FLT8 instead of FLT4 or M.K., AND, the patterns are PAIRED.
@@ -141,16 +141,16 @@ static int flt_load (FILE *f)
      * the portamento command uses a different "scale" than the normal
      * portamento command, that would be hard to patch).
      */
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC(i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
 	for (j = 0; j < (64 * 4); j++) {
 	    event = &EVENT(i, j % 4, j / 4);
 	    fread(mod_event, 1, 4, f);
 	    cvt_pt_event(event, mod_event);
 	}
-	if (xxh->chn > 4) {
+	if (m->xxh->chn > 4) {
 	    for (j = 0; j < (64 * 4); j++) {
 		event = &EVENT(i, (j % 4) + 4, j / 4);
 		fread(mod_event, 1, 4, f);
@@ -160,16 +160,16 @@ static int flt_load (FILE *f)
 	reportv(0, ".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    reportv(0, "\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-					&xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+					&m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

@@ -15,7 +15,7 @@
 #define MAGIC_INST	MAGIC4('I','N','S','T')
 #define MAGIC_WAVE	MAGIC4('W','A','V','E')
 
-int asif_load(FILE *f, int i)
+int asif_load(struct xmp_mod_context *m, FILE *f, int i)
 {
 	int size, pos;
 	uint32 id;
@@ -42,7 +42,7 @@ int asif_load(FILE *f, int i)
 			//printf("wave chunk\n");
 		
 			fseek(f, read8(f), SEEK_CUR);	/* skip name */
-			xxs[i].len = read16l(f) + 1;
+			m->xxs[i].len = read16l(f) + 1;
 			size = read16l(f);		/* NumSamples */
 			
 			//printf("WaveSize = %d\n", xxs[i].len);
@@ -50,13 +50,13 @@ int asif_load(FILE *f, int i)
 
 			for (j = 0; j < size; j++) {
 				read16l(f);		/* Location */
-				xxs[j].len = 256 * read16l(f);
+				m->xxs[j].len = 256 * read16l(f);
 				read16l(f);		/* OrigFreq */
 				read16l(f);		/* SampRate */
 			}
 		
-			xmp_drv_loadpatch (f, i, xmp_ctl->c4rate,
-					XMP_SMP_UNS, &xxs[i], NULL);
+			xmp_drv_loadpatch(f, i, xmp_ctl->c4rate,
+					XMP_SMP_UNS, &m->xxs[i], NULL);
 
 			chunk++;
 			break;
@@ -75,10 +75,10 @@ int asif_load(FILE *f, int i)
 			read8(f);			/* VibratoSpeed */
 			read8(f);			/* UpdateRate */
 		
-			xxih[i].nsm = 1;
-			xxi[i][0].vol = 0x40;
-			xxi[i][0].pan = 0x80;
-			xxi[i][0].sid = i;
+			m->xxih[i].nsm = 1;
+			m->xxi[i][0].vol = 0x40;
+			m->xxi[i][0].pan = 0x80;
+			m->xxi[i][0].sid = i;
 
 			chunk++;
 		}

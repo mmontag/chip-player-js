@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.134 2007-10-14 21:44:59 cmatsuoka Exp $
+$Id: ChangeLog,v 1.135 2007-10-15 19:19:19 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -20,6 +20,7 @@ Stable versions
 	- reset MED synth program at each new note event
 	- removed filesize-based module format detection
 	- replaced XANN loader with Prowizard XANN depacker
+	- reorganized internal data using contexts (removed global vars)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

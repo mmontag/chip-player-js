@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.7 2007-10-13 23:21:26 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int pt3_test (FILE *, char *);
-static int pt3_load (FILE *);
+static int pt3_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info pt3_loader = {
     "PTM",
@@ -88,10 +88,10 @@ struct pt3_chunk_inst {
 };
 
 
-static int ptdt_load(FILE *);
+static int ptdt_load (struct xmp_mod_context *, FILE *);
 
 
-static void get_vers(int size, FILE *f)
+static void get_vers(struct xmp_mod_context *m, int size, FILE *f)
 {
     char buf[20];
 
@@ -103,7 +103,7 @@ static void get_vers(int size, FILE *f)
 }
 
 
-static void get_info(int size, FILE *f)
+static void get_info(struct xmp_mod_context *m, int size, FILE *f)
 {
     struct pt3_chunk_info i;
 
@@ -135,19 +135,19 @@ static void get_info(int size, FILE *f)
 }
 
 
-static void get_cmnt(int size, FILE *f)
+static void get_cmnt(struct xmp_mod_context *m, int size, FILE *f)
 {
     reportv(0, "Comment size   : %d\n", size);
 }
 
 
-static void get_ptdt(int size, FILE *f)
+static void get_ptdt(struct xmp_mod_context *m, int size, FILE *f)
 {
-    ptdt_load(f);
+    ptdt_load(m, f);
 }
 
 
-static int pt3_load(FILE *f)
+static int pt3_load(struct xmp_mod_context *m, FILE *f)
 {
     LOAD_INIT();
 
@@ -165,7 +165,7 @@ static int pt3_load(FILE *f)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(f);
+	iff_chunk(m, f);
 
     iff_release();
 
@@ -173,7 +173,7 @@ static int pt3_load(FILE *f)
 }
 
 
-static int ptdt_load(FILE *f)
+static int ptdt_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     struct xxm_event *event;
@@ -194,54 +194,54 @@ static int ptdt_load(FILE *f)
     fread(&mh.order, 128, 1, f);
     fread(&mh.magic, 4, 1, f);
 
-    xxh->chn = 4;
-    xxh->len = mh.len;
-    xxh->rst = mh.restart;
-    memcpy (xxo, mh.order, 128);
+    m->xxh->chn = 4;
+    m->xxh->len = mh.len;
+    m->xxh->rst = mh.restart;
+    memcpy (m->xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++) {
-	if (xxo[i] > xxh->pat)
-	    xxh->pat = xxo[i];
+	if (m->xxo[i] > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
     }
 
-    xxh->pat++;
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->pat++;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     INSTRUMENT_INIT();
 
     reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
-	xxs[i].len = 2 * mh.ins[i].size;
-	xxs[i].lps = 2 * mh.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * mh.ins[i].loop_size;
-	xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
-	xxi[i][0].vol = mh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
+	m->xxs[i].len = 2 * mh.ins[i].size;
+	m->xxs[i].lps = 2 * mh.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
+	m->xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->xxi[i][0].vol = mh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
 
-	copy_adjust(xxih[i].name, mh.ins[i].name, 22);
+	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
 
-	if ((V(1)) && (strlen((char *)xxih[i].name) || xxs[i].len > 2)) {
+	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2)) {
 	    report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
-			i, xxih[i].name, xxs[i].len, xxs[i].lps,
-			xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
+			m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC(i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
 	for (j = 0; j < (64 * 4); j++) {
 	    event = &EVENT(i, j % 4, j / 4);
@@ -251,16 +251,16 @@ static int ptdt_load(FILE *f)
 	reportv(0, ".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
-    reportv(0, "\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", m->xxh->smp);
 
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-					    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+					    &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

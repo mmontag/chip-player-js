@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.6 2007-10-14 03:29:02 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.7 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,7 +29,7 @@
 
 
 static int sfx_test (FILE *, char *);
-static int sfx_load (FILE *);
+static int sfx_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info sfx_loader = {
     "SFX",
@@ -78,7 +78,7 @@ struct sfx_header2 {
 };
 
 
-static int sfx_13_20_load(FILE *f, int nins)
+static int sfx_13_20_load(struct xmp_mod_context *m, FILE *f, int nins)
 {
     int i, j;
     struct xxm_event *event;
@@ -100,11 +100,11 @@ static int sfx_13_20_load(FILE *f, int nins)
     if (sfx.magic != MAGIC_SONG)
 	return -1;
 
-    xxh->ins = nins;
-    xxh->smp = xxh->ins;
-    xxh->bpm = 14565 * 122 / sfx.delay;
+    m->xxh->ins = nins;
+    m->xxh->smp = m->xxh->ins;
+    m->xxh->bpm = 14565 * 122 / sfx.delay;
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	fread(&ins[i].name, 22, 1, f);
 	ins[i].len = read16b(f);
 	ins[i].finetune = read8(f);
@@ -117,19 +117,19 @@ static int sfx_13_20_load(FILE *f, int nins)
     sfx2.restart = read8(f);
     fread(&sfx2.order, 128, 1, f);
 
-    xxh->len = sfx2.len;
-    if (xxh->len > 0x7f)
+    m->xxh->len = sfx2.len;
+    if (m->xxh->len > 0x7f)
 	return -1;
 
-    memcpy (xxo, sfx2.order, xxh->len);
-    for (xxh->pat = i = 0; i < xxh->len; i++)
-	if (xxo[i] > xxh->pat)
-	    xxh->pat = xxo[i];
-    xxh->pat++;
+    memcpy (m->xxo, sfx2.order, m->xxh->len);
+    for (m->xxh->pat = i = 0; i < m->xxh->len; i++)
+	if (m->xxo[i] > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
+    m->xxh->pat++;
 
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-    strcpy (xmp_ctl->type, xxh->ins == 15 ? "SoundFX 1.3" : "SoundFX 2.0");
+    strcpy (xmp_ctl->type, m->xxh->ins == 15 ? "SoundFX 1.3" : "SoundFX 2.0");
 
     MODULE_INFO();
 
@@ -137,37 +137,37 @@ static int sfx_13_20_load(FILE *f, int nins)
 
     reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = !!(xxs[i].len = ins_size[i]);
-	xxs[i].lps = ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * ins[i].loop_length;
-	xxs[i].flg = ins[i].loop_length > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = ins[i].volume;
-	xxi[i][0].fin = (int8)(ins[i].finetune << 4); 
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = !!(m->xxs[i].len = ins_size[i]);
+	m->xxs[i].lps = ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * ins[i].loop_length;
+	m->xxs[i].flg = ins[i].loop_length > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].vol = ins[i].volume;
+	m->xxi[i][0].fin = (int8)(ins[i].finetune << 4); 
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, ins[i].name, 22);
+	copy_adjust(m->xxih[i].name, ins[i].name, 22);
 
-	if ((V(1)) && (strlen((char *)xxih[i].name) || (xxs[i].len > 2)))
+	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report("[%2X] %-22.22s %04x %04x %04x %c  %02x %+d\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol,
-		(char)xxi[i][0].fin >> 4);
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
+		(char)m->xxi[i][0].fin >> 4);
     }
 
     PATTERN_INIT ();
 
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC(i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
 
-	for (j = 0; j < 64 * xxh->chn; j++) {
-	    event = &EVENT(i, j % xxh->chn, j / xxh->chn);
+	for (j = 0; j < 64 * m->xxh->chn; j++) {
+	    event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread(ev, 1, 4, f);
 
 	    event->note = period_to_note ((LSN (ev[0]) << 8) | ev[1]);
@@ -206,16 +206,16 @@ static int sfx_13_20_load(FILE *f, int nins)
 	reportv(0, ".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Read samples */
 
-    reportv(0, "\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", m->xxh->smp);
 
-    for (i = 0; i < xxh->ins; i++) {
-	if (xxs[i].len <= 2)
+    for (i = 0; i < m->xxh->ins; i++) {
+	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report(".");
     }
@@ -225,9 +225,9 @@ static int sfx_13_20_load(FILE *f, int nins)
 }
 
 
-static int sfx_load (FILE *f)
+static int sfx_load(struct xmp_mod_context *m, FILE *f)
 {
-    if (sfx_13_20_load (f, 15) < 0)
-	return sfx_13_20_load (f, 31);
+    if (sfx_13_20_load(m, f, 15) < 0)
+	return sfx_13_20_load(m, f, 31);
     return 0;
 }

@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.26 2007-10-13 21:17:12 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.27 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -66,7 +66,7 @@
 
 
 static int psm_test (FILE *, char *);
-static int psm_load (FILE *);
+static int psm_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info psm_loader = {
 	"PSM",
@@ -93,11 +93,11 @@ uint8 *pnam;
 uint8 *pord;
 
 
-static void get_sdft(int size, FILE *f)
+static void get_sdft(struct xmp_mod_context *m, int size, FILE *f)
 {
 }
 
-static void get_titl(int size, FILE *f)
+static void get_titl(struct xmp_mod_context *m, int size, FILE *f)
 {
 	char buf[40];
 	
@@ -105,24 +105,24 @@ static void get_titl(int size, FILE *f)
 	strncpy(xmp_ctl->name, buf, size > 32 ? 32 : size);
 }
 
-static void get_dsmp_cnt(int size, FILE *f)
+static void get_dsmp_cnt(struct xmp_mod_context *m, int size, FILE *f)
 {
-	xxh->ins++;
-	xxh->smp = xxh->ins;
+	m->xxh->ins++;
+	m->xxh->smp = m->xxh->ins;
 }
 
-static void get_pbod_cnt(int size, FILE *f)
+static void get_pbod_cnt(struct xmp_mod_context *m, int size, FILE *f)
 {
 	char buf[20];
 
-	xxh->pat++;
+	m->xxh->pat++;
 	fread(buf, 1, 20, f);
 	if (buf[9] != 0 && buf[13] == 0)
 		sinaria = 1;
 }
 
 
-static void get_dsmp(int size, FILE *f)
+static void get_dsmp(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i, srate;
 	int finetune;
@@ -135,56 +135,56 @@ static void get_dsmp(int size, FILE *f)
 	    report("\n     Instrument name                  Len   LBeg  LEnd  L Vol Fine C2Spd");
 
 	i = cur_ins;
-	xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+	m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-	fread(&xxih[i].name, 1, 34, f);
-	str_adj((char *)xxih[i].name);
+	fread(&m->xxih[i].name, 1, 34, f);
+	str_adj((char *)m->xxih[i].name);
 	fseek(f, 5, SEEK_CUR);
 	read8(f);		/* insno */
 	read8(f);
-	xxs[i].len = read32l(f);
-	xxih[i].nsm = !!(xxs[i].len);
-	xxs[i].lps = read32l(f);
-	xxs[i].lpe = read32l(f);
-	xxs[i].flg = xxs[i].lpe > 2 ? WAVE_LOOPING : 0;
+	m->xxs[i].len = read32l(f);
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxs[i].lps = read32l(f);
+	m->xxs[i].lpe = read32l(f);
+	m->xxs[i].flg = m->xxs[i].lpe > 2 ? WAVE_LOOPING : 0;
 	read16l(f);
 
-	if ((int32)xxs[i].lpe < 0)
-		xxs[i].lpe = 0;
+	if ((int32)m->xxs[i].lpe < 0)
+		m->xxs[i].lpe = 0;
 
 	finetune = 0;
 	if (sinaria) {
-		if (xxs[i].len > 2)
-			xxs[i].len -= 2;
-		if (xxs[i].lpe > 2)
-			xxs[i].lpe -= 2;
+		if (m->xxs[i].len > 2)
+			m->xxs[i].len -= 2;
+		if (m->xxs[i].lpe > 2)
+			m->xxs[i].lpe -= 2;
 
 		finetune = (int8)(read8s(f) << 4);
 	}
 
-	xxi[i][0].vol = read8(f) / 2 + 1;
+	m->xxi[i][0].vol = read8(f) / 2 + 1;
 	read32l(f);
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
 	srate = read32l(f);
 
-	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
+	if ((V(1)) && (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 1)))
 	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
-		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, finetune, srate);
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
+		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, finetune, srate);
 
 	srate = 8363 * srate / 8448;
-	c2spd_to_note(srate, &xxi[i][0].xpo, &xxi[i][0].fin);
-	xxi[i][0].fin += finetune;
+	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	m->xxi[i][0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
-	xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, XMP_SMP_8BDIFF, &xxs[i], NULL);
+	xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, XMP_SMP_8BDIFF, &m->xxs[i], NULL);
 
 	cur_ins++;
 }
 
 
-static void get_pbod(int size, FILE *f)
+static void get_pbod(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i, r;
 	struct xxm_event *event, dummy;
@@ -200,7 +200,7 @@ static void get_pbod(int size, FILE *f)
 	rows = read16l(f);
 
 	PATTERN_ALLOC(i);
-	xxp[i]->rows = rows;
+	m->xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
 	r = 0;
@@ -216,7 +216,7 @@ static void get_pbod(int size, FILE *f)
 			chan = read8(f);
 			rowlen -= 2;
 	
-			event = chan < xxh->chn ? &EVENT(i, chan, r) : &dummy;
+			event = chan < m->xxh->chn ? &EVENT(i, chan, r) : &dummy;
 	
 			if (flag & 0x80) {
 				uint8 note = read8(f);
@@ -329,21 +329,21 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 	cur_pat++;
 }
 
-static void get_song(int size, FILE *f)
+static void get_song(struct xmp_mod_context *m, int size, FILE *f)
 {
 	fseek(f, 10, SEEK_CUR);
-	xxh->chn = read8(f);
+	m->xxh->chn = read8(f);
 	if (*xmp_ctl->name == 0)
 		fread(&xmp_ctl->name, 1, 8, f);
 }
 
-static void get_song_2(int size, FILE *f)
+static void get_song_2(struct xmp_mod_context *m, int size, FILE *f)
 {
 	uint32 magic;
 	char c;
 	int i;
 
-	xxh->len = 0;
+	m->xxh->len = 0;
 
 	fseek(f, 11, SEEK_CUR);		/* Point to first sub-chunk */
 
@@ -363,13 +363,13 @@ static void get_song_2(int size, FILE *f)
 	for (i = 0; c != 0x01; c = read8(f)) {
 		switch (c) {
 		case 0x07:
-			xxh->tpo = read8(f);
+			m->xxh->tpo = read8(f);
 			read8(f);		/* 08 */
-			xxh->bpm = read8(f);
+			m->xxh->bpm = read8(f);
 			break;
 		case 0x0d:
 			read8(f);		/* channel number? */
-			xxc[i].pan = read8(f);
+			m->xxc[i].pan = read8(f);
 			read8(f);		/* flags? */
 			i++;
 			break;
@@ -383,12 +383,12 @@ static void get_song_2(int size, FILE *f)
 	}
 
 	for (; c == 0x01; c = read8(f)) {
-		fread(pord + xxh->len * 8, 1, sinaria ? 8 : 4, f);
-		xxh->len++;
+		fread(pord + m->xxh->len * 8, 1, sinaria ? 8 : 4, f);
+		m->xxh->len++;
 	}
 }
 
-static int psm_load(FILE *f)
+static int psm_load(struct xmp_mod_context *m, FILE *f)
 {
 	int offset;
 	int i, j;
@@ -400,7 +400,7 @@ static int psm_load(FILE *f)
 	sinaria = 0;
 
 	fseek(f, 8, SEEK_CUR);		/* skip file size and FILE */
-	xxh->smp = xxh->ins = 0;
+	m->xxh->smp = m->xxh->ins = 0;
 	cur_pat = 0;
 	cur_ins = 0;
 	offset = ftell(f);
@@ -414,13 +414,13 @@ static int psm_load(FILE *f)
 	iff_setflag(IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!feof (f))
-		iff_chunk(f);
+	while (!feof(f))
+		iff_chunk(m, f);
 
 	iff_release();
 
-	xxh->trk = xxh->pat * xxh->chn;
-	pnam = malloc(xxh->pat * 8);		/* pattern names */
+	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	pnam = malloc(m->xxh->pat * 8);		/* pattern names */
 	pord = malloc(255 * 8);			/* pattern orders */
 
 	strcpy (xmp_ctl->type, sinaria ?
@@ -431,8 +431,8 @@ static int psm_load(FILE *f)
 	PATTERN_INIT();
 
 	if (V(0)) {
-	    report("Stored patterns: %d\n", xxh->pat);
-	    report("Stored samples : %d", xxh->smp);
+	    report("Stored patterns: %d\n", m->xxh->pat);
+	    report("Stored samples : %d", m->xxh->smp);
 	}
 
 	fseek(f, offset, SEEK_SET);
@@ -444,19 +444,19 @@ static int psm_load(FILE *f)
 
 	/* Load IFF chunks */
 	while (!feof (f))
-		iff_chunk(f);
+		iff_chunk(m, f);
 
 	iff_release ();
 
-	for (i = 0; i < xxh->len; i++) {
-		for (j = 0; j < xxh->pat; j++) {
+	for (i = 0; i < m->xxh->len; i++) {
+		for (j = 0; j < m->xxh->pat; j++) {
 			if (!memcmp(pord + i * 8, pnam + j * 8, sinaria ? 8 : 4)) {
-				xxo[i] = j;
+				m->xxo[i] = j;
 				break;
 			}
 		}
 
-		if (j == xxh->pat)
+		if (j == m->xxh->pat)
 			break;
 	}
 

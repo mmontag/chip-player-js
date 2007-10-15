@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.31 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: load.c,v 1.32 2007-10-15 19:19:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,7 +28,6 @@
 #include "../prowizard/prowiz.h"
 
 extern struct list_head loader_list;
-extern struct list_head old_loader_list;
 extern struct list_head *checked_format;
 
 int decrunch_arc (FILE *, FILE *);
@@ -267,20 +266,20 @@ static int decrunch(FILE **f, char **s)
 }
 
 
-static void get_smp_size(int awe, int *a, int *b)
+static void get_smp_size(struct xmp_player_context *p, int awe, int *a, int *b)
 {
     int i, len, smp_size, smp_4kb;
 
-    for (smp_4kb = smp_size = i = 0; i < xxh->smp; i++) {
-	len = xxs[i].len;
+    for (smp_4kb = smp_size = i = 0; i < p->m.xxh->smp; i++) {
+	len = p->m.xxs[i].len;
 
 	/* AWE cards work with 16 bit samples only and expand bidirectional
 	 * loops.
 	 */
 	if (awe) {
-	    if (xxs[i].flg & WAVE_BIDIR_LOOP)
-		len += xxs[i].lpe - xxs[i].lps;
-	    if (awe && (~xxs[i].flg & WAVE_16_BITS))
+	    if (p->m.xxs[i].flg & WAVE_BIDIR_LOOP)
+		len += p->m.xxs[i].lpe - p->m.xxs[i].lps;
+	    if (awe && (~p->m.xxs[i].flg & WAVE_16_BITS))
 		len <<= 1;
 	}
 
@@ -294,7 +293,7 @@ static void get_smp_size(int awe, int *a, int *b)
 }
 
 
-static int crunch_ratio(int awe)
+static int crunch_ratio(struct xmp_player_context *p, int awe)
 {
     int memavl, smp_size, ratio, smp_4kb;
 
@@ -304,12 +303,12 @@ static int crunch_ratio(int awe)
 
     memavl = memavl * 100 / (100 + xmp_ctl->crunch);
 
-    get_smp_size (awe, &smp_size, &smp_4kb);
+    get_smp_size(p, awe, &smp_size, &smp_4kb);
 
     if (smp_size > memavl) {
 	if (!awe)
 	    xmp_cvt_to8bit ();
-	get_smp_size (awe, &smp_size, &smp_4kb);
+	get_smp_size(p, awe, &smp_size, &smp_4kb);
     }
 
     if (smp_size > memavl) {
@@ -362,7 +361,7 @@ err:
 }
 
 
-int xmp_load_module(char *s, xmp_context ctx)
+int xmp_load_module(xmp_context ctx, char *s)
 {
     FILE *f;
     int i, t;
@@ -371,6 +370,7 @@ int xmp_load_module(char *s, xmp_context ctx)
     struct stat st;
     unsigned int crc;
     struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_mod_context *m = &p->m;
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -406,18 +406,18 @@ int xmp_load_module(char *s, xmp_context ctx)
 
     xmpi_read_modconf(xmp_ctl, crc, st.st_size);
 
-    xxh = calloc (sizeof (struct xxm_header), 1);
+    m->xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */
-    xxh->tpo = 6;
-    xxh->bpm = 125;
-    xxh->chn = 4;
+    m->xxh->tpo = 6;
+    m->xxh->bpm = 125;
+    m->xxh->chn = 4;
 
     for (i = 0; i < 64; i++) {
-	xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
-	xxc[i].cho = xmp_ctl->chorus;
-	xxc[i].rvb = xmp_ctl->reverb;
-	xxc[i].vol = 0x40;
-	xxc[i].flg = 0;
+	m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
+	m->xxc[i].cho = xmp_ctl->chorus;
+	m->xxc[i].rvb = xmp_ctl->reverb;
+	m->xxc[i].vol = 0x40;
+	m->xxc[i].flg = 0;
     }
 
     list_for_each(head, &loader_list) {
@@ -427,61 +427,61 @@ int xmp_load_module(char *s, xmp_context ctx)
 	if ((i = li->test(f, NULL)) == 0) {
 	    reportv(3, "Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
-	    if ((i = li->loader(f) == 0))
+	    if ((i = li->loader(m, f) == 0))
 		break;
 	}
     }
 
-    fclose (f);
+    fclose(f);
 
     if (i < 0)
 	return i;
 
-    if (xmp_ctl->description && (i = (strstr (xmp_ctl->description, " [AWE") != NULL))) {
-	xmp_cvt_to16bit ();
-	xmp_cvt_bid2und ();
+    if (xmp_ctl->description && (i = (strstr(xmp_ctl->description, " [AWE") != NULL))) {
+	xmp_cvt_to16bit();
+	xmp_cvt_bid2und();
     }
 
-    xmp_drv_flushpatch (crunch_ratio (i));
+    xmp_drv_flushpatch(crunch_ratio(p, i));
 
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
      * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
      * Ralf Hoffmann <ralf@boomerangsworld.de>)
      */
-    if (xxh->rst >= xxh->len)
-	xxh->rst = 0;
+    if (m->xxh->rst >= m->xxh->len)
+	m->xxh->rst = 0;
 
-    str_adj (xmp_ctl->name);
+    str_adj(xmp_ctl->name);
     if (!*xmp_ctl->name)
-	strcpy (xmp_ctl->name, "(untitled)");
+	strcpy(xmp_ctl->name, "(untitled)");
 
     if (xmp_ctl->verbose > 1) {
-	report ("Module looping : %s\n",
+	report("Module looping : %s\n",
 	    xmp_ctl->fetch & XMP_CTL_LOOP ? "yes" : "no");
-	report ("Period mode    : %s\n",
-	    xxh->flg & XXM_FLG_LINEAR ? "linear" : "Amiga");
+	report("Period mode    : %s\n",
+	    m->xxh->flg & XXM_FLG_LINEAR ? "linear" : "Amiga");
     }
 
     if (xmp_ctl->verbose > 2) {
-	report ("Amiga range    : %s\n", xxh->flg & XXM_FLG_MODRNG ?
+	report("Amiga range    : %s\n", m->xxh->flg & XXM_FLG_MODRNG ?
 		"yes" : "no");
-	report ("Restart pos    : %d\n", xxh->rst);
-	report ("Base volume    : %d\n", xmp_ctl->volbase);
-	report ("C4 replay rate : %d\n", xmp_ctl->c4rate);
-	report ("Channel mixing : %d%% (dynamic pan %s)\n",
+	report("Restart pos    : %d\n", m->xxh->rst);
+	report("Base volume    : %d\n", xmp_ctl->volbase);
+	report("C4 replay rate : %d\n", xmp_ctl->c4rate);
+	report("Channel mixing : %d%% (dynamic pan %s)\n",
 		xmp_ctl->fetch & XMP_CTL_REVERSE ? -xmp_ctl->mix : xmp_ctl->mix,
 		xmp_ctl->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
     }
 
     if (xmp_ctl->verbose) {
-	report ("Channels       : %d [ ", xxh->chn);
-	for (i = 0; i < xxh->chn; i++) {
-	    if (xxc[i].flg & XXM_CHANNEL_FM)
-		report ("F ");
+	report("Channels       : %d [ ", m->xxh->chn);
+	for (i = 0; i < m->xxh->chn; i++) {
+	    if (m->xxc[i].flg & XXM_CHANNEL_FM)
+		report("F ");
 	    else
-	        report ("%x ", xxc[i].pan >> 4);
+	        report("%x ", m->xxc[i].pan >> 4);
 	}
-	report ("]\n");
+	report("]\n");
     }
 
     t = xmpi_scan_module(p);

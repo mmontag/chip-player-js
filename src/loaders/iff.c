@@ -25,7 +25,7 @@ static LIST_HEAD(iff_list);
 static int __id_size;
 static int __flags;
 
-void iff_chunk (FILE *f)
+void iff_chunk(struct xmp_mod_context *m, FILE *f)
 {
     long size;
     char id[17] = "";
@@ -38,7 +38,7 @@ void iff_chunk (FILE *f)
     if (__flags & IFF_FULL_CHUNK_SIZE)
 	size -= __id_size + 4;
 
-    iff_process (id, size, f);
+    iff_process(m, id, size, f);
 }
 
 
@@ -50,14 +50,14 @@ void iff_register(char *id, void (*loader)())
     __flags = 0;
 
     f = malloc(sizeof (struct iff_info));
-    strcpy (f->id, id);
+    strcpy(f->id, id);
     f->loader = loader;
 
     list_add_tail(&f->list, &iff_list);
 }
 
 
-void iff_release ()
+void iff_release()
 {
     struct list_head *tmp;
     struct iff_info *i;
@@ -67,11 +67,10 @@ void iff_release ()
 	list_del(&i->list);
 	free(i);
     }
-
 }
 
 
-int iff_process(char *id, long size, FILE *f)
+int iff_process(struct xmp_mod_context *m, char *id, long size, FILE *f)
 {
     struct list_head *tmp;
     struct iff_info *i;
@@ -82,7 +81,7 @@ int iff_process(char *id, long size, FILE *f)
     list_for_each(tmp, &iff_list) {
 	i = list_entry(tmp, struct iff_info, list);
 	if (id && !strncmp(id, i->id, __id_size)) {
-	    i->loader(size, f);
+	    i->loader(m, size, f);
 	    break;
 	}
     }

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.7 2007-10-14 22:45:17 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.8 2007-10-15 19:19:21 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int stm_test (FILE *, char *);
-static int stm_load (FILE *);
+static int stm_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info stm_loader = {
     "STM",
@@ -74,7 +74,7 @@ static uint8 fx[] = {
 };
 
 
-static int stm_load(FILE *f)
+static int stm_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     struct xxm_event *event;
@@ -113,10 +113,10 @@ static int stm_load(FILE *f)
     if (!strncmp ((char *)sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
 
-    xxh->pat = sfh.patterns;
-    xxh->trk = xxh->pat * xxh->chn;
-    xxh->tpo = MSN (sfh.tempo);
-    xxh->smp = xxh->ins;
+    m->xxh->pat = sfh.patterns;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->xxh->tpo = MSN (sfh.tempo);
+    m->xxh->smp = m->xxh->ins;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
     copy_adjust((uint8 *)xmp_ctl->name, sfh.name, 20);
@@ -135,51 +135,51 @@ static int stm_load(FILE *f)
     reportv(1, "     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
 
     /* Read and convert instruments and samples */
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = !!(xxs[i].len = sfh.ins[i].length);
-	xxs[i].lps = sfh.ins[i].loopbeg;
-	xxs[i].lpe = sfh.ins[i].loopend;
-	if (xxs[i].lpe == 0xffff)
-	    xxs[i].lpe = 0;
-	xxs[i].flg = xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = sfh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = !!(m->xxs[i].len = sfh.ins[i].length);
+	m->xxs[i].lps = sfh.ins[i].loopbeg;
+	m->xxs[i].lpe = sfh.ins[i].loopend;
+	if (m->xxs[i].lpe == 0xffff)
+	    m->xxs[i].lpe = 0;
+	m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].vol = sfh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, sfh.ins[i].name, 12);
+	copy_adjust(m->xxih[i].name, sfh.ins[i].name, 12);
 
-	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1))) {
+	if ((V(1)) && (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
-		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, sfh.ins[i].c2spd);
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
+		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, sfh.ins[i].c2spd);
 	}
 
 	sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;
-	c2spd_to_note (sfh.ins[i].c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
+	c2spd_to_note (sfh.ins[i].c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
 
-    fread(xxo, 1, 128, f);
+    fread(m->xxo, 1, 128, f);
 
     for (i = 0; i < 128; i++)
-	if (xxo[i] >= xxh->pat)
+	if (m->xxo[i] >= m->xxh->pat)
 	    break;
 
-    xxh->len = i;
+    m->xxh->len = i;
 
-    reportv(0, "Module length  : %d patterns\n", xxh->len);
+    reportv(0, "Module length  : %d patterns\n", m->xxh->len);
 
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * xxh->chn; j++) {
-	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+	for (j = 0; j < 64 * m->xxh->chn; j++) {
+	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread (&b, 1, 1, f);
 	    memset (event, 0, sizeof (struct xxm_event));
 	    switch (b) {
@@ -217,11 +217,11 @@ static int stm_load(FILE *f)
     }
 
     /* Read samples */
-    reportv(0, "\nStored samples : %d ", xxh->smp);
+    reportv(0, "\nStored samples : %d ", m->xxh->smp);
 
-    for (i = 0; i < xxh->ins; i++) {
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+    for (i = 0; i < m->xxh->ins; i++) {
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

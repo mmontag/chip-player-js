@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.7 2007-10-14 03:17:17 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int mgt_test(FILE *, char *);
-static int mgt_load(FILE *);
+static int mgt_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info mgt_loader = {
 	"MGT",
@@ -48,7 +48,7 @@ static int mgt_test(FILE *f, char *t)
 	return 0;
 }
 
-static int mgt_load(FILE *f)
+static int mgt_load(struct xmp_mod_context *m, FILE *f)
 {
 	struct xxm_event *event;
 	int i, j;
@@ -64,12 +64,12 @@ static int mgt_load(FILE *f)
 
 	sprintf(xmp_ctl->type, "MGT v%d.%d (Megatracker)", MSN(ver), LSN(ver));
 
-	xxh->chn = read16b(f);
+	m->xxh->chn = read16b(f);
 	read16b(f);			/* number of songs */
-	xxh->len = read16b(f);
-	xxh->pat = read16b(f);
-	xxh->trk = read16b(f);
-	xxh->ins = xxh->smp = read16b(f);
+	m->xxh->len = read16b(f);
+	m->xxh->pat = read16b(f);
+	m->xxh->trk = read16b(f);
+	m->xxh->ins = m->xxh->smp = read16b(f);
 	read16b(f);			/* reserved */
 	read32b(f);			/* reserved */
 
@@ -86,15 +86,15 @@ static int mgt_load(FILE *f)
 
 	fread(xmp_ctl->name, 1, 32, f);
 	seq_ptr = read32b(f);
-	xxh->len = read16b(f);
-	xxh->rst = read16b(f);
-	xxh->bpm = read8(f);
-	xxh->tpo = read8(f);
+	m->xxh->len = read16b(f);
+	m->xxh->rst = read16b(f);
+	m->xxh->bpm = read8(f);
+	m->xxh->tpo = read8(f);
 	read16b(f);			/* global volume */
 	read8(f);			/* master L */
 	read8(f);			/* master R */
 
-	for (i = 0; i < xxh->chn; i++) {
+	for (i = 0; i < m->xxh->chn; i++) {
 		read16b(f);		/* pan */
 	}
 	
@@ -103,8 +103,8 @@ static int mgt_load(FILE *f)
 	/* Sequence */
 
 	fseek(f, seq_ptr, SEEK_SET);
-	for (i = 0; i < xxh->len; i++)
-		xxo[i] = read16b(f);
+	for (i = 0; i < m->xxh->len; i++)
+		m->xxo[i] = read16b(f);
 
 	/* Instruments */
 
@@ -113,28 +113,28 @@ static int mgt_load(FILE *f)
 	fseek(f, ins_ptr, SEEK_SET);
 	reportv(1, "     Name                             Len  LBeg LEnd L Vol C2Spd\n");
 
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		int c2spd, flags;
 
-		xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-		fread(xxih[i].name, 1, 32, f);
+		fread(m->xxih[i].name, 1, 32, f);
 		sdata[i] = read32b(f);
-		xxs[i].len = read32b(f);
-		xxs[i].lps = read32b(f);
-		xxs[i].lpe = xxs[i].lps + read32b(f);
+		m->xxs[i].len = read32b(f);
+		m->xxs[i].lps = read32b(f);
+		m->xxs[i].lpe = m->xxs[i].lps + read32b(f);
 		read32b(f);
 		read32b(f);
 		c2spd = read32b(f);
-		c2spd_to_note(c2spd, &xxi[i][0].xpo, &xxi[i][0].fin);
-		xxi[i][0].vol = read16b(f) >> 4;
+		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+		m->xxi[i][0].vol = read16b(f) >> 4;
 		read8(f);		/* vol L */
 		read8(f);		/* vol R */
-		xxi[i][0].pan = 0x80;
+		m->xxi[i][0].pan = 0x80;
 		flags = read8(f);
-		xxs[i].flg = flags & 0x03 ? WAVE_LOOPING : 0;
-		xxs[i].flg |= flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
-		xxi[i][0].fin += 0 * read8(f);	// FIXME
+		m->xxs[i].flg = flags & 0x03 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg |= flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
+		m->xxi[i][0].fin += 0 * read8(f);	// FIXME
 		read8(f);		/* unused */
 		read8(f);
 		read8(f);
@@ -143,27 +143,27 @@ static int mgt_load(FILE *f)
 		read32b(f);
 		read32b(f);
 
-		xxih[i].nsm = !!xxs[i].len;
-		xxi[i][0].sid = i;
+		m->xxih[i].nsm = !!m->xxs[i].len;
+		m->xxi[i][0].sid = i;
 		
-		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
+		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report("[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
-				i, xxih[i].name,
-				xxs[i].len, xxs[i].lps, xxs[i].lpe,
-				xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' :
-					xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-				xxi[i][0].vol, c2spd);
+				i, m->xxih[i].name,
+				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+				m->xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' :
+					m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxi[i][0].vol, c2spd);
 		}
 	}
 
 	/* PATTERN_INIT - alloc extra track*/
 	PATTERN_INIT();
 
-	reportv(0, "Stored tracks  : %d ", xxh->trk);
+	reportv(0, "Stored tracks  : %d ", m->xxh->trk);
 
 	/* Tracks */
 
-	for (i = 1; i < xxh->trk; i++) {
+	for (i = 1; i < m->xxh->trk; i++) {
 		int offset, rows;
 		uint8 b;
 
@@ -172,9 +172,9 @@ static int mgt_load(FILE *f)
 		fseek(f, offset, SEEK_SET);
 
 		rows = read16b(f);
-		xxt[i] = calloc(sizeof(struct xxm_track) +
+		m->xxt[i] = calloc(sizeof(struct xxm_track) +
 				sizeof(struct xxm_event) * rows, 1);
-		xxt[i]->rows = rows;
+		m->xxt[i]->rows = rows;
 
 		//printf("\n=== Track %d ===\n\n", i);
 		for (j = 0; j < rows; j++) {
@@ -184,7 +184,7 @@ static int mgt_load(FILE *f)
 			j += b & 0x03;
 
 			note = 0;
-			event = &xxt[i]->event[j];
+			event = &m->xxt[i]->event[j];
 			if (b & 0x04)
 				note = read8(f);
 			if (b & 0x08)
@@ -280,28 +280,28 @@ static int mgt_load(FILE *f)
 				event->fxt, event->fxp);*/
 		}
 
-		if (V(0) && i % xxh->chn == 0)
+		if (V(0) && i % m->xxh->chn == 0)
 			report(".");
 	}
 	reportv(0, "\n");
 
 	/* Extra track */
-	xxt[0] = calloc(sizeof(struct xxm_track) +
+	m->xxt[0] = calloc(sizeof(struct xxm_track) +
 			sizeof(struct xxm_event) * 64 - 1, 1);
-	xxt[0]->rows = 64;
+	m->xxt[0]->rows = 64;
 
 	/* Read and convert patterns */
 
-	reportv(0, "Stored patterns: %d ", xxh->pat);
+	reportv(0, "Stored patterns: %d ", m->xxh->pat);
 	fseek(f, pat_ptr, SEEK_SET);
 
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
 
-		xxp[i]->rows = read16b(f);
-		for (j = 0; j < xxh->chn; j++) {
-			xxp[i]->info[j].index = read16b(f) - 1;
-			//printf("%3d ", xxp[i]->info[j].index);
+		m->xxp[i]->rows = read16b(f);
+		for (j = 0; j < m->xxh->chn; j++) {
+			m->xxp[i]->info[j].index = read16b(f) - 1;
+			//printf("%3d ", m->xxp[i]->info[j].index);
 		}
 
 		reportv(0, ".");
@@ -311,15 +311,15 @@ static int mgt_load(FILE *f)
 
 	/* Read samples */
 
-	reportv(0, "Stored samples : %d ", xxh->smp);
+	reportv(0, "Stored samples : %d ", m->xxh->smp);
 
-	for (i = 0; i < xxh->ins; i++) {
-		if (xxih[i].nsm == 0)
+	for (i = 0; i < m->xxh->ins; i++) {
+		if (m->xxih[i].nsm == 0)
 			continue;
 
 		fseek(f, sdata[i], SEEK_SET);
-		xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-						&xxs[xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+						&m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
 	reportv(0, "\n");

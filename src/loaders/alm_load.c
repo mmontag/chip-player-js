@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.8 2007-10-14 21:44:59 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.9 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,7 +28,7 @@
 
 
 static int alm_test (FILE *, char *);
-static int alm_load (FILE *);
+static int alm_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info alm_loader = {
     "ALM",
@@ -62,7 +62,7 @@ struct alm_file_header {
 
 #define NAME_SIZE 255
 
-int alm_load (FILE *f)
+int alm_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     struct alm_file_header afh;
@@ -79,7 +79,7 @@ int alm_load (FILE *f)
     fread(&afh.id, 7, 1, f);
 
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
-	xxh->tpo = afh.speed / 2;
+	m->xxh->tpo = afh.speed / 2;
 
     strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
     basename = strtok (modulename, ".");
@@ -89,17 +89,17 @@ int alm_load (FILE *f)
     afh.restart = read8(f);
     fread(&afh.order, 128, 1, f);
 
-    xxh->len = afh.length;
-    xxh->rst = afh.restart;
-    memcpy (xxo, afh.order, xxh->len);
+    m->xxh->len = afh.length;
+    m->xxh->rst = afh.restart;
+    memcpy (m->xxo, afh.order, m->xxh->len);
 
-    for (xxh->pat = i = 0; i < xxh->len; i++)
-	if (xxh->pat < afh.order[i])
-	    xxh->pat = afh.order[i];
-    xxh->pat++;
+    for (m->xxh->pat = i = 0; i < m->xxh->len; i++)
+	if (m->xxh->pat < afh.order[i])
+	    m->xxh->pat = afh.order[i];
+    m->xxh->pat++;
 
-    xxh->trk = xxh->pat * xxh->chn;
-    xxh->smp = xxh->ins;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->xxh->smp = m->xxh->ins;
     xmp_ctl->c4rate = C4_NTSC_RATE;
 
     sprintf (xmp_ctl->type, "Aley's Module");
@@ -109,14 +109,14 @@ int alm_load (FILE *f)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    reportv(0, "Stored patterns: %d ", xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * xxh->chn; j++) {
-	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+	for (j = 0; j < 64 * m->xxh->chn; j++) {
+	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread (&b, 1, 1, f);
 	    if (b)
 		event->note = (b == 37) ? 0x61 : b + 36;
@@ -131,40 +131,40 @@ int alm_load (FILE *f)
 
     /* Read and convert instruments and samples */
 
-    reportv(0, "Loading samples: %d ", xxh->ins);
+    reportv(0, "Loading samples: %d ", m->xxh->ins);
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = fopen (filename, "rb");
 
-	if (!(xxih[i].nsm = (s != NULL)))
+	if (!(m->xxih[i].nsm = (s != NULL)))
 	    continue;
 
 	fstat (fileno (s), &stat);
 	fread (&b, 1, 1, s);	/* Get first octet */
-	xxs[i].len = stat.st_size - 5 * !b;
+	m->xxs[i].len = stat.st_size - 5 * !b;
 
 	if (!b) {		/* Instrument with header */
-	    xxs[i].lps = read16l(f);
-	    xxs[i].lpe = read16l(f);
-	    xxs[i].flg = xxs[i].lpe > xxs[i].lps ? WAVE_LOOPING : 0;
+	    m->xxs[i].lps = read16l(f);
+	    m->xxs[i].lpe = read16l(f);
+	    m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ? WAVE_LOOPING : 0;
 	} else
 	    fseek (s, 0, SEEK_SET);
 
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].vol = 0x40;
-	xxi[i][0].sid = i;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].vol = 0x40;
+	m->xxi[i][0].sid = i;
 
-	if ((V (1)) && (strlen ((char *) xxih[i].name) ||
-		(xxs[i].len > 1))) {
+	if ((V (1)) && (strlen ((char *) m->xxih[i].name) ||
+		(m->xxs[i].len > 1))) {
 	    report ("\n[%2X] %-14.14s %04x %04x %04x %c V%02x ", i,
-		filename, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol);
+		filename, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
+		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol);
 	}
 
-	xmp_drv_loadpatch (s, xxi[i][0].sid, xmp_ctl->c4rate,
-	    XMP_SMP_UNS, &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (s, m->xxi[i][0].sid, xmp_ctl->c4rate,
+	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 
 	fclose(s);
 
@@ -173,8 +173,8 @@ int alm_load (FILE *f)
     reportv(0, "\n");
 
     /* ALM is LRLR, not LRRL */
-    for (i = 0; i < xxh->chn; i++)
-	xxc[i].pan = (i % 2) * 0xff;
+    for (i = 0; i < m->xxh->chn; i++)
+	m->xxc[i].pan = (i % 2) * 0xff;
 
     return 0;
 }

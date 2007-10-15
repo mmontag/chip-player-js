@@ -51,7 +51,7 @@ static int fx[] = {
 };
 
 
-int xann_load (FILE *f)
+int xann_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j, k;
     int smp_size;
@@ -76,21 +76,21 @@ int xann_load (FILE *f)
     }
     fread(&xh.unknown2, 0x46, 1, f);
 
-    for (xxh->pat = xxh->len = i = 0; i < 128; i++) {
+    for (m->xxh->pat = m->xxh->len = i = 0; i < 128; i++) {
 	if (!xh.ptr[i])
 	    break;
-	xxo[i] = (xh.ptr[i] - 0x043c) >> 10;
-	if (xxo[i] > xxh->pat)
-	    xxh->pat = xxo[i];
+	m->xxo[i] = (xh.ptr[i] - 0x043c) >> 10;
+	if (m->xxo[i] > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
     }
-    xxh->len = i;
-    xxh->pat++;
-    xxh->trk = xxh->pat * xxh->chn;
+    m->xxh->len = i;
+    m->xxh->pat++;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-    for (smp_size = i = 0; i < xxh->ins; i++)
+    for (smp_size = i = 0; i < m->xxh->ins; i++)
 	smp_size += 2 * xh.ins[i].size;
 
-    if (1084 /*sizeof(struct xann_header)*/ + 0x400 * xxh->pat + smp_size !=
+    if (1084 /*sizeof(struct xann_header)*/ + 0x400 * m->xxh->pat + smp_size !=
 	xmp_ctl->size)
 	return -1;
 
@@ -100,24 +100,24 @@ int xann_load (FILE *f)
 
     INSTRUMENT_INIT ();
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxs[i].len = 2 * xh.ins[i].size;
-	xxs[i].lps = xh.ins[i].loop_start - xh.ins[i].ptr;
-	xxs[i].lpe = xxs[i].lps + 2 * xh.ins[i].loop_size;
-	xxs[i].flg = xh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = (int8) xh.ins[i].finetune << 4;
-	xxi[i][0].vol = xh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxs[i].len = 2 * xh.ins[i].size;
+	m->xxs[i].lps = xh.ins[i].loop_start - xh.ins[i].ptr;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * xh.ins[i].loop_size;
+	m->xxs[i].flg = xh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = (int8) xh.ins[i].finetune << 4;
+	m->xxi[i][0].vol = xh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
 
-	if (V (1) && xxs[i].len > 2) {
+	if (V (1) && m->xxs[i].len > 2) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
-		i, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, xh.ins[i].loop_size > 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		i, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, xh.ins[i].loop_size > 1 ? 'L' : ' ',
+		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
@@ -125,11 +125,11 @@ int xann_load (FILE *f)
 
     /* Load and convert patterns */
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64; j++) {
 	    for (k = 0; k < 4; k++) {
@@ -166,17 +166,17 @@ int xann_load (FILE *f)
 	    report (".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+	report ("\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");
     }

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.7 2007-10-14 19:08:14 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,7 +26,7 @@
 
 
 static int far_test (FILE *, char *);
-static int far_load (FILE *);
+static int far_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info far_loader = {
     "FAR",
@@ -62,7 +62,7 @@ static uint8 fx[] = {
 };
 
 
-static int far_load (FILE *f)
+static int far_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j, vib = 0;
     struct xxm_event *event;
@@ -95,19 +95,19 @@ static int far_load (FILE *f)
     for (i = 0; i < 256; i++)
 	ffh2.patsize[i] = read16l(f);	/* Size of each pattern in bytes */
 
-    xxh->chn = 16;
-    /*xxh->pat=ffh2.patterns; (Error in specs? --claudio) */
-    xxh->len = ffh2.songlen;
-    xxh->tpo = 6;
-    xxh->bpm = 8 * 60 / ffh.tempo;
-    memcpy (xxo, ffh2.order, xxh->len);
+    m->xxh->chn = 16;
+    /*m->xxh->pat=ffh2.patterns; (Error in specs? --claudio) */
+    m->xxh->len = ffh2.songlen;
+    m->xxh->tpo = 6;
+    m->xxh->bpm = 8 * 60 / ffh.tempo;
+    memcpy (m->xxo, ffh2.order, m->xxh->len);
 
-    for (xxh->pat = i = 0; i < 256; i++) {
+    for (m->xxh->pat = i = 0; i < 256; i++) {
 	if (ffh2.patsize[i])
-	    xxh->pat = i + 1;
+	    m->xxh->pat = i + 1;
     }
 
-    xxh->trk = xxh->chn * xxh->pat;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     strncpy(xmp_ctl->name, (char *)ffh.name, 40);
     sprintf(xmp_ctl->type, "FAR (Farandole Composer %d.%d)",
@@ -120,18 +120,18 @@ static int far_load (FILE *f)
     /* Read and convert patterns */
     if (V (0)) {
 	report("Comment bytes  : %d\n", ffh.textlen);
-	report("Stored patterns: %d ", xxh->pat);
+	report("Stored patterns: %d ", m->xxh->pat);
     }
 
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	if (!ffh2.patsize[i])
 	    continue;
-	xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
+	m->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
 	TRACK_ALLOC (i);
 	fread (&j, 1, 2, f);
-	for (j = 0; j < xxp[i]->rows * xxh->chn; j++) {
-	    event = &EVENT (i, j % xxh->chn, j / xxh->chn);
+	for (j = 0; j < m->xxp[i]->rows * m->xxh->chn; j++) {
+	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread (&fe, 1, 4, f);
 	    memset (event, 0, sizeof (struct xxm_event));
 	    if (fe.note)
@@ -174,17 +174,17 @@ static int far_load (FILE *f)
     for (i = 1; i < 0x100; i <<= 1) {
 	for (j = 0; j < 8; j++)
 	    if (sample_map[j] & i)
-		xxh->ins++;
+		m->xxh->ins++;
     }
-    xxh->smp = xxh->ins;
+    m->xxh->smp = m->xxh->ins;
 
     INSTRUMENT_INIT ();
 
     /* Read and convert instruments and samples */
-    reportv(0, "\nInstruments    : %d ", xxh->ins);
+    reportv(0, "\nInstruments    : %d ", m->xxh->ins);
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
 	fread(&fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = read32l(f);	/* Length of sample (up to 64Kb) */
@@ -198,22 +198,22 @@ static int far_load (FILE *f)
 	fih.length &= 0xffff;
 	fih.loop_start &= 0xffff;
 	fih.loopend &= 0xffff;
-	xxih[i].nsm = !!(xxs[i].len = fih.length);
-	xxs[i].lps = fih.loop_start;
-	xxs[i].lpe = fih.loopend;
-	xxs[i].flg = fih.sampletype ? WAVE_16_BITS : 0;
-	xxs[i].flg |= fih.loopmode ? WAVE_LOOPING : 0;
-	xxi[i][0].vol = 0xff; /* fih.volume; */
-	xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len = fih.length);
+	m->xxs[i].lps = fih.loop_start;
+	m->xxs[i].lpe = fih.loopend;
+	m->xxs[i].flg = fih.sampletype ? WAVE_16_BITS : 0;
+	m->xxs[i].flg |= fih.loopmode ? WAVE_LOOPING : 0;
+	m->xxi[i][0].vol = 0xff; /* fih.volume; */
+	m->xxi[i][0].sid = i;
 
-	copy_adjust(xxih[i].name, fih.name, 24);
+	copy_adjust(m->xxih[i].name, fih.name, 24);
 
-	if ((V(1)) && (strlen((char *)xxih[i].name) || xxs[i].len))
+	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len))
 	    report ("\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
-		i, fih.name, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-		fih.loopmode ? 'L' : ' ', xxi[i][0].vol);
+		i, fih.name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
 	if (sample_map[i / 8] & (1 << (i % 8)))
-	    xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0, &xxs[i], NULL);
+	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

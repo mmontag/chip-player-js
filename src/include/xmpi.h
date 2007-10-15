@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.15 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.16 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -96,7 +96,7 @@ typedef unsigned int uint32;
 #define RESET_FLAG(a,b)	((a)&=~(b))
 #define TEST_FLAG(a,b)	!!((a)&(b))
 
-#define EVENT(p, c, r)	xxt[xxp[p]->info[c].index]->event[r]
+#define EVENT(a, c, r)	m->xxt[m->xxp[a]->info[c].index]->event[r]
 
 #ifdef _DEBUG
 #define _D_INFO "\x1b[33m"
@@ -123,6 +123,27 @@ struct xmp_ord_info {
 
 /* Context */
 
+#include "xxm.h"
+
+struct xmp_mod_context {
+    struct xxm_header *xxh;
+    struct xxm_pattern **xxp;		/* Patterns */
+    struct xxm_track **xxt;		/* Tracks */
+    struct xxm_instrument_header *xxih;	/* Instrument headers */
+    struct xxm_instrument_map *xxim;	/* Instrument map */
+    struct xxm_instrument **xxi;	/* Instruments */
+    struct xxm_sample *xxs;		/* Samples */
+    uint16 **xxae;			/* Amplitude envelope */
+    uint16 **xxpe;			/* Pan envelope */
+    uint16 **xxfe;			/* Pitch envelope */
+    struct xxm_channel xxc[64];		/* Channel info */
+    struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
+    int xxo_fstrow[XMP_DEF_MAXORD];
+    uint8 xxo[XMP_DEF_MAXORD];		/* Orders */
+    uint8 **med_vol_table;		/* MED volume sequence table */
+    uint8 **med_wav_table;		/* MED waveform sequence table */
+};
+
 struct flow_control {
     int pbreak;
     int jump;
@@ -144,31 +165,16 @@ struct xmp_player_context {
     struct xmp_channel *xc_data;
     int *fetch_ctl;
     int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+    struct xmp_mod_context m;
 };
 
 
 /* Externs */
 
-extern struct xxm_header *xxh;
-extern struct xxm_pattern **xxp;
-extern struct xxm_track **xxt;
-extern struct xxm_instrument_header *xxih;
-extern struct xxm_instrument_map *xxim;
-extern struct xxm_instrument **xxi;
-extern struct xxm_sample *xxs;
-extern uint16 **xxae;
-extern uint16 **xxpe;
-extern uint16 **xxfe;
-extern struct xxm_channel xxc[64]; 
-extern uint8 xxo[XMP_DEF_MAXORD];
 extern int big_endian;
-
-extern uint8 **med_vol_table;
-extern uint8 **med_wav_table;
-
 extern void (*xmp_event_callback)(unsigned long);
-
 extern struct xmp_control *xmp_ctl;	/* built in control struct pointer */
+
 
 /* Prototypes */
 

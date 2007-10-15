@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.4 2007-10-14 19:08:14 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.5 2007-10-15 19:19:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 
 
 static int hsc_test (FILE *, char *);
-static int hsc_load (FILE *);
+static int hsc_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info hsc_loader = {
     "HSC",
@@ -69,7 +69,7 @@ static int hsc_test(FILE *f, char *t)
     return 0;
 }
 
-static int hsc_load(FILE *f)
+static int hsc_load(struct xmp_mod_context *m, FILE *f)
 {
     int p, i, r, c;
     struct xxm_event *event;
@@ -87,14 +87,14 @@ static int hsc_load(FILE *f)
 	    break;
     }
 
-    xxh->ins = i;
+    m->xxh->ins = i;
 
     fseek (f, 0, SEEK_SET);
 
-    xxh->chn = 9;
-    xxh->bpm = 125;
-    xxh->tpo = 6;
-    xxh->smp = 0;
+    m->xxh->chn = 9;
+    m->xxh->bpm = 125;
+    m->xxh->tpo = 6;
+    m->xxh->smp = 0;
 
     sprintf(xmp_ctl->type, "HSC (HSC-Tracker)");
 
@@ -109,16 +109,16 @@ static int hsc_load(FILE *f)
 
     fread (buf, 1, 128 * 12, f);
     sid = buf;
-    for (i = 0; i < xxh->ins; i++, sid += 12) {
+    for (i = 0; i < m->xxh->ins; i++, sid += 12) {
 	xmp_cvt_hsc2sbi((char *)sid);
 
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	xxih[i].nsm = 1;
-	xxi[i][0].vol = 0x40;
-	xxi[i][0].fin = (int8)sid[11];
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].xpo = 0;
-	xxi[i][0].sid = i;
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].nsm = 1;
+	m->xxi[i][0].vol = 0x40;
+	m->xxi[i][0].fin = (int8)sid[11];
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].xpo = 0;
+	m->xxi[i][0].sid = i;
 
 	if (V (1)) {
 	    int j, x;
@@ -157,32 +157,32 @@ skip:
 
     /* Read orders */
     for (p = i = 0; i < 51; i++) {
-	fread (&xxo[i], 1, 1, f);
-	if (xxo[i] & 0x80)
+	fread (&m->xxo[i], 1, 1, f);
+	if (m->xxo[i] & 0x80)
 	    break;			/* FIXME: jump line */
-	if (xxo[i] > p)
-	    p = xxo[i];
+	if (m->xxo[i] > p)
+	    p = m->xxo[i];
     }
     fseek (f, 50 - i, SEEK_CUR);
-    xxh->len = i;
-    xxh->pat = p + 1;
-    xxh->trk = xxh->pat * xxh->chn;
+    m->xxh->len = i;
+    m->xxh->pat = p + 1;
+    m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
     if (V (0)) {
-	report ("Module length  : %d patterns\n", xxh->len);
-	report ("Instruments    : %d\n", xxh->ins);
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Module length  : %d patterns\n", m->xxh->len);
+	report ("Instruments    : %d\n", m->xxh->ins);
+	report ("Stored patterns: %d ", m->xxh->pat);
     }
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    for (i = 0; i < xxh->pat; i++) {
+    for (i = 0; i < m->xxh->pat; i++) {
 	int ins[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-        for (r = 0; r < xxp[i]->rows; r++) {
+        for (r = 0; r < m->xxp[i]->rows; r++) {
             for (c = 0; c < 9; c++) {
 	        fread (e, 1, 2, f);
 	        event = &EVENT (i, c, r);
@@ -208,9 +208,9 @@ skip:
     }
     reportv(0, "\n");
 
-    for (i = 0; i < xxh->chn; i++) {
-	xxc[i].pan = 0x80;
-	xxc[i].flg = XXM_CHANNEL_FM;
+    for (i = 0; i < m->xxh->chn; i++) {
+	m->xxc[i].pan = 0x80;
+	m->xxc[i].flg = XXM_CHANNEL_FM;
     }
 
     return 0;

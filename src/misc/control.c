@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.15 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: control.c,v 1.16 2007-10-15 19:19:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,7 +26,7 @@
 
 static int drv_parm = 0;
 extern struct xmp_drv_info drv_callback;
-extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
+//extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
 int big_endian;
 
 int pw_init(void);
@@ -134,11 +134,11 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	    xmp_ctl->pos--;
 	return xmp_ctl->pos;
     case XMP_ORD_NEXT:
-	if (xmp_ctl->pos < xxh->len)
+	if (xmp_ctl->pos < p->m.xxh->len)
 	    xmp_ctl->pos++;
 	return xmp_ctl->pos;
     case XMP_ORD_SET:
-	if (arg < xxh->len && arg >= 0)
+	if (arg < p->m.xxh->len && arg >= 0)
 	    xmp_ctl->pos = arg;
 	return xmp_ctl->pos;
     case XMP_MOD_STOP:
@@ -187,47 +187,48 @@ int xmp_play_module(xmp_context ctx)
 }
 
 
-void xmp_release_module ()
+void xmp_release_module(xmp_context ctx)
 {
+    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
     int i;
 
     _D (_D_INFO "Freeing memory");
 
-    if (med_vol_table) {
-	for (i = 0; i < xxh->ins; i++)
-	     if (med_vol_table[i])
-		free (med_vol_table[i]);
-	free (med_vol_table);
+    if (p->m.med_vol_table) {
+	for (i = 0; i < p->m.xxh->ins; i++)
+	     if (p->m.med_vol_table[i])
+		free(p->m.med_vol_table[i]);
+	free(p->m.med_vol_table);
     }
 
-    if (med_wav_table) {
-	for (i = 0; i < xxh->ins; i++)
-	     if (med_wav_table[i])
-		free (med_wav_table[i]);
-	free (med_wav_table);
+    if (p->m.med_wav_table) {
+	for (i = 0; i < p->m.xxh->ins; i++)
+	     if (p->m.med_wav_table[i])
+		free(p->m.med_wav_table[i]);
+	free(p->m.med_wav_table);
     }
 
-    for (i = 0; i < xxh->trk; i++)
-	free (xxt[i]);
-    for (i = 0; i < xxh->pat; i++)
-	free (xxp[i]);
-    for (i = 0; i < xxh->ins; i++) {
-	free (xxfe[i]);
-	free (xxpe[i]);
-	free (xxae[i]);
-	free (xxi[i]);
+    for (i = 0; i < p->m.xxh->trk; i++)
+	free(p->m.xxt[i]);
+    for (i = 0; i < p->m.xxh->pat; i++)
+	free(p->m.xxp[i]);
+    for (i = 0; i < p->m.xxh->ins; i++) {
+	free(p->m.xxfe[i]);
+	free(p->m.xxpe[i]);
+	free(p->m.xxae[i]);
+	free(p->m.xxi[i]);
     }
-    free (xxt);
-    free (xxp);
-    free (xxi);
-    if (xxh->smp > 0)
-	free (xxs);
-    free (xxim);
-    free (xxih);
-    free (xxfe);
-    free (xxpe);
-    free (xxae);
-    free (xxh);
+    free(p->m.xxt);
+    free(p->m.xxp);
+    free(p->m.xxi);
+    if (p->m.xxh->smp > 0)
+	free(p->m.xxs);
+    free(p->m.xxim);
+    free(p->m.xxih);
+    free(p->m.xxfe);
+    free(p->m.xxpe);
+    free(p->m.xxae);
+    free(p->m.xxh);
 }
 
 
@@ -253,12 +254,13 @@ int xmp_verbosity_level (int i)
 
 int xmp_seek_time(xmp_context ctx, int time)
 {
+    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
     int i, t;
     /* _D("seek to %d, total %d", time, xmp_cfg.time); */
 
     time *= 1000;
-    for (i = 0; i < xxh->len; i++) {
-	t = xxo_info[i].time;
+    for (i = 0; i < p->m.xxh->len; i++) {
+	t = p->m.xxo_info[i].time;
 
 	_D("%2d: %d %d", i, time, t);
 

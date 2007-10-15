@@ -38,7 +38,7 @@ struct kris_header {
 } PACKED;
 
 
-int kris_load (FILE *f)
+int kris_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j;
     struct xxm_event *event;
@@ -52,7 +52,7 @@ int kris_load (FILE *f)
     if (strncmp ((char *)kh.magic, "KRIS", 4))
 	return -1;
 
-    xxh->pat = xxh->len = kh.len;
+    m->xxh->pat = m->xxh->len = kh.len;
 
     strncpy (xmp_ctl->name, (char *) kh.title, 20);
     sprintf (xmp_ctl->type, "ChipTracker");
@@ -61,71 +61,71 @@ int kris_load (FILE *f)
 
     INSTRUMENT_INIT ();
 
-    for (i = 0; i < xxh->ins; i++) {
+    for (i = 0; i < m->xxh->ins; i++) {
 	B_ENDIAN16 (kh.ins[i].size);
 	B_ENDIAN16 (kh.ins[i].loop_start);
 	B_ENDIAN16 (kh.ins[i].loop_size);
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	/*
 	 * Note: the sample size and loop size are given in 16-bit words,
 	 * while the loop start is given in samples.
 	 */
-	xxs[i].len = 2 * kh.ins[i].size;
-	xxs[i].lps = kh.ins[i].loop_start;
-	xxs[i].lpe = xxs[i].lps + 2 * kh.ins[i].loop_size;
-	xxs[i].flg = kh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	xxi[i][0].fin = (int8) kh.ins[i].finetune << 4;
-	xxi[i][0].vol = kh.ins[i].volume;
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
-	strncpy (xxih[i].name, kh.ins[i].name, 20);
-	str_adj (xxih[i].name);
+	m->xxs[i].len = 2 * kh.ins[i].size;
+	m->xxs[i].lps = kh.ins[i].loop_start;
+	m->xxs[i].lpe = m->xxs[i].lps + 2 * kh.ins[i].loop_size;
+	m->xxs[i].flg = kh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxi[i][0].fin = (int8) kh.ins[i].finetune << 4;
+	m->xxi[i][0].vol = kh.ins[i].volume;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
+	strncpy (m->xxih[i].name, kh.ins[i].name, 20);
+	str_adj (m->xxih[i].name);
 
 	if (V (1) &&
-		(strlen ((char *) xxih[i].name) || (xxs[i].len > 2))) {
+		(strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2))) {
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x %+d\n",
-		i, xxih[i].name, xxs[i].len, xxs[i].lps,
-		xxs[i].lpe, kh.ins[i].loop_size > 1 ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, kh.ins[i].loop_size > 1 ? 'L' : ' ',
+		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
     /* Load and convert patterns */
 
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    xxp = calloc (sizeof (struct xxm_pattern *), xxh->pat + 1);
-    for (xxh->trk = i = 0; i < xxh->len; i++) {
-	xxo[i] = i;
+    xxp = calloc (sizeof (struct xxm_pattern *), m->xxh->pat + 1);
+    for (m->xxh->trk = i = 0; i < m->xxh->len; i++) {
+	m->xxo[i] = i;
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 	for (j = 0; j < 4; j++) {
 	    B_ENDIAN16 (kh.order[i * 4 + j]);
-	    xxp[i]->info[j].index = kh.order[i * 4 + j] >> 8;
-	    if (xxp[i]->info[j].index > xxh->trk)
-		xxh->trk = xxp[i]->info[j].index;
+	    m->xxp[i]->info[j].index = kh.order[i * 4 + j] >> 8;
+	    if (m->xxp[i]->info[j].index > m->xxh->trk)
+		m->xxh->trk = m->xxp[i]->info[j].index;
 	}
 	if (V (0))
 	    report (".");
     }
-    xxh->trk++;
+    m->xxh->trk++;
 
     /* Load and convert tracks */
 
     if (V (0))
-	report ("\nStored tracks  : %d ", xxh->trk);
+	report ("\nStored tracks  : %d ", m->xxh->trk);
 
-    xxt = calloc (sizeof (struct xxm_track *), xxh->trk);
-    for (i = 0; i < xxh->trk; i++) {
-	xxt[i] = calloc (sizeof (struct xxm_track) +
+    xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
+    for (i = 0; i < m->xxh->trk; i++) {
+	m->xxt[i] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * 64, 1);
-	xxt[i]->rows = 64;
+	m->xxt[i]->rows = 64;
 
 	for (j = 0; j < 64; j++) {
-	    event = &xxt[i]->event[j];
+	    event = &m->xxt[i]->event[j];
 	    fread (kris_event, 1, 4, f);
 
 	    /* Event format:
@@ -151,17 +151,17 @@ int kris_load (FILE *f)
 	    report (".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+	report ("\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");
     }

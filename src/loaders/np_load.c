@@ -51,7 +51,7 @@ struct np_header {
 } PACKED;
 
 
-int np_load (FILE *f)
+int np_load(struct xmp_mod_context *m, FILE *f)
 {
     int i, j, ver;
     struct xxm_event *event;
@@ -70,13 +70,13 @@ int np_load (FILE *f)
     B_ENDIAN16 (nh.ordnum);
     B_ENDIAN16 (nh.trksize);
 
-    xxh->len = nh.ordnum / 2;
-    xxh->ins = xxh->smp = nh.hdrsize >> 4;
+    m->xxh->len = nh.ordnum / 2;
+    m->xxh->ins = m->xxh->smp = nh.hdrsize >> 4;
 
-    if (xxh->len > 127 || xxh->ins > 31)
+    if (m->xxh->len > 127 || m->xxh->ins > 31)
 	return -1;
 
-    for (smp_size = smp_size3 = i = 0; i < xxh->ins; i++) {
+    for (smp_size = smp_size3 = i = 0; i < m->xxh->ins; i++) {
 	fread (&ni[i], 1, sizeof (struct np_instrument), f);
 	memcpy (&n3[i], &ni[i], 16);
 	B_ENDIAN16 (ni[i].size);
@@ -91,18 +91,18 @@ int np_load (FILE *f)
 
     fseek (f, 4, SEEK_CUR);	/* Skip pattern list size and unknown bytes */
 
-    for (xxh->pat = i = 0; i < xxh->len; i++) {
+    for (m->xxh->pat = i = 0; i < m->xxh->len; i++) {
 	fread (&w, 2, 1, f);
 	B_ENDIAN16 (w);
-	if ((xxo[i] = w >> 3) > xxh->pat)
-	    xxh->pat = xxo[i];
+	if ((m->xxo[i] = w >> 3) > m->xxh->pat)
+	    m->xxh->pat = m->xxo[i];
     }
-    xxh->pat++;
+    m->xxh->pat++;
 
-    if (xmp_ctl->size == nh.hdrsize + nh.ordnum + 8 * xxh->pat
+    if (xmp_ctl->size == nh.hdrsize + nh.ordnum + 8 * m->xxh->pat
 	+ nh.trksize + smp_size3)
 	ver = 3;
-    else if (xmp_ctl->size != nh.hdrsize + nh.ordnum + 8 * xxh->pat
+    else if (xmp_ctl->size != nh.hdrsize + nh.ordnum + 8 * m->xxh->pat
 	+ nh.trksize + smp_size)
 	return -1;
 
@@ -112,47 +112,47 @@ int np_load (FILE *f)
 
     INSTRUMENT_INIT ();
 
-    for (i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+    for (i = 0; i < m->xxh->ins; i++) {
+	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	if (ver < 3 ) {
-	    xxs[i].len = 2 * ni[i].size;
-	    xxs[i].lps = (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
+	    m->xxs[i].len = 2 * ni[i].size;
+	    m->xxs[i].lps = (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
 		ni[i].loop_start;
-	    xxs[i].lpe = xxs[i].lps + 2 * ni[i].loop_size;
-	    xxs[i].flg = ni[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	    xxi[i][0].fin = (int8) ni[i].finetune << 4;
-	    xxi[i][0].vol = ni[i].volume;
+	    m->xxs[i].lpe = m->xxs[i].lps + 2 * ni[i].loop_size;
+	    m->xxs[i].flg = ni[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	    m->xxi[i][0].fin = (int8) ni[i].finetune << 4;
+	    m->xxi[i][0].vol = ni[i].volume;
 	} else {
-	    xxs[i].len = 2 * n3[i].size;
-	    xxs[i].lps = (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
+	    m->xxs[i].len = 2 * n3[i].size;
+	    m->xxs[i].lps = (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
 		n3[i].loop_start;
-	    xxs[i].lpe = xxs[i].lps + 2 * n3[i].loop_size;
-	    xxs[i].flg = n3[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	    xxi[i][0].fin = (int8) n3[i].finetune << 4;
-	    xxi[i][0].vol = n3[i].volume;
+	    m->xxs[i].lpe = m->xxs[i].lps + 2 * n3[i].loop_size;
+	    m->xxs[i].flg = n3[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	    m->xxi[i][0].fin = (int8) n3[i].finetune << 4;
+	    m->xxi[i][0].vol = n3[i].volume;
 	}
-	xxi[i][0].pan = 0x80;
-	xxi[i][0].sid = i;
-	xxih[i].nsm = !!(xxs[i].len);
-	xxih[i].rls = 0xfff;
+	m->xxi[i][0].pan = 0x80;
+	m->xxi[i][0].sid = i;
+	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxih[i].rls = 0xfff;
 
-	if (V (1) && xxs[i].len > 0) {
+	if (V (1) && m->xxs[i].len > 0) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
-		i, xxs[i].len, xxs[i].lps, xxs[i].lpe,
-		xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		xxi[i][0].vol, (char) xxi[i][0].fin >> 4);
+		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
 	}
     }
 
     /* Load and convert patterns */
 
     if (V (0))
-	report ("Stored patterns: %d ", xxh->pat);
+	report ("Stored patterns: %d ", m->xxh->pat);
 
-    xxp = calloc (sizeof (struct xxm_pattern *), xxh->pat + 1);
-    for (xxh->trk = i = 0; i < xxh->pat; i++) {
+    xxp = calloc (sizeof (struct xxm_pattern *), m->xxh->pat + 1);
+    for (m->xxh->trk = i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	xxp[i]->rows = 64;
+	m->xxp[i]->rows = 64;
 
 	/* Asle's note: Beware because this list is reversed! Meaning that
 	 * one pattern first contains the address of its track 4, then of
@@ -162,28 +162,28 @@ int np_load (FILE *f)
 	for (j = 3; j >= 0; j--) {
 	    fread (&w, 2, 1, f);
 	    B_ENDIAN16 (w);
-	    xxp[i]->info[j].index = w / 192;
-	    if (xxp[i]->info[j].index > xxh->trk)
-		xxh->trk = xxp[i]->info[j].index;
+	    m->xxp[i]->info[j].index = w / 192;
+	    if (m->xxp[i]->info[j].index > m->xxh->trk)
+		m->xxh->trk = m->xxp[i]->info[j].index;
 	}
 	if (V (0))
 	    report (".");
     }
-    xxh->trk++;
+    m->xxh->trk++;
 
     /* Load and convert tracks */
 
     if (V (0))
-	report ("\nStored tracks  : %d ", xxh->trk);
+	report ("\nStored tracks  : %d ", m->xxh->trk);
 
-    xxt = calloc (sizeof (struct xxm_track *), xxh->trk);
-    for (i = 0; i < xxh->trk; i++) {
-	xxt[i] = calloc (sizeof (struct xxm_track) +
+    xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
+    for (i = 0; i < m->xxh->trk; i++) {
+	m->xxt[i] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * 64, 1);
-	xxt[i]->rows = 64;
+	m->xxt[i]->rows = 64;
 
 	for (j = 0; j < 64; j++) {
-	    event = &xxt[i]->event[j];
+	    event = &m->xxt[i]->event[j];
 	    fread (np_event, 1, 3, f);
 
 	    /* Event format:
@@ -245,7 +245,7 @@ int np_load (FILE *f)
 	    report (".");
     }
 
-    xxh->flg |= XXM_FLG_MODRNG;
+    m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
@@ -258,12 +258,12 @@ int np_load (FILE *f)
 	fseek (f, 1, SEEK_CUR);
 
     if (V (0))
-	report ("\nStored samples : %d ", xxh->smp);
-    for (i = 0; i < xxh->smp; i++) {
-	if (!xxs[i].len)
+	report ("\nStored samples : %d ", m->xxh->smp);
+    for (i = 0; i < m->xxh->smp; i++) {
+	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, xxi[i][0].sid, xmp_ctl->c4rate, 0,
-	    &xxs[xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");
     }

@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.7 2007-10-13 22:59:36 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.8 2007-10-15 19:19:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 
 
 static int dmf_test(FILE *, char *);
-static int dmf_load(FILE *);
+static int dmf_load (struct xmp_mod_context *, FILE *);
 
 struct xmp_loader_info dmf_loader = {
 	"DMF",
@@ -160,22 +160,22 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
  * IFF chunk handlers
  */
 
-static void get_sequ(int size, FILE *f)
+static void get_sequ(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i;
 
 	read16l(f);	/* sequencer loop start */
 	read16l(f);	/* sequencer loop end */
 
-	xxh->len = (size - 4) / 2;
-	if (xxh->len > 255)
-		xxh->len = 255;
+	m->xxh->len = (size - 4) / 2;
+	if (m->xxh->len > 255)
+		m->xxh->len = 255;
 
-	for (i = 0; i < xxh->len; i++)
-		xxo[i] = read16l(f);
+	for (i = 0; i < m->xxh->len; i++)
+		m->xxo[i] = read16l(f);
 }
 
-static void get_patt(int size, FILE *f)
+static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i, j, r, chn;
 	int patsize;
@@ -183,20 +183,20 @@ static void get_patt(int size, FILE *f)
 	int track_counter[32];
 	struct xxm_event *event;
 
-	xxh->pat = read16l(f);
-	xxh->chn = read8(f);
-	xxh->trk = xxh->chn * xxh->pat;
+	m->xxh->pat = read16l(f);
+	m->xxh->chn = read8(f);
+	m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
 	PATTERN_INIT();
 
 	if (V(0))
-		report("Stored patterns: %d ", xxh->pat);
+		report("Stored patterns: %d ", m->xxh->pat);
 
-	for (i = 0; i < xxh->pat; i++) {
+	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
 		chn = read8(f);
 		read8(f);		/* beat */
-		xxp[i]->rows = read16l(f);
+		m->xxp[i]->rows = read16l(f);
 		TRACK_ALLOC(i);
 
 		patsize = read32l(f);
@@ -204,7 +204,7 @@ static void get_patt(int size, FILE *f)
 		for (j = 0; j < chn; j++)
 			track_counter[j] = 0;
 
-		for (counter = r = 0; r < xxp[i]->rows; r++) {
+		for (counter = r = 0; r < m->xxp[i]->rows; r++) {
 			if (counter == 0) {
 				/* global track */
 				info = read8(f);
@@ -252,68 +252,68 @@ static void get_patt(int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static void get_smpi(int size, FILE *f)
+static void get_smpi(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
 
-	xxh->ins = xxh->smp = read8(f);
+	m->xxh->ins = m->xxh->smp = read8(f);
 
 	INSTRUMENT_INIT();
 
-	reportv(0, "Instruments    : %d\n", xxh->ins);
+	reportv(0, "Instruments    : %d\n", m->xxh->ins);
 
-	for (i = 0; i < xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
 		int x;
 
-		xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+		m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 		
 		namelen = read8(f);
 		x = namelen - fread(name, 1, namelen > 30 ? 30 : namelen, f);
-		copy_adjust(xxih[i].name, name, namelen);
+		copy_adjust(m->xxih[i].name, name, namelen);
 		name[namelen] = 0;
 		while (x--)
 			read8(f);
 
-		xxs[i].len = read32l(f);
-		xxs[i].lps = read32l(f);
-		xxs[i].lpe = read32l(f);
-		xxih[i].nsm = !!xxs[i].len;
+		m->xxs[i].len = read32l(f);
+		m->xxs[i].lps = read32l(f);
+		m->xxs[i].lpe = read32l(f);
+		m->xxih[i].nsm = !!m->xxs[i].len;
 		c3spd = read16l(f);
-		c2spd_to_note(c3spd, &xxi[i][0].xpo, &xxi[i][0].fin);
-		xxi[i][0].vol = read8(f) / 4;
-		xxi[i][0].pan = 0x80;
-		xxi[i][0].sid = i;
+		c2spd_to_note(c3spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+		m->xxi[i][0].vol = read8(f) / 4;
+		m->xxi[i][0].pan = 0x80;
+		m->xxi[i][0].sid = i;
 		flag = read8(f);
-		xxs[i].flg = flag & 0x01 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = flag & 0x01 ? WAVE_LOOPING : 0;
 		if (ver >= 8)
 			fseek(f, 8, SEEK_CUR);	/* library name */
 		read16l(f);	/* reserved -- specs say 1 byte only*/
 		read32l(f);	/* sampledata crc32 */
 
 		packtype[i] = (flag & 0x0c) >> 2;
-		if (V(1) && (strlen((char*)xxih[i].name) || (xxs[i].len > 1))) {
+		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report("[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x\n",
-				i, name, xxs[i].len, xxs[i].lps & 0xfffff,
-				xxs[i].lpe & 0xfffff,
-				xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				i, name, m->xxs[i].len, m->xxs[i].lps & 0xfffff,
+				m->xxs[i].lpe & 0xfffff,
+				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 				'0' + packtype[i],
-				c3spd, xxi[i][0].vol);
+				c3spd, m->xxi[i][0].vol);
 		}
 	}
 }
 
-static void get_smpd(int size, FILE *f)
+static void get_smpd(struct xmp_mod_context *m, int size, FILE *f)
 {
 	int i;
 	int smpsize;
 	uint8 *data, *ibuf;
 
-	reportv(0, "Stored samples : %d ", xxh->ins);
+	reportv(0, "Stored samples : %d ", m->xxh->ins);
 
-	for (smpsize = i = 0; i < xxh->smp; i++) {
-		if (xxs[i].len > smpsize)
-			smpsize = xxs[i].len;
+	for (smpsize = i = 0; i < m->xxh->smp; i++) {
+		if (m->xxs[i].len > smpsize)
+			smpsize = m->xxs[i].len;
 	}
 
 	/* why didn't we mmap this? */
@@ -322,21 +322,21 @@ static void get_smpd(int size, FILE *f)
 	ibuf = malloc(smpsize);
 	assert(ibuf != NULL);
 
-	for (i = 0; i < xxh->smp; i++) {
+	for (i = 0; i < m->xxh->smp; i++) {
 		smpsize = read32l(f);
 		if (smpsize == 0)
 			continue;
 
 		switch (packtype[i]) {
 		case 0:
-			xmp_drv_loadpatch(f, xxi[i][0].sid, xmp_ctl->c4rate,
-						0, &xxs[xxi[i][0].sid], NULL);
+			xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+						0, &m->xxs[m->xxi[i][0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
-			unpack(data, ibuf, ibuf + smpsize, xxs[i].len);
+			unpack(data, ibuf, ibuf + smpsize, m->xxs[i].len);
 			xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate,
-					XMP_SMP_NOLOAD, &xxs[i], (char *)data);
+					XMP_SMP_NOLOAD, &m->xxs[i], (char *)data);
 			break;
 		default:
 			fseek(f, smpsize, SEEK_CUR);
@@ -349,7 +349,7 @@ static void get_smpd(int size, FILE *f)
 	free(data);
 }
 
-static int dmf_load(FILE *f)
+static int dmf_load(struct xmp_mod_context *m, FILE *f)
 {
 	char composer[XMP_DEF_NAMESIZE];
 	uint8 date[3];
@@ -384,7 +384,7 @@ static int dmf_load(FILE *f)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(f);
+		iff_chunk(m, f);
 
 	iff_release();
 
