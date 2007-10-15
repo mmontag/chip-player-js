@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.4 2007-09-12 19:48:48 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.5 2007-10-15 19:46:10 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -290,7 +290,9 @@ void prepare_screen ()
 }
 
 
-void x11_event_callback (long i)
+extern xmp_context ctx;
+
+void x11_event_callback(long i)
 {
     static int chn = 0;
     static int ord = 0;
@@ -330,38 +332,38 @@ void x11_event_callback (long i)
     switch (cmd) {
     case 'q':			/* quit */
 	skip = -2;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'f':			/* jump to next order */
-	xmp_ord_next ();
+	xmp_ord_next(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'b':			/* jump to previous order */
-	xmp_ord_prev ();
+	xmp_ord_prev(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'n':			/* skip to next module */
 	skip = 1;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'p':			/* skip to previous module */
 	skip = -1;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'm':
 	ii->mode++;
 	ii->mode %= 3;
 	break;
     case ' ':			/* pause module */
-	ii->pause = xmp_mod_pause ();
+	ii->pause = xmp_mod_pause(ctx);
 	break;
     default:
         if (cmd >= '1' && cmd <= '9') {

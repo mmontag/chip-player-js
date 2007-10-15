@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.27 2007-10-15 01:47:59 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.28 2007-10-15 19:46:10 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -109,7 +109,6 @@ extern struct xmp_drv_info drv_xmms;
 XMPConfig xmp_cfg;
 static gboolean xmp_xmms_audio_error = FALSE;
 extern InputPlugin xmp_ip;
-extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
 
 
 /* module parameters */
@@ -275,6 +274,8 @@ static XImage *ximage;
 static Display *display;
 static Window window;
 
+xmp_context ctx;
+
 
 static void stop(IPB)
 {
@@ -282,7 +283,7 @@ static void stop(IPB)
 		return;
 
 	_D("*** stop!");
-	xmp_stop_module (); 
+	xmp_stop_module(ctx); 
 	ii->mode = 0;
 
 	pthread_join (decode_thread, NULL);
@@ -297,11 +298,13 @@ static void stop(IPB)
 static void seek(IPB_int(time))
 {
 	int i, t;
+	struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+
 	_D("seek to %d, total %d", time, xmp_cfg.time);
 
 	time *= 1000;
 	for (i = 0; i < xmp_cfg.mod_info.len; i++) {
-		t = xxo_info[i].time;
+		t = p->m.xxo_info[i].time;
 
 		_D("%2d: %d %d", i, time, t);
 
@@ -309,8 +312,8 @@ static void seek(IPB_int(time))
 			int a;
 			if (i > 0)
 				i--;
-			a = xmp_ord_set (i);
-			xmp_ip.output->flush (xxo_info[i].time);
+			a = xmp_ord_set(ctx, i);
+			xmp_ip.output->flush(p->m.xxo_info[i].time);
 			break;
 		}
 	}
@@ -361,6 +364,8 @@ static void init(void)
 	ConfigFile *cfg;
 	gchar *filename;
 
+	ctx = xmp_create_context();
+
 	xmp_cfg.mixing_freq = 0;
 	xmp_cfg.convert8bit = 0;
 	xmp_cfg.fixloops = 0;
@@ -406,6 +411,8 @@ static void init(void)
 static void init(void)
 {
 	ConfigDb *cfg;
+
+	ctx = xmp_create_context();
 
 	xmp_cfg.mixing_freq = 0;
 	xmp_cfg.convert8bit = 0;
@@ -628,7 +635,7 @@ static void play_file(InputPlayback *ipb)
 	pthread_create (&catch_thread, NULL, catch_info, NULL);
 
 	_D("*** loading: %s", filename);
-	if (xmp_load_module (filename) < 0) {
+	if (xmp_load_module(ctx, filename) < 0) {
 		xmp_ip.set_info_text("Error loading mod");
 		playing = 0;
 		return;
@@ -652,8 +659,8 @@ static void play_file(InputPlayback *ipb)
 
 	_D ("before panel update");
 
-	xmp_cfg.time = xmpi_scan_module();
-	xmp_get_module_info(&ii->mi);
+	xmp_cfg.time = xmpi_scan_module((struct xmp_player_context *)ctx);
+	xmp_get_module_info(ctx, &ii->mi);
 	strcpy(ii->filename, "");
 
 	new_module = 1;
@@ -677,8 +684,8 @@ static void play_file(InputPlayback *ipb)
 
 static void *play_loop (void *arg)
 {
-	xmp_play_module();
-	xmp_release_module();
+	xmp_play_module(ctx);
+	xmp_release_module(ctx);
 	xmp_close_audio();
 	playing = 0;
 
@@ -1283,5 +1290,4 @@ int process_events(int *x, int *y)
 void settitle (char *title)
 {
 }
-
 
