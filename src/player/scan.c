@@ -38,9 +38,6 @@
 #define TIME		6
 #define MAX_GVL		0x40
 
-//extern int xxo_fstrow[XMP_DEF_MAXORD];
-//extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
-
 
 int xmpi_scan_module(struct xmp_player_context *p)
 {

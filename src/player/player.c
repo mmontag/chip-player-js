@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.22 2007-10-15 19:19:22 cmatsuoka Exp $
+ * $Id: player.c,v 1.23 2007-10-15 21:03:19 cmatsuoka Exp $
  */
 
 /*
@@ -717,11 +717,12 @@ int xmpi_player_start(struct xmp_player_context *p)
 {
     int r, o, t, e;		/* rows, order, tick, end point */
     double playing_time;
+    struct xmp_mod_context *m = &p->m;
 
     if (!xmp_ctl)
 	return XMP_ERR_DINIT;
 
-    if (p->m.xxh->len == 0 || p->m.xxh->chn == 0)
+    if (m->xxh->len == 0 || m->xxh->chn == 0)
 	return XMP_OK;
 
     if (xmp_event_callback == NULL)
@@ -730,20 +731,20 @@ int xmpi_player_start(struct xmp_player_context *p)
     p->gvol_slide = 0;
     p->gvol_base = xmp_ctl->volbase;
     o = xmp_ctl->start;
-    while (p->m.xxo[o] == 254)	/* S3M skip in first pattern (gaming.s3m) */
+    while (m->xxo[o] == 254)	/* S3M skip in first pattern (gaming.s3m) */
 	o++;
-    xmp_ctl->volume = p->m.xxo_info[o].gvl;
-    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = p->m.xxo_info[o].bpm);
-    p->flow.jumpline = p->m.xxo_fstrow[o];
-    p->tempo = p->m.xxo_info[o].tempo;
+    xmp_ctl->volume = m->xxo_info[o].gvl;
+    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = m->xxo_info[o].bpm);
+    p->flow.jumpline = m->xxo_fstrow[o];
+    p->tempo = m->xxo_info[o].tempo;
     playing_time = 0;
 
-    if ((r = xmp_drv_on(p->m.xxh->chn, p)) != XMP_OK)
+    if ((r = xmp_drv_on(m->xxh->chn, p)) != XMP_OK)
 	return r;
 
     p->flow.jump = -1;
 
-    p->fetch_ctl = calloc(p->m.xxh->chn, sizeof (int));
+    p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
     p->flow.loop_stack = calloc(xmp_ctl->numchn, sizeof (int));
     p->flow.loop_row = calloc(xmp_ctl->numchn, sizeof (int));
     p->xc_data = calloc(xmp_ctl->numchn, sizeof (struct xmp_channel));
@@ -756,23 +757,23 @@ int xmpi_player_start(struct xmp_player_context *p)
 
     for (e = p->xmp_scan_num; ; o++) {
 next_order:
-	if (o >= p->m.xxh->len) {
-	    o = ((uint32)p->m.xxh->rst > p->m.xxh->len ||
-		(uint32)p->m.xxo[p->m.xxh->rst] >= p->m.xxh->pat) ?
-							0 : p->m.xxh->rst;
-	    xmp_ctl->volume = p->m.xxo_info[o].gvl;
-	    if (p->m.xxo[o] == 0xff)
+	if (o >= m->xxh->len) {
+	    o = ((uint32)m->xxh->rst > m->xxh->len ||
+		(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
+							0 : m->xxh->rst;
+	    xmp_ctl->volume = m->xxo_info[o].gvl;
+	    if (m->xxo[o] == 0xff)
 		break;
 	}
-	if (p->m.xxo[o] >= p->m.xxh->pat) {
-	    if (p->m.xxo[o] == 0xfe)		/* S3M skips pattern 0xfe */
+	if (m->xxo[o] >= m->xxh->pat) {
+	    if (m->xxo[o] == 0xfe)		/* S3M skips pattern 0xfe */
 		continue;
-	    if (p->m.xxo[o] == 0xff)		/* S3M uses 0xff as end mark */
-		o = p->m.xxh->len;
+	    if (m->xxo[o] == 0xff)		/* S3M uses 0xff as end mark */
+		o = m->xxh->len;
 	    continue;
 	}
 
-	r = p->m.xxp[p->m.xxo[o]]->rows;
+	r = m->xxp[m->xxo[o]]->rows;
 	if (p->flow.jumpline >= r)
 	    p->flow.jumpline = 0;
 	p->flow.row_cnt = p->flow.jumpline;
@@ -812,11 +813,11 @@ next_order:
 		    if (xmp_ctl->pos == 0)
 			e = p->xmp_scan_num;
 
-		    p->tempo = p->m.xxo_info[o = xmp_ctl->pos].tempo;
-		    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = p->m.xxo_info[o].bpm);
-		    xmp_ctl->volume = p->m.xxo_info[o].gvl;
+		    p->tempo = m->xxo_info[o = xmp_ctl->pos].tempo;
+		    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = m->xxo_info[o].bpm);
+		    xmp_ctl->volume = m->xxo_info[o].gvl;
 		    p->flow.jump = o;
-		    p->flow.jumpline = p->m.xxo_fstrow[o--];
+		    p->flow.jumpline = m->xxo_fstrow[o--];
 		    p->flow.row_cnt = -1;
 		    xmp_drv_bufwipe ();
 		    xmp_drv_sync(0);
@@ -827,14 +828,14 @@ next_order:
 
 		if (!t) {
 		    p->gvol_flag = 0;
-		    chn_fetch(p, p->m.xxo[o], p->flow.row_cnt);
+		    chn_fetch(p, m->xxo[o], p->flow.row_cnt);
 
 		    xmp_drv_echoback((p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
 		    xmp_drv_echoback((xmp_ctl->volume << 4) | XMP_ECHO_GVL);
-		    xmp_drv_echoback((p->m.xxo[o] << 12)|(o << 4) | XMP_ECHO_ORD);
+		    xmp_drv_echoback((m->xxo[o] << 12)|(o << 4) | XMP_ECHO_ORD);
 		    xmp_drv_echoback((xmp_ctl->numvoc << 4) | XMP_ECHO_NCH);
-		    xmp_drv_echoback(((p->m.xxp[p->m.xxo[o]]->rows - 1) << 12) |
+		    xmp_drv_echoback(((m->xxp[m->xxo[o]]->rows - 1) << 12) |
 					(p->flow.row_cnt << 4) | XMP_ECHO_ROW);
 		}
 		xmp_drv_echoback((t << 4) | XMP_ECHO_FRM);
