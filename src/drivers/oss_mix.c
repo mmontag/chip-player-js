@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.6 2007-09-27 00:18:16 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.7 2007-10-15 13:04:08 cmatsuoka Exp $
  */
 
 /*
@@ -41,7 +41,7 @@ static int to_fmt (struct xmp_control *);
 static void setaudio (struct xmp_control *);
 static int init (struct xmp_control *);
 static void shutdown (void);
-static void bufdump (int);
+static void bufdump (int, struct xmp_player_context *);
 static void flush (void);
 
 static void dummy () { }
@@ -205,14 +205,14 @@ static int init (struct xmp_control *ctl)
     }
 #endif
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump (int i)
+static void bufdump(int i, struct xmp_player_context *p)
 {
     int j;
     void *b;
@@ -220,7 +220,7 @@ static void bufdump (int i)
     /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
     /* for (; i -= write (audio_fd, xmp_smix_buffer (), i); ); */
 
-    b = xmp_smix_buffer ();
+    b = xmp_smix_buffer(p);
     while (i) {
 	if ((j = write (audio_fd, b, i)) > 0) {
 	    i -= j;
@@ -233,7 +233,7 @@ static void bufdump (int i)
 
 static void shutdown ()
 {
-    xmp_smix_off ();
+    xmp_smix_off();
     close (audio_fd);
 }
 

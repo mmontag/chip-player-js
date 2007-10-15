@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.30 2007-10-14 21:44:59 cmatsuoka Exp $
+ * $Id: load.c,v 1.31 2007-10-15 13:04:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -362,7 +362,7 @@ err:
 }
 
 
-int xmp_load_module(char *s)
+int xmp_load_module(char *s, xmp_context ctx)
 {
     FILE *f;
     int i, t;
@@ -370,6 +370,7 @@ int xmp_load_module(char *s)
     struct list_head *head;
     struct stat st;
     unsigned int crc;
+    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -483,7 +484,7 @@ int xmp_load_module(char *s)
 	report ("]\n");
     }
 
-    t = xmpi_scan_module ();
+    t = xmpi_scan_module(p);
 
     if (xmp_ctl->verbose) {
 	if (xmp_ctl->fetch & XMP_CTL_LOOP)

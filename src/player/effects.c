@@ -27,8 +27,7 @@ static struct retrig_t rval[] = {
 };
     
 
-void
-process_fx (int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
+void process_fx(struct xmp_player_context *p, int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
 {
     int h, l;
 
@@ -68,7 +67,7 @@ process_fx (int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
     case FX_PORTA_UP:				/* Portamento up */
 fx_porta_up:
 	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
-	    switch (MSN (fxp)) {
+	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
 		fxp &= 0x0f;
@@ -93,7 +92,7 @@ fx_porta_up:
     case FX_PORTA_DN:				/* Portamento down */
 fx_porta_dn:
 	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
-	    switch (MSN (fxp)) {
+	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
 		fxp &= 0x0f;
@@ -125,10 +124,10 @@ fx_porta_dn:
 	break;
     case FX_VIBRATO:				/* Vibrato */
 	SET(VIBRATO);
-	if (LSN (fxp))
-	    xc->y_depth = LSN (fxp) * 4;
-	if (MSN (fxp))
-	    xc->y_rate = MSN (fxp);
+	if (LSN(fxp))
+	    xc->y_depth = LSN(fxp) * 4;
+	if (MSN(fxp))
+	    xc->y_rate = MSN(fxp);
 	break;
     case FX_FINE2_VIBRA:			/* Fine vibrato (2x) */
 	SET(VIBRATO);
@@ -155,10 +154,10 @@ fx_porta_dn:
 	goto fx_volslide;
     case FX_TREMOLO:				/* Tremolo */
 	SET(TREMOLO);
-	if (MSN (fxp))
-	    xc->t_rate = MSN (fxp);
-	if (LSN (fxp))
-	    xc->t_depth = LSN (fxp);
+	if (MSN(fxp))
+	    xc->t_rate = MSN(fxp);
+	if (LSN(fxp))
+	    xc->t_depth = LSN(fxp);
 	break;
     case FX_SETPAN:				/* Set pan */
 	SET(NEW_PAN);
@@ -172,8 +171,8 @@ fx_porta_dn:
     case FX_VOLSLIDE:				/* Volume slide */
 fx_volslide:
 	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
-	    h = MSN (fxp);
-	    l = LSN (fxp);
+	    h = MSN(fxp);
+	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {
 		xc->volslide = fxp;
 		fxp &= 0x0f;
@@ -197,12 +196,12 @@ fx_volslide:
 	}
 	SET(VOL_SLIDE);
 	if ((xc->volslide = fxp))
-	    xc->v_val = MSN (fxp) - LSN (fxp);
+	    xc->v_val = MSN(fxp) - LSN(fxp);
 	break;
     case FX_VOLSLIDE_2:				/* Secondary volume slide */
 	SET(VOL_SLIDE_2);
 	if (fxp)
-	    xc->v_val2 = MSN (fxp) - LSN (fxp);
+	    xc->v_val2 = MSN(fxp) - LSN(fxp);
 	break;
     case FX_VOLSLIDE_UP:			/* Vol slide with uint8 arg */
 	xc->v_val = fxp;
@@ -215,11 +214,11 @@ fx_volslide:
     case FX_F_VSLIDE:				/* Fine volume slide */
 	SET(FINE_VOLS);
 	if ((xc->fvolslide = fxp))
-	    xc->v_fval = MSN (fxp) - LSN (fxp);
+	    xc->v_fval = MSN(fxp) - LSN(fxp);
 	break;
     case FX_JUMP:				/* Order jump */
-	flow.pbreak = 1;
-	flow.jump = fxp;
+	p->flow.pbreak = 1;
+	p->flow.jump = fxp;
 	break;
     case FX_VOLSET:				/* Volume set */
 	RESET(RESET_VOL);
@@ -227,8 +226,8 @@ fx_volslide:
 	xc->volume = fxp;
 	break;
     case FX_BREAK:				/* Pattern break */
-	flow.pbreak = 1;
-	flow.jumpline = 10 * MSN (fxp) + LSN (fxp);
+	p->flow.pbreak = 1;
+	p->flow.jumpline = 10 * MSN(fxp) + LSN(fxp);
 	break;
     case FX_EXTENDED:				/* Extended effect */
 	fxt = fxp >> 4;
@@ -261,21 +260,21 @@ ex_f_porta_dn:
 	    goto fx_finetune;
 	case EX_PATTERN_LOOP:			/* Loop pattern */
 	    if (fxp) {
-		if (flow.loop_stack[chn]) {
-		    if (--flow.loop_stack[chn])
-			flow.loop_chn = ++chn;	/* #?# **** FIXME **** */
+		if (p->flow.loop_stack[chn]) {
+		    if (--p->flow.loop_stack[chn])
+			p->flow.loop_chn = ++chn;	/* **** H:FIXME **** */
 		    else
 			if (xmp_ctl->fetch & XMP_CTL_S3MLOOP)
-			    flow.loop_row[chn] = flow.row_cnt + 1;
-		}
-		else
-		    if (flow.loop_row[chn] <= flow.row_cnt) {
-			flow.loop_stack[chn] = fxp;
-			flow.loop_chn = ++chn;
+			    p->flow.loop_row[chn] = p->flow.row_cnt + 1;
+		} else {
+		    if (p->flow.loop_row[chn] <= p->flow.row_cnt) {
+			p->flow.loop_stack[chn] = fxp;
+			p->flow.loop_chn = ++chn;
 		    }
+		}
+	    } else {
+		p->flow.loop_row[chn] = p->flow.row_cnt;
 	    }
-	    else
-		flow.loop_row[chn] = flow.row_cnt;
 	    break;
 	case EX_TREMOLO_WF:			/* Set tremolo waveform */
 	    xc->t_type = fxp & 3;
@@ -305,34 +304,34 @@ ex_f_vslide_dn:
 	    xc->delay = fxp + 1;
 	    break;
 	case EX_PATT_DELAY:			/* Pattern delay */
-	    flow.delay = fxp;
+	    p->flow.delay = fxp;
 	    break;
 	}
 	break;
     case FX_TEMPO:				/* Set tempo */
 	if (fxp) {
 	    if (fxp < 0x20)	/* speedup.xm needs BPM = 20 */
-		tempo = fxp;
+		p->tempo = fxp;
 	    else
-		tick_time = xmp_ctl->rrate / (xmp_bpm = fxp);
+		p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = fxp);
 	}
 	break;
     case FX_S3M_TEMPO:				/* Set S3M tempo */
 	if (fxp)
-	    tempo = fxp;
+	    p->tempo = fxp;
 	break;
     case FX_S3M_BPM:				/* Set S3M BPM */
 	if (fxp >= 0x20)	/* Panic uses 0x14 */
-	    tick_time = xmp_ctl->rrate / (xmp_bpm = fxp);
+	    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = fxp);
 	break;
     case FX_GLOBALVOL:				/* Set global volume */
 	xmp_ctl->volume = fxp > xmp_ctl->volbase ? xmp_ctl->volbase : fxp;
 	break;
     case FX_G_VOLSLIDE:				/* Global volume slide */
-	gvol_flag = 1;
+	p->gvol_flag = 1;
 	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
-	    h = MSN (fxp);
-	    l = LSN (fxp);
+	    h = MSN(fxp);
+	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {
 		fxp = 0x01;			/* FIXME: file global vslide */
 	    } else if (l == 0xf && h != 0) {
@@ -340,7 +339,7 @@ ex_f_vslide_dn:
 	    }
 	}
 	if (fxp)
-	    gvol_slide = MSN (fxp) - LSN (fxp);
+	    p->gvol_slide = MSN(fxp) - LSN(fxp);
 	break;
     case FX_KEYOFF:				/* Key off */
 	xc->keyoff = fxp;
@@ -354,27 +353,27 @@ ex_f_vslide_dn:
     case FX_PANSLIDE:				/* Pan slide */
 	SET(PAN_SLIDE);
 	if (fxp)
-	    xc->p_val = MSN (fxp) - LSN (fxp);
+	    xc->p_val = MSN(fxp) - LSN(fxp);
 	break;
     case FX_MULTI_RETRIG:			/* Multi retrig */
-	xc->retrig = xc->rcount = LSN (fxp) ? LSN (fxp) : xc->rval;
+	xc->retrig = xc->rcount = LSN(fxp) ? LSN(fxp) : xc->rval;
 	xc->rval = xc->retrig;
-	xc->rtype = MSN (fxp);
+	xc->rtype = MSN(fxp);
 	break;
     case FX_TREMOR:				/* Tremor */
 	xc->tremor = fxp;
-	xc->tcnt_up = MSN (fxp);
+	xc->tcnt_up = MSN(fxp);
 	xc->tcnt_dn = -1;
 	break;
     case FX_XF_PORTA:				/* Extra fine portamento */
 fx_xf_porta:
 	SET(FINE_BEND);
-	switch (MSN (fxp)) {
+	switch (MSN(fxp)) {
 	case 1:
-	    xc->f_fval = -LSN (fxp);
+	    xc->f_fval = -LSN(fxp);
 	    break;
 	case 2:
-	    xc->f_fval = LSN (fxp);
+	    xc->f_fval = LSN(fxp);
 	    break;
 	}
 	break;
@@ -385,8 +384,8 @@ fx_xf_porta:
     case FX_TRK_VSLIDE:				/* Track volume slide */
 fx_trk_vslide:
 	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
-	    h = MSN (fxp);
-	    l = LSN (fxp);
+	    h = MSN(fxp);
+	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {
 		xc->trkvsld = fxp;
 		fxp &= 0x0f;
@@ -410,13 +409,13 @@ fx_trk_vslide:
 	}
 	SET(TRK_VSLIDE);
 	if ((xc->trkvsld = fxp))
-	    xc->trk_val = MSN (fxp) - LSN (fxp);
+	    xc->trk_val = MSN(fxp) - LSN(fxp);
 	break;
     case FX_TRK_FVSLIDE:			/* Track fine volume slide */
 fx_trk_fvslide:
 	SET(TRK_FVSLIDE);
 	if (fxp)
-	    xc->trk_fval = MSN (fxp) - LSN (fxp);
+	    xc->trk_fval = MSN(fxp) - LSN(fxp);
 	break;
     case FX_FINETUNE:
 fx_finetune:

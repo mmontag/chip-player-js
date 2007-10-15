@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.13 2007-10-03 22:39:44 cmatsuoka Exp $
+ * $Id: main.c,v 1.14 2007-10-15 13:04:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -85,6 +85,8 @@ static int sigusr = 0;
 
 void get_options (int, char **, struct xmp_control *);
 
+static xmp_context ctx;
+
 
 static int set_tty ()
 {
@@ -127,7 +129,7 @@ static void sigtstp_handler ()
 #ifndef XXMP
 	fprintf (stderr, "] - STOPPED\n");
 #endif
-	xmp_timer_stop ();
+	xmp_timer_stop(ctx);
 	stopped = 1;
     }
 
@@ -141,12 +143,12 @@ static void sigcont_handler ()
     background = (tcgetpgrp (0) == getppid ());
 
     if (background)
-        reset_tty ();
+        reset_tty();
     else
-        set_tty ();
+        set_tty();
 
     if (stopped)
-	xmp_timer_restart ();
+	xmp_timer_restart(ctx);
 
     stopped = 0;
     refresh_status = 1;
@@ -154,8 +156,8 @@ static void sigcont_handler ()
     /* Unlike BSD systems, signals under Linux are reset to their
      * default behavior when raised.
      */
-    signal (SIGCONT, sigcont_handler);
-    signal (SIGTSTP, sigtstp_handler);
+    signal(SIGCONT, sigcont_handler);
+    signal(SIGTSTP, sigtstp_handler);
 }
 #endif
 
@@ -167,18 +169,18 @@ static void sigusr_handler (int i)
 
 static void cleanup (int s)
 {
-    signal (SIGTERM, SIG_DFL);
-    signal (SIGINT, SIG_DFL);
-    signal (SIGQUIT, SIG_DFL);
-    signal (SIGFPE, SIG_DFL);
-    signal (SIGSEGV, SIG_DFL);
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
+    signal(SIGFPE, SIG_DFL);
+    signal(SIGSEGV, SIG_DFL);
 
 #ifdef XXMP
     if (pid) {
 #endif
 	fprintf (stderr, "\n*** Interrupted: signal %d caught\n", s);
-	xmp_stop_module ();
-	xmp_close_audio ();
+	xmp_stop_module(ctx);
+	xmp_close_audio();
 
 #ifdef XXMP
         kill (pid, SIGTERM);
@@ -207,15 +209,15 @@ static void process_echoback (unsigned long i)
 
     if (sigusr == SIGUSR1) {
 	skip = 1;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (pause)
-	    pause = xmp_mod_pause ();
+	    pause = xmp_mod_pause(ctx);
 	sigusr = 0;
     } else if (sigusr == SIGUSR2) {
 	skip = -1;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (pause)
-	    pause = xmp_mod_pause ();
+	    pause = xmp_mod_pause(ctx);
 	sigusr = 0;
     }
 
@@ -266,34 +268,34 @@ static void process_echoback (unsigned long i)
 	switch (cmd) {
 	case 'q':	/* quit */
 	    skip = -2;
-	    xmp_mod_stop ();
+	    xmp_mod_stop(ctx);
 	    if (pause)
-		pause = xmp_mod_pause ();
+		pause = xmp_mod_pause(ctx);
 	    break;
 	case 'f':	/* jump to next order */
-	    xmp_ord_next ();
+	    xmp_ord_next(ctx);
 	    if (pause)
-		pause = xmp_mod_pause ();
+		pause = xmp_mod_pause(ctx);
 	    break;
 	case 'b':	/* jump to previous order */
-	    xmp_ord_prev ();
+	    xmp_ord_prev(ctx);
 	    if (pause)
-		pause = xmp_mod_pause ();
+		pause = xmp_mod_pause(ctx);
 	    break;
 	case 'n':	/* skip to next module */
 	    skip = 1;
-	    xmp_mod_stop ();
+	    xmp_mod_stop(ctx);
 	    if (pause)
-		pause = xmp_mod_pause ();
+		pause = xmp_mod_pause(ctx);
 	    break;
 	case 'p':	/* skip to previous module */
 	    skip = -1;
-	    xmp_mod_stop ();
+	    xmp_mod_stop(ctx);
 	    if (pause)
-		pause = xmp_mod_pause ();
+		pause = xmp_mod_pause(ctx);
 	    break;
 	case ' ':	/* pause module */
-	    fprintf (stderr, "%s",  (pause = xmp_mod_pause ())
+	    fprintf (stderr, "%s",  (pause = xmp_mod_pause(ctx))
 		? "] - PAUSED\b\b\b\b\b\b\b\b\b\b"
 		: "]         \b\b\b\b\b\b\b\b\b\b");
 	    break;
@@ -306,13 +308,13 @@ static void process_echoback (unsigned long i)
 	case '7':
 	case '8':
 	case '9':
-	    xmp_channel_mute (cmd - '1', 1, -1);
+	    xmp_channel_mute(cmd - '1', 1, -1);
 	    break;
 	case '0':
-	    xmp_channel_mute (9, 1, -1);
+	    xmp_channel_mute(9, 1, -1);
 	    break;
 	case '!':
-	    xmp_channel_mute (0, 8, 0);
+	    xmp_channel_mute(0, 8, 0);
 	    break;
 	}
     }
@@ -474,6 +476,8 @@ int main (int argc, char **argv)
 
     time (&t0);
 
+    ctx = xmp_create_context();
+
     for (first = optind, num_mod = lf_flag = 0; optind < argc; optind++) {
 	if (getprevious) {
 	    optind -= 2;
@@ -490,11 +494,11 @@ int main (int argc, char **argv)
 	}
 
 	if (background) {
-	    verb = xmp_verbosity_level (0);
-	    t = xmp_load_module (argv[optind]);
-	    xmp_verbosity_level (verb);
+	    verb = xmp_verbosity_level(0);
+	    t = xmp_load_module(argv[optind], ctx);
+	    xmp_verbosity_level(verb);
 	} else {
-	    t = xmp_load_module (argv[optind]);
+	    t = xmp_load_module(argv[optind], ctx);
 	}
 
 	if (t < 0) {
@@ -553,7 +557,7 @@ int main (int argc, char **argv)
 	if (loadonly)
 	    goto skip_play;
 
-	t = xmp_play_module ();
+	t = xmp_play_module(ctx);
 
 	xmp_release_module();
 
@@ -584,6 +588,8 @@ skip_play:
 
 	skip = 0;
     }
+
+    xmp_free_context(ctx);
 
     time (&t1);
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.7 2007-10-12 04:46:42 cmatsuoka Exp $
+ * $Id: player.h,v 1.8 2007-10-15 13:04:09 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -36,17 +36,6 @@ struct retrig_t {
     int s;
     int m;
     int d;
-};
-
-struct flow_control {
-    int pbreak;
-    int jump;
-    int delay;
-    int jumpline;
-    int row_cnt;
-    int loop_chn;
-    int* loop_row;
-    int* loop_stack;
 };
 
 /* The following macros are used to set the flags for each channel */
@@ -181,7 +170,8 @@ struct xmp_channel {
     int flt_B2;
 };
 
-void process_fx (int, uint8, uint8, uint8, struct xmp_channel *);
+
+void process_fx(struct xmp_player_context *, int, uint8, uint8, uint8, struct xmp_channel *);
 void xmp_med_synth (int, struct xmp_channel *, int);
 int get_med_arp(struct xmp_channel *);
 int get_med_vibrato(struct xmp_channel *);

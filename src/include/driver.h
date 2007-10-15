@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.10 2007-09-13 10:49:56 cmatsuoka Exp $
+ * $Id: driver.h,v 1.11 2007-10-15 13:04:08 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -75,7 +75,7 @@ void	xmp_drv_register	(struct xmp_drv_info *);
 int	xmp_drv_open		(struct xmp_control *);
 int	xmp_drv_set		(struct xmp_control *);
 void	xmp_drv_close		(void);
-int	xmp_drv_on		(int);
+int	xmp_drv_on		(int, struct xmp_player_context *);
 void	xmp_drv_off		(void);
 void	xmp_drv_mute		(int, int);
 int	xmp_drv_flushpatch	(int);
@@ -97,13 +97,13 @@ void	xmp_drv_resetchannel	(int);
 void	xmp_drv_reset		(void);
 double	xmp_drv_sync		(double);
 int	xmp_drv_getmsg		(void);
-void	xmp_drv_stoptimer	(void);
+void	xmp_drv_stoptimer	(struct xmp_player_context *);
 void	xmp_drv_setsmp		(int, int);
 void	xmp_drv_clearmem	(void);
-void	xmp_drv_starttimer	(void);
+void	xmp_drv_starttimer	(struct xmp_player_context *);
 void	xmp_drv_echoback	(int);
 void	xmp_drv_bufwipe		(void);
-void	xmp_drv_bufdump		(void);
+void	xmp_drv_bufdump		(struct xmp_player_context *);
 int	xmp_drv_loadpatch 	(FILE *, int, int, int, struct xxm_sample *,
 				 char *);
 

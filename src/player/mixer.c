@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.17 2007-10-13 02:46:32 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.18 2007-10-15 13:04:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -160,15 +160,15 @@ static void out_u8ulaw(char *dest, int *src, int num, int cod)
 
 
 /* Prepare the mixer for the next tick */
-inline static void smix_resetvar()
+inline static void smix_resetvar(struct xmp_player_context *p)
 {
 /*
     smix_ticksize = xmp_ctl->freq * xmp_ctl->rrate * 33 / xmp_bpm / 100;
     smix_ticksize /= xmp_ctl->fetch & XMP_CTL_MEDBPM ? 125 : 33;
 */
     smix_ticksize = xmp_ctl->fetch & XMP_CTL_MEDBPM ?
-	xmp_ctl->freq * xmp_ctl->rrate * 33 / xmp_bpm / 12500 :
-    	xmp_ctl->freq * xmp_ctl->rrate / xmp_bpm / 100;
+	xmp_ctl->freq * xmp_ctl->rrate * 33 / p->xmp_bpm / 12500 :
+    	xmp_ctl->freq * xmp_ctl->rrate / p->xmp_bpm / 100;
 
     if (smix_buf32b) {
 	smix_dtright = smix_dtleft = TURN_OFF;
@@ -605,7 +605,7 @@ void xmp_smix_off()
 }
 
 
-void *xmp_smix_buffer()
+void *xmp_smix_buffer(struct xmp_player_context *p)
 {
     static int outbuf;
     int act;
@@ -627,7 +627,7 @@ void *xmp_smix_buffer()
     out_fn[act](smix_buffer[outbuf], smix_buf32b, smix_mode * smix_ticksize,
 							xmp_ctl->outfmt);
 
-    smix_resetvar();
+    smix_resetvar(p);
 
     return smix_buffer[outbuf]; 
 }

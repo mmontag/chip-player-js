@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.20 2007-10-12 04:46:42 cmatsuoka Exp $
+ * $Id: player.c,v 1.21 2007-10-15 13:04:09 cmatsuoka Exp $
  */
 
 /*
@@ -38,6 +38,7 @@
 #include "player.h"
 #include "synth.h"
 
+#if 0
 static int tempo;
 static int gvol_slide;
 static int gvol_flag;
@@ -48,6 +49,8 @@ static struct xmp_channel *xc_data;
 static int *fetch_ctl;
 
 int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+
+#endif
 
 /* Vibrato/tremolo waveform tables */
 static int waveform[4][64] = {
@@ -104,8 +107,8 @@ uint8 xxo[XMP_DEF_MAXORD];		/* Orders */
 uint8 **med_vol_table;			/* MED volume sequence table */
 uint8 **med_wav_table;			/* MED waveform sequence table */
 
-static int module_fetch (struct xxm_event *, int, int);
-static void module_play (int, int);
+static int module_fetch (struct xmp_player_context *, struct xxm_event *, int, int);
+static void module_play (struct xmp_player_context *, int, int);
 
 #include "effects.c"
 
@@ -188,29 +191,29 @@ do_envelope (struct xxm_envinfo *ei, uint16 *env, uint16 *x, int rl, int chn)
 }
 
 
-static inline int chn_copy (int to, int from)
+static inline int chn_copy(struct xmp_player_context *p, int to, int from)
 {
     if (to > 0 && to != from)
-	memcpy (&xc_data[to], &xc_data[from], sizeof (struct xmp_channel));
+	memcpy(&p->xc_data[to], &p->xc_data[from], sizeof (struct xmp_channel));
 
     return to;
 }
 
 
-static inline void chn_reset ()
+static inline void chn_reset(struct xmp_player_context *p)
 {
     int i;
     struct xmp_channel *xc;
 
     synth_reset ();
-    memset (xc_data, 0, sizeof (struct xmp_channel) * xmp_ctl->numchn);
+    memset(p->xc_data, 0, sizeof (struct xmp_channel) * xmp_ctl->numchn);
 
     for (i = xmp_ctl->numchn; i--; ) {
-	xc = &xc_data[i];
+	xc = &p->xc_data[i];
 	xc->insdef = xc->ins = xc->key = -1;
     }
     for (i = xmp_ctl->numtrk; i--; ) {
-	xc = &xc_data[i];
+	xc = &p->xc_data[i];
 	xc->masterpan = xxc[i].pan;
 	xc->mastervol = xxc[i].vol; //0x40;
         xc->cutoff = 0xff;
@@ -218,45 +221,45 @@ static inline void chn_reset ()
 }
 
 
-static inline void chn_fetch(int ord, int row)
+static inline void chn_fetch(struct xmp_player_context *p, int ord, int row)
 {
     int count, chn;
 
     count = 0;
     for (chn = 0; chn < xxh->chn; chn++) {
-	if (module_fetch(&EVENT (ord, chn, row), chn, 1) != XMP_OK) {
-	    fetch_ctl[chn]++;
+	if (module_fetch(p, &EVENT(ord, chn, row), chn, 1) != XMP_OK) {
+	    p->fetch_ctl[chn]++;
 	    count++;
 	}
     }
 
     for (chn = 0; count; chn++) {
-	if (fetch_ctl[chn]) {
-	    module_fetch(&EVENT (ord, chn, row), chn, 0);
-	    fetch_ctl[chn] = 0;
+	if (p->fetch_ctl[chn]) {
+	    module_fetch(p, &EVENT(ord, chn, row), chn, 0);
+	    p->fetch_ctl[chn] = 0;
 	    count--;
 	}
     }
 }
 
 
-static inline void chn_refresh(int tick)
+static inline void chn_refresh(struct xmp_player_context *p, int tick)
 { 
     int i;
 
     for (i = xmp_ctl->numchn; i--;)
-	module_play(i, tick);
+	module_play(p, i, tick);
 }
 
 
-static int module_fetch(struct xxm_event *e, int chn, int ctl)
+static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int chn, int ctl)
 {
     int xins, ins, smp, note, key, flg;
     struct xmp_channel *xc;
 
     flg = 0;
     smp = ins = note = -1;
-    xc = &xc_data[chn];
+    xc = &p->xc_data[chn];
     xins = xc->ins;
     key = e->note;
 
@@ -350,7 +353,7 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
     }
 
     if (smp >= 0) {
-	if (chn_copy(xmp_drv_setpatch(chn, ins, smp, note,
+	if (chn_copy(p, xmp_drv_setpatch(chn, ins, smp, note,
 		 	xxi[ins][xxim[ins].ins[key]].nna,
 	    		xxi[ins][xxim[ins].ins[key]].dct,
 	    		xxi[ins][xxim[ins].ins[key]].dca, ctl), chn) < 0) {
@@ -386,8 +389,8 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
     /* Secondary effect is processed _first_ and can be overriden
      * by the primary effect.
      */
-    process_fx(chn, e->note, e->f2t, e->f2p, xc);
-    process_fx(chn, e->note, e->fxt, e->fxp, xc);
+    process_fx(p, chn, e->note, e->f2t, e->f2p, xc);
+    process_fx(p, chn, e->note, e->fxt, e->fxp, xc);
 
     if (!TEST(IS_VALID)) {
 	xc->volume = 0;
@@ -442,7 +445,7 @@ static int module_fetch(struct xxm_event *e, int chn, int ctl)
 }
 
 
-static void module_play(int chn, int t)
+static void module_play(struct xmp_player_context *p, int chn, int t)
 {
     struct xmp_channel *xc;
     int finalvol, finalpan, cutoff, act;
@@ -453,7 +456,7 @@ static void module_play(int chn, int t)
     if ((act = xmp_drv_cstat(chn)) == XMP_CHN_DUMB)
 	return;
 
-    xc = &xc_data[chn];
+    xc = &p->xc_data[chn];
 
     if (!t && act != XMP_CHN_ACTIVE) {
 	if (!TEST(IS_VALID) || act == XMP_ACT_CUT) {
@@ -522,8 +525,8 @@ static void module_play(int chn, int t)
 
     if (TEST(TREMOLO))
 	finalvol += waveform[xc->t_type][xc->t_idx] * xc->t_depth / 512;
-    if (finalvol > gvol_base)
-	finalvol = gvol_base;
+    if (finalvol > p->gvol_base)
+	finalvol = p->gvol_base;
     if (finalvol < 0)
 	finalvol = 0;
 
@@ -531,7 +534,7 @@ static void module_play(int chn, int t)
 
     finalvol = (uint32) (vol_envelope *
 	(xmp_ctl->fetch & XMP_CTL_ST3GVOL ? 0x40 : xmp_ctl->volume) *
-	xc->mastervol / 0x40 * ((int) finalvol * 0x40 / gvol_base)) >> 20;
+	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 20;
 
     /* Volume translation table (for PTM) */
     if (xmp_ctl->vol_xlat)
@@ -575,14 +578,14 @@ static void module_play(int chn, int t)
 
     /* Echoback events */
     if (chn < xmp_ctl->numtrk) {
-	xmp_drv_echoback ((finalpan << 12)|(chn << 4)|XMP_ECHO_CHN);
+	xmp_drv_echoback((finalpan << 12) | (chn << 4) | XMP_ECHO_CHN);
 
 	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA)) {
-	    xmp_drv_echoback ((xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
-	    xmp_drv_echoback ((xc->volume << 4) * 0x40 / gvol_base |
+	    xmp_drv_echoback((xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
+	    xmp_drv_echoback((xc->volume << 4) * 0x40 / p->gvol_base |
 		XMP_ECHO_VOL);
 
-	    xmp_drv_echoback ((xc->pitchbend << 4)|XMP_ECHO_PBD);
+	    xmp_drv_echoback((xc->pitchbend << 4) | XMP_ECHO_PBD);
 	}
     }
 
@@ -613,13 +616,13 @@ static void module_play(int chn, int t)
     /* Volume slides happen in all frames but the first, except when the
      * "volume slide on all frames" flag is set.
      */
-    if (t % tempo || xmp_ctl->fetch & XMP_CTL_VSALL) {
-	if (!chn && gvol_flag) {
-	    xmp_ctl->volume += gvol_slide;
+    if (t % p->tempo || xmp_ctl->fetch & XMP_CTL_VSALL) {
+	if (!chn && p->gvol_flag) {
+	    xmp_ctl->volume += p->gvol_slide;
 	    if (xmp_ctl->volume < 0)
 		xmp_ctl->volume = 0;
-	    else if (xmp_ctl->volume > gvol_base)
-		xmp_ctl->volume = gvol_base;
+	    else if (xmp_ctl->volume > p->gvol_base)
+		xmp_ctl->volume = p->gvol_base;
 	}
 	if (TEST(VOL_SLIDE))
 	    xc->volume += xc->v_val;
@@ -634,7 +637,7 @@ static void module_play(int chn, int t)
     /* "Fine" sliding effects are processed in the first frame of each row,
      * and standard slides in the rest of the frames.
      */
-    if (t % tempo || xmp_ctl->fetch & XMP_CTL_PBALL) {
+    if (t % p->tempo || xmp_ctl->fetch & XMP_CTL_PBALL) {
 	/* Do pan and pitch sliding */
 	if (TEST(PAN_SLIDE)) {
 	    xc->pan += xc->p_val;
@@ -652,7 +655,7 @@ static void module_play(int chn, int t)
 	    xc->volume = 0;
     }
 
-    if (t % tempo == 0) {
+    if (t % p->tempo == 0) {
 	/* Process "fine" effects */
 	if (TEST(FINE_VOLS))
             xc->volume += xc->v_fval;
@@ -668,13 +671,13 @@ static void module_play(int chn, int t)
 
     if (xc->volume < 0)
 	xc->volume = 0;
-    else if (xc->volume > gvol_base)
-	xc->volume = gvol_base;
+    else if (xc->volume > p->gvol_base)
+	xc->volume = p->gvol_base;
 
     if (xc->mastervol < 0)
 	xc->mastervol = 0;
-    else if (xc->mastervol > gvol_base)
-	xc->mastervol = gvol_base;
+    else if (xc->mastervol > p->gvol_base)
+	xc->mastervol = p->gvol_base;
 
     if (xxh->flg & XXM_FLG_LINEAR) {
 	if (xc->period < MIN_PERIOD_L)
@@ -738,7 +741,7 @@ static void module_play(int chn, int t)
 }
 
 
-int xmpi_player_start()
+int xmpi_player_start(struct xmp_player_context *p)
 {
     int r, o, t, e;		/* rows, order, tick, end point */
     double playing_time;
@@ -752,34 +755,34 @@ int xmpi_player_start()
     if (xmp_event_callback == NULL)
 	xmp_event_callback = dummy;
 
-    gvol_slide = 0;
-    gvol_base = xmp_ctl->volbase;
+    p->gvol_slide = 0;
+    p->gvol_base = xmp_ctl->volbase;
     o = xmp_ctl->start;
     while (xxo[o] == 254)	/* S3M skip in first pattern (gaming.s3m) */
 	o++;
     xmp_ctl->volume = xxo_info[o].gvl;
-    tick_time = xmp_ctl->rrate / (xmp_bpm = xxo_info[o].bpm);
-    flow.jumpline = xxo_fstrow[o];
-    tempo = xxo_info[o].tempo;
+    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = xxo_info[o].bpm);
+    p->flow.jumpline = xxo_fstrow[o];
+    p->tempo = xxo_info[o].tempo;
     playing_time = 0;
 
-    if ((r = xmp_drv_on (xxh->chn)) != XMP_OK)
+    if ((r = xmp_drv_on(xxh->chn, p)) != XMP_OK)
 	return r;
 
-    flow.jump = -1;
+    p->flow.jump = -1;
 
-    fetch_ctl = calloc (xxh->chn, sizeof (int));
-    flow.loop_stack = calloc (xmp_ctl->numchn, sizeof (int));
-    flow.loop_row = calloc (xmp_ctl->numchn, sizeof (int));
-    xc_data = calloc (xmp_ctl->numchn, sizeof (struct xmp_channel));
-    if (!(fetch_ctl && flow.loop_stack && flow.loop_row && xc_data))
+    p->fetch_ctl = calloc(xxh->chn, sizeof (int));
+    p->flow.loop_stack = calloc(xmp_ctl->numchn, sizeof (int));
+    p->flow.loop_row = calloc(xmp_ctl->numchn, sizeof (int));
+    p->xc_data = calloc(xmp_ctl->numchn, sizeof (struct xmp_channel));
+    if (!(p->fetch_ctl && p->flow.loop_stack && p->flow.loop_row && p->xc_data))
 	return XMP_ERR_ALLOC;
 
-    chn_reset ();
+    chn_reset(p);
 
-    xmp_drv_starttimer ();
+    xmp_drv_starttimer(p);
 
-    for (e = xmp_scan_num; ; o++) {
+    for (e = p->xmp_scan_num; ; o++) {
 next_order:
 	if (o >= xxh->len) {
 	    o = ((uint32)xxh->rst > xxh->len ||
@@ -797,30 +800,30 @@ next_order:
 	}
 
 	r = xxp[xxo[o]]->rows;
-	if (flow.jumpline >= r)
-	    flow.jumpline = 0;
-	flow.row_cnt = flow.jumpline;
-	flow.jumpline = 0;
+	if (p->flow.jumpline >= r)
+	    p->flow.jumpline = 0;
+	p->flow.row_cnt = p->flow.jumpline;
+	p->flow.jumpline = 0;
 
 	xmp_ctl->pos = o;
 
-	for (; flow.row_cnt < r; flow.row_cnt++) {
-	    if ((~xmp_ctl->fetch & XMP_CTL_LOOP) && o == xmp_scan_ord &&
-		flow.row_cnt == xmp_scan_row) {
+	for (; p->flow.row_cnt < r; p->flow.row_cnt++) {
+	    if ((~xmp_ctl->fetch & XMP_CTL_LOOP) && o == p->xmp_scan_ord &&
+		p->flow.row_cnt == p->xmp_scan_row) {
 		if (!e--)
 		    goto end_module;
 	    }
 
 	    if (xmp_ctl->pause) {
-		xmp_drv_stoptimer ();
+		xmp_drv_stoptimer(p);
 		while (xmp_ctl->pause) {
-		    xmpi_select_read (1, 125);
-		    xmp_event_callback (0);
+		    xmpi_select_read(1, 125);
+		    xmp_event_callback(0);
 		}
-		xmp_drv_starttimer ();
+		xmp_drv_starttimer(p);
 	    }
 
-	    for (t = 0; t < (tempo * (1 + flow.delay)); t++) {
+	    for (t = 0; t < (p->tempo * (1 + p->flow.delay)); t++) {
 
 		/* xmp_player_ctl processing */
 
@@ -829,91 +832,91 @@ next_order:
 			xmp_ctl->pos++;		/* restart module */
 
 		    if (xmp_ctl->pos == -2) {	/* set by xmp_module_stop */
-			xmp_drv_bufwipe ();
+			xmp_drv_bufwipe();
 			goto end_module;	/* that's all folks */
 		    }
 
 		    if (xmp_ctl->pos == 0)
-			e = xmp_scan_num;
+			e = p->xmp_scan_num;
 
-		    tempo = xxo_info[o = xmp_ctl->pos].tempo;
-		    tick_time = xmp_ctl->rrate / (xmp_bpm = xxo_info[o].bpm);
+		    p->tempo = xxo_info[o = xmp_ctl->pos].tempo;
+		    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = xxo_info[o].bpm);
 		    xmp_ctl->volume = xxo_info[o].gvl;
-		    flow.jump = o;
-		    flow.jumpline = xxo_fstrow[o--];
-		    flow.row_cnt = -1;
+		    p->flow.jump = o;
+		    p->flow.jumpline = xxo_fstrow[o--];
+		    p->flow.row_cnt = -1;
 		    xmp_drv_bufwipe ();
-		    xmp_drv_sync (0);
-		    xmp_drv_reset ();
-		    chn_reset ();
+		    xmp_drv_sync(0);
+		    xmp_drv_reset();
+		    chn_reset(p);
 		    break;
 		}
 
 		if (!t) {
-		    gvol_flag = 0;
-		    chn_fetch(xxo[o], flow.row_cnt);
+		    p->gvol_flag = 0;
+		    chn_fetch(p, xxo[o], p->flow.row_cnt);
 
-		    xmp_drv_echoback((tempo << 12) | (xmp_bpm << 4)|
+		    xmp_drv_echoback((p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
 		    xmp_drv_echoback((xmp_ctl->volume << 4) | XMP_ECHO_GVL);
 		    xmp_drv_echoback((xxo[o] << 12)|(o << 4) | XMP_ECHO_ORD);
 		    xmp_drv_echoback((xmp_ctl->numvoc << 4) | XMP_ECHO_NCH);
 		    xmp_drv_echoback(((xxp[xxo[o]]->rows - 1) << 12) |
-					(flow.row_cnt << 4) | XMP_ECHO_ROW);
+					(p->flow.row_cnt << 4) | XMP_ECHO_ROW);
 		}
 		xmp_drv_echoback((t << 4) | XMP_ECHO_FRM);
-		chn_refresh(t);
+		chn_refresh(p, t);
 
 		if (xmp_ctl->time && (xmp_ctl->time < playing_time))
 		    goto end_module;
 
 
 		if (xmp_ctl->fetch & XMP_CTL_MEDBPM) {
-		    xmp_drv_sync (tick_time * 33 / 125);
-		    playing_time += xmp_ctl->rrate * 33 / (100 * xmp_bpm * 125);
+		    xmp_drv_sync(p->tick_time * 33 / 125);
+		    playing_time += xmp_ctl->rrate * 33 / (100 * p->xmp_bpm * 125);
 		} else {
-		    xmp_drv_sync(tick_time);
-		    playing_time += xmp_ctl->rrate / (100 * xmp_bpm);
+		    xmp_drv_sync(p->tick_time);
+		    playing_time += xmp_ctl->rrate / (100 * p->xmp_bpm);
 		}
 
-		xmp_drv_bufdump();
+		xmp_drv_bufdump(p);
 	    }
 
-	    flow.delay = 0;
+	    p->flow.delay = 0;
 
-	    if (flow.row_cnt == -1)
+	    if (p->flow.row_cnt == -1)
 		break;
 
-	    if (flow.pbreak) {
-		flow.pbreak = 0;
+	    if (p->flow.pbreak) {
+		p->flow.pbreak = 0;
 		break;
 	    }
 
-	    if (flow.loop_chn) {
-		flow.row_cnt = flow.loop_row[--flow.loop_chn] - 1;
-		flow.loop_chn = 0;
+	    if (p->flow.loop_chn) {
+		p->flow.row_cnt = p->flow.loop_row[--p->flow.loop_chn] - 1;
+		p->flow.loop_chn = 0;
 	    }
 	}
 
-	if (flow.jump != -1) {
-	    o = flow.jump;
-	    flow.jump = -1;
+	if (p->flow.jump != -1) {
+	    o = p->flow.jump;
+	    p->flow.jump = -1;
 	    goto next_order;
 	}
     }
 
 end_module:
-    xmp_drv_echoback (XMP_ECHO_END);
+    xmp_drv_echoback(XMP_ECHO_END);
     while (xmp_drv_getmsg () != XMP_ECHO_END)
-	xmp_drv_bufdump ();
-    xmp_drv_stoptimer ();
+	xmp_drv_bufdump(p);
+    xmp_drv_stoptimer(p);
 
-    free (xc_data);
-    free (flow.loop_row);
-    free (flow.loop_stack);
-    free (fetch_ctl);
+    free(p->xc_data);
+    free(p->flow.loop_row);
+    free(p->flow.loop_stack);
+    free(p->fetch_ctl);
 
-    xmp_drv_off ();
+    xmp_drv_off();
 
     return XMP_OK;
 }

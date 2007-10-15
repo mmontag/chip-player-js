@@ -40,10 +40,9 @@
 
 extern int xxo_fstrow[XMP_DEF_MAXORD];
 extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
-extern int xmp_scan_row, xmp_scan_ord, xmp_scan_num;
 
 
-int xmpi_scan_module()
+int xmpi_scan_module(struct xmp_player_context *p)
 {
     int prm, gvol_slide, f1, f2, ord, ord2;
     int row, last_row, break_row, cnt_row;
@@ -242,15 +241,15 @@ int xmpi_scan_module()
     row = break_row;
 
 end_module:
-    xmp_scan_num = xmp_ctl->start > ord? 0: tab_cnt[ord][row];
-    xmp_scan_row = row;
-    xmp_scan_ord = ord;
+    p->xmp_scan_num = xmp_ctl->start > ord? 0: tab_cnt[ord][row];
+    p->xmp_scan_row = row;
+    p->xmp_scan_ord = ord;
 
-    free (loop_row);
-    free (loop_stk);
+    free(loop_row);
+    free(loop_stk);
 
     for (ord = xxh->len; ord--; free (tab_cnt[ord]));
-    free (tab_cnt);
+    free(tab_cnt);
 
     clock -= clock_rst;
     alltmp += cnt_row * tempo * base_time;

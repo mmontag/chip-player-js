@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.12 2007-10-14 21:44:59 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.13 2007-10-15 13:04:09 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -66,19 +66,19 @@
 				 XMP_CTL_OFSRST | XMP_CTL_ITENV)
 
 /* Player control macros */
-#define xmp_ord_next()		xmp_player_ctl (XMP_ORD_NEXT, 0)
-#define xmp_ord_prev()		xmp_player_ctl (XMP_ORD_PREV, 0)
-#define xmp_ord_set(x)		xmp_player_ctl (XMP_ORD_SET, x)
-#define xmp_mod_stop()		xmp_player_ctl (XMP_MOD_STOP, 0)
-#define xmp_stop_module()	xmp_player_ctl (XMP_MOD_STOP, 0)
-#define xmp_mod_restart()	xmp_player_ctl (XMP_MOD_RESTART, 0)
-#define xmp_restart_module()	xmp_player_ctl (XMP_MOD_RESTART, 0)
-#define xmp_mod_pause()		xmp_player_ctl (XMP_MOD_PAUSE, 0)
-#define xmp_pause_module()	xmp_player_ctl (XMP_MOD_PAUSE, 0)
-#define xmp_timer_stop()        xmp_player_ctl (XMP_TIMER_STOP, 0)
-#define xmp_timer_restart()     xmp_player_ctl (XMP_TIMER_RESTART, 0)
-#define xmp_gvol_inc()		xmp_player_ctl (XMP_GVOL_INC, 0)
-#define xmp_gvol_dec()		xmp_player_ctl (XMP_GVOL_DEC, 0)
+#define xmp_ord_next(p)		xmp_player_ctl((p), XMP_ORD_NEXT, 0)
+#define xmp_ord_prev(p)		xmp_player_ctl((p), XMP_ORD_PREV, 0)
+#define xmp_ord_set(p,x)	xmp_player_ctl((p), XMP_ORD_SET, x)
+#define xmp_mod_stop(p)		xmp_player_ctl((p), XMP_MOD_STOP, 0)
+#define xmp_stop_module(p)	xmp_player_ctl((p), XMP_MOD_STOP, 0)
+#define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
+#define xmp_restart_module(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
+#define xmp_mod_pause(p)	xmp_player_ctl((p), XMP_MOD_PAUSE, 0)
+#define xmp_pause_module(p)	xmp_player_ctl((p), XMP_MOD_PAUSE, 0)
+#define xmp_timer_stop(p)	xmp_player_ctl((p), XMP_TIMER_STOP, 0)
+#define xmp_timer_restart(p)	xmp_player_ctl((p), XMP_TIMER_RESTART, 0)
+#define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_GVOL_INC, 0)
+#define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_GVOL_DEC, 0)
 #define xmp_mod_load		xmp_load_module
 #define xmp_mod_test		xmp_test_module
 #define xmp_mod_play		xmp_play_module
@@ -210,13 +210,18 @@ struct xmp_module_info {
     int tpo;
 };
 
+typedef char *xmp_context;
+
 extern char *xmp_version;
 extern char *xmp_date;
 extern char *xmp_copyright;
 extern char *xmp_build;
 
+void *xmp_create_context(void);
+void xmp_free_context(xmp_context);
+
 void	xmp_init			(int, char **, struct xmp_control *);
-int	xmp_load_module			(char *);
+int	xmp_load_module			(char *, xmp_context);
 int	xmp_test_module			(char *, char *);
 struct xmp_module_info*
 	xmp_get_module_info		(struct xmp_module_info *);
@@ -233,10 +238,10 @@ void	xmp_register_event_callback	(void (*)());
 void	xmp_register_driver_callback	(void (*)(void *, int));
 void	xmp_init_callback		(struct xmp_control *,
 					 void (*)(void *, int));
-int	xmp_player_ctl			(int, int);
+int	xmp_player_ctl			(xmp_context, int, int);
 int	xmp_open_audio			(struct xmp_control *);
 void	xmp_close_audio			(void);
-int	xmp_play_module			(void);
+int	xmp_play_module			(xmp_context);
 void	xmp_release_module		(void);
 int	xmp_tell_parent			(void);
 int	xmp_wait_parent			(void);
@@ -247,7 +252,7 @@ int	xmp_check_child			(int);
 void*	xmp_get_shared_mem		(int);
 void	xmp_detach_shared_mem		(void *);
 int	xmp_verbosity_level		(int);
-int	xmp_seek_time			(int);
+int	xmp_seek_time			(xmp_context, int);
 void	xmp_init_formats		(void);
 
 #endif /* __XMP_H */

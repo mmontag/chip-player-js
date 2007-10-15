@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.37 2007-10-14 21:44:59 cmatsuoka Exp $
+ * $Id: driver.c,v 1.38 2007-10-15 13:04:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,8 +21,6 @@
 #include "readlzw.h"
 
 #define	FREE	-1
-
-extern int xmp_bpm;
 
 struct xmp_control *xmp_ctl;
 
@@ -287,7 +285,7 @@ void xmp_drv_close()
 
 
 /* xmp_drv_on (number of tracks) */
-int xmp_drv_on(int num)
+int xmp_drv_on(int num, struct xmp_player_context *p)
 {
     if (!xmp_ctl)
 	return XMP_ERR_DOPEN;
@@ -320,7 +318,7 @@ int xmp_drv_on(int num)
 
     smix_mode = xmp_ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
     smix_resol = xmp_ctl->resol > 8 ? 2 : 1;
-    smix_resetvar ();
+    smix_resetvar(p);
 
     return XMP_OK;
 }
@@ -694,25 +692,25 @@ extern int **xmp_mix_buffer;
 int hold_buffer[256];
 int hold_enabled = 0;
 
-inline void xmp_drv_bufdump()
+inline void xmp_drv_bufdump(struct xmp_player_context *p)
 {
     int i = softmixer();
 
     if (hold_enabled)
 	memcpy(hold_buffer, *xmp_mix_buffer, 256 * sizeof (int));
 
-    driver->bufdump(i);
+    driver->bufdump(i, p);
 }
 
 
-inline void xmp_drv_starttimer()
+inline void xmp_drv_starttimer(struct xmp_player_context *p)
 {
     xmp_drv_sync(0);
     driver->starttimer();
 }
 
 
-void xmp_drv_stoptimer()
+void xmp_drv_stoptimer(struct xmp_player_context *p)
 {
     int voc;
 
@@ -721,7 +719,7 @@ void xmp_drv_stoptimer()
 
     driver->stoptimer();
 
-    xmp_drv_bufdump();
+    xmp_drv_bufdump(p);
 }
 
 

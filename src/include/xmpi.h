@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.14 2007-10-15 00:25:26 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.15 2007-10-15 13:04:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -119,6 +119,34 @@ struct xmp_ord_info {
     int time;
 };
 
+
+
+/* Context */
+
+struct flow_control {
+    int pbreak;
+    int jump;
+    int delay;
+    int jumpline;
+    int row_cnt;
+    int loop_chn;
+    int* loop_row;
+    int* loop_stack;
+};
+
+struct xmp_player_context {
+    int tempo;
+    int gvol_slide;
+    int gvol_flag;
+    int gvol_base;
+    double tick_time;
+    struct flow_control flow;
+    struct xmp_channel *xc_data;
+    int *fetch_ctl;
+    int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+};
+
+
 /* Externs */
 
 extern struct xxm_header *xxh;
@@ -148,8 +176,8 @@ int	report			(char *, ...);
 int	reportv			(int, char *, ...);
 int	ulaw_encode		(int);
 char	*str_adj		(char *);
-int	xmpi_scan_module	(void);
-int	xmpi_player_start	(void);
+int	xmpi_scan_module	(struct xmp_player_context *);
+int	xmpi_player_start	(struct xmp_player_context *);
 int	xmpi_tell_wait		(void);
 int	xmpi_select_read	(int, int);
 int	xmpi_read_rc		(struct xmp_control *);

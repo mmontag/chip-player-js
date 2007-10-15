@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.14 2007-10-14 21:44:59 cmatsuoka Exp $
+ * $Id: control.c,v 1.15 2007-10-15 13:04:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -30,6 +30,16 @@ extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
 int big_endian;
 
 int pw_init(void);
+
+void *xmp_create_context()
+{
+	return calloc(1, sizeof(struct xmp_player_context));
+}
+
+void xmp_free_context(xmp_context ctx)
+{
+	free(ctx);
+}
 
 void xmp_init_callback(struct xmp_control *ctl, void (*callback)(void *, int))
 {
@@ -114,8 +124,10 @@ void xmp_channel_mute(int from, int num, int on)
 }
 
 
-int xmp_player_ctl(int cmd, int arg)
+int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 {
+    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+
     switch (cmd) {
     case XMP_ORD_PREV:
 	if (xmp_ctl->pos > 0)
@@ -147,10 +159,10 @@ int xmp_player_ctl(int cmd, int arg)
 	    xmp_ctl->volume++;
 	return xmp_ctl->volume;
     case XMP_TIMER_STOP:
-	xmp_drv_stoptimer ();
+	xmp_drv_stoptimer(p);
 	break;
     case XMP_TIMER_RESTART:
-	xmp_drv_starttimer ();
+	xmp_drv_starttimer(p);
 	break;
     }
 
@@ -158,15 +170,16 @@ int xmp_player_ctl(int cmd, int arg)
 }
 
 
-int xmp_play_module ()
+int xmp_play_module(xmp_context ctx)
 {
+    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
     time_t t0, t1;
     int t;
 
     time (&t0);
-    xmpi_player_start ();
+    xmpi_player_start(p);
     time (&t1);
-    t = difftime (t1, t0);
+    t = difftime(t1, t0);
 
     xmp_ctl->start = 0;
 
@@ -238,7 +251,7 @@ int xmp_verbosity_level (int i)
 }
 
 
-int xmp_seek_time (int time)
+int xmp_seek_time(xmp_context ctx, int time)
 {
     int i, t;
     /* _D("seek to %d, total %d", time, xmp_cfg.time); */
@@ -252,7 +265,7 @@ int xmp_seek_time (int time)
 	if (t > time) {
 	    if (i > 0)
 		i--;
-	    xmp_ord_set (i);
+	    xmp_ord_set(ctx, i);
 	    return XMP_OK;
 	}
     }

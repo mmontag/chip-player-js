@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.14 2007-10-03 21:12:16 cmatsuoka Exp $
+ * $Id: wav.c,v 1.15 2007-10-15 13:04:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,7 +28,7 @@ static int fd;
 static uint32 size;
 
 static int init (struct xmp_control *);
-static void bufdump (int);
+static void bufdump (int, struct xmp_player_context *);
 static void shutdown ();
 
 static void dummy () { }
@@ -154,11 +154,11 @@ static int init (struct xmp_control *ctl)
 }
 
 
-static void bufdump (int i)
+static void bufdump(int i, struct xmp_player_context *p)
 {
     char *b;
 
-    b = xmp_smix_buffer();
+    b = xmp_smix_buffer(p);
     if (big_endian)
 	xmp_cvt_sex(i, b);
     write(fd, b, i);

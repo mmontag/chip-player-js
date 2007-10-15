@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.4 2007-09-27 00:18:16 cmatsuoka Exp $
+ * $Id: file.c,v 1.5 2007-10-15 13:04:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,7 +28,7 @@ static int fd;
 static int endian;
 
 static int init (struct xmp_control *);
-static void bufdump (int);
+static void bufdump (int, struct xmp_player_context *);
 static void shutdown ();
 
 static void dummy () { }
@@ -96,7 +96,7 @@ static int init(struct xmp_control *ctl)
 }
 
 
-static void bufdump (int i)
+static void bufdump(int i, struct xmp_player_context *p)
 {
     int j;
     void *b;
@@ -104,7 +104,7 @@ static void bufdump (int i)
     /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
     /* for (; i -= write (fd, xmp_smix_buffer (), i); ); */
 
-    b = xmp_smix_buffer ();
+    b = xmp_smix_buffer(p);
     if ((big_endian && endian == -1) || (!big_endian && endian == 1))
 	xmp_cvt_sex(i, b);
 
@@ -120,8 +120,8 @@ static void bufdump (int i)
 
 static void shutdown ()
 {
-    xmp_smix_off ();
+    xmp_smix_off();
 
     if (fd)
-	close (fd);
+	close(fd);
 }
