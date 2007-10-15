@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.17 2007-10-10 11:15:12 cmatsuoka Exp $
+ * $Id: osx.c,v 1.18 2007-10-15 15:19:03 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 
 
 static int init(struct xmp_control *);
-static void bufdump(int);
+static void bufdump(int, struct xmp_player_context *);
 static void shutdown(void);
 
 static void dummy () { }
@@ -264,7 +264,7 @@ static int init(struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i)
+static void bufdump(int i, struct xmp_player_context *p)
 {
 	uint8 *b;
 	int j = 0;
@@ -273,7 +273,7 @@ static void bufdump(int i)
 	while (buf_free() < i)
 		usleep(100000);
 
-	b = xmp_smix_buffer();
+	b = xmp_smix_buffer(p);
 
 	while (i) {
         	if ((j = write_buffer(b, i)) > 0) {

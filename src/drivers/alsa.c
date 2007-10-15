@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.9 2007-09-27 00:18:16 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.10 2007-10-15 15:19:03 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,7 +33,7 @@ static int init (struct xmp_control *);
 static int prepare_driver (void);
 static void dshutdown (void);
 static int to_fmt (struct xmp_control *);
-static void bufdump (int);
+static void bufdump (int, struct xmp_player_context *);
 static void flush (void);
 
 static void dummy () { }
@@ -174,12 +174,12 @@ static int to_fmt(struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i)
+static void bufdump(int i, struct xmp_player_context *p)
 {
 	void *b;
 	int frames;
 
-	b = xmp_smix_buffer();
+	b = xmp_smix_buffer(p);
 	frames = snd_pcm_bytes_to_frames(pcm_handle, i);
 	if (snd_pcm_writei(pcm_handle, b, frames) < 0) {
 		snd_pcm_prepare(pcm_handle);

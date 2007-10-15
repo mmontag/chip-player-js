@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: aix.c,v 1.2 2007-10-07 22:51:43 cmatsuoka Exp $
+ * $Id: aix.c,v 1.3 2007-10-15 15:19:03 cmatsuoka Exp $
  */
 
 /*
@@ -40,7 +40,7 @@ static audio_change change;
 
 static int init (struct xmp_control *);
 static int setaudio (struct xmp_control *);
-static void bufdump (int);
+static void bufdump (int, struct xmp_player_context *);
 static void shutdown (void);
 
 static void dummy () { }
@@ -82,7 +82,7 @@ struct xmp_drv_info drv_bsd = {
 #define AUDIO_MIN_GAIN 0
 #define AUDIO_MAX_GAIN 100
 
-static int setaudio (struct xmp_control *ctl)
+static int setaudio(struct xmp_control *ctl)
 {
     audio_init ainit;
     int gain = 128;
@@ -138,27 +138,27 @@ static int setaudio (struct xmp_control *ctl)
 }
 
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_control *ctl)
 {
-    if ((audio_fd = open ("/dev/paud0/1", O_WRONLY)) == -1)
+    if ((audio_fd = open("/dev/paud0/1", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
 
     if (setaudio (ctl) != XMP_OK)
 	return XMP_ERR_DINIT;
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump (int i)
+static void bufdump (int i, struct xmp_player_context *p)
 {
     int j;
     void *b;
 
-    b = xmp_smix_buffer ();
+    b = xmp_smix_buffer(p);
     while (i) {
 	if ((j = write (audio_fd, b, i)) > 0) {
 	    i -= j;
@@ -169,7 +169,7 @@ static void bufdump (int i)
 }
 
 
-static void shutdown ()
+static void shutdown()
 {
     xmp_smix_off ();
     control.ioctl_request = AUDIO_STOP;

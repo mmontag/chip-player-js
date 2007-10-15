@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: sgi.c,v 1.1 2001-06-02 20:26:00 cmatsuoka Exp $
+ * $Id: sgi.c,v 1.2 2007-10-15 15:19:03 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,7 @@ static int al_sample_16;
 
 static int init (struct xmp_control *);
 static int setaudio (struct xmp_control *);
-static void bufdump (int);
+static void bufdump (int, struct xmp_player_context *);
 static void shutdown (void);
 
 static void dummy () { }
@@ -229,12 +229,12 @@ static int init (struct xmp_control *ctl)
  * the number of bytes, which is what I assume i is.  This was a
  * trial-and-error fix, but it appears to work. - 19990706 bdowning
  */
-static void bufdump (int i)
+static void bufdump (int i, struct xmp_player_context *p)
 {
     if (al_sample_16)
-	ALwritesamps (audio_port, xmp_smix_buffer (), i / 2);
+	ALwritesamps (audio_port, xmp_smix_buffer(p), i / 2);
     else
-	ALwritesamps (audio_port, xmp_smix_buffer (), i);
+	ALwritesamps (audio_port, xmp_smix_buffer(p), i);
 }
 
 

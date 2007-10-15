@@ -39,7 +39,7 @@
 
 static int init (struct xmp_control *);
 static int setaudio (struct xmp_control *);
-static void bufdump (int);
+static void bufdump (int, struct xmp_player_context *);
 static void shutdown (void);
 
 static	MCI_MIX_BUFFER      MixBuffers[BUFFERCOUNT];
@@ -233,7 +233,7 @@ static int init (struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump (int i)
+static void bufdump(int i, struct xmp_player_context *p)
 {
    static int index = 0;
    void *b;
@@ -241,7 +241,7 @@ static void bufdump (int i)
 //   printf( "In BufDump...\n" );
 
 
-   b = xmp_smix_buffer();
+   b = xmp_smix_buffer(p);
    if( index + i > bsize ){ 
 
       //printf("Next = %d, ready = %d\n", next, ready);
