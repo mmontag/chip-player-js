@@ -1,4 +1,4 @@
-/* $Id: config.h.in,v 1.8 2007-10-05 23:31:01 cmatsuoka Exp $ */
+/* $Id: config.h.in,v 1.9 2007-10-15 00:25:26 cmatsuoka Exp $ */
 
 /* Define DRIVER_OSS_* to enable OSS /dev/sequencer and /dev/audio support */
 #undef DRIVER_OSS_SEQ
@@ -85,9 +85,6 @@
 
 /* Define if you have the select function.  */
 #undef HAVE_SELECT
-
-/* Define if your stdarg doesn't work (yikes!)  */
-#undef HAVE_BROKEN_STDARG
 
 /* Define if you have the <sbus/audio/audio.h> header file.  */
 #undef HAVE_SBUS_AUDIO_AUDIO_H

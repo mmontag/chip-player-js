@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.13 2007-10-08 16:38:28 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.14 2007-10-15 00:25:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -111,7 +111,6 @@ typedef unsigned int uint32;
 #endif
 
 #define V(x) (xmp_ctl->verbose > (x))
-#define reportv(x, r...) do { if (V(x)) report(r); } while (0)
 
 struct xmp_ord_info {
     int bpm;
@@ -145,14 +144,10 @@ extern struct xmp_control *xmp_ctl;	/* built in control struct pointer */
 
 /* Prototypes */
 
-#ifndef HAVE_BROKEN_STDARG
-int	report		(char *, ...);
-#else
-#define report printf
-#endif
+int	report			(char *, ...);
+int	reportv			(int, char *, ...);
 int	ulaw_encode		(int);
 char	*str_adj		(char *);
-char	*copy_adjust		(uint8 *, uint8 *, int);
 int	xmpi_scan_module	(void);
 int	xmpi_player_start	(void);
 int	xmpi_tell_wait		(void);
