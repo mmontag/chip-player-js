@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.26 2007-10-14 21:44:59 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.27 2007-10-15 01:47:59 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -652,21 +652,21 @@ static void play_file(InputPlayback *ipb)
 
 	_D ("before panel update");
 
-	xmp_cfg.time = xmpi_scan_module ();
-	xmp_get_module_info (&ii->mi);
-	strcpy (ii->filename, "");
+	xmp_cfg.time = xmpi_scan_module();
+	xmp_get_module_info(&ii->mi);
+	strcpy(ii->filename, "");
 
 	new_module = 1;
 
 	_D("after panel update");
 
-	memcpy (&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
+	memcpy(&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
 
-	info = malloc (strlen (ii->mi.name) + strlen (ii->mi.type) + 20);
+	info = malloc(strlen(ii->mi.name) + strlen(ii->mi.type) + 20);
 	sprintf(info, "%s", ii->mi.name);
 
 	xmp_ip.set_info(info, xmp_cfg.time, 128 * 1000, ctl.freq, channelcnt);
-	free (info);
+	free(info);
 
 	_D("--- pthread_create");
 	pthread_create(&decode_thread, NULL, play_loop, NULL);

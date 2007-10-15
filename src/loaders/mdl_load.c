@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.17 2007-10-13 19:39:48 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.18 2007-10-15 01:47:59 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -38,10 +38,20 @@ struct xmp_loader_info mdl_loader = {
 
 static int mdl_test(FILE *f, char *t)
 {
+    uint16 id;
+
     if (read32b(f) != MAGIC_DMDL)
 	return -1;
 
-    read_title(f, t, 0);
+    read8(f);			/* version */
+    id = read16b(f);
+
+    if (id == 0x494e) {		/* IN */
+	read32b(f);
+	read_title(f, t, 32);
+    } else {
+	read_title(f, t, 0);
+    }
 
     return 0;
 }
@@ -278,7 +288,7 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
  * IFF chunk handlers
  */
 
-static void get_chunk_in (int size, FILE *f)
+static void get_chunk_in(int size, FILE *f)
 {
     int i;
 

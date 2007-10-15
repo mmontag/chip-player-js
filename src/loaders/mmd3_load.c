@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.15 2007-10-13 21:17:12 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.16 2007-10-15 01:47:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,13 +29,25 @@ struct xmp_loader_info mmd3_loader = {
 static int mmd3_test(FILE *f, char *t)
 {
 	char id[4];
+	uint32 offset, len;
 
 	fread(id, 4, 1, f);
 
 	if (memcmp(id, "MMD2", 4) && memcmp(id, "MMD3", 4))
 		return -1;
 
-	read_title(f, t, 0);
+	fseek(f, 28, SEEK_CUR);
+	offset = read32b(f);		/* expdata_offset */
+	
+	if (offset) {
+		fseek(f, offset + 44, SEEK_SET);
+		offset = read32b(f);
+		len = read32b(f);
+		fseek(f, offset, SEEK_SET);
+		read_title(f, t, len);
+	} else {
+		read_title(f, t, 0);
+	}
 
 	return 0;
 }
