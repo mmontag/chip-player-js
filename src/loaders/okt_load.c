@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.7 2007-10-14 03:29:02 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.8 2007-10-15 02:02:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -121,7 +121,7 @@ static void get_samp(int size, FILE *f)
 
     reportv(1, "     Instrument name      Len   Lbeg  Lend  L Vol Mod\n");
     for (j = i = 0; i < xxh->ins; i++) {
-	xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 
 	fread(xxih[i].name, 1, 20, f);
 	str_adj((char *)xxih[i].name);
@@ -141,7 +141,7 @@ static void get_samp(int size, FILE *f)
 
 	idx[j] = i;
 
-	if ((V(1)) && (strlen ((char *) xxih[i].name) || (xxs[i].len > 1)))
+	if ((V(1)) && (strlen((char *)xxih[i].name) || (xxs[i].len > 1)))
 	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
 		xxih[i].name, xxs[i].len, xxs[i].lps, xxs[i].lpe, xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', xxi[i][0].vol, mode[i]);

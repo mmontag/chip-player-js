@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.11 2007-10-14 03:17:17 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.12 2007-10-15 02:02:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,6 +16,7 @@
 #include "iff.h"
 
 #define MAGIC_MUSX	MAGIC4('M','U','S','X')
+#define MAGIC_MNAM	MAGIC4('M','N','A','M')
 
 
 static int arch_test(FILE *, char *);
@@ -32,6 +33,20 @@ static int arch_test(FILE *f, char *t)
 {
 	if (read32b(f) != MAGIC_MUSX)
 		return -1;
+
+	read32l(f);
+
+	while (!feof(f)) {
+		uint32 id = read32b(f);
+		uint32 len = read32l(f);
+
+		if (id == MAGIC_MNAM) {
+			read_title(f, t, 32);
+			return 0;
+		}
+
+		fseek(f, len, SEEK_CUR);
+	}
 
 	read_title(f, t, 0);
 
@@ -256,8 +271,7 @@ static int arch_load(FILE *f)
 	LOAD_INIT ();
 
 	read32b(f);	/* MUSX */
-
-	fseek(f, 8, SEEK_SET);
+	read32b(f);
 
 	pflag = sflag = 0;
 
