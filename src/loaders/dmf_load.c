@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -329,13 +329,13 @@ static void get_smpd(struct xmp_mod_context *m, int size, FILE *f)
 
 		switch (packtype[i]) {
 		case 0:
-			xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+			xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
 						0, &m->xxs[m->xxi[i][0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
 			unpack(data, ibuf, ibuf + smpsize, m->xxs[i].len);
-			xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate,
+			xmp_drv_loadpatch(NULL, i, m->c4rate,
 					XMP_SMP_NOLOAD, &m->xxs[i], (char *)data);
 			break;
 		default:

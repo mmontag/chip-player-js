@@ -72,7 +72,7 @@ int mp_load (FILE * f)
     else
 	smp_size += 4;
 
-    if (xmp_ctl->size != 378 + m->xxh->pat * 0x400 + smp_size)
+    if (m->size != 378 + m->xxh->pat * 0x400 + smp_size)
 	return -1;
 
     strcpy (m->type, "Module Protector");
@@ -127,7 +127,7 @@ int mp_load (FILE * f)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }

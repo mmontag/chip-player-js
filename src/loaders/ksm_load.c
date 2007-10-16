@@ -153,7 +153,7 @@ int ksm_load(struct xmp_mod_context *m, FILE *f)
 	if (m->xxs[i].len <= 4)
 	    continue;
 	fseek (f, kh.ins[i].addr, SEEK_SET);
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }

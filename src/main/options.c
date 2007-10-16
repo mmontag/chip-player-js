@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.21 2007-10-13 18:25:05 cmatsuoka Exp $
+ * $Id: options.c,v 1.22 2007-10-16 01:14:36 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -195,7 +195,7 @@ static void usage (char *s, struct xmp_control *opt)
 }
 
 
-void get_options (int argc, char **argv, struct xmp_control *opt)
+void get_options(int argc, char **argv, struct xmp_control *opt)
 {
     int optidx = 0;
 #define OPTIONS "8b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVv"
@@ -269,10 +269,10 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	    opt->drv_id = optarg;
 	    break;
 	case OPT_FIXLOOP:
-	    opt->fetch |= XMP_CTL_FIXLOOP;
+	    opt->flags |= XMP_CTL_FIXLOOP;
 	    break;
 	case OPT_FX9BUG:
-	    opt->fetch |= XMP_CTL_FX9BUG;
+	    opt->flags |= XMP_CTL_FX9BUG;
 	    break;
 	case 'f':
 	    opt->freq = atoi (optarg);
@@ -391,7 +391,4 @@ void get_options (int argc, char **argv, struct xmp_control *opt)
 	opt->freq = 1000;	/* Min. rate 1 kHz */
     if (opt->freq > 48000)
 	opt->freq = 48000;	/* Max. rate 48 kHz */
-
-    /* Update fetch control */
-    opt->fetch = opt->flags;
 }

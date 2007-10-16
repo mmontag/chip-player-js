@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.16 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.17 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -230,7 +230,7 @@ static void get_smpl(struct xmp_mod_context *m, int size, FILE *f)
 		if (flags & 0x04 || ~flags & 0x01)
 			continue;
 		
-		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
+		xmp_drv_loadpatch(f, i, m->c4rate, 0, &m->xxs[i], NULL);
 
 		reportv(2, "\n[%2X] %05x%c%05x %05x %c ",
 			i, m->xxs[i].len,

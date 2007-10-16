@@ -151,7 +151,7 @@ static int st_load(struct xmp_mod_context *m, FILE *f)
     struct st_header mh;
     uint8 mod_event[4];
     int ust = 1, nt = 0, serr = 0;
-    /* int lps_mult = xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2; */
+    /* int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2; */
     char *modtype;
     int fxused;
     int pos;
@@ -360,7 +360,7 @@ static int st_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }

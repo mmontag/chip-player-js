@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.10 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.11 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -255,7 +255,7 @@ static void get_sbod(struct xmp_mod_context *m, int size, FILE *f)
     if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
 	flags = XMP_SMP_7BIT;
 
-    xmp_drv_loadpatch(f, sample, xmp_ctl->c4rate, flags, &m->xxs[i], NULL);
+    xmp_drv_loadpatch(f, sample, m->c4rate, flags, &m->xxs[i], NULL);
 
     reportv(0, ".");
 

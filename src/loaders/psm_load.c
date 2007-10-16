@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.28 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.29 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -178,7 +178,7 @@ static void get_dsmp(struct xmp_mod_context *m, int size, FILE *f)
 	m->xxi[i][0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
-	xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, XMP_SMP_8BDIFF, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(f, i, m->c4rate, XMP_SMP_8BDIFF, &m->xxs[i], NULL);
 
 	cur_ins++;
 }

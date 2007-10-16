@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.16 2007-10-15 19:19:22 cmatsuoka Exp $
+ * $Id: control.c,v 1.17 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,7 +26,7 @@
 
 static int drv_parm = 0;
 extern struct xmp_drv_info drv_callback;
-//extern struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
+
 int big_endian;
 
 int pw_init(void);
@@ -127,6 +127,7 @@ void xmp_channel_mute(int from, int num, int on)
 int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 {
     struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_mod_context *m = &p->m;
 
     switch (cmd) {
     case XMP_ORD_PREV:
@@ -134,11 +135,11 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	    xmp_ctl->pos--;
 	return xmp_ctl->pos;
     case XMP_ORD_NEXT:
-	if (xmp_ctl->pos < p->m.xxh->len)
+	if (xmp_ctl->pos < m->xxh->len)
 	    xmp_ctl->pos++;
 	return xmp_ctl->pos;
     case XMP_ORD_SET:
-	if (arg < p->m.xxh->len && arg >= 0)
+	if (arg < m->xxh->len && arg >= 0)
 	    xmp_ctl->pos = arg;
 	return xmp_ctl->pos;
     case XMP_MOD_STOP:
@@ -151,13 +152,13 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	xmp_ctl->pos = -1;
 	break;
     case XMP_GVOL_DEC:
-	if (xmp_ctl->volume > 0)
-	    xmp_ctl->volume--;
-	return xmp_ctl->volume;
+	if (m->volume > 0)
+	    m->volume--;
+	return m->volume;
     case XMP_GVOL_INC:
-	if (xmp_ctl->volume < 64)
-	    xmp_ctl->volume++;
-	return xmp_ctl->volume;
+	if (m->volume < 64)
+	    m->volume++;
+	return m->volume;
     case XMP_TIMER_STOP:
 	xmp_drv_stoptimer(p);
 	break;
@@ -232,12 +233,12 @@ void xmp_release_module(xmp_context ctx)
 }
 
 
-void xmp_get_driver_cfg (int *srate, int *res, int *chn, int *itpt)
+void xmp_get_driver_cfg(int *srate, int *res, int *chn, int *itpt)
 {
     *srate = xmp_ctl->memavl ? 0 : xmp_ctl->freq;
     *res = xmp_ctl->resol ? xmp_ctl->resol : 8 /* U_LAW */;
     *chn = xmp_ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    *itpt = !!(xmp_ctl->fetch & XMP_CTL_ITPT);
+    *itpt = !!(xmp_ctl->flags & XMP_CTL_ITPT);
 }
 
 

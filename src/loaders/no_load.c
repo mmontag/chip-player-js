@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.10 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.11 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -201,7 +201,7 @@ static int no_load(struct xmp_mod_context *m, FILE *f)
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

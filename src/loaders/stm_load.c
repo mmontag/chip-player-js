@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -117,7 +117,7 @@ static int stm_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
     m->xxh->tpo = MSN (sfh.tempo);
     m->xxh->smp = m->xxh->ins;
-    xmp_ctl->c4rate = C4_NTSC_RATE;
+    m->c4rate = C4_NTSC_RATE;
 
     copy_adjust((uint8 *)m->name, sfh.name, 20);
 
@@ -220,13 +220,13 @@ static int stm_load(struct xmp_mod_context *m, FILE *f)
     reportv(0, "\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");
 
-    xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
+    m->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
 
     return 0;
 }

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.34 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: load.c,v 1.35 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,6 +29,8 @@
 
 extern struct list_head loader_list;
 extern struct list_head *checked_format;
+
+char *global_filename;
 
 int decrunch_arc (FILE *, FILE *);
 int decrunch_arcfs (FILE *, FILE *);
@@ -392,17 +394,17 @@ int xmp_load_module(xmp_context ctx, char *s)
     memset(m->name, 0, XMP_DEF_NAMESIZE);
     memset(m->type, 0, XMP_DEF_NAMESIZE);
     memset(m->author, 0, XMP_DEF_NAMESIZE);
-    xmp_ctl->filename = s;		/* For ALM */
-    xmp_ctl->size = st.st_size;
-    xmp_ctl->rrate = PAL_RATE;
-    xmp_ctl->c4rate = C4_PAL_RATE;
-    xmp_ctl->volbase = 0x40;
-    xmp_ctl->volume = 0x40;
-    xmp_ctl->vol_xlat = NULL;
+    m->filename = s;		/* For ALM, SSMT, etc */
+    m->size = st.st_size;
+    m->rrate = PAL_RATE;
+    m->c4rate = C4_PAL_RATE;
+    m->volbase = 0x40;
+    m->volume = 0x40;
+    m->vol_xlat = NULL;
     /* Reset control for next module */
-    xmp_ctl->fetch = xmp_ctl->flags & ~XMP_CTL_FILTER;
+    m->fetch = xmp_ctl->flags & ~XMP_CTL_FILTER;
 
-    xmpi_read_modconf(xmp_ctl, crc, st.st_size);
+    xmpi_read_modconf(m, xmp_ctl, crc, st.st_size);
 
     m->xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */
@@ -455,7 +457,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     if (xmp_ctl->verbose > 1) {
 	report("Module looping : %s\n",
-	    xmp_ctl->fetch & XMP_CTL_LOOP ? "yes" : "no");
+	    m->fetch & XMP_CTL_LOOP ? "yes" : "no");
 	report("Period mode    : %s\n",
 	    m->xxh->flg & XXM_FLG_LINEAR ? "linear" : "Amiga");
     }
@@ -464,11 +466,11 @@ int xmp_load_module(xmp_context ctx, char *s)
 	report("Amiga range    : %s\n", m->xxh->flg & XXM_FLG_MODRNG ?
 		"yes" : "no");
 	report("Restart pos    : %d\n", m->xxh->rst);
-	report("Base volume    : %d\n", xmp_ctl->volbase);
-	report("C4 replay rate : %d\n", xmp_ctl->c4rate);
+	report("Base volume    : %d\n", m->volbase);
+	report("C4 replay rate : %d\n", m->c4rate);
 	report("Channel mixing : %d%% (dynamic pan %s)\n",
-		xmp_ctl->fetch & XMP_CTL_REVERSE ? -xmp_ctl->mix : xmp_ctl->mix,
-		xmp_ctl->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
+		m->fetch & XMP_CTL_REVERSE ? -xmp_ctl->mix : xmp_ctl->mix,
+		m->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
     }
 
     if (xmp_ctl->verbose) {
@@ -485,7 +487,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     t = xmpi_scan_module(p);
 
     if (xmp_ctl->verbose) {
-	if (xmp_ctl->fetch & XMP_CTL_LOOP)
+	if (m->fetch & XMP_CTL_LOOP)
 	    report ("One loop time  : %dmin%02ds\n",
 		(t + 500) / 60000, ((t + 500) / 1000) % 60);
 	else

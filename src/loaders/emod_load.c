@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.8 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.9 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -168,7 +168,7 @@ static void get_8smp(struct xmp_mod_context *m, int size, FILE *f)
     reportv(0, "Stored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.10 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.11 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -81,7 +81,7 @@ int alm_load(struct xmp_mod_context *m, FILE *f)
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
 	m->xxh->tpo = afh.speed / 2;
 
-    strncpy(modulename, xmp_ctl->filename, NAME_SIZE);
+    strncpy(modulename, m->filename, NAME_SIZE);
     basename = strtok (modulename, ".");
 
     afh.speed = read8(f);
@@ -100,7 +100,7 @@ int alm_load(struct xmp_mod_context *m, FILE *f)
 
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
     m->xxh->smp = m->xxh->ins;
-    xmp_ctl->c4rate = C4_NTSC_RATE;
+    m->c4rate = C4_NTSC_RATE;
 
     sprintf (m->type, "Aley's Module");
 
@@ -163,7 +163,7 @@ int alm_load(struct xmp_mod_context *m, FILE *f)
 		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol);
 	}
 
-	xmp_drv_loadpatch (s, m->xxi[i][0].sid, xmp_ctl->c4rate,
+	xmp_drv_loadpatch (s, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 
 	fclose(s);

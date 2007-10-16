@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stim_load.c,v 1.7 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: stim_load.c,v 1.8 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -189,7 +189,7 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
 
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");

@@ -320,14 +320,14 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }
     if (V (0))
 	report ("\n");
 
-    xmp_ctl->volbase = 0x100;
+    m->volbase = 0x100;
 
     return 0;
 }

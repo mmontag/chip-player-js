@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -231,8 +231,8 @@ static int imf_load(struct xmp_mod_context *m, FILE *f)
 	if (m->xxo[i] == 0xff)
 	    m->xxo[i]--;
 
-    xmp_ctl->c4rate = C4_NTSC_RATE;
-    xmp_ctl->fetch |= XMP_CTL_FINEFX;
+    m->c4rate = C4_NTSC_RATE;
+    m->fetch |= XMP_CTL_FINEFX;
 
     PATTERN_INIT ();
 
@@ -398,7 +398,7 @@ static int imf_load(struct xmp_mod_context *m, FILE *f)
 	    if (!m->xxs[smp_num].len)
 		continue;
 
-	    xmp_drv_loadpatch (f, m->xxi[i][j].sid, xmp_ctl->c4rate, 0,
+	    xmp_drv_loadpatch (f, m->xxi[i][j].sid, m->c4rate, 0,
 		&m->xxs[m->xxi[i][j].sid], NULL);
 
 	    reportv(0, ".");
@@ -409,7 +409,7 @@ static int imf_load(struct xmp_mod_context *m, FILE *f)
 
     reportv(0, "\n");
 
-    xmp_ctl->fetch |= XMP_MODE_ST3 | (xmp_ctl->flags & XMP_CTL_FILTER);
+    m->fetch |= XMP_MODE_ST3 | (xmp_ctl->flags & XMP_CTL_FILTER);
 
     return 0;
 }

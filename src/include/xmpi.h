@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.17 2007-10-15 23:37:23 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.18 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -129,8 +129,16 @@ struct xmp_mod_context {
     char name[XMP_DEF_NAMESIZE];	/* module name */
     char type[XMP_DEF_NAMESIZE];	/* module type */
     char author[XMP_DEF_NAMESIZE];	/* module author */
+    char *filename;			/* Module file name */
+    int size;				/* File size */
+    double rrate;			/* Replay rate */
+    int c4rate;				/* C4 replay rate */
+    int volbase;			/* Volume base */
+    int volume;				/* Global volume */
+    int *vol_xlat;			/* Volume translation table */
+    int fetch;				/* Fetch mode (copy from flags) */
 
-    struct xxm_header *xxh;
+    struct xxm_header *xxh;		/* Header */
     struct xxm_pattern **xxp;		/* Patterns */
     struct xxm_track **xxt;		/* Tracks */
     struct xxm_instrument_header *xxih;	/* Instrument headers */
@@ -192,7 +200,7 @@ int	xmpi_player_start	(struct xmp_player_context *);
 int	xmpi_tell_wait		(void);
 int	xmpi_select_read	(int, int);
 int	xmpi_read_rc		(struct xmp_control *);
-void	xmpi_read_modconf	(struct xmp_control *, unsigned, unsigned);
+void	xmpi_read_modconf	(struct xmp_mod_context *, struct xmp_control *, unsigned, unsigned);
 int	cksum			(FILE *);
 
 int8	read8s			(FILE *);

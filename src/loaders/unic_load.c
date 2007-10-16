@@ -120,10 +120,10 @@ static int _unic_load (FILE *f, int lax)
 	    smp_size += uh.ins[i].size * 2;
 	i = m->xxh->pat * 0x300 + smp_size + sizeof (struct unic_header) -
 	    20 * lax;
-	if ((xmp_ctl->size != (i - 4)) && (xmp_ctl->size != i))
+	if ((m->size != (i - 4)) && (m->size != i))
 	    return -1;
 
-	if (xmp_ctl->size == i - 4) {		/* No magic */
+	if (m->size == i - 4) {		/* No magic */
 	    fseek (f, -4, SEEK_CUR);
 	    nomagic = 1;
 	}
@@ -162,7 +162,7 @@ static int _unic_load (FILE *f, int lax)
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxs[i].len = 2 * uh.ins[i].size;
 	if (lax)
-	m->xxs[i].lps = (2 + (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 0 : 2)) *
+	m->xxs[i].lps = (2 + (m->fetch & XMP_CTL_FIXLOOP ? 0 : 2)) *
 	    uh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * uh.ins[i].loop_size;
 	m->xxs[i].flg = uh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
@@ -240,7 +240,7 @@ static int _unic_load (FILE *f, int lax)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.20 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.21 2007-10-16 01:14:36 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -707,7 +707,7 @@ static void get_chunk_sa(struct xmp_mod_context *m, int size, FILE *f)
 	    break;
 	}
 	
-	xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate, XMP_SMP_NOLOAD, &m->xxs[i],
+	xmp_drv_loadpatch(NULL, i, m->c4rate, XMP_SMP_NOLOAD, &m->xxs[i],
 					(char *)smpbuf);
 
 	free (smpbuf);
@@ -812,8 +812,8 @@ static int mdl_load(struct xmp_mod_context *m, FILE *f)
 
     sprintf(m->type, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
 
-    xmp_ctl->volbase = 0xff;
-    xmp_ctl->c4rate = C4_NTSC_RATE;
+    m->volbase = 0xff;
+    m->c4rate = C4_NTSC_RATE;
 
     v_envnum = p_envnum = f_envnum = 0;
     s_index = calloc(256, sizeof (int));
@@ -956,7 +956,7 @@ static int mdl_load(struct xmp_mod_context *m, FILE *f)
     if (f_envnum)
 	free(f_env);
 
-    xmp_ctl->fetch |= XMP_CTL_FINEFX;
+    m->fetch |= XMP_CTL_FINEFX;
 
     return 0;
 }

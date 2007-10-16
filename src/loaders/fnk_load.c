@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: fnk_load.c,v 1.5 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: fnk_load.c,v 1.6 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -221,7 +221,7 @@ static int fnk_load(struct xmp_mod_context *m, FILE * f)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }
@@ -230,7 +230,7 @@ static int fnk_load(struct xmp_mod_context *m, FILE * f)
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = (i % 2) * 0xff;
-    xmp_ctl->volbase = 0x100;
+    m->volbase = 0x100;
 
     return 0;
 }

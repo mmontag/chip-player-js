@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.19 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.20 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -264,8 +264,8 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
     if (sfh.flags & S3M_AMIGA_RANGE)
 	m->xxh->flg |= XXM_FLG_MODRNG;
     if (sfh.flags & S3M_ST300_VOLS)
-	xmp_ctl->fetch |= XMP_CTL_VSALL;
-    /* xmp_ctl->volbase = 4096 / sfh.gv; */
+	m->fetch |= XMP_CTL_VSALL;
+    /* m->volbase = 4096 / sfh.gv; */
     m->xxh->tpo = sfh.is;
     m->xxh->bpm = sfh.it;
 
@@ -313,17 +313,17 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 	    m->xxc[i].pan = sfh.mv % 0x80 ? 0x30 + 0xa0 * (i & 1) : 0x80;
     }
 
-    xmp_ctl->c4rate = C4_NTSC_RATE;
-    xmp_ctl->fetch |= XMP_CTL_FINEFX;
+    m->c4rate = C4_NTSC_RATE;
+    m->fetch |= XMP_CTL_FINEFX;
 
     if (sfh.version == 0x1300)
-	xmp_ctl->fetch |= XMP_CTL_VSALL;
+	m->fetch |= XMP_CTL_VSALL;
 
     switch (sfh.version >> 12) {
     case 1:
 	sprintf(tracker_name, "Scream Tracker %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-	xmp_ctl->fetch |= XMP_CTL_ST3GVOL;
+	m->fetch |= XMP_CTL_ST3GVOL;
 	break;
     case 2:
 	sprintf(tracker_name, "Imago Orpheus %d.%02x",
@@ -518,13 +518,13 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 	if (!m->xxs[i].len)
 	    continue;
 	fseek (f, 16L * sih.memseg, SEEK_SET);
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");
 
-    xmp_ctl->fetch |= XMP_MODE_ST3;
+    m->fetch |= XMP_MODE_ST3;
 
     return 0;
 }

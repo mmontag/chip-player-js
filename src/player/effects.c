@@ -29,6 +29,7 @@ static struct retrig_t rval[] = {
 
 void process_fx(struct xmp_player_context *p, int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
 {
+    struct xmp_mod_context *m = &p->m;
     int h, l;
 
     switch (fxt) {
@@ -66,7 +67,7 @@ void process_fx(struct xmp_player_context *p, int chn, uint8 note, uint8 fxt, ui
 	break;
     case FX_PORTA_UP:				/* Portamento up */
 fx_porta_up:
-	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
+	if (m->fetch & XMP_CTL_FINEFX) {
 	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
@@ -91,7 +92,7 @@ fx_porta_up:
 	break;
     case FX_PORTA_DN:				/* Portamento down */
 fx_porta_dn:
-	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
+	if (m->fetch & XMP_CTL_FINEFX) {
 	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
@@ -170,7 +171,7 @@ fx_porta_dn:
 	break;
     case FX_VOLSLIDE:				/* Volume slide */
 fx_volslide:
-	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
+	if (m->fetch & XMP_CTL_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {
@@ -264,7 +265,7 @@ ex_f_porta_dn:
 		    if (--p->flow.loop_stack[chn])
 			p->flow.loop_chn = ++chn;	/* **** H:FIXME **** */
 		    else
-			if (xmp_ctl->fetch & XMP_CTL_S3MLOOP)
+			if (m->fetch & XMP_CTL_S3MLOOP)
 			    p->flow.loop_row[chn] = p->flow.row_cnt + 1;
 		} else {
 		    if (p->flow.loop_row[chn] <= p->flow.row_cnt) {
@@ -313,7 +314,7 @@ ex_f_vslide_dn:
 	    if (fxp < 0x20)	/* speedup.xm needs BPM = 20 */
 		p->tempo = fxp;
 	    else
-		p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = fxp);
+		p->tick_time = m->rrate / (p->xmp_bpm = fxp);
 	}
 	break;
     case FX_S3M_TEMPO:				/* Set S3M tempo */
@@ -322,14 +323,14 @@ ex_f_vslide_dn:
 	break;
     case FX_S3M_BPM:				/* Set S3M BPM */
 	if (fxp >= 0x20)	/* Panic uses 0x14 */
-	    p->tick_time = xmp_ctl->rrate / (p->xmp_bpm = fxp);
+	    p->tick_time = m->rrate / (p->xmp_bpm = fxp);
 	break;
     case FX_GLOBALVOL:				/* Set global volume */
-	xmp_ctl->volume = fxp > xmp_ctl->volbase ? xmp_ctl->volbase : fxp;
+	m->volume = fxp > m->volbase ? m->volbase : fxp;
 	break;
     case FX_G_VOLSLIDE:				/* Global volume slide */
 	p->gvol_flag = 1;
-	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
+	if (m->fetch & XMP_CTL_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {
@@ -378,12 +379,12 @@ fx_xf_porta:
 	}
 	break;
     case FX_TRK_VOL:				/* Track volume setting */
-	if (fxp <= xmp_ctl->volbase)
+	if (fxp <= m->volbase)
 	    xc->mastervol = fxp;
 	break;
     case FX_TRK_VSLIDE:				/* Track volume slide */
 fx_trk_vslide:
-	if (xmp_ctl->fetch & XMP_CTL_FINEFX) {
+	if (m->fetch & XMP_CTL_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {
@@ -458,10 +459,10 @@ fx_finetune:
 	xc->resonance = fxp;
 	break;
     case FX_CHORUS:
-	p->m.xxc[chn].cho = fxp;
+	m->xxc[chn].cho = fxp;
 	break;
     case FX_REVERB:
-	p->m.xxc[chn].rvb = fxp;
+	m->xxc[chn].rvb = fxp;
 	break;
     case FX_NSLIDE_R_DN:
 	xc->retrig = xc->rcount = MSN(fxp) ? MSN(fxp) : xc->rval;

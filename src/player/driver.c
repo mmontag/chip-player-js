@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.38 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: driver.c,v 1.39 2007-10-16 01:14:36 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -285,8 +285,10 @@ void xmp_drv_close()
 
 
 /* xmp_drv_on (number of tracks) */
-int xmp_drv_on(int num, struct xmp_player_context *p)
+int xmp_drv_on(struct xmp_player_context *p, int num)
 {
+    struct xmp_mod_context *m = &p->m;
+
     if (!xmp_ctl)
 	return XMP_ERR_DOPEN;
 
@@ -296,7 +298,7 @@ int xmp_drv_on(int num, struct xmp_player_context *p)
     driver->reset ();
 
     numchn = numtrk += numusr;
-    maxvoc = xmp_ctl->fetch & XMP_CTL_VIRTUAL ? xmp_ctl->maxvoc : 1;
+    maxvoc = m->fetch & XMP_CTL_VIRTUAL ? xmp_ctl->maxvoc : 1;
     if (maxvoc > 1)
 	numchn += num;
     else if (num > numchn)
@@ -475,7 +477,7 @@ void xmp_drv_seteffect(int chn, int type, int val)
 }
 
 
-void xmp_drv_setsmp(int chn, int smp)
+void xmp_drv_setsmp(struct xmp_player_context *p, int chn, int smp)
 {
     int voc, pos, itp;
     struct voice_info *vi;
@@ -493,7 +495,7 @@ void xmp_drv_setsmp(int chn, int smp)
     pos = vi->pos;
     itp = vi->itpt;
 
-    smix_setpatch(voc, smp);
+    smix_setpatch(p, voc, smp);
     smix_voicepos(voc, pos, itp);
 
     if (extern_drv) {
@@ -504,7 +506,7 @@ void xmp_drv_setsmp(int chn, int smp)
 }
 
 
-int xmp_drv_setpatch(int chn, int ins, int smp, int note, int nna,
+int xmp_drv_setpatch(struct xmp_player_context *p, int chn, int ins, int smp, int note, int nna,
 	int dct, int dca, int flg)
 {
     int voc, vfree;
@@ -556,7 +558,7 @@ int xmp_drv_setpatch(int chn, int ins, int smp, int note, int nna,
 	return -numusr - 1;
     }
 
-    smix_setpatch(voc, smp);
+    smix_setpatch(p, voc, smp);
     smix_setnote(voc, note);
     voice_array[voc].ins = ins;
     voice_array[voc].act = nna;

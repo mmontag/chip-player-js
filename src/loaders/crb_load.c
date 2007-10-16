@@ -73,11 +73,11 @@ int crb_load(struct xmp_mod_context *m, FILE *f)
 	smp_size += 2 * xh.ins[i].size;
     }
 
-    if (sizeof (struct crb_header) + smp_size > xmp_ctl->size)
+    if (sizeof (struct crb_header) + smp_size > m->size)
 	return -1;
 
     if (sizeof (struct crb_header) + 0x400 * m->xxh->pat + smp_size <
-	xmp_ctl->size)
+	m->size)
 	return -1;
 
     sprintf (m->type, "Heatseeker");
@@ -156,7 +156,7 @@ int crb_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");

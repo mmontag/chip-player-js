@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.15 2007-10-15 23:37:23 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -101,11 +101,7 @@ struct xmp_control {
     char *description;	/* Driver description */
     char **help;	/* Driver help info */
     char *outfile;	/* Output file name when mixing to file */
-    char *filename;	/* Module file name */
-#if 0
-    char name[XMP_DEF_NAMESIZE];	/* module name */
-    char type[XMP_DEF_NAMESIZE];	/* module type */
-#endif
+
     int memavl;		/* Memory availble in the sound card */
     int verbose;	/* Verbosity level */
 #define XMP_FMT_FM	0x00000001	/* Active mode FM */
@@ -141,8 +137,6 @@ struct xmp_control {
 #define XMP_CTL_FILTER	0x01000000	/* IT lowpass filter */
 #define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
     int flags;		/* xmp internal control flags, set default mode */
-    int fetch;		/* Fetch mode control per module, copy from flags */
-    int size;		/* File size */
     int numusr;		/* Number of user allocated channels */
     int numtrk;		/* Number of tracks */
     int numchn;		/* Number of virtual channels needed by the module */
@@ -155,14 +149,9 @@ struct xmp_control {
     int mix;		/* Percentage of L/R channel separation */
     int time;		/* Maximum playing time in seconds */
     int tempo;		/* Set initial tempo */
-    double rrate;	/* Replay rate */
-    int c4rate;		/* C4 replay rate */
     int pos;		/* Current ord */
     int chorus;		/* Chorus level */
     int reverb;		/* Reverb leval */
-    int volume;		/* Global volume */
-    int volbase;	/* Volume base */
-    int *vol_xlat;	/* Volume translation table */
     char *parm[64];	/* Driver parameter data */
 };
 

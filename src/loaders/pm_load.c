@@ -115,7 +115,7 @@ int pm_load (FILE * f)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, XMP_SMP_DIFF, &m->xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, m->c4rate, XMP_SMP_DIFF, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }

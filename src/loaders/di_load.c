@@ -67,7 +67,7 @@ int di_load(struct xmp_mod_context *m, FILE *f)
 	smp_size += 2 * di.ins[i].len;
     }
 
-    if (xmp_ctl->size != di.sptr + smp_size)
+    if (m->size != di.sptr + smp_size)
 	return -1;
 
     fseek (f, 2 * m->xxh->pat, SEEK_CUR);
@@ -146,7 +146,7 @@ int di_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, i, xmp_ctl->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
 	if (V (0))
 	    report (".");
     }

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.14 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.15 2007-10-16 01:14:36 cmatsuoka Exp $
  */
 
 /*
@@ -209,7 +209,7 @@ static int med4_load(struct xmp_mod_context *m, FILE *f)
 	m->xxh->tpo = read8(f);
 
 	if (~flags & 0x20)	/* sliding */
-		xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
+		m->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
 
 	if (flags & 0x10)	/* dec/hex volumes */
 		hexvol = 1;	/* not implemented */
@@ -397,7 +397,7 @@ static int med4_load(struct xmp_mod_context *m, FILE *f)
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol, m->xxi[i][0].xpo);
 
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

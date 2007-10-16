@@ -64,7 +64,7 @@ int np_load(struct xmp_mod_context *m, FILE *f)
 
     LOAD_INIT ();
 
-    ver = xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
+    ver = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
     fread (&nh, 1, sizeof (struct np_header), f);
     B_ENDIAN16 (nh.hdrsize);
     B_ENDIAN16 (nh.ordnum);
@@ -99,10 +99,10 @@ int np_load(struct xmp_mod_context *m, FILE *f)
     }
     m->xxh->pat++;
 
-    if (xmp_ctl->size == nh.hdrsize + nh.ordnum + 8 * m->xxh->pat
+    if (m->size == nh.hdrsize + nh.ordnum + 8 * m->xxh->pat
 	+ nh.trksize + smp_size3)
 	ver = 3;
-    else if (xmp_ctl->size != nh.hdrsize + nh.ordnum + 8 * m->xxh->pat
+    else if (m->size != nh.hdrsize + nh.ordnum + 8 * m->xxh->pat
 	+ nh.trksize + smp_size)
 	return -1;
 
@@ -116,7 +116,7 @@ int np_load(struct xmp_mod_context *m, FILE *f)
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	if (ver < 3 ) {
 	    m->xxs[i].len = 2 * ni[i].size;
-	    m->xxs[i].lps = (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
+	    m->xxs[i].lps = (m->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
 		ni[i].loop_start;
 	    m->xxs[i].lpe = m->xxs[i].lps + 2 * ni[i].loop_size;
 	    m->xxs[i].flg = ni[i].loop_size > 1 ? WAVE_LOOPING : 0;
@@ -124,7 +124,7 @@ int np_load(struct xmp_mod_context *m, FILE *f)
 	    m->xxi[i][0].vol = ni[i].volume;
 	} else {
 	    m->xxs[i].len = 2 * n3[i].size;
-	    m->xxs[i].lps = (xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
+	    m->xxs[i].lps = (m->fetch & XMP_CTL_FIXLOOP ? 1 : 2) *
 		n3[i].loop_start;
 	    m->xxs[i].lpe = m->xxs[i].lps + 2 * n3[i].loop_size;
 	    m->xxs[i].flg = n3[i].loop_size > 1 ? WAVE_LOOPING : 0;
@@ -262,7 +262,7 @@ int np_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");

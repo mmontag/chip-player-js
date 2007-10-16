@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.18 2007-10-15 13:04:09 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.19 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -162,13 +162,11 @@ static void out_u8ulaw(char *dest, int *src, int num, int cod)
 /* Prepare the mixer for the next tick */
 inline static void smix_resetvar(struct xmp_player_context *p)
 {
-/*
-    smix_ticksize = xmp_ctl->freq * xmp_ctl->rrate * 33 / xmp_bpm / 100;
-    smix_ticksize /= xmp_ctl->fetch & XMP_CTL_MEDBPM ? 125 : 33;
-*/
-    smix_ticksize = xmp_ctl->fetch & XMP_CTL_MEDBPM ?
-	xmp_ctl->freq * xmp_ctl->rrate * 33 / p->xmp_bpm / 12500 :
-    	xmp_ctl->freq * xmp_ctl->rrate / p->xmp_bpm / 100;
+    struct xmp_mod_context *m = &p->m;
+
+    smix_ticksize = m->fetch & XMP_CTL_MEDBPM ?
+	xmp_ctl->freq * m->rrate * 33 / p->xmp_bpm / 12500 :
+    	xmp_ctl->freq * m->rrate / p->xmp_bpm / 100;
 
     if (smix_buf32b) {
 	smix_dtright = smix_dtleft = TURN_OFF;
@@ -415,8 +413,9 @@ static void smix_voicepos(int voc, int pos, int itp)
 }
 
 
-static void smix_setpatch(int voc, int smp)
+static void smix_setpatch(struct xmp_player_context *p, int voc, int smp)
 {
+    struct xmp_mod_context *m = &p->m;
     struct voice_info *vi = &voice_array[voc];
     struct patch_info *pi = patch_array[smp];
 
@@ -441,8 +440,7 @@ static void smix_setpatch(int voc, int smp)
     xmp_smix_setvol(voc, 0);
 
     vi->sptr = extern_drv ? NULL : pi->data;
-    vi->fidx = xmp_ctl->fetch & XMP_CTL_ITPT ?
-			FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
+    vi->fidx = m->fetch & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
 
     if (xmp_ctl->outfmt & XMP_FMT_MONO) {
 	vi->pan = TURN_OFF;
@@ -454,7 +452,7 @@ static void smix_setpatch(int voc, int smp)
     if (pi->mode & WAVE_16_BITS)
 	vi->fidx |= FLAG_16_BITS;
 
-    if (xmp_ctl->fetch & XMP_CTL_FILTER)
+    if (m->fetch & XMP_CTL_FILTER)
 	vi->fidx |= FLAG_FILTER;
 
     if (pi->mode & WAVE_LOOPING)

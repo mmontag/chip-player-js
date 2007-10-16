@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.22 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.23 2007-10-16 01:14:36 cmatsuoka Exp $
  */
 
 /*
@@ -222,11 +222,11 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 	/*
 	 * convert header
 	 */
-	xmp_ctl->c4rate = C4_NTSC_RATE;
-	xmp_ctl->fetch |= song.flags & FLAG_STSLIDE ? 0 : XMP_CTL_VSALL;
+	m->c4rate = C4_NTSC_RATE;
+	m->fetch |= song.flags & FLAG_STSLIDE ? 0 : XMP_CTL_VSALL;
 	bpmon = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
-	xmp_ctl->fetch |= bpmon ? 0 : XMP_CTL_MEDBPM;
+	m->fetch |= bpmon ? 0 : XMP_CTL_MEDBPM;
 
 	/* From the OctaMEDv4 documentation:
 	 *
@@ -527,7 +527,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 				       (uint8) m->xxi[i][0].xpo,
 				       m->xxi[i][0].fin >> 4);
 
-			xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate, 0,
+			xmp_drv_loadpatch(f, smp_idx, m->c4rate, 0,
 					&m->xxs[smp_idx], NULL);
 
 			smp_idx++;
@@ -586,7 +586,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 				m->xxs[smp_idx].lpe = m->xxs[smp_idx].len;
 				m->xxs[smp_idx].flg = WAVE_LOOPING;
 
-				xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate,
+				xmp_drv_loadpatch(f, smp_idx, m->c4rate,
 					XMP_SMP_8X, &m->xxs[smp_idx], NULL);
 
 
@@ -629,7 +629,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 			       (uint8) m->xxi[i][0].xpo, m->xxi[i][0].fin >> 4);
 
 		fseek(f, smpl_offset + 6, SEEK_SET);
-		xmp_drv_loadpatch(f, smp_idx, xmp_ctl->c4rate, 0,
+		xmp_drv_loadpatch(f, smp_idx, m->c4rate, 0,
 				  &m->xxs[smp_idx], NULL);
 
 		reportv(0, ".");

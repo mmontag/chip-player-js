@@ -1,7 +1,7 @@
 /* Real Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: rtm_load.c,v 1.11 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.12 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -335,7 +335,7 @@ static int rtm_load(struct xmp_mod_context *m, FILE *f)
 
 			}
 
-			xmp_drv_loadpatch(f, m->xxi[i][j].sid, xmp_ctl->c4rate,
+			xmp_drv_loadpatch(f, m->xxi[i][j].sid, m->c4rate,
 				XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 		}
 		if (xmp_ctl->verbose == 1)
@@ -350,7 +350,7 @@ static int rtm_load(struct xmp_mod_context *m, FILE *f)
 	m->xxh->smp = smpnum;
 	m->xxs = realloc(m->xxs, sizeof (struct xxm_sample) * m->xxh->smp);
 
-	xmp_ctl->fetch |= XMP_MODE_FT2;
+	m->fetch |= XMP_MODE_FT2;
 
 	return 0;
 }

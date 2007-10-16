@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.15 2007-10-15 19:19:22 cmatsuoka Exp $
+ * $Id: main.c,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -372,7 +372,7 @@ int main (int argc, char **argv)
     if (opt.outfile && strcmp(opt.drv_id, "wav"))
 	opt.drv_id = "file";
 
-    opt.filename = argv[optind];
+    global_filename = argv[optind];
 
     if ((background = (tcgetpgrp (0) == getppid ()))) {
 	verb = opt.verbose;
@@ -419,7 +419,7 @@ int main (int argc, char **argv)
     if (probeonly || (opt.verbose)) {
 	int srate, res, chn, itpt;
 	
-	xmp_get_driver_cfg (&srate, &res, &chn, &itpt);
+	xmp_get_driver_cfg(&srate, &res, &chn, &itpt);
 	fprintf (stderr, "Using %s\n", (char*)xmp_get_driver_description ());
 	if (srate) {
 	    fprintf (stderr, "Mixer set to %dbit, %d Hz, %s%s\n", res, srate,

@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.17 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.18 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -397,7 +397,7 @@ load_instruments:
 			m->xxi[i][j].pan, m->xxi[i][j].xpo);
 
 		if (xfh.version > 0x0103)
-		    xmp_drv_loadpatch(f, m->xxi[i][j].sid, xmp_ctl->c4rate,
+		    xmp_drv_loadpatch(f, m->xxi[i][j].sid, m->c4rate,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 	    }
 	    if (xmp_ctl->verbose == 1)
@@ -446,7 +446,7 @@ load_samples:
     if (xfh.version <= 0x0103) {
 	for (i = 0; i < m->xxh->ins; i++) {
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
-		xmp_drv_loadpatch (f, m->xxi[i][j].sid, xmp_ctl->c4rate,
+		xmp_drv_loadpatch (f, m->xxi[i][j].sid, m->c4rate,
 		    XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 		reportv(0, ".");
 	    }
@@ -455,14 +455,14 @@ load_samples:
     reportv(0, "\n");
 
     /* If dynamic pan is disabled, XM modules will use the standard
-     * MOD channel panning (LRRL). Moved to module_play () --Hipolito.
+     * MOD channel panning (LRRL). Moved to module_play() --Hipolito.
      */
 
     for (i = 0; i < m->xxh->chn; i++)
-        m->xxc[i].pan = xmp_ctl->fetch & XMP_CTL_DYNPAN ?
+        m->xxc[i].pan = m->fetch & XMP_CTL_DYNPAN ?
             0x80 : (((i + 1) / 2) % 2) * 0xff;
 
-    xmp_ctl->fetch |= XMP_MODE_FT2;
+    m->fetch |= XMP_MODE_FT2;
 
     return 0;
 }

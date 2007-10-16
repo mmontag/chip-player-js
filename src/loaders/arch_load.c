@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.14 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.15 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -246,7 +246,7 @@ static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
 		m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
 	}
 
-	xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate, XMP_SMP_VIDC,
+	xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, XMP_SMP_VIDC,
 					&m->xxs[m->xxi[i][0].sid], NULL);
 
 	if (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 0) {

@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.14 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.15 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -198,7 +198,7 @@ static int svb_load(struct xmp_mod_context *m, FILE *f)
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, p_smp[i], SEEK_SET);
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

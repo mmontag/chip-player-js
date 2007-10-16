@@ -55,7 +55,7 @@ int xmpi_scan_module(struct xmp_player_context *p)
     if (m->xxh->len == 0)
 	return 0;
 
-    medbpm = xmp_ctl->fetch & XMP_CTL_MEDBPM;
+    medbpm = m->fetch & XMP_CTL_MEDBPM;
 
     tab_cnt = calloc (sizeof (char *), m->xxh->len);
     for (ord = m->xxh->len; ord--;)
@@ -71,7 +71,7 @@ int xmpi_scan_module(struct xmp_player_context *p)
     gvl = m->xxh->gvl;
     bpm = m->xxh->bpm;
     tempo = (tempo = xmp_ctl->tempo ? xmp_ctl->tempo : m->xxh->tpo) ? tempo : TIME;
-    base_time = xmp_ctl->rrate;
+    base_time = m->rrate;
 
     ord2 = ord = -1;
     gvol_slide = break_row = cnt_row = alltmp = clock_rst = clock = 0;
@@ -107,7 +107,7 @@ int xmpi_scan_module(struct xmp_player_context *p)
 	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
 
 	if (!m->xxo_fstrow[ord] && ord) {
-	    if (ord == xmp_ctl->start && !(xmp_ctl->fetch & XMP_CTL_LOOP)) {
+	    if (ord == xmp_ctl->start && !(m->fetch & XMP_CTL_LOOP)) {
 		if (medbpm)
 	            clock_rst = clock + 132 * alltmp / 5 / bpm;
 		else
@@ -151,7 +151,7 @@ int xmpi_scan_module(struct xmp_player_context *p)
 		    if (prm)
 			gvol_slide = MSN (prm) - LSN (prm);
 		    gvl += gvol_slide *
-			(tempo - !(xmp_ctl->fetch & XMP_CTL_VSALL));
+			(tempo - !(m->fetch & XMP_CTL_VSALL));
 		}
 
 		if (f1 == FX_TEMPO || f2 == FX_TEMPO) {
@@ -204,7 +204,7 @@ int xmpi_scan_module(struct xmp_player_context *p)
 				    loop_chn = chn + 1;
 				else {
 				    loop_flg--;
-				    if (xmp_ctl->fetch & XMP_CTL_S3MLOOP)
+				    if (m->fetch & XMP_CTL_S3MLOOP)
 					loop_row[chn] = row + 1;
 				}
 			    } else {

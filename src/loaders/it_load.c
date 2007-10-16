@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.30 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.31 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -311,8 +311,8 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->pat; i++)
 	pp_pat[i] = read32l(f);
 
-    xmp_ctl->c4rate = C4_NTSC_RATE;
-    xmp_ctl->fetch |= XMP_CTL_FINEFX | XMP_CTL_ENVFADE;
+    m->c4rate = C4_NTSC_RATE;
+    m->fetch |= XMP_CTL_FINEFX | XMP_CTL_ENVFADE;
 
     switch (ifh.cwt >> 8) {
     case 0x00:
@@ -750,12 +750,12 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 		    itsex_decompress8(f, buf, m->xxs[i].len, ifh.cmwt == 0x0215);
 		}
 
-		xmp_drv_loadpatch(NULL, i, xmp_ctl->c4rate,
+		xmp_drv_loadpatch(NULL, i, m->c4rate,
 				XMP_SMP_NOLOAD | cvt, &m->xxs[i], buf);
 		free (buf);
 		reportv(0, "c");
 	    } else {
-		xmp_drv_loadpatch(f, i, xmp_ctl->c4rate, cvt, &m->xxs[i], NULL);
+		xmp_drv_loadpatch(f, i, m->c4rate, cvt, &m->xxs[i], NULL);
 
 		reportv(0, ".");
 	    }
@@ -890,8 +890,8 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
     }
 
     m->xxh->chn = max_ch + 1;
-    xmp_ctl->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
-    xmp_ctl->fetch |= XMP_CTL_VIRTUAL | (xmp_ctl->flags & XMP_CTL_FILTER);
+    m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
+    m->fetch |= XMP_CTL_VIRTUAL | (xmp_ctl->flags & XMP_CTL_FILTER);
 
     reportv(0, "\n");
 

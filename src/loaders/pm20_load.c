@@ -105,8 +105,8 @@ static int prom_20_40_load(struct xmp_mod_context *m, FILE *f)
 	smp_size += ph.ins[i].size * 2;
     }
 
-    if ((extra_size + 4 + ph.smp_ptr + smp_size != xmp_ctl->size)
-        && (extra_size + ph.smp_ptr + smp_size != xmp_ctl->size))
+    if ((extra_size + 4 + ph.smp_ptr + smp_size != m->size)
+        && (extra_size + ph.smp_ptr + smp_size != m->size))
 	return -1;
 
     sprintf (m->type, "Promizer %s", ver);
@@ -253,7 +253,7 @@ next_pattern:
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V (0))
 	    report (".");

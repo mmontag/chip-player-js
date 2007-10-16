@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
  */
 
 /*
@@ -86,7 +86,7 @@ int med2_load(struct xmp_mod_context *m, FILE *f)
 	reportv(0, "Sliding        : %d\n", sliding);
 
 	if (sliding == 6)
-		xmp_ctl->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
+		m->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
 
 	PATTERN_INIT();
 
@@ -152,7 +152,7 @@ int med2_load(struct xmp_mod_context *m, FILE *f)
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol);
 
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

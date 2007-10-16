@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.23 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.24 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -109,7 +109,7 @@ static int mod_load(struct xmp_mod_context *m, FILE *f)
     struct mod_header mh;
     uint8 mod_event[4];
     char *x, pathname[256] = "", *tracker = "";
-    int lps_mult = xmp_ctl->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
+    int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
     char magic[8], idbuffer[32];
 
@@ -228,7 +228,7 @@ static int mod_load(struct xmp_mod_context *m, FILE *f)
      * and delay.
      */
 
-    if (0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size < xmp_ctl->size) {
+    if (0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size < m->size) {
 	int pos = ftell(f);
 	fseek(f, 0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size, SEEK_SET);
 	fread(idbuffer, 1, 4, f);
@@ -250,7 +250,7 @@ static int mod_load(struct xmp_mod_context *m, FILE *f)
      */
 
     if ((wow = (!strncmp(magic, "M.K.", 4) &&
-		(0x43c + m->xxh->pat * 32 * 0x40 + smp_size == xmp_ctl->size)))) {
+		(0x43c + m->xxh->pat * 32 * 0x40 + smp_size == m->size)))) {
 	m->xxh->chn = 8;
 	tracker = "Mod's Grave";
 	goto skip_test;
@@ -266,14 +266,14 @@ static int mod_load(struct xmp_mod_context *m, FILE *f)
      */
 
     else if (sizeof (struct mod_header) + m->xxh->pat * 0x300 +
-	smp_size == xmp_ctl->size) {
+	smp_size == m->size) {
 	return -1;
     }
 
     /* Test for Protracker song files
      */
     else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
-		(0x43c + m->xxh->pat * 0x400 == xmp_ctl->size)))) {
+		(0x43c + m->xxh->pat * 0x400 == m->size)))) {
 	tracker = "Protracker";
 	goto skip_test;
     }
@@ -427,15 +427,15 @@ skip_test:
 
     /* Load samples */
 
-    if ((x = strrchr (xmp_ctl->filename, '/'))) {
+    if ((x = strrchr(m->filename, '/'))) {
 	*x = 0;
-	strcpy (pathname, xmp_ctl->filename);
-	strcat (pathname, "/");
+	strcpy(pathname, m->filename);
+	strcat(pathname, "/");
 	*x = '/';
     }
 
-    if (V (0))
-	report ("\nStored samples : %d ", m->xxh->smp);
+    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
@@ -445,13 +445,13 @@ skip_test:
 	    snprintf(sn, XMP_DEF_NAMESIZE, "%s%s", pathname, m->xxih[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        xmp_drv_loadpatch (s, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	        xmp_drv_loadpatch (s, m->xxi[i][0].sid, m->c4rate, 0,
 		    &m->xxs[m->xxi[i][0].sid], NULL);
 		if (V (0))
 		    report (".");
 	    }
 	} else {
-	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate, 0,
+	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	        &m->xxs[m->xxi[i][0].sid], NULL);
 	    if (V (0))
 		report (".");
@@ -461,7 +461,7 @@ skip_test:
 	report ("\n");
 
     if (m->xxh->chn > 4)
-	xmp_ctl->fetch |= XMP_MODE_FT2;
+	m->fetch |= XMP_MODE_FT2;
 
     return 0;
 }

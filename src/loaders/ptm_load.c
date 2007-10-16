@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.15 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -96,7 +96,7 @@ int ptm_load(struct xmp_mod_context *m, FILE *f)
     m->xxh->bpm = 125;
     memcpy (m->xxo, pfh.order, 256);
 
-    xmp_ctl->c4rate = C4_NTSC_RATE;
+    m->c4rate = C4_NTSC_RATE;
 
     copy_adjust((uint8 *)m->name, pfh.name, 28);
     sprintf(m->type, "PTMF %d.%02x (Poly Tracker)",
@@ -251,13 +251,13 @@ int ptm_load(struct xmp_mod_context *m, FILE *f)
 	if (!m->xxs[i].len)
 	    continue;
 	fseek (f, smp_ofs[m->xxi[i][0].sid], SEEK_SET);
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, xmp_ctl->c4rate,
+	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");
 
-    xmp_ctl->vol_xlat = ptm_vol;
+    m->vol_xlat = ptm_vol;
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = pfh.chset[i] << 4;
