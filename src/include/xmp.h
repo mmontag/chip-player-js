@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.17 2007-10-16 01:24:11 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -205,8 +205,8 @@ typedef char *xmp_context;
 
 extern char *xmp_version;
 extern char *xmp_date;
-extern char *xmp_copyright;
 extern char *xmp_build;
+extern char *global_filename;	/* FIXME: hack for the wav driver */
 
 void *xmp_create_context(void);
 void xmp_free_context(xmp_context);

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: wav.c,v 1.17 2007-10-16 01:24:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,8 +26,6 @@
 
 static int fd;
 static uint32 size;
-
-extern char *global_filename;
 
 static int init (struct xmp_control *);
 static void bufdump (int, struct xmp_player_context *);
