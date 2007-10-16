@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.18 2007-10-16 02:32:55 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.19 2007-10-16 19:51:05 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -137,7 +137,6 @@ struct xmp_control {
 #define XMP_CTL_FILTER	0x01000000	/* IT lowpass filter */
 #define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
     int flags;		/* xmp internal control flags, set default mode */
-    int numusr;		/* Number of user allocated channels */
     int numtrk;		/* Number of tracks */
     int numchn;		/* Number of virtual channels needed by the module */
     int numvoc;		/* Number of voices currently in use */
