@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.18 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.19 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -238,7 +238,7 @@ load_patterns:
 		event->vol = 0;
 	    }
 	    free (patbuf);
-	    if (V (0))
+	    if (V(0))
 		report (".");
 	}
     }
@@ -253,11 +253,11 @@ load_patterns:
 	m->xxp[i]->info[j].index = i * m->xxh->chn;
 
     if (xfh.version <= 0x0103) {
-	if (V (0))
+	if (V(0))
 	    report ("\n");
 	goto load_samples;
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
 load_instruments:
@@ -282,7 +282,7 @@ load_instruments:
 	if (m->xxih[i].nsm > 16)
 	    m->xxih[i].nsm = 16;
 
-	if (V (1) && (strlen ((char *) m->xxih[i].name) || m->xxih[i].nsm))
+	if (V(1) && (strlen((char *) m->xxih[i].name) || m->xxih[i].nsm))
 	    report ("[%2X] %-22.22s %2d ", i, m->xxih[i].name, m->xxih[i].nsm);
 
 	if (m->xxih[i].nsm) {
@@ -383,7 +383,7 @@ load_instruments:
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
 		if (sample_num >= MAX_SAMP)
 		    continue;
-		if ((V (1)) && xsh[j].length)
+		if ((V(1)) && xsh[j].length)
 		    report ("%s[%1x] %06x%c%06x %06x %c "
 			"V%02x F%+04d P%02x R%+03d",
 			j ? "\n\t\t\t\t" : "\t", j,
@@ -425,7 +425,7 @@ load_instruments:
 	     fseek (f, xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
 
-	if ((V (1)) && (strlen ((char *) m->xxih[i].name) || xih.samples))
+	if ((V(1)) && (strlen((char *) m->xxih[i].name) || xih.samples))
 	    report ("\n");
     }
     m->xxh->smp = sample_num;
@@ -438,7 +438,7 @@ load_instruments:
     }
 
 load_samples:
-    if ((V (0) && xfh.version <= 0x0103) || V (1))
+    if ((V(0) && xfh.version <= 0x0103) || V(1))
 	report ("Stored samples : %d ", m->xxh->smp);
 
     /* XM 1.02 stores all samples after the patterns */

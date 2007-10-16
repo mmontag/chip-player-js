@@ -117,7 +117,7 @@ static int flt_load(struct xmp_mod_context *m, FILE *f)
 
 	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
 
-	if ((V (1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2)) {
+	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2)) {
 	    report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.9 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.10 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -216,7 +216,7 @@ static int sfx_13_20_load(struct xmp_mod_context *m, FILE *f, int nins)
 	if (m->xxs[i].len <= 2)
 	    continue;
 	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
-	if (V (0))
+	if (V(0))
 	    report(".");
     }
     reportv(0, "\n");

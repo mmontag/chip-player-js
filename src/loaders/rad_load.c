@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.9 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.10 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -81,10 +81,10 @@ static int rad_load(struct xmp_mod_context *m, FILE *f)
 
     /* Read description */
     if (rfh.flags & 0x80) {
-	if (V (1))
+	if (V(1))
 	    report ("|");
 	for (j = 0; fread(&b, 1, 1, f) && b;)
-	    if (V (1)) {
+	    if (V(1)) {
 		if (!j && (b == 1)) {
 		    report ("\n|");
 		    j = 1;
@@ -96,11 +96,11 @@ static int rad_load(struct xmp_mod_context *m, FILE *f)
 		else
 		    j = 0, report (".");
 	    }
-	if (V (1))
+	if (V(1))
 	    report ("\n");
     }
 
-    if (V (1)) {
+    if (V(1)) {
 	report (
 "               Modulator                       Carrier             Common\n"
 "     Char Fr LS OL At De Su Re WS   Char Fr LS OL At De Su Re WS   Fbk Alg\n");
@@ -113,7 +113,7 @@ static int rad_load(struct xmp_mod_context *m, FILE *f)
 	m->xxh->ins = b;
 	fread(sid, 1, 11, f);
 	xmp_cvt_hsc2sbi((char *)sid);
-	if (V (1)) {
+	if (V(1)) {
 	    report ("[%2X] ", b - 1);
 
 	    report ("%c%c%c%c %2d ",
@@ -164,7 +164,7 @@ static int rad_load(struct xmp_mod_context *m, FILE *f)
     }
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-    if (V (0)) {
+    if (V(0)) {
 	report ("Module length  : %d patterns\n", m->xxh->len);
 	report ("Instruments    : %d\n", m->xxh->ins);
 	report ("Stored patterns: %d ", m->xxh->pat);
@@ -200,10 +200,10 @@ static int rad_load(struct xmp_mod_context *m, FILE *f)
 		}
 	    } while (~c & 0x80);
 	} while (~r & 0x80);
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     for (i = 0; i < m->xxh->chn; i++) {

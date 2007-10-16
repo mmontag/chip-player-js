@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mtm_load.c,v 1.8 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: mtm_load.c,v 1.9 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -110,7 +110,7 @@ static int mtm_load(struct xmp_mod_context *m, FILE *f)
 
 	copy_adjust(m->xxih[i].name, mih.name, 22);
 
-	if ((V (1)) && (strlen ((char *) m->xxih[i].name) || m->xxs[i].len))
+	if ((V(1)) && (strlen((char *) m->xxih[i].name) || m->xxs[i].len))
 	    report ("[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
@@ -121,7 +121,7 @@ static int mtm_load(struct xmp_mod_context *m, FILE *f)
 
     PATTERN_INIT ();
 
-    if (V (0))
+    if (V(0))
 	report ("Stored tracks  : %d ", m->xxh->trk - 1);
     for (i = 0; i < m->xxh->trk; i++) {
 	m->xxt[i] = calloc (sizeof (struct xxm_track) +
@@ -145,10 +145,10 @@ static int mtm_load(struct xmp_mod_context *m, FILE *f)
 		m->xxt[i]->event[j].fxp <<= 4;
 	    }
 	}
-	if (V (0) && !(i % m->xxh->chn))
+	if (V(0) && !(i % m->xxh->chn))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     /* Read patterns */
@@ -169,15 +169,15 @@ static int mtm_load(struct xmp_mod_context *m, FILE *f)
 	fread (&j, 1, 1, f);
 
     /* Read samples */
-    if (V (0))
+    if (V(0))
 	report ("\nStored samples : %d ", m->xxh->smp);
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     for (i = 0; i < m->xxh->chn; i++)

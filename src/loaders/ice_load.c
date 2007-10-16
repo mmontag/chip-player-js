@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ice_load.c,v 1.8 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: ice_load.c,v 1.9 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -118,7 +118,7 @@ static int ice_load(struct xmp_mod_context *m, FILE *f)
 	m->xxi[i][0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
-	if (V (1) && m->xxs[i].len > 2)
+	if (V(1) && m->xxs[i].len > 2)
 	    report ("[%2X] %-22.22s %04x %04x %04x %c %02x %+01x\n",
 		i, ih.ins[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
@@ -127,7 +127,7 @@ static int ice_load(struct xmp_mod_context *m, FILE *f)
 
     PATTERN_INIT ();
 
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -153,7 +153,7 @@ static int ice_load(struct xmp_mod_context *m, FILE *f)
 		cvt_pt_event (event, ev);
 	}
 
-	if (V (0) && !(i % m->xxh->chn))
+	if (V(0) && !(i % m->xxh->chn))
 	    report (".");
     }
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.11 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -173,7 +173,7 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
 
     /* Read and convert instruments and samples */
 
-    if (V (1))
+    if (V(1))
 	report ("     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
@@ -211,8 +211,8 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
 
 	copy_adjust(m->xxih[i].name, sih.name, 12);
 
-	if (V (1) &&
-	    (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
+	if (V(1) &&
+	    (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, sih.c2spd);
@@ -225,7 +225,7 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -291,23 +291,23 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
 	    }
 	}
 
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
 
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     /* Read samples */
-    if (V (0))
+    if (V(0))
 	report ("Stored samples : %d ", m->xxh->smp);
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     free (pp_pat);

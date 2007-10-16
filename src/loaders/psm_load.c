@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.29 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.30 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -168,7 +168,7 @@ static void get_dsmp(struct xmp_mod_context *m, int size, FILE *f)
 	m->xxi[i][0].sid = i;
 	srate = read32l(f);
 
-	if ((V(1)) && (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 1)))
+	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1)))
 	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, finetune, srate);

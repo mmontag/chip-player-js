@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.20 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.21 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -456,8 +456,8 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 	    c2spd_to_note (sah.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 	    m->xxi[i][0].xpo += 12;
 	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, 0, 0, NULL, (char *) &sah.reg);
-	    if (V (0)) {
-	        if (V (1)) {
+	    if (V(0)) {
+	        if (V(1)) {
 		    report ("\n[%2X] %-28.28s ", i, m->xxih[i].name);
 	            for (j = 0; j < 11; j++)
 		        report ("%02x ", (uint8) sah.reg[j]);
@@ -507,7 +507,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 
 	copy_adjust(m->xxih[i].name, sih.name, 28);
 
-	if ((V (1)) && (strlen ((char *) sih.name) || m->xxs[i].len))
+	if ((V(1)) && (strlen((char *) sih.name) || m->xxs[i].len))
 	    report ("\n[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d ",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].flg & WAVE_16_BITS ?'+' :
 		' ', m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ?

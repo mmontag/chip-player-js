@@ -315,8 +315,8 @@ static int st_load(struct xmp_mod_context *m, FILE *f)
 
     reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
-    for (i = 0; (V (1)) && (i < m->xxh->ins); i++) {
-	if ((strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
+    for (i = 0; (V(1)) && (i < m->xxh->ins); i++) {
+	if ((strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: wn_load.c,v 1.5 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: wn_load.c,v 1.6 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -68,7 +68,7 @@ int wn_load (FILE * f)
 
     INSTRUMENT_INIT ();
 
-    if (V (1))
+    if (V(1))
 	report ("     Instrument name        Len  LBeg LEnd L Vol\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
@@ -81,7 +81,7 @@ int wn_load (FILE * f)
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
 	strncpy ((char *) m->xxih[i].name, wn.ins[i].name, 22);
-	if ((V (1)) && (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
+	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report ("[%2X] %-22.22s %04x %04x %04x %c %02x\n",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol);
@@ -89,7 +89,7 @@ int wn_load (FILE * f)
 
     PATTERN_INIT ();
 
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -108,7 +108,7 @@ int wn_load (FILE * f)
 	    event->fxt = LSN (ev[2]);
 	    event->fxp = ev[3];
 	}
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
 
@@ -116,17 +116,17 @@ int wn_load (FILE * f)
 
     /* Read samples */
 
-    if (V (0))
+    if (V(0))
 	report ("\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
 	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     return 0;

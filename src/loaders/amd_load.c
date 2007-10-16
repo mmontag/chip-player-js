@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amd_load.c,v 1.5 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: amd_load.c,v 1.6 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -101,7 +101,7 @@ static int amd_load(struct xmp_mod_context *m, FILE * f)
 
     MODULE_INFO ();
 
-    if (V (0))
+    if (V(0))
 	report ("Instruments    : %d ", m->xxh->ins);
 
     INSTRUMENT_INIT ();
@@ -121,7 +121,7 @@ static int amd_load(struct xmp_mod_context *m, FILE * f)
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
 
-	if (V (1)) {
+	if (V(1)) {
 	    report ("\n[%2X] %-23.23s ", i, m->xxih[i].name);
 	    if (regs[0] | regs[1] | regs[2] | regs[3] | regs[4] | regs[5] | regs[6]
 		| regs[7] | regs[8] | regs[9] | regs[10]) {
@@ -129,11 +129,11 @@ static int amd_load(struct xmp_mod_context *m, FILE * f)
 		    report ("%02x ", (uint8) regs[j]);
 	    }
 	}
-	if (V (0) == 1)
+	if (V(0) == 1)
 	    report (".");
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, 0, 0, NULL, regs);
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     if (!afh.version) {
@@ -141,7 +141,7 @@ static int amd_load(struct xmp_mod_context *m, FILE * f)
 	    "Aborting: Unpacked modules not supported. Please contact the authors.\n");
 	return -1;
     }
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
     m->xxp = calloc (sizeof (struct xxm_pattern *), m->xxh->pat + 1);
 
@@ -154,13 +154,13 @@ static int amd_load(struct xmp_mod_context *m, FILE * f)
 		m->xxh->trk = w;
 	}
 	m->xxp[i]->rows = 64;
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
     m->xxh->trk++;
 
     w = read16l(f);
-    if (V (0))
+    if (V(0))
 	report ("\nStored tracks  : %d ", w);
     m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
     m->xxh->trk = w;
@@ -216,10 +216,10 @@ static int amd_load(struct xmp_mod_context *m, FILE * f)
 	    if ((event->note = MSN (b)))
 		event->note += (1 + ((b & 0xe) >> 1)) * 12;
 	}
-	if (V (0) && !(i % 9))
+	if (V(0) && !(i % 9))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     for (i = 0; i < m->xxh->chn; i++) {

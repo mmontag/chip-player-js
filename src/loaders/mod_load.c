@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.25 2007-10-16 11:18:02 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.26 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -388,7 +388,7 @@ skip_test:
 	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
-	    if (V(3) || (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
+	    if (V(3) || (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
 		report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
 		    i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		    m->xxs[i].lpe, (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
@@ -399,7 +399,7 @@ skip_test:
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -447,17 +447,17 @@ skip_test:
 	    if ((s = fopen (sn, "rb"))) {
 	        xmp_drv_loadpatch (s, m->xxi[i][0].sid, m->c4rate, 0,
 		    &m->xxs[m->xxi[i][0].sid], NULL);
-		if (V (0))
+		if (V(0))
 		    report (".");
 	    }
 	} else {
 	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	        &m->xxs[m->xxi[i][0].sid], NULL);
-	    if (V (0))
+	    if (V(0))
 		report (".");
 	}
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     if (m->xxh->chn > 4)

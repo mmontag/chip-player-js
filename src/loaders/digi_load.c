@@ -1,7 +1,7 @@
 /* DIGI Booster module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: digi_load.c,v 1.8 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: digi_load.c,v 1.9 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -136,7 +136,7 @@ static int digi_load(struct xmp_mod_context *m, FILE *f)
 
     /* Read and convert instruments and samples */
 
-    if (V (1))
+    if (V(1))
 	report ("     Sample name                    Len  LBeg LEnd L Vol\n");
 
     for (i = 0; i < m->xxh->ins; i++) {

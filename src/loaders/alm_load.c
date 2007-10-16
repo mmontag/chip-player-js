@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.11 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.12 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -156,7 +156,7 @@ int alm_load(struct xmp_mod_context *m, FILE *f)
 	m->xxi[i][0].vol = 0x40;
 	m->xxi[i][0].sid = i;
 
-	if ((V (1)) && (strlen ((char *) m->xxih[i].name) ||
+	if ((V(1)) && (strlen((char *) m->xxih[i].name) ||
 		(m->xxs[i].len > 1))) {
 	    report ("\n[%2X] %-14.14s %04x %04x %04x %c V%02x ", i,
 		filename, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg

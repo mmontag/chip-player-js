@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.21 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.22 2007-10-16 11:54:14 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -448,7 +448,7 @@ static void get_chunk_tr(struct xmp_mod_context *m, int size, FILE *f)
 	    sizeof (struct xxm_event) * row);
 	m->xxt[i]->rows = row;
 
-	if (V (0) && !(i % m->xxh->chn))
+	if (V(0) && !(i % m->xxh->chn))
 	    report (".");
     }
 
@@ -474,7 +474,7 @@ static void get_chunk_ii(struct xmp_mod_context *m, int size, FILE *f)
 	fread(m->xxih[i].name, 1, 32, f);
 	str_adj((char *)m->xxih[i].name);
 
-	if (V (1) && (strlen ((char *) m->xxih[i].name) || m->xxih[i].nsm)) {
+	if (V(1) && (strlen((char *) m->xxih[i].name) || m->xxih[i].nsm)) {
 	    report ("\n[%2X] %-32.32s %2d ", i_index[i], m->xxih[i].name,
 		m->xxih[i].nsm);
 	}
@@ -521,7 +521,7 @@ static void get_chunk_ii(struct xmp_mod_context *m, int size, FILE *f)
 	    if (j == 0)
 		f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
-	    if (V (1)) {
+	    if (V(1)) {
 		report("%s[%2x] V%02x S%02x  ",
 		    j ? "\n\t\t\t\t\t " : "", j, m->xxi[i][j].vol, m->xxi[i][j].sid);
 		if (v_index[i] >= 0)
@@ -579,7 +579,7 @@ static void get_chunk_is(struct xmp_mod_context *m, int size, FILE *f)
 	m->xxs[i].flg |= (x & 0x02) ? WAVE_BIDIR_LOOP : 0;
 	packinfo[i] = (x & 0x0c) >> 2;
 
-	if (V (2)) {
+	if (V(2)) {
 	    report ("%05x%c %05x %05x %c %6d ",
 		m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
@@ -650,7 +650,7 @@ static void get_chunk_i0(struct xmp_mod_context *m, int size, FILE *f)
 	m->xxs[i].flg |= (x & 0x02) ? WAVE_BIDIR_LOOP : 0;
 	packinfo[i] = (x & 0x0c) >> 2;
 
-	if (V (1)) {
+	if (V(1)) {
 	    report ("%5d V%02x %05x%c %05x %05x ",
 		c2spd[i],  m->xxi[i][0].vol,
 		m->xxs[i].len, m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',

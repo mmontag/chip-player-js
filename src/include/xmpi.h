@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.20 2007-10-16 11:18:02 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.21 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -110,7 +110,7 @@ typedef unsigned int uint32;
 #define _D(args...) do {} while (0)
 #endif
 
-#define V(x) (xmp_ctl->verbose && xmp_ctl->verbose > (x))
+#define V(x) (xmp_ctl->verbose > (x))
 
 struct xmp_ord_info {
     int bpm;

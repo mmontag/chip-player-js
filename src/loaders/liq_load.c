@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.17 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -479,7 +479,7 @@ next_pattern:
 
 	copy_adjust(m->xxih[i].name, li.name, 32);
 
-	if ((V (1)) && (strlen ((char *)m->xxih[i].name) || m->xxs[i].len)) {
+	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d ",
 		i, m->xxih[i].name, m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',

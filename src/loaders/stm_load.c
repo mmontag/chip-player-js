@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.11 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -149,7 +149,7 @@ static int stm_load(struct xmp_mod_context *m, FILE *f)
 
 	copy_adjust(m->xxih[i].name, sfh.ins[i].name, 12);
 
-	if ((V(1)) && (strlen ((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
+	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
 		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, sfh.ins[i].c2spd);

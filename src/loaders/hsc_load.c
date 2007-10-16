@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.6 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.7 2007-10-16 11:54:14 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -120,7 +120,7 @@ static int hsc_load(struct xmp_mod_context *m, FILE *f)
 	m->xxi[i][0].xpo = 0;
 	m->xxi[i][0].sid = i;
 
-	if (V (1)) {
+	if (V(1)) {
 	    int j, x;
 
 	    for (j = x = 0; j < 12; j++)
@@ -168,7 +168,7 @@ skip:
     m->xxh->pat = p + 1;
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-    if (V (0)) {
+    if (V(0)) {
 	report ("Module length  : %d patterns\n", m->xxh->len);
 	report ("Instruments    : %d\n", m->xxh->ins);
 	report ("Stored patterns: %d ", m->xxh->pat);

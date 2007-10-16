@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.11 2007-10-16 11:18:02 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.12 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -339,7 +339,7 @@ static int imf_load(struct xmp_mod_context *m, FILE *f)
 
 	memcpy (m->xxim[i].ins, ii.map, 96);
 
-	if (V (1) && (strlen ((char *) ii.name) || ii.nsm))
+	if (V(1) && (strlen((char *) ii.name) || ii.nsm))
 	    report ("\n[%2X] %-31.31s %2d %4x %c%c%c ",
 		i, ii.name, ii.nsm, ii.fadeout,
 		ii.env[0].flg & 0x01 ? 'V' : '-',
@@ -387,7 +387,7 @@ static int imf_load(struct xmp_mod_context *m, FILE *f)
 	    m->xxs[smp_num].flg = is.flg & 1 ? WAVE_LOOPING : 0;
 	    m->xxs[smp_num].flg |= is.flg & 4 ? WAVE_16_BITS : 0;
 
-	    if (V (1)) {
+	    if (V(1)) {
 		if (j)
 		    report("\n\t\t\t\t\t\t ");
 		report ("[%02x] %05x %05x %05x %5d ",

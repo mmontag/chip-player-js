@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stim_load.c,v 1.8 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: stim_load.c,v 1.9 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -104,7 +104,7 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
     PATTERN_INIT ();
 
     /* Load and convert patterns */
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -150,13 +150,13 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
 	    }
 	}
 
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
 
     INSTRUMENT_INIT ();
 
-    if (V (0))
+    if (V(0))
 	report ("\nStored samples : %d ", m->xxh->smp);
 
     fseek (f, sh.smpaddr + m->xxh->smp * 4, SEEK_SET);
@@ -180,7 +180,7 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
 	m->xxih[i].nsm = !!(m->xxs[i].len);
 	m->xxih[i].rls = 0xfff;
 
-	if (V (1) && m->xxs[i].len > 2) {
+	if (V(1) && m->xxs[i].len > 2) {
 	    report ("\n[%2X] %04x %04x %04x %c V%02x %+d ",
 		i, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, si.loop_size > 1 ? 'L' : ' ',
@@ -191,11 +191,11 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
 	    continue;
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
 
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     m->xxh->flg |= XXM_FLG_MODRNG;

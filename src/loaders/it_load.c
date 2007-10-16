@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.32 2007-10-16 11:18:02 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.33 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -382,7 +382,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 
     if (m->xxh->ins && V(0) && (ifh.flags & IT_USE_INST)) {
 	report ("\nInstruments    : %d ", m->xxh->ins);
-	if (V (1)) {
+	if (V(1)) {
 	    if (ifh.cmwt >= 0x200)
 		report ("\n     Instrument name            NNA  DCT  DCA  "
 		    "Fade  GbV Pan RV Env NSm FC FR");
@@ -637,7 +637,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
     if (V(0))
 	report ("\nStored Samples : %d ", m->xxh->smp);
 
-    if (V(2) || (~ifh.flags & IT_USE_INST && V (1)))
+    if (V(2) || (~ifh.flags & IT_USE_INST && V(1)))
 	report (
 "\n     Sample name                Len   LBeg  LEnd  SBeg  SEnd  FlCv VlGv C5Spd"
 	);
@@ -697,8 +697,8 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 	    copy_adjust(m->xxih[i].name, ish.name, 24);
 	}
 
-	if (V (2) || (~ifh.flags & IT_USE_INST && V (1))) {
-	    if (strlen ((char *) ish.name) || m->xxs[i].len > 1) {
+	if (V(2) || (~ifh.flags & IT_USE_INST && V(1))) {
+	    if (strlen((char *) ish.name) || m->xxs[i].len > 1) {
 		report (
 		    "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 		    "%02x%02x %02x%02x %5d ",
@@ -762,7 +762,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 	}
     }
 
-    if (V (0))
+    if (V(0))
 	report ("\nStored Patterns: %d ", m->xxh->pat);
 
     m->xxh->trk = m->xxh->pat * m->xxh->chn;

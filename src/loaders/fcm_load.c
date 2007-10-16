@@ -96,7 +96,7 @@ int fcm_load(struct xmp_mod_context *m, FILE *f)
 	if (m->xxi[i][0].fin < -48)
 	    m->xxi[i][0].xpo = 1;
 
-	if (V (1) && (strlen (m->xxih[i].name) || m->xxs[i].len > 2)) {
+	if (V(1) && (strlen(m->xxih[i].name) || m->xxs[i].len > 2)) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
 		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		fh.ins[i].loop_size > 1 ? 'L' : ' ',
@@ -107,7 +107,7 @@ int fcm_load(struct xmp_mod_context *m, FILE *f)
     PATTERN_INIT ();
 
     /* Load and convert patterns */
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
 
     fread (fe, 4, 1, f);	/* Skip 'SONG' pseudo chunk ID */
@@ -124,7 +124,7 @@ int fcm_load(struct xmp_mod_context *m, FILE *f)
 	    }
 	}
 
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
 
@@ -134,17 +134,17 @@ int fcm_load(struct xmp_mod_context *m, FILE *f)
 
     fread (fe, 4, 1, f);	/* Skip 'SAMP' pseudo chunk ID */
 
-    if (V (0))
+    if (V(0))
 	report ("\nStored samples : %d ", m->xxh->smp);
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     return 0;

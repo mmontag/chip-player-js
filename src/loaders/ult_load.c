@@ -126,7 +126,7 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
 
     INSTRUMENT_INIT ();
 
-    if (V (1))
+    if (V(1))
 	report ("Instruments    : %d ", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
@@ -176,7 +176,7 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
 
 	copy_adjust(m->xxih[i].name, uih.name, 24);
 
-	if ((V (1)) && (strlen ((char *) uih.name) || m->xxs[i].len)) {
+	if ((V(1)) && (strlen((char *) uih.name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
@@ -189,7 +189,7 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
 	    c2spd_to_note (uih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
 
-    if (V (1))
+    if (V(1))
 	report ("\n");
 
     fread(&ufh2.order, 256, 1, f);
@@ -221,7 +221,7 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
 
     /* Read and convert patterns */
 
-    if (V (0))
+    if (V(0))
 	report ("Stored patterns: %d ", m->xxh->pat);
 
     /* Events are stored by channel */
@@ -309,22 +309,22 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
 		}
 
 	    }
-	    if (V (0) && (j % (64 * m->xxh->chn) == 0))
+	    if (V(0) && (j % (64 * m->xxh->chn) == 0))
 		report (".");
 	}
     }
 
-    if (V (0))
+    if (V(0))
 	report ("\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
-	if (V (0))
+	if (V(0))
 	    report (".");
     }
-    if (V (0))
+    if (V(0))
 	report ("\n");
 
     m->volbase = 0x100;

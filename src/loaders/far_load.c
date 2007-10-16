@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.11 2007-10-16 11:54:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -118,7 +118,7 @@ static int far_load(struct xmp_mod_context *m, FILE *f)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    if (V (0)) {
+    if (V(0)) {
 	report("Comment bytes  : %d\n", ffh.textlen);
 	report("Stored patterns: %d ", m->xxh->pat);
     }
