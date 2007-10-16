@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.24 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.25 2007-10-16 11:18:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -384,7 +384,7 @@ skip_test:
     snprintf(m->type, XMP_DEF_NAMESIZE, "%s (%s)", magic, tracker);
     MODULE_INFO();
 
-    if (V (1)) {
+    if (V(1)) {
 	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {

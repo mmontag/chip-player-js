@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.31 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.32 2007-10-16 11:18:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -891,7 +891,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 
     m->xxh->chn = max_ch + 1;
     m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
-    m->fetch |= XMP_CTL_VIRTUAL | (xmp_ctl->flags & XMP_CTL_FILTER);
+    m->fetch |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
 
     reportv(0, "\n");
 

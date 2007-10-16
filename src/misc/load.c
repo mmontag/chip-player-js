@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.35 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: load.c,v 1.36 2007-10-16 11:18:03 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -450,6 +450,9 @@ int xmp_load_module(xmp_context ctx, char *s)
      */
     if (m->xxh->rst >= m->xxh->len)
 	m->xxh->rst = 0;
+
+    /* Disable filter if --nofilter is specified */
+    m->fetch &= ~(~xmp_ctl->flags & XMP_CTL_FILTER);
 
     str_adj(m->name);
     if (!*m->name)
