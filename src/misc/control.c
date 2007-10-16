@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.17 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: control.c,v 1.18 2007-10-16 02:32:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -131,25 +131,25 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 
     switch (cmd) {
     case XMP_ORD_PREV:
-	if (xmp_ctl->pos > 0)
-	    xmp_ctl->pos--;
-	return xmp_ctl->pos;
+	if (p->pos > 0)
+	    p->pos--;
+	return p->pos;
     case XMP_ORD_NEXT:
-	if (xmp_ctl->pos < m->xxh->len)
-	    xmp_ctl->pos++;
-	return xmp_ctl->pos;
+	if (p->pos < m->xxh->len)
+	    p->pos++;
+	return p->pos;
     case XMP_ORD_SET:
 	if (arg < m->xxh->len && arg >= 0)
-	    xmp_ctl->pos = arg;
-	return xmp_ctl->pos;
+	    p->pos = arg;
+	return p->pos;
     case XMP_MOD_STOP:
-	xmp_ctl->pos = -2;
+	p->pos = -2;
 	break;
     case XMP_MOD_PAUSE:
 	xmp_ctl->pause ^= 1;
 	return xmp_ctl->pause;
     case XMP_MOD_RESTART:
-	xmp_ctl->pos = -1;
+	p->pos = -1;
 	break;
     case XMP_GVOL_DEC:
 	if (m->volume > 0)

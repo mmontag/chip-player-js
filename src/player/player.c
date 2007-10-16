@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.24 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: player.c,v 1.25 2007-10-16 02:32:55 cmatsuoka Exp $
  */
 
 /*
@@ -779,7 +779,7 @@ next_order:
 	p->flow.row_cnt = p->flow.jumpline;
 	p->flow.jumpline = 0;
 
-	xmp_ctl->pos = o;
+	p->pos = o;
 
 	for (; p->flow.row_cnt < r; p->flow.row_cnt++) {
 	    if ((~m->fetch & XMP_CTL_LOOP) && o == p->xmp_scan_ord &&
@@ -801,19 +801,19 @@ next_order:
 
 		/* xmp_player_ctl processing */
 
-		if (o != xmp_ctl->pos) {
-		    if (xmp_ctl->pos == -1)
-			xmp_ctl->pos++;		/* restart module */
+		if (o != p->pos) {
+		    if (p->pos == -1)
+			p->pos++;		/* restart module */
 
-		    if (xmp_ctl->pos == -2) {	/* set by xmp_module_stop */
+		    if (p->pos == -2) {		/* set by xmp_module_stop */
 			xmp_drv_bufwipe();
 			goto end_module;	/* that's all folks */
 		    }
 
-		    if (xmp_ctl->pos == 0)
+		    if (p->pos == 0)
 			e = p->xmp_scan_num;
 
-		    p->tempo = m->xxo_info[o = xmp_ctl->pos].tempo;
+		    p->tempo = m->xxo_info[o = p->pos].tempo;
 		    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[o].bpm);
 		    m->volume = m->xxo_info[o].gvl;
 		    p->flow.jump = o;

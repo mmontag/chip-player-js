@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.17 2007-10-16 01:24:11 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.18 2007-10-16 02:32:55 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -149,7 +149,6 @@ struct xmp_control {
     int mix;		/* Percentage of L/R channel separation */
     int time;		/* Maximum playing time in seconds */
     int tempo;		/* Set initial tempo */
-    int pos;		/* Current ord */
     int chorus;		/* Chorus level */
     int reverb;		/* Reverb leval */
     char *parm[64];	/* Driver parameter data */

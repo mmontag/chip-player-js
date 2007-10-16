@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.18 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.19 2007-10-16 02:32:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -169,6 +169,7 @@ struct flow_control {
 };
 
 struct xmp_player_context {
+    int pos;
     int tempo;
     int gvol_slide;
     int gvol_flag;

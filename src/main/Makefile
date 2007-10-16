@@ -1,5 +1,5 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.16 2007-10-15 23:37:24 cmatsuoka Exp $
+# $Id: Makefile,v 1.17 2007-10-16 02:32:55 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
@@ -19,7 +19,7 @@ include $(TOPDIR)/Makefile.rules
 bins: $(BINS)
 
 xmp: $(OBJS) main.o $(TOPDIR)/lib/libxmp.a
-	$(LD) $(LDFLAGS) $(OBJS) main.o $(LIBS) #-lefence
+	$(LD) $(LDFLAGS) $(OBJS) main.o $(LIBS)
 
 install:: $(BINS)
 	@echo Installing binaries in $(DESTDIR)$(BINDIR)...
