@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.25 2007-10-16 02:32:55 cmatsuoka Exp $
+ * $Id: player.c,v 1.26 2007-10-16 23:54:16 cmatsuoka Exp $
  */
 
 /*
@@ -520,7 +520,8 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
     /* IT pitch envelopes are always linear, even in Amiga period mode.
      * Each unit in the envelope scale is 1/25 semitone.
      */
-    xc->pitchbend = period_to_bend(xc->period + (TEST(VIBRATO) ?
+    xc->pitchbend = period_to_bend(xc->period +
+	((TEST(VIBRATO) || TEST_PER(VIBRATO)) ?
 	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10 : 0) +
 	waveform[XXI->vwf][xc->insvib_idx] * XXI->vde / (1024 *
 	(1 + xc->insvib_swp)) + med_vibrato,
@@ -552,7 +553,7 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
     if (chn < xmp_ctl->numtrk) {
 	xmp_drv_echoback((finalpan << 12) | (chn << 4) | XMP_ECHO_CHN);
 
-	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA)) {
+	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA)) {	/* FIXME: persistent */
 	    xmp_drv_echoback((xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
 	    xmp_drv_echoback((xc->volume << 4) * 0x40 / p->gvol_base |
 		XMP_ECHO_VOL);
@@ -619,7 +620,7 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
 		xc->pan = 0xff;
 	}
 
-	if (TEST(PITCHBEND))
+	if (TEST(PITCHBEND) || TEST_PER(PITCHBEND))
 	    xc->period += xc->f_val;
 
 	/* Workaround for panic.s3m (from Toru Egashira's NSPmod) */
@@ -664,11 +665,12 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
     }
 
     /* Do tone portamento */
-    if (TEST(TONEPORTA)) {
+    if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
 	xc->period += xc->s_sgn * xc->s_val;
 	if ((xc->s_sgn * xc->s_end) < (xc->s_sgn * xc->period)) {
 	    xc->period = xc->s_end;
 	    RESET(TONEPORTA);
+	    RESET_PER(TONEPORTA);
 	}
     }
 

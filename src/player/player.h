@@ -1,19 +1,25 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.9 2007-10-15 19:19:22 cmatsuoka Exp $
+ * $Id: player.h,v 1.10 2007-10-16 23:54:16 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
 #define __PLAYER_H
 
-#define SET(f)	SET_FLAG (xc->flags,f)
-#define RESET(f) RESET_FLAG (xc->flags,f)
-#define TEST(f)	TEST_FLAG (xc->flags,f)
+/* Flag control */
+#define SET(f)		SET_FLAG(xc->flags,f)
+#define RESET(f) 	RESET_FLAG(xc->flags,f)
+#define TEST(f)		TEST_FLAG(xc->flags,f)
+
+/* Persistent effect flag control */
+#define SET_PER(f)	SET_FLAG(xc->per_flags,f)
+#define RESET_PER(f)	RESET_FLAG(xc->per_flags,f)
+#define TEST_PER(f)	TEST_FLAG(xc->per_flags,f)
 
 /* Global flags */
 #define PATTERN_BREAK	0x0001 
@@ -81,6 +87,7 @@ struct retrig_t {
 
 struct xmp_channel {
     int flags;			/* Channel flags */
+    int per_flags;		/* Persistent effect channel flags */
     uint8 note;			/* Note number */
     uint8 key;			/* Key number */
     int period;			/* Amiga or linear period */
@@ -145,7 +152,7 @@ struct xmp_channel {
     int cutoff;			/* IT filter cutoff frequency */
     int cutoff2;		/* IT filter cutoff frequency (with envelope) */
     int resonance;		/* IT filter resonance */
-
+    
     int med_vp;			/* MED synth volume sequence table pointer */
     int med_vv;			/* MED synth volume slide value */
     int med_vs;			/* MED synth volume speed */

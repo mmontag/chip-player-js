@@ -64,6 +64,12 @@
 #define FX_F_NSLIDE_DN	0x75
 #define FX_F_NSLIDE_UP	0x76
 
+/* Persistent effects -- for 669, FNK and FAR */
+#define FX_PER_PORTA_DN	0x78
+#define FX_PER_PORTA_UP	0x79
+#define FX_PER_PORTA_TO	0x7a
+#define FX_PER_VIBRATO	0x7b
+
 /* IT effects */
 #define FX_TRK_VOL      0x80
 #define FX_TRK_VSLIDE   0x81

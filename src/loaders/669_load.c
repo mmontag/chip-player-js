@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.11 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.12 2007-10-16 23:54:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -68,14 +68,12 @@ struct ssn_instrument_header {
 /* Effects bug fixed by Miod Vallat <miodrag@multimania.com> */
 
 static uint8 fx[] = {
-    FX_PORTA_UP,	FX_PORTA_DN,
-    FX_TONEPORTA,	FX_EXTENDED,
-    FX_VIBRATO,		FX_TEMPO,
-    NONE,		NONE,
-    NONE,		NONE,
-    NONE,		NONE,
-    NONE,		NONE,
-    NONE,		NONE
+    FX_PER_PORTA_UP,
+    FX_PER_PORTA_DN,
+    FX_PER_PORTA_TO,
+    FX_EXTENDED,
+    FX_PER_VIBRATO,
+    FX_TEMPO
 };
 
 
@@ -166,42 +164,41 @@ static int ssn_load(struct xmp_mod_context *m, FILE *f)
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	EVENT (i, 0, 0).f2t = FX_TEMPO;
-	EVENT (i, 0, 0).f2p = sfh.tempo[i];
-	EVENT (i, 1, sfh.pbrk[i]).f2t = FX_BREAK;
+	EVENT(i, 0, 0).f2t = FX_TEMPO;
+	EVENT(i, 0, 0).f2p = sfh.tempo[i];
+	EVENT(i, 1, sfh.pbrk[i]).f2t = FX_BREAK;
 	for (j = 0; j < 64 * 8; j++) {
 	    event = &EVENT (i, j % 8, j / 8);
 	    fread (&ev, 1, 3, f);
 	    if ((ev[0] & 0xfe) != 0xfe) {
 		event->note = 1 + 24 + (ev[0] >> 2);
-		event->ins = 1 + MSN (ev[1]) + ((ev[0] & 0x03) << 4);
+		event->ins = 1 + MSN(ev[1]) + ((ev[0] & 0x03) << 4);
 	    }
 	    if (ev[0] != 0xff)
-		event->vol = (LSN (ev[1]) << 2) + 1;
+		event->vol = (LSN(ev[1]) << 2) + 1;
 	    if (ev[2] + 1) {
-		event->fxt = fx[MSN (ev[2])];
-		event->fxp = LSN (ev[2]);
+		event->fxt = fx[MSN(ev[2])];
+		if (event->fxt > 6) {
+		    event->fxt = 0;
+		    continue;
+		}
 
 		switch (event->fxt) {
-		case NONE:
-		    event->fxp = 0;
+		case FX_PER_PORTA_UP:
+		case FX_PER_PORTA_DN:
+		case FX_PER_PORTA_TO:
+		    event->fxp = LSN(ev[2]);
 		    break;
-		case FX_PORTA_UP:
-		case FX_PORTA_DN:
-		case FX_TONEPORTA:
-		    event->fxp <<= 1;
-		    break;
-		case FX_VIBRATO:
-		    event->fxp |= 0x80;		/* Wild guess */
+		case FX_PER_VIBRATO:
+		    event->fxp = 0x40 || LSN(ev[2]);
 		    break;
 		case FX_EXTENDED:
-		    event->fxp = (EX_FINETUNE << 4) | 3;	/* Wild guess */
+		    event->fxp = (EX_FINETUNE << 4) | 3;	/* guess */
 		    break;
 		}
 	    }
 	}
-	if (V(0))
-	    report (".");
+	reportv(0, ".");
     }
 
     /* Read samples */

@@ -118,10 +118,34 @@ fx_porta_dn:
     case FX_TONEPORTA:				/* Tone portamento */
 	if (!TEST (IS_VALID))
 	    break;
-	DO_TONEPORTA ();
+	DO_TONEPORTA();
 	if (fxp)
 	    xc->s_val = fxp;
 	SET(TONEPORTA);
+	break;
+    case FX_PER_PORTA_UP:			/* Persistent portamento up */
+	SET_PER(PITCHBEND);
+	if ((xc->porta = fxp) != 0)
+	    xc->f_val = -fxp;
+	else
+	    RESET_PER(PITCHBEND);
+	break;
+    case FX_PER_PORTA_DN:			/* Persistent portamento down */
+	SET(PITCHBEND);
+	if ((xc->porta = fxp) != 0)
+	    xc->f_val = fxp;
+	else
+	    RESET_PER(PITCHBEND);
+	break;
+    case FX_PER_PORTA_TO:			/* Tone portamento */
+	if (!TEST(IS_VALID))
+	    break;
+	SET_PER(TONEPORTA);
+	DO_TONEPORTA();
+	if (fxp)
+	    xc->s_val = fxp;
+	else
+	    RESET_PER(TONEPORTA);
 	break;
     case FX_VIBRATO:				/* Vibrato */
 	SET(VIBRATO);
@@ -141,6 +165,15 @@ fx_porta_dn:
 	SET(VIBRATO);
 	if (LSN(fxp))
 	    xc->y_depth = LSN(fxp);
+	if (MSN(fxp))
+	    xc->y_rate = MSN(fxp);
+	break;
+    case FX_PER_VIBRATO:			/* Persistent vibrato */
+	SET_PER(VIBRATO);
+	if (LSN(fxp))
+	    xc->y_depth = LSN(fxp) * 4;
+	else
+	    RESET_PER(VIBRATO);
 	if (MSN(fxp))
 	    xc->y_rate = MSN(fxp);
 	break;
