@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.139 2007-10-17 13:08:48 cmatsuoka Exp $
+$Id: ChangeLog,v 1.140 2007-10-17 23:12:33 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -28,6 +28,7 @@ Stable versions
 	- reorganized internal data to remove lots of global variables
 	- changed all loaders to load module from relative offset
 	- changed UMX depacker to be a real loader (using relative offsets)
+	- ported Audacious plugin to the Audacious 1.4.0 API
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
