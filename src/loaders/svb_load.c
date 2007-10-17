@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.15 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.16 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@
 
 
 static int svb_test (FILE *, char *);
-static int svb_load (struct xmp_mod_context *, FILE *);
+static int svb_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info svb_loader = {
 	"PSM",
@@ -41,7 +41,7 @@ static int svb_test(FILE *f, char *t)
 
 /* FIXME: effects translation */
 
-static int svb_load(struct xmp_mod_context *m, FILE *f)
+static int svb_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	int c, r, i;
 	struct xxm_event *event;
@@ -89,17 +89,17 @@ static int svb_load(struct xmp_mod_context *m, FILE *f)
 
 	MODULE_INFO ();
 
-	fseek(f, p_ord, SEEK_SET);
+	fseek(f, start + p_ord, SEEK_SET);
 	fread(m->xxo, 1, m->xxh->len, f);
 
-	fseek(f, p_chn, SEEK_SET);
+	fseek(f, start + p_chn, SEEK_SET);
 	fread(buf, 1, 16, f);
 
 	INSTRUMENT_INIT ();
 
 	reportv(1, "     Sample name           Len   LBeg LEnd L Vol C2Spd\n");
 
-	fseek(f, p_ins, SEEK_SET);
+	fseek(f, start + p_ins, SEEK_SET);
 	for (i = 0; i < m->xxh->ins; i++) {
 		uint16 flags, c2spd;
 		int finetune;
@@ -141,7 +141,7 @@ static int svb_load(struct xmp_mod_context *m, FILE *f)
 
 	reportv(0, "Stored patterns: %d ", m->xxh->pat);
 
-	fseek(f, p_pat, SEEK_SET);
+	fseek(f, start + p_pat, SEEK_SET);
 	for (i = 0; i < m->xxh->pat; i++) {
 		int len;
 		uint8 b, rows, chan;
@@ -197,7 +197,7 @@ static int svb_load(struct xmp_mod_context *m, FILE *f)
 	reportv(0, "Stored samples : %d ", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		fseek(f, p_smp[i], SEEK_SET);
+		fseek(f, start + p_smp[i], SEEK_SET);
 		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");

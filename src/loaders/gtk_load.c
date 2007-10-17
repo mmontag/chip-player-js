@@ -1,7 +1,7 @@
 /* Graoumf Tracker GTK module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: gtk_load.c,v 1.9 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: gtk_load.c,v 1.10 2007-10-17 11:42:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,7 +17,7 @@
 
 
 static int gtk_test(FILE *, char *);
-static int gtk_load (struct xmp_mod_context *, FILE *);
+static int gtk_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info gtk_loader = {
 	"GTK",
@@ -39,7 +39,7 @@ static int gtk_test(FILE * f, char *t)
 	return 0;
 }
 
-static int gtk_load(struct xmp_mod_context *m, FILE *f)
+static int gtk_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	struct xxm_event *event;
 	int i, j, k;

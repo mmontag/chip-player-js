@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.26 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.27 2007-10-17 11:42:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,7 +55,7 @@ struct {
 
 
 static int mod_test (FILE *, char *);
-static int mod_load (struct xmp_mod_context *, FILE *);
+static int mod_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info mod_loader = {
     "MOD",
@@ -101,7 +101,7 @@ static int is_st_ins (char *s)
 }
 
 
-static int mod_load(struct xmp_mod_context *m, FILE *f)
+static int mod_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;
@@ -153,7 +153,7 @@ static int mod_load(struct xmp_mod_context *m, FILE *f)
 	fseek(f, -40, SEEK_END);
 	fread(magic, 8, 1, f);
 	fread(idbuffer, 1, 32, f);
-	fseek(f, pos, SEEK_SET);
+	fseek(f, start + pos, SEEK_SET);
 	tracker = idbuffer;
     } else if (!m->xxh->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
@@ -230,9 +230,9 @@ static int mod_load(struct xmp_mod_context *m, FILE *f)
 
     if (0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size < m->size) {
 	int pos = ftell(f);
-	fseek(f, 0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size, SEEK_SET);
+	fseek(f, start + 0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size, SEEK_SET);
 	fread(idbuffer, 1, 4, f);
-	fseek(f, pos, SEEK_SET);
+	fseek(f, start + pos, SEEK_SET);
 
 	if (!memcmp(idbuffer, "FLEX", 4)) {
 	    tracker = "Flextrax";

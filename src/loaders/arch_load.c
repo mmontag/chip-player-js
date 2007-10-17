@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.15 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.16 2007-10-17 11:42:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int arch_test(FILE *, char *);
-static int arch_load (struct xmp_mod_context *, FILE *);
+static int arch_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info arch_loader = {
 	"MUSX",
@@ -266,9 +266,9 @@ static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
 	max_ins++;
 }
 
-static int arch_load(struct xmp_mod_context *m, FILE *f)
+static int arch_load(struct xmp_mod_context *m, FILE *f, int start)
 {
-	LOAD_INIT ();
+	LOAD_INIT();
 
 	read32b(f);	/* MUSX */
 	read32b(f);

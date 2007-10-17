@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.33 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.34 2007-10-17 11:42:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int it_test (FILE *, char *);
-static int it_load (struct xmp_mod_context *, FILE *);
+static int it_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info it_loader = {
     "IT",
@@ -217,7 +217,7 @@ static void xlat_volfx(struct xxm_event *event)
 }
 
 
-static int it_load(struct xmp_mod_context *m, FILE *f)
+static int it_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int r, c, i, j, k, pat_len;
     struct xxm_event *event, dummy, lastevent[L_CHANNELS];
@@ -364,7 +364,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
     if (V(2) && ifh.special & IT_HAS_MSG) {
 	report("\nMessage length : %d\n| ", ifh.msglen);
 	i = ftell (f);
-	fseek (f, ifh.msgofs, SEEK_SET);
+	fseek(f, start + ifh.msgofs, SEEK_SET);
 	for (j = 0; j < ifh.msglen; j++) {
 	    fread (&b, 1, 1, f);
 	    if (b == '\r')
@@ -375,7 +375,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 	    if (b == '\n')
 		report ("| ");
 	}
-	fseek (f, i, SEEK_SET);
+	fseek(f, start + i, SEEK_SET);
     }
 
     INSTRUMENT_INIT ();
@@ -401,7 +401,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 
 	if ((ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200)) {
 	    /* New instrument format */
-	    fseek (f, pp_ins[i], SEEK_SET);
+	    fseek(f, start + pp_ins[i], SEEK_SET);
 
 	    i2h.magic = read32b(f);
 	    fread(&i2h.dosname, 12, 1, f);
@@ -539,7 +539,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 
 	} else if (ifh.flags & IT_USE_INST) {
 /* Old instrument format */
-	    fseek (f, pp_ins[i], SEEK_SET);
+	    fseek(f, start + pp_ins[i], SEEK_SET);
 
 	    i1h.magic = read32b(f);
 	    fread(&i1h.dosname, 12, 1, f);
@@ -645,7 +645,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (~ifh.flags & IT_USE_INST)
 	    m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fseek (f, pp_smp[i], SEEK_SET);
+	fseek(f, start + pp_smp[i], SEEK_SET);
 
 	ish.magic = read32b(f);
 	fread(&ish.dosname, 12, 1, f);
@@ -733,7 +733,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 	if (ish.flags & IT_SMP_SAMPLE && m->xxs[i].len > 1) {
 	    int cvt = 0;
 
-	    fseek(f, ish.sample_ptr, SEEK_SET);
+	    fseek(f, start + ish.sample_ptr, SEEK_SET);
 
 	    if (~ish.convert & IT_CVT_SIGNED)
 		cvt |= XMP_SMP_UNS;
@@ -786,7 +786,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f)
 		m->xxp[i]->info[j].index = i * m->xxh->chn;
 	    continue;
 	}
-	fseek (f, pp_pat[i], SEEK_SET);
+	fseek(f, start + pp_pat[i], SEEK_SET);
 	pat_len = read16l(f) /* - 4*/;
 	m->xxp[i]->rows = read16l(f);
 	TRACK_ALLOC (i);

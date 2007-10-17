@@ -1,7 +1,7 @@
 /* DIGI Booster module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: digi_load.c,v 1.9 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: digi_load.c,v 1.10 2007-10-17 11:42:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,7 +31,7 @@
 
 
 static int digi_test (FILE *, char *);
-static int digi_load (struct xmp_mod_context *, FILE *);
+static int digi_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info digi_loader = {
     "DIGI",
@@ -79,7 +79,7 @@ struct digi_header {
 };
 
 
-static int digi_load(struct xmp_mod_context *m, FILE *f)
+static int digi_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     struct xxm_event *event = 0;
     struct digi_header dh;

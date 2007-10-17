@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.28 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.29 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int sym_test(FILE *, char *);
-static int sym_load (struct xmp_mod_context *, FILE *);
+static int sym_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info sym_loader = {
 	"DSYM",
@@ -182,7 +182,7 @@ static uint32 readptr16l(uint8 *p)
 	return (b << 8) | a;
 }
 
-static int sym_load(struct xmp_mod_context *m, FILE *f)
+static int sym_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	struct xxm_event *event;
 	int i, j;

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.10 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.11 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,7 +16,7 @@
 
 
 static int rad_test (FILE *, char *);
-static int rad_load (struct xmp_mod_context *, FILE *);
+static int rad_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info rad_loader = {
     "RAD",
@@ -51,7 +51,7 @@ struct rad_file_header {
 };
 
 
-static int rad_load(struct xmp_mod_context *m, FILE *f)
+static int rad_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j;
     struct rad_file_header rfh;
@@ -176,7 +176,7 @@ static int rad_load(struct xmp_mod_context *m, FILE *f)
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	fseek (f, ppat[i], SEEK_SET);
+	fseek(f, start + ppat[i], SEEK_SET);
 	do {
 	    fread (&r, 1, 1, f);	/* Row number */
 	    if ((r & 0x7f) >= 64)

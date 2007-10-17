@@ -1,7 +1,7 @@
 /* Real Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: rtm_load.c,v 1.12 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.13 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int rtm_test(FILE *, char *);
-static int rtm_load (struct xmp_mod_context *, FILE *);
+static int rtm_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info rtm_loader = {
 	"RTM",
@@ -64,7 +64,7 @@ static int read_object_header(FILE *f, struct ObjectHeader *h)
 }
 
 
-static int rtm_load(struct xmp_mod_context *m, FILE *f)
+static int rtm_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	int i, j, r;
 	struct xxm_event *event;
@@ -121,7 +121,7 @@ static int rtm_load(struct xmp_mod_context *m, FILE *f)
 	for (i = 0; i < m->xxh->pat; i++) {
 		uint8 c;
 
-		fseek(f, offset, SEEK_SET);
+		fseek(f, start + offset, SEEK_SET);
 
 		read_object_header(f, &oh);
 	
@@ -178,7 +178,7 @@ static int rtm_load(struct xmp_mod_context *m, FILE *f)
 	if (V(1))
 		report("\n");
 
-	fseek(f, offset, SEEK_SET);
+	fseek(f, start + offset, SEEK_SET);
 
 	/* ESTIMATED value! We don't know the actual value at this point */
 	m->xxh->smp = MAX_SAMP;

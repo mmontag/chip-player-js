@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.23 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.24 2007-10-17 11:42:25 cmatsuoka Exp $
  */
 
 /*
@@ -21,7 +21,7 @@
 
 
 static int mmd1_test(FILE *, char *);
-static int mmd1_load (struct xmp_mod_context *, FILE *);
+static int mmd1_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info mmd1_loader = {
 	"MMD0/1",
@@ -139,7 +139,7 @@ static void xlat_fx(struct xxm_event *event)
 	}
 }
 
-static int mmd1_load(struct xmp_mod_context *m, FILE *f)
+static int mmd1_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	int i, j, k;
 	struct MMD0 header;
@@ -195,7 +195,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 	 * song structure
 	 */
 	_D(_D_WARN "load song");
-	fseek(f, song_offset, SEEK_SET);
+	fseek(f, start + song_offset, SEEK_SET);
 	for (i = 0; i < 63; i++) {
 		song.sample[i].rep = read16b(f);
 		song.sample[i].replen = read16b(f);
@@ -263,11 +263,11 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 	for (i = 0; i < m->xxh->ins; i++) {
 		uint32 smpl_offset;
 		int16 type;
-		fseek(f, smplarr_offset + i * 4, SEEK_SET);
+		fseek(f, start + smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = read32b(f);
 		if (smpl_offset == 0)
 			continue;
-		fseek(f, smpl_offset, SEEK_SET);
+		fseek(f, start + smpl_offset, SEEK_SET);
 		read32b(f);				/* length */
 		type = read16b(f);
 		if (type == -1) {			/* type is synth? */
@@ -289,7 +289,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 	expsmp_offset = 0;
 	iinfo_offset = 0;
 	if (expdata_offset) {
-		fseek(f, expdata_offset, SEEK_SET);
+		fseek(f, start + expdata_offset, SEEK_SET);
 		read32b(f);
 		expsmp_offset = read32b(f);
 		_D(_D_INFO "expsmp_offset = 0x%08x", expsmp_offset);
@@ -308,7 +308,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 		songname_offset = read32b(f);
 		_D(_D_INFO "songname_offset = 0x%08x", songname_offset);
 		expdata.songnamelen = read32b(f);
-		fseek(f, songname_offset, SEEK_SET);
+		fseek(f, start + songname_offset, SEEK_SET);
 		_D(_D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_DEF_NAMESIZE)
@@ -325,12 +325,12 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 	for (i = 0; i < m->xxh->pat; i++) {
 		int block_offset;
 
-		fseek(f, blockarr_offset + i * 4, SEEK_SET);
+		fseek(f, start + blockarr_offset + i * 4, SEEK_SET);
 		block_offset = read32b(f);
 		_D(_D_INFO "block %d block_offset = 0x%08x", i, block_offset);
 		if (block_offset == 0)
 			continue;
-		fseek(f, block_offset, SEEK_SET);
+		fseek(f, start + block_offset, SEEK_SET);
 
 		if (ver > 0) {
 			block.numtracks = read16b(f);
@@ -371,11 +371,11 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 	for (i = 0; i < m->xxh->pat; i++) {
 		int block_offset;
 
-		fseek(f, blockarr_offset + i * 4, SEEK_SET);
+		fseek(f, start + blockarr_offset + i * 4, SEEK_SET);
 		block_offset = read32b(f);
 		if (block_offset == 0)
 			continue;
-		fseek(f, block_offset, SEEK_SET);
+		fseek(f, start + block_offset, SEEK_SET);
 
 		if (ver > 0) {
 			block.numtracks = read16b(f);
@@ -447,13 +447,13 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 
 	for (smp_idx = i = 0; i < m->xxh->ins; i++) {
 		int smpl_offset;
-		fseek(f, smplarr_offset + i * 4, SEEK_SET);
+		fseek(f, start + smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = read32b(f);
 		//_D(_D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
 		if (smpl_offset == 0)
 			continue;
 
-		fseek(f, smpl_offset, SEEK_SET);
+		fseek(f, start + smpl_offset, SEEK_SET);
 		instr.length = read32b(f);
 		instr.type = read16b(f);
 
@@ -483,7 +483,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 
 		}
 
-		fseek(f, pos, SEEK_SET);
+		fseek(f, start + pos, SEEK_SET);
 
 		if (instr.type == -2) {			/* Hybrid */
 			int length, type;
@@ -501,7 +501,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 			fread(synth.voltbl, 1, 128, f);;
 			fread(synth.wftbl, 1, 128, f);;
 
-			fseek(f, pos - 6 + read32b(f), SEEK_SET);
+			fseek(f, start + pos - 6 + read32b(f), SEEK_SET);
 			length = read32b(f);
 			type = read16b(f);
 
@@ -579,7 +579,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 				m->xxi[i][j].sid = smp_idx;
 				m->xxi[i][j].fin = exp_smp.finetune;
 
-				fseek(f, pos - 6 + synth.wf[j], SEEK_SET);
+				fseek(f, start + pos - 6 + synth.wf[j], SEEK_SET);
 
 				m->xxs[smp_idx].len = read16b(f) * 2;
 				m->xxs[smp_idx].lps = 0;
@@ -628,7 +628,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f)
 			       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
 			       (uint8) m->xxi[i][0].xpo, m->xxi[i][0].fin >> 4);
 
-		fseek(f, smpl_offset + 6, SEEK_SET);
+		fseek(f, start + smpl_offset + 6, SEEK_SET);
 		xmp_drv_loadpatch(f, smp_idx, m->c4rate, 0,
 				  &m->xxs[smp_idx], NULL);
 

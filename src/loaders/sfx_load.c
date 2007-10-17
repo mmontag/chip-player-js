@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.10 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.11 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,7 +29,7 @@
 
 
 static int sfx_test (FILE *, char *);
-static int sfx_load (struct xmp_mod_context *, FILE *);
+static int sfx_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info sfx_loader = {
     "SFX",
@@ -225,7 +225,7 @@ static int sfx_13_20_load(struct xmp_mod_context *m, FILE *f, int nins)
 }
 
 
-static int sfx_load(struct xmp_mod_context *m, FILE *f)
+static int sfx_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     if (sfx_13_20_load(m, f, 15) < 0)
 	return sfx_13_20_load(m, f, 31);

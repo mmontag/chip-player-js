@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.12 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.13 2007-10-17 11:42:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,7 +25,7 @@
 
 
 static int amf_test(FILE *, char *);
-static int amf_load (struct xmp_mod_context *, FILE *);
+static int amf_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info amf_loader = {
 	"AMF",
@@ -53,7 +53,7 @@ static int amf_test(FILE * f, char *t)
 }
 
 
-int amf_load(struct xmp_mod_context *m, FILE *f)
+static int amf_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	int i, j;
 	struct xxm_event *event;

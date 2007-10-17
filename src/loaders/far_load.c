@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.14 2007-10-17 01:29:41 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.15 2007-10-17 11:42:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,7 +26,7 @@
 
 
 static int far_test (FILE *, char *);
-static int far_load (struct xmp_mod_context *, FILE *);
+static int far_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info far_loader = {
     "FAR",
@@ -75,7 +75,7 @@ static uint8 fx[] = {
 };
 
 
-static int far_load(struct xmp_mod_context *m, FILE *f)
+static int far_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j, vib = 0;
     struct xxm_event *event;

@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.17 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.18 2007-10-17 11:42:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,7 +24,7 @@
 
 
 static int dbm_test(FILE *, char *);
-static int dbm_load (struct xmp_mod_context *, FILE *);
+static int dbm_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info dbm_loader = {
 	"DBM",
@@ -275,7 +275,7 @@ static void get_venv(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static int dbm_load(struct xmp_mod_context *m, FILE *f)
+static int dbm_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	char name[44];
 	uint16 version;

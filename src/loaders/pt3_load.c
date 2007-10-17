@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.11 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int pt3_test (FILE *, char *);
-static int pt3_load (struct xmp_mod_context *, FILE *);
+static int pt3_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info pt3_loader = {
     "PTM",
@@ -88,7 +88,7 @@ struct pt3_chunk_inst {
 };
 
 
-static int ptdt_load (struct xmp_mod_context *, FILE *);
+static int ptdt_load (struct xmp_mod_context *, FILE *, int);
 
 
 static void get_vers(struct xmp_mod_context *m, int size, FILE *f)
@@ -99,7 +99,7 @@ static void get_vers(struct xmp_mod_context *m, int size, FILE *f)
     sprintf (m->type, "%-6.6s (Protracker IFFMODL)", buf + 4);
 
     /* Workaround for PT3.61 bug (?) */
-    fseek (f, 10 - size, SEEK_CUR);
+    fseek(f, 10 - size, SEEK_CUR);
 }
 
 
@@ -143,11 +143,11 @@ static void get_cmnt(struct xmp_mod_context *m, int size, FILE *f)
 
 static void get_ptdt(struct xmp_mod_context *m, int size, FILE *f)
 {
-    ptdt_load(m, f);
+    ptdt_load(m, f, 0);
 }
 
 
-static int pt3_load(struct xmp_mod_context *m, FILE *f)
+static int pt3_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     LOAD_INIT();
 
@@ -156,10 +156,10 @@ static int pt3_load(struct xmp_mod_context *m, FILE *f)
     read32b(f);		/* id */
     
     /* IFF chunk IDs */
-    iff_register ("VERS", get_vers);
-    iff_register ("INFO", get_info);
-    iff_register ("CMNT", get_cmnt);
-    iff_register ("PTDT", get_ptdt);
+    iff_register("VERS", get_vers);
+    iff_register("INFO", get_info);
+    iff_register("CMNT", get_cmnt);
+    iff_register("PTDT", get_ptdt);
 
     iff_setflag(IFF_FULL_CHUNK_SIZE);
 
@@ -173,7 +173,7 @@ static int pt3_load(struct xmp_mod_context *m, FILE *f)
 }
 
 
-static int ptdt_load(struct xmp_mod_context *m, FILE *f)
+static int ptdt_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j;
     struct xxm_event *event;

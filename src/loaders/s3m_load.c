@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.21 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.22 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -72,7 +72,7 @@
 #define MAGIC_SCRS	MAGIC4('S','C','R','S')
 
 static int s3m_test (FILE *, char *);
-static int s3m_load (struct xmp_mod_context *, FILE *);
+static int s3m_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info s3m_loader = {
     "S3M",
@@ -201,7 +201,7 @@ static void xlat_fx (int c, struct xxm_event *e)
 }
 
 
-static int s3m_load(struct xmp_mod_context *m, FILE *f)
+static int s3m_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int c, r, i, j;
     struct s3m_adlib_header sah;
@@ -363,7 +363,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 	if (!pp_pat[i])
 	    continue;
 
-	fseek (f, pp_pat[i] * 16, SEEK_SET);
+	fseek(f, start + pp_pat[i] * 16, SEEK_SET);
 	r = 0;
 	pat_len = read16l(f) - 2;
 
@@ -425,7 +425,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fseek (f, pp_ins[i] * 16, SEEK_SET);
+	fseek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = read8(f);
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
@@ -517,7 +517,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f)
 
 	if (!m->xxs[i].len)
 	    continue;
-	fseek (f, 16L * sih.memseg, SEEK_SET);
+	fseek(f, start + 16L * sih.memseg, SEEK_SET);
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
 	reportv(0, ".");

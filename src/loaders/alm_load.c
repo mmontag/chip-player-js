@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.12 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.13 2007-10-17 11:42:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,7 +28,7 @@
 
 
 static int alm_test (FILE *, char *);
-static int alm_load (struct xmp_mod_context *, FILE *);
+static int alm_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info alm_loader = {
     "ALM",
@@ -62,7 +62,7 @@ struct alm_file_header {
 
 #define NAME_SIZE 255
 
-int alm_load(struct xmp_mod_context *m, FILE *f)
+static int alm_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j;
     struct alm_file_header afh;
@@ -142,15 +142,16 @@ int alm_load(struct xmp_mod_context *m, FILE *f)
 	    continue;
 
 	fstat (fileno (s), &stat);
-	fread (&b, 1, 1, s);	/* Get first octet */
+	b = read8(s);		/* Get first octet */
 	m->xxs[i].len = stat.st_size - 5 * !b;
 
 	if (!b) {		/* Instrument with header */
 	    m->xxs[i].lps = read16l(f);
 	    m->xxs[i].lpe = read16l(f);
 	    m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ? WAVE_LOOPING : 0;
-	} else
-	    fseek (s, 0, SEEK_SET);
+	} else {
+	    fseek(s, 0, SEEK_SET);
+	}
 
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].vol = 0x40;

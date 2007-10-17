@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ims_load.c,v 1.9 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: ims_load.c,v 1.10 2007-10-17 11:42:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -58,7 +58,7 @@ struct ims_header {
 
 
 static int ims_test (FILE *, char *);
-static int ims_load (struct xmp_mod_context *, FILE *);
+static int ims_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info ims_loader = {
     "IMS",
@@ -136,7 +136,7 @@ static int ims_test(FILE *f, char *t)
 }
 
 
-static int ims_load(struct xmp_mod_context *m, FILE *f)
+static int ims_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j;
     int smp_size;

@@ -1,7 +1,7 @@
 /* TCB Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: tcb_load.c,v 1.13 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: tcb_load.c,v 1.14 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,7 +24,7 @@
 
 
 static int tcb_test(FILE *, char *);
-static int tcb_load (struct xmp_mod_context *, FILE *);
+static int tcb_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info tcb_loader = {
 	"TCB",
@@ -46,7 +46,7 @@ static int tcb_test(FILE *f, char *t)
 	return 0;
 }
 
-static int tcb_load(struct xmp_mod_context *m, FILE *f)
+static int tcb_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	struct xxm_event *event;
 	int i, j, k;
@@ -183,7 +183,7 @@ static int tcb_load(struct xmp_mod_context *m, FILE *f)
 	/* Read samples */
 	reportv(0, "Stored samples : %d ", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
-		fseek(f, base_offs + soffs[i], SEEK_SET);
+		fseek(f, start + base_offs + soffs[i], SEEK_SET);
 		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");

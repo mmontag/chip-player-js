@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.19 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.20 2007-10-17 11:42:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,7 +31,7 @@
 #define MAX_SAMP 1024
 
 static int xm_test (FILE *, char *);
-static int xm_load (struct xmp_mod_context *, FILE *);
+static int xm_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info xm_loader = {
     "XM",
@@ -53,7 +53,7 @@ static int xm_test(FILE *f, char *t)
     return 0;
 }
 
-static int xm_load(struct xmp_mod_context *m, FILE *f)
+static int xm_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j, r;
     int sample_num = 0;
@@ -310,7 +310,7 @@ load_instruments:
 	    xi.v_fade = read16l(f);		/* Volume fadeout */
 
 	    /* Skip reserved space */
-	    fseek (f, xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
+	    fseek(f, xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
 
 	    /* Envelope */
 	    m->xxih[i].rls = xi.v_fade;
@@ -422,7 +422,7 @@ load_instruments:
 	     * generalization should take care of both cases.
 	     */
 
-	     fseek (f, xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
+	     fseek(f, xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
 
 	if ((V(1)) && (strlen((char *) m->xxih[i].name) || xih.samples))

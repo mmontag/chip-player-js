@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.11 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.12 2007-10-17 11:42:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@
 
 
 static int dtt_test(FILE *, char *);
-static int dtt_load (struct xmp_mod_context *, FILE *);
+static int dtt_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info dtt_loader = {
 	"DTT",
@@ -38,7 +38,7 @@ static int dtt_test(FILE *f, char *t)
 	return 0;
 }
 
-static int dtt_load(struct xmp_mod_context *m, FILE *f)
+static int dtt_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	struct xxm_event *event;
 	int i, j, k;
@@ -124,7 +124,7 @@ static int dtt_load(struct xmp_mod_context *m, FILE *f)
 		m->xxp[i]->rows = plen[i];
 		TRACK_ALLOC(i);
 
-		fseek(f, pofs[i], SEEK_SET);
+		fseek(f, start + pofs[i], SEEK_SET);
 
 		for (j = 0; j < m->xxp[i]->rows; j++) {
 			for (k = 0; k < m->xxh->chn; k++) {
@@ -158,7 +158,7 @@ static int dtt_load(struct xmp_mod_context *m, FILE *f)
 	/* Read samples */
 	reportv(0, "Stored samples : %d ", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
-		fseek(f, sdata[i], SEEK_SET);
+		fseek(f, start + sdata[i], SEEK_SET);
 		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");

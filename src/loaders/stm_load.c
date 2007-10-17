@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.11 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.12 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int stm_test (FILE *, char *);
-static int stm_load (struct xmp_mod_context *, FILE *);
+static int stm_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info stm_loader = {
     "STM",
@@ -74,7 +74,7 @@ static uint8 fx[] = {
 };
 
 
-static int stm_load(struct xmp_mod_context *m, FILE *f)
+static int stm_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j;
     struct xxm_event *event;

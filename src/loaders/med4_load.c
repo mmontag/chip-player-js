@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.15 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.16 2007-10-17 11:42:25 cmatsuoka Exp $
  */
 
 /*
@@ -25,7 +25,7 @@
 
 
 static int med4_test(FILE *, char *);
-static int med4_load (struct xmp_mod_context *, FILE *);
+static int med4_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info med4_loader = {
 	"MED4",
@@ -119,7 +119,7 @@ static inline uint16 read12b(FILE *f)
 	return (a << 8) | (b << 4) | c;
 }
 
-static int med4_load(struct xmp_mod_context *m, FILE *f)
+static int med4_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	int i, j, k;
 	uint32 m0, mask;
@@ -143,7 +143,7 @@ static int med4_load(struct xmp_mod_context *m, FILE *f)
 	fseek(f, 0, SEEK_END);
 	fseek(f, -1023, SEEK_CUR);
 	fread(buf, 1, 1024, f);
-	fseek(f, pos, SEEK_SET);
+	fseek(f, start + pos, SEEK_SET);
 	for (i = 0; i < 1012; i++) {
 		if (!memcmp(buf + i, "MEDV\000\000\000\004", 8)) {
 			vermaj = *(buf + i + 10);

@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.11 2007-10-17 11:42:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int mgt_test(FILE *, char *);
-static int mgt_load (struct xmp_mod_context *, FILE *);
+static int mgt_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info mgt_loader = {
 	"MGT",
@@ -48,7 +48,7 @@ static int mgt_test(FILE *f, char *t)
 	return 0;
 }
 
-static int mgt_load(struct xmp_mod_context *m, FILE *f)
+static int mgt_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	struct xxm_event *event;
 	int i, j;
@@ -82,7 +82,7 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 	read32b(f);			/* total smp len */
 	read32b(f);			/* unpacked trk size */
 
-	fseek(f, sng_ptr, SEEK_SET);
+	fseek(f, start + sng_ptr, SEEK_SET);
 
 	fread(m->name, 1, 32, f);
 	seq_ptr = read32b(f);
@@ -102,7 +102,7 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 
 	/* Sequence */
 
-	fseek(f, seq_ptr, SEEK_SET);
+	fseek(f, start + seq_ptr, SEEK_SET);
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = read16b(f);
 
@@ -110,7 +110,7 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 
 	INSTRUMENT_INIT();
 
-	fseek(f, ins_ptr, SEEK_SET);
+	fseek(f, start + ins_ptr, SEEK_SET);
 	reportv(1, "     Name                             Len  LBeg LEnd L Vol C2Spd\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
@@ -167,9 +167,9 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 		int offset, rows;
 		uint8 b;
 
-		fseek(f, trk_ptr + i * 4, SEEK_SET);
+		fseek(f, start + trk_ptr + i * 4, SEEK_SET);
 		offset = read32b(f);
-		fseek(f, offset, SEEK_SET);
+		fseek(f, start + offset, SEEK_SET);
 
 		rows = read16b(f);
 		m->xxt[i] = calloc(sizeof(struct xxm_track) +
@@ -293,7 +293,7 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 	/* Read and convert patterns */
 
 	reportv(0, "Stored patterns: %d ", m->xxh->pat);
-	fseek(f, pat_ptr, SEEK_SET);
+	fseek(f, start + pat_ptr, SEEK_SET);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -317,7 +317,7 @@ static int mgt_load(struct xmp_mod_context *m, FILE *f)
 		if (m->xxih[i].nsm == 0)
 			continue;
 
-		fseek(f, sdata[i], SEEK_SET);
+		fseek(f, start + sdata[i], SEEK_SET);
 		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0,
 						&m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.17 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int ptm_test (FILE *, char *);
-static int ptm_load (struct xmp_mod_context *, FILE *);
+static int ptm_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info ptm_loader = {
     "PTM",
@@ -35,6 +35,7 @@ static int ptm_test(FILE *f, char *t)
     if (read32b(f) != MAGIC_PTMF)
 	return -1;
 
+    fseek(f, 0, SEEK_SET);
     read_title(f, t, 28);
 
     return 0;
@@ -50,7 +51,7 @@ static int ptm_vol[] = {
 };
 
 
-int ptm_load(struct xmp_mod_context *m, FILE *f)
+static int ptm_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int c, r, i, smp_ofs[256];
     struct xxm_event *event;
@@ -170,7 +171,7 @@ int ptm_load(struct xmp_mod_context *m, FILE *f)
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	fseek (f, 16L * pfh.patseg[i], SEEK_SET);
+	fseek(f, start + 16L * pfh.patseg[i], SEEK_SET);
 	r = 0;
 	while (r < 64) {
 	    fread (&b, 1, 1, f);
@@ -250,7 +251,7 @@ int ptm_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	fseek (f, smp_ofs[m->xxi[i][0].sid], SEEK_SET);
+	fseek(f, start + smp_ofs[m->xxi[i][0].sid], SEEK_SET);
 	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");

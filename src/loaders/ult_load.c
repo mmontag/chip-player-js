@@ -24,7 +24,7 @@
 
 
 static int ult_test (FILE *, char *);
-static int ult_load (struct xmp_mod_context *, FILE *);
+static int ult_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info ult_loader = {
     "ULT",
@@ -91,7 +91,7 @@ static char *verstr[4] = {
 };
 
 
-static int ult_load(struct xmp_mod_context *m, FILE *f)
+static int ult_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j, k, ver, cnt;
     struct xxm_event *event;
@@ -117,7 +117,7 @@ static int ult_load(struct xmp_mod_context *m, FILE *f)
 
     MODULE_INFO ();
 
-    fseek (f, ufh.msgsize * 32, SEEK_CUR);
+    fseek(f, ufh.msgsize * 32, SEEK_CUR);
 
     m->xxh->ins = m->xxh->smp = read8(f);
     /* m->xxh->flg |= XXM_FLG_LINEAR; */

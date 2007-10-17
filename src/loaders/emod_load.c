@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.10 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.11 2007-10-17 11:42:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int emod_test (FILE *, char *);
-static int emod_load (struct xmp_mod_context *, FILE *);
+static int emod_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info emod_loader = {
     "EMOD",
@@ -175,7 +175,7 @@ static void get_8smp(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-int emod_load(struct xmp_mod_context *m, FILE *f)
+static int emod_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     LOAD_INIT ();
 

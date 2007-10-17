@@ -23,7 +23,7 @@
 #include "period.h"
 
 static int st_test (FILE *, char *);
-static int st_load (struct xmp_mod_context *, FILE *);
+static int st_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info st_loader = {
     "ST",
@@ -143,7 +143,7 @@ static int st_test(FILE *f, char *t)
     return 0;
 }
 
-static int st_load(struct xmp_mod_context *m, FILE *f)
+static int st_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j;
     int smp_size, pat_size;
@@ -291,7 +291,7 @@ static int st_load(struct xmp_mod_context *m, FILE *f)
     if (serr && V(2))
 	report ("File size error: %d\n", serr);
 
-    fseek(f, pos, SEEK_SET);
+    fseek(f, start + pos, SEEK_SET);
 
     PATTERN_INIT();
 

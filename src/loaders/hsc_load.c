@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.7 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.8 2007-10-17 11:42:24 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 
 
 static int hsc_test (FILE *, char *);
-static int hsc_load (struct xmp_mod_context *, FILE *);
+static int hsc_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info hsc_loader = {
     "HSC",
@@ -69,7 +69,7 @@ static int hsc_test(FILE *f, char *t)
     return 0;
 }
 
-static int hsc_load(struct xmp_mod_context *m, FILE *f)
+static int hsc_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int p, i, r, c;
     struct xxm_event *event;
@@ -89,7 +89,7 @@ static int hsc_load(struct xmp_mod_context *m, FILE *f)
 
     m->xxh->ins = i;
 
-    fseek (f, 0, SEEK_SET);
+    fseek(f, start + 0, SEEK_SET);
 
     m->xxh->chn = 9;
     m->xxh->bpm = 125;
@@ -163,7 +163,7 @@ skip:
 	if (m->xxo[i] > p)
 	    p = m->xxo[i];
     }
-    fseek (f, 50 - i, SEEK_CUR);
+    fseek(f, 50 - i, SEEK_CUR);
     m->xxh->len = i;
     m->xxh->pat = p + 1;
     m->xxh->trk = m->xxh->pat * m->xxh->chn;

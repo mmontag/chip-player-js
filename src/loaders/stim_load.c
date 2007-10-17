@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stim_load.c,v 1.9 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: stim_load.c,v 1.10 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,7 +26,7 @@
 
 
 static int stim_test (FILE *, char *);
-static int stim_load (struct xmp_mod_context *, FILE *);
+static int stim_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info stim_loader = {
     "STIM",
@@ -67,7 +67,7 @@ struct stim_header {
 };
 
 
-static int stim_load(struct xmp_mod_context *m, FILE *f)
+static int stim_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i, j, k;
     struct xxm_event *event;
@@ -112,7 +112,7 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
 	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
-	fseek (f, sh.pataddr[i] + 8, SEEK_SET);
+	fseek(f, start + sh.pataddr[i] + 8, SEEK_SET);
 
 	for (j = 0; j < 4; j++) {
 	    for (k = 0; k < 64; k++) {
@@ -159,7 +159,7 @@ static int stim_load(struct xmp_mod_context *m, FILE *f)
     if (V(0))
 	report ("\nStored samples : %d ", m->xxh->smp);
 
-    fseek (f, sh.smpaddr + m->xxh->smp * 4, SEEK_SET);
+    fseek(f, start + sh.smpaddr + m->xxh->smp * 4, SEEK_SET);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	si.size = read16b(f);

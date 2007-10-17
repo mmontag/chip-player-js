@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.17 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.18 2007-10-17 11:42:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 
 
 static int liq_test (FILE *, char *);
-static int liq_load (struct xmp_mod_context *, FILE *);
+static int liq_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info liq_loader = {
     "LIQ",
@@ -157,7 +157,7 @@ static void decode_event(uint8 x1, struct xxm_event *event, FILE *f)
     assert (event->fxt <= 26);
 }
 
-int liq_load(struct xmp_mod_context *m, FILE *f)
+static int liq_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int i;
     struct xxm_event *event = NULL;
@@ -191,7 +191,7 @@ int liq_load(struct xmp_mod_context *m, FILE *f)
     if ((lh.version >> 8) == 0) {
 	lh.hdrsz = lh.len;
 	lh.len = 0;
-	fseek (f, -2, SEEK_CUR);
+	fseek(f, -2, SEEK_CUR);
     }
 
     m->xxh->tpo = lh.speed;
@@ -226,11 +226,11 @@ int liq_load(struct xmp_mod_context *m, FILE *f)
 	fread(m->xxo, 1, m->xxh->len, f);
 
 	/* Skip 1.01 echo pools */
-	fseek (f, lh.hdrsz - (0x6d + m->xxh->chn * 2 + m->xxh->len), SEEK_CUR);
+	fseek(f, lh.hdrsz - (0x6d + m->xxh->chn * 2 + m->xxh->len), SEEK_CUR);
     } else {
-	fseek (f, 0xf0, SEEK_SET);
+	fseek(f, start + 0xf0, SEEK_SET);
 	fread (m->xxo, 1, 256, f);
-	fseek (f, lh.hdrsz, SEEK_SET);
+	fseek(f, start + lh.hdrsz, SEEK_SET);
 
 	for (i = 0; i < 256; i++) {
 	    if (m->xxo[i] == 0xff)
@@ -490,7 +490,7 @@ next_pattern:
 	}
 
 	c2spd_to_note (li.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-	fseek (f, li.hdrsz - 0x90, SEEK_CUR);
+	fseek(f, li.hdrsz - 0x90, SEEK_CUR);
 
 	if (!m->xxs[i].len)
 	    continue;

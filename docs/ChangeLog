@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.137 2007-10-17 02:16:15 cmatsuoka Exp $
+$Id: ChangeLog,v 1.138 2007-10-17 11:42:15 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -26,6 +26,7 @@ Stable versions
 	- removed filesize-based module format detection
 	- replaced XANN loader with Prowizard XANN depacker
 	- reorganized internal data to remove lots of global variables
+	- changed all loaders to load module from relative offset
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

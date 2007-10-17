@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.11 2007-10-16 11:54:14 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.12 2007-10-17 11:42:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,7 +33,7 @@
 
 
 static int stx_test (FILE *, char *);
-static int stx_load (struct xmp_mod_context *, FILE *);
+static int stx_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info stx_loader = {
     "STX",
@@ -77,7 +77,7 @@ static uint8 fx[] = {
 };
 
 
-static int stx_load(struct xmp_mod_context *m, FILE *f)
+static int stx_load(struct xmp_mod_context *m, FILE *f, int start)
 {
     int c, r, i, broken = 0;
     struct xxm_event *event = 0, dummy;
@@ -131,9 +131,9 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
     /* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
      * length encoded in the first two bytes of the pattern (like S3M).
      */
-    fseek (f, sfh.pp_pat << 4, SEEK_SET);
+    fseek(f, start + (sfh.pp_pat << 4), SEEK_SET);
     x16 = read16l(f);
-    fseek (f, x16 << 4, SEEK_SET);
+    fseek(f, start + (x16 << 4), SEEK_SET);
     x16 = read16l(f);
     if (x16 == sfh.psize)
 	broken = 1;
@@ -151,22 +151,22 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
     pp_ins = calloc (2, m->xxh->ins);
 
     /* Read pattern pointers */
-    fseek (f, sfh.pp_pat << 4, SEEK_SET);
+    fseek(f, start + (sfh.pp_pat << 4), SEEK_SET);
     for (i = 0; i < m->xxh->pat; i++)
 	pp_pat[i] = read16l(f);
 
     /* Read instrument pointers */
-    fseek (f, sfh.pp_ins << 4, SEEK_SET);
+    fseek(f, start + (sfh.pp_ins << 4), SEEK_SET);
     for (i = 0; i < m->xxh->ins; i++)
 	pp_ins[i] = read16l(f);
 
     /* Skip channel table (?) */
-    fseek (f, (sfh.pp_chn << 4) + 32, SEEK_SET);
+    fseek(f, start + (sfh.pp_chn << 4) + 32, SEEK_SET);
 
     /* Read orders */
     for (i = 0; i < m->xxh->len; i++) {
 	fread (&m->xxo[i], 1, 1, f);
-	fseek (f, 4, SEEK_CUR);
+	fseek(f, 4, SEEK_CUR);
     }
  
     INSTRUMENT_INIT ();
@@ -178,7 +178,7 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	fseek (f, pp_ins[i] << 4, SEEK_SET);
+	fseek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
 	sih.type = read8(f);
 	fread(&sih.dosname, 13, 1, f);
@@ -236,9 +236,9 @@ static int stx_load(struct xmp_mod_context *m, FILE *f)
 	if (!pp_pat[i])
 	    continue;
 
-	fseek (f, pp_pat[i] * 16, SEEK_SET);
+	fseek(f, start + (pp_pat[i] << 4), SEEK_SET);
 	if (broken)
-	    fseek (f, 2, SEEK_CUR);
+	    fseek(f, 2, SEEK_CUR);
 
 	for (r = 0; r < 64; ) {
 	    fread (&b, 1, 1, f);

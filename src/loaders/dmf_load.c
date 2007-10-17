@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.11 2007-10-17 11:42:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 
 
 static int dmf_test(FILE *, char *);
-static int dmf_load (struct xmp_mod_context *, FILE *);
+static int dmf_load (struct xmp_mod_context *, FILE *, int);
 
 struct xmp_loader_info dmf_loader = {
 	"DMF",
@@ -349,7 +349,7 @@ static void get_smpd(struct xmp_mod_context *m, int size, FILE *f)
 	free(data);
 }
 
-static int dmf_load(struct xmp_mod_context *m, FILE *f)
+static int dmf_load(struct xmp_mod_context *m, FILE *f, int start)
 {
 	char composer[XMP_DEF_NAMESIZE];
 	uint8 date[3];
