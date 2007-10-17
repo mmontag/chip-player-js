@@ -33,8 +33,6 @@ struct ipc_info {
 };
 
 int	setcolor	(int);
-void    settitle        (char *);
-void	putimage	(int, int, int, int);
 void	update_display	(void);
 void	prepare_screen	(void);
 void	clear_screen	(void);

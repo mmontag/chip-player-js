@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.5 2007-10-15 19:46:10 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.6 2007-10-17 23:22:50 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -153,14 +153,10 @@ void scope (int mode, int *buf, int n)
 		y = 0;
 
 	    if (y != old_y[x]) {
-		if (old_y[x] > 0) {
-	            erase_rectangle (x, old_y[x], 2, 4);
-	            putimage (x, old_y[x], 2, 4);
-		}
-		if (y > 0) {
-	            draw_rectangle (x, y, 2, 4);
-	            putimage (x, y, 2, 4);
-		}
+		if (old_y[x] > 0)
+	            erase_rectangle(x, old_y[x], 2, 4);
+		if (y > 0)
+	            draw_rectangle(x, y, 2, 4);
 		old_y[x] = y;
 	    }
 	    old_x = x;
@@ -242,22 +238,21 @@ void shadowmsg (struct font_header *f, int x, int y, char *s, int c, int b)
 }
 
 
-void set_palette ()
+void set_palette()
 {
     bg = bg2;
     setpalette (bg);
 }
 
 
-void clear_screen ()
+void clear_screen()
 {
     draw_xpm (bg, RES_X, RES_Y);
-    putimage (0, 0, RES_X, RES_Y);
-    update_display ();
+    update_display();
 }
 
 
-void prepare_screen ()
+void prepare_screen()
 {
     char buf[90];
 
@@ -285,8 +280,7 @@ void prepare_screen ()
     sprintf (buf, "Progress:   %%");
     centermsg (&font2, RES_X / 2, 120, buf, 2, -1);
 
-    putimage (0, 0, RES_X, RES_Y);
-    update_display ();
+    update_display();
 }
 
 
@@ -393,11 +387,11 @@ void x11_event_callback(long i)
 }
 
 
-void display_loop ()
+void display_loop()
 {
-    panel_setup ();
+    panel_setup();
     while (42)
-	panel_loop ();
+	panel_loop();
 }
 
 
@@ -405,7 +399,7 @@ void display_loop ()
     static char s[8];
     static int *b, *p, *q;
 
-void panel_setup ()
+void panel_setup()
 {
     int c, n, r;
 
@@ -428,7 +422,7 @@ void panel_setup ()
 }
 
 
-int panel_loop ()
+int panel_loop()
 { 
      int c, x, y;
 
@@ -485,14 +479,13 @@ int panel_loop ()
 
 	if (xmp_check_parent (40)) {
 	    int n, r;
-	    char buf[90];
 
-	    xmp_wait_parent ();
+	    xmp_wait_parent();
 	    put_rectangle (177, 106, 15, 13, p);
 	    put_rectangle (140, 88, 22, 13, b);
 	    put_rectangle (220, 88, 22, 13, q);
 	    volume_bars (mode);
-	    prepare_screen ();
+	    prepare_screen();
 	    get_rectangle (177, 106, 15, 13, p);
 	    get_rectangle (140, 88, 22, 13, b);
 	    get_rectangle (220, 88, 22, 13, q);
@@ -516,29 +509,21 @@ int panel_loop ()
 		ii->vol[c] = 0;
 	    }
 
-	    sprintf (buf, "xmp: %s", ii->filename);
-	    settitle (buf);
-	    prepare_screen ();
-	    xmp_tell_parent ();
+	    prepare_screen();
+	    xmp_tell_parent();
 	}
 
-	update_display ();
-
-	putimage (177, 106, 15, 13);
-	putimage (140, 88, 22, 13);
-	putimage (220, 88, 22, 13);
+	update_display();
 
 	{
 	    for (c = 0; c < ii->mi.chn; c++) {
 		if (chn[c].s) {
-		    putimage (chn[c].x, chn[c].y, chn[c].w, chn[c].h);
 		    chn[c].s = 0;
 		}
 	    }
 
 	    for (c = 0; c < FRQ; c++) {
 		if (frq[c].s) {
-		    putimage (frq[c].x, frq[c].y, frq[c].w, frq[c].h);
 		    frq[c].s = 0;
 		}
 
@@ -550,7 +535,7 @@ int panel_loop ()
 	    }
 	}
 
-	update_display ();
+	update_display();
 
 	return 1;
 }

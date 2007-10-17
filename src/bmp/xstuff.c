@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.2 2007-09-12 14:36:45 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.3 2007-10-17 23:22:50 cmatsuoka Exp $
  */
 
 /*
@@ -253,7 +253,6 @@ void draw_xpm (char **bg, int w, int h)
 }
 
 
-
 void setpalette (char **bg)
 {
     int i;
@@ -290,169 +289,3 @@ void setpalette (char **bg)
 	    pmap[color[i].pixel] = color[i - 8].pixel;
     }
 }
-
-
-#ifndef ENABLE_PLUGIN
-
-void putimage (int x, int y, int w, int h)
-{
-    XShmPutImage (display, window, gc, ximage, x, y, x, y, w, h, 0);
-}
-
-
-void settitle (char *title)
-{
-    XTextProperty titleprop;
-    XStringListToTextProperty (&title,1,&titleprop);
-    XSetTextProperty (display, window, &titleprop, XA_WM_NAME);
-}
-
-
-void update_display ()
-{
-    XSync (display, False);
-}
-
-
-void close_window ()
-{
-    XSync (display, False);
-    XShmDetach (display, &shminfo);
-    XDestroyImage (ximage);
-    XCloseDisplay (display);
-    shmctl (shminfo.shmid, IPC_RMID, NULL);
-    shmdt (shminfo.shmaddr);
-}
-
-int process_events (int *x, int *y)
-{
-    static XEvent event;
-    int i = 0;
-    char k;
-
-    while (XEventsQueued (display, QueuedAfterReading)) {
-	XNextEvent (display, &event);
-	switch (event.type) {
-	case Expose:
-	    XShmPutImage (display, window, gc, ximage,
-		event.xexpose.x, event.xexpose.y,
-		event.xexpose.x, event.xexpose.y,
-		event.xexpose.width, event.xexpose.height, 0);
-	    break;
-	case KeyPress:
-	    XLookupString (&event.xkey, &k, 1, NULL, NULL);
-	    return k;
-	case ButtonPress:
-	    i = -1;
-	    *x = event.xbutton.x;
-	    *y = event.xbutton.y;
-	    break;
-	}
-    }
-
-    return i;
-}
-
-
-int create_window (char *s, char *c, int w, int h, int argc, char **argv)
-{
-    XWMHints hints;
-    XSizeHints sizehints;
-    XClassHint classhint;
-    XTextProperty appname, iconname;
-    char *apptext = s;
-    char *icontext = s;
-
-    if ((display = XOpenDisplay (NULL)) == NULL) {
-	fprintf (stderr, "%s: can't open display: %s\n", argv[0],
-		XDisplayName (NULL));
-	return -1;
-    }
-    screen = DefaultScreen (display);
-    scrptr = DefaultScreenOfDisplay (display);
-    visual = DefaultVisual (display, screen);
-    root = DefaultRootWindow (display);
-    depth = DefaultDepth (display, screen);
-    colormap = DefaultColormap (display, screen);
-    attribute_mask = CWEventMask;
-    attributes.event_mask |= ExposureMask | ButtonPressMask | KeyPressMask;
-
-    if (visual->class == PseudoColor && depth == 8) {
-	draw_rectangle = draw_rectangle_indexed;
-	erase_rectangle = erase_rectangle_indexed;
-	indexed = 1;
-    } else if (visual->class == TrueColor && depth == 24) {
-	draw_rectangle = draw_rectangle_rgb24;
-	erase_rectangle = erase_rectangle_rgb24;
-	indexed = 0;
-    } else if (visual->class == TrueColor && depth == 16) {
-	mask_r = 0xf00000;
-	mask_g = 0x00f800;
-	mask_b = 0x0000f0;
-	draw_rectangle = draw_rectangle_rgb16;
-	erase_rectangle = erase_rectangle_rgb16;
-	indexed = 0;
-    } else if (visual->class == TrueColor && depth == 15) {
-	mask_r = 0xf00000;
-	mask_g = 0x00f000;
-	mask_b = 0x0000f0;
-	draw_rectangle = draw_rectangle_rgb15;
-	erase_rectangle = erase_rectangle_rgb15;
-	indexed = 0;
-    } else {
-	fprintf (stderr, "Visual class and depth not supported, aborting\n");
-	return -1;
-    }
-
-    window = XCreateWindow (display, root, 0, 0, w, h, 1,
-	DefaultDepthOfScreen (scrptr), InputOutput, CopyFromParent,
-	attribute_mask, &attributes);
-
-    if (!window) {
-	fprintf (stderr, "can't create window\n");
-	return -1;
-    }
-    XStringListToTextProperty (&apptext, 1, &appname);
-    XStringListToTextProperty (&icontext, 1, &iconname);
-    sizehints.flags = PSize | PMinSize | PMaxSize;
-    sizehints.min_width = sizehints.max_width = w;
-    sizehints.min_height = sizehints.max_height = h;
-    hints.flags = StateHint | InputHint;
-    hints.initial_state = NormalState;
-    hints.input = 1;
-    classhint.res_name = s;
-    classhint.res_class = c;
-    XSetWMProperties (display, window, &appname, &iconname, argv,
-	argc, &sizehints, &hints, &classhint);
-
-    gc = XCreateGC (display, window, 0, NULL);
-
-    ximage = XShmCreateImage (display, visual, depth, ZPixmap,
-	NULL, &shminfo, w, h);
-
-    if (!ximage) {
-	fprintf (stderr, "can't create image\n");
-	return -1;
-    }
-    shminfo.shmid = shmget (IPC_PRIVATE, ximage->bytes_per_line *
-	(ximage->height + 1), IPC_CREAT | 0600);
-
-    if (shminfo.shmid == -1) {
-	fprintf (stderr, "can't allocate X shared memory\n");
-	return -1;
-    }
-    shminfo.shmaddr = ximage->data = shmat (shminfo.shmid, 0, 0);
-    shminfo.readOnly = 0;
-    XShmAttach (display, &shminfo);
-
-    XMapWindow (display, window);
-    XSetWindowBackground (display, window, BlackPixel (display, screen));
-    XClearWindow (display, window);
-
-    XFlush (display);
-    XSync (display, False);
-
-    return 0;
-}
-
-#endif /* !ENABLE_PLUGIN */

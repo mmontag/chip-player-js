@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.29 2007-10-15 22:26:18 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.30 2007-10-17 23:22:50 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -57,6 +57,9 @@
 #endif
 
 static void	init		(void);
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+static void	cleanup		(void);
+#endif
 static int	is_our_file	(char *);
 static void	play_file	(IPB);
 static void	stop		(IPB);
@@ -85,6 +88,11 @@ static pthread_t decode_thread;
 
 extern InputPlugin xmp_ip;
 
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+InputPlugin *xmp_iplist[] = { &xmp_ip, NULL };
+DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL);
+#endif
+ 
 typedef struct {
 	gint mixing_freq;
 	gint force8bit;
@@ -131,20 +139,26 @@ static GtkObject *pansep_adj;
 static GtkWidget *xmp_conf_window = NULL;
 static GtkWidget *about_window = NULL;
 static GtkWidget *info_window = NULL;
-//static gint expose_event (GtkWidget *, GdkEventExpose *);
 
 struct ipc_info _ii, *ii = &_ii;
 int skip = 0;
 extern volatile int new_module;
 static short audio_open = FALSE;
 
+
 InputPlugin xmp_ip = {
 	NULL,			/* handle */
 	NULL,			/* filename */
 	"XMP Player " VERSION,	/* description */
 	init,			/* init */
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	cleanup,		/* cleanup */
+#endif
 	aboutbox,		/* about */
 	configure,		/* configure */
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	TRUE,			/* enabled */
+#endif
 	is_our_file,		/* is_our_file */
 	NULL,			/* scan_dir */
 	play_file,		/* play_file */
@@ -155,7 +169,9 @@ InputPlugin xmp_ip = {
 	get_time,		/* get_time */
 	NULL,			/* get_volume */
 	NULL,			/* set_volume */
+#if __AUDACIOUS_PLUGIN_API__ < 2
 	NULL,			/* add_vis -- obsolete */
+#endif
 	NULL,			/* get_vis_type -- obsolete */
 	NULL,			/* add_vis_pcm */
 	NULL,			/* set_info */
@@ -337,10 +353,12 @@ static int get_time(IPB)
 }
 
 
+#if __AUDACIOUS_PLUGIN_API__ < 2
 InputPlugin *get_iplugin_info()
 {
 	return &xmp_ip;
 }
+#endif
 
 
 static void driver_callback(void *b, int i)
@@ -350,7 +368,7 @@ static void driver_callback(void *b, int i)
 			xmp_cfg.force_mono ? 1 : 2, i, b);
 	
 	while (xmp_ip.output->buffer_free() < i && playing)
-		xmms_usleep(10000);
+		usleep(10000);
 
 	if (playing)
 		xmp_ip.output->write_audio(b, i);
@@ -450,8 +468,18 @@ static void init(void)
 	ii->wresult = 42;
 }
 
+
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+
+static void cleanup()
+{
+	xmp_free_context(ctx);
+	xmp_close_audio();
+}
+
 #endif
 
+#endif
 
 static int is_our_file(char *filename)
 {
@@ -1233,20 +1261,6 @@ static void init_visual (GdkVisual *visual)
 
 }
 
-
-void putimage (int x, int y, int w, int h)
-{
-    //gdk_draw_image (image1->parent->window, gdkgc, image, x, y, x, y, w, h);
-}
-
-#if 0
-
-static gint expose_event (GtkWidget *widget, GdkEventExpose *event)
-{
-	return 0;
-}
-#endif
-
 void update_display()
 {
 	GdkRectangle area;
@@ -1277,9 +1291,3 @@ int process_events(int *x, int *y)
 
 	return 0;
 }
-
-
-void settitle (char *title)
-{
-}
-
