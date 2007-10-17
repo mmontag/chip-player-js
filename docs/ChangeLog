@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.135 2007-10-15 19:19:19 cmatsuoka Exp $
+$Id: ChangeLog,v 1.136 2007-10-17 00:56:20 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -10,17 +10,21 @@ Stable versions
 	- added MED synth vibrato commands VBS, VBD and VWF
 	- added module probe method without loading (Audacious plugin can
 	  test for files while a module is playing)
+	- added persistent effects for 669, FNK and FAR
 	- fixed MED synth volume slide commands CHD and CHU
 	- fixed detuning in short samples with bidirectional loop by adjusting
 	  the loop size to match forward loop size
 	- fixed sound cut bug when changing samples in the MED synth (don't
 	  reset channel on attempt to set invalid sample position)
 	- fixed identification of IIgs MegaTracker modules
+	- fixed 669 persistent vibrato and portamento effects
+	- fixed FAR persistent vibrato/portamento and pattern break effects
+	- fixed sample loading in FAR modules
 	- revert CoreAudio driver pause patch (fix memory management problem)
 	- reset MED synth program at each new note event
 	- removed filesize-based module format detection
 	- replaced XANN loader with Prowizard XANN depacker
-	- reorganized internal data using contexts (removed global vars)
+	- reorganized internal data to remove lots of global variables
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.12 2007-10-16 23:54:15 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.13 2007-10-17 00:56:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -82,18 +82,17 @@ static int far_load(struct xmp_mod_context *m, FILE *f)
     struct far_header ffh;
     struct far_header2 ffh2;
     struct far_instrument fih;
-    struct far_event fe;
     uint8 sample_map[8];
 
     LOAD_INIT ();
 
-    ffh.magic = read32b(f);		/* File magic: 'FAR\xfe' */
+    read32b(f);				/* File magic: 'FAR\xfe' */
     fread(&ffh.name, 40, 1, f);		/* Song name */
     fread(&ffh.crlf, 3, 1, f);		/* 0x0d 0x0a 0x1A */
     ffh.headersize = read16l(f);	/* Remaining header size in bytes */
     ffh.version = read8(f);		/* Version MSN=major, LSN=minor */
     fread(&ffh.ch_on, 16, 1, f);	/* Channel on/off switches */
-    fread(&ffh.rsvd1, 9, 1, f);		/* Current editing values */
+    fseek(f, 9, SEEK_CUR);		/* Current editing values */
     ffh.tempo = read8(f);		/* Default tempo */
     fread(&ffh.pan, 16, 1, f);		/* Channel pan definitions */
     read32l(f);				/* Grid, mode (for editor) */
@@ -137,31 +136,40 @@ static int far_load(struct xmp_mod_context *m, FILE *f)
     }
 
     for (i = 0; i < m->xxh->pat; i++) {
+	uint8 brk, note, ins, vol, fxb;
+
 	PATTERN_ALLOC(i);
 	if (!ffh2.patsize[i])
 	    continue;
 	m->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
-	TRACK_ALLOC (i);
+	TRACK_ALLOC(i);
 
-	read16b(f);
+	brk = read8(f) + 1;
+	read8(f);
 
 	for (j = 0; j < m->xxp[i]->rows * m->xxh->chn; j++) {
-	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
-	    fread (&fe, 1, 4, f);
-	    memset(event, 0, sizeof (struct xxm_event));
+	    event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
 
-	    if (fe.note)
-		event->note = fe.note + 36;
-	    if (event->note || fe.instrument)
-		event->ins = fe.instrument + 1;
+	    if ((j % m->xxh->chn) == 0 && (j / m->xxh->chn) == brk)
+		event->f2t = FX_BREAK;
+	
+	    note = read8(f);
+	    ins = read8(f);
+	    vol = read8(f);
+	    fxb = read8(f);
 
-	    fe.volume = LSN (fe.volume) * 16 + MSN (fe.volume);
+	    if (note)
+		event->note = note + 36;
+	    if (event->note || ins)
+		event->ins = ins + 1;
 
-	    if (fe.volume)
-		event->vol = fe.volume - 0x10;
+	    vol = 16 * LSN(vol) + MSN(vol);
 
-	    event->fxt = fx[MSN(fe.effect)];
-	    event->fxp = LSN(fe.effect);
+	    if (vol)
+		event->vol = vol - 0x10;	/* ? */
+
+	    event->fxt = fx[MSN(fxb)];
+	    event->fxp = LSN(fxb);
 
 	    switch (event->fxt) {
 	    case NONE:
@@ -209,20 +217,25 @@ static int far_load(struct xmp_mod_context *m, FILE *f)
 	reportv(0, ".");
     }
 
-    fread (sample_map, 1, 8, f);
-    for (i = 1; i < 0x100; i <<= 1) {
-	for (j = 0; j < 8; j++)
-	    if (sample_map[j] & i)
-		m->xxh->ins++;
+    m->xxh->ins = -1;
+    fread(sample_map, 1, 8, f);
+    for (i = 0; i < 64; i++) {
+	if (sample_map[i / 8] & (1 << (i % 8)))
+		m->xxh->ins = i;
     }
+    m->xxh->ins++;
+
     m->xxh->smp = m->xxh->ins;
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
     reportv(0, "\nInstruments    : %d ", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
+	if (!(sample_map[i / 8] & (1 << (i % 8))))
+		continue;
+
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
 	fread(&fih.name, 32, 1, f);	/* Instrument name */
@@ -247,14 +260,13 @@ static int far_load(struct xmp_mod_context *m, FILE *f)
 
 	copy_adjust(m->xxih[i].name, fih.name, 24);
 
-	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len) && m->xxs[i].lps != 0xffff) {
+	if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 		i, fih.name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
 	    reportv(0, ".");
 	}
-	if (sample_map[i / 8] & (1 << (i % 8)))
-	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
     }
     reportv(0, "\n");
 
