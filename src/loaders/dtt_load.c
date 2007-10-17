@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.12 2007-10-17 11:42:24 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@
 
 
 static int dtt_test(FILE *, char *);
-static int dtt_load (struct xmp_mod_context *, FILE *, int);
+static int dtt_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info dtt_loader = {
 	"DTT",
@@ -38,7 +38,7 @@ static int dtt_test(FILE *f, char *t)
 	return 0;
 }
 
-static int dtt_load(struct xmp_mod_context *m, FILE *f, int start)
+static int dtt_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
 	struct xxm_event *event;
 	int i, j, k;

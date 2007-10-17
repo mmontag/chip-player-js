@@ -1,7 +1,7 @@
 /* Real Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: rtm_load.c,v 1.13 2007-10-17 11:42:27 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.14 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int rtm_test(FILE *, char *);
-static int rtm_load (struct xmp_mod_context *, FILE *, int);
+static int rtm_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info rtm_loader = {
 	"RTM",
@@ -64,7 +64,7 @@ static int read_object_header(FILE *f, struct ObjectHeader *h)
 }
 
 
-static int rtm_load(struct xmp_mod_context *m, FILE *f, int start)
+static int rtm_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
 	int i, j, r;
 	struct xxm_event *event;

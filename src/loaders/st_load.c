@@ -23,7 +23,7 @@
 #include "period.h"
 
 static int st_test (FILE *, char *);
-static int st_load (struct xmp_mod_context *, FILE *, int);
+static int st_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info st_loader = {
     "ST",
@@ -143,7 +143,7 @@ static int st_test(FILE *f, char *t)
     return 0;
 }
 
-static int st_load(struct xmp_mod_context *m, FILE *f, int start)
+static int st_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i, j;
     int smp_size, pat_size;

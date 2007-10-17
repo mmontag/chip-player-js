@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.37 2007-10-17 11:42:28 cmatsuoka Exp $
+ * $Id: load.c,v 1.38 2007-10-17 13:08:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -37,7 +37,6 @@ int decrunch_arcfs (FILE *, FILE *);
 int decrunch_sqsh (FILE *, FILE *);
 int decrunch_pp (FILE *, FILE *);
 int decrunch_mmcmp (FILE *, FILE *);
-int decrunch_umx (FILE *, FILE *);
 int decrunch_oxm (FILE *, FILE *);
 int decrunch_pw (FILE *, FILE *);
 int test_oxm(FILE *);
@@ -50,8 +49,7 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_ARC	0x05
 #define BUILTIN_ARCFS	0x06
 #define BUILTIN_S404	0x07
-#define BUILTIN_UMX	0x08
-#define BUILTIN_OXM	0x09
+#define BUILTIN_OXM	0x08
 
 
 static int decrunch(FILE **f, char **s)
@@ -125,9 +123,6 @@ static int decrunch(FILE **f, char **s)
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
-    } else if (b[0] == 0xc1 && b[1] == 0x83 && b[2] == 0x2a && b[3] == 0x9e) {
-	packer = "UMX";
-	builtin = BUILTIN_UMX;
     } else if (test_oxm(*f) == 0) {
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
@@ -230,9 +225,6 @@ static int decrunch(FILE **f, char **s)
 	    break;
 	case BUILTIN_MMCMP:    
 	    res = decrunch_mmcmp(*f, t);
-	    break;
-	case BUILTIN_UMX:
-	    res = decrunch_umx(*f, t);
 	    break;
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);

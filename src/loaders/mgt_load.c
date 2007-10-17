@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.11 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.12 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int mgt_test(FILE *, char *);
-static int mgt_load (struct xmp_mod_context *, FILE *, int);
+static int mgt_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info mgt_loader = {
 	"MGT",
@@ -48,7 +48,7 @@ static int mgt_test(FILE *f, char *t)
 	return 0;
 }
 
-static int mgt_load(struct xmp_mod_context *m, FILE *f, int start)
+static int mgt_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
 	struct xxm_event *event;
 	int i, j;

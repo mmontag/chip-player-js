@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.34 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.35 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int it_test (FILE *, char *);
-static int it_load (struct xmp_mod_context *, FILE *, int);
+static int it_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info it_loader = {
     "IT",
@@ -217,7 +217,7 @@ static void xlat_volfx(struct xxm_event *event)
 }
 
 
-static int it_load(struct xmp_mod_context *m, FILE *f, int start)
+static int it_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int r, c, i, j, k, pat_len;
     struct xxm_event *event, dummy, lastevent[L_CHANNELS];
@@ -233,7 +233,7 @@ static int it_load(struct xmp_mod_context *m, FILE *f, int start)
     char tracker_name[80];
     int mpt = 0;	/* ModPlug Tracker has quirks */
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     /* Load and convert header */
     read32b(f);		/* magic */

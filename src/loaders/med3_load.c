@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.11 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.12 2007-10-17 13:08:49 cmatsuoka Exp $
  */
 
 /*
@@ -26,7 +26,7 @@
 
 
 static int med3_test(FILE *, char *);
-static int med3_load (struct xmp_mod_context *, FILE *, int);
+static int med3_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info med3_loader = {
 	"MED3",
@@ -207,7 +207,7 @@ static void unpack_block(struct xmp_mod_context *m, uint16 bnum, uint8 *from)
 }
 
 
-static int med3_load(struct xmp_mod_context *m, FILE *f, int start)
+static int med3_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
 	int i, j;
 	uint32 mask;

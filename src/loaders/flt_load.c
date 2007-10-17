@@ -15,7 +15,7 @@
 #include "period.h"
 
 static int flt_test (FILE *, char *);
-static int flt_load (struct xmp_mod_context *, FILE *, int);
+static int flt_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info flt_loader = {
     "MOD",
@@ -41,7 +41,7 @@ static int flt_test(FILE *f, char *t)
 }
 
 
-static int flt_load(struct xmp_mod_context *m, FILE *f, int start)
+static int flt_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i, j;
     struct xxm_event *event;

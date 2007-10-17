@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.18 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.19 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 
 
 static int liq_test (FILE *, char *);
-static int liq_load (struct xmp_mod_context *, FILE *, int);
+static int liq_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info liq_loader = {
     "LIQ",
@@ -157,7 +157,7 @@ static void decode_event(uint8 x1, struct xxm_event *event, FILE *f)
     assert (event->fxt <= 26);
 }
 
-static int liq_load(struct xmp_mod_context *m, FILE *f, int start)
+static int liq_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i;
     struct xxm_event *event = NULL;

@@ -24,7 +24,7 @@
 
 
 static int ult_test (FILE *, char *);
-static int ult_load (struct xmp_mod_context *, FILE *, int);
+static int ult_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info ult_loader = {
     "ULT",
@@ -91,7 +91,7 @@ static char *verstr[4] = {
 };
 
 
-static int ult_load(struct xmp_mod_context *m, FILE *f, int start)
+static int ult_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i, j, k, ver, cnt;
     struct xxm_event *event;

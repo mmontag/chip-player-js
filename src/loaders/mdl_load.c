@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.23 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.24 2007-10-17 13:08:49 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -27,7 +27,7 @@
 
 
 static int mdl_test (FILE *, char *);
-static int mdl_load (struct xmp_mod_context *, FILE *, int);
+static int mdl_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info mdl_loader = {
     "MDL",
@@ -775,7 +775,7 @@ static void get_chunk_fe(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static int mdl_load(struct xmp_mod_context *m, FILE *f, int start)
+static int mdl_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i, j, k, l;
     char buf[8];

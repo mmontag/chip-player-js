@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mtm_load.c,v 1.10 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: mtm_load.c,v 1.11 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,7 +16,7 @@
 #include "mtm.h"
 
 static int mtm_test (FILE *, char *);
-static int mtm_load (struct xmp_mod_context *, FILE *, int);
+static int mtm_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info mtm_loader = {
     "MTM",
@@ -41,7 +41,7 @@ static int mtm_test(FILE *f, char *t)
 }
 
 
-static int mtm_load(struct xmp_mod_context *m, FILE *f, int start)
+static int mtm_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i, j;
     struct mtm_file_header mfh;

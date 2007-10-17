@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amd_load.c,v 1.7 2007-10-17 11:42:17 cmatsuoka Exp $
+ * $Id: amd_load.c,v 1.8 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,7 +16,7 @@
 
 
 static int amd_test (FILE *, char *);
-static int amd_load (struct xmp_mod_context *, FILE *, int);
+static int amd_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info amd_loader = {
     "AMD",
@@ -63,7 +63,7 @@ struct amd_file_header {
 static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
 
-static int amd_load(struct xmp_mod_context *m, FILE *f, int start)
+static int amd_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int r, i, j, tmode = 1;
     struct amd_file_header afh;

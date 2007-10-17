@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.20 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.21 2007-10-17 13:08:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -17,7 +17,7 @@
 
 
 static int mmd3_test (FILE *, char *);
-static int mmd3_load (struct xmp_mod_context *, FILE *, int);
+static int mmd3_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info mmd3_loader = {
 	"MMD2/3",
@@ -135,7 +135,7 @@ static void xlat_fx(struct xxm_event *event)
 	}
 }
 
-static int mmd3_load(struct xmp_mod_context *m, FILE *f, int start)
+static int mmd3_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
 	int i, j, k;
 	struct MMD0 header;

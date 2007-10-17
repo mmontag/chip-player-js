@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.8 2007-10-17 11:42:24 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.9 2007-10-17 13:08:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 
 
 static int hsc_test (FILE *, char *);
-static int hsc_load (struct xmp_mod_context *, FILE *, int);
+static int hsc_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info hsc_loader = {
     "HSC",
@@ -69,7 +69,7 @@ static int hsc_test(FILE *f, char *t)
     return 0;
 }
 
-static int hsc_load(struct xmp_mod_context *m, FILE *f, int start)
+static int hsc_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int p, i, r, c;
     struct xxm_event *event;

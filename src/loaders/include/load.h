@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.20 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: load.h,v 1.21 2007-10-17 13:08:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,7 +31,7 @@ void	disable_continue_fx	(struct xxm_event *);
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
 #define LOAD_INIT() do { \
-    fseek(f, 0, SEEK_SET); \
+    fseek(f, start, SEEK_SET); \
     m->med_vol_table = m->med_wav_table = NULL; \
     set_xxh_defaults(m->xxh); \
 } while (0)

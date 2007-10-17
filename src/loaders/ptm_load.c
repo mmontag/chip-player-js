@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.17 2007-10-17 11:42:27 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.18 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int ptm_test (FILE *, char *);
-static int ptm_load (struct xmp_mod_context *, FILE *, int);
+static int ptm_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info ptm_loader = {
     "PTM",
@@ -51,7 +51,7 @@ static int ptm_vol[] = {
 };
 
 
-static int ptm_load(struct xmp_mod_context *m, FILE *f, int start)
+static int ptm_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int c, r, i, smp_ofs[256];
     struct xxm_event *event;

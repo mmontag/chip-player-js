@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.13 2007-10-17 11:42:17 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.14 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -28,7 +28,7 @@
 
 
 static int alm_test (FILE *, char *);
-static int alm_load (struct xmp_mod_context *, FILE *, int);
+static int alm_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info alm_loader = {
     "ALM",
@@ -62,7 +62,7 @@ struct alm_file_header {
 
 #define NAME_SIZE 255
 
-static int alm_load(struct xmp_mod_context *m, FILE *f, int start)
+static int alm_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i, j;
     struct alm_file_header afh;

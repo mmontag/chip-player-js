@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.12 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int okt_test (FILE *, char *);
-static int okt_load (struct xmp_mod_context *, FILE *, int);
+static int okt_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info okt_loader = {
     "OKT",
@@ -263,7 +263,7 @@ static void get_sbod(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static int okt_load(struct xmp_mod_context *m, FILE *f, int start)
+static int okt_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     LOAD_INIT ();
 

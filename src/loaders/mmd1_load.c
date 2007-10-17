@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.24 2007-10-17 11:42:25 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.25 2007-10-17 13:08:49 cmatsuoka Exp $
  */
 
 /*
@@ -21,7 +21,7 @@
 
 
 static int mmd1_test(FILE *, char *);
-static int mmd1_load (struct xmp_mod_context *, FILE *, int);
+static int mmd1_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info mmd1_loader = {
 	"MMD0/1",
@@ -139,7 +139,7 @@ static void xlat_fx(struct xxm_event *event)
 	}
 }
 
-static int mmd1_load(struct xmp_mod_context *m, FILE *f, int start)
+static int mmd1_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
 	int i, j, k;
 	struct MMD0 header;

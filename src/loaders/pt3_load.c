@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.11 2007-10-17 11:42:27 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.12 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int pt3_test (FILE *, char *);
-static int pt3_load (struct xmp_mod_context *, FILE *, int);
+static int pt3_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info pt3_loader = {
     "PTM",
@@ -88,7 +88,7 @@ struct pt3_chunk_inst {
 };
 
 
-static int ptdt_load (struct xmp_mod_context *, FILE *, int);
+static int ptdt_load (struct xmp_mod_context *, FILE *, const int);
 
 
 static void get_vers(struct xmp_mod_context *m, int size, FILE *f)
@@ -147,7 +147,7 @@ static void get_ptdt(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static int pt3_load(struct xmp_mod_context *m, FILE *f, int start)
+static int pt3_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     LOAD_INIT();
 
@@ -173,7 +173,7 @@ static int pt3_load(struct xmp_mod_context *m, FILE *f, int start)
 }
 
 
-static int ptdt_load(struct xmp_mod_context *m, FILE *f, int start)
+static int ptdt_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int i, j;
     struct xxm_event *event;

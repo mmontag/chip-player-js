@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.12 2007-10-17 11:42:27 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,7 +33,7 @@
 
 
 static int stx_test (FILE *, char *);
-static int stx_load (struct xmp_mod_context *, FILE *, int);
+static int stx_load (struct xmp_mod_context *, FILE *, const int);
 
 struct xmp_loader_info stx_loader = {
     "STX",
@@ -77,7 +77,7 @@ static uint8 fx[] = {
 };
 
 
-static int stx_load(struct xmp_mod_context *m, FILE *f, int start)
+static int stx_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
     int c, r, i, broken = 0;
     struct xxm_event *event = 0, dummy;

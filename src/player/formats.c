@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.63 2007-10-14 19:08:15 cmatsuoka Exp $
+ * $Id: formats.c,v 1.64 2007-10-17 13:08:53 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -93,7 +93,7 @@ void xmp_init_formats()
 	REG_LOADER(okt);
 	REG_LOADER(sfx);
 	REG_LOADER(far);
-	register_format("UMX", "Epic Games Unreal/UT");
+	REG_LOADER(umx);
 	REG_LOADER(stim);
 	REG_LOADER(mtp);
 	REG_LOADER(ims);
