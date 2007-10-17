@@ -390,9 +390,15 @@ ex_f_vslide_dn:
 	    xc->p_val = MSN(fxp) - LSN(fxp);
 	break;
     case FX_MULTI_RETRIG:			/* Multi retrig */
-	xc->retrig = xc->rcount = LSN(fxp) ? LSN(fxp) : xc->rval;
-	xc->rval = xc->retrig;
-	xc->rtype = MSN(fxp);
+	if (LSN(fxp)) {
+		xc->retrig = xc->rcount = LSN(fxp);
+		xc->rval = xc->retrig;
+	} else {
+		xc->retrig = xc->rcount = xc->rval;
+	}
+	if (MSN(fxp)) {
+		xc->rtype = MSN(fxp);
+	}
 	break;
     case FX_TREMOR:				/* Tremor */
 	xc->tremor = fxp;
