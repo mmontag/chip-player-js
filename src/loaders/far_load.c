@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.13 2007-10-17 00:56:20 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.14 2007-10-17 01:29:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -258,12 +258,13 @@ static int far_load(struct xmp_mod_context *m, FILE *f)
 	m->xxi[i][0].vol = 0xff; /* fih.volume; */
 	m->xxi[i][0].sid = i;
 
-	copy_adjust(m->xxih[i].name, fih.name, 24);
+	copy_adjust(m->xxih[i].name, fih.name, 32);
 
-	if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
+	if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len) && m->xxs[i].lps != 0xffff) {
 	    report ("\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
-		i, fih.name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
+			i, m->xxih[i].name,
+			m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+			fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
 	    reportv(0, ".");
 	}
 	xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
