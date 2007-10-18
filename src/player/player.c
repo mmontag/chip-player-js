@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.26 2007-10-16 23:54:16 cmatsuoka Exp $
+ * $Id: player.c,v 1.27 2007-10-18 02:04:50 cmatsuoka Exp $
  */
 
 /*
@@ -152,7 +152,7 @@ static int do_envelope(struct xmp_player_context *p, struct xxm_envinfo *ei, uin
 
     if (*x > env[rl = (ei->npt - 1) << 1]) {
 	if (!env[rl + 1])
-	    xmp_drv_resetchannel (chn);
+	    xmp_drv_resetchannel(chn);
 	else
 	    return m->fetch & XMP_CTL_ENVFADE;
     }
@@ -227,12 +227,14 @@ static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int c
     int xins, ins, smp, note, key, flg;
     struct xmp_channel *xc;
     struct xmp_mod_context *m = &p->m;
+    int cont_sample;
 
     flg = 0;
     smp = ins = note = -1;
     xc = &p->xc_data[chn];
     xins = xc->ins;
     key = e->note;
+    cont_sample = 0;
 
     if (e->ins) {
 	ins += e->ins;
@@ -272,7 +274,7 @@ static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int c
             SET(FADEOUT);
 	    flg &= ~(RESET_VOL | RESET_ENV);
         } else if (key == XMP_KEY_CUT) {
-            xmp_drv_resetchannel (chn);
+            xmp_drv_resetchannel(chn);
         } else if (key == XMP_KEY_OFF) {
             SET(RELEASE | KEYOFF);
 	    flg &= ~(RESET_VOL | RESET_ENV);
@@ -284,10 +286,16 @@ static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int c
 	    } else if (TEST(KEYOFF)) {
 		/* When a toneporta is issued after a keyoff event,
 		 * retrigger the instrument (xr-nc.xm, bug #586377)
+		 *
+		 *   flg |= NEW_INS;
+		 *   xins = ins;
+		 *
+		 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
+		 * We don't retrigger the sample, it simply continues.
+		 * This is important to play sweeps and loops correctly.
 		 */
 		RESET(KEYOFF);
-		flg |= NEW_INS;
-		xins = ins;
+		cont_sample = 1;
 	    } else {
         	key = 0;
 	    }
@@ -319,16 +327,19 @@ static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int c
 	    }
 	} else {
 	    if (!(m->fetch & XMP_CTL_CUTNWI))
-		xmp_drv_resetchannel (chn);
+		xmp_drv_resetchannel(chn);
 	}
     }
 
     if (smp >= 0) {
-	if (chn_copy(p, xmp_drv_setpatch(p, chn, ins, smp, note,
-	 	m->xxi[ins][m->xxim[ins].ins[key]].nna,
-	   	m->xxi[ins][m->xxim[ins].ins[key]].dct,
-		m->xxi[ins][m->xxim[ins].ins[key]].dca, ctl), chn) < 0) {
-	    return XMP_ERR_VIRTC;
+	if (cont_sample == 0) {
+	    if (chn_copy(p, xmp_drv_setpatch(p, chn, ins, smp, note,
+	 		m->xxi[ins][m->xxim[ins].ins[key]].nna,
+	   		m->xxi[ins][m->xxim[ins].ins[key]].dct,
+			m->xxi[ins][m->xxim[ins].ins[key]].dca, ctl), chn) < 0)
+	    {
+	        return XMP_ERR_VIRTC;
+	    }
 	}
 	xc->smp = smp;
     }
@@ -371,9 +382,11 @@ static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int c
     if (note >= 0) {
 	xc->note = note;
 
-	xmp_drv_voicepos (chn, xc->offset);
-	if (TEST(OFFSET) && (m->fetch & XMP_CTL_FX9BUG))
-	    xc->offset <<= 1;
+	if (cont_sample == 0) {
+	    xmp_drv_voicepos(chn, xc->offset);
+	    if (TEST(OFFSET) && (m->fetch & XMP_CTL_FX9BUG))
+	        xc->offset <<= 1;
+	}
 	RESET(OFFSET);
 
 	/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
@@ -450,11 +463,20 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
     if (TEST(RELEASE) && !(XXIH.aei.flg & XXM_ENV_ON))
 	xc->fadeout = 0;
 
+ 
     if (TEST(FADEOUT | RELEASE) || act == XMP_ACT_FADE || act == XMP_ACT_OFF) {
 	if (!(xc->fadeout = xc->fadeout > XXIH.rls ?
 	    xc->fadeout - XXIH.rls : 0)) {
-	    xmp_drv_resetchannel(chn);
-	    return;
+	    xc->volume = 0;
+
+	    /* Setting the volume to 0 instead of resetting the channel
+	     * will make us spend more CPU, but allows portamento after
+	     * keyoff to continue the sample instead of resetting it.
+	     * This is used in Decibelter - Cosmic 'Wegian Mamas.xm
+	     *
+	     * xmp_drv_resetchannel(chn);
+	     * return;
+	     */
 	}
     }
 
@@ -553,7 +575,8 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
     if (chn < xmp_ctl->numtrk) {
 	xmp_drv_echoback((finalpan << 12) | (chn << 4) | XMP_ECHO_CHN);
 
-	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA)) {	/* FIXME: persistent */
+	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA) ||
+					TEST_PER(PITCHBEND | TONEPORTA)) {
 	    xmp_drv_echoback((xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
 	    xmp_drv_echoback((xc->volume << 4) * 0x40 / p->gvol_base |
 		XMP_ECHO_VOL);
