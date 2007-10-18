@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.40 2007-10-16 19:51:06 cmatsuoka Exp $
+ * $Id: driver.c,v 1.41 2007-10-18 23:07:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -148,21 +148,22 @@ void xmp_init_drivers()
 
 static int drv_select(struct xmp_control *ctl)
 {
-    int tmp;
     struct xmp_drv_info *drv;
+    int ret;
 
     if (!drv_array)
-	return XMP_ERR_DNREG;
+	return XMP_ERR_NODRV;
 
     if (ctl->drv_id) {
-	tmp = XMP_ERR_NODRV;
-	for (drv = drv_array; drv; drv = drv->next)
+ 	ret = XMP_ERR_NODRV;
+	for (drv = drv_array; drv; drv = drv->next) {
 	    if (!strcmp (drv->id, ctl->drv_id)) {
-		if ((tmp = drv->init (ctl)) == XMP_OK)
+		if ((ret = drv->init (ctl)) == XMP_OK)
 		    break;
 	    }
+	}
     } else {
-	tmp = XMP_ERR_DSPEC;
+	ret = XMP_ERR_DSPEC;
 	drv = drv_array->next;	/* skip file */
 	drv = drv->next;	/* skip wav */
 	for (; drv; drv = drv->next) {
@@ -171,15 +172,15 @@ static int drv_select(struct xmp_control *ctl)
 	    if (drv->init (ctl) == XMP_OK) {
 		if (ctl->verbose > 2)
 		    report ("found\n");
-		tmp = XMP_OK;
+		ret = XMP_OK;
 		break;
 	    }
 	    if (ctl->verbose > 2)
 		report ("not found\n");
 	}
     }
-    if (tmp != XMP_OK)
-	return tmp;
+    if (ret != XMP_OK)
+	return ret;
 
     ctl->drv_id = drv->id;
     ctl->description = drv->description;
@@ -225,7 +226,7 @@ int xmp_drv_open(struct xmp_control *ctl)
     int status;
 
     if (!ctl)
-	return XMP_ERR_NCTRL;
+	return XMP_ERR_NOCTL;
 
     xmp_ctl = ctl;
     ctl->memavl = 0;
@@ -240,8 +241,8 @@ int xmp_drv_open(struct xmp_control *ctl)
 	return XMP_ERR_ALLOC;
     }
 
-    synth_init (ctl->freq);
-    synth_reset ();
+    synth_init(ctl->freq);
+    synth_reset();
 
     return XMP_OK;
 }
@@ -253,10 +254,10 @@ int xmp_drv_set(struct xmp_control *ctl)
     struct xmp_drv_info *drv;
 
     if (!ctl)
-	return XMP_ERR_NCTRL;
+	return XMP_ERR_NOCTL;
 
     if (!drv_array)
-	return XMP_ERR_DNREG;
+	return XMP_ERR_NODRV;
 
     patch_array = NULL;
     xmp_ctl = ctl;
@@ -267,7 +268,7 @@ int xmp_drv_set(struct xmp_control *ctl)
 	}
     }
 
-    return XMP_ERR_DNREG;
+    return XMP_ERR_NODRV;
 }
 
 

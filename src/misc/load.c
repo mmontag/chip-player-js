@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.40 2007-10-18 19:13:12 cmatsuoka Exp $
+ * $Id: load.c,v 1.41 2007-10-18 23:07:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -397,7 +397,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     split_name(s, &b1, &b2);
     m->dirname = strdup(b1);
     m->basename = strdup(b2); 
-    m->filesize = st.st_size;
 
     crc = cksum(f);
 

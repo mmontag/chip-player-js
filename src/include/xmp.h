@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.20 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.21 2007-10-18 23:07:10 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -55,8 +55,6 @@
 #define XMP_TIMER_RESTART       0x09
 
 /* Fetch control */
-#define XMP_MODE_MED		(0)
-#define XMP_MODE_MTM		(0)
 #define XMP_MODE_ST3		(XMP_CTL_NCWINS | XMP_CTL_IGNWINS | \
 				 XMP_CTL_S3MLOOP | XMP_CTL_RTGINS)
 #define XMP_MODE_FT2		(XMP_CTL_OINSMOD | XMP_CTL_CUTNWI | \
@@ -84,16 +82,14 @@
 #define xmp_mod_play		xmp_play_module
 
 /* Error messages */
-#define XMP_ERR_NCTRL		-1
-#define XMP_ERR_DNREG		-2
-#define XMP_ERR_NODRV		-3
-#define XMP_ERR_DSPEC		-4
-#define XMP_ERR_DOPEN		-5
-#define XMP_ERR_DINIT		-6
-#define XMP_ERR_PATCH		-7
-#define XMP_ERR_VIRTC		-9
-#define XMP_ERR_ALLOC		-10
-#define XMP_ERR_SYNTH		-11
+#define XMP_ERR_NOCTL		-1
+#define XMP_ERR_NODRV		-2
+#define XMP_ERR_DSPEC		-3
+#define XMP_ERR_DOPEN		-4
+#define XMP_ERR_DINIT		-5
+#define XMP_ERR_PATCH		-6
+#define XMP_ERR_VIRTC		-7
+#define XMP_ERR_ALLOC		-8
 
 
 struct xmp_control {

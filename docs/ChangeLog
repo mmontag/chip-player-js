@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.142 2007-10-18 21:34:30 cmatsuoka Exp $
+$Id: ChangeLog,v 1.143 2007-10-18 23:07:09 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -22,6 +22,7 @@ Stable versions
 	- fixed sample loading in FAR modules
 	- fixed multi-retrig effect processing (see cyberculosis.xm ch 7)
 	- fixed segfault when output file is specified but driver isn't
+	- fixed XM sample loop size in XMs made with Digitrakker
 	- revert CoreAudio driver pause patch (fix memory management problem)
 	- reset MED synth program at each new note event
 	- removed filesize-based module format detection
