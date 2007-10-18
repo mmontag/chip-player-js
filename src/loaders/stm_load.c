@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.14 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -122,9 +122,9 @@ static int stm_load(struct xmp_mod_context *m, FILE *f, const int start)
     copy_adjust((uint8 *)m->name, sfh.name, 20);
 
     if (bmod2stm) {
-	snprintf(m->type, XMP_DEF_NAMESIZE, "!Scream! (BMOD2STM)");
+	snprintf(m->type, XMP_NAMESIZE, "!Scream! (BMOD2STM)");
     } else {
-	snprintf(m->type, XMP_DEF_NAMESIZE, "!Scream! "
+	snprintf(m->type, XMP_NAMESIZE, "!Scream! "
 			"(Scream Tracker %d.%02d)", sfh.vermaj, sfh.vermin);
     }
 

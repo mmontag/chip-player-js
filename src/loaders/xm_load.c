@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.22 2007-10-18 02:06:15 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.23 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -117,7 +117,7 @@ static int xm_load(struct xmp_mod_context *m, FILE *f, const int start)
 	strcpy(tracker_name, "old ModPlug Tracker");
     }
 
-    snprintf(m->type, XMP_DEF_NAMESIZE, "XM %d.%02d (%s)",
+    snprintf(m->type, XMP_NAMESIZE, "XM %d.%02d (%s)",
 			xfh.version >> 8, xfh.version & 0xff, tracker_name);
 
     MODULE_INFO();

@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.12 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.13 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -351,7 +351,7 @@ static void get_smpd(struct xmp_mod_context *m, int size, FILE *f)
 
 static int dmf_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
-	char composer[XMP_DEF_NAMESIZE];
+	char composer[XMP_NAMESIZE];
 	uint8 date[3];
 	char tracker_name[10];
 
@@ -361,7 +361,7 @@ static int dmf_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	ver = read8(f);
 	fread(tracker_name, 8, 1, f);
-	snprintf(m->type, XMP_DEF_NAMESIZE,
+	snprintf(m->type, XMP_NAMESIZE,
 		"D-Lusion Digital Music File v%d (%s)", ver, tracker_name);
 	tracker_name[8] = 0;
 	fread(m->name, 30, 1, f);

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.19 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.20 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -213,7 +213,7 @@ static int liq_load(struct xmp_mod_context *m, FILE *f, const int start)
 	if (tracker_name[i])
 	   break;
     }
-    snprintf(m->type, XMP_DEF_NAMESIZE, "LIQ %d.%02d (%s)",
+    snprintf(m->type, XMP_NAMESIZE, "LIQ %d.%02d (%s)",
 		lh.version >> 8, lh.version & 0x00ff, tracker_name);
 
     if (lh.version > 0) {

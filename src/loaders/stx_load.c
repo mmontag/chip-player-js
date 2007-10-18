@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.14 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -142,7 +142,7 @@ static int stx_load(struct xmp_mod_context *m, FILE *f, const int start)
     if (bmod2stm)
 	sprintf(m->type, "STMIK 0.2 (BMOD2STM)");
     else
-	snprintf(m->type, XMP_DEF_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
+	snprintf(m->type, XMP_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
 							broken ? 0 : 1);
 
     MODULE_INFO ();

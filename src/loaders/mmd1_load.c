@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.25 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.26 2007-10-18 18:25:10 cmatsuoka Exp $
  */
 
 /*
@@ -311,7 +311,7 @@ static int mmd1_load(struct xmp_mod_context *m, FILE *f, const int start)
 		fseek(f, start + songname_offset, SEEK_SET);
 		_D(_D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
-			if (i >= XMP_DEF_NAMESIZE)
+			if (i >= XMP_NAMESIZE)
 				break;
 			m->name[i] = read8(f);
 		}

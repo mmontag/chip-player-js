@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.23 2007-10-18 02:06:15 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.24 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -126,9 +126,12 @@ struct xmp_ord_info {
 #include "xxm.h"
 
 struct xmp_mod_context {
-    char name[XMP_DEF_NAMESIZE];	/* module name */
-    char type[XMP_DEF_NAMESIZE];	/* module type */
-    char author[XMP_DEF_NAMESIZE];	/* module author */
+    char *dirname;			/* file dirname */
+    char *basename;			/* file basename */
+    int filesize;			/* file size */
+    char name[XMP_NAMESIZE];		/* module name */
+    char type[XMP_NAMESIZE];		/* module type */
+    char author[XMP_NAMESIZE];		/* module author */
     char *filename;			/* Module file name */
     int size;				/* File size */
     double rrate;			/* Replay rate */

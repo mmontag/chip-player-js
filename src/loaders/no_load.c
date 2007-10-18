@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.14 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -75,7 +75,7 @@ static int no_load(struct xmp_mod_context *m, FILE *f, const int start)
 	nsize = read8(f);
 	for (i = 0; i < nsize; i++) {
 		uint8 x = read8(f);
-		if (i < XMP_DEF_NAMESIZE)
+		if (i < XMP_NAMESIZE)
 			m->name[i] = x;
 	}
 

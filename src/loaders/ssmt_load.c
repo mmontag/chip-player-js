@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.14 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -60,28 +60,12 @@ static int mtp_test(FILE *f, char *t)
 #define NAME_SIZE 255
 
 
-static void split_name(char *s, char **d, char **b)
-{
-	if ((*b = strrchr(s, '/'))) {
-		**b = 0;
-		(*b)++;
-		*d = s;
-	} else {
-		*d = "";
-		*b = s;
-	}
-}
-
-
 static int mtp_load(struct xmp_mod_context *m, FILE *f, const int start)
 {
 	struct xxm_event *event;
 	int i, j, k;
 	uint8 buffer[25];
 	int blocksize;
-	char *dirname, *basename;
-	char filename[NAME_SIZE];
-	char modulename[NAME_SIZE];
 	FILE *s;
 
 	LOAD_INIT();
@@ -94,9 +78,6 @@ static int mtp_load(struct xmp_mod_context *m, FILE *f, const int start)
 		strcpy(m->type, "IIgs MegaTracker");
 	else
 		return -1;
-
-	strncpy(modulename, m->filename, NAME_SIZE);
-	split_name(modulename, &dirname, &basename);
 
 	blocksize = read16l(f);
 	m->xxh->tpo = read16l(f);
@@ -207,10 +188,12 @@ static int mtp_load(struct xmp_mod_context *m, FILE *f, const int start)
 	reportv(1, "\n     Name                   Len  LBeg LEnd L Vol");
 
 	for (i = 0; i < m->xxh->ins; i++) {
+		char filename[1024];
+
 		if (!m->xxih[i].name[0])
 			continue;
 
-		strncpy(filename, dirname, NAME_SIZE);
+		strncpy(filename, m->dirname, NAME_SIZE);
 		if (*filename)
 			strncat(filename, "/", NAME_SIZE);
 		strncat(filename, (char *)m->xxih[i].name, NAME_SIZE);

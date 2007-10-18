@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.16 2007-10-15 23:37:24 cmatsuoka Exp $
+ * $Id: common.c,v 1.17 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -56,13 +56,13 @@ int test_name(uint8 *s, int n)
 
 void read_title(FILE *f, char *t, int s)
 {
-	uint8 buf[XMP_DEF_NAMESIZE];
+	uint8 buf[XMP_NAMESIZE];
 
 	if (t == NULL)
 		return;
 
-	if (s >= XMP_DEF_NAMESIZE)
-		s = XMP_DEF_NAMESIZE -1;
+	if (s >= XMP_NAMESIZE)
+		s = XMP_NAMESIZE -1;
 
 	memset(t, 0, s + 1);
 

@@ -1,7 +1,7 @@
 /* Real Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: rtm_load.c,v 1.14 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.15 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -94,7 +94,7 @@ static int rtm_load(struct xmp_mod_context *m, FILE *f, const int start)
 		m->xxo[i] = read16l(f);
 	
 	strncpy(m->name, oh.name, 20);
-	snprintf(m->type, XMP_DEF_NAMESIZE, "RTMM %d.%02d (%s)",
+	snprintf(m->type, XMP_NAMESIZE, "RTMM %d.%02d (%s)",
 			oh.version >> 8, oh.version & 0xff, rh.software);
 
 	m->xxh->len = rh.nposition;

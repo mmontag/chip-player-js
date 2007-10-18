@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.18 2007-10-16 02:32:55 cmatsuoka Exp $
+ * $Id: control.c,v 1.19 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -191,45 +191,51 @@ int xmp_play_module(xmp_context ctx)
 void xmp_release_module(xmp_context ctx)
 {
     struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_mod_context *m = &p->m;
     int i;
 
     _D (_D_INFO "Freeing memory");
 
-    if (p->m.med_vol_table) {
-	for (i = 0; i < p->m.xxh->ins; i++)
-	     if (p->m.med_vol_table[i])
-		free(p->m.med_vol_table[i]);
-	free(p->m.med_vol_table);
+    if (m->med_vol_table) {
+	for (i = 0; i < m->xxh->ins; i++)
+	     if (m->med_vol_table[i])
+		free(m->med_vol_table[i]);
+	free(m->med_vol_table);
     }
 
-    if (p->m.med_wav_table) {
-	for (i = 0; i < p->m.xxh->ins; i++)
-	     if (p->m.med_wav_table[i])
-		free(p->m.med_wav_table[i]);
-	free(p->m.med_wav_table);
+    if (m->med_wav_table) {
+	for (i = 0; i < m->xxh->ins; i++)
+	     if (m->med_wav_table[i])
+		free(m->med_wav_table[i]);
+	free(m->med_wav_table);
     }
 
-    for (i = 0; i < p->m.xxh->trk; i++)
-	free(p->m.xxt[i]);
-    for (i = 0; i < p->m.xxh->pat; i++)
-	free(p->m.xxp[i]);
-    for (i = 0; i < p->m.xxh->ins; i++) {
-	free(p->m.xxfe[i]);
-	free(p->m.xxpe[i]);
-	free(p->m.xxae[i]);
-	free(p->m.xxi[i]);
+    for (i = 0; i < m->xxh->trk; i++)
+	free(m->xxt[i]);
+    for (i = 0; i < m->xxh->pat; i++)
+	free(m->xxp[i]);
+    for (i = 0; i < m->xxh->ins; i++) {
+	free(m->xxfe[i]);
+	free(m->xxpe[i]);
+	free(m->xxae[i]);
+	free(m->xxi[i]);
     }
-    free(p->m.xxt);
-    free(p->m.xxp);
-    free(p->m.xxi);
-    if (p->m.xxh->smp > 0)
-	free(p->m.xxs);
-    free(p->m.xxim);
-    free(p->m.xxih);
-    free(p->m.xxfe);
-    free(p->m.xxpe);
-    free(p->m.xxae);
-    free(p->m.xxh);
+    free(m->xxt);
+    free(m->xxp);
+    free(m->xxi);
+    if (m->xxh->smp > 0)
+	free(m->xxs);
+    free(m->xxim);
+    free(m->xxih);
+    free(m->xxfe);
+    free(m->xxpe);
+    free(m->xxae);
+    free(m->xxh);
+
+    if (m->dirname)
+	free(m->dirname);
+    if (m->basename)
+	free(m->basename); 
 }
 
 

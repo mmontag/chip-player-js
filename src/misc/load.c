@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.38 2007-10-17 13:08:53 cmatsuoka Exp $
+ * $Id: load.c,v 1.39 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -352,6 +352,19 @@ err:
 }
 
 
+static void split_name(char *s, char **d, char **b)
+{
+	if ((*b = strrchr(s, '/'))) {
+		**b = 0;
+		(*b)++;
+		*d = s;
+	} else {
+		*d = "";
+		*b = s;
+	}
+}
+
+
 int xmp_load_module(xmp_context ctx, char *s)
 {
     FILE *f;
@@ -362,6 +375,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     unsigned int crc;
     struct xmp_player_context *p = (struct xmp_player_context *)ctx;
     struct xmp_mod_context *m = &p->m;
+    char *b1, *b2;
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -378,14 +392,19 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
 	goto err;
 
+    split_name(s, &b1, &b2);
+    m->dirname = strdup(b1);
+    m->basename = strdup(b2); 
+    m->filesize = st.st_size;
+
     crc = cksum(f);
 
     xmp_drv_clearmem();
 
     /* Reset variables */
-    memset(m->name, 0, XMP_DEF_NAMESIZE);
-    memset(m->type, 0, XMP_DEF_NAMESIZE);
-    memset(m->author, 0, XMP_DEF_NAMESIZE);
+    memset(m->name, 0, XMP_NAMESIZE);
+    memset(m->type, 0, XMP_NAMESIZE);
+    memset(m->author, 0, XMP_NAMESIZE);
     m->filename = s;		/* For ALM, SSMT, etc */
     m->size = st.st_size;
     m->rrate = PAL_RATE;

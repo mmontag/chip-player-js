@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.28 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.29 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -381,7 +381,7 @@ skip_test:
 
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-    snprintf(m->type, XMP_DEF_NAMESIZE, "%s (%s)", magic, tracker);
+    snprintf(m->type, XMP_NAMESIZE, "%s (%s)", magic, tracker);
     MODULE_INFO();
 
     if (V(1)) {
@@ -442,7 +442,7 @@ skip_test:
 	if (ptsong) {
 	    FILE *s;
 	    char sn[256];
-	    snprintf(sn, XMP_DEF_NAMESIZE, "%s%s", pathname, m->xxih[i].name);
+	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, m->xxih[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
 	        xmp_drv_loadpatch (s, m->xxi[i][0].sid, m->c4rate, 0,

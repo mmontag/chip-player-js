@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.14 2007-10-18 18:25:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,9 +55,9 @@ static int dtt_load(struct xmp_mod_context *m, FILE *f, const int start)
 	strcpy(m->type, "Desktop Tracker");
 
 	fread(buf, 1, 64, f);
-	strncpy(m->name, (char *)buf, XMP_DEF_NAMESIZE);
+	strncpy(m->name, (char *)buf, XMP_NAMESIZE);
 	fread(buf, 1, 64, f);
-	strncpy(m->author, (char *)buf, XMP_DEF_NAMESIZE);
+	strncpy(m->author, (char *)buf, XMP_NAMESIZE);
 	
 	flags = read32l(f);
 	m->xxh->chn = read32l(f);

@@ -5,15 +5,15 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.19 2007-10-16 19:51:05 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.20 2007-10-18 18:25:10 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
 #define __XMP_H
 
-#define XMP_DEF_NAMESIZE	64
+#define XMP_NAMESIZE		64
 
-#define XMP_OK			0x00
+#define XMP_OK			0
 
 #define XMP_KEY_OFF		0x61
 #define XMP_KEY_CUT		0x62
