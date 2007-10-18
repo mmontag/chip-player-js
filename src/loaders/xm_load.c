@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.21 2007-10-17 13:08:52 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.22 2007-10-18 02:06:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -65,7 +65,6 @@ static int xm_load(struct xmp_mod_context *m, FILE *f, const int start)
     struct xm_instrument xi;
     struct xm_sample_header xsh[16];
     char tracker_name[21];
-    int fix_loop = 0;
 
     LOAD_INIT();
 
@@ -116,7 +115,6 @@ static int xm_load(struct xmp_mod_context *m, FILE *f, const int start)
 
     if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
 	strcpy(tracker_name, "old ModPlug Tracker");
-	fix_loop = 1;		/* for Breath of the Wind */
     }
 
     snprintf(m->type, XMP_DEF_NAMESIZE, "XM %d.%02d (%s)",
@@ -371,8 +369,6 @@ load_instruments:
 		m->xxs[sample_num].len = xsh[j].length;
 		m->xxs[sample_num].lps = xsh[j].loop_start;
 		m->xxs[sample_num].lpe = xsh[j].loop_start + xsh[j].loop_length;
-		if (!fix_loop && m->xxs[sample_num].lpe > 0)
-		    m->xxs[sample_num].lpe--;
 		m->xxs[sample_num].flg = xsh[j].type & XM_SAMPLE_16BIT ?
 		    WAVE_16_BITS : 0;
 		m->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_FORWARD ?

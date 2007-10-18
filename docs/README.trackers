@@ -9,7 +9,6 @@ Sat Aug 11 08:04:52 BRT 2007
 - added Digitrakker 3.2
 
 Fri Sep 14 16:09:18 BRT 2007
-- added info about "FastTracker v 2.00" loops
 - IT tracker fingerprint
 
 
@@ -325,9 +324,6 @@ instrument type ("always 0" according to xm.txt) is 0xda. This module was
 created using an old version of ModPlug Tracker (marked as 1.04 made with
 "FastTracker v 2.00", note that authentic FT2 modules are marked as
 "FastTracker v2.00").
-
-Other "FastTracker v 2.00" differences: loop size is one sample larger
-than standard FT2 modules, check Breath of the Wind by DipA.
 
 Extended Module 1.02 (Vogue's "Trans atlantic" and "Dont you" remixes) and
 1.03 (Vogue's "Developer 94" and "Enhanced Intuition") contains header,

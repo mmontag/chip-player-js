@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.140 2007-10-17 23:12:33 cmatsuoka Exp $
+$Id: ChangeLog,v 1.141 2007-10-18 02:06:15 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -29,6 +29,9 @@ Stable versions
 	- changed all loaders to load module from relative offset
 	- changed UMX depacker to be a real loader (using relative offsets)
 	- ported Audacious plugin to the Audacious 1.4.0 API
+	- fixed sample offset on portamento after keyoff (Decibeter - Cosmic
+	  'Wegian Mamas.xm plays correctly now)
+	- fixed length of XM loops (jt_xmas.xm no longer out of tune)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
