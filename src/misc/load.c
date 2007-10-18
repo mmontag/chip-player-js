@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.39 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: load.c,v 1.40 2007-10-18 19:13:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -159,21 +159,23 @@ static int decrunch(FILE **f, char **s)
 
     free(b);
 
-    fseek (*f, 0, SEEK_SET);
+    fseek(*f, 0, SEEK_SET);
 
-    if (packer == NULL)
+    if (packer == NULL) {
+	free(temp);
 	return 0;
+    }
 
     reportv(0, "Depacking %s file... ", packer);
 
     if ((fd = mkstemp(temp)) < 0) {
 	reportv(0, "failed\n");
-	return -1;
+	goto err;
     }
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	reportv(0, "failed\n");
-	return -1;
+	goto err;
     }
 
     if (cmd) {
@@ -190,19 +192,15 @@ static int decrunch(FILE **f, char **s)
 		report("failed\n");
 	    fclose(t);
 	    free(line);
-            unlink(temp);
-	    free(temp);
-	    return -1;
+	    goto err2;
 	}
 	free (line);
 #define BSIZE 0x4000
 	if ((buf = malloc (BSIZE)) == NULL) {
 	    reportv(0, "failed\n");
-            unlink (temp);
-	    free (temp);
 	    pclose (p);
 	    fclose (t);
-	    return -1;
+	    goto err2;
 	}
 	while ((n = fread(buf, 1, BSIZE, p)) > 0) {
 	    fwrite(buf, 1, n, t);
@@ -237,9 +235,7 @@ static int decrunch(FILE **f, char **s)
 
     if (res < 0) {
 	reportv(0, "failed\n");
-	unlink(temp);
-	free(temp);
-	return -1;
+	goto err2;
     }
 
     reportv(0, "done\n");
@@ -254,6 +250,12 @@ static int decrunch(FILE **f, char **s)
     free(temp);
 
     return 1;
+
+err2:
+    unlink(temp);
+err:
+    free(temp);
+    return -1;
 }
 
 

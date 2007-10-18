@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.9 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.10 2007-10-18 19:13:12 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,7 +40,9 @@ static int hsc_test(FILE *f, char *t)
 
     fseek(f, 128 * 12, SEEK_CUR);
 
-    fread (buf, 1, 51, f);
+    if (fread(buf, 1, 51, f) != 51)
+	return -1;
+;
     for (p = i = 0; i < 51; i++) {
 	if (buf[i] == 0xff)
 	    break;
