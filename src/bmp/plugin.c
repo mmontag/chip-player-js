@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.31 2007-10-18 20:21:57 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.32 2007-10-18 21:13:05 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -483,6 +483,9 @@ static void cleanup()
 
 static int is_our_file(char *filename)
 {
+	if (memcmp(filename, "file://", 7) == 0)
+		filename += 7;
+
 	if (xmp_test_module(filename, NULL) == 0)
 		return 1;
 
@@ -563,6 +566,9 @@ static void play_file(InputPlayback *ipb)
 	GtkTextIter start, end;
 #endif
 	
+	if (memcmp(filename, "file://", 7) == 0)
+		filename += 7;
+
 	_D("play_file: %s", filename);
 
 #if defined PLUGIN_XMMS || defined PLUGIN_BMP
