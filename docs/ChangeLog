@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.141 2007-10-18 02:06:15 cmatsuoka Exp $
+$Id: ChangeLog,v 1.142 2007-10-18 21:34:30 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -21,6 +21,7 @@ Stable versions
 	- fixed FAR persistent vibrato/portamento and pattern break effects
 	- fixed sample loading in FAR modules
 	- fixed multi-retrig effect processing (see cyberculosis.xm ch 7)
+	- fixed segfault when output file is specified but driver isn't
 	- revert CoreAudio driver pause patch (fix memory management problem)
 	- reset MED synth program at each new note event
 	- removed filesize-based module format detection

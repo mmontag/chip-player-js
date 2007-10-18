@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.16 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: main.c,v 1.17 2007-10-18 21:34:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -369,7 +369,7 @@ int main (int argc, char **argv)
     if (randomize)
 	shuffle (argc - optind + 1, &argv[optind - 1]);
 
-    if (opt.outfile && strcmp(opt.drv_id, "wav"))
+    if (opt.outfile && (!opt.drv_id || strcmp(opt.drv_id, "wav")))
 	opt.drv_id = "file";
 
     global_filename = argv[optind];
