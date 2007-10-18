@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.16 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.17 2007-10-18 23:56:07 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -59,7 +59,7 @@ static uint8 fx[] = {
     NONE,
     FX_FAR_PORTA_UP,		/* 0x1?  Pitch Adjust */
     FX_FAR_PORTA_DN,		/* 0x2?  Pitch Adjust */
-    FX_PER_PORTA_TO,		/* 0x3?  Port to Note -- FIXME */
+    FX_PER_TPORTA,		/* 0x3?  Port to Note -- FIXME */
     FX_FAR_RETRIG,		/* 0x4?  Retrigger */
     FX_FAR_SETVIBRATO,		/* 0x5?  Set VibDepth */
     FX_VIBRATO,			/* 0x6?  Vibrato note */

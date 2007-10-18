@@ -67,7 +67,7 @@
 /* Persistent effects -- for 669, FNK and FAR */
 #define FX_PER_PORTA_DN	0x78
 #define FX_PER_PORTA_UP	0x79
-#define FX_PER_PORTA_TO	0x7a
+#define FX_PER_TPORTA	0x7a
 #define FX_PER_VIBRATO	0x7b
 
 /* IT effects */

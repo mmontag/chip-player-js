@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.14 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.15 2007-10-18 23:56:07 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -70,8 +70,8 @@ struct ssn_instrument_header {
 static uint8 fx[] = {
     FX_PER_PORTA_UP,
     FX_PER_PORTA_DN,
-    FX_PER_PORTA_TO,
-    FX_EXTENDED,
+    FX_PER_TPORTA,
+    FX_FINETUNE,
     FX_PER_VIBRATO,
     FX_TEMPO
 };
@@ -106,14 +106,14 @@ static int ssn_load(struct xmp_mod_context *m, FILE *f, const int start)
     m->xxh->len = i;
     memcpy (m->xxo, sfh.order, m->xxh->len);
     m->xxh->tpo = 6;
-    m->xxh->bpm = 0x50;
+    m->xxh->bpm = 78;
     m->xxh->smp = m->xxh->ins;
     m->xxh->flg |= XXM_FLG_LINEAR;
 
     strcpy(m->type, strncmp((char *)sfh.marker, "if", 2) ?
 				"669 (UNIS 669)" : "669 (Composer 669)");
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     if (V(0)) {
 	report ("| %-36.36s\n", sfh.message);
@@ -158,42 +158,45 @@ static int ssn_load(struct xmp_mod_context *m, FILE *f, const int start)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+    reportv(0, "Stored patterns: %d ", m->xxh->pat);
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
+
 	EVENT(i, 0, 0).f2t = FX_TEMPO;
 	EVENT(i, 0, 0).f2p = sfh.tempo[i];
 	EVENT(i, 1, sfh.pbrk[i]).f2t = FX_BREAK;
+
 	for (j = 0; j < 64 * 8; j++) {
-	    event = &EVENT (i, j % 8, j / 8);
-	    fread (&ev, 1, 3, f);
+	    event = &EVENT(i, j % 8, j / 8);
+	    fread(&ev, 1, 3, f);
+
 	    if ((ev[0] & 0xfe) != 0xfe) {
 		event->note = 1 + 24 + (ev[0] >> 2);
 		event->ins = 1 + MSN(ev[1]) + ((ev[0] & 0x03) << 4);
 	    }
+
 	    if (ev[0] != 0xff)
 		event->vol = (LSN(ev[1]) << 2) + 1;
-	    if (ev[2] + 1) {
-		event->fxt = fx[MSN(ev[2])];
-		if (event->fxt > 6) {
-		    event->fxt = 0;
+
+	    if (ev[2] != 0xff) {
+		if (MSN(ev[2]) > 5)
 		    continue;
-		}
+
+		event->fxt = fx[MSN(ev[2])];
 
 		switch (event->fxt) {
 		case FX_PER_PORTA_UP:
 		case FX_PER_PORTA_DN:
-		case FX_PER_PORTA_TO:
+		case FX_PER_TPORTA:
 		    event->fxp = LSN(ev[2]);
 		    break;
 		case FX_PER_VIBRATO:
 		    event->fxp = 0x40 || LSN(ev[2]);
 		    break;
-		case FX_EXTENDED:
-		    event->fxp = (EX_FINETUNE << 4) | 3;	/* guess */
+		case FX_FINETUNE:
+		    event->fxp = 0x80 + (LSN(ev[2]) << 4);
 		    break;
 		}
 	    }

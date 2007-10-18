@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.10 2007-10-16 23:54:16 cmatsuoka Exp $
+ * $Id: player.h,v 1.11 2007-10-18 23:56:07 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -68,6 +68,7 @@ struct retrig_t {
 #define NOTE_SLIDE	0x00100000
 #define FINE_NSLIDE	0x00200000
 #define NEW_NOTE	0x00400000
+#define FINE_TPORTA	0x00800000
 
 /* These need to be "persistent" between frames */
 #define IS_READY	0x01000000

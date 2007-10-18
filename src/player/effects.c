@@ -137,7 +137,7 @@ fx_porta_dn:
 	else
 	    RESET_PER(PITCHBEND);
 	break;
-    case FX_PER_PORTA_TO:			/* Tone portamento */
+    case FX_PER_TPORTA:				/* Persistent tone portamento */
 	if (!TEST(IS_VALID))
 	    break;
 	SET_PER(TONEPORTA);
