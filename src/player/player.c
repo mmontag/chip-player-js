@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.27 2007-10-18 02:04:50 cmatsuoka Exp $
+ * $Id: player.c,v 1.28 2007-10-18 02:27:06 cmatsuoka Exp $
  */
 
 /*
@@ -467,16 +467,20 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
     if (TEST(FADEOUT | RELEASE) || act == XMP_ACT_FADE || act == XMP_ACT_OFF) {
 	if (!(xc->fadeout = xc->fadeout > XXIH.rls ?
 	    xc->fadeout - XXIH.rls : 0)) {
-	    xc->volume = 0;
 
 	    /* Setting the volume to 0 instead of resetting the channel
 	     * will make us spend more CPU, but allows portamento after
 	     * keyoff to continue the sample instead of resetting it.
 	     * This is used in Decibelter - Cosmic 'Wegian Mamas.xm
-	     *
-	     * xmp_drv_resetchannel(chn);
-	     * return;
+	     * Only reset the channel in virtual channel mode so we
+	     * can release it.
 	     */
+	     if (m->fetch & XMP_CTL_VIRTUAL) {
+	         xmp_drv_resetchannel(chn);
+	         return;
+	     } else {
+	         xc->volume = 0;
+	     }
 	}
     }
 
