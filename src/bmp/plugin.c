@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.30 2007-10-17 23:22:50 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.31 2007-10-18 20:21:57 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -493,7 +493,7 @@ static int is_our_file(char *filename)
 static void get_song_info(char *filename, char **title, int *length)
 {
 	char *x;
-	char name[XMP_DEF_NAMESIZE];
+	char name[XMP_NAMESIZE];
 
 	xmp_test_module(filename, name);
 
