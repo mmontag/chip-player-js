@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.27 2007-10-19 09:42:07 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.28 2007-10-19 09:56:44 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -206,8 +206,8 @@ int	report			(char *, ...);
 int	reportv			(int, char *, ...);
 int	ulaw_encode		(int);
 char	*str_adj		(char *);
-int	xmpi_scan_module	(struct xmp_player_context *);
-int	xmpi_player_start	(struct xmp_player_context *);
+int	xmpi_scan_module	(struct xmp_context *);
+int	xmpi_player_start	(struct xmp_context *);
 int	xmpi_tell_wait		(void);
 int	xmpi_select_read	(int, int);
 int	xmpi_read_rc		(struct xmp_control *);

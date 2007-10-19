@@ -39,7 +39,7 @@
 #define MAX_GVL		0x40
 
 
-int xmpi_scan_module(struct xmp_player_context *p)
+int xmpi_scan_module(struct xmp_context *ctx)
 {
     int prm, gvol_slide, f1, f2, ord, ord2;
     int row, last_row, break_row, cnt_row;
@@ -50,6 +50,7 @@ int xmpi_scan_module(struct xmp_player_context *p)
     int* loop_row;
     char** tab_cnt;
     struct xxm_event* event;
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
 
     if (m->xxh->len == 0)

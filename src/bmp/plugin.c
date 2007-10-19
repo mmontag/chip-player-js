@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.33 2007-10-18 23:07:09 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.34 2007-10-19 09:56:44 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -314,7 +314,7 @@ static void stop(IPB)
 static void seek(IPB_int(time))
 {
 	int i, t;
-	struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 
 	_D("seek to %d, total %d", time, xmp_cfg.time);
 
@@ -688,7 +688,7 @@ static void play_file(InputPlayback *ipb)
 
 	_D ("before panel update");
 
-	xmp_cfg.time = xmpi_scan_module((struct xmp_player_context *)ctx);
+	xmp_cfg.time = xmpi_scan_module((struct xmp_context *)ctx);
 	xmp_get_module_info(ctx, &ii->mi);
 	strcpy(ii->filename, "");
 

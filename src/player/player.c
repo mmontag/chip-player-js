@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.28 2007-10-18 02:27:06 cmatsuoka Exp $
+ * $Id: player.c,v 1.29 2007-10-19 09:56:44 cmatsuoka Exp $
  */
 
 /*
@@ -742,10 +742,11 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
 }
 
 
-int xmpi_player_start(struct xmp_player_context *p)
+int xmpi_player_start(struct xmp_context *ctx)
 {
     int r, o, t, e;		/* rows, order, tick, end point */
     double playing_time;
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
 
     if (!xmp_ctl)
