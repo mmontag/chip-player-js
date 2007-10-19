@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.36 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.37 2007-10-19 21:36:12 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -76,6 +76,7 @@ static void	file_info_box	(char *);
 static struct xmp_control ctl;
 
 static pthread_t decode_thread;
+static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 #ifdef __EMX__
@@ -497,6 +498,8 @@ static void get_song_info(char *filename, char **title, int *length)
 {
 	char *x;
 	char name[XMP_NAMESIZE];
+	xmp_context ctx2;
+	int lret;
 
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
@@ -511,6 +514,24 @@ static void get_song_info(char *filename, char **title, int *length)
 			filename = ++x;
 		*title = g_strdup(filename);
 	}
+
+	/* Create new context to load a file and get the length */
+
+	ctx2 = xmp_create_context();
+
+	pthread_mutex_lock(&load_mutex);
+	lret = xmp_load_module(ctx2, filename);
+	pthread_mutex_unlock(&load_mutex);
+
+	if (lret < 0) {
+		xmp_free_context(ctx2);
+		return;
+	}
+
+	*length = lret;
+
+	xmp_release_module(ctx2);
+	xmp_free_context(ctx2);
 }
 
 
@@ -566,6 +587,7 @@ static void play_file(InputPlayback *ipb)
 	FILE *f;
 	char *info;
 	struct xmp_options *opt;
+	int lret;
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	GtkTextIter start, end;
 #endif
@@ -667,7 +689,11 @@ static void play_file(InputPlayback *ipb)
 	pthread_create (&catch_thread, NULL, catch_info, NULL);
 
 	_D("*** loading: %s", filename);
-	if (xmp_load_module(ctx, filename) < 0) {
+	pthread_mutex_lock(&load_mutex);
+	lret =  xmp_load_module(ctx, filename);
+	pthread_mutex_unlock(&load_mutex);
+
+	if (lret < 0) {
 		xmp_ip.set_info_text("Error loading mod");
 		playing = 0;
 		return;
