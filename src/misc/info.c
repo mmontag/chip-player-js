@@ -18,17 +18,17 @@ extern struct xmp_fmt_info *__fmt_head;
 
 inline struct xmp_module_info *xmp_get_module_info(xmp_context ctx, struct xmp_module_info *i)
 {
-    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_mod_context *m = &p->m;
 
     strncpy(i->name, m->name, 0x40);
     strncpy(i->type, m->type, 0x40);
-    i->chn = p->m.xxh->chn;
-    i->pat = p->m.xxh->pat;
-    i->ins = p->m.xxh->ins;
-    i->trk = p->m.xxh->trk;
-    i->smp = p->m.xxh->smp;
-    i->len = p->m.xxh->len;
+    i->chn = m->xxh->chn;
+    i->pat = m->xxh->pat;
+    i->ins = m->xxh->ins;
+    i->trk = m->xxh->trk;
+    i->smp = m->xxh->smp;
+    i->len = m->xxh->len;
 
     return i;
 }

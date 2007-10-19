@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.17 2007-10-18 21:34:30 cmatsuoka Exp $
+ * $Id: main.c,v 1.18 2007-10-19 09:42:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -353,6 +353,8 @@ int main (int argc, char **argv)
     long rc;
 #endif
 
+    ctx = xmp_create_context();
+
     xmp_init (argc, argv, &opt);
     opt.verbose = 1;
     get_options (argc, argv, &opt);
@@ -475,8 +477,6 @@ int main (int argc, char **argv)
 #endif
 
     time (&t0);
-
-    ctx = xmp_create_context();
 
     for (first = optind, num_mod = lf_flag = 0; optind < argc; optind++) {
 	if (getprevious) {

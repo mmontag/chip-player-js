@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.19 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: control.c,v 1.20 2007-10-19 09:42:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,7 +33,7 @@ int pw_init(void);
 
 void *xmp_create_context()
 {
-	return calloc(1, sizeof(struct xmp_player_context));
+	return calloc(1, sizeof(struct xmp_context));
 }
 
 void xmp_free_context(xmp_context ctx)
@@ -126,7 +126,7 @@ void xmp_channel_mute(int from, int num, int on)
 
 int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 {
-    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_mod_context *m = &p->m;
 
     switch (cmd) {
@@ -173,7 +173,7 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 
 int xmp_play_module(xmp_context ctx)
 {
-    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     time_t t0, t1;
     int t;
 
@@ -190,7 +190,7 @@ int xmp_play_module(xmp_context ctx)
 
 void xmp_release_module(xmp_context ctx)
 {
-    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_mod_context *m = &p->m;
     int i;
 
@@ -261,7 +261,7 @@ int xmp_verbosity_level (int i)
 
 int xmp_seek_time(xmp_context ctx, int time)
 {
-    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     int i, t;
     /* _D("seek to %d, total %d", time, xmp_cfg.time); */
 

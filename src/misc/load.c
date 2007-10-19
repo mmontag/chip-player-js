@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.42 2007-10-19 09:08:11 cmatsuoka Exp $
+ * $Id: load.c,v 1.43 2007-10-19 09:42:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -375,7 +375,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct list_head *head;
     struct stat st;
     unsigned int crc;
-    struct xmp_player_context *p = (struct xmp_player_context *)ctx;
+    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_mod_context *m = &p->m;
     char *b1, *b2;
 

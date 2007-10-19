@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.26 2007-10-19 09:08:11 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.27 2007-10-19 09:42:07 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -185,16 +185,13 @@ struct xmp_player_context {
     struct xmp_mod_context m;
 };
 
-#if 0
-
 struct xmp_context {
-    struct xmp_options o;
-    struct xmp_control c;
-    struct xmp_driver_context d;
+    //struct xmp_options o;
+    //struct xmp_control c;
+    //struct xmp_driver_context d;
     struct xmp_player_context p;
 };
 
-#endif
 
 /* Externs */
 
