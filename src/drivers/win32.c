@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.5 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: win32.c,v 1.6 2007-10-19 19:31:10 cmatsuoka Exp $
  */
 
 /*
@@ -91,6 +91,7 @@ static void CALLBACK wave_callback (HWAVE hWave, UINT uMsg, DWORD dwInstance,
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+    struct xmp_options *o = &ctx->o;
     MMRESULT res;
     WAVEFORMATEX outFormatex;
 
@@ -100,9 +101,9 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     }
 
     outFormatex.wFormatTag = WAVE_FORMAT_PCM;
-    outFormatex.wBitsPerSample = ctl->resol;
-    outFormatex.nChannels = ctl->flags & XMP_FMT_MONO ? 1 : 2;
-    outFormatex.nSamplesPerSec = ctl->freq;
+    outFormatex.wBitsPerSample = o->resol;
+    outFormatex.nChannels = o->flags & XMP_FMT_MONO ? 1 : 2;
+    outFormatex.nSamplesPerSec = o->freq;
     outFormatex.nAvgBytesPerSec = outFormatex.nSamplesPerSec *
 	outFormatex.nChannels * outFormatex.wBitsPerSample / 8;
     outFormatex.nBlockAlign = outFormatex.nChannels *
@@ -145,11 +146,11 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     waveOutReset(dev);
     InitializeCriticalSection(&cs);
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 
-static void bufdump(int len, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int len)
 {
     HGLOBAL hg, hg2;
     LPWAVEHDR wh;

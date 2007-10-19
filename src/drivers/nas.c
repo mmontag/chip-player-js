@@ -4,7 +4,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: nas.c,v 1.6 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: nas.c,v 1.7 2007-10-19 19:31:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -80,7 +80,7 @@ struct xmp_drv_info drv_nas = {
 };
 
 
-static void nas_send (AuServer *aud, InfoPtr i, AuUint32 numBytes)
+static void nas_send(AuServer *aud, InfoPtr i, AuUint32 numBytes)
 {
     _D (_D_INFO "send: numBytes = %ld, i->buf_cnt = %ld", numBytes, i->buf_cnt);
 
@@ -98,7 +98,7 @@ static void nas_send (AuServer *aud, InfoPtr i, AuUint32 numBytes)
 }
 
 
-static AuBool nas_event (AuServer *aud, AuEvent *ev, AuEventHandlerRec *handler)
+static AuBool nas_event(AuServer *aud, AuEvent *ev, AuEventHandlerRec *handler)
 {
     InfoPtr i = (InfoPtr) handler->data;
     AuElementNotifyEvent *event = (AuElementNotifyEvent *) ev;
@@ -131,7 +131,7 @@ static AuBool nas_event (AuServer *aud, AuEvent *ev, AuEventHandlerRec *handler)
 }
 
 
-static void nas_flush ()
+static void nas_flush()
 {
     AuEvent ev;
     
@@ -147,13 +147,14 @@ static void nas_flush ()
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+    struct xmp_options *o = &ctx->o;
     int channels, rate, format, buf_samples;
     int duration, gain, watermark;
     char *server;
     AuDeviceID device = AuNone;
     AuElement element[2];
     char *token;
-    char **parm = ctl->parm;
+    char **parm = o->parm;
     int i;
 
     duration = 2;
@@ -161,30 +162,30 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     server = NULL;
     watermark = 10;
     channels = 2;
-    rate = ctl->freq;
+    rate = o->freq;
 
-    parm_init ();
-    chkparm1 ("duration", duration = atoi (token));
-    chkparm1 ("gain", gain = atoi (token));
-    chkparm1 ("server", server = token);
-    chkparm1 ("watermark", watermark = atoi (token));
-    parm_end ();
+    parm_init();
+    chkparm1("duration", duration = atoi (token));
+    chkparm1("gain", gain = atoi (token));
+    chkparm1("server", server = token);
+    chkparm1("watermark", watermark = atoi (token));
+    parm_end();
 
-    if (ctl->resol == 8) {
-	format = ctl->outfmt & XMP_FMT_UNS ?
+    if (o->resol == 8) {
+	format = o->outfmt & XMP_FMT_UNS ?
 	    AuFormatLinearUnsigned8 :
 	    AuFormatLinearSigned8;
     } else {
 	if (big_endian) {
-	    format = ctl->outfmt & XMP_FMT_UNS ? AuFormatLinearUnsigned16MSB :
+	    format = o->outfmt & XMP_FMT_UNS ? AuFormatLinearUnsigned16MSB :
 						 AuFormatLinearSigned16MSB;
 	} else {
-	    format = ctl->outfmt & XMP_FMT_UNS ? AuFormatLinearUnsigned16LSB :
+	    format = o->outfmt & XMP_FMT_UNS ? AuFormatLinearUnsigned16LSB :
 						 AuFormatLinearSigned16LSB;
 	}
     }
 
-    if (ctl->outfmt & XMP_FMT_MONO)
+    if (o->outfmt & XMP_FMT_MONO)
         channels = 1;
 
     info.aud = AuOpenServer(server, 0, NULL, 0, NULL, NULL);
@@ -267,7 +268,7 @@ static void bufdump(int len, struct xmp_context *ctx)
 }
 
 
-static void myshutdown ()
+static void myshutdown()
 {
     while (!info.finished) {
         nas_flush();

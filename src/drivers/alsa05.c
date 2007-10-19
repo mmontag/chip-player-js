@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.11 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.12 2007-10-19 19:31:08 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -40,11 +40,11 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int init(struct xmp_context *ctx, struct xmp_control *);
-static void dshutdown(void);
-static void bufdump(int, struct xmp_context *);
-static void bufwipe(void);
-static void flush(void);
+static int init (struct xmp_context *ctx, struct xmp_control *);
+static void dshutdown (void);
+static void bufdump (struct xmp_context *, int);
+static void bufwipe (void);
+static void flush (void);
 
 static void dummy()
 {
@@ -105,14 +105,14 @@ static int prepare_driver(void)
 	return 0;
 }
 
-static int to_fmt(struct xmp_control *ctl)
+static int to_fmt(struct xmp_options *o)
 {
 	int fmt;
 
-	if (ctl->resol == 0)
+	if (o->resol == 0)
 		return SND_PCM_SFMT_MU_LAW;
 
-	if (ctl->resol == 8) {
+	if (o->resol == 8) {
 		fmt = SND_PCM_SFMT_U8 | SND_PCM_SFMT_S8;
 	} else {
 		fmt = SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_S16_BE |
@@ -125,7 +125,7 @@ static int to_fmt(struct xmp_control *ctl)
 		}
 	}
 
-	if (ctl->outfmt & XMP_FMT_UNS) {
+	if (o->outfmt & XMP_FMT_UNS) {
 		fmt &= SND_PCM_SFMT_U8|SND_PCM_SFMT_U16_LE|SND_PCM_SFMT_U16_BE;
 	} else {
 		fmt &= SND_PCM_SFMT_S8|SND_PCM_SFMT_S16_LE|SND_PCM_SFMT_S16_BE;
@@ -136,6 +136,7 @@ static int to_fmt(struct xmp_control *ctl)
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+	struct xmp_options *o = &ctl->o;
 	snd_pcm_channel_params_t params;
 	snd_pcm_channel_setup_t setup;
 	int card = 0;
@@ -191,8 +192,8 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 
 	params.format.interleave = 1;
 	params.format.format = to_fmt(ctl);
-	params.format.rate = ctl->freq;
-	params.format.voices = (ctl->outfmt & XMP_FMT_MONO) ? 1 : 2;
+	params.format.rate = o->freq;
+	params.format.voices = (o->outfmt & XMP_FMT_MONO) ? 1 : 2;
 
 	if ((rc = snd_pcm_plugin_params(pcm_handle, &params)) < 0) {
 		printf("Unable to set output parameters: %s\n",

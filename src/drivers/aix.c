@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: aix.c,v 1.5 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: aix.c,v 1.6 2007-10-19 19:31:08 cmatsuoka Exp $
  */
 
 /*
@@ -82,13 +82,13 @@ struct xmp_drv_info drv_bsd = {
 #define AUDIO_MIN_GAIN 0
 #define AUDIO_MAX_GAIN 100
 
-static int setaudio(struct xmp_control *ctl)
+static int setaudio(struct xmp_options *o)
 {
     audio_init ainit;
     int gain = 128;
     int bsize = 32 * 1024;
     char *token;
-    char **parm = ctl->parm;
+    char **parm = o->parm;
 
     parm_init ();
     chkparm1 ("gain", gain = atoi (token));
@@ -101,13 +101,13 @@ static int setaudio(struct xmp_control *ctl)
 	gain = AUDIO_MAX_GAIN;
 
     init.mode = PCM;  			/* audio format */
-    init.srate = ctl->freq;		/* sample rate */
+    init.srate = o->freq;		/* sample rate */
     init.operation = PLAY;		/* PLAY or RECORD */
-    init.channels = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    init.bits_per_sample = ctl->resol;	/* bits per sample */
+    init.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    init.bits_per_sample = o->resol;	/* bits per sample */
     init.flags = BIG_ENDIAN | TWOS_COMPLEMENT;
    
-    if (ioctl (audio_fd, AUDIO_INIT, &init) < 0) {
+    if (ioctl(audio_fd, AUDIO_INIT, &init) < 0) {
 	close (audio_fd);
 	return XMP_ERR_DINIT;
     }
@@ -121,7 +121,7 @@ static int setaudio(struct xmp_control *ctl)
 
     control.ioctl_request = AUDIO_CHANGE;
     control.request_info = (char *) &change;
-    if (ioctl (audio_fd, AUDIO_CONTROL, &control) < 0) {
+    if (ioctl(audio_fd, AUDIO_CONTROL, &control) < 0) {
 	close (audio_fd);
 	return XMP_ERR_DINIT;
     }
@@ -129,7 +129,7 @@ static int setaudio(struct xmp_control *ctl)
     /* start playback - won't actually start until write() calls occur */
     control.ioctl_request = AUDIO_START;
     control.position = 0;
-    if (ioctl (audio_fd, AUDIO_CONTROL, &control) < 0) {
+    if (ioctl(audio_fd, AUDIO_CONTROL, &control) < 0) {
 	close (audio_fd);
 	return XMP_ERR_DINIT;
     }
@@ -143,7 +143,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     if ((audio_fd = open("/dev/paud0/1", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
 
-    if (setaudio (ctl) != XMP_OK)
+    if (setaudio(&ctx->o) != XMP_OK)
 	return XMP_ERR_DINIT;
 
     return xmp_smix_on(ctl);
@@ -153,7 +153,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump (int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
     int j;
     void *b;

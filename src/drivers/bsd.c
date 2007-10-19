@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: bsd.c,v 1.3 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: bsd.c,v 1.4 2007-10-19 19:31:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,7 +31,7 @@ static int audio_fd;
 
 static int init (struct xmp_context *, struct xmp_control *);
 static int setaudio (struct xmp_control *);
-static void bufdump (int);
+static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
 
 static void dummy () { }
@@ -70,13 +70,13 @@ struct xmp_drv_info drv_bsd = {
 };
 
 
-static int setaudio (struct xmp_control *ctl)
+static int setaudio(struct xmp_options *o)
 {
     audio_info_t ainfo;
     int gain = 128;
     int bsize = 32 * 1024;
     char *token;
-    char **parm = ctl->parm;
+    char **parm = o->parm;
 
     parm_init ();
     chkparm1 ("gain", gain = atoi (token));
@@ -88,12 +88,12 @@ static int setaudio (struct xmp_control *ctl)
     if (gain > AUDIO_MAX_GAIN)
 	gain = AUDIO_MAX_GAIN;
 
-    AUDIO_INITINFO (&ainfo);
+    AUDIO_INITINFO(&ainfo);
 
-    ainfo.play.sample_rate = ctl->freq;
-    ainfo.play.channels = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    ainfo.play.precision = ctl->resol;
-    ainfo.play.encoding = ctl->resol > 8 ?
+    ainfo.play.sample_rate = o->freq;
+    ainfo.play.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    ainfo.play.precision = o->resol;
+    ainfo.play.encoding = o->resol > 8 ?
 	AUDIO_ENCODING_SLINEAR : AUDIO_ENCODING_ULINEAR;
     ainfo.play.gain = gain;
     ainfo.play.buffer_size = bsize;
@@ -104,6 +104,7 @@ static int setaudio (struct xmp_control *ctl)
     }
 
     drv_bsd.description = "BSD PCM audio";
+
     return XMP_OK;
 }
 
@@ -113,17 +114,17 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     if ((audio_fd = open ("/dev/sound", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
 
-    if (setaudio (ctl) != XMP_OK)
+    if (setaudio(o) != XMP_OK)
 	return XMP_ERR_DINIT;
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump (int i)
+static void bufdump(struct xmp_context *ctx, int i)
 {
     int j;
     void *b;
@@ -131,9 +132,9 @@ static void bufdump (int i)
     /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
     /* for (; i -= write (audio_fd, xmp_smix_buffer (), i); ); */
 
-    b = xmp_smix_buffer ();
+    b = xmp_smix_buffer(ctx);
     while (i) {
-	if ((j = write (audio_fd, b, i)) > 0) {
+	if ((j = write(audio_fd, b, i)) > 0) {
 	    i -= j;
 	    (char *)b += j;
 	} else
@@ -142,8 +143,8 @@ static void bufdump (int i)
 }
 
 
-static void shutdown ()
+static void shutdown()
 {
-    xmp_smix_off ();
-    close (audio_fd);
+    xmp_smix_off();
+    close(audio_fd);
 }

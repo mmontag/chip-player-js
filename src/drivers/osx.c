@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.20 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: osx.c,v 1.21 2007-10-19 19:31:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,9 +23,9 @@
 #include "mixer.h"
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *);
-static void bufdump(int, struct xmp_context *);
-static void shutdown(void);
+static int init (struct xmp_context *ctx, struct xmp_control *);
+static void bufdump (int, struct xmp_context *);
+static void shutdown (void);
 
 static void dummy () { }
 
@@ -164,19 +164,20 @@ OSStatus render_proc(void *inRefCon,
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+	struct xmp_options *o = &ctx->o;
 	AudioStreamBasicDescription ad;
 	Component comp;
 	ComponentDescription cd;
 	AURenderCallbackStruct rc;
 	//char *token;
-	//char **parm = ctl->parm;
+	//char **parm = o->parm;
 	OSStatus err;
 	UInt32 size, max_frames;
 
 	//parm_init();
 	//parm_end();
 
-	ad.mSampleRate = ctl->freq;
+	ad.mSampleRate = o->freq;
 	ad.mFormatID = kAudioFormatLinearPCM;
 	ad.mFormatFlags = kAudioFormatFlagIsPacked |
 					kAudioFormatFlagIsSignedInteger;
@@ -185,10 +186,10 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	else
 		ad.mFormatFlags &= ~kAudioFormatFlagIsBigEndian;
 
-	ad.mChannelsPerFrame = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-	ad.mBitsPerChannel = ctl->resol;
+	ad.mChannelsPerFrame = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	ad.mBitsPerChannel = o->resol;
 
-	ad.mBytesPerFrame = ctl->resol / 8 * ad.mChannelsPerFrame;
+	ad.mBytesPerFrame = o->resol / 8 * ad.mChannelsPerFrame;
 	ad.mBytesPerPacket = ad.mBytesPerFrame;
 	ad.mFramesPerPacket = 1;
 
@@ -239,7 +240,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	}
 
 	chunk_size = max_frames;
-        num_chunks = (ctl->freq * ad.mBytesPerFrame + chunk_size - 1) /
+        num_chunks = (o->freq * ad.mBytesPerFrame + chunk_size - 1) /
 								chunk_size;
         buffer_len = (num_chunks + 1) * chunk_size;
         buffer = calloc(num_chunks + 1, chunk_size);

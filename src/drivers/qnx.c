@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: qnx.c,v 1.6 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: qnx.c,v 1.7 2007-10-19 19:31:10 cmatsuoka Exp $
  */
 
 /*
@@ -66,18 +66,19 @@ struct xmp_drv_info drv_qnx = {
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+    struct xmp_options *o = &ctx->o;
     int rc, rate, bits, stereo, bsize;
     char *dev;
     char *token;
-    char **parm = ctl->parm;
+    char **parm = o->parm;
  
-    parm_init ();
-    chkparm1 ("dev", dev = token);
-    chkparm1 ("buffer", bsize = atoi (token));
-    parm_end ();
+    parm_init();
+    chkparm1("dev", dev = token);
+    chkparm1("buffer", bsize = atoi (token));
+    parm_end();
 
-    rate = ctl->freq;
-    bits = ctl->resol;
+    rate = o->freq;
+    bits = o->resol;
     stereo = 1;
     bufsize = 32 * 1024;
 
@@ -87,7 +88,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	return XMP_ERR_DINIT;
     }
 
-    if (ctl->outfmt & XMP_FMT_MONO)
+    if (o->outfmt & XMP_FMT_MONO)
 	stereo = 0;
 
     if (ioctl(fd_audio, SOUND_PCM_WRITE_BITS, &bits) < 0) {
@@ -115,10 +116,10 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	goto error;
     }
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 
 error:
-    close (fd_audio);
+    close(fd_audio);
     return XMP_ERR_DINIT;
 }
 

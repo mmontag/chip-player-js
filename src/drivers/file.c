@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.7 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: file.c,v 1.8 2007-10-19 19:31:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -119,7 +119,7 @@ static void bufdump(struct xmp_context *ctx, int i)
 }
 
 
-static void shutdown ()
+static void shutdown()
 {
     xmp_smix_off();
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.11 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: beos.c,v 1.12 2007-10-19 19:31:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,9 +26,9 @@ extern "C" {
 #include "mixer.h"
 }
 
-static int init(struct xmp_context *ctx, struct xmp_control *);
-static void bufdump(int, struct xmp_context *);
-static void myshutdown();
+static int init (struct xmp_context *ctx, struct xmp_control *);
+static void bufdump (struct xmp_context *, int);
+static void myshutdown ();
 
 static void dummy()
 {
@@ -170,9 +170,10 @@ void render_proc(void *theCookie, void *buffer, size_t req,
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+	struct xmp_options = &ctx->o;
 	char *dev;
 	char *token;
-	char **parm = ctl->parm;
+	char **parm = o->parm;
 	static char desc[80];
 
 	be_app = new BApplication("application/x-vnd.cm-xmp");
@@ -188,9 +189,9 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 			drv_beos.description, chunk_num, chunk_size);
 	drv_beos.description = desc;
 
-	fmt.frame_rate = ctl->freq;
-	fmt.channel_count = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-	fmt.format = ctl->resol > 8 ? B_AUDIO_SHORT : B_AUDIO_CHAR;
+	fmt.frame_rate = o->freq;
+	fmt.channel_count = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	fmt.format = o->resol > 8 ? B_AUDIO_SHORT : B_AUDIO_CHAR;
 	fmt.byte_order = B_HOST_IS_LENDIAN ?
 				B_MEDIA_LITTLE_ENDIAN : B_MEDIA_BIG_ENDIAN;
 	fmt.buffer_size = chunk_size * chunk_num;

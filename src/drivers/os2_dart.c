@@ -111,24 +111,22 @@ static LONG APIENTRY OS2_Dart_UpdateBuffers
 
 static int setaudio (struct xmp_control *ctl)
 {
+   struct xmp_options *o = &ctl->o;
    char sharing = 0;
    int  device  = 0;
    int  flags;
-	int  i;
-
-	MCI_AMP_OPEN_PARMS AmpOpenParms;
-
+   int  i;
+   MCI_AMP_OPEN_PARMS AmpOpenParms;
    char *token;
-   char **parm = ctl->parm;
+   char **parm = o->parm;
 
    //printf( "In SetAudio...\n" );
 
-
-   parm_init ();
-   chkparm1 ("sharing", sharing = *token );
-   chkparm1 ("device",  device  = atoi (token));
-   chkparm1 ("buffer",  bsize   = atoi (token));
-   parm_end ();
+   parm_init();
+   chkparm1("sharing", sharing = *token );
+   chkparm1("device",  device  = atoi (token));
+   chkparm1("buffer",  bsize   = atoi (token));
+   parm_end();
 
 
    if( (bsize < BUF_MIN || bsize > BUF_MAX) && bsize != 0 ){
@@ -165,10 +163,10 @@ static int setaudio (struct xmp_control *ctl)
 	/* setup playback parameters */
 	memset(&MixSetupParms,0,sizeof(MCI_MIXSETUP_PARMS));
 
-	MixSetupParms.ulBitsPerSample  = ctl->resol;
+	MixSetupParms.ulBitsPerSample  = o->resol;
 	MixSetupParms.ulFormatTag      = MCI_WAVE_FORMAT_PCM;
-	MixSetupParms.ulSamplesPerSec  = ctl->freq;
-	MixSetupParms.ulChannels       = ctl->outfmt & XMP_FMT_MONO?1:2;
+	MixSetupParms.ulSamplesPerSec  = o->freq;
+	MixSetupParms.ulChannels       = o->outfmt & XMP_FMT_MONO?1:2;
 	MixSetupParms.ulFormatMode     = MCI_PLAY;
 	MixSetupParms.ulDeviceType     = MCI_DEVTYPE_WAVEFORM_AUDIO;
 	MixSetupParms.pmixEvent        = OS2_Dart_UpdateBuffers;

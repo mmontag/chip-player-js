@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: solaris.c,v 1.4 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: solaris.c,v 1.5 2007-10-19 19:31:10 cmatsuoka Exp $
  */
 
 /* CS4231 code tested on Sparc 20 and Ultra 1 running Solaris 2.5.1
@@ -96,32 +96,32 @@ struct xmp_drv_info drv_solaris = {
 };
 
 
-static int setaudio (struct xmp_control *ctl)
+static int setaudio(struct xmp_options *o)
 {
     audio_info_t ainfo, ainfo2;
-    int gain  ;
+    int gain;
     int bsize = 32 * 1024;
-    int port ;
+    int port;
     char *token;
-    char **parm = ctl->parm;
+    char **parm = ctl->o;
     AUDIO_INITINFO(&ainfo);
 
     /* try to open audioctl device */
-    if ((audioctl_fd = open ("/dev/audioctl",O_RDWR)) < 0) {
-	fprintf (stderr, "couldn't open audioctl device\n");
-	close (audio_fd);
+    if ((audioctl_fd = open("/dev/audioctl", O_RDWR)) < 0) {
+	fprintf(stderr, "couldn't open audioctl device\n");
+	close(audio_fd);
 	return -1;
     }
 
     /* sleep(2); -- Really needed? */
 
     /* empty buffers before change config */
-    ioctl (audio_fd, AUDIO_DRAIN, 0);		/* drain everything out */
-    ioctl (audio_fd, I_FLUSH, FLUSHRW);		/* flush everything     */
-    ioctl (audioctl_fd, I_FLUSH, FLUSHRW);	/* flush everything */
+    ioctl(audio_fd, AUDIO_DRAIN, 0);		/* drain everything out */
+    ioctl(audio_fd, I_FLUSH, FLUSHRW);		/* flush everything     */
+    ioctl(audioctl_fd, I_FLUSH, FLUSHRW);	/* flush everything */
 
     /* get audio parameters. */
-    if (ioctl (audioctl_fd, AUDIO_GETINFO, &ainfo) <0) {
+    if (ioctl(audioctl_fd, AUDIO_GETINFO, &ainfo) <0) {
 	fprintf(stderr, "AUDIO_GETINFO failed!\n");
 	close(audio_fd);
         close(audioctl_fd);
@@ -139,11 +139,11 @@ static int setaudio (struct xmp_control *ctl)
     gain = ainfo.play.gain;
     port = ainfo.play.port;
 
-    parm_init ();
-    chkparm1 ("gain", gain = atoi (token));
-    chkparm1 ("buffer", bsize = atoi (token));
-    chkparm1 ("port", port = (int)*token)
-    parm_end ();
+    parm_init();
+    chkparm1("gain", gain = atoi (token));
+    chkparm1("buffer", bsize = atoi (token));
+    chkparm1("port", port = (int)*token)
+    parm_end();
 
     switch (port) {
     case 'h':
@@ -161,12 +161,12 @@ static int setaudio (struct xmp_control *ctl)
     if (gain > AUDIO_MAX_GAIN)
 	gain = AUDIO_MAX_GAIN;
 
-    AUDIO_INITINFO (&ainfo);		/* For CS4231 */
-    AUDIO_INITINFO (&ainfo2);		/* For AMD 7930 if needed */
+    AUDIO_INITINFO(&ainfo);		/* For CS4231 */
+    AUDIO_INITINFO(&ainfo2);		/* For AMD 7930 if needed */
 
-    ainfo.play.sample_rate = ctl->freq;
-    ainfo.play.channels = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    ainfo.play.precision = ctl->resol;
+    ainfo.play.sample_rate = o->freq;
+    ainfo.play.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    ainfo.play.precision = o->resol;
     ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
     ainfo2.play.gain = ainfo.play.gain = gain;
     ainfo2.play.port = ainfo.play.port = port;
@@ -179,12 +179,13 @@ static int setaudio (struct xmp_control *ctl)
 	    return XMP_ERR_DINIT;
 	}
 	
-	ctl->resol = 0;
-	ctl->freq = 8000;
-	ctl->outfmt |= XMP_FMT_MONO;
+	o->resol = 0;
+	o->freq = 8000;
+	o->outfmt |= XMP_FMT_MONO;
 	drv_solaris.description = "Solaris AMD7930 PCM audio";
-    } else
+    } else {
 	drv_solaris.description = "Solaris CS4231 PCM audio";
+    }
 
     return XMP_OK;
 }
@@ -192,13 +193,15 @@ static int setaudio (struct xmp_control *ctl)
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+    struct xmp_options *o = &ctx->o;
+
     if ((audio_fd = open ("/dev/audio", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
 
-    if (setaudio (ctl) != XMP_OK)
+    if (setaudio(o) != XMP_OK)
 	return XMP_ERR_DINIT;
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 
@@ -221,8 +224,8 @@ static void bufdump(struct xmp_context *ctx, int i)
 }
 
 
-static void shutdown ()
+static void shutdown()
 {
-    xmp_smix_off ();
-    close (audio_fd);
+    xmp_smix_off();
+    close(audio_fd);
 }

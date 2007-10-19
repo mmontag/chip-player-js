@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hpux.c,v 1.5 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: hpux.c,v 1.6 2007-10-19 19:31:09 cmatsuoka Exp $
  */
 
 /* This code was tested on a 9000/710 running HP-UX 9.05 with 8 kHz,
@@ -76,7 +76,7 @@ struct xmp_drv_info drv_hpux = {
 };
 
 
-static int setaudio (struct xmp_control *ctl)
+static int setaudio(struct xmp_options *o)
 {
     int flags;
     int gain = 128;
@@ -85,7 +85,7 @@ static int setaudio (struct xmp_control *ctl)
     struct audio_gains agains;
     struct audio_describe adescribe;
     char *token;
-    char **parm = ctl->parm;
+    char **parm = o->parm;
     int i;
 
     parm_init ();
@@ -116,18 +116,18 @@ static int setaudio (struct xmp_control *ctl)
 	return XMP_ERR_DINIT;
 
     if (ioctl (audio_fd, AUDIO_SET_CHANNELS,
-	ctl->outfmt & XMP_FMT_MONO ? 1 : 2) == -1) {
-	ctl->outfmt ^= XMP_FMT_MONO;
+	o->outfmt & XMP_FMT_MONO ? 1 : 2) == -1) {
+	o->outfmt ^= XMP_FMT_MONO;
 
         if (ioctl (audio_fd, AUDIO_SET_CHANNELS,
-	    ctl->outfmt & XMP_FMT_MONO ? 1 : 2) == -1)
+	    o->outfmt & XMP_FMT_MONO ? 1 : 2) == -1)
 	    return XMP_ERR_DINIT;
     }
 
     ioctl (audio_fd, AUDIO_SET_OUTPUT, port);
 
-    for (i = 0; ioctl (audio_fd, AUDIO_SET_SAMPLE_RATE, ctl->freq) == -1; i++)
-	if ((ctl->freq = srate[i]) == 0)
+    for (i = 0; ioctl (audio_fd, AUDIO_SET_SAMPLE_RATE, o->freq) == -1; i++)
+	if ((o->freq = srate[i]) == 0)
 	    return XMP_ERR_DINIT;
 
     if (ioctl (audio_fd, AUDIO_DESCRIBE, &adescribe) == -1)

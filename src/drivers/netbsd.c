@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: netbsd.c,v 1.4 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: netbsd.c,v 1.5 2007-10-19 19:31:09 cmatsuoka Exp $
  */
 
 /* based upon bsd.c and improved from solaris.c. Tested running NetBSD. */
@@ -75,29 +75,29 @@ struct xmp_drv_info drv_netbsd = {
 };
 
 
-static int setaudio (struct xmp_control *ctl)
+static int setaudio (struct xmp_options *o)
 {
     audio_info_t ainfo;
     int gain = 128;
     int bsize = 32 * 1024;
 /* XXX  int port ; XXX */
     char *token;
-    char **parm = ctl->parm;
+    char **parm = o->parm;
 
-    /* try to open audioctl device */
+    /* try to open audioctldevice */
     if ((audioctl_fd = open ("/dev/audioctl",O_RDWR)) < 0) {
-        fprintf (stderr, "couldn't open audioctl device\n");
+        fprintf (stderr, "couldn't open audioctldevice\n");
         close (audio_fd);
         return -1;
     }
 
     /* empty buffers before change config */ 
-    ioctl (audio_fd, AUDIO_DRAIN, 0);   /*    drain everything out     */
-    ioctl (audio_fd, AUDIO_FLUSH);      /*    XXX flush audio XXX      */
-    ioctl (audioctl_fd, AUDIO_FLUSH);   /*    XXX flush audioctl XXX   */
+    ioctl(audio_fd, AUDIO_DRAIN, 0);   /*    drain everything out     */
+    ioctl(audio_fd, AUDIO_FLUSH);      /*    XXX flush audio XXX      */
+    ioctl(audioctl_fd, AUDIO_FLUSH);   /*    XXX flush audioctlXXX   */
 
     /* get audio parameters. */
-    if (ioctl (audioctl_fd, AUDIO_GETINFO, &ainfo) <0) {
+    if (ioctl(audioctl_fd, AUDIO_GETINFO, &ainfo) <0) {
         fprintf(stderr, "AUDIO_GETINFO failed!\n");
         close(audio_fd);
         close(audioctl_fd);
@@ -131,25 +131,25 @@ XXX */
 
     AUDIO_INITINFO (&ainfo);
 
-    ainfo.play.sample_rate = ctl->freq;
-    ainfo.play.channels = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    ainfo.play.precision = ctl->resol;
+    ainfo.play.sample_rate = o->freq;
+    ainfo.play.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    ainfo.play.precision = o->resol;
 /* XXX ainfo.play.precision = AUDIO_ENCODING_ULINEAR; XXX */
-    ainfo.play.encoding = ctl->resol > 8 ?
+    ainfo.play.encoding = o->resol > 8 ?
 	AUDIO_ENCODING_SLINEAR : AUDIO_ENCODING_ULINEAR;
     ainfo.play.gain = gain;
 /*  XXX ainfo.play.port = port; XXX */
     ainfo.play.buffer_size = bsize;
 
-    if (ioctl (audio_fd, AUDIO_SETINFO, &ainfo) == -1) {
+    if (ioctl(audio_fd, AUDIO_SETINFO, &ainfo) == -1) {
 	close (audio_fd);
 	return XMP_ERR_DINIT;
     }
 
-    /* ctl->resol = 0; */
-    /* ctl->freq = 8000; */
-    /* ctl->outfmt |=XMP_FMT_MONO; */
-    ctl->freq = 44000;
+    /* o->resol = 0; */
+    /* o->freq = 8000; */
+    /* o->outfmt |=XMP_FMT_MONO; */
+    o->freq = 44000;
     drv_netbsd.description = "NetBSD PCM audio";
     return XMP_OK;
 }
@@ -160,10 +160,10 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     if ((audio_fd = open ("/dev/sound", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
 
-    if (setaudio (ctl) != XMP_OK)
+    if (setaudio(&ctx->o) != XMP_OK)
 	return XMP_ERR_DINIT;
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 

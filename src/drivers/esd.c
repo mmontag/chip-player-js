@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: esd.c,v 1.5 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: esd.c,v 1.6 2007-10-19 19:31:09 cmatsuoka Exp $
  */
 
 /* Based on esdcat.c from the Enlightened Sound Daemon 0.2 for Linux
@@ -69,23 +69,24 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     int format, rate = ESD_DEFAULT_RATE;
     int bits = ESD_BITS16, channels = ESD_STEREO;
     int mode = ESD_STREAM, func = ESD_PLAY ;
+    struct xmp_options *o = &ctx->o;
 
-    if (ctl->resol == 8)
+    if (o->resol == 8)
 	bits = ESD_BITS8;
-    if (ctl->outfmt & XMP_FMT_MONO)
+    if (o->outfmt & XMP_FMT_MONO)
 	channels = ESD_MONO;
-    rate = ctl->freq;
+    rate = o->freq;
     format = bits | channels | mode | func;
 
-    printf( "opening socket, format = 0x%08x at %d Hz\n", format, rate );
+    printf("opening socket, format = 0x%08x at %d Hz\n", format, rate);
 
     /* Number of arguments fixed by Terry Glass <tglass@bigfoot.com> */
-    if ((audio_fd = esd_play_stream (format, rate, NULL, "xmp")) <= 0) {
+    if ((audio_fd = esd_play_stream(format, rate, NULL, "xmp")) <= 0) {
 	fprintf (stderr, "drv_esd: unable to connect to server\n");
 	return XMP_ERR_DINIT;
     }
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 

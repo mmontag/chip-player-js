@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: openbsd.c,v 1.4 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: openbsd.c,v 1.5 2007-10-19 19:31:09 cmatsuoka Exp $
  */
 
 /* This should work for OpenBSD */
@@ -72,40 +72,41 @@ struct xmp_drv_info drv_openbsd = {
 };
 
 
-static int setaudio (struct xmp_control *ctl)
+static int setaudio(struct xmp_options *o)
 {
     audio_info_t ainfo;
     int gain = 128;
     int bsize = 32 * 1024;
     char *token;
-    char **parm = ctl->parm;
+    char **parm = o->parm;
 
-    parm_init ();
-    chkparm1 ("gain", gain = atoi (token));
-    chkparm1 ("buffer", bsize = atoi (token));
-    parm_end ();
+    parm_init();
+    chkparm1("gain", gain = atoi (token));
+    chkparm1("buffer", bsize = atoi (token));
+    parm_end();
 
     if (gain < AUDIO_MIN_GAIN)
 	gain = AUDIO_MIN_GAIN;
     if (gain > AUDIO_MAX_GAIN)
 	gain = AUDIO_MAX_GAIN;
 
-    AUDIO_INITINFO (&ainfo);
+    AUDIO_INITINFO(&ainfo);
 
-    ainfo.play.sample_rate = ctl->freq;
-    ainfo.play.channels = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    ainfo.play.precision = ctl->resol;
-    ainfo.play.encoding = ctl->resol > 8 ?
+    ainfo.play.sample_rate = o->freq;
+    ainfo.play.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    ainfo.play.precision = o->resol;
+    ainfo.play.encoding = o->resol > 8 ?
 	AUDIO_ENCODING_SLINEAR : AUDIO_ENCODING_ULINEAR;
     ainfo.play.gain = gain;
     ainfo.play.buffer_size = bsize;
 
-    if (ioctl (audio_fd, AUDIO_SETINFO, &ainfo) == -1) {
-	close (audio_fd);
+    if (ioctl(audio_fd, AUDIO_SETINFO, &ainfo) == -1) {
+	close(audio_fd);
 	return XMP_ERR_DINIT;
     }
 
     drv_openbsd.description = "OpenBSD PCM audio";
+
     return XMP_OK;
 }
 
