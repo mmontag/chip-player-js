@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.23 2007-10-19 18:57:13 cmatsuoka Exp $
+ * $Id: control.c,v 1.24 2007-10-19 20:28:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -273,8 +273,8 @@ int xmp_verbosity_level(xmp_context ctx, int i)
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     int tmp;
 
-    tmp = o->verbose;
-    o->verbose = i;
+    tmp = o->verbosity;
+    o->verbosity = i;
 
     return tmp;
 }

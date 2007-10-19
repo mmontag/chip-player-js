@@ -38,7 +38,7 @@
 #define BUF_MAX 32
 
 static int init (struct xmp_context *, struct xmp_control *);
-static int setaudio (struct xmp_control *);
+static int setaudio (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
 
@@ -109,9 +109,8 @@ static LONG APIENTRY OS2_Dart_UpdateBuffers
 }
 
 
-static int setaudio (struct xmp_control *ctl)
+static int setaudio (struct xmp_options *o)
 {
-   struct xmp_options *o = &ctl->o;
    char sharing = 0;
    int  device  = 0;
    int  flags;

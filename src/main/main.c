@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.20 2007-10-19 20:03:43 cmatsuoka Exp $
+ * $Id: main.c,v 1.21 2007-10-19 20:28:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -360,9 +360,9 @@ int main (int argc, char **argv)
     xmp_init(ctx, argc, argv, &ctl);
     opt = xmp_get_options(ctx);
 
-    opt->verbose = 1;
+    opt->verbosity = 1;
     get_options(argc, argv, opt);
-    verbosity = opt->verbose;
+    verbosity = opt->verbosity;
 
     if (!(probeonly || argv[optind])) {
 	fprintf (stderr, "%s: no modules to play\n"
@@ -382,10 +382,10 @@ int main (int argc, char **argv)
     global_filename = argv[optind];
 
     if ((background = (tcgetpgrp (0) == getppid ()))) {
-	verb = opt->verbose;
-	opt->verbose = 0;
+	verb = opt->verbosity;
+	opt->verbosity = 0;
 	i = xmp_open_audio(ctx, &ctl);
-	xmp_verbosity_level(ctx, opt->verbose = verb);
+	xmp_verbosity_level(ctx, opt->verbosity = verb);
     } else {
 	i = xmp_open_audio(ctx, &ctl);
     }
@@ -414,7 +414,7 @@ int main (int argc, char **argv)
     xmp_register_event_callback(process_echoback);
 #endif
 
-    if (opt->verbose) {
+    if (opt->verbosity) {
 	fprintf (stderr, "Extended Module Player %s %s\n"
 	"Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr\n",
 	    xmp_version, xmp_date);
@@ -423,7 +423,7 @@ int main (int argc, char **argv)
 #endif
     }
 
-    if (probeonly || (opt->verbose)) {
+    if (probeonly || (opt->verbosity)) {
 	int srate, res, chn, itpt;
 	
 	xmp_get_driver_cfg(ctx, &srate, &res, &chn, &itpt);
@@ -491,7 +491,7 @@ int main (int argc, char **argv)
 	    }
 	}
 
-	if (opt->verbose && !background) {
+	if (opt->verbosity && !background) {
 	    if (lf_flag)
 		fprintf (stderr, "\n");
 	    lf_flag = fprintf (stderr, "Loading %s... (%d of %d)\n",
@@ -566,7 +566,7 @@ int main (int argc, char **argv)
 
 	xmp_release_module(ctx);
 
-	if (opt->verbose && !background) {
+	if (opt->verbosity && !background) {
 	    fprintf (stderr,
 "\rElapsed time   : %dmin%02ds %s                                              \n",
 	    t / 60, t % 60, skip ? "(SKIPPED)" : " ");
@@ -596,7 +596,7 @@ skip_play:
 
     time (&t1);
 
-    if (!loadonly && opt->verbose && !background && num_mod > 1) {
+    if (!loadonly && opt->verbosity && !background && num_mod > 1) {
 	t = difftime (t1, t0);
 	fprintf (stderr, "\n\t%d modules played, total time %dh%02dmin%02ds\n",
 	     num_mod, t / 3600, (t % 3600) / 60, t % 60); 

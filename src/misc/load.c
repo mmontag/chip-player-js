@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.45 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: load.c,v 1.46 2007-10-19 20:28:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -170,7 +170,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     reportv(ctx, 0, "Depacking %s file... ", packer);
 
     if ((fd = mkstemp(temp)) < 0) {
-	if (o->verbose > 0)
+	if (o->verbosity > 0)
 	    report("failed\n");
 	goto err;
     }
@@ -310,7 +310,7 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
     if (smp_size > memavl) {
 	ratio = (int)
 	    (((long long)(memavl - smp_4kb) << 16) / (smp_size - smp_4kb));
-	if (o->verbose)
+	if (o->verbosity)
 	    report ("Crunch ratio   : %d%% [Mem:%.3fMb Smp:%.3fMb]\n",
 		100 - 100 * ratio / 0x10000, .000001 * xmp_ctl->memavl,
 		.000001 * smp_size);
@@ -436,15 +436,15 @@ int xmp_load_module(xmp_context ctx, char *s)
 	m->xxc[i].flg = 0;
     }
 
-    m->verbosity = o->verbose;
+    m->verbosity = o->verbosity;
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
-	if (o->verbose > 3)
+	if (o->verbosity > 3)
 	    report("Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
 	if ((i = li->test(f, NULL)) == 0) {
-	    if (o->verbose > 3)
+	    if (o->verbosity > 3)
 		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
 	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) == 0))
@@ -478,14 +478,14 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (!*m->name)
 	strcpy(m->name, "(untitled)");
 
-    if (o->verbose > 1) {
+    if (o->verbosity > 1) {
 	report("Module looping : %s\n",
 	    m->fetch & XMP_CTL_LOOP ? "yes" : "no");
 	report("Period mode    : %s\n",
 	    m->xxh->flg & XXM_FLG_LINEAR ? "linear" : "Amiga");
     }
 
-    if (o->verbose > 2) {
+    if (o->verbosity > 2) {
 	report("Amiga range    : %s\n", m->xxh->flg & XXM_FLG_MODRNG ?
 		"yes" : "no");
 	report("Restart pos    : %d\n", m->xxh->rst);
@@ -496,7 +496,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 		m->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
     }
 
-    if (o->verbose) {
+    if (o->verbosity) {
 	report("Channels       : %d [ ", m->xxh->chn);
 	for (i = 0; i < m->xxh->chn; i++) {
 	    if (m->xxc[i].flg & XXM_CHANNEL_FM)
@@ -509,7 +509,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     t = xmpi_scan_module((struct xmp_context *)ctx);
 
-    if (o->verbose) {
+    if (o->verbosity) {
 	if (m->fetch & XMP_CTL_LOOP)
 	    report ("One loop time  : %dmin%02ds\n",
 		(t + 500) / 60000, ((t + 500) / 1000) % 60);

@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.35 2007-10-19 18:16:55 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.36 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -606,7 +606,7 @@ static void play_file(InputPlayback *ipb)
 	playing = 1;
 
 	opt->resol = 8;
-	opt->verbose = 3;
+	opt->verbosity = 3;
 	opt->drv_id = "callback";
 
 	switch (xmp_cfg.mixing_freq) {

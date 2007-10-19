@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: alsa_seq.c,v 1.6 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: alsa_seq.c,v 1.7 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -404,7 +404,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	parm_end();
 
 	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_DUPLEX, 0) < 0) {
-		if (ctl->verbose > 2) {
+		if (ctl->verbosity > 2) {
 			fprintf(stderr, "xmp: can't open sequencer: %s",
 						snd_strerror(errno));
 		}

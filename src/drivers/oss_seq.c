@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.10 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.11 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -377,7 +377,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	    return XMP_ERR_DINIT;
 	}
     } else {
-	if (o->verbose > 2)
+	if (o->verbosity > 2)
 	    fprintf (stderr, "xmp: can't open sequencer\n");
 	return XMP_ERR_DINIT;
     }

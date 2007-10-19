@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.23 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: options.c,v 1.24 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -315,10 +315,10 @@ void get_options(int argc, char **argv, struct xmp_options *opt)
 	    break;
 	case OPT_PROBEONLY:
 	    probeonly = 1;
-	    opt->verbose = 0;
+	    opt->verbosity = 0;
 	    break;
 	case 'q':
-	    opt->verbose = 0;
+	    opt->verbosity = 0;
 	    break;
 #ifdef HAVE_SYS_RTPRIO_H
 	case OPT_REALTIME:
@@ -377,7 +377,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt)
 	    printf ("Extended Module Player %s\n", xmp_version);
 	    exit (0);
 	case 'v':
-	    opt->verbose++;
+	    opt->verbosity++;
 	    break;
 	case 'h':
 	    usage (argv[0], opt);

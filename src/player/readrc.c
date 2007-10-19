@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.11 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.12 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -104,7 +104,7 @@ int xmpi_read_rc(struct xmp_context *ctx)
 	getval_no("reverb", o->reverb);
 	getval_no("srate", o->freq);
 	getval_no("time", o->time);
-	getval_no("verbosity", o->verbose);
+	getval_no("verbosity", o->verbosity);
 
 	if (!strcmp (var, "driver")) {
 	    strncpy (drive_id, val, 31);
@@ -159,7 +159,7 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 	    if (strtoul (&line[1], NULL, 0) && strtoul (val, NULL, 0)) {
 		active = (strtoul (&line[1], NULL, 0) == crc &&
 	 	    strtoul (val, NULL, 0) == size);
-		if (active && o->verbose > 2)
+		if (active && o->verbosity > 2)
 		    report ("Matching CRC in %s (%u)\n", fn, crc);
 	    }
 	    continue;

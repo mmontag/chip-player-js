@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.24 2007-10-19 18:57:13 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.25 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -106,7 +106,7 @@ struct xmp_control {
 struct xmp_options {
     char *drv_id;	/* Driver ID */
     char *outfile;	/* Output file name when mixing to file */
-    int verbose;	/* Verbosity level */
+    int verbosity;	/* Verbosity level */
 #define XMP_FMT_FM	0x00000001	/* Active mode FM */
 #define XMP_FMT_UNS	0x00000002	/* Unsigned samples */
 #define XMP_FMT_MONO	0x00000004	/* Mono output */

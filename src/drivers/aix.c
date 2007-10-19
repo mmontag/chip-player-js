@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: aix.c,v 1.6 2007-10-19 19:31:08 cmatsuoka Exp $
+ * $Id: aix.c,v 1.7 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 /*
@@ -39,7 +39,7 @@ static audio_control control;
 static audio_change change;
 
 static int init (struct xmp_context *, struct xmp_control *);
-static int setaudio (struct xmp_control *);
+static int setaudio (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
 

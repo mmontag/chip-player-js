@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: openbsd.c,v 1.5 2007-10-19 19:31:09 cmatsuoka Exp $
+ * $Id: openbsd.c,v 1.6 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 /* This should work for OpenBSD */
@@ -32,7 +32,7 @@
 static int audio_fd;
 
 static int init (struct xmp_context *, struct xmp_control *);
-static int setaudio (struct xmp_control *);
+static int setaudio (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.44 2007-10-19 18:57:13 cmatsuoka Exp $
+ * $Id: driver.c,v 1.45 2007-10-19 20:28:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -168,15 +168,15 @@ static int drv_select(struct xmp_context *ctx, struct xmp_control *ctl)
 	drv = drv_array->next;	/* skip file */
 	drv = drv->next;	/* skip wav */
 	for (; drv; drv = drv->next) {
-	    if (o->verbose > 2)
+	    if (o->verbosity > 2)
 		report ("Probing %s... ", drv->description);
 	    if (drv->init(ctx, ctl) == XMP_OK) {
-		if (o->verbose > 2)
+		if (o->verbosity > 2)
 		    report ("found\n");
 		ret = XMP_OK;
 		break;
 	    }
-	    if (o->verbose > 2)
+	    if (o->verbosity > 2)
 		report ("not found\n");
 	}
     }
@@ -797,7 +797,7 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 	    } else 
 		patch_array[smp] = realloc (patch, sizeof (struct patch_info));
 
-	    if (o->verbose) {
+	    if (o->verbosity) {
 		if (num != XMP_OK)
 		    report ("E");		/* Show type error */
 		else if (!crunch)
