@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.7 2007-10-12 04:15:19 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.8 2007-10-19 01:02:24 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -385,7 +385,7 @@ static int init(struct xmp_control *ctl)
 
 	if (ioctl (seqfd, SNDCTL_SYNTH_INFO, &si) == -1) {
 	    fprintf (stderr, "xmp: can't determine synth info\n");
-	    return XMP_ERR_SYNTH;
+	    return XMP_ERR_DINIT;
 	}
 
 	if (si.synth_type == (ctl->outfmt & XMP_FMT_FM ?
