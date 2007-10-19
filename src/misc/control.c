@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.24 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: control.c,v 1.25 2007-10-19 20:55:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -27,7 +27,6 @@
 static int drv_parm = 0;
 extern struct xmp_drv_info drv_callback;
 
-int big_endian;
 
 int pw_init(void);
 
@@ -74,7 +73,7 @@ void xmp_init(xmp_context ctx, int argc, char **argv, struct xmp_control *ctl)
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
     w = 0x00ff;
-    big_endian = (*(char *)&w == 0x00);
+    ((struct xmp_context *)ctx)->big_endian = (*(char *)&w == 0x00);
 
     xmp_init_drivers();
     xmp_init_formats();

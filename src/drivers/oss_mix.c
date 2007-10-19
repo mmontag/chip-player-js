@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.9 2007-10-19 17:41:10 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.10 2007-10-19 20:55:00 cmatsuoka Exp $
  */
 
 /*
@@ -36,9 +36,9 @@
 
 static int audio_fd;
 
-static void from_fmt (struct xmp_options *, int);
-static int to_fmt (struct xmp_options *);
-static void setaudio (struct xmp_options *);
+static void from_fmt (struct xmp_context *, int);
+static int to_fmt (struct xmp_context *);
+static void setaudio (struct xmp_context *);
 static int init (struct xmp_context *, struct xmp_control *);
 static void shutdown (void);
 static void bufdump (struct xmp_context *, int);
@@ -90,8 +90,9 @@ static int voxware = 0;		/* For Linux 1.2.13 */
 #endif
 
 
-static int to_fmt(struct xmp_options *o)
+static int to_fmt(struct xmp_context *ctx)
 {
+    struct xmp_options *o = &ctx->o;
     int fmt;
 
     if (!o->resol)
@@ -100,8 +101,8 @@ static int to_fmt(struct xmp_options *o)
     if (o->resol == 8)
 	fmt = AFMT_U8 | AFMT_S8;
     else {
-	fmt = big_endian ? AFMT_S16_BE | AFMT_U16_BE :
-			   AFMT_S16_LE | AFMT_U16_LE;
+	fmt = ctx->big_endian ? AFMT_S16_BE | AFMT_U16_BE :
+				AFMT_S16_LE | AFMT_U16_LE;
     }
     if (o->outfmt & XMP_FMT_UNS)
 	fmt &= AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE;
@@ -112,8 +113,10 @@ static int to_fmt(struct xmp_options *o)
 }
 
 
-static void from_fmt(struct xmp_options *o, int outfmt)
+static void from_fmt(struct xmp_context *ctx, int outfmt)
 {
+    struct xmp_options *o = &ctx->o;
+
     if (outfmt & AFMT_MU_LAW) {
 	o->resol = 0;
 	return;
@@ -131,17 +134,18 @@ static void from_fmt(struct xmp_options *o, int outfmt)
 }
 
 
-static void setaudio(struct xmp_options *o)
+static void setaudio(struct xmp_context *ctx)
 {
+    struct xmp_options *o = &ctx->o;
     static int fragset = 0;
     int frag = 0;
     int fmt;
 
     frag = (fragnum << 16) + fragsize;
 
-    fmt = to_fmt(o);
+    fmt = to_fmt(ctx);
     ioctl(audio_fd, SNDCTL_DSP_SETFMT, &fmt);
-    from_fmt(o, fmt);
+    from_fmt(ctx, fmt);
 
     fmt = !(o->outfmt & XMP_FMT_MONO);
     ioctl (audio_fd, SNDCTL_DSP_STEREO, &fmt);
@@ -194,7 +198,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     if(audio_fd<0)
       return XMP_ERR_DINIT;
 
-    setaudio(o);
+    setaudio(ctx);
 
 #ifdef HAVE_AUDIO_BUF_INFO
     if (!voxware) {

@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.12 2007-10-19 19:31:08 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.13 2007-10-19 20:55:00 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -105,8 +105,9 @@ static int prepare_driver(void)
 	return 0;
 }
 
-static int to_fmt(struct xmp_options *o)
+static int to_fmt(struct xmp_context *ctx)
 {
+	struct xmp_options *o = &ctx->o;
 	int fmt;
 
 	if (o->resol == 0)
@@ -118,7 +119,7 @@ static int to_fmt(struct xmp_options *o)
 		fmt = SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_S16_BE |
 		      SND_PCM_SFMT_U16_LE | SND_PCM_SFMT_U16_BE;
 
-		if (big_endian) {
+		if (ctx->big_endian) {
 			fmt &= SND_PCM_SFMT_S16_BE | SND_PCM_SFMT_U16_BE;
 		} else {
 			fmt &= SND_PCM_SFMT_S16_LE | SND_PCM_SFMT_U16_LE;
@@ -191,7 +192,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	params.stop_mode = SND_PCM_STOP_ROLLOVER;
 
 	params.format.interleave = 1;
-	params.format.format = to_fmt(ctl);
+	params.format.format = to_fmt(ctx);
 	params.format.rate = o->freq;
 	params.format.voices = (o->outfmt & XMP_FMT_MONO) ? 1 : 2;
 
