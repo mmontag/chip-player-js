@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.12 2007-10-19 19:31:08 cmatsuoka Exp $
+ * $Id: beos.c,v 1.13 2007-10-19 20:37:40 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -170,7 +170,7 @@ void render_proc(void *theCookie, void *buffer, size_t req,
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
-	struct xmp_options = &ctx->o;
+	struct xmp_options *o = &ctx->o;
 	char *dev;
 	char *token;
 	char **parm = o->parm;

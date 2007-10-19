@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.13 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: driver.h,v 1.14 2007-10-19 20:37:40 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -56,7 +56,7 @@ struct patch_info {
 #define XMP_CHN_ACTIVE		0x100
 #define XMP_CHN_DUMB		-1
 
-#define parm_init() for (parm = ctx->o.parm; *parm; parm++) { \
+#define parm_init() for (parm = o->parm; *parm; parm++) { \
 	token = strtok (*parm, ":="); token = strtok (NULL, "");
 #define parm_end() }
 #define parm_error() { \
