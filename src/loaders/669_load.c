@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.16 2007-10-19 00:15:20 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.17 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,7 +16,7 @@
 
 
 static int ssn_test (FILE *, char *);
-static int ssn_load (struct xmp_mod_context *, FILE *, const int);
+static int ssn_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info ssn_loader = {
     "669",
@@ -77,8 +77,10 @@ static uint8 fx[] = {
 };
 
 
-static int ssn_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     struct xxm_event *event;
     struct ssn_file_header sfh;
@@ -210,7 +212,7 @@ static int ssn_load(struct xmp_mod_context *m, FILE *f, const int start)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[i], NULL);
 	if (V(0))
 	    report (".");

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.24 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.25 2007-10-19 12:49:00 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -27,7 +27,7 @@
 
 
 static int mdl_test (FILE *, char *);
-static int mdl_load (struct xmp_mod_context *, FILE *, const int);
+static int mdl_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mdl_loader = {
     "MDL",
@@ -288,8 +288,10 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
  * IFF chunk handlers
  */
 
-static void get_chunk_in(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_in(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i;
 
     fread(m->name, 1, 32, f);
@@ -315,8 +317,10 @@ static void get_chunk_in(struct xmp_mod_context *m, int size, FILE *f)
     MODULE_INFO ();
 }
 
-static void get_chunk_pa(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, chn;
     int x;
 
@@ -342,8 +346,10 @@ static void get_chunk_pa(struct xmp_mod_context *m, int size, FILE *f)
     reportv(0, "\n");
 }
 
-static void get_chunk_p0(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_p0(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     uint16 x16;
 
@@ -367,8 +373,10 @@ static void get_chunk_p0(struct xmp_mod_context *m, int size, FILE *f)
     reportv(0, "\n");
 }
 
-static void get_chunk_tr(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, k, row, len;
     struct xxm_track *track;
 
@@ -457,8 +465,10 @@ static void get_chunk_tr(struct xmp_mod_context *m, int size, FILE *f)
     reportv(0, "\n");
 }
 
-static void get_chunk_ii(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, k;
     int map, last_map;
 
@@ -543,8 +553,10 @@ static void get_chunk_ii(struct xmp_mod_context *m, int size, FILE *f)
     reportv(0, "\n");
 }
 
-static void get_chunk_is(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i;
     char buf[64];
     uint8 x;
@@ -608,8 +620,10 @@ static void get_chunk_is(struct xmp_mod_context *m, int size, FILE *f)
     reportv(1, "\n");
 }
 
-static void get_chunk_i0(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i;
     char buf[64];
     uint8 x;
@@ -676,8 +690,10 @@ static void get_chunk_i0(struct xmp_mod_context *m, int size, FILE *f)
     reportv(0, "\n");
 }
 
-static void get_chunk_sa(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, len;
     uint8 *smpbuf, *buf;
 
@@ -707,7 +723,7 @@ static void get_chunk_sa(struct xmp_mod_context *m, int size, FILE *f)
 	    break;
 	}
 	
-	xmp_drv_loadpatch(NULL, i, m->c4rate, XMP_SMP_NOLOAD, &m->xxs[i],
+	xmp_drv_loadpatch(ctx, NULL, i, m->c4rate, XMP_SMP_NOLOAD, &m->xxs[i],
 					(char *)smpbuf);
 
 	free (smpbuf);
@@ -717,7 +733,7 @@ static void get_chunk_sa(struct xmp_mod_context *m, int size, FILE *f)
     reportv(0, "\n");
 }
 
-static void get_chunk_ve(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_ve(struct xmp_context *ctx, int size, FILE *f)
 {
     int i;
 
@@ -736,7 +752,7 @@ static void get_chunk_ve(struct xmp_mod_context *m, int size, FILE *f)
     }
 }
 
-static void get_chunk_pe(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_pe(struct xmp_context *ctx, int size, FILE *f)
 {
     int i;
 
@@ -755,7 +771,7 @@ static void get_chunk_pe(struct xmp_mod_context *m, int size, FILE *f)
     }
 }
 
-static void get_chunk_fe(struct xmp_mod_context *m, int size, FILE *f)
+static void get_chunk_fe(struct xmp_context *ctx, int size, FILE *f)
 {
     int i;
 
@@ -775,8 +791,10 @@ static void get_chunk_fe(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static int mdl_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, k, l;
     char buf[8];
 
@@ -829,7 +847,7 @@ static int mdl_load(struct xmp_mod_context *m, FILE *f, const int start)
 
     /* Load IFFoid chunks */
     while (!feof(f))
-	iff_chunk(m, f);
+	iff_chunk(ctx, f);
 
     iff_release();
 

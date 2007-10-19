@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.21 2007-10-18 23:07:10 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.22 2007-10-19 12:49:00 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -93,12 +93,20 @@
 
 
 struct xmp_control {
-    char *drv_id;	/* Driver ID */
     char *description;	/* Driver description */
     char **help;	/* Driver help info */
     char *outfile;	/* Output file name when mixing to file */
-
+    int numtrk;		/* Number of tracks */
+    int numchn;		/* Number of virtual channels needed by the module */
+    int numvoc;		/* Number of voices currently in use */
+    int numbuf;		/* Number of output buffers */
+    int maxvoc;		/* Channel max number of voice */
     int memavl;		/* Memory availble in the sound card */
+    int pause;		/* Player pause */
+};
+
+struct xmp_options {
+    char *drv_id;	/* Driver ID */
     int verbose;	/* Verbosity level */
 #define XMP_FMT_FM	0x00000001	/* Active mode FM */
 #define XMP_FMT_UNS	0x00000002	/* Unsigned samples */
@@ -106,7 +114,6 @@ struct xmp_control {
     int outfmt;		/* Software mixing output data format */
     int resol;		/* Software mixing resolution output */
     int freq;		/* Software mixing rate (Hz) */
-			/* Global mode control */
 #define XMP_CTL_ITPT	0x00000001	/* Mixer interpolation */
 #define XMP_CTL_REVERSE	0x00000002	/* Reverse stereo */
 #define XMP_CTL_8BIT	0x00000004	/* Convert 16 bit samples to 8 bit */
@@ -133,13 +140,7 @@ struct xmp_control {
 #define XMP_CTL_FILTER	0x01000000	/* IT lowpass filter */
 #define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
     int flags;		/* xmp internal control flags, set default mode */
-    int numtrk;		/* Number of tracks */
-    int numchn;		/* Number of virtual channels needed by the module */
-    int numvoc;		/* Number of voices currently in use */
-    int numbuf;		/* Number of output buffers */
-    int maxvoc;		/* Channel max number of voice */
     int crunch;		/* Sample crunching ratio */
-    int pause;		/* Player pause */
     int start;		/* Set initial order (default = 0) */
     int mix;		/* Percentage of L/R channel separation */
     int time;		/* Maximum playing time in seconds */
@@ -205,9 +206,9 @@ extern char *global_filename;	/* FIXME: hack for the wav driver */
 void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
 
-void	xmp_init			(int, char **, struct xmp_control *);
+void	xmp_init			(xmp_context, int, char **, struct xmp_control *);
 int	xmp_load_module			(xmp_context, char *);
-int	xmp_test_module			(char *, char *);
+int	xmp_test_module			(xmp_context, char *, char *);
 struct xmp_module_info*
 	xmp_get_module_info		(xmp_context, struct xmp_module_info *);
 struct xmp_fmt_info*
@@ -215,17 +216,16 @@ struct xmp_fmt_info*
 struct xmp_drv_info*
 	xmp_get_drv_info		(struct xmp_drv_info **);
 char*	xmp_get_driver_description 	(void);
-void	xmp_set_driver_parameter 	(struct xmp_control *, char *);
-void	xmp_get_driver_cfg		(int *, int *, int *, int *);
+void	xmp_set_driver_parameter 	(xmp_context, char *);
+void	xmp_get_driver_cfg		(xmp_context, int *, int *, int *, int *);
 void	xmp_channel_mute		(int, int, int);
 void	xmp_display_license		(void);
 void	xmp_register_event_callback	(void (*)());
 void	xmp_register_driver_callback	(void (*)(void *, int));
-void	xmp_init_callback		(struct xmp_control *,
-					 void (*)(void *, int));
+void	xmp_init_callback		(xmp_context, void (*)(void *, int));
 int	xmp_player_ctl			(xmp_context, int, int);
-int	xmp_open_audio			(struct xmp_control *);
-void	xmp_close_audio			(void);
+int	xmp_open_audio			(xmp_context, struct xmp_control *);
+void	xmp_close_audio			(xmp_context);
 int	xmp_play_module			(xmp_context);
 void	xmp_release_module		(xmp_context);
 int	xmp_tell_parent			(void);
@@ -236,7 +236,7 @@ int	xmp_wait_child			(void);
 int	xmp_check_child			(int);
 void*	xmp_get_shared_mem		(int);
 void	xmp_detach_shared_mem		(void *);
-int	xmp_verbosity_level		(int);
+int	xmp_verbosity_level		(xmp_context, int);
 int	xmp_seek_time			(xmp_context, int);
 void	xmp_init_formats		(void);
 

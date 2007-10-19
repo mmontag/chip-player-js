@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.14 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.15 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int no_test (FILE *, char *);
-static int no_load (struct xmp_mod_context *, FILE *, const int);
+static int no_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info no_loader = {
 	"LIQ",
@@ -60,8 +60,10 @@ static uint8 fx[] = {
 };
 
 
-static int no_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	int i, j, k;
 	int nsize;
@@ -201,7 +203,7 @@ static int no_load(struct xmp_mod_context *m, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

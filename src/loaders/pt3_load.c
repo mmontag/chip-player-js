@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.12 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.13 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int pt3_test (FILE *, char *);
-static int pt3_load (struct xmp_mod_context *, FILE *, const int);
+static int pt3_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info pt3_loader = {
     "PTM",
@@ -88,11 +88,13 @@ struct pt3_chunk_inst {
 };
 
 
-static int ptdt_load (struct xmp_mod_context *, FILE *, const int);
+static int ptdt_load (struct xmp_context *, FILE *, const int);
 
 
-static void get_vers(struct xmp_mod_context *m, int size, FILE *f)
+static void get_vers(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     char buf[20];
 
     fread(buf, 1, 10, f);
@@ -103,8 +105,10 @@ static void get_vers(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_info(struct xmp_mod_context *m, int size, FILE *f)
+static void get_info(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     struct pt3_chunk_info i;
 
     fread(m->name, 1, 32, f);
@@ -135,20 +139,23 @@ static void get_info(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_cmnt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_cmnt(struct xmp_context *ctx, int size, FILE *f)
 {
     reportv(0, "Comment size   : %d\n", size);
 }
 
 
-static void get_ptdt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_ptdt(struct xmp_context *ctx, int size, FILE *f)
 {
-    ptdt_load(m, f, 0);
+    ptdt_load(ctx, f, 0);
 }
 
 
-static int pt3_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int pt3_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     LOAD_INIT();
 
     read32b(f);		/* form */
@@ -165,7 +172,7 @@ static int pt3_load(struct xmp_mod_context *m, FILE *f, const int start)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(m, f);
+	iff_chunk(ctx, f);
 
     iff_release();
 
@@ -173,8 +180,10 @@ static int pt3_load(struct xmp_mod_context *m, FILE *f, const int start)
 }
 
 
-static int ptdt_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     struct xxm_event *event;
     struct mod_header mh;
@@ -259,7 +268,7 @@ static int ptdt_load(struct xmp_mod_context *m, FILE *f, const int start)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 					    &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }

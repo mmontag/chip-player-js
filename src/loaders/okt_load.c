@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.13 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.14 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int okt_test (FILE *, char *);
-static int okt_load (struct xmp_mod_context *, FILE *, const int);
+static int okt_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info okt_loader = {
     "OKT",
@@ -93,8 +93,10 @@ static int fx[] = {
 };
 
 
-static void get_cmod(struct xmp_mod_context *m, int size, FILE *f)
-{
+static void get_cmod(struct xmp_context *ctx, int size, FILE *f)
+{ 
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, k;
 
     m->xxh->chn = 0;
@@ -108,8 +110,10 @@ static void get_cmod(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
+static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     int looplen;
 
@@ -151,35 +155,50 @@ static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_spee(struct xmp_mod_context *m, int size, FILE *f)
+static void get_spee(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     m->xxh->tpo = read16b(f);
     m->xxh->bpm = 125;
 }
 
 
-static void get_slen(struct xmp_mod_context *m, int size, FILE *f)
+static void get_slen(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     m->xxh->pat = read16b(f);
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
 }
 
 
-static void get_plen(struct xmp_mod_context *m, int size, FILE *f)
+static void get_plen(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     m->xxh->len = read16b(f);
     reportv(0, "Module length  : %d patterns\n", m->xxh->len);
 }
 
 
-static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     fread(m->xxo, 1, m->xxh->len, f);
 }
 
 
-static void get_pbod(struct xmp_mod_context *m, int size, FILE *f)
+static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     int j;
     uint16 rows;
     struct xxm_event *event;
@@ -240,8 +259,11 @@ static void get_pbod(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_sbod(struct xmp_mod_context *m, int size, FILE *f)
+static void get_sbod(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     int flags = 0;
     int i;
 
@@ -255,7 +277,7 @@ static void get_sbod(struct xmp_mod_context *m, int size, FILE *f)
     if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
 	flags = XMP_SMP_7BIT;
 
-    xmp_drv_loadpatch(f, sample, m->c4rate, flags, &m->xxs[i], NULL);
+    xmp_drv_loadpatch(ctx, f, sample, m->c4rate, flags, &m->xxs[i], NULL);
 
     reportv(0, ".");
 
@@ -263,8 +285,11 @@ static void get_sbod(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static int okt_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     LOAD_INIT ();
 
     fseek(f, 8, SEEK_CUR);	/* OKTASONG */
@@ -287,7 +312,7 @@ static int okt_load(struct xmp_mod_context *m, FILE *f, const int start)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(m, f);
+	iff_chunk(ctx, f);
 
     iff_release ();
 

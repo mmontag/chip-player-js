@@ -15,7 +15,7 @@
 #include "period.h"
 
 static int flt_test (FILE *, char *);
-static int flt_load (struct xmp_mod_context *, FILE *, const int);
+static int flt_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info flt_loader = {
     "MOD",
@@ -41,8 +41,10 @@ static int flt_test(FILE *f, char *t)
 }
 
 
-static int flt_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     struct xxm_event *event;
     struct mod_header mh;
@@ -168,7 +170,7 @@ static int flt_load(struct xmp_mod_context *m, FILE *f, const int start)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 					&m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }

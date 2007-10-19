@@ -65,8 +65,8 @@ int	xmp_smix_numvoices	(int);
 void	xmp_smix_echoback	(int);
 void	xmp_smix_starttimer	(void);
 void	xmp_smix_stoptimer	(void);
-int	xmp_smix_writepatch	(struct patch_info *);
+int	xmp_smix_writepatch	(struct xmp_context *, struct patch_info *);
 int	xmp_smix_getmsg		(void);
-void    *xmp_smix_buffer	(struct xmp_player_context *);
+void    *xmp_smix_buffer	(struct xmp_context *);
 
 #endif /* __MIXER_H */

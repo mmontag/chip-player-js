@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.28 2007-10-19 09:56:44 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.29 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -186,7 +186,7 @@ struct xmp_player_context {
 };
 
 struct xmp_context {
-    //struct xmp_options o;
+    struct xmp_options o;
     //struct xmp_control c;
     //struct xmp_driver_context d;
     struct xmp_player_context p;
@@ -210,8 +210,8 @@ int	xmpi_scan_module	(struct xmp_context *);
 int	xmpi_player_start	(struct xmp_context *);
 int	xmpi_tell_wait		(void);
 int	xmpi_select_read	(int, int);
-int	xmpi_read_rc		(struct xmp_control *);
-void	xmpi_read_modconf	(struct xmp_mod_context *, struct xmp_control *, unsigned, unsigned);
+int	xmpi_read_rc		(struct xmp_context *);
+void	xmpi_read_modconf	(struct xmp_context *, struct xmp_control *, unsigned, unsigned);
 int	cksum			(FILE *);
 
 int8	read8s			(FILE *);

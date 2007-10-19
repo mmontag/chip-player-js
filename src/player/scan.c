@@ -52,6 +52,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
     struct xxm_event* event;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
 
     if (m->xxh->len == 0)
 	return 0;
@@ -71,7 +72,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
 
     gvl = m->xxh->gvl;
     bpm = m->xxh->bpm;
-    tempo = (tempo = xmp_ctl->tempo ? xmp_ctl->tempo : m->xxh->tpo) ? tempo : TIME;
+    tempo = (tempo = o->tempo ? o->tempo : m->xxh->tpo) ? tempo : TIME;
     base_time = m->rrate;
 
     ord2 = ord = -1;
@@ -108,7 +109,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
 	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
 
 	if (!m->xxo_fstrow[ord] && ord) {
-	    if (ord == xmp_ctl->start && !(m->fetch & XMP_CTL_LOOP)) {
+	    if (ord == o->start && !(m->fetch & XMP_CTL_LOOP)) {
 		if (medbpm)
 	            clock_rst = clock + 132 * alltmp / 5 / bpm;
 		else
@@ -240,7 +241,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
     row = break_row;
 
 end_module:
-    p->xmp_scan_num = xmp_ctl->start > ord? 0: tab_cnt[ord][row];
+    p->xmp_scan_num = o->start > ord? 0: tab_cnt[ord][row];
     p->xmp_scan_row = row;
     p->xmp_scan_ord = ord;
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.19 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.20 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -160,13 +160,15 @@ static void out_u8ulaw(char *dest, int *src, int num, int cod)
 
 
 /* Prepare the mixer for the next tick */
-inline static void smix_resetvar(struct xmp_player_context *p)
+inline static void smix_resetvar(struct xmp_context *ctx)
 {
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
 
     smix_ticksize = m->fetch & XMP_CTL_MEDBPM ?
-	xmp_ctl->freq * m->rrate * 33 / p->xmp_bpm / 12500 :
-    	xmp_ctl->freq * m->rrate / p->xmp_bpm / 100;
+	o->freq * m->rrate * 33 / p->xmp_bpm / 12500 :
+    	o->freq * m->rrate / p->xmp_bpm / 100;
 
     if (smix_buf32b) {
 	smix_dtright = smix_dtleft = TURN_OFF;
@@ -413,19 +415,21 @@ static void smix_voicepos(int voc, int pos, int itp)
 }
 
 
-static void smix_setpatch(struct xmp_player_context *p, int voc, int smp)
+static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 {
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &voice_array[voc];
     struct patch_info *pi = patch_array[smp];
 
     vi->smp = smp;
     vi->vol = 0;
-    vi->freq = (long long) C4_FREQ * pi->base_freq / xmp_ctl->freq;
+    vi->freq = (long long) C4_FREQ * pi->base_freq / o->freq;
     
     if (pi->len == XMP_PATCH_FM) {
 	vi->fidx = FLAG_SYNTH;
-	if (xmp_ctl->outfmt & XMP_FMT_MONO)
+	if (o->outfmt & XMP_FMT_MONO)
 	    vi->pan = TURN_OFF;
 	else {
 	    vi->pan = pi->panning;
@@ -442,7 +446,7 @@ static void smix_setpatch(struct xmp_player_context *p, int voc, int smp)
     vi->sptr = extern_drv ? NULL : pi->data;
     vi->fidx = m->fetch & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
 
-    if (xmp_ctl->outfmt & XMP_FMT_MONO) {
+    if (o->outfmt & XMP_FMT_MONO) {
 	vi->pan = TURN_OFF;
     } else {
 	vi->pan = pi->panning;
@@ -541,7 +545,7 @@ int xmp_smix_numvoices(int num)
 /* WARNING! Output samples must have the same byte order of the host machine!
  * (That's what happens in most cases anyway)
  */
-int xmp_smix_writepatch(struct patch_info *patch)
+int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 {
     if (patch) {
 	if (patch->len == XMP_PATCH_FM)
@@ -554,6 +558,7 @@ int xmp_smix_writepatch(struct patch_info *patch)
 	    xmp_cvt_sig2uns (patch->len, patch->mode & WAVE_16_BITS,
 		patch->data);
     }
+
     return XMP_OK;
 }
 
@@ -603,14 +608,15 @@ void xmp_smix_off()
 }
 
 
-void *xmp_smix_buffer(struct xmp_player_context *p)
+void *xmp_smix_buffer(struct xmp_context *ctx)
 {
     static int outbuf;
     int act;
+    struct xmp_options *o = &ctx->o;
 
-    if (!xmp_ctl->resol)
+    if (!o->resol)
 	act = OUT_U8ULAW;
-    else if (xmp_ctl->resol > 8)
+    else if (o->resol > 8)
 	act = OUT_SU16NORM;
     else
 	act = OUT_SU8NORM;
@@ -623,9 +629,9 @@ void *xmp_smix_buffer(struct xmp_player_context *p)
 	outbuf = 0;
 
     out_fn[act](smix_buffer[outbuf], smix_buf32b, smix_mode * smix_ticksize,
-							xmp_ctl->outfmt);
+							o->outfmt);
 
-    smix_resetvar(p);
+    smix_resetvar(ctx);
 
     return smix_buffer[outbuf]; 
 }

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.12 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: driver.h,v 1.13 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -56,7 +56,7 @@ struct patch_info {
 #define XMP_CHN_ACTIVE		0x100
 #define XMP_CHN_DUMB		-1
 
-#define parm_init() for (parm = ctl->parm; *parm; parm++) { \
+#define parm_init() for (parm = ctx->o.parm; *parm; parm++) { \
 	token = strtok (*parm, ":="); token = strtok (NULL, "");
 #define parm_end() }
 #define parm_error() { \
@@ -72,18 +72,18 @@ struct patch_info {
 /* PROTOTYPES */
 
 void	xmp_drv_register	(struct xmp_drv_info *);
-int	xmp_drv_open		(struct xmp_control *);
-int	xmp_drv_set		(struct xmp_control *);
-void	xmp_drv_close		(void);
-int	xmp_drv_on		(struct xmp_player_context *, int);
-void	xmp_drv_off		(void);
+int	xmp_drv_open		(struct xmp_context *, struct xmp_control *);
+int	xmp_drv_set		(struct xmp_context *, struct xmp_control *);
+void	xmp_drv_close		(struct xmp_context *);
+int	xmp_drv_on		(struct xmp_context *, int);
+void	xmp_drv_off		(struct xmp_context *);
 void	xmp_drv_mute		(int, int);
-int	xmp_drv_flushpatch	(int);
-int	xmp_drv_writepatch	(struct patch_info *);
-int	xmp_drv_setpatch	(struct xmp_player_context *, int, int, int, int, int, int, int, int);
+int	xmp_drv_flushpatch	(struct xmp_context *, int);
+int	xmp_drv_writepatch	(struct xmp_context *, struct patch_info *);
+int	xmp_drv_setpatch	(struct xmp_context *, int, int, int, int, int, int, int, int);
 int	xmp_drv_cvt8bit		(void);
 int	xmp_drv_crunch		(struct patch_info **, unsigned int);
-void	xmp_drv_setsmp		(struct xmp_player_context *, int, int);
+void	xmp_drv_setsmp		(struct xmp_context *, int, int);
 void	xmp_drv_setnna		(int, int);
 void	xmp_drv_pastnote	(int, int);
 void	xmp_drv_retrig		(int);
@@ -97,13 +97,13 @@ void	xmp_drv_resetchannel	(int);
 void	xmp_drv_reset		(void);
 double	xmp_drv_sync		(double);
 int	xmp_drv_getmsg		(void);
-void	xmp_drv_stoptimer	(struct xmp_player_context *);
+void	xmp_drv_stoptimer	(struct xmp_context *);
 void	xmp_drv_clearmem	(void);
-void	xmp_drv_starttimer	(struct xmp_player_context *);
+void	xmp_drv_starttimer	(struct xmp_context *);
 void	xmp_drv_echoback	(int);
 void	xmp_drv_bufwipe		(void);
-void	xmp_drv_bufdump		(struct xmp_player_context *);
-int	xmp_drv_loadpatch 	(FILE *, int, int, int, struct xxm_sample *,
+void	xmp_drv_bufdump		(struct xmp_context *);
+int	xmp_drv_loadpatch 	(struct xmp_context *, FILE *, int, int, int, struct xxm_sample *,
 				 char *);
 
 void xmp_init_drivers (void);

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.17 2007-10-18 23:56:07 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.18 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,7 +26,7 @@
 
 
 static int far_test (FILE *, char *);
-static int far_load (struct xmp_mod_context *, FILE *, const int);
+static int far_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info far_loader = {
     "FAR",
@@ -75,8 +75,10 @@ static uint8 fx[] = {
 };
 
 
-static int far_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, vib = 0;
     struct xxm_event *event;
     struct far_header ffh;
@@ -84,7 +86,7 @@ static int far_load(struct xmp_mod_context *m, FILE *f, const int start)
     struct far_instrument fih;
     uint8 sample_map[8];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     read32b(f);				/* File magic: 'FAR\xfe' */
     fread(&ffh.name, 40, 1, f);		/* Song name */
@@ -267,7 +269,7 @@ static int far_load(struct xmp_mod_context *m, FILE *f, const int start)
 			fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
 	    reportv(0, ".");
 	}
-	xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
     }
     reportv(0, "\n");
 

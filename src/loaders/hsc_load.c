@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.10 2007-10-18 19:13:12 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.11 2007-10-19 12:49:00 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 
 
 static int hsc_test (FILE *, char *);
-static int hsc_load (struct xmp_mod_context *, FILE *, const int);
+static int hsc_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info hsc_loader = {
     "HSC",
@@ -71,9 +71,11 @@ static int hsc_test(FILE *f, char *t)
     return 0;
 }
 
-static int hsc_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    int p, i, r, c;
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+    int pat, i, r, c;
     struct xxm_event *event;
     uint8 *x, *sid, e[2], buf[128 * 12];
 
@@ -154,20 +156,20 @@ static int hsc_load(struct xmp_mod_context *m, FILE *f, const int start)
 	    report ("%2d  %2d  %02x\n", sid[10] >> 1, sid[10] & 0x01, sid[11]);
 	}
 skip:
-	xmp_drv_loadpatch(f, i, 0, 0, NULL, (char *)sid);
+	xmp_drv_loadpatch(ctx, f, i, 0, 0, NULL, (char *)sid);
     }
 
     /* Read orders */
-    for (p = i = 0; i < 51; i++) {
+    for (pat = i = 0; i < 51; i++) {
 	fread (&m->xxo[i], 1, 1, f);
 	if (m->xxo[i] & 0x80)
 	    break;			/* FIXME: jump line */
 	if (m->xxo[i] > p)
-	    p = m->xxo[i];
+	    pat = m->xxo[i];
     }
     fseek(f, 50 - i, SEEK_CUR);
     m->xxh->len = i;
-    m->xxh->pat = p + 1;
+    m->xxh->pat = pat + 1;
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
     if (V(0)) {

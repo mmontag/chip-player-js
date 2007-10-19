@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.10 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.11 2007-10-19 12:48:59 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,11 +29,11 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int init (struct xmp_control *);
+static int init (struct xmp_context *, struct xmp_control *);
 static int prepare_driver (void);
 static void dshutdown (void);
-static int to_fmt (struct xmp_control *);
-static void bufdump (int, struct xmp_player_context *);
+static int to_fmt (struct xmp_options *);
+static void bufdump (int, struct xmp_context *);
 static void flush (void);
 
 static void dummy () { }
@@ -75,7 +75,7 @@ struct xmp_drv_info drv_alsa_mix = {
 static snd_pcm_t *pcm_handle;
 
 
-static int init(struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
 	snd_pcm_hw_params_t *hwparams;
 	int ret;
@@ -84,6 +84,7 @@ static int init(struct xmp_control *ctl)
 	unsigned int btime = 2000000;	/* 2s */
 	unsigned int ptime = 100000;	/* 100ms */
 	char *card_name = "default";
+	struct xmp_options *o = &ctx->o;
 
 	parm_init();  
 	chkparm1("buffer", btime = 1000 * strtoul(token, NULL, 0));
@@ -98,14 +99,14 @@ static int init(struct xmp_control *ctl)
 		return XMP_ERR_DINIT;
 	}
 
-	channels = (ctl->outfmt & XMP_FMT_MONO) ? 1 : 2;
-	rate = ctl->freq;
+	channels = (o->outfmt & XMP_FMT_MONO) ? 1 : 2;
+	rate = o->freq;
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_hw_params_any(pcm_handle, hwparams);
 	snd_pcm_hw_params_set_access(pcm_handle, hwparams,
 		SND_PCM_ACCESS_RW_INTERLEAVED);
-	snd_pcm_hw_params_set_format(pcm_handle, hwparams, to_fmt(ctl));
+	snd_pcm_hw_params_set_format(pcm_handle, hwparams, to_fmt(o));
 	snd_pcm_hw_params_set_rate_near(pcm_handle, hwparams, &rate, 0);
 	snd_pcm_hw_params_set_channels_near(pcm_handle, hwparams, &channels);
 	snd_pcm_hw_params_set_buffer_time_near(pcm_handle, hwparams, &btime, 0);
@@ -121,7 +122,7 @@ static int init(struct xmp_control *ctl)
 	if (prepare_driver() < 0)
 		return XMP_ERR_DINIT;
   
-	ctl->freq = rate;
+	o->freq = rate;
 
 	return xmp_smix_on(ctl);
 }
@@ -141,11 +142,11 @@ static int prepare_driver()
 }
 
 
-static int to_fmt(struct xmp_control *ctl)
+static int to_fmt(struct xmp_options *o)
 {
 	int fmt;
 
-	switch (ctl->resol) {
+	switch (o->resol) {
 	case 0:
 		return SND_PCM_FORMAT_MU_LAW;
 	case 8:
@@ -159,7 +160,7 @@ static int to_fmt(struct xmp_control *ctl)
 		}
 	}
 
-	if (ctl->outfmt & XMP_FMT_UNS) {
+	if (o->outfmt & XMP_FMT_UNS) {
       		fmt &= SND_PCM_FORMAT_U8 | SND_PCM_FORMAT_U16_LE |
 			SND_PCM_FORMAT_U16_BE;
 	} else {
@@ -174,12 +175,12 @@ static int to_fmt(struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
 	void *b;
 	int frames;
 
-	b = xmp_smix_buffer(p);
+	b = xmp_smix_buffer(ctx);
 	frames = snd_pcm_bytes_to_frames(pcm_handle, i);
 	if (snd_pcm_writei(pcm_handle, b, frames) < 0) {
 		snd_pcm_prepare(pcm_handle);

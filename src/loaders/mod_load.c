@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.29 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.30 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,7 +55,7 @@ struct {
 
 
 static int mod_test (FILE *, char *);
-static int mod_load (struct xmp_mod_context *, FILE *, const int);
+static int mod_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mod_loader = {
     "MOD",
@@ -101,8 +101,10 @@ static int is_st_ins (char *s)
 }
 
 
-static int mod_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;
     struct xxm_event *event;
@@ -445,13 +447,13 @@ skip_test:
 	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, m->xxih[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        xmp_drv_loadpatch (s, m->xxi[i][0].sid, m->c4rate, 0,
+	        xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate, 0,
 		    &m->xxs[m->xxi[i][0].sid], NULL);
 		if (V(0))
 		    report (".");
 	    }
 	} else {
-	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
+	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	        &m->xxs[m->xxi[i][0].sid], NULL);
 	    if (V(0))
 		report (".");

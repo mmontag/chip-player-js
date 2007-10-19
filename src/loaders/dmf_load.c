@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.13 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.14 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 
 
 static int dmf_test(FILE *, char *);
-static int dmf_load (struct xmp_mod_context *, FILE *, const int);
+static int dmf_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info dmf_loader = {
 	"DMF",
@@ -160,8 +160,10 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
  * IFF chunk handlers
  */
 
-static void get_sequ(struct xmp_mod_context *m, int size, FILE *f)
+static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i;
 
 	read16l(f);	/* sequencer loop start */
@@ -175,8 +177,10 @@ static void get_sequ(struct xmp_mod_context *m, int size, FILE *f)
 		m->xxo[i] = read16l(f);
 }
 
-static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, j, r, chn;
 	int patsize;
 	int info, counter, data;
@@ -252,8 +256,10 @@ static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static void get_smpi(struct xmp_mod_context *m, int size, FILE *f)
+static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
 
@@ -303,8 +309,10 @@ static void get_smpi(struct xmp_mod_context *m, int size, FILE *f)
 	}
 }
 
-static void get_smpd(struct xmp_mod_context *m, int size, FILE *f)
+static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i;
 	int smpsize;
 	uint8 *data, *ibuf;
@@ -329,13 +337,13 @@ static void get_smpd(struct xmp_mod_context *m, int size, FILE *f)
 
 		switch (packtype[i]) {
 		case 0:
-			xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 						0, &m->xxs[m->xxi[i][0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
 			unpack(data, ibuf, ibuf + smpsize, m->xxs[i].len);
-			xmp_drv_loadpatch(NULL, i, m->c4rate,
+			xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
 					XMP_SMP_NOLOAD, &m->xxs[i], (char *)data);
 			break;
 		default:
@@ -349,8 +357,10 @@ static void get_smpd(struct xmp_mod_context *m, int size, FILE *f)
 	free(data);
 }
 
-static int dmf_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	char composer[XMP_NAMESIZE];
 	uint8 date[3];
 	char tracker_name[10];
@@ -384,7 +394,7 @@ static int dmf_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(ctx, f);
 
 	iff_release();
 

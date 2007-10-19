@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.12 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.13 2007-10-19 12:49:00 cmatsuoka Exp $
  */
 
 /*
@@ -26,7 +26,7 @@
 
 
 static int med3_test(FILE *, char *);
-static int med3_load (struct xmp_mod_context *, FILE *, const int);
+static int med3_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info med3_loader = {
 	"MED3",
@@ -88,8 +88,10 @@ static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
 	return res;
 }
 
-static void unpack_block(struct xmp_mod_context *m, uint16 bnum, uint8 *from)
+static void unpack_block(struct xmp_context *ctx, uint16 bnum, uint8 *from)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	uint32 linemsk0 = *((uint32 *)from), linemsk1 = *((uint32 *)from + 1);
 	uint32 fxmsk0 = *((uint32 *)from + 2), fxmsk1 = *((uint32 *)from + 3);
@@ -207,8 +209,10 @@ static void unpack_block(struct xmp_mod_context *m, uint16 bnum, uint8 *from)
 }
 
 
-static int med3_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, j;
 	uint32 mask;
 	int transp, sliding;
@@ -352,7 +356,7 @@ static int med3_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 		fread(conv + 4, 1, convsz, f);
 
-                unpack_block(m, i, (uint8 *)conv);
+                unpack_block(ctx, i, (uint8 *)conv);
 
 		free(conv);
 
@@ -382,7 +386,7 @@ static int med3_load(struct xmp_mod_context *m, FILE *f, const int start)
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol);
 
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

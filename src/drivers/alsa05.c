@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.9 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.10 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -40,9 +40,9 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int init(struct xmp_control *);
+static int init(struct xmp_context *ctx, struct xmp_control *);
 static void dshutdown(void);
-static void bufdump(int, struct xmp_player_context *);
+static void bufdump(int, struct xmp_context *);
 static void bufwipe(void);
 static void flush(void);
 
@@ -134,7 +134,7 @@ static int to_fmt(struct xmp_control *ctl)
 	return fmt;
 }
 
-static int init(struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
 	snd_pcm_channel_params_t params;
 	snd_pcm_channel_setup_t setup;
@@ -223,11 +223,11 @@ static void bufwipe(void)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
 	void *b;
 
-	b = xmp_smix_buffer(p);
+	b = xmp_smix_buffer(ctx);
 	/* Note this assumes a fragment size of (frag_size) */
 	while (i > 0) {
 		size_t f = (frag_size) - (mybuffer_nextfree - mybuffer);

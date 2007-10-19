@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: qnx.c,v 1.4 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: qnx.c,v 1.5 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 /*
@@ -24,8 +24,8 @@
 
 static int fd_audio;
 
-static int init (struct xmp_control *);
-static void bufdump (int, struct xmp_player_context *);
+static int init (struct xmp_context *, struct xmp_control *);
+static void bufdump (int, struct xmp_context *);
 static void myshutdown ();
 static void mysync ();
 
@@ -64,7 +64,7 @@ struct xmp_drv_info drv_qnx = {
     NULL
 };
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     int rc, rate, bits, stereo, bsize;
     char *dev;
@@ -123,12 +123,12 @@ error:
 }
 
 
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
     int j;
     void *b;
 
-    b = xmp_smix_buffer(p);
+    b = xmp_smix_buffer(ctx);
     do {
 	if ((j = write (fd_audio, b, i)) > 0) {
 	    i -= j;

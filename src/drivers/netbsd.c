@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: netbsd.c,v 1.2 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: netbsd.c,v 1.3 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 /* based upon bsd.c and improved from solaris.c. Tested running NetBSD. */
@@ -33,9 +33,9 @@
 static int audio_fd;
 static int audioctl_fd;
 
-static int init (struct xmp_control *);
+static int init (struct xmp_context *, struct xmp_control *);
 static int setaudio (struct xmp_control *);
-static void bufdump (int, struct xmp_player_context *);
+static void bufdump (int, struct xmp_context *);
 static void shutdown (void);
 
 static void dummy () { }
@@ -155,7 +155,7 @@ XXX */
 }
 
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     if ((audio_fd = open ("/dev/sound", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
@@ -170,7 +170,7 @@ static int init (struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
     int j;
     void *b;
@@ -178,7 +178,7 @@ static void bufdump(int i, struct xmp_player_context *p)
     /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
     /* for (; i -= write (audio_fd, xmp_smix_buffer (), i); ); */
 
-    b = xmp_smix_buffer(p);
+    b = xmp_smix_buffer(ctx);
     while (i) {
 	if ((j = write (audio_fd, b, i)) > 0) {
 	    i -= j;

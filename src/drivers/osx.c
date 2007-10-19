@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.18 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: osx.c,v 1.19 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,8 +23,8 @@
 #include "mixer.h"
 
 
-static int init(struct xmp_control *);
-static void bufdump(int, struct xmp_player_context *);
+static int init(struct xmp_context *ctx, struct xmp_control *);
+static void bufdump(int, struct xmp_context *);
 static void shutdown(void);
 
 static void dummy () { }
@@ -162,7 +162,7 @@ OSStatus render_proc(void *inRefCon,
  */
 
 
-static int init(struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
 	AudioStreamBasicDescription ad;
 	Component comp;
@@ -264,7 +264,7 @@ static int init(struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
 	uint8 *b;
 	int j = 0;
@@ -273,7 +273,7 @@ static void bufdump(int i, struct xmp_player_context *p)
 	while (buf_free() < i)
 		usleep(100000);
 
-	b = xmp_smix_buffer(p);
+	b = xmp_smix_buffer(ctx);
 
 	while (i) {
         	if ((j = write_buffer(b, i)) > 0) {

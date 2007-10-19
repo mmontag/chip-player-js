@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.7 2007-10-15 13:04:08 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.8 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 /*
@@ -36,12 +36,12 @@
 
 static int audio_fd;
 
-static void from_fmt (struct xmp_control *, int);
-static int to_fmt (struct xmp_control *);
-static void setaudio (struct xmp_control *);
-static int init (struct xmp_control *);
+static void from_fmt (struct xmp_options *, int);
+static int to_fmt (struct xmp_options *);
+static void setaudio (struct xmp_options *);
+static int init (struct xmp_context *, struct xmp_control *);
 static void shutdown (void);
-static void bufdump (int, struct xmp_player_context *);
+static void bufdump (int, struct xmp_context *);
 static void flush (void);
 
 static void dummy () { }
@@ -90,20 +90,20 @@ static int voxware = 0;		/* For Linux 1.2.13 */
 #endif
 
 
-static int to_fmt (struct xmp_control *ctl)
+static int to_fmt(struct xmp_options *o)
 {
     int fmt;
 
-    if (!ctl->resol)
+    if (!o->resol)
 	return AFMT_MU_LAW;
 
-    if (ctl->resol == 8)
+    if (o->resol == 8)
 	fmt = AFMT_U8 | AFMT_S8;
     else {
 	fmt = big_endian ? AFMT_S16_BE | AFMT_U16_BE :
 			   AFMT_S16_LE | AFMT_U16_LE;
     }
-    if (ctl->outfmt & XMP_FMT_UNS)
+    if (o->outfmt & XMP_FMT_UNS)
 	fmt &= AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE;
     else
 	fmt &= AFMT_S8 | AFMT_S16_LE | AFMT_S16_BE;
@@ -112,26 +112,26 @@ static int to_fmt (struct xmp_control *ctl)
 }
 
 
-static void from_fmt (struct xmp_control *ctl, int outfmt)
+static void from_fmt(struct xmp_options *o, int outfmt)
 {
     if (outfmt & AFMT_MU_LAW) {
-	ctl->resol = 0;
+	o->resol = 0;
 	return;
     }
 
     if (outfmt & (AFMT_S16_LE | AFMT_S16_BE | AFMT_U16_LE | AFMT_U16_BE))
-	ctl->resol = 16;
+	o->resol = 16;
     else
-	ctl->resol = 8;
+	o->resol = 8;
 
     if (outfmt & (AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE))
-	ctl->outfmt |= XMP_FMT_UNS;
+	o->outfmt |= XMP_FMT_UNS;
     else
-	ctl->outfmt &= ~XMP_FMT_UNS;
+	o->outfmt &= ~XMP_FMT_UNS;
 }
 
 
-static void setaudio (struct xmp_control *ctl)
+static void setaudio(struct xmp_options *o)
 {
     static int fragset = 0;
     int frag = 0;
@@ -139,18 +139,18 @@ static void setaudio (struct xmp_control *ctl)
 
     frag = (fragnum << 16) + fragsize;
 
-    fmt = to_fmt (ctl);
-    ioctl (audio_fd, SNDCTL_DSP_SETFMT, &fmt);
-    from_fmt (ctl, fmt);
+    fmt = to_fmt(o);
+    ioctl(audio_fd, SNDCTL_DSP_SETFMT, &fmt);
+    from_fmt(o, fmt);
 
-    fmt = !(ctl->outfmt & XMP_FMT_MONO);
+    fmt = !(o->outfmt & XMP_FMT_MONO);
     ioctl (audio_fd, SNDCTL_DSP_STEREO, &fmt);
     if (fmt)
-	ctl->outfmt &= ~XMP_FMT_MONO;
+	o->outfmt &= ~XMP_FMT_MONO;
     else
-	ctl->outfmt |= XMP_FMT_MONO;
+	o->outfmt |= XMP_FMT_MONO;
 
-    ioctl (audio_fd, SNDCTL_DSP_SPEED, &ctl->freq);
+    ioctl(audio_fd, SNDCTL_DSP_SPEED, &o->freq);
 
     /* Set the fragments only once */
     if (!fragset) {
@@ -161,9 +161,10 @@ static void setaudio (struct xmp_control *ctl)
 }
 
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     char *dev_audio[] = { "/dev/dsp", "/dev/sound/dsp" };
+    struct xmp_options *o = &ctx->o;
 
 #ifdef HAVE_AUDIO_BUF_INFO
     audio_buf_info info;
@@ -193,7 +194,7 @@ static int init (struct xmp_control *ctl)
     if(audio_fd<0)
       return XMP_ERR_DINIT;
 
-    setaudio (ctl);
+    setaudio(o);
 
 #ifdef HAVE_AUDIO_BUF_INFO
     if (!voxware) {
@@ -212,7 +213,7 @@ static int init (struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
     int j;
     void *b;
@@ -220,7 +221,7 @@ static void bufdump(int i, struct xmp_player_context *p)
     /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
     /* for (; i -= write (audio_fd, xmp_smix_buffer (), i); ); */
 
-    b = xmp_smix_buffer(p);
+    b = xmp_smix_buffer(ctx);
     while (i) {
 	if ((j = write (audio_fd, b, i)) > 0) {
 	    i -= j;

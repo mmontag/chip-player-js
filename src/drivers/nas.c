@@ -4,7 +4,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: nas.c,v 1.4 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: nas.c,v 1.5 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -46,8 +46,8 @@ static char *help[] = {
 
 static InfoRec info;
 
-static int init (struct xmp_control *);
-static void bufdump (int, struct xmp_player_context *);
+static int init (struct xmp_context *, struct xmp_control *);
+static void bufdump (int, struct xmp_context *);
 static void myshutdown ();
 
 static void dummy () { }
@@ -145,7 +145,7 @@ static void nas_flush ()
 }
 
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     int channels, rate, format, buf_samples;
     int duration, gain, watermark;
@@ -247,10 +247,10 @@ static int init (struct xmp_control *ctl)
 }
 
 
-static void bufdump(int len, struct xmp_player_context *p)
+static void bufdump(int len, struct xmp_context *ctx)
 {
     int buf_cnt = 0;
-    unsigned char *buf = xmp_smix_buffer(p);
+    unsigned char *buf = xmp_smix_buffer(ctx);
 
     _D (_D_INFO "bufdump: %d", len);
 

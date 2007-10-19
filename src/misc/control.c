@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.20 2007-10-19 09:42:08 cmatsuoka Exp $
+ * $Id: control.c,v 1.21 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -41,19 +41,22 @@ void xmp_free_context(xmp_context ctx)
 	free(ctx);
 }
 
-void xmp_init_callback(struct xmp_control *ctl, void (*callback)(void *, int))
+void xmp_init_callback(xmp_context ctx, void (*callback)(void *, int))
 {
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
+
     xmp_drv_register(&drv_callback);
     xmp_init_formats();
     pw_init();
     xmp_register_driver_callback(callback);
-    ctl->drv_id = "callback";
+    o->drv_id = "callback";
 }
 
-void xmp_init(int argc, char **argv, struct xmp_control *ctl)
+void xmp_init(xmp_context ctx, int argc, char **argv, struct xmp_control *ctl)
 {
     int num;
     uint16 w;
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
     w = 0x00ff;
     big_endian = (*(char *)&w == 0x00);
@@ -66,10 +69,10 @@ void xmp_init(int argc, char **argv, struct xmp_control *ctl)
     xmp_event_callback = NULL;
 
     /* Set defaults */
-    ctl->freq = 44100;
-    ctl->mix = 80;
-    ctl->resol = 16;
-    ctl->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
+    o->freq = 44100;
+    o->mix = 80;
+    o->resol = 16;
+    o->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
 
     /* Set max number of voices per channel */
     ctl->maxvoc = 16;
@@ -80,29 +83,31 @@ void xmp_init(int argc, char **argv, struct xmp_control *ctl)
 	    break;
     }
     if (num >= argc)
-	xmpi_read_rc(ctl);
+	xmpi_read_rc((struct xmp_context *)ctx);
 
     xmpi_tell_wait();
 }
 
 
-inline int xmp_open_audio (struct xmp_control *ctl)
+inline int xmp_open_audio(xmp_context ctx, struct xmp_control *ctl)
 {
-    return xmp_drv_open (ctl);
+    return xmp_drv_open((struct xmp_context *)ctx, ctl);
 }
 
 
-inline void xmp_close_audio ()
+inline void xmp_close_audio(xmp_context ctx)
 {
-    xmp_drv_close ();
+    xmp_drv_close((struct xmp_context *)ctx);
 }
 
 
-void xmp_set_driver_parameter (struct xmp_control *ctl, char *s)
+void xmp_set_driver_parameter(xmp_context ctx, char *s)
 {
-    ctl->parm[drv_parm] = s;
-    while (isspace (*ctl->parm[drv_parm]))
-	ctl->parm[drv_parm]++;
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
+
+    o->parm[drv_parm] = s;
+    while (isspace (*o->parm[drv_parm]))
+	o->parm[drv_parm]++;
     drv_parm++;
 }
 
@@ -160,10 +165,10 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	    m->volume++;
 	return m->volume;
     case XMP_TIMER_STOP:
-	xmp_drv_stoptimer(p);
+	xmp_drv_stoptimer((struct xmp_context *)ctx);
 	break;
     case XMP_TIMER_RESTART:
-	xmp_drv_starttimer(p);
+	xmp_drv_starttimer((struct xmp_context *)ctx);
 	break;
     }
 
@@ -173,16 +178,16 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 
 int xmp_play_module(xmp_context ctx)
 {
-    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     time_t t0, t1;
     int t;
 
     time (&t0);
-    xmpi_player_start(p);
+    xmpi_player_start((struct xmp_context *)ctx);
     time (&t1);
     t = difftime(t1, t0);
 
-    xmp_ctl->start = 0;
+    o->start = 0;
 
     return t;
 }
@@ -239,21 +244,24 @@ void xmp_release_module(xmp_context ctx)
 }
 
 
-void xmp_get_driver_cfg(int *srate, int *res, int *chn, int *itpt)
+void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn, int *itpt)
 {
-    *srate = xmp_ctl->memavl ? 0 : xmp_ctl->freq;
-    *res = xmp_ctl->resol ? xmp_ctl->resol : 8 /* U_LAW */;
-    *chn = xmp_ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    *itpt = !!(xmp_ctl->flags & XMP_CTL_ITPT);
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
+
+    *srate = xmp_ctl->memavl ? 0 : o->freq;
+    *res = o->resol ? o->resol : 8 /* U_LAW */;
+    *chn = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    *itpt = !!(o->flags & XMP_CTL_ITPT);
 }
 
 
-int xmp_verbosity_level (int i)
+int xmp_verbosity_level(xmp_context ctx, int i)
 {
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     int tmp;
 
-    tmp = xmp_ctl->verbose;
-    xmp_ctl->verbose = i;
+    tmp = o->verbose;
+    o->verbose = i;
 
     return tmp;
 }

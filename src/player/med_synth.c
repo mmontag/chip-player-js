@@ -94,8 +94,10 @@ int get_med_arp(struct xmp_player_context *p, struct xmp_channel *xc)
 }
 
 
-void xmp_med_synth(struct xmp_player_context *p, int chn, struct xmp_channel *xc, int rst)
+void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int rst)
 {
+    struct xmp_player_context *p = &ctx->p;
+
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
 
     if (p->m.med_vol_table == NULL || p->m.med_wav_table == NULL)
@@ -221,7 +223,7 @@ skip_vol:
 	    default:
 		if (b < p->m.xxih[xc->ins].nsm && p->m.xxi[xc->ins][b].sid != xc->smp) {
 		    xc->smp = p->m.xxi[xc->ins][b].sid;
-		    xmp_drv_setsmp(p, chn, xc->smp);
+		    xmp_drv_setsmp(ctx, chn, xc->smp);
 		}
 	    }
 	}

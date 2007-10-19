@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.9 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.10 2007-10-19 12:49:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,8 +40,9 @@ static int get_yesno(char *s)
 }
 
 
-int xmpi_read_rc(struct xmp_control *ctl)
+int xmpi_read_rc(struct xmp_context *ctx)
 {
+    struct xmp_options *o = &ctx->o;
     FILE *rc;
     char myrc[MAXPATHLEN], myrc2[MAXPATHLEN];
     char *home = getenv ("HOME");
@@ -90,31 +91,31 @@ int xmpi_read_rc(struct xmp_control *ctl)
 #define getval_no(x,y) { \
 	if (!strcmp(var,x)) { y = atoi (val); continue; } }
 
-	getval_yn(ctl->flags, "8bit", XMP_CTL_8BIT);
-	getval_yn(ctl->flags, "interpolate", XMP_CTL_ITPT);
-	getval_yn(ctl->flags, "loop", XMP_CTL_LOOP);
-	getval_yn(ctl->flags, "reverse", XMP_CTL_REVERSE);
-	getval_yn(ctl->flags, "pan", XMP_CTL_DYNPAN);
-	getval_yn(ctl->flags, "filter", XMP_CTL_FILTER);
-	getval_yn(ctl->outfmt, "mono", XMP_FMT_MONO);
-	getval_no("mix", ctl->mix);
-	getval_no("crunch", ctl->crunch);
-	getval_no("chorus", ctl->chorus);
-	getval_no("reverb", ctl->reverb);
-	getval_no("srate", ctl->freq);
-	getval_no("time", ctl->time);
-	getval_no("verbosity", ctl->verbose);
+	getval_yn(o->flags, "8bit", XMP_CTL_8BIT);
+	getval_yn(o->flags, "interpolate", XMP_CTL_ITPT);
+	getval_yn(o->flags, "loop", XMP_CTL_LOOP);
+	getval_yn(o->flags, "reverse", XMP_CTL_REVERSE);
+	getval_yn(o->flags, "pan", XMP_CTL_DYNPAN);
+	getval_yn(o->flags, "filter", XMP_CTL_FILTER);
+	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
+	getval_no("mix", o->mix);
+	getval_no("crunch", o->crunch);
+	getval_no("chorus", o->chorus);
+	getval_no("reverb", o->reverb);
+	getval_no("srate", o->freq);
+	getval_no("time", o->time);
+	getval_no("verbosity", o->verbose);
 
 	if (!strcmp (var, "driver")) {
 	    strncpy (drive_id, val, 31);
-	    ctl->drv_id = drive_id;
+	    o->drv_id = drive_id;
 	    continue;
 	}
 
 	if (!strcmp (var, "bits")) {
-	    ctl->resol = atoi (val);
-	    if (ctl->resol != 16 || ctl->resol != 8 || ctl->resol != 0)
-		ctl->resol = 16;	/* #?# FIXME resol==0 -> U_LAW mode ? */
+	    o->resol = atoi (val);
+	    if (o->resol != 16 || o->resol != 8 || o->resol != 0)
+		o->resol = 16;	/* #?# FIXME resol==0 -> U_LAW mode ? */
 	    continue;
 	}
 
@@ -122,7 +123,7 @@ int xmpi_read_rc(struct xmp_control *ctl)
 	 * send it to the device driver
 	 */
 	snprintf(cparm, 512, "%s=%s", var, val);
-	xmp_set_driver_parameter (ctl, cparm);
+	xmp_set_driver_parameter((xmp_context)ctx, cparm);
     }
 
     fclose (rc);
@@ -131,8 +132,11 @@ int xmpi_read_rc(struct xmp_control *ctl)
 }
 
 
-static void parse_modconf(struct xmp_mod_context *m, struct xmp_control *ctl, char *fn, unsigned crc, unsigned size)
+static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsigned size)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     FILE *rc;
     char *hash, *var, *val, line[256];
     int active = 0;
@@ -155,7 +159,7 @@ static void parse_modconf(struct xmp_mod_context *m, struct xmp_control *ctl, ch
 	    if (strtoul (&line[1], NULL, 0) && strtoul (val, NULL, 0)) {
 		active = (strtoul (&line[1], NULL, 0) == crc &&
 	 	    strtoul (val, NULL, 0) == size);
-		if (active && xmp_ctl->verbose > 2)
+		if (active && o->verbose > 2)
 		    report ("Matching CRC in %s (%u)\n", fn, crc);
 	    }
 	    continue;
@@ -179,29 +183,29 @@ static void parse_modconf(struct xmp_mod_context *m, struct xmp_control *ctl, ch
 	getval_yn(m->fetch, "filter", XMP_CTL_FILTER);
 	getval_yn(m->fetch, "fixloop", XMP_CTL_FIXLOOP);
 	getval_yn(m->fetch, "fx9bug", XMP_CTL_FX9BUG);
-	getval_yn(ctl->outfmt, "mono", XMP_FMT_MONO);
-	getval_no("mix", ctl->mix);
-	getval_no("crunch", ctl->crunch);
-	getval_no("chorus", ctl->chorus);
-	getval_no("reverb", ctl->reverb);
+	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
+	getval_no("mix", o->mix);
+	getval_no("crunch", o->crunch);
+	getval_no("chorus", o->chorus);
+	getval_no("reverb", o->reverb);
     }
 
     fclose (rc);
 }
 
 
-void xmpi_read_modconf(struct xmp_mod_context *m, struct xmp_control *ctl, unsigned crc, unsigned size)
+void xmpi_read_modconf(struct xmp_context *ctx, struct xmp_control *ctl, unsigned crc, unsigned size)
 {
     char myrc[MAXPATHLEN];
     char *home = getenv ("HOME");
 
 #ifndef __EMX__
     snprintf(myrc, MAXPATHLEN, "%s/.xmp/modules.conf", home);
-    parse_modconf(m, ctl, SYSCONFDIR "/xmp-modules.conf", crc, size);
+    parse_modconf(ctx, SYSCONFDIR "/xmp-modules.conf", crc, size);
 #else
     snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\modules.conf", home);
-    parse_modconf(m, ctl, "xmp-modules.conf", crc, size);
+    parse_modconf(ctx, "xmp-modules.conf", crc, size);
 #endif
-    parse_modconf(m, ctl, myrc, crc, size);
+    parse_modconf(ctx, myrc, crc, size);
 }
 

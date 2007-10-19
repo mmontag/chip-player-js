@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.43 2007-10-19 09:42:08 cmatsuoka Exp $
+ * $Id: load.c,v 1.44 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -52,8 +52,9 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_OXM	0x08
 
 
-static int decrunch(FILE **f, char **s)
+static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 {
+    struct xmp_options *o = &ctx->o;
     unsigned char *b;
     char *cmd;
     FILE *t;
@@ -188,7 +189,7 @@ static int decrunch(FILE **f, char **s)
 	snprintf(line, lsize, cmd, *s);
 
 	if ((p = popen (line, "r")) == NULL) {
-	    if (xmp_ctl->verbose)
+	    if (o->verbose)
 		report("failed\n");
 	    fclose(t);
 	    free(line);
@@ -244,7 +245,7 @@ static int decrunch(FILE **f, char **s)
     *f = t;
  
     temp2 = strdup(temp);
-    decrunch(f, &temp);
+    decrunch(ctx, f, &temp);
     unlink(temp2);
     free(temp2);
     free(temp);
@@ -286,28 +287,30 @@ static void get_smp_size(struct xmp_player_context *p, int awe, int *a, int *b)
 }
 
 
-static int crunch_ratio(struct xmp_player_context *p, int awe)
+static int crunch_ratio(struct xmp_context *ctx, int awe)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_options *o = &ctx->o;
     int memavl, smp_size, ratio, smp_4kb;
 
     ratio = 0x10000;
     if (!(memavl = xmp_ctl->memavl))
 	return ratio;
 
-    memavl = memavl * 100 / (100 + xmp_ctl->crunch);
+    memavl = memavl * 100 / (100 + o->crunch);
 
     get_smp_size(p, awe, &smp_size, &smp_4kb);
 
     if (smp_size > memavl) {
 	if (!awe)
-	    xmp_cvt_to8bit ();
+	    xmp_cvt_to8bit();
 	get_smp_size(p, awe, &smp_size, &smp_4kb);
     }
 
     if (smp_size > memavl) {
 	ratio = (int)
 	    (((long long)(memavl - smp_4kb) << 16) / (smp_size - smp_4kb));
-	if (xmp_ctl->verbose)
+	if (o->verbose)
 	    report ("Crunch ratio   : %d%% [Mem:%.3fMb Smp:%.3fMb]\n",
 		100 - 100 * ratio / 0x10000, .000001 * xmp_ctl->memavl,
 		.000001 * smp_size);
@@ -317,7 +320,7 @@ static int crunch_ratio(struct xmp_player_context *p, int awe)
 }
 
 
-int xmp_test_module(char *s, char *n)
+int xmp_test_module(xmp_context ctx, char *s, char *n)
 {
     FILE *f;
     struct xmp_loader_info *li;
@@ -333,7 +336,7 @@ int xmp_test_module(char *s, char *n)
     if (S_ISDIR(st.st_mode))
 	goto err;
 
-    if (decrunch(&f, &s) < 0)
+    if (decrunch((struct xmp_context *)ctx, &f, &s) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -377,6 +380,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     unsigned int crc;
     struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     char *b1, *b2;
 
     if ((f = fopen(s, "rb")) == NULL)
@@ -388,7 +392,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (S_ISDIR(st.st_mode))
 	goto err;
 
-    if ((t = decrunch(&f, &s)) < 0)
+    if ((t = decrunch((struct xmp_context *)ctx, &f, &s)) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -414,9 +418,9 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->volume = 0x40;
     m->vol_xlat = NULL;
     /* Reset control for next module */
-    m->fetch = xmp_ctl->flags & ~XMP_CTL_FILTER;
+    m->fetch = o->flags & ~XMP_CTL_FILTER;
 
-    xmpi_read_modconf(m, xmp_ctl, crc, st.st_size);
+    xmpi_read_modconf((struct xmp_context *)ctx, xmp_ctl, crc, st.st_size);
 
     m->xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */
@@ -426,13 +430,13 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     for (i = 0; i < 64; i++) {
 	m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
-	m->xxc[i].cho = xmp_ctl->chorus;
-	m->xxc[i].rvb = xmp_ctl->reverb;
+	m->xxc[i].cho = o->chorus;
+	m->xxc[i].rvb = o->reverb;
 	m->xxc[i].vol = 0x40;
 	m->xxc[i].flg = 0;
     }
 
-    m->verbosity = xmp_ctl->verbose;
+    m->verbosity = o->verbose;
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
@@ -456,7 +460,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	xmp_cvt_bid2und();
     }
 
-    xmp_drv_flushpatch(crunch_ratio(p, i));
+    xmp_drv_flushpatch((struct xmp_context *)ctx, crunch_ratio((struct xmp_context *)ctx, i));
 
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
      * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
@@ -466,31 +470,31 @@ int xmp_load_module(xmp_context ctx, char *s)
 	m->xxh->rst = 0;
 
     /* Disable filter if --nofilter is specified */
-    m->fetch &= ~(~xmp_ctl->flags & XMP_CTL_FILTER);
+    m->fetch &= ~(~o->flags & XMP_CTL_FILTER);
 
     str_adj(m->name);
     if (!*m->name)
 	strcpy(m->name, "(untitled)");
 
-    if (xmp_ctl->verbose > 1) {
+    if (o->verbose > 1) {
 	report("Module looping : %s\n",
 	    m->fetch & XMP_CTL_LOOP ? "yes" : "no");
 	report("Period mode    : %s\n",
 	    m->xxh->flg & XXM_FLG_LINEAR ? "linear" : "Amiga");
     }
 
-    if (xmp_ctl->verbose > 2) {
+    if (o->verbose > 2) {
 	report("Amiga range    : %s\n", m->xxh->flg & XXM_FLG_MODRNG ?
 		"yes" : "no");
 	report("Restart pos    : %d\n", m->xxh->rst);
 	report("Base volume    : %d\n", m->volbase);
 	report("C4 replay rate : %d\n", m->c4rate);
 	report("Channel mixing : %d%% (dynamic pan %s)\n",
-		m->fetch & XMP_CTL_REVERSE ? -xmp_ctl->mix : xmp_ctl->mix,
+		m->fetch & XMP_CTL_REVERSE ? -o->mix : o->mix,
 		m->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
     }
 
-    if (xmp_ctl->verbose) {
+    if (o->verbose) {
 	report("Channels       : %d [ ", m->xxh->chn);
 	for (i = 0; i < m->xxh->chn; i++) {
 	    if (m->xxc[i].flg & XXM_CHANNEL_FM)
@@ -501,9 +505,9 @@ int xmp_load_module(xmp_context ctx, char *s)
 	report("]\n");
     }
 
-    t = xmpi_scan_module(p);
+    t = xmpi_scan_module((struct xmp_context *)ctx);
 
-    if (xmp_ctl->verbose) {
+    if (o->verbose) {
 	if (m->fetch & XMP_CTL_LOOP)
 	    report ("One loop time  : %dmin%02ds\n",
 		(t + 500) / 60000, ((t + 500) / 1000) % 60);

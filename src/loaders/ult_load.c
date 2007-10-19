@@ -24,7 +24,7 @@
 
 
 static int ult_test (FILE *, char *);
-static int ult_load (struct xmp_mod_context *, FILE *, const int);
+static int ult_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info ult_loader = {
     "ULT",
@@ -91,8 +91,10 @@ static char *verstr[4] = {
 };
 
 
-static int ult_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, k, ver, cnt;
     struct xxm_event *event;
     struct ult_header ufh;
@@ -320,7 +322,7 @@ static int ult_load(struct xmp_mod_context *m, FILE *f, const int start)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
 	if (V(0))
 	    report (".");
     }

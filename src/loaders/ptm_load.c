@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.18 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.19 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int ptm_test (FILE *, char *);
-static int ptm_load (struct xmp_mod_context *, FILE *, const int);
+static int ptm_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info ptm_loader = {
     "PTM",
@@ -51,8 +51,10 @@ static int ptm_vol[] = {
 };
 
 
-static int ptm_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int c, r, i, smp_ofs[256];
     struct xxm_event *event;
     struct ptm_file_header pfh;
@@ -252,7 +254,7 @@ static int ptm_load(struct xmp_mod_context *m, FILE *f, const int start)
 	if (!m->xxs[i].len)
 	    continue;
 	fseek(f, start + smp_ofs[m->xxi[i][0].sid], SEEK_SET);
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i][0].sid], NULL);
 	reportv(0, ".");
     }

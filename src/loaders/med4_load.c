@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.17 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.18 2007-10-19 12:49:01 cmatsuoka Exp $
  */
 
 /*
@@ -25,7 +25,7 @@
 
 
 static int med4_test(FILE *, char *);
-static int med4_load (struct xmp_mod_context *, FILE *, const int);
+static int med4_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info med4_loader = {
 	"MED4",
@@ -119,8 +119,10 @@ static inline uint16 read12b(FILE *f)
 	return (a << 8) | (b << 4) | c;
 }
 
-static int med4_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, j, k;
 	uint32 m0, mask;
 	int transp, masksz;
@@ -397,7 +399,7 @@ static int med4_load(struct xmp_mod_context *m, FILE *f, const int start)
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol, m->xxi[i][0].xpo);
 
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

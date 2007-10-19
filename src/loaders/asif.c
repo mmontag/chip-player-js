@@ -14,8 +14,10 @@
 #define MAGIC_INST	MAGIC4('I','N','S','T')
 #define MAGIC_WAVE	MAGIC4('W','A','V','E')
 
-int asif_load(struct xmp_mod_context *m, FILE *f, int i)
+int asif_load(struct xmp_context *ctx, FILE *f, int i)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int size, pos;
 	uint32 id;
 	int chunk;
@@ -54,7 +56,7 @@ int asif_load(struct xmp_mod_context *m, FILE *f, int i)
 				read16l(f);		/* SampRate */
 			}
 		
-			xmp_drv_loadpatch(f, i, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, i, m->c4rate,
 					XMP_SMP_UNS, &m->xxs[i], NULL);
 
 			chunk++;

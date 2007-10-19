@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.24 2007-10-18 23:07:10 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.25 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,7 +31,7 @@
 #define MAX_SAMP 1024
 
 static int xm_test (FILE *, char *);
-static int xm_load (struct xmp_mod_context *, FILE *, const int);
+static int xm_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info xm_loader = {
     "XM",
@@ -53,11 +53,13 @@ static int xm_test(FILE *f, char *t)
     return 0;
 }
 
-static int xm_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, r;
     int sample_num = 0;
-    uint8 *patbuf, *p, b;
+    uint8 *patbuf, *pat, b;
     struct xxm_event *event;
     struct xm_file_header xfh;
     struct xm_pattern_header xph;
@@ -151,24 +153,24 @@ load_patterns:
 	TRACK_ALLOC(i);
 
 	if (xph.datasize) {
-	    p = patbuf = calloc (1, xph.datasize);
+	    pat = patbuf = calloc (1, xph.datasize);
 	    fread (patbuf, 1, xph.datasize, f);
 	    for (j = 0; j < (m->xxh->chn * r); j++) {
-		if ((p - patbuf) >= xph.datasize)
+		if ((pat - patbuf) >= xph.datasize)
 		    break;
 		event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
-		if ((b = *p++) & XM_EVENT_PACKING) {
+		if ((b = *pat++) & XM_EVENT_PACKING) {
 		    if (b & XM_EVENT_NOTE_FOLLOWS)
-			event->note = *p++;
+			event->note = *pat++;
 		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS) {
-			if (*p & XM_END_OF_SONG)
+			if (*pat & XM_END_OF_SONG)
 			    break;
-			event->ins = *p++;
+			event->ins = *pat++;
 		    }
 		    if (b & XM_EVENT_VOLUME_FOLLOWS)
-			event->vol = *p++;
+			event->vol = *pat++;
 		    if (b & XM_EVENT_FXTYPE_FOLLOWS) {
-			event->fxt = *p++;
+			event->fxt = *pat++;
 #if 0
 			if (event->fxt == FX_GLOBALVOL)
 			    event->fxt = FX_TRK_VOL;
@@ -177,13 +179,13 @@ load_patterns:
 #endif
 		    }
 		    if (b & XM_EVENT_FXPARM_FOLLOWS)
-			event->fxp = *p++;
+			event->fxp = *pat++;
 		} else {
 		    event->note = b;
-		    event->ins = *p++;
-		    event->vol = *p++;
-		    event->fxt = *p++;
-		    event->fxp = *p++;
+		    event->ins = *pat++;
+		    event->vol = *pat++;
+		    event->fxt = *pat++;
+		    event->fxp = *pat++;
 		}
 		if (!event->vol)
 		    continue;
@@ -398,10 +400,10 @@ load_instruments:
 			m->xxi[i][j].pan, m->xxi[i][j].xpo);
 
 		if (xfh.version > 0x0103)
-		    xmp_drv_loadpatch(f, m->xxi[i][j].sid, m->c4rate,
+		    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 	    }
-	    if (xmp_ctl->verbose == 1)
+	    if (m->verbosity == 1)
 		report (".");
 	} else {
 	    /* The sample size is a field of struct xm_instrument_header that
@@ -433,7 +435,7 @@ load_instruments:
     m->xxs = realloc(m->xxs, sizeof (struct xxm_sample) * m->xxh->smp);
 
     if (xfh.version <= 0x0103) {
-	if (xmp_ctl->verbose > 0 && xmp_ctl->verbose < 2)
+	if (m->verbosity > 0 && m->verbosity < 2)
 	    report ("\n");
 	goto load_patterns;
     }
@@ -447,7 +449,7 @@ load_samples:
     if (xfh.version <= 0x0103) {
 	for (i = 0; i < m->xxh->ins; i++) {
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
-		xmp_drv_loadpatch (f, m->xxi[i][j].sid, m->c4rate,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
 		    XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 		reportv(0, ".");
 	    }

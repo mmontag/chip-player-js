@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ice_load.c,v 1.11 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: ice_load.c,v 1.12 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int ice_test (FILE *, char *);
-static int ice_load (struct xmp_mod_context *, FILE *, const int);
+static int ice_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info ice_loader = {
     "MTN",
@@ -65,8 +65,10 @@ struct ice_header {
 };
 
 
-static int ice_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     struct xxm_event *event;
     struct ice_header ih;
@@ -166,7 +168,7 @@ static int ice_load(struct xmp_mod_context *m, FILE *f, const int start)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 4)
 	    continue;
-	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.5 2007-10-15 13:04:08 cmatsuoka Exp $
+ * $Id: file.c,v 1.6 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,8 +27,8 @@
 static int fd;
 static int endian;
 
-static int init (struct xmp_control *);
-static void bufdump (int, struct xmp_player_context *);
+static int init (struct xmp_context *, struct xmp_control *);
+static void bufdump (int, struct xmp_context *);
 static void shutdown ();
 
 static void dummy () { }
@@ -66,7 +66,7 @@ struct xmp_drv_info drv_file = {
     NULL
 };
 
-static int init(struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     char *buf;
     int bsize;
@@ -96,7 +96,7 @@ static int init(struct xmp_control *ctl)
 }
 
 
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
     int j;
     void *b;
@@ -104,7 +104,7 @@ static void bufdump(int i, struct xmp_player_context *p)
     /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
     /* for (; i -= write (fd, xmp_smix_buffer (), i); ); */
 
-    b = xmp_smix_buffer(p);
+    b = xmp_smix_buffer(ctx);
     if ((big_endian && endian == -1) || (!big_endian && endian == 1))
 	xmp_cvt_sex(i, b);
 

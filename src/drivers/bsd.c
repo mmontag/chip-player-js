@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: bsd.c,v 1.2 2007-10-07 22:51:43 cmatsuoka Exp $
+ * $Id: bsd.c,v 1.3 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,7 +29,7 @@
 
 static int audio_fd;
 
-static int init (struct xmp_control *);
+static int init (struct xmp_context *, struct xmp_control *);
 static int setaudio (struct xmp_control *);
 static void bufdump (int);
 static void shutdown (void);
@@ -108,7 +108,7 @@ static int setaudio (struct xmp_control *ctl)
 }
 
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     if ((audio_fd = open ("/dev/sound", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;

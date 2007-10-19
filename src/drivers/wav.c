@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.17 2007-10-16 01:24:11 cmatsuoka Exp $
+ * $Id: wav.c,v 1.18 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,8 +27,8 @@
 static int fd;
 static uint32 size;
 
-static int init (struct xmp_control *);
-static void bufdump (int, struct xmp_player_context *);
+static int init (struct xmp_context *, struct xmp_control *);
+static void bufdump (int, struct xmp_context *);
 static void shutdown ();
 
 static void dummy () { }
@@ -89,7 +89,7 @@ static void writeval_32l(int fd, uint32 v)
 	write(fd, &x, 1);
 }
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     char *buf;
     uint32 len = 0;
@@ -97,6 +97,7 @@ static int init (struct xmp_control *ctl)
     uint32 sampling_rate, bytes_per_second;
     uint16 bytes_per_frame, bits_per_sample;
     char *f, filename[260];
+    struct xmp_options *o = &ctx->o;
 
     if (!ctl->outfile) {
 	if (global_filename) {
@@ -130,9 +131,9 @@ static int init (struct xmp_control *ctl)
     writeval_32l(fd, len);
     write(fd, "WAVE", 4);
 
-    chan = ctl->outfmt & XMP_FMT_MONO ? 1 : 2;
-    sampling_rate = ctl->freq;
-    bits_per_sample = ctl->resol;
+    chan = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    sampling_rate = o->freq;
+    bits_per_sample = o->resol;
     bytes_per_frame = chan * bits_per_sample / 8;
     bytes_per_second = sampling_rate * bytes_per_frame;
 
@@ -154,11 +155,11 @@ static int init (struct xmp_control *ctl)
 }
 
 
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
     char *b;
 
-    b = xmp_smix_buffer(p);
+    b = xmp_smix_buffer(ctx);
     if (big_endian)
 	xmp_cvt_sex(i, b);
     write(fd, b, i);

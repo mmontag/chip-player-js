@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.8 2007-10-19 01:02:24 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.9 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -81,8 +81,8 @@ static void bufdump	(void);
 static void bufwipe	(void);
 static void clearmem	(void);
 static void seq_sync	(double);
-static int writepatch	(struct patch_info *);
-static int init		(struct xmp_control *);
+static int writepatch	(struct xmp_context *ctx, struct patch_info *);
+static int init		(struct xmp_context *ctx, struct xmp_control *);
 static int getmsg	(void);
 static void shutdown	(void);
 
@@ -320,16 +320,17 @@ static void seq_sync(double next_time)
 }
 
 
-static int writepatch(struct patch_info *patch)
+static int writepatch(struct xmp_context *ctx, struct patch_info *patch)
 {
     struct sbi_instrument sbi;
+    struct xmp_options *o = &ctx->o;
 
     if (!patch) {
 	clearmem ();
 	return XMP_OK;
     }
 
-    if ((!!(xmp_ctl->outfmt & XMP_FMT_FM)) ^ (patch->len == XMP_PATCH_FM))
+    if ((!!(o->outfmt & XMP_FMT_FM)) ^ (patch->len == XMP_PATCH_FM))
 	return XMP_ERR_PATCH;
 
     patch->device_no = dev;
@@ -354,18 +355,19 @@ static int getmsg()
 }
 
 
-static int init(struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     int found;
     char *buf, *token;
     char **parm;
+    struct xmp_options *o = &ctx->o;
 
     buf = calloc(1, 256);
 
     parm_init();
     chkparm1("awechorus", chorusmode = strtoul (token, NULL, 0));
     chkparm1("awereverb", reverbmode = strtoul (token, NULL, 0));
-    chkparm1("opl2", ctl->outfmt |= XMP_FMT_FM);
+    chkparm1("opl2", o->outfmt |= XMP_FMT_FM);
     chkparm1("dev", dev_sequencer = token);
     parm_end();
 
@@ -375,7 +377,7 @@ static int init(struct xmp_control *ctl)
 	    return XMP_ERR_DINIT;
 	}
     } else {
-	if (ctl->verbose > 2)
+	if (o->verbose > 2)
 	    fprintf (stderr, "xmp: can't open sequencer\n");
 	return XMP_ERR_DINIT;
     }
@@ -388,7 +390,7 @@ static int init(struct xmp_control *ctl)
 	    return XMP_ERR_DINIT;
 	}
 
-	if (si.synth_type == (ctl->outfmt & XMP_FMT_FM ?
+	if (si.synth_type == (o->outfmt & XMP_FMT_FM ?
 	    SYNTH_TYPE_FM : SYNTH_TYPE_SAMPLE)) {
 	    if (si.synth_type != SYNTH_TYPE_FM) {
 		int i = dev;

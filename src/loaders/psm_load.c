@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.32 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.33 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -66,7 +66,7 @@
 
 
 static int psm_test (FILE *, char *);
-static int psm_load (struct xmp_mod_context *, FILE *, const int);
+static int psm_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info psm_loader = {
 	"PSM",
@@ -93,26 +93,33 @@ uint8 *pnam;
 uint8 *pord;
 
 
-static void get_sdft(struct xmp_mod_context *m, int size, FILE *f)
+static void get_sdft(struct xmp_context *ctx, int size, FILE *f)
 {
 }
 
-static void get_titl(struct xmp_mod_context *m, int size, FILE *f)
+static void get_titl(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	char buf[40];
 	
 	fread(buf, 1, 40, f);
 	strncpy(m->name, buf, size > 32 ? 32 : size);
 }
 
-static void get_dsmp_cnt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_dsmp_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	m->xxh->ins++;
 	m->xxh->smp = m->xxh->ins;
 }
 
-static void get_pbod_cnt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_pbod_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	char buf[20];
 
 	m->xxh->pat++;
@@ -122,8 +129,10 @@ static void get_pbod_cnt(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_dsmp(struct xmp_mod_context *m, int size, FILE *f)
+static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, srate;
 	int finetune;
 
@@ -178,14 +187,16 @@ static void get_dsmp(struct xmp_mod_context *m, int size, FILE *f)
 	m->xxi[i][0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
-	xmp_drv_loadpatch(f, i, m->c4rate, XMP_SMP_8BDIFF, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, i, m->c4rate, XMP_SMP_8BDIFF, &m->xxs[i], NULL);
 
 	cur_ins++;
 }
 
 
-static void get_pbod(struct xmp_mod_context *m, int size, FILE *f)
+static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, r;
 	struct xxm_event *event, dummy;
 	uint8 flag, chan;
@@ -329,16 +340,21 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 	cur_pat++;
 }
 
-static void get_song(struct xmp_mod_context *m, int size, FILE *f)
+static void get_song(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	fseek(f, 10, SEEK_CUR);
 	m->xxh->chn = read8(f);
 	if (*m->name == 0)
 		fread(&m->name, 1, 8, f);
 }
 
-static void get_song_2(struct xmp_mod_context *m, int size, FILE *f)
+static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	uint32 magic;
 	char c;
 	int i;
@@ -388,8 +404,10 @@ static void get_song_2(struct xmp_mod_context *m, int size, FILE *f)
 	}
 }
 
-static int psm_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int offset;
 	int i, j;
 
@@ -415,7 +433,7 @@ static int psm_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(ctx, f);
 
 	iff_release();
 
@@ -444,7 +462,7 @@ static int psm_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof (f))
-		iff_chunk(m, f);
+		iff_chunk(ctx, f);
 
 	iff_release ();
 

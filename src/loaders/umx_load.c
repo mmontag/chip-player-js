@@ -1,7 +1,7 @@
 /* Extended Module Player UMX module loader
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: umx_load.c,v 1.1 2007-10-17 13:08:52 cmatsuoka Exp $
+ * $Id: umx_load.c,v 1.2 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,7 +25,7 @@
 extern struct list_head loader_list;
 
 static int umx_test (FILE *, char *);
-static int umx_load (struct xmp_mod_context *, FILE *, const int);
+static int umx_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info umx_loader = {
 	"UMX",
@@ -74,15 +74,17 @@ static int umx_test(FILE *f, char *t)
 }
 
 
-static int load(struct xmp_mod_context *m, FILE *f, char *fmt, int offset)
+static int load(struct xmp_context *ctx, FILE *f, char *fmt, int offset)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	struct xmp_loader_info *li;
 	struct list_head *head;
 
 	list_for_each(head, &loader_list) {
 		li = list_entry(head, struct xmp_loader_info, list);
 		if (strcmp(li->id, fmt) == 0) {
-			if (li->loader(m, f, offset) == 0)
+			if (li->loader(ctx, f, offset) == 0)
 				return 0;
 		}
 	}
@@ -91,8 +93,10 @@ static int load(struct xmp_mod_context *m, FILE *f, char *fmt, int offset)
 }
 
 
-static int umx_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i;
 	uint8 buf[TEST_SIZE], *b = buf;
 	uint32 id;
@@ -107,7 +111,7 @@ static int umx_load(struct xmp_mod_context *m, FILE *f, const int start)
 		id = readmem32b(b);
 
 		if (!memcmp(b, "Extended Module:", 16))
-			return load(m, f, "XM", i);
+			return load(ctx, f, "XM", i);
 		if (id == MAGIC_IMPM)
 			return load(m, f, "IT", i);
 		if (i > 44 && id == MAGIC_SCRM)

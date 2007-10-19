@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.10 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.11 2007-10-19 12:49:00 cmatsuoka Exp $
  */
 
 /*
@@ -22,7 +22,7 @@
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 
 
-int med2_load(struct xmp_mod_context *m, FILE *f)
+int med2_load(struct xmp_context *ctx, FILE *f)
 {
 	int i, j, k;
 	int sliding;
@@ -152,7 +152,7 @@ int med2_load(struct xmp_mod_context *m, FILE *f)
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol);
 
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, 0,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}

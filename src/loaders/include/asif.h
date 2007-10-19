@@ -5,6 +5,6 @@
 #include <stdio.h>
 #include "xmpi.h"
 
-int asif_load(struct xmp_mod_context *, FILE *, int);
+int asif_load(struct xmp_context *, FILE *, int);
 
 #endif

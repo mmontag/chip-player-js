@@ -42,7 +42,7 @@ struct fcm_header {
 } PACKED;
     
 
-int fcm_load(struct xmp_mod_context *m, FILE *f)
+int fcm_load(struct xmp_context *ctx, FILE *f)
 {
     int i, j, k;
     struct xxm_event *event;
@@ -139,7 +139,7 @@ int fcm_load(struct xmp_mod_context *m, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate, 0,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
 	if (V(0))
 	    report (".");

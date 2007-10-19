@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.17 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.18 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 
 
 static int arch_test(FILE *, char *);
-static int arch_load (struct xmp_mod_context *, FILE *, const int);
+static int arch_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info arch_loader = {
 	"MUSX",
@@ -104,7 +104,7 @@ static void fix_effect(struct xxm_event *e)
 	}
 }
 
-static void get_tinf(struct xmp_mod_context *m, int size, FILE *f)
+static void get_tinf(struct xmp_context *ctx, int size, FILE *f)
 {
 	int x;
 
@@ -120,43 +120,61 @@ static void get_tinf(struct xmp_mod_context *m, int size, FILE *f)
 	day = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 }
 
-static void get_mvox(struct xmp_mod_context *m, int size, FILE *f)
+static void get_mvox(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	m->xxh->chn = read32l(f);
 }
 
-static void get_ster(struct xmp_mod_context *m, int size, FILE *f)
+static void get_ster(struct xmp_context *ctx, int size, FILE *f)
 {
 	fread(ster, 1, 8, f);
 }
 
-static void get_mnam(struct xmp_mod_context *m, int size, FILE *f)
+static void get_mnam(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	fread(m->name, 1, 32, f);
 }
 
-static void get_anam(struct xmp_mod_context *m, int size, FILE *f)
+static void get_anam(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	fread(m->author, 1, 32, f);
 }
 
-static void get_mlen(struct xmp_mod_context *m, int size, FILE *f)
+static void get_mlen(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	m->xxh->len = read32l(f);
 }
 
-static void get_pnum(struct xmp_mod_context *m, int size, FILE *f)
+static void get_pnum(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	m->xxh->pat = read32l(f);
 }
 
-static void get_plen(struct xmp_mod_context *m, int size, FILE *f)
+static void get_plen(struct xmp_context *ctx, int size, FILE *f)
 {
 	fread(rows, 1, 64, f);
 }
 
-static void get_sequ(struct xmp_mod_context *m, int size, FILE *f)
+static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	fread(m->xxo, 1, 128, f);
 
 	strcpy(m->type, "MUSX (Archimedes Tracker)");
@@ -165,8 +183,10 @@ static void get_sequ(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "Creation date  : %02d/%02d/%04d\n", day, month, year);
 }
 
-static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	static int i = 0;
 	int j, k;
 	struct xxm_event *event;
@@ -203,8 +223,10 @@ static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, ".");
 }
 
-static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
+static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	static int i = 0;
 
 	if (!sflag) {
@@ -246,7 +268,7 @@ static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
 		m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
 	}
 
-	xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate, XMP_SMP_VIDC,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, XMP_SMP_VIDC,
 					&m->xxs[m->xxi[i][0].sid], NULL);
 
 	if (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 0) {
@@ -266,8 +288,11 @@ static void get_samp(struct xmp_mod_context *m, int size, FILE *f)
 	max_ins++;
 }
 
-static int arch_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	LOAD_INIT();
 
 	read32b(f);	/* MUSX */
@@ -292,7 +317,7 @@ static int arch_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(ctx, f);
 
 	reportv(0, "\n");
 

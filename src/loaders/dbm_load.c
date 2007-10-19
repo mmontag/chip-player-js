@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.20 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.21 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,7 +24,7 @@
 
 
 static int dbm_test(FILE *, char *);
-static int dbm_load (struct xmp_mod_context *, FILE *, const int);
+static int dbm_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info dbm_loader = {
 	"DBM",
@@ -49,8 +49,11 @@ static int dbm_test(FILE * f, char *t)
 static int have_song;
 
 
-static void get_info(struct xmp_mod_context *m, int size, FILE *f)
+static void get_info(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	m->xxh->ins = read16b(f);
 	m->xxh->smp = read16b(f);
 	read16b(f);			/* Songs */
@@ -62,8 +65,10 @@ static void get_info(struct xmp_mod_context *m, int size, FILE *f)
 	INSTRUMENT_INIT();
 }
 
-static void get_song(struct xmp_mod_context *m, int size, FILE *f)
+static void get_song(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i;
 	char buffer[50];
 
@@ -82,8 +87,10 @@ static void get_song(struct xmp_mod_context *m, int size, FILE *f)
 		m->xxo[i] = read16b(f);
 }
 
-static void get_inst(struct xmp_mod_context *m, int size, FILE *f)
+static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i;
 	int c2spd, flags, snum;
 	uint8 buffer[50];
@@ -122,8 +129,10 @@ static void get_inst(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, c, r, n, sz;
 	struct xxm_event *event, dummy;
 	uint8 x;
@@ -213,8 +222,10 @@ static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static void get_smpl(struct xmp_mod_context *m, int size, FILE *f)
+static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, flags;
 
 	reportv(0, "Stored samples : %d ", m->xxh->smp);
@@ -230,7 +241,7 @@ static void get_smpl(struct xmp_mod_context *m, int size, FILE *f)
 		if (flags & 0x04 || ~flags & 0x01)
 			continue;
 		
-		xmp_drv_loadpatch(f, i, m->c4rate, 0, &m->xxs[i], NULL);
+		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
 
 		reportv(2, "\n[%2X] %05x%c%05x %05x %c ",
 			i, m->xxs[i].len,
@@ -244,8 +255,10 @@ static void get_smpl(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static void get_venv(struct xmp_mod_context *m, int size, FILE *f)
+static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, j, nenv, ins;
 
 	nenv = read16b(f);
@@ -275,8 +288,10 @@ static void get_venv(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static int dbm_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	char name[44];
 	uint16 version;
 
@@ -305,7 +320,7 @@ static int dbm_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(ctx, f);
 
 	iff_release();
 

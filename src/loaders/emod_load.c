@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.13 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.14 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int emod_test (FILE *, char *);
-static int emod_load (struct xmp_mod_context *, FILE *, const int);
+static int emod_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info emod_loader = {
     "EMOD",
@@ -49,8 +49,10 @@ static int emod_test(FILE *f, char *t)
 static uint8 *reorder;
 
 
-static void get_emic(struct xmp_mod_context *m, int size, FILE *f)
+static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, ver;
 
     ver = read16b(f);
@@ -120,8 +122,10 @@ static void get_emic(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j, k;
     struct xxm_event *event;
     uint8 x;
@@ -161,22 +165,27 @@ static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
 }
 
 
-static void get_8smp(struct xmp_mod_context *m, int size, FILE *f)
+static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i;
 
     reportv(0, "Stored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
-	xmp_drv_loadpatch (f, i, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
 	reportv(0, ".");
     }
     reportv(0, "\n");
 }
 
 
-static int emod_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int emod_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+
     LOAD_INIT ();
 
     read32b(f);		/* FORM */
@@ -190,7 +199,7 @@ static int emod_load(struct xmp_mod_context *m, FILE *f, const int start)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(m, f);
+	iff_chunk(ctx, f);
 
     iff_release();
 

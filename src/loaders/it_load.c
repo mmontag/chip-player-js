@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.35 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.36 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,7 +21,7 @@
 
 
 static int it_test (FILE *, char *);
-static int it_load (struct xmp_mod_context *, FILE *, const int);
+static int it_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info it_loader = {
     "IT",
@@ -217,8 +217,10 @@ static void xlat_volfx(struct xxm_event *event)
 }
 
 
-static int it_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int r, c, i, j, k, pat_len;
     struct xxm_event *event, dummy, lastevent[L_CHANNELS];
     struct it_file_header ifh;
@@ -750,12 +752,12 @@ static int it_load(struct xmp_mod_context *m, FILE *f, const int start)
 		    itsex_decompress8(f, buf, m->xxs[i].len, ifh.cmwt == 0x0215);
 		}
 
-		xmp_drv_loadpatch(NULL, i, m->c4rate,
+		xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
 				XMP_SMP_NOLOAD | cvt, &m->xxs[i], buf);
 		free (buf);
 		reportv(0, "c");
 	    } else {
-		xmp_drv_loadpatch(f, i, m->c4rate, cvt, &m->xxs[i], NULL);
+		xmp_drv_loadpatch(ctx, f, i, m->c4rate, cvt, &m->xxs[i], NULL);
 
 		reportv(0, ".");
 	    }

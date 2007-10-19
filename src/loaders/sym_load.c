@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.30 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.31 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 
 
 static int sym_test(FILE *, char *);
-static int sym_load (struct xmp_mod_context *, FILE *, const int);
+static int sym_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info sym_loader = {
 	"DSYM",
@@ -182,8 +182,10 @@ static uint32 readptr16l(uint8 *p)
 	return (b << 8) | a;
 }
 
-static int sym_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	int i, j;
 	int ver, infolen, sn[64];
@@ -357,17 +359,17 @@ static int sym_load(struct xmp_mod_context *m, FILE *f, const int start)
 			uint8 *b = malloc(m->xxs[i].len);
 			read_lzw_dynamic(f, b, 13, 0, m->xxs[i].len, m->xxs[i].len,
 							XMP_LZW_QUIRK_DSYM);
-			xmp_drv_loadpatch(NULL, m->xxi[i][0].sid, m->c4rate,
-				XMP_SMP_NOLOAD | XMP_SMP_DIFF,
+			xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid,
+				m->c4rate, XMP_SMP_NOLOAD | XMP_SMP_DIFF,
 				&m->xxs[m->xxi[i][0].sid], (char*)b);
 			free(b);
 			reportv(0, "c");
 		} else if (a == 4) {
-			xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 			reportv(0, "C");
 		} else {
-			xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 			reportv(0, ".");
 		}

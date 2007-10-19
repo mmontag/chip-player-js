@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.22 2007-10-19 09:08:11 cmatsuoka Exp $
+ * $Id: load.h,v 1.23 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -39,7 +39,7 @@ void	disable_continue_fx	(struct xxm_event *);
 } while (0)
 
 #define MODULE_INFO() do { \
-    if (xmp_ctl->verbose) { \
+    if (m->verbosity) { \
 	if (*m->name) report("Module title   : %s\n", m->name); \
         if (*m->type) report("Module type    : %s\n", m->type); \
 	if (*m->author) report("Author name    : %s\n", m->author); \

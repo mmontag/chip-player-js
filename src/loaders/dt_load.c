@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.18 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.19 2007-10-19 12:49:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 
 
 static int dt_test(FILE *, char *);
-static int dt_load (struct xmp_mod_context *, FILE *, const int);
+static int dt_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info dt_loader = {
 	"DTM",
@@ -46,8 +46,10 @@ static int pflag, sflag;
 static int realpat;
 
 
-static void get_d_t_(struct xmp_mod_context *m, int size, FILE *f)
+static void get_d_t_(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int b;
 
 	read16b(f);			/* type */
@@ -64,8 +66,10 @@ static void get_d_t_(struct xmp_mod_context *m, int size, FILE *f)
 	MODULE_INFO();
 }
 
-static void get_s_q_(struct xmp_mod_context *m, int size, FILE *f)
+static void get_s_q_(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, maxpat;
 
 	m->xxh->len = read16b(f);
@@ -80,15 +84,20 @@ static void get_s_q_(struct xmp_mod_context *m, int size, FILE *f)
 	m->xxh->pat = maxpat + 1;
 }
 
-static void get_patt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	m->xxh->chn = read16b(f);
 	realpat = read16b(f);
 	m->xxh->trk = m->xxh->chn * m->xxh->pat;
 }
 
-static void get_inst(struct xmp_mod_context *m, int size, FILE *f)
+static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, c2spd;
 	uint8 name[30];
 
@@ -150,8 +159,10 @@ static void get_inst(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, "\n");
 }
 
-static void get_dapt(struct xmp_mod_context *m, int size, FILE *f)
+static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int pat, i, j, k;
 	struct xxm_event *event;
 	static int last_pat;
@@ -198,8 +209,10 @@ static void get_dapt(struct xmp_mod_context *m, int size, FILE *f)
 	reportv(0, ".");
 }
 
-static void get_dait(struct xmp_mod_context *m, int size, FILE *f)
+static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	static int i = 0;
 
 	if (!sflag) {
@@ -209,7 +222,7 @@ static void get_dait(struct xmp_mod_context *m, int size, FILE *f)
 	}
 
 	if (size > 2) {
-		xmp_drv_loadpatch(f, m->xxi[i][0].sid, m->c4rate,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_BIGEND, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(0, ".");
 	}
@@ -217,8 +230,11 @@ static void get_dait(struct xmp_mod_context *m, int size, FILE *f)
 	i++;
 }
 
-static int dt_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int dt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+
 	LOAD_INIT ();
 
 	pflag = sflag = 0;
@@ -233,7 +249,7 @@ static int dt_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(ctx, f);
 
 	reportv(0, "\n");
 

@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.24 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.25 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -72,7 +72,7 @@
 #define MAGIC_SCRS	MAGIC4('S','C','R','S')
 
 static int s3m_test (FILE *, char *);
-static int s3m_load (struct xmp_mod_context *, FILE *, const int);
+static int s3m_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info s3m_loader = {
     "S3M",
@@ -201,8 +201,10 @@ static void xlat_fx (int c, struct xxm_event *e)
 }
 
 
-static int s3m_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int c, r, i, j;
     struct s3m_adlib_header sah;
     struct xxm_event *event = 0, dummy;
@@ -455,7 +457,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f, const int start)
 	    m->xxi[i][0].vol = sah.vol;
 	    c2spd_to_note (sah.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 	    m->xxi[i][0].xpo += 12;
-	    xmp_drv_loadpatch (f, m->xxi[i][0].sid, 0, 0, NULL, (char *) &sah.reg);
+	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, 0, NULL, (char *) &sah.reg);
 	    if (V(0)) {
 	        if (V(1)) {
 		    report ("\n[%2X] %-28.28s ", i, m->xxih[i].name);
@@ -518,7 +520,7 @@ static int s3m_load(struct xmp_mod_context *m, FILE *f, const int start)
 	if (!m->xxs[i].len)
 	    continue;
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
-	xmp_drv_loadpatch (f, m->xxi[i][0].sid, m->c4rate,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
 	reportv(0, ".");
     }

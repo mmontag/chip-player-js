@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.9 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: beos.c,v 1.10 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,8 +26,8 @@ extern "C" {
 #include "mixer.h"
 }
 
-static int init(struct xmp_control *);
-static void bufdump(int, struct xmp_player_context *);
+static int init(struct xmp_context *ctx, struct xmp_control *);
+static void bufdump(int, struct xmp_context *);
 static void myshutdown();
 
 static void dummy()
@@ -168,7 +168,7 @@ void render_proc(void *theCookie, void *buffer, size_t req,
 }
 
 
-static int init(struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
 	char *dev;
 	char *token;
@@ -210,7 +210,7 @@ static int init(struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_player_context *p)
+static void bufdump(int i, struct xmp_context *ctx)
 {
 	uint8 *b;
 	int j = 0;
@@ -219,7 +219,7 @@ static void bufdump(int i, struct xmp_player_context *p)
 	while (buf_free() < i)
 		snooze(100000);
 
-	b = (uint8 *)xmp_smix_buffer(p);
+	b = (uint8 *)xmp_smix_buffer(ctx);
 
 	while (i) {
         	if ((j = write_buffer(b, i)) > 0) {

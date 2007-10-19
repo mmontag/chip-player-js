@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.29 2007-10-19 09:56:44 cmatsuoka Exp $
+ * $Id: player.c,v 1.30 2007-10-19 12:49:01 cmatsuoka Exp $
  */
 
 /*
@@ -76,8 +76,8 @@ static int waveform[4][64] = {
  *                          -- Ice of FC about "Mental Surgery"
  */
 
-static int module_fetch (struct xmp_player_context *, struct xxm_event *, int, int);
-static void module_play (struct xmp_player_context *, int, int);
+static int module_fetch (struct xmp_context *, struct xxm_event *, int, int);
+static void module_play (struct xmp_context *, int, int);
 
 #include "effects.c"
 
@@ -190,14 +190,15 @@ static inline void chn_reset(struct xmp_player_context *p)
 }
 
 
-static inline void chn_fetch(struct xmp_player_context *p, int ord, int row)
+static inline void chn_fetch(struct xmp_context *ctx, int ord, int row)
 {
     int count, chn;
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
 
     count = 0;
     for (chn = 0; chn < p->m.xxh->chn; chn++) {
-	if (module_fetch(p, &EVENT(ord, chn, row), chn, 1) != XMP_OK) {
+	if (module_fetch(ctx, &EVENT(ord, chn, row), chn, 1) != XMP_OK) {
 	    p->fetch_ctl[chn]++;
 	    count++;
 	}
@@ -205,7 +206,7 @@ static inline void chn_fetch(struct xmp_player_context *p, int ord, int row)
 
     for (chn = 0; count; chn++) {
 	if (p->fetch_ctl[chn]) {
-	    module_fetch(p, &EVENT(ord, chn, row), chn, 0);
+	    module_fetch(ctx, &EVENT(ord, chn, row), chn, 0);
 	    p->fetch_ctl[chn] = 0;
 	    count--;
 	}
@@ -213,20 +214,21 @@ static inline void chn_fetch(struct xmp_player_context *p, int ord, int row)
 }
 
 
-static inline void chn_refresh(struct xmp_player_context *p, int tick)
+static inline void chn_refresh(struct xmp_context *ctx, int tick)
 { 
     int i;
 
     for (i = xmp_ctl->numchn; i--;)
-	module_play(p, i, tick);
+	module_play(ctx, i, tick);
 }
 
 
-static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int chn, int ctl)
+static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, int ctl)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int xins, ins, smp, note, key, flg;
     struct xmp_channel *xc;
-    struct xmp_mod_context *m = &p->m;
     int cont_sample;
 
     flg = 0;
@@ -333,7 +335,7 @@ static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int c
 
     if (smp >= 0) {
 	if (cont_sample == 0) {
-	    if (chn_copy(p, xmp_drv_setpatch(p, chn, ins, smp, note,
+	    if (chn_copy(p, xmp_drv_setpatch(ctx, chn, ins, smp, note,
 	 		m->xxi[ins][m->xxim[ins].ins[key]].nna,
 	   		m->xxi[ins][m->xxim[ins].ins[key]].dct,
 			m->xxi[ins][m->xxim[ins].ins[key]].dca, ctl), chn) < 0)
@@ -429,14 +431,16 @@ static int module_fetch(struct xmp_player_context *p, struct xxm_event *e, int c
 }
 
 
-static void module_play(struct xmp_player_context *p, int chn, int t)
+static void module_play(struct xmp_context *ctx, int chn, int t)
 {
     struct xmp_channel *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
     int med_arp, med_vibrato;
     uint16 vol_envelope;
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
 
     if ((act = xmp_drv_cstat(chn)) == XMP_CHN_DUMB)
 	return;
@@ -458,7 +462,7 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
 	return;
 
     /* Process MED synth instruments */
-    xmp_med_synth(p, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
+    xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
 
     if (TEST(RELEASE) && !(XXIH.aei.flg & XXM_ENV_ON))
 	xc->fadeout = 0;
@@ -719,15 +723,15 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
     med_arp = get_med_arp(p, xc);
 
     /* Adjust pitch and pan, than play the note */
-    finalpan = xmp_ctl->outfmt & XMP_FMT_MONO ?
-	0 : (finalpan - 0x80) * xmp_ctl->mix / 100;
+    finalpan = o->outfmt & XMP_FMT_MONO ?
+	0 : (finalpan - 0x80) * o->mix / 100;
     xmp_drv_setbend(chn, (xc->pitchbend + xc->a_val[xc->a_idx] + med_arp));
     xmp_drv_setpan(chn, m->fetch & XMP_CTL_REVERSE ?
 					-finalpan : finalpan);
     xmp_drv_setvol(chn, finalvol >> 2);
 
     if (cutoff < 0xff && (m->fetch & XMP_CTL_FILTER)) {
-	filter_setup(xc, cutoff);
+	filter_setup(ctx, xc, cutoff);
 	xmp_drv_seteffect(chn, XMP_FX_FILTER_B0, xc->flt_B0);
 	xmp_drv_seteffect(chn, XMP_FX_FILTER_B1, xc->flt_B1);
 	xmp_drv_seteffect(chn, XMP_FX_FILTER_B2, xc->flt_B2);
@@ -744,10 +748,11 @@ static void module_play(struct xmp_player_context *p, int chn, int t)
 
 int xmpi_player_start(struct xmp_context *ctx)
 {
-    int r, o, t, e;		/* rows, order, tick, end point */
+    int r, d, t, e;		/* rows, order, tick, end point */
     double playing_time;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
 
     if (!xmp_ctl)
 	return XMP_ERR_DINIT;
@@ -760,16 +765,16 @@ int xmpi_player_start(struct xmp_context *ctx)
 
     p->gvol_slide = 0;
     p->gvol_base = m->volbase;
-    o = xmp_ctl->start;
-    while (m->xxo[o] == 254)	/* S3M skip in first pattern (gaming.s3m) */
-	o++;
-    m->volume = m->xxo_info[o].gvl;
-    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[o].bpm);
-    p->flow.jumpline = m->xxo_fstrow[o];
-    p->tempo = m->xxo_info[o].tempo;
+    d = o->start;
+    while (m->xxo[d] == 254)	/* S3M skip in first pattern (gaming.s3m) */
+	d++;
+    m->volume = m->xxo_info[d].gvl;
+    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[d].bpm);
+    p->flow.jumpline = m->xxo_fstrow[d];
+    p->tempo = m->xxo_info[d].tempo;
     playing_time = 0;
 
-    if ((r = xmp_drv_on(p, m->xxh->chn)) != XMP_OK)
+    if ((r = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
 	return r;
 
     p->flow.jump = -1;
@@ -783,55 +788,55 @@ int xmpi_player_start(struct xmp_context *ctx)
 
     chn_reset(p);
 
-    xmp_drv_starttimer(p);
+    xmp_drv_starttimer(ctx);
 
     for (e = p->xmp_scan_num; ; o++) {
 next_order:
-	if (o >= m->xxh->len) {
-	    o = ((uint32)m->xxh->rst > m->xxh->len ||
+	if (d >= m->xxh->len) {
+	    d = ((uint32)m->xxh->rst > m->xxh->len ||
 		(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
 							0 : m->xxh->rst;
-	    m->volume = m->xxo_info[o].gvl;
-	    if (m->xxo[o] == 0xff)
+	    m->volume = m->xxo_info[d].gvl;
+	    if (m->xxo[d] == 0xff)
 		break;
 	}
-	if (m->xxo[o] >= m->xxh->pat) {
-	    if (m->xxo[o] == 0xfe)		/* S3M skips pattern 0xfe */
+	if (m->xxo[d] >= m->xxh->pat) {
+	    if (m->xxo[d] == 0xfe)		/* S3M skips pattern 0xfe */
 		continue;
-	    if (m->xxo[o] == 0xff)		/* S3M uses 0xff as end mark */
-		o = m->xxh->len;
+	    if (m->xxo[d] == 0xff)		/* S3M uses 0xff as end mark */
+		d = m->xxh->len;
 	    continue;
 	}
 
-	r = m->xxp[m->xxo[o]]->rows;
+	r = m->xxp[m->xxo[d]]->rows;
 	if (p->flow.jumpline >= r)
 	    p->flow.jumpline = 0;
 	p->flow.row_cnt = p->flow.jumpline;
 	p->flow.jumpline = 0;
 
-	p->pos = o;
+	p->pos = d;
 
 	for (; p->flow.row_cnt < r; p->flow.row_cnt++) {
-	    if ((~m->fetch & XMP_CTL_LOOP) && o == p->xmp_scan_ord &&
+	    if ((~m->fetch & XMP_CTL_LOOP) && d == p->xmp_scan_ord &&
 		p->flow.row_cnt == p->xmp_scan_row) {
 		if (!e--)
 		    goto end_module;
 	    }
 
 	    if (xmp_ctl->pause) {
-		xmp_drv_stoptimer(p);
+		xmp_drv_stoptimer(ctx);
 		while (xmp_ctl->pause) {
 		    xmpi_select_read(1, 125);
 		    xmp_event_callback(0);
 		}
-		xmp_drv_starttimer(p);
+		xmp_drv_starttimer(ctx);
 	    }
 
 	    for (t = 0; t < (p->tempo * (1 + p->flow.delay)); t++) {
 
 		/* xmp_player_ctl processing */
 
-		if (o != p->pos) {
+		if (d != p->pos) {
 		    if (p->pos == -1)
 			p->pos++;		/* restart module */
 
@@ -843,11 +848,11 @@ next_order:
 		    if (p->pos == 0)
 			e = p->xmp_scan_num;
 
-		    p->tempo = m->xxo_info[o = p->pos].tempo;
-		    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[o].bpm);
-		    m->volume = m->xxo_info[o].gvl;
-		    p->flow.jump = o;
-		    p->flow.jumpline = m->xxo_fstrow[o--];
+		    p->tempo = m->xxo_info[d = p->pos].tempo;
+		    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[d].bpm);
+		    m->volume = m->xxo_info[d].gvl;
+		    p->flow.jump = d;
+		    p->flow.jumpline = m->xxo_fstrow[d--];
 		    p->flow.row_cnt = -1;
 		    xmp_drv_bufwipe ();
 		    xmp_drv_sync(0);
@@ -858,22 +863,21 @@ next_order:
 
 		if (!t) {
 		    p->gvol_flag = 0;
-		    chn_fetch(p, m->xxo[o], p->flow.row_cnt);
+		    chn_fetch(ctx, m->xxo[d], p->flow.row_cnt);
 
 		    xmp_drv_echoback((p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
 		    xmp_drv_echoback((m->volume << 4) | XMP_ECHO_GVL);
-		    xmp_drv_echoback((m->xxo[o] << 12)|(o << 4) | XMP_ECHO_ORD);
+		    xmp_drv_echoback((m->xxo[d] << 12)|(d << 4) | XMP_ECHO_ORD);
 		    xmp_drv_echoback((xmp_ctl->numvoc << 4) | XMP_ECHO_NCH);
-		    xmp_drv_echoback(((m->xxp[m->xxo[o]]->rows - 1) << 12) |
+		    xmp_drv_echoback(((m->xxp[m->xxo[d]]->rows - 1) << 12) |
 					(p->flow.row_cnt << 4) | XMP_ECHO_ROW);
 		}
 		xmp_drv_echoback((t << 4) | XMP_ECHO_FRM);
-		chn_refresh(p, t);
+		chn_refresh(ctx, t);
 
-		if (xmp_ctl->time && (xmp_ctl->time < playing_time))
+		if (o->time && (o->time < playing_time))
 		    goto end_module;
-
 
 		if (m->fetch & XMP_CTL_MEDBPM) {
 		    xmp_drv_sync(p->tick_time * 33 / 125);
@@ -883,7 +887,7 @@ next_order:
 		    playing_time += m->rrate / (100 * p->xmp_bpm);
 		}
 
-		xmp_drv_bufdump(p);
+		xmp_drv_bufdump(ctx);
 	    }
 
 	    p->flow.delay = 0;
@@ -903,7 +907,7 @@ next_order:
 	}
 
 	if (p->flow.jump != -1) {
-	    o = p->flow.jump;
+	    d = p->flow.jump;
 	    p->flow.jump = -1;
 	    goto next_order;
 	}
@@ -912,15 +916,15 @@ next_order:
 end_module:
     xmp_drv_echoback(XMP_ECHO_END);
     while (xmp_drv_getmsg () != XMP_ECHO_END)
-	xmp_drv_bufdump(p);
-    xmp_drv_stoptimer(p);
+	xmp_drv_bufdump(ctx);
+    xmp_drv_stoptimer(ctx);
 
     free(p->xc_data);
     free(p->flow.loop_row);
     free(p->flow.loop_stack);
     free(p->fetch_ctl);
 
-    xmp_drv_off();
+    xmp_drv_off(ctx);
 
     return XMP_OK;
 }

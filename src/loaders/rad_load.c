@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.12 2007-10-17 13:08:49 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.13 2007-10-19 12:49:01 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -16,7 +16,7 @@
 
 
 static int rad_test (FILE *, char *);
-static int rad_load (struct xmp_mod_context *, FILE *, const int);
+static int rad_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info rad_loader = {
     "RAD",
@@ -51,8 +51,10 @@ struct rad_file_header {
 };
 
 
-static int rad_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
     int i, j;
     struct rad_file_header rfh;
     struct xxm_event *event;
@@ -136,7 +138,7 @@ static int rad_load(struct xmp_mod_context *m, FILE *f, const int start)
 
 	    report ("%2d  %2d\n", sid[10] >> 1, sid[10] & 0x01);
 	}
-	xmp_drv_loadpatch (f, b - 1, 0, 0, NULL, (char *)sid);
+	xmp_drv_loadpatch(ctx, f, b - 1, 0, 0, NULL, (char *)sid);
     }
 
     INSTRUMENT_INIT ();

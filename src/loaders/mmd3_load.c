@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.22 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.23 2007-10-19 12:49:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -17,7 +17,7 @@
 
 
 static int mmd3_test (FILE *, char *);
-static int mmd3_load (struct xmp_mod_context *, FILE *, const int);
+static int mmd3_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mmd3_loader = {
 	"MMD2/3",
@@ -135,8 +135,10 @@ static void xlat_fx(struct xxm_event *event)
 	}
 }
 
-static int mmd3_load(struct xmp_mod_context *m, FILE *f, const int start)
+static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, j, k;
 	struct MMD0 header;
 	struct MMD2song song;
@@ -519,7 +521,7 @@ static int mmd3_load(struct xmp_mod_context *m, FILE *f, const int start)
 				       (uint8) m->xxi[i][0].xpo,
 				       m->xxi[i][0].fin >> 4);
 
-			xmp_drv_loadpatch(f, smp_idx, m->c4rate, 0,
+			xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,
 					&m->xxs[smp_idx], NULL);
 
 			smp_idx++;
@@ -578,7 +580,7 @@ static int mmd3_load(struct xmp_mod_context *m, FILE *f, const int start)
 				m->xxs[smp_idx].lpe = m->xxs[smp_idx].len;
 				m->xxs[smp_idx].flg = WAVE_LOOPING;
 
-				xmp_drv_loadpatch(f, smp_idx, m->c4rate,
+				xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate,
 					XMP_SMP_8X, &m->xxs[smp_idx], NULL);
 
 
@@ -621,7 +623,7 @@ static int mmd3_load(struct xmp_mod_context *m, FILE *f, const int start)
 			       (uint8) m->xxi[i][0].xpo, m->xxi[i][0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
-		xmp_drv_loadpatch(f, smp_idx, m->c4rate, 0,
+		xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,
 				  &m->xxs[smp_idx], NULL);
 
 		reportv(0, ".");

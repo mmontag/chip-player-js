@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: sgi.c,v 1.2 2007-10-15 15:19:03 cmatsuoka Exp $
+ * $Id: sgi.c,v 1.3 2007-10-19 12:48:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,9 +28,9 @@ static ALport audio_port;
 /* Hack to get 16 bit sound working - 19990706 bdowning */
 static int al_sample_16;
 
-static int init (struct xmp_control *);
+static int init (struct xmp_context *, struct xmp_control *);
 static int setaudio (struct xmp_control *);
-static void bufdump (int, struct xmp_player_context *);
+static void bufdump (int, struct xmp_context *);
 static void shutdown (void);
 
 static void dummy () { }
@@ -213,7 +213,7 @@ static int setaudio (struct xmp_control *ctl)
 }
 	
 
-static int init (struct xmp_control *ctl)
+static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     if (setaudio (ctl) != XMP_OK)
 	return XMP_ERR_DINIT;
@@ -229,12 +229,12 @@ static int init (struct xmp_control *ctl)
  * the number of bytes, which is what I assume i is.  This was a
  * trial-and-error fix, but it appears to work. - 19990706 bdowning
  */
-static void bufdump (int i, struct xmp_player_context *p)
+static void bufdump (int i, struct xmp_context *ctx)
 {
     if (al_sample_16)
-	ALwritesamps (audio_port, xmp_smix_buffer(p), i / 2);
+	ALwritesamps (audio_port, xmp_smix_buffer(ctx), i / 2);
     else
-	ALwritesamps (audio_port, xmp_smix_buffer(p), i);
+	ALwritesamps (audio_port, xmp_smix_buffer(ctx), i);
 }
 
 
