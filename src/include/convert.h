@@ -19,9 +19,9 @@ void xmp_cvt_sig2uns (int, int, char *);
 void xmp_cvt_sex (int, char *);
 void xmp_cvt_2xsmp (int, char *);
 void xmp_cvt_vidc (int, char *);
-void xmp_cvt_to8bit (void);
-void xmp_cvt_to16bit (void);
-void xmp_cvt_bid2und (void);
+void xmp_cvt_to8bit (struct xmp_context *);
+void xmp_cvt_to16bit (struct xmp_context *);
+void xmp_cvt_bid2und (struct xmp_context *);
 
 void xmp_cvt_anticlick (struct patch_info *);
 int xmp_cvt_crunch (struct patch_info **, unsigned int);

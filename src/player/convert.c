@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.8 2007-09-14 17:48:20 cmatsuoka Exp $
+ * $Id: convert.c,v 1.9 2007-10-19 23:38:51 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,8 +18,6 @@
 #include "xmpi.h"
 #include "convert.h"
 #include "driver.h"
-
-extern struct patch_info **patch_array;
 
 
 /*
@@ -127,15 +125,16 @@ void xmp_cvt_vidc(int l, char *p)
 
 
 /* Convert all patches with 16 bit samples to 8 bit (for crunching) */
-void xmp_cvt_to8bit ()
+void xmp_cvt_to8bit(struct xmp_context *ctx)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int l, smp;
     int8 *p8; 
     int16 *p16;
     struct patch_info *patch;
 
     for (smp = XMP_DEF_MAXPAT; smp--;) {
-	patch = patch_array[smp];
+	patch = d->patch_array[smp];
 
 	if (!(patch && (patch->mode & WAVE_16_BITS) &&
 	    (patch->len != XMP_PATCH_FM)))
@@ -150,22 +149,23 @@ void xmp_cvt_to8bit ()
 	patch->loop_start >>= 1;
 	for (l = (patch->len >>= 1); l--; *p8++ = (int8) *p16++ >> 8);
 
-	patch_array[smp] = realloc (patch,
-	    sizeof (struct patch_info) + patch->len);
+	d->patch_array[smp] = realloc(patch,
+				sizeof (struct patch_info) + patch->len);
     }
 }
 
 
 /* Convert all patches with 8 bit samples to 16 bit (for AWE) */
-void xmp_cvt_to16bit ()
+void xmp_cvt_to16bit(struct xmp_context *ctx)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int l, smp;
     int8 *p8;
     int16 *p16;
     struct patch_info *patch;
 
     for (smp = XMP_DEF_MAXPAT; smp--;) {
-	patch = patch_array[smp];
+	patch = d->patch_array[smp];
 	if ((!patch) || patch->mode & WAVE_16_BITS ||
 	    (patch->len == XMP_PATCH_FM))
 	    continue;
@@ -173,7 +173,7 @@ void xmp_cvt_to16bit ()
 	patch->mode |= WAVE_16_BITS;
 
 	l = patch->len;
-	patch = realloc (patch,
+	patch = realloc(patch,
 	    sizeof (struct patch_info) + (patch->len <<= 1));
 	patch->loop_start <<= 1;
 	patch->loop_end <<= 1;
@@ -182,7 +182,7 @@ void xmp_cvt_to16bit ()
 	p16= (int16 *)patch->data;
 	for (p8 += l, p16 += l; l--; *(--p16) = (int16) *(--p8) << 8);
 
-	patch_array[smp] = patch;
+	d->patch_array[smp] = patch;
     }
 }
 
@@ -224,15 +224,16 @@ void xmp_cvt_anticlick (struct patch_info *patch)
 
 
 /* Unroll bidirectional loops for AWE */
-void xmp_cvt_bid2und ()
+void xmp_cvt_bid2und(struct xmp_context *ctx)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int8 *s8;
     int16 *s16;
     int r, l, le, smp;
     struct patch_info *patch;
 
     for (smp = XMP_DEF_MAXPAT; smp--;) {
-	patch = patch_array[smp];
+	patch = d->patch_array[smp];
 	if (!(patch && (patch->mode & WAVE_BIDIR_LOOP) &&
 	    (patch->len != XMP_PATCH_FM)))
 	    continue;
@@ -255,8 +256,8 @@ void xmp_cvt_bid2und ()
 	else 
 	    for (s8 += le; l--; *(s8 + l) = *(s8 - l));
 
-	xmp_cvt_anticlick (patch);
-	patch_array[smp] = patch;
+	xmp_cvt_anticlick(patch);
+	d->patch_array[smp] = patch;
     }
 }
 

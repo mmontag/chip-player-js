@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.46 2007-10-19 20:55:01 cmatsuoka Exp $
+ * $Id: driver.c,v 1.47 2007-10-19 23:38:51 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,7 +27,7 @@ struct xmp_control *xmp_ctl;
 static int *ch2vo_count = NULL;
 static int *ch2vo_array = NULL;
 
-struct patch_info **patch_array = NULL;
+//struct patch_info **patch_array = NULL;
 static struct voice_info *voice_array = NULL;
 static struct xmp_drv_info *drv_array = NULL;
 static struct xmp_drv_info *driver = NULL;
@@ -225,6 +225,7 @@ void xmp_drv_register(struct xmp_drv_info *drv)
 int xmp_drv_open(struct xmp_context *ctx, struct xmp_control *ctl)
 {
     int status;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
 
     if (!ctl)
@@ -237,8 +238,9 @@ int xmp_drv_open(struct xmp_context *ctx, struct xmp_control *ctl)
     if ((status = drv_select(ctx, ctl)) != XMP_OK)
 	return status;
 
-    if ((patch_array = calloc(XMP_DEF_MAXPAT,
-		sizeof(struct patch_info *))) == NULL) {
+    d->patch_array = calloc(XMP_DEF_MAXPAT, sizeof(struct patch_info *));
+
+    if (d->patch_array == NULL) {
 	driver->shutdown ();
 	return XMP_ERR_ALLOC;
     }
@@ -253,6 +255,7 @@ int xmp_drv_open(struct xmp_context *ctx, struct xmp_control *ctl)
 /* for the XMMS/BMP/Audacious plugin */
 int xmp_drv_set(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
     struct xmp_drv_info *drv;
 
@@ -262,7 +265,7 @@ int xmp_drv_set(struct xmp_context *ctx, struct xmp_control *ctl)
     if (!drv_array)
 	return XMP_ERR_NODRV;
 
-    patch_array = NULL;
+    d->patch_array = NULL;
     xmp_ctl = ctl;
     for (drv = drv_array; drv; drv = drv->next) {
 	if (!strcmp (drv->id, o->drv_id)) {
@@ -277,9 +280,11 @@ int xmp_drv_set(struct xmp_context *ctx, struct xmp_control *ctl)
 
 void xmp_drv_close(struct xmp_context *ctx)
 {
+    struct xmp_driver_context *d = &ctx->d;
+
     xmp_drv_off(ctx);
     memset(cmute_array, 0, nummte * sizeof(int));
-    free(patch_array);
+    free(d->patch_array);
     driver->shutdown();
     xmp_ctl = NULL;
 
@@ -477,6 +482,7 @@ void xmp_drv_seteffect(int chn, int type, int val)
 
 void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int voc, pos, itp;
     struct voice_info *vi;
 
@@ -486,31 +492,31 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 	return;
 
     vi = &voice_array[voc];
-    if ((uint32)smp >= XMP_DEF_MAXPAT || !patch_array[smp] || vi->smp == smp)
+    if ((uint32)smp >= XMP_DEF_MAXPAT || !d->patch_array[smp] || vi->smp == smp)
 	return;
 
     pos = vi->pos;
     itp = vi->itpt;
 
     smix_setpatch(ctx, voc, smp);
-    smix_voicepos(voc, pos, itp);
+    smix_voicepos(ctx, voc, pos, itp);
 
     if (extern_drv) {
 	driver->setpatch(voc, smp);
 	driver->setnote(voc, vi->note);
-	driver->voicepos(voc, pos << !!(patch_array[smp]->mode& WAVE_16_BITS));
+	driver->voicepos(voc, pos << !!(d->patch_array[smp]->mode& WAVE_16_BITS));
     }
 }
 
 
-int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note, int nna,
-	int dct, int dca, int flg)
+int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int voc, vfree;
 
     if ((uint32) chn >= numchn)
 	return -1;
-    if (ins < 0 || (uint32) smp >= XMP_DEF_MAXPAT || !patch_array[smp])
+    if (ins < 0 || (uint32) smp >= XMP_DEF_MAXPAT || !d->patch_array[smp])
 	smp = -1;
 
     if (dct) {
@@ -555,7 +561,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
     }
 
     smix_setpatch(ctx, voc, smp);
-    smix_setnote(voc, note);
+    smix_setnote(ctx, voc, note);
     voice_array[voc].ins = ins;
     voice_array[voc].act = nna;
 
@@ -599,7 +605,7 @@ void xmp_drv_setbend(int chn, int bend)
 }
 
 
-void xmp_drv_retrig(int chn)
+void xmp_drv_retrig(struct xmp_context *ctx, int chn)
 {
     int voc;
 
@@ -608,7 +614,7 @@ void xmp_drv_retrig(int chn)
     if ((uint32)chn >= numchn || (uint32)voc >= numvoc)
 	return;
 
-    smix_voicepos(voc, 0, 0);
+    smix_voicepos(ctx, voc, 0, 0);
 
     if (extern_drv)
 	driver->setnote(voc, voice_array[voc].note);
@@ -630,15 +636,16 @@ void xmp_drv_pastnote(int chn, int act)
 }
 
 
-void xmp_drv_voicepos(int chn, int pos)
+void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int voc;
     struct patch_info *pi;
 
     if ((uint32) chn >= numchn || (uint32) (voc = ch2vo_array[chn]) >= numvoc)
 	return;
 
-    pi = patch_array[voice_array[voc].smp];
+    pi = d->patch_array[voice_array[voc].smp];
 
     if (pi->base_note != C4_FREQ)	/* process crunching samples */
 	pos = ((long long)pos << SMIX_SHIFT) / (int)
@@ -647,10 +654,10 @@ void xmp_drv_voicepos(int chn, int pos)
     if (pos > pi->len)	/* Attempt to set offset beyond the end of sample */
 	return;
 
-    smix_voicepos(voc, pos, 0);
+    smix_voicepos(ctx, voc, pos, 0);
 
     if (extern_drv)
-	driver->voicepos (voc, pos << !!(pi->mode & WAVE_16_BITS));
+	driver->voicepos(voc, pos << !!(pi->mode & WAVE_16_BITS));
 }
 
 
@@ -685,7 +692,7 @@ int hold_enabled = 0;
 
 inline void xmp_drv_bufdump(struct xmp_context *ctx)
 {
-    int i = softmixer();
+    int i = softmixer(ctx);
 
     if (hold_enabled)
 	memcpy(hold_buffer, *xmp_mix_buffer, 256 * sizeof (int));
@@ -735,26 +742,27 @@ inline void xmp_drv_bufwipe()
 
 int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int num;
 
     if (!xmp_ctl)
 	return XMP_ERR_DOPEN;
 
-    if (!patch_array)	/* FIXME -- this makes xmms happy */
+    if (!d->patch_array)	/* FIXME -- this makes xmms happy */
     	return XMP_OK;
 
     if (!patch) {
 	driver->writepatch(ctx, patch);
 
 	for (num = XMP_DEF_MAXPAT; num--;) {
-	    free (patch_array[num]);
-	    patch_array[num] = NULL;
+	    free(d->patch_array[num]);
+	    d->patch_array[num] = NULL;
 	}
 	return XMP_OK;
     }
     if (patch->instr_no >= XMP_DEF_MAXPAT)
 	return XMP_ERR_PATCH;
-    patch_array[patch->instr_no] = patch;
+    d->patch_array[patch->instr_no] = patch;
 
     return XMP_OK;
 }
@@ -762,27 +770,28 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 
 int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 {
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
     struct patch_info *patch;
     int smp, num, crunch;
 
-    if (!patch_array)		/* FIXME -- this makes xmms happy */
+    if (!d->patch_array)		/* FIXME -- this makes xmms happy */
 	return XMP_OK;
 
     if (!ratio)
 	ratio = 0x10000;
 
     for (smp = XMP_DEF_MAXPAT, num = 0; smp--;)
-	if (patch_array[smp])
+	if (d->patch_array[smp])
 	    num++;
 
     if (extern_drv) {
 	reportv(ctx, 0, "Uploading smps : %d ", num);
 
 	for (smp = XMP_DEF_MAXPAT; smp--;) {
-	    if (!patch_array[smp])
+	    if (!d->patch_array[smp])
 		continue;
-	    patch = patch_array[smp];
+	    patch = d->patch_array[smp];
 
 	    if (patch->len == XMP_PATCH_FM) {
 		reportv(ctx, 0, "F");
@@ -792,10 +801,10 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 	    crunch = xmp_cvt_crunch(&patch, ratio);
 	    xmp_cvt_anticlick (patch);
 	    if ((num = driver->writepatch(ctx, patch)) != XMP_OK) {
-		patch_array[smp] = NULL;	/* Bad type, reset array */
+		d->patch_array[smp] = NULL;	/* Bad type, reset array */
 		free (patch);
 	    } else 
-		patch_array[smp] = realloc (patch, sizeof (struct patch_info));
+		d->patch_array[smp] = realloc(patch, sizeof (struct patch_info));
 
 	    if (o->verbosity) {
 		if (num != XMP_OK)
@@ -809,12 +818,12 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 	reportv(ctx, 0, "\n");
     } else {					/* Softmixer writepatch */
 	for (smp = XMP_DEF_MAXPAT; smp--;) {
-	    if (!patch_array[smp])
+	    if (!d->patch_array[smp])
 		continue;
-	    patch = patch_array[smp];
+	    patch = d->patch_array[smp];
 	    xmp_cvt_anticlick (patch);
 	    if (driver->writepatch(ctx, patch) != XMP_OK) {
-		patch_array[smp] = NULL;	/* Bad type, reset array */
+		d->patch_array[smp] = NULL;	/* Bad type, reset array */
 		free (patch);
 	    }
 	}

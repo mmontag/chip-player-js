@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.31 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: player.c,v 1.32 2007-10-19 23:38:51 cmatsuoka Exp $
  */
 
 /*
@@ -385,7 +385,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
 	xc->note = note;
 
 	if (cont_sample == 0) {
-	    xmp_drv_voicepos(chn, xc->offset);
+	    xmp_drv_voicepos(ctx, chn, xc->offset);
 	    if (TEST(OFFSET) && (m->fetch & XMP_CTL_FX9BUG))
 	        xc->offset <<= 1;
 	}
@@ -515,7 +515,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     /* Do cut/retrig */
     if (xc->retrig) {
 	if (!--xc->rcount) {
-	    xmp_drv_retrig(chn);
+	    xmp_drv_retrig(ctx, chn);
 	    xc->volume += rval[xc->rtype].s;
 	    xc->volume *= rval[xc->rtype].m;
 	    xc->volume /= rval[xc->rtype].d;
@@ -598,7 +598,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 	if (--xc->delay)
 	    finalvol = 0;
 	else
-	    xmp_drv_retrig (chn);
+	    xmp_drv_retrig(ctx, chn);
     }
 
     /* Do tremor */

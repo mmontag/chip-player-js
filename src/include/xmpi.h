@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.31 2007-10-19 20:55:00 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.32 2007-10-19 23:38:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -112,10 +112,10 @@ typedef unsigned int uint32;
 
 
 struct xmp_ord_info {
-    int bpm;
-    int tempo;
-    int gvl;
-    int time;
+	int bpm;
+	int tempo;
+	int gvl;
+	int time;
 };
 
 
@@ -125,72 +125,76 @@ struct xmp_ord_info {
 #include "xxm.h"
 
 struct xmp_mod_context {
-    int verbosity;			/* verbosity level */
-    char *dirname;			/* file dirname */
-    char *basename;			/* file basename */
-    char name[XMP_NAMESIZE];		/* module name */
-    char type[XMP_NAMESIZE];		/* module type */
-    char author[XMP_NAMESIZE];		/* module author */
-    char *filename;			/* Module file name */
-    int size;				/* File size */
-    double rrate;			/* Replay rate */
-    int c4rate;				/* C4 replay rate */
-    int volbase;			/* Volume base */
-    int volume;				/* Global volume */
-    int *vol_xlat;			/* Volume translation table */
-    int fetch;				/* Fetch mode (copy from flags) */
+	int verbosity;			/* verbosity level */
+	char *dirname;			/* file dirname */
+	char *basename;			/* file basename */
+	char name[XMP_NAMESIZE];		/* module name */
+	char type[XMP_NAMESIZE];		/* module type */
+	char author[XMP_NAMESIZE];		/* module author */
+	char *filename;			/* Module file name */
+	int size;				/* File size */
+	double rrate;			/* Replay rate */
+	int c4rate;				/* C4 replay rate */
+	int volbase;			/* Volume base */
+	int volume;				/* Global volume */
+	int *vol_xlat;			/* Volume translation table */
+	int fetch;				/* Fetch mode (copy from flags) */
 
-    struct xxm_header *xxh;		/* Header */
-    struct xxm_pattern **xxp;		/* Patterns */
-    struct xxm_track **xxt;		/* Tracks */
-    struct xxm_instrument_header *xxih;	/* Instrument headers */
-    struct xxm_instrument_map *xxim;	/* Instrument map */
-    struct xxm_instrument **xxi;	/* Instruments */
-    struct xxm_sample *xxs;		/* Samples */
-    uint16 **xxae;			/* Amplitude envelope */
-    uint16 **xxpe;			/* Pan envelope */
-    uint16 **xxfe;			/* Pitch envelope */
-    struct xxm_channel xxc[64];		/* Channel info */
-    struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
-    int xxo_fstrow[XMP_DEF_MAXORD];
-    uint8 xxo[XMP_DEF_MAXORD];		/* Orders */
+	struct xxm_header *xxh;		/* Header */
+	struct xxm_pattern **xxp;		/* Patterns */
+	struct xxm_track **xxt;		/* Tracks */
+	struct xxm_instrument_header *xxih;	/* Instrument headers */
+	struct xxm_instrument_map *xxim;	/* Instrument map */
+	struct xxm_instrument **xxi;	/* Instruments */
+	struct xxm_sample *xxs;		/* Samples */
+	uint16 **xxae;			/* Amplitude envelope */
+	uint16 **xxpe;			/* Pan envelope */
+	uint16 **xxfe;			/* Pitch envelope */
+	struct xxm_channel xxc[64];		/* Channel info */
+	struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
+	int xxo_fstrow[XMP_DEF_MAXORD];
+	uint8 xxo[XMP_DEF_MAXORD];		/* Orders */
 
-    uint8 **med_vol_table;		/* MED volume sequence table */
-    uint8 **med_wav_table;		/* MED waveform sequence table */
+	uint8 **med_vol_table;		/* MED volume sequence table */
+	uint8 **med_wav_table;		/* MED waveform sequence table */
 };
 
 struct flow_control {
-    int pbreak;
-    int jump;
-    int delay;
-    int jumpline;
-    int row_cnt;
-    int loop_chn;
-    int* loop_row;
-    int* loop_stack;
+	int pbreak;
+	int jump;
+	int delay;
+	int jumpline;
+	int row_cnt;
+	int loop_chn;
+	int* loop_row;
+	int* loop_stack;
 };
 
 struct xmp_player_context {
-    int pos;
-    int tempo;
-    int gvol_slide;
-    int gvol_flag;
-    int gvol_base;
-    double tick_time;
-    struct flow_control flow;
-    struct xmp_channel *xc_data;
-    int *fetch_ctl;
-    int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+	int pos;
+	int tempo;
+	int gvol_slide;
+	int gvol_flag;
+	int gvol_base;
+	double tick_time;
+	struct flow_control flow;
+	struct xmp_channel *xc_data;
+	int *fetch_ctl;
+	int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
 
-    struct xmp_mod_context m;
+	struct xmp_mod_context m;
+};
+
+struct xmp_driver_context {
+	struct patch_info **patch_array;
 };
 
 struct xmp_context {
-    int big_endian;
-    struct xmp_options o;
-    //struct xmp_control c;
-    //struct xmp_driver_context d;
-    struct xmp_player_context p;
+	int big_endian;
+	struct xmp_options o;
+	//struct xmp_control c;
+	struct xmp_driver_context d;
+	struct xmp_player_context p;
 };
 
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.20 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.21 2007-10-19 23:38:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -251,8 +251,9 @@ static void smix_anticlick(int voc, int vol, int pan, int *buf, int cnt)
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
-static int softmixer()
+static int softmixer(struct xmp_context *ctx)
 {
+    struct xmp_driver_context *d = &ctx->d;
     struct voice_info* vi;
     struct patch_info* pi;
     int smp_cnt, tic_cnt, lps, lpe;
@@ -290,7 +291,7 @@ static int softmixer()
 
 	itp_inc = ((long long)vi->pbase << SMIX_SHIFT) / vi->period;
 
-	pi = patch_array[vi->smp];
+	pi = d->patch_array[vi->smp];
 
 	/* This is for bidirectional sample loops */
 	if (vi->fidx & FLAG_REVLOOP)
@@ -385,10 +386,11 @@ static int softmixer()
 }
 
 
-static void smix_voicepos(int voc, int pos, int itp)
+static void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
 {
+    struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi = &voice_array[voc];
-    struct patch_info *pi = patch_array[vi->smp];
+    struct patch_info *pi = d->patch_array[vi->smp];
     int lpe, res, mode;
 
     if (pi->len == XMP_PATCH_FM)
@@ -418,10 +420,11 @@ static void smix_voicepos(int voc, int pos, int itp)
 static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 {
     struct xmp_player_context *p = &ctx->p;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &voice_array[voc];
-    struct patch_info *pi = patch_array[smp];
+    struct patch_info *pi = d->patch_array[smp];
 
     vi->smp = smp;
     vi->vol = 0;
@@ -464,16 +467,17 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     else
 	vi->fxor = vi->fidx;
 
-    smix_voicepos(voc, 0, 0);
+    smix_voicepos(ctx, voc, 0, 0);
 }
 
 
-static void smix_setnote(int voc, int note)
+static void smix_setnote(struct xmp_context *ctx, int voc, int note)
 {
+    struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi = &voice_array[voc];
 
     vi->period = note_to_period2 (vi->note = note, 0);
-    vi->pbase = SMIX_C4NOTE * vi->freq / patch_array[vi->smp]->base_note;
+    vi->pbase = SMIX_C4NOTE * vi->freq / d->patch_array[vi->smp]->base_note;
 }
 
 

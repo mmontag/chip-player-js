@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.11 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.12 2007-10-19 23:38:50 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -362,8 +362,6 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     char **parm;
     struct xmp_options *o = &ctx->o;
 
-    buf = calloc(1, 256);
-
     parm_init();
     chkparm1("awechorus", chorusmode = strtoul (token, NULL, 0));
     chkparm1("awereverb", reverbmode = strtoul (token, NULL, 0));
@@ -402,6 +400,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 		ctl->memavl = i;
 	    }
 
+    	    buf = calloc(1, 256);
 	    sprintf(buf, "%s [%s]", drv_oss_seq.description, si.name);
 
 #if defined AWE_DEVICE && defined HAVE_AWE_MD_NEW_VOLUME_CALC
@@ -433,5 +432,6 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 
 static void shutdown ()
 {
+    free(drv_oss_seq.description);
     close(seqfd);
 }
