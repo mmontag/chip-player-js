@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.43 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: driver.c,v 1.44 2007-10-19 18:57:13 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -302,7 +302,7 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     driver->reset ();
 
     numchn = numtrk;
-    maxvoc = m->fetch & XMP_CTL_VIRTUAL ? xmp_ctl->maxvoc : 1;
+    maxvoc = m->fetch & XMP_CTL_VIRTUAL ? o->maxvoc : 1;
     if (maxvoc > 1)
 	numchn += num;
     else if (num > numchn)

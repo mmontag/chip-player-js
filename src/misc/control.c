@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.22 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: control.c,v 1.23 2007-10-19 18:57:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -54,6 +54,16 @@ void xmp_init_callback(xmp_context ctx, void (*callback)(void *, int))
     xmp_init_formats();
     pw_init();
     xmp_register_driver_callback(callback);
+
+    /* Set defaults */
+    o->freq = 44100;
+    o->mix = 80;
+    o->resol = 16;
+    o->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
+
+    /* Set max number of voices per channel */
+    o->maxvoc = 16;
+
     o->drv_id = "callback";
 }
 
@@ -70,7 +80,7 @@ void xmp_init(xmp_context ctx, int argc, char **argv, struct xmp_control *ctl)
     xmp_init_formats();
     pw_init();
 
-    memset (ctl, 0, sizeof (struct xmp_control));
+    memset(ctl, 0, sizeof (struct xmp_control));
     xmp_event_callback = NULL;
 
     /* Set defaults */
@@ -80,7 +90,7 @@ void xmp_init(xmp_context ctx, int argc, char **argv, struct xmp_control *ctl)
     o->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
 
     /* Set max number of voices per channel */
-    ctl->maxvoc = 16;
+    o->maxvoc = 16;
 
     /* must be parsed before loading the rc file. */
     for (num = 1; num < argc; num++) {

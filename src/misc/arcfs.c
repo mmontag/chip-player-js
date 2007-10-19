@@ -4,7 +4,7 @@
  * Based on the nomarch .arc depacker from nomarch
  * Copyright (C) 2001-2006 Russell Marks
  *
- * $Id: arcfs.c,v 1.2 2007-08-28 21:22:47 cmatsuoka Exp $
+ * $Id: arcfs.c,v 1.3 2007-10-19 18:57:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -74,8 +74,6 @@ static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 		x = read32l(in);
 		hdrp->compressed_size = read32l(in);
 		hdrp->offset = read32l(in);
-
-		reportv(0, "'%s' ", hdrp->name);
 
 		//printf("method = %d\n", hdrp->method);
 		//printf("name = %s\n", hdrp->name);

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.23 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.24 2007-10-19 18:57:13 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -99,7 +99,6 @@ struct xmp_control {
     int numchn;		/* Number of virtual channels needed by the module */
     int numvoc;		/* Number of voices currently in use */
     int numbuf;		/* Number of output buffers */
-    int maxvoc;		/* Channel max number of voice */
     int memavl;		/* Memory availble in the sound card */
     int pause;		/* Player pause */
 };
@@ -147,6 +146,7 @@ struct xmp_options {
     int tempo;		/* Set initial tempo */
     int chorus;		/* Chorus level */
     int reverb;		/* Reverb leval */
+    int maxvoc;		/* Channel max number of voice */
     char *parm[64];	/* Driver parameter data */
 };
 
