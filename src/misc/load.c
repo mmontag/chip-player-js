@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.41 2007-10-18 23:07:11 cmatsuoka Exp $
+ * $Id: load.c,v 1.42 2007-10-19 09:08:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -431,6 +431,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 	m->xxc[i].vol = 0x40;
 	m->xxc[i].flg = 0;
     }
+
+    m->verbosity = xmp_ctl->verbose;
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);

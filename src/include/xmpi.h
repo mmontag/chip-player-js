@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.25 2007-10-18 23:07:10 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.26 2007-10-19 09:08:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -110,7 +110,6 @@ typedef unsigned int uint32;
 #define _D(args...) do {} while (0)
 #endif
 
-#define V(x) (xmp_ctl->verbose > (x))
 
 struct xmp_ord_info {
     int bpm;
@@ -126,6 +125,7 @@ struct xmp_ord_info {
 #include "xxm.h"
 
 struct xmp_mod_context {
+    int verbosity;			/* verbosity level */
     char *dirname;			/* file dirname */
     char *basename;			/* file basename */
     char name[XMP_NAMESIZE];		/* module name */
@@ -181,9 +181,20 @@ struct xmp_player_context {
     struct xmp_channel *xc_data;
     int *fetch_ctl;
     int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+
     struct xmp_mod_context m;
 };
 
+#if 0
+
+struct xmp_context {
+    struct xmp_options o;
+    struct xmp_control c;
+    struct xmp_driver_context d;
+    struct xmp_player_context p;
+};
+
+#endif
 
 /* Externs */
 

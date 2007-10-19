@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.21 2007-10-17 13:08:52 cmatsuoka Exp $
+ * $Id: load.h,v 1.22 2007-10-19 09:08:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,6 +26,8 @@ void	read_title		(FILE *, char *, int);
 void	set_xxh_defaults	(struct xxm_header *);
 void	cvt_pt_event		(struct xxm_event *, uint8 *);
 void	disable_continue_fx	(struct xxm_event *);
+
+#define V(x) (m->verbosity > (x))
 
 #define MAGIC4(a,b,c,d) \
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
