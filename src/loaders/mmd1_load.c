@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.27 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.28 2007-10-19 17:41:16 cmatsuoka Exp $
  */
 
 /*
@@ -431,9 +431,9 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	m->med_vol_table = calloc(sizeof(uint8 *), m->xxh->ins);
 	m->med_wav_table = calloc(sizeof(uint8 *), m->xxh->ins);
@@ -444,8 +444,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_WARN "read instruments");
 	INSTRUMENT_INIT();
 
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
-	reportv(1, "\n     Instrument name                          Typ Len   LBeg  LEnd  Vl Xp Ft");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Instrument name                          Typ Len   LBeg  LEnd  Vl Xp Ft");
 
 	for (smp_idx = i = 0; i < m->xxh->ins; i++) {
 		int smpl_offset;
@@ -523,7 +523,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].flg = song.sample[i].replen > 1 ?
 						WAVE_LOOPING : 0;
 
-			reportv(1, "%05x %05x %05x %02x %02x %+1d ",
+			reportv(ctx, 1, "%05x %05x %05x %02x %02x %+1d ",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 				       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
 				       (uint8) m->xxi[i][0].xpo,
@@ -540,7 +540,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->med_wav_table[i] = calloc(1, synth.wftbllen);
 			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
 
-			reportv(0, ".");
+			reportv(ctx, 0, ".");
 
 			continue;
 		}
@@ -562,7 +562,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			for (j = 0; j < 64; j++)
 				synth.wf[j] = read32b(f);
 
-			reportv(1, "VS:%02x WS:%02x WF:%02x %02x %02x %+1d ",
+			reportv(ctx, 1, "VS:%02x WS:%02x WF:%02x %02x %02x %+1d ",
 					synth.volspeed, synth.wfspeed,
 					synth.wforms, song.sample[i].svol,
 					(uint8)song.sample[i].strans,
@@ -601,7 +601,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->med_wav_table[i] = calloc(1, synth.wftbllen);
 			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
 
-			reportv(0, ".");
+			reportv(ctx, 0, ".");
 
 			continue;
 		}
@@ -625,7 +625,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 						song.sample[i].replen;
 		m->xxs[smp_idx].flg = song.sample[i].replen > 1 ? WAVE_LOOPING : 0;
 
-		reportv(1, "%05x %05x %05x %02x %02x %+1d ",
+		reportv(ctx, 1, "%05x %05x %05x %02x %02x %+1d ",
 			       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 			       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
 			       (uint8) m->xxi[i][0].xpo, m->xxi[i][0].fin >> 4);
@@ -634,12 +634,12 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,
 				  &m->xxs[smp_idx], NULL);
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 
 		smp_idx++;
 	}
 
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < m->xxh->chn; i++) {
 		m->xxc[i].vol = song.trkvol[i];

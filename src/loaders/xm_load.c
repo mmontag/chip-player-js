@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.25 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.26 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -136,7 +136,7 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 load_patterns:
     PATTERN_INIT();
 
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     /* Endianism fixed by Miodrag Vallat <miodrag@multimania.com>
      * Mon, 04 Jan 1999 11:17:20 +0100
@@ -264,8 +264,8 @@ load_patterns:
 	report ("\n");
 
 load_instruments:
-    reportv(0, "Instruments    : %d ", m->xxh->ins);
-    reportv(1, "\n     Instrument name            Smp Size   LStart LEnd   L Vol Fine  Pan Xpo\n");
+    reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+    reportv(ctx, 1, "\n     Instrument name            Smp Size   LStart LEnd   L Vol Fine  Pan Xpo\n");
 
     /* ESTIMATED value! We don't know the actual value at this point */
     m->xxh->smp = MAX_SAMP;
@@ -451,11 +451,11 @@ load_samples:
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
 		    XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	    }
 	}
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     /* If dynamic pan is disabled, XM modules will use the standard
      * MOD channel panning (LRRL). Moved to module_play() --Hipolito.

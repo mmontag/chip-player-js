@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: esd.c,v 1.4 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: esd.c,v 1.5 2007-10-19 17:41:10 cmatsuoka Exp $
  */
 
 /* Based on esdcat.c from the Enlightened Sound Daemon 0.2 for Linux
@@ -32,7 +32,7 @@
 static int audio_fd = -1;
 
 static int init (struct xmp_context *, struct xmp_control *);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void myshutdown ();
 
 static void dummy () { }
@@ -89,7 +89,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 }
 
 
-static void bufdump(int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
     int j;
     void *b;

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mtm_load.c,v 1.12 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: mtm_load.c,v 1.13 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -154,7 +154,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	report ("\n");
 
     /* Read patterns */
-    reportv(0, "Stored patterns: %d ", m->xxh->pat - 1);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat - 1);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -163,7 +163,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    mp[j] = read16l(f);
 	for (j = 0; j < m->xxh->chn; j++)
 	    m->xxp[i]->info[j].index = mp[j];
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     /* Comments */

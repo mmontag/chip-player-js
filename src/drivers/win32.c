@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.4 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: win32.c,v 1.5 2007-10-19 17:41:11 cmatsuoka Exp $
  */
 
 /*
@@ -28,7 +28,7 @@ static int nBlocks = 0;
 static int MAX_BLOCKS  = 6;
 
 static int init (struct xmp_context *, struct xmp_control *);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void shutdown ();
 
 static void dummy () { }

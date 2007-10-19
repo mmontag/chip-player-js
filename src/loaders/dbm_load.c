@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.21 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.22 2007-10-19 17:41:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -82,7 +82,7 @@ static void get_song(struct xmp_context *ctx, int size, FILE *f)
 		report("Song name      : %s\n", buffer);
 
 	m->xxh->len = read16b(f);
-	reportv(0, "Song length    : %d patterns\n", m->xxh->len);
+	reportv(ctx, 0, "Song length    : %d patterns\n", m->xxh->len);
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = read16b(f);
 }
@@ -95,9 +95,9 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	int c2spd, flags, snum;
 	uint8 buffer[50];
 
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 
-	reportv(1, "\n     Instrument name                Smp Vol Pan C2Spd");
+	reportv(ctx, 1, "\n     Instrument name                Smp Vol Pan C2Spd");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -120,13 +120,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 
-		reportv(1, "\n[%2X] %-30.30s #%02X V%02x P%02x %5d ",
+		reportv(ctx, 1, "\n[%2X] %-30.30s #%02X V%02x P%02x %5d ",
 			i, m->xxih[i].name, snum,
 			m->xxi[i][0].vol, m->xxi[i][0].pan, c2spd);
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
@@ -139,7 +139,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 	PATTERN_INIT();
 
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	/*
 	 * Note: channel and flag bytes are inverted in the format
@@ -217,9 +217,9 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 			if (event->f2t > 0x1c)
 				event->f2t = event->f2p = 0;
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 }
 
 static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
@@ -228,9 +228,9 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i, flags;
 
-	reportv(0, "Stored samples : %d ", m->xxh->smp);
+	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 
-	reportv(2, "\n     Len   LBeg  LEnd  L");
+	reportv(ctx, 2, "\n     Len   LBeg  LEnd  L");
 
 	for (i = 0; i < m->xxh->smp; i++) {
 		flags = read32b(f);
@@ -243,16 +243,16 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 		
 		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
 
-		reportv(2, "\n[%2X] %05x%c%05x %05x %c ",
+		reportv(ctx, 2, "\n[%2X] %05x%c%05x %05x %c ",
 			i, m->xxs[i].len,
 			m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
 			m->xxs[i].flg & WAVE_LOOPING ?
 			(m->xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' : 'L') : ' ');
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 }
 
 static void get_venv(struct xmp_context *ctx, int size, FILE *f)
@@ -263,7 +263,7 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 
 	nenv = read16b(f);
 
-	reportv(0, "Vol envelopes  : %d ", nenv);
+	reportv(ctx, 0, "Vol envelopes  : %d ", nenv);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxae[i] = calloc(4, 32);
@@ -283,9 +283,9 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 			m->xxae[ins][j * 2 + 0] = read16b(f);
 			m->xxae[ins][j * 2 + 1] = read16b(f);
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 }
 
 static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)

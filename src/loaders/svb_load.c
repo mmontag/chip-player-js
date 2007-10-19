@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.19 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.20 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -99,7 +99,7 @@ static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT ();
 
-	reportv(1, "     Sample name           Len   LBeg LEnd L Vol C2Spd\n");
+	reportv(ctx, 1, "     Sample name           Len   LBeg LEnd L Vol C2Spd\n");
 
 	fseek(f, start + p_ins, SEEK_SET);
 	for (i = 0; i < m->xxh->ins; i++) {
@@ -141,7 +141,7 @@ static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT ();
 
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	fseek(f, start + p_pat, SEEK_SET);
 	for (i = 0; i < m->xxh->pat; i++) {
@@ -190,21 +190,21 @@ static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (len > 0)
 			fseek(f, len, SEEK_CUR);
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Read samples */
 
-	reportv(0, "Stored samples : %d ", m->xxh->smp);
+	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

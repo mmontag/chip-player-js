@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.21 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: control.c,v 1.22 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -39,6 +39,11 @@ void *xmp_create_context()
 void xmp_free_context(xmp_context ctx)
 {
 	free(ctx);
+}
+
+struct xmp_options *xmp_get_options(xmp_context ctx)
+{
+	return &((struct xmp_context *)ctx)->o;
 }
 
 void xmp_init_callback(xmp_context ctx, void (*callback)(void *, int))
@@ -101,10 +106,8 @@ inline void xmp_close_audio(xmp_context ctx)
 }
 
 
-void xmp_set_driver_parameter(xmp_context ctx, char *s)
+void xmp_set_driver_parameter(struct xmp_options *o, char *s)
 {
-    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
-
     o->parm[drv_parm] = s;
     while (isspace (*o->parm[drv_parm]))
 	o->parm[drv_parm]++;
@@ -112,7 +115,7 @@ void xmp_set_driver_parameter(xmp_context ctx, char *s)
 }
 
 
-inline void xmp_register_event_callback (void (*cb)())
+inline void xmp_register_event_callback(void (*cb)(unsigned long))
 {
     xmp_event_callback = cb;
 }

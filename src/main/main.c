@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.18 2007-10-19 09:42:08 cmatsuoka Exp $
+ * $Id: main.c,v 1.19 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -70,7 +70,8 @@ struct ipc_info *ii;
 static struct xmp_module_info mi;
 #endif
 
-static struct xmp_control opt;
+static int verbosity;
+static struct xmp_control ctl;
 static struct termios term;
 static int background = 0;
 #ifdef SIGTSTP
@@ -83,7 +84,7 @@ int skip = 0;
 
 static int sigusr = 0;
 
-void get_options (int, char **, struct xmp_control *);
+void get_options (int, char **, struct xmp_options *);
 
 static xmp_context ctx;
 
@@ -180,7 +181,7 @@ static void cleanup (int s)
 #endif
 	fprintf (stderr, "\n*** Interrupted: signal %d caught\n", s);
 	xmp_stop_module(ctx);
-	xmp_close_audio();
+	xmp_close_audio(ctx);
 
 #ifdef XXMP
         kill (pid, SIGTERM);
@@ -198,7 +199,7 @@ static void cleanup (int s)
 
 
 #ifndef XXMP
-static void process_echoback (unsigned long i)
+static void process_echoback(unsigned long i)
 {
     unsigned long msg = i >> 4;
     unsigned char cmd;
@@ -224,7 +225,7 @@ static void process_echoback (unsigned long i)
     if (background)
 	return;
 
-    if (opt.verbose) {
+    if (verbosity) {
 	switch (i & 0xf) {
 	case XMP_ECHO_BPM:
 	    _bpm = bpm;
@@ -342,6 +343,7 @@ int main (int argc, char **argv)
     time_t t0, t1;
     struct timeval tv;
     struct timezone tz;
+    struct xmp_options *opt;
 #ifdef HAVE_SYS_RTPRIO_H
     struct rtprio rtp;
 #endif
@@ -355,9 +357,12 @@ int main (int argc, char **argv)
 
     ctx = xmp_create_context();
 
-    xmp_init (argc, argv, &opt);
-    opt.verbose = 1;
-    get_options (argc, argv, &opt);
+    xmp_init(ctx, argc, argv, &ctl);
+    opt = xmp_get_options(ctx);
+
+    opt->verbose = 1;
+    get_options(argc, argv, opt);
+    verbosity = opt->verbose;
 
     if (!(probeonly || argv[optind])) {
 	fprintf (stderr, "%s: no modules to play\n"
@@ -365,24 +370,24 @@ int main (int argc, char **argv)
 	exit (-1);
     }
 
-    gettimeofday (&tv, &tz);
-    srand (tv.tv_usec);
+    gettimeofday(&tv, &tz);
+    srand(tv.tv_usec);
 
     if (randomize)
-	shuffle (argc - optind + 1, &argv[optind - 1]);
+	shuffle(argc - optind + 1, &argv[optind - 1]);
 
-    if (opt.outfile && (!opt.drv_id || strcmp(opt.drv_id, "wav")))
-	opt.drv_id = "file";
+    if (opt->outfile && (!opt->drv_id || strcmp(opt->drv_id, "wav")))
+	opt->drv_id = "file";
 
     global_filename = argv[optind];
 
     if ((background = (tcgetpgrp (0) == getppid ()))) {
-	verb = opt.verbose;
-	opt.verbose = 0;
-	i = xmp_open_audio (&opt);
-	xmp_verbosity_level (opt.verbose = verb);
+	verb = opt->verbose;
+	opt->verbose = 0;
+	i = xmp_open_audio(ctx, &ctl);
+	xmp_verbosity_level(ctx, opt->verbose = verb);
     } else {
-	i = xmp_open_audio (&opt);
+	i = xmp_open_audio(ctx, &ctl);
     }
 
     if (i < 0) {
@@ -404,12 +409,12 @@ int main (int argc, char **argv)
     }
 
 #ifdef XXMP
-    xmp_register_event_callback (x11_event_callback);
+    xmp_register_event_callback(x11_event_callback);
 #else
-    xmp_register_event_callback (process_echoback);
+    xmp_register_event_callback(process_echoback);
 #endif
 
-    if (opt.verbose) {
+    if (opt->verbose) {
 	fprintf (stderr, "Extended Module Player %s %s\n"
 	"Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr\n",
 	    xmp_version, xmp_date);
@@ -418,10 +423,10 @@ int main (int argc, char **argv)
 #endif
     }
 
-    if (probeonly || (opt.verbose)) {
+    if (probeonly || (opt->verbose)) {
 	int srate, res, chn, itpt;
 	
-	xmp_get_driver_cfg(&srate, &res, &chn, &itpt);
+	xmp_get_driver_cfg(ctx, &srate, &res, &chn, &itpt);
 	fprintf (stderr, "Using %s\n", (char*)xmp_get_driver_description ());
 	if (srate) {
 	    fprintf (stderr, "Mixer set to %dbit, %d Hz, %s%s\n", res, srate,
@@ -453,17 +458,17 @@ int main (int argc, char **argv)
    }
 #endif
 
-    signal (SIGTERM, cleanup);
-    signal (SIGINT, cleanup);
-    signal (SIGQUIT, cleanup);
-    signal (SIGFPE, cleanup);
-    signal (SIGSEGV, cleanup);
+    signal(SIGTERM, cleanup);
+    signal(SIGINT, cleanup);
+    signal(SIGQUIT, cleanup);
+    signal(SIGFPE, cleanup);
+    signal(SIGSEGV, cleanup);
 #ifdef SIGTSTP
-    signal (SIGTSTP, sigtstp_handler);
-    signal (SIGCONT, sigcont_handler);
+    signal(SIGTSTP, sigtstp_handler);
+    signal(SIGCONT, sigcont_handler);
 #endif
-    signal (SIGUSR1, sigusr_handler);
-    signal (SIGUSR2, sigusr_handler);
+    signal(SIGUSR1, sigusr_handler);
+    signal(SIGUSR2, sigusr_handler);
 
 #ifdef XXMP
     if ((ii = xmp_get_shared_mem (sizeof (struct ipc_info))) <= 0) {
@@ -486,7 +491,7 @@ int main (int argc, char **argv)
 	    }
 	}
 
-	if (opt.verbose && !background) {
+	if (opt->verbose && !background) {
 	    if (lf_flag)
 		fprintf (stderr, "\n");
 	    lf_flag = fprintf (stderr, "Loading %s... (%d of %d)\n",
@@ -494,9 +499,9 @@ int main (int argc, char **argv)
 	}
 
 	if (background) {
-	    verb = xmp_verbosity_level(0);
+	    verb = xmp_verbosity_level(ctx, 0);
 	    t = xmp_load_module(ctx, argv[optind]);
-	    xmp_verbosity_level(verb);
+	    xmp_verbosity_level(ctx, verb);
 	} else {
 	    t = xmp_load_module(ctx, argv[optind]);
 	}
@@ -561,7 +566,7 @@ int main (int argc, char **argv)
 
 	xmp_release_module(ctx);
 
-	if (opt.verbose && !background) {
+	if (opt->verbose && !background) {
 	    fprintf (stderr,
 "\rElapsed time   : %dmin%02ds %s                                              \n",
 	    t / 60, t % 60, skip ? "(SKIPPED)" : " ");
@@ -593,22 +598,22 @@ skip_play:
 
     time (&t1);
 
-    if (!loadonly && opt.verbose && !background && num_mod > 1) {
+    if (!loadonly && opt->verbose && !background && num_mod > 1) {
 	t = difftime (t1, t0);
 	fprintf (stderr, "\n\t%d modules played, total time %dh%02dmin%02ds\n",
 	     num_mod, t / 3600, (t % 3600) / 60, t % 60); 
     }
 
-    xmp_close_audio ();
+    xmp_close_audio(ctx);
 
 #ifdef XXMP
     if (pid) {
-	kill (pid, SIGTERM);
-	waitpid (pid, NULL, 0);
+	kill(pid, SIGTERM);
+	waitpid(pid, NULL, 0);
     }
-    xmp_detach_shared_mem (ii);
+    xmp_detach_shared_mem(ii);
 #else
-    reset_tty ();
+    reset_tty();
 #endif
 
     return 0;

@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.25 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.26 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -353,7 +353,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read patterns */
 
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     memset (arpeggio_val, 0, 32);
 
@@ -412,18 +412,18 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 		pat_len -= 2;
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
-    reportv(1, "Stereo enabled : %s\n", sfh.mv & 0x80 ? "yes" : "no");
-    reportv(1, "Pan settings   : %s\n", sfh.dp ? "no" : "yes");
+    reportv(ctx, 1, "Stereo enabled : %s\n", sfh.mv & 0x80 ? "yes" : "no");
+    reportv(ctx, 1, "Pan settings   : %s\n", sfh.dp ? "no" : "yes");
 
     INSTRUMENT_INIT ();
 
     /* Read and convert instruments and samples */
 
-    reportv(0, "Instruments    : %d ", m->xxh->ins);
+    reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -522,9 +522,9 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     m->fetch |= XMP_MODE_ST3;
 

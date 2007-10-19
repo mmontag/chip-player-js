@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: misc.c,v 1.9 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: misc.c,v 1.10 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,15 +31,14 @@ int report(char *fmt, ...)
 	return n;
 }
 
-int reportv(int v, char *fmt, ...)
+int reportv(struct xmp_context *ctx, int v, char *fmt, ...)
 {
 	va_list a;
 	int n;
+	struct xmp_options *o = &ctx->o;
 
-#if 0
-	if (xmp_ctl == NULL || xmp_ctl->verbose <= v)
+	if (xmp_ctl == NULL || o->verbose <= v)
 		return 0;
-#endif
 
 	va_start(a, fmt);
 	n = vfprintf(stderr, fmt, a);

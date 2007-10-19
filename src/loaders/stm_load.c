@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.15 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.16 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -134,7 +134,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    reportv(1, "     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
+    reportv(ctx, 1, "     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
 
     /* Read and convert instruments and samples */
     for (i = 0; i < m->xxh->ins; i++) {
@@ -169,12 +169,12 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     m->xxh->len = i;
 
-    reportv(0, "Module length  : %d patterns\n", m->xxh->len);
+    reportv(ctx, 0, "Module length  : %d patterns\n", m->xxh->len);
 
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -215,18 +215,18 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     /* Read samples */
-    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     m->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
 

@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.19 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.20 2007-10-19 17:41:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -102,11 +102,11 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	uint8 name[30];
 
 	m->xxh->ins = m->xxh->smp = read16b(f);
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 
 	INSTRUMENT_INIT();
 
-	reportv(1, "\n     Instrument name        Len   LBeg  LSize LS Res Vol Fine C2Spd");
+	reportv(ctx, 1, "\n     Instrument name        Len   LBeg  LSize LS Res Vol Fine C2Spd");
 	for (i = 0; i < m->xxh->ins; i++) {
 		int fine, replen, flag;
 
@@ -156,7 +156,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 				report(".");
 		}
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 }
 
 static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
@@ -169,7 +169,7 @@ static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 	int rows;
 
 	if (!pflag) {
-		reportv(0, "Stored patterns: %d ", m->xxh->pat);
+		reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 		pflag = 1;
 		last_pat = 0;
 		PATTERN_INIT();
@@ -206,7 +206,7 @@ static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 		}
 	}
 
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
 }
 
 static void get_dait(struct xmp_context *ctx, int size, FILE *f)
@@ -216,7 +216,7 @@ static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 	static int i = 0;
 
 	if (!sflag) {
-		reportv(0, "\nStored samples : %d ", m->xxh->smp);
+		reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 		sflag = 1;
 		i = 0;
 	}
@@ -224,7 +224,7 @@ static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 	if (size > 2) {
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_BIGEND, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
 
 	i++;
@@ -251,7 +251,7 @@ static int dt_load(struct xmp_context *ctx, FILE *f, const int start)
 	while (!feof(f))
 		iff_chunk(ctx, f);
 
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	iff_release();
 

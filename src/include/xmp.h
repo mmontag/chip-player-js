@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.22 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.23 2007-10-19 17:41:11 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -95,7 +95,6 @@
 struct xmp_control {
     char *description;	/* Driver description */
     char **help;	/* Driver help info */
-    char *outfile;	/* Output file name when mixing to file */
     int numtrk;		/* Number of tracks */
     int numchn;		/* Number of virtual channels needed by the module */
     int numvoc;		/* Number of voices currently in use */
@@ -107,6 +106,7 @@ struct xmp_control {
 
 struct xmp_options {
     char *drv_id;	/* Driver ID */
+    char *outfile;	/* Output file name when mixing to file */
     int verbose;	/* Verbosity level */
 #define XMP_FMT_FM	0x00000001	/* Active mode FM */
 #define XMP_FMT_UNS	0x00000002	/* Unsigned samples */
@@ -205,6 +205,7 @@ extern char *global_filename;	/* FIXME: hack for the wav driver */
 
 void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
+struct xmp_options *xmp_get_options(xmp_context);
 
 void	xmp_init			(xmp_context, int, char **, struct xmp_control *);
 int	xmp_load_module			(xmp_context, char *);
@@ -216,11 +217,11 @@ struct xmp_fmt_info*
 struct xmp_drv_info*
 	xmp_get_drv_info		(struct xmp_drv_info **);
 char*	xmp_get_driver_description 	(void);
-void	xmp_set_driver_parameter 	(xmp_context, char *);
+void	xmp_set_driver_parameter 	(struct xmp_options *, char *);
 void	xmp_get_driver_cfg		(xmp_context, int *, int *, int *, int *);
 void	xmp_channel_mute		(int, int, int);
 void	xmp_display_license		(void);
-void	xmp_register_event_callback	(void (*)());
+void	xmp_register_event_callback	(void (*)(unsigned long));
 void	xmp_register_driver_callback	(void (*)(void *, int));
 void	xmp_init_callback		(xmp_context, void (*)(void *, int));
 int	xmp_player_ctl			(xmp_context, int, int);

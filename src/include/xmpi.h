@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.29 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.30 2007-10-19 17:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -203,7 +203,7 @@ extern struct xmp_control *xmp_ctl;	/* built in control struct pointer */
 /* Prototypes */
 
 int	report			(char *, ...);
-int	reportv			(int, char *, ...);
+int	reportv			(struct xmp_context *, int, char *, ...);
 int	ulaw_encode		(int);
 char	*str_adj		(char *);
 int	xmpi_scan_module	(struct xmp_context *);

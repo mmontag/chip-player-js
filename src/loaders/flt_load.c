@@ -102,7 +102,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
+    reportv(ctx, 1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -130,7 +130,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     /* The format you are looking for is FLT8, and the ONLY two differences
      * are: It says FLT8 instead of FLT4 or M.K., AND, the patterns are PAIRED.
@@ -159,22 +159,22 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 		cvt_pt_event(event, mod_event);
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 					&m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     return 0;
 }

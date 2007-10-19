@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.18 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.19 2007-10-19 17:41:16 cmatsuoka Exp $
  */
 
 /*
@@ -227,7 +227,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	reportv(0, "Play transpose : %d semitones\n", transp);
+	reportv(ctx, 0, "Play transpose : %d semitones\n", transp);
 
 	for (i = 0; i < 32; i++)
 		m->xxi[i][0].xpo += transp;
@@ -240,7 +240,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		int size, plen;
@@ -366,14 +366,14 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			printf("\n");*/
 		}
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Load samples */
 
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
-	reportv(1, "\n     Instrument name                  Len  LBeg LEnd L Vol Xpo");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Instrument name                  Len  LBeg LEnd L Vol Xpo");
 
 	mask = read32b(f);
 
@@ -393,7 +393,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxi[i][0].sid = i;
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 
-		reportv(1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x %+03d ",
+		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x %+03d ",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe,
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
@@ -401,9 +401,9 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

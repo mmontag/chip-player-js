@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.11 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.12 2007-10-19 17:41:12 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -104,7 +104,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 
     MODULE_INFO();
 
-    reportv(1,
+    reportv(ctx, 1,
 "               Modulator                       Carrier             Common\n"
 "     Char Fr LS OL At De Su Re WS   Char Fr LS OL At De Su Re WS   Fbk Alg Fin\n");
 
@@ -164,7 +164,7 @@ skip:
 	fread (&m->xxo[i], 1, 1, f);
 	if (m->xxo[i] & 0x80)
 	    break;			/* FIXME: jump line */
-	if (m->xxo[i] > p)
+	if (m->xxo[i] > pat)
 	    pat = m->xxo[i];
     }
     fseek(f, 50 - i, SEEK_CUR);
@@ -208,9 +208,9 @@ skip:
 		}
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     for (i = 0; i < m->xxh->chn; i++) {
 	m->xxc[i].pan = 0x80;

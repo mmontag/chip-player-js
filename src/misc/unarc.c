@@ -228,8 +228,6 @@ static int arc_extract(FILE * in, FILE * out)
 		return -1;
 	}
 
-	reportv(0, "'%s' ", hdr.name);
-
 	orig_data = NULL;
 	supported = 0;
 

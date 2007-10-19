@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.36 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.37 2007-10-19 17:41:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -355,7 +355,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     MODULE_INFO ();
 
-    reportv(0, "Instr/FX mode  : %s/%s",
+    reportv(ctx, 0, "Instr/FX mode  : %s/%s",
 			ifh.flags & IT_USE_INST ? ifh.cmwt >= 0x200 ?
 			"new" : "old" : "sample",
 			ifh.flags & IT_OLD_FX ? "old" : "IT");
@@ -520,7 +520,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	        }
 	    }
 
-	    reportv(1, "\n[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
+	    reportv(ctx, 1, "\n[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
 			"%02x %c%c%c %3d %02x %02x ",
 		i, i2h.name,
 		i2h.nna < 4 ? nna[i2h.nna] : "none",
@@ -537,7 +537,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		i2h.ifc,
 		i2h.ifr
 	    );
-	    reportv(0, ".");
+	    reportv(ctx, 0, ".");
 
 	} else if (ifh.flags & IT_USE_INST) {
 /* Old instrument format */
@@ -620,7 +620,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	        }
 	    }
 
-	    reportv(1, "\n[%2X] %-26.26s %-4.4s %-4.4s %4d  "
+	    reportv(ctx, 1, "\n[%2X] %-26.26s %-4.4s %-4.4s %4d  "
 			"%2d %c%c%c %3d ",
 		i, i1h.name,
 		i1h.nna < 4 ? nna[i1h.nna] : "none",
@@ -632,7 +632,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].aei.flg & XXM_ENV_SUS ? 'S' : '-',
 		m->xxih[i].nsm
 	    );
-	    reportv(0, ".");
+	    reportv(ctx, 0, ".");
 	}
     }
 
@@ -755,11 +755,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
 				XMP_SMP_NOLOAD | cvt, &m->xxs[i], buf);
 		free (buf);
-		reportv(0, "c");
+		reportv(ctx, 0, "c");
 	    } else {
 		xmp_drv_loadpatch(ctx, f, i, m->c4rate, cvt, &m->xxs[i], NULL);
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	    }
 	}
     }
@@ -874,7 +874,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		event->fxp = lastevent[c].fxp;
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
 
 	/* Sweep channels, look for unused tracks */
 	for (c = m->xxh->chn - 1; c >= max_ch; c--) {
@@ -895,7 +895,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
     m->fetch |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
 
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     return XMP_OK;
 }

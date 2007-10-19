@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.15 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.16 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -117,7 +117,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	/* Load notes */
 	for (i = 0; i < m->xxh->pat; i++) {
@@ -133,7 +133,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 					event->note += 12;
 			}
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
 
 	/* Load fx1 */
@@ -183,11 +183,11 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Read instrument data */
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
-	reportv(1, "\n     Name                   Len  LBeg LEnd L Vol");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Name                   Len  LBeg LEnd L Vol");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		char filename[1024];
@@ -201,7 +201,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		strncat(filename, (char *)m->xxih[i].name, NAME_SIZE);
 
 		s = fopen(filename, "rb");
-		asif_load(m, s, i);
+		asif_load(ctx, s, i);
 		fclose(s);
 
 #if 0
@@ -220,7 +220,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxi[i][0].vol);
 		}
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

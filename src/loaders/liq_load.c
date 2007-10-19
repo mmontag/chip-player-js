@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.21 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.22 2007-10-19 17:41:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -248,7 +248,7 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     x1 = x2 = 0;
     for (i = 0; i < m->xxh->pat; i++) {
@@ -409,16 +409,16 @@ next_row:
 	goto read_event;
 
 next_pattern:
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     /* Read and convert instruments */
 
     INSTRUMENT_INIT ();
 
-    reportv(0, "\nInstruments    : %d ", m->xxh->ins);
+    reportv(ctx, 0, "\nInstruments    : %d ", m->xxh->ins);
 
-    reportv(1, "\n"
+    reportv(ctx, 1, "\n"
 "     Instrument name                Size  Start End Loop Vol   Ver  C2Spd");
 
     for (i = 0; i < m->xxh->ins; i++) {
@@ -497,9 +497,9 @@ next_pattern:
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     return 0;
 }

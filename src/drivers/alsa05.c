@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.10 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.11 2007-10-19 17:41:10 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -223,7 +223,7 @@ static void bufwipe(void)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
 	void *b;
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.10 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: beos.c,v 1.11 2007-10-19 17:41:10 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -210,7 +210,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
 	uint8 *b;
 	int j = 0;

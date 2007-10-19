@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: far_load.c,v 1.18 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: far_load.c,v 1.19 2007-10-19 17:41:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -216,7 +216,7 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 		break;
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     m->xxh->ins = -1;
@@ -232,7 +232,7 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
-    reportv(0, "\nInstruments    : %d ", m->xxh->ins);
+    reportv(ctx, 0, "\nInstruments    : %d ", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
@@ -267,11 +267,11 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 			i, m->xxih[i].name,
 			m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 			fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
-	    reportv(0, ".");
+	    reportv(ctx, 0, ".");
 	}
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     m->volbase = 0xff;
 

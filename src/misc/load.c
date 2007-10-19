@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.44 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: load.c,v 1.45 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -167,15 +167,16 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	return 0;
     }
 
-    reportv(0, "Depacking %s file... ", packer);
+    reportv(ctx, 0, "Depacking %s file... ", packer);
 
     if ((fd = mkstemp(temp)) < 0) {
-	reportv(0, "failed\n");
+	if (o->verbose > 0)
+	    report("failed\n");
 	goto err;
     }
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
-	reportv(0, "failed\n");
+	reportv(ctx, 0, "failed\n");
 	goto err;
     }
 
@@ -189,8 +190,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	snprintf(line, lsize, cmd, *s);
 
 	if ((p = popen (line, "r")) == NULL) {
-	    if (o->verbose)
-		report("failed\n");
+	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
 	    free(line);
 	    goto err2;
@@ -198,7 +198,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	free (line);
 #define BSIZE 0x4000
 	if ((buf = malloc (BSIZE)) == NULL) {
-	    reportv(0, "failed\n");
+	    reportv(ctx, 0, "failed\n");
 	    pclose (p);
 	    fclose (t);
 	    goto err2;
@@ -235,11 +235,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     }
 
     if (res < 0) {
-	reportv(0, "failed\n");
+	reportv(ctx, 0, "failed\n");
 	goto err2;
     }
 
-    reportv(0, "done\n");
+    reportv(ctx, 0, "done\n");
 
     fclose(*f);
     *f = t;
@@ -440,12 +440,14 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
-	reportv(3, "Test format: %s (%s)\n", li->id, li->name);
+	if (o->verbose > 3)
+	    report("Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
 	if ((i = li->test(f, NULL)) == 0) {
-	    reportv(3, "Identified as %s\n", li->id);
+	    if (o->verbose > 3)
+		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
-	    if ((i = li->loader(m, f, 0) == 0))
+	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) == 0))
 		break;
 	}
     }

@@ -7,7 +7,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med3_load.c,v 1.13 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: med3_load.c,v 1.14 2007-10-19 17:41:16 cmatsuoka Exp $
  */
 
 /*
@@ -296,8 +296,8 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 	
 	MODULE_INFO();
 
-	reportv(0, "Sliding        : %d\n", sliding);
-	reportv(0, "Play transpose : %d semitones\n", transp);
+	reportv(ctx, 0, "Sliding        : %d\n", sliding);
+	reportv(ctx, 0, "Play transpose : %d semitones\n", transp);
 
 	if (sliding == 6)
 		m->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
@@ -308,7 +308,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		uint32 *conv;
@@ -360,14 +360,14 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		free(conv);
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Load samples */
 
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
-	reportv(1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
 
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
@@ -380,7 +380,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 
-		reportv(1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
+		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe,
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
@@ -388,9 +388,9 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

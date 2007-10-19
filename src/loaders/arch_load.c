@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.18 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.19 2007-10-19 17:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -180,7 +180,7 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 	strcpy(m->type, "MUSX (Archimedes Tracker)");
 
 	MODULE_INFO();
-	reportv(0, "Creation date  : %02d/%02d/%04d\n", day, month, year);
+	reportv(ctx, 0, "Creation date  : %02d/%02d/%04d\n", day, month, year);
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
@@ -192,7 +192,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	struct xxm_event *event;
 
 	if (!pflag) {
-		reportv(0, "Stored patterns: %d ", m->xxh->pat);
+		reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 		pflag = 1;
 		i = 0;
 		m->xxh->trk = m->xxh->pat * m->xxh->chn;
@@ -220,7 +220,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	}
 
 	i++;
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
 }
 
 static void get_samp(struct xmp_context *ctx, int size, FILE *f)
@@ -232,8 +232,8 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if (!sflag) {
 		m->xxh->smp = m->xxh->ins = 36;
 		INSTRUMENT_INIT();
-		reportv(0, "\nInstruments    : %d ", m->xxh->ins);
-	        reportv(1, "\n     Instrument name      Len   LBeg  LEnd  L Vol");
+		reportv(ctx, 0, "\nInstruments    : %d ", m->xxh->ins);
+	        reportv(ctx, 1, "\n     Instrument name      Len   LBeg  LEnd  L Vol");
 		sflag = 1;
 		max_ins = 0;
 		i = 0;
@@ -281,7 +281,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 				m->xxi[i][0].vol);
 		else
-			reportv(0, ".");
+			reportv(ctx, 0, ".");
 	}
 
 	i++;
@@ -319,7 +319,7 @@ static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 	while (!feof(f))
 		iff_chunk(ctx, f);
 
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	iff_release();
 

@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.11 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.12 2007-10-19 17:41:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,7 +33,7 @@ static int init (struct xmp_context *, struct xmp_control *);
 static int prepare_driver (void);
 static void dshutdown (void);
 static int to_fmt (struct xmp_options *);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void flush (void);
 
 static void dummy () { }
@@ -175,7 +175,7 @@ static int to_fmt(struct xmp_options *o)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
 	void *b;
 	int frames;

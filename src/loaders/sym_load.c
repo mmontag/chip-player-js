@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.31 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.32 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -232,7 +232,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Sequence */
 	a = read8(f);			/* packing */
 	assert(a == 0 || a == 1);
-	reportv(0, "Packed sequence: %s\n", a ? "yes" : "no");
+	reportv(ctx, 0, "Packed sequence: %s\n", a ? "yes" : "no");
 
 	size = m->xxh->len * m->xxh->chn * 2;
 	buf = malloc(size);
@@ -264,8 +264,8 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	a = read8(f);
 	assert(a == 0 || a == 1);
-	reportv(0, "Packed tracks  : %s\n", a ? "yes" : "no");
-	reportv(0, "Stored tracks  : %d ", m->xxh->trk);
+	reportv(ctx, 0, "Packed tracks  : %s\n", a ? "yes" : "no");
+	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
 
 	size = 64 * m->xxh->trk * 4;
 	buf = malloc(size);
@@ -298,10 +298,10 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 		if (V(0)) {
 			if (i % m->xxh->chn == 0)
-				reportv(0, ".");
+				reportv(ctx, 0, ".");
 		}
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	free(buf);
 
@@ -312,8 +312,8 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Load and convert instruments */
 
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
-	reportv(1, "\n     Instrument Name        Len   LBeg  LEnd  L Vol Fin");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Instrument Name        Len   LBeg  LEnd  L Vol Fin");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		uint8 buf[128];
@@ -363,18 +363,18 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->c4rate, XMP_SMP_NOLOAD | XMP_SMP_DIFF,
 				&m->xxs[m->xxi[i][0].sid], (char*)b);
 			free(b);
-			reportv(0, "c");
+			reportv(ctx, 0, "c");
 		} else if (a == 4) {
 			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
-			reportv(0, "C");
+			reportv(ctx, 0, "C");
 		} else {
 			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
-			reportv(0, ".");
+			reportv(ctx, 0, ".");
 		}
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

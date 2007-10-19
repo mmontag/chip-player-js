@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.30 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: player.c,v 1.31 2007-10-19 17:41:17 cmatsuoka Exp $
  */
 
 /*
@@ -748,7 +748,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 
 int xmpi_player_start(struct xmp_context *ctx)
 {
-    int r, d, t, e;		/* rows, order, tick, end point */
+    int r, t, e, ord;		/* rows, tick, end point, order */
     double playing_time;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
@@ -765,13 +765,13 @@ int xmpi_player_start(struct xmp_context *ctx)
 
     p->gvol_slide = 0;
     p->gvol_base = m->volbase;
-    d = o->start;
-    while (m->xxo[d] == 254)	/* S3M skip in first pattern (gaming.s3m) */
-	d++;
-    m->volume = m->xxo_info[d].gvl;
-    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[d].bpm);
-    p->flow.jumpline = m->xxo_fstrow[d];
-    p->tempo = m->xxo_info[d].tempo;
+    ord = o->start;
+    while (m->xxo[ord] == 254)	/* S3M skip in first pattern (gaming.s3m) */
+	ord++;
+    m->volume = m->xxo_info[ord].gvl;
+    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[ord].bpm);
+    p->flow.jumpline = m->xxo_fstrow[ord];
+    p->tempo = m->xxo_info[ord].tempo;
     playing_time = 0;
 
     if ((r = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
@@ -790,34 +790,33 @@ int xmpi_player_start(struct xmp_context *ctx)
 
     xmp_drv_starttimer(ctx);
 
-    for (e = p->xmp_scan_num; ; o++) {
+    for (e = p->xmp_scan_num; ; ord++) {
 next_order:
-	if (d >= m->xxh->len) {
-	    d = ((uint32)m->xxh->rst > m->xxh->len ||
-		(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
-							0 : m->xxh->rst;
-	    m->volume = m->xxo_info[d].gvl;
-	    if (m->xxo[d] == 0xff)
+	if (ord >= m->xxh->len) {
+	    ord = ((uint32)m->xxh->rst > m->xxh->len ||
+		(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?  0 : m->xxh->rst;
+	    m->volume = m->xxo_info[ord].gvl;
+	    if (m->xxo[ord] == 0xff)
 		break;
 	}
-	if (m->xxo[d] >= m->xxh->pat) {
-	    if (m->xxo[d] == 0xfe)		/* S3M skips pattern 0xfe */
+	if (m->xxo[ord] >= m->xxh->pat) {
+	    if (m->xxo[ord] == 0xfe)		/* S3M skips pattern 0xfe */
 		continue;
-	    if (m->xxo[d] == 0xff)		/* S3M uses 0xff as end mark */
-		d = m->xxh->len;
+	    if (m->xxo[ord] == 0xff)		/* S3M uses 0xff as end mark */
+		ord = m->xxh->len;
 	    continue;
 	}
 
-	r = m->xxp[m->xxo[d]]->rows;
+	r = m->xxp[m->xxo[ord]]->rows;
 	if (p->flow.jumpline >= r)
 	    p->flow.jumpline = 0;
 	p->flow.row_cnt = p->flow.jumpline;
 	p->flow.jumpline = 0;
 
-	p->pos = d;
+	p->pos = ord;
 
 	for (; p->flow.row_cnt < r; p->flow.row_cnt++) {
-	    if ((~m->fetch & XMP_CTL_LOOP) && d == p->xmp_scan_ord &&
+	    if ((~m->fetch & XMP_CTL_LOOP) && ord == p->xmp_scan_ord &&
 		p->flow.row_cnt == p->xmp_scan_row) {
 		if (!e--)
 		    goto end_module;
@@ -836,7 +835,7 @@ next_order:
 
 		/* xmp_player_ctl processing */
 
-		if (d != p->pos) {
+		if (ord != p->pos) {
 		    if (p->pos == -1)
 			p->pos++;		/* restart module */
 
@@ -848,11 +847,11 @@ next_order:
 		    if (p->pos == 0)
 			e = p->xmp_scan_num;
 
-		    p->tempo = m->xxo_info[d = p->pos].tempo;
-		    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[d].bpm);
-		    m->volume = m->xxo_info[d].gvl;
-		    p->flow.jump = d;
-		    p->flow.jumpline = m->xxo_fstrow[d--];
+		    p->tempo = m->xxo_info[ord = p->pos].tempo;
+		    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[ord].bpm);
+		    m->volume = m->xxo_info[ord].gvl;
+		    p->flow.jump = ord;
+		    p->flow.jumpline = m->xxo_fstrow[ord--];
 		    p->flow.row_cnt = -1;
 		    xmp_drv_bufwipe ();
 		    xmp_drv_sync(0);
@@ -863,14 +862,15 @@ next_order:
 
 		if (!t) {
 		    p->gvol_flag = 0;
-		    chn_fetch(ctx, m->xxo[d], p->flow.row_cnt);
+		    chn_fetch(ctx, m->xxo[ord], p->flow.row_cnt);
 
 		    xmp_drv_echoback((p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
 		    xmp_drv_echoback((m->volume << 4) | XMP_ECHO_GVL);
-		    xmp_drv_echoback((m->xxo[d] << 12)|(d << 4) | XMP_ECHO_ORD);
+		    xmp_drv_echoback((m->xxo[ord] << 12) | (ord << 4) |
+						XMP_ECHO_ORD);
 		    xmp_drv_echoback((xmp_ctl->numvoc << 4) | XMP_ECHO_NCH);
-		    xmp_drv_echoback(((m->xxp[m->xxo[d]]->rows - 1) << 12) |
+		    xmp_drv_echoback(((m->xxp[m->xxo[ord]]->rows - 1) << 12) |
 					(p->flow.row_cnt << 4) | XMP_ECHO_ROW);
 		}
 		xmp_drv_echoback((t << 4) | XMP_ECHO_FRM);
@@ -907,7 +907,7 @@ next_order:
 	}
 
 	if (p->flow.jump != -1) {
-	    d = p->flow.jump;
+	    ord = p->flow.jump;
 	    p->flow.jump = -1;
 	    goto next_order;
 	}

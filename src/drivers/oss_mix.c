@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.8 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.9 2007-10-19 17:41:10 cmatsuoka Exp $
  */
 
 /*
@@ -41,7 +41,7 @@ static int to_fmt (struct xmp_options *);
 static void setaudio (struct xmp_options *);
 static int init (struct xmp_context *, struct xmp_control *);
 static void shutdown (void);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void flush (void);
 
 static void dummy () { }
@@ -213,7 +213,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
     int j;
     void *b;

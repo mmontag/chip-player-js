@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.10 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.11 2007-10-19 17:41:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -123,7 +123,7 @@ int xmpi_read_rc(struct xmp_context *ctx)
 	 * send it to the device driver
 	 */
 	snprintf(cparm, 512, "%s=%s", var, val);
-	xmp_set_driver_parameter((xmp_context)ctx, cparm);
+	xmp_set_driver_parameter(&ctx->o, cparm);
     }
 
     fclose (rc);

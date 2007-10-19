@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.11 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.12 2007-10-19 17:41:16 cmatsuoka Exp $
  */
 
 /*
@@ -83,7 +83,7 @@ int med2_load(struct xmp_context *ctx, FILE *f)
 
 	MODULE_INFO();
 
-	reportv(0, "Sliding        : %d\n", sliding);
+	reportv(ctx, 0, "Sliding        : %d\n", sliding);
 
 	if (sliding == 6)
 		m->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
@@ -91,7 +91,7 @@ int med2_load(struct xmp_context *ctx, FILE *f)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -130,14 +130,14 @@ int med2_load(struct xmp_context *ctx, FILE *f)
 			}
 		}
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Load samples */
 
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
-	reportv(1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
 
 	for (i = 0; i < 32; i++) {
 		m->xxs[i].len = read32b(f);
@@ -146,7 +146,7 @@ int med2_load(struct xmp_context *ctx, FILE *f)
 
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 
-		reportv(1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
+		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe,
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
@@ -154,9 +154,9 @@ int med2_load(struct xmp_context *ctx, FILE *f)
 
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

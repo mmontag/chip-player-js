@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.15 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.16 2007-10-19 17:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -102,7 +102,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = i;
 
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	m->xxp = calloc(sizeof(struct xxm_pattern *), m->xxh->pat + 1);
 
@@ -113,9 +113,9 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 			uint16 t = read16l(f);
 			m->xxp[i]->info[j].index = t;
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 
 	/* Instruments */
@@ -188,7 +188,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = newtrk;
 	free(trkmap);
 
-	reportv(0, "Stored tracks  : %d ", m->xxh->trk);
+	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
 	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
 
 	for (i = 0; i < m->xxh->trk; i++) {
@@ -364,7 +364,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 		if (V(0) & !(i % 4)) report(".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 
 	/* Samples */
@@ -374,9 +374,9 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	m->fetch |= XMP_CTL_FINEFX;
 

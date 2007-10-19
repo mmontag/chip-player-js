@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.17 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.18 2007-10-19 17:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -160,7 +160,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
@@ -203,7 +203,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     /* Read samples */

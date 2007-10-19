@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.13 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.14 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -141,7 +141,7 @@ static void get_info(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_cmnt(struct xmp_context *ctx, int size, FILE *f)
 {
-    reportv(0, "Comment size   : %d\n", size);
+    reportv(ctx, 0, "Comment size   : %d\n", size);
 }
 
 
@@ -218,7 +218,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    reportv(1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
+    reportv(ctx, 1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
@@ -246,7 +246,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC(i);
@@ -257,22 +257,22 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fread(mod_event, 1, 4, f);
 	    cvt_pt_event(event, mod_event);
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
-    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 					    &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     return 0;
 }

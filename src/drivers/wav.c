@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.18 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: wav.c,v 1.19 2007-10-19 17:41:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,7 +28,7 @@ static int fd;
 static uint32 size;
 
 static int init (struct xmp_context *, struct xmp_control *);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void shutdown ();
 
 static void dummy () { }
@@ -99,7 +99,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     char *f, filename[260];
     struct xmp_options *o = &ctx->o;
 
-    if (!ctl->outfile) {
+    if (!o->outfile) {
 	if (global_filename) {
 	    if ((f = strrchr(global_filename, '/')) != NULL)
 		strncpy(filename, f + 1, 255);
@@ -111,16 +111,16 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 
 	strncat(filename, ".wav", 260);
 
-	ctl->outfile = filename;
+	o->outfile = filename;
     }
 
-    fd = strcmp(ctl->outfile, "-") ? creat(ctl->outfile, 0644) : 1;
+    fd = strcmp(o->outfile, "-") ? creat(o->outfile, 0644) : 1;
     if (fd < 0)
 	return -1;
 
-    buf = malloc(strlen (drv_wav.description) + strlen (ctl->outfile) + 8);
-    if (strcmp (ctl->outfile, "-")) {
-	sprintf (buf, "%s: %s", drv_wav.description, ctl->outfile);
+    buf = malloc(strlen (drv_wav.description) + strlen (o->outfile) + 8);
+    if (strcmp (o->outfile, "-")) {
+	sprintf (buf, "%s: %s", drv_wav.description, o->outfile);
 	drv_wav.description = buf;
     } else {
 	drv_wav.description = "WAV writer: stdout";
@@ -155,7 +155,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 }
 
 
-static void bufdump(int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
     char *b;
 

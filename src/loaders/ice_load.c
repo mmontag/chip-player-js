@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ice_load.c,v 1.12 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: ice_load.c,v 1.13 2007-10-19 17:41:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -108,7 +108,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT ();
 
-    reportv(1, "     Instrument name        Len  LBeg LEnd L Vl Ft\n");
+    reportv(ctx, 1, "     Instrument name        Len  LBeg LEnd L Vl Ft\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -140,10 +140,10 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	m->xxo[i] = i;
 
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
-    reportv(0, "\nStored tracks  : %d ", m->xxh->trk);
+    reportv(ctx, 0, "\nStored tracks  : %d ", m->xxh->trk);
 
     for (i = 0; i < m->xxh->trk; i++) {
 	m->xxt[i] = calloc (sizeof (struct xxm_track) + sizeof
@@ -163,15 +163,15 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read samples */
 
-    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 4)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     return 0;
 }

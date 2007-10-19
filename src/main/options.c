@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.22 2007-10-16 01:14:36 cmatsuoka Exp $
+ * $Id: options.c,v 1.23 2007-10-19 17:41:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -98,7 +98,7 @@ static void copyright_header()
 }
 
 
-static void usage (char *s, struct xmp_control *opt)
+static void usage(char *s, struct xmp_options *opt)
 {
     struct xmp_fmt_info *f, *fmt;
     struct xmp_drv_info *d, *drv;
@@ -195,7 +195,7 @@ static void usage (char *s, struct xmp_control *opt)
 }
 
 
-void get_options(int argc, char **argv, struct xmp_control *opt)
+void get_options(int argc, char **argv, struct xmp_options *opt)
 {
     int optidx = 0;
 #define OPTIONS "8b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVv"
@@ -243,27 +243,27 @@ void get_options(int argc, char **argv, struct xmp_control *opt)
     };
 
     i = 0;
-    while ((o = getopt_long (argc, argv, OPTIONS, lopt, &optidx)) != -1) {
+    while ((o = getopt_long(argc, argv, OPTIONS, lopt, &optidx)) != -1) {
 	switch (o) {
 	case '8':
 	    opt->flags |= XMP_CTL_8BIT;
 	    break;
 	case 'b':
-	    opt->resol = atoi (optarg);
+	    opt->resol = atoi(optarg);
 	    if (opt->resol != 8 && opt->resol != 16)
 		opt->resol = 16;
 	    break;
 	case OPT_CHORUS:
-	    opt->chorus = strtoul (optarg, NULL, 0);
+	    opt->chorus = strtoul(optarg, NULL, 0);
 	    break;
 	case OPT_CRUNCH:
-	    opt->crunch = strtoul (optarg, NULL, 0);
+	    opt->crunch = strtoul(optarg, NULL, 0);
 	    break;
 	case 'c':
 	    opt->outfile = "-";
 	    break;
 	case 'D':
-	    xmp_set_driver_parameter (opt, optarg);
+	    xmp_set_driver_parameter(opt, optarg);
 	    break;
 	case 'd':
 	    opt->drv_id = optarg;

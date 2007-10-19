@@ -78,17 +78,17 @@ int ftm_load(FILE * f)
 		for (j = 0; j < 4; j++) {
 		}
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
 
 	INSTRUMENT_INIT();
-	reportv(0, "\nStored samples : %d ", m->xxh->smp);
+	reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->smp; i++) {
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
 
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 	m->xxh->flg |= XXM_FLG_MODRNG;
 
 	return 0;

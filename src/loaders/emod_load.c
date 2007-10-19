@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.14 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.15 2007-10-19 17:41:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -68,7 +68,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 
     INSTRUMENT_INIT ();
 
-    reportv(1, "     Instrument name      Len  LBeg LEnd L Vol Fin\n");
+    reportv(ctx, 1, "     Instrument name      Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -115,7 +115,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 
     m->xxh->len = read8(f);
 
-    reportv(0, "Module length  : %d\n", m->xxh->len);
+    reportv(ctx, 0, "Module length  : %d\n", m->xxh->len);
 
     for (i = 0; i < m->xxh->len; i++)
 	m->xxo[i] = reorder[read8(f)];
@@ -130,7 +130,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
     struct xxm_event *event;
     uint8 x;
 
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	for (j = 0; j < m->xxp[i]->rows; j++) {
@@ -159,9 +159,9 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 		}
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 }
 
 
@@ -171,13 +171,13 @@ static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
     struct xmp_mod_context *m = &p->m;
     int i;
 
-    reportv(0, "Stored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 }
 
 

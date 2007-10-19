@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.30 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.31 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -424,7 +424,7 @@ skip_test:
 		event->fxp <<= 4;
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
     /* Load samples */
@@ -436,7 +436,7 @@ skip_test:
 	*x = '/';
     }
 
-    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)

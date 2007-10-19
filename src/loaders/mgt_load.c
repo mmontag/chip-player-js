@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.13 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.14 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -113,7 +113,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	fseek(f, start + ins_ptr, SEEK_SET);
-	reportv(1, "     Name                             Len  LBeg LEnd L Vol C2Spd\n");
+	reportv(ctx, 1, "     Name                             Len  LBeg LEnd L Vol C2Spd\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		int c2spd, flags;
@@ -161,7 +161,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* PATTERN_INIT - alloc extra track*/
 	PATTERN_INIT();
 
-	reportv(0, "Stored tracks  : %d ", m->xxh->trk);
+	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
 
 	/* Tracks */
 
@@ -285,7 +285,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (V(0) && i % m->xxh->chn == 0)
 			report(".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Extra track */
 	m->xxt[0] = calloc(sizeof(struct xxm_track) +
@@ -294,7 +294,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read and convert patterns */
 
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 	fseek(f, start + pat_ptr, SEEK_SET);
 
 	for (i = 0; i < m->xxh->pat; i++) {
@@ -306,14 +306,14 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 			//printf("%3d ", m->xxp[i]->info[j].index);
 		}
 
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 		//printf("\n");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Read samples */
 
-	reportv(0, "Stored samples : %d ", m->xxh->smp);
+	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxih[i].nsm == 0)
@@ -322,9 +322,9 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, start + sdata[i], SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 						&m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.19 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.20 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -111,7 +111,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    reportv(1, "     Instrument name              Len   LBeg  LEnd  L Vol C4Spd\n");
+    reportv(ctx, 1, "     Instrument name              Len   LBeg  LEnd  L Vol C4Spd\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -165,7 +165,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT ();
 
     /* Read patterns */
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	if (!pfh.patseg[i])
@@ -245,10 +245,10 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 		event->vol = read8(f) + 1;
 	    }
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
 
-    reportv(0, "\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
@@ -256,9 +256,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, start + smp_ofs[m->xxi[i][0].sid], SEEK_SET);
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     m->vol_xlat = ptm_vol;
 

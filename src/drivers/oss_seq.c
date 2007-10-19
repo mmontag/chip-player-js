@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.9 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.10 2007-10-19 17:41:10 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -67,7 +67,7 @@ static int echo_msg;
 
 static int numvoices	(int);
 static void voicepos	(int, int);
-static void echoback	(int);
+static void echoback	(xmp_context, int);
 static void setpatch	(int, int);
 static void setvol	(int, int);
 static void setnote	(int, int);
@@ -155,7 +155,7 @@ static void voicepos(int ch, int pos)
 }
 
 
-static void echoback(int msg)
+static void echoback(xmp_context ctx, int msg)
 {
     SEQ_ECHO_BACK (msg);
 }

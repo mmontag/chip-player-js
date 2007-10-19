@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.15 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.16 2007-10-19 17:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -111,7 +111,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT ();
 
     /* Read and convert patterns */
-    reportv(0, "Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -125,15 +125,15 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fread (&b, 1, 1, f);
 	    event->ins = b;
 	}
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     INSTRUMENT_INIT ();
 
     /* Read and convert instruments and samples */
 
-    reportv(0, "Loading samples: %d ", m->xxh->ins);
+    reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -171,9 +171,9 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fclose(s);
 
-	reportv(0, ".");
+	reportv(ctx, 0, ".");
     }
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     /* ALM is LRLR, not LRRL */
     for (i = 0; i < m->xxh->chn; i++)

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.6 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: file.c,v 1.7 2007-10-19 17:41:10 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,7 +28,7 @@ static int fd;
 static int endian;
 
 static int init (struct xmp_context *, struct xmp_control *);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void shutdown ();
 
 static void dummy () { }
@@ -68,6 +68,7 @@ struct xmp_drv_info drv_file = {
 
 static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 {
+    struct xmp_options *o = &ctx->o;
     char *buf;
     int bsize;
     char *token, **parm;
@@ -78,25 +79,25 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     chkparm1 ("little-endian", endian = -1);
     parm_end ();
 
-    if (!ctl->outfile)
-	ctl->outfile = "xmp.out";
+    if (!o->outfile)
+	o->outfile = "xmp.out";
 
-    fd = strcmp (ctl->outfile, "-") ? creat (ctl->outfile, 0644) : 1;
+    fd = strcmp (o->outfile, "-") ? creat (o->outfile, 0644) : 1;
 
-    bsize = strlen(drv_file.description) + strlen (ctl->outfile) + 8;
+    bsize = strlen(drv_file.description) + strlen (o->outfile) + 8;
     buf = malloc(bsize);
-    if (strcmp (ctl->outfile, "-")) {
-	snprintf(buf, bsize, "%s: %s", drv_file.description, ctl->outfile);
+    if (strcmp (o->outfile, "-")) {
+	snprintf(buf, bsize, "%s: %s", drv_file.description, o->outfile);
 	drv_file.description = buf;
     } else {
 	drv_file.description = "Output to stdout";
     }
 
-    return xmp_smix_on (ctl);
+    return xmp_smix_on(ctl);
 }
 
 
-static void bufdump(int i, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int i)
 {
     int j;
     void *b;

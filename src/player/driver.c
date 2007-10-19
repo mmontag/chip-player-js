@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.42 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: driver.c,v 1.43 2007-10-19 17:41:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -777,7 +777,7 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 	    num++;
 
     if (extern_drv) {
-	reportv(0, "Uploading smps : %d ", num);
+	reportv(ctx, 0, "Uploading smps : %d ", num);
 
 	for (smp = XMP_DEF_MAXPAT; smp--;) {
 	    if (!patch_array[smp])
@@ -785,7 +785,7 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 	    patch = patch_array[smp];
 
 	    if (patch->len == XMP_PATCH_FM) {
-		reportv(0, "F");
+		reportv(ctx, 0, "F");
 		continue;
 	    }
 
@@ -806,7 +806,7 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 		    "c" : crunch > 0x10000 ? "x" : ".");
 	    }
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
     } else {					/* Softmixer writepatch */
 	for (smp = XMP_DEF_MAXPAT; smp--;) {
 	    if (!patch_array[smp])

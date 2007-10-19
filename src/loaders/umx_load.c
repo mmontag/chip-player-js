@@ -1,7 +1,7 @@
 /* Extended Module Player UMX module loader
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: umx_load.c,v 1.2 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: umx_load.c,v 1.3 2007-10-19 17:41:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -76,8 +76,6 @@ static int umx_test(FILE *f, char *t)
 
 static int load(struct xmp_context *ctx, FILE *f, char *fmt, int offset)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
 	struct xmp_loader_info *li;
 	struct list_head *head;
 
@@ -103,7 +101,7 @@ static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	reportv(0, "Container type : Epic Games UMX\n");
+	reportv(ctx, 0, "Container type : Epic Games UMX\n");
 
 	fread(buf, 1, TEST_SIZE, f);
 
@@ -113,11 +111,11 @@ static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (!memcmp(b, "Extended Module:", 16))
 			return load(ctx, f, "XM", i);
 		if (id == MAGIC_IMPM)
-			return load(m, f, "IT", i);
+			return load(ctx, f, "IT", i);
 		if (i > 44 && id == MAGIC_SCRM)
-			return load(m, f, "S3M", i - 44);
+			return load(ctx, f, "S3M", i - 44);
 		if (i > 1080 && id == MAGIC_M_K_)
-			return load(m, f, "MOD", i - 1080);
+			return load(ctx, f, "MOD", i - 1080);
 	}
 	
 	return -1;

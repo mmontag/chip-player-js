@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.14 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.15 2007-10-19 17:41:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -251,9 +251,9 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 				}
 			}
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 }
 
 static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
@@ -267,7 +267,7 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 
 	INSTRUMENT_INIT();
 
-	reportv(0, "Instruments    : %d\n", m->xxh->ins);
+	reportv(ctx, 0, "Instruments    : %d\n", m->xxh->ins);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		int x;
@@ -317,7 +317,7 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 	int smpsize;
 	uint8 *data, *ibuf;
 
-	reportv(0, "Stored samples : %d ", m->xxh->ins);
+	reportv(ctx, 0, "Stored samples : %d ", m->xxh->ins);
 
 	for (smpsize = i = 0; i < m->xxh->smp; i++) {
 		if (m->xxs[i].len > smpsize)
@@ -349,9 +349,9 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 		default:
 			fseek(f, smpsize, SEEK_CUR);
 		}
-		reportv(0, packtype[i] ? "c" : ".");
+		reportv(ctx, 0, packtype[i] ? "c" : ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	free(ibuf);
 	free(data);

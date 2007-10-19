@@ -1,7 +1,7 @@
 /* Graoumf Tracker GTK module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: gtk_load.c,v 1.12 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: gtk_load.c,v 1.13 2007-10-19 17:41:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -66,8 +66,8 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	reportv(0, "Instruments    : %d ", m->xxh->ins);
-	reportv(1, "\n     Name                          Len   LBeg  LSiz  L Vol Fin  C2spd");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Name                          Len   LBeg  LSiz  L Vol Fin  C2spd");
 
 	INSTRUMENT_INIT();
 	for (i = 0; i < m->xxh->ins; i++) {
@@ -124,7 +124,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 			}
 		}
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < 256; i++)
 		m->xxo[i] = read16b(f);
@@ -140,7 +140,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -167,20 +167,20 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Read samples */
-	reportv(0, "Stored samples : %d ", m->xxh->smp);
+	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 						&m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

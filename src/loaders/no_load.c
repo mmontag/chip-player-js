@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.15 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.16 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -108,7 +108,7 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();
-	reportv(1, "     Instrument name         SLen SBeg SEnd L Vol C2spd\n");
+	reportv(ctx, 1, "     Instrument name         SLen SBeg SEnd L Vol C2spd\n");
 
 	/* Read instrument names */
 	for (i = 0; i < m->xxh->ins; i++) {
@@ -161,7 +161,7 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 //printf("%d  %x\n", i, ftell(f));
@@ -194,20 +194,20 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	/* Read samples */
-	reportv(0, "Stored samples : %d ", m->xxh->smp);
+	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(0, ".");
+		reportv(ctx, 0, ".");
 	}
-	reportv(0, "\n");
+	reportv(ctx, 0, "\n");
 
 	return 0;
 }

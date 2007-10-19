@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: sgi.c,v 1.3 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: sgi.c,v 1.4 2007-10-19 17:41:11 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,7 @@ static int al_sample_16;
 
 static int init (struct xmp_context *, struct xmp_control *);
 static int setaudio (struct xmp_control *);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
 
 static void dummy () { }

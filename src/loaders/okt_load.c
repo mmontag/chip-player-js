@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.14 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.15 2007-10-19 17:41:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -123,7 +123,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 
     INSTRUMENT_INIT ();
 
-    reportv(1, "     Instrument name      Len   Lbeg  Lend  L Vol Mod\n");
+    reportv(ctx, 1, "     Instrument name      Len   Lbeg  Lend  L Vol Mod\n");
     for (j = i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 
@@ -181,7 +181,7 @@ static void get_plen(struct xmp_context *ctx, int size, FILE *f)
     struct xmp_mod_context *m = &p->m;
 
     m->xxh->len = read16b(f);
-    reportv(0, "Module length  : %d patterns\n", m->xxh->len);
+    reportv(ctx, 0, "Module length  : %d patterns\n", m->xxh->len);
 }
 
 
@@ -208,7 +208,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 
     if (!pattern) {
 	PATTERN_INIT ();
-	reportv(0, "Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
     }
 
     rows = read16b(f);
@@ -254,7 +254,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 	if (event->fxt == NONE)
 	    event->fxt = event->fxp = 0;
     }
-    reportv(0, ".");
+    reportv(ctx, 0, ".");
     pattern++;
 }
 
@@ -279,7 +279,7 @@ static void get_sbod(struct xmp_context *ctx, int size, FILE *f)
 
     xmp_drv_loadpatch(ctx, f, sample, m->c4rate, flags, &m->xxs[i], NULL);
 
-    reportv(0, ".");
+    reportv(ctx, 0, ".");
 
     sample++;
 }
@@ -316,7 +316,7 @@ static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     iff_release ();
 
-    reportv(0, "\n");
+    reportv(ctx, 0, "\n");
 
     return 0;
 }
