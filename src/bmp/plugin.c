@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.34 2007-10-19 09:56:44 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.35 2007-10-19 18:16:55 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -461,7 +461,7 @@ static void init(void)
 	file_info_box_build();
 
 	memset(&ctl, 0, sizeof (struct xmp_control));
-	xmp_init_callback(&ctl, driver_callback);
+	xmp_init_callback(ctx, driver_callback);
 	xmp_register_event_callback(x11_event_callback);
 
 	memset(ii, 0, sizeof (ii));
@@ -474,7 +474,7 @@ static void init(void)
 static void cleanup()
 {
 	xmp_free_context(ctx);
-	xmp_close_audio();
+	xmp_close_audio(ctx);
 }
 
 #endif
@@ -486,7 +486,7 @@ static int is_our_file(char *filename)
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
 
-	if (xmp_test_module(filename, NULL) == 0)
+	if (xmp_test_module(ctx, filename, NULL) == 0)
 		return 1;
 
 	return 0;
@@ -501,7 +501,7 @@ static void get_song_info(char *filename, char **title, int *length)
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
 
-	xmp_test_module(filename, name);
+	xmp_test_module(ctx, filename, name);
 
 	if (strlen(name)) {
 		*title = g_strdup(name);
@@ -565,10 +565,13 @@ static void play_file(InputPlayback *ipb)
 	int format = FMT_U8;
 	FILE *f;
 	char *info;
+	struct xmp_options *opt;
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	GtkTextIter start, end;
 #endif
 	
+	opt = xmp_get_options(ctx);
+
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
 
@@ -602,52 +605,52 @@ static void play_file(InputPlayback *ipb)
 	xmp_xmms_audio_error = FALSE;
 	playing = 1;
 
-	ctl.resol = 8;
-	ctl.verbose = 3;
-	ctl.drv_id = "callback";
+	opt->resol = 8;
+	opt->verbose = 3;
+	opt->drv_id = "callback";
 
 	switch (xmp_cfg.mixing_freq) {
 	case 1:
-		ctl.freq = 22050;	/* 1:2 mixing freq */
+		opt->freq = 22050;	/* 1:2 mixing freq */
 		break;
 	case 2:
-		ctl.freq = 11025;	/* 1:4 mixing freq */
+		opt->freq = 11025;	/* 1:4 mixing freq */
 		break;
 	default:
-		ctl.freq = 44100;	/* standard mixing freq */
+		opt->freq = 44100;	/* standard mixing freq */
 		break;
 	}
 
 	if ((xmp_cfg.force8bit == 0)) {
 		format = FMT_S16_NE;
-		ctl.resol = 16;
+		opt->resol = 16;
 	}
 
 	if ((xmp_cfg.force_mono == 0)) {
 		channelcnt = 2;
 	} else {
-		ctl.outfmt |= XMP_FMT_MONO;
+		opt->outfmt |= XMP_FMT_MONO;
 	}
 
 	if ((xmp_cfg.interpolation == 1))
-		ctl.flags |= XMP_CTL_ITPT;
+		opt->flags |= XMP_CTL_ITPT;
 
 	if ((xmp_cfg.filter == 1))
-		ctl.flags |= XMP_CTL_FILTER;
+		opt->flags |= XMP_CTL_FILTER;
 
-	ctl.mix = xmp_cfg.pan_amplitude;
+	opt->mix = xmp_cfg.pan_amplitude;
 
 	{
 	    AFormat fmt;
 	    int nch;
 	
-	    fmt = ctl.resol == 16 ? FMT_S16_NE : FMT_U8;
-	    nch = ctl.outfmt & XMP_FMT_MONO ? 1 : 2;
+	    fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
+	    nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	
 	    if (audio_open)
 		xmp_ip.output->close_audio();
 	
-	    if (!xmp_ip.output->open_audio(fmt, ctl.freq, nch)) {
+	    if (!xmp_ip.output->open_audio(fmt, opt->freq, nch)) {
 		xmp_xmms_audio_error = TRUE;
 		return;
 	    }
@@ -655,7 +658,7 @@ static void play_file(InputPlayback *ipb)
 	    audio_open = TRUE;
 	}
 
-	xmp_open_audio(&ctl);
+	xmp_open_audio(ctx, &ctl);
 
 	pipe (fd_info);
 	fd_old2 = dup (fileno (stderr));
@@ -701,7 +704,7 @@ static void play_file(InputPlayback *ipb)
 	info = malloc(strlen(ii->mi.name) + strlen(ii->mi.type) + 20);
 	sprintf(info, "%s", ii->mi.name);
 
-	xmp_ip.set_info(info, xmp_cfg.time, 128 * 1000, ctl.freq, channelcnt);
+	xmp_ip.set_info(info, xmp_cfg.time, 128 * 1000, opt->freq, channelcnt);
 	free(info);
 
 	_D("--- pthread_create");
@@ -715,7 +718,7 @@ static void *play_loop (void *arg)
 {
 	xmp_play_module(ctx);
 	xmp_release_module(ctx);
-	xmp_close_audio();
+	xmp_close_audio(ctx);
 	playing = 0;
 
 	_D("--- pthread_exit");
@@ -958,6 +961,9 @@ static void config_ok(GtkWidget *widget, gpointer data)
 #ifdef PLUGIN_AUDACIOUS
 	ConfigDb *cfg;
 #endif
+	struct xmp_options *opt;
+
+	opt = xmp_get_options(ctx);
 
 	if (GTK_TOGGLE_BUTTON(Res_16)->active)
 		xmp_cfg.force8bit = 0;
@@ -983,7 +989,7 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	xmp_cfg.fixloops = !!GTK_TOGGLE_BUTTON(Fixloops_Check)->active;
 
 	xmp_cfg.pan_amplitude = (guchar)GTK_ADJUSTMENT(pansep_adj)->value;
-        ctl.mix = xmp_cfg.pan_amplitude;
+        opt->mix = xmp_cfg.pan_amplitude;
 
 #if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	filename = g_strconcat(g_get_home_dir(), CONFIG_FILE, NULL);

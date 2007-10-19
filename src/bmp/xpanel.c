@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.6 2007-10-17 23:22:50 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.7 2007-10-19 18:16:55 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -286,7 +286,7 @@ void prepare_screen()
 
 extern xmp_context ctx;
 
-void x11_event_callback(long i)
+void x11_event_callback(unsigned long i)
 {
     static int chn = 0;
     static int ord = 0;

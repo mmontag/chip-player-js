@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: callback.c,v 1.3 2007-10-19 12:48:59 cmatsuoka Exp $
+ * $Id: callback.c,v 1.4 2007-10-19 18:16:55 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,7 +20,7 @@ extern void (*_driver_callback)(void*, int);
 
 static int init (struct xmp_context *, struct xmp_control *);
 static void shutdown (void);
-static void callback (int, struct xmp_context *ctx);
+static void callback (struct xmp_context *ctx, int);
 
 static void dummy () { }
 
@@ -57,7 +57,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 }
 
 
-static void callback(int i, struct xmp_context *ctx)
+static void callback(struct xmp_context *ctx, int i)
 {
     void *b;
 
