@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.22 2007-10-19 20:55:00 cmatsuoka Exp $
+ * $Id: osx.c,v 1.23 2007-10-20 13:35:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,7 +23,7 @@
 #include "mixer.h"
 
 
-static int init (struct xmp_context *ctx, struct xmp_control *);
+static int init (struct xmp_context *ctx);
 static void bufdump (int, struct xmp_context *);
 static void shutdown (void);
 
@@ -162,7 +162,7 @@ OSStatus render_proc(void *inRefCon,
  */
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	AudioStreamBasicDescription ad;
@@ -258,7 +258,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 		return XMP_ERR_DINIT;
 	}
 	
-	return xmp_smix_on(ctl);
+	return xmp_smix_on(ctx);
 }
 
 

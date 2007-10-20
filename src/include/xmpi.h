@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.32 2007-10-19 23:38:51 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.33 2007-10-20 13:35:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -192,7 +192,7 @@ struct xmp_driver_context {
 struct xmp_context {
 	int big_endian;
 	struct xmp_options o;
-	//struct xmp_control c;
+	struct xmp_control c;
 	struct xmp_driver_context d;
 	struct xmp_player_context p;
 };
@@ -201,7 +201,7 @@ struct xmp_context {
 /* Externs */
 
 extern void (*xmp_event_callback)(unsigned long);
-extern struct xmp_control *xmp_ctl;	/* built in control struct pointer */
+//extern struct xmp_control *xmp_ctl;	/* built in control struct pointer */
 
 
 /* Prototypes */
@@ -215,7 +215,7 @@ int	xmpi_player_start	(struct xmp_context *);
 int	xmpi_tell_wait		(void);
 int	xmpi_select_read	(int, int);
 int	xmpi_read_rc		(struct xmp_context *);
-void	xmpi_read_modconf	(struct xmp_context *, struct xmp_control *, unsigned, unsigned);
+void	xmpi_read_modconf	(struct xmp_context *, unsigned, unsigned);
 int	cksum			(FILE *);
 
 int8	read8s			(FILE *);

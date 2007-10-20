@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: arts.c,v 1.6 2007-10-19 19:31:08 cmatsuoka Exp $
+ * $Id: arts.c,v 1.7 2007-10-20 13:35:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,7 +19,7 @@
 
 static arts_stream_t as;
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static void bufdump (struct xmp_context *, int);
 static void myshutdown ();
 
@@ -52,7 +52,7 @@ struct xmp_drv_info drv_arts = {
     NULL
 };
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     struct xmp_options *o = &ctl->o;
     int rc, rate, bits, channels;
@@ -71,7 +71,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 
     as = arts_play_stream(rate, bits, channels, "xmp");
 
-    return xmp_smix_on(ctl);
+    return xmp_smix_on(ctx);
 }
 
 

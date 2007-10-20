@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.12 2007-10-19 23:38:50 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.13 2007-10-20 13:35:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -82,7 +82,7 @@ static void bufwipe	(void);
 static void clearmem	(void);
 static void seq_sync	(double);
 static int writepatch	(struct xmp_context *ctx, struct patch_info *);
-static int init		(struct xmp_context *ctx, struct xmp_control *);
+static int init		(struct xmp_context *ctx);
 static int getmsg	(void);
 static void shutdown	(void);
 
@@ -355,11 +355,12 @@ static int getmsg()
 }
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     int found;
     char *buf, *token;
     char **parm;
+    struct xmp_control *c = &ctx->c;
     struct xmp_options *o = &ctx->o;
 
     parm_init();
@@ -397,7 +398,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 		ioctl(seqfd, SNDCTL_SYNTH_MEMAVL, &i);
 		if (!i)
 		    continue;
-		ctl->memavl = i;
+		c->memavl = i;
 	    }
 
     	    buf = calloc(1, 256);

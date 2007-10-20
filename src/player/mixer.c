@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.21 2007-10-19 23:38:51 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.22 2007-10-20 13:35:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -272,7 +272,7 @@ static int softmixer(struct xmp_context *ctx)
 	    continue;
 
 	if (vi->period < 1) {
-	    drv_resetvoice (voc, 1);
+	    drv_resetvoice(ctx, voc, 1);
 	    continue;
 	}
 
@@ -361,7 +361,7 @@ static int softmixer(struct xmp_context *ctx)
 	    /* Single sample loop run */
             if (vi->fidx == 0 || lps >= lpe) {
 		smix_anticlick(voc, 0, 0, buf_pos, tic_cnt);
-		drv_resetvoice(voc, 0);
+		drv_resetvoice(ctx, voc, 0);
 		tic_cnt = 0;
 		continue;
 	    }
@@ -567,16 +567,17 @@ int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 }
 
 
-int xmp_smix_on(struct xmp_control *ctl)
+int xmp_smix_on(struct xmp_context *ctx)
 {
+    struct xmp_control *c = &ctx->c;
     int cnt;
 
     if (smix_numbuf)
 	return XMP_OK;
 
-    if (ctl->numbuf < 1)
-	ctl->numbuf = 1;
-    cnt = smix_numbuf = ctl->numbuf;
+    if (c->numbuf < 1)
+	c->numbuf = 1;
+    cnt = smix_numbuf = c->numbuf;
 
     smix_buffer = calloc(sizeof (void *), cnt);
     smix_buf32b = calloc(sizeof (int), OUT_MAXLEN);
@@ -591,7 +592,7 @@ int xmp_smix_on(struct xmp_control *ctl)
     smix_numvoc = SMIX_NUMVOC;
     extern_drv = TURN_OFF;
 
-    //synth_init (ctl->freq);
+    //synth_init (c->freq);
 
     return XMP_OK;
 }

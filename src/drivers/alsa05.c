@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.13 2007-10-19 20:55:00 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.14 2007-10-20 13:35:08 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -40,7 +40,7 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int init (struct xmp_context *ctx, struct xmp_control *);
+static int init (struct xmp_context *ctx);
 static void dshutdown (void);
 static void bufdump (struct xmp_context *, int);
 static void bufwipe (void);
@@ -135,7 +135,7 @@ static int to_fmt(struct xmp_context *ctx)
 	return fmt;
 }
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
 	struct xmp_options *o = &ctl->o;
 	snd_pcm_channel_params_t params;
@@ -214,7 +214,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 		return XMP_ERR_DINIT;
 	}
 
-	return xmp_smix_on(ctl);
+	return xmp_smix_on(ctx);
 }
 
 static void bufwipe(void)

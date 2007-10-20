@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.9 2007-10-19 20:55:00 cmatsuoka Exp $
+ * $Id: file.c,v 1.10 2007-10-20 13:35:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,7 +27,7 @@
 static int fd;
 static int endian;
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown ();
 
@@ -66,7 +66,7 @@ struct xmp_drv_info drv_file = {
     NULL
 };
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     struct xmp_options *o = &ctx->o;
     char *buf;
@@ -93,7 +93,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	drv_file.description = "Output to stdout";
     }
 
-    return xmp_smix_on(ctl);
+    return xmp_smix_on(ctx);
 }
 
 

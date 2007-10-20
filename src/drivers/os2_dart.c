@@ -37,7 +37,7 @@
 #define BUF_MIN 8
 #define BUF_MAX 32
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static int setaudio (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
@@ -207,7 +207,7 @@ static int setaudio (struct xmp_options *o)
 }
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
    //printf( "In Init...\n" );
 
@@ -221,7 +221,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	MixSetupParms.pmixWrite(MixSetupParms.ulMixHandle,MixBuffers,2);
 
    //printf("Starting the Mixer!\n");
-   return xmp_smix_on (ctl);
+   return xmp_smix_on(ctx);
 
    //printf("Init Done!!\n");
 }

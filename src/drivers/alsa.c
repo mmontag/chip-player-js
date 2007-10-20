@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.13 2007-10-19 20:55:00 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.14 2007-10-20 13:35:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,7 +29,7 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static int prepare_driver (void);
 static void dshutdown (void);
 static int to_fmt (struct xmp_context *);
@@ -75,7 +75,7 @@ struct xmp_drv_info drv_alsa_mix = {
 static snd_pcm_t *pcm_handle;
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
 	snd_pcm_hw_params_t *hwparams;
 	int ret;
@@ -124,7 +124,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
   
 	o->freq = rate;
 
-	return xmp_smix_on(ctl);
+	return xmp_smix_on(ctx);
 }
 
 

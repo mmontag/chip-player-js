@@ -56,7 +56,7 @@ struct voice_info {
     int resonance;
 };
 
-int	xmp_smix_on		(struct xmp_control *);
+int	xmp_smix_on		(struct xmp_context *);
 void	xmp_smix_off		(void);
 void    xmp_smix_setvol		(int, int);
 void    xmp_smix_seteffect	(int, int, int);

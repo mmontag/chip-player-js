@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: debug.c,v 1.4 2007-10-19 19:31:09 cmatsuoka Exp $
+ * $Id: debug.c,v 1.5 2007-10-20 13:35:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -34,7 +34,7 @@ static void bufwipe	(void);
 static void clearmem	(void);
 static void seq_sync	(double);
 static int writepatch	(struct patch_info *);
-static int init		(struct xmp_context *ctx, struct xmp_control *);
+static int init		(struct xmp_context *ctx);
 static int getmsg	(void);
 static void shutdown	(void);
 
@@ -162,7 +162,7 @@ static int getmsg ()
     return XMP_OK;
 }
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     return XMP_OK;
 }

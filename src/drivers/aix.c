@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: aix.c,v 1.7 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: aix.c,v 1.8 2007-10-20 13:35:08 cmatsuoka Exp $
  */
 
 /*
@@ -38,7 +38,7 @@ static int audio_fd;
 static audio_control control; 
 static audio_change change;
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static int setaudio (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
@@ -138,7 +138,7 @@ static int setaudio(struct xmp_options *o)
 }
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     if ((audio_fd = open("/dev/paud0/1", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
@@ -146,7 +146,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     if (setaudio(&ctx->o) != XMP_OK)
 	return XMP_ERR_DINIT;
 
-    return xmp_smix_on(ctl);
+    return xmp_smix_on(ctx);
 }
 
 

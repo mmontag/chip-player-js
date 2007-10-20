@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.12 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.13 2007-10-20 13:35:10 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -194,7 +194,7 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 }
 
 
-void xmpi_read_modconf(struct xmp_context *ctx, struct xmp_control *ctl, unsigned crc, unsigned size)
+void xmpi_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
 {
     char myrc[MAXPATHLEN];
     char *home = getenv ("HOME");

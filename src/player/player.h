@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.12 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: player.h,v 1.13 2007-10-20 13:35:10 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -179,7 +179,7 @@ struct xmp_channel {
 };
 
 
-void process_fx(struct xmp_player_context *, int, uint8, uint8, uint8, struct xmp_channel *);
+void process_fx(struct xmp_context *, int, uint8, uint8, uint8, struct xmp_channel *);
 void xmp_med_synth(struct xmp_context *, int, struct xmp_channel *, int);
 int get_med_arp(struct xmp_player_context *, struct xmp_channel *);
 int get_med_vibrato(struct xmp_channel *);

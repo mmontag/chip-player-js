@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: netbsd.c,v 1.6 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: netbsd.c,v 1.7 2007-10-20 13:35:09 cmatsuoka Exp $
  */
 
 /* based upon bsd.c and improved from solaris.c. Tested running NetBSD. */
@@ -33,7 +33,7 @@
 static int audio_fd;
 static int audioctl_fd;
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static int setaudio (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
@@ -155,7 +155,7 @@ XXX */
 }
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     if ((audio_fd = open ("/dev/sound", O_WRONLY)) == -1)
 	return XMP_ERR_DINIT;
@@ -163,7 +163,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     if (setaudio(&ctx->o) != XMP_OK)
 	return XMP_ERR_DINIT;
 
-    return xmp_smix_on(ctl);
+    return xmp_smix_on(ctx);
 }
 
 

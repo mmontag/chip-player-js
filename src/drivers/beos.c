@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.13 2007-10-19 20:37:40 cmatsuoka Exp $
+ * $Id: beos.c,v 1.14 2007-10-20 13:35:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,7 +26,7 @@ extern "C" {
 #include "mixer.h"
 }
 
-static int init (struct xmp_context *ctx, struct xmp_control *);
+static int init (struct xmp_context *ctx);
 static void bufdump (struct xmp_context *, int);
 static void myshutdown ();
 
@@ -168,7 +168,7 @@ void render_proc(void *theCookie, void *buffer, size_t req,
 }
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	char *dev;
@@ -204,7 +204,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	
 	player = new BSoundPlayer(&fmt, "xmp output", render_proc);
 
-	return xmp_smix_on(ctl);
+	return xmp_smix_on(ctx);
 }
 
 

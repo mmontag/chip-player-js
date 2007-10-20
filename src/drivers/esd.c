@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: esd.c,v 1.6 2007-10-19 19:31:09 cmatsuoka Exp $
+ * $Id: esd.c,v 1.7 2007-10-20 13:35:08 cmatsuoka Exp $
  */
 
 /* Based on esdcat.c from the Enlightened Sound Daemon 0.2 for Linux
@@ -31,7 +31,7 @@
 
 static int audio_fd = -1;
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static void bufdump (struct xmp_context *, int);
 static void myshutdown ();
 
@@ -64,7 +64,7 @@ struct xmp_drv_info drv_esd = {
     NULL
 };
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     int format, rate = ESD_DEFAULT_RATE;
     int bits = ESD_BITS16, channels = ESD_STEREO;
@@ -86,7 +86,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
 	return XMP_ERR_DINIT;
     }
 
-    return xmp_smix_on(ctl);
+    return xmp_smix_on(ctx);
 }
 
 

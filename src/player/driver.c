@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.49 2007-10-20 11:50:45 cmatsuoka Exp $
+ * $Id: driver.c,v 1.50 2007-10-20 13:35:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,12 +22,9 @@
 
 #define	FREE	-1
 
-struct xmp_control *xmp_ctl;
-
 static int *ch2vo_count = NULL;
 static int *ch2vo_array = NULL;
 
-//struct patch_info **patch_array = NULL;
 static struct voice_info *voice_array = NULL;
 static struct xmp_drv_info *drv_array = NULL;
 static struct xmp_drv_info *driver = NULL;
@@ -42,8 +39,8 @@ static int maxvoc;		/* */
 static int agevoc;		/* */
 static int extern_drv;		/* set output to driver other than mixer */
 
-static int drv_select (struct xmp_context *, struct xmp_control *);
-static inline void drv_resetvoice (int, int);
+static int drv_select (struct xmp_context *);
+static inline void drv_resetvoice (struct xmp_context *, int, int);
 
 void (*_driver_callback)(void *, int) = NULL;
 
@@ -146,11 +143,12 @@ void xmp_init_drivers()
 }
 
 
-static int drv_select(struct xmp_context *ctx, struct xmp_control *ctl)
+static int drv_select(struct xmp_context *ctx)
 {
     struct xmp_drv_info *drv;
     int ret;
     struct xmp_options *o = &ctx->o;
+    struct xmp_control *c = &ctx->c;
 
     if (!drv_array)
 	return XMP_ERR_NODRV;
@@ -159,7 +157,7 @@ static int drv_select(struct xmp_context *ctx, struct xmp_control *ctl)
  	ret = XMP_ERR_NODRV;
 	for (drv = drv_array; drv; drv = drv->next) {
 	    if (!strcmp (drv->id, o->drv_id)) {
-		if ((ret = drv->init(ctx, ctl)) == XMP_OK)
+		if ((ret = drv->init(ctx)) == XMP_OK)
 		    break;
 	    }
 	}
@@ -170,7 +168,7 @@ static int drv_select(struct xmp_context *ctx, struct xmp_control *ctl)
 	for (; drv; drv = drv->next) {
 	    if (o->verbosity > 2)
 		report ("Probing %s... ", drv->description);
-	    if (drv->init(ctx, ctl) == XMP_OK) {
+	    if (drv->init(ctx) == XMP_OK) {
 		if (o->verbosity > 2)
 		    report ("found\n");
 		ret = XMP_OK;
@@ -184,23 +182,25 @@ static int drv_select(struct xmp_context *ctx, struct xmp_control *ctl)
 	return ret;
 
     o->drv_id = drv->id;
-    ctl->description = drv->description;
-    ctl->help = drv->help;
+    c->description = drv->description;
+    c->help = drv->help;
     driver = drv;
 
     return XMP_OK;
 }
 
 
-static void drv_resetvoice(int voc, int mute)
+static void drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
 {
+    struct xmp_control *c = &ctx->c;
+
     if ((uint32) voc >= numvoc)
 	return;
 
     if (mute)
-	driver->setvol (voc, 0);
+	driver->setvol(voc, 0);
 
-    xmp_ctl->numvoc--;
+    c->numvoc--;
     ch2vo_count[voice_array[voc].root]--;
     ch2vo_array[voice_array[voc].chn] = FREE;
     memset(&voice_array[voc], 0, sizeof (struct voice_info));
@@ -222,20 +222,17 @@ void xmp_drv_register(struct xmp_drv_info *drv)
 }
 
 
-int xmp_drv_open(struct xmp_context *ctx, struct xmp_control *ctl)
+int xmp_drv_open(struct xmp_context *ctx)
 {
     int status;
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_control *c = &ctx->c;
     struct xmp_options *o = &ctx->o;
 
-    if (!ctl)
-	return XMP_ERR_NOCTL;
-
-    xmp_ctl = ctl;
-    ctl->memavl = 0;
+    c->memavl = 0;
     smix_buf32b = NULL;
     extern_drv = TURN_ON;
-    if ((status = drv_select(ctx, ctl)) != XMP_OK)
+    if ((status = drv_select(ctx)) != XMP_OK)
 	return status;
 
     d->patch_array = calloc(XMP_DEF_MAXPAT, sizeof(struct patch_info *));
@@ -253,20 +250,16 @@ int xmp_drv_open(struct xmp_context *ctx, struct xmp_control *ctl)
 
 
 /* for the XMMS/BMP/Audacious plugin */
-int xmp_drv_set(struct xmp_context *ctx, struct xmp_control *ctl)
+int xmp_drv_set(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
     struct xmp_drv_info *drv;
 
-    if (!ctl)
-	return XMP_ERR_NOCTL;
-
     if (!drv_array)
 	return XMP_ERR_NODRV;
 
     d->patch_array = NULL;
-    xmp_ctl = ctl;
     for (drv = drv_array; drv; drv = drv->next) {
 	if (!strcmp (drv->id, o->drv_id)) {
 	    driver = drv;
@@ -286,8 +279,6 @@ void xmp_drv_close(struct xmp_context *ctx)
     memset(cmute_array, 0, nummte * sizeof(int));
     free(d->patch_array);
     driver->shutdown();
-    xmp_ctl = NULL;
-
     synth_deinit();
 }
 
@@ -297,12 +288,10 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_control *c = &ctx->c;
     struct xmp_options *o = &ctx->o;
 
-    if (!xmp_ctl)
-	return XMP_ERR_DOPEN;
-
-    numtrk = xmp_ctl->numtrk = num;
+    numtrk = c->numtrk = num;
     num = driver->numvoices (driver->numvoices(135711));
     driver->reset ();
 
@@ -323,10 +312,9 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
 
     for (; num--; voice_array[num].chn = voice_array[num].root = FREE);
     for (num = numchn; num--; ch2vo_array[num] = FREE);
-    xmp_ctl->numvoc = agevoc = 0;
 
-    xmp_ctl->numchn = numchn;
-
+    c->numvoc = agevoc = 0;
+    c->numchn = numchn;
     smix_mode = o->outfmt & XMP_FMT_MONO ? 1 : 2;
     smix_resol = o->resol > 8 ? 2 : 1;
     smix_resetvar(ctx);
@@ -337,12 +325,14 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
 
 void xmp_drv_off(struct xmp_context *ctx)
 {
+    struct xmp_control *c = &ctx->c;
+
     if (numchn < 1)
 	return;
 
     xmp_drv_writepatch(ctx, NULL);
-    xmp_ctl->numvoc = numvoc = 0;
-    xmp_ctl->numchn = numchn = 0;
+    c->numvoc = numvoc = 0;
+    c->numchn = numchn = 0;
     numtrk = 0;
     free(ch2vo_count);
     free(ch2vo_array);
@@ -356,8 +346,9 @@ void xmp_drv_off(struct xmp_context *ctx)
 }
 
 
-void xmp_drv_reset()
+void xmp_drv_reset(struct xmp_context *ctx)
 {
+    struct xmp_control *c = &ctx->c;
     int num;
 
     if (numchn < 1)
@@ -371,12 +362,13 @@ void xmp_drv_reset()
     memset(voice_array, 0, numvoc * sizeof (struct voice_info));
     for (; num--; voice_array[num].chn = voice_array[num].root = FREE);
     for (num = numchn; num--; ch2vo_array[num] = FREE);
-    xmp_ctl->numvoc = agevoc = 0;
+    c->numvoc = agevoc = 0;
 }
 
 
-void xmp_drv_resetchannel(int chn)
+void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
 {
+    struct xmp_control *c = &ctx->c;
     int voc;
 
     voc = ch2vo_array[chn];
@@ -384,9 +376,9 @@ void xmp_drv_resetchannel(int chn)
     if ((uint32)chn >= numchn || (uint32)voc >= numvoc)
 	return;
 
-    driver->setvol (voc, 0);
+    driver->setvol(voc, 0);
 
-    xmp_ctl->numvoc--;
+    c->numvoc--;
     ch2vo_count[voice_array[voc].root]--;
     ch2vo_array[chn] = FREE;
     memset (&voice_array[voc], 0, sizeof (struct voice_info));
@@ -394,8 +386,9 @@ void xmp_drv_resetchannel(int chn)
 }
 
 
-static int drv_allocvoice(int chn)
+static int drv_allocvoice(struct xmp_context *ctx, int chn)
 {
+    struct xmp_control *c = &ctx->c;
     int voc, vfree;
     uint32 age;
 
@@ -406,7 +399,7 @@ static int drv_allocvoice(int chn)
 
 	voice_array[voc].age = agevoc;
 	ch2vo_count[chn]++;
-	xmp_ctl->numvoc++;
+	c->numvoc++;
 
 	return voc;
     }
@@ -435,7 +428,7 @@ void xmp_drv_mute(int chn, int status)
 }
 
 
-void xmp_drv_setvol(int chn, int vol)
+void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
 {
     int voc;
 
@@ -450,7 +443,7 @@ void xmp_drv_setvol(int chn, int vol)
     driver->setvol(voc, vol);
 
     if (!(vol || chn < numtrk))
-	drv_resetvoice(voc, TURN_ON);
+	drv_resetvoice(ctx, voc, TURN_ON);
 }
 
 
@@ -529,7 +522,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 			if (voc != ch2vo_array[chn] || voice_array[voc].act)
 			    voice_array[voc].act = dca;
 		    } else
-			drv_resetvoice (voc, TURN_ON);
+			drv_resetvoice(ctx, voc, TURN_ON);
 		}
     }
 
@@ -537,7 +530,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 
     if (voc > FREE) {
 	if (voice_array[voc].act && maxvoc > 1) {
-	    if ((vfree = drv_allocvoice (chn)) > FREE) {
+	    if ((vfree = drv_allocvoice(ctx, chn)) > FREE) {
 		voice_array[vfree].root = chn;
 		voice_array[ch2vo_array[chn] = vfree].chn = chn;
 		for (chn = numtrk; ch2vo_array[chn++] > FREE;);
@@ -549,14 +542,14 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 	    }
 	}
     } else {
-	if ((voc = drv_allocvoice (chn)) < 0)
+	if ((voc = drv_allocvoice(ctx, chn)) < 0)
 	    return -1;
 	voice_array[ch2vo_array[chn] = voc].chn = chn;
 	voice_array[voc].root = chn;
     }
 
     if (smp < 0) {
-	drv_resetvoice (voc, TURN_ON);
+	drv_resetvoice(ctx, voc, TURN_ON);
 	return -1;
     }
 
@@ -621,14 +614,14 @@ void xmp_drv_retrig(struct xmp_context *ctx, int chn)
 }
 
 
-void xmp_drv_pastnote(int chn, int act)
+void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
 {
     int voc;
 
     for (voc = numvoc; voc--;) {
 	if (voice_array[voc].root == chn && voice_array[voc].chn >= numtrk) {
 	    if (act == XMP_ACT_CUT)
-		drv_resetvoice (voc, TURN_ON);
+		drv_resetvoice(ctx, voc, TURN_ON);
 	    else
 		voice_array[voc].act = act;
 	}
@@ -744,9 +737,6 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 {
     struct xmp_driver_context *d = &ctx->d;
     int num;
-
-    if (!xmp_ctl)
-	return XMP_ERR_DOPEN;
 
     if (!d->patch_array)	/* FIXME -- this makes xmms happy */
     	return XMP_OK;

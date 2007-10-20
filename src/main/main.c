@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.21 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: main.c,v 1.22 2007-10-20 13:35:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -71,7 +71,6 @@ static struct xmp_module_info mi;
 #endif
 
 static int verbosity;
-static struct xmp_control ctl;
 static struct termios term;
 static int background = 0;
 #ifdef SIGTSTP
@@ -357,7 +356,7 @@ int main (int argc, char **argv)
 
     ctx = xmp_create_context();
 
-    xmp_init(ctx, argc, argv, &ctl);
+    xmp_init(ctx, argc, argv);
     opt = xmp_get_options(ctx);
 
     opt->verbosity = 1;
@@ -384,10 +383,10 @@ int main (int argc, char **argv)
     if ((background = (tcgetpgrp (0) == getppid ()))) {
 	verb = opt->verbosity;
 	opt->verbosity = 0;
-	i = xmp_open_audio(ctx, &ctl);
+	i = xmp_open_audio(ctx);
 	xmp_verbosity_level(ctx, opt->verbosity = verb);
     } else {
-	i = xmp_open_audio(ctx, &ctl);
+	i = xmp_open_audio(ctx);
     }
 
     if (i < 0) {
@@ -427,15 +426,15 @@ int main (int argc, char **argv)
 	int srate, res, chn, itpt;
 	
 	xmp_get_driver_cfg(ctx, &srate, &res, &chn, &itpt);
-	fprintf (stderr, "Using %s\n", (char*)xmp_get_driver_description ());
+	fprintf(stderr, "Using %s\n", (char*)xmp_get_driver_description(ctx));
 	if (srate) {
-	    fprintf (stderr, "Mixer set to %dbit, %d Hz, %s%s\n", res, srate,
+	    fprintf(stderr, "Mixer set to %dbit, %d Hz, %s%s\n", res, srate,
 		itpt ? "interpolated " : "", chn > 1 ? "stereo" : "mono");
 	}
     }
 
     if (probeonly)
-	exit (0);
+	exit(0);
 
     /*
      * Support for real-time priority by Douglas Carmichael <dcarmich@mcs.com>

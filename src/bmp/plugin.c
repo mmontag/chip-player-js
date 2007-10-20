@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.39 2007-10-20 11:50:37 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.40 2007-10-20 13:35:03 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -72,8 +72,6 @@ static void	get_song_info	(char *, char **, int *);
 static void	configure	(void);
 static void	config_ok	(GtkWidget *, gpointer);
 static void	file_info_box	(char *);
-
-static struct xmp_control ctl;
 
 static pthread_t decode_thread;
 static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -415,8 +413,7 @@ static void init(void)
 
 	file_info_box_build();
 
-	memset(&ctl, 0, sizeof (struct xmp_control));
-	xmp_init_callback(&ctl, driver_callback);
+	xmp_init_callback(ctx, driver_callback);
 	xmp_register_event_callback(x11_event_callback);
 
 	memset(ii, 0, sizeof (ii));
@@ -461,7 +458,6 @@ static void init(void)
 
 	file_info_box_build();
 
-	memset(&ctl, 0, sizeof (struct xmp_control));
 	xmp_init_callback(ctx, driver_callback);
 	xmp_register_event_callback(x11_event_callback);
 
@@ -673,7 +669,7 @@ static void play_file(InputPlayback *ipb)
 	    audio_open = TRUE;
 	}
 
-	xmp_open_audio(ctx, &ctl);
+	xmp_open_audio(ctx);
 
 	pipe (fd_info);
 	fd_old2 = dup (fileno (stderr));

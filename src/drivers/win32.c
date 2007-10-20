@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.6 2007-10-19 19:31:10 cmatsuoka Exp $
+ * $Id: win32.c,v 1.7 2007-10-20 13:35:09 cmatsuoka Exp $
  */
 
 /*
@@ -27,7 +27,7 @@ static HWAVEOUT dev = NULL;
 static int nBlocks = 0;
 static int MAX_BLOCKS  = 6;
 
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static void bufdump (struct xmp_context *, int);
 static void shutdown ();
 
@@ -89,7 +89,7 @@ static void CALLBACK wave_callback (HWAVE hWave, UINT uMsg, DWORD dwInstance,
     }
 }
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     struct xmp_options *o = &ctx->o;
     MMRESULT res;
@@ -146,7 +146,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     waveOutReset(dev);
     InitializeCriticalSection(&cs);
 
-    return xmp_smix_on(ctl);
+    return xmp_smix_on(ctx);
 }
 
 

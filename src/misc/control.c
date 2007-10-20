@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.26 2007-10-19 23:38:51 cmatsuoka Exp $
+ * $Id: control.c,v 1.27 2007-10-20 13:35:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -76,7 +76,7 @@ void xmp_init_callback(xmp_context ctx, void (*callback) (void *, int))
 	o->drv_id = "callback";
 }
 
-void xmp_init(xmp_context ctx, int argc, char **argv, struct xmp_control *ctl)
+void xmp_init(xmp_context ctx, int argc, char **argv)
 {
 	int num;
 	uint16 w;
@@ -88,7 +88,6 @@ void xmp_init(xmp_context ctx, int argc, char **argv, struct xmp_control *ctl)
 	xmp_init_formats();
 	pw_init();
 
-	memset(ctl, 0, sizeof(struct xmp_control));
 	xmp_event_callback = NULL;
 
 	/* must be parsed before loading the rc file. */
@@ -102,9 +101,9 @@ void xmp_init(xmp_context ctx, int argc, char **argv, struct xmp_control *ctl)
 	xmpi_tell_wait();
 }
 
-inline int xmp_open_audio(xmp_context ctx, struct xmp_control *ctl)
+inline int xmp_open_audio(xmp_context ctx)
 {
-	return xmp_drv_open((struct xmp_context *)ctx, ctl);
+	return xmp_drv_open((struct xmp_context *)ctx);
 }
 
 inline void xmp_close_audio(xmp_context ctx)
@@ -139,6 +138,7 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 {
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 	struct xmp_mod_context *m = &p->m;
+	struct xmp_control *c = &((struct xmp_context *)ctx)->c;
 
 	switch (cmd) {
 	case XMP_ORD_PREV:
@@ -157,8 +157,8 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 		p->pos = -2;
 		break;
 	case XMP_MOD_PAUSE:
-		xmp_ctl->pause ^= 1;
-		return xmp_ctl->pause;
+		c->pause ^= 1;
+		return c->pause;
 	case XMP_MOD_RESTART:
 		p->pos = -1;
 		break;
@@ -250,9 +250,10 @@ void xmp_release_module(xmp_context ctx)
 void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,
 			int *itpt)
 {
+	struct xmp_control *c = &((struct xmp_context *)ctx)->c;
 	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
-	*srate = xmp_ctl->memavl ? 0 : o->freq;
+	*srate = c->memavl ? 0 : o->freq;
 	*res = o->resol ? o->resol : 8 /* U_LAW */ ;
 	*chn = o->outfmt & XMP_FMT_MONO ? 1 : 2;
 	*itpt = !!(o->flags & XMP_CTL_ITPT);

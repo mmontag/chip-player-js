@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.26 2007-10-20 11:50:37 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.27 2007-10-20 13:35:09 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -208,7 +208,7 @@ void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
 struct xmp_options *xmp_get_options(xmp_context);
 
-void	xmp_init			(xmp_context, int, char **, struct xmp_control *);
+void	xmp_init			(xmp_context, int, char **);
 int	xmp_load_module			(xmp_context, char *);
 int	xmp_test_module			(xmp_context, char *, char *);
 struct xmp_module_info*
@@ -217,7 +217,7 @@ struct xmp_fmt_info*
 	xmp_get_fmt_info		(struct xmp_fmt_info **);
 struct xmp_drv_info*
 	xmp_get_drv_info		(struct xmp_drv_info **);
-char*	xmp_get_driver_description 	(void);
+char*	xmp_get_driver_description 	(xmp_context);
 void	xmp_set_driver_parameter 	(struct xmp_options *, char *);
 void	xmp_get_driver_cfg		(xmp_context, int *, int *, int *, int *);
 void	xmp_channel_mute		(int, int, int);
@@ -226,7 +226,7 @@ void	xmp_register_event_callback	(void (*)(unsigned long));
 void	xmp_register_driver_callback	(void (*)(void *, int));
 void	xmp_init_callback		(xmp_context, void (*)(void *, int));
 int	xmp_player_ctl			(xmp_context, int, int);
-int	xmp_open_audio			(xmp_context, struct xmp_control *);
+int	xmp_open_audio			(xmp_context);
 void	xmp_close_audio			(xmp_context);
 int	xmp_play_module			(xmp_context);
 void	xmp_release_module		(xmp_context);

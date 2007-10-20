@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_mix.c,v 1.10 2007-10-19 20:55:00 cmatsuoka Exp $
+ * $Id: oss_mix.c,v 1.11 2007-10-20 13:35:09 cmatsuoka Exp $
  */
 
 /*
@@ -39,7 +39,7 @@ static int audio_fd;
 static void from_fmt (struct xmp_context *, int);
 static int to_fmt (struct xmp_context *);
 static void setaudio (struct xmp_context *);
-static int init (struct xmp_context *, struct xmp_control *);
+static int init (struct xmp_context *);
 static void shutdown (void);
 static void bufdump (struct xmp_context *, int);
 static void flush (void);
@@ -165,7 +165,7 @@ static void setaudio(struct xmp_context *ctx)
 }
 
 
-static int init(struct xmp_context *ctx, struct xmp_control *ctl)
+static int init(struct xmp_context *ctx)
 {
     char *dev_audio[] = { "/dev/dsp", "/dev/sound/dsp" };
     struct xmp_options *o = &ctx->o;
@@ -210,7 +210,7 @@ static int init(struct xmp_context *ctx, struct xmp_control *ctl)
     }
 #endif
 
-    return xmp_smix_on(ctl);
+    return xmp_smix_on(ctx);
 }
 
 
