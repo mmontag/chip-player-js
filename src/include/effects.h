@@ -69,6 +69,8 @@
 #define FX_PER_PORTA_UP	0x79
 #define FX_PER_TPORTA	0x7a
 #define FX_PER_VIBRATO	0x7b
+#define FX_TEMPO_CP	0x7e
+#define FX_PER_CANCEL	0x7f
 
 /* IT effects */
 #define FX_TRK_VOL      0x80

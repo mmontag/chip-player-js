@@ -126,16 +126,14 @@ fx_porta_dn:
 	break;
     case FX_PER_PORTA_UP:			/* Persistent portamento up */
 	SET_PER(PITCHBEND);
-	if ((xc->porta = fxp) != 0)
-	    xc->f_val = -fxp;
-	else
+	xc->f_val = -fxp;
+	if ((xc->porta = fxp) == 0)
 	    RESET_PER(PITCHBEND);
 	break;
     case FX_PER_PORTA_DN:			/* Persistent portamento down */
 	SET(PITCHBEND);
-	if ((xc->porta = fxp) != 0)
-	    xc->f_val = fxp;
-	else
+	xc->f_val = fxp;
+	if ((xc->porta = fxp) == 0)
 	    RESET_PER(PITCHBEND);
 	break;
     case FX_PER_TPORTA:				/* Persistent tone portamento */
@@ -143,10 +141,16 @@ fx_porta_dn:
 	    break;
 	SET_PER(TONEPORTA);
 	DO_TONEPORTA();
-	if (fxp)
-	    xc->s_val = fxp;
-	else
+	xc->s_val = fxp;
+	if (fxp == 0)
 	    RESET_PER(TONEPORTA);
+	break;
+    case FX_TEMPO_CP:				/* Set tempo and ... */
+	if (fxp)
+	    p->tempo = fxp;
+	/* fall through */
+    case FX_PER_CANCEL:				/* Cancel persistent effects */
+	RESET_PER(VIBRATO | PITCHBEND | TONEPORTA);
 	break;
     case FX_VIBRATO:				/* Vibrato */
 	SET(VIBRATO);

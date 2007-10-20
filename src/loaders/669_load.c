@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.19 2007-10-20 11:50:37 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.20 2007-10-20 16:04:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -74,7 +74,7 @@ static uint8 fx[] = {
     FX_PER_TPORTA,
     FX_FINETUNE,
     FX_PER_VIBRATO,
-    FX_TEMPO
+    FX_TEMPO_CP
 };
 
 
@@ -129,11 +129,8 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    if (V(0))
-	report ("Instruments    : %d\n", m->xxh->pat);
-
-    if (V(1))
-	report ("     Instrument     Len  LBeg LEnd L\n");
+    reportv(ctx, 0, "Instruments    : %d\n", m->xxh->pat);
+    reportv(ctx, 1, "     Instrument     Len  LBeg LEnd L\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -168,9 +165,16 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
-	EVENT(i, 0, 0).f2t = FX_TEMPO;
+	EVENT(i, 0, 0).f2t = FX_TEMPO_CP;
 	EVENT(i, 0, 0).f2p = sfh.tempo[i];
 	EVENT(i, 1, sfh.pbrk[i]).f2t = FX_BREAK;
+	EVENT(i, 1, sfh.pbrk[i]).f2p = 0;
+
+	/* Cancel persistent effects at each new pattern */
+	for (j = 1; j < 8; j++) {
+	    EVENT(i, j, 0).f2t = FX_PER_CANCEL;
+	    EVENT(i, j, 0).f2p = 0;
+	}
 
 	for (j = 0; j < 64 * 8; j++) {
 	    event = &EVENT(i, j % 8, j / 8);
@@ -188,6 +192,13 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (MSN(ev[2]) > 5)
 		    continue;
 
+		/* If no instrument is playing on the channel where the
+		 * command was encountered, there will be no effect (except
+		 * for command 'f', it always changes the tempo). 
+		 */
+		if (MSN(ev[2] < 5) && !event->ins)
+		    continue;
+
 		event->fxt = fx[MSN(ev[2])];
 
 		switch (event->fxt) {
@@ -202,6 +213,10 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 		case FX_FINETUNE:
 		    event->fxp = 0x80 + (LSN(ev[2]) << 4);
 		    break;
+		case FX_TEMPO_CP:
+		    event->fxp = LSN(ev[2]);
+		    event->f2t = FX_PER_CANCEL;
+		    break;
 		}
 	    }
 	}
@@ -209,18 +224,16 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    if (V(0))
-	report ("\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[i], NULL);
-	if (V(0))
-	    report (".");
+	reportv(ctx, 0, ".");
     }
-    if (V(0))
-	report ("\n");
+    reportv(ctx, 0, "\n");
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = (i % 2) * 0xff;
