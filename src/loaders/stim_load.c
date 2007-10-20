@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stim_load.c,v 1.12 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: stim_load.c,v 1.13 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -77,7 +77,7 @@ static int stim_load(struct xmp_context *ctx, FILE *f, const int start)
     struct stim_instrument si;
     uint8 b1, b2, b3;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     sh.id = read32b(f);
     sh.smpaddr = read32b(f);
@@ -101,9 +101,9 @@ static int stim_load(struct xmp_context *ctx, FILE *f, const int start)
 
     sprintf(m->type, "STIM (Slamtilt)");
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Load and convert patterns */
     if (V(0))
@@ -156,7 +156,7 @@ static int stim_load(struct xmp_context *ctx, FILE *f, const int start)
 	    report (".");
     }
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     if (V(0))
 	report ("\nStored samples : %d ", m->xxh->smp);

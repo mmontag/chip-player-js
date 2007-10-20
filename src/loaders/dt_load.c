@@ -1,7 +1,7 @@
 /* Digital Tracker DTM loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dt_load.c,v 1.20 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: dt_load.c,v 1.21 2007-10-20 11:50:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -235,7 +235,7 @@ static int dt_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 
-	LOAD_INIT ();
+	LOAD_INIT();
 
 	pflag = sflag = 0;
 	

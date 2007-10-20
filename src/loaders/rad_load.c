@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rad_load.c,v 1.13 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: rad_load.c,v 1.14 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -62,7 +62,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
     uint16 ppat[32];
     uint8 b, r, c;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&rfh.magic, 16, 1, f);
     rfh.version = read8(f);
@@ -79,7 +79,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
     sprintf(m->type, "RAD %d.%d (Reality Adlib Tracker)",
 				MSN(rfh.version), LSN(rfh.version));
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     /* Read description */
     if (rfh.flags & 0x80) {
@@ -141,7 +141,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	xmp_drv_loadpatch(ctx, f, b - 1, 0, 0, NULL, (char *)sid);
     }
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxih[i].nsm = 1;
@@ -171,7 +171,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	report ("Instruments    : %d\n", m->xxh->ins);
 	report ("Stored patterns: %d ", m->xxh->pat);
     }
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
     for (i = 0; i < m->xxh->pat; i++) {

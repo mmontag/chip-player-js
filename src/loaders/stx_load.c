@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stx_load.c,v 1.15 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: stx_load.c,v 1.16 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -89,7 +89,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     uint16 x16;
     int bmod2stm = 0;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&sfh.name, 20, 1, f);
     fread(&sfh.magic, 8, 1, f);
@@ -147,7 +147,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	snprintf(m->type, XMP_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
 							broken ? 0 : 1);
 
-    MODULE_INFO ();
+    MODULE_INFO();
  
     pp_pat = calloc (2, m->xxh->pat);
     pp_ins = calloc (2, m->xxh->ins);
@@ -171,12 +171,11 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, 4, SEEK_CUR);
     }
  
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    if (V(1))
-	report ("     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
+    reportv(ctx, 1, "     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -224,11 +223,10 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	c2spd_to_note (sih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
-    if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -293,27 +291,22 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	}
 
-	if (V(0))
-	    report (".");
+	reportv(ctx, 0, ".");
     }
-
-    if (V(0))
-	report ("\n");
-
-    /* Read samples */
-    if (V(0))
-	report ("Stored samples : %d ", m->xxh->smp);
-    for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
-	    &m->xxs[m->xxi[i][0].sid], NULL);
-	if (V(0))
-	    report (".");
-    }
-    if (V(0))
-	report ("\n");
+    reportv(ctx, 0, "\n");
 
     free (pp_pat);
     free (pp_ins);
+
+    /* Read samples */
+    reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+
+    for (i = 0; i < m->xxh->ins; i++) {
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+	    &m->xxs[m->xxi[i][0].sid], NULL);
+	reportv(ctx, 0, ".");
+    }
+    reportv(ctx, 0, "\n");
 
     m->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
 

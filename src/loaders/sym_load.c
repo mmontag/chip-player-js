@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.32 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.33 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -12,7 +12,6 @@
 #include "config.h"
 #endif
 
-#include <assert.h>
 #include "load.h"
 #include "readlzw.h"
 
@@ -231,7 +230,10 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Sequence */
 	a = read8(f);			/* packing */
-	assert(a == 0 || a == 1);
+
+	if (a != 0 && a != 1)
+		return -1;
+
 	reportv(ctx, 0, "Packed sequence: %s\n", a ? "yes" : "no");
 
 	size = m->xxh->len * m->xxh->chn * 2;
@@ -263,7 +265,10 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Read and convert patterns */
 
 	a = read8(f);
-	assert(a == 0 || a == 1);
+
+	if (a != 0 && a != 1)
+		return -1;
+
 	reportv(ctx, 0, "Packed tracks  : %s\n", a ? "yes" : "no");
 	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
 
@@ -319,7 +324,6 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 buf[128];
 
 		memset(buf, 0, 128);
-//printf(" offset = %x\n", ftell(f));
 		fread(buf, 1, sn[i] & 0x7f, f);
 		copy_adjust(m->xxih[i].name, buf, 32);
 
@@ -352,13 +356,14 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		a = read8(f);
-//printf(" a = %d\n", a);
-		assert(a == 0 || a == 1 || a == 4);
+
+		if (a != 0 && a != 1 && a != 4)
+			return -1;
 
 		if (a == 1) {
 			uint8 *b = malloc(m->xxs[i].len);
-			read_lzw_dynamic(f, b, 13, 0, m->xxs[i].len, m->xxs[i].len,
-							XMP_LZW_QUIRK_DSYM);
+			read_lzw_dynamic(f, b, 13, 0, m->xxs[i].len,
+					m->xxs[i].len, XMP_LZW_QUIRK_DSYM);
 			xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid,
 				m->c4rate, XMP_SMP_NOLOAD | XMP_SMP_DIFF,
 				&m->xxs[m->xxi[i][0].sid], (char*)b);

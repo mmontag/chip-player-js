@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ptm_load.c,v 1.20 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: ptm_load.c,v 1.21 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -61,7 +61,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     struct ptm_instrument_header pih;
     uint8 n, b;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     /* Load and convert header */
 
@@ -105,9 +105,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     sprintf(m->type, "PTMF %d.%02x (Poly Tracker)",
 	pfh.vermaj, pfh.vermin);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
@@ -162,7 +162,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	c2spd_to_note (pih.c4spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read patterns */
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);

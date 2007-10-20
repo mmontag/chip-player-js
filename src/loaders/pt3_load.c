@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.14 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.15 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -129,7 +129,7 @@ static void get_info(struct xmp_context *ctx, int size, FILE *f)
     i.dsec = read16b(f);
     i.dmsc = read16b(f);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     if (V(0)) {
 	report("Creation date  : %02d/%02d/%02d %02d:%02d:%02d\n",

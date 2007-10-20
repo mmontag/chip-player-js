@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amd_load.c,v 1.9 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: amd_load.c,v 1.10 2007-10-20 11:50:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -74,7 +74,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
     uint16 w;
     uint8 b;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&afh.name, 24, 1, f);
     fread(&afh.author, 24, 1, f);
@@ -101,12 +101,12 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
     strncpy(m->name, (char *)afh.name, 24);
     strncpy(m->author, (char *)afh.author, 24);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     if (V(0))
 	report ("Instruments    : %d ", m->xxh->ins);
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Load instruments */
     for (i = 0; i < m->xxh->ins; i++) {

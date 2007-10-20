@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.143 2007-10-18 23:07:09 cmatsuoka Exp $
+$Id: ChangeLog,v 1.144 2007-10-20 11:50:36 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -34,6 +34,7 @@ Stable versions
 	- fixed sample offset on portamento after keyoff (Decibeter - Cosmic
 	  'Wegian Mamas.xm plays correctly now)
 	- fixed length of XM loops (jt_xmas.xm no longer out of tune)
+	- fixed Audacious plugin to display duration when adding to playlist
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

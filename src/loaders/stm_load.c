@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.16 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.17 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -84,7 +84,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     uint8 b;
     int bmod2stm = 0;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&sfh.name, 20, 1, f);			/* ASCIIZ song name */
     fread(&sfh.magic, 8, 1, f);			/* '!Scream!' */
@@ -171,7 +171,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     reportv(ctx, 0, "Module length  : %d patterns\n", m->xxh->len);
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);

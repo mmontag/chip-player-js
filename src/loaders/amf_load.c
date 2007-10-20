@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.16 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.17 2007-10-20 11:50:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -94,7 +94,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		fread(buf, 1, 16, f);
 	}
 
-	MODULE_INFO ();
+	MODULE_INFO();
  
 
 	/* Orders */

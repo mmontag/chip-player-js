@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.18 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.19 2007-10-20 11:50:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -37,7 +37,8 @@ static int ssn_test(FILE *f, char *t)
     if (read8(f) != 0xff)
 	return -1;
 
-    read_title(f, t, 0);
+    fseek(f, 2, SEEK_CUR);
+    read_title(f, t, 36);
 
     return 0;
 }
@@ -87,7 +88,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     struct ssn_instrument_header sih;
     uint8 ev[3];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&sfh.marker, 2, 1, f);	/* 'if'=standard, 'JN'=extended */
     fread(&sfh.message, 108, 1, f);	/* Song message */
@@ -112,12 +113,13 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->smp = m->xxh->ins;
     m->xxh->flg |= XXM_FLG_LINEAR;
 
+    copy_adjust((uint8 *)m->name, sfh.message, 36);
     strcpy(m->type, strncmp((char *)sfh.marker, "if", 2) ?
 				"669 (UNIS 669)" : "669 (Composer 669)");
 
     MODULE_INFO();
 
-    if (V(0)) {
+    if (V(1)) {
 	report ("| %-36.36s\n", sfh.message);
 	report ("| %-36.36s\n", sfh.message + 36);
 	report ("| %-36.36s\n", sfh.message + 72);
@@ -125,7 +127,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     if (V(0))
 	report ("Instruments    : %d\n", m->xxh->pat);
@@ -157,7 +159,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ');
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.14 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.15 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -159,7 +159,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 		(char)m->xxi[i][0].fin >> 4);
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 

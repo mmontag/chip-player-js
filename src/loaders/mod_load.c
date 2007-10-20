@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.31 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.32 2007-10-20 11:50:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -105,6 +105,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;
     struct xxm_event *event;
@@ -427,6 +428,9 @@ skip_test:
 	reportv(ctx, 0, ".");
     }
 
+    if (o->skipsmp)
+	return 0;
+
     /* Load samples */
 
     if ((x = strrchr(m->filename, '/'))) {
@@ -449,18 +453,15 @@ skip_test:
 	    if ((s = fopen (sn, "rb"))) {
 	        xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate, 0,
 		    &m->xxs[m->xxi[i][0].sid], NULL);
-		if (V(0))
-		    report (".");
+		reportv(ctx, 0, ".");
 	    }
 	} else {
 	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	        &m->xxs[m->xxi[i][0].sid], NULL);
-	    if (V(0))
-		report (".");
+	    reportv(ctx, 0, ".");
 	}
     }
-    if (V(0))
-	report ("\n");
+    reportv(ctx, 0, "\n");
 
     if (m->xxh->chn > 4)
 	m->fetch |= XMP_MODE_FT2;

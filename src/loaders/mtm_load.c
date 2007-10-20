@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mtm_load.c,v 1.13 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: mtm_load.c,v 1.14 2007-10-20 11:50:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -51,7 +51,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     uint8 mt[192];
     uint16 mp[32];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&mfh.magic, 3, 1, f);		/* "MTM" */
     mfh.version = read8(f);		/* MSN=major, LSN=minor */
@@ -84,9 +84,9 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     sprintf(m->type, "MTM (MultiTracker %d.%02d)",
 				MSN(mfh.version), LSN(mfh.version));
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments */
     for (i = 0; i < m->xxh->ins; i++) {
@@ -119,12 +119,12 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxi[i][0].vol, m->xxi[i][0].fin - 0x80);
     }
 
-    fread (m->xxo, 1, 128, f);
+    fread(m->xxo, 1, 128, f);
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
-    if (V(0))
-	report ("Stored tracks  : %d ", m->xxh->trk - 1);
+    reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk - 1);
+
     for (i = 0; i < m->xxh->trk; i++) {
 	m->xxt[i] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * mfh.rows, 1);
@@ -150,8 +150,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (V(0) && !(i % m->xxh->chn))
 	    report (".");
     }
-    if (V(0))
-	report ("\n");
+    reportv(ctx, 0, "\n");
 
     /* Read patterns */
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat - 1);
@@ -171,16 +170,13 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread (&j, 1, 1, f);
 
     /* Read samples */
-    if (V(0))
-	report ("\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-	if (V(0))
-	    report (".");
+	reportv(ctx, 0, ".");
     }
-    if (V(0))
-	report ("\n");
+    reportv(ctx, 0, "\n");
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = mfh.pan[i] << 4;

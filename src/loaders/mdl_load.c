@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.26 2007-10-19 17:41:13 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.27 2007-10-20 11:50:39 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -314,7 +314,7 @@ static void get_chunk_in(struct xmp_context *ctx, int size, FILE *f)
 
     fread(m->xxo, 1, m->xxh->len, f);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 }
 
 static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
@@ -327,7 +327,7 @@ static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
     m->xxh->pat = read8(f);
     m->xxh->trk = m->xxh->pat * m->xxh->chn;	/* Max */
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -356,7 +356,7 @@ static void get_chunk_p0(struct xmp_context *ctx, int size, FILE *f)
     m->xxh->pat = read8(f);
     m->xxh->trk = m->xxh->pat * m->xxh->chn;	/* Max */
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -476,7 +476,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 
     reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
 	i_index[i] = read8(f);
@@ -632,7 +632,7 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 
     reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     m->xxs = calloc (sizeof (struct xxm_sample), m->xxh->smp);
     packinfo = calloc (sizeof (int), m->xxh->smp);
@@ -694,8 +694,12 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     int i, len;
     uint8 *smpbuf, *buf;
+
+    if (o->skipsmp)
+	return;
 
     reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 

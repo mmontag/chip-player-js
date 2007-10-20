@@ -49,7 +49,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
     struct fcm_header fh;
     uint8 fe[4];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread (&fh, 1, sizeof (struct fcm_header), f);
 
@@ -60,7 +60,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
     strncpy (m->name, fh.name, 20);
     sprintf (m->type, "FC-M %d.%d", fh.vmaj, fh.vmin);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     m->xxh->len = fh.len;
 
@@ -74,7 +74,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
 	B_ENDIAN16 (fh.ins[i].size);
@@ -104,7 +104,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	}
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Load and convert patterns */
     if (V(0))

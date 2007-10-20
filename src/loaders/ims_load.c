@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ims_load.c,v 1.13 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: ims_load.c,v 1.14 2007-10-20 11:50:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -147,7 +147,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     uint8 ims_event[3];
     int xpo = 21;		/* Tuned against UADE */
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     m->xxh->ins = 31;
     m->xxh->smp = m->xxh->ins;

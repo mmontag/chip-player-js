@@ -1,7 +1,7 @@
 /* DIGI Booster module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: digi_load.c,v 1.13 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: digi_load.c,v 1.14 2007-10-20 11:50:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -89,7 +89,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     uint16 w;
     int i, j, k, c;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&dh.id, 20, 1, f);
 
@@ -129,12 +129,12 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     copy_adjust((uint8 *)m->name, dh.title, 32);
     sprintf(m->type, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
 
-    MODULE_INFO ();
+    MODULE_INFO();
  
     for (i = 0; i < m->xxh->len; i++)
 	m->xxo[i] = dh.ord[i];
  
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
@@ -161,7 +161,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);

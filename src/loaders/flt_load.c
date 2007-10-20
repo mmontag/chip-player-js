@@ -45,6 +45,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     int i, j;
     struct xxm_event *event;
     struct mod_header mh;
@@ -163,6 +164,9 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     m->xxh->flg |= XXM_FLG_MODRNG;
+
+    if (o->skipsmp)
+	return 0;
 
     /* Load samples */
 

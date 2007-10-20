@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hsc_load.c,v 1.12 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: hsc_load.c,v 1.13 2007-10-20 11:50:39 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -79,7 +79,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xxm_event *event;
     uint8 *x, *sid, e[2], buf[128 * 12];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(buf, 1, 128 * 12, f);
 
@@ -109,7 +109,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 "     Char Fr LS OL At De Su Re WS   Char Fr LS OL At De Su Re WS   Fbk Alg Fin\n");
 
     /* Read instruments */
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     fread (buf, 1, 128 * 12, f);
     sid = buf;
@@ -177,7 +177,7 @@ skip:
 	report ("Instruments    : %d\n", m->xxh->ins);
 	report ("Stored patterns: %d ", m->xxh->pat);
     }
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
     for (i = 0; i < m->xxh->pat; i++) {

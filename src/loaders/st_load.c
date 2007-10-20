@@ -54,6 +54,7 @@ static int st_test(FILE *f, char *t)
     fread(mh.name, 1, 20, f);
     if (test_name(mh.name, 20) < 0)
 	return -1;
+
     for (i = 0; i < 15; i++) {
 	fread(mh.ins[i].name, 1, 22, f);
 	mh.ins[i].size = read16b(f);
@@ -131,11 +132,11 @@ static int st_test(FILE *f, char *t)
 	    p = 256 * LSN(mod_event[0]) + mod_event[1];
 	    if (p == 0)
 		continue;
-	    for (k = 0; period[k] > 0; k++) {
+	    for (k = 0; period[k] >= 0; k++) {
 		if (p == period[k])
 		    break;
 	    }
-	    if (period[k] > 0)
+	    if (period[k] < 0)
 		return -1;
 	}
     }
@@ -147,6 +148,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     int i, j;
     int smp_size, pat_size;
     struct xxm_event ev, *event;
@@ -354,6 +356,9 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (m->xxh->rst >= m->xxh->len)
 	    m->xxh->rst = 0;
     }
+
+    if (o->skipsmp)
+	return 0;
 
     /* Load samples */
 

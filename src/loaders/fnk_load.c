@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: fnk_load.c,v 1.10 2007-10-19 12:49:00 cmatsuoka Exp $
+ * $Id: fnk_load.c,v 1.11 2007-10-20 11:50:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -99,7 +99,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     struct fnk_header ffh;
     uint8 ev[3];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&ffh.marker, 4, 1, f);
     fread(&ffh.info, 4, 1, f);
@@ -145,9 +145,9 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->smp = m->xxh->ins;
     strcpy(m->type, "Funktracker");
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Convert instruments */
     for (i = 0; i < m->xxh->ins; i++) {
@@ -170,7 +170,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, m->xxi[i][0].pan);
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
     if (V(0))

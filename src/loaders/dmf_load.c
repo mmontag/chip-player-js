@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.15 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.16 2007-10-20 11:50:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -365,7 +365,7 @@ static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 	uint8 date[3];
 	char tracker_name[10];
 
-	LOAD_INIT ();
+	LOAD_INIT();
 
 	read32b(f);		/* DDMF */
 

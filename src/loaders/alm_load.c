@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: alm_load.c,v 1.16 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: alm_load.c,v 1.17 2007-10-20 11:50:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -76,7 +76,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     char modulename[NAME_SIZE];
     FILE *s;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&afh.id, 7, 1, f);
 
@@ -106,9 +106,9 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     sprintf (m->type, "Aley's Module");
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
@@ -129,7 +129,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
     reportv(ctx, 0, "\n");
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 

@@ -1,7 +1,7 @@
 /* Protracker Studio PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: svb_load.c,v 1.20 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: svb_load.c,v 1.21 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -52,7 +52,7 @@ static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
 	uint32 p_smp[64];
 	int type, ver, mode;
  
-	LOAD_INIT ();
+	LOAD_INIT();
 
 	read32b(f);
 
@@ -89,7 +89,7 @@ static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* should be this way but fails with Silverball song 6 */
 	//m->xxh->flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
 
-	MODULE_INFO ();
+	MODULE_INFO();
 
 	fseek(f, start + p_ord, SEEK_SET);
 	fread(m->xxo, 1, m->xxh->len, f);
@@ -97,7 +97,7 @@ static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, start + p_chn, SEEK_SET);
 	fread(buf, 1, 16, f);
 
-	INSTRUMENT_INIT ();
+	INSTRUMENT_INIT();
 
 	reportv(ctx, 1, "     Sample name           Len   LBeg LEnd L Vol C2Spd\n");
 
@@ -139,7 +139,7 @@ static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	
 
-	PATTERN_INIT ();
+	PATTERN_INIT();
 
 	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.37 2007-10-19 17:41:13 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.38 2007-10-20 11:50:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -221,6 +221,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     int r, c, i, j, k, pat_len;
     struct xxm_event *event, dummy, lastevent[L_CHANNELS];
     struct it_file_header ifh;
@@ -353,7 +354,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     sprintf (m->type, "IMPM %d.%02x (%s)",
 			ifh.cmwt >> 8, ifh.cmwt & 0xff, tracker_name);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     reportv(ctx, 0, "Instr/FX mode  : %s/%s",
 			ifh.flags & IT_USE_INST ? ifh.cmwt >= 0x200 ?
@@ -380,7 +381,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, start + i, SEEK_SET);
     }
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     if (m->xxh->ins && V(0) && (ifh.flags & IT_USE_INST)) {
 	report ("\nInstruments    : %d ", m->xxh->ins);
@@ -636,8 +637,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    if (V(0))
-	report ("\nStored Samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored Samples : %d ", m->xxh->smp);
 
     if (V(2) || (~ifh.flags & IT_USE_INST && V(1)))
 	report (
@@ -735,6 +735,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (ish.flags & IT_SMP_SAMPLE && m->xxs[i].len > 1) {
 	    int cvt = 0;
 
+	    if (o->skipsmp)
+		continue;
+
 	    fseek(f, start + ish.sample_ptr, SEEK_SET);
 
 	    if (~ish.convert & IT_CVT_SIGNED)
@@ -757,6 +760,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		free (buf);
 		reportv(ctx, 0, "c");
 	    } else {
+		if (o->skipsmp) {
+		    fseek(f, m->xxs[i].len, SEEK_CUR);
+		    continue;
+		}
+
 		xmp_drv_loadpatch(ctx, f, i, m->c4rate, cvt, &m->xxs[i], NULL);
 
 		reportv(ctx, 0, ".");
@@ -764,15 +772,14 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    if (V(0))
-	report ("\nStored Patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "\nStored Patterns: %d ", m->xxh->pat);
 
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
     memset(arpeggio_val, 0, 64);
     memset(last_h, 0, 64);
     memset(last_fxp, 0, 64);
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read patterns */
     for (max_ch = i = 0; i < m->xxh->pat; i++) {

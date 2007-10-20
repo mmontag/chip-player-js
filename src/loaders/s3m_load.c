@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.26 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.27 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -347,9 +347,9 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     snprintf(m->type, XMP_NAMESIZE, "SCRM (%s)", tracker_name);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read patterns */
 
@@ -419,7 +419,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     reportv(ctx, 1, "Stereo enabled : %s\n", sfh.mv & 0x80 ? "yes" : "no");
     reportv(ctx, 1, "Pan settings   : %s\n", sfh.dp ? "no" : "yes");
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
@@ -517,8 +517,6 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	c2spd_to_note (sih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 
-	if (!m->xxs[i].len)
-	    continue;
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);

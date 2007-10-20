@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.22 2007-10-19 17:41:13 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.23 2007-10-20 11:50:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -170,7 +170,7 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
     uint32 pmag;
     char tracker_name[21];
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&lh.magic, 14, 1, f);
     fread(&lh.name, 30, 1, f);
@@ -241,10 +241,10 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->len = i;
     }
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
 
@@ -414,7 +414,7 @@ next_pattern:
 
     /* Read and convert instruments */
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     reportv(ctx, 0, "\nInstruments    : %d ", m->xxh->ins);
 

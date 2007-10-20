@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.48 2007-10-20 00:46:43 cmatsuoka Exp $
+ * $Id: driver.c,v 1.49 2007-10-20 11:50:45 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -852,9 +852,9 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, int flags,
-	struct xxm_sample *xxs, char *buffer)
+int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, int flags, struct xxm_sample *xxs, char *buffer)
 {
+    struct xmp_options *o = &ctx->o;
     struct patch_info *patch;
     int datasize;
     char s[5];
@@ -871,11 +871,18 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
 	return xmp_drv_writepatch(ctx, patch);
     }
+
+    if (o->skipsmp) {		/* Will fail for ADPCM samples */
+        if (~flags & XMP_SMP_NOLOAD)
+	    fseek(f, xxs->len, SEEK_CUR);
+	return XMP_OK;
+    }
+
     /* Empty samples
      */
     if (xxs->len < 5) {
 	if (~flags & XMP_SMP_NOLOAD)
-	    fread (s, 1, xxs->len, f);
+	    fread(s, 1, xxs->len, f);
 	return XMP_OK;
     }
     /* Patches with samples

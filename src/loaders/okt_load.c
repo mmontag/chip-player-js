@@ -1,7 +1,7 @@
 /* Oktalyzer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: okt_load.c,v 1.15 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: okt_load.c,v 1.16 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -121,7 +121,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
     m->xxh->ins = size / 32;  /* sizeof(struct okt_instrument_header); */
     m->xxh->smp = m->xxh->ins;
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     reportv(ctx, 1, "     Instrument name      Len   Lbeg  Lend  L Vol Mod\n");
     for (j = i = 0; i < m->xxh->ins; i++) {
@@ -207,7 +207,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 	return;
 
     if (!pattern) {
-	PATTERN_INIT ();
+	PATTERN_INIT();
 	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
     }
 
@@ -290,7 +290,7 @@ static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fseek(f, 8, SEEK_CUR);	/* OKTASONG */
 
@@ -308,13 +308,13 @@ static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     strcpy (m->type, "OKT (Oktalyzer)");
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     /* Load IFF chunks */
     while (!feof(f))
 	iff_chunk(ctx, f);
 
-    iff_release ();
+    iff_release();
 
     reportv(ctx, 0, "\n");
 

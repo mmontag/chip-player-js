@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.16 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.17 2007-10-20 11:50:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -168,7 +168,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
     int pat_len, smp_num;
     uint8 n, b;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     /* Load and convert header */
     fread(&ih.name, 32, 1, f);
@@ -214,7 +214,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     sprintf (m->type, "IM10 (Imago Orpheus)");
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     for (m->xxh->chn = i = 0; i < 32; i++) {
 	if (ih.chn[i].status != 0x00)
@@ -236,7 +236,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
     m->c4rate = C4_NTSC_RATE;
     m->fetch |= XMP_CTL_FINEFX;
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read patterns */
 
@@ -296,7 +296,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
     }
     reportv(ctx, 0, "\n");
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 

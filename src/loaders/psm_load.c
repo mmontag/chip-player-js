@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.34 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.35 2007-10-20 11:50:40 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -411,7 +411,7 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 	int offset;
 	int i, j;
 
-	LOAD_INIT ();
+	LOAD_INIT();
 
 	read32b(f);
 
@@ -464,7 +464,7 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 	while (!feof (f))
 		iff_chunk(ctx, f);
 
-	iff_release ();
+	iff_release();
 
 	for (i = 0; i < m->xxh->len; i++) {
 		for (j = 0; j < m->xxh->pat; j++) {

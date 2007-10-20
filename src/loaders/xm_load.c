@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.26 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.27 2007-10-20 11:50:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -256,12 +256,10 @@ load_patterns:
 	m->xxp[i]->info[j].index = i * m->xxh->chn;
 
     if (xfh.version <= 0x0103) {
-	if (V(0))
-	    report ("\n");
+	reportv(ctx, 0, "\n");
 	goto load_samples;
     }
-    if (V(0))
-	report ("\n");
+    reportv(ctx, 0, "\n");
 
 load_instruments:
     reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);

@@ -104,7 +104,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     int keep_porta1 = 0, keep_porta2 = 0;
     uint8 x8;
 
-    LOAD_INIT ();
+    LOAD_INIT();
 
     fread(&ufh.magic, 15, 1, f);
     fread(&ufh.name, 32, 1, f);
@@ -117,7 +117,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     sprintf(m->type, "ULT V%04d (Ultra Tracker %s)",
 						ver, verstr[ver - 1]);
 
-    MODULE_INFO ();
+    MODULE_INFO();
 
     fseek(f, ufh.msgsize * 32, SEEK_CUR);
 
@@ -126,7 +126,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments */
 
-    INSTRUMENT_INIT ();
+    INSTRUMENT_INIT();
 
     if (V(1))
 	report ("Instruments    : %d ", m->xxh->ins);
@@ -219,7 +219,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    PATTERN_INIT ();
+    PATTERN_INIT();
 
     /* Read and convert patterns */
 
