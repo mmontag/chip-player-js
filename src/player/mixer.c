@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.23 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.24 2007-10-20 18:42:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -178,8 +178,9 @@ inline static void smix_resetvar(struct xmp_context *ctx)
 
 
 /* Hipolito's rampdown anticlick */
-static void smix_rampdown(int voc, int32 *buf, int cnt)
+static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
 {
+    struct xmp_driver_context *d = &ctx->d;
     int smp_l, smp_r;
     int dec_l, dec_r;
 
@@ -187,9 +188,9 @@ static void smix_rampdown(int voc, int32 *buf, int cnt)
 	smp_r = smix_dtright;
 	smp_l = smix_dtleft;
     } else {
-	smp_r = voice_array[voc].sright;
-	smp_l = voice_array[voc].sleft;
-	voice_array[voc].sright = voice_array[voc].sleft = 0;
+	smp_r = d->voice_array[voc].sright;
+	smp_l = d->voice_array[voc].sleft;
+	d->voice_array[voc].sright = d->voice_array[voc].sleft = 0;
     }
 
     if (!smp_l && !smp_r)
@@ -220,10 +221,11 @@ static void smix_rampdown(int voc, int32 *buf, int cnt)
 
 
 /* Ok, it's messy, but it works :-) Hipolito */
-static void smix_anticlick(int voc, int vol, int pan, int *buf, int cnt)
+static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, int *buf, int cnt)
 {
     int oldvol, newvol;
-    struct voice_info *vi = &voice_array[voc];
+    struct xmp_driver_context *d = &ctx->d;
+    struct voice_info *vi = &d->voice_array[voc];
 
     if (extern_drv)
 	return;			/* Anticlick is useful for softmixer only */
@@ -243,7 +245,7 @@ static void smix_anticlick(int voc, int vol, int pan, int *buf, int cnt)
 	smix_dtleft += vi->sleft;
 	vi->sright = vi->sleft = TURN_OFF;
     } else {
-	smix_rampdown(voc, buf, cnt);
+	smix_rampdown(ctx, voc, buf, cnt);
     }
 }
 
@@ -260,13 +262,13 @@ static int softmixer(struct xmp_context *ctx)
     int vol_l, vol_r, itp_inc, voc;
     int prv_l, prv_r;
     int synth = 1;
-    int* buf_pos;
+    int *buf_pos;
 
     if (!extern_drv)
-	smix_rampdown (-1, NULL, 0);		/* Anti-click */
+	smix_rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
     for (voc = numvoc; voc--; ) {
-	vi = &voice_array[voc];
+	vi = &d->voice_array[voc];
 
 	if (vi->chn < 0)
 	    continue;
@@ -329,11 +331,19 @@ static int softmixer(struct xmp_context *ctx)
 		smp_cnt = tic_cnt;
 
 	    if (vi->vol) {
+		int idx;
+		int mix_size = smix_mode * smp_cnt;
 		int mixer = vi->fidx & FIDX_FLAGMASK;
 
 		/* Something for Hipolito's anticlick routine */
-		prv_r = buf_pos[smix_mode * smp_cnt - 2];
-		prv_l = buf_pos[smix_mode * smp_cnt - 1];
+
+		/* Workaround to prevent memory access violaton -- we should
+		 * fix it properly later */
+		idx = mix_size;
+		if (idx < 2)
+		    idx = 2;
+		prv_r = buf_pos[idx - 2];
+		prv_l = buf_pos[idx - 1];
 
 		/* "Beautiful Ones" apparently uses 0xfe as 'no filter' :\ */
 		if (vi->cutoff >= 0xfe)
@@ -344,8 +354,11 @@ static int softmixer(struct xmp_context *ctx)
 		buf_pos += smix_mode * smp_cnt;
 
 		/* More stuff for Hipolito's anticlick routine */
-		vi->sright = buf_pos[-2] - prv_r;
-		vi->sleft = buf_pos[-1] - prv_l;
+		idx = 0;
+		if (mix_size < 2)
+		    idx = 2;
+		vi->sright = buf_pos[idx - 2] - prv_r;
+		vi->sleft = buf_pos[idx - 1] - prv_l;
 	    }
 
 	    vi->itpt += itp_inc * smp_cnt;
@@ -360,7 +373,7 @@ static int softmixer(struct xmp_context *ctx)
 
 	    /* Single sample loop run */
             if (vi->fidx == 0 || lps >= lpe) {
-		smix_anticlick(voc, 0, 0, buf_pos, tic_cnt);
+		smix_anticlick(ctx, voc, 0, 0, buf_pos, tic_cnt);
 		drv_resetvoice(ctx, voc, 0);
 		tic_cnt = 0;
 		continue;
@@ -389,7 +402,7 @@ static int softmixer(struct xmp_context *ctx)
 static void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct voice_info *vi = &voice_array[voc];
+    struct voice_info *vi = &d->voice_array[voc];
     struct patch_info *pi = d->patch_array[vi->smp];
     int lpe, res, mode;
 
@@ -423,7 +436,7 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
-    struct voice_info *vi = &voice_array[voc];
+    struct voice_info *vi = &d->voice_array[voc];
     struct patch_info *pi = d->patch_array[smp];
 
     vi->smp = smp;
@@ -444,7 +457,7 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 	return;
     }
     
-    xmp_smix_setvol(voc, 0);
+    xmp_smix_setvol(ctx, voc, 0);
 
     vi->sptr = extern_drv ? NULL : pi->data;
     vi->fidx = m->fetch & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
@@ -474,16 +487,17 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 static void smix_setnote(struct xmp_context *ctx, int voc, int note)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct voice_info *vi = &voice_array[voc];
+    struct voice_info *vi = &d->voice_array[voc];
 
     vi->period = note_to_period2 (vi->note = note, 0);
     vi->pbase = SMIX_C4NOTE * vi->freq / d->patch_array[vi->smp]->base_note;
 }
 
 
-static inline void smix_setbend(int voc, int bend)
+static inline void smix_setbend(struct xmp_context *ctx, int voc, int bend)
 {
-    struct voice_info *vi = &voice_array[voc];
+    struct xmp_driver_context *d = &ctx->d;
+    struct voice_info *vi = &d->voice_array[voc];
 
     vi->period = note_to_period2 (vi->note, bend);
 
@@ -492,40 +506,47 @@ static inline void smix_setbend(int voc, int bend)
 }
 
 
-void xmp_smix_setvol(int voc, int vol)
+void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
 {
-    struct voice_info *vi = &voice_array[voc];
+    struct xmp_driver_context *d = &ctx->d;
+    struct voice_info *vi = &d->voice_array[voc];
  
-    smix_anticlick(voc, vol, vi->pan, NULL, 0);
+    smix_anticlick(ctx, voc, vol, vi->pan, NULL, 0);
     vi->vol = vol;
 }
 
 
-void xmp_smix_seteffect(int voc, int type, int val)
+void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
 {
+    struct xmp_driver_context *d = &ctx->d;
+    struct voice_info *vi = &d->voice_array[voc];
+ 
     switch (type) {
     case XMP_FX_CUTOFF:
-        voice_array[voc].cutoff = val;
+        vi->cutoff = val;
 	break;
     case XMP_FX_RESONANCE:
-        voice_array[voc].resonance = val;
+        vi->resonance = val;
 	break;
     case XMP_FX_FILTER_B0:
-        voice_array[voc].flt_B0 = val;
+        vi->flt_B0 = val;
 	break;
     case XMP_FX_FILTER_B1:
-        voice_array[voc].flt_B1 = val;
+        vi->flt_B1 = val;
 	break;
     case XMP_FX_FILTER_B2:
-        voice_array[voc].flt_B2 = val;
+        vi->flt_B2 = val;
 	break;
     }
 }
 
 
-void xmp_smix_setpan(int voc, int pan)
+void xmp_smix_setpan(struct xmp_context *ctx, int voc, int pan)
 {
-    voice_array[voc].pan = pan;
+    struct xmp_driver_context *d = &ctx->d;
+    struct voice_info *vi = &d->voice_array[voc];
+ 
+    vi->pan = pan;
 }
 
 

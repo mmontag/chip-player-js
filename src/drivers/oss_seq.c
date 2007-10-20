@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.14 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.15 2007-10-20 18:42:37 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -67,13 +67,13 @@ static int echo_msg;
 
 static int numvoices	(int);
 static void voicepos	(int, int);
-static void echoback	(xmp_context, int);
+static void echoback	(int);
 static void setpatch	(int, int);
-static void setvol	(int, int);
+static void setvol	(struct xmp_context *, int, int);
 static void setnote	(int, int);
-static void setpan	(int, int);
+static void setpan	(struct xmp_context *, int, int);
 static void setbend	(int, int);
-static void seteffect	(int, int, int);
+static void seteffect	(struct xmp_context *, int, int, int);
 static void starttimer	(void);
 static void stoptimer	(void);
 static void resetvoices	(void);
@@ -81,8 +81,8 @@ static void bufdump	(void);
 static void bufwipe	(void);
 static void clearmem	(void);
 static void seq_sync	(double);
-static int writepatch	(struct xmp_context *ctx, struct patch_info *);
-static int init		(struct xmp_context *ctx);
+static int writepatch	(struct xmp_context *, struct patch_info *);
+static int init		(struct xmp_context *);
 static int getmsg	(void);
 static void shutdown	(void);
 
@@ -155,7 +155,7 @@ static void voicepos(int ch, int pos)
 }
 
 
-static void echoback(xmp_context ctx, int msg)
+static void echoback(int msg)
 {
     SEQ_ECHO_BACK (msg);
 }
@@ -167,7 +167,7 @@ static void setpatch(int ch, int smp)
 }
 
 
-static void setvol(int ch, int vol)
+static void setvol(struct xmp_context *ctx, int ch, int vol)
 {
     SEQ_START_NOTE (dev, ch, 255, vol);
 }
@@ -179,7 +179,7 @@ static void setnote(int ch, int note)
 }
 
 
-static void seteffect(int ch, int type, int val)
+static void seteffect(struct xmp_context *ctx, int ch, int type, int val)
 {
 #ifdef AWE_DEVICE
     if (si.synth_subtype == SAMPLE_TYPE_AWE32) {
@@ -202,7 +202,7 @@ static void seteffect(int ch, int type, int val)
 }
 
 
-static void setpan(int ch, int pan)
+static void setpan(struct xmp_context *ctx, int ch, int pan)
 {
     GUS_VOICEBALA(dev, ch, (pan + 0x80) >> 4)
 }

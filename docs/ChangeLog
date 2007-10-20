@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.144 2007-10-20 11:50:36 cmatsuoka Exp $
+$Id: ChangeLog,v 1.145 2007-10-20 18:42:37 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -35,6 +35,7 @@ Stable versions
 	  'Wegian Mamas.xm plays correctly now)
 	- fixed length of XM loops (jt_xmas.xm no longer out of tune)
 	- fixed Audacious plugin to display duration when adding to playlist
+	- fixed memory access violations reported by Valgrind
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

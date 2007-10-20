@@ -479,16 +479,16 @@ fx_finetune:
 	    xmp_drv_pastnote(ctx, chn, XXM_NNA_FADE);
 	    break;
 	case 3:			/* Set NNA to note cut */
-	    xmp_drv_setnna(chn, XXM_NNA_CUT);
+	    xmp_drv_setnna(ctx, chn, XXM_NNA_CUT);
 	    break;
 	case 4:			/* Set NNA to continue */
-	    xmp_drv_setnna(chn, XXM_NNA_CONT);
+	    xmp_drv_setnna(ctx, chn, XXM_NNA_CONT);
 	    break;
 	case 5:			/* Set NNA to note off */
-	    xmp_drv_setnna(chn, XXM_NNA_OFF);
+	    xmp_drv_setnna(ctx, chn, XXM_NNA_OFF);
 	    break;
 	case 6:			/* Set NNA to note fade */
-	    xmp_drv_setnna(chn, XXM_NNA_FADE);
+	    xmp_drv_setnna(ctx, chn, XXM_NNA_FADE);
 	    break;
 	case 7:			/* Turn off volume envelope */
 	    break;

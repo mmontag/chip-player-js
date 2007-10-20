@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.35 2007-10-20 17:04:57 cmatsuoka Exp $
+ * $Id: player.c,v 1.36 2007-10-20 18:42:37 cmatsuoka Exp $
  */
 
 /*
@@ -448,7 +448,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
 
-    if ((act = xmp_drv_cstat(chn)) == XMP_CHN_DUMB)
+    if ((act = xmp_drv_cstat(ctx, chn)) == XMP_CHN_DUMB)
 	return;
 
     xc = &p->xc_data[chn];

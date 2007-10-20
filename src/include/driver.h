@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.18 2007-10-20 17:04:57 cmatsuoka Exp $
+ * $Id: driver.h,v 1.19 2007-10-20 18:42:37 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -84,7 +84,7 @@ int	xmp_drv_setpatch	(struct xmp_context *, int, int, int, int, int, int, int, i
 int	xmp_drv_cvt8bit		(void);
 int	xmp_drv_crunch		(struct patch_info **, unsigned int);
 void	xmp_drv_setsmp		(struct xmp_context *, int, int);
-void	xmp_drv_setnna		(int, int);
+void	xmp_drv_setnna		(struct xmp_context *, int, int);
 void	xmp_drv_pastnote	(struct xmp_context *, int, int);
 void	xmp_drv_retrig		(struct xmp_context *, int);
 void	xmp_drv_setvol		(struct xmp_context *, int, int);
@@ -92,7 +92,7 @@ void	xmp_drv_voicepos	(struct xmp_context *, int, int);
 void	xmp_drv_setbend		(struct xmp_context *, int, int);
 void	xmp_drv_setpan		(struct xmp_context *, int, int);
 void	xmp_drv_seteffect	(struct xmp_context *, int, int, int);
-int	xmp_drv_cstat		(int);
+int	xmp_drv_cstat		(struct xmp_context *, int);
 void	xmp_drv_resetchannel	(struct xmp_context *, int);
 void	xmp_drv_reset		(struct xmp_context *);
 double	xmp_drv_sync		(struct xmp_context *, double);

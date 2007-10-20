@@ -58,9 +58,9 @@ struct voice_info {
 
 int	xmp_smix_on		(struct xmp_context *);
 void	xmp_smix_off		(void);
-void    xmp_smix_setvol		(int, int);
-void    xmp_smix_seteffect	(int, int, int);
-void    xmp_smix_setpan		(int, int);
+void    xmp_smix_setvol		(struct xmp_context *, int, int);
+void    xmp_smix_seteffect	(struct xmp_context *, int, int, int);
+void    xmp_smix_setpan		(struct xmp_context *, int, int);
 int	xmp_smix_numvoices	(int);
 void	xmp_smix_echoback	(int);
 void	xmp_smix_starttimer	(void);

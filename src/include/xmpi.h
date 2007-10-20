@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.35 2007-10-20 17:04:57 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.36 2007-10-20 18:42:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -190,11 +190,16 @@ struct xmp_driver_context {
 	struct xmp_drv_info *driver;	/* Driver */
 	char *description;		/* Driver description */
 	char **help;			/* Driver help info */
+
 	int memavl;			/* Memory availble in sound card */
 	int numtrk;			/* Number of tracks */
 	int numchn;			/* Number of virtual channels */
 	int numvoc;			/* Number of voices currently in use */
 	int numbuf;			/* Number of output buffers */
+
+	int *ch2vo_count;
+	int *ch2vo_array;
+	struct voice_info *voice_array;
 
 	struct patch_info **patch_array;
 };
