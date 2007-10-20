@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.34 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: player.c,v 1.35 2007-10-20 17:04:57 cmatsuoka Exp $
  */
 
 /*
@@ -587,15 +587,15 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 
     /* Echoback events */
     if (chn < d->numtrk) {
-	xmp_drv_echoback((finalpan << 12) | (chn << 4) | XMP_ECHO_CHN);
+	xmp_drv_echoback(ctx, (finalpan << 12) | (chn << 4) | XMP_ECHO_CHN);
 
 	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA) ||
 					TEST_PER(PITCHBEND | TONEPORTA)) {
-	    xmp_drv_echoback((xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
-	    xmp_drv_echoback((xc->volume << 4) * 0x40 / p->gvol_base |
-		XMP_ECHO_VOL);
+	    xmp_drv_echoback(ctx, (xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
+	    xmp_drv_echoback(ctx, (xc->volume << 4) * 0x40 / p->gvol_base |
+							XMP_ECHO_VOL);
 
-	    xmp_drv_echoback((xc->pitchbend << 4) | XMP_ECHO_PBD);
+	    xmp_drv_echoback(ctx, (xc->pitchbend << 4) | XMP_ECHO_PBD);
 	}
     }
 
@@ -731,24 +731,23 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     /* Adjust pitch and pan, than play the note */
     finalpan = o->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * o->mix / 100;
-    xmp_drv_setbend(chn, (xc->pitchbend + xc->a_val[xc->a_idx] + med_arp));
-    xmp_drv_setpan(chn, m->fetch & XMP_CTL_REVERSE ?
-					-finalpan : finalpan);
+    xmp_drv_setbend(ctx, chn, (xc->pitchbend + xc->a_val[xc->a_idx] + med_arp));
+    xmp_drv_setpan(ctx, chn, m->fetch & XMP_CTL_REVERSE ? -finalpan : finalpan);
     xmp_drv_setvol(ctx, chn, finalvol >> 2);
 
     if (cutoff < 0xff && (m->fetch & XMP_CTL_FILTER)) {
 	filter_setup(ctx, xc, cutoff);
-	xmp_drv_seteffect(chn, XMP_FX_FILTER_B0, xc->flt_B0);
-	xmp_drv_seteffect(chn, XMP_FX_FILTER_B1, xc->flt_B1);
-	xmp_drv_seteffect(chn, XMP_FX_FILTER_B2, xc->flt_B2);
+	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B0, xc->flt_B0);
+	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B1, xc->flt_B1);
+	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B2, xc->flt_B2);
     } else {
 	cutoff = 0xff;
     }
 
-    xmp_drv_seteffect(chn, XMP_FX_RESONANCE, xc->resonance);
-    xmp_drv_seteffect(chn, XMP_FX_CUTOFF, cutoff);
-    xmp_drv_seteffect(chn, XMP_FX_CHORUS, m->xxc[chn].cho);
-    xmp_drv_seteffect(chn, XMP_FX_REVERB, m->xxc[chn].rvb);
+    xmp_drv_seteffect(ctx, chn, XMP_FX_RESONANCE, xc->resonance);
+    xmp_drv_seteffect(ctx, chn, XMP_FX_CUTOFF, cutoff);
+    xmp_drv_seteffect(ctx, chn, XMP_FX_CHORUS, m->xxc[chn].cho);
+    xmp_drv_seteffect(ctx, chn, XMP_FX_REVERB, m->xxc[chn].rvb);
 }
 
 
@@ -844,7 +843,7 @@ next_order:
 			p->pos++;		/* restart module */
 
 		    if (p->pos == -2) {		/* set by xmp_module_stop */
-			xmp_drv_bufwipe();
+			xmp_drv_bufwipe(ctx);
 			goto end_module;	/* that's all folks */
 		    }
 
@@ -857,8 +856,8 @@ next_order:
 		    p->flow.jump = ord;
 		    p->flow.jumpline = m->xxo_fstrow[ord--];
 		    p->flow.row_cnt = -1;
-		    xmp_drv_bufwipe ();
-		    xmp_drv_sync(0);
+		    xmp_drv_bufwipe(ctx);
+		    xmp_drv_sync(ctx, 0);
 		    xmp_drv_reset(ctx);
 		    chn_reset(ctx);
 		    break;
@@ -868,26 +867,26 @@ next_order:
 		    p->gvol_flag = 0;
 		    chn_fetch(ctx, m->xxo[ord], p->flow.row_cnt);
 
-		    xmp_drv_echoback((p->tempo << 12) | (p->xmp_bpm << 4) |
+		    xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
-		    xmp_drv_echoback((m->volume << 4) | XMP_ECHO_GVL);
-		    xmp_drv_echoback((m->xxo[ord] << 12) | (ord << 4) |
-						XMP_ECHO_ORD);
-		    xmp_drv_echoback((d->numvoc << 4) | XMP_ECHO_NCH);
-		    xmp_drv_echoback(((m->xxp[m->xxo[ord]]->rows - 1) << 12) |
-					(p->flow.row_cnt << 4) | XMP_ECHO_ROW);
+		    xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
+		    xmp_drv_echoback(ctx, (m->xxo[ord] << 12) | (ord << 4) |
+							XMP_ECHO_ORD);
+		    xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
+		    xmp_drv_echoback(ctx, ((m->xxp[m->xxo[ord]]->rows - 1)
+				<< 12) | (p->flow.row_cnt << 4) | XMP_ECHO_ROW);
 		}
-		xmp_drv_echoback((t << 4) | XMP_ECHO_FRM);
+		xmp_drv_echoback(ctx, (t << 4) | XMP_ECHO_FRM);
 		chn_refresh(ctx, t);
 
 		if (o->time && (o->time < playing_time))
 		    goto end_module;
 
 		if (m->fetch & XMP_CTL_MEDBPM) {
-		    xmp_drv_sync(p->tick_time * 33 / 125);
+		    xmp_drv_sync(ctx, p->tick_time * 33 / 125);
 		    playing_time += m->rrate * 33 / (100 * p->xmp_bpm * 125);
 		} else {
-		    xmp_drv_sync(p->tick_time);
+		    xmp_drv_sync(ctx, p->tick_time);
 		    playing_time += m->rrate / (100 * p->xmp_bpm);
 		}
 
@@ -918,8 +917,8 @@ next_order:
     }
 
 end_module:
-    xmp_drv_echoback(XMP_ECHO_END);
-    while (xmp_drv_getmsg () != XMP_ECHO_END)
+    xmp_drv_echoback(ctx, XMP_ECHO_END);
+    while (xmp_drv_getmsg(ctx) != XMP_ECHO_END)
 	xmp_drv_bufdump(ctx);
     xmp_drv_stoptimer(ctx);
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.50 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: load.c,v 1.51 2007-10-20 17:04:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -406,7 +406,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     crc = cksum(f);
 
-    xmp_drv_clearmem();
+    xmp_drv_clearmem((struct xmp_context *)ctx);
 
     /* Reset variables */
     memset(m->name, 0, XMP_NAMESIZE);
@@ -478,7 +478,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     str_adj(m->name);
     if (!*m->name)
-	strcpy(m->name, "(untitled)");
+	strncpy(m->name, m->basename, XMP_NAMESIZE);
 
     if (o->verbosity > 1) {
 	report("Module looping : %s\n",

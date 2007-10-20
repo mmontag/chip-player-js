@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.34 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.35 2007-10-20 17:04:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -187,6 +187,7 @@ struct xmp_player_context {
 };
 
 struct xmp_driver_context {
+	struct xmp_drv_info *driver;	/* Driver */
 	char *description;		/* Driver description */
 	char **help;			/* Driver help info */
 	int memavl;			/* Memory availble in sound card */

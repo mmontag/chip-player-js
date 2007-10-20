@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.17 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: driver.h,v 1.18 2007-10-20 17:04:57 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -89,22 +89,22 @@ void	xmp_drv_pastnote	(struct xmp_context *, int, int);
 void	xmp_drv_retrig		(struct xmp_context *, int);
 void	xmp_drv_setvol		(struct xmp_context *, int, int);
 void	xmp_drv_voicepos	(struct xmp_context *, int, int);
-void	xmp_drv_setbend		(int, int);
-void	xmp_drv_setpan		(int, int);
-void	xmp_drv_seteffect	(int, int, int);
+void	xmp_drv_setbend		(struct xmp_context *, int, int);
+void	xmp_drv_setpan		(struct xmp_context *, int, int);
+void	xmp_drv_seteffect	(struct xmp_context *, int, int, int);
 int	xmp_drv_cstat		(int);
 void	xmp_drv_resetchannel	(struct xmp_context *, int);
 void	xmp_drv_reset		(struct xmp_context *);
-double	xmp_drv_sync		(double);
-int	xmp_drv_getmsg		(void);
+double	xmp_drv_sync		(struct xmp_context *, double);
+int	xmp_drv_getmsg		(struct xmp_context *);
 void	xmp_drv_stoptimer	(struct xmp_context *);
-void	xmp_drv_clearmem	(void);
+void	xmp_drv_clearmem	(struct xmp_context *);
 void	xmp_drv_starttimer	(struct xmp_context *);
-void	xmp_drv_echoback	(int);
-void	xmp_drv_bufwipe		(void);
+void	xmp_drv_echoback	(struct xmp_context *, int);
+void	xmp_drv_bufwipe		(struct xmp_context *);
 void	xmp_drv_bufdump		(struct xmp_context *);
-int	xmp_drv_loadpatch 	(struct xmp_context *, FILE *, int, int, int, struct xxm_sample *,
-				 char *);
+int	xmp_drv_loadpatch 	(struct xmp_context *, FILE *, int, int, int,
+				 struct xxm_sample *, char *);
 
 void xmp_init_drivers (void);
 struct xmp_drv_info *xmp_drv_array (void);
