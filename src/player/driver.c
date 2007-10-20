@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.47 2007-10-19 23:38:51 cmatsuoka Exp $
+ * $Id: driver.c,v 1.48 2007-10-20 00:46:43 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -352,7 +352,7 @@ void xmp_drv_off(struct xmp_context *ctx)
 
 /*inline*/ void xmp_drv_clearmem()
 {
-    driver->clearmem();
+    if (driver) driver->clearmem();
 }
 
 

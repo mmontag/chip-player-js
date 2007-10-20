@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.47 2007-10-19 23:38:51 cmatsuoka Exp $
+ * $Id: load.c,v 1.48 2007-10-20 00:46:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -294,7 +294,7 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
     int memavl, smp_size, ratio, smp_4kb;
 
     ratio = 0x10000;
-    if (!(memavl = xmp_ctl->memavl))
+    if (!xmp_ctl || !(memavl = xmp_ctl->memavl))
 	return ratio;
 
     memavl = memavl * 100 / (100 + o->crunch);
@@ -457,7 +457,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (i < 0)
 	return i;
 
-    if (xmp_ctl->description && (i = (strstr(xmp_ctl->description, " [AWE") != NULL))) {
+    if (xmp_ctl && xmp_ctl->description && (i = (strstr(xmp_ctl->description, " [AWE") != NULL))) {
 	xmp_cvt_to16bit((struct xmp_context *)ctx);
 	xmp_cvt_bid2und((struct xmp_context *)ctx);
     }

@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.37 2007-10-19 21:36:12 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.38 2007-10-20 00:46:43 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -496,24 +496,12 @@ static int is_our_file(char *filename)
 
 static void get_song_info(char *filename, char **title, int *length)
 {
-	char *x;
-	char name[XMP_NAMESIZE];
 	xmp_context ctx2;
 	int lret;
+	struct xmp_module_info mi;
 
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
-
-	xmp_test_module(ctx, filename, name);
-
-	if (strlen(name)) {
-		*title = g_strdup(name);
-	} else {
-		_D("song_info: %s", filename);
-		if ((x = strrchr(filename, '/')))
-			filename = ++x;
-		*title = g_strdup(filename);
-	}
 
 	/* Create new context to load a file and get the length */
 
@@ -529,6 +517,8 @@ static void get_song_info(char *filename, char **title, int *length)
 	}
 
 	*length = lret;
+	xmp_get_module_info(ctx2, &mi);
+	*title = g_strdup(mi.name);
 
 	xmp_release_module(ctx2);
 	xmp_free_context(ctx2);
