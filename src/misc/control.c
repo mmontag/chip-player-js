@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.27 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: control.c,v 1.28 2007-10-20 14:25:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -138,7 +138,6 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 {
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 	struct xmp_mod_context *m = &p->m;
-	struct xmp_control *c = &((struct xmp_context *)ctx)->c;
 
 	switch (cmd) {
 	case XMP_ORD_PREV:
@@ -157,8 +156,8 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 		p->pos = -2;
 		break;
 	case XMP_MOD_PAUSE:
-		c->pause ^= 1;
-		return c->pause;
+		p->pause ^= 1;
+		return p->pause;
 	case XMP_MOD_RESTART:
 		p->pos = -1;
 		break;
@@ -250,10 +249,10 @@ void xmp_release_module(xmp_context ctx)
 void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,
 			int *itpt)
 {
-	struct xmp_control *c = &((struct xmp_context *)ctx)->c;
+	struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
 	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
-	*srate = c->memavl ? 0 : o->freq;
+	*srate = d->memavl ? 0 : o->freq;
 	*res = o->resol ? o->resol : 8 /* U_LAW */ ;
 	*chn = o->outfmt & XMP_FMT_MONO ? 1 : 2;
 	*itpt = !!(o->flags & XMP_CTL_ITPT);

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.24 2007-10-19 20:28:00 cmatsuoka Exp $
+ * $Id: options.c,v 1.25 2007-10-20 14:25:53 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -125,7 +125,7 @@ static void usage(char *s, struct xmp_options *opt)
 
     printf("\nAvailable drivers:\n");
 
-    xmp_get_drv_info (&drv);
+    xmp_get_drv_info(&drv);
     list_wrap (NULL, 3, 78, 1);
     for (d = drv; d; d = d->next) {
         snprintf(buf, 80, "%s (%s)", d->id, d->description);

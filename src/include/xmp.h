@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.27 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.28 2007-10-20 14:25:53 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -92,17 +92,6 @@
 #define XMP_ERR_ALLOC		-8
 
 
-struct xmp_control {
-    char *description;	/* Driver description */
-    char **help;	/* Driver help info */
-    int numtrk;		/* Number of tracks */
-    int numchn;		/* Number of virtual channels needed by the module */
-    int numvoc;		/* Number of voices currently in use */
-    int numbuf;		/* Number of output buffers */
-    int memavl;		/* Memory availble in the sound card */
-    int pause;		/* Player pause */
-};
-
 struct xmp_options {
     char *drv_id;	/* Driver ID */
     char *outfile;	/* Output file name when mixing to file */
@@ -152,9 +141,9 @@ struct xmp_options {
 };
 
 struct xmp_fmt_info {
+    struct xmp_fmt_info *next;
     char *suffix;
     char *tracker;
-    struct xmp_fmt_info *next;
 };
 
 struct xmp_drv_info {

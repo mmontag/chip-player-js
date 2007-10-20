@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.33 2007-10-20 13:35:10 cmatsuoka Exp $
+ * $Id: player.c,v 1.34 2007-10-20 14:25:53 cmatsuoka Exp $
  */
 
 /*
@@ -174,18 +174,18 @@ static inline int chn_copy(struct xmp_player_context *p, int to, int from)
 static inline void chn_reset(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     int i;
     struct xmp_channel *xc;
 
     synth_reset ();
-    memset(p->xc_data, 0, sizeof (struct xmp_channel) * c->numchn);
+    memset(p->xc_data, 0, sizeof (struct xmp_channel) * d->numchn);
 
-    for (i = c->numchn; i--; ) {
+    for (i = d->numchn; i--; ) {
 	xc = &p->xc_data[i];
 	xc->insdef = xc->ins = xc->key = -1;
     }
-    for (i = c->numtrk; i--; ) {
+    for (i = d->numtrk; i--; ) {
 	xc = &p->xc_data[i];
 	xc->masterpan = p->m.xxc[i].pan;
 	xc->mastervol = p->m.xxc[i].vol; //0x40;
@@ -220,10 +220,10 @@ static inline void chn_fetch(struct xmp_context *ctx, int ord, int row)
 
 static inline void chn_refresh(struct xmp_context *ctx, int tick)
 { 
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     int i;
 
-    for (i = c->numchn; i--;)
+    for (i = d->numchn; i--;)
 	module_play(ctx, i, tick);
 }
 
@@ -444,8 +444,8 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     int med_arp, med_vibrato;
     uint16 vol_envelope;
     struct xmp_player_context *p = &ctx->p;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &p->m;
-    struct xmp_control *c = &ctx->c;
     struct xmp_options *o = &ctx->o;
 
     if ((act = xmp_drv_cstat(chn)) == XMP_CHN_DUMB)
@@ -586,7 +586,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     cutoff = xc->cutoff * cutoff / 0xff;
 
     /* Echoback events */
-    if (chn < c->numtrk) {
+    if (chn < d->numtrk) {
 	xmp_drv_echoback((finalpan << 12) | (chn << 4) | XMP_ECHO_CHN);
 
 	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA) ||
@@ -757,8 +757,8 @@ int xmpi_player_start(struct xmp_context *ctx)
     int r, t, e, ord;		/* rows, tick, end point, order */
     double playing_time;
     struct xmp_player_context *p = &ctx->p;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &p->m;
-    struct xmp_control *c = &ctx->c;
     struct xmp_options *o = &ctx->o;
 
     if (m->xxh->len == 0 || m->xxh->chn == 0)
@@ -784,9 +784,9 @@ int xmpi_player_start(struct xmp_context *ctx)
     p->flow.jump = -1;
 
     p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
-    p->flow.loop_stack = calloc(c->numchn, sizeof (int));
-    p->flow.loop_row = calloc(c->numchn, sizeof (int));
-    p->xc_data = calloc(c->numchn, sizeof (struct xmp_channel));
+    p->flow.loop_stack = calloc(d->numchn, sizeof (int));
+    p->flow.loop_row = calloc(d->numchn, sizeof (int));
+    p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
     if (!(p->fetch_ctl && p->flow.loop_stack && p->flow.loop_row && p->xc_data))
 	return XMP_ERR_ALLOC;
 
@@ -826,9 +826,9 @@ next_order:
 		    goto end_module;
 	    }
 
-	    if (c->pause) {
+	    if (p->pause) {
 		xmp_drv_stoptimer(ctx);
-		while (c->pause) {
+		while (p->pause) {
 		    xmpi_select_read(1, 125);
 		    xmp_event_callback(0);
 		}
@@ -873,7 +873,7 @@ next_order:
 		    xmp_drv_echoback((m->volume << 4) | XMP_ECHO_GVL);
 		    xmp_drv_echoback((m->xxo[ord] << 12) | (ord << 4) |
 						XMP_ECHO_ORD);
-		    xmp_drv_echoback((c->numvoc << 4) | XMP_ECHO_NCH);
+		    xmp_drv_echoback((d->numvoc << 4) | XMP_ECHO_NCH);
 		    xmp_drv_echoback(((m->xxp[m->xxo[ord]]->rows - 1) << 12) |
 					(p->flow.row_cnt << 4) | XMP_ECHO_ROW);
 		}

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.33 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.34 2007-10-20 14:25:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
  */
 
 #define XMP_DEF_MAXPAT	0x400		/* max number of samples in driver */
-#define XMP_DEF_MAXORD	0x100		/* max number of patterns in module */
+#define XMP_MAXORD	0x100		/* max number of patterns in module */
 #define XMP_DEF_MAXROW	0x100		/* pattern loop stack size */
 #define XMP_DEF_MAXVOL	(0x400 * 0x7fff)
 #define XMP_DEF_EXTDRV	0xffff
@@ -128,20 +128,20 @@ struct xmp_mod_context {
 	int verbosity;			/* verbosity level */
 	char *dirname;			/* file dirname */
 	char *basename;			/* file basename */
-	char name[XMP_NAMESIZE];		/* module name */
-	char type[XMP_NAMESIZE];		/* module type */
-	char author[XMP_NAMESIZE];		/* module author */
+	char name[XMP_NAMESIZE];	/* module name */
+	char type[XMP_NAMESIZE];	/* module type */
+	char author[XMP_NAMESIZE];	/* module author */
 	char *filename;			/* Module file name */
-	int size;				/* File size */
+	int size;			/* File size */
 	double rrate;			/* Replay rate */
-	int c4rate;				/* C4 replay rate */
+	int c4rate;			/* C4 replay rate */
 	int volbase;			/* Volume base */
-	int volume;				/* Global volume */
+	int volume;			/* Global volume */
 	int *vol_xlat;			/* Volume translation table */
-	int fetch;				/* Fetch mode (copy from flags) */
+	int fetch;			/* Fetch mode (copy from flags) */
 
 	struct xxm_header *xxh;		/* Header */
-	struct xxm_pattern **xxp;		/* Patterns */
+	struct xxm_pattern **xxp;	/* Patterns */
 	struct xxm_track **xxt;		/* Tracks */
 	struct xxm_instrument_header *xxih;	/* Instrument headers */
 	struct xxm_instrument_map *xxim;	/* Instrument map */
@@ -150,10 +150,10 @@ struct xmp_mod_context {
 	uint16 **xxae;			/* Amplitude envelope */
 	uint16 **xxpe;			/* Pan envelope */
 	uint16 **xxfe;			/* Pitch envelope */
-	struct xxm_channel xxc[64];		/* Channel info */
-	struct xmp_ord_info xxo_info[XMP_DEF_MAXORD];
-	int xxo_fstrow[XMP_DEF_MAXORD];
-	uint8 xxo[XMP_DEF_MAXORD];		/* Orders */
+	struct xxm_channel xxc[64];	/* Channel info */
+	struct xmp_ord_info xxo_info[XMP_MAXORD];
+	int xxo_fstrow[XMP_MAXORD];
+	uint8 xxo[XMP_MAXORD];		/* Orders */
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
 	uint8 **med_wav_table;		/* MED waveform sequence table */
@@ -171,6 +171,7 @@ struct flow_control {
 };
 
 struct xmp_player_context {
+	int pause;
 	int pos;
 	int tempo;
 	int gvol_slide;
@@ -186,13 +187,21 @@ struct xmp_player_context {
 };
 
 struct xmp_driver_context {
+	char *description;		/* Driver description */
+	char **help;			/* Driver help info */
+	int memavl;			/* Memory availble in sound card */
+	int numtrk;			/* Number of tracks */
+	int numchn;			/* Number of virtual channels */
+	int numvoc;			/* Number of voices currently in use */
+	int numbuf;			/* Number of output buffers */
+
 	struct patch_info **patch_array;
 };
 
 struct xmp_context {
 	int big_endian;
 	struct xmp_options o;
-	struct xmp_control c;
+	//struct xmp_control c;
 	struct xmp_driver_context d;
 	struct xmp_player_context p;
 };

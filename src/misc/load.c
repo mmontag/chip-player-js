@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.49 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: load.c,v 1.50 2007-10-20 14:25:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -290,12 +290,12 @@ static void get_smp_size(struct xmp_player_context *p, int awe, int *a, int *b)
 static int crunch_ratio(struct xmp_context *ctx, int awe)
 {
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
     int memavl, smp_size, ratio, smp_4kb;
 
     ratio = 0x10000;
-    if (!(memavl = c->memavl))
+    if (!(memavl = d->memavl))
 	return ratio;
 
     memavl = memavl * 100 / (100 + o->crunch);
@@ -313,7 +313,7 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
 	    (((long long)(memavl - smp_4kb) << 16) / (smp_size - smp_4kb));
 	if (o->verbosity)
 	    report ("Crunch ratio   : %d%% [Mem:%.3fMb Smp:%.3fMb]\n",
-		100 - 100 * ratio / 0x10000, .000001 * c->memavl,
+		100 - 100 * ratio / 0x10000, .000001 * d->memavl,
 		.000001 * smp_size);
     }
 	
@@ -380,8 +380,8 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct stat st;
     unsigned int crc;
     struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+    struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
     struct xmp_mod_context *m = &p->m;
-    struct xmp_control *c = &((struct xmp_context *)ctx)->c;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     char *b1, *b2;
 
@@ -459,7 +459,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (i < 0)
 	return i;
 
-    if (c->description && (i = (strstr(c->description, " [AWE") != NULL))) {
+    if (d->description && (i = (strstr(d->description, " [AWE") != NULL))) {
 	xmp_cvt_to16bit((struct xmp_context *)ctx);
 	xmp_cvt_bid2und((struct xmp_context *)ctx);
     }

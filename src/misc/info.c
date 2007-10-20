@@ -36,9 +36,9 @@ inline struct xmp_module_info *xmp_get_module_info(xmp_context ctx, struct xmp_m
 
 inline char *xmp_get_driver_description(xmp_context ctx)
 {
-    struct xmp_control *c = &((struct xmp_context *)ctx)->c;
+    struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
 
-    return c->description;
+    return d->description;
 }
 
 

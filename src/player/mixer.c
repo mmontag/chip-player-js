@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.22 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.23 2007-10-20 14:25:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -569,15 +569,15 @@ int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 
 int xmp_smix_on(struct xmp_context *ctx)
 {
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     int cnt;
 
     if (smix_numbuf)
 	return XMP_OK;
 
-    if (c->numbuf < 1)
-	c->numbuf = 1;
-    cnt = smix_numbuf = c->numbuf;
+    if (d->numbuf < 1)
+	d->numbuf = 1;
+    cnt = smix_numbuf = d->numbuf;
 
     smix_buffer = calloc(sizeof (void *), cnt);
     smix_buf32b = calloc(sizeof (int), OUT_MAXLEN);
@@ -585,14 +585,14 @@ int xmp_smix_on(struct xmp_context *ctx)
 	return XMP_ERR_ALLOC;
 
     while (cnt--) {
-	if (!(smix_buffer[cnt] = calloc (SMIX_RESMAX, OUT_MAXLEN)))
+	if (!(smix_buffer[cnt] = calloc(SMIX_RESMAX, OUT_MAXLEN)))
 	    return XMP_ERR_ALLOC;
     }
 
     smix_numvoc = SMIX_NUMVOC;
     extern_drv = TURN_OFF;
 
-    //synth_init (c->freq);
+    //synth_init (o->freq);
 
     return XMP_OK;
 }

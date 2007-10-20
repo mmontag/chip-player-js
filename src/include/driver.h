@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.16 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: driver.h,v 1.17 2007-10-20 14:25:53 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -20,20 +20,20 @@
 #define GUS_PATCH 1
 
 struct patch_info {
-    unsigned short key;
-    short device_no;			/* Synthesizer number */
-    short instr_no;			/* Midi pgm# */
-    unsigned int mode;
-    int len;				/* Size of the wave data in bytes */
-    int loop_start, loop_end;		/* Byte offsets from the beginning */
-    unsigned int base_freq;
-    unsigned int base_note;
-    unsigned int high_note;
-    unsigned int low_note;
-    int panning;			/* -128=left, 127=right */
-    int detuning;
-    int volume;
-    char data[1];			/* The waveform data starts here */
+	unsigned short key;
+	short device_no;		/* Synthesizer number */
+	short instr_no;			/* Midi pgm# */
+	unsigned int mode;
+	int len;			/* Size of the wave data in bytes */
+	int loop_start, loop_end;	/* Byte offsets from the beginning */
+	unsigned int base_freq;
+	unsigned int base_note;
+	unsigned int high_note;
+	unsigned int low_note;
+	int panning;			/* -128=left, 127=right */
+	int detuning;
+	int volume;
+	char data[1];			/* The waveform data starts here */
 };
 
 #endif

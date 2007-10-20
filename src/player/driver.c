@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.50 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: driver.c,v 1.51 2007-10-20 14:25:53 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -147,8 +147,8 @@ static int drv_select(struct xmp_context *ctx)
 {
     struct xmp_drv_info *drv;
     int ret;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
-    struct xmp_control *c = &ctx->c;
 
     if (!drv_array)
 	return XMP_ERR_NODRV;
@@ -182,8 +182,8 @@ static int drv_select(struct xmp_context *ctx)
 	return ret;
 
     o->drv_id = drv->id;
-    c->description = drv->description;
-    c->help = drv->help;
+    d->description = drv->description;
+    d->help = drv->help;
     driver = drv;
 
     return XMP_OK;
@@ -192,7 +192,7 @@ static int drv_select(struct xmp_context *ctx)
 
 static void drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
 {
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
 
     if ((uint32) voc >= numvoc)
 	return;
@@ -200,7 +200,7 @@ static void drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
     if (mute)
 	driver->setvol(voc, 0);
 
-    c->numvoc--;
+    d->numvoc--;
     ch2vo_count[voice_array[voc].root]--;
     ch2vo_array[voice_array[voc].chn] = FREE;
     memset(&voice_array[voc], 0, sizeof (struct voice_info));
@@ -226,10 +226,9 @@ int xmp_drv_open(struct xmp_context *ctx)
 {
     int status;
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_control *c = &ctx->c;
     struct xmp_options *o = &ctx->o;
 
-    c->memavl = 0;
+    d->memavl = 0;
     smix_buf32b = NULL;
     extern_drv = TURN_ON;
     if ((status = drv_select(ctx)) != XMP_OK)
@@ -287,12 +286,12 @@ void xmp_drv_close(struct xmp_context *ctx)
 int xmp_drv_on(struct xmp_context *ctx, int num)
 {
     struct xmp_player_context *p = &ctx->p;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &p->m;
-    struct xmp_control *c = &ctx->c;
     struct xmp_options *o = &ctx->o;
 
-    numtrk = c->numtrk = num;
-    num = driver->numvoices (driver->numvoices(135711));
+    numtrk = d->numtrk = num;
+    num = driver->numvoices(driver->numvoices(135711));
     driver->reset ();
 
     numchn = numtrk;
@@ -313,8 +312,8 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     for (; num--; voice_array[num].chn = voice_array[num].root = FREE);
     for (num = numchn; num--; ch2vo_array[num] = FREE);
 
-    c->numvoc = agevoc = 0;
-    c->numchn = numchn;
+    d->numvoc = agevoc = 0;
+    d->numchn = numchn;
     smix_mode = o->outfmt & XMP_FMT_MONO ? 1 : 2;
     smix_resol = o->resol > 8 ? 2 : 1;
     smix_resetvar(ctx);
@@ -325,14 +324,14 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
 
 void xmp_drv_off(struct xmp_context *ctx)
 {
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
 
     if (numchn < 1)
 	return;
 
     xmp_drv_writepatch(ctx, NULL);
-    c->numvoc = numvoc = 0;
-    c->numchn = numchn = 0;
+    d->numvoc = numvoc = 0;
+    d->numchn = numchn = 0;
     numtrk = 0;
     free(ch2vo_count);
     free(ch2vo_array);
@@ -348,7 +347,7 @@ void xmp_drv_off(struct xmp_context *ctx)
 
 void xmp_drv_reset(struct xmp_context *ctx)
 {
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     int num;
 
     if (numchn < 1)
@@ -362,13 +361,13 @@ void xmp_drv_reset(struct xmp_context *ctx)
     memset(voice_array, 0, numvoc * sizeof (struct voice_info));
     for (; num--; voice_array[num].chn = voice_array[num].root = FREE);
     for (num = numchn; num--; ch2vo_array[num] = FREE);
-    c->numvoc = agevoc = 0;
+    d->numvoc = agevoc = 0;
 }
 
 
 void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
 {
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     int voc;
 
     voc = ch2vo_array[chn];
@@ -378,7 +377,7 @@ void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
 
     driver->setvol(voc, 0);
 
-    c->numvoc--;
+    d->numvoc--;
     ch2vo_count[voice_array[voc].root]--;
     ch2vo_array[chn] = FREE;
     memset (&voice_array[voc], 0, sizeof (struct voice_info));
@@ -388,7 +387,7 @@ void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
 
 static int drv_allocvoice(struct xmp_context *ctx, int chn)
 {
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     int voc, vfree;
     uint32 age;
 
@@ -399,7 +398,7 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
 
 	voice_array[voc].age = agevoc;
 	ch2vo_count[chn]++;
-	c->numvoc++;
+	d->numvoc++;
 
 	return voc;
     }

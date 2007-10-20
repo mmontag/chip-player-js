@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.13 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.14 2007-10-20 14:25:53 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -360,7 +360,7 @@ static int init(struct xmp_context *ctx)
     int found;
     char *buf, *token;
     char **parm;
-    struct xmp_control *c = &ctx->c;
+    struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
 
     parm_init();
@@ -398,7 +398,7 @@ static int init(struct xmp_context *ctx)
 		ioctl(seqfd, SNDCTL_SYNTH_MEMAVL, &i);
 		if (!i)
 		    continue;
-		c->memavl = i;
+		d->memavl = i;
 	    }
 
     	    buf = calloc(1, 256);

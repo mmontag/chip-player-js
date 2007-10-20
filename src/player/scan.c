@@ -68,7 +68,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
     loop_row = calloc(sizeof (int), m->xxh->chn);
     loop_chn = loop_flg = 0;
 
-    memset(m->xxo_fstrow, 0, XMP_DEF_MAXORD);
+    memset(m->xxo_fstrow, 0, XMP_MAXORD);
 
     gvl = m->xxh->gvl;
     bpm = m->xxh->bpm;
