@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.22 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: main.c,v 1.23 2007-10-20 16:08:29 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -601,8 +601,8 @@ skip_play:
 	     num_mod, t / 3600, (t % 3600) / 60, t % 60); 
     }
 
-    xmp_free_context(ctx);
     xmp_close_audio(ctx);
+    xmp_free_context(ctx);
 
 #ifdef XXMP
     if (pid) {
