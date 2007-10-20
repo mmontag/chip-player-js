@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.7 2007-10-19 18:16:55 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.8 2007-10-20 19:41:11 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -361,23 +361,23 @@ void x11_event_callback(unsigned long i)
 	break;
     default:
         if (cmd >= '1' && cmd <= '9') {
-	    xmp_channel_mute (cmd - '1', 1, -1);
+	    xmp_channel_mute(ctx, cmd - '1', 1, -1);
 	    ii->mute[cmd - '1'] = !ii->mute[cmd - '1'];
 	    break;
 	}
         if (cmd == '0') {
-	    xmp_channel_mute (9, 1, -1);
+	    xmp_channel_mute(ctx, 9, 1, -1);
 	    ii->mute[9] = !ii->mute[9];
 	    break;
 	}
         if (cmd == '!') {
-	    xmp_channel_mute (0, 64, 0);
+	    xmp_channel_mute (ctx, 0, 64, 0);
 	    for (i = 0; i < 64; i++)
 		ii->mute[i] = 0;
 	    break;
 	}
 	if (cmd < 0) {
-	    xmp_channel_mute (-cmd - 1, 1, !ii->mute[-cmd - 1]);
+	    xmp_channel_mute(ctx, -cmd - 1, 1, !ii->mute[-cmd - 1]);
 	    ii->mute[-cmd - 1] ^= 1;
 	    break;
 	}

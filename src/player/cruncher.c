@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1998-1999 Claudio Matsuoka and Hipolito Carraro Jr.
+ * Copyright (C) 1998-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See docs/COPYING
@@ -92,7 +92,7 @@ int xmp_cvt_crunch (struct patch_info **patch, unsigned int ratio)
         ++type;
     }
 
-    if (ratio < 0x10000 && smp_len < XMP_DEF_MINLEN)
+    if (ratio < 0x10000 && smp_len < XMP_MINLEN)
 	return 0x10000;
 
     base_note = ((long long) ((*patch)->base_note) << SMIX_SHIFT) / ratio;

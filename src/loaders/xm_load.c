@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.27 2007-10-20 11:50:43 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.28 2007-10-20 19:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -339,7 +339,7 @@ load_instruments:
 	    memcpy (&m->xxim[i], xi.sample, 96);
 	    for (j = 0; j < 96; j++) {
 		if (m->xxim[i].ins[j] >= m->xxih[i].nsm)
-		    m->xxim[i].ins[j] = (uint8) XMP_DEF_MAXPAT;
+		    m->xxim[i].ins[j] = (uint8) XMP_MAXPAT;
 	    }
 
 	    for (j = 0; j < m->xxih[i].nsm; j++, sample_num++) {

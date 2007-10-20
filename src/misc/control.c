@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.28 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: control.c,v 1.29 2007-10-20 19:41:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -124,13 +124,13 @@ inline void xmp_register_event_callback(void (*cb) (unsigned long))
 	xmp_event_callback = cb;
 }
 
-void xmp_channel_mute(int from, int num, int on)
+void xmp_channel_mute(xmp_context ctx, int from, int num, int on)
 {
 	from += num - 1;
 
 	if (num > 0) {
 		while (num--)
-			xmp_drv_mute(from - num, on);
+			xmp_drv_mute((struct xmp_context *)ctx, from - num, on);
 	}
 }
 

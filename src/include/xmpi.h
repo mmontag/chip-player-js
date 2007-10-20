@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.36 2007-10-20 18:42:37 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.37 2007-10-20 19:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,17 +17,19 @@
  * In megaman.xm there should be a tempo change at position 1 but in
  * xmp tempo and bpm remain the same.
  *
- * Claudio's fix: megaman has many (unused) samples, raise XMP_DEF_MAXPAT
+ * Claudio's fix: megaman has many (unused) samples, raise XMP_MAXPAT
  * from 256 to 1024. Otherwise, xmp ignores any event containing a sample
  * number above the limit.
  */
 
-#define XMP_DEF_MAXPAT	0x400		/* max number of samples in driver */
-#define XMP_MAXORD	0x100		/* max number of patterns in module */
-#define XMP_DEF_MAXROW	0x100		/* pattern loop stack size */
-#define XMP_DEF_MAXVOL	(0x400 * 0x7fff)
-#define XMP_DEF_EXTDRV	0xffff
-#define XMP_DEF_MINLEN	0x1000
+#define XMP_MAXPAT	1024		/* max number of samples in driver */
+#define XMP_MAXORD	256		/* max number of patterns in module */
+#define XMP_MAXROW	256		/* pattern loop stack size */
+#define XMP_MAXVOL	(0x400 * 0x7fff)
+#define XMP_EXTDRV	0xffff
+#define XMP_MINLEN	0x1000
+#define XMP_MAXCH	64		/* max virtual channels */
+#define XMP_MAXVOC	64		/* max physical voices */
 
 #if defined (DRIVER_OSS_MIX) || defined (DRIVER_OSS_SEQ)
 #   if defined (HAVE_SYS_SOUNDCARD_H)
@@ -197,17 +199,17 @@ struct xmp_driver_context {
 	int numvoc;			/* Number of voices currently in use */
 	int numbuf;			/* Number of output buffers */
 
-	int *ch2vo_count;
-	int *ch2vo_array;
-	struct voice_info *voice_array;
+	int cmute_array[XMP_MAXCH];
+	int ch2vo_count[XMP_MAXCH];
+	int ch2vo_array[XMP_MAXCH];
 
+	struct voice_info *voice_array;
 	struct patch_info **patch_array;
 };
 
 struct xmp_context {
 	int big_endian;
 	struct xmp_options o;
-	//struct xmp_control c;
 	struct xmp_driver_context d;
 	struct xmp_player_context p;
 };

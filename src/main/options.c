@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.25 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: options.c,v 1.26 2007-10-20 19:41:14 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -195,7 +195,7 @@ static void usage(char *s, struct xmp_options *opt)
 }
 
 
-void get_options(int argc, char **argv, struct xmp_options *opt)
+void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
 #define OPTIONS "8b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVv"
@@ -337,7 +337,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt)
 	case 'M':
 	case 'S':
 	    if (o == 'S')
-		xmp_channel_mute (0, 64, 1);
+		xmp_channel_mute(ctx, 0, 64, 1);
 	    token = strtok (optarg, ",");
 	    while (token) {
 		int a, b;
@@ -353,7 +353,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt)
 		    a = b = atoi (token);
 		for (; b >= a; b--) {
 		    if (b < 64)
-			xmp_channel_mute (b, 1, (o == 'M'));
+			xmp_channel_mute(ctx, b, 1, (o == 'M'));
 		}
 		token = strtok (NULL, ",");
 	    }

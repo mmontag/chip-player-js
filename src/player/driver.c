@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.53 2007-10-20 18:42:37 cmatsuoka Exp $
+ * $Id: driver.c,v 1.54 2007-10-20 19:41:14 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,9 +23,6 @@
 #define	FREE	-1
 
 static struct xmp_drv_info *drv_array = NULL;
-
-#define nummte 64		/* number of channels in cmute_array */
-static int cmute_array[nummte];
 
 static int numvoc;		/* number of soundcard voices */
 static int numchn;		/* number of channels need to play one module */
@@ -229,7 +226,7 @@ int xmp_drv_open(struct xmp_context *ctx)
     if ((status = drv_select(ctx)) != XMP_OK)
 	return status;
 
-    d->patch_array = calloc(XMP_DEF_MAXPAT, sizeof(struct patch_info *));
+    d->patch_array = calloc(XMP_MAXPAT, sizeof(struct patch_info *));
 
     if (d->patch_array == NULL) {
 	d->driver->shutdown ();
@@ -270,7 +267,7 @@ void xmp_drv_close(struct xmp_context *ctx)
     struct xmp_driver_context *d = &ctx->d;
 
     xmp_drv_off(ctx);
-    memset(cmute_array, 0, nummte * sizeof(int));
+    memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
     free(d->patch_array);
     d->driver->shutdown();
     synth_deinit();
@@ -299,8 +296,11 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     num = numvoc = d->driver->numvoices(num);
 
     d->voice_array = calloc(numvoc, sizeof (struct voice_info));
-    d->ch2vo_array = calloc(numchn, sizeof (int));
-    d->ch2vo_count = calloc(numchn, sizeof (int));
+
+    memset(d->ch2vo_array, 0, XMP_MAXCH * sizeof(int));
+    memset(d->ch2vo_count, 0, XMP_MAXCH * sizeof(int));
+    memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
+
     if (!(d->voice_array && d->ch2vo_array && d->ch2vo_count))
 	return XMP_ERR_ALLOC;
 
@@ -329,8 +329,6 @@ void xmp_drv_off(struct xmp_context *ctx)
     d->numvoc = numvoc = 0;
     d->numchn = numchn = 0;
     numtrk = 0;
-    free(d->ch2vo_count);
-    free(d->ch2vo_array);
     free(d->voice_array);
 }
 
@@ -358,8 +356,10 @@ void xmp_drv_reset(struct xmp_context *ctx)
 
     memset(d->ch2vo_count, 0, numchn * sizeof (int));
     memset(d->voice_array, 0, numvoc * sizeof (struct voice_info));
+
     for (; num--; d->voice_array[num].chn = d->voice_array[num].root = FREE);
     for (num = numchn; num--; d->ch2vo_array[num] = FREE);
+
     d->numvoc = agevoc = 0;
 }
 
@@ -414,15 +414,17 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
 }
 
 
-void xmp_drv_mute(int chn, int status)
+void xmp_drv_mute(struct xmp_context *ctx, int chn, int status)
 {
-    if ((uint32) chn >= nummte)
+    struct xmp_driver_context *d = &ctx->d;
+
+    if ((uint32)chn >= XMP_MAXCH)
 	return;
 
     if (status < 0)
-	cmute_array[chn] = !cmute_array[chn];
+	d->cmute_array[chn] = !d->cmute_array[chn];
     else
-	cmute_array[chn] = status;
+	d->cmute_array[chn] = status;
 }
 
 
@@ -436,7 +438,7 @@ void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
     if ((uint32)chn >= numchn || (uint32)voc >= numvoc)
 	return;
 
-    if (nummte > d->voice_array[voc].root && cmute_array[d->voice_array[voc].root])
+    if (d->voice_array[voc].root < XMP_MAXCH && d->cmute_array[d->voice_array[voc].root])
 	vol = TURN_OFF;
 
     d->driver->setvol(ctx, voc, vol);
@@ -486,7 +488,7 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 	return;
 
     vi = &d->voice_array[voc];
-    if ((uint32)smp >= XMP_DEF_MAXPAT || !d->patch_array[smp] || vi->smp == smp)
+    if ((uint32)smp >= XMP_MAXPAT || !d->patch_array[smp] || vi->smp == smp)
 	return;
 
     pos = vi->pos;
@@ -511,7 +513,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 
     if ((uint32) chn >= numchn)
 	return -1;
-    if (ins < 0 || (uint32) smp >= XMP_DEF_MAXPAT || !d->patch_array[smp])
+    if (ins < 0 || (uint32) smp >= XMP_MAXPAT || !d->patch_array[smp])
 	smp = -1;
 
     if (dct) {
@@ -762,13 +764,13 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
     if (!patch) {
 	d->driver->writepatch(ctx, patch);
 
-	for (num = XMP_DEF_MAXPAT; num--;) {
+	for (num = XMP_MAXPAT; num--;) {
 	    free(d->patch_array[num]);
 	    d->patch_array[num] = NULL;
 	}
 	return XMP_OK;
     }
-    if (patch->instr_no >= XMP_DEF_MAXPAT)
+    if (patch->instr_no >= XMP_MAXPAT)
 	return XMP_ERR_PATCH;
     d->patch_array[patch->instr_no] = patch;
 
@@ -789,14 +791,14 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
     if (!ratio)
 	ratio = 0x10000;
 
-    for (smp = XMP_DEF_MAXPAT, num = 0; smp--;)
+    for (smp = XMP_MAXPAT, num = 0; smp--;)
 	if (d->patch_array[smp])
 	    num++;
 
     if (extern_drv) {
 	reportv(ctx, 0, "Uploading smps : %d ", num);
 
-	for (smp = XMP_DEF_MAXPAT; smp--;) {
+	for (smp = XMP_MAXPAT; smp--;) {
 	    if (!d->patch_array[smp])
 		continue;
 	    patch = d->patch_array[smp];
@@ -825,7 +827,7 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 	}
 	reportv(ctx, 0, "\n");
     } else {					/* Softmixer writepatch */
-	for (smp = XMP_DEF_MAXPAT; smp--;) {
+	for (smp = XMP_MAXPAT; smp--;) {
 	    if (!d->patch_array[smp])
 		continue;
 	    patch = d->patch_array[smp];
@@ -963,6 +965,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     patch->panning = 0;
 
     xmp_cvt_crunch(&patch, flags & XMP_SMP_8X ? 0x80000 : 0x10000);
+
     return xmp_drv_writepatch(ctx, patch);
 }
 

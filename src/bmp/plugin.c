@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.40 2007-10-20 13:35:03 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.41 2007-10-20 19:41:11 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1058,7 +1058,7 @@ static void button_mute(GtkWidget *widget, GdkEvent *event)
 	if (!playing)
 		return;
 
-	xmp_channel_mute(0, 64, 1);
+	xmp_channel_mute(ctx, 0, 64, 1);
 	for (i = 0; i < ii->mi.chn; i++)
 		ii->mute[i] = 1;
 }
@@ -1070,7 +1070,7 @@ static void button_unmute(GtkWidget *widget, GdkEvent *event)
 	if (!playing)
 		return;
 
-	xmp_channel_mute(0, 64, 0);
+	xmp_channel_mute(ctx, 0, 64, 0);
 	for (i = 0; i < ii->mi.chn; i++)
 		ii->mute[i] = 0;
 }

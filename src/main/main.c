@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.23 2007-10-20 16:08:29 cmatsuoka Exp $
+ * $Id: main.c,v 1.24 2007-10-20 19:41:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -83,7 +83,7 @@ int skip = 0;
 
 static int sigusr = 0;
 
-void get_options (int, char **, struct xmp_options *);
+void get_options (int, char **, struct xmp_options *, xmp_context);
 
 static xmp_context ctx;
 
@@ -308,13 +308,13 @@ static void process_echoback(unsigned long i)
 	case '7':
 	case '8':
 	case '9':
-	    xmp_channel_mute(cmd - '1', 1, -1);
+	    xmp_channel_mute(ctx, cmd - '1', 1, -1);
 	    break;
 	case '0':
-	    xmp_channel_mute(9, 1, -1);
+	    xmp_channel_mute(ctx, 9, 1, -1);
 	    break;
 	case '!':
-	    xmp_channel_mute(0, 8, 0);
+	    xmp_channel_mute(ctx, 0, 8, 0);
 	    break;
 	}
     }
@@ -360,7 +360,7 @@ int main (int argc, char **argv)
     opt = xmp_get_options(ctx);
 
     opt->verbosity = 1;
-    get_options(argc, argv, opt);
+    get_options(argc, argv, opt, ctx);
     verbosity = opt->verbosity;
 
     if (!(probeonly || argv[optind])) {

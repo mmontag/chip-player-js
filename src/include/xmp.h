@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.28 2007-10-20 14:25:53 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.29 2007-10-20 19:41:11 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -209,7 +209,7 @@ struct xmp_drv_info*
 char*	xmp_get_driver_description 	(xmp_context);
 void	xmp_set_driver_parameter 	(struct xmp_options *, char *);
 void	xmp_get_driver_cfg		(xmp_context, int *, int *, int *, int *);
-void	xmp_channel_mute		(int, int, int);
+void	xmp_channel_mute		(xmp_context, int, int, int);
 void	xmp_display_license		(void);
 void	xmp_register_event_callback	(void (*)(unsigned long));
 void	xmp_register_driver_callback	(void (*)(void *, int));

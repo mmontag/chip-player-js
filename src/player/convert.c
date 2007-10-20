@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.9 2007-10-19 23:38:51 cmatsuoka Exp $
+ * $Id: convert.c,v 1.10 2007-10-20 19:41:14 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -133,7 +133,7 @@ void xmp_cvt_to8bit(struct xmp_context *ctx)
     int16 *p16;
     struct patch_info *patch;
 
-    for (smp = XMP_DEF_MAXPAT; smp--;) {
+    for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
 
 	if (!(patch && (patch->mode & WAVE_16_BITS) &&
@@ -164,7 +164,7 @@ void xmp_cvt_to16bit(struct xmp_context *ctx)
     int16 *p16;
     struct patch_info *patch;
 
-    for (smp = XMP_DEF_MAXPAT; smp--;) {
+    for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
 	if ((!patch) || patch->mode & WAVE_16_BITS ||
 	    (patch->len == XMP_PATCH_FM))
@@ -232,7 +232,7 @@ void xmp_cvt_bid2und(struct xmp_context *ctx)
     int r, l, le, smp;
     struct patch_info *patch;
 
-    for (smp = XMP_DEF_MAXPAT; smp--;) {
+    for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
 	if (!(patch && (patch->mode & WAVE_BIDIR_LOOP) &&
 	    (patch->len != XMP_PATCH_FM)))
