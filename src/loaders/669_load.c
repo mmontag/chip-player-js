@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: 669_load.c,v 1.20 2007-10-20 16:04:51 cmatsuoka Exp $
+ * $Id: 669_load.c,v 1.21 2007-10-21 13:31:15 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -170,12 +170,6 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 	EVENT(i, 1, sfh.pbrk[i]).f2t = FX_BREAK;
 	EVENT(i, 1, sfh.pbrk[i]).f2p = 0;
 
-	/* Cancel persistent effects at each new pattern */
-	for (j = 1; j < 8; j++) {
-	    EVENT(i, j, 0).f2t = FX_PER_CANCEL;
-	    EVENT(i, j, 0).f2p = 0;
-	}
-
 	for (j = 0; j < 64 * 8; j++) {
 	    event = &EVENT(i, j % 8, j / 8);
 	    fread(&ev, 1, 3, f);
@@ -237,6 +231,8 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = (i % 2) * 0xff;
+
+    m->fetch |= XMP_CTL_PERPAT;	    /* Cancel persistent fx at each new pat */
 
     return 0;
 }

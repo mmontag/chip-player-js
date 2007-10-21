@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
+# $Id: Makefile,v 1.2 2007-10-21 13:31:15 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
@@ -22,7 +22,7 @@ all: $(PLUGINS)
 #
 
 audacious: xmp-audacious.so
-	@echo done
+	@true
 
 xmp-audacious.so: $(OBJS) audacious.o $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -o $@ $(OBJS) audacious.o `pkg-config --libs audacious` -L$(TOPDIR)/lib/ -lxmp-pic
@@ -39,7 +39,7 @@ install-audacious:
 #
 
 bmp: xmp-bmp.so
-	@echo done
+	@true
 
 xmp-bmp.so: $(OBJS) bmp.o $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -o $@ $(OBJS) bmp.o `pkg-config --libs bmp` -L$(TOPDIR)/lib/ -lxmp-pic
@@ -56,7 +56,7 @@ install-bmp:
 #
 
 xmms: xmp-xmms.so
-	@echo done
+	@true
 
 xmp-xmms.so: $(OBJS) xmms.o $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -o $@ $(OBJS) xmms.o `xmms-config --libs` -L$(TOPDIR)/lib/ -lxmp-pic

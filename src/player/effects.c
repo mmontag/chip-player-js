@@ -150,7 +150,7 @@ fx_porta_dn:
 	    p->tempo = fxp;
 	/* fall through */
     case FX_PER_CANCEL:				/* Cancel persistent effects */
-	RESET_PER(VIBRATO | PITCHBEND | TONEPORTA);
+	xc->per_flags = 0;
 	break;
     case FX_VIBRATO:				/* Vibrato */
 	SET(VIBRATO);

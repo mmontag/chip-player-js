@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.30 2007-10-21 01:43:28 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.31 2007-10-21 13:31:15 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -127,6 +127,7 @@ struct xmp_options {
 #define XMP_CTL_RTGINS	0x00800000	/* Retrig instrument on toneporta */
 #define XMP_CTL_FILTER	0x01000000	/* IT lowpass filter */
 #define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
+#define XMP_CTL_PERPAT	0x04000000	/* Cancel persistent fx at pat start */
     int flags;		/* xmp internal control flags, set default mode */
     int crunch;		/* Sample crunching ratio */
     int start;		/* Set initial order (default = 0) */

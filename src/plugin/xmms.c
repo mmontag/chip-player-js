@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: xmms.c,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
+ * $Id: xmms.c,v 1.2 2007-10-21 13:31:16 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -274,6 +274,12 @@ static int get_time()
 		return -1;
 
 	return xmp_ip.output->output_time();
+}
+
+
+InputPlugin *get_iplugin_info()
+{
+	return &xmp_ip;
 }
 
 

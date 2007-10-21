@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.36 2007-10-20 18:42:37 cmatsuoka Exp $
+ * $Id: player.c,v 1.37 2007-10-21 13:31:15 cmatsuoka Exp $
  */
 
 /*
@@ -817,6 +817,13 @@ next_order:
 	p->flow.jumpline = 0;
 
 	p->pos = ord;
+
+	/* Reset persistent effects at each new pattern */
+	if (m->fetch & XMP_CTL_PERPAT) {
+	    int chn;
+	    for (chn = 0; chn < p->m.xxh->chn; chn++)
+		p->xc_data[chn].per_flags = 0;
+	}
 
 	for (; p->flow.row_cnt < r; p->flow.row_cnt++) {
 	    if ((~m->fetch & XMP_CTL_LOOP) && ord == p->xmp_scan_ord &&
