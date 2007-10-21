@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.43 2007-10-21 03:56:17 cmatsuoka Exp $
+ * $Id: xmms.c,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -15,25 +15,10 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#ifdef PLUGIN_BMP
-#include <bmp/configfile.h>
-#include <bmp/util.h>
-#include <bmp/plugin.h>
-#define CONFIG_FILE "/.bmp/config"
-#endif
-
-#ifdef PLUGIN_AUDACIOUS
-#include <audacious/configdb.h>
-#include <audacious/util.h>
-#include <audacious/plugin.h>
-#endif
-
-#ifdef PLUGIN_XMMS
 #include <xmms/configfile.h>
 #include <xmms/util.h>
 #include <xmms/plugin.h>
 #define CONFIG_FILE "/.xmms/config"
-#endif
 
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
@@ -45,25 +30,13 @@
 #include "formats.h"
 #include "xpanel.h"
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
-#define IPB
-#define IPB_short(x) short x
-#define IPB_int(x) int x
-#endif
-#ifdef PLUGIN_AUDACIOUS
-#define IPB InputPlayback *ipb
-#define IPB_short(x) IPB, short x
-#define IPB_int(x) IPB, int x
-#endif
-
 static void	init		(void);
 static int	is_our_file	(char *);
-static void	play_file	(IPB);
-static void	stop		(IPB);
-static void	mod_pause	(IPB_short(p));
-static void	seek		(IPB_int(time));
-
-static int	get_time	(IPB);
+static void	play_file	(char *);
+static void	stop		(void);
+static void	mod_pause	(short);
+static void	seek		(int);
+static int	get_time	(void);
 static void	*play_loop	(void *);
 static void	aboutbox	(void);
 static void	get_song_info	(char *, char **, int *);
@@ -71,44 +44,13 @@ static void	configure	(void);
 static void	config_ok	(GtkWidget *, gpointer);
 static void	file_info_box	(char *);
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-static void	cleanup		(void);
-static void	mseek		(InputPlayback *, gulong);
-static Tuple	*get_song_tuple	(char *);
-#endif
-
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-static GThread *decode_thread;
-#else
 static pthread_t decode_thread;
-#endif
-
 static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-
-#ifdef __EMX__
-#define PATH_MAX _POSIX_PATH_MAX
-#endif
 
 #define FREQ_SAMPLE_44 0
 #define FREQ_SAMPLE_22 1
 #define FREQ_SAMPLE_11 2
-
-extern InputPlugin xmp_ip;
-
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-
-InputPlugin *xmp_iplist[] = { &xmp_ip, NULL };
-
-DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
-
-#endif
- 
-static struct {
-	InputPlayback *ipb;
-	AFormat fmt;
-	int nch;
-} play_data;
 
 typedef struct {
 	gint mixing_freq;
@@ -173,11 +115,6 @@ InputPlugin xmp_ip = {
 	.get_time	= get_time,
 	.get_song_info	= get_song_info,
 	.file_info_box	= file_info_box,
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	.mseek		= mseek,
-	.cleanup	= cleanup,
-	.get_song_tuple	= get_song_tuple,
-#endif
 };
 
 
@@ -233,9 +170,6 @@ static void aboutbox ()
 	scroll1 = gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll1),
 			GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gtk_widget_set_size_request(scroll1, 290, 100);
-#endif
 	gtk_object_set_data(GTK_OBJECT(scroll1), "scroll1", scroll1);
 	gtk_widget_set (scroll1, "height", 100, NULL);
 	gtk_box_pack_start(GTK_BOX(vbox1), scroll1, TRUE, TRUE, 0);
@@ -269,19 +203,11 @@ static void aboutbox ()
 	gtk_widget_show_all(about_window);
 }
 
-//static GdkGC *gdkgc;
 static GdkImage *image;
 static GtkWidget *image1;
 static GtkWidget *frame1;
-
 static GtkWidget *text1;
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-static GtkTextBuffer *text1b;
-#endif
-#ifdef PLUGIN_XMMS
 static GdkFont *font;
-#endif
-
 static GdkColor *color_black;
 static GdkColor *color_white;
 static GdkColormap *colormap;
@@ -292,7 +218,7 @@ static Window window;
 xmp_context ctx;
 
 
-static void stop(IPB)
+static void stop()
 {
 	if (!playing)
 		return;
@@ -301,33 +227,22 @@ static void stop(IPB)
 	xmp_stop_module(ctx); 
 	ii->mode = 0;
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	ipb->playing = 0;
-	g_thread_join(decode_thread);
-	ipb->output->close_audio();
-        audio_open = FALSE;
-#else
 	pthread_join(decode_thread, NULL);
 
 	if (audio_open) {
         	xmp_ip.output->close_audio();
         	audio_open = FALSE;
     	}
-#endif
 }
 
-static void seek(IPB_int(time))
-{
-	mseek(ipb, time * 1000);
-}
-
-static void mseek(InputPlayback *ipb, unsigned long time)
+static void seek(int time)
 {
 	int i, t;
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 
 	_D("seek to %d, total %d", time, xmp_cfg.time);
 
+	time *= 1000;
 	for (i = 0; i < xmp_cfg.mod_info.len; i++) {
 		t = p->m.xxo_info[i].time;
 
@@ -344,14 +259,14 @@ static void mseek(InputPlayback *ipb, unsigned long time)
 	}
 }
 
-static void mod_pause(IPB_short(p))
+static void mod_pause(short p)
 {
 	ii->pause = p;
 	xmp_ip.output->pause(p);
 }
 
 
-static int get_time(IPB)
+static int get_time()
 {
 	if (xmp_plugin_audio_error)
 		return -2;
@@ -362,23 +277,8 @@ static int get_time(IPB)
 }
 
 
-#if __AUDACIOUS_PLUGIN_API__ < 2
-
-InputPlugin *get_iplugin_info()
-{
-	return &xmp_ip;
-}
-
-#endif
-
-
 static void driver_callback(void *b, int i)
 {
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	play_data.ipb->pass_audio(play_data.ipb, play_data.fmt, play_data.nch,
-					i, b, &play_data.ipb->playing);
-
-#else
 	xmp_ip.add_vis_pcm (xmp_ip.output->written_time(),
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, i, b);
@@ -388,11 +288,8 @@ static void driver_callback(void *b, int i)
 
 	if (playing)
 		xmp_ip.output->write_audio(b, i);
-#endif
 }
 
-
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 
 static void init(void)
 {
@@ -438,63 +335,6 @@ static void init(void)
 	ii->wresult = 42;
 }
 
-#endif
-
-#ifdef PLUGIN_AUDACIOUS
-
-static void init(void)
-{
-	ConfigDb *cfg;
-
-	ctx = xmp_create_context();
-
-	xmp_cfg.mixing_freq = 0;
-	xmp_cfg.convert8bit = 0;
-	xmp_cfg.fixloops = 0;
-	xmp_cfg.modrange = 0;
-	xmp_cfg.force8bit = 0;
-	xmp_cfg.force_mono = 0;
-	xmp_cfg.interpolation = TRUE;
-	xmp_cfg.filter = TRUE;
-	xmp_cfg.pan_amplitude = 80;
-
-#define CFGREADINT(x) bmp_cfg_db_get_int (cfg, "XMP", #x, &xmp_cfg.x)
-
-	if ((cfg = bmp_cfg_db_open())) {
-		CFGREADINT(mixing_freq);
-		CFGREADINT(force8bit);
-		CFGREADINT(convert8bit);
-		CFGREADINT(modrange);
-		CFGREADINT(fixloops);
-		CFGREADINT(force_mono);
-		CFGREADINT(interpolation);
-		CFGREADINT(filter);
-		CFGREADINT(pan_amplitude);
-
-		bmp_cfg_db_close(cfg);
-	}
-
-	file_info_box_build();
-
-	xmp_init_callback(ctx, driver_callback);
-	xmp_register_event_callback(x11_event_callback);
-
-	memset(ii, 0, sizeof (ii));
-	ii->wresult = 42;
-}
-
-
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-
-static void cleanup()
-{
-	xmp_free_context(ctx);
-	xmp_close_audio(ctx);
-}
-
-#endif
-
-#endif
 
 static int is_our_file(char *filename)
 {
@@ -543,51 +383,6 @@ static void get_song_info(char *filename, char **title, int *length)
 	xmp_free_context(ctx2);
 }
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-
-static Tuple *get_song_tuple(char *filename)
-{
-	Tuple *tuple;
-	xmp_context ctx2;
-	int lret;
-	struct xmp_module_info mi;
-	struct xmp_options *opt;
-
-	/* Sorry, no VFS support */
-	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
-		filename += 7;
-
-	tuple = aud_tuple_new_from_filename(filename);
-
-	/* Create new context to load a file and get the length */
-
-	ctx2 = xmp_create_context();
-	opt = xmp_get_options(ctx2);
-	opt->skipsmp = 1;	/* don't load samples */
-
-	pthread_mutex_lock(&load_mutex);
-	lret = xmp_load_module(ctx2, filename);
-	pthread_mutex_unlock(&load_mutex);
-
-	if (lret < 0) {
-		xmp_free_context(ctx2);
-		return NULL;
-	}
-
-	xmp_get_module_info(ctx2, &mi);
-
-	aud_tuple_associate_string(tuple, FIELD_TITLE, NULL, mi.name);
-	aud_tuple_associate_string(tuple, FIELD_CODEC, NULL, mi.type);
-	aud_tuple_associate_int(tuple, FIELD_LENGTH, NULL, lret);
-
-	xmp_release_module(ctx2);
-	xmp_free_context(ctx2);
-
-	return tuple;
-}
-
-#endif
-
 static int fd_old2, fd_info[2];
 static pthread_t catch_thread;
 
@@ -595,27 +390,13 @@ void *catch_info(void *arg)
 {
 	FILE *f;
 	char buf[100];
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	GtkTextIter end;
-	GtkTextTag *tag;
-#endif
 
 	f = fdopen(fd_info[0], "r");
 
 	while (!feof (f)) {
 		fgets (buf, 100, f);
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-		gtk_text_buffer_get_end_iter(text1b, &end);
-		tag = gtk_text_buffer_create_tag(text1b, NULL,
-						"foreground", "black", NULL);
-		gtk_text_buffer_insert_with_tags(text1b, &end, buf, -1,
-								tag, NULL);
-#endif
-
-#ifdef PLUGIN_XMMS
 		gtk_text_insert(GTK_TEXT(text1), font,
 			color_black, color_white, buf, strlen(buf));
-#endif
 		if (!strncmp(buf, "Estimated time :", 16))
 			break;
 	}
@@ -626,23 +407,15 @@ void *catch_info(void *arg)
 }
 
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 static void play_file(char *filename)
 {
-#endif
-#ifdef PLUGIN_AUDACIOUS
-static void play_file(InputPlayback *ipb)
-{
-	char *filename = ipb->filename;
-#endif
 	int channelcnt = 1;
 	int format = FMT_U8;
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	GtkTextIter start, end;
-#endif
+	AFormat fmt;
+	int nch;
 	
 	opt = xmp_get_options(ctx);
 
@@ -652,12 +425,7 @@ static void play_file(InputPlayback *ipb)
 
 	_D("play_file: %s", filename);
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	stop();		/* sanity check */
-#endif
-#ifdef PLUGIN_AUDACIOUS
-	stop(ipb);	/* sanity check */
-#endif
 
 	if ((f = fopen(filename,"rb")) == 0) {
 		playing = 0;
@@ -665,17 +433,9 @@ static void play_file(InputPlayback *ipb)
 	}
 	fclose(f);
 
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gtk_text_buffer_get_start_iter(text1b, &start);
-	gtk_text_buffer_get_end_iter(text1b, &end);
-	gtk_text_buffer_delete(text1b, &start, &end);
-#endif
-
-#ifdef PLUGIN_XMMS
 	gtk_text_set_point(GTK_TEXT(text1), 0);
 	gtk_text_forward_delete(GTK_TEXT(text1),
 			gtk_text_get_length(GTK_TEXT(text1)));
-#endif
 	
 	xmp_plugin_audio_error = FALSE;
 	playing = 1;
@@ -715,28 +475,16 @@ static void play_file(InputPlayback *ipb)
 
 	opt->mix = xmp_cfg.pan_amplitude;
 
-	play_data.ipb = ipb;
-	play_data.fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
-	play_data.nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
+	nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	if (audio_open)
-	    ipb->output->close_audio();
-	
-	if (!ipb->output->open_audio(play_data.fmt, opt->freq, play_data.nch)) {
-	    ipb->error = TRUE;
-	    xmp_plugin_audio_error = TRUE;
-	    return;
-	}
-#else
 	if (audio_open)
 	    xmp_ip.output->close_audio();
 	
-	if (!xmp_ip.output->open_audio(play_data.fmt, opt->freq, play_data.nch)) {
+	if (!xmp_ip.output->open_audio(fmt, opt->freq, nch)) {
 	    xmp_plugin_audio_error = TRUE;
 	    return;
 	}
-#endif
 	
 	audio_open = TRUE;
 
@@ -764,13 +512,7 @@ static void play_file(InputPlayback *ipb)
 	_D("joined");
 	dup2(fileno(stderr), fd_old2);
 
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1)->vadjustment, 0.0);
-#endif
-
-#ifdef PLUGIN_XMMS
 	gtk_adjustment_set_value(GTK_TEXT(text1)->vadj, 0.0);
-#endif
 
 	close(fd_info[0]);
 	close(fd_info[1]);
@@ -787,42 +529,20 @@ static void play_file(InputPlayback *ipb)
 
 	memcpy(&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	ipb->set_params(ipb, ii->mi.name, lret, 0, opt->freq, channelcnt);
-	ipb->playing = 1;
-	ipb->eof = 0;
-	ipb->error = FALSE;
-
-	decode_thread = g_thread_self();
-	ipb->set_pb_ready(ipb);
-	play_loop(ipb);
-#else
 	xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
 	pthread_create(&decode_thread, NULL, play_loop, NULL);
-#endif
 }
 
 
 static void *play_loop(void *arg)
 {
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	InputPlayback *ipb = arg;
-#endif
-
 	xmp_play_module(ctx);
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 	playing = 0;
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	ipb->eof = 1;
-	ipb->playing = 0;
-#endif
-
-#if 0
 	_D("--- pthread_exit");
 	pthread_exit(NULL);
-#endif
 
 	return NULL;
 }
@@ -1054,13 +774,8 @@ static void configure()
 
 static void config_ok(GtkWidget *widget, gpointer data)
 {
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	ConfigFile *cfg;
 	gchar *filename;
-#endif
-#ifdef PLUGIN_AUDACIOUS
-	ConfigDb *cfg;
-#endif
 	struct xmp_options *opt;
 
 	opt = xmp_get_options(ctx);
@@ -1091,20 +806,12 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	xmp_cfg.pan_amplitude = (guchar)GTK_ADJUSTMENT(pansep_adj)->value;
         opt->mix = xmp_cfg.pan_amplitude;
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	filename = g_strconcat(g_get_home_dir(), CONFIG_FILE, NULL);
 	cfg = xmms_cfg_open_file(filename);
 	if (!cfg)
 		cfg = xmms_cfg_new();
 
 #define CFGWRITEINT(x) xmms_cfg_write_int (cfg, "XMP", #x, xmp_cfg.x)
-#endif
-
-#ifdef PLUGIN_AUDACIOUS
-	cfg = bmp_cfg_db_open();
-
-#define CFGWRITEINT(x) bmp_cfg_db_set_int (cfg, "XMP", #x, xmp_cfg.x)
-#endif
 
 	CFGWRITEINT (mixing_freq);
 	CFGWRITEINT (force8bit);
@@ -1116,15 +823,9 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	CFGWRITEINT (filter);
 	CFGWRITEINT (pan_amplitude);
 
-#if defined PLUGIN_XMMS || defined PLUGIN_BMP
 	xmms_cfg_write_file(cfg, filename);
 	xmms_cfg_free(cfg);
 	g_free(filename);
-#endif
-
-#ifdef PLUGIN_AUDACIOUS
-	bmp_cfg_db_close(cfg);
-#endif
 
 	gtk_widget_destroy(xmp_conf_window);
 }
@@ -1182,9 +883,6 @@ static void file_info_box_build()
 	GtkWidget *scrw1;
 	GtkWidget *expander;
 	GdkVisual *visual;
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	PangoFontDescription *desc;
-#endif
 
 	info_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_object_set_data(GTK_OBJECT(info_window),
@@ -1209,20 +907,11 @@ static void file_info_box_build()
 
 	frame1 = gtk_event_box_new();
 	gtk_object_set_data(GTK_OBJECT(frame1), "frame1", frame1);
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gtk_widget_set_size_request(frame1, 300, 128);
-#endif
 	gtk_box_pack_start(GTK_BOX(vbox1), frame1, FALSE, FALSE, 0);
 
 	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
 	ximage = GDK_IMAGE_XIMAGE(image);
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	image1 = gtk_image_new_from_image(image, NULL);
-#endif
-
-#ifdef PLUGIN_XMMS
 	image1 = gtk_image_new(image, NULL);
-#endif
 	gtk_object_set_data(GTK_OBJECT(image1), "image1", image1);
 	gtk_container_add (GTK_CONTAINER(frame1), image1);
 	gtk_widget_set_events (frame1, GDK_BUTTON_PRESS_MASK | GDK_KEY_PRESS_MASK);
@@ -1271,12 +960,7 @@ static void file_info_box_build()
 	 * Info area
 	 */
 
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	expander = gtk_expander_new("Module information");
-#endif
-#ifdef PLUGIN_XMMS
 	expander = gtk_frame_new("Module information");
-#endif
 
 	scrw1 = gtk_scrolled_window_new(NULL, NULL);
 	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
@@ -1286,23 +970,10 @@ static void file_info_box_build()
 	gtk_container_add(GTK_CONTAINER(expander), scrw1);
 	gtk_box_pack_start(GTK_BOX(vbox1), expander, TRUE, TRUE, 0);
 
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gtk_widget_set_size_request(scrw1, 290, 200);
-	text1b = gtk_text_buffer_new(NULL);
-	text1 = gtk_text_view_new_with_buffer(text1b);
-	desc = pango_font_description_new();
-	pango_font_description_set_family(desc, "Monospace");
-	gtk_widget_modify_font(text1, desc);
-	pango_font_description_free(desc);
-	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1), GTK_WRAP_NONE);
-#endif
-
-#ifdef PLUGIN_XMMS
 	gtk_widget_set(scrw1, "width", 290, "height", 160, NULL);
 	text1 = gtk_text_new(NULL, NULL);
 	font = gdk_font_load("fixed");
 	gtk_text_set_line_wrap(GTK_TEXT(text1), FALSE);
-#endif
 
 	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
 	gtk_container_add(GTK_CONTAINER(scrw1), text1);
@@ -1385,14 +1056,7 @@ void update_display()
 	area.width = 300;
 	area.height = 128;
 
-#if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
-	gdk_window_invalidate_rect(image1->window, &area, FALSE);
-#endif
-
-#ifdef PLUGIN_XMMS
 	gtk_widget_draw(image1, &area);
-#endif
-
 }
 
 int process_events(int *x, int *y)

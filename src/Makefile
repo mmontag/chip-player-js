@@ -1,15 +1,15 @@
 # Extended Module Player src/Makefile
-# $Id: Makefile,v 1.12 2007-09-12 14:36:45 cmatsuoka Exp $
+# $Id: Makefile,v 1.13 2007-10-21 12:59:15 cmatsuoka Exp $
 
 TOPDIR	= ../
 DFILES	= Makefile
-_DIRS	= drivers include loaders prowizard player misc main
-DDIRS	= $(_DIRS) os2 bmp
+_DIRS	= drivers include loaders prowizard player misc main plugin
+DDIRS	= $(_DIRS) os2
 CFILES	=
 DCFILES	=
 
 all install::
-	@for i in $(_DIRS) $(PLUGDIR); do	\
+	@for i in $(_DIRS); do	\
 		(cd $$i && $(MAKE) $@)	\
 	done
 

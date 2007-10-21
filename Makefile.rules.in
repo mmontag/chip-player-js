@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.52 2007-10-20 17:04:57 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.53 2007-10-21 12:59:14 cmatsuoka Exp $
 
 VERSION		= 2.4.0
 DATE		= Sat Oct 20 14:09:46 BRST 2007
@@ -20,11 +20,9 @@ LDFLAGS		= -o $@ @LDFLAGS@
 RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 
-PLUGDIR		= @PLUGDIR@
-PLUGFLAGS	= -fPIC @PLUGFLAGS@
-PLUGINST	= @PLUGINST@
+PLUGINS		= @PLUGINS@
 
-ifneq ($(PLUGDIR),)
+ifneq ($(PLUGINS),)
 PIC_OBJS	= $(OBJS:.o=.lo)
 PIC_XOBJS	= $(XOBJS:.o=.lo)
 PIC_LIB		= $(LIB:.a=-pic.a)

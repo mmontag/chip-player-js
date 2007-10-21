@@ -23,9 +23,7 @@ If you wish to build the Audacious plugin, configure with:
 
 $ ./configure --enable-audacious-plugin
 
-Use --enable-bmp-plugin or --enable-xmms-plugin for BMP and XMMS. Only
-one plugin can be specified, you must reconfigure to build a different
-one.
+Use --enable-bmp-plugin or --enable-xmms-plugin for BMP and XMMS.
 
 Many other options are available, run ./configure --help to list them.
 

@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.33 2007-10-08 16:38:28 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.34 2007-10-21 12:59:14 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -15,14 +15,8 @@ AC_CANONICAL_HOST
 AC_SUBST(CINCS)
 CINCS="${CPPFLAGS}"
 
-AC_SUBST(PLUGDIR)
-PLUGDIR=""
-
-AC_SUBST(PLUGINST)
-PLUGINST=""
-
-AC_SUBST(PLUGFLAGS)
-PLUGFLAGS=""
+AC_SUBST(PLUGINS)
+PLUGINS=""
 
 AC_SUBST(LDFLAGS)
 LDFLAGS=""
@@ -202,9 +196,7 @@ if test "${enable_xmms_plugin}" = "yes"; then
     AC_CHECK_HEADERS(xmms/plugin.h)
 
     if test "${ac_cv_header_xmms_plugin_h}" = "yes"; then
-        PLUGDIR="bmp"
-	PLUGFLAGS="`xmms-config --cflags` -DENABLE_PLUGIN -DPLUGIN_XMMS"
-	PLUGINST="`xmms-config --input-plugin-dir`"
+        PLUGINS="$PLUGINS xmms"
     fi
 fi
 
@@ -230,9 +222,7 @@ if test "${enable_bmp_plugin}" = "yes"; then
     AC_CHECK_HEADERS(bmp/plugin.h)
 
     if test "${ac_cv_header_bmp_plugin_h}" = "yes"; then
-        PLUGDIR="bmp"
-	PLUGFLAGS="`pkg-config --cflags bmp` -DENABLE_PLUGIN -DPLUGIN_BMP"
-	PLUGINST="`pkg-config --variable=input_plugin_dir bmp`"
+        PLUGINS="$PLUGINS bmp"
     fi
 fi
 
@@ -258,9 +248,7 @@ if test "${enable_audacious_plugin}" = "yes"; then
     AC_CHECK_HEADERS(audacious/plugin.h)
 
     if test "${ac_cv_header_audacious_plugin_h}" = "yes"; then
-        PLUGDIR="bmp"
-	PLUGFLAGS="`pkg-config --cflags audacious` -DENABLE_PLUGIN -DPLUGIN_AUDACIOUS"
-	PLUGINST="`pkg-config --variable=input_plugin_dir audacious`"
+        PLUGINS="$PLUGINS audacious"
     fi
 fi
 

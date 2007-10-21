@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.145 2007-10-20 18:42:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.146 2007-10-21 12:59:14 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -36,6 +36,7 @@ Stable versions
 	- fixed length of XM loops (jt_xmas.xm no longer out of tune)
 	- fixed Audacious plugin to display duration when adding to playlist
 	- fixed memory access violations reported by Valgrind
+	- split XMMS/BMP/Audacious plugin source
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

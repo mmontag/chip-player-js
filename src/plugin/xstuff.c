@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.3 2007-10-17 23:22:50 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
  */
 
 /*

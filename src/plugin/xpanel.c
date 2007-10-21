@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.8 2007-10-20 19:41:11 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
  */
 
 #include <stdio.h>
