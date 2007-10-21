@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.37 2007-10-20 19:41:11 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.38 2007-10-21 01:43:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -192,6 +192,7 @@ struct xmp_driver_context {
 	struct xmp_drv_info *driver;	/* Driver */
 	char *description;		/* Driver description */
 	char **help;			/* Driver help info */
+	void (*callback)(void *, int);
 
 	int memavl;			/* Memory availble in sound card */
 	int numtrk;			/* Number of tracks */
@@ -218,7 +219,6 @@ struct xmp_context {
 /* Externs */
 
 extern void (*xmp_event_callback)(unsigned long);
-//extern struct xmp_control *xmp_ctl;	/* built in control struct pointer */
 
 
 /* Prototypes */

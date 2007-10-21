@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.51 2007-10-20 17:04:57 cmatsuoka Exp $
+ * $Id: load.c,v 1.52 2007-10-21 01:42:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -360,13 +360,17 @@ err:
 
 static void split_name(char *s, char **d, char **b)
 {
-	if ((*b = strrchr(s, '/'))) {
-		**b = 0;
-		(*b)++;
-		*d = s;
+	char tmp, *div;
+
+	if ((div = strrchr(s, '/'))) {
+		tmp = *div;
+		*div = 0;
+		*d = strdup(s);
+		*b = strdup(div + 1);
+		*div = tmp;
 	} else {
-		*d = "";
-		*b = s;
+		*d = strdup("");
+		*b = strdup(s);
 	}
 }
 
@@ -383,7 +387,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
-    char *b1, *b2;
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -400,9 +403,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
 	goto err;
 
-    split_name(s, &b1, &b2);
-    m->dirname = strdup(b1);
-    m->basename = strdup(b2); 
+    split_name(s, &m->dirname, &m->basename);
 
     crc = cksum(f);
 

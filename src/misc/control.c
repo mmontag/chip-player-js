@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.29 2007-10-20 19:41:14 cmatsuoka Exp $
+ * $Id: control.c,v 1.30 2007-10-21 01:42:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -71,7 +71,7 @@ void xmp_init_callback(xmp_context ctx, void (*callback) (void *, int))
 	xmp_drv_register(&drv_callback);
 	xmp_init_formats();
 	pw_init();
-	xmp_register_driver_callback(callback);
+	xmp_register_driver_callback(ctx, callback);
 
 	o->drv_id = "callback";
 }

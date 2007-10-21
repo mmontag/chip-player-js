@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.54 2007-10-20 19:41:14 cmatsuoka Exp $
+ * $Id: driver.c,v 1.55 2007-10-21 01:42:39 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -33,7 +33,6 @@ static int extern_drv;		/* set output to driver other than mixer */
 
 static inline void drv_resetvoice (struct xmp_context *, int, int);
 
-void (*_driver_callback)(void *, int) = NULL;
 
 extern struct xmp_drv_info drv_file;
 extern struct xmp_drv_info drv_wav;
@@ -976,8 +975,8 @@ inline struct xmp_drv_info *xmp_drv_array()
 }
 
 
-void xmp_register_driver_callback(void (*callback)(void *, int))
+void xmp_register_driver_callback(xmp_context ctx, void (*callback)(void *, int))
 {
-    _driver_callback = callback;
+    ((struct xmp_context *)ctx)->d.callback = callback;
 }
 
