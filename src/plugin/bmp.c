@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: bmp.c,v 1.2 2007-10-21 13:31:16 cmatsuoka Exp $
+ * $Id: bmp.c,v 1.3 2007-10-21 13:54:55 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -67,12 +67,10 @@ typedef struct {
 	struct xmp_module_info mod_info;
 } XMPConfig;
 
-extern XMPConfig xmp_cfg;
 
 
 XMPConfig xmp_cfg;
 static gboolean xmp_plugin_audio_error = FALSE;
-extern InputPlugin xmp_ip;
 
 
 /* module parameters */

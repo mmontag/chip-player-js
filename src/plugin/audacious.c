@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.2 2007-10-21 13:54:55 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -60,16 +60,6 @@ static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define FREQ_SAMPLE_22 1
 #define FREQ_SAMPLE_11 2
 
-extern InputPlugin xmp_ip;
-
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-
-InputPlugin *xmp_iplist[] = { &xmp_ip, NULL };
-
-DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
-
-#endif
- 
 static struct {
 	InputPlayback *ipb;
 	AFormat fmt;
@@ -91,16 +81,9 @@ typedef struct {
 	struct xmp_module_info mod_info;
 } XMPConfig;
 
-extern XMPConfig xmp_cfg;
-
 
 XMPConfig xmp_cfg;
 static gboolean xmp_plugin_audio_error = FALSE;
-extern InputPlugin xmp_ip;
-
-
-/* module parameters */
-gboolean playing = 0;
 
 static GtkWidget *Res_16;
 static GtkWidget *Res_8;
@@ -147,6 +130,14 @@ InputPlugin xmp_ip = {
 };
 
 
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+
+InputPlugin *xmp_iplist[] = { &xmp_ip, NULL };
+
+DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
+
+#endif
+ 
 static void file_info_box_build (void);
 static void init_visual (GdkVisual *);
 
@@ -252,7 +243,7 @@ xmp_context ctx;
 
 static void stop(InputPlayback *ipb)
 {
-	if (!playing)
+	if (!ipb->playing)
 		return;
 
 	_D("*** stop!");
@@ -313,7 +304,7 @@ static int get_time(InputPlayback *ipb)
 {
 	if (xmp_plugin_audio_error)
 		return -2;
-	if (!playing)
+	if (!ipb->playing)
 		return -1;
 
 	return xmp_ip.output->output_time();
@@ -341,10 +332,10 @@ static void driver_callback(void *b, int i)
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, i, b);
 	
-	while (xmp_ip.output->buffer_free() < i && playing)
+	while (xmp_ip.output->buffer_free() < i && ipb->playing)
 		usleep(10000);
 
-	if (playing)
+	if (ipb->playing)
 		xmp_ip.output->write_audio(b, i);
 #endif
 }
@@ -546,7 +537,7 @@ static void play_file(InputPlayback *ipb)
 	stop(ipb);	/* sanity check */
 
 	if ((f = fopen(filename,"rb")) == 0) {
-		playing = 0;
+		ipb->playing = 0;
 		return;
 	}
 	fclose(f);
@@ -556,7 +547,7 @@ static void play_file(InputPlayback *ipb)
 	gtk_text_buffer_delete(text1b, &start, &end);
 
 	xmp_plugin_audio_error = FALSE;
-	playing = 1;
+	ipb->playing = 1;
 
 	opt->resol = 8;
 	opt->verbosity = 3;
@@ -633,7 +624,7 @@ static void play_file(InputPlayback *ipb)
 
 	if (lret < 0) {
 		xmp_ip.set_info_text("Error loading mod");
-		playing = 0;
+		ipb->playing = 0;
 		return;
 	}
 
@@ -677,24 +668,14 @@ static void play_file(InputPlayback *ipb)
 
 static void *play_loop(void *arg)
 {
-#if __AUDACIOUS_PLUGIN_API__ >= 2
 	InputPlayback *ipb = arg;
-#endif
 
 	xmp_play_module(ctx);
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
-	playing = 0;
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
 	ipb->eof = 1;
 	ipb->playing = 0;
-#endif
-
-#if 0
-	_D("--- pthread_exit");
-	pthread_exit(NULL);
-#endif
 
 	return NULL;
 }
@@ -987,7 +968,7 @@ static void button_mute(GtkWidget *widget, GdkEvent *event)
 {
 	int i;
 
-	if (!playing)
+	if (!play_data.ipb->playing)
 		return;
 
 	xmp_channel_mute(ctx, 0, 64, 1);
@@ -999,7 +980,7 @@ static void button_unmute(GtkWidget *widget, GdkEvent *event)
 {
 	int i;
 
-	if (!playing)
+	if (!play_data.ipb->playing)
 		return;
 
 	xmp_channel_mute(ctx, 0, 64, 0);
@@ -1013,7 +994,7 @@ static int image1_clicked_ok = 0;
 
 static void image1_clicked(GtkWidget *widget, GdkEventButton *event)
 {
-	if (!playing || image1_clicked_ok)
+	if (!play_data.ipb->playing || image1_clicked_ok)
 		return;
 
 	image1_clicked_x = event->x - (frame1->allocation.width - 300) / 2;
