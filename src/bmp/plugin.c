@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.41 2007-10-20 19:41:11 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.42 2007-10-21 01:46:15 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -57,14 +57,12 @@
 #endif
 
 static void	init		(void);
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-static void	cleanup		(void);
-#endif
 static int	is_our_file	(char *);
 static void	play_file	(IPB);
 static void	stop		(IPB);
 static void	mod_pause	(IPB_short(p));
 static void	seek		(IPB_int(time));
+
 static int	get_time	(IPB);
 static void	*play_loop	(void *);
 static void	aboutbox	(void);
@@ -73,7 +71,17 @@ static void	configure	(void);
 static void	config_ok	(GtkWidget *, gpointer);
 static void	file_info_box	(char *);
 
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+static void	cleanup		(void);
+static void	mseek		(InputPlayback *, gulong);
+static Tuple	*get_song_tuple	(char *);
+#endif
+
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+static GThread *decode_thread;
+#else
 static pthread_t decode_thread;
+#endif
 static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -114,7 +122,7 @@ extern struct xmp_drv_info drv_xmms;
 
 
 XMPConfig xmp_cfg;
-static gboolean xmp_xmms_audio_error = FALSE;
+static gboolean xmp_plugin_audio_error = FALSE;
 extern InputPlugin xmp_ip;
 
 
@@ -146,38 +154,24 @@ static short audio_open = FALSE;
 
 
 InputPlugin xmp_ip = {
-	NULL,			/* handle */
-	NULL,			/* filename */
-	"XMP Player " VERSION,	/* description */
-	init,			/* init */
+	.description	= "XMP Plugin " VERSION,
+	.init		= init,
+	.about		= aboutbox,
+	.configure	= configure,
+	.is_our_file	= is_our_file,
+	.play_file	= play_file,
+	.stop		= stop,
+	.pause		= mod_pause,
+	.seek		= seek,
+	.get_time	= get_time,
+	.get_song_info	= get_song_info,
+	.file_info_box	= file_info_box,
 #if __AUDACIOUS_PLUGIN_API__ >= 2
-	cleanup,		/* cleanup */
+	.mseek		= mseek,
+	.cleanup	= cleanup,
+	.enabled	= TRUE,
+	.get_song_tuple	= get_song_tuple,
 #endif
-	aboutbox,		/* about */
-	configure,		/* configure */
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	TRUE,			/* enabled */
-#endif
-	is_our_file,		/* is_our_file */
-	NULL,			/* scan_dir */
-	play_file,		/* play_file */
-	stop,			/* stop */
-	mod_pause,		/* pause */
-	seek,			/* seek */
-	NULL,			/* set_eq */
-	get_time,		/* get_time */
-	NULL,			/* get_volume */
-	NULL,			/* set_volume */
-#if __AUDACIOUS_PLUGIN_API__ < 2
-	NULL,			/* add_vis -- obsolete */
-#endif
-	NULL,			/* get_vis_type -- obsolete */
-	NULL,			/* add_vis_pcm */
-	NULL,			/* set_info */
-	NULL,			/* set_info_text */
-	get_song_info,		/* get_song_info */
-	file_info_box,		/* file_info_box */
-	NULL			/* output */
 };
 
 
@@ -301,7 +295,12 @@ static void stop(IPB)
 	xmp_stop_module(ctx); 
 	ii->mode = 0;
 
-	pthread_join (decode_thread, NULL);
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	ipb->playing = 0;
+	g_thread_join(decode_thread);
+#else
+	pthread_join(decode_thread, NULL);
+#endif
 
 	if (audio_open) {
         	xmp_ip.output->close_audio();
@@ -309,15 +308,18 @@ static void stop(IPB)
     	}
 }
 
-
 static void seek(IPB_int(time))
+{
+	mseek(ipb, time * 1000);
+}
+
+static void mseek(InputPlayback *ipb, unsigned long time)
 {
 	int i, t;
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 
 	_D("seek to %d, total %d", time, xmp_cfg.time);
 
-	time *= 1000;
 	for (i = 0; i < xmp_cfg.mod_info.len; i++) {
 		t = p->m.xxo_info[i].time;
 
@@ -343,7 +345,7 @@ static void mod_pause(IPB_short(p))
 
 static int get_time(IPB)
 {
-	if (xmp_xmms_audio_error)
+	if (xmp_plugin_audio_error)
 		return -2;
 	if (!playing)
 		return -1;
@@ -353,10 +355,12 @@ static int get_time(IPB)
 
 
 #if __AUDACIOUS_PLUGIN_API__ < 2
+
 InputPlugin *get_iplugin_info()
 {
 	return &xmp_ip;
 }
+
 #endif
 
 
@@ -480,6 +484,7 @@ static void cleanup()
 
 static int is_our_file(char *filename)
 {
+	/* Sorry, no VFS support */
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
 
@@ -497,6 +502,7 @@ static void get_song_info(char *filename, char **title, int *length)
 	struct xmp_module_info mi;
 	struct xmp_options *opt;
 
+	/* Sorry, no VFS support */
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
 
@@ -523,6 +529,50 @@ static void get_song_info(char *filename, char **title, int *length)
 	xmp_free_context(ctx2);
 }
 
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+
+static Tuple *get_song_tuple(char *filename)
+{
+	Tuple *tuple;
+	xmp_context ctx2;
+	int lret;
+	struct xmp_module_info mi;
+	struct xmp_options *opt;
+
+	/* Sorry, no VFS support */
+	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
+		filename += 7;
+
+	tuple = aud_tuple_new_from_filename(filename);
+
+	/* Create new context to load a file and get the length */
+
+	ctx2 = xmp_create_context();
+	opt = xmp_get_options(ctx2);
+	opt->skipsmp = 1;	/* don't load samples */
+
+	pthread_mutex_lock(&load_mutex);
+	lret = xmp_load_module(ctx2, filename);
+	pthread_mutex_unlock(&load_mutex);
+
+	if (lret < 0) {
+		xmp_free_context(ctx2);
+		return NULL;
+	}
+
+	xmp_get_module_info(ctx2, &mi);
+
+	aud_tuple_associate_string(tuple, FIELD_TITLE, NULL, mi.name);
+	aud_tuple_associate_string(tuple, FIELD_CODEC, NULL, mi.type);
+	aud_tuple_associate_int(tuple, FIELD_LENGTH, NULL, lret);
+
+	xmp_release_module(ctx2);
+	xmp_free_context(ctx2);
+
+	return tuple;
+}
+
+#endif
 
 static int fd_old2, fd_info[2];
 static pthread_t catch_thread;
@@ -574,7 +624,6 @@ static void play_file(InputPlayback *ipb)
 	int channelcnt = 1;
 	int format = FMT_U8;
 	FILE *f;
-	char *info;
 	struct xmp_options *opt;
 	int lret;
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
@@ -583,6 +632,7 @@ static void play_file(InputPlayback *ipb)
 	
 	opt = xmp_get_options(ctx);
 
+	/* Sorry, no VFS support */
 	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
 		filename += 7;
 
@@ -613,7 +663,7 @@ static void play_file(InputPlayback *ipb)
 			gtk_text_get_length(GTK_TEXT(text1)));
 #endif
 	
-	xmp_xmms_audio_error = FALSE;
+	xmp_plugin_audio_error = FALSE;
 	playing = 1;
 
 	opt->resol = 8;
@@ -658,24 +708,34 @@ static void play_file(InputPlayback *ipb)
 	    fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
 	    nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	    if (audio_open)
+		ipb->output->close_audio();
+	
+	    if (!ipb->output->open_audio(fmt, opt->freq, nch)) {
+		xmp_plugin_audio_error = TRUE;
+		return;
+	    }
+#else
 	    if (audio_open)
 		xmp_ip.output->close_audio();
 	
 	    if (!xmp_ip.output->open_audio(fmt, opt->freq, nch)) {
-		xmp_xmms_audio_error = TRUE;
+		xmp_plugin_audio_error = TRUE;
 		return;
 	    }
+#endif
 	
 	    audio_open = TRUE;
 	}
 
 	xmp_open_audio(ctx);
 
-	pipe (fd_info);
+	pipe(fd_info);
 	fd_old2 = dup (fileno (stderr));
-	dup2 (fd_info[1], fileno (stderr));
-	fflush (stderr);
-	pthread_create (&catch_thread, NULL, catch_info, NULL);
+	dup2(fd_info[1], fileno (stderr));
+	fflush(stderr);
+	pthread_create(&catch_thread, NULL, catch_info, NULL);
 
 	_D("*** loading: %s", filename);
 	pthread_mutex_lock(&load_mutex);
@@ -689,9 +749,9 @@ static void play_file(InputPlayback *ipb)
 	}
 
 	_D("joining catch thread");
-	pthread_join (catch_thread, NULL);
+	pthread_join(catch_thread, NULL);
 	_D("joined");
-	dup2 (fileno (stderr), fd_old2);
+	dup2(fileno(stderr), fd_old2);
 
 #if defined PLUGIN_BMP || defined PLUGIN_AUDACIOUS
 	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1)->vadjustment, 0.0);
@@ -701,12 +761,12 @@ static void play_file(InputPlayback *ipb)
 	gtk_adjustment_set_value(GTK_TEXT(text1)->vadj, 0.0);
 #endif
 
-	close (fd_info[0]);
-	close (fd_info[1]);
+	close(fd_info[0]);
+	close(fd_info[1]);
 
 	_D ("before panel update");
 
-	xmp_cfg.time = xmpi_scan_module((struct xmp_context *)ctx);
+	xmp_cfg.time = lret; //xmpi_scan_module((struct xmp_context *)ctx);
 	xmp_get_module_info(ctx, &ii->mi);
 	strcpy(ii->filename, "");
 
@@ -716,29 +776,34 @@ static void play_file(InputPlayback *ipb)
 
 	memcpy(&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
 
-	info = malloc(strlen(ii->mi.name) + strlen(ii->mi.type) + 20);
-	sprintf(info, "%s", ii->mi.name);
-
-	xmp_ip.set_info(info, xmp_cfg.time, 128 * 1000, opt->freq, channelcnt);
-	free(info);
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	ipb->set_params(ipb, ii->mi.name, 1000 * lret, 128 * 1000, opt->freq, channelcnt);
+	ipb->playing = 1;
+	decode_thread = g_thread_self();
+	ipb->set_pb_ready(ipb);
+	play_loop(ipb);
+	
+#else
+	xmp_ip.set_info(ii->mi.name, lret, 128 * 1000, opt->freq, channelcnt);
 
 	_D("--- pthread_create");
 	pthread_create(&decode_thread, NULL, play_loop, NULL);
-
-	return;
+#endif
 }
 
 
-static void *play_loop (void *arg)
+static void *play_loop(void *arg)
 {
 	xmp_play_module(ctx);
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 	playing = 0;
 
+#if 0
 	_D("--- pthread_exit");
-
 	pthread_exit(NULL);
+#endif
+
 	return NULL;
 }
 
