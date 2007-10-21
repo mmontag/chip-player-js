@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.3 2007-10-21 23:00:05 cmatsuoka Exp $
+# $Id: Makefile,v 1.4 2007-10-21 23:59:11 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
@@ -16,6 +16,7 @@ include $(TOPDIR)/Makefile.rules
 
 all: $(PLUGINS)
 
+install:: $(addprefix install-, $(PLUGINS))
 
 #
 # Audacious
@@ -31,7 +32,10 @@ audacious.o: audacious.c
 	$(CC) -c $(CFLAGS) $(XCFLAGS) `pkg-config --cflags audacious` -o $@ audacious.c
 
 install-audacious:
-	$(INSTALL) -s -m755 xmp-audacious.so $(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`
+	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \
+	echo "Installing xmp-audacious.so in $$DIR..."; \
+	[ -d "$$DIR" ] || mkdir "$$DIR"; \
+	$(INSTALL) -s -m755 xmp-audacious.so "$$DIR"
 
 
 #
@@ -48,8 +52,10 @@ bmp.o: bmp.c
 	$(CC) -c $(CFLAGS) $(XCFLAGS) `pkg-config --cflags bmp` -o $@ bmp.c
 
 install-bmp:
-	$(INSTALL) -s -m755 xmp-bmp.so $(DESTDIR)`pkg-config --variable=input_plugin_dir bmp`
-
+	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir bmp`"; \
+	echo "Installing xmp-bmp.so in $$DIR..."; \
+	[ -d "$$DIR" ] || mkdir "$$DIR"; \
+	$(INSTALL) -s -m755 xmp-bmp.so "$$DIR"
 
 #
 # XMMS
@@ -65,8 +71,10 @@ xmms.o: xmms.c
 	$(CC) -c $(CFLAGS) $(XCFLAGS) `xmms-config --cflags` -o $@ xmms.c
 
 install-xmms:
-	$(INSTALL) -s -m755 xmp-xmms.so $(DESTDIR)`xmms-config --input-plugin-dir`
-
+	@DIR="$(DESTDIR)`xmms-config --input-plugin-dir`"; \
+	echo "Installing xmp-xmms.so in $$DIR..."; \
+	[ -d "$$DIR" ] || mkdir "$$DIR"; \
+	$(INSTALL) -s -m755 xmp-xmms.so "$$DIR"
 
 
 $(OBJS): Makefile
