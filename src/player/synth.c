@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: synth.c,v 1.2 2003-06-24 23:36:22 dmierzej Exp $
+ * $Id: synth.c,v 1.3 2007-10-21 03:56:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -234,7 +234,7 @@ void synth_setnote (int c, int note, int bend)
 int synth_init (int freq)
 {
 #ifdef DEBUG_ADLIB
-   ioperm (0x388, 2, 1);
+    ioperm (0x388, 2, 1);
 #endif
     synth_chreset ();
 
@@ -260,7 +260,7 @@ int synth_reset ()
 
 int synth_deinit ()
 {
-    synth_reset ();
+    synth_reset();
     YM3812Shutdown();
 
     return 0;

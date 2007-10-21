@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: callback.c,v 1.6 2007-10-21 01:42:39 cmatsuoka Exp $
+ * $Id: callback.c,v 1.7 2007-10-21 03:56:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -65,8 +65,8 @@ static void callback(struct xmp_context *ctx, int i)
 }
 
 
-static void shutdown ()
+static void shutdown()
 {
-    xmp_smix_off ();
+    xmp_smix_off();
 }
 

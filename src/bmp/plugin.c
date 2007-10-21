@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: plugin.c,v 1.42 2007-10-21 01:46:15 cmatsuoka Exp $
+ * $Id: plugin.c,v 1.43 2007-10-21 03:56:17 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -82,6 +82,7 @@ static GThread *decode_thread;
 #else
 static pthread_t decode_thread;
 #endif
+
 static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -96,10 +97,19 @@ static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
 extern InputPlugin xmp_ip;
 
 #if __AUDACIOUS_PLUGIN_API__ >= 2
+
 InputPlugin *xmp_iplist[] = { &xmp_ip, NULL };
-DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL);
+
+DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
+
 #endif
  
+static struct {
+	InputPlayback *ipb;
+	AFormat fmt;
+	int nch;
+} play_data;
+
 typedef struct {
 	gint mixing_freq;
 	gint force8bit;
@@ -116,9 +126,6 @@ typedef struct {
 } XMPConfig;
 
 extern XMPConfig xmp_cfg;
-
-extern struct xmp_drv_info drv_xmms;
-
 
 
 XMPConfig xmp_cfg;
@@ -169,7 +176,6 @@ InputPlugin xmp_ip = {
 #if __AUDACIOUS_PLUGIN_API__ >= 2
 	.mseek		= mseek,
 	.cleanup	= cleanup,
-	.enabled	= TRUE,
 	.get_song_tuple	= get_song_tuple,
 #endif
 };
@@ -298,14 +304,16 @@ static void stop(IPB)
 #if __AUDACIOUS_PLUGIN_API__ >= 2
 	ipb->playing = 0;
 	g_thread_join(decode_thread);
+	ipb->output->close_audio();
+        audio_open = FALSE;
 #else
 	pthread_join(decode_thread, NULL);
-#endif
 
 	if (audio_open) {
         	xmp_ip.output->close_audio();
         	audio_open = FALSE;
     	}
+#endif
 }
 
 static void seek(IPB_int(time))
@@ -366,6 +374,11 @@ InputPlugin *get_iplugin_info()
 
 static void driver_callback(void *b, int i)
 {
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	play_data.ipb->pass_audio(play_data.ipb, play_data.fmt, play_data.nch,
+					i, b, &play_data.ipb->playing);
+
+#else
 	xmp_ip.add_vis_pcm (xmp_ip.output->written_time(),
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, i, b);
@@ -375,6 +388,7 @@ static void driver_callback(void *b, int i)
 
 	if (playing)
 		xmp_ip.output->write_audio(b, i);
+#endif
 }
 
 
@@ -701,33 +715,30 @@ static void play_file(InputPlayback *ipb)
 
 	opt->mix = xmp_cfg.pan_amplitude;
 
-	{
-	    AFormat fmt;
-	    int nch;
-	
-	    fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
-	    nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	play_data.ipb = ipb;
+	play_data.fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
+	play_data.nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	
 #if __AUDACIOUS_PLUGIN_API__ >= 2
-	    if (audio_open)
-		ipb->output->close_audio();
+	if (audio_open)
+	    ipb->output->close_audio();
 	
-	    if (!ipb->output->open_audio(fmt, opt->freq, nch)) {
-		xmp_plugin_audio_error = TRUE;
-		return;
-	    }
+	if (!ipb->output->open_audio(play_data.fmt, opt->freq, play_data.nch)) {
+	    ipb->error = TRUE;
+	    xmp_plugin_audio_error = TRUE;
+	    return;
+	}
 #else
-	    if (audio_open)
-		xmp_ip.output->close_audio();
+	if (audio_open)
+	    xmp_ip.output->close_audio();
 	
-	    if (!xmp_ip.output->open_audio(fmt, opt->freq, nch)) {
-		xmp_plugin_audio_error = TRUE;
-		return;
-	    }
+	if (!xmp_ip.output->open_audio(play_data.fmt, opt->freq, play_data.nch)) {
+	    xmp_plugin_audio_error = TRUE;
+	    return;
+	}
 #endif
 	
-	    audio_open = TRUE;
-	}
+	audio_open = TRUE;
 
 	xmp_open_audio(ctx);
 
@@ -777,16 +788,16 @@ static void play_file(InputPlayback *ipb)
 	memcpy(&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
 
 #if __AUDACIOUS_PLUGIN_API__ >= 2
-	ipb->set_params(ipb, ii->mi.name, 1000 * lret, 128 * 1000, opt->freq, channelcnt);
+	ipb->set_params(ipb, ii->mi.name, lret, 0, opt->freq, channelcnt);
 	ipb->playing = 1;
+	ipb->eof = 0;
+	ipb->error = FALSE;
+
 	decode_thread = g_thread_self();
 	ipb->set_pb_ready(ipb);
 	play_loop(ipb);
-	
 #else
-	xmp_ip.set_info(ii->mi.name, lret, 128 * 1000, opt->freq, channelcnt);
-
-	_D("--- pthread_create");
+	xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
 	pthread_create(&decode_thread, NULL, play_loop, NULL);
 #endif
 }
@@ -794,10 +805,19 @@ static void play_file(InputPlayback *ipb)
 
 static void *play_loop(void *arg)
 {
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	InputPlayback *ipb = arg;
+#endif
+
 	xmp_play_module(ctx);
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 	playing = 0;
+
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+	ipb->eof = 1;
+	ipb->playing = 0;
+#endif
 
 #if 0
 	_D("--- pthread_exit");

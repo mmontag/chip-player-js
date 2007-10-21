@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.55 2007-10-21 01:42:39 cmatsuoka Exp $
+ * $Id: driver.c,v 1.56 2007-10-21 03:56:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -249,7 +249,6 @@ int xmp_drv_set(struct xmp_context *ctx)
     if (!drv_array)
 	return XMP_ERR_NODRV;
 
-    d->patch_array = NULL;
     for (drv = drv_array; drv; drv = drv->next) {
 	if (!strcmp (drv->id, o->drv_id)) {
 	    d->driver = drv;
