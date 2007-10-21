@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.56 2007-10-21 03:56:17 cmatsuoka Exp $
+ * $Id: driver.c,v 1.57 2007-10-21 21:15:06 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -281,11 +281,12 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     struct xmp_options *o = &ctx->o;
 
     numtrk = d->numtrk = num;
-    num = d->driver->numvoices(d->driver->numvoices(135711));
-    d->driver->reset ();
+    num = d->driver->numvoices(135711);
+    d->driver->reset();
 
     numchn = numtrk;
     maxvoc = m->fetch & XMP_CTL_VIRTUAL ? o->maxvoc : 1;
+
     if (maxvoc > 1)
 	numchn += num;
     else if (num > numchn)
@@ -294,9 +295,9 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     num = numvoc = d->driver->numvoices(num);
 
     d->voice_array = calloc(numvoc, sizeof (struct voice_info));
+    d->ch2vo_array = calloc(numchn, sizeof (int));
+    d->ch2vo_count = calloc(numchn, sizeof (int));
 
-    memset(d->ch2vo_array, 0, XMP_MAXCH * sizeof(int));
-    memset(d->ch2vo_count, 0, XMP_MAXCH * sizeof(int));
     memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
 
     if (!(d->voice_array && d->ch2vo_array && d->ch2vo_count))
@@ -328,6 +329,8 @@ void xmp_drv_off(struct xmp_context *ctx)
     d->numchn = numchn = 0;
     numtrk = 0;
     free(d->voice_array);
+    free(d->ch2vo_array);
+    free(d->ch2vo_count);
 }
 
 

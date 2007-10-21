@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.38 2007-10-21 01:43:28 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.39 2007-10-21 21:15:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -201,9 +201,9 @@ struct xmp_driver_context {
 	int numbuf;			/* Number of output buffers */
 
 	int cmute_array[XMP_MAXCH];
-	int ch2vo_count[XMP_MAXCH];
-	int ch2vo_array[XMP_MAXCH];
 
+	int *ch2vo_count;
+	int *ch2vo_array;
 	struct voice_info *voice_array;
 	struct patch_info **patch_array;
 };

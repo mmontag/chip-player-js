@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.31 2007-10-21 03:56:17 cmatsuoka Exp $
+ * $Id: control.c,v 1.32 2007-10-21 21:15:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -46,7 +46,7 @@ void *xmp_create_context()
 	o->freq = 44100;
 	o->mix = 80;
 	o->resol = 16;
-	o->flags = XMP_CTL_DYNPAN | XMP_CTL_ITPT;
+	o->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
 
 	/* Set max number of voices per channel */
 	o->maxvoc = 16;
