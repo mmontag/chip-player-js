@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.2 2007-10-21 13:54:55 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.3 2007-10-21 23:00:05 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -47,13 +47,10 @@ static void	file_info_box	(char *);
 static void	cleanup		(void);
 static void	mseek		(InputPlayback *, gulong);
 static Tuple	*get_song_tuple	(char *);
-
-static GThread *decode_thread;
-#else
-static pthread_t decode_thread;
 #endif
 
-static pthread_mutex_t load_mutex = PTHREAD_MUTEX_INITIALIZER;
+static GThread *decode_thread;
+static GStaticMutex load_mutex = G_STATIC_MUTEX_INIT;
 
 
 #define FREQ_SAMPLE_44 0
@@ -141,7 +138,7 @@ DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
 static void file_info_box_build (void);
 static void init_visual (GdkVisual *);
 
-static void aboutbox ()
+static void aboutbox()
 {
 	GtkWidget *vbox1;
 	GtkWidget *label1;
@@ -250,19 +247,10 @@ static void stop(InputPlayback *ipb)
 	xmp_stop_module(ctx); 
 	ii->mode = 0;
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
 	ipb->playing = 0;
 	g_thread_join(decode_thread);
 	ipb->output->close_audio();
         audio_open = FALSE;
-#else
-	pthread_join(decode_thread, NULL);
-
-	if (audio_open) {
-        	xmp_ip.output->close_audio();
-        	audio_open = FALSE;
-    	}
-#endif
 }
 
 static void seek(InputPlayback *ipb, int time)
@@ -424,9 +412,9 @@ static void get_song_info(char *filename, char **title, int *length)
 	opt = xmp_get_options(ctx2);
 	opt->skipsmp = 1;	/* don't load samples */
 
-	pthread_mutex_lock(&load_mutex);
+	g_static_mutex_lock(&load_mutex);
 	lret = xmp_load_module(ctx2, filename);
-	pthread_mutex_unlock(&load_mutex);
+	g_static_mutex_unlock(&load_mutex);
 
 	if (lret < 0) {
 		xmp_free_context(ctx2);
@@ -463,9 +451,9 @@ static Tuple *get_song_tuple(char *filename)
 	opt = xmp_get_options(ctx2);
 	opt->skipsmp = 1;	/* don't load samples */
 
-	pthread_mutex_lock(&load_mutex);
+	g_static_mutex_lock(&load_mutex);
 	lret = xmp_load_module(ctx2, filename);
-	pthread_mutex_unlock(&load_mutex);
+	g_static_mutex_unlock(&load_mutex);
 
 	if (lret < 0) {
 		xmp_free_context(ctx2);
@@ -487,24 +475,27 @@ static Tuple *get_song_tuple(char *filename)
 #endif
 
 static int fd_old2, fd_info[2];
-static pthread_t catch_thread;
+static GThread *catch_thread;
 
-void *catch_info(void *arg)
+static gpointer catch_info(gpointer arg)
 {
 	FILE *f;
 	char buf[100];
 	GtkTextIter end;
-	GtkTextTag *tag;
+	//GtkTextTag *tag;
 
 	f = fdopen(fd_info[0], "r");
 
 	while (!feof (f)) {
 		fgets (buf, 100, f);
 		gtk_text_buffer_get_end_iter(text1b, &end);
+#if 0
 		tag = gtk_text_buffer_create_tag(text1b, NULL,
 						"foreground", "black", NULL);
 		gtk_text_buffer_insert_with_tags(text1b, &end, buf, -1,
 								tag, NULL);
+#endif
+		gtk_text_buffer_insert(text1b, &end, buf, -1);
 
 		if (!strncmp(buf, "Estimated time :", 16))
 			break;
@@ -512,7 +503,9 @@ void *catch_info(void *arg)
 
 	fclose (f);
 
-	pthread_exit (NULL);
+	gdk_window_process_updates(text1->window, FALSE);
+
+	return NULL;
 }
 
 
@@ -615,12 +608,12 @@ static void play_file(InputPlayback *ipb)
 	fd_old2 = dup (fileno (stderr));
 	dup2(fd_info[1], fileno (stderr));
 	fflush(stderr);
-	pthread_create(&catch_thread, NULL, catch_info, NULL);
+	catch_thread = g_thread_create(catch_info, NULL, TRUE, NULL);
 
 	_D("*** loading: %s", filename);
-	pthread_mutex_lock(&load_mutex);
+	g_static_mutex_lock(&load_mutex);
 	lret =  xmp_load_module(ctx, filename);
-	pthread_mutex_unlock(&load_mutex);
+	g_static_mutex_unlock(&load_mutex);
 
 	if (lret < 0) {
 		xmp_ip.set_info_text("Error loading mod");
@@ -629,7 +622,7 @@ static void play_file(InputPlayback *ipb)
 	}
 
 	_D("joining catch thread");
-	pthread_join(catch_thread, NULL);
+	g_thread_join(catch_thread);
 	_D("joined");
 	dup2(fileno(stderr), fd_old2);
 
@@ -650,23 +643,22 @@ static void play_file(InputPlayback *ipb)
 
 	memcpy(&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
 	ipb->set_params(ipb, ii->mi.name, lret, 0, opt->freq, channelcnt);
 	ipb->playing = 1;
 	ipb->eof = 0;
 	ipb->error = FALSE;
 
+#if __AUDACIOUS_PLUGIN_API__ >= 2
 	decode_thread = g_thread_self();
 	ipb->set_pb_ready(ipb);
 	play_loop(ipb);
 #else
-	xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
-	pthread_create(&decode_thread, NULL, play_loop, NULL);
+	decode_thread = g_thread_create(play_loop, NULL, TRUE, NULL);
 #endif
 }
 
 
-static void *play_loop(void *arg)
+static gpointer play_loop(gpointer arg)
 {
 	InputPlayback *ipb = arg;
 
@@ -957,7 +949,6 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	gtk_widget_destroy(xmp_conf_window);
 }
 
-
 static void button_cycle(GtkWidget *widget, GdkEvent *event)
 {
      ii->mode++;
@@ -1115,8 +1106,8 @@ static void file_info_box_build()
 
 	gtk_widget_realize (image1);
 
-	display = GDK_WINDOW_XDISPLAY (info_window->window);
-	window = GDK_WINDOW_XWINDOW (info_window->window);
+	display = GDK_WINDOW_XDISPLAY(info_window->window);
+	window = GDK_WINDOW_XWINDOW(info_window->window);
     	colormap = gdk_colormap_get_system ();
 
 	gdk_color_black(colormap, color_black);
@@ -1141,6 +1132,7 @@ static void file_info_box(char *filename)
 	gtk_widget_show_all(info_window);
 	gdk_window_raise(info_window->window);
 }
+
 
 /*----------------------------------------------------------------------*/
 
@@ -1183,14 +1175,7 @@ static void init_visual (GdkVisual *visual)
 
 void update_display()
 {
-	GdkRectangle area;
-
-	area.x = (frame1->allocation.width - 300) / 2;
-	area.y = 0;
-	area.width = 300;
-	area.height = 128;
-
-	gdk_window_invalidate_rect(image1->window, &area, FALSE);
+	gdk_window_process_updates(image1->window, FALSE);
 }
 
 int process_events(int *x, int *y)

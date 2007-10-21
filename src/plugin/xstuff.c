@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.2 2007-10-21 23:00:05 cmatsuoka Exp $
  */
 
 /*
@@ -60,8 +60,8 @@ static int mask_r = 0xfe0000;
 static int mask_g = 0x00fe00;
 static int mask_b = 0x0000fe;
 
-void (*draw_rectangle) ();
-void (*erase_rectangle) ();
+void (*draw_rectangle)(int, int, int, int);
+void (*erase_rectangle)(int, int, int, int);
 
 
 int setcolor (int x)
@@ -70,7 +70,7 @@ int setcolor (int x)
 }
 
 
-static void draw_rectangle_rgb24 (int x, int y, int w, int h)
+static void draw_rectangle_rgb24(int x, int y, int w, int h)
 {
     int i, j, c;
 
