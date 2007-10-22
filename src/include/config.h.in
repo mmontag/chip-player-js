@@ -1,4 +1,4 @@
-/* $Id: config.h.in,v 1.9 2007-10-15 00:25:26 cmatsuoka Exp $ */
+/* $Id: config.h.in,v 1.10 2007-10-22 13:27:31 cmatsuoka Exp $ */
 
 /* Define DRIVER_OSS_* to enable OSS /dev/sequencer and /dev/audio support */
 #undef DRIVER_OSS_SEQ
@@ -85,6 +85,9 @@
 
 /* Define if you have the select function.  */
 #undef HAVE_SELECT
+
+/* Define if you have the <termios.h> header file.  */
+#undef HAVE_TERMIOS_H
 
 /* Define if you have the <sbus/audio/audio.h> header file.  */
 #undef HAVE_SBUS_AUDIO_AUDIO_H

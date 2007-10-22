@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.52 2007-10-21 01:42:39 cmatsuoka Exp $
+ * $Id: load.c,v 1.53 2007-10-22 13:27:31 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -124,9 +124,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
+#ifndef __MINGW32__
     } else if (test_oxm(*f) == 0) {
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
+#endif
     } else {
 	int extra;
 	int s = PW_TEST_CHUNK;
@@ -225,9 +227,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	case BUILTIN_MMCMP:    
 	    res = decrunch_mmcmp(*f, t);
 	    break;
+#ifndef __MINGW32__
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);
 	    break;
+#endif
 	case BUILTIN_PW:
 	    res = decrunch_pw(*f, t);
 	    break;

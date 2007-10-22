@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.24 2007-10-20 19:41:11 cmatsuoka Exp $
+ * $Id: main.c,v 1.25 2007-10-22 13:27:31 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -21,6 +21,10 @@
  * Support for real-time priority in FreeBSD.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,12 +32,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <signal.h>
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
-#include <unistd.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
 #endif
+#include <unistd.h>
 
 #ifdef HAVE_SYS_RTPRIO_H
 #include <sys/resource.h>
@@ -71,7 +73,9 @@ static struct xmp_module_info mi;
 #endif
 
 static int verbosity;
+#ifdef HAVE_TERMIOS_H
 static struct termios term;
+#endif
 static int background = 0;
 #ifdef SIGTSTP
 static int stopped = 0;
@@ -90,6 +94,7 @@ static xmp_context ctx;
 
 static int set_tty ()
 {
+#ifdef HAVE_TERMIOS_H
     struct termios t;
 
     if (background)
@@ -104,6 +109,7 @@ static int set_tty ()
 
     if (tcsetattr (0, TCSAFLUSH, &t) < 0)
 	return -1;
+#endif
 
     return 0;
 }
@@ -111,6 +117,7 @@ static int set_tty ()
 
 static int reset_tty ()
 {
+#ifdef HAVE_TERMIOS_H
     if (background)
 	return -1;
 
@@ -118,6 +125,7 @@ static int reset_tty ()
 	fprintf (stderr, "can't reset terminal!\n");
 	return -1;
     }
+#endif
 
     return 0;
 }
@@ -171,7 +179,9 @@ static void cleanup (int s)
 {
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
+#ifdef SIGQUIT
     signal(SIGQUIT, SIG_DFL);
+#endif
     signal(SIGFPE, SIG_DFL);
     signal(SIGSEGV, SIG_DFL);
 
@@ -207,6 +217,7 @@ static void process_echoback(unsigned long i)
     static int pos, pat;
     static int pause = 0;
 
+#ifdef SIGUSR1
     if (sigusr == SIGUSR1) {
 	skip = 1;
 	xmp_mod_stop(ctx);
@@ -220,6 +231,7 @@ static void process_echoback(unsigned long i)
 	    pause = xmp_mod_pause(ctx);
 	sigusr = 0;
     }
+#endif
 
     if (background)
 	return;
@@ -380,12 +392,15 @@ int main (int argc, char **argv)
 
     global_filename = argv[optind];
 
+#ifdef HAVE_TERMIOS_H
     if ((background = (tcgetpgrp (0) == getppid ()))) {
 	verb = opt->verbosity;
 	opt->verbosity = 0;
 	i = xmp_open_audio(ctx);
 	xmp_verbosity_level(ctx, opt->verbosity = verb);
-    } else {
+    } else
+#endif
+    {
 	i = xmp_open_audio(ctx);
     }
 
@@ -459,18 +474,24 @@ int main (int argc, char **argv)
 
     signal(SIGTERM, cleanup);
     signal(SIGINT, cleanup);
-    signal(SIGQUIT, cleanup);
     signal(SIGFPE, cleanup);
     signal(SIGSEGV, cleanup);
+#ifdef SIGQUIT
+    signal(SIGQUIT, cleanup);
+#endif
 #ifdef SIGTSTP
     signal(SIGTSTP, sigtstp_handler);
+#endif
+#ifdef SIGCONT
     signal(SIGCONT, sigcont_handler);
 #endif
+#ifdef SIGUSR1
     signal(SIGUSR1, sigusr_handler);
     signal(SIGUSR2, sigusr_handler);
+#endif
 
 #ifdef XXMP
-    if ((ii = xmp_get_shared_mem (sizeof (struct ipc_info))) <= 0) {
+    if ((ii = xmp_get_shared_mem(sizeof (struct ipc_info))) <= 0) {
         fprintf (stderr, "can't map shared memory\n");
         exit (-1);
     }
