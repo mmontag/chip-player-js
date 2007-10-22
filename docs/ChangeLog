@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.149 2007-10-22 21:36:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.150 2007-10-22 23:38:56 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -39,6 +39,7 @@ Stable versions
 	- split XMMS/BMP/Audacious plugin source
 	- invalid patterns in sequence ignored instead of aborting replay
 	- fixed load of DBM 16-bit samples (reported by Ralf Hoffmann)
+	- fixed DBM envelope offset error (reported by Ralf Hoffmann)
 	- disabled AMF volslide effect (problems with CannonFodder2-Done.AMF)
 
 2.3.2 (20071009):
