@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.37 2007-10-21 13:31:15 cmatsuoka Exp $
+ * $Id: player.c,v 1.38 2007-10-22 12:35:57 cmatsuoka Exp $
  */
 
 /*
@@ -246,6 +246,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
     if (e->ins) {
 	ins += e->ins;
 	flg = NEW_INS | RESET_VOL | RESET_ENV;
+	xc->per_flags = 0;
 
 	if (m->fetch & XMP_CTL_OINSMOD) {
 	    if (TEST(IS_READY)) {
