@@ -1,13 +1,13 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.18 2007-10-22 22:58:41 cmatsuoka Exp $
+# $Id: Makefile,v 1.19 2007-10-22 23:05:10 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
 OBJS	= getopt.o getopt1.o options.o
-XDEPS	=
+XDEPS	= main.c
 BINS	= xmp
 XLIBS	= -L$(TOPDIR)/lib -lxmp $(LIBM)
-DFILES	= Makefile $(OBJS:.o=.c) main.c simple.c mod2mp3.c xstuff.c
+DFILES	= Makefile $(OBJS:.o=.c) main.c
 DDIRS	=
 CFILES	= $(BINS)
 DCFILES	=
@@ -27,8 +27,5 @@ install:: $(BINS)
 	$(INSTALL) -s -m755 $(BINS) $(DESTDIR)$(BINDIR)
 
 $(OBJS): $(TOPDIR)/Makefile.rules Makefile
-
-clean::
-	rm -f simple
 
 include depend
