@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.4 2007-10-22 00:04:43 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.5 2007-10-22 01:59:21 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -42,10 +42,10 @@ static void	get_song_info	(char *, char **, int *);
 static void	configure	(void);
 static void	config_ok	(GtkWidget *, gpointer);
 static void	file_info_box	(char *);
+static void	mseek		(InputPlayback *, gulong);
+static void	cleanup		(void);
 
 #if __AUDACIOUS_PLUGIN_API__ >= 2
-static void	cleanup		(void);
-static void	mseek		(InputPlayback *, gulong);
 static Tuple	*get_song_tuple	(char *);
 #endif
 
@@ -119,10 +119,10 @@ InputPlugin xmp_ip = {
 	.get_time	= get_time,
 	.get_song_info	= get_song_info,
 	.file_info_box	= file_info_box,
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	.mseek		= mseek,
 	.cleanup	= cleanup,
+#if __AUDACIOUS_PLUGIN_API__ >= 2
 	.get_song_tuple	= get_song_tuple,
+	.mseek		= mseek,
 #endif
 };
 
@@ -320,10 +320,10 @@ static void driver_callback(void *b, int i)
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, i, b);
 	
-	while (xmp_ip.output->buffer_free() < i && ipb->playing)
+	while (xmp_ip.output->buffer_free() < i && play_data.ipb->playing)
 		usleep(10000);
 
-	if (ipb->playing)
+	if (play_data.ipb->playing)
 		xmp_ip.output->write_audio(b, i);
 #endif
 }
@@ -371,15 +371,10 @@ static void init(void)
 }
 
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-
 static void cleanup()
 {
 	xmp_free_context(ctx);
-	xmp_close_audio(ctx);
 }
-
-#endif
 
 
 static int is_our_file(char *filename)
@@ -429,6 +424,7 @@ static void get_song_info(char *filename, char **title, int *length)
 	xmp_free_context(ctx2);
 }
 
+
 #if __AUDACIOUS_PLUGIN_API__ >= 2
 
 static Tuple *get_song_tuple(char *filename)
@@ -474,6 +470,7 @@ static Tuple *get_song_tuple(char *filename)
 
 #endif
 
+
 static int fd_old2, fd_info[2];
 static GThread *catch_thread;
 
@@ -482,19 +479,12 @@ static gpointer catch_info(gpointer arg)
 	FILE *f;
 	char buf[100];
 	GtkTextIter end;
-	//GtkTextTag *tag;
 
 	f = fdopen(fd_info[0], "r");
 
 	while (!feof (f)) {
 		fgets (buf, 100, f);
 		gtk_text_buffer_get_end_iter(text1b, &end);
-#if 0
-		tag = gtk_text_buffer_create_tag(text1b, NULL,
-						"foreground", "black", NULL);
-		gtk_text_buffer_insert_with_tags(text1b, &end, buf, -1,
-								tag, NULL);
-#endif
 		gtk_text_buffer_insert(text1b, &end, buf, -1);
 
 		if (!strncmp(buf, "Estimated time :", 16))
@@ -502,8 +492,6 @@ static gpointer catch_info(gpointer arg)
 	}
 
 	fclose (f);
-
-	gdk_window_process_updates(text1->window, FALSE);
 
 	return NULL;
 }
@@ -581,7 +569,6 @@ static void play_file(InputPlayback *ipb)
 	play_data.fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
 	play_data.nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	
-#if __AUDACIOUS_PLUGIN_API__ >= 2
 	if (audio_open)
 	    ipb->output->close_audio();
 	
@@ -590,15 +577,6 @@ static void play_file(InputPlayback *ipb)
 	    xmp_plugin_audio_error = TRUE;
 	    return;
 	}
-#else
-	if (audio_open)
-	    xmp_ip.output->close_audio();
-	
-	if (!xmp_ip.output->open_audio(play_data.fmt, opt->freq, play_data.nch)) {
-	    xmp_plugin_audio_error = TRUE;
-	    return;
-	}
-#endif
 	
 	audio_open = TRUE;
 
@@ -643,17 +621,18 @@ static void play_file(InputPlayback *ipb)
 
 	memcpy(&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
 
+#if __AUDACIOUS_PLUGIN_API__ >= 2
 	ipb->set_params(ipb, ii->mi.name, lret, 0, opt->freq, channelcnt);
 	ipb->playing = 1;
 	ipb->eof = 0;
 	ipb->error = FALSE;
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
 	decode_thread = g_thread_self();
 	ipb->set_pb_ready(ipb);
 	play_loop(ipb);
 #else
-	decode_thread = g_thread_create(play_loop, NULL, TRUE, NULL);
+	xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
+	decode_thread = g_thread_create(play_loop, ipb, TRUE, NULL);
 #endif
 }
 
