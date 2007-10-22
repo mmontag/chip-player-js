@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.23 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: osx.c,v 1.24 2007-10-22 09:47:28 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,7 @@
 
 
 static int init (struct xmp_context *ctx);
-static void bufdump (int, struct xmp_context *);
+static void bufdump (struct xmp_context *, int);
 static void shutdown (void);
 
 static void dummy () { }

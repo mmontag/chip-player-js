@@ -4,7 +4,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: nas.c,v 1.9 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: nas.c,v 1.10 2007-10-22 09:47:28 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -248,7 +248,7 @@ static int init(struct xmp_context *ctx)
 }
 
 
-static void bufdump(int len, struct xmp_context *ctx)
+static void bufdump(struct xmp_context *ctx, int len)
 {
     int buf_cnt = 0;
     unsigned char *buf = xmp_smix_buffer(ctx);
