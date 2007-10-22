@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.17 2007-10-20 11:50:38 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.18 2007-10-22 21:16:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -232,6 +232,10 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 					fxp = t3;
 					break;
 				case 0x82:
+					/* Problem with CannonFodder2-Done.AMF
+					 * main brass sound doesn't play
+					 */
+#if 0
 					if ((int8)t3 > 0) {
 						fxt = FX_VOLSLIDE;
 						fxp = t3 << 4;
@@ -239,9 +243,10 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 						fxt = FX_VOLSLIDE;
 						fxp = -(int8)t3 & 0x0f;
 					}
+#endif
 					break;
 				case 0x83:
-					/* set track vol -- later */
+					event->vol = t3;
 					break;
 				case 0x84:
 					if ((int8)t3 > 0) {
@@ -295,7 +300,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 					break;
 				case 0x8d:
 					fxt = FX_JUMP;
-					fxp = (t3 >> 4) * 10 + (t3 & 0x0f);
+					fxp = t3;
 					break;
 				case 0x8e:
 					/* sync -- unknown */

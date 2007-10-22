@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.22 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.23 2007-10-22 21:16:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -230,21 +230,33 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 
 	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 
-	reportv(ctx, 2, "\n     Len   LBeg  LEnd  L");
+	reportv(ctx, 2, "\n     Flags    Len   LBeg  LEnd  L");
 
 	for (i = 0; i < m->xxh->smp; i++) {
 		flags = read32b(f);
 		m->xxs[i].len = read32b(f);
 
-		if (flags & 0x02)
+		if (flags & 0x02) {
 			m->xxs[i].flg |= WAVE_16_BITS;
-		if (flags & 0x04 || ~flags & 0x01)
-			continue;
-		
-		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
+			m->xxs[i].len <<= 1;
+			m->xxs[i].lps <<= 1;
+			m->xxs[i].lpe <<= 1;
+		}
 
-		reportv(ctx, 2, "\n[%2X] %05x%c%05x %05x %c ",
-			i, m->xxs[i].len,
+		if (flags & 0x04) {	/* Skip 32-bit samples */
+			m->xxs[i].len <<= 2;
+			fseek(f, m->xxs[i].len, SEEK_CUR);
+			continue;
+		}
+		
+		xmp_drv_loadpatch(ctx, f, i, m->c4rate, XMP_SMP_BIGEND,
+							&m->xxs[i], NULL);
+
+		if (m->xxs[i].len == 0)
+			continue;
+
+		reportv(ctx, 2, "\n[%2X] %08x %05x%c%05x %05x %c ",
+			i, flags, m->xxs[i].len,
 			m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
 			m->xxs[i].flg & WAVE_LOOPING ?

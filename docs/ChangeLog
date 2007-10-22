@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.147 2007-10-22 20:08:01 cmatsuoka Exp $
+$Id: ChangeLog,v 1.148 2007-10-22 21:16:51 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -38,6 +38,7 @@ Stable versions
 	- fixed memory access violations reported by Valgrind
 	- split XMMS/BMP/Audacious plugin source
 	- invalid patterns in sequence ignored instead of aborting replay
+	- fixed load of DBM 16-bit samples (reported by Ralf Hoffmann)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
