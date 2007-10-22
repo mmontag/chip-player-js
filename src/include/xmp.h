@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.31 2007-10-21 13:31:15 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.32 2007-10-22 10:33:09 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -93,6 +93,7 @@
 
 
 struct xmp_options {
+    int big_endian;	/* Machine byte order */
     char *drv_id;	/* Driver ID */
     char *outfile;	/* Output file name when mixing to file */
     int verbosity;	/* Verbosity level */

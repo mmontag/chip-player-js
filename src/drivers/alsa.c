@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.15 2007-10-22 10:13:49 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.16 2007-10-22 10:33:06 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -32,7 +32,7 @@
 static int init (struct xmp_context *);
 static int prepare_driver (void);
 static void dshutdown (void);
-static int to_fmt (struct xmp_context *);
+static int to_fmt (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void flush (void);
 
@@ -106,7 +106,7 @@ static int init(struct xmp_context *ctx)
 	snd_pcm_hw_params_any(pcm_handle, hwparams);
 	snd_pcm_hw_params_set_access(pcm_handle, hwparams,
 		SND_PCM_ACCESS_RW_INTERLEAVED);
-	snd_pcm_hw_params_set_format(pcm_handle, hwparams, to_fmt(ctx));
+	snd_pcm_hw_params_set_format(pcm_handle, hwparams, to_fmt(o));
 	snd_pcm_hw_params_set_rate_near(pcm_handle, hwparams, &rate, 0);
 	snd_pcm_hw_params_set_channels_near(pcm_handle, hwparams, &channels);
 	snd_pcm_hw_params_set_buffer_time_near(pcm_handle, hwparams, &btime, 0);
@@ -142,9 +142,8 @@ static int prepare_driver()
 }
 
 
-static int to_fmt(struct xmp_context *ctx)
+static int to_fmt(struct xmp_options *o)
 {
-	struct xmp_options *o = &ctx->o;
 	int fmt;
 
 	switch (o->resol) {
@@ -154,7 +153,7 @@ static int to_fmt(struct xmp_context *ctx)
 		fmt = SND_PCM_FORMAT_U8 | SND_PCM_FORMAT_S8;
 		break;
 	default:
-		if (ctx->big_endian) {
+		if (o->big_endian) {
 			fmt = SND_PCM_FORMAT_S16_BE | SND_PCM_FORMAT_U16_BE;
 		} else {
 			fmt = SND_PCM_FORMAT_S16_LE | SND_PCM_FORMAT_U16_LE;

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.32 2007-10-21 21:15:06 cmatsuoka Exp $
+ * $Id: control.c,v 1.33 2007-10-22 10:33:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -34,6 +34,7 @@ void *xmp_create_context()
 {
 	struct xmp_context *ctx;
 	struct xmp_options *o;
+	uint16 w;
 
 	ctx = calloc(1, sizeof(struct xmp_context));
 
@@ -41,6 +42,9 @@ void *xmp_create_context()
 		return NULL;
 
 	o = &ctx->o;
+
+	w = 0x00ff;
+	o->big_endian = (*(char *)&w == 0x00);
 
 	/* Set defaults */
 	o->freq = 44100;
@@ -80,10 +84,6 @@ void xmp_init_callback(xmp_context ctx, void (*callback) (void *, int))
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {
 	int num;
-	uint16 w;
-
-	w = 0x00ff;
-	((struct xmp_context *)ctx)->big_endian = (*(char *)&w == 0x00);
 
 	xmp_init_drivers();
 	xmp_init_formats();

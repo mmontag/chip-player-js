@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.39 2007-10-21 21:15:06 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.40 2007-10-22 10:33:09 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -209,7 +209,6 @@ struct xmp_driver_context {
 };
 
 struct xmp_context {
-	int big_endian;
 	struct xmp_options o;
 	struct xmp_driver_context d;
 	struct xmp_player_context p;

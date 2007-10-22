@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.25 2007-10-22 10:13:49 cmatsuoka Exp $
+ * $Id: osx.c,v 1.26 2007-10-22 10:33:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -181,7 +181,7 @@ static int init(struct xmp_context *ctx)
 	ad.mFormatID = kAudioFormatLinearPCM;
 	ad.mFormatFlags = kAudioFormatFlagIsPacked |
 					kAudioFormatFlagIsSignedInteger;
-	if (ctx->big_endian)
+	if (o->big_endian)
 		ad.mFormatFlags |= kAudioFormatFlagIsBigEndian;
 	else
 		ad.mFormatFlags &= ~kAudioFormatFlagIsBigEndian;
