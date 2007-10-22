@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.146 2007-10-21 12:59:14 cmatsuoka Exp $
+$Id: ChangeLog,v 1.147 2007-10-22 20:08:01 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -37,6 +37,7 @@ Stable versions
 	- fixed Audacious plugin to display duration when adding to playlist
 	- fixed memory access violations reported by Valgrind
 	- split XMMS/BMP/Audacious plugin source
+	- invalid patterns in sequence ignored instead of aborting replay
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

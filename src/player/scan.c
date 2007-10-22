@@ -88,11 +88,14 @@ int xmpi_scan_module(struct xmp_context *ctx)
 		break;
 	} 
 
+	/* All invalid patterns skipped, only S3M_END aborts replay */
 	if ((uint32)m->xxo[ord] >= m->xxh->pat) {
-	    if (m->xxo[ord] == S3M_SKIP)
-		ord++;
-	    if (m->xxo[ord] == S3M_END)
+	    /*if (m->xxo[ord] == S3M_SKIP) ord++;*/
+	    if (m->xxo[ord] == S3M_END) {
 		ord = m->xxh->len;
+	        continue;
+	    }
+	    ord++;
 	    continue;
 	}
 
@@ -183,7 +186,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
 		}
 
 		if (f1 == FX_JUMP || f2 == FX_JUMP) {
-		    ord2 = ((f1 == FX_JUMP) ? event->fxp : event->f2p);
+		    ord2 = (f1 == FX_JUMP) ? event->fxp : event->f2p;
 		    last_row = 0;
 		}
 
@@ -221,7 +224,6 @@ int xmpi_scan_module(struct xmp_context *ctx)
 			}
 		    }
 		}
-
 	    }
 
 	    if (loop_chn) {
