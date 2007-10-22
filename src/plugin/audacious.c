@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.3 2007-10-21 23:00:05 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.4 2007-10-22 00:04:43 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1175,7 +1175,14 @@ static void init_visual (GdkVisual *visual)
 
 void update_display()
 {
-	gdk_window_process_updates(image1->window, FALSE);
+	GdkRectangle area;
+
+	area.x = (frame1->allocation.width - 300) / 2;
+	area.y = 0;
+	area.width = 300;
+	area.height = 128;
+
+	gdk_window_invalidate_rect(image1->window, &area, FALSE);
 }
 
 int process_events(int *x, int *y)
