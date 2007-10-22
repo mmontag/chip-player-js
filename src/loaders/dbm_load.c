@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.23 2007-10-22 21:16:51 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.24 2007-10-22 23:37:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -282,7 +282,7 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 	}
 
 	for (i = 0; i < nenv; i++) {
-		ins = read16b(f);
+		ins = read16b(f) - 1;
 		m->xxih[ins].aei.flg = read8(f) & 0x07;
 		m->xxih[ins].aei.npt = read8(f);
 		m->xxih[ins].aei.sus = read8(f);
