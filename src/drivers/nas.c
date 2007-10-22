@@ -4,7 +4,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: nas.c,v 1.10 2007-10-22 09:47:28 cmatsuoka Exp $
+ * $Id: nas.c,v 1.11 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -68,7 +68,7 @@ struct xmp_drv_info drv_nas = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* resetvoices */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */

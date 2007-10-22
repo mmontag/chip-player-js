@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: aix.c,v 1.8 2007-10-20 13:35:08 cmatsuoka Exp $
+ * $Id: aix.c,v 1.9 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /*
@@ -67,7 +67,7 @@ struct xmp_drv_info drv_bsd = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* reset */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */

@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: osx.c,v 1.24 2007-10-22 09:47:28 cmatsuoka Exp $
+ * $Id: osx.c,v 1.25 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -45,7 +45,7 @@ struct xmp_drv_info drv_osx = {
 	dummy,			/* setbend */
 	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	dummy,			/* stctlimer */
+	dummy,			/* flush */
 	dummy,			/* reset */
 	bufdump,		/* bufdump */
 	dummy,			/* bufwipe */

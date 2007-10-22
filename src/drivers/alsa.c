@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.14 2007-10-20 13:35:08 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.15 2007-10-22 10:13:49 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -61,7 +61,7 @@ struct xmp_drv_info drv_alsa_mix = {
 	dummy,			/* setbend */
 	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	flush,			/* stctlimer */
+	flush,			/* flush */
 	dummy,			/* reset */
 	bufdump,		/* bufdump */
 	dummy,			/* bufwipe */

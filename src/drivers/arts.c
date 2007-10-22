@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: arts.c,v 1.7 2007-10-20 13:35:08 cmatsuoka Exp $
+ * $Id: arts.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,7 +41,7 @@ struct xmp_drv_info drv_arts = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* resetvoices */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */
@@ -54,7 +54,7 @@ struct xmp_drv_info drv_arts = {
 
 static int init(struct xmp_context *ctx)
 {
-    struct xmp_options *o = &ctl->o;
+    struct xmp_options *o = &ctx->o;
     int rc, rate, bits, channels;
 
     rate = o->freq;

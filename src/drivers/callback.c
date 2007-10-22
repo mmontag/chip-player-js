@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: callback.c,v 1.7 2007-10-21 03:56:17 cmatsuoka Exp $
+ * $Id: callback.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -39,7 +39,7 @@ struct xmp_drv_info drv_callback = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* resetvoices */
     callback,		/* bufdump */
     dummy,		/* bufwipe */

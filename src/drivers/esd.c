@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: esd.c,v 1.7 2007-10-20 13:35:08 cmatsuoka Exp $
+ * $Id: esd.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /* Based on esdcat.c from the Enlightened Sound Daemon 0.2 for Linux
@@ -53,7 +53,7 @@ struct xmp_drv_info drv_esd = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* resetvoices */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */

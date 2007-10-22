@@ -8,7 +8,7 @@
  * Fixed for ALSA 0.5 by Rob Adamson <R.Adamson@fitz.cam.ac.uk>
  * Sat, 29 Apr 2000 17:10:46 +0100 (BST)
  *
- * $Id: alsa05.c,v 1.14 2007-10-20 13:35:08 cmatsuoka Exp $
+ * $Id: alsa05.c,v 1.15 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /* preliminary alsa 0.5 support, Tijs van Bakel, 02-03-2000.
@@ -72,7 +72,7 @@ struct xmp_drv_info drv_alsa05 = {
 	dummy,			/* setbend */
 	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	flush,			/* stctlimer */
+	flush,			/* flush */
 	dummy,			/* reset */
 	bufdump,		/* bufdump */
 	bufwipe,		/* bufwipe */
@@ -137,7 +137,7 @@ static int to_fmt(struct xmp_context *ctx)
 
 static int init(struct xmp_context *ctx)
 {
-	struct xmp_options *o = &ctl->o;
+	struct xmp_options *o = &ctx->o;
 	snd_pcm_channel_params_t params;
 	snd_pcm_channel_setup_t setup;
 	int card = 0;

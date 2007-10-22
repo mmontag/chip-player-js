@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: qnx.c,v 1.8 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: qnx.c,v 1.9 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /*
@@ -53,7 +53,7 @@ struct xmp_drv_info drv_qnx = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* resetvoices */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */

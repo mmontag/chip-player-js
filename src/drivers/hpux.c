@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: hpux.c,v 1.8 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: hpux.c,v 1.9 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /* This code was tested on a 9000/710 running HP-UX 9.05 with 8 kHz,
@@ -64,7 +64,7 @@ struct xmp_drv_info drv_hpux = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* reset */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */

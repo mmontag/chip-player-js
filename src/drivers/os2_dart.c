@@ -79,7 +79,7 @@ struct xmp_drv_info drv_os2dart = {
     dummy,		         /* setbend    */
     xmp_smix_seteffect,	         /* seteffect  */
     dummy,		         /* starttimer */
-    dummy,		         /* stctlimer  */
+    dummy,		         /* flush  */
     dummy,		         /* reset      */
     bufdump,		      /* bufdump    */
     dummy,		         /* bufwipe    */

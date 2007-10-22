@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: netbsd.c,v 1.7 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: netbsd.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /* based upon bsd.c and improved from solaris.c. Tested running NetBSD. */
@@ -63,7 +63,7 @@ struct xmp_drv_info drv_netbsd = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* reset */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */

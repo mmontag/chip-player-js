@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: openbsd.c,v 1.7 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: openbsd.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /* This should work for OpenBSD */
@@ -60,7 +60,7 @@ struct xmp_drv_info drv_openbsd = {
     dummy,		/* setbend */
     xmp_smix_seteffect,	/* seteffect */
     dummy,		/* starttimer */
-    dummy,		/* stctlimer */
+    dummy,		/* flush */
     dummy,		/* reset */
     bufdump,		/* bufdump */
     dummy,		/* bufwipe */
