@@ -1,5 +1,5 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.17 2007-10-16 02:32:55 cmatsuoka Exp $
+# $Id: Makefile,v 1.18 2007-10-22 22:58:41 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
@@ -27,12 +27,6 @@ install:: $(BINS)
 	$(INSTALL) -s -m755 $(BINS) $(DESTDIR)$(BINDIR)
 
 $(OBJS): $(TOPDIR)/Makefile.rules Makefile
-
-simple: simple.o
-	$(LD) $(LDFLAGS) $+ $(LIBS)
-
-mod2mp3: mod2mp3.o
-	$(LD) $(LDFLAGS) $+ $(LIBS)
 
 clean::
 	rm -f simple

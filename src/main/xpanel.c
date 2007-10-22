@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.5 2005-02-23 14:25:50 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.6 2007-10-22 22:58:41 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -294,7 +294,7 @@ void prepare_screen ()
 }
 
 
-void x11_event_callback (long i)
+void x11_event_callback(unsigned long i)
 {
     static int chn = 0;
     static int ord = 0;
@@ -334,58 +334,58 @@ void x11_event_callback (long i)
     switch (cmd) {
     case 'q':			/* quit */
 	skip = -2;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'f':			/* jump to next order */
-	xmp_ord_next ();
+	xmp_ord_next(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'b':			/* jump to previous order */
-	xmp_ord_prev ();
+	xmp_ord_prev(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'n':			/* skip to next module */
 	skip = 1;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'p':			/* skip to previous module */
 	skip = -1;
-	xmp_mod_stop ();
+	xmp_mod_stop(ctx);
 	if (ii->pause)
-	    ii->pause = xmp_mod_pause ();
+	    ii->pause = xmp_mod_pause(ctx);
 	break;
     case 'm':
 	ii->mode++;
 	ii->mode %= 3;
 	break;
     case ' ':			/* pause module */
-	ii->pause = xmp_mod_pause ();
+	ii->pause = xmp_mod_pause(ctx);
 	break;
     default:
         if (cmd >= '1' && cmd <= '9') {
-	    xmp_channel_mute (cmd - '1', 1, -1);
+	    xmp_channel_mute(ctx, cmd - '1', 1, -1);
 	    ii->mute[cmd - '1'] = !ii->mute[cmd - '1'];
 	    break;
 	}
         if (cmd == '0') {
-	    xmp_channel_mute (9, 1, -1);
+	    xmp_channel_mute(ctx, 9, 1, -1);
 	    ii->mute[9] = !ii->mute[9];
 	    break;
 	}
         if (cmd == '!') {
-	    xmp_channel_mute (0, 64, 0);
+	    xmp_channel_mute(ctx, 0, 64, 0);
 	    for (i = 0; i < 64; i++)
 		ii->mute[i] = 0;
 	    break;
 	}
 	if (cmd < 0) {
-	    xmp_channel_mute (-cmd - 1, 1, !ii->mute[-cmd - 1]);
+	    xmp_channel_mute(ctx, -cmd - 1, 1, !ii->mute[-cmd - 1]);
 	    ii->mute[-cmd - 1] ^= 1;
 	    break;
 	}

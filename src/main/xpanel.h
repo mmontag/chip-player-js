@@ -50,7 +50,7 @@ int	writemsg	(struct font_header *, int, int, char *, int, int);
 void	draw_xpm	(char **, int, int);
 int	process_events	(int *, int *);
 int	create_window	(char *, char *, int, int, int, char **);
-void	x11_event_callback (long);
+void	x11_event_callback (unsigned long);
 
 
 extern void	(*draw_rectangle)	(int, int, int, int);

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.26 2007-10-22 22:58:41 cmatsuoka Exp $
+ * $Id: xmain.c,v 1.1 2007-10-22 22:58:41 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -49,6 +49,11 @@
 
 #include "xmp.h"
 
+#ifdef XXMP
+#include <sys/wait.h>
+#include "xpanel.h"
+#endif
+
 extern int optind;
 
 /* Options not belonging to libxmp */
@@ -60,7 +65,12 @@ int nocmd = 0;
 int rt = 0;
 #endif
 
+#ifdef XXMP
+static pid_t pid = 0;
+struct ipc_info *ii;
+#else
 static struct xmp_module_info mi;
+#endif
 
 static int verbosity;
 #ifdef HAVE_TERMIOS_H
@@ -124,7 +134,9 @@ static int reset_tty ()
 static void sigtstp_handler ()
 {
     if (!stopped) {
+#ifndef XXMP
 	fprintf (stderr, "] - STOPPED\n");
+#endif
 	xmp_timer_stop(ctx);
 	stopped = 1;
     }
@@ -173,16 +185,29 @@ static void cleanup (int s)
     signal(SIGFPE, SIG_DFL);
     signal(SIGSEGV, SIG_DFL);
 
-    fprintf (stderr, "\n*** Interrupted: signal %d caught\n", s);
-    xmp_stop_module(ctx);
-    xmp_close_audio(ctx);
+#ifdef XXMP
+    if (pid) {
+#endif
+	fprintf (stderr, "\n*** Interrupted: signal %d caught\n", s);
+	xmp_stop_module(ctx);
+	xmp_close_audio(ctx);
 
+#ifdef XXMP
+        kill (pid, SIGTERM);
+        waitpid (pid, NULL, 0);
+    } else {
+        close_window ();
+    }
+    xmp_detach_shared_mem (ii);
+#else
     reset_tty ();
+#endif
 
     exit (-2);
 }
 
 
+#ifndef XXMP
 static void process_echoback(unsigned long i)
 {
     unsigned long msg = i >> 4;
@@ -306,6 +331,7 @@ static void process_echoback(unsigned long i)
 	}
     }
 }
+#endif
 
 
 static void shuffle (int argc, char **argv)
@@ -333,6 +359,9 @@ int main (int argc, char **argv)
     struct rtprio rtp;
 #endif
     int getprevious = 0, skipprev = 0;
+#ifdef XXMP
+    char *fn;
+#endif
 #ifdef __EMX__
     long rc;
 #endif
@@ -393,7 +422,11 @@ int main (int argc, char **argv)
 	}
     }
 
+#ifdef XXMP
+    xmp_register_event_callback(x11_event_callback);
+#else
     xmp_register_event_callback(process_echoback);
+#endif
 
     if (opt->verbosity) {
 	fprintf (stderr, "Extended Module Player %s %s\n"
@@ -457,7 +490,16 @@ int main (int argc, char **argv)
     signal(SIGUSR2, sigusr_handler);
 #endif
 
+#ifdef XXMP
+    if ((ii = xmp_get_shared_mem(sizeof (struct ipc_info))) <= 0) {
+        fprintf (stderr, "can't map shared memory\n");
+        exit (-1);
+    }
+
+    ii->wresult = 42;
+#else
     set_tty ();
+#endif
 
     time (&t0);
 
@@ -510,7 +552,32 @@ int main (int argc, char **argv)
 	rows = tot_nch = max_nch = getprevious = skipprev = 0;
         num_mod++;
 
+#ifdef XXMP
+	if (!(fn = strrchr (argv[optind], '/')))
+	    fn = argv[optind];
+	else
+	    fn++;
+
+	xmp_get_module_info(ctx, &ii->mi);
+	strncpy(ii->filename, fn, 80);
+
+	if (ii->wresult) {
+	    if (!(pid = fork ())) {
+		signal(SIGCONT, SIG_DFL);
+		signal(SIGTSTP, SIG_DFL);
+		if ((ii->wresult = create_window
+			("xmp", "Xmp", RES_X, RES_Y, argc, argv)))
+		    exit(-1);
+		set_palette();
+		prepare_screen();
+		display_loop();
+	    }
+	}
+	xmp_tell_child();  /* We have module_info */
+	xmp_wait_child();
+#else
 	xmp_get_module_info(ctx, &mi);
+#endif
 
 	if (loadonly)
 	    goto skip_play;
@@ -524,12 +591,14 @@ int main (int argc, char **argv)
 "\rElapsed time   : %dmin%02ds %s                                              \n",
 	    t / 60, t % 60, skip ? "(SKIPPED)" : " ");
 
+#ifndef XXMP
 	    fprintf (stderr, "Channels used  : %d/%d", max_nch, mi.chn);
 	    if (max_nch)
 		fprintf (stderr, ", avg %.2f (%.1f%%)\n",
 			tot_nch / rows, 100.0 * tot_nch / rows / mi.chn);
 	    else
 		fprintf (stderr, "\n");
+#endif
 	}
 
 skip_play:
@@ -555,7 +624,16 @@ skip_play:
 
     xmp_close_audio(ctx);
     xmp_free_context(ctx);
+
+#ifdef XXMP
+    if (pid) {
+	kill(pid, SIGTERM);
+	waitpid(pid, NULL, 0);
+    }
+    xmp_detach_shared_mem(ii);
+#else
     reset_tty();
+#endif
 
     return 0;
 }
