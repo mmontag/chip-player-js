@@ -200,7 +200,6 @@ follwing devices are supported:
   arts		aRts (KDE sound server)
   beos		BeOS BSoundPlayer (not tested)
   bsd		BSD generic audio device
-  callback	Callback sound driver (for plugins)
   dart		OS/2 Direct Audio Real Time (DART)
   esd		Enlightened Sound Daemon
   file		File/stdout output
@@ -214,9 +213,8 @@ follwing devices are supported:
   osx		MacOS X CoreAudio
   qnx		QNX Neutrino 4 audio device
   solaris	Solaris audio device (linear and ulaw)
-  win32		Win32 sound (experimental, unstable)
   wav		WAV file writer
-  win32		Windows WinMM
+  win32		Win32 sound (experimental, unstable)
 
 
 INTERACTIVE COMMANDS
