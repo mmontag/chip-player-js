@@ -1,14 +1,12 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: fnk_load.c,v 1.12 2007-10-23 20:32:43 cmatsuoka Exp $
+ * $Id: fnk_load.c,v 1.13 2007-10-23 23:26:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  */
-
-/* INCOMPLETE LOADER!!! NO EFFECTS! */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -36,11 +34,15 @@ static int fnk_test(FILE *f, char *t)
     if (read32b(f) != MAGIC_Funk)
 	return -1;
 
-    fseek(f, 8, SEEK_CUR);
-    a = read8(f);    
-    b = read8(f);    
+    read8(f); 
+    a = read8(f);
+    b = read8(f); 
+    read8(f); 
 
-    if (a != 'F' || b != '2')
+    if ((a >> 1) < 10)			/* creation year (-1980) */
+	return -1;
+
+    if (MSN(b) > 7 || LSN(b) > 9)	/* CPU and card */
 	return -1;
 
     read_title(f, t, 0);
@@ -64,7 +66,7 @@ struct fnk_header {
     uint8 marker[4];		/* 'Funk' */
     uint8 info[4];		/* */
     uint32 filesize;		/* File size */
-    uint8 format[4];		/* F2xx, Fkxx or Fvxx */
+    uint8 fmt[4];		/* F2xx, Fkxx or Fvxx */
     uint8 loop;			/* Loop order number */
     uint8 order[256];		/* Order list */
     uint8 pbrk[128];		/* Break list for patterns */
@@ -77,6 +79,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
     int i, j;
+    int day, month, year;
     struct xxm_event *event;
     struct fnk_header ffh;
     uint8 ev[3];
@@ -86,7 +89,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&ffh.marker, 4, 1, f);
     fread(&ffh.info, 4, 1, f);
     ffh.filesize = read32l(f);
-    fread(&ffh.format, 4, 1, f);
+    fread(&ffh.fmt, 4, 1, f);
     ffh.loop = read8(f);
     fread(&ffh.order, 256, 1, f);
     fread(&ffh.pbrk, 128, 1, f);
@@ -102,9 +105,9 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	ffh.fih[i].retrig = read8(f);
     }
 
-    m->xxh->chn = (ffh.format[2] < '0') || (ffh.format[2] > '9') ||
-	(ffh.format[3] < '0') || (ffh.format[3] > '9') ? 8 :
-	(ffh.format[2] - '0') * 10 + ffh.format[3] - '0';
+    day = ffh.info[0] & 0x1f;
+    month = ((ffh.info[1] & 0x01) << 3) | ((ffh.info[0] & 0xe0) >> 5);
+    year = 1980 + ((ffh.info[1] & 0xfe) >> 1);
 
     m->xxh->smp = m->xxh->ins = 64;
 
@@ -115,25 +118,44 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->pat++;
 
     m->xxh->len = i;
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
     memcpy (m->xxo, ffh.order, m->xxh->len);
 
-    m->xxh->tpo = 6;
+    m->xxh->tpo = 4;
     m->xxh->bpm = 125;
+    m->xxh->chn = 0;
+
     /*
-     * If an R1 format (funktype = Fk** or Fv**), then ignore byte 3. It's
+     * If an R1 fmt (funktype = Fk** or Fv**), then ignore byte 3. It's
      * unreliable. It used to store the (GUS) sample memory requirement.
      */
-    if (ffh.format[0] == 'F' && ffh.format[1] == '2') {
-	if (((int8)ffh.info[0] >> 1) & 0x40)
-	    m->xxh->bpm -= (ffh.info[0] >> 1) & 0x3f;
+    if (ffh.fmt[0] == 'F' && ffh.fmt[1] == '2') {
+	if (((int8)ffh.info[3] >> 1) & 0x40)
+	    m->xxh->bpm -= (ffh.info[3] >> 1) & 0x3f;
 	else
-	    m->xxh->bpm += (ffh.info[0] >> 1) & 0x3f;
+	    m->xxh->bpm += (ffh.info[3] >> 1) & 0x3f;
+
+	strcpy(m->type, "FNK R2 (FunktrackerGOLD)");
+    } else if (ffh.fmt[0] == 'F' && (ffh.fmt[1] == 'v' || ffh.fmt[1] == 'k')) {
+	strcpy(m->type, "FNK R1 (Funktracker)");
+    } else {
+	m->xxh->chn = 8;
+	strcpy(m->type, "FNK R0 (Funktracker DOS32)");
     }
 
-    strcpy(m->type, "Funk (Funktracker)");
+    if (m->xxh->chn == 0) {
+	m->xxh->chn = (ffh.fmt[2] < '0') || (ffh.fmt[2] > '9') ||
+		(ffh.fmt[3] < '0') || (ffh.fmt[3] > '9') ? 8 :
+		(ffh.fmt[2] - '0') * 10 + ffh.fmt[3] - '0';
+    }
+
+    m->xxh->bpm = 4 * m->xxh->bpm / 5;
+    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    /* FNK allows mode per instrument but we don't, so use linear like 669 */
+    m->xxh->flg |= XXM_FLG_LINEAR;
 
     MODULE_INFO();
+
+    reportv(ctx, 0, "Creation date  : %02d/%02d/%04d\n", day, month, year);
 
     INSTRUMENT_INIT();
 
@@ -189,37 +211,65 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    switch (LSN(ev[1])) {
 	    case 0x00:
-		    event->fxt = FX_PER_PORTA_UP;
-		    event->fxp = ev[2];
-		    break;
+		event->fxt = FX_PER_PORTA_UP;
+		event->fxp = ev[2];
+		break;
 	    case 0x01:
-		    event->fxt = FX_PER_PORTA_DN;
-		    event->fxp = ev[2];
-		    break;
+		event->fxt = FX_PER_PORTA_DN;
+		event->fxp = ev[2];
+		break;
 	    case 0x02:
-		    event->fxt = FX_PER_TPORTA;
-		    event->fxp = ev[2];
-		    break;
+		event->fxt = FX_PER_TPORTA;
+		event->fxp = ev[2];
+		break;
 	    case 0x03:
-		    event->fxt = FX_PER_VIBRATO;
-		    event->fxp = ev[2];
-		    break;
+		event->fxt = FX_PER_VIBRATO;
+		event->fxp = ev[2];
+		break;
 	    case 0x06:
-		    event->fxt = FX_PER_VSLD_UP;
-		    event->fxp = ev[2] << 1;
-		    break;
+		event->fxt = FX_PER_VSLD_UP;
+		event->fxp = ev[2] << 1;
+		break;
 	    case 0x07:
-		    event->fxt = FX_PER_VSLD_DN;
-		    event->fxp = ev[2] << 1;
-		    break;
+		event->fxt = FX_PER_VSLD_DN;
+		event->fxp = ev[2] << 1;
+		break;
 	    case 0x0b:
-		    event->fxt = FX_ARPEGGIO;
-		    event->fxp = ev[2];
-		    break;
+		event->fxt = FX_ARPEGGIO;
+		event->fxp = ev[2];
+		break;
 	    case 0x0d:
-		    event->fxt = FX_VOLSET;
-		    event->fxp = ev[2];
+		event->fxt = FX_VOLSET;
+		event->fxp = ev[2];
+		break;
+	    case 0x0e:
+		if (ev[2] == 0x0a || ev[2] == 0x0b || ev[2] == 0x0c) {
+		    event->fxt = FX_PER_CANCEL;
 		    break;
+		}
+
+		switch (MSN(ev[2])) {
+		case 0x1:
+		    event->fxt = FX_EXTENDED;
+		    event->fxp = (EX_CUT << 4) | LSN(ev[2]);
+		    break;
+		case 0x2:
+		    event->fxt = FX_EXTENDED;
+		    event->fxp = (EX_DELAY << 4) | LSN(ev[2]);
+		    break;
+		case 0xd:
+		    event->fxt = FX_EXTENDED;
+		    event->fxp = (EX_RETRIG << 4) | LSN(ev[2]);
+		    break;
+		case 0xe:
+		    event->fxt = FX_SETPAN;
+		    event->fxp = 8 + (LSN(ev[2]) << 4);	
+		    break;
+		case 0xf:
+		    event->fxt = FX_TEMPO;
+		    event->fxp = LSN(ev[2]);	
+		    break;
+		}
 	    }
 	}
 	reportv(ctx, 0, ".");
