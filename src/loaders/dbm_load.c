@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.24 2007-10-22 23:37:17 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.25 2007-10-23 00:12:29 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -113,7 +113,9 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		c2spd = read32b(f);
 		m->xxs[snum].lps = read32b(f);
 		m->xxs[snum].lpe = m->xxs[i].lps + read32b(f);
-		m->xxi[i][0].pan = read16b(f);
+		m->xxi[i][0].pan = 0x80 + (int16)read16b(f);
+		if (m->xxi[i][0].pan > 0xff)
+			m->xxi[i][0].pan = 0xff;
 		flags = read16b(f);
 		m->xxs[snum].flg = flags & 0x03 ? WAVE_LOOPING : 0;
 		m->xxs[snum].flg |= flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
@@ -275,7 +277,7 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 
 	nenv = read16b(f);
 
-	reportv(ctx, 0, "Vol envelopes  : %d ", nenv);
+	reportv(ctx, 1, "Vol envelopes  : %d ", nenv);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxae[i] = calloc(4, 32);
@@ -295,9 +297,9 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 			m->xxae[ins][j * 2 + 0] = read16b(f);
 			m->xxae[ins][j * 2 + 1] = read16b(f);
 		}
-		reportv(ctx, 0, ".");
+		reportv(ctx, 1, ".");
 	}
-	reportv(ctx, 0, "\n");
+	reportv(ctx, 1, "\n");
 }
 
 static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
@@ -306,6 +308,7 @@ static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_mod_context *m = &p->m;
 	char name[44];
 	uint16 version;
+	int i;
 
 	LOAD_INIT();
 
@@ -335,6 +338,9 @@ static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 		iff_chunk(ctx, f);
 
 	iff_release();
+
+	for (i = 0; i < m->xxh->chn; i++)
+		m->xxc[i].pan = 0x80;
 
 	return 0;
 }
