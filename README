@@ -40,7 +40,7 @@ The current version recognizes the following module formats:
 
   CHN	****+	Fast/Taketracker	xCHN, xxCH
   EXO	*** 	Startrekker/ADSC	FLT4/8, EXO4/8 (AM unsupported)
-  M15	****	Soundtracker		2.2, UST
+  ST	****	Soundtracker		2.2, UST
   MOD	****+	Sound/Noise/Protracker	M.K., M!K!, M&K!, N.T., CD81
   WOW	****+	Mod's Grave		M.K.
 
@@ -105,7 +105,7 @@ The current version recognizes the following module formats:
   AMF	***	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
   DMF	**	X-Tracker		7, 8
   FAR	*** 	Farandole Composer	1.0
-  FNK	**	Funktracker		?
+  FNK	***	Funktracker		?
   IMF	**** 	Imago Orpheus		1.0
   IT	**** 	Impulse Tracker		1.00, 2.00, 2.14, 2.15
   LIQ	***	Liquid Tracker		0.0, 1.0
