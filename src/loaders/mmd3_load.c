@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.24 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.25 2007-10-23 00:21:51 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -556,9 +556,13 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			reportv(ctx, 1, "VS:%02x WS:%02x WF:%02x %02x %02x %+1d ",
 					synth.volspeed, synth.wfspeed,
-					synth.wforms, song.sample[i].svol,
+					synth.wforms & 0xff,
+					song.sample[i].svol,
 					(uint8)song.sample[i].strans,
 					exp_smp.finetune);
+
+			if (synth.wforms == 0xffff)
+				continue;
 
 			m->xxi[i] = calloc(sizeof(struct xxm_instrument),
 							synth.wforms);
