@@ -1,7 +1,7 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: fnk_load.c,v 1.11 2007-10-20 11:50:38 cmatsuoka Exp $
+ * $Id: fnk_load.c,v 1.12 2007-10-23 20:32:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -56,7 +56,7 @@ struct fnk_instrument {
     uint8 volume;		/* Volume (0-255) */
     uint8 pan;			/* Pan (0-255) */
     uint8 shifter;		/* Portamento and offset shift */
-    uint8 wavsallorm;		/* Vibrato and tremolo wavsallorms */
+    uint8 waveform;		/* Vibrato and tremolo waveforms */
     uint8 retrig;		/* Retrig and arpeggio speed */
 };
 
@@ -70,24 +70,6 @@ struct fnk_header {
     uint8 pbrk[128];		/* Break list for patterns */
     struct fnk_instrument fih[64];	/* Instruments */
 };
-
-
-#if 0
-
-#define FX_NONE	0xff
-
-static uint8 fx[] = {
-    FX_NONE,		FX_NONE,
-    FX_NONE,		FX_NONE,
-    FX_NONE,		FX_NONE,
-    FX_NONE,		FX_NONE,
-    FX_NONE,		FX_NONE,
-    FX_PORTA_UP,	FX_PORTA_DN,
-    FX_TONEPORTA,	FX_EXTENDED,
-    FX_VIBRATO,		FX_NONE,
-    FX_NONE,		FX_NONE,
-};
-#endif
 
 
 static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
@@ -116,34 +98,40 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	ffh.fih[i].volume = read8(f);
 	ffh.fih[i].pan = read8(f);
 	ffh.fih[i].shifter = read8(f);
-	ffh.fih[i].wavsallorm = read8(f);
+	ffh.fih[i].waveform = read8(f);
 	ffh.fih[i].retrig = read8(f);
     }
-
-    if (strncmp ((char *) ffh.marker, "Funk", 4) ||
-	strncmp ((char *) ffh.format, "F2", 2))
-	return -1;
 
     m->xxh->chn = (ffh.format[2] < '0') || (ffh.format[2] > '9') ||
 	(ffh.format[3] < '0') || (ffh.format[3] > '9') ? 8 :
 	(ffh.format[2] - '0') * 10 + ffh.format[3] - '0';
 
-    m->xxh->ins = 64;
+    m->xxh->smp = m->xxh->ins = 64;
 
-    for (i = 0; i < 256 && ffh.order[i] != 0xff; i++)
+    for (i = 0; i < 256 && ffh.order[i] != 0xff; i++) {
 	if (ffh.order[i] > m->xxh->pat)
-	    m->xxh->pat = i;
+	    m->xxh->pat = ffh.order[i];
+    }
+    m->xxh->pat++;
 
     m->xxh->len = i;
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
     memcpy (m->xxo, ffh.order, m->xxh->len);
+
     m->xxh->tpo = 6;
-    m->xxh->bpm = ffh.info[3] >> 1;
-    if (m->xxh->bpm & 64)
-	m->xxh->bpm = -(m->xxh->bpm & 63);
-    m->xxh->bpm += 125;
-    m->xxh->smp = m->xxh->ins;
-    strcpy(m->type, "Funktracker");
+    m->xxh->bpm = 125;
+    /*
+     * If an R1 format (funktype = Fk** or Fv**), then ignore byte 3. It's
+     * unreliable. It used to store the (GUS) sample memory requirement.
+     */
+    if (ffh.format[0] == 'F' && ffh.format[1] == '2') {
+	if (((int8)ffh.info[0] >> 1) & 0x40)
+	    m->xxh->bpm -= (ffh.info[0] >> 1) & 0x3f;
+	else
+	    m->xxh->bpm += (ffh.info[0] >> 1) & 0x3f;
+    }
+
+    strcpy(m->type, "Funk (Funktracker)");
 
     MODULE_INFO();
 
@@ -151,7 +139,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Convert instruments */
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 	m->xxih[i].nsm = !!(m->xxs[i].len = ffh.fih[i].length);
 	m->xxs[i].lps = ffh.fih[i].loop_start;
 	if (m->xxs[i].lps == -1)
@@ -164,25 +152,30 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, ffh.fih[i].name, 19);
 
-	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
+	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2))
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, m->xxi[i][0].pan);
+		m->xxih[i].name,
+		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxi[i][0].vol, m->xxi[i][0].pan);
     }
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	EVENT (i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
+
+	EVENT(i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
+
 	for (j = 0; j < 64 * m->xxh->chn; j++) {
-	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
-	    fread (&ev, 1, 3, f);
+	    event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
+	    fread(&ev, 1, 3, f);
+
 	    switch (ev[0] >> 2) {
 	    case 0x3f:
 	    case 0x3e:
@@ -190,49 +183,68 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 		break;
 	    default:
 		event->note = 25 + (ev[0] >> 2);
-		event->ins = 1 + MSN (ev[1]) + ((ev[0] & 0x03) << 4);
+		event->ins = 1 + MSN(ev[1]) + ((ev[0] & 0x03) << 4);
 		event->vol = ffh.fih[event->ins - 1].volume;
 	    }
-#if 0
-	    if (ev[2] + 1) {
-		event->fxt = fx[MSN (ev[2])];
-		event->fxp = fx[LSN (ev[2])];
-		if (!event->fxp)
-		    event->fxp = 0;
-		switch (event->fxt) {
-		case FX_ARPEGGIO:
-		    event->fxp = 0;
+
+	    switch (LSN(ev[1])) {
+	    case 0x00:
+		    event->fxt = FX_PER_PORTA_UP;
+		    event->fxp = ev[2];
 		    break;
-		case FX_VIBRATO:
-		    event->fxp |= 0x80;		/* Wild guess */
+	    case 0x01:
+		    event->fxt = FX_PER_PORTA_DN;
+		    event->fxp = ev[2];
 		    break;
-		case FX_EXTENDED:
-		    event->fxp = 0x53;		/* Wild guess */
+	    case 0x02:
+		    event->fxt = FX_PER_TPORTA;
+		    event->fxp = ev[2];
 		    break;
-		}
+	    case 0x03:
+		    event->fxt = FX_PER_VIBRATO;
+		    event->fxp = ev[2];
+		    break;
+	    case 0x06:
+		    event->fxt = FX_PER_VSLD_UP;
+		    event->fxp = ev[2] << 1;
+		    break;
+	    case 0x07:
+		    event->fxt = FX_PER_VSLD_DN;
+		    event->fxp = ev[2] << 1;
+		    break;
+	    case 0x0b:
+		    event->fxt = FX_ARPEGGIO;
+		    event->fxp = ev[2];
+		    break;
+	    case 0x0d:
+		    event->fxt = FX_VOLSET;
+		    event->fxp = ev[2];
+		    break;
 	    }
-#endif
 	}
-	if (V(0))
-	    report (".");
+	reportv(ctx, 0, ".");
     }
 
     /* Read samples */
-    if (V(0))
-	report ("\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
-	if (V(0))
-	    report (".");
+
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+							&m->xxs[i], NULL);
+
+	reportv(ctx, 0, ".");
     }
-    if (V(0))
-	report ("\n");
+
+    reportv(ctx, 0, "\n");
 
     for (i = 0; i < m->xxh->chn; i++)
-	m->xxc[i].pan = (i % 2) * 0xff;
-    m->volbase = 0x100;
+	m->xxc[i].pan = 0x80;
+
+    m->volbase = 0xff;
+    m->fetch = XMP_CTL_VSALL;
 
     return 0;
 }

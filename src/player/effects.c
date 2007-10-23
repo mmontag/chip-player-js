@@ -145,6 +145,18 @@ fx_porta_dn:
 	if (fxp == 0)
 	    RESET_PER(TONEPORTA);
 	break;
+    case FX_PER_VSLD_UP:			/* Persistent volslide up */
+	SET_PER(VOL_SLIDE);
+	xc->v_val = fxp;
+	if (fxp == 0)
+	    RESET_PER(VOL_SLIDE);
+	break;
+    case FX_PER_VSLD_DN:			/* Persistent volslide down */
+	SET_PER(VOL_SLIDE);
+	xc->v_val = -fxp;
+	if (fxp == 0)
+	    RESET_PER(VOL_SLIDE);
+	break;
     case FX_TEMPO_CP:				/* Set tempo and ... */
 	if (fxp)
 	    p->tempo = fxp;

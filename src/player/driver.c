@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.58 2007-10-22 10:33:10 cmatsuoka Exp $
+ * $Id: driver.c,v 1.59 2007-10-23 20:32:43 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -297,8 +297,6 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     d->voice_array = calloc(numvoc, sizeof (struct voice_info));
     d->ch2vo_array = calloc(numchn, sizeof (int));
     d->ch2vo_count = calloc(numchn, sizeof (int));
-
-    memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
 
     if (!(d->voice_array && d->ch2vo_array && d->ch2vo_count))
 	return XMP_ERR_ALLOC;

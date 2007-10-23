@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.151 2007-10-23 00:21:51 cmatsuoka Exp $
+$Id: ChangeLog,v 1.152 2007-10-23 20:32:43 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -43,6 +43,8 @@ Stable versions
 	- disabled AMF volslide effect (problems with CannonFodder2-Done.AMF)
 	- fixed MMD1/MMD3 loaders to skip invalid synth instruments (reported
 	  by Ralf Hoffmann, Misanthropy.MED loads correctly)
+	- fixed number of patterns in Funktracker modules
+	- added Funktracker persistent portamento and volume slide effects
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

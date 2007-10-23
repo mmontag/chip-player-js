@@ -69,6 +69,8 @@
 #define FX_PER_PORTA_UP	0x79
 #define FX_PER_TPORTA	0x7a
 #define FX_PER_VIBRATO	0x7b
+#define FX_PER_VSLD_UP	0x7c
+#define FX_PER_VSLD_DN	0x7d
 #define FX_TEMPO_CP	0x7e
 #define FX_PER_CANCEL	0x7f
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.39 2007-10-22 20:08:01 cmatsuoka Exp $
+ * $Id: player.c,v 1.40 2007-10-23 20:32:43 cmatsuoka Exp $
  */
 
 /*
@@ -635,8 +635,19 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 	    else if (m->volume > p->gvol_base)
 		m->volume = p->gvol_base;
 	}
-	if (TEST(VOL_SLIDE))
+	if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE))
 	    xc->volume += xc->v_val;
+
+	if (TEST_PER(VOL_SLIDE)) {
+	    if (xc->v_val > 0 && xc->volume > m->volbase) {
+		xc->volume = m->volbase;
+		RESET_PER(VOL_SLIDE);
+	    }
+	    if (xc->v_val < 0 && xc->volume < 0) {
+		xc->volume = 0;
+		RESET_PER(VOL_SLIDE);
+	    }
+	}
 
 	if (TEST(VOL_SLIDE_2))
 	    xc->volume += xc->v_val2;
