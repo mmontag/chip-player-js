@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.35 2007-10-22 13:27:31 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.36 2007-10-23 21:09:32 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -289,7 +289,7 @@ fi
 CPPFLAGS="${CINCS}"
 
 AC_CHECK_HEADERS(strings.h getopt.h sys/select.h sys/param.h \
-    termios.h sys/soundcard.h machine/soundcard.h \
+    termios.h sys/shm.h sys/soundcard.h machine/soundcard.h \
     sys/ultrasound.h linux/ultrasound.h machine/ultrasound.h \
     awe_voice.h sys/awe_voice.h linux/awe_voice.h \
     alsa/asoundlib.h esd.h)

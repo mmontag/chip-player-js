@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: beos.c,v 1.15 2007-10-22 10:13:49 cmatsuoka Exp $
+ * $Id: beos.c,v 1.16 2007-10-23 21:09:32 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,7 +21,13 @@
 extern "C" {
 #include <string.h>
 #include <stdlib.h>
+
+#include "xmp.h"
+
+/* g++ doesn't like typedef xmp_context and struct xmp_context */
+#define xmp_context _xmp_context
 #include "xmpi.h"
+
 #include "driver.h"
 #include "mixer.h"
 }
