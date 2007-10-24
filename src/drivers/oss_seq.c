@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: oss_seq.c,v 1.15 2007-10-20 18:42:37 cmatsuoka Exp $
+ * $Id: oss_seq.c,v 1.16 2007-10-24 22:45:05 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -169,7 +169,7 @@ static void setpatch(int ch, int smp)
 
 static void setvol(struct xmp_context *ctx, int ch, int vol)
 {
-    SEQ_START_NOTE (dev, ch, 255, vol);
+    SEQ_START_NOTE (dev, ch, 255, vol >> 4);
 }
 
 

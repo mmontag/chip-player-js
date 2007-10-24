@@ -1,9 +1,9 @@
-$Id: ChangeLog,v 1.154 2007-10-24 20:30:16 cmatsuoka Exp $
+$Id: ChangeLog,v 1.155 2007-10-24 22:45:05 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.4.0 ():
+2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects
 	- added Oktalyzer arpeggio 3, arpeggio 4 and arpeggio 5 effects
 	- added MED synth programmable arpeggio commands ARP and ARE
