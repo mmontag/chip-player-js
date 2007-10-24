@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.10 2007-10-20 19:41:14 cmatsuoka Exp $
+ * $Id: convert.c,v 1.11 2007-10-24 01:56:30 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -202,8 +202,7 @@ void xmp_cvt_anticlick (struct patch_info *patch)
 	    patch->data[patch->loop_end] = patch->data[patch->loop_start];
 	    patch->data[patch->loop_end + 1] = patch->data[patch->loop_start + 1];
 	    patch->len += 4;
-	}
-	else {
+	} else {
 	    patch->data[patch->loop_end++] = patch->data[patch->loop_start++];
 	    patch->data[patch->loop_end] = patch->data[patch->loop_start];
 	    patch->len += 2;
@@ -214,8 +213,7 @@ void xmp_cvt_anticlick (struct patch_info *patch)
 	    patch->data[patch->len] = patch->data[patch->len - 2];
 	    patch->data[patch->len + 1] = patch->data[patch->len - 1];
 	    patch->len += 2;
-	}
-        else {
+	} else {
 	    patch->data[patch->len] = patch->data[patch->len - 1];
 	    patch->len++;
 	}

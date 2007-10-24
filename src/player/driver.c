@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.59 2007-10-23 20:32:43 cmatsuoka Exp $
+ * $Id: driver.c,v 1.60 2007-10-24 01:56:30 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -921,16 +921,6 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	}
     }
 
-#if 0
-    /* dump patch to file */
-    if (id == 3) {
-	printf("dump patch\n");
-	FILE *f = fopen("patch_data", "w");
-	fwrite(patch->data, 1, xxs->len, f);
-	fclose(f);
-    }
-#endif
-
     /* Fix endianism if needed */
     if (xxs->flg & WAVE_16_BITS) {
 	if (o->big_endian ^ (flags & XMP_SMP_BIGEND))
@@ -944,6 +934,26 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	xmp_cvt_diff2abs(xxs->len, 0, patch->data);
     if (flags & XMP_SMP_VIDC)
 	xmp_cvt_vidc(xxs->len, patch->data);
+
+    /* Duplicate last sample -- prevent click in bidir loops */
+    if (xxs->flg & WAVE_16_BITS) {
+	patch->data[xxs->len] = patch->data[xxs->len - 2];
+	patch->data[xxs->len + 1] = patch->data[xxs->len - 1];
+	xxs->len += 2;
+    } else {
+	patch->data[xxs->len] = patch->data[xxs->len - 1];
+	xxs->len++;
+    }
+
+#if 0
+    /* dump patch to file */
+    if (id == 11) {
+	printf("dump patch\n");
+	FILE *f = fopen("patch_data", "w");
+	fwrite(patch->data, 1, xxs->len, f);
+	fclose(f);
+    }
+#endif
 
     patch->key = GUS_PATCH;
     patch->instr_no = id;

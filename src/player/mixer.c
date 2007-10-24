@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.24 2007-10-20 18:42:37 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.25 2007-10-24 01:56:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -379,7 +379,7 @@ static int softmixer(struct xmp_context *ctx)
 		continue;
 	    }
 
-	    /* FIXME: sample size in bidirectional loops still not OK
+	    /* FIXME: short samples with bidirectional loops still not ok
 	     *        test with jt_xmas.xm
 	     */
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
