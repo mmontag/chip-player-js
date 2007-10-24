@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.17 2007-10-18 18:25:10 cmatsuoka Exp $
+ * $Id: common.c,v 1.18 2007-10-24 02:41:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 #include "load.h"
 
 
-char *copy_adjust(uint8 *s, uint8 * r, int n)
+char *copy_adjust(uint8 *s, uint8 *r, int n)
 {
 	int i;
 

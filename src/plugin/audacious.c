@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.5 2007-10-22 01:59:21 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.6 2007-10-24 02:41:50 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -137,6 +137,29 @@ DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
  
 static void file_info_box_build (void);
 static void init_visual (GdkVisual *);
+
+static void strip_vfs(char *s)
+{
+	int len;
+	char *c;
+
+	if (!memcmp(s, "file://", 7)) {
+		len = strlen(s);
+		memmove(s, s + 7, len - 6);
+	}
+
+	for (c = s; *c; c++) {
+		if (*c == '%' && isxdigit(*(c + 1)) && isxdigit(*(c + 2))) {
+			char val[3];
+			val[0] = *(c + 1);
+			val[1] = *(c + 2);
+			val[2] = 0;
+			*c++ = strtoul(val, NULL, 16);
+			len = strlen(c);
+			memmove(c, c + 2, len - 1);
+		}
+	}
+}
 
 static void aboutbox()
 {
@@ -379,9 +402,7 @@ static void cleanup()
 
 static int is_our_file(char *filename)
 {
-	/* Sorry, no VFS support */
-	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
-		filename += 7;
+	strip_vfs(filename);		/* Sorry, no VFS support */
 
 	if (xmp_test_module(ctx, filename, NULL) == 0)
 		return 1;
@@ -397,9 +418,7 @@ static void get_song_info(char *filename, char **title, int *length)
 	struct xmp_module_info mi;
 	struct xmp_options *opt;
 
-	/* Sorry, no VFS support */
-	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
-		filename += 7;
+	strip_vfs(filename);		/* Sorry, no VFS support */
 
 	/* Create new context to load a file and get the length */
 
@@ -435,9 +454,7 @@ static Tuple *get_song_tuple(char *filename)
 	struct xmp_module_info mi;
 	struct xmp_options *opt;
 
-	/* Sorry, no VFS support */
-	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
-		filename += 7;
+	strip_vfs(filename);		/* Sorry, no VFS support */
 
 	tuple = aud_tuple_new_from_filename(filename);
 
