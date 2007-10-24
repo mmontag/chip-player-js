@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.153 2007-10-24 11:09:24 cmatsuoka Exp $
+$Id: ChangeLog,v 1.154 2007-10-24 20:30:16 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -46,6 +46,8 @@ Stable versions
 	- fixed number of patterns in Funktracker modules
 	- added Funktracker persistent portamento and volume slide effects
 	- fixed offset effect with parameter 00 (reported by Adric Riedel)
+	- changed volume dynamic range to fix steps in volume ramps (tested
+	  with departure soundtrack.xm, reported by Adric Riedel)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.41 2007-10-24 11:09:24 cmatsuoka Exp $
+ * $Id: player.c,v 1.42 2007-10-24 20:30:17 cmatsuoka Exp $
  */
 
 /*
@@ -415,7 +415,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
         return XMP_OK;
 
     if (TEST(RESET_ENV)) {
-        xc->fadeout = 0x10000;
+        xc->fadeout = 0x8000;
         RESET(RELEASE | FADEOUT);
         xc->gvl = XXI[XXIM.ins[xc->key]].gvl;   /* #?# Onde eu coloco isso? */
         xc->insvib_swp = XXI->vsw;              /* #?# Onde eu coloco isso? */
@@ -476,8 +476,9 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 
  
     if (TEST(FADEOUT | RELEASE) || act == XMP_ACT_FADE || act == XMP_ACT_OFF) {
-	if (!(xc->fadeout = xc->fadeout > XXIH.rls ?
-	    xc->fadeout - XXIH.rls : 0)) {
+	xc->fadeout = xc->fadeout > XXIH.rls ? xc->fadeout - XXIH.rls : 0;
+
+	if (xc->fadeout == 0) {
 
 	    /* Setting the volume to 0 instead of resetting the channel
 	     * will make us spend more CPU, but allows portamento after
@@ -539,15 +540,15 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     if (finalvol < 0)
 	finalvol = 0;
 
-    finalvol = (finalvol * xc->fadeout) >> 6;	/* 16 bit output */
+    finalvol = (finalvol * xc->fadeout) >> 5;	/* 16 bit output */
 
     finalvol = (uint32) (vol_envelope *
 	(m->fetch & XMP_CTL_ST3GVOL ? 0x40 : m->volume) *
-	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 20;
+	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 18;
 
     /* Volume translation table (for PTM) */
     if (m->vol_xlat)
-	finalvol = m->vol_xlat[finalvol >> 2] << 2;
+	finalvol = m->vol_xlat[finalvol >> 4] << 4;
 
     if (m->xxh->flg & XXM_FLG_INSVOL)
 	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;
@@ -745,7 +746,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 	0 : (finalpan - 0x80) * o->mix / 100;
     xmp_drv_setbend(ctx, chn, (xc->pitchbend + xc->a_val[xc->a_idx] + med_arp));
     xmp_drv_setpan(ctx, chn, m->fetch & XMP_CTL_REVERSE ? -finalpan : finalpan);
-    xmp_drv_setvol(ctx, chn, finalvol >> 2);
+    xmp_drv_setvol(ctx, chn, finalvol);
 
     if (cutoff < 0xff && (m->fetch & XMP_CTL_FILTER)) {
 	filter_setup(ctx, xc, cutoff);

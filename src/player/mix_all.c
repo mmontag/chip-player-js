@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: mix_all.c,v 1.3 2007-10-05 01:49:17 cmatsuoka Exp $
+ * $Id: mix_all.c,v 1.4 2007-10-24 20:30:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -81,9 +81,6 @@
 SMIX_MIXER(smix_st8itpt)
 {
     VAR_ITPT(int8);
-
-    vl <<= 8;
-    vr <<= 8;
     while (count--) { INTERPOLATE(); MIX_STEREO(); }
 }
 
@@ -93,6 +90,9 @@ SMIX_MIXER(smix_st8itpt)
 SMIX_MIXER(smix_st16itpt)
 {
     VAR_ITPT(int16);
+
+    vl >>= 8;
+    vr >>= 8;
     while (count--) { INTERPOLATE(); MIX_STEREO(); }
 }
 
@@ -103,8 +103,6 @@ SMIX_MIXER(smix_st8norm)
 {
     VAR_NORM(int8);
 
-    vl <<= 8;
-    vr <<= 8;
     in_bk += cur_bk;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
@@ -116,6 +114,8 @@ SMIX_MIXER(smix_st16norm)
 {
     VAR_NORM(int16);
 
+    vl >>= 8;
+    vr >>= 8;
     in_bk += cur_bk;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
@@ -127,7 +127,7 @@ SMIX_MIXER(smix_mn8itpt)
 {
     VAR_ITPT(int8);
 
-    vl <<= 9;
+    vl <<= 1;
     while (count--) { INTERPOLATE(); MIX_MONO(); }
 }
 
@@ -138,7 +138,7 @@ SMIX_MIXER(smix_mn16itpt)
 {
     VAR_ITPT(int16);
 
-    vl <<= 1;
+    vl >>= 7;
     while (count--) { INTERPOLATE(); MIX_MONO(); }
 }
 
@@ -149,7 +149,7 @@ SMIX_MIXER(smix_mn8norm)
 {
     VAR_NORM(int8);
 
-    vl <<= 9;
+    vl <<= 1;
     in_bk += cur_bk;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
@@ -161,7 +161,7 @@ SMIX_MIXER(smix_mn16norm)
 {
     VAR_NORM(int16);
 
-    vl <<= 1;
+    vl >>= 7;
     in_bk += cur_bk;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
@@ -177,8 +177,6 @@ SMIX_MIXER(smix_st8itpt_flt)
     VAR_ITPT(int8);
     VAR_FILT;
 
-    vl <<= 8;
-    vr <<= 8;
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO(); }
     SAVE_FILTER();
 }
@@ -191,6 +189,8 @@ SMIX_MIXER(smix_st16itpt_flt)
     VAR_ITPT(int16);
     VAR_FILT;
 
+    vl >>= 8;
+    vr >>= 8;
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO(); }
     SAVE_FILTER();
 }
@@ -203,7 +203,7 @@ SMIX_MIXER(smix_mn8itpt_flt)
     VAR_ITPT(int8);
     VAR_FILT;
 
-    vl <<= 9;
+    vl <<= 1;
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO(); }
     SAVE_FILTER();
 }
@@ -216,7 +216,7 @@ SMIX_MIXER(smix_mn16itpt_flt)
     VAR_ITPT(int16);
     VAR_FILT;
 
-    vl <<= 1;
+    vl >>= 7;
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO(); }
     SAVE_FILTER();
 }
@@ -226,6 +226,6 @@ SMIX_MIXER(smix_mn16itpt_flt)
  */
 SMIX_MIXER(smix_synth)
 {
-    synth_mixer(tmp_bk, count, vl << 1, vr << 1, itpt_inc);
+    synth_mixer(tmp_bk, count, vl >> 7, vr >> 7, itpt_inc);
 }
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.25 2007-10-24 01:56:30 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.26 2007-10-24 20:30:17 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -279,8 +279,8 @@ static int softmixer(struct xmp_context *ctx)
 	}
 
 	buf_pos = smix_buf32b;
-	vol_r = (vi->vol * (0x80 - vi->pan)) >> 4;
-	vol_l = (vi->vol * (0x80 + vi->pan)) >> 4;
+	vol_r = (vi->vol * (0x80 - vi->pan));
+	vol_l = (vi->vol * (0x80 + vi->pan));
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {
