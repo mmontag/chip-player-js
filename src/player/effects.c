@@ -217,7 +217,9 @@ fx_porta_dn:
     case FX_OFFSET:				/* Set sample offset */
 	SET(OFFSET);
 	if (fxp)
-	    xc->offset = fxp << 8;
+	    xc->offset_val = xc->offset = fxp << 8;
+	else
+	    xc->offset_val = xc->offset;
 	break;
     case FX_VOLSLIDE:				/* Volume slide */
 fx_volslide:

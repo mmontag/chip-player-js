@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.40 2007-10-23 20:32:43 cmatsuoka Exp $
+ * $Id: player.c,v 1.41 2007-10-24 11:09:24 cmatsuoka Exp $
  */
 
 /*
@@ -374,7 +374,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
     }
 
     if (TEST(NEW_INS) || (m->fetch & XMP_CTL_OFSRST))
-	xc->offset = 0;
+	xc->offset_val = 0;
 
     /* Secondary effect is processed _first_ and can be overriden
      * by the primary effect.
@@ -391,9 +391,9 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
 	xc->note = note;
 
 	if (cont_sample == 0) {
-	    xmp_drv_voicepos(ctx, chn, xc->offset);
+	    xmp_drv_voicepos(ctx, chn, xc->offset_val);
 	    if (TEST(OFFSET) && (m->fetch & XMP_CTL_FX9BUG))
-	        xc->offset <<= 1;
+	        xc->offset_val <<= 1;
 	}
 	RESET(OFFSET);
 

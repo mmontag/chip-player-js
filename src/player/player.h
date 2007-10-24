@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.13 2007-10-20 13:35:10 cmatsuoka Exp $
+ * $Id: player.h,v 1.14 2007-10-24 11:09:24 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -145,7 +145,8 @@ struct xmp_channel {
     int a_size;			/* Arpeggio size */
     int insvib_idx;		/* Instrument vibrato index */
     int insvib_swp;		/* Instrument vibrato sweep */
-    int offset;			/* Sample offset */
+    int offset;			/* Sample offset memory */
+    int offset_val;		/* Sample offset */
     int ns_val;			/* PTM note slide amount */
     int ns_fval;		/* OKT fine note slide amount */
     int ns_speed;		/* PTM note slide speed */
