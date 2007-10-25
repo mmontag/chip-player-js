@@ -248,13 +248,14 @@ fx_volslide:
 	    }
 	}
 	SET(VOL_SLIDE);
+	/* Skaven's 2nd reality has volslide with parameter D7 */
 	if ((xc->volslide = fxp))
-	    xc->v_val = MSN(fxp) - LSN(fxp);
+	    xc->v_val = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
 	break;
     case FX_VOLSLIDE_2:				/* Secondary volume slide */
 	SET(VOL_SLIDE_2);
 	if (fxp)
-	    xc->v_val2 = MSN(fxp) - LSN(fxp);
+	    xc->v_val2 = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
 	break;
     case FX_VOLSLIDE_UP:			/* Vol slide with uint8 arg */
 	xc->v_val = fxp;

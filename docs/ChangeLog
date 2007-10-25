@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.155 2007-10-24 22:45:05 cmatsuoka Exp $
+$Id: ChangeLog,v 1.156 2007-10-25 01:14:47 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -48,6 +48,8 @@ Stable versions
 	- fixed offset effect with parameter 00 (reported by Adric Riedel)
 	- changed volume dynamic range to fix steps in volume ramps (tested
 	  with departure soundtrack.xm, reported by Adric Riedel)
+	- set priority to slide down when volume slide up and down is used,
+	  fixes Skaven's 2nd Reality blast (reported by Douglas Carmichael)
 
 2.3.2 (20071009):
 	- added ModPlug Tracker IT quirk: ignore sample global volume (fixes
