@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.27 2007-10-26 22:41:36 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.28 2007-10-26 23:16:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -34,8 +34,6 @@
 
 #define TURN_OFF	0
 #define TURN_ON		1
-
-#define ptk_loop_count	detuning
 
 static char** smix_buffer = NULL;	/* array of output buffers */
 static int* smix_buf32b = NULL;		/* temp buffer for 32 bit samples */
@@ -310,8 +308,8 @@ static int softmixer(struct xmp_context *ctx)
 	}
 
 	/* check for Protracker loop */
-	if (pi->mode & WAVE_PTKLOOP && pi->ptk_loop_count < 2) {
-	    lpe = pi->len;
+	if (pi->mode & WAVE_PTKLOOP && pi->mode & WAVE_FIRSTRUN) {
+	    lpe = pi->len - 1;
 	    if (vi->fidx & FLAG_16_BITS)
 		lpe >>= 1;
 	}
@@ -393,8 +391,7 @@ static int softmixer(struct xmp_context *ctx)
 	     */
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
 		vi->pos -= lpe - lps;			/* forward loop */
-		if (pi->mode && WAVE_PTKLOOP && pi->ptk_loop_count < 3)
-		    pi->ptk_loop_count++;
+		pi->mode &= ~WAVE_FIRSTRUN;	
 	    } else {
 		itp_inc = -itp_inc;			/* invert dir */
 		vi->itpt += itp_inc;
@@ -427,6 +424,11 @@ static void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
     lpe = pi->len - mode;
     if (pi->mode & WAVE_LOOPING)
 	lpe = lpe > pi->loop_end ? pi->loop_end : lpe;
+
+    /* check for Protracker loop */
+    if (pi->mode & WAVE_PTKLOOP && pi->mode & WAVE_FIRSTRUN)
+	lpe = pi->len;
+
     lpe >>= res;
 
     if (pos >= lpe)			/* Happens often in MED synth */
@@ -492,7 +494,7 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 	vi->fxor = vi->fidx;
 
     if (pi->mode & WAVE_PTKLOOP)
-	pi->ptk_loop_count = 0;
+	pi->mode |= WAVE_FIRSTRUN;
 
     smix_voicepos(ctx, voc, 0, 0);
 }

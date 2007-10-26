@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.41 2007-10-26 22:41:36 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.42 2007-10-26 23:16:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -50,6 +50,7 @@
  * sample once before looping -- see menowantmiseria.mod
  */
 #define WAVE_PTKLOOP	0x80	/* bit 7 = Protracker loop enable */
+#define WAVE_FIRSTRUN	0x40	/* bit 6 = Protracker loop control */
 
 #include <stdio.h>
 #include <signal.h>
