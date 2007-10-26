@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.60 2007-10-24 01:56:30 cmatsuoka Exp $
+ * $Id: driver.c,v 1.61 2007-10-26 18:34:07 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -505,7 +505,7 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 }
 
 
-int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg)
+int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg, int cont_sample)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc, vfree;
@@ -516,17 +516,20 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 	smp = -1;
 
     if (dct) {
-	for (voc = numvoc; voc--;)
-	    if (d->voice_array[voc].root == chn && d->voice_array[voc].ins == ins)
+	for (voc = numvoc; voc--;) {
+	    if (d->voice_array[voc].root == chn && d->voice_array[voc].ins == ins) {
 		if ((dct == XXM_DCT_INST) ||
 		    (dct == XXM_DCT_SMP && d->voice_array[voc].smp == smp) ||
 		    (dct == XXM_DCT_NOTE && d->voice_array[voc].note == note)) {
 		    if (dca) {
 			if (voc != d->ch2vo_array[chn] || d->voice_array[voc].act)
 			    d->voice_array[voc].act = dca;
-		    } else
+		    } else {
 			drv_resetvoice(ctx, voc, TURN_ON);
+		    }
 		}
+	    }
+	}
     }
 
     voc = d->ch2vo_array[chn];
@@ -556,13 +559,15 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 	return -1;
     }
 
-    smix_setpatch(ctx, voc, smp);
+    if (!cont_sample)
+	smix_setpatch(ctx, voc, smp);
     smix_setnote(ctx, voc, note);
     d->voice_array[voc].ins = ins;
     d->voice_array[voc].act = nna;
 
     if (extern_drv) {
-	d->driver->setpatch(voc, smp);
+	if (!cont_sample)
+	    d->driver->setpatch(voc, smp);
 	d->driver->setnote(voc, note);
     }
 

@@ -1,7 +1,11 @@
-$Id: ChangeLog,v 1.156 2007-10-25 01:14:47 cmatsuoka Exp $
+$Id: ChangeLog,v 1.157 2007-10-26 18:34:07 cmatsuoka Exp $
 
 Stable versions
 ---------------
+
+2.4.1 ():
+	- fixed portamento after keyoff problem in metamorph_part_ii.xm
+	  where new note is not recognized (reported by Adric Riedel)
 
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.42 2007-10-24 20:30:17 cmatsuoka Exp $
+ * $Id: player.c,v 1.43 2007-10-26 18:34:07 cmatsuoka Exp $
  */
 
 /*
@@ -340,14 +340,13 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
     }
 
     if (smp >= 0) {
-	if (cont_sample == 0) {
-	    if (chn_copy(p, xmp_drv_setpatch(ctx, chn, ins, smp, note,
+	if (chn_copy(p, xmp_drv_setpatch(ctx, chn, ins, smp, note,
 	 		m->xxi[ins][m->xxim[ins].ins[key]].nna,
 	   		m->xxi[ins][m->xxim[ins].ins[key]].dct,
-			m->xxi[ins][m->xxim[ins].ins[key]].dca, ctl), chn) < 0)
-	    {
-	        return XMP_ERR_VIRTC;
-	    }
+			m->xxi[ins][m->xxim[ins].ins[key]].dca, ctl,
+			cont_sample), chn) < 0)
+	{
+	    return XMP_ERR_VIRTC;
 	}
 	xc->smp = smp;
     }
