@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.25 2007-10-23 00:21:51 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.26 2007-10-26 11:34:12 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -376,9 +376,8 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (bpmon)
 			report(" (length = %d)", bpmlen);
 		report("\n");
-		if (song.playtransp)
-			report("Song transpose : %d semitones\n",
-			       song.playtransp);
+		if (V(1) && song.playtransp)
+			report("Song transpose : %d\n", song.playtransp);
 		report("Stored patterns: %d ", m->xxh->pat);
 	}
 

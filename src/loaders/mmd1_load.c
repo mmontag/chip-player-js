@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.29 2007-10-23 00:21:51 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.30 2007-10-26 11:34:12 cmatsuoka Exp $
  */
 
 /*
@@ -358,9 +358,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (bpmon)
 			report(" (length = %d)", bpmlen);
 		report("\n");
-		if (song.playtransp)
-			report("Song transpose : %d semitones\n",
-			       song.playtransp);
+		if (V(1) && song.playtransp)
+			report("Song transpose : %d\n", song.playtransp);
 		report("Stored patterns: %d ", m->xxh->pat);
 	}
 

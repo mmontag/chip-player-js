@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.36 2007-10-23 21:09:32 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.37 2007-10-26 11:34:11 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -133,6 +133,8 @@ case ${target_os} in
     enable_arts=no
     enable_bmp_plugin=no
     enable_audacious_plugin=no
+    enable_winamp_plugin=yes
+    PLUGINS="$PLUGINS winamp"
     ;;
 esac
 
