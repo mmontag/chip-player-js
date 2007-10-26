@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.26 2007-10-24 20:30:17 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.27 2007-10-26 22:41:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,6 +35,7 @@
 #define TURN_OFF	0
 #define TURN_ON		1
 
+#define ptk_loop_count	detuning
 
 static char** smix_buffer = NULL;	/* array of output buffers */
 static int* smix_buf32b = NULL;		/* temp buffer for 32 bit samples */
@@ -256,8 +257,8 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 static int softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct voice_info* vi;
-    struct patch_info* pi;
+    struct voice_info *vi;
+    struct patch_info *pi;
     int smp_cnt, tic_cnt, lps, lpe;
     int vol_l, vol_r, itp_inc, voc;
     int prv_l, prv_r;
@@ -306,6 +307,13 @@ static int softmixer(struct xmp_context *ctx)
 	} else {
 	    lps = pi->loop_start;
 	    lpe = pi->loop_end;
+	}
+
+	/* check for Protracker loop */
+	if (pi->mode & WAVE_PTKLOOP && pi->ptk_loop_count < 2) {
+	    lpe = pi->len;
+	    if (vi->fidx & FLAG_16_BITS)
+		lpe >>= 1;
 	}
 
 	for (tic_cnt = smix_ticksize; tic_cnt; ) {
@@ -371,7 +379,7 @@ static int softmixer(struct xmp_context *ctx)
 
 	    vi->fidx ^= vi->fxor;
 
-	    /* Single sample loop run */
+	    /* First sample loop run */
             if (vi->fidx == 0 || lps >= lpe) {
 		smix_anticlick(ctx, voc, 0, 0, buf_pos, tic_cnt);
 		drv_resetvoice(ctx, voc, 0);
@@ -379,11 +387,14 @@ static int softmixer(struct xmp_context *ctx)
 		continue;
 	    }
 
+
 	    /* FIXME: short samples with bidirectional loops still not ok
 	     *        test with jt_xmas.xm
 	     */
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
 		vi->pos -= lpe - lps;			/* forward loop */
+		if (pi->mode && WAVE_PTKLOOP && pi->ptk_loop_count < 3)
+		    pi->ptk_loop_count++;
 	    } else {
 		itp_inc = -itp_inc;			/* invert dir */
 		vi->itpt += itp_inc;
@@ -479,6 +490,9 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 	vi->fxor = pi->mode & WAVE_BIDIR_LOOP ? FLAG_REVLOOP : 0;
     else
 	vi->fxor = vi->fidx;
+
+    if (pi->mode & WAVE_PTKLOOP)
+	pi->ptk_loop_count = 0;
 
     smix_voicepos(ctx, voc, 0, 0);
 }

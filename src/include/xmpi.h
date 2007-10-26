@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.40 2007-10-22 10:33:09 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.41 2007-10-26 22:41:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -32,19 +32,24 @@
 #define XMP_MAXVOC	64		/* max physical voices */
 
 #if defined (DRIVER_OSS_MIX) || defined (DRIVER_OSS_SEQ)
-#   if defined (HAVE_SYS_SOUNDCARD_H)
-#	include <sys/soundcard.h>
-#   elif defined (HAVE_MACHINE_SOUNDCARD_H)
-#	include <machine/soundcard.h>
-#   endif
+#  if defined (HAVE_SYS_SOUNDCARD_H)
+#    include <sys/soundcard.h>
+#  elif defined (HAVE_MACHINE_SOUNDCARD_H)
+#    include <machine/soundcard.h>
+#  endif
 #else
-#   undef USE_ISA_CARDS
-#   define WAVE_16_BITS    0x01   /* bit 0 = 8 or 16 bit wave data. */
-#   define WAVE_UNSIGNED   0x02   /* bit 1 = Signed - Unsigned data. */
-#   define WAVE_LOOPING    0x04   /* bit 2 = looping enabled-1. */
-#   define WAVE_BIDIR_LOOP 0x08   /* bit 3 = Set is bidirectional looping. */
-#   define WAVE_LOOP_BACK  0x10   /* bit 4 = Set is looping backward. */
+#  undef USE_ISA_CARDS
+#  define WAVE_16_BITS    0x01	/* bit 0 = 8 or 16 bit wave data. */
+#  define WAVE_UNSIGNED   0x02 	/* bit 1 = Signed - Unsigned data. */
+#  define WAVE_LOOPING    0x04	/* bit 2 = looping enabled-1. */
+#  define WAVE_BIDIR_LOOP 0x08	/* bit 3 = Set is bidirectional looping. */
+#  define WAVE_LOOP_BACK  0x10	/* bit 4 = Set is looping backward. */
 #endif
+
+/* For emulation of Amiga Protracker-style sample loops: play entire
+ * sample once before looping -- see menowantmiseria.mod
+ */
+#define WAVE_PTKLOOP	0x80	/* bit 7 = Protracker loop enable */
 
 #include <stdio.h>
 #include <signal.h>

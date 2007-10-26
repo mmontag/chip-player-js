@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.32 2007-10-20 11:50:39 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.33 2007-10-26 22:41:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -115,6 +115,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
     char magic[8], idbuffer[32];
+    int ptkloop = 1;			/* Protracker loop */
 
     LOAD_INIT();
 
@@ -158,6 +159,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(idbuffer, 1, 32, f);
 	fseek(f, start + pos, SEEK_SET);
 	tracker = idbuffer;
+	ptkloop = 1;
     } else if (!m->xxh->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
 	    isdigit(*magic) && isdigit(magic[1])) {
@@ -206,6 +208,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
 	m->xxs[i].flg = (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
 		WAVE_LOOPING : 0;
+	m->xxs[i].flg |= ptkloop ? WAVE_PTKLOOP : 0;
 	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
 	m->xxi[i][0].vol = mh.ins[i].volume;
 	m->xxi[i][0].pan = 0x80;
@@ -278,6 +281,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
 		(0x43c + m->xxh->pat * 0x400 == m->size)))) {
 	tracker = "Protracker";
+	ptkloop = 1;
 	goto skip_test;
     }
 
@@ -285,13 +289,17 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
      */
     if (m->xxh->chn == 4 && mh.restart == m->xxh->pat) {
 	tracker = "Soundtracker";
+	ptkloop = 1;
     } else if (m->xxh->chn == 4 && mh.restart == 0x78) {
 	tracker = "Noisetracker" /*" (0x78)"*/;
+	ptkloop = 1;
     } else if (mh.restart < 0x7f) {
-	if (m->xxh->chn == 4)
+	if (m->xxh->chn == 4) {
 	    tracker = "Noisetracker";
-	else
+	    ptkloop = 1;
+	} else {
 	    tracker = "unknown tracker";
+	}
 	m->xxh->rst = mh.restart;
     }
 
