@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.43 2007-10-26 18:34:07 cmatsuoka Exp $
+ * $Id: player.c,v 1.44 2007-10-27 17:05:55 cmatsuoka Exp $
  */
 
 /*
@@ -304,6 +304,11 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
 		 */
 		RESET(KEYOFF);
 		cont_sample = 1;
+
+		/* set key to 0 so we can have the tone portamento from
+		 * the original note (see funky_stars.xm pos 5 ch 9)
+		 */
+        	key = 0;
 	    } else {
         	key = 0;
 	    }
