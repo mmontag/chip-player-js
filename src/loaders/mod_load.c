@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.34 2007-10-26 23:16:13 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.35 2007-10-27 12:29:04 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -71,6 +71,17 @@ static int mod_test(FILE *f, char *t)
 
     fseek(f, 1080, SEEK_SET);
     fread(buf, 4, 1, f);
+
+    if (!strncmp(buf + 2, "CH", 2) && isdigit(buf[0]) && isdigit(buf[1])) {
+	i = (buf[0] - '0') * 10 + buf[1] - '0';
+	if (i > 0 && i <= 32)
+	    return 0;
+    }
+
+    if (!strncmp(buf + 1, "CHN", 3) && isdigit(*buf)) {
+	if (*buf - '0')
+	    return 0;
+    }
 
     for (i = 0; mod_magic[i].ch; i++) {
 	if (!memcmp(buf, mod_magic[i].magic, 4))
@@ -162,7 +173,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	ptkloop = 1;
     } else if (!m->xxh->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
-	    isdigit(*magic) && isdigit(magic[1])) {
+	    isdigit(magic[0]) && isdigit(magic[1])) {
 	    if ((m->xxh->chn = (*magic - '0') *
 		10 + magic[1] - '0') > 32)
 		return -1;

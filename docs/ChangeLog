@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.159 2007-10-27 01:50:40 cmatsuoka Exp $
+$Id: ChangeLog,v 1.160 2007-10-27 12:29:04 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -11,6 +11,7 @@ Stable versions
 	  reported by Adric Riedel)
 	- fixed finetune test in UNIC Tracker detection to prevent false
 	  positive with all that she wants.mod (reported by Adric Riedel)
+	- fixed test for ?CHN and ??CH TakeTracker/FastTracker2 modules
 
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects
