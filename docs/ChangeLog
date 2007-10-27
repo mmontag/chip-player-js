@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.160 2007-10-27 12:29:04 cmatsuoka Exp $
+$Id: ChangeLog,v 1.161 2007-10-27 20:44:46 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -12,6 +12,7 @@ Stable versions
 	- fixed finetune test in UNIC Tracker detection to prevent false
 	  positive with all that she wants.mod (reported by Adric Riedel)
 	- fixed test for ?CHN and ??CH TakeTracker/FastTracker2 modules
+	- fixed data type in the XM loader to work in 64-bit systems
 
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects

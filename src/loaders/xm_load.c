@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.28 2007-10-20 19:41:11 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.29 2007-10-27 20:44:46 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -311,7 +311,7 @@ load_instruments:
 	    xi.v_fade = read16l(f);		/* Volume fadeout */
 
 	    /* Skip reserved space */
-	    fseek(f, xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
+	    fseek(f, (int)xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
 
 	    /* Envelope */
 	    m->xxih[i].rls = xi.v_fade;
@@ -336,7 +336,7 @@ load_instruments:
 	    memcpy (m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
 	    memcpy (m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
 
-	    memcpy (&m->xxim[i], xi.sample, 96);
+	    memcpy (&m->xxim[i].ins, xi.sample, 96);
 	    for (j = 0; j < 96; j++) {
 		if (m->xxim[i].ins[j] >= m->xxih[i].nsm)
 		    m->xxim[i].ins[j] = (uint8) XMP_MAXPAT;
@@ -423,7 +423,7 @@ load_instruments:
 	     * generalization should take care of both cases.
 	     */
 
-	     fseek(f, xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
+	     fseek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
 
 	if ((V(1)) && (strlen((char *) m->xxih[i].name) || xih.samples))
