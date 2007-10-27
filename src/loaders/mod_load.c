@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.35 2007-10-27 12:29:04 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.36 2007-10-27 14:57:32 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -35,21 +35,22 @@
 struct {
     char *magic;
     int flag;
+    int ptkloop;
     char *tracker;
     int ch;
 } mod_magic[] = {
-    { "M.K.", 0, "Protracker", 4 },
-    { "M!K!", 1, "Protracker", 4 },
-    { "M&K!", 1, "Noisetracker", 4 },
-    { "N.T.", 1, "Noisetracker", 4 },
-    { "6CHN", 0, "Fast Tracker", 6 },
-    { "8CHN", 0, "Fast Tracker", 8 },
-    { "CD61", 1, "Octalyser", 6 },		/* Atari STe/Falcon */
-    { "CD81", 1, "Octalyser", 8 },		/* Atari STe/Falcon */
-    { "FA04", 1, "Digital Tracker", 4 },	/* Atari Falcon */
-    { "FA06", 1, "Digital Tracker", 6 },	/* Atari Falcon */
-    { "FA08", 1, "Digital Tracker", 8 },	/* Atari Falcon */
-    { "PWIZ", 1, "", 4 },
+    { "M.K.", 0, 1, "Protracker", 4 },
+    { "M!K!", 1, 1, "Protracker", 4 },
+    { "M&K!", 1, 1, "Noisetracker", 4 },
+    { "N.T.", 1, 1, "Noisetracker", 4 },
+    { "6CHN", 0, 0, "Fast Tracker", 6 },
+    { "8CHN", 0, 0, "Fast Tracker", 8 },
+    { "CD61", 1, 0, "Octalyser", 6 },		/* Atari STe/Falcon */
+    { "CD81", 1, 0, "Octalyser", 8 },		/* Atari STe/Falcon */
+    { "FA04", 1, 0, "Digital Tracker", 4 },	/* Atari Falcon */
+    { "FA06", 1, 0, "Digital Tracker", 6 },	/* Atari Falcon */
+    { "FA08", 1, 0, "Digital Tracker", 8 },	/* Atari Falcon */
+    { "PWIZ", 1, 1, "", 4 },
     { "", 0 }
 };
 
@@ -126,7 +127,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
     char magic[8], idbuffer[32];
-    int ptkloop = 1;			/* Protracker loop */
+    int ptkloop = 0;			/* Protracker loop */
 
     LOAD_INIT();
 
@@ -158,6 +159,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxh->chn = mod_magic[i].ch;
 	    tracker = mod_magic[i].tracker;
 	    detected = mod_magic[i].flag;
+	    ptkloop = mod_magic[i].ptkloop;
 	    break;
 	}
     }
@@ -170,7 +172,6 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(idbuffer, 1, 32, f);
 	fseek(f, start + pos, SEEK_SET);
 	tracker = idbuffer;
-	ptkloop = 1;
     } else if (!m->xxh->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
 	    isdigit(magic[0]) && isdigit(magic[1])) {
@@ -254,6 +255,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	if (!memcmp(idbuffer, "FLEX", 4)) {
 	    tracker = "Flextrax";
+	    ptkloop = 0;
 	    goto skip_test;
 	}
     }
@@ -271,6 +273,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 		(0x43c + m->xxh->pat * 32 * 0x40 + smp_size == m->size)))) {
 	m->xxh->chn = 8;
 	tracker = "Mod's Grave";
+	ptkloop = 0;
 	goto skip_test;
     }
 
@@ -293,7 +296,6 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
 		(0x43c + m->xxh->pat * 0x400 == m->size)))) {
 	tracker = "Protracker";
-	ptkloop = 1;
 	goto skip_test;
     }
 
@@ -301,30 +303,32 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
      */
     if (m->xxh->chn == 4 && mh.restart == m->xxh->pat) {
 	tracker = "Soundtracker";
-	ptkloop = 1;
     } else if (m->xxh->chn == 4 && mh.restart == 0x78) {
 	tracker = "Noisetracker" /*" (0x78)"*/;
-	ptkloop = 1;
     } else if (mh.restart < 0x7f) {
 	if (m->xxh->chn == 4) {
 	    tracker = "Noisetracker";
-	    ptkloop = 1;
 	} else {
 	    tracker = "unknown tracker";
+	    ptkloop = 0;
 	}
 	m->xxh->rst = mh.restart;
     }
 
-    if (m->xxh->chn != 4 && mh.restart == 0x7f)
+    if (m->xxh->chn != 4 && mh.restart == 0x7f) {
 	tracker = "unknown tracker";
+	ptkloop = 0;
+    }
 
     if (m->xxh->chn == 4 && mh.restart == 0x7f) {
 	for (i = 0; i < 31; i++) {
 	    if (mh.ins[i].loop_size == 0)
 		break;
 	}
-	if (i < 31)
+	if (i < 31) {
 	    tracker = "Protracker clone";
+	    ptkloop = 0;
+	}
     }
 
     if (mh.restart != 0x78 && mh.restart < 0x7f) {
@@ -336,6 +340,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	    for (i = 0; i < 31; i++) {
 		if (mh.ins[i].size == 1 && mh.ins[i].volume == 0) {
 		    tracker = "Probably converted";
+		    ptkloop = 0;
 		    goto skip_test;
 		}
 	    }
@@ -354,9 +359,11 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 			case 6:
 			case 8:
 		            tracker = "Octalyser";
+		    	    ptkloop = 0;
 			    break;
 			default:
 		            tracker = "unknown tracker";
+		    	    ptkloop = 0;
 			}
 		        goto skip_test;
 		    }
@@ -364,10 +371,13 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		if (m->xxh->chn == 4) {
 	    	    tracker = "Maybe Protracker";
+		    ptkloop = 0;
 		} else if (m->xxh->chn == 6 || m->xxh->chn == 8) {
 	    	    tracker = "FastTracker 1.01?";
+		    ptkloop = 0;
 		} else {
 	    	    tracker = "unknown tracker";
+		    ptkloop = 0;
 		}
 	    }
 	} else {	/* Has loops with 0 size */
@@ -377,6 +387,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    if (i == 31 && is_st_ins((char *)mh.ins[14].name)) {
 		tracker = "converted 15 instrument";
+		ptkloop = 0;
 		goto skip_test;
 	    }
 
@@ -387,16 +398,19 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    if (i < 31) {
 		tracker = "unknown/converted";
+		ptkloop = 0;
 		goto skip_test;
 	    }
 
 	    if (m->xxh->chn == 4 || m->xxh->chn == 6 || m->xxh->chn == 8) {
 	    	tracker = "Fast Tracker";
+		ptkloop = 0;
 	        m->xxh->flg &= ~XXM_FLG_MODRNG;
 		goto skip_test;
 	    }
 
 	    tracker = "unknown tracker";		/* ??!? */
+	    ptkloop = 0;
 	}
     }
 
