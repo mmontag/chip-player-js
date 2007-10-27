@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.158 2007-10-26 23:18:36 cmatsuoka Exp $
+$Id: ChangeLog,v 1.159 2007-10-27 01:50:40 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,6 +9,8 @@ Stable versions
 	- implement Protracker-style sample loops: first play entire sample,
 	  then play the loop (needed to play MeNoWantMiseria.mod correctly,
 	  reported by Adric Riedel)
+	- fixed finetune test in UNIC Tracker detection to prevent false
+	  positive with all that she wants.mod (reported by Adric Riedel)
 
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects

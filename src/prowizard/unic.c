@@ -5,7 +5,7 @@
  * Unic tracked MODs to Protracker
  * both with or without ID Unic files will be converted
  *
- * $Id: unic.c,v 1.14 2007-10-05 00:18:44 cmatsuoka Exp $
+ * $Id: unic.c,v 1.15 2007-10-27 01:50:40 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -14,6 +14,7 @@
 
 #define MAGIC_UNIC	MAGIC4('U','N','I','C')
 #define MAGIC_M_K_	MAGIC4('M','.','K','.')
+#define MAGIC_0000	MAGIC4(0x0,0x0,0x0,0x0)
 
 
 static int test_unic_id (uint8 *, int);
@@ -166,8 +167,7 @@ static int test_unic_id (uint8 *data, int s)
 	/* test 1 */
 	PW_REQUEST_DATA (s, 1084);
 
-	if (data[start + 1080] != 'M' || data[start + 1081] != '.' ||
-		data[start + 1082] != 'K' || data[start + 1083] != '.')
+	if (readmem32b(data + start + 1080) != MAGIC_M_K_)
 		return -1;
 
 	/* test 2 */
@@ -175,10 +175,10 @@ static int test_unic_id (uint8 *data, int s)
 	for (k = 0; k < 31; k++) {
 		int x = start + k * 30;
 
-		j = (((data[x + 42] << 8) + data[x + 43]) * 2);
+		j = readmem16b(data + x + 42) * 2;
 		ssize += j;
-		n = (((data[x + 46] << 8) + data[x + 47]) * 2) +
-			(((data[x + 48] << 8) + data[x + 49]) * 2);
+		n = (readmem16b(data + x + 46) + readmem16b(data + x + 48)) * 2;
+
 		if ((j + 2) < n)
 			return -1;
 	}
@@ -190,7 +190,7 @@ static int test_unic_id (uint8 *data, int s)
 	for (k = 0; k < 31; k++) {
 		int x = start + k * 30;
 
-		if (data[x + 44] > 0x0f || data[x + 45] > 0x40)
+		if (data[x + 40] > 0x0f || data[x + 44] || data[x + 45] > 0x40)
 			return -1;
 	}
 
@@ -245,8 +245,7 @@ static int test_unic_emptyid (uint8 *data, int s)
 	PW_REQUEST_DATA (s, 1084);
 
 	/* test #2 ID = $00000000 ? */
-	if (data[start + 1080] != 00 || data[start + 1081] != 00 ||
-		data[start + 1082] != 00 || data[start + 1083] != 00)
+	if (readmem32b(data + start + 1080) != MAGIC_0000)
 		return -1;
 
 	/* test 2,5 :) */
@@ -364,8 +363,7 @@ static int test_unic_noid (uint8 *data, int s)
 	PW_REQUEST_DATA (s, 1084);
 
 	/* test #2 ID = $00000000 ? */
-	if (data[start + 1080] == 00 && data[start + 1081] == 00 &&
-		data[start + 1082] == 00 && data[start + 1083] == 00)
+	if (readmem32b(data + start + 1080) == MAGIC_0000)
 		return -1;
 
 	/* test 2,5 :) */
