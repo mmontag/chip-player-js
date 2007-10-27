@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.28 2007-10-26 23:16:13 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.29 2007-10-27 22:23:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -309,7 +309,7 @@ static int softmixer(struct xmp_context *ctx)
 
 	/* check for Protracker loop */
 	if (pi->mode & WAVE_PTKLOOP && pi->mode & WAVE_FIRSTRUN) {
-	    lpe = pi->len - 1;
+	    lpe = pi->len - 2;
 	    if (vi->fidx & FLAG_16_BITS)
 		lpe >>= 1;
 	}
@@ -385,13 +385,13 @@ static int softmixer(struct xmp_context *ctx)
 		continue;
 	    }
 
-
 	    /* FIXME: short samples with bidirectional loops still not ok
 	     *        test with jt_xmas.xm
 	     */
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
+	        vi->end = lpe = pi->loop_end;
 		vi->pos -= lpe - lps;			/* forward loop */
-		pi->mode &= ~WAVE_FIRSTRUN;	
+	        pi->mode &= ~WAVE_FIRSTRUN;	
 	    } else {
 		itp_inc = -itp_inc;			/* invert dir */
 		vi->itpt += itp_inc;
@@ -422,12 +422,8 @@ static void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
     mode = (mode << res) + res + 1;	/* see xmp_cvt_anticlick */
 
     lpe = pi->len - mode;
-    if (pi->mode & WAVE_LOOPING)
+    if (pi->mode & WAVE_LOOPING && ~pi->mode & WAVE_FIRSTRUN)
 	lpe = lpe > pi->loop_end ? pi->loop_end : lpe;
-
-    /* check for Protracker loop */
-    if (pi->mode & WAVE_PTKLOOP && pi->mode & WAVE_FIRSTRUN)
-	lpe = pi->len;
 
     lpe >>= res;
 

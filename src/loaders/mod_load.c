@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.36 2007-10-27 14:57:32 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.37 2007-10-27 22:23:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -220,8 +220,6 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
 	m->xxs[i].flg = (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
 		WAVE_LOOPING : 0;
-	if (m->xxs[i].flg & WAVE_LOOPING)
-	    m->xxs[i].flg |= ptkloop ? WAVE_PTKLOOP : 0;
 	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
 	m->xxi[i][0].vol = mh.ins[i].volume;
 	m->xxi[i][0].pan = 0x80;
@@ -416,10 +414,12 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 
 skip_test:
 
+
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     snprintf(m->type, XMP_NAMESIZE, "%s (%s)", magic, tracker);
     MODULE_INFO();
+    reportv(ctx, 1, "Ptk-style smp  : %s\n", ptkloop ? "yes" : "no");
 
     if (V(1)) {
 	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
@@ -479,6 +479,10 @@ skip_test:
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
+
+	if (m->xxs[i].flg & WAVE_LOOPING)
+	    m->xxs[i].flg |= ptkloop ? WAVE_PTKLOOP : 0;
+
 	if (ptsong) {
 	    FILE *s;
 	    char sn[256];
