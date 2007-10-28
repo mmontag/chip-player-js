@@ -275,7 +275,6 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	}
     }
-printf("3:ust = %d\n", ust);
 
     if (ust && (fxused & ~0x0006) == 0)
 	modtype = "Ultimate Soundtracker";
