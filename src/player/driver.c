@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.62 2007-10-28 00:44:56 cmatsuoka Exp $
+ * $Id: driver.c,v 1.63 2007-10-28 11:20:22 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -894,7 +894,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
     /* Empty samples
      */
-    if (xxs->len < 5) {
+    if (xxs->len < 4) {
 	if (~flags & XMP_SMP_NOLOAD)
 	    fread(s, 1, xxs->len, f);
 	return XMP_OK;

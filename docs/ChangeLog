@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.163 2007-10-28 01:08:39 cmatsuoka Exp $
+$Id: ChangeLog,v 1.164 2007-10-28 11:20:22 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -17,6 +17,8 @@ Stable versions
 	  in 39.mod pos 11, reported by Adric Riedel)
 	- removed restrictive tests for Ultimate Soundtracker (false negative
 	  in Karsten Obarski's sleepwalk.mod, reported by Adric Riedel)
+	- minimum sample size changed from 5 to 4 bytes, childhood.it actually
+	  has 4 byte samples (reported by Adric Riedel)
 	  
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects

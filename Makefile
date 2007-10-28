@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.30 2007-10-14 22:13:08 cmatsuoka Exp $
+# $Id: Makefile,v 1.31 2007-10-28 11:20:21 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -9,7 +9,7 @@ TOPDIR	= .
 XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)
-MODULES	= enjoythesilence.mod
+MODULES	= megadrive.mod
 DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
 DDIRS	= lib docs etc src scripts
