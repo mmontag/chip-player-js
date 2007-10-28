@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.162 2007-10-28 00:44:55 cmatsuoka Exp $
+$Id: ChangeLog,v 1.163 2007-10-28 01:08:39 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -15,6 +15,8 @@ Stable versions
 	- fixed data type in the XM loader to work in 64-bit systems
 	- don't ignore effect on event with invalid instrument (fixes tempo
 	  in 39.mod pos 11, reported by Adric Riedel)
+	- removed restrictive tests for Ultimate Soundtracker (false negative
+	  in Karsten Obarski's sleepwalk.mod, reported by Adric Riedel)
 	  
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects

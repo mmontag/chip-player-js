@@ -261,9 +261,12 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (ev.fxt && ev.fxt != 1 && ev.fxt != 2)
 		ust = 0;
 
+	    /* Karsten Obarski's sleepwalk mod uses arpeggio 30 and 40 */
 	    if (ev.fxt == 1) {		/* unlikely arpeggio */
-		if ((ev.fxp & 0x0f) == 0 || (ev.fxp & 0xf0) == 0)
+		if (ev.fxp == 0x00)
 		    ust = 0;
+		/*if ((ev.fxp & 0x0f) == 0 || (ev.fxp & 0xf0) == 0)
+		    ust = 0;*/
 	    }
 
 	    if (ev.fxt == 2) {		/* bend up and down at same time? */
@@ -272,6 +275,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	}
     }
+printf("3:ust = %d\n", ust);
 
     if (ust && (fxused & ~0x0006) == 0)
 	modtype = "Ultimate Soundtracker";
