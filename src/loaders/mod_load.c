@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.37 2007-10-27 22:23:02 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.38 2007-10-28 00:44:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -447,7 +447,7 @@ skip_test:
 	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 	    fread (mod_event, 1, 4, f);
 
-	    cvt_pt_event (event, mod_event);
+	    cvt_pt_event(event, mod_event);
 
 	    /* Special translation for e8 (set panning) effect.
 	     * This is not an official Protracker effect but DMP uses

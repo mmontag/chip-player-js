@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.61 2007-10-26 18:34:07 cmatsuoka Exp $
+ * $Id: driver.c,v 1.62 2007-10-28 00:44:56 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -556,7 +556,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 
     if (smp < 0) {
 	drv_resetvoice(ctx, voc, TURN_ON);
-	return -1;
+	return chn;	/* was -1 */
     }
 
     if (!cont_sample)

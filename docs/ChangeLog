@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.161 2007-10-27 20:44:46 cmatsuoka Exp $
+$Id: ChangeLog,v 1.162 2007-10-28 00:44:55 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -13,7 +13,9 @@ Stable versions
 	  positive with all that she wants.mod (reported by Adric Riedel)
 	- fixed test for ?CHN and ??CH TakeTracker/FastTracker2 modules
 	- fixed data type in the XM loader to work in 64-bit systems
-
+	- don't ignore effect on event with invalid instrument (fixes tempo
+	  in 39.mod pos 11, reported by Adric Riedel)
+	  
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects
 	- added Oktalyzer arpeggio 3, arpeggio 4 and arpeggio 5 effects

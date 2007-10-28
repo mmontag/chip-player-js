@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.44 2007-10-27 17:05:55 cmatsuoka Exp $
+ * $Id: player.c,v 1.45 2007-10-28 00:44:56 cmatsuoka Exp $
  */
 
 /*
@@ -82,13 +82,13 @@ static void module_play (struct xmp_context *, int, int);
 #include "effects.c"
 
 
-static void dummy ()
+static void dummy()
 {
     /* dummy */
 }
 
 
-static int get_envelope (int16 *env, int p, int x)
+static int get_envelope(int16 *env, int p, int x)
 {
     int x1, x2, y1, y2;
 
