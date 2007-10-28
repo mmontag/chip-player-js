@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.38 2007-10-28 00:44:56 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.39 2007-10-28 11:19:54 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -419,17 +419,20 @@ skip_test:
 
     snprintf(m->type, XMP_NAMESIZE, "%s (%s)", magic, tracker);
     MODULE_INFO();
-    reportv(ctx, 1, "Ptk-style smp  : %s\n", ptkloop ? "yes" : "no");
 
     if (V(1)) {
 	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 	    if (V(3) || (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
-		report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
-		    i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-		    m->xxs[i].lpe, (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
-		    'L' : ' ', m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
+		report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
+			i, m->xxih[i].name,
+			m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+			(mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
+				'L' : ' ', m->xxi[i][0].vol,
+			(char)m->xxi[i][0].fin >> 4,
+			ptkloop && (mh.ins[i].loop_size > 1 &&
+				m->xxs[i].len > m->xxs[i].lpe) ? '!' : ' ');
 	}
     }
 

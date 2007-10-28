@@ -291,7 +291,10 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     else
 	modtype = "unknown tracker";
 
-    snprintf(m->type, XMP_NAMESIZE, "ST (%s)", modtype);
+    if (ust)
+	snprintf(m->type, XMP_NAMESIZE, "UST (%s)", modtype);
+    else
+	snprintf(m->type, XMP_NAMESIZE, "ST (%s)", modtype);
 
     MODULE_INFO();
 
