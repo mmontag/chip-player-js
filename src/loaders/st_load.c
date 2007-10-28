@@ -130,8 +130,13 @@ static int st_test(FILE *f, char *t)
 		return -1;
 
 	    p = 256 * LSN(mod_event[0]) + mod_event[1];
+
 	    if (p == 0)
 		continue;
+
+	    if (p == 162)	/* used in Karsten Obarski's blueberry.mod */
+		continue;
+
 	    for (k = 0; period[k] >= 0; k++) {
 		if (p == period[k])
 		    break;
