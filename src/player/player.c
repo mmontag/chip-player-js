@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.45 2007-10-28 00:44:56 cmatsuoka Exp $
+ * $Id: player.c,v 1.46 2007-10-28 15:16:08 cmatsuoka Exp $
  */
 
 /*
@@ -244,7 +244,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
     cont_sample = 0;
 
     if (e->ins) {
-	ins += e->ins;
+	ins = e->ins - 1;
 	flg = NEW_INS | RESET_VOL | RESET_ENV;
 	xc->per_flags = 0;
 
@@ -284,14 +284,14 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
         } else if (key == XMP_KEY_CUT) {
             xmp_drv_resetchannel(ctx, chn);
         } else if (key == XMP_KEY_OFF) {
-            SET(RELEASE | KEYOFF);
+            SET(RELEASE);
 	    flg &= ~(RESET_VOL | RESET_ENV);
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
 	    /* This test should fix portamento behaviour in 7spirits.s3m */
 	    if (m->fetch & XMP_CTL_RTGINS && e->ins && xc->ins != ins) {
 		flg |= NEW_INS;
 		xins = ins;
-	    } else if (TEST(KEYOFF)) {
+	    } else {
 		/* When a toneporta is issued after a keyoff event,
 		 * retrigger the instrument (xr-nc.xm, bug #586377)
 		 *
@@ -302,25 +302,25 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
 		 * We don't retrigger the sample, it simply continues.
 		 * This is important to play sweeps and loops correctly.
 		 */
-		RESET(KEYOFF);
 		cont_sample = 1;
 
 		/* set key to 0 so we can have the tone portamento from
 		 * the original note (see funky_stars.xm pos 5 ch 9)
 		 */
         	key = 0;
-	    } else {
-        	key = 0;
+
+		/* And do the same if there's no keyoff (see comic bakery
+		 * remix.xm pos 1 ch 3)
+		 */
 	    }
         } else if (flg & NEW_INS) {
             xins = ins;
-	    RESET(KEYOFF);
         } else {
             ins = xc->insdef;
             flg |= IS_READY;
-	    RESET(KEYOFF);
         }
     }
+
     if (!key || key >= XMP_KEY_OFF)
 	ins = xins;
 
@@ -527,7 +527,8 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     /* Do cut/retrig */
     if (xc->retrig) {
 	if (!--xc->rcount) {
-	    xmp_drv_retrig(ctx, chn);
+	    if (xc->rtype < 0x10)
+		xmp_drv_retrig(ctx, chn);	/* don't retrig on cut */
 	    xc->volume += rval[xc->rtype].s;
 	    xc->volume *= rval[xc->rtype].m;
 	    xc->volume /= rval[xc->rtype].d;

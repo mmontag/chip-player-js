@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.63 2007-10-28 11:20:22 cmatsuoka Exp $
+ * $Id: driver.c,v 1.64 2007-10-28 15:16:08 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -512,7 +512,8 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 
     if ((uint32) chn >= numchn)
 	return -1;
-    if (ins < 0 || (uint32) smp >= XMP_MAXPAT || !d->patch_array[smp])
+
+    if (ins < 0 || (uint32)smp >= XMP_MAXPAT || !d->patch_array[smp])
 	smp = -1;
 
     if (dct) {

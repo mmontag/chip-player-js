@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.h,v 1.14 2007-10-24 11:09:24 cmatsuoka Exp $
+ * $Id: player.h,v 1.15 2007-10-28 15:16:08 cmatsuoka Exp $
  */
 
 #ifndef __PLAYER_H
@@ -74,7 +74,6 @@ struct retrig_t {
 #define IS_READY	0x01000000
 #define FADEOUT		0x02000000
 #define RELEASE		0x04000000
-#define KEYOFF		0x08000000
 
 /* Prefixes: 
  * a_ for arpeggio

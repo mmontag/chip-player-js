@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.29 2007-10-27 22:23:02 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.30 2007-10-28 15:16:08 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -389,9 +389,11 @@ static int softmixer(struct xmp_context *ctx)
 	     *        test with jt_xmas.xm
 	     */
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
-	        vi->end = lpe = pi->loop_end;
 		vi->pos -= lpe - lps;			/* forward loop */
-	        pi->mode &= ~WAVE_FIRSTRUN;	
+		if (pi->mode & WAVE_PTKLOOP) {
+	            vi->end = lpe = pi->loop_end;
+	            pi->mode &= ~WAVE_FIRSTRUN;
+		}
 	    } else {
 		itp_inc = -itp_inc;			/* invert dir */
 		vi->itpt += itp_inc;
@@ -422,7 +424,7 @@ static void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
     mode = (mode << res) + res + 1;	/* see xmp_cvt_anticlick */
 
     lpe = pi->len - mode;
-    if (pi->mode & WAVE_LOOPING && ~pi->mode & WAVE_FIRSTRUN)
+    if (pi->mode & WAVE_LOOPING && pi->mode & WAVE_PTKLOOP && ~pi->mode & WAVE_FIRSTRUN)
 	lpe = lpe > pi->loop_end ? pi->loop_end : lpe;
 
     lpe >>= res;
