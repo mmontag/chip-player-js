@@ -1,9 +1,9 @@
-$Id: ChangeLog,v 1.166 2007-10-28 15:24:23 cmatsuoka Exp $
+$Id: ChangeLog,v 1.167 2007-10-29 03:04:41 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.4.1 ():
+2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
 	  where new note is not recognized (reported by Adric Riedel)
 	- implement Protracker-style sample loops: first play entire sample,
