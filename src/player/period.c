@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: period.c,v 1.4 2007-10-29 02:09:26 cmatsuoka Exp $
+ * $Id: period.c,v 1.5 2007-10-29 11:27:23 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -46,12 +46,29 @@ int note_to_period(int n, int type)
     int n1 = n + 1;
 
     return type ?
-	((120 - n) << 7) >> 3 :			/* Linear */
+	(120 - n) << 4 :			/* Linear */
 	*(t + ((n1 % 12) << 3)) >> (n1 / 12);	/* Amiga */
 }
 
 
 /* For the software mixer */
+int note_to_period_mix(int n, int b)
+{
+    int *t = period_amiga;
+
+    n++;
+    n += b / 100;
+    b %= 100;
+
+    if (n < 0)
+	n = 0;
+
+    t += (n % 12) * 8;
+
+    return (int)(16.0 * (double)*t / pow(2, (double)b / 1200.0 + (n / 12)));
+}
+
+#if 0
 int note_to_period_mix(int n, int b)
 {
     int *t = period_amiga;
@@ -70,10 +87,11 @@ int note_to_period_mix(int n, int b)
     t += ((n % 12) << 3) + (f >> 4);
     return ((*t << 4) + (*t++ - *t) * (f & 0xf)) >> (n / 12);
 }
+#endif
 
 
 /* Get note from period using the Amiga frequency table */
-/* This function is currently used only by the MOD loader */
+/* This function is used only by the MOD loader */
 int period_to_note (int p)
 {
     int n, f, *t = period_amiga + MAX_NOTE;

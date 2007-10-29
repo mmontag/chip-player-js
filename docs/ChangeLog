@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.167 2007-10-29 03:04:41 cmatsuoka Exp $
+$Id: ChangeLog,v 1.168 2007-10-29 11:27:23 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -22,6 +22,7 @@ Stable versions
 	- cut effect doesn't retrigger sample (fixes Comic Bakery Remix pos 1
 	  ch 3, reported by Adric Riedel)
 	- allow period 162 in ST mods (for blueberry.mod UST, reported by AR)
+	- fixed period interpolation using real log function instead of table
 	  
 2.4.0 (20071025):
 	- added Oktalyzer note slide and fine note slide effects
