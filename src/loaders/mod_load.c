@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.40 2007-10-29 19:33:05 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.41 2007-10-29 23:23:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -439,8 +439,7 @@ skip_test:
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -455,6 +454,7 @@ skip_test:
 	reportv(ctx, 0, ".");
     }
 
+    /* Keep the test to avoid problems with ADPCM samples */
     if (o->skipsmp)
 	return 0;
 
@@ -473,8 +473,10 @@ skip_test:
 	if (!m->xxs[i].len)
 	    continue;
 
-	if (m->xxs[i].flg & WAVE_LOOPING)
-	    m->xxs[i].flg |= ptkloop ? WAVE_PTKLOOP : 0;
+	if (m->xxs[i].flg & WAVE_LOOPING) {
+	    if (ptkloop && m->xxs[i].len > m->xxs[i].lpe)
+		m->xxs[i].flg |= WAVE_PTKLOOP;
+	}
 
 	if (ptsong) {
 	    FILE *s;
