@@ -24,7 +24,7 @@
 #define AMIGA_LIMIT_LOWER 907
 
 int	note_to_period		(int, int);
-int	note_to_period2		(int, int);
+int	note_to_period_mix	(int, int);
 int	period_to_note		(int);
 int	period_to_bend		(int, int, int, int, int, int);
 void	c2spd_to_note		(int, int *, int *);

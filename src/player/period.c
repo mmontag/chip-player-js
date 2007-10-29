@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: period.c,v 1.2 2007-10-12 04:15:19 cmatsuoka Exp $
+ * $Id: period.c,v 1.3 2007-10-29 01:39:42 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -17,6 +17,7 @@
 #include "xmpi.h"
 #include "period.h"
 
+#include <math.h>
 
 /* Amiga periods */
 static int period_amiga[] = {
@@ -39,7 +40,7 @@ static int period_amiga[] = {
 
 /* Get period from note */
 /* Finetune moved to period_to_bend () --claudio */
-int note_to_period (int n, int type)
+int note_to_period(int n, int type)
 {
     int *t = period_amiga;
     int n1 = n + 1;
@@ -51,7 +52,7 @@ int note_to_period (int n, int type)
 
 
 /* For the software mixer */
-int note_to_period2 (int n, int b)
+int note_to_period_mix(int n, int b)
 {
     int *t = period_amiga;
     int f = ((b % 100) << 7) / 100;
@@ -114,19 +115,22 @@ int period_to_bend(int p, int n, int f, int a, int g, int type)
     for (n = NOTE_B0 - 1 - n; p <= (MAX_PERIOD / 2); n += 12, p <<= 1);
 
     for (; p > *t; t -= 8, n--);
-    b = 100 * n + (100 * (*t - p) / (*t - *(t + 8))) + f * 100 / 128;
+
+    /* Get correct logarithmic interpolation for bending value */
+    //b = 100 * n + (100 * (*t - p) / (*t - *(t + 8))) + f * 100 / 128;
+    b = 100 * n + (int)(1200.0 * log((double)*t / p) / M_LN2) + f * 100 / 128;
 
     return g ? b / 100 * 100 : b;	/* Amiga */
 }
 
 
-/* Convert finetune=1200*log2 (C2SPD/8363)) using the Amiga frequency table.
+/* Convert finetune = 1200 * log2(C2SPD/8363)) using the Amiga frequency table.
  *
  *      c = (1200.0 * log (c2spd)-1200.0 * log (c4_rate))/M_LN2;
  *      xpo = c/100;
  *      fin = 128 * (c%100) / 100;
  */
-void c2spd_to_note (int c2spd, int *n, int *f)
+void c2spd_to_note(int c2spd, int *n, int *f)
 {
     int note, finetune, *t = period_amiga;
 
@@ -134,6 +138,7 @@ void c2spd_to_note (int c2spd, int *n, int *f)
 	*n = *f = 0;
 	return;
     }
+
     for (note = 8; c2spd <= (MAX_PERIOD / 2); note -= 12, c2spd <<= 1);
     for (; c2spd > MAX_PERIOD; note += 12, c2spd >>= 1);
     for (; *t > c2spd; t += 8, note--);

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.30 2007-10-28 15:16:08 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.31 2007-10-29 01:39:42 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -503,7 +503,7 @@ static void smix_setnote(struct xmp_context *ctx, int voc, int note)
     struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi = &d->voice_array[voc];
 
-    vi->period = note_to_period2 (vi->note = note, 0);
+    vi->period = note_to_period_mix(vi->note = note, 0);
     vi->pbase = SMIX_C4NOTE * vi->freq / d->patch_array[vi->smp]->base_note;
 }
 
@@ -513,7 +513,7 @@ static inline void smix_setbend(struct xmp_context *ctx, int voc, int bend)
     struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi = &d->voice_array[voc];
 
-    vi->period = note_to_period2 (vi->note, bend);
+    vi->period = note_to_period_mix(vi->note, bend);
 
     if (vi->fidx & FLAG_SYNTH)
 	synth_setnote(voc, vi->note, bend);

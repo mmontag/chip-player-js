@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.46 2007-10-28 15:16:08 cmatsuoka Exp $
+ * $Id: player.c,v 1.47 2007-10-29 01:39:42 cmatsuoka Exp $
  */
 
 /*
@@ -446,7 +446,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     struct xmp_channel *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
-    int med_arp, med_vibrato;
+    int med_arp, vibrato, med_vibrato;
     uint16 vol_envelope;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
@@ -560,20 +560,23 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 
     med_vibrato = get_med_vibrato(xc);
 
+    vibrato = ((TEST(VIBRATO) || TEST_PER(VIBRATO)) ?
+	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10 : 0) +
+	waveform[XXI->vwf][xc->insvib_idx] * XXI->vde / (1024 *
+	(1 + xc->insvib_swp));
+
     /* IT pitch envelopes are always linear, even in Amiga period mode.
      * Each unit in the envelope scale is 1/25 semitone.
      */
-    xc->pitchbend = period_to_bend(xc->period +
-	((TEST(VIBRATO) || TEST_PER(VIBRATO)) ?
-	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10 : 0) +
-	waveform[XXI->vwf][xc->insvib_idx] * XXI->vde / (1024 *
-	(1 + xc->insvib_swp)) + med_vibrato,
+    xc->pitchbend = period_to_bend(
+	xc->period + vibrato + med_vibrato,
 	xc->note,
 	xc->finetune,
 	m->xxh->flg & XXM_FLG_MODRNG,
 	xc->gliss,
-	m->xxh->flg & XXM_FLG_LINEAR) +
-	(XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope);
+	m->xxh->flg & XXM_FLG_LINEAR);
+
+    xc->pitchbend += XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope;
 
     /* From Takashi Iwai's awedrv FAQ:
      *
@@ -749,7 +752,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     /* Adjust pitch and pan, than play the note */
     finalpan = o->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * o->mix / 100;
-    xmp_drv_setbend(ctx, chn, (xc->pitchbend + xc->a_val[xc->a_idx] + med_arp));
+    xmp_drv_setbend(ctx, chn, xc->pitchbend + xc->a_val[xc->a_idx] + med_arp);
     xmp_drv_setpan(ctx, chn, m->fetch & XMP_CTL_REVERSE ? -finalpan : finalpan);
     xmp_drv_setvol(ctx, chn, finalvol);
 
