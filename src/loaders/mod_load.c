@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.39 2007-10-28 11:19:54 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.40 2007-10-29 19:33:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -451,16 +451,6 @@ skip_test:
 	    fread (mod_event, 1, 4, f);
 
 	    cvt_pt_event(event, mod_event);
-
-	    /* Special translation for e8 (set panning) effect.
-	     * This is not an official Protracker effect but DMP uses
-	     * it for panning, and a couple of modules follow this
-	     * "standard".
-	     */
-	    if ((event->fxt == 0x0e) && ((event->fxp & 0xf0) == 0x80)) {
-		event->fxt = FX_SETPAN;
-		event->fxp <<= 4;
-	    }
 	}
 	reportv(ctx, 0, ".");
     }

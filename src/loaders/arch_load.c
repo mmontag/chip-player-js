@@ -1,7 +1,7 @@
 /* Archimedes Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: arch_load.c,v 1.19 2007-10-19 17:41:11 cmatsuoka Exp $
+ * $Id: arch_load.c,v 1.20 2007-10-29 19:33:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -96,8 +96,7 @@ static void fix_effect(struct xxm_event *e)
 		e->fxt = FX_TEMPO;
 		break;
 	case 0x1f:			/* 1F xx Set Volume */
-		e->vol = e->fxp;
-		e->fxp = e->fxt = 0;
+		e->fxt = FX_VOLSET;
 		break;
 	default:
 		e->fxt = e->fxp = 0;
