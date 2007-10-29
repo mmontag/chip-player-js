@@ -1,7 +1,7 @@
 /* Digital Symphony module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: sym_load.c,v 1.33 2007-10-20 11:50:40 cmatsuoka Exp $
+ * $Id: sym_load.c,v 1.34 2007-10-29 02:44:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -234,7 +234,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (a != 0 && a != 1)
 		return -1;
 
-	reportv(ctx, 0, "Packed sequence: %s\n", a ? "yes" : "no");
+	reportv(ctx, 1, "Packed sequence: %s\n", a ? "yes" : "no");
 
 	size = m->xxh->len * m->xxh->chn * 2;
 	buf = malloc(size);
@@ -269,7 +269,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (a != 0 && a != 1)
 		return -1;
 
-	reportv(ctx, 0, "Packed tracks  : %s\n", a ? "yes" : "no");
+	reportv(ctx, 1, "Packed tracks  : %s\n", a ? "yes" : "no");
 	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
 
 	size = 64 * m->xxh->trk * 4;

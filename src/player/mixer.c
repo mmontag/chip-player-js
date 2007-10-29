@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.31 2007-10-29 01:39:42 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.32 2007-10-29 02:44:26 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -424,7 +424,7 @@ static void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
     mode = (mode << res) + res + 1;	/* see xmp_cvt_anticlick */
 
     lpe = pi->len - mode;
-    if (pi->mode & WAVE_LOOPING && pi->mode & WAVE_PTKLOOP && ~pi->mode & WAVE_FIRSTRUN)
+    if (pi->mode & WAVE_LOOPING && ~pi->mode & WAVE_FIRSTRUN)
 	lpe = lpe > pi->loop_end ? pi->loop_end : lpe;
 
     lpe >>= res;
