@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.42 2007-10-26 23:16:13 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.43 2007-10-30 11:57:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -259,5 +259,9 @@ uint16	readmem16l		(uint8 *);
 uint16	readmem16b		(uint8 *);
 uint32	readmem32l		(uint8 *);
 uint32	readmem32b		(uint8 *);
+
+#ifdef WIN32
+int	mkstemp			(char *);
+#endif
 
 #endif /* __XMPI_H */

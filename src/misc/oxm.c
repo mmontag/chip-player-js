@@ -1,7 +1,7 @@
 /* Extended Module Player OMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: oxm.c,v 1.6 2007-10-22 13:27:31 cmatsuoka Exp $
+ * $Id: oxm.c,v 1.7 2007-10-30 11:57:51 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -114,8 +114,8 @@ int test_oxm(FILE *f)
 static char *oggdec(FILE *f, int len, int res, int *newlen)
 {
 	char buf[1024];
-	char *temp;
-	int i, fd, l;
+	FILE *t;
+	int i, l;
 	struct stat st;
 	int8 *pcm;
 	int16 *pcm16;
@@ -134,13 +134,11 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 		return (char *)pcm;
 	}
 	
-	temp = strdup("/tmp/xmp_oxm_XXXXXX");
-
-	if ((fd = mkstemp(temp)) < 0)
-		goto err1;
+	if ((t = tmpfile()) == NULL)
+		return NULL;
 
 	if (pipe(p) < 0)
-		goto err1;
+		return NULL;
 
 	if (fork() == 0) {		/* child process runs oggdec */
 		char b[10];
@@ -148,7 +146,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 
 		close(p[1]);
 		dup2(p[0], STDIN_FILENO);
-		dup2(fd, STDOUT_FILENO);
+		dup2(fileno(t), STDOUT_FILENO);
 
 		snprintf(b, 10, "-b%d", res);
 		execlp("oggdec", "oggdec", "-Q", b, "-e0", "-R", "-s1",
@@ -173,19 +171,25 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	close(p[1]);
 	wait(&status);
 
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-		goto err2;
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+		fclose(t);
+		return NULL;
+	}
 
-	if (fstat(fd, &st) < 0)
-		goto err2;
+	if (fstat(fileno(t), &st) < 0) {
+		fclose(t);
+		return NULL;
+	}
 
-	if ((pcm = malloc(st.st_size)) == NULL)
-		goto err2;
+	if ((pcm = malloc(st.st_size)) == NULL) {
+		fclose(t);
+		return NULL;
+	}
 
 	pcm16 = (int16 *)pcm;
-	lseek(fd, 0, SEEK_SET);
-	read(fd, pcm, st.st_size);
-	close(fd);
+	fseek(t, 0, SEEK_SET);
+	fread(pcm, 1, st.st_size, t);
+	fclose(t);
 
 	/* Convert to delta */
 	if (res == 8) {
@@ -198,17 +202,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 		*newlen = st.st_size / 2;
 	}
 
-	unlink(temp);
-	free(temp);
-
 	return (char *)pcm;
-
-err2:
-	close(fd);
-	unlink(temp);
-err1:
-	free(temp);
-	return NULL;
 }
 
 int decrunch_oxm(FILE *f, FILE *fo)

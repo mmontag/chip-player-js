@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: period.c,v 1.5 2007-10-29 11:27:23 cmatsuoka Exp $
+ * $Id: period.c,v 1.6 2007-10-30 11:57:51 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -92,7 +92,7 @@ int note_to_period_mix(int n, int b)
 
 /* Get note from period using the Amiga frequency table */
 /* This function is used only by the MOD loader */
-int period_to_note (int p)
+int period_to_note(int p)
 {
     int n, f, *t = period_amiga + MAX_NOTE;
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.64 2007-10-28 15:16:08 cmatsuoka Exp $
+ * $Id: driver.c,v 1.65 2007-10-30 11:57:51 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -56,6 +56,7 @@ extern struct xmp_drv_info drv_nas;
 extern struct xmp_drv_info drv_os2dart;
 extern struct xmp_drv_info drv_qnx;
 extern struct xmp_drv_info drv_beos;
+extern struct xmp_drv_info drv_win32;
 
 
 void (*xmp_event_callback) (unsigned long);

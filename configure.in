@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.37 2007-10-26 11:34:11 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.38 2007-10-30 11:57:51 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -531,12 +531,22 @@ beos*)
     fi
     ;;
 dnl
+dnl	Test for Mingw32
+dnl
+mingw32*)
+    AC_CHECK_HEADERS(mmsystem.h)
+    if test "${ac_cv_header_mmsystem_h}" = "yes"; then
+	DRIVERS="${DRIVERS} win32.o"
+	LIBS="${LIBS} -luser32 -lgdi32 -lwinmm"
+	AC_DEFINE(DRIVER_WIN32)
+    fi
+    ;;
+dnl
 dnl	Test for Cygwin32
 dnl
 cygwin*)
     AC_CHECK_HEADERS(mmsystem.h)
     if test "${ac_cv_header_mmsystem_h}" = "yes"; then
-	RANLIB=ranlib
 	DRIVERS="${DRIVERS} win32.o"
 	LIBS="${LIBS} -lcygwin -luser32 -lgdi32 -lwinmm"
 	AC_DEFINE(DRIVER_WIN32)

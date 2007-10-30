@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
+ * $Id: win32.c,v 1.9 2007-10-30 11:57:51 cmatsuoka Exp $
  */
 
 /*
@@ -29,16 +29,16 @@ static int MAX_BLOCKS  = 6;
 
 static int init (struct xmp_context *);
 static void bufdump (struct xmp_context *, int);
-static void shutdown ();
+static void deinit();
 
-static void dummy () { }
+static void dummy() { }
 
 struct xmp_drv_info drv_win32 = {
     "win32",		/* driver ID */
     "Win32 driver",	/* driver description */
     NULL,		/* help */
     init,		/* init */
-    shutdown,		/* shutdown */
+    deinit,		/* shutdown */
     xmp_smix_numvoices,	/* numvoices */
     dummy,		/* voicepos */
     xmp_smix_echoback,	/* echoback */
@@ -95,7 +95,7 @@ static int init(struct xmp_context *ctx)
     MMRESULT res;
     WAVEFORMATEX outFormatex;
 
-    if (!waveOutGetNumDevs ()) {
+    if (!waveOutGetNumDevs()) {
         MessageBox(NULL, "No audio devices present!", "Error...", MB_OK);
 	return XMP_ERR_DINIT;
     }
@@ -167,7 +167,7 @@ static void bufdump(struct xmp_context *ctx, int len)
     hg2 = GlobalAlloc (GMEM_MOVEABLE, len);
     if(!hg2) {
 	MessageBox (NULL, "GlobalAlloc failed!", "Error...",  MB_OK);
-	abort ();
+	abort();
     }
     b = GlobalLock(hg2);
 
@@ -178,7 +178,7 @@ static void bufdump(struct xmp_context *ctx, int len)
     hg = GlobalAlloc (GMEM_MOVEABLE | GMEM_ZEROINIT, sizeof (WAVEHDR));
     if(!hg) {
 	MessageBox (NULL, "GlobalAlloc failed!", "Error...",  MB_OK);
-	abort ();
+	abort();
     }
     wh = GlobalLock(hg);
     wh->dwBufferLength = len;
@@ -196,7 +196,7 @@ static void bufdump(struct xmp_context *ctx, int len)
 
     res = waveOutWrite (dev, wh, sizeof (WAVEHDR));
     if (res) {
-	GlobalUnlock (hg);
+	GlobalUnlock(hg);
 	GlobalFree (hg);
 	LeaveCriticalSection (&cs);
 	return;
@@ -208,9 +208,9 @@ static void bufdump(struct xmp_context *ctx, int len)
 }
 
 
-static void shutdown ()
+static void deinit()
 {
-    xmp_smix_off ();
+    xmp_smix_off();
 
     if(dev) {
 	while (nBlocks)
