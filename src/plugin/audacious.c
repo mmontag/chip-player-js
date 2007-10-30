@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.6 2007-10-24 02:41:50 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.7 2007-10-30 20:40:22 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -518,7 +518,6 @@ static void play_file(InputPlayback *ipb)
 {
 	char *filename = ipb->filename;
 	int channelcnt = 1;
-	int format = FMT_U8;
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
@@ -563,10 +562,8 @@ static void play_file(InputPlayback *ipb)
 		break;
 	}
 
-	if ((xmp_cfg.force8bit == 0)) {
-		format = FMT_S16_NE;
+	if ((xmp_cfg.force8bit == 0))
 		opt->resol = 16;
-	}
 
 	if ((xmp_cfg.force_mono == 0)) {
 		channelcnt = 2;

@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.1 2007-10-25 23:12:00 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.2 2007-10-30 20:40:22 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -9,11 +9,12 @@
 #include <msacm.h>
 #include <math.h>
 
+#include "xmpi.h"
 #include "in2.h"
 
 extern In_Module mod;
-char lastfn[MAX_PATH];
-short sample_buffer[576 * 2];
+static char lastfn[MAX_PATH];
+static short sample_buffer[576 * 2];
 
 // avoid CRT. Evil. Big. Bloated.
 BOOL WINAPI
@@ -50,7 +51,43 @@ typedef struct {
 
 
 XMPConfig xmp_cfg;
+static int xmp_plugin_audio_error = FALSE;
+static short audio_open = FALSE;
+static xmp_context ctx;
+static int playing;
 
+
+void stop()
+{
+	if (!playing)
+		return;
+
+	xmp_stop_module(ctx);
+
+	if (thread_handle != INVALID_HANDLE_VALUE) {
+		killDecodeThread = 1;
+		if (WaitForSingleObject(thread_handle, INFINITE) ==
+		    WAIT_TIMEOUT) {
+			MessageBox(mod.hMainWindow,
+				   "error asking thread to die!\n",
+				   "error killing decode thread", 0);
+			TerminateThread(thread_handle, 0);
+		}
+		CloseHandle(thread_handle);
+		thread_handle = INVALID_HANDLE_VALUE;
+	}
+	mod.outMod->Close();
+	mod.SAVSADeInit();
+}
+
+
+static void driver_callback(void *b, int i)
+{
+#if 0
+	play_data.ipb->pass_audio(play_data.ipb, play_data.fmt, play_data.nch,
+					i, b, &play_data.ipb->playing);
+#endif
+}
 
 
 void config(HWND hwndParent)
@@ -67,8 +104,8 @@ void about(HWND hwndParent)
 
 void init()
 {
-	ConfigFile *cfg;
-	char *filename;
+	//ConfigFile *cfg;
+	//char *filename;
 
 	ctx = xmp_create_context();
 
@@ -114,7 +151,7 @@ void quit()
 
 int is_our_file(char *fn)
 {
-	if (xmp_test_module(ctx, filename, NULL) == 0)
+	if (xmp_test_module(ctx, fn, NULL) == 0)
 		return 1;
 
 	return 0;
@@ -124,23 +161,22 @@ int is_our_file(char *fn)
 int play(char *fn)
 {
 	int maxlatency;
-	int tmp;
+	DWORD tmp;
 	int channelcnt = 1;
-	int format = FMT_U8;
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
-	int nch;
+	int fmt, nch;
 	
 	strcpy(lastfn, fn);
 
 	opt = xmp_get_options(ctx);
 
-	stop();		/* sanity check */
+	//stop();		/* sanity check */
 
-	if ((f = fopen(filename,"rb")) == 0) {
+	if ((f = fopen(fn, "rb")) == NULL) {
 		playing = 0;
-		return;
+		return -1;
 	}
 	fclose(f);
 
@@ -163,10 +199,8 @@ int play(char *fn)
 		break;
 	}
 
-	if ((xmp_cfg.force8bit == 0)) {
-		format = FMT_S16_NE;
+	if ((xmp_cfg.force8bit == 0))
 		opt->resol = 16;
-	}
 
 	if ((xmp_cfg.force_mono == 0)) {
 		channelcnt = 2;
@@ -182,7 +216,7 @@ int play(char *fn)
 
 	opt->mix = xmp_cfg.pan_amplitude;
 
-	fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
+	//fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
 	nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	
 	if (audio_open)
@@ -202,15 +236,15 @@ int play(char *fn)
 	
 	xmp_open_audio(ctx);
 
-	pthread_mutex_lock(&load_mutex);
-	lret =  xmp_load_module(ctx, filename);
-	pthread_mutex_unlock(&load_mutex);
+	//pthread_mutex_lock(&load_mutex);
+	lret =  xmp_load_module(ctx, fn);
+	//pthread_mutex_unlock(&load_mutex);
 
 	xmp_cfg.time = lret;
-	xmp_get_module_info(ctx, &ii->mi);
-	strcpy(ii->filename, "");
+	//xmp_get_module_info(ctx, mi);
+	//strcpy(ii->filename, "");
 
-	new_module = 1;
+	//new_module = 1;
 
 	//xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
 
@@ -240,30 +274,6 @@ void unpause()
 int is_paused()
 {
 	return paused;
-}
-
-
-void stop()
-{
-	if (!playing)
-		return;
-
-	xmp_stop_module();
-
-	if (thread_handle != INVALID_HANDLE_VALUE) {
-		killDecodeThread = 1;
-		if (WaitForSingleObject(thread_handle, INFINITE) ==
-		    WAIT_TIMEOUT) {
-			MessageBox(mod.hMainWindow,
-				   "error asking thread to die!\n",
-				   "error killing decode thread", 0);
-			TerminateThread(thread_handle, 0);
-		}
-		CloseHandle(thread_handle);
-		thread_handle = INVALID_HANDLE_VALUE;
-	}
-	mod.outMod->Close();
-	mod.SAVSADeInit();
 }
 
 
@@ -359,6 +369,8 @@ In_Module *winampGetInModule2()
 int _fltused = 0;
 DWORD WINAPI __stdcall PlayThread(void *b)
 {
+	int l;
+
 	while (!*((int *)b)) {
 		if (mod.outMod->CanWrite() >= ((sizeof(sample_buffer) / 2) <<
 						(mod.dsp_isactive()? 1 : 0))) {
@@ -373,7 +385,7 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 			l = mod.dsp_dosamples(sample_buffer, l / 2, 16,
 					      1, 44100) * 2;
 
-			mod.outMod->Write(sample_buffer, l);
+			mod.outMod->Write((char *)sample_buffer, l);
 		} else {
 			Sleep(50);
 		}

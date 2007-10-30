@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: bmp.c,v 1.4 2007-10-21 23:00:05 cmatsuoka Exp $
+ * $Id: bmp.c,v 1.5 2007-10-30 20:40:22 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -414,7 +414,6 @@ void *catch_info(void *arg)
 static void play_file(char *filename)
 {
 	int channelcnt = 1;
-	int format = FMT_U8;
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
@@ -457,10 +456,8 @@ static void play_file(char *filename)
 		break;
 	}
 
-	if ((xmp_cfg.force8bit == 0)) {
-		format = FMT_S16_NE;
+	if ((xmp_cfg.force8bit == 0))
 		opt->resol = 16;
-	}
 
 	if ((xmp_cfg.force_mono == 0)) {
 		channelcnt = 2;

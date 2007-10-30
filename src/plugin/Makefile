@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.5 2007-10-22 23:05:10 cmatsuoka Exp $
+# $Id: Makefile,v 1.6 2007-10-30 20:40:22 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
@@ -18,6 +18,10 @@ all: $(PLUGINS)
 
 install:: $(addprefix install-, $(PLUGINS))
 
+
+winamp.o: winamp.c
+	$(CC) $(CFLAGS) $(XCFLAGS) -I$(TOPDIR)/wa502_sdk/winamp -o $@ winamp.c
+	
 #
 # Audacious
 #

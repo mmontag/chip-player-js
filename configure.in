@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.38 2007-10-30 11:57:51 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.39 2007-10-30 20:40:09 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -127,9 +127,9 @@ powerpc64)
 esac
 
 case ${target_os} in
-*win32* | cygwin* | mingw*)
+cygwin* | mingw*)
     is_win32=yes
-    CFLAGS="${CFLAGS} -D_WIN32"
+    CFLAGS="${CFLAGS}"
     enable_arts=no
     enable_bmp_plugin=no
     enable_audacious_plugin=no
