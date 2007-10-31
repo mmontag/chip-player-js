@@ -13,6 +13,7 @@
 #include "load.h"
 #include "mod.h"
 #include "period.h"
+#include "am.h"
 
 static int flt_test (FILE *, char *);
 static int flt_load (struct xmp_context *, FILE *, const int);
