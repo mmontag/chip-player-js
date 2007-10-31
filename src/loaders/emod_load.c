@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.16 2007-10-20 11:50:38 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.17 2007-10-31 10:35:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -62,8 +62,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
     m->xxh->ins = read8(f);
     m->xxh->smp = m->xxh->ins;
 
-    snprintf(m->type, XMP_NAMESIZE,
-				"EMOD v%d (Quadra Composer)", ver);
+    snprintf(m->type, XMP_NAMESIZE, "EMOD v%d (Quadra Composer)", ver);
     MODULE_INFO();
 
     INSTRUMENT_INIT();
@@ -71,7 +70,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
     reportv(ctx, 1, "     Instrument name      Len  LBeg LEnd L Vol Fin\n");
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 
 	read8(f);		/* num */
 	m->xxi[i][0].vol = read8(f);
@@ -88,7 +87,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].sid = i;
 
 	if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 2))) {
-	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x %+d\n",
+	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x %+d\n",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol, (char)m->xxi[i][0].fin >> 4);

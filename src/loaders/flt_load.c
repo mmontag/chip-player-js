@@ -118,13 +118,17 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].nsm = !!(m->xxs[i].len);
 	m->xxih[i].rls = 0xfff;
 
+	if (m->xxs[i].flg & WAVE_LOOPING && m->xxs[i].len > m->xxs[i].lpe)
+            m->xxs[i].flg |= WAVE_PTKLOOP;
+
 	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
 
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2)) {
-	    report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
+	    report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
+			m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4,
+			m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
 	}
     }
 
