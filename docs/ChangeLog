@@ -1,10 +1,11 @@
-$Id: ChangeLog,v 1.169 2007-10-29 19:33:05 cmatsuoka Exp $
+$Id: ChangeLog,v 1.170 2007-10-31 10:32:11 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.4.2 ():
 	- remove DMP-specific effect from MOD loader
+	- merge patch: make main loop accept only regular files (shd)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm

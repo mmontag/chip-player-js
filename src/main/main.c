@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.26 2007-10-22 22:58:41 cmatsuoka Exp $
+ * $Id: main.c,v 1.27 2007-10-31 10:32:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -36,6 +36,7 @@
 #include <termios.h>
 #endif
 #include <unistd.h>
+#include <sys/stat.h>
 
 #ifdef HAVE_SYS_RTPRIO_H
 #include <sys/resource.h>
@@ -328,6 +329,7 @@ int main (int argc, char **argv)
     time_t t0, t1;
     struct timeval tv;
     struct timezone tz;
+    struct stat st;
     struct xmp_options *opt;
 #ifdef HAVE_SYS_RTPRIO_H
     struct rtprio rtp;
@@ -469,7 +471,17 @@ int main (int argc, char **argv)
 	    }
 	}
 
-	if (opt->verbosity && !background) {
+	if (stat(argv[optind], &st)) {
+	    fprintf(stderr, "%s: can't stat %s\n", argv[0], argv[optind]);
+	    continue;
+	}
+	if (!S_ISREG(st.st_mode)) {
+	    fprintf(stderr, "%s: %s is not a regular file\n",
+						argv[0], argv[optind]);
+	    continue;
+ 	}
+
+	if (opt->verbosity > 0 && !background) {
 	    if (lf_flag)
 		fprintf (stderr, "\n");
 	    lf_flag = fprintf (stderr, "Loading %s... (%d of %d)\n",
