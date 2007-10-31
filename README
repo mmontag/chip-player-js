@@ -39,7 +39,7 @@ The current version recognizes the following module formats:
   Protracker and variants:
 
   CHN	****+	Fast/Taketracker	xCHN, xxCH
-  EXO	*** 	Startrekker/ADSC	FLT4/8, EXO4/8 (AM unsupported)
+  FLT	*** 	Startrekker/ADSC	FLT4/8/M, EXO4/8 (AM unsupported)
   ST	****	Soundtracker		2.2, UST
   MOD	****+	Sound/Noise/Protracker	M.K., M!K!, M&K!, N.T., CD81
   WOW	****+	Mod's Grave		M.K.
