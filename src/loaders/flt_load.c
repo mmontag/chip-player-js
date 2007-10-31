@@ -26,12 +26,15 @@ struct xmp_loader_info flt_loader = {
 
 static int flt_test(FILE *f, char *t)
 {
-    int buf[4];
+    char buf[4];
 
     fseek(f, 1080, SEEK_SET);
     fread(buf, 4, 1, f);
 
     if (memcmp(buf, "FLT", 3) && memcmp(buf, "EXO", 3))
+	return -1;
+
+    if (buf[3] != '4' && buf[3] != '8' && buf[3] != 'M')
 	return -1;
 
     fseek(f, 0, SEEK_SET);
@@ -78,9 +81,8 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     if (mh.magic[3] == '4')
 	m->xxh->chn = 4;
-    else if (mh.magic[3] == '8') 
+    else
 	m->xxh->chn = 8;
-    else return -1;
 
     m->xxh->len = mh.len;
     m->xxh->rst = mh.restart;
