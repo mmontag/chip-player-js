@@ -89,9 +89,6 @@ The Authors
 * Griff Miller II <griff.miller@positron.com>
 - fix for XMMS plugin in big-endian machines
 
-* Heikki Orsila <heikki.orsila@iki.fi>
-- test for regular files before loading
-
 * Pavel Pavlov <Simon.Says@iname.com>
 - esd driver fixes
 

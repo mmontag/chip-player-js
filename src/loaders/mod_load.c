@@ -1,7 +1,7 @@
 /* Protracker module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.41 2007-10-29 23:23:56 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.42 2007-10-31 11:13:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -303,9 +303,11 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	tracker = "Soundtracker";
     } else if (m->xxh->chn == 4 && mh.restart == 0x78) {
 	tracker = "Noisetracker" /*" (0x78)"*/;
+	ptkloop = 1;
     } else if (mh.restart < 0x7f) {
 	if (m->xxh->chn == 4) {
 	    tracker = "Noisetracker";
+	    ptkloop = 1;
 	} else {
 	    tracker = "unknown tracker";
 	    ptkloop = 0;
