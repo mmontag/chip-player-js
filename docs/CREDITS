@@ -153,23 +153,25 @@ Other contributors
 * Testing and bug reports:
   Antti Huovilainen, Michael Janson, Matthias Leonhardt, Andy Eltsov,
   Davi Lima, Geoff Reedy, Sipos Attila, Bjoern Fisher, Matus Telgarsky,
-  Bernhard MÃ¤rz, Cyke O'Path, Rudolf Cejka and Igor Krpanic.
+  Bernhard März, Cyke O'Path, Rudolf Cejka, Igor Krpanic, Chris Cox,
+  Rudá Moura, Paul Wise, Henrik Pauli, Zbigniew Luszpinski, Jon Rafkind,
+  Reynir Stefansson, Ralf Hoffmann, Douglas Carmichael, Adric Riedel.
 
 * Module format specs and information:
   Kilian Hekhuis (PTM), Arnaud Hasenfratz (RTM), Aley Keptr (ALM),
   Adi Sapir (LIQ), Sylvain "Asle" Chipaux (packed modules), Michael
   Schwendt (UST), Bjorn Wesen (Startrekker), Martin Willers (MOD tricks),
   Miodrag Vallat (IMF, AMF, MMD2, MMCMP), Louise Heimann (DIGIBooster),
-  Bernhard MÃ¤rz (DPP), Laurent Clevy (Sound/Noise/Protracker details),
+  Bernhard März (DPP), Laurent Clevy (Sound/Noise/Protracker details),
   Michael Doering (MED3/MED4)
 
 * Module samples
   Sylvain Chipaux, Bert Jahn, Miod Vallat, Adi Sapir, Jools "BuZz" Smyth,
-  Martin Jeppesen, Stuart Caie, Bernhard MÃ¤r, Matthias Arndt
+  Martin Jeppesen, Stuart Caie, Bernhard März, Matthias Arndt
 
 * Hardware
   Davi Lima (AWE32 card with 2Mb RAM), Miod "Pitr" Vallat (Mach 3 rasoir,
-  lames, baume aprÃ¨s-rasage, pansements antiseptiques).
+  lames, baume après-rasage, pansements antiseptiques).
 
 * RPM packaging
   Dominik Mierzejewski

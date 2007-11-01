@@ -326,5 +326,8 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     }
     reportv(ctx, 0, "\n");
 
+    if (nt)
+	fclose(nt);
+
     return 0;
 }
