@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.47 2007-10-29 01:39:42 cmatsuoka Exp $
+ * $Id: player.c,v 1.48 2007-11-01 10:48:39 cmatsuoka Exp $
  */
 
 /*
@@ -142,8 +142,7 @@ static int do_envelope(struct xmp_context *ctx, struct xxm_envinfo *ei, uint16 *
 	    if (*x >= env[ei->lpe << 1])
 		*x = env[ei->lps << 1];
 	}
-    }
-    else {
+    } else {
 	if (!rl && (ei->flg & XXM_ENV_SUS) && *x > env[ei->sus << 1])
 	    *x = env[ei->sus << 1];
 	if (loop && *x >= env[ei->lpe << 1])
@@ -477,7 +476,6 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 
     if (TEST(RELEASE) && !(XXIH.aei.flg & XXM_ENV_ON))
 	xc->fadeout = 0;
-
  
     if (TEST(FADEOUT | RELEASE) || act == XMP_ACT_FADE || act == XMP_ACT_OFF) {
 	xc->fadeout = xc->fadeout > XXIH.rls ? xc->fadeout - XXIH.rls : 0;

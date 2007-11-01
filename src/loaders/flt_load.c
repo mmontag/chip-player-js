@@ -31,6 +31,7 @@ static int flt_test(FILE *f, char *t)
     fseek(f, 1080, SEEK_SET);
     fread(buf, 4, 1, f);
 
+    /* Also RASP? */
     if (memcmp(buf, "FLT", 3) && memcmp(buf, "EXO", 3))
 	return -1;
 
@@ -70,22 +71,6 @@ int8 am_waveform[4][32] = {
 	}
 };
 
-/*
- * AM synth parameters based on the Startrekker 1.2 documentation
- *
- * FQ    This waves base frequency. $1 is very low, $4 is average and $20 is
- *       quite high.
- * L0    Start amplitude for the envelope
- * A1L   Attack level
- * A1S   The speed that the amplitude changes to the attack level, $1 is slow
- *       and $40 is fast.
- * A2L   Secondary attack level, for those who likes envelopes...
- * A2S   Secondary attack speed.
- * DS    The speed that the amplitude decays down to the:
- * SL    Sustain level. There is remains for the time set by the
- * ST    Sustain time.
- * RS    Release speed. The speed that the amplitude falls from ST to 0.
- */
 
 struct am_instrument {
 	int16 l0;		/* start amplitude */
@@ -145,6 +130,46 @@ static void read_am_instrument(struct xmp_context *ctx, FILE *nt, int i)
     m->xxs[i].flg = WAVE_LOOPING;
     //m->xxi[i][0].vol = mh.ins[i].volume;
     m->xxih[i].nsm = 1;
+    m->xxi[i][0].xpo = -12 * am.fq;
+    m->xxi[i][0].vwf = 0;
+    m->xxi[i][0].vde = am.v_amp;
+    m->xxi[i][0].vra = am.v_spd;
+    /* FIXME: am.p_fall */
+
+    /*
+     * AM synth envelope parameters based on the Startrekker 1.2 docs
+     *
+     * L0    Start amplitude for the envelope
+     * A1L   Attack level
+     * A1S   The speed that the amplitude changes to the attack level, $1
+     *       is slow and $40 is fast.
+     * A2L   Secondary attack level, for those who likes envelopes...
+     * A2S   Secondary attack speed.
+     * DS    The speed that the amplitude decays down to the:
+     * SL    Sustain level. There is remains for the time set by the
+     * ST    Sustain time.
+     * RS    Release speed. The speed that the amplitude falls from ST to 0.
+     */
+    if (am.a1s > 0x40) am.a1s = 0x40;
+    if (am.a2s > 0x40) am.a2s = 0x40;
+    if (am.ds  > 0x40) am.ds  = 0x40;
+    if (am.rs  > 0x40) am.rs  = 0x40;
+
+    m->xxih[i].aei.npt = 6;
+    m->xxih[i].aei.flg = XXM_ENV_ON;
+    m->xxae[i] = calloc(4, m->xxih[i].aei.npt);
+    m->xxae[i][0] = 0;
+    m->xxae[i][1] = am.l0 >> 2;
+    m->xxae[i][2] = m->xxae[i][0] + 0x40 - am.a1s;
+    m->xxae[i][3] = am.a1l >> 2;
+    m->xxae[i][4] = m->xxae[i][2] + 0x40 - am.a2s;
+    m->xxae[i][5] = am.a2l >> 2;
+    m->xxae[i][6] = m->xxae[i][4] + 0x40 - am.ds;
+    m->xxae[i][7] = am.sl >> 2;
+    m->xxae[i][8] = m->xxae[i][6] + am.st;
+    m->xxae[i][9] = am.sl >> 2;
+    m->xxae[i][10] = m->xxae[i][8] + 0x40 - am.rs;
+    m->xxae[i][11] = 0;
 
     xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, m->c4rate, XMP_SMP_NOLOAD,
 			&m->xxs[m->xxi[i][0].sid], (char *)am_waveform[am.wf]);
@@ -200,12 +225,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&mh.order, 128, 1, f);
     fread(&mh.magic, 4, 1, f);
 
-    /* Also RASP? */
-    if (mh.magic[0] == 'F' && mh.magic[1] == 'L' && mh.magic[2] == 'T') {
-	tracker = "Startrekker";
-    } else {
-	tracker = "Startrekker/Audio Sculpture";
-    }
+    tracker = "Startrekker";
 
     if (am_synth) {
 	if (buf[4] == '2')
@@ -305,7 +325,9 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	reportv(ctx, 0, ".");
     }
 
-    m->xxh->flg |= XXM_FLG_MODRNG;
+    /* no such limit for synth instruments
+     * m->xxh->flg |= XXM_FLG_MODRNG;
+     */
 
     if (o->skipsmp)
 	return 0;
