@@ -1,13 +1,13 @@
-$Id: ChangeLog,v 1.174 2007-11-01 10:48:39 cmatsuoka Exp $
+$Id: ChangeLog,v 1.175 2007-11-02 01:01:50 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.4.2 ():
+2.5.0 ():
 	- remove DMP-specific effect from MOD loader
 	- extend Protracker-style loops to Noisetracker and Startrekker
 	- FLT loader recognizes Startrekker FLTM modules (only PCM channels)
-	- implemented support for Startrekker AM synth instruments
+	- implement support for Startrekker AM synth instruments
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
