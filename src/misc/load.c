@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.53 2007-10-22 13:27:31 cmatsuoka Exp $
+ * $Id: load.c,v 1.54 2007-11-02 14:11:25 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -367,11 +367,11 @@ static void split_name(char *s, char **d, char **b)
 	char tmp, *div;
 
 	if ((div = strrchr(s, '/'))) {
-		tmp = *div;
-		*div = 0;
+		tmp = *(div + 1);
+		*(div + 1) = 0;
 		*d = strdup(s);
+		*(div + 1) = tmp;
 		*b = strdup(div + 1);
-		*div = tmp;
 	} else {
 		*d = strdup("");
 		*b = strdup(s);

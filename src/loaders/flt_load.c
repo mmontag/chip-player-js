@@ -18,7 +18,7 @@ static int flt_test (FILE *, char *);
 static int flt_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info flt_loader = {
-    "MOD",
+    "FLT",
     "Startrekker/Audio Sculpture",
     flt_test,
     flt_load
@@ -157,13 +157,12 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
 
     m->xxs[i].flg = WAVE_LOOPING;
-    //m->xxi[i][0].vol = mh.ins[i].volume;
+    m->xxi[i][0].vol = 0x40;		/* prelude.mod has 0 in instrument */
     m->xxih[i].nsm = 1;
     m->xxi[i][0].xpo = -12 * am.fq;
     m->xxi[i][0].vwf = 0;
     m->xxi[i][0].vde = am.v_amp;
     m->xxi[i][0].vra = am.v_spd;
-    /* FIXME: am.p_fall */
 
     /*
      * AM synth envelope parameters based on the Startrekker 1.2 docs
@@ -192,15 +191,14 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     m->xxae[i][1] = am.l0 / 4;
 
     /*
-     * This is a strange envelope formula, but it seems that Startrekker
-     * uses that (speed sets the stage climb rate, and level sets x and y
-     * coordinates). Check with cylicon.mod (FLT4), amsyntdemo.mod (EXO4).
+     * Startrekker increments/decrements the envelope by the stage speed
+     * until it reaches the next stage level.
      *
      *         ^ 
      *         |
      *     100 +.........o
      *         |        /:
-     *     A2L +.......o :        x = 256 * (A2L-A1L) / (256 - A1L)
+     *     A2L +.......o :        x = 256 * (A2L - A1L) / (256 - A1L)
      *         |      /: :
      *         |     / : :
      *     A1L +....o..:.:
@@ -219,6 +217,8 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	a = am.l0 - am.a1l;
 	b = am.l0;
     }
+    if (b == 0) b = 1;
+
     m->xxae[i][2] = m->xxae[i][0] + (256 * a) / (am.a1s * b);
 
     m->xxae[i][3] = am.a1l / 4;
@@ -230,6 +230,8 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	a = am.a1l - am.a2l;
 	b = am.a1l;
     }
+    if (b == 0) b = 1;
+
     m->xxae[i][4] = m->xxae[i][2] + (256 * a) / (am.a2s * b);
 
     m->xxae[i][5] = am.a2l / 4;
@@ -241,6 +243,8 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	a = am.a2l - am.sl;
 	b = am.a2l;
     }
+    if (b == 0) b = 1;
+
     m->xxae[i][6] = m->xxae[i][4] + (256 * a) / (am.ds * b);
 
     m->xxae[i][7] = am.sl / 4;
@@ -248,6 +252,22 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     m->xxae[i][9] = am.sl / 4;
     m->xxae[i][10] = m->xxae[i][8] + (256 / am.rs);
     m->xxae[i][11] = 0;
+
+    /*
+     * Implement P.FALL using pitch envelope
+     */
+
+    if (am.p_fall) {
+	m->xxih[i].fei.npt = 2;
+	m->xxih[i].fei.flg = XXM_ENV_ON;
+	m->xxfe[i] = calloc(4, m->xxih[i].fei.npt);
+
+	m->xxfe[i][0] = 0;
+	m->xxfe[i][1] = 0;
+
+	m->xxfe[i][2] = 1024 / abs(am.p_fall);
+	m->xxfe[i][3] = 10 * (am.p_fall < 0 ? -256 : 256);
+    }
 
     xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, m->c4rate, XMP_SMP_NOLOAD,
 					&m->xxs[m->xxi[i][0].sid], wave);
@@ -275,9 +295,9 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* See if we have the synth parameters file */
     am_synth = 0;
-    snprintf(filename, 1024, "%s/%s.NT", m->dirname, m->basename);
+    snprintf(filename, 1024, "%s%s.NT", m->dirname, m->basename);
     if ((nt = fopen(filename, "rb")) == NULL) {
-	snprintf(filename, 1024, "%s/%s.nt", m->dirname, m->basename);
+	snprintf(filename, 1024, "%s%s.nt", m->dirname, m->basename);
 	nt = fopen(filename, "rb");
     }
 
@@ -358,13 +378,17 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
 
-	if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2
-						|| is_am_instrument(nt, i))) {
-	    report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
+	if (V(1)) {
+	    if (am_synth && is_am_instrument(nt, i)) {
+	        report("[%2X] %-22.22s SYNT ---- ----   V40 %+d\n",
+			i, m->xxih[i].name, (char)m->xxi[i][0].fin >> 4);
+	    } else if ((strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2)) {
+	        report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4,
+			m->xxi[i][0].vol, (char)m->xxi[i][0].fin >> 4,
 			m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
+	    }
 	}
     }
 
