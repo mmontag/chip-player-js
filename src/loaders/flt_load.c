@@ -48,7 +48,7 @@ static int flt_test(FILE *f, char *t)
 
 /* Waveforms from the Startrekker 1.2 AM synth replayer code */
 
-int8 am_waveform[4][32] = {
+static int8 am_waveform[3][32] = {
 	{    0,   25,   49,   71,   90,  106,  117,  125,	/* Sine */
 	   127,  125,  117,  106,   90,   71,   49,   25,
 	     0,  -25,  -49,  -71,  -90, -106, -117, -125,
@@ -66,10 +66,9 @@ int8 am_waveform[4][32] = {
 	   127,  127,  127,  127,  127,  127,  127,  127,
 	   127,  127,  127,  127,  127,  127,  127,  127
 	},
-
-	{							/* Random */
-	}
 };
+
+static int8 am_noise[1024];
 
 
 struct am_instrument {
@@ -94,11 +93,19 @@ struct am_instrument {
 static int is_am_instrument(FILE *nt, int i)
 {
     char buf[2];
+    int16 wf;
 
     fseek(nt, 144 + i * 120, SEEK_SET);
     fread(buf, 1, 2, nt);
+    if (memcmp(buf, "AM", 2))
+	return 0;
 
-    return !memcmp(buf, "AM", 2);
+    fseek(nt, 24, SEEK_CUR);
+    wf = read16b(nt);
+    if (wf < 0 || wf > 3)
+	return 0;
+
+    return 1;
 }
 
 static void read_am_instrument(struct xmp_context *ctx, FILE *nt, int i)
@@ -106,6 +113,8 @@ static void read_am_instrument(struct xmp_context *ctx, FILE *nt, int i)
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
     struct am_instrument am;
+    char *wave;
+    int a, b;
 
     fseek(nt, 144 + i * 120 + 2 + 4, SEEK_SET);
     am.l0 = read16b(nt);
@@ -124,9 +133,29 @@ static void read_am_instrument(struct xmp_context *ctx, FILE *nt, int i)
     am.v_spd = read16b(nt);
     am.fq = read16b(nt);
 
-    m->xxs[i].len = 32;
-    m->xxs[i].lps = 0;
-    m->xxs[i].lpe = 32;
+#if 0
+printf("L0=%d A1L=%d A1S=%d A2L=%d A2S=%d SL=%d DS=%d ST=%d RS=%d WF=%d\n",
+am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
+#endif
+
+    if (am.wf < 3) {
+	m->xxs[i].len = 32;
+	m->xxs[i].lps = 0;
+	m->xxs[i].lpe = 32;
+	wave = (char *)&am_waveform[am.wf][0];
+    } else {
+	int j;
+
+	m->xxs[i].len = 1024;
+	m->xxs[i].lps = 0;
+	m->xxs[i].lpe = 1024;
+
+	for (j = 0; j < 1024; j++)
+	    am_noise[j] = random() % 256;
+
+	wave = (char *)&am_noise[0];
+    }
+
     m->xxs[i].flg = WAVE_LOOPING;
     //m->xxi[i][0].vol = mh.ins[i].volume;
     m->xxih[i].nsm = 1;
@@ -150,29 +179,78 @@ static void read_am_instrument(struct xmp_context *ctx, FILE *nt, int i)
      * ST    Sustain time.
      * RS    Release speed. The speed that the amplitude falls from ST to 0.
      */
-    if (am.a1s > 0x40) am.a1s = 0x40;
-    if (am.a2s > 0x40) am.a2s = 0x40;
-    if (am.ds  > 0x40) am.ds  = 0x40;
-    if (am.rs  > 0x40) am.rs  = 0x40;
+    if (am.a1s == 0) am.a1s = 1;
+    if (am.a2s == 0) am.a2s = 1;
+    if (am.ds  == 0) am.ds  = 1;
+    if (am.rs  == 0) am.rs  = 1;
 
     m->xxih[i].aei.npt = 6;
     m->xxih[i].aei.flg = XXM_ENV_ON;
     m->xxae[i] = calloc(4, m->xxih[i].aei.npt);
+
     m->xxae[i][0] = 0;
-    m->xxae[i][1] = am.l0 >> 2;
-    m->xxae[i][2] = m->xxae[i][0] + 0x40 - am.a1s;
-    m->xxae[i][3] = am.a1l >> 2;
-    m->xxae[i][4] = m->xxae[i][2] + 0x40 - am.a2s;
-    m->xxae[i][5] = am.a2l >> 2;
-    m->xxae[i][6] = m->xxae[i][4] + 0x40 - am.ds;
-    m->xxae[i][7] = am.sl >> 2;
+    m->xxae[i][1] = am.l0 / 4;
+
+    /*
+     * This is a strange envelope formula, but it seems that Startrekker
+     * uses that (speed sets the stage climb rate, and level sets x and y
+     * coordinates). Check with cylicon.mod (FLT4), amsyntdemo.mod (EXO4).
+     *
+     *         ^ 
+     *         |
+     *     100 +.........o
+     *         |        /:
+     *     A2L +.......o :        x = 256 * (A2L-A1L) / (256 - A1L)
+     *         |      /: :
+     *         |     / : :
+     *     A1L +....o..:.:
+     *         |    :  : :
+     *         |    :x : :
+     *         +----+--+-+----->
+     *              |    |
+     *              |256/|
+     *               A2S
+     */
+
+    if (am.a1l > am.l0) {
+	a = am.a1l - am.l0;
+	b = 256 - am.l0;
+    } else {
+	a = am.l0 - am.a1l;
+	b = am.l0;
+    }
+    m->xxae[i][2] = m->xxae[i][0] + (256 * a) / (am.a1s * b);
+
+    m->xxae[i][3] = am.a1l / 4;
+
+    if (am.a2l > am.a1l) {
+	a = am.a2l - am.a1l;
+	b = 256 - am.a1l;
+    } else {
+	a = am.a1l - am.a2l;
+	b = am.a1l;
+    }
+    m->xxae[i][4] = m->xxae[i][2] + (256 * a) / (am.a2s * b);
+
+    m->xxae[i][5] = am.a2l / 4;
+
+    if (am.sl > am.a2l) {
+	a = am.sl - am.a2l;
+	b = 256 - am.a2l;
+    } else {
+	a = am.a2l - am.sl;
+	b = am.a2l;
+    }
+    m->xxae[i][6] = m->xxae[i][4] + (256 * a) / (am.ds * b);
+
+    m->xxae[i][7] = am.sl / 4;
     m->xxae[i][8] = m->xxae[i][6] + am.st;
-    m->xxae[i][9] = am.sl >> 2;
-    m->xxae[i][10] = m->xxae[i][8] + 0x40 - am.rs;
+    m->xxae[i][9] = am.sl / 4;
+    m->xxae[i][10] = m->xxae[i][8] + (256 / am.rs);
     m->xxae[i][11] = 0;
 
     xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, m->c4rate, XMP_SMP_NOLOAD,
-			&m->xxs[m->xxi[i][0].sid], (char *)am_waveform[am.wf]);
+					&m->xxs[m->xxi[i][0].sid], wave);
 
     reportv(ctx, 0, "A");
 }
