@@ -381,12 +381,12 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (V(1)) {
 	    if (am_synth && is_am_instrument(nt, i)) {
 	        report("[%2X] %-22.22s SYNT ---- ----   V40 %+d\n",
-			i, m->xxih[i].name, (char)m->xxi[i][0].fin >> 4);
-	    } else if ((strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2)) {
+			i, m->xxih[i].name, (int8)m->xxi[i][0].fin >> 4);
+	    } else if (*m->xxih[i].name || m->xxs[i].len > 2) {
 	        report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			m->xxi[i][0].vol, (char)m->xxi[i][0].fin >> 4,
+			m->xxi[i][0].vol, (int8)m->xxi[i][0].fin >> 4,
 			m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
 	    }
 	}

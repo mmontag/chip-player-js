@@ -100,7 +100,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
 		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		fh.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->xxi[i][0].vol, (char) m->xxi[i][0].fin >> 4);
+		m->xxi[i][0].vol, (int8)m->xxi[i][0].fin >> 4);
 	}
     }
 

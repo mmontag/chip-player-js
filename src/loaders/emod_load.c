@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.17 2007-10-31 10:35:47 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.18 2007-11-03 00:50:28 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -90,7 +90,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x %+d\n",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-			m->xxi[i][0].vol, (char)m->xxi[i][0].fin >> 4);
+			m->xxi[i][0].vol, (int8)m->xxi[i][0].fin >> 4);
 	}
     }
 
