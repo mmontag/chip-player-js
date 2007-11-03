@@ -422,6 +422,10 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 		event = &EVENT(i, (j % 4) + 4, j / 4);
 		fread(mod_event, 1, 4, f);
 		cvt_pt_event(event, mod_event);
+
+		/* no macros */
+		if (event->fxt = 0x0e)
+		   event->fxt = event->fxp = 0;
 	    }
 	}
 	reportv(ctx, 0, ".");
