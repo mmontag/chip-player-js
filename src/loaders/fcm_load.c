@@ -85,7 +85,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	m->xxs[i].lps = 2 * fh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * fh.ins[i].loop_size;
 	m->xxs[i].flg = fh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-	m->xxi[i][0].fin = (int8) fh.ins[i].finetune << 4;
+	m->xxi[i][0].fin = (int8)fh.ins[i].finetune << 4;
 	m->xxi[i][0].vol = fh.ins[i].volume;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
@@ -100,7 +100,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
 		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		fh.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->xxi[i][0].vol, (int8)m->xxi[i][0].fin >> 4);
+		m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
 	}
     }
 

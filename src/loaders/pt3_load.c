@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.16 2007-11-03 00:50:29 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.17 2007-11-03 16:49:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -184,7 +184,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (m->xxs[i].len > m->xxs[i].lpe)
 				m->xxs[i].flg |= WAVE_PTKLOOP;
 		}
-		m->xxi[i][0].fin = (int8) (mh.ins[i].finetune << 4);
+		m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
 		m->xxi[i][0].vol = mh.ins[i].volume;
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].sid = i;
@@ -200,7 +200,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxs[i].lpe,
 				mh.ins[i].loop_size > 1 ? 'L' : ' ',
 				m->xxi[i][0].vol,
-				(int8)m->xxi[i][0].fin >> 4,
+				m->xxi[i][0].fin >> 4,
 				m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
 		}
 	}

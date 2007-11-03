@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ims_load.c,v 1.15 2007-11-03 00:50:28 cmatsuoka Exp $
+ * $Id: ims_load.c,v 1.16 2007-11-03 16:49:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -208,7 +208,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x %+d\n",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, ih.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->xxi[i][0].vol, (int8)m->xxi[i][0].fin >> 4);
+		m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
 	}
     }
 

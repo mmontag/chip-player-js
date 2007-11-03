@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: sfx_load.c,v 1.16 2007-11-03 00:50:29 cmatsuoka Exp $
+ * $Id: sfx_load.c,v 1.17 2007-11-03 16:49:02 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -156,7 +156,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 	    report("[%2X] %-22.22s %04x %04x %04x %c  %02x %+d\n",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
-		(int8)m->xxi[i][0].fin >> 4);
+		m->xxi[i][0].fin >> 4);
     }
 
     PATTERN_INIT();
