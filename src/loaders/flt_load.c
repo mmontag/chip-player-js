@@ -298,15 +298,29 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     snprintf(filename, 1024, "%s%s.NT", m->dirname, m->basename);
     if ((nt = fopen(filename, "rb")) == NULL) {
 	snprintf(filename, 1024, "%s%s.nt", m->dirname, m->basename);
-	nt = fopen(filename, "rb");
+	if ((nt = fopen(filename, "rb")) == NULL) {
+	    snprintf(filename, 1024, "%s%s.AS", m->dirname, m->basename);
+	    if ((nt = fopen(filename, "rb")) == NULL) {
+	        snprintf(filename, 1024, "%s%s.as", m->dirname, m->basename);
+	        nt = fopen(filename, "rb");
+	    }
+	}
     }
+
+    tracker = "Startrekker";
 
     if (nt) {
 	fread(buf, 1, 16, nt);
-	if (memcmp(buf, "ST1.2 ModuleINFO", 16) == 0)
+	if (memcmp(buf, "ST1.2 ModuleINFO", 16) == 0) {
 	    am_synth = 1;
-	if (memcmp(buf, "ST1.3 ModuleINFO", 16) == 0)
+	    tracker = "Startrekker 1.2";
+	} else if (memcmp(buf, "ST1.3 ModuleINFO", 16) == 0) {
 	    am_synth = 1;
+	    tracker = "Startrekker 1.3";
+	} else if (memcmp(buf, "AudioSculpture10", 16) == 0) {
+	    am_synth = 1;
+	    tracker = "AudioSculpture 1.0";
+	}
     }
 
     fread(&mh.name, 20, 1, f);
@@ -322,15 +336,6 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     mh.restart = read8(f);
     fread(&mh.order, 128, 1, f);
     fread(&mh.magic, 4, 1, f);
-
-    tracker = "Startrekker";
-
-    if (am_synth) {
-	if (buf[4] == '2')
-	    tracker = "Startrekker 1.2";
-	else if (buf[4] == '3')
-	    tracker = "Startrekker 1.3";
-    }
 
     if (mh.magic[3] == '4')
 	m->xxh->chn = 4;
@@ -424,7 +429,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 		cvt_pt_event(event, mod_event);
 
 		/* no macros */
-		if (event->fxt = 0x0e)
+		if (event->fxt == 0x0e)
 		   event->fxt = event->fxp = 0;
 	    }
 	}
