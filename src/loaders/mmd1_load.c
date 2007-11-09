@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.30 2007-10-26 11:34:12 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.31 2007-11-09 00:25:18 cmatsuoka Exp $
  */
 
 /*
@@ -25,7 +25,7 @@ static int mmd1_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mmd1_loader = {
 	"MMD0/1",
-	"MED 3.00/OctaMED",
+	"MED 2.10/OctaMED",
 	mmd1_test,
 	mmd1_load
 };
