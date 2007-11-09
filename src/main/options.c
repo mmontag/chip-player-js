@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.26 2007-10-20 19:41:14 cmatsuoka Exp $
+ * $Id: options.c,v 1.27 2007-11-09 20:05:04 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -111,7 +111,7 @@ static void usage(char *s, struct xmp_options *opt)
     printf ("Usage: %s [options] [modules]\n", s);
 
     printf ("\nSupported module formats:\n");
-    xmp_get_fmt_info (&fmt);
+    xmp_get_fmt_info(&fmt);
     list_wrap (NULL, 3, 78, 1);
 
     for (i = 0, f = fmt; f; i++, f = f->next) {
@@ -143,51 +143,56 @@ static void usage(char *s, struct xmp_options *opt)
 
     printf (
 "\nPlayer control options:\n"
-"   -D parameter[=val]     Pass configuration parameter to the output driver\n"
-"   -d --driver name       Force output to the specified device\n"
-"   --fix-sample-loops     Use sample loop start /2 in MOD/UNIC/NP3\n" 
-"   --offset-bug-emulation Emulate Protracker 2.x bug in effect 9\n"
-"   -l --loop              Enable module looping\n"
-"   -M --mute ch-list      Mute the specified channels\n"
-"   --modrange             Limit the octave range to 3 octaves in MOD files\n"
-"   --nocmd                Disable interactive commands\n"
-"   --norc                 Don't read configuration files\n"
-"   -R --random            Random order playing\n"
+"   -D parameter[=val]      Pass configuration parameter to the output driver\n"
+"   -d --driver name        Force output to the specified device\n"
+"   --fix-sample-loops      Use sample loop start /2 in MOD/UNIC/NP3\n" 
+"   --offset-bug-emulation  Emulate Protracker 2.x bug in effect 9\n"
+"   -l --loop               Enable module looping\n"
+"   -M --mute ch-list       Mute the specified channels\n"
+"   --modrange              Limit the octave range to 3 octaves in MOD files\n"
+"   --nocmd                 Disable interactive commands\n"
+"   --norc                  Don't read configuration files\n"
+"   -R --random             Random order playing\n"
 #ifdef HAVE_SYS_RTPRIO_H
-"   --realtime             Run in real-time priority\n" 
+"   --realtime              Run in real-time priority\n" 
 #endif
-"   -S --solo ch-list      Set channels to solo mode\n"
-"   -s --start num         Start from the specified order\n"
-"   -T --tempo num         Initial tempo (default 6)\n"
-"   -t --time num          Maximum playing time in seconds\n"
+"   -S --solo ch-list       Set channels to solo mode\n"
+"   -s --start num          Start from the specified order\n"
+"   -T --tempo num          Initial tempo (default 6)\n"
+"   -t --time num           Maximum playing time in seconds\n"
 
 "\nPlayer sound options:\n"
-"   -8 --8bit              Convert 16 bit samples to 8 bit\n"
-"   --chorus num           Chorus depth (if supported)\n"
-"   -m --mono              Mono output\n"
-"   --nofilter             Disable IT filter\n"
-"   --nopan                Disable dynamic panning\n"
-"   -P --pan pan           Percentual pan amplitude (default %d%%)\n"
-"   -r --reverse           Reverse left/right stereo channels\n"
-"   --reverb num           Reverb depth (if supported)\n"
-"   --stereo               Stereo output\n"
+"   -8 --8bit               Convert 16 bit samples to 8 bit\n"
+"   --chorus num            Chorus depth (if supported)\n"
+"   -m --mono               Mono output\n"
+"   --nofilter              Disable IT filter\n"
+"   --nopan                 Disable dynamic panning\n"
+"   -P --pan pan            Percentual pan amplitude (default %d%%)\n"
+"   -r --reverse            Reverse left/right stereo channels\n"
+"   --reverb num            Reverb depth (if supported)\n"
+"   --stereo                Stereo output\n"
 
 "\nSoftware mixer options:\n"
-"   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
-"   -c --stdout            Mix the module to stdout\n"
-"   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
-"   -i --interpolate       Use linear interpolation (default %s)\n"
-"   -n --nearest           Use nearest neighbor interpolation\n"
-"   -o --output-file name  Mix the module to file ('-' for stdout)\n"
-"   -u --unsigned          Set the mixer to use unsigned samples\n"
+"   -b --bits {8|16}        Software mixer resolution (8 or 16 bits)\n"
+"   -c --stdout             Mix the module to stdout\n"
+"   -f --frequency rate     Sampling rate in hertz (default %d Hz)\n"
+"   -i --interpolate        Use linear interpolation (default %s)\n"
+"   -n --nearest            Use nearest neighbor interpolation\n"
+"   -o --output-file name   Mix the module to file ('-' for stdout)\n"
+"   -u --unsigned           Set the mixer to use unsigned samples\n"
+
+"\nModule format options:\n"
+"   -x --exclude-format ids Exclude the specified IDs from format probing\n"
+"   -F --force-format id    Load data forcing a specific loader\n"
+"   -O --load-offset num    Load file from a specified offset\n"
 
 "\nInformation options:\n"
-"   -h --help              Print a summary of the command line options\n"
-"   --load-only            Load module and exit\n"
-"   --probe-only           Probe audio device and exit\n"
-"   -q --quiet             Quiet mode (verbosity level = 0)\n"
-"   -V --version           Print version information\n"
-"   -v --verbose           Verbose mode (incremental)\n"
+"   -h --help               Print a summary of the command line options\n"
+"   --load-only             Load module and exit\n"
+"   --probe-only            Probe audio device and exit\n"
+"   -q --quiet              Quiet mode (verbosity level = 0)\n"
+"   -V --version            Print version information\n"
+"   -v --verbose            Verbose mode (incremental)\n"
 	,opt->mix,
 	opt->freq,
 	opt->flags & XMP_CTL_ITPT ? "enabled" : "disabled"
@@ -198,15 +203,15 @@ static void usage(char *s, struct xmp_options *opt)
 void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
-#define OPTIONS "8b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVv"
-    static struct option lopt[] =
-    {
+#define OPTIONS "8b:cD:d:F:f:hilM:mnO:o:P:qRrS:s:T:t:uVvx:"
+    static struct option lopt[] = {
 	{ "8bit",		 0, 0, '8' },
 	{ "bits",		 1, 0, 'b' },
 	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
 	{ "driver",		 1, 0, 'd' },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
+	{ "force-format",	 1, 0, 'F' },
 	{ "frequency",		 1, 0, 'f' },
 	{ "offset-bug-emulation",0, 0, OPT_FX9BUG },
 	{ "help",		 0, 0, 'h' },
@@ -220,6 +225,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "nearest",		 0, 0, 'n' },
 	{ "nopan",		 0, 0, OPT_NOPAN },
 	{ "norc",		 0, 0, OPT_NORC },
+	{ "load-offset",	 1, 0, 'O' },
 	{ "output-file",	 1, 0, 'o' },
 	{ "pan",		 1, 0, 'P' },
 	{ "probe-only",		 0, 0, OPT_PROBEONLY },
@@ -239,6 +245,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "unsigned",		 0, 0, 'u' },
 	{ "version",		 0, 0, 'V' },
 	{ "verbose",		 0, 0, 'v' },
+	{ "exclude-formats",	 1, 0, 'x' },
 	{ NULL,	0, 0, 0 }
     };
 
@@ -274,8 +281,11 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	case OPT_FX9BUG:
 	    opt->flags |= XMP_CTL_FX9BUG;
 	    break;
+	case 'F':
+	    opt->force_id = optarg;
+	    break;
 	case 'f':
-	    opt->freq = atoi (optarg);
+	    opt->freq = strtoul(optarg, NULL, 0);
 	    break;
 	case 'i':
 	    opt->flags |= XMP_CTL_ITPT;
@@ -303,11 +313,14 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case OPT_NORC:
 	    break;
+	case 'O':
+	    opt->offset = strtoul(optarg, NULL, 0);
+	    break;
 	case 'o':
 	    opt->outfile = optarg;
 	    break;
 	case 'P':
-	    opt->mix = atoi(optarg);
+	    opt->mix = strtoul(optarg, NULL, 0);
 	    if (opt->mix < 0)
 		opt->mix = 0;
 	    if (opt->mix > 100)
@@ -344,31 +357,31 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 		char buf[40];
 		if (strchr (token, '-')) {
 		    b = strcspn (token, "-");
-		    strncpy (buf, token, b);
-		    a = atoi (buf);
-		    strncpy (buf, token + b + 1,
-			strlen (token) - b - 1);
-		    b = atoi (buf);
+		    strncpy(buf, token, b);
+		    a = atoi(buf);
+		    strncpy(buf, token + b + 1,
+			strlen(token) - b - 1);
+		    b = atoi(buf);
 		} else
 		    a = b = atoi (token);
 		for (; b >= a; b--) {
 		    if (b < 64)
 			xmp_channel_mute(ctx, b, 1, (o == 'M'));
 		}
-		token = strtok (NULL, ",");
+		token = strtok(NULL, ",");
 	    }
 	    break;
 	case 's':
-	    opt->start = strtoul (optarg, NULL, 0);
+	    opt->start = strtoul(optarg, NULL, 0);
 	    break;
 	case OPT_STEREO:
 	    opt->outfmt &= ~XMP_FMT_MONO;
 	    break;
 	case 'T':
-	    opt->tempo = strtoul (optarg, NULL, 0);
+	    opt->tempo = strtoul(optarg, NULL, 0);
 	    break;
 	case 't':
-	    opt->time = strtoul (optarg, NULL, 0);
+	    opt->time = strtoul(optarg, NULL, 0);
 	    break;
 	case 'u':
 	    opt->outfmt |= XMP_FMT_UNS;
@@ -380,9 +393,9 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    opt->verbosity++;
 	    break;
 	case 'h':
-	    usage (argv[0], opt);
+	    usage(argv[0], opt);
 	default:
-	    exit (-1);
+	    exit(-1);
 	}
     }
 
