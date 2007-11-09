@@ -1,5 +1,5 @@
 # Extended Module Player Makefile.rules.in
-# $Id: Makefile.rules.in,v 1.58 2007-11-02 01:01:50 cmatsuoka Exp $
+# $Id: Makefile.rules.in,v 1.59 2007-11-09 02:09:54 cmatsuoka Exp $
 
 VERSION		= 2.5.0-pre1
 DATE		= Thu Oct 25 00:00:43 BRST 2007
@@ -35,8 +35,6 @@ endif
 # I moved -laudio from just after -lXext to after -lm. It seems gcc
 # [2.95.2 as supplied by the freeware.sgi.com site] has problems
 # resolving the audio-symbols otherwise.
-#
-# LIBS		= @LIBS@ $(XLIBS)
 
 LIBS		= $(XLIBS) @LIBS@
 SHELL		= /bin/sh

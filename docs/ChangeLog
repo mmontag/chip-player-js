@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.177 2007-11-08 02:20:18 cmatsuoka Exp $
+$Id: ChangeLog,v 1.178 2007-11-09 02:09:54 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -11,6 +11,7 @@ Stable versions
 	- fixed cast to signed type in finetune display
 	- fixed Protracker 3 IFFMODL loader (process VERS chunk manually)
 	- added support to full sample loops in the Protracker 3 loader
+	- added PulseAudio driver (using the simple API)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm

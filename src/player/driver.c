@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.65 2007-10-30 11:57:51 cmatsuoka Exp $
+ * $Id: driver.c,v 1.66 2007-11-09 02:09:54 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -53,6 +53,7 @@ extern struct xmp_drv_info drv_net;
 extern struct xmp_drv_info drv_esd;
 extern struct xmp_drv_info drv_arts;
 extern struct xmp_drv_info drv_nas;
+extern struct xmp_drv_info drv_pulseaudio;
 extern struct xmp_drv_info drv_os2dart;
 extern struct xmp_drv_info drv_qnx;
 extern struct xmp_drv_info drv_beos;
@@ -119,6 +120,9 @@ void xmp_init_drivers()
 #endif
 #ifdef DRIVER_OS2DART
     xmp_drv_register(&drv_os2dart);
+#endif
+#ifdef DRIVER_PULSEAUDIO
+    xmp_drv_register(&drv_pulseaudio);
 #endif
 #ifdef DRIVER_ARTS
     xmp_drv_register(&drv_arts);

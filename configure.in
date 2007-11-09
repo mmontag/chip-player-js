@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.39 2007-10-30 20:40:09 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.40 2007-11-09 02:09:54 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -44,8 +44,11 @@ AC_ARG_ENABLE(alsa,
 AC_ARG_ENABLE(arts,
     [  --enable-arts           Compile aRts support])
 
-AC_ARG_ENABLE(arts,
+AC_ARG_ENABLE(nas,
     [  --enable-nas            Compile NAS support])
+
+AC_ARG_ENABLE(pulseaudio,
+    [  --enable-pulseaudio     Compile PulseAudio support])
 
 AC_ARG_ENABLE(xmms-plugin,
     [  --enable-xmms-plugin    Compile the XMMS plugin])
@@ -294,7 +297,7 @@ AC_CHECK_HEADERS(strings.h getopt.h sys/select.h sys/param.h \
     termios.h sys/shm.h sys/soundcard.h machine/soundcard.h \
     sys/ultrasound.h linux/ultrasound.h machine/ultrasound.h \
     awe_voice.h sys/awe_voice.h linux/awe_voice.h \
-    alsa/asoundlib.h esd.h)
+    alsa/asoundlib.h esd.h pulse/simple.h)
 
 AC_CHECK_HEADERS(audio/audiolib.h audio/soundlib.h,,,
 [[#if HAVE_AUDIO_AUDIOLIB_H
@@ -382,6 +385,19 @@ if test "${ac_cv_header_audio_audiolib_h}" = "yes" && \
 	AC_DEFINE(DRIVER_NAS)
     fi])
     LIBS="$OLDLIBS"
+fi
+
+if test "${enable_pulseaudio}" = "yes"; then
+    if test "${ac_cv_header_pulse_simple_h}" = "yes"; then
+        AC_CHECK_LIB(pulse-simple, pa_simple_new, [
+	    CFLAGS="${CFLAGS} `pkg-config --cflags libpulse-simple`"
+            LIBS="${LIBS} `pkg-config --libs libpulse-simple`"
+            DRIVERS="${DRIVERS} pulseaudio.o"
+            AC_DEFINE(DRIVER_PULSEAUDIO)
+        ])
+    fi
+else
+    enable_arts="no"
 fi
 
 dnl -----------------------------------------------------------------------
