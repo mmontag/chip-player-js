@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: ice_load.c,v 1.14 2007-10-20 11:50:39 cmatsuoka Exp $
+ * $Id: ice_load.c,v 1.15 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 #define MAGIC_IT10	MAGIC4('I','T','1','0')
 
 
-static int ice_test (FILE *, char *);
+static int ice_test (FILE *, char *, const int);
 static int ice_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info ice_loader = {
@@ -30,16 +30,16 @@ struct xmp_loader_info ice_loader = {
     ice_load
 };
 
-static int ice_test(FILE *f, char *t)
+static int ice_test(FILE *f, char *t, const int start)
 {
     uint32 magic;
 
-    fseek(f, 1464, SEEK_SET);
+    fseek(f, start + 1464, SEEK_SET);
     magic = read32b(f);
     if (magic != MAGIC_MTN_ && magic != MAGIC_IT10)
 	return -1;
 
-    fseek(f, 0, SEEK_SET);
+    fseek(f, start + 0, SEEK_SET);
     read_title(f, t, 28);
 
     return 0;

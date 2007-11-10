@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.31 2007-11-09 00:25:18 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.32 2007-11-10 14:49:05 cmatsuoka Exp $
  */
 
 /*
@@ -20,7 +20,7 @@
 #include "load.h"
 
 
-static int mmd1_test(FILE *, char *);
+static int mmd1_test(FILE *, char *, const int);
 static int mmd1_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mmd1_loader = {
@@ -30,7 +30,7 @@ struct xmp_loader_info mmd1_loader = {
 	mmd1_load
 };
 
-static int mmd1_test(FILE *f, char *t)
+static int mmd1_test(FILE *f, char *t, const int start)
 {
 	char id[4];
 	uint32 offset, len;
@@ -44,10 +44,10 @@ static int mmd1_test(FILE *f, char *t)
 	offset = read32b(f);		/* expdata_offset */
 	
 	if (offset) {
-		fseek(f, offset + 44, SEEK_SET);
+		fseek(f, start + offset + 44, SEEK_SET);
 		offset = read32b(f);
 		len = read32b(f);
-		fseek(f, offset, SEEK_SET);
+		fseek(f, start + offset, SEEK_SET);
 		read_title(f, t, len);
 	} else {
 		read_title(f, t, 0);

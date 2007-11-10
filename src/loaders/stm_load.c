@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stm_load.c,v 1.17 2007-10-20 11:50:40 cmatsuoka Exp $
+ * $Id: stm_load.c,v 1.18 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,7 +17,7 @@
 #include "period.h"
 
 
-static int stm_test (FILE *, char *);
+static int stm_test (FILE *, char *, const int);
 static int stm_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info stm_loader = {
@@ -27,11 +27,11 @@ struct xmp_loader_info stm_loader = {
     stm_load
 };
 
-static int stm_test(FILE *f, char *t)
+static int stm_test(FILE *f, char *t, const int start)
 {
     char buf[8];
 
-    fseek(f, 20, SEEK_SET);
+    fseek(f, start + 20, SEEK_SET);
     fread(buf, 8, 1, f);
     if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
 	return -1;
@@ -44,7 +44,7 @@ static int stm_test(FILE *f, char *t)
     if (read8(f) < 1)		/* We don't want STX files */
 	return -1;
 
-    fseek(f, 0, SEEK_SET);
+    fseek(f, start + 0, SEEK_SET);
     read_title(f, t, 20);
 
     return 0;

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.28 2007-11-10 14:26:52 cmatsuoka Exp $
+ * $Id: options.c,v 1.29 2007-11-10 14:49:05 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -181,10 +181,6 @@ static void usage(char *s, struct xmp_options *opt)
 "   -o --output-file name   Mix the module to file ('-' for stdout)\n"
 "   -u --unsigned           Set the mixer to use unsigned samples\n"
 
-"\nModule format options:\n"
-"   -x --exclude-format ids Exclude the specified IDs from format probing\n"
-"   -O --load-offset num    Load file from a specified offset\n"
-
 "\nInformation options:\n"
 "   -h --help               Print a summary of the command line options\n"
 "   --load-only             Load module and exit\n"
@@ -202,7 +198,7 @@ static void usage(char *s, struct xmp_options *opt)
 void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
-#define OPTIONS "8b:cD:d:f:hilM:mnO:o:P:qRrS:s:T:t:uVvx:"
+#define OPTIONS "8b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVvx:"
     static struct option lopt[] = {
 	{ "8bit",		 0, 0, '8' },
 	{ "bits",		 1, 0, 'b' },
@@ -223,7 +219,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "nearest",		 0, 0, 'n' },
 	{ "nopan",		 0, 0, OPT_NOPAN },
 	{ "norc",		 0, 0, OPT_NORC },
-	{ "load-offset",	 1, 0, 'O' },
 	{ "output-file",	 1, 0, 'o' },
 	{ "pan",		 1, 0, 'P' },
 	{ "probe-only",		 0, 0, OPT_PROBEONLY },
@@ -307,9 +302,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    opt->flags &= ~XMP_CTL_DYNPAN;
 	    break;
 	case OPT_NORC:
-	    break;
-	case 'O':
-	    opt->offset = strtoul(optarg, NULL, 0);
 	    break;
 	case 'o':
 	    opt->outfile = optarg;

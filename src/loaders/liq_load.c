@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: liq_load.c,v 1.23 2007-10-20 11:50:39 cmatsuoka Exp $
+ * $Id: liq_load.c,v 1.24 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 #include "liq.h"
 
 
-static int liq_test (FILE *, char *);
+static int liq_test (FILE *, char *, const int);
 static int liq_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info liq_loader = {
@@ -32,7 +32,7 @@ struct xmp_loader_info liq_loader = {
     liq_load
 };
 
-static int liq_test(FILE *f, char *t)
+static int liq_test(FILE *f, char *t, const int start)
 {
     char buf[15];
 

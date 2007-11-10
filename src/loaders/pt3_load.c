@@ -1,7 +1,7 @@
 /* Protracker 3 IFFMODL module loader for xmp
  * Copyright (C) 2000-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.17 2007-11-03 16:49:02 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.18 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 #define MAGIC_FORM	MAGIC4('F','O','R','M')
 #define MAGIC_MODL	MAGIC4('M','O','D','L')
 
-static int pt3_test(FILE *, char *);
+static int pt3_test(FILE *, char *, const int);
 static int pt3_load(struct xmp_context *, FILE *, const int);
 static int ptdt_load(struct xmp_context *, FILE *, const int);
 
@@ -31,7 +31,7 @@ struct xmp_loader_info pt3_loader = {
 	pt3_load
 };
 
-static int pt3_test(FILE *f, char *t)
+static int pt3_test(FILE *f, char *t, const int start)
 {
 	uint32 form, id;
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.34 2007-11-10 14:26:52 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.35 2007-11-10 14:49:05 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -139,7 +139,6 @@ struct xmp_options {
     int reverb;		/* Reverb leval */
     int maxvoc;		/* Channel max number of voice */
     int skipsmp;	/* Don't load sample data */
-    int offset;		/* Load from offset */
     char *exclude_fmt;	/* Exclude these format IDs */
     char *parm[64];	/* Driver parameter data */
 };

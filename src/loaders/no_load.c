@@ -1,7 +1,7 @@
 /* Old Liquid Tracker "NO" module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: no_load.c,v 1.17 2007-11-09 00:25:18 cmatsuoka Exp $
+ * $Id: no_load.c,v 1.18 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
  */
 
 
-static int no_test (FILE *, char *);
+static int no_test (FILE *, char *, const int);
 static int no_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info no_loader = {
@@ -30,7 +30,7 @@ struct xmp_loader_info no_loader = {
 	no_load
 };
 
-static int no_test(FILE *f, char *t)
+static int no_test(FILE *f, char *t, const int start)
 {
 	if (read32b(f) != 0x4e4f0000)		/* NO 0x00 0x00 */
 		return -1;

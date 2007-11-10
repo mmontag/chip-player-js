@@ -1,7 +1,7 @@
 /* Quadra Composer module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: emod_load.c,v 1.19 2007-11-03 16:49:02 cmatsuoka Exp $
+ * $Id: emod_load.c,v 1.20 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,7 +20,7 @@
 #define MAGIC_EMOD	MAGIC4('E','M','O','D')
 
 
-static int emod_test (FILE *, char *);
+static int emod_test (FILE *, char *, const int);
 static int emod_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info emod_loader = {
@@ -30,7 +30,7 @@ struct xmp_loader_info emod_loader = {
     emod_load
 };
 
-static int emod_test(FILE *f, char *t)
+static int emod_test(FILE *f, char *t, const int start)
 {
     if (read32b(f) != MAGIC_FORM)
 	return -1;

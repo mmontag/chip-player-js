@@ -8,7 +8,7 @@
 struct xmp_loader_info {
 	char *id;
 	char *name;
-	int (*test)(FILE *, char *);
+	int (*test)(FILE *, char *, const int);
 	int (*loader)(struct xmp_context *, FILE *, const int);
 	struct list_head list;
 };

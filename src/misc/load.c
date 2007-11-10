@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.55 2007-11-10 14:26:52 cmatsuoka Exp $
+ * $Id: load.c,v 1.56 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -438,7 +438,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 	    continue;
 	
 	fseek(f, 0, SEEK_SET);
-	if (li->test(f, n) == 0) {
+	if (li->test(f, n, 0) == 0) {
 	    fclose(f);
 	    return 0;
 	}
@@ -545,7 +545,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	if (o->verbosity > 3)
 	    report("Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
-   	if ((i = li->test(f, NULL)) == 0) {
+   	if ((i = li->test(f, NULL, 0)) == 0) {
 	    if (o->verbosity > 3)
 		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);

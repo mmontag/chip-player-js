@@ -1,7 +1,7 @@
 /* DigiBoosterPRO module loader for xmp
  * Copyright (C) 1999-2007 Claudio Matsuoka
  *
- * $Id: dbm_load.c,v 1.25 2007-10-23 00:12:29 cmatsuoka Exp $
+ * $Id: dbm_load.c,v 1.26 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 #define MAGIC_DBM0	MAGIC4('D','B','M','0')
 
 
-static int dbm_test(FILE *, char *);
+static int dbm_test(FILE *, char *, const int);
 static int dbm_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info dbm_loader = {
@@ -33,7 +33,7 @@ struct xmp_loader_info dbm_loader = {
 	dbm_load
 };
 
-static int dbm_test(FILE * f, char *t)
+static int dbm_test(FILE * f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_DBM0)
 		return -1;

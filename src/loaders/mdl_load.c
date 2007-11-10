@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.27 2007-10-20 11:50:39 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.28 2007-11-10 14:49:05 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -26,7 +26,7 @@
 #define MAGIC_DMDL	MAGIC4('D','M','D','L')
 
 
-static int mdl_test (FILE *, char *);
+static int mdl_test (FILE *, char *, const int);
 static int mdl_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mdl_loader = {
@@ -36,7 +36,7 @@ struct xmp_loader_info mdl_loader = {
     mdl_load
 };
 
-static int mdl_test(FILE *f, char *t)
+static int mdl_test(FILE *f, char *t, const int start)
 {
     uint16 id;
 

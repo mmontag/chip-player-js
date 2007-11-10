@@ -14,7 +14,7 @@
 #include "mod.h"
 #include "period.h"
 
-static int flt_test (FILE *, char *);
+static int flt_test (FILE *, char *, const int);
 static int flt_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info flt_loader = {
@@ -24,11 +24,11 @@ struct xmp_loader_info flt_loader = {
     flt_load
 };
 
-static int flt_test(FILE *f, char *t)
+static int flt_test(FILE *f, char *t, const int start)
 {
     char buf[4];
 
-    fseek(f, 1080, SEEK_SET);
+    fseek(f, start + 1080, SEEK_SET);
     fread(buf, 4, 1, f);
 
     /* Also RASP? */
@@ -38,7 +38,7 @@ static int flt_test(FILE *f, char *t)
     if (buf[3] != '4' && buf[3] != '8' && buf[3] != 'M')
 	return -1;
 
-    fseek(f, 0, SEEK_SET);
+    fseek(f, start + 0, SEEK_SET);
     read_title(f, t, 28);
 
     return 0;

@@ -1,7 +1,7 @@
 /* Desktop Tracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: dtt_load.c,v 1.16 2007-10-19 17:41:12 cmatsuoka Exp $
+ * $Id: dtt_load.c,v 1.17 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,7 +18,7 @@
 #define MAGIC_DskS	MAGIC4('D','s','k','S')
 
 
-static int dtt_test(FILE *, char *);
+static int dtt_test(FILE *, char *, const int);
 static int dtt_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info dtt_loader = {
@@ -28,7 +28,7 @@ struct xmp_loader_info dtt_loader = {
 	dtt_load
 };
 
-static int dtt_test(FILE *f, char *t)
+static int dtt_test(FILE *f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_DskT)
 		return -1;

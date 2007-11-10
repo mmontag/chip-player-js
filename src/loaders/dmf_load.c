@@ -2,7 +2,7 @@
  * Copyright (C) 2007 Claudio Matsuoka
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.16 2007-10-20 11:50:38 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.17 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,7 @@
 #define MAGIC_DDMF	MAGIC4('D','D','M','F')
 
 
-static int dmf_test(FILE *, char *);
+static int dmf_test(FILE *, char *, const int);
 static int dmf_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info dmf_loader = {
@@ -32,7 +32,7 @@ struct xmp_loader_info dmf_loader = {
 	dmf_load
 };
 
-static int dmf_test(FILE * f, char *t)
+static int dmf_test(FILE * f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_DDMF)
 		return -1;

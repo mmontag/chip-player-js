@@ -1,7 +1,7 @@
 /* DSMI Advanced Module Format loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.18 2007-10-22 21:16:51 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.19 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,7 +24,7 @@
 #include "period.h"
 
 
-static int amf_test(FILE *, char *);
+static int amf_test(FILE *, char *, const int);
 static int amf_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info amf_loader = {
@@ -34,7 +34,7 @@ struct xmp_loader_info amf_loader = {
 	amf_load
 };
 
-static int amf_test(FILE * f, char *t)
+static int amf_test(FILE * f, char *t, const int start)
 {
 	char buf[4];
 	int ver;

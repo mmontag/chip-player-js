@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amd_load.c,v 1.10 2007-10-20 11:50:37 cmatsuoka Exp $
+ * $Id: amd_load.c,v 1.11 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -15,7 +15,7 @@
 #include "load.h"
 
 
-static int amd_test (FILE *, char *);
+static int amd_test (FILE *, char *, const int);
 static int amd_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info amd_loader = {
@@ -25,17 +25,17 @@ struct xmp_loader_info amd_loader = {
     amd_load
 };
 
-static int amd_test(FILE *f, char *t)
+static int amd_test(FILE *f, char *t, const int start)
 {
     char buf[9];
 
-    fseek(f, 1062, SEEK_SET);
+    fseek(f, start + 1062, SEEK_SET);
     fread(buf, 1, 9, f);
 
     if (memcmp(buf, "<o", 2) || memcmp(buf + 6, "RoR", 3))
 	return -1;
 
-    fseek(f, 0, SEEK_SET);
+    fseek(f, start + 0, SEEK_SET);
     read_title(f, t, 24);
 
     return 0;

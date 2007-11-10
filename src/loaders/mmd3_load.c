@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.26 2007-10-26 11:34:12 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.27 2007-11-10 14:49:05 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -16,7 +16,7 @@
 #include "load.h"
 
 
-static int mmd3_test (FILE *, char *);
+static int mmd3_test (FILE *, char *, const int);
 static int mmd3_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mmd3_loader = {
@@ -26,7 +26,7 @@ struct xmp_loader_info mmd3_loader = {
 	mmd3_load
 };
 
-static int mmd3_test(FILE *f, char *t)
+static int mmd3_test(FILE *f, char *t, const int start)
 {
 	char id[4];
 	uint32 offset, len;
@@ -40,10 +40,10 @@ static int mmd3_test(FILE *f, char *t)
 	offset = read32b(f);		/* expdata_offset */
 	
 	if (offset) {
-		fseek(f, offset + 44, SEEK_SET);
+		fseek(f, start + offset + 44, SEEK_SET);
 		offset = read32b(f);
 		len = read32b(f);
-		fseek(f, offset, SEEK_SET);
+		fseek(f, start + offset, SEEK_SET);
 		read_title(f, t, len);
 	} else {
 		read_title(f, t, 0);

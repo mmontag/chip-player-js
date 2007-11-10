@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med4_load.c,v 1.19 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.20 2007-11-10 14:49:05 cmatsuoka Exp $
  */
 
 /*
@@ -24,7 +24,7 @@
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
 
 
-static int med4_test(FILE *, char *);
+static int med4_test(FILE *, char *, const int);
 static int med4_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info med4_loader = {
@@ -34,7 +34,7 @@ struct xmp_loader_info med4_loader = {
 	med4_load
 };
 
-static int med4_test(FILE *f, char *t)
+static int med4_test(FILE *f, char *t, const int start)
 {
 	if (read32b(f) !=  MAGIC_MED4)
 		return -1;

@@ -1,7 +1,7 @@
 /* Extended Module Player UMX module loader
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: umx_load.c,v 1.3 2007-10-19 17:41:17 cmatsuoka Exp $
+ * $Id: umx_load.c,v 1.4 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -24,7 +24,7 @@
 
 extern struct list_head loader_list;
 
-static int umx_test (FILE *, char *);
+static int umx_test (FILE *, char *, const int);
 static int umx_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info umx_loader = {
@@ -34,7 +34,7 @@ struct xmp_loader_info umx_loader = {
 	umx_load
 };
 
-static int umx_test(FILE *f, char *t)
+static int umx_test(FILE *f, char *t, const int start)
 {
 	int i, offset = -1;
 	uint8 buf[TEST_SIZE], *b = buf;

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.17 2007-10-20 11:50:39 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.18 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -23,7 +23,7 @@
 #define MAGIC_IM10	MAGIC4('I','M','1','0')
 #define MAGIC_II10	MAGIC4('I','I','1','0')
 
-static int imf_test (FILE *, char *);
+static int imf_test (FILE *, char *, const int);
 static int imf_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info imf_loader = {
@@ -33,9 +33,9 @@ struct xmp_loader_info imf_loader = {
     imf_load
 };
 
-static int imf_test(FILE *f, char *t)
+static int imf_test(FILE *f, char *t, const int start)
 {
-    fseek(f, 60, SEEK_SET);
+    fseek(f, start + 60, SEEK_SET);
     if (read32b(f) != MAGIC_IM10)
 	return -1;
 

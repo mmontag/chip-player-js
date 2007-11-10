@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: stim_load.c,v 1.15 2007-11-03 16:49:02 cmatsuoka Exp $
+ * $Id: stim_load.c,v 1.16 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -25,7 +25,7 @@
 #define MAGIC_STIM	MAGIC4('S','T','I','M')
 
 
-static int stim_test (FILE *, char *);
+static int stim_test (FILE *, char *, const int);
 static int stim_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info stim_loader = {
@@ -35,7 +35,7 @@ struct xmp_loader_info stim_loader = {
     stim_load
 };
 
-static int stim_test(FILE *f, char *t)
+static int stim_test(FILE *f, char *t, const int start)
 {
     if (read32b(f) != MAGIC_STIM)
 	return -1;

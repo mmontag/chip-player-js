@@ -23,7 +23,7 @@
 #include "load.h"
 
 
-static int ult_test (FILE *, char *);
+static int ult_test (FILE *, char *, const int);
 static int ult_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info ult_loader = {
@@ -33,7 +33,7 @@ struct xmp_loader_info ult_loader = {
     ult_load
 };
 
-static int ult_test(FILE *f, char *t)
+static int ult_test(FILE *f, char *t, const int start)
 {
     char buf[15];
 

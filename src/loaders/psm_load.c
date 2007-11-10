@@ -1,7 +1,7 @@
 /* Epic Megagames MASI PSM loader for xmp
  * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: psm_load.c,v 1.37 2007-11-09 00:25:18 cmatsuoka Exp $
+ * $Id: psm_load.c,v 1.38 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -65,7 +65,7 @@
 #define MAGIC_OPLH	MAGIC4('O','P','L','H')
 
 
-static int psm_test (FILE *, char *);
+static int psm_test (FILE *, char *, const int);
 static int psm_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info psm_loader = {
@@ -75,7 +75,7 @@ struct xmp_loader_info psm_loader = {
 	psm_load
 };
 
-static int psm_test(FILE * f, char *t)
+static int psm_test(FILE * f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_PSM_)
 		return -1;

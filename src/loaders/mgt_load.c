@@ -1,7 +1,7 @@
 /* Megatracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: mgt_load.c,v 1.14 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: mgt_load.c,v 1.15 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -19,7 +19,7 @@
 #define MAGIC_MCS	MAGIC4(0xbd,'M','C','S')
 
 
-static int mgt_test(FILE *, char *);
+static int mgt_test(FILE *, char *, const int);
 static int mgt_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mgt_loader = {
@@ -29,7 +29,7 @@ struct xmp_loader_info mgt_loader = {
 	mgt_load
 };
 
-static int mgt_test(FILE *f, char *t)
+static int mgt_test(FILE *f, char *t, const int start)
 {
 	int sng_ptr;
 
@@ -41,7 +41,7 @@ static int mgt_test(FILE *f, char *t)
 
 	fseek(f, 18, SEEK_CUR);
 	sng_ptr = read32b(f);
-	fseek(f, sng_ptr, SEEK_SET);
+	fseek(f, start + sng_ptr, SEEK_SET);
 
 	read_title(f, t, 32);
 	

@@ -1,7 +1,7 @@
 /* SoundSmith/MegaTracker module loader for xmp
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: ssmt_load.c,v 1.16 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: ssmt_load.c,v 1.17 2007-11-10 14:49:05 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,7 +31,7 @@
 #include "asif.h"
 
 
-static int mtp_test (FILE *, char *);
+static int mtp_test (FILE *, char *, const int);
 static int mtp_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mtp_loader = {
@@ -41,7 +41,7 @@ struct xmp_loader_info mtp_loader = {
 	mtp_load
 };
 
-static int mtp_test(FILE *f, char *t)
+static int mtp_test(FILE *f, char *t, const int start)
 {
 	char buf[6];
 
