@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.179 2007-11-10 15:40:21 cmatsuoka Exp $
+$Id: ChangeLog,v 1.180 2007-11-10 16:07:34 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -14,6 +14,8 @@ Stable versions
 	- added PulseAudio driver (using the simple API)
 	- remove restrictive test for Soundtracker modules (fixes
 	  99redballoons.mod, reported by Adric Riedel)
+	- fixed infinite loop control for jos-dr4k.xm (allows full replay
+	  time of 11:04 for Global Trash 3.mod, reported by Adric Riedel)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm

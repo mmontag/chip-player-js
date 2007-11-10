@@ -130,8 +130,15 @@ int xmpi_scan_module(struct xmp_context *ctx)
 	     * The scan routine falls into infinite looping and doesn't let
 	     * xmp play jos-dr4k.xm.
 	     * Claudio's workaround: we'll break infinite loops here.
+	     *
+	     * Date: Oct 27, 2007 8:05 PM
+	     * From: Adric Riedel <adric.riedel@gmail.com>
+	     * Jesper Kyd: Global Trash 3.mod (the 'Hardwired' theme) only
+	     * plays the first 4:41 of what should be a 10 minute piece.
+	     * (...) it dies at the end of position 2F
 	     */
-	    if (cnt_row > 255)
+
+	    if (cnt_row > 512)	/* was 255, but Global trash goes to 318 */
 		goto end_module;
 
 	    if (!loop_flg && tab_cnt[ord][row]) {
