@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: period.c,v 1.7 2007-11-10 20:52:42 cmatsuoka Exp $
+ * $Id: period.c,v 1.8 2007-11-10 22:36:21 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -111,7 +111,7 @@ int period_to_bend(int p, int n, int f, int a, int g, int type)
 }
 
 
-/* Convert finetune = 1200 * log2(C2SPD/8363)) using the Amiga frequency table.
+/* Convert finetune = 1200 * log2(C2SPD/8363))
  *
  *      c = (1200.0 * log(c2spd) - 1200.0 * log(c4_rate)) / M_LN2;
  *      xpo = c/100;
@@ -121,23 +121,7 @@ void c2spd_to_note(int c2spd, int *n, int *f)
 {
     int c;
 
-    c = (int)(1200.0 * log((double)c2spd / 8363) / M_LN2);
-    *n = c / 100;
-    *f = 128 * (c % 100) / 100;
-
-#if 0
-    int note, finetune, *t = period_amiga;
-
-    if (!(c2spd = (140 * c2spd) >> 8)) {
-	*n = *f = 0;
-	return;
-    }
-
-    for (note = 8; c2spd <= (MAX_PERIOD / 2); note -= 12, c2spd <<= 1);
-    for (; c2spd > MAX_PERIOD; note += 12, c2spd >>= 1);
-    for (; *t > c2spd; t += 8, note--);
-    for (finetune = -1; *t < c2spd; t--, finetune++);
-    *n = note;
-    *f = finetune << 4;
-#endif
+    c = (int)(1536.0 * log((double)c2spd / 8363) / M_LN2);
+    *n = c / 128;
+    *f = c % 128;
 }
