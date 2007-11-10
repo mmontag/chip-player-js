@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.33 2007-10-22 10:33:09 cmatsuoka Exp $
+ * $Id: control.c,v 1.34 2007-11-10 14:26:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -73,7 +73,7 @@ void xmp_init_callback(xmp_context ctx, void (*callback) (void *, int))
 	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
 	xmp_drv_register(&drv_callback);
-	xmp_init_formats();
+	xmp_init_formats(ctx);
 	pw_init();
 
 	xmp_register_driver_callback(ctx, callback);
@@ -86,7 +86,7 @@ void xmp_init(xmp_context ctx, int argc, char **argv)
 	int num;
 
 	xmp_init_drivers();
-	xmp_init_formats();
+	xmp_init_formats(ctx);
 	pw_init();
 
 	xmp_event_callback = NULL;

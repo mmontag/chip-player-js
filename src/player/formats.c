@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.64 2007-10-17 13:08:53 cmatsuoka Exp $
+ * $Id: formats.c,v 1.65 2007-11-10 14:26:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,6 +21,11 @@
 struct xmp_fmt_info *__fmt_head;
 
 LIST_HEAD(loader_list);
+
+struct exclude_id {
+	struct list_head list;
+	char *id;
+};
 
 void register_format(char *suffix, char *tracker)
 {
@@ -52,8 +57,12 @@ static void register_loader(struct xmp_loader_info *l)
 	register_loader(&x##_loader); \
 } while (0)
 
-void xmp_init_formats()
+void xmp_init_formats(xmp_context ctx)
 {
+	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	
+	INIT_LIST_HEAD(&p->exclude_list);
+
 	REG_LOADER(xm);
 	REG_LOADER(mod);
 	REG_LOADER(flt);

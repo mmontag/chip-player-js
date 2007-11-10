@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.54 2007-11-02 14:11:25 cmatsuoka Exp $
+ * $Id: load.c,v 1.55 2007-11-10 14:26:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -32,15 +32,15 @@ extern struct list_head *checked_format;
 
 char *global_filename;
 
-int decrunch_arc (FILE *, FILE *);
-int decrunch_arcfs (FILE *, FILE *);
-int decrunch_sqsh (FILE *, FILE *);
-int decrunch_pp (FILE *, FILE *);
-int decrunch_mmcmp (FILE *, FILE *);
-int decrunch_oxm (FILE *, FILE *);
-int decrunch_pw (FILE *, FILE *);
-int test_oxm(FILE *);
-int pw_check(unsigned char *, int);
+int decrunch_arc	(FILE *, FILE *);
+int decrunch_arcfs	(FILE *, FILE *);
+int decrunch_sqsh	(FILE *, FILE *);
+int decrunch_pp		(FILE *, FILE *);
+int decrunch_mmcmp	(FILE *, FILE *);
+int decrunch_oxm	(FILE *, FILE *);
+int decrunch_pw		(FILE *, FILE *);
+int test_oxm		(FILE *);
+int pw_check		(unsigned char *, int);
 
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
@@ -51,6 +51,80 @@ int pw_check(unsigned char *, int);
 #define BUILTIN_S404	0x07
 #define BUILTIN_OXM	0x08
 
+
+struct exclude_id {
+	struct list_head list;
+	char *id;
+};
+
+
+/*
+ * Check if the given format is in the exclude list
+ */
+static int is_excluded_fmt(struct xmp_context *ctx, char *s)
+{
+    struct xmp_player_context *p = &ctx->p;
+    struct list_head *head;
+    struct exclude_id *e;
+
+    list_for_each(head, &p->exclude_list) {
+        e = list_entry(head, struct exclude_id, list);
+	if (!strcasecmp(s, e->id))
+	    return 1;
+    }
+
+    return 0;
+}
+
+/*
+ * Exclude mod from the exclude list
+ */
+static void dont_exclude_mod(struct xmp_context *ctx)
+{
+    struct xmp_player_context *p = &ctx->p;
+    struct list_head *head;
+    struct exclude_id *e;
+
+    list_for_each(head, &p->exclude_list) {
+        e = list_entry(head, struct exclude_id, list);
+	if (!strcasecmp(e->id, "mod")) {
+	    list_del(&e->list);
+	}
+    }
+}
+
+static void build_exclude_list(struct xmp_context *ctx)
+{
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_options *o = &ctx->o;
+    struct exclude_id *e;
+    struct list_head *head;
+    struct xmp_fmt_info *f, *fmt;
+    char *tok;
+    int found;
+
+    tok = strtok(o->exclude_fmt, ", ");
+    while (tok) {
+    	e = malloc(sizeof(struct exclude_id));
+    	e->id = tok;
+    	list_add_tail(&e->list, &p->exclude_list);
+    	tok = strtok(NULL, ", ");
+    }
+
+    list_for_each(head, &p->exclude_list) {
+        e = list_entry(head, struct exclude_id, list);
+	xmp_get_fmt_info(&fmt);
+	found = 0;
+	for (f = fmt; f; f = f->next) {
+	    if (!strcasecmp(f->suffix, e->id)) {
+		found = 1;
+		break;
+	    }
+	}
+	if (!found)
+	    reportv(ctx, 0, "Warning: format \"%s\" not supported\n", e->id);
+    }
+}
 
 static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 {
@@ -143,8 +217,13 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    struct pw_format *format;
 
 	    format = list_entry(checked_format, struct pw_format, list);
-	    packer = format->name;
-	    builtin = BUILTIN_PW;
+
+	    if (!is_excluded_fmt(ctx, format->id)) {
+	        packer = format->name;
+	        builtin = BUILTIN_PW;
+
+		dont_exclude_mod(ctx);
+	    }
 	}
     }
 
@@ -328,9 +407,14 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
 int xmp_test_module(xmp_context ctx, char *s, char *n)
 {
     FILE *f;
+    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     struct xmp_loader_info *li;
     struct list_head *head;
     struct stat st;
+
+    if (o->exclude_fmt != NULL && list_empty(&p->exclude_list))
+	build_exclude_list((struct xmp_context *)ctx);
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -349,6 +433,10 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
+
+	if (is_excluded_fmt((struct xmp_context *)ctx, li->id))
+	    continue;
+	
 	fseek(f, 0, SEEK_SET);
 	if (li->test(f, n) == 0) {
 	    fclose(f);
@@ -391,6 +479,9 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
+
+    if (o->exclude_fmt != NULL && list_empty(&p->exclude_list))
+	build_exclude_list((struct xmp_context *)ctx);
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -447,10 +538,14 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
+
+	if (is_excluded_fmt((struct xmp_context *)ctx, li->id))
+	    continue;
+	
 	if (o->verbosity > 3)
 	    report("Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
-	if ((i = li->test(f, NULL)) == 0) {
+   	if ((i = li->test(f, NULL)) == 0) {
 	    if (o->verbosity > 3)
 		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);

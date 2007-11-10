@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.27 2007-11-09 20:05:04 cmatsuoka Exp $
+ * $Id: options.c,v 1.28 2007-11-10 14:26:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -183,7 +183,6 @@ static void usage(char *s, struct xmp_options *opt)
 
 "\nModule format options:\n"
 "   -x --exclude-format ids Exclude the specified IDs from format probing\n"
-"   -F --force-format id    Load data forcing a specific loader\n"
 "   -O --load-offset num    Load file from a specified offset\n"
 
 "\nInformation options:\n"
@@ -203,7 +202,7 @@ static void usage(char *s, struct xmp_options *opt)
 void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
-#define OPTIONS "8b:cD:d:F:f:hilM:mnO:o:P:qRrS:s:T:t:uVvx:"
+#define OPTIONS "8b:cD:d:f:hilM:mnO:o:P:qRrS:s:T:t:uVvx:"
     static struct option lopt[] = {
 	{ "8bit",		 0, 0, '8' },
 	{ "bits",		 1, 0, 'b' },
@@ -211,7 +210,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "crunch",		 1, 0, OPT_CRUNCH },
 	{ "driver",		 1, 0, 'd' },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
-	{ "force-format",	 1, 0, 'F' },
 	{ "frequency",		 1, 0, 'f' },
 	{ "offset-bug-emulation",0, 0, OPT_FX9BUG },
 	{ "help",		 0, 0, 'h' },
@@ -280,9 +278,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case OPT_FX9BUG:
 	    opt->flags |= XMP_CTL_FX9BUG;
-	    break;
-	case 'F':
-	    opt->force_id = optarg;
 	    break;
 	case 'f':
 	    opt->freq = strtoul(optarg, NULL, 0);
@@ -391,6 +386,9 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    exit (0);
 	case 'v':
 	    opt->verbosity++;
+	    break;
+	case 'x':
+	    opt->exclude_fmt = optarg;
 	    break;
 	case 'h':
 	    usage(argv[0], opt);

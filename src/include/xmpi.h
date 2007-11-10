@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.43 2007-10-30 11:57:51 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.44 2007-11-10 14:26:52 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -130,6 +130,7 @@ struct xmp_ord_info {
 
 /* Context */
 
+#include "list.h"
 #include "xxm.h"
 
 struct xmp_mod_context {
@@ -190,6 +191,7 @@ struct xmp_player_context {
 	struct xmp_channel *xc_data;
 	int *fetch_ctl;
 	int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+	struct list_head exclude_list;
 
 	struct xmp_mod_context m;
 };
