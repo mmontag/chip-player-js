@@ -70,8 +70,6 @@ static int st_test(FILE *f, char *t, const int start)
     for (pat = i = 0; i < 128; i++) {
 	if (mh.order[i] > 0x7f)
 	    return -1;
-	if (mh.order[i] && i > mh.len)
-	    return -1;
 	if (mh.order[i] > pat)
 	    pat = mh.order[i];
     }

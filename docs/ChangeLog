@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.178 2007-11-09 02:09:54 cmatsuoka Exp $
+$Id: ChangeLog,v 1.179 2007-11-10 15:40:21 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -12,6 +12,8 @@ Stable versions
 	- fixed Protracker 3 IFFMODL loader (process VERS chunk manually)
 	- added support to full sample loops in the Protracker 3 loader
 	- added PulseAudio driver (using the simple API)
+	- remove restrictive test for Soundtracker modules (fixes
+	  99redballoons.mod, reported by Adric Riedel)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
