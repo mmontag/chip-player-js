@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.180 2007-11-10 16:07:34 cmatsuoka Exp $
+$Id: ChangeLog,v 1.181 2007-11-10 20:52:42 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -16,6 +16,7 @@ Stable versions
 	  99redballoons.mod, reported by Adric Riedel)
 	- fixed infinite loop control for jos-dr4k.xm (allows full replay
 	  time of 11:04 for Global Trash 3.mod, reported by Adric Riedel)
+	- use floating point period generation for the software mixer
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
