@@ -194,6 +194,7 @@ follwing devices are supported:
 
   Name		Description
 
+  ahi		Amiga AHI audio output
   aix		AIX audio library (not tested, possibly broken)
   alsa		Advanced Linux Sound Architecture (ALSA) PCM
   alsa05	ALSA 0.5 / QNX Neutrino 6 sound system
