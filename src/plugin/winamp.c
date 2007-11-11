@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.3 2007-11-11 19:39:49 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.4 2007-11-11 20:18:35 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -28,6 +28,7 @@ DWORD WINAPI __stdcall play_loop(void *);
 int gen_freq = 2600;
 int killDecodeThread = 0;
 HANDLE thread_handle = INVALID_HANDLE_VALUE;
+HANDLE load_mutex;
 
 #define FREQ_SAMPLE_44 0
 #define FREQ_SAMPLE_22 1
@@ -86,10 +87,8 @@ static void driver_callback(void *b, int i)
 		Sleep(50);
 
 	t = mod.outMod->GetWrittenTime();
-	mod.SAAddPCMData(b, 1, 16, t);
+	mod.SAAddPCMData(b, 1, 16, t);	/* What is this supposed to be? */
 	mod.VSAAddPCMData(b, 1, 16, t);
-
-	l = mod.dsp_dosamples(b, i / 2, 16, 1, 44100) * 2;
 
 	mod.outMod->Write(b, i);
 }
@@ -234,9 +233,9 @@ int play_file(char *fn)
 
 	xmp_open_audio(ctx);
 
-	//pthread_mutex_lock(&load_mutex);
+	load_mutex = CreateMutex(NULL, TRUE, "load_mutex");
 	lret = xmp_load_module(ctx, fn);
-	//pthread_mutex_unlock(&load_mutex);
+	ReleaseMutex(load_mutex);
 
 	xmp_cfg.time = lret;
 	//xmp_get_module_info(ctx, mi);
@@ -313,13 +312,33 @@ int infoDlg(char *fn, HWND hwnd)
 
 void get_file_info(char *filename, char *title, int *length_in_ms)
 {
+	xmp_context ctx2;
+	int lret;
+	struct xmp_module_info mi;
+	struct xmp_options *opt;
 	char *x;
 
-	_D("song_info: %s", filename);
-	if ((x = strrchr(filename, '\\')))
-		filename = ++x;
-	wsprintf(title, "%s", title);
+	/* Create new context to load a file and get the length */
+	
+	ctx2 = xmp_create_context();
+	opt = xmp_get_options(ctx2);
+	opt->skipsmp = 1;	/* don't load samples */
 
+	load_mutex = CreateMutex(NULL, TRUE, "load_mutex");
+	lret = xmp_load_module(ctx2, filename);
+	ReleaseMutex(load_mutex);
+
+	if (lret < 0) {
+		xmp_free_context(ctx2);
+		return;
+        }
+
+	*length_in_ms = lret * 1000;
+	xmp_get_module_info(ctx2, &mi);
+	wsprintf(title, "%s", mi.name);
+
+        xmp_release_module(ctx2);
+        xmp_free_context(ctx2);
 }
 
 void eq_set(int on, char data[10], int preamp)
