@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.184 2007-11-11 16:06:52 cmatsuoka Exp $
+$Id: ChangeLog,v 1.185 2007-11-11 21:54:33 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -14,12 +14,13 @@ Stable versions
 	- added PulseAudio driver (using the simple API)
 	- remove restrictive test for Soundtracker modules (fixes
 	  99redballoons.mod, reported by Adric Riedel)
-	- fixed infinite loop control for jos-dr4k.xm (allows full replay
-	  time of 11:04 for Global Trash 3.mod, reported by Adric Riedel)
+	- fixed infinite loop control (allows full replay time of 11:04 for
+	  Gryzor's extended Global Trash 3.mod, reported by Adric Riedel)
 	- use floating point period generation for the software mixer
 	- fix S3M tempo/bpm setting effect (fixes seaside_hotel.s3m)
 	- MinGW32 build fixes and new Windows driver (based on MikMod)
 	- merged Amiga AHI driver written by Lorence Lombardo
+	- don't read commands from terminal in Windows and Amiga
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
