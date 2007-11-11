@@ -64,6 +64,9 @@ The Authors
 * Priit Jarv
 - FreeBSD port of xmp 1.0.1
 
+* Lorence Lombardo <lombi@iprimus.com.au>
+- Amiga AHI driver
+
 * John v/d Kamp <blade_@dds.nl>
 - 15 bpp support for xxmp
 

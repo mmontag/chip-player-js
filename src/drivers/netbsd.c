@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: netbsd.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
+ * $Id: netbsd.c,v 1.9 2007-11-11 16:06:52 cmatsuoka Exp $
  */
 
 /* based upon bsd.c and improved from solaris.c. Tested running NetBSD. */
@@ -107,8 +107,8 @@ static int setaudio (struct xmp_options *o)
     close(audioctl_fd);
 
     parm_init ();
-    chkparm1 ("gain", gain = atoi (token));
-    chkparm1 ("buffer", bsize = atoi (token));
+    chkparm1 ("gain", gain = strtoul(token, NULL, 0));
+    chkparm1 ("buffer", bsize = strtoul(token, NULL, 0));
     parm_end ();
 /* XXX chkparm1 ("port", port = (int)*token)
     parm_end ();

@@ -122,9 +122,9 @@ static int setaudio (struct xmp_options *o)
    //printf( "In SetAudio...\n" );
 
    parm_init();
-   chkparm1("sharing", sharing = *token );
-   chkparm1("device",  device  = atoi (token));
-   chkparm1("buffer",  bsize   = atoi (token));
+   chkparm1("sharing", sharing = *token);
+   chkparm1("device",  device  = atoi(token));
+   chkparm1("buffer",  bsize   = strtoul(token, NULL, 0));
    parm_end();
 
 

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: bsd.c,v 1.7 2007-10-22 10:13:49 cmatsuoka Exp $
+ * $Id: bsd.c,v 1.8 2007-11-11 16:06:52 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -78,10 +78,10 @@ static int setaudio(struct xmp_options *o)
     char *token;
     char **parm = o->parm;
 
-    parm_init ();
-    chkparm1 ("gain", gain = atoi (token));
-    chkparm1 ("buffer", bsize = atoi (token));
-    parm_end ();
+    parm_init();
+    chkparm1("gain", gain = strtoul(token, NULL, 0));
+    chkparm1("buffer", bsize = strtoul(token, NULL, 0));
+    parm_end();
 
     if (gain < AUDIO_MIN_GAIN)
 	gain = AUDIO_MIN_GAIN;

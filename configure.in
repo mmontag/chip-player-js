@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.41 2007-11-11 12:54:15 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.42 2007-11-11 16:06:52 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -540,6 +540,13 @@ beos*)
 	LIBS="${LIBS} -lmedia -lbe"
 	LIBM=""
     fi
+    ;;
+dnl
+dnl	Test for AmigaOS
+dnl
+amigaos*)
+    DRIVERS="${DRIVERS} amiga.o"
+    AC_DEFINE(DRIVER_AMIGA)
     ;;
 dnl
 dnl	Test for Mingw32

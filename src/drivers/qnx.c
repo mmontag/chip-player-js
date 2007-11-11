@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: qnx.c,v 1.9 2007-10-22 10:13:49 cmatsuoka Exp $
+ * $Id: qnx.c,v 1.10 2007-11-11 16:06:52 cmatsuoka Exp $
  */
 
 /*
@@ -74,7 +74,7 @@ static int init(struct xmp_context *ctx)
  
     parm_init();
     chkparm1("dev", dev = token);
-    chkparm1("buffer", bsize = atoi (token));
+    chkparm1("buffer", bsize = strtoul(token, NULL, 0));
     parm_end();
 
     rate = o->freq;

@@ -1,4 +1,4 @@
-/* $Id: config.h.in,v 1.12 2007-11-09 02:09:54 cmatsuoka Exp $ */
+/* $Id: config.h.in,v 1.13 2007-11-11 16:06:52 cmatsuoka Exp $ */
 
 /* Define DRIVER_OSS_* to enable OSS /dev/sequencer and /dev/audio support */
 #undef DRIVER_OSS_SEQ
@@ -30,6 +30,9 @@
 
 /* Define to enable BeOS audio support */
 #undef DRIVER_BEOS
+
+/* Define to enable Amiga AHI audio support */
+#undef DRIVER_AMIGA
 
 /* Define to enable Win32 audio support */
 #undef DRIVER_WIN32
