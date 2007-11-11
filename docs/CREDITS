@@ -132,7 +132,7 @@ Reused code
 * Russell Marks
 - Decompression routines from nomarch
 
-* Tony Million
+* Bjornar Henden <bhenden@online.no>
 - portions of the win32 driver
 
 * Arturo R. Montesinos <arami@fi.upm.es>
@@ -172,6 +172,9 @@ Other contributors
 * Hardware
   Davi Lima (AWE32 card with 2Mb RAM), Miod "Pitr" Vallat (Mach 3 rasoir,
   lames, baume après-rasage, pansements antiseptiques).
+
+* OSX builds and packaging
+  Rudá Moura
 
 * RPM packaging
   Dominik Mierzejewski
