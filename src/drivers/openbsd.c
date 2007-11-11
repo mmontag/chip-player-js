@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: openbsd.c,v 1.9 2007-11-11 16:06:52 cmatsuoka Exp $
+ * $Id: openbsd.c,v 1.10 2007-11-11 16:07:29 cmatsuoka Exp $
  */
 
 /* This should work for OpenBSD */
@@ -82,7 +82,7 @@ static int setaudio(struct xmp_options *o)
 
     parm_init();
     chkparm1("gain", gain = strtoul(token, NULL, 0));
-    chkparm1("buffer", bsize = strotoul(token, NULL, 0));
+    chkparm1("buffer", bsize = strtoul(token, NULL, 0));
     parm_end();
 
     if (gain < AUDIO_MIN_GAIN)
