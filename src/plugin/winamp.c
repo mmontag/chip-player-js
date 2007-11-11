@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.2 2007-10-30 20:40:22 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.3 2007-11-11 19:39:49 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -24,11 +24,10 @@ _DllMainCRTStartup(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 }
 
 int paused;
-DWORD WINAPI __stdcall PlayThread(void *b);
+DWORD WINAPI __stdcall play_loop(void *);
 int gen_freq = 2600;
 int killDecodeThread = 0;
 HANDLE thread_handle = INVALID_HANDLE_VALUE;
-
 
 #define FREQ_SAMPLE_44 0
 #define FREQ_SAMPLE_22 1
@@ -49,13 +48,11 @@ typedef struct {
 	struct xmp_module_info mod_info;
 } XMPConfig;
 
-
 XMPConfig xmp_cfg;
 static int xmp_plugin_audio_error = FALSE;
 static short audio_open = FALSE;
 static xmp_context ctx;
 static int playing;
-
 
 void stop()
 {
@@ -80,27 +77,32 @@ void stop()
 	mod.SAVSADeInit();
 }
 
-
 static void driver_callback(void *b, int i)
 {
-#if 0
-	play_data.ipb->pass_audio(play_data.ipb, play_data.fmt, play_data.nch,
-					i, b, &play_data.ipb->playing);
-#endif
-}
+	int n = (i / 2) << (mod.dsp_isactive()? 1 : 0);
+	int t;
 
+	while (mod.outMod->CanWrite() < n)
+		Sleep(50);
+
+	t = mod.outMod->GetWrittenTime();
+	mod.SAAddPCMData(b, 1, 16, t);
+	mod.VSAAddPCMData(b, 1, 16, t);
+
+	l = mod.dsp_dosamples(b, i / 2, 16, 1, 44100) * 2;
+
+	mod.outMod->Write(b, i);
+}
 
 void config(HWND hwndParent)
 {
 	MessageBox(hwndParent, "Later.", "Configuration", MB_OK);
 }
 
-
 void about(HWND hwndParent)
 {
 	MessageBox(hwndParent, "Later.", "About XMP", MB_OK);
 }
-
 
 void init()
 {
@@ -143,11 +145,9 @@ void init()
 	//xmp_register_event_callback(x11_event_callback);
 }
 
-
 void quit()
 {
 }
-
 
 int is_our_file(char *fn)
 {
@@ -157,8 +157,7 @@ int is_our_file(char *fn)
 	return 0;
 }
 
-
-int play(char *fn)
+int play_file(char *fn)
 {
 	int maxlatency;
 	DWORD tmp;
@@ -167,12 +166,12 @@ int play(char *fn)
 	struct xmp_options *opt;
 	int lret;
 	int fmt, nch;
-	
+
 	strcpy(lastfn, fn);
 
 	opt = xmp_get_options(ctx);
 
-	//stop();		/* sanity check */
+	//stop();               /* sanity check */
 
 	if ((f = fopen(fn, "rb")) == NULL) {
 		playing = 0;
@@ -218,9 +217,9 @@ int play(char *fn)
 
 	//fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
 	nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
-	
+
 	if (audio_open)
-	    mod.outMod->Close();
+		mod.outMod->Close();
 	audio_open = TRUE;
 
 	paused = 0;
@@ -233,11 +232,10 @@ int play(char *fn)
 	mod.VSASetInfo(44100, 1);
 	mod.outMod->SetVolume(-666);
 
-	
 	xmp_open_audio(ctx);
 
 	//pthread_mutex_lock(&load_mutex);
-	lret =  xmp_load_module(ctx, fn);
+	lret = xmp_load_module(ctx, fn);
 	//pthread_mutex_unlock(&load_mutex);
 
 	xmp_cfg.time = lret;
@@ -248,14 +246,24 @@ int play(char *fn)
 
 	//xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
 
-
 	killDecodeThread = 0;
-	thread_handle = (HANDLE)CreateThread(NULL, 0,
-			(LPTHREAD_START_ROUTINE) PlayThread,
-			(void *)&killDecodeThread, 0, &tmp);
+	thread_handle = (HANDLE) CreateThread(NULL, 0,
+					      (LPTHREAD_START_ROUTINE)
+					      play_loop,
+					      (void *)&killDecodeThread, 0,
+					      &tmp);
 	return 0;
 }
 
+DWORD WINAPI __stdcall play_loop(void *b)
+{
+	xmp_play_module(ctx);
+	xmp_release_module(ctx);
+	xmp_close_audio(ctx);
+	playing = 0;
+
+	return 0;
+}
 
 void pause()
 {
@@ -263,71 +271,60 @@ void pause()
 	mod.outMod->Pause(1);
 }
 
-
 void unpause()
 {
 	paused = 0;
 	mod.outMod->Pause(0);
 }
 
-
 int is_paused()
 {
 	return paused;
 }
-
 
 int getlength()
 {
 	return -1000;
 }
 
-
 int getoutputtime()
 {
 	return mod.outMod->GetOutputTime();
 }
 
-
 void setoutputtime(int time_in_ms)
 {
 }
-
 
 void setvolume(int volume)
 {
 	mod.outMod->SetVolume(volume);
 }
 
-
 void setpan(int pan)
 {
 	mod.outMod->SetPan(pan);
 }
-
 
 int infoDlg(char *fn, HWND hwnd)
 {
 	return 0;
 }
 
-
 void get_file_info(char *filename, char *title, int *length_in_ms)
 {
 	char *x;
 
 	_D("song_info: %s", filename);
-	if ((x = strrchr (filename, '\\')))
+	if ((x = strrchr(filename, '\\')))
 		filename = ++x;
 	wsprintf(title, "%s", title);
 
 }
 
-
 void eq_set(int on, char data[10], int preamp)
 {
 }
-
 
 In_Module mod = {
 	IN_VER,
@@ -343,7 +340,7 @@ In_Module mod = {
 	get_file_info,
 	infoDlg,
 	is_our_file,
-	play,
+	play_file,
 	pause,
 	unpause,
 	is_paused,
@@ -365,31 +362,4 @@ In_Module *winampGetInModule2()
 	return &mod;
 }
 
-
 int _fltused = 0;
-DWORD WINAPI __stdcall PlayThread(void *b)
-{
-	int l;
-
-	while (!*((int *)b)) {
-		if (mod.outMod->CanWrite() >= ((sizeof(sample_buffer) / 2) <<
-						(mod.dsp_isactive()? 1 : 0))) {
-			{
-				int t = mod.outMod->GetWrittenTime();
-				mod.SAAddPCMData((char *)sample_buffer, 1, 16,
-						 t);
-				mod.VSAAddPCMData((char *)sample_buffer, 1, 16,
-						  t);
-			}
-
-			l = mod.dsp_dosamples(sample_buffer, l / 2, 16,
-					      1, 44100) * 2;
-
-			mod.outMod->Write((char *)sample_buffer, l);
-		} else {
-			Sleep(50);
-		}
-	}
-
-	return 0;
-}
