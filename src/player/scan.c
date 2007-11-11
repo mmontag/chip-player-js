@@ -80,11 +80,10 @@ int xmpi_scan_module(struct xmp_context *ctx)
 
     while (42) {
 	if ((uint32)++ord >= m->xxh->len) {
-	    if ((uint32)++ord >= m->xxh->len)
+	    /*if ((uint32)++ord >= m->xxh->len)*/
 		ord = ((uint32)m->xxh->rst > m->xxh->len ||
 			(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
 			0 : m->xxh->rst;
-	    if (m->xxo[ord] == S3M_END)
 		break;
 	} 
 
@@ -95,7 +94,6 @@ int xmpi_scan_module(struct xmp_context *ctx)
 		ord = m->xxh->len;
 	        continue;
 	    }
-	    ord++;
 	    continue;
 	}
 
