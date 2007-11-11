@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.4 2007-11-11 20:18:35 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.5 2007-11-11 20:38:20 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -25,9 +25,7 @@ _DllMainCRTStartup(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 
 int paused;
 DWORD WINAPI __stdcall play_loop(void *);
-int gen_freq = 2600;
-int killDecodeThread = 0;
-HANDLE thread_handle = INVALID_HANDLE_VALUE;
+HANDLE decode_thread = INVALID_HANDLE_VALUE;
 HANDLE load_mutex;
 
 #define FREQ_SAMPLE_44 0
@@ -62,17 +60,16 @@ void stop()
 
 	xmp_stop_module(ctx);
 
-	if (thread_handle != INVALID_HANDLE_VALUE) {
-		killDecodeThread = 1;
-		if (WaitForSingleObject(thread_handle, INFINITE) ==
+	if (decode_thread != INVALID_HANDLE_VALUE) {
+		if (WaitForSingleObject(decode_thread, INFINITE) ==
 		    WAIT_TIMEOUT) {
 			MessageBox(mod.hMainWindow,
 				   "error asking thread to die!\n",
 				   "error killing decode thread", 0);
-			TerminateThread(thread_handle, 0);
+			TerminateThread(decode_thread, 0);
 		}
-		CloseHandle(thread_handle);
-		thread_handle = INVALID_HANDLE_VALUE;
+		CloseHandle(decode_thread);
+		decode_thread = INVALID_HANDLE_VALUE;
 	}
 	mod.outMod->Close();
 	mod.SAVSADeInit();
@@ -170,7 +167,7 @@ int play_file(char *fn)
 
 	opt = xmp_get_options(ctx);
 
-	//stop();               /* sanity check */
+	stop();				/* sanity check */
 
 	if ((f = fopen(fn, "rb")) == NULL) {
 		playing = 0;
@@ -241,16 +238,10 @@ int play_file(char *fn)
 	//xmp_get_module_info(ctx, mi);
 	//strcpy(ii->filename, "");
 
-	//new_module = 1;
-
 	//xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
 
-	killDecodeThread = 0;
-	thread_handle = (HANDLE) CreateThread(NULL, 0,
-					      (LPTHREAD_START_ROUTINE)
-					      play_loop,
-					      (void *)&killDecodeThread, 0,
-					      &tmp);
+	decode_thread = (HANDLE)CreateThread(NULL, 0,
+			(LPTHREAD_START_ROUTINE)play_loop, NULL, 0, &tmp);
 	return 0;
 }
 
