@@ -1,7 +1,7 @@
 /* Scream Tracker 3 module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.29 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.30 2007-11-11 01:10:36 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -151,14 +151,6 @@ static void xlat_fx (int c, struct xxm_event *e)
 	    arpeggio_val[c] = e->fxp;
 	else
 	    e->fxp = arpeggio_val[c];
-	break;
-    case FX_TEMPO:	/* BPM */
-	if (e->fxp && e->fxp < 0x21)
-	    e->fxp = 0x21;
-	break;
-    case FX_S3M_TEMPO:
-	if (e->fxp <= 0x20)
-	    e->fxt = FX_TEMPO;
 	break;
     case FX_S3M_EXTENDED:		/* Extended effects */
 	e->fxt = FX_EXTENDED;
