@@ -2,7 +2,7 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.40 2007-11-09 02:09:54 cmatsuoka Exp $
+dnl $Id: configure.in,v 1.41 2007-11-11 12:54:15 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT
@@ -59,6 +59,9 @@ AC_ARG_ENABLE(bmp-plugin,
 AC_ARG_ENABLE(audacious-plugin,
     [  --enable-audacious-plugin Compile the Audacious plugin])
 
+AC_ARG_ENABLE(winamp-plugin,
+    [  --enable-winamp-plugin  Compile the Winamp plugin])
+
 AC_ARG_ENABLE(esd,
     [  --enable-esd            Compile ESD support])
 
@@ -74,21 +77,6 @@ AC_ARG_WITH(esd,
 AC_ARG_WITH(nas,
     [  --with-nas=<path>       NAS prefix (optional)],
     nas_path="$withval")
-
-AC_ARG_WITH(xmms,
-    [  --with-xmms=<path>      XMMS prefix (optional)],
-    xmms_path="$withval",
-    xmms_path="/usr")
-
-AC_ARG_WITH(bmp,
-    [  --with-bmp=<path>       Beep Media Player prefix (optional)],
-    bmp_path="$withval",
-    bmp_path="/usr")
-
-AC_ARG_WITH(audacious,
-    [  --with-audacious=<path> Audacious prefix (optional)],
-    audacious_path="$withval",
-    audacious_path="/usr")
 
 dnl -----------------------------------------------------------------------
 dnl Sanitize prefixes
@@ -134,10 +122,9 @@ cygwin* | mingw*)
     is_win32=yes
     CFLAGS="${CFLAGS}"
     enable_arts=no
+    enable_xmms_plugin=no
     enable_bmp_plugin=no
     enable_audacious_plugin=no
-    enable_winamp_plugin=yes
-    PLUGINS="$PLUGINS winamp"
     ;;
 esac
 
@@ -255,6 +242,14 @@ if test "${enable_audacious_plugin}" = "yes"; then
     if test "${ac_cv_header_audacious_plugin_h}" = "yes"; then
         PLUGINS="$PLUGINS audacious"
     fi
+fi
+
+dnl -----------------------------------------------------------------------
+dnl Check for Winamp SDK
+dnl -----------------------------------------------------------------------
+
+if test "${enable_winamp_plugin}" = "yes"; then
+    PLUGINS="$PLUGINS winamp"
 fi
 
 dnl -----------------------------------------------------------------------

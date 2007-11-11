@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: misc.c,v 1.12 2007-10-20 13:35:09 cmatsuoka Exp $
+ * $Id: misc.c,v 1.13 2007-11-11 12:54:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -14,10 +14,10 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include "xmpi.h"
-
 
 int report(char *fmt, ...)
 {
@@ -60,3 +60,19 @@ char *str_adj(char *s)
 
 	return s;
 }
+
+int get_temp_dir(char *buf, int size)
+{
+#ifdef WIN32
+	char *def = "C:\\WINDOWS\\TEMP\\";
+	char *tmp = getenv("TEMP");
+#else
+	char *def = "/tmp/";
+	char *tmp = getenv("TMPDIR");
+#endif
+
+	strncpy(buf, tmp ? tmp : def, size);
+
+	return 0;
+}
+

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.44 2007-11-10 14:26:52 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.45 2007-11-11 12:54:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -262,6 +262,7 @@ uint16	readmem16b		(uint8 *);
 uint32	readmem32l		(uint8 *);
 uint32	readmem32b		(uint8 *);
 
+int	get_temp_dir		(char *, int);
 #ifdef WIN32
 int	mkstemp			(char *);
 #endif

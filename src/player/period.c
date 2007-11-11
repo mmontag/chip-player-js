@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: period.c,v 1.9 2007-11-11 00:11:20 cmatsuoka Exp $
+ * $Id: period.c,v 1.10 2007-11-11 12:54:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -46,7 +46,6 @@ inline int note_to_period(int n, int type)
 
     return type ?
 	(120 - n) << 4 :			/* Linear */
-	//*(t + ((n1 % 12) << 3)) >> (n1 / 12);	/* Amiga */
         (int)(6847.0 / pow(2, d / 12));		/* Amiga */
 }
 
@@ -77,7 +76,7 @@ int period_to_note(int p)
 /* Get pitchbend from base note and period */
 int period_to_bend(int p, int n, int f, int a, int g, int type)
 {
-    int b;//, *t = period_amiga + MAX_NOTE;
+    int b;
     double d;
 
     if (!n)
@@ -98,19 +97,6 @@ int period_to_bend(int p, int n, int f, int a, int g, int type)
 
     if (p < MIN_PERIOD_A)
 	p = MIN_PERIOD_A;
-
-#if 0
-    /* Fixup for panic.s3m  (from Toru Egashira's NSPmod) */
-    for (n = NOTE_B0 - 1 - n; p <= (MAX_PERIOD / 2); n += 12, p <<= 1);
-
-    for (; p > *t; t -= 8, n--);
-
-    /* Get correct logarithmic interpolation for bending value */
-    //b = 100 * n + (100 * (*t - p) / (*t - *(t + 8))) + f * 100 / 128;
-    b = 100 * n + (int)(1200.0 * log((double)*t / p) / M_LN2) + f * 100 / 128;
-
-    return g ? b / 100 * 100 : b;	/* Amiga */
-#endif
 
     d = note_to_period(n, 0);
     b = 100.0 * ((1536.0 * log(d / p) / M_LN2) + f) / 128;

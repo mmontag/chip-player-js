@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.56 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: load.c,v 1.57 2007-11-11 12:54:16 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -126,6 +126,8 @@ static void build_exclude_list(struct xmp_context *ctx)
     }
 }
 
+#define TMP_SIZE 512
+
 static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 {
     struct xmp_options *o = &ctx->o;
@@ -133,11 +135,13 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     char *cmd;
     FILE *t;
     int fd, builtin, res;
-    char *packer, *temp, *temp2;
+    char *packer, *temp, *temp2, tmp[TMP_SIZE];
 
     packer = cmd = NULL;
     builtin = res = 0;
-    temp = strdup("/tmp/xmp_XXXXXX");
+    get_temp_dir(tmp, TMP_SIZE);
+    strncat(tmp, "xmp_XXXXXX", TMP_SIZE);
+    temp = strdup(tmp);
 
     fseek(*f, 0, SEEK_SET);
     b = calloc(1, PW_TEST_CHUNK);

@@ -151,7 +151,7 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	m->xxs[i].lpe = 1024;
 
 	for (j = 0; j < 1024; j++)
-	    am_noise[j] = random() % 256;
+	    am_noise[j] = rand() % 256;
 
 	wave = (char *)&am_noise[0];
     }
