@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: period.c,v 1.8 2007-11-10 22:36:21 cmatsuoka Exp $
+ * $Id: period.c,v 1.9 2007-11-11 00:11:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,22 +40,22 @@ static int period_amiga[] = {
 
 /* Get period from note */
 /* Finetune moved to period_to_bend () --claudio */
-int note_to_period(int n, int type)
+inline int note_to_period(int n, int type)
 {
-    int *t = period_amiga;
-    int n1 = n + 1;
+    double d = (double)n;
 
     return type ?
 	(120 - n) << 4 :			/* Linear */
-	*(t + ((n1 % 12) << 3)) >> (n1 / 12);	/* Amiga */
+	//*(t + ((n1 % 12) << 3)) >> (n1 / 12);	/* Amiga */
+        (int)(6847.0 / pow(2, d / 12));		/* Amiga */
 }
 
 
 /* For the software mixer */
 int note_to_period_mix(int n, int b)
 {
-    double f = (double)n + 1 + (double)b / 100;
-    return (int)(16.0 * 7254.0 / pow(2, f / 12));
+    double d = (double)n + (double)b / 100;
+    return (int)(16.0 * 6847.0 / pow(2, d / 12));
 }
 
 
@@ -77,7 +77,8 @@ int period_to_note(int p)
 /* Get pitchbend from base note and period */
 int period_to_bend(int p, int n, int f, int a, int g, int type)
 {
-    int b, *t = period_amiga + MAX_NOTE;
+    int b;//, *t = period_amiga + MAX_NOTE;
+    double d;
 
     if (!n)
 	return 0;
@@ -90,14 +91,15 @@ int period_to_bend(int p, int n, int f, int a, int g, int type)
     }
 
     if (type) {
-	b = (100 * (((120 - n) << 4) - p)) >> 4;	/* Linear */
-	b += f * 100 / 128;
+	/* b = (100 * (((120 - n) << 4) - p)) >> 4 + f * 100 / 128; */
+	b = 100 * (8 * (((120 - n) << 4) - p) + f) / 128;	/* Linear */
 	return g ? b / 100 * 100 : b;
     }
 
     if (p < MIN_PERIOD_A)
 	p = MIN_PERIOD_A;
 
+#if 0
     /* Fixup for panic.s3m  (from Toru Egashira's NSPmod) */
     for (n = NOTE_B0 - 1 - n; p <= (MAX_PERIOD / 2); n += 12, p <<= 1);
 
@@ -106,6 +108,12 @@ int period_to_bend(int p, int n, int f, int a, int g, int type)
     /* Get correct logarithmic interpolation for bending value */
     //b = 100 * n + (100 * (*t - p) / (*t - *(t + 8))) + f * 100 / 128;
     b = 100 * n + (int)(1200.0 * log((double)*t / p) / M_LN2) + f * 100 / 128;
+
+    return g ? b / 100 * 100 : b;	/* Amiga */
+#endif
+
+    d = note_to_period(n, 0);
+    b = 100.0 * ((1536.0 * log(d / p) / M_LN2) + f) / 128;
 
     return g ? b / 100 * 100 : b;	/* Amiga */
 }
