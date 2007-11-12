@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.23 2007-10-22 10:33:08 cmatsuoka Exp $
+ * $Id: wav.c,v 1.24 2007-11-12 23:04:50 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -114,9 +114,17 @@ static int init(struct xmp_context *ctx)
 	o->outfile = filename;
     }
 
-    fd = strcmp(o->outfile, "-") ? creat(o->outfile, 0644) : 1;
-    if (fd < 0)
-	return -1;
+    if (strcmp(o->outfile, "-")) {
+#if WIN32
+	fd = open(o->outfile, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0644);
+#else
+	fd = open(o->outfile, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+#endif
+	if (fd < 0)
+	    return -1;
+    } else {
+	fd = 1;
+    }
 
     buf = malloc(strlen (drv_wav.description) + strlen (o->outfile) + 8);
     if (strcmp (o->outfile, "-")) {
