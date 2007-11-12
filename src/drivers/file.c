@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: file.c,v 1.12 2007-10-22 10:33:07 cmatsuoka Exp $
+ * $Id: file.c,v 1.13 2007-11-12 23:25:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,6 +23,10 @@
 #include "driver.h"
 #include "mixer.h"
 #include "convert.h"
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 static int fd;
 static int endian;
@@ -82,7 +86,13 @@ static int init(struct xmp_context *ctx)
     if (!o->outfile)
 	o->outfile = "xmp.out";
 
-    fd = strcmp (o->outfile, "-") ? creat (o->outfile, 0644) : 1;
+    if (strcmp(o->outfile, "-")) {
+	fd = open(o->outfile, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0644);
+	if (fd < 0)
+	    return -1;
+    } else {
+	fd = 1;
+    }
 
     bsize = strlen(drv_file.description) + strlen (o->outfile) + 8;
     buf = malloc(bsize);

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: wav.c,v 1.24 2007-11-12 23:04:50 cmatsuoka Exp $
+ * $Id: wav.c,v 1.25 2007-11-12 23:25:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,6 +23,10 @@
 #include "driver.h"
 #include "mixer.h"
 #include "convert.h"
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 static int fd;
 static uint32 size;
@@ -115,11 +119,7 @@ static int init(struct xmp_context *ctx)
     }
 
     if (strcmp(o->outfile, "-")) {
-#if WIN32
 	fd = open(o->outfile, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0644);
-#else
-	fd = open(o->outfile, O_WRONLY|O_CREAT|O_TRUNC, 0644);
-#endif
 	if (fd < 0)
 	    return -1;
     } else {
