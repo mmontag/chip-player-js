@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mdl_load.c,v 1.28 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: mdl_load.c,v 1.29 2007-11-12 19:30:32 cmatsuoka Exp $
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
@@ -94,6 +94,9 @@ static struct mdl_envelope *f_env;
 static void xlat_fx_common(uint8 *t, uint8 *p)
 {
     switch (*t) {
+    case 0x00:			/* - - No effect */
+	*p = 0;
+	break;
     case 0x07:			/* 7 - Set BPM */
 	*t = FX_S3M_BPM;
 	break;

@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.185 2007-11-11 21:54:33 cmatsuoka Exp $
+$Id: ChangeLog,v 1.186 2007-11-12 19:30:32 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -21,6 +21,8 @@ Stable versions
 	- MinGW32 build fixes and new Windows driver (based on MikMod)
 	- merged Amiga AHI driver written by Lorence Lombardo
 	- don't read commands from terminal in Windows and Amiga
+	- reset parameter in case of MDL "no effect" (saa.mdl pos 13 ch 9
+	  plays correctly, reported by Gürkan Sengün)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
