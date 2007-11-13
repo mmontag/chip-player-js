@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.13 2007-11-13 20:38:02 cmatsuoka Exp $
+ * $Id: win32.c,v 1.14 2007-11-13 22:29:31 cmatsuoka Exp $
  */
 
 /*
@@ -20,14 +20,15 @@
 #include "driver.h"
 #include "mixer.h"
 
-#define NUMBUFFERS	6			/* number of buffers */
+#define MAXBUFFERS	32			/* max number of buffers */
 #define BUFFERSIZE	120			/* buffer size in ms */
 
 static HWAVEOUT hwaveout;
-static WAVEHDR header[NUMBUFFERS];
-static LPSTR buffer[NUMBUFFERS];		/* pointers to buffers */
+static WAVEHDR header[MAXBUFFERS];
+static LPSTR buffer[MAXBUFFERS];		/* pointers to buffers */
 static WORD freebuffer;				/*  */
 static WORD nextbuffer;				/* next buffer to be mixed */
+static int num_buffers;
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
@@ -37,10 +38,15 @@ static void dummy()
 {
 }
 
+static char *help[] = {
+	"buffers=val", "Number of buffers (default 10)",
+	NULL
+};
+
 struct xmp_drv_info drv_win32 = {
 	"win32",		/* driver ID */
 	"Windows WinMM driver",	/* driver description */
-	NULL,			/* help */
+	help,			/* help */
 	init,			/* init */
 	deinit,			/* shutdown */
 	xmp_smix_numvoices,	/* numvoices */
@@ -99,7 +105,7 @@ static void CALLBACK wave_callback(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance,
 {
 	if (uMsg == WOM_DONE) {
         	freebuffer++;
-		freebuffer %= NUMBUFFERS;
+		freebuffer %= num_buffers;
 	}
 }
 
@@ -109,6 +115,17 @@ static int init(struct xmp_context *ctx)
 	MMRESULT res;
 	WAVEFORMATEX wfe;
 	int i;
+	char *token;
+	char **parm = o->parm;
+
+	num_buffers = 10;
+	
+	parm_init();
+	chkparm1("buffers", num_buffers = strtoul(token, NULL, 0));
+	parm_end();
+
+	if (num_buffers > MAXBUFFERS)
+		num_buffers = MAXBUFFERS;
 
 	if (!waveOutGetNumDevs())
 		return XMP_ERR_DINIT;
@@ -131,7 +148,7 @@ static int init(struct xmp_context *ctx)
 
 	waveOutReset(hwaveout);
 
-	for (i = 0; i < NUMBUFFERS; i++) {
+	for (i = 0; i < num_buffers; i++) {
 		buffer[i] = malloc(OUT_MAXLEN);
 		header[i].lpData = buffer[i];
 
@@ -150,7 +167,7 @@ static void bufdump(struct xmp_context *ctx, int len)
 {
 	memcpy(buffer[nextbuffer], xmp_smix_buffer(ctx), len);
 
-	while ((nextbuffer + 1) % NUMBUFFERS == freebuffer)
+	while ((nextbuffer + 1) % num_buffers == freebuffer)
 		Sleep(10);
 
         header[nextbuffer].dwBufferLength = len;
@@ -158,7 +175,7 @@ static void bufdump(struct xmp_context *ctx, int len)
         waveOutWrite(hwaveout, &header[nextbuffer], sizeof(WAVEHDR));
 
         nextbuffer++;
-	nextbuffer %= NUMBUFFERS;
+	nextbuffer %= num_buffers;
 }
 
 static void deinit()
@@ -168,7 +185,7 @@ static void deinit()
 	xmp_smix_off();
 
 	if (hwaveout) {
-		for (i = 0; i < NUMBUFFERS; i++) {
+		for (i = 0; i < num_buffers; i++) {
 			if (header[i].dwFlags & WHDR_PREPARED)
 				waveOutUnprepareHeader(hwaveout, &header[i],
 						       sizeof(WAVEHDR));

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.29 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: options.c,v 1.30 2007-11-13 22:29:31 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -143,51 +143,51 @@ static void usage(char *s, struct xmp_options *opt)
 
     printf (
 "\nPlayer control options:\n"
-"   -D parameter[=val]      Pass configuration parameter to the output driver\n"
-"   -d --driver name        Force output to the specified device\n"
-"   --fix-sample-loops      Use sample loop start /2 in MOD/UNIC/NP3\n" 
-"   --offset-bug-emulation  Emulate Protracker 2.x bug in effect 9\n"
-"   -l --loop               Enable module looping\n"
-"   -M --mute ch-list       Mute the specified channels\n"
-"   --modrange              Limit the octave range to 3 octaves in MOD files\n"
-"   --nocmd                 Disable interactive commands\n"
-"   --norc                  Don't read configuration files\n"
-"   -R --random             Random order playing\n"
+"   -D parameter[=val]     Pass configuration parameter to the output driver\n"
+"   -d --driver name       Force output to the specified device\n"
+"   --fix-sample-loops     Use sample loop start /2 in MOD/UNIC/NP3\n" 
+"   --offset-bug-emulation Emulate Protracker 2.x bug in effect 9\n"
+"   -l --loop              Enable module looping\n"
+"   -M --mute ch-list      Mute the specified channels\n"
+"   --modrange             Limit the octave range to 3 octaves in MOD files\n"
+"   --nocmd                Disable interactive commands\n"
+"   --norc                 Don't read configuration files\n"
+"   -R --random            Random order playing\n"
 #ifdef HAVE_SYS_RTPRIO_H
-"   --realtime              Run in real-time priority\n" 
+"   --realtime             Run in real-time priority\n" 
 #endif
-"   -S --solo ch-list       Set channels to solo mode\n"
-"   -s --start num          Start from the specified order\n"
-"   -T --tempo num          Initial tempo (default 6)\n"
-"   -t --time num           Maximum playing time in seconds\n"
+"   -S --solo ch-list      Set channels to solo mode\n"
+"   -s --start num         Start from the specified order\n"
+"   -T --tempo num         Initial tempo (default 6)\n"
+"   -t --time num          Maximum playing time in seconds\n"
 
 "\nPlayer sound options:\n"
-"   -8 --8bit               Convert 16 bit samples to 8 bit\n"
-"   --chorus num            Chorus depth (if supported)\n"
-"   -m --mono               Mono output\n"
-"   --nofilter              Disable IT filter\n"
-"   --nopan                 Disable dynamic panning\n"
-"   -P --pan pan            Percentual pan amplitude (default %d%%)\n"
-"   -r --reverse            Reverse left/right stereo channels\n"
-"   --reverb num            Reverb depth (if supported)\n"
-"   --stereo                Stereo output\n"
+"   -8 --8bit              Convert 16 bit samples to 8 bit\n"
+"   --chorus num           Chorus depth (if supported)\n"
+"   -m --mono              Mono output\n"
+"   --nofilter             Disable IT filter\n"
+"   --nopan                Disable dynamic panning\n"
+"   -P --pan pan           Percentual pan amplitude (default %d%%)\n"
+"   -r --reverse           Reverse left/right stereo channels\n"
+"   --reverb num           Reverb depth (if supported)\n"
+"   --stereo               Stereo output\n"
 
 "\nSoftware mixer options:\n"
-"   -b --bits {8|16}        Software mixer resolution (8 or 16 bits)\n"
-"   -c --stdout             Mix the module to stdout\n"
-"   -f --frequency rate     Sampling rate in hertz (default %d Hz)\n"
-"   -i --interpolate        Use linear interpolation (default %s)\n"
-"   -n --nearest            Use nearest neighbor interpolation\n"
-"   -o --output-file name   Mix the module to file ('-' for stdout)\n"
-"   -u --unsigned           Set the mixer to use unsigned samples\n"
+"   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
+"   -c --stdout            Mix the module to stdout\n"
+"   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
+"   -i --interpolate       Use linear interpolation (default %s)\n"
+"   -n --nearest           Use nearest neighbor interpolation\n"
+"   -o --output-file name  Mix the module to file ('-' for stdout)\n"
+"   -u --unsigned          Set the mixer to use unsigned samples\n"
 
 "\nInformation options:\n"
-"   -h --help               Print a summary of the command line options\n"
-"   --load-only             Load module and exit\n"
-"   --probe-only            Probe audio device and exit\n"
-"   -q --quiet              Quiet mode (verbosity level = 0)\n"
-"   -V --version            Print version information\n"
-"   -v --verbose            Verbose mode (incremental)\n"
+"   -h --help              Print a summary of the command line options\n"
+"   --load-only            Load module and exit\n"
+"   --probe-only           Probe audio device and exit\n"
+"   -q --quiet             Quiet mode (verbosity level = 0)\n"
+"   -V --version           Print version information\n"
+"   -v --verbose           Verbose mode (incremental)\n"
 	,opt->mix,
 	opt->freq,
 	opt->flags & XMP_CTL_ITPT ? "enabled" : "disabled"
