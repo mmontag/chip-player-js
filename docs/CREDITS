@@ -135,12 +135,6 @@ Reused code
 * Russell Marks
 - Decompression routines from nomarch
 
-* Bjornar Henden <bhenden@online.no>
-- portions of the win32 driver
-
-* Arturo R. Montesinos <arami@fi.upm.es>
-- water effect eye-candy algorithm
-
 * Takuya Ooura <ooura@mmm.t.u-tokyo.ac.jp>
 - FFT code
 

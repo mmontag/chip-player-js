@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.10 2007-11-11 13:43:08 cmatsuoka Exp $
+ * $Id: win32.c,v 1.11 2007-11-13 01:10:28 cmatsuoka Exp $
  */
 
 /*
@@ -26,7 +26,7 @@
 static HWAVEOUT hwaveout;
 static WAVEHDR header[NUMBUFFERS];
 static LPSTR buffer[NUMBUFFERS];		/* pointers to buffers */
-static WORD buffersout;				/* number of buffers playing */
+static WORD freebuffer;				/*  */
 static WORD nextbuffer;				/* next buffer to be mixed */
 
 static int init(struct xmp_context *);
@@ -97,8 +97,10 @@ static void show_error(int res)
 static void CALLBACK wave_callback(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance,
 				   DWORD dwParam1, DWORD dwParam2)
 {
-	if (uMsg == WOM_DONE)
-		--buffersout;
+	if (uMsg == WOM_DONE) {
+        	freebuffer++;
+		freebuffer %= NUMBUFFERS;
+	}
 }
 
 static int init(struct xmp_context *ctx)
@@ -135,28 +137,30 @@ static int init(struct xmp_context *ctx)
 		buffer[i] = malloc(OUT_MAXLEN);
 		header[i].lpData = buffer[i];
 
-		res = waveOutPrepareHeader(hwaveout, &header[i], sizeof(WAVEHDR));
 		if (!buffer[i] || res != MMSYSERR_NOERROR) {
 			show_error(res);
 			return XMP_ERR_DINIT;
 		}
 	}
 
-	buffersout = nextbuffer = 0;
+	freebuffer = nextbuffer = 0;
 
 	return xmp_smix_on(ctx);
 }
 
 static void bufdump(struct xmp_context *ctx, int len)
 {
-        while (buffersout < NUMBUFFERS) {
-		memcpy(buffer[nextbuffer], xmp_smix_buffer(ctx), len);
-                header[nextbuffer].dwBufferLength = len;
-                waveOutWrite(hwaveout, &header[nextbuffer], sizeof(WAVEHDR));
-                if (++nextbuffer >= NUMBUFFERS)
-			nextbuffer %= NUMBUFFERS;
-                ++buffersout;
-        }
+	memcpy(buffer[nextbuffer], xmp_smix_buffer(ctx), len);
+
+	while ((nextbuffer + 1) % NUMBUFFERS == freebuffer)
+		Sleep(10);
+
+        header[nextbuffer].dwBufferLength = len;
+	waveOutPrepareHeader(hwaveout, &header[nextbuffer], sizeof(WAVEHDR));
+        waveOutWrite(hwaveout, &header[nextbuffer], sizeof(WAVEHDR));
+
+        nextbuffer++;
+	nextbuffer %= NUMBUFFERS;
 }
 
 static void deinit()
