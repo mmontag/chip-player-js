@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.11 2007-11-13 01:10:28 cmatsuoka Exp $
+ * $Id: win32.c,v 1.12 2007-11-13 20:25:47 cmatsuoka Exp $
  */
 
 /*
@@ -91,7 +91,7 @@ static void show_error(int res)
 		msg = "Unknown media error";
 	}
 
-	MessageBox(NULL, msg, "Error...", MB_OK);
+	fprintf(stderr, "Error: %s", msg);
 }
 
 static void CALLBACK wave_callback(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance,
@@ -110,10 +110,8 @@ static int init(struct xmp_context *ctx)
 	WAVEFORMATEX wfe;
 	int i;
 
-	if (!waveOutGetNumDevs()) {
-		MessageBox(NULL, "No audio devices!", "Error...", MB_OK);
+	if (!waveOutGetNumDevs())
 		return XMP_ERR_DINIT;
-	}
 
 	wfe.wFormatTag = WAVE_FORMAT_PCM;
 	wfe.wBitsPerSample = o->resol;
