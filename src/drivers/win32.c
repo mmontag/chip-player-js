@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: win32.c,v 1.12 2007-11-13 20:25:47 cmatsuoka Exp $
+ * $Id: win32.c,v 1.13 2007-11-13 20:38:02 cmatsuoka Exp $
  */
 
 /*
@@ -39,7 +39,7 @@ static void dummy()
 
 struct xmp_drv_info drv_win32 = {
 	"win32",		/* driver ID */
-	"Win32 driver",		/* driver description */
+	"Windows WinMM driver",	/* driver description */
 	NULL,			/* help */
 	init,			/* init */
 	deinit,			/* shutdown */
