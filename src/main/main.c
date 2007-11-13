@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.30 2007-11-13 11:05:54 cmatsuoka Exp $
+ * $Id: main.c,v 1.31 2007-11-13 11:23:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -256,14 +256,18 @@ static void process_echoback(unsigned long i)
     if (nocmd)
 	return;
 
-    /* TODO: find some input method that works Amiga CLI */
 #if defined HAVE_TERMIOS_H && !defined WIN32
     k = read(0, &cmd, 1);
 #elif defined WIN32
     if (kbhit())
 	k = getch();
 #else
-    k = 0;
+    /* Amiga CLI */
+    if (WaitForChar(Input(), 1)) {
+	char c;
+	Read(in, &c, 1);
+	k = c;
+    }
 #endif
 
     if (k > 0) {
