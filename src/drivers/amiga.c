@@ -6,7 +6,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: amiga.c,v 1.1 2007-11-11 16:06:52 cmatsuoka Exp $
+ * $Id: amiga.c,v 1.2 2007-11-14 22:12:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -36,7 +36,7 @@ static void dummy()
 }
 
 static char *help[] = {
-	"buffer=val", "Audio buffer size (default is 358000)",
+	"buffer=val", "Audio buffer size",
 	NULL
 };
 
@@ -71,7 +71,8 @@ static int init(struct xmp_context *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	char outfile[256];
-	int bsize = 358000;	/* Isn't it too large? */
+	int nch = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	int bsize = o->freq * nch * o->resol / 4;
 	char *token;
 	char **parm = o->parm;
 	
@@ -80,10 +81,7 @@ static int init(struct xmp_context *ctx)
 	parm_end();
 
 	sprintf(outfile, "AUDIO:B/%d/F/%d/C/%d/BUFFER/%d",
-		o->resol,
-		o->freq,
-		o->outfmt & XMP_FMT_MONO ? 1 : 2,
-		bsize);
+				o->resol, o->freq, nch, bsize);
 
 	fd = open(outfile, O_WRONLY);
 
