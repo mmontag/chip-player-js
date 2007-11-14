@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.188 2007-11-12 23:25:59 cmatsuoka Exp $
+$Id: ChangeLog,v 1.189 2007-11-14 20:52:30 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -24,6 +24,8 @@ Stable versions
 	- reset parameter in case of MDL "no effect" (saa.mdl pos 13 ch 9
 	  plays correctly, reported by Gürkan Sengün)
 	- fixed wav and file drivers binary file creation for win32
+	- add support for Octamed V6 16bit samples (fixes some instruments
+	  in LaEsperanza.mmd3, reported by Lorence Lombardo)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm

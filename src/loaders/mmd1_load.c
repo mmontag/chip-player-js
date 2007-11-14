@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.32 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.33 2007-11-14 20:52:31 cmatsuoka Exp $
  */
 
 /*
@@ -629,9 +629,12 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[smp_idx].flg = song.sample[i].replen > 1 ? WAVE_LOOPING : 0;
 
 		reportv(ctx, 1, "%05x %05x %05x %02x %02x %+1d ",
-			       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
-			       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
-			       (uint8) m->xxi[i][0].xpo, m->xxi[i][0].fin >> 4);
+				m->xxs[smp_idx].len,
+				m->xxs[smp_idx].lps,
+				m->xxs[smp_idx].lpe,
+				m->xxi[i][0].vol,
+				(uint8) m->xxi[i][0].xpo,
+				m->xxi[i][0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,

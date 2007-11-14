@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.67 2007-11-11 16:06:52 cmatsuoka Exp $
+ * $Id: driver.c,v 1.68 2007-11-14 20:52:31 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -962,7 +962,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
 #if 0
     /* dump patch to file */
-    if (id == 11) {
+    if (id == 0) {
 	printf("dump patch\n");
 	FILE *f = fopen("patch_data", "w");
 	fwrite(patch->data, 1, xxs->len, f);
