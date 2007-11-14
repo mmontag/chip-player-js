@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.68 2007-11-14 20:52:31 cmatsuoka Exp $
+ * $Id: driver.c,v 1.69 2007-11-14 21:54:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -941,14 +941,23 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	if (o->big_endian ^ (flags & XMP_SMP_BIGEND))
 	    xmp_cvt_sex(xxs->len, patch->data);
     }
+
+    if (flags & XMP_SMP_STEREO) {	/* Downmix stereo samples */
+	xmp_cvt_stdownmix(xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
+	xxs->len /= 2;
+    }
+
     if (flags & XMP_SMP_7BIT)
 	xmp_cvt_2xsmp(xxs->len, patch->data);
+
     if (flags & XMP_SMP_DIFF)
 	xmp_cvt_diff2abs(xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
     else if (flags & XMP_SMP_8BDIFF)
 	xmp_cvt_diff2abs(xxs->len, 0, patch->data);
+
     if (flags & XMP_SMP_VIDC)
 	xmp_cvt_vidc(xxs->len, patch->data);
+
 
     /* Duplicate last sample -- prevent click in bidir loops */
     if (xxs->flg & WAVE_16_BITS) {

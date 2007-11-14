@@ -15,6 +15,7 @@
 
 void xmp_cvt_hsc2sbi (char *);
 void xmp_cvt_diff2abs (int, int, char *);
+void xmp_cvt_stdownmix (int, int, char *);
 void xmp_cvt_sig2uns (int, int, char *);
 void xmp_cvt_sex (int, char *);
 void xmp_cvt_2xsmp (int, char *);

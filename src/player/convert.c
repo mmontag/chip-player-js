@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: convert.c,v 1.11 2007-10-24 01:56:30 cmatsuoka Exp $
+ * $Id: convert.c,v 1.12 2007-11-14 21:54:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -89,7 +89,7 @@ void xmp_cvt_sig2uns (int l, int r, char *p)
 
 
 /* Convert little-endian 16 bit samples to big-endian */
-void xmp_cvt_sex (int l, char *p)
+void xmp_cvt_sex(int l, char *p)
 {
     uint8 b;
 
@@ -102,8 +102,26 @@ void xmp_cvt_sex (int l, char *p)
 }
 
 
+/* Downmix stereo samples to mono */
+void xmp_cvt_stdownmix(int l, int r, char *p)
+{
+    int16 *b = (int16 *)p;
+    int i;
+
+    if (r) {
+	l /= 4;
+	for (i = 0; i < l; i++)
+	    b[i] = (b[i * 2] + b[i * 2 + 1]) / 2;
+    } else {
+	l /= 2;
+	for (i = 0; i < l; i++)
+	    p[i] = (p[i * 2] + p[i * 2 + 1]) / 2;
+    }
+}
+
+
 /* Convert 7 bit samples to 8 bit */
-void xmp_cvt_2xsmp (int l, char *p)
+void xmp_cvt_2xsmp(int l, char *p)
 {
     for (; l--; *p++ <<= 1);
 }

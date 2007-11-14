@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.28 2007-11-14 20:52:31 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.29 2007-11-14 21:54:20 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -603,7 +603,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 		}
 
-		if ((instr.type & ~(S_16 /*| STEREO*/)) != 0)
+		if ((instr.type & ~(S_16 | STEREO)) != 0)
 			continue;
 
 		/* instr type is sample */
@@ -625,6 +625,8 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].flg |= WAVE_LOOPING;
 		if (instr.type & S_16)
 			m->xxs[smp_idx].flg |= WAVE_16_BITS;
+		if (instr.type & STEREO)
+			m->xxs[smp_idx].flg |= WAVE_STEREO;
 
 		reportv(ctx, 1, "%05x%c%05x %05x %02x %02x %+1d ",
 				m->xxs[smp_idx].len,

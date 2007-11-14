@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.189 2007-11-14 20:52:30 cmatsuoka Exp $
+$Id: ChangeLog,v 1.190 2007-11-14 21:54:19 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -26,6 +26,8 @@ Stable versions
 	- fixed wav and file drivers binary file creation for win32
 	- add support for Octamed V6 16bit samples (fixes some instruments
 	  in LaEsperanza.mmd3, reported by Lorence Lombardo)
+	- add stereo sample downmix for Octamed V6 stereo samples (fixes
+	  rest of samples of LaEsperanza.mmd3, reported by Lorence Lombardo)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
