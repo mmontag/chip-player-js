@@ -16,7 +16,7 @@ The Authors
 - RT priority in FreeBSD
 - OSX portability fixes
 
-* Hipolito Carraro Jr <hipolito@onda.com.br>
+* Hipolito Carraro Jr <hipolito.carraro@gmail.com>
 - main player coding
 - software mixer
 - virtual channel system design and implementation
