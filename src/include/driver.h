@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: driver.h,v 1.21 2007-10-26 18:34:07 cmatsuoka Exp $
+ * $Id: driver.h,v 1.22 2007-11-14 23:01:59 cmatsuoka Exp $
  */
 
 #ifndef __XMP_DRIVER_H
@@ -39,14 +39,14 @@ struct patch_info {
 #endif
 
 /* Sample flags */
-#define XMP_SMP_DIFF		0x01	/* Differential */
-#define XMP_SMP_UNS		0x02	/* Unsigned */
-#define XMP_SMP_8BDIFF		0x04
-#define XMP_SMP_7BIT		0x08
-#define XMP_SMP_NOLOAD		0x10	/* Get from buffer, don't load */
-#define XMP_SMP_8X		0x20
-#define XMP_SMP_BIGEND		0x40	/* Big-endian */
-#define XMP_SMP_VIDC		0x80	/* Archimedes VIDC logarithmic */
+#define XMP_SMP_DIFF		0x0001	/* Differential */
+#define XMP_SMP_UNS		0x0002	/* Unsigned */
+#define XMP_SMP_8BDIFF		0x0004
+#define XMP_SMP_7BIT		0x0008
+#define XMP_SMP_NOLOAD		0x0010	/* Get from buffer, don't load */
+#define XMP_SMP_8X		0x0020
+#define XMP_SMP_BIGEND		0x0040	/* Big-endian */
+#define XMP_SMP_VIDC		0x0080	/* Archimedes VIDC logarithmic */
 
 #define XMP_ACT_CUT		XXM_NNA_CUT
 #define XMP_ACT_CONT		XXM_NNA_CONT

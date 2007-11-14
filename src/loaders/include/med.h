@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med.h,v 1.4 2007-10-07 16:43:02 cmatsuoka Exp $
+ * $Id: med.h,v 1.5 2007-11-14 23:01:59 cmatsuoka Exp $
  */
 
 #include "xmpi.h"
@@ -195,6 +195,16 @@ struct InstrExt {
     UBYTE decay;
     UBYTE suppress_midi_off;
     BYTE  finetune;
+    /* Below fields saved by >= V5 */
+    UBYTE default_pitch;
+    UBYTE instr_flags;
+    UWORD long_midi_preset;
+    /* Below fields saved by >= V5.02 */
+    UBYTE output_device;
+    UBYTE reserved;
+    /* Below fields saved by >= V7 */
+    ULONG long_repeat;
+    ULONG long_replen;
 };
 
 

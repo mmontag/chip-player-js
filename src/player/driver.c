@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.69 2007-11-14 21:54:20 cmatsuoka Exp $
+ * $Id: driver.c,v 1.70 2007-11-14 23:01:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -942,7 +942,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	    xmp_cvt_sex(xxs->len, patch->data);
     }
 
-    if (flags & XMP_SMP_STEREO) {	/* Downmix stereo samples */
+    if (xxs->flg & WAVE_STEREO) {	/* Downmix stereo samples */
 	xmp_cvt_stdownmix(xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
 	xxs->len /= 2;
     }

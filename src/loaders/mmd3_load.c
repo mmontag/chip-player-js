@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.29 2007-11-14 21:54:20 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.30 2007-11-14 23:01:59 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -476,6 +476,10 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			exp_smp.suppress_midi_off = read8(f);
 			exp_smp.finetune = read8(f);
 
+			if (expdata.s_ext_entrsz > 4) {	/* Octamed V5 */
+				exp_smp.default_pitch = read8(f);
+				exp_smp.instr_flags = read8(f);
+			}
 		}
 
 		fseek(f, start + pos, SEEK_SET);
