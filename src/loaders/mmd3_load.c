@@ -1,11 +1,11 @@
-/* MMD2/3 MED module loader for xmp
- * Copyright (C) 2007 Claudio Matsuoka
+/* Extended Module Player
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.32 2007-11-15 14:20:33 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.33 2007-11-15 22:36:54 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H

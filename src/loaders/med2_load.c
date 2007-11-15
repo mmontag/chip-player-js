@@ -1,11 +1,11 @@
-/* MED2 loader for xmp
- * Copyright (C) 2007 Claudio Matsuoka
+/* Extended Module Player
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med2_load.c,v 1.12 2007-10-19 17:41:16 cmatsuoka Exp $
+ * $Id: med2_load.c,v 1.13 2007-11-15 22:36:54 cmatsuoka Exp $
  */
 
 /*

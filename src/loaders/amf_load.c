@@ -1,7 +1,7 @@
-/* DSMI Advanced Module Format loader for xmp
- * Copyright (C) 2005-2007 Claudio Matsuoka and Hipolito Carraro Jr
+/* Extended Module Player
+ * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: amf_load.c,v 1.19 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: amf_load.c,v 1.20 2007-11-15 22:36:54 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING

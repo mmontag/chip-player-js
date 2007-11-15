@@ -1,7 +1,7 @@
-/* Scream Tracker 3 module loader for xmp
+/* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.30 2007-11-11 01:10:36 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.31 2007-11-15 22:36:54 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING

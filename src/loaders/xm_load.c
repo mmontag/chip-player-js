@@ -1,7 +1,7 @@
-/* Fasttracker II module loader for xmp
+/* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.31 2007-11-15 13:54:27 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.32 2007-11-15 22:36:54 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
