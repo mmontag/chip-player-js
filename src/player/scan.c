@@ -32,6 +32,7 @@
 #include <string.h>
 #include "xmpi.h"
 #include "effects.h"
+#include "mixer.h"
 
 #define S3M_END		0xff
 #define S3M_SKIP	0xff
@@ -72,6 +73,11 @@ int xmpi_scan_module(struct xmp_context *ctx)
 
     gvl = m->xxh->gvl;
     bpm = m->xxh->bpm;
+
+    /* Prevent crashes caused by large softmixer frames */
+    if (bpm < SMIX_MINBPM)
+	bpm = SMIX_MINBPM;
+
     tempo = (tempo = o->tempo ? o->tempo : m->xxh->tpo) ? tempo : TIME;
     base_time = m->rrate;
 

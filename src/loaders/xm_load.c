@@ -1,7 +1,7 @@
 /* Fasttracker II module loader for xmp
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.30 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.31 2007-11-15 13:54:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -87,11 +87,6 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
     xfh.bpm = read16l(f);		/* Default BPM */
     fread(&xfh.order, 256, 1, f);	/* Pattern order table */
 
-#if 0
-    if (strncmp ((char *) xfh.id, "Extended Module: ", 17))
-	return -1;
-#endif
-
     strncpy(m->name, (char *)xfh.name, 20);
 
     m->xxh->len = xfh.songlen;
@@ -153,7 +148,7 @@ load_patterns:
 	TRACK_ALLOC(i);
 
 	if (xph.datasize) {
-	    pat = patbuf = calloc (1, xph.datasize);
+	    pat = patbuf = calloc(1, xph.datasize);
 	    fread (patbuf, 1, xph.datasize, f);
 	    for (j = 0; j < (m->xxh->chn * r); j++) {
 		if ((pat - patbuf) >= xph.datasize)

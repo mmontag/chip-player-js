@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.191 2007-11-15 11:41:36 cmatsuoka Exp $
+$Id: ChangeLog,v 1.192 2007-11-15 13:54:27 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -26,6 +26,8 @@ Stable versions
 	- fixed wav and file drivers binary file creation for win32
 	- add support for Octamed V6 16bit samples (fixes instruments in
 	  LaEsperanza.mmd3, reported by Lorence Lombardo)
+	- enforce minimum allowed BPM to prevent large frames (fix crash with
+	  MED2XM modules such as Fascinated.xm, reported by Lorence Lombardo)
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.70 2007-11-14 23:01:59 cmatsuoka Exp $
+ * $Id: driver.c,v 1.71 2007-11-15 13:54:27 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -716,7 +716,7 @@ inline void xmp_drv_bufdump(struct xmp_context *ctx)
     int i = softmixer(ctx);
 
     if (hold_enabled)
-	memcpy(hold_buffer, *xmp_mix_buffer, 256 * sizeof (int));
+	memcpy(hold_buffer, *xmp_mix_buffer, 256 * sizeof(int));
 
     d->driver->bufdump(ctx, i);
 }

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.32 2007-10-29 02:44:26 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.33 2007-11-15 13:54:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -11,6 +11,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <assert.h>
 
 #include "mixer.h"
 #include "synth.h"
@@ -651,7 +653,7 @@ void xmp_smix_off()
 void *xmp_smix_buffer(struct xmp_context *ctx)
 {
     static int outbuf;
-    int act;
+    int act, size;
     struct xmp_options *o = &ctx->o;
 
     if (!o->resol)
@@ -668,8 +670,10 @@ void *xmp_smix_buffer(struct xmp_context *ctx)
     if (++outbuf >= smix_numbuf)
 	outbuf = 0;
 
-    out_fn[act](smix_buffer[outbuf], smix_buf32b, smix_mode * smix_ticksize,
-							o->outfmt);
+    size = smix_mode * smix_ticksize;
+    assert(size <= OUT_MAXLEN);
+
+    out_fn[act](smix_buffer[outbuf], smix_buf32b, size, o->outfmt);
 
     smix_resetvar(ctx);
 
