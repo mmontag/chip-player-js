@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.5 2007-11-11 20:38:20 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.6 2007-11-15 19:57:47 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -12,9 +12,9 @@
 #include "xmpi.h"
 #include "in2.h"
 
-extern In_Module mod;
-static char lastfn[MAX_PATH];
-static short sample_buffer[576 * 2];
+//extern In_Module mod;
+//static char lastfn[MAX_PATH];
+//static short sample_buffer[576 * 2];
 
 // avoid CRT. Evil. Big. Bloated.
 BOOL WINAPI
@@ -23,8 +23,9 @@ _DllMainCRTStartup(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 	return TRUE;
 }
 
-int paused;
 DWORD WINAPI __stdcall play_loop(void *);
+
+static int paused;
 HANDLE decode_thread = INVALID_HANDLE_VALUE;
 HANDLE load_mutex;
 
@@ -53,7 +54,62 @@ static short audio_open = FALSE;
 static xmp_context ctx;
 static int playing;
 
-void stop()
+static void	config		(HWND);
+static void	about		(HWND);
+static void	init		(void);
+static void	quit		(void);
+static void	get_file_info	(char *, char *, int *);
+static int	infoDlg		(char *, HWND);
+static int	is_our_file	(char *);
+static int	play_file	(char *);
+static void	pause		(void);
+static void	unpause		(void);
+static int	is_paused	(void);
+static void	stop		(void);
+static int	getlength	(void);
+static int	getoutputtime	(void);
+static void	setoutputtime	(int);
+static void	setvolume	(int);
+static void	setpan		(int);
+static void	eq_set		(int, char[10], int);
+
+In_Module mod = {
+	IN_VER,
+	"XMP Plugin " VERSION,
+	0,			// hMainWindow
+	0,			// hDllInstance
+	"\0", 0,		// is_seekable
+	1,			// uses output
+	config,
+	about,
+	init,
+	quit,
+	get_file_info,
+	infoDlg,
+	is_our_file,
+	play_file,
+	pause,
+	unpause,
+	is_paused,
+	stop,
+	getlength,
+	getoutputtime,
+	setoutputtime,
+	setvolume,
+	setpan,
+	0, 0, 0, 0, 0, 0, 0, 0, 0,	// vis stuff
+	0, 0,			// dsp
+	eq_set, NULL,		// setinfo
+	0			// out_mod
+};
+
+__declspec(dllexport) In_Module *winampGetInModule2()
+{
+	return &mod;
+}
+
+
+static void stop()
 {
 	if (!playing)
 		return;
@@ -90,17 +146,17 @@ static void driver_callback(void *b, int i)
 	mod.outMod->Write(b, i);
 }
 
-void config(HWND hwndParent)
+static void config(HWND hwndParent)
 {
 	MessageBox(hwndParent, "Later.", "Configuration", MB_OK);
 }
 
-void about(HWND hwndParent)
+static void about(HWND hwndParent)
 {
 	MessageBox(hwndParent, "Later.", "About XMP", MB_OK);
 }
 
-void init()
+static void init()
 {
 	//ConfigFile *cfg;
 	//char *filename;
@@ -141,11 +197,11 @@ void init()
 	//xmp_register_event_callback(x11_event_callback);
 }
 
-void quit()
+static void quit()
 {
 }
 
-int is_our_file(char *fn)
+static int is_our_file(char *fn)
 {
 	if (xmp_test_module(ctx, fn, NULL) == 0)
 		return 1;
@@ -153,7 +209,7 @@ int is_our_file(char *fn)
 	return 0;
 }
 
-int play_file(char *fn)
+static int play_file(char *fn)
 {
 	int maxlatency;
 	DWORD tmp;
@@ -161,9 +217,9 @@ int play_file(char *fn)
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
-	int fmt, nch;
+	int /*fmt,*/ nch;
 
-	strcpy(lastfn, fn);
+	//strcpy(lastfn, fn);
 
 	opt = xmp_get_options(ctx);
 
@@ -219,7 +275,7 @@ int play_file(char *fn)
 	audio_open = TRUE;
 
 	paused = 0;
-	memset(sample_buffer, 0, sizeof(sample_buffer));
+	//memset(sample_buffer, 0, sizeof(sample_buffer));
 	maxlatency = mod.outMod->Open(44100, 1, 16, -1, -1);
 	if (maxlatency < 0)
 		return 1;
@@ -255,59 +311,59 @@ DWORD WINAPI __stdcall play_loop(void *b)
 	return 0;
 }
 
-void pause()
+static void pause()
 {
 	paused = 1;
 	mod.outMod->Pause(1);
 }
 
-void unpause()
+static void unpause()
 {
 	paused = 0;
 	mod.outMod->Pause(0);
 }
 
-int is_paused()
+static int is_paused()
 {
 	return paused;
 }
 
-int getlength()
+static int getlength()
 {
 	return -1000;
 }
 
-int getoutputtime()
+static int getoutputtime()
 {
 	return mod.outMod->GetOutputTime();
 }
 
-void setoutputtime(int time_in_ms)
+static void setoutputtime(int time_in_ms)
 {
 }
 
-void setvolume(int volume)
+static void setvolume(int volume)
 {
 	mod.outMod->SetVolume(volume);
 }
 
-void setpan(int pan)
+static void setpan(int pan)
 {
 	mod.outMod->SetPan(pan);
 }
 
-int infoDlg(char *fn, HWND hwnd)
+static int infoDlg(char *fn, HWND hwnd)
 {
 	return 0;
 }
 
-void get_file_info(char *filename, char *title, int *length_in_ms)
+static void get_file_info(char *filename, char *title, int *length_in_ms)
 {
 	xmp_context ctx2;
 	int lret;
 	struct xmp_module_info mi;
 	struct xmp_options *opt;
-	char *x;
+	//char *x;
 
 	/* Create new context to load a file and get the length */
 	
@@ -332,44 +388,7 @@ void get_file_info(char *filename, char *title, int *length_in_ms)
         xmp_free_context(ctx2);
 }
 
-void eq_set(int on, char data[10], int preamp)
+static void eq_set(int on, char data[10], int preamp)
 {
 }
 
-In_Module mod = {
-	IN_VER,
-	"XMP Plugin " VERSION,
-	0,			// hMainWindow
-	0,			// hDllInstance
-	"\0", 0,		// is_seekable
-	1,			// uses output
-	config,
-	about,
-	init,
-	quit,
-	get_file_info,
-	infoDlg,
-	is_our_file,
-	play_file,
-	pause,
-	unpause,
-	is_paused,
-	stop,
-	getlength,
-	getoutputtime,
-	setoutputtime,
-	setvolume,
-	setpan,
-	0, 0, 0, 0, 0, 0, 0, 0, 0,	// vis stuff
-	0, 0,			// dsp
-	eq_set, NULL,		// setinfo
-	0			// out_mod
-};
-
-__declspec(dllexport)
-In_Module *winampGetInModule2()
-{
-	return &mod;
-}
-
-int _fltused = 0;
