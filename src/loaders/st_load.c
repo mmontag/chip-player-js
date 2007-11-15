@@ -97,8 +97,11 @@ static int st_test(FILE *f, char *t, const int start)
 	if (mh.ins[i].loop_size > 0x8000)
 	    return -1;
 
-	if (mh.ins[i].loop_size > 1 && mh.ins[i].loop_size > mh.ins[i].size)
-	    return -1;
+	/* This test fails in atmosfer.mod, disable it 
+	 *
+	 * if (mh.ins[i].loop_size > 1 && mh.ins[i].loop_size > mh.ins[i].size)
+	 *    return -1;
+	 */
 
 	if ((mh.ins[i].loop_start >> 1) > mh.ins[i].size)
 	    return -1;
@@ -279,7 +282,10 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    if (ust && (fxused & ~0x0006) == 0)
+    if (fxused & ~0x0006)
+	ust = 0;
+
+    if (ust)
 	modtype = "Ultimate Soundtracker";
     else if ((fxused & ~0xd007) == 0)
 	modtype = "Soundtracker IX";	/* or MasterSoundtracker? */

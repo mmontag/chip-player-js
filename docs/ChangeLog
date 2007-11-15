@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.192 2007-11-15 13:54:27 cmatsuoka Exp $
+$Id: ChangeLog,v 1.193 2007-11-15 14:34:51 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -12,8 +12,8 @@ Stable versions
 	- fixed Protracker 3 IFFMODL loader (process VERS chunk manually)
 	- added support to full sample loops in the Protracker 3 loader
 	- added PulseAudio driver (using the simple API)
-	- remove restrictive test for Soundtracker modules (fixes
-	  99redballoons.mod, reported by Adric Riedel)
+	- remove restrictive tests for Soundtracker modules (fixes
+	  99redballoons.mod and atmosfer4.mod, reported by Adric Riedel)
 	- fixed infinite loop control (allows full replay time of 11:04 for
 	  Gryzor's extended Global Trash 3.mod, reported by Adric Riedel)
 	- use floating point period generation for the software mixer
