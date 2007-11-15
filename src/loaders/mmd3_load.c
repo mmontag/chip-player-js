@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd3_load.c,v 1.31 2007-11-15 11:41:36 cmatsuoka Exp $
+ * $Id: mmd3_load.c,v 1.32 2007-11-15 14:20:33 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,7 +21,7 @@ static int mmd3_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info mmd3_loader = {
 	"MMD2/3",
-	"OctaMED Soundstudio",
+	"OctaMED v5/OctaMED SS",
 	mmd3_test,
 	mmd3_load
 };
@@ -368,7 +368,11 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-	sprintf(m->type, "MMD%c (OctaMED Soundstudio)", '0' + ver);
+	if (ver == 2)
+	    sprintf(m->type, "MMD%c (OctaMED v5)", '0' + ver);
+	else
+	    sprintf(m->type, "MMD%c (OctaMED Soundstudio)", '0' + ver);
+
 	MODULE_INFO();
 
 	if (V(0)) {
