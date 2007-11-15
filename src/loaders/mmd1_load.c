@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.33 2007-11-14 20:52:31 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.34 2007-11-15 11:41:36 cmatsuoka Exp $
  */
 
 /*
@@ -444,7 +444,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Instrument name                          Typ Len   LBeg  LEnd  Vl Xp Ft");
+	reportv(ctx, 1, "\n     Instrument name                          Typ Len   LBeg  LEnd  Vl Xpo Ft");
 
 	for (smp_idx = i = 0; i < m->xxh->ins; i++) {
 		int smpl_offset;
@@ -522,10 +522,10 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].flg = song.sample[i].replen > 1 ?
 						WAVE_LOOPING : 0;
 
-			reportv(ctx, 1, "%05x %05x %05x %02x %02x %+1d ",
+			reportv(ctx, 1, "%05x %05x %05x %02x %+3d %+1d ",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 				       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
-				       (uint8) m->xxi[i][0].xpo,
+				       m->xxi[i][0].xpo,
 				       m->xxi[i][0].fin >> 4);
 
 			xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,
@@ -561,11 +561,11 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			for (j = 0; j < 64; j++)
 				synth.wf[j] = read32b(f);
 
-			reportv(ctx, 1, "VS:%02x WS:%02x WF:%02x %02x %02x %+1d ",
+			reportv(ctx, 1, "VS:%02x WS:%02x WF:%02x %02x %+3d %+1d ",
 					synth.volspeed, synth.wfspeed,
 					synth.wforms & 0xff,
 					song.sample[i].svol,
-					(uint8)song.sample[i].strans,
+					song.sample[i].strans,
 					exp_smp.finetune);
 
 			if (synth.wforms == 0xffff)	
@@ -626,14 +626,17 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[smp_idx].lps = 2 * song.sample[i].rep;
 		m->xxs[smp_idx].lpe = m->xxs[smp_idx].lps + 2 *
 						song.sample[i].replen;
-		m->xxs[smp_idx].flg = song.sample[i].replen > 1 ? WAVE_LOOPING : 0;
 
-		reportv(ctx, 1, "%05x %05x %05x %02x %02x %+1d ",
+		m->xxs[smp_idx].flg = 0;
+		if (song.sample[i].replen > 1)
+			m->xxs[smp_idx].flg |= WAVE_LOOPING;
+
+		reportv(ctx, 1, "%05x %05x %05x %02x %+3d %+1d ",
 				m->xxs[smp_idx].len,
 				m->xxs[smp_idx].lps,
 				m->xxs[smp_idx].lpe,
 				m->xxi[i][0].vol,
-				(uint8) m->xxi[i][0].xpo,
+				m->xxi[i][0].xpo,
 				m->xxi[i][0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
