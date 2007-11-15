@@ -4,7 +4,7 @@
  *
  * Kris Tracker to Protracker.
  *
- * $Id: kris.c,v 1.6 2007-10-08 16:51:24 cmatsuoka Exp $
+ * $Id: kris.c,v 1.7 2007-11-15 15:30:03 cmatsuoka Exp $
  */
 
 #include <string.h>
@@ -16,7 +16,7 @@ static int depack_kris (FILE *, FILE *);
 
 struct pw_format pw_kris = {
 	"KRIS",
-	"Kris Tracker",
+	"ChipTracker",
 	0x00,
 	test_kris,
 	depack_kris
