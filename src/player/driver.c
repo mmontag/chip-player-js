@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See docs/COPYING
  * for more information.
  *
- * $Id: driver.c,v 1.71 2007-11-15 13:54:27 cmatsuoka Exp $
+ * $Id: driver.c,v 1.72 2007-11-16 19:16:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -938,7 +938,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
     /* Fix endianism if needed */
     if (xxs->flg & WAVE_16_BITS) {
-	if (o->big_endian ^ (flags & XMP_SMP_BIGEND))
+	if (!!o->big_endian ^ !!(flags & XMP_SMP_BIGEND))
 	    xmp_cvt_sex(xxs->len, patch->data);
     }
 
