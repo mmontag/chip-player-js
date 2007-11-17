@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.9 2007-11-17 13:05:11 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.10 2007-11-17 13:10:43 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -292,7 +292,7 @@ static int play_file(char *fn)
 	xmp_cfg.time = lret;
 	xmp_get_module_info(ctx, &mi);
 
-	mod->SetInfo(0, opt->freq, channelcnt, 0);
+	mod.SetInfo(0, opt->freq, channelcnt, 0);
 
 	decode_thread = (HANDLE)CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)play_loop, NULL, 0, &tmp);
@@ -364,8 +364,10 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 
 	_D(_D_WARN "filename = %s", filename);
 
-	/* if filename == NULL, current playing is used */
-	if (filename == NULL) {
+	/* Winamp docs say "if filename == NULL, current playing is used"
+	 * but it seems to pass an empty filename. I'll test for both
+	 */
+	if (filename == NULL || strlen(filename) == 0) {
 		xmp_get_module_info(ctx, &mi);
 		wsprintf(title, "%s", mi.name);
 		return;
