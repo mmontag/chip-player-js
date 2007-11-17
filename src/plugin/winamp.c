@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.6 2007-11-15 19:57:47 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.7 2007-11-17 11:54:12 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -203,6 +203,7 @@ static void quit()
 
 static int is_our_file(char *fn)
 {
+	_D(_D_WARN "fn = %s", fn);
 	if (xmp_test_module(ctx, fn, NULL) == 0)
 		return 1;
 
@@ -219,6 +220,8 @@ static int play_file(char *fn)
 	int lret;
 	int /*fmt,*/ nch;
 
+return 0;
+	_D("fn = %s", fn);
 	//strcpy(lastfn, fn);
 
 	opt = xmp_get_options(ctx);
@@ -365,17 +368,25 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 	struct xmp_options *opt;
 	//char *x;
 
+	_D(_D_WARN "filename = %s", filename);
+
 	/* Create new context to load a file and get the length */
 	
+	_D(_D_INFO "create context");
 	ctx2 = xmp_create_context();
+	_D(_D_INFO "get options");
 	opt = xmp_get_options(ctx2);
 	opt->skipsmp = 1;	/* don't load samples */
 
+	_D(_D_INFO "create mutex");
 	load_mutex = CreateMutex(NULL, TRUE, "load_mutex");
+	_D(_D_INFO "load module");
 	lret = xmp_load_module(ctx2, filename);
+	_D(_D_INFO "release mutex");
 	ReleaseMutex(load_mutex);
 
 	if (lret < 0) {
+		_D(_D_INFO "free context");
 		xmp_free_context(ctx2);
 		return;
         }

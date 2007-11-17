@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.57 2007-11-11 12:54:16 cmatsuoka Exp $
+ * $Id: load.c,v 1.58 2007-11-17 11:54:12 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -67,6 +67,12 @@ static int is_excluded_fmt(struct xmp_context *ctx, char *s)
     struct list_head *head;
     struct exclude_id *e;
 
+    return 0;
+
+    if (list_empty(&p->exclude_list))
+	return 0;
+
+    _D(_D_INFO "check %s\n", s);
     list_for_each(head, &p->exclude_list) {
         e = list_entry(head, struct exclude_id, list);
 	if (!strcasecmp(s, e->id))
@@ -484,6 +490,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
+    _D(_D_WARN "s = %s", s);
     if (o->exclude_fmt != NULL && list_empty(&p->exclude_list))
 	build_exclude_list((struct xmp_context *)ctx);
 
@@ -496,6 +503,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (S_ISDIR(st.st_mode))
 	goto err;
 
+    _D(_D_INFO "decrunch");
     if ((t = decrunch((struct xmp_context *)ctx, &f, &s)) < 0)
 	goto err;
 
@@ -506,6 +514,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     crc = cksum(f);
 
+    _D(_D_INFO "clear mem");
     xmp_drv_clearmem((struct xmp_context *)ctx);
 
     /* Reset variables */
@@ -522,6 +531,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     /* Reset control for next module */
     m->fetch = o->flags & ~XMP_CTL_FILTER;
 
+    _D(_D_INFO "read modconf");
     xmpi_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
 
     m->xxh = calloc(sizeof (struct xxm_header), 1);
@@ -540,23 +550,29 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     m->verbosity = o->verbosity;
 
+    _D(_D_WARN "load");
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
 
+        _D(_D_INFO "check exclusion");
 	if (is_excluded_fmt((struct xmp_context *)ctx, li->id))
 	    continue;
+        _D(_D_INFO "not excluded");
 	
 	if (o->verbosity > 3)
 	    report("Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
+	_D(_D_INFO "test format: %s (%s)", li->id, li->name);
    	if ((i = li->test(f, NULL, 0)) == 0) {
 	    if (o->verbosity > 3)
 		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
+	    _D(_D_WARN "load format: %s (%s)", li->id, li->name);
 	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) == 0))
 		break;
 	}
     }
+    _D(_D_WARN "loaded");
 
     fclose(f);
 

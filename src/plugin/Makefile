@@ -1,12 +1,12 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.8 2007-11-15 19:57:47 cmatsuoka Exp $
+# $Id: Makefile,v 1.9 2007-11-17 11:54:12 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
 	  -DENABLE_PLUGIN
 DFILES	= Makefile xpanel.h xstuff.c bg2.xpm $(OBJS:.o=.c) xmms.c bmp.c \
 	  audacious.c winamp.c
-CFILES	= xmp-audacious.so xmp-bmp.so xmp-xmms.so xmp-winamp.dll
+CFILES	= xmp-audacious.so xmp-bmp.so xmp-xmms.so in_xmp.dll
 OBJS	= driver.o xpanel.o fft4g.o font1.o font2.o
 
 WINAMP_SDK = $(TOPDIR)/wa502_sdk/winamp
@@ -82,10 +82,10 @@ install-xmms:
 # Winamp
 #
 
-winamp: xmp-winamp.dll
+winamp: in_xmp.dll
 	@true
 
-xmp-winamp.dll: driver.o winamp.o $(TOPDIR)/lib/libxmp-pic.a
+in_xmp.dll: driver.o winamp.o $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -mwindows -o $@ driver.o winamp.o -L$(TOPDIR)/lib/ -lxmp-pic
 
 winamp.o: winamp.c
