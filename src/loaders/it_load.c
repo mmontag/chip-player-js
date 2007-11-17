@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.39 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.40 2007-11-17 19:33:42 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -749,8 +749,13 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		buf = calloc(1, m->xxs[i].len);
 
 		if (ish.flags & IT_SMP_16BIT) {
-		    itsex_decompress16 (f, buf, m->xxs[i].len >> 1, 
+		    itsex_decompress16(f, buf, m->xxs[i].len >> 1, 
 					ish.convert & IT_CVT_DIFF);
+
+		    /* decompression generates native-endian samples, but
+		     * we want little-endian */
+		    if (o->big_endian)
+			xmp_cvt_sex(m->xxs[i].len, buf);
 		} else {
 		    itsex_decompress8(f, buf, m->xxs[i].len, ifh.cmwt == 0x0215);
 		}

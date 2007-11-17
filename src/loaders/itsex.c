@@ -187,7 +187,7 @@ static inline uint32 readbits(uint8 n)
 	return retval;
 }
 
-static int readblock(FILE * f)
+static int readblock(FILE *f)
 {				/* gets block of compressed data from file */
 	uint16 size;
 
@@ -330,7 +330,7 @@ int itsex_decompress16(FILE *module, void *dst, int len, char it215)
 	sword d1, d2;		/* integrator buffers (d2 for it2.15) */
 	sword *destpos;
 
-	destbuf = (sword *) dst;
+	destbuf = (sword *)dst;
 	if (!destbuf)
 		return 0;
 
