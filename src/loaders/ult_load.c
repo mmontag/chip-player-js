@@ -114,8 +114,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     strncpy(m->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
-    sprintf(m->type, "ULT V%04d (Ultra Tracker %s)",
-						ver, verstr[ver - 1]);
+    sprintf(m->type, "ULT V%04d (Ultra Tracker %s)", ver, verstr[ver - 1]);
 
     MODULE_INFO();
 
@@ -128,8 +127,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    if (V(1))
-	report ("Instruments    : %d ", m->xxh->ins);
+    reportv(ctx, 1, "Instruments    : %d ", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -150,12 +148,31 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	    uih.finetune ^= uih.c2spd;
 	    uih.c2spd ^= uih.finetune;
 	}
-	m->xxih[i].nsm = !!(m->xxs[i].len = uih.sizeend - uih.sizestart);
+	m->xxs[i].len = uih.sizeend - uih.sizestart;
+	m->xxih[i].nsm = !!m->xxs[i].len;
 	m->xxs[i].lps = uih.loop_start;
 	m->xxs[i].lpe = uih.loopend;
 
+	/* BiDi Loop : (Bidirectional Loop)
+	 *
+	 * UT takes advantage of the Gus's ability to loop a sample in
+	 * several different ways. By setting the Bidi Loop, the sample can
+	 * be played forward or backwards, looped or not looped. The Bidi
+	 * variable also tracks the sample resolution (8 or 16 bit).
+	 *
+	 * The following table shows the possible values of the Bidi Loop.
+	 * Bidi = 0  : No looping, forward playback,  8bit sample
+	 * Bidi = 4  : No Looping, forward playback, 16bit sample
+	 * Bidi = 8  : Loop Sample, forward playback, 8bit sample
+	 * Bidi = 12 : Loop Sample, forward playback, 16bit sample
+	 * Bidi = 24 : Loop Sample, reverse playback 8bit sample
+	 * Bidi = 28 : Loop Sample, reverse playback, 16bit sample
+	 */
+
 	/* Claudio's note: I'm ignoring reverse playback for samples */
+
 	switch (uih.bidiloop) {
+	case 20:		/* Type 20 is in seasons.ult */
 	case 4:
 	    m->xxs[i].flg = WAVE_16_BITS;
 	    m->xxs[i].len <<= 1;
@@ -188,11 +205,10 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	if (ver > 3)
-	    c2spd_to_note (uih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	    c2spd_to_note(uih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
 
-    if (V(1))
-	report ("\n");
+    reportv(ctx, 1, "\n");
 
     fread(&ufh2.order, 256, 1, f);
     ufh2.channels = read8(f);
@@ -316,18 +332,15 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    if (V(0))
-	report ("\nStored samples : %d ", m->xxh->smp);
+    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
-	if (V(0))
-	    report (".");
+	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
+	reportv(ctx, 0, ".");
     }
-    if (V(0))
-	report ("\n");
+    reportv(ctx, 0, "\n");
 
     m->volbase = 0x100;
 
