@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.8 2007-11-17 12:34:12 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.9 2007-11-17 13:05:11 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -12,9 +12,6 @@
 #include "xmpi.h"
 #include "in2.h"
 
-//extern In_Module mod;
-//static char lastfn[MAX_PATH];
-//static short sample_buffer[576 * 2];
 
 // avoid CRT. Evil. Big. Bloated.
 BOOL WINAPI
@@ -219,9 +216,9 @@ static int play_file(char *fn)
 	struct xmp_options *opt;
 	int lret;
 	int /*fmt,*/ nch;
+	struct xmp_module_info mi;
 
 	_D("fn = %s", fn);
-	//strcpy(lastfn, fn);
 
 	opt = xmp_get_options(ctx);
 
@@ -237,7 +234,7 @@ static int play_file(char *fn)
 	playing = 1;
 
 	opt->resol = 8;
-	opt->verbosity = 3;
+	opt->verbosity = 0;
 	opt->drv_id = "callback";
 
 	switch (xmp_cfg.mixing_freq) {
@@ -252,19 +249,19 @@ static int play_file(char *fn)
 		break;
 	}
 
-	if ((xmp_cfg.force8bit == 0))
+	if (xmp_cfg.force8bit == 0)
 		opt->resol = 16;
 
-	if ((xmp_cfg.force_mono == 0)) {
+	if (xmp_cfg.force_mono == 0) {
 		channelcnt = 2;
 	} else {
 		opt->outfmt |= XMP_FMT_MONO;
 	}
 
-	if ((xmp_cfg.interpolation == 1))
+	if (xmp_cfg.interpolation == 1)
 		opt->flags |= XMP_CTL_ITPT;
 
-	if ((xmp_cfg.filter == 1))
+	if (xmp_cfg.filter == 1)
 		opt->flags |= XMP_CTL_FILTER;
 
 	opt->mix = xmp_cfg.pan_amplitude;
@@ -277,7 +274,7 @@ static int play_file(char *fn)
 	audio_open = TRUE;
 
 	paused = 0;
-	//memset(sample_buffer, 0, sizeof(sample_buffer));
+
 	maxlatency = mod.outMod->Open(44100, 1, 16, -1, -1);
 	if (maxlatency < 0)
 		return 1;
@@ -293,10 +290,9 @@ static int play_file(char *fn)
 	ReleaseMutex(load_mutex);
 
 	xmp_cfg.time = lret;
-	//xmp_get_module_info(ctx, mi);
-	//strcpy(ii->filename, "");
+	xmp_get_module_info(ctx, &mi);
 
-	//xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
+	mod->SetInfo(0, opt->freq, channelcnt, 0);
 
 	decode_thread = (HANDLE)CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)play_loop, NULL, 0, &tmp);
@@ -367,6 +363,13 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 	struct xmp_options *opt;
 
 	_D(_D_WARN "filename = %s", filename);
+
+	/* if filename == NULL, current playing is used */
+	if (filename == NULL) {
+		xmp_get_module_info(ctx, &mi);
+		wsprintf(title, "%s", mi.name);
+		return;
+	}
 
 	/* Create new context to load a file and get the length */
 	

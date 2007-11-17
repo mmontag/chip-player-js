@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.35 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.36 2007-11-17 13:05:10 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -187,6 +187,7 @@ struct xmp_module_info {
     int len;
     int bpm;
     int tpo;
+    int time;
 };
 
 typedef char *xmp_context;

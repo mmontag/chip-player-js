@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.59 2007-11-17 12:15:03 cmatsuoka Exp $
+ * $Id: load.c,v 1.60 2007-11-17 13:05:11 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -552,6 +552,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 	    report ("Estimated time : %dmin%02ds\n",
 		(t + 500) / 60000, ((t + 500) / 1000) % 60);
     }
+
+    m->time = t;
 
     return t;
 

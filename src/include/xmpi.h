@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.47 2007-11-17 12:15:03 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.48 2007-11-17 13:05:10 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -137,6 +137,7 @@ struct xmp_ord_info {
 
 struct xmp_mod_context {
 	int verbosity;			/* verbosity level */
+	int time;			/* replay time in ms */
 	char *dirname;			/* file dirname */
 	char *basename;			/* file basename */
 	char name[XMP_NAMESIZE];	/* module name */
