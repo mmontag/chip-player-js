@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.194 2007-11-16 19:16:49 cmatsuoka Exp $
+$Id: ChangeLog,v 1.195 2007-11-17 16:28:36 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -29,6 +29,7 @@ Stable versions
 	- enforce minimum allowed BPM to prevent large frames (fix crash with
 	  MED2XM modules such as Fascinated.xm, reported by Lorence Lombardo)
 	- fix conversion of big-endian 16-bit samples in big-endian machines
+	- added experimental Winamp plugin
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm

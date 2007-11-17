@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.10 2007-11-17 13:10:43 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.11 2007-11-17 16:28:36 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -73,10 +73,11 @@ static void	eq_set		(int, char[10], int);
 In_Module mod = {
 	IN_VER,
 	"XMP Plugin " VERSION,
-	0,			// hMainWindow
-	0,			// hDllInstance
-	"\0", 0,		// is_seekable
-	1,			// uses output
+	0,			/* hMainWindow */
+	0,			/* hDllInstance */
+	"\0",			/* DLL instance handle */
+	1,			/* is_seekable */
+	1,			/* uses output */
 	config,
 	about,
 	init,
@@ -130,6 +131,7 @@ static void stop()
 
 static void driver_callback(void *b, int i)
 {
+	int numch = xmp_cfg.force_mono ? 1 : 2;
 	int n = (i / 2) << (mod.dsp_isactive()? 1 : 0);
 	int t;
 
@@ -137,8 +139,8 @@ static void driver_callback(void *b, int i)
 		Sleep(50);
 
 	t = mod.outMod->GetWrittenTime();
-	mod.SAAddPCMData(b, 1, 16, t);	/* What is this supposed to be? */
-	mod.VSAAddPCMData(b, 1, 16, t);
+	mod.SAAddPCMData(b, numch, 16, t);
+	mod.VSAAddPCMData(b, numch, 16, t);
 
 	mod.outMod->Write(b, i);
 }
@@ -211,7 +213,7 @@ static int play_file(char *fn)
 {
 	int maxlatency;
 	DWORD tmp;
-	int channelcnt = 1;
+	int numch = 1;
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
@@ -253,7 +255,7 @@ static int play_file(char *fn)
 		opt->resol = 16;
 
 	if (xmp_cfg.force_mono == 0) {
-		channelcnt = 2;
+		numch = 2;
 	} else {
 		opt->outfmt |= XMP_FMT_MONO;
 	}
@@ -275,7 +277,7 @@ static int play_file(char *fn)
 
 	paused = 0;
 
-	maxlatency = mod.outMod->Open(44100, 1, 16, -1, -1);
+	maxlatency = mod.outMod->Open(opt->freq, numch, opt->resol, -1, -1);
 	if (maxlatency < 0)
 		return 1;
 	mod.SetInfo(0, 44, 1, 1);
@@ -291,8 +293,6 @@ static int play_file(char *fn)
 
 	xmp_cfg.time = lret;
 	xmp_get_module_info(ctx, &mi);
-
-	mod.SetInfo(0, opt->freq, channelcnt, 0);
 
 	decode_thread = (HANDLE)CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)play_loop, NULL, 0, &tmp);
@@ -336,8 +336,28 @@ static int getoutputtime()
 	return mod.outMod->GetOutputTime();
 }
 
-static void setoutputtime(int time_in_ms)
+static void setoutputtime(int time)
 {
+	int i, t;
+	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+
+	_D("seek to %d, total %d", time, xmp_cfg.time);
+
+	time *= 1000;
+	for (i = 0; i < xmp_cfg.mod_info.len; i++) {
+		t = p->m.xxo_info[i].time;
+
+		_D("%2d: %d %d", i, time, t);
+
+		if (t > time) {
+			int a;
+			if (i > 0)
+				i--;
+			a = xmp_ord_set(ctx, i);
+			mod.outMod->Flush(p->m.xxo_info[i].time);
+			break;
+		}
+	}
 }
 
 static void setvolume(int volume)
