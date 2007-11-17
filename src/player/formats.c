@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.65 2007-11-10 14:26:52 cmatsuoka Exp $
+ * $Id: formats.c,v 1.66 2007-11-17 12:15:03 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,10 +22,33 @@ struct xmp_fmt_info *__fmt_head;
 
 LIST_HEAD(loader_list);
 
-struct exclude_id {
-	struct list_head list;
-	char *id;
-};
+
+#if 0
+static void exclude_formats(struct xmp_context *ctx)
+{
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_options *o = &ctx->o;
+    struct list_head *head;
+    struct xmp_loader_info *li;
+    struct xmp_fmt_info *f, *fmt;
+    char *tok;
+    int found;
+
+    if (!*o->exclude_fmt)
+	return;
+
+    tok = strtok(o->exclude_fmt, ", ");
+    while (tok) {
+        list_for_each(head, &loader_list) {
+	    li = list_entry(head, struct xmp_loader_info, list);
+	    if (!strcmp(tok, li->id)) {
+		li->disabled = 1;
+		break;
+	    }
+	}
+    }
+}
+#endif
 
 void register_format(char *suffix, char *tracker)
 {
@@ -48,6 +71,7 @@ void register_format(char *suffix, char *tracker)
 
 static void register_loader(struct xmp_loader_info *l)
 {
+	l->disabled = 0;
 	list_add_tail(&l->list, &loader_list);
 	register_format(l->id, l->name);
 }
@@ -59,10 +83,6 @@ static void register_loader(struct xmp_loader_info *l)
 
 void xmp_init_formats(xmp_context ctx)
 {
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-	
-	INIT_LIST_HEAD(&p->exclude_list);
-
 	REG_LOADER(xm);
 	REG_LOADER(mod);
 	REG_LOADER(flt);

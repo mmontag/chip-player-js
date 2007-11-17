@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.58 2007-11-17 11:54:12 cmatsuoka Exp $
+ * $Id: load.c,v 1.59 2007-11-17 12:15:03 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -51,86 +51,6 @@ int pw_check		(unsigned char *, int);
 #define BUILTIN_S404	0x07
 #define BUILTIN_OXM	0x08
 
-
-struct exclude_id {
-	struct list_head list;
-	char *id;
-};
-
-
-/*
- * Check if the given format is in the exclude list
- */
-static int is_excluded_fmt(struct xmp_context *ctx, char *s)
-{
-    struct xmp_player_context *p = &ctx->p;
-    struct list_head *head;
-    struct exclude_id *e;
-
-    return 0;
-
-    if (list_empty(&p->exclude_list))
-	return 0;
-
-    _D(_D_INFO "check %s\n", s);
-    list_for_each(head, &p->exclude_list) {
-        e = list_entry(head, struct exclude_id, list);
-	if (!strcasecmp(s, e->id))
-	    return 1;
-    }
-
-    return 0;
-}
-
-/*
- * Exclude mod from the exclude list
- */
-static void dont_exclude_mod(struct xmp_context *ctx)
-{
-    struct xmp_player_context *p = &ctx->p;
-    struct list_head *head;
-    struct exclude_id *e;
-
-    list_for_each(head, &p->exclude_list) {
-        e = list_entry(head, struct exclude_id, list);
-	if (!strcasecmp(e->id, "mod")) {
-	    list_del(&e->list);
-	}
-    }
-}
-
-static void build_exclude_list(struct xmp_context *ctx)
-{
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_options *o = &ctx->o;
-    struct exclude_id *e;
-    struct list_head *head;
-    struct xmp_fmt_info *f, *fmt;
-    char *tok;
-    int found;
-
-    tok = strtok(o->exclude_fmt, ", ");
-    while (tok) {
-    	e = malloc(sizeof(struct exclude_id));
-    	e->id = tok;
-    	list_add_tail(&e->list, &p->exclude_list);
-    	tok = strtok(NULL, ", ");
-    }
-
-    list_for_each(head, &p->exclude_list) {
-        e = list_entry(head, struct exclude_id, list);
-	xmp_get_fmt_info(&fmt);
-	found = 0;
-	for (f = fmt; f; f = f->next) {
-	    if (!strcasecmp(f->suffix, e->id)) {
-		found = 1;
-		break;
-	    }
-	}
-	if (!found)
-	    reportv(ctx, 0, "Warning: format \"%s\" not supported\n", e->id);
-    }
-}
 
 #define TMP_SIZE 512
 
@@ -228,11 +148,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 
 	    format = list_entry(checked_format, struct pw_format, list);
 
-	    if (!is_excluded_fmt(ctx, format->id)) {
+	    if (1 /*!format->disabled*/) {
 	        packer = format->name;
 	        builtin = BUILTIN_PW;
 
-		dont_exclude_mod(ctx);
+		//dont_exclude_mod(ctx);
 	    }
 	}
     }
@@ -417,14 +337,9 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
 int xmp_test_module(xmp_context ctx, char *s, char *n)
 {
     FILE *f;
-    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     struct xmp_loader_info *li;
     struct list_head *head;
     struct stat st;
-
-    if (o->exclude_fmt != NULL && list_empty(&p->exclude_list))
-	build_exclude_list((struct xmp_context *)ctx);
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -444,7 +359,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
 
-	if (is_excluded_fmt((struct xmp_context *)ctx, li->id))
+	if (li->disabled)
 	    continue;
 	
 	fseek(f, 0, SEEK_SET);
@@ -491,8 +406,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
     _D(_D_WARN "s = %s", s);
-    if (o->exclude_fmt != NULL && list_empty(&p->exclude_list))
-	build_exclude_list((struct xmp_context *)ctx);
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -555,7 +468,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	li = list_entry(head, struct xmp_loader_info, list);
 
         _D(_D_INFO "check exclusion");
-	if (is_excluded_fmt((struct xmp_context *)ctx, li->id))
+	if (li->disabled)
 	    continue;
         _D(_D_INFO "not excluded");
 	

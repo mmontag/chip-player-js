@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.9 2007-11-17 11:54:12 cmatsuoka Exp $
+# $Id: Makefile,v 1.10 2007-11-17 12:15:03 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
@@ -91,6 +91,11 @@ in_xmp.dll: driver.o winamp.o $(TOPDIR)/lib/libxmp-pic.a
 winamp.o: winamp.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -I$(WINAMP_SDK) -o $@ winamp.c
 
+main.o: main.c
+	$(CC) $(CFLAGS) $(XCFLAGS) -I$(WINAMP_SDK) -o $@ main.c
+
+main: main.o
+	$(LD) $(LDFLAGS) -o $@ main.o
 
 
 $(OBJS): Makefile

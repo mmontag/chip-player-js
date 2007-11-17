@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.46 2007-11-14 21:54:19 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.47 2007-11-17 12:15:03 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -193,7 +193,6 @@ struct xmp_player_context {
 	struct xmp_channel *xc_data;
 	int *fetch_ctl;
 	int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
-	struct list_head exclude_list;
 
 	struct xmp_mod_context m;
 };
