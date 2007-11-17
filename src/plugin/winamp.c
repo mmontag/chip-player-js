@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.7 2007-11-17 11:54:12 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.8 2007-11-17 12:34:12 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -220,7 +220,6 @@ static int play_file(char *fn)
 	int lret;
 	int /*fmt,*/ nch;
 
-return 0;
 	_D("fn = %s", fn);
 	//strcpy(lastfn, fn);
 
@@ -366,7 +365,6 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 	int lret;
 	struct xmp_module_info mi;
 	struct xmp_options *opt;
-	//char *x;
 
 	_D(_D_WARN "filename = %s", filename);
 
@@ -391,9 +389,12 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 		return;
         }
 
-	*length_in_ms = lret * 1000;
+	*length_in_ms = lret;
+	_D(_D_INFO "length_in_ms = %d", *length_in_ms);
 	xmp_get_module_info(ctx2, &mi);
 	wsprintf(title, "%s", mi.name);
+	_D(_D_INFO "title = %s", mi.name);
+
 
         xmp_release_module(ctx2);
         xmp_free_context(ctx2);

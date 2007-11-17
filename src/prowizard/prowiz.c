@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.25 2007-10-14 19:08:15 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.26 2007-11-17 12:34:12 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -213,7 +213,7 @@ static int check(unsigned char *b, int s)
 		if (tmp == &pw_format_list)
 			break;
 		format = list_entry(tmp, struct pw_format, list);
-		_D ("checking format [%d]: %s", s, format->name);
+		//_D ("checking format [%d]: %s", s, format->name);
 		if ((extra = format->test (b, s)) > 0) {
 			_D ("format: %s, extra: %d", format->id, extra);
 			shortcut = tmp->prev;
