@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.11 2007-11-18 21:09:46 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.12 2007-11-18 22:56:06 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -567,15 +567,20 @@ static void play_file(InputPlayback *ipb)
 
 	if (xmp_cfg.force_mono == 0) {
 		channelcnt = 2;
+		opt->outfmt &= ~XMP_FMT_MONO;
 	} else {
 		opt->outfmt |= XMP_FMT_MONO;
 	}
 
 	if (xmp_cfg.interpolation == 1)
 		opt->flags |= XMP_CTL_ITPT;
+	else
+		opt->flags &= ~XMP_CTL_ITPT;
 
 	if (xmp_cfg.filter == 1)
 		opt->flags |= XMP_CTL_FILTER;
+	else
+		opt->flags &= ~XMP_CTL_FILTER;
 
 	opt->mix = xmp_cfg.pan_amplitude;
 

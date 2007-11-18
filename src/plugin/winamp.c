@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.17 2007-11-18 21:56:14 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.18 2007-11-18 22:56:06 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -79,7 +79,12 @@ In_Module mod = {
 	"XMP Plugin " VERSION,
 	0,			/* hMainWindow */
 	0,			/* hDllInstance */
-	"mod\0bla\0",		/* file extensions */
+	"xm;mod;flt;st;m15;it;s3m;stm;stx;mtm;ice;imf;ptm;mdl;ult;liq;psm;"
+	"amf;mmd0;mmd1;mmd2;mmd3;med;dmf;rtm;pt3;tcb;dt;gtk;dtt;mgt;arch;"
+	"dsym;digi;dbm;emod;okt;sfx;far;umx;stim;mtp;ims;669;fnk;funk;amd;"
+	"rad;hsc;alm;ac1d;fchs;fcm;fuzz;kris;ksm;mp;p18a;p10c;pru1;pru2;pha;"
+	"wn;unic;tp3;xann;di;eu;p4x;p60a;np1;np2;np3;zen;crb;tdd;gmc\0"
+	"Module formats\0",	/* file extensions */
 	1,			/* is_seekable */
 	1,			/* uses output */
 	config,
@@ -240,9 +245,6 @@ static void about(HWND hwndParent)
 
 static void init()
 {
-	//ConfigFile *cfg;
-	struct xmp_fmt_info *f, *fmt;
-	static char formats[1024];
 	static char inifile[MAX_PATH];
 	int i = 0;
 
@@ -268,16 +270,6 @@ static void init()
 	//xmp_register_event_callback(x11_event_callback);
 
 	xmp_get_fmt_info(&fmt);
-	for (f = fmt; f; f = f->next) {
-		if (f != fmt)
-			strncat(formats, ";", 1024);
-		strncat(formats, f->id, 1024);
-	}
-
-	i = strlen(formats);
-	snprintf(formats + i + 1, 1024 - i - 1, "Module formats");
-
-	mod.FileExtensions = formats;
 }
 
 static void quit()
@@ -367,7 +359,7 @@ static int play_file(char *fn)
 	maxlatency = mod.outMod->Open(opt->freq, numch, opt->resol, -1, -1);
 	if (maxlatency < 0)
 		return 1;
-	mod.SetInfo(0, opt->freq, 1, 1);
+	mod.SetInfo(0, opt->freq / 1000, 1, 1);
 	mod.SAVSAInit(maxlatency, opt->freq);
 	mod.VSASetInfo(numch, opt->freq);
 	mod.outMod->SetVolume(-666);

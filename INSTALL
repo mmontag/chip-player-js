@@ -25,7 +25,13 @@ $ ./configure --enable-audacious-plugin
 
 Use --enable-bmp-plugin or --enable-xmms-plugin for BMP and XMMS.
 
+To build the Winamp plugin, you need the Winamp SDK from http://winamp.com/.
+If you want to cross-compile using MinGW, configure with:
+
+$ ./configure --host=i586-mingw32msvc --enable-winamp-plugin
+
 Many other options are available, run ./configure --help to list them.
+
 
 
 Installation
