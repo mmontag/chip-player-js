@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.12 2007-11-18 13:37:28 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.13 2007-11-18 16:16:50 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -218,7 +218,6 @@ static int play_file(char *fn)
 	struct xmp_options *opt;
 	int lret;
 	int /*fmt,*/ nch;
-	struct xmp_module_info mi;
 
 	_D("fn = %s", fn);
 
@@ -292,7 +291,7 @@ static int play_file(char *fn)
 	ReleaseMutex(load_mutex);
 
 	xmp_cfg.time = lret;
-	xmp_get_module_info(ctx, &mi);
+	xmp_get_module_info(ctx, &xmp_cfg.mod_info);
 
 	decode_thread = (HANDLE)CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)play_loop, NULL, 0, &tmp);
@@ -301,12 +300,14 @@ static int play_file(char *fn)
 
 DWORD WINAPI __stdcall play_loop(void *b)
 {
+	_D(_D_WARN "play");
 	xmp_play_module(ctx);
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 	playing = 0;
 
-	ThreadExit();
+	_D(_D_WARN "exit thread");
+	ExitThread(0);
 
 	return 0;
 }
@@ -330,7 +331,7 @@ static int is_paused()
 
 static int getlength()
 {
-	return -1000;
+	return xmp_cfg.time;
 }
 
 static int getoutputtime()
@@ -348,7 +349,6 @@ static void setoutputtime(int time)
 
 	_D("seek to %d, total %d", time, xmp_cfg.time);
 
-	time *= 1000;
 	for (i = 0; i < xmp_cfg.mod_info.len; i++) {
 		t = p->m.xxo_info[i].time;
 
@@ -400,30 +400,30 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 
 	/* Create new context to load a file and get the length */
 	
-	_D(_D_INFO "create context");
+	_D("create context");
 	ctx2 = xmp_create_context();
-	_D(_D_INFO "get options");
+	_D("get options");
 	opt = xmp_get_options(ctx2);
 	opt->skipsmp = 1;	/* don't load samples */
 
-	_D(_D_INFO "create mutex");
+	_D("create mutex");
 	load_mutex = CreateMutex(NULL, TRUE, "load_mutex");
-	_D(_D_INFO "load module");
+	_D("load module");
 	lret = xmp_load_module(ctx2, filename);
-	_D(_D_INFO "release mutex");
+	_D("release mutex");
 	ReleaseMutex(load_mutex);
 
 	if (lret < 0) {
-		_D(_D_INFO "free context");
+		_D("free context");
 		xmp_free_context(ctx2);
 		return;
         }
 
 	*length_in_ms = lret;
-	_D(_D_INFO "length_in_ms = %d", *length_in_ms);
+	_D("length_in_ms = %d", *length_in_ms);
 	xmp_get_module_info(ctx2, &mi);
 	wsprintf(title, "%s", mi.name);
-	_D(_D_INFO "title = %s", mi.name);
+	_D("title = %s", mi.name);
 
 
         xmp_release_module(ctx2);
