@@ -1,16 +1,18 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.14 2007-11-18 17:49:33 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.15 2007-11-18 20:05:22 cmatsuoka Exp $
  */
 
 #include <windows.h>
+#include <windowsx.h>
 #include <mmreg.h>
 #include <msacm.h>
 #include <math.h>
 
 #include "xmpi.h"
 #include "in2.h"
+#include "resource.h"
 
 #define WM_WA_MPEG_EOF (WM_USER + 2)
 
@@ -21,7 +23,7 @@ _DllMainCRTStartup(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 	return TRUE;
 }
 
-DWORD WINAPI __stdcall play_loop(void *);
+static DWORD WINAPI __stdcall play_loop(void *);
 
 static int paused;
 HANDLE decode_thread = INVALID_HANDLE_VALUE;
@@ -33,11 +35,11 @@ HANDLE load_mutex;
 
 typedef struct {
 	int mixing_freq;
-	int force8bit;
+	int convert8bit;
 	int force_mono;
 	int interpolation;
 	int filter;
-	int convert8bit;
+	int force8bit;
 	int fixloops;
 	int loop;
 	int modrange;
@@ -146,55 +148,89 @@ static void driver_callback(void *b, int i)
 	mod.outMod->Write(b, i);
 }
 
+static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_CLOSE:
+		EndDialog(hDlg,TRUE);
+		return 0;
+	case WM_INITDIALOG:
+		break;
+	case WM_COMMAND:
+		switch (GET_WM_COMMAND_ID(wParam, lParam)) {
+		case IDOK:
+			break;
+		case IDCANCEL:
+			EndDialog(hDlg,TRUE);
+			break;
+		}
+		break;
+	default:
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static void config(HWND hwndParent)
 {
-	MessageBox(hwndParent, "Later.", "Configuration", MB_OK);
+	DialogBox(mod.hDllInstance, (const char *)IDD_CONFIG, hwndParent,
+							config_dialog);
 }
 
 static void about(HWND hwndParent)
 {
-	MessageBox(hwndParent, "Later.", "About XMP", MB_OK);
+	MessageBox(hwndParent,
+		"Extended Module Player " VERSION "\n"
+		"Written by Claudio Matsuoka and Hipolito Carraro Jr.\n"
+		"\n"
+		"Portions Copyright (C) 1998,2000 Olivier Lapicque,\n"
+		"(C) 1998 Tammo Hinrichs, (C) 1998 Sylvain Chipaux,\n"
+		"(C) 1997 Bert Jahn, (C) 1999 Tatsuyuki Satoh, (C)\n"
+		"1996-1999 Takuya Ooura, (C) 2001-2006 Russell Marks\n"
+		, "About XMP", MB_OK);
 }
+
+
+static char *get_inifile(char *s)
+{
+	char *c;
+
+	if (GetModuleFileName(GetModuleHandle("in_xmp.dll"), s, MAX_PATH)) {
+		if ((c = strrchr(s, '\\')) != NULL)
+			*++c = 0;
+                strncat(s, "plugin.ini", MAX_PATH);
+        }
+
+	return s;
+}
+
 
 static void init()
 {
 	//ConfigFile *cfg;
-	//char *filename;
 	struct xmp_fmt_info *f, *fmt;
 	static char formats[1024];
+	static char inifile[MAX_PATH];
 	int i = 0;
 
 	ctx = xmp_create_context();
 
-	xmp_cfg.mixing_freq = 0;
-	xmp_cfg.convert8bit = 0;
-	xmp_cfg.fixloops = 0;
-	xmp_cfg.modrange = 0;
-	xmp_cfg.force8bit = 0;
-	xmp_cfg.force_mono = 0;
-	xmp_cfg.interpolation = TRUE;
-	xmp_cfg.filter = TRUE;
-	xmp_cfg.pan_amplitude = 80;
+#define CFGREADINT(x,y) do { \
+	xmp_cfg.x = GetPrivateProfileInt("XMP", #x, y, inifile); \
+} while (0)
 
-#if 0
-#define CFGREADINT(x) xmms_cfg_read_int (cfg, "XMP", #x, &xmp_cfg.x)
-
-	filename = g_strconcat(g_get_home_dir(), CONFIG_FILE, NULL);
-
-	if ((cfg = xmms_cfg_open_file(filename))) {
-		CFGREADINT(mixing_freq);
-		CFGREADINT(force8bit);
-		CFGREADINT(convert8bit);
-		CFGREADINT(modrange);
-		CFGREADINT(fixloops);
-		CFGREADINT(force_mono);
-		CFGREADINT(interpolation);
-		CFGREADINT(filter);
-		CFGREADINT(pan_amplitude);
-
-		xmms_cfg_free(cfg);
-	}
-#endif
+	get_inifile(inifile);
+	
+	CFGREADINT(mixing_freq, 0);
+	CFGREADINT(force8bit, 0);
+	CFGREADINT(convert8bit, 0);
+	CFGREADINT(modrange, 0);
+	CFGREADINT(fixloops, 0);
+	CFGREADINT(force_mono, 0);
+	CFGREADINT(interpolation, 1);
+	CFGREADINT(filter, 1);
+	CFGREADINT(pan_amplitude, 80);
 
 	xmp_init_callback(ctx, driver_callback);
 	//xmp_register_event_callback(x11_event_callback);
@@ -210,7 +246,6 @@ static void init()
 	snprintf(formats + i + 1, 1024 - i - 1, "Module formats");
 
 	mod.FileExtensions = formats;
-
 }
 
 static void quit()
@@ -284,7 +319,6 @@ static int play_file(char *fn)
 
 	opt->mix = xmp_cfg.pan_amplitude;
 
-	//fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
 	nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 
 	if (audio_open)
@@ -316,7 +350,7 @@ static int play_file(char *fn)
 	return 0;
 }
 
-DWORD WINAPI __stdcall play_loop(void *b)
+static DWORD WINAPI __stdcall play_loop(void *b)
 {
 	_D(_D_WARN "play");
 	xmp_play_module(ctx);
