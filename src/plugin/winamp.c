@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.15 2007-11-18 20:05:22 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.16 2007-11-18 21:09:46 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -110,6 +110,20 @@ __declspec(dllexport) In_Module *winampGetInModule2()
 }
 
 
+static char *get_inifile(char *s)
+{
+	char *c;
+
+	if (GetModuleFileName(GetModuleHandle("in_xmp.dll"), s, MAX_PATH)) {
+		if ((c = strrchr(s, '\\')) != NULL)
+			*++c = 0;
+                strncat(s, "plugin.ini", MAX_PATH);
+        }
+
+	return s;
+}
+
+
 static void stop()
 {
 	if (!playing)
@@ -150,16 +164,36 @@ static void driver_callback(void *b, int i)
 
 static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	char inifile[MAX_PATH];
+
+#define CFGWRITESTR(x) do { \
+	char buf[16]; \
+	snprintf(buf, 16, "%d", xmp_cfg.x); \
+	WritePrivateProfileString("XMP", #x, buf, inifile); \
+} while (0)
+
 	switch (uMsg) {
 	case WM_CLOSE:
 		EndDialog(hDlg,TRUE);
 		return 0;
 	case WM_INITDIALOG:
+		if (xmp_cfg.interpolation)
+			CheckDlgButton(hDlg, IDC_INTERPOLATION, BST_CHECKED);
+		if (xmp_cfg.filter)
+			CheckDlgButton(hDlg, IDC_FILTER, BST_CHECKED);
 		break;
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam, lParam)) {
 		case IDOK:
-			break;
+			xmp_cfg.interpolation = (IsDlgButtonChecked(hDlg,
+					IDC_INTERPOLATION) == BST_CHECKED);
+			xmp_cfg.filter = (IsDlgButtonChecked(hDlg,
+					IDC_FILTER) == BST_CHECKED);
+				
+			get_inifile(inifile);
+			CFGWRITESTR(interpolation);
+			CFGWRITESTR(filter);
+			/* fall thru */
 		case IDCANCEL:
 			EndDialog(hDlg,TRUE);
 			break;
@@ -189,20 +223,6 @@ static void about(HWND hwndParent)
 		"(C) 1997 Bert Jahn, (C) 1999 Tatsuyuki Satoh, (C)\n"
 		"1996-1999 Takuya Ooura, (C) 2001-2006 Russell Marks\n"
 		, "About XMP", MB_OK);
-}
-
-
-static char *get_inifile(char *s)
-{
-	char *c;
-
-	if (GetModuleFileName(GetModuleHandle("in_xmp.dll"), s, MAX_PATH)) {
-		if ((c = strrchr(s, '\\')) != NULL)
-			*++c = 0;
-                strncat(s, "plugin.ini", MAX_PATH);
-        }
-
-	return s;
 }
 
 
@@ -307,15 +327,20 @@ static int play_file(char *fn)
 
 	if (xmp_cfg.force_mono == 0) {
 		numch = 2;
+		opt->outfmt &= ~XMP_FMT_MONO;
 	} else {
 		opt->outfmt |= XMP_FMT_MONO;
 	}
 
 	if (xmp_cfg.interpolation == 1)
 		opt->flags |= XMP_CTL_ITPT;
+	else
+		opt->flags &= ~XMP_CTL_ITPT;
 
 	if (xmp_cfg.filter == 1)
 		opt->flags |= XMP_CTL_FILTER;
+	else
+		opt->flags &= ~XMP_CTL_FILTER;
 
 	opt->mix = xmp_cfg.pan_amplitude;
 

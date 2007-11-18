@@ -1,160 +1,24 @@
-//Microsoft Developer Studio generated resource script.
-//
+/*
+ * $Id: resource.rc,v 1.2 2007-11-18 21:09:46 cmatsuoka Exp $
+ */
+
 #include "winuser.h"
 #include "resource.h"
 
 #define IDC_STATIC (-1)
 
-#define APSTUDIO_READONLY_SYMBOLS
-#include "afxres.h"
-#undef APSTUDIO_READONLY_SYMBOLS
 
-/////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
-
-//#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-//#ifdef _WIN32
-//LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
-//#endif //_WIN32
-
-#if 0
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#include ""afxres.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-#endif
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_CONFIG DIALOG DISCARDABLE  0, 0, 186, 140
+IDD_CONFIG DIALOG DISCARDABLE  0, 0, 186, 50
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GC Stream Player Config"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
-    CONTROL         "Low Volume (prevent clipping)",IDC_FORCE8BIT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,12,73,108,10
-    LTEXT           "Fade Delay",IDC_STATIC,7,41,37,8
-#if 0
-    EDITTEXT        IDC_FADEDELAY,52,38,39,14,ES_AUTOHSCROLL
-    LTEXT           "seconds",IDC_STATIC,93,39,29,11
-    CONTROL         "Only play channel #",IDC_ONECHAN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,12,62,77,10
-    EDITTEXT        IDC_CHANNUM,89,60,29,12,ES_AUTOHSCROLL
-    GROUPBOX        "ADX",IDC_STATIC,7,54,117,34
-    CONTROL         "Slider1",IDC_PRISLIDER,"msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP,124,48,58,10
-    CTEXT           "DATARIFIC",IDC_CPUPRI,125,62,54,11
-    LTEXT           "Thread Priority",IDC_STATIC,128,40,46,8
-    GROUPBOX        "RSF",IDC_STATIC,7,91,117,42
-    EDITTEXT        IDC_RSFCOEF1,50,100,67,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_RSFCOEF2,50,115,67,12,ES_AUTOHSCROLL
-#endif
+    DEFPUSHBUTTON   "OK", IDOK, 129, 7, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 129, 24, 50, 14
+    CONTROL         "Enable interpolation", IDC_INTERPOLATION, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 10, 108, 10
+    CONTROL         "Enable IT lowpass filters", IDC_FILTER, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 24, 108, 10
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_CONFIG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 133
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-//#ifndef _MAC
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x40004L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "Comments", "\0"
-            VALUE "CompanyName", "Halley's Comet Software\0"
-            VALUE "FileDescription", "in_cube\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "in_cube\0"
-            VALUE "LegalCopyright", "Copyright © 2006\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "in_cube.dll\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "Halley's Comet Software in_cube\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
-            VALUE "SpecialBuild", "\0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-
-//#endif    // !_MAC
-
-//#endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
 

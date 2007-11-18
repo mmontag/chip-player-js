@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.10 2007-11-18 13:37:28 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.11 2007-11-18 21:09:46 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -799,7 +799,7 @@ static void configure()
 	if (xmp_cfg.mixing_freq == FREQ_SAMPLE_44)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(Sample_44),TRUE);
 
-	Sample_22 = gtk_radio_button_new_with_label(sample_group, "22 kHz)");
+	Sample_22 = gtk_radio_button_new_with_label(sample_group, "22 kHz");
 	sample_group = gtk_radio_button_group(GTK_RADIO_BUTTON(Sample_22));
 	gtk_object_set_data(GTK_OBJECT(xmp_conf_window), "Sample_22",Sample_22);
 	gtk_widget_show(Sample_22);
