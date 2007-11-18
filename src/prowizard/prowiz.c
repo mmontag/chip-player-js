@@ -4,7 +4,7 @@
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * $Id: prowiz.c,v 1.26 2007-11-17 12:34:12 cmatsuoka Exp $
+ * $Id: prowiz.c,v 1.27 2007-11-18 12:47:19 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>
@@ -22,8 +22,25 @@ static int check (unsigned char *, int);
 static LIST_HEAD(pw_format_list);
 
 
+int pw_enable(char *id, int enable)
+{
+	struct list_head *tmp;
+	struct pw_format *format;
+
+	list_for_each(tmp, &pw_format_list) {
+		format = list_entry(tmp, struct pw_format, list);
+		if (!strcmp(id, format->id)) {
+			format->enable = enable;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 int pw_register(struct pw_format *f)
 {
+	f->enable = 1;
 	list_add_tail(&f->list, &pw_format_list);
 	register_format(f->id, f->name);
 	return 0;
@@ -31,7 +48,7 @@ int pw_register(struct pw_format *f)
 
 int pw_unregister(struct pw_format *f)
 {
-	list_del (&f->list);
+	list_del(&f->list);
 	return 0;
 }
 
@@ -67,40 +84,40 @@ int pw_write_zero(FILE *out, int len)
 int pw_init()
 {
 	/* With signature */
-	pw_register (&pw_ac1d);
+	pw_register(&pw_ac1d);
 	/* pw_register (&pw_emod); */
-	pw_register (&pw_fchs);
-	pw_register (&pw_fcm);
-	pw_register (&pw_fuzz);
-	pw_register (&pw_kris);
-	pw_register (&pw_ksm);
-	pw_register (&pw_mp_id);
-	pw_register (&pw_p18a);
-	pw_register (&pw_p10c);
-	pw_register (&pw_pru1);
-	pw_register (&pw_pru2);
-	pw_register (&pw_pha);
-	pw_register (&pw_wn);
-	pw_register (&pw_unic_id);
-	pw_register (&pw_tp3);
+	pw_register(&pw_fchs);
+	pw_register(&pw_fcm);
+	pw_register(&pw_fuzz);
+	pw_register(&pw_kris);
+	pw_register(&pw_ksm);
+	pw_register(&pw_mp_id);
+	pw_register(&pw_p18a);
+	pw_register(&pw_p10c);
+	pw_register(&pw_pru1);
+	pw_register(&pw_pru2);
+	pw_register(&pw_pha);
+	pw_register(&pw_wn);
+	pw_register(&pw_unic_id);
+	pw_register(&pw_tp3);
 
 	/* No signature */
-	pw_register (&pw_xann);
-	pw_register (&pw_mp_noid);	/* Must check before Heatseeker */
-	pw_register (&pw_di);
-	pw_register (&pw_eu);
-	pw_register (&pw_p4x);
-	pw_register (&pw_p60a);
-	pw_register (&pw_np2);
-	pw_register (&pw_np1);
-	pw_register (&pw_np3);
-	pw_register (&pw_zen);
-	pw_register (&pw_unic_emptyid);
-	pw_register (&pw_unic_noid);
-	pw_register (&pw_unic2);
-	pw_register (&pw_crb);
-	pw_register (&pw_tdd);
-	pw_register (&pw_gmc);
+	pw_register(&pw_xann);
+	pw_register(&pw_mp_noid);	/* Must check before Heatseeker */
+	pw_register(&pw_di);
+	pw_register(&pw_eu);
+	pw_register(&pw_p4x);
+	pw_register(&pw_p60a);
+	pw_register(&pw_np2);
+	pw_register(&pw_np1);
+	pw_register(&pw_np3);
+	pw_register(&pw_zen);
+	pw_register(&pw_unic_emptyid);
+	pw_register(&pw_unic_noid);
+	pw_register(&pw_unic2);
+	pw_register(&pw_crb);
+	pw_register(&pw_tdd);
+	pw_register(&pw_gmc);
 
 	return 0;
 }

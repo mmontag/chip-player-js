@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.36 2007-11-17 13:05:10 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.37 2007-11-18 12:47:19 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -139,13 +139,12 @@ struct xmp_options {
     int reverb;		/* Reverb leval */
     int maxvoc;		/* Channel max number of voice */
     int skipsmp;	/* Don't load sample data */
-    char *exclude_fmt;	/* Exclude these format IDs */
     char *parm[64];	/* Driver parameter data */
 };
 
 struct xmp_fmt_info {
     struct xmp_fmt_info *next;
-    char *suffix;
+    char *id;
     char *tracker;
 };
 
@@ -234,5 +233,7 @@ void	xmp_detach_shared_mem		(void *);
 int	xmp_verbosity_level		(xmp_context, int);
 int	xmp_seek_time			(xmp_context, int);
 void	xmp_init_formats		(xmp_context);
+int	xmp_enable_format		(char *, int);
+
 
 #endif /* __XMP_H */

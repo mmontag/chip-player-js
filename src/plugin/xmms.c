@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: xmms.c,v 1.6 2007-11-17 13:05:11 cmatsuoka Exp $
+ * $Id: xmms.c,v 1.7 2007-11-18 12:47:19 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -174,7 +174,7 @@ static void aboutbox ()
 	xmp_get_fmt_info(&fmt);
 	table1 = gtk_table_new(100, 2, FALSE);
 	for (i = 0, f = fmt; f; i++, f = f->next) {
-		label_fmt = gtk_label_new(f->suffix);
+		label_fmt = gtk_label_new(f->id);
 		label_trk = gtk_label_new(f->tracker);
 		gtk_label_set_justify (GTK_LABEL (label_fmt), GTK_JUSTIFY_LEFT);
 		gtk_label_set_justify (GTK_LABEL (label_trk), GTK_JUSTIFY_LEFT);

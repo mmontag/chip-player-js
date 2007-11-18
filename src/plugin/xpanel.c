@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.1 2007-10-21 12:59:16 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.2 2007-11-18 12:47:19 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -241,13 +241,13 @@ void shadowmsg (struct font_header *f, int x, int y, char *s, int c, int b)
 void set_palette()
 {
     bg = bg2;
-    setpalette (bg);
+    setpalette(bg);
 }
 
 
 void clear_screen()
 {
-    draw_xpm (bg, RES_X, RES_Y);
+    draw_xpm(bg, RES_X, RES_Y);
     update_display();
 }
 

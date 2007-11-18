@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: coco_load.c,v 1.1 2007-11-16 00:57:29 cmatsuoka Exp $
+ * $Id: coco_load.c,v 1.2 2007-11-18 12:47:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -38,21 +38,26 @@ static int coco_test(FILE *f, char *t, const int start)
 	if (x != 4 && x != 8)
 		return -1;
 
+	fseek(f, 19, SEEK_CUR);		/* skip title */
+
+	if (read8(f) != 0x0d)
+		return -1;
+
+	read8(f);
+	read8(f);
+	read8(f);
+
+	y = read32l(f);
+	if (y < 64 || y > 0x00100000)
+		return -1;
+
+	y = read32l(f);
+	if (y < 64 || y > 0x00100000)
+		return -1;
+
+	fseek(f, start + 1, SEEK_SET);
 	read_title(f, t, 19);
 	
-	read8(f);
-	read8(f);
-	read8(f);
-	read8(f);
-
-	y = read32l(f);
-	if (y < 64 || y > 0x00100000)
-		return -1;
-
-	y = read32l(f);
-	if (y < 64 || y > 0x00100000)
-		return -1;
-
 	return 0;
 }
 
@@ -63,6 +68,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xxm_event *event;
 	int i, j;
 	int seq_ptr, pat_ptr, smp_ptr[64];
+	char x;
 
 	LOAD_INIT();
 
@@ -94,8 +100,10 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].lps = read32b(f);
 		m->xxs[i].lpe = m->xxs[i].lps + read32b(f);
 		m->xxs[i].flg = m->xxs[i].lps > 0 ? WAVE_LOOPING : 0;
-		fread(m->xxih[i].name, 1, 10, f);
-		read8(f);
+
+		for (j = 0; (x = read8(f)) != 0x0d; j++) {
+			m->xxih[i].name[j] = x;
+		}
 		read8(f);
 
 		m->xxih[i].nsm = !!m->xxs[i].len;

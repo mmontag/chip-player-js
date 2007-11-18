@@ -44,12 +44,14 @@ struct pw_format {
 	int flags;
 	int (*test)(uint8 *, int);
 	int (*depack)(FILE *, FILE *);
+	int enable;
 	struct list_head list;
 };
 
 void pw_crap (struct pw_format *, FILE *);
 int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);
+int pw_enable(char *, int);
 
 extern const uint8 ptk_table[37][2];
 extern const short tun_table[16][36];

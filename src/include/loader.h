@@ -10,7 +10,7 @@ struct xmp_loader_info {
 	char *name;
 	int (*test)(FILE *, char *, const int);
 	int (*loader)(struct xmp_context *, FILE *, const int);
-	int disabled;
+	int enable;
 	struct list_head list;
 };
 

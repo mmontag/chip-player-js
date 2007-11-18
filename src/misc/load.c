@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.60 2007-11-17 13:05:11 cmatsuoka Exp $
+ * $Id: load.c,v 1.61 2007-11-18 12:47:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -148,11 +148,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 
 	    format = list_entry(checked_format, struct pw_format, list);
 
-	    if (1 /*!format->disabled*/) {
+	    if (format->enable) {
 	        packer = format->name;
 	        builtin = BUILTIN_PW;
 
-		//dont_exclude_mod(ctx);
+		xmp_enable_format("MOD", 1);
 	    }
 	}
     }
@@ -358,14 +358,12 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
-
-	if (li->disabled)
-	    continue;
-	
-	fseek(f, 0, SEEK_SET);
-	if (li->test(f, n, 0) == 0) {
-	    fclose(f);
-	    return 0;
+	if (li->enable) {
+	    fseek(f, 0, SEEK_SET);
+	    if (li->test(f, n, 0) == 0) {
+	        fclose(f);
+	        return 0;
+	    }
 	}
     }
 
@@ -468,14 +466,13 @@ int xmp_load_module(xmp_context ctx, char *s)
 	li = list_entry(head, struct xmp_loader_info, list);
 
         _D(_D_INFO "check exclusion");
-	if (li->disabled)
+	if (li->enable == 0)
 	    continue;
         _D(_D_INFO "not excluded");
 	
 	if (o->verbosity > 3)
 	    report("Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
-	_D(_D_INFO "test format: %s (%s)", li->id, li->name);
    	if ((i = li->test(f, NULL, 0)) == 0) {
 	    if (o->verbosity > 3)
 		report("Identified as %s\n", li->id);
@@ -485,7 +482,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 		break;
 	}
     }
-    _D(_D_WARN "loaded");
 
     fclose(f);
 
@@ -561,3 +557,21 @@ err:
     fclose(f);
     return -1;
 }
+
+
+int xmp_enable_format(char *id, int enable)
+{
+    struct list_head *head;
+    struct xmp_loader_info *li;
+
+    list_for_each(head, &loader_list) {
+	li = list_entry(head, struct xmp_loader_info, list);
+	if (!strcasecmp(id, li->id)) {
+	    li->enable = enable;
+	    return 0;
+        }
+    }
+
+    return pw_enable(id, enable);
+}
+

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.66 2007-11-17 12:15:03 cmatsuoka Exp $
+ * $Id: formats.c,v 1.67 2007-11-18 12:47:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,40 +23,13 @@ struct xmp_fmt_info *__fmt_head;
 LIST_HEAD(loader_list);
 
 
-#if 0
-static void exclude_formats(struct xmp_context *ctx)
-{
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_options *o = &ctx->o;
-    struct list_head *head;
-    struct xmp_loader_info *li;
-    struct xmp_fmt_info *f, *fmt;
-    char *tok;
-    int found;
-
-    if (!*o->exclude_fmt)
-	return;
-
-    tok = strtok(o->exclude_fmt, ", ");
-    while (tok) {
-        list_for_each(head, &loader_list) {
-	    li = list_entry(head, struct xmp_loader_info, list);
-	    if (!strcmp(tok, li->id)) {
-		li->disabled = 1;
-		break;
-	    }
-	}
-    }
-}
-#endif
-
-void register_format(char *suffix, char *tracker)
+void register_format(char *id, char *tracker)
 {
 	struct xmp_fmt_info *f;
 
 	f = malloc(sizeof(struct xmp_fmt_info));
 	f->tracker = tracker;
-	f->suffix = suffix;
+	f->id = id;
 
 	if (!__fmt_head)
 		__fmt_head = f;
@@ -71,7 +44,7 @@ void register_format(char *suffix, char *tracker)
 
 static void register_loader(struct xmp_loader_info *l)
 {
-	l->disabled = 0;
+	l->enable = 1;
 	list_add_tail(&l->list, &loader_list);
 	register_format(l->id, l->name);
 }
@@ -124,6 +97,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(far);
 	REG_LOADER(umx);
 	REG_LOADER(stim);
+	//REG_LOADER(coco);
 	REG_LOADER(mtp);
 	REG_LOADER(ims);
 	REG_LOADER(ssn);

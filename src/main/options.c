@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: options.c,v 1.30 2007-11-13 22:29:31 cmatsuoka Exp $
+ * $Id: options.c,v 1.31 2007-11-18 12:47:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,6 +47,18 @@ extern int rt;
 #define OPT_FIXLOOP	0x10d
 #define OPT_CRUNCH	0x10e
 #define OPT_NOFILTER	0x10f
+
+
+static void exclude_formats(char *list)
+{
+    char *tok;
+
+    tok = strtok(list, ", ");
+    while (tok) {
+	xmp_enable_format(tok, 0);
+	tok = strtok(NULL, ", ");
+    }
+}
 
 
 static void list_wrap(char *s, int l, int r, int v)
@@ -115,7 +127,7 @@ static void usage(char *s, struct xmp_options *opt)
     list_wrap (NULL, 3, 78, 1);
 
     for (i = 0, f = fmt; f; i++, f = f->next) {
-        snprintf(buf, 80, "%s (%s)", f->suffix, f->tracker);
+        snprintf(buf, 80, "%s (%s)", f->id, f->tracker);
         list_wrap(buf, 3, 0, 1);
     }
 
@@ -380,7 +392,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    opt->verbosity++;
 	    break;
 	case 'x':
-	    opt->exclude_fmt = optarg;
+	    exclude_formats(optarg);
 	    break;
 	case 'h':
 	    usage(argv[0], opt);
