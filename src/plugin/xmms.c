@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: xmms.c,v 1.7 2007-11-18 12:47:19 cmatsuoka Exp $
+ * $Id: xmms.c,v 1.8 2007-11-18 13:37:28 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -282,7 +282,7 @@ InputPlugin *get_iplugin_info()
 
 static void driver_callback(void *b, int i)
 {
-	xmp_ip.add_vis_pcm (xmp_ip.output->written_time(),
+	xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, i, b);
 	

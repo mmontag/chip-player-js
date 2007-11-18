@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: audacious.c,v 1.9 2007-11-18 12:47:19 cmatsuoka Exp $
+ * $Id: audacious.c,v 1.10 2007-11-18 13:37:28 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -339,7 +339,7 @@ static void driver_callback(void *b, int i)
 					i, b, &play_data.ipb->playing);
 
 #else
-	xmp_ip.add_vis_pcm (xmp_ip.output->written_time(),
+	xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, i, b);
 	

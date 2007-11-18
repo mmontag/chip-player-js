@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.11 2007-11-17 16:28:36 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.12 2007-11-18 13:37:28 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -306,6 +306,8 @@ DWORD WINAPI __stdcall play_loop(void *b)
 	xmp_close_audio(ctx);
 	playing = 0;
 
+	ThreadExit();
+
 	return 0;
 }
 
@@ -333,6 +335,9 @@ static int getlength()
 
 static int getoutputtime()
 {
+	if (!playing)
+		return -1;
+
 	return mod.outMod->GetOutputTime();
 }
 
