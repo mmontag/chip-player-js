@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: xmms.c,v 1.8 2007-11-18 13:37:28 cmatsuoka Exp $
+ * $Id: xmms.c,v 1.9 2007-11-18 17:49:33 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -118,7 +118,7 @@ InputPlugin xmp_ip = {
 static void file_info_box_build (void);
 static void init_visual (GdkVisual *);
 
-static void aboutbox ()
+static void aboutbox()
 {
 	GtkWidget *vbox1;
 	GtkWidget *label1;

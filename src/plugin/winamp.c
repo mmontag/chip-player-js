@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.13 2007-11-18 16:16:50 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.14 2007-11-18 17:49:33 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -12,6 +12,7 @@
 #include "xmpi.h"
 #include "in2.h"
 
+#define WM_WA_MPEG_EOF (WM_USER + 2)
 
 // avoid CRT. Evil. Big. Bloated.
 BOOL WINAPI
@@ -75,7 +76,7 @@ In_Module mod = {
 	"XMP Plugin " VERSION,
 	0,			/* hMainWindow */
 	0,			/* hDllInstance */
-	"\0",			/* DLL instance handle */
+	"mod\0bla\0",		/* file extensions */
 	1,			/* is_seekable */
 	1,			/* uses output */
 	config,
@@ -159,6 +160,9 @@ static void init()
 {
 	//ConfigFile *cfg;
 	//char *filename;
+	struct xmp_fmt_info *f, *fmt;
+	static char formats[1024];
+	int i = 0;
 
 	ctx = xmp_create_context();
 
@@ -194,6 +198,19 @@ static void init()
 
 	xmp_init_callback(ctx, driver_callback);
 	//xmp_register_event_callback(x11_event_callback);
+
+	xmp_get_fmt_info(&fmt);
+	for (f = fmt; f; f = f->next) {
+		if (f != fmt)
+			strncat(formats, ";", 1024);
+		strncat(formats, f->id, 1024);
+	}
+
+	i = strlen(formats);
+	snprintf(formats + i + 1, 1024 - i - 1, "Module formats");
+
+	mod.FileExtensions = formats;
+
 }
 
 static void quit()
@@ -279,9 +296,9 @@ static int play_file(char *fn)
 	maxlatency = mod.outMod->Open(opt->freq, numch, opt->resol, -1, -1);
 	if (maxlatency < 0)
 		return 1;
-	mod.SetInfo(0, 44, 1, 1);
-	mod.SAVSAInit(maxlatency, 44100);
-	mod.VSASetInfo(44100, 1);
+	mod.SetInfo(0, opt->freq, 1, 1);
+	mod.SAVSAInit(maxlatency, opt->freq);
+	mod.VSASetInfo(numch, opt->freq);
 	mod.outMod->SetVolume(-666);
 
 	xmp_open_audio(ctx);
@@ -294,7 +311,8 @@ static int play_file(char *fn)
 	xmp_get_module_info(ctx, &xmp_cfg.mod_info);
 
 	decode_thread = (HANDLE)CreateThread(NULL, 0,
-			(LPTHREAD_START_ROUTINE)play_loop, NULL, 0, &tmp);
+			(LPTHREAD_START_ROUTINE)play_loop,
+			NULL, 0, &tmp);
 	return 0;
 }
 
@@ -306,8 +324,7 @@ DWORD WINAPI __stdcall play_loop(void *b)
 	xmp_close_audio(ctx);
 	playing = 0;
 
-	_D(_D_WARN "exit thread");
-	ExitThread(0);
+	PostMessage(mod.hMainWindow, WM_WA_MPEG_EOF, 0, 0);
 
 	return 0;
 }
