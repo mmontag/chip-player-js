@@ -1,11 +1,12 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.16 2007-11-18 21:09:46 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.17 2007-11-18 21:56:14 cmatsuoka Exp $
  */
 
 #include <windows.h>
 #include <windowsx.h>
+#include <commctrl.h>
 #include <mmreg.h>
 #include <msacm.h>
 #include <math.h>
@@ -165,6 +166,7 @@ static void driver_callback(void *b, int i)
 static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	char inifile[MAX_PATH];
+	HANDLE sld;
 
 #define CFGWRITESTR(x) do { \
 	char buf[16]; \
@@ -179,8 +181,15 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 	case WM_INITDIALOG:
 		if (xmp_cfg.interpolation)
 			CheckDlgButton(hDlg, IDC_INTERPOLATION, BST_CHECKED);
+
 		if (xmp_cfg.filter)
 			CheckDlgButton(hDlg, IDC_FILTER, BST_CHECKED);
+
+		sld = GetDlgItem(hDlg, IDC_PAN_AMPLITUDE);
+		SendMessage(sld, TBM_SETRANGE, (WPARAM)TRUE,
+						(LPARAM)MAKELONG(0, 100));
+		SendMessage(sld, TBM_SETPOS, (WPARAM)TRUE,
+						(LPARAM)xmp_cfg.pan_amplitude);
 		break;
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam, lParam)) {
@@ -189,10 +198,13 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 					IDC_INTERPOLATION) == BST_CHECKED);
 			xmp_cfg.filter = (IsDlgButtonChecked(hDlg,
 					IDC_FILTER) == BST_CHECKED);
+			xmp_cfg.pan_amplitude = SendMessage(GetDlgItem(hDlg,
+					IDC_PAN_AMPLITUDE), TBM_GETPOS, 0, 0);
 				
 			get_inifile(inifile);
 			CFGWRITESTR(interpolation);
 			CFGWRITESTR(filter);
+			CFGWRITESTR(pan_amplitude);
 			/* fall thru */
 		case IDCANCEL:
 			EndDialog(hDlg,TRUE);
