@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: bmp.c,v 1.11 2007-11-18 22:56:06 cmatsuoka Exp $
+ * $Id: bmp.c,v 1.12 2007-11-19 22:09:36 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -1026,7 +1026,7 @@ gdk_colormap_alloc_color(colormap, (GdkColor *)x, TRUE, TRUE)
 #include "xstuff.c"
 
 
-static void init_visual (GdkVisual *visual)
+static void init_visual(GdkVisual *visual)
 {
     if (visual->type == GDK_VISUAL_PSEUDO_COLOR && visual->depth == 8) {
 	draw_rectangle = draw_rectangle_indexed;
@@ -1054,7 +1054,6 @@ static void init_visual (GdkVisual *visual)
 	fprintf (stderr, "Visual class and depth not supported, aborting\n");
 	exit (-1);
     }
-
 }
 
 void update_display()

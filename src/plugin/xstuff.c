@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.3 2007-11-19 11:29:53 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.4 2007-11-19 22:09:36 cmatsuoka Exp $
  */
 
 /*
@@ -123,7 +123,7 @@ static void erase_rectangle_rgb16(int x, int y, int w, int h)
 }
 
 
-static void draw_rectangle_rgb15 (int x, int y, int w, int h)
+static void draw_rectangle_rgb15(int x, int y, int w, int h)
 {
     int i, j, c;
 
@@ -136,7 +136,7 @@ static void draw_rectangle_rgb15 (int x, int y, int w, int h)
 }
 
 
-static void erase_rectangle_rgb15 (int x, int y, int w, int h)
+static void erase_rectangle_rgb15(int x, int y, int w, int h)
 {
     int i, j, c;
 
