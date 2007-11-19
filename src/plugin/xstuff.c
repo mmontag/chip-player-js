@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.2 2007-10-21 23:00:05 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.3 2007-11-19 11:29:53 cmatsuoka Exp $
  */
 
 /*
@@ -76,49 +76,49 @@ static void draw_rectangle_rgb24(int x, int y, int w, int h)
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
+	    c = XGetPixel(ximage, i, j);
 	    if (c != 0xfefefe && c != 0xd0d0d0)
-		XPutPixel (ximage, i, j, c >> 1);
+		XPutPixel(ximage, i, j, c >> 1);
 	}
 }
 
 
-static void erase_rectangle_rgb24 (int x, int y, int w, int h)
+static void erase_rectangle_rgb24(int x, int y, int w, int h)
 {
     int i, j, c;
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
+	    c = XGetPixel(ximage, i, j);
 	    if (c != 0xfefefe && c != 0xd0d0d0)
-		XPutPixel (ximage, i, j, c << 1);
+		XPutPixel(ximage, i, j, c << 1);
 	}
 }
 
 
-static void draw_rectangle_rgb16 (int x, int y, int w, int h)
+static void draw_rectangle_rgb16(int x, int y, int w, int h)
 {
     int i, j, c;
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
+	    c = XGetPixel(ximage, i, j);
 	    /* Erm. It seems that the gray color is now 0xce98. Weird */
 	    if (c != 0xffff && c != 0xd69a && (c & ~1) != 0xce98)
-		XPutPixel (ximage, i, j, c >> 1);
+		XPutPixel(ximage, i, j, c >> 1);
 	}
 }
 
 
-static void erase_rectangle_rgb16 (int x, int y, int w, int h)
+static void erase_rectangle_rgb16(int x, int y, int w, int h)
 {
     int i, j, c;
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
+	    c = XGetPixel(ximage, i, j);
 	    if (c != 0xffff && c != 0xd69a && (c & ~1) != 0xce98)
-		XPutPixel (ximage, i, j, c << 1);
+		XPutPixel(ximage, i, j, c << 1);
 	}
 }
 
@@ -129,9 +129,9 @@ static void draw_rectangle_rgb15 (int x, int y, int w, int h)
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
+	    c = XGetPixel(ximage, i, j);
 	    if (c != 0x7fff && c != 0x6b5a)
-		XPutPixel (ximage, i, j, c >> 1);
+		XPutPixel(ximage, i, j, c >> 1);
 	}
 }
 
@@ -142,59 +142,58 @@ static void erase_rectangle_rgb15 (int x, int y, int w, int h)
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
+	    c = XGetPixel(ximage, i, j);
 	    if (c != 0x7fff && c != 0x6b5a)
-		XPutPixel (ximage, i, j, c << 1);
+		XPutPixel(ximage, i, j, c << 1);
 	}
 }
 
 
-static void draw_rectangle_indexed (int x, int y, int w, int h)
+static void draw_rectangle_indexed(int x, int y, int w, int h)
 {
     int i, j, c;
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
-	    XPutPixel (ximage, i, j, pmap[c]);
+	    c = XGetPixel(ximage, i, j);
+	    XPutPixel(ximage, i, j, pmap[c]);
 	}
 }
 
 
-static void erase_rectangle_indexed (int x, int y, int w, int h)
+static void erase_rectangle_indexed(int x, int y, int w, int h)
 {
     int i, j, c;
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;) {
-	    c = XGetPixel (ximage, i, j);
-	    XPutPixel (ximage, i, j, pmap[c]);
+	    c = XGetPixel(ximage, i, j);
+	    XPutPixel(ximage, i, j, pmap[c]);
 	}
 }
 
 
-inline void get_rectangle (int x, int y, int w, int h, int *buf)
+inline void get_rectangle(int x, int y, int w, int h, int *buf)
 {
     register int i, j;
     
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;)
-	    *buf++ = XGetPixel (ximage, i, j);
+	    *buf++ = XGetPixel(ximage, i, j);
 }
 
 
-inline void put_rectangle (int x, int y, int w, int h, int *buf)
+inline void put_rectangle(int x, int y, int w, int h, int *buf)
 {
     register int i, j;
 
     for (i = x + w; i-- > x;)
 	for (j = y + h; j-- > y;)
-	    XPutPixel (ximage, i, j, *buf++);
+	    XPutPixel(ximage, i, j, *buf++);
 }
 
 
-
-int writemsg (struct font_header *f, int x, int y, char *s, int c, int b)
+int writemsg(struct font_header *f, int x, int y, char *s, int c, int b)
 {
     int w, x1 = 0, y1 = 0, i;
     char *p;
@@ -207,23 +206,23 @@ int writemsg (struct font_header *f, int x, int y, char *s, int c, int b)
 	    for (; *p; x1++) {
 		for (y1 = 0; *p; p++, y1++) {
 		    if (c >= 0) {
-			i = XGetPixel (ximage, x + x1, y - y1);
+			i = XGetPixel(ximage, x + x1, y - y1);
 			if ((*p == '#') && (i != c)) {
-			    XPutPixel (ximage, x + x1, y - y1, color[c].pixel);
+			    XPutPixel(ximage, x + x1, y - y1, color[c].pixel);
 			} else if ((b != -1) && (*p != '#')) {
-			    XPutPixel (ximage, x + x1, y - y1, color[b].pixel);
+			    XPutPixel(ximage, x + x1, y - y1, color[b].pixel);
 			}
 		    }
 		}
 		if ((b != -1) && (c != -1)) {
 		    for (; y1 < f->h; y1++)
-			if ((i = XGetPixel (ximage, x + x1, y - y1)) != b)
-			    XPutPixel (ximage, x + x1, y - y1, color[b].pixel);
+			if ((i = XGetPixel(ximage, x + x1, y - y1)) != b)
+			    XPutPixel(ximage, x + x1, y - y1, color[b].pixel);
 		}
 	    }
 	    for (y1 = 0; (b != -1) && (c != -1) && (y1 < f->h); y1++)
-		if ((i = XGetPixel (ximage, x + x1, y - y1)) != b)
-		    XPutPixel (ximage, x + x1, y - y1, color[b].pixel);
+		if ((i = XGetPixel(ximage, x + x1, y - y1)) != b)
+		    XPutPixel(ximage, x + x1, y - y1, color[b].pixel);
 	}
     }
 
@@ -231,7 +230,7 @@ int writemsg (struct font_header *f, int x, int y, char *s, int c, int b)
 }
 
 
-void draw_xpm (char **bg, int w, int h)
+void draw_xpm(char **bg, int w, int h)
 {
     int i, j, k;
 
@@ -247,7 +246,7 @@ void draw_xpm (char **bg, int w, int h)
 	    default:
 		k = k - 'a' + 6;
 	    }
-	    XPutPixel (ximage, j, i, color[k].pixel);
+	    XPutPixel(ximage, j, i, color[k].pixel);
 	}
     }
 }
@@ -276,8 +275,8 @@ void setpalette (char **bg)
 	color[i].red <<= 8;
 	color[i].green <<= 8;
 	color[i].blue <<= 8;
-	if (!alloc_color (display, colormap, &color[i]))
-	    fprintf (stderr, "cannot allocte color cell\n");
+	if (!alloc_color(display, colormap, &color[i]))
+	    fprintf(stderr, "cannot allocte color cell\n");
     }
 
     if (indexed) {
