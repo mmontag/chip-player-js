@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.19 2007-11-19 16:07:16 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.20 2007-11-19 20:21:08 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -26,6 +26,7 @@ _DllMainCRTStartup(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 
 static DWORD WINAPI __stdcall play_loop(void *);
 
+static int stopped;
 static int paused;
 HANDLE decode_thread = INVALID_HANDLE_VALUE;
 HANDLE load_mutex;
@@ -136,6 +137,9 @@ static void stop()
 	if (!playing)
 		return;
 
+	_D(_D_CRIT "stop!");
+
+	stopped = 1;
 	xmp_stop_module(ctx);
 
 	if (decode_thread != INVALID_HANDLE_VALUE) {
@@ -371,6 +375,7 @@ static int play_file(char *fn)
 	xmp_cfg.time = lret;
 	xmp_get_module_info(ctx, &xmp_cfg.mod_info);
 
+	stopped = 0;
 	decode_thread = (HANDLE)CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)play_loop,
 			NULL, 0, &tmp);
@@ -379,13 +384,15 @@ static int play_file(char *fn)
 
 static DWORD WINAPI __stdcall play_loop(void *b)
 {
-	_D(_D_WARN "play");
+	_D(_D_CRIT "play");
 	xmp_play_module(ctx);
+	_D(_D_CRIT "end play");
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 	playing = 0;
 
-	PostMessage(mod.hMainWindow, WM_WA_MPEG_EOF, 0, 0);
+	if (!stopped)
+		PostMessage(mod.hMainWindow, WM_WA_MPEG_EOF, 0, 0);
 
 	return 0;
 }
