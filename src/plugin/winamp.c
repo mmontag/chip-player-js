@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.18 2007-11-18 22:56:06 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.19 2007-11-19 16:07:16 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -79,10 +79,11 @@ In_Module mod = {
 	"XMP Plugin " VERSION,
 	0,			/* hMainWindow */
 	0,			/* hDllInstance */
-	"xm;mod;flt;st;m15;it;s3m;stm;stx;mtm;ice;imf;ptm;mdl;ult;liq;psm;"
-	"amf;mmd0;mmd1;mmd2;mmd3;med;dmf;rtm;pt3;tcb;dt;gtk;dtt;mgt;arch;"
-	"dsym;digi;dbm;emod;okt;sfx;far;umx;stim;mtp;ims;669;fnk;funk;amd;"
-	"rad;hsc;alm;ac1d;fchs;fcm;fuzz;kris;ksm;mp;p18a;p10c;pru1;pru2;pha;"
+	"xm;mod;flt;st;m15;it;s3m;stm;stx;mtm;ice;imf;ptm;mdl;"
+	"ult;liq;psm;amf;mmd0;mmd1;mmd2;mmd3;med;med3;med4;dmf;"
+	"rtm;pt3;tcb;dt;gtk;dtt;mgt;arch;dsym;digi;dbm;emod;okt;"
+	"sfx;far;umx;stim;mtp;ims;669;fnk;funk;amd;rad;hsc;alm;"
+	"ac1d;fchs;fcm;fuzz;kris;ksm;mp;p18a;p10c;pru1;pru2;pha;"
 	"wn;unic;tp3;xann;di;eu;p4x;p60a;np1;np2;np3;zen;crb;tdd;gmc\0"
 	"Module formats\0",	/* file extensions */
 	1,			/* is_seekable */
@@ -246,7 +247,6 @@ static void about(HWND hwndParent)
 static void init()
 {
 	static char inifile[MAX_PATH];
-	int i = 0;
 
 	ctx = xmp_create_context();
 
@@ -268,8 +268,6 @@ static void init()
 
 	xmp_init_callback(ctx, driver_callback);
 	//xmp_register_event_callback(x11_event_callback);
-
-	xmp_get_fmt_info(&fmt);
 }
 
 static void quit()
