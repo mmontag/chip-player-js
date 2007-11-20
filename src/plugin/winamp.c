@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.21 2007-11-20 12:11:30 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.22 2007-11-20 17:53:37 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -85,7 +85,8 @@ In_Module mod = {
 	"rtm;pt3;tcb;dt;gtk;dtt;mgt;arch;dsym;digi;dbm;emod;okt;"
 	"sfx;far;umx;stim;mtp;ims;669;fnk;funk;amd;rad;hsc;alm;"
 	"ac1d;fchs;fcm;fuzz;kris;ksm;mp;p18a;p10c;pru1;pru2;pha;"
-	"wn;unic;tp3;xann;di;eu;p4x;p60a;np1;np2;np3;zen;crb;tdd;gmc\0"
+	"wn;unic;tp3;xann;di;eu;p4x;p40;p41;p60a;np1;np2;np3;zen;"
+	"crb;tdd;gmc\0"
 	"Module formats\0",	/* file extensions */
 	1,			/* is_seekable */
 	1,			/* uses output */
@@ -195,7 +196,7 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		if (xmp_cfg.filter)
 			CheckDlgButton(hDlg, IDC_FILTER, BST_CHECKED);
 
-		sld = GetDlgItem(hDlg, IDC_PAN_AMPLITUDE) * 10;
+		sld = GetDlgItem(hDlg, IDC_PAN_AMPLITUDE);
 		SendMessage(sld, TBM_SETRANGE, (WPARAM)TRUE,
 					(LPARAM)MAKELONG(0, 10));
 		SendMessage(sld, TBM_SETPOS, (WPARAM)TRUE,
@@ -205,11 +206,11 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		switch (GET_WM_COMMAND_ID(wParam, lParam)) {
 		case IDOK:
 			xmp_cfg.interpolation = (IsDlgButtonChecked(hDlg,
-					IDC_INTERPOLATION) == BST_CHECKED);
+				IDC_INTERPOLATION) == BST_CHECKED);
 			xmp_cfg.filter = (IsDlgButtonChecked(hDlg,
-					IDC_FILTER) == BST_CHECKED);
+				IDC_FILTER) == BST_CHECKED);
 			xmp_cfg.pan_amplitude = SendMessage(GetDlgItem(hDlg,
-					IDC_PAN_AMPLITUDE), TBM_GETPOS, 0, 0);
+				IDC_PAN_AMPLITUDE), TBM_GETPOS, 0, 0) * 10;
 				
 			get_inifile(inifile);
 			CFGWRITESTR(interpolation);

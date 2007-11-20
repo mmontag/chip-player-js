@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: med4_load.c,v 1.21 2007-11-15 22:36:54 cmatsuoka Exp $
+ * $Id: med4_load.c,v 1.22 2007-11-20 17:53:37 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -188,10 +188,23 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			buf[j] = read8(f);
 		buf[j] = 0;
 
-		m->xxs[i].lps    = c & 0x01 ? 0 : read16b(f) << 1;
-		loop_len      = c & 0x02 ? 0 : read16b(f) << 1;
+		m->xxs[i].lps = 0;
+		loop_len = 0;
+		m->xxi[i][0].vol = 0x40;
+
+#if 0
+		m->xxs[i].lps    = c & 0x01 ? 0    : read16b(f) << 1;
+		loop_len         = c & 0x02 ? 0    : read16b(f) << 1;
 		m->xxi[i][0].vol = c & 0x20 ? 0x40 : read8(f);
 		m->xxi[i][0].xpo = c & 0x40 ? 0x00 : read8(f);
+#endif
+
+		if ((c & 0x01) == 0)
+			m->xxs[i].lps = read16b(f) << 1;
+		if ((c & 0x02) == 0)
+			loop_len = read16b(f) << 1;
+		if ((c & 0x30) == 0)
+			m->xxi[i][0].vol = read8(f);
 
 		m->xxs[i].lpe = m->xxs[i].lps + loop_len;
 		if (loop_len > 0)

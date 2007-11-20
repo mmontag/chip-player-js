@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.197 2007-11-20 12:11:30 cmatsuoka Exp $
+$Id: ChangeLog,v 1.198 2007-11-20 17:53:37 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -31,8 +31,10 @@ Stable versions
 	- fixed conversion of big-endian 16-bit samples in big-endian machines
 	- fixed decompression of 16-bit IT samples in big-endian machines
 	- added experimental (incomplete) Winamp plugin
+	- added experimental Winamp plugin
 	- added handler for Ultra Tracker sample type 20 (fixes seasons.ult,
 	  reported by Lorence Lombardo)
+	- fixed instrument parameter handling in MED4 loader
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm
