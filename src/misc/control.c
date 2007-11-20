@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.34 2007-11-10 14:26:52 cmatsuoka Exp $
+ * $Id: control.c,v 1.35 2007-11-20 23:38:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -22,7 +22,6 @@
 
 #include "driver.h"
 #include "mixer.h"
-#include "formats.h"
 
 static int drv_parm = 0;
 extern struct xmp_drv_info drv_callback;

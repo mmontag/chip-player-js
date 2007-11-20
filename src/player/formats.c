@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.67 2007-11-18 12:47:19 cmatsuoka Exp $
+ * $Id: formats.c,v 1.68 2007-11-20 23:38:19 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include "xmpi.h"
 #include "list.h"
-#include "formats.h"
 #include "loader.h"
 
 struct xmp_fmt_info *__fmt_head;
@@ -75,6 +74,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(psm);
 	REG_LOADER(svb);
 	REG_LOADER(amf);
+	REG_LOADER(gdm);
 	REG_LOADER(mmd1);
 	REG_LOADER(mmd3);
 	REG_LOADER(med3);

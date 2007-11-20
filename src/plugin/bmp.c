@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: bmp.c,v 1.13 2007-11-20 12:11:30 cmatsuoka Exp $
+ * $Id: bmp.c,v 1.14 2007-11-20 23:38:19 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -27,7 +27,6 @@
 #include "xmp.h"
 #include "xmpi.h"
 #include "driver.h"
-#include "formats.h"
 #include "xpanel.h"
 
 static void	init		(void);
