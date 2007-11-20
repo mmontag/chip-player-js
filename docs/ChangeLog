@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.196 2007-11-17 18:10:17 cmatsuoka Exp $
+$Id: ChangeLog,v 1.197 2007-11-20 12:11:30 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -29,6 +29,7 @@ Stable versions
 	- enforce minimum allowed BPM to prevent large frames (fix crash with
 	  MED2XM modules such as Fascinated.xm, reported by Lorence Lombardo)
 	- fixed conversion of big-endian 16-bit samples in big-endian machines
+	- fixed decompression of 16-bit IT samples in big-endian machines
 	- added experimental (incomplete) Winamp plugin
 	- added handler for Ultra Tracker sample type 20 (fixes seasons.ult,
 	  reported by Lorence Lombardo)

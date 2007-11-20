@@ -3,7 +3,7 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.16 2007-10-22 10:33:06 cmatsuoka Exp $
+ * $Id: alsa.c,v 1.17 2007-11-20 12:11:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -31,6 +31,7 @@
 
 static int init (struct xmp_context *);
 static int prepare_driver (void);
+static void echoback (int);
 static void dshutdown (void);
 static int to_fmt (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
@@ -53,7 +54,7 @@ struct xmp_drv_info drv_alsa_mix = {
 	dshutdown,		/* shutdown */
 	xmp_smix_numvoices,	/* numvoices */
 	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
+	echoback,		/* echoback */
 	dummy,			/* setpatch */
 	xmp_smix_setvol,	/* setvol */
 	dummy,			/* setnote */
@@ -73,6 +74,29 @@ struct xmp_drv_info drv_alsa_mix = {
 };
 
 static snd_pcm_t *pcm_handle;
+
+static void echoback(int msg)
+{
+#if 0
+	int err;
+	snd_pcm_status_t *status;
+	snd_timestamp_t *timestamp;
+
+	snd_pcm_status_alloca(&status);
+	if ((err = snd_pcm_status(pcm_handle, status)) < 0) {
+		printf("Stream status error: %s\n", snd_strerror(err));
+		return;
+	}
+	
+	snd_pcm_status_get_tstamp(status, timestamp);
+	printf("%d.%d ", timestamp->tv_sec, timestamp->tv_usec);
+
+	snd_pcm_status_get_trigger_tstamp(status, timestamp);
+	printf("%d.%d\n", timestamp->tv_sec, timestamp->tv_usec);
+#endif
+
+	xmp_smix_echoback(msg);
+}
 
 
 static int init(struct xmp_context *ctx)

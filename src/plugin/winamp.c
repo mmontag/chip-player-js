@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.20 2007-11-19 20:21:08 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.21 2007-11-20 12:11:30 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -195,11 +195,11 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		if (xmp_cfg.filter)
 			CheckDlgButton(hDlg, IDC_FILTER, BST_CHECKED);
 
-		sld = GetDlgItem(hDlg, IDC_PAN_AMPLITUDE);
+		sld = GetDlgItem(hDlg, IDC_PAN_AMPLITUDE) * 10;
 		SendMessage(sld, TBM_SETRANGE, (WPARAM)TRUE,
-						(LPARAM)MAKELONG(0, 100));
+					(LPARAM)MAKELONG(0, 10));
 		SendMessage(sld, TBM_SETPOS, (WPARAM)TRUE,
-						(LPARAM)xmp_cfg.pan_amplitude);
+					(LPARAM)xmp_cfg.pan_amplitude / 10);
 		break;
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam, lParam)) {

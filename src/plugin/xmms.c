@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: xmms.c,v 1.12 2007-11-19 22:09:36 cmatsuoka Exp $
+ * $Id: xmms.c,v 1.13 2007-11-20 12:11:31 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -892,7 +892,7 @@ static void file_info_box_build()
 	gtk_object_set_data(GTK_OBJECT(vbox1), "vbox1", vbox1);
 	gtk_container_border_width(GTK_CONTAINER(vbox1), 4);
 
-	visual = gdk_visual_get_system ();
+	visual = gdk_visual_get_system();
 
 	/*
 	 * Image
@@ -972,11 +972,11 @@ static void file_info_box_build()
 	gtk_container_add(GTK_CONTAINER(scrw1), text1);
 	gtk_widget_realize(text1);
 
-	gtk_widget_realize (image1);
+	gtk_widget_realize(image1);
 
-	display = GDK_WINDOW_XDISPLAY (info_window->window);
-	window = GDK_WINDOW_XWINDOW (info_window->window);
-    	colormap = gdk_colormap_get_system ();
+	display = GDK_WINDOW_XDISPLAY(info_window->window);
+	window = GDK_WINDOW_XWINDOW(info_window->window);
+    	colormap = gdk_colormap_get_system();
 
 	gdk_color_black(colormap, color_black);
 	gdk_color_white(colormap, color_white);
