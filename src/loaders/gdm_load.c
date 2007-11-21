@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: gdm_load.c,v 1.2 2007-11-21 00:23:55 cmatsuoka Exp $
+ * $Id: gdm_load.c,v 1.3 2007-11-21 12:31:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -66,10 +66,10 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
-	int i, j, k;
 	int vermaj, vermin, tvmaj, tvmin, tracker;
 	int origfmt, ord_ofs, pat_ofs, ins_ofs, smp_ofs;
 	uint8 buffer[32], panmap[32];
+	int i;
 
 	LOAD_INIT();
 
@@ -118,11 +118,12 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = read8(f);
 
+	/* Read instrument data */
+
 	fseek(f, start + ins_ofs, SEEK_SET);
 
 	INSTRUMENT_INIT();
 
-	/* Read instrument data */
 	reportv(ctx, 1, "     Name                             Len   LBeg  LEnd  L Vol Pan C4Spd\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
@@ -170,69 +171,79 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	}
 
+	/* Read and convert patterns */
+
+	fseek(f, start + pat_ofs, SEEK_SET);
+
 	PATTERN_INIT();
 
-#if 0
-	/* Read and convert patterns */
 	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
+		int len, c, r, k;
+
 		PATTERN_ALLOC(i);
 		m->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		for (j = 0; j < m->xxp[i]->rows; j++) {
-			for (k = 0; k < m->xxh->chn; k++) {
-				int b;
-				event = &EVENT (i, k, j);
+		len = read16l(f);
+		len -= 2;
 
-				b = read8(f);
-				if (b) {
-					event->note = 12 * (b >> 4);
-					event->note += (b & 0xf) + 24;
-				}
-				b = read8(f);
-				event->ins = b >> 4;
-				if (event->ins)
-					event->ins += 1;
-				if (b &= 0x0f) {
-					switch (b) {
-					case 0xd:
-						event->fxt = FX_BREAK;
-						event->fxp = 0;
+		for (r = 0; len > 0; ) {
+			c = read8(f);
+			len--;
+
+			if (c == 0) {
+				r++;
+				continue;
+			}
+
+			event = &EVENT (i, c & 0x1f, r);
+
+			if (c & 0x20) {		/* note and sample follows */
+				k = read8(f);
+				event->note = k & 0x7f;
+				event->ins = 1 + read8(f);
+				len -= 2;
+			}
+
+			if (c & 0x40) {		/* effect(s) follow */
+				while ((k = read8(f)) & 0x20) {
+					len--;
+					switch ((k & 0xc0) >> 6) {
+					case 0:
+						event->fxt = k & 0x1f;
+						event->fxp = read8(f);
+						len--;
 						break;
-					default:
-						printf("---> %02x\n", b);
+					case 1:
+						event->f2t = k & 0x1f;
+						event->f2p = read8(f);
+						len--;
+						break;
+					case 2:
+						read8(f);
+						len--;
 					}
 				}
 			}
 		}
+		
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
-
-	base_offs = ftell(f);
-	read32b(f);	/* remaining size */
-
-
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i][0].vol = read8(f) / 2;
-		m->xxi[i][0].pan = 0x80;
-		unk1[i] = read8(f);
-		unk2[i] = read8(f);
-		unk3[i] = read8(f);
-	}
 
 	/* Read samples */
+
+	fseek(f, start + smp_ofs, SEEK_SET);
+
 	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
-		fseek(f, start + base_offs + soffs[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
-				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+					&m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
-#endif
 
 	return 0;
 }
