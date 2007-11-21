@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.198 2007-11-20 17:53:37 cmatsuoka Exp $
+$Id: ChangeLog,v 1.199 2007-11-21 23:59:57 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -35,6 +35,7 @@ Stable versions
 	- added handler for Ultra Tracker sample type 20 (fixes seasons.ult,
 	  reported by Lorence Lombardo)
 	- fixed instrument parameter handling in MED4 loader
+	- added Generic Digital Music (GDM) loader
 
 2.4.1 (20071029):
 	- fixed portamento after keyoff problem in metamorph_part_ii.xm

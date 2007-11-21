@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: gdm_load.c,v 1.3 2007-11-21 12:31:43 cmatsuoka Exp $
+ * $Id: gdm_load.c,v 1.4 2007-11-21 23:59:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,6 +17,7 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include "load.h"
 #include "period.h"
 
@@ -61,6 +62,57 @@ static int gdm_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
+
+
+void fix_effect(uint8 *fxt, uint8 *fxp)
+{
+	switch (*fxt) {
+	case 0x00:			/* no effect */
+		*fxp = 0;
+		break;
+	case 0x01:
+	case 0x02:
+	case 0x03:
+	case 0x04:
+	case 0x05:
+	case 0x06:
+	case 0x07:
+	case 0x08:
+	case 0x09:
+	case 0x0a:
+	case 0x0b:
+	case 0x0c:
+	case 0x0d:
+	case 0x0e:
+	case 0x0f:			/* same as protracker */
+		break;
+	case 0x10:			/* arpeggio */
+		*fxt = 0;
+		break;
+	case 0x11:			/* set internal flag */
+		*fxt = *fxp = 0;
+		break;
+	case 0x12:
+		*fxt = FX_MULTI_RETRIG;
+		break;
+	case 0x13:
+		*fxt = FX_GLOBALVOL;
+		break;
+	case 0x14:
+		*fxt = FX_FINE4_VIBRA;
+		break;
+	case 0x1e:			/* special misc */
+		*fxt = *fxp = 0;
+		break;
+	case 0x1f:
+		*fxt = FX_S3M_BPM;
+		break;
+	default:
+		*fxt = *fxp = 0;
+	}
+}
+
+
 static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
@@ -94,6 +146,13 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	fread(panmap, 32, 1, f);
+	for (i = 0; i < 32; i++) {
+		if (panmap[i] != 0xff)
+			m->xxh->chn = i + 1;
+		if (panmap[i] == 16)
+			panmap[i] = 8;
+		m->xxc[i].pan = 0x80 + (panmap[i] - 8) * 16;
+	}
 
 	m->xxh->gvl = read8(f);
 	m->xxh->tpo = read8(f);
@@ -106,6 +165,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	ins_ofs = read32l(f);
 	smp_ofs = read32l(f);
 	m->xxh->ins = m->xxh->smp = read8(f);
+	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	
 	MODULE_INFO();
 
@@ -198,34 +258,38 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 				continue;
 			}
 
+			assert((c & 0x1f) < m->xxh->chn);
 			event = &EVENT (i, c & 0x1f, r);
 
 			if (c & 0x20) {		/* note and sample follows */
 				k = read8(f);
-				event->note = k & 0x7f;
-				event->ins = 1 + read8(f);
+				event->note = 12 * MSN(k & 0x7f) + LSN(k);
+				event->ins = read8(f);
 				len -= 2;
 			}
 
 			if (c & 0x40) {		/* effect(s) follow */
-				while ((k = read8(f)) & 0x20) {
+				do {
+					k = read8(f);
 					len--;
 					switch ((k & 0xc0) >> 6) {
 					case 0:
 						event->fxt = k & 0x1f;
 						event->fxp = read8(f);
 						len--;
+						fix_effect(&event->fxt, &event->fxp);
 						break;
 					case 1:
 						event->f2t = k & 0x1f;
 						event->f2p = read8(f);
 						len--;
+						fix_effect(&event->f2t, &event->f2p);
 						break;
 					case 2:
 						read8(f);
 						len--;
 					}
-				}
+				} while (k & 0x20);
 			}
 		}
 		
@@ -239,8 +303,8 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
-					&m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
