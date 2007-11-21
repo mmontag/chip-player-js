@@ -15,7 +15,7 @@ OVERVIEW
 
 This is the Extended Module Player, a module player for Unix-like systems
 that runs on Linux with ALSA and OSS, Free/Open/NetBSD, AIX, OS/2, HP-UX,
-MacOS X, SunOS, QNX and Solaris. Xmp plays over 70 mainstream and obscure
+MacOS X, SunOS, QNX and Solaris. Xmp plays over 80 mainstream and obscure
 module formats from Amiga, Atari, Acorn, Apple IIgs and PC.
 
 Many compressed module formats are supported, including popular Unix, DOS
@@ -24,13 +24,12 @@ and Amiga file packers including gzip, bzip2, SQSH, Powerpack, etc.
 
 SUPPORTED FORMATS
 
-xmp 2.2 tries to  accurately  emulate Protracker, Fast Tracker II, Scream
-Tracker 3 and Impulse Tracker event handling algorithms to play M.K., XM,
-S3M and IT modules. By default, Sound/Noise/Protracker modules are played
-in  Protracker 3.15 style  and  multichannel mutations in Fast Tracker II
-style -- see doc/README.trackers for details. Multifile formats must have
-all files in the same directory (Protracker song, Soundsmith, Startrekker
-AM, ALM).
+Xmp tries to accurately emulate Protracker, FastTracker II, ScreamTracker
+3 and Impulse Tracker event handling algorithms to play M.K., XM, S3M and
+IT modules. By default, Noisetracker and Protracker modules are played in
+Protracker 3.15 style and multichannel mutations in Fast Tracker II style
+(see doc/README.trackers for details).  Multifile formats  must have  all
+files in the same directory (Startrekker AM, Soundsmith, ALM, etc).
 
 The current version recognizes the following module formats:
 
@@ -102,7 +101,6 @@ The current version recognizes the following module formats:
 
   669	***	Composer 669/UNIS 669	if, JN
   ALM   ****+	Aley Keptr		1.0, 1.1, 1.2
-  AMF	***	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
   DMF	**	X-Tracker		7, 8
   FAR	*** 	Farandole Composer	1.0
   FNK	***	Funktracker		R0, R1, R2
@@ -115,9 +113,14 @@ The current version recognizes the following module formats:
   RTM	***	Real Tracker		1.00
   S3M	**** 	Scream Tracker 3	3.00, 3.01+
   STM	****+	Scream Tracker 2	!Scream!, BMOD2STM
-  STX	****+	ST Music Interface Kit	1.0, 1.1
   ULT	***	Ultra Tracker		V0001, V0002, V0003, V0004
   XM	**** 	Fast Tracker II		1.02, 1.03, 1.04
+
+  PC packed formats:
+
+  AMF	***	DSMI (DMP)		1.0, 1.1, 1.2, 1.3, 1.4
+  GDM   *	Generic Digital Music	1.0
+  STX	****+	ST Music Interface Kit	1.0, 1.1
 
   Game formats:
 
@@ -175,16 +178,15 @@ to be installed on the system:
 
 FRONT-ENDS
 
-xmp can be used stand-alone, as a plugin for BMP or Audacious or as a back
-end for GQmpeg, xhippo and others. Get them in the following URLs:
+Xmp can be used as a stand-alone terminal-based (CLI) player, as a plugin
+for XMMS, BMP, Winamp or Audacious,  or as a back end for  GQmpeg, xhippo
+and others. Get the media players and front-ends in the following URLs:
 
   BeepMP:    http://beepmp.sourceforge.net
   Audacious: http://audacious-media-player.org
+  Winamp:    http://www.winamp.com
   GQmpeg:    http://gqmpeg.sourceforge.net
   xhippo:    http://freshmeat.net/projects/gnuxhippo/homepage/
-
-WARNING: When using the XMMS plugin, it's advisable to disable the mikmod
-plugin (otherwise XMMS may get confused and eventually crash).
 
 
 OUTPUT DRIVERS
@@ -254,6 +256,7 @@ OS/2-specific portions and DART driver Copyright (C) 1999 Kevin Langman
 FFT routine Copyright (C) 1996-1999 Takuya Ooura
 Portions of NAS driver Copyright (C) 1999 Martin Denn
 LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks
+Amiga AHI driver (C) 2007 Lorence Lombardo
 
 This program is free software;  you can redistribute it  and/or modify it
 under  the terms of  the GNU General Public License  as published  by the

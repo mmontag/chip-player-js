@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: gdm_load.c,v 1.1 2007-11-20 23:38:19 cmatsuoka Exp $
+ * $Id: gdm_load.c,v 1.2 2007-11-21 00:23:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -18,6 +18,7 @@
 #endif
 
 #include "load.h"
+#include "period.h"
 
 #define MAGIC_GDM	MAGIC4('G','D','M',0xfe)
 #define MAGIC_GMFS	MAGIC4('G','M','F','S')
@@ -68,7 +69,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	int i, j, k;
 	int vermaj, vermin, tvmaj, tvmin, tracker;
 	int origfmt, ord_ofs, pat_ofs, ins_ofs, smp_ofs;
-	uint8 panmap[32];
+	uint8 buffer[32], panmap[32];
 
 	LOAD_INIT();
 
@@ -121,15 +122,57 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-#if 0
+	/* Read instrument data */
+	reportv(ctx, 1, "     Name                             Len   LBeg  LEnd  L Vol Pan C4Spd\n");
+
 	for (i = 0; i < m->xxh->ins; i++) {
+		int flg, c4spd, vol, pan;
+
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
-		fread(buffer, 8, 1, f);
-		copy_adjust(m->xxih[i].name, buffer, 8);
+		fread(buffer, 32, 1, f);
+		copy_adjust(m->xxih[i].name, buffer, 32);
+		fseek(f, 12, SEEK_CUR);		/* skip filename */
+		read8(f);			/* skip EMS handle */
+		m->xxs[i].len = read32l(f);
+		m->xxs[i].lps = read32l(f);
+		m->xxs[i].lpe = read32l(f);
+		flg = read8(f);
+		c4spd = read16l(f);
+		vol = read8(f);
+		pan = read8(f);
+		
+		m->xxi[i][0].vol = vol > 0x40 ? 0x40 : vol;
+		m->xxi[i][0].pan = pan > 15 ? 0x80 : 0x80 + (pan - 8) * 16;
+		c2spd_to_note(c4spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+
+		m->xxih[i].nsm = !!(m->xxs[i].len);
+		m->xxi[i][0].sid = i;
+		m->xxs[i].flg = 0;
+
+		if (flg & 0x01)
+			m->xxs[i].flg |= WAVE_LOOPING;
+		if (flg & 0x02)
+			m->xxs[i].flg |= WAVE_16_BITS;
+
+		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
+			report("[%2X] %-32.32s %05x%c%05x %05x %c V%02x P%02x %5d\n",
+				i, m->xxih[i].name,
+				m->xxs[i].len,
+				m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+				m->xxs[i].lps,
+				m->xxs[i].lpe,
+				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxi[i][0].vol,
+				m->xxi[i][0].pan,
+				c4spd);
+		}
+
+
 	}
 
 	PATTERN_INIT();
 
+#if 0
 	/* Read and convert patterns */
 	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
@@ -171,8 +214,6 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	base_offs = ftell(f);
 	read32b(f);	/* remaining size */
 
-	/* Read instrument data */
-	reportv(ctx, 1, "     Name      Len  LBeg LEnd L Vol  ?? ?? ??\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxi[i][0].vol = read8(f) / 2;
@@ -180,31 +221,6 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 		unk1[i] = read8(f);
 		unk2[i] = read8(f);
 		unk3[i] = read8(f);
-	}
-
-
-	for (i = 0; i < m->xxh->ins; i++) {
-		soffs[i] = read32b(f);
-		m->xxs[i].len = read32b(f);
-	}
-
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].nsm = !!(m->xxs[i].len);
-		m->xxs[i].lps = 0;
-		m->xxs[i].lpe = 0;
-		m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
-		m->xxi[i][0].fin = 0;
-		m->xxi[i][0].pan = 0x80;
-		m->xxi[i][0].sid = i;
-
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-8.8s  %04x %04x %04x %c "
-						"V%02x  %02x %02x %02x\n",
-				i, m->xxih[i].name,
-				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-				m->xxi[i][0].vol, unk1[i], unk2[i], unk3[i]);
-		}
 	}
 
 	/* Read samples */
