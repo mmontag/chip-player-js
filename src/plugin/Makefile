@@ -1,11 +1,11 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.11 2007-11-18 20:05:22 cmatsuoka Exp $
+# $Id: Makefile,v 1.12 2007-11-22 00:34:55 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
 	  -DENABLE_PLUGIN
 DFILES	= Makefile xpanel.h xstuff.c bg2.xpm $(OBJS:.o=.c) xmms.c bmp.c \
-	  audacious.c winamp.c
+	  audacious.c winamp.c resource.rc resource.h
 CFILES	= xmp-audacious.so xmp-bmp.so xmp-xmms.so in_xmp.dll
 OBJS	= driver.o xpanel.o fft4g.o font1.o font2.o
 
