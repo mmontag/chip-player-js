@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.12 2007-11-22 00:34:55 cmatsuoka Exp $
+# $Id: Makefile,v 1.13 2007-11-23 00:36:27 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
@@ -31,7 +31,7 @@ audacious: xmp-audacious.so $(OBJS)
 xmp-audacious.so: $(OBJS) audacious.o $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -o $@ $(OBJS) audacious.o `pkg-config --libs audacious` -L$(TOPDIR)/lib/ -lxmp-pic
 
-audacious.o: audacious.c
+audacious.o: audacious.c xstuff.c
 	$(CC) -c $(CFLAGS) $(XCFLAGS) `pkg-config --cflags audacious` -o $@ audacious.c
 
 install-audacious:
@@ -51,7 +51,7 @@ bmp: xmp-bmp.so $(OBJS)
 xmp-bmp.so: $(OBJS) bmp.o $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -o $@ $(OBJS) bmp.o `pkg-config --libs bmp` -L$(TOPDIR)/lib/ -lxmp-pic
 
-bmp.o: bmp.c
+bmp.o: bmp.c xstuff.c
 	$(CC) -c $(CFLAGS) $(XCFLAGS) `pkg-config --cflags bmp` -o $@ bmp.c
 
 install-bmp:
@@ -70,7 +70,7 @@ xmms: xmp-xmms.so $(OBJS)
 xmp-xmms.so: $(OBJS) xmms.o $(TOPDIR)/lib/libxmp-pic.a
 	$(LD) -shared -o $@ $(OBJS) xmms.o `xmms-config --libs` -L$(TOPDIR)/lib/ -lxmp-pic
 
-xmms.o: xmms.c
+xmms.o: xmms.c xstuff.c
 	$(CC) -c $(CFLAGS) $(XCFLAGS) `xmms-config --cflags` -o $@ xmms.c
 
 install-xmms:

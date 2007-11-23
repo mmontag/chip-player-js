@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.4 2007-11-19 22:09:36 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.5 2007-11-23 00:36:27 cmatsuoka Exp $
  */
 
 /*
@@ -252,7 +252,7 @@ void draw_xpm(char **bg, int w, int h)
 }
 
 
-void setpalette (char **bg)
+void setpalette(char **bg)
 {
     int i;
     unsigned long rgb;
