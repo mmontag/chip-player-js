@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.5 2007-11-23 00:36:27 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.6 2007-11-23 11:40:59 cmatsuoka Exp $
  */
 
 /*
@@ -19,38 +19,6 @@
  * add #include<sys/types.h> before #include<sys/ipc.h>.
  */
 
-#ifndef ENABLE_PLUGIN
-
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/XShm.h>
-
-#include "xpanel.h"
-
-static Display *display;
-static Visual *visual;
-static int screen;
-static Screen *scrptr;
-static Colormap colormap;
-static XSetWindowAttributes attributes;
-static unsigned long attribute_mask;
-static int depth;
-static GC gc;
-static XImage *ximage;
-static Window window, root;
-static XShmSegmentInfo shminfo;
-
-#define alloc_color(d,c,x) XAllocColor(d,c,x)
-#endif /* ENABLE_PLUGIN */
-
-static unsigned long __color;
 static XColor color[20];
 static int pmap[256];
 static int indexed;
@@ -62,12 +30,6 @@ static int mask_b = 0x0000fe;
 
 void (*draw_rectangle)(int, int, int, int);
 void (*erase_rectangle)(int, int, int, int);
-
-
-int setcolor (int x)
-{
-    return __color = color[x].pixel;
-}
 
 
 static void draw_rectangle_rgb24(int x, int y, int w, int h)
