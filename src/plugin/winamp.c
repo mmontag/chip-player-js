@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.22 2007-11-20 17:53:37 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.23 2007-11-25 13:58:11 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -244,7 +244,7 @@ static void about(HWND hwndParent)
 		"Portions Copyright (C) 1998,2000 Olivier Lapicque,\n"
 		"(C) 1998 Tammo Hinrichs, (C) 1998 Sylvain Chipaux,\n"
 		"(C) 1997 Bert Jahn, (C) 1999 Tatsuyuki Satoh, (C)\n"
-		"1996-1999 Takuya Ooura, (C) 2001-2006 Russell Marks\n"
+		"2001-2006 Russell Marks\n"
 		, "About XMP", MB_OK);
 }
 

@@ -20,19 +20,16 @@ struct font_header {
 struct ipc_info {
     struct xmp_module_info mi;
     char filename[80];
-    int vol[32];
-    int mute[32];
+    int vol[64];
+    int mute[64];
     int progress;
     int pat;
     int row;
     int wresult;
     int pause;
     int cmd;
-    int mode;
-    int buffer[256];
 };
 
-int	setcolor	(int);
 void	update_display	(void);
 void	prepare_screen	(void);
 void	clear_screen	(void);

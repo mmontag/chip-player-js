@@ -3,7 +3,7 @@
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
  *
- * $Id: xmms.c,v 1.14 2007-11-20 23:38:19 cmatsuoka Exp $
+ * $Id: xmms.c,v 1.15 2007-11-25 13:58:11 cmatsuoka Exp $
  */
 
 #include <stdlib.h>
@@ -156,7 +156,7 @@ static void aboutbox()
 		"Portions Copyright (C) 1998,2000 Olivier Lapicque,\n"
 		"(C) 1998 Tammo Hinrichs, (C) 1998 Sylvain Chipaux,\n"
 		"(C) 1997 Bert Jahn, (C) 1999 Tatsuyuki Satoh, (C)\n"
-		"1996-1999 Takuya Ooura, (C) 2001-2006 Russell Marks\n"
+		"2001-2006 Russell Marks\n"
 		"\n"
 		"Supported module formats:"
 	);
@@ -221,7 +221,6 @@ static void stop()
 
 	_D("*** stop!");
 	xmp_stop_module(ctx); 
-	ii->mode = 0;
 
 	pthread_join(decode_thread, NULL);
 
@@ -823,12 +822,6 @@ static void config_ok(GtkWidget *widget, gpointer data)
 }
 
 
-static void button_cycle(GtkWidget *widget, GdkEvent *event)
-{
-     ii->mode++;
-     ii->mode %= 3;
-}
-
 static void button_mute(GtkWidget *widget, GdkEvent *event)
 {
 	int i;
@@ -870,7 +863,7 @@ static void image1_clicked(GtkWidget *widget, GdkEventButton *event)
 static void file_info_box_build()
 {
 	GtkWidget *hbox1, *vbox1;
-	GtkWidget *info_exit, *info_cycle, *info_mute;
+	GtkWidget *info_exit, *info_mute;
 	GtkWidget *info_unmute, *info_about;
 	GtkWidget *scrw1;
 	GtkWidget *expander;
@@ -917,12 +910,6 @@ static void file_info_box_build()
 	hbox1 = gtk_hbox_new (TRUE, 0);
 	gtk_object_set_data(GTK_OBJECT(hbox1), "hbox1", hbox1);
 	gtk_box_pack_start(GTK_BOX(vbox1), hbox1, TRUE, FALSE, 0);
-
-	info_cycle = gtk_button_new_with_label("Mode");
-	gtk_signal_connect (GTK_OBJECT (info_cycle), "clicked",
-                            (GtkSignalFunc) button_cycle, NULL);
-	gtk_object_set_data(GTK_OBJECT(info_cycle), "info_cycle", info_cycle);
-	gtk_box_pack_start(GTK_BOX(hbox1), info_cycle, TRUE, TRUE, 0);
 
 	info_mute = gtk_button_new_with_label("Mute");
 	gtk_signal_connect (GTK_OBJECT (info_mute), "clicked",

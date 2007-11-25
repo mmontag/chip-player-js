@@ -135,9 +135,6 @@ Reused code
 * Russell Marks
 - Decompression routines from nomarch
 
-* Takuya Ooura <ooura@mmm.t.u-tokyo.ac.jp>
-- FFT code
-
 * Tatsuyuki Satoh
 - YM3812 emulator
 

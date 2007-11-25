@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.2 2007-11-18 12:47:19 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.3 2007-11-25 13:58:11 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -57,7 +57,7 @@ int new_module = 0;
 #define xmp_tell_parent() do { new_module = 0; } while (0)
 
 
-void volume_bars (int mode)
+void volume_bars()
 {
     int x, y, w, n, r, i, v;
 
@@ -66,10 +66,9 @@ void volume_bars (int mode)
 
     w = n - 2;
 
-    setcolor (12);
     for (i = 0; i < ii->mi.chn; i++) {
 
-	v = mode == 0 ? ii->vol[i] : 0;
+	v = ii->vol[i];
 	if (v < 0)
 	    v = 0;
 	if (v > 0x40)
@@ -77,7 +76,7 @@ void volume_bars (int mode)
 	x = i * n + 8 + r;
 	y = (RES_Y - 8) - (RES_Y - 16) * v / 0x40;
 
-	if (ii->mute[i] && mode == 0) {
+	if (ii->mute[i]) {
 	    if (chn[i].old_y > 0) {
 		erase_rectangle (x, chn[i].old_y, w,
 			RES_Y - 8 - chn[i].old_y);
@@ -114,119 +113,6 @@ void volume_bars (int mode)
 	    }
 	}
 	chn[i].old_y = y;
-    }
-}
-
-
-void scope (int mode, int *buf, int n)
-{
-    int i, idx, step;
-    int old_x = -1;
-    static int old_y[RES_X];
-    static int once = 0;
-
-    if (n == 0)
-	return;
-
-    setcolor (12);
-
-    if (!once) {
-	int x;
-	for (x = 0; x < RES_X; x += 2)
-	    old_y[x] = 0;
-	once++;
-    }
-
-    step = (RES_X << 8) / n;
-    for (idx = i = 0; i < (RES_X << 8); idx++, i += step) {
-	int x = (i >> 8) & ~1;
-	if (x != old_x) {
-	    int idx2 = ((idx * 2) % n) + 1 * (idx > n / 2);
-	    int y = RES_Y / 2 + (buf[idx2] >> 20);
-
-	    if (y < 4)
-		y = 4;
-	    if (y > RES_Y - 12)
-		y = RES_Y - 12;
-
-	    if (mode != 1)
-		y = 0;
-
-	    if (y != old_y[x]) {
-		if (old_y[x] > 0)
-	            erase_rectangle(x, old_y[x], 2, 4);
-		if (y > 0)
-	            draw_rectangle(x, y, 2, 4);
-		old_y[x] = y;
-	    }
-	    old_x = x;
-	}
-    }
-}
-
-
-void spectrum_analyser (int mode, int *buf, int n)
-{
-    int x, y, w, k, r, i, v;
-    static float a[128], ww[128 * 5 / 4];
-    static int ip[18] = { 0 };
-    static int old_value[FRQ];
-
-    if (n == 0)
-	return;
-
-    n >>= 1;
-
-    for (i = 0; i < n; i++)
-	a[i] = (buf[i] + buf[n + i]) / 2;
-
-    if (mode == 2)
-        rdft(n, 1, a, ip, ww);
-
-    k = (RES_X - 16) / FRQ;
-    r = ((RES_X - 16) - k * FRQ) >> 1;
-    w = k - 2;
-
-    setcolor (12);
-
-#define FMAX 0x200
-    for (i = 0; i < FRQ; i++) {
-	v = mode == 2 ? abs((int)a[i * 2 + 3]) >> 18 : 0;
-	if (v < 0)
-	    v = 0;
-	if (v > FMAX)
-	    v = FMAX;
-	x = i * k + 8 + r;
-	y = (RES_Y - 8) - (RES_Y - 16) * v / FMAX;
-
-	if (mode == 2 && y > (frq[i].val / 10 - 1) * 10)
-	    y = frq[i].val;
-	else
-	    frq[i].val = y;
-
-	/* Minimize jitters */
-	if (old_value[i] - y > 10) {
-		int t = y;
-		y = old_value[i] - 10;
-		old_value[i] = t;
-	}
-
-	if (y > frq[i].old_y) {
-	    erase_rectangle (x, frq[i].old_y, w, y - frq[i].old_y);
-	    if (!frq[i].s) {
-		frq[i].s = 1;
-		frq[i].y = frq[i].old_y;
-		frq[i].h = y - frq[i].old_y;
-	    }
-	} else if (y < frq[i].old_y) {
-	    draw_rectangle (x, y, w, frq[i].old_y - y);
-	    if (!frq[i].s) {
-		frq[i].s = 1;
-		frq[i].y = y;
-		frq[i].h = frq[i].old_y - y;
-	    }
-	}
-	frq[i].old_y = y;
     }
 }
 
@@ -292,18 +178,8 @@ void x11_event_callback(unsigned long i)
     static int ord = 0;
     long msg = i >> 4;
     int m, cmd = ii->cmd;
-    extern int hold_buffer[];
-    extern int hold_enabled;
 
     switch (i & 0xf) {
-    case XMP_ECHO_FRM:
-	if (ii->mode == 1 || ii->mode == 2) {
-	    hold_enabled = 1;
-	    memcpy (ii->buffer, hold_buffer, 256 * sizeof (int));
-	} else {
-	    hold_enabled = 0;
-	}
-	return;
     case XMP_ECHO_ORD:
 	ord = msg & 0xff;
 	ii->pat = msg >> 8;
@@ -351,10 +227,6 @@ void x11_event_callback(unsigned long i)
 	xmp_mod_stop(ctx);
 	if (ii->pause)
 	    ii->pause = xmp_mod_pause(ctx);
-	break;
-    case 'm':
-	ii->mode++;
-	ii->mode %= 3;
 	break;
     case ' ':			/* pause module */
 	ii->pause = xmp_mod_pause(ctx);
@@ -426,12 +298,8 @@ int panel_loop()
 { 
      int c, x, y;
 
-	int mode = ii->mode;
-
 	switch ((c = process_events (&x, &y))) {
 	case -1:		/* mute channel */
-	    if (mode != 0)
-		break;
 	    for (c = 0; c < ii->mi.chn; c++) {
 		if (x >= chn[c].x && x < (chn[c].x + chn[c].w)) {
 		    c = -c - 1;
@@ -453,9 +321,7 @@ int panel_loop()
 	put_rectangle (140, 88, 22, 13, b);
 	put_rectangle (220, 88, 22, 13, q);
 
-	volume_bars (mode);
-	scope (mode, ii->buffer, 256);
-	spectrum_analyser (mode, ii->buffer, 256);
+	volume_bars();
 
 	get_rectangle (177, 106, 15, 13, p);
 	get_rectangle (140, 88, 22, 13, b);
@@ -484,7 +350,7 @@ int panel_loop()
 	    put_rectangle (177, 106, 15, 13, p);
 	    put_rectangle (140, 88, 22, 13, b);
 	    put_rectangle (220, 88, 22, 13, q);
-	    volume_bars (mode);
+	    volume_bars();
 	    prepare_screen();
 	    get_rectangle (177, 106, 15, 13, p);
 	    get_rectangle (140, 88, 22, 13, b);

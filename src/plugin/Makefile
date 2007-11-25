@@ -1,5 +1,5 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.13 2007-11-23 00:36:27 cmatsuoka Exp $
+# $Id: Makefile,v 1.14 2007-11-25 13:58:11 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
@@ -7,7 +7,7 @@ XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
 DFILES	= Makefile xpanel.h xstuff.c bg2.xpm $(OBJS:.o=.c) xmms.c bmp.c \
 	  audacious.c winamp.c resource.rc resource.h
 CFILES	= xmp-audacious.so xmp-bmp.so xmp-xmms.so in_xmp.dll
-OBJS	= driver.o xpanel.o fft4g.o font1.o font2.o
+OBJS	= driver.o xpanel.o font1.o font2.o
 
 WINAMP_SDK = $(TOPDIR)/wa502_sdk/winamp
 WINDRES = i586-mingw32msvc-windres
