@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xpanel.c,v 1.3 2007-11-25 13:58:11 cmatsuoka Exp $
+ * $Id: xpanel.c,v 1.4 2007-11-25 14:04:16 cmatsuoka Exp $
  */
 
 #include <stdio.h>
@@ -77,7 +77,7 @@ void volume_bars()
 	y = (RES_Y - 8) - (RES_Y - 16) * v / 0x40;
 
 	if (ii->mute[i]) {
-	    if (chn[i].old_y > 0) {
+	    if (chn[i].old_y >= 0) {
 		erase_rectangle (x, chn[i].old_y, w,
 			RES_Y - 8 - chn[i].old_y);
 		draw_rectangle (x, 8, w, RES_Y - 16);
