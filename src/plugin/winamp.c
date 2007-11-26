@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.24 2007-11-26 11:16:18 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.25 2007-11-26 17:11:04 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -177,7 +177,10 @@ static void driver_callback(void *b, int i)
 static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	char inifile[MAX_PATH];
-	HANDLE sld;
+	HANDLE sld, cmb;
+	char *freq[] = { "48000", "44100", "22050", "11025", 0 };
+	int i, fidx;
+	char buffer[20];
 
 #define CFGWRITESTR(x) do { \
 	char buf[16]; \
@@ -201,10 +204,27 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 					(LPARAM)MAKELONG(0, 10));
 		SendMessage(sld, TBM_SETPOS, (WPARAM)TRUE,
 					(LPARAM)xmp_cfg.pan_amplitude / 10);
+
+		cmb = GetDlgItem(hDlg, IDC_MIXING_FREQ);
+		SendMessage(cmb, CB_RESETCONTENT, 0, 0);
+
+		for (i = 0; freq[i]; i++)
+			SendMessage(cmb, CB_ADDSTRING, i, (LPARAM)freq[i]);
+		snprintf(buffer, 20, "%d", xmp_cfg.mixing_freq);
+		fidx = SendMessage(cmb, CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
+		if (fidx == CB_ERR)
+			fidx = 0;
+		SendMessage(cmb, CB_SETCURSEL, fidx, 0);
 		break;
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam, lParam)) {
 		case IDOK:
+			xmp_cfg.mixing_freq = atoi(freq[SendMessage(GetDlgItem(
+				hDlg, IDC_MIXING_FREQ), CB_GETCURSEL, 0, 0)]);
+			xmp_cfg.force8bit = (IsDlgButtonChecked(hDlg,
+				IDC_FORCE8BIT) == BST_CHECKED);
+			xmp_cfg.force_mono = (IsDlgButtonChecked(hDlg,
+				IDC_FORCE_MONO) == BST_CHECKED);
 			xmp_cfg.interpolation = (IsDlgButtonChecked(hDlg,
 				IDC_INTERPOLATION) == BST_CHECKED);
 			xmp_cfg.filter = (IsDlgButtonChecked(hDlg,
@@ -213,6 +233,9 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				IDC_PAN_AMPLITUDE), TBM_GETPOS, 0, 0) * 10;
 				
 			get_inifile(inifile);
+			CFGWRITESTR(mixing_freq);
+			CFGWRITESTR(force8bit);
+			CFGWRITESTR(force_mono);
 			CFGWRITESTR(interpolation);
 			CFGWRITESTR(filter);
 			CFGWRITESTR(pan_amplitude);
@@ -317,17 +340,7 @@ static int play_file(char *fn)
 	opt->verbosity = 0;
 	opt->drv_id = "callback";
 
-	switch (xmp_cfg.mixing_freq) {
-	case 1:
-		opt->freq = 22050;	/* 1:2 mixing freq */
-		break;
-	case 2:
-		opt->freq = 11025;	/* 1:4 mixing freq */
-		break;
-	default:
-		opt->freq = 44100;	/* standard mixing freq */
-		break;
-	}
+	opt->freq = xmp_cfg.mixing_freq;
 
 	if (xmp_cfg.force8bit == 0)
 		opt->resol = 16;
