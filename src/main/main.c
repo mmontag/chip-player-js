@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.33 2007-11-13 22:29:31 cmatsuoka Exp $
+ * $Id: main.c,v 1.34 2007-11-26 11:47:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -32,10 +32,17 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <unistd.h>
+
+#ifdef __amigaos4__
+#undef HAVE_TERMIOS_H
+#define __USE_INLINE__
+#include <proto/dos.h>
+#endif
+
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
-#include <unistd.h>
 
 #ifdef HAVE_SYS_RTPRIO_H
 #include <sys/resource.h>
@@ -125,7 +132,7 @@ static int reset_tty ()
 }
 
 #ifdef SIGTSTP
-static void sigtstp_handler ()
+static void sigtstp_handler()
 {
     if (!stopped) {
 	fprintf (stderr, "] - STOPPED\n");
@@ -138,9 +145,11 @@ static void sigtstp_handler ()
 }
 
 
-static void sigcont_handler ()
+static void sigcont_handler()
 {
-    background = (tcgetpgrp (0) == getppid ());
+#ifndef __amigaos4__
+    background = (tcgetpgrp(0) == getppid());
+#endif
 
     if (background)
         reset_tty();
@@ -264,7 +273,11 @@ static void process_echoback(unsigned long i)
     /* Amiga CLI */
     if (WaitForChar(Input(), 1)) {
 	char c;
+#ifndef __amigaos4__
 	Read(in, &c, 1);
+#else
+	Read(stdin, &c, 1);
+#endif
 	cmd = k = c;
     }
 #endif

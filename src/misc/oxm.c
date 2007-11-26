@@ -1,7 +1,7 @@
 /* Extended Module Player OMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: oxm.c,v 1.7 2007-10-30 11:57:51 cmatsuoka Exp $
+ * $Id: oxm.c,v 1.8 2007-11-26 11:47:00 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -9,6 +9,7 @@
  */
 
 #ifndef __MINGW32__
+#ifndef __amigaos4__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -285,4 +286,5 @@ int decrunch_oxm(FILE *f, FILE *fo)
 	return 0;
 }
 
+#endif /* __amigaos4__ */
 #endif /* __MINGW32__ */

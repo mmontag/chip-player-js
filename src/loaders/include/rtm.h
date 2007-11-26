@@ -2,10 +2,13 @@
  * Copyright (C) 1997 Arnaud Hasenfratz
  *
  * Modified for xmp by Claudio Matsuoka
+ * AmigaOS4 fixes by Chris Young
  */
 
+#ifndef __amigaos4__
 typedef uint8 BYTE;
 typedef uint16 WORD;
+#endif
 typedef uint32 DWORD;
 
 /* The following definitions are from the specification of the RTM format

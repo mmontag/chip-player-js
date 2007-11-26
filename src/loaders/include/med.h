@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med.h,v 1.5 2007-11-14 23:01:59 cmatsuoka Exp $
+ * $Id: med.h,v 1.6 2007-11-26 11:47:00 cmatsuoka Exp $
  */
 
 #include "xmpi.h"
@@ -16,7 +16,9 @@ typedef int16 WORD;
 typedef uint16 UWORD;
 typedef int8 BYTE;
 typedef uint8 UBYTE;
+#ifndef __amigaos4__
 typedef char *STRPTR;
+#endif
 
 
 /* Structures as defined in the MED/OctaMED MMD0 and MMD1 file formats,
