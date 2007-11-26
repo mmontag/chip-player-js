@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.34 2007-11-26 11:47:00 cmatsuoka Exp $
+ * $Id: main.c,v 1.35 2007-11-26 19:04:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -552,8 +552,8 @@ int main (int argc, char **argv)
 
 	if (opt->verbosity && !background) {
 	    fprintf (stderr,
-"\rElapsed time   : %dmin%02ds %s                                              \n",
-	    t / 60, t % 60, skip ? "(SKIPPED)" : " ");
+"\rElapsed time   : %dmin%02ds %s                                \n",
+	    t / 60, t % 60, skip ? "(SKIPPED)" : "         ");
 
 	    fprintf (stderr, "Channels used  : %d/%d", max_nch, mi.chn);
 	    if (max_nch)
