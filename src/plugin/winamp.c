@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.23 2007-11-25 13:58:11 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.24 2007-11-26 11:16:18 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -486,17 +486,12 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 
 	/* Create new context to load a file and get the length */
 	
-	_D("create context");
 	ctx2 = xmp_create_context();
-	_D("get options");
 	opt = xmp_get_options(ctx2);
 	opt->skipsmp = 1;	/* don't load samples */
 
-	_D("create mutex");
 	load_mutex = CreateMutex(NULL, TRUE, "load_mutex");
-	_D("load module");
 	lret = xmp_load_module(ctx2, filename);
-	_D("release mutex");
 	ReleaseMutex(load_mutex);
 
 	if (lret < 0) {
@@ -506,11 +501,8 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
         }
 
 	*length_in_ms = lret;
-	_D("length_in_ms = %d", *length_in_ms);
 	xmp_get_module_info(ctx2, &mi);
 	wsprintf(title, "%s", mi.name);
-	_D("title = %s", mi.name);
-
 
         xmp_release_module(ctx2);
         xmp_free_context(ctx2);
