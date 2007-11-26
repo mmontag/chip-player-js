@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xstuff.c,v 1.6 2007-11-23 11:40:59 cmatsuoka Exp $
+ * $Id: xstuff.c,v 1.7 2007-11-26 11:15:52 cmatsuoka Exp $
  */
 
 /*
@@ -19,7 +19,7 @@
  * add #include<sys/types.h> before #include<sys/ipc.h>.
  */
 
-static XColor color[20];
+static GdkColor color[20];
 static int pmap[256];
 static int indexed;
 
