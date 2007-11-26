@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.25 2007-11-26 17:11:04 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.26 2007-11-26 22:17:21 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -178,7 +178,7 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	char inifile[MAX_PATH];
 	HANDLE sld, cmb;
-	char *freq[] = { "48000", "44100", "22050", "11025", 0 };
+	char *freq[] = { "44100", "22050", "11025", 0 };
 	int i, fidx;
 	char buffer[20];
 
