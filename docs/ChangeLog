@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.202 2007-11-27 12:56:30 cmatsuoka Exp $
+$Id: ChangeLog,v 1.203 2007-11-27 12:58:11 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -30,7 +30,6 @@ Stable versions
 	  MED2XM modules such as Fascinated.xm, reported by Lorence Lombardo)
 	- fixed conversion of big-endian 16-bit samples in big-endian machines
 	- fixed decompression of 16-bit IT samples in big-endian machines
-	- added experimental (incomplete) Winamp plugin
 	- added experimental Winamp plugin
 	- added handler for Ultra Tracker sample type 20 (fixes seasons.ult,
 	  reported by Lorence Lombardo)
