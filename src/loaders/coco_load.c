@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: coco_load.c,v 1.2 2007-11-18 12:47:19 cmatsuoka Exp $
+ * $Id: coco_load.c,v 1.3 2007-11-27 12:56:30 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -29,13 +29,9 @@ static int coco_test(FILE *f, char *t, const int start)
 	uint8 x;
 	uint32 y;
 
-	x = read8(f);
+	x = read8(f) & 0xbf;
 
-	if (~x & 0x80)
-		return -1;
-
-	x &= 0x3f;
-	if (x != 4 && x != 8)
+	if (x != 0x84 && x != 0x88)
 		return -1;
 
 	fseek(f, 19, SEEK_CUR);		/* skip title */
@@ -46,6 +42,10 @@ static int coco_test(FILE *f, char *t, const int start)
 	read8(f);
 	read8(f);
 	read8(f);
+
+	y = read32l(f);
+	if (y < 64 || y > 0x00100000)
+		return -1;
 
 	y = read32l(f);
 	if (y < 64 || y > 0x00100000)
@@ -93,18 +93,22 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+
 		smp_ptr[i] = read32l(f);
 		m->xxs[i].len = read32l(f);
-		m->xxi[i][0].vol = (0xff - read32l(f)) >> 4;
+		read32l(f);
+#if 0
+		m->xxi[i][0].vol = read32l(f);
 		m->xxi[i][0].pan = 0x80;
 		m->xxs[i].lps = read32b(f);
 		m->xxs[i].lpe = m->xxs[i].lps + read32b(f);
 		m->xxs[i].flg = m->xxs[i].lps > 0 ? WAVE_LOOPING : 0;
+#endif
 
 		for (j = 0; (x = read8(f)) != 0x0d; j++) {
 			m->xxih[i].name[j] = x;
 		}
-		read8(f);
+		read32l(f);
 
 		m->xxih[i].nsm = !!m->xxs[i].len;
 		m->xxi[i][0].sid = i;

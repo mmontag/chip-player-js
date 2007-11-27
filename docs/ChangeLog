@@ -1,9 +1,9 @@
-$Id: ChangeLog,v 1.201 2007-11-26 11:46:59 cmatsuoka Exp $
+$Id: ChangeLog,v 1.202 2007-11-27 12:56:30 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.5.0 ():
+2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader
 	- extend full sample loops to Noisetracker and Startrekker
 	- FLT loader recognizes Startrekker FLTM modules (only PCM channels)

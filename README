@@ -214,6 +214,7 @@ follwing devices are supported:
   oss_mix	Open Sound System (OSS) PCM
   oss_seq	Open Sound System (OSS) sequencer
   osx		MacOS X CoreAudio
+  pulseaudio	PulseAudio
   qnx		QNX Neutrino 4 audio device
   solaris	Solaris audio device (linear and ulaw)
   wav		WAV file writer
