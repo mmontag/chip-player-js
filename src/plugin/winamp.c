@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.26 2007-11-26 22:17:21 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.27 2007-11-27 16:14:45 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -55,6 +55,7 @@ static int xmp_plugin_audio_error = FALSE;
 static short audio_open = FALSE;
 static xmp_context ctx;
 static int playing;
+static int numch;
 
 static void	config		(HWND);
 static void	about		(HWND);
@@ -160,7 +161,6 @@ static void stop()
 
 static void driver_callback(void *b, int i)
 {
-	int numch = xmp_cfg.force_mono ? 1 : 2;
 	int n = (i / 2) << (mod.dsp_isactive()? 1 : 0);
 	int t;
 
@@ -193,9 +193,12 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		EndDialog(hDlg,TRUE);
 		return 0;
 	case WM_INITDIALOG:
+		if (xmp_cfg.force8bit)
+			CheckDlgButton(hDlg, IDC_FORCE8BIT, BST_CHECKED);
+		if (xmp_cfg.force_mono)
+			CheckDlgButton(hDlg, IDC_FORCE_MONO, BST_CHECKED);
 		if (xmp_cfg.interpolation)
 			CheckDlgButton(hDlg, IDC_INTERPOLATION, BST_CHECKED);
-
 		if (xmp_cfg.filter)
 			CheckDlgButton(hDlg, IDC_FILTER, BST_CHECKED);
 
@@ -315,7 +318,6 @@ static int play_file(char *fn)
 {
 	int maxlatency;
 	DWORD tmp;
-	int numch = 1;
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
@@ -349,6 +351,7 @@ static int play_file(char *fn)
 		numch = 2;
 		opt->outfmt &= ~XMP_FMT_MONO;
 	} else {
+		numch = 1;
 		opt->outfmt |= XMP_FMT_MONO;
 	}
 
