@@ -218,7 +218,7 @@ follwing devices are supported:
   qnx		QNX Neutrino 4 audio device
   solaris	Solaris audio device (linear and ulaw)
   wav		WAV file writer
-  win32		Win32 sound (experimental, unstable)
+  win32		Windows WinMM audio
 
 
 INTERACTIVE COMMANDS

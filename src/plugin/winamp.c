@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.27 2007-11-27 16:14:45 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.28 2007-11-28 11:38:59 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -218,6 +218,7 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		if (fidx == CB_ERR)
 			fidx = 0;
 		SendMessage(cmb, CB_SETCURSEL, fidx, 0);
+		xmp_cfg.mixing_freq = atoi(freq[fidx]);
 		break;
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam, lParam)) {

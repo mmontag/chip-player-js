@@ -1,7 +1,10 @@
-$Id: ChangeLog,v 1.203 2007-11-27 12:58:11 cmatsuoka Exp $
+$Id: ChangeLog,v 1.204 2007-11-28 11:38:58 cmatsuoka Exp $
 
 Stable versions
 ---------------
+
+2.5.1 ():
+	- Winamp plugin fixes
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

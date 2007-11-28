@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.62 2007-11-26 11:47:00 cmatsuoka Exp $
+ * $Id: load.c,v 1.63 2007-11-28 11:38:58 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -178,7 +178,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	return 0;
     }
 
-    reportv(ctx, 0, "Depacking %s file... ", packer);
+    /* TODO: move pw to loaders -- add better Arc test above */
+    if (builtin != BUILTIN_PW)
+       reportv(ctx, 0, "Depacking %s file... ", packer);
 
     if ((fd = mkstemp(temp)) < 0) {
 	if (o->verbosity > 0)
