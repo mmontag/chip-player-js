@@ -1,10 +1,12 @@
-$Id: ChangeLog,v 1.204 2007-11-28 11:38:58 cmatsuoka Exp $
+$Id: ChangeLog,v 1.205 2007-11-28 22:28:55 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
 2.5.1 ():
-	- Winamp plugin fixes
+	- fixed Winamp plugin default sampling rate (reported by Mirko Buffoni)
+	- Winamp plugin number of channels fixed by Mirko Buffoni
+	- recognize TakeTracker TDZ4 modules (reported by Lorence Lombardo)
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

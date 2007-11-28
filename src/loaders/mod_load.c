@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.47 2007-11-18 13:11:37 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.48 2007-11-28 22:28:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,6 +20,7 @@
  * - Mod's Grave M.K. w/ 8 channels (WOW)
  * - Atari Octalyser CD61 and CD81
  * - Digital Tracker FA04, FA06 and FA08
+ * - TakeTracker TDZ4
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,6 +48,7 @@ struct {
     { "8CHN", 0, 0, "Fast Tracker", 8 },
     { "CD61", 1, 0, "Octalyser", 6 },		/* Atari STe/Falcon */
     { "CD81", 1, 0, "Octalyser", 8 },		/* Atari STe/Falcon */
+    { "TDZ4", 1, 0, "TakeTracker", 4 },		/* see XModule SaveTracker.c */
     { "FA04", 1, 0, "Digital Tracker", 4 },	/* Atari Falcon */
     { "FA06", 1, 0, "Digital Tracker", 6 },	/* Atari Falcon */
     { "FA08", 1, 0, "Digital Tracker", 8 },	/* Atari Falcon */
