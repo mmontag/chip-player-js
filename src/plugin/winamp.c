@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.28 2007-11-28 11:38:59 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.29 2007-11-28 16:14:23 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -288,7 +288,7 @@ static void init()
 
 	get_inifile(inifile);
 	
-	CFGREADINT(mixing_freq, 0);
+	CFGREADINT(mixing_freq, 44100);
 	CFGREADINT(force8bit, 0);
 	CFGREADINT(convert8bit, 0);
 	CFGREADINT(modrange, 0);
@@ -322,7 +322,6 @@ static int play_file(char *fn)
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
-	int /*fmt,*/ nch;
 
 	_D("fn = %s", fn);
 
@@ -368,7 +367,7 @@ static int play_file(char *fn)
 
 	opt->mix = xmp_cfg.pan_amplitude;
 
-	nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 
 	if (audio_open)
 		mod.outMod->Close();
