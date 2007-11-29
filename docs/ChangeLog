@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.206 2007-11-29 11:52:22 cmatsuoka Exp $
+$Id: ChangeLog,v 1.207 2007-11-29 17:43:19 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -9,6 +9,8 @@ Stable versions
 	- recognize TakeTracker TDZ4 modules (reported by Lorence Lombardo)
 	- fix crash in anticlick when pan amplitude is set to 100% (reported
 	  by Mirko Buffoni)
+	- extend playable octave range (fixes replay of octave 9 notes in
+	  beek-my_eleventh_year.it, reported by Mirko Buffoni)
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

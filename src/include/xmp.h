@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.37 2007-11-18 12:47:19 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.38 2007-11-29 17:43:19 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -15,9 +15,9 @@
 
 #define XMP_OK			0
 
-#define XMP_KEY_OFF		0x61
-#define XMP_KEY_CUT		0x62
-#define XMP_KEY_FADE		0x63
+#define XMP_KEY_OFF		0x81
+#define XMP_KEY_CUT		0x82
+#define XMP_KEY_FADE		0x83
 
 /* DSP effects */
 #define XMP_FX_CHORUS		0x00

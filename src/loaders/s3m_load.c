@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.31 2007-11-15 22:36:54 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.32 2007-11-29 17:43:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -382,7 +382,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 		    n = 0;
 		    break;	/* Empty note */
 		case 254:
-		    n = 0x61;
+		    n = XMP_KEY_OFF;
 		    break;	/* Key off */
 		default:
 		    n = 1 + 12 * MSN (n) + LSN (n);

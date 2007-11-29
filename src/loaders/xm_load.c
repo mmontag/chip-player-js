@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.32 2007-11-15 22:36:54 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.33 2007-11-29 17:43:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -182,6 +182,10 @@ load_patterns:
 		    event->fxt = *pat++;
 		    event->fxp = *pat++;
 		}
+
+		if (event->note == 0x61)
+		    event->note = XMP_KEY_OFF;
+
 		if (!event->vol)
 		    continue;
 

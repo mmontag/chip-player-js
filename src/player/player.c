@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.48 2007-11-01 10:48:39 cmatsuoka Exp $
+ * $Id: player.c,v 1.49 2007-11-29 17:43:20 cmatsuoka Exp $
  */
 
 /*
@@ -326,7 +326,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
     if ((uint32)ins < m->xxh->ins && m->xxih[ins].nsm)
 	flg |= IS_VALID;
 
-    if ((uint32)key < 0x61 && key--) {
+    if ((uint32)key < XMP_KEY_OFF && key--) {
 	xc->key = key;
 
         if (flg & IS_VALID) {

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.40 2007-11-17 19:33:42 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.41 2007-11-29 17:43:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -829,15 +829,19 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    event = c >= m->xxh->chn ? &dummy : &EVENT (i, c, r);
 	    if (mask[c] & 0x01) {
 		fread (&b, 1, 1, f);
+
+		if (b > 0x7f && b < 0xfd)
+			b = 0;
+
 		switch (b) {
 		case 0xff:	/* key off */
-		    b = 0x61;
+		    b = XMP_KEY_OFF;
 		    break;
 		case 0xfe:	/* cut */
-		    b = 0x62;
+		    b = XMP_KEY_CUT;
 		    break;
 		case 0xfd:	/* fade */
-		    b = 0x63;
+		    b = XMP_KEY_FADE;
 		    break;
 		default:
 		    if (b < 11)
@@ -845,8 +849,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    else
 			b -= 11;
 		}
-		if (b > 0x62)
-		    b = 0;
 		lastevent[c].note = event->note = b;
 		pat_len--;
 	    }

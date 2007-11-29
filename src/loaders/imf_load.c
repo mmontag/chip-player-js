@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: imf_load.c,v 1.18 2007-11-10 14:49:05 cmatsuoka Exp $
+ * $Id: imf_load.c,v 1.19 2007-11-29 17:43:19 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -269,7 +269,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 		switch (n) {
 		case 255:
 		case 160:	/* ??!? */
-		    n = 0x61;
+		    n = XMP_KEY_OFF;
 		    break;	/* Key off */
 		default:
 		    n = 1 + 12 * MSN (n) + LSN (n);
