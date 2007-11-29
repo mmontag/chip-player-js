@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.33 2007-11-15 13:54:27 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.34 2007-11-29 11:52:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -224,19 +224,31 @@ static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
 /* Ok, it's messy, but it works :-) Hipolito */
 static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, int *buf, int cnt)
 {
-    int oldvol, newvol;
+    int oldvol, newvol, pan0;
     struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi = &d->voice_array[voc];
 
     if (extern_drv)
 	return;			/* Anticlick is useful for softmixer only */
 
+    /* From: Mirko Buffoni <mirbuf@gmail.com>
+     * To: Claudio Matsuoka <cmatsuoka@gmail.com>
+     * Date: Nov 29, 2007 6:45 AM
+     *	
+     * Put PAN SEPARATION to 100. Then it crashes. Other modules crash when
+     * PAN SEPARATION = 100, (...) moving separation one step behind, stop
+     * crashes.
+     */
+    pan0 = vi->pan;
+    if (pan0 < -127)
+	pan0 = -127;
+
     if (vi->vol) {
-	oldvol = vi->vol * (0x80 - vi->pan);
+	oldvol = vi->vol * (0x80 - pan0);
 	newvol = vol * (0x80 - pan);
 	vi->sright -= vi->sright / oldvol * newvol;
 
-	oldvol = vi->vol * (0x80 + vi->pan);
+	oldvol = vi->vol * (0x80 + pan0);
 	newvol = vol * (0x80 + pan);
 	vi->sleft -= vi->sleft / oldvol * newvol;
     }
