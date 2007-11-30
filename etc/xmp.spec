@@ -3,7 +3,7 @@
 %define enable_xmms 1
 
 Name: xmp
-Version: 2.5.0
+Version: 2.5.1
 Release: 1
 Summary: A multi-format module player
 Group: Sound

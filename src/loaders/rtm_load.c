@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: rtm_load.c,v 1.18 2007-11-15 22:36:54 cmatsuoka Exp $
+ * $Id: rtm_load.c,v 1.19 2007-11-30 17:30:22 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -148,8 +148,11 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 					j = read8(f);
 					event = &EVENT(i, j, r);
 				}
-				if (c & 0x02)		/* read note */
+				if (c & 0x02) {		/* read note */
 					event->note = read8(f);
+					if (event->note == 0x61)
+						event->note = XMP_KEY_OFF;
+				}
 				if (c & 0x04)		/* read instrument */
 					event->ins = read8(f);
 				if (c & 0x08)		/* read effect */
