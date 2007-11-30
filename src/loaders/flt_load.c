@@ -378,8 +378,10 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].nsm = !!(m->xxs[i].len);
 	m->xxih[i].rls = 0xfff;
 
-	if (m->xxs[i].flg & WAVE_LOOPING && m->xxs[i].len > m->xxs[i].lpe)
-            m->xxs[i].flg |= WAVE_PTKLOOP;
+	if (m->xxs[i].flg & WAVE_LOOPING) {
+	    if (m->xxs[i].lps == 0 && m->xxs[i].len > m->xxs[i].lpe)
+		m->xxs[i].flg |= WAVE_PTKLOOP;
+	}
 
 	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
 

@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.48 2007-11-28 22:28:56 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.49 2007-11-30 02:11:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -220,6 +220,8 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxs[i].len = 2 * mh.ins[i].size;
 	m->xxs[i].lps = lps_mult * mh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
+	if (m->xxs[i].lpe > m->xxs[i].len)
+		m->xxs[i].lpe = m->xxs[i].len;
 	m->xxs[i].flg = (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
 		WAVE_LOOPING : 0;
 	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
@@ -435,8 +437,9 @@ skip_test:
 			(mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
 				'L' : ' ', m->xxi[i][0].vol,
 			m->xxi[i][0].fin >> 4,
-			ptkloop && (mh.ins[i].loop_size > 1 &&
-				m->xxs[i].len > m->xxs[i].lpe) ? '!' : ' ');
+			ptkloop && m->xxs[i].lps == 0 &&
+				mh.ins[i].loop_size > 1 &&
+				m->xxs[i].len > m->xxs[i].lpe ? '!' : ' ');
 	}
     }
 
@@ -478,7 +481,7 @@ skip_test:
 	    continue;
 
 	if (m->xxs[i].flg & WAVE_LOOPING) {
-	    if (ptkloop && m->xxs[i].len > m->xxs[i].lpe)
+	    if (ptkloop && m->xxs[i].lps == 0 && m->xxs[i].len > m->xxs[i].lpe)
 		m->xxs[i].flg |= WAVE_PTKLOOP;
 	}
 

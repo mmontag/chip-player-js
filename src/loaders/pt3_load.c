@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: pt3_load.c,v 1.19 2007-11-15 22:36:54 cmatsuoka Exp $
+ * $Id: pt3_load.c,v 1.20 2007-11-30 02:11:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -181,7 +181,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
 		m->xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
 		if (m->xxs[i].flg & WAVE_LOOPING) {
-			if (m->xxs[i].len > m->xxs[i].lpe)
+			if (m->xxs[i].len == 0 && m->xxs[i].len > m->xxs[i].lpe)
 				m->xxs[i].flg |= WAVE_PTKLOOP;
 		}
 		m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);

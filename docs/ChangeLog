@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.207 2007-11-29 17:43:19 cmatsuoka Exp $
+$Id: ChangeLog,v 1.208 2007-11-30 02:11:26 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -11,15 +11,17 @@ Stable versions
 	  by Mirko Buffoni)
 	- extend playable octave range (fixes replay of octave 9 notes in
 	  beek-my_eleventh_year.it, reported by Mirko Buffoni)
+	- Protracker-style sample loops only valid with loop start 0 (fixes
+	  M.K. Amegas conversion and others, reported by Mirko Buffoni)
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader
-	- extend full sample loops to Noisetracker and Startrekker
+	- extend Protracker sample loops to Noisetracker and Startrekker
 	- FLT loader recognizes Startrekker FLTM modules (only PCM channels)
 	- implement support for Startrekker/ADSC AM synth instruments
 	- fixed cast to signed type in finetune display
 	- fixed Protracker 3 IFFMODL loader (process VERS chunk manually)
-	- added support to full sample loops in the Protracker 3 loader
+	- added support to Protracker sample loops in the Protracker 3 loader
 	- added PulseAudio driver (using the simple API)
 	- remove restrictive tests for Soundtracker modules (fixes
 	  99redballoons.mod and atmosfer4.mod, reported by Adric Riedel)

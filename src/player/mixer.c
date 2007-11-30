@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mixer.c,v 1.34 2007-11-29 11:52:22 cmatsuoka Exp $
+ * $Id: mixer.c,v 1.35 2007-11-30 02:11:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -122,8 +122,7 @@ static void out_su8norm(char *dest, int *src, int num, int cod)
 
     for (; num--; ++src, ++dest) {
 	smp = *src >> (LIM_FT + 8);
-	smp = smp > LIM8_HI ? lhi : smp < LIM8_LO ? llo : smp + offs;
-	*dest = smp;
+	*dest = smp > LIM8_HI ? lhi : smp < LIM8_LO ? llo : smp + offs;
     }
 }
 
@@ -140,8 +139,7 @@ static void out_su16norm(int16 *dest, int *src, int num, int cod)
 
     for (; num--; ++src, ++dest) {
 	smp = *src >> LIM_FT;
-	smp = smp > LIM16_HI ? lhi : smp < LIM16_LO ? llo : smp + offs;
-	*dest = smp;
+	*dest = smp > LIM16_HI ? lhi : smp < LIM16_LO ? llo : smp + offs;
     }
 }
 
@@ -153,9 +151,8 @@ static void out_u8ulaw(char *dest, int *src, int num, int cod)
 
     for (; num--; ++src, ++dest) {
 	smp = *src >> (LIM_FT + 4);
-	smp = smp > LIM12_HI ? ulaw_encode(LIM12_HI) :
-	      smp < LIM12_LO ? ulaw_encode(LIM12_LO) : ulaw_encode (smp);
-	*dest = smp;
+	*dest = smp > LIM12_HI ? ulaw_encode(LIM12_HI) :
+		smp < LIM12_LO ? ulaw_encode(LIM12_LO) : ulaw_encode (smp);
     }
 }
 
