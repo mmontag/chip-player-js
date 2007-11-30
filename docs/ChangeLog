@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.208 2007-11-30 02:11:26 cmatsuoka Exp $
+$Id: ChangeLog,v 1.209 2007-11-30 03:04:40 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -13,6 +13,8 @@ Stable versions
 	  beek-my_eleventh_year.it, reported by Mirko Buffoni)
 	- Protracker-style sample loops only valid with loop start 0 (fixes
 	  M.K. Amegas conversion and others, reported by Mirko Buffoni)
+	- reset fadeout on new instrument fetch (fixes echo in "pain of lace"
+	  pat 0 ch 2-3, reported by Mirko Buffoni)
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.49 2007-11-29 17:43:20 cmatsuoka Exp $
+ * $Id: player.c,v 1.50 2007-11-30 03:04:41 cmatsuoka Exp $
  */
 
 /*
@@ -245,6 +245,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
     if (e->ins) {
 	ins = e->ins - 1;
 	flg = NEW_INS | RESET_VOL | RESET_ENV;
+	xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 	xc->per_flags = 0;
 
 	if (m->fetch & XMP_CTL_OINSMOD) {
@@ -418,7 +419,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
         return XMP_OK;
 
     if (TEST(RESET_ENV)) {
-        xc->fadeout = 0x8000;
+        /* xc->fadeout = 0x8000; -- moved to fetch */
         RESET(RELEASE | FADEOUT);
         xc->gvl = XXI[XXIM.ins[xc->key]].gvl;   /* #?# Onde eu coloco isso? */
         xc->insvib_swp = XXI->vsw;              /* #?# Onde eu coloco isso? */
