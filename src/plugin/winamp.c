@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.29 2007-11-28 16:14:23 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.30 2007-11-30 03:21:47 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -87,7 +87,7 @@ In_Module mod = {
 	"sfx;far;umx;stim;mtp;ims;669;fnk;funk;amd;rad;hsc;alm;"
 	"ac1d;fchs;fcm;fuzz;kris;ksm;mp;p18a;p10c;pru1;pru2;pha;"
 	"wn;unic;tp3;xann;di;eu;p4x;p40;p41;p60a;np1;np2;np3;zen;"
-	"crb;tdd;gmc\0"
+	"crb;tdd;gmc;gdm\0"
 	"Module formats\0",	/* file extensions */
 	1,			/* is_seekable */
 	1,			/* uses output */
