@@ -248,14 +248,20 @@ fx_volslide:
 	    }
 	}
 	SET(VOL_SLIDE);
-	/* Skaven's 2nd reality has volslide with parameter D7 */
-	if ((xc->volslide = fxp))
-	    xc->v_val = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
+	/* Skaven's 2nd reality (S3M) has volslide parameter D7 => pri down
+	 * Stargazer's Red Dream (MOD) uses volslide DF => compute both
+	 */
+	if (m->fetch & XMP_CTL_VOLPDN) {
+	    if ((xc->volslide = fxp))
+	        xc->v_val = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
+	} else {
+	    xc->v_val = -LSN(fxp) + MSN(fxp);
+	}
 	break;
     case FX_VOLSLIDE_2:				/* Secondary volume slide */
 	SET(VOL_SLIDE_2);
 	if (fxp)
-	    xc->v_val2 = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
+	    xc->v_val2 = -LSN(fxp) + MSN(fxp);
 	break;
     case FX_VOLSLIDE_UP:			/* Vol slide with uint8 arg */
 	xc->v_val = fxp;

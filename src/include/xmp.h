@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.38 2007-11-29 17:43:19 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.39 2007-11-30 16:25:48 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -56,12 +56,14 @@
 
 /* Fetch control */
 #define XMP_MODE_ST3		(XMP_CTL_NCWINS | XMP_CTL_IGNWINS | \
-				 XMP_CTL_S3MLOOP | XMP_CTL_RTGINS)
+				 XMP_CTL_S3MLOOP | XMP_CTL_RTGINS | \
+				 XMP_CTL_VOLPDN)
 #define XMP_MODE_FT2		(XMP_CTL_OINSMOD | XMP_CTL_CUTNWI | \
 				 XMP_CTL_OFSRST)
 #define XMP_MODE_IT		(XMP_CTL_NCWINS | XMP_CTL_INSPRI | \
 				 XMP_CTL_ENVFADE | XMP_CTL_S3MLOOP | \
-				 XMP_CTL_OFSRST | XMP_CTL_ITENV)
+				 XMP_CTL_OFSRST | XMP_CTL_ITENV | \
+				 XMP_CTL_VOLPDN)
 
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_ORD_NEXT, 0)
@@ -111,7 +113,7 @@ struct xmp_options {
 #define XMP_CTL_DYNPAN	0x00000080	/* Enable dynamic pan */
 			/* Fetch control */
 #define XMP_CTL_MEDBPM	0x00000100	/* Enable MED BPM timing */
-#define XMP_CTL_S3MLOOP 0x00000200      /* Active s3m loop mode */
+#define XMP_CTL_S3MLOOP 0x00000200      /* S3M loop mode */
 #define XMP_CTL_ENVFADE	0x00000400	/* Fade at end of envelope */
 #define XMP_CTL_ITENV	0x00000800	/* IT envelope mode */
 #define XMP_CTL_IGNWINS	0x00001000	/* Ignore invalid instrument */
@@ -129,6 +131,7 @@ struct xmp_options {
 #define XMP_CTL_FILTER	0x01000000	/* IT lowpass filter */
 #define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
 #define XMP_CTL_PERPAT	0x04000000	/* Cancel persistent fx at pat start */
+#define XMP_CTL_VOLPDN	0x08000000	/* Set priority to volume slide down */
     int flags;		/* xmp internal control flags, set default mode */
     int crunch;		/* Sample crunching ratio */
     int start;		/* Set initial order (default = 0) */

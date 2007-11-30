@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.209 2007-11-30 03:04:40 cmatsuoka Exp $
+$Id: ChangeLog,v 1.210 2007-11-30 16:25:48 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -15,6 +15,10 @@ Stable versions
 	  M.K. Amegas conversion and others, reported by Mirko Buffoni)
 	- reset fadeout on new instrument fetch (fixes echo in "pain of lace"
 	  pat 0 ch 2-3, reported by Mirko Buffoni)
+	- add quirk for simultaneous volume slide up and down (M.K. allows it
+	  but S3M doesn't, fixes Red Dream.mod reported by Ralf Hoffmann)
+	- Impulse Tracker in sample mode has instrument priority quirk
+	- fix IT far right (64) stereo channel panning
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

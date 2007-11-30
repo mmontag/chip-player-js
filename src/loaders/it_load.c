@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.41 2007-11-29 17:43:20 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.42 2007-11-30 16:25:48 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -291,8 +291,13 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	else
 	    ifh.chvol[i] = 0;
 
-	m->xxc[i].pan = ifh.flags & IT_STEREO ?
-	    ((int) ifh.chpan[i] * 0x80 >> 5) & 0xff : 0x80;
+	if (ifh.flags & IT_STEREO) {
+	    m->xxc[i].pan = (int)ifh.chpan[i] * 0x80 >> 5;
+	    if (m->xxc[i].pan > 0xff)
+		m->xxc[i].pan = 0xff;
+	} else {
+	    m->xxc[i].pan = 0x80;
+	}
 
 	m->xxc[i].vol = ifh.chvol[i];
     }
@@ -907,7 +912,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     m->xxh->chn = max_ch + 1;
     m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
-    m->fetch |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
+    m->fetch |= XMP_CTL_INSPRI | XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
 
     reportv(ctx, 0, "\n");
 
