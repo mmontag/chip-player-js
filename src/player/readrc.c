@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.14 2007-12-01 16:54:43 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.15 2007-12-01 17:27:09 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -51,11 +51,12 @@ int xmpi_read_rc(struct xmp_context *ctx)
     struct xmp_options *o = &ctx->o;
     FILE *rc;
     char myrc[MAXPATHLEN], myrc2[MAXPATHLEN];
-    char *home = getenv("HOME");
     char *hash, *var, *val, line[256];
     char cparm[512];
 
 #if defined __EMX__
+    char *home = getenv("HOME");
+
     snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\xmp.conf", home);
     snprintf(myrc2, MAXPATHLEN, "%s\\.xmprc", home);    
 
@@ -72,6 +73,8 @@ int xmpi_read_rc(struct xmp_context *ctx)
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
 #else
+    char *home = getenv("HOME");
+
     snprintf(myrc, MAXPATHLEN, "%s/.xmp/xmp.conf", home);
     snprintf(myrc2, MAXPATHLEN, "%s/.xmprc", home);
 
@@ -212,16 +215,22 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 
 void xmpi_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
 {
+#if defined __EMX__
     char myrc[MAXPATHLEN];
     char *home = getenv ("HOME");
 
-#ifndef __EMX__
-    snprintf(myrc, MAXPATHLEN, "%s/.xmp/modules.conf", home);
-    parse_modconf(ctx, SYSCONFDIR "/xmp-modules.conf", crc, size);
-#else
     snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\modules.conf", home);
     parse_modconf(ctx, "xmp-modules.conf", crc, size);
-#endif
     parse_modconf(ctx, myrc, crc, size);
+#elif defined __AMIGA__
+    parse_modconf(ctx, "PROGDIR:xmp-modules.conf", crc, size);
+#else
+    char myrc[MAXPATHLEN];
+    char *home = getenv ("HOME");
+
+    snprintf(myrc, MAXPATHLEN, "%s/.xmp/modules.conf", home);
+    parse_modconf(ctx, SYSCONFDIR "/xmp-modules.conf", crc, size);
+    parse_modconf(ctx, myrc, crc, size);
+#endif
 }
 
