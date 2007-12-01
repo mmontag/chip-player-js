@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.210 2007-11-30 16:25:48 cmatsuoka Exp $
+$Id: ChangeLog,v 1.211 2007-12-01 22:21:58 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -19,6 +19,8 @@ Stable versions
 	  but S3M doesn't, fixes Red Dream.mod reported by Ralf Hoffmann)
 	- Impulse Tracker in sample mode has instrument priority quirk
 	- fix IT far right (64) stereo channel panning
+	- merge Amiga port improvements by Johan Samuelsson
+	- merge Amiga xfdmaster.library support by Chris Young 
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

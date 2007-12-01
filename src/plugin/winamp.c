@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.30 2007-11-30 03:21:47 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.31 2007-12-01 22:21:58 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -161,7 +161,7 @@ static void stop()
 
 static void driver_callback(void *b, int i)
 {
-	int n = (i / 2) << (mod.dsp_isactive()? 1 : 0);
+	int n = (i / 2) << (mod.dsp_isactive() ? 1 : 0);
 	int t;
 
 	while (mod.outMod->CanWrite() < n)
@@ -170,6 +170,8 @@ static void driver_callback(void *b, int i)
 	t = mod.outMod->GetWrittenTime();
 	mod.SAAddPCMData(b, numch, 16, t);
 	mod.VSAAddPCMData(b, numch, 16, t);
+
+	/* FIXME: call mod.dsp_dosamples() */
 
 	mod.outMod->Write(b, i);
 }
