@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.65 2007-12-01 16:54:43 cmatsuoka Exp $
+ * $Id: load.c,v 1.66 2007-12-01 17:39:29 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -38,8 +38,10 @@ int decrunch_sqsh	(FILE *, FILE *);
 int decrunch_pp		(FILE *, FILE *);
 int decrunch_mmcmp	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
+int decrunch_xfd	(FILE *, FILE *);
 int decrunch_pw		(FILE *, FILE *);
 int test_oxm		(FILE *);
+char *test_xfd		(unsigned char *, int);
 int pw_check		(unsigned char *, int);
 
 #define BUILTIN_PP	0x01
@@ -50,6 +52,7 @@ int pw_check		(unsigned char *, int);
 #define BUILTIN_ARCFS	0x06
 #define BUILTIN_S404	0x07
 #define BUILTIN_OXM	0x08
+#define BUILTIN_XFD	0x09
 
 
 #define TMP_SIZE 512
@@ -73,6 +76,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     b = calloc(1, PW_TEST_CHUNK);
     fread(b, 1, PW_TEST_CHUNK, *f);
 
+#ifdef AMIGA
+    if (packer = test_xfd(b,PW_TEST_CHUNK)) {
+	builtin = BUILTIN_XFD;
+    } else
+#endif
     if (b[0] == 'P' && b[1] == 'K') {
 	packer = "Zip";
 #ifdef __EMX__
@@ -243,6 +251,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 #if !defined __MINGW32__ && !defined __AMIGA__
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);
+	    break;
+#endif
+#ifdef AMIGA
+	case BUILTIN_XFD:
+	    res = decrunch_xfd(*f, t);
 	    break;
 #endif
 	case BUILTIN_PW:
