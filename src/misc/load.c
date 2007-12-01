@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.64 2007-12-01 16:24:57 cmatsuoka Exp $
+ * $Id: load.c,v 1.65 2007-12-01 16:54:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -84,8 +84,10 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 #endif
     } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
 	packer = "LHa";
-#ifdef __EMX__
+#if defined __EMX__
 	fprintf( stderr, "LHA for OS/2 does NOT support output to stdout.\n" );
+#elif defined __AMIGA__
+	cmd = "lha p -q \"%s\"";
 #endif
 	cmd = "lha -pq \"%s\"";
     } else if (b[0] == 31 && b[1] == 139) {

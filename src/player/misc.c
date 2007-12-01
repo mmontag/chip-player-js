@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: misc.c,v 1.13 2007-11-11 12:54:16 cmatsuoka Exp $
+ * $Id: misc.c,v 1.14 2007-12-01 16:54:43 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -63,9 +63,12 @@ char *str_adj(char *s)
 
 int get_temp_dir(char *buf, int size)
 {
-#ifdef WIN32
+#if defined WIN32
 	char *def = "C:\\WINDOWS\\TEMP\\";
 	char *tmp = getenv("TEMP");
+#elif defined __AMIGA__
+	char *def = "T:";
+	char *tmp = getenv("TMPDIR");
 #else
 	char *def = "/tmp/";
 	char *tmp = getenv("TMPDIR");

@@ -101,6 +101,9 @@ The Authors
 * Adam Sampson <ats@offog.org>
 - buildsystem and configuration file location fixes
 
+* Johan Samuelsson <spot@triad.se>
+- Amiga port and fixes
+
 * Attila Sipos <h430827@stud.u-szeged.hu>
 - SQSH decruncher checksum
 
@@ -109,7 +112,7 @@ The Authors
 - XM loader endianism fixes
 
 * Chris Young <cdyoung@ntlworld.com>
-- AmigaOS4 fixes
+- Amiga port and fixes
 
 
 Reused code

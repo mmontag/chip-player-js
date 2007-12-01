@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.13 2007-10-20 13:35:10 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.14 2007-12-01 16:54:43 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -17,6 +17,12 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include "xmpi.h"
+
+#ifdef __AMIGA__
+#include <sys/unistd.h>
+#endif
+
+/* TODO: use .ini file in Windows */
 
 static char drive_id[32];
 
@@ -45,28 +51,38 @@ int xmpi_read_rc(struct xmp_context *ctx)
     struct xmp_options *o = &ctx->o;
     FILE *rc;
     char myrc[MAXPATHLEN], myrc2[MAXPATHLEN];
-    char *home = getenv ("HOME");
+    char *home = getenv("HOME");
     char *hash, *var, *val, line[256];
     char cparm[512];
 
-#ifndef __EMX__
-    snprintf(myrc, MAXPATHLEN, "%s/.xmp/xmp.conf", home);
-    snprintf(myrc2, MAXPATHLEN, "%s/.xmprc", home);
-#else
+#if defined __EMX__
     snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\xmp.conf", home);
     snprintf(myrc2, MAXPATHLEN, "%s\\.xmprc", home);    
-#endif
-    if ((rc = fopen (myrc2, "r")) == NULL) {
-	if ((rc = fopen (myrc, "r")) == NULL) {
-#ifndef __EMX__
-	    if ((rc = fopen(SYSCONFDIR "/xmp.conf", "r")) == NULL) {
-#else
+
+    if ((rc = fopen(myrc2, "r")) == NULL) {
+	if ((rc = fopen(myrc, "r")) == NULL) {
 	    if ((rc = fopen("xmp.conf", "r")) == NULL) {
-#endif
 		return -1;
 	    }
 	}
     }
+#elif defined __AMIGA__
+    strncpy(myrc, "PROGDIR:xmp.conf", MAXPATHLEN);
+
+    if ((rc = fopen(myrc, "r")) == NULL)
+	return -1;
+#else
+    snprintf(myrc, MAXPATHLEN, "%s/.xmp/xmp.conf", home);
+    snprintf(myrc2, MAXPATHLEN, "%s/.xmprc", home);
+
+    if ((rc = fopen(myrc2, "r")) == NULL) {
+	if ((rc = fopen(myrc, "r")) == NULL) {
+	    if ((rc = fopen(SYSCONFDIR "/xmp.conf", "r")) == NULL) {
+		return -1;
+	    }
+	}
+    }
+#endif
 
     while (!feof (rc)) {
 	memset (line, 0, 256);
