@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.35 2007-11-26 19:04:48 cmatsuoka Exp $
+ * $Id: main.c,v 1.36 2007-12-01 16:24:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -34,7 +34,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#ifdef __amigaos4__
+#ifdef __AMIGA__
 #undef HAVE_TERMIOS_H
 #define __USE_INLINE__
 #include <proto/dos.h>
@@ -147,7 +147,7 @@ static void sigtstp_handler()
 
 static void sigcont_handler()
 {
-#ifndef __amigaos4__
+#ifndef __AMIGA__
     background = (tcgetpgrp(0) == getppid());
 #endif
 

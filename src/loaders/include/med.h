@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: med.h,v 1.6 2007-11-26 11:47:00 cmatsuoka Exp $
+ * $Id: med.h,v 1.7 2007-12-01 16:24:57 cmatsuoka Exp $
  */
 
 #include "xmpi.h"
@@ -16,7 +16,7 @@ typedef int16 WORD;
 typedef uint16 UWORD;
 typedef int8 BYTE;
 typedef uint8 UBYTE;
-#ifndef __amigaos4__
+#ifndef __AMIGA__
 typedef char *STRPTR;
 #endif
 

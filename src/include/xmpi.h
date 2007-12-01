@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.49 2007-11-26 11:47:00 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.50 2007-12-01 16:24:57 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -59,19 +59,17 @@
 
 /* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
  */
-#ifdef B_BEOS_VERSION
+#if defined B_BEOS_VERSION
 #  include <SupportDefs.h>
+#elif defined __AMIGA__
+#  include <exec/types.h>
 #else
-#  ifdef __amigaos4__
-#    include <exec/types.h>
-#  else
 typedef signed char int8;
 typedef signed short int int16;
 typedef signed int int32;
 typedef unsigned char uint8;
 typedef unsigned short int uint16;
 typedef unsigned int uint32;
-#  endif
 #endif
 
 #include "xmp.h"
