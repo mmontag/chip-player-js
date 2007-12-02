@@ -2,7 +2,7 @@
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.18 2007-11-15 22:36:54 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.19 2007-12-02 13:44:39 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -213,7 +213,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 				/* global track */
 				info = read8(f);
 				counter = info & 0x80 ? read8(f) : 0;
-				data = read8(f);
+				data = info & 0x3f ? read8(f) : 0;
 			} else {
 				counter--;
 			}

@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.212 2007-12-02 01:19:45 cmatsuoka Exp $
+$Id: ChangeLog,v 1.213 2007-12-02 13:44:39 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -22,6 +22,8 @@ Stable versions
 	- merge Amiga port improvements by Johan Samuelsson
 	- merge Amiga xfdmaster.library support by Chris Young 
 	- Amiga port also buildable for AROS (AHI driver not tested)
+	- fix global track parsing in DMF loader (fixes mok-trea.dmf, reported
+	  by Lorence Lombardo)
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader
