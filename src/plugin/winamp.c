@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.31 2007-12-01 22:21:58 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.32 2007-12-02 13:09:18 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -35,6 +35,9 @@ HANDLE load_mutex;
 #define FREQ_SAMPLE_22 1
 #define FREQ_SAMPLE_11 2
 
+/* x2 because mod.dsp_dosamples() may use up to twice as much space */
+#define MIX_BUFSIZE (20000 * 2)
+
 typedef struct {
 	int mixing_freq;
 	int convert8bit;
@@ -55,7 +58,9 @@ static int xmp_plugin_audio_error = FALSE;
 static short audio_open = FALSE;
 static xmp_context ctx;
 static int playing;
-static int numch;
+static struct xmp_options *opt;
+
+static char mix_buffer[MIX_BUFSIZE];
 
 static void	config		(HWND);
 static void	about		(HWND);
@@ -161,19 +166,26 @@ static void stop()
 
 static void driver_callback(void *b, int i)
 {
-	int n = (i / 2) << (mod.dsp_isactive() ? 1 : 0);
+	int dsp = !!mod.dsp_isactive();
+	int n = i * (dsp ? 2 : 1);
+	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	int t;
 
 	while (mod.outMod->CanWrite() < n)
 		Sleep(50);
 
 	t = mod.outMod->GetWrittenTime();
-	mod.SAAddPCMData(b, numch, 16, t);
-	mod.VSAAddPCMData(b, numch, 16, t);
+	mod.SAAddPCMData(b, numch, opt->resol, t);
+	mod.VSAAddPCMData(b, numch, opt->resol, t);
 
-	/* FIXME: call mod.dsp_dosamples() */
+	if (dsp) {
+		memcpy(mix_buffer, b, i);
+		n = mod.dsp_dosamples((short *)mix_buffer, n, opt->resol, numch,
+			opt->freq) * numch * 2;
+		b = mix_buffer;
+	}
 
-	mod.outMod->Write(b, i);
+	mod.outMod->Write(b, n);
 }
 
 static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -322,8 +334,7 @@ static int play_file(char *fn)
 	int maxlatency;
 	DWORD tmp;
 	FILE *f;
-	struct xmp_options *opt;
-	int lret;
+	int lret, numch;
 
 	_D("fn = %s", fn);
 
@@ -350,10 +361,8 @@ static int play_file(char *fn)
 		opt->resol = 16;
 
 	if (xmp_cfg.force_mono == 0) {
-		numch = 2;
 		opt->outfmt &= ~XMP_FMT_MONO;
 	} else {
-		numch = 1;
 		opt->outfmt |= XMP_FMT_MONO;
 	}
 

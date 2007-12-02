@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.66 2007-12-01 17:39:29 cmatsuoka Exp $
+ * $Id: load.c,v 1.67 2007-12-02 13:09:18 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -76,7 +76,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     b = calloc(1, PW_TEST_CHUNK);
     fread(b, 1, PW_TEST_CHUNK, *f);
 
-#ifdef AMIGA
+#if defined __AMIGA__ && !defined __AROS__
     if (packer = test_xfd(b,PW_TEST_CHUNK)) {
 	builtin = BUILTIN_XFD;
     } else
