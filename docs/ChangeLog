@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.211 2007-12-01 22:21:58 cmatsuoka Exp $
+$Id: ChangeLog,v 1.212 2007-12-02 01:19:45 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -21,6 +21,7 @@ Stable versions
 	- fix IT far right (64) stereo channel panning
 	- merge Amiga port improvements by Johan Samuelsson
 	- merge Amiga xfdmaster.library support by Chris Young 
+	- Amiga port also buildable for AROS (AHI driver not tested)
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

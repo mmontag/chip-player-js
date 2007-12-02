@@ -5,7 +5,7 @@
  * AmigaOS4 fixes by Chris Young
  */
 
-#ifndef __AMIGA__
+#ifndef __amigaos4__
 typedef uint8 BYTE;
 typedef uint16 WORD;
 #endif

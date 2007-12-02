@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.36 2007-12-01 16:24:57 cmatsuoka Exp $
+ * $Id: main.c,v 1.37 2007-12-02 01:19:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -33,6 +33,10 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <unistd.h>
+
+#ifdef __AROS__
+#define __AMIGA__
+#endif
 
 #ifdef __AMIGA__
 #undef HAVE_TERMIOS_H
@@ -269,17 +273,20 @@ static void process_echoback(unsigned long i)
     k = read(0, &cmd, 1);
 #elif defined WIN32
     k = cmd = kbhit() ? getch() : 0;
-#else
+#elif defined __AMIGA__
     /* Amiga CLI */
+    k = cmd = 0;
     if (WaitForChar(Input(), 1)) {
 	char c;
-#ifndef __amigaos4__
-	Read(in, &c, 1);
-#else
+#if defined __amigaos4__ || defined __AROS__
 	Read(stdin, &c, 1);
+#else
+	Read(in, &c, 1);
 #endif
 	cmd = k = c;
     }
+#else
+    k = cmd = 0;
 #endif
 
     if (k > 0) {

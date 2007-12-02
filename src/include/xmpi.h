@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.50 2007-12-01 16:24:57 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.51 2007-12-02 01:19:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -10,6 +10,10 @@
 
 #ifndef __XMPI_H
 #define __XMPI_H
+
+#ifdef __AROS__
+#define __AMIGA__
+#endif
 
 /*
  * Sat, 15 Sep 2007 10:39:41 -0600
@@ -61,7 +65,7 @@
  */
 #if defined B_BEOS_VERSION
 #  include <SupportDefs.h>
-#elif defined __AMIGA__
+#elif defined __amigaos4__
 #  include <exec/types.h>
 #else
 typedef signed char int8;

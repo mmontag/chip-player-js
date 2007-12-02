@@ -21,7 +21,7 @@ struct xfdBufferInfo *open_xfd()
 {
 	IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
 
-    if(xfdMasterBase = OpenLibrary("xfdmaster.library",38))
+	if(xfdMasterBase = OpenLibrary("xfdmaster.library",38))
 	{
 #ifdef __amigaos4__
 		if(IxfdMaster = (struct xfdMasterIFace *)GetInterface(xfdMasterBase,"main",1,NULL))

@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.15 2007-12-01 17:27:09 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.16 2007-12-02 01:19:45 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,11 +50,12 @@ int xmpi_read_rc(struct xmp_context *ctx)
 {
     struct xmp_options *o = &ctx->o;
     FILE *rc;
-    char myrc[MAXPATHLEN], myrc2[MAXPATHLEN];
+    char myrc[MAXPATHLEN];
     char *hash, *var, *val, line[256];
     char cparm[512];
 
 #if defined __EMX__
+    char myrc2[MAXPATHLEN];
     char *home = getenv("HOME");
 
     snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\xmp.conf", home);
@@ -73,6 +74,7 @@ int xmpi_read_rc(struct xmp_context *ctx)
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
 #else
+    char myrc2[MAXPATHLEN];
     char *home = getenv("HOME");
 
     snprintf(myrc, MAXPATHLEN, "%s/.xmp/xmp.conf", home);

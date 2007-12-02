@@ -1,15 +1,14 @@
 /* Extended Module Player OMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: oxm.c,v 1.9 2007-12-01 16:24:57 cmatsuoka Exp $
+ * $Id: oxm.c,v 1.10 2007-12-02 01:19:45 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  */
 
-#ifndef __MINGW32__
-#ifndef __AMIGA__
+#if !defined WIN32 && !defined __AMIGA__ && !defined __AROS__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -286,5 +285,4 @@ int decrunch_oxm(FILE *f, FILE *fo)
 	return 0;
 }
 
-#endif /* __AMIGA__ */
-#endif /* __MINGW32__ */
+#endif /* !WIN32 && !__AMIGA__ && !__AROS__ */
