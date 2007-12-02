@@ -2,7 +2,7 @@
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *
- * $Id: dmf_load.c,v 1.19 2007-12-02 13:44:39 cmatsuoka Exp $
+ * $Id: dmf_load.c,v 1.20 2007-12-02 22:04:13 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -219,7 +219,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 			}
 
 			for (j = 0; j < chn; j++) {
-				int b;
+				int b, fxt, fxp;
 
 				event = &EVENT(i, j, r);
 
@@ -235,16 +235,22 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 					if (b & 0x10)
 						event->vol = read8(f);
 					if (b & 0x08) {	/* instrument effect */
-						read8(f);
-						read8(f);
+						fxt = read8(f);
+						fxp = read8(f);
 					}
 					if (b & 0x04) {	/* note effect */
-						read8(f);
-						read8(f);
+						fxt = read8(f);
+						fxp = read8(f);
 					}
 					if (b & 0x02) {	/* volume effect */
-						read8(f);
-						read8(f);
+						fxt = read8(f);
+						fxp = read8(f);
+						switch (fxt) {
+						case 0x02:
+							event->fxt = FX_VOLSLIDE_DN;
+							event->fxp = fxp;
+							break;
+						}
 					}
 				} else {
 					track_counter[j]--;
@@ -287,7 +293,7 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 		m->xxih[i].nsm = !!m->xxs[i].len;
 		c3spd = read16l(f);
 		c2spd_to_note(c3spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-		m->xxi[i][0].vol = read8(f) / 4;
+		m->xxi[i][0].vol = read8(f);
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].sid = i;
 		flag = read8(f);
@@ -395,6 +401,8 @@ static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Load IFF chunks */
 	while (!feof(f))
 		iff_chunk(ctx, f);
+
+	m->volbase = 0xff;
 
 	iff_release();
 
