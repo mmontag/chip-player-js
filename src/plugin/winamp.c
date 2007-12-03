@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.32 2007-12-02 13:09:18 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.33 2007-12-03 00:01:36 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -40,14 +40,11 @@ HANDLE load_mutex;
 
 typedef struct {
 	int mixing_freq;
-	int convert8bit;
 	int force_mono;
 	int interpolation;
 	int filter;
-	int force8bit;
 	int fixloops;
 	int loop;
-	int modrange;
 	int pan_amplitude;
 	int time;
 	struct xmp_module_info mod_info;
@@ -58,7 +55,7 @@ static int xmp_plugin_audio_error = FALSE;
 static short audio_open = FALSE;
 static xmp_context ctx;
 static int playing;
-static struct xmp_options *opt;
+static struct xmp_options *opt = NULL;
 
 static char mix_buffer[MIX_BUFSIZE];
 
@@ -166,9 +163,10 @@ static void stop()
 
 static void driver_callback(void *b, int i)
 {
-	int dsp = !!mod.dsp_isactive();
+	int dsp = mod.dsp_isactive();
 	int n = i * (dsp ? 2 : 1);
 	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	int ssize = opt->resol / 8;
 	int t;
 
 	while (mod.outMod->CanWrite() < n)
@@ -180,8 +178,8 @@ static void driver_callback(void *b, int i)
 
 	if (dsp) {
 		memcpy(mix_buffer, b, i);
-		n = mod.dsp_dosamples((short *)mix_buffer, n, opt->resol, numch,
-			opt->freq) * numch * 2;
+		n = mod.dsp_dosamples((short *)mix_buffer, i / numch / ssize,
+				opt->resol, numch, opt->freq) * numch * ssize;
 		b = mix_buffer;
 	}
 
@@ -207,8 +205,8 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		EndDialog(hDlg,TRUE);
 		return 0;
 	case WM_INITDIALOG:
-		if (xmp_cfg.force8bit)
-			CheckDlgButton(hDlg, IDC_FORCE8BIT, BST_CHECKED);
+		if (xmp_cfg.loop)
+			CheckDlgButton(hDlg, IDC_LOOP, BST_CHECKED);
 		if (xmp_cfg.force_mono)
 			CheckDlgButton(hDlg, IDC_FORCE_MONO, BST_CHECKED);
 		if (xmp_cfg.interpolation)
@@ -239,8 +237,8 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		case IDOK:
 			xmp_cfg.mixing_freq = atoi(freq[SendMessage(GetDlgItem(
 				hDlg, IDC_MIXING_FREQ), CB_GETCURSEL, 0, 0)]);
-			xmp_cfg.force8bit = (IsDlgButtonChecked(hDlg,
-				IDC_FORCE8BIT) == BST_CHECKED);
+			xmp_cfg.loop = (IsDlgButtonChecked(hDlg,
+				IDC_LOOP) == BST_CHECKED);
 			xmp_cfg.force_mono = (IsDlgButtonChecked(hDlg,
 				IDC_FORCE_MONO) == BST_CHECKED);
 			xmp_cfg.interpolation = (IsDlgButtonChecked(hDlg,
@@ -252,11 +250,19 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				
 			get_inifile(inifile);
 			CFGWRITESTR(mixing_freq);
-			CFGWRITESTR(force8bit);
+			CFGWRITESTR(loop);
 			CFGWRITESTR(force_mono);
 			CFGWRITESTR(interpolation);
 			CFGWRITESTR(filter);
 			CFGWRITESTR(pan_amplitude);
+
+			if (opt) {
+				if (xmp_cfg.loop)
+					opt->flags |= XMP_CTL_LOOP;
+				else
+					opt->flags &= ~XMP_CTL_LOOP;
+			}
+
 			/* fall thru */
 		case IDCANCEL:
 			EndDialog(hDlg,TRUE);
@@ -303,9 +309,7 @@ static void init()
 	get_inifile(inifile);
 	
 	CFGREADINT(mixing_freq, 44100);
-	CFGREADINT(force8bit, 0);
-	CFGREADINT(convert8bit, 0);
-	CFGREADINT(modrange, 0);
+	CFGREADINT(loop, 0);
 	CFGREADINT(fixloops, 0);
 	CFGREADINT(force_mono, 0);
 	CFGREADINT(interpolation, 1);
@@ -351,27 +355,28 @@ static int play_file(char *fn)
 	xmp_plugin_audio_error = FALSE;
 	playing = 1;
 
-	opt->resol = 8;
+	opt->resol = 16;
 	opt->verbosity = 0;
 	opt->drv_id = "callback";
 
 	opt->freq = xmp_cfg.mixing_freq;
 
-	if (xmp_cfg.force8bit == 0)
-		opt->resol = 16;
+	if (xmp_cfg.loop)
+		opt->flags |= XMP_CTL_LOOP;
+	else
+		opt->flags &= ~XMP_CTL_LOOP;
 
-	if (xmp_cfg.force_mono == 0) {
-		opt->outfmt &= ~XMP_FMT_MONO;
-	} else {
+	if (xmp_cfg.force_mono)
 		opt->outfmt |= XMP_FMT_MONO;
-	}
+	else
+		opt->outfmt &= ~XMP_FMT_MONO;
 
-	if (xmp_cfg.interpolation == 1)
+	if (xmp_cfg.interpolation)
 		opt->flags |= XMP_CTL_ITPT;
 	else
 		opt->flags &= ~XMP_CTL_ITPT;
 
-	if (xmp_cfg.filter == 1)
+	if (xmp_cfg.filter)
 		opt->flags |= XMP_CTL_FILTER;
 	else
 		opt->flags &= ~XMP_CTL_FILTER;

@@ -1,5 +1,5 @@
 /*
- * $Id: resource.rc,v 1.5 2007-11-26 17:11:04 cmatsuoka Exp $
+ * $Id: resource.rc,v 1.6 2007-12-03 00:01:36 cmatsuoka Exp $
  */
 
 #include <winuser.h>
@@ -19,8 +19,8 @@ BEGIN
     LTEXT           "Sampling rate", IDC_STATIC, 10, 10, 108, 10
     COMBOBOX        IDC_MIXING_FREQ, 60, 8, 40, 10,
                     CBS_DROPDOWNLIST | WS_TABSTOP
-    CONTROL         "8 bit output", IDC_FORCE8BIT, "Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 24, 108, 10
+    CONTROL         "Loop module", IDC_LOOP, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 24, 108, 10
     CONTROL         "Force mono", IDC_FORCE_MONO, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 38, 108, 10
     CONTROL         "Enable interpolation", IDC_INTERPOLATION, "Button",
