@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.33 2007-12-03 00:01:36 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.34 2007-12-04 22:22:06 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -163,7 +163,7 @@ static void stop()
 
 static void driver_callback(void *b, int i)
 {
-	int dsp = mod.dsp_isactive();
+	int dsp = 0;//mod.dsp_isactive();
 	int n = i * (dsp ? 2 : 1);
 	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	int ssize = opt->resol / 8;
@@ -173,6 +173,7 @@ static void driver_callback(void *b, int i)
 		Sleep(50);
 
 	t = mod.outMod->GetWrittenTime();
+#if 0
 	mod.SAAddPCMData(b, numch, opt->resol, t);
 	mod.VSAAddPCMData(b, numch, opt->resol, t);
 
@@ -182,6 +183,7 @@ static void driver_callback(void *b, int i)
 				opt->resol, numch, opt->freq) * numch * ssize;
 		b = mix_buffer;
 	}
+#endif
 
 	mod.outMod->Write(b, n);
 }

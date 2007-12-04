@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: mmd1_load.c,v 1.35 2007-11-15 22:36:54 cmatsuoka Exp $
+ * $Id: mmd1_load.c,v 1.36 2007-12-04 22:22:06 cmatsuoka Exp $
  */
 
 /*
@@ -349,7 +349,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
 	strcpy(m->type, ver == 0 ? m->xxh->chn > 4 ? "MMD0 (OctaMED 2.00)" :
-			"MMD0 (MED 3.00)" : "MMD1 (OctaMED 4.00)");
+			"MMD0 (MED 2.10)" : "MMD1 (OctaMED 4.00)");
 	
 	MODULE_INFO();
 
@@ -392,7 +392,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxp[i]->rows = block.lines + 1;
 		TRACK_ALLOC(i);
 
-		if (ver > 0) {
+		if (ver > 0) {		/* MMD1 */
 			for (j = 0; j < m->xxp[i]->rows; j++) {
 				for (k = 0; k < block.numtracks; k++) {
 					e[0] = read8(f);
@@ -411,7 +411,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 					xlat_fx(event);
 				}
 			}
-		} else {
+		} else {		/* MMD0 */
 			for (j = 0; j < m->xxp[i]->rows; j++) {
 				for (k = 0; k < block.numtracks; k++) {
 					e[0] = read8(f);
