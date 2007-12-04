@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.37 2007-12-02 01:19:45 cmatsuoka Exp $
+ * $Id: main.c,v 1.38 2007-12-04 22:24:14 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -278,11 +278,7 @@ static void process_echoback(unsigned long i)
     k = cmd = 0;
     if (WaitForChar(Input(), 1)) {
 	char c;
-#if defined __amigaos4__ || defined __AROS__
-	Read(stdin, &c, 1);
-#else
-	Read(in, &c, 1);
-#endif
+	Read(Input(), &c, 1);
 	cmd = k = c;
     }
 #else
