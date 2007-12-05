@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.35 2007-12-05 21:06:04 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.36 2007-12-05 23:19:51 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -36,7 +36,9 @@ HANDLE load_mutex;
 #define FREQ_SAMPLE_11 2
 
 /* x2 because mod.dsp_dosamples() may use up to twice as much space */
-#define MIX_BUFSIZE (576 * 2)
+#define BPS 16
+#define NCH 2
+#define MIX_BUFSIZE (576*NCH*(BPS/8))
 
 typedef struct {
 	int mixing_freq;
@@ -57,7 +59,7 @@ static xmp_context ctx;
 static int playing;
 static struct xmp_options *opt = NULL;
 
-static char mix_buffer[MIX_BUFSIZE];
+char mix_buffer[MIX_BUFSIZE * 4];
 
 static void	config		(HWND);
 static void	about		(HWND);
@@ -164,30 +166,37 @@ static void stop()
 static void driver_callback(void *b, int i)
 {
 	int dsp = mod.dsp_isactive();
+	int n = i * (dsp ? 2 : 1);
 	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	int ssize = opt->resol / 8;
-	int t, n, todo;
+	int t, todo;
 
-	while (mod.outMod->CanWrite() < n)
-		Sleep(50);
+	if (dsp) {
+		/* Winamp dsp support fixed by Mirko Buffoni */
+		while (i > 0) {
+			todo = (i > MIX_BUFSIZE * 2) ? MIX_BUFSIZE : i;
+			memcpy(mix_buffer, b, todo);
 
-	if (!dsp) {
+			while (mod.outMod->CanWrite() < todo * 2)
+				Sleep(20);
+
+			t = mod.outMod->GetWrittenTime();
+			mod.SAAddPCMData(mix_buffer, numch, opt->resol, t);
+			mod.VSAAddPCMData(mix_buffer, numch, opt->resol, t);
+			n = mod.dsp_dosamples((short *)mix_buffer,
+				todo / numch / ssize, opt->resol, numch,
+				opt->freq) * numch * ssize;
+			mod.outMod->Write(mix_buffer, n);
+			i -= todo;
+			b += todo;
+		}
+	} else {
+		while (mod.outMod->CanWrite() < i)
+			Sleep(50);
 		t = mod.outMod->GetWrittenTime();
 		mod.SAAddPCMData(b, numch, opt->resol, t);
 		mod.VSAAddPCMData(b, numch, opt->resol, t);
 		mod.outMod->Write(b, i);
-	} else {
-		while (i) {
-			todo = (i > 576) ? 576 : i;
-			memcpy(mix_buffer, b, todo);
-			n = mod.dsp_dosamples((short *)mix_buffer, todo / numch / ssize,
-					opt->resol, numch, opt->freq) * numch * ssize;
-			t = mod.outMod->GetWrittenTime();
-			mod.SAAddPCMData(mix_buffer, numch, opt->resol, t);
-			mod.VSAAddPCMData(mix_buffer, numch, opt->resol, t);
-			mod.outMod->Write(mix_buffer, n);
-			i -= todo;	b += todo;
-		}
 	}
 }
 
@@ -399,9 +408,9 @@ static int play_file(char *fn)
 	maxlatency = mod.outMod->Open(opt->freq, numch, opt->resol, -1, -1);
 	if (maxlatency < 0)
 		return 1;
-	mod.SetInfo(0, opt->freq / 1000, 1, 1);
+	mod.SetInfo(opt->freq * opt->resol * numch / 1000, opt->freq / 1000, numch, 1);
 	mod.SAVSAInit(maxlatency, opt->freq);
-	mod.VSASetInfo(numch, opt->freq);
+	mod.VSASetInfo(opt->freq, numch);
 	mod.outMod->SetVolume(-666);
 
 	xmp_open_audio(ctx);
