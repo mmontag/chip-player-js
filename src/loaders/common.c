@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.19 2007-12-05 11:10:55 cmatsuoka Exp $
+ * $Id: common.c,v 1.20 2007-12-05 11:57:50 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -133,10 +133,12 @@ void clean_s3m_seq(struct xxm_header *xxh, uint8 *xxo)
 	ord_xlat[j] = i;
         //printf("xlat %d -> %d\n", j, i);
 
+#if 0
 	if (xxo[i] == 0xff) {
 	    xxh->len = i;
 	    break;
 	}
+#endif
     }
     /*for (i = 0; i < xxh->len; i++) printf("%02x ", xxo[i]);
     printf("\n");*/
