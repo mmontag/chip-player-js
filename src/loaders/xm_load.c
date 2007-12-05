@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xm_load.c,v 1.33 2007-11-29 17:43:20 cmatsuoka Exp $
+ * $Id: xm_load.c,v 1.34 2007-12-05 12:48:38 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -113,9 +113,13 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 	fix_loop = 1;
     }
 
-    if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
+    /* See MMD1 loader for explanation */
+    if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19))
+	if (m->xxh->bpm <= 10)
+	    m->xxh->bpm = 0x7d - m->xxh->bpm * 2;
+
+    if (!strncmp(tracker_name, "FastTracker v 2.00", 18))
 	strcpy(tracker_name, "old ModPlug Tracker");
-    }
 
     snprintf(m->type, XMP_NAMESIZE, "XM %d.%02d (%s)",
 			xfh.version >> 8, xfh.version & 0xff, tracker_name);

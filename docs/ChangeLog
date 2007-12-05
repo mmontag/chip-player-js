@@ -1,9 +1,9 @@
-$Id: ChangeLog,v 1.217 2007-12-05 12:24:42 cmatsuoka Exp $
+$Id: ChangeLog,v 1.218 2007-12-05 12:48:38 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.5.1 ():
+2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
 	- Winamp plugin number of channels fixed by Mirko Buffoni
 	- recognize TakeTracker TDZ4 modules (reported by Lorence Lombardo)
@@ -27,6 +27,8 @@ Stable versions
 	- fix Winamp plugin to use the equalizer (reported by Mirko Buffoni)
 	- skip 0xfe and 0xff S3M/IT control patterns at load time
 	- fix scan of pattern break in the last pattern of the module
+	- add BPM quirk for XMs converted with MED2XM (fixes LaEsperanza.xm,
+	  reported by Lorence Lombardo)
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader
