@@ -1,7 +1,7 @@
 /*
  * XMP plugin for WinAmp
  *
- * $Id: winamp.c,v 1.34 2007-12-04 22:22:06 cmatsuoka Exp $
+ * $Id: winamp.c,v 1.35 2007-12-05 21:06:04 cmatsuoka Exp $
  */
 
 #include <windows.h>
@@ -36,7 +36,7 @@ HANDLE load_mutex;
 #define FREQ_SAMPLE_11 2
 
 /* x2 because mod.dsp_dosamples() may use up to twice as much space */
-#define MIX_BUFSIZE (20000 * 2)
+#define MIX_BUFSIZE (576 * 2)
 
 typedef struct {
 	int mixing_freq;
@@ -163,29 +163,32 @@ static void stop()
 
 static void driver_callback(void *b, int i)
 {
-	int dsp = 0;//mod.dsp_isactive();
-	int n = i * (dsp ? 2 : 1);
+	int dsp = mod.dsp_isactive();
 	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	int ssize = opt->resol / 8;
-	int t;
+	int t, n, todo;
 
 	while (mod.outMod->CanWrite() < n)
 		Sleep(50);
 
-	t = mod.outMod->GetWrittenTime();
-#if 0
-	mod.SAAddPCMData(b, numch, opt->resol, t);
-	mod.VSAAddPCMData(b, numch, opt->resol, t);
-
-	if (dsp) {
-		memcpy(mix_buffer, b, i);
-		n = mod.dsp_dosamples((short *)mix_buffer, i / numch / ssize,
-				opt->resol, numch, opt->freq) * numch * ssize;
-		b = mix_buffer;
+	if (!dsp) {
+		t = mod.outMod->GetWrittenTime();
+		mod.SAAddPCMData(b, numch, opt->resol, t);
+		mod.VSAAddPCMData(b, numch, opt->resol, t);
+		mod.outMod->Write(b, i);
+	} else {
+		while (i) {
+			todo = (i > 576) ? 576 : i;
+			memcpy(mix_buffer, b, todo);
+			n = mod.dsp_dosamples((short *)mix_buffer, todo / numch / ssize,
+					opt->resol, numch, opt->freq) * numch * ssize;
+			t = mod.outMod->GetWrittenTime();
+			mod.SAAddPCMData(mix_buffer, numch, opt->resol, t);
+			mod.VSAAddPCMData(mix_buffer, numch, opt->resol, t);
+			mod.outMod->Write(mix_buffer, n);
+			i -= todo;	b += todo;
+		}
 	}
-#endif
-
-	mod.outMod->Write(b, n);
 }
 
 static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -249,7 +252,7 @@ static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				IDC_FILTER) == BST_CHECKED);
 			xmp_cfg.pan_amplitude = SendMessage(GetDlgItem(hDlg,
 				IDC_PAN_AMPLITUDE), TBM_GETPOS, 0, 0) * 10;
-				
+
 			get_inifile(inifile);
 			CFGWRITESTR(mixing_freq);
 			CFGWRITESTR(loop);
@@ -309,7 +312,7 @@ static void init()
 } while (0)
 
 	get_inifile(inifile);
-	
+
 	CFGREADINT(mixing_freq, 44100);
 	CFGREADINT(loop, 0);
 	CFGREADINT(fixloops, 0);
@@ -519,7 +522,7 @@ static void get_file_info(char *filename, char *title, int *length_in_ms)
 	}
 
 	/* Create new context to load a file and get the length */
-	
+
 	ctx2 = xmp_create_context();
 	opt = xmp_get_options(ctx2);
 	opt->skipsmp = 1;	/* don't load samples */
