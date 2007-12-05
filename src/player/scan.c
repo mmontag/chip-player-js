@@ -90,8 +90,8 @@ int xmpi_scan_module(struct xmp_context *ctx)
 		ord = ((uint32)m->xxh->rst > m->xxh->len ||
 			(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
 			0 : m->xxh->rst;
-		if (m->xxo[ord] == S3M_END)
-		    break;
+		//if (m->xxo[ord] == S3M_END)
+		 //   break;
 	} 
 
 	/* All invalid patterns skipped, only S3M_END aborts replay */

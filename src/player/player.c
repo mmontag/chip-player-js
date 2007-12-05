@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.52 2007-12-05 11:57:50 cmatsuoka Exp $
+ * $Id: player.c,v 1.53 2007-12-05 12:24:42 cmatsuoka Exp $
  */
 
 /*
@@ -826,8 +826,10 @@ next_order:
 
 	/* Skip invalid patterns */
 	if (m->xxo[ord] >= m->xxh->pat) {
+#if 0
            if (m->xxo[ord] == 0xff)            /* S3M uses 0xff as end mark */
                 ord = m->xxh->len;
+#endif
 	    continue;
 	}
 
