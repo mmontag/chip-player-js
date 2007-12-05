@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: main.c,v 1.38 2007-12-04 22:24:14 cmatsuoka Exp $
+ * $Id: main.c,v 1.39 2007-12-05 23:39:27 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -275,11 +275,14 @@ static void process_echoback(unsigned long i)
     k = cmd = kbhit() ? getch() : 0;
 #elif defined __AMIGA__
     /* Amiga CLI */
-    k = cmd = 0;
-    if (WaitForChar(Input(), 1)) {
-	char c;
-	Read(Input(), &c, 1);
-	cmd = k = c;
+    {
+	BPTR in = Input();
+        k = cmd = 0;
+        if (WaitForChar(in, 1)) {
+	    char c;
+	    Read(in, &c, 1);
+	    cmd = k = c;
+	}
     }
 #else
     k = cmd = 0;
