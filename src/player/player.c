@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.50 2007-11-30 03:04:41 cmatsuoka Exp $
+ * $Id: player.c,v 1.51 2007-12-05 11:10:55 cmatsuoka Exp $
  */
 
 /*
@@ -790,10 +790,8 @@ int xmpi_player_start(struct xmp_context *ctx)
     p->gvol_base = m->volbase;
     ord = o->start;
 
-    /* S3M skip in first pattern (gaming.s3m) or
-     * invalid patterns at start (the seventh laboratory.it)
-     */
-    while (ord < m->xxh->len && m->xxo[ord] >= m->xxh->pat /*== 254*/)
+    /* Skip invalid patterns at start (the seventh laboratory.it) */
+    while (ord < m->xxh->len && m->xxo[ord] >= m->xxh->pat)
 	ord++;
 
     m->volume = m->xxo_info[ord].gvl;
@@ -824,16 +822,11 @@ next_order:
 	    ord = ((uint32)m->xxh->rst > m->xxh->len ||
 		(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?  0 : m->xxh->rst;
 	    m->volume = m->xxo_info[ord].gvl;
-	    if (m->xxo[ord] == 0xff)
-		break;
 	}
-	if (m->xxo[ord] >= m->xxh->pat) {
-	    if (m->xxo[ord] == 0xfe)		/* S3M skips pattern 0xfe */
-		continue;
-	    if (m->xxo[ord] == 0xff)		/* S3M uses 0xff as end mark */
-		ord = m->xxh->len;
+
+	/* Skip invalid patterns */
+	if (m->xxo[ord] >= m->xxh->pat)
 	    continue;
-	}
 
 	r = m->xxp[m->xxo[ord]]->rows;
 	if (p->flow.jumpline >= r)

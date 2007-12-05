@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.214 2007-12-03 00:01:36 cmatsuoka Exp $
+$Id: ChangeLog,v 1.215 2007-12-05 11:10:55 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -25,6 +25,7 @@ Stable versions
 	- fix global track parsing in DMF loader (fixes mok-trea.dmf, reported
 	  by Lorence Lombardo)
 	- fix Winamp plugin to use the equalizer (reported by Mirko Buffoni)
+	- skip 0xfe/0xff S3M/IT control patterns at load time
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

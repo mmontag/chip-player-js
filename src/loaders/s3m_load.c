@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: s3m_load.c,v 1.32 2007-11-29 17:43:20 cmatsuoka Exp $
+ * $Id: s3m_load.c,v 1.33 2007-12-05 11:10:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -152,6 +152,9 @@ static void xlat_fx (int c, struct xxm_event *e)
 	else
 	    e->fxp = arpeggio_val[c];
 	break;
+    case FX_JUMP:
+	e->fxp = ord_xlat[e->fxp];
+	break;
     case FX_S3M_EXTENDED:		/* Extended effects */
 	e->fxt = FX_EXTENDED;
 	switch (h) {
@@ -278,18 +281,8 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     }
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-    fread (m->xxo, 1, m->xxh->len, f);
-
-#if 0
-    /* S3M skips pattern 0xfe */
-    for (i = 0; i < (m->xxh->len - 1); i++)
-	if (m->xxo[i] == 0xfe) {
-	    memcpy (&m->xxo[i], &m->xxo[i + 1], m->xxh->len - i - 1);
-	    m->xxh->len--;
-	}
-    while (m->xxh->len && m->xxo[m->xxh->len - 1] == 0xff)
-	m->xxh->len--;
-#endif
+    fread(m->xxo, 1, m->xxh->len, f);
+    clean_s3m_seq(m->xxh, m->xxo);
 
     for (i = 0; i < m->xxh->ins; i++)
 	pp_ins[i] = read16l(f);

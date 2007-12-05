@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.h,v 1.23 2007-10-19 12:49:01 cmatsuoka Exp $
+ * $Id: load.h,v 1.24 2007-12-05 11:10:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -26,6 +26,9 @@ void	read_title		(FILE *, char *, int);
 void	set_xxh_defaults	(struct xxm_header *);
 void	cvt_pt_event		(struct xxm_event *, uint8 *);
 void	disable_continue_fx	(struct xxm_event *);
+void	clean_s3m_seq		(struct xxm_header *, uint8 *);
+
+extern uint8 ord_xlat[];
 
 #define V(x) (m->verbosity > (x))
 

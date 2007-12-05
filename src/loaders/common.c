@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: common.c,v 1.18 2007-10-24 02:41:50 cmatsuoka Exp $
+ * $Id: common.c,v 1.19 2007-12-05 11:10:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -109,3 +109,36 @@ void disable_continue_fx(struct xxm_event *event)
 		}
 	}
 }
+
+
+uint8 ord_xlat[255];
+
+/* normalize pattern sequence */
+void clean_s3m_seq(struct xxm_header *xxh, uint8 *xxo)
+{
+    int i, j;
+    
+    /*for (i = 0; i < xxh->len; i++) printf("%02x ", xxo[i]);
+    printf("\n");*/
+    for (i = j = 0; i < xxh->len; i++, j++) {
+	while (xxo[i] == 0xfe) {
+	    xxh->len--;
+	    ord_xlat[j] = i;
+            //printf("xlat %d -> %d\n", j, i);
+	    j++;
+	    //printf("move %d from %d to %d\n", xxh->len - i, i + 1, i);
+	    memmove(xxo + i, xxo + i + 1, xxh->len - i);
+        }
+
+	ord_xlat[j] = i;
+        //printf("xlat %d -> %d\n", j, i);
+
+	if (xxo[i] == 0xff) {
+	    xxh->len = i;
+	    break;
+	}
+    }
+    /*for (i = 0; i < xxh->len; i++) printf("%02x ", xxo[i]);
+    printf("\n");*/
+}
+

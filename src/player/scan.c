@@ -34,8 +34,6 @@
 #include "effects.h"
 #include "mixer.h"
 
-#define S3M_END		0xff
-#define S3M_SKIP	0xff
 #define TIME		6
 #define MAX_GVL		0x40
 
@@ -86,22 +84,15 @@ int xmpi_scan_module(struct xmp_context *ctx)
 
     while (42) {
 	if ((uint32)++ord >= m->xxh->len) {
-	    /*if ((uint32)++ord >= m->xxh->len)*/
 		ord = ((uint32)m->xxh->rst > m->xxh->len ||
 			(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
 			0 : m->xxh->rst;
 		break;
 	} 
 
-	/* All invalid patterns skipped, only S3M_END aborts replay */
-	if ((uint32)m->xxo[ord] >= m->xxh->pat) {
-	    /*if (m->xxo[ord] == S3M_SKIP) ord++;*/
-	    if (m->xxo[ord] == S3M_END) {
-		ord = m->xxh->len;
-	        continue;
-	    }
+	/* Skip invalid patterns */
+	if ((uint32)m->xxo[ord] >= m->xxh->pat)
 	    continue;
-	}
 
 	if (tab_cnt[ord][break_row])
 	    break;

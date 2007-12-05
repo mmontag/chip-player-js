@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.42 2007-11-30 16:25:48 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.43 2007-12-05 11:10:55 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -101,6 +101,9 @@ static void xlat_fx(int c, struct xxm_event *e)
 	    arpeggio_val[c] = e->fxp;
 	else
 	    e->fxp = arpeggio_val[c];
+	break;
+    case FX_JUMP:
+	e->fxp = ord_xlat[e->fxp];
 	break;
     case FX_VIBRATO:		/* Old or new vibrato */
 	if (new_fx)
@@ -301,7 +304,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxc[i].vol = ifh.chvol[i];
     }
-    fread (m->xxo, 1, m->xxh->len, f);
+    fread(m->xxo, 1, m->xxh->len, f);
+    clean_s3m_seq(m->xxh, m->xxo);
 
     new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
