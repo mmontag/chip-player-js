@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.68 2007-12-06 15:57:31 cmatsuoka Exp $
+ * $Id: load.c,v 1.69 2007-12-06 20:22:56 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -215,7 +215,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	line = malloc(lsize);
 	snprintf(line, lsize, cmd, *s);
 
-	if ((p = popen (line, "rb")) == NULL) {
+#ifdef WIN32
+	if ((p = popen(line, "rb")) == NULL) {
+#else
+	if ((p = popen(line, "r")) == NULL) {
+#endif
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
 	    free(line);
