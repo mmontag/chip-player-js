@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.219 2007-12-06 00:10:36 cmatsuoka Exp $
+$Id: ChangeLog,v 1.220 2007-12-06 15:57:31 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -29,7 +29,7 @@ Stable versions
 	- fix scan of pattern break in the last pattern of the module
 	- add BPM quirk for XMs converted with MED2XM (fixes Fascinated.xm,
           reported by Lorence Lombardo)
-
+	- merge Windows patch for decompression by Mirko Buffoni
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader

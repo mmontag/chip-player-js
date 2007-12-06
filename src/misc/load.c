@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.67 2007-12-02 13:09:18 cmatsuoka Exp $
+ * $Id: load.c,v 1.68 2007-12-06 15:57:31 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -57,6 +57,14 @@ int pw_check		(unsigned char *, int);
 
 #define TMP_SIZE 512
 
+#if defined __EMX__ || defined WIN32
+#define REDIR_STDERR "2>NUL"
+#elif defined unix
+#define REDIR_STDERR "2>/dev/null"
+#else
+#define REDIR_STDERR
+#endif
+
 static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 {
     struct xmp_options *o = &ctx->o;
@@ -83,13 +91,8 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 #endif
     if (b[0] == 'P' && b[1] == 'K') {
 	packer = "Zip";
-#ifdef __EMX__
 	cmd = "unzip -pqqC \"%s\" -x readme '*.diz' '*.nfo' '*.txt' "
-		"'*.exe' '*.com' 2>NUL";
-#else
-	cmd = "unzip -pqqC \"%s\" -x readme '*.diz' '*.nfo' '*.txt' "
-		"'*.exe' '*.com' 2>/dev/null";
-#endif
+		"'*.exe' '*.com' " REDIR_STDERR;
     } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
 	packer = "LHa";
 #if defined __EMX__
@@ -138,7 +141,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
-#if !defined __MINGW32__ && !defined __AMIGA__
+#if !defined WIN32 && !defined __AMIGA__
     } else if (test_oxm(*f) == 0) {
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
@@ -212,7 +215,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	line = malloc(lsize);
 	snprintf(line, lsize, cmd, *s);
 
-	if ((p = popen (line, "r")) == NULL) {
+	if ((p = popen (line, "rb")) == NULL) {
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
 	    free(line);
