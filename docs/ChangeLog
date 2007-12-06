@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.218 2007-12-05 12:48:38 cmatsuoka Exp $
+$Id: ChangeLog,v 1.219 2007-12-06 00:10:36 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -27,8 +27,9 @@ Stable versions
 	- fix Winamp plugin to use the equalizer (reported by Mirko Buffoni)
 	- skip 0xfe and 0xff S3M/IT control patterns at load time
 	- fix scan of pattern break in the last pattern of the module
-	- add BPM quirk for XMs converted with MED2XM (fixes LaEsperanza.xm,
-	  reported by Lorence Lombardo)
+	- add BPM quirk for XMs converted with MED2XM (fixes Fascinated.xm,
+          reported by Lorence Lombardo)
+
 
 2.5.0 (20071127):
 	- remove DMP-specific effect from MOD loader
