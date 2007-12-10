@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: xmpi.h,v 1.51 2007-12-02 01:19:45 cmatsuoka Exp $
+ * $Id: xmpi.h,v 1.52 2007-12-10 01:23:47 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,8 +55,6 @@
  */
 #define WAVE_PTKLOOP	0x80	/* bit 7 = Protracker loop enable */
 #define WAVE_FIRSTRUN	0x40	/* bit 6 = Protracker loop control */
-
-#define WAVE_STEREO	0x20	/* bit 5 = Interleaved stereo wave */
 
 #include <stdio.h>
 #include <signal.h>
