@@ -1,5 +1,5 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.34 2007-12-10 01:23:47 cmatsuoka Exp $
+# $Id: Makefile,v 1.35 2007-12-15 19:24:21 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 
@@ -9,7 +9,7 @@ TOPDIR	= .
 XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)
-MODULES	= degens_ventyr.xm
+MODULES	= oldschool_combat3.mod
 DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
 DDIRS	= lib docs etc src scripts
