@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr.
  *
- * $Id: it_load.c,v 1.43 2007-12-05 11:10:55 cmatsuoka Exp $
+ * $Id: it_load.c,v 1.44 2007-12-19 19:27:20 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -681,8 +681,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	ish.vir = read8(f);
 	ish.vit = read8(f);
 
+	/* Changed to continue to allow use-brdg.it and use-funk.it to
+	 * load correctly (both IT 2.04)
+	 */
 	if (ish.magic != MAGIC_IMPS)
-	    return -2;
+	    continue;
 	
 	if (ish.flags & IT_SMP_16BIT) {
 	    m->xxs[i].len = ish.length * 2;
