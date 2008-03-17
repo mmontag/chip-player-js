@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: mod_load.c,v 1.49 2007-11-30 02:11:27 cmatsuoka Exp $
+ * $Id: mod_load.c,v 1.50 2008-03-17 15:18:24 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -322,6 +322,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     if (m->xxh->chn != 4 && mh.restart == 0x7f) {
 	tracker = "Scream Tracker 3?";
 	ptkloop = 0;
+	m->xxh->flg &= ~XXM_FLG_MODRNG;
     }
 
     if (m->xxh->chn == 4 && mh.restart == 0x7f) {
@@ -379,6 +380,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 		} else if (m->xxh->chn == 6 || m->xxh->chn == 8) {
 	    	    tracker = "FastTracker 1.01?";
 		    ptkloop = 0;
+		    m->xxh->flg &= ~XXM_FLG_MODRNG;
 		} else {
 	    	    tracker = "unknown tracker";
 		    ptkloop = 0;

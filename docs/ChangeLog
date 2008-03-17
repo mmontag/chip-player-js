@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.221 2007-12-19 19:27:20 cmatsuoka Exp $
+$Id: ChangeLog,v 1.222 2008-03-17 15:18:24 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -6,6 +6,8 @@ Stable versions
 2.5.2 ():
 	- don't abort loading if IT sample magic not found (fixes loading
 	  of use-brdg.it and use-funk.it, reported by Mirko Buffoni)
+	- multichannel mods written with Scream Tracker don't use Amiga note
+	  limits (fixes Earth Mountains, reported by Samuli Sorvakko)
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
