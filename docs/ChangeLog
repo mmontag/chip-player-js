@@ -1,4 +1,4 @@
-$Id: ChangeLog,v 1.222 2008-03-17 15:18:24 cmatsuoka Exp $
+$Id: ChangeLog,v 1.223 2008-04-03 02:04:23 cmatsuoka Exp $
 
 Stable versions
 ---------------
@@ -8,6 +8,7 @@ Stable versions
 	  of use-brdg.it and use-funk.it, reported by Mirko Buffoni)
 	- multichannel mods written with Scream Tracker don't use Amiga note
 	  limits (fixes Earth Mountains, reported by Samuli Sorvakko)
+	- fix start option in DeusEx's .umx files (by erlk ozlr)
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

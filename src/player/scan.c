@@ -81,7 +81,22 @@ int xmpi_scan_module(struct xmp_context *ctx)
     tempo = (tempo = o->tempo ? o->tempo : m->xxh->tpo) ? tempo : TIME;
     base_time = m->rrate;
 
-    ord2 = ord = -1;
+    /* By erlk ozlr <erlk.ozlr@gmail.com>
+     *
+     * xmp doesn't handle really properly the "start" option (-s for the
+     * command-line) for DeusEx's .umx files. These .umx files contain
+     * several loop "tracks" that never join together. That's how they put
+     * multiple musics on each level with a file per level. Each "track"
+     * starts at the same order in all files. The problem is that xmp starts
+     * decoding the module at order 0 and not at the order specified with
+     * the start option. If we have a module that does "0 -> 2 -> 0 -> ...",
+     * we cannot play order 1, even with the supposed right option.
+     *
+     * was: ord2 = ord = -1;
+     */
+    ord2 = -1;
+    ord = ctx->o.start - 1;
+
     gvol_slide = break_row = cnt_row = alltmp = clock_rst = clock = 0;
 
     while (42) {
