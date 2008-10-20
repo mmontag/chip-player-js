@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: formats.c,v 1.68 2007-11-20 23:38:19 cmatsuoka Exp $
+ * $Id: formats.c,v 1.69 2008-10-20 02:29:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -97,7 +97,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(far);
 	REG_LOADER(umx);
 	REG_LOADER(stim);
-	//REG_LOADER(coco);
+	REG_LOADER(coco);
 	REG_LOADER(mtp);
 	REG_LOADER(ims);
 	REG_LOADER(ssn);
