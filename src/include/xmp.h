@@ -1,11 +1,11 @@
 /* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: xmp.h,v 1.39 2007-11-30 16:25:48 cmatsuoka Exp $
+ * $Id: xmp.h,v 1.40 2009-06-13 02:07:52 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -206,12 +206,9 @@ struct xmp_options *xmp_get_options(xmp_context);
 void	xmp_init			(xmp_context, int, char **);
 int	xmp_load_module			(xmp_context, char *);
 int	xmp_test_module			(xmp_context, char *, char *);
-struct xmp_module_info*
-	xmp_get_module_info		(xmp_context, struct xmp_module_info *);
-struct xmp_fmt_info*
-	xmp_get_fmt_info		(struct xmp_fmt_info **);
-struct xmp_drv_info*
-	xmp_get_drv_info		(struct xmp_drv_info **);
+struct xmp_module_info* xmp_get_module_info	(xmp_context, struct xmp_module_info *);
+struct xmp_fmt_info* xmp_get_fmt_info	(struct xmp_fmt_info **);
+struct xmp_drv_info* xmp_get_drv_info	(struct xmp_drv_info **);
 char*	xmp_get_driver_description 	(xmp_context);
 void	xmp_set_driver_parameter 	(struct xmp_options *, char *);
 void	xmp_get_driver_cfg		(xmp_context, int *, int *, int *, int *);
@@ -231,8 +228,6 @@ int	xmp_check_parent		(int);
 int	xmp_tell_child			(void);
 int	xmp_wait_child			(void);
 int	xmp_check_child			(int);
-void*	xmp_get_shared_mem		(int);
-void	xmp_detach_shared_mem		(void *);
 int	xmp_verbosity_level		(xmp_context, int);
 int	xmp_seek_time			(xmp_context, int);
 void	xmp_init_formats		(xmp_context);

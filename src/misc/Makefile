@@ -2,7 +2,7 @@
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
-OBJS	= control.o info.o ipc.o readdata.o load.o ppdepack.o unsqsh.o \
+OBJS	= control.o info.o readdata.o load.o ppdepack.o unsqsh.o \
 	  crc32.o mmcmp.o readrle.o readhuff.o readlzw.o unarc.o arcfs.o \
 	  oxm.o mkstemp.o xfd.o
 XDEPS	=

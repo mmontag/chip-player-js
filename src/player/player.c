@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: player.c,v 1.53 2007-12-05 12:24:42 cmatsuoka Exp $
+ * $Id: player.c,v 1.54 2009-06-13 02:07:53 cmatsuoka Exp $
  */
 
 /*
@@ -858,7 +858,8 @@ next_order:
 	    if (p->pause) {
 		xmp_drv_stoptimer(ctx);
 		while (p->pause) {
-		    xmpi_select_read(1, 125);
+		    /* xmpi_select_read(1, 125); */
+		    usleep(125000);
 		    xmp_event_callback(0);
 		}
 		xmp_drv_starttimer(ctx);

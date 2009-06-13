@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: control.c,v 1.35 2007-11-20 23:38:19 cmatsuoka Exp $
+ * $Id: control.c,v 1.36 2009-06-13 02:07:53 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -98,7 +98,7 @@ void xmp_init(xmp_context ctx, int argc, char **argv)
 	if (num >= argc)
 		xmpi_read_rc((struct xmp_context *)ctx);
 
-	xmpi_tell_wait();
+	/* xmpi_tell_wait(); */
 }
 
 inline int xmp_open_audio(xmp_context ctx)
