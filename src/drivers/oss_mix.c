@@ -1,11 +1,9 @@
 /* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: oss_mix.c,v 1.12 2007-10-22 10:33:08 cmatsuoka Exp $
  */
 
 /*
@@ -36,51 +34,53 @@
 
 static int audio_fd;
 
-static void from_fmt (struct xmp_options *, int);
-static int to_fmt (struct xmp_options *);
-static void setaudio (struct xmp_options *);
-static int init (struct xmp_context *);
-static void shutdown (void);
-static void bufdump (struct xmp_context *, int);
-static void flush (void);
+static void from_fmt(struct xmp_options *, int);
+static int to_fmt(struct xmp_options *);
+static void setaudio(struct xmp_options *);
+static int init(struct xmp_context *);
+static void shutdown(void);
+static void bufdump(struct xmp_context *, int);
+static void flush(void);
 
-static void dummy () { }
+static void dummy()
+{
+}
 
 static char *help[] = {
-    "frag=num,size", "Set the number and size of fragments",
-    "dev=<device_name>", "Audio device to use (default /dev/dsp)",
-    "nosync", "Don't flush OSS buffers between modules",
+	"frag=num,size", "Set the number and size of fragments",
+	"dev=<device_name>", "Audio device to use (default /dev/dsp)",
+	"nosync", "Don't flush OSS buffers between modules",
 #ifdef HAVE_AUDIO_BUF_INFO
-    "voxware", "For VoxWare 2.90 (used in Linux 1.2.13)",
+	"voxware", "For VoxWare 2.90 (used in Linux 1.2.13)",
 #endif
-    NULL
+	NULL
 };
 
 struct xmp_drv_info drv_oss_mix = {
-    "oss_mix",		/* driver ID */
-    "OSS PCM audio",	/* driver description */
-    help,		/* help */
-    init,		/* init */
-    shutdown,		/* shutdown */
-    xmp_smix_numvoices,	/* numvoices */
-    dummy,		/* voicepos */
-    xmp_smix_echoback,	/* echoback */
-    dummy,		/* setpatch */
-    xmp_smix_setvol,	/* setvol */
-    dummy,		/* setnote */
-    xmp_smix_setpan,	/* setpan */
-    dummy,		/* setbend */
-    xmp_smix_seteffect,	/* seteffect */
-    dummy,		/* starttimer */
-    flush,		/* stctlimer */
-    dummy,		/* reset */
-    bufdump,		/* bufdump */
-    dummy,		/* bufwipe */
-    dummy,		/* clearmem */
-    dummy,		/* sync */
-    xmp_smix_writepatch,/* writepatch */
-    xmp_smix_getmsg,	/* getmsg */
-    NULL
+	"oss_mix",		/* driver ID */
+	"OSS PCM audio",	/* driver description */
+	help,			/* help */
+	init,			/* init */
+	shutdown,		/* shutdown */
+	xmp_smix_numvoices,	/* numvoices */
+	dummy,			/* voicepos */
+	xmp_smix_echoback,	/* echoback */
+	dummy,			/* setpatch */
+	xmp_smix_setvol,	/* setvol */
+	dummy,			/* setnote */
+	xmp_smix_setpan,	/* setpan */
+	dummy,			/* setbend */
+	xmp_smix_seteffect,	/* seteffect */
+	dummy,			/* starttimer */
+	flush,			/* stctlimer */
+	dummy,			/* reset */
+	bufdump,		/* bufdump */
+	dummy,			/* bufwipe */
+	dummy,			/* clearmem */
+	dummy,			/* sync */
+	xmp_smix_writepatch,	/* writepatch */
+	xmp_smix_getmsg,	/* getmsg */
+	NULL
 };
 
 static int fragnum, fragsize;
@@ -89,160 +89,152 @@ static int do_sync = 1;
 static int voxware = 0;		/* For Linux 1.2.13 */
 #endif
 
-
 static int to_fmt(struct xmp_options *o)
 {
-    int fmt;
+	int fmt;
 
-    if (!o->resol)
-	return AFMT_MU_LAW;
+	if (!o->resol)
+		return AFMT_MU_LAW;
 
-    if (o->resol == 8)
-	fmt = AFMT_U8 | AFMT_S8;
-    else {
-	fmt = o->big_endian ? AFMT_S16_BE | AFMT_U16_BE :
-			      AFMT_S16_LE | AFMT_U16_LE;
-    }
-    if (o->outfmt & XMP_FMT_UNS)
-	fmt &= AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE;
-    else
-	fmt &= AFMT_S8 | AFMT_S16_LE | AFMT_S16_BE;
+	if (o->resol == 8)
+		fmt = AFMT_U8 | AFMT_S8;
+	else {
+		fmt = o->big_endian ? AFMT_S16_BE | AFMT_U16_BE :
+		    AFMT_S16_LE | AFMT_U16_LE;
+	}
 
-    return fmt;
+	if (o->outfmt & XMP_FMT_UNS)
+		fmt &= AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE;
+	else
+		fmt &= AFMT_S8 | AFMT_S16_LE | AFMT_S16_BE;
+
+	return fmt;
 }
-
 
 static void from_fmt(struct xmp_options *o, int outfmt)
 {
-    if (outfmt & AFMT_MU_LAW) {
-	o->resol = 0;
-	return;
-    }
+	if (outfmt & AFMT_MU_LAW) {
+		o->resol = 0;
+		return;
+	}
 
-    if (outfmt & (AFMT_S16_LE | AFMT_S16_BE | AFMT_U16_LE | AFMT_U16_BE))
-	o->resol = 16;
-    else
-	o->resol = 8;
+	if (outfmt & (AFMT_S16_LE | AFMT_S16_BE | AFMT_U16_LE | AFMT_U16_BE))
+		o->resol = 16;
+	else
+		o->resol = 8;
 
-    if (outfmt & (AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE))
-	o->outfmt |= XMP_FMT_UNS;
-    else
-	o->outfmt &= ~XMP_FMT_UNS;
+	if (outfmt & (AFMT_U8 | AFMT_U16_LE | AFMT_U16_BE))
+		o->outfmt |= XMP_FMT_UNS;
+	else
+		o->outfmt &= ~XMP_FMT_UNS;
 }
-
 
 static void setaudio(struct xmp_options *o)
 {
-    static int fragset = 0;
-    int frag = 0;
-    int fmt;
+	static int fragset = 0;
+	int frag = 0;
+	int fmt;
 
-    frag = (fragnum << 16) + fragsize;
+	frag = (fragnum << 16) + fragsize;
 
-    fmt = to_fmt(o);
-    ioctl(audio_fd, SNDCTL_DSP_SETFMT, &fmt);
-    from_fmt(o, fmt);
+	fmt = to_fmt(o);
+	ioctl(audio_fd, SNDCTL_DSP_SETFMT, &fmt);
+	from_fmt(o, fmt);
 
-    fmt = !(o->outfmt & XMP_FMT_MONO);
-    ioctl (audio_fd, SNDCTL_DSP_STEREO, &fmt);
-    if (fmt)
-	o->outfmt &= ~XMP_FMT_MONO;
-    else
-	o->outfmt |= XMP_FMT_MONO;
+	fmt = !(o->outfmt & XMP_FMT_MONO);
+	ioctl(audio_fd, SNDCTL_DSP_STEREO, &fmt);
+	if (fmt)
+		o->outfmt &= ~XMP_FMT_MONO;
+	else
+		o->outfmt |= XMP_FMT_MONO;
 
-    ioctl(audio_fd, SNDCTL_DSP_SPEED, &o->freq);
+	ioctl(audio_fd, SNDCTL_DSP_SPEED, &o->freq);
 
-    /* Set the fragments only once */
-    if (!fragset) {
-	if (fragnum && fragsize)
-	    ioctl (audio_fd, SNDCTL_DSP_SETFRAGMENT, &frag);
-	fragset++;
-    }
+	/* Set the fragments only once */
+	if (!fragset) {
+		if (fragnum && fragsize)
+			ioctl(audio_fd, SNDCTL_DSP_SETFRAGMENT, &frag);
+		fragset++;
+	}
 }
-
 
 static int init(struct xmp_context *ctx)
 {
-    char *dev_audio[] = { "/dev/dsp", "/dev/sound/dsp" };
-    struct xmp_options *o = &ctx->o;
+	char *dev_audio[] = { "/dev/dsp", "/dev/sound/dsp" };
+	struct xmp_options *o = &ctx->o;
 
 #ifdef HAVE_AUDIO_BUF_INFO
-    audio_buf_info info;
-    static char buf[80];
+	audio_buf_info info;
+	static char buf[80];
 #endif
-    char *token, **parm;
-    int i = 1024;
+	char *token, **parm;
+	int i = 1024;
 
-    parm_init();
-    chkparm2("frag", "%d,%d", &fragnum, &i);
-    chkparm1("dev", dev_audio[0] = token);
+	parm_init();
+	chkparm2("frag", "%d,%d", &fragnum, &i);
+	chkparm1("dev", dev_audio[0] = token);
 #ifdef HAVE_AUDIO_BUF_INFO
-    chkparm1("voxware", voxware = 1);
+	chkparm1("voxware", voxware = 1);
 #endif
-    chkparm1("nosync", do_sync = 0);
-    parm_end();
+	chkparm1("nosync", do_sync = 0);
+	parm_end();
 
-    for (fragsize = 0; i >>= 1; fragsize++);
-    if (fragsize < 4)
-	fragsize = 4;
-    if (fragnum > 1)
-	fragnum--;
+	for (fragsize = 0; i >>= 1; fragsize++) ;
+	if (fragsize < 4)
+		fragsize = 4;
+	if (fragnum > 1)
+		fragnum--;
 
-    for (i = 0; i < sizeof (dev_audio) / sizeof (dev_audio[0]); i++)
-      if ((audio_fd = open(dev_audio[i], O_WRONLY)) >= 0)
-	break;
-    if (audio_fd < 0)
-      return XMP_ERR_DINIT;
+	for (i = 0; i < sizeof(dev_audio) / sizeof(dev_audio[0]); i++)
+		if ((audio_fd = open(dev_audio[i], O_WRONLY)) >= 0)
+			break;
+	if (audio_fd < 0)
+		return XMP_ERR_DINIT;
 
-    setaudio(o);
+	setaudio(o);
 
 #ifdef HAVE_AUDIO_BUF_INFO
-    if (!voxware) {
-	if (ioctl(audio_fd, SNDCTL_DSP_GETOSPACE, &info) == 0) {
-	    snprintf(buf, 80, "%s [%d fragments of %d bytes]",
-		drv_oss_mix.description, info.fragstotal, info.fragsize);
-	    drv_oss_mix.description = buf;
+	if (!voxware) {
+		if (ioctl(audio_fd, SNDCTL_DSP_GETOSPACE, &info) == 0) {
+			snprintf(buf, 80, "%s [%d fragments of %d bytes]",
+				 drv_oss_mix.description, info.fragstotal,
+				 info.fragsize);
+			drv_oss_mix.description = buf;
+		}
 	}
-    }
 #endif
 
-    return xmp_smix_on(ctx);
+	return xmp_smix_on(ctx);
 }
-
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
 static void bufdump(struct xmp_context *ctx, int i)
 {
-    int j;
-    void *b;
+	int j;
+	void *b;
 
-    /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
-    /* for (; i -= write (audio_fd, xmp_smix_buffer (), i); ); */
-
-    b = xmp_smix_buffer(ctx);
-    while (i) {
-	if ((j = write (audio_fd, b, i)) > 0) {
-	    i -= j;
-	    b = (char *)b + j;
-	} else
-	    break;
-    };
+	b = xmp_smix_buffer(ctx);
+	while (i) {
+		if ((j = write(audio_fd, b, i)) > 0) {
+			i -= j;
+			b = (char *)b + j;
+		} else
+			break;
+	};
 }
 
-
-static void shutdown ()
+static void shutdown()
 {
-    xmp_smix_off();
-    close(audio_fd);
+	xmp_smix_off();
+	close(audio_fd);
 }
 
-
-static void flush ()
+static void flush()
 {
-    if (!do_sync)
-	return;
+	if (!do_sync)
+		return;
 
-    ioctl(audio_fd, SNDCTL_DSP_SYNC);
+	ioctl(audio_fd, SNDCTL_DSP_SYNC);
 }

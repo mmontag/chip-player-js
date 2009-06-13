@@ -3,8 +3,6 @@
  * Based on the ALSA 0.5 driver for xmp, Copyright (C) 2000 Tijs
  * van Bakel and Rob Adamson.
  *
- * $Id: alsa.c,v 1.18 2007-11-21 20:19:00 cmatsuoka Exp $
- *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
@@ -80,7 +78,6 @@ static void echoback(int msg)
 	xmp_smix_echoback(msg);
 }
 
-
 static int init(struct xmp_context *ctx)
 {
 	snd_pcm_hw_params_t *hwparams;
@@ -133,7 +130,6 @@ static int init(struct xmp_context *ctx)
 	return xmp_smix_on(ctx);
 }
 
-
 static int prepare_driver()
 {
 	int ret;
@@ -146,7 +142,6 @@ static int prepare_driver()
 
 	return 0;
 }
-
 
 static int to_fmt(struct xmp_options *o)
 {
@@ -177,7 +172,6 @@ static int to_fmt(struct xmp_options *o)
 	return fmt;
 }
 
-
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
@@ -193,13 +187,11 @@ static void bufdump(struct xmp_context *ctx, int i)
 	}
 }
 
-
 static void dshutdown()
 {
 	xmp_smix_off();
 	snd_pcm_close(pcm_handle);
 }
-
 
 static void flush()
 {

@@ -5,8 +5,6 @@
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: amiga.c,v 1.2 2007-11-14 22:12:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H

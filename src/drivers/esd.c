@@ -1,11 +1,9 @@
 /* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: esd.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 /* Based on esdcat.c from the Enlightened Sound Daemon 0.2 for Linux
@@ -31,88 +29,85 @@
 
 static int audio_fd = -1;
 
-static int init (struct xmp_context *);
-static void bufdump (struct xmp_context *, int);
-static void myshutdown ();
+static int init(struct xmp_context *);
+static void bufdump(struct xmp_context *, int);
+static void myshutdown();
 
-static void dummy () { }
+static void dummy()
+{
+}
 
 struct xmp_drv_info drv_esd = {
-    "esd",		/* driver ID */
-    "Enlightened Sound Daemon client",	/* driver description */
-    NULL,		/* help */
-    init,		/* init */
-    myshutdown,		/* shutdown */
-    xmp_smix_numvoices,	/* numvoices */
-    dummy,		/* voicepos */
-    xmp_smix_echoback,	/* echoback */
-    dummy,		/* setpatch */
-    xmp_smix_setvol,	/* setvol */
-    dummy,		/* setnote */
-    xmp_smix_setpan,	/* setpan */
-    dummy,		/* setbend */
-    xmp_smix_seteffect,	/* seteffect */
-    dummy,		/* starttimer */
-    dummy,		/* flush */
-    dummy,		/* resetvoices */
-    bufdump,		/* bufdump */
-    dummy,		/* bufwipe */
-    dummy,		/* clearmem */
-    dummy,		/* sync */
-    xmp_smix_writepatch,/* writepatch */
-    xmp_smix_getmsg,	/* getmsg */
-    NULL
+	"esd",			/* driver ID */
+	"Enlightened Sound Daemon client",	/* driver description */
+	NULL,			/* help */
+	init,			/* init */
+	myshutdown,		/* shutdown */
+	xmp_smix_numvoices,	/* numvoices */
+	dummy,			/* voicepos */
+	xmp_smix_echoback,	/* echoback */
+	dummy,			/* setpatch */
+	xmp_smix_setvol,	/* setvol */
+	dummy,			/* setnote */
+	xmp_smix_setpan,	/* setpan */
+	dummy,			/* setbend */
+	xmp_smix_seteffect,	/* seteffect */
+	dummy,			/* starttimer */
+	dummy,			/* flush */
+	dummy,			/* resetvoices */
+	bufdump,		/* bufdump */
+	dummy,			/* bufwipe */
+	dummy,			/* clearmem */
+	dummy,			/* sync */
+	xmp_smix_writepatch,	/* writepatch */
+	xmp_smix_getmsg,	/* getmsg */
+	NULL
 };
 
 static int init(struct xmp_context *ctx)
 {
-    int format, rate = ESD_DEFAULT_RATE;
-    int bits = ESD_BITS16, channels = ESD_STEREO;
-    int mode = ESD_STREAM, func = ESD_PLAY ;
-    struct xmp_options *o = &ctx->o;
+	int format, rate = ESD_DEFAULT_RATE;
+	int bits = ESD_BITS16, channels = ESD_STEREO;
+	int mode = ESD_STREAM, func = ESD_PLAY;
+	struct xmp_options *o = &ctx->o;
 
-    if (o->resol == 8)
-	bits = ESD_BITS8;
-    if (o->outfmt & XMP_FMT_MONO)
-	channels = ESD_MONO;
-    rate = o->freq;
-    format = bits | channels | mode | func;
+	if (o->resol == 8)
+		bits = ESD_BITS8;
+	if (o->outfmt & XMP_FMT_MONO)
+		channels = ESD_MONO;
+	rate = o->freq;
+	format = bits | channels | mode | func;
 
-    printf("opening socket, format = 0x%08x at %d Hz\n", format, rate);
+	printf("opening socket, format = 0x%08x at %d Hz\n", format, rate);
 
-    /* Number of arguments fixed by Terry Glass <tglass@bigfoot.com> */
-    if ((audio_fd = esd_play_stream(format, rate, NULL, "xmp")) <= 0) {
-	fprintf (stderr, "drv_esd: unable to connect to server\n");
-	return XMP_ERR_DINIT;
-    }
+	/* Number of arguments fixed by Terry Glass <tglass@bigfoot.com> */
+	if ((audio_fd = esd_play_stream(format, rate, NULL, "xmp")) <= 0) {
+		fprintf(stderr, "drv_esd: unable to connect to server\n");
+		return XMP_ERR_DINIT;
+	}
 
-    return xmp_smix_on(ctx);
+	return xmp_smix_on(ctx);
 }
-
 
 static void bufdump(struct xmp_context *ctx, int i)
 {
-    int j;
-    void *b;
+	int j;
+	void *b;
 
-    /* Doesn't work if EINTR -- reported by Ruda Moura <ruda@helllabs.org> */
-    /* for (; i -= write (audio_fd, xmp_smix_buffer (), i); ); */
-
-    b = xmp_smix_buffer(ctx);
-    do {
-	if ((j = write(audio_fd, b, i)) > 0) {
-	    i -= j;
-	    b += j;
-	} else
-	    break;
-    } while (i);
+	b = xmp_smix_buffer(ctx);
+	do {
+		if ((j = write(audio_fd, b, i)) > 0) {
+			i -= j;
+			b += j;
+		} else
+			break;
+	} while (i);
 }
 
-
-static void myshutdown ()
+static void myshutdown()
 {
-    xmp_smix_off();
+	xmp_smix_off();
 
-    if (audio_fd)
-	close (audio_fd);
+	if (audio_fd)
+		close(audio_fd);
 }

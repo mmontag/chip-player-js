@@ -1,11 +1,9 @@
 /* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: arts.c,v 1.8 2007-10-22 10:13:49 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,81 +17,81 @@
 
 static arts_stream_t as;
 
-static int init (struct xmp_context *);
-static void bufdump (struct xmp_context *, int);
-static void myshutdown ();
+static int init(struct xmp_context *);
+static void bufdump(struct xmp_context *, int);
+static void myshutdown();
 
-static void dummy () { }
+static void dummy()
+{
+}
 
 struct xmp_drv_info drv_arts = {
-    "arts",		/* driver ID */
-    "aRts client driver",	/* driver description */
-    NULL,		/* help */
-    init,		/* init */
-    myshutdown,		/* shutdown */
-    xmp_smix_numvoices,	/* numvoices */
-    dummy,		/* voicepos */
-    xmp_smix_echoback,	/* echoback */
-    dummy,		/* setpatch */
-    xmp_smix_setvol,	/* setvol */
-    dummy,		/* setnote */
-    xmp_smix_setpan,	/* setpan */
-    dummy,		/* setbend */
-    xmp_smix_seteffect,	/* seteffect */
-    dummy,		/* starttimer */
-    dummy,		/* flush */
-    dummy,		/* resetvoices */
-    bufdump,		/* bufdump */
-    dummy,		/* bufwipe */
-    dummy,		/* clearmem */
-    dummy,		/* sync */
-    xmp_smix_writepatch,/* writepatch */
-    xmp_smix_getmsg,	/* getmsg */
-    NULL
+	"arts",			/* driver ID */
+	"aRts client driver",	/* driver description */
+	NULL,			/* help */
+	init,			/* init */
+	myshutdown,		/* shutdown */
+	xmp_smix_numvoices,	/* numvoices */
+	dummy,			/* voicepos */
+	xmp_smix_echoback,	/* echoback */
+	dummy,			/* setpatch */
+	xmp_smix_setvol,	/* setvol */
+	dummy,			/* setnote */
+	xmp_smix_setpan,	/* setpan */
+	dummy,			/* setbend */
+	xmp_smix_seteffect,	/* seteffect */
+	dummy,			/* starttimer */
+	dummy,			/* flush */
+	dummy,			/* resetvoices */
+	bufdump,		/* bufdump */
+	dummy,			/* bufwipe */
+	dummy,			/* clearmem */
+	dummy,			/* sync */
+	xmp_smix_writepatch,	/* writepatch */
+	xmp_smix_getmsg,	/* getmsg */
+	NULL
 };
 
 static int init(struct xmp_context *ctx)
 {
-    struct xmp_options *o = &ctx->o;
-    int rc, rate, bits, channels;
+	struct xmp_options *o = &ctx->o;
+	int rc, rate, bits, channels;
 
-    rate = o->freq;
-    bits = o->resol;
-    channels = 2;
+	rate = o->freq;
+	bits = o->resol;
+	channels = 2;
 
-    if ((rc = arts_init()) < 0) {
-	fprintf (stderr, "%s\n", arts_error_text (rc));
-	return XMP_ERR_DINIT;
-    }
+	if ((rc = arts_init()) < 0) {
+		fprintf(stderr, "%s\n", arts_error_text(rc));
+		return XMP_ERR_DINIT;
+	}
 
-    if (o->outfmt & XMP_FMT_MONO)
-	channels = 1;
+	if (o->outfmt & XMP_FMT_MONO)
+		channels = 1;
 
-    as = arts_play_stream(rate, bits, channels, "xmp");
+	as = arts_play_stream(rate, bits, channels, "xmp");
 
-    return xmp_smix_on(ctx);
+	return xmp_smix_on(ctx);
 }
-
 
 static void bufdump(struct xmp_context *ctx, int i)
 {
-    int j;
-    void *b;
+	int j;
+	void *b;
 
-    b = xmp_smix_buffer(ctx);
-    do {
-	if ((j = arts_write(as, b, i)) > 0) {
-	    i -= j;
-	    b += j;
-	} else
-	    break;
-    } while (i);
+	b = xmp_smix_buffer(ctx);
+	do {
+		if ((j = arts_write(as, b, i)) > 0) {
+			i -= j;
+			b += j;
+		} else
+			break;
+	} while (i);
 }
-
 
 static void myshutdown()
 {
-    xmp_smix_off();
-    arts_close_stream(as);
-    arts_free();
+	xmp_smix_off();
+	arts_close_stream(as);
+	arts_free();
 }

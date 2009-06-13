@@ -1,5 +1,4 @@
 # Extended Module Player src/drivers/Makefile
-# $Id: Makefile,v 1.13 2007-11-11 16:06:52 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
