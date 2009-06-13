@@ -1,17 +1,8 @@
-/* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- */
 
 #ifndef __XMP_CONVERT_H
 #define __XMP_CONVERT_H
 
 #include "driver.h"
-
-/* Convert functions ... */
 
 void xmp_cvt_hsc2sbi (char *);
 void xmp_cvt_diff2abs (int, int, char *);

@@ -1,10 +1,3 @@
-/* Extended Module Player
- * Copyright (C) 1997-2007 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- */
 
 #ifndef __MIXER_H
 #define __MIXER_H
@@ -25,35 +18,35 @@
 #define FILTER_PRECISION (1 << 12)
 
 struct voice_info {
-    int chn;			/* channel link */
-    int root;			/* */
-    unsigned int age;		/* */
-    int note;			/* */
-    int pan;			/* */
-    int vol;			/* */
-    int period;			/* current period */
-    int pbase;			/* base period */
-    int itpt;			/* interpolation */
-    int pos;			/* position in sample */
-    int fidx;			/* function index */
-    int fxor;			/* function xor control */
-    int ins;			/* instrument number */
-    int smp;			/* sample number */
-    int end;			/* loop end */
-    int freq;
-    int shl8;
-    int act;			/* nna info & status of voice */
-    int sleft;			/* last left sample output, in 32bit */
-    int sright;			/* last right sample output, in 32bit */
-    void *sptr;			/* sample pointer */
+	int chn;		/* channel link */
+	int root;		/* */
+	unsigned int age;	/* */
+	int note;		/* */
+	int pan;		/* */
+	int vol;		/* */
+	int period;		/* current period */
+	int pbase;		/* base period */
+	int itpt;		/* interpolation */
+	int pos;		/* position in sample */
+	int fidx;		/* function index */
+	int fxor;		/* function xor control */
+	int ins;		/* instrument number */
+	int smp;		/* sample number */
+	int end;		/* loop end */
+	int freq;
+	int shl8;
+	int act;		/* nna info & status of voice */
+	int sleft;		/* last left sample output, in 32bit */
+	int sright;		/* last right sample output, in 32bit */
+	void *sptr;		/* sample pointer */
 
-    int flt_X1;			/* filter variables */
-    int flt_X2;
-    int flt_B0;
-    int flt_B1;
-    int flt_B2;
-    int cutoff;
-    int resonance;
+	int flt_X1;		/* filter variables */
+	int flt_X2;
+	int flt_B0;
+	int flt_B1;
+	int flt_B2;
+	int cutoff;
+	int resonance;
 };
 
 int	xmp_smix_on		(struct xmp_context *);

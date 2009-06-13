@@ -4,8 +4,6 @@
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: xmp.h,v 1.40 2009-06-13 02:07:52 cmatsuoka Exp $
  */
 
 #ifndef __XMP_H
@@ -93,27 +91,26 @@
 #define XMP_ERR_VIRTC		-7
 #define XMP_ERR_ALLOC		-8
 
-
 struct xmp_options {
-    int big_endian;	/* Machine byte order */
-    char *drv_id;	/* Driver ID */
-    char *outfile;	/* Output file name when mixing to file */
-    int verbosity;	/* Verbosity level */
+	int big_endian;		/* Machine byte order */
+	char *drv_id;		/* Driver ID */
+	char *outfile;		/* Output file name when mixing to file */
+	int verbosity;		/* Verbosity level */
 #define XMP_FMT_FM	0x00000001	/* Active mode FM */
 #define XMP_FMT_UNS	0x00000002	/* Unsigned samples */
 #define XMP_FMT_MONO	0x00000004	/* Mono output */
-    int outfmt;		/* Software mixing output data format */
-    int resol;		/* Software mixing resolution output */
-    int freq;		/* Software mixing rate (Hz) */
+	int outfmt;		/* Software mixing output data format */
+	int resol;		/* Software mixing resolution output */
+	int freq;		/* Software mixing rate (Hz) */
 #define XMP_CTL_ITPT	0x00000001	/* Mixer interpolation */
 #define XMP_CTL_REVERSE	0x00000002	/* Reverse stereo */
 #define XMP_CTL_8BIT	0x00000004	/* Convert 16 bit samples to 8 bit */
 #define XMP_CTL_LOOP	0x00000010	/* Enable module looping */
 #define XMP_CTL_VIRTUAL	0x00000040	/* Enable virtual channels */
 #define XMP_CTL_DYNPAN	0x00000080	/* Enable dynamic pan */
-			/* Fetch control */
+	/* Fetch control */
 #define XMP_CTL_MEDBPM	0x00000100	/* Enable MED BPM timing */
-#define XMP_CTL_S3MLOOP 0x00000200      /* S3M loop mode */
+#define XMP_CTL_S3MLOOP 0x00000200	/* S3M loop mode */
 #define XMP_CTL_ENVFADE	0x00000400	/* Fade at end of envelope */
 #define XMP_CTL_ITENV	0x00000800	/* IT envelope mode */
 #define XMP_CTL_IGNWINS	0x00001000	/* Ignore invalid instrument */
@@ -122,7 +119,7 @@ struct xmp_options {
 #define XMP_CTL_CUTNWI	0x00008000	/* Cut only when note + invalid ins */
 #define XMP_CTL_OINSMOD	0x00010000	/* XM old instrument mode */
 #define XMP_CTL_OFSRST	0x00020000	/* Always reset sample offset */
-#define XMP_CTL_FX9BUG	0x00040000	/* Protracker effect 9 bug emulation */ 
+#define XMP_CTL_FX9BUG	0x00040000	/* Protracker effect 9 bug emulation */
 #define XMP_CTL_ST3GVOL	0x00080000	/* ST 3 weird global volume effect */
 #define XMP_CTL_FINEFX	0x00100000	/* Enable 0xf/0xe for fine effects */
 #define XMP_CTL_VSALL	0x00200000	/* Volume slides in all frames */
@@ -132,64 +129,64 @@ struct xmp_options {
 #define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
 #define XMP_CTL_PERPAT	0x04000000	/* Cancel persistent fx at pat start */
 #define XMP_CTL_VOLPDN	0x08000000	/* Set priority to volume slide down */
-    int flags;		/* xmp internal control flags, set default mode */
-    int crunch;		/* Sample crunching ratio */
-    int start;		/* Set initial order (default = 0) */
-    int mix;		/* Percentage of L/R channel separation */
-    int time;		/* Maximum playing time in seconds */
-    int tempo;		/* Set initial tempo */
-    int chorus;		/* Chorus level */
-    int reverb;		/* Reverb leval */
-    int maxvoc;		/* Channel max number of voice */
-    int skipsmp;	/* Don't load sample data */
-    char *parm[64];	/* Driver parameter data */
+	int flags;		/* internal control flags, set default mode */
+	int crunch;		/* Sample crunching ratio */
+	int start;		/* Set initial order (default = 0) */
+	int mix;		/* Percentage of L/R channel separation */
+	int time;		/* Maximum playing time in seconds */
+	int tempo;		/* Set initial tempo */
+	int chorus;		/* Chorus level */
+	int reverb;		/* Reverb leval */
+	int maxvoc;		/* Channel max number of voice */
+	int skipsmp;		/* Don't load sample data */
+	char *parm[64];		/* Driver parameter data */
 };
 
 struct xmp_fmt_info {
-    struct xmp_fmt_info *next;
-    char *id;
-    char *tracker;
+	struct xmp_fmt_info *next;
+	char *id;
+	char *tracker;
 };
 
 struct xmp_drv_info {
-    char *id;
-    char *description;
-    char **help;
-    int (*init)();
-    void (*shutdown)();
-    int (*numvoices)();
-    void (*voicepos)();
-    void (*echoback)();
-    void (*setpatch)();
-    void (*setvol)();
-    void (*setnote)();
-    void (*setpan)();
-    void (*setbend)();
-    void (*seteffect)();
-    void (*starttimer)();
-    void (*stoptimer)();
-    void (*reset)();
-    void (*bufdump)();
-    void (*bufwipe)();
-    void (*clearmem)();
-    void (*sync)();
-    int (*writepatch)();
-    int (*getmsg)();
-    struct xmp_drv_info *next;
+	char *id;
+	char *description;
+	char **help;
+	int (*init) ();
+	void (*shutdown) ();
+	int (*numvoices) ();
+	void (*voicepos) ();
+	void (*echoback) ();
+	void (*setpatch) ();
+	void (*setvol) ();
+	void (*setnote) ();
+	void (*setpan) ();
+	void (*setbend) ();
+	void (*seteffect) ();
+	void (*starttimer) ();
+	void (*stoptimer) ();
+	void (*reset) ();
+	void (*bufdump) ();
+	void (*bufwipe) ();
+	void (*clearmem) ();
+	void (*sync) ();
+	int (*writepatch) ();
+	int (*getmsg) ();
+	struct xmp_drv_info *next;
 };
 
 struct xmp_module_info {
-    char name[0x40];
-    char type[0x40];
-    int chn;
-    int pat;
-    int ins;
-    int trk;
-    int smp;
-    int len;
-    int bpm;
-    int tpo;
-    int time;
+	char name[0x40];
+	char type[0x40];
+	int chn;
+	int pat;
+	int ins;
+	int trk;
+	int smp;
+	int len;
+	int bpm;
+	int tpo;
+	int time;
 };
 
 typedef char *xmp_context;
@@ -203,35 +200,35 @@ void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
 struct xmp_options *xmp_get_options(xmp_context);
 
-void	xmp_init			(xmp_context, int, char **);
-int	xmp_load_module			(xmp_context, char *);
-int	xmp_test_module			(xmp_context, char *, char *);
-struct xmp_module_info* xmp_get_module_info	(xmp_context, struct xmp_module_info *);
-struct xmp_fmt_info* xmp_get_fmt_info	(struct xmp_fmt_info **);
-struct xmp_drv_info* xmp_get_drv_info	(struct xmp_drv_info **);
-char*	xmp_get_driver_description 	(xmp_context);
-void	xmp_set_driver_parameter 	(struct xmp_options *, char *);
-void	xmp_get_driver_cfg		(xmp_context, int *, int *, int *, int *);
-void	xmp_channel_mute		(xmp_context, int, int, int);
-void	xmp_display_license		(void);
-void	xmp_register_event_callback	(void (*)(unsigned long));
-void	xmp_register_driver_callback	(xmp_context, void (*)(void *, int));
-void	xmp_init_callback		(xmp_context, void (*)(void *, int));
-int	xmp_player_ctl			(xmp_context, int, int);
-int	xmp_open_audio			(xmp_context);
-void	xmp_close_audio			(xmp_context);
-int	xmp_play_module			(xmp_context);
-void	xmp_release_module		(xmp_context);
-int	xmp_tell_parent			(void);
-int	xmp_wait_parent			(void);
-int	xmp_check_parent		(int);
-int	xmp_tell_child			(void);
-int	xmp_wait_child			(void);
-int	xmp_check_child			(int);
-int	xmp_verbosity_level		(xmp_context, int);
-int	xmp_seek_time			(xmp_context, int);
-void	xmp_init_formats		(xmp_context);
-int	xmp_enable_format		(char *, int);
+void xmp_init(xmp_context, int, char **);
+int xmp_load_module(xmp_context, char *);
+int xmp_test_module(xmp_context, char *, char *);
+struct xmp_module_info *xmp_get_module_info(xmp_context,
+					    struct xmp_module_info *);
+struct xmp_fmt_info *xmp_get_fmt_info(struct xmp_fmt_info **);
+struct xmp_drv_info *xmp_get_drv_info(struct xmp_drv_info **);
+char *xmp_get_driver_description(xmp_context);
+void xmp_set_driver_parameter(struct xmp_options *, char *);
+void xmp_get_driver_cfg(xmp_context, int *, int *, int *, int *);
+void xmp_channel_mute(xmp_context, int, int, int);
+void xmp_display_license(void);
+void xmp_register_event_callback(void (*)(unsigned long));
+void xmp_register_driver_callback(xmp_context, void (*)(void *, int));
+void xmp_init_callback(xmp_context, void (*)(void *, int));
+int xmp_player_ctl(xmp_context, int, int);
+int xmp_open_audio(xmp_context);
+void xmp_close_audio(xmp_context);
+int xmp_play_module(xmp_context);
+void xmp_release_module(xmp_context);
+int xmp_tell_parent(void);
+int xmp_wait_parent(void);
+int xmp_check_parent(int);
+int xmp_tell_child(void);
+int xmp_wait_child(void);
+int xmp_check_child(int);
+int xmp_verbosity_level(xmp_context, int);
+int xmp_seek_time(xmp_context, int);
+void xmp_init_formats(xmp_context);
+int xmp_enable_format(char *, int);
 
-
-#endif /* __XMP_H */
+#endif	/* __XMP_H */

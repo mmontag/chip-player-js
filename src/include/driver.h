@@ -1,12 +1,3 @@
-/* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- *
- * $Id: driver.h,v 1.23 2007-12-10 01:23:47 cmatsuoka Exp $
- */
 
 #ifndef __XMP_DRIVER_H
 #define __XMP_DRIVER_H

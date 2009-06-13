@@ -1,10 +1,3 @@
-/* Extended Module Player
- * Copyright (C) 1996-1999 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- */
 
 #ifndef __PERIOD_H
 #define __PERIOD_H
