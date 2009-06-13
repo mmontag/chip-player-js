@@ -1,9 +1,11 @@
-$Id: ChangeLog,v 1.223 2008-04-03 02:04:23 cmatsuoka Exp $
+$Id: ChangeLog,v 1.224 2009-06-13 13:28:29 cmatsuoka Exp $
 
 Stable versions
 ---------------
 
-2.5.2 ():
+2.6.0 ():
+	- cleanup: remove rarely used Unix IPC code that difficults porting
+	- cleanup: remove per module configuration that nobody uses
 	- don't abort loading if IT sample magic not found (fixes loading
 	  of use-brdg.it and use-funk.it, reported by Mirko Buffoni)
 	- multichannel mods written with Scream Tracker don't use Amiga note

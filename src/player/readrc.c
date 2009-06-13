@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
  *
- * $Id: readrc.c,v 1.16 2007-12-02 01:19:45 cmatsuoka Exp $
+ * $Id: readrc.c,v 1.17 2009-06-13 13:28:29 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -153,6 +153,7 @@ int xmpi_read_rc(struct xmp_context *ctx)
 }
 
 
+#if 0
 static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsigned size)
 {
     struct xmp_player_context *p = &ctx->p;
@@ -235,4 +236,4 @@ void xmpi_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
     parse_modconf(ctx, myrc, crc, size);
 #endif
 }
-
+#endif

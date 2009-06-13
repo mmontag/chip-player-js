@@ -1,7 +1,7 @@
 /* Extended Module Player
  * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * $Id: load.c,v 1.70 2007-12-10 01:23:47 cmatsuoka Exp $
+ * $Id: load.c,v 1.71 2009-06-13 13:28:29 cmatsuoka Exp $
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -422,7 +422,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_loader_info *li;
     struct list_head *head;
     struct stat st;
-    unsigned int crc;
     struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
     struct xmp_mod_context *m = &p->m;
@@ -448,8 +447,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     split_name(s, &m->dirname, &m->basename);
 
-    crc = cksum(f);
-
     _D(_D_INFO "clear mem");
     xmp_drv_clearmem((struct xmp_context *)ctx);
 
@@ -466,9 +463,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->vol_xlat = NULL;
     /* Reset control for next module */
     m->fetch = o->flags & ~XMP_CTL_FILTER;
-
-    _D(_D_INFO "read modconf");
-    xmpi_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
 
     m->xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */
