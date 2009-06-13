@@ -3,8 +3,6 @@
  *                    Modified by Claudio Matsuoka
  *
  * Converts NoisePacked MODs back to ptk
- *
- * $Id: np1.c,v 1.4 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>

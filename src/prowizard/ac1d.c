@@ -5,8 +5,6 @@
  * Converts AC1D packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
- *
- * $Id: ac1d.c,v 1.7 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <stdlib.h>

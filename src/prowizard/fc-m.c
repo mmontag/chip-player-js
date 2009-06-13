@@ -3,8 +3,6 @@
  *                 Copyright (c) 2006-2007 Claudio Matsuoka
  *
  * Converts back to ptk FC-M packed MODs
- *
- * $Id: fc-m.c,v 1.7 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>

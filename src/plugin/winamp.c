@@ -1,7 +1,5 @@
 /*
  * XMP plugin for WinAmp
- *
- * $Id: winamp.c,v 1.36 2007-12-05 23:19:51 cmatsuoka Exp $
  */
 
 #include <windows.h>

@@ -3,8 +3,6 @@
  *                  Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks Fuchs Tracker modules
- *
- * $Id: fuchs.c,v 1.7 2007-10-09 00:03:56 cmatsuoka Exp $
  */
 
 #include <string.h>

@@ -5,10 +5,6 @@
  * XANN Packer to Protracker.
  */
 
-/*
- * $Id: xann.c,v 1.4 2007-10-14 19:08:15 cmatsuoka Exp $
- */
-
 #include <string.h>
 #include "prowiz.h"
 

@@ -4,8 +4,6 @@
  * 
  * Unic tracked MODs to Protracker
  * both with or without ID Unic files will be converted
- *
- * $Id: unic.c,v 1.15 2007-10-27 01:50:40 cmatsuoka Exp $
  */
 
 #include <string.h>

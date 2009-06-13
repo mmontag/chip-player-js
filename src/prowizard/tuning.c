@@ -1,8 +1,6 @@
 
 /* period tables for each tuning
  * part of Pro-Wizard package
- *
- * $Id: tuning.c,v 1.1 2006-02-12 22:04:43 cmatsuoka Exp $
  */
 
 const short tun_table[16][36] = {

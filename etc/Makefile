@@ -1,5 +1,4 @@
 # Extended Module Player etc/Makefile
-# $Id: Makefile,v 1.12 2009-06-13 13:28:29 cmatsuoka Exp $
 
 TOPDIR	= ..
 DFILES	= Makefile xmp.conf xmp.spec

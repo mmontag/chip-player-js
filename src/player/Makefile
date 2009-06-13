@@ -1,5 +1,4 @@
 # Extended Module Player src/player/Makefile
-# $Id: Makefile,v 1.11 2007-10-31 23:49:58 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -DSYSCONFDIR=\"$(SYSCONFDIR)\" -I../include

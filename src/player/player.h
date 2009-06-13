@@ -1,15 +1,13 @@
 /* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: player.h,v 1.15 2007-10-28 15:16:08 cmatsuoka Exp $
  */
 
-#ifndef __PLAYER_H
-#define __PLAYER_H
+#ifndef __XMP_PLAYER_H
+#define __XMP_PLAYER_H
 
 /* Flag control */
 #define SET(f)		SET_FLAG(xc->flags,f)
@@ -185,4 +183,4 @@ int get_med_arp(struct xmp_player_context *, struct xmp_channel *);
 int get_med_vibrato(struct xmp_channel *);
 void filter_setup(struct xmp_context *, struct xmp_channel *, int);
 
-#endif /* __PLAYER_H */
+#endif /* __XMP_PLAYER_H */

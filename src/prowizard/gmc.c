@@ -3,8 +3,6 @@
  *          Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks musics in the Game Music Creator format and saves in ptk.
- *
- * $Id: gmc.c,v 1.8 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>

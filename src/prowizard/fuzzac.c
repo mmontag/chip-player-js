@@ -11,8 +11,6 @@
  *      pattern order (most of the time the list is generated badly ..).
  *      Dont know why I did it for this depacker because I've but one
  *      exemple file ! :)
- *
- * $Id: fuzzac.c,v 1.3 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>

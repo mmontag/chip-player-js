@@ -2,7 +2,6 @@ dnl -----------------------------------------------------------------------
 dnl configure.in for xmp
 dnl
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.44 2009-06-13 01:57:06 cmatsuoka Exp $
 dnl -----------------------------------------------------------------------
 
 AC_INIT

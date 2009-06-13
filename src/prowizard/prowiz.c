@@ -3,8 +3,6 @@
  *
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
- *
- * $Id: prowiz.c,v 1.27 2007-11-18 12:47:19 cmatsuoka Exp $
  */
 #include <string.h>
 #include <stdlib.h>

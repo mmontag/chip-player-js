@@ -3,8 +3,6 @@
  *			Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts DI packed MODs back to PTK MODs
- *
- * $Id: di.c,v 1.6 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>

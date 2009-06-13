@@ -3,8 +3,6 @@
  *                    Modified by Claudio Matsuoka
  *
  * Converts QC MODs back to PTK MODs
- *
- * $Id: qc.c,v 1.3 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

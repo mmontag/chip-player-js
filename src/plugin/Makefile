@@ -1,5 +1,4 @@
 # Extended Module Player src/bmp/Makefile
-# $Id: Makefile,v 1.15 2007-12-03 00:04:13 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \

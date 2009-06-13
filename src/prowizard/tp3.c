@@ -3,8 +3,6 @@
  *                      Copyright (C) 2007 Claudio Matsuoka
  *
  * Converts tp3 packed MODs back to PTK MODs
- *
- * $Id: tp3.c,v 1.9 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

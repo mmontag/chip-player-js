@@ -7,8 +7,6 @@
  * would not exist !!!
  *
  * claudio's note: this code asks for heavy optimization. maybe later
- *
- * $Id: pm18a.c,v 1.4 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

@@ -2,8 +2,6 @@
  * XMP plugin for XMMS/Beep/Audacious
  * Written by Claudio Matsuoka, 2000-04-30
  * Based on J. Nick Koston's MikMod plugin for XMMS
- *
- * $Id: xmms.c,v 1.15 2007-11-25 13:58:11 cmatsuoka Exp $
  */
 
 #include <stdlib.h>

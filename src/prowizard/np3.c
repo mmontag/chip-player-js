@@ -6,8 +6,6 @@
  * Last revision : 26/11/1999 by Sylvain "Asle" Chipaux
  *                 reduced to only one FREAD.
  *                 Speed-up and Binary smaller.
- *
- * $Id: np3.c,v 1.4 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>

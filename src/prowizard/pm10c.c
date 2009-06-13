@@ -5,8 +5,6 @@
  * Converts PM10c packed MODs back to PTK MODs
  *
  * claudio's note: Now this one can be *heavily* optimized...
- *
- * $Id: pm10c.c,v 1.7 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

@@ -1,5 +1,4 @@
 # Extended Module Player doc/Makefile
-# $Id: Makefile,v 1.9 2007-09-16 13:12:41 cmatsuoka Exp $
 
 TOPDIR	= ..
 DOCS	= xmp.1

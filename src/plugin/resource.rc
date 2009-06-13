@@ -1,6 +1,3 @@
-/*
- * $Id: resource.rc,v 1.7 2007-12-15 19:24:21 cmatsuoka Exp $
- */
 
 #include <winuser.h>
 #include <commctrl.h>

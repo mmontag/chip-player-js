@@ -3,8 +3,6 @@
  *                   Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts MODs converted with Wanton packer
- *
- * $Id: wn.c,v 1.5 2007-10-03 19:44:52 cmatsuoka Exp $
  */
 
 #include <string.h>

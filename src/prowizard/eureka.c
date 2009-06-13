@@ -3,8 +3,6 @@
  *		    Modified by Claudio Matsuoka
  *
  * Converts MODs packed with Eureka packer back to ptk
- *
- * $Id: eureka.c,v 1.3 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>

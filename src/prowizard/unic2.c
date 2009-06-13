@@ -3,8 +3,6 @@
  *                    Copyright 2006-2007 Claudio Matsuoka
  *
  * Convert Unic Tracker 2 MODs to Protracker
- *
- * $Id: unic2.c,v 1.7 2007-09-30 11:22:18 cmatsuoka Exp $
  */
 
 #include <string.h>

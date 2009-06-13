@@ -3,8 +3,6 @@
  *                  Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Kris Tracker to Protracker.
- *
- * $Id: kris.c,v 1.7 2007-11-15 15:30:03 cmatsuoka Exp $
  */
 
 #include <string.h>

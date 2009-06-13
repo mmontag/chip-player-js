@@ -4,8 +4,6 @@
  *
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
- *
- * $Id: pha.c,v 1.10 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

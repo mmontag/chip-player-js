@@ -1,5 +1,4 @@
 # Extended Module Player src/prowizard/Makefile
-# $Id: Makefile,v 1.16 2007-10-14 19:08:15 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include

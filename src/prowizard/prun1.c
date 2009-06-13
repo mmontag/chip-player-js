@@ -3,8 +3,6 @@
  *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts MODs packed with Prorunner v1.0
- *
- * $Id: prun1.c,v 1.6 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

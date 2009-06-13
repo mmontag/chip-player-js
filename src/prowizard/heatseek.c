@@ -5,8 +5,6 @@
  * Converts back to ptk Heatseeker packed MODs
  *
  * Asle's note: There's a good job ! .. gosh !.
- *
- * $Id: heatseek.c,v 1.7 2007-10-08 16:51:24 cmatsuoka Exp $
  */
 
 #include <string.h>

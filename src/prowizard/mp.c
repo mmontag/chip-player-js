@@ -3,8 +3,6 @@
  *                      Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts MP packed MODs back to PTK MODs
- *
- * $Id: mp.c,v 1.10 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <stdlib.h>

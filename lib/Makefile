@@ -1,5 +1,4 @@
 # Extended Module player lib/Makefile
-# $Id: Makefile,v 1.11 2007-09-15 15:12:42 cmatsuoka Exp $
 
 TOPDIR	= ..
 DFILES	= Makefile

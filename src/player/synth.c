@@ -1,11 +1,9 @@
 /* Extended Module Player
- * Copyright (C) 1997-2001 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1997-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: synth.c,v 1.3 2007-10-21 03:56:17 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H

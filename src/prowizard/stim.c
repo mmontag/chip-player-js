@@ -7,8 +7,6 @@
  * 13 april 1999 : Update
  *   - no more open() of input file ... so no more fread() !.
  *     It speeds-up the process quite a bit :).
- *
- * $Id: stim.c,v 1.4 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

@@ -12,8 +12,6 @@
  *
  * claudio's note: I don't care if it's a mess. My attempt to write a p60a
  *	depacker produced cleaner code that didn't work.
- *
- * $Id: p60a.c,v 1.4 2007-10-08 16:51:26 cmatsuoka Exp $
  */
 
 #include <string.h>

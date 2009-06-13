@@ -11,8 +11,6 @@
  * Modified for xmp 2.0 by Claudio Matsuoka
  * (optimized, removed all math functions, added precalculated tables)
  * Mon Dec 25 10:49:19 BRST 2000
- *
- * $Id: filter.c,v 1.4 2007-10-19 12:49:01 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H

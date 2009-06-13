@@ -3,8 +3,6 @@
  *                    Copyright (C) 2007 Claudio Matsuoka
  *
  * The Player 4.0a and 4.0b to Protracker.
- *
- * $Id: p40.c,v 1.8 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>

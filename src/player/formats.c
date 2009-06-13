@@ -1,11 +1,9 @@
 /* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
- *
- * $Id: formats.c,v 1.69 2008-10-20 02:29:16 cmatsuoka Exp $
  */
 
 #ifdef HAVE_CONFIG_H

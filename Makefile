@@ -1,5 +1,4 @@
 # Extended Module Player toplevel Makefile
-# $Id: Makefile,v 1.35 2007-12-15 19:24:21 cmatsuoka Exp $
 
 # DIST		distribution package name
 # DFILES	standard distribution files 

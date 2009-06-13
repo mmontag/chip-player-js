@@ -3,8 +3,6 @@
  *                           Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
- *
- * $Id: ksm.c,v 1.10 2007-10-08 16:51:25 cmatsuoka Exp $
  */
 
 #include <string.h>
