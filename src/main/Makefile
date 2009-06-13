@@ -1,5 +1,4 @@
 # Extended Module Player src/main/Makefile
-# $Id: Makefile,v 1.19 2007-10-22 23:05:10 cmatsuoka Exp $
 
 TOPDIR	= ../..
 XCFLAGS	= -I../include
