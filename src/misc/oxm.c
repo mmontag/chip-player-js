@@ -1,8 +1,6 @@
 /* Extended Module Player OMX depacker
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: oxm.c,v 1.10 2007-12-02 01:19:45 cmatsuoka Exp $
- *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.

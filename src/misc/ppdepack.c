@@ -20,8 +20,6 @@
  * You'll probably want to use ppcrack stand-alone to crack encrypted
  * powerpack files once instead of using brute force at each replay.
  *
- * $Id: ppdepack.c,v 1.2 2007-10-08 16:38:29 cmatsuoka Exp $
- *
  * Modified for xmp by Claudio Matsuoka, 08/2007
  * - merged mld's checks from the old depack sources. Original credits:
  *   - corrupt file and data detection

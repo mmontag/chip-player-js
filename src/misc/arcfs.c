@@ -4,8 +4,6 @@
  * Based on the nomarch .arc depacker from nomarch
  * Copyright (C) 2001-2006 Russell Marks
  *
- * $Id: arcfs.c,v 1.3 2007-10-19 18:57:13 cmatsuoka Exp $
- *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.

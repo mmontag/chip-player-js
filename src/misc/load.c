@@ -1,7 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * $Id: load.c,v 1.71 2009-06-13 13:28:29 cmatsuoka Exp $
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
