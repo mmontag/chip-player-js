@@ -1,7 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2006 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * $Id: s3m.h,v 1.3 2007-08-25 10:38:11 cmatsuoka Exp $
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -45,58 +43,58 @@
 #define S3M_INST_AHIHAT	0x07
 
 struct s3m_file_header {
-    uint8 name[28];		/* Song name */
-    uint8 doseof;		/* 0x1a */
-    uint8 type;			/* File type */
-    uint8 rsvd1[2];		/* Reserved */
-    uint16 ordnum;		/* Number of orders (must be even) */
-    uint16 insnum;		/* Number of instruments */
-    uint16 patnum;		/* Number of patterns */
-    uint16 flags;		/* Flags */
-    uint16 version;		/* Tracker ID and version */
-    uint16 ffi;			/* File format information */
-    uint32 magic;		/* 'SCRM' */
-    uint8 gv;			/* Global volume */
-    uint8 is;			/* Initial speed */
-    uint8 it;			/* Initial tempo */
-    uint8 mv;			/* Master volume */
-    uint8 uc;			/* Ultra click removal */
-    uint8 dp;			/* Default pan positions if 0xfc */
-    uint8 rsvd2[8];		/* Reserved */
-    uint16 special;		/* Ptr to special custom data */
-    uint8 chset[32];		/* Channel settings */
+	uint8 name[28];		/* Song name */
+	uint8 doseof;		/* 0x1a */
+	uint8 type;		/* File type */
+	uint8 rsvd1[2];		/* Reserved */
+	uint16 ordnum;		/* Number of orders (must be even) */
+	uint16 insnum;		/* Number of instruments */
+	uint16 patnum;		/* Number of patterns */
+	uint16 flags;		/* Flags */
+	uint16 version;		/* Tracker ID and version */
+	uint16 ffi;		/* File format information */
+	uint32 magic;		/* 'SCRM' */
+	uint8 gv;		/* Global volume */
+	uint8 is;		/* Initial speed */
+	uint8 it;		/* Initial tempo */
+	uint8 mv;		/* Master volume */
+	uint8 uc;		/* Ultra click removal */
+	uint8 dp;		/* Default pan positions if 0xfc */
+	uint8 rsvd2[8];		/* Reserved */
+	uint16 special;		/* Ptr to special custom data */
+	uint8 chset[32];	/* Channel settings */
 };
 
 struct s3m_instrument_header {
-    uint8 dosname[13];		/* DOS file name */
-    uint16 memseg;		/* Pointer to sample data */
-    uint32 length;		/* Length */
-    uint32 loopbeg;		/* Loop begin */
-    uint32 loopend;		/* Loop end */
-    uint8 vol;			/* Volume */
-    uint8 rsvd1;		/* Reserved */
-    uint8 pack;			/* Packing type (not used) */
-    uint8 flags;		/* Loop/stereo/16bit samples flags */
-    uint16 c2spd;		/* C 4 speed */
-    uint16 rsvd2;		/* Reserved */
-    uint8 rsvd3[4];		/* Reserved */
-    uint16 int_gp;		/* Internal - GUS pointer */
-    uint16 int_512;		/* Internal - SB pointer */
-    uint32 int_last;		/* Internal - SB index */
-    uint8 name[28];		/* Instrument name */
-    uint32 magic;		/* 'SCRS' */
+	uint8 dosname[13];	/* DOS file name */
+	uint16 memseg;		/* Pointer to sample data */
+	uint32 length;		/* Length */
+	uint32 loopbeg;		/* Loop begin */
+	uint32 loopend;		/* Loop end */
+	uint8 vol;		/* Volume */
+	uint8 rsvd1;		/* Reserved */
+	uint8 pack;		/* Packing type (not used) */
+	uint8 flags;		/* Loop/stereo/16bit samples flags */
+	uint16 c2spd;		/* C 4 speed */
+	uint16 rsvd2;		/* Reserved */
+	uint8 rsvd3[4];		/* Reserved */
+	uint16 int_gp;		/* Internal - GUS pointer */
+	uint16 int_512;		/* Internal - SB pointer */
+	uint32 int_last;	/* Internal - SB index */
+	uint8 name[28];		/* Instrument name */
+	uint32 magic;		/* 'SCRS' */
 };
 
 struct s3m_adlib_header {
-    uint8 dosname[12];		/* DOS file name */
-    uint8 rsvd1[3];		/* 0x00 0x00 0x00 */
-    uint8 reg[12];		/* Adlib registers */
-    uint8 vol;
-    uint8 dsk;
-    uint8 rsvd2[2];
-    uint16 c2spd;		/* C 4 speed */
-    uint16 rsvd3;		/* Reserved */
-    uint8 rsvd4[12];		/* Reserved */
-    uint8 name[28];		/* Instrument name */
-    uint32 magic;		/* 'SCRI' */
+	uint8 dosname[12];	/* DOS file name */
+	uint8 rsvd1[3];		/* 0x00 0x00 0x00 */
+	uint8 reg[12];		/* Adlib registers */
+	uint8 vol;
+	uint8 dsk;
+	uint8 rsvd2[2];
+	uint16 c2spd;		/* C 4 speed */
+	uint16 rsvd3;		/* Reserved */
+	uint8 rsvd4[12];	/* Reserved */
+	uint8 name[28];		/* Instrument name */
+	uint32 magic;		/* 'SCRI' */
 };

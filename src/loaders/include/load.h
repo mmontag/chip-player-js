@@ -1,7 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * $Id: load.h,v 1.24 2007-12-05 11:10:55 cmatsuoka Exp $
+ * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -20,13 +18,13 @@
 #include "convert.h"
 #include "loader.h"
 
-char	*copy_adjust		(uint8 *, uint8 *, int);
-int	test_name		(uint8 *, int);
-void	read_title		(FILE *, char *, int);
-void	set_xxh_defaults	(struct xxm_header *);
-void	cvt_pt_event		(struct xxm_event *, uint8 *);
-void	disable_continue_fx	(struct xxm_event *);
-void	clean_s3m_seq		(struct xxm_header *, uint8 *);
+char *copy_adjust(uint8 *, uint8 *, int);
+int test_name(uint8 *, int);
+void read_title(FILE *, char *, int);
+void set_xxh_defaults(struct xxm_header *);
+void cvt_pt_event(struct xxm_event *, uint8 *);
+void disable_continue_fx(struct xxm_event *);
+void clean_s3m_seq(struct xxm_header *, uint8 *);
 
 extern uint8 ord_xlat[];
 

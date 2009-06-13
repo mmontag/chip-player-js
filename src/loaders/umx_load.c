@@ -1,8 +1,6 @@
 /* Extended Module Player UMX module loader
  * Copyright (C) 2007 Claudio Matsuoka
  *
- * $Id: umx_load.c,v 1.4 2007-11-10 14:49:05 cmatsuoka Exp $
- *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
  * for more information.
