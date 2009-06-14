@@ -141,6 +141,7 @@ static void strip_vfs(char *s)
 	int len;
 	char *c;
 
+	g_static_mutex_lock(&load_mutex);
 	_D("%s", s);
 	if (!memcmp(s, "file://", 7)) {
 		len = strlen(s);
@@ -158,6 +159,7 @@ static void strip_vfs(char *s)
 			memmove(c, c + 2, len - 1);
 		}
 	}
+	g_static_mutex_unlock(&load_mutex);
 }
 
 static void aboutbox()
@@ -478,12 +480,11 @@ static void play_file(InputPlayback *ipb)
 	struct xmp_options *opt;
 	int lret;
 	
-	_D("play");
+	_D("play: %s\n", filename);
 	opt = xmp_get_options(ctx);
 
 	/* Sorry, no VFS support */
-	if (memcmp(filename, "file://", 7) == 0)	/* Audacious 1.4.0 */
-		filename += 7;
+	strip_vfs(filename);
 
 	_D("play_file: %s", filename);
 
