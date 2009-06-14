@@ -247,7 +247,8 @@ load_patterns:
 	}
     }
 
-    PATTERN_ALLOC (i);
+    /* Alloc one extra pattern */
+    PATTERN_ALLOC(i);
 
     m->xxp[i]->rows = 64;
     m->xxt[i * m->xxh->chn] = calloc (1, sizeof (struct xxm_track) +
@@ -255,6 +256,7 @@ load_patterns:
     m->xxt[i * m->xxh->chn]->rows = 64;
     for (j = 0; j < m->xxh->chn; j++)
 	m->xxp[i]->info[j].index = i * m->xxh->chn;
+    m->xxh->pat++;
 
     if (xfh.version <= 0x0103) {
 	reportv(ctx, 0, "\n");

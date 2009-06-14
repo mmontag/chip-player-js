@@ -59,13 +59,13 @@ extern uint8 ord_xlat[];
 } while (0)
 
 #define PATTERN_INIT() do { \
-    m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk); \
-    m->xxp = calloc (sizeof (struct xxm_pattern *), m->xxh->pat + 1); \
+    m->xxt = calloc(sizeof (struct xxm_track *), m->xxh->trk); \
+    m->xxp = calloc(sizeof (struct xxm_pattern *), m->xxh->pat + 1); \
 } while (0)
 
 #define PATTERN_ALLOC(x) do { \
-    m->xxp[x] = calloc (1, sizeof (struct xxm_pattern) + \
-    sizeof (struct xxm_trackinfo) * (m->xxh->chn - 1)); \
+    m->xxp[x] = calloc(1, sizeof (struct xxm_pattern) + \
+	sizeof (struct xxm_trackinfo) * (m->xxh->chn - 1)); \
 } while (0)
 
 #define TRACK_ALLOC(i) do { \
