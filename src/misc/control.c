@@ -218,14 +218,17 @@ void xmp_release_module(xmp_context ctx)
 
 	for (i = 0; i < m->xxh->trk; i++)
 		free(m->xxt[i]);
+
 	for (i = 0; i < m->xxh->pat; i++)
 		free(m->xxp[i]);
+
 	for (i = 0; i < m->xxh->ins; i++) {
 		free(m->xxfe[i]);
 		free(m->xxpe[i]);
 		free(m->xxae[i]);
 		free(m->xxi[i]);
 	}
+
 	free(m->xxt);
 	free(m->xxp);
 	free(m->xxi);
@@ -238,10 +241,9 @@ void xmp_release_module(xmp_context ctx)
 	free(m->xxae);
 	free(m->xxh);
 
-	if (m->dirname)
-		free(m->dirname);
-	if (m->basename)
-		free(m->basename);
+	_D("free dirname/basename");
+	free(m->dirname);
+	free(m->basename);
 }
 
 void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,

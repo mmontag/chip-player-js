@@ -10,7 +10,8 @@ Stable versions
 	  limits (fixes Earth Mountains, reported by Samuli Sorvakko)
 	- fix start option in DeusEx's .umx files (by erlk ozlr)
 	- add OpenBSD sndio driver (by Thomas Pfaff)
-	- fix XM loader memory leak caused by extra pattern not deallocated
+	- fix memory leak: free extra pattern allocated by the XM loader
+	- fix memory leak: free header and filename when file is invalid
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

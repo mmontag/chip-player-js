@@ -400,6 +400,7 @@ static void split_name(char *s, char **d, char **b)
 {
 	char tmp, *div;
 
+	_D("alloc dirname/basename");
 	if ((div = strrchr(s, '/'))) {
 		tmp = *(div + 1);
 		*(div + 1) = 0;
@@ -502,8 +503,12 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     fclose(f);
 
-    if (i < 0)
+    if (i < 0) {
+	free(m->basename);
+	free(m->dirname);
+	free(m->xxh);
 	return i;
+    }
 
     if (d->description && (i = (strstr(d->description, " [AWE") != NULL))) {
 	xmp_cvt_to16bit((struct xmp_context *)ctx);
