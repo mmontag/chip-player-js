@@ -17,14 +17,9 @@
 #include <audacious/util.h>
 #include <audacious/plugin.h>
 
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
-#include <X11/Xlib.h>
-
 #include "xmp.h"
 #include "xmpi.h"
 #include "driver.h"
-#include "xpanel.h"
 
 static void	init		(void);
 static int	is_our_file	(char *);
@@ -38,7 +33,6 @@ static void	aboutbox	(void);
 static void	get_song_info	(char *, char **, int *);
 static void	configure	(void);
 static void	config_ok	(GtkWidget *, gpointer);
-static void	file_info_box	(char *);
 static void	mseek		(InputPlayback *, gulong);
 static void	cleanup		(void);
 
@@ -95,12 +89,22 @@ static GtkObject *pansep_adj;
 
 static GtkWidget *xmp_conf_window = NULL;
 static GtkWidget *about_window = NULL;
-static GtkWidget *info_window = NULL;
 
-struct ipc_info _ii, *ii = &_ii;
 int skip = 0;
-extern volatile int new_module;
 static short audio_open = FALSE;
+
+static gchar *fmts[] = {
+	"xm", "mod", "flt", "st", "m15", "it", "s3m", "stm", "stx",
+	"mtm", "ice", "imf", "ptm", "mdl", "ult", "liq", "psm", "amf",
+	"mmd0", "mmd1", "mmd2", "mmd3", "med", "med3", "med4", "dmf",
+        "rtm", "pt3", "tcb", "dt", "gtk", "dtt", "mgt", "arch", "dsym",
+	"digi", "dbm", "emod", "okt", "sfx", "far", "umx", "stim",
+	"mtp", "ims", "669", "fnk", "funk", "amd", "rad", "hsc", "alm",
+        "ac1d", "fchs", "fcm", "fuzz", "kris", "ksm", "mp", "p18a",
+	"p10c", "pru1", "pru2", "pha", "wn", "unic", "tp3", "xann",
+	"di", "eu", "p4x", "p40", "p41", "p60a", "np1", "np2", "np3",
+	"zen", "crb", "tdd", "gmc", "gdm", NULL
+};
 
 
 InputPlugin xmp_ip = {
@@ -115,11 +119,11 @@ InputPlugin xmp_ip = {
 	.seek		= seek,
 	.get_time	= get_time,
 	.get_song_info	= get_song_info,
-	.file_info_box	= file_info_box,
 	.cleanup	= cleanup,
 #if __AUDACIOUS_PLUGIN_API__ >= 2
 	.get_song_tuple	= get_song_tuple,
 	.mseek		= mseek,
+	.vfs_extensions = fmts,
 #endif
 };
 
@@ -132,14 +136,12 @@ DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
 
 #endif
  
-static void file_info_box_build (void);
-static void init_visual (GdkVisual *);
-
 static void strip_vfs(char *s)
 {
 	int len;
 	char *c;
 
+	_D("%s", s);
 	if (!memcmp(s, "file://", 7)) {
 		len = strlen(s);
 		memmove(s, s + 7, len - 6);
@@ -241,19 +243,6 @@ static void aboutbox()
 	gtk_widget_show_all(about_window);
 }
 
-static GdkImage *image;
-static GtkWidget *image1;
-static GtkWidget *frame1;
-
-static GtkWidget *text1;
-static GtkTextBuffer *text1b;
-
-static GdkColor *color_black;
-static GdkColor *color_white;
-static GdkColormap *colormap;
-static XImage *ximage;
-static Display *display;
-static Window window;
 
 xmp_context ctx;
 
@@ -282,12 +271,12 @@ static void mseek(InputPlayback *ipb, unsigned long time)
 	int i, t;
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 
-	_D("seek to %d, total %d", time, xmp_cfg.time);
+	_D("seek to %ld, total %d", time, xmp_cfg.time);
 
 	for (i = 0; i < xmp_cfg.mod_info.len; i++) {
 		t = p->m.xxo_info[i].time;
 
-		_D("%2d: %d %d", i, time, t);
+		_D("%2d: %ld %d", i, time, t);
 
 		if (t > time) {
 			int a;
@@ -302,7 +291,6 @@ static void mseek(InputPlayback *ipb, unsigned long time)
 
 static void mod_pause(InputPlayback *ipb, short p)
 {
-	ii->pause = p;
 	xmp_ip.output->pause(p);
 }
 
@@ -352,6 +340,7 @@ static void init(void)
 {
 	ConfigDb *cfg;
 
+	_D("Plugin init");
 	ctx = xmp_create_context();
 
 	xmp_cfg.mixing_freq = 0;
@@ -364,9 +353,9 @@ static void init(void)
 	xmp_cfg.filter = TRUE;
 	xmp_cfg.pan_amplitude = 80;
 
-#define CFGREADINT(x) bmp_cfg_db_get_int (cfg, "XMP", #x, &xmp_cfg.x)
+#define CFGREADINT(x) aud_cfg_db_get_int (cfg, "XMP", #x, &xmp_cfg.x)
 
-	if ((cfg = bmp_cfg_db_open())) {
+	if ((cfg = aud_cfg_db_open())) {
 		CFGREADINT(mixing_freq);
 		CFGREADINT(force8bit);
 		CFGREADINT(convert8bit);
@@ -377,16 +366,10 @@ static void init(void)
 		CFGREADINT(filter);
 		CFGREADINT(pan_amplitude);
 
-		bmp_cfg_db_close(cfg);
+		aud_cfg_db_close(cfg);
 	}
 
-	file_info_box_build();
-
 	xmp_init_callback(ctx, driver_callback);
-	xmp_register_event_callback(x11_event_callback);
-
-	memset(ii, 0, sizeof (ii));
-	ii->wresult = 42;
 }
 
 
@@ -398,6 +381,7 @@ static void cleanup()
 
 static int is_our_file(char *filename)
 {
+	_D("filename = %s", filename);
 	strip_vfs(filename);		/* Sorry, no VFS support */
 
 	if (xmp_test_module(ctx, filename, NULL) == 0)
@@ -414,6 +398,7 @@ static void get_song_info(char *filename, char **title, int *length)
 	struct xmp_module_info mi;
 	struct xmp_options *opt;
 
+	_D("filename = %s", filename);
 	strip_vfs(filename);		/* Sorry, no VFS support */
 
 	/* Create new context to load a file and get the length */
@@ -450,6 +435,7 @@ static Tuple *get_song_tuple(char *filename)
 	struct xmp_module_info mi;
 	struct xmp_options *opt;
 
+	_D("filename = %s", filename);
 	strip_vfs(filename);		/* Sorry, no VFS support */
 
 	tuple = aud_tuple_new_from_filename(filename);
@@ -484,32 +470,6 @@ static Tuple *get_song_tuple(char *filename)
 #endif
 
 
-static int fd_old2, fd_info[2];
-static GThread *catch_thread;
-
-static gpointer catch_info(gpointer arg)
-{
-	FILE *f;
-	char buf[100];
-	GtkTextIter end;
-
-	f = fdopen(fd_info[0], "r");
-
-	while (!feof (f)) {
-		fgets (buf, 100, f);
-		gtk_text_buffer_get_end_iter(text1b, &end);
-		gtk_text_buffer_insert(text1b, &end, buf, -1);
-
-		if (!strncmp(buf, "Estimated time :", 16))
-			break;
-	}
-
-	fclose (f);
-
-	return NULL;
-}
-
-
 static void play_file(InputPlayback *ipb)
 {
 	char *filename = ipb->filename;
@@ -517,8 +477,8 @@ static void play_file(InputPlayback *ipb)
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
-	GtkTextIter start, end;
 	
+	_D("play");
 	opt = xmp_get_options(ctx);
 
 	/* Sorry, no VFS support */
@@ -535,15 +495,11 @@ static void play_file(InputPlayback *ipb)
 	}
 	fclose(f);
 
-	gtk_text_buffer_get_start_iter(text1b, &start);
-	gtk_text_buffer_get_end_iter(text1b, &end);
-	gtk_text_buffer_delete(text1b, &start, &end);
-
 	xmp_plugin_audio_error = FALSE;
 	ipb->playing = 1;
 
 	opt->resol = 8;
-	opt->verbosity = 3;
+	opt->verbosity = 0;
 	opt->drv_id = "callback";
 
 	switch (xmp_cfg.mixing_freq) {
@@ -597,13 +553,8 @@ static void play_file(InputPlayback *ipb)
 
 	xmp_open_audio(ctx);
 
-	pipe(fd_info);
-	fd_old2 = dup (fileno (stderr));
-	dup2(fd_info[1], fileno (stderr));
-	fflush(stderr);
-	catch_thread = g_thread_create(catch_info, NULL, TRUE, NULL);
-
 	_D("*** loading: %s", filename);
+
 	g_static_mutex_lock(&load_mutex);
 	lret =  xmp_load_module(ctx, filename);
 	g_static_mutex_unlock(&load_mutex);
@@ -614,30 +565,12 @@ static void play_file(InputPlayback *ipb)
 		return;
 	}
 
-	_D("joining catch thread");
-	g_thread_join(catch_thread);
-	_D("joined");
-	dup2(fileno(stderr), fd_old2);
-
-	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1)->vadjustment, 0.0);
-
-	close(fd_info[0]);
-	close(fd_info[1]);
-
-	_D ("before panel update");
-
-	xmp_cfg.time = lret; //xmpi_scan_module((struct xmp_context *)ctx);
-	xmp_get_module_info(ctx, &ii->mi);
-	strcpy(ii->filename, "");
-
-	new_module = 1;
-
-	_D("after panel update");
-
-	memcpy(&xmp_cfg.mod_info, &ii->mi, sizeof (ii->mi));
+	xmp_cfg.time = lret;
+	xmp_get_module_info(ctx, &xmp_cfg.mod_info);
 
 #if __AUDACIOUS_PLUGIN_API__ >= 2
-	ipb->set_params(ipb, ii->mi.name, lret, 0, opt->freq, channelcnt);
+	ipb->set_params(ipb, xmp_cfg.mod_info.name, lret, 0,
+					opt->freq, channelcnt);
 	ipb->playing = 1;
 	ipb->eof = 0;
 	ipb->error = FALSE;
@@ -646,7 +579,7 @@ static void play_file(InputPlayback *ipb)
 	ipb->set_pb_ready(ipb);
 	play_loop(ipb);
 #else
-	xmp_ip.set_info(ii->mi.name, lret, 0, opt->freq, channelcnt);
+	xmp_ip.set_info(xmp_cfg.mod_info.name, lret, 0, opt->freq, channelcnt);
 	decode_thread = g_thread_create(play_loop, ipb, TRUE, NULL);
 #endif
 }
@@ -924,9 +857,9 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	xmp_cfg.pan_amplitude = (guchar)GTK_ADJUSTMENT(pansep_adj)->value;
         opt->mix = xmp_cfg.pan_amplitude;
 
-	cfg = bmp_cfg_db_open();
+	cfg = aud_cfg_db_open();
 
-#define CFGWRITEINT(x) bmp_cfg_db_set_int (cfg, "XMP", #x, xmp_cfg.x)
+#define CFGWRITEINT(x) aud_cfg_db_set_int (cfg, "XMP", #x, xmp_cfg.x)
 
 	CFGWRITEINT (mixing_freq);
 	CFGWRITEINT (force8bit);
@@ -938,242 +871,8 @@ static void config_ok(GtkWidget *widget, gpointer data)
 	CFGWRITEINT (filter);
 	CFGWRITEINT (pan_amplitude);
 
-	bmp_cfg_db_close(cfg);
+	aud_cfg_db_close(cfg);
 
 	gtk_widget_destroy(xmp_conf_window);
 }
 
-static void button_mute(GtkWidget *widget, GdkEvent *event)
-{
-	int i;
-
-	if (!play_data.ipb->playing)
-		return;
-
-	xmp_channel_mute(ctx, 0, 64, 1);
-	for (i = 0; i < ii->mi.chn; i++)
-		ii->mute[i] = 1;
-}
-
-static void button_unmute(GtkWidget *widget, GdkEvent *event)
-{
-	int i;
-
-	if (!play_data.ipb->playing)
-		return;
-
-	xmp_channel_mute(ctx, 0, 64, 0);
-	for (i = 0; i < ii->mi.chn; i++)
-		ii->mute[i] = 0;
-}
-
-static int image1_clicked_x = 0;
-static int image1_clicked_y = 0;
-static int image1_clicked_ok = 0;
-
-static void image1_clicked(GtkWidget *widget, GdkEventButton *event)
-{
-	if (!play_data.ipb->playing || image1_clicked_ok)
-		return;
-
-	image1_clicked_x = event->x - (frame1->allocation.width - 300) / 2;
-	image1_clicked_y = event->y;
-	image1_clicked_ok = 1;
-}
-
-static void file_info_box_build()
-{
-	GtkWidget *hbox1, *vbox1;
-	GtkWidget *info_exit, *info_mute;
-	GtkWidget *info_unmute, *info_about;
-	GtkWidget *scrw1;
-	GtkWidget *expander;
-	GdkVisual *visual;
-	PangoFontDescription *desc;
-
-	info_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_object_set_data(GTK_OBJECT(info_window),
-					"info_window", info_window);
-	gtk_window_set_title(GTK_WINDOW(info_window),"Extended Module Player");
-	gtk_window_set_policy(GTK_WINDOW(info_window), FALSE, FALSE, TRUE);
-	gtk_signal_connect(GTK_OBJECT(info_window), "destroy",
-		GTK_SIGNAL_FUNC(gtk_widget_destroyed), &info_window);
-	gtk_container_border_width(GTK_CONTAINER(info_window), 0);
-	gtk_widget_realize (info_window);
-
-	vbox1 = gtk_vbox_new(FALSE, 0);
-	gtk_container_add(GTK_CONTAINER(info_window), vbox1);
-	gtk_object_set_data(GTK_OBJECT(vbox1), "vbox1", vbox1);
-	gtk_container_border_width(GTK_CONTAINER(vbox1), 4);
-
-	visual = gdk_visual_get_system();
-
-	/*
-	 * Image
-	 */
-
-	frame1 = gtk_event_box_new();
-	gtk_object_set_data(GTK_OBJECT(frame1), "frame1", frame1);
-	gtk_widget_set_size_request(frame1, 300, 128);
-	gtk_box_pack_start(GTK_BOX(vbox1), frame1, FALSE, FALSE, 0);
-
-	image = gdk_image_new(GDK_IMAGE_FASTEST, visual, 300, 128);
-	ximage = GDK_IMAGE_XIMAGE(image);
-	image1 = gtk_image_new_from_image(image, NULL);
-
-	gtk_object_set_data(GTK_OBJECT(image1), "image1", image1);
-	gtk_container_add (GTK_CONTAINER(frame1), image1);
-	gtk_widget_set_events (frame1, GDK_BUTTON_PRESS_MASK | GDK_KEY_PRESS_MASK);
-	gtk_signal_connect (GTK_OBJECT (frame1), "button_press_event",
-			(GtkSignalFunc)image1_clicked, NULL);
-
-	/*
-	 * Buttons
-	 */
-
-	hbox1 = gtk_hbox_new (TRUE, 0);
-	gtk_object_set_data(GTK_OBJECT(hbox1), "hbox1", hbox1);
-	gtk_box_pack_start(GTK_BOX(vbox1), hbox1, TRUE, FALSE, 0);
-
-	info_mute = gtk_button_new_with_label("Mute");
-	gtk_signal_connect (GTK_OBJECT (info_mute), "clicked",
-                            (GtkSignalFunc) button_mute, NULL);
-	gtk_object_set_data(GTK_OBJECT(info_mute), "info_mute", info_mute);
-	gtk_box_pack_start(GTK_BOX(hbox1), info_mute, TRUE, TRUE, 0);
-
-	info_unmute = gtk_button_new_with_label("Unmute");
-	gtk_signal_connect (GTK_OBJECT (info_unmute), "clicked",
-                            (GtkSignalFunc) button_unmute, NULL);
-	gtk_object_set_data(GTK_OBJECT(info_unmute), "info_unmute", info_unmute);
-	gtk_box_pack_start(GTK_BOX(hbox1), info_unmute, TRUE, TRUE, 0);
-
-	info_about = gtk_button_new_with_label("About");
-	gtk_signal_connect_object(GTK_OBJECT(info_about), "clicked",
-			(GtkSignalFunc) aboutbox, NULL);
-	gtk_object_set_data(GTK_OBJECT(info_about), "info_about", info_about);
-	gtk_box_pack_start(GTK_BOX(hbox1), info_about, TRUE, TRUE, 0);
-
-	info_exit = gtk_button_new_with_label("Close");
-	gtk_signal_connect_object(GTK_OBJECT(info_exit), "clicked",
-		GTK_SIGNAL_FUNC(gtk_widget_hide), GTK_OBJECT(info_window));
-	gtk_object_set_data(GTK_OBJECT(info_exit), "info_exit", info_exit);
-	gtk_box_pack_start(GTK_BOX(hbox1), info_exit, TRUE, TRUE, 0);
-
-	/*
-	 * Info area
-	 */
-
-	expander = gtk_expander_new("Module information");
-
-	scrw1 = gtk_scrolled_window_new(NULL, NULL);
-	gtk_object_set_data(GTK_OBJECT(scrw1), "scrw1", scrw1);
-	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrw1),
-				GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
-
-	gtk_container_add(GTK_CONTAINER(expander), scrw1);
-	gtk_box_pack_start(GTK_BOX(vbox1), expander, TRUE, TRUE, 0);
-
-	gtk_widget_set_size_request(scrw1, 290, 200);
-	text1b = gtk_text_buffer_new(NULL);
-	text1 = gtk_text_view_new_with_buffer(text1b);
-	desc = pango_font_description_new();
-	pango_font_description_set_family(desc, "Monospace");
-	gtk_widget_modify_font(text1, desc);
-	pango_font_description_free(desc);
-	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text1), GTK_WRAP_NONE);
-
-	gtk_object_set_data(GTK_OBJECT(text1), "text1", text1);
-	gtk_container_add(GTK_CONTAINER(scrw1), text1);
-	gtk_widget_realize(text1);
-
-	gtk_widget_realize(image1);
-
-	display = GDK_WINDOW_XDISPLAY(info_window->window);
-	window = GDK_WINDOW_XWINDOW(info_window->window);
-    	colormap = gdk_colormap_get_system();
-
-	gdk_color_black(colormap, color_black);
-	gdk_color_white(colormap, color_white);
-
-	init_visual(visual);
-
-	set_palette();
-	clear_screen();
-
-	ii->wresult = 0;
-
-	panel_setup();
-	gtk_timeout_add(50, (GtkFunction)panel_loop, NULL);
-}
-
-
-static void file_info_box(char *filename)
-{
-	_D ("Info box");
-
-	gtk_widget_show_all(info_window);
-	gdk_window_raise(info_window->window);
-}
-
-
-/*----------------------------------------------------------------------*/
-
-#define alloc_color(d,c,x) \
-gdk_colormap_alloc_color(colormap, (GdkColor *)x, TRUE, TRUE)
-
-#include "xstuff.c"
-
-
-static void init_visual(GdkVisual *visual)
-{
-    if (visual->type == GDK_VISUAL_PSEUDO_COLOR && visual->depth == 8) {
-	draw_rectangle = draw_rectangle_indexed;
-	erase_rectangle = erase_rectangle_indexed;
-	indexed = 1;
-    } else if (visual->type == GDK_VISUAL_TRUE_COLOR && visual->depth == 24) {
-	draw_rectangle = draw_rectangle_rgb24;
-	erase_rectangle = erase_rectangle_rgb24;
-	indexed = 0;
-    } else if (visual->type == GDK_VISUAL_TRUE_COLOR && visual->depth == 16) {
-	mask_r = 0xf00000;
-	mask_g = 0x00f800;
-	mask_b = 0x0000f0;
-	draw_rectangle = draw_rectangle_rgb16;
-	erase_rectangle = erase_rectangle_rgb16;
-	indexed = 0;
-    } else if (visual->type == GDK_VISUAL_TRUE_COLOR && visual->depth == 15) {
-	mask_r = 0xf00000;
-	mask_g = 0x00f000;
-	mask_b = 0x0000f0;
-	draw_rectangle = draw_rectangle_rgb15;
-	erase_rectangle = erase_rectangle_rgb15;
-	indexed = 0;
-    } else {
-	fprintf (stderr, "Visual class and depth not supported, aborting\n");
-	exit (-1);
-    }
-}
-
-void update_display()
-{
-	GdkRectangle area;
-
-	area.x = (frame1->allocation.width - 300) / 2;
-	area.y = 0;
-	area.width = 300;
-	area.height = 128;
-
-	gdk_window_invalidate_rect(image1->window, &area, FALSE);
-}
-
-int process_events(int *x, int *y)
-{
-	if (image1_clicked_ok) {
-		*x = image1_clicked_x;
-		*y = image1_clicked_y;
-		image1_clicked_ok = 0;
-		return -1;
-	}
-
-	return 0;
-}
