@@ -6,7 +6,7 @@ OBJS	= file.o wav.o callback.o
 DRV	= file.c oss_mix.c hpux.c bsd.c solaris.c oss_seq.c alsa.c alsa05.c \
 	  esd.c sgi.c os2_dart.c netbsd.c openbsd.c aix.c nas.c arts.c qnx.c \
 	  win32.c callback.c wav.c osx.c beos.c alsa_seq.c pulseaudio.c \
-	  amiga.c
+	  amiga.c sndio.c
 DFILES	= Makefile $(DRV) debug.c
 DDIRS	=
 LIB	= $(TOPDIR)/lib/libxmp.a

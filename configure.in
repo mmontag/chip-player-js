@@ -498,8 +498,11 @@ dnl	Test for OpenBSD
 dnl	fixed by Chris Cox <cox.christopher@gmail.com>
 dnl
 openbsd*)
-    AC_CHECK_HEADERS(sys/audio.h sys/audioio.h)
-    if test "${ac_cv_header_sys_audio_h}" = "yes"; then
+    AC_CHECK_HEADERS(sndio.h sys/audio.h sys/audioio.h)
+    if test "${ac_cv_header_sndio_h}" = "yes"; then
+	DRIVERS="${DRIVERS} sndio.o"
+	AC_DEFINE(DRIVER_SNDIO)
+    else if test "${ac_cv_header_sys_audio_h}" = "yes"; then
 	DRIVERS="${DRIVERS} openbsd.o"
 	AC_DEFINE(DRIVER_OPENBSD)
     elif test "${ac_cv_header_sys_audioio_h}" = "yes"; then

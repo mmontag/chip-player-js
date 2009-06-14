@@ -99,6 +99,9 @@ The Authors
 * Pavel Pavlov <Simon.Says@iname.com>
 - esd driver fixes
 
+* Thomas Pfaff <tpfaff@tp76.info>
+- OpenBSD sndio driver
+
 * Geoff Reedy <vader21@imsa.edu>
 - xxmp window title patch
 
