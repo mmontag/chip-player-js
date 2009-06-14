@@ -42,6 +42,7 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	int i, j, k;
+	int n;
 	uint8 buf[100];
 	uint32 flags;
 	uint32 pofs[256];
@@ -73,10 +74,18 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	for (i = 0; i < m->xxh->pat; i++)
-		pofs[i] = read32l(f);
+	for (i = 0; i < m->xxh->pat; i++) {
+		int x = read32l(f);
+		if (i < 256)
+			pofs[i] = x;
+	}
 
-	fread(plen, 1, ((m->xxh->pat + 3) >> 2) << 2, f);
+	n = (m->xxh->pat + 3) & ~3L;
+	for (i = 0; i < n; i++) {
+		int x = read8(f);
+		if (i < 256)
+			plen[i] = x;
+	}
 
 	INSTRUMENT_INIT();
 

@@ -47,7 +47,8 @@ int test_oxm(FILE *f)
 {
 	int i, j;
 	int hlen, npat, len, plen;
-	int nins, nsmp, ilen;
+	int nins, nsmp;
+	uint32 ilen;
 	int slen[256];
 	uint8 buf[1024];
 
@@ -207,7 +208,8 @@ int decrunch_oxm(FILE *f, FILE *fo)
 {
 	int i, j, pos;
 	int hlen, npat, len, plen;
-	int nins, nsmp, ilen;
+	int nins, nsmp;
+	uint32 ilen;
 	uint8 buf[1024];
 	struct xm_instrument xi[256];
 	char *pcm[256];
