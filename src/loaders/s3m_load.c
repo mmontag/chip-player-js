@@ -512,6 +512,9 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     }
     reportv(ctx, 0, "\n");
 
+    free(pp_pat);
+    free(pp_ins);
+
     m->fetch |= XMP_MODE_ST3;
 
     return 0;
