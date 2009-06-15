@@ -45,7 +45,7 @@ extern struct xmp_drv_info drv_sgi;
 extern struct xmp_drv_info drv_aix;
 extern struct xmp_drv_info drv_oss_seq;
 extern struct xmp_drv_info drv_oss;
-extern struct xmp_drv_info drv_alsa_mix;
+extern struct xmp_drv_info drv_alsa;
 extern struct xmp_drv_info drv_alsa05;
 extern struct xmp_drv_info drv_net;
 extern struct xmp_drv_info drv_esd;

@@ -44,7 +44,7 @@ static char *help[] = {
 	NULL
 };
 
-struct xmp_drv_info drv_alsa_mix = {
+struct xmp_drv_info drv_alsa = {
 	"alsa",			/* driver ID */
 	"ALSA PCM audio",	/* driver description */
 	help,			/* help */
