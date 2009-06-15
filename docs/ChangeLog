@@ -11,6 +11,7 @@ Stable versions
 	- fix start option in DeusEx's .umx files (by erlk ozlr)
 	- add OpenBSD sndio driver (by Thomas Pfaff)
 	- fix memory leak: free extra pattern allocated by the XM loader
+	- fix memory leak: free temporary pointer arrays in IT loader
 	- fix memory leak: free header and filename when file is invalid
 	- fix buffer overflow in OXM and DTT loaders (reported by Luigi
 	  Auriemma)

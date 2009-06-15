@@ -276,8 +276,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->pat = ifh.patnum;
     if (m->xxh->ins)		/* Sample mode has no instruments */
 	pp_ins = calloc (4, m->xxh->ins);
-    pp_smp = calloc (4, m->xxh->smp);
-    pp_pat = calloc (4, m->xxh->pat);
+    pp_smp = calloc(4, m->xxh->smp);
+    pp_pat = calloc(4, m->xxh->pat);
     m->xxh->tpo = ifh.is;
     m->xxh->bpm = ifh.it;
     m->xxh->flg = ifh.flags & IT_LINEAR_FREQ ? XXM_FLG_LINEAR : 0;
@@ -914,6 +914,10 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		max_ch = c;
 	}
     }
+
+    free(pp_pat);
+    free(pp_smp);
+    free(pp_ins);
 
     m->xxh->chn = max_ch + 1;
     m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
