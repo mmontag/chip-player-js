@@ -56,8 +56,8 @@ static char *help[] = {
 	NULL
 };
 
-struct xmp_drv_info drv_oss_mix = {
-	"oss_mix",		/* driver ID */
+struct xmp_drv_info drv_oss = {
+	"oss",			/* driver ID */
 	"OSS PCM audio",	/* driver description */
 	help,			/* help */
 	init,			/* init */
@@ -197,9 +197,9 @@ static int init(struct xmp_context *ctx)
 	if (!voxware) {
 		if (ioctl(audio_fd, SNDCTL_DSP_GETOSPACE, &info) == 0) {
 			snprintf(buf, 80, "%s [%d fragments of %d bytes]",
-				 drv_oss_mix.description, info.fragstotal,
+				 drv_oss.description, info.fragstotal,
 				 info.fragsize);
-			drv_oss_mix.description = buf;
+			drv_oss.description = buf;
 		}
 	}
 #endif

@@ -26,7 +26,7 @@
 #define XMP_MAXCH	64		/* max virtual channels */
 #define XMP_MAXVOC	64		/* max physical voices */
 
-#if defined (DRIVER_OSS_MIX) || defined (DRIVER_OSS_SEQ)
+#if defined (DRIVER_OSS) || defined (DRIVER_OSS_SEQ)
 #  if defined (HAVE_SYS_SOUNDCARD_H)
 #    include <sys/soundcard.h>
 #  elif defined (HAVE_MACHINE_SOUNDCARD_H)

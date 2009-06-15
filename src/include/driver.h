@@ -6,7 +6,7 @@
 
 #define XMP_PATCH_FM	-1
 
-#if !defined(DRIVER_OSS_SEQ) && !defined(DRIVER_OSS_MIX)
+#if !defined(DRIVER_OSS_SEQ) && !defined(DRIVER_OSS)
 
 #define GUS_PATCH 1
 

@@ -16,6 +16,7 @@ Stable versions
 	- fix memory leak: free header and filename when file is invalid
 	- fix buffer overflow in OXM and DTT loaders (reported by Luigi
 	  Auriemma)
+	- rename oss_mix driver to oss and alsa_mix to alsa
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

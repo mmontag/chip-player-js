@@ -44,7 +44,7 @@ extern struct xmp_drv_info drv_openbsd;
 extern struct xmp_drv_info drv_sgi;
 extern struct xmp_drv_info drv_aix;
 extern struct xmp_drv_info drv_oss_seq;
-extern struct xmp_drv_info drv_oss_mix;
+extern struct xmp_drv_info drv_oss;
 extern struct xmp_drv_info drv_alsa_mix;
 extern struct xmp_drv_info drv_alsa05;
 extern struct xmp_drv_info drv_net;
@@ -99,11 +99,11 @@ void xmp_init_drivers()
 #ifdef DRIVER_OSS_SEQ
     xmp_drv_register(&drv_oss_seq);
 #endif
-#ifdef DRIVER_OSS_MIX
-    xmp_drv_register(&drv_oss_mix);
+#ifdef DRIVER_OSS
+    xmp_drv_register(&drv_oss);
 #endif
-#ifdef DRIVER_ALSA_MIX
-    xmp_drv_register(&drv_alsa_mix);
+#ifdef DRIVER_ALSA
+    xmp_drv_register(&drv_alsa);
 #endif
 #ifdef DRIVER_ALSA05
     xmp_drv_register(&drv_alsa05);
