@@ -417,8 +417,16 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 					e[2] = read8(f);
 
 					event = &EVENT(i, k, j);
-					if ((event->note = e[0] & 0x3f))
+					event->note = e[0] & 0x3f;
+					if (event->note) {
+						/* Restrict to 3 octaves,
+						 * med.egyptian has C4 that
+						 * plays like C3
+						 */
+						while (event->note > 35)
+							event->note -= 12;
 						event->note += 36;
+					}
 					event->ins =
 					    (e[1] >> 4) | ((e[0] & 0x80) >> 3) |
 					    ((e[0] & 0x40) >> 1);
