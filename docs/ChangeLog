@@ -18,6 +18,7 @@ Stable versions
 	  Auriemma)
 	- rename oss_mix driver to oss and alsa_mix to alsa
 	- restrict MMD0 note range to 3 octaves (reported by Daniel Åkerud)
+	- assume wav driver if output filename ends in .wav
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

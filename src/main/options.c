@@ -315,6 +315,10 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case 'o':
 	    opt->outfile = optarg;
+	    if (strlen(optarg) >= 4 &&
+			!strcasecmp(optarg + strlen(optarg) - 4, ".wav")) {
+		opt->drv_id = "wav";
+	    }
 	    break;
 	case 'P':
 	    opt->mix = strtoul(optarg, NULL, 0);
