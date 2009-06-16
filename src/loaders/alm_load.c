@@ -22,7 +22,9 @@
 #include "load.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 
 static int alm_test (FILE *, char *, const int);

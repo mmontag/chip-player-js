@@ -29,8 +29,12 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#ifdef HAVE_SIGNAL_H
 #include <signal.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #ifdef __AROS__
 #define __AMIGA__
@@ -57,6 +61,7 @@
 #endif
 
 #ifdef WIN32
+#include <windows.h>
 #include "conio.h"
 #endif
 
@@ -118,7 +123,7 @@ static int set_tty ()
 }
 
 
-static int reset_tty ()
+static int reset_tty()
 {
 #ifdef HAVE_TERMIOS_H
     if (background)
@@ -132,6 +137,9 @@ static int reset_tty ()
 
     return 0;
 }
+
+
+#ifdef HAVE_SIGNAL_H
 
 #ifdef SIGTSTP
 static void sigtstp_handler()
@@ -178,7 +186,7 @@ static void sigusr_handler (int i)
 }
 
 
-static void cleanup (int s)
+static void cleanup(int s)
 {
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
@@ -188,7 +196,7 @@ static void cleanup (int s)
     signal(SIGFPE, SIG_DFL);
     signal(SIGSEGV, SIG_DFL);
 
-    fprintf (stderr, "\n*** Interrupted: signal %d caught\n", s);
+    fprintf(stderr, "\n*** Interrupted: signal %d caught\n", s);
     xmp_stop_module(ctx);
     xmp_close_audio(ctx);
 
@@ -196,6 +204,8 @@ static void cleanup (int s)
 
     exit (-2);
 }
+
+#endif /* HAVE_SIGNAL_H */
 
 
 static void process_echoback(unsigned long i)
@@ -474,6 +484,7 @@ int main (int argc, char **argv)
    }
 #endif
 
+#ifdef HAVE_SIGNAL_H
     signal(SIGTERM, cleanup);
     signal(SIGINT, cleanup);
     signal(SIGFPE, cleanup);
@@ -490,6 +501,7 @@ int main (int argc, char **argv)
 #ifdef SIGUSR1
     signal(SIGUSR1, sigusr_handler);
     signal(SIGUSR2, sigusr_handler);
+#endif
 #endif
 
     set_tty ();

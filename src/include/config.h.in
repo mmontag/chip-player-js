@@ -130,6 +130,9 @@
 /* Define if you have the <strings.h> header file.  */
 #undef HAVE_STRINGS_H
 
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
 /* Define if you have the <getopt.h> header file.  */
 #undef HAVE_GETOPT_H
 

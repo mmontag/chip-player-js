@@ -14,8 +14,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <string.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef WIN32
+#include <io.h>
+#endif
 
 #include "xmpi.h"
 #include "driver.h"
