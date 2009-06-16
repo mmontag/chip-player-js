@@ -4,7 +4,7 @@ TOPDIR	= ../..
 XCFLAGS	= -DSYSCONFDIR=\"$(SYSCONFDIR)\" -I../include
 OBJS	= convert.o driver.o formats.o misc.o period.o player.o \
 	  readrc.o scan.o ulaw.o cruncher.o med_synth.o filter.o \
-	  fmopl.o synth.o
+	  fmopl.o synth.o usleep.o
 XOBJS	= version.o $(MIXER)
 XDEPS	=
 DFILES	= Makefile $(OBJS:.o=.c) effects.c mixer.c player.h mix_all.c \
