@@ -248,14 +248,18 @@ fx_volslide:
 	    }
 	}
 	SET(VOL_SLIDE);
+
 	/* Skaven's 2nd reality (S3M) has volslide parameter D7 => pri down
 	 * Stargazer's Red Dream (MOD) uses volslide DF => compute both
+	 * Also don't assign xc->volslide if fxp is 0, see Guild of Sounds.xm
 	 */
-	if (m->fetch & XMP_CTL_VOLPDN) {
-	    if ((xc->volslide = fxp))
-	        xc->v_val = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
-	} else {
-	    xc->v_val = -LSN(fxp) + MSN(fxp);
+	if (fxp) {
+	    if (m->fetch & XMP_CTL_VOLPDN) {
+		if ((xc->volslide = fxp))
+	            xc->v_val = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
+	    } else {
+		xc->v_val = -LSN(fxp) + MSN(fxp);
+	    }
 	}
 	break;
     case FX_VOLSLIDE_2:				/* Secondary volume slide */
@@ -264,11 +268,13 @@ fx_volslide:
 	    xc->v_val2 = -LSN(fxp) + MSN(fxp);
 	break;
     case FX_VOLSLIDE_UP:			/* Vol slide with uint8 arg */
-	xc->v_val = fxp;
+	if (fxp)
+	    xc->v_val = fxp;
 	SET(VOL_SLIDE);
 	break;
     case FX_VOLSLIDE_DN:			/* Vol slide with uint8 arg */
-	xc->v_val = -fxp;
+	if (fxp)
+	    xc->v_val = -fxp;
 	SET(VOL_SLIDE);
 	break;
     case FX_F_VSLIDE:				/* Fine volume slide */
