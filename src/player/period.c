@@ -113,6 +113,11 @@ void c2spd_to_note(int c2spd, int *n, int *f)
 {
     int c;
 
+    if (c2spd == 0) {
+	*n = *f = 0;
+	return;
+    }
+
     c = (int)(1536.0 * log((double)c2spd / 8363) / M_LN2);
     *n = c / 128;
     *f = c % 128;
