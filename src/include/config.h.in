@@ -73,6 +73,9 @@
 /* Define if you have the usleep function.  */
 #undef HAVE_USLEEP
 
+/* Define if you have the popen function.  */
+#undef HAVE_POPEN
+
 /* Define if you have the nanosleep function.  */
 #undef HAVE_NANOSLEEP
 

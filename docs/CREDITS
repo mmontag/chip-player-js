@@ -140,6 +140,9 @@ Reused code
 * Tammo Hinrichs <kb@nwn.de>
 - IT sample decruncher
 
+* Kurt Keller
+- Win32 popen/pclose implementation
+
 * Olivier Lapicque <olivierl@jps.net>
 - 4-bit ADPCM decruncher
 - MMCMP decruncher

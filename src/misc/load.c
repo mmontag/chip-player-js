@@ -18,6 +18,11 @@
 #endif
 #include <sys/stat.h>
 #include <unistd.h>
+
+#if !defined(HAVE_POPEN) && defined(WIN32)
+#include "ptpopen.h"
+#endif
+
 #include "driver.h"
 #include "convert.h"
 #include "loader.h"
@@ -214,6 +219,13 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	snprintf(line, lsize, cmd, *s);
 
 #ifdef WIN32
+	/* Note: The _popen function returns an invalid file handle, if
+	 * used in a Windows program, that will cause the program to hang
+	 * indefinitely. _popen works properly in a Console application.
+	 * To create a Windows application that redirects input and output,
+	 * read the section "Creating a Child Process with Redirected Input
+	 * and Output" in the Win32 SDK. -- Mirko 
+	 */
 	if ((p = popen(line, "rb")) == NULL) {
 #else
 	if ((p = popen(line, "r")) == NULL) {

@@ -21,6 +21,7 @@ Stable versions
 	- assume wav driver if output filename ends in .wav
 	- fix volume slides with 00 parameter (by Mirko Buffoni)
 	- fix crash when S3M C2spd is zero (by Mirko Buffoni)
+	- merged Mirko Buffoni's Windows Visual C++ port
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

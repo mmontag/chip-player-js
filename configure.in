@@ -659,7 +659,7 @@ dnl -----------------------------------------------------------------------
 AC_PROG_GCC_TRADITIONAL
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(select getopt_long snprintf usleep)
+AC_CHECK_FUNCS(select getopt_long snprintf usleep popen)
 
 AC_CONFIG_FILES([Makefile.rules])
 AC_OUTPUT
