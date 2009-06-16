@@ -797,6 +797,7 @@ int xmpi_player_start(struct xmp_context *ctx)
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
+    struct flow_control *f = &p->flow;
 
     if (m->xxh->len == 0 || m->xxh->chn == 0)
 	return XMP_OK;
@@ -814,20 +815,20 @@ int xmpi_player_start(struct xmp_context *ctx)
 
     m->volume = m->xxo_info[ord].gvl;
     p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[ord].bpm);
-    p->flow.jumpline = m->xxo_fstrow[ord];
+    f->jumpline = m->xxo_fstrow[ord];
     p->tempo = m->xxo_info[ord].tempo;
     playing_time = 0;
 
     if ((r = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
 	return r;
 
-    p->flow.jump = -1;
+    f->jump = -1;
 
     p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
-    p->flow.loop_stack = calloc(d->numchn, sizeof (int));
-    p->flow.loop_row = calloc(d->numchn, sizeof (int));
+    f->loop_stack = calloc(d->numchn, sizeof (int));
+    f->loop_row = calloc(d->numchn, sizeof (int));
     p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
-    if (!(p->fetch_ctl && p->flow.loop_stack && p->flow.loop_row && p->xc_data))
+    if (!(p->fetch_ctl && f->loop_stack && f->loop_row && p->xc_data))
 	return XMP_ERR_ALLOC;
 
     chn_reset(ctx);
@@ -852,10 +853,10 @@ next_order:
 	}
 
 	r = m->xxp[m->xxo[ord]]->rows;
-	if (p->flow.jumpline >= r)
-	    p->flow.jumpline = 0;
-	p->flow.row_cnt = p->flow.jumpline;
-	p->flow.jumpline = 0;
+	if (f->jumpline >= r)
+	    f->jumpline = 0;
+	f->row_cnt = f->jumpline;
+	f->jumpline = 0;
 
 	p->pos = ord;
 
@@ -866,9 +867,9 @@ next_order:
 		p->xc_data[chn].per_flags = 0;
 	}
 
-	for (; p->flow.row_cnt < r; p->flow.row_cnt++) {
+	for (; f->row_cnt < r; f->row_cnt++) {
 	    if ((~m->fetch & XMP_CTL_LOOP) && ord == p->xmp_scan_ord &&
-		p->flow.row_cnt == p->xmp_scan_row) {
+		f->row_cnt == p->xmp_scan_row) {
 		if (!e--)
 		    goto end_module;
 	    }
@@ -883,7 +884,7 @@ next_order:
 		xmp_drv_starttimer(ctx);
 	    }
 
-	    for (t = 0; t < (p->tempo * (1 + p->flow.delay)); t++) {
+	    for (t = 0; t < (p->tempo * (1 + f->delay)); t++) {
 		/* xmp_player_ctl processing */
 
 		if (ord != p->pos) {
@@ -901,9 +902,9 @@ next_order:
 		    p->tempo = m->xxo_info[ord = p->pos].tempo;
 		    p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[ord].bpm);
 		    m->volume = m->xxo_info[ord].gvl;
-		    p->flow.jump = ord;
-		    p->flow.jumpline = m->xxo_fstrow[ord--];
-		    p->flow.row_cnt = -1;
+		    f->jump = ord;
+		    f->jumpline = m->xxo_fstrow[ord--];
+		    f->row_cnt = -1;
 		    xmp_drv_bufwipe(ctx);
 		    xmp_drv_sync(ctx, 0);
 		    xmp_drv_reset(ctx);
@@ -913,7 +914,7 @@ next_order:
 
 		if (!t) {
 		    p->gvol_flag = 0;
-		    chn_fetch(ctx, m->xxo[ord], p->flow.row_cnt);
+		    chn_fetch(ctx, m->xxo[ord], f->row_cnt);
 
 		    xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
@@ -922,7 +923,7 @@ next_order:
 							XMP_ECHO_ORD);
 		    xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
 		    xmp_drv_echoback(ctx, ((m->xxp[m->xxo[ord]]->rows - 1)
-				<< 12) | (p->flow.row_cnt << 4) | XMP_ECHO_ROW);
+				<< 12) | (f->row_cnt << 4) | XMP_ECHO_ROW);
 		}
 		xmp_drv_echoback(ctx, (t << 4) | XMP_ECHO_FRM);
 		chn_refresh(ctx, t);
@@ -941,25 +942,25 @@ next_order:
 		xmp_drv_bufdump(ctx);
 	    }
 
-	    p->flow.delay = 0;
+	    f->delay = 0;
 
-	    if (p->flow.row_cnt == -1)
+	    if (f->row_cnt == -1)
 		break;
 
-	    if (p->flow.pbreak) {
-		p->flow.pbreak = 0;
+	    if (f->pbreak) {
+		f->pbreak = 0;
 		break;
 	    }
 
-	    if (p->flow.loop_chn) {
-		p->flow.row_cnt = p->flow.loop_row[--p->flow.loop_chn] - 1;
-		p->flow.loop_chn = 0;
+	    if (f->loop_chn) {
+		f->row_cnt = f->loop_row[--f->loop_chn] - 1;
+		f->loop_chn = 0;
 	    }
 	}
 
-	if (p->flow.jump != -1) {
-	    ord = p->flow.jump;
-	    p->flow.jump = -1;
+	if (f->jump != -1) {
+	    ord = f->jump;
+	    f->jump = -1;
 	    goto next_order;
 	}
     }
@@ -971,8 +972,8 @@ end_module:
     xmp_drv_stoptimer(ctx);
 
     free(p->xc_data);
-    free(p->flow.loop_row);
-    free(p->flow.loop_stack);
+    free(f->loop_row);
+    free(f->loop_stack);
     free(p->fetch_ctl);
 
     xmp_drv_off(ctx);
@@ -1023,11 +1024,11 @@ int xmp_player_start(struct xmp_context *ctx)
 	if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
 		return ret;
 
-	p->flow.jump = -1;
+	f->jump = -1;
 
 	p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
-	p->flow.loop_stack = calloc(d->numchn, sizeof (int));
-	p->flow.loop_row = calloc(d->numchn, sizeof (int));
+	f->loop_stack = calloc(d->numchn, sizeof (int));
+	f->loop_row = calloc(d->numchn, sizeof (int));
 	p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
 	if (!(p->fetch_ctl && f->loop_stack && f->loop_row && p->xc_data))
 		return XMP_ERR_ALLOC;
@@ -1210,8 +1211,8 @@ void xmp_player_end(struct xmp_context *ctx)
 	xmp_drv_stoptimer(ctx);
 
 	free(p->xc_data);
-	free(p->flow.loop_row);
-	free(p->flow.loop_stack);
+	free(f->loop_row);
+	free(f->loop_stack);
 	free(p->fetch_ctl);
 
 	xmp_drv_off(ctx);
