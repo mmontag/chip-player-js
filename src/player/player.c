@@ -979,3 +979,241 @@ end_module:
 
     return XMP_OK;
 }
+
+
+#ifdef TEST_OPEN_LOOP
+/*
+ * EXPERIMENTAL open loop
+ */
+
+int xmp_player_start(struct xmp_context *ctx)
+{
+    //int r, t, e;		/* rows, tick, end point, order */
+	int ret;
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_driver_context *d = &ctx->d;
+	struct xmp_mod_context *m = &p->m;
+	struct xmp_options *o = &ctx->o;
+	struct flow_control *f = &p->flow;
+
+	if (m->xxh->len == 0 || m->xxh->chn == 0)
+		return XMP_OK;
+
+	if (xmp_event_callback == NULL)
+		xmp_event_callback = dummy;
+
+	p->gvol_slide = 0;
+	p->gvol_base = m->volbase;
+	f->ord = o->start;
+	f->frame = 0;
+	f->row_cnt = 0;
+	f->row = m->xxp[m->xxo[f->ord]]->rows;
+
+	/* Skip invalid patterns at start (the seventh laboratory.it) */
+	while (f->ord < m->xxh->len && m->xxo[f->ord] >= m->xxh->pat)
+		f->ord++;
+
+	m->volume = m->xxo_info[f->ord].gvl;
+	p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[f->ord].bpm);
+	p->tempo = m->xxo_info[f->ord].tempo;
+	f->jumpline = m->xxo_fstrow[f->ord];
+	f->playing_time = 0;
+	f->end_point = p->xmp_scan_num;
+
+	if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
+		return ret;
+
+	p->flow.jump = -1;
+
+	p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
+	p->flow.loop_stack = calloc(d->numchn, sizeof (int));
+	p->flow.loop_row = calloc(d->numchn, sizeof (int));
+	p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
+	if (!(p->fetch_ctl && f->loop_stack && f->loop_row && p->xc_data))
+		return XMP_ERR_ALLOC;
+
+	chn_reset(ctx);
+
+	xmp_drv_starttimer(ctx);
+
+	return 0;
+}
+
+
+int xmp_player_loop(struct xmp_context *ctx)
+{
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_driver_context *d = &ctx->d;
+	struct xmp_mod_context *m = &p->m;
+	struct xmp_options *o = &ctx->o;
+	struct flow_control *f = &p->flow;
+
+	/* check end of module */
+	if (f->frame == 0) {
+	    	if ((~m->fetch & XMP_CTL_LOOP) && f->ord == p->xmp_scan_ord &&
+					f->row_cnt == p->xmp_scan_row) {
+			if (!f->end_point--)
+				return -1;
+		}
+	}
+
+	/* For each frame */
+
+//printf("ord: %d, row: %d/%d, frame: %d\n", f->ord, f->row_cnt, f->row, f->frame);
+	if (f->ord != p->pos) {			/* changed pattern */
+		if (p->pos == -1)
+			p->pos++;		/* restart module */
+
+		if (p->pos == -2) {		/* set by xmp_module_stop */
+			xmp_drv_bufwipe(ctx);
+			return -1;		/* that's all folks */
+		}
+
+		if (p->pos == 0)
+			f->end_point = p->xmp_scan_num;
+
+		p->tempo = m->xxo_info[f->ord = p->pos].tempo;
+		p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[f->ord].bpm);
+		m->volume = m->xxo_info[f->ord].gvl;
+		f->jump = f->ord;
+		f->jumpline = m->xxo_fstrow[f->ord--];
+		f->row_cnt = -1;
+		xmp_drv_bufwipe(ctx);
+		xmp_drv_sync(ctx, 0);
+		xmp_drv_reset(ctx);
+		chn_reset(ctx);
+		goto next_row;
+	}
+
+	if (f->frame == 0) {			/* first frame in row */
+		p->gvol_flag = 0;
+		chn_fetch(ctx, m->xxo[f->ord], f->row_cnt);
+
+		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
+							XMP_ECHO_BPM);
+		xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
+		xmp_drv_echoback(ctx, (m->xxo[f->ord] << 12) | (f->ord << 4) |
+							XMP_ECHO_ORD);
+		xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
+		xmp_drv_echoback(ctx, ((m->xxp[m->xxo[f->ord]]->rows - 1)
+				<< 12) | (f->row_cnt << 4) | XMP_ECHO_ROW);
+	}
+
+	xmp_drv_echoback(ctx, (f->frame << 4) | XMP_ECHO_FRM);
+	chn_refresh(ctx, f->frame);
+
+	if (o->time && (o->time < f->playing_time))	/* expired time */
+		return -1;
+
+	if (m->fetch & XMP_CTL_MEDBPM) {
+		xmp_drv_sync(ctx, p->tick_time * 33 / 125);
+		f->playing_time += m->rrate * 33 / (100 * p->xmp_bpm * 125);
+	} else {
+		xmp_drv_sync(ctx, p->tick_time);
+		f->playing_time += m->rrate / (100 * p->xmp_bpm);
+	}
+
+	xmp_drv_bufdump(ctx);
+
+
+
+	/* check new row */
+	if (f->frame >= (p->tempo * (1 + f->delay)) - 1) {
+next_row:
+//printf("** new row\n");
+		f->frame = 0;
+		f->delay = 0;
+
+		if (f->row_cnt == -1)
+			goto next_row;
+
+		if (f->pbreak) {
+			f->pbreak = 0;
+			goto next_row;
+		}
+
+		if (f->loop_chn) {
+			f->row_cnt = f->loop_row[--f->loop_chn] - 1;
+			f->loop_chn = 0;
+		}
+
+		f->row_cnt++;
+
+		if (f->jump != -1) {
+			f->ord = f->jump;
+			f->jump = -1;
+			goto next_order;
+		}
+
+#if 0
+		if (p->pause) {
+			xmp_drv_stoptimer(ctx);
+			while (p->pause) {
+				usleep(125000);
+				xmp_event_callback(0);
+			}
+			xmp_drv_starttimer(ctx);
+	    	}
+#endif
+
+
+		/* check end of pattern */
+		if (f->row_cnt >= f->row) {
+next_order:
+//printf("*** new order\n");
+    			f->ord++;
+
+			/* Restart module */
+			if (f->ord >= m->xxh->len) {
+    				f->ord = ((uint32)m->xxh->rst > m->xxh->len ||
+					(uint32)m->xxo[m->xxh->rst] >=
+					m->xxh->pat) ?  0 : m->xxh->rst;
+				m->volume = m->xxo_info[f->ord].gvl;
+			}
+
+			/* Skip invalid patterns */
+			if (m->xxo[f->ord] >= m->xxh->pat) {
+    				f->ord++;
+    				goto next_order;
+			}
+
+			f->row = m->xxp[m->xxo[f->ord]]->rows;
+			if (f->jumpline >= f->row)
+				f->jumpline = 0;
+			f->row_cnt = f->jumpline;
+			f->jumpline = 0;
+
+			p->pos = f->ord;
+
+			/* Reset persistent effects at new pattern */
+			if (m->fetch & XMP_CTL_PERPAT) {
+				int chn;
+				for (chn = 0; chn < p->m.xxh->chn; chn++)
+					p->xc_data[chn].per_flags = 0;
+			}
+		}
+	} else {
+		f->frame++;
+	}
+
+	return 0;
+}
+    
+
+void xmp_player_end(struct xmp_context *ctx)
+{
+	struct xmp_player_context *p = &ctx->p;
+
+	xmp_drv_echoback(ctx, XMP_ECHO_END);
+	while (xmp_drv_getmsg(ctx) != XMP_ECHO_END)
+		xmp_drv_bufdump(ctx);
+	xmp_drv_stoptimer(ctx);
+
+	free(p->xc_data);
+	free(p->flow.loop_row);
+	free(p->flow.loop_stack);
+	free(p->fetch_ctl);
+
+	xmp_drv_off(ctx);
+}
+#endif

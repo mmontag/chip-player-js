@@ -177,6 +177,13 @@ struct flow_control {
 	int loop_chn;
 	int* loop_row;
 	int* loop_stack;
+#ifdef TEST_OPEN_LOOP
+	int frame;
+	int row;
+	int ord;
+	int end_point;
+	double playing_time;
+#endif
 };
 
 struct xmp_player_context {
