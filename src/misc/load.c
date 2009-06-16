@@ -17,7 +17,9 @@
 #include <sys/types.h>
 #endif
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "ptpopen.h"
@@ -265,7 +267,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	case BUILTIN_MMCMP:    
 	    res = decrunch_mmcmp(*f, t);
 	    break;
-#if !defined __MINGW32__ && !defined __AMIGA__
+#if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);
 	    break;
