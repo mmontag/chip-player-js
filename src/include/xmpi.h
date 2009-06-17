@@ -105,6 +105,18 @@ typedef unsigned int uint32;
 
 #define EVENT(a, c, r)	m->xxt[m->xxp[a]->info[c].index]->event[r]
 
+#ifdef _MSC_VER
+#define _D_CRIT "  Error: "
+#define _D_WARN "Warning: "
+#define _D_INFO "   Info: "
+#ifdef _DEBUG
+void CLIB_DECL _D(const char *text, ...) ATTR_PRINTF(1,2);
+#else
+void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
+#endif
+
+#else	/* !_MSC_VER */
+
 #ifdef _DEBUG
 #define _D_INFO "\x1b[33m"
 #define _D_CRIT "\x1b[31m"
@@ -117,6 +129,7 @@ typedef unsigned int uint32;
 #define _D(args...) do {} while (0)
 #endif
 
+#endif	/* !_MSC_VER */
 
 struct xmp_ord_info {
 	int bpm;
