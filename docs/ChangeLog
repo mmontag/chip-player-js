@@ -24,6 +24,7 @@ Stable versions
 	- merged Mirko Buffoni's Windows Visual C++ port
 	- don't process tone portamento in first frame of each row, fixes
 	  Space Debris.mod (by Mirko Buffoni)
+	- add amplification factor option (by Mirko Buffoni)
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

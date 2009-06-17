@@ -183,6 +183,7 @@ static void usage(char *s, struct xmp_options *opt)
 "   --stereo               Stereo output\n"
 
 "\nSoftware mixer options:\n"
+"   -a --amplify {0|1|2|3} Amplification factor: 0=Normal, 1=x2, 2=x4, 3=x8\n"
 "   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
 "   -c --stdout            Mix the module to stdout\n"
 "   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
@@ -208,9 +209,10 @@ static void usage(char *s, struct xmp_options *opt)
 void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
-#define OPTIONS "8b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVvx:"
+#define OPTIONS "8a:b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVvx:"
     static struct option lopt[] = {
 	{ "8bit",		 0, 0, '8' },
+	{ "amplify",		 1, 0, 'a' },
 	{ "bits",		 1, 0, 'b' },
 	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
@@ -257,6 +259,11 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	switch (o) {
 	case '8':
 	    opt->flags |= XMP_CTL_8BIT;
+	    break;
+	case 'a':
+	    opt->amplify = atoi(optarg);
+	    if (opt->amplify < 0 || opt->amplify > 3)
+		opt->amplify = 1;
 	    break;
 	case 'b':
 	    opt->resol = atoi(optarg);

@@ -40,7 +40,7 @@ static int* smix_buf32b = NULL;		/* temp buffer for 32 bit samples */
 static int smix_numvoc;			/* default softmixer voices number */
 static int smix_numbuf;			/* number of buffer to output */
 static int smix_mode;			/* mode = 0:OFF, 1:MONO, 2:STEREO */
-static int smix_resol;			/* resolution output 0:8bit, 1:16bit */
+static int smix_resol;			/* resolution output 1:8bit, 2:16bit */
 static int smix_ticksize;
 int **xmp_mix_buffer = &smix_buf32b;
 
@@ -264,6 +264,7 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 static int softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_options *o = &ctx->o;
     struct voice_info *vi;
     struct patch_info *pi;
     int smp_cnt, tic_cnt, lps, lpe;
@@ -287,8 +288,8 @@ static int softmixer(struct xmp_context *ctx)
 	}
 
 	buf_pos = smix_buf32b;
-	vol_r = (vi->vol * (0x80 - vi->pan));
-	vol_l = (vi->vol * (0x80 + vi->pan));
+	vol_r = (vi->vol * (0x80 - vi->pan)) << o->amplify;
+	vol_l = (vi->vol * (0x80 + vi->pan)) << o->amplify;
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {

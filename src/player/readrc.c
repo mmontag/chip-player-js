@@ -126,6 +126,7 @@ int xmpi_read_rc(struct xmp_context *ctx)
 	getval_yn(o->flags, "pan", XMP_CTL_DYNPAN);
 	getval_yn(o->flags, "filter", XMP_CTL_FILTER);
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
+	getval_no("amplify", o->amplify);
 	getval_no("mix", o->mix);
 	getval_no("crunch", o->crunch);
 	getval_no("chorus", o->chorus);
@@ -137,6 +138,13 @@ int xmpi_read_rc(struct xmp_context *ctx)
 	if (!strcmp (var, "driver")) {
 	    strncpy (drive_id, val, 31);
 	    o->drv_id = drive_id;
+	    continue;
+	}
+
+	if (!strcmp (var, "amplify")) {
+	    o->amplify = atoi (val);
+	    if (o->amplify < 0 || o->amplify > 3)
+		o->amplify = 0;
 	    continue;
 	}
 

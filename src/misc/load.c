@@ -553,6 +553,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     }
 
     if (o->verbosity > 2) {
+	char * amp_factor[] = { "Normal", "x2", "x4", "x8" };
 	report("Amiga range    : %s\n", m->xxh->flg & XXM_FLG_MODRNG ?
 		"yes" : "no");
 	report("Restart pos    : %d\n", m->xxh->rst);
@@ -561,6 +562,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 	report("Channel mixing : %d%% (dynamic pan %s)\n",
 		m->fetch & XMP_CTL_REVERSE ? -o->mix : o->mix,
 		m->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
+	report("Volume amplify : %s\n",
+		amp_factor[o->amplify]);
     }
 
     if (o->verbosity) {
