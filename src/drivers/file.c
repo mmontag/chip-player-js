@@ -16,11 +16,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-
-#ifdef WIN32
-#include <io.h>
-#endif
-
 #include "xmpi.h"
 #include "driver.h"
 #include "mixer.h"

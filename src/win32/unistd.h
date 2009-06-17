@@ -1,3 +1,3 @@
 
-/* empty file (for VC++ win32 port) */
+#include <io.h>
 
