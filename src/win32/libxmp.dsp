@@ -778,7 +778,7 @@ SOURCE=..\misc\crc32.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\misc\debug.c
+SOURCE=.\debug.c
 # End Source File
 # Begin Source File
 
@@ -810,7 +810,7 @@ SOURCE=..\misc\ppdepack.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\misc\ptpopen.c
+SOURCE=.\ptpopen.c
 # End Source File
 # Begin Source File
 
@@ -835,6 +835,10 @@ SOURCE=..\misc\unarc.c
 # Begin Source File
 
 SOURCE=..\misc\unsqsh.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\usleep.c
 # End Source File
 # Begin Source File
 
