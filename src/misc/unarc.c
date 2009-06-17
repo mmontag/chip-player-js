@@ -33,9 +33,7 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/types.h>
-#include <utime.h>
 #include <unistd.h>
-
 #include "xmpi.h"
 #include "readrle.h"
 #include "readhuff.h"
