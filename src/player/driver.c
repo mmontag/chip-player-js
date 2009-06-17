@@ -661,8 +661,8 @@ void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
     pi = d->patch_array[d->voice_array[voc].smp];
 
     if (pi->base_note != C4_FREQ)	/* process crunching samples */
-	pos = ((long long)pos << SMIX_SHIFT) / (int)
-	    (((long long)pi->base_note << SMIX_SHIFT) / C4_FREQ);
+	pos = ((int64)pos << SMIX_SHIFT) / (int)
+	    (((int64)pi->base_note << SMIX_SHIFT) / C4_FREQ);
 
     if (pos > pi->len)	/* Attempt to set offset beyond the end of sample */
 	return;

@@ -65,6 +65,16 @@ typedef unsigned short int uint16;
 typedef unsigned int uint32;
 #endif
 
+/* MSVC++6.0 has no long long */
+#ifdef _MSC_VER
+typedef signed __int64 int64;
+typedef unsigned __int64 uint64;
+#else
+typedef unsigned long long uint64;
+typedef signed long long int64;
+#endif
+
+
 #include "xmp.h"
 #include "xxm.h"
 

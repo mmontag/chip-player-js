@@ -95,11 +95,11 @@ int xmp_cvt_crunch (struct patch_info **patch, unsigned int ratio)
     if (ratio < 0x10000 && smp_len < XMP_MINLEN)
 	return 0x10000;
 
-    base_note = ((long long) ((*patch)->base_note) << SMIX_SHIFT) / ratio;
-    itpt_inc = ((long long) base_note << SMIX_SHIFT) / (*patch)->base_note;
-    smp_len = ((long long) smp_len << SMIX_SHIFT) / itpt_inc;
-    loop_end = ((long long) loop_end << SMIX_SHIFT) / itpt_inc;
-    loop_dt = ((long long) loop_dt << SMIX_SHIFT) / itpt_inc;
+    base_note = ((int64) ((*patch)->base_note) << SMIX_SHIFT) / ratio;
+    itpt_inc  = ((int64) base_note << SMIX_SHIFT) / (*patch)->base_note;
+    smp_len   = ((int64) smp_len << SMIX_SHIFT) / itpt_inc;
+    loop_end  = ((int64) loop_end << SMIX_SHIFT) / itpt_inc;
+    loop_dt   = ((int64) loop_dt << SMIX_SHIFT) / itpt_inc;
 
     pi = calloc (1, sizeof (struct patch_info) + (smp_len << type) +
 	sizeof (int));

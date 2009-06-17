@@ -299,7 +299,7 @@ static int softmixer(struct xmp_context *ctx)
 	    continue;
 	}
 
-	itp_inc = ((long long)vi->pbase << SMIX_SHIFT) / vi->period;
+	itp_inc = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
 
 	pi = d->patch_array[vi->smp];
 
@@ -326,7 +326,7 @@ static int softmixer(struct xmp_context *ctx)
 	for (tic_cnt = smix_ticksize; tic_cnt; ) {
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
-	    smp_cnt = 1 + (((long long)(vi->end - vi->pos) << SMIX_SHIFT)
+	    smp_cnt = 1 + (((int64)(vi->end - vi->pos) << SMIX_SHIFT)
 		- vi->itpt) / itp_inc;
 
 	    if (itp_inc > 0) {
@@ -461,7 +461,7 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 
     vi->smp = smp;
     vi->vol = 0;
-    vi->freq = (long long) C4_FREQ * pi->base_freq / o->freq;
+    vi->freq = (int64)C4_FREQ * pi->base_freq / o->freq;
     
     if (pi->len == XMP_PATCH_FM) {
 	vi->fidx = FLAG_SYNTH;

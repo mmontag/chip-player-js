@@ -337,7 +337,6 @@ static void get_smp_size(struct xmp_player_context *p, int awe, int *a, int *b)
 
 static int crunch_ratio(struct xmp_context *ctx, int awe)
 {
-#ifdef DRIVER_OSS_SEQ
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_options *o = &ctx->o;
@@ -361,7 +360,7 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
 
     if (smp_size > memavl) {
 	ratio = (int)
-	    (((long long)(memavl - smp_4kb) << 16) / (smp_size - smp_4kb));
+	    (((int64)(memavl - smp_4kb) << 16) / (smp_size - smp_4kb));
 	if (o->verbosity)
 	    report ("Crunch ratio   : %d%% [Mem:%.3fMb Smp:%.3fMb]\n",
 		100 - 100 * ratio / 0x10000, .000001 * d->memavl,
@@ -369,9 +368,6 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
     }
 	
     return ratio;
-#else
-    return 0x10000;
-#endif
 }
 
 
