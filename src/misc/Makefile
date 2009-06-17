@@ -7,7 +7,7 @@ OBJS	= control.o info.o readdata.o load.o ppdepack.o unsqsh.o \
 	  oxm.o mkstemp.o xfd.o
 XDEPS	=
 XLIBS	= -L$(TOPDIR)/lib -lxmp
-DFILES	= Makefile $(OBJS:.o=.c)
+DFILES	= Makefile $(OBJS:.o=.c) ptpopen.c
 DDIRS	=
 LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	= $(BINS)
