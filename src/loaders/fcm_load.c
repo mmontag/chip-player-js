@@ -25,7 +25,7 @@ struct fcm_instrument {
     uint8 volume;
     uint16 loop_start;
     uint16 loop_size;
-} PACKED;
+};
 
 struct fcm_header {
     uint8 magic[4];		/* 'FC-M' magic ID */
@@ -39,7 +39,7 @@ struct fcm_header {
     uint8 len;
     uint8 rst;
     uint8 patt_id[4];		/* 'PATT' pseudo chunk ID */
-} PACKED;
+};
     
 
 int fcm_load(struct xmp_context *ctx, FILE *f)

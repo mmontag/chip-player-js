@@ -21,7 +21,7 @@
 struct ftm_instrument {
 	uint8 name[30];		/* Instrument name */
 	uint8 unknown[2];
-} PACKED;
+};
 
 struct ftm_header {
 	uint8 id[4];		/* "FTMN" ID string */
@@ -31,7 +31,7 @@ struct ftm_header {
 	uint8 title[32];	/* Module title */
 	uint8 author[32];	/* Module author */
 	uint8 unknown2[2];
-} PACKED;
+};
 
 int ftm_load(FILE * f)
 {

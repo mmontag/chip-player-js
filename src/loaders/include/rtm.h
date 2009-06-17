@@ -92,5 +92,5 @@ struct RTSMHeader {		/* Real Tracker Sample */
     DWORD basefreq;
     BYTE basenote;
     char panning;		/* Panning from -64 to 64 */
-} PACKED;
+};
 
