@@ -102,8 +102,14 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 #endif
     if (b[0] == 'P' && b[1] == 'K') {
 	packer = "Zip";
-	cmd = "unzip -pqqC \"%s\" -x readme '*.diz' '*.nfo' '*.txt' "
-		"'*.exe' '*.com' " REDIR_STDERR;
+#if defined WIN32
+	cmd = "unzip -pqqC \"%s\" -x readme *.diz *.nfo *.txt *.exe *.com "
+		"README *.DIZ *.NFO *.TXT *.EXE *.COM " REDIR_STDERR;
+#else
+	cmd = "unzip -pqqC \"%s\" -x readme '*.diz' '*.nfo' '*.txt' '*.exe' "
+		"'*.com' README '*.DIZ' '*.NFO' '*.TXT' '*.EXE' '*.COM' "
+		REDIR_STDERR;
+#endif
     } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
 	packer = "LHa";
 #if defined __EMX__
