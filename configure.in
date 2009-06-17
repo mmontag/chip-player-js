@@ -29,6 +29,9 @@ MIXER="mix_all.o"
 AC_SUBST(LIBM)
 LIBM="-lm"
 
+AC_SUBST(PLATFORM_DIR)
+PLATFORM_DIR=""
+
 dnl -----------------------------------------------------------------------
 dnl Config arguments
 dnl -----------------------------------------------------------------------
@@ -120,6 +123,7 @@ cygwin*|mingw*)
     case ${target_os} in
     mingw*)
 	CFLAGS="${CFLAGS} -Isrc/win32"
+	PLATFORM_DIR="win32"
 	;;
     esac
     is_win32=yes

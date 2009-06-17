@@ -8,7 +8,7 @@ CFILES	=
 DCFILES	=
 
 all install::
-	@for i in $(_DIRS); do	\
+	@for i in $(_DIRS) $(PLATFORM_DIR); do	\
 		(cd $$i && $(MAKE) $@)	\
 	done
 

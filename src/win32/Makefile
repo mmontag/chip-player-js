@@ -1,6 +1,7 @@
 
 TOPDIR	= ../..
-DFILES	= Makefile unistd.h
+OBJS	= ptpopen.o debug.o usleep.o
+DFILES	= Makefile $(OBJS:.o=.c) unistd.h
 DDIRS	=
 CFILES	=
 DCFILES	=
