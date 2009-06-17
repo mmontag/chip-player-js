@@ -26,6 +26,7 @@ Stable versions
 	  Space Debris.mod (by Mirko Buffoni)
 	- add amplification factor option (by Mirko Buffoni)
 	- improved Winamp plugin (by Mirko Buffoni)
+	- don't unlink open files (for Windows port, by Mirko Buffoni)
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
