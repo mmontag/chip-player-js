@@ -7,3 +7,20 @@
 #define IDC_LOOP			1005
 #define IDC_MODRANGE			1006
 #define IDC_PAN_AMPLITUDE		1007
+#define IDC_AMPLIFICATION_FACT  1008
+
+#define IDABOUT                 3
+#define IDD_INFODLG             102
+#define IDC_SAMPLES             2000
+#define IDC_MODULE_TITLE        2001
+#define IDC_MODULE_TYPE         2002
+#define IDC_MODULE_LENGTH       2003
+#define IDC_MODULE_LOOP         2004
+#define IDC_MODULE_EST          2005
+#define IDC_MODULE_ELT          2006
+#define IDC_MODULE_CHANNELS     2007
+#define IDC_MODULE_PATTERNS     2008
+#define IDC_MODULE_SAMPLES      2009
+#define IDC_MODULE_INSTR        2010
+#define IDC_MODULE_BPM          2011
+#define IDC_MODULE_TEMPO        2012

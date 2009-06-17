@@ -6,29 +6,70 @@
 #define IDC_STATIC (-1)
 
 
-IDD_CONFIG DIALOG DISCARDABLE  0, 0, 186, 120
+IDD_CONFIG DIALOG DISCARDABLE  0, 0, 186, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "XMP Plugin"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK", IDOK, 129, 7, 50, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 129, 24, 50, 14
-    LTEXT           "Sampling rate", IDC_STATIC, 10, 10, 108, 10
-    COMBOBOX        IDC_MIXING_FREQ, 60, 8, 40, 10,
+    LTEXT           "Sampling rate", IDC_STATIC, 10, 10, 45, 10
+    COMBOBOX        IDC_MIXING_FREQ, 60, 8, 40, 40,
+                    CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Volume mult.", IDC_STATIC, 10, 24, 45, 10
+    COMBOBOX        IDC_AMPLIFICATION_FACT, 60, 22, 40, 54,
                     CBS_DROPDOWNLIST | WS_TABSTOP
     CONTROL         "Loop module", IDC_LOOP, "Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 24, 108, 10
-    CONTROL         "Force mono", IDC_FORCE_MONO, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 38, 108, 10
-    CONTROL         "Enable interpolation", IDC_INTERPOLATION, "Button",
+    CONTROL         "Force mono", IDC_FORCE_MONO, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 52, 108, 10
-    CONTROL         "Enable IT lowpass filters", IDC_FILTER, "Button",
+    CONTROL         "Enable interpolation", IDC_INTERPOLATION, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 66, 108, 10
-    LTEXT           "Pan amplitude", IDC_STATIC, 10, 84, 108, 10
+    CONTROL         "Enable IT lowpass filters", IDC_FILTER, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 80, 108, 10
+    LTEXT           "Pan amplitude", IDC_STATIC, 10, 98, 108, 10
     CONTROL         "Pan amplitude", IDC_PAN_AMPLITUDE, "msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP, 10, 94, 108, 10
-    CTEXT           "0", IDC_STATIC, 10, 106, 12, 10
-    CTEXT           "100", IDC_STATIC, 108, 106, 12, 10
+                    TBS_AUTOTICKS | WS_TABSTOP, 10, 108, 108, 10
+    CTEXT           "0", IDC_STATIC, 10, 120, 12, 10
+    CTEXT           "100", IDC_STATIC, 108, 120, 12, 10
 END
 
+
+IDD_INFODLG DIALOG DISCARDABLE 0, 0, 217, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "XMP Module Info"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Cool!",IDOK,160,195,50,14,0,WS_EX_STATICEDGE
+    PUSHBUTTON      "About",IDABOUT,5,195,50,14,0,WS_EX_STATICEDGE
+
+    GROUPBOX        "Module Info",IDC_STATIC,5,5,205,85
+    RTEXT           "Title:",IDC_STATIC,10,15,55,10
+    LTEXT           "",IDC_MODULE_TITLE,70,14,135,10,WS_BORDER
+    RTEXT           "Type:",IDC_STATIC,10,25,55,10
+    LTEXT           "",IDC_MODULE_TYPE,70,24,135,10,WS_BORDER
+    RTEXT           "Length:",IDC_STATIC,10,35,55,10
+    LTEXT           "",IDC_MODULE_LENGTH,70,34,40,10,WS_BORDER
+    RTEXT           "Looping:",IDC_STATIC,110,35,50,10
+    LTEXT           "",IDC_MODULE_LOOP,165,34,40,10,WS_BORDER
+    RTEXT           "Estimated time:",IDC_STATIC,10,45,55,10
+    LTEXT           "",IDC_MODULE_EST,70,44,40,10,WS_BORDER
+    RTEXT           "Elapsed time:",IDC_STATIC,110,45,50,10
+    LTEXT           "",IDC_MODULE_ELT,165,44,40,10,WS_BORDER
+    RTEXT           "Channels:",IDC_STATIC,10,55,55,10
+    LTEXT           "",IDC_MODULE_CHANNELS,70,54,40,10,WS_BORDER
+    RTEXT           "BPM:",IDC_STATIC,110,55,50,10
+    LTEXT           "",IDC_MODULE_BPM,165,54,40,10,WS_BORDER
+    RTEXT           "Tempo:",IDC_STATIC,110,65,50,10
+    LTEXT           "",IDC_MODULE_TEMPO,165,64,40,10,WS_BORDER
+    RTEXT           "Stored Patterns:",IDC_STATIC,10,65,55,10
+    LTEXT           "",IDC_MODULE_PATTERNS,70,64,40,10,WS_BORDER
+    RTEXT           "Samples:",IDC_STATIC,10,75,55,10
+    LTEXT           "",IDC_MODULE_SAMPLES,70,74,40,10,WS_BORDER
+    RTEXT           "Instruments:",IDC_STATIC,110,75,50,10
+    LTEXT           "",IDC_MODULE_INSTR,165,74,40,10,WS_BORDER
+    GROUPBOX        "Samples",IDC_STATIC,5,95,205,95
+    CONTROL         "List1",IDC_SAMPLES,"SysListView32",LVS_REPORT |
+                    WS_BORDER | WS_TABSTOP,10,105,195,80
+END
 
