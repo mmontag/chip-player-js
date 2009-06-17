@@ -13,7 +13,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
+#endif
 #include "xmpi.h"
 
 #ifdef __AMIGA__
@@ -68,6 +70,13 @@ int xmpi_read_rc(struct xmp_context *ctx)
     }
 #elif defined __AMIGA__
     strncpy(myrc, "PROGDIR:xmp.conf", MAXPATHLEN);
+
+    if ((rc = fopen(myrc, "r")) == NULL)
+	return -1;
+#elif defined WIN32
+    char *home = getenv("SystemRoot");
+
+    snprintf(myrc, MAXPATHLEN, "%s/xmp.ini", home);
 
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
