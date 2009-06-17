@@ -119,7 +119,7 @@ esac
 case ${target_os} in
 cygwin* | mingw*)
     is_win32=yes
-    CFLAGS="${CFLAGS} -Iwin32"
+    CFLAGS="${CFLAGS} -Isrc/win32"
     enable_arts=no
     enable_xmms_plugin=no
     enable_bmp_plugin=no

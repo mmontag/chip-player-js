@@ -8,7 +8,7 @@ TOPDIR	= .
 XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)
-MODULES	= oldschool_combat3.mod
+MODULES	= 
 DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
 DDIRS	= lib docs etc src scripts
