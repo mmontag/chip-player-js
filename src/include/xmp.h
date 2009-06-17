@@ -200,6 +200,7 @@ extern char *global_filename;	/* FIXME: hack for the wav driver */
 
 void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
+void xmp_unlink_tempfiles(void);
 struct xmp_options *xmp_get_options(xmp_context);
 
 void xmp_init(xmp_context, int, char **);

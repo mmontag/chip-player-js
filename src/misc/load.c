@@ -33,6 +33,13 @@
 extern struct list_head loader_list;
 extern struct list_head *checked_format;
 
+LIST_HEAD(tmp_files);
+
+struct tmpfilename {
+	char *name;
+	struct list_head list;
+};
+
 char *global_filename;
 
 int decrunch_arc	(FILE *, FILE *);
@@ -75,13 +82,14 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     char *cmd;
     FILE *t;
     int fd, builtin, res;
-    char *packer, *temp, *temp2, tmp[TMP_SIZE];
+    char *packer, *temp2, tmp[TMP_SIZE];
+    struct tmpfilename *temp;
+
 
     packer = cmd = NULL;
     builtin = res = 0;
     get_temp_dir(tmp, TMP_SIZE);
     strncat(tmp, "xmp_XXXXXX", TMP_SIZE);
-    temp = strdup(tmp);
 
     fseek(*f, 0, SEEK_SET);
     b = calloc(1, PW_TEST_CHUNK);
@@ -189,20 +197,27 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 
     fseek(*f, 0, SEEK_SET);
 
-    if (packer == NULL) {
-	free(temp);
+    if (packer == NULL)
 	return 0;
-    }
 
     /* TODO: move pw to loaders -- add better Arc test above */
     if (builtin != BUILTIN_PW)
        reportv(ctx, 0, "Depacking %s file... ", packer);
 
-    if ((fd = mkstemp(temp)) < 0) {
+    temp = calloc(sizeof (struct tmpfilename), 1);
+    if (!temp) {
+	report("calloc failed\n");
+	goto err;
+    }
+
+    temp->name = strdup(tmp);
+    if ((fd = mkstemp(temp->name)) < 0) {
 	if (o->verbosity > 0)
 	    report("failed\n");
 	goto err;
     }
+
+    list_add_tail(&temp->list, &tmp_files);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	reportv(ctx, 0, "failed\n");
@@ -233,7 +248,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
 	    free(line);
-	    goto err2;
+	    goto err;
 	}
 	free (line);
 #define BSIZE 0x4000
@@ -241,7 +256,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    reportv(ctx, 0, "failed\n");
 	    pclose (p);
 	    fclose (t);
-	    goto err2;
+	    goto err;
 	}
 	while ((n = fread(buf, 1, BSIZE, p)) > 0) {
 	    fwrite(buf, 1, n, t);
@@ -283,7 +298,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 
     if (res < 0) {
 	reportv(ctx, 0, "failed\n");
-	goto err2;
+	goto err;
     }
 
     if (builtin != BUILTIN_PW)
@@ -292,19 +307,44 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     fclose(*f);
     *f = t;
  
-    temp2 = strdup(temp);
-    decrunch(ctx, f, &temp);
+    temp2 = strdup(temp->name);
+    decrunch(ctx, f, &temp->name);
     unlink(temp2);
     free(temp2);
-    free(temp);
+    /* Mirko: temp is now deallocated in xmp_unlink_tempfiles
+     * not a problem, since xmp_unlink_tempfiles is called after decrunch
+     * in loader routines
+     *
+     * free(temp);
+     */
 
     return 1;
 
-err2:
-    unlink(temp);
 err:
-    free(temp);
     return -1;
+}
+
+
+/*
+ * Windows doesn't allow you to unlink an open file, so we changed the
+ * temp file cleanup system to remove temporary files after we close it
+ *
+ * CM: shouldn't we have a mechanism to remove files when the player
+ *     crashes?
+ */
+void xmp_unlink_tempfiles(void)
+{
+	struct tmpfilename *li;
+	struct list_head *head;
+
+	for (head = (&tmp_files)->next; head != (&tmp_files); ) {
+		li = list_entry(head, struct tmpfilename, list);
+		_D(_D_INFO "unlink tmpfile %s\n", li->name);
+		unlink(li->name);
+		free(li->name);
+		head = head->next;
+		list_del(&li->list);  free(li);
+	}
 }
 
 
@@ -399,6 +439,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 	    fseek(f, 0, SEEK_SET);
 	    if (li->test(f, n, 0) == 0) {
 	        fclose(f);
+		xmp_unlink_tempfiles();
 	        return 0;
 	    }
 	}
@@ -516,6 +557,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     }
 
     fclose(f);
+    xmp_unlink_tempfiles();
 
     if (i < 0) {
 	free(m->basename);
@@ -594,6 +636,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 
 err:
     fclose(f);
+    xmp_unlink_tempfiles();
     return -1;
 }
 
