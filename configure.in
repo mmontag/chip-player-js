@@ -29,7 +29,6 @@ MIXER="mix_all.o"
 AC_SUBST(LIBM)
 LIBM="-lm"
 
-
 dnl -----------------------------------------------------------------------
 dnl Config arguments
 dnl -----------------------------------------------------------------------
@@ -117,9 +116,13 @@ powerpc64)
 esac
 
 case ${target_os} in
-cygwin* | mingw*)
+cygwin*|mingw*)
+    case ${target_os} in
+    mingw*)
+	CFLAGS="${CFLAGS} -Isrc/win32"
+	;;
+    esac
     is_win32=yes
-    CFLAGS="${CFLAGS} -Isrc/win32"
     enable_arts=no
     enable_xmms_plugin=no
     enable_bmp_plugin=no
