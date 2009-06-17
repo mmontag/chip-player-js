@@ -17,9 +17,7 @@
 #include <sys/types.h>
 #endif
 #include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "ptpopen.h"
