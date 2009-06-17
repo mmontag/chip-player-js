@@ -442,7 +442,7 @@ int main (int argc, char **argv)
 
     if (opt->verbosity) {
 	fprintf (stderr, "Extended Module Player %s %s\n"
-	"Copyright (C) 1996-2008 Claudio Matsuoka and Hipolito Carraro Jr\n",
+	"Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n",
 	    xmp_version, xmp_date);
 #ifdef __EMX__
 	fprintf(stderr, "OS/2 Port by Kevin Langman (langman@earthling.net)\n" );
