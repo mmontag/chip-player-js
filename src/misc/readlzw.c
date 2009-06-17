@@ -75,7 +75,7 @@ unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
 	int size;
 
 	if ((buf2 = malloc(in_len)) == NULL)
-		perror(__FUNCTION__), exit(1);
+		perror("read_lzw_dynamic"), exit(1);
 	pos = ftell(f);
 	fread(buf2, 1, in_len, f);
 	b = convert_lzw_dynamic(buf2, max_bits, use_rle, in_len, orig_len, q);
