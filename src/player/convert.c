@@ -71,18 +71,17 @@ void xmp_cvt_diff2abs (int l, int r, char *p)
 
 
 /* Convert signed to unsigned sample data */
-void xmp_cvt_sig2uns (int l, int r, char *p)
+void xmp_cvt_sig2uns(int l, int r, char *p)
 {
-    uint16* w = (uint16*) p;
+    uint16* w = (uint16*)p;
 
-    if (r)
-	for (l >>= 1; l--; w++) {
+    if (r) {
+	for (l >>= 1; l--; w++)
 	    *w += 0x8000;
-	}
-    else
-	for (; l--; p++) {
-	    *p += 0x80;
-	}
+    } else {
+	for (; l--; p++)
+	    *p += (char)0x80;		/* cast needed by MSVC++ */
+    }
 }
 
 
