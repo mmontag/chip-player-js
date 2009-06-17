@@ -720,12 +720,15 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     }
 
     /* Do tone portamento */
-    if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
-	xc->period += xc->s_sgn * xc->s_val;
-	if ((xc->s_sgn * xc->s_end) < (xc->s_sgn * xc->period)) {
-	    xc->period = xc->s_end;
-	    RESET(TONEPORTA);
-	    RESET_PER(TONEPORTA);
+    if (t % p->tempo) {		/* Mix: fix SpaceDebris.mod portamento
+				 * slide down at pattern 3 */
+	if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
+	    xc->period += xc->s_sgn * xc->s_val;
+	    if ((xc->s_sgn * xc->s_end) < (xc->s_sgn * xc->period)) {
+		xc->period = xc->s_end;
+		RESET(TONEPORTA);
+		RESET_PER(TONEPORTA);
+    	    }
 	}
     }
 

@@ -22,6 +22,8 @@ Stable versions
 	- fix volume slides with 00 parameter (by Mirko Buffoni)
 	- fix crash when S3M C2spd is zero (by Mirko Buffoni)
 	- merged Mirko Buffoni's Windows Visual C++ port
+	- don't process tone portamento in first frame of each row, fixes
+	  Space Debris.mod (by Mirko Buffoni)
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
