@@ -91,7 +91,9 @@ static int max_nch = 0;
 static double rows, tot_nch;
 int skip = 0;
 
+#ifdef HAVE_SIGNAL_H
 static int sigusr = 0;
+#endif
 
 void get_options (int, char **, struct xmp_options *, xmp_context);
 
