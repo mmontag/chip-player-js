@@ -246,17 +246,6 @@ fx_volslide:
 	}
 	SET(VOL_SLIDE);
 
-	if (m->fetch & XMP_CTL_FINEFX) {
-	    /* Mirko reports that a S3M with D0F effects created with ST321
-	     * should process volume slides in all frames like ST300. I
-	     * suspect ST3/IT could be handling D0F effects like this.
-	     */
-	    if (MSN(xc->volslide) == 0xf || LSN(xc->volslide) == 0xf) {
-        	SET(FINE_VOLS);
-        	xc->v_fval = xc->volslide;
-	    }
-	}
-
 	/* Skaven's 2nd reality (S3M) has volslide parameter D7 => pri down
 	 * Stargazer's Red Dream (MOD) uses volslide DF => compute both
 	 * Also don't assign xc->volslide if fxp is 0, see Guild of Sounds.xm
@@ -267,6 +256,17 @@ fx_volslide:
 	            xc->v_val = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
 	    } else {
 		xc->v_val = -LSN(fxp) + MSN(fxp);
+	    }
+	}
+
+	if (m->fetch & XMP_CTL_FINEFX) {
+	    /* Mirko reports that a S3M with D0F effects created with ST321
+	     * should process volume slides in all frames like ST300. I
+	     * suspect ST3/IT could be handling D0F effects like this.
+	     */
+	    if (MSN(xc->volslide) == 0xf || LSN(xc->volslide) == 0xf) {
+        	SET(FINE_VOLS);
+        	xc->v_fval = xc->v_val;
 	    }
 	}
 	break;
