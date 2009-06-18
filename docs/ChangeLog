@@ -17,7 +17,8 @@ Stable versions
 	- fix buffer overflow in OXM and DTT loaders (reported by Luigi
 	  Auriemma)
 	- rename oss_mix driver to oss and alsa_mix to alsa
-	- restrict MMD0 note range to 3 octaves (reported by Daniel Åkerud)
+	- restrict MMD0/MMD1 non-synth instrument note range to 3 octaves
+	  (reported by Daniel Åkerud and Mirko Buffoni)
 	- assume wav driver if output filename ends in .wav
 	- fix volume slides with 00 parameter (by Mirko Buffoni)
 	- fix crash when S3M C2spd is zero (by Mirko Buffoni)

@@ -418,18 +418,11 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 					event = &EVENT(i, k, j);
 					event->note = e[0] & 0x3f;
-					if (event->note) {
-						/* Restrict to 3 octaves,
-						 * med.egyptian has C4 that
-						 * plays like C3
-						 */
-						while (event->note > 35)
-							event->note -= 12;
+					if (event->note)
 						event->note += 36;
-					}
 					event->ins =
-					    (e[1] >> 4) | ((e[0] & 0x80) >> 3) |
-					    ((e[0] & 0x40) >> 1);
+					    (e[1] >> 4) | ((e[0] & 0x80) >> 3)
+					    | ((e[0] & 0x40) >> 1);
 					event->fxt = e[1] & 0x0f;
 					event->fxp = e[2];
 					xlat_fx(event);
@@ -655,6 +648,31 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	reportv(ctx, 0, "\n");
+
+	/*
+	 * Adjust event note data in patterns
+	 */
+
+	/* Restrict non-synth instruments to 3 octave range.
+	 * Checked in MMD0 with med.egypian/med.medieval from Lemmings 2
+	 * and MED.ParasolStars, MMD1 with med.Lemmings2
+	 */
+	for (i = 0; i < m->xxh->pat; i++) {
+		for (j = 0; j < m->xxp[i]->rows; j++) {
+			for (k = 0; k < m->xxh->chn; k++) {
+				event = &EVENT(i, k, j);
+
+				if (!event->note || !event->ins)
+					continue;
+
+				/* Not a synth instrument */
+				if (!p->m.med_wav_table[event->ins - 1]) {
+					while (event->note > (35 + 36))
+						event->note -= 12;
+				}
+			}
+		}
+	}
 
 	for (i = 0; i < m->xxh->chn; i++) {
 		m->xxc[i].vol = song.trkvol[i];
