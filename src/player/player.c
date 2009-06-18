@@ -80,7 +80,7 @@ static void module_play (struct xmp_context *, int, int);
 #include "effects.c"
 
 
-static void dummy()
+static void dummy(unsigned long)
 {
     /* dummy */
 }
