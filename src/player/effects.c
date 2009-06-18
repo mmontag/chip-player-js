@@ -222,26 +222,23 @@ fx_porta_dn:
 	    xc->offset_val = xc->offset;
 	break;
     case FX_VOLSLIDE:				/* Volume slide */
+	/* S3M file volume slide note:
+	 * DFy	Fine volume down by y (...) If y is 0, the command will be
+	 *	treated as a volume slide up with a value of f (15). If a
+	 *	DFF command is specified, the volume will be slid up.
+	 */
 fx_volslide:
 	if (m->fetch & XMP_CTL_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
-	    if (h == 0xf && l != 0) {
-		xc->volslide = fxp;
-		fxp &= 0x0f;
-		goto ex_f_vslide_dn;
-	    } else if (h == 0xe && l != 0) {
-		xc->volslide = fxp;
-		fxp &= 0x0f;
-		goto ex_f_vslide_dn;		/* FIXME */
-	    } else if (l == 0xf && h != 0) {
+	    if (l == 0xf && h != 0) {
 		xc->volslide = fxp;
 		fxp >>= 4;
 		goto ex_f_vslide_up;
-	    } else if (l == 0xe && h != 0) {
+	    } else if (h == 0xf && l != 0) {
 		xc->volslide = fxp;
-		fxp >>= 4;
-		goto ex_f_vslide_up;		/* FIXME */
+		fxp &= 0x0f;
+		goto ex_f_vslide_dn;
 	    } else if (!fxp) {
 		if ((fxp = xc->volslide) != 0)
 		    goto fx_volslide;
