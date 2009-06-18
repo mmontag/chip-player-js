@@ -774,19 +774,11 @@ SOURCE=..\misc\control.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\misc\crc32.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\debug.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\misc\info.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\ipc.c
 # End Source File
 # Begin Source File
 
