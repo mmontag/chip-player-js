@@ -23,7 +23,7 @@ struct iff_info {
 };
 
 void iff_chunk (struct xmp_context *, FILE *);
-void iff_register (char *, void(struct xmp_context *, int, FILE *));
+void iff_register (char *, void(*loader)(struct xmp_context *, int, FILE *));
 void iff_idsize (int);
 void iff_setflag (int);
 void iff_release (void);
