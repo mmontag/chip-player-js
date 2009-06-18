@@ -41,7 +41,7 @@ void iff_chunk(struct xmp_context *ctx, FILE *f)
 }
 
 
-void iff_register(char *id, void (*loader)())
+void iff_register(char *id, void (*loader)(struct xmp_context *, int, FILE *))
 {
     struct iff_info *f;
 
