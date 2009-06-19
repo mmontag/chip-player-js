@@ -1,7 +1,7 @@
 # Extended Module Player src/prowizard/Makefile
 
-TOPDIR	= ../..
-XCFLAGS	= -I../include
+TOPDIR	= ../../..
+XCFLAGS	= -I../../include
 OBJS	= prowiz.o ptktable.o tuning.o \
 	  ac1d.o di.o eureka.o fc-m.o fuchs.o fuzzac.o gmc.o heatseek.o \
 	  kris.o ksm.o mp.o np1.o np2.o np3.o p60a.o pm10c.o pm18a.o pha.o \

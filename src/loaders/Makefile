@@ -14,12 +14,19 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  gdm_load.o coco_load.o pw_load.o
 OBJS	= common.o iff.o itsex.o asif.o $(LOADERS)
 DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c med2_load.c
-DDIRS	= include
+_DIRS	= prowizard
+DDIRS	= $(_DIRS) include
 LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	=
 DCFILES	= 
 
-all: $(LIB)
+all:: $(LIB)
+
+all install::
+	@for i in $(_DIRS); do \
+		(cd $$i && $(MAKE) $@) \
+	done
+
 
 include $(TOPDIR)/Makefile.rules
 

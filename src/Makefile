@@ -2,7 +2,7 @@
 
 TOPDIR	= ../
 DFILES	= Makefile
-_DIRS	= drivers include loaders prowizard player misc main plugin
+_DIRS	= drivers include loaders player misc main plugin
 DDIRS	= $(_DIRS) os2 win32
 CFILES	=
 DCFILES	=
