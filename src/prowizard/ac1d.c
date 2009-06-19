@@ -147,6 +147,7 @@ static int test_AC1D (uint8 *data, int s)
 
 	PW_REQUEST_DATA (s, 896);
 
+printf("%x %x\n", data[2], data[3]);
 	/* test #1 */
 	if (data[2] != 0xac || data[3] != 0x1d)
 		return -1;

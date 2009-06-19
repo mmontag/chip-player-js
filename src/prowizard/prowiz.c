@@ -122,7 +122,7 @@ int pw_init()
 
 struct list_head *checked_format = &pw_format_list;
 
-int pw_wizardry (int in, int out)
+int pw_wizardry(int in, int out, struct pw_format **fmt)
 {
 	struct list_head *tmp;
 	struct pw_format *format;
@@ -137,7 +137,7 @@ int pw_wizardry (int in, int out)
 
 	file_out = fdopen (out, "w+b");
 
-	if (fstat (fileno (file_in), &st) < 0)
+	if (fstat(fileno(file_in), &st) < 0)
 		in_size = -1;
 	else
 		in_size = st.st_size;
@@ -147,9 +147,9 @@ int pw_wizardry (int in, int out)
 		return -2;
 
 	/* alloc mem */
-	data = (uint8 *) malloc (in_size + 4096);	/* slack added */
+	data = (uint8 *)malloc (in_size + 4096);	/* slack added */
 	if (data == NULL) {
-		perror ("Couldn't allocate memory");
+		perror("Couldn't allocate memory");
 		return -1;
 	}
 	fread (data, in_size, 1, file_in);
@@ -172,7 +172,7 @@ int pw_wizardry (int in, int out)
 
 checked:
 	format = list_entry(checked_format, struct pw_format, list);
-	_D (_D_WARN "checked format: %s", format->name);
+	_D(_D_WARN "checked format: %s", format->name);
 	checked_format = &pw_format_list;
 
 done:
@@ -184,7 +184,7 @@ done:
 	if (size < 0)
 		return -1;
 
-	pw_crap(format, file_out);
+	//pw_crap(format, file_out);
 	fflush(file_out);
 
 	/*
@@ -193,17 +193,21 @@ done:
 
 	free(data);
 
+	if (fmt)
+		*fmt = format;
+
 	return 0;
 }
 
+#if 0
 /* writfile_ing craps in converted MODs */
 void pw_crap(struct pw_format *f, FILE *file_out)
 {
 	int i;
 	char buf[40];
 
-	_D ("packer: %s", f->name);
-	i = ftell (file_out);
+	_D("packer: %s", f->name);
+	i = ftell(file_out);
 
 	fseek(file_out, 0x438, SEEK_SET);
 	fwrite("PWIZ", 1, 4, file_out);
@@ -213,8 +217,9 @@ void pw_crap(struct pw_format *f, FILE *file_out)
 		if (buf[i] == ' ')
 			buf[i] = 0;
 	}
-	fwrite (buf, 1, 40, file_out);
+	fwrite(buf, 1, 40, file_out);
 }
+#endif
 
 
 static struct list_head *shortcut = &pw_format_list;
@@ -228,14 +233,14 @@ static int check(unsigned char *b, int s)
 		if (tmp == &pw_format_list)
 			break;
 		format = list_entry(tmp, struct pw_format, list);
-		//_D ("checking format [%d]: %s", s, format->name);
+		_D("checking format [%d]: %s", s, format->name);
 		if ((extra = format->test (b, s)) > 0) {
-			_D ("format: %s, extra: %d", format->id, extra);
+			_D("format: %s, extra: %d", format->id, extra);
 			shortcut = tmp->prev;
 			return extra;
 		}
 		if (extra == 0) {
-			_D ("format ok: %s", format->id);
+			_D("format ok: %s", format->id);
 			checked_format = tmp;
 			shortcut = &pw_format_list;
 			return 0;
@@ -250,12 +255,3 @@ int pw_check(unsigned char *b, int s)
 {
 	return check(b, s);
 }
-
-int decrunch_pw(FILE *f1, FILE *f2)
-{
-	if (pw_wizardry(fileno(f1), fileno(f2)) < 0)
-		return -1;
-
-	return 0;
-}
-

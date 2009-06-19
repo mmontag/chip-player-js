@@ -48,7 +48,8 @@ struct pw_format {
 	struct list_head list;
 };
 
-void pw_crap (struct pw_format *, FILE *);
+//void pw_crap (struct pw_format *, FILE *);
+int pw_wizardry(int, int, struct pw_format **);
 int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);
 int pw_enable(char *, int);

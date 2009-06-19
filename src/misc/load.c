@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "ptpopen.h"
@@ -55,15 +56,13 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
 #define BUILTIN_MMCMP	0x03
-#define BUILTIN_PW	0x04
+//#define BUILTIN_PW	0x04
 #define BUILTIN_ARC	0x05
 #define BUILTIN_ARCFS	0x06
 #define BUILTIN_S404	0x07
 #define BUILTIN_OXM	0x08
 #define BUILTIN_XFD	0x09
 
-
-#define TMP_SIZE 512
 
 #if defined __EMX__ || defined WIN32
 #define REDIR_STDERR "2>NUL"
@@ -80,14 +79,13 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     char *cmd;
     FILE *t;
     int fd, builtin, res;
-    char *packer, *temp2, tmp[TMP_SIZE];
+    char *packer, *temp2, tmp[PATH_MAX];
     struct tmpfilename *temp;
-
 
     packer = cmd = NULL;
     builtin = res = 0;
-    get_temp_dir(tmp, TMP_SIZE);
-    strncat(tmp, "xmp_XXXXXX", TMP_SIZE);
+    get_temp_dir(tmp, PATH_MAX);
+    strncat(tmp, "xmp_XXXXXX", PATH_MAX);
 
     fseek(*f, 0, SEEK_SET);
     //b = calloc(1, PW_TEST_CHUNK);
@@ -188,6 +186,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 #endif
     }
 
+#if 0
     /* Test Arc after prowizard to prevent misidentification */
     if (packer == NULL && b[0] == 0x1a) {
 	int x = b[1] & 0x7f;
@@ -199,6 +198,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    builtin = BUILTIN_ARC;
 	}
     }
+#endif
 
     //free(b);
 
@@ -208,7 +208,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	return 0;
 
     /* TODO: move pw to loaders -- add better Arc test above */
-    if (builtin != BUILTIN_PW)
+    //if (builtin != BUILTIN_PW)
        reportv(ctx, 0, "Depacking %s file... ", packer);
 
     temp = calloc(sizeof (struct tmpfilename), 1);
@@ -240,6 +240,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	line = malloc(lsize);
 	snprintf(line, lsize, cmd, *s);
 
+#ifdef WIN32
 	/* Note: The _popen function returns an invalid file handle, if
 	 * used in a Windows program, that will cause the program to hang
 	 * indefinitely. _popen works properly in a Console application.
@@ -248,6 +249,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	 * and Output" in the Win32 SDK. -- Mirko 
 	 */
 	if ((p = popen(line, "rb")) == NULL) {
+#else
+	if ((p = popen(line, "r")) == NULL) {
+#endif
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
 	    free(line);
@@ -306,7 +310,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	goto err;
     }
 
-    if (builtin != BUILTIN_PW)
+    //if (builtin != BUILTIN_PW)
         reportv(ctx, 0, "done\n");
 
     fclose(*f);

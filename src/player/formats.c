@@ -106,5 +106,6 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(hsc);
 	REG_LOADER(alm);
 
+	pw_loader.enable = 1;
 	list_add_tail(&pw_loader.list, &loader_list);
 }
