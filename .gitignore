@@ -1,0 +1,13 @@
+.gitignore
+*.o
+*.a
+*.obj
+tags
+depend
+*~
+config.log
+config.status
+configure
+autom4te.cache
+Makefile.rules
+Makefile.rules.old
