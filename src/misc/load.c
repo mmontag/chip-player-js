@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -54,7 +55,6 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
 #define BUILTIN_MMCMP	0x03
-//#define BUILTIN_PW	0x04
 #define BUILTIN_ARC	0x05
 #define BUILTIN_ARCFS	0x06
 #define BUILTIN_S404	0x07
@@ -158,19 +158,34 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 #endif
     }
 
-#if 0
-    /* Test Arc after prowizard to prevent misidentification */
     if (packer == NULL && b[0] == 0x1a) {
 	int x = b[1] & 0x7f;
-	if (x >= 1 && x <= 9 && x != 7) {
-	    packer = "Arc";
-	    builtin = BUILTIN_ARC;
-	} else if (x == 0x7f) {
-	    packer = "!Spark";
-	    builtin = BUILTIN_ARC;
+	int i, flag = 0;
+	long size;
+	
+	for (i = 0; i < 13; i++) {
+	    if (b[2 + i] == 0)
+		break;
+	    if (!isprint(b[2 + i])) {
+		flag = 1;
+		break;
+	    }
+	}
+
+	size = readmem32l(b + 15);
+	if (size < 0 || size > 512 * 1024)
+		flag = 1;
+
+        if (flag == 0) {
+	    if (x >= 1 && x <= 9 && x != 7) {
+		packer = "Arc";
+		builtin = BUILTIN_ARC;
+	    } else if (x == 0x7f) {
+		packer = "!Spark";
+		builtin = BUILTIN_ARC;
+	    }
 	}
     }
-#endif
 
     fseek(*f, 0, SEEK_SET);
 
