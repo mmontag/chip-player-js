@@ -163,16 +163,20 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	int i, flag = 0;
 	long size;
 	
+	/* check file name */
 	for (i = 0; i < 13; i++) {
-	    if (b[2 + i] == 0)
+	    if (b[2 + i] == 0) {
+		if (i == 0)		/* name can't be empty */
+		    flag = 1;
 		break;
-	    if (!isprint(b[2 + i])) {
+	    }
+	    if (!isprint(b[2 + i])) {	/* name must be printable */
 		flag = 1;
 		break;
 	    }
 	}
 
-	size = readmem32l(b + 15);
+	size = readmem32l(b + 15);	/* max file size is 512KB */
 	if (size < 0 || size > 512 * 1024)
 		flag = 1;
 
