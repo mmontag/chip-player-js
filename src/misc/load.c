@@ -13,9 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef __EMX__
 #include <sys/types.h>
-#endif
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -31,7 +29,7 @@
 #include "../prowizard/prowiz.h"
 
 extern struct list_head loader_list;
-extern struct list_head *checked_format;
+//extern struct list_head *checked_format;
 
 LIST_HEAD(tmp_files);
 
@@ -49,10 +47,10 @@ int decrunch_pp		(FILE *, FILE *);
 int decrunch_mmcmp	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
-int decrunch_pw		(FILE *, FILE *);
+//int decrunch_pw		(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
-int pw_check		(unsigned char *, int);
+//int pw_check		(unsigned char *, int);
 
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
@@ -78,7 +76,7 @@ int pw_check		(unsigned char *, int);
 static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 {
     struct xmp_options *o = &ctx->o;
-    unsigned char *b;
+    unsigned char b[1024];
     char *cmd;
     FILE *t;
     int fd, builtin, res;
@@ -92,11 +90,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     strncat(tmp, "xmp_XXXXXX", TMP_SIZE);
 
     fseek(*f, 0, SEEK_SET);
-    b = calloc(1, PW_TEST_CHUNK);
-    fread(b, 1, PW_TEST_CHUNK, *f);
+    //b = calloc(1, PW_TEST_CHUNK);
+    fread(b, 1, 1024, *f);
 
 #if defined __AMIGA__ && !defined __AROS__
-    if (packer = test_xfd(b,PW_TEST_CHUNK)) {
+    if (packer = test_xfd(b, 1024)) {
 	builtin = BUILTIN_XFD;
     } else
 #endif
@@ -163,6 +161,8 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
 #endif
+
+#if 0
     } else {
 	int extra;
 	int s = PW_TEST_CHUNK;
@@ -185,6 +185,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 		xmp_enable_format("MOD", 1);
 	    }
 	}
+#endif
     }
 
     /* Test Arc after prowizard to prevent misidentification */
@@ -199,7 +200,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	}
     }
 
-    free(b);
+    //free(b);
 
     fseek(*f, 0, SEEK_SET);
 
@@ -239,7 +240,6 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	line = malloc(lsize);
 	snprintf(line, lsize, cmd, *s);
 
-#ifdef WIN32
 	/* Note: The _popen function returns an invalid file handle, if
 	 * used in a Windows program, that will cause the program to hang
 	 * indefinitely. _popen works properly in a Console application.
@@ -248,9 +248,6 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	 * and Output" in the Win32 SDK. -- Mirko 
 	 */
 	if ((p = popen(line, "rb")) == NULL) {
-#else
-	if ((p = popen(line, "r")) == NULL) {
-#endif
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
 	    free(line);
@@ -296,9 +293,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    res = decrunch_xfd(*f, t);
 	    break;
 #endif
+#if 0
 	case BUILTIN_PW:
 	    res = decrunch_pw(*f, t);
 	    break;
+#endif
 	}
     }
 

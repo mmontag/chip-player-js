@@ -52,6 +52,7 @@ void pw_crap (struct pw_format *, FILE *);
 int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);
 int pw_enable(char *, int);
+int pw_check(unsigned char *, int);
 
 extern const uint8 ptk_table[37][2];
 extern const short tun_table[16][36];
