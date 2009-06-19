@@ -4,6 +4,7 @@ Stable versions
 2.6.0 ():
 	- cleanup: remove rarely used Unix IPC code that difficults porting
 	- cleanup: remove per module configuration that nobody uses
+	- cleanup: moved Prowizard depacking to loader section
 	- don't abort loading if IT sample magic not found (fixes loading
 	  of use-brdg.it and use-funk.it, reported by Mirko Buffoni)
 	- multichannel mods written with Scream Tracker don't use Amiga note

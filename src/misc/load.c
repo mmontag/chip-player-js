@@ -27,10 +27,10 @@
 #include "loader.h"
 
 #include "list.h"
-#include "../prowizard/prowiz.h"
+
+int pw_enable(char *, int);
 
 extern struct list_head loader_list;
-//extern struct list_head *checked_format;
 
 LIST_HEAD(tmp_files);
 
@@ -48,10 +48,8 @@ int decrunch_pp		(FILE *, FILE *);
 int decrunch_mmcmp	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
-//int decrunch_pw		(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
-//int pw_check		(unsigned char *, int);
 
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
@@ -88,7 +86,6 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     strncat(tmp, "xmp_XXXXXX", PATH_MAX);
 
     fseek(*f, 0, SEEK_SET);
-    //b = calloc(1, PW_TEST_CHUNK);
     fread(b, 1, 1024, *f);
 
 #if defined __AMIGA__ && !defined __AROS__
@@ -159,31 +156,6 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
 #endif
-
-#if 0
-    } else {
-	int extra;
-	int s = PW_TEST_CHUNK;
-
-	while ((extra = pw_check(b, s)) > 0) {
-	    b = realloc(b, s + extra);
-	    fread(b + s, extra, 1, *f);
-	    s += extra;
-	}
-
-	if (extra == 0) {
-	    struct pw_format *format;
-
-	    format = list_entry(checked_format, struct pw_format, list);
-
-	    if (format->enable) {
-	        packer = format->name;
-	        builtin = BUILTIN_PW;
-
-		xmp_enable_format("MOD", 1);
-	    }
-	}
-#endif
     }
 
 #if 0
@@ -200,16 +172,12 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     }
 #endif
 
-    //free(b);
-
     fseek(*f, 0, SEEK_SET);
 
     if (packer == NULL)
 	return 0;
 
-    /* TODO: move pw to loaders -- add better Arc test above */
-    //if (builtin != BUILTIN_PW)
-       reportv(ctx, 0, "Depacking %s file... ", packer);
+    reportv(ctx, 0, "Depacking %s file... ", packer);
 
     temp = calloc(sizeof (struct tmpfilename), 1);
     if (!temp) {
@@ -250,6 +218,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	 */
 	if ((p = popen(line, "rb")) == NULL) {
 #else
+	/* Linux popen fails with "rb" */
 	if ((p = popen(line, "r")) == NULL) {
 #endif
 	    reportv(ctx, 0, "failed\n");
@@ -297,11 +266,6 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    res = decrunch_xfd(*f, t);
 	    break;
 #endif
-#if 0
-	case BUILTIN_PW:
-	    res = decrunch_pw(*f, t);
-	    break;
-#endif
 	}
     }
 
@@ -310,8 +274,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	goto err;
     }
 
-    //if (builtin != BUILTIN_PW)
-        reportv(ctx, 0, "done\n");
+    reportv(ctx, 0, "done\n");
 
     fclose(*f);
     *f = t;
@@ -348,7 +311,7 @@ void xmp_unlink_tempfiles(void)
 
 	for (head = (&tmp_files)->next; head != (&tmp_files); ) {
 		li = list_entry(head, struct tmpfilename, list);
-		_D(_D_INFO "unlink tmpfile %s\n", li->name);
+		_D(_D_INFO "unlink tmpfile %s", li->name);
 		unlink(li->name);
 		free(li->name);
 		head = head->next;
@@ -665,4 +628,3 @@ int xmp_enable_format(char *id, int enable)
 
     return pw_enable(id, enable);
 }
-

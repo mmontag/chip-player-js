@@ -19,7 +19,6 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 #endif
 
-#define PW_MARK		0x0001
 #define PW_DELTA	0x0002
 #define PW_PACKED	0x0004
 
@@ -29,10 +28,6 @@ typedef unsigned int uint32;
 	do { if ((s)<(n)) return ((n)-(s)); } while (0)
 
 /*
- * The PW_MARK flag will make a module with PWIZ signature instead
- * of M.K. It's a kludge to make life easier for xmp to determine
- * the original file format.
- * 
  * depackb() and depackf() perform the same action reading the packed
  * module from a buffer or a file. We're supporting both protocols to
  * to avoid rewriting Asle's functions.
@@ -48,7 +43,6 @@ struct pw_format {
 	struct list_head list;
 };
 
-//void pw_crap (struct pw_format *, FILE *);
 int pw_wizardry(int, int, struct pw_format **);
 int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);

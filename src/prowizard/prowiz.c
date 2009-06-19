@@ -199,29 +199,6 @@ done:
 	return 0;
 }
 
-#if 0
-/* writfile_ing craps in converted MODs */
-void pw_crap(struct pw_format *f, FILE *file_out)
-{
-	int i;
-	char buf[40];
-
-	_D("packer: %s", f->name);
-	i = ftell(file_out);
-
-	fseek(file_out, 0x438, SEEK_SET);
-	fwrite("PWIZ", 1, 4, file_out);
-	fseek(file_out, 0, SEEK_END);
-  	snprintf(buf, 40, "%-8.8s%-.32s", f->id, f->name);
-	for (i = 0; i < 8; i++) {
-		if (buf[i] == ' ')
-			buf[i] = 0;
-	}
-	fwrite(buf, 1, 40, file_out);
-}
-#endif
-
-
 static struct list_head *shortcut = &pw_format_list;
 static int check(unsigned char *b, int s)
 {
