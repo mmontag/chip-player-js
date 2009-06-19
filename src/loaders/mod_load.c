@@ -50,7 +50,6 @@ struct {
     { "FA04", 1, 0, "Digital Tracker", 4 },	/* Atari Falcon */
     { "FA06", 1, 0, "Digital Tracker", 6 },	/* Atari Falcon */
     { "FA08", 1, 0, "Digital Tracker", 8 },	/* Atari Falcon */
-    { "PWIZ", 1, 1, "", 4 },
     { "", 0 }
 };
 
@@ -164,15 +163,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    /* Prowizard hack */
-    if (memcmp(magic, "PWIZ", 4) == 0) {
-	int pos = ftell(f);
-	fseek(f, -40, SEEK_END);
-	fread(magic, 8, 1, f);
-	fread(idbuffer, 1, 32, f);
-	fseek(f, start + pos, SEEK_SET);
-	tracker = idbuffer;
-    } else if (!m->xxh->chn) {
+    if (!m->xxh->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
 	    isdigit(magic[0]) && isdigit(magic[1])) {
 	    if ((m->xxh->chn = (*magic - '0') *
