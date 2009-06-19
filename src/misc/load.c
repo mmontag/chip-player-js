@@ -13,11 +13,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef __EMX__
+#include <ctype.h>
 #include <sys/types.h>
-#endif
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "ptpopen.h"
@@ -28,10 +28,10 @@
 #include "loader.h"
 
 #include "list.h"
-#include "../prowizard/prowiz.h"
+
+int pw_enable(char *, int);
 
 extern struct list_head loader_list;
-extern struct list_head *checked_format;
 
 LIST_HEAD(tmp_files);
 
@@ -49,23 +49,18 @@ int decrunch_pp		(FILE *, FILE *);
 int decrunch_mmcmp	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
-int decrunch_pw		(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
-int pw_check		(unsigned char *, int);
 
 #define BUILTIN_PP	0x01
 #define BUILTIN_SQSH	0x02
 #define BUILTIN_MMCMP	0x03
-#define BUILTIN_PW	0x04
 #define BUILTIN_ARC	0x05
 #define BUILTIN_ARCFS	0x06
 #define BUILTIN_S404	0x07
 #define BUILTIN_OXM	0x08
 #define BUILTIN_XFD	0x09
 
-
-#define TMP_SIZE 512
 
 #if defined __EMX__ || defined WIN32
 #define REDIR_STDERR "2>NUL"
@@ -78,25 +73,23 @@ int pw_check		(unsigned char *, int);
 static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 {
     struct xmp_options *o = &ctx->o;
-    unsigned char *b;
+    unsigned char b[1024];
     char *cmd;
     FILE *t;
     int fd, builtin, res;
-    char *packer, *temp2, tmp[TMP_SIZE];
+    char *packer, *temp2, tmp[PATH_MAX];
     struct tmpfilename *temp;
-
 
     packer = cmd = NULL;
     builtin = res = 0;
-    get_temp_dir(tmp, TMP_SIZE);
-    strncat(tmp, "xmp_XXXXXX", TMP_SIZE);
+    get_temp_dir(tmp, PATH_MAX);
+    strncat(tmp, "xmp_XXXXXX", PATH_MAX);
 
     fseek(*f, 0, SEEK_SET);
-    b = calloc(1, PW_TEST_CHUNK);
-    fread(b, 1, PW_TEST_CHUNK, *f);
+    fread(b, 1, 1024, *f);
 
 #if defined __AMIGA__ && !defined __AROS__
-    if (packer = test_xfd(b,PW_TEST_CHUNK)) {
+    if (packer = test_xfd(b, 1024)) {
 	builtin = BUILTIN_XFD;
     } else
 #endif
@@ -163,52 +156,43 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
 #endif
-    } else {
-	int extra;
-	int s = PW_TEST_CHUNK;
+    }
 
-	while ((extra = pw_check(b, s)) > 0) {
-	    b = realloc(b, s + extra);
-	    fread(b + s, extra, 1, *f);
-	    s += extra;
+    if (packer == NULL && b[0] == 0x1a) {
+	int x = b[1] & 0x7f;
+	int i, flag = 0;
+	long size;
+	
+	for (i = 0; i < 13; i++) {
+	    if (b[2 + i] == 0)
+		break;
+	    if (!isprint(b[2 + i])) {
+		flag = 1;
+		break;
+	    }
 	}
 
-	if (extra == 0) {
-	    struct pw_format *format;
+	size = readmem32l(b + 15);
+	if (size < 0 || size > 512 * 1024)
+		flag = 1;
 
-	    format = list_entry(checked_format, struct pw_format, list);
-
-	    if (format->enable) {
-	        packer = format->name;
-	        builtin = BUILTIN_PW;
-
-		xmp_enable_format("MOD", 1);
+        if (flag == 0) {
+	    if (x >= 1 && x <= 9 && x != 7) {
+		packer = "Arc";
+		builtin = BUILTIN_ARC;
+	    } else if (x == 0x7f) {
+		packer = "!Spark";
+		builtin = BUILTIN_ARC;
 	    }
 	}
     }
-
-    /* Test Arc after prowizard to prevent misidentification */
-    if (packer == NULL && b[0] == 0x1a) {
-	int x = b[1] & 0x7f;
-	if (x >= 1 && x <= 9 && x != 7) {
-	    packer = "Arc";
-	    builtin = BUILTIN_ARC;
-	} else if (x == 0x7f) {
-	    packer = "!Spark";
-	    builtin = BUILTIN_ARC;
-	}
-    }
-
-    free(b);
 
     fseek(*f, 0, SEEK_SET);
 
     if (packer == NULL)
 	return 0;
 
-    /* TODO: move pw to loaders -- add better Arc test above */
-    if (builtin != BUILTIN_PW)
-       reportv(ctx, 0, "Depacking %s file... ", packer);
+    reportv(ctx, 0, "Depacking %s file... ", packer);
 
     temp = calloc(sizeof (struct tmpfilename), 1);
     if (!temp) {
@@ -249,6 +233,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	 */
 	if ((p = popen(line, "rb")) == NULL) {
 #else
+	/* Linux popen fails with "rb" */
 	if ((p = popen(line, "r")) == NULL) {
 #endif
 	    reportv(ctx, 0, "failed\n");
@@ -296,9 +281,6 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    res = decrunch_xfd(*f, t);
 	    break;
 #endif
-	case BUILTIN_PW:
-	    res = decrunch_pw(*f, t);
-	    break;
 	}
     }
 
@@ -307,8 +289,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	goto err;
     }
 
-    if (builtin != BUILTIN_PW)
-        reportv(ctx, 0, "done\n");
+    reportv(ctx, 0, "done\n");
 
     fclose(*f);
     *f = t;
@@ -345,7 +326,7 @@ void xmp_unlink_tempfiles(void)
 
 	for (head = (&tmp_files)->next; head != (&tmp_files); ) {
 		li = list_entry(head, struct tmpfilename, list);
-		_D(_D_INFO "unlink tmpfile %s\n", li->name);
+		_D(_D_INFO "unlink tmpfile %s", li->name);
 		unlink(li->name);
 		free(li->name);
 		head = head->next;
@@ -662,4 +643,3 @@ int xmp_enable_format(char *id, int enable)
 
     return pw_enable(id, enable);
 }
-

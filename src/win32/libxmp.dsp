@@ -626,127 +626,127 @@ SOURCE=..\drivers\win32.c
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\prowizard\ac1d.c
+SOURCE=..\loaders\prowizard\ac1d.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\di.c
+SOURCE=..\loaders\prowizard\di.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\eureka.c
+SOURCE=..\loaders\prowizard\eureka.c
 # End Source File
 # Begin Source File
 
-SOURCE="..\prowizard\fc-m.c"
+SOURCE="..\loaders\prowizard\fc-m.c"
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\fuchs.c
+SOURCE=..\loaders\prowizard\fuchs.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\fuzzac.c
+SOURCE=..\loaders\prowizard\fuzzac.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\gmc.c
+SOURCE=..\loaders\prowizard\gmc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\heatseek.c
+SOURCE=..\loaders\prowizard\heatseek.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\kris.c
+SOURCE=..\loaders\prowizard\kris.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\ksm.c
+SOURCE=..\loaders\prowizard\ksm.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\mp.c
+SOURCE=..\loaders\prowizard\mp.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\np1.c
+SOURCE=..\loaders\prowizard\np1.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\np2.c
+SOURCE=..\loaders\prowizard\np2.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\np3.c
+SOURCE=..\loaders\prowizard\np3.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\p40.c
+SOURCE=..\loaders\prowizard\p40.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\p60a.c
+SOURCE=..\loaders\prowizard\p60a.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\pha.c
+SOURCE=..\loaders\prowizard\pha.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\pm10c.c
+SOURCE=..\loaders\prowizard\pm10c.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\pm18a.c
+SOURCE=..\loaders\prowizard\pm18a.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\prowiz.c
+SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\prun1.c
+SOURCE=..\loaders\prowizard\prun1.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\prun2.c
+SOURCE=..\loaders\prowizard\prun2.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\ptktable.c
+SOURCE=..\loaders\prowizard\ptktable.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\tdd.c
+SOURCE=..\loaders\prowizard\tdd.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\tp3.c
+SOURCE=..\loaders\prowizard\tp3.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\tuning.c
+SOURCE=..\loaders\prowizard\tuning.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\unic.c
+SOURCE=..\loaders\prowizard\unic.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\unic2.c
+SOURCE=..\loaders\prowizard\unic2.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\wn.c
+SOURCE=..\loaders\prowizard\wn.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\xann.c
+SOURCE=..\loaders\prowizard\xann.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\prowizard\zen.c
+SOURCE=..\loaders\prowizard\zen.c
 # End Source File
 # End Group
 # Begin Group "Prowiz Headers"
@@ -754,7 +754,7 @@ SOURCE=..\prowizard\zen.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\prowizard\prowiz.h
+SOURCE=..\loaders\prowizard\prowiz.h
 # End Source File
 # End Group
 # End Group

@@ -4,6 +4,7 @@ Stable versions
 2.6.0 ():
 	- cleanup: remove rarely used Unix IPC code that difficults porting
 	- cleanup: remove per module configuration that nobody uses
+	- cleanup: moved Prowizard depacking to loader section
 	- don't abort loading if IT sample magic not found (fixes loading
 	  of use-brdg.it and use-funk.it, reported by Mirko Buffoni)
 	- multichannel mods written with Scream Tracker don't use Amiga note
@@ -29,6 +30,7 @@ Stable versions
 	- improved Winamp plugin (by Mirko Buffoni)
 	- don't unlink open files (for Windows port, by Mirko Buffoni)
 	- add experimental DxF/DFx handling with volume slides in all frames
+	- add better Archimedes .arc compressed file test
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

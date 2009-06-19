@@ -19,6 +19,7 @@ struct xmp_fmt_info *__fmt_head;
 
 LIST_HEAD(loader_list);
 
+extern struct xmp_loader_info pw_loader;
 
 void register_format(char *id, char *tracker)
 {
@@ -95,7 +96,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(far);
 	REG_LOADER(umx);
 	REG_LOADER(stim);
-	REG_LOADER(coco);
+	/* REG_LOADER(coco); */
 	REG_LOADER(mtp);
 	REG_LOADER(ims);
 	REG_LOADER(ssn);
@@ -104,4 +105,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(rad);
 	REG_LOADER(hsc);
 	REG_LOADER(alm);
+
+	pw_loader.enable = 1;
+	list_add_tail(&pw_loader.list, &loader_list);
 }
