@@ -31,6 +31,7 @@ Stable versions
 	- don't unlink open files (for Windows port, by Mirko Buffoni)
 	- add experimental DxF/DFx handling with volume slides in all frames
 	- add better Archimedes .arc compressed file test
+	- reverted to older YM3812 emulator for license compliance
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

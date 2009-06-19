@@ -15,6 +15,21 @@
 #include "driver.h"
 #include "fmopl.h"
 
+/* Use the old GPL-compatible version */
+#define USE_OLD_FMOPL
+
+#ifdef USE_OLD_FMOPL
+static FM_OPL *ym3812;
+#define YM3812ResetChip(which)	OPLResetChip(ym3812)
+#define YM3812Write(which,a,v)	OPLWrite(ym3812, a, v)
+#define YM3812Read(which,a)	OPLRead(ym3812, a)
+#define YM3812Init(num,clock,rate) \
+		((ym3812 = OPLCreate(OPL_TYPE_IO, clock, rate)) != NULL)
+#define YM3812Shutdown()	OPLDestroy(ym3812)
+#define YM3812UpdateOne(which,tmp_bk,count,vl,vr,stereo) \
+		YM3812UpdateOne(ym3812, tmp_bk, count, vl, vr, stereo)
+#endif
+
 /*
  * ------+-----------------------------------+-----------------------+
  * offset|       SBI data format             |    YM3812 base port
@@ -265,11 +280,10 @@ int synth_deinit ()
 }
 
 
-void synth_mixer (int* tmp_bk, int count, int vl, int vr, int stereo)
+void synth_mixer (int *tmp_bk, int count, int vl, int vr, int stereo)
 {
     if (!tmp_bk)
 	return;
 
-    YM3812UpdateOne (0, tmp_bk, count, vl, vr, stereo);
+    YM3812UpdateOne(0, tmp_bk, count, vl, vr, stereo);
 }
-
