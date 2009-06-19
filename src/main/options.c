@@ -116,7 +116,8 @@ static void usage(char *s, struct xmp_options *opt)
     int i;
 
     copyright_header ();
-    printf ("%s\n", xmp_build); 
+    if (xmp_build)
+	printf ("%s\n", xmp_build); 
 
     printf ("Usage: %s [options] [modules]\n", s);
 
