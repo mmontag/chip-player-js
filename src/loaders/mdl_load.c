@@ -474,7 +474,6 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
     int map, last_map;
 
     m->xxh->ins = read8(f);
-
     reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 
     INSTRUMENT_INIT();
@@ -635,7 +634,6 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 
     INSTRUMENT_INIT();
 
-    m->xxs = calloc (sizeof (struct xxm_sample), m->xxh->smp);
     packinfo = calloc (sizeof (int), m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
@@ -736,6 +734,8 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
 	reportv(ctx, 0, ".");
     }
     reportv(ctx, 0, "\n");
+
+    free(packinfo);
 }
 
 static void get_chunk_ve(struct xmp_context *ctx, int size, FILE *f)

@@ -76,8 +76,6 @@ void set_xxh_defaults(struct xxm_header *xxh)
 	xxh->tpo = 6;
 	xxh->bpm = 125;
 	xxh->chn = 4;
-	xxh->ins = 31;
-	xxh->smp = xxh->ins;
 }
 
 void cvt_pt_event(struct xxm_event *event, uint8 *mod_event)
