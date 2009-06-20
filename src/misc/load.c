@@ -33,7 +33,7 @@ int pw_enable(char *, int);
 
 extern struct list_head loader_list;
 
-LIST_HEAD(tmp_files);
+LIST_HEAD(tmpfiles_list);
 
 struct tmpfilename {
 	char *name;
@@ -211,7 +211,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	goto err;
     }
 
-    list_add_tail(&temp->list, &tmp_files);
+    list_add_tail(&temp->list, &tmpfiles_list);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	reportv(ctx, 0, "failed\n");
@@ -328,13 +328,13 @@ void xmp_unlink_tempfiles(void)
 	struct tmpfilename *li;
 	struct list_head *head;
 
-	for (head = (&tmp_files)->next; head != (&tmp_files); ) {
+	list_for_each(head, &tmpfiles_list) {
 		li = list_entry(head, struct tmpfilename, list);
 		_D(_D_INFO "unlink tmpfile %s", li->name);
 		unlink(li->name);
 		free(li->name);
-		head = head->next;
-		list_del(&li->list);  free(li);
+		list_del(&li->list);
+		free(li);
 	}
 }
 
