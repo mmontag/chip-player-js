@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "xmpi.h"
+#include "common.h"
 #include "period.h"
 
 #include <math.h>

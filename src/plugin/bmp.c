@@ -21,7 +21,7 @@
 #include <gtk/gtk.h>
 
 #include "xmp.h"
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 
 static void	init		(void);

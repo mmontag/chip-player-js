@@ -10,7 +10,7 @@
 #include "config.h"
 #endif
 
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 #include "mixer.h"
 #include "synth.h"

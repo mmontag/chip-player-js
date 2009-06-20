@@ -16,7 +16,7 @@
 #include <AudioToolbox/AudioToolbox.h>
 #include <unistd.h>
 
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 #include "mixer.h"
 

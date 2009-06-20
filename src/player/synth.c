@@ -11,7 +11,7 @@
 #endif
 
 #include "xmp.h"
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 #include "fmopl.h"
 

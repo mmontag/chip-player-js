@@ -88,14 +88,14 @@ version.c:
 	char *xmp_build= "Compiled by $(XMP_OS2_BUILDER) on " __DATE__ " at " __TIME__;>>$@
 
 version.o:	version.c \
-			../include/xmpi.h
+			../include/common.h
 	$(COMPILE) -o $@ -c version.c	
 
 file.o:	../drivers/file.c \
-			../include/xmpi.h ../include/driver.h ../include/mixer.h
+			../include/common.h ../include/driver.h ../include/mixer.h
 	$(COMPILE) -o $@ -c ../drivers/file.c
 os2_dart.o:	../drivers/os2_dart.c \
-			../include/xmpi.h ../include/driver.h ../include/mixer.h
+			../include/common.h ../include/driver.h ../include/mixer.h
 	$(COMPILE) -o $@ -c ../drivers/os2_dart.c
 
 
@@ -107,22 +107,22 @@ crc32.o:	../misc/crc32.c \
 			../include/formats.h
 	$(COMPILE) -o $@ -c ../misc/crc32.c
 depack.o:	../misc/depack.c \
-			../include/xmpi.h 
+			../include/common.h 
 	$(COMPILE) -o $@ -c ../misc/depack.c
 info.o:	../misc/info.c \
 			../include/driver.h 
 	$(COMPILE) -o $@ -c ../misc/info.c
 ipc.o:	../misc/ipc.c \
-			../include/xmpi.h 
+			../include/common.h 
 	$(COMPILE) -o $@ -c ../misc/ipc.c
 load.o:	../misc/load.c \
 			../include/driver.h ../include/convert.h
 	$(COMPILE) -o $@ -c ../misc/load.c
 mmcmp.o:	../misc/mmcmp.c \
-			../include/xmpi.h
+			../include/common.h
 	$(COMPILE) -o $@ -c ../misc/mmcmp.c
 unsqsh.o:	../misc/unsqsh.c \
-			../include/xmpi.h
+			../include/common.h
 	$(COMPILE) -o $@ -c ../misc/unsqsh.c
 
 
@@ -131,7 +131,7 @@ common.o:	../loaders/common.c \
 			../include/xmp.h ../include/period.h ../loaders/include/load.h
 	$(COMPILE) -o $@ -c ../loaders/common.c
 iff.o:	../loaders/iff.c \
-			../loaders/include/iff.h ../include/xmpi.h
+			../loaders/include/iff.h ../include/common.h
 	$(COMPILE) -o $@ -c ../loaders/iff.c
 itsex.o:	../loaders/itsex.c \
 			../loaders/include/load.h
@@ -298,7 +298,7 @@ font2.o:	../main/font2.c \
 			../main/xpanel.h
 	$(COMPILE) -o $@ -c ../main/font2.c
 getopt.o:	../main/getopt.c \
-			../include/xmpi.h
+			../include/common.h
 	$(COMPILE) -o $@ -c ../main/getopt.c
 getopt1.o:	../main/getopt1.c \
 			../include/getopt.h
@@ -329,34 +329,34 @@ driver.o:	../player/driver.c \
 			../include/driver.h ../include/convert.h ../include/mixer.h ../include/period.h
 	$(COMPILE) -o $@ -c ../player/driver.c
 formats.o:	../player/formats.c \
-			../include/xmpi.h ../include/formats.h
+			../include/common.h ../include/formats.h
 	$(COMPILE) -o $@ -c ../player/formats.c
 med_synth.o:	../player/med_synth.c \
-			../include/xmpi.h ../player/player.h ../include/driver.h
+			../include/common.h ../player/player.h ../include/driver.h
 	$(COMPILE) -o $@ -c ../player/med_synth.c
 misc.o:	../player/misc.c \
-			../include/xmpi.h
+			../include/common.h
 	$(COMPILE) -o $@ -c ../player/misc.c
 mixer.o:	../player/mixer.c \
 			../include/mixer.h
 	$(COMPILE) -o $@ -c ../player/mixer.c
 mix_all.o:	../player/mix_all.c \
-			../include/xmpi.h ../include/driver.h ../include/mixer.h
+			../include/common.h ../include/driver.h ../include/mixer.h
 	$(COMPILE) -o $@ -c ../player/mix_all.c
 period.o:	../player/period.c \
-			../include/xmpi.h ../include/period.h
+			../include/common.h ../include/period.h
 	$(COMPILE) -o $@ -c ../player/period.c
 player.o:	../player/player.c \
 			../player/effects.c ../include/driver.h ../include/period.h ../include/effects.h ../player/player.h
 	$(COMPILE) -o $@ -c ../player/player.c
 readrc.o:	../player/readrc.c \
-			../include/xmpi.h
+			../include/common.h
 	$(COMPILE) -o $@ -c ../player/readrc.c
 scan.o:	../player/scan.c \
-			../include/xmpi.h ../include/effects.h
+			../include/common.h ../include/effects.h
 	$(COMPILE) -o $@ -c ../player/scan.c
 ulaw.o:	../player/ulaw.c \
-			../include/xmpi.h
+			../include/common.h
 	$(COMPILE) -o $@ -c ../player/ulaw.c
 	
 

@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "xmpi.h"
+#include "common.h"
 #include "xxm.h"
 #include "effects.h"
 #include "driver.h"

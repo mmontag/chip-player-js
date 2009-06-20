@@ -11,7 +11,7 @@
 #endif
 
 #include <stdlib.h>
-#include "xmpi.h"
+#include "common.h"
 #include "list.h"
 #include "loader.h"
 

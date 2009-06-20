@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "xmpi.h"
+#include "common.h"
 
 int report(char *fmt, ...)
 {

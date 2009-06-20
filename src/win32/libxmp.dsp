@@ -878,7 +878,7 @@ SOURCE=..\include\xmp.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\xmpi.h
+SOURCE=..\include\common.h
 # End Source File
 # Begin Source File
 

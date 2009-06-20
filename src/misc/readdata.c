@@ -10,7 +10,7 @@
 #include "config.h"
 #endif
 
-#include "xmpi.h"
+#include "common.h"
 
 
 inline uint8 read8(FILE *f)

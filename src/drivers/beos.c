@@ -24,7 +24,7 @@ extern "C" {
 
 /* g++ doesn't like typedef xmp_context and struct xmp_context */
 #define xmp_context _xmp_context
-#include "xmpi.h"
+#include "common.h"
 
 #include "driver.h"
 #include "mixer.h"

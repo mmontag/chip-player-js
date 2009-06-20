@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <audio/audiolib.h>
 #include <audio/soundlib.h>
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 #include "mixer.h"
 

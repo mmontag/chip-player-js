@@ -1,6 +1,6 @@
 
-#ifndef __XMPI_H
-#define __XMPI_H
+#ifndef __XMP_COMMON_H
+#define __XMP_COMMON_H
 
 #ifdef __AROS__
 #define __AMIGA__
@@ -294,4 +294,4 @@ int	get_temp_dir		(char *, int);
 int	mkstemp			(char *);
 #endif
 
-#endif /* __XMPI_H */
+#endif /* __XMP_COMMON_H */

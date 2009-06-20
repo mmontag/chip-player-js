@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-#include "xmpi.h"
+#include "common.h"
 
 /* #include "stdafx.h" */
 /* #include "sndfile.h" */

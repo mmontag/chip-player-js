@@ -30,7 +30,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "xmpi.h"
+#include "common.h"
 #include "effects.h"
 #include "mixer.h"
 

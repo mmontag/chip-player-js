@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "xmpi.h"
+#include "common.h"
 
 #define XPKERR_CHKSUM 1
 #define XPKERR_UNKNOWNTYPE 2

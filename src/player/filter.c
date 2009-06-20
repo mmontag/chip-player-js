@@ -18,7 +18,7 @@
 #endif
 
 #include "xmp.h"
-#include "xmpi.h"
+#include "common.h"
 #include "player.h"
 #include "driver.h"
 #include "mixer.h"

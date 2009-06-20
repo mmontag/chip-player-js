@@ -14,7 +14,7 @@
 #include <pulse/simple.h>
 #include <pulse/error.h>
 
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 #include "mixer.h"
 

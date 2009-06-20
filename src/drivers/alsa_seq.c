@@ -16,7 +16,7 @@
 #include <linux/awe_voice.h>
 #include <math.h>
 
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 
 

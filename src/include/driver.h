@@ -2,7 +2,7 @@
 #ifndef __XMP_DRIVER_H
 #define __XMP_DRIVER_H
 
-#include "xmpi.h"
+#include "common.h"
 
 #define XMP_PATCH_FM	-1
 

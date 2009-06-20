@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "xmp.h"
-#include "xmpi.h"
+#include "common.h"
 #include "period.h"
 #include "load.h"
 

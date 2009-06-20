@@ -16,7 +16,7 @@
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
-#include "xmpi.h"
+#include "common.h"
 
 #ifdef __AMIGA__
 #include <sys/unistd.h>

@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include "readrle.h"
 
-#include "xmpi.h"
+#include "common.h"
 #include "readlzw.h"
 
 

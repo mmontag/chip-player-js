@@ -11,7 +11,7 @@
 #endif
 
 #include <artsc.h>
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 #include "mixer.h"
 

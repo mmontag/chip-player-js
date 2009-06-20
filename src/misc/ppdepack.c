@@ -35,7 +35,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "xmpi.h"
+#include "common.h"
 
 #define WANT_PP2X_DECRYPTING
 

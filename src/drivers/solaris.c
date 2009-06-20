@@ -44,7 +44,7 @@
 #include <sbus/audio/audio.h>
 #endif
 
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 #include "mixer.h"
 

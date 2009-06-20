@@ -34,7 +34,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "xmpi.h"
+#include "common.h"
 #include "readrle.h"
 #include "readhuff.h"
 #include "readlzw.h"

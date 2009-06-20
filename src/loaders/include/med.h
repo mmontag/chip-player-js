@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "xmpi.h"
+#include "common.h"
 
 typedef int32 LONG;
 typedef uint32 ULONG;

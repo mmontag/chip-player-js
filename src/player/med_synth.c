@@ -10,7 +10,7 @@
 #include "config.h"
 #endif
 
-#include "xmpi.h"
+#include "common.h"
 #include "player.h"
 #include "driver.h"
 

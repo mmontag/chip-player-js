@@ -48,7 +48,7 @@
 #include <linux/awe_voice.h>
 #endif
 
-#include "xmpi.h"
+#include "common.h"
 #include "driver.h"
 
 #if !defined (DISABLE_AWE) && (defined (HAVE_AWE_VOICE_H) || \

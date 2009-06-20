@@ -2,7 +2,7 @@
 #ifndef __XMP_SYNTH_H
 #define __XMP_SYNTH_H
 
-#include "xmpi.h"
+#include "common.h"
 
 int	synth_init	(int);
 int	synth_deinit	(void);

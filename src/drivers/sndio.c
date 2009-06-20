@@ -21,7 +21,7 @@
 
 #include "driver.h"
 #include "mixer.h"
-#include "xmpi.h"
+#include "common.h"
 
 static struct sio_hdl *hdl;
 
