@@ -63,17 +63,17 @@
 #define MAGIC_OPLH	MAGIC4('O','P','L','H')
 
 
-static int psm_test (FILE *, char *, const int);
-static int psm_load (struct xmp_context *, FILE *, const int);
+static int masi_test (FILE *, char *, const int);
+static int masi_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info psm_loader = {
+struct xmp_loader_info masi_loader = {
 	"MASI",
 	"Epic Megagames MASI",
-	psm_test,
-	psm_load
+	masi_test,
+	masi_load
 };
 
-static int psm_test(FILE * f, char *t, const int start)
+static int masi_test(FILE * f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_PSM_)
 		return -1;
@@ -402,7 +402,7 @@ static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
+static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;

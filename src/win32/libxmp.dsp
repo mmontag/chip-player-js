@@ -306,7 +306,7 @@ SOURCE=..\loaders\okt_load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\psm_load.c
+SOURCE=..\loaders\masi_load.c
 # ADD CPP /I "../loaders/include"
 # SUBTRACT CPP /I "include"
 # End Source File
