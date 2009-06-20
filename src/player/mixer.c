@@ -537,6 +537,9 @@ void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
  
     smix_anticlick(ctx, voc, vol, vi->pan, NULL, 0);
     vi->vol = vol;
+
+    if (vi->fidx & FLAG_SYNTH)
+	synth_setvol(voc, vol >> 4);
 }
 
 

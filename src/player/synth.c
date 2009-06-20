@@ -244,6 +244,29 @@ void synth_setnote (int c, int note, int bend)
 }
 
 
+void synth_setvol(int c, int vol)
+{
+    int b, ofs;
+
+    if ((c = synth_getchannel(c)) < 0)
+	return;
+
+    if (vol > 63)
+	vol = 63;
+
+    /* Check if operator 1 produces sound */
+    if (opl_read(0xc8 + c)) {
+	    ofs = register_offset[0][c];
+	    b = opl_read(0x40 + ofs);
+	    opl_write(0x40 + ofs, (b & 0xc0) | (63 - vol));
+    }
+
+    ofs = register_offset[1][c];
+    b = opl_read(0x40 + ofs);
+    opl_write(0x40 + ofs, (b & 0xc0) | (63 - vol));
+}
+
+
 int synth_init (int freq)
 {
 #ifdef DEBUG_ADLIB
