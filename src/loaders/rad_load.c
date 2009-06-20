@@ -197,18 +197,17 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 
 				b = read8(f);	/* Note + octave + inst */
 				event->ins = (b & 0x80) >> 3;
-				event->note = (b & 0x0f) +
-						12 * ((b & 0x70) >> 4);
+				event->note = LSN(b);
 
 				if (event->note == 15)
 					event->note = XMP_KEY_OFF;
 				else if (event->note)
-					event->note += 14;
+					event->note += 14 +
+						12 * ((b & 0x70) >> 4);
 
 				b = read8(f);	/* Instrument + effect */
 				event->ins |= MSN(b);
 				event->fxt = LSN(b);
-
 				if (event->fxt) {
 					b = read8(f);	/* Effect parameter */
 					event->fxp = b;
