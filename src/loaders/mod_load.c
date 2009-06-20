@@ -27,7 +27,8 @@
 
 #include <ctype.h>
 #include <sys/types.h>
-
+#include <sys/stat.h>
+#include <unistd.h>
 #include "load.h"
 #include "mod.h"
 
@@ -68,6 +69,8 @@ static int mod_test(FILE *f, char *t, const int start)
 {
     int i;
     char buf[4];
+    struct stat st;
+    int smp_size, num_pat;
 
     fseek(f, start + 1080, SEEK_SET);
     fread(buf, 4, 1, f);
@@ -88,6 +91,42 @@ static int mod_test(FILE *f, char *t, const int start)
 	    break;
     }
     if (mod_magic[i].ch == 0)
+	return -1;
+
+    /* Test for UNIC tracker modules
+     *
+     * From Gryzor's Pro-Wizard PW_FORMATS-Engl.guide:
+     * ``The UNIC format is very similar to Protracker... At least in the
+     * heading... same length : 1084 bytes. Even the "M.K." is present,
+     * sometimes !! Maybe to disturb the rippers.. hehe but Pro-Wizard
+     * doesn't test this only!''
+     */
+
+    /* get file size */
+    fstat(fileno(f), &st);
+    smp_size = 0;
+    fseek(f, start + 20, SEEK_SET);
+
+    /* get samples size */
+    for (i = 0; i < 31; i++) {
+	fseek(f, 22, SEEK_CUR);
+	smp_size += 2 * read16b(f);		/* Length in 16-bit words */
+	fseek(f, 6, SEEK_CUR);
+    } 
+
+    /* get number of patterns */
+    num_pat = 0;
+    fseek(f, start + 952, SEEK_SET);
+    for (i = 0; i < 128; i++) {
+	uint8 x = read8(f);
+	if (x > 0x7f)
+		break;
+	if (x > num_pat)
+	    num_pat = x;
+    }
+    num_pat++;
+
+    if (start + 1084 + num_pat * 0x300 + smp_size == st.st_size)
 	return -1;
 
     fseek(f, start + 0, SEEK_SET);
@@ -146,6 +185,8 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	mh.ins[i].volume = read8(f);		/* Linear playback volume */
 	mh.ins[i].loop_start = read16b(f);	/* Loop start in 16-bit words */
 	mh.ins[i].loop_size = read16b(f);	/* Loop size in 16-bit words */
+
+	smp_size += 2 * mh.ins[i].size;
     }
     mh.len = read8(f);
     mh.restart = read8(f);
@@ -203,8 +244,6 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	smp_size += 2 * mh.ins[i].size;
-
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxs[i].len = 2 * mh.ins[i].size;
 	m->xxs[i].lps = lps_mult * mh.ins[i].loop_start;
@@ -266,20 +305,6 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	tracker = "Mod's Grave";
 	ptkloop = 0;
 	goto skip_test;
-    }
-
-    /* Test for UNIC tracker modules
-     *
-     * From Gryzor's Pro-Wizard PW_FORMATS-Engl.guide:
-     * ``The UNIC format is very similar to Protracker... At least in the
-     * heading... same length : 1084 bytes. Even the "M.K." is present,
-     * sometimes !! Maybe to disturb the rippers.. hehe but Pro-Wizard
-     * doesn't test this only!''
-     */
-
-    else if (sizeof (struct mod_header) + m->xxh->pat * 0x300 +
-	smp_size == m->size) {
-	return -1;
     }
 
     /* Test for Protracker song files
