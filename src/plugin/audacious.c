@@ -285,7 +285,7 @@ static void mseek(InputPlayback *ipb, unsigned long time)
 			if (i > 0)
 				i--;
 			a = xmp_ord_set(ctx, i);
-			xmp_ip.output->flush(p->m.xxo_info[i].time);
+			ipb->output->flush(p->m.xxo_info[i].time);
 			break;
 		}
 	}
@@ -293,7 +293,7 @@ static void mseek(InputPlayback *ipb, unsigned long time)
 
 static void mod_pause(InputPlayback *ipb, short p)
 {
-	xmp_ip.output->pause(p);
+	ipb->output->pause(p);
 }
 
 
@@ -304,7 +304,7 @@ static int get_time(InputPlayback *ipb)
 	if (!ipb->playing)
 		return -1;
 
-	return xmp_ip.output->output_time();
+	return ipb->output->output_time();
 }
 
 
