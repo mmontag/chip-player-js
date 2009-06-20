@@ -134,8 +134,8 @@ The current version recognizes the following module formats:
   YM3812 (Adlib) formats:
 
   AMD	***	Amusic Adlib Tracker	-
-  RAD	***	Reality Adlib Tracker	-
-  HSC	**	NEO soft/HSC-Tracker	1.5
+  RAD	***+	Reality Adlib Tracker	-
+  HSC	***	NEO soft/HSC-Tracker	1.5
   S3M	***  	Scream Tracker 3	3.00, 3.01+
 
 Ratings:
