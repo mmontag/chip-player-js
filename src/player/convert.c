@@ -276,7 +276,7 @@ void xmp_cvt_bid2und(struct xmp_context *ctx)
 
 
 /* Convert HSC OPL2 instrument data to SBI instrument data */
-void xmp_cvt_hsc2sbi (char *a)
+void xmp_cvt_hsc2sbi(char *a)
 {
     char b[11];
     int i;
@@ -285,7 +285,7 @@ void xmp_cvt_hsc2sbi (char *a)
 	uint8 x;
  	x = a[i];
 	a[i] = a[i + 1];
-	a[i] = x;
+	a[i + 1] = x;
     }
 
     memcpy (b, a, 11);
