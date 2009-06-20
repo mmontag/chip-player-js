@@ -98,6 +98,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxh->pat = afh.order[i];
     m->xxh->pat++;
 
+    m->xxh->ins = 31;
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
     m->xxh->smp = m->xxh->ins;
     m->c4rate = C4_NTSC_RATE;
