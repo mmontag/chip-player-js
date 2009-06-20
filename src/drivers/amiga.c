@@ -1,6 +1,5 @@
 /* Amiga AHI driver for Extended Module Player
  * Copyright (C) 2007 Lorence Lombardo
- * Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
