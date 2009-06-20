@@ -35,6 +35,7 @@ Stable versions
 	- fix byte swap error in HSC to SBI Adlib OPL2 instrument conversion
 	- fix Reality Adlib tracker loader
 	- implement Adlib OPL2 synth volume setting
+	- improve tempo, tuning and envelope of HSC modules
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

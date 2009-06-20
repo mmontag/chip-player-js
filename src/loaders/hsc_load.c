@@ -94,16 +94,17 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
     fseek(f, start + 0, SEEK_SET);
 
     m->xxh->chn = 9;
-    m->xxh->bpm = 125;
+    m->xxh->bpm = 135;
     m->xxh->tpo = 6;
     m->xxh->smp = 0;
+    m->xxh->flg = XXM_FLG_LINEAR;
 
     sprintf(m->type, "HSC (HSC-Tracker)");
 
     MODULE_INFO();
 
     reportv(ctx, 1,
-"               Modulator                       Carrier             Common\n"
+"               Modulator                       Carrier               Common\n"
 "     Char Fr LS OL At De Su Re WS   Char Fr LS OL At De Su Re WS   Fbk Alg Fin\n");
 
     /* Read instruments */
@@ -117,10 +118,11 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxih[i].nsm = 1;
 	m->xxi[i][0].vol = 0x40;
-	m->xxi[i][0].fin = (int8)sid[11];
+	m->xxi[i][0].fin = (int8)sid[11] / 4;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].xpo = 0;
 	m->xxi[i][0].sid = i;
+	m->xxih[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
 	if (V(1)) {
 	    int j, x;
@@ -151,7 +153,8 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	    report ("%2d %2d ", sid[7] >> 4, sid[7] & 0x0f);
 	    report ("%2d   ", sid[9]);
 
-	    report ("%2d  %2d  %02x\n", sid[10] >> 1, sid[10] & 0x01, sid[11]);
+	    report ("%2d  %2d %4d\n", sid[10] >> 1, sid[10] & 0x01,
+							(int8)sid[11]);
 	}
 skip:
 	xmp_drv_loadpatch(ctx, f, i, 0, 0, NULL, (char *)sid);
@@ -193,7 +196,7 @@ skip:
 		} else if (e[0] == 0x7f) {
 		    event->note = XMP_KEY_OFF;
 		} else if (e[0] > 0) {
-		    event->note = e[0] + 12;
+		    event->note = e[0] + 13;
 		    event->ins = ins[c];
 		}
 
