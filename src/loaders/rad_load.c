@@ -46,7 +46,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
-	int i;
+	int i, j;
 	uint8 sid[11];
 	uint16 ppat[32];
 	uint8 b, r, c;
@@ -148,12 +148,10 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Read orders */
 	m->xxh->len = read8(f);
 
-	for (i = 0; i < m->xxh->len; i++) {
+	for (j = i = 0; i < m->xxh->len; i++) {
 		b = read8(f);
 		if (b < 0x80)
-			m->xxo[i] = b;
-		else
-			i--;			/* FIXME: jump line */
+			m->xxo[j++] = b;
 	}
 
 	/* Read pattern pointers */
