@@ -70,8 +70,8 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(ult);
 	REG_LOADER(liq);
 	REG_LOADER(no);
+	REG_LOADER(masi);
 	REG_LOADER(psm);
-	REG_LOADER(svb);
 	REG_LOADER(amf);
 	REG_LOADER(gdm);
 	REG_LOADER(mmd1);

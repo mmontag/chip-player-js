@@ -378,7 +378,7 @@ SOURCE=..\loaders\stx_load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\svb_load.c
+SOURCE=..\loaders\psm_load.c
 # ADD CPP /I "../loaders/include"
 # SUBTRACT CPP /I "include"
 # End Source File

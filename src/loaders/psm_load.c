@@ -16,17 +16,17 @@
 #define MAGIC_PSM_	MAGIC4('P','S','M',0xfe)
 
 
-static int svb_test (FILE *, char *, const int);
-static int svb_load (struct xmp_context *, FILE *, const int);
+static int psm_test (FILE *, char *, const int);
+static int psm_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info svb_loader = {
+struct xmp_loader_info psm_loader = {
 	"PSM",
 	"Protracker Studio",
-	svb_test,
-	svb_load
+	psm_test,
+	psm_load
 };
 
-static int svb_test(FILE *f, char *t, const int start)
+static int psm_test(FILE *f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_PSM_)
 		return -1;
@@ -39,7 +39,7 @@ static int svb_test(FILE *f, char *t, const int start)
 
 /* FIXME: effects translation */
 
-static int svb_load(struct xmp_context *ctx, FILE *f, const int start)
+static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
