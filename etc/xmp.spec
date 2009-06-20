@@ -1,9 +1,9 @@
 %define enable_audacious 1
 %define enable_bmp 0
-%define enable_xmms 1
+%define enable_xmms 0
 
 Name: xmp
-Version: 2.5.1
+Version: 2.6.0
 Release: 1
 Summary: A multi-format module player
 Group: Sound
