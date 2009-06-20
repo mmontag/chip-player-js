@@ -342,6 +342,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     else
 	m->xxh->chn = 8;
 
+    m->xxh->ins = 31;
     m->xxh->len = mh.len;
     m->xxh->rst = mh.restart;
     memcpy(m->xxo, mh.order, 128);

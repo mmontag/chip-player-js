@@ -113,6 +113,7 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (memcmp(mh.magic, "M.K.", 4))
 		goto err;
 		
+	m->xxh->ins = 31;
 	m->xxh->chn = 4;
 	m->xxh->len = mh.len;
 	m->xxh->rst = mh.restart;
