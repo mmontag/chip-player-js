@@ -62,6 +62,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->chn = 9;
 	m->xxh->bpm = 125;
 	m->xxh->tpo = flags & 0x1f;
+	m->xxh->flg = XXM_FLG_LINEAR;
 	/* FIXME: tempo setting in RAD modules */
 	if (m->xxh->tpo <= 2)
 		m->xxh->tpo = 6;
