@@ -17,6 +17,7 @@ Stable versions
 	- fix memory leak: free header and filename when file is invalid
 	- fix memory leak: free temporary buffer in MDL loader
 	- fix memory leak: move UNIC check to test section of mod loader
+	- fix memory leak: free DigitalSymphony extra empty track
 	- fix buffer overflow in OXM and DTT loaders (reported by Luigi
 	  Auriemma)
 	- rename oss_mix driver to oss and alsa_mix to alsa

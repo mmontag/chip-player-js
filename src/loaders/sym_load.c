@@ -222,9 +222,8 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	/* PATTERN_INIT - alloc extra track*/
-	m->xxt = calloc(sizeof(struct xxm_track *), m->xxh->trk + 1);
-	m->xxp = calloc(sizeof(struct xxm_pattern *), m->xxh->pat + 1);
+	m->xxh->trk++;			/* alloc extra empty track */
+	PATTERN_INIT();
 
 	/* Sequence */
 	a = read8(f);			/* packing */
@@ -250,13 +249,11 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			int idx = 2 * (i * m->xxh->chn + j);
 			m->xxp[i]->info[j].index = readptr16l(&buf[idx]);
 
-			if (m->xxp[i]->info[j].index == 0x1000) /* empty track */
-				m->xxp[i]->info[j].index = m->xxh->trk;
+			if (m->xxp[i]->info[j].index == 0x1000) /* empty trk */
+				m->xxp[i]->info[j].index = m->xxh->trk - 1;
 
-			//printf("%04x ", m->xxp[i]->info[j].index);
 		}
 		m->xxo[i] = i;
-		//printf("\n");
 	}
 	free(buf);
 
@@ -268,9 +265,9 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		return -1;
 
 	reportv(ctx, 1, "Packed tracks  : %s\n", a ? "yes" : "no");
-	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
+	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk - 1);
 
-	size = 64 * m->xxh->trk * 4;
+	size = 64 * (m->xxh->trk - 1) * 4;
 	buf = malloc(size);
 
 	if (a) {
@@ -279,7 +276,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		fread(buf, 1, size, f);
 	}
 
-	for (i = 0; i < m->xxh->trk; i++) {
+	for (i = 0; i < m->xxh->trk - 1; i++) {
 		m->xxt[i] = calloc(sizeof(struct xxm_track) +
 				sizeof(struct xxm_event) * 64 - 1, 1);
 		m->xxt[i]->rows = 64;
