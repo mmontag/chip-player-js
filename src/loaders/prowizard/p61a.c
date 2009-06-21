@@ -39,7 +39,6 @@ static int depack_p61a(FILE * in, FILE * out)
     uint8 PatPos = 0x00;
     uint8 PatMax = 0x00;
     uint8 nins = 0x00;
-    uint8 ptk_table[37][2];
     uint8 tdata[512][256];
     uint8 ptable[128];
     uint8 isize[31][2];

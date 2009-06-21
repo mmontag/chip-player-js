@@ -29,7 +29,7 @@ struct xmp_loader_info pw_loader = {
 	pw_load
 };
 
-#define BUF_SIZE 4096
+#define BUF_SIZE 0x10000
 
 static int pw_test(FILE *f, char *t, const int start)
 {
