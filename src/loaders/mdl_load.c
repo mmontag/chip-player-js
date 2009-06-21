@@ -263,7 +263,7 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
 
     get_bits (0, &f, &len);
 
-    for (i = lo = b = d = 0; i < l; i++) {
+    for (i = lo = b = d = 0; i < l && len > 1; i++) {
 	lo = get_bits (8, &f, &len);
 	s = get_bits (1, &f, &len);
 	if (get_bits (1, &f, &len)) {
