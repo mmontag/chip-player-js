@@ -342,7 +342,7 @@ static int depack_p18a (FILE *in, FILE *out)
 
 static int test_p18a (uint8 *data, int s)
 {
-	int i = 0, j, k, l;
+	int i = 0, j, k;
 	int start = 0;
 
 	/* test 1 */
@@ -361,11 +361,9 @@ static int test_p18a (uint8 *data, int s)
 	if (data[start + 21] != 0xd2)
 		return -1;
 
-	PW_REQUEST_DATA (s, 4456);
-
 	/* test 3 */
-	j = (data[start + 4456] << 24) + (data[start + 4457] << 16) +
-		(data[start + 4458] << 8) + data[start + 4459];
+	PW_REQUEST_DATA(s, 4460);
+	j = readmem32b(data + start + 4456);
 
 #if 0
 	if ((start + j + 4456) > in_size) {
@@ -375,10 +373,9 @@ static int test_p18a (uint8 *data, int s)
 #endif
 
 	/* test 4 */
-	k = (data[start + 4712] << 8) + data[start + 4713];
-	l = k / 4;
-	l *= 4;
-	if (l != k)
+	PW_REQUEST_DATA(s, 4714);
+	k = readmem16b(data + start + 4712);
+	if (k & 0x03)
 		return -1;
 
 	/* test 5 */

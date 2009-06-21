@@ -22,6 +22,7 @@ Stable versions
 	- fix memory access violation in MDL track allocation
 	- fix memory access violation in MDL sample decompression
 	- fix memory access violation in LIQ pattern loading
+	- fix memory access violation in P18A format test
 	- fix free of unallocated block in IT sample-only mode
 	- fix buffer overflow in OXM/DTT loaders (reported by Luigi Auriemma)
 	- rename oss_mix driver to oss and alsa_mix to alsa
