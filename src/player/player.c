@@ -148,6 +148,9 @@ static int do_envelope(struct xmp_context *ctx, struct xxm_envinfo *ei, uint16 *
 		*x = env[ei->lps << 1];
     }
 
+    if (chn < 0)
+	return 0;
+
     if (*x > env[rl = (ei->npt - 1) << 1]) {
 	if (!env[rl + 1])
 	    xmp_drv_resetchannel(ctx, chn);
