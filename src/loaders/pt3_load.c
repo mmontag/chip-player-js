@@ -155,6 +155,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(&mh.magic, 4, 1, f);
 
 	m->xxh->ins = 31;
+	m->xxh->smp = m->xxh->ins;
 	m->xxh->chn = 4;
 	m->xxh->len = mh.len;
 	m->xxh->rst = mh.restart;
