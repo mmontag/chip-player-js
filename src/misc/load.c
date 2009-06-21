@@ -319,21 +319,20 @@ err:
 /*
  * Windows doesn't allow you to unlink an open file, so we changed the
  * temp file cleanup system to remove temporary files after we close it
- *
- * CM: shouldn't we have a mechanism to remove files when the player
- *     crashes?
  */
 void xmp_unlink_tempfiles(void)
 {
 	struct tmpfilename *li;
-	struct list_head *head;
+	struct list_head *tmp;
 
-	list_for_each(head, &tmpfiles_list) {
-		li = list_entry(head, struct tmpfilename, list);
+	/* can't use list_for_each when freeing the node! */
+	for (tmp = (&tmpfiles_list)->next; tmp != (&tmpfiles_list); ) {
+		li = list_entry(tmp, struct tmpfilename, list);
 		_D(_D_INFO "unlink tmpfile %s", li->name);
 		unlink(li->name);
 		free(li->name);
 		list_del(&li->list);
+		tmp = tmp->next;
 		free(li);
 	}
 }

@@ -61,9 +61,11 @@ void iff_release()
     struct list_head *tmp;
     struct iff_info *i;
 
-    list_for_each(tmp, &iff_list) {
+    /* can't use list_for_each because we free the node before incrementing */
+    for (tmp = (&iff_list)->next; tmp != (&iff_list); ) {
 	i = list_entry(tmp, struct iff_info, list);
 	list_del(&i->list);
+	tmp = tmp->next;
 	free(i);
     }
 }
