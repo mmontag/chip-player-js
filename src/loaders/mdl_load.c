@@ -173,7 +173,7 @@ static void xlat_fx2(uint8 *t, uint8 *p)
 }
 
 
-static unsigned int get_bits(char i, uint8 **buf, int* len)
+static unsigned int get_bits(char i, uint8 **buf, int *len)
 {
     static uint32 b = 0, n = 32;
     unsigned int x;
@@ -185,9 +185,11 @@ static unsigned int get_bits(char i, uint8 **buf, int* len)
 	return 0;
     }
 
-    x = b & ((1 << i) - 1);
+    x = b & ((1 << i) - 1);	/* get i bits */
     b >>= i;
     if ((n -= i) <= 24) {
+	if (*len == 0)		/* FIXME: last few bits can't be consumed */
+		return x;
 	b |= (uint32)(*(*buf)++) << n;
 	n += 8; (*len)--;
     }
@@ -225,7 +227,7 @@ static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
 
     get_bits (0, &f, &len);
 
-    for (i = b = d = 0; i < l && len > 0; i++) {
+    for (i = b = d = 0; i < l; i++) {
 	s = get_bits (1, &f, &len);
 	if (get_bits (1, &f, &len)) {
 	    b = get_bits (3, &f, &len);
@@ -263,7 +265,7 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
 
     get_bits (0, &f, &len);
 
-    for (i = lo = b = d = 0; i < l && len > 1; i++) {
+    for (i = lo = b = d = 0; i < l; i++) {
 	lo = get_bits (8, &f, &len);
 	s = get_bits (1, &f, &len);
 	if (get_bits (1, &f, &len)) {
