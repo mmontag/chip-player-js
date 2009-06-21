@@ -310,7 +310,7 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 int decrunch_mmcmp (FILE *f, FILE *fo)                          
 {                                                          
 	struct stat st;
-	uint8 *buf;
+	uint8 *b, *buf;
 	uint32 s;
   
 	if (fo == NULL) 
@@ -319,14 +319,12 @@ int decrunch_mmcmp (FILE *f, FILE *fo)
 	if (fstat (fileno (f), &st))
 		return -1;
 
-	buf = malloc (s = st.st_size);
-	fread (buf, 1, s, f);
-
-	mmcmp_unpack (&buf, &s);
- 
-	fwrite (buf, 1, s, fo);
-
-	free (buf);
+	b = buf = malloc (s = st.st_size);
+	fread(buf, 1, s, f);
+	mmcmp_unpack(&buf, &s);
+	fwrite(buf, 1, s, fo);
+	free(b);
+	free(buf);
 
 	return 0;
 }

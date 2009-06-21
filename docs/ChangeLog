@@ -18,6 +18,7 @@ Stable versions
 	- fix memory leak: free temporary buffer in MDL loader
 	- fix memory leak: move UNIC check to test section of mod loader
 	- fix memory leak: free Digital Symphony extra empty track
+	- fix memory leak: free Music Module Compressor buffers
 	- fix memory access violation freeing list nodes using list_for_each
 	- fix memory access violation in MDL track allocation
 	- fix memory access violation in MDL sample decompression
