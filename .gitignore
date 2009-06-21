@@ -11,3 +11,5 @@ configure
 autom4te.cache
 Makefile.rules
 Makefile.rules.old
+CMakeCache.txt
+CMakeFiles
