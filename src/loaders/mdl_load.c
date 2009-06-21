@@ -225,7 +225,7 @@ static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
 
     get_bits (0, &f, &len);
 
-    for (i = b = d = 0; i < l; i++) {
+    for (i = b = d = 0; i < l && len > 0; i++) {
 	s = get_bits (1, &f, &len);
 	if (get_bits (1, &f, &len)) {
 	    b = get_bits (3, &f, &len);

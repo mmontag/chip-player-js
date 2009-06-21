@@ -19,6 +19,7 @@ Stable versions
 	- fix memory leak: move UNIC check to test section of mod loader
 	- fix memory leak: free Digital Symphony extra empty track
 	- fix memory violation freeing list nodes using list_for_each
+	- fix memory violation in MDL sample decompression
 	- fix buffer overflow in OXM/DTT loaders (reported by Luigi Auriemma)
 	- rename oss_mix driver to oss and alsa_mix to alsa
 	- restrict MMD0/MMD1 non-synth instrument note range to 3 octaves
