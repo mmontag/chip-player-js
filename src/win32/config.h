@@ -32,8 +32,6 @@
 #define popen        _popen
 #define pclose       _pclose
 
-#define MAXPATHLEN   260
-
 #define PACKED
 
 #ifndef M_LN2

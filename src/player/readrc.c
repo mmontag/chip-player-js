@@ -13,9 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
+#include <limits.h>
 #include "common.h"
 
 #ifdef __AMIGA__
@@ -50,16 +48,16 @@ int xmpi_read_rc(struct xmp_context *ctx)
 {
     struct xmp_options *o = &ctx->o;
     FILE *rc;
-    char myrc[MAXPATHLEN];
+    char myrc[PATH_MAX];
     char *hash, *var, *val, line[256];
     char cparm[512];
 
 #if defined __EMX__
-    char myrc2[MAXPATHLEN];
+    char myrc2[PATH_MAX];
     char *home = getenv("HOME");
 
-    snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\xmp.conf", home);
-    snprintf(myrc2, MAXPATHLEN, "%s\\.xmprc", home);    
+    snprintf(myrc, PATH_MAX, "%s\\.xmp\\xmp.conf", home);
+    snprintf(myrc2, PATH_MAX, "%s\\.xmprc", home);    
 
     if ((rc = fopen(myrc2, "r")) == NULL) {
 	if ((rc = fopen(myrc, "r")) == NULL) {
@@ -69,23 +67,23 @@ int xmpi_read_rc(struct xmp_context *ctx)
 	}
     }
 #elif defined __AMIGA__
-    strncpy(myrc, "PROGDIR:xmp.conf", MAXPATHLEN);
+    strncpy(myrc, "PROGDIR:xmp.conf", PATH_MAX);
 
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
 #elif defined WIN32
     char *home = getenv("SystemRoot");
 
-    snprintf(myrc, MAXPATHLEN, "%s/xmp.ini", home);
+    snprintf(myrc, PATH_MAX, "%s/xmp.ini", home);
 
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
 #else
-    char myrc2[MAXPATHLEN];
+    char myrc2[PATH_MAX];
     char *home = getenv("HOME");
 
-    snprintf(myrc, MAXPATHLEN, "%s/.xmp/xmp.conf", home);
-    snprintf(myrc2, MAXPATHLEN, "%s/.xmprc", home);
+    snprintf(myrc, PATH_MAX, "%s/.xmp/xmp.conf", home);
+    snprintf(myrc2, PATH_MAX, "%s/.xmprc", home);
 
     if ((rc = fopen(myrc2, "r")) == NULL) {
 	if ((rc = fopen(myrc, "r")) == NULL) {
@@ -234,19 +232,19 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 void xmpi_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
 {
 #if defined __EMX__
-    char myrc[MAXPATHLEN];
+    char myrc[PATH_MAX];
     char *home = getenv ("HOME");
 
-    snprintf(myrc, MAXPATHLEN, "%s\\.xmp\\modules.conf", home);
+    snprintf(myrc, PATH_MAX, "%s\\.xmp\\modules.conf", home);
     parse_modconf(ctx, "xmp-modules.conf", crc, size);
     parse_modconf(ctx, myrc, crc, size);
 #elif defined __AMIGA__
     parse_modconf(ctx, "PROGDIR:xmp-modules.conf", crc, size);
 #else
-    char myrc[MAXPATHLEN];
+    char myrc[PATH_MAX];
     char *home = getenv ("HOME");
 
-    snprintf(myrc, MAXPATHLEN, "%s/.xmp/modules.conf", home);
+    snprintf(myrc, PATH_MAX, "%s/.xmp/modules.conf", home);
     parse_modconf(ctx, SYSCONFDIR "/xmp-modules.conf", crc, size);
     parse_modconf(ctx, myrc, crc, size);
 #endif
