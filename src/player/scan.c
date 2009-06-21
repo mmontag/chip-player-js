@@ -119,7 +119,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
 	    continue;
 	}
 
-	if (tab_cnt[ord][break_row])
+	if (break_row < m->xxp[m->xxo[ord]]->rows && tab_cnt[ord][break_row])
 	    break;
 
 	m->xxo_info[ord].gvl = gvl;
