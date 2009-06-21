@@ -326,7 +326,7 @@ static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
     int x;
 
     m->xxh->pat = read8(f);
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;	/* Max */
+    m->xxh->trk = m->xxh->pat * m->xxh->chn + 1;	/* Max */
 
     PATTERN_INIT();
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
@@ -355,7 +355,7 @@ static void get_chunk_p0(struct xmp_context *ctx, int size, FILE *f)
     uint16 x16;
 
     m->xxh->pat = read8(f);
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;	/* Max */
+    m->xxh->trk = m->xxh->pat * m->xxh->chn + 1;	/* Max */
 
     PATTERN_INIT();
     reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
@@ -382,6 +382,7 @@ static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
     struct xxm_track *track;
 
     m->xxh->trk = read16l(f) + 1;
+    m->xxt = realloc(m->xxt, sizeof (struct xxm_track *) * m->xxh->trk);
 
     reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
 
