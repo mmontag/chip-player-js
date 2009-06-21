@@ -917,7 +917,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     free(pp_pat);
     free(pp_smp);
-    free(pp_ins);
+    if (m->xxh->ins)	/* sample mode has no instruments */
+	free(pp_ins);
 
     m->xxh->chn = max_ch + 1;
     m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
