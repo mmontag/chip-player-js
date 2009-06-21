@@ -47,6 +47,7 @@ Stable versions
 	- improve tempo, tuning and envelope of HSC modules
 	- fix scanning of patterns containing short tracks
 	- don't play notes outside the valid 8 octave note range
+	- enable The Player 6.1A loader in (untested)
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
