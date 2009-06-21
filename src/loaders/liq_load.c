@@ -396,12 +396,11 @@ next_row:
 	    row = 0;
 	    x2 = 0;
 	    channel++;
-	}
 
-	if (channel >= m->xxh->chn) {
-	    _D(_D_CRIT "bad channel number!");
-	    x1 = read8(f);
-	    goto test_event;
+	    /* FIXME */
+	    if (channel >= m->xxh->chn) {
+		channel = 0;
+	    }
 	}
 
 	goto read_event;

@@ -21,6 +21,7 @@ Stable versions
 	- fix memory access violation freeing list nodes using list_for_each
 	- fix memory access violation in MDL track allocation
 	- fix memory access violation in MDL sample decompression
+	- fix memory access violation in LIQ pattern loading
 	- fix buffer overflow in OXM/DTT loaders (reported by Luigi Auriemma)
 	- rename oss_mix driver to oss and alsa_mix to alsa
 	- restrict MMD0/MMD1 non-synth instrument note range to 3 octaves
