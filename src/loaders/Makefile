@@ -1,7 +1,7 @@
 # Extended Module Player src/loaders/Makefile
 
 TOPDIR	= ../..
-XCFLAGS	= -I../include -Iinclude
+XCFLAGS	= -I../include
 LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  mtm_load.o ptm_load.o okt_load.o alm_load.o amd_load.o rad_load.o \
 	  ult_load.o mdl_load.o it_load.o stx_load.o pt3_load.o sfx_load.o \
@@ -13,9 +13,11 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  med4_load.o ssmt_load.o dbm_load.o stim_load.o umx_load.o \
 	  gdm_load.o coco_load.o pw_load.o
 OBJS	= common.o iff.o itsex.o asif.o $(LOADERS)
-DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c med2_load.c
+DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c med2_load.c \
+	  asif.h far.h iff.h imf.h it.h liq.h load.h med.h mod.h \
+	  mtm.h ptm.h rtm.h s3m.h stm.h stx.h xm.h
 _DIRS	= prowizard
-DDIRS	= $(_DIRS) include
+DDIRS	= $(_DIRS)
 LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	=
 DCFILES	= 

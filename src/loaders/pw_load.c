@@ -15,7 +15,7 @@
 #include "load.h"
 #include "mod.h"
 #include "period.h"
-#include "../prowizard/prowiz.h"
+#include "prowizard/prowiz.h"
 
 extern struct list_head *checked_format;
 
