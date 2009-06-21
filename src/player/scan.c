@@ -168,6 +168,9 @@ int xmpi_scan_module(struct xmp_context *ctx)
 	    tab_cnt[ord][row]++;
 
 	    for (chn = 0; chn < m->xxh->chn; chn++) {
+		if (row >= m->xxt[m->xxp[m->xxo[ord]]->info[chn].index]->rows)
+		    continue;
+
 		event = &EVENT(m->xxo[ord], chn, row);
 
 		f1 = event->fxt;

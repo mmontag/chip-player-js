@@ -857,16 +857,22 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
     iff_release();
 
+#define EVENT(a, c, r)  m->xxt[m->xxp[a]->info[c].index]->event[r]
+
     /* Re-index instruments & samples */
 
     for (i = 0; i < m->xxh->pat; i++)
 	for (j = 0; j < m->xxp[i]->rows; j++)
 	    for (k = 0; k < m->xxh->chn; k++)
-		for (l = 0; l < m->xxh->ins; l++)
+		for (l = 0; l < m->xxh->ins; l++) {
+		    if (j >= m->xxt[m->xxp[i]->info[k].index]->rows)
+			continue;
+		    
 		    if (EVENT(i, k, j).ins && EVENT(i, k, j).ins == i_index[l]) {
 		    	EVENT(i, k, j).ins = l + 1;
 			break;
 		    }
+		}
 
     for (i = 0; i < m->xxh->ins; i++) {
 
