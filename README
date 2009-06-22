@@ -53,7 +53,7 @@ The current version recognizes the following module formats:
   KSM	****+	Kefrens Sound Machine	-
   MP	****+	Module Protector	-
   NP	****+	NoisePacker		1.0, 2.0, 3.0
-  Pxx	****	The Player		4.x, 6.0a
+  Pxx	****	The Player		4.x, 5.0a, 6.0a
   TP	***	Tracker Packer		3
   PM	***	Power Music		-
   PHA	***	Pha Packer		-
