@@ -7,7 +7,7 @@ OBJS	= prowiz.o ptktable.o tuning.o \
 	  kris.o ksm.o mp.o np1.o np2.o np3.o p60a.o pm10c.o pm18a.o pha.o \
 	  prun1.o prun2.o tdd.o unic.o unic2.o wn.o zen.o tp3.o p40.o \
 	  xann.o p50a.o pp21.o
-OBJS2	= hrt.o noiserun.o p61a pm.o pm01.o \
+OBJS2	= hrt.o noiserun.o p61a.o pm.o pm01.o \
 	  pm20.o pm40.o pp10.o pp30.o skyt.o starpack.o tp1.o tp2.o
 XOBJS	=
 XDEPS	=
