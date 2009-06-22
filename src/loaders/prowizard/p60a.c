@@ -33,7 +33,7 @@ struct pw_format pw_p60a = {
 #define ON 1
 #define OFF 2
 
-static int depack_p60a (FILE * in, FILE * out)
+static int depack_p60a(FILE *in, FILE *out)
 {
     uint8 c1, c2, c3, c4, c5, c6;
     int max_row;
@@ -191,7 +191,7 @@ static int depack_p60a (FILE * in, FILE * out)
 			k = 9999l;
 			continue;
 		    }
-		    if (c6 == 0x0B) {		/* pattern jump */
+		    if (c6 == 0x0b) {		/* pattern jump */
 			max_row = k;
 			k = 9999l;
 			continue;
@@ -225,7 +225,7 @@ static int depack_p60a (FILE * in, FILE * out)
 
 		if (c1 == 0x80) {
 		    c4 = read8(in);
-		    a = ftell (in);
+		    a = ftell(in);
 		    c5 = c2;
 		    fseek (in, -((c3 << 8) + c4), SEEK_CUR);
 		    for (l = 0; l <= c5; l++, k++) {
@@ -248,7 +248,7 @@ static int depack_p60a (FILE * in, FILE * out)
 			    *x++ = c2;
 
 			    if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-				c3 = (c3 > 0x7f) ? ( (0x100 - c3) << 4) : c3;
+				c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
 
 			    *x++ = c3;
 
@@ -257,7 +257,7 @@ static int depack_p60a (FILE * in, FILE * out)
 				k = l = 9999l;
 				continue;
 			    }
-			    if (c6 == 0x0B) {	/* pattern jump */
+			    if (c6 == 0x0b) {	/* pattern jump */
 				max_row = k;
 				k = l = 9999l;
 				continue;
@@ -273,8 +273,8 @@ static int depack_p60a (FILE * in, FILE * out)
 				x = &tdata[i * 4 + j][k * 4];
 
 				*x++ = ((c1 << 4) & 0x10) |
-						 (ptk_table[c1 / 2][0]);
-				*x++ = ptk_table [c1 / 2][1];
+						(ptk_table[c1 / 2][0]);
+				*x++ = ptk_table[c1 / 2][1];
 
 				c6 = c2 & 0x0f;
 				if (c6 == 0x08)
@@ -354,7 +354,7 @@ static int depack_p60a (FILE * in, FILE * out)
 
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
-	fseek (in, sdata_addr + saddr[i + 1], 0);
+	fseek (in, sdata_addr + saddr[i + 1], SEEK_SET);
 	insDataWork = (signed char *) malloc (smp_size[i]);
 	memset(insDataWork, 0, smp_size[i]);
 	fread (insDataWork, smp_size[i], 1, in);

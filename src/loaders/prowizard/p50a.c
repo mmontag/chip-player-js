@@ -73,7 +73,7 @@ static int depack_p50a(FILE *in, FILE *out)
 
     /* sample headers */
     for (i = 0; i < nins; i++) {
-        pw_write_zero(out, 22);		/* name */
+	pw_write_zero(out, 22);		/* name */
 
 	j = isize[i] = read16b(in);	/* sample size */
 
@@ -127,14 +127,14 @@ static int depack_p50a(FILE *in, FILE *out)
     fwrite(ptable, 128, 1, out);	/* write pattern table */
     write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
-    tdata_addr = ftell (in);
+    tdata_addr = ftell(in);
 
     /* rewrite the track data */
 
     for (i = 0; i < npat; i++) {
 	max_row = 63;
 	for (j = 0; j < 4; j++) {
-	    fseek (in, taddr[i][j] + tdata_addr, 0);
+	    fseek (in, taddr[i][j] + tdata_addr, SEEK_SET);
 	    for (k = 0; k <= max_row; k++) {
 		uint8 *x = &tdata[i * 4 + j][k * 4];
 		c1 = read8(in);
@@ -143,7 +143,7 @@ static int depack_p50a(FILE *in, FILE *out)
 
 		if ((c1 & 0x80) == 0x80 && c1 != 0x80) {
 		    c4 = read8(in);
-		    c1 = 0xFF - c1;
+		    c1 = 0xff - c1;
 
 		    *x++ = ((c1 << 4) & 0x10) | (ptk_table[c1 / 2][0]);
 		    *x++ = ptk_table[c1 / 2][1];
@@ -159,12 +159,12 @@ static int depack_p50a(FILE *in, FILE *out)
 
 		    *x++ = c3;
 
-		    if (c6 == 0x0D) {		/* pattern break */
+		    if (c6 == 0x0d) {		/* pattern break */
 			max_row = k;
 			k = 9999l;
 			continue;
 		    }
-		    if (c6 == 0x0B) {		/* pattern jump */
+		    if (c6 == 0x0b) {		/* pattern jump */
 			max_row = k;
 			k = 9999l;
 			continue;
@@ -198,9 +198,9 @@ static int depack_p50a(FILE *in, FILE *out)
 
 		if (c1 == 0x80) {
 		    c4 = read8(in);
-		    a = ftell (in);
+		    a = ftell(in);
 		    c5 = c2;
-		    fseek (in, -((c3 << 8) + c4), 1);
+		    fseek (in, -((c3 << 8) + c4), SEEK_CUR);
 		    for (l = 0; l <= c5; l++, k++) {
 			x = &tdata[i * 4 + j][k * 4];
 
@@ -210,7 +210,7 @@ static int depack_p50a(FILE *in, FILE *out)
 
 			if ((c1 & 0x80) == 0x80 && c1 != 0x80) {
 			    c4 = read8(in);
-			    c1 = 0xFF - c1;
+			    c1 = 0xff - c1;
 			    *x++ = ((c1 << 4) & 0x10) | (ptk_table[c1 / 2][0]);
 			    *x++ = ptk_table[c1 / 2][1];
 
@@ -230,7 +230,7 @@ static int depack_p50a(FILE *in, FILE *out)
 				k = l = 9999l;
 				continue;
 			    }
-			    if (c6 == 0x0B) {	/* pattern jump */
+			    if (c6 == 0x0b) {	/* pattern jump */
 				max_row = k;
 				k = l = 9999l;
 				continue;
@@ -246,7 +246,7 @@ static int depack_p50a(FILE *in, FILE *out)
 				x = &tdata[i * 4 + j][k * 4];
 
 				*x++ = ((c1 << 4) & 0x10) |
-				   		(ptk_table [c1 / 2][0]);
+						(ptk_table[c1 / 2][0]);
 				*x++ = ptk_table[c1 / 2][1];
 
 				c6 = c2 & 0x0f;
@@ -277,7 +277,7 @@ static int depack_p50a(FILE *in, FILE *out)
 
 			*x++ = c3;
 		    }
-		    fseek (in, a, 0);
+		    fseek (in, a, SEEK_SET);
 		    k -= 1;
 		    continue;
 		}
@@ -298,11 +298,11 @@ static int depack_p50a(FILE *in, FILE *out)
 
 		*x++ = c3;
 
-		if (c6 == 0x0D) {	/* pattern break */
+		if (c6 == 0x0d) {	/* pattern break */
 		    max_row = k;
 		    break;
 		}
-		if (c6 == 0x0B) {	/* pattern jump */
+		if (c6 == 0x0b) {	/* pattern jump */
 		    max_row = k;
 		    break;
 		}
@@ -322,11 +322,11 @@ static int depack_p50a(FILE *in, FILE *out)
     }
 
     /* go to sample data address */
-    fseek (in, sdata_addr, 0);
+    fseek(in, sdata_addr, SEEK_SET);
 
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
-	fseek (in, sdata_addr + saddr[i + 1], 0);
+	fseek (in, sdata_addr + saddr[i + 1], SEEK_SET);
 	insDataWork = (signed char *) malloc (smp_size[i]);
 	memset(insDataWork, 0, smp_size[i]);
 	fread (insDataWork, smp_size[i], 1, in);
@@ -344,7 +344,7 @@ static int depack_p50a(FILE *in, FILE *out)
     }
 
     if (GLOBAL_DELTA == ON)
-        pw_p60a.flags |= PW_DELTA;
+	pw_p50a.flags |= PW_DELTA;
 
     return 0;
 }
@@ -383,17 +383,17 @@ static int test_p50a(uint8 *data, int s)
     ssize = 0;
     for (n = 0; n < k; n++) {
 	o = ((data[start + 4 + n * 6] << 8) + data[start + 5 + n * 6]);
-	if (((o < 0xFFDF) && (o > 0x8000)) || (o == 0))
+	if (((o < 0xffDF) && (o > 0x8000)) || (o == 0))
 	    return -1;
-	if (o < 0xFF00)
+	if (o < 0xff00)
 	    ssize += (o * 2);
 
 	j = ((data[start + 8 + n * 6] << 8) + data[start + 9 + n * 6]);
-	if ((j != 0xFFFF) && (j >= o))
+	if ((j != 0xffFF) && (j >= o))
 	    return -1;
 
-	if (o > 0xFFDF) {
-	    if ((0xFFFF - o) > k)
+	if (o > 0xffDF) {
+	    if ((0xffFF - o) > k)
 		return -1;
 	}
     }
@@ -418,7 +418,7 @@ static int test_p50a(uint8 *data, int s)
 
     PW_REQUEST_DATA(s, start + k * 6 + 4 + m * 8 + 128);
 
-    while ((data[start + k * 6 + 4 + m * 8 + l] != 0xFF) && (l < 128)) {
+    while ((data[start + k * 6 + 4 + m * 8 + l] != 0xff) && (l < 128)) {
 
 	if (((data[start + k * 6 + 4 + m * 8 + l] / 2) * 2) !=
 	    data[start + k * 6 + 4 + m * 8 + l])
