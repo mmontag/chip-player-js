@@ -279,7 +279,7 @@ static int softmixer(struct xmp_context *ctx)
     for (voc = numvoc; voc--; ) {
 	vi = &d->voice_array[voc];
 
-	if (vi->chn < 0 || vi->pbase <= 0)
+	if (vi->chn < 0)
 	    continue;
 
 	if (vi->period < 1) {
@@ -299,6 +299,9 @@ static int softmixer(struct xmp_context *ctx)
 	    }
 	    continue;
 	}
+
+	if (vi->pbase <= 0)
+	    continue;
 
 	itp_inc = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
 
