@@ -77,6 +77,7 @@ extern struct pw_format pw_p50a;
 extern struct pw_format pw_p60a;
 extern struct pw_format pw_p61a;
 extern struct pw_format pw_pha;
+extern struct pw_format pw_pp21;
 extern struct pw_format pw_pru1;
 extern struct pw_format pw_pru2;
 extern struct pw_format pw_stim;

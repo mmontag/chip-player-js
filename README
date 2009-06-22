@@ -57,6 +57,7 @@ The current version recognizes the following module formats:
   TP	***	Tracker Packer		3
   PM	***	Power Music		-
   PHA	***	Pha Packer		-
+  PP	****+	ProPacker		2.1
   PROM	****+	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
   UNIC	****+	Unic Tracker		1.0, 2.0

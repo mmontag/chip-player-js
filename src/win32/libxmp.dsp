@@ -594,6 +594,10 @@ SOURCE=..\loaders\prowizard\pha.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\prowizard\pp21.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\prowizard\pm10c.c
 # End Source File
 # Begin Source File

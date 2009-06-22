@@ -47,7 +47,8 @@ Stable versions
 	- improve tempo, tuning and envelope of HSC modules
 	- fix scanning of patterns containing short tracks
 	- don't play notes outside the valid 8 octave note range
-	- enable The Player 5.0A loader
+	- enable The Player 5.0A loader (tested with Full Moon mods)
+	- enable ProPacker 2.1 loader (tested with Cool World mods)
 	- fix endianism issues in The Player 5.0 and 6.0 loaders
 	- fix AMF track remapping error
 

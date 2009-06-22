@@ -1,263 +1,140 @@
 /*
- *   ProPacker_21.c   1997 (c) Asle / ReDoX
+ * ProPacker_21.c   1997 (c) Asle / ReDoX
+ *		    Modified by Claudio Matsuoka
  *
  * Converts PP21 packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
- *
-*/
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-void Depack_PP21 (FILE * in, FILE * out)
+static int depack_pp21 (FILE *, FILE *);
+static int test_pp21 (uint8 *, int);
+
+struct pw_format pw_pp21 = {
+	"PP21",
+	"ProPacker 2.1",
+	0x00,
+	test_pp21,
+	depack_pp21
+};
+
+static int depack_pp21 (FILE * in, FILE * out)
 {
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
 	uint8 ptable[128];
-	short Max = 0;
-	uint8 Tracks_Numbers[4][128];
-	short Tracks_PrePointers[512][64];
-	uint8 NOP = 0x00;	/* number of pattern */
-	uint8 *reftab;
-	uint8 Pattern[1024];
-	long i = 0, j = 0;
-	long ssize = 0;
-	long RTS = 0;		/* Reference Table Size */
-	// FILE *in,*out;
-
-	if (Save_Status == BAD)
-		return;
+	int max = 0;
+	uint8 trk[4][128];
+	int tptr[512][64];
+	uint8 numpat;
+	uint8 *tab;
+	uint8 buf[1024];
+	int i, j;
+	int size;
+	int ssize = 0;
+	int tabsize = 0;		/* Reference Table Size */
 
 	memset(ptable, 0, 128);
-	memset(Tracks_Numbers, 0, 4 * 128);
-	memset(Tracks_PrePointers, 0, 512 * 128);
+	memset(trk, 0, 4 * 128);
+	memset(tptr, 0, 512 * 128);
 
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
-
-	for (i = 0; i < 20; i++)	/* title */
-		fwrite (&c1, 1, 1, out);
+	pw_write_zero(out, 20);			/* title */
 
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
-
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		pw_write_zero(out, 22);		/* sample name */
+		write16b(out, size = read16b(in));
+		ssize += size * 2;
+		write8(out, read8(in));		/* finetune */
+		write8(out, read8(in));		/* volume */
+		write16b(out, read16b(in));	/* loop start */
+		write16b(out, read16b(in));	/* loop size */
 	}
 
-	/* pattern table lenght */
-	fread (&NOP, 1, 1, in);
-	fwrite (&NOP, 1, 1, out);
+	write8(out, numpat = read8(in));	/* number of patterns */
+	write8(out, read8(in));			/* NoiseTracker restart byte */
 
-	/*printf ( "Number of patterns : %d\n" , NOP ); */
-
-	/* NoiseTracker restart byte */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
-
-	Max = 0;
+	max = 0;
 	for (j = 0; j < 4; j++) {
 		for (i = 0; i < 128; i++) {
-			fread (&c1, 1, 1, in);
-			Tracks_Numbers[j][i] = c1;
-			if (Tracks_Numbers[j][i] > Max)
-				Max = Tracks_Numbers[j][i];
+			trk[j][i] = read8(in);
+			if (trk[j][i] > max)
+				max = trk[j][i];
 		}
 	}
-	/*printf ( "Number of tracks : %d\n" , Max+1 ); */
 
 	/* write pattern table without any optimizing ! */
-	for (c1 = 0x00; c1 < NOP; c1++)
-		fwrite (&c1, 1, 1, out);
-	c4 = 0x00;
-	for (; c1 < 128; c1++)
-		fwrite (&c4, 1, 1, out);
+	for (i = 0; i < numpat; i++)
+		write8(out, i);
+	pw_write_zero(out, 128 - i);
 
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-
+	write32b(out, PW_MOD_MAGIC);		/* M.K. */
 
 
 	/* PATTERN DATA code starts here */
 
-	/*printf ( "Highest track number : %d\n" , Max ); */
-	for (j = 0; j <= Max; j++) {
-		for (i = 0; i < 64; i++) {
-			fread (&c1, 1, 1, in);
-			fread (&c2, 1, 1, in);
-			Tracks_PrePointers[j][i] = (c1 << 8) + c2;
-		}
+	/*printf ("Highest track number : %d\n", max); */
+	for (j = 0; j <= max; j++) {
+		for (i = 0; i < 64; i++)
+			tptr[j][i] = read16b(in);
 	}
 
 	/* read "reference table" size */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-
-	RTS = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
-
+	tabsize = read32b(in);
 
 	/* read "reference Table" */
-	/*printf ( "Reference table location : %ld\n" , ftell (in) ); */
-	reftab = (uint8 *) malloc (RTS);
-	fread (reftab, RTS, 1, in);
+	tab = (uint8 *)malloc(tabsize);
+	fread(tab, tabsize, 1, in);
 
-	/* NOW, the real shit takes place :) */
-	for (i = 0; i < NOP; i++) {
-		memset(Pattern, 0, 1024);
+	for (i = 0; i < numpat; i++) {
+		memset(buf, 0, 1024);
 		for (j = 0; j < 64; j++) {
-
-			Pattern[j * 16] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[0][i]][j] * 4];
-			Pattern[j * 16 + 1] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[0][i]][j] * 4 + 1];
-			Pattern[j * 16 + 2] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[0][i]][j] * 4 + 2];
-			Pattern[j * 16 + 3] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[0][i]][j] * 4 + 3];
-
-			Pattern[j * 16 + 4] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[1][i]][j] * 4];
-			Pattern[j * 16 + 5] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[1][i]][j] * 4 + 1];
-			Pattern[j * 16 + 6] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[1][i]][j] * 4 + 2];
-			Pattern[j * 16 + 7] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[1][i]][j] * 4 + 3];
-
-			Pattern[j * 16 + 8] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[2][i]][j] * 4];
-			Pattern[j * 16 + 9] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[2][i]][j] * 4 + 1];
-			Pattern[j * 16 + 10] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[2][i]][j] * 4 + 2];
-			Pattern[j * 16 + 11] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[2][i]][j] * 4 + 3];
-
-			Pattern[j * 16 + 12] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[3][i]][j] * 4];
-			Pattern[j * 16 + 13] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[3][i]][j] * 4 + 1];
-			Pattern[j * 16 + 14] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[3][i]][j] * 4 + 2];
-			Pattern[j * 16 + 15] =
-				reftab[Tracks_PrePointers
-				[Tracks_Numbers[3][i]][j] * 4 + 3];
-
-
+			uint8 *b = buf + j * 16;
+			memcpy(b, tab + tptr[trk[0][i]][j] * 4, 4);
+			memcpy(b + 4, tab + tptr[trk[1][i]][j] * 4, 4);
+			memcpy(b + 8, tab + tptr[trk[2][i]][j] * 4, 4);
+			memcpy(b + 12, tab + tptr[trk[3][i]][j] * 4, 4);
 		}
-		fwrite (Pattern, 1024, 1, out);
+		fwrite (buf, 1024, 1, out);
 	}
 
-	free (reftab);
-
+	free (tab);
 
 	/* Now, it's sample data ... though, VERY quickly handled :) */
-	/* thx GCC ! (GNU C COMPILER). */
+	pw_move_data(out, in, ssize);
 
-	/*printf ( "Total sample size : %ld\n" , ssize ); */
-	reftab = (uint8 *) malloc (ssize);
-	fread (reftab, ssize, 1, in);
-	fwrite (reftab, ssize, 1, out);
-	free (reftab);
-
-
-	Crap ("PP21:ProPacker v2.1", BAD, BAD, out);
-
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
 
-void testPP21 (void)
+static int test_pp21(uint8 *data, int s)
 {
-	/* test #1 */
-	if (i < 3) {
-/*printf ( "#1 (i:%ld)\n" , i );*/
-		Test = BAD;
-		return;
-	}
+	int j, k, l;
+	int start = 0;
+	int ssize;
 
-	/* test #2 */
-	start = i - 3;
 	l = 0;
 	for (j = 0; j < 31; j++) {
-		k =
-			(((data[start + j * 8] << 8) +
-				 data[start + 1 +
-					j * 8]) * 2);
+		k = ((data[start + j * 8] << 8) + data[start + 1 + j * 8]) * 2;
 		l += k;
+
 		/* finetune > 0x0f ? */
-		if (data[start + 2 + 8 * j] > 0x0f) {
-/*printf ( "#2 (start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
-		}
+		if (data[start + 2 + 8 * j] > 0x0f)
+			return -1;
+
 		/* loop start > size ? */
-		if ((((data[start + 4 + j * 8] << 8) +
-					data[start + 5 +
-						j * 8]) * 2) > k) {
-			Test = BAD;
-/*printf ( "#2,1 (start:%ld)\n" , start );*/
-			return;
-		}
+		if ((((data[start + 4 + j * 8] << 8) + data[start + 5 + j * 8]) * 2) > k)
+			return -1;
 	}
-	if (l <= 2) {
-/*printf ( "#2,2 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
+
+	if (l <= 2)
+		return -1;
 
 	/* test #3   about size of pattern list */
 	l = data[start + 248];
-	if ((l > 127) || (l == 0)) {
-/*printf ( "#3 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
+	if (l > 127 || l == 0)
+		return -1;
 
 	/* get the highest track value */
 	k = 0;
@@ -274,33 +151,22 @@ void testPP21 (void)
 	/* ssize used as a variable .. set to 0 afterward */
 	ssize = 0;
 	for (j = 0; j < k; j++) {
-		l =
-			(data[start + 762 + j * 2] << 8) +
-			data[start + 763 + j * 2];
+		l = (data[start + 762 + j * 2] << 8) + data[start + 763 + j * 2];
 		if (l > ssize)
 			ssize = l;
-		if (l > 0x4000) {
-/*printf ( "#4 (start:%ld)(where:%ld)\n" , start,start+j*2+762 );*/
-			Test = BAD;
-			ssize = 0;
-			return;
-		}
+
+		if (l > 0x4000)
+			return -1;
 	}
 
 	/* test #5  reference table size *4 ? */
 	/* ssize is the highest reference number */
 	k *= 2;
-	l = (data[start + k + 762] << 24)
-		+ (data[start + k + 763] << 16)
-		+ (data[start + k + 764] << 8)
-		+ data[start + k + 765];
-	if (l != ((ssize + 1) * 4)) {
-/*printf ( "#5 (start:%ld)(where:%ld)\n" , start,(start+k+762) );*/
-		Test = BAD;
-		ssize = 0;
-		return;
-	}
-	ssize = 0;
+	l = (data[start + k + 762] << 24) + (data[start + k + 763] << 16) +
+			(data[start + k + 764] << 8) + data[start + k + 765];
 
-	Test = GOOD;
+	if (l != ((ssize + 1) * 4))
+		return -1;
+
+	return 0;
 }
