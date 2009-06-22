@@ -4,10 +4,11 @@ OBJS	= ptpopen.o debug.o usleep.o
 DFILES	= Makefile $(OBJS:.o=.c) unistd.h config.h version.c ptpopen.h \
 	  in_xmp.dsp libxmp.dsp libxmp.dsw osdcomm.h xmp.dsp
 DDIRS	= sys
+LIB	= $(TOPDIR)/lib/libxmp.a
 CFILES	= version.c
 DCFILES	=
 
-all:
+all: $(LIB)
 
 subdist:: version.c
 
