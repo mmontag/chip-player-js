@@ -179,6 +179,8 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->pat; i++) {		/* read track table */
 		for (j = 0; j < m->xxh->chn; j++) {
 			int k = m->xxp[i]->info[j].index - 1;
+			if (k < 0)		/* FIXME: what if k is 0? */
+				k = 0;
 			m->xxp[i]->info[j].index = trkmap[k];
 		}
 	}

@@ -49,6 +49,7 @@ Stable versions
 	- don't play notes outside the valid 8 octave note range
 	- enable The Player 5.0A loader
 	- fix endianism issues in The Player 5.0 and 6.0 loaders
+	- fix AMF track remapping error
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
