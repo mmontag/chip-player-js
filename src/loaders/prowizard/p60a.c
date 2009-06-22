@@ -64,7 +64,7 @@ static int depack_p60a (FILE * in, FILE * out)
     memset(ptable, 0, 128);
     memset(smp_size, 0, 31 * 4);
     memset(saddr, 0, 32 * 4);
-    memset(isize, 0, 31 * 2);
+    memset(isize, 0, 31 * sizeof(int));
     for (i = 0; i < 31; i++) {
 	PACK[i] = OFF;
 /*    DELTA[i] = OFF;*/
@@ -94,7 +94,7 @@ static int depack_p60a (FILE * in, FILE * out)
 
     pw_write_zero(out, 20);		/* write title */
 
-    /* sample headers stuff */
+    /* sample headers */
     for (i = 0; i < nins; i++) {
 	pw_write_zero(out, 22);		/* name */
 

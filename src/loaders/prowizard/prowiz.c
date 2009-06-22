@@ -107,7 +107,6 @@ int pw_init()
 	pw_register(&pw_p4x);
 	pw_register(&pw_p50a);
 	pw_register(&pw_p60a);
-	pw_register(&pw_p61a);
 	pw_register(&pw_np2);
 	pw_register(&pw_np1);
 	pw_register(&pw_np3);

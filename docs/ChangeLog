@@ -48,8 +48,7 @@ Stable versions
 	- fix scanning of patterns containing short tracks
 	- don't play notes outside the valid 8 octave note range
 	- enable The Player 5.0A loader
-	- enable The Player 6.1A loader (untested)
-	- fix endianism issues in The Player 5.0, 6.0 and 6.1 loaders
+	- fix endianism issues in The Player 5.0 and 6.0 loaders
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
