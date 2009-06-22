@@ -100,7 +100,7 @@ void get_options (int, char **, struct xmp_options *, xmp_context);
 static xmp_context ctx;
 
 
-static int set_tty ()
+static int set_tty()
 {
 #ifdef HAVE_TERMIOS_H
     struct termios t;
@@ -371,8 +371,10 @@ int main (int argc, char **argv)
 {
     int i, t, lf_flag, first, num_mod, verb = 0;
     time_t t0, t1;
+#ifndef WIN32
     struct timeval tv;
     struct timezone tz;
+#endif
     struct xmp_options *opt;
 #ifdef HAVE_SYS_RTPRIO_H
     struct rtprio rtp;
@@ -397,8 +399,12 @@ int main (int argc, char **argv)
 	exit (-1);
     }
 
+#ifndef WIN32
     gettimeofday(&tv, &tz);
     srand(tv.tv_usec);
+#else
+    srand(GetTickCount());
+#endif
 
     if (randomize)
 	shuffle(argc - optind + 1, &argv[optind - 1]);

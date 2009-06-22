@@ -119,7 +119,13 @@ typedef signed long long int64;
 #define _D_CRIT "  Error: "
 #define _D_WARN "Warning: "
 #define _D_INFO "   Info: "
+#ifndef CLIB_DECL
+#define CLIB_DECL
+#endif
 #ifdef _DEBUG
+#ifndef ATTR_PRINTF
+#define ATTR_PRINTF(x,y)
+#endif
 void CLIB_DECL _D(const char *text, ...) ATTR_PRINTF(1,2);
 #else
 void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }

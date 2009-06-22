@@ -40,7 +40,7 @@ RSC=rc.exe
 # PROP Output_Dir ""
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D __inline__=__inline /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "include" /I "../include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x410 /d "NDEBUG"
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D __inline__=__inline /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "../win32" /I "include" /I "../include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x410 /d "_DEBUG"
@@ -91,326 +91,222 @@ LIB32=link.exe -lib
 # Begin Source File
 
 SOURCE=..\loaders\669_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\alm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\amd_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\amf_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\arch_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\asif.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\common.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\dbm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\digi_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\dmf_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\dt_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\dtt_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\emod_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\far_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\flt_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\fnk_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\gdm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\gtk_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\hsc_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\ice_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\iff.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\imf_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\ims_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\it_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\itsex.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\liq_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\mdl_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\med3_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\med4_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\mgt_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\mmd1_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\mmd3_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\mod_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\mtm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\no_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\okt_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\masi_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\pt3_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\ptm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\pw_load.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\rad_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\rtm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\s3m_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\sfx_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\ssmt_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\st_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\stim_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\stm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\stx_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\psm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\sym_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\tcb_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\ult_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\umx_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\xm_load.c
-# ADD CPP /I "../loaders/include"
-# SUBTRACT CPP /I "include"
 # End Source File
 # End Group
 # Begin Group "Loaders Headers"
@@ -418,67 +314,67 @@ SOURCE=..\loaders\xm_load.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\loaders\include\asif.h
+SOURCE=..\loaders\asif.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\far.h
+SOURCE=..\loaders\far.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\iff.h
+SOURCE=..\loaders\iff.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\imf.h
+SOURCE=..\loaders\imf.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\it.h
+SOURCE=..\loaders\it.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\liq.h
+SOURCE=..\loaders\liq.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\load.h
+SOURCE=..\loaders\load.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\med.h
+SOURCE=..\loaders\med.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\mod.h
+SOURCE=..\loaders\mod.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\mtm.h
+SOURCE=..\loaders\mtm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\ptm.h
+SOURCE=..\loaders\ptm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\rtm.h
+SOURCE=..\loaders\rtm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\s3m.h
+SOURCE=..\loaders\s3m.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\stm.h
+SOURCE=..\loaders\stm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\stx.h
+SOURCE=..\loaders\stx.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\include\xm.h
+SOURCE=..\loaders\xm.h
 # End Source File
 # End Group
 # End Group
@@ -550,7 +446,7 @@ SOURCE=..\player\ulaw.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\player\version.c
+SOURCE=.\version.c
 # End Source File
 # End Group
 # Begin Group "Player Headers"
@@ -683,6 +579,10 @@ SOURCE=..\loaders\prowizard\np3.c
 # Begin Source File
 
 SOURCE=..\loaders\prowizard\p40.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\prowizard\p50a.c
 # End Source File
 # Begin Source File
 

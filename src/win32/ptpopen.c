@@ -37,7 +37,6 @@ Web:    www.parity-soft.de
 /*----------------------------------------------------------------------------
   Globals for the Routines pt_popen() / pt_pclose()
 ----------------------------------------------------------------------------*/
-#if defined(WIN32)
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>

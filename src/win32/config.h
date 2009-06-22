@@ -17,8 +17,7 @@
 // 4761: integral size mismatch in argument; conversion supplied
 #pragma warning( disable : 4018 4244 4761 )
 
-#define    inline    
-#define  __inline__  __inline
+#define  inline      __inline
 #define  strcasecmp  _strcmpi
 #define  snprintf    _snprintf
 
@@ -29,10 +28,9 @@
 #define lseek        _lseek
 #define close        _close
 
-#define popen        _popen
-#define pclose       _pclose
-
-#define PACKED
+#ifndef PATH_MAX
+#define PATH_MAX	260
+#endif
 
 #ifndef M_LN2
 #define M_LN2		0.69314718055994530942
