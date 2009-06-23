@@ -100,14 +100,16 @@ In_Module mod = {
 	"crb;tdd;gmc;gdm;"
 */
 	/* file extensions */
-	"xm;mod;it;s3m;s2m;stm;mtm;ptm\0"
-		"XMP Module formats (xm;mod;it;s3m;s2m)\0"
-	"xmz;mdz;itz;s3z\0"
-		"XMP Compressed Modules (xmz;mdz;itz;s3z)\0"
-	"amd;rad;hsc;alm\0"
-		"XMP Adlib Modules (amd;rad;hsc;alm)\0"
-	"ult;amf;med;di;digi;okt;far;669;wow\0"
-		"XMP Exotic Modules (ult;amf;med;di;digi;okt;far;669;wow)\0"
+	"xm;it;s3m;s2m;stm;mdl;imf;mtm;ptm;ult;far;669\0"
+		"XMP PC Modules (xm;it;s3m;s2m;stm;mdl;imf;mtm;ptm;ult;far;669)\0"
+	"mod;med;digi;dbm;okt;sfx\0"
+		"XMP Amiga Modules (mod;med;digi;dbm;okt;sfx)\0"
+	"xmz;mdz;itz;s3z;amf\0"
+		"XMP Compressed Modules (xmz;mdz;itz;s3z;amf)\0"
+	"psm;umx;gmc;di;stim\0"
+		"XMP Game Modules (psm;umx;gmc;di;stim)\0"
+	"amd;rad;hsc\0"
+		"XMP Adlib Modules (amd;rad;hsc)\0"
 		,	
 	1,			/* is_seekable */
 	1,			/* uses output */
@@ -462,6 +464,12 @@ static int play_file(char *fn)
 
 	xmp_cfg.time = lret;
 	xmp_get_module_info(ctx, &xmp_cfg.mod_info);
+
+	/* Winamp goes nuts if module has zero length */
+	if (xmp_cfg.mod_info.len == 0) {
+		playing = 0;
+		return -1;
+	}
 
 	stopped = 0;
 	decode_thread = (HANDLE)CreateThread(NULL, 0,
