@@ -61,7 +61,7 @@
 #define XMP_MODE_IT		(XMP_CTL_NCWINS | XMP_CTL_INSPRI | \
 				 XMP_CTL_ENVFADE | XMP_CTL_S3MLOOP | \
 				 XMP_CTL_OFSRST | XMP_CTL_ITENV | \
-				 XMP_CTL_VOLPDN)
+				 XMP_CTL_VOLPDN | XMP_CTL_RTGINS)
 
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_ORD_NEXT, 0)
