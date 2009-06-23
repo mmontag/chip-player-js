@@ -94,15 +94,15 @@ int skip = 0;
 static short audio_open = FALSE;
 
 static gchar *fmts[] = {
-	"xm", "mod", "flt", "st", "m15", "it", "s3m", "stm", "stx",
+	"xm", "mod", "flt", "st", "m15", "it", "s2m", "s3m", "stm", "stx",
 	"mtm", "ice", "imf", "ptm", "mdl", "ult", "liq", "psm", "amf",
 	"mmd0", "mmd1", "mmd2", "mmd3", "med", "med3", "med4", "dmf",
         "rtm", "pt3", "tcb", "dt", "gtk", "dtt", "mgt", "arch", "dsym",
 	"digi", "dbm", "emod", "okt", "sfx", "far", "umx", "stim",
 	"mtp", "ims", "669", "fnk", "funk", "amd", "rad", "hsc", "alm",
         "ac1d", "fchs", "fcm", "fuzz", "kris", "ksm", "mp", "p18a",
-	"p10c", "pru1", "pru2", "pha", "wn", "unic", "tp3", "xann",
-	"di", "eu", "p4x", "p40", "p41", "p60a", "np1", "np2", "np3",
+	"p10c", "pp21" "pru1", "pru2", "pha", "wn", "unic", "tp3", "xann",
+	"di", "eu", "p4x", "p40", "p41", "p50a" "p60a", "np1", "np2", "np3",
 	"zen", "crb", "tdd", "gmc", "gdm", NULL
 };
 
