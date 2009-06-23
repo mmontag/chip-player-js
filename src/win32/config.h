@@ -17,7 +17,7 @@
 // 4761: integral size mismatch in argument; conversion supplied
 #pragma warning( disable : 4018 4244 4761 )
 
-#define  inline      __inline
+#define  inline
 #define  strcasecmp  _strcmpi
 #define  snprintf    _snprintf
 
