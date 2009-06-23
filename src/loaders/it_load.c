@@ -218,6 +218,22 @@ static void xlat_volfx(struct xxm_event *event)
 }
 
 
+static void fix_name(uint8 *s, int l)
+{
+    int i;
+
+    /* IT names can have 0 at start of data, replace with space */
+    for (l--, i = 0; i < l; i++) {
+	if (s[i] == 0)
+	    s[i] = ' ';
+    }
+    for (i--; i >= 0 && s[i] == ' '; i--) {
+	if (s[i] == ' ')
+	    s[i] = 0;
+    }
+}
+
+
 static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_player_context *p = &ctx->p;
@@ -433,6 +449,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    i2h.rsvd1 = read8(f);
 	    fread(&i2h.name, 26, 1, f);
 
+	    fix_name(i2h.name, 26);
+
 	    i2h.ifc = read8(f);
 	    i2h.ifr = read8(f);
 	    i2h.mch = read8(f);
@@ -528,7 +546,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	        }
 	    }
 
-	    reportv(ctx, 1, "\n[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
+	    reportv(ctx, 1,
+			"\n[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
 			"%02x %c%c%c %3d %02x %02x ",
 		i, i2h.name,
 		i2h.nna < 4 ? nna[i2h.nna] : "none",
@@ -570,6 +589,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    i1h.rsvd2 = read8(f);
 
 	    fread(&i1h.name, 26, 1, f);
+
+	    fix_name(i1h.name, 26);
+
 	    fread(&i1h.rsvd3, 6, 1, f);
 	    fread(&i1h.keys, 240, 1, f);
 	    fread(&i1h.epoint, 200, 1, f);
@@ -664,6 +686,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	ish.vol = read8(f);
 	fread(&ish.name, 26, 1, f);
 
+	fix_name(ish.name, 26);
+
 	ish.convert = read8(f);
 	ish.dfp = read8(f);
 	ish.length = read32l(f);
@@ -705,7 +729,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxi[i][0].pan = 0x80;
 	    m->xxi[i][0].sid = i;
 	    m->xxih[i].nsm = !!(m->xxs[i].len);
-
 	    copy_adjust(m->xxih[i].name, ish.name, 24);
 	}
 
@@ -900,7 +923,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	reportv(ctx, 0, ".");
 
-	/* Sweep channels, look for unused tracks */
+	/* Scan channels, look for unused tracks */
 	for (c = m->xxh->chn - 1; c >= max_ch; c--) {
 	    for (flag = j = 0; j < m->xxt[m->xxp[i]->info[c].index]->rows; j++) {
 		event = &EVENT (i, c, j);
