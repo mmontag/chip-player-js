@@ -786,8 +786,10 @@ int xmpi_player_start(struct xmp_context *ctx)
     struct xmp_options *o = &ctx->o;
     struct flow_control *f = &p->flow;
 
-    if (m->xxh->len == 0 || m->xxh->chn == 0)
+    if (m->xxh->len == 0 || m->xxh->chn == 0) {
+	xmp_drv_writepatch(ctx, NULL);
 	return XMP_OK;
+    }
 
     if (xmp_event_callback == NULL)
 	xmp_event_callback = dummy;
