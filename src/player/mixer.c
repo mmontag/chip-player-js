@@ -300,10 +300,10 @@ static int softmixer(struct xmp_context *ctx)
 	    continue;
 	}
 
-	if (vi->pbase <= 0)
-	    continue;
-
 	itp_inc = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
+
+	if (itp_inc == 0)	/* otherwise m5v-nwlf.t crashes */
+	    continue;
 
 	pi = d->patch_array[vi->smp];
 
