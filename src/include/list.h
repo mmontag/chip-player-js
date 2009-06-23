@@ -4,6 +4,10 @@
 #ifndef __LINUX_LIST_H
 #define __LINUX_LIST_H
 
+#ifdef _MSC_VER
+#define __inline__ __inline
+#endif
+
 /*
  * Simple doubly linked list implementation.
  *

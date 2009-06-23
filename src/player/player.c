@@ -436,7 +436,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
         SET(ECHOBACK | NEW_VOL);
     }
 
-    if ((m->fetch & XMP_CTL_ST3GVOL) && TEST(NEW_VOL))
+    if ((m->fetch & XMP_CTL_ST3GVOL) && TEST(NEW_VOL) && m->volbase)
 	xc->volume = xc->volume * m->volume / m->volbase;
 
     return XMP_OK;
