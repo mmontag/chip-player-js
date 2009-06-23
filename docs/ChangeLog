@@ -53,6 +53,7 @@ Stable versions
 	- fix AMF track remapping error
 	- enable instrument retriggering quirk in IT loader
 	- configuration file moved back to /etc
+	- fix estimated tempo for S3M/IT modules with BPM changes
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)

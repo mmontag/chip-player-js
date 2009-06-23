@@ -215,6 +215,17 @@ int xmpi_scan_module(struct xmp_context *ctx)
 		    tempo = prm;
 		}
 
+		if (f1 == FX_S3M_BPM || f2 == FX_S3M_BPM) {
+		    prm = (f1 == FX_S3M_BPM) ? event->fxp : event->f2p;
+		    if (medbpm)
+			clock += 132 * alltmp / 5 / bpm;
+		    else
+			clock += 100 * alltmp / bpm;
+
+		    alltmp = 0;
+		    bpm = prm;
+		}
+
 		if (f1 == FX_JUMP || f2 == FX_JUMP) {
 		    ord2 = (f1 == FX_JUMP) ? event->fxp : event->f2p;
 		    last_row = 0;
