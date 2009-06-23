@@ -947,6 +947,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
     m->fetch |= XMP_CTL_INSPRI | XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
 
+    /* See m5v-nwlf.it pat 8 chn 8 row 18, note C#6 needs this quirk */
+    m->fetch |= XMP_CTL_RTGINS;
+
     reportv(ctx, 0, "\n");
 
     return XMP_OK;
