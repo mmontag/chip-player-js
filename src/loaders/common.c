@@ -28,9 +28,10 @@ char *copy_adjust(uint8 *s, uint8 *r, int n)
 	memset(s, 0, n);
 	strncpy((char *)s, (char *)r, n);
 
-	for (i = 0; i < n; i++)
-		if (!isprint(s[i]) || ((uint8) s[i] > 127))
+	for (i = 0; i < n; i++) {
+		if (!isprint(s[i]) || ((uint8)s[i] > 127))
 			s[i] = '.';
+	}
 
 	while (*s && (s[strlen((char *)s) - 1] == ' '))
 		s[strlen((char *)s) - 1] = 0;
