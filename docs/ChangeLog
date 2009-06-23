@@ -3,7 +3,7 @@ Stable versions
 
 2.6.0 ():
 	- cleanup: remove rarely used Unix IPC code that difficults porting
-	- cleanup: remove per module configuration that nobody uses
+	- cleanup: remove per-module configuration that nobody uses
 	- cleanup: moved Prowizard depacking to loader section
 	- don't abort loading if IT sample magic not found (fixes loading
 	  of use-brdg.it and use-funk.it, reported by Mirko Buffoni)
@@ -51,6 +51,8 @@ Stable versions
 	- enable ProPacker 2.1 loader (tested with Cool World mods)
 	- fix endianism issues in The Player 5.0 and 6.0 loaders
 	- fix AMF track remapping error
+	- enable instrument retriggering quirk in IT loader
+	- configuration file moved back to /etc
 
 2.5.1 (20071207): 11 years after xmp 0.09a, the first public release!
 	- fix Winamp plugin default sampling rate (reported by Mirko Buffoni)
