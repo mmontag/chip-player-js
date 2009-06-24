@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-2.6.0 ():
+2.6.0 (20090624):
 	- cleanup: remove rarely used Unix IPC code that difficults porting
 	- cleanup: remove per-module configuration that nobody uses
 	- cleanup: moved Prowizard depacking to loader section
