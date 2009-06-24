@@ -290,8 +290,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->ins = ifh.insnum;
     m->xxh->smp = ifh.smpnum;
     m->xxh->pat = ifh.patnum;
-    if (m->xxh->ins)		/* Sample mode has no instruments */
-	pp_ins = calloc (4, m->xxh->ins);
+    pp_ins = m->xxh->ins ? calloc(4, m->xxh->ins) : NULL;
     pp_smp = calloc(4, m->xxh->smp);
     pp_pat = calloc(4, m->xxh->pat);
     m->xxh->tpo = ifh.is;
@@ -940,7 +939,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     free(pp_pat);
     free(pp_smp);
-    if (m->xxh->ins)	/* sample mode has no instruments */
+    if (pp_ins)		/* sample mode has no instruments */
 	free(pp_ins);
 
     m->xxh->chn = max_ch + 1;
