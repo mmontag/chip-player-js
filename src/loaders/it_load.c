@@ -729,6 +729,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxi[i][0].sid = i;
 	    m->xxih[i].nsm = !!(m->xxs[i].len);
 	    copy_adjust(m->xxih[i].name, ish.name, 24);
+	} else {
+	    copy_adjust(m->xxs[i].name, ish.name, 24);
 	}
 
 	if (V(2) || (~ifh.flags & IT_USE_INST && V(1))) {
