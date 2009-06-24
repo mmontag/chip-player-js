@@ -217,6 +217,9 @@ int xmpi_scan_module(struct xmp_context *ctx)
 
 		if (f1 == FX_S3M_BPM || f2 == FX_S3M_BPM) {
 		    prm = (f1 == FX_S3M_BPM) ? event->fxp : event->f2p;
+		    alltmp += cnt_row * tempo * base_time;
+		    cnt_row = 0;
+
 		    if (medbpm)
 			clock += 132 * alltmp / 5 / bpm;
 		    else
