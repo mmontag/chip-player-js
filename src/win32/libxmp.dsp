@@ -7,19 +7,19 @@
 CFG=libxmp - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
-!MESSAGE
+!MESSAGE 
 !MESSAGE NMAKE /f "libxmp.mak".
-!MESSAGE
+!MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
-!MESSAGE
+!MESSAGE 
 !MESSAGE NMAKE /f "libxmp.mak" CFG="libxmp - Win32 Debug"
-!MESSAGE
+!MESSAGE 
 !MESSAGE Possible choices for configuration are:
-!MESSAGE
+!MESSAGE 
 !MESSAGE "libxmp - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE "libxmp - Win32 Debug" (based on "Win32 (x86) Static Library")
-!MESSAGE
+!MESSAGE 
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "include" /I "../include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "inline" /D "HAVE_CONFIG_H" /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "include" /I "../include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /D inline="" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x410 /d "NDEBUG"
 # ADD RSC /l 0x410 /d "NDEBUG"
@@ -65,7 +65,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D __inline__=__inline /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "../win32" /I "include" /I "../include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "../win32" /I "include" /I "../include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "HAVE_CONFIG_H" /D inline="" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x410 /d "_DEBUG"
 # ADD RSC /l 0x410 /d "_DEBUG"
@@ -76,7 +76,7 @@ LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
 
-!ENDIF
+!ENDIF 
 
 # Begin Target
 
@@ -194,6 +194,10 @@ SOURCE=..\loaders\liq_load.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\masi_load.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\mdl_load.c
 # End Source File
 # Begin Source File
@@ -234,7 +238,7 @@ SOURCE=..\loaders\okt_load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\masi_load.c
+SOURCE=..\loaders\psm_load.c
 # End Source File
 # Begin Source File
 
@@ -283,10 +287,6 @@ SOURCE=..\loaders\stm_load.c
 # Begin Source File
 
 SOURCE=..\loaders\stx_load.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\loaders\psm_load.c
 # End Source File
 # Begin Source File
 
@@ -594,15 +594,15 @@ SOURCE=..\loaders\prowizard\pha.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\prowizard\pp21.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\loaders\prowizard\pm10c.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\prowizard\pm18a.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\prowizard\pp21.c
 # End Source File
 # Begin Source File
 
@@ -746,6 +746,10 @@ SOURCE=..\misc\xfd.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\include\common.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\config.h
 # End Source File
 # Begin Source File
@@ -779,10 +783,6 @@ SOURCE=..\include\readrle.h
 # Begin Source File
 
 SOURCE=..\include\xmp.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\include\common.h
 # End Source File
 # Begin Source File
 

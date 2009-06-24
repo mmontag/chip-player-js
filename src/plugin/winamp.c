@@ -176,6 +176,9 @@ static void stop()
 		}
 		CloseHandle(decode_thread);
 		decode_thread = INVALID_HANDLE_VALUE;
+	} else {
+		// if stopped before entering play loop, do sanity clean
+		xmp_close_audio(ctx);
 	}
 	mod.outMod->Close();
 	mod.SAVSADeInit();
@@ -458,6 +461,7 @@ static int play_file(char *fn)
 	lret = xmp_load_module(ctx, fn);
 	ReleaseMutex(load_mutex);
 	if (lret < 0) {
+		stop();
 		playing = 0;
 		return -1;
 	}
@@ -467,6 +471,7 @@ static int play_file(char *fn)
 
 	/* Winamp goes nuts if module has zero length */
 	if (xmp_cfg.mod_info.len == 0) {
+		stop();
 		playing = 0;
 		return -1;
 	}
@@ -598,6 +603,8 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			ShowWindow(hDlg, SW_HIDE);
 			PostMessage(hDlg, WM_CLOSE, 0, 0);
 		} else {
+			int empty_names = 1;
+
 			xmp_get_module_info(ctx, &mi);
 			// Set module title
 			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_TITLE), mi.name);
@@ -641,15 +648,35 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			ListView_InsertColumn( lvm, column.iSubItem, &column );
 
 			for (i=0; i < mi.ins; i++) {
-				snprintf(tmpbuf, 256, "%d", i+1);
-				SetItem( &item, i, 0, tmpbuf );
-				ListView_InsertItem( lvm, &item );
-				snprintf(tmpbuf, 256, "%s", p->m.xxih[i].name);
-				SetItem( &item, i, 1, tmpbuf );
-				ListView_SetItem( lvm, &item );
-				snprintf(tmpbuf, 256, "%d", p->m.xxs[i].len);
-				SetItem( &item, i, 2, tmpbuf );
-				ListView_SetItem( lvm, &item );
+				if (p->m.xxih[i].name[0] != 0) { 
+					empty_names = 0; break; 
+				}
+			}
+
+			if (!empty_names) {
+				for (i=0; i < mi.ins; i++) {
+					snprintf(tmpbuf, 256, "%d", i+1);
+					SetItem( &item, i, 0, tmpbuf );
+					ListView_InsertItem( lvm, &item );
+					snprintf(tmpbuf, 256, "%s", p->m.xxih[i].name);
+					SetItem( &item, i, 1, tmpbuf );
+					ListView_SetItem( lvm, &item );
+					snprintf(tmpbuf, 256, "%d", p->m.xxs[i].len);
+					SetItem( &item, i, 2, tmpbuf );
+					ListView_SetItem( lvm, &item );
+				}
+			} else {
+				for (i=0; i < mi.smp; i++) {
+					snprintf(tmpbuf, 256, "%d", i+1);
+					SetItem( &item, i, 0, tmpbuf );
+					ListView_InsertItem( lvm, &item );
+					snprintf(tmpbuf, 256, "%s", p->m.xxs[i].name);
+					SetItem( &item, i, 1, tmpbuf );
+					ListView_SetItem( lvm, &item );
+					snprintf(tmpbuf, 256, "%d", p->m.xxs[i].len);
+					SetItem( &item, i, 2, tmpbuf );
+					ListView_SetItem( lvm, &item );
+				}
 			}
 		}
 		break;
