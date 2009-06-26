@@ -354,6 +354,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    sprintf(tracker_name, "Impulse Tracker 2.14v3");
 	} else if (ifh.cwt == 0x0217) {
 	    sprintf(tracker_name, "Impulse Tracker 2.14v5");
+	} else if (ifh.cwt == 0x0214 && !memcmp(ifh.rsvd2, "CHBI", 4)) {
+	    sprintf(tracker_name, "Chibi Tracker");
 	} else {
 	    sprintf(tracker_name, "Impulse Tracker %d.%02x",
 			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);

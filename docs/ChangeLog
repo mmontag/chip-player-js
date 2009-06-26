@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+2.6.1 ():
+	- add Chibi Tracker to IT fingerprints (info by Storlek)
+
 2.6.0 (20090625):
 	- cleanup: remove rarely used Unix IPC code that difficults porting
 	- cleanup: remove per-module configuration that nobody uses
