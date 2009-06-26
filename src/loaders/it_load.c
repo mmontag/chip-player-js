@@ -948,7 +948,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	free(pp_ins);
 
     m->xxh->chn = max_ch + 1;
-    m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;
+    /*m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;*/
+    m->fetch |= XMP_MODE_IT;
     m->fetch |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
 
     reportv(ctx, 0, "\n");
