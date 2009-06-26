@@ -11,6 +11,9 @@ Sat Aug 11 08:04:52 BRT 2007
 Fri Sep 14 16:09:18 BRT 2007
 - IT tracker fingerprint
 
+Fri Jun 26 19:53:15 BRT 2009
+- More fingerprints from Storlek
+
 
 1. Event fetch
 
@@ -438,8 +441,11 @@ S3M tracker codes:
   1 = Scream Tracker 3
   2 = Imago Orpheus
   3 = Impulse Tracker
+  4 = Schism Tracker
 
 IT version codes:
+  0214, format 0214, rsvd at 0x3c CHBI = Chibi Tracker
+  0214, format 0214, rsvd at 0x3c zero, XXXXXXXX.YYY filenames = CheeseTracker
   0216 = Impulse Tracker 2.14v3
   0217 = Impulse Tracker 2.14v5
   0217 and format 0200 = ModPlug Tracker 1.16

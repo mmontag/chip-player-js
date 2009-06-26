@@ -2,7 +2,8 @@ Stable versions
 ---------------
 
 2.6.1 ():
-	- add Chibi Tracker to IT fingerprints (info by Storlek)
+	- add Chibi Tracker fingerprint to IT loader (info by Storlek)
+	- add Schism Tracker fingerprint to S3M loader (info by Storlek)
 
 2.6.0 (20090625):
 	- cleanup: remove rarely used Unix IPC code that difficults porting
