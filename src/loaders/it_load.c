@@ -367,6 +367,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	} else {
 	    sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
 	}
+	break;
     case 0x10:
 	sprintf(tracker_name, "Schism Tracker %d.%02x",
 			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
