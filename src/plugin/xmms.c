@@ -84,7 +84,6 @@ static GtkObject *pansep_adj;
 
 static GtkWidget *xmp_conf_window = NULL;
 static GtkWidget *about_window = NULL;
-static GtkWidget *info_window = NULL;
 
 int skip = 0;
 static short audio_open = FALSE;
@@ -104,9 +103,6 @@ InputPlugin xmp_ip = {
 	.get_song_info	= get_song_info,
 };
 
-
-static void file_info_box_build (void);
-static void init_visual (GdkVisual *);
 
 static void aboutbox()
 {
@@ -190,20 +186,8 @@ static void aboutbox()
 	gtk_widget_show_all(about_window);
 }
 
-static GdkImage *image;
-static GtkWidget *image1;
-static GtkWidget *frame1;
-static GtkWidget *text1;
-static GdkFont *font;
-static GdkColor *color_black;
-static GdkColor *color_white;
-static GdkColormap *colormap;
-static XImage *ximage;
-static Display *display;
-static Window window;
 
 xmp_context ctx;
-
 
 static void stop()
 {
@@ -317,13 +301,7 @@ static void init(void)
 		xmms_cfg_free(cfg);
 	}
 
-	file_info_box_build();
-
 	xmp_init_callback(ctx, driver_callback);
-	xmp_register_event_callback(x11_event_callback);
-
-	memset(ii, 0, sizeof (ii));
-	ii->wresult = 42;
 }
 
 
@@ -388,10 +366,6 @@ static void play_file(char *filename)
 	}
 	fclose(f);
 
-	gtk_text_set_point(GTK_TEXT(text1), 0);
-	gtk_text_forward_delete(GTK_TEXT(text1),
-			gtk_text_get_length(GTK_TEXT(text1)));
-	
 	xmp_plugin_audio_error = FALSE;
 	playing = 1;
 
@@ -458,11 +432,6 @@ static void play_file(char *filename)
 		playing = 0;
 		return;
 	}
-
-	gtk_adjustment_set_value(GTK_TEXT(text1)->vadj, 0.0);
-
-	close(fd_info[0]);
-	close(fd_info[1]);
 
 	_D ("before panel update");
 
