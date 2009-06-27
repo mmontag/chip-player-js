@@ -8,7 +8,7 @@ TOPDIR	= .
 XCFLAGS	= -Iloaders/include
 TEST_XM	=
 DIST	= xmp-$(VERSION)
-MODULES	= cpw.rad
+MODULES	= "intro nr.15.mod" "intro nr.15.mod.nt"
 DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  $(MODULES)
 DDIRS	= lib docs etc src scripts

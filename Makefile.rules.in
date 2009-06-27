@@ -1,7 +1,7 @@
 # Extended Module Player Makefile.rules.in
 
-VERSION		= 2.6.1-pre
-DATE		= Thu Jun 25 13:31:25 BRT 2009
+VERSION		= 2.6.1
+DATE		= Sat Jun 27 14:52:03 BRT 2009
 
 DESTDIR		=
 prefix		= @prefix@
