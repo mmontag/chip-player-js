@@ -40,14 +40,14 @@ static int period_amiga[] = {
 /* Finetune moved to period_to_bend () --claudio */
 inline int note_to_period(int n, int type)
 {
-    double d = (double)n;
+    double d = (double)n + 1;
 
     /* Period scale based in 6462 instead of 6847, check Storlek test #1
      * and SpaceDebris.mod
      */
     return type ?
 	(120 - n) << 4 :			/* Linear */
-        (int)(6462.0 / pow(2, d / 12));		/* Amiga */
+        (int)(6847.0 / pow(2, d / 12));		/* Amiga */
 }
 
 
