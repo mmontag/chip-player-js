@@ -123,7 +123,7 @@ fx_porta_dn:
 	if (fxp) {
 	    xc->s_val = fxp;
 	    if (m->fetch & XMP_CTL_UNISLD)	/* IT compatible Gxx off */
-		printf("bla\n"),xc->porta = fxp;
+		xc->porta = fxp;
 	}
 	SET(TONEPORTA);
 	break;
