@@ -47,7 +47,6 @@ static int depack_p18a (FILE *in, FILE *out)
     long SDAV = 0l;
     uint8 FLAG = OFF;
     uint8 fin[31];
-    uint8 ptk_table[37][2];
     uint8 oins[4];
     short per;
 
