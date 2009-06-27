@@ -60,6 +60,8 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
     m->xxh->ins = read8(f);
     m->xxh->smp = m->xxh->ins;
 
+    m->xxh->flg |= XXM_FLG_MODRNG;
+
     snprintf(m->type, XMP_NAMESIZE, "EMOD v%d (Quadra Composer)", ver);
     MODULE_INFO();
 
@@ -199,7 +201,6 @@ static int emod_load(struct xmp_context *ctx, FILE *f, const int start)
 	iff_chunk(ctx, f);
 
     iff_release();
-
     free(reorder);
 
     return 0;
