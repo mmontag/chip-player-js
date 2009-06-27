@@ -13,6 +13,7 @@
 #define IT_USE_INST	0x04
 #define IT_LINEAR_FREQ	0x08
 #define IT_OLD_FX	0x10
+#define IT_LINK_GXX	0x20
 
 /* IT special */
 #define IT_HAS_MSG	0x01

@@ -131,6 +131,7 @@ struct xmp_options {
 #define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
 #define XMP_CTL_PERPAT	0x04000000	/* Cancel persistent fx at pat start */
 #define XMP_CTL_VOLPDN	0x08000000	/* Set priority to volume slide down */
+#define XMP_CTL_UNISLD	0x10000000	/* Unified pitch slide/portamento */
 	int flags;		/* internal control flags, set default mode */
 	int crunch;		/* Sample crunching ratio */
 	int start;		/* Set initial order (default = 0) */

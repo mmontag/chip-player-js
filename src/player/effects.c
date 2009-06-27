@@ -120,8 +120,11 @@ fx_porta_dn:
 	if (!TEST (IS_VALID))
 	    break;
 	DO_TONEPORTA();
-	if (fxp)
+	if (fxp) {
 	    xc->s_val = fxp;
+	    if (m->fetch & XMP_CTL_UNISLD)	/* IT compatible Gxx off */
+		printf("bla\n"),xc->porta = fxp;
+	}
 	SET(TONEPORTA);
 	break;
     case FX_PER_PORTA_UP:			/* Persistent portamento up */

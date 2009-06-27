@@ -9,6 +9,7 @@ Stable versions
 	- IT instrument and sample modes use same quirks (Storlek test #9)
 	- transposed period scale base down one semitone (Storlek test #1)
 	- remove previous portamento in SpaceDebris.mod fix
+	- add unified pitch slide/portamento memory (Storlek test #3)
 
 2.6.0 (20090625):
 	- cleanup: remove rarely used Unix IPC code that difficults porting
