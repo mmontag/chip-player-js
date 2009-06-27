@@ -519,8 +519,10 @@ skip_test:
     }
     reportv(ctx, 0, "\n");
 
-    if (m->xxh->chn > 4)
+    if (m->xxh->chn > 4) {
+	m->xxh->flg &= ~XXM_FLG_MODRNG;
 	m->fetch |= XMP_MODE_FT2;
+    }
 
     return 0;
 }
