@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-2.6.1 ():
+2.6.1 (20090627):
 	- fix XMMS plugin build (reported by Götz Waschk)
 	- add Chibi Tracker fingerprint to IT loader (info by Storlek)
 	- add Schism Tracker fingerprint to S3M loader (info by Storlek)
