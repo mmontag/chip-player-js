@@ -5,6 +5,7 @@ Stable versions
 	- default amplification level set to 1
 	- fix portamento slide to skip first frame of each row
 	- Promizer 1.8a loader code cleanup
+	- fix period slides in instruments with finetune
 
 2.6.1 (20090627):
 	- fix XMMS plugin build (reported by Götz Waschk)
