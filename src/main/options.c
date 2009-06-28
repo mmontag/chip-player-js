@@ -263,8 +263,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case 'a':
 	    opt->amplify = atoi(optarg);
-	    if (opt->amplify < 0 || opt->amplify > 3)
-		opt->amplify = 1;
 	    break;
 	case 'b':
 	    opt->resol = atoi(optarg);

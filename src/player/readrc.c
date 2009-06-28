@@ -141,8 +141,6 @@ int xmpi_read_rc(struct xmp_context *ctx)
 
 	if (!strcmp (var, "amplify")) {
 	    o->amplify = atoi (val);
-	    if (o->amplify < 0 || o->amplify > 3)
-		o->amplify = 0;
 	    continue;
 	}
 

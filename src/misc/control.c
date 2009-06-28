@@ -44,7 +44,7 @@ void *xmp_create_context()
 	o->big_endian = (*(char *)&w == 0x00);
 
 	/* Set defaults */
-	o->amplify = 0;
+	o->amplify = DEFAULT_AMPLIFY;
 	o->freq = 44100;
 	o->mix = 80;
 	o->resol = 16;
