@@ -100,7 +100,7 @@ typedef signed long long int64;
 /* [Amiga] PAL color carrier frequency (PCCF) = 4.43361825 MHz */
 /* [Amiga] CPU clock = 1.6 * PCCF = 7.0937892 MHz */
 
-#define DEFAULT_AMPLIFY	1
+#define DEFAULT_AMPLIFY	0
 
 /* Global flags */
 #define PATTERN_BREAK	0x0001 

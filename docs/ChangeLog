@@ -2,7 +2,6 @@ Stable versions
 ---------------
 
 2.6.2 ():
-	- default amplification level set to 1
 	- Promizer 1.8a loader code cleanup
 	- fix portamento to skip first frame of each row
 	- fix period slides in instruments with finetune
