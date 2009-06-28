@@ -410,7 +410,8 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
 	if (!TEST(FINETUNE))
 	    xc->finetune = m->xxi[ins][m->xxim[ins].ins[key]].fin;
 
-	xc->s_end = xc->period = note_to_period(note, m->xxh->flg & XXM_FLG_LINEAR);
+	xc->s_end = xc->period = note_to_period(note, xc->finetune,
+			m->xxh->flg & XXM_FLG_LINEAR);
 
 	xc->y_idx = xc->t_idx = 0;              /* #?# Onde eu coloco isso? */
 
@@ -520,7 +521,8 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     if (TEST(NOTE_SLIDE)) {
 	if (!--xc->ns_count) {
 	    xc->note += xc->ns_val;
-	    xc->period = note_to_period(xc->note, m->xxh->flg & XXM_FLG_LINEAR);
+	    xc->period = note_to_period(xc->note, xc->finetune,
+				m->xxh->flg & XXM_FLG_LINEAR);
 	    xc->ns_count = xc->ns_speed;
 	}
     }
@@ -572,7 +574,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     xc->pitchbend = period_to_bend(
 	xc->period + vibrato + med_vibrato,
 	xc->note,
-	xc->finetune,
+	/* xc->finetune, */
 	m->xxh->flg & XXM_FLG_MODRNG,
 	xc->gliss,
 	m->xxh->flg & XXM_FLG_LINEAR);
@@ -707,7 +709,8 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
             xc->mastervol += xc->trk_fval;
 	if (TEST(FINE_NSLIDE)) {
             xc->note += xc->ns_fval;
-	    xc->period = note_to_period(xc->note, m->xxh->flg & XXM_FLG_LINEAR);
+	    xc->period = note_to_period(xc->note, xc->finetune,
+				m->xxh->flg & XXM_FLG_LINEAR);
 	}
     }
 

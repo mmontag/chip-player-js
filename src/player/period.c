@@ -37,14 +37,10 @@ static int period_amiga[] = {
 
 
 /* Get period from note */
-/* Finetune moved to period_to_bend () --claudio */
-inline int note_to_period(int n, int type)
+inline int note_to_period(int n, int f, int type)
 {
-    double d = (double)n;
+    double d = (double)n + (double)f / 128;
 
-    /* Period scale based in 6462 instead of 6847, check Storlek test #1
-     * and SpaceDebris.mod
-     */
     return type ?
 	(120 - n) << 4 :			/* Linear */
         (int)(6847.0 / pow(2, d / 12));		/* Amiga */
@@ -75,7 +71,7 @@ int period_to_note(int p)
 
 
 /* Get pitchbend from base note and period */
-int period_to_bend(int p, int n, int f, int a, int g, int type)
+int period_to_bend(int p, int n, int limit, int gliss, int type)
 {
     int b;
     double d;
@@ -83,7 +79,7 @@ int period_to_bend(int p, int n, int f, int a, int g, int type)
     if (!n)
 	return 0;
 
-    if (a) {				/* Force Amiga limits */
+    if (limit) {				/* Force Amiga limits */
 	if (p > AMIGA_LIMIT_LOWER)
 	    p = AMIGA_LIMIT_LOWER;
 	if (p < AMIGA_LIMIT_UPPER)
@@ -92,17 +88,17 @@ int period_to_bend(int p, int n, int f, int a, int g, int type)
 
     if (type) {
 	/* b = (100 * (((120 - n) << 4) - p)) >> 4 + f * 100 / 128; */
-	b = 100 * (8 * (((120 - n) << 4) - p) + f) / 128;	/* Linear */
-	return g ? b / 100 * 100 : b;
+	b = 100 * (8 * (((120 - n) << 4) - p)) / 128;	/* Linear */
+	return gliss ? b / 100 * 100 : b;
     }
 
     if (p < MIN_PERIOD_A)
 	p = MIN_PERIOD_A;
 
-    d = note_to_period(n, 0);
-    b = 100.0 * ((1536.0 * log(d / p) / M_LN2) + f) / 128;
+    d = note_to_period(n, 0, 0);
+    b = 100.0 * ((1536.0 * log(d / p) / M_LN2)) / 128;
 
-    return g ? b / 100 * 100 : b;	/* Amiga */
+    return gliss ? b / 100 * 100 : b;	/* Amiga */
 }
 
 
