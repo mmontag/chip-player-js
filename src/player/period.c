@@ -71,7 +71,8 @@ int period_to_note(int p)
 
 
 /* Get pitchbend from base note and period */
-int period_to_bend(int p, int n, int limit, int gliss, int type)
+/* f is used only in linear mode */
+int period_to_bend(int p, int n, int f, int limit, int gliss, int type)
 {
     int b;
     double d;
@@ -88,7 +89,7 @@ int period_to_bend(int p, int n, int limit, int gliss, int type)
 
     if (type) {
 	/* b = (100 * (((120 - n) << 4) - p)) >> 4 + f * 100 / 128; */
-	b = 100 * (8 * (((120 - n) << 4) - p)) / 128;	/* Linear */
+	b = 100 * (8 * (((120 - n) << 4) - p) + f) / 128;	/* Linear */
 	return gliss ? b / 100 * 100 : b;
     }
 
