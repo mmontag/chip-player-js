@@ -1,6 +1,10 @@
 Stable versions
 ---------------
 
+2.6.1 ():
+	- default amplification level set to 1
+	- fix portamento slide to skip first frame of each row
+
 2.6.1 (20090627):
 	- fix XMMS plugin build (reported by Götz Waschk)
 	- add Chibi Tracker fingerprint to IT loader (info by Storlek)

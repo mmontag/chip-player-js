@@ -682,6 +682,16 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 	if (TEST(PITCHBEND) || TEST_PER(PITCHBEND))
 	    xc->period += xc->f_val;
 
+	/* Do tone portamento */
+	if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
+	    xc->period += xc->s_sgn * xc->s_val;
+	    if ((xc->s_sgn * xc->s_end) < (xc->s_sgn * xc->period)) {
+		xc->period = xc->s_end;
+		RESET(TONEPORTA);
+		RESET_PER(TONEPORTA);
+   	    }
+	}
+
 	/* Workaround for panic.s3m (from Toru Egashira's NSPmod) */
 	if (xc->period <= 8)
 	    xc->volume = 0;
@@ -721,16 +731,6 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
 	    xc->period = MIN_PERIOD_A;
 	else if (xc->period > MAX_PERIOD_A)
 	    xc->period = MAX_PERIOD_A;
-    }
-
-    /* Do tone portamento */
-    if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
-	xc->period += xc->s_sgn * xc->s_val;
-	if ((xc->s_sgn * xc->s_end) < (xc->s_sgn * xc->period)) {
-	    xc->period = xc->s_end;
-	    RESET(TONEPORTA);
-	    RESET_PER(TONEPORTA);
-   	}
     }
 
     /* Update vibrato, tremolo and arpeggio indexes */
