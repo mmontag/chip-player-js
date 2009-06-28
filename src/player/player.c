@@ -574,7 +574,7 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     xc->pitchbend = period_to_bend(
 	xc->period + vibrato + med_vibrato,
 	xc->note,
-	xc->finetune,
+	/* xc->finetune, */
 	m->xxh->flg & XXM_FLG_MODRNG,
 	xc->gliss,
 	m->xxh->flg & XXM_FLG_LINEAR);
