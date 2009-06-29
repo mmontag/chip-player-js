@@ -10,7 +10,7 @@ DCFILES	=
 
 all: $(LIB)
 
-subdist:: version.c
+subdist:: version.c $(TOPDIR)/Makefile.rules.in
 
 include $(TOPDIR)/Makefile.rules
 
