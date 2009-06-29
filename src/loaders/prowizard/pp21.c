@@ -1,6 +1,6 @@
 /*
- * ProPacker_21.c   1997 (c) Asle / ReDoX
- *		    Modified by Claudio Matsuoka
+ * ProPacker_21.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
+ *		    Copyright (C) 2006-2009 Claudio Matsuoka
  *
  * Converts PP21 packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
@@ -22,7 +22,7 @@ struct pw_format pw_pp21 = {
 	depack_pp21
 };
 
-static int depack_pp21 (FILE * in, FILE * out)
+static int depack_pp21(FILE *in, FILE *out)
 {
 	uint8 ptable[128];
 	int max = 0;

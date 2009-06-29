@@ -1,6 +1,6 @@
 /*
- * The_Player_5.0a.c	1998 (c) Asle / ReDoX
- *			Modified by Claudio Matsuoka
+ * The_Player_5.0a.c	Copyright (C) 1998 Sylvain "Asle" Chipaux
+ *			Copyright (C) 2006-2008 Claudio Matsuoka
  *
  * The Player 5.0a to Protracker.
  *

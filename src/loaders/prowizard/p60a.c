@@ -1,6 +1,6 @@
 /*
- * The_Player_6.0a.c   Copyright (C) 1998 Asle / ReDoX
- *		       Modified by Claudio Matsuoka
+ * The_Player_6.0a.c   Copyright (C) 1998 Sylvain "Asle" Chipaux
+ *		       Copyright (C) 2006-2009 Claudio Matsuoka
  *
  * The Player 6.0a to Protracker.
  *
@@ -9,9 +9,6 @@
  *      certainly wont dare to beat Gryzor on the ground :). His Prowiz IS
  *      the converter to use !!!. Though, using the official depacker could
  *      be a good idea too :).
- *
- * claudio's note: I don't care if it's a mess. My attempt to write a p60a
- *	depacker produced cleaner code that didn't work.
  */
 
 #include <string.h>
