@@ -1,14 +1,26 @@
 /*
- *  StarTrekker _Packer.c   1997 (c) Asle / ReDoX
+ * StarTrekker _Packer.c   1997 (c) Asle / ReDoX
+ *                         Modified by Claudio Matsuoka
  *
  * Converts back to ptk StarTrekker packed MODs
- *
-*/
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-void Depack_STARPACK (FILE * in, FILE * out)
+static int depack_starpack (FILE *, FILE *);
+static int test_starpack (uint8 *, int);
+
+struct pw_format pw_starpack = {
+	"STAR",
+	"Startrakker Packer",
+	0x00,
+	test_starpack,
+	depack_starpack
+};
+
+int depack_starpack(FILE *in, FILE *out)
 {
 	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00, c5;
 	uint8 pnum[128];
@@ -24,10 +36,6 @@ void Depack_STARPACK (FILE * in, FILE * out)
 	long paddr_tmp2[128];
 	long tmp_ptr, tmp1, tmp2;
 	long sdataAddress = 0;
-	// FILE *in,*out;
-
-	if (Save_Status == BAD)
-		return;
 
 	memset(pnum, 0, 128);
 	memset(pnum_tmp, 0, 128);
@@ -285,185 +293,131 @@ fprintf ( info , "\n\n" );
 	fwrite (tmp, ssize, 1, out);
 	free (tmp);
 
-
-	Crap ("STP:Startrekker Pack", BAD, BAD, out);
-
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
 
-void testSTARPACK (void)
+int test_starpack(uint8 *data, int s)
 {
+	int start = 0;
+	int j, k, l, m;
+	int ssize;
+
+#if 0
 	/* test 1 */
 	if (i < 23) {
-/*printf ( "#1 (i:%ld)\n" , i );*/
 		Test = BAD;
 		return;
 	}
+#endif
 
 	/* test 2 */
-	start = i - 23;
-	l =
-		(data[start + 268] << 8) +
-		data[start + 269];
-	k = l / 4;
-	if ((k * 4) != l) {
-/*printf ( "#2,0 (Start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
-	if (k > 127) {
-/*printf ( "#2,1 (Start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
-	if (k == 0) {
-/*printf ( "#2,2 (Start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
+	l = (data[start + 268] << 8) + data[start + 269];
+	if (l & 0x03)
+		return -1;
 
-	if (data[start + 784] != 0) {
-/*printf ( "#3,-1 (Start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
+	k = l / 4;
+	if (k == 0 || k > 127)
+		return -1;
+
+	if (data[start + 784] != 0)
+		return -1;
 
 	/* test #3  smp size < loop start + loop size ? */
 	/* l is still the size of the pattern list */
 	for (k = 0; k < 31; k++) {
-		j =
-			(((data[start + 20 + k * 8] << 8) +
-				 data[start + 21 +
-					k * 8]) * 2);
-		ssize =
-			(((data[start + 24 + k * 8] << 8) +
-				data[start + 25 +
-					k * 8]) * 2) +
-			(((data[start + 26 + k * 8] << 8) +
-				data[start + 27 +
-					k * 8]) * 2);
-		if ((j + 2) < ssize) {
-/*printf ( "#3 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
-		}
+		j = (((data[start + 20 + k * 8] << 8) + data[start + 21 + k * 8]) * 2);
+		ssize = (((data[start + 24 + k * 8] << 8) + data[start + 25 + k * 8]) * 2) + (((data[start + 26 + k * 8] << 8) + data[start + 27 + k * 8]) * 2);
+
+		if ((j + 2) < ssize)
+			return -1;
 	}
-	ssize = 0;
+printf("e\n");
 
 	/* test #4  finetunes & volumes */
 	/* l is still the size of the pattern list */
 	for (k = 0; k < 31; k++) {
-		if ((data[start + 22 + k * 8] > 0x0f)
-			|| (data[start + 23 + k * 8] > 0x40)) {
-/*printf ( "#4 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
-		}
+		if ((data[start + 22 + k * 8] > 0x0f) || (data[start + 23 + k * 8] > 0x40))
+			return -1;
 	}
 
 	/* test #5  pattern addresses > sample address ? */
 	/* l is still the size of the pattern list */
 	/* get sample data address */
+#if 0
 	if ((start + 0x314) > in_size) {
 /*printf ( "#5,-1 (Start:%ld)\n" , start );*/
 		Test = BAD;
 		return;
 	}
+#endif
 	/* k gets address of sample data */
 	k = (data[start + 784] << 24)
 		+ (data[start + 785] << 16)
 		+ (data[start + 786] << 8)
 		+ data[start + 787];
+#if 0
 	if ((k + start) > in_size) {
-/*printf ( "#5,0 (Start:%ld)\n" , start );*/
 		Test = BAD;
 		return;
 	}
-	if (k < 788) {
-/*printf ( "#5,1 (Start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
+#endif
+	if (k < 788)
+		return -1;
+
 	/* k is the address of the sample data */
 	/* pattern addresses > sample address ? */
 	for (j = 0; j < l; j += 4) {
-		/* m gets each pattern address */
-		m =
-			(data[start + 272 +
-				 j] << 24) +
+		/* m gets each pattern address */ m =
+			(data[start + 272 + j] << 24) +
 			(data[start + 273 + j] << 16)
 			+ (data[start + 274 + j] << 8)
 			+ data[start + 275 + j];
-		if (m > k) {
-/*printf ( "#5,2 (Start:%ld) (smp addy:%ld) (pat addy:%ld) (pat nbr:%ld) (max:%ld)\n"
-         , start 
-         , k
-         , m
-         , (j/4)
-         , l );*/
-			return;
-		}
-	}
-	/* test last patterns of the pattern list == 0 ? */
-	j += 2;
-	while (j < 128) {
-		m =
-			(data[start + 272 +
-				 j * 4] << 24) +
-			(data[start + 273 +
-				j * 4] << 16) +
-			(data[start + 274 + j * 4] << 8)
-			+ data[start + 275 + j * 4];
-		if (m != 0) {
-/*printf ( "#5,3 (start:%ld)\n" , start );*/
-			return;
-		}
-		j += 1;
+		if (m > k)
+			return -1;
 	}
 
+	/* test last patterns of the pattern list == 0 ? */
+	for (j += 2; j < 128; j++) {
+		m = (data[start + 272 + j * 4] << 24) +
+			(data[start + 273 + j * 4] << 16) +
+			(data[start + 274 + j * 4] << 8)
+			+ data[start + 275 + j * 4];
+		if (m != 0)
+			return -1;
+	}
 
 	/* test pattern data */
 	/* k is the address of the sample data */
 	j = start + 788;
 	/* j points on pattern data */
-/*printf ( "j:%ld , k:%ld\n" , j , k );*/
 	while (j < (k + start - 4)) {
 		if (data[j] == 0x80) {
 			j += 1;
 			continue;
 		}
-		if (data[j] > 0x80) {
-/*printf ( "#6 (start:%ld)\n" , start );*/
-			return;
-		}
+
+		if (data[j] > 0x80)
+			return -1;
+
 		/* empty row ? ... not ptk_tableible ! */
 		if ((data[j] == 0x00) &&
 			(data[j + 1] == 0x00) &&
 			(data[j + 2] == 0x00) &&
 			(data[j + 3] == 0x00)) {
-/*printf ( "#6,0 (start:%ld)\n" , start );*/
-			return;
+			return - 1;
 		}
+
 		/* fx = C .. arg > 64 ? */
-		if (((data[j + 2] * 0x0f) == 0x0C)
-			&& (data[j + 3] > 0x40)) {
-/*printf ( "#6,1 (start:%ld)\n" , start );*/
-			return;
-		}
+		if (((data[j + 2] * 0x0f) == 0x0C) && (data[j + 3] > 0x40))
+			return - 1;
+
 		/* fx = D .. arg > 64 ? */
-		if (((data[j + 2] * 0x0f) == 0x0D)
-			&& (data[j + 3] > 0x40)) {
-/*printf ( "#6,2 (start:%ld)\n" , start );*/
-			return;
-		}
+		if (((data[j + 2] * 0x0f) == 0x0D) && (data[j + 3] > 0x40))
+			return - 1;
+
 		j += 4;
 	}
 
-	Test = GOOD;
+	return 0;
 }

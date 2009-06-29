@@ -122,6 +122,7 @@ int pw_init()
 	pw_register(&pw_unic2);
 	pw_register(&pw_crb);
 	pw_register(&pw_tdd);
+	/* pw_register(&pw_starpack); */
 	pw_register(&pw_gmc);
 
 	return 0;

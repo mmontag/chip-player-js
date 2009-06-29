@@ -80,6 +80,7 @@ extern struct pw_format pw_pha;
 extern struct pw_format pw_pp21;
 extern struct pw_format pw_pru1;
 extern struct pw_format pw_pru2;
+extern struct pw_format pw_starpack;
 extern struct pw_format pw_stim;
 extern struct pw_format pw_tdd;
 extern struct pw_format pw_tp3;

@@ -39,10 +39,8 @@ static int depack_pru1 (FILE *in, FILE *out)
 	fwrite(header, 950, 1, out);
 
 	/* get whole sample size */
-	for (i = 0; i < 31; i++) {
-		ssize += ((header[42 + i * 30] << 8) +
-			   header[43 + i * 30]) * 2;
-	}
+	for (i = 0; i < 31; i++)
+		ssize += readmem16b(header + i * 30 + 42);
 
 	/* read and write size of pattern list */
 	write8(out, npat = read8(in));

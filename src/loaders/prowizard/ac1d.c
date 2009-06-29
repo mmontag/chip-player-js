@@ -140,7 +140,7 @@ static int depack_AC1D (FILE *in, FILE *out)
 }
 
 
-static int test_AC1D (uint8 *data, int s)
+static int test_AC1D(uint8 *data, int s)
 {
 	int j, k;
 	int start = 0;
