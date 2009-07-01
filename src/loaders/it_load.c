@@ -247,7 +247,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     struct it_sample_header ish;
     struct it_envelope env;
     uint8 b, mask[L_CHANNELS];
-    uint16 x16;
     int max_ch, flag;
     int inst_map[120], inst_rmap[96];
     char tracker_name[80];
@@ -394,7 +393,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	i = ftell (f);
 	fseek(f, start + ifh.msgofs, SEEK_SET);
 	for (j = 0; j < ifh.msglen; j++) {
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 	    if (b == '\r')
 		b = '\n';
 	    if ((b < 32 || b > 127) && b != '\n' && b != '\t')
@@ -842,11 +841,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxp[i]->rows = read16l(f);
 	TRACK_ALLOC (i);
 	memset (mask, 0, L_CHANNELS);
-	fread (&x16, 2, 1, f);
-	fread (&x16, 2, 1, f);
+	read16l(f);
+	read16l(f);
 
 	while (--pat_len >= 0) {
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 	    if (!b) {
 		r++;
 		continue;
@@ -865,7 +864,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	     */
 	    event = c >= m->xxh->chn ? &dummy : &EVENT (i, c, r);
 	    if (mask[c] & 0x01) {
-		fread (&b, 1, 1, f);
+		b = read8(f);
 
 		if (b > 0x7f && b < 0xfd)
 			b = 0;
@@ -890,18 +889,18 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		pat_len--;
 	    }
 	    if (mask[c] & 0x02) {
-		fread (&b, 1, 1, f);
+		b = read8(f);
 		lastevent[c].ins = event->ins = b;
 		pat_len--;
 	    }
 	    if (mask[c] & 0x04) {
-		fread (&b, 1, 1, f);
+		b = read8(f);
 		lastevent[c].vol = event->vol = b;
 		xlat_volfx (event);
 		pat_len--;
 	    }
 	    if (mask[c] & 0x08) {
-		fread (&b, 1, 1, f);
+		b = read8(f);
 		event->fxt = b;
 		fread (&b, 1, 1, f);
 		event->fxp = b;
