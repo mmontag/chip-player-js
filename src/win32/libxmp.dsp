@@ -622,6 +622,10 @@ SOURCE=..\loaders\prowizard\ptktable.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\prowizard\starpack.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\prowizard\tdd.c
 # End Source File
 # Begin Source File
