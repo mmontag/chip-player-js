@@ -1,6 +1,6 @@
 /*
- * StarTrekker _Packer.c   1997 (c) Asle / ReDoX
- *                         Modified by Claudio Matsuoka
+ * StarTrekker _Packer.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
+ *                         Copyright (C) 2006-2009 Claudio Matsuoka
  *
  * Converts back to ptk StarTrekker packed MODs
  */
@@ -13,7 +13,7 @@ static int depack_starpack (FILE *, FILE *);
 static int test_starpack (uint8 *, int);
 
 struct pw_format pw_starpack = {
-	"STAR",
+	"STP",
 	"Startrakker Packer",
 	0x00,
 	test_starpack,
@@ -26,16 +26,15 @@ int depack_starpack(FILE *in, FILE *out)
 	uint8 pnum[128];
 	uint8 pnum_tmp[128];
 	uint8 pat_pos;
-	uint8 *tmp;
 	uint8 Pattern[1024];
 	uint8 PatMax = 0x00;
-	long i = 0, j = 0, k = 0;
-	long ssize = 0;
-	long paddr[128];
-	long paddr_tmp[128];
-	long paddr_tmp2[128];
-	long tmp_ptr, tmp1, tmp2;
-	long sdataAddress = 0;
+	int i = 0, j = 0, k = 0;
+	int size, ssize = 0;
+	int paddr[128];
+	int paddr_tmp[128];
+	int paddr_tmp2[128];
+	int tmp_ptr, tmp1, tmp2;
+	int sdataAddress = 0;
 
 	memset(pnum, 0, 128);
 	memset(pnum_tmp, 0, 128);
@@ -43,62 +42,24 @@ int depack_starpack(FILE *in, FILE *out)
 	memset(paddr_tmp, 0, 128 * 4);
 	memset(paddr_tmp2, 0, 128 * 4);
 
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
+	pw_move_data(in, out, 20);		/* title */
 
-	/* read and write title */
-	for (i = 0; i < 20; i++) {	/* title */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-	}
-
-	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
-
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		pw_write_zero(out, 22);		/* sample name */
+		write16b(out, size = read16b(in));	/* size */
+		ssize += 2 * size;
+		write8(out, read8(in));		/* finetune */
+		write8(out, read8(in));		/* volume */
+		write16b(out, read16b(in));	/* loop start */
+		write16b(out, read16b(in));	/* loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* read size of pattern table */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	pat_pos = ((c1 << 8) + c2) / 4;
-	/*printf ( "Size of pattern table : %d\n" , pat_pos ); */
+	pat_pos = read16b(in);			/* size of pattern table */
 
-	/* bypass $0000 unknown bytes */
-	fseek (in, 2, 1);	/* SEEK_CUR */
+	fseek(in, 2, SEEK_CUR);			/* bypass $0000 unknown bytes */
 
-/***********/
-
-	for (i = 0; i < 128; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		paddr[i] =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
-	}
+	for (i = 0; i < 128; i++)
+		paddr[i] = read32b(in);
 
 	/* ordering of patterns addresses */
 
@@ -119,13 +80,7 @@ int depack_starpack(FILE *in, FILE *out)
 		if (j == i)
 			pnum[i] = tmp_ptr++;
 	}
-/*
-for ( i=0 ; i<128 ; i++ )
-fprintf ( info , "%x," , pnum[i] );
-fprintf ( info , "\n\n" );
-*/
-	/* correct re-order */
-  /********************/
+
 	for (i = 0; i < 128; i++)
 		paddr_tmp[i] = paddr[i];
 
@@ -143,11 +98,7 @@ fprintf ( info , "\n\n" );
 			}
 		}
 	}
-/*
-for ( i=0 ; i<128 ; i++ )
-fprintf ( info , "%x," , pnum[i] );
-fprintf ( info , "\n\n" );
-*/
+
 	j = 0;
 	for (i = 0; i < 128; i++) {
 		if (i == 0) {
@@ -160,28 +111,9 @@ fprintf ( info , "\n\n" );
 		paddr_tmp2[++j] = paddr_tmp[i];
 	}
 
-/*
-for ( i=0 ; i<128 ; i++ )
-fprintf ( info , "%ld," , paddr[i] );
-fprintf ( info , "\n\n" );
-for ( i=0 ; i<128 ; i++ )
-fprintf ( info , "%ld," , paddr_tmp2[i] );
-fprintf ( info , "\n\n" );
-
-for ( i=0 ; i<128 ; i++ )
-fprintf ( info , "%x," , pnum_tmp[i] );
-fprintf ( info , "\n\n" );
-*/
-
 	/* try to locate unused patterns .. hard ! */
 	j = 0;
 	for (i = 0; i < (pat_pos - 1); i++) {
-/*
-fprintf ( info , "%6ld (%6ld,%6ld)\n"
-               , paddr_tmp2[i+1] - paddr_tmp2[i]
-               , paddr_tmp2[i+1]
-               , paddr_tmp2[i] );
-*/
 		paddr_tmp[j] = paddr_tmp2[i];
 		j += 1;
 		if ((paddr_tmp2[i + 1] - paddr_tmp2[i]) > 1024) {
@@ -199,59 +131,30 @@ fprintf ( info , "%6ld (%6ld,%6ld)\n"
 				break;
 			}
 	}
-/*
-for ( i=0 ; i<128 ; i++ )
-fprintf ( info , "%x," , pnum_tmp[i] );
-fprintf ( info , "\n\n" );
-*/
 
 	memset(pnum, 0, 128);
 	for (i = 0; i < pat_pos; i++) {
 		pnum[i] = pnum_tmp[i];
 	}
 
-	/* write number of position */
-	fwrite (&pat_pos, 1, 1, out);
+	write8(out, pat_pos);			/* write number of position */
 
 	/* get highest pattern number */
-	for (i = 0; i < pat_pos; i++)
+	for (i = 0; i < pat_pos; i++) {
 		if (pnum[i] > PatMax)
 			PatMax = pnum[i];
+	}
 
-	/*printf ( "Highest pattern number : %d\n" , PatMax ); */
-
-	/* write noisetracker byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
-
-	/* write pattern list */
-	for (i = 0; i < 128; i++)
-		fwrite (&pnum[i], 1, 1, out);
-
-/***********/
-
-
-	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write8(out, 0x7f);			/* write noisetracker byte */
+	fwrite(pnum, 128, 1, out);		/* write pattern list */
+	write32b(out, PW_MOD_MAGIC);		/* M.K. */
 
 	/* read sample data address */
-	fseek (in, 0x310, 0);
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	sdataAddress =
-		(c1 << 24) + (c2 << 16) + (c3 << 8) + c4 +
-		0x314;
+	fseek(in, 0x310, SEEK_SET);
+	sdataAddress = read32b(in) + 0x314;
 
 	/* pattern data */
-	fseek (in, 0x314, 0);	/* SEEK_CUR */
+	fseek (in, 0x314, SEEK_SET);
 	PatMax += 1;
 	for (i = 0; i < PatMax; i++) {
 		memset(Pattern, 0, 1024);
@@ -280,18 +183,14 @@ fprintf ( info , "\n\n" );
 					((c5 << 4) & 0xf0);
 			}
 		}
-		fwrite (Pattern, 1024, 1, out);
+		fwrite(Pattern, 1024, 1, out);
 		/*printf ( "+" ); */
 	}
 	/*printf ( "\n" ); */
 
 	/* sample data */
 	fseek (in, sdataAddress, 0);
-	tmp = (uint8 *) malloc (ssize);
-	memset(tmp, 0, ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	pw_move_data(in, out, ssize);
 
 	return 0;
 }

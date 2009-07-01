@@ -8,7 +8,7 @@
                               \_/     \/|_|    
                 E x t e n d e d   M o d u l e   P l a y e r
 
-			     Version 2.6.2
+			     Version 2.7.0
 
 
 OVERVIEW
@@ -60,6 +60,7 @@ The current version recognizes the following module formats:
   PP	****+	ProPacker		2.1
   PROM	****+	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
+  STP	****+	StarTrekker Packer	-
   UNIC	****+	Unic Tracker		1.0, 2.0
   WN	****+	Wanton Packer		-
   XANN	****+	XANN Packer		-
