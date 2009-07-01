@@ -853,7 +853,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    c = (b - 1) & 63;
 
 	    if (b & 0x80) {
-		fread (&mask[c], 1, 1, f);
+		mask[c] = read8(f);
 		pat_len--;
 	    }
 	    /*
@@ -902,8 +902,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (mask[c] & 0x08) {
 		b = read8(f);
 		event->fxt = b;
-		fread (&b, 1, 1, f);
-		event->fxp = b;
+		event->fxp = read8(f);
 		xlat_fx (c, event);
 		lastevent[c].fxt = event->fxt;
 		lastevent[c].fxp = event->fxp;

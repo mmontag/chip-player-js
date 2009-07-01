@@ -252,20 +252,19 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->chn; i++) {
 	for (j = 0; j < 64 * m->xxh->pat; ) {
 	    cnt = 1;
-	    fread (&x8, 1, 1, f);	/* Read note or repeat code (0xfc) */
+	    x8 = read8(f);		/* Read note or repeat code (0xfc) */
 	    if (x8 == 0xfc) {
-		fread (&x8, 1, 1, f);		/* Read repeat count */
-		cnt = x8;
-		fread (&x8, 1, 1, f);		/* Read note */
+		cnt = read8(f);			/* Read repeat count */
+		x8 = read8(f);			/* Read note */
 	    }
-	    fread (&ue, 4, 1, f);		/* Read rest of the event */
+	    fread(&ue, 4, 1, f);		/* Read rest of the event */
 
 	    if (cnt == 0)
 		cnt++;
 
 	    for (k = 0; k < cnt; k++, j++) {
 		event = &EVENT (j >> 6, i , j & 0x3f);
-		memset (event, 0, sizeof (struct xxm_event));
+		memset(event, 0, sizeof (struct xxm_event));
 		if (x8)
 		    event->note = x8 + 24;
 		event->ins = ue.ins;

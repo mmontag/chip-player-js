@@ -181,7 +181,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64 * m->xxh->chn; j++) {
 	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 	    memset (event, 0, sizeof (struct xxm_event));
 	    switch (b) {
 	    case 251:
@@ -191,19 +191,18 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    case 255:
 		b = 0;
 	    default:
-		event->note = b ? 1 + LSN (b) + 12 * (2 + MSN (b)) : 0;
-		fread (&b, 1, 1, f);
+		event->note = b ? 1 + LSN(b) + 12 * (2 + MSN(b)) : 0;
+		b = read8(f);
 		event->vol = b & 0x07;
 		event->ins = (b & 0xf8) >> 3;
-		fread (&b, 1, 1, f);
+		b = read8(f);
 		event->vol += (b & 0xf0) >> 1;
 		if (event->vol > 0x40)
 		    event->vol = 0;
 		else
 		    event->vol++;
-		event->fxt = fx[LSN (b)];
-		fread (&b, 1, 1, f);
-		event->fxp = b;
+		event->fxt = fx[LSN(b)];
+		event->fxp = read8(f);
 		switch (event->fxt) {
 		case FX_TEMPO:
 		    event->fxp = MSN (event->fxp);

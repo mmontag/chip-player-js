@@ -165,7 +165,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read orders */
     for (i = 0; i < m->xxh->len; i++) {
-	fread (&m->xxo[i], 1, 1, f);
+	m->xxo[i] = read8(f);
 	fseek(f, 4, SEEK_CUR);
     }
  
@@ -239,7 +239,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fseek(f, 2, SEEK_CUR);
 
 	for (r = 0; r < 64; ) {
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 
 	    if (b == S3M_EOR) {
 		r++;
@@ -250,7 +250,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	    event = c >= m->xxh->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
-		fread (&n, 1, 1, f);
+		n = read8(f);
 
 		switch (n) {
 		case 255:
@@ -264,20 +264,16 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		event->note = n;
-		fread (&n, 1, 1, f);
-		event->ins = n;
+		event->ins = read8(f);;
 	    }
 
 	    if (b & S3M_VOL_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->vol = n + 1;
+		event->vol = read8(f) + 1;
 	    }
 
 	    if (b & S3M_FX_FOLLOWS) {
-		fread (&n, 1, 1, f);
-		event->fxt = fx[n];
-		fread (&n, 1, 1, f);
-		event->fxp = n;
+		event->fxt = fx[read8(f)];
+		event->fxp = read8(f);
 		switch (event->fxt) {
 		case FX_TEMPO:
 		    event->fxp = MSN (event->fxp);

@@ -174,7 +174,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, start + 16L * pfh.patseg[i], SEEK_SET);
 	r = 0;
 	while (r < 64) {
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 	    if (!b) {
 		r++;
 		continue;
@@ -186,7 +186,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    event = &EVENT (i, c, r);
 	    if (b & PTM_NI_FOLLOW) {
-		fread (&n, 1, 1, f);
+		n = read8(f);
 		switch (n) {
 		case 255:
 		    n = 0;
@@ -196,8 +196,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 		    break;	/* Key off */
 		}
 		event->note = n;
-		fread (&n, 1, 1, f);
-		event->ins = n;
+		event->ins = read8(f);
 	    }
 	    if (b & PTM_FX_FOLLOWS) {
 		event->fxt = read8(f);

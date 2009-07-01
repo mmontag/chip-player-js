@@ -118,11 +118,10 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64 * m->xxh->chn; j++) {
 	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 	    if (b)
 		event->note = (b == 37) ? 0x61 : b + 36;
-	    fread (&b, 1, 1, f);
-	    event->ins = b;
+	    event->ins = read8(f);
 	}
 	reportv(ctx, 0, ".");
     }

@@ -164,8 +164,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Comments */
-    for (i = 0; i < mfh.extralen; i++)
-	fread (&j, 1, 1, f);
+    fseek(f, mfh.extralen, SEEK_CUR);
 
     /* Read samples */
     reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);

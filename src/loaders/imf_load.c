@@ -252,7 +252,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	r = 0;
 
 	while (--pat_len >= 0) {
-	    fread (&b, 1, 1, f);
+	    b = read8(f);
 
 	    if (b == IMF_EOR) {
 		r++;
