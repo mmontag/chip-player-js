@@ -339,6 +339,9 @@ load_instruments:
 	    memcpy (m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
 	    memcpy (m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
 
+	    for (j = 0; i < XXM_KEY_MAX; j++)
+		m->xxim[i].ins[j] = -1;
+
 	    memcpy (&m->xxim[i].ins, xi.sample, 96);
 	    for (j = 0; j < 96; j++) {
 		if (m->xxim[i].ins[j] >= m->xxih[i].nsm)

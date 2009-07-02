@@ -80,9 +80,10 @@ struct xxm_instrument_header {
 	int wts;		/* Waveform table speed -- for MED */
 };
 
+#define XXM_KEY_MAX 108
 struct xxm_instrument_map {
-	uint8 ins[96];		/* Instrument number for each key */
-	int8 xpo[96];		/* Instrument transpose for each key */
+	uint8 ins[XXM_KEY_MAX];	/* Instrument number for each key */
+	int8 xpo[XXM_KEY_MAX];	/* Instrument transpose for each key */
 };
 
 struct xxm_instrument {

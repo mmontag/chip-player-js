@@ -249,7 +249,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxih[i].nsm = 16;
 		m->xxi[i] = calloc(sizeof (struct xxm_instrument), m->xxih[i].nsm);
 
-		for (j = 0; j < 96; j++)
+		for (j = 0; j < XXM_KEY_MAX; j++)
 			m->xxim->ins[j] = ri.table[j + 12];
 
 		/* Envelope */

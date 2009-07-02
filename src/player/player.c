@@ -328,11 +328,10 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
     if ((uint32)ins < m->xxh->ins && m->xxih[ins].nsm)
 	flg |= IS_VALID;
 
-    if ((uint32)key < XMP_KEY_OFF && key--) {
-	xc->key = key;
+    if ((uint32)key < XMP_KEY_OFF && key > 0) {
+	xc->key = --key;
 
-	/* we have a 96 key limit here, rhythm.mdl uses key 108 */
-        if (flg & IS_VALID && key < 96) {
+        if (flg & IS_VALID && key < XXM_KEY_MAX) {
 	    if (m->xxim[ins].ins[key] != 0xff) {
 		note = key + m->xxi[ins][m->xxim[ins].ins[key]].xpo +
 						m->xxim[ins].xpo[key];

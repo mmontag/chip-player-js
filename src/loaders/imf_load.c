@@ -337,7 +337,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	str_adj ((char *) ii.name);
 	strncpy ((char *) m->xxih[i].name, ii.name, 24);
 
-	memcpy (m->xxim[i].ins, ii.map, 96);
+	memcpy (m->xxim[i].ins, ii.map, XXM_KEY_MAX);
 
 	if (V(1) && (strlen((char *) ii.name) || ii.nsm))
 	    report ("\n[%2X] %-31.31s %2d %4x %c%c%c ",
