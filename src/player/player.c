@@ -623,10 +623,16 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     if (xc->tremor) {
 	if (xc->tcnt_dn > 0)
 	    finalvol = 0;
-	if (!xc->tcnt_up--)
-	    xc->tcnt_dn = LSN (xc->tremor);
-	if (!xc->tcnt_dn--)
-	    xc->tcnt_up = MSN (xc->tremor);
+
+	if (xc->tcnt_up == 0)
+	    xc->tcnt_dn = LSN(xc->tremor);
+	else
+	    xc->tcnt_up--;
+
+	if (xc->tcnt_dn == 0)
+	    xc->tcnt_up = MSN(xc->tremor);
+	else
+	    xc->tcnt_dn--;
     }
 
     /* Do keyoff */
