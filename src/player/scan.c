@@ -230,6 +230,26 @@ int xmpi_scan_module(struct xmp_context *ctx)
 		    bpm = parm;
 		}
 
+		if ((f1 == FX_IT_BPM && p1) || (f2 == FX_IT_BPM && p2)) {
+		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
+		    alltmp += cnt_row * tempo * base_time;
+		    cnt_row = 0;
+		    clock += 100 * alltmp / bpm;
+		    alltmp = 0;
+
+		    if (MSN(parm) == 0) {
+			bpm -= LSN(parm);
+			if (bpm < 0x20)
+			    bpm = 0x20;
+		    } else if (MSN(parm) == 1) {
+			bpm += LSN(parm);
+			if (bpm > 0xff)
+			    bpm = 0xff;
+		    } else {
+			bpm = parm;
+		    }
+		}
+
 		if (f1 == FX_JUMP || f2 == FX_JUMP) {
 		    ord2 = (f1 == FX_JUMP) ? p1 : p2;
 		    last_row = 0;

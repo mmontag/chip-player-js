@@ -71,7 +71,7 @@ static uint8 fx[] = {
 	/* Q */ FX_MULTI_RETRIG,
 	/* R */ FX_TREMOLO,
 	/* S */ FX_XTND,
-	/* T */ FX_S3M_BPM,
+	/* T */ FX_IT_BPM,
 	/* U */ FX_NONE,
 	/* V */ FX_GLOBALVOL,
 	/* W */ FX_G_VOLSLIDE,

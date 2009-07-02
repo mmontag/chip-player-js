@@ -401,6 +401,20 @@ ex_f_vslide_dn:
 	if (fxp >= 0x20)	/* Panic uses 0x14 */
 	    p->tick_time = m->rrate / (p->xmp_bpm = fxp);
 	break;
+    case FX_IT_BPM:				/* Set IT BPM */
+	if (MSN(fxp) == 0) {		/* T0x - Tempo slide down by x */
+	    p->xmp_bpm -= LSN(fxp);
+	    if (p->xmp_bpm < 0x20)
+		p->xmp_bpm = 0x20;
+	} else if (MSN(fxp) == 1) {	/* T1x - Tempo slide up by x */
+	    p->xmp_bpm += LSN(fxp);
+	    if ((int32)p->xmp_bpm > 0xff)
+		p->xmp_bpm = 0xff;
+	} else {
+	    p->xmp_bpm = fxp;
+	}
+	p->tick_time = m->rrate / p->xmp_bpm;
+	break;
     case FX_GLOBALVOL:				/* Set global volume */
 	m->volume = fxp > m->volbase ? m->volbase : fxp;
 	break;

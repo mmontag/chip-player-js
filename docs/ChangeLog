@@ -5,7 +5,8 @@ Stable versions
 	- add StarTrekker packer loader (untested, need samples)
 	- extended key range to IT octave 9 (fixes beek-my_eleventh_year.it,
 	  reported by Mirko Buffoni)
-	- ignore tempo/bpm settings to 0 in module scanner
+	- ignore tempo/bpm settings to 0 in scan (reported by Storlek)
+	- implement IT T0x and T1x tempo slides
 
 2.6.2 (20090630):
 	- Promizer 1.8a loader code cleanup
