@@ -167,6 +167,12 @@ static void xlat_fx(int c, struct xxm_event *e)
 	    e->fxp *= 2;
 	}
 	break;
+    case FX_TREMOR:
+	if (!LSN(e->fxp))
+	    e->fxp |= 0x01; 
+	if (!MSN(e->fxp))
+	    e->fxp |= 0x10; 
+	break;
     case FX_NONE:		/* No effect */
 	e->fxt = e->fxp = 0;
 	break;

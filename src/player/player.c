@@ -74,8 +74,8 @@ static int waveform[4][64] = {
  *                          -- Ice of FC about "Mental Surgery"
  */
 
-static int module_fetch (struct xmp_context *, struct xxm_event *, int, int);
-static void module_play (struct xmp_context *, int, int);
+static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
+static void play_channel (struct xmp_context *, int, int);
 
 #include "effects.c"
 
@@ -194,7 +194,7 @@ static inline void chn_reset(struct xmp_context *ctx)
 }
 
 
-static inline void chn_fetch(struct xmp_context *ctx, int ord, int row)
+static inline void fetch_row(struct xmp_context *ctx, int ord, int row)
 {
     int count, chn;
     struct xmp_player_context *p = &ctx->p;
@@ -202,7 +202,7 @@ static inline void chn_fetch(struct xmp_context *ctx, int ord, int row)
 
     count = 0;
     for (chn = 0; chn < p->m.xxh->chn; chn++) {
-	if (module_fetch(ctx, &EVENT(ord, chn, row), chn, 1) != XMP_OK) {
+	if (fetch_channel(ctx, &EVENT(ord, chn, row), chn, 1) != XMP_OK) {
 	    p->fetch_ctl[chn]++;
 	    count++;
 	}
@@ -210,7 +210,7 @@ static inline void chn_fetch(struct xmp_context *ctx, int ord, int row)
 
     for (chn = 0; count; chn++) {
 	if (p->fetch_ctl[chn]) {
-	    module_fetch(ctx, &EVENT(ord, chn, row), chn, 0);
+	    fetch_channel(ctx, &EVENT(ord, chn, row), chn, 0);
 	    p->fetch_ctl[chn] = 0;
 	    count--;
 	}
@@ -218,17 +218,17 @@ static inline void chn_fetch(struct xmp_context *ctx, int ord, int row)
 }
 
 
-static inline void chn_refresh(struct xmp_context *ctx, int tick)
+static inline void play_frame(struct xmp_context *ctx, int tick)
 { 
     struct xmp_driver_context *d = &ctx->d;
     int i;
 
     for (i = d->numchn; i--;)
-	module_play(ctx, i, tick);
+	play_channel(ctx, i, tick);
 }
 
 
-static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, int ctl)
+static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, int ctl)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
@@ -443,7 +443,7 @@ static int module_fetch(struct xmp_context *ctx, struct xxm_event *e, int chn, i
 }
 
 
-static void module_play(struct xmp_context *ctx, int chn, int t)
+static void play_channel(struct xmp_context *ctx, int chn, int t)
 {
     struct xmp_channel *xc;
     int finalvol, finalpan, cutoff, act;
@@ -620,19 +620,16 @@ static void module_play(struct xmp_context *ctx, int chn, int t)
     }
 
     /* Do tremor */
-    if (xc->tremor) {
-	if (xc->tcnt_dn > 0)
+    if (xc->tcnt_up || xc->tcnt_dn) {
+printf("\nup %d  down %d\n", xc->tcnt_up, xc->tcnt_dn);
+	if (xc->tcnt_up > 0) {
+	    if (xc->tcnt_up--)
+		xc->tcnt_dn = LSN(xc->tremor);
+	} else {
 	    finalvol = 0;
-
-	if (xc->tcnt_up == 0)
-	    xc->tcnt_dn = LSN(xc->tremor);
-	else
-	    xc->tcnt_up--;
-
-	if (xc->tcnt_dn == 0)
-	    xc->tcnt_up = MSN(xc->tremor);
-	else
-	    xc->tcnt_dn--;
+	    if (xc->tcnt_dn--)
+		xc->tcnt_up = MSN(xc->tremor);
+	}
     }
 
     /* Do keyoff */
@@ -906,9 +903,9 @@ next_order:
 		    break;
 		}
 
-		if (!t) {
+		if (!t) {		/* first frame of row */
 		    p->gvol_flag = 0;
-		    chn_fetch(ctx, m->xxo[ord], f->row_cnt);
+		    fetch_row(ctx, m->xxo[ord], f->row_cnt);
 
 		    xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
@@ -919,8 +916,9 @@ next_order:
 		    xmp_drv_echoback(ctx, ((m->xxp[m->xxo[ord]]->rows - 1)
 				<< 12) | (f->row_cnt << 4) | XMP_ECHO_ROW);
 		}
+
 		xmp_drv_echoback(ctx, (t << 4) | XMP_ECHO_FRM);
-		chn_refresh(ctx, t);
+		play_frame(ctx, t);
 
 		if (o->time && (o->time < playing_time))
 		    goto end_module;
@@ -1082,7 +1080,7 @@ int xmp_player_loop(struct xmp_context *ctx)
 
 	if (f->frame == 0) {			/* first frame in row */
 		p->gvol_flag = 0;
-		chn_fetch(ctx, m->xxo[f->ord], f->row_cnt);
+		fetch_row(ctx, m->xxo[f->ord], f->row_cnt);
 
 		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
 							XMP_ECHO_BPM);
@@ -1095,7 +1093,7 @@ int xmp_player_loop(struct xmp_context *ctx)
 	}
 
 	xmp_drv_echoback(ctx, (f->frame << 4) | XMP_ECHO_FRM);
-	chn_refresh(ctx, f->frame);
+	play_frame(ctx, f->frame);
 
 	if (o->time && (o->time < f->playing_time))	/* expired time */
 		return -1;
