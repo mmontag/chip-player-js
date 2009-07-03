@@ -611,7 +611,7 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			// Set module type
 			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_TYPE), mi.type);
 			// Calculate estimated time
-		    t = xmpi_scan_module((struct xmp_context *)ctx);
+		    t = _xmp_scan_module((struct xmp_context *)ctx);
 			snprintf(tmpbuf, 256, "%dm %02ds\n",
 				(t + 500) / 60000, ((t + 500) / 1000) % 60);
 			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_EST), tmpbuf);

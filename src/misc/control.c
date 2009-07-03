@@ -95,9 +95,9 @@ void xmp_init(xmp_context ctx, int argc, char **argv)
 			break;
 	}
 	if (num >= argc)
-		xmpi_read_rc((struct xmp_context *)ctx);
+		_xmp_read_rc((struct xmp_context *)ctx);
 
-	/* xmpi_tell_wait(); */
+	/* _xmp_tell_wait(); */
 }
 
 inline int xmp_open_audio(xmp_context ctx)
@@ -186,7 +186,7 @@ int xmp_play_module(xmp_context ctx)
 	int t;
 
 	time(&t0);
-	xmpi_player_start((struct xmp_context *)ctx);
+	_xmp_player_start((struct xmp_context *)ctx);
 	time(&t1);
 	t = difftime(t1, t0);
 

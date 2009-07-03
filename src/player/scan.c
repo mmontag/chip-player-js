@@ -40,7 +40,7 @@
 #define MAX_GVL		0x40
 
 
-int xmpi_scan_module(struct xmp_context *ctx)
+int _xmp_scan_module(struct xmp_context *ctx)
 {
     int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
