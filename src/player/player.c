@@ -817,9 +817,9 @@ int _xmp_player_start(struct xmp_context *ctx)
 
     p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
     f->loop_stack = calloc(d->numchn, sizeof (int));
-    f->loop_row = calloc(d->numchn, sizeof (int));
+    f->loop_start = calloc(d->numchn, sizeof (int));
     p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
-    if (!(p->fetch_ctl && f->loop_stack && f->loop_row && p->xc_data))
+    if (!(p->fetch_ctl && f->loop_stack && f->loop_start && p->xc_data))
 	return XMP_ERR_ALLOC;
 
     reset_channel(ctx);
@@ -946,7 +946,7 @@ next_order:
 	    }
 
 	    if (f->loop_chn) {
-		f->row = f->loop_row[--f->loop_chn] - 1;
+		f->row = f->loop_start[--f->loop_chn] - 1;
 		f->loop_chn = 0;
 	    }
 	}
@@ -965,7 +965,7 @@ end_module:
     xmp_drv_stoptimer(ctx);
 
     free(p->xc_data);
-    free(f->loop_row);
+    free(f->loop_start);
     free(f->loop_stack);
     free(p->fetch_ctl);
 
@@ -1021,9 +1021,9 @@ int xmp_player_start(struct xmp_context *ctx)
 
 	p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
 	f->loop_stack = calloc(d->numchn, sizeof (int));
-	f->loop_row = calloc(d->numchn, sizeof (int));
+	f->loop_start = calloc(d->numchn, sizeof (int));
 	p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
-	if (!(p->fetch_ctl && f->loop_stack && f->loop_row && p->xc_data))
+	if (!(p->fetch_ctl && f->loop_stack && f->loop_start && p->xc_data))
 		return XMP_ERR_ALLOC;
 
 	reset_channel(ctx);
@@ -1127,7 +1127,7 @@ next_row:
 		}
 
 		if (f->loop_chn) {
-			f->row = f->loop_row[--f->loop_chn] - 1;
+			f->row = f->loop_start[--f->loop_chn] - 1;
 			f->loop_chn = 0;
 		}
 
@@ -1204,7 +1204,7 @@ void xmp_player_end(struct xmp_context *ctx)
 	xmp_drv_stoptimer(ctx);
 
 	free(p->xc_data);
-	free(f->loop_row);
+	free(f->loop_start);
 	free(f->loop_stack);
 	free(p->fetch_ctl);
 

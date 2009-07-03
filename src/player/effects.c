@@ -31,6 +31,7 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct flow_control *f = &p->flow;
     int h, l;
 
     switch (fxt) {
@@ -336,21 +337,24 @@ ex_f_porta_dn:
 	    fxp <<= 4;
 	    goto fx_finetune;
 	case EX_PATTERN_LOOP:			/* Loop pattern */
-	    if (fxp) {
-		if (p->flow.loop_stack[chn]) {
-		    if (--p->flow.loop_stack[chn])
-			p->flow.loop_chn = ++chn;	/* **** H:FIXME **** */
-		    else
+	    if (fxp == 0) {
+		/* mark start of loop */
+		f->loop_start[chn] = p->flow.row;
+	    } else {
+		/* end of loop */
+		if (f->loop_stack[chn]) {
+		    if (--f->loop_stack[chn]) {
+			f->loop_chn = ++chn;	/* **** H:FIXME **** */
+		    } else {
 			if (m->fetch & XMP_CTL_S3MLOOP)
-			    p->flow.loop_row[chn] = p->flow.row_cnt + 1;
+			    f->loop_start[chn] = f->row + 1;
+		    }
 		} else {
-		    if (p->flow.loop_row[chn] <= p->flow.row_cnt) {
-			p->flow.loop_stack[chn] = fxp;
-			p->flow.loop_chn = ++chn;
+		    if (f->loop_start[chn] <= f->row) {
+			f->loop_stack[chn] = fxp;
+			f->loop_chn = ++chn;
 		    }
 		}
-	    } else {
-		p->flow.loop_row[chn] = p->flow.row_cnt;
 	    }
 	    break;
 	case EX_TREMOLO_WF:			/* Set tremolo waveform */

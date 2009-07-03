@@ -206,7 +206,7 @@ struct flow_control {
 	int jumpline;
 	int row;
 	int loop_chn;
-	int* loop_row;
+	int* loop_start;
 	int* loop_stack;
 #ifdef TEST_OPEN_LOOP
 	int frame;
