@@ -106,7 +106,9 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    break;
     }
 
-    if (*tracker_name == 0) {
+    if (xfh.headersz == 0x0113) {
+	strcpy(tracker_name, "unknown tracker");
+    } else if (*tracker_name == 0) {
 	strcpy(tracker_name, "Digitrakker");	/* best guess */
 	fix_loop = 1;
     }
@@ -124,8 +126,12 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     MODULE_INFO();
 
-    /* XM 1.02/1.03 has a different structure. This is a nasty kludge to
-     * re-order the loader and recognize 1.02 files correctly.
+    /* Honor header size */
+
+    fseek(f, start + xfh.headersz + 60, SEEK_SET);
+
+    /* XM 1.02/1.03 has a different structure. This is a hack to re-order
+     * the loader and recognize 1.02 files correctly.
      */
     if (xfh.version <= 0x0103)
 	goto load_instruments;
@@ -339,7 +345,7 @@ load_instruments:
 	    memcpy (m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
 	    memcpy (m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
 
-	    for (j = 0; i < XXM_KEY_MAX; j++)
+	    for (j = 0; j < XXM_KEY_MAX; j++)
 		m->xxim[i].ins[j] = -1;
 
 	    memcpy (&m->xxim[i].ins, xi.sample, 96);

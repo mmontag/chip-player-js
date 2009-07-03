@@ -328,6 +328,10 @@ created using an old version of ModPlug Tracker (marked as 1.04 made with
 "FastTracker v 2.00", note that authentic FT2 modules are marked as
 "FastTracker v2.00").
 
+The module "ebony owl netsuke" by lamb (Filip Skutela) has tracker name
+"FastTracker v2.00", header size 275 (authentic Fast Tracker II modules
+have 276 in this field) and instrument size 263.
+
 Extended Module 1.02 (Vogue's "Trans atlantic" and "Dont you" remixes) and
 1.03 (Vogue's "Developer 94" and "Enhanced Intuition") contains header,
 instruments, patterns and samples in that order. 1.04 has header, patterns,
