@@ -303,14 +303,17 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->flg = ifh.flags & IT_LINEAR_FREQ ? XXM_FLG_LINEAR : 0;
     m->xxh->flg |= (ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200) ?
 					XXM_FLG_INSVOL : 0;
+
+    m->xxh->chn = 64;	/* Effects in muted channels are still processed! */
+
     for (i = 0; i < 64; i++) {
-	if (ifh.chpan[i] == 100)
+	if (ifh.chpan[i] == 100)	/* Surround -> center */
 	    ifh.chpan[i] = 32;
 
-	if (~ifh.chpan[i] & 0x80)
-	    m->xxh->chn = i + 1;
-	else
+	if (ifh.chpan[i] & 0x80) {	/* Channel mute */
 	    ifh.chvol[i] = 0;
+	    m->xxc[i].flg |= XXM_CHANNEL_MUTE;
+	}
 
 	if (ifh.flags & IT_STEREO) {
 	    m->xxc[i].pan = (int)ifh.chpan[i] * 0x80 >> 5;
@@ -343,6 +346,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     m->c4rate = C4_NTSC_RATE;
     m->fetch |= XMP_CTL_FINEFX | XMP_CTL_ENVFADE;
+
+    /* Identify tracker */
 
     switch (ifh.cwt >> 8) {
     case 0x00:

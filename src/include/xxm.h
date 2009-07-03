@@ -23,8 +23,9 @@ struct xxm_header {
 struct xxm_channel {
 	int pan;
 	int vol;
-#define XXM_CHANNEL_FM 0x01
-#define XXM_CHANNEL_FX 0x02
+#define XXM_CHANNEL_FM	0x01
+#define XXM_CHANNEL_FX	0x02
+#define XXM_CHANNEL_MUTE 0x04
 	int flg;
 	int cho;
 	int rvb;
