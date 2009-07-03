@@ -5,14 +5,13 @@ Claudio Matsuoka <cmatsuoka@gmail.com>
 
 Created: Sun May 16 13:43:42 EST 1999
 
-Sat Aug 11 08:04:52 BRT 2007
+Aug/Sep BRT 2007
 - added Digitrakker 3.2
-
-Fri Sep 14 16:09:18 BRT 2007
 - IT tracker fingerprint
 
-Fri Jun 26 19:53:15 BRT 2009
+Jun/Jul 2009
 - More fingerprints from Storlek
+- Notes on lamb's 275/263 XM tracker
 
 
 1. Event fetch
@@ -328,9 +327,9 @@ created using an old version of ModPlug Tracker (marked as 1.04 made with
 "FastTracker v 2.00", note that authentic FT2 modules are marked as
 "FastTracker v2.00").
 
-The module "ebony owl netsuke" by lamb (Filip Skutela) has tracker name
-"FastTracker v2.00", header size 275 (authentic Fast Tracker II modules
-have 276 in this field) and instrument size 263.
+"ebony owl netsuke", "lightbeam", "dom" and other modules by Filip Skutela
+have tracker name "FastTracker v2.00", header size 275 (authentic Fast
+Tracker II modules have 276 in this field) and instrument size 263.
 
 Extended Module 1.02 (Vogue's "Trans atlantic" and "Dont you" remixes) and
 1.03 (Vogue's "Developer 94" and "Enhanced Intuition") contains header,
