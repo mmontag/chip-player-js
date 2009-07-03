@@ -162,7 +162,7 @@ static int do_envelope(struct xmp_context *ctx, struct xxm_envinfo *ei, uint16 *
 }
 
 
-static inline int chn_copy(struct xmp_player_context *p, int to, int from)
+static inline int copy_channel(struct xmp_player_context *p, int to, int from)
 {
     if (to > 0 && to != from)
 	memcpy(&p->xc_data[to], &p->xc_data[from], sizeof (struct xmp_channel));
@@ -171,7 +171,7 @@ static inline int chn_copy(struct xmp_player_context *p, int to, int from)
 }
 
 
-static inline void chn_reset(struct xmp_context *ctx)
+static inline void reset_channel(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
@@ -346,7 +346,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     }
 
     if (smp >= 0) {
-	if (chn_copy(p, xmp_drv_setpatch(ctx, chn, ins, smp, note,
+	if (copy_channel(p, xmp_drv_setpatch(ctx, chn, ins, smp, note,
 	 		m->xxi[ins][m->xxim[ins].ins[key]].nna,
 	   		m->xxi[ins][m->xxim[ins].ins[key]].dct,
 			m->xxi[ins][m->xxim[ins].ins[key]].dca, ctl,
@@ -822,7 +822,7 @@ int _xmp_player_start(struct xmp_context *ctx)
     if (!(p->fetch_ctl && f->loop_stack && f->loop_row && p->xc_data))
 	return XMP_ERR_ALLOC;
 
-    chn_reset(ctx);
+    reset_channel(ctx);
 
     xmp_drv_starttimer(ctx);
 
@@ -875,8 +875,8 @@ next_order:
 		xmp_drv_starttimer(ctx);
 	    }
 
+	    /* Frame processing */
 	    for (t = 0; t < (p->tempo * (1 + f->delay)); t++) {
-		/* xmp_player_ctl processing */
 
 		if (ord != p->pos) {
 		    if (p->pos == -1)
@@ -899,7 +899,7 @@ next_order:
 		    xmp_drv_bufwipe(ctx);
 		    xmp_drv_sync(ctx, 0);
 		    xmp_drv_reset(ctx);
-		    chn_reset(ctx);
+		    reset_channel(ctx);
 		    break;
 		}
 
@@ -918,6 +918,7 @@ next_order:
 		}
 
 		xmp_drv_echoback(ctx, (t << 4) | XMP_ECHO_FRM);
+
 		play_frame(ctx, t);
 
 		if (o->time && (o->time < playing_time))
@@ -1025,7 +1026,7 @@ int xmp_player_start(struct xmp_context *ctx)
 	if (!(p->fetch_ctl && f->loop_stack && f->loop_row && p->xc_data))
 		return XMP_ERR_ALLOC;
 
-	chn_reset(ctx);
+	reset_channel(ctx);
 
 	xmp_drv_starttimer(ctx);
 
@@ -1074,7 +1075,7 @@ int xmp_player_loop(struct xmp_context *ctx)
 		xmp_drv_bufwipe(ctx);
 		xmp_drv_sync(ctx, 0);
 		xmp_drv_reset(ctx);
-		chn_reset(ctx);
+		reset_channel(ctx);
 		goto next_row;
 	}
 
