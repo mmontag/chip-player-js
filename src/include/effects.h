@@ -97,5 +97,6 @@
 #define FX_REVERB	0xaa	/* IMF */
 #define FX_S3M_BPM	0xab	/* S3M */
 #define FX_FINE4_VIBRA	0xac	/* S3M/PTM/IMF/LIQ */
+#define FX_IT_BPM	0xad	/* IT */
 
 #endif /* __EFFECTS_H */

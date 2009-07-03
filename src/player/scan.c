@@ -40,9 +40,9 @@
 #define MAX_GVL		0x40
 
 
-int xmpi_scan_module(struct xmp_context *ctx)
+int _xmp_scan_module(struct xmp_context *ctx)
 {
-    int prm, gvol_slide, f1, f2, ord, ord2;
+    int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
     int gvl, bpm, tempo, base_time, chn;
     int alltmp, clock, clock_rst, medbpm;
@@ -174,28 +174,29 @@ int xmpi_scan_module(struct xmp_context *ctx)
 		event = &EVENT(m->xxo[ord], chn, row);
 
 		f1 = event->fxt;
+		p1 = event->fxp;
 		f2 = event->f2t;
+		p2 = event->f2p;
 
 		if (f1 == FX_GLOBALVOL || f2 == FX_GLOBALVOL) {
-		    gvl = (f1 == FX_GLOBALVOL) ? event->fxp : event->f2p;
+		    gvl = (f1 == FX_GLOBALVOL) ? p1 : p2;
 		    gvl = gvl > MAX_GVL ? MAX_GVL : gvl < 0 ? 0 : gvl;
 		}
 
 		if (f1 == FX_G_VOLSLIDE || f2 == FX_G_VOLSLIDE) {
-		    prm = (f1 == FX_G_VOLSLIDE) ? event->fxp : event->f2p;
-		    if (prm)
-			gvol_slide = MSN (prm) - LSN (prm);
-		    gvl += gvol_slide *
-			(tempo - !(m->fetch & XMP_CTL_VSALL));
+		    parm = (f1 == FX_G_VOLSLIDE) ? p1 : p2;
+		    if (parm)
+			gvol_slide = MSN(parm) - LSN(parm);
+		    gvl += gvol_slide * (tempo - !(m->fetch & XMP_CTL_VSALL));
 		}
 
-		if (f1 == FX_TEMPO || f2 == FX_TEMPO) {
-		    prm = (f1 == FX_TEMPO) ? event->fxp : event->f2p;
+		if ((f1 == FX_TEMPO && p1) || (f2 == FX_TEMPO && p2)) {
+		    parm = (f1 == FX_TEMPO) ? p1 : p2;
 		    alltmp += cnt_row * tempo * base_time;
 		    cnt_row = 0;
-		    if (prm) {
-			if (prm <= 0x20)
-			    tempo = prm;
+		    if (parm) {
+			if (parm <= 0x20)
+			    tempo = parm;
 			else {
 			    if (medbpm)
 				clock += 132 * alltmp / 5 / bpm;
@@ -203,20 +204,20 @@ int xmpi_scan_module(struct xmp_context *ctx)
 				clock += 100 * alltmp / bpm;
 
 			    alltmp = 0;
-			    bpm = prm;
+			    bpm = parm;
 			}
 		    }
 		}
 
-		if (f1 == FX_S3M_TEMPO || f2 == FX_S3M_TEMPO) {
-		    prm = (f1 == FX_S3M_TEMPO) ? event->fxp : event->f2p;
+		if ((f1 == FX_S3M_TEMPO && p1) || (f2 == FX_S3M_TEMPO && p2)) {
+		    parm = (f1 == FX_S3M_TEMPO) ? p1 : p2;
 		    alltmp += cnt_row * tempo * base_time;
 		    cnt_row  = 0;
-		    tempo = prm;
+		    tempo = parm;
 		}
 
-		if (f1 == FX_S3M_BPM || f2 == FX_S3M_BPM) {
-		    prm = (f1 == FX_S3M_BPM) ? event->fxp : event->f2p;
+		if ((f1 == FX_S3M_BPM && p1) || (f2 == FX_S3M_BPM && p2)) {
+		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
 		    alltmp += cnt_row * tempo * base_time;
 		    cnt_row = 0;
 
@@ -226,28 +227,48 @@ int xmpi_scan_module(struct xmp_context *ctx)
 			clock += 100 * alltmp / bpm;
 
 		    alltmp = 0;
-		    bpm = prm;
+		    bpm = parm;
+		}
+
+		if ((f1 == FX_IT_BPM && p1) || (f2 == FX_IT_BPM && p2)) {
+		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
+		    alltmp += cnt_row * tempo * base_time;
+		    cnt_row = 0;
+		    clock += 100 * alltmp / bpm;
+		    alltmp = 0;
+
+		    if (MSN(parm) == 0) {
+			bpm -= LSN(parm);
+			if (bpm < 0x20)
+			    bpm = 0x20;
+		    } else if (MSN(parm) == 1) {
+			bpm += LSN(parm);
+			if (bpm > 0xff)
+			    bpm = 0xff;
+		    } else {
+			bpm = parm;
+		    }
 		}
 
 		if (f1 == FX_JUMP || f2 == FX_JUMP) {
-		    ord2 = (f1 == FX_JUMP) ? event->fxp : event->f2p;
+		    ord2 = (f1 == FX_JUMP) ? p1 : p2;
 		    last_row = 0;
 		}
 
 		if (f1 == FX_BREAK || f2 == FX_BREAK) {
-		    prm = (f1 == FX_BREAK) ? event->fxp : event->f2p;
-		    break_row = 10 * MSN (prm) + LSN (prm);
+		    parm = (f1 == FX_BREAK) ? p1 : p2;
+		    break_row = 10 * MSN(parm) + LSN(parm);
 		    last_row = 0;
 		}
 
 		if (f1 == FX_EXTENDED || f2 == FX_EXTENDED) {
-		    prm = (f1 == FX_EXTENDED) ? event->fxp : event->f2p;
+		    parm = (f1 == FX_EXTENDED) ? p1 : p2;
 
-		    if ((prm >> 4) == EX_PATT_DELAY)
-			alltmp += (prm & 0x0f) * tempo * base_time;
+		    if ((parm >> 4) == EX_PATT_DELAY)
+			alltmp += (parm & 0x0f) * tempo * base_time;
 
-		    if ((prm >> 4) == EX_PATTERN_LOOP) {
-			if (prm &= 0x0f) {
+		    if ((parm >> 4) == EX_PATTERN_LOOP) {
+			if (parm &= 0x0f) {
 			    if (loop_stk[chn]) {
 				if (--loop_stk[chn])
 				    loop_chn = chn + 1;
@@ -258,7 +279,7 @@ int xmpi_scan_module(struct xmp_context *ctx)
 				}
 			    } else {
 				if (loop_row[chn] <= row) {
-				    loop_stk[chn] = prm;
+				    loop_stk[chn] = parm;
 				    loop_chn = chn + 1;
 				    loop_flg++;
 				}

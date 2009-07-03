@@ -44,7 +44,7 @@ static int get_yesno(char *s)
 }
 
 
-int xmpi_read_rc(struct xmp_context *ctx)
+int _xmp_read_rc(struct xmp_context *ctx)
 {
     struct xmp_options *o = &ctx->o;
     FILE *rc;
@@ -227,7 +227,7 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 }
 
 
-void xmpi_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
+void _xmp_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
 {
 #if defined __EMX__
     char myrc[PATH_MAX];

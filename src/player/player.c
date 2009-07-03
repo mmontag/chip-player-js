@@ -778,7 +778,7 @@ printf("\nup %d  down %d\n", xc->tcnt_up, xc->tcnt_dn);
 }
 
 
-int xmpi_player_start(struct xmp_context *ctx)
+int _xmp_player_start(struct xmp_context *ctx)
 {
     int r, t, e, ord;		/* rows, tick, end point, order */
     double playing_time;
@@ -868,7 +868,7 @@ next_order:
 	    if (p->pause) {
 		xmp_drv_stoptimer(ctx);
 		while (p->pause) {
-		    /* xmpi_select_read(1, 125); */
+		    /* _xmp_select_read(1, 125); */
 		    usleep(125000);
 		    xmp_event_callback(0);
 		}

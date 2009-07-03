@@ -609,7 +609,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	report("]\n");
     }
 
-    t = xmpi_scan_module((struct xmp_context *)ctx);
+    t = _xmp_scan_module((struct xmp_context *)ctx);
 
     if (o->verbosity) {
 	if (m->fetch & XMP_CTL_LOOP)
