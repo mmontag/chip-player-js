@@ -204,13 +204,13 @@ struct flow_control {
 	int jump;
 	int delay;
 	int jumpline;
-	int row_cnt;
+	int row;
 	int loop_chn;
 	int* loop_row;
 	int* loop_stack;
 #ifdef TEST_OPEN_LOOP
 	int frame;
-	int row;
+	int num_rows;
 	int ord;
 	int end_point;
 	double playing_time;
