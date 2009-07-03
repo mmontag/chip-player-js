@@ -231,7 +231,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		}
 
 		if ((f1 == FX_IT_BPM && p1) || (f2 == FX_IT_BPM && p2)) {
-		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
+		    parm = (f1 == FX_IT_BPM) ? p1 : p2;
 		    alltmp += cnt_row * tempo * base_time;
 		    cnt_row = 0;
 		    clock += 100 * alltmp / bpm;
