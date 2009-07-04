@@ -72,7 +72,7 @@ struct xmp_drv_info drv_oss = {
 	dummy,			/* setbend */
 	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	flush,			/* stctlimer */
+	flush,			/* stoptimer */
 	dummy,			/* reset */
 	bufdump,		/* bufdump */
 	dummy,			/* bufwipe */

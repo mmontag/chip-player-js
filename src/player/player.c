@@ -243,6 +243,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     key = e->note;
     cont_sample = 0;
 
+    /* Check instrument */
+
     if (e->ins) {
 	ins = e->ins - 1;
 	flg = NEW_INS | RESET_VOL | RESET_ENV;
@@ -275,6 +277,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->insdef = ins;
 	xc->med_arp = xc->med_aidx = 0;
     }
+
+    /* Check note */
 
     if (key) {
 	flg |= NEW_NOTE;
@@ -365,10 +369,12 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     xc->a_size = 1;
     xc->a_val[0] = 0;
 
-    if ((uint32)xins >= m->xxh->ins || !m->xxih[xins].nsm)
+    if ((uint32)xins >= m->xxh->ins || !m->xxih[xins].nsm) {
 	RESET(IS_VALID);
-    else
+    } else {
 	SET(IS_VALID);
+    }
+
     xc->ins = xins;
 
     /* Process new volume */
@@ -473,6 +479,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     if (!TEST(IS_VALID))
 	return;
+
 
     /* Process MED synth instruments */
     xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
@@ -589,10 +596,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
      *       it may be a bug.
      */
 
-    finalpan = m->fetch & XMP_CTL_DYNPAN ?
-	xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32 : 0x80;
+    finalpan = m->fetch & XMP_CTL_DYNPAN ?  xc->pan + (pan_envelope - 32) *
+			(128 - abs (xc->pan - 128)) / 32 : 0x80;
     finalpan = xc->masterpan + (finalpan - 128) *
-	(128 - abs (xc->masterpan - 128)) / 128;
+			(128 - abs (xc->masterpan - 128)) / 128;
 
     cutoff = XXIH.fei.flg & XXM_ENV_FLT ? frq_envelope : 0xff;
     cutoff = xc->cutoff * cutoff / 0xff;
@@ -613,15 +620,15 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     /* Do delay */
     if (xc->delay) {
-	if (--xc->delay)
+	if (--xc->delay) {
 	    finalvol = 0;
-	else
+	} else {
 	    xmp_drv_retrig(ctx, chn);
+	}
     }
 
     /* Do tremor */
     if (xc->tcnt_up || xc->tcnt_dn) {
-printf("\nup %d  down %d\n", xc->tcnt_up, xc->tcnt_dn);
 	if (xc->tcnt_up > 0) {
 	    if (xc->tcnt_up--)
 		xc->tcnt_dn = LSN(xc->tremor);
@@ -755,7 +762,7 @@ printf("\nup %d  down %d\n", xc->tcnt_up, xc->tcnt_dn);
     /* Process MED synth arpeggio */
     med_arp = get_med_arp(p, xc);
 
-    /* Adjust pitch and pan, than play the note */
+    /* Adjust pitch and pan, then play the note */
     finalpan = o->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * o->mix / 100;
     xmp_drv_setbend(ctx, chn, xc->pitchbend + xc->a_val[xc->a_idx] + med_arp);
@@ -858,7 +865,10 @@ next_order:
 		p->xc_data[chn].per_flags = 0;
 	}
 
+	/* Row processing */
 	for (; f->row < r; f->row++) {
+
+	    /* Check module end */
 	    if ((~m->fetch & XMP_CTL_LOOP) && ord == p->xmp_scan_ord &&
 		f->row == p->xmp_scan_row) {
 		if (!e--)
@@ -868,7 +878,6 @@ next_order:
 	    if (p->pause) {
 		xmp_drv_stoptimer(ctx);
 		while (p->pause) {
-		    /* _xmp_select_read(1, 125); */
 		    usleep(125000);
 		    xmp_event_callback(0);
 		}
@@ -878,6 +887,7 @@ next_order:
 	    /* Frame processing */
 	    for (t = 0; t < (p->tempo * (1 + f->delay)); t++) {
 
+		/* Check reposition */
 		if (ord != p->pos) {
 		    if (p->pos == -1)
 			p->pos++;		/* restart module */
@@ -905,13 +915,14 @@ next_order:
 
 		if (!t) {		/* first frame of row */
 		    p->gvol_flag = 0;
+
 		    fetch_row(ctx, m->xxo[ord], f->row);
 
-		    xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
-							XMP_ECHO_BPM);
+		    xmp_drv_echoback(ctx, (p->tempo << 12) |
+					(p->xmp_bpm << 4) | XMP_ECHO_BPM);
 		    xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
-		    xmp_drv_echoback(ctx, (m->xxo[ord] << 12) | (ord << 4) |
-							XMP_ECHO_ORD);
+		    xmp_drv_echoback(ctx, (m->xxo[ord] << 12) |
+					(ord << 4) | XMP_ECHO_ORD);
 		    xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
 		    xmp_drv_echoback(ctx, ((m->xxp[m->xxo[ord]]->rows - 1)
 				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
