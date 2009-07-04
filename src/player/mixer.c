@@ -398,9 +398,6 @@ static int softmixer(struct xmp_context *ctx)
 		continue;
 	    }
 
-	    /* FIXME: short samples with bidirectional loops still not ok
-	     *        test with jt_xmas.xm
-	     */
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
 		vi->pos -= lpe - lps;			/* forward loop */
 		if (pi->mode & WAVE_PTKLOOP) {
