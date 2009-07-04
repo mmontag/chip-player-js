@@ -86,8 +86,9 @@ struct retrig_t {
 struct xmp_channel {
     int flags;			/* Channel flags */
     int per_flags;		/* Persistent effect channel flags */
-    uint8 note;			/* Note number */
-    uint8 key;			/* Key number */
+    int note;			/* Note number */
+    int key;			/* Key number */
+    int key_release;		/* Key release event */
     int period;			/* Amiga or linear period */
     int pitchbend;		/* Pitch bender value */
     int finetune;		/* Guess what */

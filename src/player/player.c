@@ -280,17 +280,13 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
     /* Check note */
 
+    xc->key_release = 0;
+
     if (key) {
 	flg |= NEW_NOTE;
 
-        if (key == XMP_KEY_FADE) {
-            SET(FADEOUT);
-	    flg &= ~(RESET_VOL | RESET_ENV);
-        } else if (key == XMP_KEY_CUT) {
-            xmp_drv_resetchannel(ctx, chn);
-        } else if (key == XMP_KEY_OFF) {
-            SET(RELEASE);
-	    flg &= ~(RESET_VOL | RESET_ENV);
+        if (key == XMP_KEY_FADE || key == XMP_KEY_CUT || key == XMP_KEY_OFF) {
+	    xc->key_release = key;
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
 	    /* This test should fix portamento behaviour in 7spirits.s3m */
 	    if (m->fetch & XMP_CTL_RTGINS && e->ins && xc->ins != ins) {
@@ -363,7 +359,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
     /* Reset flags */
     xc->delay = xc->retrig = 0;
-    xc->flags = flg | (xc->flags & 0xff000000);
+    xc->flags = flg | (xc->flags & 0xff000000);	/* keep persistent flags */
 
     xc->a_idx = 0;
     xc->a_size = 1;
@@ -480,6 +476,24 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     if (!TEST(IS_VALID))
 	return;
 
+    /* Do delayed key release */
+    if (xc->key_release) {
+	if (!xc->delay || !--xc->delay) {
+	    switch (xc->key_release) {
+	    case XMP_KEY_OFF:
+                SET(RELEASE);
+	        RESET(RESET_VOL | RESET_ENV);
+		break;
+	    case XMP_KEY_CUT:
+                xmp_drv_resetchannel(ctx, chn);
+		break;
+	    case XMP_KEY_FADE:
+                SET(FADEOUT);
+	        RESET(RESET_VOL | RESET_ENV);
+		break;
+	    }
+	}
+    }
 
     /* Process MED synth instruments */
     xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
@@ -619,7 +633,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     }
 
     /* Do delay */
-    if (xc->delay) {
+    if (!xc->key_release && xc->delay) {
 	if (--xc->delay) {
 	    finalvol = 0;
 	} else {
