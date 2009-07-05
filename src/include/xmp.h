@@ -61,7 +61,8 @@
 #define XMP_MODE_IT		(XMP_CTL_NCWINS | XMP_CTL_INSPRI | \
 				 XMP_CTL_ENVFADE | XMP_CTL_S3MLOOP | \
 				 XMP_CTL_OFSRST | XMP_CTL_ITENV | \
-				 XMP_CTL_VOLPDN | XMP_CTL_RTGINS)
+				 XMP_CTL_VOLPDN | XMP_CTL_RTGINS | \
+				 XMP_CTL_SAVEINS)
 
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_ORD_NEXT, 0)
@@ -132,6 +133,7 @@ struct xmp_options {
 #define XMP_CTL_PERPAT	0x04000000	/* Cancel persistent fx at pat start */
 #define XMP_CTL_VOLPDN	0x08000000	/* Set priority to volume slide down */
 #define XMP_CTL_UNISLD	0x10000000	/* Unified pitch slide/portamento */
+#define XMP_CTL_SAVEINS	0x20000000	/* Always save instrument number */
 	int flags;		/* internal control flags, set default mode */
 	int crunch;		/* Sample crunching ratio */
 	int start;		/* Set initial order (default = 0) */

@@ -88,7 +88,6 @@ struct xmp_channel {
     int per_flags;		/* Persistent effect channel flags */
     int note;			/* Note number */
     int key;			/* Key number */
-    int key_release;		/* Key release event */
     int period;			/* Amiga or linear period */
     int pitchbend;		/* Pitch bender value */
     int finetune;		/* Guess what */
@@ -175,6 +174,8 @@ struct xmp_channel {
     int flt_B0;			/* IT filter stuff */
     int flt_B1;
     int flt_B2;
+
+    struct xxm_event delayed_event;
 };
 
 

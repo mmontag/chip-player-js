@@ -71,7 +71,7 @@ static int waveform[4][64] = {
 /*
  * "Anyway I think this is the most brilliant piece of crap we
  *  have managed to put up!"
- *                          -- Ice of FC about "Mental Surgery"
+ *			  -- Ice of FC about "Mental Surgery"
  */
 
 static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
@@ -189,7 +189,7 @@ static inline void reset_channel(struct xmp_context *ctx)
 	xc = &p->xc_data[i];
 	xc->masterpan = p->m.xxc[i].pan;
 	xc->mastervol = p->m.xxc[i].vol; //0x40;
-        xc->cutoff = 0xff;
+	xc->cutoff = 0xff;
     }
 }
 
@@ -236,9 +236,24 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     struct xmp_channel *xc;
     int cont_sample;
 
+    xc = &p->xc_data[chn];
+
+    if ((e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) ||
+		(e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY)) {
+	/* delay the entire fetch cycle */
+	int parm = (e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) ?
+					LSN(e->fxp) : LSN(e->f2p);
+	xc->delay = parm + 1;
+	memcpy(&xc->delayed_event, e, sizeof (struct xxm_event));
+	return 0;
+    }
+
+    /* Emulate Impulse Tracker "always read instrument" bug */
+    if (e->note && !e->ins && xc->delayed_event.ins && m->fetch & XMP_CTL_SAVEINS)
+	e->ins = xc->delayed_event.ins;
+
     flg = 0;
     smp = ins = note = -1;
-    xc = &p->xc_data[chn];
     xins = xc->ins;
     key = e->note;
     cont_sample = 0;
@@ -280,13 +295,17 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
     /* Check note */
 
-    xc->key_release = 0;
-
     if (key) {
 	flg |= NEW_NOTE;
 
-        if (key == XMP_KEY_FADE || key == XMP_KEY_CUT || key == XMP_KEY_OFF) {
-	    xc->key_release = key;
+	if (key == XMP_KEY_FADE) {
+	    SET(FADEOUT);
+	    RESET(RESET_VOL | RESET_ENV);
+	} else if (key == XMP_KEY_CUT) {
+	    xmp_drv_resetchannel(ctx, chn);
+	} else if (key == XMP_KEY_OFF) {
+	    SET(RELEASE);
+	    RESET(RESET_VOL | RESET_ENV);
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
 	    /* This test should fix portamento behaviour in 7spirits.s3m */
 	    if (m->fetch & XMP_CTL_RTGINS && e->ins && xc->ins != ins) {
@@ -308,18 +327,18 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 		/* set key to 0 so we can have the tone portamento from
 		 * the original note (see funky_stars.xm pos 5 ch 9)
 		 */
-        	key = 0;
+		key = 0;
 
 		/* And do the same if there's no keyoff (see comic bakery
 		 * remix.xm pos 1 ch 3)
 		 */
 	    }
-        } else if (flg & NEW_INS) {
-            xins = ins;
-        } else {
-            ins = xc->insdef;
-            flg |= IS_READY;
-        }
+	} else if (flg & NEW_INS) {
+	    xins = ins;
+	} else {
+	    ins = xc->insdef;
+	    flg |= IS_READY;
+	}
     }
 
     if (!key || key >= XMP_KEY_OFF)
@@ -331,7 +350,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     if ((uint32)key < XMP_KEY_OFF && key > 0) {
 	xc->key = --key;
 
-        if (flg & IS_VALID && key < XXM_KEY_MAX) {
+	if (flg & IS_VALID && key < XXM_KEY_MAX) {
 	    if (m->xxim[ins].ins[key] != 0xff) {
 		note = key + m->xxi[ins][m->xxim[ins].ins[key]].xpo +
 						m->xxim[ins].xpo[key];
@@ -400,7 +419,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	if (cont_sample == 0) {
 	    xmp_drv_voicepos(ctx, chn, xc->offset_val);
 	    if (TEST(OFFSET) && (m->fetch & XMP_CTL_FX9BUG))
-	        xc->offset_val <<= 1;
+		xc->offset_val <<= 1;
 	}
 	RESET(OFFSET);
 
@@ -414,28 +433,28 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 			m->xxh->flg & XXM_FLG_LINEAR);
 
-	xc->y_idx = xc->t_idx = 0;              /* #?# Onde eu coloco isso? */
+	xc->y_idx = xc->t_idx = 0;	      /* #?# Onde eu coloco isso? */
 
 	SET(ECHOBACK);
     }
 
     if (xc->key == 0xff || XXIM.ins[xc->key] == 0xff)
-        return XMP_OK;
+	return XMP_OK;
 
     if (TEST(RESET_ENV)) {
-        /* xc->fadeout = 0x8000; -- moved to fetch */
-        RESET(RELEASE | FADEOUT);
-        xc->gvl = XXI[XXIM.ins[xc->key]].gvl;   /* #?# Onde eu coloco isso? */
-        xc->insvib_swp = XXI->vsw;              /* #?# Onde eu coloco isso? */
-        xc->insvib_idx = 0;                     /* #?# Onde eu coloco isso? */
-        xc->v_idx = xc->p_idx = xc->f_idx = 0;
+	/* xc->fadeout = 0x8000; -- moved to fetch */
+	RESET(RELEASE | FADEOUT);
+	xc->gvl = XXI[XXIM.ins[xc->key]].gvl;   /* #?# Onde eu coloco isso? */
+	xc->insvib_swp = XXI->vsw;	      /* #?# Onde eu coloco isso? */
+	xc->insvib_idx = 0;		     /* #?# Onde eu coloco isso? */
+	xc->v_idx = xc->p_idx = xc->f_idx = 0;
 	xc->cutoff = XXI->ifc & 0x80 ? (XXI->ifc - 0x80) * 2 : 0xff;
 	xc->resonance = XXI->ifr & 0x80 ? (XXI->ifr - 0x80) * 2 : 0;
     }
 
     if (TEST(RESET_VOL)) {
-        xc->volume = XXI[XXIM.ins[xc->key]].vol;
-        SET(ECHOBACK | NEW_VOL);
+	xc->volume = XXI[XXIM.ins[xc->key]].vol;
+	SET(ECHOBACK | NEW_VOL);
     }
 
     if ((m->fetch & XMP_CTL_ST3GVOL) && TEST(NEW_VOL) && m->volbase)
@@ -462,6 +481,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     xc = &p->xc_data[chn];
 
+    /* Do delay */
+    if (xc->delay && !--xc->delay)
+	fetch_channel(ctx, &xc->delayed_event, chn, 0);
+
     if (!t && act != XMP_CHN_ACTIVE) {
 	if (!TEST(IS_VALID) || act == XMP_ACT_CUT) {
 	    xmp_drv_resetchannel(ctx, chn);
@@ -475,25 +498,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     if (!TEST(IS_VALID))
 	return;
-
-    /* Do delayed key release */
-    if (xc->key_release) {
-	if (!xc->delay || !--xc->delay) {
-	    switch (xc->key_release) {
-	    case XMP_KEY_OFF:
-                SET(RELEASE);
-	        RESET(RESET_VOL | RESET_ENV);
-		break;
-	    case XMP_KEY_CUT:
-                xmp_drv_resetchannel(ctx, chn);
-		break;
-	    case XMP_KEY_FADE:
-                SET(FADEOUT);
-	        RESET(RESET_VOL | RESET_ENV);
-		break;
-	    }
-	}
-    }
 
     /* Process MED synth instruments */
     xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
@@ -514,10 +518,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	     * can release it.
 	     */
 	     if (m->fetch & XMP_CTL_VIRTUAL) {
-	         xmp_drv_resetchannel(ctx, chn);
-	         return;
+		 xmp_drv_resetchannel(ctx, chn);
+		 return;
 	     } else {
-	         xc->volume = 0;
+		 xc->volume = 0;
 	     }
 	}
     }
@@ -529,7 +533,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	get_envelope((int16 *)XXPE, XXIH.pei.npt, xc->p_idx) : 32;
 
     frq_envelope = XXIH.fei.flg & XXM_ENV_ON ?
-        (int16)get_envelope((int16 *)XXFE, XXIH.fei.npt, xc->f_idx) : 0;
+	(int16)get_envelope((int16 *)XXFE, XXIH.fei.npt, xc->f_idx) : 0;
 
     /* Update envelopes */
     if (do_envelope(ctx, &XXIH.aei, XXAE, &xc->v_idx, DOENV_RELEASE, chn))
@@ -632,14 +636,16 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	}
     }
 
+#if 0
     /* Do delay */
-    if (!xc->key_release && xc->delay) {
+    if (xc->delay) {
 	if (--xc->delay) {
 	    finalvol = 0;
 	} else {
 	    xmp_drv_retrig(ctx, chn);
 	}
     }
+#endif
 
     /* Do tremor */
     if (xc->tcnt_up || xc->tcnt_dn) {
@@ -725,13 +731,13 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     if (t % p->tempo == 0) {
 	/* Process "fine" effects */
 	if (TEST(FINE_VOLS))
-            xc->volume += xc->v_fval;
+	    xc->volume += xc->v_fval;
 	if (TEST(FINE_BEND))
 	    xc->period = (4 * xc->period + xc->f_fval) / 4;
 	if (TEST(TRK_FVSLIDE))
-            xc->mastervol += xc->trk_fval;
+	    xc->mastervol += xc->trk_fval;
 	if (TEST(FINE_NSLIDE)) {
-            xc->note += xc->ns_fval;
+	    xc->note += xc->ns_fval;
 	    xc->period = note_to_period(xc->note, xc->finetune,
 				m->xxh->flg & XXM_FLG_LINEAR);
 	}
@@ -858,8 +864,8 @@ next_order:
 	/* Skip invalid patterns */
 	if (m->xxo[ord] >= m->xxh->pat) {
 #if 0
-           if (m->xxo[ord] == 0xff)            /* S3M uses 0xff as end mark */
-                ord = m->xxh->len;
+	   if (m->xxo[ord] == 0xff)	    /* S3M uses 0xff as end mark */
+		ord = m->xxh->len;
 #endif
 	    continue;
 	}
