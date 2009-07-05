@@ -829,7 +829,8 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
 int _xmp_player_start(struct xmp_context *ctx)
 {
-    int r, t, e, ord;		/* rows, tick, end point, order */
+    int num_rows, frame, e, ord;	/* rows, frame, end point, order */
+    int ret;
     double playing_time;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
@@ -859,8 +860,8 @@ int _xmp_player_start(struct xmp_context *ctx)
     p->tempo = m->xxo_info[ord].tempo;
     playing_time = 0;
 
-    if ((r = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
-	return r;
+    if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
+	return ret;
 
     f->jump = -1;
 
@@ -879,7 +880,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 next_order:
 	if (ord >= m->xxh->len) {
 	    ord = ((uint32)m->xxh->rst > m->xxh->len ||
-		(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?  0 : m->xxh->rst;
+		(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ? 0 : m->xxh->rst;
 	    m->volume = m->xxo_info[ord].gvl;
 	}
 
@@ -892,8 +893,8 @@ next_order:
 	    continue;
 	}
 
-	r = m->xxp[m->xxo[ord]]->rows;
-	if (f->jumpline >= r)
+	num_rows = m->xxp[m->xxo[ord]]->rows;
+	if (f->jumpline >= num_rows)
 	    f->jumpline = 0;
 	f->row = f->jumpline;
 	f->jumpline = 0;
@@ -908,7 +909,7 @@ next_order:
 	}
 
 	/* Row processing */
-	for (; f->row < r; f->row++) {
+	for (; f->row < num_rows; f->row++) {
 
 	    /* Check module end */
 	    if ((~m->fetch & XMP_CTL_LOOP) && ord == p->xmp_scan_ord &&
@@ -927,7 +928,7 @@ next_order:
 	    }
 
 	    /* Frame processing */
-	    for (t = 0; t < (p->tempo * (1 + f->delay)); t++) {
+	    for (frame = 0; frame < (p->tempo * (1 + f->delay)); frame++) {
 
 		/* Check reposition */
 		if (ord != p->pos) {
@@ -955,7 +956,7 @@ next_order:
 		    break;
 		}
 
-		if (!t) {		/* first frame of row */
+		if (frame == 0) {		/* first frame of row */
 		    p->gvol_flag = 0;
 
 		    fetch_row(ctx, m->xxo[ord], f->row);
@@ -970,9 +971,9 @@ next_order:
 				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
 		}
 
-		xmp_drv_echoback(ctx, (t << 4) | XMP_ECHO_FRM);
+		xmp_drv_echoback(ctx, (frame << 4) | XMP_ECHO_FRM);
 
-		play_frame(ctx, t);
+		play_frame(ctx, frame);
 
 		if (o->time && (o->time < playing_time))
 		    goto end_module;
@@ -1095,18 +1096,29 @@ int xmp_player_loop(struct xmp_context *ctx)
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
 
-	/* check end of module */
-	if (f->frame == 0) {
+	if (f->frame == 0) {			/* first frame in row */
+		/* check end of module */
 	    	if ((~m->fetch & XMP_CTL_LOOP) && f->ord == p->xmp_scan_ord &&
 					f->row == p->xmp_scan_row) {
 			if (!f->end_point--)
 				return -1;
 		}
+
+		p->gvol_flag = 0;
+		fetch_row(ctx, m->xxo[f->ord], f->row);
+
+		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
+							XMP_ECHO_BPM);
+		xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
+		xmp_drv_echoback(ctx, (m->xxo[f->ord] << 12) | (f->ord << 4) |
+							XMP_ECHO_ORD);
+		xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
+		xmp_drv_echoback(ctx, ((m->xxp[m->xxo[f->ord]]->rows - 1)
+				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
 	}
 
 	/* For each frame */
 
-//printf("ord: %d, row: %d/%d, frame: %d\n", f->ord, f->row, f->num_rows, f->frame);
 	if (f->ord != p->pos) {			/* changed pattern */
 		if (p->pos == -1)
 			p->pos++;		/* restart module */
@@ -1132,19 +1144,6 @@ int xmp_player_loop(struct xmp_context *ctx)
 		goto next_row;
 	}
 
-	if (f->frame == 0) {			/* first frame in row */
-		p->gvol_flag = 0;
-		fetch_row(ctx, m->xxo[f->ord], f->row);
-
-		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
-							XMP_ECHO_BPM);
-		xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
-		xmp_drv_echoback(ctx, (m->xxo[f->ord] << 12) | (f->ord << 4) |
-							XMP_ECHO_ORD);
-		xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
-		xmp_drv_echoback(ctx, ((m->xxp[m->xxo[f->ord]]->rows - 1)
-				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
-	}
 
 	xmp_drv_echoback(ctx, (f->frame << 4) | XMP_ECHO_FRM);
 	play_frame(ctx, f->frame);
