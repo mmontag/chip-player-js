@@ -223,7 +223,7 @@ static inline void play_frame(struct xmp_context *ctx, int tick)
     struct xmp_driver_context *d = &ctx->d;
     int i;
 
-    for (i = d->numchn; i--;)
+    for (i = 0; i < d->numchn; i++)
 	play_channel(ctx, i, tick);
 }
 
@@ -238,15 +238,31 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
     xc = &p->xc_data[chn];
 
-    if ((e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) ||
-		(e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY)) {
-	/* delay the entire fetch cycle */
-	int parm = (e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) ?
-					LSN(e->fxp) : LSN(e->f2p);
-	xc->delay = parm + 1;
+    /* Tempo affects delay and must be computed first */
+    if ((e->fxt == FX_TEMPO && e->fxp < 0x20) || e->fxt == FX_S3M_TEMPO) {
+	if (e->fxp)
+	    p->tempo = e->fxp;
+    }
+    if ((e->f2t == FX_TEMPO && e->f2p < 0x20) || e->f2t == FX_S3M_TEMPO) {
+	if (e->f2p)
+	    p->tempo = e->f2p;
+    }
+
+    /* Delay the entire fetch cycle */
+    if (e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) {
+	xc->delay = LSN(e->fxp) + 1;
 	xc->delayed_event = e;
 	if (e->ins)
 		xc->delayed_ins = e->ins;
+	e->fxt = e->fxp = 0;
+	return 0;
+    }
+    if (e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY) {
+	xc->delay = LSN(e->f2p) + 1;
+	xc->delayed_event = e;
+	if (e->ins)
+		xc->delayed_ins = e->ins;
+	e->f2t = e->f2p = 0;
 	return 0;
     }
 
@@ -480,14 +496,14 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
 
-    if ((act = xmp_drv_cstat(ctx, chn)) == XMP_CHN_DUMB)
-	return;
-
     xc = &p->xc_data[chn];
 
     /* Do delay */
     if (xc->delay && !--xc->delay)
-	fetch_channel(ctx, xc->delayed_event, chn, 0);
+	fetch_channel(ctx, xc->delayed_event, chn, 1);
+
+    if ((act = xmp_drv_cstat(ctx, chn)) == XMP_CHN_DUMB)
+	return;
 
     if (!t && act != XMP_CHN_ACTIVE) {
 	if (!TEST(IS_VALID) || act == XMP_ACT_CUT) {
