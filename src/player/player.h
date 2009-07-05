@@ -175,7 +175,8 @@ struct xmp_channel {
     int flt_B1;
     int flt_B2;
 
-    struct xxm_event delayed_event;
+    struct xxm_event *delayed_event;
+    int delayed_ins;		/* IT save instrument emulation */
 };
 
 

@@ -244,13 +244,17 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	int parm = (e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) ?
 					LSN(e->fxp) : LSN(e->f2p);
 	xc->delay = parm + 1;
-	memcpy(&xc->delayed_event, e, sizeof (struct xxm_event));
+	xc->delayed_event = e;
+	if (e->ins)
+		xc->delayed_ins = e->ins;
 	return 0;
     }
 
     /* Emulate Impulse Tracker "always read instrument" bug */
-    if (e->note && !e->ins && xc->delayed_event.ins && m->fetch & XMP_CTL_SAVEINS)
-	e->ins = xc->delayed_event.ins;
+    if (e->note && !e->ins && xc->delayed_ins && m->fetch & XMP_CTL_SAVEINS) {
+	e->ins = xc->delayed_ins;
+	xc->delayed_ins = 0;
+    }
 
     flg = 0;
     smp = ins = note = -1;
@@ -483,7 +487,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     /* Do delay */
     if (xc->delay && !--xc->delay)
-	fetch_channel(ctx, &xc->delayed_event, chn, 0);
+	fetch_channel(ctx, xc->delayed_event, chn, 0);
 
     if (!t && act != XMP_CHN_ACTIVE) {
 	if (!TEST(IS_VALID) || act == XMP_ACT_CUT) {
