@@ -499,8 +499,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     xc = &p->xc_data[chn];
 
     /* Do delay */
-    if (xc->delay && !--xc->delay)
-	fetch_channel(ctx, xc->delayed_event, chn, 1);
+    if (xc->delay && !--xc->delay) {
+	if (fetch_channel(ctx, xc->delayed_event, chn, 1) != XMP_OK)
+	    fetch_channel(ctx, xc->delayed_event, chn, 0);
+    }
 
     if ((act = xmp_drv_cstat(ctx, chn)) == XMP_CHN_DUMB)
 	return;
