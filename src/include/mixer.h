@@ -47,6 +47,8 @@ struct voice_info {
 	int flt_B2;
 	int cutoff;
 	int resonance;
+
+	int attack;		/* ramp up anticlick */
 };
 
 int	xmp_smix_on		(struct xmp_context *);

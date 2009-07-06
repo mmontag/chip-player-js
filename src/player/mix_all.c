@@ -47,13 +47,24 @@
 } while (0)
 
 #define MIX_STEREO() do { \
-    *(tmp_bk++) += smp_in * vr; \
-    *(tmp_bk++) += smp_in * vl; \
+    if (vi->attack) { \
+	*(tmp_bk++) += (smp_in * vr) / vi->attack; \
+	*(tmp_bk++) += (smp_in * vl) / vi->attack; \
+	vi->attack--; \
+    } else { \
+	*(tmp_bk++) += smp_in * vr; \
+	*(tmp_bk++) += smp_in * vl; \
+    } \
     itpt += itpt_inc; \
 } while (0)
 
 #define MIX_MONO() do { \
-    *(tmp_bk++) += smp_in * vl; \
+    if (vi->attack) { \
+	*(tmp_bk++) += (smp_in * vl) / vi->attack; \
+	vi->attack--; \
+    } else { \
+	*(tmp_bk++) += smp_in * vl; \
+    } \
     itpt += itpt_inc; \
 } while (0)
 

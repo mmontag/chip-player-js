@@ -35,6 +35,10 @@
 #define TURN_OFF	0
 #define TURN_ON		1
 
+/* Anticlick ramps */
+#define SLOW_ATTACK	16
+#define SLOW_RELEASE	16
+
 static char** smix_buffer = NULL;	/* array of output buffers */
 static int* smix_buf32b = NULL;		/* temp buffer for 32 bit samples */
 static int smix_numvoc;			/* default softmixer voices number */
@@ -181,6 +185,7 @@ static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
     int dec_l, dec_r;
 
     if (voc < 0) {
+	/* initialize */
 	smp_r = smix_dtright;
 	smp_l = smix_dtleft;
     } else {
@@ -194,7 +199,7 @@ static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
 
     if (!buf) {
 	buf = smix_buf32b;
-	cnt = 16; //smix_ticksize;
+	cnt = SLOW_RELEASE; //smix_ticksize;
     }
     if (!cnt)
 	return;
@@ -515,6 +520,7 @@ static void smix_setnote(struct xmp_context *ctx, int voc, int note)
 
     vi->period = note_to_period_mix(vi->note = note, 0);
     vi->pbase = SMIX_C4NOTE * vi->freq / d->patch_array[vi->smp]->base_note;
+    vi->attack = SLOW_ATTACK;
 }
 
 

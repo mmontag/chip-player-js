@@ -11,6 +11,7 @@ Stable versions
 	- process effects in IT muted channels (Storlek test #10)
 	- generalized delayed event support (Storlek test #8)
 	- emulate "always store instrument" IT bug (Storlek test #8)
+	- improved click-removal in mixer routines
 
 2.6.2 (20090630):
 	- Promizer 1.8a loader code cleanup
