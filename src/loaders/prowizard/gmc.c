@@ -43,46 +43,11 @@ static int depack_GMC(FILE *in, FILE *out)
 		write8(out, 0);			/* finetune */
 		write8(out, read8(in));		/* volume */
 		read32b(in);			/* bypass 4 address bytes */
-#if 1
-		/* loop size */
-		looplen = read16b(in);
+
+		looplen = read16b(in);		/* loop size */
 		write16b(out, looplen > 2 ? len - looplen : 0);
-		write16b(out, looplen);
-		read16b(in);
-#else
-		/* loop size */
-		fread(&c1, 1, 1, in);
-		fread(&c2, 1, 1, in);
-		/* loop start */
-		fread(&c3, 1, 1, in);
-		fread(&c4, 1, 1, in);
-		c4 /= 2;
-		if ((c3 / 2) * 2 != c3) {
-			if (c4 < 0x80)
-				c4 += 0x80;
-			else {
-				c4 -= 0x80;
-				c3 += 0x01;
-			}
-		}
-		c3 /= 2;
-		fwrite(&c3, 1, 1, out);
-		fwrite(&c4, 1, 1, out);
-		c2 /= 2;
-		if ((c1 / 2) * 2 != c1) {
-			if (c2 < 0x80)
-				c2 += 0x80;
-			else {
-				c2 -= 0x80;
-				c1 += 0x01;
-			}
-		}
-		c1 /= 2;
-		if ((c1 == 0x00) && (c2 == 0x00))
-			c2 = 0x01;
-		fwrite(&c1, 1, 1, out);
-		fwrite(&c2, 1, 1, out);
-#endif
+		write16b(out, looplen <= 2 ? 1 : looplen);
+		read16b(in);	/* always zero? */
 	}
 
 	memset(tmp, 0, 30);
@@ -171,51 +136,43 @@ static int test_GMC(uint8 *data, int s)
 		n = (data[start + 16 * k + 12] << 8) +
 		    data[start + 16 * k + 13];
 		o *= 2;
+
 		/* volumes */
-		if (data[start + 7 + (16 * k)] > 0x40) {
-/*printf ( "#2\n" );*/
+		if (data[start + 7 + (16 * k)] > 0x40)
 			return -1;
-		}
+
 		/* size */
-		if (o > 0xFFFF) {
-/*printf ( "#2,1 Start:%ld\n" , start );*/
+		if (o > 0xFFFF)
 			return -1;
-		}
-		if (n > o) {
-/*printf ( "#2,2 Start:%ld\n" , start );*/
+
+		if (n > o)
 			return -1;
-		}
+
 		m += o;
 		if (o != 0)
 			j = k + 1;
 	}
-	if (m <= 4) {
-/*printf ( "#2,3 Start:%ld\n" , start );*/
+	if (m <= 4)
 		return -1;
-	}
 	/* j is the highest not null sample */
 
 	/* pattern table size */
-	if ((data[start + 243] > 0x64) || (data[start + 243] == 0x00)) {
+	if (data[start + 243] > 0x64 || data[start + 243] == 0x00)
 		return -1;
-	}
 
 	/* pattern order table */
 	l = 0;
 	for (n = 0; n < 100; n++) {
-		k = ((data[start + 244 + n * 2] << 8) +
-		     data[start + 245 + n * 2]);
-		if (((k / 1024) * 1024) != k) {
-/*printf ( "#4 Start:%d (k:%d)\n" , start , k);*/
+		k = readmem16b(data + start + 244 + n * 2);
+		if (k & 0x03ff)
 			return -1;
-		}
-		l = ((k / 1024) > l) ? k / 1024 : l;
+		l = ((k >> 10) > l) ? k >> 10 : l;
 	}
-	l += 1;
+	l++;
+
 	/* l is the number of pattern */
-	if ((l == 1) || (l > 0x64)) {
+	if (l == 1 || l > 0x64)
 		return -1;
-	}
 
 	PW_REQUEST_DATA(s, 444 + k * 1024 + n * 4 + 3);
 
@@ -230,39 +187,27 @@ static int test_GMC(uint8 *data, int s)
 				return -1;
 				
 			/* First test fails with Jumping Jackson */
-			if (/*(d[0] > 0x03) ||*/ ((d[2] & 0x0f) >= 0x90)) {
-/*printf ( "#5,0 Start:%d (k:%d) %02x %02x\n" , start , k, d[0], d[2]);*/
+			if (/*d[0] > 0x03 ||*/ (d[2] & 0x0f) >= 0x90)
 				return -1;
-			}
 #if 0
 			/* Test fails with Jumping Jackson */
-			if (((d[2] & 0xf0) >> 4) > j) {
-printf ( "#5,1 Start:%d (j:%d) (where:%d) (value:%x)\n"
-         , start , j , offset + 2
-         , ((data[offset + 2]&0xf0)>>4) );
+			if (((d[2] & 0xf0) >> 4) > j)
 				return -1;
-			}
 #endif
-			if (((d[2] & 0x0f) == 3) && (d[3] > 0x40)) {
-//printf ( "#5,2 Start:%d (j:%d)\n" , start , j);
+			if ((d[2] & 0x0f) == 3 && d[3] > 0x40)
 				return -1;
-			}
-			if (((d[2] & 0x0f) == 4) && (d[3] > 0x63)) {
-//printf ( "#5,3 Start:%d (j:%d)\n" , start , j);
+
+			if ((d[2] & 0x0f) == 4 && d[3] > 0x63)
 				return -1;
-			}
-			if (((d[2] & 0x0f) == 5) && (d[3] > o + 1)) {
-//printf ( "#5,4 Start:%d (effect:5)(o:%d)(4th note byte:%x)\n" , start , j , data[start+444+k*1024+n*4+3]);
+
+			if ((d[2] & 0x0f) == 5 && d[3] > (o + 1))
 				return -1;
-			}
-			if (((d[2] & 0x0f) == 6) && (d[3] >= 0x02)) {
-//printf ( "#5,5 Start:%d (at:%d)\n" , start , start+444+k*1024+n*4+3 );
+
+			if ((d[2] & 0x0f) == 6 && d[3] >= 0x02)
 				return -1;
-			}
-			if (((d[2] & 0x0f) == 7) && (d[3] >= 0x02)) {
-//printf ( "#5,6 Start:%d (at:%d)\n" , start , start+444+k*1024+n*4+3 );
+
+			if ((d[2] & 0x0f) == 7 && d[3] >= 0x02)
 				return -1;
-			}
 		}
 	}
 
