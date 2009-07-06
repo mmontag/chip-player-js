@@ -160,7 +160,7 @@ int _xmp_read_rc(struct xmp_context *ctx)
 
     fclose (rc);
 
-    return XMP_OK;
+    return 0;
 }
 
 

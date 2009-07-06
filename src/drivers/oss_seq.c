@@ -309,7 +309,7 @@ static int writepatch(struct xmp_context *ctx, struct patch_info *patch)
 
 	if (!patch) {
 		clearmem();
-		return XMP_OK;
+		return 0;
 	}
 
 	if ((!!(o->outfmt & XMP_FMT_FM)) ^ (patch->len == XMP_PATCH_FM))
@@ -323,11 +323,11 @@ static int writepatch(struct xmp_context *ctx, struct patch_info *patch)
 		memcpy(&sbi.operators, patch->data, 11);
 		write(seqfd, &sbi, sizeof(sbi));
 
-		return XMP_OK;
+		return 0;
 	}
 	SEQ_WRPATCH(patch, sizeof(struct patch_info) + patch->len - 1);
 
-	return XMP_OK;
+	return 0;
 }
 
 static int getmsg()
@@ -410,7 +410,7 @@ static int init(struct xmp_context *ctx)
 	bufdump();
 	ioctl(seqfd, SNDCTL_SEQ_SYNC, 0);
 
-	return XMP_OK;
+	return 0;
 }
 
 static void shutdown()

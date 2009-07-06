@@ -176,7 +176,7 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 		break;
 	}
 
-	return XMP_OK;
+	return 0;
 }
 
 int xmp_play_module(xmp_context ctx)
@@ -307,7 +307,7 @@ int xmp_seek_time(xmp_context ctx, int time)
 			if (i > 0)
 				i--;
 			xmp_ord_set(ctx, i);
-			return XMP_OK;
+			return 0;
 		}
 	}
 	return -1;

@@ -607,7 +607,7 @@ int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 {
     if (patch) {
 	if (patch->len == XMP_PATCH_FM)
-	    return XMP_OK;
+	    return 0;
 
 	if (patch->len <= 0)
 	    return XMP_ERR_PATCH;
@@ -617,7 +617,7 @@ int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 		patch->data);
     }
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -627,7 +627,7 @@ int xmp_smix_on(struct xmp_context *ctx)
     int cnt;
 
     if (smix_numbuf)
-	return XMP_OK;
+	return 0;
 
     if (d->numbuf < 1)
 	d->numbuf = 1;
@@ -646,9 +646,7 @@ int xmp_smix_on(struct xmp_context *ctx)
     smix_numvoc = SMIX_NUMVOC;
     extern_drv = TURN_OFF;
 
-    //synth_init (o->freq);
-
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -656,8 +654,6 @@ void xmp_smix_off()
 {
     while (smix_numbuf)
 	free(smix_buffer[--smix_numbuf]);
-
-    //synth_deinit();
 
     free(smix_buf32b);
     free(smix_buffer);

@@ -11,8 +11,6 @@
 
 #define XMP_NAMESIZE		64
 
-#define XMP_OK			0
-
 #define XMP_KEY_OFF		0x81
 #define XMP_KEY_CUT		0x82
 #define XMP_KEY_FADE		0x83

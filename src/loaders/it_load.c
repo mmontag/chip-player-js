@@ -965,5 +965,5 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     reportv(ctx, 0, "\n");
 
-    return XMP_OK;
+    return 0;
 }

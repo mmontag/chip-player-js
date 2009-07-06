@@ -154,7 +154,7 @@ static int drv_select(struct xmp_context *ctx)
  	ret = XMP_ERR_NODRV;
 	for (drv = drv_array; drv; drv = drv->next) {
 	    if (!strcmp (drv->id, o->drv_id)) {
-		if ((ret = drv->init(ctx)) == XMP_OK)
+		if ((ret = drv->init(ctx)) == 0)
 		    break;
 	    }
 	}
@@ -165,17 +165,17 @@ static int drv_select(struct xmp_context *ctx)
 	for (; drv; drv = drv->next) {
 	    if (o->verbosity > 2)
 		report ("Probing %s... ", drv->description);
-	    if (drv->init(ctx) == XMP_OK) {
+	    if (drv->init(ctx) == 0) {
 		if (o->verbosity > 2)
 		    report ("found\n");
-		ret = XMP_OK;
+		ret = 0;
 		break;
 	    }
 	    if (o->verbosity > 2)
 		report ("not found\n");
 	}
     }
-    if (ret != XMP_OK)
+    if (ret)
 	return ret;
 
     o->drv_id = drv->id;
@@ -183,7 +183,7 @@ static int drv_select(struct xmp_context *ctx)
     d->help = drv->help;
     d->driver = drv;
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -229,7 +229,7 @@ int xmp_drv_open(struct xmp_context *ctx)
     d->memavl = 0;
     smix_buf32b = NULL;
     extern_drv = TURN_ON;
-    if ((status = drv_select(ctx)) != XMP_OK)
+    if ((status = drv_select(ctx)) != 0)
 	return status;
 
     d->patch_array = calloc(XMP_MAXPAT, sizeof(struct patch_info *));
@@ -242,7 +242,7 @@ int xmp_drv_open(struct xmp_context *ctx)
     synth_init(o->freq);
     synth_reset();
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -259,7 +259,7 @@ int xmp_drv_set(struct xmp_context *ctx)
     for (drv = drv_array; drv; drv = drv->next) {
 	if (!strcmp (drv->id, o->drv_id)) {
 	    d->driver = drv;
-	    return XMP_OK;
+	    return 0;
 	}
     }
 
@@ -318,7 +318,7 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     smix_resol = o->resol > 8 ? 2 : 1;
     smix_resetvar(ctx);
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -765,8 +765,8 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
     struct xmp_driver_context *d = &ctx->d;
     int num;
 
-    if (!d->patch_array)	/* FIXME -- this makes xmms happy */
-    	return XMP_OK;
+    if (!d->patch_array)
+    	return 0;
 
     if (!patch) {
 	d->driver->writepatch(ctx, patch);
@@ -775,13 +775,13 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 	    free(d->patch_array[num]);
 	    d->patch_array[num] = NULL;
 	}
-	return XMP_OK;
+	return 0;
     }
     if (patch->instr_no >= XMP_MAXPAT)
 	return XMP_ERR_PATCH;
     d->patch_array[patch->instr_no] = patch;
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -793,7 +793,7 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
     int smp, num, crunch;
 
     if (!d->patch_array)		/* FIXME -- this makes xmms happy */
-	return XMP_OK;
+	return 0;
 
     if (!ratio)
 	ratio = 0x10000;
@@ -817,14 +817,14 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 
 	    crunch = xmp_cvt_crunch(&patch, ratio);
 	    xmp_cvt_anticlick (patch);
-	    if ((num = d->driver->writepatch(ctx, patch)) != XMP_OK) {
+	    if ((num = d->driver->writepatch(ctx, patch)) != 0) {
 		d->patch_array[smp] = NULL;	/* Bad type, reset array */
 		free (patch);
 	    } else 
 		d->patch_array[smp] = realloc(patch, sizeof (struct patch_info));
 
 	    if (o->verbosity) {
-		if (num != XMP_OK)
+		if (num)
 		    report ("E");		/* Show type error */
 		else if (!crunch)
 		    report ("i");		/* Show sbi patch type */
@@ -839,14 +839,14 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 		continue;
 	    patch = d->patch_array[smp];
 	    xmp_cvt_anticlick (patch);
-	    if (d->driver->writepatch(ctx, patch) != XMP_OK) {
+	    if (d->driver->writepatch(ctx, patch) != 0) {
 		d->patch_array[smp] = NULL;	/* Bad type, reset array */
 		free (patch);
 	    }
 	}
     }
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -892,7 +892,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     if (o->skipsmp) {		/* Will fail for ADPCM samples */
         if (~flags & XMP_SMP_NOLOAD)
 	    fseek(f, xxs->len, SEEK_CUR);
-	return XMP_OK;
+	return 0;
     }
 
     /* Empty samples
@@ -900,7 +900,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     if (xxs->len < 4) {
 	if (~flags & XMP_SMP_NOLOAD)
 	    fread(s, 1, xxs->len, f);
-	return XMP_OK;
+	return 0;
     }
     /* Patches with samples
      */

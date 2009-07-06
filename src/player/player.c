@@ -202,7 +202,7 @@ static inline void fetch_row(struct xmp_context *ctx, int ord, int row)
 
     count = 0;
     for (chn = 0; chn < p->m.xxh->chn; chn++) {
-	if (fetch_channel(ctx, &EVENT(ord, chn, row), chn, 1) != XMP_OK) {
+	if (fetch_channel(ctx, &EVENT(ord, chn, row), chn, 1) != 0) {
 	    p->fetch_ctl[chn]++;
 	    count++;
 	}
@@ -430,7 +430,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
     if (!TEST(IS_VALID)) {
 	xc->volume = 0;
-	return XMP_OK;
+	return 0;
     }
 
     if (note >= 0) {
@@ -459,7 +459,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     }
 
     if (xc->key == 0xff || XXIM.ins[xc->key] == 0xff)
-	return XMP_OK;
+	return 0;
 
     if (TEST(RESET_ENV)) {
 	/* xc->fadeout = 0x8000; -- moved to fetch */
@@ -480,7 +480,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     if ((m->fetch & XMP_CTL_ST3GVOL) && TEST(NEW_VOL) && m->volbase)
 	xc->volume = xc->volume * m->volume / m->volbase;
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -500,7 +500,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     /* Do delay */
     if (xc->delay && !--xc->delay) {
-	if (fetch_channel(ctx, xc->delayed_event, chn, 1) != XMP_OK)
+	if (fetch_channel(ctx, xc->delayed_event, chn, 1) != 0)
 	    fetch_channel(ctx, xc->delayed_event, chn, 0);
     }
 
@@ -840,7 +840,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 
     if (m->xxh->len == 0 || m->xxh->chn == 0) {
 	xmp_drv_writepatch(ctx, NULL);
-	return XMP_OK;
+	return 0;
     }
 
     if (xmp_event_callback == NULL)
@@ -860,7 +860,7 @@ int _xmp_player_start(struct xmp_context *ctx)
     p->tempo = m->xxo_info[ord].tempo;
     playing_time = 0;
 
-    if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
+    if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != 0)
 	return ret;
 
     f->jump = -1;
@@ -1025,7 +1025,7 @@ end_module:
 
     xmp_drv_off(ctx);
 
-    return XMP_OK;
+    return 0;
 }
 
 
@@ -1045,7 +1045,7 @@ int xmp_player_start(struct xmp_context *ctx)
 	struct flow_control *f = &p->flow;
 
 	if (m->xxh->len == 0 || m->xxh->chn == 0)
-		return XMP_OK;
+		return 0;
 
 	if (xmp_event_callback == NULL)
 		xmp_event_callback = dummy;
@@ -1068,7 +1068,7 @@ int xmp_player_start(struct xmp_context *ctx)
 	f->playing_time = 0;
 	f->end_point = p->xmp_scan_num;
 
-	if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != XMP_OK)
+	if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != 0)
 		return ret;
 
 	f->jump = -1;
