@@ -141,6 +141,8 @@ static int init(struct xmp_context *ctx)
 	chan = o->outfmt & XMP_FMT_MONO ? 1 : 2;
 	sampling_rate = o->freq;
 	bits_per_sample = o->resol;
+	if (bits_per_sample == 8)
+		o->outfmt |= XMP_FMT_UNS;
 	bytes_per_frame = chan * bits_per_sample / 8;
 	bytes_per_second = sampling_rate * bytes_per_frame;
 
