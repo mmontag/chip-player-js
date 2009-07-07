@@ -399,21 +399,26 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     if (~ifh.flags & IT_USE_INST)
 	m->xxh->ins = m->xxh->smp;
 
-    if (V(2) && ifh.special & IT_HAS_MSG) {
-	report("\nMessage length : %d\n| ", ifh.msglen);
-	i = ftell (f);
+    if (ifh.special & IT_HAS_MSG) {
+	if ((m->comment = malloc(ifh.msglen + 1)) == NULL)
+	    return -1;
+	i = ftell(f);
 	fseek(f, start + ifh.msgofs, SEEK_SET);
+	reportv(ctx, 2, "\nMessage length : %d\n| ", ifh.msglen);
 	for (j = 0; j < ifh.msglen; j++) {
 	    b = read8(f);
 	    if (b == '\r')
 		b = '\n';
 	    if ((b < 32 || b > 127) && b != '\n' && b != '\t')
 		b = '.';
-	    report ("%c", b);
+	    m->comment[j] = b;
+	    reportv(ctx, 2, "%c", b);
 	    if (b == '\n')
-		report ("| ");
+		reportv(ctx, 2, "| ");
 	}
-	fseek(f, start + i, SEEK_SET);
+	m->comment[j] = 0;
+
+	fseek(f, i, SEEK_SET);
     }
 
     INSTRUMENT_INIT();

@@ -507,6 +507,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->vol_xlat = NULL;
     /* Reset control for next module */
     m->fetch = o->flags & ~XMP_CTL_FILTER;
+    m->comment = NULL;
 
     m->xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */
@@ -696,6 +697,8 @@ void xmp_release_module(xmp_context ctx)
 	free(m->xxpe);
 	free(m->xxae);
 	free(m->xxh);
+	if (m->comment)
+		free(m->comment);
 
 	_D("free dirname/basename");
 	free(m->dirname);

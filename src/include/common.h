@@ -172,6 +172,7 @@ struct xmp_mod_context {
 	char type[XMP_NAMESIZE];	/* module type */
 	char author[XMP_NAMESIZE];	/* module author */
 	char *filename;			/* Module file name */
+	char *comment;			/* Comments, if any */
 	int size;			/* File size */
 	double rrate;			/* Replay rate */
 	int c4rate;			/* C4 replay rate */

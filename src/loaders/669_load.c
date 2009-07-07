@@ -117,6 +117,10 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     MODULE_INFO();
 
+    m->comment = malloc(109);
+    memcpy(m->comment, sfh.message, 108);
+    m->comment[108] = 0;
+    
     if (V(1)) {
 	report ("| %-36.36s\n", sfh.message);
 	report ("| %-36.36s\n", sfh.message + 36);
