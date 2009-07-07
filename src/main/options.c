@@ -200,7 +200,7 @@ static void usage(char *s, struct xmp_options *opt)
 "   -q --quiet             Quiet mode (verbosity level = 0)\n"
 "   -V --version           Print version information\n"
 "   -v --verbose           Verbose mode (incremental)\n"
-	,opt->mix,
+	, opt->mix,
 	opt->freq,
 	opt->flags & XMP_CTL_ITPT ? "enabled" : "disabled"
     );

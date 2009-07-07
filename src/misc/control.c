@@ -46,7 +46,7 @@ void *xmp_create_context()
 	/* Set defaults */
 	o->amplify = DEFAULT_AMPLIFY;
 	o->freq = 44100;
-	o->mix = 80;
+	o->mix = 70;
 	o->resol = 16;
 	o->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
 
