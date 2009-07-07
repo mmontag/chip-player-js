@@ -14,6 +14,7 @@ Stable versions
 	- add extra click removal step in mixer routines
 	- fix loop size in GMC loader (reported by Mirko Buffoni)
 	- GMC loader code cleanup
+	- store in-file comments
 
 2.6.2 (20090630):
 	- Promizer 1.8a loader code cleanup

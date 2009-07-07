@@ -320,12 +320,12 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
 	if (key == XMP_KEY_FADE) {
 	    SET(FADEOUT);
-	    RESET(RESET_VOL | RESET_ENV);
+	    flg &= ~(RESET_VOL | RESET_ENV);
 	} else if (key == XMP_KEY_CUT) {
 	    xmp_drv_resetchannel(ctx, chn);
 	} else if (key == XMP_KEY_OFF) {
 	    SET(RELEASE);
-	    RESET(RESET_VOL | RESET_ENV);
+	    flg &= ~(RESET_VOL | RESET_ENV);
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
 	    /* This test should fix portamento behaviour in 7spirits.s3m */
 	    if (m->fetch & XMP_CTL_RTGINS && e->ins && xc->ins != ins) {
