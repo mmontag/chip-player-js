@@ -24,7 +24,7 @@
 #define FLAG_SYNTH	0x40
 #define FIDX_FLAGMASK	(FLAG_ITPT | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
 
-#define LIM_FT		 12
+#define DOWNMIX_SHIFT	 12
 #define LIM8_HI		 127
 #define LIM8_LO		-127
 #define LIM12_HI	 4095
@@ -69,9 +69,9 @@ void    smix_st16itpt_flt (struct voice_info *, int *, int, int, int, int);
 
 void    smix_synth	  (struct voice_info *, int *, int, int, int, int);
 
-static void     out_su8norm     (char*, int*, int, int);
-static void     out_su16norm    (int16*, int*, int, int);
-static void     out_u8ulaw      (char*, int*, int, int);
+static void     out_su8norm     (char*, int*, int, int, int);
+static void     out_su16norm    (int16*, int*, int, int, int);
+static void     out_u8ulaw      (char*, int*, int, int, int);
 
 /* Array index:
  *
@@ -113,46 +113,49 @@ static void (*out_fn[])() = {
 };
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
-static void out_su8norm(char *dest, int *src, int num, int cod)
+static void out_su8norm(char *dest, int *src, int num, int amp, int flags)
 {
     int smp, lhi, llo, offs;
+    int shift = DOWNMIX_SHIFT + 8 - amp;
 
-    offs = (cod & XMP_FMT_UNS) ? 0x80 : 0;
+    offs = (flags & XMP_FMT_UNS) ? 0x80 : 0;
 
     lhi = LIM8_HI + offs;
     llo = LIM8_LO + offs;
 
     for (; num--; ++src, ++dest) {
-	smp = *src >> (LIM_FT + 8);
+	smp = *src >> shift;
 	*dest = smp > LIM8_HI ? lhi : smp < LIM8_LO ? llo : smp + offs;
     }
 }
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void out_su16norm(int16 *dest, int *src, int num, int cod)
+static void out_su16norm(int16 *dest, int *src, int num, int amp, int flags)
 {
     int smp, lhi, llo, offs;
+    int shift = DOWNMIX_SHIFT - amp;
 
-    offs = (cod & XMP_FMT_UNS) ? 0x8000 : 0;
+    offs = (flags & XMP_FMT_UNS) ? 0x8000 : 0;
 
     lhi = LIM16_HI + offs;
     llo = LIM16_LO + offs;
 
     for (; num--; ++src, ++dest) {
-	smp = *src >> LIM_FT;
+	smp = *src >> shift;
 	*dest = smp > LIM16_HI ? lhi : smp < LIM16_LO ? llo : smp + offs;
     }
 }
 
 
 /* Downmix 32bit samples to 8bit, unsigned ulaw, mono or stereo output */
-static void out_u8ulaw(char *dest, int *src, int num, int cod)
+static void out_u8ulaw(char *dest, int *src, int num, int amp, int flags)
 {
     int smp;
+    int shift = DOWNMIX_SHIFT + 4 - amp;
 
     for (; num--; ++src, ++dest) {
-	smp = *src >> (LIM_FT + 4);
+	smp = *src >> shift;
 	*dest = smp > LIM12_HI ? ulaw_encode(LIM12_HI) :
 		smp < LIM12_LO ? ulaw_encode(LIM12_LO) : ulaw_encode (smp);
     }
@@ -269,7 +272,6 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 static int softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_options *o = &ctx->o;
     struct voice_info *vi;
     struct patch_info *pi;
     int smp_cnt, tic_cnt, lps, lpe;
@@ -293,8 +295,8 @@ static int softmixer(struct xmp_context *ctx)
 	}
 
 	buf_pos = smix_buf32b;
-	vol_r = (vi->vol * (0x80 - vi->pan)) << o->amplify;
-	vol_l = (vi->vol * (0x80 + vi->pan)) << o->amplify;
+	vol_r = vi->vol * (0x80 - vi->pan);
+	vol_l = vi->vol * (0x80 + vi->pan);
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {
@@ -666,15 +668,15 @@ void xmp_smix_off()
 void *xmp_smix_buffer(struct xmp_context *ctx)
 {
     static int outbuf;
-    int act, size;
+    int fmt, size;
     struct xmp_options *o = &ctx->o;
 
     if (!o->resol)
-	act = OUT_U8ULAW;
+	fmt = OUT_U8ULAW;
     else if (o->resol > 8)
-	act = OUT_SU16NORM;
+	fmt = OUT_SU16NORM;
     else
-	act = OUT_SU8NORM;
+	fmt = OUT_SU8NORM;
 
     /* The mixer works with multiple buffers -- this is useless when using
      * multi-buffered sound output (e.g. OSS fragments) but can be useful for
@@ -686,7 +688,7 @@ void *xmp_smix_buffer(struct xmp_context *ctx)
     size = smix_mode * smix_ticksize;
     assert(size <= OUT_MAXLEN);
 
-    out_fn[act](smix_buffer[outbuf], smix_buf32b, size, o->outfmt);
+    out_fn[fmt](smix_buffer[outbuf], smix_buf32b, size, o->amplify, o->outfmt);
 
     smix_resetvar(ctx);
 
