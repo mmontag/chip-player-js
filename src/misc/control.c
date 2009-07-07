@@ -216,57 +216,6 @@ int xmp_play_module2(xmp_context ctx)
 }
 #endif
 
-void xmp_release_module(xmp_context ctx)
-{
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-	struct xmp_mod_context *m = &p->m;
-	int i;
-
-	_D(_D_INFO "Freeing memory");
-
-	if (m->med_vol_table) {
-		for (i = 0; i < m->xxh->ins; i++)
-			if (m->med_vol_table[i])
-				free(m->med_vol_table[i]);
-		free(m->med_vol_table);
-	}
-
-	if (m->med_wav_table) {
-		for (i = 0; i < m->xxh->ins; i++)
-			if (m->med_wav_table[i])
-				free(m->med_wav_table[i]);
-		free(m->med_wav_table);
-	}
-
-	for (i = 0; i < m->xxh->trk; i++)
-		free(m->xxt[i]);
-
-	for (i = 0; i < m->xxh->pat; i++)
-		free(m->xxp[i]);
-
-	for (i = 0; i < m->xxh->ins; i++) {
-		free(m->xxfe[i]);
-		free(m->xxpe[i]);
-		free(m->xxae[i]);
-		free(m->xxi[i]);
-	}
-
-	free(m->xxt);
-	free(m->xxp);
-	free(m->xxi);
-	if (m->xxh->smp > 0)
-		free(m->xxs);
-	free(m->xxim);
-	free(m->xxih);
-	free(m->xxfe);
-	free(m->xxpe);
-	free(m->xxae);
-	free(m->xxh);
-
-	_D("free dirname/basename");
-	free(m->dirname);
-	free(m->basename);
-}
 
 void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,
 			int *itpt)
