@@ -15,6 +15,7 @@ Stable versions
 	- fix loop size in GMC loader (reported by Mirko Buffoni)
 	- GMC loader code cleanup
 	- store in-file comments
+	- apply amplification in the final downmix
 
 2.6.2 (20090630):
 	- Promizer 1.8a loader code cleanup
