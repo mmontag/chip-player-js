@@ -69,7 +69,7 @@ static char *inst_type[] = {
 	"EXT",			/*  7 */
 };
 
-static int bpmon, bpmlen;
+static int bpm_on, bpmlen;
 
 static void xlat_fx(struct xxm_event *event)
 {
@@ -103,9 +103,9 @@ static void xlat_fx(struct xxm_event *event)
 			break;
 		} else if (event->fxp <= 0xf0) {
 			event->fxt = FX_S3M_BPM;
+			event->fxp = event->fxp * 8 / bpmlen;
 			break;
-		}
-		switch (event->fxp) {
+		} else switch (event->fxp) {
 		case 0xf1:	/* Play note twice */
 			event->fxt = FX_EXTENDED;
 			event->fxp = (EX_RETRIG << 4) | 3;
@@ -224,9 +224,9 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 	m->c4rate = C4_NTSC_RATE;
 	m->fetch |= song.flags & FLAG_STSLIDE ? 0 : XMP_CTL_VSALL;
-	bpmon = song.flags2 & FLAG2_BPM;
+	bpm_on = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
-	m->fetch |= bpmon ? 0 : XMP_CTL_MEDBPM;
+	m->fetch |= bpm_on ? 0 : XMP_CTL_MEDBPM;
 
 	/* From the OctaMEDv4 documentation:
 	 *
@@ -239,14 +239,21 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Just a half-assed implementation of the spec above for tempo 1
 	 * in PrivInv.med
 	 */
-	if (!bpmon && song.deftempo < 10)
+	if (!bpm_on && song.deftempo < 10)
 		song.deftempo = 0x35 - song.deftempo * 2;
 
 	/* FIXME: med tempos are incorrectly handled */
-	m->xxh->tpo = song.tempo2;
-	m->xxh->bpm = bpmon ? song.deftempo * bpmlen / 4 : song.deftempo;
-	if (!bpmon && m->xxh->bpm <= 10)
-		m->xxh->bpm = m->xxh->bpm * 33 / 6;
+	if (bpm_on) {
+		m->xxh->tpo = 3;
+		m->xxh->bpm = song.deftempo * 8 / bpmlen;
+	} else {
+		m->xxh->tpo = song.tempo2;
+		m->xxh->bpm = song.deftempo;
+
+		if (m->xxh->bpm <= 10)
+			m->xxh->bpm = m->xxh->bpm * 33 / 6;
+	}
+
 	m->xxh->pat = song.numblocks;
 	m->xxh->ins = song.numsamples;
 	//m->xxh->smp = m->xxh->ins;
@@ -352,8 +359,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	MODULE_INFO();
 
 	if (V(0)) {
-		report("BPM mode       : %s", bpmon ? "on" : "off");
-		if (bpmon)
+		report("BPM mode       : %s", bpm_on ? "on" : "off");
+		if (bpm_on)
 			report(" (length = %d)", bpmlen);
 		report("\n");
 		if (V(1) && song.playtransp)
