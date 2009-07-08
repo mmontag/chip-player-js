@@ -78,18 +78,6 @@ typedef signed long long int64;
 #include "xmp.h"
 #include "xxm.h"
 
-/* [from the comp.lang.c Answers to Frequently Asked Questions]
- *
- * 9.10:   My compiler is leaving holes in structures, which is wasting
- *	   space and preventing "binary" I/O to external data files.  Can I
- *	   turn off the padding, or otherwise control the alignment of
- *	   structs?
- *
- * A:	   Your compiler may provide an extension to give you this control
- *	   (perhaps a #pragma), but there is no standard method.  See also
- *	   question 17.2.
- */
-
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
 #define NTSC_RATE	208.0		/* 1 / (60Hz * 80us)		  */
