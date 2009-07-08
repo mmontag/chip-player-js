@@ -17,6 +17,10 @@
 
 #define FILTER_PRECISION (1 << 12)
 
+/* Anticlick ramps */
+#define SLOW_ATTACK	64
+#define SLOW_RELEASE	16
+
 struct voice_info {
 	int chn;		/* channel link */
 	int root;		/* */

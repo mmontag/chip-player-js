@@ -35,10 +35,6 @@
 #define TURN_OFF	0
 #define TURN_ON		1
 
-/* Anticlick ramps */
-#define SLOW_ATTACK	64
-#define SLOW_RELEASE	16
-
 static char** smix_buffer = NULL;	/* array of output buffers */
 static int* smix_buf32b = NULL;		/* temp buffer for 32 bit samples */
 static int smix_numvoc;			/* default softmixer voices number */
