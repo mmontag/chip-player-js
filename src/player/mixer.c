@@ -504,6 +504,9 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     else
 	vi->fxor = vi->fidx;
 
+    if (o->cf_cutoff)			/* Filter-based anticlick */
+	vi->fidx |= FLAG_FILTER;
+
     if (pi->mode & WAVE_PTKLOOP)
 	pi->mode |= WAVE_FIRSTRUN;
 

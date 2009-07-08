@@ -13,6 +13,7 @@ xmp - Extended Module Player
 [\fB-D\fP \fIdevice-specific parameters\fP]
 [\fB-d, --driver\fP \fIdriver\fP]
 [\fB--fix-sample-loop\fP]
+[\fB-F, --click-filter\fP]
 [\fB-f, --frequency\fP \fIrate\fP]
 [\fB-h, --help\fP]
 [\fB-i, --interpolate\fP]
@@ -78,6 +79,8 @@ probe each available driver\&.
 .IP "\fB--fix-sample-loop\fP" 
 Force sample loop start in samples instead of 16-bit words\&. This
 option affects only MOD files\&.
+.IP "\fB-F, --click-filter\fP" 
+Use the LPF filter to remove clicks from the software mixer output\&.
 .IP "\fB-f, --frequency\fP \fIrate\fP" 
 Set the software mixer sampling rate in hertz\&.
 .IP "\fB-h, --help\fP" 

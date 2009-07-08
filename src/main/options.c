@@ -187,6 +187,7 @@ static void usage(char *s, struct xmp_options *opt)
 "   -a --amplify {0|1|2|3} Amplification factor: 0=Normal, 1=x2, 2=x4, 3=x8\n"
 "   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
 "   -c --stdout            Mix the module to stdout\n"
+"   -F --click-filter      Apply LPF filter to remove clicks\n"
 "   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
 "   -i --interpolate       Use linear interpolation (default %s)\n"
 "   -n --nearest           Use nearest neighbor interpolation\n"
@@ -210,7 +211,7 @@ static void usage(char *s, struct xmp_options *opt)
 void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
-#define OPTIONS "8a:b:cD:d:f:hilM:mno:P:qRrS:s:T:t:uVvx:"
+#define OPTIONS "8a:b:cD:d:Ff:hilM:mno:P:qRrS:s:T:t:uVvx:"
     static struct option lopt[] = {
 	{ "8bit",		 0, 0, '8' },
 	{ "amplify",		 1, 0, 'a' },
@@ -220,6 +221,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "driver",		 1, 0, 'd' },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
 	{ "frequency",		 1, 0, 'f' },
+	{ "click-filter",	 0, 0, 'F' },
 	{ "offset-bug-emulation",0, 0, OPT_FX9BUG },
 	{ "help",		 0, 0, 'h' },
 	{ "interpolate",	 0, 0, 'i' },
@@ -289,6 +291,10 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case OPT_FX9BUG:
 	    opt->flags |= XMP_CTL_FX9BUG;
+	    break;
+	case 'F':
+	    opt->flags |= XMP_CTL_FILTER;
+	    opt->cf_cutoff = 0xfd;
 	    break;
 	case 'f':
 	    opt->freq = strtoul(optarg, NULL, 0);

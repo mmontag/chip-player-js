@@ -641,8 +641,12 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     finalpan = xc->masterpan + (finalpan - 128) *
 			(128 - abs (xc->masterpan - 128)) / 128;
 
-    cutoff = XXIH.fei.flg & XXM_ENV_FLT ? frq_envelope : 0xff;
-    cutoff = xc->cutoff * cutoff / 0xff;
+    if (o->cf_cutoff) {
+	cutoff = o->cf_cutoff;		/* Click-filter cutoff */
+    } else {
+	cutoff = XXIH.fei.flg & XXM_ENV_FLT ? frq_envelope : 0xff;
+	cutoff = xc->cutoff * cutoff / 0xff;
+    }
 
     /* Echoback events */
     if (chn < d->numtrk) {
