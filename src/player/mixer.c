@@ -36,7 +36,7 @@
 #define TURN_ON		1
 
 /* Anticlick ramps */
-#define SLOW_ATTACK	16
+#define SLOW_ATTACK	64
 #define SLOW_RELEASE	16
 
 static char** smix_buffer = NULL;	/* array of output buffers */

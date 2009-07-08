@@ -48,8 +48,8 @@
 
 #define MIX_STEREO() do { \
     if (vi->attack) { \
-	*(tmp_bk++) += (smp_in * vr) / vi->attack; \
-	*(tmp_bk++) += (smp_in * vl) / vi->attack; \
+	*(tmp_bk++) += (((smp_in * vr) << 4) / (vi->attack)) >> 4; \
+	*(tmp_bk++) += (((smp_in * vl) << 4) / (vi->attack)) >> 4; \
 	vi->attack--; \
     } else { \
 	*(tmp_bk++) += smp_in * vr; \
@@ -60,7 +60,7 @@
 
 #define MIX_MONO() do { \
     if (vi->attack) { \
-	*(tmp_bk++) += (smp_in * vl) / vi->attack; \
+	*(tmp_bk++) += (((smp_in * vl) << 4) / vi->attack) >> 4; \
 	vi->attack--; \
     } else { \
 	*(tmp_bk++) += smp_in * vl; \
