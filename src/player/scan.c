@@ -197,7 +197,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		    if (parm) {
 			if (parm <= 0x20)
 			    tempo = parm;
-			else {
+			else if (~m->fetch & XMP_CTL_VBLANK) {
 			    if (medbpm)
 				clock += 132 * alltmp / 5 / bpm;
 			    else
