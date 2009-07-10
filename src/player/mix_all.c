@@ -47,6 +47,17 @@
 } while (0)
 
 #define MIX_STEREO() do { \
+    *(tmp_bk++) += smp_in * vr; \
+    *(tmp_bk++) += smp_in * vl; \
+    itpt += itpt_inc; \
+} while (0)
+
+#define MIX_MONO() do { \
+    *(tmp_bk++) += smp_in * vl; \
+    itpt += itpt_inc; \
+} while (0)
+
+#define MIX_STEREO_AC() do { \
     if (vi->attack) { \
 	int a = SLOW_ATTACK - vi->attack; \
 	*(tmp_bk++) += smp_in * vr * a / SLOW_ATTACK; \
@@ -59,7 +70,7 @@
     itpt += itpt_inc; \
 } while (0)
 
-#define MIX_MONO() do { \
+#define MIX_MONO_AC() do { \
     if (vi->attack) { \
 	*(tmp_bk++) += smp_in * vl * (SLOW_ATTACK - vi->attack) / SLOW_ATTACK; \
 	vi->attack--; \
@@ -91,7 +102,7 @@
 SMIX_MIXER(smix_st8itpt)
 {
     VAR_ITPT(int8);
-    while (count--) { INTERPOLATE(); MIX_STEREO(); }
+    while (count--) { INTERPOLATE(); MIX_STEREO_AC(); }
 }
 
 
@@ -103,7 +114,7 @@ SMIX_MIXER(smix_st16itpt)
 
     vl >>= 8;
     vr >>= 8;
-    while (count--) { INTERPOLATE(); MIX_STEREO(); }
+    while (count--) { INTERPOLATE(); MIX_STEREO_AC(); }
 }
 
 
@@ -138,7 +149,7 @@ SMIX_MIXER(smix_mn8itpt)
     VAR_ITPT(int8);
 
     vl <<= 1;
-    while (count--) { INTERPOLATE(); MIX_MONO(); }
+    while (count--) { INTERPOLATE(); MIX_MONO_AC(); }
 }
 
 
@@ -149,7 +160,7 @@ SMIX_MIXER(smix_mn16itpt)
     VAR_ITPT(int16);
 
     vl >>= 7;
-    while (count--) { INTERPOLATE(); MIX_MONO(); }
+    while (count--) { INTERPOLATE(); MIX_MONO_AC(); }
 }
 
 
@@ -187,7 +198,7 @@ SMIX_MIXER(smix_st8itpt_flt)
     VAR_ITPT(int8);
     VAR_FILT;
 
-    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO(); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO_AC(); }
     SAVE_FILTER();
 }
 
@@ -201,7 +212,7 @@ SMIX_MIXER(smix_st16itpt_flt)
 
     vl >>= 8;
     vr >>= 8;
-    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO(); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO_AC(); }
     SAVE_FILTER();
 }
 
@@ -214,7 +225,7 @@ SMIX_MIXER(smix_mn8itpt_flt)
     VAR_FILT;
 
     vl <<= 1;
-    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO(); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO_AC(); }
     SAVE_FILTER();
 }
 
@@ -227,7 +238,7 @@ SMIX_MIXER(smix_mn16itpt_flt)
     VAR_FILT;
 
     vl >>= 7;
-    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO(); }
+    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO_AC(); }
     SAVE_FILTER();
 }
 
