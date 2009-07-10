@@ -129,14 +129,6 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	getval_no("time", o->time);
 	getval_no("verbosity", o->verbosity);
 
-	if (!strcmp (var, "clickfilter")) {
-	    if (get_yesno(val)) {
-		o->flags |= XMP_CTL_FILTER;
-		o->cf_cutoff = 0xfd;
-	    }
-	    continue;
-	}
-
 	if (!strcmp (var, "driver")) {
 	    strncpy (drive_id, val, 31);
 	    o->drv_id = drive_id;
@@ -168,7 +160,7 @@ int _xmp_read_rc(struct xmp_context *ctx)
 }
 
 
-static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsigned size)
+static void parse_modconf(struct xmp_context *ctx, char *s, unsigned crc, unsigned size)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
@@ -177,13 +169,13 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
     char *hash, *var, *val, line[256];
     int active = 0;
 
-    if ((rc = fopen (fn, "r")) == NULL)
+    if ((rc = fopen(s, "r")) == NULL)
 	return;
 
-    while (!feof (rc)) {
+    while (!feof(rc)) {
 	memset (line, 0, 256);
-	fscanf (rc, "%255[^\n]", line);
-	fgetc (rc);
+	fscanf(rc, "%255[^\n]", line);
+	fgetc(rc);
 
 	/* Delete comments */
 	if ((hash = strchr (line, '#')))
@@ -196,7 +188,7 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 		active = (strtoul (&line[1], NULL, 0) == crc &&
 	 	    strtoul (val, NULL, 0) == size);
 		if (active && o->verbosity > 2)
-		    report ("Matching CRC in %s (%u)\n", fn, crc);
+		    report ("Matching CRC in %s (%u)\n", s, crc);
 	    }
 	    continue;
  	}
@@ -224,6 +216,14 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 	getval_no("crunch", o->crunch);
 	getval_no("chorus", o->chorus);
 	getval_no("reverb", o->reverb);
+
+	if (!strcmp (var, "clickfilter")) {
+	    if (get_yesno(val)) {
+		o->flags |= XMP_CTL_FILTER;
+		o->cf_cutoff = 0xfd;
+	    }
+	    continue;
+	}
     }
 
     fclose (rc);

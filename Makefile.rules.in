@@ -10,7 +10,7 @@ datarootdir	= @datarootdir@
 BINDIR		= @bindir@
 LIBDIR		= @libdir@
 MANDIR		= @mandir@/man1
-SYSCONFDIR	= @sysconfdir@
+SYSCONFDIR	= @sysconfdir@/xmp
 
 CC		= @CC@
 CFLAGS		= -c @CFLAGS@ @DEFS@ @CINCS@ #-D_DEBUG
