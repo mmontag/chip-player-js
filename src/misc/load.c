@@ -470,7 +470,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
-    uint32 crc;
+    uint32 crc = 0;
 
     _D(_D_WARN "s = %s", s);
 
@@ -492,8 +492,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     split_name(s, &m->dirname, &m->basename);
 
-    crc = cksum(f);
-
     _D(_D_INFO "clear mem");
     xmp_drv_clearmem((struct xmp_context *)ctx);
 
@@ -512,9 +510,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->fetch = o->flags & ~XMP_CTL_FILTER;
     m->comment = NULL;
 
-    _D(_D_INFO "read modconf");
-    _xmp_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
-
     m->xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */
     m->xxh->tpo = 6;
@@ -523,8 +518,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     for (i = 0; i < 64; i++) {
 	m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
-	m->xxc[i].cho = o->chorus;
-	m->xxc[i].rvb = o->reverb;
 	m->xxc[i].vol = 0x40;
 	m->xxc[i].flg = 0;
     }
@@ -548,8 +541,10 @@ int xmp_load_module(xmp_context ctx, char *s)
 		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
 	    _D(_D_WARN "load format: %s (%s)", li->id, li->name);
-	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) == 0))
+	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) == 0)) {
+		crc = cksum(f);
 		break;
+	    }
 	}
     }
 
@@ -561,6 +556,13 @@ int xmp_load_module(xmp_context ctx, char *s)
 	free(m->dirname);
 	free(m->xxh);
 	return i;
+    }
+
+    _xmp_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
+
+    for (i = 0; i < 64; i++) {
+	m->xxc[i].cho = o->chorus;	/* set after reading modconf */
+	m->xxc[i].rvb = o->reverb;
     }
 
     if (d->description && (i = (strstr(d->description, " [AWE") != NULL))) {
@@ -601,8 +603,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 	report("Channel mixing : %d%% (dynamic pan %s)\n",
 		m->fetch & XMP_CTL_REVERSE ? -o->mix : o->mix,
 		m->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
-	report("Volume amplify : %s\n",
-		amp_factor[o->amplify]);
+	report("Checksum       : %u %ld\n", crc, st.st_size);
+	report("Volume amplify : %s\n", amp_factor[o->amplify]);
     }
 
     if (o->verbosity) {

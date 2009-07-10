@@ -29,7 +29,6 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
@@ -73,7 +72,6 @@ int probeonly = 0;
 int randomize = 0;
 int loadonly = 0;
 int nocmd = 0;
-int checksum = 0;
 #ifdef HAVE_SYS_RTPRIO_H
 int rt = 0;
 #endif
@@ -410,21 +408,6 @@ int main (int argc, char **argv)
 
     if (randomize)
 	shuffle(argc - optind + 1, &argv[optind - 1]);
-
-    if (checksum) {
-	struct stat st;
-	FILE *f;
-	for (i = optind; i < argc; i++) {
-	    if (stat(argv[i], &st) != 0) {
-		perror(argv[i]);
-	    } else {
-		f = fopen(argv[i], "rb");
-		printf("%u %ld %s\n", cksum(f), st.st_size, argv[i]);
-		fclose(f);
-	    }
-	}
-	exit(0);
-    }
 
     if (opt->outfile && (!opt->drv_id || strcmp(opt->drv_id, "wav")))
 	opt->drv_id = "file";

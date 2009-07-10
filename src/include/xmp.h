@@ -225,15 +225,10 @@ int xmp_open_audio(xmp_context);
 void xmp_close_audio(xmp_context);
 int xmp_play_module(xmp_context);
 void xmp_release_module(xmp_context);
-int xmp_tell_parent(void);
-int xmp_wait_parent(void);
-int xmp_check_parent(int);
-int xmp_tell_child(void);
-int xmp_wait_child(void);
-int xmp_check_child(int);
 int xmp_verbosity_level(xmp_context, int);
 int xmp_seek_time(xmp_context, int);
 void xmp_init_formats(xmp_context);
 int xmp_enable_format(char *, int);
+int xmp_checksum(char *, unsigned int *, unsigned int *);
 
 #endif	/* __XMP_H */
