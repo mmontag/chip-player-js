@@ -198,9 +198,10 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 			strncat(filename, "/", NAME_SIZE);
 		strncat(filename, (char *)m->xxih[i].name, NAME_SIZE);
 
-		s = fopen(filename, "rb");
-		asif_load(ctx, s, i);
-		fclose(s);
+		if ((s = fopen(filename, "rb")) != NULL) {
+			asif_load(ctx, s, i);
+			fclose(s);
+		}
 
 #if 0
 		m->xxs[i].lps = 0;
