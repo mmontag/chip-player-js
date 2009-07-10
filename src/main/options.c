@@ -46,6 +46,7 @@ extern int rt;
 #define OPT_FIXLOOP	0x10d
 #define OPT_CRUNCH	0x10e
 #define OPT_NOFILTER	0x10f
+#define OPT_VBLANK	0x110
 
 
 static void exclude_formats(char *list)
@@ -101,7 +102,7 @@ static void copyright_header()
 {
     printf("Extended Module Player %s %s\n", xmp_version, xmp_date);
     printf(
-"Copyright (C) 1996-2007 Claudio Matsuoka and Hipolito Carraro Jr\n"
+"Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n"
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1988 Tammo Hinrichs,\n"
 "(C) 1989 Rich Gopstein and Harris Corporation, (C) 1997 Bert Jahn, (C) 1998\n"
 "Sylvain Chipaux, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh,\n"
@@ -172,6 +173,7 @@ static void usage(char *s, struct xmp_options *opt)
 "   -s --start num         Start from the specified order\n"
 "   -T --tempo num         Initial tempo (default 6)\n"
 "   -t --time num          Maximum playing time in seconds\n"
+"   --vblank               Force vblank timing in Amiga modules (no CIA)\n"
 
 "\nPlayer sound options:\n"
 "   -8 --8bit              Convert 16 bit samples to 8 bit\n"
@@ -252,6 +254,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "tempo",		 1, 0, 'T' },
 	{ "time",		 1, 0, 't' },
 	{ "unsigned",		 0, 0, 'u' },
+	{ "vblank",		 0, 0, OPT_VBLANK },
 	{ "version",		 0, 0, 'V' },
 	{ "verbose",		 0, 0, 'v' },
 	{ "exclude-formats",	 1, 0, 'x' },
@@ -399,6 +402,9 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case 'u':
 	    opt->outfmt |= XMP_FMT_UNS;
+	    break;
+	case OPT_VBLANK:
+	    opt->flags |= XMP_CTL_VBLANK;
 	    break;
 	case 'V':
 	    printf ("Extended Module Player %s\n", xmp_version);

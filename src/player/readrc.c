@@ -129,6 +129,9 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	getval_no("time", o->time);
 	getval_no("verbosity", o->verbosity);
 
+	/* don't parse clickfilter in general config */
+	/* don't parse vblank in general config */
+
 	if (!strcmp (var, "driver")) {
 	    strncpy (drive_id, val, 31);
 	    o->drv_id = drive_id;
@@ -188,7 +191,7 @@ static void parse_modconf(struct xmp_context *ctx, char *s, unsigned crc, unsign
 		active = (strtoul (&line[1], NULL, 0) == crc &&
 	 	    strtoul (val, NULL, 0) == size);
 		if (active && o->verbosity > 2)
-		    report ("Matching CRC in %s (%u)\n", s, crc);
+		    report("Quirk found in %s\n", s);
 	    }
 	    continue;
  	}
@@ -211,6 +214,7 @@ static void parse_modconf(struct xmp_context *ctx, char *s, unsigned crc, unsign
 	getval_yn(m->fetch, "filter", XMP_CTL_FILTER);
 	getval_yn(m->fetch, "fixloop", XMP_CTL_FIXLOOP);
 	getval_yn(m->fetch, "fx9bug", XMP_CTL_FX9BUG);
+	getval_yn(m->fetch, "vblank", XMP_CTL_VBLANK);
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
 	getval_no("mix", o->mix);
 	getval_no("crunch", o->crunch);

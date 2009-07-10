@@ -107,9 +107,10 @@ struct xmp_options {
 #define XMP_CTL_REVERSE	0x00000002	/* Reverse stereo */
 #define XMP_CTL_8BIT	0x00000004	/* Convert 16 bit samples to 8 bit */
 #define XMP_CTL_LOOP	0x00000010	/* Enable module looping */
+#define XMP_CTL_VBLANK	0x00000020	/* Use vblank timing only */
 #define XMP_CTL_VIRTUAL	0x00000040	/* Enable virtual channels */
 #define XMP_CTL_DYNPAN	0x00000080	/* Enable dynamic pan */
-	/* Fetch control */
+	/* Format quirks */
 #define XMP_CTL_MEDBPM	0x00000100	/* Enable MED BPM timing */
 #define XMP_CTL_S3MLOOP 0x00000200	/* S3M loop mode */
 #define XMP_CTL_ENVFADE	0x00000400	/* Fade at end of envelope */
