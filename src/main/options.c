@@ -27,6 +27,7 @@ extern int probeonly;
 extern int loadonly;
 extern int randomize;
 extern int nocmd;
+extern int checksum;
 #ifdef HAVE_SYS_RTPRIO_H
 extern int rt;
 #endif
@@ -195,6 +196,7 @@ static void usage(char *s, struct xmp_options *opt)
 "   -u --unsigned          Set the mixer to use unsigned samples\n"
 
 "\nInformation options:\n"
+"   -C --cksum             Compute the module checksum for modules.conf\n"
 "   -h --help              Print a summary of the command line options\n"
 "   --load-only            Load module and exit\n"
 "   --probe-only           Probe audio device and exit\n"
@@ -211,12 +213,13 @@ static void usage(char *s, struct xmp_options *opt)
 void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
-#define OPTIONS "8a:b:cD:d:Ff:hilM:mno:P:qRrS:s:T:t:uVvx:"
+#define OPTIONS "8a:b:CcD:d:Ff:hilM:mno:P:qRrS:s:T:t:uVvx:"
     static struct option lopt[] = {
 	{ "8bit",		 0, 0, '8' },
 	{ "amplify",		 1, 0, 'a' },
 	{ "bits",		 1, 0, 'b' },
 	{ "chorus",		 1, 0, OPT_CHORUS },
+	{ "cksum",		 0, 0, 'C' },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
 	{ "driver",		 1, 0, 'd' },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
@@ -276,6 +279,9 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case OPT_CRUNCH:
 	    opt->crunch = strtoul(optarg, NULL, 0);
+	    break;
+	case 'C':
+	    checksum = 1;
 	    break;
 	case 'c':
 	    opt->outfile = "-";

@@ -230,7 +230,7 @@ static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsig
 }
 
 
-void _xmp_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
+void _xmp_read_modconf(struct xmp_context *ctx, uint32 crc, long size)
 {
 #if defined __EMX__
     char myrc[PATH_MAX];
