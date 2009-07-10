@@ -300,7 +300,7 @@ So it seems that the bug was fixed somewhere between Protracker 2.3d and
 3.15. The problem is that there's no way to know if the bug emulation is
 desirable or not when playing M.K. mods! I believe that mods _requiring_
 this bug to be emulated are quite rare, so it will be switched using a
-command line parameter.
+command line parameter or via modules.conf.
 
 
 7. XM file format anomalies

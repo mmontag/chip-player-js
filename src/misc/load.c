@@ -470,6 +470,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
+    uint32 crc;
 
     _D(_D_WARN "s = %s", s);
 
@@ -491,6 +492,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     split_name(s, &m->dirname, &m->basename);
 
+    crc = cksum(f);
+
     _D(_D_INFO "clear mem");
     xmp_drv_clearmem((struct xmp_context *)ctx);
 
@@ -508,6 +511,9 @@ int xmp_load_module(xmp_context ctx, char *s)
     /* Reset control for next module */
     m->fetch = o->flags & ~XMP_CTL_FILTER;
     m->comment = NULL;
+
+    _D(_D_INFO "read modconf");
+    _xmp_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
 
     m->xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */

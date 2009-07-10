@@ -390,6 +390,10 @@ SOURCE=..\player\convert.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\player\crc.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\player\cruncher.c
 # End Source File
 # Begin Source File

@@ -57,7 +57,6 @@ int _xmp_read_rc(struct xmp_context *ctx)
     char *home = getenv("HOME");
 
     snprintf(myrc, PATH_MAX, "%s\\.xmp\\xmp.conf", home);
-    snprintf(myrc2, PATH_MAX, "%s\\.xmprc", home);    
 
     if ((rc = fopen(myrc2, "r")) == NULL) {
 	if ((rc = fopen(myrc, "r")) == NULL) {
@@ -79,17 +78,14 @@ int _xmp_read_rc(struct xmp_context *ctx)
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
 #else
-    char myrc2[PATH_MAX];
     char *home = getenv("HOME");
 
     snprintf(myrc, PATH_MAX, "%s/.xmp/xmp.conf", home);
-    snprintf(myrc2, PATH_MAX, "%s/.xmprc", home);
+    /*snprintf(myrc2, PATH_MAX, "%s/.xmprc", home); -- deprecated */
 
-    if ((rc = fopen(myrc2, "r")) == NULL) {
-	if ((rc = fopen(myrc, "r")) == NULL) {
-	    if ((rc = fopen(SYSCONFDIR "/xmp.conf", "r")) == NULL) {
-		return -1;
-	    }
+    if ((rc = fopen(myrc, "r")) == NULL) {
+	if ((rc = fopen(SYSCONFDIR "/xmp.conf", "r")) == NULL) {
+	    return -1;
 	}
     }
 #endif
@@ -133,6 +129,14 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	getval_no("time", o->time);
 	getval_no("verbosity", o->verbosity);
 
+	if (!strcmp (var, "clickfilter")) {
+	    if (get_yesno(val)) {
+		o->flags |= XMP_CTL_FILTER;
+		o->cf_cutoff = 0xfd;
+	    }
+	    continue;
+	}
+
 	if (!strcmp (var, "driver")) {
 	    strncpy (drive_id, val, 31);
 	    o->drv_id = drive_id;
@@ -164,7 +168,6 @@ int _xmp_read_rc(struct xmp_context *ctx)
 }
 
 
-#if 0
 static void parse_modconf(struct xmp_context *ctx, char *fn, unsigned crc, unsigned size)
 {
     struct xmp_player_context *p = &ctx->p;
@@ -238,13 +241,17 @@ void _xmp_read_modconf(struct xmp_context *ctx, unsigned crc, unsigned size)
     parse_modconf(ctx, myrc, crc, size);
 #elif defined __AMIGA__
     parse_modconf(ctx, "PROGDIR:xmp-modules.conf", crc, size);
+#elif defined WIN32
+    char *home = getenv("SystemRoot");
+
+    snprintf(myrc, PATH_MAX, "%s/modules.ini", home);
+    parse_modconf(ctx, myrc, crc, size);
 #else
     char myrc[PATH_MAX];
     char *home = getenv ("HOME");
 
     snprintf(myrc, PATH_MAX, "%s/.xmp/modules.conf", home);
-    parse_modconf(ctx, SYSCONFDIR "/xmp-modules.conf", crc, size);
+    parse_modconf(ctx, SYSCONFDIR "/modules.conf", crc, size);
     parse_modconf(ctx, myrc, crc, size);
 #endif
 }
-#endif
