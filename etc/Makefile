@@ -1,7 +1,6 @@
-# Extended Module Player etc/Makefile
 
 TOPDIR	= ..
-DFILES	= Makefile xmp.conf xmp.spec
+DFILES	= Makefile xmp.conf modules.conf xmp.spec
 DDIRS	=
 CFILES	=
 DCFILES	=
@@ -16,4 +15,5 @@ install::
 	@echo Installing xmp.conf in $(SYSCONFDIR)...
 	@[ -d $(DESTDIR)$(SYSCONFDIR) ] || mkdir -p $(DESTDIR)$(SYSCONFDIR)
 	$(INSTALL) -m644 xmp.conf $(DESTDIR)$(SYSCONFDIR)/
+	$(INSTALL) -m644 modules.conf $(DESTDIR)$(SYSCONFDIR)/
 

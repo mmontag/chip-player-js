@@ -103,7 +103,8 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root)
 %doc README docs/COPYING docs/README.* docs/ChangeLog docs/CREDITS
-%config(noreplace) %{_sysconfdir}/*
+%dir %{_sysconfdir}/xmp
+%config(noreplace) %{_sysconfdir}/xmp/*conf
 %{_bindir}/*
 %{_mandir}/man1/xmp.1*
 
