@@ -103,7 +103,8 @@ static void xlat_fx(struct xxm_event *event)
 			break;
 		} else if (event->fxp <= 0xf0) {
 			event->fxt = FX_S3M_BPM;
-			event->fxp = event->fxp * 8 / bpmlen;
+			if (bpm_on)
+				event->fxp = event->fxp * 8 / bpmlen;
 			break;
 		} else switch (event->fxp) {
 		case 0xf1:	/* Play note twice */
