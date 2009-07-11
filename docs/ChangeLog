@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-2.7.0 ():
+2.7.0 (20090711):
 	- add StarTrekker packer loader (untested, need samples)
 	- extended key range to IT octave 9 (fixes beek-my_eleventh_year.it,
 	  reported by Mirko Buffoni)
@@ -18,7 +18,7 @@ Stable versions
 	- apply amplification in the final downmix
 	- set sample format to unsigned on 8-bit wav file output
 	- attempt to handle BPM-based MED tempos a bit better
-	- add option to use LPF as a click/noise filter
+	- add option to use the IT LPF as a click/noise filter
 	- deprecate $HOME/.xmprc, use $HOME/.xmp/xmp.conf instead
 	- reintroduce modules.conf, move SYSCONFDIR back to /etc/xmp
 	- display checksum for platforms where cksum(1) not readily available
