@@ -19,7 +19,7 @@ Stable versions
 	- set sample format to unsigned on 8-bit wav file output
 	- attempt to handle BPM-based MED tempos a bit better
 	- add option to use LPF as a click/noise filter
-	- deprecate $HOME/.xmprc, use $HOME/xmp/xmp.conf instead
+	- deprecate $HOME/.xmprc, use $HOME/.xmp/xmp.conf instead
 	- reintroduce modules.conf, move SYSCONFDIR back to /etc/xmp
 	- display checksum for platforms where cksum(1) not readily available
 	- add filter quirk for rn-alone.it

@@ -34,13 +34,13 @@ install-plugin:
 install::
 	@echo
 	@echo "  Installation complete. To customize, copy $(SYSCONFDIR)/xmp.conf"
-	@echo "  and $(SYSCONFDIR)/xmp-modules.conf to \$$HOME/.xmp/"
+	@echo "  and $(SYSCONFDIR)/modules.conf to \$$HOME/.xmp/"
 	@echo
 
 uninstall:
 	rm -f $(BINDIR)/xmp
 	rm -f $(MANDIR)/xmp.1
-	rm -f $(SYSCONFDIR)/xmp.conf $(SYSCONFDIR)/xmp-modules.conf
+	rm -f $(SYSCONFDIR)/xmp.conf $(SYSCONFDIR)/modules.conf
 
 
 # Extra targets:
