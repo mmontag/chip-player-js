@@ -390,10 +390,6 @@ SOURCE=..\player\convert.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\player\crc.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\player\cruncher.c
 # End Source File
 # Begin Source File
@@ -683,6 +679,10 @@ SOURCE=..\misc\arcfs.c
 # Begin Source File
 
 SOURCE=..\misc\control.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\misc\crc.c
 # End Source File
 # Begin Source File
 

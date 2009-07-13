@@ -244,8 +244,9 @@ void _xmp_read_modconf(struct xmp_context *ctx, uint32 crc, long size)
     parse_modconf(ctx, "xmp-modules.conf", crc, size);
     parse_modconf(ctx, myrc, crc, size);
 #elif defined __AMIGA__
-    parse_modconf(ctx, "PROGDIR:xmp-modules.conf", crc, size);
+    parse_modconf(ctx, "PROGDIR:modules.conf", crc, size);
 #elif defined WIN32
+    char myrc[PATH_MAX];
     char *home = getenv("SystemRoot");
 
     snprintf(myrc, PATH_MAX, "%s/modules.ini", home);
