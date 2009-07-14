@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+2.7.1 ():
+	- fix -l option in manpage (debian bug #442147)
+
 2.7.0 (20090711):
 	- add StarTrekker packer loader (untested, need samples)
 	- extended key range to IT octave 9 (fixes beek-my_eleventh_year.it,
