@@ -5,6 +5,7 @@ Stable versions
 	- fix -l option in manpage (debian bug #442147)
 	- fix endianism in MDL sample depacking (reported by Gürkan Sengün)
 	- fix loading of MOD2XM 1.0 modules (reported by Gürkan Sengün)
+	- add some sanity checks in XM module loading
 
 2.7.0 (20090711):
 	- add StarTrekker packer loader (untested, need samples)
