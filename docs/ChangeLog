@@ -3,6 +3,7 @@ Stable versions
 
 2.7.1 ():
 	- fix -l option in manpage (debian bug #442147)
+	- fix endianism in MDL sample depacking (reported by Gürkan Sengün)
 
 2.7.0 (20090711):
 	- add StarTrekker packer loader (untested, need samples)

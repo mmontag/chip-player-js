@@ -179,7 +179,7 @@ static unsigned int get_bits(char i, uint8 **buf, int *len)
     unsigned int x;
 
     if (i == 0) {
-	b = *((uint32 *)(*buf));
+	b = readmem32l(*buf);
 	*buf += 4; *len -= 4;
 	n = 32;
 	return 0;
@@ -190,7 +190,7 @@ static unsigned int get_bits(char i, uint8 **buf, int *len)
     if ((n -= i) <= 24) {
 	if (*len == 0)		/* FIXME: last few bits can't be consumed */
 		return x;
-	b |= (uint32)(*(*buf)++) << n;
+	b |= readmem32l((*buf)++) << n;
 	n += 8; (*len)--;
     }
 
@@ -225,17 +225,17 @@ static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
     int i, s;
     uint8 b, d;
 
-    get_bits (0, &f, &len);
+    get_bits(0, &f, &len);
 
     for (i = b = d = 0; i < l; i++) {
-	s = get_bits (1, &f, &len);
-	if (get_bits (1, &f, &len)) {
-	    b = get_bits (3, &f, &len);
+	s = get_bits(1, &f, &len);
+	if (get_bits(1, &f, &len)) {
+	    b = get_bits(3, &f, &len);
 	} else {
             b = 8;
-	    while (len >= 0 && !get_bits (1, &f, &len))
+	    while (len >= 0 && !get_bits(1, &f, &len))
 		b += 16;
-	    b += get_bits (4, &f, &len);
+	    b += get_bits(4, &f, &len);
 	}
 
 	if (s)
@@ -266,15 +266,15 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
     get_bits (0, &f, &len);
 
     for (i = lo = b = d = 0; i < l; i++) {
-	lo = get_bits (8, &f, &len);
-	s = get_bits (1, &f, &len);
-	if (get_bits (1, &f, &len)) {
-	    b = get_bits (3, &f, &len);
+	lo = get_bits(8, &f, &len);
+	s = get_bits(1, &f, &len);
+	if (get_bits(1, &f, &len)) {
+	    b = get_bits(3, &f, &len);
 	} else {
             b = 8;
 	    while (len >= 0 && !get_bits (1, &f, &len))
 		b += 16;
-	    b += get_bits (4, &f, &len);
+	    b += get_bits(4, &f, &len);
 	}
 
 	if (s)
