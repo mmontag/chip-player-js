@@ -12,6 +12,7 @@ Aug/Sep BRT 2007
 Jun/Jul 2009
 - More fingerprints from Storlek
 - Notes on lamb's 275/263 XM tracker
+- Notes on MOD2XM converted modules
 
 
 1. Event fetch
@@ -336,6 +337,12 @@ Extended Module 1.02 (Vogue's "Trans atlantic" and "Dont you" remixes) and
 instruments, patterns and samples in that order. 1.04 has header, patterns,
 instruments and samples. XM 1.02 uses one byte to store the number of rows
 in the pattern header, XM 1.03 and 1.04 use a 16-bit word.
+
+XM modules converted using MOD2XM 1.0 will always list instrument number
+as 31, but the file is truncated after the last valid mod sample. These
+modules are marked as "MOD2XM 1.0" with zero padding, but they can also
+identify themselves as "FastTracker v2.00   ". These two variations seem
+to be common in Windows cracktro loaders.
 
 
 8. Broken sample loops in converted MOD files

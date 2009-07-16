@@ -280,7 +280,18 @@ load_instruments:
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
+
 	xih.size = read32l(f);			/* Instrument size */
+
+	/* Modules converted with MOD2XM 1.0 always say we have 31
+	 * instruments, but file may end abruptly before that. This test
+	 * will not work if file has trailing garbage.
+	 */
+	if (feof(f)) {
+		m->xxh->ins = i;
+		break;
+	}
+
 	fread(&xih.name, 22, 1, f);		/* Instrument name */
 	xih.type = read8(f);			/* Instrument type (always 0) */
 	xih.samples = read16l(f);		/* Number of samples */
@@ -342,20 +353,19 @@ load_instruments:
 		m->xxpe[i] = calloc (4, m->xxih[i].pei.npt);
 	    else
 		m->xxih[i].pei.flg &= ~XXM_ENV_ON;
-	    memcpy (m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
-	    memcpy (m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
+	    memcpy(m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
+	    memcpy(m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
 
 	    for (j = 0; j < XXM_KEY_MAX; j++)
 		m->xxim[i].ins[j] = -1;
 
-	    memcpy (&m->xxim[i].ins, xi.sample, 96);
+	    memcpy(&m->xxim[i].ins, xi.sample, 96);
 	    for (j = 0; j < 96; j++) {
 		if (m->xxim[i].ins[j] >= m->xxih[i].nsm)
-		    m->xxim[i].ins[j] = (uint8) XMP_MAXPAT;
+		    m->xxim[i].ins[j] = (uint8)XMP_MAXPAT;
 	    }
 
 	    for (j = 0; j < m->xxih[i].nsm; j++, sample_num++) {
-
 		xsh[j].length = read32l(f);	/* Sample length */
 		xsh[j].loop_start = read32l(f);	/* Sample loop start */
 		xsh[j].loop_length = read32l(f);/* Sample loop length */
