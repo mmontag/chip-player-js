@@ -297,6 +297,12 @@ load_instruments:
 	xih.samples = read16l(f);		/* Number of samples */
 	xih.sh_size = read32l(f);		/* Sample header size */
 
+	/* Sanity check */
+	if (xih.samples > 0x100 || xih.sh_size > 0x1000000) {
+		m->xxh->ins = i;
+		break;
+	}
+
 	copy_adjust(m->xxih[i].name, xih.name, 22);
 
 	m->xxih[i].nsm = xih.samples;
