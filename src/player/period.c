@@ -35,6 +35,7 @@ static int period_amiga[] = {
     0x0e2b, 0x0e11, 0x0df7, 0x0ddd, 0x0dc3, 0x0daa, 0x0d91, 0x0d78,  /* B  */
 };
 
+#define BASE_PERIOD (6847.0 * 100)
 
 /* Get period from note */
 inline int note_to_period(int n, int f, int type)
@@ -43,7 +44,7 @@ inline int note_to_period(int n, int f, int type)
 
     return type ?
 	(120.0 - d) * 16 :			/* Linear */
-        (int)(6847.0 / pow(2, d / 12));		/* Amiga */
+        (int)(684700.0 / pow(2, d / 12));	/* Amiga */
 }
 
 
@@ -96,7 +97,7 @@ int period_to_bend(int p, int n, int limit, int gliss, int type)
 	p = MIN_PERIOD_A;
 
     d = note_to_period(n, 0, 0);
-    b = 100.0 * ((1536.0 * log(d / p) / M_LN2)) / 128;
+    b = ((1536.0 * log(d / p) / M_LN2)) / 128;
 
     return gliss ? b / 100 * 100 : b;	/* Amiga */
 }

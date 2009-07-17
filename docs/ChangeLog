@@ -7,6 +7,8 @@ Stable versions
 	- fix loading of MOD2XM 1.0 modules (reported by Gürkan Sengün)
 	- add some sanity checks in XM module loading
 	- fix IT note cut and delay (Storlek test #22)
+	- increase period resolution for better tuning (reported by Mirko
+	  Buffoni and Gürkan Sengün)
 
 2.7.0 (20090711):
 	- add StarTrekker packer loader (untested, need samples)
