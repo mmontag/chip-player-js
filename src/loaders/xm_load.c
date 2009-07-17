@@ -298,7 +298,7 @@ load_instruments:
 	xih.sh_size = read32l(f);		/* Sample header size */
 
 	/* Sanity check */
-	if (xih.samples > 0x10 || xih.sh_size > 0x1000000) {
+	if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
 		m->xxh->ins = i;
 		break;
 	}
