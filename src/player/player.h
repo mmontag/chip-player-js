@@ -88,7 +88,7 @@ struct xmp_channel {
     int per_flags;		/* Persistent effect channel flags */
     int note;			/* Note number */
     int key;			/* Key number */
-    int period;			/* Amiga or linear period */
+    double period;		/* Amiga or linear period */
     int pitchbend;		/* Pitch bender value */
     int finetune;		/* Guess what */
     int ins;			/* Instrument number */
