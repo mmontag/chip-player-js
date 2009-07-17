@@ -1,6 +1,6 @@
 # Extended Module Player Makefile.rules.in
 
-VERSION		= 2.7.1-pre
+VERSION		= 2.7.1
 DATE		= Sat Jul 11 14:25:20 BRT 2009
 
 DESTDIR		=
