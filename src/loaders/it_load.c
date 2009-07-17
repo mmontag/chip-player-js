@@ -91,7 +91,7 @@ int itsex_decompress16 (FILE *, void *, int, int);
 
 static void xlat_fx(int c, struct xxm_event *e)
 {
-    uint8 h = MSN (e->fxp), l = LSN (e->fxp);
+    uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
     switch (e->fxt = fx[e->fxt]) {
     case FX_ARPEGGIO:		/* Arpeggio */
@@ -153,6 +153,10 @@ static void xlat_fx(int c, struct xxm_event *e)
 	    break;
 	case 0xc:		/* Note cut */
 	case 0xd:		/* Note delay */
+	    if ((e->fxp = l) == 0)
+		e->fxp++;	/* SD0 and SC0 becomes SD1 and SC1 */
+	    e->fxp |= h << 4;
+	    break;
 	case 0xe:		/* Pattern delay */
 	    break;
 	default:
