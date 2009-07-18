@@ -402,7 +402,7 @@ ex_f_vslide_dn:
 	    p->tempo = fxp;
 	break;
     case FX_S3M_BPM:				/* Set S3M BPM */
-	if (fxp >= 0x15)	/* Panic uses 0x14, L2circus.med uses 0x1A */
+	if (fxp)
 	    p->tick_time = m->rrate / (p->xmp_bpm = fxp);
 	break;
     case FX_IT_BPM:				/* Set IT BPM */
