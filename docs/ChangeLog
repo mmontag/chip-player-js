@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-2.7.1 ():
+2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
 	- fix endianism in MDL sample depacking (reported by Gürkan Sengün)
 	- fix loading of MOD2XM 1.0 modules (reported by Gürkan Sengün)

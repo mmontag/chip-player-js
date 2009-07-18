@@ -73,7 +73,7 @@ The current version recognizes the following module formats:
   EMOD  ****	Quadra Composer		0001
   KRIS	****+	ChipTracker		KRIS
   MODL	****+	Protracker 3.59		PTDT
-  MED	***	MED 2.10/3.00	 	MED3, MED4
+  MED	** 	MED 2.10/3.00	 	MED3, MED4
   MED	***	MED 3.00/OctaMED	MMD0, MMD1, MMD2, MMD3
   MTN	****	ST 2.6, Ice Tracker	MTN, IT10
   OKT 	***	Oktalyzer		-
@@ -218,6 +218,7 @@ follwing devices are supported:
   osx		MacOS X CoreAudio
   pulseaudio	PulseAudio
   qnx		QNX Neutrino 4 audio device
+  sndio		OpenBSD sndio
   solaris	Solaris audio device (linear and ulaw)
   wav		WAV file writer
   win32		Windows WinMM audio
@@ -255,10 +256,11 @@ ProWizard-PC decruncher Copyright (C) 1998 Sylvain Chipaux
 IT sample decompression routine Copyright (C) 1998 Tammo Hinrichs
 MMCMP and IT lowpass filter routines Copyright (C) 1998 Olivier Lapicque
 OS/2-specific portions and DART driver Copyright (C) 1999 Kevin Langman
-FFT routine Copyright (C) 1996-1999 Takuya Ooura
 Portions of NAS driver Copyright (C) 1999 Martin Denn
 LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks
 Amiga AHI driver (C) 2007 Lorence Lombardo
+OpenBSD sndio driver (C) 2009 Thomas Pfaff
+Portions of WinAmp plugin (C) 2009 Mirko Buffoni
 
 This program is free software;  you can redistribute it  and/or modify it
 under  the terms of  the GNU General Public License  as published  by the
@@ -271,3 +273,4 @@ GNU General Public License for more details.
 You  should  have received a copy of the GNU General Public License along
 with this program;  if not, write to the  Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
