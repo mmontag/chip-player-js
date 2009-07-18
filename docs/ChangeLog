@@ -9,6 +9,7 @@ Stable versions
 	- fix IT note cut and delay (Storlek test #22)
 	- increase period resolution for better tuning (reported by Mirko
 	  Buffoni and Gürkan Sengün)
+	- allow lower BPM settings (fixes Lemmings 2 circus music)
 
 2.7.0 (20090711):
 	- add StarTrekker packer loader (untested, need samples)
