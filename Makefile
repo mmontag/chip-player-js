@@ -27,7 +27,6 @@ LOBJS = $(OBJS:.o=.lo)
 
 include src/main/Makefile
 include src/plugin/Makefile
-include src/win32/Makefile
 include docs/Makefile
 include etc/Makefile
 
