@@ -35,15 +35,6 @@ DRIVERS		= @DRIVERS@
 
 dummy:
 
-install::
-ifdef DDIRS
-	@for i in $(DDIRS); do \
-		if [ -d $$i ]; then \
-			(cd $$i && [ -f Makefile ] && $(MAKE) $@) \
-		fi \
-	done; true 
-endif
-
 subdist::
 	cp -dp $(DFILES) $(DISTDIR)
 ifdef DDIRS

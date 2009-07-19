@@ -20,9 +20,9 @@ src/plugin/audacious.lo: src/plugin/audacious.c src/plugin/Makefile
 
 install-audacious:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \
-	echo "Installing xmp-audacious.so in $$DIR..."; \
+	echo "Installing xmp-audacious.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -s -m755 xmp-audacious.so "$$DIR"
+	$(INSTALL) -s -m755 src/plugin/xmp-audacious.so "$$DIR"
 
 
 
@@ -40,9 +40,9 @@ src/plugin/bmp.lo: src/plugin/bmp.c src/plugin/Makefile
 
 install-bmp:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir bmp`"; \
-	echo "Installing xmp-bmp.so in $$DIR..."; \
+	echo "Installing xmp-bmp.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -s -m755 xmp-bmp.so "$$DIR"
+	$(INSTALL) -s -m755 src/plugin/xmp-bmp.so "$$DIR"
 
 
 
@@ -60,9 +60,9 @@ src/plugin/xmms.lo: src/plugin/xmms.c src/plugin/Makefile
 
 install-xmms:
 	@DIR="$(DESTDIR)`xmms-config --input-plugin-dir`"; \
-	echo "Installing xmp-xmms.so in $$DIR..."; \
+	echo "Installing xmp-xmms.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -s -m755 xmp-xmms.so "$$DIR"
+	$(INSTALL) -s -m755 src/plugin/xmp-xmms.so "$$DIR"
 
 
 

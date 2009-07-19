@@ -15,14 +15,13 @@ OBJS += $(addprefix src/loaders/prowizard/, $(PROWIZ_OBJS))
 OBJS += $(addprefix src/misc/, $(MISC_OBJS))
 OBJS += $(addprefix src/player/, $(PLAYER_OBJS))
 
-ifneq ($(PLUGINS),)
 LOBJS = $(OBJS:.o=.lo)
-endif
 
 include src/main/Makefile
 M_OBJS += $(addprefix src/main/, $(MAIN_OBJS))
 
 include src/plugin/Makefile
+include docs/Makefile
 
 XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
@@ -43,13 +42,15 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
 binaries: src/main/xmp $(PLUGINS)
 
-src/main/xmp: $(OBJS) $(M_OBJS)
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(LIBS)'; \
-	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
-	eval $$CMD
-
 clean:
 	@rm -f $(OBJS) $(OBJS:.o=.lo) $(M_OBJS)
+
+install: install-xmp install-docs $(addprefix install-, $(PLUGINS))
+	@echo
+	@echo "  Installation complete. To customize, copy $(SYSCONFDIR)/xmp.conf"
+	@echo "  and $(SYSCONFDIR)/modules.conf to \$$HOME/.xmp/"
+	@echo
+
 
 depend:
 	@echo Building dependencies...
