@@ -61,7 +61,7 @@ extern struct xmp_drv_info drv_win32;
 
 void (*xmp_event_callback) (unsigned long);
 
-#include "../player/mixer.c"
+#include "mixer.c"
 
 
 void xmp_init_drivers()

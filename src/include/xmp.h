@@ -196,9 +196,6 @@ struct xmp_module_info {
 
 typedef char *xmp_context;
 
-extern char *xmp_version;
-extern char *xmp_date;
-extern char *xmp_build;
 extern char *global_filename;	/* FIXME: hack for the wav driver */
 
 void *xmp_create_context(void);

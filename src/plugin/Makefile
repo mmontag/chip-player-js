@@ -1,36 +1,17 @@
-# Extended Module Player src/bmp/Makefile
 
-TOPDIR	= ../..
-XCFLAGS	= -I../include -I. -DVERSION=\"$(VERSION)\" -D_REENTRANT -fPIC \
-	  -DENABLE_PLUGIN
-DFILES	= Makefile $(OBJS:.o=.c) xmms.c bmp.c audacious.c winamp.c \
-	  resource.rc resource.h in2.h out.h
-CFILES	= xmp-audacious.so xmp-bmp.so xmp-xmms.so in_xmp.dll
-OBJS	= driver.o
+PLUGIN_OBJS	= driver.o
+PLUGIN_DFILES	= Makefile $(OBJS:.o=.c) xmms.c bmp.c audacious.c winamp.c \
+		  resource.rc resource.h in2.h out.h
 
 WINDRES = i586-mingw32msvc-windres
 
-default: all
 
-include $(TOPDIR)/Makefile.rules
+src/plugin/audacious.lo: src/plugin/audacious.c src/plugin/Makefile
+	@if [ "$(V)" -gt 0 ]; then \
+	    echo $(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ src/plugin/audacious.c; \
+	else echo "CC(fPIC)" src/plugin/audacious.c ; fi
+	@$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ src/plugin/audacious.c
 
-all: $(PLUGINS)
-
-install:: $(addprefix install-, $(PLUGINS))
-
-	
-#
-# Audacious
-#
-
-audacious: xmp-audacious.so $(OBJS)
-	@true
-
-xmp-audacious.so: $(OBJS) audacious.o $(TOPDIR)/lib/libxmp-pic.a
-	$(LD) -shared -o $@ $(OBJS) audacious.o `pkg-config --libs audacious` -L$(TOPDIR)/lib/ -lxmp-pic
-
-audacious.o: audacious.c
-	$(CC) -c $(CFLAGS) $(XCFLAGS) `pkg-config --cflags audacious` -o $@ audacious.c
 
 install-audacious:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \

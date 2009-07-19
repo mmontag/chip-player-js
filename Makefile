@@ -1,79 +1,69 @@
-# Extended Module Player toplevel Makefile
 
-# DIST		distribution package name
-# DFILES	standard distribution files 
-# DDIRS		standard distribution directories
+V = 0
 
-TOPDIR	= .
-XCFLAGS	= -Iloaders/include
-TEST_XM	=
-DIST	= xmp-$(VERSION)
-MODULES	= "mod.wondere wereld"
-DFILES	= README INSTALL configure configure.in Makefile Makefile.rules.in \
-	  $(MODULES)
-DDIRS	= lib docs etc src scripts
-CFILES	=
-DCFILES	= Makefile.rules.old config.log config.status config.cache
-
-all: xmp
-
-xmp:
-	cd src && $(MAKE)
+all: binaries
 
 include Makefile.rules
+include src/drivers/Makefile
+include src/loaders/Makefile
+include src/loaders/prowizard/Makefile
+include src/misc/Makefile
+include src/player/Makefile
+OBJS += $(addprefix src/drivers/, $(DRIVERS_OBJS))
+OBJS += $(addprefix src/loaders/, $(LOADERS_OBJS))
+OBJS += $(addprefix src/loaders/prowizard/, $(PROWIZ_OBJS))
+OBJS += $(addprefix src/misc/, $(MISC_OBJS))
+OBJS += $(addprefix src/player/, $(PLAYER_OBJS))
 
-distclean::
-	rm -f Makefile.rules
+ifneq ($(PLUGINS),)
+LOBJS = $(OBJS:.o=.lo)
+endif
 
-configure: configure.in
-	autoconf
+include src/main/Makefile
+M_OBJS += $(addprefix src/main/, $(MAIN_OBJS))
 
-install-plugin:
-	$(MAKE) -C src/bmp install
+include src/plugin/Makefile
 
-install::
-	@echo
-	@echo "  Installation complete. To customize, copy $(SYSCONFDIR)/xmp.conf"
-	@echo "  and $(SYSCONFDIR)/modules.conf to \$$HOME/.xmp/"
-	@echo
+XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
-uninstall:
-	rm -f $(BINDIR)/xmp
-	rm -f $(MANDIR)/xmp.1
-	rm -f $(SYSCONFDIR)/xmp.conf $(SYSCONFDIR)/modules.conf
+.SUFFIXES: .c .o .lo .a .S .so
 
+.c.o:
+	@if [ "$(V)" -gt 0 ]; then \
+	    echo $(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $< ; \
+	else echo CC $< ; fi
+	@$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<
 
-# Extra targets:
-# 'dist' prepares a distribution package
-# 'mark' marks the last CVS revision with the package version number
-# 'rpm' generates a RPM package
+.c.lo:
+	@if [ "$(V)" -gt 0 ]; then \
+	    echo $(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) -o $*.lo $< ; \
+	else echo "CC(fPIC)" $< ; fi
+	@$(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) -o $*.lo $<
 
-dist:
-	rm -Rf $(DIST) $(DIST).tar.gz
-	mkdir $(DIST)
-	$(MAKE) DISTDIR=$(DIST) subdist
-	cat Makefile.rules.in | \
-	sed "s/$(DATE)/`date`/" > $(DIST)/Makefile.rules.in
-	mv -f Makefile.rules.in Makefile.rules.old
-	cp $(DIST)/Makefile.rules.in .
-	chmod -R u+w $(DIST)/*
-	tar cvf - $(DIST) | gzip -9c > $(DIST).tar.gz
-	rm -Rf $(DIST)
-	./config.status
-	touch -r Makefile.rules.old Makefile.rules.in Makefile.rules
-	sync
-	ls -l $(DIST).tar.gz
+binaries: src/main/xmp $(PLUGINS)
 
-mark:
-	cvs tag r`echo $(VERSION) | tr .- _`
+src/main/xmp: $(OBJS) $(M_OBJS)
+	@if [ "$(V)" -gt 0 ]; then \
+	    echo $(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(LIBS); \
+	else echo LD $@ ; fi
+	@$(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(LIBS)
 
-Makefile.rules: Makefile.rules.in
-	@if [ -f config.status ]; then \
-	    ./config.status; \
-	else \
-	    [ -f configure ] || autoconf; \
-	    ./configure; \
-	fi
+audacious: src/plugin/plugin-audacious.so
 
-$(OBJS): Makefile
+src/plugin/plugin-audacious.so: $(LOBJS) src/plugin/audacious.lo
+	@if [ "$(V)" -gt 0 ]; then \
+	    echo $(LD) -shared -o $@ $(OBJS) src/plugin/audacious.lo `pkg-config --libs audacious`; \
+	else echo LD $@ ; fi
+	@$(LD) -shared -o $@ $(OBJS) src/plugin/audacious.lo `pkg-config --libs audacious`
+
+clean:
+	@rm -f $(OBJS) $(OBJS:.o=.lo) $(M_OBJS)
+
+depend:
+	@echo Building dependencies...
+	@$(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $(OBJS:.o=.c) >$@
+
+$(OBJS): Makefile.rules
+
+include depend
 

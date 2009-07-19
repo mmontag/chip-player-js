@@ -447,12 +447,8 @@ int main (int argc, char **argv)
     xmp_register_event_callback(process_echoback);
 
     if (opt->verbosity) {
-	fprintf (stderr, "Extended Module Player %s %s\n"
-	"Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n",
-	    xmp_version, xmp_date);
-#ifdef __EMX__
-	fprintf(stderr, "OS/2 Port by Kevin Langman (langman@earthling.net)\n" );
-#endif
+	fprintf(stderr, "Extended Module Player " VERSION "\n"
+	"Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n");
     }
 
     if (probeonly || (opt->verbosity)) {
