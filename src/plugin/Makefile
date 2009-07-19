@@ -1,5 +1,5 @@
 
-PLUGIN_OBJS	= driver.o
+PLUGIN_OBJS	=
 PLUGIN_DFILES	= Makefile $(PLUGIN_OBJS:.o=.c) xmms.c bmp.c audacious.c \
 		  winamp.c resource.rc resource.h in2.h out.h
 PLUGIN_PATH	= src/plugin

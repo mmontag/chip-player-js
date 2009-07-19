@@ -4,7 +4,8 @@ DIST    = xmp-$(VERSION)
 MODULES = "mod.syfuid.long"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  scripts $(MODULES)
-DDIRS	= docs drivers etc include loaders misc player plugin prowiz main
+DDIRS	= docs drivers etc include loaders misc player plugin prowiz win32 \
+	  main
 
 V	= 0
 
@@ -26,6 +27,7 @@ LOBJS = $(OBJS:.o=.lo)
 
 include src/main/Makefile
 include src/plugin/Makefile
+include src/win32/Makefile
 include docs/Makefile
 include etc/Makefile
 

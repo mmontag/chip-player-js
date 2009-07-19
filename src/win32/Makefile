@@ -8,5 +8,5 @@ OBJS += $(addprefix $(WIN32_PATH)/,$(WIN32_OBJS))
 
 dist-win32:
 	mkdir -p $(DIST)/$(WIN32_PATH)
-	cp -dp $(addprefix $(WIN32_PATH)/,$(WIN32_DFILES)) $(DIST)/$(WIN32_PATH)
+	cp -drp $(addprefix $(WIN32_PATH)/,$(WIN32_DFILES)) $(DIST)/$(WIN32_PATH)
 

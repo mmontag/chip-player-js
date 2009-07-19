@@ -11,5 +11,5 @@ install-docs:
 
 dist-docs:
 	mkdir -p $(DIST)/$(DOCS_PATH)
-	cp -rp $(addprefix $(DOCS_PATH)/,$(DOCS_DFILES)) $(DIST)/$(DOCS_PATH)
+	cp -drp $(addprefix $(DOCS_PATH)/,$(DOCS_DFILES)) $(DIST)/$(DOCS_PATH)
 
