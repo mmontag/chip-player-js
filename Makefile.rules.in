@@ -1,4 +1,3 @@
-# Extended Module Player Makefile.rules.in
 
 DESTDIR		=
 prefix		= @prefix@

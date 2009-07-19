@@ -26,35 +26,27 @@ include src/plugin/Makefile
 
 XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
-.SUFFIXES: .c .o .lo .a .S .so
+.SUFFIXES: .c .o .lo .a .so .dll
+
+	    #echo $(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $< ; \
+	#@$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<
 
 .c.o:
-	@if [ "$(V)" -gt 0 ]; then \
-	    echo $(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $< ; \
-	else echo CC $< ; fi
-	@$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<
+	@CMD='$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.o ; fi; \
+	eval $$CMD
 
 .c.lo:
-	@if [ "$(V)" -gt 0 ]; then \
-	    echo $(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) -o $*.lo $< ; \
-	else echo "CC(fPIC)" $< ; fi
-	@$(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) -o $*.lo $<
+	@CMD='$(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) -o $*.lo $<'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
+	eval $$CMD
 
 binaries: src/main/xmp $(PLUGINS)
 
 src/main/xmp: $(OBJS) $(M_OBJS)
-	@if [ "$(V)" -gt 0 ]; then \
-	    echo $(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(LIBS); \
-	else echo LD $@ ; fi
-	@$(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(LIBS)
-
-audacious: src/plugin/plugin-audacious.so
-
-src/plugin/plugin-audacious.so: $(LOBJS) src/plugin/audacious.lo
-	@if [ "$(V)" -gt 0 ]; then \
-	    echo $(LD) -shared -o $@ $(OBJS) src/plugin/audacious.lo `pkg-config --libs audacious`; \
-	else echo LD $@ ; fi
-	@$(LD) -shared -o $@ $(OBJS) src/plugin/audacious.lo `pkg-config --libs audacious`
+	@CMD='$(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(LIBS)'; \
+	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
 
 clean:
 	@rm -f $(OBJS) $(OBJS:.o=.lo) $(M_OBJS)
@@ -64,6 +56,8 @@ depend:
 	@$(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $(OBJS:.o=.c) >$@
 
 $(OBJS): Makefile.rules
+
+$(LOBJS): Makefile.rules
 
 include depend
 

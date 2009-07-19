@@ -6,12 +6,17 @@ PLUGIN_DFILES	= Makefile $(OBJS:.o=.c) xmms.c bmp.c audacious.c winamp.c \
 WINDRES = i586-mingw32msvc-windres
 
 
-src/plugin/audacious.lo: src/plugin/audacious.c src/plugin/Makefile
-	@if [ "$(V)" -gt 0 ]; then \
-	    echo $(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ src/plugin/audacious.c; \
-	else echo "CC(fPIC)" src/plugin/audacious.c ; fi
-	@$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ src/plugin/audacious.c
+audacious: src/plugin/xmp-audacious.so
 
+src/plugin/xmp-audacious.so: src/plugin/audacious.lo $(LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) src/plugin/audacious.lo `pkg-config --libs audacious`'; \
+	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+src/plugin/audacious.lo: src/plugin/audacious.c src/plugin/Makefile
+	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ src/plugin/audacious.c'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
+	eval $$CMD
 
 install-audacious:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \
@@ -20,18 +25,18 @@ install-audacious:
 	$(INSTALL) -s -m755 xmp-audacious.so "$$DIR"
 
 
-#
-# BMP
-#
 
-bmp: xmp-bmp.so $(OBJS)
-	@true
+bmp: src/plugin/xmp-bmp.so
 
-xmp-bmp.so: $(OBJS) bmp.o $(TOPDIR)/lib/libxmp-pic.a
-	$(LD) -shared -o $@ $(OBJS) bmp.o `pkg-config --libs bmp` -L$(TOPDIR)/lib/ -lxmp-pic
+src/plugin/xmp-bmp.so: src/plugin/bmp.lo $(LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) src/plugin/bmp.lo `pkg-config --libs bmp`'; \
+	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
 
-bmp.o: bmp.c
-	$(CC) -c $(CFLAGS) $(XCFLAGS) `pkg-config --cflags bmp` -o $@ bmp.c
+src/plugin/bmp.lo: src/plugin/bmp.c src/plugin/Makefile
+	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags bmp` -o $@ src/plugin/bmp.c'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
+	eval $$CMD
 
 install-bmp:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir bmp`"; \
@@ -39,18 +44,19 @@ install-bmp:
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
 	$(INSTALL) -s -m755 xmp-bmp.so "$$DIR"
 
-#
-# XMMS
-#
 
-xmms: xmp-xmms.so $(OBJS)
-	@true
 
-xmp-xmms.so: $(OBJS) xmms.o $(TOPDIR)/lib/libxmp-pic.a
-	$(LD) -shared -o $@ $(OBJS) xmms.o `xmms-config --libs` -L$(TOPDIR)/lib/ -lxmp-pic
+xmms: src/plugins/xmp-xmms.so
 
-xmms.o: xmms.c
-	$(CC) -c $(CFLAGS) $(XCFLAGS) `xmms-config --cflags` -o $@ xmms.c
+src/plugins/xmp-xmms.so: src/plugin/xmms.lo $(LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) src/plugin/xmms.lo `xmms-config --libs`'; \
+	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+src/plugin/xmms.lo: src/plugin/xmms.c src/plugin/Makefile
+	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `xmms-config --cflags` -o $@ src/plugin/xmms.c'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
+	eval $$CMD
 
 install-xmms:
 	@DIR="$(DESTDIR)`xmms-config --input-plugin-dir`"; \
@@ -58,24 +64,21 @@ install-xmms:
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
 	$(INSTALL) -s -m755 xmp-xmms.so "$$DIR"
 
-#
-# Winamp
-#
 
-winamp: in_xmp.dll
-	@true
 
-in_xmp.dll: driver.o winamp.o resource.o $(TOPDIR)/lib/libxmp-pic.a resource.h
-	$(LD) -shared -mwindows -o $@ driver.o winamp.o resource.o -L$(TOPDIR)/lib/ -lxmp-pic
+winamp: src/plugins/in_xmp.dll
 
-winamp.o: winamp.c
-	$(CC) $(CFLAGS) $(XCFLAGS) -o $@ winamp.c
+src/plugin/in_xmp.dll: src/plugin/winamp.c src/plugin/resource.rc src/plugin/Makefile
+	@CMD='$(LD) -shared -mwindows -o $@ driver.o winamp.o resource.o'; \
+	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+#winamp.o: winamp.c
+#	$(CC) $(CFLAGS) $(XCFLAGS) -o $@ winamp.c
 
 resource.o: resource.rc resource.h
 	$(WINDRES) -o$@ resource.rc
 
-
-$(OBJS): Makefile
 
 include depend
 
