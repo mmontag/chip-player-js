@@ -1,21 +1,12 @@
 
-TOPDIR	= ../..
-OBJS	= ptpopen.o debug.o usleep.o
-DFILES	= Makefile $(OBJS:.o=.c) unistd.h config.h version.c ptpopen.h \
-	  in_xmp.dsp libxmp.dsp libxmp.dsw osdcomm.h xmp.dsp
-DDIRS	= sys
-LIB	= $(TOPDIR)/lib/libxmp.a
-CFILES	= version.c
-DCFILES	=
+WIN32_OBJS	= ptpopen.o debug.o usleep.o
+WIN32_DFILES	= Makefile $(WIN32_OBJS:.o=.c) unistd.h config.h ptpopen.h \
+		  in_xmp.dsp libxmp.dsp libxmp.dsw osdcomm.h xmp.dsp sys
+WIN32_PATH	= src/win32
 
-all: $(LIB)
+OBJS += $(addprefix $(WIN32_PATH)/,$(WIN32_OBJS))
 
-subdist:: version.c $(TOPDIR)/Makefile.rules.in
+dist-win32:
+	mkdir -p $(DIST)/$(WIN32_PATH)
+	cp -dp $(addprefix $(WIN32_PATH)/,$(WIN32_DFILES)) $(DIST)/$(WIN32_PATH)
 
-include $(TOPDIR)/Makefile.rules
-
-version.c: $(DFILES) $(TOPDIR)/Makefile.rules
-	@echo "Creating version id..."; \
-	printf "char *xmp_version = \"$(VERSION)\";\n">$@; \
-	printf "char *xmp_date = \"$(DATE)\";\n">>$@; \
-        printf "char *xmp_build = 0;\n">>$@

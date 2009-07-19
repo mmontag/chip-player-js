@@ -10,12 +10,12 @@ dist-plugin:
 
 
 WINDRES = i586-mingw32msvc-windres
-
+D_LOBJS	= $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_LOBJS))
 
 audacious: src/plugin/xmp-audacious.so
 
-src/plugin/xmp-audacious.so: src/plugin/audacious.lo $(LOBJS)
-	@CMD='$(LD) -shared -o $@ $(LOBJS) src/plugin/audacious.lo `pkg-config --libs audacious`'; \
+src/plugin/xmp-audacious.so: src/plugin/audacious.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) src/plugin/audacious.lo `pkg-config --libs audacious`'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -34,8 +34,8 @@ install-audacious:
 
 bmp: src/plugin/xmp-bmp.so
 
-src/plugin/xmp-bmp.so: src/plugin/bmp.lo $(LOBJS)
-	@CMD='$(LD) -shared -o $@ $(LOBJS) src/plugin/bmp.lo `pkg-config --libs bmp`'; \
+src/plugin/xmp-bmp.so: src/plugin/bmp.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) src/plugin/bmp.lo `pkg-config --libs bmp`'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -52,10 +52,10 @@ install-bmp:
 
 
 
-xmms: src/plugins/xmp-xmms.so
+xmms: src/plugin/xmp-xmms.so
 
-src/plugins/xmp-xmms.so: src/plugin/xmms.lo $(LOBJS)
-	@CMD='$(LD) -shared -o $@ $(LOBJS) src/plugin/xmms.lo `xmms-config --libs`'; \
+src/plugins/xmp-xmms.so: src/plugin/xmms.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) src/plugin/xmms.lo `xmms-config --libs`'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -72,18 +72,18 @@ install-xmms:
 
 
 
-winamp: src/plugins/in_xmp.dll
+winamp: src/plugin/in_xmp.dll
 
-src/plugin/in_xmp.dll: src/plugin/winamp.c src/plugin/resource.rc src/plugin/Makefile
-	@CMD='$(LD) -shared -mwindows -o $@ driver.o winamp.o resource.o'; \
+src/plugin/in_xmp.dll: src/plugin/winamp.lo src/plugin/resource.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(D_LOBJS) src/plugin/winamp.o src/plugin/resource.o'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
-#winamp.o: winamp.c
-#	$(CC) $(CFLAGS) $(XCFLAGS) -o $@ winamp.c
+src/plugin/winamp.lo: src/plugin/winamp.c src/plugin/Makefile
+	$(CC) $(CFLAGS) $(XCFLAGS) -o $@ src/plugin/winamp.c
 
-resource.o: resource.rc resource.h
-	$(WINDRES) -o$@ resource.rc
+src/plugin/resource.lo: src/plugin/resource.rc src/plugin/resource.h
+	$(WINDRES) -o$@ src/plugin/resource.rc
 
 
 include depend

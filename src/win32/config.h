@@ -3,8 +3,6 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define VERSION "2.6.0"
-
 #include "osdcomm.h"
 
 #define DRIVER_WIN32 1

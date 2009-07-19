@@ -18,6 +18,10 @@ include src/loaders/prowizard/Makefile
 include src/misc/Makefile
 include src/player/Makefile
 
+ifneq ($(PLATFORM_DIR),)
+include src/$(PLATFORM_DIR)/Makefile
+endif
+
 LOBJS = $(OBJS:.o=.lo)
 
 include src/main/Makefile
@@ -30,15 +34,20 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
 .SUFFIXES: .c .o .lo .a .so .dll
 
+# Implicit rules for object generation. Position-independent code is intended
+# to be used in plugins, so it's also built thread-safe and with the callback
+# driver only.
+
 .c.o:
 	@CMD='$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.o ; fi; \
 	eval $$CMD
 
 .c.lo:
-	@CMD='$(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) -o $*.lo $<'; \
+	@CMD='$(CC) $(CFLAGS) -fPIC -D_REENTRANT -DENABLE_PLUGIN $(XCFLAGS) -o $*.lo $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
 	eval $$CMD
+
 
 binaries: src/main/xmp $(PLUGINS)
 

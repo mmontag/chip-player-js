@@ -5,10 +5,9 @@ DRV	= file.c oss.c hpux.c bsd.c solaris.c oss_seq.c alsa.c alsa05.c \
 	  amiga.c sndio.c
 
 DRIVERS_OBJS	= file.o wav.o callback.o $(DRIVERS)
+DRIVERS_LOBJS	= callback.o
 DRIVERS_DFILES	= Makefile $(DRV) debug.c
 DRIVERS_PATH	= src/drivers
-
-OBJS += $(addprefix $(DRIVERS_PATH)/, $(DRIVERS_OBJS))
 
 dist-drivers:
 	mkdir -p $(DIST)/$(DRIVERS_PATH)
