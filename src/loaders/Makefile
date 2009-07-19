@@ -11,7 +11,14 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  coco_load.o pw_load.o
 
 LOADERS_OBJS	= common.o iff.o itsex.o asif.o $(LOADERS)
-LOADERS_DFILES	= Makefile $(OBJS:.o=.c) ftm_load.c med2_load.c \
+LOADERS_DFILES	= Makefile $(LOADERS_OBJS:.o=.c) ftm_load.c med2_load.c \
 		  asif.h far.h iff.h imf.h it.h liq.h load.h med.h mod.h \
 		  mtm.h ptm.h rtm.h s3m.h stm.h stx.h xm.h
+LOADERS_PATH	= src/loaders
+
+OBJS += $(addprefix $(LOADERS_PATH)/,$(LOADERS_OBJS))
+
+dist-loaders:
+	mkdir -p $(DIST)/$(LOADERS_PATH)
+	cp -dp $(addprefix $(LOADERS_PATH)/,$(LOADERS_DFILES)) $(DIST)/$(LOADERS_PATH)
 

@@ -1,7 +1,13 @@
 
 PLUGIN_OBJS	= driver.o
-PLUGIN_DFILES	= Makefile $(OBJS:.o=.c) xmms.c bmp.c audacious.c winamp.c \
-		  resource.rc resource.h in2.h out.h
+PLUGIN_DFILES	= Makefile $(PLUGIN_OBJS:.o=.c) xmms.c bmp.c audacious.c \
+		  winamp.c resource.rc resource.h in2.h out.h
+PLUGIN_PATH	= src/plugin
+
+dist-plugin:
+	mkdir -p $(DIST)/$(PLUGIN_PATH)
+	cp -dp $(addprefix $(PLUGIN_PATH)/,$(PLUGIN_DFILES)) $(DIST)/$(PLUGIN_PATH)
+
 
 WINDRES = i586-mingw32msvc-windres
 

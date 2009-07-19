@@ -1,34 +1,34 @@
 
-V = 0
+VERSION	= 2.8.0-pre
+DIST    = xmp-$(VERSION)
+MODULES = "mod.syfuid.long"
+DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
+	  scripts $(MODULES)
+DDIRS	= docs drivers etc include loaders misc player plugin prowiz main
+
+V	= 0
 
 all: binaries
 
 include Makefile.rules
 include src/drivers/Makefile
+include src/include/Makefile
 include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
 include src/misc/Makefile
 include src/player/Makefile
-OBJS += $(addprefix src/drivers/, $(DRIVERS_OBJS))
-OBJS += $(addprefix src/loaders/, $(LOADERS_OBJS))
-OBJS += $(addprefix src/loaders/prowizard/, $(PROWIZ_OBJS))
-OBJS += $(addprefix src/misc/, $(MISC_OBJS))
-OBJS += $(addprefix src/player/, $(PLAYER_OBJS))
 
 LOBJS = $(OBJS:.o=.lo)
 
 include src/main/Makefile
-M_OBJS += $(addprefix src/main/, $(MAIN_OBJS))
-
 include src/plugin/Makefile
 include docs/Makefile
+include etc/Makefile
+
 
 XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
 .SUFFIXES: .c .o .lo .a .so .dll
-
-	    #echo $(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $< ; \
-	#@$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<
 
 .c.o:
 	@CMD='$(CC) $(CFLAGS) $(XCFLAGS) -o $*.o $<'; \
@@ -45,7 +45,7 @@ binaries: src/main/xmp $(PLUGINS)
 clean:
 	@rm -f $(OBJS) $(OBJS:.o=.lo) $(M_OBJS)
 
-install: install-xmp install-docs $(addprefix install-, $(PLUGINS))
+install: install-xmp install-etc install-docs $(addprefix install-, $(PLUGINS))
 	@echo
 	@echo "  Installation complete. To customize, copy $(SYSCONFDIR)/xmp.conf"
 	@echo "  and $(SYSCONFDIR)/modules.conf to \$$HOME/.xmp/"
@@ -55,6 +55,19 @@ install: install-xmp install-docs $(addprefix install-, $(PLUGINS))
 depend:
 	@echo Building dependencies...
 	@$(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $(OBJS:.o=.c) >$@
+
+dist: dist-prepare dist-subdirs
+
+dist-prepare:
+	rm -Rf $(DIST) $(DIST).tar.gz
+	mkdir -p $(DIST)
+	cp -rp $(DFILES) $(DIST)/
+
+dist-subdirs: $(addprefix dist-,$(DDIRS))
+	chmod -R u+w $(DIST)/*
+	tar cvf - $(DIST) | gzip -9c > $(DIST).tar.gz
+	rm -Rf $(DIST)
+	ls -l $(DIST).tar.gz
 
 $(OBJS): Makefile.rules
 

@@ -1,16 +1,23 @@
 
 MAIN_OBJS	= getopt.o getopt1.o options.o main.o
-MAIN_DFILES	= Makefile $(OBJS:.o=.c)
+MAIN_DFILES	= Makefile $(MAIN_OBJS:.o=.c)
+MAIN_PATH	= src/main
 
-src/main/options.o: Version
+dist-main:
+	mkdir -p $(DIST)/$(MAIN_PATH)
+	cp -dp $(addprefix $(MAIN_PATH)/,$(MAIN_DFILES)) $(DIST)/$(MAIN_PATH)
+
+src/main/options.o: Makefile
+
+M_OBJS	= $(addprefix $(MAIN_PATH)/,$(MAIN_OBJS))
 
 src/main/xmp: $(OBJS) $(M_OBJS)
 	@CMD='$(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(LIBS)'; \
-	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
 install-xmp: src/main/xmp
-	@echo Installing binaries in $(DESTDIR)$(BINDIR)
+	@echo Installing xmp in $(DESTDIR)$(BINDIR)
 	@[ -d $(DESTDIR)$(BINDIR) ] || mkdir -p $(DESTDIR)$(BINDIR)
 	@$(INSTALL) -s -m755 $+ $(DESTDIR)$(BINDIR)
 
