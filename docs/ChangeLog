@@ -4,6 +4,7 @@ Stable versions
 2.8.0 ():
 	- allow parallel makes (R.I.P. 1996 buildsystem)
 	- add experimental, long postponed open player loop 
+	- generate win32 project files when packaging distfile
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

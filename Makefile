@@ -50,7 +50,7 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\" 
 binaries: src/main/xmp $(PLUGINS)
 
 clean:
-	@rm -f $(OBJS) $(OBJS:.o=.lo) $(M_OBJS)
+	@rm -f $(OBJS) $(OBJS:.o=.lo) $(M_OBJS) $(D_OBJS) $(CLEAN)
 
 install: install-xmp install-etc install-docs $(addprefix install-, $(PLUGINS))
 	@echo

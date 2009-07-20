@@ -10,7 +10,7 @@ dist-main:
 src/main/options.o: Makefile
 
 M_OBJS	= $(addprefix $(MAIN_PATH)/,$(MAIN_OBJS))
-D_OBJS	= $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_OBJS))
+D_OBJS	= $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_OBJS) $(DRIVERS))
 
 src/main/xmp: $(OBJS) $(M_OBJS) $(D_OBJS)
 	@CMD='$(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(D_OBJS) $(LIBS)'; \
