@@ -1175,11 +1175,6 @@ next_row:
 		f->frame = 0;
 		f->delay = 0;
 
-#if 0
-		if (f->row == -1)
-			goto next_row;
-#endif
-
 		if (f->pbreak) {
 			f->pbreak = 0;
 
@@ -1199,7 +1194,6 @@ next_row:
 
 		f->row++;
 
-#if 0
 		if (p->pause) {
 			xmp_drv_stoptimer(ctx);
 			while (p->pause) {
@@ -1208,7 +1202,6 @@ next_row:
 			}
 			xmp_drv_starttimer(ctx);
 	    	}
-#endif
 
 
 		/* check end of pattern */
