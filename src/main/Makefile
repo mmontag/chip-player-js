@@ -23,3 +23,11 @@ install-xmp: src/main/xmp
 	@$(INSTALL) -s -m755 $+ $(DESTDIR)$(BINDIR)
 
 
+# Test
+
+src/main/simple: $(OBJS) src/main/simple.o $(D_OBJS)
+	$(LD) -o $@ $(LDFLAGS) $(OBJS) src/main/simple.o $(D_OBJS) $(LIBS)
+
+src/main/simple2: $(OBJS) src/main/simple2.o $(D_OBJS)
+	$(LD) -o $@ $(LDFLAGS) $(OBJS) src/main/simple2.o $(D_OBJS) $(LIBS)
+
