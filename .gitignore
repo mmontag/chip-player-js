@@ -1,7 +1,14 @@
 .gitignore
 *.o
+*.lo
+*.so
 *.a
 *.obj
+*.mod
+*.mod.nt
+mod.*
+*.zip
+*.tar.gz
 tags
 depend
 *~
@@ -11,5 +18,4 @@ configure
 autom4te.cache
 Makefile.rules
 Makefile.rules.old
-CMakeCache.txt
-CMakeFiles
+src/main/xmp

@@ -31,7 +31,7 @@ include docs/Makefile
 include etc/Makefile
 
 
-XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
+XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\" -DTEST_OPEN_LOOP
 
 .SUFFIXES: .c .o .lo .a .so .dll
 
