@@ -262,6 +262,8 @@ int	ulaw_encode		(int);
 char	*str_adj		(char *);
 int	_xmp_scan_module	(struct xmp_context *);
 int	_xmp_player_start	(struct xmp_context *);
+int	_xmp_player_loop	(struct xmp_context *);
+void	_xmp_player_end		(struct xmp_context *);
 int	_xmp_tell_wait		(void);
 int	_xmp_select_read	(int, int);
 int	_xmp_read_rc		(struct xmp_context *);

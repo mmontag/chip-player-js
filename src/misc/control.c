@@ -182,6 +182,21 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 
 #ifdef TEST_OPEN_LOOP
 
+inline int xmp_player_start(xmp_context ctx)
+{
+	return _xmp_player_start((struct xmp_context *)ctx);
+}
+
+inline int xmp_player_loop(xmp_context ctx)
+{
+	return _xmp_player_loop((struct xmp_context *)ctx);
+}
+
+inline void xmp_player_end(xmp_context ctx)
+{
+	_xmp_player_end((struct xmp_context *)ctx);
+}
+
 int xmp_play_module(xmp_context ctx)
 {
 	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
@@ -189,9 +204,9 @@ int xmp_play_module(xmp_context ctx)
 	int t;
 
 	time(&t0);
-	xmp_player_start((struct xmp_context *)ctx);
-	while (xmp_player_loop((struct xmp_context *)ctx) == 0);
-	xmp_player_end((struct xmp_context *)ctx);
+	xmp_player_start(ctx);
+	while (xmp_player_loop(ctx) == 0);
+	xmp_player_end(ctx);
 	time(&t1);
 	t = difftime(t1, t0);
 

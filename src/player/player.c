@@ -831,6 +831,8 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 }
 
 
+#ifndef TEST_OPEN_LOOP
+
 int _xmp_player_start(struct xmp_context *ctx)
 {
     int num_rows, frame, e, ord;	/* rows, frame, end point, order */
@@ -1033,12 +1035,13 @@ end_module:
 }
 
 
-#ifdef TEST_OPEN_LOOP
+#else
+
 /*
  * EXPERIMENTAL open loop
  */
 
-int xmp_player_start(struct xmp_context *ctx)
+int _xmp_player_start(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_driver_context *d = &ctx->d;
@@ -1091,7 +1094,7 @@ int xmp_player_start(struct xmp_context *ctx)
 }
 
 
-int xmp_player_loop(struct xmp_context *ctx)
+int _xmp_player_loop(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_driver_context *d = &ctx->d;
@@ -1245,7 +1248,7 @@ next_order:
 }
     
 
-void xmp_player_end(struct xmp_context *ctx)
+void _xmp_player_end(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct flow_control *f = &p->flow;
