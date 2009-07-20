@@ -18,10 +18,7 @@ include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
 include src/misc/Makefile
 include src/player/Makefile
-
-ifneq ($(PLATFORM_DIR),)
-include src/$(PLATFORM_DIR)/Makefile
-endif
+include src/win32/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
