@@ -197,13 +197,11 @@ struct flow_control {
 	int loop_chn;
 	int* loop_start;
 	int* loop_stack;
-#ifdef TEST_OPEN_LOOP
 	int frame;
 	int num_rows;
 	int ord;
 	int end_point;
 	double playing_time;
-#endif
 };
 
 struct xmp_player_context {
@@ -262,7 +260,7 @@ int	ulaw_encode		(int);
 char	*str_adj		(char *);
 int	_xmp_scan_module	(struct xmp_context *);
 int	_xmp_player_start	(struct xmp_context *);
-int	_xmp_player_loop	(struct xmp_context *);
+int	_xmp_player_frame	(struct xmp_context *);
 void	_xmp_player_end		(struct xmp_context *);
 int	_xmp_tell_wait		(void);
 int	_xmp_select_read	(int, int);

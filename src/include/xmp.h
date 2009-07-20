@@ -221,7 +221,7 @@ int xmp_open_audio(xmp_context);
 void xmp_close_audio(xmp_context);
 int xmp_play_module(xmp_context);
 int xmp_player_start(xmp_context);
-int xmp_player_loop(xmp_context);
+int xmp_player_frame(xmp_context);
 void xmp_player_end(xmp_context);
 void xmp_release_module(xmp_context);
 int xmp_verbosity_level(xmp_context, int);
