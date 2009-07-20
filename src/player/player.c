@@ -1055,7 +1055,7 @@ int xmp_player_start(struct xmp_context *ctx)
 
 	p->gvol_slide = 0;
 	p->gvol_base = m->volbase;
-	f->ord = o->start;
+	p->pos = f->ord = o->start;
 	f->frame = 0;
 	f->row = 0;
 	f->num_rows = m->xxp[m->xxo[f->ord]]->rows;
@@ -1118,6 +1118,7 @@ int xmp_player_loop(struct xmp_context *ctx)
 		f->jump = f->ord;
 		f->jumpline = m->xxo_fstrow[f->ord--];
 		f->row = -1;
+		f->pbreak = 1;
 		xmp_drv_bufwipe(ctx);
 		xmp_drv_sync(ctx, 0);
 		xmp_drv_reset(ctx);
