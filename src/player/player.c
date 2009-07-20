@@ -1116,7 +1116,8 @@ int _xmp_player_loop(struct xmp_context *ctx)
 			f->end_point = p->xmp_scan_num;
 
 		p->tempo = m->xxo_info[f->ord = p->pos].tempo;
-		p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[f->ord].bpm);
+		p->xmp_bpm = m->xxo_info[f->ord].bpm;
+		p->tick_time = m->rrate / p->xmp_bpm;
 		m->volume = m->xxo_info[f->ord].gvl;
 		f->jump = f->ord;
 		f->jumpline = m->xxo_fstrow[f->ord--];
@@ -1242,7 +1243,6 @@ next_order:
 			}
 		}
 	}
-
 
 	return 0;
 }
