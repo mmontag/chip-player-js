@@ -28,7 +28,7 @@ src/win32/xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	    echo $$i | sed 's!^src!SOURCE=..!;s!/!\\!g' >> $@.tmp; \
 	    echo "# End Source File" >> $@.tmp; \
 	done
-	@sed '/@SOURCES@/r $@.tmp' < $@.in > $@
+	@sed 's/@VERSION@/$(VERSION)/g;/@SOURCES@/r $@.tmp' < $@.in > $@
 	@rm -f $@.tmp
 
 src/win32/in_xmp.dsp: Makefile Makefile.rules src/*/Makefile
@@ -39,6 +39,6 @@ src/win32/in_xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	    echo $$i | sed 's!^src!SOURCE=..!;s!/!\\!g' >> $@.tmp; \
 	    echo "# End Source File" >> $@.tmp; \
 	done
-	@sed '/@SOURCES@/r $@.tmp' < $@.in > $@
+	@sed 's/@VERSION@/$(VERSION)/g;/@SOURCES@/r $@.tmp' < $@.in > $@
 	@rm -f $@.tmp
 
