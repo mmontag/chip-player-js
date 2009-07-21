@@ -88,520 +88,519 @@ LINK32=link.exe
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
-# @SOURCES@
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\common.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\iff.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\itsex.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\asif.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\xm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\mod_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\s3m_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\stm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\669_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\far_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\mtm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\ptm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\okt_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\alm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\amd_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\rad_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\ult_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\mdl_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\it_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\stx_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\pt3_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\sfx_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\flt_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\st_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\emod_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\imf_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\digi_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\fnk_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\ice_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\hsc_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\liq_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\ims_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\masi_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\amf_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\psm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\stim_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\mmd1_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\mmd3_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\rtm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\dmf_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\tcb_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\dt_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\gtk_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\no_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\arch_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\sym_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\dtt_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\mgt_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\med3_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\med4_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\ssmt_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\dbm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\umx_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\gdm_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\coco_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\pw_load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\ptktable.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\tuning.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\ac1d.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\di.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\eureka.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\fc-m.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\fuchs.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\fuzzac.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\gmc.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\heatseek.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\kris.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\ksm.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\mp.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\np1.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\np2.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\np3.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\p60a.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\pm10c.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\pm18a.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\pha.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\prun1.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\prun2.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\tdd.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\unic.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\unic2.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\wn.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\zen.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\tp3.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\p40.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\xann.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\p50a.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\pp21.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\loaders\prowizard\starpack.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\control.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\info.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\readdata.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\load.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\ppdepack.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\unsqsh.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\mmcmp.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\readrle.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\readhuff.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\readlzw.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\unarc.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\arcfs.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\oxm.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\mkstemp.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\xfd.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\misc\crc32.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\convert.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\driver.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\formats.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\misc.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\period.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\player.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\readrc.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\scan.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\ulaw.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\cruncher.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\med_synth.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\filter.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\fmopl.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\synth.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\player\mix_all.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\drivers\file.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\drivers\wav.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\drivers\callback.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\drivers\win32.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\main\getopt.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\main\getopt1.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\main\options.c
 # End Source File
--e # Begin Source File
+# Begin Source File
 
 SOURCE=..\main\main.c
 # End Source File
