@@ -24,7 +24,8 @@ src/win32/xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	@echo Generate $@
 	@rm -f $@.tmp
 	@for i in $(OBJS:.o=.c) $(W32DRV_OBJS:.o=.c)  $(M_OBJS:.o=.c); do \
-	    echo "# Begin Source File\n" >> $@.tmp; \
+	    echo "# Begin Source File" >> $@.tmp; \
+	    echo >> $@.tmp; \
 	    echo $$i | sed 's!^src!SOURCE=..!;s!/!\\!g' >> $@.tmp; \
 	    echo "# End Source File" >> $@.tmp; \
 	done
@@ -35,7 +36,8 @@ src/win32/in_xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	@echo Generate $@
 	@rm -f $@.tmp
 	@for i in $(LOBJS:.lo=.c) $(W32DRV_LOBJS:.lo=.c) ; do \
-	    echo "# Begin Source File\n" >> $@.tmp; \
+	    echo "# Begin Source File" >> $@.tmp; \
+	    echo >> $@.tmp; \
 	    echo $$i | sed 's!^src!SOURCE=..!;s!/!\\!g' >> $@.tmp; \
 	    echo "# End Source File" >> $@.tmp; \
 	done
