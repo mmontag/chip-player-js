@@ -574,6 +574,10 @@ SOURCE=..\player\mix_all.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\player\effects.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\drivers\file.c
 # End Source File
 # Begin Source File
