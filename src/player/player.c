@@ -37,6 +37,15 @@
 #include "synth.h"
 
 
+/* Values for multi-retrig */
+static struct retrig_t rval[] = {
+    {   0,  1,  1 }, {  -1,  1,  1 }, {  -2,  1,  1 }, {  -4,  1,  1 },
+    {  -8,  1,  1 }, { -16,  1,  1 }, {   0,  2,  3 }, {   0,  1,  2 },
+    {   0,  1,  1 }, {   1,  1,  1 }, {   2,  1,  1 }, {   4,  1,  1 },
+    {   8,  1,  1 }, {  16,  1,  1 }, {   0,  3,  2 }, {   0,  2,  1 },
+    {   0,  0,  1 }	/* Note cut */
+};
+
 /* Vibrato/tremolo waveform tables */
 static int waveform[4][64] = {
    {   0,  24,  49,  74,  97, 120, 141, 161, 180, 197, 212, 224,
@@ -77,7 +86,7 @@ static int waveform[4][64] = {
 static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
 static void play_channel (struct xmp_context *, int, int);
 
-#include "effects.c"
+/* #include "effects.c" */
 
 
 static void dummy(unsigned long ul)

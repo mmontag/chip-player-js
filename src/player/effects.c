@@ -6,6 +6,13 @@
  * for more information.
  */
 
+#include "common.h"
+#include "player.h"
+#include "effects.h"
+#include "period.h"
+#include "driver.h"
+
+
 #define NOT_IMPLEMENTED
 
 #define DO_TONEPORTA() { \
@@ -16,16 +23,6 @@
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 }
 
-
-/* Values for multi-retrig */
-static struct retrig_t rval[] = {
-    {   0,  1,  1 }, {  -1,  1,  1 }, {  -2,  1,  1 }, {  -4,  1,  1 },
-    {  -8,  1,  1 }, { -16,  1,  1 }, {   0,  2,  3 }, {   0,  1,  2 },
-    {   0,  1,  1 }, {   1,  1,  1 }, {   2,  1,  1 }, {   4,  1,  1 },
-    {   8,  1,  1 }, {  16,  1,  1 }, {   0,  3,  2 }, {   0,  2,  1 },
-    {   0,  0,  1 }	/* Note cut */
-};
-    
 
 void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
 {
@@ -87,10 +84,13 @@ fx_porta_up:
 	    }
 	}
 	SET(PITCHBEND);
-	if ((xc->porta = fxp) != 0)
+	if ((xc->porta = fxp) != 0) {
 	    xc->f_val = -fxp;
-	else if (xc->f_val > 0)
+	    if (m->fetch & XMP_CTL_UNISLD)
+		xc->s_val = -fxp;
+	} else if (xc->f_val > 0) {
 	    xc->f_val *= -1;
+	}
 	break;
     case FX_PORTA_DN:				/* Portamento down */
 fx_porta_dn:
@@ -112,10 +112,13 @@ fx_porta_dn:
 	    }
 	}
 	SET(PITCHBEND);
-	if ((xc->porta = fxp) != 0)
+	if ((xc->porta = fxp) != 0) {
 	    xc->f_val = fxp;
-	else if (xc->f_val < 0)
+	    if (m->fetch & XMP_CTL_UNISLD)
+		xc->s_val = fxp;
+	} else if (xc->f_val < 0) {
 	    xc->f_val *= -1;
+	}
 	break;
     case FX_TONEPORTA:				/* Tone portamento */
 	if (!TEST (IS_VALID))
