@@ -10,17 +10,17 @@ dist-plugin:
 
 
 WINDRES = i586-mingw32msvc-windres
-D_LOBJS	= $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_LOBJS))
+
 
 audacious: src/plugin/xmp-audacious.so
 
-src/plugin/xmp-audacious.so: src/plugin/audacious.lo $(LOBJS) $(D_LOBJS)
-	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) src/plugin/audacious.lo `pkg-config --libs audacious`'; \
+$(PLUGIN_PATH)/xmp-audacious.so: $(PLUGIN_PATH)/audacious.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/audacious.lo `pkg-config --libs audacious`'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
-src/plugin/audacious.lo: src/plugin/audacious.c src/plugin/Makefile
-	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ src/plugin/audacious.c'; \
+$(PLUGIN_PATH)/audacious.lo: $(PLUGIN_PATH)/audacious.c $(PLUGIN_PATH)/Makefile
+	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ $(PLUGIN_PATH)/audacious.c'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
 	eval $$CMD
 
@@ -28,19 +28,19 @@ install-audacious:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \
 	echo "Installing xmp-audacious.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -s -m755 src/plugin/xmp-audacious.so "$$DIR"
+	$(INSTALL) -s -m755 $(PLUGIN_PATH)/xmp-audacious.so "$$DIR"
 
 
 
-bmp: src/plugin/xmp-bmp.so
+bmp: $(PLUGIN_PATH)/xmp-bmp.so
 
-src/plugin/xmp-bmp.so: src/plugin/bmp.lo $(LOBJS) $(D_LOBJS)
-	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) src/plugin/bmp.lo `pkg-config --libs bmp`'; \
+$(PLUGIN_PATH)/xmp-bmp.so: $(PLUGIN_PATH)/bmp.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/bmp.lo `pkg-config --libs bmp`'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
-src/plugin/bmp.lo: src/plugin/bmp.c src/plugin/Makefile
-	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags bmp` -o $@ src/plugin/bmp.c'; \
+$(PLUGIN_PATH)/bmp.lo: $(PLUGIN_PATH)/bmp.c $(PLUGIN_PATH)/Makefile
+	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags bmp` -o $@ $(PLUGIN_PATH)/bmp.c'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
 	eval $$CMD
 
@@ -48,19 +48,19 @@ install-bmp:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir bmp`"; \
 	echo "Installing xmp-bmp.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -s -m755 src/plugin/xmp-bmp.so "$$DIR"
+	$(INSTALL) -s -m755 $(PLUGIN_PATH)/xmp-bmp.so "$$DIR"
 
 
 
-xmms: src/plugin/xmp-xmms.so
+xmms: $(PLUGIN_PATH)/xmp-xmms.so
 
-src/plugins/xmp-xmms.so: src/plugin/xmms.lo $(LOBJS) $(D_LOBJS)
-	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) src/plugin/xmms.lo `xmms-config --libs`'; \
+$(PLUGIN_PATH)s/xmp-xmms.so: $(PLUGIN_PATH)/xmms.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/xmms.lo `xmms-config --libs`'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
-src/plugin/xmms.lo: src/plugin/xmms.c src/plugin/Makefile
-	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `xmms-config --cflags` -o $@ src/plugin/xmms.c'; \
+$(PLUGIN_PATH)/xmms.lo: $(PLUGIN_PATH)/xmms.c $(PLUGIN_PATH)/Makefile
+	@CMD='$(CC) -c $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `xmms-config --cflags` -o $@ $(PLUGIN_PATH)/xmms.c'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
 	eval $$CMD
 
@@ -68,23 +68,20 @@ install-xmms:
 	@DIR="$(DESTDIR)`xmms-config --input-plugin-dir`"; \
 	echo "Installing xmp-xmms.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -s -m755 src/plugin/xmp-xmms.so "$$DIR"
+	$(INSTALL) -s -m755 $(PLUGIN_PATH)/xmp-xmms.so "$$DIR"
 
 
 
-winamp: src/plugin/in_xmp.dll
+winamp: $(PLUGIN_PATH)/in_xmp.dll
 
-src/plugin/in_xmp.dll: src/plugin/winamp.lo src/plugin/resource.lo $(LOBJS) $(D_LOBJS)
-	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(D_LOBJS) src/plugin/winamp.o src/plugin/resource.o'; \
+$(PLUGIN_PATH)/in_xmp.dll: $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/winamp.o $(PLUGIN_PATH)/resource.o'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
-src/plugin/winamp.lo: src/plugin/winamp.c src/plugin/Makefile
-	$(CC) $(CFLAGS) $(XCFLAGS) -o $@ src/plugin/winamp.c
+$(PLUGIN_PATH)/winamp.lo: $(PLUGIN_PATH)/winamp.c $(PLUGIN_PATH)/Makefile
+	$(CC) $(CFLAGS) $(XCFLAGS) -o $@ $(PLUGIN_PATH)/winamp.c
 
-src/plugin/resource.lo: src/plugin/resource.rc src/plugin/resource.h
-	$(WINDRES) -o$@ src/plugin/resource.rc
-
-
-include depend
+$(PLUGIN_PATH)/resource.lo: $(PLUGIN_PATH)/resource.rc $(PLUGIN_PATH)/resource.h
+	$(WINDRES) -o$@ $(PLUGIN_PATH)/resource.rc
 

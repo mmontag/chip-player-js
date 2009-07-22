@@ -9,6 +9,9 @@ DRIVERS_LOBJS	= callback.o
 DRIVERS_DFILES	= Makefile $(DRV) debug.c
 DRIVERS_PATH	= src/drivers
 
+D_OBJS	= $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_OBJS) $(DRIVERS))
+D_LOBJS = $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_LOBJS))
+
 dist-drivers:
 	mkdir -p $(DIST)/$(DRIVERS_PATH)
 	cp -dp $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_DFILES)) $(DIST)/$(DRIVERS_PATH)
