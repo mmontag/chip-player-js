@@ -22,7 +22,6 @@
 #include "mixer.h"
 
 static int drv_parm = 0;
-extern struct xmp_drv_info drv_callback;
 
 
 int pw_init(void);
@@ -67,19 +66,6 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 	return &((struct xmp_context *)ctx)->o;
 }
 
-void xmp_init_callback(xmp_context ctx, void (*callback) (void *, int))
-{
-	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
-
-	xmp_drv_register(&drv_callback);
-	xmp_init_formats(ctx);
-	pw_init();
-
-	xmp_register_driver_callback(ctx, callback);
-
-	o->drv_id = "callback";
-}
-
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {
 	int num;
@@ -97,8 +83,6 @@ void xmp_init(xmp_context ctx, int argc, char **argv)
 	}
 	if (num >= argc)
 		_xmp_read_rc((struct xmp_context *)ctx);
-
-	/* _xmp_tell_wait(); */
 }
 
 inline int xmp_open_audio(xmp_context ctx)
@@ -195,6 +179,17 @@ inline void xmp_player_end(xmp_context ctx)
 	_xmp_player_end((struct xmp_context *)ctx);
 }
 
+inline void xmp_play_buffer(xmp_context ctx)
+{
+	xmp_drv_bufdump((struct xmp_context *)ctx);
+}
+
+void xmp_get_buffer(xmp_context ctx, void **buffer, int *size)
+{
+	*size = xmp_drv_softmixer((struct xmp_context *)ctx);
+	*buffer = xmp_smix_buffer((struct xmp_context *)ctx);
+}
+
 int xmp_play_module(xmp_context ctx)
 {
 	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
@@ -203,7 +198,8 @@ int xmp_play_module(xmp_context ctx)
 
 	time(&t0);
 	xmp_player_start(ctx);
-	while (xmp_player_frame(ctx) == 0);
+	while (xmp_player_frame(ctx) == 0)
+		xmp_play_buffer(ctx);
 	xmp_player_end(ctx);
 	time(&t1);
 	t = difftime(t1, t0);

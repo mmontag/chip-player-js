@@ -318,26 +318,6 @@ InputPlugin *get_iplugin_info()
 #endif
 
 
-static void driver_callback(void *b, int i)
-{
-#if __AUDACIOUS_PLUGIN_API__ >= 2
-	play_data.ipb->pass_audio(play_data.ipb, play_data.fmt, play_data.nch,
-					i, b, &play_data.ipb->playing);
-
-#else
-	xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
-			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
-			xmp_cfg.force_mono ? 1 : 2, i, b);
-	
-	while (xmp_ip.output->buffer_free() < i && play_data.ipb->playing)
-		usleep(10000);
-
-	if (play_data.ipb->playing)
-		xmp_ip.output->write_audio(b, i);
-#endif
-}
-
-
 static void init(void)
 {
 	ConfigDb *cfg;
@@ -371,7 +351,7 @@ static void init(void)
 		aud_cfg_db_close(cfg);
 	}
 
-	xmp_init_callback(ctx, driver_callback);
+	xmp_init(ctx, 0, NULL);
 }
 
 
@@ -501,7 +481,7 @@ static void play_file(InputPlayback *ipb)
 
 	opt->resol = 8;
 	opt->verbosity = 0;
-	opt->drv_id = "callback";
+	opt->drv_id = "smix";
 
 	switch (xmp_cfg.mixing_freq) {
 	case 1:
@@ -589,8 +569,33 @@ static void play_file(InputPlayback *ipb)
 static gpointer play_loop(gpointer arg)
 {
 	InputPlayback *ipb = arg;
+	void *data;
+	int size;
 
-	xmp_play_module(ctx);
+	xmp_player_start(ctx);
+	while (xmp_player_frame(ctx) == 0) {
+		xmp_get_buffer(ctx, &data, &size);
+
+#if __AUDACIOUS_PLUGIN_API__ >= 2
+		play_data.ipb->pass_audio(play_data.ipb, play_data.fmt,
+			play_data.nch, size, data, &play_data.ipb->playing);
+
+#else
+		xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
+			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
+			xmp_cfg.force_mono ? 1 : 2, size, data);
+	
+		while (xmp_ip.output->buffer_free() < i && play_data.ipb->playing)
+			usleep(10000);
+
+		if (play_data.ipb->playing)
+			xmp_ip.output->write_audio(data, size);
+#endif
+	}
+
+
+	xmp_player_end(ctx);
+
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 

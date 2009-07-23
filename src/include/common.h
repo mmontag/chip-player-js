@@ -224,7 +224,6 @@ struct xmp_driver_context {
 	struct xmp_drv_info *driver;	/* Driver */
 	char *description;		/* Driver description */
 	char **help;			/* Driver help info */
-	void (*callback)(void *, int);
 
 	int memavl;			/* Memory availble in sound card */
 	int numtrk;			/* Number of tracks */
@@ -238,6 +237,9 @@ struct xmp_driver_context {
 	int *ch2vo_array;
 	struct voice_info *voice_array;
 	struct patch_info **patch_array;
+
+	void *buffer;
+	int size;
 };
 
 struct xmp_context {

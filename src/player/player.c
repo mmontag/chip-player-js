@@ -968,7 +968,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		f->playing_time += m->rrate / (100 * p->xmp_bpm);
 	}
 
-	xmp_drv_bufdump(ctx);
+	//xmp_drv_bufdump(ctx);
 
 	f->frame++;
 
