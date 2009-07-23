@@ -67,6 +67,7 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 	return &((struct xmp_context *)ctx)->o;
 }
 
+#ifdef ENABLE_PLUGIN
 void xmp_init_callback(xmp_context ctx, void (*callback) (void *, int))
 {
 	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
@@ -79,6 +80,7 @@ void xmp_init_callback(xmp_context ctx, void (*callback) (void *, int))
 
 	o->drv_id = "callback";
 }
+#endif
 
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {

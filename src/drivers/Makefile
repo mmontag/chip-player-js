@@ -4,7 +4,7 @@ DRV	= file.c oss.c hpux.c bsd.c solaris.c oss_seq.c alsa.c alsa05.c \
 	  win32.c callback.c wav.c osx.c beos.c alsa_seq.c pulseaudio.c \
 	  amiga.c sndio.c
 
-DRIVERS_OBJS	= file.o wav.o callback.o
+DRIVERS_OBJS	= file.o wav.o
 DRIVERS_LOBJS	= callback.o
 DRIVERS_DFILES	= Makefile $(DRV) debug.c
 DRIVERS_PATH	= src/drivers

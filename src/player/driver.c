@@ -59,7 +59,7 @@ extern struct xmp_drv_info drv_amiga;
 extern struct xmp_drv_info drv_win32;
 
 
-void (*xmp_event_callback) (unsigned long);
+void (*xmp_event_callback)(unsigned long);
 
 #include "mixer.c"
 
