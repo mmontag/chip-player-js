@@ -2,8 +2,8 @@ Stable versions
 ---------------
 
 3.0.0 ():
-	- allow parallel makes (R.I.P. 1996 buildsystem)
-	- add experimental, long postponed open player loop 
+	- allow parallel build (R.I.P. 1996 buildsystem)
+	- implement the long postponed open player loop 
 	- generate win32 project files when packaging distfile
 	- remove callback driver
 	- split unified flags/quirks into separate variables
