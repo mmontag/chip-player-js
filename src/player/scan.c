@@ -58,7 +58,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
     if (m->xxh->len == 0)
 	return 0;
 
-    medbpm = m->fetch & XMP_CTL_MEDBPM;
+    medbpm = m->quirk & XMP_QRK_MEDBPM;
 
     tab_cnt = calloc (sizeof (char *), m->xxh->len);
     for (ord = m->xxh->len; ord--;)
@@ -132,7 +132,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
 
 	if (!m->xxo_fstrow[ord] && ord) {
-	    if (ord == o->start && !(m->fetch & XMP_CTL_LOOP)) {
+	    if (ord == o->start && !(m->flags & XMP_CTL_LOOP)) {
 		if (medbpm)
 	            clock_rst = clock + 132 * alltmp / 5 / bpm;
 		else
@@ -187,7 +187,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		    parm = (f1 == FX_G_VOLSLIDE) ? p1 : p2;
 		    if (parm)
 			gvol_slide = MSN(parm) - LSN(parm);
-		    gvl += gvol_slide * (tempo - !(m->fetch & XMP_CTL_VSALL));
+		    gvl += gvol_slide * (tempo - !(m->quirk & XMP_QRK_VSALL));
 		}
 
 		if ((f1 == FX_TEMPO && p1) || (f2 == FX_TEMPO && p2)) {
@@ -197,7 +197,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		    if (parm) {
 			if (parm <= 0x20)
 			    tempo = parm;
-			else if (~m->fetch & XMP_CTL_VBLANK) {
+			else if (~m->flags & XMP_CTL_VBLANK) {
 			    if (medbpm)
 				clock += 132 * alltmp / 5 / bpm;
 			    else
@@ -274,7 +274,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 				    loop_chn = chn + 1;
 				else {
 				    loop_flg--;
-				    if (m->fetch & XMP_CTL_S3MLOOP)
+				    if (m->quirk & XMP_QRK_S3MLOOP)
 					loop_row[chn] = row + 1;
 				}
 			    } else {

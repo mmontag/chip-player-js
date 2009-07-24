@@ -226,7 +226,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
     reportv(ctx, 0, "\n");
 
-    m->fetch |= XMP_CTL_VSALL | XMP_MODE_ST3;
+    m->quirk |= XMP_QRK_VSALL | XMP_QUIRK_ST3;
 
     return 0;
 }

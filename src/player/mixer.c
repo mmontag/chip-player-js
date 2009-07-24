@@ -165,7 +165,7 @@ inline static void smix_resetvar(struct xmp_context *ctx)
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
 
-    smix_ticksize = m->fetch & XMP_CTL_MEDBPM ?
+    smix_ticksize = m->quirk & XMP_QRK_MEDBPM ?
 	o->freq * m->rrate * 33 / p->xmp_bpm / 12500 :
     	o->freq * m->rrate / p->xmp_bpm / 100;
 
@@ -484,7 +484,7 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     xmp_smix_setvol(ctx, voc, 0);
 
     vi->sptr = extern_drv ? NULL : pi->data;
-    vi->fidx = m->fetch & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
+    vi->fidx = m->flags & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
 
     if (o->outfmt & XMP_FMT_MONO) {
 	vi->pan = TURN_OFF;
@@ -496,7 +496,7 @@ static void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     if (pi->mode & WAVE_16_BITS)
 	vi->fidx |= FLAG_16_BITS;
 
-    if (m->fetch & XMP_CTL_FILTER)
+    if (m->flags & XMP_CTL_FILTER)
 	vi->fidx |= FLAG_FILTER;
 
     if (pi->mode & WAVE_LOOPING)

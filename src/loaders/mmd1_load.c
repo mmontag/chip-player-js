@@ -224,10 +224,10 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * convert header
 	 */
 	m->c4rate = C4_NTSC_RATE;
-	m->fetch |= song.flags & FLAG_STSLIDE ? 0 : XMP_CTL_VSALL;
+	m->quirk |= song.flags & FLAG_STSLIDE ? 0 : XMP_QRK_VSALL;
 	bpm_on = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
-	m->fetch |= bpm_on ? 0 : XMP_CTL_MEDBPM;
+	m->quirk |= bpm_on ? 0 : XMP_QRK_MEDBPM;
 
 	/* From the OctaMEDv4 documentation:
 	 *

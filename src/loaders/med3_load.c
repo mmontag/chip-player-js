@@ -298,7 +298,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 	reportv(ctx, 0, "Play transpose : %d semitones\n", transp);
 
 	if (sliding == 6)
-		m->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
+		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
 
 	for (i = 0; i < 32; i++)
 		m->xxi[i][0].xpo = transp;

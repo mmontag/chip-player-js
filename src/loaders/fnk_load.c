@@ -292,7 +292,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxc[i].pan = 0x80;
 
     m->volbase = 0xff;
-    m->fetch = XMP_CTL_VSALL;
+    m->quirk = XMP_QRK_VSALL;
 
     return 0;
 }

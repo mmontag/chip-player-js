@@ -206,15 +206,15 @@ static void parse_modconf(struct xmp_context *ctx, char *s, unsigned crc, unsign
 
 	val = strtok (NULL, " \t\n");
 
-	getval_yn(m->fetch, "8bit", XMP_CTL_8BIT);
-	getval_yn(m->fetch, "interpolate", XMP_CTL_ITPT);
-	getval_yn(m->fetch, "loop", XMP_CTL_LOOP);
-	getval_yn(m->fetch, "reverse", XMP_CTL_REVERSE);
-	getval_yn(m->fetch, "pan", XMP_CTL_DYNPAN);
-	getval_yn(m->fetch, "filter", XMP_CTL_FILTER);
-	getval_yn(m->fetch, "fixloop", XMP_CTL_FIXLOOP);
-	getval_yn(m->fetch, "fx9bug", XMP_CTL_FX9BUG);
-	getval_yn(m->fetch, "vblank", XMP_CTL_VBLANK);
+	getval_yn(m->flags, "8bit", XMP_CTL_8BIT);
+	getval_yn(m->flags, "interpolate", XMP_CTL_ITPT);
+	getval_yn(m->flags, "loop", XMP_CTL_LOOP);
+	getval_yn(m->flags, "reverse", XMP_CTL_REVERSE);
+	getval_yn(m->flags, "pan", XMP_CTL_DYNPAN);
+	getval_yn(m->flags, "filter", XMP_CTL_FILTER);
+	getval_yn(m->flags, "fixloop", XMP_CTL_FIXLOOP);
+	getval_yn(m->quirk, "fx9bug", XMP_QRK_FX9BUG);
+	getval_yn(m->flags, "vblank", XMP_CTL_VBLANK);
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
 	getval_no("mix", o->mix);
 	getval_no("crunch", o->crunch);

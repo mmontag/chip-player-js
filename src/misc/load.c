@@ -507,7 +507,8 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->volume = 0x40;
     m->vol_xlat = NULL;
     /* Reset control for next module */
-    m->fetch = o->flags & ~XMP_CTL_FILTER;
+    m->flags = o->flags & ~XMP_CTL_FILTER;	/* verify this later */
+    m->quirk = o->quirk;
     m->comment = NULL;
 
     m->xxh = calloc(sizeof (struct xxm_header), 1);
@@ -580,7 +581,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	m->xxh->rst = 0;
 
     /* Disable filter if --nofilter is specified */
-    m->fetch &= ~(~o->flags & XMP_CTL_FILTER);
+    m->flags &= ~(~o->flags & XMP_CTL_FILTER);
 
     str_adj(m->name);
     if (!*m->name)
@@ -588,7 +589,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     if (o->verbosity > 1) {
 	report("Module looping : %s\n",
-	    m->fetch & XMP_CTL_LOOP ? "yes" : "no");
+	    m->flags & XMP_CTL_LOOP ? "yes" : "no");
 	report("Period mode    : %s\n",
 	    m->xxh->flg & XXM_FLG_LINEAR ? "linear" : "Amiga");
     }
@@ -601,8 +602,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 	report("Base volume    : %d\n", m->volbase);
 	report("C4 replay rate : %d\n", m->c4rate);
 	report("Channel mixing : %d%% (dynamic pan %s)\n",
-		m->fetch & XMP_CTL_REVERSE ? -o->mix : o->mix,
-		m->fetch & XMP_CTL_DYNPAN ? "enabled" : "disabled");
+		m->flags & XMP_CTL_REVERSE ? -o->mix : o->mix,
+		m->flags & XMP_CTL_DYNPAN ? "enabled" : "disabled");
 	report("Checksum       : %u %ld\n", crc, st.st_size);
 	report("Volume amplify : %s\n", amp_factor[o->amplify]);
     }
@@ -623,7 +624,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     t = _xmp_scan_module((struct xmp_context *)ctx);
 
     if (o->verbosity) {
-	if (m->fetch & XMP_CTL_LOOP)
+	if (m->flags & XMP_CTL_LOOP)
 	    report ("One loop time  : %dmin%02ds\n",
 		(t + 500) / 60000, ((t + 500) / 1000) % 60);
 	else

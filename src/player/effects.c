@@ -66,7 +66,7 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
 	break;
     case FX_PORTA_UP:				/* Portamento up */
 fx_porta_up:
-	if (m->fetch & XMP_CTL_FINEFX) {
+	if (m->quirk & XMP_QRK_FINEFX) {
 	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
@@ -86,7 +86,7 @@ fx_porta_up:
 	SET(PITCHBEND);
 	if ((xc->porta = fxp) != 0) {
 	    xc->f_val = -fxp;
-	    if (m->fetch & XMP_CTL_UNISLD)
+	    if (m->quirk & XMP_QRK_UNISLD)
 		xc->s_val = -fxp;
 	} else if (xc->f_val > 0) {
 	    xc->f_val *= -1;
@@ -94,7 +94,7 @@ fx_porta_up:
 	break;
     case FX_PORTA_DN:				/* Portamento down */
 fx_porta_dn:
-	if (m->fetch & XMP_CTL_FINEFX) {
+	if (m->quirk & XMP_QRK_FINEFX) {
 	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
@@ -114,7 +114,7 @@ fx_porta_dn:
 	SET(PITCHBEND);
 	if ((xc->porta = fxp) != 0) {
 	    xc->f_val = fxp;
-	    if (m->fetch & XMP_CTL_UNISLD)
+	    if (m->quirk & XMP_QRK_UNISLD)
 		xc->s_val = fxp;
 	} else if (xc->f_val < 0) {
 	    xc->f_val *= -1;
@@ -126,7 +126,7 @@ fx_porta_dn:
 	DO_TONEPORTA();
 	if (fxp) {
 	    xc->s_val = fxp;
-	    if (m->fetch & XMP_CTL_UNISLD)	/* IT compatible Gxx off */
+	    if (m->quirk & XMP_QRK_UNISLD)	/* IT compatible Gxx off */
 		xc->porta = fxp;
 	}
 	SET(TONEPORTA);
@@ -235,7 +235,7 @@ fx_porta_dn:
 	 *	DFF command is specified, the volume will be slid up.
 	 */
 fx_volslide:
-	if (m->fetch & XMP_CTL_FINEFX) {
+	if (m->quirk & XMP_QRK_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
 	    if (l == 0xf && h != 0) {
@@ -258,7 +258,7 @@ fx_volslide:
 	 * Also don't assign xc->volslide if fxp is 0, see Guild of Sounds.xm
 	 */
 	if (fxp) {
-	    if (m->fetch & XMP_CTL_VOLPDN) {
+	    if (m->quirk & XMP_QRK_VOLPDN) {
 		if ((xc->volslide = fxp))
 	            xc->v_val = LSN(fxp) ? -LSN(fxp) : MSN(fxp);
 	    } else {
@@ -266,7 +266,7 @@ fx_volslide:
 	    }
 	}
 
-	if (m->fetch & XMP_CTL_FINEFX) {
+	if (m->quirk & XMP_QRK_FINEFX) {
 	    /* Mirko reports that a S3M with D0F effects created with ST321
 	     * should process volume slides in all frames like ST300. I
 	     * suspect ST3/IT could be handling D0F effects like this.
@@ -349,7 +349,7 @@ ex_f_porta_dn:
 		    if (--f->loop_stack[chn]) {
 			f->loop_chn = ++chn;	/* **** H:FIXME **** */
 		    } else {
-			if (m->fetch & XMP_CTL_S3MLOOP)
+			if (m->quirk & XMP_QRK_S3MLOOP)
 			    f->loop_start[chn] = f->row + 1;
 		    }
 		} else {
@@ -396,7 +396,7 @@ ex_f_vslide_dn:
 	if (fxp) {
 	    if (fxp < 0x20)	/* speedup.xm needs BPM = 20 */
 		p->tempo = fxp;
-	    else if (~m->fetch & XMP_CTL_VBLANK)
+	    else if (~m->flags & XMP_CTL_VBLANK)
 		p->tick_time = m->rrate / (p->xmp_bpm = fxp);
 	}
 	break;
@@ -427,7 +427,7 @@ ex_f_vslide_dn:
 	break;
     case FX_G_VOLSLIDE:				/* Global volume slide */
 	p->gvol_flag = 1;
-	if (m->fetch & XMP_CTL_FINEFX) {
+	if (m->quirk & XMP_QRK_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {
@@ -487,7 +487,7 @@ fx_xf_porta:
 	break;
     case FX_TRK_VSLIDE:				/* Track volume slide */
 fx_trk_vslide:
-	if (m->fetch & XMP_CTL_FINEFX) {
+	if (m->quirk & XMP_QRK_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
 	    if (h == 0xf && l != 0) {

@@ -50,17 +50,17 @@
 #define XMP_TIMER_STOP          0x08
 #define XMP_TIMER_RESTART       0x09
 
-/* Fetch control */
-#define XMP_MODE_ST3		(XMP_CTL_NCWINS | XMP_CTL_IGNWINS | \
-				 XMP_CTL_S3MLOOP | XMP_CTL_RTGINS | \
-				 XMP_CTL_VOLPDN)
-#define XMP_MODE_FT2		(XMP_CTL_OINSMOD | XMP_CTL_CUTNWI | \
-				 XMP_CTL_OFSRST)
-#define XMP_MODE_IT		(XMP_CTL_NCWINS | XMP_CTL_INSPRI | \
-				 XMP_CTL_ENVFADE | XMP_CTL_S3MLOOP | \
-				 XMP_CTL_OFSRST | XMP_CTL_ITENV | \
-				 XMP_CTL_VOLPDN | XMP_CTL_RTGINS | \
-				 XMP_CTL_SAVEINS)
+/* Format quirks */
+#define XMP_QUIRK_ST3		(XMP_QRK_NCWINS | XMP_QRK_IGNWINS | \
+				 XMP_QRK_S3MLOOP | XMP_QRK_RTGINS | \
+				 XMP_QRK_VOLPDN)
+#define XMP_QUIRK_FT2		(XMP_QRK_OINSMOD | XMP_QRK_CUTNWI | \
+				 XMP_QRK_OFSRST)
+#define XMP_QUIRK_IT		(XMP_QRK_NCWINS | XMP_QRK_INSPRI | \
+				 XMP_QRK_ENVFADE | XMP_QRK_S3MLOOP | \
+				 XMP_QRK_OFSRST | XMP_QRK_ITENV | \
+				 XMP_QRK_VOLPDN | XMP_QRK_RTGINS | \
+				 XMP_QRK_SAVEINS)
 
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_ORD_NEXT, 0)
@@ -95,45 +95,46 @@ struct xmp_options {
 	char *drv_id;		/* Driver ID */
 	char *outfile;		/* Output file name when mixing to file */
 	int verbosity;		/* Verbosity level */
-#define XMP_FMT_FM	0x00000001	/* Active mode FM */
-#define XMP_FMT_UNS	0x00000002	/* Unsigned samples */
-#define XMP_FMT_MONO	0x00000004	/* Mono output */
+#define XMP_FMT_FM	(1 << 0)	/* Active mode FM */
+#define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */
+#define XMP_FMT_MONO	(1 << 2)	/* Mono output */
 	int amplify;		/* Software mixing amplify volume:
 				   0 = none, 1 = x2, 2 = x4, 3 = x8 */
 	int outfmt;		/* Software mixing output data format */
 	int resol;		/* Software mixing resolution output */
 	int freq;		/* Software mixing rate (Hz) */
-#define XMP_CTL_ITPT	0x00000001	/* Mixer interpolation */
-#define XMP_CTL_REVERSE	0x00000002	/* Reverse stereo */
-#define XMP_CTL_8BIT	0x00000004	/* Convert 16 bit samples to 8 bit */
-#define XMP_CTL_LOOP	0x00000010	/* Enable module looping */
-#define XMP_CTL_VBLANK	0x00000020	/* Use vblank timing only */
-#define XMP_CTL_VIRTUAL	0x00000040	/* Enable virtual channels */
-#define XMP_CTL_DYNPAN	0x00000080	/* Enable dynamic pan */
-	/* Format quirks */
-#define XMP_CTL_MEDBPM	0x00000100	/* Enable MED BPM timing */
-#define XMP_CTL_S3MLOOP 0x00000200	/* S3M loop mode */
-#define XMP_CTL_ENVFADE	0x00000400	/* Fade at end of envelope */
-#define XMP_CTL_ITENV	0x00000800	/* IT envelope mode */
-#define XMP_CTL_IGNWINS	0x00001000	/* Ignore invalid instrument */
-#define XMP_CTL_NCWINS	0x00002000	/* Don't cut invalid instrument */
-#define XMP_CTL_INSPRI	0x00004000	/* Reset note for every new != ins */
-#define XMP_CTL_CUTNWI	0x00008000	/* Cut only when note + invalid ins */
-#define XMP_CTL_OINSMOD	0x00010000	/* XM old instrument mode */
-#define XMP_CTL_OFSRST	0x00020000	/* Always reset sample offset */
-#define XMP_CTL_FX9BUG	0x00040000	/* Protracker effect 9 bug emulation */
-#define XMP_CTL_ST3GVOL	0x00080000	/* ST 3 weird global volume effect */
-#define XMP_CTL_FINEFX	0x00100000	/* Enable 0xf/0xe for fine effects */
-#define XMP_CTL_VSALL	0x00200000	/* Volume slides in all frames */
-#define XMP_CTL_FIXLOOP	0x00400000	/* Fix sample loop start */
-#define XMP_CTL_RTGINS	0x00800000	/* Retrig instrument on toneporta */
-#define XMP_CTL_FILTER	0x01000000	/* IT lowpass filter */
-#define XMP_CTL_PBALL	0x02000000	/* Pitch bending in all frames */
-#define XMP_CTL_PERPAT	0x04000000	/* Cancel persistent fx at pat start */
-#define XMP_CTL_VOLPDN	0x08000000	/* Set priority to volume slide down */
-#define XMP_CTL_UNISLD	0x10000000	/* Unified pitch slide/portamento */
-#define XMP_CTL_SAVEINS	0x20000000	/* Always save instrument number */
+#define XMP_CTL_ITPT	(1 << 0)	/* Mixer interpolation */
+#define XMP_CTL_REVERSE	(1 << 1)	/* Reverse stereo */
+#define XMP_CTL_8BIT	(1 << 2)	/* Convert 16 bit samples to 8 bit */
+#define XMP_CTL_LOOP	(1 << 3)	/* Enable module looping */
+#define XMP_CTL_VBLANK	(1 << 4)	/* Use vblank timing only */
+#define XMP_CTL_VIRTUAL	(1 << 5)	/* Enable virtual channels */
+#define XMP_CTL_DYNPAN	(1 << 6)	/* Enable dynamic pan */
+#define XMP_CTL_FIXLOOP	(1 << 7)	/* Fix sample loop start */
+#define XMP_CTL_FILTER	(1 << 8)	/* IT lowpass filter */
 	int flags;		/* internal control flags, set default mode */
+	/* Format quirks */
+#define XMP_QRK_MEDBPM	(1 << 0)	/* Enable MED BPM timing */
+#define XMP_QRK_S3MLOOP	(1 << 1)	/* S3M loop mode */
+#define XMP_QRK_ENVFADE	(1 << 2)	/* Fade at end of envelope */
+#define XMP_QRK_ITENV	(1 << 3)	/* IT envelope mode */
+#define XMP_QRK_IGNWINS	(1 << 4)	/* Ignore invalid instrument */
+#define XMP_QRK_NCWINS	(1 << 5)	/* Don't cut invalid instrument */
+#define XMP_QRK_INSPRI	(1 << 6)	/* Reset note for every new != ins */
+#define XMP_QRK_CUTNWI	(1 << 7)	/* Cut only when note + invalid ins */
+#define XMP_QRK_OINSMOD	(1 << 8)	/* XM old instrument mode */
+#define XMP_QRK_OFSRST	(1 << 9)	/* Always reset sample offset */
+#define XMP_QRK_FX9BUG	(1 << 10)	/* Protracker effect 9 bug emulation */
+#define XMP_QRK_ST3GVOL	(1 << 11)	/* ST 3 weird global volume effect */
+#define XMP_QRK_FINEFX	(1 << 12)	/* Enable 0xf/0xe for fine effects */
+#define XMP_QRK_VSALL	(1 << 13)	/* Volume slides in all frames */
+#define XMP_QRK_RTGINS	(1 << 14)	/* Retrig instrument on toneporta */
+#define XMP_QRK_PBALL	(1 << 15)	/* Pitch bending in all frames */
+#define XMP_QRK_PERPAT	(1 << 16)	/* Cancel persistent fx at pat start */
+#define XMP_QRK_VOLPDN	(1 << 17)	/* Set priority to volume slide down */
+#define XMP_QRK_UNISLD	(1 << 18)	/* Unified pitch slide/portamento */
+#define XMP_QRK_SAVEINS	(1 << 19)	/* Always save instrument number */
+	int quirk;		/* extra control flags */
 	int crunch;		/* Sample crunching ratio */
 	int start;		/* Set initial order (default = 0) */
 	int mix;		/* Percentage of L/R channel separation */

@@ -140,7 +140,7 @@ static int do_envelope(struct xmp_context *ctx, struct xxm_envinfo *ei, uint16 *
     else
 	loop = ei->flg & XXM_ENV_LOOP;
 
-    if (m->fetch & XMP_CTL_ITENV) {
+    if (HAS_QUIRK(XMP_QRK_ITENV)) {
 	if (!rl && (ei->flg & XXM_ENV_SUS)) {
 	    if (*x >= env[ei->sue << 1])
 		*x = env[ei->sus << 1];
@@ -164,7 +164,7 @@ static int do_envelope(struct xmp_context *ctx, struct xxm_envinfo *ei, uint16 *
 	if (!env[rl + 1])
 	    xmp_drv_resetchannel(ctx, chn);
 	else
-	    return m->fetch & XMP_CTL_ENVFADE;
+	    return HAS_QUIRK(XMP_QRK_ENVFADE);
     }
 
     return 0;
@@ -276,7 +276,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     }
 
     /* Emulate Impulse Tracker "always read instrument" bug */
-    if (e->note && !e->ins && xc->delayed_ins && m->fetch & XMP_CTL_SAVEINS) {
+    if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(XMP_QRK_SAVEINS)) {
 	e->ins = xc->delayed_ins;
 	xc->delayed_ins = 0;
     }
@@ -295,13 +295,13 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 	xc->per_flags = 0;
 
-	if (m->fetch & XMP_CTL_OINSMOD) {
+	if (HAS_QUIRK(XMP_QRK_OINSMOD)) {
 	    if (TEST(IS_READY)) {
 		xins = xc->insdef;
 		RESET(IS_READY);
 	    }
 	} else if ((uint32)ins < m->xxh->ins && m->xxih[ins].nsm) {	/* valid ins */
-	    if (!key && m->fetch & XMP_CTL_INSPRI) {
+	    if (!key && HAS_QUIRK(XMP_QRK_INSPRI)) {
 		if (xins == ins)
 		    flg = NEW_INS | RESET_VOL;
 		else 
@@ -309,10 +309,10 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	    }
 	    xins = ins;
 	} else {					/* invalid ins */
-	    if (~m->fetch & XMP_CTL_NCWINS)
+	    if (!HAS_QUIRK(XMP_QRK_NCWINS))
 		xmp_drv_resetchannel(ctx, chn);
 
-	    if (m->fetch & XMP_CTL_IGNWINS) {
+	    if (HAS_QUIRK(XMP_QRK_IGNWINS)) {
 		ins = -1;
 		flg = 0;
 	    }
@@ -337,7 +337,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	    flg &= ~(RESET_VOL | RESET_ENV);
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
 	    /* This test should fix portamento behaviour in 7spirits.s3m */
-	    if (m->fetch & XMP_CTL_RTGINS && e->ins && xc->ins != ins) {
+	    if (HAS_QUIRK(XMP_QRK_RTGINS) && e->ins && xc->ins != ins) {
 		flg |= NEW_INS;
 		xins = ins;
 	    } else {
@@ -388,7 +388,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
 	} else {
-	    if (!(m->fetch & XMP_CTL_CUTNWI))
+	    if (!HAS_QUIRK(XMP_QRK_CUTNWI))
 		xmp_drv_resetchannel(ctx, chn);
 	}
     }
@@ -428,7 +428,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	SET(NEW_VOL);
     }
 
-    if (TEST(NEW_INS) || (m->fetch & XMP_CTL_OFSRST))
+    if (TEST(NEW_INS) || HAS_QUIRK(XMP_QRK_OFSRST))
 	xc->offset_val = 0;
 
     /* Secondary effect is processed _first_ and can be overriden
@@ -447,7 +447,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
 	if (cont_sample == 0) {
 	    xmp_drv_voicepos(ctx, chn, xc->offset_val);
-	    if (TEST(OFFSET) && (m->fetch & XMP_CTL_FX9BUG))
+	    if (TEST(OFFSET) && HAS_QUIRK(XMP_QRK_FX9BUG))
 		xc->offset_val <<= 1;
 	}
 	RESET(OFFSET);
@@ -486,7 +486,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	SET(ECHOBACK | NEW_VOL);
     }
 
-    if ((m->fetch & XMP_CTL_ST3GVOL) && TEST(NEW_VOL) && m->volbase)
+    if (HAS_QUIRK(XMP_QRK_ST3GVOL) && TEST(NEW_VOL) && m->volbase)
 	xc->volume = xc->volume * m->volume / m->volbase;
 
     return 0;
@@ -548,7 +548,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	     * Only reset the channel in virtual channel mode so we
 	     * can release it.
 	     */
-	     if (m->fetch & XMP_CTL_VIRTUAL) {
+	     if (m->flags & XMP_CTL_VIRTUAL) {
 		 xmp_drv_resetchannel(ctx, chn);
 		 return;
 	     } else {
@@ -606,7 +606,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     finalvol = (finalvol * xc->fadeout) >> 5;	/* 16 bit output */
 
     finalvol = (uint32) (vol_envelope *
-	(m->fetch & XMP_CTL_ST3GVOL ? 0x40 : m->volume) *
+	(HAS_QUIRK(XMP_QRK_ST3GVOL) ? 0x40 : m->volume) *
 	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 18;
 
     /* Volume translation table (for PTM) */
@@ -645,7 +645,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
      *       it may be a bug.
      */
 
-    finalpan = m->fetch & XMP_CTL_DYNPAN ?  xc->pan + (pan_envelope - 32) *
+    finalpan = m->flags & XMP_CTL_DYNPAN ?  xc->pan + (pan_envelope - 32) *
 			(128 - abs (xc->pan - 128)) / 32 : 0x80;
     finalpan = xc->masterpan + (finalpan - 128) *
 			(128 - abs (xc->masterpan - 128)) / 128;
@@ -703,7 +703,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* Volume slides happen in all frames but the first, except when the
      * "volume slide on all frames" flag is set.
      */
-    if (t % p->tempo || m->fetch & XMP_CTL_VSALL) {
+    if (t % p->tempo || HAS_QUIRK(XMP_QRK_VSALL)) {
 	if (!chn && p->gvol_flag) {
 	    m->volume += p->gvol_slide;
 	    if (m->volume < 0)
@@ -735,7 +735,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* "Fine" sliding effects are processed in the first frame of each row,
      * and standard slides in the rest of the frames.
      */
-    if (t % p->tempo || m->fetch & XMP_CTL_PBALL) {
+    if (t % p->tempo || HAS_QUIRK(XMP_QRK_PBALL)) {
 	/* Do pan and pitch sliding */
 	if (TEST(PAN_SLIDE)) {
 	    xc->pan += xc->p_val;
@@ -821,10 +821,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     finalpan = o->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * o->mix / 100;
     xmp_drv_setbend(ctx, chn, xc->pitchbend + xc->a_val[xc->a_idx] + med_arp);
-    xmp_drv_setpan(ctx, chn, m->fetch & XMP_CTL_REVERSE ? -finalpan : finalpan);
+    xmp_drv_setpan(ctx, chn, m->flags & XMP_CTL_REVERSE ? -finalpan : finalpan);
     xmp_drv_setvol(ctx, chn, finalvol);
 
-    if (cutoff < 0xff && (m->fetch & XMP_CTL_FILTER)) {
+    if (cutoff < 0xff && (m->flags & XMP_CTL_FILTER)) {
 	filter_setup(ctx, xc, cutoff);
 	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B0, xc->flt_B0);
 	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B1, xc->flt_B1);
@@ -933,7 +933,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 
 	if (f->frame == 0) {			/* first frame in row */
 		/* check end of module */
-	    	if ((~m->fetch & XMP_CTL_LOOP) && f->ord == p->xmp_scan_ord &&
+	    	if ((~m->flags & XMP_CTL_LOOP) && f->ord == p->xmp_scan_ord &&
 					f->row == p->xmp_scan_row) {
 			if (!f->end_point--)
 				return -1;
@@ -960,7 +960,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	if (o->time && (o->time < f->playing_time))	/* expired time */
 		return -1;
 
-	if (m->fetch & XMP_CTL_MEDBPM) {
+	if (HAS_QUIRK(XMP_QRK_MEDBPM)) {
 		xmp_drv_sync(ctx, p->tick_time * 33 / 125);
 		f->playing_time += m->rrate * 33 / (100 * p->xmp_bpm * 125);
 	} else {
@@ -1035,7 +1035,7 @@ next_order:
 			p->pos = f->ord;
 
 			/* Reset persistent effects at new pattern */
-			if (m->fetch & XMP_CTL_PERPAT) {
+			if (HAS_QUIRK(XMP_QRK_PERPAT)) {
 				int chn;
 				for (chn = 0; chn < p->m.xxh->chn; chn++)
 					p->xc_data[chn].per_flags = 0;

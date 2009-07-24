@@ -488,10 +488,10 @@ load_samples:
      */
 
     for (i = 0; i < m->xxh->chn; i++)
-        m->xxc[i].pan = m->fetch & XMP_CTL_DYNPAN ?
+        m->xxc[i].pan = m->flags & XMP_CTL_DYNPAN ?
             0x80 : (((i + 1) / 2) % 2) * 0xff;
 
-    m->fetch |= XMP_MODE_FT2;
+    m->quirk |= XMP_QUIRK_FT2;
 
     return 0;
 }

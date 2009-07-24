@@ -292,7 +292,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    opt->flags |= XMP_CTL_FIXLOOP;
 	    break;
 	case OPT_FX9BUG:
-	    opt->flags |= XMP_CTL_FX9BUG;
+	    opt->quirk |= XMP_QRK_FX9BUG;
 	    break;
 	case 'F':
 	    opt->flags |= XMP_CTL_FILTER;

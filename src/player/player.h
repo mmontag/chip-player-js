@@ -9,7 +9,10 @@
 #ifndef __XMP_PLAYER_H
 #define __XMP_PLAYER_H
 
-/* Flag control */
+/* Quirk control */
+#define HAS_QUIRK(x)	(m->quirk & (x))
+
+/* Channel flag control */
 #define SET(f)		SET_FLAG(xc->flags,f)
 #define RESET(f) 	RESET_FLAG(xc->flags,f)
 #define TEST(f)		TEST_FLAG(xc->flags,f)

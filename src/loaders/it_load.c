@@ -349,7 +349,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	pp_pat[i] = read32l(f);
 
     m->c4rate = C4_NTSC_RATE;
-    m->fetch |= XMP_CTL_FINEFX | XMP_CTL_ENVFADE;
+    m->quirk |= XMP_QRK_FINEFX | XMP_QRK_ENVFADE;
 
     /* Identify tracker */
 
@@ -966,11 +966,10 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	free(pp_ins);
 
     m->xxh->chn = max_ch + 1;
-    /*m->fetch |= ifh.flags & IT_USE_INST ? XMP_MODE_IT : XMP_MODE_ST3;*/
-    m->fetch |= XMP_MODE_IT;
-    m->fetch |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
+    m->flags |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
+    m->quirk |= XMP_QUIRK_IT;
     if (~ifh.flags & IT_LINK_GXX)
-	m->fetch |= XMP_CTL_UNISLD;
+	m->quirk |= XMP_QRK_UNISLD;
 
     reportv(ctx, 0, "\n");
 

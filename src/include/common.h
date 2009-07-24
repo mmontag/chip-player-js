@@ -167,7 +167,8 @@ struct xmp_mod_context {
 	int volbase;			/* Volume base */
 	int volume;			/* Global volume */
 	int *vol_xlat;			/* Volume translation table */
-	int fetch;			/* Fetch mode (copy from flags) */
+	int flags;			/* Copy from options */
+	int quirk;			/* Copy from options */
 
 	struct xxm_header *xxh;		/* Header */
 	struct xxm_pattern **xxp;	/* Patterns */

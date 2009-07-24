@@ -383,7 +383,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	reportv(ctx, 0, "\n");
 
-	m->fetch |= XMP_CTL_FINEFX;
+	m->quirk |= XMP_QRK_FINEFX;
 
 	return 0;
 }

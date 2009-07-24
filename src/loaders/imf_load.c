@@ -232,7 +232,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxo[i]--;
 
     m->c4rate = C4_NTSC_RATE;
-    m->fetch |= XMP_CTL_FINEFX;
+    m->quirk |= XMP_QRK_FINEFX;
 
     PATTERN_INIT();
 
@@ -409,7 +409,8 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     reportv(ctx, 0, "\n");
 
-    m->fetch |= XMP_MODE_ST3 | XMP_CTL_FILTER;
+    m->flags |= XMP_CTL_FILTER;
+    m->quirk |= XMP_QUIRK_ST3;
 
     return 0;
 }

@@ -162,7 +162,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     struct mod_header mh;
     uint8 mod_event[4];
     char *x, pathname[256] = "", *tracker = "";
-    int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2;
+    int lps_mult = m->flags & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
@@ -521,7 +521,7 @@ skip_test:
 
     if (m->xxh->chn > 4) {
 	m->xxh->flg &= ~XXM_FLG_MODRNG;
-	m->fetch |= XMP_MODE_FT2;
+	m->quirk |= XMP_QUIRK_FT2;
     }
 
     return 0;

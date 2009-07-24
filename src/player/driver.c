@@ -297,7 +297,7 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     d->driver->reset();
 
     numchn = numtrk;
-    maxvoc = m->fetch & XMP_CTL_VIRTUAL ? o->maxvoc : 1;
+    maxvoc = m->flags & XMP_CTL_VIRTUAL ? o->maxvoc : 1;
 
     if (maxvoc > 1)
 	numchn += num;

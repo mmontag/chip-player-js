@@ -6,6 +6,7 @@ Stable versions
 	- add experimental, long postponed open player loop 
 	- generate win32 project files when packaging distfile
 	- remove callback driver
+	- split unified flags/quirks into separate variables
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
