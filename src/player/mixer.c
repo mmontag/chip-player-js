@@ -265,7 +265,7 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
-static int softmixer(struct xmp_context *ctx)
+int xmp_smix_softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi;

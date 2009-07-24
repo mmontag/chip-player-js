@@ -1,7 +1,7 @@
 
-TUNENET_OBJS	= Init.o Obtain.o Release.o AnnouncePlayer.o InitPlayer.o \
-		  OpenPlayer.o ClosePlayer.o DoNotify.o DecodeFramePlayer.o \
-		  ExitPlayer.o SeekPlayer.o TestPlayer.o
+TUNENET_OBJS	= init.o obtain.o release.o announceplayer.o initplayer.o \
+		  openplayer.o closeplayer.o donotify.o decodeframeplayer.o \
+		  exitplayer.o seekplayer.o testplayer.o
 TUNENET_DFILES	= Makefile # $(TUNENET_OBJS:.o=.c)
 TUNENET_PATH	= src/plugin/tunenet
 

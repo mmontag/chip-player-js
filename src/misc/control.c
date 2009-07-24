@@ -186,7 +186,7 @@ inline void xmp_play_buffer(xmp_context ctx)
 
 void xmp_get_buffer(xmp_context ctx, void **buffer, int *size)
 {
-	*size = xmp_drv_softmixer((struct xmp_context *)ctx);
+	*size = xmp_smix_softmixer((struct xmp_context *)ctx);
 	*buffer = xmp_smix_buffer((struct xmp_context *)ctx);
 }
 

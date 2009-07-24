@@ -701,12 +701,6 @@ inline void xmp_drv_echoback(struct xmp_context *ctx, int msg)
 }
 
 
-inline int xmp_drv_softmixer(struct xmp_context *ctx)
-{
-	return softmixer(ctx);
-}
-
-
 inline int xmp_drv_getmsg(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
@@ -718,7 +712,7 @@ inline int xmp_drv_getmsg(struct xmp_context *ctx)
 inline void xmp_drv_bufdump(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
-    int i = softmixer(ctx);
+    int i = xmp_smix_softmixer(ctx);
 
     d->driver->bufdump(ctx, i);
 }
