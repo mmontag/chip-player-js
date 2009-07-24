@@ -252,20 +252,6 @@ InputPlugin *get_iplugin_info()
 }
 
 
-static void driver_callback(void *b, int i)
-{
-	xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
-			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
-			xmp_cfg.force_mono ? 1 : 2, i, b);
-	
-	while (xmp_ip.output->buffer_free() < i && playing)
-		usleep(10000);
-
-	if (playing)
-		xmp_ip.output->write_audio(b, i);
-}
-
-
 static void init(void)
 {
 	ConfigFile *cfg;
@@ -301,7 +287,7 @@ static void init(void)
 		xmms_cfg_free(cfg);
 	}
 
-	xmp_init_callback(ctx, driver_callback);
+	xmp_init(ctx, 0, NULL);
 }
 
 
@@ -371,7 +357,7 @@ static void play_file(char *filename)
 
 	opt->resol = 8;
 	opt->verbosity = 0;
-	opt->drv_id = "callback";
+	opt->drv_id = "smix";
 
 	switch (xmp_cfg.mixing_freq) {
 	case 1:
@@ -447,7 +433,25 @@ static void play_file(char *filename)
 
 static void *play_loop(void *arg)
 {
-	xmp_play_module(ctx);
+	void *data;
+	int size;
+
+	xmp_player_start(ctx);
+	while (xmp_player_frame(ctx) == 0) {
+                xmp_get_buffer(ctx, &data, &size);
+
+		xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
+			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
+			xmp_cfg.force_mono ? 1 : 2, i, b);
+	
+		while (xmp_ip.output->buffer_free() < i && playing)
+			usleep(10000);
+
+		if (playing)
+			xmp_ip.output->write_audio(b, i);
+	}
+        xmp_player_end(ctx);
+
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 	playing = 0;

@@ -17,12 +17,6 @@ struct buffer_data dst = { 0 , 0 };
 struct buffer_data src = { 0 , 0 };
 
 
-static void callback(void *b, int i)
-{
-	src.data = b;
-	src.size = i;
-}
-
 static int fill_buffer(xmp_context ctx, void *buffer, int size)
 {
 	int want, have;
@@ -49,7 +43,7 @@ static int fill_buffer(xmp_context ctx, void *buffer, int size)
 			have = src.size - src.pos;
 
 			if (have <= 0) {
-				if (xmp_player_frame(ctx) < 0)
+				if (xmp_get_frame(ctx, &src.data, &src.size) < 0)
 					return -1;
 				have = src.size - src.pos;
 			}
@@ -73,7 +67,6 @@ int main(int argc, char **argv)
 	xmp_init(ctx, argc, argv);
 
 	xmp_verbosity_level(ctx, 0);
-	xmp_init_callback(ctx, callback);
 
 	for (i = 1; i < argc; i++) {
 		if (xmp_load_module(ctx, argv[i]) < 0) {

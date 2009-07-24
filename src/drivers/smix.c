@@ -16,15 +16,14 @@
 
 static int init(struct xmp_context *);
 static void shutdown(void);
-static void callback(struct xmp_context *ctx, int);
 
 static void dummy()
 {
 }
 
-struct xmp_drv_info drv_callback = {
-	"callback",		/* driver ID */
-	"callback driver",	/* driver description */
+struct xmp_drv_info drv_smix = {
+	"smix",			/* driver ID */
+	"nil softmixer",	/* driver description */
 	NULL,			/* help */
 	init,			/* init */
 	shutdown,		/* shutdown */
@@ -40,7 +39,7 @@ struct xmp_drv_info drv_callback = {
 	dummy,			/* starttimer */
 	dummy,			/* flush */
 	dummy,			/* resetvoices */
-	callback,		/* bufdump */
+	dummy,			/* bufdump */
 	dummy,			/* bufwipe */
 	dummy,			/* clearmem */
 	dummy,			/* sync */
@@ -51,15 +50,7 @@ struct xmp_drv_info drv_callback = {
 
 static int init(struct xmp_context *ctx)
 {
-	return ctx->d.callback ? xmp_smix_on(ctx) : -1;
-}
-
-static void callback(struct xmp_context *ctx, int i)
-{
-	void *b;
-
-	b = xmp_smix_buffer(ctx);
-	ctx->d.callback(b, i);
+	return xmp_smix_on(ctx);
 }
 
 static void shutdown()

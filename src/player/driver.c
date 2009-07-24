@@ -34,6 +34,7 @@ static inline void drv_resetvoice (struct xmp_context *, int, int);
 
 extern struct xmp_drv_info drv_file;
 extern struct xmp_drv_info drv_wav;
+extern struct xmp_drv_info drv_smix;
 
 extern struct xmp_drv_info drv_osx;
 extern struct xmp_drv_info drv_solaris;
@@ -135,6 +136,10 @@ void xmp_init_drivers()
 #ifdef DRIVER_NAS
     xmp_drv_register(&drv_nas);
 #endif
+
+#else	/* ENABLE_PLUGIN */
+
+    xmp_drv_register(&drv_smix);
 
 #endif	/* ENABLE_PLUGIN */
 }
@@ -696,6 +701,12 @@ inline void xmp_drv_echoback(struct xmp_context *ctx, int msg)
 }
 
 
+inline int xmp_drv_softmixer(struct xmp_context *ctx)
+{
+	return softmixer(ctx);
+}
+
+
 inline int xmp_drv_getmsg(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
@@ -703,8 +714,6 @@ inline int xmp_drv_getmsg(struct xmp_context *ctx)
     return d->driver->getmsg();
 }
 
-
-extern int **xmp_mix_buffer;
 
 inline void xmp_drv_bufdump(struct xmp_context *ctx)
 {
@@ -1000,10 +1009,3 @@ inline struct xmp_drv_info *xmp_drv_array()
 {
     return drv_array;
 }
-
-
-void xmp_register_driver_callback(xmp_context ctx, void (*callback)(void *, int))
-{
-    ((struct xmp_context *)ctx)->d.callback = callback;
-}
-
