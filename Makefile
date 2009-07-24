@@ -62,8 +62,13 @@ install: install-xmp install-etc install-docs $(addprefix install-, $(PLUGINS))
 
 depend:
 	@echo Building dependencies...
-	@$(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $(OBJS:.o=.c) >$@
-
+	@echo > $@
+	@for i in $(OBJS); do \
+	    c="$${i%.o}.c"; l="$${i%.o}.lo"; \
+	    $(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $$c | \
+		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
+	done
+	    
 dist: dist-prepare dist-subdirs
 
 dist-prepare:
