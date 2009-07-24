@@ -582,6 +582,18 @@ SOURCE=..\player\effects.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\win32\ptpopen.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\win32\debug.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\win32\usleep.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\drivers\smix.c
 # End Source File
 

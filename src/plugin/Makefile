@@ -75,12 +75,14 @@ install-xmms:
 winamp: $(PLUGIN_PATH)/in_xmp.dll
 
 $(PLUGIN_PATH)/in_xmp.dll: $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo $(LOBJS) $(D_LOBJS)
-	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/winamp.o $(PLUGIN_PATH)/resource.o'; \
+	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo'; \
 	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
 $(PLUGIN_PATH)/winamp.lo: $(PLUGIN_PATH)/winamp.c $(PLUGIN_PATH)/Makefile
-	$(CC) $(CFLAGS) $(XCFLAGS) -o $@ $(PLUGIN_PATH)/winamp.c
+	@CMD='$(CC) $(CFLAGS) $(XCFLAGS) -o $@ $(PLUGIN_PATH)/winamp.c'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
+	eval $$CMD
 
 $(PLUGIN_PATH)/resource.lo: $(PLUGIN_PATH)/resource.rc $(PLUGIN_PATH)/resource.h
 	$(WINDRES) -o$@ $(PLUGIN_PATH)/resource.rc

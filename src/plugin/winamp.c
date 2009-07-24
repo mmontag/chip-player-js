@@ -184,44 +184,6 @@ static void stop()
 	mod.SAVSADeInit();
 }
 
-static void driver_callback(void *b, int i)
-{
-	int dsp = mod.dsp_isactive();
-	int n = i * (dsp ? 2 : 1);
-	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
-	int ssize = opt->resol / 8;
-	int t, todo;
-
-	if (dsp) {
-		char * bb = b;
-		/* Winamp dsp support fixed by Mirko Buffoni */
-		while (i > 0) {
-			todo = (i > MIX_BUFSIZE * 2) ? MIX_BUFSIZE : i;
-			memcpy(mix_buffer, bb, todo);
-
-			while (mod.outMod->CanWrite() < todo * 2)
-				Sleep(20);
-
-			t = mod.outMod->GetWrittenTime();
-			mod.SAAddPCMData(mix_buffer, numch, opt->resol, t);
-			mod.VSAAddPCMData(mix_buffer, numch, opt->resol, t);
-			n = mod.dsp_dosamples((short *)mix_buffer,
-				todo / numch / ssize, opt->resol, numch,
-				opt->freq) * numch * ssize;
-			mod.outMod->Write(mix_buffer, n);
-			i -= todo;
-			bb += todo;
-		}
-	} else {
-		while (mod.outMod->CanWrite() < i)
-			Sleep(50);
-		t = mod.outMod->GetWrittenTime();
-		mod.SAAddPCMData(b, numch, opt->resol, t);
-		mod.VSAAddPCMData(b, numch, opt->resol, t);
-		mod.outMod->Write(b, i);
-	}
-}
-
 static BOOL CALLBACK config_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	char inifile[MAX_PATH];
@@ -371,8 +333,7 @@ static void init()
 	CFGREADINT(filter, 1);
 	CFGREADINT(pan_amplitude, 80);
 
-	xmp_init_callback(ctx, driver_callback);
-	//xmp_register_event_callback(x11_event_callback);
+	xmp_init(ctx, 0, NULL);
 }
 
 static void quit()
@@ -412,7 +373,7 @@ static int play_file(char *fn)
 
 	opt->resol = 16;
 	opt->verbosity = 0;
-	opt->drv_id = "callback";
+	opt->drv_id = "smix";
 
 	opt->freq = xmp_cfg.mixing_freq;
 
@@ -483,11 +444,54 @@ static int play_file(char *fn)
 	return 0;
 }
 
-static DWORD WINAPI __stdcall play_loop(void *b)
+static DWORD WINAPI __stdcall play_loop(void *x)
 {
-	_D(_D_CRIT "play");
-	xmp_play_module(ctx);
-	_D(_D_CRIT "end play");
+	int n, dsp;
+	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	int ssize = opt->resol / 8;
+	int t, todo;
+	void *data;
+	int size;
+
+	xmp_player_start(ctx);
+	while (xmp_player_frame(ctx) == 0) {
+		xmp_get_buffer(ctx, &data, &size);
+
+		dsp = mod.dsp_isactive();
+		n = size * (dsp ? 2 : 1);
+
+		if (dsp) {
+			/* Winamp dsp support fixed by Mirko Buffoni */
+			while (size > 0) {
+				todo = (size > MIX_BUFSIZE * 2) ?
+					MIX_BUFSIZE : size;
+				memcpy(mix_buffer, data, todo);
+	
+				while (mod.outMod->CanWrite() < todo * 2)
+					Sleep(20);
+	
+				t = mod.outMod->GetWrittenTime();
+				mod.SAAddPCMData(mix_buffer, numch,
+							opt->resol, t);
+				mod.VSAAddPCMData(mix_buffer, numch,
+							opt->resol, t);
+				n = mod.dsp_dosamples((short *)mix_buffer,
+					todo / numch / ssize, opt->resol, numch,
+					opt->freq) * numch * ssize;
+				mod.outMod->Write(mix_buffer, n);
+				size -= todo;
+				data += todo;
+			}
+		} else {
+			while (mod.outMod->CanWrite() < size)
+				Sleep(50);
+			t = mod.outMod->GetWrittenTime();
+			mod.SAAddPCMData(data, numch, opt->resol, t);
+			mod.VSAAddPCMData(data, numch, opt->resol, t);
+			mod.outMod->Write(data, size);
+		}
+	}
+
 	xmp_release_module(ctx);
 	xmp_close_audio(ctx);
 	playing = 0;
