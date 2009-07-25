@@ -671,17 +671,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	}
     }
 
-#if 0
-    /* Do delay */
-    if (xc->delay) {
-	if (--xc->delay) {
-	    finalvol = 0;
-	} else {
-	    xmp_drv_retrig(ctx, chn);
-	}
-    }
-#endif
-
     /* Do tremor */
     if (xc->tcnt_up || xc->tcnt_dn) {
 	if (xc->tcnt_up > 0) {
@@ -950,6 +939,8 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
 		xmp_drv_echoback(ctx, ((m->xxp[m->xxo[f->ord]]->rows - 1)
 				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
+		xmp_drv_echoback(ctx, ((int)(f->playing_time * 10) << 4)
+							| XMP_ECHO_TIME);
 	}
 
 
@@ -968,10 +959,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		f->playing_time += m->rrate / (100 * p->xmp_bpm);
 	}
 
-	//xmp_drv_bufdump(ctx);
-
 	f->frame++;
-
 
 	if (f->frame >= (p->tempo * (1 + f->delay))) {
 next_row:

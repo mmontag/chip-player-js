@@ -37,6 +37,7 @@
 #define XMP_ECHO_GVL		0x09
 #define XMP_ECHO_NCH		0x0a
 #define XMP_ECHO_FRM		0x0b
+#define XMP_ECHO_TIME		0x0c
 
 /* xmp_player_ctl arguments */
 #define XMP_ORD_NEXT		0x00

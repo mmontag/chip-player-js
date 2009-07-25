@@ -72,6 +72,7 @@ int probeonly = 0;
 int randomize = 0;
 int loadonly = 0;
 int nocmd = 0;
+int showtime = 0;
 #ifdef HAVE_SYS_RTPRIO_H
 int rt = 0;
 #endif
@@ -237,7 +238,15 @@ static void process_echoback(unsigned long i)
     if (background)
 	return;
 
-    if (verbosity) {
+    if (showtime) {
+	switch (i & 0xf) {
+	case XMP_ECHO_TIME:
+	    fprintf(stderr, "\r%d:%02d:%02d.%d", (int)(msg / (60 * 600)),
+			(int)((msg / 600) % 600), (int)((msg / 10) % 60),
+			(int)(msg % 10));
+	    break;
+	}
+    } else if (verbosity) {
 	switch (i & 0xf) {
 	case XMP_ECHO_BPM:
 	    _bpm = bpm;
@@ -255,6 +264,8 @@ static void process_echoback(unsigned long i)
 		max_nch = nch;
 	    break;
 	case XMP_ECHO_ROW:
+	    if (showtime)
+		break;
 	    rows += 1;
 	    tot_nch += nch;
 	    if
@@ -327,9 +338,12 @@ static void process_echoback(unsigned long i)
 		pause = xmp_mod_pause(ctx);
 	    break;
 	case ' ':	/* pause module */
-	    fprintf (stderr, "%s",  (pause = xmp_mod_pause(ctx))
-		? "] - PAUSED\b\b\b\b\b\b\b\b\b\b"
-		: "]         \b\b\b\b\b\b\b\b\b\b");
+	    pause = xmp_mod_pause(ctx);
+	    if (verbosity && !showtime) {
+	    	fprintf (stderr, "%s",  pause ?
+				"] - PAUSED\b\b\b\b\b\b\b\b\b\b" :
+				"]         \b\b\b\b\b\b\b\b\b\b");
+	    }
 	    break;
 	case '1':
 	case '2':
