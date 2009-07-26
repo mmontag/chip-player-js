@@ -903,14 +903,17 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		if (p->pos == 0)
 			f->end_point = p->xmp_scan_num;
 
-		p->tempo = m->xxo_info[f->ord = p->pos].tempo;
+		f->ord = p->pos;
+		p->tempo = m->xxo_info[f->ord].tempo;
 		p->xmp_bpm = m->xxo_info[f->ord].bpm;
 		p->tick_time = m->rrate / p->xmp_bpm;
 		m->volume = m->xxo_info[f->ord].gvl;
 		f->jump = f->ord;
-		f->jumpline = m->xxo_fstrow[f->ord--];
+		f->time = (double)m->xxo_info[f->ord].time / 1000;
+		f->jumpline = m->xxo_fstrow[f->ord];
 		f->row = -1;
 		f->pbreak = 1;
+		f->ord--;
 		xmp_drv_bufwipe(ctx);
 		xmp_drv_sync(ctx, 0);
 		xmp_drv_reset(ctx);
@@ -939,7 +942,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
 		xmp_drv_echoback(ctx, ((m->xxp[m->xxo[f->ord]]->rows - 1)
 				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
-		xmp_drv_echoback(ctx, ((int)(f->playing_time * 10) << 4)
+		xmp_drv_echoback(ctx, ((int)(f->time * 10) << 4)
 							| XMP_ECHO_TIME);
 	}
 
@@ -957,6 +960,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	} else {
 		xmp_drv_sync(ctx, p->tick_time);
 		f->playing_time += m->rrate / (100 * p->xmp_bpm);
+		f->time += m->rrate / (100 * p->xmp_bpm);
 	}
 
 	f->frame++;

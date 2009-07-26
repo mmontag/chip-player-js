@@ -202,6 +202,7 @@ struct flow_control {
 	int num_rows;
 	int ord;
 	int end_point;
+	double time;
 	double playing_time;
 };
 

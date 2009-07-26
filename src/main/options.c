@@ -28,6 +28,7 @@ extern int loadonly;
 extern int randomize;
 extern int nocmd;
 extern int checksum;
+extern int showtime;
 #ifdef HAVE_SYS_RTPRIO_H
 extern int rt;
 #endif
@@ -47,6 +48,7 @@ extern int rt;
 #define OPT_CRUNCH	0x10e
 #define OPT_NOFILTER	0x10f
 #define OPT_VBLANK	0x110
+#define OPT_SHOWTIME	0x111
 
 
 static void exclude_formats(char *list)
@@ -200,6 +202,7 @@ static void usage(char *s, struct xmp_options *opt)
 "   --load-only            Load module and exit\n"
 "   --probe-only           Probe audio device and exit\n"
 "   -q --quiet             Quiet mode (verbosity level = 0)\n"
+"   --show-time            Display elapsed and remaining time\n"
 "   -V --version           Print version information\n"
 "   -v --verbose           Verbose mode (incremental)\n"
 	, opt->mix,
@@ -245,6 +248,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 #endif
 	{ "reverb",		 1, 0, OPT_CHORUS },
 	{ "reverse",		 0, 0, 'r' },
+	{ "show-time",		 0, 0, OPT_SHOWTIME },
 	{ "solo",		 1, 0, 'S' },
 	{ "start",		 1, 0, 's' },
 	{ "stdout",		 0, 0, 'c' },
@@ -388,6 +392,9 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case 's':
 	    opt->start = strtoul(optarg, NULL, 0);
+	    break;
+	case OPT_SHOWTIME:
+	    showtime = 1;
 	    break;
 	case OPT_STEREO:
 	    opt->outfmt &= ~XMP_FMT_MONO;

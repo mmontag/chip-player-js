@@ -8,6 +8,7 @@ Stable versions
 	- remove callback driver
 	- split unified flags/quirks into separate variables
 	- add elapsed time echoback event
+	- add option to display elapsed and remaining time
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

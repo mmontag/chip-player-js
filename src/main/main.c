@@ -130,8 +130,8 @@ static int reset_tty()
     if (background)
 	return -1;
 
-    if (tcsetattr (0, TCSAFLUSH, &term) < 0) {
-	fprintf (stderr, "can't reset terminal!\n");
+    if (tcsetattr(0, TCSAFLUSH, &term) < 0) {
+	fprintf(stderr, "can't reset terminal!\n");
 	return -1;
     }
 #endif
@@ -146,7 +146,10 @@ static int reset_tty()
 static void sigtstp_handler()
 {
     if (!stopped) {
-	fprintf (stderr, "] - STOPPED\n");
+	if (showtime)
+	    fprintf(stderr, "\n");
+	else if (verbosity)
+	    fprintf(stderr, "] - STOPPED\n");
 	xmp_timer_stop(ctx);
 	stopped = 1;
     }
@@ -241,12 +244,19 @@ static void process_echoback(unsigned long i)
     if (showtime) {
 	switch (i & 0xf) {
 	case XMP_ECHO_TIME:
-	    fprintf(stderr, "\r%d:%02d:%02d.%d", (int)(msg / (60 * 600)),
-			(int)((msg / 600) % 600), (int)((msg / 10) % 60),
-			(int)(msg % 10));
+	    if (1 || showtime) {
+		int rem = mi.time / 100 - msg;
+		fprintf(stderr, "\r%02d:%02d:%02d.%d  ",
+			(int)(msg / (60 * 600)), (int)((msg / 600) % 60),
+			(int)((msg / 10) % 60), (int)(msg % 10));
+		fprintf(stderr, "-%02d:%02d:%02d.%d",
+			(int)(rem / (60 * 600)), (int)((rem / 600) % 60),
+			(int)((rem / 10) % 60), (int)(rem % 10));
+	    }
 	    break;
 	}
-    } else if (verbosity) {
+    }
+    if (verbosity) {
 	switch (i & 0xf) {
 	case XMP_ECHO_BPM:
 	    _bpm = bpm;
@@ -339,7 +349,7 @@ static void process_echoback(unsigned long i)
 	    break;
 	case ' ':	/* pause module */
 	    pause = xmp_mod_pause(ctx);
-	    if (verbosity && !showtime) {
+	    if (verbosity) {
 	    	fprintf (stderr, "%s",  pause ?
 				"] - PAUSED\b\b\b\b\b\b\b\b\b\b" :
 				"]         \b\b\b\b\b\b\b\b\b\b");
@@ -583,6 +593,9 @@ int main (int argc, char **argv)
 
 	xmp_release_module(ctx);
 
+	if (showtime) {
+	    fprintf(stderr, "\r                       \r");
+	}
 	if (opt->verbosity && !background) {
 	    fprintf (stderr,
 "\rElapsed time   : %dmin%02ds %s                                \n",
