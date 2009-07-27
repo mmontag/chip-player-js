@@ -585,7 +585,7 @@ static gpointer play_loop(gpointer arg)
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
 			xmp_cfg.force_mono ? 1 : 2, size, data);
 	
-		while (xmp_ip.output->buffer_free() < i && play_data.ipb->playing)
+		while (xmp_ip.output->buffer_free() < size && play_data.ipb->playing)
 			usleep(10000);
 
 		if (play_data.ipb->playing)

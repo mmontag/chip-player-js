@@ -359,10 +359,6 @@ static void play_file(char *filename)
 	}
 	fclose(f);
 
-	gtk_text_buffer_get_start_iter(text1b, &start);
-	gtk_text_buffer_get_end_iter(text1b, &end);
-	gtk_text_buffer_delete(text1b, &start, &end);
-	
 	xmp_plugin_audio_error = FALSE;
 	playing = 1;
 
@@ -419,12 +415,6 @@ static void play_file(char *filename)
 
 	xmp_open_audio(ctx);
 
-	pipe(fd_info);
-	fd_old2 = dup (fileno (stderr));
-	dup2(fd_info[1], fileno (stderr));
-	fflush(stderr);
-	pthread_create(&catch_thread, NULL, catch_info, NULL);
-
 	_D("*** loading: %s", filename);
 	pthread_mutex_lock(&load_mutex);
 	lret =  xmp_load_module(ctx, filename);
@@ -448,19 +438,22 @@ static void play_file(char *filename)
 
 static void *play_loop(void *arg)
 {
+	void *data;
+	int size;
+
 	xmp_player_start(ctx);
 	while (xmp_player_frame(ctx) == 0) {
-		xmp_play_buffer(ctx);
+		xmp_get_buffer(ctx, &data, &size);
 
 		xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
-			xmp_cfg.force_mono ? 1 : 2, i, b);
+			xmp_cfg.force_mono ? 1 : 2, size, data);
 	
-		while (xmp_ip.output->buffer_free() < i && playing)
+		while (xmp_ip.output->buffer_free() < size && playing)
 			usleep(10000);
 
 		if (playing)
-			xmp_ip.output->write_audio(b, i);
+			xmp_ip.output->write_audio(data, size);
 	}
 	xmp_player_end(ctx);
 
