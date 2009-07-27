@@ -23,8 +23,10 @@
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 }
 
+#define HAS_QUIRK(x) (m->quirk & (x))
 
-void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc)
+
+void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc, int fnum)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
@@ -65,8 +67,10 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
 	xc->a_size = 3;
 	break;
     case FX_PORTA_UP:				/* Portamento up */
-fx_porta_up:
-	if (m->quirk & XMP_QRK_FINEFX) {
+	if (fxp == 0)
+	    fxp = xc->porta;
+
+	if (HAS_QUIRK(XMP_QRK_FINEFX) && (fnum == 0 || !HAS_QUIRK(XMP_QRK_ITVPOR))) {
 	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
@@ -77,10 +81,6 @@ fx_porta_up:
 		fxp &= 0x0e;
 		fxp |= 0x10;
 		goto fx_xf_porta;
-	    }
-	    if (!fxp) {
-		if ((fxp = xc->porta) != 0)
-		    goto fx_porta_up;
 	    }
 	}
 	SET(PITCHBEND);
@@ -93,8 +93,10 @@ fx_porta_up:
 	}
 	break;
     case FX_PORTA_DN:				/* Portamento down */
-fx_porta_dn:
-	if (m->quirk & XMP_QRK_FINEFX) {
+	if (fxp == 0)
+	    fxp = xc->porta;
+
+	if (HAS_QUIRK(XMP_QRK_FINEFX) && (fnum == 0 || !HAS_QUIRK(XMP_QRK_ITVPOR))) {
 	    switch (MSN(fxp)) {
 	    case 0xf:
 		xc->porta = fxp;
@@ -105,10 +107,6 @@ fx_porta_dn:
 		fxp &= 0x0e;
 		fxp |= 0x20;
 		goto fx_xf_porta;
-	    }
-	    if (!fxp) {
-		if ((fxp = xc->porta) != 0)
-		    goto fx_porta_dn;
 	    }
 	}
 	SET(PITCHBEND);

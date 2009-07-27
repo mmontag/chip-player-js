@@ -434,8 +434,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     /* Secondary effect is processed _first_ and can be overriden
      * by the primary effect.
      */
-    process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc);
-    process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc);
+    process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
+    process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
     if (!TEST(IS_VALID)) {
 	xc->volume = 0;

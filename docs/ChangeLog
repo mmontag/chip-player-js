@@ -9,6 +9,7 @@ Stable versions
 	- split unified flags/quirks into separate variables
 	- add elapsed time echoback event
 	- add option to display elapsed and remaining time
+	- implement IT volume column fine effects quirk (Storlek test #6)
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

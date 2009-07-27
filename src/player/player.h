@@ -183,7 +183,7 @@ struct xmp_channel {
 };
 
 
-void process_fx(struct xmp_context *, int, uint8, uint8, uint8, struct xmp_channel *);
+void process_fx(struct xmp_context *, int, uint8, uint8, uint8, struct xmp_channel *, int);
 void xmp_med_synth(struct xmp_context *, int, struct xmp_channel *, int);
 int get_med_arp(struct xmp_player_context *, struct xmp_channel *);
 int get_med_vibrato(struct xmp_channel *);

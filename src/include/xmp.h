@@ -61,7 +61,7 @@
 				 XMP_QRK_ENVFADE | XMP_QRK_S3MLOOP | \
 				 XMP_QRK_OFSRST | XMP_QRK_ITENV | \
 				 XMP_QRK_VOLPDN | XMP_QRK_RTGINS | \
-				 XMP_QRK_SAVEINS)
+				 XMP_QRK_SAVEINS | XMP_QRK_ITVPOR)
 
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_ORD_NEXT, 0)
@@ -135,6 +135,7 @@ struct xmp_options {
 #define XMP_QRK_VOLPDN	(1 << 17)	/* Set priority to volume slide down */
 #define XMP_QRK_UNISLD	(1 << 18)	/* Unified pitch slide/portamento */
 #define XMP_QRK_SAVEINS	(1 << 19)	/* Always save instrument number */
+#define XMP_QRK_ITVPOR	(1 << 20)	/* Disable fine bends in IT vol fx */
 	int quirk;		/* extra control flags */
 	int crunch;		/* Sample crunching ratio */
 	int start;		/* Set initial order (default = 0) */
