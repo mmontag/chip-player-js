@@ -74,10 +74,6 @@ int _xmp_scan_module(struct xmp_context *ctx)
     gvl = m->xxh->gvl;
     bpm = m->xxh->bpm;
 
-    /* Prevent crashes caused by large softmixer frames */
-    if (bpm < SMIX_MINBPM)
-	bpm = SMIX_MINBPM;
-
     tempo = (tempo = o->tempo ? o->tempo : m->xxh->tpo) ? tempo : TIME;
     base_time = m->rrate;
 
@@ -144,6 +140,9 @@ int _xmp_scan_module(struct xmp_context *ctx)
 
 	last_row = m->xxp[m->xxo[ord]]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
+	    /* Prevent crashes caused by large softmixer frames */
+	    if (bpm < SMIX_MINBPM)
+		bpm = SMIX_MINBPM;
 
 	    /* Date: Sat, 8 Sep 2007 04:01:06 +0200
 	     * Reported by Zbigniew Luszpinski <zbiggy@o2.pl>

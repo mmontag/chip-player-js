@@ -11,7 +11,7 @@
 #include "effects.h"
 #include "period.h"
 #include "driver.h"
-
+#include "mixer.h"
 
 #define NOT_IMPLEMENTED
 
@@ -403,8 +403,12 @@ ex_f_vslide_dn:
 	    p->tempo = fxp;
 	break;
     case FX_S3M_BPM:				/* Set S3M BPM */
-	if (fxp)
-	    p->tick_time = m->rrate / (p->xmp_bpm = fxp);
+	if (fxp) {
+	    if (fxp < SMIX_MINBPM)
+		fxp = SMIX_MINBPM;
+	    p->xmp_bpm = fxp;
+	    p->tick_time = m->rrate / p->xmp_bpm;
+	}
 	break;
     case FX_IT_BPM:				/* Set IT BPM */
 	if (MSN(fxp) == 0) {		/* T0x - Tempo slide down by x */
@@ -416,6 +420,8 @@ ex_f_vslide_dn:
 	    if ((int32)p->xmp_bpm > 0xff)
 		p->xmp_bpm = 0xff;
 	} else {
+	    if (fxp < SMIX_MINBPM)
+		fxp = SMIX_MINBPM;
 	    p->xmp_bpm = fxp;
 	}
 	p->tick_time = m->rrate / p->xmp_bpm;
