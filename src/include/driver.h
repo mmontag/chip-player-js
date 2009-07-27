@@ -86,6 +86,7 @@ void	xmp_drv_setpan		(struct xmp_context *, int, int);
 void	xmp_drv_seteffect	(struct xmp_context *, int, int, int);
 int	xmp_drv_cstat		(struct xmp_context *, int);
 void	xmp_drv_resetchannel	(struct xmp_context *, int);
+void	xmp_drv_resetvoice	(struct xmp_context *, int, int);
 void	xmp_drv_reset		(struct xmp_context *);
 double	xmp_drv_sync		(struct xmp_context *, double);
 int	xmp_drv_getmsg		(struct xmp_context *);

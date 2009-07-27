@@ -21,6 +21,7 @@
 #define SLOW_ATTACK	64
 #define SLOW_RELEASE	16
 
+
 struct voice_info {
 	int chn;		/* channel link */
 	int root;		/* */
@@ -56,7 +57,7 @@ struct voice_info {
 };
 
 int	xmp_smix_on		(struct xmp_context *);
-void	xmp_smix_off		(void);
+void	xmp_smix_off		(struct xmp_context *);
 void    xmp_smix_setvol		(struct xmp_context *, int, int);
 void    xmp_smix_seteffect	(struct xmp_context *, int, int, int);
 void    xmp_smix_setpan		(struct xmp_context *, int, int);

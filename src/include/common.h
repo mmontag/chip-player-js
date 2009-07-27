@@ -227,11 +227,13 @@ struct xmp_driver_context {
 	char *description;		/* Driver description */
 	char **help;			/* Driver help info */
 
+	int ext;			/* External non-softmixer driver */
 	int memavl;			/* Memory availble in sound card */
 	int numtrk;			/* Number of tracks */
 	int numchn;			/* Number of virtual channels */
-	int numvoc;			/* Number of voices currently in use */
 	int numbuf;			/* Number of output buffers */
+	int curvoc;			/* Number of voices currently in use */
+	int maxvoc;			/* Number of sound card voices */
 
 	int cmute_array[XMP_MAXCH];
 

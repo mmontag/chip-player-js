@@ -939,7 +939,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
 		xmp_drv_echoback(ctx, (m->xxo[f->ord] << 12) | (f->ord << 4) |
 							XMP_ECHO_ORD);
-		xmp_drv_echoback(ctx, (d->numvoc << 4) | XMP_ECHO_NCH);
+		xmp_drv_echoback(ctx, (d->curvoc << 4) | XMP_ECHO_NCH);
 		xmp_drv_echoback(ctx, ((m->xxp[m->xxo[f->ord]]->rows - 1)
 				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
 		xmp_drv_echoback(ctx, ((int)(f->time * 10) << 4)

@@ -267,7 +267,7 @@ void synth_setvol(int c, int vol)
 }
 
 
-int synth_init (int freq)
+int synth_init(int freq)
 {
 #ifdef DEBUG_ADLIB
     ioperm (0x388, 2, 1);
