@@ -24,7 +24,7 @@ static int fd_audio;
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
-static void myshutdown();
+static void myshutdown(struct xmp_context *);
 static void mysync();
 
 static void dummy()
@@ -138,9 +138,9 @@ static void bufdump(struct xmp_context *ctx, int i)
 	} while (i);
 }
 
-static void myshutdown()
+static void myshutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 	close(fd_audio);
 }
 

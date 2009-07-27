@@ -32,7 +32,7 @@ extern "C" {
 
 static int init (struct xmp_context *ctx);
 static void bufdump (struct xmp_context *, int);
-static void myshutdown ();
+static void myshutdown (struct xmp_context *);
 
 static void dummy()
 {
@@ -241,10 +241,10 @@ static void bufdump(struct xmp_context *ctx, int i)
 	}
 }
 
-static void myshutdown()
+static void myshutdown(struct xmp_context *)
 {
 	player->Stop(); 
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 	be_app->Lock();
 	be_app->Quit();
 }

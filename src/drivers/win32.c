@@ -30,7 +30,7 @@ static int num_buffers;
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
-static void deinit();
+static void deinit(struct xmp_context *);
 
 static void dummy()
 {
@@ -176,11 +176,11 @@ static void bufdump(struct xmp_context *ctx, int len)
 	nextbuffer %= num_buffers;
 }
 
-static void deinit()
+static void deinit(struct xmp_context *ctx)
 {
 	int i;
 
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 
 	if (hwaveout) {
 		for (i = 0; i < num_buffers; i++) {

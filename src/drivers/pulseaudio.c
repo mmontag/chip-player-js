@@ -22,7 +22,7 @@ static pa_simple *s;
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
-static void myshutdown();
+static void myshutdown(struct xmp_context *);
 static void flush();
 
 static void dummy()
@@ -112,9 +112,9 @@ static void bufdump(struct xmp_context *ctx, int i)
 	}
 }
 
-static void myshutdown()
+static void myshutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 
 	if (s)
 		pa_simple_free(s);

@@ -39,7 +39,7 @@
 static int init(struct xmp_context *);
 static int setaudio(struct xmp_options *);
 static void bufdump(struct xmp_context *, int);
-static void shutdown(void);
+static void shutdown(struct xmp_context *);
 
 static MCI_MIX_BUFFER MixBuffers[BUFFERCOUNT];
 static MCI_MIXSETUP_PARMS MixSetupParms;
@@ -265,11 +265,11 @@ static void bufdump(struct xmp_context *ctx, int i)
 
 }
 
-static void shutdown()
+static void shutdown(struct xmp_context *ctx)
 {
 	//printf( "In ShutDown...\n" );
 
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 
 	if (MixBuffers[0].pBuffer) {
 		mciSendCommand(DeviceID, MCI_BUFFER,

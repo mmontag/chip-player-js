@@ -236,7 +236,7 @@ int xmp_drv_open(struct xmp_context *ctx)
     d->patch_array = calloc(XMP_MAXPAT, sizeof(struct patch_info *));
 
     if (d->patch_array == NULL) {
-	d->driver->shutdown ();
+	d->driver->shutdown(ctx);
 	return XMP_ERR_ALLOC;
     }
 

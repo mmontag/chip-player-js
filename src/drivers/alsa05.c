@@ -39,7 +39,7 @@
 #include "mixer.h"
 
 static int init (struct xmp_context *ctx);
-static void dshutdown (void);
+static void dshutdown (struct xmp_context *);
 static void bufdump (struct xmp_context *, int);
 static void bufwipe (void);
 static void flush (void);
@@ -244,9 +244,9 @@ static void bufdump(struct xmp_context *ctx, int i)
 	}
 }
 
-static void dshutdown()
+static void dshutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 	snd_pcm_close(pcm_handle);
 	free(mybuffer);
 }

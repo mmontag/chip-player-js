@@ -15,7 +15,7 @@
 #include "mixer.h"
 
 static int init(struct xmp_context *);
-static void shutdown(void);
+static void shutdown(struct xmp_context *);
 
 static void dummy()
 {
@@ -53,7 +53,7 @@ static int init(struct xmp_context *ctx)
 	return xmp_smix_on(ctx);
 }
 
-static void shutdown()
+static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 }

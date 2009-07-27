@@ -30,7 +30,7 @@ static uint32 size;
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
-static void shutdown();
+static void shutdown(struct xmp_context *);
 
 static void dummy()
 {
@@ -175,9 +175,9 @@ static void bufdump(struct xmp_context *ctx, int i)
 	size += i;
 }
 
-static void shutdown()
+static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 
 	lseek(fd, 40, SEEK_SET);
 	writeval_32l(fd, size);

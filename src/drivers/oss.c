@@ -38,7 +38,7 @@ static void from_fmt(struct xmp_options *, int);
 static int to_fmt(struct xmp_options *);
 static void setaudio(struct xmp_options *);
 static int init(struct xmp_context *);
-static void shutdown(void);
+static void shutdown(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
 static void flush(void);
 
@@ -225,9 +225,9 @@ static void bufdump(struct xmp_context *ctx, int i)
 	};
 }
 
-static void shutdown()
+static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 	close(audio_fd);
 }
 

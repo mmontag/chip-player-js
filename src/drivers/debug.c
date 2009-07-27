@@ -34,7 +34,7 @@ static void seq_sync(double);
 static int writepatch(struct patch_info *);
 static int init(struct xmp_context *ctx);
 static int getmsg(void);
-static void shutdown(void);
+static void shutdown(struct xmp_context *);
 
 struct xmp_drv_info drv_debug = {
 	"debug",		/* driver ID */
@@ -161,7 +161,7 @@ static int init(struct xmp_context *ctx)
 	return XMP_OK;
 }
 
-static void shutdown()
+static void shutdown(struct xmp_context *ctx)
 {
 	printf("** shutdown\n");
 }

@@ -27,7 +27,7 @@ static struct sio_hdl *hdl;
 
 static int init (struct xmp_context *);
 static void bufdump (struct xmp_context *, int);
-static void shutdown (void);
+static void shutdown (struct xmp_context *);
 static void dummy (void);
 
 struct xmp_drv_info drv_openbsd = {
@@ -121,9 +121,9 @@ bufdump (struct xmp_context *ctx, int len)
 }
 
 static void
-shutdown (void)
+shutdown (struct xmp_context *ctx)
 {
-	 xmp_smix_off ();
+	 xmp_smix_off (ctx);
 	 sio_close (hdl);
 	 hdl = NULL;
 }

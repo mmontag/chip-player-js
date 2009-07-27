@@ -82,7 +82,7 @@ static void seq_sync(double);
 static int writepatch(struct xmp_context *, struct patch_info *);
 static int init(struct xmp_context *);
 static int getmsg(void);
-static void shutdown(void);
+static void shutdown(struct xmp_context *);
 
 #define seqbuf_dump bufdump
 
@@ -413,7 +413,7 @@ static int init(struct xmp_context *ctx)
 	return 0;
 }
 
-static void shutdown()
+static void shutdown(struct xmp_context *ctx)
 {
 	free(drv_oss_seq.description);
 	close(seqfd);

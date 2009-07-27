@@ -29,7 +29,7 @@ static int al_sample_16;
 static int init(struct xmp_context *);
 static int setaudio(struct xmp_options *);
 static void bufdump(struct xmp_context *, int);
-static void shutdown(void);
+static void shutdown(struct xmp_context *);
 
 static void dummy()
 {
@@ -232,8 +232,8 @@ static void bufdump(struct xmp_context *ctx, int i)
 		ALwritesamps(audio_port, xmp_smix_buffer(ctx), i);
 }
 
-static void shutdown()
+static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 	ALcloseport(audio_port);
 }

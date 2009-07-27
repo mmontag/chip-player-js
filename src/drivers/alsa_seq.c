@@ -47,7 +47,7 @@ static void seq_sync	(double);
 static int writepatch	(struct patch_info *);
 static int init(struct xmp_context *ctx);
 static int getmsg	(void);
-static void shutdown	(void);
+static void shutdown	(struct xmp_context *);
 
 static char *help[] = {
 	"addr=port", "Set ALSA sequencer port",
@@ -455,7 +455,7 @@ error:
 }
 
 
-static void shutdown ()
+static void shutdown(struct xmp_context *ctx)
 {
 	snd_seq_free_queue(seq, queue);
 	snd_hwdep_close(hwdep);

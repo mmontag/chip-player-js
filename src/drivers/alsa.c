@@ -30,7 +30,7 @@
 static int init (struct xmp_context *);
 static int prepare_driver (void);
 static void echoback (int);
-static void dshutdown (void);
+static void dshutdown (struct xmp_context *);
 static int to_fmt (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
 static void flush (void);
@@ -187,9 +187,9 @@ static void bufdump(struct xmp_context *ctx, int i)
 	}
 }
 
-static void dshutdown()
+static void dshutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 	snd_pcm_close(pcm_handle);
 }
 

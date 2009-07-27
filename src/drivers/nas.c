@@ -47,7 +47,7 @@ static InfoRec info;
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
-static void myshutdown();
+static void myshutdown(struct xmp_context *);
 
 static void dummy()
 {
@@ -269,13 +269,13 @@ static void bufdump(struct xmp_context *ctx, int len)
 	info.buf_cnt += (len - buf_cnt);
 }
 
-static void myshutdown()
+static void myshutdown(struct xmp_context *ctx)
 {
 	while (!info.finished) {
 		nas_flush();
 	}
 
-	xmp_smix_off();
+	xmp_smix_off(ctx);
 	AuDestroyFlow(info.aud, info.flow, NULL);
 	AuCloseServer(info.aud);
 	free(info.buf);
