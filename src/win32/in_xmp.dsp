@@ -582,6 +582,10 @@ SOURCE=..\player\effects.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\player\mixer.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\drivers\smix.c
 # End Source File
 # Begin Source File

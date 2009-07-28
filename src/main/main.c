@@ -29,6 +29,9 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#ifdef __CYGWIN__
+#include <sys/select.h>
+#endif
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
@@ -244,7 +247,7 @@ static int stdin_ready_for_reading()
     
     ret = select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
     
-    if (FD_ISSET(STDIN_FILENO, &fds))
+    if (ret > 0 && FD_ISSET(STDIN_FILENO, &fds))
         return 1;
     
     return 0;
