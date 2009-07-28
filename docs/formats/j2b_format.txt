@@ -109,6 +109,14 @@ Ax - on channel x+1 read the following data: <eff_parameter><effect><vol/2> (3 b
 Cx - on channel x+1 read the following data: <eff_parameter><effect><samplenum><note> (4 bytes)
 Ex - on channel x+1 read the following data: <eff_parameter><effect><samplenum><note><vol/2> (5 bytes)
 
+3x – on channel x+17 read the following data: vol/2 (1 byte)
+5x – on channel x+17 read the following data: samplenum,note (2 bytes)
+7x – on channel x+17 read the following data: samplenum,note,vol/2 (3 bytes)
+9x – on channel x+17 read the following data: eff_parameter,effect (2 bytes)
+Bx – on channel x+17 read the following data: eff_parameter,effect,vol/2 (3 bytes)
+Dx – on channel x+17 read the following data: eff_parameter,effect,samplenum,note (4 bytes)
+Fx – on channel x+17 read the following data: eff_parameter,effect,samplenum,note,vol/2 (5 bytes)
+
 Note numbers and conversion:
 
 31 - C-4
@@ -151,9 +159,19 @@ Note numbers and conversion:
 Effects (not all of them, as I'll have more time I'll list more effects here):
 0x01 - Portamento up
 0x02 - Portamento down
+0×03 – Tone portamento
+0×04 – Vibrato
+0×05 – Volslide+Toneporta
+0×06 – Volslide+Vibrato
+0×07 – Tremolo
 0x08 - Panning
+0×09 – Set offset
 0x0A - Volume slide
-0x0F - Speed/Tempo (as in MOD)
+0×0B – Position jump
+0×0D – Pattern break
+0×0E – Multieffect (like Sxx in IT format)
+0x0F - Speed
+0×14 – Tempo
 
 Next data of dj2b is instrument and then sample.
 By now I decoded sample structure (instrument structure too but I don't know what data is there):
