@@ -211,6 +211,45 @@ static void cleanup(int s)
 
 #endif /* HAVE_SIGNAL_H */
 
+#ifdef __CYGWIN__
+/*
+ * from	daniel åkerud <daniel.akerud@gmail.com>
+ * date	Tue, Jul 28, 2009 at 9:59 AM
+ *
+ * Under Cygwin, the read() in process_echoback blocks because VTIME = 0
+ * is not handled correctly. To fix this you can either:
+ *
+ * 1. Enable "tty emulation" in Cygwin using an environment variable.
+ * http://www.mail-archive.com/cygwin@cygwin.com/msg99417.html
+ * For me this is _very_ slow and I can see the characters as they are
+ * typed out when running xmp. I have not investigated why this is
+ * happening, but there is of course a reason why this mode is not
+ * enabled by default.
+ * 
+ * 2. Do a select() before read()ing if the platform is Cygwin.
+ * This makes Cygwin builds work out of the box with no fiddling around,
+ * but does impose a neglectible cpu overhead (for Cygwin builds only).
+ */
+static int stdin_ready_for_reading()
+{
+    fd_set fds;
+    struct timeval tv;
+    int ret;
+    
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    
+    ret = select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
+    
+    if (FD_ISSET(STDIN_FILENO, &fds))
+        return 1;
+    
+    return 0;
+}
+#endif
 
 static void process_echoback(unsigned long i)
 {
@@ -299,6 +338,10 @@ static void process_echoback(unsigned long i)
 	return;
 
 #if defined HAVE_TERMIOS_H && !defined WIN32
+#ifdef __CYGWIN__
+    k = 0;
+    if (stdin_ready_for_reading())
+#endif
     k = read(0, &cmd, 1);
 #elif defined WIN32
     k = cmd = kbhit() ? getch() : 0;
