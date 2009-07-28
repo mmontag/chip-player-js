@@ -13,6 +13,7 @@ Stable versions
 	- fix bmp plugin build
 	- fix FreeBSD build (by swell k)
 	- fix terminal handling in Cygwin (by daniel åkerud)
+	- add OpenMPT id to S3M loader
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

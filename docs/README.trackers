@@ -452,6 +452,7 @@ S3M tracker codes:
   2 = Imago Orpheus
   3 = Impulse Tracker
   4 = Schism Tracker
+  5 = OpenMPT (starting in 1.17)
 
 IT version codes:
   0214, format 0214, rsvd at 0x3c CHBI, -DEPRECATED- filenames = Chibi Tracker

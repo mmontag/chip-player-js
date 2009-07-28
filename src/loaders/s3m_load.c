@@ -328,6 +328,10 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	sprintf(tracker_name, "Schism Tracker %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	break;
+    case 5:
+	sprintf(tracker_name, "OpenMPT %d.%02x",
+		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+	break;
     default:
 	snprintf(tracker_name, 80, "unknown (%04x)", sfh.version);
     }
