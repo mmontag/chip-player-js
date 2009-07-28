@@ -74,7 +74,7 @@ dist: dist-prepare dist-subdirs
 dist-prepare:
 	rm -Rf $(DIST) $(DIST).tar.gz
 	mkdir -p $(DIST)
-	cp -rp $(DFILES) $(DIST)/
+	cp -RPp $(DFILES) $(DIST)/
 
 dist-subdirs: $(addprefix dist-,$(DDIRS))
 	chmod -R u+w $(DIST)/*

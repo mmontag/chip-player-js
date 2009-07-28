@@ -17,7 +17,7 @@ D_LOBJS	= $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_LOBJS))
 
 dist-drivers:
 	mkdir -p $(DIST)/$(DRIVERS_PATH)
-	cp -dp $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_DFILES)) $(DIST)/$(DRIVERS_PATH)
+	cp -RPp $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_DFILES)) $(DIST)/$(DRIVERS_PATH)
 
 beos.o: src/drivers/beos.c
 	g++ -c $(XCFLAGS) -o beos.o $+

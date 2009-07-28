@@ -12,7 +12,7 @@ endif
 
 dist-win32: dsps
 	mkdir -p $(DIST)/$(WIN32_PATH)
-	cp -drp $(addprefix $(WIN32_PATH)/,$(WIN32_DFILES)) $(DIST)/$(WIN32_PATH)
+	cp -RPp $(addprefix $(WIN32_PATH)/,$(WIN32_DFILES)) $(DIST)/$(WIN32_PATH)
 
 # Always generate project files with windows drivers
 W32DRV_OBJS	= $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_OBJS) win32.o)

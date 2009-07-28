@@ -36,7 +36,7 @@ DRIVERS		= @DRIVERS@
 dummy:
 
 subdist::
-	cp -dp $(DFILES) $(DISTDIR)
+	cp -RPp $(DFILES) $(DISTDIR)
 ifdef DDIRS
 	for i in $(DDIRS); do \
 		mkdir $(DISTDIR)/$$i; \
@@ -46,7 +46,7 @@ ifdef DDIRS
 			subdist; \
 		else \
 			for j in *; do \
-				[ -f $$j ] && cp -dp $$j ../$(DISTDIR)/$$i; \
+				[ -f $$j ] && cp -RPp $$j ../$(DISTDIR)/$$i; \
 			done; true; \
 		fi; ) \
 	done

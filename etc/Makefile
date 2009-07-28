@@ -11,6 +11,6 @@ install-etc:
 
 dist-etc:
 	mkdir -p $(DIST)/$(ETC_PATH)
-	cp -rp $(addprefix $(ETC_PATH)/,$(ETC_DFILES)) $(DIST)/$(ETC_PATH)
+	cp -RPp $(addprefix $(ETC_PATH)/,$(ETC_DFILES)) $(DIST)/$(ETC_PATH)
 
 

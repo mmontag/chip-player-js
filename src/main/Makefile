@@ -5,7 +5,7 @@ MAIN_PATH	= src/main
 
 dist-main:
 	mkdir -p $(DIST)/$(MAIN_PATH)
-	cp -dp $(addprefix $(MAIN_PATH)/,$(MAIN_DFILES)) $(DIST)/$(MAIN_PATH)
+	cp -RPp $(addprefix $(MAIN_PATH)/,$(MAIN_DFILES)) $(DIST)/$(MAIN_PATH)
 
 $(MAIN_PATH)/options.o: Makefile
 

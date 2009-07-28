@@ -20,5 +20,5 @@ OBJS += $(addprefix $(LOADERS_PATH)/,$(LOADERS_OBJS))
 
 dist-loaders:
 	mkdir -p $(DIST)/$(LOADERS_PATH)
-	cp -dp $(addprefix $(LOADERS_PATH)/,$(LOADERS_DFILES)) $(DIST)/$(LOADERS_PATH)
+	cp -RPp $(addprefix $(LOADERS_PATH)/,$(LOADERS_DFILES)) $(DIST)/$(LOADERS_PATH)
 

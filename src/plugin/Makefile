@@ -6,7 +6,7 @@ PLUGIN_PATH	= src/plugin
 
 dist-plugin:
 	mkdir -p $(DIST)/$(PLUGIN_PATH)
-	cp -dp $(addprefix $(PLUGIN_PATH)/,$(PLUGIN_DFILES)) $(DIST)/$(PLUGIN_PATH)
+	cp -RPp $(addprefix $(PLUGIN_PATH)/,$(PLUGIN_DFILES)) $(DIST)/$(PLUGIN_PATH)
 
 
 WINDRES = i586-mingw32msvc-windres

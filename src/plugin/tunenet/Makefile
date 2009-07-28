@@ -7,7 +7,7 @@ TUNENET_PATH	= src/plugin/tunenet
 
 dist-tunenet:
 	mkdir -p $(DIST)/$(TUNENET_PATH)
-	cp -dp $(addprefix $(TUNENET_PATH)/,$(TUNENET_DFILES)) $(DIST)/$(TUNENET_PATH)
+	cp -RPp $(addprefix $(TUNENET_PATH)/,$(TUNENET_DFILES)) $(DIST)/$(TUNENET_PATH)
 
 TN_OBJS = $(addprefix $(TUNENET_PATH)/,$(TUNENET_OBJS))
 

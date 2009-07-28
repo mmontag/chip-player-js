@@ -73,7 +73,7 @@ install:
 # with this subdirectory
 
 subdist::
-	cp -dp $(DFILES) $(DISTDIR)
+	cp -RPp $(DFILES) $(DISTDIR)
 
 
 # The '+del version.o' will cause the build Date&Time to be recalculated for each build!

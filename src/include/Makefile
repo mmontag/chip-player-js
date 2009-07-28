@@ -6,6 +6,6 @@ INCLUDE_PATH	= src/include
 
 dist-include:
 	mkdir -p $(DIST)/$(INCLUDE_PATH)
-	cp -dp $(addprefix $(INCLUDE_PATH)/,$(INCLUDE_DFILES)) $(DIST)/$(INCLUDE_PATH)
+	cp -RPp $(addprefix $(INCLUDE_PATH)/,$(INCLUDE_DFILES)) $(DIST)/$(INCLUDE_PATH)
 
 

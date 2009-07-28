@@ -10,5 +10,5 @@ OBJS += $(addprefix $(PLAYER_PATH)/,$(PLAYER_OBJS))
 
 dist-player:
 	mkdir -p $(DIST)/$(PLAYER_PATH)
-	cp -dp $(addprefix $(PLAYER_PATH)/,$(PLAYER_DFILES)) $(DIST)/$(PLAYER_PATH)
+	cp -RPp $(addprefix $(PLAYER_PATH)/,$(PLAYER_DFILES)) $(DIST)/$(PLAYER_PATH)
 

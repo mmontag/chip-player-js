@@ -9,4 +9,4 @@ OBJS += $(addprefix $(MISC_PATH)/,$(MISC_OBJS))
 
 dist-misc:
 	mkdir -p $(DIST)/$(MISC_PATH)
-	cp -dp $(addprefix $(MISC_PATH)/,$(MISC_DFILES)) $(DIST)/$(MISC_PATH)
+	cp -RPp $(addprefix $(MISC_PATH)/,$(MISC_DFILES)) $(DIST)/$(MISC_PATH)

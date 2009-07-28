@@ -13,6 +13,6 @@ OBJS += $(addprefix $(PROWIZ_PATH)/, $(PROWIZ_OBJS))
 
 dist-prowiz:
 	mkdir -p $(DIST)/$(PROWIZ_PATH)
-	cp -dp $(addprefix $(PROWIZ_PATH)/,$(PROWIZ_DFILES)) $(DIST)/$(PROWIZ_PATH)
+	cp -RPp $(addprefix $(PROWIZ_PATH)/,$(PROWIZ_DFILES)) $(DIST)/$(PROWIZ_PATH)
 
 
