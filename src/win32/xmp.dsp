@@ -314,6 +314,10 @@ SOURCE=..\loaders\pw_load.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\j2b_load.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
 # Begin Source File
@@ -511,6 +515,10 @@ SOURCE=..\misc\xfd.c
 # Begin Source File
 
 SOURCE=..\misc\crc32.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\misc\inflate.c
 # End Source File
 # Begin Source File
 

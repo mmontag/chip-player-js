@@ -129,7 +129,7 @@ int n,k;
   return 0;
 }
 
-unsigned int crc32(char *buffer, int len, unsigned int crc)
+unsigned int crc32(unsigned char *buffer, int len, unsigned int crc)
 {
 int t;
 
