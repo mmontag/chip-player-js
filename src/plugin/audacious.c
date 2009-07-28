@@ -103,7 +103,7 @@ static gchar *fmts[] = {
         "ac1d", "fchs", "fcm", "fuzz", "kris", "ksm", "mp", "p18a",
 	"p10c", "pp21" "pru1", "pru2", "pha", "wn", "unic", "tp3", "xann",
 	"di", "eu", "p4x", "p40", "p41", "p50a" "p60a", "np1", "np2", "np3",
-	"zen", "crb", "tdd", "gmc", "gdm", NULL
+	"zen", "crb", "tdd", "gmc", "gdm", "mdz", "xmz", "s3z", NULL
 };
 
 
