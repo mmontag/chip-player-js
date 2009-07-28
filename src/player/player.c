@@ -524,7 +524,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	xc->delay = xc->retrig = xc->a_idx = 0;
 	xc->a_size = 1;
 	xc->a_val[0] = 0;
-	xc->flags &= (0xff000000 | IS_VALID);
+	xc->flags &= (0xff000000 | IS_VALID);	/* keep persistent flags */
     }
 
     if (!TEST(IS_VALID))

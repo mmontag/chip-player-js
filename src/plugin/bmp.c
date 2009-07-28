@@ -101,12 +101,9 @@ InputPlugin xmp_ip = {
 	.seek		= seek,
 	.get_time	= get_time,
 	.get_song_info	= get_song_info,
-	//.file_info_box	= file_info_box,
+	/* .file_info_box	= file_info_box, */
 };
 
-
-static void file_info_box_build (void);
-static void init_visual (GdkVisual *);
 
 static void aboutbox()
 {
@@ -343,7 +340,6 @@ static void play_file(char *filename)
 	FILE *f;
 	struct xmp_options *opt;
 	int lret;
-	GtkTextIter start, end;
 	AFormat fmt;
 	int nch;
 	
@@ -425,8 +421,6 @@ static void play_file(char *filename)
 		playing = 0;
 		return;
 	}
-
-	gtk_adjustment_set_value(GTK_TEXT_VIEW(text1)->vadjustment, 0.0);
 
 	xmp_cfg.time = lret;
 	xmp_get_module_info(ctx, &xmp_cfg.mod_info);
