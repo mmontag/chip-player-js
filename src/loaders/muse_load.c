@@ -50,6 +50,8 @@ static int muse_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
+static uint8 chn_pan[64];
+
 static void get_init(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_player_context *p = &ctx->p;
@@ -65,7 +67,7 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 	m->xxh->bpm = read8(f);
 	read32l(f);	/* unknown */
 	read8(f);	/* unknown */
-	/* channelpan */
+	fread(chn_pan, 1, 64, f);
 }
 
 static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
@@ -130,9 +132,10 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 	for (r = 0; r < rows; r++) {
 		flag = read8(f);
-		chan = LSN(flag);
+		chan = flag & 0x1f;
 
 		event = chan < m->xxh->chn ? &EVENT(i, chan, r) : &dummy;
+
 		if (flag & 0x80) {
 			uint8 fxp = read8(f);
 			uint8 fxt = read8(f);
@@ -162,6 +165,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 				break;
 			default:
 				if (fxt > 0x0f)
+					printf("unknown effect %02x %02x\n", fxt, fxp);
 					fxt = fxp = 0;
 			}
 
@@ -170,8 +174,12 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 		}
 
 		if (flag & 0x40) {
-			event->note = read8(f) + 12;
-			event->ins = read8(f) + 1;
+			event->ins = read8(f);
+			event->note = read8(f);
+			if (event->note > 12)
+				event->note -= 12;
+			else
+				event->note = 0;
 		}
 
 		if (flag & 0x20) {
@@ -194,8 +202,6 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	    report("\n     Instrument name           Len   LBeg  LEnd  L Vol Fine C2Spd");
 	}
 
-	m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
-
 	fread(&m->xxih[i].name, 1, 24, f);
 	str_adj((char *)m->xxih[i].name);
 
@@ -213,10 +219,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	read32b(f);	/* unknown */
 	read32b(f);	/* unknown */
+	read8(f);			/* unknown */
 
 	m->xxih[i].nsm = 1;
-
-	read8(f);			/* unknown */
+	m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	m->xxi[i][0].sid = i;
 	m->xxi[i][0].vol = read8(f);
 	m->xxi[i][0].pan = 0x80;
@@ -235,7 +241,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);			/* unknown */
 
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report("\n[%2X] %-24.24s  %05x %05x %05x %c V%02x %+04d %5d", i,
+	    report("\n[%2X] %-24.24s  %05x %05x %05x %c V%02x %+04d %5d ", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
 		finetune, srate);
@@ -244,13 +250,15 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].fin += finetune;
 
 	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
+
+	reportv(ctx, 0, ".");
 }
 
 static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	int offset;
+	int i, offset;
 
 	LOAD_INIT();
 
@@ -287,7 +295,7 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	if (V(0)) {
 	    report("Stored patterns: %d\n", m->xxh->pat);
-	    report("Stored samples : %d", m->xxh->smp);
+	    report("Stored samples : %d ", m->xxh->smp);
 	}
 
 	fseek(f, start + offset, SEEK_SET);
@@ -305,6 +313,9 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 	iff_release();
 
 	reportv(ctx, 0, "\n");
+
+	for (i = 0; i < m->xxh->chn; i++)
+		m->xxc[i].pan = chn_pan[i] * 2;
 
 	return 0;
 }
