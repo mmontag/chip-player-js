@@ -130,8 +130,12 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	m->xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
-	for (r = 0; r < rows; r++) {
-		flag = read8(f);
+	for (r = 0; r < rows; ) {
+		if ((flag = read8(f)) == 0) {
+			r++;
+			continue;
+		}
+
 		chan = flag & 0x1f;
 
 		event = chan < m->xxh->chn ? &EVENT(i, chan, r) : &dummy;
@@ -176,6 +180,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 		if (flag & 0x40) {
 			event->ins = read8(f);
 			event->note = read8(f);
+
 			if (event->note > 12)
 				event->note -= 12;
 			else
