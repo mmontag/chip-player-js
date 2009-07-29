@@ -15,6 +15,7 @@ Stable versions
 	- fix terminal handling in Cygwin (by daniel åkerud)
 	- add OpenMPT id to S3M loader
 	- add Epic MegaGames MUSE data decompression
+	- add Jazz Jackrabbit 2 J2B module format loader
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
