@@ -68,7 +68,7 @@ static int masi_load (struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info masi_loader = {
 	"MASI",
-	"Epic Megagames MASI",
+	"Epic MegaGames MASI",
 	masi_test,
 	masi_load
 };
