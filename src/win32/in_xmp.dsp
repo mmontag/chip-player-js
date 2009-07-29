@@ -318,7 +318,7 @@ SOURCE=..\loaders\pw_load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\j2b_load.c
+SOURCE=..\loaders\muse_load.c
 # End Source File
 # Begin Source File
 
@@ -523,6 +523,10 @@ SOURCE=..\misc\crc32.c
 # Begin Source File
 
 SOURCE=..\misc\inflate.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\misc\muse.c
 # End Source File
 # Begin Source File
 

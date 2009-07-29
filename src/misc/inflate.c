@@ -143,7 +143,7 @@ int t;
   return crc;
 }
 
-static int kunzip_inflate_init()
+int kunzip_inflate_init()
 {
 /*
 int t,r,b,rev_code;
@@ -166,7 +166,7 @@ int t,r,b,rev_code;
   return 0;
 }
 
-static int kunzip_inflate_free()
+int kunzip_inflate_free()
 {
   if (huffman_tree_len_static!=0)
   { free(huffman_tree_len_static); }
@@ -962,7 +962,7 @@ printf("\n");
   return 0;
 }
 
-static int inflate(FILE *in, FILE *out, unsigned int *checksum)
+int inflate(FILE *in, FILE *out, unsigned int *checksum)
 {
 #ifndef ZIP
 unsigned char CMF, FLG;
@@ -1127,22 +1127,4 @@ printf("comp_method=%d  bfinal=%d\n",comp_method,bfinal);
 */
 
   return 0;
-}
-
-
-
-int decrunch_muse (FILE *f, FILE *fo)                          
-{                                                          
-	uint32 checksum;
-  
-	if (fo == NULL) 
-		return -1; 
-
-	fseek(f, 24, SEEK_SET);
-
-	kunzip_inflate_init();
-	inflate(f, fo, &checksum);
-	kunzip_inflate_free();
-
-	return 0;
 }
