@@ -261,6 +261,7 @@ LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks
 Amiga AHI driver (C) 2007 Lorence Lombardo
 OpenBSD sndio driver (C) 2009 Thomas Pfaff
 Portions of WinAmp plugin (C) 2009 Mirko Buffoni
+Inflate decompression routine Copyright (C) 2005-2006 Michael Kohn
 
 This program is free software;  you can redistribute it  and/or modify it
 under  the terms of  the GNU General Public License  as published  by the

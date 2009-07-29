@@ -15,6 +15,8 @@
 
 This code is Copyright 2005-2006 by Michael Kohn
 
+Modified for xmp by Claudio Matsuoka, Jul 2009
+
 This package is licensed under the LGPL. You are free to use this library
 in both commercial and non-commercial applications as long as you dynamically
 link to it. If you statically link this library you must also release your
@@ -50,27 +52,27 @@ struct huffman_tree_t
   short int right;
 };
 
-int length_codes[29] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,
+static int length_codes[29] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,
                          23,27,31,35,43,51,59,67,83,99,115,
                          131,163,195,227,258 };
 
-int length_extra_bits[29] = { 0,0,0,0,0,0,0,0,1,1,1,1,
+static int length_extra_bits[29] = { 0,0,0,0,0,0,0,0,1,1,1,1,
                               2,2,2,2,3,3,3,3,4,4,4,4,
                               5,5,5,5,0 };
 
-int dist_codes[30] = { 1,2,3,4,5,7,9,13,17,25,
+static int dist_codes[30] = { 1,2,3,4,5,7,9,13,17,25,
                              33,49,65,97,129,193,257,385,513,769,
                              1025,1537,2049,3073,4097,6145,8193,
                              12289,16385,24577 };
 
-int dist_extra_bits[30] = { 0,0,0,0,1,1,2,2,3,3,
+static int dist_extra_bits[30] = { 0,0,0,0,1,1,2,2,3,3,
                             4,4,5,5,6,6,7,7,8,8,
                             9,9,10,10,11,11,12,12,13,13 };
 
-int dyn_huff_trans[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5,
+static int dyn_huff_trans[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5,
                            11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
-unsigned char reverse[256] = {
+static unsigned char reverse[256] = {
 0, 128, 64, 192, 32, 160, 96, 224, 16, 144, 80, 208, 48, 176, 112, 240,
 8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248,
 4, 132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244,
@@ -88,9 +90,9 @@ unsigned char reverse[256] = {
 7, 135, 71, 199, 39, 167, 103, 231, 23, 151, 87, 215, 55, 183, 119, 247,
 15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95, 223, 63, 191, 127, 255 };
 
-struct huffman_tree_t *huffman_tree_len_static=0;
-int crc_built=0;
-unsigned int crc_table[256];
+static struct huffman_tree_t *huffman_tree_len_static=0;
+static int crc_built=0;
+static unsigned int crc_table[256];
 
 #ifdef DEBUG
 int print_binary(int b, int l)
@@ -106,7 +108,7 @@ int print_binary(int b, int l)
 
 /* These CRC32 functions were taken from the gzip spec and kohninized */
 
-int build_crc32()
+static int build_crc32()
 {
 unsigned int c;
 int n,k;
@@ -129,7 +131,7 @@ int n,k;
   return 0;
 }
 
-unsigned int crc32(unsigned char *buffer, int len, unsigned int crc)
+static unsigned int crc32(unsigned char *buffer, int len, unsigned int crc)
 {
 int t;
 
@@ -141,7 +143,7 @@ int t;
   return crc;
 }
 
-int kunzip_inflate_init()
+static int kunzip_inflate_init()
 {
 /*
 int t,r,b,rev_code;
@@ -164,14 +166,16 @@ int t,r,b,rev_code;
   return 0;
 }
 
-int kunzip_inflate_free()
+static int kunzip_inflate_free()
 {
   if (huffman_tree_len_static!=0)
   { free(huffman_tree_len_static); }
 
   return 0;
 }
-unsigned int get_alder(FILE *out)
+
+#if 0
+static unsigned int get_alder(FILE *out)
 {
 unsigned int s1,s2;
 unsigned int adler;
@@ -198,8 +202,9 @@ int len,t,value;
 
   return adler;
 }
+#endif
 
-int reverse_bitstream(struct bitstream_t *bitstream)
+static int reverse_bitstream(struct bitstream_t *bitstream)
 {
 unsigned int i;
 
@@ -215,7 +220,7 @@ unsigned int i;
 }
 
 
-int add_static_codes_to_tree(struct huffman_tree_t *huffman_tree, int code_len, int count, int start_code, int start_uncomp_code, int next_leaf)
+static int add_static_codes_to_tree(struct huffman_tree_t *huffman_tree, int code_len, int count, int start_code, int start_uncomp_code, int next_leaf)
 {
 struct huffman_tree_t *curr_huffman_leaf;
 int t,x,r;
@@ -264,7 +269,7 @@ int t,x,r;
   return next_leaf;
 }
 
-int load_fixed_huffman(struct huffman_t *huffman, struct huffman_tree_t **huffman_tree_ptr)
+static int load_fixed_huffman(struct huffman_t *huffman, struct huffman_tree_t **huffman_tree_ptr)
 {
 struct huffman_tree_t *huffman_tree;
 int next_leaf;
@@ -332,7 +337,7 @@ printf("load_fixed_huffman()\n");
   return 0;
 }
 
-int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int count, int *hclen_code_length, int *hclen_code, struct huffman_tree_t *huffman_tree)
+static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int count, int *hclen_code_length, int *hclen_code, struct huffman_tree_t *huffman_tree)
 {
 int r,t,c,x;
 int code,curr_code;
@@ -528,7 +533,7 @@ printf("Leaving load_codes()\n");
   return 0;
 }
 
-int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist)
+static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist)
 {
 int hlit,hdist,hclen;
 int hclen_code_lengths[19];
@@ -957,7 +962,7 @@ printf("\n");
   return 0;
 }
 
-int inflate(FILE *in, FILE *out, unsigned int *checksum)
+static int inflate(FILE *in, FILE *out, unsigned int *checksum)
 {
 #ifndef ZIP
 unsigned char CMF, FLG;
@@ -1124,3 +1129,20 @@ printf("comp_method=%d  bfinal=%d\n",comp_method,bfinal);
   return 0;
 }
 
+
+
+int decrunch_muse (FILE *f, FILE *fo)                          
+{                                                          
+	uint32 checksum;
+  
+	if (fo == NULL) 
+		return -1; 
+
+	fseek(f, 24, SEEK_SET);
+
+	kunzip_inflate_init();
+	inflate(f, fo, &checksum);
+	kunzip_inflate_free();
+
+	return 0;
+}

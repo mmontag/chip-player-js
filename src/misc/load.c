@@ -47,6 +47,7 @@ int decrunch_arcfs	(FILE *, FILE *);
 int decrunch_sqsh	(FILE *, FILE *);
 int decrunch_pp		(FILE *, FILE *);
 int decrunch_mmcmp	(FILE *, FILE *);
+int decrunch_muse	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
 int test_oxm		(FILE *);
@@ -60,6 +61,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_S404	0x07
 #define BUILTIN_OXM	0x08
 #define BUILTIN_XFD	0x09
+#define BUILTIN_MUSE	0x0a
 
 
 #if defined __EMX__ || defined WIN32
@@ -147,6 +149,10 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 		b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
 	packer = "MMCMP";
 	builtin = BUILTIN_MMCMP;
+    } else if (b[0] == 'M' && b[1] == 'U' && b[2] == 'S' && b[3] == 'E' &&
+		b[4] == 0xde && b[5] == 0xad && b[6] == 0xbe && b[7] == 0xaf) {
+	packer = "MUSE";
+	builtin = BUILTIN_MUSE;
     } else if (b[0] == 'R' && b[1] == 'a' && b[2] == 'r') {
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
@@ -274,6 +280,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    break;
 	case BUILTIN_MMCMP:    
 	    res = decrunch_mmcmp(*f, t);
+	    break;
+	case BUILTIN_MUSE:    
+	    res = decrunch_muse(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__
 	case BUILTIN_OXM:

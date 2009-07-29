@@ -13,9 +13,7 @@
 #endif
 
 #include <stdlib.h>
-#ifdef __EMX__
 #include <sys/types.h>
-#endif
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>

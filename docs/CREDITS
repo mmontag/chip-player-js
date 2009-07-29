@@ -143,6 +143,9 @@ Reused code
 * Kurt Keller
 - Win32 popen/pclose implementation
 
+* Michael Kohn
+- Inflate data decompression routine
+
 * Olivier Lapicque <olivierl@jps.net>
 - 4-bit ADPCM decruncher
 - MMCMP decruncher
