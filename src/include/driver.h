@@ -49,16 +49,20 @@ struct patch_info {
 #define XMP_CHN_DUMB		-1
 
 #define parm_init() for (parm = o->parm; *parm; parm++) { \
-	token = strtok (*parm, ":="); token = strtok (NULL, "");
+	char s[80]; strncpy(s, *parm, 80); \
+	token = strtok(s, ":="); token = strtok(NULL, "");
 #define parm_end() }
-#define parm_error() { \
-	fprintf (stderr, "xmp: incorrect parameters in -D %s\n", *parm); \
-	exit (-4); }
+#define parm_error() do { \
+	fprintf(stderr, "xmp: incorrect parameters in -D %s\n", s); \
+	exit(-4); } while (0)
+#define chkparm0(x,y) { \
+	if (!strcmp(s, x)) { \
+	    if (token != NULL) parm_error(); else { y; } } }
 #define chkparm1(x,y) { \
-	if (!strcmp (*parm,x)) { \
-	    if (token == NULL) parm_error ()  else { y; } } }
-#define chkparm2(x,y,z,w) { if (!strcmp (*parm,x)) { \
-	if (2 > sscanf (token, y, z, w)) parm_error (); } }
+	if (!strcmp(s, x)) { \
+	    if (token == NULL) parm_error(); else { y; } } }
+#define chkparm2(x,y,z,w) { if (!strcmp(s, x)) { \
+	if (2 > sscanf(token, y, z, w)) parm_error(); } }
 
 
 /* PROTOTYPES */

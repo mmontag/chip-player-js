@@ -174,9 +174,9 @@ static int init(struct xmp_context *ctx)
 	chkparm2("frag", "%d,%d", &fragnum, &i);
 	chkparm1("dev", dev_audio[0] = token);
 #ifdef HAVE_AUDIO_BUF_INFO
-	chkparm1("voxware", voxware = 1);
+	chkparm0("voxware", voxware = 1);
 #endif
-	chkparm1("nosync", do_sync = 0);
+	chkparm0("nosync", do_sync = 0);
 	parm_end();
 
 	for (fragsize = 0; i >>= 1; fragsize++) ;

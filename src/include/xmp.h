@@ -147,7 +147,7 @@ struct xmp_options {
 	int maxvoc;		/* Channel max number of voice */
 	int skipsmp;		/* Don't load sample data */
 	int cf_cutoff;		/* Cutoff for filter-based anticlick */
-	char *parm[64];		/* Driver parameter data */
+	char *parm[16];		/* Driver parameter data */
 };
 
 struct xmp_fmt_info {
