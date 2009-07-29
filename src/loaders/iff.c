@@ -29,10 +29,24 @@ void iff_chunk(struct xmp_context *ctx, FILE *f)
     long size;
     char id[17] = "";
 
-    if (fread (id, 1, __id_size, f) != __id_size)
+    if (fread(id, 1, __id_size, f) != __id_size)
 	return;
 
+    if (__flags & IFF_SKIP_EMBEDDED) {
+	/* embedded RIFF hack */
+	if (!strncmp(id, "RIFF", 4)) {
+	    read32b(f);
+	    read32b(f);
+	    fread(id, 1, __id_size, f);	/* read first chunk ID instead */
+        }
+    }
+
     size = (__flags & IFF_LITTLE_ENDIAN) ? read32l(f) : read32b(f);
+
+    if (__flags & IFF_ALIGN_CHUNK_SIZE) {
+	if (size & 1)
+	    size++;
+    }
 
     if (__flags & IFF_FULL_CHUNK_SIZE)
 	size -= __id_size + 4;

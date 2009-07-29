@@ -9,6 +9,8 @@
 
 #define IFF_LITTLE_ENDIAN	0x01
 #define IFF_FULL_CHUNK_SIZE	0x02
+#define IFF_ALIGN_CHUNK_SIZE	0x04
+#define IFF_SKIP_EMBEDDED	0x04
 
 struct iff_header {
     char form[4];	/* FORM */
