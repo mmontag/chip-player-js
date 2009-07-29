@@ -124,7 +124,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	i = read8(f);	/* pattern number */
 	len = read32l(f);
 	
-	rows = read8(f);
+	rows = read8(f) + 1;
 
 	PATTERN_ALLOC(i);
 	m->xxp[i]->rows = rows;
@@ -292,7 +292,7 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->smp = m->xxh->ins;
 
-	strcpy (m->type, "MUSE (Epic Megagames MUSE)");
+	strcpy (m->type, "MUSE (Epic MegaGames MUSE)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
