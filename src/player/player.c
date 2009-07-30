@@ -335,8 +335,9 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	} else if (key == XMP_KEY_OFF) {
 	    SET(RELEASE);
 	    flg &= ~(RESET_VOL | RESET_ENV);
-	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA) {
-	    /* This test should fix portamento behaviour in 7spirits.s3m */
+	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
+		|| e->fxt == FX_TONE_VSLIDE || e->f2t == FX_TONE_VSLIDE) {
+	    /* Fix portamento in 7spirits.s3m and mod.Biomechanoid */
 	    if (HAS_QUIRK(XMP_QRK_RTGINS) && e->ins && xc->ins != ins) {
 		flg |= NEW_INS;
 		xins = ins;
