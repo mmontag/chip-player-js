@@ -143,8 +143,8 @@ The current version recognizes the following module formats:
 
 Ratings:
 
-  *****	Perfect replaying
-  ****	Accurate replaying
+  *****	Accurate replaying
+  ****	Good quality
   ***	Fair quality, shouldn't hurt your ears
   **	Poor quality, lots of errors, bad or unimplemented effects
   *	Broken or nonfunctional loader

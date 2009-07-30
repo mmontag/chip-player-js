@@ -90,15 +90,6 @@ In_Module mod = {
 	0,			/* hDllInstance */
 	// Leave out the following more obscure extensions, 
 	// cause overloading GetOpenFileName causes missing extensions
-/*
-	"flt;st;stx;m15;ice;imf;mdl;"
-	"liq;psm;mmd0;mmd1;mmd2;mmd3;med3;med4;dmf;"
-	"rtm;pt3;tcb;dt;gtk;dtt;mgt;arch;dsym;dbm;emod;"
-	"sfx;umx;stim;mtp;ims;fnk;funk;"
-	"ac1d;fchs;fcm;fuzz;kris;ksm;mp;p18a;p10c;pru1;pru2;pha;"
-	"wn;unic;tp3;xann;di;eu;p4x;p40;p41;p60a;np1;np2;np3;zen;"
-	"crb;tdd;gmc;gdm;"
-*/
 	/* file extensions */
 	"xm;it;s3m;s2m;stm;mdl;imf;mtm;ptm;ult;far;669\0"
 		"XMP PC Modules (xm;it;s3m;s2m;stm;mdl;imf;mtm;ptm;ult;far;669)\0"
@@ -106,8 +97,8 @@ In_Module mod = {
 		"XMP Amiga Modules (mod;med;digi;dbm;okt;sfx)\0"
 	"xmz;mdz;itz;s3z;amf\0"
 		"XMP Compressed Modules (xmz;mdz;itz;s3z;amf)\0"
-	"psm;umx;gmc;di;stim\0"
-		"XMP Game Modules (psm;umx;gmc;di;stim)\0"
+	"psm;j2b;umx;gmc;di;stim\0"
+		"XMP Game Modules (psm;j2b;umx;gmc;di;stim)\0"
 	"amd;rad;hsc\0"
 		"XMP Adlib Modules (amd;rad;hsc)\0"
 		,	
