@@ -76,11 +76,8 @@ static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i;
 
-	read8(f);	/* length */
-	read8(f);	/* unknown */
-	read8(f);	/* unknown */
-	read8(f);	/* unknown */
-	m->xxh->len = read8(f);
+	m->xxh->len = read8(f) + 1;
+	/* Don't follow Dr.Eggman's specs here */
 
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = read8(f);
@@ -205,7 +202,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	i = read8(f);	/* instrument number */
 	
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name           Len   LBeg  LEnd  L Vol Fine C2Spd");
+	    report("\n     Instrument name           Len   LBeg  LEnd  L Vol C2Spd");
 	}
 
 	fread(&m->xxih[i].name, 1, 24, f);
@@ -243,24 +240,24 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	srate = read32l(f);
 	finetune = 0;
+	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	m->xxi[i][0].fin += finetune;
 
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
 
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %+04d %5d ", i,
+	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %5d ", i,
 		m->xxih[i].name, m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		m->xxi[i][0].vol, finetune, srate);
+		m->xxi[i][0].vol, srate);
 
-	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-	m->xxi[i][0].fin += finetune;
-
-	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
-
-	reportv(ctx, 0, ".");
+	if (m->xxs[i].len > 1) {
+		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
+		reportv(ctx, 0, ".");
+	}
 }
 
 static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
