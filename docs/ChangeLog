@@ -21,6 +21,7 @@ Stable versions
 	- fix memory access error in MDL sample depacker
 	- fix ProRunner1 samples size
 	- OSS driver resets the DSP device on exit (by Andrew Church)
+	- fix handling of PT portamento+vslide effect (by Andrew Church)
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
