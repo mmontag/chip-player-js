@@ -24,9 +24,9 @@ install-xmp: $(MAIN_PATH)/xmp
 
 # Test
 
-$(MAIN_PATH)/simple: $(OBJS) $(MAIN_PATH)/simple.o $(D_OBJS)
-	$(LD) -o $@ $(LDFLAGS) $(OBJS) $(MAIN_PATH)/simple.o $(D_OBJS) $(LIBS)
+$(MAIN_PATH)/test1: $(OBJS) $(MAIN_PATH)/test1.o $(D_OBJS)
+	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
-$(MAIN_PATH)/simple2: $(OBJS) $(MAIN_PATH)/simple2.o $(D_OBJS)
-	$(LD) -o $@ $(LDFLAGS) $(OBJS) $(MAIN_PATH)/simple2.o $(D_OBJS) $(LIBS)
+$(MAIN_PATH)/test3: $(OBJS) $(MAIN_PATH)/test3.o $(D_OBJS)
+	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
