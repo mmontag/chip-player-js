@@ -74,8 +74,11 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 	case 0x04:
 	case 0x05:
 	case 0x06:
-	case 0x07:
+	case 0x07:			/* same as protracker */
+		break;
 	case 0x08:
+		fxt = FX_TREMOR;
+		break;
 	case 0x09:
 	case 0x0a:
 	case 0x0b:
@@ -85,7 +88,7 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 	case 0x0f:			/* same as protracker */
 		break;
 	case 0x10:			/* arpeggio */
-		*fxt = 0;
+		*fxt = FX_ARPEGGIO;
 		break;
 	case 0x11:			/* set internal flag */
 		*fxt = *fxp = 0;
@@ -157,12 +160,12 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->bpm = read8(f);
 	origfmt = read16l(f);
 	ord_ofs = read32l(f);
-	m->xxh->len = read8(f);
+	m->xxh->len = read8(f) + 1;
 	pat_ofs = read32l(f);
-	m->xxh->pat = read8(f);
+	m->xxh->pat = read8(f) + 1;
 	ins_ofs = read32l(f);
 	smp_ofs = read32l(f);
-	m->xxh->ins = m->xxh->smp = read8(f);
+	m->xxh->ins = m->xxh->smp = read8(f) + 1;
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	
 	MODULE_INFO();
@@ -225,8 +228,6 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxi[i][0].pan,
 				c4spd);
 		}
-
-
 	}
 
 	/* Read and convert patterns */
