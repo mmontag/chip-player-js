@@ -904,7 +904,8 @@ int _xmp_player_frame(struct xmp_context *ctx)
 			f->end_point = p->xmp_scan_num;
 
 		f->ord = p->pos;
-		p->tempo = m->xxo_info[f->ord].tempo;
+		if (m->xxo_info[f->ord].tempo)
+			p->tempo = m->xxo_info[f->ord].tempo;
 		p->xmp_bpm = m->xxo_info[f->ord].bpm;
 		p->tick_time = m->rrate / p->xmp_bpm;
 		m->volume = m->xxo_info[f->ord].gvl;
