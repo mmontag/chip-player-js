@@ -183,20 +183,20 @@ Set the audio device to open\&. Default is /dev/dsp\&.
 Don\'t sync the OSS audio device between modules\&.
 .PP 
 HP-UX and Solaris audio:
-.IP "\fB-Dgain=\fP\fIgain\fP" 
-Set the audio gain\&. Valid values go from 0 to 255\&.
-The default value is 128\&.
-.IP "\fB-Dport=\fP\fI{s|h|l}\fP" 
+.IP "\fB-D\fP \fIgain=value\fP" 
+Set the audio gain\&. Valid \fIvalue\fP goes from 0 to 255\&.
+The default is 128\&.
+.IP "\fB-D\fP \fIport={s|h|l}\fP" 
 Set the audio port\&. Valid arguments are \fIs\fP for the internal
 speaker, \fIh\fP for headphones and \fIl\fP for line out\&. The default
 is the internal speaker\&.
-.IP "\fB-Dbuffer=\fP\fIsize\fP" 
+.IP "\fB-D\fP \fIbuffer=size\fP" 
 Set the size in bytes of the audio buffer\&. The default value is 32 Kb\&.
 .PP 
 File output:
-.IP "\fB--Dbig-endian\fP" 
+.IP "\fB-D\fP \fIbig-endian\fP" 
 Generate big-endian 16-bit samples (default is the machine byte ordering)\&.
-.IP "\fB--Dlittle-endian\fP" 
+.IP "\fB-D\fP \fIlittle-endian\fP" 
 Generate little-endian 16-bit samples (default is the machine byte ordering)\&.
 .PP
 .SH "INTERACTIVE COMMANDS" 
