@@ -18,6 +18,7 @@ Stable versions
 	- add Jazz Jackrabbit 2 J2B module format loader
 	- fix parsing of driver-specific parameters
 	- fix GDM length, number of patterns and number of samples
+	- fix memory access error in MDL sample depacker
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

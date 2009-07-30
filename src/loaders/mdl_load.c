@@ -718,14 +718,14 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
 	    break;
 	case 1: 
 	    len = read32l(f);
-	    buf = malloc(len);
+	    buf = malloc((len + 4) & ~4);	/* round to multiple of 4 */
 	    fread(buf, 1, len, f);
 	    unpack_sample8(smpbuf, buf, len, m->xxs[i].len);
 	    free(buf);
 	    break;
 	case 2:
 	    len = read32l(f);
-	    buf = malloc(len);
+	    buf = malloc((len + 4) & ~4);	/* round to multiple of 4 */
 	    fread(buf, 1, len, f);
 	    unpack_sample16(smpbuf, buf, len, m->xxs[i].len >> 1);
 	    free(buf);
