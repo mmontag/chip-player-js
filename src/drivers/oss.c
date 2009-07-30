@@ -228,6 +228,7 @@ static void bufdump(struct xmp_context *ctx, int i)
 static void shutdown(struct xmp_context *ctx)
 {
 	xmp_smix_off(ctx);
+	ioctl(audio_fd, SNDCTL_DSP_RESET);
 	close(audio_fd);
 }
 
