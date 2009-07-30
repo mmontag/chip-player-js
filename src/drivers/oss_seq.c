@@ -346,7 +346,7 @@ static int init(struct xmp_context *ctx)
 	parm_init();
 	chkparm1("awechorus", chorusmode = strtoul(token, NULL, 0));
 	chkparm1("awereverb", reverbmode = strtoul(token, NULL, 0));
-	chkparm1("opl2", o->outfmt |= XMP_FMT_FM);
+	chkparm0("opl2", o->outfmt |= XMP_FMT_FM);
 	chkparm1("dev", dev_sequencer = token);
 	parm_end();
 

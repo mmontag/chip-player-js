@@ -78,8 +78,8 @@ static int init(struct xmp_context *ctx)
 
 	endian = 0;
 	parm_init();
-	chkparm1("big-endian", endian = 1);
-	chkparm1("little-endian", endian = -1);
+	chkparm0("big-endian", endian = 1);
+	chkparm0("little-endian", endian = -1);
 	parm_end();
 
 	if (!o->outfile)
