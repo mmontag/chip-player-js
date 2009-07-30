@@ -225,10 +225,11 @@ int xmp_drv_open(struct xmp_context *ctx)
 {
     int status;
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_smixer_context *s = &ctx->s;
     struct xmp_options *o = &ctx->o;
 
     d->memavl = 0;
-    smix.buf32b = NULL;
+    s->buf32b = NULL;
     d->ext = 1;
     if ((status = drv_select(ctx)) != 0)
 	return status;
@@ -274,7 +275,7 @@ void xmp_drv_close(struct xmp_context *ctx)
 
     xmp_drv_off(ctx);
     memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
-    d->driver->shutdown();
+    d->driver->shutdown(ctx);
     free(d->patch_array);
     synth_deinit();
 }
@@ -285,11 +286,12 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_smixer_context *s = &ctx->s;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
 
     numtrk = d->numtrk = num;
-    num = d->driver->numvoices(135711);
+    num = d->driver->numvoices(ctx, 135711);
     d->driver->reset();
 
     numchn = numtrk;
@@ -300,7 +302,7 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     else if (num > numchn)
 	num = numchn;
 
-    num = d->maxvoc = d->driver->numvoices(num);
+    num = d->maxvoc = d->driver->numvoices(ctx, num);
 
     d->voice_array = calloc(d->maxvoc, sizeof (struct voice_info));
     d->ch2vo_array = calloc(numchn, sizeof (int));
@@ -315,8 +317,8 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     d->curvoc = agevoc = 0;
     d->numchn = numchn;
 
-    smix.mode = o->outfmt & XMP_FMT_MONO ? 1 : 2;
-    smix.resol = o->resol > 8 ? 2 : 1;
+    s->mode = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+    s->resol = o->resol > 8 ? 2 : 1;
     smix_resetvar(ctx);
 
     return 0;
@@ -357,17 +359,17 @@ void xmp_drv_reset(struct xmp_context *ctx)
     if (numchn < 1)
 	return;
 
-    d->driver->numvoices(d->driver->numvoices(43210));
+    d->driver->numvoices(ctx, d->driver->numvoices(ctx, 43210));
     d->driver->reset();
-    d->driver->numvoices(d->maxvoc);
+    d->driver->numvoices(ctx, d->maxvoc);
 
     memset(d->ch2vo_count, 0, numchn * sizeof (int));
     memset(d->voice_array, 0, d->maxvoc * sizeof (struct voice_info));
 
-    for (i = d->maxvoc; i; i--)
+    for (i = 0; i < d->maxvoc; i++)
 	 d->voice_array[i].chn = d->voice_array[i].root = FREE;
 
-    for (i = numchn; i; i--)
+    for (i = 0; i < numchn; i++)
 	d->ch2vo_array[i] = FREE;
 
     d->curvoc = agevoc = 0;

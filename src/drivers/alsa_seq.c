@@ -28,7 +28,7 @@ static int dest_client, dest_port;
 static int nvoices;
 static snd_hwdep_t *hwdep;
 
-static int numvoices	(int);
+static int numvoices	(struct xmp_context *, int);
 static void voicepos	(int, int);
 static void echoback	(int);
 static void setpatch	(int, int);
@@ -172,7 +172,7 @@ static void midi_send(snd_seq_event_t *ev)
 }
 
 
-static int numvoices(int num)
+static int numvoices(struct xmp_context *ctx, int num)
 {
 	return nvoices;
 }

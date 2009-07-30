@@ -246,10 +246,23 @@ struct xmp_driver_context {
 	int size;
 };
 
+struct xmp_smixer_context {
+	char** buffer;		/* array of output buffers */
+	int* buf32b;		/* temp buffer for 32 bit samples */
+	int numvoc;		/* default softmixer voices number */
+	int numbuf;		/* number of buffer to output */
+	int mode;		/* mode = 0:OFF, 1:MONO, 2:STEREO */
+	int resol;		/* resolution output 1:8bit, 2:16bit */
+	int ticksize;
+	int dtright;		/* anticlick control, right channel */
+	int dtleft;		/* anticlick control, left channel */
+};
+
 struct xmp_context {
 	struct xmp_options o;
 	struct xmp_driver_context d;
 	struct xmp_player_context p;
+	struct xmp_smixer_context s;
 };
 
 

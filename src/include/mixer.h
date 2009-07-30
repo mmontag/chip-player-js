@@ -61,7 +61,7 @@ void	xmp_smix_off		(struct xmp_context *);
 void    xmp_smix_setvol		(struct xmp_context *, int, int);
 void    xmp_smix_seteffect	(struct xmp_context *, int, int, int);
 void    xmp_smix_setpan		(struct xmp_context *, int, int);
-int	xmp_smix_numvoices	(int);
+int	xmp_smix_numvoices	(struct xmp_context *, int);
 void	xmp_smix_echoback	(int);
 void	xmp_smix_starttimer	(void);
 void	xmp_smix_stoptimer	(void);

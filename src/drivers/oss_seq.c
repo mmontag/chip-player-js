@@ -63,7 +63,7 @@ SEQ_DEFINEBUF(2048);
 static int seqfd = -1, hz;
 static int echo_msg;
 
-static int numvoices(int);
+static int numvoices(struct xmp_context *, int);
 static void voicepos(int, int);
 static void echoback(int);
 static void setpatch(int, int);
@@ -127,7 +127,7 @@ static int chorusmode = 0;
 static int reverbmode = 0;
 static char *dev_sequencer = "/dev/sequencer";
 
-static int numvoices(int num)
+static int numvoices(struct xmp_context *ctx, int num)
 {
 	switch (si.synth_subtype) {
 	case SAMPLE_TYPE_GUS:

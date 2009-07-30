@@ -41,11 +41,6 @@
 #define LIM16_LO	-32768
 
 
-struct smix_info smix;
-
-static int smix_dtright;		/* anticlick control, right channel */
-static int smix_dtleft;			/* anticlick control, left channel */
-
 static int echo_msg;
 
 void    smix_mn8norm      (struct voice_info *, int *, int, int, int, int);
@@ -162,15 +157,16 @@ void smix_resetvar(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xmp_smixer_context *s = &ctx->s;
     struct xmp_options *o = &ctx->o;
 
-    smix.ticksize = m->quirk & XMP_QRK_MEDBPM ?
+    s->ticksize = m->quirk & XMP_QRK_MEDBPM ?
 	o->freq * m->rrate * 33 / p->xmp_bpm / 12500 :
     	o->freq * m->rrate / p->xmp_bpm / 100;
 
-    if (smix.buf32b) {
-	smix_dtright = smix_dtleft = 0;
-	memset(smix.buf32b, 0, smix.ticksize * smix.mode * sizeof (int));
+    if (s->buf32b) {
+	s->dtright = s->dtleft = 0;
+	memset(s->buf32b, 0, s->ticksize * s->mode * sizeof (int));
     }
 }
 
@@ -179,13 +175,14 @@ void smix_resetvar(struct xmp_context *ctx)
 static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_smixer_context *s = &ctx->s;
     int smp_l, smp_r;
     int dec_l, dec_r;
 
     if (voc < 0) {
 	/* initialize */
-	smp_r = smix_dtright;
-	smp_l = smix_dtleft;
+	smp_r = s->dtright;
+	smp_l = s->dtleft;
     } else {
 	smp_r = d->voice_array[voc].sright;
 	smp_l = d->voice_array[voc].sleft;
@@ -196,8 +193,8 @@ static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
 	return;
 
     if (!buf) {
-	buf = smix.buf32b;
-	cnt = SLOW_RELEASE; //smix.ticksize;
+	buf = s->buf32b;
+	cnt = SLOW_RELEASE; //s->ticksize;
     }
     if (!cnt)
 	return;
@@ -224,6 +221,7 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 {
     int oldvol, newvol, pan0;
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_smixer_context *s = &ctx->s;
     struct voice_info *vi = &d->voice_array[voc];
 
     if (d->ext)
@@ -252,8 +250,8 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
     }
 
     if (!buf) {
-	smix_dtright += vi->sright;
-	smix_dtleft += vi->sleft;
+	s->dtright += vi->sright;
+	s->dtleft += vi->sleft;
 	vi->sright = vi->sleft = 0;
     } else {
 	smix_rampdown(ctx, voc, buf, cnt);
@@ -267,6 +265,7 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 int xmp_smix_softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_smixer_context *s = &ctx->s;
     struct voice_info *vi;
     struct patch_info *pi;
     int smp_cnt, tic_cnt, lps, lpe;
@@ -289,13 +288,13 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	    continue;
 	}
 
-	buf_pos = smix.buf32b;
+	buf_pos = s->buf32b;
 	vol_r = vi->vol * (0x80 - vi->pan);
 	vol_l = vi->vol * (0x80 + vi->pan);
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {
-		smix_synth(vi, buf_pos, smix.ticksize, vol_l, vol_r,
+		smix_synth(vi, buf_pos, s->ticksize, vol_l, vol_r,
 						vi->fidx & FLAG_STEREO);
 	        synth = 0;
 	    }
@@ -329,7 +328,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 		lpe >>= 1;
 	}
 
-	for (tic_cnt = smix.ticksize; tic_cnt; ) {
+	for (tic_cnt = s->ticksize; tic_cnt; ) {
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
 	    smp_cnt = 1 + (((int64)(vi->end - vi->pos) << SMIX_SHIFT)
@@ -353,7 +352,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 
 	    if (vi->vol) {
 		int idx;
-		int mix_size = smix.mode * smp_cnt;
+		int mix_size = s->mode * smp_cnt;
 		int mixer = vi->fidx & FIDX_FLAGMASK;
 
 		/* Something for Hipolito's anticlick routine */
@@ -372,7 +371,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 
 		/* Call the output handler */
 		mix_fn[mixer](vi, buf_pos, smp_cnt, vol_l, vol_r, itp_inc);
-		buf_pos += smix.mode * smp_cnt;
+		buf_pos += s->mode * smp_cnt;
 
 		/* More stuff for Hipolito's anticlick routine */
 		idx = 0;
@@ -417,7 +416,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	}
     }
 
-    return smix.ticksize * smix.mode * smix.resol;
+    return s->ticksize * s->mode * s->resol;
 }
 
 
@@ -595,9 +594,10 @@ int xmp_smix_getmsg()
 }
 
 
-int xmp_smix_numvoices(int num)
+int xmp_smix_numvoices(struct xmp_context *ctx, int num)
 {
-    return num > smix.numvoc ? smix.numvoc : num;
+    struct xmp_smixer_context *s = &ctx->s;
+    return num > s->numvoc ? s->numvoc : num;
 }
 
 /* WARNING! Output samples must have the same byte order of the host machine!
@@ -624,26 +624,27 @@ int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 int xmp_smix_on(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_smixer_context *s = &ctx->s;
     int cnt;
 
-    if (smix.numbuf)
+    if (s->numbuf)
 	return 0;
 
     if (d->numbuf < 1)
 	d->numbuf = 1;
-    cnt = smix.numbuf = d->numbuf;
+    cnt = s->numbuf = d->numbuf;
 
-    smix.buffer = calloc(sizeof (void *), cnt);
-    smix.buf32b = calloc(sizeof (int), OUT_MAXLEN);
-    if (!(smix.buffer && smix.buf32b))
+    s->buffer = calloc(sizeof (void *), cnt);
+    s->buf32b = calloc(sizeof (int), OUT_MAXLEN);
+    if (!(s->buffer && s->buf32b))
 	return XMP_ERR_ALLOC;
 
     while (cnt--) {
-	if (!(smix.buffer[cnt] = calloc(SMIX_RESMAX, OUT_MAXLEN)))
+	if (!(s->buffer[cnt] = calloc(SMIX_RESMAX, OUT_MAXLEN)))
 	    return XMP_ERR_ALLOC;
     }
 
-    smix.numvoc = SMIX_NUMVOC;
+    s->numvoc = SMIX_NUMVOC;
     d->ext = 0;
 
     return 0;
@@ -653,14 +654,15 @@ int xmp_smix_on(struct xmp_context *ctx)
 void xmp_smix_off(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_smixer_context *s = &ctx->s;
 
-    while (smix.numbuf)
-	free(smix.buffer[--smix.numbuf]);
+    while (s->numbuf)
+	free(s->buffer[--s->numbuf]);
 
-    free(smix.buf32b);
-    free(smix.buffer);
-    smix.buf32b = NULL;
-    smix.buffer = NULL;
+    free(s->buf32b);
+    free(s->buffer);
+    s->buf32b = NULL;
+    s->buffer = NULL;
     d->ext = 1;
 }
 
@@ -669,6 +671,7 @@ void *xmp_smix_buffer(struct xmp_context *ctx)
 {
     static int outbuf;
     int fmt, size;
+    struct xmp_smixer_context *s = &ctx->s;
     struct xmp_options *o = &ctx->o;
 
     if (!o->resol)
@@ -682,16 +685,16 @@ void *xmp_smix_buffer(struct xmp_context *ctx)
      * multi-buffered sound output (e.g. OSS fragments) but can be useful for
      * DMA transfers in DOS.
      */
-    if (++outbuf >= smix.numbuf)
+    if (++outbuf >= s->numbuf)
 	outbuf = 0;
 
-    size = smix.mode * smix.ticksize;
+    size = s->mode * s->ticksize;
     assert(size <= OUT_MAXLEN);
 
-    out_fn[fmt](smix.buffer[outbuf], smix.buf32b, size, o->amplify, o->outfmt);
+    out_fn[fmt](s->buffer[outbuf], s->buf32b, size, o->amplify, o->outfmt);
 
     smix_resetvar(ctx);
 
-    return smix.buffer[outbuf]; 
+    return s->buffer[outbuf]; 
 }
 
