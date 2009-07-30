@@ -168,9 +168,10 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 				fxt = FX_S3M_TEMPO;
 				break;
 			default:
-				if (fxt > 0x0f)
+				if (fxt > 0x0f) {
 					printf("unknown effect %02x %02x\n", fxt, fxp);
 					fxt = fxp = 0;
+				}
 			}
 
 			event->fxt = fxt;
@@ -197,7 +198,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	int i, srate, finetune;
+	int i, srate, finetune, flags;
 
 	read32b(f);	/* 42 01 00 00 */
 	read8(f);	/* 00 */
@@ -231,13 +232,14 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].sid = i;
 	m->xxi[i][0].vol = read8(f);
 	m->xxi[i][0].pan = 0x80;
-	read16l(f);			/* unknown */
-	read16l(f);			/* unknown */
-	read16l(f);			/* unknown */
+	read16l(f);			/* unknown - 0x7fff, 0x6400, etc*/
+	flags = read16l(f);
+	read16l(f);			/* unknown - 0x0000 */
 	m->xxs[i].len = read32l(f);
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);
-	m->xxs[i].flg = m->xxs[i].lpe > 2 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = flags & 0x08 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg |= flags & 0x04 ? WAVE_16_BITS : 0;
 
 	srate = read32l(f);
 	finetune = 0;
@@ -246,10 +248,12 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);			/* unknown */
 
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report("\n[%2X] %-24.24s  %05x %05x %05x %c V%02x %+04d %5d ", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
-		finetune, srate);
+	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %+04d %5d ", i,
+		m->xxih[i].name, m->xxs[i].len,
+		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxi[i][0].vol, finetune, srate);
 
 	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 	m->xxi[i][0].fin += finetune;

@@ -123,10 +123,6 @@ struct xxm_sample {
 	int len;		/* Sample length */
 	int lps;		/* Loop start */
 	int lpe;		/* Loop end */
-#define XXM_SMP_16BIT	0x01
-#define XXM_SMP_FDLOOP	0x02
-#define XXM_SMP_BDLOOP	0x04
-#define XXM_SMP_RLS	0x02
 	int flg;		/* Flags */
 };
 

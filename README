@@ -129,7 +129,7 @@ The current version recognizes the following module formats:
   DI	****+	Digital Illusions	-
   GMC	****+	Game Music Creator	-
   MASI	****	Epic Megagames MASI	epic, sinaria
-  MUSE	*	Epic Megagames MUSE	j2b
+  MUSE	***	Epic Megagames MUSE	j2b
   PSM	****	Protracker Studio	0.01, 1.00
   STIM	****+	Slamtilt		-
   UMX	****+	Epic Games Unreal/UT	IT, S3M, MOD, XM
