@@ -179,10 +179,13 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 			event->ins = read8(f);
 			event->note = read8(f);
 
-			if (event->note > 12)
+			if (event->note == 128) {
+				event->note = XMP_KEY_OFF;
+			} else if (event->note > 12) {
 				event->note -= 12;
-			else
+			} else {
 				event->note = 0;
+			}
 		}
 
 		if (flag & 0x20) {
@@ -202,7 +205,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	i = read8(f);	/* instrument number */
 	
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name           Len   LBeg  LEnd  L Vol C2Spd");
+	    report("\n     Instrument name           Len   LBeg  LEnd  L Vol Rls  C2Spd");
 	}
 
 	fread(&m->xxih[i].name, 1, 24, f);
@@ -222,14 +225,14 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	read32b(f);	/* unknown */
 	read32b(f);	/* unknown */
-	read8(f);			/* unknown */
+	read8(f);	/* unknown */
 
 	m->xxih[i].nsm = 1;
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	m->xxi[i][0].sid = i;
 	m->xxi[i][0].vol = read8(f);
 	m->xxi[i][0].pan = 0x80;
-	read16l(f);			/* unknown - 0x7fff, 0x6400, etc*/
+	m->xxih[i].rls = read16l(f);
 	flags = read16l(f);
 	read16l(f);			/* unknown - 0x0000 */
 	m->xxs[i].len = read32l(f);
@@ -247,12 +250,12 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);			/* unknown */
 
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %5d ", i,
+	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %04x %5d ", i,
 		m->xxih[i].name, m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		m->xxi[i][0].vol, srate);
+		m->xxi[i][0].vol, m->xxih[i].rls, srate);
 
 	if (m->xxs[i].len > 1) {
 		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
