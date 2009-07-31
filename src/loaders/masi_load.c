@@ -73,7 +73,7 @@ struct xmp_loader_info masi_loader = {
 	masi_load
 };
 
-static int masi_test(FILE * f, char *t, const int start)
+static int masi_test(FILE *f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_PSM_)
 		return -1;
@@ -345,8 +345,6 @@ static void get_song(struct xmp_context *ctx, int size, FILE *f)
 
 	fseek(f, 10, SEEK_CUR);
 	m->xxh->chn = read8(f);
-	if (*m->name == 0)
-		fread(&m->name, 1, 8, f);
 }
 
 static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
@@ -354,12 +352,13 @@ static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	uint32 magic;
-	char c;
+	char c, buf[20];
 	int i;
 
-	m->xxh->len = 0;
+	fread(buf, 1, 9, f);
+	read16l(f);
 
-	fseek(f, 11, SEEK_CUR);		/* Point to first sub-chunk */
+	reportv(ctx, 2, "\nSubsong title  : %-9.9s", buf);
 
 	magic = read32b(f);
 	while (magic != MAGIC_OPLH) {
@@ -414,6 +413,7 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 	read32b(f);
 
 	sinaria = 0;
+	m->name[0] = 0;
 
 	fseek(f, 8, SEEK_CUR);		/* skip file size and FILE */
 	m->xxh->smp = m->xxh->ins = 0;
@@ -452,6 +452,8 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	fseek(f, start + offset, SEEK_SET);
+
+	m->xxh->len = 0;
 
 	iff_register("SONG", get_song_2);
 	iff_register("DSMP", get_dsmp);
