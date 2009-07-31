@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "xmp.h"
 
+void init_drivers (void);
+
 static xmp_context ctx;
 static struct xmp_module_info mi;
 
@@ -46,7 +48,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	xmp_register_event_callback(process_echoback);
+	xmp_register_event_callback(ctx, process_echoback);
 
 	for (i = 1; i < argc; i++) {
 		if (xmp_load_module(ctx, argv[i]) < 0) {
