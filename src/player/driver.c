@@ -21,13 +21,9 @@
 #include "smix.h"
 
 #define	FREE	-1
+#define MAX_VOICES_CHANNEL 16
 
 static struct xmp_drv_info *drv_array = NULL;
-
-static int numchn;		/* number of channels need to play one module */
-static int numtrk;		/* number of tracks in module */
-static int maxvoc;		/* */
-static int agevoc;		/* */
 
 extern struct xmp_drv_info drv_file;
 extern struct xmp_drv_info drv_wav;
@@ -193,7 +189,7 @@ void xmp_drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
     struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi = &d->voice_array[voc];
 
-    if ((uint32) voc >= d->maxvoc)
+    if ((uint32)voc >= d->maxvoc)
 	return;
 
     if (mute)
@@ -290,32 +286,31 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
 
-    numtrk = d->numtrk = num;
+    d->numtrk = num;
     num = d->driver->numvoices(ctx, 135711);
     d->driver->reset();
 
-    numchn = numtrk;
-    maxvoc = m->flags & XMP_CTL_VIRTUAL ? o->maxvoc : 1;
+    d->numchn = d->numtrk;
+    d->chnvoc = m->flags & XMP_CTL_VIRTUAL ? MAX_VOICES_CHANNEL : 1;
 
-    if (maxvoc > 1)
-	numchn += num;
-    else if (num > numchn)
-	num = numchn;
+    if (d->chnvoc > 1)
+	d->numchn += num;
+    else if (num > d->numchn)
+	num = d->numchn;
 
     num = d->maxvoc = d->driver->numvoices(ctx, num);
 
     d->voice_array = calloc(d->maxvoc, sizeof (struct voice_info));
-    d->ch2vo_array = calloc(numchn, sizeof (int));
-    d->ch2vo_count = calloc(numchn, sizeof (int));
+    d->ch2vo_array = calloc(d->numchn, sizeof (int));
+    d->ch2vo_count = calloc(d->numchn, sizeof (int));
 
     if (!(d->voice_array && d->ch2vo_array && d->ch2vo_count))
 	return XMP_ERR_ALLOC;
 
     for (; num--; d->voice_array[num].chn = d->voice_array[num].root = FREE);
-    for (num = numchn; num--; d->ch2vo_array[num] = FREE);
+    for (num = d->numchn; num--; d->ch2vo_array[num] = FREE);
 
-    d->curvoc = agevoc = 0;
-    d->numchn = numchn;
+    d->curvoc = d->agevoc = 0;
 
     s->mode = o->outfmt & XMP_FMT_MONO ? 1 : 2;
     s->resol = o->resol > 8 ? 2 : 1;
@@ -329,13 +324,13 @@ void xmp_drv_off(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    if (numchn < 1)
+    if (d->numchn < 1)
 	return;
 
     xmp_drv_writepatch(ctx, NULL);
     d->curvoc = d->maxvoc = 0;
-    d->numchn = numchn = 0;
-    numtrk = 0;
+    d->numchn = 0;
+    d->numtrk = 0;
     free(d->voice_array);
     free(d->ch2vo_array);
     free(d->ch2vo_count);
@@ -356,23 +351,23 @@ void xmp_drv_reset(struct xmp_context *ctx)
     struct xmp_driver_context *d = &ctx->d;
     int i;
 
-    if (numchn < 1)
+    if (d->numchn < 1)
 	return;
 
     d->driver->numvoices(ctx, d->driver->numvoices(ctx, 43210));
     d->driver->reset();
     d->driver->numvoices(ctx, d->maxvoc);
 
-    memset(d->ch2vo_count, 0, numchn * sizeof (int));
+    memset(d->ch2vo_count, 0, d->numchn * sizeof (int));
     memset(d->voice_array, 0, d->maxvoc * sizeof (struct voice_info));
 
     for (i = 0; i < d->maxvoc; i++)
 	 d->voice_array[i].chn = d->voice_array[i].root = FREE;
 
-    for (i = 0; i < numchn; i++)
+    for (i = 0; i < d->numchn; i++)
 	d->ch2vo_array[i] = FREE;
 
-    d->curvoc = agevoc = 0;
+    d->curvoc = d->agevoc = 0;
 }
 
 
@@ -383,7 +378,7 @@ void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     d->driver->setvol(ctx, voc, 0);
@@ -402,12 +397,12 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
     int voc, vfree;
     uint32 age;
 
-    if (d->ch2vo_count[chn] < maxvoc) {
+    if (d->ch2vo_count[chn] < d->chnvoc) {
 	for (voc = d->maxvoc; voc-- && d->voice_array[voc].chn != FREE;);
 	if (voc < 0)
 	    return voc;
 
-	d->voice_array[voc].age = agevoc;
+	d->voice_array[voc].age = d->agevoc;
 	d->ch2vo_count[chn]++;
 	d->curvoc++;
 
@@ -420,7 +415,7 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
     }
 
     d->ch2vo_array[d->voice_array[vfree].chn] = FREE;
-    d->voice_array[vfree].age = agevoc;
+    d->voice_array[vfree].age = d->agevoc;
 
     return vfree;
 }
@@ -447,7 +442,7 @@ void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     if (d->voice_array[voc].root < XMP_MAXCH && d->cmute_array[d->voice_array[voc].root])
@@ -455,7 +450,7 @@ void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
 
     d->driver->setvol(ctx, voc, vol);
 
-    if (!(vol || chn < numtrk))
+    if (!(vol || chn < d->numtrk))
 	xmp_drv_resetvoice(ctx, voc, 1);
 }
 
@@ -467,7 +462,7 @@ void xmp_drv_setpan(struct xmp_context *ctx, int chn, int pan)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     d->driver->setpan(ctx, voc, pan);
@@ -481,7 +476,7 @@ void xmp_drv_seteffect(struct xmp_context *ctx, int chn, int type, int val)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     d->driver->seteffect(ctx, voc, type, val);
@@ -496,7 +491,7 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     vi = &d->voice_array[voc];
@@ -523,7 +518,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
     struct xmp_driver_context *d = &ctx->d;
     int voc, vfree;
 
-    if ((uint32) chn >= numchn)
+    if ((uint32)chn >= d->numchn)
 	return -1;
 
     if (ins < 0 || (uint32)smp >= XMP_MAXPAT || !d->patch_array[smp])
@@ -549,11 +544,11 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
     voc = d->ch2vo_array[chn];
 
     if (voc > FREE) {
-	if (d->voice_array[voc].act && maxvoc > 1) {
+	if (d->voice_array[voc].act && d->chnvoc > 1) {
 	    if ((vfree = drv_allocvoice(ctx, chn)) > FREE) {
 		d->voice_array[vfree].root = chn;
 		d->voice_array[d->ch2vo_array[chn] = vfree].chn = chn;
-		for (chn = numtrk; d->ch2vo_array[chn++] > FREE;);
+		for (chn = d->numtrk; d->ch2vo_array[chn++] > FREE;);
 		d->voice_array[voc].chn = --chn;
 		d->ch2vo_array[chn] = voc;
 		voc = vfree;
@@ -585,7 +580,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 	d->driver->setnote(voc, note);
     }
 
-    agevoc++;
+    d->agevoc++;
 
     return chn;
 }
@@ -598,7 +593,7 @@ void xmp_drv_setnna(struct xmp_context *ctx, int chn, int nna)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     d->voice_array[voc].act = nna;
@@ -612,7 +607,7 @@ void xmp_drv_setbend(struct xmp_context *ctx, int chn, int bend)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     smix_setbend(ctx, voc, bend);
@@ -629,7 +624,7 @@ void xmp_drv_retrig(struct xmp_context *ctx, int chn)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32)chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
     smix_voicepos(ctx, voc, 0, 0);
@@ -645,7 +640,7 @@ void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
     int voc;
 
     for (voc = d->maxvoc; voc--;) {
-	if (d->voice_array[voc].root == chn && d->voice_array[voc].chn >= numtrk) {
+	if (d->voice_array[voc].root == chn && d->voice_array[voc].chn >= d->numtrk) {
 	    if (act == XMP_ACT_CUT)
 		xmp_drv_resetvoice(ctx, voc, 1);
 	    else
@@ -661,7 +656,7 @@ void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
     int voc;
     struct patch_info *pi;
 
-    if ((uint32) chn >= numchn || (uint32) (voc = d->ch2vo_array[chn]) >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32) (voc = d->ch2vo_array[chn]) >= d->maxvoc)
 	return;
 
     pi = d->patch_array[d->voice_array[voc].smp];
@@ -687,10 +682,10 @@ int xmp_drv_cstat(struct xmp_context *ctx, int chn)
 
     voc = d->ch2vo_array[chn];
 
-    if ((uint32) chn >= numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return XMP_CHN_DUMB;
 
-    return chn < numtrk ? XMP_CHN_ACTIVE : d->voice_array[voc].act;
+    return chn < d->numtrk ? XMP_CHN_ACTIVE : d->voice_array[voc].act;
 }
 
 

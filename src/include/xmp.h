@@ -144,7 +144,6 @@ struct xmp_options {
 	int tempo;		/* Set initial tempo */
 	int chorus;		/* Chorus level */
 	int reverb;		/* Reverb leval */
-	int maxvoc;		/* Channel max number of voice */
 	int skipsmp;		/* Don't load sample data */
 	int cf_cutoff;		/* Cutoff for filter-based anticlick */
 	char *parm[16];		/* Driver parameter data */

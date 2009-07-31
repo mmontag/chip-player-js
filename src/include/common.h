@@ -234,6 +234,8 @@ struct xmp_driver_context {
 	int numbuf;			/* Number of output buffers */
 	int curvoc;			/* Number of voices currently in use */
 	int maxvoc;			/* Number of sound card voices */
+	int chnvoc;			/* Number of voices per channel */
+	int agevoc;			/* Voice age control (?) */
 
 	int cmute_array[XMP_MAXCH];
 
