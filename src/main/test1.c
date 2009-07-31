@@ -36,6 +36,7 @@ int main(int argc, char **argv)
 
 	setbuf(stdout, NULL);
 
+	init_drivers();
 	ctx = xmp_create_context();
 	xmp_init(ctx, argc, argv);
 
