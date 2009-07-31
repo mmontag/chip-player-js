@@ -41,8 +41,6 @@
 #define LIM16_LO	-32768
 
 
-static int echo_msg;
-
 void    smix_mn8norm      (struct voice_info *, int *, int, int, int, int);
 void    smix_mn8itpt      (struct voice_info *, int *, int, int, int, int);
 void    smix_mn16norm     (struct voice_info *, int *, int, int, int, int);
@@ -582,15 +580,17 @@ void xmp_smix_setpan(struct xmp_context *ctx, int voc, int pan)
 }
 
 
-void xmp_smix_echoback(int msg)
+void xmp_smix_echoback(struct xmp_context *ctx, int msg)
 {
-    xmp_event_callback(echo_msg = msg);
+    struct xmp_smixer_context *s = &ctx->s;
+    xmp_event_callback(s->echo_msg = msg);
 }
 
 
-int xmp_smix_getmsg()
+int xmp_smix_getmsg(struct xmp_context *ctx)
 {
-    return echo_msg;
+    struct xmp_smixer_context *s = &ctx->s;
+    return s->echo_msg;
 }
 
 

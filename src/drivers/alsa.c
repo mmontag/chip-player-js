@@ -29,7 +29,7 @@
 
 static int init (struct xmp_context *);
 static int prepare_driver (void);
-static void echoback (int);
+static void echoback (struct xmp_context *, int);
 static void dshutdown (struct xmp_context *);
 static int to_fmt (struct xmp_options *);
 static void bufdump (struct xmp_context *, int);
@@ -73,9 +73,9 @@ struct xmp_drv_info drv_alsa = {
 
 static snd_pcm_t *pcm_handle;
 
-static void echoback(int msg)
+static void echoback(struct xmp_context *ctx, int msg)
 {
-	xmp_smix_echoback(msg);
+	xmp_smix_echoback(ctx, msg);
 }
 
 static int init(struct xmp_context *ctx)

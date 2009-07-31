@@ -15,9 +15,9 @@
 #include "common.h"
 #include "driver.h"
 
-static int numvoices(int);
+static int numvoices(struct xmp_context *, int);
 static void voicepos(int, int);
-static void echoback(int);
+static void echoback(struct xmp_context *, int);
 static void setpatch(int, int);
 static void setvol(int, int);
 static void setnote(int, int);
@@ -63,7 +63,7 @@ struct xmp_drv_info drv_debug = {
 	NULL
 };
 
-static int numvoices(int num)
+static int numvoices(struct xmp_context *ctx, int num)
 {
 	return 32;
 }
@@ -72,7 +72,7 @@ static void voicepos(int ch, int pos)
 {
 }
 
-static void echoback(int msg)
+static void echoback(struct xmp_context *ctx, int msg)
 {
 }
 

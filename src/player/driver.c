@@ -698,7 +698,7 @@ inline void xmp_drv_echoback(struct xmp_context *ctx, int msg)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    d->driver->echoback(msg);
+    d->driver->echoback(ctx, msg);
 }
 
 
@@ -706,7 +706,7 @@ inline int xmp_drv_getmsg(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    return d->driver->getmsg();
+    return d->driver->getmsg(ctx);
 }
 
 

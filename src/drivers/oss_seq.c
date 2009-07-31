@@ -65,7 +65,7 @@ static int echo_msg;
 
 static int numvoices(struct xmp_context *, int);
 static void voicepos(int, int);
-static void echoback(int);
+static void echoback(struct xmp_context *, int);
 static void setpatch(int, int);
 static void setvol(struct xmp_context *, int, int);
 static void setnote(int, int);
@@ -150,7 +150,7 @@ static void voicepos(int ch, int pos)
 	GUS_VOICE_POS(dev, ch, pos);
 }
 
-static void echoback(int msg)
+static void echoback(struct xmp_context *ctx, int msg)
 {
 	SEQ_ECHO_BACK(msg);
 }

@@ -256,6 +256,7 @@ struct xmp_smixer_context {
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
+	int echo_msg;		/* echoback message */
 };
 
 struct xmp_context {
