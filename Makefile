@@ -43,7 +43,7 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 	eval $$CMD
 
 .c.lo:
-	@CMD='$(CC) $(CFLAGS) -fPIC -D_REENTRANT -DENABLE_PLUGIN $(XCFLAGS) -o $*.lo $<'; \
+	@CMD='$(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) -o $*.lo $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
 	eval $$CMD
 

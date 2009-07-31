@@ -67,7 +67,6 @@ struct patch_info {
 
 /* PROTOTYPES */
 
-void	xmp_drv_register	(struct xmp_drv_info *);
 int	xmp_drv_open		(struct xmp_context *);
 int	xmp_drv_set		(struct xmp_context *);
 void	xmp_drv_close		(struct xmp_context *);
@@ -103,7 +102,6 @@ void	xmp_drv_bufdump		(struct xmp_context *);
 int	xmp_drv_loadpatch 	(struct xmp_context *, FILE *, int, int, int,
 				 struct xxm_sample *, char *);
 
-void xmp_init_drivers (void);
 struct xmp_drv_info *xmp_drv_array (void);
 
 #endif /* __XMP_DRIVER_H */

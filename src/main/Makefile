@@ -1,5 +1,5 @@
 
-MAIN_OBJS	= getopt.o getopt1.o options.o main.o
+MAIN_OBJS	= getopt.o getopt1.o options.o drivers.o main.o
 MAIN_DFILES	= Makefile $(MAIN_OBJS:.o=.c)
 MAIN_PATH	= src/main
 
@@ -24,7 +24,7 @@ install-xmp: $(MAIN_PATH)/xmp
 
 # Test
 
-$(MAIN_PATH)/test1: $(OBJS) $(MAIN_PATH)/test1.o $(D_OBJS)
+$(MAIN_PATH)/test1: $(OBJS) $(MAIN_PATH)/test1.o $(MAIN_PATH)/drivers.o $(D_OBJS)
 	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
 $(MAIN_PATH)/test3: $(OBJS) $(MAIN_PATH)/test3.o $(D_OBJS)

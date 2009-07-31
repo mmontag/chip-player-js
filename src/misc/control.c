@@ -67,7 +67,7 @@ void xmp_init(xmp_context ctx, int argc, char **argv)
 {
 	int num;
 
-	xmp_init_drivers();
+	//xmp_init_drivers();
 	xmp_init_formats(ctx);
 	pw_init();
 

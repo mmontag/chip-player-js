@@ -100,6 +100,7 @@ static int sigusr = 0;
 #endif
 
 void get_options (int, char **, struct xmp_options *, xmp_context);
+void init_drivers (void);
 
 static xmp_context ctx;
 
@@ -437,7 +438,7 @@ static void shuffle (int argc, char **argv)
 }
 
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
     int i, t, lf_flag, first, num_mod, verb = 0;
     time_t t0, t1;
@@ -453,6 +454,8 @@ int main (int argc, char **argv)
 #ifdef __EMX__
     long rc;
 #endif
+
+    init_drivers();
 
     ctx = xmp_create_context();
 

@@ -22,6 +22,7 @@ Stable versions
 	- fix ProRunner1 samples size
 	- OSS driver resets the DSP device on exit (by Andrew Church)
 	- fix handling of PT portamento+vslide effect (by Andrew Church)
+	- move driver init from player core to main application or plugin
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

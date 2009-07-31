@@ -103,6 +103,8 @@ InputPlugin xmp_ip = {
 	.get_song_info	= get_song_info,
 };
 
+extern struct xmp_drv_info drv_smix;
+
 
 static void aboutbox()
 {
@@ -257,6 +259,7 @@ static void init(void)
 	ConfigFile *cfg;
 	gchar *filename;
 
+	xmp_drv_register(&drv_smix);
 	ctx = xmp_create_context();
 
 	xmp_cfg.mixing_freq = 0;

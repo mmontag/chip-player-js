@@ -64,6 +64,8 @@ static struct xmp_options *opt = NULL;
 
 char mix_buffer[MIX_BUFSIZE * 4];
 
+extern struct xmp_drv_info drv_file;
+
 static void	config		(HWND);
 static void	about		(HWND);
 static void	init		(void);
@@ -307,6 +309,7 @@ static void init()
 {
 	static char inifile[MAX_PATH];
 
+	xmp_drv_register(&drv_smix);
 	ctx = xmp_create_context();
 
 #define CFGREADINT(x,y) do { \

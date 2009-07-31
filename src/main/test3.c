@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "xmp.h"
 
+extern struct xmp_drv_info drv_wav;
 
 
 int main(int argc, char **argv)
@@ -13,6 +14,8 @@ int main(int argc, char **argv)
 	int res1, res2;
 
 	setbuf(stdout, NULL);
+
+	xmp_drv_register(&drv_wav);
 
 	ctx1 = xmp_create_context();
 	ctx2 = xmp_create_context();
@@ -51,7 +54,23 @@ int main(int argc, char **argv)
 	printf("1: %s (%s)\n", mi1.name, mi1.type);
 	printf("2: %s (%s)\n", mi2.name, mi2.type);
 
-	xmp_play_module(ctx1);
+	xmp_player_start(ctx1);
+	xmp_player_start(ctx2);
+	res1 = res2 = 0;
+
+	while (res1 == 0 || res2 == 0) {
+		if (res1 == 0) {
+			res1 = xmp_player_frame(ctx1);
+			xmp_play_buffer(ctx1);
+		}
+		if (res2 == 0) {
+			res2 = xmp_player_frame(ctx2);
+			xmp_play_buffer(ctx2);
+		}
+	}
+
+	xmp_player_end(ctx1);
+	xmp_player_end(ctx2);
 
 	xmp_release_module(ctx1);
 	xmp_release_module(ctx2);

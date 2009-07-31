@@ -630,6 +630,10 @@ SOURCE=..\main\options.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\main\drivers.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\main\main.c
 # End Source File
 # End Group
