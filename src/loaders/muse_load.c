@@ -206,30 +206,39 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	i = read8(f);	/* instrument number */
 	
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name           Len   LBeg  LEnd  L Vol Rls  C2Spd");
+	    report("\n     Instrument name               Len   LBeg  LEnd  L Vol Rls  C2Spd");
 	}
 
-	fread(&m->xxih[i].name, 1, 24, f);
+	fread(&m->xxih[i].name, 1, 28, f);
 	str_adj((char *)m->xxih[i].name);
 
-	fseek(f, 296, SEEK_CUR);
+	fseek(f, 290, SEEK_CUR);	/* Sample/note map? */
+
+	m->xxih[i].nsm = read16l(f);
+
+	if (m->xxih[i].nsm == 0)
+		return;
+
+	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
+	
+	if ((V(1)) && strlen((char *)m->xxih[i].name))
+	    report("\n[%2X] %-28.28s  ", i, m->xxih[i].name);
+
+	/* FIXME: Currently reading only the first sample */
 
 	read32b(f);	/* RIFF */
 	read32b(f);	/* size */
 	read32b(f);	/* AS   */
 	read32b(f);	/* SAMP */
 	read32b(f);	/* size */
-	read32b(f);	/* unknown */
+	read32b(f);	/* unknown - usually 0x40000000 */
 
-	fread(&m->xxs[i].name, 1, 24, f);
+	fread(&m->xxs[i].name, 1, 28, f);
 	str_adj((char *)m->xxs[i].name);
 
-	read32b(f);	/* unknown */
-	read32b(f);	/* unknown */
-	read8(f);	/* unknown */
+	read32b(f);	/* unknown - 0x0000 */
+	read8(f);	/* unknown - 0x00 */
 
-	m->xxih[i].nsm = 1;
-	m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	m->xxi[i][0].sid = i;
 	m->xxi[i][0].vol = read8(f);
 	m->xxi[i][0].pan = 0x80;
@@ -255,11 +264,12 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	else
 		snprintf(buf, 5, "%04x", m->xxih[i].rls);
 
-	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %4.4s %5d ", i,
-		m->xxih[i].name, m->xxs[i].len,
+	if ((V(1)) && strlen((char *)m->xxih[i].name))
+	    report("%05x%c%05x %05x %c V%02x %-4.4s %5d ",
+		m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].lps,
+		m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 		m->xxi[i][0].vol, buf, srate);
 
