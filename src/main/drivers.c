@@ -7,8 +7,6 @@
 
 extern struct xmp_drv_info drv_file;
 extern struct xmp_drv_info drv_wav;
-extern struct xmp_drv_info drv_smix;
-
 extern struct xmp_drv_info drv_osx;
 extern struct xmp_drv_info drv_solaris;
 extern struct xmp_drv_info drv_hpux;
