@@ -141,25 +141,6 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 			uint8 fxp = read8(f);
 			uint8 fxt = read8(f);
 
-#if 0
-			/* compressed events */
-			if (fxt >= 0x40) {
-				switch (fxp >> 4) {
-				case 0x0: {
-					uint8 note;
-					note = (fxt>>4)*12 +
-						(fxt & 0x0f) + 2;
-					event->note = note;
-					fxt = FX_TONEPORTA;
-					fxp = (fxp + 1) * 2;
-					break; }
-				default:
-printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
-				}
-			} else
-#endif
-
-
 			switch (fxt) {
 			case 0x14:		/* speed */
 				fxt = FX_S3M_TEMPO;
