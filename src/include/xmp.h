@@ -206,6 +206,7 @@ void xmp_unlink_tempfiles(void);
 struct xmp_options *xmp_get_options(xmp_context);
 
 void xmp_init(xmp_context, int, char **);
+void xmp_drv_register(struct xmp_drv_info *);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);
 struct xmp_module_info *xmp_get_module_info(xmp_context, struct xmp_module_info *);

@@ -1,5 +1,5 @@
 
-MAIN_OBJS	= getopt.o getopt1.o options.o main.o
+MAIN_OBJS	= getopt.o getopt1.o options.o drivers.o main.o
 MAIN_DFILES	= Makefile $(MAIN_OBJS:.o=.c)
 MAIN_PATH	= src/main
 

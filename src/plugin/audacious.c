@@ -132,6 +132,9 @@ DECLARE_PLUGIN(xmp, NULL, NULL, xmp_iplist, NULL, NULL, NULL, NULL, NULL);
 
 #endif
  
+extern struct xmp_drv_info drv_smix;
+
+
 static void strip_vfs(char *s)
 {
 	int len;
@@ -319,6 +322,7 @@ static void init(void)
 	ConfigDb *cfg;
 
 	_D("Plugin init");
+	xmp_drv_register(&drv_smix);
 	ctx = xmp_create_context();
 
 	xmp_cfg.mixing_freq = 0;
