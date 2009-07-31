@@ -221,8 +221,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
 	
-	if ((V(1)) && strlen((char *)m->xxih[i].name))
-	    report("\n[%2X] %-28.28s  ", i, m->xxih[i].name);
+	reportv(ctx, 1, "\n[%2X] %-28.28s  ", i, m->xxih[i].name);
 
 	/* FIXME: Currently reading only the first sample */
 
@@ -264,8 +263,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	else
 		snprintf(buf, 5, "%04x", m->xxih[i].rls);
 
-	if ((V(1)) && strlen((char *)m->xxih[i].name))
-	    report("%05x%c%05x %05x %c V%02x %-4.4s %5d ",
+	reportv(ctx, 1, "%05x%c%05x %05x %c V%02x %-4.4s %5d ",
 		m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		m->xxs[i].lps,
