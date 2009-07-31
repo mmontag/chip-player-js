@@ -842,8 +842,8 @@ int _xmp_player_start(struct xmp_context *ctx)
 	if (m->xxh->len == 0 || m->xxh->chn == 0)
 		return 0;
 
-	if (xmp_event_callback == NULL)
-		xmp_event_callback = dummy;
+	if (p->event_callback == NULL)
+		p->event_callback = dummy;
 
 	p->gvol_slide = 0;
 	p->gvol_base = m->volbase;
@@ -995,7 +995,7 @@ next_row:
 			xmp_drv_stoptimer(ctx);
 			while (p->pause) {
 				usleep(125000);
-				xmp_event_callback(0);
+				p->event_callback(0);
 			}
 			xmp_drv_starttimer(ctx);
 	    	}

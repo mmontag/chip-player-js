@@ -58,7 +58,7 @@ struct xmp_drv_info drv_file = {
 	dummy,			/* setbend */
 	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	dummy,			/* flush */
+	dummy,			/* stoptimer */
 	dummy,			/* resetvoices */
 	bufdump,		/* bufdump */
 	dummy,			/* bufwipe */

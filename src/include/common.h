@@ -218,6 +218,7 @@ struct xmp_player_context {
 	struct xmp_channel *xc_data;
 	int *fetch_ctl;
 	int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+	void (*event_callback)(unsigned long);
 
 	struct xmp_mod_context m;
 };

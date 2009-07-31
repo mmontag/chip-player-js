@@ -25,8 +25,6 @@
 
 static struct xmp_drv_info *drv_array = NULL;
 
-void (*xmp_event_callback)(unsigned long);
-
 
 static int drv_select(struct xmp_context *ctx)
 {

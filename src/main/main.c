@@ -517,7 +517,7 @@ int main(int argc, char **argv)
 	}
     }
 
-    xmp_register_event_callback(process_echoback);
+    xmp_register_event_callback(ctx, process_echoback);
 
     if (opt->verbosity) {
 	fprintf(stderr, "Extended Module Player " VERSION "\n"

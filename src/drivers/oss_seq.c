@@ -126,6 +126,7 @@ static struct synth_info si;
 static int chorusmode = 0;
 static int reverbmode = 0;
 static char *dev_sequencer = "/dev/sequencer";
+static struct xmp_player_context *p_ctx;
 
 static int numvoices(struct xmp_context *ctx, int num)
 {
@@ -260,7 +261,7 @@ static void bufdump()
 			if ((read(seqfd, &echo_msg, 4) == 4) &&
 			    ((echo_msg & 0xff) == SEQ_ECHO)) {
 				echo_msg >>= 8;
-				xmp_event_callback(echo_msg);
+				p_ctx->event_callback(echo_msg);
 			} else
 				echo_msg = 0;	/* ECHO_NONE */
 		}
@@ -349,6 +350,8 @@ static int init(struct xmp_context *ctx)
 	chkparm0("opl2", o->outfmt |= XMP_FMT_FM);
 	chkparm1("dev", dev_sequencer = token);
 	parm_end();
+
+	p_ctx = &ctx->p;
 
 	if ((seqfd = open(dev_sequencer, O_RDWR)) != -1) {
 		if ((seqfd != -1)

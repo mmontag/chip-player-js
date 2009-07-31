@@ -65,13 +65,13 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {
+	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 	int num;
 
-	//xmp_init_drivers();
 	xmp_init_formats(ctx);
 	pw_init();
 
-	xmp_event_callback = NULL;
+	p->event_callback = NULL;
 
 	/* must be parsed before loading the rc file. */
 	for (num = 1; num < argc; num++) {
@@ -100,9 +100,11 @@ void xmp_set_driver_parameter(struct xmp_options *o, char *s)
 	drv_parm++;
 }
 
-inline void xmp_register_event_callback(void (*cb) (unsigned long))
+inline void xmp_register_event_callback(xmp_context ctx, void (*cb) (unsigned long))
 {
-	xmp_event_callback = cb;
+	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+
+	p->event_callback = cb;
 }
 
 void xmp_channel_mute(xmp_context ctx, int from, int num, int on)
