@@ -199,6 +199,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	int i, srate, finetune, flags;
+	char buf[10];
 
 	read32b(f);	/* 42 01 00 00 */
 	read8(f);	/* 00 */
@@ -249,13 +250,18 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
 
+	if (m->xxih[i].rls == 0x7fff)
+		strcpy(buf, "----");
+	else
+		snprintf(buf, 5, "%04x", m->xxih[i].rls);
+
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %04x %5d ", i,
+	    report("\n[%2X] %-24.24s  %05x%c%05x %05x %c V%02x %4.4s %5d ", i,
 		m->xxih[i].name, m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		m->xxi[i][0].vol, m->xxih[i].rls, srate);
+		m->xxi[i][0].vol, buf, srate);
 
 	if (m->xxs[i].len > 1) {
 		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
