@@ -15,7 +15,7 @@ Stable versions
 	- fix terminal handling in Cygwin (by daniel åkerud)
 	- add OpenMPT id to S3M loader
 	- add Epic MegaGames MUSE data decompression
-	- add Jazz Jackrabbit 2 J2B module format loader
+	- add Epic MegaGames MUSE (Jazz Jackrabbit 2 J2B) module loader
 	- fix parsing of driver-specific parameters
 	- fix GDM length, number of patterns and number of samples
 	- fix memory access error in MDL sample depacker
@@ -23,6 +23,7 @@ Stable versions
 	- OSS driver resets the DSP device on exit (by Andrew Church)
 	- fix handling of PT portamento+vslide effect (by Andrew Church)
 	- move driver init from player core to main application or plugin
+	- Epic MegaGames MASI loader fixes
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
