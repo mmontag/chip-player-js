@@ -16,71 +16,37 @@
 #include "iff.h"
 #include "period.h"
 
-/* Galaxy Music System module file loader
+/* Galaxy Music System 4.0 module file loader
  *
- * Based on the format description by Dr.Eggman
- * (http://www.jazz2online.com/J2Ov2/articles/view.php?articleID=288)
- * and Jazz Jackrabbit modules by Alexander Brandon from Lori Central
- * (http://www.loricentral.com/jj2music.html)
+ * Based on modules converted using mod2j2b.exe
  */
 
-static int gal_test(FILE *, char *, const int);
-static int gal_load(struct xmp_context *, FILE *, const int);
+static int gal4_test(FILE *, char *, const int);
+static int gal4_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info gal_loader = {
-	"GAL",
-	"Galaxy Music System",
-	gal_test,
-	gal_load
+struct xmp_loader_info gal4_loader = {
+	"GAL4",
+	"Galaxy Music System 4.0",
+	gal4_test,
+	gal4_load
 };
 
-static uint8 chn_pan[64];
-static int version;
-
-static int gal_test(FILE *f, char *t, const int start)
+static int gal4_test(FILE *f, char *t, const int start)
 {
         if (read32b(f) != MAGIC4('R', 'I', 'F', 'F'))
 		return -1;
 
 	read32b(f);
 
-	switch (read32b(f)) {
-        case MAGIC4('A', 'M', ' ', ' '):		/* Galaxy 5.0 */
-        	if (read32b(f) != MAGIC4('I', 'N', 'I', 'T'))
-			return -1;
-		version = 5;
-		break;
-        case MAGIC4('A', 'M', 'F', 'F'):		/* Galaxy 4.0 */
-        	if (read32b(f) != MAGIC4('M', 'A', 'I', 'N'))
-			return -1;
-		version = 4;
-		break;
-	default:
+	if (read32b(f) != MAGIC4('A', 'M', ' ', ' '))
 		return -1;
-	}
+
+	if (read32b(f) != MAGIC4('M', 'A', 'I', 'N'))
+		return -1;
 
 	read_title(f, t, 0);
 
 	return 0;
-}
-
-static void get_init(struct xmp_context *ctx, int size, FILE *f)
-{
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
-	char buf[64];
-	
-	fread(buf, 1, 64, f);
-	strncpy(m->name, buf, 64);
-	strcpy(m->type, "Galaxy Music System 5.0");
-
-	read8(f);	/* unknown */
-	m->xxh->chn = read8(f);
-	m->xxh->tpo = read8(f);
-	m->xxh->bpm = read8(f);
-	read32l(f);	/* unknown */
-	read8(f);	/* unknown */
-	fread(chn_pan, 1, 64, f);
 }
 
 static void get_main(struct xmp_context *ctx, int size, FILE *f)
@@ -99,8 +65,6 @@ static void get_main(struct xmp_context *ctx, int size, FILE *f)
 	m->xxh->bpm = read8(f);
 	read32l(f);	/* unknown */
 	read8(f);	/* unknown */
-
-	memset(chn_pan, 0x80, 64);
 }
 
 static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
@@ -109,8 +73,7 @@ static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i;
 
-	m->xxh->len = read8(f) + 1;
-	/* Don't follow Dr.Eggman's specs here */
+	m->xxh->len = read8(f);
 
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = read8(f);
@@ -122,7 +85,7 @@ static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i;
 
-	i = read8(f) + 1;	/* pattern number */
+	i = read8(f);		/* pattern number */
 
 	if (i > m->xxh->pat)
 		m->xxh->pat = i;
@@ -134,9 +97,8 @@ static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i;
 
-	read32b(f);		/* 42 01 00 00 */
 	read8(f);		/* 00 */
-	i = read8(f) + 1;	/* instrument number */
+	i = read8(f);		/* instrument number */
 
 	if (i > m->xxh->ins)
 		m->xxh->ins = i;
@@ -214,36 +176,33 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i, srate, finetune, flags;
 
-	read32b(f);	/* 42 01 00 00 */
-	read8(f);	/* 00 */
-	i = read8(f);	/* instrument number */
+	read8(f);		/* 00 */
+	i = read8(f);		/* instrument number */
 	
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name               Len   LBeg  LEnd  L Vol Flag C2Spd");
+	    report("\n     Instrument name                   Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
 	}
 
 	fread(&m->xxih[i].name, 1, 28, f);
 	str_adj((char *)m->xxih[i].name);
 
-	fseek(f, 290, SEEK_CUR);	/* Sample/note map? */
+	fseek(f, 128, SEEK_CUR);	/* Sample/note map? */
+	m->xxih[i].nsm = read8(f);
 
-	m->xxih[i].nsm = read16l(f);
+	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ", i, m->xxih[i].name,
+							m->xxih[i].nsm);
 
 	if (m->xxih[i].nsm == 0)
 		return;
 
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
-	
-	reportv(ctx, 1, "\n[%2X] %-28.28s  ", i, m->xxih[i].name);
 
+	fseek(f, 42, SEEK_CUR);		/* envelope? */
+	
 	/* FIXME: Currently reading only the first sample */
 
-	read32b(f);	/* RIFF */
-	read32b(f);	/* size */
-	read32b(f);	/* AS   */
 	read32b(f);	/* SAMP */
 	read32b(f);	/* size */
-	read32b(f);	/* unknown - usually 0x40000000 */
 
 	fread(&m->xxs[i].name, 1, 28, f);
 	str_adj((char *)m->xxs[i].name);
@@ -294,7 +253,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static int gal_load(struct xmp_context *ctx, FILE *f, const int start)
+static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
@@ -310,14 +269,12 @@ static int gal_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxh->smp = m->xxh->ins = 0;
 
-	iff_register("INIT", get_init);		/* Galaxy 5.0 */
-	iff_register("MAIN", get_main);		/* Galaxy 4.0 */
+	iff_register("MAIN", get_main);
 	iff_register("ORDR", get_ordr);
 	iff_register("PATT", get_patt_cnt);
 	iff_register("INST", get_inst_cnt);
-	iff_setflag(IFF_SKIP_EMBEDDED);
 	iff_setflag(IFF_LITTLE_ENDIAN);
-	iff_setflag(version == 4 ? IFF_CHUNK_ALIGN4 : IFF_CHUNK_ALIGN2);
+	iff_setflag(IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
 	while (!feof(f))
@@ -341,9 +298,8 @@ static int gal_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_register("PATT", get_patt);
 	iff_register("INST", get_inst);
-	iff_setflag(IFF_SKIP_EMBEDDED);
 	iff_setflag(IFF_LITTLE_ENDIAN);
-	iff_setflag(version == 4 ? IFF_CHUNK_ALIGN4 : IFF_CHUNK_ALIGN2);
+	iff_setflag(IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
 	while (!feof (f))
@@ -354,7 +310,7 @@ static int gal_load(struct xmp_context *ctx, FILE *f, const int start)
 	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < m->xxh->chn; i++)
-		m->xxc[i].pan = chn_pan[i] * 2;
+		m->xxc[i].pan = 0x80;
 
 	return 0;
 }

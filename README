@@ -129,7 +129,8 @@ The current version recognizes the following module formats:
   DI	****+	Digital Illusions	-
   GMC	****+	Game Music Creator	-
   MASI	****	Epic Megagames MASI	epic, sinaria
-  MUSE	***	Galaxy Music System	5.0a (j2b)
+  GAL5	***	Galaxy Music System 5.0	-
+  GAL4	*	Galaxy Music System 4.0	-
   PSM	****	Protracker Studio	0.01, 1.00
   STIM	****+	Slamtilt		-
   UMX	****+	Epic Games Unreal/UT	IT, S3M, MOD, XM

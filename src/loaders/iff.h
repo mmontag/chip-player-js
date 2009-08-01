@@ -12,6 +12,7 @@
 #define IFF_CHUNK_ALIGN2	0x04
 #define IFF_CHUNK_ALIGN4	0x08
 #define IFF_SKIP_EMBEDDED	0x10
+#define IFF_CHUNK_TRUNC4	0x20
 
 struct iff_header {
     char form[4];	/* FORM */
