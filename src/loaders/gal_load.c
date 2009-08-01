@@ -24,20 +24,20 @@
  * (http://www.loricentral.com/jj2music.html)
  */
 
-static int muse_test(FILE *, char *, const int);
-static int muse_load(struct xmp_context *, FILE *, const int);
+static int gal_test(FILE *, char *, const int);
+static int gal_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info muse_loader = {
-	"MUSE",
+struct xmp_loader_info gal_loader = {
+	"GAL",
 	"Galaxy Music System",
-	muse_test,
-	muse_load
+	gal_test,
+	gal_load
 };
 
 static uint8 chn_pan[64];
 static int version;
 
-static int muse_test(FILE *f, char *t, const int start)
+static int gal_test(FILE *f, char *t, const int start)
 {
         if (read32b(f) != MAGIC4('R', 'I', 'F', 'F'))
 		return -1;
@@ -72,6 +72,7 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 	
 	fread(buf, 1, 64, f);
 	strncpy(m->name, buf, 64);
+	strcpy(m->type, "Galaxy Music System 5.0");
 
 	read8(f);	/* unknown */
 	m->xxh->chn = read8(f);
@@ -90,6 +91,7 @@ static void get_main(struct xmp_context *ctx, int size, FILE *f)
 	
 	fread(buf, 1, 64, f);
 	strncpy(m->name, buf, 64);
+	strcpy(m->type, "Galaxy Music System 4.0");
 
 	read8(f);	/* unknown */
 	m->xxh->chn = read8(f);
@@ -292,7 +294,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
+static int gal_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
@@ -325,8 +327,6 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->smp = m->xxh->ins;
-
-	strcpy (m->type, "MUSE (Galaxy Music System 5.0a)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
