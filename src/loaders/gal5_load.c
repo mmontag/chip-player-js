@@ -226,7 +226,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].vol = (read16l(f) + 1) / 512;
 	flags = read16l(f);
-	read16l(f);			/* unknown - 0x0000 */
+	read16l(f);			/* unknown - 0x0080 */
 	m->xxs[i].len = read32l(f);
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);

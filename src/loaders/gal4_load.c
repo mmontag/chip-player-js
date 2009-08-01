@@ -49,6 +49,8 @@ static int gal4_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
+static int snum;
+
 static void get_main(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_player_context *p = &ctx->p;
@@ -85,7 +87,7 @@ static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i;
 
-	i = read8(f) + 1;	/* pattern number */
+	i = read8(f) + 1;		/* pattern number */
 
 	if (i > m->xxh->pat)
 		m->xxh->pat = i;
@@ -97,9 +99,12 @@ static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i;
 
-	read8(f);		/* 00 */
-	i = read8(f) + 1;	/* instrument number */
+	read8(f);			/* 00 */
+	i = read8(f) + 1;		/* instrument number */
 
+	fseek(f, 28, SEEK_CUR);		/* skip name */
+	m->xxh->smp += read8(f);
+	
 	if (i > m->xxh->ins)
 		m->xxh->ins = i;
 }
@@ -174,7 +179,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	int i, srate, finetune, flags;
+	int i, j;
+	int srate, finetune, flags;
 
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
@@ -187,7 +193,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	str_adj((char *)m->xxih[i].name);
 
 	m->xxih[i].nsm = read8(f);
-	fseek(f, 194, SEEK_CUR);	/* Sample map */
+	fseek(f, 12, SEEK_CUR);		/* Sample map - 1st octave */
+	fread(&m->xxim[i].ins, 1, 96, f);
+
+	fseek(f, 86, SEEK_CUR);		/* unknown */
 
 	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ", i, m->xxih[i].name,
 							m->xxih[i].nsm);
@@ -199,58 +208,63 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	/* FIXME: Currently reading only the first sample */
 
-	read32b(f);	/* SAMP */
-	read32b(f);	/* size */
-
-	fread(&m->xxs[i].name, 1, 28, f);
-	str_adj((char *)m->xxs[i].name);
-
-	m->xxi[i][0].pan = read8(f) * 4;
-	m->xxi[i][0].vol = read8(f);
-	flags = read8(f);
-	read8(f);	/* unknown */
-
-	m->xxi[i][0].sid = i;
-	m->xxs[i].len = read32l(f);
-	m->xxs[i].lps = read32l(f);
-	m->xxs[i].lpe = read32l(f);
-
-	m->xxs[i].flg = 0;
-	if (flags & 0x04)
-		m->xxs[i].flg |= WAVE_16_BITS;
-	if (flags & 0x08)
-		m->xxs[i].flg |= WAVE_LOOPING;
-	if (flags & 0x10)
-		m->xxs[i].flg |= WAVE_BIDIR_LOOP;
-	if (~flags & 0x80)
-		m->xxs[i].flg |= WAVE_UNSIGNED;
-
-	if (m->xxs[i].flg & WAVE_16_BITS) {
-		m->xxs[i].len <<= 1;
-		m->xxs[i].lps <<= 1;
-		m->xxs[i].lpe <<= 1;
-	}
-
-	srate = read32l(f);
-	finetune = 0;
-	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-	m->xxi[i][0].fin += finetune;
-
-	read32l(f);			/* 0x00000000 */
-	read32l(f);			/* unknown */
-
-	reportv(ctx, 1, "[%X] %05x%c%05x %05x %c V%02x %04x %5d ",
-		0, m->xxs[i].len,
-		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
-		m->xxs[i].lps,
-		m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' : 
-			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		m->xxi[i][0].vol, flags, srate);
-
-	if (m->xxs[i].len > 1) {
-		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
-		reportv(ctx, 0, ".");
+	for (j = 0; j < m->xxih[i].nsm; j++, snum++) {
+		read32b(f);	/* SAMP */
+		read32b(f);	/* size */
+	
+		fread(&m->xxs[snum].name, 1, 28, f);
+		str_adj((char *)m->xxs[snum].name);
+	
+		m->xxi[i][j].pan = read8(f) * 4;
+		m->xxi[i][j].vol = read8(f);
+		flags = read8(f);
+		read8(f);	/* unknown - 0x80 */
+	
+		m->xxi[i][j].sid = snum + 1;
+		m->xxs[snum].len = read32l(f);
+		m->xxs[snum].lps = read32l(f);
+		m->xxs[snum].lpe = read32l(f);
+	
+		m->xxs[snum].flg = 0;
+		if (flags & 0x04)
+			m->xxs[snum].flg |= WAVE_16_BITS;
+		if (flags & 0x08)
+			m->xxs[snum].flg |= WAVE_LOOPING;
+		if (flags & 0x10)
+			m->xxs[snum].flg |= WAVE_BIDIR_LOOP;
+		if (~flags & 0x80)
+			m->xxs[snum].flg |= WAVE_UNSIGNED;
+	
+		if (m->xxs[snum].flg & WAVE_16_BITS) {
+			m->xxs[snum].len <<= 1;
+			m->xxs[snum].lps <<= 1;
+			m->xxs[snum].lpe <<= 1;
+		}
+	
+		srate = read32l(f);
+		finetune = 0;
+		c2spd_to_note(srate, &m->xxi[i][j].xpo, &m->xxi[i][j].fin);
+		m->xxi[i][j].fin += finetune;
+	
+		read32l(f);			/* 0x00000000 */
+		read32l(f);			/* unknown */
+	
+		if (j > 0)
+			reportv(ctx, 1, "\n                                      ");
+	
+		reportv(ctx, 1, "[%X] %05x%c%05x %05x %c V%02x %04x %5d ",
+			j, m->xxs[snum].len,
+			m->xxs[snum].flg & WAVE_16_BITS ? '+' : ' ',
+			m->xxs[snum].lps,
+			m->xxs[snum].lpe,
+			m->xxs[snum].flg & WAVE_BIDIR_LOOP ? 'B' : 
+				m->xxs[snum].flg & WAVE_LOOPING ? 'L' : ' ',
+			m->xxi[i][j].vol, flags, srate);
+	
+		if (m->xxs[snum].len > 1) {
+			xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[snum], NULL);
+			reportv(ctx, 0, ".");
+		}
 	}
 }
 
@@ -284,7 +298,6 @@ static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 	iff_release();
 
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
-	m->xxh->smp = m->xxh->ins;
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
@@ -296,6 +309,7 @@ static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	fseek(f, start + offset, SEEK_SET);
+	snum = 0;
 
 	iff_register("PATT", get_patt);
 	iff_register("INST", get_inst);
