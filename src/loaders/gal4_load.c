@@ -38,7 +38,7 @@ static int gal4_test(FILE *f, char *t, const int start)
 
 	read32b(f);
 
-	if (read32b(f) != MAGIC4('A', 'M', ' ', ' '))
+	if (read32b(f) != MAGIC4('A', 'M', 'F', 'F'))
 		return -1;
 
 	if (read32b(f) != MAGIC4('M', 'A', 'I', 'N'))

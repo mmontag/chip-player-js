@@ -189,7 +189,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	i = read8(f);		/* instrument number */
 	
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name                   Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
+	    report("\n     Instrument name                  Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
 	}
 
 	fread(&m->xxih[i].name, 1, 28, f);
