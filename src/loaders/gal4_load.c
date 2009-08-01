@@ -101,12 +101,13 @@ static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 
 	read8(f);			/* 00 */
 	i = read8(f) + 1;		/* instrument number */
-
-	fseek(f, 28, SEEK_CUR);		/* skip name */
-	m->xxh->smp += read8(f);
 	
 	if (i > m->xxh->ins)
 		m->xxh->ins = i;
+
+	fseek(f, 28, SEEK_CUR);		/* skip name */
+
+	m->xxh->smp += read8(f);
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
@@ -184,7 +185,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
-	
+
 	if (V(1) && i == 0) {
 	    report("\n     Instrument name                  Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
 	}
@@ -206,8 +207,6 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
 
-	/* FIXME: Currently reading only the first sample */
-
 	for (j = 0; j < m->xxih[i].nsm; j++, snum++) {
 		read32b(f);	/* SAMP */
 		read32b(f);	/* size */
@@ -220,7 +219,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		flags = read8(f);
 		read8(f);	/* unknown - 0x80 */
 	
-		m->xxi[i][j].sid = snum + 1;
+		m->xxi[i][j].sid = snum;
 		m->xxs[snum].len = read32l(f);
 		m->xxs[snum].lps = read32l(f);
 		m->xxs[snum].lpe = read32l(f);
@@ -262,7 +261,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			m->xxi[i][j].vol, flags, srate);
 	
 		if (m->xxs[snum].len > 1) {
-			xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[snum], NULL);
+			xmp_drv_loadpatch(ctx, f, snum, m->c4rate, 0, &m->xxs[snum], NULL);
 			reportv(ctx, 0, ".");
 		}
 	}
