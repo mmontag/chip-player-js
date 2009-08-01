@@ -318,7 +318,11 @@ SOURCE=..\loaders\pw_load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\muse_load.c
+SOURCE=..\loaders\gal5_load.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\gal4_load.c
 # End Source File
 # Begin Source File
 
