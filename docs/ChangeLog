@@ -15,7 +15,7 @@ Stable versions
 	- fix terminal handling in Cygwin (by daniel åkerud)
 	- add OpenMPT id to S3M loader
 	- add Epic MegaGames MUSE data decompression
-	- add Epic MegaGames MUSE (Jazz Jackrabbit 2 J2B) module loader
+	- add Galaxy Music System (Jazz Jackrabbit 2 J2B) module loader
 	- fix parsing of driver-specific parameters
 	- fix GDM length, number of patterns and number of samples
 	- fix memory access error in MDL sample depacker

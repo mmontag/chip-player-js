@@ -16,9 +16,11 @@
 #include "iff.h"
 #include "period.h"
 
-/*
+/* Galaxy Music System v5.0a module file loader
+ *
  * Based on the format description by Dr.Eggman
- * http://www.jazz2online.com/J2Ov2/articles/view.php?articleID=288
+ * (http://www.jazz2online.com/J2Ov2/articles/view.php?articleID=288)
+ * and Jazz Jackrabbit modules by Alexander Brandon from Lori Central
  */
 
 static int muse_test(FILE *, char *, const int);
@@ -26,7 +28,7 @@ static int muse_load(struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info muse_loader = {
 	"MUSE",
-	"Epic MegaGames MUSE",
+	"Galaxy Music System",
 	muse_test,
 	muse_load
 };
@@ -170,7 +172,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 		}
 
 		if (flag & 0x20) {
-			event->vol = read8(f) / 2;
+			event->vol = 1 + read8(f) / 2;
 		}
 	}
 }
@@ -180,14 +182,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	int i, srate, finetune, flags;
-	char buf[10];
 
 	read32b(f);	/* 42 01 00 00 */
 	read8(f);	/* 00 */
 	i = read8(f);	/* instrument number */
 	
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name               Len   LBeg  LEnd  L Vol Rls  C2Spd");
+	    report("\n     Instrument name               Len   LBeg  LEnd  L Vol Flag C2Spd");
 	}
 
 	fread(&m->xxih[i].name, 1, 28, f);
@@ -220,16 +221,24 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);	/* unknown - 0x00 */
 
 	m->xxi[i][0].sid = i;
-	m->xxi[i][0].vol = read8(f);
+	m->xxih[i].vol = read8(f);
 	m->xxi[i][0].pan = 0x80;
-	m->xxih[i].rls = read16l(f);
+	m->xxi[i][0].vol = (read16l(f) + 1) / 512;
 	flags = read16l(f);
 	read16l(f);			/* unknown - 0x0000 */
 	m->xxs[i].len = read32l(f);
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);
-	m->xxs[i].flg = flags & 0x08 ? WAVE_LOOPING : 0;
-	m->xxs[i].flg |= flags & 0x04 ? WAVE_16_BITS : 0;
+
+	m->xxs[i].flg = 0;
+	if (flags & 0x04)
+		m->xxs[i].flg |= WAVE_16_BITS;
+	if (flags & 0x08)
+		m->xxs[i].flg |= WAVE_LOOPING;
+	if (flags & 0x10)
+		m->xxs[i].flg |= WAVE_LOOPING | WAVE_BIDIR_LOOP;
+	if (~flags & 0x80)
+		m->xxs[i].flg |= WAVE_UNSIGNED;
 
 	srate = read32l(f);
 	finetune = 0;
@@ -239,18 +248,14 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
 
-	if (m->xxih[i].rls == 0x7fff)
-		strcpy(buf, "----");
-	else
-		snprintf(buf, 5, "%04x", m->xxih[i].rls);
-
-	reportv(ctx, 1, "%05x%c%05x %05x %c V%02x %-4.4s %5d ",
+	reportv(ctx, 1, "%05x%c%05x %05x %c V%02x %04x %5d ",
 		m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		m->xxs[i].lps,
 		m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
-		m->xxi[i][0].vol, buf, srate);
+		m->xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' : 
+			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxi[i][0].vol, flags, srate);
 
 	if (m->xxs[i].len > 1) {
 		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
@@ -291,7 +296,7 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->smp = m->xxh->ins;
 
-	strcpy (m->type, "MUSE (Epic MegaGames MUSE)");
+	strcpy (m->type, "MUSE (Galaxy Music System)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
