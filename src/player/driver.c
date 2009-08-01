@@ -46,9 +46,8 @@ static int drv_select(struct xmp_context *ctx)
 	}
     } else {
 	ret = XMP_ERR_DSPEC;
-	drv = drv_array->next;	/* skip file */
-	drv = drv->next;	/* skip wav */
-	for (; drv; drv = drv->next) {
+
+	for (drv = drv_array; drv; drv = drv->next) {
 	    if (o->verbosity > 2)
 		report ("Probing %s... ", drv->description);
 	    if (drv->init(ctx) == 0) {

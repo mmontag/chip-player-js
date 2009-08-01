@@ -33,9 +33,6 @@ extern struct xmp_drv_info drv_win32;
 
 void init_drivers()
 {
-    xmp_drv_register(&drv_file);
-    xmp_drv_register(&drv_wav);
-
 #ifdef DRIVER_OSX
     xmp_drv_register(&drv_osx);
 #endif
@@ -99,5 +96,8 @@ void init_drivers()
 #ifdef DRIVER_NAS
     xmp_drv_register(&drv_nas);
 #endif
+    xmp_drv_register(&drv_file);
+    xmp_drv_register(&drv_wav);
+
 }
 

@@ -27,6 +27,6 @@ install-xmp: $(MAIN_PATH)/xmp
 $(MAIN_PATH)/test1: $(OBJS) $(MAIN_PATH)/test1.o $(MAIN_PATH)/drivers.o $(D_OBJS)
 	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
-$(MAIN_PATH)/test3: $(OBJS) $(MAIN_PATH)/test3.o $(D_OBJS)
+$(MAIN_PATH)/test3: $(LOBJS) $(MAIN_PATH)/test3.o $(D_LOBJS)
 	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
