@@ -28,7 +28,7 @@ static int muse_load(struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info muse_loader = {
 	"MUSE",
-	"Galaxy Music System",
+	"Galaxy Music System 5.0a",
 	muse_test,
 	muse_load
 };
@@ -296,7 +296,7 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->smp = m->xxh->ins;
 
-	strcpy (m->type, "MUSE (Galaxy Music System)");
+	strcpy (m->type, "MUSE (Galaxy Music System v5.0a)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
