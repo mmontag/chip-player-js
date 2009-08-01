@@ -334,7 +334,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     if (m->xxh->chn != 4 && mh.restart == 0x7f) {
-	tracker = "Scream Tracker 3?";
+	tracker = "Scream Tracker 3";
 	ptkloop = 0;
 	m->xxh->flg &= ~XXM_FLG_MODRNG;
     }

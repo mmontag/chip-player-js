@@ -180,7 +180,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	i = read8(f);		/* instrument number */
 	
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name                   Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
+	    report("\n     Instrument name                  Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
 	}
 
 	fread(&m->xxih[i].name, 1, 28, f);
@@ -197,7 +197,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
 
-	fseek(f, 42, SEEK_CUR);		/* envelope? */
+	fseek(f, 66, SEEK_CUR);		/* envelope? */
 	
 	/* FIXME: Currently reading only the first sample */
 
@@ -207,15 +207,12 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	fread(&m->xxs[i].name, 1, 28, f);
 	str_adj((char *)m->xxs[i].name);
 
-	read32b(f);	/* unknown - 0x0000 */
-	read8(f);	/* unknown - 0x00 */
+	m->xxi[i][0].pan = read8(f) * 4;
+	m->xxi[i][0].vol = read8(f);
+	flags = read8(f);
+	read8(f);	/* unknown */
 
 	m->xxi[i][0].sid = i;
-	m->xxih[i].vol = read8(f);
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].vol = (read16l(f) + 1) / 512;
-	flags = read16l(f);
-	read16l(f);			/* unknown - 0x0000 */
 	m->xxs[i].len = read32l(f);
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);
@@ -226,7 +223,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	if (flags & 0x08)
 		m->xxs[i].flg |= WAVE_LOOPING;
 	if (flags & 0x10)
-		m->xxs[i].flg |= WAVE_LOOPING | WAVE_BIDIR_LOOP;
+		m->xxs[i].flg |= WAVE_BIDIR_LOOP;
 	if (~flags & 0x80)
 		m->xxs[i].flg |= WAVE_UNSIGNED;
 
