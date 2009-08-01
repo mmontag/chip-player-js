@@ -62,7 +62,7 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 	
 	fread(buf, 1, 64, f);
 	strncpy(m->name, buf, 64);
-	strcpy(m->type, "GAL5 (Galaxy Music System 5.0)");
+	strcpy(m->type, "Galaxy Music System 5.0");
 
 	read8(f);	/* unknown */
 	m->xxh->chn = read8(f);
