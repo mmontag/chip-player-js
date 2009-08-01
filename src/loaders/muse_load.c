@@ -21,6 +21,7 @@
  * Based on the format description by Dr.Eggman
  * (http://www.jazz2online.com/J2Ov2/articles/view.php?articleID=288)
  * and Jazz Jackrabbit modules by Alexander Brandon from Lori Central
+ * (http://www.loricentral.com/jj2music.html)
  */
 
 static int muse_test(FILE *, char *, const int);
@@ -296,7 +297,7 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->smp = m->xxh->ins;
 
-	strcpy (m->type, "MUSE (Galaxy Music System v5.0a)");
+	strcpy (m->type, "MUSE (Galaxy Music System 5.0a)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
