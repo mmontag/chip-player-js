@@ -85,7 +85,7 @@ static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i;
 
-	i = read8(f);		/* pattern number */
+	i = read8(f) + 1;	/* pattern number */
 
 	if (i > m->xxh->pat)
 		m->xxh->pat = i;
@@ -98,7 +98,7 @@ static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 	int i;
 
 	read8(f);		/* 00 */
-	i = read8(f);		/* instrument number */
+	i = read8(f) + 1;	/* instrument number */
 
 	if (i > m->xxh->ins)
 		m->xxh->ins = i;
@@ -186,8 +186,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	fread(&m->xxih[i].name, 1, 28, f);
 	str_adj((char *)m->xxih[i].name);
 
-	fseek(f, 128, SEEK_CUR);	/* Sample/note map? */
 	m->xxih[i].nsm = read8(f);
+	fseek(f, 194, SEEK_CUR);	/* Sample map */
 
 	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ", i, m->xxih[i].name,
 							m->xxih[i].nsm);
@@ -197,8 +197,6 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
 
-	fseek(f, 66, SEEK_CUR);		/* envelope? */
-	
 	/* FIXME: Currently reading only the first sample */
 
 	read32b(f);	/* SAMP */
@@ -227,6 +225,12 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	if (~flags & 0x80)
 		m->xxs[i].flg |= WAVE_UNSIGNED;
 
+	if (m->xxs[i].flg & WAVE_16_BITS) {
+		m->xxs[i].len <<= 1;
+		m->xxs[i].lps <<= 1;
+		m->xxs[i].lpe <<= 1;
+	}
+
 	srate = read32l(f);
 	finetune = 0;
 	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
@@ -235,8 +239,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
 
-	reportv(ctx, 1, "%05x%c%05x %05x %c V%02x %04x %5d ",
-		m->xxs[i].len,
+	reportv(ctx, 1, "[%X] %05x%c%05x %05x %c V%02x %04x %5d ",
+		0, m->xxs[i].len,
 		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
 		m->xxs[i].lps,
 		m->xxs[i].lpe,
