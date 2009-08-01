@@ -16,7 +16,7 @@
 #include "iff.h"
 #include "period.h"
 
-/* Galaxy Music System v5.0a module file loader
+/* Galaxy Music System module file loader
  *
  * Based on the format description by Dr.Eggman
  * (http://www.jazz2online.com/J2Ov2/articles/view.php?articleID=288)
@@ -29,11 +29,13 @@ static int muse_load(struct xmp_context *, FILE *, const int);
 
 struct xmp_loader_info muse_loader = {
 	"MUSE",
-	"Galaxy Music System 5.0a",
+	"Galaxy Music System",
 	muse_test,
 	muse_load
 };
 
+static uint8 chn_pan[64];
+static int version;
 
 static int muse_test(FILE *f, char *t, const int start)
 {
@@ -42,18 +44,25 @@ static int muse_test(FILE *f, char *t, const int start)
 
 	read32b(f);
 
-        if (read32b(f) != MAGIC4('A', 'M', ' ', ' '))
+	switch (read32b(f)) {
+        case MAGIC4('A', 'M', ' ', ' '):		/* Galaxy 5.0 */
+        	if (read32b(f) != MAGIC4('I', 'N', 'I', 'T'))
+			return -1;
+		version = 5;
+		break;
+        case MAGIC4('A', 'M', 'F', 'F'):		/* Galaxy 4.0 */
+        	if (read32b(f) != MAGIC4('M', 'A', 'I', 'N'))
+			return -1;
+		version = 4;
+		break;
+	default:
 		return -1;
-
-        if (read32b(f) != MAGIC4('I', 'N', 'I', 'T'))
-		return -1;
+	}
 
 	read_title(f, t, 0);
 
 	return 0;
 }
-
-static uint8 chn_pan[64];
 
 static void get_init(struct xmp_context *ctx, int size, FILE *f)
 {
@@ -71,6 +80,25 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);	/* unknown */
 	read8(f);	/* unknown */
 	fread(chn_pan, 1, 64, f);
+}
+
+static void get_main(struct xmp_context *ctx, int size, FILE *f)
+{
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+	char buf[64];
+	
+	fread(buf, 1, 64, f);
+	strncpy(m->name, buf, 64);
+
+	read8(f);	/* unknown */
+	m->xxh->chn = read8(f);
+	m->xxh->tpo = read8(f);
+	m->xxh->bpm = read8(f);
+	read32l(f);	/* unknown */
+	read8(f);	/* unknown */
+
+	memset(chn_pan, 0x80, 64);
 }
 
 static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
@@ -280,13 +308,14 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxh->smp = m->xxh->ins = 0;
 
-	iff_register("INIT", get_init);
+	iff_register("INIT", get_init);		/* Galaxy 5.0 */
+	iff_register("MAIN", get_main);		/* Galaxy 4.0 */
 	iff_register("ORDR", get_ordr);
 	iff_register("PATT", get_patt_cnt);
 	iff_register("INST", get_inst_cnt);
 	iff_setflag(IFF_SKIP_EMBEDDED);
 	iff_setflag(IFF_LITTLE_ENDIAN);
-	iff_setflag(IFF_ALIGN_CHUNK_SIZE);
+	iff_setflag(version == 4 ? IFF_CHUNK_ALIGN4 : IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
 	while (!feof(f))
@@ -314,7 +343,7 @@ static int muse_load(struct xmp_context *ctx, FILE *f, const int start)
 	iff_register("INST", get_inst);
 	iff_setflag(IFF_SKIP_EMBEDDED);
 	iff_setflag(IFF_LITTLE_ENDIAN);
-	iff_setflag(IFF_ALIGN_CHUNK_SIZE);
+	iff_setflag(version == 4 ? IFF_CHUNK_ALIGN4 : IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
 	while (!feof (f))

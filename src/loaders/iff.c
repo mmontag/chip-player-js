@@ -43,10 +43,11 @@ void iff_chunk(struct xmp_context *ctx, FILE *f)
 
     size = (__flags & IFF_LITTLE_ENDIAN) ? read32l(f) : read32b(f);
 
-    if (__flags & IFF_ALIGN_CHUNK_SIZE) {
-	if (size & 1)
-	    size++;
-    }
+    if (__flags & IFF_CHUNK_ALIGN2)
+	size = (size + 1) & ~1;
+
+    if (__flags & IFF_CHUNK_ALIGN4)
+	size = (size + 3) & ~3;
 
     if (__flags & IFF_FULL_CHUNK_SIZE)
 	size -= __id_size + 4;

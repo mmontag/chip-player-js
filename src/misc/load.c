@@ -151,7 +151,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	builtin = BUILTIN_MMCMP;
     } else if (b[0] == 'M' && b[1] == 'U' && b[2] == 'S' && b[3] == 'E' &&
 		b[4] == 0xde && b[5] == 0xad && b[6] == 0xbe && b[7] == 0xaf) {
-	packer = "MUSE";
+	packer = "MUSE/J2B";
+	builtin = BUILTIN_MUSE;
+    } else if (b[0] == 'M' && b[1] == 'U' && b[2] == 'S' && b[3] == 'E' &&
+		b[4] == 0xde && b[5] == 0xad && b[6] == 0xba && b[7] == 0xbe) {
+	packer = "MUSE/MOD2J2B";
 	builtin = BUILTIN_MUSE;
     } else if (b[0] == 'R' && b[1] == 'a' && b[2] == 'r') {
 	packer = "rar";
