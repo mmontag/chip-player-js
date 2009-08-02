@@ -5,6 +5,8 @@ TUNENET_OBJS	= Init.o Obtain.o Release.o AnnouncePlayer.o InitPlayer.o \
 TUNENET_DFILES	= Makefile $(TUNENET_OBJS:.o=.c) include
 TUNENET_PATH	= src/plugin/tunenet
 
+tunenet: tn_xmp
+
 dist-tunenet:
 	mkdir -p $(DIST)/$(TUNENET_PATH)
 	cp -RPp $(addprefix $(TUNENET_PATH)/,$(TUNENET_DFILES)) $(DIST)/$(TUNENET_PATH)

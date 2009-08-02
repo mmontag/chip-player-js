@@ -63,6 +63,9 @@ AC_ARG_ENABLE(audacious-plugin,
 AC_ARG_ENABLE(winamp-plugin,
     [  --enable-winamp-plugin  Compile the Winamp plugin])
 
+AC_ARG_ENABLE(tunenet-plugin,
+    [  --enable-tunenet-plugin Compile the TuneNet plugin])
+
 AC_ARG_ENABLE(esd,
     [  --enable-esd            Compile ESD support])
 
@@ -131,6 +134,7 @@ cygwin*|mingw*)
     enable_xmms_plugin=no
     enable_bmp_plugin=no
     enable_audacious_plugin=no
+    enable_tunenet_plugin=no
     ;;
 esac
 
@@ -256,6 +260,14 @@ dnl -----------------------------------------------------------------------
 
 if test "${enable_winamp_plugin}" = "yes"; then
     PLUGINS="$PLUGINS winamp"
+fi
+
+dnl -----------------------------------------------------------------------
+dnl Check for TuneNet
+dnl -----------------------------------------------------------------------
+
+if test "${enable_tunenet_plugin}" = "yes"; then
+    PLUGINS="$PLUGINS tunenet"
 fi
 
 dnl -----------------------------------------------------------------------
