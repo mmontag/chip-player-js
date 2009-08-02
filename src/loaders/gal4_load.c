@@ -182,6 +182,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i, j;
 	int srate, finetune, flags;
+	int val, vwf, vra, vde, vsw, fade;
+	uint8 buf[30];
 
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
@@ -197,7 +199,59 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	fseek(f, 12, SEEK_CUR);		/* Sample map - 1st octave */
 	fread(&m->xxim[i].ins, 1, 96, f);
 
-	fseek(f, 86, SEEK_CUR);		/* unknown */
+	fseek(f, 11, SEEK_CUR);		/* unknown */
+	vwf = read8(f);			/* vibrato waveform */
+	vsw = read8(f);			/* vibrato sweep */
+	read8(f);			/* unknown */
+	read8(f);			/* unknown */
+	vde = read8(f) / 4;		/* vibrato depth */
+	vra = read16l(f) / 16;		/* vibrato speed */
+	read8(f);			/* unknown */
+
+	val = read8(f);			/* PV envelopes flags */
+	m->xxih[i].aei.flg = LSN(val);
+	m->xxih[i].pei.flg = MSN(val);
+
+	val = read8(f);			/* PV envelopes points */
+	m->xxih[i].aei.npt = LSN(val);
+	m->xxih[i].pei.npt = MSN(val);
+
+	val = read8(f);			/* PV envelopes sustain point */
+	m->xxih[i].aei.sus = LSN(val);
+	m->xxih[i].pei.sus = MSN(val);
+
+	val = read8(f);			/* PV envelopes loop start */
+	m->xxih[i].aei.lps = LSN(val);
+	m->xxih[i].pei.lps = MSN(val);
+
+	read8(f);			/* PV envelopes loop end */
+	m->xxih[i].aei.lpe = LSN(val);
+	m->xxih[i].pei.lpe = MSN(val);
+
+	if (m->xxih[i].aei.npt)
+		m->xxae[i] = calloc(4, m->xxih[i].aei.npt);
+	else
+		m->xxih[i].aei.flg &= ~XXM_ENV_ON;
+
+	if (m->xxih[i].pei.npt)
+		m->xxpe[i] = calloc(4, m->xxih[i].pei.npt);
+	else
+		m->xxih[i].pei.flg &= ~XXM_ENV_ON;
+
+	fread(buf, 1, 30, f);		/* volume envelope points */;
+	for (j = 0; j < m->xxih[i].aei.npt; j++) {
+		m->xxae[i][j * 2] = readmem16l(buf + j * 3);
+		m->xxae[i][j * 2 + 1] = buf[j * 3 + 2];
+	}
+
+	fread(buf, 1, 30, f);		/* pan envelope points */;
+	for (j = 0; j < m->xxih[i].pei.npt; j++) {
+		m->xxpe[i][j * 2] = readmem16l(buf + j * 3);
+		m->xxpe[i][j * 2 + 1] = buf[j * 3 + 2];
+	}
+
+	fade = read8(f);		/* fadeout - 0x80->0x02 0x310->0x0c */
+	read8(f);			/* unknown */
 
 	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ", i, m->xxih[i].name,
 							m->xxih[i].nsm);
@@ -218,8 +272,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		m->xxi[i][j].vol = read8(f);
 		flags = read8(f);
 		read8(f);	/* unknown - 0x80 */
-	
+
+		m->xxi[i][j].vwf = vwf;
+		m->xxi[i][j].vde = vde;
+		m->xxi[i][j].vra = vra;
+		m->xxi[i][j].vsw = vsw;
 		m->xxi[i][j].sid = snum;
+	
 		m->xxs[snum].len = read32l(f);
 		m->xxs[snum].lps = read32l(f);
 		m->xxs[snum].lpe = read32l(f);
