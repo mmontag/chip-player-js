@@ -7,7 +7,7 @@ TUNENET_PATH	= src/plugin/tunenet
 
 tunenet: tn_xmp
 
-dist-tunenet:
+dist-tunenet: $(TUNENET_PATH)/include/TN_XMP.tnplug_rev.h
 	mkdir -p $(DIST)/$(TUNENET_PATH)
 	cp -RPp $(addprefix $(TUNENET_PATH)/,$(TUNENET_DFILES)) $(DIST)/$(TUNENET_PATH)
 
@@ -19,3 +19,8 @@ tn_xmp: $(TUNENET_PATH)/XMP.tnplug
 $(TUNENET_PATH)/XMP.tnplug: $(TN_OBJS)
 	$(LD) -mcrt=newlib -nostartfiles -o $@ $(TN_OBJS) $(LIBS)
 
+$(TUNENET_PATH)/include/TN_XMP.tnplug_rev.h: Makefile
+	ver=`echo $(VERSION)|sed 's/\([0-9]*\)\.[0-9]*\.[0-9]*.*/\1/'`; \
+	rev=`echo $(VERSION)|sed 's/[0-9]*\.\([0-9]*\)\.[0-9]*.*/\1/'`; \
+	sub=`echo $(VERSION)|sed 's/[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/'`; \
+	sed "s/@VER@/$$ver/g;s/@REV@/$$rev/g;s/@SUB@/$$sub/g" < $@.in > $@
