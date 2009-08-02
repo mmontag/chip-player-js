@@ -24,6 +24,7 @@ Stable versions
 	- fix handling of PT portamento+vslide effect (by Andrew Church)
 	- move driver init from player core to main application or plugin
 	- Epic MegaGames MASI loader fixes
+	- add Amiga OS4 TuneNet plugin
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

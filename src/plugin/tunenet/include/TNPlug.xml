@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE library SYSTEM "library.dtd">
+<library name="TN_MP" basename="TNPlugBase" basetype="TNPlugLibBase" openname="TN_MP.tnplug">
+	<include>utility/tagitem.h</include>
+	<interface name="main" version="1.0" struct="TNPlugIFace" prefix="_TNPlug_" asmprefix="TNPlug" global="ITNPlug">
+		<method name="Obtain" result="ULONG"/>
+		<method name="Release" result="ULONG"/>
+		<method name="Expunge" result="void" status="unimplemented"/>
+		<method name="Clone" result="struct Interface *" status="unimplemented"/>
+
+		<method name="AnnouncePlayer" result="struct audio_player *">
+			<arg name="version" type="ULONG"/>
+		</method>
+		<method name="InitPlayer" result="BOOL">
+			<arg name="inTuneNet" type="struct TuneNet *"/>
+			<arg name="playmode" type="ULONG"/>
+		</method>
+		<method name="OpenPlayer" result="BOOL">
+			<arg name="openme" type="UBYTE *"/>
+			<arg name="inTuneNet" type="struct TuneNet *"/>
+		</method>
+		<method name="ClosePlayer" result="VOID">
+			<arg name="inTuneNet" type="struct TuneNet *"/>
+		</method>
+		<method name="DecodeFramePlayer" result="LONG">
+			<arg name="inTuneNet" type="struct TuneNet *"/>
+			<arg name="outbuffer" type="WORD *"/>
+		</method>
+		<method name="ExitPlayer" result="VOID">
+			<arg name="aplayer" type="struct audio_player *"/>
+		</method>
+		<method name="TestPlayer" result="LONG">
+			<arg name="testme" type="UBYTE *"/>
+			<arg name="testbuffer" type="UBYTE *"/>
+			<arg name="totalsize" type="ULONG"/>
+			<arg name="testsize" type="ULONG"/>
+		</method>
+		<method name="SeekPlayer" result="LONG">
+			<arg name="inTuneNet" type="struct TuneNet *"/>
+			<arg name="seconds" type="ULONG"/>
+		</method>
+		<method name="DoNotify" result="ULONG">
+			<arg name="inTuneNet" type="struct TuneNet *"/>
+			<arg name="item" type="ULONG"/>
+			<arg name="value" type="ULONG"/>
+		</method>
+		
+	</interface>
+</library>
