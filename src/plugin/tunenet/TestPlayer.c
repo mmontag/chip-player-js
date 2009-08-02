@@ -1,3 +1,8 @@
+/* This is part of the TuneNet XMP plugin
+ * written by Chris Young <chris@unsatisfactorysoftware.co.uk>
+ * based on an example plugin by Paul Heams
+ */
+
 #include <exec/exec.h>
 #include <proto/exec.h>
 #include <dos/dos.h>
@@ -14,23 +19,17 @@ LONG _TNPlug_TestPlayer(struct TNPlugIFace *Self, UBYTE * testme, UBYTE * testbu
 {
 	struct TNPlugLibBase * MyBase = (struct TNPlugLibBase *)Self->Data.LibBase;
 	struct ExecIFace 		* IExec = MyBase->IExec;
-   	LONG retn = 0,j=0;
+   	LONG j=0;
+	xmp_context ctx;
 
-	if(!MyBase->ctx)
-	{
-		MyBase->ctx = xmp_create_context();
-		xmp_init(MyBase->ctx,NULL,NULL);
-		xmp_verbosity_level(MyBase->ctx, 0);
-	}
+	ctx = xmp_create_context();
+	xmp_init(ctx,NULL,NULL);
+	xmp_verbosity_level(ctx, 0);
 
 	/* Check buffer comming in */
 
-	j = xmp_test_module(MyBase->ctx, (char *)testme, NULL);
+	j = xmp_test_module(ctx, (char *)testme, NULL);
 
-	if(j==0)
-	{
-		retn = PLM_File;
-	}
-
-	return retn;
+	if(j==0) return PLM_File;
+		else return 0;
 }

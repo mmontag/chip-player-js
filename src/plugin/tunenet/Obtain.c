@@ -1,3 +1,8 @@
+/* This is part of the TuneNet XMP plugin
+ * written by Chris Young <chris@unsatisfactorysoftware.co.uk>
+ * based on an example plugin by Paul Heams
+ */
+
 #include <exec/exec.h>
 #include <proto/exec.h>
 #include <dos/dos.h>
@@ -9,7 +14,6 @@
 
 ULONG _TNPlug_Obtain(struct TNPlugIFace *Self)
 {
-    /* Write me. Really, I dare you! */
     return (ULONG)0;
 }
 

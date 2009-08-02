@@ -1,3 +1,8 @@
+/* This is part of the TuneNet XMP plugin
+ * written by Chris Young <chris@unsatisfactorysoftware.co.uk>
+ * based on an example plugin by Paul Heams
+ */
+
 #include <exec/exec.h>
 #include <proto/exec.h>
 #include <dos/dos.h>

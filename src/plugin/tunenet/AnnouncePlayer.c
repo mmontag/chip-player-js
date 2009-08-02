@@ -1,3 +1,8 @@
+/* This is part of the TuneNet XMP plugin
+ * written by Chris Young <chris@unsatisfactorysoftware.co.uk>
+ * based on an example plugin by Paul Heams
+ */
+
 #include <exec/exec.h>
 #include <proto/exec.h>
 #include <dos/dos.h>
@@ -14,7 +19,7 @@ struct audio_player * _TNPlug_AnnouncePlayer(struct TNPlugIFace *Self, ULONG ver
 	static struct audio_player my_player =
    {
 		"XMP",															// ** As reported in TuneNet (keep this short).
-		"Chris Young and the XMP team\nhttp://xmp.sourceforge.net\nhttp://www.unsatisfactorysoftware.co.uk",		// ** 127 chars max!
+		"Chris Young\nusing XMP code by\nClaudio Matsuoka and Hipolito Carraro Jr\nhttp://xmp.sourceforge.net",		// ** 127 chars max!
 		"Extended Module Player",
 		"",																			// ** Extentions (.mp3) comma seperated (mp3,mp2) ** (16 chars max)
 		(char *) NULL,																	// ** Pointer to pattern match string - IGNORE for now **
