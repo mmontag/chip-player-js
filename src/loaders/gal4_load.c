@@ -189,7 +189,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	i = read8(f);		/* instrument number */
 
 	if (V(1) && i == 0) {
-	    report("\n     Instrument name                  Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
+	    report("\n     Instrument name                  Smp Len   LBeg  LEnd  L Vol Pan C2Spd");
 	}
 
 	fread(&m->xxih[i].name, 1, 28, f);
@@ -253,8 +253,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	fade = read8(f);		/* fadeout - 0x80->0x02 0x310->0x0c */
 	read8(f);			/* unknown */
 
-	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ", i, m->xxih[i].name,
-							m->xxih[i].nsm);
+	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ",
+			i, m->xxih[i].name, m->xxih[i].nsm);
 
 	if (m->xxih[i].nsm == 0)
 		return;
@@ -269,6 +269,9 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		str_adj((char *)m->xxs[snum].name);
 	
 		m->xxi[i][j].pan = read8(f) * 4;
+		if (m->xxi[i][j].pan == 0)	/* not sure about this */
+			m->xxi[i][j].pan = 0x80;
+		
 		m->xxi[i][j].vol = read8(f);
 		flags = read8(f);
 		read8(f);	/* unknown - 0x80 */
@@ -290,8 +293,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			m->xxs[snum].flg |= WAVE_LOOPING;
 		if (flags & 0x10)
 			m->xxs[snum].flg |= WAVE_BIDIR_LOOP;
-		if (~flags & 0x80)
-			m->xxs[snum].flg |= WAVE_UNSIGNED;
+		/* if (flags & 0x80)
+			m->xxs[snum].flg |= ? */
 	
 		if (m->xxs[snum].flg & WAVE_16_BITS) {
 			m->xxs[snum].len <<= 1;
@@ -310,14 +313,16 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		if (j > 0)
 			reportv(ctx, 1, "\n                                      ");
 	
-		reportv(ctx, 1, "[%X] %05x%c%05x %05x %c V%02x %04x %5d ",
+		reportv(ctx, 1, "[%X] %05x%c%05x %05x %c V%02x P%02x %5d ",
 			j, m->xxs[snum].len,
 			m->xxs[snum].flg & WAVE_16_BITS ? '+' : ' ',
 			m->xxs[snum].lps,
 			m->xxs[snum].lpe,
 			m->xxs[snum].flg & WAVE_BIDIR_LOOP ? 'B' : 
 				m->xxs[snum].flg & WAVE_LOOPING ? 'L' : ' ',
-			m->xxi[i][j].vol, flags, srate);
+			m->xxi[i][j].vol,
+			m->xxi[i][j].pan,
+			srate);
 	
 		if (m->xxs[snum].len > 1) {
 			xmp_drv_loadpatch(ctx, f, snum, m->c4rate, 0, &m->xxs[snum], NULL);
