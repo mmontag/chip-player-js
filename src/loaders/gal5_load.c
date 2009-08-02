@@ -59,17 +59,20 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	char buf[64];
+	int flags;
 	
 	fread(buf, 1, 64, f);
 	strncpy(m->name, buf, 64);
 	strcpy(m->type, "Galaxy Music System 5.0");
-
-	read8(f);	/* unknown */
+	flags = read8(f);	/* bit 0: Amiga period */
+	if (~flags & 0x01)
+		m->xxh->flg = XXM_FLG_LINEAR;
 	m->xxh->chn = read8(f);
 	m->xxh->tpo = read8(f);
 	m->xxh->bpm = read8(f);
-	read32l(f);	/* unknown */
-	read8(f);	/* unknown */
+	read16l(f);		/* unknown - 0x01c5 */
+	read16l(f);		/* unknown - 0xff00 */
+	read8(f);		/* unknown - 0x80 */
 	fread(chn_pan, 1, 64, f);
 }
 
@@ -195,7 +198,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	fread(&m->xxih[i].name, 1, 28, f);
 	str_adj((char *)m->xxih[i].name);
 
-	fseek(f, 290, SEEK_CUR);	/* Sample/note map? */
+	fseek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
 	m->xxih[i].nsm = read16l(f);
 
 	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ", i, m->xxih[i].name,
