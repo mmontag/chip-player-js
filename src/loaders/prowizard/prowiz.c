@@ -172,7 +172,7 @@ int pw_wizardry(int in, int out, struct pw_format **fmt)
 
 	list_for_each(tmp, &pw_format_list) {
 		format = list_entry(tmp, struct pw_format, list);
-		_D ("checking format: %s", format->name);
+		_D("checking format: %s", format->name);
 		if (format->test(data, in_size) >= 0)
 			goto done;
 	}

@@ -25,6 +25,7 @@ Stable versions
 	- move driver init from player core to main application or plugin
 	- Epic MegaGames MASI loader fixes
 	- add Amiga TuneNet plugin (by Chris Young)
+	- fix Module Protector loader
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

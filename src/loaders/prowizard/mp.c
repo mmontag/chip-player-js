@@ -58,8 +58,8 @@ static int depack_mp(FILE *in, FILE *out)
 		write16b(out, read16b(in));		/* loop size */
 	}
 
-	write16b(out, read16b(in));		/* pattern table length */
-	write16b(out, read16b(in));		/* NoiseTracker restart byte */
+	write8(out, read8(in));		/* pattern table length */
+	write8(out, read8(in));		/* NoiseTracker restart byte */
 
 	for (max = i = 0; i < 128; i++) {
 		write8(out, c1 = read8(in));
