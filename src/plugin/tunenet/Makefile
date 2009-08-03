@@ -2,7 +2,7 @@
 TUNENET_OBJS	= Init.o Obtain.o Release.o AnnouncePlayer.o InitPlayer.o \
 		  OpenPlayer.o ClosePlayer.o DoNotify.o DecodeFramePlayer.o \
 		  ExitPlayer.o SeekPlayer.o TestPlayer.o
-TUNENET_DFILES	= Makefile $(TUNENET_OBJS:.o=.c) include
+TUNENET_DFILES	= Makefile $(TUNENET_OBJS:.o=.c) include Vectors.cpp
 TUNENET_PATH	= src/plugin/tunenet
 
 tunenet: tn_xmp
