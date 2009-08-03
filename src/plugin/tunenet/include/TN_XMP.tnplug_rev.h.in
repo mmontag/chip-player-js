@@ -12,5 +12,5 @@
 #define REV		@REV@
 #define SUB		@SUB@
 #define AMIREV		1
-#define VSTRING		"XMP.tnplug " #VER "." #AMIREV "(02.08.2009)\r\n"
-#define VERSTAG		"\0$VER: XMP.tnplug " #VER "." #AMIREV "(02.08.2009)"
+#define VSTRING		"XMP.tnplug @VER@.1 (02.08.2009)\r\n"
+#define VERSTAG		"\0$VER: XMP.tnplug @VER@.1 (02.08.2009)"
