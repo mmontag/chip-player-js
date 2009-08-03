@@ -179,6 +179,7 @@ to be installed on the system:
   !Spark	built-in	Acorn
   SQSH		built-in	Amiga
   MUSE		built-in	Windows
+  LZX		built-in	Amiga
 
 
 FRONT-ENDS
@@ -187,9 +188,10 @@ Xmp can be used as a stand-alone terminal-based (CLI) player, as a plugin
 for XMMS, BMP, Winamp or Audacious,  or as a back end for  GQmpeg, xhippo
 and others. Get the media players and front-ends in the following URLs:
 
-  BeepMP:    http://beepmp.sourceforge.net
   Audacious: http://audacious-media-player.org
+  BeepMP:    http://beepmp.sourceforge.net
   Winamp:    http://www.winamp.com
+  TuneNet:   http://www.tunenet.co.uk
   GQmpeg:    http://gqmpeg.sourceforge.net
   xhippo:    http://freshmeat.net/projects/gnuxhippo/homepage/
 

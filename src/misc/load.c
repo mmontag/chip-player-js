@@ -48,6 +48,7 @@ int decrunch_sqsh	(FILE *, FILE *);
 int decrunch_pp		(FILE *, FILE *);
 int decrunch_mmcmp	(FILE *, FILE *);
 int decrunch_muse	(FILE *, FILE *);
+int decrunch_lzx	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
 int test_oxm		(FILE *);
@@ -62,6 +63,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_OXM	0x08
 #define BUILTIN_XFD	0x09
 #define BUILTIN_MUSE	0x0a
+#define BUILTIN_LZX	0x0b
 
 
 #if defined __EMX__ || defined WIN32
@@ -157,6 +159,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 		b[4] == 0xde && b[5] == 0xad && b[6] == 0xba && b[7] == 0xbe) {
 	packer = "MOD2J2B MUSE";
 	builtin = BUILTIN_MUSE;
+    } else if (b[0] == 76 && b[1] == 90 && b[2] == 88) {
+	packer = "LZX";
+	builtin = BUILTIN_LZX;
     } else if (b[0] == 'R' && b[1] == 'a' && b[2] == 'r') {
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
@@ -287,6 +292,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    break;
 	case BUILTIN_MUSE:    
 	    res = decrunch_muse(*f, t);
+	    break;
+	case BUILTIN_LZX:    
+	    res = decrunch_lzx(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__
 	case BUILTIN_OXM:

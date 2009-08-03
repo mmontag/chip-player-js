@@ -534,6 +534,10 @@ SOURCE=..\misc\muse.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\misc\unlzx.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\player\convert.c
 # End Source File
 # Begin Source File
