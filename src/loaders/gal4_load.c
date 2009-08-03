@@ -56,17 +56,21 @@ static void get_main(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	char buf[64];
+	int flags;
 	
 	fread(buf, 1, 64, f);
 	strncpy(m->name, buf, 64);
 	strcpy(m->type, "Galaxy Music System 4.0");
 
-	read8(f);	/* unknown */
+	flags = read8(f);
+	if (~flags & 0x01)
+		m->xxh->flg = XXM_FLG_LINEAR;
 	m->xxh->chn = read8(f);
 	m->xxh->tpo = read8(f);
 	m->xxh->bpm = read8(f);
-	read32l(f);	/* unknown */
-	read8(f);	/* unknown */
+	read16l(f);		/* unknown - 0x01c5 */
+	read16l(f);		/* unknown - 0xff00 */
+	read8(f);		/* unknown - 0x80 */
 }
 
 static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
@@ -209,12 +213,22 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);			/* unknown */
 
 	val = read8(f);			/* PV envelopes flags */
-	m->xxih[i].aei.flg = LSN(val);
-	m->xxih[i].pei.flg = MSN(val);
+	if (LSN(val) & 0x01)
+		m->xxih[i].aei.flg |= XXM_ENV_ON;
+	if (LSN(val) & 0x02)
+		m->xxih[i].aei.flg |= XXM_ENV_SUS;
+	if (LSN(val) & 0x04)
+		m->xxih[i].aei.flg |= XXM_ENV_LOOP;
+	if (MSN(val) & 0x01)
+		m->xxih[i].pei.flg |= XXM_ENV_ON;
+	if (MSN(val) & 0x02)
+		m->xxih[i].pei.flg |= XXM_ENV_SUS;
+	if (MSN(val) & 0x04)
+		m->xxih[i].pei.flg |= XXM_ENV_LOOP;
 
 	val = read8(f);			/* PV envelopes points */
-	m->xxih[i].aei.npt = LSN(val);
-	m->xxih[i].pei.npt = MSN(val);
+	m->xxih[i].aei.npt = LSN(val) + 1;
+	m->xxih[i].pei.npt = MSN(val) + 1;
 
 	val = read8(f);			/* PV envelopes sustain point */
 	m->xxih[i].aei.sus = LSN(val);
@@ -240,13 +254,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	fread(buf, 1, 30, f);		/* volume envelope points */;
 	for (j = 0; j < m->xxih[i].aei.npt; j++) {
-		m->xxae[i][j * 2] = readmem16l(buf + j * 3);
+		m->xxae[i][j * 2] = readmem16l(buf + j * 3) / 16;
 		m->xxae[i][j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	fread(buf, 1, 30, f);		/* pan envelope points */;
 	for (j = 0; j < m->xxih[i].pei.npt; j++) {
-		m->xxpe[i][j * 2] = readmem16l(buf + j * 3);
+		m->xxpe[i][j * 2] = readmem16l(buf + j * 3) / 16;
 		m->xxpe[i][j * 2 + 1] = buf[j * 3 + 2];
 	}
 
