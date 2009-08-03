@@ -156,9 +156,6 @@ Reused code
 * Russell Marks
 - Decompression routines from nomarch
 
-* Erik Meusel
-- LZX decompressor
-
 * Tatsuyuki Satoh
 - YM3812 emulator
 

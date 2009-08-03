@@ -108,7 +108,7 @@ static void copyright_header()
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1988 Tammo Hinrichs,\n"
 "(C) 1989 Rich Gopstein and Harris Corporation, (C) 1997 Bert Jahn, (C) 1998\n"
 "Sylvain Chipaux, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh,\n"
-"(C) 2001-2006 Russell Marks, (C) 2005-2006 Michael Kohn, (C) 1998 Erik Meusel\n\n");
+"(C) 2001-2006 Russell Marks, (C) 2005-2006 Michael Kohn\n\n");
 }
 
 
