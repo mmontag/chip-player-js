@@ -27,6 +27,7 @@ Stable versions
 	- add Amiga TuneNet plugin (by Chris Young)
 	- fix Module Protector loader
 	- add built-in LZX decompressor
+	- fix lha depacking in Amiga (reported by Chris Young)
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

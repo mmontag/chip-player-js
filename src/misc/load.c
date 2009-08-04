@@ -113,8 +113,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	fprintf( stderr, "LHA for OS/2 does NOT support output to stdout.\n" );
 #elif defined __AMIGA__
 	cmd = "lha p -q \"%s\"";
-#endif
+#else
 	cmd = "lha -pq \"%s\"";
+#endif
     } else if (b[0] == 31 && b[1] == 139) {
 	packer = "gzip";
 	cmd = "gzip -dc \"%s\"";
