@@ -126,25 +126,12 @@ static int test_tdd (uint8 *data, int s)
 	/* test #2 (volumes,sample addresses and whole sample size) */
 	ssize = 0;
 	for (j = 0; j < 31; j++) {
-		/* sample address */
-		k = (data[start + j * 14 + 130] << 24) +
-			(data[start + j * 14 + 131] << 16) +
-			(data[start + j * 14 + 132] << 8) +
-			data[start + j * 14 + 133];
+		uint8 *d = data + start + j * 14;
 
-		/* sample size */
-		l = (((data[start + j * 14 + 134] << 8) +
-			data[start + j * 14 + 135]) * 2);
-
-		/* loop start address */
-		m = (data[start + j * 14 + 138] << 24) +
-			(data[start + j * 14 + 139] << 16) +
-			(data[start + j * 14 + 140] << 8) +
-			data[start + j * 14 + 141];
-
-		/* loop size (replen) */
-		n = (((data[start + j * 14 + 142] << 8) +
-			data[start + j * 14 + 143]) * 2);
+		k = readmem32b(d + 130);	/* sample address */
+		l = readmem16b(d + 134);	/* sample size */
+		m = readmem32b(d + 138);	/* loop start address */
+		n = readmem16b(d + 142);	/* loop size (replen) */
 
 		/* volume > 40h ? */
 		if (data[start + j * 14 + 137] > 0x40)
@@ -159,11 +146,11 @@ static int test_tdd (uint8 *data, int s)
 			return -1;
 
 		/* loop start > size ? */
-		if ((m - k) > l)
+		if (m - k > l)
 			return -1;
 
 		/* loop start+replen > size ? */
-		if ((m - k + n) > (l + 2))
+		if (m - k + n > l + 2)
 			return -1;
 
 		ssize += l;
