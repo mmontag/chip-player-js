@@ -1,5 +1,5 @@
 
-How to decompess .IT samples:
+How to decompress .IT samples:
 
 Basic structure:
 
@@ -18,7 +18,7 @@ destination buffer for the sample. CX = <Decompressed byte count>
 These routines haven't been optimised at all - they are the ones that have
 been used in IT itself, so they should be sufficiently fast.
 
-;컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴�
+;-------------------------------------------------------------------------------
 
 Proc            D_Decompress16BitData
 
@@ -123,7 +123,7 @@ D_Decompress16BitB:
 
 EndP            D_Decompress16BitData
 
-;컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴�
+;-------------------------------------------------------------------------------
 
 Proc            D_Decompress8BitData
 
