@@ -86,5 +86,5 @@ $(OBJS): Makefile.rules
 
 $(LOBJS): Makefile.rules
 
-include depend
+sinclude depend
 
