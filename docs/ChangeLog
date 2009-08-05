@@ -28,6 +28,7 @@ Stable versions
 	- fix Module Protector loader
 	- add built-in LZX decompressor
 	- fix lha depacking in Amiga (reported by Chris Young)
+	- add support for xz decompressor (by swell k)
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
