@@ -162,13 +162,14 @@ to be installed on the system:
 
   Format	Helper		Native environment
 
-  bz2		bzip2		Linux, Unix
-  gz		gzip		Linux, Unix
+  bz2		bzip2		Unix
+  gz		gzip		Unix
   lha		lha		Amiga, DOS
-  lzma		lzma		Linux, Unix
+  lzma		lzma		Unix
   mo3		unmo3		DOS?
   oxm		oggdec		Windows
   rar		unrar		DOS
+  xz		xz		Unix
   Z		compress	Unix
   zip		unzip		DOS
   zoo		zoo		Amiga?
