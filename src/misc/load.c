@@ -125,6 +125,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     } else if (b[0] == 0x5d && b[1] == 0 && b[2] == 0 && b[3] == 0x80) {
 	packer = "lzma";
 	cmd = "lzma -dc \"%s\"";
+    } else if (b[0] == 0xfd && b[3] == 'X' && b[4] == 'Z' && b[5] == 0x00) {
+	packer = "xz";
+	cmd = "xz -dc \"%s\"";
     } else if (b[0] == 'Z' && b[1] == 'O' && b[2] == 'O' && b[3] == ' ') {
 	packer = "zoo";
 	cmd = "zoo xpq \"%s\"";
