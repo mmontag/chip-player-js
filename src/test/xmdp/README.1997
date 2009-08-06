@@ -1,0 +1,26 @@
+
+xmdp, an MDP clone for X11/SVGAlib
+Copyright (C) 1997 by Claudio Matsuoka and Hipolito Carraro Jr.
+Raw keyboard functions Copyright (C) 1994 by Russel Marks
+Original MDP design Copyright (C) 1993 by Future Crew
+
+
+
+xmdp and smdp are X11 and SVGAlib clones of Future Crew's MusicDisk Player
+(MDP). They show how to use shared memory to create a graphic frontend for
+xmp. xmdp and smdp are NOT (at least in this version) a  complete clone of
+MDP. There's NO module selector and mdp.mdi files will NOT be read.
+
+
+Installation:
+
+To compile and  run [sx]mdp you will need  xmp 1.1.0. smdp will require a
+recent  version of the SVGAlib (version 1.2.10 recommended;  S3 805 cards
+may not work with older versions).
+
+
+Disclaimer
+
+This is a free  product with  no warranties of any kind.  Use at your own
+risk.
+
