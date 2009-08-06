@@ -16,7 +16,7 @@ audacious: src/plugin/xmp-audacious.so
 
 $(PLUGIN_PATH)/xmp-audacious.so: $(PLUGIN_PATH)/audacious.lo $(LOBJS) $(D_LOBJS)
 	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/audacious.lo `pkg-config --libs audacious`'; \
-	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
 $(PLUGIN_PATH)/audacious.lo: $(PLUGIN_PATH)/audacious.c $(PLUGIN_PATH)/Makefile
@@ -36,7 +36,7 @@ bmp: $(PLUGIN_PATH)/xmp-bmp.so
 
 $(PLUGIN_PATH)/xmp-bmp.so: $(PLUGIN_PATH)/bmp.lo $(LOBJS) $(D_LOBJS)
 	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/bmp.lo `pkg-config --libs bmp`'; \
-	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
 $(PLUGIN_PATH)/bmp.lo: $(PLUGIN_PATH)/bmp.c $(PLUGIN_PATH)/Makefile
@@ -56,7 +56,7 @@ xmms: $(PLUGIN_PATH)/xmp-xmms.so
 
 $(PLUGIN_PATH)s/xmp-xmms.so: $(PLUGIN_PATH)/xmms.lo $(LOBJS) $(D_LOBJS)
 	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/xmms.lo `xmms-config --libs`'; \
-	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
 $(PLUGIN_PATH)/xmms.lo: $(PLUGIN_PATH)/xmms.c $(PLUGIN_PATH)/Makefile
@@ -76,7 +76,7 @@ winamp: $(PLUGIN_PATH)/in_xmp.dll
 
 $(PLUGIN_PATH)/in_xmp.dll: $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo $(LOBJS) $(D_LOBJS)
 	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo'; \
-	if [ "$(V)" -gt 0 ]; then $$CMD; else echo LD $@ ; fi; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
 $(PLUGIN_PATH)/winamp.lo: $(PLUGIN_PATH)/winamp.c $(PLUGIN_PATH)/Makefile
