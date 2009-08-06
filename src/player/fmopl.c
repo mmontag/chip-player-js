@@ -23,7 +23,7 @@
 
 /*** For xmp ***/
 #define HAS_YM3812 1
-#define INLINE inline
+#define INLINE static inline
 /* $Id: fmopl.c,v 1.1 2001-06-02 20:28:27 cmatsuoka Exp $ */
 
 #include "fmopl.h"

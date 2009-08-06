@@ -10,6 +10,7 @@
 #include "config.h"
 #endif
 
+#include "common.h"
 
 /* ulaw encoding function from sound2sun.c
  * Copyright (C) 1989 by Rich Gopstein and Harris Corporation
