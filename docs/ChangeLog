@@ -26,9 +26,10 @@ Stable versions
 	- Epic MegaGames MASI loader fixes
 	- add Amiga TuneNet plugin (by Chris Young)
 	- fix Module Protector loader
-	- add built-in LZX decompressor
 	- fix lha depacking in Amiga (reported by Chris Young)
+	- fix clang build (by swell k)
 	- add support for xz decompressor (by swell k)
+	- add built-in LZX decompressor
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

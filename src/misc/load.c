@@ -68,7 +68,7 @@ char *test_xfd		(unsigned char *, int);
 
 #if defined __EMX__ || defined WIN32
 #define REDIR_STDERR "2>NUL"
-#elif defined unix
+#elif defined unix || defined __unix__
 #define REDIR_STDERR "2>/dev/null"
 #else
 #define REDIR_STDERR
