@@ -138,9 +138,6 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	case XMP_MOD_STOP:
 		p->pos = -2;
 		break;
-	case XMP_MOD_PAUSE:
-		p->pause ^= 1;
-		return p->pause;
 	case XMP_MOD_RESTART:
 		p->pos = -1;
 		break;
@@ -187,25 +184,6 @@ void xmp_get_buffer(xmp_context ctx, void **buffer, int *size)
 {
 	*size = xmp_smix_softmixer((struct xmp_context *)ctx);
 	*buffer = xmp_smix_buffer((struct xmp_context *)ctx);
-}
-
-int xmp_play_module(xmp_context ctx)
-{
-	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
-	time_t t0, t1;
-	int t;
-
-	time(&t0);
-	xmp_player_start(ctx);
-	while (xmp_player_frame(ctx) == 0)
-		xmp_play_buffer(ctx);
-	xmp_player_end(ctx);
-	time(&t1);
-	t = difftime(t1, t0);
-
-	o->start = 0;
-
-	return t;
 }
 
 void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,

@@ -103,6 +103,7 @@ void get_options (int, char **, struct xmp_options *, xmp_context);
 void init_drivers (void);
 
 static xmp_context ctx;
+static int paused;
 
 
 static int set_tty()
@@ -258,25 +259,20 @@ static int stdin_ready_for_reading()
 static void process_echoback(unsigned long i)
 {
     unsigned long msg = i >> 4;
-    unsigned char cmd;
     static int _pos = -1;
     static int tpo, bpm, nch, _tpo = -1, _bpm = -1;
     static int pos, pat;
-    static int pause = 0;
-    int k;
 
 #ifdef SIGUSR1
     if (sigusr == SIGUSR1) {
 	skip = 1;
 	xmp_mod_stop(ctx);
-	if (pause)
-	    pause = xmp_mod_pause(ctx);
+	paused = 0;
 	sigusr = 0;
     } else if (sigusr == SIGUSR2) {
 	skip = -1;
 	xmp_mod_stop(ctx);
-	if (pause)
-	    pause = xmp_mod_pause(ctx);
+	paused = 0;
 	sigusr = 0;
     }
 #endif
@@ -335,6 +331,13 @@ static void process_echoback(unsigned long i)
 	    break;
 	}
     }
+}
+
+
+void read_keyboard()
+{
+    unsigned char cmd;
+    int k;
 
     /* Interactive commands */
 
@@ -369,35 +372,30 @@ static void process_echoback(unsigned long i)
 	case 'q':	/* quit */
 	    skip = -2;
 	    xmp_mod_stop(ctx);
-	    if (pause)
-		pause = xmp_mod_pause(ctx);
+	    paused = 0;
 	    break;
 	case 'f':	/* jump to next order */
 	    xmp_ord_next(ctx);
-	    if (pause)
-		pause = xmp_mod_pause(ctx);
+	    paused = 0;
 	    break;
 	case 'b':	/* jump to previous order */
 	    xmp_ord_prev(ctx);
-	    if (pause)
-		pause = xmp_mod_pause(ctx);
+	    paused = 0;
 	    break;
 	case 'n':	/* skip to next module */
 	    skip = 1;
 	    xmp_mod_stop(ctx);
-	    if (pause)
-		pause = xmp_mod_pause(ctx);
+	    paused = 0;
 	    break;
 	case 'p':	/* skip to previous module */
 	    skip = -1;
 	    xmp_mod_stop(ctx);
-	    if (pause)
-		pause = xmp_mod_pause(ctx);
+	    paused = 0;
 	    break;
-	case ' ':	/* pause module */
-	    pause = xmp_mod_pause(ctx);
+	case ' ':	/* paused module */
+	    paused ^= 1;
 	    if (verbosity) {
-	    	fprintf (stderr, "%s",  pause ?
+	    	fprintf (stderr, "%s",  paused ?
 				"] - PAUSED\b\b\b\b\b\b\b\b\b\b" :
 				"]         \b\b\b\b\b\b\b\b\b\b");
 	    }
@@ -441,7 +439,7 @@ static void shuffle (int argc, char **argv)
 int main(int argc, char **argv)
 {
     int i, t, lf_flag, first, num_mod, verb = 0;
-    time_t t0, t1;
+    time_t t0, t1, t2, t3;
 #ifndef WIN32
     struct timeval tv;
     struct timezone tz;
@@ -581,6 +579,7 @@ int main(int argc, char **argv)
 
     set_tty ();
 
+    paused = 0;
     time (&t0);
 
     num_mod = lf_flag = 0;
@@ -638,7 +637,23 @@ int main(int argc, char **argv)
 	if (loadonly)
 	    goto skip_play;
 
-	t = xmp_play_module(ctx);
+	/* Play the module */
+	time(&t2);
+	xmp_player_start(ctx);
+	for (;;) {
+		read_keyboard();
+
+		if (paused) {
+			usleep(100000);
+		} else {
+			if (xmp_player_frame(ctx) != 0)
+				break;
+			xmp_play_buffer(ctx);
+		}
+	}
+	xmp_player_end(ctx);
+	time(&t3);
+	t = difftime(t3, t2);
 
 	xmp_release_module(ctx);
 

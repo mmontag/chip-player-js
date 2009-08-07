@@ -30,6 +30,7 @@ Stable versions
 	- fix clang build (by swell k)
 	- add support for xz decompressor (by swell k)
 	- add built-in LZX decompressor
+	- remove pause-related functions from player core
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

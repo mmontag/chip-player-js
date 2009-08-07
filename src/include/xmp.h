@@ -45,11 +45,10 @@
 #define XMP_ORD_SET		0x02
 #define XMP_MOD_STOP		0x03
 #define XMP_MOD_RESTART		0x04
-#define XMP_MOD_PAUSE		0x05
-#define XMP_GVOL_INC		0x06
-#define XMP_GVOL_DEC		0x07
-#define XMP_TIMER_STOP          0x08
-#define XMP_TIMER_RESTART       0x09
+#define XMP_GVOL_INC		0x05
+#define XMP_GVOL_DEC		0x06
+#define XMP_TIMER_STOP          0x07
+#define XMP_TIMER_RESTART       0x08
 
 /* Format quirks */
 #define XMP_QUIRK_ST3		(XMP_QRK_NCWINS | XMP_QRK_IGNWINS | \
@@ -71,8 +70,6 @@
 #define xmp_stop_module(p)	xmp_player_ctl((p), XMP_MOD_STOP, 0)
 #define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
 #define xmp_restart_module(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
-#define xmp_mod_pause(p)	xmp_player_ctl((p), XMP_MOD_PAUSE, 0)
-#define xmp_pause_module(p)	xmp_player_ctl((p), XMP_MOD_PAUSE, 0)
 #define xmp_timer_stop(p)	xmp_player_ctl((p), XMP_TIMER_STOP, 0)
 #define xmp_timer_restart(p)	xmp_player_ctl((p), XMP_TIMER_RESTART, 0)
 #define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_GVOL_INC, 0)

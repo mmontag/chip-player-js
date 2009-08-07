@@ -891,6 +891,11 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
 
+	if (p->pause) {
+		p->event_callback(0);
+		return 0;
+	}
+
 	/* check reposition */
 	if (f->ord != p->pos) {
 		if (p->pos == -1)
@@ -990,16 +995,6 @@ next_row:
 		}
 
 		f->row++;
-
-		if (p->pause) {
-			xmp_drv_stoptimer(ctx);
-			while (p->pause) {
-				usleep(125000);
-				p->event_callback(0);
-			}
-			xmp_drv_starttimer(ctx);
-	    	}
-
 
 		/* check end of pattern */
 		if (f->row >= f->num_rows) {
