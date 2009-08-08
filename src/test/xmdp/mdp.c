@@ -56,6 +56,7 @@ static SDL_Color color[16];
 static Uint32 mapped_color[16];
 static int __color;
 static xmp_context ctx;
+static int paused;
 
 static inline void setcolor(int c)
 {
@@ -335,23 +336,26 @@ void process_events ()
 	    case SDLK_F10:
 	    case SDLK_ESCAPE:
 		xmp_stop_module(ctx);
+		paused = 0;
 		break;
-#if 0
 	    case SDLK_SPACE:
-		xmp_pause_module(ctx);
+		paused ^= 1;
 		break;
-#endif
 	    case SDLK_LEFT:
 		xmp_ord_prev(ctx);
+		paused = 0;
 		break;
 	    case SDLK_RIGHT:
 		xmp_ord_next(ctx);
+		paused = 0;
 		break;
 	    case SDLK_MINUS:
 		xmp_gvol_dec(ctx);
+		paused = 0;
 		break;
 	    case SDLK_PLUS:
 		xmp_gvol_inc(ctx);
+		paused = 0;
 		break;
 	    }
 	}
@@ -379,7 +383,6 @@ static void event_callback(unsigned long i)
 	update_counter (global_vol, gvl, 68); 
 	draw_progress (ord * 126 / mi.len +
 	    (msg & 0xff) * 126 / mi.len / (msg >> 8));
-	process_events ();
 	break;
     case XMP_ECHO_INS:
 	ins = msg &0xff;
@@ -503,10 +506,18 @@ int main (int argc, char **argv)
 	xmp_get_module_info(ctx, &mi);
 	shadowmsg(&font1, 10, 26, mi.name, 15, -1);
 
+	paused = 0;
 	xmp_player_start(ctx);
-	while (xmp_player_frame(ctx) == 0) {
+	for (;;) {
+	    process_events();
+	    if (paused) {
+		usleep(100000);
+	    } else {
+		if (xmp_player_frame(ctx) != 0)
+		    break;
 		xmp_play_buffer(ctx);
 		draw_bars();
+	    }
 	}
 	xmp_player_end(ctx);
 	break;
