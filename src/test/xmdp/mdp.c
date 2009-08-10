@@ -283,11 +283,21 @@ int writemsg (struct font_header *f, int x, int y, char *s, int c, int b)
 {
     int w, x1 = 0, y1 = 0;
     char *p;
+    int color = c;
 
     if (!*s)
 	return 0;
 
-    for (; *s; s++, x1++) {
+    for (; *s; s++) {
+	if (*s == '@') {		/* @word@ is printed in white */
+	    if (c > 0) {
+		if (c == color)
+		    c = 15;
+		else
+		    c = color;
+	    }
+	    continue;
+	}
 	for (w = 0; *((p = f->map[f->index[(int) *s] + w])); w++) {
 	    for (; *p; x1++) {
 		for (y1 = 0; *p; p++, y1++) {
@@ -301,6 +311,8 @@ int writemsg (struct font_header *f, int x, int y, char *s, int c, int b)
 			}
 		    }
 		}
+
+		/* */
 		if ((b != -1) && (c != -1)) {
 		    setcolor (b);
 		    for (; y1 < f->h; y1++)
@@ -310,6 +322,7 @@ int writemsg (struct font_header *f, int x, int y, char *s, int c, int b)
 	    for (y1 = 0; (b != -1) && (c != -1) && (y1 < f->h); y1++)
 		drawpixel(x + x1, y - y1);
 	}
+	x1++;
     }
 
     if (c != -1)
