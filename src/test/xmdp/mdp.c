@@ -57,6 +57,7 @@ static Uint32 mapped_color[16];
 static int __color;
 static xmp_context ctx;
 static int paused;
+static int menu;
 
 static inline void setcolor(int c)
 {
@@ -97,12 +98,17 @@ static inline void put_pixel(int x, int y, int c)
 	}
 }
 
+void drawpixel(int x, int y)
+{
+    put_pixel(x, y, __color);
+}
+
 void drawhline (int x, int y, int w)
 {
     int i;
 
     for (i = 0; i < w; i++)
-	put_pixel(x + i, y, __color);
+	drawpixel(x + i, y);
 }
 
 
@@ -111,14 +117,9 @@ void drawvline (int x, int y, int h)
     int i;
 
     for (i = 0; i < h; i++)
-	put_pixel(x, y + i, __color);
+	drawpixel(x, y + i);
 }
 
-
-void drawpixel(int x, int y)
-{
-    put_pixel(x, y, __color);
-}
 
 
 int init_video()
@@ -467,6 +468,26 @@ int main (int argc, char **argv)
     }
 #endif
 
+    xmp_register_event_callback(ctx, event_callback);
+
+    switch (xmp_load_module(ctx, argv[optind])) {
+    case -1:
+	fprintf (stderr, "%s: %s: unrecognized file format\n",
+	    argv[0], argv[optind]);
+	return 1;
+    case -2:
+	fprintf (stderr, "%s: %s: possibly corrupted file\n",
+	    argv[0], argv[optind]);
+	return 1;
+    case -3: {
+	char *line;
+	line = malloc (strlen (argv[0]) + strlen (argv[optind]) + 10);
+	sprintf (line, "%s: %s", argv[0], argv[optind]);
+	perror (line);
+	return 1;
+	}
+    }
+
     prepare_screen ();
 
     /* Pipc->pctl.gvl = 64; */
@@ -485,43 +506,23 @@ int main (int argc, char **argv)
 
     SDL_UpdateRect(screen, 0, 0, 640, 480);
 
-    xmp_register_event_callback(ctx, event_callback);
+    xmp_get_module_info(ctx, &mi);
+    shadowmsg(&font1, 10, 26, mi.name, 15, -1);
 
-    switch (xmp_load_module(ctx, argv[optind])) {
-    case -1:
-	fprintf (stderr, "%s: %s: unrecognized file format\n",
-	    argv[0], argv[optind]);
-        break;
-    case -2:
-	fprintf (stderr, "%s: %s: possibly corrupted file\n",
-	    argv[0], argv[optind]);
-	break;
-    case -3: {
-	char *line;
-	line = malloc (strlen (argv[0]) + strlen (argv[optind]) + 10);
-	sprintf (line, "%s: %s", argv[0], argv[optind]);
-	perror (line);
-	break; }
-    default:
-	xmp_get_module_info(ctx, &mi);
-	shadowmsg(&font1, 10, 26, mi.name, 15, -1);
-
-	paused = 0;
-	xmp_player_start(ctx);
-	for (;;) {
-	    process_events();
-	    if (paused) {
-		usleep(100000);
-	    } else {
-		if (xmp_player_frame(ctx) != 0)
-		    break;
-		xmp_play_buffer(ctx);
-		draw_bars();
-	    }
+    paused = 0;
+    xmp_player_start(ctx);
+    for (;;) {
+	process_events();
+	if (paused) {
+	    usleep(100000);
+	} else {
+	    if (xmp_player_frame(ctx) != 0)
+		break;
+	    xmp_play_buffer(ctx);
+	    draw_bars();
 	}
-	xmp_player_end(ctx);
-	break;
     }
+    xmp_player_end(ctx);
 
     xmp_close_audio(ctx);
 
