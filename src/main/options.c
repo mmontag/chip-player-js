@@ -162,7 +162,6 @@ static void usage(char *s, struct xmp_options *opt)
 "   --offset-bug-emulation Emulate Protracker 2.x bug in effect 9\n"
 "   -l --loop              Enable module looping\n"
 "   -M --mute ch-list      Mute the specified channels\n"
-"   --modrange             Limit the octave range to 3 octaves in MOD files\n"
 "   --nocmd                Disable interactive commands\n"
 "   --norc                 Don't read configuration files\n"
 "   -R --random            Random order playing\n"
