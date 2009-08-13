@@ -6,13 +6,14 @@ DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  scripts $(MODULES)
 DDIRS	= docs drivers etc include loaders misc player plugin prowiz win32 \
 	  tunenet main
-
+LIB	= libxmp.a
 V	= 0
 
 all: binaries
 
 include Makefile.rules
-include src/drivers/Makefile
+
+# This is the "lib" part
 include src/include/Makefile
 include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
@@ -22,6 +23,8 @@ include src/win32/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
+# These are the applications
+include src/drivers/Makefile
 include src/main/Makefile
 include src/plugin/Makefile
 include src/plugin/tunenet/Makefile
@@ -51,8 +54,15 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
 binaries: src/main/xmp $(PLUGINS)
 
+# Legacy libxmp.a creation, in case someone needs it
+#$(LIB): $(OBJS)
+#	@CMD='$(AR) r $@ $(LOBJS)'; \
+#	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
+#	eval $$CMD
+#	ranlib libxmp.a
+
 clean:
-	@rm -f $(OBJS) $(OBJS:.o=.lo) $(M_OBJS) $(D_OBJS) $(CLEAN)
+	@rm -f $(OBJS) $(LIB) $(OBJS:.o=.lo) $(M_OBJS) $(D_OBJS) $(CLEAN)
 
 install: install-xmp install-etc install-docs $(addprefix install-, $(PLUGINS))
 	@echo
