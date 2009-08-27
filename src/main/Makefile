@@ -19,5 +19,5 @@ $(MAIN_PATH)/xmp: $(OBJS) $(M_OBJS) $(D_OBJS)
 install-xmp: $(MAIN_PATH)/xmp
 	@echo Installing xmp in $(DESTDIR)$(BINDIR)
 	@[ -d $(DESTDIR)$(BINDIR) ] || mkdir -p $(DESTDIR)$(BINDIR)
-	@$(INSTALL) -m755 $+ $(DESTDIR)$(BINDIR)
+	@$(INSTALL_PROGRAM) $+ $(DESTDIR)$(BINDIR)
 

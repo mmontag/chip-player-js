@@ -28,7 +28,7 @@ install-audacious:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \
 	echo "Installing xmp-audacious.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -m755 $(PLUGIN_PATH)/xmp-audacious.so "$$DIR"
+	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-audacious.so "$$DIR"
 
 
 
@@ -48,7 +48,7 @@ install-bmp:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir bmp`"; \
 	echo "Installing xmp-bmp.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -m755 $(PLUGIN_PATH)/xmp-bmp.so "$$DIR"
+	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-bmp.so "$$DIR"
 
 
 
@@ -68,7 +68,7 @@ install-xmms:
 	@DIR="$(DESTDIR)`xmms-config --input-plugin-dir`"; \
 	echo "Installing xmp-xmms.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
-	$(INSTALL) -m755 $(PLUGIN_PATH)/xmp-xmms.so "$$DIR"
+	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-xmms.so "$$DIR"
 
 
 

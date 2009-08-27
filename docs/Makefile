@@ -7,7 +7,7 @@ DOCS_PATH	= docs
 install-docs:
 	@echo "Installing manpages in $(DESTDIR)$(MANDIR)"
 	@[ -d $(DESTDIR)$(MANDIR) ] || mkdir -p $(DESTDIR)$(MANDIR)
-	@$(INSTALL) -m644 docs/xmp.1 $(DESTDIR)$(MANDIR)
+	@$(INSTALL_DATA) docs/xmp.1 $(DESTDIR)$(MANDIR)
 
 dist-docs:
 	mkdir -p $(DIST)/$(DOCS_PATH)
