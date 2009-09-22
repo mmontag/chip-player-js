@@ -106,7 +106,7 @@ static int setaudio(struct xmp_options *o)
 
 	drv_openbsd.description = "OpenBSD PCM audio";
 
-	return XMP_OK;
+	return 0;
 }
 
 static int init(struct xmp_context *ctx)
@@ -114,7 +114,7 @@ static int init(struct xmp_context *ctx)
 	if ((audio_fd = open("/dev/sound", O_WRONLY)) == -1)
 		return XMP_ERR_DINIT;
 
-	if (setaudio(ctl) != XMP_OK)
+	if (setaudio(ctl) != 0)
 		return XMP_ERR_DINIT;
 
 	return xmp_smix_on(ctx);

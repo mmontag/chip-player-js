@@ -206,12 +206,12 @@ static int setaudio(struct xmp_options *o)
 	if ((audio_port = ALopenport("xmp", "w", config)) == 0)
 		return XMP_ERR_DINIT;
 
-	return XMP_OK;
+	return 0;
 }
 
 static int init(struct xmp_context *ctx)
 {
-	if (setaudio(&ctx->o) != XMP_OK)
+	if (setaudio(&ctx->o) != 0)
 		return XMP_ERR_DINIT;
 
 	return xmp_smix_on(ctx);

@@ -378,7 +378,7 @@ static int writepatch(struct patch_info *patch)
 	p->sf_id = 0;
 	snd_hwdep_ioctl(hwdep, SNDRV_EMUX_IOCTL_LOAD_PATCH, p);
 
-	return XMP_OK;
+	return 0;
 }
 
 
@@ -446,7 +446,7 @@ static int init(struct xmp_context *ctx)
 	
 	bufdump ();
 
-	return XMP_OK;
+	return 0;
 
 error:
 	snd_seq_close(seq);

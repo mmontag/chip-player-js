@@ -203,14 +203,14 @@ static int setaudio(struct xmp_options *o)
 	//MixBuffers[2].ulBufferLength = bsize;
 	//MixBuffers[3].ulBufferLength = bsize;
 
-	return XMP_OK;
+	return 0;
 }
 
 static int init(struct xmp_context *ctx)
 {
 	//printf( "In Init...\n" );
 
-	if (setaudio(ctl) != XMP_OK)
+	if (setaudio(ctl) != 0)
 		return XMP_ERR_DINIT;
 
 	/* Start Playback */

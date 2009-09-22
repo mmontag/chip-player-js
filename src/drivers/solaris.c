@@ -185,7 +185,7 @@ static int setaudio(struct xmp_options *o)
 		drv_solaris.description = "Solaris CS4231 PCM audio";
 	}
 
-	return XMP_OK;
+	return 0;
 }
 
 static int init(struct xmp_context *ctx)
@@ -195,7 +195,7 @@ static int init(struct xmp_context *ctx)
 	if ((audio_fd = open("/dev/audio", O_WRONLY)) == -1)
 		return XMP_ERR_DINIT;
 
-	if (setaudio(o) != XMP_OK)
+	if (setaudio(o) != 0)
 		return XMP_ERR_DINIT;
 
 	return xmp_smix_on(ctx);

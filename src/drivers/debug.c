@@ -143,22 +143,22 @@ static int writepatch(struct patch_info *patch)
 {
 	if (!patch) {
 		clearmem();
-		return XMP_OK;
+		return 0;
 	}
 
 	printf("** writepatch: len = %d\n", patch->len);
 
-	return XMP_OK;
+	return 0;
 }
 
 static int getmsg()
 {
-	return XMP_OK;
+	return 0;
 }
 
 static int init(struct xmp_context *ctx)
 {
-	return XMP_OK;
+	return 0;
 }
 
 static void shutdown(struct xmp_context *ctx)

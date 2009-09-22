@@ -149,7 +149,7 @@ static int setaudio(struct xmp_options *o)
 	/* o->outfmt |=XMP_FMT_MONO; */
 	o->freq = 44000;
 	drv_netbsd.description = "NetBSD PCM audio";
-	return XMP_OK;
+	return 0;
 }
 
 static int init(struct xmp_context *ctx)
@@ -157,7 +157,7 @@ static int init(struct xmp_context *ctx)
 	if ((audio_fd = open("/dev/sound", O_WRONLY)) == -1)
 		return XMP_ERR_DINIT;
 
-	if (setaudio(&ctx->o) != XMP_OK)
+	if (setaudio(&ctx->o) != 0)
 		return XMP_ERR_DINIT;
 
 	return xmp_smix_on(ctx);
