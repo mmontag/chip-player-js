@@ -148,7 +148,7 @@ static int reset_tty()
 #ifdef HAVE_SIGNAL_H
 
 #ifdef SIGTSTP
-static void sigtstp_handler()
+static void sigtstp_handler(int n)
 {
     if (!stopped) {
 	if (showtime)
@@ -164,7 +164,7 @@ static void sigtstp_handler()
 }
 
 
-static void sigcont_handler()
+static void sigcont_handler(int n)
 {
 #ifndef __AMIGA__
     background = (tcgetpgrp(0) == getppid());
@@ -189,9 +189,9 @@ static void sigcont_handler()
 }
 #endif
 
-static void sigusr_handler (int i)
+static void sigusr_handler(int n)
 {
-    signal (sigusr = i, sigusr_handler);
+    signal(sigusr = n, sigusr_handler);
 }
 
 
