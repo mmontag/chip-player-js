@@ -31,6 +31,8 @@ Stable versions
 	- add support for xz decompressor (by swell k)
 	- add built-in LZX decompressor
 	- remove pause-related functions from player core
+	- fix build in Solaris 10 and Sun Studio 12 Update 1 C++ compiler
+	  (reported by Douglas Carmichael)
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

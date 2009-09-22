@@ -212,7 +212,7 @@ static void bufdump(struct xmp_context *ctx, int i)
 	while (i) {
 		if ((j = write(audio_fd, b, i)) > 0) {
 			i -= j;
-			(char *)b += j;
+			b = (char *)b + j;
 		} else
 			break;
 	}
