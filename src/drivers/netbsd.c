@@ -79,8 +79,7 @@ static int setaudio(struct xmp_options *o)
 	audio_info_t ainfo;
 	int gain = 128;
 	int bsize = 32 * 1024;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 
 	/* try to open audioctldevice */
 	if ((audioctl_fd = open("/dev/audioctl", O_RDWR)) < 0) {

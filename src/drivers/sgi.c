@@ -87,8 +87,7 @@ static int setaudio(struct xmp_options *o)
 	int bsize = 32 * 1024;
 	ALconfig config;
 	long pvbuffer[2];
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 	int i;
 
 	parm_init();

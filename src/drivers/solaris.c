@@ -100,8 +100,7 @@ static int setaudio(struct xmp_options *o)
 	int gain;
 	int bsize = 32 * 1024;
 	int port;
-	char *token;
-	char **parm = ctl->o;
+	char *token, **parm;
 	AUDIO_INITINFO(&ainfo);
 
 	/* try to open audioctl device */

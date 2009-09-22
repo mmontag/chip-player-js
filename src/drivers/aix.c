@@ -84,8 +84,7 @@ static int setaudio(struct xmp_options *o)
 	audio_init ainit;
 	int gain = 128;
 	int bsize = 32 * 1024;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 
 	parm_init();
 	chkparm1("gain", gain = strtoul(token, NULL, 0));

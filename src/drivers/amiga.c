@@ -70,8 +70,7 @@ static int init(struct xmp_context *ctx)
 	char outfile[256];
 	int nch = o->outfmt & XMP_FMT_MONO ? 1 : 2;
 	int bsize = o->freq * nch * o->resol / 4;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 	
 	parm_init();
 	chkparm1("buffer", bsize = strtoul(token, NULL, 0));

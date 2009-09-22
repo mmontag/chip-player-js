@@ -113,8 +113,7 @@ static int init(struct xmp_context *ctx)
 	MMRESULT res;
 	WAVEFORMATEX wfe;
 	int i;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 
 	num_buffers = 10;
 	

@@ -152,8 +152,7 @@ static int init(struct xmp_context *ctx)
 	char *server;
 	AuDeviceID device = AuNone;
 	AuElement element[2];
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 	int i;
 
 	duration = 2;

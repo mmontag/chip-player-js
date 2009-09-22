@@ -113,8 +113,7 @@ static int setaudio(struct xmp_options *o)
 	int flags;
 	int i;
 	MCI_AMP_OPEN_PARMS AmpOpenParms;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 
 	//printf( "In SetAudio...\n" );
 

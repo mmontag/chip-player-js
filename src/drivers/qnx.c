@@ -69,8 +69,7 @@ static int init(struct xmp_context *ctx)
 	struct xmp_options *o = &ctx->o;
 	int rc, rate, bits, stereo, bsize;
 	char *dev;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 
 	parm_init();
 	chkparm1("dev", dev = token);

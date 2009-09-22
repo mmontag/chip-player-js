@@ -83,8 +83,7 @@ static int setaudio(struct xmp_options *o)
 	int port = AUDIO_OUT_SPEAKER;
 	struct audio_gains agains;
 	struct audio_describe adescribe;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 	int i;
 
 	parm_init();

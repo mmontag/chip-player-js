@@ -176,8 +176,7 @@ static int init(struct xmp_context *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	char *dev;
-	char *token;
-	char **parm = o->parm;
+	char *token, **parm;
 	static char desc[80];
 
 	be_app = new BApplication("application/x-vnd.cm-xmp");

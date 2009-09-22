@@ -167,8 +167,7 @@ static int init(struct xmp_context *ctx)
 	Component comp;
 	ComponentDescription cd;
 	AURenderCallbackStruct rc;
-	//char *token;
-	//char **parm = o->parm;
+	//char *token, **parm;
 	OSStatus err;
 	UInt32 size, max_frames;
 
