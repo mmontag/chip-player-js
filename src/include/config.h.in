@@ -106,9 +106,6 @@
 /* Define if you have the <termios.h> header file.  */
 #undef HAVE_TERMIOS_H
 
-/* Define if you have the <sys/shm.h> header file.  */
-#undef HAVE_SYS_SHM_H
-
 /* Define if you have the <sbus/audio/audio.h> header file.  */
 #undef HAVE_SBUS_AUDIO_AUDIO_H
 
