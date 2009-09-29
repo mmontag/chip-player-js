@@ -421,6 +421,9 @@ if test "${ac_cv_header_audio_audiolib_h}" = "yes" && \
 fi
 
 if test "${enable_pulseaudio}" = "yes"; then
+    if test "$pulseaudio_path" != ""; then
+        LIBS="${LIBS} -L${pulseaudio_path}/lib"
+    fi
     if test "${ac_cv_header_pulse_simple_h}" = "yes"; then
         AC_CHECK_LIB(pulse-simple, pa_simple_new, [
 	    CFLAGS="${CFLAGS} `pkg-config --cflags libpulse-simple`"
@@ -428,7 +431,17 @@ if test "${enable_pulseaudio}" = "yes"; then
             DRIVERS="${DRIVERS} pulseaudio.o"
             AC_DEFINE(DRIVER_PULSEAUDIO)
         ], [
-            AC_MSG_ERROR(Can't compile PulseAudio test)
+	    AC_MSG_NOTICE(check whether PulseAudio needs -lpthread)
+	    unset ac_cv_lib_pulse_simple_pa_simple_new
+            AC_CHECK_LIB(pulse-simple, pa_simple_new, [
+	        CFLAGS="${CFLAGS} `pkg-config --cflags libpulse-simple`"
+		
+                LIBS="${LIBS} `pkg-config --libs libpulse-simple` -lpthread"
+                DRIVERS="${DRIVERS} pulseaudio.o"
+                AC_DEFINE(DRIVER_PULSEAUDIO)
+            ], [
+                AC_MSG_ERROR(Can't compile PulseAudio test)
+	    ])
         ])
     else
         AC_MSG_ERROR(Can't find PulseAudio header files)
