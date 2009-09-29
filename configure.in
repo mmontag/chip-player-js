@@ -392,6 +392,8 @@ if test "${enable_arts}" = "yes"; then
             DRIVERS="${DRIVERS} arts.o"
             AC_DEFINE(DRIVER_ARTS)
         ])
+    else
+        AC_MSG_ERROR(Can't find aRts header files)
     fi
 else
     enable_arts="no"
@@ -418,9 +420,11 @@ if test "${enable_pulseaudio}" = "yes"; then
             DRIVERS="${DRIVERS} pulseaudio.o"
             AC_DEFINE(DRIVER_PULSEAUDIO)
         ])
+    else
+        AC_MSG_ERROR(Can't find PulseAudio header files)
     fi
 else
-    enable_arts="no"
+    enable_pulseaudio="no"
 fi
 
 dnl -----------------------------------------------------------------------
