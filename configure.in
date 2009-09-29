@@ -81,7 +81,11 @@ AC_ARG_WITH(esd,
 AC_ARG_WITH(nas,
     [  --with-nas=<path>       NAS prefix (optional)],
     nas_path="$withval")
-
+ 
+AC_ARG_WITH(pulseaudio,
+    [  --with-pulseaudio=<path> PulseAudio prefix (optional)],
+    pulseaudio_path="$withval")
+ 
 dnl -----------------------------------------------------------------------
 dnl Sanitize prefixes
 dnl -----------------------------------------------------------------------
@@ -304,6 +308,10 @@ if test "$nas_path" != ""; then
     CINCS="${CINCS} -I${nas_path}/include"
 fi
 
+if test "$pulseaudio_path" != ""; then
+    CINCS="${CINCS} -I${pulseaudio_path}/include"
+fi
+
 CPPFLAGS="${CINCS}"
 
 AC_CHECK_HEADERS(strings.h getopt.h unistd.h signal.h sys/select.h \
@@ -419,6 +427,8 @@ if test "${enable_pulseaudio}" = "yes"; then
             LIBS="${LIBS} `pkg-config --libs libpulse-simple`"
             DRIVERS="${DRIVERS} pulseaudio.o"
             AC_DEFINE(DRIVER_PULSEAUDIO)
+        ], [
+            AC_MSG_ERROR(Can't compile PulseAudio test)
         ])
     else
         AC_MSG_ERROR(Can't find PulseAudio header files)
