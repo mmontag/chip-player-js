@@ -21,8 +21,14 @@
 #include "common.h"
 #include "driver.h"
 
+#if __AUDACIOUS_PLUGIN_API__ >= 12
+#define CONST12 const
+#else
+#define CONST12
+#endif
+
 static void	init		(void);
-static int	is_our_file	(char *);
+static int	is_our_file	(CONST12 char *);
 static void	play_file	(InputPlayback *);
 static void	stop		(InputPlayback *);
 static void	mod_pause	(InputPlayback *, short);
@@ -30,14 +36,16 @@ static void	seek		(InputPlayback *, int);
 static int	get_time	(InputPlayback *);
 static void	*play_loop	(void *);
 static void	aboutbox	(void);
+#if __AUDACIOUS_PLUGIN_API__ < 12
 static void	get_song_info	(char *, char **, int *);
+#endif
 static void	configure	(void);
 static void	config_ok	(GtkWidget *, gpointer);
 static void	mseek		(InputPlayback *, gulong);
 static void	cleanup		(void);
 
 #if __AUDACIOUS_PLUGIN_API__ >= 2
-static Tuple	*get_song_tuple	(char *);
+static Tuple	*get_song_tuple	(CONST12 char *);
 #endif
 
 static GThread *decode_thread;
@@ -114,7 +122,9 @@ InputPlugin xmp_ip = {
 	.pause		= mod_pause,
 	.seek		= seek,
 	.get_time	= get_time,
+#if __AUDACIOUS_PLUGIN_API__ < 12
 	.get_song_info	= get_song_info,
+#endif
 	.cleanup	= cleanup,
 #if __AUDACIOUS_PLUGIN_API__ >= 2
 	.get_song_tuple	= get_song_tuple,
@@ -361,17 +371,18 @@ static void cleanup()
 }
 
 
-static int is_our_file(char *filename)
+static int is_our_file(CONST12 char *filename)
 {
 	_D("filename = %s", filename);
-	strip_vfs(filename);		/* Sorry, no VFS support */
+	strip_vfs((char *)filename);		/* Sorry, no VFS support */
 
-	if (xmp_test_module(ctx, filename, NULL) == 0)
+	if (xmp_test_module(ctx, (char *)filename, NULL) == 0)
 		return 1;
 
 	return 0;
 }
 
+#if __AUDACIOUS_PLUGIN_API__ < 12
 
 static void get_song_info(char *filename, char **title, int *length)
 {
@@ -406,10 +417,11 @@ static void get_song_info(char *filename, char **title, int *length)
 	xmp_free_context(ctx2);
 }
 
+#endif
 
 #if __AUDACIOUS_PLUGIN_API__ >= 2
 
-static Tuple *get_song_tuple(char *filename)
+static Tuple *get_song_tuple(CONST12 char *filename)
 {
 	Tuple *tuple;
 	xmp_context ctx2;
@@ -418,7 +430,7 @@ static Tuple *get_song_tuple(char *filename)
 	struct xmp_options *opt;
 
 	_D("filename = %s", filename);
-	strip_vfs(filename);		/* Sorry, no VFS support */
+	strip_vfs((char *)filename);		/* Sorry, no VFS support */
 
 	tuple = aud_tuple_new_from_filename(filename);
 
@@ -429,7 +441,7 @@ static Tuple *get_song_tuple(char *filename)
 	opt->skipsmp = 1;	/* don't load samples */
 
 	g_static_mutex_lock(&load_mutex);
-	lret = xmp_load_module(ctx2, filename);
+	lret = xmp_load_module(ctx2, (char *)filename);
 	g_static_mutex_unlock(&load_mutex);
 
 	if (lret < 0) {

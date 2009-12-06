@@ -33,6 +33,7 @@ Stable versions
 	- remove pause-related functions from player core
 	- fix build in Solaris 10 and Sun Studio 12 Update 1 C++ compiler
 	  (reported by Douglas Carmichael)
+	- fix audacious plugin to work with 2.2 (reported by Götz Waschk)
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
