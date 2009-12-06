@@ -202,7 +202,7 @@ if test "${enable_xmms_plugin}" = "yes"; then
     AC_CHECK_HEADERS(xmms/plugin.h)
 
     if test "${ac_cv_header_xmms_plugin_h}" = "yes"; then
-        PLUGINS="$PLUGINS xmms"
+        PLUGINS="$PLUGINS plugin-xmms"
     fi
 fi
 
@@ -228,7 +228,7 @@ if test "${enable_bmp_plugin}" = "yes"; then
     AC_CHECK_HEADERS(bmp/plugin.h)
 
     if test "${ac_cv_header_bmp_plugin_h}" = "yes"; then
-        PLUGINS="$PLUGINS bmp"
+        PLUGINS="$PLUGINS plugin-bmp"
     fi
 fi
 
@@ -254,7 +254,7 @@ if test "${enable_audacious_plugin}" = "yes"; then
     AC_CHECK_HEADERS(audacious/plugin.h)
 
     if test "${ac_cv_header_audacious_plugin_h}" = "yes"; then
-        PLUGINS="$PLUGINS audacious"
+        PLUGINS="$PLUGINS plugin-audacious"
     fi
 fi
 
@@ -263,7 +263,7 @@ dnl Check for Winamp SDK
 dnl -----------------------------------------------------------------------
 
 if test "${enable_winamp_plugin}" = "yes"; then
-    PLUGINS="$PLUGINS winamp"
+    PLUGINS="$PLUGINS plugin-winamp"
 fi
 
 dnl -----------------------------------------------------------------------
@@ -271,7 +271,7 @@ dnl Check for TuneNet
 dnl -----------------------------------------------------------------------
 
 if test "${enable_tunenet_plugin}" = "yes"; then
-    PLUGINS="$PLUGINS tunenet"
+    PLUGINS="$PLUGINS plugin-tunenet"
 fi
 
 dnl -----------------------------------------------------------------------

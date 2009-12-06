@@ -5,7 +5,7 @@ TUNENET_OBJS	= Init.o Obtain.o Release.o AnnouncePlayer.o InitPlayer.o \
 TUNENET_DFILES	= Makefile $(TUNENET_OBJS:.o=.c) include Vectors.cpp
 TUNENET_PATH	= src/plugin/tunenet
 
-tunenet: tn_xmp
+plugin-tunenet: tn_xmp
 
 dist-tunenet: $(TUNENET_PATH)/include/TN_XMP.tnplug_rev.h
 	mkdir -p $(DIST)/$(TUNENET_PATH)

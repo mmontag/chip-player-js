@@ -27,7 +27,7 @@ PLATFORM_DIR	= @PLATFORM_DIR@
 # [2.95.2 as supplied by the freeware.sgi.com site] has problems
 # resolving the audio-symbols otherwise.
 
-LIBS		= $(XLIBS) $(LIBM) @LIBS@
+LIBS		= @LIBS@ $(LIBM)
 SHELL		= /bin/sh
 PLATFORM	= @PLATFORM@
 
