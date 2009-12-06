@@ -33,7 +33,7 @@ include etc/Makefile
 
 sinclude src/test/Makefile
 
-XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"\\\"$(VERSION)\\\"\"
+XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
 .SUFFIXES: .c .o .lo .a .so .dll
 

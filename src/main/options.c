@@ -102,7 +102,7 @@ static void list_wrap(char *s, int l, int r, int v)
 
 static void copyright_header()
 {
-    printf("Extended Module Player %s\n", VERSION);
+    printf("Extended Module Player " VERSION "\n");
     printf(
 "Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n"
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1988 Tammo Hinrichs,\n"
