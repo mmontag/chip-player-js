@@ -101,6 +101,7 @@ static GtkWidget *about_window = NULL;
 int skip = 0;
 static short audio_open = FALSE;
 
+/* Filtering files by suffix is really stupid. */
 static gchar *fmts[] = {
 	"xm", "mod", "m15", "it", "s2m", "s3m", "stm", "stx", "med", "dmf",
 	"mtm", "ice", "imf", "ptm", "mdl", "ult", "liq", "psm", "amf",
