@@ -445,13 +445,13 @@ static void *play_loop(void *arg)
 
 		xmp_ip.add_vis_pcm(xmp_ip.output->written_time(),
 			xmp_cfg.force8bit ? FMT_U8 : FMT_S16_NE,
-			xmp_cfg.force_mono ? 1 : 2, i, b);
+			xmp_cfg.force_mono ? 1 : 2, size, data);
 	
-		while (xmp_ip.output->buffer_free() < i && playing)
+		while (xmp_ip.output->buffer_free() < size && playing)
 			usleep(10000);
 
 		if (playing)
-			xmp_ip.output->write_audio(b, i);
+			xmp_ip.output->write_audio(data, size);
 	}
         xmp_player_end(ctx);
 
