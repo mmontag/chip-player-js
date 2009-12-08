@@ -36,6 +36,9 @@ static void	seek		(InputPlayback *, int);
 static int	get_time	(InputPlayback *);
 static void	*play_loop	(void *);
 static void	aboutbox	(void);
+#if __AUDACIOUS_PLUGIN_API__ >= 8
+static int	is_our_file_from_vfs(const char *, VFSFile *);
+#endif
 #if __AUDACIOUS_PLUGIN_API__ < 12
 static void	get_song_info	(char *, char **, int *);
 #endif
@@ -123,6 +126,9 @@ InputPlugin xmp_ip = {
 	.pause		= mod_pause,
 	.seek		= seek,
 	.get_time	= get_time,
+#if __AUDACIOUS_PLUGIN_API__ >= 8
+	.is_our_file_from_vfs = is_our_file_from_vfs,
+#endif
 #if __AUDACIOUS_PLUGIN_API__ < 12
 	.get_song_info	= get_song_info,
 #endif
@@ -382,6 +388,21 @@ static int is_our_file(CONST12 char *filename)
 
 	return 0;
 }
+
+#if __AUDACIOUS_PLUGIN_API__ >= 8
+
+static int is_our_file_from_vfs(const char* filename, VFSFile *vfsfile)
+{
+	_D("filename = %s", filename);
+	strip_vfs((char *)filename);		/* Sorry, no VFS support */
+
+	if (xmp_test_module(ctx, (char *)filename, NULL) == 0)
+		return 1;
+
+	return 0;
+}
+
+#endif
 
 #if __AUDACIOUS_PLUGIN_API__ < 12
 
