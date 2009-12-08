@@ -584,7 +584,7 @@ static void play_file(InputPlayback *ipb)
 	xmp_get_module_info(ctx, &xmp_cfg.mod_info);
 
 #if __AUDACIOUS_PLUGIN_API__ >= 2
-	ipb->set_params(ipb, xmp_cfg.mod_info.name, lret, 0,
+	ipb->set_params(ipb, xmp_cfg.mod_info.name, lret, xmp_cfg.mod_info.chn * 1000,
 					opt->freq, channelcnt);
 	ipb->playing = 1;
 	ipb->eof = 0;
