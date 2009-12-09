@@ -262,7 +262,7 @@ static void aboutbox()
 }
 
 
-xmp_context ctx;
+static xmp_context ctx;
 
 
 static void stop(InputPlayback *ipb)
