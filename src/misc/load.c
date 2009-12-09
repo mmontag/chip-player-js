@@ -448,6 +448,9 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
 	goto err;
 
+    if (st.st_size < 500)		/* set minimum valid module size */
+	goto err;
+
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
 	if (li->enable) {
