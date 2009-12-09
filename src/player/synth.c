@@ -225,11 +225,11 @@ void synth_setpatch (int c, uint8 *data)
  *          bits 1-0 - Most significant bits of F-number.
  */
 
-void synth_setnote (int c, int note, int bend)
+void synth_setnote(int c, int note, int bend)
 {
     int n, f, o;
 
-    if ((c = synth_getchannel (c)) < 0)
+    if ((c = synth_getchannel(c)) < 0)
 	return;
 
     n = note % 12;
@@ -270,31 +270,31 @@ void synth_setvol(int c, int vol)
 int synth_init(int freq)
 {
 #ifdef DEBUG_ADLIB
-    ioperm (0x388, 2, 1);
+    ioperm(0x388, 2, 1);
 #endif
-    synth_chreset ();
+    synth_chreset();
 
-    return YM3812Init (1, 3579545, freq);
+    return YM3812Init(1, 3579545, freq);
 }
 
 
-int synth_reset ()
+int synth_reset()
 {
 #ifdef DEBUG_ADLIB
     int i;
 
     for (i = 0; i < 9; i++)
-	opl_write (ym3812, 0xb0 + i, 0);
+	opl_write(ym3812, 0xb0 + i, 0);
 #else
-    YM3812ResetChip (0);
+    YM3812ResetChip(0);
 #endif
-    synth_chreset ();
+    synth_chreset();
 
     return 0;
 }
 
 
-int synth_deinit ()
+int synth_deinit()
 {
     synth_reset();
     YM3812Shutdown();

@@ -111,3 +111,14 @@ void xmp_init_formats(xmp_context ctx)
 	pw_loader.enable = 1;
 	list_add_tail(&pw_loader.list, &loader_list);
 }
+
+void xmp_deinit_formats(xmp_context ctx)
+{
+	struct xmp_fmt_info *f = __fmt_head, *g;
+
+	while (f != NULL) {
+		g = f->next;
+		free(f);
+		f = g;
+	}
+}

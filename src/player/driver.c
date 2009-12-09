@@ -161,7 +161,7 @@ void xmp_drv_close(struct xmp_context *ctx)
     memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
     d->driver->shutdown(ctx);
     free(d->patch_array);
-    /*synth_deinit();*/
+    synth_deinit();
 }
 
 

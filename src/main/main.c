@@ -695,6 +695,7 @@ skip_play:
     }
 
     xmp_close_audio(ctx);
+    xmp_deinit(ctx);
     xmp_free_context(ctx);
     reset_tty();
 

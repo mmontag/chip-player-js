@@ -82,6 +82,11 @@ void xmp_init(xmp_context ctx, int argc, char **argv)
 		_xmp_read_rc((struct xmp_context *)ctx);
 }
 
+void xmp_deinit(xmp_context ctx)
+{
+	xmp_deinit_formats(ctx);
+}
+
 inline int xmp_open_audio(xmp_context ctx)
 {
 	return xmp_drv_open((struct xmp_context *)ctx);

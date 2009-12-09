@@ -203,6 +203,7 @@ void xmp_unlink_tempfiles(void);
 struct xmp_options *xmp_get_options(xmp_context);
 
 void xmp_init(xmp_context, int, char **);
+void xmp_deinit(xmp_context);
 void xmp_drv_register(struct xmp_drv_info *);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);
@@ -227,6 +228,7 @@ void xmp_release_module(xmp_context);
 int xmp_verbosity_level(xmp_context, int);
 int xmp_seek_time(xmp_context, int);
 void xmp_init_formats(xmp_context);
+void xmp_deinit_formats(xmp_context);
 int xmp_enable_format(char *, int);
 int xmp_checksum(char *, unsigned int *, unsigned int *);
 
