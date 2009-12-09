@@ -33,7 +33,8 @@ static int mmd1_test(FILE *f, char *t, const int start)
 	char id[4];
 	uint32 offset, len;
 
-	fread(id, 4, 1, f);
+	if (fread(id, 4, 1, f) < 4)
+		return -1;
 
 	if (memcmp(id, "MMD0", 4) && memcmp(id, "MMD1", 4))
 		return -1;

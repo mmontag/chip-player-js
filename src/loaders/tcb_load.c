@@ -35,7 +35,8 @@ static int tcb_test(FILE *f, char *t, const int start)
 {
 	uint8 buffer[10];
 
-	fread(buffer, 8, 1, f);
+	if (fread(buffer, 8, 1, f) < 8)
+		return -1;
 	if (memcmp(buffer, "AN COOL.", 8) && memcmp(buffer, "AN COOL!", 8))
 		return -1;
 

@@ -29,7 +29,8 @@ static int rtm_test(FILE *f, char *t, const int start)
 {
 	char buf[4];
 
-	fread(buf, 4, 1, f);
+	if (fread(buf, 4, 1, f) < 4)
+		return -1;
 	if (memcmp(buf, "RTMM", 4))
 		return -1;
 

@@ -27,7 +27,8 @@ static int mtm_test(FILE *f, char *t, const int start)
 {
     uint8 buf[4];
 
-    fread(buf, 1, 4, f);
+    if (fread(buf, 1, 4, f) < 4)
+	return -1;
     if (memcmp(buf, "MTM", 3))
 	return -1;
     if (buf[3] != 0x10)

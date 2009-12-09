@@ -45,12 +45,14 @@ static int stx_test(FILE *f, char *t, const int start)
     char buf[8];
 
     fseek(f, start + 20, SEEK_SET);
-    fread(buf, 8, 1, f);
+    if (fread(buf, 8, 1, f) < 8)
+	return -1;
     if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
 	return -1;
 
     fseek(f, start + 60, SEEK_SET);
-    fread(buf, 4, 1, f);
+    if (fread(buf, 4, 1, f) < 4)
+	return -1;
     if (memcmp(buf, "SCRM", 4))
 	return -1;
 

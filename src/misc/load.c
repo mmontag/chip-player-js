@@ -90,7 +90,8 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     strncat(tmp, "xmp_XXXXXX", PATH_MAX);
 
     fseek(*f, 0, SEEK_SET);
-    fread(b, 1, 1024, *f);
+    if (fread(b, 1, 1024, *f) < 100)	/* minimum valid file size */
+	return 0;
 
 #if defined __AMIGA__ && !defined __AROS__
     if (packer = test_xfd(b, 1024)) {
@@ -465,6 +466,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 
 err:
     fclose (f);
+    xmp_unlink_tempfiles();
     return -1;
 }
 

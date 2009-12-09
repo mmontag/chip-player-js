@@ -29,7 +29,8 @@ static int flt_test(FILE *f, char *t, const int start)
     char buf[4];
 
     fseek(f, start + 1080, SEEK_SET);
-    fread(buf, 4, 1, f);
+    if (fread(buf, 4, 1, f) < 4)
+	return -1;
 
     /* Also RASP? */
     if (memcmp(buf, "FLT", 3) && memcmp(buf, "EXO", 3))

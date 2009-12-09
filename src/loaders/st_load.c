@@ -49,6 +49,9 @@ static int st_test(FILE *f, char *t, const int start)
 
     fstat(fileno(f), &st);
 
+    if (st.st_size < 600)
+	return -1;
+
     smp_size = 0;
 
     fread(mh.name, 1, 20, f);

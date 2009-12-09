@@ -28,7 +28,8 @@ static int amd_test(FILE *f, char *t, const int start)
     char buf[9];
 
     fseek(f, start + 1062, SEEK_SET);
-    fread(buf, 1, 9, f);
+    if (fread(buf, 1, 9, f) < 9)
+	return -1;
 
     if (memcmp(buf, "<o", 2) || memcmp(buf + 6, "RoR", 3))
 	return -1;

@@ -37,7 +37,9 @@ static int ult_test(FILE *f, char *t, const int start)
 {
     char buf[15];
 
-    fread(buf, 1, 15, f);
+    if (fread(buf, 1, 15, f) < 15)
+	return -1;
+
     if (memcmp(buf, "MAS_UTrack_V000", 14))
 	return -1;
 

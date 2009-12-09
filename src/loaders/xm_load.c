@@ -42,7 +42,9 @@ static int xm_test(FILE *f, char *t, const int start)
 {
     char buf[20];
 
-    fread(buf, 17, 1, f);		/* ID text */
+    if (fread(buf, 17, 1, f) < 17)		/* ID text */
+	return -1;
+
     if (memcmp(buf, "Extended Module: ", 17))
 	return -1;
 
