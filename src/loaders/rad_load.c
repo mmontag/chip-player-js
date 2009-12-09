@@ -26,7 +26,9 @@ static int rad_test(FILE *f, char *t, const int start)
 {
 	char buf[16];
 
-	fread(buf, 1, 16, f);
+	if (fread(buf, 1, 16, f) < 16)
+		return -1;
+
 	if (memcmp(buf, "RAD by REALiTY!!", 16))
 		return -1;
 

@@ -42,7 +42,8 @@ static int digi_test(FILE *f, char *t, const int start)
 {
     char buf[20];
 
-    fread(buf, 20, 1, f);
+    if (fread(buf, 1, 20, f) < 20)
+	return -1;
 
     if (memcmp(buf, "DIGI Booster module", 19))
 	return -1;

@@ -39,7 +39,9 @@ static int alm_test(FILE *f, char *t, const int start)
 {
     char buf[7];
 
-    fread(buf, 1, 7, f);
+    if (fread(buf, 1, 7, f) < 7)
+	return -1;
+
     if (memcmp(buf, "ALEYMOD", 7) && memcmp(buf, "ALEY MO", 7))
 	return -1;
 

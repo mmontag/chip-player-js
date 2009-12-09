@@ -22,11 +22,7 @@ char *copy_adjust(uint8 *s, uint8 *r, int n)
 {
 	int i;
 
-	r[n] = 0;
-	if (n > strlen((char *)r))
-		n = strlen((char *)r);
-
-	memset(s, 0, n);
+	memset(s, 0, n + 1);
 	strncpy((char *)s, (char *)r, n);
 
 	for (i = 0; i < n; i++) {

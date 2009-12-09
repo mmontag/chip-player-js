@@ -33,7 +33,9 @@ static int okt_test(FILE *f, char *t, const int start)
 {
     char magic[8];
 
-    fread (magic, 1, 8, f);
+    if (fread(magic, 1, 8, f) < 8)
+	return -1;
+
     if (strncmp (magic, "OKTASONG", 8))
 	return -1;
 

@@ -210,7 +210,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->tpo = ih.tpo;
     m->xxh->bpm = ih.bpm;
 
-    sprintf (m->type, "IM10 (Imago Orpheus)");
+    sprintf(m->type, "IM10 (Imago Orpheus)");
 
     MODULE_INFO();
 
@@ -225,8 +225,8 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxc[i].flg |= XXM_CHANNEL_FX;
     }
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
-
-    memcpy (m->xxo, ih.pos, m->xxh->len);
+ 
+    memcpy(m->xxo, ih.pos, m->xxh->len);
     for (i = 0; i < m->xxh->len; i++)
 	if (m->xxo[i] == 0xff)
 	    m->xxo[i]--;

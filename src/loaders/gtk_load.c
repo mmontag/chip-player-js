@@ -28,7 +28,9 @@ static int gtk_test(FILE * f, char *t, const int start)
 {
 	char buf[4];
 
-	fread(buf, 4, 1, f);
+	if (fread(buf, 1, 4, f) < 4)
+		return -1;
+
 	if (memcmp(buf, "GTK", 3) || buf[3] > 4)
 		return -1;
 

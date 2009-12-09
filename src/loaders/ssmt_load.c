@@ -43,7 +43,9 @@ static int mtp_test(FILE *f, char *t, const int start)
 {
 	char buf[6];
 
-	fread(buf, 6, 1, f);
+	if (fread(buf, 1, 6, f) < 6)
+		return -1;
+
 	if (memcmp(buf, "SONGOK", 6) && memcmp(buf, "IAN92a", 6))
 		return -1;
 

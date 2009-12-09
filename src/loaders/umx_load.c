@@ -38,7 +38,9 @@ static int umx_test(FILE *f, char *t, const int start)
 	uint8 buf[TEST_SIZE], *b = buf;
 	uint32 id;
 
-	fread(buf, 1, TEST_SIZE, f);
+	if (fread(buf, 1, TEST_SIZE, f) < TEST_SIZE)
+		return -1;
+;
 	id = readmem32b(b);
 
 	if (id != MAGIC_UMX)

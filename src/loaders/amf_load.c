@@ -37,7 +37,9 @@ static int amf_test(FILE * f, char *t, const int start)
 	char buf[4];
 	int ver;
 
-	fread(buf, 1, 3, f);
+	if (fread(buf, 1, 3, f) < 3)
+		return -1;
+
 	if (buf[0] != 'A' || buf[1] != 'M' || buf[2] != 'F')
 		return -1;
 
