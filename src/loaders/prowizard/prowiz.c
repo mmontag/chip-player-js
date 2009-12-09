@@ -139,11 +139,11 @@ int pw_wizardry(int in, int out, struct pw_format **fmt)
 	uint8 *data;
 	FILE *file_in, *file_out;
 
-	file_in = fdopen (in, "rb");
+	file_in = fdopen(dup(in), "rb");
 	if (file_in == NULL)
 		return -1;
 
-	file_out = fdopen (out, "w+b");
+	file_out = fdopen(dup(out), "w+b");
 
 	if (fstat(fileno(file_in), &st) < 0)
 		in_size = -1;
@@ -160,7 +160,7 @@ int pw_wizardry(int in, int out, struct pw_format **fmt)
 		perror("Couldn't allocate memory");
 		return -1;
 	}
-	fread (data, in_size, 1, file_in);
+	fread(data, in_size, 1, file_in);
 
 
   /********************************************************************/
@@ -193,7 +193,8 @@ done:
 		return -1;
 
 	//pw_crap(format, file_out);
-	fflush(file_out);
+	fclose(file_out);
+	fclose(file_in);
 
 	/*
 	 * ADD: Rip based on size
