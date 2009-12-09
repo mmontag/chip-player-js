@@ -73,7 +73,7 @@ static int mod_test(FILE *f, char *t, const int start)
     int smp_size, num_pat;
 
     fseek(f, start + 1080, SEEK_SET);
-    if (fread(buf, 4, 1, f) < 4)
+    if (fread(buf, 1, 4, f) < 4)
 	return -1;
 
     if (!strncmp(buf + 2, "CH", 2) && isdigit(buf[0]) && isdigit(buf[1])) {

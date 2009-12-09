@@ -29,7 +29,7 @@ static int flt_test(FILE *f, char *t, const int start)
     char buf[4];
 
     fseek(f, start + 1080, SEEK_SET);
-    if (fread(buf, 4, 1, f) < 4)
+    if (fread(buf, 1, 4, f) < 4)
 	return -1;
 
     /* Also RASP? */
