@@ -76,7 +76,9 @@ static int ims_test(FILE *f, char *t, const int start)
     fread(&ih.title, 20, 1, f);
 
     for (i = 0; i < 31; i++) {
-	fread(&ih.ins[i].name, 20, 1, f);
+	if (fread(&ih.ins[i].name, 20, 1, f) < 20)
+	    return -1;
+
 	ih.ins[i].finetune = (int16)read16b(f);
 	ih.ins[i].size = read16b(f);
 	ih.ins[i].unknown = read8(f);

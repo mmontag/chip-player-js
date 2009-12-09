@@ -475,6 +475,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
     struct xmp_mod_context *m = &p->m;
     int i, j, k;
     int map, last_map;
+    char buf[40];
 
     m->xxh->ins = read8(f);
     reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
@@ -484,8 +485,10 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
     for (i = 0; i < m->xxh->ins; i++) {
 	i_index[i] = read8(f);
 	m->xxih[i].nsm = read8(f);
-	fread(m->xxih[i].name, 1, 32, f);
-	str_adj((char *)m->xxih[i].name);
+	fread(buf, 1, 32, f);
+	buf[32] = 0;
+	str_adj(buf);
+	strncpy((char *)m->xxih[i].name, buf, 32);
 
 	if (V(1) && (strlen((char *) m->xxih[i].name) || m->xxih[i].nsm)) {
 	    report ("\n[%2X] %-32.32s %2d ", i_index[i], m->xxih[i].name,
@@ -576,6 +579,7 @@ static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	s_index[i] = read8(f);		/* Sample number */
 	fread(buf, 1, 32, f);
+	buf[32] = 0;
 	str_adj(buf);
 	reportv(ctx, 2, "\n[%2X] %-32.32s ", s_index[i],buf);
 	fseek(f, 8, SEEK_CUR);		/* Sample filename */
@@ -648,6 +652,7 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].sid = i_index[i] = s_index[i] = read8(f);
 
 	fread(buf, 1, 32, f);
+	buf[32] = 0;
 	str_adj(buf);			/* Sample name */
 	reportv(ctx, 1, "\n[%2X] %-32.32s ", i_index[i], buf);
 	fseek(f, 8, SEEK_CUR);		/* Sample filename */

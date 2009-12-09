@@ -34,6 +34,9 @@ void *xmp_create_context()
 
 	ctx = calloc(1, sizeof(struct xmp_context));
 
+	/* Explicitly initialize to keep valgrind happy */
+	*ctx->p.m.name = *ctx->p.m.type = 0;
+
 	if (ctx == NULL)
 		return NULL;
 

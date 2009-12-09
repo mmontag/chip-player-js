@@ -799,10 +799,11 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	memcpy(patch->data, buffer, xxs->len);
     } else {
 	int pos = ftell(f);
-	fread(s, 1, 5, f);
+	int num = fread(s, 1, 5, f);
+
 	fseek(f, pos, SEEK_SET);
 
-	if (!strncmp(s, "ADPCM", 5)) {
+	if (num == 5 && !memcmp(s, "ADPCM", 5)) {
 	    int x2 = xxs->len >> 1;
 	    char table[16];
 

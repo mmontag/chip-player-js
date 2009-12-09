@@ -96,7 +96,8 @@ static int is_am_instrument(FILE *nt, int i)
     int16 wf;
 
     fseek(nt, 144 + i * 120, SEEK_SET);
-    fread(buf, 1, 2, nt);
+    if (fread(buf, 1, 2, nt) < 2)
+	return 0;
     if (memcmp(buf, "AM", 2))
 	return 0;
 

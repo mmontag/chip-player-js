@@ -22,6 +22,7 @@ char *copy_adjust(uint8 *s, uint8 *r, int n)
 {
 	int i;
 
+	r[n] = 0;
 	if (n > strlen((char *)r))
 		n = strlen((char *)r);
 
