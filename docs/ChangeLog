@@ -34,7 +34,8 @@ Stable versions
 	- fix build in Solaris 10 and Sun Studio 12 Update 1 C++ compiler
 	  (reported by Douglas Carmichael)
 	- fix plugin to work with Audacious 2.2 (reported by Götz Waschk)
-	- fix usage of uninitialized data reported by Valgrind
+	- fix invalid and uninitialized data accesses reported by Valgrind
+	- fix memory leaks reported by Valgrind
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)

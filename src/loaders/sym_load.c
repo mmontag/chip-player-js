@@ -242,7 +242,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		fread(buf, 1, size, f);
 	}
 
-	for (i = 0; i < m->xxh->len; i++) {
+	for (i = 0; i < m->xxh->len; i++) {	/* len == pat */
 		PATTERN_ALLOC(i);
 		m->xxp[i]->rows = 64;
 		for (j = 0; j < m->xxh->chn; j++) {

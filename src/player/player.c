@@ -463,20 +463,23 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 			m->xxh->flg & XXM_FLG_LINEAR);
 
-	xc->y_idx = xc->t_idx = 0;	      /* #?# Onde eu coloco isso? */
+	xc->y_idx = xc->t_idx = 0;	/* H: where should I put this? */
 
 	SET(ECHOBACK);
     }
 
-    if (xc->key == 0xff || XXIM.ins[xc->key] == 0xff)
+    if (xc->key < 0 || XXIM.ins[xc->key] == 0xff)
 	return 0;
 
     if (TEST(RESET_ENV)) {
 	/* xc->fadeout = 0x8000; -- moved to fetch */
 	RESET(RELEASE | FADEOUT);
-	xc->gvl = XXI[XXIM.ins[xc->key]].gvl;   /* #?# Onde eu coloco isso? */
-	xc->insvib_swp = XXI->vsw;	      /* #?# Onde eu coloco isso? */
-	xc->insvib_idx = 0;		     /* #?# Onde eu coloco isso? */
+
+	/* H: where should I put these? */
+	xc->gvl = p->m.xxi[XXIM.ins[xc->key]]->gvl;
+	xc->insvib_swp = XXI->vsw;
+	xc->insvib_idx = 0;
+
 	xc->v_idx = xc->p_idx = xc->f_idx = 0;
 	xc->cutoff = XXI->ifc & 0x80 ? (XXI->ifc - 0x80) * 2 : 0xff;
 	xc->resonance = XXI->ifr & 0x80 ? (XXI->ifr - 0x80) * 2 : 0;
