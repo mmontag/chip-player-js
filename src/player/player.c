@@ -476,7 +476,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	RESET(RELEASE | FADEOUT);
 
 	/* H: where should I put these? */
-	xc->gvl = p->m.xxi[XXIM.ins[xc->key]]->gvl;
+	xc->gvl = XXI[XXIM.ins[xc->key]].gvl;
 	xc->insvib_swp = XXI->vsw;
 	xc->insvib_idx = 0;
 
