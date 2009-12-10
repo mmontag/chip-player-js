@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 #include "common.h"
 #include "driver.h"
 #include "mixer.h"
@@ -25,8 +26,12 @@
 #define O_BINARY 0
 #endif
 
-static int fd;
-static uint32 size;
+#define DATA(x) (((struct data *)drv_wav.data)->x)
+
+struct data {
+	int fd;
+	uint32 size;
+};
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
@@ -68,10 +73,10 @@ static void writeval_16l(int fd, uint16 v)
 	uint8 x;
 
 	x = v & 0xff;
-	write(fd, &x, 1);
+	write(DATA(fd), &x, 1);
 
 	x = v >> 8;
-	write(fd, &x, 1);
+	write(DATA(fd), &x, 1);
 }
 
 static void writeval_32l(int fd, uint32 v)
@@ -79,16 +84,16 @@ static void writeval_32l(int fd, uint32 v)
 	uint8 x;
 
 	x = v & 0xff;
-	write(fd, &x, 1);
+	write(DATA(fd), &x, 1);
 
 	x = (v >> 8) & 0xff;
-	write(fd, &x, 1);
+	write(DATA(fd), &x, 1);
 
 	x = (v >> 16) & 0xff;
-	write(fd, &x, 1);
+	write(DATA(fd), &x, 1);
 
 	x = (v >> 24) & 0xff;
-	write(fd, &x, 1);
+	write(DATA(fd), &x, 1);
 }
 
 static int init(struct xmp_context *ctx)
@@ -98,45 +103,50 @@ static int init(struct xmp_context *ctx)
 	uint16 chan;
 	uint32 sampling_rate, bytes_per_second;
 	uint16 bytes_per_frame, bits_per_sample;
-	char *f, filename[260];
+	char *f, filename[PATH_MAX];
 	struct xmp_options *o = &ctx->o;
+
+	drv_wav.data = malloc(sizeof (struct data));
+	if (drv_wav.data == NULL)
+		return -1;
 
 	if (!o->outfile) {
 		if (global_filename) {
 			if ((f = strrchr(global_filename, '/')) != NULL)
-				strncpy(filename, f + 1, 255);
+				strncpy(filename, f + 1, PATH_MAX);
 			else
-				strncpy(filename, global_filename, 255);
+				strncpy(filename, global_filename, PATH_MAX);
 		} else {
 			strcpy(filename, "xmp");
 		}
 
-		strncat(filename, ".wav", 260);
+		strncat(filename, ".wav", PATH_MAX);
 
 		o->outfile = filename;
 	}
 
 	if (strcmp(o->outfile, "-")) {
-		fd = open(o->outfile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY,
-			  0644);
-		if (fd < 0)
+		DATA(fd) = open(o->outfile, O_WRONLY | O_CREAT | O_TRUNC
+							| O_BINARY, 0644);
+		if (DATA(fd) < 0)
 			return -1;
 	} else {
-		fd = 1;
+		DATA(fd) = 1;
 	}
 
-	buf = malloc(strlen(drv_wav.description) + strlen(o->outfile) + 8);
 	if (strcmp(o->outfile, "-")) {
+		buf = malloc(strlen(drv_wav.description) +
+					strlen(o->outfile) + 8);
 		sprintf(buf, "%s: %s", drv_wav.description, o->outfile);
 		drv_wav.description = buf;
 	} else {
-		drv_wav.description = "WAV writer: stdout";
+		drv_wav.description = strdup("WAV writer: stdout");
 		len = -1;
 	}
 
-	write(fd, "RIFF", 4);
-	writeval_32l(fd, len);
-	write(fd, "WAVE", 4);
+	write(DATA(fd), "RIFF", 4);
+	writeval_32l(DATA(fd), len);
+	write(DATA(fd), "WAVE", 4);
 
 	chan = o->outfmt & XMP_FMT_MONO ? 1 : 2;
 	sampling_rate = o->freq;
@@ -146,19 +156,19 @@ static int init(struct xmp_context *ctx)
 	bytes_per_frame = chan * bits_per_sample / 8;
 	bytes_per_second = sampling_rate * bytes_per_frame;
 
-	write(fd, "fmt ", 4);
-	writeval_32l(fd, 16);
-	writeval_16l(fd, 1);
-	writeval_16l(fd, chan);
-	writeval_32l(fd, sampling_rate);
-	writeval_32l(fd, bytes_per_second);
-	writeval_16l(fd, bytes_per_frame);
-	writeval_16l(fd, bits_per_sample);
+	write(DATA(fd), "fmt ", 4);
+	writeval_32l(DATA(fd), 16);
+	writeval_16l(DATA(fd), 1);
+	writeval_16l(DATA(fd), chan);
+	writeval_32l(DATA(fd), sampling_rate);
+	writeval_32l(DATA(fd), bytes_per_second);
+	writeval_16l(DATA(fd), bytes_per_frame);
+	writeval_16l(DATA(fd), bits_per_sample);
 
-	write(fd, "data", 4);
-	writeval_32l(fd, len);
+	write(DATA(fd), "data", 4);
+	writeval_32l(DATA(fd), len);
 
-	size = 0;
+	DATA(size) = 0;
 
 	return xmp_smix_on(ctx);
 }
@@ -171,20 +181,23 @@ static void bufdump(struct xmp_context *ctx, int i)
 	b = xmp_smix_buffer(ctx);
 	if (o->big_endian)
 		xmp_cvt_sex(i, b);
-	write(fd, b, i);
-	size += i;
+	write(DATA(fd), b, i);
+	DATA(size) += i;
 }
 
 static void shutdown(struct xmp_context *ctx)
 {
 	xmp_smix_off(ctx);
 
-	lseek(fd, 40, SEEK_SET);
-	writeval_32l(fd, size);
+	lseek(DATA(fd), 40, SEEK_SET);
+	writeval_32l(DATA(fd), DATA(size));
 
-	lseek(fd, 4, SEEK_SET);
-	writeval_32l(fd, size + 40);
+	lseek(DATA(fd), 4, SEEK_SET);
+	writeval_32l(DATA(fd), DATA(size) + 40);
 
-	if (fd)
-		close(fd);
+	if (DATA(fd) > 0)
+		close(DATA(fd));
+
+	free(drv_wav.description);
+	free(drv_wav.data);
 }

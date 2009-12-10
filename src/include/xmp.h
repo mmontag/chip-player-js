@@ -176,6 +176,7 @@ struct xmp_drv_info {
 	void (*sync) ();
 	int (*writepatch) ();
 	int (*getmsg) ();
+	void *data;
 	struct xmp_drv_info *next;
 };
 

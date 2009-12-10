@@ -25,8 +25,12 @@
 #define O_BINARY 0
 #endif
 
-static int fd;
-static int endian;
+#define DATA(x) (((struct data *)drv_file.data)->x)
+
+struct data {
+	int fd;
+	int endian;
+};
 
 static int init(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
@@ -66,7 +70,6 @@ struct xmp_drv_info drv_file = {
 	dummy,			/* sync */
 	xmp_smix_writepatch,	/* writepatch */
 	xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static int init(struct xmp_context *ctx)
@@ -76,32 +79,36 @@ static int init(struct xmp_context *ctx)
 	int bsize;
 	char *token, **parm;
 
-	endian = 0;
+	drv_file.data = malloc(sizeof (struct data));
+	if (drv_file.data == NULL)
+		return -1;
+
+	DATA(endian) = 0;
 	parm_init();
-	chkparm0("big-endian", endian = 1);
-	chkparm0("little-endian", endian = -1);
+	chkparm0("big-endian", DATA(endian) = 1);
+	chkparm0("little-endian", DATA(endian) = -1);
 	parm_end();
 
 	if (!o->outfile)
 		o->outfile = "xmp.out";
 
 	if (strcmp(o->outfile, "-")) {
-		fd = open(o->outfile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY,
-			  0644);
-		if (fd < 0)
+		DATA(fd) = open(o->outfile, O_WRONLY | O_CREAT | O_TRUNC
+							| O_BINARY, 0644);
+		if (DATA(fd) < 0)
 			return -1;
 	} else {
-		fd = 1;
+		DATA(fd) = 1;
 	}
 
-	bsize = strlen(drv_file.description) + strlen(o->outfile) + 8;
-	buf = malloc(bsize);
 	if (strcmp(o->outfile, "-")) {
+		bsize = strlen(drv_file.description) + strlen(o->outfile) + 8;
+		buf = malloc(bsize);
 		snprintf(buf, bsize, "%s: %s", drv_file.description,
-			 o->outfile);
+							 o->outfile);
 		drv_file.description = buf;
 	} else {
-		drv_file.description = "Output to stdout";
+		drv_file.description = strdup("Output to stdout");
 	}
 
 	return xmp_smix_on(ctx);
@@ -114,11 +121,13 @@ static void bufdump(struct xmp_context *ctx, int i)
 	void *b;
 
 	b = xmp_smix_buffer(ctx);
-	if ((o->big_endian && endian == -1) || (!o->big_endian && endian == 1))
+	if ((o->big_endian && DATA(endian) == -1) ||
+				(!o->big_endian && DATA(endian) == 1)) {
 		xmp_cvt_sex(i, b);
+	}
 
 	while (i) {
-		if ((j = write(fd, b, i)) > 0) {
+		if ((j = write(DATA(fd), b, i)) > 0) {
 			i -= j;
 			b = (char *)b + j;
 		} else
@@ -130,6 +139,9 @@ static void shutdown(struct xmp_context *ctx)
 {
 	xmp_smix_off(ctx);
 
-	if (fd)
-		close(fd);
+	if (DATA(fd) > 0)
+		close(DATA(fd));
+
+	free(drv_file.description);
+	free(drv_file.data);
 }
