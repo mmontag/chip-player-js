@@ -619,11 +619,9 @@ int main(int argc, char **argv)
 		getprevious = skipprev;
 		continue;
 	    case -3: {
-		char *line;
-		int lsize = strlen(*argv) + strlen(argv[optind]) + 10;
-		line = malloc(lsize);
-		snprintf(line, lsize, "%s: %s", *argv, argv[optind]);
-		perror (line);
+		char line[1024];
+		snprintf(line, 1024, "%s: %s", *argv, argv[optind]);
+		perror(line);
 		getprevious = skipprev;
 		continue; }
 	    }
