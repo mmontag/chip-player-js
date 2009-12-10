@@ -24,7 +24,7 @@ $(PLUGIN_PATH)/audacious.lo: $(PLUGIN_PATH)/audacious.c $(PLUGIN_PATH)/Makefile
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
 	eval $$CMD
 
-install-audacious-plugin:
+install-plugin-audacious:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \
 	echo "Installing xmp-audacious.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
@@ -44,7 +44,7 @@ $(PLUGIN_PATH)/bmp.lo: $(PLUGIN_PATH)/bmp.c $(PLUGIN_PATH)/Makefile
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
 	eval $$CMD
 
-install-bmp-plugin:
+install-plugin-bmp:
 	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir bmp`"; \
 	echo "Installing xmp-bmp.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
@@ -64,7 +64,7 @@ $(PLUGIN_PATH)/xmms.lo: $(PLUGIN_PATH)/xmms.c $(PLUGIN_PATH)/Makefile
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
 	eval $$CMD
 
-install-xmms-plugin:
+install-plugin-xmms:
 	@DIR="$(DESTDIR)`xmms-config --input-plugin-dir`"; \
 	echo "Installing xmp-xmms.so in $$DIR"; \
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
