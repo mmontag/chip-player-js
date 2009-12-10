@@ -33,6 +33,8 @@ static int paused;
 HANDLE decode_thread = INVALID_HANDLE_VALUE;
 HANDLE load_mutex;
 
+extern struct xmp_drv_info drv_smix;
+
 #define FREQ_SAMPLE_44 0
 #define FREQ_SAMPLE_22 1
 #define FREQ_SAMPLE_11 2

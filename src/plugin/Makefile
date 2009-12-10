@@ -71,11 +71,14 @@ install-xmms-plugin:
 	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-xmms.so "$$DIR"
 
 
+# A hack to make this link correctly. It should be D_LOBJS but smix.lo
+# fails to link (undefined _GLOBAL_OFFSET_TABLE_)
+WIN_D_LOBJS = src/drivers/smix.o
 
 plugin-winamp: $(PLUGIN_PATH)/in_xmp.dll
 
-$(PLUGIN_PATH)/in_xmp.dll: $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo $(LOBJS) $(D_LOBJS)
-	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo'; \
+$(PLUGIN_PATH)/in_xmp.dll: $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo $(LOBJS) $(WIN_D_LOBJS)
+	@CMD='$(LD) -shared -mwindows -o $@ $(LOBJS) $(WIN_D_LOBJS) $(PLUGIN_PATH)/winamp.lo $(PLUGIN_PATH)/resource.lo'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 

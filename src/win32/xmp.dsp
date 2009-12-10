@@ -602,6 +602,18 @@ SOURCE=..\player\mixer.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\win32\ptpopen.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\win32\debug.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\win32\usleep.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\drivers\file.c
 # End Source File
 # Begin Source File

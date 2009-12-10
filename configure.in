@@ -612,7 +612,7 @@ dnl
 dnl	Test for Mingw32
 dnl
 mingw32*)
-    AC_CHECK_HEADERS(mmsystem.h)
+    AC_CHECK_HEADERS(mmsystem.h,,,[[#include <windows.h>]])
     if test "${ac_cv_header_mmsystem_h}" = "yes"; then
 	DRIVERS="${DRIVERS} win32.o"
 	LIBS="${LIBS} -luser32 -lgdi32 -lwinmm"
@@ -623,7 +623,7 @@ dnl
 dnl	Test for Cygwin32
 dnl
 cygwin*)
-    AC_CHECK_HEADERS(mmsystem.h)
+    AC_CHECK_HEADERS(mmsystem.h,,,[[#include <windows.h>]])
     if test "${ac_cv_header_mmsystem_h}" = "yes"; then
 	DRIVERS="${DRIVERS} win32.o"
 	LIBS="${LIBS} -lcygwin -luser32 -lgdi32 -lwinmm"
