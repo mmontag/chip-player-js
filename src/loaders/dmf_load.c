@@ -366,7 +366,6 @@ static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	char composer[XMP_NAMESIZE];
 	uint8 date[3];
 	char tracker_name[10];
 
@@ -376,19 +375,17 @@ static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	ver = read8(f);
 	fread(tracker_name, 8, 1, f);
+	tracker_name[8] = 0;
 	snprintf(m->type, XMP_NAMESIZE,
 		"D-Lusion Digital Music File v%d (%s)", ver, tracker_name);
 	tracker_name[8] = 0;
 	fread(m->name, 30, 1, f);
-	fread(composer, 20, 1, f);
+	fread(m->author, 20, 1, f);
 	fread(date, 3, 1, f);
 	
 	MODULE_INFO();
-	if (V(0)) {
-		report("Composer name  : %s\n", composer);
-		report("Creation date  : %02d/%02d/%04d\n", date[0], date[1],
-							1900 + date[2]);
-	}
+	reportv(ctx, 0, "Creation date  : %02d/%02d/%04d\n", date[0],
+						date[1], 1900 + date[2]);
 	
 	/* IFF chunk IDs */
 	iff_register("SEQU", get_sequ);
