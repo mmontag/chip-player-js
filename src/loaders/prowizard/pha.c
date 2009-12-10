@@ -195,13 +195,13 @@ restart:
 #endif
 	psize = npat * 1024;
 	pdata = (uint8 *) malloc (psize);
-	fread(pdata, 1, psize, in);
+	psize = fread(pdata, 1, psize, in);
 	npat += 1;		/* coz first value is $00 */
 	pat = (uint8 *)malloc(npat * 1024);
 	memset(pat, 0, npat * 1024);
 
 	j = 0;
-	for (i = 0; j < (npat * 1024); i++) {
+	for (i = 0; j < psize; i++) {
 		if (pdata[i] == 0xff) {
 			i += 1;
 			ocpt[(k + 3) % 4] = 0xff - pdata[i];
