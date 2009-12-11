@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+3.0.1 ():
+	-
+
 3.0.0 (20091210): 13 years after the 0.09b release
 	- allow parallel build (R.I.P. 1996 buildsystem)
 	- implement the long postponed open player loop 
