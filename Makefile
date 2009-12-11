@@ -1,5 +1,5 @@
 
-VERSION	= 3.0.0
+VERSION	= 3.0.1-pre
 DIST    = xmp-$(VERSION)
 MODULES = "mod.syfuid.long"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
