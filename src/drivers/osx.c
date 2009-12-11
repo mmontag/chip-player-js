@@ -15,6 +15,7 @@
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreServices/CoreServices.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "driver.h"
