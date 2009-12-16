@@ -38,6 +38,9 @@ struct RTMMHeader {		/* Real Tracker Music Module */
     BYTE tempo;			/* initial tempo */
     char panning[32];		/* initial pannings (for S3M compatibility) */
     DWORD extraDataSize;	/* length of data after the header */
+
+/* version 1.12 */
+    char originalName[32];
 };
 
 struct RTNDHeader {		/* Real Tracker Note Data */
@@ -64,7 +67,8 @@ struct Envelope {
 
 struct RTINHeader {		/* Real Tracker Instrument */
     BYTE nsample;
-    WORD flags;			/* bit 0 : default panning enabled */
+    WORD flags;			/* bit 0 : default panning enabled
+				   bit 1 : mute samples */
     BYTE table[120];		/* sample number for each note */
     struct Envelope volumeEnv;
     struct Envelope panningEnv;
@@ -73,10 +77,18 @@ struct RTINHeader {		/* Real Tracker Instrument */
     char vibdepth;		/* vibrato depth */
     char vibrate;		/* vibrato rate */
     WORD volfade;
+
+/* version 1.10 */
     BYTE midiPort;
     BYTE midiChannel;
     BYTE midiProgram;
     BYTE midiEnable;
+
+/* version 1.12 */
+    char midiTranspose;                                                     
+    BYTE midiBenderRange;                                                   
+    BYTE midiBaseVolume;                                                    
+    char midiUseVelocity;
 };
 
 struct RTSMHeader {		/* Real Tracker Sample */
@@ -85,8 +97,9 @@ struct RTSMHeader {		/* Real Tracker Sample */
     BYTE basevolume;
     BYTE defaultvolume;
     DWORD length;
-    long loop;			/* =0:no loop, =1:forward loop,
+    BYTE loop;			/* =0:no loop, =1:forward loop,
 				   =2:bi-directional loop */
+    BYTE reserved[3];
     DWORD loopbegin;
     DWORD loopend;
     DWORD basefreq;

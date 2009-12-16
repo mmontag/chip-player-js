@@ -45,11 +45,15 @@ static int rtm_test(FILE *f, char *t, const int start)
 
 #define MAX_SAMP 1024
 
-static int read_object_header(FILE *f, struct ObjectHeader *h)
+static int read_object_header(FILE *f, struct ObjectHeader *h, char *id)
 {
 	fread(&h->id, 4, 1, f);
 	_D(_D_WARN "object id: %02x %02x %02x %02x", h->id[0],
 					h->id[1], h->id[2], h->id[3]);
+
+	if (memcmp(id, h->id, 4))
+		return -1;
+
 	h->rc = read8(f);
 	if (h->rc != 0x20)
 		return -1;
@@ -75,13 +79,17 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct RTINHeader ri;
 	struct RTSMHeader rs;
 	int offset, smpnum;
+	char tracker_name[21], composer[33];
 
 	LOAD_INIT();
 
-	read_object_header(f, &oh);
+	if (read_object_header(f, &oh, "RTMM") < 0)
+		return -1;
 
-	fread(&rh.software, 1, 20, f);
-	fread(&rh.composer, 1, 32, f);
+	fread(tracker_name, 1, 20, f);
+	tracker_name[20] = 0;
+	fread(composer, 1, 32, f);
+	composer[32] = 0;
 	rh.flags = read16l(f);	/* bit 0: linear table, bit 1: track names */
 	rh.ntrack = read8(f);
 	rh.ninstr = read8(f);
@@ -95,8 +103,9 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxo[i] = read16l(f);
 	
 	strncpy(m->name, oh.name, 20);
-	snprintf(m->type, XMP_NAMESIZE, "RTMM %d.%02d (%s)",
-			oh.version >> 8, oh.version & 0xff, rh.software);
+	snprintf(m->type, XMP_NAMESIZE, "RTMM %x.%02x (%s)",
+			oh.version >> 8, oh.version & 0xff, tracker_name);
+	strncpy(m->author, composer, XMP_NAMESIZE);
 
 	m->xxh->len = rh.nposition;
 	m->xxh->pat = rh.npattern;
@@ -114,8 +123,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	if (V(0))
-		report("Stored patterns: %d ", m->xxh->pat);
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 
 	offset = 42 + oh.headerSize + rh.extraDataSize;
 
@@ -124,7 +132,10 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		fseek(f, start + offset, SEEK_SET);
 
-		read_object_header(f, &oh);
+		if (read_object_header(f, &oh, "RTND") < 0) {
+			reportv(ctx, 0, "Error reading pattern %d\n", i);
+			return -1;
+		}
 	
 		rp.flags = read16l(f);
 		rp.ntrack = read8(f);
@@ -165,22 +176,16 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 					
 			}
 		}
-
-		if (V(0))
-		report(".");
+		reportv(ctx, 0, ".");
 	}
-
-	if (V(0))
-		report("\n");
+	reportv(ctx, 0, "\n");
 
 	/*
 	 * load instruments
 	 */
 
-	if (V(0))
-		report("Instruments    : %d ", m->xxh->ins);
-	if (V(1))
-		report("\n");
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n");
 
 	fseek(f, start + offset, SEEK_SET);
 
@@ -189,8 +194,12 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	for (smpnum = i = 0; i < m->xxh->ins; i++) {
-		read_object_header(f, &oh);
+	smpnum = 0;
+	for (i = 0; i < m->xxh->ins; i++) {
+		if (read_object_header(f, &oh, "RTIN") < 0) {
+			reportv(ctx, 0, "Error reading instrument %d\n", i);
+			return -1;
+		}
 
 		copy_adjust(m->xxih[i].name, (uint8 *)&oh.name, 32);
 
@@ -235,11 +244,18 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		ri.vibrate = read8(f);
 		ri.volfade = read16l(f);
 
-		/* I don't see these inside the module */
-		//ri.midiPort = read8(f);
-		//ri.midiChannel = read8(f);
-		//ri.midiProgram = read8(f);
-		//ri.midiEnable = read8(f);
+		if (oh.version >= 0x0110) {
+			ri.midiPort = read8(f);
+			ri.midiChannel = read8(f);
+			ri.midiProgram = read8(f);
+			ri.midiEnable = read8(f);
+		}
+		if (oh.version >= 0x0112) {
+			ri.midiTranspose = read8(f);
+			ri.midiBenderRange = read8(f);
+			ri.midiBaseVolume = read8(f);
+			ri.midiUseVelocity = read8(f);
+		}
 
 		m->xxih[i].nsm = ri.nsample;
 		if (V(1) && (strlen((char *)m->xxih[i].name) || ri.nsample)) {
@@ -285,7 +301,10 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		/* For each sample */
 		for (j = 0; j < m->xxih[i].nsm; j++, smpnum++) {
-			read_object_header(f, &oh);
+			if (read_object_header(f, &oh, "RTSM") < 0) {
+				reportv(ctx, 0, "Error reading sample %d\n", j);
+				return -1;
+			}
 
 			rs.flags = read16l(f);
 			rs.basevolume = read8(f);
