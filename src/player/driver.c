@@ -157,7 +157,6 @@ void xmp_drv_close(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    xmp_drv_off(ctx);
     memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
     d->driver->shutdown(ctx);
     free(d->patch_array);
@@ -212,10 +211,11 @@ void xmp_drv_off(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
+    xmp_drv_writepatch(ctx, NULL);
+
     if (d->numchn < 1)
 	return;
 
-    xmp_drv_writepatch(ctx, NULL);
     d->curvoc = d->maxvoc = 0;
     d->numchn = 0;
     d->numtrk = 0;
@@ -225,7 +225,7 @@ void xmp_drv_off(struct xmp_context *ctx)
 }
 
 
-/*inline*/ void xmp_drv_clearmem(struct xmp_context *ctx)
+void xmp_drv_clearmem(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
@@ -659,7 +659,9 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 	d->driver->writepatch(ctx, patch);
 
 	for (num = XMP_MAXPAT; num--;) {
-	    free(d->patch_array[num]);
+	    if (d->patch_array[num]) {
+		free(d->patch_array[num]);
+	    }
 	    d->patch_array[num] = NULL;
 	}
 	return 0;

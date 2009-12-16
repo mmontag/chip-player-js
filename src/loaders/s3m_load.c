@@ -438,8 +438,10 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fread(&sah.name, 28, 1, f);		/* Instrument name */
 	    sah.magic = read32b(f);		/* 'SCRI' */
 
-	    if (sah.magic != MAGIC_SCRI)
+	    if (sah.magic != MAGIC_SCRI) {
+		reportv(ctx, 0, "error: FM instrument magic\n");
 		return -2;
+	    }
 	    sah.magic = 0;
 
 	    copy_adjust(m->xxih[i].name, sah.name, 28);
@@ -480,8 +482,10 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(&sih.name, 28, 1, f);		/* Instrument name */
 	sih.magic = read32b(f);			/* 'SCRS' */
 
-	if (x8 == 1 && sih.magic != MAGIC_SCRS)
+	if (x8 == 1 && sih.magic != MAGIC_SCRS) {
+	    reportv(ctx, 0, "error: instrument magic\n");
 	    return -2;
+	}
 
 	if (quirk87) {
 	    fix87(sih.length);
