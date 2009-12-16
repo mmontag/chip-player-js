@@ -1,7 +1,7 @@
 
 VERSION	= 3.0.1-pre
 DIST    = xmp-$(VERSION)
-MODULES = "mod.syfuid.long"
+MODULES = "jerry-boleti.xm"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  scripts $(MODULES)
 DDIRS	= docs drivers etc include loaders misc player plugin prowiz win32 \
