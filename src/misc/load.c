@@ -574,7 +574,10 @@ int xmp_load_module(xmp_context ctx, char *s)
 	    _D(_D_WARN "load format: %s (%s)", li->id, li->name);
 	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) == 0)) {
 		crc = cksum(f);
-		break;
+	        break;
+	    } else {
+		report("can't load module, possibly corrupted file\n");
+		goto err;
 	    }
 	}
     }
