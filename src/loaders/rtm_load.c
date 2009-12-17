@@ -165,7 +165,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 					event = &EVENT(i, j, r);
 				}
 				if (c & 0x02) {		/* read note */
-					event->note = read8(f);
+					event->note = read8(f) + 1;
 					if (event->note == 0x61)
 						event->note = XMP_KEY_OFF;
 				}
