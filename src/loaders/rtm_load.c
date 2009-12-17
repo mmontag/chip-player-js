@@ -155,18 +155,27 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		TRACK_ALLOC(i);
 
 		for (r = 0; r < rp.nrows; r++) {
-			for (j = 0; j < rp.ntrack; j++) {
+			for (j = 0; /*j < rp.ntrack */; j++) {
+
 				event = &EVENT(i, j, r);
 				c = read8(f);
 				if (c == 0)		/* next row */
 					break;
+
+				/* should never happen! */
+				if (j >= rp.ntrack) {
+					reportv(ctx, 0, "error: decoding "
+						"pattern %d row %d\n", i, r);
+					break;
+				}
+
 				if (c & 0x01) {		/* set track */
 					j = read8(f);
 					event = &EVENT(i, j, r);
 				}
 				if (c & 0x02) {		/* read note */
 					event->note = read8(f) + 1;
-					if (event->note == 0x61)
+					if (event->note == 0xff)
 						event->note = XMP_KEY_OFF;
 				}
 				if (c & 0x04)		/* read instrument */
@@ -179,7 +188,6 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 					event->f2t = read8(f);
 				if (c & 0x40)		/* read parameter 2 */
 					event->f2p = read8(f);
-					
 			}
 		}
 		reportv(ctx, 0, ".");

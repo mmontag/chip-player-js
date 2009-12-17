@@ -4,6 +4,8 @@ Stable versions
 3.0.1 ():
 	- better handling of corrupted modules
 	- load Real Tracker RTMM 1.12 modules (tested with odyssey.rtm)
+	- fix tuning of Real Tracker modules
+	- fix Real Tracker patern decoding
 
 3.0.0 (20091210): 13 years after the 0.09b release
 	- allow parallel build (R.I.P. 1996 buildsystem)
