@@ -157,7 +157,6 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		for (r = 0; r < rp.nrows; r++) {
 			for (j = 0; /*j < rp.ntrack */; j++) {
 
-				event = &EVENT(i, j, r);
 				c = read8(f);
 				if (c == 0)		/* next row */
 					break;
@@ -168,6 +167,8 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 						"pattern %d row %d\n", i, r);
 					break;
 				}
+
+				event = &EVENT(i, j, r);
 
 				if (c & 0x01) {		/* set track */
 					j = read8(f);
