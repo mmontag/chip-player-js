@@ -78,13 +78,15 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct RTNDHeader rp;
 	struct RTINHeader ri;
 	struct RTSMHeader rs;
-	int offset, smpnum;
+	int offset, smpnum, version;
 	char tracker_name[21], composer[33];
 
 	LOAD_INIT();
 
 	if (read_object_header(f, &oh, "RTMM") < 0)
 		return -1;
+
+	version = oh.version;
 
 	fread(tracker_name, 1, 20, f);
 	tracker_name[20] = 0;
@@ -99,12 +101,16 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	rh.tempo = read8(f);
 	fread(&rh.panning, 32, 1, f);
 	rh.extraDataSize = read32l(f);
+
+	if (version >= 0x0112)
+		fseek(f, 32, SEEK_CUR);		/* skip original name */
+
 	for (i = 0; i < rh.nposition; i++)
 		m->xxo[i] = read16l(f);
 	
 	strncpy(m->name, oh.name, 20);
 	snprintf(m->type, XMP_NAMESIZE, "RTMM %x.%02x (%s)",
-			oh.version >> 8, oh.version & 0xff, tracker_name);
+			version >> 8, version & 0xff, tracker_name);
 	strncpy(m->author, composer, XMP_NAMESIZE);
 
 	m->xxh->len = rh.nposition;
@@ -244,13 +250,13 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		ri.vibrate = read8(f);
 		ri.volfade = read16l(f);
 
-		if (oh.version >= 0x0110) {
+		if (version >= 0x0110) {
 			ri.midiPort = read8(f);
 			ri.midiChannel = read8(f);
 			ri.midiProgram = read8(f);
 			ri.midiEnable = read8(f);
 		}
-		if (oh.version >= 0x0112) {
+		if (version >= 0x0112) {
 			ri.midiTranspose = read8(f);
 			ri.midiBenderRange = read8(f);
 			ri.midiBaseVolume = read8(f);
