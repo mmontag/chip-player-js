@@ -851,8 +851,14 @@ int _xmp_player_start(struct xmp_context *ctx)
 	f->frame = 0;
 	f->row = 0;
 
-	if (m->xxh->len == 0 || m->xxh->chn == 0)
+	if (m->xxh->len == 0 || m->xxh->chn == 0) {
+		/* set variables to sane state */
+		m->flags &= ~XMP_CTL_LOOP;
+		f->ord = p->xmp_scan_ord = 0;
+		f->row = p->xmp_scan_row = 0;
+		f->end_point = 0;
 		return 0;
+	}
 
 	f->num_rows = m->xxp[m->xxo[f->ord]]->rows;
 
