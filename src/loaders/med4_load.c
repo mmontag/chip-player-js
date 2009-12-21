@@ -296,6 +296,9 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		/* check block end */
 		if (read8(f) != 0xff) {
 			reportv(ctx, 0, "error: module is corrupted\n");
+			TRACK_DEALLOC_ALL(i);
+			PATTERN_DEALLOC_ALL(i);
+			INSTRUMENT_DEALLOC_ALL(m->xxh->ins);
 			return -1;
 		}
 

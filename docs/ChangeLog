@@ -8,6 +8,7 @@ Stable versions
 	- fix Real Tracker patern decoding
 	- fix segfault in modules with 0 orders or 0 channels
 	- fix loading of MED4 module patterns with less than 32 lines
+	- fix memory leak when loading corrupt MED4 files
 
 3.0.0 (20091210): 13 years after the 0.09b release
 	- allow parallel build (R.I.P. 1996 buildsystem)

@@ -577,7 +577,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 	        break;
 	    } else {
 		report("can't load module, possibly corrupted file\n");
-		goto err;
+		i = -1;
+		break;
 	    }
 	}
     }
