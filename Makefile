@@ -1,5 +1,5 @@
 
-VERSION	= 3.0.1-pre
+VERSION	= 3.0.1
 DIST    = xmp-$(VERSION)
 MODULES = "jerry-boleti.xm"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
