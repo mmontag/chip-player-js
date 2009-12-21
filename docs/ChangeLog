@@ -7,6 +7,7 @@ Stable versions
 	- fix tuning of Real Tracker modules
 	- fix Real Tracker patern decoding
 	- fix segfault in modules with 0 orders or 0 channels
+	- fix reading of MED4 patterns with less than 32 lines
 
 3.0.0 (20091210): 13 years after the 0.09b release
 	- allow parallel build (R.I.P. 1996 buildsystem)
