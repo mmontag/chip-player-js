@@ -179,8 +179,10 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (~mask & 0x80000000)
 			continue;
 
+		/* read flags */
 		c = read8(f);
 
+		/* read instrument name */
 		size = read8(f);
 		for (j = 0; j < size; j++)
 			buf[j] = read8(f);
@@ -190,26 +192,20 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		loop_len = 0;
 		m->xxi[i][0].vol = 0x40;
 
-#if 0
-		m->xxs[i].lps    = c & 0x01 ? 0    : read16b(f) << 1;
-		loop_len         = c & 0x02 ? 0    : read16b(f) << 1;
-		m->xxi[i][0].vol = c & 0x20 ? 0x40 : read8(f);
-		m->xxi[i][0].xpo = c & 0x40 ? 0x00 : read8(f);
-#endif
-
 		if ((c & 0x01) == 0)
 			m->xxs[i].lps = read16b(f) << 1;
 		if ((c & 0x02) == 0)
 			loop_len = read16b(f) << 1;
-		if ((c & 0x30) == 0)
+		if ((c & 0x20) == 0)
 			m->xxi[i][0].vol = read8(f);
+		if ((c & 0x40) == 0)
+			m->xxi[i][0].xpo = read8s(f);
 
 		m->xxs[i].lpe = m->xxs[i].lps + loop_len;
 		if (loop_len > 0)
 			m->xxs[i].flg |= WAVE_LOOPING;
 
 		copy_adjust(m->xxih[i].name, buf, 32);
-		//printf("%d = %s\n", i, m->xxih[i].name);
 	}
 
 	m->xxh->pat = read16b(f);
@@ -416,8 +412,8 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (~mask & 0x80000000)
 			continue;
 
-		read16b(f);
-		read16b(f);
+		read16b(f);	/* some flag? 0x202a, 0xfef9, 0x0a0a */
+		read16b(f);	/* 0x0000 */
 		m->xxs[i].len = read16b(f);
 
 		m->xxi[i][0].sid = i;
@@ -434,6 +430,41 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
+
+	read16b(f);	/* unknown */
+
+	/* IFF-like section */
+	while (!feof(f)) {
+		int32 id, size, s2, pos, ver;
+
+		if ((id = read32b(f)) < 0)
+			break;
+
+		if ((size = read32b(f)) < 0)
+			break;
+
+		pos = ftell(f);
+
+		switch (id) {
+		case MAGIC4('M','E','D','V'):
+			ver = read32b(f);
+			reportv(ctx, 2, "MED Version    : %d.%0d\n",
+					(ver & 0xff00) >> 8, ver & 0xff);
+			break;
+		case MAGIC4('A','N','N','O'):
+			/* annotation */
+			s2 = size < 1023 ? size : 1023;
+			fread(buf, 1, s2, f);
+			buf[s2] = 0;
+			reportv(ctx, 2, "Annotation     : %s\n", buf);
+			break;
+		case MAGIC4('H','L','D','C'):
+			/* hold & decay */
+			break;
+		}
+
+		fseek(f, pos + size, SEEK_SET);
+	}
 
 	return 0;
 }
