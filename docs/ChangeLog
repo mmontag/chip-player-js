@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+3.1.0 ():
+	- implement MED4 instrument transposition
+
 3.0.1 (20091221):
 	- better handling of corrupted modules
 	- load Real Tracker RTMM 1.12 modules (tested with odyssey.rtm)
