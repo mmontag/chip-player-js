@@ -90,12 +90,12 @@ void xmp_deinit(xmp_context ctx)
 	xmp_deinit_formats(ctx);
 }
 
-inline int xmp_open_audio(xmp_context ctx)
+int xmp_open_audio(xmp_context ctx)
 {
 	return xmp_drv_open((struct xmp_context *)ctx);
 }
 
-inline void xmp_close_audio(xmp_context ctx)
+void xmp_close_audio(xmp_context ctx)
 {
 	xmp_drv_close((struct xmp_context *)ctx);
 }
@@ -108,7 +108,7 @@ void xmp_set_driver_parameter(struct xmp_options *o, char *s)
 	drv_parm++;
 }
 
-inline void xmp_register_event_callback(xmp_context ctx, void (*cb) (unsigned long))
+void xmp_register_event_callback(xmp_context ctx, void (*cb) (unsigned long))
 {
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 
@@ -168,22 +168,22 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	return 0;
 }
 
-inline int xmp_player_start(xmp_context ctx)
+int xmp_player_start(xmp_context ctx)
 {
 	return _xmp_player_start((struct xmp_context *)ctx);
 }
 
-inline int xmp_player_frame(xmp_context ctx)
+int xmp_player_frame(xmp_context ctx)
 {
 	return _xmp_player_frame((struct xmp_context *)ctx);
 }
 
-inline void xmp_player_end(xmp_context ctx)
+void xmp_player_end(xmp_context ctx)
 {
 	_xmp_player_end((struct xmp_context *)ctx);
 }
 
-inline void xmp_play_buffer(xmp_context ctx)
+void xmp_play_buffer(xmp_context ctx)
 {
 	xmp_drv_bufdump((struct xmp_context *)ctx);
 }
