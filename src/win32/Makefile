@@ -21,7 +21,7 @@ W_OBJS		= $(addprefix $(WIN32_PATH)/,$(WIN32_OBJS))
 
 dsps: src/win32/xmp.dsp src/win32/in_xmp.dsp
 
-src/win32/xmp.dsp: Makefile Makefile.rules src/*/Makefile
+src/win32/xmp.dsp: Makefile Makefile.rules src/*/Makefile src/win32/xmp.dsp.in
 	@echo Generate $@
 	@rm -f $@.tmp
 	@for i in $(OBJS:.o=.c) $(W32DRV_OBJS:.o=.c) $(W_OBJS:.o=.c) $(M_OBJS:.o=.c); do \
@@ -34,7 +34,7 @@ src/win32/xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	@rm -f $@.tmp
 	@unix2dos $@
 
-src/win32/in_xmp.dsp: Makefile Makefile.rules src/*/Makefile
+src/win32/in_xmp.dsp: Makefile Makefile.rules src/*/Makefile src/win32/in_xmp.dsp.in
 	@echo Generate $@
 	@rm -f $@.tmp
 	@for i in $(LOBJS:.lo=.c) $(W32DRV_LOBJS:.lo=.c) $(W_OBJS:.o=.c); do \
