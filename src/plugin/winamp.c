@@ -599,84 +599,86 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		EndDialog(hDlg,TRUE);
 		return 0;
 	case WM_INITDIALOG:
+		int empty_names = 1;
+
 		if (!playing) {
 			ShowWindow(hDlg, SW_HIDE);
 			PostMessage(hDlg, WM_CLOSE, 0, 0);
-		} else {
-			int empty_names = 1;
+			break;
+		}
 
-			xmp_get_module_info(ctx, &mi);
-			// Set module title
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_TITLE), mi.name);
-			// Set module type
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_TYPE), mi.type);
-			// Calculate estimated time
-		    t = _xmp_scan_module((struct xmp_context *)ctx);
-			snprintf(tmpbuf, 256, "%dm %02ds\n",
-				(t + 500) / 60000, ((t + 500) / 1000) % 60);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_EST), tmpbuf);
-			// Module length
-			snprintf(tmpbuf, 256, "%d patterns", mi.len);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_LENGTH), tmpbuf);
-			// Number of channels
-			snprintf(tmpbuf, 256, "%d", mi.chn);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_CHANNELS), tmpbuf);
-			// Number of stored patterns
-			snprintf(tmpbuf, 256, "%d", mi.pat);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_PATTERNS), tmpbuf);
-			// Number of stored samples
-			snprintf(tmpbuf, 256, "%d", mi.smp);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_SAMPLES), tmpbuf);
-			// Number of stored instruments
-			snprintf(tmpbuf, 256, "%d", mi.ins);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_INSTR), tmpbuf);
-			// BPM (TODO: mi.bpm is unsupported atm)
-			snprintf(tmpbuf, 256, "%d", p->m.xxh->bpm);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_BPM), tmpbuf);
-			// Module tempo (TODO: mi.tpo is unsupported atm)
-			snprintf(tmpbuf, 256, "%d", p->m.xxh->tpo);
-			SetWindowText( GetDlgItem(hDlg, IDC_MODULE_TEMPO), tmpbuf);
 
-			lvm = GetDlgItem(hDlg, IDC_SAMPLES);
-			ListView_DeleteAllItems( lvm );
-			// Prepare column headers
-			SetColumn( &column, 0, "Idx", 30, LVCFMT_CENTER );
-			ListView_InsertColumn( lvm, column.iSubItem, &column );
-			SetColumn( &column, 1, "Name", 195, LVCFMT_LEFT );
-			ListView_InsertColumn( lvm, column.iSubItem, &column );
-			SetColumn( &column, 2, "Length", 45, LVCFMT_RIGHT );
-			ListView_InsertColumn( lvm, column.iSubItem, &column );
+		xmp_get_module_info(ctx, &mi);
+		// Set module title
+		SetWindowText(GetDlgItem(hDlg, IDC_MODULE_TITLE), mi.name);
+		// Set module type
+		SetWindowText(GetDlgItem(hDlg, IDC_MODULE_TYPE), mi.type);
+		// Calculate estimated time
+		t = _xmp_scan_module((struct xmp_context *)ctx);
+		snprintf(tmpbuf, 256, "%dm %02ds\n",
+			(t + 500) / 60000, ((t + 500) / 1000) % 60);
+		SetWindowText(GetDlgItem(hDlg, IDC_MODULE_EST), tmpbuf);
+		// Module length
+		snprintf(tmpbuf, 256, "%d patterns", mi.len);
+		SetWindowText(GetDlgItem(hDlg, IDC_MODULE_LENGTH), tmpbuf);
+		// Number of channels
+		snprintf(tmpbuf, 256, "%d", mi.chn);
+		SetWindowText(GetDlgItem(hDlg, IDC_MODULE_CHANNELS), tmpbuf);
+		// Number of stored patterns
+		snprintf(tmpbuf, 256, "%d", mi.pat);
+		SetWindowText( GetDlgItem(hDlg, IDC_MODULE_PATTERNS), tmpbuf);
+		// Number of stored samples
+		snprintf(tmpbuf, 256, "%d", mi.smp);
+		SetWindowText( GetDlgItem(hDlg, IDC_MODULE_SAMPLES), tmpbuf);
+		// Number of stored instruments
+		snprintf(tmpbuf, 256, "%d", mi.ins);
+		SetWindowText( GetDlgItem(hDlg, IDC_MODULE_INSTR), tmpbuf);
+		// BPM (TODO: mi.bpm is unsupported atm)
+		snprintf(tmpbuf, 256, "%d", p->m.xxh->bpm);
+		SetWindowText( GetDlgItem(hDlg, IDC_MODULE_BPM), tmpbuf);
+		// Module tempo (TODO: mi.tpo is unsupported atm)
+		snprintf(tmpbuf, 256, "%d", p->m.xxh->tpo);
+		SetWindowText( GetDlgItem(hDlg, IDC_MODULE_TEMPO), tmpbuf);
 
-			for (i=0; i < mi.ins; i++) {
-				if (p->m.xxih[i].name[0] != 0) { 
-					empty_names = 0; break; 
-				}
+		lvm = GetDlgItem(hDlg, IDC_SAMPLES);
+		ListView_DeleteAllItems( lvm );
+		// Prepare column headers
+		SetColumn( &column, 0, "Idx", 30, LVCFMT_CENTER );
+		ListView_InsertColumn( lvm, column.iSubItem, &column );
+		SetColumn( &column, 1, "Name", 195, LVCFMT_LEFT );
+		ListView_InsertColumn( lvm, column.iSubItem, &column );
+		SetColumn( &column, 2, "Length", 45, LVCFMT_RIGHT );
+		ListView_InsertColumn( lvm, column.iSubItem, &column );
+
+		for (i = 0; i < mi.ins; i++) {
+			if (p->m.xxih[i].name[0] != 0) { 
+				empty_names = 0; break; 
 			}
+		}
 
-			if (!empty_names) {
-				for (i=0; i < mi.ins; i++) {
-					snprintf(tmpbuf, 256, "%d", i+1);
-					SetItem( &item, i, 0, tmpbuf );
-					ListView_InsertItem( lvm, &item );
-					snprintf(tmpbuf, 256, "%s", p->m.xxih[i].name);
-					SetItem( &item, i, 1, tmpbuf );
-					ListView_SetItem( lvm, &item );
-					snprintf(tmpbuf, 256, "%d", p->m.xxs[i].len);
-					SetItem( &item, i, 2, tmpbuf );
-					ListView_SetItem( lvm, &item );
-				}
-			} else {
-				for (i=0; i < mi.smp; i++) {
-					snprintf(tmpbuf, 256, "%d", i+1);
-					SetItem( &item, i, 0, tmpbuf );
-					ListView_InsertItem( lvm, &item );
-					snprintf(tmpbuf, 256, "%s", p->m.xxs[i].name);
-					SetItem( &item, i, 1, tmpbuf );
-					ListView_SetItem( lvm, &item );
-					snprintf(tmpbuf, 256, "%d", p->m.xxs[i].len);
-					SetItem( &item, i, 2, tmpbuf );
-					ListView_SetItem( lvm, &item );
-				}
+		if (!empty_names) {
+			for (i = 0; i < mi.ins; i++) {
+				snprintf(tmpbuf, 256, "%d", i + 1);
+				SetItem(&item, i, 0, tmpbuf);
+				ListView_InsertItem( lvm, &item );
+				snprintf(tmpbuf, 256, "%s", p->m.xxih[i].name);
+				SetItem(&item, i, 1, tmpbuf);
+				ListView_SetItem(lvm, &item);
+				snprintf(tmpbuf, 256, "%d", p->m.xxs[p->m.xxi[i][0].sid].len);
+				SetItem(&item, i, 2, tmpbuf);
+				ListView_SetItem(lvm, &item);
+			}
+		} else {
+			for (i=0; i < mi.smp; i++) {
+				snprintf(tmpbuf, 256, "%d", i + 1);
+				SetItem( &item, i, 0, tmpbuf);
+				ListView_InsertItem(lvm, &item);
+				snprintf(tmpbuf, 256, "%s", p->m.xxs[i].name);
+				SetItem(&item, i, 1, tmpbuf);
+				ListView_SetItem(lvm, &item);
+				snprintf(tmpbuf, 256, "%d", p->m.xxs[p->m.xxi[i][0].sid].len);
+				SetItem(&item, i, 2, tmpbuf);
+				ListView_SetItem(lvm, &item);
 			}
 		}
 		break;
