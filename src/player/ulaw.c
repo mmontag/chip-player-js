@@ -16,7 +16,7 @@
  * Copyright (C) 1989 by Rich Gopstein and Harris Corporation
  */
 
-inline int ulaw_encode (register int c)
+int ulaw_encode (register int c)
 {
     register int mask;
 
