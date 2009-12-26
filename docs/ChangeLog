@@ -3,6 +3,7 @@ Stable versions
 
 3.1.0 ():
 	- implement MED4 instrument transposition
+	- fix build with MSVC++ 2008
 
 3.0.1 (20091221):
 	- better handling of corrupted modules

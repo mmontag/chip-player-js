@@ -32,6 +32,7 @@ src/win32/xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	done
 	@sed -e 's/@VERSION@/$(VERSION)/g;/@SOURCES@/{r $@.tmp' -e 'd' -e '}' < $@.in > $@
 	@rm -f $@.tmp
+	@unix2dos $@
 
 src/win32/in_xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	@echo Generate $@
@@ -44,4 +45,5 @@ src/win32/in_xmp.dsp: Makefile Makefile.rules src/*/Makefile
 	done
 	@sed -e 's/@VERSION@/$(VERSION)/g;/@SOURCES@/{r $@.tmp' -e 'd' -e '}' < $@.in > $@
 	@rm -f $@.tmp
+	@unix2dos $@
 

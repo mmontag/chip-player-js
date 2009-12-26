@@ -6,6 +6,11 @@
 #define __AMIGA__
 #endif
 
+/* MSVC++ 2008 has problems with inline */
+#ifdef _MSC_VER
+#define inline __inline
+#endif
+
 /*
  * Sat, 15 Sep 2007 10:39:41 -0600
  * Reported by Jon Rafkind <workmin@ccs.neu.edu>
