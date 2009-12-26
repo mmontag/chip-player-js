@@ -518,8 +518,9 @@ int main(int argc, char **argv)
     xmp_register_event_callback(ctx, process_echoback);
 
     if (opt->verbosity) {
-	fprintf(stderr, "Extended Module Player " VERSION "\n"
-	"Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n");
+	fprintf(stderr, "Extended Module Player %s\n", VERSION);
+	fprintf(stderr, "Copyright (C) 1996-2009 Claudio Matsuoka "
+						"and Hipolito Carraro Jr\n");
     }
 
     if (probeonly || (opt->verbosity)) {

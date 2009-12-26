@@ -23,7 +23,7 @@
 // Additional definitions needed by MSVC 9.0 
 #if _MSC_VER > 0
 #define inline	__inline
-#define fileno	__fileno
+#define fileno	_fileno
 #else
 #define write        _write
 #endif
