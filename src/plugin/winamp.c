@@ -321,7 +321,7 @@ static void init()
 	get_inifile(inifile);
 
 	CFGREADINT(mixing_freq, 44100);
-	CFGREADINT(amplify, 1);
+	CFGREADINT(amplify, 0);
 	CFGREADINT(loop, 0);
 	CFGREADINT(fixloops, 0);
 	CFGREADINT(force_mono, 0);
@@ -446,7 +446,7 @@ static DWORD WINAPI __stdcall play_loop(void *x)
 	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
 	int ssize = opt->resol / 8;
 	int t, todo;
-	void *data;
+	char *data;
 	int size;
 
 	xmp_player_start(ctx);
