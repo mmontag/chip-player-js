@@ -102,8 +102,7 @@ static void list_wrap(char *s, int l, int r, int v)
 
 static void copyright_header()
 {
-    printf("Extended Module Player %s\n", VERSION);
-    printf(
+    printf("Extended Module Player " VERSION "\n"
 "Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n"
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1988 Tammo Hinrichs,\n"
 "(C) 1989 Rich Gopstein and Harris Corporation, (C) 1997 Bert Jahn, (C) 1998\n"
@@ -411,7 +410,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    opt->flags |= XMP_CTL_VBLANK;
 	    break;
 	case 'V':
-	    printf("Extended Module Player %s\n", VERSION);
+	    puts("Extended Module Player " VERSION);
 	    exit(0);
 	case 'v':
 	    opt->verbosity++;
