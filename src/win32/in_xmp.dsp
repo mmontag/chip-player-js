@@ -326,6 +326,10 @@ SOURCE=..\loaders\gal4_load.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\mfp_load.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
 # Begin Source File
