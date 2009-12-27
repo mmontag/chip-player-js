@@ -106,6 +106,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(amd);
 	REG_LOADER(rad);
 	REG_LOADER(hsc);
+	REG_LOADER(mfp);
 	REG_LOADER(alm);
 
 	pw_loader.enable = 1;
