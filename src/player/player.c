@@ -842,9 +842,6 @@ int _xmp_player_start(struct xmp_context *ctx)
 	struct flow_control *f = &p->flow;
 	int ret;
 
-	if (m->xxh->len == 0 || m->xxh->chn == 0)
-		return 0;
-
 	if (p->event_callback == NULL)
 		p->event_callback = dummy;
 
@@ -853,6 +850,16 @@ int _xmp_player_start(struct xmp_context *ctx)
 	p->pos = f->ord = o->start;
 	f->frame = 0;
 	f->row = 0;
+
+	if (m->xxh->len == 0 || m->xxh->chn == 0) {
+		/* set variables to sane state */
+		m->flags &= ~XMP_CTL_LOOP;
+		f->ord = p->xmp_scan_ord = 0;
+		f->row = p->xmp_scan_row = 0;
+		f->end_point = 0;
+		return 0;
+	}
+
 	f->num_rows = m->xxp[m->xxo[f->ord]]->rows;
 
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
@@ -1042,17 +1049,23 @@ next_order:
 void _xmp_player_end(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	struct flow_control *f = &p->flow;
 
 	xmp_drv_echoback(ctx, XMP_ECHO_END);
+
 	while (xmp_drv_getmsg(ctx) != XMP_ECHO_END)
 		xmp_drv_bufdump(ctx);
+
 	xmp_drv_stoptimer(ctx);
+	xmp_drv_off(ctx);
+
+	if (m->xxh->len == 0 || m->xxh->chn == 0)
+                return;
 
 	free(p->xc_data);
 	free(f->loop_start);
 	free(f->loop_stack);
 	free(p->fetch_ctl);
 
-	xmp_drv_off(ctx);
 }

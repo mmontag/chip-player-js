@@ -20,7 +20,7 @@
 #include "load.h"
 
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
-
+#undef MED4_DEBUG
 
 static int med4_test(FILE *, char *, const int);
 static int med4_load (struct xmp_context *, FILE *, const int);
@@ -179,8 +179,10 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (~mask & 0x80000000)
 			continue;
 
+		/* read flags */
 		c = read8(f);
 
+		/* read instrument name */
 		size = read8(f);
 		for (j = 0; j < size; j++)
 			buf[j] = read8(f);
@@ -190,26 +192,20 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		loop_len = 0;
 		m->xxi[i][0].vol = 0x40;
 
-#if 0
-		m->xxs[i].lps    = c & 0x01 ? 0    : read16b(f) << 1;
-		loop_len         = c & 0x02 ? 0    : read16b(f) << 1;
-		m->xxi[i][0].vol = c & 0x20 ? 0x40 : read8(f);
-		m->xxi[i][0].xpo = c & 0x40 ? 0x00 : read8(f);
-#endif
-
 		if ((c & 0x01) == 0)
 			m->xxs[i].lps = read16b(f) << 1;
 		if ((c & 0x02) == 0)
 			loop_len = read16b(f) << 1;
-		if ((c & 0x30) == 0)
+		if ((c & 0x20) == 0)
 			m->xxi[i][0].vol = read8(f);
+		if ((c & 0x40) == 0)
+			m->xxi[i][0].xpo = read8s(f);
 
 		m->xxs[i].lpe = m->xxs[i].lps + loop_len;
 		if (loop_len > 0)
 			m->xxs[i].flg |= WAVE_LOOPING;
 
 		copy_adjust(m->xxih[i].name, buf, 32);
-		//printf("%d = %s\n", i, m->xxih[i].name);
 	}
 
 	m->xxh->pat = read16b(f);
@@ -258,8 +254,10 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 ctl, chmsk, chn, rows;
 		uint32 linemsk0, fxmsk0, linemsk1, fxmsk1, x;
 
-		/*printf("\n===== PATTERN %d =====\n", i);
-		printf("offset = %lx\n", ftell(f));*/
+#ifdef MED4_DEBUG
+		printf("\n===== PATTERN %d =====\n", i);
+		printf("offset = %lx\n", ftell(f));
+#endif
 
 		size = read8(f);	/* pattern control block */
 		chn = read8(f);
@@ -273,10 +271,14 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		linemsk0 = ctl & 0x80 ? ~0 : ctl & 0x40 ? 0 : read32b(f);
 		fxmsk0   = ctl & 0x20 ? ~0 : ctl & 0x10 ? 0 : read32b(f);
-		linemsk1 = ctl & 0x08 ? ~0 : ctl & 0x04 ? 0 : read32b(f);
-		fxmsk1   = ctl & 0x02 ? ~0 : ctl & 0x01 ? 0 : read32b(f);
 
-		/*printf("size = %02x\n", size);
+		if (rows > 32) {
+			linemsk1=ctl & 0x08 ? ~0 : ctl & 0x04 ? 0 : read32b(f);
+			fxmsk1  =ctl & 0x02 ? ~0 : ctl & 0x01 ? 0 : read32b(f);
+		}
+
+#ifdef MED4_DEBUG
+		printf("size = %02x\n", size);
 		printf("chn  = %01x\n", chn);
 		printf("rows = %01x\n", rows);
 		printf("plen = %04x\n", plen);
@@ -284,10 +286,17 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		printf("linemsk0 = %08x\n", linemsk0);
 		printf("fxmsk0   = %08x\n", fxmsk0);
 		printf("linemsk1 = %08x\n", linemsk1);
-		printf("fxmsk1   = %08x\n", fxmsk1);*/
+		printf("fxmsk1   = %08x\n", fxmsk1);
+#endif
 
-		x = read8(f);		/* 0xff */
-		//printf("blk end  = %02x\n\n", x);
+		/* check block end */
+		if (read8(f) != 0xff) {
+			reportv(ctx, 0, "error: module is corrupted\n");
+			TRACK_DEALLOC_ALL(i);
+			PATTERN_DEALLOC_ALL(i);
+			INSTRUMENT_DEALLOC_ALL(m->xxh->ins);
+			return -1;
+		}
 
 		read4_ctl = 0;
 
@@ -321,7 +330,8 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 
-			/*printf("%03d ", j);
+#ifdef MED4_DEBUG
+			printf("%03d ", j);
 			for (k = 0; k < 4; k++) {
 				event = &EVENT(i, k, j);
 				if (event->note)
@@ -331,7 +341,8 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 				printf(" %1x%1x%02x ",
 					event->ins, event->fxt, event->fxp);
 			}
-			printf("\n");*/
+			printf("\n");
+#endif
 		}
 
 		for (j = 32; j < 64; j++, linemsk1 <<= 1, fxmsk1 <<= 1) {
@@ -364,7 +375,8 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 
-			/*printf("%03d ", j);
+#ifdef MED4_DEBUG
+			printf("%03d ", j);
 			for (k = 0; k < 4; k++) {
 				event = &EVENT(i, k, j);
 				if (event->note)
@@ -374,7 +386,8 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 				printf(" %1x%1x%02x ",
 					event->ins, event->fxt, event->fxp);
 			}
-			printf("\n");*/
+			printf("\n");
+#endif
 		}
 
 		reportv(ctx, 0, ".");
@@ -390,15 +403,17 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	read16b(f);
 
-	//printf("instrument mask: %08x\n", mask);
+#ifdef MED4_DEBUG
+	printf("instrument mask: %08x\n", mask);
+#endif
 
 	mask <<= 1;	/* no instrument #0 */
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		if (~mask & 0x80000000)
 			continue;
 
-		read16b(f);
-		read16b(f);
+		read16b(f);	/* some flag? 0x202a, 0xfef9, 0x0a0a */
+		read16b(f);	/* 0x0000 */
 		m->xxs[i].len = read16b(f);
 
 		m->xxi[i][0].sid = i;
@@ -415,6 +430,41 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
+
+	read16b(f);	/* unknown */
+
+	/* IFF-like section */
+	while (!feof(f)) {
+		int32 id, size, s2, pos, ver;
+
+		if ((id = read32b(f)) < 0)
+			break;
+
+		if ((size = read32b(f)) < 0)
+			break;
+
+		pos = ftell(f);
+
+		switch (id) {
+		case MAGIC4('M','E','D','V'):
+			ver = read32b(f);
+			reportv(ctx, 2, "MED Version    : %d.%0d\n",
+					(ver & 0xff00) >> 8, ver & 0xff);
+			break;
+		case MAGIC4('A','N','N','O'):
+			/* annotation */
+			s2 = size < 1023 ? size : 1023;
+			fread(buf, 1, s2, f);
+			buf[s2] = 0;
+			reportv(ctx, 2, "Annotation     : %s\n", buf);
+			break;
+		case MAGIC4('H','L','D','C'):
+			/* hold & decay */
+			break;
+		}
+
+		fseek(f, pos + size, SEEK_SET);
+	}
 
 	return 0;
 }

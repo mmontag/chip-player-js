@@ -18,7 +18,7 @@ inline uint8 read8(FILE *f)
 	return (uint8)fgetc(f);
 }
 
-inline int8 read8s(FILE *f)
+int8 read8s(FILE *f)
 {
 	return (int8)fgetc(f);
 }

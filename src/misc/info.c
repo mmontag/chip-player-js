@@ -16,7 +16,7 @@
 extern struct xmp_fmt_info *__fmt_head;
 
 
-inline struct xmp_module_info *xmp_get_module_info(xmp_context ctx, struct xmp_module_info *i)
+struct xmp_module_info *xmp_get_module_info(xmp_context ctx, struct xmp_module_info *i)
 {
     struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_mod_context *m = &p->m;
@@ -35,7 +35,7 @@ inline struct xmp_module_info *xmp_get_module_info(xmp_context ctx, struct xmp_m
 }
 
 
-inline char *xmp_get_driver_description(xmp_context ctx)
+char *xmp_get_driver_description(xmp_context ctx)
 {
     struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
 
@@ -43,13 +43,13 @@ inline char *xmp_get_driver_description(xmp_context ctx)
 }
 
 
-inline struct xmp_fmt_info *xmp_get_fmt_info(struct xmp_fmt_info **x)
+struct xmp_fmt_info *xmp_get_fmt_info(struct xmp_fmt_info **x)
 {
     return *x = __fmt_head;
 }
 
 
-inline struct xmp_drv_info *xmp_get_drv_info(struct xmp_drv_info **x)
+struct xmp_drv_info *xmp_get_drv_info(struct xmp_drv_info **x)
 {
     return *x = xmp_drv_array();		/* **** H:FIXME **** */
 }

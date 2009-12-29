@@ -577,7 +577,7 @@ int xmp_drv_cstat(struct xmp_context *ctx, int chn)
 }
 
 
-inline void xmp_drv_echoback(struct xmp_context *ctx, int msg)
+void xmp_drv_echoback(struct xmp_context *ctx, int msg)
 {
     struct xmp_driver_context *d = &ctx->d;
 
@@ -585,7 +585,7 @@ inline void xmp_drv_echoback(struct xmp_context *ctx, int msg)
 }
 
 
-inline int xmp_drv_getmsg(struct xmp_context *ctx)
+int xmp_drv_getmsg(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
@@ -593,7 +593,7 @@ inline int xmp_drv_getmsg(struct xmp_context *ctx)
 }
 
 
-inline void xmp_drv_bufdump(struct xmp_context *ctx)
+void xmp_drv_bufdump(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     int i = xmp_smix_softmixer(ctx);
@@ -602,7 +602,7 @@ inline void xmp_drv_bufdump(struct xmp_context *ctx)
 }
 
 
-inline void xmp_drv_starttimer(struct xmp_context *ctx)
+void xmp_drv_starttimer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
@@ -639,7 +639,7 @@ double xmp_drv_sync(struct xmp_context *ctx, double step)
 }
 
 
-inline void xmp_drv_bufwipe(struct xmp_context *ctx)
+void xmp_drv_bufwipe(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
@@ -886,7 +886,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 }
 
 
-inline struct xmp_drv_info *xmp_drv_array()
+struct xmp_drv_info *xmp_drv_array()
 {
     return drv_array;
 }

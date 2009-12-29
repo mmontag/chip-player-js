@@ -78,4 +78,51 @@ extern uint8 ord_xlat[];
     } \
 } while (0)
 
+#define PATTERN_INIT() do { \
+    m->xxt = calloc(sizeof (struct xxm_track *), m->xxh->trk); \
+    m->xxp = calloc(sizeof (struct xxm_pattern *), m->xxh->pat + 1); \
+} while (0)
+
+#define PATTERN_ALLOC(x) do { \
+    m->xxp[x] = calloc(1, sizeof (struct xxm_pattern) + \
+	sizeof (struct xxm_trackinfo) * (m->xxh->chn - 1)); \
+} while (0)
+
+#define TRACK_ALLOC(i) do { \
+    int j; \
+    for (j = 0; j < m->xxh->chn; j++) { \
+	m->xxp[i]->info[j].index = i * m->xxh->chn + j; \
+	m->xxt[i * m->xxh->chn + j] = calloc (sizeof (struct xxm_track) + \
+	    sizeof (struct xxm_event) * m->xxp[i]->rows, 1); \
+	m->xxt[i * m->xxh->chn + j]->rows = m->xxp[i]->rows; \
+    } \
+} while (0)
+
+#define INSTRUMENT_DEALLOC_ALL(i) do { \
+    int k; \
+    for (k = (i) - 1; k >= 0; k--) free(m->xxi[k]); \
+    free(m->xxfe); \
+    free(m->xxpe); \
+    free(m->xxae); \
+    if (m->xxh->smp) free(m->xxs); \
+    free(m->xxi); \
+    free(m->xxim); \
+    free(m->xxih); \
+} while (0)
+
+#define PATTERN_DEALLOC_ALL(x) do { \
+    int k; \
+    for (k = x; k >= 0; k--) free(m->xxp[k]); \
+    free(m->xxp); \
+} while (0)
+
+#define TRACK_DEALLOC_ALL(i) do { \
+    int j, k; \
+    for (k = i; k >= 0; k--) { \
+	for (j = 0; j < m->xxh->chn; j++) \
+	    free(m->xxt[k * m->xxh->chn + j]); \
+    } \
+    free(m->xxt); \
+} while (0)
+
 #endif
