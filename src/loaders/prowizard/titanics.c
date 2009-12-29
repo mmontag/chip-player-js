@@ -57,6 +57,14 @@ static int depack_titanics(FILE *in, FILE *out)
 		write16b(out, read16b(in));	/* loop start */
 		write16b(out, read16b(in));	/* loop size */
 	}
+	for (i = 15; i < 31; i++) {		/* only 15 samples */
+		pw_write_zero(out, 22);		/* write name */
+		write16b(out, 0);
+		write8(out, 0);			/* finetune */
+		write8(out, 0x40);		/* volume */
+		write16b(out, 0);		/* loop start */
+		write16b(out, 1);		/* loop size */
+	}
 
 	buf = calloc(1, 2048);
 
@@ -69,7 +77,7 @@ static int depack_titanics(FILE *in, FILE *out)
 	}
 
 	write8(out, pat);		/* patterns */
-	write8(out, 0);			/* restart byte */
+	write8(out, 0x7f);		/* write ntk byte */
 
 	memset(buf, 0, 2048);
 
@@ -90,6 +98,7 @@ static int depack_titanics(FILE *in, FILE *out)
 			max = j;
 	}
 	fwrite(buf, 128, 1, out);
+	write32b(out, PW_MOD_MAGIC);	/* write M.K. */
 
 	/* pattern data */
 	for (i = 0; i <= max; i++) {
