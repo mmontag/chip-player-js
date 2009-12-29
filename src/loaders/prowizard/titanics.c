@@ -142,13 +142,12 @@ static int depack_titanics(FILE *in, FILE *out)
 	free(buf);
 
 	/* sample data */
-#if 0
 	for (i = 0; i < 15; i++) {
-		if (smp_addr[i] != 0)
-			fwrite(&in_data[PW_Start_Address + smp_addr[i]],
-			       smp_size[i], 1, out);
+		if (smp_addr[i] != 0) {
+			fseek(in, smp_addr[i], SEEK_SET);
+			pw_move_data(out, in, smp_size[i]);
+		}
 	}
-#endif
 
 	return 0;
 }
