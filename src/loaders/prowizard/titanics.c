@@ -51,7 +51,10 @@ static int depack_titanics(FILE *in, FILE *out)
 	for (i = 0; i < 15; i++) {		/* only 15 samples */
 		smp_addr[i] = read32b(in);
 		pw_write_zero(out, 22);		/* write name */
-		write16b(out, smp_size[i] = 2 * read16b(in));
+		smp_size[i] = 2 * read16b(in);
+		if (smp_size[i] > 0x7fff)
+			smp_size[i] = 0x7fff;
+		write16b(out, smp_size[i]);	/* sample size */
 		write8(out, read8(in));		/* finetune */
 		write8(out, read8(in));		/* volume */
 		write16b(out, read16b(in));	/* loop start */
@@ -59,7 +62,7 @@ static int depack_titanics(FILE *in, FILE *out)
 	}
 	for (i = 15; i < 31; i++) {		/* only 15 samples */
 		pw_write_zero(out, 22);		/* write name */
-		write16b(out, 0);
+		write16b(out, 0);		/* sample size */
 		write8(out, 0);			/* finetune */
 		write8(out, 0x40);		/* volume */
 		write16b(out, 0);		/* loop start */
@@ -107,7 +110,6 @@ static int depack_titanics(FILE *in, FILE *out)
 		k = 0;
 
 		fseek(in, SEEK_SET, pat_addr_final[i]);
-		//Where = pat_addr_final[i] + PW_Start_Address;
 
 		memset(buf, 0, 2048);
 		do {
