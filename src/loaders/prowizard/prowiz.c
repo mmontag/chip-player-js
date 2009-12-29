@@ -124,6 +124,7 @@ int pw_init()
 	pw_register(&pw_tdd);
 	pw_register(&pw_starpack);
 	pw_register(&pw_gmc);
+	pw_register(&pw_titanics);
 
 	return 0;
 }
