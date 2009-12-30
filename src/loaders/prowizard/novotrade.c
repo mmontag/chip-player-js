@@ -80,8 +80,9 @@ static int depack_ntp(FILE *in, FILE *out)
 	/* pattern data now ... *gee* */
 	for (i = 0; i < npat; i++) {
 		fseek(in, body_addr + 4 + pat_addr[i], SEEK_SET);
+		memset(buf, 0, 1024);
 
-		for (j = 0; j < 1024; j += 4) {
+		for (j = 0; j < 64 * 4; j += 4) {
 			int x = read8(in);
 			int y = read8(in);
 
@@ -104,6 +105,7 @@ static int depack_ntp(FILE *in, FILE *out)
 			buf[j * 4 + 2] = read8(in);
 			buf[j * 4 + 3] = read8(in);
 		}
+		fwrite(buf, 1024, 1, out);
 	}
 	free(buf);
 
