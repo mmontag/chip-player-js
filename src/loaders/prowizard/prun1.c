@@ -93,7 +93,7 @@ static int test_pru1 (uint8 *data, int s)
 {
 	int start = 0;
 
-	PW_REQUEST_DATA (s, 1080);
+	PW_REQUEST_DATA(s, 1080);
 
 	if (data[1080] != 'S' || data[1081] != 'N' ||
 		data[1082] != 'T' || data[1083] != '.')
