@@ -37,10 +37,10 @@ static int depack_pha(FILE *in, FILE *out)
 	int paddr1[128];
 	int paddr2[128];
 	int tmp_ptr, tmp1, tmp2;
-	int Start_Pat_Address;
+	int pat_addr;
 	int psize;
 	int size, ssize = 0;
-	int sdata_Address;
+	int smp_addr;
 	short ocpt[4];
 
 	memset(paddr, 0, 128 * 4);
@@ -152,11 +152,11 @@ restart:
 	}
 
 	memset(pnum, 0, 128);
-	Start_Pat_Address = 999999l;
+	pat_addr = 999999l;
 	for (i = 0; i < 128; i++) {
 		pnum[i] = pnum1[i];
-		if (paddr[i] < Start_Pat_Address)
-			Start_Pat_Address = paddr[i];
+		if (paddr[i] < pat_addr)
+			pat_addr = paddr[i];
 	}
 
 	/* try to get the number of pattern in pattern list */
@@ -180,8 +180,8 @@ restart:
 
 	write32b(out, PW_MOD_MAGIC);		/* ID string */
 
-	sdata_Address = ftell(in);
-	fseek(in, Start_Pat_Address, SEEK_SET);
+	smp_addr = ftell(in);
+	fseek(in, pat_addr, SEEK_SET);
 
 	/* pattern datas */
 	/* read ALL pattern data */
@@ -248,7 +248,7 @@ restart:
 	free(pat);
 
 	/* Sample data */
-	fseek (in, sdata_Address, SEEK_SET);
+	fseek(in, smp_addr, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;
@@ -260,7 +260,7 @@ static int test_pha (uint8 *data, int s)
 	int j, k, l, m, n;
 	int start = 0, ssize;
 
-	PW_REQUEST_DATA (s, 451 + 128 * 4);
+	PW_REQUEST_DATA(s, 451 + 128 * 4);
 
 	if (data[10] != 0x03 || data[11] != 0xc0)
 		return -1;
@@ -269,24 +269,20 @@ static int test_pha (uint8 *data, int s)
 	l = 0;
 	for (j = 0; j < 31; j++) {
 		/* sample size */
-		n = (((data[start + j * 14] << 8) +
-			data[start + j * 14 + 1]) * 2);
+		n = readmem16b(data + start + j * 14) * 2;
 		l += n;
-		/* loop start */
-		m = (((data[start + j * 14 + 4] << 8) +
-			 data[start + j * 14 + 5]) * 2);
 
-		if (data[start + 3 + j * 14] > 0x40)
+		if (data[start + j * 14 + 3] > 0x40)
 			return -1;
+
+		/* loop start */
+		m = readmem16b(data + start + j * 14 + 4) * 2;
 
 		if (m > l)
 			return -1;
 
-		k = (data[start + 8 + j * 14] << 24) +
-			(data[start + 9 + j * 14] << 16) +
-			(data[start + 10 + j * 14] << 8) +
-			data[start + 11 + j * 14];
-		/* k is the address of this sample data */
+		/* address of sample data */
+		k = readmem32b(data + start + j * 14 + 8);
 
 		if (k < 0x3C0)
 			return -1;
@@ -301,10 +297,7 @@ static int test_pha (uint8 *data, int s)
 	l += 960;
 	k = 0;
 	for (j = 0; j < 128; j++) {
-		ssize = (data[start + 448 + j * 4] << 24) +
-			(data[start + 449 + j * 4] << 16) +
-			(data[start + 450 + j * 4] << 8) +
-			data[start + 451 + j * 4];
+		ssize = readmem32b(data + start + 448 + j * 4);
 
 		if (ssize > k)
 			k = ssize;

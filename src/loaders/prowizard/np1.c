@@ -255,8 +255,8 @@ static int test_np1 (uint8 *data, int s)
 	int start = 0, ssize;
 
 	/* size of the pattern table */
-	j = (data[start + 2] << 8) + data[start + 3];
-	if (((j / 2) * 2) != j || j == 0)
+	j = readmem16b(data + start + 2);
+	if (j % 2 || j == 0)
 		return -1;
 
 	/* test nbr of samples */
@@ -268,7 +268,7 @@ static int test_np1 (uint8 *data, int s)
 		return -1;
 	/* l is the number of samples */
 
-	PW_REQUEST_DATA (s, start + 15 + l * 16);
+	PW_REQUEST_DATA(s, start + 15 + l * 16);
 
 	/* test volumes */
 	for (k = 0; k < l; k++) {
@@ -279,16 +279,14 @@ static int test_np1 (uint8 *data, int s)
 	/* test sample sizes */
 	ssize = 0;
 	for (k = 0; k < l; k++) {
-		o = (data[start + k*16 + 12] << 8) + data[start + k*16 + 13];
-		m = (data[start + k*16 + 20] << 8) + data[start + k*16 + 21];
-		n = (data[start + k*16 + 22] << 8) + data[start + k*16 + 23];
-		o *= 2;
-		m *= 2;
+		o = readmem16b(data + start + k * 16 + 12) * 2;
+		m = readmem16b(data + start + k * 16 + 20) * 2;
+		n = readmem16b(data + start + k * 16 + 22);
 
 		if (o > 0xFFFF || m > 0xFFFF || n > 0xFFFF)
 			return -1;
 
-		if ((m + n) > (o + 2))
+		if (m + n > o + 2)
 			return -1;
 
 		if (n != 0 && m == 0)
@@ -300,34 +298,28 @@ static int test_np1 (uint8 *data, int s)
 	if (ssize <= 4)
 		return -1;
 
-	/* small shit to gain some vars */
-	l *= 16;
-	l += 8;
-	l += 4;
+	l = l * 16 + 8 + 4;
 	/* l is the size of the header til the end of sample descriptions */
 
 	/* test pattern table */
 	n = 0;
 	for (k = 0; k < j; k += 2) {
-		m = ((data[start + l + k] << 8) + data[start + l + k + 1]);
-		if (((m / 8) * 8) != m)
+		m = readmem16b(data + start + l + k);
+		if (m % 8)
 			return -1;
 		if (m > n)
 			n = m;
 	}
 
-	l += j;
-	l += n;
-	l += 8;		/* paske on a que l'address du dernier pattern .. */
+	l += j + n + 8;	/* paske on a que l'address du dernier pattern .. */
 	/* l is now the size of the header 'til the end of the track list */
-	/* j is now available for use :) */
 
 	/* test track data size */
-	k = (data[start + 6] << 8) + data[start + 7];
-	if (k < 192 || ((k / 192) * 192) != k)
+	k = readmem16b(data + start + 6);
+	if (k < 192 || k % 192)
 		return -1;
 
-	PW_REQUEST_DATA (s, start + l + k);
+	PW_REQUEST_DATA(s, start + l + k);
 
 	/* test notes */
 	for (m = 0; m < k; m += 3) {

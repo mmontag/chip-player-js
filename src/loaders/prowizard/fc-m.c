@@ -84,7 +84,7 @@ static int test_fcm (uint8 *data, int s)
 	int start = 0;
 	int j;
 
-	PW_REQUEST_DATA (s, 37 + 8 * 31);
+	PW_REQUEST_DATA(s, 37 + 8 * 31);
 
 	/* "FC-M" : ID of FC-M packer */
 	if (data[0] != 'F' || data[1] != 'C' || data[2] != '-' ||

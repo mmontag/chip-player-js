@@ -3,6 +3,9 @@
  * xmp version Copyright (C) 2009 Claudio Matsuoka
  */
 
+/*
+ * Titan Trax vol. 1: http://www.youtube.com/watch?v=blgm0EcPUd8
+ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -32,7 +35,6 @@ static int cmplong(const void *a, const void *b)
 static int depack_titanics(FILE *in, FILE *out)
 {
 	uint8 *buf;
-	uint8 c1;
 	long pat_addr[128];
 	long pat_addr_ord[128];
 	long pat_addr_final[128];
@@ -48,19 +50,17 @@ static int depack_titanics(FILE *in, FILE *out)
 
 	pw_write_zero(out, 20);			/* write title */
 
-	for (i = 0; i < 15; i++) {		/* only 15 samples */
+	for (i = 0; i < 15; i++) {
 		smp_addr[i] = read32b(in);
 		pw_write_zero(out, 22);		/* write name */
-		smp_size[i] = 2 * read16b(in);
-		if (smp_size[i] > 0x7fff)
-			smp_size[i] = 0x7fff;
-		write16b(out, smp_size[i]);	/* sample size */
+		write16b(out, smp_size[i] = read16b(in));
+		smp_size[i] *= 2;
 		write8(out, read8(in));		/* finetune */
 		write8(out, read8(in));		/* volume */
 		write16b(out, read16b(in));	/* loop start */
 		write16b(out, read16b(in));	/* loop size */
 	}
-	for (i = 15; i < 31; i++) {		/* only 15 samples */
+	for (i = 15; i < 31; i++) {
 		pw_write_zero(out, 22);		/* write name */
 		write16b(out, 0);		/* sample size */
 		write8(out, 0);			/* finetune */
@@ -105,36 +105,34 @@ static int depack_titanics(FILE *in, FILE *out)
 
 	/* pattern data */
 	for (i = 0; i <= max; i++) {
-		uint8 x, y;
+		uint8 x, y, c;
+		int note;
 
-		k = 0;
-
-		fseek(in, SEEK_SET, pat_addr_final[i]);
+		fseek(in, pat_addr_final[i], SEEK_SET);
 
 		memset(buf, 0, 2048);
-		do {
-			x = read8(in);
+		x = read8(in);
+
+		for (k = 0; k < 64; ) {			/* row number */
 			y = read8(in);
+			c = (y >> 6) * 4;		/* channel */
 
-			/* k is row nbr */
+			note = y & 0x3f;
 
-			c1 = ((y >> 6) & 0x03) * 4;	/* voice */
-
-			/* no note ... */
-			if ((y & 0x3f) <= 36) {
-				buf[(k * 16) + c1] = ptk_table[y & 0x3f][0];
-				buf[(k * 16) + c1 + 1] = ptk_table[y & 0x3F][1];
+			if (note <= 36) {
+				buf[(k * 16) + c] = ptk_table[note][0];
+				buf[(k * 16) + c + 1] = ptk_table[note][1];
 			}
-			buf[(k * 16) + c1 + 2] = read8(in);
-			buf[(k * 16) + c1 + 3] = read8(in);
+			buf[(k * 16) + c + 2] = read8(in);
+			buf[(k * 16) + c + 3] = read8(in);
 
-			if ((x & 0x7f) != 0)
-				k += x & 0x7f;
-			if (k > 1024) {
-				/*printf ("pat %ld too big\n",i); */
+			if (x & 0x80)
 				break;
-			}
-		} while ((x & 0x80) != 0x80);	/* pattern break it seems */
+
+			/* next event */
+			x = read8(in);
+			k += x & 0x7f;
+		}
 
 		fwrite(&buf[0], 1024, 1, out);
 	}
@@ -145,7 +143,7 @@ static int depack_titanics(FILE *in, FILE *out)
 
 	/* sample data */
 	for (i = 0; i < 15; i++) {
-		if (smp_addr[i] != 0) {
+		if (smp_addr[i]) {
 			fseek(in, smp_addr[i], SEEK_SET);
 			pw_move_data(out, in, smp_size[i]);
 		}
@@ -160,12 +158,7 @@ static int test_titanics(uint8 *data, int s)
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
 
-#if 0
-	if (i < 7)
-		return -1;
-
-	start = i - 7;
-#endif
+	PW_REQUEST_DATA(s, 182);
 
 	/* test samples */
 	n = ssize = 0;
@@ -202,13 +195,12 @@ static int test_titanics(uint8 *data, int s)
 	/* test pattern addresses */
 	o = -1;
 	for (l = k = 0; k < 256; k += 2) {
-		if ((data[start + k + 180] == 0xff)
-				&& (data[start + k + 181] == 0xff)) {
+		if (readmem16b(data + start + k + 180) == 0xffff) {
 			o = 0;
 			break;
 		}
 
-		j = ((data[start + k + 180] * 256) + data[start + k + 181]);
+		j = readmem16b(data + start + k + 180);
 		if (j < 180)
 			return -1;
 

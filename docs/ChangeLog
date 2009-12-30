@@ -5,8 +5,10 @@ Stable versions
 	- implement MED4 instrument transposition
 	- fix build with MSVC++ 2008
 	- fix bogus information in winamp plugin file info display
-	- add Titanics Player prowizard-based format loader
 	- fix Audacious plugin dialog stacking order (by Michael Schwendt)
+	- add Titanics Player prowizard loader
+	- add SKYT Packer prowizard loader
+	- code cleanup and optimizations
 
 3.0.1 (20091221):
 	- better handling of corrupted modules

@@ -82,7 +82,7 @@ static int test_wn(uint8 *data, int s)
 {
 	int start = 0;
 
-	PW_REQUEST_DATA (s, 1082);
+	PW_REQUEST_DATA(s, 1082);
 
 	/* test 1 */
 	if (data[1080] != 'W' || data[1081] !='N')

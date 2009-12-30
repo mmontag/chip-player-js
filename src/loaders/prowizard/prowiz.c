@@ -103,6 +103,7 @@ int pw_init()
 	pw_register(&pw_wn);
 	pw_register(&pw_unic_id);
 	pw_register(&pw_tp3);
+	pw_register(&pw_skyt);
 
 	/* No signature */
 	pw_register(&pw_xann);
