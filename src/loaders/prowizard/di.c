@@ -87,7 +87,7 @@ static int depack_di(FILE * in, FILE * out)
 		paddr[i] = read16b(in);
 
 	for (i = 0; i <= max; i++) {
-		fseek (in, paddr[i], 0);
+		fseek(in, paddr[i], 0);
 		for (k = 0; k < 256; k++) {	/* 256 = 4 voices * 64 rows */
 			memset(ptk_tab, 0, 5);
 			c1 = read8(in);
@@ -150,7 +150,7 @@ static int test_di (uint8 *data, int s)
 #endif
 
 	/* test #2  (number of sample) */
-	k = (data[start] << 8) + data[start + 1];
+	k = readmem16b(data + start);
 	if (k > 31)
 		return -1;
 
@@ -158,14 +158,14 @@ static int test_di (uint8 *data, int s)
 	/* k = number of samples */
 	l = 0;
 	for (j = 0; j < k; j++) {
-		o = (((data[start + 14] << 8) + data[start + 15]) * 2);
-		m = (((data[start + 18] << 8) + data[start + 19]) * 2);
-		n = (((data[start + 20] << 8) + data[start + 21]) * 2);
+		o = readmem16b(data + start + 14) * 2;
+		m = readmem16b(data + start + 18) * 2;
+		n = readmem16b(data + start + 20) * 2;
 
-		if ((o > 0xffff) || (m > 0xffff) || (n > 0xffff))
+		if (o > 0xffff || m > 0xffff || n > 0xffff)
 			return -1;
 
-		if ((m + n) > o)
+		if (m + n > o)
 			return -1;
 
 		if (data[start + 16 + j * 8] > 0x0f)
@@ -183,24 +183,16 @@ static int test_di (uint8 *data, int s)
 	/* test #4 (addresses of pattern in file ... ptk_tableible ?) */
 	/* k is still the number of sample */
 
-	ssize = k;
+	ssize = k * 8 + 2;
 
-	/* j is the address of pattern table now */
-	j = (data[start + 2] << 24) + (data[start + 3] << 16)
-		+ (data[start + 4] << 8) + data[start + 5];
-
-	/* k is the address of the pattern data */
-	k = (data[start + 6] << 24) + (data[start + 7] << 16)
-		+ (data[start + 8] << 8) + data[start + 9];
-
-	/* l is the address of the pattern data */
-	l = (data[start + 10] << 24) + (data[start + 11] << 16)
-		+ (data[start + 12] << 8) + data[start + 13];
+	j = readmem32b(data + start + 2);	/* address of pattern table */
+	k = readmem32b(data + start + 6);	/* address of pattern data */
+	l = readmem32b(data + start + 10);	/* address of sample data */
 
 	if (k <= j || l <= j || l <= k)
 		return -1;
 
-	if ((k - j) > 128)
+	if (k - j > 128)
 		return -1;
 
 #if 0
@@ -209,8 +201,6 @@ static int test_di (uint8 *data, int s)
 #endif
 
 	/* test #4,1 :) */
-	ssize *= 8;
-	ssize += 2;
 	if (j < ssize)
 		return -1;
 
