@@ -6,6 +6,12 @@
  * for more information.
  */
 
+/*
+ * A module packer created by Shaun Southern. Samples are stored in a
+ * separate file. File prefixes are mfp for song and smp for samples. For
+ * more information see http://www.exotica.org.uk/wiki/Magnetic_Fields_Packer
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -63,6 +69,7 @@ static int mfp_load(struct xmp_context *ctx, FILE * f, const int start)
 	char *basename;
 	char modulename[PATH_MAX];
 	FILE *s;
+	int size1, size2;
 
 	LOAD_INIT();
 
@@ -120,6 +127,21 @@ report("\n[%2X] %04x %04x %04x %c V%02x %+d",
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
 	PATTERN_INIT();
+
+	size1 = read16b(f);
+	size2 = read16b(f);
+
+printf("size1 = %d\n", size1);
+printf("size2 = %d\n", size2);
+
+	for (i = 0; i < size1; i++) {
+		for (j = 0; j < 4; j++) {
+			int x = read16b(f);
+			printf("%04x ", x);
+		}
+		printf("\n");
+	}
+
 
 	/* Read and convert patterns */
 	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
