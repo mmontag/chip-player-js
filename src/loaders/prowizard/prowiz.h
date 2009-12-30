@@ -68,6 +68,7 @@ extern struct pw_format pw_mp_noid;
 extern struct pw_format pw_np1;
 extern struct pw_format pw_np2;
 extern struct pw_format pw_np3;
+extern struct pw_format pw_ntp;
 extern struct pw_format pw_p01;
 extern struct pw_format pw_p10c;
 extern struct pw_format pw_p18a;
