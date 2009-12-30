@@ -60,6 +60,7 @@ The current version recognizes the following module formats:
   PP	****+	ProPacker		2.1
   PROM	****+	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
   PRU	****+	ProRunner		1.0, 2.0
+  SKYT  ****+	SKYT Packer		-
   STP	****+	StarTrekker Packer	-
   TIT	****+	Titanics Player		-
   UNIC	****+	Unic Tracker		1.0, 2.0
