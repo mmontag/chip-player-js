@@ -149,11 +149,10 @@ static int test_zen(uint8 *data, int s)
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
 
-	PW_REQUEST_DATA (s, 9 + 16 * 31);
+	PW_REQUEST_DATA(s, 9 + 16 * 31);
 
 	/* test #2 */
-	l = ((data[start] << 24) + (data[start + 1] << 16) +
-		(data[start + 2] << 8) + data[start + 3]);
+	l = readmem32b(data + start);
 	if (l < 502 || l > 2163190L)
 		return -1;
 	/* l is the address of the pattern list */
@@ -164,31 +163,22 @@ static int test_zen(uint8 *data, int s)
 			return -1;
 
 		/* finetune */
-		j = (data[start + 6 + (k * 16)] << 8) +
-			data[start + 7 + (k * 16)];
-		if (((j / 72) * 72) != j)
+		if (readmem16b(data + start + 6 + (k * 16)) % 72)
 			return -1;
 	}
 
 	/* smp sizes .. */
 	n = 0;
 	for (k = 0; k < 31; k++) {
-		o = (data[start + 10 + k * 16] << 8) +
-			data[start + 11 + k * 16];
-		m = (data[start + 12 + k * 16] << 8) +
-			data[start + 13 + k * 16];
-		j = ((data[start + 14 + k * 16] << 24) +
-			(data[start + 15 + k * 16] << 16) +
-			(data[start + 16 + k * 16] << 8) +
-			data[start + 17 + k * 16]);
-		o *= 2;
-		m *= 2;
+		o = readmem16b(data + start + 10 + k * 16) * 2;
+		m = readmem16b(data + start + 12 + k * 16) * 2;
+		j = readmem32b(data + start + 14 + k * 16);
 
 		/* sample size and loop size > 64k ? */
 		if (o > 0xFFFF || m > 0xFFFF)
 			return -1;
 
-		/* sample address < pattern table address ? */
+		/* sample address < pattern table address? */
 		if (j < l)
 			return -1;
 
@@ -214,13 +204,10 @@ static int test_zen(uint8 *data, int s)
 	if (j > 0x7f || j == 0)
 		return -1;
 
-	PW_REQUEST_DATA (s, start + l + j * 4 + 4);
+	PW_REQUEST_DATA(s, start + l + j * 4 + 4);
 
 	/* test if the end of pattern list is $FFFFFFFF */
-	if ((data[start + l + j * 4] != 0xFF) ||
-		(data[start + l + j * 4 + 1] != 0xFF) ||
-		(data[start + l + j * 4 + 2] != 0xFF) ||
-		(data[start + l + j * 4 + 3] != 0xFF))
+	if (readmem32b(data + start + l + j * 4) != 0xffffffff)
 		return -1;
 
 	/* n is the highest address of a sample data */

@@ -6,6 +6,7 @@ Stable versions
 	- fix build with MSVC++ 2008
 	- fix bogus information in winamp plugin file info display
 	- add Titanics Player prowizard-based format loader
+	- code cleanup and optimizations
 
 3.0.1 (20091221):
 	- better handling of corrupted modules
