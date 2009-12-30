@@ -195,6 +195,8 @@ static void aboutbox()
 	}
 
 	about_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_type_hint(GTK_WINDOW(about_window),
+					GDK_WINDOW_TYPE_HINT_DIALOG);
 	gtk_object_set_data(GTK_OBJECT(about_window),
 		"about_window", about_window);
 	gtk_window_set_title(GTK_WINDOW(about_window),"About the XMP Plugin");
@@ -674,7 +676,8 @@ static void configure()
 	}
 
 	xmp_conf_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-
+	gtk_window_set_type_hint(GTK_WINDOW(xmp_conf_window),
+					GDK_WINDOW_TYPE_HINT_DIALOG);
 	gtk_object_set_data(GTK_OBJECT(xmp_conf_window),
 		"xmp_conf_window", xmp_conf_window);
 	gtk_window_set_title(GTK_WINDOW(xmp_conf_window), "XMP Configuration");
