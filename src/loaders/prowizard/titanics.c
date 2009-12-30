@@ -50,7 +50,7 @@ static int depack_titanics(FILE *in, FILE *out)
 
 	pw_write_zero(out, 20);			/* write title */
 
-	for (i = 0; i < 15; i++) {		/* only 15 samples */
+	for (i = 0; i < 15; i++) {
 		smp_addr[i] = read32b(in);
 		pw_write_zero(out, 22);		/* write name */
 		write16b(out, smp_size[i] = read16b(in));
@@ -60,7 +60,7 @@ static int depack_titanics(FILE *in, FILE *out)
 		write16b(out, read16b(in));	/* loop start */
 		write16b(out, read16b(in));	/* loop size */
 	}
-	for (i = 15; i < 31; i++) {		/* only 15 samples */
+	for (i = 15; i < 31; i++) {
 		pw_write_zero(out, 22);		/* write name */
 		write16b(out, 0);		/* sample size */
 		write8(out, 0);			/* finetune */
@@ -158,12 +158,7 @@ static int test_titanics(uint8 *data, int s)
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
 
-#if 0
-	if (i < 7)
-		return -1;
-
-	start = i - 7;
-#endif
+	PW_REQUEST_DATA(s, 182);
 
 	/* test samples */
 	n = ssize = 0;
@@ -200,13 +195,12 @@ static int test_titanics(uint8 *data, int s)
 	/* test pattern addresses */
 	o = -1;
 	for (l = k = 0; k < 256; k += 2) {
-		if ((data[start + k + 180] == 0xff)
-				&& (data[start + k + 181] == 0xff)) {
+		if (readmem16b(data + start + k + 180) == 0xffff) {
 			o = 0;
 			break;
 		}
 
-		j = ((data[start + k + 180] * 256) + data[start + k + 181]);
+		j = readmem16b(data + start + k + 180);
 		if (j < 180)
 			return -1;
 
