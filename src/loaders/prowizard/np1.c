@@ -20,7 +20,7 @@ struct pw_format pw_np1 = {
 	depack_np1
 };
 
-static int depack_np1(FILE * in, FILE * out)
+static int depack_np1(FILE *in, FILE *out)
 {
 	uint8 tmp[1024];
 	uint8 c1, c2, c3, c4;
@@ -107,14 +107,16 @@ static int depack_np1(FILE * in, FILE * out)
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
 			fseek(in, tdata + taddr[i][3 - j], 0);
-			for (k = 0; k < 64 * 16; k += 16) {
+			for (k = 0; k < 64; k++) {
+				int x = k * 16 + j * 4;
+
 				c1 = read8(in);
 				c2 = read8(in);
 				c3 = read8(in);
-				tmp[k + j * 4] = (c1 << 4) & 0x10;
 				c4 = (c1 & 0xfe) / 2;
-				tmp[k + j * 4] |= ptk_table[c4][0];
-				tmp[k + j * 4 + 1] = ptk_table[c4][1];
+
+				tmp[x] = ((c1 << 4) & 0x10) | ptk_table[c4][0];
+				tmp[x + 1] = ptk_table[c4][1];
 
 				switch (c2 & 0x0f) {
 				case 0x08:
@@ -129,12 +131,12 @@ static int depack_np1(FILE * in, FILE * out)
 							(c3 << 4) & 0xf0;
 					break;
 				case 0x0B:
-					c3 = (c3 + 0x04) / 2;
+					c3 = (c3 + 4) / 2;
 					break;
 				}
 
-				tmp[k + j * 4 + 2] = c2;
-				tmp[k + j * 4 + 3] = c3;
+				tmp[x + 2] = c2;
+				tmp[x + 3] = c3;
 			}
 		}
 		fwrite(tmp, 1024, 1, out);
@@ -147,7 +149,7 @@ static int depack_np1(FILE * in, FILE * out)
 	return 0;
 }
 
-static int test_np1(uint8 * data, int s)
+static int test_np1(uint8 *data, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -224,10 +226,6 @@ static int test_np1(uint8 * data, int s)
 		if (data[start + l + m] > 0x49)
 			return -1;
 	}
-
-	/* ssize is the size of the sample data */
-	/* l is the size of the header 'til the track datas */
-	/* k is the size of the track datas */
 
 	return 0;
 }

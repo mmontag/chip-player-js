@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_np3 (uint8 *, int);
-static int depack_np3 (FILE *, FILE *);
+static int test_np3(uint8 *, int);
+static int depack_np3(FILE *, FILE *);
 
 struct pw_format pw_np3 = {
 	"NP3",
@@ -23,8 +23,7 @@ struct pw_format pw_np3 = {
 	depack_np3
 };
 
-
-static int depack_np3 (FILE *in, FILE *out)
+static int depack_np3(FILE * in, FILE * out)
 {
 	uint8 *tmp, *buffer;
 	uint8 c1, c2, c3, c4;
@@ -47,23 +46,23 @@ static int depack_np3 (FILE *in, FILE *out)
 	memset(taddr, 0, 128 * 4 * 4);
 
 	/* get input file size */
-	fseek (in, 0, 2);
-	filesize = ftell (in);
-	fseek (in, 0, 0);
+	fseek(in, 0, 2);
+	filesize = ftell(in);
+	fseek(in, 0, 0);
 
 	/* read but once input file */
-	buffer = (uint8 *) malloc (filesize);
+	buffer = (uint8 *) malloc(filesize);
 	memset(buffer, 0, filesize);
-	fread (buffer, filesize, 1, in);
+	fread(buffer, filesize, 1, in);
 
 	/* read number of sample */
 	nins = ((buffer[0] << 4) & 0xf0) | ((buffer[1] >> 4) & 0x0f);
 
 	/* write title */
-	tmp = (uint8 *) malloc (20);
+	tmp = (uint8 *) malloc(20);
 	memset(tmp, 0, 20);
-	fwrite (tmp, 20, 1, out);
-	free (tmp);
+	fwrite(tmp, 20, 1, out);
+	free(tmp);
 
 	/* read size of pattern list */
 	npos = buffer[3] / 2;
@@ -76,45 +75,45 @@ static int depack_np3 (FILE *in, FILE *out)
 	tsize = (buffer[6] << 8) + buffer[7];
 	/*printf ( "tsize : %ld\n" , tsize ); */
 	/* read sample descriptions */
-	tmp = (uint8 *) malloc (22);
+	tmp = (uint8 *) malloc(22);
 	memset(tmp, 0, 22);
 	OverallCpt = 8;
 	for (i = 0; i < nins; i++) {
 		/* sample name */
-		fwrite (tmp, 22, 1, out);
+		fwrite(tmp, 22, 1, out);
 		/* size */
-		fwrite (&buffer[OverallCpt + 6], 2, 1, out);
+		fwrite(&buffer[OverallCpt + 6], 2, 1, out);
 		ssize += (((buffer[OverallCpt + 6] << 8) +
-		     buffer[OverallCpt + 7]) * 2);
+			   buffer[OverallCpt + 7]) * 2);
 		/* write finetune */
-		fwrite (&buffer[OverallCpt], 1, 1, out);
+		fwrite(&buffer[OverallCpt], 1, 1, out);
 		/* write volume */
-		fwrite (&buffer[OverallCpt + 1], 1, 1, out);
+		fwrite(&buffer[OverallCpt + 1], 1, 1, out);
 		/* write loop start */
-		fwrite (&buffer[OverallCpt + 14], 2, 1, out);
+		fwrite(&buffer[OverallCpt + 14], 2, 1, out);
 		/* write loop size */
-		fwrite (&buffer[OverallCpt + 12], 2, 1, out);
+		fwrite(&buffer[OverallCpt + 12], 2, 1, out);
 		OverallCpt += 16;
 	}
 	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
 	/* fill up to 31 samples */
-	free (tmp);
-	tmp = (uint8 *) malloc (30);
+	free(tmp);
+	tmp = (uint8 *) malloc(30);
 	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	while (i != 31) {
-		fwrite (tmp, 30, 1, out);
+		fwrite(tmp, 30, 1, out);
 		i += 1;
 	}
-	free (tmp);
+	free(tmp);
 
 	/* write size of pattern list */
-	fwrite (&npos, 1, 1, out);
+	fwrite(&npos, 1, 1, out);
 
 	/* write noisetracker byte */
 	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	fwrite(&c1, 1, 1, out);
 
 	/* bypass 2 bytes ... seems always the same as in $02 */
 	/* & bypass 2 other bytes which meaning is beside me */
@@ -124,7 +123,7 @@ static int depack_np3 (FILE *in, FILE *out)
 	pat_max = 0x00;
 	for (i = 0; i < npos; i++) {
 		ptable[i] = ((buffer[OverallCpt + (i * 2)] << 8) +
-			buffer[OverallCpt + (i * 2) + 1]) / 8;
+			     buffer[OverallCpt + (i * 2) + 1]) / 8;
 		/*printf ( "%d," , ptable[i] ); */
 		if (ptable[i] > pat_max)
 			pat_max = ptable[i];
@@ -134,37 +133,37 @@ static int depack_np3 (FILE *in, FILE *out)
 	/*printf ( "Number of pattern : %d\n" , pat_max ); */
 
 	/* write pattern table */
-	fwrite (ptable, 128, 1, out);
+	fwrite(ptable, 128, 1, out);
 
 	/* write ptk's ID */
 	c1 = 'M';
 	c2 = '.';
 	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	fwrite(&c1, 1, 1, out);
+	fwrite(&c2, 1, 1, out);
+	fwrite(&c3, 1, 1, out);
+	fwrite(&c2, 1, 1, out);
 
 	/* read tracks addresses per pattern */
 	/*printf ( "\nOverallCpt : %ld\n" , OverallCpt ); */
 	for (i = 0; i < pat_max; i++) {
 		taddr[i][0] = (buffer[OverallCpt + (i * 8)] << 8) +
-			buffer[OverallCpt + (i * 8) + 1];
+		    buffer[OverallCpt + (i * 8) + 1];
 		/*printf ( "\n%ld - " , taddr[i][0] ); */
 		if (taddr[i][0] > Max_Add)
 			Max_Add = taddr[i][0];
 		taddr[i][1] = (buffer[OverallCpt + (i * 8) + 2] << 8) +
-			buffer[OverallCpt + (i * 8) + 3];
+		    buffer[OverallCpt + (i * 8) + 3];
 		/*printf ( "%ld - " , taddr[i][1] ); */
 		if (taddr[i][1] > Max_Add)
 			Max_Add = taddr[i][1];
 		taddr[i][2] = (buffer[OverallCpt + (i * 8) + 4] << 8) +
-			buffer[OverallCpt + (i * 8) + 5];
+		    buffer[OverallCpt + (i * 8) + 5];
 		/*printf ( "%ld - " , taddr[i][2] ); */
 		if (taddr[i][2] > Max_Add)
 			Max_Add = taddr[i][2];
 		taddr[i][3] = (buffer[OverallCpt + (i * 8) + 6] << 8) +
-			buffer[OverallCpt + (i * 8) + 7];
+		    buffer[OverallCpt + (i * 8) + 7];
 		/*printf ( "%ld" , taddr[i][3] ); */
 		if (taddr[i][3] > Max_Add)
 			Max_Add = taddr[i][3];
@@ -173,7 +172,7 @@ static int depack_np3 (FILE *in, FILE *out)
 	/*printf ( "tdata : %ld\n" , tdata ); */
 
 	/* the track data now ... */
-	tmp = (uint8 *) malloc (1024);
+	tmp = (uint8 *) malloc(1024);
 	for (i = 0; i < pat_max; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
@@ -230,27 +229,26 @@ static int depack_np3 (FILE *in, FILE *out)
 			if (l > saddr)
 				saddr = l;
 		}
-		fwrite (tmp, 1024, 1, out);
+		fwrite(tmp, 1024, 1, out);
 	}
-	free (tmp);
+	free(tmp);
 
 	/* sample data */
 	if (((saddr / 2) * 2) != saddr)
 		saddr += 1;
 	OverallCpt = saddr;
 	/*printf ( "Starting address of sample data : %x\n" , ftell ( in ) ); */
-	fwrite (&buffer[saddr], ssize, 1, out);
+	fwrite(&buffer[saddr], ssize, 1, out);
 
 	return 0;
 }
 
-
-static int test_np3 (uint8 *data, int s)
+static int test_np3(uint8 * data, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
 
-	PW_REQUEST_DATA (s, 10);
+	PW_REQUEST_DATA(s, 10);
 
 	/* size of the pattern table */
 	j = (data[start + 2] << 8) + data[start + 3];
@@ -278,11 +276,11 @@ static int test_np3 (uint8 *data, int s)
 	ssize = 0;
 	for (k = 0; k < l; k++) {
 		o = (data[start + k * 16 + 14] << 8) +
-			data[start + k * 16 + 15];
+		    data[start + k * 16 + 15];
 		m = (data[start + k * 16 + 20] << 8) +
-			data[start + k * 16 + 21];
+		    data[start + k * 16 + 21];
 		n = (data[start + k * 16 + 22] << 8) +
-			data[start + k * 16 + 23];
+		    data[start + k * 16 + 23];
 		o *= 2;
 		m *= 2;
 		n *= 2;
@@ -319,7 +317,7 @@ static int test_np3 (uint8 *data, int s)
 	}
 	l += j;
 	l += n;
-	l += 8;		/* paske on a que l'address du dernier pattern .. */
+	l += 8;			/* paske on a que l'address du dernier pattern .. */
 	/* l is now the size of the header 'til the end of the track list */
 	/* j is now available for use :) */
 	/* n is the highest pattern number (*8) */
@@ -329,7 +327,7 @@ static int test_np3 (uint8 *data, int s)
 	if (k <= 63)
 		return -1;
 
-	PW_REQUEST_DATA (s, start + l + k);
+	PW_REQUEST_DATA(s, start + l + k);
 
 	/* test notes */
 	/* re-calculate the number of sample */
@@ -341,22 +339,22 @@ static int test_np3 (uint8 *data, int s)
 
 		/* si note trop grande et si effet = A */
 		if ((data[start + l + m] > 0x49) ||
-			((data[start + l + m + 1] & 0x0f) == 0x0A))
+		    ((data[start + l + m + 1] & 0x0f) == 0x0A))
 			return -1;
 
 		/* si effet D et arg > 0x40 */
 		if (((data[start + l + m + 1] & 0x0f) == 0x0D)
-			&& (data[start + l + m + 2] > 0x40))
+		    && (data[start + l + m + 2] > 0x40))
 			return -1;
 
 		/* sample nbr > ce qui est defini au debut ? */
 		if ((((data[start + l + m] << 4) & 0x10) |
-			((data[start + l + m + 1] >> 4) & 0x0f)) > j)
+		     ((data[start + l + m + 1] >> 4) & 0x0f)) > j)
 			return -1;
 
 		/* all is empty ?!? ... cannot be ! */
 		if (data[start + l + m] == 0 && data[start + l + m + 1] == 0 &&
-			data[start + l + m + 2] == 0 && m < (k - 3))
+		    data[start + l + m + 2] == 0 && m < (k - 3))
 			return -1;
 
 		m += 2;

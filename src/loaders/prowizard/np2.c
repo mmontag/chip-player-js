@@ -55,12 +55,12 @@ static int depack_np2(FILE *in, FILE *out)
 		pw_write_zero(out, 22);		/* sample name */
 		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, read8(in));			/* finetune */
-		write8(out, read8(in));			/* volume */
+		write8(out, read8(in));		/* finetune */
+		write8(out, read8(in));		/* volume */
 		read32b(in);			/* bypass 4 unknown bytes */
-		size = read16b(in);			/* read loop size */
-		write16b(out, read16b(in));		/* loop start */
-		write16b(out, size);			/* write loop size */
+		size = read16b(in);		/* read loop size */
+		write16b(out, read16b(in));	/* loop start */
+		write16b(out, size);		/* write loop size */
 	}
 
 	/* fill up to 31 samples */
@@ -88,20 +88,16 @@ static int depack_np2(FILE *in, FILE *out)
 
 	/* read tracks addresses per pattern */
 	for (max_addr = i = 0; i < npat; i++) {
-		trk_addr[i][0] = read16b(in);
-		if (trk_addr[i][0] > max_addr)
+		if ((trk_addr[i][0] = read16b(in)) > max_addr)
 			max_addr = trk_addr[i][0];
-		trk_addr[i][1] = read16b(in);
-		if (trk_addr[i][1] > max_addr)
+		if ((trk_addr[i][1] = read16b(in)) > max_addr)
 			max_addr = trk_addr[i][1];
-		trk_addr[i][2] = read16b(in);
-		if (trk_addr[i][2] > max_addr)
+		if ((trk_addr[i][2] = read16b(in)) > max_addr)
 			max_addr = trk_addr[i][2];
-		trk_addr[i][3] = read16b(in);
-		if (trk_addr[i][3] > max_addr)
+		if ((trk_addr[i][3] = read16b(in)) > max_addr)
 			max_addr = trk_addr[i][3];
 	}
-	trk_start = ftell (in);
+	trk_start = ftell(in);
 
 	/* the track data now ... */
 	for (i = 0; i < npat; i++) {
@@ -114,46 +110,35 @@ static int depack_np2(FILE *in, FILE *out)
 				c1 = read8(in);
 				c2 = read8(in);
 				c3 = read8(in);
-
-				tmp[x] = (c1 << 4) & 0x10;
-
 				c4 = (c1 & 0xfe) / 2;
-				tmp[x] |= ptk_table[c4][0];
+
+				tmp[x] = ((c1 << 4) & 0x10) | ptk_table[c4][0];
 				tmp[x + 1] = ptk_table[c4][1];
 
-				if ((c2 & 0x0f) == 0x08)
+				switch (c2 & 0x0f) {
+				case 0x08:
 					c2 &= 0xf0;
-				if ((c2 & 0x0f) == 0x07) {
+					break;
+				case 0x07:
 					c2 = (c2 & 0xf0) + 0x0a;
-					if (c3 > 0x80)
-						c3 = 0x100 - c3;
-					else
-						c3 = (c3 << 4) & 0xf0;
-				}
-				if ((c2 & 0x0f) == 0x06) {
-					if (c3 > 0x80)
-						c3 = 0x100 - c3;
-					else
-						c3 = (c3 << 4) & 0xf0;
-				}
-				if ((c2 & 0x0f) == 0x05) {
-					if (c3 > 0x80)
-						c3 = 0x100 - c3;
-					else
-						c3 = (c3 << 4) & 0xf0;
-				}
-				if ((c2 & 0x0f) == 0x0E) {
-					c3 -= 0x01;
-				}
-				if ((c2 & 0x0f) == 0x0B) {
-					c3 += 0x04;
-					c3 /= 2;
+					/* fall through */
+				case 0x06:
+				case 0x05:
+					c3 = c3 > 0x80 ? 0x100 - c3 :
+							(c3 << 4) & 0xf0;
+					break;
+				case 0x0e:
+					c3--;
+					break;
+				case 0x0B:
+					c3 = (c3 + 4) / 2;
+					break;
 				}
 				tmp[x + 2] = c2;
 				tmp[x + 3] = c3;
 			}
 		}
-		fwrite (tmp, 1024, 1, out);
+		fwrite(tmp, 1024, 1, out);
 	}
 
 	/* sample data */
@@ -164,7 +149,7 @@ static int depack_np2(FILE *in, FILE *out)
 }
 
 
-static int test_np2 (uint8 *data, int s)
+static int test_np2(uint8 *data, int s)
 {
 	int j, k, l, o, m, n;
 	int start, ssize;
