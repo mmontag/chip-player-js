@@ -43,19 +43,19 @@ static int depack_ntp(FILE *in, FILE *out)
 
 	/* instruments */
 	for (i = 0; i < nins; i++) {
-		int x = read8(in) * 30;
+		int x = read8(in) * 30;		/* instrument number */
 
-		buf[x + 25] = read8(in);		/* volume */
+		buf[x + 25] = read8(in);	/* volume */
 
-		size = read16b(in);			/* size */
+		size = read16b(in);		/* size */
 		buf[x + 22] = size >> 8;
 		buf[x + 23] = size & 0xff;
 		ssize += size * 2;
 
-		buf[x + 26] = read8(in);		/* loop start */
+		buf[x + 26] = read8(in);	/* loop start */
 		buf[x + 27] = read8(in);
 
-		buf[x + 28] = read8(in);		/* loop size */
+		buf[x + 28] = read8(in);	/* loop size */
 		buf[x + 29] = read8(in);
 	}
 	fwrite(buf, 930, 1, out);
@@ -82,28 +82,17 @@ static int depack_ntp(FILE *in, FILE *out)
 		fseek(in, body_addr + 4 + pat_addr[i], SEEK_SET);
 		memset(buf, 0, 1024);
 
-		for (j = 0; j < 64 * 4; j += 4) {
-			int x = read8(in);
-			int y = read8(in);
+		for (j = 0; j < 64; j++) {
+			int x = read16b(in);
 
-			if (y == 0x80) {
-				/* end of pattern */
-				break;
-			}
-			if (y == 0x01) {
-				/* unknown -- pattern ends */
-				break;
-			}
-			if (x == 0x00 && y <= 0x70) {
-				/* bypass notes .. guess */
-				j += y;
-				continue;
-			}
-
-			buf[j * 4    ] = x;
-			buf[j * 4 + 1] = y;
-			buf[j * 4 + 2] = read8(in);
-			buf[j * 4 + 3] = read8(in);
+			if (x & 0x0008)
+				fread(buf + j * 16, 1, 4, in);
+			if (x & 0x0004)
+				fread(buf + j * 16 + 4, 1, 4, in);
+			if (x & 0x0002)
+				fread(buf + j * 16 + 8, 1, 4, in);
+			if (x & 0x0001)
+				fread(buf + j * 16 + 12, 1, 4, in);
 		}
 		fwrite(buf, 1024, 1, out);
 	}
