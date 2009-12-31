@@ -56,7 +56,7 @@ static int depack_di(FILE * in, FILE * out)
 		write16b(out, read16b(in));		/* loop size */
 	}
 
-	tmp[29] = 0x01;
+	memset(tmp, 0, 50);
 	for (i = nins; i < 31; i++)
 		fwrite(tmp, 30, 1, out);
 
