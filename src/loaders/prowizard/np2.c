@@ -24,10 +24,8 @@ static int depack_np2(FILE *in, FILE *out)
 {
 	uint8 tmp[1024];
 	uint8 c1, c2, c3, c4;
-	uint8 npos;
-	uint8 nsmp;
 	uint8 ptable[128];
-	uint8 npat;
+	int len, nins, npat;
 	int max_addr;
 	int size, ssize = 0;
 	int tsize;
@@ -38,19 +36,19 @@ static int depack_np2(FILE *in, FILE *out)
 	memset(ptable, 0, 128);
 	memset(trk_addr, 0, 128 * 4 * 4);
 
-	c1 = read8(in);			/* read number of sample */
+	c1 = read8(in);			/* read number of samples */
 	c2 = read8(in);
-	nsmp = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
+	nins = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
 
 	pw_write_zero(out, 20);		/* write title */
 
 	read8(in);
-	npos = read8(in) / 2;		/* read size of pattern list */
+	len = read8(in) / 2;		/* read size of pattern list */
 	read16b(in);			/* 2 unknown bytes */
 	tsize = read16b(in);		/* read track data size */
 
 	/* read sample descriptions */
-	for (i = 0; i < nsmp; i++) {
+	for (i = 0; i < nins; i++) {
 		read32b(in);			/* bypass 4 unknown bytes */
 		pw_write_zero(out, 22);		/* sample name */
 		write16b(out, size = read16b(in));	/* size */
@@ -66,17 +64,17 @@ static int depack_np2(FILE *in, FILE *out)
 	/* fill up to 31 samples */
 	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
-	for (; i != 31; i++)
+	for (; i < 31; i++)
 		fwrite(tmp, 30, 1, out);
 
-	write8(out, npos);		/* write size of pattern list */
+	write8(out, len);		/* write size of pattern list */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
 	fseek(in, 2, SEEK_CUR);		/* always $02? */
 	fseek(in, 2, SEEK_CUR);		/* unknown */
 
 	/* read pattern table */
-	for (npat = i = 0; i < npos; i++) {
+	for (npat = i = 0; i < len; i++) {
 		ptable[i] = read16b(in) / 8;
 		if (ptable[i] > npat)
 			npat = ptable[i];
@@ -103,7 +101,7 @@ static int depack_np2(FILE *in, FILE *out)
 	for (i = 0; i < npat; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
-			fseek (in, trk_start + trk_addr[i][3 - j], SEEK_SET);
+			fseek(in, trk_start + trk_addr[i][3 - j], SEEK_SET);
 			for (k = 0; k < 64; k++) {
 				int x = k * 16 + j * 4;
 
@@ -130,7 +128,7 @@ static int depack_np2(FILE *in, FILE *out)
 				case 0x0e:
 					c3--;
 					break;
-				case 0x0B:
+				case 0x0b:
 					c3 = (c3 + 4) / 2;
 					break;
 				}
