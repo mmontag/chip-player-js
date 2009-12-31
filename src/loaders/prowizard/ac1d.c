@@ -93,27 +93,31 @@ static int depack_AC1D (FILE *in, FILE *out)
 
 				note = ins = fxt = fxp = 0x00;
 				c1 = read8(in);
-				if ((c1 & 0x80) == 0x80) {
+				if (c1 & 0x80) {
 					c4 = c1 & 0x7f;
 					j += (c4 - 1);
 					continue;
 				}
 
 				c2 = read8(in);
-				ins = ((c1 & 0xc0) >> 2);
-				ins |= ((c2 >> 4) & 0x0f);
+				ins = ((c1 & 0xc0) >> 2) | ((c2 >> 4) & 0x0f);
 				note = c1 & 0x3f;
+
 				if (note == 0x3f)
 					note = NO_NOTE;
-				else if (note != 0x00)
+				else if (note)
 					note -= 0x0b;
-				if (note == 0x00)
-					note += 0x01;
+
+				if (note == 0)
+					note++;
+
 				tmp[x] = ins & 0xf0;
+
 				if (note != NO_NOTE) {
 					tmp[x] |= ptk_table[note][0];
 					tmp[x + 1] = ptk_table[note][1];
 				}
+
 				if ((c2 & 0x0f) == 0x07) {
 					fxt = 0x00;
 					fxp = 0x00;
@@ -124,8 +128,7 @@ static int depack_AC1D (FILE *in, FILE *out)
 				c3 = read8(in);
 				fxt = c2 & 0x0f;
 				fxp = c3;
-				tmp[x + 2] = ((ins << 4) & 0xf0);
-				tmp[x + 2] |= fxt;
+				tmp[x + 2] = ((ins << 4) & 0xf0) | fxt;
 				tmp[x + 3] = fxp;
 			}
 		}
