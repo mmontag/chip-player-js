@@ -23,7 +23,7 @@ struct pw_format pw_kris = {
 
 static int depack_kris(FILE *in, FILE *out)
 {
-	uint8 tmp[1025];
+	uint8 tmp[1024];
 	uint8 c3;
 	uint8 npat, max;
 	uint8 ptable[128];
@@ -34,7 +34,7 @@ static int depack_kris(FILE *in, FILE *out)
 	int i, j, k;
 	int size, ssize = 0;
 
-	memset(tmp, 0, 1025);
+	memset(tmp, 0, 1024);
 	memset(ptable, 0, 128);
 	memset(taddr, 0, 128 * 4 * 2);
 	memset(tdata, 0, 512 << 8);
@@ -71,78 +71,58 @@ static int depack_kris(FILE *in, FILE *out)
 			if (taddr[k][j] > maxtaddr)
 				maxtaddr = taddr[k][j];
 		}
+
 		for (j = 0; j < k; j++) {
-			if ((taddr[j][0] == taddr[k][0])
-				&& (taddr[j][1] == taddr[k][1])
-				&& (taddr[j][2] == taddr[k][2])
-				&& (taddr[j][3] == taddr[k][3])) {
+			if (!memcmp(taddr[j], taddr[k], 4)) {
 				ptable[i] = ptable[j];
-				k -= 1;
+				k--;
 				break;
 			}
 		}
-		if (k == j) {
-			ptable[i] = c3;
-			c3 += 0x01;
-		}
+
+		if (k == j)
+			ptable[i] = c3++;
+
 		write8(out, ptable[i]);
 	}
 
-	max = c3 - 0x01;
-
+	max = c3 - 1;
 	write32b(out, PW_MOD_MAGIC);	/* ptk ID */
-
 	read16b(in);			/* bypass two unknown bytes */
 
 	/* Track data ... */
 	for (i = 0; i <= (maxtaddr / 256); i += 1) {
-		memset(tmp, 0, 1025);
+		memset(tmp, 0, 1024);
 		fread(tmp, 256, 1, in);
 
-		for (j = 0; j < 64; j++) {
-			note = tmp[j * 4];
-			ins = tmp[j * 4 + 1];
-			fxt = tmp[j * 4 + 2] & 0x0f;
-			fxp = tmp[j * 4 + 3];
+		for (j = 0; j < 64 * 4; j += 4) {
+			note = tmp[j];
+			ins = tmp[j + 1];
+			fxt = tmp[j + 2] & 0x0f;
+			fxp = tmp[j + 3];
 
-			tdata[i][j * 4] = (ins & 0xf0);
+			tdata[i][j] = ins & 0xf0;
 
 			if (note != 0xa8) {
-				tdata[i][j * 4] |=
-					ptk_table[(note / 2) - 35][0];
-				tdata[i][j * 4 + 1] |=
-					ptk_table[(note / 2) - 35][1];
+				tdata[i][j] |= ptk_table[(note / 2) - 35][0];
+				tdata[i][j + 1] = ptk_table[(note / 2) - 35][1];
 			}
-			tdata[i][j * 4 + 2] = (ins << 4) & 0xf0;
-			tdata[i][j * 4 + 2] |= (fxt & 0x0f);
-			tdata[i][j * 4 + 3] = fxp;
+			tdata[i][j + 2] = ((ins << 4) & 0xf0) | (fxt & 0x0f);
+			tdata[i][j + 3] = fxp;
 		}
 	}
 
 	for (i = 0; i <= max; i++) {
-		memset(tmp, 0, 1025);
-		for (j = 0; j < 64; j++) {
-			tmp[j * 16] = tdata[taddr[i][0] / 256][j * 4];
-			tmp[j * 16 + 1] = tdata[taddr[i][0] / 256][j * 4 + 1];
-			tmp[j * 16 + 2] = tdata[taddr[i][0] / 256][j * 4 + 2];
-			tmp[j * 16 + 3] = tdata[taddr[i][0] / 256][j * 4 + 3];
+		memset(tmp, 0, 1024);
+		for (j = 0; j < 64 * 4; j += 4) {
+			uint8 *p = &tmp[j * 4];
 
-			tmp[j * 16 + 4] = tdata[taddr[i][1] / 256][j * 4];
-			tmp[j * 16 + 5] = tdata[taddr[i][1] / 256][j * 4 + 1];
-			tmp[j * 16 + 6] = tdata[taddr[i][1] / 256][j * 4 + 2];
-			tmp[j * 16 + 7] = tdata[taddr[i][1] / 256][j * 4 + 3];
-
-			tmp[j * 16 + 8] = tdata[taddr[i][2] / 256][j * 4];
-			tmp[j * 16 + 9] = tdata[taddr[i][2] / 256][j * 4 + 1];
-			tmp[j * 16 + 10] = tdata[taddr[i][2] / 256][j * 4 + 2];
-			tmp[j * 16 + 11] = tdata[taddr[i][2] / 256][j * 4 + 3];
-
-			tmp[j * 16 + 12] = tdata[taddr[i][3] / 256][j * 4];
-			tmp[j * 16 + 13] = tdata[taddr[i][3] / 256][j * 4 + 1];
-			tmp[j * 16 + 14] = tdata[taddr[i][3] / 256][j * 4 + 2];
-			tmp[j * 16 + 15] = tdata[taddr[i][3] / 256][j * 4 + 3];
+			memcpy(p, &tdata[taddr[i][0] / 256][j], 4);
+			memcpy(p + 4, &tdata[taddr[i][1] / 256][j], 4);
+			memcpy(p + 8, &tdata[taddr[i][2] / 256][j], 4);
+			memcpy(p + 12, &tdata[taddr[i][3] / 256][j], 4);
 		}
-		fwrite (tmp, 1024, 1, out);
+		fwrite(tmp, 1024, 1, out);
 	}
 
 	/* sample data */
@@ -159,8 +139,7 @@ static int test_kris (uint8 *data, int s)
 	/* test 1 */
 	PW_REQUEST_DATA (s, 1024);
 
-	if (data[952] != 'K' || data[953] != 'R' ||
-		data[954] != 'I' || data[955] != 'S')
+	if (readmem32b(data + 952) != MAGIC4('K','R','I','S'))
 		return -1;
 
 	/* test 2 */
