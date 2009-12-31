@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_np1 (uint8 *, int);
-static int depack_np1 (FILE *, FILE *);
+static int test_np1(uint8 *, int);
+static int depack_np1(FILE *, FILE *);
 
 struct pw_format pw_np1 = {
 	"NP1",
@@ -20,20 +20,18 @@ struct pw_format pw_np1 = {
 	depack_np1
 };
 
-
-static int depack_np1 (FILE *in, FILE *out)
+static int depack_np1(FILE * in, FILE * out)
 {
-	uint8 *tmp;
+	uint8 tmp[1024];
 	uint8 c1, c2, c3, c4;
-	uint8 npos;
+	uint8 len;
 	uint8 nins;
 	uint8 ptable[128];
-	uint8 pat_max = 0x00;
-	int Max_Add = 0;
-	int ssize = 0;
+	uint8 npat = 0x00;
+	int max_addr;
+	int size, ssize = 0;
 	int tsize;
 	int taddr[128][4];
-	int Unknown1;
 	int i = 0, j = 0, k;
 	int tdata;
 
@@ -41,215 +39,115 @@ static int depack_np1 (FILE *in, FILE *out)
 	memset(taddr, 0, 128 * 4 * 4);
 
 	/* read number of sample */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
+	c1 = read8(in);
+	c2 = read8(in);
 	nins = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
-	/*printf ( "Number of sample : %d (%x)\n" , nins , nins ); */
 
 	/* write title */
-	tmp = (uint8 *) malloc (20);
-	memset(tmp, 0, 20);
-	fwrite (tmp, 20, 1, out);
-	free (tmp);
+	pw_write_zero(out, 20);
 
-	/* read size of pattern list */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	npos = c2 / 2;
-	/*printf ( "Size of pattern list : %d\n" , npos ); */
-
-	/* read 2 unknown bytes which size seem to be of some use ... */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	Unknown1 = (c1 << 8) + c2;
-
-	/* read track data size */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	tsize = (c1 << 8) + c2;
-	/*printf ( "tsize : %ld\n" , tsize ); */
+	len = read16b(in) / 2;		/* size of pattern list */
+	read16b(in);			/* 2 unknown bytes */
+	tsize = read16b(in);		/* read track data size */
 
 	/* read sample descriptions */
-	tmp = (uint8 *) malloc (22);
-	memset(tmp, 0, 22);
 	for (i = 0; i < nins; i++) {
-		/* bypass 4 unknown bytes */
-		fseek (in, 4, 1);
-		/* sample name */
-		fwrite (tmp, 22, 1, out);
-		/* size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		ssize += (((c1 << 8) + c2) * 2);
-		/* finetune */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		/* volume */
-		fread (&c1, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		/* bypass 4 unknown bytes */
-		fseek (in, 4, 1);
-		/* read loop size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		/* read loop start */
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		/* write loop start */
-		c4 /= 2;
-		if ((c3 / 2) * 2 != c3) {
-			if (c4 < 0x80)
-				c4 += 0x80;
-			else {
-				c4 -= 0x80;
-				c3 += 0x01;
-			}
-		}
-		c3 /= 2;
-		fwrite (&c3, 1, 1, out);
-		fwrite (&c4, 1, 1, out);
-		/* write loop size */
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		read32b(in);			/* bypass 4 unknown bytes */
+		pw_write_zero(out, 22);		/* sample name */
+		write16b(out, size = read16b(in));	/* sample size */
+		ssize += size * 2;
+		write8(out, read8(in));		/* finetune */
+		write8(out, read8(in));		/* volume */
+		read32b(in);			/* bypass 4 unknown bytes */
+		size = read16b(in);		/* read loop size */
+		write16b(out, read16b(in) / 2);	/* loop start */
+		write16b(out, size);		/* write loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
 	/* fill up to 31 samples */
-	free (tmp);
-	tmp = (uint8 *) malloc (30);
 	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
-	while (i != 31) {
-		fwrite (tmp, 30, 1, out);
-		i += 1;
-	}
-	free (tmp);
+	for (; i < 31; i++)
+		fwrite(tmp, 30, 1, out);
 
-	/* write size of pattern list */
-	fwrite (&npos, 1, 1, out);
+	write8(out, len);		/* write size of pattern list */
+	write8(out, 0x7f);		/* write noisetracker byte */
 
-	/* write noisetracker byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
-
-	/* bypass 2 bytes ... seems always the same as in $02 */
-	fseek (in, 2, 1);
-
-	/* bypass 2 other bytes which meaning is beside me */
-	fseek (in, 2, 1);
+	read16b(in);	/* bypass 2 bytes ... seems always the same as in $02 */
+	read16b(in);	/* bypass 2 other bytes which meaning is beside me */
 
 	/* read pattern table */
-	pat_max = 0x00;
-	for (i = 0; i < npos; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		ptable[i] = ((c1 << 8) + c2) / 8;
-		if (ptable[i] > pat_max)
-			pat_max = ptable[i];
+	npat = 0;
+	for (i = 0; i < len; i++) {
+		ptable[i] = read16b(in);
+		if (ptable[i] > npat)
+			npat = ptable[i];
 	}
-	pat_max += 1;
-	/*printf ( "Number of pattern : %d\n" , pat_max ); */
+	npat++;
 
-	/* write pattern table */
-	fwrite (ptable, 128, 1, out);
-
-	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	fwrite(ptable, 128, 1, out);		/* write pattern table */
+	write32b(out, PW_MOD_MAGIC);		/* write ptk ID */
 
 	/* read tracks addresses per pattern */
-	for (i = 0; i < pat_max; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		taddr[i][0] = (c1 << 8) + c2;
-		if (taddr[i][0] > Max_Add)
-			Max_Add = taddr[i][0];
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		taddr[i][1] = (c1 << 8) + c2;
-		if (taddr[i][1] > Max_Add)
-			Max_Add = taddr[i][1];
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		taddr[i][2] = (c1 << 8) + c2;
-		if (taddr[i][2] > Max_Add)
-			Max_Add = taddr[i][2];
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		taddr[i][3] = (c1 << 8) + c2;
-		if (taddr[i][3] > Max_Add)
-			Max_Add = taddr[i][3];
+	max_addr = 0;
+	for (i = 0; i < npat; i++) {
+		if ((taddr[i][0] = read16b(in)) > max_addr)
+			max_addr = taddr[i][0];
+		if ((taddr[i][1] = read16b(in)) > max_addr)
+			max_addr = taddr[i][1];
+		if ((taddr[i][2] = read16b(in)) > max_addr)
+			max_addr = taddr[i][2];
+		if ((taddr[i][3] = read16b(in)) > max_addr)
+			max_addr = taddr[i][3];
 	}
-	tdata = ftell (in);
+	tdata = ftell(in);
 
 	/* the track data now ... */
-	tmp = (uint8 *) malloc (1024);
-	for (i = 0; i < pat_max; i++) {
+	for (i = 0; i < npat; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
-			fseek (in,
-				tdata +
-				taddr[i][3 - j], 0);
-			for (k = 0; k < 64; k++) {
-				fread (&c1, 1, 1, in);
-				fread (&c2, 1, 1, in);
-				fread (&c3, 1, 1, in);
-				tmp[k * 16 + j * 4] = (c1 << 4) & 0x10;
-				c4 = (c1 & 0xFE) / 2;
-				tmp[k * 16 + j * 4] |= ptk_table[c4][0];
-				tmp[k * 16 + j * 4 + 1] = ptk_table[c4][1];
-				if ((c2 & 0x0f) == 0x08)
+			fseek(in, tdata + taddr[i][3 - j], 0);
+			for (k = 0; k < 64 * 16; k += 16) {
+				c1 = read8(in);
+				c2 = read8(in);
+				c3 = read8(in);
+				tmp[k + j * 4] = (c1 << 4) & 0x10;
+				c4 = (c1 & 0xfe) / 2;
+				tmp[k + j * 4] |= ptk_table[c4][0];
+				tmp[k + j * 4 + 1] = ptk_table[c4][1];
+
+				switch (c2 & 0x0f) {
+				case 0x08:
 					c2 &= 0xf0;
-				if ((c2 & 0x0f) == 0x07) {
-					c2 = (c2 & 0xf0) + 0x0A;
-					if (c3 > 0x80)
-						c3 = 0x100 - c3;
-					else
-						c3 = (c3 << 4) & 0xf0;
+					break;
+				case 0x07:
+					c2 = (c2 & 0xf0) + 0x0a;
+					/* fall through */
+				case 0x06:
+				case 0x05:
+					c3 = c3 > 0x80 ? 0x100 - c3 :
+							(c3 << 4) & 0xf0;
+					break;
+				case 0x0B:
+					c3 = (c3 + 0x04) / 2;
+					break;
 				}
-				if ((c2 & 0x0f) == 0x06) {
-					if (c3 > 0x80)
-						c3 = 0x100 - c3;
-					else
-						c3 = (c3 << 4) & 0xf0;
-				}
-				if ((c2 & 0x0f) == 0x05) {
-					if (c3 > 0x80)
-						c3 = 0x100 - c3;
-					else
-						c3 = (c3 << 4) & 0xf0;
-				}
-				if ((c2 & 0x0f) == 0x0B) {
-					c3 += 0x04;
-					c3 /= 2;
-				}
-				tmp[k * 16 + j * 4 + 2] = c2;
-				tmp[k * 16 + j * 4 + 3] = c3;
+
+				tmp[k + j * 4 + 2] = c2;
+				tmp[k + j * 4 + 3] = c3;
 			}
 		}
-		fwrite (tmp, 1024, 1, out);
+		fwrite(tmp, 1024, 1, out);
 	}
-	free (tmp);
 
 	/* sample data */
-	fseek (in, Max_Add + 192 + tdata, 0);
-	tmp = (uint8 *) malloc (ssize);
-	memset(tmp, 0, ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	fseek(in, max_addr + 192 + tdata, 0);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }
 
-static int test_np1 (uint8 *data, int s)
+static int test_np1(uint8 * data, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -333,4 +231,3 @@ static int test_np1 (uint8 *data, int s)
 
 	return 0;
 }
-
