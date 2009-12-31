@@ -34,7 +34,7 @@ static int cmplong(const void *a, const void *b)
 
 static int depack_titanics(FILE *in, FILE *out)
 {
-	uint8 *buf;
+	uint8 buf[1024];
 	long pat_addr[128];
 	long pat_addr_ord[128];
 	long pat_addr_final[128];
@@ -69,8 +69,6 @@ static int depack_titanics(FILE *in, FILE *out)
 		write16b(out, 1);		/* loop size */
 	}
 
-	buf = calloc(1, 2048);
-
 	/* pattern list */
 	fread(buf, 2, 128, in);
 	for (pat = 0; pat < 128; pat++) {
@@ -82,8 +80,6 @@ static int depack_titanics(FILE *in, FILE *out)
 	write8(out, pat);		/* patterns */
 	write8(out, 0x7f);		/* write ntk byte */
 
-	memset(buf, 0, 2048);
-
 	/* With the help of Xigh :) .. thx */
 	qsort(pat_addr_ord, pat, sizeof(long), cmplong);
 
@@ -92,6 +88,8 @@ static int depack_titanics(FILE *in, FILE *out)
 		while ((pat_addr_ord[i + 1] == pat_addr_ord[i]) && (i < pat))
 			i++;
 	}
+
+	memset(buf, 0, 128);
 
 	/* write pattern list */
 	for (i = 0; i < pat; i++) {
@@ -110,7 +108,7 @@ static int depack_titanics(FILE *in, FILE *out)
 
 		fseek(in, pat_addr_final[i], SEEK_SET);
 
-		memset(buf, 0, 2048);
+		memset(buf, 0, 1024);
 		x = read8(in);
 
 		for (k = 0; k < 64; ) {			/* row number */
@@ -120,11 +118,11 @@ static int depack_titanics(FILE *in, FILE *out)
 			note = y & 0x3f;
 
 			if (note <= 36) {
-				buf[(k * 16) + c] = ptk_table[note][0];
-				buf[(k * 16) + c + 1] = ptk_table[note][1];
+				buf[k * 16 + c] = ptk_table[note][0];
+				buf[k * 16 + c + 1] = ptk_table[note][1];
 			}
-			buf[(k * 16) + c + 2] = read8(in);
-			buf[(k * 16) + c + 3] = read8(in);
+			buf[k * 16 + c + 2] = read8(in);
+			buf[k * 16 + c + 3] = read8(in);
 
 			if (x & 0x80)
 				break;
@@ -136,10 +134,6 @@ static int depack_titanics(FILE *in, FILE *out)
 
 		fwrite(&buf[0], 1024, 1, out);
 	}
-
-	/* Where is now on the first smp */
-
-	free(buf);
 
 	/* sample data */
 	for (i = 0; i < 15; i++) {

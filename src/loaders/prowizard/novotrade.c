@@ -22,7 +22,7 @@ struct pw_format pw_ntp = {
 
 static int depack_ntp(FILE *in, FILE *out)
 {
-	uint8 *buf;
+	uint8 buf[1024];
 	int i, j;
 	int pat_addr[128];
 	short body_addr, smp_addr, nins, len, npat;
@@ -39,11 +39,18 @@ static int depack_ntp(FILE *in, FILE *out)
 	npat = read16b(in);			/* number of patterns stored */
 	smp_addr = read16b(in) + body_addr + 4;	/* get 'SAMP' address */
 
-	buf = calloc(1, 2048);
+	memset(buf, 0, 930);
 
 	/* instruments */
 	for (i = 0; i < nins; i++) {
-		int x = read8(in) * 30;		/* instrument number */
+		int x = read8(in);		/* instrument number */
+
+		if (x > 30) {
+			fseek(in, 7, SEEK_CUR);
+			continue;
+		}
+
+		x *= 30;
 
 		buf[x + 25] = read8(in);	/* volume */
 
@@ -96,7 +103,6 @@ static int depack_ntp(FILE *in, FILE *out)
 		}
 		fwrite(buf, 1024, 1, out);
 	}
-	free(buf);
 
 	/* samples */
 	fseek(in, smp_addr, SEEK_SET);
