@@ -9,6 +9,7 @@ Stable versions
 	- add Titanics Player prowizard loader
 	- add SKYT Packer prowizard loader
 	- add Novotrade Packer prowizard loader
+	- add Hornet Packer prowizard loader
 	- fix empty instruments in Digital Illusions loader
 	- code cleanup and optimizations
 

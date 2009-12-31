@@ -61,6 +61,7 @@ extern struct pw_format pw_fcm;
 extern struct pw_format pw_fchs;
 extern struct pw_format pw_fuzz;
 extern struct pw_format pw_gmc;
+extern struct pw_format pw_hrt;
 extern struct pw_format pw_kris;
 extern struct pw_format pw_ksm;
 extern struct pw_format pw_mp_id;

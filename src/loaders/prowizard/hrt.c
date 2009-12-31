@@ -1,152 +1,112 @@
 /*
- *   Hornet_Packer.c   1997 (c) Asle / ReDoX
- *
- * Converts MODs converted with Hornet packer
- * GCC Hornet_Packer.c -o Hornet_Packer -Wall -O3
- *
-*/
+ * Hornet_Packer.c Copyright (C) 1997 Asle / ReDoX
+ * xmp version Copyright (C) 2009 Claudio Matsuoka
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-void Depack_HRT (FILE * in, FILE * out)
+
+static int test_hrt (uint8 *, int);
+static int depack_hrt (FILE *, FILE *);
+
+struct pw_format pw_hrt = {
+	"HRT",
+	"Hornet Packer",
+	0x00,
+	test_hrt,
+	depack_hrt
+};
+
+static int depack_hrt(FILE *in, FILE *out)
 {
-	uint8 Header[2048];
-	uint8 *tmp;
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
-	uint8 npat = 0x00;
-	uint8 ptable[128];
-	uint8 ptk_table[37][2];
-	uint8 Max = 0x00;
-	long ssize = 0;
-	long i = 0, j = 0;
-	// FILE *in,*out;
+	uint8 buf[1024];
+	uint8 c1, c2, c3, c4;
+	int len, npat;
+	int ssize = 0;
+	int i, j;
 
-	if (Save_Status == BAD)
-		return;
+	memset(buf, 0, 950);
 
-#include "ptktable.h"
+	fread (buf, 950, 1, in);		/* read header */
+	for (i = 0; i < 31; i++)		/* erase addresses */
+		*(uint32 *)(buf + 38 + 30 * i) = 0;
+	fwrite(buf, 950, 1, out);		/* write header */
 
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
+	for (i = 0; i < 31; i++)		/* samples size */
+		ssize += readmem16b(buf + 42 + 30 * i) * 2;
 
-	memset(Header, 0, 2048);
-	memset(ptable, 0, 128);
+	write8(out, len = read8(in));		/* song length */
+	write8(out, read8(in));			/* nst byte */
 
-	/* read header */
-	fread (Header, 950, 1, in);
+	fread(buf, 1, 128, in);			/* pattern list */
 
-	/* empty-ing those adresse values ... */
-	for (i = 0; i < 31; i++) {
-		Header[38 + (30 * i)] = 0x00;
-		Header[38 + (30 * i) + 1] = 0x00;
-		Header[38 + (30 * i) + 2] = 0x00;
-		Header[38 + (30 * i) + 3] = 0x00;
+	npat = 0;				/* number of patterns */
+	for (i = 0; i < 128; i++) {
+		if (buf[i] > npat)
+			npat = buf[i];
 	}
+	npat++;
 
-	/* write header */
-	fwrite (Header, 950, 1, out);
-
-	/* get whole sample size */
-	for (i = 0; i < 31; i++) {
-		ssize +=
-			(((Header[42 + (30 * i)] << 8) + Header[43 +
-					30 * i]) * 2);
-	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
-
-	/* read number of pattern */
-	fread (&npat, 1, 1, in);
-	fwrite (&npat, 1, 1, out);
-	/*printf ( "Size of pattern list : %d\n" , npat ); */
-
-	/* read noisetracker byte and pattern list */
-	memset(Header, 0, 2048);
-	fread (Header, 129, 1, in);
-	fwrite (Header, 129, 1, out);
-
-	/* get number of pattern */
-	Max = 0x00;
-	for (i = 1; i < 129; i++) {
-		if (Header[i] > Max)
-			Max = Header[i];
-	}
-	/*printf ( "Number of pattern : %d\n" , Max ); */
-
-	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, PW_MOD_MAGIC);		/* write ptk ID */
 
 	/* pattern data */
-	fseek (in, 1084, SEEK_SET);
-	for (i = 0; i <= Max; i++) {
+	fseek(in, 1084, SEEK_SET);
+	for (i = 0; i < npat; i++) {
 		for (j = 0; j < 256; j++) {
-			fread (&Header[0], 1, 1, in);
-			fread (&Header[1], 1, 1, in);
-			fread (&Header[2], 1, 1, in);
-			fread (&Header[3], 1, 1, in);
-			Header[0] /= 2;
-			c1 = Header[0] & 0xf0;
-			if (Header[1] == 0x00)
-				c2 = 0x00;
-			else {
-				c1 |= ptk_table[(Header[1] / 2)][0];
-				c2 = ptk_table[(Header[1] / 2)][1];
-			}
-			c3 = (Header[0] << 4) & 0xf0;
-			c3 |= Header[2];
-			c4 = Header[3];
+			buf[0] = read8(in);
+			buf[1] = read8(in);
+			buf[2] = read8(in);
+			buf[3] = read8(in);
 
-			fwrite (&c1, 1, 1, out);
-			fwrite (&c2, 1, 1, out);
-			fwrite (&c3, 1, 1, out);
-			fwrite (&c4, 1, 1, out);
+			buf[0] /= 2;
+			c1 = buf[0] & 0xf0;
+
+			if (buf[1] == 0)
+				c2 = 0;
+			else {
+				c1 |= ptk_table[buf[1] / 2][0];
+				c2 = ptk_table[buf[1] / 2][1];
+			}
+
+			c3 = ((buf[0] << 4) & 0xf0) | buf[2];
+			c4 = buf[3];
+
+			write8(out, c1);
+			write8(out, c2);
+			write8(out, c3);
+			write8(out, c4);
 		}
 	}
-
 
 	/* sample data */
-	tmp = (uint8 *) malloc (ssize);
-	memset(tmp, 0, ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	pw_move_data(out, in, ssize);
 
-	/* crap */
-	Crap ("HRT:Hornet Packer", BAD, BAD, out);
-
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
-#include <string.h>
-#include <stdlib.h>
 
-void testHRT (void)
+static int test_hrt(uint8 *data, int s)
 {
-	/* test 1 */
-	if (i < 1080) {
-		Test = BAD;
-		return;
+	int i;
+	int start = 0;
+
+	PW_REQUEST_DATA(s, 1084);
+
+	if (readmem32b(data + 1080) != MAGIC4('H','R','T','!'))
+		return -1;
+
+	for (i = 0; i < 31; i++) {
+		/* test finetune */
+		if (data[start + 20 + i * 30 + 24] > 0x0f)
+			return -1;
+
+		/* test volume */
+		if (data[start + 20 + i * 30 + 25] > 0x40)
+			return -1;
+		
 	}
 
-	/* test 2 */
-	start = i - 1080;
-	for (j = 0; j < 31; j++) {
-		if (data[45 + j * 30 + start] > 0x40) {
-			Test = BAD;
-			return;
-		}
-	}
-
-	Test = GOOD;
+	return 0;
 }

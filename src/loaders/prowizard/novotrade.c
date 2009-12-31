@@ -1,6 +1,6 @@
 /*
  * NovoTrade.c   Copyright (C) 2007 Asle / ReDoX
- * xmp modifications Copyright (C) 2009 Claudio Matsuoka
+ * xmp version Copyright (C) 2009 Claudio Matsuoka
  */
 
 #include <string.h>

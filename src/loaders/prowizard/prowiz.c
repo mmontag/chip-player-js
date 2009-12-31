@@ -92,9 +92,11 @@ int pw_init()
 	pw_register(&pw_fchs);
 	pw_register(&pw_fcm);
 	pw_register(&pw_fuzz);
+	pw_register(&pw_hrt);
 	pw_register(&pw_kris);
 	pw_register(&pw_ksm);
 	pw_register(&pw_mp_id);
+	pw_register(&pw_ntp);
 	pw_register(&pw_p18a);
 	pw_register(&pw_p10c);
 	pw_register(&pw_pru1);
@@ -104,7 +106,6 @@ int pw_init()
 	pw_register(&pw_unic_id);
 	pw_register(&pw_tp3);
 	pw_register(&pw_skyt);
-	pw_register(&pw_ntp);
 
 	/* No signature */
 	pw_register(&pw_xann);
