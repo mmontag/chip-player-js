@@ -92,13 +92,13 @@ static int depack_ntp(FILE *in, FILE *out)
 		for (j = 0; j < 64; j++) {
 			int x = read16b(in);
 
-			if (x & 0x0008)
-				fread(buf + j * 16, 1, 4, in);
-			if (x & 0x0004)
-				fread(buf + j * 16 + 4, 1, 4, in);
-			if (x & 0x0002)
-				fread(buf + j * 16 + 8, 1, 4, in);
 			if (x & 0x0001)
+				fread(buf + j * 16, 1, 4, in);
+			if (x & 0x0002)
+				fread(buf + j * 16 + 4, 1, 4, in);
+			if (x & 0x0004)
+				fread(buf + j * 16 + 8, 1, 4, in);
+			if (x & 0x0008)
 				fread(buf + j * 16 + 12, 1, 4, in);
 		}
 		fwrite(buf, 1024, 1, out);
