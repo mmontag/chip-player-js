@@ -25,10 +25,7 @@ struct pw_format pw_titanics = {
 /* With the help of Xigh :) .. thx */
 static int cmplong(const void *a, const void *b)
 {
-	long *aa = (long *)a;
-	long *bb = (long *)b;
-
-	return *aa == *bb ? 0 : *aa > *bb ? 1 : -1;
+	return *(int *)a == *(int *)b ? 0 : *(int *)a > *(int *)b ? 1 : -1;
 }
 
 
