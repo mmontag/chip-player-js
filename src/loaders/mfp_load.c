@@ -68,7 +68,7 @@ static int mfp_test(FILE *f, char *t, const int start)
 		if (lps + lsz - 1 > len)
 			return -1;
 
-		if (lsz == 0)
+		if (len > 0 && lsz == 0)
 			return -1;
 	}
 
