@@ -11,6 +11,7 @@ Stable versions
 	- add Novotrade Packer prowizard loader
 	- add Hornet Packer prowizard loader
 	- fix empty instruments in Digital Illusions loader
+	- fix silent Liquid Tracker module bug
 	- add Magnetic Fields Packer loader
 	- code cleanup and optimizations
 

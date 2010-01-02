@@ -478,7 +478,7 @@ next_pattern:
 	m->xxi[i][0].pan = li.pan;
 	m->xxi[i][0].sid = i;
 
-	copy_adjust(m->xxih[i].name, li.name, 32);
+	copy_adjust(m->xxih[i].name, li.name, 31);
 
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d ",
