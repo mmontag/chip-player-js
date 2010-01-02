@@ -59,29 +59,21 @@ static int mfp_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int mfp_load(struct xmp_context *ctx, FILE * f, const int start)
+static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	int i, j;
+	int i, j, k, x, y;
 	struct xxm_event *event;
-	struct stat stat;
-	char *basename;
-	char modulename[PATH_MAX];
+	struct stat st;
+	char smp_filename[PATH_MAX];
 	FILE *s;
 	int size1, size2;
+	int pat_addr, pat_table[128][4];
+	uint8 buf[1024], mod_event[4];
+	int row;
 
 	LOAD_INIT();
-
-#if 0
-	strncpy(modulename, m->filename, PATH_MAX);
-	basename = strtok(modulename, ".");
-
-	afh.speed = read8(f);
-	afh.length = read8(f);
-	afh.restart = read8(f);
-	fread(&afh.order, 128, 1, f);
-#endif
 
 	sprintf(m->type, "Magnetic Fields Packer");
 	MODULE_INFO();
@@ -90,6 +82,8 @@ static int mfp_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	m->xxh->ins = m->xxh->smp = 31;
 	INSTRUMENT_INIT();
+
+	reportv(ctx, 1, "     Len  LBeg LEnd L Vol Fin\n");
 
 	for (i = 0; i < 31; i++) {
 		int loop_size;
@@ -109,10 +103,14 @@ static int mfp_load(struct xmp_context *ctx, FILE * f, const int start)
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 		m->xxih[i].rls = 0xfff;
 
-report("\n[%2X] %04x %04x %04x %c V%02x %+d",
-			i, m->xxs[i].len, m->xxs[i].lps,
-			m->xxs[i].lpe, loop_size > 1 ? 'L' : ' ',
-			m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
+		if (V(1) && m->xxs[i].len > 2) {
+                	report("[%2X] %04x %04x %04x %c V%02x %+d %c\n",
+                       		i, m->xxs[i].len, m->xxs[i].lps,
+                        	m->xxs[i].lpe,
+				loop_size > 1 ? 'L' : ' ',
+                        	m->xxi[i][0].vol, m->xxi[i][0].fin >> 4,
+                        	m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
+		}
 	}
 
 	m->xxh->len = read8(f);
@@ -126,32 +124,41 @@ report("\n[%2X] %04x %04x %04x %c V%02x %+d",
 	m->xxh->pat++;
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
+	/* Read and convert patterns */
+
 	PATTERN_INIT();
 
 	size1 = read16b(f);
 	size2 = read16b(f);
 
-printf("size1 = %d\n", size1);
-printf("size2 = %d\n", size2);
-
-	for (i = 0; i < size1; i++) {
-		for (j = 0; j < 4; j++) {
-			int x = read16b(f);
-			printf("%04x ", x);
-		}
-		printf("\n");
+	for (i = 0; i < size1; i++) {		/* Read pattern table */
+		for (j = 0; j < 4; j++)
+			pat_table[i][j] = read16b(f);
 	}
 
-
-	/* Read and convert patterns */
 	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+
+	pat_addr = ftell(f);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
 		m->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
-		for (j = 0; j < 64 * m->xxh->chn; j++) {
-			event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
+
+		for (j = 0; j < 4; j++) {
+			fseek(f, pat_addr + pat_table[i][j], SEEK_SET);
+
+			fread(buf, 1, 1024, f);
+
+			for (row = k = 0; k < 4; k++) {
+				for (x = 0; x < 4; x++) {
+					for (y = 0; y < 4; y++, row++) {
+						event = &EVENT(i, j, row);
+						memcpy(mod_event, &buf[buf[buf[buf[k] + x] + y] * 2], 4);
+						cvt_pt_event(event, mod_event);
+					}
+				}
+			}
 		}
 		reportv(ctx, 0, ".");
 	}
@@ -160,16 +167,27 @@ printf("size2 = %d\n", size2);
 	/* Read samples */
 	reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
 
+	m->basename[0] = 's';
+	m->basename[1] = 'm';
+	m->basename[2] = 'p';
+	snprintf(smp_filename, PATH_MAX, "%s%s", m->dirname, m->basename);
+	if (stat(smp_filename, &st) < 0) {
+		report("sample file %s is missing!\n", smp_filename);
+		return 0;
+	}
+	if ((s = fopen(smp_filename, "rb")) == NULL) {
+		report("can't open sample file %s!\n", smp_filename);
+		return 0;
+	}
+
 	for (i = 0; i < m->xxh->ins; i++) {
-
-#if 0
-		xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate,
-				  XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-#endif
-
+		xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate, 0,
+				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
+
+	fclose(s);
 
 	m->xxh->flg |= XXM_FLG_MODRNG;
 

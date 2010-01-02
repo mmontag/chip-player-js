@@ -134,6 +134,7 @@ The current version recognizes the following module formats:
   MASI	****	Epic Megagames MASI	epic, sinaria
   GAL5	***	Galaxy Music System 5.0	-
   GAL4	***	Galaxy Music System 4.0	-
+  MFP   ****+	Magnetic Fields Packer	-
   NTP	****+	Novotrade Packer	-
   PSM	****	Protracker Studio	0.01, 1.00
   STIM	****+	Slamtilt		-
