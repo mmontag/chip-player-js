@@ -190,13 +190,20 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Read samples */
 	reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
 
+	/* first check smp.filename */
 	m->basename[0] = 's';
 	m->basename[1] = 'm';
 	m->basename[2] = 'p';
 	snprintf(smp_filename, PATH_MAX, "%s%s", m->dirname, m->basename);
 	if (stat(smp_filename, &st) < 0) {
-		report("sample file %s is missing!\n", smp_filename);
-		return 0;
+		/* handle .set filenames like in Kid Chaos*/
+		char *x;
+		if ((x = strchr(smp_filename, '-')))
+			strcpy(x, ".set");
+		if (stat(smp_filename, &st) < 0) {
+			report("sample file %s is missing!\n", smp_filename);
+			return 0;
+		}
 	}
 	if ((s = fopen(smp_filename, "rb")) == NULL) {
 		report("can't open sample file %s!\n", smp_filename);
