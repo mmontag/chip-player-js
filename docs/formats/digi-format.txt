@@ -1,4 +1,4 @@
-xmp/doc/format/digi_format
+xmp/docs/format/digi_format
 analysed by Claudio Matsuoka <claudio@helllabs.org>
 Sun Feb 21 18:20:32 EST 1999
 

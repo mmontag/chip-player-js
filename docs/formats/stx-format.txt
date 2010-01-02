@@ -1,4 +1,4 @@
-xmp/doc/format/stx_format
+xmp/docs/format/stx_format
 analysed by Claudio Matsuoka <claudio@helllabs.org>
 
 Format: STX

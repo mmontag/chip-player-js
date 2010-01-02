@@ -35,17 +35,13 @@ struct xmp_loader_info mfp_loader = {
 static int mfp_test(FILE *f, char *t, const int start)
 {
 	uint8 buf[384];
-	int i, len, lps, loop_size;
+	int i, len, lps, lsz;
 
 	if (fread(buf, 1, 384, f) < 384)
 		return -1;
 
 	/* check restart byte */
 	if (buf[249] != 0x7f)
-		return -1;
-
-	/* check song length */
-	if (buf[248] > 0x7f)
 		return -1;
 
 	for (i = 0; i < 31; i++) {
@@ -68,13 +64,16 @@ static int mfp_test(FILE *f, char *t, const int start)
 			return -1;
 
 		/* check loop size */
-		loop_size = readmem16b(buf + i * 8 + 6);
-		if (lps + loop_size - 1 > len)
+		lsz = readmem16b(buf + i * 8 + 6);
+		if (lps + lsz - 1 > len)
 			return -1;
 
-		if (loop_size == 0)
+		if (lsz == 0)
 			return -1;
 	}
+
+	if (buf[248] != readmem16b(buf + 378))
+		return -1;
 
 	if (readmem16b(buf + 378) != readmem16b(buf + 380))
 		return -1;
@@ -136,15 +135,21 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->xxh->len = read8(f);
+	m->xxh->len = m->xxh->pat = read8(f);
 	read8(f);		/* restart */
 
+	for (i = 0; i < 128; i++)
+		m->xxo[i] = read8(f);
+
+#if 0
 	for (i = 0; i < 128; i++) {
 		m->xxo[i] = read8(f);
 		if (m->xxo[i] > m->xxh->pat)
 			m->xxh->pat = m->xxo[i];
 	}
 	m->xxh->pat++;
+#endif
+
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
 	/* Read and convert patterns */
@@ -155,8 +160,9 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	size2 = read16b(f);
 
 	for (i = 0; i < size1; i++) {		/* Read pattern table */
-		for (j = 0; j < 4; j++)
+		for (j = 0; j < 4; j++) {
 			pat_table[i][j] = read16b(f);
+		}
 	}
 
 	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);

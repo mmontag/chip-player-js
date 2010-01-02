@@ -1,4 +1,4 @@
-xmp/doc/format/sfx_format
+xmp/docs/format/sfx_format
 analysed by Claudio Matsuoka <claudio@helllabs.org>
 Mon Feb 22 09:29:58 EST 1999
 
