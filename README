@@ -8,14 +8,14 @@
                               \_/     \/|_|    
                 E x t e n d e d   M o d u l e   P l a y e r
 
-			       Version 3.0
+			       Version 3.1
 
 
 OVERVIEW
 
 This is the Extended Module Player, a module player for Unix-like systems
 that runs on Linux with ALSA and OSS, Free/Open/NetBSD, AIX, OS/2, HP-UX,
-MacOS X, SunOS, QNX and Solaris. Xmp plays over 80 mainstream and obscure
+MacOS X, SunOS, QNX and Solaris. Xmp plays over 90 mainstream and obscure
 module formats from Amiga, Atari, Acorn, Apple IIgs and PC.
 
 Many compressed module formats are supported, including popular Unix, DOS
@@ -259,7 +259,7 @@ directly to cmatsuoka@gmail.com.
 
 LICENSE
 
-Extended Module Player (C)1996-2009 Claudio Matsuoka, Hipolito Carraro Jr
+Extended Module Player (C)1996-2010 Claudio Matsuoka, Hipolito Carraro Jr
 AWE-specific portions of oss_seq.c Copyright (C) 1996,1997 Takashi Iwai
 ulaw encoding function Copyright (C) 1989 Rich Gopstein and Harris Corp
 XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn

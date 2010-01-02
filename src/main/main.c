@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2010 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -519,7 +519,7 @@ int main(int argc, char **argv)
 
     if (opt->verbosity) {
 	fprintf(stderr, "Extended Module Player " VERSION "\n"
-	"Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr\n");
+	"Copyright (C) 1996-2010 Claudio Matsuoka and Hipolito Carraro Jr\n");
     }
 
     if (probeonly || (opt->verbosity)) {

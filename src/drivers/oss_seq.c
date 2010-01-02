@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2009 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2010 Claudio Matsuoka and Hipolito Carraro Jr
  * AWE32 support Copyright (C) 1996, 1997 Takashi Iwai
  *
  * This file is part of the Extended Module Player and is distributed
