@@ -34,17 +34,26 @@ struct xmp_loader_info mfp_loader = {
 
 static int mfp_test(FILE *f, char *t, const int start)
 {
-	char buf[378];
-	int i;
+	uint8 buf[384];
+	int i, len, lps, loop_size;
 
-	if (fread(buf, 1, 378, f) < 378)
+	if (fread(buf, 1, 384, f) < 384)
 		return -1;
 
 	/* check restart byte */
 	if (buf[249] != 0x7f)
 		return -1;
 
+	/* check song length */
+	if (buf[248] > 0x7f)
+		return -1;
+
 	for (i = 0; i < 31; i++) {
+		/* check size */
+		len = readmem16b(buf + i * 8);
+		if (len > 0x7fff)
+			return -1;
+
 		/* check finetune */
 		if (buf[i * 8 + 2] & 0xf0)
 			return -1;
@@ -53,8 +62,22 @@ static int mfp_test(FILE *f, char *t, const int start)
 		if (buf[i * 8 + 3] > 0x40)
 			return -1;
 
-		/* check len vs loop start */
+		/* check loop start */
+		lps = readmem16b(buf + i * 8 + 4);
+		if (lps > len)
+			return -1;
+
+		/* check loop size */
+		loop_size = readmem16b(buf + i * 8 + 6);
+		if (lps + loop_size - 1 > len)
+			return -1;
+
+		if (loop_size == 0)
+			return -1;
 	}
+
+	if (readmem16b(buf + 378) != readmem16b(buf + 380))
+		return -1;
 
 	return 0;
 }
