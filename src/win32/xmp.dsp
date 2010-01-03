@@ -398,6 +398,10 @@ SOURCE=..\loaders\prowizard\p60a.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\prowizard\p61a.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\prowizard\pm10c.c
 # End Source File
 # Begin Source File
@@ -459,6 +463,22 @@ SOURCE=..\loaders\prowizard\pp21.c
 # Begin Source File
 
 SOURCE=..\loaders\prowizard\starpack.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\prowizard\titanics.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\prowizard\skyt.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\prowizard\novotrade.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\prowizard\hrt.c
 # End Source File
 # Begin Source File
 
