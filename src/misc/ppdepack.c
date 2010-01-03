@@ -337,7 +337,7 @@ static int ppdepack(uint8 *src, size_t s, FILE *fo)
 }
 
 
-int decrunch_pp (FILE *f, FILE *fo)
+int decrunch_pp(FILE *f, FILE *fo)
 {
     uint8 *packed /*, *unpacked */;
     int plen, unplen;

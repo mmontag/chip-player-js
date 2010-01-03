@@ -105,7 +105,7 @@ static int depack_zen(FILE *in, FILE *out)
 	}
 
 	fwrite(ptable, 128, 1, out);		/* write pattern table */
-	write32b(out, PW_MOD_MAGIC);		/* write ptk's ID */
+	write32b(out, PW_MOD_MAGIC);		/* write ptk ID */
 
 	/* pattern data */
 	/*printf ( "converting pattern datas " ); */

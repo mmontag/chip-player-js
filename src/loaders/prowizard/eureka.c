@@ -20,93 +20,53 @@ struct pw_format pw_eu = {
 	depack_eu
 };
 
-static int depack_eu (FILE * in, FILE * out)
+static int depack_eu(FILE *in, FILE *out)
 {
-	uint8 *tmp;
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
-	uint8 npat = 0x00;
-	uint8 ptable[128];
-	uint8 pat_max = 0x00;
-	long Sample_Start_Address = 0;
-	long ssize = 0;
-	long Track_Address[128][4];
-	long i = 0, j = 0, k;
-
-	memset(ptable, 0, 128);
+	uint8 tmp[1080];
+	uint8 c1;
+	int npat, smp_addr;
+	int ssize = 0;
+	int trk_addr[128][4];
+	int i, j, k;
 
 	/* read header ... same as ptk */
-	tmp = (uint8 *) malloc (1080);
-	memset(tmp, 0, 1080);
-	fread (tmp, 1080, 1, in);
-	fwrite (tmp, 1080, 1, out);
+	fread(tmp, 1080, 1, in);
+	fwrite(tmp, 1080, 1, out);
 
 	/* now, let's sort out that a bit :) */
 	/* first, the whole sample size */
 	for (i = 0; i < 31; i++)
-		ssize +=
-			(((tmp[i * 30 + 42] << 8) + tmp[i * 30 +
-					43]) * 2);
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
-
-	/* next, the size of the pattern list */
-	npat = tmp[950];
-	/*printf ( "Size of pattern list : %d\n" , npat ); */
+		ssize += 2 * readmem16b(tmp + i * 30 + 42);
 
 	/* now, the pattern list .. and the max */
-	pat_max = 0x00;
-	for (i = 0; i < 128; i++) {
-		ptable[i] = tmp[952 + i];
-		if (ptable[i] > pat_max)
-			pat_max = ptable[i];
+	for (npat = i = 0; i < 128; i++) {
+		if (tmp[952 + i] > npat)
+			npat = tmp[952 + i];
 	}
-	pat_max += 1;
-	/*printf ( "Number of patterns : %d\n" , pat_max ); */
-	free (tmp);
+	npat++;
 
-	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-
-
-	/* read sample data address */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	Sample_Start_Address =
-		(c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
-	/*printf ( "Address of sample data : %ld\n" , Sample_Start_Address ); */
+	write32b(out, PW_MOD_MAGIC);		/* write ptk ID */
+	smp_addr = read32b(in);			/* read sample data address */
 
 	/* read tracks addresses */
-	for (i = 0; i < pat_max; i++) {
-		for (j = 0; j < 4; j++) {
-			fread (&c1, 1, 1, in);
-			fread (&c2, 1, 1, in);
-			Track_Address[i][j] = (c1 << 8) + c2;
-		}
+	for (i = 0; i < npat; i++) {
+		for (j = 0; j < 4; j++)
+			trk_addr[i][j] = read16b(in);
 	}
 
 	/* the track data now ... */
-	tmp = (uint8 *) malloc (1024);
-	for (i = 0; i < pat_max; i++) {
+	for (i = 0; i < npat; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
-			fseek (in, Track_Address[i][j], 0);	/* SEEK_SET */
+			fseek(in, trk_addr[i][j], SEEK_SET);
 			for (k = 0; k < 64; k++) {
-				fread (&c1, 1, 1, in);
+				uint8 *x = &tmp[k * 16 + j * 4];
+				c1 = read8(in);
 				if ((c1 & 0xc0) == 0x00) {
-					fread (&c2, 1, 1, in);
-					fread (&c3, 1, 1, in);
-					fread (&c4, 1, 1, in);
-					tmp[k * 16 + j * 4] = c1;
-					tmp[k * 16 + j * 4 + 1] = c2;
-					tmp[k * 16 + j * 4 + 2] = c3;
-					tmp[k * 16 + j * 4 + 3] = c4;
+					*x++ = c1;
+					*x++ = read8(in);
+					*x++ = read8(in);
+					*x++ = read8(in);
 					continue;
 				}
 				if ((c1 & 0xc0) == 0xc0) {
@@ -114,37 +74,24 @@ static int depack_eu (FILE * in, FILE * out)
 					continue;
 				}
 				if ((c1 & 0xc0) == 0x40) {
-					fread (&c2, 1, 1, in);
-					tmp[k * 16 + j * 4 + 2] =
-						c1 & 0x0f;
-					tmp[k * 16 + j * 4 + 3] = c2;
+					x += 2;
+					*x++ = c1 & 0x0f;
+					*x++ = read8(in);
 					continue;
 				}
 				if ((c1 & 0xc0) == 0x80) {
-					fread (&c2, 1, 1, in);
-					fread (&c3, 1, 1, in);
-					tmp[k * 16 + j * 4] = c2;
-					tmp[k * 16 + j * 4 + 1] = c3;
-					tmp[k * 16 + j * 4 + 2] =
-						(c1 << 4) & 0xf0;
+					*x++ = read8(in);
+					*x++ = read8(in);
+					*x++ = (c1 << 4) & 0xf0;
 					continue;
 				}
 			}
 		}
-		fwrite (tmp, 1024, 1, out);
-		/*printf ( "+" ); */
+		fwrite(tmp, 1024, 1, out);
 	}
-	free (tmp);
 
-	/* go to sample data addy */
-	fseek (in, Sample_Start_Address, 0);	/* SEEK_SET */
-
-	/* read sample data */
-	tmp = (uint8 *) malloc (ssize);
-	memset(tmp, 0, ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	fseek(in, smp_addr, SEEK_SET);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }
