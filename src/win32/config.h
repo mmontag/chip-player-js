@@ -33,9 +33,7 @@
 #define close	_close
 #define fdopen	_fdopen
 #define unlink	_unlink
-#define dup	_dup
 #define strdup	_strdup
-#define getpid	_getpid
 
 #ifndef PATH_MAX
 #define PATH_MAX	260
