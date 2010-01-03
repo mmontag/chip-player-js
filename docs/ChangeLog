@@ -14,6 +14,7 @@ Stable versions
 	- fix silent Liquid Tracker module bug
 	- add Magnetic Fields Packer loader
 	- add The Player 6.1a prowizard loader
+	- add StoneCracker S404 decompressor (from amigadepacker)
 	- code cleanup and optimizations
 
 3.0.1 (20091221):

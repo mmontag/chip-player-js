@@ -147,6 +147,9 @@ Reused code
 * Michael Kohn
 - Inflate data decompression routine
 
+* Jouni "Spiv" Korhonen
+- StoneCracker S404 depacker
+
 * Olivier Lapicque <olivierl@jps.net>
 - 4-bit ADPCM decruncher
 - MMCMP decruncher
