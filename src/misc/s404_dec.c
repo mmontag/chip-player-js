@@ -9,6 +9,7 @@
    Warning: Code is not re-entrant.
 
    modified for xmp by Claudio Matsuoka, Jan 2010
+   (couldn't keep stdint types, some platforms we build on didn't like them)
 */
 
 #ifdef HAVE_CONFIG_H
@@ -94,7 +95,7 @@ static uint16 getb(struct bitstream *bs, int nbits)
 
 /* Returns bytes still to read.. or < 0 if error. */
 static int checkS404File(uint32 *buf, /*size_t len,*/
-			 int32_t *oLen, int32_t *pLen, int32_t *sLen )
+			 int32 *oLen, int32 *pLen, int32 *sLen )
 {
   /*if (len < 16)
     return -1;*/
