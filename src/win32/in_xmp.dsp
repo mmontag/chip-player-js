@@ -562,6 +562,10 @@ SOURCE=..\misc\unlzx.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\misc\s404_dec.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\player\convert.c
 # End Source File
 # Begin Source File
