@@ -33,28 +33,27 @@ struct pw_format pw_p61a = {
 static int depack_p61a(FILE * in, FILE * out)
 {
     uint8 c1, c2, c3, c4, c5, c6;
-    long Max;
-    uint8 *tmp;
-    signed char *insDataWork;
-    uint8 PatPos = 0x00;
-    uint8 PatMax = 0x00;
+    long max_row;
+    uint8 tmp[1024];
+    signed char *smp_buffer;
+    uint8 len = 0x00;
+    uint8 npat = 0x00;
     uint8 nins = 0x00;
     uint8 tdata[512][256];
     uint8 ptable[128];
-    uint8 isize[31][2];
+    int isize[31];
     uint8 PACK[31];
-/*  uint8 DELTA[31];*/
-    uint8 GLOBAL_DELTA = OFF;
-    uint8 GLOBAL_PACK = OFF;
-    long taddr[128][4];
-    long tdata_addr = 0;
-    long sdata_addr = 0;
-    long ssize = 0;
-    long i = 0, j, k, l, a, b, z;
-    long smp_size[31];
-    long saddr[32];
-    long Unpacked_Sample_Data_Size;
-    // FILE *in,*out;
+    uint8 use_delta = OFF;
+    uint8 use_packed = OFF;
+    int taddr[128][4];
+    int tdata_addr = 0;
+    int sdata_addr = 0;
+    int ssize = 0;
+    int i = 0, j, k, l, a, b, z;
+    int smp_size[31];
+    int saddr[32];
+    int Unpacked_Sample_Data_Size;
+    int x;
 
     memset(taddr, 0, 128 * 4 * 4);
     memset(tdata, 0, 512 << 8);
@@ -67,201 +66,110 @@ static int depack_p61a(FILE * in, FILE * out)
 /*    DELTA[i] = OFF;*/
     }
 
-//#include "ptktable.h"
+    sdata_addr = read16b(in);		/* read sample data address */
+    npat = read8(in);			/* read Real number of pattern */
+    nins = read8(in);			/* read number of samples */
 
-    // in = fdopen (fd_in, "rb");
-    // sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-    // out = fdopen (fd_out, "w+b");
-
-    /* read sample data address */
-    fread (&c1, 1, 1, in);
-    fread (&c2, 1, 1, in);
-    sdata_addr = (c1 << 8) + c2;
-
-    /* read Real number of pattern */
-    fread (&PatMax, 1, 1, in);
-
-    /* read number of samples */
-    fread (&nins, 1, 1, in);
-    if ((nins & 0x80) == 0x80) {
-	/*printf ( "Samples are saved as delta values !\n" ); */
-	GLOBAL_DELTA = ON;
+    if (nins & 0x80) {
+	/* Samples are saved as delta values */
+	use_delta = ON;
     }
-    if ((nins & 0x40) == 0x40) {
-	/*printf ( "some samples are packed !\n" ); */
-	/*printf ( "\n! Since I could not understand the packing method of the\n" */
-	/*         "! samples, neither could I do a depacker .. . mission ends here :)\n" ); */
-	GLOBAL_PACK = ON;
-
+    if (nins & 0x40) {
+	/* Some samples are packed -- depacking not implemented */
+	use_packed = ON;
 	return -1;
     }
-    nins &= 0x3F;
+    nins &= 0x3f;
 
     /* read unpacked sample data size */
-    if (GLOBAL_PACK == ON) {
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	Unpacked_Sample_Data_Size =
-	    (c1 << 24) + (c2 << 16) +
-	    (c3 << 8) + c4;
-    }
+    if (use_packed == ON)
+	Unpacked_Sample_Data_Size = read32b(in);
 
-    /* write title */
-    tmp = (uint8 *) malloc (21);
-    memset(tmp, 0, 21);
-    fwrite (tmp, 20, 1, out);
-    free (tmp);
+    pw_write_zero(out, 20);		/* write title */
 
     /* sample headers stuff */
     for (i = 0; i < nins; i++) {
-	/* write sample name */
-	c1 = 0x00;
-	for (j = 0; j < 22; j++)
-	    fwrite (&c1, 1, 1, out);
+	pw_write_zero(out, 22);		/* write sample name */
 
-	/* sample size */
-	fread (&isize[i][0], 1, 1, in);
-	fread (&isize[i][1], 1, 1, in);
-	j = (isize[i][0] << 8) + isize[i][1];
-	if (j > 0xFF00) {
-	    smp_size[i] = smp_size[0xFFFF - j];
-	    isize[i][0] = isize[0xFFFF - j][0];
-	    isize[i][1] = isize[0xFFFF - j][1];
-/*fprintf ( debug , "!%2ld!" , 0xFFFF-j );*/
-	    saddr[i + 1] = saddr[0xFFFF - j + 1];    /* - smp_size[i]+smp_size[0xFFFF-j]; */
+	j = isize[i] = read16b(in);	/* sample size */
+
+	if (j > 0xff00) {
+	    smp_size[i] = smp_size[0xffff - j];
+	    isize[i] = isize[0xffff - j];
+	    saddr[i + 1] = saddr[0xffff - j + 1];
 	} else {
-	    saddr[i + 1] =
-	        saddr[i] + smp_size[i - 1];
+	    saddr[i + 1] = saddr[i] + smp_size[i - 1];
 	    smp_size[i] = j * 2;
 	    ssize += smp_size[i];
 	}
 	j = smp_size[i] / 2;
-	fwrite (&isize[i][0], 1, 1, out);
-	fwrite (&isize[i][1], 1, 1, out);
+	write16b(out, isize[i]);
 
-	/* finetune */
-	fread (&c1, 1, 1, in);
-	if ((c1 & 0x40) == 0x40)
+	c1 = read8(in);			/* finetune */
+	if (c1 & 0x40)
 	    PACK[i] = ON;
-	c1 &= 0x3F;
-	fwrite (&c1, 1, 1, out);
+	c1 &= 0x3f;
+	write8(out, c1);
 
-	/* volume */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
+	write8(out, read8(in));		/* volume */
 
 	/* loop start */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-/*fprintf ( debug , "loop start : %2x, %2x " , c1,c2 );*/
-	if ((c1 == 0xFF) && (c2 == 0xFF)) {
-	    c3 = 0x00;
-	    c4 = 0x01;
-	    fwrite (&c3, 1, 1, out);
-	    fwrite (&c3, 1, 1, out);
-	    fwrite (&c3, 1, 1, out);
-	    fwrite (&c4, 1, 1, out);
-/*fprintf ( debug , " <--- no loop! (%2x,%2x)\n" ,c3,c4);*/
+	x = read16b(in);
+	if (x == 0xffff) {
+	    write16b(out, 0x0000);
+	    write16b(out, 0x0001);
 	    continue;
 	}
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	l = j - ((c1 << 8) + c2);
-/*fprintf ( debug , " -> size:%6ld  lstart:%5d  -> lsize:%ld\n" , j,c1*256+c2,l );*/
-
-	/* WARNING !!! WORKS ONLY ON 80X86 computers ! */
-	/* 68k machines code : c1 = *(tmp+2); */
-	/* 68k machines code : c2 = *(tmp+3); */
-	tmp = (uint8 *) & l;
-	c1 = *(tmp + 1);
-	c2 = *tmp;
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write16b(out, x);
+	write16b(out, j - x);
     }
 
     /* go up to 31 samples */
-    tmp = (uint8 *) malloc (30);
     memset(tmp, 0, 30);
     tmp[29] = 0x01;
-    while (i != 31) {
-	fwrite (tmp, 30, 1, out);
-	i += 1;
-    }
-    free (tmp);
-    /*printf ( "Whole sample size : %ld\n" , ssize ); */
-
-/*fprintf ( debug , "Where after sample headers : %x\n" , ftell ( in ) );*/
+    for (; i < 31; i++)
+	fwrite(tmp, 30, 1, out);
 
     /* read tracks addresses per pattern */
-    for (i = 0; i < PatMax; i++) {
-/*fprintf ( debug , "\npattern %ld : " , i );*/
-	for (j = 0; j < 4; j++) {
-	    fread (&c1, 1, 1, in);
-	    fread (&c2, 1, 1, in);
-	    taddr[i][j] = (c1 << 8) + c2;
-/*fprintf ( debug , "%6ld, " , taddr[i][j] );*/
-	}
+    for (i = 0; i < npat; i++) {
+	for (j = 0; j < 4; j++)
+	    taddr[i][j] = read16b(in);
     }
-/*fprintf ( debug , "\n\nwhere after the track addresses : %x\n\n" , ftell ( in ));*/
-
 
     /* pattern table */
-/*fprintf ( debug , "\nPattern table :\n" );*/
-    for (PatPos = 0; PatPos < 128; PatPos++) {
-	fread (&c1, 1, 1, in);
-	if (c1 == 0xFF)
+    for (len = 0; len < 128; len++) {
+	c1 = read8(in);
+	if (c1 == 0xff)
 	    break;
-	ptable[PatPos] = c1;    /* <--- /2 in p50a */
-/*fprintf ( debug , "%2x, " , ptable[PatPos] );*/
+	ptable[len] = c1;		/* <--- /2 in p50a */
     }
 
-    /* write size of pattern list */
-    fwrite (&PatPos, 1, 1, out);
-/*fprintf ( debug , "\nsize of the pattern table : %d\n\n" , PatPos );*/
+    write8(out, len);			/* write size of pattern list */
+    write8(out, 0x7f);			/* write noisetracker byte */
+    fwrite(ptable, 128, 1, out);	/* write pattern table */
+    write32b(out, PW_MOD_MAGIC);	/* write ptk ID */
 
-    /* write noisetracker byte */
-    c1 = 0x7f;
-    fwrite (&c1, 1, 1, out);
-
-    /* write pattern table */
-    fwrite (ptable, 128, 1, out);
-
-    /* write ptk's ID */
-    c1 = 'M';
-    c2 = '.';
-    c3 = 'K';
-    fwrite (&c1, 1, 1, out);
-    fwrite (&c2, 1, 1, out);
-    fwrite (&c3, 1, 1, out);
-    fwrite (&c2, 1, 1, out);
-
-/*fprintf ( debug , "\n\nbefore reading track data : %x\n" , ftell ( in ) );*/
-    tdata_addr = ftell (in);
+    tdata_addr = ftell(in);
 
     /* rewrite the track data */
-
-    /*printf ( "sorting and depacking tracks data ... " ); */
-    for (i = 0; i < PatMax; i++) {
-	Max = 63;
+    for (i = 0; i < npat; i++) {
+	max_row = 63;
 	for (j = 0; j < 4; j++) {
-	    fseek (in, taddr[i][j] + tdata_addr, 0);
-	    for (k = 0; k <= Max; k++) {
-	        fread (&c1, 1, 1, in);
+	    fseek(in, taddr[i][j] + tdata_addr, SEEK_SET);
+	    for (k = 0; k <= max_row; k++) {
+		uint8 *x = &tdata[i * 4 + j][k * 4];
+		c1 = read8(in);
 
 	        /* case no fxt nor fxtArg  (3 bytes) */
-	        if (((c1 & 0x70) == 0x70) && (c1 != 0xFF)
-	            && (c1 != 0x7F)) {
-	            fread (&c2, 1, 1, in);
+	        if ((c1 & 0x70) == 0x70 && c1 != 0xff && c1 != 0x7F) {
+		    c2 = read8(in);
 	            c6 = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0e);
-	            tdata[i * 4 + j][k * 4] =
-	                (c2 & 0x10) | (ptk_table[c6 / 2][0]);
-	            tdata[i * 4 + j][k * 4 + 1] = ptk_table[c6 / 2][1];
-	            tdata[i * 4 + j][k * 4 + 2] = ((c2 << 4) & 0xf0);
+	            *x++ = (c2 & 0x10) | (ptk_table[c6 / 2][0]);
+	            *x++ = ptk_table[c6 / 2][1];
+	            *x++ = (c2 << 4) & 0xf0;
 
-	            if ((c1 & 0x80) == 0x80) {
-	                fread (&c3, 1, 1, in);
+	            if (c1 & 0x80) {
+			c3 = read8(in);
 	                if (c3 < 0x80) {
 	                    k += c3;
 	                    continue;
@@ -269,81 +177,80 @@ static int depack_p61a(FILE * in, FILE * out)
 	                c4 = c3 - 0x80;
 
 	                for (l = 0; l < c4; l++) {
-	                    k += 1;
-	                    tdata[i * 4 + j][k * 4] = (c2 & 0x10) |
-					(ptk_table[c6 / 2] [0]);
-	                    tdata[i * 4 + j][k * 4 + 1] = ptk_table[c6 / 2][1];
-	                    tdata[i * 4 + j][k * 4 + 2] = ((c2 << 4) & 0xf0);
+	                    k++;
+			    x = &tdata[i * 4 + j][k * 4];
+	                    *x++ = (c2 & 0x10) | ptk_table[c6 / 2][0];
+	                    *x++ = ptk_table[c6 / 2][1];
+	                    *x++ = (c2 << 4) & 0xf0;
 	                }
 	            }
 	            continue;
 	        }
 	        /* end of case no fxt nor fxtArg */
 
-	        /* case no Sample number nor Relative not number */
-	        if (((c1 & 0x70) == 0x60) && (c1 != 0xFF)) {
-	            fread (&c2, 1, 1, in);
-
+	        /* case no sample number nor relative note number */
+	        if ((c1 & 0x70) == 0x60 && c1 != 0xff) {
+		    c2 = read8(in);
 	            c6 = c1 & 0x0f;
 	            if (c6 == 0x08)
 	                c1 -= 0x08;
-	            tdata[i * 4 + j][k * 4 + 2] = (c1 & 0x0f);
-	            if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-	                c2 = (c2 > 0x7f) ? ((0x100 - c2) << 4) : c2;
-	            tdata[i * 4 + j][k * 4 + 3] = c2;
+		    x += 2;
+	            *x++ = c1 & 0x0f;
+	            if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+	                c2 = c2 > 0x7f ? (0x100 - c2) << 4 : c2;
+	            *x++ = c2;
 
-	            if (c6 == 0x0D) {	/* PATTERN BREAK, track ends */
-	                Max = k;
-	                k = 9999l;
-	                continue;
+	            if (c6 == 0x0d) {	/* PATTERN BREAK, track ends */
+	                max_row = k;
+			break;
 	            }
 	            if (c6 == 0x0B) {	/* PATTERN JUMP, track ends */
-	                Max = k;
-	                k = 9999l;
-	                continue;
+	                max_row = k;
+			break;
 	            }
-	            if ((c1 & 0x80) == 0x80) {
-	                fread (&c3, 1, 1, in);
+	            if (c1 & 0x80) {
+			c3 = read8(in);
 	                if (c3 < 0x80) {	/* bypass c3 rows */
 	                    k += c3;
 	                    continue;
 	                }
 	                c4 = c3 - 0x80;		/* repeat current row */
 	                for (l = 0; l < c4; l++) {
-	                    k += 1;
-	                    tdata[i * 4 + j][k * 4 + 2] = (c1 & 0x0f);
-	                    tdata[i * 4 + j][k * 4 + 3] = c2;
+	                    k++;
+			    x = &tdata[i * 4 + j][k * 4] + 2;
+	                    *x++ = c1 & 0x0f;
+	                    *x++ = c2;
 	                }
 	            }
 	            continue;
 	        }
 	        /* end of case no Sample number nor Relative not number */
 
-	        if (((c1 & 0x80) == 0x80) && (c1 != 0xFF)) {
-	            fread (&c2, 1, 1, in);
-	            fread (&c3, 1, 1, in);
-	            fread (&c4, 1, 1, in);
-	            c1 = c1 & 0x7F;
-	            tdata[i * 4 + j][k * 4] = ((c1 << 4) & 0x10) |
-					(ptk_table[c1 / 2][0]);
-	            tdata[i * 4 + j][k * 4 + 1] = ptk_table[c1 / 2][1];
+	        if ((c1 & 0x80) == 0x80 && c1 != 0xff) {
+		    c2 = read8(in);
+		    c3 = read8(in);
+		    c4 = read8(in);
+	            c1 &= 0x7f;
+
+		    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
+	            *x++ = ptk_table[c1 / 2][1];
 	            c6 = c2 & 0x0f;
 	            if (c6 == 0x08)
 	                c2 -= 0x08;
-	            tdata[i * 4 + j][k * 4 + 2] = c2;
+	            *x++ = c2;
 
-	            if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-	                c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
-	            tdata[i * 4 + j][k * 4 + 3] = c3;
-	            if (c6 == 0x0D) {	/* PATTERN BREAK, track ends */
-	                Max = k;
-	                k = 9999l;
-	                continue;
+	            if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+	                c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
+
+	            *x++ = c3;
+
+	            if (c6 == 0x0d) {	/* PATTERN BREAK, track ends */
+	                max_row = k;
+			break;
 	            }
 	            if (c6 == 0x0B) {	/* PATTERN JUMP, track ends */
-	                Max = k;
-	                k = 9999l;
-	                continue;
+	                max_row = k;
+			break;
 	            }
 
 	            if (c4 < 0x80) {	/* bypass c4 rows */
@@ -351,141 +258,145 @@ static int depack_p61a(FILE * in, FILE * out)
 	                continue;
 	            }
 	            c4 = c4 - 0x80;
+
 	            for (l = 0; l < c4; l++) {	/* repeat row c4-0x80 times */
-	                k += 1;
-	                tdata[i * 4 + j][k * 4] = ((c1 << 4) & 0x10) |
-	                    			(ptk_table[c1 / 2][0]);
-	                tdata[i * 4 + j][k * 4 + 1] = ptk_table[c1 / 2][1];
+	                k++;
+			x = &tdata[i * 4 + j][k * 4];
+
+	                *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
+	                *x++ = ptk_table[c1 / 2][1];
 	                c6 = c2 & 0x0f;
 	                if (c6 == 0x08)
 	                    c2 -= 0x08;
-	                tdata[i * 4 + j][k * 4 + 2] = c2;
-	                if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-	                    c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
-	                tdata[i * 4 + j][k * 4 + 3] = c3;
+	                *x++ = c2;
+
+	                if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+	                    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
+	                *x++ = c3;
 	            }
 	            continue;
 	        }
 
-
-	        if ((c1 & 0x7F) == 0x7F) {
-	            if ((c1 & 0x80) == 0x00) {	/* bypass 1 row */
+	        if ((c1 & 0x7f) == 0x7f) {
+	            if (~c1 & 0x80) {		/* bypass 1 row */
 	                /*k += 1; */
 	                continue;
 	            }
-	            fread (&c2, 1, 1, in);
+		    c2 = read8(in);
 	            if (c2 < 0x40) {	/* bypass c2 rows */
 	                k += c2;
 	                continue;
 	            }
 	            c2 -= 0x40;
-	            fread (&c3, 1, 1, in);
+		    c3 = read8(in);
 	            z = c3;
 	            if (c2 >= 0x80) {
 	                c2 -= 0x80;
-	                fread (&c4, 1, 1, in);
+			c4 = read8(in);
 	                z = (c3 << 8) + c4;
 	            }
-	            a = ftell (in);
+	            a = ftell(in);
 	            c5 = c2;
-	            fseek (in, -(z), 1);
-	            for (l = 0; (l <= c5) && (k <= Max); l++, k++) {
-	                fread (&c1, 1, 1, in);
+
+	            fseek(in, -z, SEEK_CUR);
+
+	            for (l = 0; l <= c5 && k <= max_row; l++, k++) {
+			c1 = read8(in);
+			x = &tdata[i * 4 + j][k * 4];
 
 	                /* case no fxt nor fxtArg  (3 bytes) */
-	                if (((c1 & 0x70) == 0x70) && (c1 != 0xFF)
-	                    			&& (c1 != 0x7F)) {
-	                    fread (&c2, 1, 1, in);
+	                if ((c1 & 0x70) == 0x70 && c1 != 0xff && c1 != 0x7f) {
+			    c2 = read8(in);
 	                    c6 = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0e);
-	                    tdata[i * 4 + j][k * 4] = (c2 & 0x10) |
-						(ptk_table[c6 / 2][0]);
-	                    tdata[i * 4 + j][k * 4 + 1] = ptk_table[c6 / 2][1];
-	                    tdata[i * 4 + j][k * 4 + 2] = ((c2 << 4) & 0xf0);
+	                    *x++ = (c2 & 0x10) | ptk_table[c6 / 2][0];
+	                    *x++ = ptk_table[c6 / 2][1];
+	                    *x++ = (c2 << 4) & 0xf0;
 
-	                    if ((c1 & 0x80) == 0x80) {
-	                        fread (&c3, 1, 1, in);
+	                    if (c1 & 0x80) {
+				c3 = read8(in);
 	                        if (c3 < 0x80) {	/* bypass c3 rows */
 	                            k += c3;
 	                            continue;
 	                        }
 	                        c4 = c3 - 0x80;	/* repeat row c3-0x80 times */
 	                        for (b = 0; b < c4; b++) {
-	                            k += 1;
-	                            tdata[i * 4 + j][k * 4] = (c2 & 0x10) |
-	                                	(ptk_table [c6 / 2][0]);
-	                            tdata[i * 4 + j][k * 4 + 1] =
-						ptk_table[c6 / 2][1];
-	                            tdata[i * 4 + j][k * 4 + 2] =
-	                                	((c2 << 4) & 0xf0);
+	                            k++;
+			            x = &tdata[i * 4 + j][k * 4];
+	                            *x++ = (c2 & 0x10) | ptk_table[c6 / 2][0];
+	                            *x++ = ptk_table[c6 / 2][1];
+	                            *x++ = (c2 << 4) & 0xf0;
 	                        }
 	                    }
 	                    continue;
 	                }
 	                /* end of case no fxt nor fxtArg */
 
-	                /* case no Sample number nor Relative not number */
-	                if (((c1 & 0x60) == 0x60) && (c1 != 0xFF) && (c1 != 0x7F)) {
-	                    fread (&c2, 1, 1, in);
+	                /* case no sample number nor relative note number */
+	                if ((c1 & 0x60) == 0x60 && c1 != 0xff && c1 != 0x7f) {
+			    c2 = read8(in);
 	                    c6 = c1 & 0x0f;
 	                    if (c6 == 0x08)
 	                        c1 -= 0x08;
-	                    tdata[i * 4 + j][k * 4 + 2] = (c1 & 0x0f);
-	                    if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-	                            c2 = (c2 > 0x7f) ? ( (0x100 - c2) << 4) : c2;
-	                    tdata[i * 4 + j][k * 4 + 3] = c2;
 
-	                    if (c6 == 0x0D) {	/* PATTERN BREAK, track ends */
-	                        Max = k;
-	                        k = 9999l;
-	                        continue;
+			    x += 2;
+	                    *x++ = c1 & 0x0f;
+
+	                    if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+	                            c2 = c2 > 0x7f ? (0x100 - c2) << 4 : c2;
+	                    *x++ = c2;
+
+	                    if (c6 == 0x0d) {	/* PATTERN BREAK, track ends */
+	                        max_row = k;
+				goto brk_k;
 	                    }
-	                    if (c6 == 0x0B) {	/* PATTERN JUMP, track ends */
-	                        Max = k;
-	                        k = 9999l;
-	                        continue;
+	                    if (c6 == 0x0b) {	/* PATTERN JUMP, track ends */
+	                        max_row = k;
+				goto brk_k;
 	                    }
 
-	                    if ((c1 & 0x80) == 0x80) {
-	                        fread (&c3, 1, 1, in);
+	                    if (c1 & 0x80) {
+				c3 = read8(in);
 	                        if (c3 < 0x80) {	/* bypass c3 rows */
 	                            k += c3;
 	                            continue;
 	                        }
 	                        c4 = c3 - 0x80;	/* repeat row c3-0x80 times */
 	                        for (b = 0; b < c4; b++) {
-	                            k += 1;
-	                            tdata[i * 4 + j][k * 4 + 2] = (c1 & 0x0f);
-	                            tdata[i * 4 + j][k * 4 + 3] = c2;
+	                            k++;
+			            x = &tdata[i * 4 + j][k * 4] + 2;
+	                            *x++ = c1 & 0x0f;
+	                            *x++ = c2;
 	                        }
 	                    }
 	                    continue;
 	                }
-	                /* end of case no Sample number nor Relative not number */
+	                /* end of case no sample nor relative note number */
 
-	                if (((c1 & 0x80) == 0x80) && (c1 != 0xFF) && (c1 != 0x7F)) {
-	                    fread (&c2, 1, 1, in);
-	                    fread (&c3, 1, 1, in);
-	                    fread (&c4, 1, 1, in);
-	                    c1 = c1 & 0x7f;
-	                    tdata[i * 4 + j][k * 4] = ((c1 << 4) & 0x10) |
-	                        		(ptk_table[c1 / 2][0]);
-	                    tdata[i * 4 + j][k * 4 + 1] = ptk_table[c1 / 2][1];
+	                if ((c1 & 0x80) && c1 != 0xff && c1 != 0x7f) {
+			    c2 = read8(in);
+			    c3 = read8(in);
+			    c4 = read8(in);
+	                    c1 &= 0x7f;
+
+	                    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
+	                    *x++ = ptk_table[c1 / 2][1];
+
 	                    c6 = c2 & 0x0f;
 	                    if (c6 == 0x08)
 	                        c2 -= 0x08;
-	                    tdata[i * 4 + j][k * 4 + 2] = c2;
-	                    if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-	                            c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
-	                    tdata[i * 4 + j][k * 4 + 3] = c3;
-	                    if (c6 == 0x0D) {	/* PATTERN BREAK, track ends */
-	                        Max = k;
-	                        k = l = 9999l;
-	                        continue;
+	                    *x++ = c2;
+
+	                    if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+	                            c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
+	                    *x++ = c3;
+
+	                    if (c6 == 0x0d) {	/* PATTERN BREAK, track ends */
+	                        max_row = k;
+				goto brk_k;
 	                    }
-	                    if (c6 == 0x0B) {	/* PATTERN JUMP, track ends */
-	                        Max = k;
-	                        k = l = 9999l;
-	                        continue;
+	                    if (c6 == 0x0b) {	/* PATTERN JUMP, track ends */
+	                        max_row = k;
+				goto brk_k;
 	                    }
 	                    if (c4 < 0x80) {	/* bypass c4 rows */
 	                        k += c4;
@@ -494,26 +405,28 @@ static int depack_p61a(FILE * in, FILE * out)
 	                    c4 = c4 - 0x80;	/* repeat row c4-0x80 times */
 	                    for (b = 0; b < c4; b++) {
 	                        k += 1;
-	                        tdata[i * 4 + j][k * 4] = ((c1 << 4) & 0x10) |
-	                            		(ptk_table [c1 / 2] [0]);
-	                        tdata[i * 4 + j][k * 4 + 1] =
-						ptk_table[c1 / 2][1];
+			        x = &tdata[i * 4 + j][k * 4];
+
+	                        *x++ = ((c1 << 4) & 0x10) |ptk_table[c1 / 2][0];
+	                        *x++ = ptk_table[c1 / 2][1];
+
 	                        c6 = c2 & 0x0f;
 	                        if (c6 == 0x08)
-	                                c2 -= 0x08;
-	                        tdata[i * 4 + j][k * 4 + 2] = c2;
-	                        if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-	                                c3 = (c3 > 0x7f) ?  ( (0x100 - c3) << 4) : c3;
-	                        tdata[i * 4 + j][k * 4 + 3] = c3;
+	                             c2 -= 0x08;
+	                        *x++ = c2;
+
+	                        if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+	                             c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
+	                        *x++ = c3;
 	                    }
 	                    continue;
 	                }
-	                if ((c1 & 0x7F) == 0x7F) {
+	                if ((c1 & 0x7f) == 0x7f) {
 	                    if ((c1 & 0x80) == 0x00) {	/* bypass 1 row */
 	                        /*k += 1; */
 	                        continue;
 	                    }
-	                    fread (&c2, 1, 1, in);
+			    c2 = read8(in);
 	                    if (c2 < 0x40) {	/* bypass c2 rows */
 	                        k += c2;
 	                        continue;
@@ -521,98 +434,91 @@ static int depack_p61a(FILE * in, FILE * out)
 	                    continue;
 	                }
 
-	                fread(&c2, 1, 1, in);
-	                fread(&c3, 1, 1, in);
-	                tdata[i * 4 + j][k * 4] = ((c1 << 4) & 0x10) |
-	                    			(ptk_table[c1 / 2][0]);
-	                tdata[i * 4 + j][k * 4 + 1] = ptk_table[c1 / 2][1];
+			c2 = read8(in);
+			c3 = read8(in);
+
+	                *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
+	                *x++ = ptk_table[c1 / 2][1];
+
 	                c6 = c2 & 0x0f;
 	                if (c6 == 0x08)
 	                    c2 -= 0x08;
-	                tdata[i * 4 + j][k * 4 + 2] = c2;
-	                if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-	                    c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
-	                tdata[i * 4 + j][k * 4 + 3] = c3;
+	                *x++ = c2;
+
+	                if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+	                    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
+	                *x++ = c3;
 	            }
-	            fseek (in, a, 0);
+	            fseek(in, a, SEEK_SET);
 	            k -= 1;
 	            continue;
 	        }
 
+		c2 = read8(in);
+		c3 = read8(in);
 
-	        fread (&c2, 1, 1, in);
-	        fread (&c3, 1, 1, in);
-	        tdata[i * 4 + j][k * 4] = ((c1 << 4) & 0x10) |
-					(ptk_table[c1 / 2][0]);
-	        tdata[i * 4 + j][k * 4 + 1] = ptk_table[c1 / 2][1];
+	        *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
+	        *x++ = ptk_table[c1 / 2][1];
+
 	        c6 = c2 & 0x0f;
 	        if (c6 == 0x08)
 	            c2 -= 0x08;
-	        tdata[i * 4 + j][k * 4 + 2] = c2;
-	        if ((c6 == 0x05) || (c6 == 0x06) || (c6 == 0x0a))
-			c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
-	        tdata[i * 4 + j][k * 4 + 3] = c3;
-	        if (c6 == 0x0D) {	/* PATTERN BREAK, track ends */
-	            Max = k;
-	            k = 9999l;
-	            continue;
+	        *x++ = c2;
+
+	        if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
+		    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
+	        *x++ = c3;
+
+	        if (c6 == 0x0d) {	/* PATTERN BREAK, track ends */
+	            max_row = k;
+		    break;
 	        }
-	        if (c6 == 0x0B) {	/* PATTERN JUMP, track ends */
-	            Max = k;
-	            k = 9999l;
-	            continue;
+	        if (c6 == 0x0b) {	/* PATTERN JUMP, track ends */
+	            max_row = k;
+		    break;
 	        }
 	    }
+	    brk_k: ;
 	}
     }
 
     /* write pattern data */
 
-    /*printf ( "writing pattern data ... " ); */
-    tmp = (uint8 *) malloc (1024);
-    for (i = 0; i < PatMax; i++) {
+    for (i = 0; i < npat; i++) {
 	memset(tmp, 0, 1024);
 	for (j = 0; j < 64; j++) {
-	    for (k = 0; k < 4; k++) {
-	        tmp[j * 16 + k * 4] = tdata[k + i * 4][j * 4];
-	        tmp[j * 16 + k * 4 + 1] = tdata[k + i * 4][j * 4 + 1];
-	        tmp[j * 16 + k * 4 + 2] = tdata[k + i * 4][j * 4 + 2];
-	        tmp[j * 16 + k * 4 + 3] = tdata[k + i * 4][j * 4 + 3];
-	    }
+	    for (k = 0; k < 4; k++)
+		memcpy(&tmp[j * 16 + k * 4], &tdata[k + i * 4][j * 4], 4);
 	}
 	fwrite (tmp, 1024, 1, out);
     }
-    free (tmp);
-    /*printf ( "ok\n" ); */
-
 
     /* go to sample data address */
-
     fseek (in, sdata_addr, 0);
 
     /* read and write sample data */
 
     /*printf ( "writing sample data ... " ); */
     for (i = 0; i < nins; i++) {
-	fseek (in, sdata_addr + saddr[i + 1], 0);
-	insDataWork = (signed char *) malloc (smp_size[i]);
-	memset(insDataWork, 0, smp_size[i]);
-	fread (insDataWork, smp_size[i], 1, in);
-	if (GLOBAL_DELTA == ON) {
-	    c1 = 0x00;
+	fseek(in, sdata_addr + saddr[i + 1], 0);
+	smp_buffer = malloc(smp_size[i]);
+	memset(smp_buffer, 0, smp_size[i]);
+	fread(smp_buffer, smp_size[i], 1, in);
+	if (use_delta == ON) {
+	    c1 = 0;
 	    for (j = 1; j < smp_size[i]; j++) {
-	        c2 = insDataWork[j];
+	        c2 = smp_buffer[j];
 	        c2 = 0x100 - c2;
 	        c3 = c2 + c1;
-	        insDataWork[j] = c3;
+	        smp_buffer[j] = c3;
 	        c1 = c3;
 	    }
 	}
-	fwrite (insDataWork, smp_size[i], 1, out);
-	free (insDataWork);
+	fwrite(smp_buffer, smp_size[i], 1, out);
+	free(smp_buffer);
     }
 
-    if (GLOBAL_DELTA == ON)
+    if (use_delta == ON)
 	pw_p60a.flags |= PW_DELTA;
 
     return 0;
@@ -623,6 +529,7 @@ static int test_p61a(uint8 *data, int s)
 {
     int j, k, l, m, n, o;
     int start = 0, ssize;
+    int x;
 
 #if 0
     if (i < 7) {
@@ -640,8 +547,8 @@ static int test_p61a(uint8 *data, int s)
 
     /* number of sample */
     /* k is the number of sample */
-    k = (data[start + 3] & 0x3F);
-    if (k > 0x1F || k == 0)
+    k = (data[start + 3] & 0x3f);
+    if (k > 0x1f || k == 0)
 	return -1;
 
     for (l = 0; l < k; l++) {
@@ -650,41 +557,40 @@ static int test_p61a(uint8 *data, int s)
 	    return -1;
 
 	/* test finetunes */
-	if (data[start + 6 + l * 6] > 0x0F)
+	if (data[start + 6 + l * 6] > 0x0f)
 	    return -1;
     }
 
     /* test sample sizes and loop start */
     ssize = 0;
     for (n = 0; n < k; n++) {
-	o = ((data[start + 4 + n * 6] << 8) + data[start + 5 + n * 6]);
-	if ((o < 0xFFDF && o > 0x8000) || o == 0)
+	o = readmem16b(data + start + n * 6 + 4);
+	if ((o < 0xffdf && o > 0x8000) || o == 0)
 	    return -1;
 
-	if (o < 0xFF00)
-	    ssize += (o * 2);
+	if (o < 0xff00)
+	    ssize += o * 2;
 
-	j = ((data[start + 8 + n * 6] << 8) + data[start + 9 + n * 6]);
-	if (j != 0xFFFF && j >= o)
+	j = readmem16b(data + start + n * 6 + 8);
+	if (j != 0xffff && j >= o)
 	    return -1;
 
-	if (o > 0xFFDF) {
-	    if ((0xFFFF - o) > k)
+	if (o > 0xffdf) {
+	    if (0xffff - o > k)
 	        return -1;
 	}
     }
 
     /* test sample data address */
     /* j is the address of the sample data */
-    j = (data[start] << 8) + data[start + 1];
-    if (j < (k * 6 + 4 + m * 8))
+    j = readmem16b(data + start);
+    if (j < k * 6 + 4 + m * 8)
 	return -1;
 
     /* test track table */
-    for (l = 0; l < (m * 4); l++) {
-	o = ((data[start + 4 + k * 6 + l * 2] << 8) +
-	    data[start + 4 + k * 6 + l * 2 + 1]);
-	if ((o + k * 6 + 4 + m * 8) > j)
+    for (l = 0; l < m * 4; l++) {
+	o = readmem16b(data + start + 4 + k * 6 + l * 2);
+	if (o + k * 6 + 4 + m * 8 > j)
 	    return -1;
     }
 
@@ -692,19 +598,20 @@ static int test_p61a(uint8 *data, int s)
     l = 0;
     o = 0;
     /* first, test if we dont oversize the input file */
-    PW_REQUEST_DATA (s, start + k * 6 + 4 + m * 8);
+    x = k * 6 + 4 + m * 8;    
+    PW_REQUEST_DATA(s, start + x);
 
-    while ((data[start + k * 6 + 4 + m * 8 + l] != 0xFF) && (l < 128)) {
-	if (data[start + k * 6 + 4 + m * 8 + l] > (m - 1))
+    while (data[start + x + l] != 0xff && l < 128) {
+	if (data[start + x + l] > m - 1)
 	    return -1;
 
-	if (data[start + k * 6 + 4 + m * 8 + l] > o)
-	    o = data[start + k * 6 + 4 + m * 8 + l];
+	if (data[start + x + l] > o)
+	    o = data[start + x + l];
 	l++;
     }
 
     /* are we beside the sample data address ? */
-    if ((k * 6 + 4 + m * 8 + l) > j)
+    if (x + l > j)
 	return -1;
 
     if (l == 0 || l == 128)
@@ -718,60 +625,64 @@ static int test_p61a(uint8 *data, int s)
     PW_REQUEST_DATA (s, start + j + 1);
 
     l += 1;
-    for (n = (k * 6 + 4 + m * 8 + l); n < j; n++) {
-	if ((data[start + n] & 0xff) == 0xff) {
-	    if ((data[start + n + 1] & 0xc0) == 0x00) {
+    for (n = x + l; n < j; n++) {
+        uint8 d, e;
+
+	d = data[start + n];
+	e = data[start + n + 1];
+
+	if ((d & 0xff) == 0xff) {
+	    if ((e & 0xc0) == 0x00) {
 	        n += 1;
 	        continue;
 	    }
-	    if ((data[start + n + 1] & 0xc0) == 0x40) {
+	    if ((e & 0xc0) == 0x40) {
 	        n += 2;
 	        continue;
 	    }
-	    if ((data[start + n + 1] & 0xc0) == 0xc0) {
+	    if ((e & 0xc0) == 0xc0) {
 	        n += 3;
 	        continue;
 	    }
 	}
-	if ((data[start + n] & 0xff) == 0x7f)
+
+	if ((d & 0xff) == 0x7f)
 	    continue;
 
 	/* no fxt nor fxtArg */
-	if ((data[start + n] & 0xf0) == 0xf0) {
-	    if ((data[start + n + 1] & 0x1F) > k)
+	if ((d & 0xf0) == 0xf0) {
+	    if ((e & 0x1f) > k)
 	        return -1;
 	    n += 2;
 	    continue;
 	}
 
-	if ((data[start + n] & 0xf0) == 0x70) {
-	    if ((data[start + n + 1] & 0x1F) > k)
+	if ((d & 0xf0) == 0x70) {
+	    if ((e & 0x1f) > k)
 	        return -1;
 	    n += 1;
 	    continue;
 	}
 
 	/* no note nor Sample number */
-	if ((data[start + n] & 0xf0) == 0xe0) {
+	if ((d & 0xf0) == 0xe0) {
 	    n += 2;
 	    continue;
 	}
 
-	if ((data[start + n] & 0xf0) == 0x60) {
+	if ((d & 0xf0) == 0x60) {
 	    n += 1;
 	    continue;
 	}
 
-	if ((data[start + n] & 0x80) == 0x80) {
-	    if ((((data[start + n] << 4) & 0x10)
-	        | ((data[start + n + 1] >> 4) & 0x0F)) > k)
+	if ((d & 0x80) == 0x80) {
+	    if ((((d << 4) & 0x10) | ((e >> 4) & 0x0f)) > k)
 	        return -1;
 	    n += 3;
 	    continue;
 	}
 
-	if ((((data[start + n] << 4) & 0x10) |
-	    ((data[start + n + 1] >> 4) & 0x0F)) > k)
+	if ((((d << 4) & 0x10) | ((e >> 4) & 0x0F)) > k)
 	    return -1;
 	n += 2;
     }

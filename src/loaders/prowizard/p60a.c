@@ -34,7 +34,7 @@ static int depack_p60a(FILE *in, FILE *out)
 {
     uint8 c1, c2, c3, c4, c5, c6;
     int max_row;
-    signed char *insDataWork;
+    signed char *smp_buffer;
     uint8 PatPos = 0x00;
     uint8 npat = 0x00;
     uint8 nins = 0x00;
@@ -158,7 +158,7 @@ static int depack_p60a(FILE *in, FILE *out)
     for (i = 0; i < npat; i++) {
 	max_row = 63;
 	for (j = 0; j < 4; j++) {
-	    fseek (in, taddr[i][j] + tdata_addr, SEEK_SET);
+	    fseek(in, taddr[i][j] + tdata_addr, SEEK_SET);
 	    for (k = 0; k <= max_row; k++) {
 		uint8 *x = &tdata[i * 4 + j][k * 4];
 		c1 = read8(in);
@@ -297,7 +297,7 @@ static int depack_p60a(FILE *in, FILE *out)
 			*x++ = c2;
 
 			if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-			    c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
+			    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
 
 			*x++ = c3;
 		    }
@@ -319,7 +319,7 @@ static int depack_p60a(FILE *in, FILE *out)
 		*x++ = c2;
 
 		if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-		    c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
+		    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
 
 		*x++ = c3;
 
@@ -352,21 +352,21 @@ static int depack_p60a(FILE *in, FILE *out)
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
 	fseek (in, sdata_addr + saddr[i + 1], SEEK_SET);
-	insDataWork = (signed char *) malloc (smp_size[i]);
-	memset(insDataWork, 0, smp_size[i]);
-	fread (insDataWork, smp_size[i], 1, in);
+	smp_buffer = malloc(smp_size[i]);
+	memset(smp_buffer, 0, smp_size[i]);
+	fread (smp_buffer, smp_size[i], 1, in);
 	if (GLOBAL_DELTA == ON) {
 	    c1 = 0x00;
 	    for (j = 1; j < smp_size[i]; j++) {
-		c2 = insDataWork[j];
+		c2 = smp_buffer[j];
 		c2 = 0x100 - c2;
 		c3 = c2 + c1;
-		insDataWork[j] = c3;
+		smp_buffer[j] = c3;
 		c1 = c3;
 	    }
 	}
-	fwrite (insDataWork, smp_size[i], 1, out);
-	free (insDataWork);
+	fwrite(smp_buffer, smp_size[i], 1, out);
+	free(smp_buffer);
     }
 
     if (GLOBAL_DELTA == ON)
@@ -440,10 +440,9 @@ static int test_p60a(uint8 *data, int s)
 	}
 
 	/* test pattern table */
-	l = 0;
-	o = 0;
+	l = o = 0;
 	/* first, test if we dont oversize the input file */
-	PW_REQUEST_DATA (s, start + k * 6 + 4 + m * 8);
+	PW_REQUEST_DATA(s, start + k * 6 + 4 + m * 8);
 
 	while ((data[start + k * 6 + 4 + m * 8 + l] != 0xFF) && (l < 128)) {
 		if (data[start + k * 6 + 4 + m * 8 + l] > (m - 1))
@@ -466,11 +465,11 @@ static int test_p60a(uint8 *data, int s)
 
 	/* test notes ... pfiew */
 
-	PW_REQUEST_DATA (s, start + j + 1);
+	PW_REQUEST_DATA(s, start + j + 1);
 
 	l += 1;
-	for (n = (k * 6 + 4 + m * 8 + l); n < j; n++) {
-		if ((data[start + n] & 0x80) == 0x00) {
+	for (n = k * 6 + 4 + m * 8 + l; n < j; n++) {
+		if (~data[start + n] & 0x80) {
 			if (data[start + n] > 0x49)
 				return -1;
 
@@ -478,8 +477,9 @@ static int test_p60a(uint8 *data, int s)
 				((data[start + n + 1] >> 4) & 0x0F)) > k)
 				return -1;
 			n += 2;
-		} else
+		} else {
 			n += 3;
+		}
 	}
 
 	return 0;
