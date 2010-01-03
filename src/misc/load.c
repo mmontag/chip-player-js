@@ -51,6 +51,7 @@ int decrunch_muse	(FILE *, FILE *);
 int decrunch_lzx	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
+int decrunch_s404	(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -142,35 +143,34 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	fprintf( stderr, "I hope that the default command will work if a OS/2 version is found/created!\n" );
 #endif
 	cmd = "uncompress -c \"%s\"";
-    } else if (b[0] == 'P' && b[1] == 'P' && b[2] == '2' && b[3] == '0') {
+    } else if (memcmp(b, "PP20", 4) == 0) {
 	packer = "PowerPack";
 	builtin = BUILTIN_PP;
-    } else if (b[0] == 'X' && b[1] == 'P' && b[2] == 'K' && b[3] == 'F' &&
-	b[8] == 'S' && b[9] == 'Q' && b[10] == 'S' && b[11] == 'H') {
+    } else if (memcmp(b, "XPKF", 4) == 0 && memcmp(b + 8, "SQSH", 4) == 0) {
 	packer = "SQSH";
 	builtin = BUILTIN_SQSH;
     } else if (!memcmp(b, "Archive\0", 8)) {
 	packer = "ArcFS";
 	builtin = BUILTIN_ARCFS;
-    } else if (b[0] == 'z' && b[1] == 'i' && b[2] == 'R' && b[3] == 'C' &&
-		b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
+    } else if (memcmp(b, "ziRCONia", 8) == 0) {
 	packer = "MMCMP";
 	builtin = BUILTIN_MMCMP;
-    } else if (b[0] == 'M' && b[1] == 'U' && b[2] == 'S' && b[3] == 'E' &&
-		b[4] == 0xde && b[5] == 0xad && b[6] == 0xbe && b[7] == 0xaf) {
+    } else if (memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbeaf) {
 	packer = "J2B MUSE";
 	builtin = BUILTIN_MUSE;
-    } else if (b[0] == 'M' && b[1] == 'U' && b[2] == 'S' && b[3] == 'E' &&
-		b[4] == 0xde && b[5] == 0xad && b[6] == 0xba && b[7] == 0xbe) {
+    } else if (memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbabe) {
 	packer = "MOD2J2B MUSE";
 	builtin = BUILTIN_MUSE;
-    } else if (b[0] == 76 && b[1] == 90 && b[2] == 88) {
+    } else if (memcmp(b, "LZX", 3) == 0) {
 	packer = "LZX";
 	builtin = BUILTIN_LZX;
-    } else if (b[0] == 'R' && b[1] == 'a' && b[2] == 'r') {
+    } else if (memcmp(b, "Rar", 3) == 0) {
 	packer = "rar";
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
+    } else if (memcmp(b, "S404", 4) == 0) {
+	packer = "Stonecracker";
+	builtin = BUILTIN_S404;
 #if !defined WIN32 && !defined __AMIGA__
     } else if (test_oxm(*f) == 0) {
 	packer = "oggmod";
@@ -300,6 +300,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	    break;
 	case BUILTIN_LZX:    
 	    res = decrunch_lzx(*f, t);
+	    break;
+	case BUILTIN_S404:
+	    res = decrunch_s404(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__
 	case BUILTIN_OXM:

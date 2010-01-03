@@ -19,7 +19,7 @@ int kunzip_inflate_free(void);
 int inflate(FILE *, FILE *, unsigned int *);
 
 
-int decrunch_muse (FILE *f, FILE *fo)                          
+int decrunch_muse(FILE *f, FILE *fo)                          
 {                                                          
 	uint32 checksum;
   
