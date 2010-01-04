@@ -8,7 +8,8 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  rtm_load.o dmf_load.o tcb_load.o dt_load.o gtk_load.o no_load.o \
 	  arch_load.o sym_load.o dtt_load.o mgt_load.o med3_load.o \
 	  med4_load.o ssmt_load.o dbm_load.o umx_load.o gdm_load.o \
-	  coco_load.o pw_load.o gal5_load.o gal4_load.o mfp_load.o
+	  coco_load.o pw_load.o gal5_load.o gal4_load.o mfp_load.o \
+	  polly_load.o
 
 LOADERS_OBJS	= common.o iff.o itsex.o asif.o $(LOADERS)
 LOADERS_DFILES	= Makefile $(LOADERS_OBJS:.o=.c) ftm_load.c med2_load.c \
