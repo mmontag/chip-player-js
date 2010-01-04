@@ -29,75 +29,126 @@ struct xmp_loader_info polly_loader = {
 	polly_load
 };
 
+#define NUM_PAT 0x1f
+#define PAT_SIZE (64 * 4)
+
+
 static int polly_test(FILE *f, char *t, const int start)
 {
-	uint8 buf[384];
+	int i, n;
 
-	if (fread(buf, 1, 100, f) < 100)
+	if (read8(f) != 0xae)
 		return -1;
 
-	if (buf[0] != 0xae)
-		return -1;
+	for (i = 0; i < NUM_PAT * PAT_SIZE; ) {
+		int x = read8(f);
+		if (x == 0xae) {
+			int n;
+			n = read8(f);
+			if (feof(f))
+				return -1;
+			switch (n) {
+			case 0x00:
+				return -1;
+			case 0x01:
+				i++;
+				break;
+			default:
+				read8(f);
+				i += n;
+			}
+		} else {
+			i++;
+		}
+	}		
 
-	/* FIXME: more tests */
+	for (i = 0; ; i++) {
+		n = read8(f);
+
+		if (n == 0xae)
+			break;
+
+		if (n < 0xe0 && n != 0xae)
+			return -1;
+
+		if (i > 255)
+			return -1;
+	}
 
 	return 0;
 }
+
 
 static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
-	uint8 tmp[1024];
+	uint8 tmp[NUM_PAT * PAT_SIZE];
 	int i, j;
 
 	LOAD_INIT();
 
 	read8(f);			/* skip 0xae */
-	//m->xxh->pat = read8(f);		/* number of patterns */
+	m->xxh->pat = NUM_PAT;		/* number of patterns */
+	m->xxh->chn = 4;
+	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-	/* Read and convert patterns */
-	//m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	PATTERN_INIT();
 
-	//PATTERN_INIT();
-
-	for (i = 0; i < 4 * 64; ) {
+	for (i = 0; i < NUM_PAT * PAT_SIZE; ) {
 		int x = read8(f);
 		if (x == 0xae) {
-			int n = read8(f);
-			int v = read8(f);
-			for (j = 0; j < n; j++)
-				tmp[i++] = v;
+			int n,v;
+			switch (n = read8(f)) {
+			case 0x01:
+				tmp[i++] = 0xae;
+				break;
+			default:
+				v = read8(f);
+				while (n--)
+					tmp[i++] = v;
+			}
 		} else {
 			tmp[i++] = x;
 		}
+	}		
+
+#if 0
+	char *note[] = {
+		"---", "C 1", "C#1", "D 1",
+		"D#1", "E 1", "F 1", "F#1",
+		"G 1", "G#1", "A 1", "A#1",
+		"B 1", "C 2", "C#2", "D 2"
+	};
+
+	for (i = 0; i < 0x1f; i++) {
+		printf("\n\nPATTERN %x\n", i);
+		for (j = 0; j < 4 * 64; j++) {
+			printf("%s %x  ", note[LSN(tmp[i * 256 + j])], MSN(tmp[i * 256 + j]));
+			if ((j + 1) % 4 == 0)
+				printf("\n%02x  ", (j + 4) / 4);
+		}
 	}
 
-char *note[] = {
-	"---", "C 1", "C#1", "D 1",
-	"D#1", "E 1", "F 1", "F#1",
-	"G 1", "G#1", "A 1", "A#1",
-	"B 1", "C 2", "C#2", "D 2"
-};
+	printf("HERE: %lx\n", ftell(f));
+#endif
 
-	for (i = 0; i < 4 * 64; i++) {
-		printf("%s %x  ", note[LSN(tmp[i])], MSN(tmp[i]));
-		if ((i + 1) % 4 == 0)
-			printf("\n%02x  ", (i + 4) / 4);
-	}
+	for (m->xxh->len = i = 0; i != 0xae; m->xxh->len++)
+		m->xxo[m->xxh->len] = i = read8(f) - 0xe0;
 
-abort();
+
+
 
 	sprintf(m->type, "Polly Tracker");
 	MODULE_INFO();
 
-	m->xxh->chn = 4;
-	m->xxh->ins = m->xxh->smp = 31;
+
+	m->xxh->ins = m->xxh->smp = 15;
 	INSTRUMENT_INIT();
 
 #if 0
-	reportv(ctx, 1, "     Len  LBeg LEnd L Vol Fin\n");
+	reportv(ctx, 1, "     Length\n");
 
 	for (i = 0; i < 31; i++) {
 		int loop_size;
