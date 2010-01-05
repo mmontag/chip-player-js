@@ -178,11 +178,9 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].rls = 0xfff;
 
 		if (V(1) && m->xxs[i].len > 0) {
-                	report("[%2X] %04x %04x %04x %c V%02x %+d\n",
+                	report("[%2X] %04x %04x %04x %c V%02x\n",
                        		i, m->xxs[i].len, m->xxs[i].lps,
-                        	m->xxs[i].lpe,
-				' ',
-                        	m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
+                        	m->xxs[i].lpe, ' ', m->xxi[i][0].vol);
 		}
 	}
 
