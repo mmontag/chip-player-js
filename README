@@ -16,7 +16,7 @@ OVERVIEW
 This is the Extended Module Player, a module player for Unix-like systems
 that runs on Linux with ALSA and OSS, Free/Open/NetBSD, AIX, OS/2, HP-UX,
 MacOS X, SunOS, QNX and Solaris. Xmp plays over 90 mainstream and obscure
-module formats from Amiga, Atari, Acorn, Apple IIgs and PC.
+module formats from Amiga, Atari, Acorn, Apple IIgs, Commodore 64 and PC.
 
 Many compressed module formats are supported, including popular Unix, DOS
 and Amiga file packers including gzip, bzip2, SQSH, Powerpack, etc.
@@ -101,6 +101,10 @@ The current version recognizes the following module formats:
   IIgs tracker formats:
 
   MTP	**	SoundSmith		SONGOK, IAN92a
+
+  Commodore 64 formats:
+
+  POLLY	**	Polly Tracker		-
 
   PC tracker formats:
 
