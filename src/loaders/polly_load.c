@@ -32,52 +32,8 @@ struct xmp_loader_info polly_loader = {
 #define NUM_PAT 0x1f
 #define PAT_SIZE (64 * 4)
 #define ORD_OFS (NUM_PAT * PAT_SIZE)
+#define DATA_OFS (NUM_PAT * PAT_SIZE + 192)
 
-static int polly_test(FILE *f, char *t, const int start)
-{
-	int i, n;
-
-	if (read8(f) != 0xae)
-		return -1;
-
-	
-	for (i = 0; i < NUM_PAT * PAT_SIZE; ) {
-		int x = read8(f);
-		if (x == 0xae) {
-			int n;
-			n = read8(f);
-			if (feof(f))
-				return -1;
-			switch (n) {
-			case 0x00:
-				return -1;
-			case 0x01:
-				i++;
-				break;
-			default:
-				read8(f);
-				i += n;
-			}
-		} else {
-			i++;
-		}
-	}		
-
-	for (i = 0; i < 128; i++) {
-		n = read8(f);
-
-		if (n == 0xae)
-			break;
-
-		if (n < 0xe0 && n != 0xae)
-			return -1;
-
-		if (i > 255)
-			return -1;
-	}
-
-	return 0;
-}
 
 static void decode_rle(uint8 *out, FILE *f, int size)
 {
@@ -106,23 +62,42 @@ static void decode_rle(uint8 *out, FILE *f, int size)
 	}
 }
 
+static int polly_test(FILE *f, char *t, const int start)
+{
+	int i;
+	uint8 *buf;
+
+	if (read8(f) != 0xae)
+		return -1;
+
+	if ((buf = malloc(0x10000)) == NULL)
+		return -1;
+
+	decode_rle(buf, f, 0x10000);
+
+	for (i = 0; i < 128; i++) {
+		if (buf[ORD_OFS + i] != 0 && buf[ORD_OFS] < 0xe0) {
+			free(buf);
+			return -1;
+		}
+	}
+
+	free(buf);
+
+	return 0;
+}
+
 static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	uint8 *buf;
-	int i, j;
+	int i, j, k;
 
 	LOAD_INIT();
 
 	read8(f);			/* skip 0xae */
-	m->xxh->pat = NUM_PAT;		/* number of patterns */
-	m->xxh->chn = 4;
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
-
-	PATTERN_INIT();
-
 	/*
 	 * File is RLE-encoded, escape is 0xAE (Aleksi Eeben's initials).
 	 * Actual 0xAE is encoded as 0xAE 0x01
@@ -140,6 +115,38 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	memcpy(m->author, buf + ORD_OFS + 176, 16);
 	sprintf(m->type, "Polly Tracker");
 	MODULE_INFO();
+
+	for (i = 0; i < 512; i++) {
+		if ((i % 16) == 0) printf("\n");
+		printf("%02x ", buf[ORD_OFS + i]);
+	}
+
+	m->xxh->pat = buf[DATA_OFS];		/* number of patterns */
+	m->xxh->chn = 4;
+	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+
+	PATTERN_INIT();
+
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+
+	for (i = 0; i < m->xxh->pat; i++) {
+		PATTERN_ALLOC(i);
+		m->xxp[i]->rows = 64;
+		TRACK_ALLOC(i);
+
+		for (j = 0; j < 64; j++) {
+			for (k = 0; k < 4; k++) {
+				uint8 x = buf[i * PAT_SIZE + j * 4 + k];
+				event = &EVENT(i, k, j);
+				event->note = LSN(x);
+				if (event->note)
+					event->note += 36;
+				event->ins = MSN(x);
+			}
+		}
+		reportv(ctx, 0, ".");
+	}
+	reportv(ctx, 0, "\n");
 
 
 	m->xxh->ins = m->xxh->smp = 15;
@@ -176,32 +183,6 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
-
-	for (i = 0; i < m->xxh->pat; i++) {
-		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
-
-		for (j = 0; j < 4; j++) {
-			fseek(f, pat_addr + pat_table[i][j], SEEK_SET);
-
-			fread(buf, 1, 1024, f);
-
-			for (row = k = 0; k < 4; k++) {
-				for (x = 0; x < 4; x++) {
-					for (y = 0; y < 4; y++, row++) {
-						event = &EVENT(i, j, row);
-						memcpy(mod_event, &buf[buf[buf[buf[k] + x] + y] * 2], 4);
-						cvt_pt_event(event, mod_event);
-					}
-				}
-			}
-		}
-		reportv(ctx, 0, ".");
-	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
 	reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
