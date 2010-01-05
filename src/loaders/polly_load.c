@@ -31,6 +31,7 @@ struct xmp_loader_info polly_loader = {
 
 #define NUM_PAT 0x1f
 #define PAT_SIZE (64 * 4)
+#define ORD_OFS (NUM_PAT * PAT_SIZE)
 
 static int polly_test(FILE *f, char *t, const int start)
 {
@@ -84,6 +85,10 @@ static void decode_rle(uint8 *out, FILE *f, int size)
 
 	for (i = 0; i < size; ) {
 		int x = read8(f);
+
+		if (feof(f))
+			return;
+
 		if (x == 0xae) {
 			int n,v;
 			switch (n = read8(f)) {
@@ -106,8 +111,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
-	uint8 buf[NUM_PAT * PAT_SIZE];
-	uint8 tmp[256];
+	uint8 *buf;
 	int i, j;
 
 	LOAD_INIT();
@@ -120,50 +124,20 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/*
-	 * Number of patterns is 31. Each pattern is RLE-encoded, escape
-	 * is 0xAE (Aleksi Eeben's initials). Actual 0xAE is encoded as
-	 * 0xAE 0x01
+	 * File is RLE-encoded, escape is 0xAE (Aleksi Eeben's initials).
+	 * Actual 0xAE is encoded as * 0xAE 0x01
 	 */
-	decode_rle(buf, f, NUM_PAT * PAT_SIZE);
+	if ((buf = malloc(0x10000)) == NULL)
+		return -1;
 
-#if 0
-	char *note[] = {
-		"---", "C 1", "C#1", "D 1",
-		"D#1", "E 1", "F 1", "F#1",
-		"G 1", "G#1", "A 1", "A#1",
-		"B 1", "C 2", "C#2", "D 2"
-	};
+	decode_rle(buf, f, 0x10000);
 
-	for (i = 0; i < 0x1f; i++) {
-		printf("\n\nPATTERN %x\n", i);
-		for (j = 0; j < 4 * 64; j++) {
-			printf("%s %x  ", note[LSN(buf[i * 256 + j])], MSN(buf[i * 256 + j]));
-			if ((j + 1) % 4 == 0)
-				printf("\n%02x  ", (j + 4) / 4);
-		}
-	}
-
-	printf("HERE: %lx\n", ftell(f));
-#endif
-
-	/* Expand order and info data */
-
-	decode_rle(tmp, f, 192);
-
-#if 0
-	for (i = 0; i < 192; i++) {
-		if (i % 8 == 0) printf("\n");
-		printf("%02x ", tmp[i]);
-	}
-abort();
-#endif
-
-	for (i = 0; tmp[i] != 0 && i < 128; i++)
-		m->xxo[i] = tmp[i] - 0xe0;
+	for (i = 0; buf[ORD_OFS + i] != 0 && i < 128; i++)
+		m->xxo[i] = buf[ORD_OFS + i] - 0xe0;
 	m->xxh->len = i;
 
-	memcpy(m->name, tmp + 160, 16);
-	memcpy(m->author, tmp + 176, 16);
+	memcpy(m->name, buf + ORD_OFS + 160, 16);
+	memcpy(m->author, buf + ORD_OFS + 176, 16);
 	sprintf(m->type, "Polly Tracker");
 	MODULE_INFO();
 
