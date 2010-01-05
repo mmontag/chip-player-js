@@ -125,7 +125,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/*
 	 * File is RLE-encoded, escape is 0xAE (Aleksi Eeben's initials).
-	 * Actual 0xAE is encoded as * 0xAE 0x01
+	 * Actual 0xAE is encoded as 0xAE 0x01
 	 */
 	if ((buf = malloc(0x10000)) == NULL)
 		return -1;
@@ -213,6 +213,8 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	reportv(ctx, 0, "\n");
 #endif
+
+	free(buf);
 
 	/* make it mono */
 	for (i = 0; i < m->xxh->chn; i++)
