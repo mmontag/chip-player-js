@@ -46,8 +46,8 @@ RSC=rc.exe
 # ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "../include" /D "ENABLE_PLUGIN" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.1.0\"" /D "_CRT_SECURE_NO_WARNINGS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
-# ADD BASE RSC /l 0x410 /d "NDEBUG"
-# ADD RSC /l 0x410 /d "NDEBUG"
+# ADD BASE RSC /l 0x409 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -72,8 +72,8 @@ LINK32=link.exe
 # ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "../win32" /I "../include" /D "_DEBUG" /D "ENABLE_PLUGIN" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.1.0\"" /D "_CRT_SECURE_NO_WARNINGS" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
-# ADD BASE RSC /l 0x410 /d "_DEBUG"
-# ADD RSC /l 0x410 /d "_DEBUG"
+# ADD BASE RSC /l 0x409 /d "_DEBUG"
+# ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
