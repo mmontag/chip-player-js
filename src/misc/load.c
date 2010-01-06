@@ -239,13 +239,12 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     }
 
     if (cmd) {
-	int n, lsize;
-	char *line, *buf;
+#define BSIZE 0x4000
+	int n;
+	char line[1024], buf[BSIZE];
 	FILE *p;
 
-	lsize = strlen(cmd) + strlen(*s) + 16;
-	line = malloc(lsize);
-	snprintf(line, lsize, cmd, *s);
+	snprintf(line, 1024, cmd, *s);
 
 #ifdef WIN32
 	/* Note: The _popen function returns an invalid file handle, if
@@ -262,21 +261,10 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 #endif
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
-	    free(line);
 	    goto err;
 	}
-	free (line);
-#define BSIZE 0x4000
-	if ((buf = malloc (BSIZE)) == NULL) {
-	    reportv(ctx, 0, "failed\n");
-	    pclose (p);
-	    fclose (t);
-	    goto err;
-	}
-	while ((n = fread(buf, 1, BSIZE, p)) > 0) {
+	while ((n = fread(buf, 1, BSIZE, p)) > 0)
 	    fwrite(buf, 1, n, t);
-	} 
-	free(buf);
 	pclose (p);
     } else {
 	switch (builtin) {
