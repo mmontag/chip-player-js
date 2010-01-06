@@ -307,6 +307,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 
     if (res < 0) {
 	reportv(ctx, 0, "failed\n");
+	fclose(t);
 	goto err;
     }
 
