@@ -274,7 +274,10 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		if (rows > 32) {
 			linemsk1=ctl & 0x08 ? ~0 : ctl & 0x04 ? 0 : read32b(f);
-			fxmsk1  =ctl & 0x02 ? ~0 : ctl & 0x01 ? 0 : read32b(f);
+			fxmsk1 = ctl & 0x02 ? ~0 : ctl & 0x01 ? 0 : read32b(f);
+		} else {
+			linemsk1 = 0;
+			fxmsk1 = 0;
 		}
 
 #ifdef MED4_DEBUG
