@@ -23,10 +23,10 @@ Buildrequires: xmms-devel
 BuildRoot: %{_tmppath}/%{name}-buildroot
 
 %description
-The Extended Module Player is a modplayer for Unix-like systems that
-plays over 90 mainstream and obscure module formats from Amiga, Atari,
-Acorn, Apple IIgs, Commodore 64 and PC, including Protracker (MOD),
-Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).
+The Extended Module Player is a modplayer for Unix-like systems that plays
+over 90 mainstream and obscure module formats from Amiga, Atari, Acorn,
+Apple IIgs, C64 and PC, including Protracker (MOD), Scream Tracker 3 (S3M),
+Fast Tracker II (XM) and Impulse Tracker (IT).
 
 %if %enable_audacious
 %package audacious
@@ -35,10 +35,10 @@ Group: Sound
 Requires: audacious
 
 %description audacious
-The Extended Module Player is a modplayer for Unix-like systems that
-plays over 90 mainstream and obscure module formats from Amiga, Atari,
-Acorn, Apple IIgs, Commodore 64 and PC, including Protracker (MOD),
-Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).
+The Extended Module Player is a modplayer for Unix-like systems that plays
+over 90 mainstream and obscure module formats from Amiga, Atari, Acorn,
+Apple IIgs, C64 and PC, including Protracker (MOD), Scream Tracker 3 (S3M),
+Fast Tracker II (XM) and Impulse Tracker (IT).
 
 This package contains the xmp plugin for the Audacious media player.
 %endif
@@ -50,10 +50,10 @@ Group: Sound
 Requires: beep-media-player
 
 %description bmp
-The Extended Module Player is a modplayer for Unix-like systems that
-plays over 90 mainstream and obscure module formats from Amiga, Atari,
-Acorn, Apple IIgs, Commodore 64 and PC, including Protracker (MOD),
-Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).
+The Extended Module Player is a modplayer for Unix-like systems that plays
+over 90 mainstream and obscure module formats from Amiga, Atari, Acorn,
+Apple IIgs, C64 and PC, including Protracker (MOD), Scream Tracker 3 (S3M),
+Fast Tracker II (XM) and Impulse Tracker (IT).
 
 This package contains the xmp plugin for the Beep Media Player.
 %endif
@@ -65,10 +65,10 @@ Group: Sound
 Requires: xmms
 
 %description xmms
-The Extended Module Player is a modplayer for Unix-like systems that
-plays over 90 mainstream and obscure module formats from Amiga, Atari,
-Acorn, Apple IIgs, Commodore 64 and PC, including Protracker (MOD),
-Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).
+The Extended Module Player is a modplayer for Unix-like systems that plays
+over 90 mainstream and obscure module formats from Amiga, Atari, Acorn,
+Apple IIgs, C64 and PC, including Protracker (MOD), Scream Tracker 3 (S3M),
+Fast Tracker II (XM) and Impulse Tracker (IT).
 
 This package contains the xmp plugin for XMMS.
 %endif

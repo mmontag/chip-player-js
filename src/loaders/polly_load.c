@@ -93,7 +93,6 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	uint8 *buf;
-	int offset;
 	int i, j, k;
 
 	LOAD_INIT();
@@ -117,6 +116,8 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	sprintf(m->type, "Polly Tracker");
 	MODULE_INFO();
 
+	m->xxh->tpo = 0x03;
+	m->xxh->bpm = 0x7d * buf[ORD_OFS + 193] / 0x88;
 #if 0
 	for (i = 0; i < 1024; i++) {
 		if ((i % 16) == 0) printf("\n");
@@ -147,6 +148,11 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 			for (k = 0; k < 4; k++) {
 				uint8 x = buf[i * PAT_SIZE + j * 4 + k];
 				event = &EVENT(i, k, j);
+				if (x == 0xf0) {
+					event->fxt = FX_BREAK;
+					event->fxp = 0;
+					continue;
+				}
 				event->note = LSN(x);
 				if (event->note)
 					event->note += 36;
@@ -161,12 +167,12 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->ins = m->xxh->smp = 15;
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 1, "     Len  LBeg LEnd L Vol Fin\n");
+	reportv(ctx, 1, "     Len  LBeg LEnd L Vol\n");
 
 	for (i = 0; i < 15; i++) {
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
-		m->xxs[i].len = 256 * buf[ORD_OFS + 144 + 1 + i] +
-					buf[ORD_OFS + 128 + 1 + i];
+		m->xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
+					256 * buf[ORD_OFS + 145 + i];
 		m->xxi[i][0].fin = 0;
 		m->xxi[i][0].vol = 0x40;
 		m->xxs[i].lps = 0;
@@ -186,17 +192,19 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Convert samples from 6 to 8 bits */
 	for (i = SMP_OFS; i < 0x10000; i++)
-		buf[i] <<= 2;
+		buf[i] = buf[i] << 2;
 
 	/* Read samples */
 	reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
 
-	for (offset = i = 0; i < m->xxh->ins; i++) {
+	for (i = 0; i < m->xxh->ins; i++) {
+		if (m->xxs[i].len == 0)
+			continue;
 		xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_NOLOAD | XMP_SMP_UNS,
 				&m->xxs[m->xxi[i][0].sid],
-				(char*)buf + SMP_OFS + offset);
-		offset += m->xxs[i].len;
+				(char*)buf + ORD_OFS + 256 +
+					256 * (buf[ORD_OFS + 129 + i] - 0x10));
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
