@@ -10,6 +10,8 @@
 #include "config.h"
 #endif
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "load.h"
 
 #define MAGIC_Funk	MAGIC4('F','u','n','k')
@@ -28,6 +30,8 @@ struct xmp_loader_info fnk_loader = {
 static int fnk_test(FILE *f, char *t, const int start)
 {
     uint8 a, b;
+    int size;
+    struct stat st;
 
     if (read32b(f) != MAGIC_Funk)
 	return -1;
@@ -41,6 +45,14 @@ static int fnk_test(FILE *f, char *t, const int start)
 	return -1;
 
     if (MSN(b) > 7 || LSN(b) > 9)	/* CPU and card */
+	return -1;
+
+    size = read32l(f);
+    if (size < 1024)
+	return -1;
+
+    fstat(fileno(f), &st);
+    if (size != st.st_size)
 	return -1;
 
     read_title(f, t, 0);
