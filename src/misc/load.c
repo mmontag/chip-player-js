@@ -443,6 +443,8 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
     if (st.st_size < 500)		/* set minimum valid module size */
 	goto err;
 
+    if (n) *n = 0;			/* reset name prior to testing */
+
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
 	if (li->enable) {

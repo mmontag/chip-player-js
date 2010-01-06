@@ -82,6 +82,9 @@ static int polly_test(FILE *f, char *t, const int start)
 		}
 	}
 
+	if (t)
+		memcpy(t, buf + ORD_OFS + 160, 16);
+
 	free(buf);
 
 	return 0;
