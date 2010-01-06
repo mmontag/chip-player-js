@@ -141,18 +141,20 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 	pos = ftell(f);
 	fseek(f, 0, SEEK_END);
-	fseek(f, -1023, SEEK_CUR);
-	fread(buf, 1, 1024, f);
-	fseek(f, start + pos, SEEK_SET);
-	for (i = 0; i < 1012; i++) {
-		if (!memcmp(buf + i, "MEDV\000\000\000\004", 8)) {
-			vermaj = *(buf + i + 10);
-			vermin = *(buf + i + 11);
-			break;
+	if (ftell(f) > 2000) {
+		fseek(f, -1023, SEEK_CUR);
+		fread(buf, 1, 1024, f);
+		for (i = 0; i < 1012; i++) {
+			if (!memcmp(buf + i, "MEDV\000\000\000\004", 8)) {
+				vermaj = *(buf + i + 10);
+				vermin = *(buf + i + 11);
+				break;
+			}
 		}
 	}
+	fseek(f, start + pos, SEEK_SET);
 
-	sprintf(m->type, "MED4 (MED %d.%02d)", vermaj, vermin);
+	snprintf(m->type, XMP_NAMESIZE, "MED4 (MED %d.%02d)", vermaj, vermin);
 
 	m0 = read8(f);
 
