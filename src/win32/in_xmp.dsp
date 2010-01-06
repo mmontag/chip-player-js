@@ -330,6 +330,10 @@ SOURCE=..\loaders\mfp_load.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\polly_load.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
 # Begin Source File
