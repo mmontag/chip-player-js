@@ -1,7 +1,7 @@
 
-VERSION	= 3.1.0-pre
+VERSION	= 3.1.0
 DIST    = xmp-$(VERSION)
-MODULES = "jerry-boleti.xm"
+MODULES = "graff-strange_land.xm"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  scripts $(MODULES)
 DDIRS	= docs drivers etc include loaders misc player plugin prowiz win32 \

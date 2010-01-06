@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-3.1.0 ():
+3.1.0 (20100107):
 	- implement MED4 instrument transposition
 	- fix build with MSVC++ 2008
 	- fix bogus information in winamp plugin file info display
@@ -15,6 +15,7 @@ Stable versions
 	- add Magnetic Fields Packer loader
 	- add The Player 6.1a prowizard loader
 	- add StoneCracker S404 decompressor (from amigadepacker)
+	- add Polly Tracker module loader
 	- code cleanup and optimizations
 
 3.0.1 (20091221):
