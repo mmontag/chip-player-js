@@ -89,7 +89,7 @@ static void play_channel (struct xmp_context *, int, int);
 /* #include "effects.c" */
 
 
-static void dummy(unsigned long ul)
+static void dummy(unsigned long ul, void *data)
 {
     /* dummy */
 }
@@ -902,7 +902,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	struct flow_control *f = &p->flow;
 
 	if (p->pause) {
-		p->event_callback(0);
+		p->event_callback(0, p->callback_data);
 		return 0;
 	}
 

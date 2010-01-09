@@ -215,7 +215,7 @@ char *xmp_get_driver_description(xmp_context);
 void xmp_set_driver_parameter(struct xmp_options *, char *);
 void xmp_get_driver_cfg(xmp_context, int *, int *, int *, int *);
 void xmp_channel_mute(xmp_context, int, int, int);
-void xmp_register_event_callback(xmp_context, void (*)(unsigned long));
+void xmp_register_event_callback(xmp_context, void (*)(unsigned long, void *), void *);
 int xmp_player_ctl(xmp_context, int, int);
 int xmp_open_audio(xmp_context);
 void xmp_close_audio(xmp_context);

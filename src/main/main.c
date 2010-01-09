@@ -256,7 +256,7 @@ static int stdin_ready_for_reading()
 }
 #endif
 
-static void process_echoback(unsigned long i)
+static void process_echoback(unsigned long i, void *data)
 {
     unsigned long msg = i >> 4;
     static int _pos = -1;
@@ -515,7 +515,7 @@ int main(int argc, char **argv)
 	}
     }
 
-    xmp_register_event_callback(ctx, process_echoback);
+    xmp_register_event_callback(ctx, process_echoback, NULL);
 
     if (opt->verbosity) {
 	fprintf(stderr, "Extended Module Player " VERSION "\n"

@@ -108,11 +108,12 @@ void xmp_set_driver_parameter(struct xmp_options *o, char *s)
 	drv_parm++;
 }
 
-void xmp_register_event_callback(xmp_context ctx, void (*cb) (unsigned long))
+void xmp_register_event_callback(xmp_context ctx, void (*cb)(unsigned long, void *), void *data)
 {
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 
 	p->event_callback = cb;
+	p->callback_data = data;
 }
 
 void xmp_channel_mute(xmp_context ctx, int from, int num, int on)

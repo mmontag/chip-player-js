@@ -261,7 +261,7 @@ static void bufdump()
 			if ((read(seqfd, &echo_msg, 4) == 4) &&
 			    ((echo_msg & 0xff) == SEQ_ECHO)) {
 				echo_msg >>= 8;
-				p_ctx->event_callback(echo_msg);
+				p_ctx->event_callback(echo_msg, p_ctx->callback_data);
 			} else
 				echo_msg = 0;	/* ECHO_NONE */
 		}

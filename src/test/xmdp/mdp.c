@@ -32,6 +32,8 @@
     }									\
 }
 
+void init_drivers(void);
+
 extern char *mdp_font1[];
 extern char *mdp_font2[];
 extern struct font_header font1;
@@ -377,7 +379,7 @@ void process_events ()
 }
 
 
-static void event_callback(unsigned long i)
+static void event_callback(unsigned long i, void *data)
 {
     static int ord = -1, pat = -1, row = -1, gvl = -1, ins = 0;
     static int global_vol;
@@ -428,7 +430,7 @@ void usage ()
 int main (int argc, char **argv)
 {
     int o;
-    struct xmp_options opt;
+    /* struct xmp_options opt; */
 
     init_drivers();
     ctx = xmp_create_context();
@@ -481,7 +483,7 @@ int main (int argc, char **argv)
     }
 #endif
 
-    xmp_register_event_callback(ctx, event_callback);
+    xmp_register_event_callback(ctx, event_callback, NULL);
 
     switch (xmp_load_module(ctx, argv[optind])) {
     case -1:

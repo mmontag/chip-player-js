@@ -585,7 +585,7 @@ void xmp_smix_echoback(struct xmp_context *ctx, int msg)
     struct xmp_player_context *p = &ctx->p;
     struct xmp_smixer_context *s = &ctx->s;
 
-    p->event_callback(s->echo_msg = msg);
+    p->event_callback(s->echo_msg = msg, p->callback_data);
 }
 
 
