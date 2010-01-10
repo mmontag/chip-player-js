@@ -57,6 +57,9 @@ The Authors
 - updated OPL emulation
 - misc hacks
 
+* Tom Hargreaves <hex@freezone.co.uk>
+- Digital Symphony and Archimedes Tracker loader fixes
+
 * Keith Hargrove <Keith.Hargrove@Eng.Sun.COM>
 - Solaris driver fixes
 
