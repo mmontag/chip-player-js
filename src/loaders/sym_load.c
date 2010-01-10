@@ -37,8 +37,12 @@ static int sym_test(FILE * f, char *t, const int start)
 
 	ver = read8(f);
 
-	if (ver > 0)		// FIXME
+	/* v1 files are the same as v0 but may contain strange compression
+	 * formats. Deal with that problem later if it arises.
+	 */
+	if (ver > 1) {
 		return -1;
+	}
 
 	read8(f);		/* chn */
 	read16l(f);		/* pat */
@@ -113,16 +117,25 @@ static void fix_effect(struct xxm_event *e, int parm)
 		e->fxp = (EX_TREMOLO_WF << 4) | (parm & 0x0f);
 		break;
 	case 0x19:	/* 19 xxx Retrig Note */
-		e->fxt = FX_EXTENDED;
-		e->fxp = (EX_RETRIG << 4) | (parm & 0x0f);
+		if (parm < 0x10) {
+			e->fxt = FX_EXTENDED;
+			e->fxp = (EX_RETRIG << 4) | (parm & 0x0f);
+		} else {
+			/* ignore */
+			e->fxt = 0;
+		}
 		break;
 	case 0x1a:	/* 1A xyy Fine Slide Up + Fine Volume Slide Down */
 		e->fxt = FX_EXTENDED;
 		e->fxp = (EX_F_PORTA_UP << 4) | (parm & 0x0f);
+		e->f2t = FX_EXTENDED;
+		e->f2p = (EX_F_VSLIDE_DN << 4) | (parm >> 8);
 		break;
 	case 0x1b:	/* 1B xyy Fine Slide Down + Fine Volume Slide Down */
 		e->fxt = FX_EXTENDED;
 		e->fxp = (EX_F_PORTA_DN << 4) | (parm & 0x0f);
+		e->f2t = FX_EXTENDED;
+		e->f2p = (EX_F_VSLIDE_DN << 4) | (parm >> 8);
 		break;
 	case 0x1c:	/* 1C xxx Note Cut */
 		e->fxt = FX_EXTENDED;
@@ -140,15 +153,33 @@ static void fix_effect(struct xxm_event *e, int parm)
 		e->fxt = 0;
 		break;
 	case 0x20:	/* 20 xyz Normal play or Arpeggio + Volume Slide Down */
-	case 0x21:	/* 21 xyy Slide Up + Volume Slide Down */
-	case 0x22:	/* 22 xyy Slide Down + Volume Slide Down */
+		e->fxt = FX_ARPEGGIO;
 		e->fxp = parm & 0xff;
 		e->f2t = FX_VOLSLIDE_DN;
 		e->f2p = parm >> 8;
 		break;
+	case 0x21:	/* 21 xyy Slide Up + Volume Slide Down */
+		e->fxt = FX_PORTA_UP;
+		e->fxp = parm & 0xff;
+		e->f2t = FX_VOLSLIDE_DN;
+		e->f2p = parm >> 8;
+		break;
+	case 0x22:	/* 22 xyy Slide Down + Volume Slide Down */
+		e->fxt = FX_PORTA_DN;
+		e->fxp = parm & 0xff;
+		e->f2t = FX_VOLSLIDE_DN;
+		e->f2p = parm >> 8;
+		break;
+	case 0x2f:	/* 2F xxx Set Tempo */
+		if (parm >= 0x100 && parm <= 0x800) {
+			e->fxt = FX_TEMPO;
+			e->fxp = (parm+4) >> 3; /* round to nearest */
+		} else {
+			/* umm... */
+		}
+		break;
 	case 0x2a:	/* 2A xyz Volume Slide + Fine Slide Down */
 	case 0x2b:	/* 2B xyy Line Jump */
-	case 0x2f:	/* 2F xxx Set Tempo */
 	case 0x30:	/* 30 xxy Set Stereo */
 	case 0x31:	/* 31 xxx Song Upcall */
 	case 0x32:	/* 32 xxx Unset Sample Repeat */
@@ -189,6 +220,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	uint32 a, b;
 	uint8 *buf;
 	int size;
+	uint8 allowed_effects[8];
 
 	LOAD_INIT();
 
@@ -218,7 +250,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	a = read8(f);			/* track name length */
 
 	fread(m->name, 1, a, f);
-	fseek(f, 8, SEEK_CUR);		/* skip effects table */
+	fread(&allowed_effects, 1, 8, f);
 
 	MODULE_INFO();
 
@@ -294,7 +326,11 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			event->fxt = (b & 0x000fc000) >> 14;
 			parm = (b & 0xfff00000) >> 20;
 
-			fix_effect(event, parm);
+			if (allowed_effects[event->fxt >> 3] & (1 << (event->fxt & 7))) {
+				fix_effect(event, parm);
+			} else {
+				event->fxt = 0;
+			}
 		}
 		if (V(0)) {
 			if (i % m->xxh->chn == 0)
@@ -335,7 +371,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxi[i][0].pan = 0x80;
 			/* finetune adjusted comparing DSym and S3M versions
 			 * of "inside out" */
-			m->xxi[i][0].fin = (int8)(read8(f) << 3);
+			m->xxi[i][0].fin = (int8)(read8(f) << 4);
 			m->xxi[i][0].sid = i;
 		}
 
@@ -352,7 +388,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		a = read8(f);
 
-		if (a != 0 && a != 1 && a != 4)
+		if (a != 0 && a != 1)
 			return -1;
 
 		if (a == 1) {
