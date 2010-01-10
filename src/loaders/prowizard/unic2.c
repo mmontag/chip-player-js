@@ -134,8 +134,7 @@ static int test_unic2 (uint8 *data, int s)
 	PW_REQUEST_DATA (s, 1084);
 
 	/* test #2 ID = $00000000 ? */
-	if (data[start + 1080] == 00 && data[start + 1081] == 00 &&
-		data[start + 1082] == 00 && data[start + 1083] == 00)
+	if (readmem32b(data + start + 1080) == 0x00000000)
 		return -1;
 
 	/* test 2,5 :) */
