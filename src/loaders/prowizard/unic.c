@@ -141,8 +141,7 @@ static int depack_unic (FILE *in, FILE *out)
 				fxp = 16 * c3 + c4;
 			}
 
-			tmp[j * 4] = (ins & 0xf0);
-			tmp[j * 4] |= ptk_table[note][0];
+			tmp[j * 4] = (ins & 0xf0) | ptk_table[note][0];
 			tmp[j * 4 + 1] = ptk_table[note][1];
 			tmp[j * 4 + 2] = ((ins << 4) & 0xf0) | fxt;
 			tmp[j * 4 + 3] = fxp;
@@ -163,7 +162,7 @@ static int test_unic_id (uint8 *data, int s)
 	int start = 0, ssize;
 
 	/* test 1 */
-	PW_REQUEST_DATA (s, 1084);
+	PW_REQUEST_DATA(s, 1084);
 
 	if (readmem32b(data + start + 1080) != MAGIC_M_K_)
 		return -1;
@@ -211,12 +210,12 @@ static int test_unic_id (uint8 *data, int s)
 	while (j != 128) {
 		if (data[start + 952 + j] != 0)
 			return -1;
-		j += 1;
+		j++;
 	}
 	/* k is the number of pattern in the file (-1) */
-	k += 1;
+	k++;
 
-	PW_REQUEST_DATA (s, 1084 + k * 256 * 3);
+	PW_REQUEST_DATA(s, 1084 + k * 256 * 3);
 
 #if 0
 	/* test #5 pattern data ... */
@@ -240,7 +239,7 @@ static int test_unic_emptyid (uint8 *data, int s)
 	int start = 0, ssize;
 
 	/* test 1 */
-	PW_REQUEST_DATA (s, 1084);
+	PW_REQUEST_DATA(s, 1084);
 
 	/* test #2 ID = $00000000 ? */
 	if (readmem32b(data + start + 1080) != MAGIC_0000)
@@ -250,11 +249,11 @@ static int test_unic_emptyid (uint8 *data, int s)
 	ssize = 0;
 	o = 0;
 	for (k = 0; k < 31; k++) {
-		int x = start + k * 30;
+		int x = start + k * 30, y;
 
-		j = (((data[x + 42] << 8) + data[x + 43]) * 2);
-		m = (((data[x + 46] << 8) + data[x + 47]) * 2);
-		n = (((data[x + 48] << 8) + data[x + 49]) * 2);
+		j = readmem16b(data + x + 42) * 2;
+		m = readmem16b(data + x + 46) * 2;
+		n = readmem16b(data + x + 48) * 2;
 		ssize += j;
 
 		if (n != 0 && (j + 2) < (m + n))
@@ -267,9 +266,8 @@ static int test_unic_emptyid (uint8 *data, int s)
 			return -1;
 
 		/* finetune ... */
-		if ((((data[x + 40] << 8) + data[x + 41]) != 0 && j == 0)
-			|| ((data[x + 40] * 256 + data[x + 41] > 8)
-			&& (data[x + 40] * 256 + data[x + 41]) < 247))
+		y = readmem16b(data + x + 40);
+		if ((y != 0 && j == 0) || (y > 8 && y < 247))
 			return -1;
 
 		/* loop start but no replen ? */
@@ -317,7 +315,7 @@ static int test_unic_emptyid (uint8 *data, int s)
 		return -1;
 #endif
 
-	PW_REQUEST_DATA (s, 1084 + k * 256 * 3 + 2);
+	PW_REQUEST_DATA(s, 1084 + k * 256 * 3 + 2);
 
 	for (j = 0; j < (k << 8); j++) {
 		int y = start + 1084 + j * 3;
@@ -358,7 +356,7 @@ static int test_unic_noid (uint8 *data, int s)
 	int start = 0, ssize;
 
 	/* test 1 */
-	PW_REQUEST_DATA (s, 1084);
+	PW_REQUEST_DATA(s, 1084);
 
 	/* test #2 ID = $00000000 ? */
 	if (readmem32b(data + start + 1080) == MAGIC_0000)
@@ -368,11 +366,11 @@ static int test_unic_noid (uint8 *data, int s)
 	ssize = 0;
 	o = 0;
 	for (k = 0; k < 31; k++) {
-		int x = start + k * 30;
+		int x = start + k * 30, y;
 
-		j = (((data[x + 42] << 8) + data[x + 43]) * 2);
-		m = (((data[x + 46] << 8) + data[x + 47]) * 2);
-		n = (((data[x + 48] << 8) + data[x + 49]) * 2);
+		j = readmem16b(data + x + 42) * 2;
+		m = readmem16b(data + x + 46) * 2;
+		n = readmem16b(data + x + 48) * 2;
 
 		ssize += j;
 		if (n != 0 && (j + 2) < (m + n))
@@ -387,9 +385,8 @@ static int test_unic_noid (uint8 *data, int s)
 			return -1;
 
 		/* finetune ... */
-		if (((data[x + 40] * 256 + data[x + 41]) != 0 && j == 0)
-			|| ((data[x + 40] * 256 + data[x + 41]) > 8 &&
-			data[x + 40] * 256 + data[x + 41] < 247))
+		y = readmem16b(data + x + 40);
+		if ((y != 0 && j == 0) || (y > 8 && y < 247))
 			return -1;
 
 		/* loop start but no replen ? */
@@ -440,7 +437,7 @@ static int test_unic_noid (uint8 *data, int s)
 	}
 #endif
 
-	PW_REQUEST_DATA (s, 1080 + k * 256 * 3 + 2);
+	PW_REQUEST_DATA(s, 1080 + k * 256 * 3 + 2);
 
 	for (j = 0; j < (k << 8); j++) {
 		int y = start + 1080 + j * 3;

@@ -4,6 +4,7 @@ Stable versions
 3.2.0 ():
 	- Digital Symphony fixes by Tom Hargreaves
 	- Archimedes Tracker fixes by Tom Hargreaves
+	- code cleanup and optimizations
 
 3.1.0 (20100107):
 	- implement MED4 instrument transposition
