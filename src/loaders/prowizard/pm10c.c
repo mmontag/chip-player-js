@@ -339,22 +339,18 @@ restart:
 	return 0;
 }
 
-static int test_p10c(uint8 * data, int s)
+static int test_p10c(uint8 *data, int s)
 {
-	int i = 0, j, k, l;
 	int start = 0;
+	uint8 magic[] = {
+		0x60, 0x38, 0x60, 0x00, 0x00, 0xa0, 0x60, 0x00,
+		0x01, 0x3e, 0x60, 0x00, 0x01, 0x0c, 0x48, 0xe7
+	};
 
 	/* test 1 */
 	PW_REQUEST_DATA(s, 22);
 
-	if (data[i] != 0x60 || data[i + 1] != 0x38 || data[i + 2] != 0x60 ||
-	    data[i + 3] != 0x00 || data[i + 4] != 0x00 ||
-	    data[i + 5] != 0xa0 || data[i + 6] != 0x60 ||
-	    data[i + 7] != 0x00 || data[i + 8] != 0x01 ||
-	    data[i + 9] != 0x3e || data[i + 10] != 0x60 ||
-	    data[i + 11] != 0x00 || data[i + 12] != 0x01 ||
-	    data[i + 13] != 0x0c || data[i + 14] != 0x48 ||
-	    data[i + 15] != 0xe7)
+	if (memcmp(data + start, magic, 16) != 0)
 		return -1;
 
 	/* test 2 */
@@ -363,20 +359,15 @@ static int test_p10c(uint8 * data, int s)
 
 	PW_REQUEST_DATA(s, 4714);
 
-	/* test 3 */
-	j = (data[start + 4452] << 24) + (data[start + 4453] << 16) +
-	    (data[start + 4454] << 8) + data[start + 4455];
-
 #if 0
+	/* test 3 */
+	j = readmem32b(data + start + 4452);
 	if ((start + j + 4452) > in_size)
 		return -1;
 #endif
 
 	/* test 4 */
-	k = (data[start + 4712] << 8) + data[start + 4713];
-	l = k / 4;
-	l *= 4;
-	if (l != k)
+	if (readmem16b(data + start + 4712) & 0x03)
 		return -1;
 
 	/* test 5 */
@@ -384,7 +375,7 @@ static int test_p10c(uint8 * data, int s)
 		return -1;
 
 	/* test 6 */
-	if (data[start + 37] != 0xFC)
+	if (data[start + 37] != 0xfc)
 		return -1;
 
 	return 0;
