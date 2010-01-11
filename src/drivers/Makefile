@@ -20,7 +20,7 @@ dist-drivers:
 	cp -RPp $(addprefix $(DRIVERS_PATH)/,$(DRIVERS_DFILES)) $(DIST)/$(DRIVERS_PATH)
 
 $(DRIVERS_PATH)/beos.o: src/drivers/beos.c
-	g++ -c $(XCFLAGS) -o beos.o $+
+	g++ -c $(XCFLAGS) -o $@ $+
 
 $(DRIVERS_PATH)/arts.o: src/drivers/arts.c
 	$(CC) $(CFLAGS) $(XCFLAGS) `artsc-config --cflags` -o $@ $+
