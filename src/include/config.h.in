@@ -64,12 +64,6 @@
 /* Define if awedrv defines AWE_MD_NEW_VOLUME_CALC.  */
 #undef HAVE_AWE_MD_NEW_VOLUME_CALC
 
-/* Define if you have the vprintf function.  */
-#undef HAVE_VPRINTF
-
-/* Define if you have the snprintf function.  */
-#undef HAVE_SNPRINTF
-
 /* Define if you have the usleep function.  */
 #undef HAVE_USLEEP
 
@@ -99,9 +93,6 @@
 
 /* Define if you have the <signal.h> header file.  */
 #undef HAVE_SIGNAL_H
-
-/* Define if you have the <unistd.h> header file.  */
-#undef HAVE_UNISTD_H
 
 /* Define if you have the <termios.h> header file.  */
 #undef HAVE_TERMIOS_H
@@ -135,9 +126,6 @@
 
 /* Define if you have the <sys/asoundlib.h> header file.  */
 #undef HAVE_SYS_ASOUNDLIB_H
-
-/* Define if you have the <strings.h> header file.  */
-#undef HAVE_STRINGS_H
 
 /* Define if you have the <getopt.h> header file.  */
 #undef HAVE_GETOPT_H
