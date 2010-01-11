@@ -240,7 +240,7 @@ static void bufdump(struct xmp_context *ctx, int i)
 	}
 }
 
-static void myshutdown(struct xmp_context *)
+static void myshutdown(struct xmp_context *ctx)
 {
 	player->Stop(); 
 	xmp_smix_off(ctx);

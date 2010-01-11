@@ -594,14 +594,14 @@ nto-qnx*)
 dnl
 dnl	Test for BeOS
 dnl
-beos*)
-    AC_CHECK_HEADERS(SoundPlayer.h)
-    if test "${ac_cv_header_SoundPlayer_h}" = "yes"; then
+beos*|haiku)
+    dnl AC_CHECK_HEADERS(SoundPlayer.h)
+    dnl if test "${ac_cv_header_SoundPlayer_h}" = "yes"; then
 	DRIVERS="${DRIVERS} beos.o"
 	AC_DEFINE(DRIVER_BEOS)
 	LIBS="${LIBS} -lmedia -lbe"
 	LIBM=""
-    fi
+    dnl fi
     ;;
 dnl
 dnl	Test for AmigaOS

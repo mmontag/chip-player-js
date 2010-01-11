@@ -65,11 +65,10 @@ typedef unsigned short int uint16;
 typedef unsigned int uint32;
 #endif
 
-/* MSVC++6.0 has no long long */
-#ifdef _MSC_VER
+#ifdef _MSC_VER				/* MSVC++6.0 has no long long */
 typedef signed __int64 int64;
 typedef unsigned __int64 uint64;
-#else
+#elif !defined B_BEOS_VERSION		/*BeOS has its own int64 definition */
 typedef unsigned long long uint64;
 typedef signed long long int64;
 #endif
