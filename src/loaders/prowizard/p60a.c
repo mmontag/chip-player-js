@@ -169,7 +169,7 @@ static int depack_p60a(FILE *in, FILE *out)
 		    c4 = read8(in);
 		    c1 = 0xff - c1;
 
-		    *x++ = ((c1 << 4) & 0x10) | (ptk_table[c1 / 2][0]);
+		    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
 		    *x++ = ptk_table[c1 / 2][1];
 
 		    c6 = c2 & 0x0f;
@@ -179,19 +179,17 @@ static int depack_p60a(FILE *in, FILE *out)
 		    *x++ = c2;
 
 		    if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-			c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
+			c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
 
 		    *x++ = c3;
 
 		    if (c6 == 0x0d) {		/* pattern break */
 			max_row = k;
-			k = 9999l;
-			continue;
+			break;
 		    }
 		    if (c6 == 0x0b) {		/* pattern jump */
 			max_row = k;
-			k = 9999l;
-			continue;
+			break;
 		    }
 		    if (c4 < 0x80) {		/* skip rows */
 			k += c4;
@@ -203,7 +201,7 @@ static int depack_p60a(FILE *in, FILE *out)
 			k += 1;
 			x = &tdata[i * 4 + j][k * 4];
 
-			*x++ = ((c1 << 4) & 0x10) | (ptk_table[c1 / 2][0]);
+			*x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
 			*x++ = ptk_table[c1 / 2][1];
 
 			c6 = c2 & 0x0f;
@@ -213,7 +211,7 @@ static int depack_p60a(FILE *in, FILE *out)
 			*x++ = c2;
 
 			if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-			    c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
+			    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
 
 			*x++ = c3;
 		    }
@@ -235,7 +233,7 @@ static int depack_p60a(FILE *in, FILE *out)
 			if ((c1 & 0x80) == 0x80 && c1 != 0x80) {
 			    c4 = read8(in);
 			    c1 = 0xff - c1;
-			    *x++ = ((c1 << 4) & 0x10) | (ptk_table[c1 / 2][0]);
+			    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
 			    *x++ = ptk_table[c1 / 2][1];
 
 			    c6 = c2 & 0x0f;
@@ -245,7 +243,7 @@ static int depack_p60a(FILE *in, FILE *out)
 			    *x++ = c2;
 
 			    if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-				c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
+				c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
 
 			    *x++ = c3;
 
@@ -270,7 +268,7 @@ static int depack_p60a(FILE *in, FILE *out)
 				x = &tdata[i * 4 + j][k * 4];
 
 				*x++ = ((c1 << 4) & 0x10) |
-						(ptk_table[c1 / 2][0]);
+						ptk_table[c1 / 2][0];
 				*x++ = ptk_table[c1 / 2][1];
 
 				c6 = c2 & 0x0f;
@@ -280,14 +278,14 @@ static int depack_p60a(FILE *in, FILE *out)
 				*x++ = c2;
 
 				if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-				    c3 = (c3 > 0x7f) ? ((0x100 - c3) << 4) : c3;
+				    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
 				*x++ = c3;
 			    }
 			}
 
 			x = &tdata[i * 4 + j][k * 4];
 
-			*x++ = ((c1 << 4) & 0x10) | (ptk_table[c1 / 2][0]);
+			*x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
 			*x++ = ptk_table[c1 / 2][1];
 
 			c6 = c2 & 0x0f;
@@ -309,7 +307,7 @@ static int depack_p60a(FILE *in, FILE *out)
 
 		x = &tdata[i * 4 + j][k * 4];
 
-		*x++ = ((c1 << 4) & 0x10) | (ptk_table[c1 / 2][0]);
+		*x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
 		*x++ = ptk_table[c1 / 2][1];
 
 		c6 = c2 & 0x0f;
