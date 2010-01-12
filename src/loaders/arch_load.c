@@ -279,11 +279,6 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);
 	m->xxs[i].lpe = read32l(f);
 
-	/* non-zero repeat offset and repeat length of 2 means loop to
-	 * end of sample */
-	if (m->xxs[i].lpe == 2 && m->xxs[i].lps > 0)
-		m->xxs[i].lpe = m->xxs[i].len;
-
 	read32l(f);	/* SDAT */
 	read32l(f);
 	read32l(f);	/* 0x00000000 */
@@ -295,6 +290,11 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if (m->xxs[i].lpe > 2) {
 		m->xxs[i].flg = WAVE_LOOPING;
 		m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
+	} else if (m->xxs[i].lpe == 2 && m->xxs[i].lps > 0) {
+		/* non-zero repeat offset and repeat length of 2
+		 * means loop to end of sample */
+		m->xxs[i].flg = WAVE_LOOPING;
+		m->xxs[i].lpe = m->xxs[i].len;
 	}
 
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, XMP_SMP_VIDC,
