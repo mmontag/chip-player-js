@@ -222,7 +222,7 @@ static int depack_p60a(FILE *in, FILE *out)
 		    c4 = read8(in);
 		    a = ftell(in);
 		    c5 = c2;
-		    fseek (in, -((c3 << 8) + c4), SEEK_CUR);
+		    fseek(in, -((c3 << 8) + c4), SEEK_CUR);
 		    for (l = 0; l <= c5; l++, k++) {
 			x = &tdata[i * 4 + j][k * 4];
 
@@ -300,7 +300,7 @@ static int depack_p60a(FILE *in, FILE *out)
 			*x++ = c3;
 		    }
 
-		    fseek (in, a, SEEK_SET);
+		    fseek(in, a, SEEK_SET);
 		    k -= 1;
 		    continue;
 		}
@@ -349,10 +349,10 @@ static int depack_p60a(FILE *in, FILE *out)
 
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
-	fseek (in, sdata_addr + saddr[i + 1], SEEK_SET);
+	fseek(in, sdata_addr + saddr[i + 1], SEEK_SET);
 	smp_buffer = malloc(smp_size[i]);
 	memset(smp_buffer, 0, smp_size[i]);
-	fread (smp_buffer, smp_size[i], 1, in);
+	fread(smp_buffer, smp_size[i], 1, in);
 	if (GLOBAL_DELTA == ON) {
 	    c1 = 0x00;
 	    for (j = 1; j < smp_size[i]; j++) {
@@ -407,33 +407,32 @@ static int test_p60a(uint8 *data, int s)
 	ssize = 0;
 	for (n = 0; n < k; n++) {
 		o = ((data[start + 4 + n * 6] << 8) + data[start + 5 + n * 6]);
-		if ((o < 0xFFDF && o > 0x8000) || o == 0)
+		if ((o < 0xffdf && o > 0x8000) || o == 0)
 			return -1;
 
-		if (o < 0xFF00)
-			ssize += (o * 2);
+		if (o < 0xff00)
+			ssize += o * 2;
 
-		j = ((data[start + 8 + n * 6] << 8) + data[start + 9 + n * 6]);
-		if (j != 0xFFFF && j >= o)
+		j = readmem16b(data + start + 8 + n * 6);
+		if (j != 0xffff && j >= o)
 			return -1;
 
-		if (o > 0xFFDF) {
-			if ((0xFFFF - o) > k)
+		if (o > 0xffdf) {
+			if (0xffff - o > k)
 				return -1;
 		}
 	}
 
 	/* test sample data address */
 	/* j is the address of the sample data */
-	j = (data[start] << 8) + data[start + 1];
-	if (j < (k * 6 + 4 + m * 8))
+	j = readmem16b(data + start);
+	if (j < k * 6 + 4 + m * 8)
 		return -1;
 
 	/* test track table */
-	for (l = 0; l < (m * 4); l++) {
-		o = ((data[start + 4 + k * 6 + l * 2] << 8) +
-			data[start + 4 + k * 6 + l * 2 + 1]);
-		if ((o + k * 6 + 4 + m * 8) > j)
+	for (l = 0; l < m * 4; l++) {
+		o = readmem16b(data + start + 4 + k * 6 + l * 2);
+		if (o + k * 6 + 4 + m * 8 > j)
 			return -1;
 	}
 
@@ -442,8 +441,8 @@ static int test_p60a(uint8 *data, int s)
 	/* first, test if we dont oversize the input file */
 	PW_REQUEST_DATA(s, start + k * 6 + 4 + m * 8);
 
-	while ((data[start + k * 6 + 4 + m * 8 + l] != 0xFF) && (l < 128)) {
-		if (data[start + k * 6 + 4 + m * 8 + l] > (m - 1))
+	while (data[start + k * 6 + 4 + m * 8 + l] != 0xff && l < 128) {
+		if (data[start + k * 6 + 4 + m * 8 + l] > m - 1)
 			return -1;
 
 		if (data[start + k * 6 + 4 + m * 8 + l] > o)
@@ -452,7 +451,7 @@ static int test_p60a(uint8 *data, int s)
 	}
 
 	/* are we beside the sample data address ? */
-	if ((k * 6 + 4 + m * 8 + l) > j)
+	if (k * 6 + 4 + m * 8 + l > j)
 		return -1;
 
 	if (l == 0 || l == 128)
