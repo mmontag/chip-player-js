@@ -171,8 +171,14 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Sequence */
 
 	fseek(f, start + seq_ptr, SEEK_SET);
-	for (i = 0; i < m->xxh->len; i++)
-		m->xxo[i] = read8(f);
+	for (i = 0; ; i++) {
+		uint8 x = read8(f);
+		if (x == 0xff)
+			break;
+		m->xxo[i] = x;
+	}
+	for (; i % 4; i++)	/* for alignment */
+		read8(f);
 
 
 	/* Patterns */
@@ -189,6 +195,8 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 		for (j = 0; j < (64 * m->xxh->chn); j++) {
 			event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 			event->note = read8(f);
+			if (event->note)
+				event->note += 36;
 			event->ins = read8(f);
 			event->fxt = read8(f);
 			event->fxp = read8(f);
@@ -210,8 +218,8 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + smp_ptr[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
-					&m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
