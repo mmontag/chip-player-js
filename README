@@ -97,6 +97,7 @@ The current version recognizes the following module formats:
   MUSX	****	Archimedes Tracker	V1.0+++
   DSYM  ****	Digital Symphony	0
   DTT	**	Desktop Tracker		-
+  COCO	**	Coconizer		old
 
   IIgs tracker formats:
 
