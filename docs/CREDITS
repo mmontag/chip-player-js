@@ -189,18 +189,10 @@ Other contributors
 
 * Module samples
   Sylvain Chipaux, Bert Jahn, Miod Vallat, Adi Sapir, Jools "BuZz" Smyth,
-  Martin Jeppesen, Stuart Caie, Bernhard März, Matthias Arndt
+  Martin Jeppesen, Stuart Caie, Bernhard März, Matthias Arndt,
+  Tom Hargreaves
 
 * Hardware
   Davi Lima (AWE32 card with 2Mb RAM), Miod "Pitr" Vallat (Mach 3 rasoir,
   lames, baume après-rasage, pansements antiseptiques).
-
-* OSX builds and packaging
-  Rudá Moura
-
-* RPM packaging
-  Dominik Mierzejewski
-
-* Web space
-  Robinson Mioshi (1996-97), Eric Bouquerel (1997-98)
 

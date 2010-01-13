@@ -22,25 +22,36 @@ struct xmp_loader_info coco_loader = {
 	coco_load
 };
 
+static int check_cr(uint8 *s, int n)
+{
+	while (n--) {
+		if (*s++ == 0x0d)
+			return 0;
+	}
+
+	return -1;
+}
+
 static int coco_test(FILE *f, char *t, const int start)
 {
-	uint8 x;
+	uint8 x, buf[20];
 	uint32 y;
-	int n;
+	int n, i;
 
-	read32l(f);			/* ? */
-	read8(f);
+	x = read8(f);
 
-	x = read8(f) & 0x3f;
-	if (x != 0x04 && x != 0x08)
+	/* check number of channels */
+	if (x != 0x84 && x != 0x88)
 		return -1;
 
-	fseek(f, 19, SEEK_CUR);		/* skip title */
-
-	if (read8(f) != 0x0d)
+	fread(buf, 1, 20, f);		/* read title */
+	if (check_cr(buf, 20) != 0)
 		return -1;
 
 	n = read8(f);			/* instruments */
+	if (n > 100)
+		return -1;
+
 	read8(f);			/* sequences */
 	read8(f);			/* patterns */
 
@@ -52,12 +63,41 @@ static int coco_test(FILE *f, char *t, const int start)
 	if (y < 64 || y > 0x00100000)
 		return -1;
 
-	y = read32l(f);
-	if (y < 64 || y > 0x00100000)	/* offset of samples */
-		return -1;
+	for (i = 0; i < n; i++) {
+		int ofs = read32l(f);
+		int len = read32l(f);
+		int vol = read32l(f);
+		int lps = read32l(f);
+		int lsz = read32l(f);
+
+		if (ofs < 64 || ofs > 0x00100000)
+			return -1;
+
+		if (vol > 0xff)
+			return -1;
+
+		if (len > 0x00100000 || lps > 0x00100000 || lsz > 0x00100000)
+			return -1;
+
+		if (lps + lsz - 1 > len)
+			return -1;
+
+		fread(buf, 1, 11, f);
+		if (check_cr(buf, 11) != 0)
+			return -1;
+
+		read8(f);	/* unused */
+	}
 
 	fseek(f, start + 1, SEEK_SET);
-	read_title(f, t, 19);
+	read_title(f, t, 20);
+
+#if 0
+	for (i = 0; i < 20; i++) {
+		if (t[i] == 0x0d)
+			t[i] = 0;
+	}
+#endif
 	
 	return 0;
 }
@@ -68,17 +108,17 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	int i, j;
-	int seq_ptr, pat_ptr, smp_ptr;
-	unsigned char x;
+	int seq_ptr, pat_ptr, smp_ptr[100];
 
 	LOAD_INIT();
 
-	read32l(f);			/* ? */
-	read8(f);
-
 	m->xxh->chn = read8(f) & 0x3f;
-	read_title(f, m->name, 19);
-	read8(f);
+	read_title(f, m->name, 20);
+
+	for (i = 0; i < 20; i++) {
+		if (m->name[i] == 0x0d)
+			m->name[i] = 0;
+	}
 
 	strcpy(m->type, "Coconizer");
 
@@ -89,69 +129,38 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	seq_ptr = read32l(f);
 	pat_ptr = read32l(f);
-	smp_ptr = read32l(f);
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 1, "     Name        Len  LBeg LEnd L Vol\n");
+	m->volbase = 0xff;
+
+	reportv(ctx, 1, "     Name          Len  LBeg  LEnd L Vol\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-		m->xxs[i].len = read16l(f);
-
-		m->xxi[i][0].vol = 0x40;
+		smp_ptr[i] = read32l(f);
+		m->xxs[i].len = read32l(f);
+		m->xxi[i][0].vol = 0xff - read32l(f);
 		m->xxi[i][0].pan = 0x80;
-
-		do {
-			int val;
-
-			switch ((x = read8(f))) {
-			case 0x00:
-				switch ((val = read16l(f))) {
-				case 0x00:
-					m->xxs[i].lps = read32l(f);
-                			m->xxs[i].lpe = m->xxs[i].lps +
-							read32l(f);
-					m->xxs[i].flg = m->xxs[i].lps > 0 ?
-							WAVE_LOOPING : 0;
-					x = 0xfe;
-					break;
-				default:
-					m->xxi[i][0].vol = 0x40 - (val >> 8);
-					break;
-				}
-				break;
-			case 0xfe:
-				switch (read16l(f)) {
-				case 0x06:
-					m->xxs[i].lps = read32l(f);
-                			m->xxs[i].lpe = m->xxs[i].lps +
-							read32l(f);
-					m->xxs[i].flg = m->xxs[i].lps > 0 ?
-							WAVE_LOOPING : 0;
-					break;
-				case 0x0b:
-				case 0x0e:
-					break;
-				}
-				break;
-			}
-		} while (x != 0xfe);
-
-		for (j = 0; (x = read8(f)) != 0x0d; j++)
-			m->xxih[i].name[j] = x;
-
-		read8(f);
-		read8(f);
-		read8(f);
+		m->xxs[i].lps = read32l(f);
+                m->xxs[i].lpe = m->xxs[i].lps + read32l(f);
+		if (m->xxs[i].lpe)
+			m->xxs[i].lpe -= 1;
+		m->xxs[i].flg = m->xxs[i].lps > 0 ?  WAVE_LOOPING : 0;
+		fread(m->xxih[i].name, 1, 11, f);
+		for (j = 0; j < 11; j++) {
+			if (m->xxih[i].name[j] == 0x0d)
+				m->xxih[i].name[j] = 0;
+		}
+		read8(f);	/* unused */
 
 		m->xxih[i].nsm = !!m->xxs[i].len;
 		m->xxi[i][0].sid = i;
 
 		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-10.10s %04x %04x %04x %c V%02x\n",
+			report("[%2X] %-10.10s  %05x %05x %05x %c V%02x\n",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
@@ -181,8 +190,11 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 			event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
 			event->note = read8(f);
 			event->ins = read8(f);
-			event->fxt = 0; //read8(f);
-			event->fxp = 0; //read8(f);
+			event->fxt = read8(f);
+			event->fxp = read8(f);
+
+			if (event->fxt == 0x0c)		/* set volume */
+				event->fxp = 0xff - event->fxp;
 		}
 
 		reportv(ctx, 0, ".");
@@ -191,7 +203,6 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read samples */
 
-#if 0
 	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
@@ -204,7 +215,6 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
-#endif
 
 	return 0;
 }

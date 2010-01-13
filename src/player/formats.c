@@ -98,7 +98,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(far);
 	REG_LOADER(umx);
 	REG_LOADER(stim);
-	/* REG_LOADER(coco); */
+	REG_LOADER(coco);
 	REG_LOADER(mtp);
 	REG_LOADER(ims);
 	REG_LOADER(ssn);
