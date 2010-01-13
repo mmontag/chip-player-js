@@ -177,7 +177,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 			break;
 		m->xxo[i] = x;
 	}
-	for (; i % 4; i++)	/* for alignment */
+	for (i++; i % 4; i++)	/* for alignment */
 		read8(f);
 
 
@@ -194,12 +194,10 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		for (j = 0; j < (64 * m->xxh->chn); j++) {
 			event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
-			event->note = read8(f);
-			if (event->note)
-				event->note += 36;
-			event->ins = read8(f);
-			event->fxt = read8(f);
 			event->fxp = read8(f);
+			event->fxt = read8(f);
+			event->ins = read8(f);
+			event->note = read8(f);
 
 			if (event->fxt == 0x0c)		/* set volume */
 				event->fxp = 0xff - event->fxp;
