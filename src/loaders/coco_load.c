@@ -102,6 +102,69 @@ static int coco_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
+
+static void fix_effect(struct xxm_event *e)
+{
+	switch (e->fxt) {
+	case 0x00:			/* 00 xy Normal play or Arpeggio */
+		e->fxt = FX_ARPEGGIO;
+		/* x: first halfnote to add
+		   y: second halftone to subtract */
+		break;
+	case 0x01:			/* 01 xx Slide Up */
+	case 0x05:
+		e->fxt = FX_PORTA_UP;
+		break;
+	case 0x02:			/* 02 xx Slide Down */
+	case 0x06:
+		e->fxt = FX_PORTA_DN;
+		break;
+	case 0x03:
+		e->fxt = FX_VOLSLIDE_UP;	/* FIXME: it's fine */
+		break;
+	case 0x04:
+		e->fxt = FX_VOLSLIDE_DN;	/* FIXME: it's fine */
+		break;
+	case 0x07:
+		e->fxt = FX_SETPAN;
+		break;
+	case 0x08:			/* FIXME */
+	case 0x09:
+	case 0x0a:
+	case 0x0b:
+		e->fxt = e->fxp = 0;
+		break;
+	case 0x0c:
+		e->fxt = FX_VOLSET;
+		e->fxp = 0xff - e->fxp;
+		break;
+	case 0x0d:
+		e->fxt = FX_BREAK;
+		break;
+	case 0x0e:
+		e->fxt = FX_JUMP;
+		break;
+	case 0x0f:
+		e->fxt = FX_TEMPO;
+		break;
+	case 0x10:			/* unused */
+		e->fxt = e->fxp = 0;
+		break;
+	case 0x11:
+	case 0x12:			/* FIXME */
+		e->fxt = e->fxp = 0;
+		break;
+	case 0x13:
+		e->fxt = FX_VOLSLIDE_UP;
+		break;
+	case 0x14:
+		e->fxt = FX_VOLSLIDE_DN;
+		break;
+	default:
+		e->fxt = e->fxp = 0;
+	}
+}
+
 static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
@@ -199,8 +262,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 			event->ins = read8(f);
 			event->note = read8(f);
 
-			if (event->fxt == 0x0c)		/* set volume */
-				event->fxp = 0xff - event->fxp;
+			fix_effect(event);
 		}
 
 		reportv(ctx, 0, ".");
