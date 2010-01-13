@@ -188,7 +188,7 @@ static void usage(char *s, struct xmp_options *opt)
 "   -a --amplify {0|1|2|3} Amplification factor: 0=Normal, 1=x2, 2=x4, 3=x8\n"
 "   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
 "   -c --stdout            Mix the module to stdout\n"
-"   -F --click-filter      Apply LPF filter to remove clicks\n"
+"   -F --click-filter      Apply low pass filter to reduce clicks\n"
 "   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
 "   -i --interpolate       Use linear interpolation (default %s)\n"
 "   -n --nearest           Use nearest neighbor interpolation\n"
