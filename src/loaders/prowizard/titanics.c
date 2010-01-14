@@ -41,9 +41,8 @@ static int depack_titanics(FILE *in, FILE *out)
 	uint16 smp_size[15];
 	int i, j, k;
 
-	memset(pat_addr, 0, 128);
-	memset(pat_addr_ord, 0, 128);
-	memset(pat_addr_final, 0, 128);
+	for (i = 0; i < 128; i++)
+		pat_addr[i] = pat_addr_ord[i] = pat_addr_final[i] = 0;
 
 	pw_write_zero(out, 20);			/* write title */
 
@@ -82,7 +81,7 @@ static int depack_titanics(FILE *in, FILE *out)
 
 	for (j = i = 0; i < pat; i++) {
 		pat_addr_final[j++] = pat_addr_ord[i];
-		while ((pat_addr_ord[i + 1] == pat_addr_ord[i]) && (i < pat))
+		while (pat_addr_ord[i + 1] == pat_addr_ord[i] && i < pat)
 			i++;
 	}
 
