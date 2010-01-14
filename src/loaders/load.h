@@ -27,6 +27,7 @@ void disable_continue_fx(struct xxm_event *);
 void clean_s3m_seq(struct xxm_header *, uint8 *);
 
 extern uint8 ord_xlat[];
+extern int arch_vol_table[];
 
 #define V(x) (m->verbosity > (x))
 

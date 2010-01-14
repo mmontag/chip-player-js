@@ -613,9 +613,12 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	(HAS_QUIRK(XMP_QRK_ST3GVOL) ? 0x40 : m->volume) *
 	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 18;
 
-    /* Volume translation table (for PTM) */
-    if (m->vol_xlat)
-	finalvol = m->vol_xlat[finalvol >> 4] << 4;
+    /* Volume translation table (for PTM, ARCH, COCO) */
+    if (m->vol_xlat) {
+	finalvol = m->volbase == 0xff ?
+		m->vol_xlat[finalvol >> 2] << 2 :
+		m->vol_xlat[finalvol >> 4] << 4;
+    }
 
     if (m->xxh->flg & XXM_FLG_INSVOL)
 	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;

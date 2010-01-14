@@ -4,6 +4,7 @@ Stable versions
 3.2.0 ():
 	- Digital Symphony fixes by Tom Hargreaves
 	- Archimedes Tracker fixes by Tom Hargreaves
+	- add shared logarithmic volume table for Archimedes formats
 	- add Coconizer file loader
 	- portability fixes for BeOS and Haiku
 	- code cleanup and optimizations
