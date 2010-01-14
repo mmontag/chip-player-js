@@ -490,7 +490,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	SET(ECHOBACK | NEW_VOL);
     }
 
-    if (HAS_QUIRK(XMP_QRK_ST3GVOL) && TEST(NEW_VOL) && m->volbase)
+    if (HAS_QUIRK(XMP_QRK_ST3GVOL) && TEST(NEW_VOL))
 	xc->volume = xc->volume * m->volume / m->volbase;
 
     return 0;
