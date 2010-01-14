@@ -257,7 +257,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
     reportv(ctx, 0, "\n");
 
-    m->vol_xlat = ptm_vol;
+    m->vol_table = ptm_vol;
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = pfh.chset[i] << 4;

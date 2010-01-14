@@ -165,7 +165,7 @@ struct xmp_mod_context {
 	int c4rate;			/* C4 replay rate */
 	int volbase;			/* Volume base */
 	int volume;			/* Global volume */
-	int *vol_xlat;			/* Volume translation table */
+	int *vol_table;			/* Volume translation table */
 	int flags;			/* Copy from options */
 	int quirk;			/* Copy from options */
 

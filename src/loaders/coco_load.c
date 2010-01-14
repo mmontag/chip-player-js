@@ -196,7 +196,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	MODULE_INFO();
 	INSTRUMENT_INIT();
 
-	m->vol_xlat = arch_vol_table;
+	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
 
 	reportv(ctx, 1, "     Name          Len  LBeg  LEnd L Vol\n");

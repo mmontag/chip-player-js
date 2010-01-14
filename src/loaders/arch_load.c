@@ -272,7 +272,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].sid = i;
 	m->xxi[i][0].pan = 0x80;
 
-	m->vol_xlat = arch_vol_table;
+	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
 
 	if (m->xxs[i].lpe > 2) {

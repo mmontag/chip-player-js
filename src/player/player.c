@@ -614,10 +614,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 18;
 
     /* Volume translation table (for PTM, ARCH, COCO) */
-    if (m->vol_xlat) {
+    if (m->vol_table) {
 	finalvol = m->volbase == 0xff ?
-		m->vol_xlat[finalvol >> 2] << 2 :
-		m->vol_xlat[finalvol >> 4] << 4;
+		m->vol_table[finalvol >> 2] << 2 :
+		m->vol_table[finalvol >> 4] << 4;
     }
 
     if (m->xxh->flg & XXM_FLG_INSVOL)
