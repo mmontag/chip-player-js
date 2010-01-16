@@ -5,6 +5,7 @@ Stable versions
 	- Digital Symphony fixes by Tom Hargreaves
 	- Archimedes Tracker fixes by Tom Hargreaves
 	- add shared logarithmic volume table for Archimedes formats
+	- fix default Digital Symphony pan (RLLR instead of LRRL)
 	- add Coconizer file loader
 	- portability fixes for BeOS and Haiku
 	- code cleanup and optimizations

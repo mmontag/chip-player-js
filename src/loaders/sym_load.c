@@ -412,5 +412,8 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	reportv(ctx, 0, "\n");
 
+	for (i = 0; i < m->xxh->chn; i++)
+		m->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
+
 	return 0;
 }
