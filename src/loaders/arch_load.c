@@ -309,6 +309,7 @@ static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
+	int i;
 
 	LOAD_INIT();
 
@@ -339,6 +340,9 @@ static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 	reportv(ctx, 0, "\n");
 
 	iff_release();
+
+	for (i = 0; i < m->xxh->chn; i++)
+		m->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
 
 	return 0;
 }
