@@ -68,21 +68,31 @@ static void fix_effect(struct xxm_event *e, int parm)
 	case 0x01:	/* 01 xyy Slide Up + Volume Slide Up */
 	case 0x02:	/* 01 xyy Slide Up + Volume Slide Up */
 		e->fxp = parm & 0xff;
-		e->f2t = FX_VOLSLIDE_UP;
-		e->f2p = parm >> 8;
+		if (parm >> 8) {
+			e->f2t = FX_VOLSLIDE_UP;
+			e->f2p = parm >> 8;
+		}
 		break;
 	case 0x03:	/* 03 xyy Tone Portamento */
 	case 0x04:	/* 04 xyz Vibrato */
-	case 0x05:	/* 05 xyz Tone Portamento + Volume Slide */
-	case 0x06:	/* 06 xyz Vibrato + Volume Slide */
 	case 0x07:	/* 07 xyz Tremolo */
 		e->fxp = parm;
+		break;
+	case 0x05:	/* 05 xyz Tone Portamento + Volume Slide */
+	case 0x06:	/* 06 xyz Vibrato + Volume Slide */
+		e->fxp = parm;
+		if (!parm)
+			e->fxt -= 2;
 		break;
 	case 0x09:	/* 09 xxx Set Sample Offset */
 		e->fxp = parm >> 1;
 		break;
 	case 0x0a:	/* 0A xyz Volume Slide + Fine Slide Up */
-		e->fxp = parm & 0xff;
+		if (parm & 0xff) {
+			e->fxp = parm & 0xff;
+		} else {
+			e->fxt = 0;
+		}
 		e->f2t = FX_EXTENDED;
 		e->f2p = (EX_F_PORTA_UP << 4) | ((parm & 0xf00) >> 8);
 		break;
@@ -91,10 +101,6 @@ static void fix_effect(struct xxm_event *e, int parm)
 	case 0x0d:	/* 0D xyy Pattern Break */
 	case 0x0f:	/* 0F xxx Set Speed */
 		e->fxp = parm;
-		break;
-	case 0x11:	/* 11 xyy Fine Slide Up + Fine Volume Slide Up */
-	case 0x12:	/* 12 xyy Fine Slide Down + Fine Volume Slide Up */
-		e->fxt = 0;
 		break;
 	case 0x13:	/* 13 xxy Glissando Control */
 		e->fxt = FX_EXTENDED;
@@ -125,18 +131,27 @@ static void fix_effect(struct xxm_event *e, int parm)
 			e->fxt = 0;
 		}
 		break;
+	case 0x11:	/* 11 xyy Fine Slide Up + Fine Volume Slide Up */
+	case 0x12:	/* 12 xyy Fine Slide Down + Fine Volume Slide Up */
 	case 0x1a:	/* 1A xyy Fine Slide Up + Fine Volume Slide Down */
-		e->fxt = FX_EXTENDED;
-		e->fxp = (EX_F_PORTA_UP << 4) | (parm & 0x0f);
-		e->f2t = FX_EXTENDED;
-		e->f2p = (EX_F_VSLIDE_DN << 4) | (parm >> 8);
-		break;
 	case 0x1b:	/* 1B xyy Fine Slide Down + Fine Volume Slide Down */
-		e->fxt = FX_EXTENDED;
-		e->fxp = (EX_F_PORTA_DN << 4) | (parm & 0x0f);
-		e->f2t = FX_EXTENDED;
-		e->f2p = (EX_F_VSLIDE_DN << 4) | (parm >> 8);
+	{
+		uint8 pitch_effect = ((e->fxt == 0x11 || e->fxt == 0x1a) ?
+				      EX_F_PORTA_UP : EX_F_PORTA_DN);
+		uint8 vol_effect = ((e->fxt == 0x11 || e->fxt == 0x12) ?
+				      EX_F_VSLIDE_UP : EX_F_VSLIDE_DN);
+
+		if ((parm & 0xff) && ((parm & 0xff) < 0x10)) {
+			e->fxt = FX_EXTENDED;
+			e->fxp = (pitch_effect << 4) | (parm & 0x0f);
+		} else
+			e->fxt = 0;
+		if (parm >> 8) {
+			e->f2t = FX_EXTENDED;
+			e->f2p = (vol_effect << 4) | (parm >> 8);
+		}
 		break;
+	}
 	case 0x1c:	/* 1C xxx Note Cut */
 		e->fxt = FX_EXTENDED;
 		e->fxp = (EX_CUT << 4) | (parm & 0x0f);
@@ -155,20 +170,26 @@ static void fix_effect(struct xxm_event *e, int parm)
 	case 0x20:	/* 20 xyz Normal play or Arpeggio + Volume Slide Down */
 		e->fxt = FX_ARPEGGIO;
 		e->fxp = parm & 0xff;
-		e->f2t = FX_VOLSLIDE_DN;
-		e->f2p = parm >> 8;
+		if (parm >> 8) {
+			e->f2t = FX_VOLSLIDE_DN;
+			e->f2p = parm >> 8;
+		}
 		break;
 	case 0x21:	/* 21 xyy Slide Up + Volume Slide Down */
 		e->fxt = FX_PORTA_UP;
 		e->fxp = parm & 0xff;
-		e->f2t = FX_VOLSLIDE_DN;
-		e->f2p = parm >> 8;
+		if (parm >> 8) {
+			e->f2t = FX_VOLSLIDE_DN;
+			e->f2p = parm >> 8;
+		}
 		break;
 	case 0x22:	/* 22 xyy Slide Down + Volume Slide Down */
 		e->fxt = FX_PORTA_DN;
 		e->fxp = parm & 0xff;
-		e->f2t = FX_VOLSLIDE_DN;
-		e->f2p = parm >> 8;
+		if (parm >> 8) {
+			e->f2t = FX_VOLSLIDE_DN;
+			e->f2p = parm >> 8;
+		}
 		break;
 	case 0x2f:	/* 2F xxx Set Tempo */
 		if (parm >= 0x100 && parm <= 0x800) {
