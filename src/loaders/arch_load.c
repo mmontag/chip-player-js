@@ -28,6 +28,24 @@ struct xmp_loader_info arch_loader = {
 	arch_load
 };
 
+/* 
+ * Linear (0 to 0x40) to logarithmic volume conversion.
+ * This is only used for the Protracker-compatible "linear volume" effect in
+ * Andy Southgate's StasisMod.  In this implementation linear and logarithmic
+ * volumes can be freely intermixed.
+ */
+static const uint8 lin_table[65]={
+	0x00, 0x48, 0x64, 0x74, 0x82, 0x8a, 0x92, 0x9a,
+	0xa2, 0xa6, 0xaa, 0xae, 0xb2, 0xb6, 0xea, 0xbe,
+	0xc2, 0xc4, 0xc6, 0xc8, 0xca, 0xcc, 0xce, 0xd0,
+	0xd2, 0xd4, 0xd6, 0xd8, 0xda, 0xdc, 0xde, 0xe0,
+	0xe2, 0xe2, 0xe4, 0xe4, 0xe6, 0xe6, 0xe8, 0xe8,
+	0xea, 0xea, 0xec, 0xec, 0xee, 0xee, 0xf0, 0xf0,
+	0xf2, 0xf2, 0xf4, 0xf4, 0xf6, 0xf6, 0xf8, 0xf8,
+	0xfa, 0xfa, 0xfc, 0xfc, 0xfe, 0xfe, 0xfe, 0xfe,
+	0xfe
+};
+
 #if 0
 static uint8 convert_vol(uint8 vol) {
 /*	return pow(2,6.0-(255.0-vol)/32)+.5; */
@@ -60,12 +78,16 @@ static int arch_test(FILE *f, char *t, const int start)
 }
 
 
-static int year, month, day;
+static int year=0, month=0, day=0;
 static int pflag, sflag, max_ins;
 static uint8 ster[8], rows[64];
 
 static void fix_effect(struct xxm_event *e)
 {
+#if 0
+	/* for debugging */
+	printf ("%c%02x ", e->fxt["0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"], e->fxp);
+#endif
 	switch (e->fxt) {
 	case 0x00:			/* 00 xy Normal play or Arpeggio */
 		e->fxt = FX_ARPEGGIO;
@@ -78,12 +100,29 @@ static void fix_effect(struct xxm_event *e)
 	case 0x02:			/* 02 xx Slide Down */
 		e->fxt = FX_PORTA_DN;
 		break;
+	case 0x03:			/* 03 xx Tone Portamento */
+		e->fxt = FX_TONEPORTA;
+		break;
 	case 0x0b:			/* 0B xx Break Pattern */
 		e->fxt = FX_BREAK;
 		break;
+	case 0x0c:
+		/* Set linear volume */
+		if (e->fxp <= 64) {
+			e->fxt = FX_VOLSET;
+			e->fxp = lin_table[e->fxp];
+		} else {
+			e->fxp = e->fxt = 0;
+		}
+		break;
 	case 0x0e:			/* 0E xy Set Stereo */
-		e->fxt = e->fxp = 0;
+	case 0x19: /* StasisMod's non-standard set panning effect */
 		/* y: stereo position (1-7,ignored). 1=left 4=center 7=right */
+		if (e->fxp>0 && e->fxp<8) {
+			e->fxt = FX_SETPAN;
+			e->fxp = 42*e->fxp-40;
+		} else
+			e->fxt = e->fxp = 0;
 		break;
 	case 0x10:			/* 10 xx Volume Slide Up */
 		e->fxt = FX_VOLSLIDE_UP;
@@ -137,7 +176,15 @@ static void get_mvox(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_ster(struct xmp_context *ctx, int size, FILE *f)
 {
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+	int i;
+
 	fread(ster, 1, 8, f);
+	
+	for (i=0; i < m->xxh->chn; i++)
+		if (ster[i] > 0 && ster[i] < 8) 
+			m->xxc[i].pan = 42*ster[i]-40;
 }
 
 static void get_mnam(struct xmp_context *ctx, int size, FILE *f)
@@ -246,14 +293,25 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 		i = 0;
 	}
 
+	/* FIXME: More than 36 sample slots used.  Unfortunately we
+	 * have no way to handle this without two passes, and there's
+	 * only officially supposed to be 36, so ignore the rest.
+	 */
+	if (i >= 36)
+		return;
+
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	read32l(f);	/* SNAM */
-	read32l(f);
-	fread(m->xxih[i].name, 1, 20, f);
+	{
+		/* should usually be 0x14 but zero is not unknown */
+		int name_len = read32l(f);
+		if (name_len < 32)
+			fread(m->xxih[i].name, 1, name_len, f);
+	}
 	read32l(f);	/* SVOL */
 	read32l(f);
 	/* m->xxi[i][0].vol = convert_vol(read32l(f)); */
-	m->xxi[i][0].vol = read32l(f);
+	m->xxi[i][0].vol = read32l(f) & 0xff;
 	read32l(f);	/* SLEN */
 	read32l(f);
 	m->xxs[i].len = read32l(f);
