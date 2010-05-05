@@ -7,5 +7,7 @@ public class Xmp {
 	private native int release();
 	private native int play();
 	private native int stop();
-	private native int frame();	
+	private native int play_frame();	
+	private native int softmixer();
+	private native short[] get_buffer(int size);
 }

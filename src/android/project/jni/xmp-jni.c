@@ -19,6 +19,11 @@ Java_org_helllabs_android_Xmp_init(JNIEnv *env, jobject obj)
 	opt = xmp_get_options(ctx);
 	opt->verbosity = 0;
 
+	opt->freq = 44100;
+	opt->resol = 16;
+	opt->outfmt &= ~XMP_FMT_MONO;
+	opt->flags |= XMP_CTL_ITPT | XMP_CTL_FILTER;
+
 	if (xmp_open_audio(ctx) < 0) {
 		xmp_deinit(ctx);
 		xmp_free_context(ctx);
@@ -34,6 +39,8 @@ Java_org_helllabs_android_Xmp_deinit(JNIEnv *env, jobject obj)
 	xmp_close_audio(ctx);
 	xmp_deinit(ctx);
 	xmp_free_context(ctx);
+
+	return 0;
 }
 
 
@@ -43,34 +50,55 @@ Java_org_helllabs_android_Xmp_load(JNIEnv *env, jobject obj, jstring filename)
 	if (xmp_load_module(ctx, filename) < 0)
 		return -1;
 	xmp_get_module_info(ctx, &mi);
+
+	return 0;
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_Xmp_release(JNIEnv *env, jobject obj)
 {
 	xmp_release_module(ctx);
+
+	return 0;
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_Xmp_play(JNIEnv *env, jobject obj)
 {
-	xmp_player_start(ctx);
+	return xmp_player_start(ctx);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_Xmp_stop(JNIEnv *env, jobject obj)
 {
 	xmp_player_end(ctx);
+
+	return 0;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_frame(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_Xmp_play_1frame(JNIEnv *env, jobject obj)
 {
-	xmp_player_frame(ctx);
+	return xmp_player_frame(ctx);
 }
 
-void j_get_buffer(void **data, int *size)
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_softmixer(JNIEnv *env, jobject obj)
 {
-	xmp_get_buffer(ctx, data, size);
+	return xmp_smix_softmixer(ctx);
 }
 
+JNIEXPORT jshortArray JNICALL
+Java_org_helllabs_android_Xmp_get_1buffer(JNIEnv *env, jobject obj, jint size)
+{
+	jshortArray a;
+	short *b;
+
+	if ((a = (*env)->NewShortArray(env, size)) == NULL)
+		return NULL;
+
+	b = (short *)xmp_smix_buffer(ctx);
+	(*env)->SetShortArrayRegion(env, a, 0, size, b);
+
+	return b;
+}
