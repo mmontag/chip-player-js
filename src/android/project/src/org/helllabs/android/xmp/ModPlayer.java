@@ -13,7 +13,7 @@ import android.widget.ListView;
 import org.helllabs.android.xmp.R;
 
 public class ModPlayer extends ListActivity {
-	private static final String MEDIA_PATH = new String("/sdcard");
+	private static final String MEDIA_PATH = new String("/sdcard/");
 	private List<String> plist = new ArrayList<String>();
 	private Xmp xmp = new Xmp();
 	
@@ -43,8 +43,11 @@ public class ModPlayer extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		/* FIXME: check exception */
    		xmp.init();
-   		xmp.load(MEDIA_PATH + plist.get(position));
+   		int i = xmp.load(MEDIA_PATH + plist.get(position));
+   		Log.v(getString(R.string.app_name), i + " " + MEDIA_PATH + plist.get(position));
    		xmp.play();
+   		Log.v(getString(R.string.app_name), "xx");
+   		
    		
    		xmp.stop();
    		xmp.release();
