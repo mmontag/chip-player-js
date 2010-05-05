@@ -10,4 +10,8 @@ public class Xmp {
 	public native int playFrame();	
 	public native int softmixer();
 	public native short[] getBuffer(int size);
+	
+	static {
+		System.loadLibrary("xmp");
+	}
 }

@@ -13,8 +13,8 @@ import android.widget.ListView;
 import org.helllabs.android.xmp.R;
 
 public class ModPlayer extends ListActivity {
-	private static final String MEDIA_PATH = new String("/sdcard/");
-	private List<String> songs = new ArrayList<String>();
+	private static final String MEDIA_PATH = new String("/sdcard");
+	private List<String> plist = new ArrayList<String>();
 	private Xmp xmp = new Xmp();
 	
 	@Override
@@ -31,21 +31,23 @@ public class ModPlayer extends ListActivity {
 	public void updatePlaylist() {
 		File home = new File(MEDIA_PATH);
 		for (File file : home.listFiles()) {
-			songs.add(file.getName());
+			plist.add(file.getName());
 		}
 		
         ArrayAdapter<String> playlist = new ArrayAdapter<String>(this,
-        			R.layout.song_item, songs);
+        			R.layout.song_item, plist);
+        setListAdapter(playlist);
 	}
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		/* FIXME: check exception */
    		xmp.init();
-   		xmp.load(MEDIA_PATH + songs.get(position));
-	}
-    
-	static {
-		System.loadLibrary("xmp");
+   		xmp.load(MEDIA_PATH + plist.get(position));
+   		xmp.play();
+   		
+   		xmp.stop();
+   		xmp.release();
+   		xmp.deinit();
 	}
 }

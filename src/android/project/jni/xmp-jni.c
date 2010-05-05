@@ -11,7 +11,7 @@ static struct xmp_options *opt;
 static struct xmp_module_info mi;
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_init(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj)
 {
 	xmp_drv_register(&drv_smix);
 	ctx = xmp_create_context();
@@ -34,7 +34,7 @@ Java_org_helllabs_android_Xmp_init(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_deinit(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_deinit(JNIEnv *env, jobject obj)
 {
 	xmp_close_audio(ctx);
 	xmp_deinit(ctx);
@@ -45,7 +45,7 @@ Java_org_helllabs_android_Xmp_deinit(JNIEnv *env, jobject obj)
 
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_load(JNIEnv *env, jobject obj, jstring filename)
+Java_org_helllabs_android_xmp_Xmp_load(JNIEnv *env, jobject obj, jstring filename)
 {
 	if (xmp_load_module(ctx, filename) < 0)
 		return -1;
@@ -55,7 +55,7 @@ Java_org_helllabs_android_Xmp_load(JNIEnv *env, jobject obj, jstring filename)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_release(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_release(JNIEnv *env, jobject obj)
 {
 	xmp_release_module(ctx);
 
@@ -63,13 +63,13 @@ Java_org_helllabs_android_Xmp_release(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_play(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_play(JNIEnv *env, jobject obj)
 {
 	return xmp_player_start(ctx);
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_stop(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_stop(JNIEnv *env, jobject obj)
 {
 	xmp_player_end(ctx);
 
@@ -77,19 +77,19 @@ Java_org_helllabs_android_Xmp_stop(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_playFrame(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_playFrame(JNIEnv *env, jobject obj)
 {
 	return xmp_player_frame(ctx);
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_softmixer(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_softmixer(JNIEnv *env, jobject obj)
 {
 	return xmp_smix_softmixer(ctx);
 }
 
 JNIEXPORT jshortArray JNICALL
-Java_org_helllabs_android_Xmp_getBuffer(JNIEnv *env, jobject obj, jint size)
+Java_org_helllabs_android_xmp_Xmp_getBuffer(JNIEnv *env, jobject obj, jint size)
 {
 	jshortArray a;
 	short *b;
