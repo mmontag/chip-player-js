@@ -38,14 +38,14 @@ public class ModPlayer extends ListActivity {
         			R.layout.song_item, songs);
 	}
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-    	/* FIXME: check exception */
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		/* FIXME: check exception */
    		xmp.init();
    		xmp.load(MEDIA_PATH + songs.get(position));
 	}
     
-    static {
-        System.loadLibrary("xmp");
-    }
+	static {
+		System.loadLibrary("xmp");
+	}
 }
