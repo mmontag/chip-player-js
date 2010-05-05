@@ -55,3 +55,13 @@ int j_stop()
 	xmp_player_end(ctx);
 }
 
+int j_play_frame()
+{
+	xmp_player_frame(ctx);
+}
+
+void j_get_buffer(void **data, int *size)
+{
+	xmp_get_buffer(ctx, data, size);
+}
+
