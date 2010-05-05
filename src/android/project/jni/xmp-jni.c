@@ -77,7 +77,7 @@ Java_org_helllabs_android_Xmp_stop(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_Xmp_play_1frame(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_Xmp_playFrame(JNIEnv *env, jobject obj)
 {
 	return xmp_player_frame(ctx);
 }
@@ -89,7 +89,7 @@ Java_org_helllabs_android_Xmp_softmixer(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jshortArray JNICALL
-Java_org_helllabs_android_Xmp_get_1buffer(JNIEnv *env, jobject obj, jint size)
+Java_org_helllabs_android_Xmp_getBuffer(JNIEnv *env, jobject obj, jint size)
 {
 	jshortArray a;
 	short *b;
