@@ -1,6 +1,7 @@
 /* Simple interface adaptor for jni */
 
 #include <stdlib.h>
+#include <jni.h>
 #include "xmp.h"
 
 extern struct xmp_drv_info drv_smix;
@@ -9,7 +10,8 @@ static xmp_context ctx;
 static struct xmp_options *opt;
 static struct xmp_module_info mi;
 
-int j_init()
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_init(JNIEnv *env, jobject obj)
 {
 	xmp_drv_register(&drv_smix);
 	ctx = xmp_create_context();
@@ -26,36 +28,43 @@ int j_init()
 	return 0;
 }
 
-int j_deinit()
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_deinit(JNIEnv *env, jobject obj)
 {
 	xmp_close_audio(ctx);
 	xmp_deinit(ctx);
 	xmp_free_context(ctx);
 }
 
-int j_load(char *name)
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_load(JNIEnv *env, jobject obj, jstring filename)
 {
-	if (xmp_load_module(ctx, name) < 0)
+	if (xmp_load_module(ctx, filename) < 0)
 		return -1;
 	xmp_get_module_info(ctx, &mi);
 }
 
-int j_release()
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_release(JNIEnv *env, jobject obj)
 {
 	xmp_release_module(ctx);
 }
 
-int j_play()
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_play(JNIEnv *env, jobject obj)
 {
 	xmp_player_start(ctx);
 }
 
-int j_stop()
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_stop(JNIEnv *env, jobject obj)
 {
 	xmp_player_end(ctx);
 }
 
-int j_play_frame()
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_Xmp_frame(JNIEnv *env, jobject obj)
 {
 	xmp_player_frame(ctx);
 }
