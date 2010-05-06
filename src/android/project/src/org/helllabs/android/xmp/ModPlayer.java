@@ -19,11 +19,14 @@ public class ModPlayer extends ListActivity {
 	private static final String MEDIA_PATH = new String("/sdcard/");
 	private List<String> plist = new ArrayList<String>();
 	private Xmp xmp = new Xmp();
+	private int minSize = AudioTrack.getMinBufferSize(44100,
+			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+			AudioFormat.ENCODING_PCM_16BIT);
 	private AudioTrack audio = new AudioTrack(
 			AudioManager.STREAM_MUSIC, 44100,
 			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-			AudioFormat.ENCODING_PCM_16BIT,
-			1024, AudioTrack.MODE_STREAM);
+			AudioFormat.ENCODING_PCM_16BIT, minSize,
+			AudioTrack.MODE_STREAM);
 	
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -49,7 +52,8 @@ public class ModPlayer extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-		
+		//Log.v(getString(R.string.app_name), "** start " + minSize);
+		audio.play();
 		
 		/* FIXME: check exception */
    		xmp.init();
@@ -62,8 +66,11 @@ public class ModPlayer extends ListActivity {
    		while (xmp.playFrame() == 0) {
    			int size = xmp.softmixer();
    			short buffer[] = xmp.getBuffer(size);
-   			audio.write(buffer, 0, size);
+   			int i = audio.write(buffer, 0, size / 2);
+   			//Log.v(getString(R.string.app_name), "--> " + size + " " + i);
    		}
+   		
+   		audio.stop();
    		
    		xmp.stop();
    		xmp.release();
