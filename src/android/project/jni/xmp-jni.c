@@ -4,7 +4,7 @@
 #include <jni.h>
 #include "xmp.h"
 
-#include <android/log.h>
+/* #include <android/log.h> */
 
 
 extern struct xmp_drv_info drv_smix;
