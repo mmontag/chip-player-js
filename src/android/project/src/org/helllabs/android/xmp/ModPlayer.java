@@ -25,7 +25,8 @@ public class ModPlayer extends ListActivity {
 	private AudioTrack audio = new AudioTrack(
 			AudioManager.STREAM_MUSIC, 44100,
 			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-			AudioFormat.ENCODING_PCM_16BIT, minSize,
+			AudioFormat.ENCODING_PCM_16BIT,
+			minSize < 4096 ? 4096 : minSize,
 			AudioTrack.MODE_STREAM);
 	
 	@Override
@@ -57,11 +58,11 @@ public class ModPlayer extends ListActivity {
 		
 		/* FIXME: check exception */
    		xmp.init();
-   		if (xmp.load(MEDIA_PATH + plist.get(position)) < 0) {
+   		if (xmp.loadModule(MEDIA_PATH + plist.get(position)) < 0) {
    			xmp.deinit();
    			return;
    		}
-   		xmp.play();
+   		xmp.startPlayer();
    		
    		while (xmp.playFrame() == 0) {
    			int size = xmp.softmixer();
@@ -72,8 +73,8 @@ public class ModPlayer extends ListActivity {
    		
    		audio.stop();
    		
-   		xmp.stop();
-   		xmp.release();
+   		xmp.endPlayer();
+   		xmp.releaseModule();
    		xmp.deinit();
 	}
 }
