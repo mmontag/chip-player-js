@@ -1,5 +1,5 @@
-LOCAL_PATH := $(call my-dir)
-#LOCAL_ARM_MODE := arm
+LOCAL_PATH	:= $(call my-dir)
+#LOCAL_ARM_MODE	:= arm
 
 include $(CLEAR_VARS)
 
@@ -15,6 +15,7 @@ PLAYER_SOURCES	:= $(addprefix player/,$(PLAYER_OBJS))
 
 LOCAL_MODULE    := xmp
 LOCAL_CFLAGS	:= -DHAVE_CONFIG_H -I$(LOCAL_PATH) -I$(LOCAL_PATH)/include
+LOCAL_LDLIBS	:= -Lbuild/platforms/android-3/arch-arm/usr/lib -llog
 LOCAL_SRC_FILES := xmp-jni.c drivers/smix.c \
 	$(MISC_SOURCES:.o=.c) \
 	$(LOADERS_SOURCES:.o=.c) \

@@ -4,6 +4,9 @@
 #include <jni.h>
 #include "xmp.h"
 
+#include <android/log.h>
+
+
 extern struct xmp_drv_info drv_smix;
 
 static xmp_context ctx;
@@ -49,8 +52,8 @@ Java_org_helllabs_android_xmp_Xmp_load(JNIEnv *env, jobject obj, jstring name)
 	const jchar *filename = (*env)->GetStringChars(env, name, 0);
 	int res;
 
-	res = xmp_load_module(ctx, filename);
-return res;
+	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename);
+	res = xmp_load_module(ctx, (char *)filename);
 	(*env)->ReleaseStringChars(env, name, filename);
 
 	if (res < 0)
