@@ -10,12 +10,20 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.media.AudioTrack;
+import android.media.AudioManager;
+import android.media.AudioFormat;
 import org.helllabs.android.xmp.R;
 
 public class ModPlayer extends ListActivity {
 	private static final String MEDIA_PATH = new String("/sdcard/");
 	private List<String> plist = new ArrayList<String>();
 	private Xmp xmp = new Xmp();
+	private AudioTrack audio = new AudioTrack(
+			AudioManager.STREAM_MUSIC, 44100,
+			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+			AudioFormat.ENCODING_PCM_16BIT,
+			1024, AudioTrack.MODE_STREAM);
 	
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -41,6 +49,8 @@ public class ModPlayer extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
+		
+		
 		/* FIXME: check exception */
    		xmp.init();
    		if (xmp.load(MEDIA_PATH + plist.get(position)) < 0) {
@@ -52,6 +62,7 @@ public class ModPlayer extends ListActivity {
    		while (xmp.playFrame() == 0) {
    			int size = xmp.softmixer();
    			short buffer[] = xmp.getBuffer(size);
+   			audio.write(buffer, 0, size);
    		}
    		
    		xmp.stop();
