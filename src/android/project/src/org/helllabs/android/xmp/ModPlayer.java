@@ -43,11 +43,16 @@ public class ModPlayer extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		/* FIXME: check exception */
    		xmp.init();
-   		int i = xmp.load(MEDIA_PATH + plist.get(position));
-   		Log.v(getString(R.string.app_name), i + " " + MEDIA_PATH + plist.get(position));
+   		if (xmp.load(MEDIA_PATH + plist.get(position)) < 0) {
+   			xmp.deinit();
+   			return;
+   		}
    		xmp.play();
-   		Log.v(getString(R.string.app_name), "xx");
    		
+   		while (xmp.playFrame() == 0) {
+   			int size = xmp.softmixer();
+   			short buffer[] = xmp.getBuffer(size);
+   		}
    		
    		xmp.stop();
    		xmp.release();

@@ -49,12 +49,13 @@ Java_org_helllabs_android_xmp_Xmp_deinit(JNIEnv *env, jobject obj)
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_load(JNIEnv *env, jobject obj, jstring name)
 {
-	const jchar *filename = (*env)->GetStringChars(env, name, 0);
+	const char *filename;
 	int res;
 
-	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename);
+	filename = (*env)->GetStringUTFChars(env, name, NULL);
+	/*__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename);*/
 	res = xmp_load_module(ctx, (char *)filename);
-	(*env)->ReleaseStringChars(env, name, filename);
+	(*env)->ReleaseStringUTFChars(env, name, filename);
 
 	if (res < 0)
 		return -1;
