@@ -4,14 +4,61 @@
         android:layout_width="fill_parent" 
         android:layout_height="fill_parent">
 
-    <ListView android:id="@id/android:list"
+  <LinearLayout
+    android:gravity="top"
+    android:layout_weight="1.0"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+    <ListView android:id="@+id/android:list"
               android:layout_width="fill_parent" 
               android:layout_height="fill_parent"
               android:layout_weight="1"
               android:drawSelectorOnTop="false"/>
 
     <TextView android:id="@id/android:empty"
+              android:gravity="top"
               android:layout_width="fill_parent" 
               android:layout_height="fill_parent"
               android:text="No modules found on SD Card."/>
+   </LinearLayout>
+   
+   <SeekBar android:id="@+id/android:seek"
+            android:gravity="bottom"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="3mm"
+            android:paddingTop="3mm" />
+        
+   <LinearLayout
+     android:gravity="bottom"
+     android:orientation="horizontal"
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content">
+     <ImageButton android:id="@+id/back"
+         android:src="@drawable/back"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Rew" />
+     <ImageButton android:id="@+id/play"
+         android:src="@drawable/play"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Play" />
+     <ImageButton android:id="@+id/stop"
+         android:src="@drawable/stop"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Stop" />
+     <ImageButton android:id="@+id/forward"
+         android:src="@drawable/forward"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="FF" />       
+   </LinearLayout>   
+
 </LinearLayout>
