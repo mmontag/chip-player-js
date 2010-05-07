@@ -11,7 +11,6 @@ extern struct xmp_drv_info drv_smix;
 
 static xmp_context ctx;
 static struct xmp_options *opt;
-static struct xmp_module_info mi;
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj)
@@ -57,11 +56,7 @@ Java_org_helllabs_android_xmp_Xmp_loadModule(JNIEnv *env, jobject obj, jstring n
 	res = xmp_load_module(ctx, (char *)filename);
 	(*env)->ReleaseStringUTFChars(env, name, filename);
 
-	if (res < 0)
-		return -1;
-	xmp_get_module_info(ctx, &mi);
-
-	return 0;
+	return res;
 }
 
 JNIEXPORT jint JNICALL
@@ -206,4 +201,54 @@ Java_org_helllabs_android_xmp_Xmp_seek(JNIEnv *env, jobject obj, jlong time)
 #endif
 
 	return 0;
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_helllabs_android_xmp_Xmp_getModInfo(JNIEnv *env, jobject obj, jstring fname)
+{
+	const char *filename;
+	int res;
+	xmp_context ctx2;
+	struct xmp_options *opt;
+	struct xmp_module_info mi;
+	jobject modInfo;
+	jmethodID cid;
+	jclass modInfoClass;
+	jstring name, type;
+
+	modInfoClass = (*env)->FindClass(env, "org/helllabs/android/xmp/ModInfo");
+	if (modInfoClass == NULL)
+		return NULL;
+
+
+	filename = (*env)->GetStringUTFChars(env, fname, NULL);
+	ctx2 = xmp_create_context();
+	opt = xmp_get_options(ctx2);
+	opt->skipsmp = 1;	/* don't load samples */
+	res = xmp_load_module(ctx2, (char *)filename);
+	(*env)->ReleaseStringUTFChars(env, fname, filename);
+	if (res < 0) {
+		xmp_free_context(ctx2);
+		return NULL;
+        }
+	xmp_get_module_info(ctx2, &mi);
+	xmp_release_module(ctx2);
+	xmp_free_context(ctx2);
+
+	/*__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", mi.name);
+	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", mi.type);*/
+
+	name = (*env)->NewStringUTF(env, mi.name);
+	type = (*env)->NewStringUTF(env, mi.type);
+
+	cid = (*env)->GetMethodID(env, modInfoClass,
+		"<init>",
+		"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IIIIIIIII)V");
+
+	modInfo = (*env)->NewObject(env, modInfoClass, cid,
+		name, type, fname,
+		mi.chn, mi.pat, mi.ins, mi.trk, mi.smp, mi.len,
+		mi.bpm, mi.tpo, mi.time);
+
+	return modInfo;
 }

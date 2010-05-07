@@ -21,15 +21,9 @@ import android.media.AudioFormat;
 import org.helllabs.android.xmp.R;
 
 
-
 public class ModPlayer extends ListActivity {
-	private class ModInfo {
-		String title;
-		String filename;
-		String format;
-		int time;
-	}
-	
+
+		
 	private class ModInfoAdapter extends ArrayAdapter<ModInfo> {
 	    private List<ModInfo> items;
 
@@ -46,13 +40,14 @@ public class ModPlayer extends ListActivity {
                     v = vi.inflate(R.layout.song_item, null);
                 }
                 ModInfo o = items.get(position);
-                if (o != null) {
+                
+                if (o != null) {                		
                         TextView tt = (TextView) v.findViewById(R.id.title);
                         TextView bt = (TextView) v.findViewById(R.id.info);
                         if (tt != null) {
-                              tt.setText(o.title);                            }
+                              tt.setText(o.name);                            }
                         if(bt != null){
-                              bt.setText(o.filename);
+                              bt.setText(o.chn + " chn " + o.type);
                         }
                 }
                 
@@ -96,9 +91,9 @@ public class ModPlayer extends ListActivity {
 	public void updatePlaylist() {
 		File home = new File(MEDIA_PATH);
 		for (File file : home.listFiles(new ModFilter())) {
-			ModInfo m = new ModInfo();
-			m.title = file.getName();
-			m.filename = file.getName();
+			ModInfo m = xmp.getModInfo(MEDIA_PATH + "/" + file.getName());
+			/* m.title = file.getName();
+			m.filename = file.getName(); */
 			modlist.add(m);
 		}
 		
@@ -113,7 +108,8 @@ public class ModPlayer extends ListActivity {
 		audio.play();
 		
 		/* FIXME: check exception */
-   		if (xmp.loadModule(MEDIA_PATH + modlist.get(position).filename) < 0) {
+		//Log.v(getString(R.string.app_name), "load: " + MEDIA_PATH + modlist.get(position).filename);
+   		if (xmp.loadModule(modlist.get(position).filename) < 0) {
    			xmp.deinit();
    			return;
    		}

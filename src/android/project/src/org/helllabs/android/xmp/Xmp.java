@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp;
 
+
 public class Xmp {
 	public native int init();
 	public native int deinit();
@@ -21,6 +22,7 @@ public class Xmp {
 	public native int incGvol();
 	public native int decGvol();
 	public native int seek(long time);
+	public native ModInfo getModInfo(String name);
 	
 	static {
 		System.loadLibrary("xmp");
