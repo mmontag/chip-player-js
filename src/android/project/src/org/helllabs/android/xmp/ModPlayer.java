@@ -102,7 +102,7 @@ public class ModPlayer extends ListActivity {
 		
 		/* FIXME: check exception */
    		xmp.init();
-   		if (xmp.loadModule(MEDIA_PATH + modlist.get(position)) < 0) {
+   		if (xmp.loadModule(MEDIA_PATH + modlist.get(position).filename) < 0) {
    			xmp.deinit();
    			return;
    		}
