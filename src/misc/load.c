@@ -418,7 +418,6 @@ static int crunch_ratio(struct xmp_context *ctx, int awe)
     return ratio;
 }
 
-
 int xmp_test_module(xmp_context ctx, char *s, char *n)
 {
     FILE *f;

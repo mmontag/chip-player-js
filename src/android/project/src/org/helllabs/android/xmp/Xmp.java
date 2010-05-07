@@ -3,6 +3,7 @@ package org.helllabs.android.xmp;
 public class Xmp {
 	public native int init();
 	public native int deinit();
+	public native int testModule(String name);
 	public native int loadModule(String name);
 	public native int releaseModule();
 	public native int startPlayer();
