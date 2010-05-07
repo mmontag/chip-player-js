@@ -5,19 +5,61 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import android.app.ListActivity;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
 import org.helllabs.android.xmp.R;
 
+
 public class ModPlayer extends ListActivity {
+	private class ModFile {
+		String title;
+		String filename;
+		String format;
+		int time;
+	}
+	
+	private class ModFileAdapter extends ArrayAdapter<ModFile> {
+	    private List<ModFile> items;
+
+        public ModFileAdapter(Context context, int resource, int textViewResourceId, List<ModFile> items) {
+                super(context, resource, textViewResourceId, items);
+                this.items = items;
+        }
+        
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+                View v = convertView;
+                if (v == null) {
+                    LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    v = vi.inflate(R.layout.song_item, null);
+                }
+                ModFile o = items.get(position);
+                if (o != null) {
+                        TextView tt = (TextView) v.findViewById(R.id.title);
+                        TextView bt = (TextView) v.findViewById(R.id.info);
+                        if (tt != null) {
+                              tt.setText(o.title);                            }
+                        if(bt != null){
+                              bt.setText(o.filename);
+                        }
+                }
+                
+                return v;
+        }
+	}
+	
 	private static final String MEDIA_PATH = new String("/sdcard/");
-	private List<String> plist = new ArrayList<String>();
+	private List<ModFile> modlist = new ArrayList<ModFile>();
 	private Xmp xmp = new Xmp();
 	private int minSize = AudioTrack.getMinBufferSize(44100,
 			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
@@ -43,11 +85,13 @@ public class ModPlayer extends ListActivity {
 	public void updatePlaylist() {
 		File home = new File(MEDIA_PATH);
 		for (File file : home.listFiles()) {
-			plist.add(file.getName());
+			ModFile m = new ModFile();
+			m.filename = file.getName();
+			modlist.add(m);
 		}
 		
-        ArrayAdapter<String> playlist = new ArrayAdapter<String>(this,
-        			R.layout.song_item, plist);
+        ModFileAdapter playlist = new ModFileAdapter(this,
+        			R.layout.song_item, R.id.info, modlist);
         setListAdapter(playlist);
 	}
 
@@ -58,7 +102,7 @@ public class ModPlayer extends ListActivity {
 		
 		/* FIXME: check exception */
    		xmp.init();
-   		if (xmp.loadModule(MEDIA_PATH + plist.get(position)) < 0) {
+   		if (xmp.loadModule(MEDIA_PATH + modlist.get(position)) < 0) {
    			xmp.deinit();
    			return;
    		}
