@@ -9,5 +9,7 @@ interface Interface {
 	void stop();
 	void skipForward();
 	void skipBack();
+	
+	int time();
 }
 

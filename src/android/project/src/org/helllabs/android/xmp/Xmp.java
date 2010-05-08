@@ -23,6 +23,7 @@ public class Xmp {
 	public native int decGvol();
 	public native int seek(long time);
 	public native ModInfo getModInfo(String name);
+	public native int time();
 	
 	static {
 		System.loadLibrary("xmp");

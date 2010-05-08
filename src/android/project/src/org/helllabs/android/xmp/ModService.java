@@ -48,7 +48,7 @@ public class ModService extends Service {
 	
     @Override
 	public void onCreate() {
-		Log.v(getString(R.string.app_name), ">>> create service");    	
+		//Log.v(getString(R.string.app_name), ">>> create service");    	
     	super.onCreate();
         nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         xmp.init();
@@ -115,7 +115,7 @@ public class ModService extends Service {
         }
 
         public void addSongPlaylist(String song) throws DeadObjectException {
-        	Log.v(getString(R.string.app_name), "add song: " + song);
+        	//Log.v(getString(R.string.app_name), "add song: " + song);
         	songs.add(song);
         }
 
@@ -142,6 +142,10 @@ public class ModService extends Service {
         public void stop() throws DeadObjectException {
         	//nm.cancel(NOTIFY_ID);
         	xmp.stopModule();
+        }
+        
+        public int time() throws DeadObjectException {
+        	return xmp.time();
         }
     };
 }

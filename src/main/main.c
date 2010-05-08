@@ -283,15 +283,13 @@ static void process_echoback(unsigned long i, void *data)
     if (showtime) {
 	switch (i & 0xf) {
 	case XMP_ECHO_TIME:
-	    if (1 || showtime) {
-		int rem = mi.time / 100 - msg;
-		fprintf(stderr, "\r%02d:%02d:%02d.%d  ",
+	    int rem = mi.time / 100 - msg;
+	    fprintf(stderr, "\r%02d:%02d:%02d.%d  ",
 			(int)(msg / (60 * 600)), (int)((msg / 600) % 60),
 			(int)((msg / 10) % 60), (int)(msg % 10));
-		fprintf(stderr, "-%02d:%02d:%02d.%d",
+	    fprintf(stderr, "-%02d:%02d:%02d.%d",
 			(int)(rem / (60 * 600)), (int)((rem / 600) % 60),
 			(int)((rem / 10) % 60), (int)(rem % 10));
-	    }
 	    break;
 	}
     }

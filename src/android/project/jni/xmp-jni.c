@@ -11,6 +11,19 @@ extern struct xmp_drv_info drv_smix;
 
 static xmp_context ctx;
 static struct xmp_options *opt;
+static int _time;
+static int _playing = 0;
+
+static void process_echoback(unsigned long i, void *data)
+{
+	unsigned long msg = i >> 4;
+
+	switch (i & 0x0f) {
+	case XMP_ECHO_TIME:
+		_time = msg;
+		break;
+	}
+}
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj)
@@ -20,6 +33,9 @@ Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj)
 	xmp_init(ctx, 0, NULL);
 	opt = xmp_get_options(ctx);
 	opt->verbosity = 0;
+
+	xmp_register_event_callback(ctx, process_echoback, NULL);
+	_playing = 0;
 
 	opt->freq = 44100;
 	opt->resol = 16;
@@ -68,7 +84,6 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
 	filename = (*env)->GetStringUTFChars(env, name, NULL);
 	/* __android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename); */
 	res = xmp_test_module(ctx, (char *)filename, NULL);
-	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "res = %d", res);
 	(*env)->ReleaseStringUTFChars(env, name, filename);
 
 	return res;
@@ -84,12 +99,14 @@ Java_org_helllabs_android_xmp_Xmp_releaseModule(JNIEnv *env, jobject obj)
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_startPlayer(JNIEnv *env, jobject obj)
 {
+	_playing = 1;
 	return xmp_player_start(ctx);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_endPlayer(JNIEnv *env, jobject obj)
 {
+	_playing = 0;
 	xmp_player_end(ctx);
 	return 0;
 }
@@ -252,4 +269,10 @@ Java_org_helllabs_android_xmp_Xmp_getModInfo(JNIEnv *env, jobject obj, jstring f
 		mi.bpm, mi.tpo, mi.time);
 
 	return modInfo;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_time(JNIEnv *env, jobject obj)
+{
+	return _playing ? _time : -1;
 }

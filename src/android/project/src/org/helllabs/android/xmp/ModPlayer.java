@@ -59,16 +59,47 @@ public class ModPlayer extends ListActivity {
         }
 	}
 	
-	static final String MEDIA_PATH = new String("/sdcard/");
-	private List<ModInfo> modlist = new ArrayList<ModInfo>();
+	static final String MEDIA_PATH = new String("/sdcard/mod/");
+	private List<ModInfo> modList = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();
     private Interface modInterface;
 	private ImageButton playButton, stopButton, backButton, forwardButton;
 	private SeekBar seekBar;
+	boolean playing = false;
 	
+	private class ProgressThread extends Thread {
+		@Override
+    	public void run() {
+			playing = true;
+    		int t = 0;
+    		do {
+    			try {
+    				t = modInterface.time();
+    			} catch (RemoteException e) {
+    				Log.e(getString(R.string.app_name), e.getMessage());
+    			}
+    			//Log.v(getString(R.string.app_name), "t = " + t);
+    			if (t >= 0) {
+    				seekBar.setProgress(t);
+    			}
+    			
+    			try {
+					sleep(250);
+				} catch (InterruptedException e) {
+					Log.e(getString(R.string.app_name), e.getMessage());
+				}
+    		} while (t >= 0);
+    		
+    		seekBar.setProgress(0);
+    		playing = false;
+    	}
+    };
+
+    private ProgressThread progressThread;
+    
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
-	    	Log.v(getString(R.string.app_name), "** " + dir + "/" + name);
+	    	//Log.v(getString(R.string.app_name), "** " + dir + "/" + name);
 	        return (xmp.testModule(dir + "/" + name) == 0);
 	    }
 	}
@@ -96,7 +127,7 @@ public class ModPlayer extends ListActivity {
 		    	try {
 					modInterface.stop();
 				} catch (RemoteException e) {
-					Log.v(getString(R.string.app_name), e.getMessage());
+					Log.e(getString(R.string.app_name), e.getMessage());
 				}
 		    }
 		});
@@ -130,23 +161,29 @@ public class ModPlayer extends ListActivity {
 			} catch (RemoteException e) {
 				Log.v(getString(R.string.app_name), e.getMessage());
 			}
-			modlist.add(m);
+			modList.add(m);
 		}
 		
         ModInfoAdapter playlist = new ModInfoAdapter(this,
-        			R.layout.song_item, R.id.info, modlist);
+        			R.layout.song_item, R.id.info, modList);
         setListAdapter(playlist);
 	}
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
+		if (playing)
+			return;
+		
         try {
+        	seekBar.setProgress(0);
+        	seekBar.setMax(modList.get(position).time / 100);
             modInterface.playFile(position);
+            progressThread = new ProgressThread();
+            progressThread.start();
         } catch (DeadObjectException e) {
             Log.e(getString(R.string.app_name), e.getMessage());
         } catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+        	Log.e(getString(R.string.app_name), e.getMessage());
 		}
 	}
 	
