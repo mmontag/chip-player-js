@@ -120,10 +120,10 @@ public class ModPlayer extends ListActivity {
 	public void updatePlaylist() {
 		File home = new File(MEDIA_PATH);
 		for (File file : home.listFiles(new ModFilter())) {
-			ModInfo m = xmp.getModInfo(MEDIA_PATH + "/" + file.getName());
+			ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
 			
 			try {
-				modInterface.addSongPlaylist(MEDIA_PATH + "/" + file.getName());
+				modInterface.addSongPlaylist(MEDIA_PATH + file.getName());
 			} catch (RemoteException e) {
 				Log.v(getString(R.string.app_name), e.getMessage());
 			}

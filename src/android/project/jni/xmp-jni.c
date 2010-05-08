@@ -68,6 +68,7 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
 	filename = (*env)->GetStringUTFChars(env, name, NULL);
 	/* __android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename); */
 	res = xmp_test_module(ctx, (char *)filename, NULL);
+	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "res = %d", res);
 	(*env)->ReleaseStringUTFChars(env, name, filename);
 
 	return res;

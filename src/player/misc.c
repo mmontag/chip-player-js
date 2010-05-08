@@ -68,9 +68,10 @@ int get_temp_dir(char *buf, int size)
 	strncpy(buf, tmp ? tmp : def, size);
 	strncat(buf, "\\", size);
 #elif defined __AMIGA__
-	char *def = "T:";
-
-	strncpy(buf, def, size);
+	strncpy(buf, "T:", size);
+#elif defined __ANDROID__
+	mkdir("/sdcard/xmp/");
+	strncpy(buf, "/sdcard/xmp/", size);
 #else
 	char *def = "/tmp";
 	char *tmp = getenv("TMPDIR");

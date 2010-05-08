@@ -131,8 +131,8 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
-	strncpy(m->name, (char *)mh.name, 20);
-	sprintf(m->type, "%s (%s)", fmt->id, fmt->name);
+	snprintf(m->name, XMP_NAMESIZE, "%s", (char *)mh.name);
+	snprintf(m->type, XMP_NAMESIZE, "%s (%s)", fmt->id, fmt->name);
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();
