@@ -21,6 +21,7 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import org.helllabs.android.xmp.R;
 
@@ -63,6 +64,7 @@ public class ModPlayer extends ListActivity {
 	private Xmp xmp = new Xmp();
     private Interface modInterface;
 	private ImageButton playButton, stopButton, backButton, forwardButton;
+	private SeekBar seekBar;
 	
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
@@ -111,7 +113,8 @@ public class ModPlayer extends ListActivity {
 		    }
 		});
 		
-
+		seekBar = (SeekBar)findViewById(R.id.seek);
+		seekBar.setProgress(0);
 			
 		this.bindService(new Intent(ModPlayer.this, ModService.class),
 					mConnection, Context.BIND_AUTO_CREATE);

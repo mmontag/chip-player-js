@@ -23,7 +23,7 @@
               android:text="No modules found on SD Card."/>
    </LinearLayout>
    
-   <SeekBar android:id="@+id/android:seek"
+   <SeekBar android:id="@+id/seek"
             android:gravity="bottom"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
