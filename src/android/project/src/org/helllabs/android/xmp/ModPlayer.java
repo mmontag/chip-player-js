@@ -2,28 +2,29 @@ package org.helllabs.android.xmp;
 
 import java.io.File;
 import java.io.FilenameFilter;
-//import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.DeadObjectException;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.media.AudioTrack;
-import android.media.AudioManager;
-import android.media.AudioFormat;
 import org.helllabs.android.xmp.R;
 
 
 public class ModPlayer extends ListActivity {
-
-		
+	
 	private class ModInfoAdapter extends ArrayAdapter<ModInfo> {
 	    private List<ModInfo> items;
 
@@ -55,18 +56,11 @@ public class ModPlayer extends ListActivity {
         }
 	}
 	
-	private static final String MEDIA_PATH = new String("/sdcard/");
+	static final String MEDIA_PATH = new String("/sdcard/");
 	private List<ModInfo> modlist = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();
-	private int minSize = AudioTrack.getMinBufferSize(44100,
-			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-			AudioFormat.ENCODING_PCM_16BIT);
-	private AudioTrack audio = new AudioTrack(
-			AudioManager.STREAM_MUSIC, 44100,
-			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-			AudioFormat.ENCODING_PCM_16BIT,
-			minSize < 4096 ? 4096 : minSize,
-			AudioTrack.MODE_STREAM);
+    private Interface modInterface;
+	private Button playButton, stopButton, backButton, forwardButton;
 	
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
@@ -78,6 +72,18 @@ public class ModPlayer extends ListActivity {
 	@Override
 	public void onCreate(Bundle icicle) {
 		xmp.init();
+		
+		playButton = (Button)findViewById(R.id.play);
+		stopButton = (Button)findViewById(R.id.stop);
+		backButton = (Button)findViewById(R.id.back);
+		forwardButton = (Button)findViewById(R.id.forward);
+		
+		/*playButton.setOnClickListener(new OnClickListener() {
+			@Override
+		    public void onClick(View v) {
+		    	finish();
+		    }
+		}); */
 		
 		try {
 			super.onCreate(icicle);
@@ -104,27 +110,26 @@ public class ModPlayer extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-		//Log.v(getString(R.string.app_name), "** start " + minSize);
-		audio.play();
-		
-		/* FIXME: check exception */
-		//Log.v(getString(R.string.app_name), "load: " + MEDIA_PATH + modlist.get(position).filename);
-   		if (xmp.loadModule(modlist.get(position).filename) < 0) {
-   			xmp.deinit();
-   			return;
-   		}
-   		xmp.startPlayer();
-   		
-   		while (xmp.playFrame() == 0) {
-   			int size = xmp.softmixer();
-   			short buffer[] = xmp.getBuffer(size);
-   			int i = audio.write(buffer, 0, size / 2);
-   			//Log.v(getString(R.string.app_name), "--> " + size + " " + i);
-   		}
-   		
-   		audio.stop();
-   		
-   		xmp.endPlayer();
-   		xmp.releaseModule();
+        try {
+            modInterface.playFile(position);
+        } catch (DeadObjectException e) {
+            Log.e(getString(R.string.app_name), e.getMessage());
+        } catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
+	
+    private ServiceConnection mConnection = new ServiceConnection()
+    {
+    	public void onServiceConnected(ComponentName className, IBinder service) {
+    		modInterface = Interface.Stub.asInterface((IBinder)service);
+    		updatePlaylist();
+    	}
+
+    	public void onServiceDisconnected(ComponentName className) {
+    		modInterface = null;
+    	}
+    };
+
 }
