@@ -17,8 +17,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import org.helllabs.android.xmp.R;
@@ -61,7 +62,7 @@ public class ModPlayer extends ListActivity {
 	private List<ModInfo> modlist = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();
     private Interface modInterface;
-	private Button playButton, stopButton, backButton, forwardButton;
+	private ImageButton playButton, stopButton, backButton, forwardButton;
 	
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
@@ -74,20 +75,43 @@ public class ModPlayer extends ListActivity {
 	public void onCreate(Bundle icicle) {
 		xmp.init();
 		
-		playButton = (Button)findViewById(R.id.play);
-		stopButton = (Button)findViewById(R.id.stop);
-		backButton = (Button)findViewById(R.id.back);
-		forwardButton = (Button)findViewById(R.id.forward);
-		
-		/*playButton.setOnClickListener(new OnClickListener() {
-			@Override
-		    public void onClick(View v) {
-		    	finish();
-		    }
-		}); */
-		
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
+		
+		playButton = (ImageButton)findViewById(R.id.play);
+		stopButton = (ImageButton)findViewById(R.id.stop);
+		backButton = (ImageButton)findViewById(R.id.back);
+		forwardButton = (ImageButton)findViewById(R.id.forward);
+		
+		playButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+		    	finish();
+		    }
+		});
+		
+		stopButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+		    	try {
+					modInterface.stop();
+				} catch (RemoteException e) {
+					Log.v(getString(R.string.app_name), e.getMessage());
+				}
+		    }
+		});
+		
+		backButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+		    	finish();
+		    }
+		});
+		
+		forwardButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+		    	finish();
+		    }
+		});
+		
+
 			
 		this.bindService(new Intent(ModPlayer.this, ModService.class),
 					mConnection, Context.BIND_AUTO_CREATE);

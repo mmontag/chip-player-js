@@ -27,11 +27,11 @@ public class ModService extends Service {
 			minSize < 4096 ? 4096 : minSize,
 			AudioTrack.MODE_STREAM);
 	private NotificationManager nm;
-    private static final int NOTIFY_ID = R.layout.playlist;
-    private List<String> songs = new ArrayList<String>();
-    private int currentPosition;
+	private static final int NOTIFY_ID = R.layout.playlist;
+	private List<String> songs = new ArrayList<String>();
+	private int currentPosition;
     
-    private class PlayRunnable implements Runnable {
+	private class PlayRunnable implements Runnable {
     	public void run() {
        		while (xmp.playFrame() == 0) {
        			int size = xmp.softmixer();
