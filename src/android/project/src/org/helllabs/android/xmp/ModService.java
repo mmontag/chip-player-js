@@ -14,6 +14,7 @@ import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.util.Log;
 
+
 public class ModService extends Service {
 	private Xmp xmp = new Xmp();
 	private int minSize = AudioTrack.getMinBufferSize(44100,
@@ -29,9 +30,25 @@ public class ModService extends Service {
     private static final int NOTIFY_ID = R.layout.playlist;
     private List<String> songs = new ArrayList<String>();
     private int currentPosition;
+    
+    private class PlayRunnable implements Runnable {
+    	public void run() {
+       		while (xmp.playFrame() == 0) {
+       			int size = xmp.softmixer();
+       			short buffer[] = xmp.getBuffer(size);
+       			int i = audio.write(buffer, 0, size / 2);
+       			//Log.v(getString(R.string.app_name), "--> " + size + " " + i);
+       		}
+       		
+       		audio.stop();
+       		xmp.endPlayer();
+       		xmp.releaseModule(); 
+    	}
+    }
 	
     @Override
 	public void onCreate() {
+		Log.v(getString(R.string.app_name), ">>> create service");    	
     	super.onCreate();
         nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         xmp.init();
@@ -61,17 +78,9 @@ public class ModService extends Service {
    		audio.play();
    		xmp.startPlayer();
    		
-   		while (xmp.playFrame() == 0) {
-   			int size = xmp.softmixer();
-   			short buffer[] = xmp.getBuffer(size);
-   			int i = audio.write(buffer, 0, size / 2);
-   			//Log.v(getString(R.string.app_name), "--> " + size + " " + i);
-   		}
-   		
-   		audio.stop();
-   		
-   		xmp.endPlayer();
-   		xmp.releaseModule();   		
+   		PlayRunnable playRunnable = new PlayRunnable();
+   		Thread playThread = new Thread(playRunnable);
+   		playThread.start();		
     }
     
     private void nextSong() {
@@ -80,15 +89,15 @@ public class ModService extends Service {
                 currentPosition = 0;
                 nm.cancel(NOTIFY_ID);
         } else {
-                playSong(ModPlayer.MEDIA_PATH + songs.get(currentPosition));
+                playSong(songs.get(currentPosition));
         }
 }
 
     private void prevSong() {
         if (currentPosition >= 1) {
-                playSong(ModPlayer.MEDIA_PATH + songs.get(--currentPosition));
+                playSong(songs.get(--currentPosition));
         } else {
-                playSong(ModPlayer.MEDIA_PATH + songs.get(currentPosition));
+                playSong(songs.get(currentPosition));
         }
     }
     
@@ -97,7 +106,8 @@ public class ModService extends Service {
         public void playFile(int position) throws DeadObjectException {
         	try {
         		currentPosition = position;
-        		playSong(ModPlayer.MEDIA_PATH + songs.get(position));
+        		Log.v(getString(R.string.app_name), "play song: " + songs.get(position));
+        		playSong(songs.get(position));
 
         	} catch (IndexOutOfBoundsException e) {
         		Log.e(getString(R.string.app_name), e.getMessage());
@@ -105,6 +115,7 @@ public class ModService extends Service {
         }
 
         public void addSongPlaylist(String song) throws DeadObjectException {
+        	Log.v(getString(R.string.app_name), "add song: " + song);
         	songs.add(song);
         }
 

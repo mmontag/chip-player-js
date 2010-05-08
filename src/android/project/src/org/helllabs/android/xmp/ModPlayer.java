@@ -7,6 +7,7 @@ import java.util.List;
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.DeadObjectException;
@@ -85,21 +86,23 @@ public class ModPlayer extends ListActivity {
 		    }
 		}); */
 		
-		try {
-			super.onCreate(icicle);
-			setContentView(R.layout.playlist);
-			updatePlaylist();
-		} catch (NullPointerException e) {
-			Log.v(getString(R.string.app_name), e.getMessage());
-		}
+		super.onCreate(icicle);
+		setContentView(R.layout.playlist);
+			
+		this.bindService(new Intent(ModPlayer.this, ModService.class),
+					mConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	public void updatePlaylist() {
 		File home = new File(MEDIA_PATH);
 		for (File file : home.listFiles(new ModFilter())) {
 			ModInfo m = xmp.getModInfo(MEDIA_PATH + "/" + file.getName());
-			/* m.title = file.getName();
-			m.filename = file.getName(); */
+			
+			try {
+				modInterface.addSongPlaylist(MEDIA_PATH + "/" + file.getName());
+			} catch (RemoteException e) {
+				Log.v(getString(R.string.app_name), e.getMessage());
+			}
 			modlist.add(m);
 		}
 		
