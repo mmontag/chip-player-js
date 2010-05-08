@@ -895,7 +895,6 @@ int _xmp_player_start(struct xmp_context *ctx)
 	return 0;
 }
 
-
 int _xmp_player_frame(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
@@ -967,7 +966,6 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	}
 
 
-
 	xmp_drv_echoback(ctx, (f->frame << 4) | XMP_ECHO_FRM);
 	play_frame(ctx, f->frame);
 
@@ -977,6 +975,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	if (HAS_QUIRK(XMP_QRK_MEDBPM)) {
 		xmp_drv_sync(ctx, p->tick_time * 33 / 125);
 		f->playing_time += m->rrate * 33 / (100 * p->xmp_bpm * 125);
+		f->time += m->rrate * 33 / (100 * p->xmp_bpm * 125);
 	} else {
 		xmp_drv_sync(ctx, p->tick_time);
 		f->playing_time += m->rrate / (100 * p->xmp_bpm);
