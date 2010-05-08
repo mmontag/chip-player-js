@@ -853,6 +853,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 	p->pos = f->ord = o->start;
 	f->frame = 0;
 	f->row = 0;
+	f->time = 0;
 
 	if (m->xxh->len == 0 || m->xxh->chn == 0) {
 		/* set variables to sane state */

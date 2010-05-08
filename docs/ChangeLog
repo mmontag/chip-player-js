@@ -11,6 +11,7 @@ Stable versions
 	- code cleanup and optimizations
 	- Android port using NDK
 	- fix time echoback event for MED
+	- fix module time count not reseting at new module
 
 3.1.0 (20100107):
 	- implement MED4 instrument transposition
