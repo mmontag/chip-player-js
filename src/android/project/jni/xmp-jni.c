@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <jni.h>
 #include "xmp.h"
+#include "common.h"
 
 /* #include <android/log.h> */
 
@@ -194,29 +195,23 @@ Java_org_helllabs_android_xmp_Xmp_decGvol(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_xmp_Xmp_seek(JNIEnv *env, jobject obj, jlong time)
+Java_org_helllabs_android_xmp_Xmp_seek(JNIEnv *env, jobject obj, jint time)
 {
-#if 0
         int i, t;
         struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 
-        _D("seek to %ld, total %d", time, xmp_cfg.time);
+	time *= 100;
 
-        for (i = 0; i < xmp_cfg.mod_info.len; i++) {
+        for (i = 0; i < p->m.xxh->len; i++) {
                 t = p->m.xxo_info[i].time;
 
-                _D("%2d: %ld %d", i, time, t);
-
                 if (t > time) {
-                        int a;
                         if (i > 0)
                                 i--;
-                        a = xmp_ord_set(ctx, i);
-                        ipb->output->flush(p->m.xxo_info[i].time);
+                        xmp_ord_set(ctx, i);
                         break;
                 }
         }
-#endif
 
 	return 0;
 }

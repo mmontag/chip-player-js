@@ -24,6 +24,7 @@ public class Xmp {
 	public native int seek(long time);
 	public native ModInfo getModInfo(String name);
 	public native int time();
+	public native int seek(int seconds);
 	
 	static {
 		System.loadLibrary("xmp");

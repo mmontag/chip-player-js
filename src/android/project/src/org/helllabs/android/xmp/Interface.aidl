@@ -11,5 +11,6 @@ interface Interface {
 	void skipBack();
 	
 	int time();
+	void seekPosition(in int seconds);
 }
 

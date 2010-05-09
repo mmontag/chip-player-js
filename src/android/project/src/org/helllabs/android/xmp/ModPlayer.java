@@ -23,6 +23,8 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+
 import org.helllabs.android.xmp.R;
 
 
@@ -66,6 +68,7 @@ public class ModPlayer extends ListActivity {
 	private ImageButton playButton, stopButton, backButton, forwardButton;
 	private SeekBar seekBar;
 	boolean playing = false;
+	boolean seeking = false;
 	
 	private class ProgressThread extends Thread {
 		@Override
@@ -80,7 +83,8 @@ public class ModPlayer extends ListActivity {
     			}
     			//Log.v(getString(R.string.app_name), "t = " + t);
     			if (t >= 0) {
-    				seekBar.setProgress(t);
+    				if (!seeking)
+    					seekBar.setProgress(t);
     			}
     			
     			try {
@@ -146,6 +150,34 @@ public class ModPlayer extends ListActivity {
 		
 		seekBar = (SeekBar)findViewById(R.id.seek);
 		seekBar.setProgress(0);
+		
+		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			public void onClick(View v) {
+		    	finish();
+		    }
+
+			public void onProgressChanged(SeekBar s, int p, boolean b) {
+				// do nothing
+			}
+
+			public void onStartTrackingTouch(SeekBar s) {
+				seeking = true;
+			}
+
+			public void onStopTrackingTouch(SeekBar s) {
+				seeking = false;
+				
+				if (!playing)
+					return;
+				
+				try {
+					modInterface.seekPosition(s.getProgress());
+				} catch (RemoteException e) {
+					Log.e(getString(R.string.app_name), e.getMessage());
+				}
+				
+			}
+		});
 			
 		this.bindService(new Intent(ModPlayer.this, ModService.class),
 					mConnection, Context.BIND_AUTO_CREATE);

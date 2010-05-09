@@ -12,6 +12,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.DeadObjectException;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 
 
@@ -147,6 +148,10 @@ public class ModService extends Service {
         public int time() throws DeadObjectException {
         	return xmp.time();
         }
+
+		public void seekPosition(int seconds) throws DeadObjectException {
+			xmp.seek(seconds);
+		}
     };
 }
 
