@@ -125,19 +125,15 @@ Java_org_helllabs_android_xmp_Xmp_softmixer(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jshortArray JNICALL
-Java_org_helllabs_android_xmp_Xmp_getBuffer(JNIEnv *env, jobject obj, jint size)
+Java_org_helllabs_android_xmp_Xmp_getBuffer(JNIEnv *env, jobject obj, jint size, jshortArray buffer)
 {
-	jshortArray a;
 	short *b;
 
 	size /= 2;
-	if ((a = (*env)->NewShortArray(env, size)) == NULL)
-		return NULL;
-
 	b = (short *)xmp_smix_buffer(ctx);
-	(*env)->SetShortArrayRegion(env, a, 0, size, b);
+	(*env)->SetShortArrayRegion(env, buffer, 0, size, b);
 
-	return a;
+	return buffer;
 }
 
 JNIEXPORT jint JNICALL

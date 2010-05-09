@@ -34,9 +34,10 @@ public class ModService extends Service {
     
 	private class PlayRunnable implements Runnable {
     	public void run() {
+    		short buffer[] = new short[minSize];
        		while (xmp.playFrame() == 0) {
        			int size = xmp.softmixer();
-       			short buffer[] = xmp.getBuffer(size);
+       			buffer = xmp.getBuffer(size, buffer);
        			int i = audio.write(buffer, 0, size / 2);
        			//Log.v(getString(R.string.app_name), "--> " + size + " " + i);
        		}

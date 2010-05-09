@@ -11,7 +11,7 @@ public class Xmp {
 	public native int endPlayer();
 	public native int playFrame();	
 	public native int softmixer();
-	public native short[] getBuffer(int size);
+	public native short[] getBuffer(int size, short buffer[]);
 	public native int nextOrd();
 	public native int prevOrd();
 	public native int setOrd(int n);
