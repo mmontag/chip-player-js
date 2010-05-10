@@ -203,10 +203,12 @@ public class ModPlayer extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-		if (playing)
-			return;
-		
-        try {
+		try {
+			if (playing) {
+				modInterface.stop();
+				progressThread.join();
+			}
+		      
         	seekBar.setProgress(0);
         	seekBar.setMax(modList.get(position).time / 100);
             modInterface.playFile(position);
@@ -216,6 +218,8 @@ public class ModPlayer extends ListActivity {
             Log.e(getString(R.string.app_name), e.getMessage());
         } catch (RemoteException e) {
         	Log.e(getString(R.string.app_name), e.getMessage());
+		} catch (InterruptedException e) {
+			Log.e(getString(R.string.app_name), e.getMessage());
 		}
 	}
 	
