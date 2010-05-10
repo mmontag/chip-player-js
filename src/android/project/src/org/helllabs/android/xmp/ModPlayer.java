@@ -165,17 +165,18 @@ public class ModPlayer extends ListActivity {
 			}
 
 			public void onStopTrackingTouch(SeekBar s) {
-				seeking = false;
 				
-				if (!playing)
+				if (!playing) {
+					seekBar.setProgress(0);
 					return;
+				}
 				
 				try {
 					modInterface.seekPosition(s.getProgress());
 				} catch (RemoteException e) {
 					Log.e(getString(R.string.app_name), e.getMessage());
 				}
-				
+				seeking = false;
 			}
 		});
 			
@@ -205,8 +206,10 @@ public class ModPlayer extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		try {
 			if (playing) {
+				seeking = true;		/* To stop progress bar update */
 				modInterface.stop();
 				progressThread.join();
+				seeking = false;
 			}
 		      
         	seekBar.setProgress(0);

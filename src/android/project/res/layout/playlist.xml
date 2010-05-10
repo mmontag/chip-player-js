@@ -27,8 +27,8 @@
             android:gravity="bottom"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="3mm"
-            android:paddingTop="3mm" />
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp" />
         
    <LinearLayout
      android:gravity="bottom"
