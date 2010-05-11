@@ -3,11 +3,14 @@ package org.helllabs.android.xmp;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
+
 import android.app.ListActivity;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.RemoteException;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,30 +33,31 @@ public class Xmpoid extends ListActivity {
 	    private List<ModInfo> items;
 
         public ModInfoAdapter(Context context, int resource, int textViewResourceId, List<ModInfo> items) {
-                super(context, resource, textViewResourceId, items);
-                this.items = items;
+        	super(context, resource, textViewResourceId, items);
+        	this.items = items;
         }
         
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-                View v = convertView;
-                if (v == null) {
-                    LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    v = vi.inflate(R.layout.song_item, null);
-                }
-                ModInfo o = items.get(position);
+        	View v = convertView;
+        	if (v == null) {
+        		LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        		v = vi.inflate(R.layout.song_item, null);
+        	}
+        	ModInfo o = items.get(position);
                 
-                if (o != null) {                		
-                        TextView tt = (TextView) v.findViewById(R.id.title);
-                        TextView bt = (TextView) v.findViewById(R.id.info);
-                        if (tt != null) {
-                              tt.setText(o.name);                            }
-                        if(bt != null){
-                              bt.setText(o.chn + " chn " + o.type);
-                        }
-                }
+        	if (o != null) {                		
+        		TextView tt = (TextView) v.findViewById(R.id.title);
+        		TextView bt = (TextView) v.findViewById(R.id.info);
+        		if (tt != null) {
+        			tt.setText(o.name);
+        		}
+        		if(bt != null){
+        			bt.setText(o.chn + " chn " + o.type);
+        		}
+        	}
                 
-                return v;
+        	return v;
         }
 	}
 	
@@ -65,8 +69,56 @@ public class Xmpoid extends ListActivity {
 	private SeekBar seekBar;
 	private boolean playing = false;
 	private boolean seeking = false;
+	private boolean single = false;		/* play only one module */
+	private boolean shuffleMode = true;
 	private ViewFlipper flipper;
 	private TextView infoName, infoType;
+	private int playIndex;
+	private RandomIndex ridx;
+	final Handler handler = new Handler();
+	
+	private class RandomIndex {
+		private int[] idx;
+		
+		public RandomIndex(int n) {
+			idx = new int[n];
+			for (int i = 0; i < n; i++) {
+				idx[i] = i;
+			}
+			
+			randomize();
+		}
+	
+		public void randomize() {
+			Random random = new Random();
+			Date date = new Date();
+			random.setSeed(date.getTime());
+			for (int i = 0; i < idx.length; i++) {				
+				int r = random.nextInt(idx.length);
+				int temp = idx[i];
+				idx[i] = idx[r];
+				idx[r] = temp;
+			}
+		}
+		
+		public int getIndex(int n) {
+			return idx[n];
+		}
+	}
+	
+    final Runnable endSongRunnable = new Runnable() {
+        public void run() {
+    		if (!single) {
+    			if (++playIndex < modList.size()) {
+    				playNewMod(playIndex);
+    			} else {
+    				ridx.randomize();
+    			}
+    		} else {
+    			flipper.showPrevious();
+    		}
+        }
+    };
 	
 	private class ProgressThread extends Thread {
 		@Override
@@ -90,6 +142,8 @@ public class Xmpoid extends ListActivity {
     		
     		seekBar.setProgress(0);
     		playing = false;
+    		
+    		handler.post(endSongRunnable);
     	}
     };
 
@@ -123,20 +177,29 @@ public class Xmpoid extends ListActivity {
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-		    	finish();
+				int idx[] = new int[modList.size()];
+				for (int i = 0; i < modList.size(); i++) {
+					idx[i] = i;
+				}
+				
+				ridx = new RandomIndex(idx.length);				
+				single = false;
+				
+				flipper.showNext();
+				playIndex = 0;
+				playNewMod(0);
 		    }
 		});
 		
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+				single = true;
 				player.stop();
 				try {
 					progressThread.join();
 				} catch (InterruptedException e) {
 					Log.e(getString(R.string.app_name), e.getMessage());
 				}
-				flipper.showPrevious();
-				
 		    }
 		});
 		
@@ -156,10 +219,6 @@ public class Xmpoid extends ListActivity {
 		seekBar.setProgress(0);
 		
 		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-			public void onClick(View v) {
-		    	finish();
-		    }
-
 			public void onProgressChanged(SeekBar s, int p, boolean b) {
 				// do nothing
 			}
@@ -204,12 +263,14 @@ public class Xmpoid extends ListActivity {
 				seeking = false;
 			}
 
+			if (shuffleMode && !single)
+				position = ridx.getIndex(position);
+			
         	seekBar.setProgress(0);
         	seekBar.setMax(modList.get(position).time / 100);
         	
         	infoName.setText(modList.get(position).name);
         	infoType.setText(modList.get(position).type);
-        	flipper.showNext();
         	
             player.play(modList.get(position).filename);
             progressThread = new ProgressThread();
@@ -222,7 +283,8 @@ public class Xmpoid extends ListActivity {
 	
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
+		single = true;
+		flipper.showNext();
 		playNewMod(position);
 	}
-
 }

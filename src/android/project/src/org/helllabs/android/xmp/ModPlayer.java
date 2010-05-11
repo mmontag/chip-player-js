@@ -3,7 +3,7 @@ package org.helllabs.android.xmp;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.util.Log;
+//import android.util.Log;
 
 
 public class ModPlayer {
