@@ -60,7 +60,7 @@ public class Xmpoid extends ListActivity {
 	static final String MEDIA_PATH = new String("/sdcard/mod/");
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();	/* used to get mod info */
-	private ModService player;		/* actual mod player */ 
+	private ModPlayer player;		/* actual mod player */ 
 	private ImageButton playButton, stopButton, backButton, forwardButton;
 	private SeekBar seekBar;
 	private boolean playing = false;
@@ -109,7 +109,7 @@ public class Xmpoid extends ListActivity {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
 		
-		player = new ModService();
+		player = new ModPlayer();
 		
 		/* Info view widgets */
 		flipper = (ViewFlipper)findViewById(R.id.flipper);

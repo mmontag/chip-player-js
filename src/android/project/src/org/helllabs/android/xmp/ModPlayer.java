@@ -6,7 +6,7 @@ import android.media.AudioTrack;
 import android.util.Log;
 
 
-public class ModService {
+public class ModPlayer {
 	private Xmp xmp = new Xmp();
 	private int minSize = AudioTrack.getMinBufferSize(44100,
 			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
@@ -33,7 +33,7 @@ public class ModService {
     	}
     }
 
-	public ModService() {
+	public ModPlayer() {
 		xmp.init();
 	}
 
