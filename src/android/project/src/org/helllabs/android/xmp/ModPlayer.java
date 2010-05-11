@@ -23,6 +23,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import org.helllabs.android.xmp.R;
@@ -67,8 +68,10 @@ public class ModPlayer extends ListActivity {
     private Interface modInterface;
 	private ImageButton playButton, stopButton, backButton, forwardButton;
 	private SeekBar seekBar;
-	boolean playing = false;
-	boolean seeking = false;
+	private boolean playing = false;
+	private boolean seeking = false;
+	private ViewFlipper flipper;
+	private TextView infoName, infoType;
 	
 	private class ProgressThread extends Thread {
 		@Override
@@ -115,6 +118,11 @@ public class ModPlayer extends ListActivity {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
 		
+		/* Info view widgets */
+		flipper = (ViewFlipper)findViewById(R.id.flipper);
+		infoName = (TextView)findViewById(R.id.info_name);
+		infoType = (TextView)findViewById(R.id.info_type);
+		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);
 		backButton = (ImageButton)findViewById(R.id.back);
@@ -133,6 +141,13 @@ public class ModPlayer extends ListActivity {
 				} catch (RemoteException e) {
 					Log.e(getString(R.string.app_name), e.getMessage());
 				}
+				try {
+					progressThread.join();
+				} catch (InterruptedException e) {
+					Log.e(getString(R.string.app_name), e.getMessage());
+				}
+				flipper.showPrevious();
+				
 		    }
 		});
 		
@@ -214,6 +229,11 @@ public class ModPlayer extends ListActivity {
 		      
         	seekBar.setProgress(0);
         	seekBar.setMax(modList.get(position).time / 100);
+        	
+        	infoName.setText(modList.get(position).name);
+        	infoType.setText(modList.get(position).type);
+        	flipper.showNext();
+        	
             modInterface.playFile(position);
             progressThread = new ProgressThread();
             progressThread.start();

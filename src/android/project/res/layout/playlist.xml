@@ -4,12 +4,19 @@
         android:layout_width="fill_parent" 
         android:layout_height="fill_parent">
 
+<ViewFlipper android:id="@+id/flipper"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"
+  android:layout_weight="1">
+  
+  <!-- Mod list page -->
+  
   <LinearLayout
     android:gravity="top"
     android:layout_weight="1.0"
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="fill_parent">
     <ListView android:id="@+id/android:list"
               android:layout_width="fill_parent" 
               android:layout_height="fill_parent"
@@ -21,7 +28,87 @@
               android:layout_width="fill_parent" 
               android:layout_height="fill_parent"
               android:text="No modules found on SD Card."/>
-   </LinearLayout>
+  </LinearLayout>
+   
+  <!-- Mod info page -->
+   
+  <LinearLayout
+		android:gravity="top"
+		android:layout_weight="1.0"
+		android:orientation="vertical"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+	
+	<TextView android:id="@+id/info_name"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge" />
+		
+	<TextView android:id="@+id/info_type"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceMedium" />
+		
+	<View
+	    android:layout_width="fill_parent"
+		android:layout_height="1dip"
+		android:background="#c0c0c000" />
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:text="Module length: "/>		
+	  <TextView android:id="@+id/info_len"
+	    android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+	    
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:text="Stored Patterns: "/>		
+	  <TextView android:id="@+id/info_pat"
+	    android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:text="Instruments: "/>		
+	  <TextView android:id="@+id/info_ins"
+	    android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:text="Samples: "/>		
+	  <TextView android:id="@+id/info_smp"
+	    android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+				
+  </LinearLayout>    
+   
+</ViewFlipper>
    
    <SeekBar android:id="@+id/seek"
             android:gravity="bottom"
