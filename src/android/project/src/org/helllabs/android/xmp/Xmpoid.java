@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
@@ -205,13 +207,15 @@ public class Xmpoid extends ListActivity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-		    	finish();
+				if (playing && !single)
+					playNewMod(playIndex - 1);
 		    }
 		});
 		
 		forwardButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-		    	finish();
+				if (playing && !single)
+					player.stop();
 		    }
 		});
 		
@@ -286,5 +290,11 @@ public class Xmpoid extends ListActivity {
 		single = true;
 		flipper.showNext();
 		playNewMod(position);
+	}
+	
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.options_menu, menu);
+	    return true;
 	}
 }
