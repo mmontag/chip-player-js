@@ -5,13 +5,8 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 import android.app.ListActivity;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.DeadObjectException;
-import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,7 +24,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import org.helllabs.android.xmp.R;
 
 
-public class ModPlayer extends ListActivity {
+public class Xmpoid extends ListActivity {
 	
 	private class ModInfoAdapter extends ArrayAdapter<ModInfo> {
 	    private List<ModInfo> items;
@@ -64,8 +59,8 @@ public class ModPlayer extends ListActivity {
 	
 	static final String MEDIA_PATH = new String("/sdcard/mod/");
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
-	private Xmp xmp = new Xmp();
-    private Interface modInterface;
+	private Xmp xmp = new Xmp();	/* used to get mod info */
+	private ModService player;		/* actual mod player */ 
 	private ImageButton playButton, stopButton, backButton, forwardButton;
 	private SeekBar seekBar;
 	private boolean playing = false;
@@ -79,11 +74,7 @@ public class ModPlayer extends ListActivity {
 			playing = true;
     		int t = 0;
     		do {
-    			try {
-    				t = modInterface.time();
-    			} catch (RemoteException e) {
-    				Log.e(getString(R.string.app_name), e.getMessage());
-    			}
+    			t = player.time();
     			//Log.v(getString(R.string.app_name), "t = " + t);
     			if (t >= 0) {
     				if (!seeking)
@@ -118,6 +109,8 @@ public class ModPlayer extends ListActivity {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
 		
+		player = new ModService();
+		
 		/* Info view widgets */
 		flipper = (ViewFlipper)findViewById(R.id.flipper);
 		infoName = (TextView)findViewById(R.id.info_name);
@@ -136,11 +129,7 @@ public class ModPlayer extends ListActivity {
 		
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-		    	try {
-					modInterface.stop();
-				} catch (RemoteException e) {
-					Log.e(getString(R.string.app_name), e.getMessage());
-				}
+				player.stop();
 				try {
 					progressThread.join();
 				} catch (InterruptedException e) {
@@ -186,47 +175,35 @@ public class ModPlayer extends ListActivity {
 					return;
 				}
 				
-				try {
-					modInterface.seekPosition(s.getProgress());
-				} catch (RemoteException e) {
-					Log.e(getString(R.string.app_name), e.getMessage());
-				}
+				player.seek(s.getProgress());
 				seeking = false;
 			}
 		});
-			
-		this.bindService(new Intent(ModPlayer.this, ModService.class),
-					mConnection, Context.BIND_AUTO_CREATE);
+		
+		updatePlaylist();
 	}
 
 	public void updatePlaylist() {
 		File home = new File(MEDIA_PATH);
 		for (File file : home.listFiles(new ModFilter())) {
 			ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
-			
-			try {
-				modInterface.addSongPlaylist(MEDIA_PATH + file.getName());
-			} catch (RemoteException e) {
-				Log.v(getString(R.string.app_name), e.getMessage());
-			}
 			modList.add(m);
-		}
-		
+		}		
         ModInfoAdapter playlist = new ModInfoAdapter(this,
         			R.layout.song_item, R.id.info, modList);
         setListAdapter(playlist);
 	}
 
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
+	void playNewMod(int position)
+	{
 		try {
 			if (playing) {
 				seeking = true;		/* To stop progress bar update */
-				modInterface.stop();
+				player.stop();
 				progressThread.join();
 				seeking = false;
 			}
-		      
+
         	seekBar.setProgress(0);
         	seekBar.setMax(modList.get(position).time / 100);
         	
@@ -234,28 +211,18 @@ public class ModPlayer extends ListActivity {
         	infoType.setText(modList.get(position).type);
         	flipper.showNext();
         	
-            modInterface.playFile(position);
+            player.play(modList.get(position).filename);
             progressThread = new ProgressThread();
             progressThread.start();
-        } catch (DeadObjectException e) {
-            Log.e(getString(R.string.app_name), e.getMessage());
-        } catch (RemoteException e) {
-        	Log.e(getString(R.string.app_name), e.getMessage());
+            
 		} catch (InterruptedException e) {
 			Log.e(getString(R.string.app_name), e.getMessage());
-		}
+		}		
 	}
 	
-    private ServiceConnection mConnection = new ServiceConnection()
-    {
-    	public void onServiceConnected(ComponentName className, IBinder service) {
-    		modInterface = Interface.Stub.asInterface((IBinder)service);
-    		updatePlaylist();
-    	}
-
-    	public void onServiceDisconnected(ComponentName className) {
-    		modInterface = null;
-    	}
-    };
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		playNewMod(position);
+	}
 
 }
