@@ -182,7 +182,7 @@ public class Xmpoid extends ListActivity {
 				}
 				
 				if (count == 0)
-					handler.post(updateInfoRunnable);
+					updateInfoRunnable.run();	//handler.post(updateInfoRunnable);
 				if (++count > 1)
 					count = 0;
     		} while (t >= 0);
