@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
@@ -86,6 +87,8 @@ public class Xmpoid extends ListActivity {
 	private RandomIndex ridx;
 	private ProgressDialog progressDialog;
 	final Handler handler = new Handler();
+	private static final int QUIT_ID = 0;
+	private static final int ABOUT_ID = 1;
 	
 	private class RandomIndex {
 		private int[] idx;
@@ -350,7 +353,7 @@ public class Xmpoid extends ListActivity {
 			alertDialog.setTitle("Oops");
 			alertDialog.setMessage(MEDIA_PATH + " not found. " +
 					"Create this directory and place your modules there.");
-			alertDialog.setButton("Ok", new DialogInterface.OnClickListener() {
+			alertDialog.setButton("Bummer!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					finish();
 				}
@@ -431,9 +434,35 @@ public class Xmpoid extends ListActivity {
 		playNewMod(position);
 	}
 	
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.options_menu, menu);
 	    return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()) {
+		case QUIT_ID:
+			try {
+				finalize();
+			} catch (Throwable e) {
+				Log.e(getString(R.string.app_name), e.getMessage());
+			}
+			return false;
+		case ABOUT_ID:
+			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+			
+			alertDialog.setTitle("About");
+			alertDialog.setMessage("Xmpoid");
+			alertDialog.setButton("Cool", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					alertDialog.dismiss();
+				}
+			});
+			alertDialog.show();			
+		}
+		return false;
 	}
 }
