@@ -87,7 +87,10 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 
     packer = cmd = NULL;
     builtin = res = 0;
-    get_temp_dir(tmp, PATH_MAX);
+
+    if (get_temp_dir(tmp, PATH_MAX) < 0)
+	return 0;
+
     strncat(tmp, "xmp_XXXXXX", PATH_MAX);
 
     fseek(*f, 0, SEEK_SET);
@@ -217,6 +220,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	return 0;
 
 #if __ANDROID__
+    /* Don't use external helpers in android */
     if (cmd)
 	return 0;
 #endif

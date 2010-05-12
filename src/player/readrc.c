@@ -77,6 +77,9 @@ int _xmp_read_rc(struct xmp_context *ctx)
 
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
+#elif defined __ANDROID__
+    if ((rc = fopen("/sdcard/xmp/xmp.conf", "r")) == NULL) {
+	return -1;
 #else
     char *home = getenv("HOME");
 
@@ -251,6 +254,8 @@ void _xmp_read_modconf(struct xmp_context *ctx, uint32 crc, long size)
 
     snprintf(myrc, PATH_MAX, "%s/modules.ini", home);
     parse_modconf(ctx, myrc, crc, size);
+#elif defined __ANDROID__
+    parse_modconf(ctx, "/sdcard/xmp/modules.conf", crc, size);
 #else
     char myrc[PATH_MAX];
     char *home = getenv ("HOME");

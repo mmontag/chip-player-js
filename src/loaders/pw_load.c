@@ -73,7 +73,9 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Prowizard depacking */
 
-	get_temp_dir(tmp, PATH_MAX);
+	if (get_temp_dir(tmp, PATH_MAX) < 0)
+		return -1;
+
 	strncat(tmp, "xmp_XXXXXX", PATH_MAX);
 
 	if ((fd = mkstemp(tmp)) < 0)

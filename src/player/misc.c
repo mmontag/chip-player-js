@@ -15,6 +15,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#ifdef __ANDROID__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 #include "common.h"
 
 int report(char *fmt, ...)
@@ -70,8 +75,13 @@ int get_temp_dir(char *buf, int size)
 #elif defined __AMIGA__
 	strncpy(buf, "T:", size);
 #elif defined __ANDROID__
-	mkdir("/sdcard/xmp/");
-	strncpy(buf, "/sdcard/xmp/", size);
+	struct stat st;
+	stat("/sdcard/xmp", &st);
+	if (!S_ISDIR(st.st_mode)) {
+		if (mkdir("/sdcard/xmp", 0777) < 0)
+			return -1;
+	}
+	strncpy(buf, "/sdcard/xmp", size);
 #else
 	char *def = "/tmp";
 	char *tmp = getenv("TMPDIR");
