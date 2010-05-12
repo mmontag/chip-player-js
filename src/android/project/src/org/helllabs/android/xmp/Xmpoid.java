@@ -87,8 +87,6 @@ public class Xmpoid extends ListActivity {
 	private RandomIndex ridx;
 	private ProgressDialog progressDialog;
 	final Handler handler = new Handler();
-	private static final int QUIT_ID = 0;
-	private static final int ABOUT_ID = 1;
 	
 	private class RandomIndex {
 		private int[] idx;
@@ -444,18 +442,19 @@ public class Xmpoid extends ListActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
-		case QUIT_ID:
+		case R.id.menu_quit:
 			try {
-				finalize();
+				finish();
 			} catch (Throwable e) {
 				Log.e(getString(R.string.app_name), e.getMessage());
 			}
 			return false;
-		case ABOUT_ID:
+		case R.id.menu_about:
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
-			alertDialog.setTitle("About");
-			alertDialog.setMessage("Xmpoid");
+			alertDialog.setTitle("About " + getString(R.string.app_name));
+			alertDialog.setMessage(getString(R.string.app_name) + " " +
+					getString(R.string.app_version));
 			alertDialog.setButton("Cool", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();
