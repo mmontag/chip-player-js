@@ -74,7 +74,9 @@ public class Xmpoid extends ListActivity {
 	private boolean single = false;		/* play only one module */
 	private boolean shuffleMode = true;
 	private ViewFlipper flipper;
-	private TextView infoName, infoType;
+	private TextView infoName, infoType, infoLen;
+	private TextView infoNpat, infoIns, infoSmp;
+	private TextView infoTpo, infoBpm, infoPos, infoPat; 
 	private int playIndex;
 	private RandomIndex ridx;
 	final Handler handler = new Handler();
@@ -121,7 +123,39 @@ public class Xmpoid extends ListActivity {
     		}
         }
     };
-	
+    
+    final Runnable updateInfoRunnable = new Runnable() {
+    	private int oldTpo = -1;
+    	private int oldBpm = -1;
+    	private int oldPos = -1;
+    	private int oldPat = -1;
+        public void run() {
+        	int tpo = player.getTempo();
+        	if (tpo != oldTpo) {
+        		infoTpo.setText(Integer.toString(tpo));
+        		oldTpo = tpo;
+        	}
+
+        	int bpm = player.getBpm();
+        	if (bpm != oldBpm) {
+        		infoBpm.setText(Integer.toString(bpm));
+        		oldBpm = bpm;
+        	}
+
+        	int pos = player.getPos();
+        	if (bpm != oldPos) {
+        		infoPos.setText(Integer.toString(pos));
+        		oldPos = pos;
+        	}
+
+        	int pat = player.getPat();
+        	if (pat != oldPat) {
+        		infoPat.setText(Integer.toString(pat));
+        		oldPat = pat;
+        	}        	
+        }
+    };
+    
 	private class ProgressThread extends Thread {
 		@Override
     	public void run() {
@@ -140,6 +174,8 @@ public class Xmpoid extends ListActivity {
 				} catch (InterruptedException e) {
 					Log.e(getString(R.string.app_name), e.getMessage());
 				}
+				
+				handler.post(updateInfoRunnable);
     		} while (t >= 0);
     		
     		seekBar.setProgress(0);
@@ -171,6 +207,14 @@ public class Xmpoid extends ListActivity {
 		flipper = (ViewFlipper)findViewById(R.id.flipper);
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
+		infoLen = (TextView)findViewById(R.id.info_len);
+		infoNpat = (TextView)findViewById(R.id.info_npat);
+		infoIns = (TextView)findViewById(R.id.info_ins);
+		infoSmp = (TextView)findViewById(R.id.info_smp);
+		infoTpo = (TextView)findViewById(R.id.info_tpo);
+		infoBpm = (TextView)findViewById(R.id.info_bpm);
+		infoPos = (TextView)findViewById(R.id.info_pos);
+		infoPat = (TextView)findViewById(R.id.info_pat);
 		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);
@@ -278,14 +322,19 @@ public class Xmpoid extends ListActivity {
 							
 			if (shuffleMode && !single)
 				position = ridx.getIndex(position);
-			
+
+			ModInfo m = modList.get(position);
         	seekBar.setProgress(0);
-        	seekBar.setMax(modList.get(position).time / 100);
+        	seekBar.setMax(m.time / 100);
         	
-        	infoName.setText(modList.get(position).name);
-        	infoType.setText(modList.get(position).type);
+        	infoName.setText(m.name);
+        	infoType.setText(m.type);
+        	infoLen.setText(Integer.toString(m.len));
+        	infoNpat.setText(Integer.toString(m.pat));
+        	infoIns.setText(Integer.toString(m.ins));
+        	infoSmp.setText(Integer.toString(m.smp));
         	
-            player.play(modList.get(position).filename);
+            player.play(m.filename);
             progressThread = new ProgressThread();
             progressThread.start();
             

@@ -25,6 +25,10 @@ public class Xmp {
 	public native ModInfo getModInfo(String name);
 	public native int time();
 	public native int seek(int seconds);
+	public native int tempo();
+	public native int bpm();
+	public native int pos();
+	public native int pat();
 	
 	static {
 		System.loadLibrary("xmp");

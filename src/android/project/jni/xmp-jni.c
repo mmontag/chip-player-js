@@ -12,7 +12,7 @@ extern struct xmp_drv_info drv_smix;
 
 static xmp_context ctx;
 static struct xmp_options *opt;
-static int _time;
+static int _time, _bpm, _tpo, _pos, _pat;
 static int _playing = 0;
 
 static void process_echoback(unsigned long i, void *data)
@@ -22,6 +22,14 @@ static void process_echoback(unsigned long i, void *data)
 	switch (i & 0x0f) {
 	case XMP_ECHO_TIME:
 		_time = msg;
+		break;
+	case XMP_ECHO_BPM:
+		_bpm = msg & 0xff;
+		_tpo = msg >> 8;
+		break;
+	case XMP_ECHO_ORD:
+		_pos = msg & 0xff;
+		_pat = msg >> 8;
 		break;
 	}
 }
@@ -267,3 +275,29 @@ Java_org_helllabs_android_xmp_Xmp_time(JNIEnv *env, jobject obj)
 {
 	return _playing ? _time : -1;
 }
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_tempo(JNIEnv *env, jobject obj)
+{
+	return _tpo;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_bpm(JNIEnv *env, jobject obj)
+{
+	return _bpm;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_pos(JNIEnv *env, jobject obj)
+{
+	return _pos;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_pat(JNIEnv *env, jobject obj)
+{
+	return _pat;
+}
+
+

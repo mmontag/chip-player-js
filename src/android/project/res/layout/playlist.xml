@@ -50,21 +50,31 @@
 		android:textAppearance="?android:attr/textAppearanceMedium" />
 		
 	<View
+		android:layout_width="fill_parent"
+		android:layout_height="2dp"/>		
+	<View
 	    android:layout_width="fill_parent"
-		android:layout_height="1dip"
-		android:background="#c0c0c000" />
-	
+		android:layout_height="1dp"
+		android:background="#80c080" />
+	<View
+		android:layout_width="fill_parent"
+		android:layout_height="2dp"/>
+		
 	<LinearLayout
 	  android:orientation="horizontal"
 	  android:layout_width="wrap_content" 
 	  android:layout_height="wrap_content">	  	
 	  <TextView
-		android:layout_width="fill_parent" 
+		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"
 		android:text="Module length: "/>		
 	  <TextView android:id="@+id/info_len"
-	    android:layout_width="fill_parent" 
-		android:layout_height="wrap_content" /> 	
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text=" patterns"/>		 	
 	</LinearLayout>
 	    
 	<LinearLayout
@@ -72,11 +82,11 @@
 	  android:layout_width="wrap_content" 
 	  android:layout_height="wrap_content">	  	
 	  <TextView
-		android:layout_width="fill_parent" 
+		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"
-		android:text="Stored Patterns: "/>		
-	  <TextView android:id="@+id/info_pat"
-	    android:layout_width="fill_parent" 
+		android:text="Stored patterns: "/>		
+	  <TextView android:id="@+id/info_npat"
+	    android:layout_width="wrap_content" 
 		android:layout_height="wrap_content" /> 	
 	</LinearLayout>
 	
@@ -85,11 +95,18 @@
 	  android:layout_width="wrap_content" 
 	  android:layout_height="wrap_content">	  	
 	  <TextView
-		android:layout_width="fill_parent" 
+		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"
 		android:text="Instruments: "/>		
 	  <TextView android:id="@+id/info_ins"
-	    android:layout_width="fill_parent" 
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" /> 	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text=", Samples: "/>		
+	  <TextView android:id="@+id/info_smp"
+	    android:layout_width="wrap_content" 
 		android:layout_height="wrap_content" /> 	
 	</LinearLayout>
 	
@@ -98,14 +115,38 @@
 	  android:layout_width="wrap_content" 
 	  android:layout_height="wrap_content">	  	
 	  <TextView
-		android:layout_width="fill_parent" 
+		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"
-		android:text="Samples: "/>		
-	  <TextView android:id="@+id/info_smp"
-	    android:layout_width="fill_parent" 
-		android:layout_height="wrap_content" /> 	
-	</LinearLayout>
-				
+		android:text="Tempo["/>		
+	  <TextView android:id="@+id/info_tpo"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="] BPM["/>
+	  <TextView android:id="@+id/info_bpm"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="] Pos["/>
+	  <TextView android:id="@+id/info_pos"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="] Pat["/>	
+	  <TextView android:id="@+id/info_pat"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="]"/>		 	
+	</LinearLayout>			
   </LinearLayout>    
    
 </ViewFlipper>
