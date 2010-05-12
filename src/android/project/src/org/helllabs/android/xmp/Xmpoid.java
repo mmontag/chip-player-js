@@ -7,9 +7,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -340,14 +342,29 @@ public class Xmpoid extends ListActivity {
 	}
 
 	public void updatePlaylist() {
-		final File home = new File(MEDIA_PATH);
+		final File modDir = new File(MEDIA_PATH);
+		
+		if (!modDir.isDirectory()) {
+			AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+			
+			alertDialog.setTitle("Oops");
+			alertDialog.setMessage(MEDIA_PATH + " not found. " +
+					"Create this directory and place your modules there.");
+			alertDialog.setButton("Ok", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					finish();
+				}
+			});
+			alertDialog.show();
+			return;
+		}
 		
 		progressDialog = ProgressDialog.show(this,      
 				"Please wait", "Scanning module files...", true);
 		
 		new Thread() { 
 			public void run() { 		
-            	for (File file : home.listFiles(new ModFilter())) {
+            	for (File file : modDir.listFiles(new ModFilter())) {
             		ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
             		modList.add(m);
             	}
