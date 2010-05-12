@@ -78,7 +78,7 @@ public class Xmpoid extends ListActivity {
 	private boolean paused = false;
 	private ViewFlipper flipper;
 	private TextView infoName, infoType, infoLen;
-	private TextView infoNpat, infoIns, infoSmp;
+	private TextView infoNpat, infoChn, infoIns, infoSmp;
 	private TextView infoTpo, infoBpm, infoPos, infoPat; 
 	private int playIndex;
 	private RandomIndex ridx;
@@ -230,6 +230,7 @@ public class Xmpoid extends ListActivity {
 		infoType = (TextView)findViewById(R.id.info_type);
 		infoLen = (TextView)findViewById(R.id.info_len);
 		infoNpat = (TextView)findViewById(R.id.info_npat);
+		infoChn = (TextView)findViewById(R.id.info_chn);
 		infoIns = (TextView)findViewById(R.id.info_ins);
 		infoSmp = (TextView)findViewById(R.id.info_smp);
 		infoTpo = (TextView)findViewById(R.id.info_tpo);
@@ -391,6 +392,7 @@ public class Xmpoid extends ListActivity {
         	infoType.setText(m.type);
         	infoLen.setText(Integer.toString(m.len));
         	infoNpat.setText(Integer.toString(m.pat));
+        	infoChn.setText(Integer.toString(m.chn));
         	infoIns.setText(Integer.toString(m.ins));
         	infoSmp.setText(Integer.toString(m.smp));
         	

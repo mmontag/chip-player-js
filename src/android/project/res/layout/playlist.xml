@@ -97,6 +97,19 @@
 	  <TextView
 		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"
+		android:text="Audio channels: "/>		
+	  <TextView android:id="@+id/info_chn"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
 		android:text="Instruments: "/>		
 	  <TextView android:id="@+id/info_ins"
 	    android:layout_width="wrap_content" 
