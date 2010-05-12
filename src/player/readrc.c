@@ -78,7 +78,7 @@ int _xmp_read_rc(struct xmp_context *ctx)
     if ((rc = fopen(myrc, "r")) == NULL)
 	return -1;
 #elif defined __ANDROID__
-    if ((rc = fopen("/sdcard/xmp/xmp.conf", "r")) == NULL) {
+    if ((rc = fopen("/sdcard/xmp/xmp.conf", "r")) == NULL)
 	return -1;
 #else
     char *home = getenv("HOME");
