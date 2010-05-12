@@ -111,11 +111,11 @@ public class Xmpoid extends ListActivity {
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
     		if (!single) {
-    			if (++playIndex < modList.size()) {
-    				playNewMod(playIndex);
-    			} else {
+    			if (++playIndex >= modList.size()) {
     				ridx.randomize();
+    				playIndex = 0;
     			}
+    			playNewMod(playIndex);
     		} else {
     			flipper.showPrevious();
     		}
@@ -207,15 +207,20 @@ public class Xmpoid extends ListActivity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (playing && !single)
-					playNewMod(playIndex - 1);
+				if (playing && !single) {
+					playIndex -= 2;
+					if (playIndex < -1)
+						playIndex = -1;
+					player.stop();
+				}
 		    }
 		});
 		
 		forwardButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (playing && !single)
+				if (playing && !single) {
 					player.stop();
+				}
 		    }
 		});
 		
@@ -267,6 +272,10 @@ public class Xmpoid extends ListActivity {
 				seeking = false;
 			}
 
+			/* Sanity check */
+			if (position < 0 || position >= modList.size())
+				position = 0;
+							
 			if (shuffleMode && !single)
 				position = ridx.getIndex(position);
 			
