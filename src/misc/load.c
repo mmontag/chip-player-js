@@ -216,6 +216,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     if (packer == NULL)
 	return 0;
 
+#if __ANDROID__
+    if (cmd)
+	return 0;
+#endif
+
     reportv(ctx, 0, "Depacking %s file... ", packer);
 
     temp = calloc(sizeof (struct tmpfilename), 1);
