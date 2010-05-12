@@ -132,25 +132,25 @@ public class Xmpoid extends ListActivity {
     	private int oldPos = -1;
     	private int oldPat = -1;
         public void run() {
-        	int tpo = player.getTempo();
+        	int tpo = player.getPlayTempo();
         	if (tpo != oldTpo) {
         		infoTpo.setText(Integer.toString(tpo));
         		oldTpo = tpo;
         	}
 
-        	int bpm = player.getBpm();
+        	int bpm = player.getPlayBpm();
         	if (bpm != oldBpm) {
         		infoBpm.setText(Integer.toString(bpm));
         		oldBpm = bpm;
         	}
 
-        	int pos = player.getPos();
-        	if (bpm != oldPos) {
+        	int pos = player.getPlayPos();
+        	if (pos != oldPos) {
         		infoPos.setText(Integer.toString(pos));
         		oldPos = pos;
         	}
 
-        	int pat = player.getPat();
+        	int pat = player.getPlayPat();
         	if (pat != oldPat) {
         		infoPat.setText(Integer.toString(pat));
         		oldPat = pat;
@@ -181,7 +181,7 @@ public class Xmpoid extends ListActivity {
 				
 				if (count == 0)
 					handler.post(updateInfoRunnable);
-				if (++count > 2)
+				if (++count > 1)
 					count = 0;
     		} while (t >= 0);
     		

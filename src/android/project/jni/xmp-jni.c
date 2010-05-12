@@ -277,25 +277,25 @@ Java_org_helllabs_android_xmp_Xmp_time(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_xmp_Xmp_tempo(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_getPlayTempo(JNIEnv *env, jobject obj)
 {
 	return _tpo;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_xmp_Xmp_bpm(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_getPlayBpm(JNIEnv *env, jobject obj)
 {
 	return _bpm;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_xmp_Xmp_pos(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_getPlayPos(JNIEnv *env, jobject obj)
 {
 	return _pos;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_xmp_Xmp_pat(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_getPlayPat(JNIEnv *env, jobject obj)
 {
 	return _pat;
 }

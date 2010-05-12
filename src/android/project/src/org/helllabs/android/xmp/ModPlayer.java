@@ -66,20 +66,20 @@ public class ModPlayer {
 		xmp.seek(seconds);
 	}
 	
-	public int getTempo() {
-		return xmp.tempo();
+	public int getPlayTempo() {
+		return xmp.getPlayTempo();
 	}
 	
-	public int getBpm() {
-		return xmp.bpm();
+	public int getPlayBpm() {
+		return xmp.getPlayBpm();
 	}
 	
-	public int getPos() {
-		return xmp.pos();
+	public int getPlayPos() {
+		return xmp.getPlayPos();
 	}
 	
-	public int getPat() {
-		return xmp.pat();
+	public int getPlayPat() {
+		return xmp.getPlayPat();
 	}
 }
 
