@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -119,6 +120,7 @@ public class Xmpoid extends ListActivity {
     			}
     			playNewMod(playIndex);
     		} else {
+    			flipper.setAnimation(AnimationUtils.loadAnimation(flipper.getContext(), R.anim.slide_right));
     			flipper.showPrevious();
     		}
         }
@@ -160,7 +162,9 @@ public class Xmpoid extends ListActivity {
 		@Override
     	public void run() {
 			playing = true;
+			int count = 0;		/* to reduce CPU usage */
     		int t = 0;
+    		
     		do {
     			t = player.time();
     			//Log.v(getString(R.string.app_name), "t = " + t);
@@ -175,7 +179,10 @@ public class Xmpoid extends ListActivity {
 					Log.e(getString(R.string.app_name), e.getMessage());
 				}
 				
-				handler.post(updateInfoRunnable);
+				if (count == 0)
+					handler.post(updateInfoRunnable);
+				if (++count > 2)
+					count = 0;
     		} while (t >= 0);
     		
     		seekBar.setProgress(0);
@@ -231,6 +238,7 @@ public class Xmpoid extends ListActivity {
 				ridx = new RandomIndex(idx.length);				
 				single = false;
 				
+				flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));				
 				flipper.showNext();
 				playIndex = 0;
 				playNewMod(0);
@@ -346,6 +354,7 @@ public class Xmpoid extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		single = true;
+		flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));
 		flipper.showNext();
 		playNewMod(position);
 	}
