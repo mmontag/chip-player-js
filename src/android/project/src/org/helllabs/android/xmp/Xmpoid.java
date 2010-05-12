@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Random;
 
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -81,6 +82,7 @@ public class Xmpoid extends ListActivity {
 	private TextView infoTpo, infoBpm, infoPos, infoPat; 
 	private int playIndex;
 	private RandomIndex ridx;
+	private ProgressDialog progressDialog;
 	final Handler handler = new Handler();
 	
 	private class RandomIndex {
@@ -182,7 +184,7 @@ public class Xmpoid extends ListActivity {
 				}
 				
 				if (count == 0)
-					updateInfoRunnable.run();	//handler.post(updateInfoRunnable);
+					handler.post(updateInfoRunnable);
 				if (++count > 1)
 					count = 0;
     		} while (t >= 0);
@@ -337,14 +339,31 @@ public class Xmpoid extends ListActivity {
 	}
 
 	public void updatePlaylist() {
-		File home = new File(MEDIA_PATH);
-		for (File file : home.listFiles(new ModFilter())) {
-			ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
-			modList.add(m);
-		}		
-        ModInfoAdapter playlist = new ModInfoAdapter(this,
-        			R.layout.song_item, R.id.info, modList);
-        setListAdapter(playlist);
+		final File home = new File(MEDIA_PATH);
+		
+		progressDialog = ProgressDialog.show(this,      
+				"Please wait", "Scanning module files...", true);
+		
+		new Thread() { 
+			public void run() { 		
+            	for (File file : home.listFiles(new ModFilter())) {
+            		ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
+            		modList.add(m);
+            	}
+            	
+                final ModInfoAdapter playlist = new ModInfoAdapter(Xmpoid.this,
+                			R.layout.song_item, R.id.info, modList);
+                
+                /* This one must run in the UI thread */
+                handler.post(new Runnable() {
+                	public void run() {
+                		 setListAdapter(playlist);
+                	 }
+                });
+            	
+                progressDialog.dismiss();
+			}
+		}.start();
 	}
 
 	void playNewMod(int position)
