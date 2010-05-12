@@ -123,6 +123,7 @@ public class Xmpoid extends ListActivity {
     		} else {
     			flipper.setAnimation(AnimationUtils.loadAnimation(flipper.getContext(), R.anim.slide_right));
     			flipper.showPrevious();
+    			playButton.setImageResource(R.drawable.play);
     		}
         }
     };
