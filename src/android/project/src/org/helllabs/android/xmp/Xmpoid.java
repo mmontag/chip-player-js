@@ -264,8 +264,8 @@ public class Xmpoid extends ListActivity {
 				flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));				
 				flipper.showNext();
 				playIndex = 0;
-				playNewMod(0);
 				unpause();
+				playNewMod(0);
 		    }
 		});
 		
@@ -388,8 +388,8 @@ public class Xmpoid extends ListActivity {
 		single = true;
 		flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));
 		flipper.showNext();
-		playNewMod(position);
 		unpause();
+		playNewMod(position);
 	}
 	
 	public boolean onCreateOptionsMenu(Menu menu) {
