@@ -74,6 +74,7 @@ public class Xmpoid extends ListActivity {
 	private boolean seeking = false;
 	private boolean single = false;		/* play only one module */
 	private boolean shuffleMode = true;
+	private boolean paused = false;
 	private ViewFlipper flipper;
 	private TextView infoName, infoType, infoLen;
 	private TextView infoNpat, infoIns, infoSmp;
@@ -169,7 +170,7 @@ public class Xmpoid extends ListActivity {
     			t = player.time();
     			//Log.v(getString(R.string.app_name), "t = " + t);
     			if (t >= 0) {
-    				if (!seeking)
+    				if (!seeking && !paused)
     					seekBar.setProgress(t);
     			}
     			
@@ -201,6 +202,16 @@ public class Xmpoid extends ListActivity {
 	    }
 	}
 	
+	public void pause() {
+		paused = true;
+		playButton.setImageResource(R.drawable.play);
+	}
+	
+	public void unpause() {
+		paused = false;
+		playButton.setImageResource(R.drawable.pause);
+	}
+	
 	@Override
 	public void onCreate(Bundle icicle) {
 		xmp.init();
@@ -230,6 +241,18 @@ public class Xmpoid extends ListActivity {
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+				if (playing) {
+					player.pause();
+					
+					if (paused) {
+						unpause();
+					} else {
+						pause();
+					}
+					
+					return;
+				}
+				
 				int idx[] = new int[modList.size()];
 				for (int i = 0; i < modList.size(); i++) {
 					idx[i] = i;
@@ -242,13 +265,20 @@ public class Xmpoid extends ListActivity {
 				flipper.showNext();
 				playIndex = 0;
 				playNewMod(0);
+				unpause();
 		    }
 		});
 		
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+				if (!playing)
+					return;
+				
 				single = true;
 				player.stop();
+				paused = false;
+				playButton.setImageResource(R.drawable.play);
+				
 				try {
 					progressThread.join();
 				} catch (InterruptedException e) {
@@ -264,6 +294,7 @@ public class Xmpoid extends ListActivity {
 					if (playIndex < -1)
 						playIndex = -1;
 					player.stop();
+					unpause();
 				}
 		    }
 		});
@@ -272,6 +303,7 @@ public class Xmpoid extends ListActivity {
 			public void onClick(View v) {
 				if (playing && !single) {
 					player.stop();
+					unpause();
 				}
 		    }
 		});
@@ -357,6 +389,7 @@ public class Xmpoid extends ListActivity {
 		flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));
 		flipper.showNext();
 		playNewMod(position);
+		unpause();
 	}
 	
 	public boolean onCreateOptionsMenu(Menu menu) {

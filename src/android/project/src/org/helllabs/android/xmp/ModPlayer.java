@@ -17,6 +17,7 @@ public class ModPlayer {
 			AudioFormat.ENCODING_PCM_16BIT,
 			minSize < 4096 ? 4096 : minSize,
 			AudioTrack.MODE_STREAM);
+	private boolean paused;
 	    
 	private class PlayRunnable implements Runnable {
     	public void run() {
@@ -25,6 +26,15 @@ public class ModPlayer {
        			int size = xmp.softmixer();
        			buffer = xmp.getBuffer(size, buffer);
        			audio.write(buffer, 0, size / 2);
+       			
+       			while (paused) {
+       				try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+       			}
        		}
        		
        		audio.stop();
@@ -35,6 +45,7 @@ public class ModPlayer {
 
 	public ModPlayer() {
 		xmp.init();
+		paused = false;
 	}
 
 	protected void finalize() {
@@ -56,6 +67,11 @@ public class ModPlayer {
     
     public void stop() {
     	xmp.stopModule();
+    	paused = false;
+    }
+    
+    public void pause() {
+    	paused = !paused;
     }
     
     public int time() {
