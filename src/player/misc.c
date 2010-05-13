@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#ifdef __ANDROID__
+#ifdef ANDROID
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -74,7 +74,7 @@ int get_temp_dir(char *buf, int size)
 	strncat(buf, "\\", size);
 #elif defined __AMIGA__
 	strncpy(buf, "T:", size);
-#elif defined __ANDROID__
+#elif defined ANDROID
 	struct stat st;
 	stat("/sdcard/xmp", &st);
 	if (!S_ISDIR(st.st_mode)) {

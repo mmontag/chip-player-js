@@ -219,7 +219,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     if (packer == NULL)
 	return 0;
 
-#if __ANDROID__
+#ifdef ANDROID
     /* Don't use external helpers in android */
     if (cmd)
 	return 0;
