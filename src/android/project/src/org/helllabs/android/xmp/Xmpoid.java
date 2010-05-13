@@ -482,7 +482,7 @@ public class Xmpoid extends ListActivity {
 			alertDialog.setTitle("About " + getString(R.string.app_name));
 			alertDialog.setMessage(getString(R.string.app_name) + " " +
 					getString(R.string.app_version) +
-					"\nFull source code available at http://sf.net/project/xmp");
+					"\nSource code available at http://xmp.sf.net");
 			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();
