@@ -1,4 +1,5 @@
-/* Copyright (C) 2010 Claudio Matsuoka
+/* Xmpoid.java
+ * Copyright (C) 2010 Claudio Matsuoka
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -241,10 +242,6 @@ public class Xmpoid extends ListActivity {
 	
 	@Override
 	public void onCreate(Bundle icicle) {
-		/* Here's the trick: DON'T INIT! */
-		/* xmp.init(); */
-		
-		player = new ModPlayer();
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
 		
@@ -487,7 +484,7 @@ public class Xmpoid extends ListActivity {
 					getString(R.string.app_version) +
 					"\nWe're using xmp " + xmp.getVersion() +
 					" and we know " + xmp.getFormatCount() + " module formats. " +
-					"Get the source code at http://xmp.sf.net");
+					"Source code available at http://xmp.sf.net");
 			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();
