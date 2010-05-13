@@ -18,6 +18,7 @@ public class ModPlayer {
 			minSize < 4096 ? 4096 : minSize,
 			AudioTrack.MODE_STREAM);
 	private boolean paused;
+	private Thread playThread;
 	    
 	private class PlayRunnable implements Runnable {
     	public void run() {
@@ -31,8 +32,7 @@ public class ModPlayer {
        				try {
 						Thread.sleep(500);
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						break;
 					}
        			}
        		}
@@ -50,6 +50,11 @@ public class ModPlayer {
 
 	protected void finalize() {
     	xmp.stopModule();
+    	paused = false;
+    	try {
+			playThread.join();
+		} catch (InterruptedException e) { }
+
     	xmp.deinit();
     }
    
@@ -61,7 +66,7 @@ public class ModPlayer {
    		xmp.startPlayer();
    		
    		PlayRunnable playRunnable = new PlayRunnable();
-   		Thread playThread = new Thread(playRunnable);
+   		playThread = new Thread(playRunnable);
    		playThread.start();
     }
     

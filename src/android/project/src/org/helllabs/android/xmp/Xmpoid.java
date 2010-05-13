@@ -365,8 +365,9 @@ public class Xmpoid extends ListActivity {
 	
 	@Override
 	public void onDestroy() {
+		single = true;
 		player.stop();
-		player.finalize();
+		super.onDestroy();
 	}
 	
 	public void updatePlaylist() {
