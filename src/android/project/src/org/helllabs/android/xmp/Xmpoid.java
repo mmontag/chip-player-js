@@ -362,7 +362,13 @@ public class Xmpoid extends ListActivity {
 		
 		updatePlaylist();
 	}
-
+	
+	@Override
+	public void onDestroy() {
+		player.stop();
+		player.finalize();
+	}
+	
 	public void updatePlaylist() {
 		final File modDir = new File(MEDIA_PATH);
 		
@@ -477,7 +483,7 @@ public class Xmpoid extends ListActivity {
 			alertDialog.setMessage(getString(R.string.app_name) + " " +
 					getString(R.string.app_version) +
 					"\nFull source code available at http://sf.net/project/xmp");
-			alertDialog.setButton("Cool", new DialogInterface.OnClickListener() {
+			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();
 				}
