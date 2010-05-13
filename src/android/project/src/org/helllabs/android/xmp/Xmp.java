@@ -29,6 +29,8 @@ public class Xmp {
 	public native int getPlayBpm();
 	public native int getPlayPos();
 	public native int getPlayPat();
+	public native String getVersion();
+	public native String[] getFormats();
 	
 	static {
 		System.loadLibrary("xmp");

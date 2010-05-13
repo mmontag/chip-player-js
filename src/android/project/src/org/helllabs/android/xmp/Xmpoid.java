@@ -91,7 +91,6 @@ public class Xmpoid extends ListActivity {
 	
 	static final String MEDIA_PATH = new String("/sdcard/mod/");
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
-	private Xmp xmp = new Xmp();	/* used to get mod info */
 	private ModPlayer player;		/* actual mod player */ 
 	private ImageButton playButton, stopButton, backButton, forwardButton;
 	private SeekBar seekBar;
@@ -225,7 +224,7 @@ public class Xmpoid extends ListActivity {
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
 	    	//Log.v(getString(R.string.app_name), "** " + dir + "/" + name);
-	        return (xmp.testModule(dir + "/" + name) == 0);
+	        return (player.testModule(dir + "/" + name) == 0);
 	    }
 	}
 	
@@ -241,7 +240,7 @@ public class Xmpoid extends ListActivity {
 	
 	@Override
 	public void onCreate(Bundle icicle) {
-		xmp.init();
+//		xmp.init();
 		
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
@@ -394,7 +393,7 @@ public class Xmpoid extends ListActivity {
 		new Thread() { 
 			public void run() { 		
             	for (File file : modDir.listFiles(new ModFilter())) {
-            		ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
+            		ModInfo m = player.getModInfo(MEDIA_PATH + file.getName());
             		modList.add(m);
             	}
             	
@@ -483,7 +482,9 @@ public class Xmpoid extends ListActivity {
 			alertDialog.setTitle("About " + getString(R.string.app_name));
 			alertDialog.setMessage(getString(R.string.app_name) + " " +
 					getString(R.string.app_version) +
-					"\nSource code available at http://xmp.sf.net");
+					"\nUsing xmp " + player.getVersion() +
+					". Known module formats: " + player.getFormats().length +
+					". Source code available at http://xmp.sf.net");
 			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();

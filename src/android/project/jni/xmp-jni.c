@@ -300,4 +300,39 @@ Java_org_helllabs_android_xmp_Xmp_getPlayPat(JNIEnv *env, jobject obj)
 	return _pat;
 }
 
+JNIEXPORT jstring JNICALL
+Java_org_helllabs_android_xmp_Xmp_getVersion(JNIEnv *env, jobject obj)
+{
+	return (*env)->NewStringUTF(env, VERSION);
+}
 
+JNIEXPORT jobjectArray JNICALL
+Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj)
+{
+	jstring s = NULL;
+	jclass stringClass;
+	jobjectArray stringArray;
+	int i, num;
+	struct xmp_fmt_info *f, *fmt;
+	char buf[80];
+
+	xmp_get_fmt_info(ctx, &fmt);
+	for (num = 0, f = fmt; f; num++, f = f->next);
+
+	stringClass = (*env)->FindClass(env,"java/lang/String");
+	if (stringClass == NULL)
+		return NULL;
+
+	stringArray = (*env)->NewObjectArray(env, num, stringClass, NULL);
+	if (stringArray = NULL)
+		return NULL;
+
+	for (i = 0, f = fmt; i < num; i++, f = f->next) {
+		snprintf(buf, 80, "%s (%s)", f->id, f->tracker);
+		s = (*env)->NewStringUTF(env, buf);
+		(*env)->SetObjectArrayElement(env, stringArray, i, s);
+		(*env)->DeleteLocalRef(env, s);
+	}
+
+	return stringArray;
+}
