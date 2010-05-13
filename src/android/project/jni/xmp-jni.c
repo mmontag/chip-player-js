@@ -306,17 +306,29 @@ Java_org_helllabs_android_xmp_Xmp_getVersion(JNIEnv *env, jobject obj)
 	return (*env)->NewStringUTF(env, VERSION);
 }
 
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_getFormatCount(JNIEnv *env, jobject obj)
+{
+	int num;
+	struct xmp_fmt_info *f, *fmt;
+
+	xmp_get_fmt_info(&fmt);
+	for (num = 0, f = fmt; f; num++, f = f->next);
+
+	return num;
+}
+
 JNIEXPORT jobjectArray JNICALL
 Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj)
 {
-	jstring s = NULL;
+	jstring s;
 	jclass stringClass;
 	jobjectArray stringArray;
 	int i, num;
 	struct xmp_fmt_info *f, *fmt;
 	char buf[80];
 
-	xmp_get_fmt_info(ctx, &fmt);
+	xmp_get_fmt_info(&fmt);
 	for (num = 0, f = fmt; f; num++, f = f->next);
 
 	stringClass = (*env)->FindClass(env,"java/lang/String");

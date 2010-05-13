@@ -102,22 +102,5 @@ public class ModPlayer {
 	public int getPlayPat() {
 		return xmp.getPlayPat();
 	}
-	
-	public int testModule(String name) {
-		return xmp.testModule(name);
-	}
-	
-	public ModInfo getModInfo(String name) {
-		return xmp.getModInfo(name);
-	}
-	
-	public String getVersion() {
-		return xmp.getVersion();
-	}
-	
-	public String[] getFormats() {
-		return xmp.getFormats();
-	}
-	
 }
 

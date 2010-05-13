@@ -30,6 +30,7 @@ public class Xmp {
 	public native int getPlayPos();
 	public native int getPlayPat();
 	public native String getVersion();
+	public native int getFormatCount();
 	public native String[] getFormats();
 	
 	static {
