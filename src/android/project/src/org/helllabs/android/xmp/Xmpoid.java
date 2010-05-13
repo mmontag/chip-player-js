@@ -151,6 +151,7 @@ public class Xmpoid extends ListActivity {
     			flipper.setAnimation(AnimationUtils.loadAnimation(flipper.getContext(), R.anim.slide_right));
     			flipper.showPrevious();
     			playButton.setImageResource(R.drawable.play);
+    			playing = false;
     		}
         }
     };
@@ -190,7 +191,6 @@ public class Xmpoid extends ListActivity {
 	private class ProgressThread extends Thread {
 		@Override
     	public void run() {
-			playing = true;
 			int count = 0;		/* to reduce CPU usage */
     		int t = 0;
     		
@@ -215,8 +215,6 @@ public class Xmpoid extends ListActivity {
     		} while (t >= 0);
     		
     		seekBar.setProgress(0);
-    		playing = false;
-    		
     		handler.post(endSongRunnable);
     	}
     };
@@ -268,18 +266,22 @@ public class Xmpoid extends ListActivity {
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (playing) {
-					player.pause();
+				synchronized (this) {
+					if (playing) {
+						player.pause();
 					
-					if (paused) {
-						unpause();
-					} else {
-						pause();
+						if (paused) {
+							unpause();
+						} else {
+							pause();
+						}
+					
+						return;
 					}
-					
-					return;
-				}
 				
+					playing = true;
+				}
+								
 				int idx[] = new int[modList.size()];
 				for (int i = 0; i < modList.size(); i++) {
 					idx[i] = i;
@@ -414,12 +416,6 @@ public class Xmpoid extends ListActivity {
 
 	void playNewMod(int position)
 	{
-		if (playing) {
-			Log.w(getString(R.string.app_name), "playNewMod(" + position +
-					"): already playing");
-			return;
-		}
-
 		/* Sanity check */
 		if (position < 0 || position >= modList.size())
 			position = 0;
@@ -446,6 +442,11 @@ public class Xmpoid extends ListActivity {
 	
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
+		synchronized (this) {
+			if (playing)
+				return;
+			playing = true;
+		}
 		single = true;
 		flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));
 		flipper.showNext();
