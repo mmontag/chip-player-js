@@ -414,40 +414,34 @@ public class Xmpoid extends ListActivity {
 
 	void playNewMod(int position)
 	{
-		try {
-			if (playing) {
-				seeking = true;		/* To stop progress bar update */
-				player.stop();
-				progressThread.join();
-				seeking = false;
-			}
+		if (playing) {
+			Log.w(getString(R.string.app_name), "playNewMod(" + position +
+					"): already playing");
+			return;
+		}
 
-			/* Sanity check */
-			if (position < 0 || position >= modList.size())
-				position = 0;
-							
-			if (shuffleMode && !single)
-				position = ridx.getIndex(position);
+		/* Sanity check */
+		if (position < 0 || position >= modList.size())
+			position = 0;
+						
+		if (shuffleMode && !single)
+			position = ridx.getIndex(position);
 
-			ModInfo m = modList.get(position);
-        	seekBar.setProgress(0);
-        	seekBar.setMax(m.time / 100);
+		ModInfo m = modList.get(position);
+       	seekBar.setProgress(0);
+       	seekBar.setMax(m.time / 100);
         	
-        	infoName.setText(m.name);
-        	infoType.setText(m.type);
-        	infoLen.setText(Integer.toString(m.len));
-        	infoNpat.setText(Integer.toString(m.pat));
-        	infoChn.setText(Integer.toString(m.chn));
-        	infoIns.setText(Integer.toString(m.ins));
-        	infoSmp.setText(Integer.toString(m.smp));
+       	infoName.setText(m.name);
+       	infoType.setText(m.type);
+       	infoLen.setText(Integer.toString(m.len));
+       	infoNpat.setText(Integer.toString(m.pat));
+       	infoChn.setText(Integer.toString(m.chn));
+       	infoIns.setText(Integer.toString(m.ins));
+       	infoSmp.setText(Integer.toString(m.smp));
         	
-            player.play(m.filename);
-            progressThread = new ProgressThread();
-            progressThread.start();
-            
-		} catch (InterruptedException e) {
-			Log.e(getString(R.string.app_name), e.getMessage());
-		}		
+       	player.play(m.filename);
+        progressThread = new ProgressThread();
+        progressThread.start();	
 	}
 	
 	@Override
