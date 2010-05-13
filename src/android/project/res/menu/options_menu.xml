@@ -3,7 +3,10 @@
     <item android:id="@+id/menu_quit"
     	android:icon="@drawable/ic_menu_close_clear_cancel"
     	android:title="Quit" />
-	<item android:id="@+id/menu_about"
-		android:icon="@drawable/ic_menu_help"
-		android:title="About" />
+    <item android:id="@+id/menu_about"
+	android:icon="@drawable/ic_menu_help"
+	android:title="About" />
+    <item android:id="@+id/menu_prefs"
+	android:icon="@drawable/ic_menu_preferences"
+	android:title="Settings" />
 </menu>

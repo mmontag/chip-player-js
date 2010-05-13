@@ -2,6 +2,5 @@
 <resources>
     <string name="app_name">Xmpoid</string>
     <string name="app_version">1.0</string>
-<string name="app_descrip">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).
-Place modules in /sdcard/mod and select a file or press the play button to shuffle through the entire collection.</string>
+    <string name="app_descrip">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
 </resources>
