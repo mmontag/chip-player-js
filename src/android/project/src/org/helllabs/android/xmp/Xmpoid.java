@@ -238,19 +238,7 @@ public class Xmpoid extends ListActivity {
 		
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (!playing)
-					return;
-				
-				single = true;
-				player.stop();
-				paused = false;
-				playButton.setImageResource(R.drawable.play);
-				
-				try {
-					progressThread.join();
-				} catch (InterruptedException e) {
-					Log.e(getString(R.string.app_name), e.getMessage());
-				}
+				stopPlayingMod();
 		    }
 		});
 		
@@ -311,8 +299,10 @@ public class Xmpoid extends ListActivity {
 	
 	public void updatePlaylist() {
 		media_path = settings.getString(Settings.PREF_MEDIA_PATH, "/sdcard/mod");
-		Log.v(getString(R.string.app_name), "path = " + media_path);
+		//Log.v(getString(R.string.app_name), "path = " + media_path);
 
+		modList.clear();
+		
 		final File modDir = new File(media_path);
 		
 		if (!modDir.isDirectory()) {
@@ -388,6 +378,22 @@ public class Xmpoid extends ListActivity {
         progressThread.start();	
 	}
 	
+	void stopPlayingMod() {
+		if (!playing)
+			return;
+		
+		single = true;
+		player.stop();
+		paused = false;
+		playButton.setImageResource(R.drawable.play);
+		
+		try {
+			progressThread.join();
+		} catch (InterruptedException e) {
+			Log.e(getString(R.string.app_name), e.getMessage());
+		}
+	}
+	
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		synchronized (this) {
@@ -450,6 +456,10 @@ public class Xmpoid extends ListActivity {
 			/* Nicer, but only for API level 5 :(
 			overridePendingTransition(int R.anim.slide_left, int R.anim.slide_right);
 			*/
+			break;
+		case R.id.menu_refresh:
+			stopPlayingMod();
+			updatePlaylist();
 			break;
 		}
 		return true;
