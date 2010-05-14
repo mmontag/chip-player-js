@@ -5,13 +5,14 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 
 public class Settings extends android.preference.PreferenceActivity {
+	public static final String PREF_MEDIA_PATH = "media_path";
 	private SharedPreferences prefs;
 	
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle icicle) {
+        super.onCreate(icicle);
         
-        this.addPreferencesFromResource(R.xml.preferences);
+        addPreferencesFromResource(R.xml.preferences);
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
     }
 }

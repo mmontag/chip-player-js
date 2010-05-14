@@ -31,8 +31,10 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -50,7 +52,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import org.helllabs.android.xmp.R;
 
 public class Xmpoid extends ListActivity {
-	static final String MEDIA_PATH = new String("/sdcard/mod/");
+	private String media_path;
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();	/* used to get mod info */
 	private ModPlayer player;		/* actual mod player */ 
@@ -68,6 +70,7 @@ public class Xmpoid extends ListActivity {
 	private int playIndex;
 	private RandomIndex ridx;
 	private ProgressDialog progressDialog;
+	private SharedPreferences settings;
 	final Handler handler = new Handler();
 	
     final Runnable endSongRunnable = new Runnable() {
@@ -168,12 +171,14 @@ public class Xmpoid extends ListActivity {
 		paused = false;
 		playButton.setImageResource(R.drawable.pause);
 	}
-	
+    
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
 		
+		settings = PreferenceManager.getDefaultSharedPreferences(this);
+
 		player = new ModPlayer();
 		
 		/* Info view widgets */
@@ -303,17 +308,25 @@ public class Xmpoid extends ListActivity {
 	}
 	
 	public void updatePlaylist() {
-		final File modDir = new File(MEDIA_PATH);
+		media_path = settings.getString(Settings.PREF_MEDIA_PATH, "/sdcard/mod");
+
+		final File modDir = new File(media_path);
 		
 		if (!modDir.isDirectory()) {
 			AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
 			alertDialog.setTitle("Oops");
-			alertDialog.setMessage(MEDIA_PATH + " not found. " +
-					"Create this directory and place your modules there.");
+			alertDialog.setMessage(media_path + " not found. " +
+					"Create this directory or change the module path.");
 			alertDialog.setButton("Bummer!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					finish();
+				}
+			});
+			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					startActivity(new Intent(Xmpoid.this, Settings.class));
+					updatePlaylist();
 				}
 			});
 			alertDialog.show();
@@ -326,7 +339,7 @@ public class Xmpoid extends ListActivity {
 		new Thread() { 
 			public void run() { 		
             	for (File file : modDir.listFiles(new ModFilter())) {
-            		ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
+            		ModInfo m = xmp.getModInfo(media_path + "/" + file.getName());
             		modList.add(m);
             	}
             	
@@ -420,6 +433,10 @@ public class Xmpoid extends ListActivity {
 			break;
 		case R.id.menu_prefs:
 			startActivity(new Intent(this, Settings.class));
+			/* Nicer, but only for API level 5 :(
+			overridePendingTransition(int R.anim.slide_left, int R.anim.slide_right);
+			*/
+			updatePlaylist();
 			break;
 		}
 		return true;
