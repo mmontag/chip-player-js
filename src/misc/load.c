@@ -102,7 +102,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	builtin = BUILTIN_XFD;
     } else
 #endif
-    if (b[0] == 'P' && b[1] == 'K') {
+    if (b[0] == 'P' && b[1] == 'K' && b[2] == 0x03 && b[3] == 0x04) {
 	packer = "Zip";
 #if defined WIN32
 	cmd = "unzip -pqqC \"%s\" -x readme *.diz *.nfo *.txt *.exe *.com "
