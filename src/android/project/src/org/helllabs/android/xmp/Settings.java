@@ -3,7 +3,6 @@ package org.helllabs.android.xmp;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.KeyEvent;
 
 public class Settings extends android.preference.PreferenceActivity {
