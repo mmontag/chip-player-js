@@ -25,27 +25,23 @@ package org.helllabs.android.xmp;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Random;
-
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.animation.AnimationUtils;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
@@ -55,42 +51,8 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import org.helllabs.android.xmp.R;
 
-
 public class Xmpoid extends ListActivity {
-	
-	private class ModInfoAdapter extends ArrayAdapter<ModInfo> {
-	    private List<ModInfo> items;
-
-        public ModInfoAdapter(Context context, int resource, int textViewResourceId, List<ModInfo> items) {
-        	super(context, resource, textViewResourceId, items);
-        	this.items = items;
-        }
-        
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-        	View v = convertView;
-        	if (v == null) {
-        		LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        		v = vi.inflate(R.layout.song_item, null);
-        	}
-        	ModInfo o = items.get(position);
-                
-        	if (o != null) {                		
-        		TextView tt = (TextView) v.findViewById(R.id.title);
-        		TextView bt = (TextView) v.findViewById(R.id.info);
-        		if (tt != null) {
-        			tt.setText(o.name);
-        		}
-        		if(bt != null){
-        			bt.setText(o.chn + " chn " + o.type);
-        		}
-        	}
-                
-        	return v;
-        }
-	}
-	
-	static final String MEDIA_PATH = new String("/sdcard/mod/");
+	private String media_path;
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();	/* used to get mod info */
 	private ModPlayer player;		/* actual mod player */ 
@@ -108,36 +70,8 @@ public class Xmpoid extends ListActivity {
 	private int playIndex;
 	private RandomIndex ridx;
 	private ProgressDialog progressDialog;
+	private SharedPreferences settings;
 	final Handler handler = new Handler();
-	
-	private class RandomIndex {
-		private int[] idx;
-		
-		public RandomIndex(int n) {
-			idx = new int[n];
-			for (int i = 0; i < n; i++) {
-				idx[i] = i;
-			}
-			
-			randomize();
-		}
-	
-		public void randomize() {
-			Random random = new Random();
-			Date date = new Date();
-			random.setSeed(date.getTime());
-			for (int i = 0; i < idx.length; i++) {				
-				int r = random.nextInt(idx.length);
-				int temp = idx[i];
-				idx[i] = idx[r];
-				idx[r] = temp;
-			}
-		}
-		
-		public int getIndex(int n) {
-			return idx[n];
-		}
-	}
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
@@ -151,6 +85,7 @@ public class Xmpoid extends ListActivity {
     			flipper.setAnimation(AnimationUtils.loadAnimation(flipper.getContext(), R.anim.slide_right));
     			flipper.showPrevious();
     			playButton.setImageResource(R.drawable.play);
+    			playing = false;
     		}
         }
     };
@@ -190,7 +125,6 @@ public class Xmpoid extends ListActivity {
 	private class ProgressThread extends Thread {
 		@Override
     	public void run() {
-			playing = true;
 			int count = 0;		/* to reduce CPU usage */
     		int t = 0;
     		
@@ -215,8 +149,6 @@ public class Xmpoid extends ListActivity {
     		} while (t >= 0);
     		
     		seekBar.setProgress(0);
-    		playing = false;
-    		
     		handler.post(endSongRunnable);
     	}
     };
@@ -239,12 +171,14 @@ public class Xmpoid extends ListActivity {
 		paused = false;
 		playButton.setImageResource(R.drawable.pause);
 	}
-	
+    
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
 		
+		settings = PreferenceManager.getDefaultSharedPreferences(this);
+
 		player = new ModPlayer();
 		
 		/* Info view widgets */
@@ -268,18 +202,22 @@ public class Xmpoid extends ListActivity {
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (playing) {
-					player.pause();
+				synchronized (this) {
+					if (playing) {
+						player.pause();
 					
-					if (paused) {
-						unpause();
-					} else {
-						pause();
+						if (paused) {
+							unpause();
+						} else {
+							pause();
+						}
+					
+						return;
 					}
-					
-					return;
-				}
 				
+					playing = true;
+				}
+								
 				int idx[] = new int[modList.size()];
 				for (int i = 0; i < modList.size(); i++) {
 					idx[i] = i;
@@ -370,17 +308,25 @@ public class Xmpoid extends ListActivity {
 	}
 	
 	public void updatePlaylist() {
-		final File modDir = new File(MEDIA_PATH);
+		media_path = settings.getString(Settings.PREF_MEDIA_PATH, "/sdcard/mod");
+
+		final File modDir = new File(media_path);
 		
 		if (!modDir.isDirectory()) {
 			AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
 			alertDialog.setTitle("Oops");
-			alertDialog.setMessage(MEDIA_PATH + " not found. " +
-					"Create this directory and place your modules there.");
+			alertDialog.setMessage(media_path + " not found. " +
+					"Create this directory or change the module path.");
 			alertDialog.setButton("Bummer!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					finish();
+				}
+			});
+			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					startActivity(new Intent(Xmpoid.this, Settings.class));
+					updatePlaylist();
 				}
 			});
 			alertDialog.show();
@@ -393,7 +339,7 @@ public class Xmpoid extends ListActivity {
 		new Thread() { 
 			public void run() { 		
             	for (File file : modDir.listFiles(new ModFilter())) {
-            		ModInfo m = xmp.getModInfo(MEDIA_PATH + file.getName());
+            		ModInfo m = xmp.getModInfo(media_path + "/" + file.getName());
             		modList.add(m);
             	}
             	
@@ -414,44 +360,37 @@ public class Xmpoid extends ListActivity {
 
 	void playNewMod(int position)
 	{
-		try {
-			if (playing) {
-				seeking = true;		/* To stop progress bar update */
-				player.stop();
-				progressThread.join();
-				seeking = false;
-			}
+		/* Sanity check */
+		if (position < 0 || position >= modList.size())
+			position = 0;
+						
+		if (shuffleMode && !single)
+			position = ridx.getIndex(position);
 
-			/* Sanity check */
-			if (position < 0 || position >= modList.size())
-				position = 0;
-							
-			if (shuffleMode && !single)
-				position = ridx.getIndex(position);
-
-			ModInfo m = modList.get(position);
-        	seekBar.setProgress(0);
-        	seekBar.setMax(m.time / 100);
+		ModInfo m = modList.get(position);
+       	seekBar.setProgress(0);
+       	seekBar.setMax(m.time / 100);
         	
-        	infoName.setText(m.name);
-        	infoType.setText(m.type);
-        	infoLen.setText(Integer.toString(m.len));
-        	infoNpat.setText(Integer.toString(m.pat));
-        	infoChn.setText(Integer.toString(m.chn));
-        	infoIns.setText(Integer.toString(m.ins));
-        	infoSmp.setText(Integer.toString(m.smp));
+       	infoName.setText(m.name);
+       	infoType.setText(m.type);
+       	infoLen.setText(Integer.toString(m.len));
+       	infoNpat.setText(Integer.toString(m.pat));
+       	infoChn.setText(Integer.toString(m.chn));
+       	infoIns.setText(Integer.toString(m.ins));
+       	infoSmp.setText(Integer.toString(m.smp));
         	
-            player.play(m.filename);
-            progressThread = new ProgressThread();
-            progressThread.start();
-            
-		} catch (InterruptedException e) {
-			Log.e(getString(R.string.app_name), e.getMessage());
-		}		
+       	player.play(m.filename);
+        progressThread = new ProgressThread();
+        progressThread.start();	
 	}
 	
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
+		synchronized (this) {
+			if (playing)
+				return;
+			playing = true;
+		}
 		single = true;
 		flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));
 		flipper.showNext();
@@ -475,7 +414,7 @@ public class Xmpoid extends ListActivity {
 			} catch (Throwable e) {
 				Log.e(getString(R.string.app_name), e.getMessage());
 			}
-			return false;
+			break;
 		case R.id.menu_about:
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
@@ -490,8 +429,16 @@ public class Xmpoid extends ListActivity {
 					alertDialog.dismiss();
 				}
 			});
-			alertDialog.show();			
+			alertDialog.show();	
+			break;
+		case R.id.menu_prefs:
+			startActivity(new Intent(this, Settings.class));
+			/* Nicer, but only for API level 5 :(
+			overridePendingTransition(int R.anim.slide_left, int R.anim.slide_right);
+			*/
+			updatePlaylist();
+			break;
 		}
-		return false;
+		return true;
 	}
 }
