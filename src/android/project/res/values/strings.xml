@@ -5,5 +5,5 @@
     <string name="app_descrip">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
     <string name="settings_title">Settings</string>
     <string name="preferences_media_path_title">Module file pathname</string>
-    <string name="preferences_media_path_summary">Colon-separated list of directories where mod files are located</string>
+    <string name="preferences_media_path_summary">The directory where mod files are located</string>
 </resources>

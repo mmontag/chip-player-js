@@ -52,6 +52,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import org.helllabs.android.xmp.R;
 
 public class Xmpoid extends ListActivity {
+	private static final int SETTINGS_REQUEST = 45;
 	private String media_path;
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();	/* used to get mod info */
@@ -63,6 +64,7 @@ public class Xmpoid extends ListActivity {
 	private boolean single = false;		/* play only one module */
 	private boolean shuffleMode = true;
 	private boolean paused = false;
+	private boolean isBadDir = false;
 	private ViewFlipper flipper;
 	private TextView infoName, infoType, infoLen;
 	private TextView infoNpat, infoChn, infoIns, infoSmp;
@@ -309,10 +311,12 @@ public class Xmpoid extends ListActivity {
 	
 	public void updatePlaylist() {
 		media_path = settings.getString(Settings.PREF_MEDIA_PATH, "/sdcard/mod");
+		Log.v(getString(R.string.app_name), "path = " + media_path);
 
 		final File modDir = new File(media_path);
 		
 		if (!modDir.isDirectory()) {
+			isBadDir = true;
 			AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
 			alertDialog.setTitle("Oops");
@@ -325,14 +329,14 @@ public class Xmpoid extends ListActivity {
 			});
 			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					startActivity(new Intent(Xmpoid.this, Settings.class));
-					updatePlaylist();
+					startActivityForResult(new Intent(Xmpoid.this, Settings.class), SETTINGS_REQUEST);
 				}
 			});
 			alertDialog.show();
 			return;
 		}
 		
+		isBadDir = false;
 		progressDialog = ProgressDialog.show(this,      
 				"Please wait", "Scanning module files...", true);
 		
@@ -406,6 +410,16 @@ public class Xmpoid extends ListActivity {
 	}
 	
 	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
+    	if (requestCode == SETTINGS_REQUEST) {
+            if (isBadDir || resultCode == RESULT_OK) {
+            	updatePlaylist();
+            }
+        }
+    }
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
 		case R.id.menu_quit:
@@ -431,12 +445,11 @@ public class Xmpoid extends ListActivity {
 			});
 			alertDialog.show();	
 			break;
-		case R.id.menu_prefs:
-			startActivity(new Intent(this, Settings.class));
+		case R.id.menu_prefs:		
+			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
 			/* Nicer, but only for API level 5 :(
 			overridePendingTransition(int R.anim.slide_left, int R.anim.slide_right);
 			*/
-			updatePlaylist();
 			break;
 		}
 		return true;
