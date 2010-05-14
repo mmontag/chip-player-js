@@ -25,27 +25,21 @@ package org.helllabs.android.xmp;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Random;
-
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.animation.AnimationUtils;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
@@ -55,41 +49,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import org.helllabs.android.xmp.R;
 
-
 public class Xmpoid extends ListActivity {
-	
-	private class ModInfoAdapter extends ArrayAdapter<ModInfo> {
-	    private List<ModInfo> items;
-
-        public ModInfoAdapter(Context context, int resource, int textViewResourceId, List<ModInfo> items) {
-        	super(context, resource, textViewResourceId, items);
-        	this.items = items;
-        }
-        
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-        	View v = convertView;
-        	if (v == null) {
-        		LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        		v = vi.inflate(R.layout.song_item, null);
-        	}
-        	ModInfo o = items.get(position);
-                
-        	if (o != null) {                		
-        		TextView tt = (TextView) v.findViewById(R.id.title);
-        		TextView bt = (TextView) v.findViewById(R.id.info);
-        		if (tt != null) {
-        			tt.setText(o.name);
-        		}
-        		if(bt != null){
-        			bt.setText(o.chn + " chn " + o.type);
-        		}
-        	}
-                
-        	return v;
-        }
-	}
-	
 	static final String MEDIA_PATH = new String("/sdcard/mod/");
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
 	private Xmp xmp = new Xmp();	/* used to get mod info */
@@ -109,35 +69,6 @@ public class Xmpoid extends ListActivity {
 	private RandomIndex ridx;
 	private ProgressDialog progressDialog;
 	final Handler handler = new Handler();
-	
-	private class RandomIndex {
-		private int[] idx;
-		
-		public RandomIndex(int n) {
-			idx = new int[n];
-			for (int i = 0; i < n; i++) {
-				idx[i] = i;
-			}
-			
-			randomize();
-		}
-	
-		public void randomize() {
-			Random random = new Random();
-			Date date = new Date();
-			random.setSeed(date.getTime());
-			for (int i = 0; i < idx.length; i++) {				
-				int r = random.nextInt(idx.length);
-				int temp = idx[i];
-				idx[i] = idx[r];
-				idx[r] = temp;
-			}
-		}
-		
-		public int getIndex(int n) {
-			return idx[n];
-		}
-	}
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
@@ -470,7 +401,7 @@ public class Xmpoid extends ListActivity {
 			} catch (Throwable e) {
 				Log.e(getString(R.string.app_name), e.getMessage());
 			}
-			return false;
+			break;
 		case R.id.menu_about:
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
@@ -485,8 +416,12 @@ public class Xmpoid extends ListActivity {
 					alertDialog.dismiss();
 				}
 			});
-			alertDialog.show();			
+			alertDialog.show();	
+			break;
+		case R.id.menu_prefs:
+			startActivity(new Intent(this, Settings.class));
+			break;
 		}
-		return false;
+		return true;
 	}
 }
