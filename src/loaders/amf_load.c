@@ -218,6 +218,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (t2 < 0x7f) {		/* note */
 				if (t2 > 12)
 					event->note = t2 + 1 - 12;
+				event->vol = t3;
 			} else if (t2 == 0x7f) {	/* copy previous */
 				memcpy(event, &m->xxt[i]->event[t1 - 1],
 					sizeof(struct xxm_event));

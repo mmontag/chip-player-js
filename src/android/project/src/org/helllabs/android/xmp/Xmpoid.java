@@ -443,7 +443,7 @@ public class Xmpoid extends ListActivity {
 					getString(R.string.app_version) +
 					"\nWe're using xmp " + xmp.getVersion() +
 					" and we know " + xmp.getFormatCount() + " module formats. " +
-					"Source code available at http://xmp.sf.net");
+					"Further information and source code available at http://xmp.sf.net");
 			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();

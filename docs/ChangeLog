@@ -13,6 +13,7 @@ Stable versions
 	- fix time echoback event for MED
 	- fix module time count not reseting at new module
 	- make zipfile detection stricter (by Solomon Peachy)
+	- fix DSMI loader volume event (by Solomon Peachy)
 
 3.1.0 (20100107):
 	- implement MED4 instrument transposition
