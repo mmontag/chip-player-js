@@ -6,6 +6,7 @@ import android.media.AudioTrack;
 
 
 public class ModPlayer {
+	private static ModPlayer instance = null;
 	private Xmp xmp = new Xmp();
 	private int minSize = AudioTrack.getMinBufferSize(44100,
 			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
@@ -18,6 +19,19 @@ public class ModPlayer {
 			AudioTrack.MODE_STREAM);
 	private boolean paused;
 	private Thread playThread;
+	
+	protected ModPlayer() {
+	      // empty
+	}
+	
+	public static ModPlayer getInstance() {
+		if(instance == null) {
+			instance = new ModPlayer();
+			instance.xmp.init();
+			instance.paused = false;
+		}
+		return instance;
+	}
 	    
 	private class PlayRunnable implements Runnable {
     	public void run() {
@@ -42,10 +56,6 @@ public class ModPlayer {
     	}
     }
 
-	public ModPlayer() {
-		xmp.init();
-		paused = false;
-	}
 
 	protected void finalize() {
     	xmp.stopModule();

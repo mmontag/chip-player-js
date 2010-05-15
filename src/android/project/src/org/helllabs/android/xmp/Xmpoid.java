@@ -189,7 +189,7 @@ public class Xmpoid extends ListActivity {
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 
-		player = new ModPlayer();
+		player = ModPlayer.getInstance();
 		
 		/* Info view widgets */
 		flipper = (ViewFlipper)findViewById(R.id.flipper);
