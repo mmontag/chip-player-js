@@ -438,10 +438,11 @@ public class Xmpoid extends ListActivity {
     			} else {
     				finish();
     			}
+    			return true;
     		}
     	}
     	
-    	return true;
+    	return super.onKeyDown(keyCode, event);
     }
 
 	@Override
