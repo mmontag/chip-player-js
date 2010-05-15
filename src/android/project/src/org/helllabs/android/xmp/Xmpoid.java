@@ -36,6 +36,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -298,6 +299,8 @@ public class Xmpoid extends ListActivity {
 	}
 	
 	public void updatePlaylist() {
+		stopPlayingMod();
+		
 		media_path = settings.getString(Settings.PREF_MEDIA_PATH, "/sdcard/mod");
 		//Log.v(getString(R.string.app_name), "path = " + media_path);
 
@@ -425,6 +428,22 @@ public class Xmpoid extends ListActivity {
         }
     }
 	
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	if(event.getAction() == KeyEvent.ACTION_DOWN) {
+    		switch(keyCode) {
+    		case KeyEvent.KEYCODE_BACK:
+    			if (playing) {
+    				stopPlayingMod();
+    			} else {
+    				finish();
+    			}
+    		}
+    	}
+    	
+    	return true;
+    }
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
