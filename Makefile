@@ -1,5 +1,5 @@
 
-VERSION	= 3.2.0-pre
+VERSION	= 3.2.0
 DIST    = xmp-$(VERSION)
 MODULES = "bzl-funky_escalator.xm"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \

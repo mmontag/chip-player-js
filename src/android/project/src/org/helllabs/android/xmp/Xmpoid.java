@@ -328,7 +328,7 @@ public class Xmpoid extends ListActivity {
 		
 		isBadDir = false;
 		progressDialog = ProgressDialog.show(this,      
-				"Please wait", "Scanning module files...", true);
+				"Xmp for Android", "Scanning module files...", true);
 		
 		new Thread() { 
 			public void run() { 		
@@ -438,12 +438,12 @@ public class Xmpoid extends ListActivity {
 		case R.id.menu_about:
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
-			alertDialog.setTitle("About " + getString(R.string.app_name));
-			alertDialog.setMessage(getString(R.string.app_name) + " " +
-					getString(R.string.app_version) +
-					"\nWe're using xmp " + xmp.getVersion() +
-					" and we know " + xmp.getFormatCount() + " module formats. " +
-					"Further information and source code available at http://xmp.sf.net");
+			alertDialog.setIcon(R.drawable.icon);
+			alertDialog.setTitle(getString(R.string.app_name) + " " + getString(R.string.app_version));
+			alertDialog.setMessage("Based on xmp " + xmp.getVersion() +
+					" written by Claudio Matsuoka & Hipolito Carraro Jr" +
+					"\n\nSupported module formats: " + xmp.getFormatCount() +
+					"\n\nSee http://xmp.sf.net for more information and source code");
 			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();

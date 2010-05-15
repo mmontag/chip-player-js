@@ -2,11 +2,15 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <EditTextPreference
-    android:key="media_path"
-    android:persistent="true"
-    android:title="@string/preferences_media_path_title"
-    android:summary="@string/preferences_media_path_summary"
-    android:defaultValue="/sdcard/mod" />
+  <PreferenceCategory
+    android:title="@string/preferences_category_application">
+
+    <EditTextPreference
+      android:key="media_path"
+      android:persistent="true"
+      android:title="@string/preferences_media_path_title"
+      android:summary="@string/preferences_media_path_summary"
+      android:defaultValue="/sdcard/mod" />
+  </PreferenceCategory>
 
 </PreferenceScreen>
