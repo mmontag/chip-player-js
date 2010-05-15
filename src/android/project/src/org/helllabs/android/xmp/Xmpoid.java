@@ -68,7 +68,7 @@ public class Xmpoid extends ListActivity {
 	private boolean isBadDir = false;
 	private boolean firstTime = true;
 	private ViewFlipper flipper;
-	private TextView infoName, infoType, infoLen;
+	private TextView infoName, infoType, infoLen, infoTime;
 	private TextView infoNpat, infoChn, infoIns, infoSmp;
 	private TextView infoTpo, infoBpm, infoPos, infoPat; 
 	private int playIndex;
@@ -194,6 +194,7 @@ public class Xmpoid extends ListActivity {
 		infoChn = (TextView)findViewById(R.id.info_chn);
 		infoIns = (TextView)findViewById(R.id.info_ins);
 		infoSmp = (TextView)findViewById(R.id.info_smp);
+		infoTime = (TextView)findViewById(R.id.info_time);
 		infoTpo = (TextView)findViewById(R.id.info_tpo);
 		infoBpm = (TextView)findViewById(R.id.info_bpm);
 		infoPos = (TextView)findViewById(R.id.info_pos);
@@ -378,6 +379,8 @@ public class Xmpoid extends ListActivity {
        	infoChn.setText(Integer.toString(m.chn));
        	infoIns.setText(Integer.toString(m.ins));
        	infoSmp.setText(Integer.toString(m.smp));
+       	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
+       			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
         	
        	player.play(m.filename);
         progressThread = new ProgressThread();
