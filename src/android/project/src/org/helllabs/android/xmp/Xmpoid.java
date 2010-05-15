@@ -32,6 +32,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -176,6 +177,11 @@ public class Xmpoid extends ListActivity {
 		playButton.setImageResource(R.drawable.pause);
 	}
     
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+	}
+	
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
