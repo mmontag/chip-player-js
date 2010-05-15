@@ -66,6 +66,7 @@ public class Xmpoid extends ListActivity {
 	private boolean shuffleMode = true;
 	private boolean paused = false;
 	private boolean isBadDir = false;
+	private boolean firstTime = true;
 	private ViewFlipper flipper;
 	private TextView infoName, infoType, infoLen;
 	private TextView infoNpat, infoChn, infoIns, infoSmp;
@@ -331,7 +332,9 @@ public class Xmpoid extends ListActivity {
 		
 		isBadDir = false;
 		progressDialog = ProgressDialog.show(this,      
-				"Xmp for Android", "Scanning module files...", true);
+				firstTime ? "Xmp for Android" : "Please wait",
+				"Scanning module files...", true);
+		firstTime = false;
 		
 		new Thread() { 
 			public void run() { 		
@@ -478,7 +481,6 @@ public class Xmpoid extends ListActivity {
 			*/
 			break;
 		case R.id.menu_refresh:
-			stopPlayingMod();
 			updatePlaylist();
 			break;
 		}
