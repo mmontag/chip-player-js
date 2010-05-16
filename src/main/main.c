@@ -341,6 +341,9 @@ void read_keyboard()
 
     /* Interactive commands */
 
+    if (background)
+        return;
+
     if (nocmd)
 	return;
 
