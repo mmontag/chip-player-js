@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">Xmpoid</string>
-    <string name="app_version">1.0</string>
-    <string name="app_descrip">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
+    <string name="app_name">Xmp</string>
+    <string name="app_description">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
     <string name="settings_title">Settings</string>
     <string name="preferences_category_application">Application settings</string>
     <string name="preferences_media_path_title">Modules pathname</string>

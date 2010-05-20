@@ -1,4 +1,4 @@
-/* Xmpoid.java
+/* Interface.java
  * Copyright (C) 2010 Claudio Matsuoka
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -53,7 +53,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import org.helllabs.android.xmp.R;
 
-public class Xmpoid extends ListActivity {
+public class Interface extends ListActivity {
 	private static final int SETTINGS_REQUEST = 45;
 	private String media_path;
 	private List<ModInfo> modList = new ArrayList<ModInfo>();
@@ -330,7 +330,7 @@ public class Xmpoid extends ListActivity {
 			});
 			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					startActivityForResult(new Intent(Xmpoid.this, Settings.class), SETTINGS_REQUEST);
+					startActivityForResult(new Intent(Interface.this, Settings.class), SETTINGS_REQUEST);
 				}
 			});
 			alertDialog.show();
@@ -350,7 +350,7 @@ public class Xmpoid extends ListActivity {
             		modList.add(m);
             	}
             	
-                final ModInfoAdapter playlist = new ModInfoAdapter(Xmpoid.this,
+                final ModInfoAdapter playlist = new ModInfoAdapter(Interface.this,
                 			R.layout.song_item, R.id.info, modList);
                 
                 /* This one must run in the UI thread */
@@ -471,7 +471,7 @@ public class Xmpoid extends ListActivity {
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
 			alertDialog.setIcon(R.drawable.icon);
-			alertDialog.setTitle(getString(R.string.app_name) + " " + getString(R.string.app_version));
+			alertDialog.setTitle("Xmp for Android");
 			alertDialog.setMessage("Based on xmp " + xmp.getVersion() +
 					" written by Claudio Matsuoka & Hipolito Carraro Jr" +
 					"\n\nSupported module formats: " + xmp.getFormatCount() +
