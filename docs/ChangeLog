@@ -15,6 +15,8 @@ Stable versions
 	- make zipfile detection stricter (by Solomon Peachy)
 	- fix DSMI loader volume event (by Solomon Peachy)
 	- initialize formats only once
+	- fix build with Audacious plugin API 13
+	- fix seek in Audacious plugin
 
 3.1.0 (20100107):
 	- implement MED4 instrument transposition
