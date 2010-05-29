@@ -13,7 +13,7 @@ LOADERS_SOURCES := $(addprefix loaders/,$(LOADERS_OBJS))
 PROWIZ_SOURCES	:= $(addprefix loaders/prowizard/,$(PROWIZ_OBJS))
 PLAYER_SOURCES	:= $(addprefix player/,$(PLAYER_OBJS))
 
-XMP_VERSION	:= `grep ^VERSION $(LOCAL_PATH)/Makefile.txt|sed 's/.* //'`
+XMP_VERSION	:= `grep ^VERSION $(LOCAL_PATH)/../../../../Makefile|sed 's/.* //'`
 LOCAL_MODULE    := xmp
 LOCAL_CFLAGS	:= -DVERSION=\"$(XMP_VERSION)\" -O3 -DHAVE_CONFIG_H -I$(LOCAL_PATH) -I$(LOCAL_PATH)/include
 LOCAL_LDLIBS	:= -Lbuild/platforms/android-3/arch-arm/usr/lib -llog
