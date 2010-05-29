@@ -54,6 +54,9 @@ static void register_loader(struct xmp_loader_info *l)
 
 void xmp_init_formats(xmp_context ctx)
 {
+	if (!list_empty(&loader_list))
+		return;
+
 	REG_LOADER(xm);
 	REG_LOADER(mod);
 	REG_LOADER(flt);
