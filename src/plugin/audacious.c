@@ -303,7 +303,11 @@ static void mseek(InputPlayback *ipb, unsigned long time)
 			if (i > 0)
 				i--;
 			a = xmp_ord_set(ctx, i);
+#if __AUDACIOUS_PLUGIN_API__ < 13
 			ipb->output->flush(p->m.xxo_info[i].time);
+#else
+			ipb->output->flush(p->m.xxo_info[i].time / 1000);
+#endif
 			break;
 		}
 	}
