@@ -322,7 +322,11 @@ static int get_time(InputPlayback *ipb)
 	if (!ipb->playing)
 		return -1;
 
+#if __AUDACIOUS_PLUGIN_API__ < 13
 	return ipb->output->output_time();
+#else
+	return ipb->output->written_time();
+#endif
 }
 
 
@@ -577,7 +581,9 @@ static void play_file(InputPlayback *ipb)
 	g_static_mutex_unlock(&load_mutex);
 
 	if (lret < 0) {
+#if __AUDACIOUS_PLUGIN_API__ < 13
 		xmp_ip.set_info_text("Error loading mod");
+#endif
 		ipb->playing = 0;
 		return;
 	}
