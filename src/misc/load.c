@@ -86,6 +86,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     int fd, builtin, res;
     char *packer, *temp2, tmp[PATH_MAX];
     struct tmpfilename *temp;
+    int headersize;
 
     packer = cmd = NULL;
     builtin = res = 0;
@@ -96,7 +97,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     strncat(tmp, "xmp_XXXXXX", PATH_MAX);
 
     fseek(*f, 0, SEEK_SET);
-    if (fread(b, 1, 1024, *f) < 100)	/* minimum valid file size */
+    if ((headersize = fread(b, 1, 1024, *f)) < 100)	/* minimum valid file size */
 	return 0;
 
 #if defined __AMIGA__ && !defined __AROS__
@@ -145,6 +146,13 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     } else if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
 	packer = "MO3";
 	cmd = "unmo3 -s \"%s\" STDOUT";
+    } else if (headersize > 300 &&
+	       b[257] == 'u' && b[258] == 's' && b[259] == 't' &&
+	       b[260] == 'a' && b[261] == 'r' &&
+	       ((b[262] == 0) || (b[262] == ' ' && b[263] == ' ' &&
+				  b[264] == 0))) {
+	packer = "tar";
+	cmd = "tar -xOf \"%s\"";
     } else if (b[0] == 31 && b[1] == 157) {
 	packer = "compress";
 #ifdef __EMX__
