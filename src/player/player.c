@@ -400,6 +400,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     xc->a_idx = 0;
     xc->a_size = 1;
     xc->a_val[0] = 0;
+    xc->tremor = 0;
 
     if ((uint32)xins >= m->xxh->ins || !m->xxih[xins].nsm) {
 	RESET(IS_VALID);
