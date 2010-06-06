@@ -86,8 +86,6 @@ static int waveform[4][64] = {
 static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
 static void play_channel (struct xmp_context *, int, int);
 
-/* #include "effects.c" */
-
 
 static void dummy(unsigned long ul, void *data)
 {
@@ -187,7 +185,7 @@ static inline void reset_channel(struct xmp_context *ctx)
     int i;
     struct xmp_channel *xc;
 
-    synth_reset ();
+    synth_reset();
     memset(p->xc_data, 0, sizeof (struct xmp_channel) * d->numchn);
 
     for (i = d->numchn; i--; ) {
@@ -224,16 +222,6 @@ static inline void fetch_row(struct xmp_context *ctx, int ord, int row)
 	    count--;
 	}
     }
-}
-
-
-static inline void play_frame(struct xmp_context *ctx, int tick)
-{ 
-    struct xmp_driver_context *d = &ctx->d;
-    int i;
-
-    for (i = 0; i < d->numchn; i++)
-	play_channel(ctx, i, tick);
 }
 
 
@@ -903,6 +891,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	struct xmp_mod_context *m = &p->m;
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
+	int i;
 
 	if (p->pause) {
 		p->event_callback(0, p->callback_data);
@@ -968,7 +957,9 @@ int _xmp_player_frame(struct xmp_context *ctx)
 
 
 	xmp_drv_echoback(ctx, (f->frame << 4) | XMP_ECHO_FRM);
-	play_frame(ctx, f->frame);
+	/* play_frame */
+	for (i = 0; i < d->numchn; i++)
+		play_channel(ctx, i, f->frame);
 
 	if (o->time && (o->time < f->playing_time))	/* expired time */
 		return -1;
