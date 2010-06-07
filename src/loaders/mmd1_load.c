@@ -228,7 +228,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->quirk |= song.flags & FLAG_STSLIDE ? 0 : XMP_QRK_VSALL;
 	bpm_on = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
-	m->quirk |= bpm_on ? 0 : XMP_QRK_MEDBPM;
+	m->quirk |= XMP_QRK_MEDBPM;
 
 	/* From the OctaMEDv4 documentation:
 	 *
@@ -246,8 +246,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* FIXME: med tempos are incorrectly handled */
 	if (bpm_on) {
-		m->xxh->tpo = 3;
-		m->xxh->bpm = song.deftempo * 8 / bpmlen;
+		m->xxh->tpo = song.tempo2;
+		m->xxh->bpm = song.deftempo * bpmlen / 16;
 	} else {
 		m->xxh->tpo = song.tempo2;
 		m->xxh->bpm = song.deftempo;
