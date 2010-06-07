@@ -399,7 +399,7 @@ ex_f_vslide_dn:
 	    if (fxp < 0x20)	/* speedup.xm needs BPM = 20 */
 		p->tempo = fxp;
 	    else if (~m->flags & XMP_CTL_VBLANK)
-		p->tick_time = m->rrate / (p->xmp_bpm = fxp);
+		p->tick_time = m->rrate / (p->bpm = fxp);
 	}
 	break;
     case FX_S3M_TEMPO:				/* Set S3M tempo */
@@ -410,25 +410,25 @@ ex_f_vslide_dn:
 	if (fxp) {
 	    if (fxp < SMIX_MINBPM)
 		fxp = SMIX_MINBPM;
-	    p->xmp_bpm = fxp;
-	    p->tick_time = m->rrate / p->xmp_bpm;
+	    p->bpm = fxp;
+	    p->tick_time = m->rrate / p->bpm;
 	}
 	break;
     case FX_IT_BPM:				/* Set IT BPM */
 	if (MSN(fxp) == 0) {		/* T0x - Tempo slide down by x */
-	    p->xmp_bpm -= LSN(fxp);
-	    if (p->xmp_bpm < 0x20)
-		p->xmp_bpm = 0x20;
+	    p->bpm -= LSN(fxp);
+	    if (p->bpm < 0x20)
+		p->bpm = 0x20;
 	} else if (MSN(fxp) == 1) {	/* T1x - Tempo slide up by x */
-	    p->xmp_bpm += LSN(fxp);
-	    if ((int32)p->xmp_bpm > 0xff)
-		p->xmp_bpm = 0xff;
+	    p->bpm += LSN(fxp);
+	    if ((int32)p->bpm > 0xff)
+		p->bpm = 0xff;
 	} else {
 	    if (fxp < SMIX_MINBPM)
 		fxp = SMIX_MINBPM;
-	    p->xmp_bpm = fxp;
+	    p->bpm = fxp;
 	}
-	p->tick_time = m->rrate / p->xmp_bpm;
+	p->tick_time = m->rrate / p->bpm;
 	break;
     case FX_GLOBALVOL:				/* Set global volume */
 	m->volume = fxp > m->volbase ? m->volbase : fxp;

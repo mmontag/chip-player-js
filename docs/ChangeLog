@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+3.3.0 ():
+	- code cleanup
+
 3.2.0 (20100530):
 	- Digital Symphony fixes by Tom Hargreaves
 	- Archimedes Tracker fixes by Tom Hargreaves

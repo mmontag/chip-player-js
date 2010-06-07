@@ -307,9 +307,9 @@ int _xmp_scan_module(struct xmp_context *ctx)
     row = break_row;
 
 end_module:
-    p->xmp_scan_num = o->start > ord ? 0: tab_cnt[ord][row];
-    p->xmp_scan_row = row;
-    p->xmp_scan_ord = ord;
+    p->scan_num = o->start > ord ? 0: tab_cnt[ord][row];
+    p->scan_row = row;
+    p->scan_ord = ord;
 
     free(loop_row);
     free(loop_stk);

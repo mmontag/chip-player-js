@@ -216,7 +216,10 @@ struct xmp_player_context {
 	struct flow_control flow;
 	struct xmp_channel *xc_data;
 	int *fetch_ctl;
-	int xmp_scan_ord, xmp_scan_row, xmp_scan_num, xmp_bpm;
+	int scan_ord;
+	int scan_row;
+	int scan_num;
+	int bpm;
 	void (*event_callback)(unsigned long, void *);
 	void *callback_data;
 

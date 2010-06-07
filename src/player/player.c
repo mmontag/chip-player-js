@@ -846,8 +846,8 @@ int _xmp_player_start(struct xmp_context *ctx)
 	if (m->xxh->len == 0 || m->xxh->chn == 0) {
 		/* set variables to sane state */
 		m->flags &= ~XMP_CTL_LOOP;
-		f->ord = p->xmp_scan_ord = 0;
-		f->row = p->xmp_scan_row = 0;
+		f->ord = p->scan_ord = 0;
+		f->row = p->scan_row = 0;
 		f->end_point = 0;
 		return 0;
 	}
@@ -859,11 +859,11 @@ int _xmp_player_start(struct xmp_context *ctx)
 		f->ord++;
 
 	m->volume = m->xxo_info[f->ord].gvl;
-	p->tick_time = m->rrate / (p->xmp_bpm = m->xxo_info[f->ord].bpm);
+	p->tick_time = m->rrate / (p->bpm = m->xxo_info[f->ord].bpm);
 	p->tempo = m->xxo_info[f->ord].tempo;
 	f->jumpline = m->xxo_fstrow[f->ord];
 	f->playing_time = 0;
-	f->end_point = p->xmp_scan_num;
+	f->end_point = p->scan_num;
 
 	if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != 0)
 		return ret;
@@ -909,13 +909,13 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		}
 
 		if (p->pos == 0)
-			f->end_point = p->xmp_scan_num;
+			f->end_point = p->scan_num;
 
 		f->ord = p->pos;
 		if (m->xxo_info[f->ord].tempo)
 			p->tempo = m->xxo_info[f->ord].tempo;
-		p->xmp_bpm = m->xxo_info[f->ord].bpm;
-		p->tick_time = m->rrate / p->xmp_bpm;
+		p->bpm = m->xxo_info[f->ord].bpm;
+		p->tick_time = m->rrate / p->bpm;
 		m->volume = m->xxo_info[f->ord].gvl;
 		f->jump = f->ord;
 		f->time = (double)m->xxo_info[f->ord].time / 1000;
@@ -934,8 +934,8 @@ int _xmp_player_frame(struct xmp_context *ctx)
 
 	if (f->frame == 0) {			/* first frame in row */
 		/* check end of module */
-	    	if ((~m->flags & XMP_CTL_LOOP) && f->ord == p->xmp_scan_ord &&
-					f->row == p->xmp_scan_row) {
+	    	if ((~m->flags & XMP_CTL_LOOP) && f->ord == p->scan_ord &&
+					f->row == p->scan_row) {
 			if (!f->end_point--)
 				return -1;
 		}
@@ -943,7 +943,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		p->gvol_flag = 0;
 		fetch_row(ctx, m->xxo[f->ord], f->row);
 
-		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->xmp_bpm << 4) |
+		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->bpm << 4) |
 							XMP_ECHO_BPM);
 		xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
 		xmp_drv_echoback(ctx, (m->xxo[f->ord] << 12) | (f->ord << 4) |
@@ -966,12 +966,12 @@ int _xmp_player_frame(struct xmp_context *ctx)
 
 	if (HAS_QUIRK(XMP_QRK_MEDBPM)) {
 		xmp_drv_sync(ctx, p->tick_time * 33 / 125);
-		f->playing_time += m->rrate * 33 / (100 * p->xmp_bpm * 125);
-		f->time += m->rrate * 33 / (100 * p->xmp_bpm * 125);
+		f->playing_time += m->rrate * 33 / (100 * p->bpm * 125);
+		f->time += m->rrate * 33 / (100 * p->bpm * 125);
 	} else {
 		xmp_drv_sync(ctx, p->tick_time);
-		f->playing_time += m->rrate / (100 * p->xmp_bpm);
-		f->time += m->rrate / (100 * p->xmp_bpm);
+		f->playing_time += m->rrate / (100 * p->bpm);
+		f->time += m->rrate / (100 * p->bpm);
 	}
 
 	f->frame++;
