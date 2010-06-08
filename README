@@ -252,6 +252,7 @@ for description of the command line arguments recognized by xmp.)
 	'b'		=>	jump to previous pattern
 	'n'		=>	jump to next module
 	'p'		=>	jump to previous module
+	'l'		=>	toggle loop mode
 	SPACE		=>	pause
 	'1' to '0'	=>	mute/unmute channels 1 to 10
 	'!'		=>	unmute all channels

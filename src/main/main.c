@@ -81,6 +81,7 @@ int rt = 0;
 #endif
 
 static struct xmp_module_info mi;
+static struct xmp_options *opt;
 
 static int verbosity;
 #ifdef HAVE_TERMIOS_H
@@ -326,8 +327,9 @@ static void process_echoback(unsigned long i, void *data)
 		if (refresh_status)
 		    refresh_status = 0;
 	    }
-	    fprintf (stderr, "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%02X/%02X] Chn[%02X/%02X",
-		(int)(msg & 0xff), (int)(msg >> 8), nch, max_nch);
+	    fprintf (stderr, "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%02X/%02X] Chn[%02X/%02X] %s",
+		(int)(msg & 0xff), (int)(msg >> 8), nch, max_nch,
+		opt->flags & XMP_CTL_LOOP ? "L\b\b\b" : " \b\b\b");
 	    break;
 	}
     }
@@ -392,6 +394,9 @@ void read_keyboard()
 	    xmp_mod_stop(ctx);
 	    paused = 0;
 	    break;
+	case 'l':
+	    opt->flags ^= XMP_CTL_LOOP;
+	    break;
 	case ' ':	/* paused module */
 	    paused ^= 1;
 	    if (verbosity) {
@@ -444,7 +449,6 @@ int main(int argc, char **argv)
     struct timeval tv;
     struct timezone tz;
 #endif
-    struct xmp_options *opt;
 #ifdef HAVE_SYS_RTPRIO_H
     struct rtprio rtp;
 #endif

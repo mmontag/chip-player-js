@@ -66,6 +66,16 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 	return &((struct xmp_context *)ctx)->o;
 }
 
+int xmp_get_flags(xmp_context ctx)
+{
+	return ((struct xmp_context *)ctx)->p.m.flags;
+}
+
+void xmp_set_flags(xmp_context ctx, int flags)
+{
+	((struct xmp_context *)ctx)->p.m.flags = flags;
+}
+
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;

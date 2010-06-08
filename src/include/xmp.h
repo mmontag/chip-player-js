@@ -202,6 +202,8 @@ void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
 void xmp_unlink_tempfiles(void);
 struct xmp_options *xmp_get_options(xmp_context);
+int xmp_get_flags(xmp_context);
+void xmp_set_flags(xmp_context, int);
 
 void xmp_init(xmp_context, int, char **);
 void xmp_deinit(xmp_context);
