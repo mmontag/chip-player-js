@@ -3,6 +3,7 @@ Stable versions
 
 3.3.0 ():
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)
+	- fix OSS driver fragment setting
 	- code cleanup
 
 3.2.0 (20100530):
