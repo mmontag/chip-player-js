@@ -1,7 +1,7 @@
 
 VERSION	= 3.3.0-pre
 DIST    = xmp-$(VERSION)
-MODULES = "bzl-funky_escalator.xm"
+MODULES = "graff-strange_land.xm"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  scripts $(MODULES)
 DDIRS	= docs drivers etc include loaders misc player plugin prowiz win32 \
