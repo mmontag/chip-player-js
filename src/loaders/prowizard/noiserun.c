@@ -34,18 +34,12 @@ static int depack_nru(FILE *in, FILE *out)
 	uint8 ptable[128];
 	uint8 PatPos;
 	uint8 ptk_table[37][2];
-	uint8 Max = 0x00;
+	uint8 max_pat = 0x00;
 	uint8 note, ins, fxt, fxp;
-	uint8 *sdata;
-	uint8 *address;
 	uint8 fine, vol;
-	uint8 Pattern[1025];
-	long i = 0, j = 0, l = 0;
+	uint8 pat_data[1025];
+	int i, j;
 	long ssize = 0;
-
-	memset(tmp, 0, 1025);
-	memset(ptable, 0, 128);
-	memset(Pattern, 0, 1025);
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -71,31 +65,29 @@ static int depack_nru(FILE *in, FILE *out)
 		write16b(out, lsize);		/* write loop size */
 	}
 
-	/* size of pattern list */
-	fseek (in, 950, 0);
-	fread (&PatPos, 1, 1, in);
-	fwrite (&PatPos, 1, 1, out);
-
+	fseek(in, 950, SEEK_SET);
+	//write8(out, read8(in));			/* size of pattern list */
+       fread (&PatPos, 1, 1, in);
+       fwrite (&PatPos, 1, 1, out);
 	write8(out, read8(in));			/* ntk byte */
 
 	/* pattern table */
-	Max = 0x00;
-	fread (ptable, 128, 1, in);
-	fwrite (ptable, 128, 1, out);
+	max_pat = 0;
+	fread(ptable, 128, 1, in);
+	fwrite(ptable, 128, 1, out);
 	for (i = 0; i < 128; i++) {
-		if (ptable[i] > Max)
-			Max = ptable[i];
+		if (ptable[i] > max_pat)
+			max_pat = ptable[i];
 	}
-	Max += 1;		/* starts at $00 */
-	/*printf ( "number of pattern : %d\n" , Max ); */
+	max_pat++;
 
 	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
 	fseek (in, 0x043c, SEEK_SET);
-	for (i = 0; i < Max; i++) {
-		memset(Pattern, 0, 1025);
-		fread (tmp, 1024, 1, in);
+	for (i = 0; i < max_pat; i++) {
+		memset(pat_data, 0, 1025);
+		fread(tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			ins = (tmp[j * 4 + 3] >> 3) & 0x1f;
 			note = tmp[j * 4 + 2];
@@ -163,15 +155,14 @@ static int depack_nru(FILE *in, FILE *out)
 				fxt = 0x00;
 				break;
 			}
-			Pattern[j * 4] = (ins & 0xf0);
-			Pattern[j * 4] |= ptk_table[(note / 2)][0];
-			Pattern[j * 4 + 1] = ptk_table[(note / 2)][1];
-			Pattern[j * 4 + 2] = ((ins << 4) & 0xf0);
-			Pattern[j * 4 + 2] |= fxt;
-			Pattern[j * 4 + 3] = fxp;
+			pat_data[j * 4] = ins & 0xf0;
+			pat_data[j * 4] |= ptk_table[note / 2][0];
+			pat_data[j * 4 + 1] = ptk_table[note / 2][1];
+			pat_data[j * 4 + 2] = (ins << 4) & 0xf0;
+			pat_data[j * 4 + 2] |= fxt;
+			pat_data[j * 4 + 3] = fxp;
 		}
-		fwrite (Pattern, 1024, 1, out);
-/*    printf ( "pattern %ld written\n" , i );*/
+		fwrite (pat_data, 1024, 1, out);
 	}
 
 	pw_move_data(out, in, ssize);		/* sample data */
