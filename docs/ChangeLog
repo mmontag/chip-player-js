@@ -5,6 +5,7 @@ Stable versions
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)
 	- fix OSS driver fragment setting
 	- add interactive loop toggle (requested by Emanuel Haupt)
+	- add filter to prevent loading NoiseRunner modules as Protracker
 	- code cleanup
 
 3.2.0 (20100530):

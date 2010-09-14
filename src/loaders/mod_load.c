@@ -94,6 +94,26 @@ static int mod_test(FILE *f, char *t, const int start)
     if (mod_magic[i].ch == 0)
 	return -1;
 
+    /*
+     * Sanity check to prevent loading NoiseRunner and other module
+     * formats with valid magic at offset 1080
+     */
+
+    fseek(f, start + 20, SEEK_SET);
+    for (i = 0; i < 31; i++) {
+	fseek(f, 22, SEEK_CUR);			/* Instrument name */
+	if (read16b(f) & 0x8000)		/* test length */
+		return -1;
+	if (read8(f) & 0xf0)			/* test finetune */
+		return -1;
+	if (read8(f) > 0x40)			/* test volume */
+		return -1;
+	if (read16b(f) & 0x8000)		/* test loop start */
+		return -1;
+	if (read16b(f) & 0x8000)		/* test loop size */
+		return -1;
+    }
+
     /* Test for UNIC tracker modules
      *
      * From Gryzor's Pro-Wizard PW_FORMATS-Engl.guide:
