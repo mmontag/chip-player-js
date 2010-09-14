@@ -23,7 +23,7 @@ struct pw_format pw_nru = {
 
 
 static int fine_table[] = {
-	0x0000, 0xffb8, 0xff70, 0xdd28, 0xfee0, 0xfe98, 0xfe50, 0xfe08,
+	0x0000, 0xffb8, 0xff70, 0xff28, 0xfee0, 0xfe98, 0xfe50, 0xfe08,
 	0xfdc0, 0xfd78, 0xfd30, 0xfce8, 0xfca0, 0xfc58, 0xfc10, 0xfbc8
 };
 
@@ -36,8 +36,8 @@ static int depack_nru(FILE *in, FILE *out)
 	uint8 ptk_table[37][2];
 	uint8 max_pat = 0x00;
 	uint8 note, ins, fxt, fxp;
-	uint8 fine, vol;
 	uint8 pat_data[1025];
+	int fine;
 	int i, j;
 	long ssize = 0;
 
@@ -57,7 +57,14 @@ static int depack_nru(FILE *in, FILE *out)
 		lsize = read16b(in);		/* read loop size */
 		fine = read16b(in);		/* read finetune ?!? */
 
-		fine = 0x00;
+		for (j = 0; j < 16; j++) {
+			if (fine == fine_table[j]) {
+				fine = j;
+				break;
+			}
+		}
+		if (j == 16)
+			fine = 0;
 
 		write8(out, fine);		/* write fine */
 		write8(out, vol);		/* write vol */
@@ -97,62 +104,11 @@ static int depack_nru(FILE *in, FILE *out)
 			case 0x00:	/* tone portamento */
 				fxt = 0x03;
 				break;
-
-			case 0x04:	/* slide up */
-				fxt = 0x01;
-				break;
-
-			case 0x08:	/* slide down */
-				fxt = 0x02;
-				break;
-
 			case 0x0C:	/* no fxt */
 				fxt = 0x00;
 				break;
-
-			case 0x10:	/* set vibrato */
-				fxt = 0x04;
-				break;
-
-			case 0x14:	/* portamento + volume slide */
-				fxt = 0x05;
-				break;
-
-			case 0x18:	/* vibrato + volume slide */
-				fxt = 0x06;
-				break;
-
-			case 0x20:	/* set panning ?!?!? not PTK ! Heh, Gryzor ... */
-				fxt = 0x08;
-				break;
-
-			case 0x24:	/* sample offset */
-				fxt = 0x09;
-				break;
-
-			case 0x28:	/* volume slide */
-				fxt = 0x0A;
-				break;
-
-			case 0x30:	/* set volume */
-				fxt = 0x0C;
-				break;
-
-			case 0x34:	/* pattern break */
-				fxt = 0x0D;
-				break;
-
-			case 0x38:	/* extended command */
-				fxt = 0x0E;
-				break;
-
-			case 0x3C:	/* set speed */
-				fxt = 0x0F;
-				break;
-
 			default:
-				/*printf ( "%x : at %x\n" , fxt , i*1024 + j*4 + 1084 ); */
-				fxt = 0x00;
+				fxt >>= 2;
 				break;
 			}
 			pat_data[j * 4] = ins & 0xf0;
