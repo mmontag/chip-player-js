@@ -1,23 +1,36 @@
 /*
- *   NoiseRunner.c   1997 (c) Asle / ReDoX
+ *  NoiseRunner.c	Copyright (C) 1997 Asle / ReDoX
+ *			Copyright (C) 2010 Claudio Matsuoka
  *
- * NoiseRunner to Protracker.
- *
- * NOTE: some lines will work ONLY on IBM-PC !!!. Check the lines
- *      with the warning note to get this code working on 68k machines.
- *
-*/
+ *  Converts NoiseRunner packed MODs back to Protracker
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-#define PAT_DATA_ADDRESS 0x43C
+static int test_nru (uint8 *, int);
+static int depack_nru (FILE *, FILE *);
 
-void Depack_Noiserunner (FILE * in, FILE * out)
+
+struct pw_format pw_nru = {
+	"NRU",
+	"NoiseRunner",
+	0x00,
+	test_nru,
+	depack_nru
+};
+
+
+static int fine_table[] = {
+	0x0000, 0xffb8, 0xff70, 0xdd28, 0xfee0, 0xfe98, 0xfe50, 0xfe08,
+	0xfdc0, 0xfd78, 0xfd30, 0xfce8, 0xfca0, 0xfc58, 0xfc10, 0xfbc8
+};
+
+
+static int depack_nru(FILE *in, FILE *out)
 {
 	uint8 tmp[1025];
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00, c5 = 0x00, c6 =
-		0x00;
 	uint8 ptable[128];
 	uint8 PatPos;
 	uint8 ptk_table[37][2];
@@ -29,137 +42,41 @@ void Depack_Noiserunner (FILE * in, FILE * out)
 	uint8 Pattern[1025];
 	long i = 0, j = 0, l = 0;
 	long ssize = 0;
-	// FILE *in,*out;
-
-	if (Save_Status == BAD)
-		return;
-
-#include "ptktable.h"
 
 	memset(tmp, 0, 1025);
 	memset(ptable, 0, 128);
 	memset(Pattern, 0, 1025);
 
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
+	pw_write_zero(out, 20);			/* title */
 
-	/* title */
-	fwrite (tmp, 20, 1, out);
+	for (i = 0; i < 31; i++) {		/* 31 samples */
+		int vol, size, addr, start, lsize;
 
-	/* 31 samples */
-	/*printf ( "Converting sample headers ... " ); */
-	for (i = 0; i < 31; i++) {
-		/* sample name */
-		fwrite (tmp, 22, 1, out);
+		pw_write_zero(out, 22);		/* sample name */
+		read8(in);			/* bypass 0x00 */
+		vol = read8(in);		/* read volume */
+		addr = read32b(in);		/* read sample address */
+		write16b(out, size = read16b(in)); /* read/write sample size */
+		ssize += size * 2;
+		start = read32b(in);		/* read loop start address */
 
-		/* bypass $00 */
-		fseek (in, 1, 1);
+		lsize = read16b(in);		/* read loop size */
+		fine = read16b(in);		/* read finetune ?!? */
 
-		/* read volume */
-		fread (&vol, 1, 1, in);
+		fine = 0x00;
 
-		/* read sample address */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		j =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
-
-		/* read and write sample size */
-		fread (&c5, 1, 1, in);
-		fread (&c6, 1, 1, in);
-		fwrite (&c5, 1, 1, out);
-		fwrite (&c6, 1, 1, out);
-		ssize += (((c5 << 8) + c6) * 2);
-
-		/* read loop start address */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		l =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
-
-		/* calculate loop start value */
-		j = l - j;
-
-		/* read loop size */
-		fread (&c5, 1, 1, in);
-		fread (&c6, 1, 1, in);
-
-		/* read finetune ?!? */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		if (c1 > 0xf0) {
-			if ((c1 == 0xFB) && (c2 == 0xC8))
-				fine = 0x0f;
-			if ((c1 == 0xFC) && (c2 == 0x10))
-				fine = 0x0E;
-			if ((c1 == 0xFC) && (c2 == 0x58))
-				fine = 0x0D;
-			if ((c1 == 0xFC) && (c2 == 0xA0))
-				fine = 0x0C;
-			if ((c1 == 0xFC) && (c2 == 0xE8))
-				fine = 0x0B;
-			if ((c1 == 0xFD) && (c2 == 0x30))
-				fine = 0x0A;
-			if ((c1 == 0xFD) && (c2 == 0x78))
-				fine = 0x09;
-			if ((c1 == 0xFD) && (c2 == 0xC0))
-				fine = 0x08;
-			if ((c1 == 0xFE) && (c2 == 0x08))
-				fine = 0x07;
-			if ((c1 == 0xFE) && (c2 == 0x50))
-				fine = 0x06;
-			if ((c1 == 0xFE) && (c2 == 0x98))
-				fine = 0x05;
-			if ((c1 == 0xFE) && (c2 == 0xE0))
-				fine = 0x04;
-			if ((c1 == 0xFF) && (c2 == 0x28))
-				fine = 0x03;
-			if ((c1 == 0xFF) && (c2 == 0x70))
-				fine = 0x02;
-			if ((c1 == 0xFF) && (c2 == 0xB8))
-				fine = 0x01;
-		} else
-			fine = 0x00;
-
-		/* write fine */
-		fwrite (&fine, 1, 1, out);
-
-		/* write vol */
-		fwrite (&vol, 1, 1, out);
-
-		/* write loop start */
-		/* WARNING !!! WORKS ONLY ON PC !!!       */
-		/* 68k machines code : c1 = *(address+2); */
-		/* 68k machines code : c2 = *(address+3); */
-		j /= 2;
-		address = (uint8 *) & j;
-		c1 = *(address + 1);
-		c2 = *address;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
-		/* write loop size */
-		fwrite (&c5, 1, 1, out);
-		fwrite (&c6, 1, 1, out);
+		write8(out, fine);		/* write fine */
+		write8(out, vol);		/* write vol */
+		write16b(out, (start - addr) / 2);	/* write loop start */
+		write16b(out, lsize);		/* write loop size */
 	}
-	/*printf ( "ok\n" ); */
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
 	/* size of pattern list */
 	fseek (in, 950, 0);
 	fread (&PatPos, 1, 1, in);
 	fwrite (&PatPos, 1, 1, out);
 
-	/* ntk byte */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
+	write8(out, read8(in));			/* ntk byte */
 
 	/* pattern table */
 	Max = 0x00;
@@ -172,18 +89,10 @@ void Depack_Noiserunner (FILE * in, FILE * out)
 	Max += 1;		/* starts at $00 */
 	/*printf ( "number of pattern : %d\n" , Max ); */
 
-	/* write Protracker's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-
+	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
-	fseek (in, PAT_DATA_ADDRESS, 0);	/* SEEK_SET */
+	fseek (in, 0x043c, SEEK_SET);
 	for (i = 0; i < Max; i++) {
 		memset(Pattern, 0, 1025);
 		fread (tmp, 1024, 1, in);
@@ -265,92 +174,65 @@ void Depack_Noiserunner (FILE * in, FILE * out)
 /*    printf ( "pattern %ld written\n" , i );*/
 	}
 
-	/* sample data */
-	sdata = (uint8 *) malloc (ssize);
-	memset(sdata, 0, ssize);
-	fread (sdata, ssize, 1, in);
-	fwrite (sdata, ssize, 1, out);
-	free (sdata);
+	pw_move_data(out, in, ssize);		/* sample data */
 
-
-	Crap ("NR:NoiseRunner", BAD, BAD, out);
-
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
 
-void testNoiserunner (void)
+static int test_nru(uint8 *data, int s)
 {
+	int i, j, k, l;
+	int start = 0;
+	int ssize;
+
+	PW_REQUEST_DATA(s, 1500);
+
+#if 0
 	/* test 1 */
 	if (i < 1080) {
-		Test = BAD;
-		return;
+		return -1;
 	}
+#endif
+
+	if (readmem32b(data + start + 1080) != PW_MOD_MAGIC)
+		return -1;
 
 	/* test 2 */
-	start = i - 1080;
-	for (k = 0; k < 31; k++) {
-		j =
-			(((data[start + 6 + k * 16] << 8) +
-				 data[start + 7 +
-					k * 16]) * 2);
-		if (j > 0xFFFF) {
-/*printf ( "#2 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
-		}
-		ssize += j;
-	}
-	if (ssize == 0) {
-		Test = BAD;
-		return;
-	}
-	/* ssize is the size of all the pattern data */
+	ssize = 0;
+	for (i = 0; i < 31; i++)
+		ssize += 2 * readmem16b(data + start + 6 + i * 16);
+	if (ssize == 0)
+		return -1;
 
 	/* test #3 volumes */
-	for (k = 0; k < 31; k++) {
-		if (data[start + 1 + k * 16] > 0x40) {
-/*printf ( "#3 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
-		}
+	for (i = 0; i < 31; i++) {
+		if (data[start + 1 + i * 16] > 0x40)
+			return -1;
 	}
 
 	/* test #4  pattern list size */
 	l = data[start + 950];
-	if ((l > 127) || (l == 0)) {
-/*printf ( "#4,0 (Start:%ld)\n" , start );*/
-		Test = BAD;
-		ssize = 0;
-		return;
+	if (l > 127 || l == 0) {
+		return -1;
 	}
+
 	/* l holds the size of the pattern list */
 	k = 0;
 	for (j = 0; j < l; j++) {
 		if (data[start + 952 + j] > k)
 			k = data[start + 952 + j];
 		if (data[start + 952 + j] > 127) {
-/*printf ( "#4,1 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
+			return -1;
 		}
 	}
 	/* k holds the highest pattern number */
 	/* test last patterns of the pattern list = 0 ? */
 	while (j != 128) {
 		if (data[start + 952 + j] != 0) {
-/*printf ( "#4,2 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
+			return -1;
 		}
-		j += 1;
+		j++;
 	}
 	/* k is the number of pattern in the file (-1) */
 	k += 1;
@@ -360,26 +242,17 @@ void testNoiserunner (void)
 	for (j = 0; j < (k << 8); j++) {
 		/* note > 48h ? */
 		if (data[start + 1086 + j * 4] > 0x48) {
-/*printf ( "#5.1 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
+			return -1;
 		}
 		l = data[start + 1087 + j * 4];
 		if (((l / 8) * 8) != l) {
-/*printf ( "#5,2 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
+			return -1;
 		}
 		l = data[start + 1084 + j * 4];
 		if (((l / 4) * 4) != l) {
-/*printf ( "#5,2 (Start:%ld)\n" , start );*/
-			Test = BAD;
-			ssize = 0;
-			return;
+			return -1;
 		}
 	}
 
-	Test = GOOD;
+	return 0;
 }
