@@ -32,7 +32,6 @@ static int depack_nru(FILE *in, FILE *out)
 {
 	uint8 tmp[1025];
 	uint8 ptable[128];
-	uint8 PatPos;
 	uint8 note, ins, fxt, fxp;
 	uint8 pat_data[1025];
 	int fine;
@@ -72,9 +71,7 @@ static int depack_nru(FILE *in, FILE *out)
 	}
 
 	fseek(in, 950, SEEK_SET);
-	//write8(out, read8(in));			/* size of pattern list */
-       fread (&PatPos, 1, 1, in);
-       fwrite (&PatPos, 1, 1, out);
+	write8(out, read8(in));			/* size of pattern list */
 	write8(out, read8(in));			/* ntk byte */
 
 	/* pattern table */
