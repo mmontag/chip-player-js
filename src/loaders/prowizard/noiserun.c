@@ -33,12 +33,11 @@ static int depack_nru(FILE *in, FILE *out)
 	uint8 tmp[1025];
 	uint8 ptable[128];
 	uint8 PatPos;
-	uint8 ptk_table[37][2];
-	uint8 max_pat = 0x00;
 	uint8 note, ins, fxt, fxp;
 	uint8 pat_data[1025];
 	int fine;
 	int i, j;
+	int max_pat;
 	long ssize = 0;
 
 	pw_write_zero(out, 20);			/* title */

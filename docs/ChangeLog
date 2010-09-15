@@ -6,6 +6,7 @@ Stable versions
 	- fix OSS driver fragment setting
 	- add interactive loop toggle (requested by Emanuel Haupt)
 	- add filter to prevent loading NoiseRunner modules as Protracker
+	- add NoiseRunner loader (requested by Johan Samuelsson)
 	- code cleanup
 
 3.2.0 (20100530):
