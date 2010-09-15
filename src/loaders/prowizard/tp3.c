@@ -180,7 +180,7 @@ static int depack_tp3(FILE *in, FILE *out)
 	}
 
 	/* Sample data */
-	if (((max_trk_ofs / 2) * 2) != max_trk_ofs)
+	if (max_trk_ofs & 0x01)
 		max_trk_ofs += 1;
 
 	fseek(in, max_trk_ofs, SEEK_SET);
@@ -202,9 +202,9 @@ static int test_tp3(uint8 *data, int s)
 		return -1;
 
 	/* number of sample */
-	l = ((data[start + 28] << 8) + data[start + 29]);
+	l = readmem16b(data + start + 28);
 
-	if ((((l / 8) * 8) != l) || (l == 0))
+	if (l & 0x07 || l == 0)
 		return -1;
 
 	l /= 8;
@@ -228,17 +228,17 @@ static int test_tp3(uint8 *data, int s)
 	for (k = 0; k < l; k++) {
 		int x = start + k * 8;
 
-		j = ((data[x + 32] << 8) + data[x + 33]) * 2;	/* size */
-		m = ((data[x + 34] << 8) + data[x + 35]) * 2;	/* loop start */
-		n = ((data[x + 36] << 8) + data[x + 37]) * 2;	/* loop size */
+		j = readmem16b(data + x + 32) * 2;	/* size */
+		m = readmem16b(data + x + 34) * 2;	/* loop start */
+		n = readmem16b(data + x + 36) * 2;	/* loop size */
 
-		if ((j > 0xFFFF) || (m > 0xFFFF) || (n > 0xFFFF))
+		if (j > 0xffff || m > 0xffff || n > 0xffff)
 			return -1;
 
-		if ((m + n) > (j + 2))
+		if (m + n > j + 2)
 			return -1;
 
-		if ((m != 0) && (n == 0))
+		if (m != 0 && n == 0)
 			return -1;
 
 		ssize += j;
@@ -249,7 +249,7 @@ static int test_tp3(uint8 *data, int s)
 
 	/* pattern list size */
 	j = data[start + l * 8 + 31];
-	if ((l == 0) || (l > 128))
+	if (l == 0 || l > 128)
 		return -1;
 
 	/* j is the size of the pattern list */

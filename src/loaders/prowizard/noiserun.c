@@ -191,11 +191,11 @@ static int test_nru(uint8 *data, int s)
 			return -1;
 		}
 		l = data[start + 1087 + j * 4];
-		if (((l / 8) * 8) != l) {
+		if (l & 0x07) {
 			return -1;
 		}
 		l = data[start + 1084 + j * 4];
-		if (((l / 4) * 4) != l) {
+		if (l & 0x03) {
 			return -1;
 		}
 	}
