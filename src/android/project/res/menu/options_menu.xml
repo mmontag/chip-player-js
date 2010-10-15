@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/menu_refresh"
-	android:icon="@drawable/android:ic_menu_refresh"
+	android:icon="@drawable/ic_menu_refresh"
 	android:title="Rescan" />
     <item android:id="@+id/menu_about"
-	android:icon="@drawable/android:ic_menu_info_details"
+	android:icon="@drawable/ic_menu_info_details"
 	android:title="About" />
     <item android:id="@+id/menu_quit"
-    	android:icon="@drawable/android:ic_menu_close_clear_cancel"
+    	android:icon="@drawable/ic_menu_close_clear_cancel"
     	android:title="Quit" />
     <item android:id="@+id/menu_prefs"
-	android:icon="@drawable/android:ic_menu_preferences"
+	android:icon="@drawable/ic_menu_preferences"
 	android:title="Settings" />
 </menu>
