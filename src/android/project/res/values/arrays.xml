@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="vol_boost_array">
+        <item>Normal</item>
+        <item>2x</item>
+        <item>4x</item>
+    </string-array>
+    
+    <string-array name="vol_boost_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+</resources>

@@ -7,15 +7,17 @@ import android.view.KeyEvent;
 
 public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_MEDIA_PATH = "media_path";
+	public static final String PREF_VOL_BOOST = "vol_boost";
 	private SharedPreferences prefs;
-	private String oldPath;
+	private String oldPath, oldBoost;
 	
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        oldPath = prefs.getString(PREF_MEDIA_PATH, null);    
+        oldPath = prefs.getString(PREF_MEDIA_PATH, null);
+        oldBoost = prefs.getString(PREF_VOL_BOOST, "1");
         addPreferencesFromResource(R.xml.preferences);
     }
         
@@ -25,7 +27,9 @@ public class Settings extends android.preference.PreferenceActivity {
     		switch(keyCode) {
     		case KeyEvent.KEYCODE_BACK:
     			String newPath = prefs.getString(PREF_MEDIA_PATH, null);
-    			setResult(newPath == oldPath ? RESULT_CANCELED : RESULT_OK);
+    			String newBoost = prefs.getString(PREF_VOL_BOOST, "1");
+    			setResult(newPath == oldPath && newBoost == oldBoost ?
+    					RESULT_CANCELED : RESULT_OK);
     			finish();
     		}
     	}

@@ -348,3 +348,15 @@ Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj)
 
 	return stringArray;
 }
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_optAmplify(JNIEnv *env, jobject obj, jint n)
+{
+	struct xmp_options *opt;
+
+	opt = xmp_get_options(ctx);
+	opt->amplify = n;
+
+	return 0;
+}
+

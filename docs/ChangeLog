@@ -7,6 +7,8 @@ Stable versions
 	- add interactive loop toggle (requested by Emanuel Haupt)
 	- add filter to prevent loading NoiseRunner modules as Protracker
 	- add NoiseRunner loader (requested by Johan Samuelsson)
+	- add QVGA support to Android application
+	- add volume boost option to Android application preferences
 	- code cleanup
 
 3.2.0 (20100530):

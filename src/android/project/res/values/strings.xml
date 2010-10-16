@@ -6,4 +6,6 @@
     <string name="preferences_category_application">Application settings</string>
     <string name="preferences_media_path_title">Modules pathname</string>
     <string name="preferences_media_path_summary">The directory where mod files are located</string>
+<string name="preferences_vol_boost_title">Volume boost</string>
+    <string name="preferences_vol_boost_summary">Set output volume amplification factor</string>
 </resources>

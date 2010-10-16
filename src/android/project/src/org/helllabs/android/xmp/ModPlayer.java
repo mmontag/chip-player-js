@@ -1,8 +1,11 @@
 package org.helllabs.android.xmp;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.preference.PreferenceManager;
 
 
 public class ModPlayer {
@@ -19,8 +22,9 @@ public class ModPlayer {
 			AudioTrack.MODE_STREAM);
 	private boolean paused;
 	private Thread playThread;
+	private SharedPreferences prefs;
 	
-	protected ModPlayer() {
+	protected ModPlayer() {		
 	      // empty
 	}
 	
@@ -37,6 +41,9 @@ public class ModPlayer {
     	public void run() {
     		short buffer[] = new short[minSize];
        		while (xmp.playFrame() == 0) {
+       			String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
+       			xmp.optAmplify(Integer.valueOf(volBoost));
+       			       			
        			int size = xmp.softmixer();
        			buffer = xmp.getBuffer(size, buffer);
        			audio.write(buffer, 0, size / 2);
@@ -67,10 +74,11 @@ public class ModPlayer {
     	xmp.deinit();
     }
    
-    public void play(String file) {
+    public void play(Context context, String file) {
    		if (xmp.loadModule(file) < 0) {
    			return;
    		}
+   		prefs = PreferenceManager.getDefaultSharedPreferences(context);
    		audio.play();
    		xmp.startPlayer();
    		

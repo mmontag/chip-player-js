@@ -388,7 +388,7 @@ public class Interface extends ListActivity {
        	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
         	
-       	player.play(m.filename);
+       	player.play(this, m.filename);
         progressThread = new ProgressThread();
         progressThread.start();	
 	}
