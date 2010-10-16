@@ -8,6 +8,7 @@ import android.view.KeyEvent;
 public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_MEDIA_PATH = "media_path";
 	public static final String PREF_VOL_BOOST = "vol_boost";
+	public static final String PREF_CHANGELOG_VERSION = "changelog_version";
 	private SharedPreferences prefs;
 	private String oldPath, oldBoost;
 	

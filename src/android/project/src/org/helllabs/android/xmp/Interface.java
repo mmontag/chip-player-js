@@ -187,6 +187,8 @@ public class Interface extends ListActivity {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist);
 		
+		ChangeLog changeLog = new ChangeLog(this);
+		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 
 		player = ModPlayer.getInstance();
@@ -297,6 +299,8 @@ public class Interface extends ListActivity {
 		});
 		
 		updatePlaylist();
+		
+		changeLog.show();
 	}
 	
 	@Override
