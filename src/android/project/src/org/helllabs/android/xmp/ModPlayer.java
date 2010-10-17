@@ -43,6 +43,8 @@ public class ModPlayer {
        		while (xmp.playFrame() == 0) {
        			String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
        			xmp.optAmplify(Integer.valueOf(volBoost));
+       			xmp.optMix(prefs.getBoolean(Settings.PREF_STEREO, true) ?
+       					prefs.getInt(Settings.PREF_PAN_SEPARATION, 70): 0);
        			       			
        			int size = xmp.softmixer();
        			buffer = xmp.getBuffer(size, buffer);

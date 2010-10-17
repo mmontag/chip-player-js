@@ -9,6 +9,7 @@ Stable versions
 	- add NoiseRunner loader (requested by Johan Samuelsson)
 	- add QVGA support to Android application
 	- add volume boost option to Android application preferences
+	- add stereo and panning options to Android application preferences
 	- code cleanup
 
 3.2.0 (20100530):

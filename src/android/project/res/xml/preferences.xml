@@ -3,7 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
 
   <PreferenceCategory
-    android:title="@string/preferences_category_application">
+    android:title="@string/preferences_category_files">
 
     <EditTextPreference
       android:key="media_path"
@@ -11,6 +11,11 @@
       android:title="@string/preferences_media_path_title"
       android:summary="@string/preferences_media_path_summary"
       android:defaultValue="/sdcard/mod" />
+      
+  </PreferenceCategory>
+  
+  <PreferenceCategory
+    android:title="@string/preferences_category_sound">
       
     <ListPreference
       android:key="vol_boost"
@@ -21,6 +26,33 @@
       android:entries="@array/vol_boost_array"
       android:entryValues="@array/vol_boost_values" />
       
+    <CheckBoxPreference
+      android:key="stereo"
+      android:persistent="true"
+      android:title="@string/preferences_stereo_title"
+      android:summary="@string/preferences_stereo_summary"
+      android:defaultValue="true" />
+      
+    <org.helllabs.android.xmp.SeekBarPreference
+      android:key="pan_separation"
+      android:persistent="true"
+      android:dependency="stereo"
+      android:title="@string/preferences_pan_separation_title"
+      android:summary="@string/preferences_pan_separation_summary"
+      android:dialogMessage="@string/preferences_pan_separation_dialog"
+      android:defaultValue="70"
+      android:text="%"
+      android:max="100" />
+      
   </PreferenceCategory>
-
+  
+  <PreferenceCategory
+    android:title="@string/preferences_category_format">
+  
+    <Preference
+      android:key="list_formats"
+      android:title="@string/preferences_list_formats_title"
+      android:summary="@string/preferences_list_formats_summary" />
+  </PreferenceCategory>
+  
 </PreferenceScreen>

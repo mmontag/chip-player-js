@@ -33,6 +33,7 @@ public class Xmp {
 	public native int getFormatCount();
 	public native String[] getFormats();
 	public native int optAmplify(int n);
+	public native int optMix(int n);
 	
 	static {
 		System.loadLibrary("xmp");

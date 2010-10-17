@@ -3,9 +3,19 @@
     <string name="app_name">Xmp</string>
     <string name="app_description">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
     <string name="settings_title">Settings</string>
-    <string name="preferences_category_application">Application settings</string>
+    
     <string name="preferences_media_path_title">Modules pathname</string>
     <string name="preferences_media_path_summary">The directory where mod files are located</string>
 <string name="preferences_vol_boost_title">Volume boost</string>
     <string name="preferences_vol_boost_summary">Set output volume amplification factor</string>
+<string name="preferences_pan_separation_summary">Set the default mixing pan separation</string>
+    <string name="preferences_stereo_summary">Mix channels to stereo</string>
+    <string name="preferences_stereo_title">Stereo output</string>
+    <string name="preferences_pan_separation_title">Pan separation</string>
+    <string name="preferences_category_sound">Sound settings</string>
+    <string name="preferences_category_files">Playlist settings</string>
+    <string name="preferences_list_formats_title">Supported formats</string>
+    <string name="preferences_category_format">Format settings</string>
+    <string name="preferences_list_formats_summary">List all supported module formats</string>
+    <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer</string>
 </resources>

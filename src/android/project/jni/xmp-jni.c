@@ -360,3 +360,14 @@ Java_org_helllabs_android_xmp_Xmp_optAmplify(JNIEnv *env, jobject obj, jint n)
 	return 0;
 }
 
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_optMix(JNIEnv *env, jobject obj, jint n)
+{
+	struct xmp_options *opt;
+
+	opt = xmp_get_options(ctx);
+	opt->mix = n;
+
+	return 0;
+}
+

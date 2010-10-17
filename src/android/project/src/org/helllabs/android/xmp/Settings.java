@@ -9,8 +9,10 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_MEDIA_PATH = "media_path";
 	public static final String PREF_VOL_BOOST = "vol_boost";
 	public static final String PREF_CHANGELOG_VERSION = "changelog_version";
+	public static final String PREF_STEREO = "stereo";
+	public static final String PREF_PAN_SEPARATION = "pan_separation";
 	private SharedPreferences prefs;
-	private String oldPath, oldBoost;
+	private String oldPath;
 	
     @Override
     protected void onCreate(Bundle icicle) {
@@ -18,7 +20,6 @@ public class Settings extends android.preference.PreferenceActivity {
         
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         oldPath = prefs.getString(PREF_MEDIA_PATH, null);
-        oldBoost = prefs.getString(PREF_VOL_BOOST, "1");
         addPreferencesFromResource(R.xml.preferences);
     }
         
@@ -28,9 +29,7 @@ public class Settings extends android.preference.PreferenceActivity {
     		switch(keyCode) {
     		case KeyEvent.KEYCODE_BACK:
     			String newPath = prefs.getString(PREF_MEDIA_PATH, null);
-    			String newBoost = prefs.getString(PREF_VOL_BOOST, "1");
-    			setResult(newPath == oldPath && newBoost == oldBoost ?
-    					RESULT_CANCELED : RESULT_OK);
+    			setResult(newPath == oldPath ? RESULT_CANCELED : RESULT_OK);
     			finish();
     		}
     	}
