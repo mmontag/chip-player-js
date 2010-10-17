@@ -46,13 +46,4 @@
       
   </PreferenceCategory>
   
-  <PreferenceCategory
-    android:title="@string/preferences_category_format">
-  
-    <Preference
-      android:key="list_formats"
-      android:title="@string/preferences_list_formats_title"
-      android:summary="@string/preferences_list_formats_summary" />
-  </PreferenceCategory>
-  
 </PreferenceScreen>
