@@ -11,7 +11,7 @@
           android:orientation="vertical"
           android:layout_width="fill_parent"
           android:layout_height="fill_parent">
-            <TextView android:text="New in version 1.0.1"
+            <TextView android:text="@strings/changelog_title"
               android:layout_width="fill_parent" 
               android:layout_height="wrap_content"
               android:paddingLeft="15px"       
@@ -19,11 +19,7 @@
               android:layout_gravity="center_vertical"
               android:textStyle="bold"
               android:textColor="#ffffff" />  
-            <TextView android:text="
-- Change MED BPM mode setting\n
-- Add NoiseRunner module support\n
-- Add support for QVGA display\n
-- Add volume boost option"
+            <TextView android:text="@strings/changelog_text"
               android:layout_width="fill_parent" 
               android:layout_height="wrap_content"
               android:paddingLeft="15px"      
