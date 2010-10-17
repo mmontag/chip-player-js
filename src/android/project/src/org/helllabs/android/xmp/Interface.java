@@ -464,12 +464,8 @@ public class Interface extends ListActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
-		case R.id.menu_quit:
-			try {
-				finish();
-			} catch (Throwable e) {
-				Log.e(getString(R.string.app_name), e.getMessage());
-			}
+		case R.id.menu_formats:
+			startActivity(new Intent(this, ListFormats.class));
 			break;
 		case R.id.menu_about:
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();

@@ -2,14 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/menu_refresh"
 	android:icon="@drawable/ic_menu_refresh"
-	android:title="Rescan" />
+	android:title="@string/menu_refresh" />
     <item android:id="@+id/menu_about"
 	android:icon="@drawable/ic_menu_info_details"
-	android:title="About" />
-    <item android:id="@+id/menu_quit"
-    	android:icon="@drawable/ic_menu_close_clear_cancel"
-    	android:title="Quit" />
+	android:title="@string/menu_about" />
+    <item android:id="@+id/menu_formats"
+    	android:icon="@drawable/ic_menu_list"
+    	android:title="@string/menu_formats" />
     <item android:id="@+id/menu_prefs"
 	android:icon="@drawable/ic_menu_preferences"
-	android:title="Settings" />
+	android:title="@string/menu_prefs" />
 </menu>

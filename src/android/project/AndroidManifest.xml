@@ -21,6 +21,9 @@
 	<activity android:name=".Settings" 
               android:label="@string/settings_title">
         </activity>
+	<activity android:name=".ListFormats" 
+              android:label="@string/list_formats_title">
+        </activity>
         <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>       
     </application>
     <supports-screens/>

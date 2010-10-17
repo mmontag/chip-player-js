@@ -16,6 +16,11 @@
     <string name="preferences_category_files">Playlist settings</string>
     <string name="preferences_category_format">Format settings</string>
     <string name="changelog_text">- Add stereo mixing settings\n</string>
-    <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="changelog_title">New in version 1.0.1</string>
+    <string name="menu_formats">List formats</string>
+    <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
+    <string name="menu_refresh">Rescan</string>
+    <string name="menu_prefs">Settings</string>
+    <string name="menu_about">About</string>
+<string name="list_formats_title">Known module formats</string>
 </resources>
