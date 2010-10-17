@@ -7,6 +7,7 @@ package org.helllabs.android.xmp;
  */
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -18,8 +19,6 @@ import android.widget.LinearLayout;
 
 public class SeekBarPreference extends DialogPreference implements SeekBar.OnSeekBarChangeListener
 {
-	private static final String androidns="http://schemas.android.com/apk/res/android";
-
 	private SeekBar mSeekBar;
 	private TextView mSplashText,mValueText;
 	private Context mContext;
@@ -31,10 +30,12 @@ public class SeekBarPreference extends DialogPreference implements SeekBar.OnSee
 		super(context,attrs); 
 		mContext = context;
 
-		mDialogMessage = attrs.getAttributeValue(androidns, "dialogMessage");
-		mSuffix = attrs.getAttributeValue(androidns, "text");
-		mDefault = attrs.getAttributeIntValue(androidns, "defaultValue", 0);
-		mMax = attrs.getAttributeIntValue(androidns, "max", 100);
+		TypedArray styledAttrs = context.obtainStyledAttributes(attrs,
+				R.styleable.SeekBarPreference);
+		mDialogMessage = styledAttrs.getString(R.styleable.SeekBarPreference_android_dialogMessage);
+		mSuffix = styledAttrs.getString(R.styleable.SeekBarPreference_android_text);;
+		mDefault = styledAttrs.getInt(R.styleable.SeekBarPreference_android_defaultValue, 0);
+		mMax = styledAttrs.getInt(R.styleable.SeekBarPreference_android_max, 100);
 	}
 	
 	@Override 
