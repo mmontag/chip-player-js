@@ -11,7 +11,7 @@
           android:orientation="vertical"
           android:layout_width="fill_parent"
           android:layout_height="fill_parent">
-            <TextView android:text="@strings/changelog_title"
+            <TextView android:text="@string/changelog_title"
               android:layout_width="fill_parent" 
               android:layout_height="wrap_content"
               android:paddingLeft="15px"       
@@ -19,7 +19,7 @@
               android:layout_gravity="center_vertical"
               android:textStyle="bold"
               android:textColor="#ffffff" />  
-            <TextView android:text="@strings/changelog_text"
+            <TextView android:text="@string/changelog_text"
               android:layout_width="fill_parent" 
               android:layout_height="wrap_content"
               android:paddingLeft="15px"      
