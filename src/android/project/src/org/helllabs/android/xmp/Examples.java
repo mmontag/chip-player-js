@@ -4,7 +4,6 @@ import java.io.File;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.content.res.Resources;
 import android.util.Log;
 
 import java.io.FileNotFoundException;
@@ -28,10 +27,10 @@ public class Examples {
 		
 		Log.v("xmp", "path = " + path);
 		
-		/*if (dir.isDirectory())
+		if (dir.isDirectory())
 			return 0;
 		
-		dir.mkdirs();*/
+		dir.mkdirs();
 		
 		am = context.getResources().getAssets();
 		

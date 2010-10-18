@@ -334,6 +334,7 @@ public class Interface extends ListActivity {
 			alertDialog.setButton("Create", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					examples.install(media_path);
+					updatePlaylist();
 				}
 			});
 			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
