@@ -323,15 +323,17 @@ public class Interface extends ListActivity {
 		final File modDir = new File(media_path);
 		
 		if (!modDir.isDirectory()) {
+			final Examples examples = new Examples(this);
+			
 			isBadDir = true;
 			AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			
 			alertDialog.setTitle("Oops");
 			alertDialog.setMessage(media_path + " not found. " +
 					"Create this directory or change the module path.");
-			alertDialog.setButton("Bummer!", new DialogInterface.OnClickListener() {
+			alertDialog.setButton("Create", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					finish();
+					examples.install(media_path);
 				}
 			});
 			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
