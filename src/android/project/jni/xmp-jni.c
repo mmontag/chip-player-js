@@ -336,7 +336,7 @@ Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj)
 		return NULL;
 
 	stringArray = (*env)->NewObjectArray(env, num, stringClass, NULL);
-	if (stringArray = NULL)
+	if (stringArray == NULL)
 		return NULL;
 
 	for (i = 0, f = fmt; i < num; i++, f = f->next) {

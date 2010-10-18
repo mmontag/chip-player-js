@@ -5,13 +5,15 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 
 public class ListFormats extends ListActivity {
-	String[] formats = { "a", "b", "c" };
+	private Xmp xmp = new Xmp();
+		
+	String[] formats = xmp.getFormats();
 	
 	@Override
     public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.list_formats);
 		setListAdapter(new ArrayAdapter(this, 
-				android.R.layout.simple_list_item_1, formats));
+				R.layout.format_list_item, formats));
 	}
 }
