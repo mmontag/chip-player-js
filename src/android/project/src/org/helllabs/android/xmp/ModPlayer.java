@@ -121,5 +121,9 @@ public class ModPlayer {
 	public int getPlayPat() {
 		return xmp.getPlayPat();
 	}
+	
+	public String[] getInstruments() {
+		return xmp.getInstruments();
+	}
 }
 

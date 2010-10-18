@@ -72,6 +72,7 @@ public class Interface extends ListActivity {
 	private TextView infoName, infoType, infoLen, infoTime;
 	private TextView infoNpat, infoChn, infoIns, infoSmp;
 	private TextView infoTpo, infoBpm, infoPos, infoPat; 
+	private TextView infoInsList;
 	private int playIndex;
 	private RandomIndex ridx;
 	private ProgressDialog progressDialog;
@@ -207,6 +208,7 @@ public class Interface extends ListActivity {
 		infoBpm = (TextView)findViewById(R.id.info_bpm);
 		infoPos = (TextView)findViewById(R.id.info_pos);
 		infoPat = (TextView)findViewById(R.id.info_pat);
+		infoInsList = (TextView)findViewById(R.id.info_ins_list);
 		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);
@@ -391,8 +393,19 @@ public class Interface extends ListActivity {
        	infoSmp.setText(Integer.toString(m.smp));
        	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
-        	
+       	
        	player.play(this, m.filename);
+       	
+       	/* Show list of instruments */
+       	String insList = "";
+       	String[] instrument = player.getInstruments();
+       	if (instrument.length > 0)
+       		insList += instrument[0];
+       	for (int i = 1; i < instrument.length; i++) {
+       		insList += "\n" + instrument[i];
+       	}
+       	infoInsList.setText(insList);
+
         progressThread = new ProgressThread();
         progressThread.start();	
 	}

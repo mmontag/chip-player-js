@@ -371,3 +371,34 @@ Java_org_helllabs_android_xmp_Xmp_optMix(JNIEnv *env, jobject obj, jint n)
 	return 0;
 }
 
+JNIEXPORT jobjectArray JNICALL
+Java_org_helllabs_android_xmp_Xmp_getInstruments(JNIEnv *env, jobject obj)
+{
+	jstring s;
+	jclass stringClass;
+	jobjectArray stringArray;
+	int i;
+	struct xmp_module_info mi;
+	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	char buf[80];
+
+	xmp_get_module_info(ctx, &mi);
+
+	stringClass = (*env)->FindClass(env,"java/lang/String");
+	if (stringClass == NULL)
+		return NULL;
+
+	stringArray = (*env)->NewObjectArray(env, mi.ins, stringClass, NULL);
+	if (stringArray == NULL)
+		return NULL;
+
+	for (i = 0; i < mi.ins; i++) {
+		snprintf(buf, 80, "%02x: %s", i, p->m.xxih[i].name);
+		s = (*env)->NewStringUTF(env, buf);
+		(*env)->SetObjectArrayElement(env, stringArray, i, s);
+		(*env)->DeleteLocalRef(env, s);
+	}
+
+	return stringArray;
+}
+

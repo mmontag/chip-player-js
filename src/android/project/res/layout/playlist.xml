@@ -59,7 +59,16 @@
 	<View
 		android:layout_width="fill_parent"
 		android:layout_height="2dp"/>
-		
+
+	<ScrollView
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+	
+	<LinearLayout
+	  android:orientation="vertical"
+	  android:layout_width="fill_parent"
+	  android:layout_height="wrap_content">
+	  	
 	<LinearLayout
 	  android:orientation="horizontal"
 	  android:layout_width="wrap_content" 
@@ -172,7 +181,23 @@
 		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"
 		android:text="]"/>		 	
-	</LinearLayout>			
+	</LinearLayout>
+	
+	<TextView
+	  android:layout_width="wrap_content" 
+      android:layout_height="wrap_content"
+      android:textAppearance="?android:attr/textAppearanceMedium"
+      android:paddingTop="10dip"
+      android:text="Instruments: "/>
+      	
+	<TextView android:id="@+id/info_ins_list"
+	  android:layout_width="wrap_content"
+	  android:layout_height="wrap_content" />
+
+  </LinearLayout>
+  
+  </ScrollView>
+  	  		
   </LinearLayout>    
    
 </ViewFlipper>

@@ -32,6 +32,7 @@ public class Xmp {
 	public native String getVersion();
 	public native int getFormatCount();
 	public native String[] getFormats();
+	public native String[] getInstruments();
 	public native int optAmplify(int n);
 	public native int optMix(int n);
 	
