@@ -400,14 +400,15 @@ public class Interface extends ListActivity {
        	player.play(this, m.filename);
        	
        	/* Show list of instruments */
-       	String insList = "";
+       	StringBuffer insList = new StringBuffer();
        	String[] instrument = player.getInstruments();
        	if (instrument.length > 0)
-       		insList += instrument[0];
+       		insList.append(instrument[0]);
        	for (int i = 1; i < instrument.length; i++) {
-       		insList += "\n" + instrument[i];
+       		insList.append('\n');
+       		insList.append(instrument[i]);
        	}
-       	infoInsList.setText(insList);
+       	infoInsList.setText(insList.toString());
 
         progressThread = new ProgressThread();
         progressThread.start();	
