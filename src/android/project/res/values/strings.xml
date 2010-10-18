@@ -18,7 +18,7 @@
     <string name="changelog_text">- Add stereo mixing settings\n
 - Add menu entry to list supported formats</string>
     <string name="changelog_title">New in version 1.1</string>
-    <string name="menu_formats">List formats</string>
+    <string name="menu_formats">Known formats</string>
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
     <string name="menu_prefs">Settings</string>
