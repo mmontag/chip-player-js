@@ -33,6 +33,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -45,6 +46,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -77,6 +79,9 @@ public class Interface extends ListActivity {
 	private RandomIndex ridx;
 	private ProgressDialog progressDialog;
 	private SharedPreferences settings;
+	private LinearLayout infoMeterLayout;
+	private TextView[] infoMeter = new TextView[32];
+	private int numChannels = 0;
 	final Handler handler = new Handler();
 	
     final Runnable endSongRunnable = new Runnable() {
@@ -101,6 +106,8 @@ public class Interface extends ListActivity {
     	private int oldBpm = -1;
     	private int oldPos = -1;
     	private int oldPat = -1;
+    	private int[] oldVol = new int[32];
+    	
         public void run() {
         	int tpo = player.getPlayTempo();
         	if (tpo != oldTpo) {
@@ -124,7 +131,15 @@ public class Interface extends ListActivity {
         	if (pat != oldPat) {
         		infoPat.setText(Integer.toString(pat));
         		oldPat = pat;
-        	}        	
+        	}
+        	
+        	int[] vol = player.getVolumes();
+        	for (int i = 0; i < numChannels; i++) {
+        		if (vol[i] != oldVol[i]) {
+        			infoMeter[i].setTextColor(Color.rgb(0, 50 + vol[i] * 3, 0));
+        			oldVol[i] = vol[i];
+        		}
+        	}
         }
     };
     
@@ -143,7 +158,7 @@ public class Interface extends ListActivity {
     			}
     			
     			try {
-					sleep(250);
+					sleep(100);
 				} catch (InterruptedException e) {
 					Log.e(getString(R.string.app_name), e.getMessage());
 				}
@@ -208,7 +223,14 @@ public class Interface extends ListActivity {
 		infoBpm = (TextView)findViewById(R.id.info_bpm);
 		infoPos = (TextView)findViewById(R.id.info_pos);
 		infoPat = (TextView)findViewById(R.id.info_pat);
+		infoMeterLayout = (LinearLayout)findViewById(R.id.info_meters);
 		infoInsList = (TextView)findViewById(R.id.info_ins_list);
+		
+		for (int i = 0; i < 32; i++) {
+			infoMeter[i] = new TextView(Interface.this);
+			infoMeter[i].setText("●");
+			infoMeter[i].setTextColor(Color.rgb(0, 50, 0));
+		}
 		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);
@@ -397,6 +419,15 @@ public class Interface extends ListActivity {
        	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
        	
+       	numChannels = m.chn;
+       	
+       	infoMeterLayout.removeAllViews();
+       	for (int i = 0; i < m.chn; i++) {
+       		if (i >= 32)
+       			break;
+       		infoMeterLayout.addView(infoMeter[i], i);
+       	}
+       		
        	player.play(this, m.filename);
        	
        	/* Show list of instruments */

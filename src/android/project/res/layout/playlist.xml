@@ -183,12 +183,20 @@
 		android:text="]"/>		 	
 	</LinearLayout>
 	
+	<LinearLayout android:id="@+id/info_meters"
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content"
+	  android:textAppearance="?android:attr/textAppearanceMedium"
+	  android:paddingTop="8dip"
+	  android:layout_gravity="center_horizontal"/>
+	
 	<TextView
 	  android:layout_width="wrap_content" 
       android:layout_height="wrap_content"
       android:textAppearance="?android:attr/textAppearanceMedium"
-      android:paddingTop="10dip"
-      android:text="Instruments: "/>
+      android:paddingTop="4dip"
+      android:text="Instruments"/>
       	
 	<TextView android:id="@+id/info_ins_list"
 	  android:layout_width="wrap_content"

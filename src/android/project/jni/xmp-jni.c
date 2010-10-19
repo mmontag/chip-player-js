@@ -14,6 +14,8 @@ static xmp_context ctx;
 static struct xmp_options *opt;
 static int _time, _bpm, _tpo, _pos, _pat;
 static int _playing = 0;
+static int _vol[32];
+static int _chn;
 
 static void process_echoback(unsigned long i, void *data)
 {
@@ -30,6 +32,13 @@ static void process_echoback(unsigned long i, void *data)
 	case XMP_ECHO_ORD:
 		_pos = msg & 0xff;
 		_pat = msg >> 8;
+		break;
+	case XMP_ECHO_CHN:
+		_chn = msg & 0xff;
+		break;
+	case XMP_ECHO_VOL:
+		if (_chn < 32)
+			_vol[_chn] = msg & 0xff;
 		break;
 	}
 }
@@ -402,3 +411,14 @@ Java_org_helllabs_android_xmp_Xmp_getInstruments(JNIEnv *env, jobject obj)
 	return stringArray;
 }
 
+JNIEXPORT jintArray JNICALL
+Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj)
+{
+	jintArray vol;
+	int i;
+
+	vol = (*env)->NewIntArray(env, 32);
+	(*env)->SetIntArrayRegion(env, vol, 0, 32, _vol);
+
+	return vol;
+}

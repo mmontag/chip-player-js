@@ -125,5 +125,9 @@ public class ModPlayer {
 	public String[] getInstruments() {
 		return xmp.getInstruments();
 	}
+	
+	public int[] getVolumes() {
+		return xmp.getVolumes();
+	}
 }
 
