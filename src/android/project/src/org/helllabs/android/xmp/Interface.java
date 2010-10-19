@@ -42,6 +42,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -248,9 +249,10 @@ public class Interface extends ListActivity {
 		backButton = (ImageButton)findViewById(R.id.back);
 		forwardButton = (ImageButton)findViewById(R.id.forward);
 		
-		image = new BitmapDrawable(getResources(),
-					BitmapFactory.decodeResource(getResources(), R.drawable.logo));
-		
+		/* Set background here because we want to keep aspect ratio */
+		image = new BitmapDrawable(BitmapFactory.decodeResource(getResources(),
+												R.drawable.logo));
+		image.setGravity(Gravity.CENTER);
 		infoLayout.setBackgroundDrawable(image.getCurrent());
 		
 		playButton.setOnClickListener(new OnClickListener() {
