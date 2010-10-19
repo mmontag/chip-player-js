@@ -32,7 +32,7 @@
    
   <!-- Mod info page -->
    
-  <LinearLayout
+  <LinearLayout android:id="@+id/info_layout"
 		android:gravity="top"
 		android:layout_weight="1.0"
 		android:orientation="vertical"

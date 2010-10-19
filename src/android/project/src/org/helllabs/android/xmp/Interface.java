@@ -35,6 +35,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -82,6 +85,8 @@ public class Interface extends ListActivity {
 	private SharedPreferences settings;
 	private LinearLayout infoMeterLayout;
 	private Meter infoMeter;
+	private LinearLayout infoLayout;
+	private BitmapDrawable image;
 	final Handler handler = new Handler();
 	
     final Runnable endSongRunnable = new Runnable() {
@@ -236,11 +241,17 @@ public class Interface extends ListActivity {
 		infoPat = (TextView)findViewById(R.id.info_pat);
 		infoMeterLayout = (LinearLayout)findViewById(R.id.info_meters);
 		infoInsList = (TextView)findViewById(R.id.info_ins_list);
+		infoLayout = (LinearLayout)findViewById(R.id.info_layout);
 		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);
 		backButton = (ImageButton)findViewById(R.id.back);
 		forwardButton = (ImageButton)findViewById(R.id.forward);
+		
+		image = new BitmapDrawable(getResources(),
+					BitmapFactory.decodeResource(getResources(), R.drawable.logo));
+		
+		infoLayout.setBackgroundDrawable(image.getCurrent());
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
