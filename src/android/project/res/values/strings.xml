@@ -15,7 +15,7 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     <string name="preferences_category_format">Format settings</string>
-    <string name="changelog_text">- Install example modules if none found\n- Allow installation on SD card in 2.2\n- Add channel activity indicators</string>
+    <string name="changelog_text">- Install example modules if none found\n- Allow installation on SD card in 2.2\n- Add volume bars</string>
     <string name="changelog_title">New in version 1.2</string>
     <string name="menu_formats">Known formats</string>
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
@@ -25,4 +25,7 @@
 <string name="list_formats_title">Known module formats</string>
 <string name="preferences_examples_title">Install modules</string>
     <string name="preferences_examples_summary">Install example music files when creating modules directory</string>
+<string name="preferences_meters_title">Volume bars</string>
+    <string name="preferences_meters_summary">Set the type of volume bars</string>
+    <string name="preferences_category_interface">Interface settings</string>
 </resources>

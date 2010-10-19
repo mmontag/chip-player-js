@@ -12,6 +12,7 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_STEREO = "stereo";
 	public static final String PREF_PAN_SEPARATION = "pan_separation";
 	public static final String PREF_EXAMPLES = "examples";
+	public static final String PREF_METERS = "meters";
 	private SharedPreferences prefs;
 	private String oldPath;
 	

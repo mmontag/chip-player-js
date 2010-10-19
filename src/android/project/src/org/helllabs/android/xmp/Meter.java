@@ -6,6 +6,7 @@ import android.widget.TextView;
 abstract public class Meter {
 	
 	int numChannels = 0;
+	int type;
 	TextView infoMeter[] = new TextView[32];
 	int[] oldVol = new int[32];
 	
@@ -13,6 +14,7 @@ abstract public class Meter {
 		int i;
 		
 		numChannels = chn;
+		layout.setVisibility(LinearLayout.VISIBLE);
 		
 		for (i = 0; i < 32; i++) {
 			infoMeter[i] = new TextView(layout.getContext());
@@ -28,6 +30,14 @@ abstract public class Meter {
 		reset();
    	}
 
+	public int getChannels() {
+		return numChannels;
+	}
+	
+	public int getType() {
+		return type;
+	}
+	
 	public void reset() {
 		for (int i = 0; i < 32; i++) {
 			oldVol[i] = -1;

@@ -130,6 +130,10 @@ public class Interface extends ListActivity {
         		infoPat.setText(Integer.toString(pat));
         		oldPat = pat;
         	}
+
+        	int meterType = Integer.valueOf(settings.getString(Settings.PREF_METERS, "2"));
+        	if (infoMeter.getType() != meterType)
+        		infoMeter = createMeter(meterType, infoMeter.getChannels());
         	
         	infoMeter.setVolumes(player.getVolumes());
         }
@@ -185,6 +189,24 @@ public class Interface extends ListActivity {
 		playButton.setImageResource(R.drawable.pause);
 	}
     
+	private Meter createMeter(int type, int size) {
+       	Meter meter;
+		
+       	switch (type) {
+       	case 1:
+       		meter = new LedMeter(infoMeterLayout, size);
+       		break;
+       	case 2:
+       		meter = new BarMeter(infoMeterLayout, size);
+       		break;
+       	default:
+       		meter = new EmptyMeter(infoMeterLayout, size);
+       		break;       		
+       	}
+       	
+       	return meter;
+	}
+	
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
@@ -406,8 +428,9 @@ public class Interface extends ListActivity {
        	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
        	
-       	infoMeter = new BarMeter(infoMeterLayout, m.chn);
-       		
+       	int meterType = Integer.valueOf(settings.getString(Settings.PREF_METERS, "2"));
+       	infoMeter = createMeter(meterType, m.chn);
+       	       		
        	player.play(this, m.filename);
        	
        	/* Show list of instruments */

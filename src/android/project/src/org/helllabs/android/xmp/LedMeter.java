@@ -13,6 +13,8 @@ public class LedMeter extends Meter {
 			infoMeter[i].setText("●");
 			infoMeter[i].setTextColor(Color.rgb(0, 50, 0));
 		}
+		
+		type = 1;
 	}
 
 	@Override

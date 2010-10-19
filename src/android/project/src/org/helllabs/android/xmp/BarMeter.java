@@ -15,6 +15,8 @@ public class BarMeter extends Meter {
 			infoMeter[i].setTextColor(Color.rgb(64, 112, 192));
 			infoMeter[i].setPadding(1, 0, 1, 0);
 		}
+		
+		type = 2;
 	}
 
 	@Override

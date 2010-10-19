@@ -53,4 +53,18 @@
       
   </PreferenceCategory>
   
+  <PreferenceCategory
+    android:title="@string/preferences_category_interface">
+    
+    <ListPreference
+      android:key="meters"
+      android:persistent="true"
+      android:title="@string/preferences_meters_title"
+      android:summary="@string/preferences_meters_summary"
+      android:defaultValue="2"
+      android:entries="@array/meters_array"
+      android:entryValues="@array/meters_values" />
+          
+  </PreferenceCategory>
+  
 </PreferenceScreen>
