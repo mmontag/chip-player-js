@@ -80,8 +80,7 @@ public class Interface extends ListActivity {
 	private ProgressDialog progressDialog;
 	private SharedPreferences settings;
 	private LinearLayout infoMeterLayout;
-	private TextView[] infoMeter = new TextView[32];
-	private int numChannels = 0;
+	private Meter infoMeter;
 	final Handler handler = new Handler();
 	
     final Runnable endSongRunnable = new Runnable() {
@@ -106,7 +105,6 @@ public class Interface extends ListActivity {
     	private int oldBpm = -1;
     	private int oldPos = -1;
     	private int oldPat = -1;
-    	private int[] oldVol = new int[32];
     	
         public void run() {
         	int tpo = player.getPlayTempo();
@@ -133,13 +131,7 @@ public class Interface extends ListActivity {
         		oldPat = pat;
         	}
         	
-        	int[] vol = player.getVolumes();
-        	for (int i = 0; i < numChannels; i++) {
-        		if (vol[i] != oldVol[i]) {
-        			infoMeter[i].setTextColor(Color.rgb(0, 50 + vol[i] * 3, 0));
-        			oldVol[i] = vol[i];
-        		}
-        	}
+        	infoMeter.setVolumes(player.getVolumes());
         }
     };
     
@@ -225,12 +217,6 @@ public class Interface extends ListActivity {
 		infoPat = (TextView)findViewById(R.id.info_pat);
 		infoMeterLayout = (LinearLayout)findViewById(R.id.info_meters);
 		infoInsList = (TextView)findViewById(R.id.info_ins_list);
-		
-		for (int i = 0; i < 32; i++) {
-			infoMeter[i] = new TextView(Interface.this);
-			infoMeter[i].setText("●");
-			infoMeter[i].setTextColor(Color.rgb(0, 50, 0));
-		}
 		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);
@@ -419,14 +405,7 @@ public class Interface extends ListActivity {
        	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
        	
-       	numChannels = m.chn;
-       	
-       	infoMeterLayout.removeAllViews();
-       	for (int i = 0; i < m.chn; i++) {
-       		if (i >= 32)
-       			break;
-       		infoMeterLayout.addView(infoMeter[i], i);
-       	}
+       	infoMeter = new BarMeter(infoMeterLayout, m.chn);
        		
        	player.play(this, m.filename);
        	
