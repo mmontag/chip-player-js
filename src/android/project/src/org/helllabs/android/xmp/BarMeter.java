@@ -10,7 +10,7 @@ public class BarMeter extends Meter {
 	public BarMeter(LinearLayout layout, int chn) {
 		super(layout, chn);
 
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < MAX_METERS; i++) {
 			infoMeter[i].setText(bar[0]);
 			infoMeter[i].setTextColor(Color.rgb(64, 112, 192));
 			infoMeter[i].setPadding(1, 0, 1, 0);

@@ -8,7 +8,7 @@ public class LedMeter extends Meter {
 	public LedMeter(LinearLayout layout, int chn) {
 		super(layout, chn);
 
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < MAX_METERS; i++) {
 			infoMeter[i].setText("●");
 			infoMeter[i].setTextColor(Color.rgb(0, 50, 0));
 		}

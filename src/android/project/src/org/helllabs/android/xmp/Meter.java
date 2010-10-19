@@ -4,11 +4,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 abstract public class Meter {
+	final int MAX_METERS = 30;
 	
 	int numChannels = 0;
 	int type;
-	TextView infoMeter[] = new TextView[32];
-	int[] oldVol = new int[32];
+	TextView infoMeter[] = new TextView[MAX_METERS];
+	int[] oldVol = new int[MAX_METERS];
 	
 	public Meter(LinearLayout layout, int chn) {
 		int i;
@@ -16,13 +17,13 @@ abstract public class Meter {
 		numChannels = chn;
 		layout.setVisibility(LinearLayout.VISIBLE);
 		
-		for (i = 0; i < 32; i++) {
+		for (i = 0; i < MAX_METERS; i++) {
 			infoMeter[i] = new TextView(layout.getContext());
 		}
 		
 		layout.removeAllViews();
 		for (i = 0; i < chn; i++) {
-			if (i >= 32)
+			if (i >= MAX_METERS)
 				break;
 			layout.addView(infoMeter[i], i);
 		}
@@ -39,7 +40,7 @@ abstract public class Meter {
 	}
 	
 	public void reset() {
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < MAX_METERS; i++) {
 			oldVol[i] = -1;
 		}
 	}
