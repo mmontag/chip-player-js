@@ -4,6 +4,7 @@ import java.io.File;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.util.Log;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,8 +27,10 @@ public class Examples {
 		
 		if (dir.isDirectory())
 			return 0;
-		
-		dir.mkdirs();
+
+		Log.v("bla", "path = " + path);
+		Boolean b = dir.mkdirs();
+		Log.v("bla", "b = " + b);
 		
 		am = context.getResources().getAssets();
 		
@@ -38,6 +41,7 @@ public class Examples {
 				return 0;
 		
 			for (int i = 0; i < assets.length; i++) {
+				Log.v("bla", "asset = " + assets[i]);
 				copyAsset(am.open("mod/" + assets[i]), path + "/" + assets[i]);
 			}
 		} catch (IOException e) {

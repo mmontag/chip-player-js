@@ -1,12 +1,16 @@
 package org.helllabs.android.xmp;
 
+import java.io.File;
+
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 
 public class Settings extends android.preference.PreferenceActivity {
-	public static final String DEFAULT_MEDIA_PATH = "/sdcard/mod";
+	static File sdDir = Environment.getExternalStorageDirectory();
+	public static final String DEFAULT_MEDIA_PATH = sdDir.toString() + "/mod";
 	public static final String PREF_MEDIA_PATH = "media_path";
 	public static final String PREF_VOL_BOOST = "vol_boost";
 	public static final String PREF_CHANGELOG_VERSION = "changelog_version";
