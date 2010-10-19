@@ -13,7 +13,7 @@ public class ListFormats extends ListActivity {
     public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.list_formats);
-		setListAdapter(new ArrayAdapter(this, 
+		setListAdapter(new ArrayAdapter<String>(this, 
 				R.layout.format_list_item, formats));
 	}
 }

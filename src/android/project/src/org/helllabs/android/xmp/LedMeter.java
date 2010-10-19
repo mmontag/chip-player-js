@@ -2,7 +2,6 @@ package org.helllabs.android.xmp;
 
 import android.graphics.Color;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 public class LedMeter extends Meter {	
 	

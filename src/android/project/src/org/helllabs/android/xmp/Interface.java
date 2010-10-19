@@ -33,7 +33,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -142,7 +141,6 @@ public class Interface extends ListActivity {
 	private class ProgressThread extends Thread {
 		@Override
     	public void run() {
-			int count = 0;		/* to reduce CPU usage */
     		int t = 0;
     		
     		do {
@@ -159,10 +157,7 @@ public class Interface extends ListActivity {
 					Log.e(getString(R.string.app_name), e.getMessage());
 				}
 				
-				if (count == 0)
-					handler.post(updateInfoRunnable);
-				if (++count > 1)
-					count = 0;
+				handler.post(updateInfoRunnable);
     		} while (t >= 0);
     		
     		seekBar.setProgress(0);

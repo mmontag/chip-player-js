@@ -14,8 +14,10 @@ static xmp_context ctx;
 static struct xmp_options *opt;
 static int _time, _bpm, _tpo, _pos, _pat;
 static int _playing = 0;
-static int _vol[32];
+static int _vol[32], _cur_vol[32];
+static int _key[32];
 static int _chn;
+static int _decay = 8;
 
 static void process_echoback(unsigned long i, void *data)
 {
@@ -35,6 +37,10 @@ static void process_echoback(unsigned long i, void *data)
 		break;
 	case XMP_ECHO_CHN:
 		_chn = msg & 0xff;
+		break;
+	case XMP_ECHO_INS:
+		if (_chn < 32 && _key[_chn] == -1)
+			_key[_chn] = msg >> 8;
 		break;
 	case XMP_ECHO_VOL:
 		if (_chn < 32)
@@ -117,6 +123,13 @@ Java_org_helllabs_android_xmp_Xmp_releaseModule(JNIEnv *env, jobject obj)
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_startPlayer(JNIEnv *env, jobject obj)
 {
+	int i;
+
+	for (i = 0; i < 32; i++) {
+		_key[i] = -1;
+		_vol[i] = 0;
+	}
+
 	_playing = 1;
 	return xmp_player_start(ctx);
 }
@@ -417,8 +430,19 @@ Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj)
 	jintArray vol;
 	int i;
 
+	for (i = 0; i < 32; i++) {
+		if (_key[i] > 0) {
+			_cur_vol[i] = _vol[i];
+			_key[i] = -1;
+		} else {
+			_cur_vol[i] -= _decay;
+			if (_cur_vol[i] < 0)
+				_cur_vol[i] = 0;
+		}
+	}
+
 	vol = (*env)->NewIntArray(env, 32);
-	(*env)->SetIntArrayRegion(env, vol, 0, 32, _vol);
+	(*env)->SetIntArrayRegion(env, vol, 0, 32, _cur_vol);
 
 	return vol;
 }
