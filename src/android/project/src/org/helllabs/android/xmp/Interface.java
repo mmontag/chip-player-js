@@ -32,6 +32,8 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
@@ -514,14 +516,21 @@ public class Interface extends ListActivity {
 			startActivity(new Intent(this, ListFormats.class));
 			break;
 		case R.id.menu_about:
+			String version = "";
+			
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+			try {
+				PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+				version = "Version " + packageInfo.versionName + "\n\n";
+			} catch (NameNotFoundException e) {
+				// Do nothing
+			}
 			
 			alertDialog.setIcon(R.drawable.icon);
 			alertDialog.setTitle("Xmp for Android");
-			alertDialog.setMessage("Based on xmp " + xmp.getVersion() +
-					" written by Claudio Matsuoka & Hipolito Carraro Jr" +
-					"\n\nSupported module formats: " + xmp.getFormatCount() +
-					"\n\nSee http://xmp.sf.net for more information and source code");
+			alertDialog.setMessage(version + "Based on xmp " + xmp.getVersion() +
+					" written by Claudio Matsuoka and Hipolito Carraro Jr" +
+					"\n\nSupported module formats: " + xmp.getFormatCount() + "\n");
 			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					alertDialog.dismiss();
