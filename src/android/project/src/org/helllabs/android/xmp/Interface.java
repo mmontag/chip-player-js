@@ -340,7 +340,7 @@ public class Interface extends ListActivity {
 	public void updatePlaylist() {
 		stopPlayingMod();
 		
-		media_path = settings.getString(Settings.PREF_MEDIA_PATH, "/sdcard/mod");
+		media_path = settings.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		//Log.v(getString(R.string.app_name), "path = " + media_path);
 
 		modList.clear();
