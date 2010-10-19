@@ -341,7 +341,8 @@ public class Interface extends ListActivity {
 					"Create this directory or change the module path.");
 			alertDialog.setButton("Create", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					examples.install(media_path);
+					examples.install(media_path,
+							settings.getBoolean(Settings.PREF_EXAMPLES, true));
 					updatePlaylist();
 				}
 			});

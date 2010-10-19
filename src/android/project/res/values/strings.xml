@@ -23,4 +23,6 @@
     <string name="menu_prefs">Settings</string>
     <string name="menu_about">About</string>
 <string name="list_formats_title">Known module formats</string>
+<string name="preferences_examples_title">Install modules</string>
+    <string name="preferences_examples_summary">Install example music files when creating modules directory</string>
 </resources>

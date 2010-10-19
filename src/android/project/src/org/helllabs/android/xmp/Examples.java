@@ -4,7 +4,6 @@ import java.io.File;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.util.Log;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,10 +21,8 @@ public class Examples {
 		context = c;
 	}
 	
-	public int install(String path) {
+	public int install(String path, boolean examples) {
 		File dir = new File(path);
-		
-		Log.v("xmp", "path = " + path);
 		
 		if (dir.isDirectory())
 			return 0;
@@ -37,11 +34,10 @@ public class Examples {
 		try {
 			assets = am.list("mod");
 			
-			if (assets == null)
+			if (!examples || assets == null)
 				return 0;
 		
 			for (int i = 0; i < assets.length; i++) {
-				Log.v("xmp", "asset = " + assets[i]);
 				copyAsset(am.open("mod/" + assets[i]), path + "/" + assets[i]);
 			}
 		} catch (IOException e) {
@@ -55,8 +51,6 @@ public class Examples {
 	private int copyAsset(InputStream in, String dst) {
 		byte[] buf = new byte[1024];
 		int len;
-		
-		Log.v("xmp", "dst = " + dst);
 		
 		try{			
 		      OutputStream out = new FileOutputStream(new File(dst));
