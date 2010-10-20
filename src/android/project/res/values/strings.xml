@@ -15,8 +15,8 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     <string name="preferences_category_format">Format settings</string>
-    <string name="changelog_text">- Install example mods if none found\n- Allow installation on SD card in 2.2\n- Add volume bars\n- Fix default directory setting</string>
-    <string name="changelog_title">New in version 1.2</string>
+    <string name="changelog_text">- Performance optimization</string>
+    <string name="changelog_title">New in version 1.3</string>
     <string name="menu_formats">Known formats</string>
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>

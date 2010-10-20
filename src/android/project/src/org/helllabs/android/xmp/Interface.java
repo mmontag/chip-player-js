@@ -544,7 +544,12 @@ public class Interface extends ListActivity {
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			try {
 				PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-				version = "Version " + packageInfo.versionName + "\n\n";
+				version = packageInfo.versionName;
+				int end = version.indexOf(' ');
+				if (end > 0) {
+					version = version.substring(0, end);
+				}
+				version = "Version" + version + "\n\n";
 			} catch (NameNotFoundException e) {
 				// Do nothing
 			}
