@@ -11,28 +11,39 @@ import android.preference.PreferenceManager;
 public class ModPlayer {
 	private static ModPlayer instance = null;
 	private Xmp xmp = new Xmp();
-	private int minSize = AudioTrack.getMinBufferSize(44100,
-			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-			AudioFormat.ENCODING_PCM_16BIT);
-	private AudioTrack audio = new AudioTrack(
-			AudioManager.STREAM_MUSIC, 44100,
-			AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-			AudioFormat.ENCODING_PCM_16BIT,
-			minSize < 4096 ? 4096 : minSize,
-			AudioTrack.MODE_STREAM);
+	private int minSize;
+	private int sampleRate;
+	private int bufferSize;
+	private AudioTrack audio;
 	private boolean paused;
 	private Thread playThread;
 	private SharedPreferences prefs;
 	
-	protected ModPlayer() {		
-	      // empty
+	protected ModPlayer(Context context) {	
+   		prefs = PreferenceManager.getDefaultSharedPreferences(context);
+   		
+   		sampleRate = 44100;
+   		bufferSize = 4096;
+   		
+		minSize = AudioTrack.getMinBufferSize(
+				sampleRate,
+				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+				AudioFormat.ENCODING_PCM_16BIT);
+		
+		audio = new AudioTrack(
+				AudioManager.STREAM_MUSIC, sampleRate,
+				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+				AudioFormat.ENCODING_PCM_16BIT,
+				minSize < bufferSize ? bufferSize : minSize,
+				AudioTrack.MODE_STREAM);
+		
+		xmp.init(sampleRate);
+		paused = false;
 	}
 	
-	public static ModPlayer getInstance() {
+	public static ModPlayer getInstance(Context context) {
 		if(instance == null) {
-			instance = new ModPlayer();
-			instance.xmp.init();
-			instance.paused = false;
+			instance = new ModPlayer(context);
 		}
 		return instance;
 	}
@@ -76,11 +87,11 @@ public class ModPlayer {
     	xmp.deinit();
     }
    
-    public void play(Context context, String file) {
+    public void play(String file) {
    		if (xmp.loadModule(file) < 0) {
    			return;
    		}
-   		prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
    		audio.play();
    		xmp.startPlayer();
    		

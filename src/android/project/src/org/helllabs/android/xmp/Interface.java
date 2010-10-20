@@ -223,7 +223,7 @@ public class Interface extends ListActivity {
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 
-		player = ModPlayer.getInstance();
+		player = ModPlayer.getInstance(this);
 		
 		/* Info view widgets */
 		flipper = (ViewFlipper)findViewById(R.id.flipper);
@@ -440,7 +440,7 @@ public class Interface extends ListActivity {
        	int meterType = Integer.valueOf(settings.getString(Settings.PREF_METERS, "2"));
        	infoMeter = createMeter(meterType, m.chn);
        	       		
-       	player.play(this, m.filename);
+       	player.play(m.filename);
        	
        	/* Show list of instruments */
        	StringBuffer insList = new StringBuffer();
