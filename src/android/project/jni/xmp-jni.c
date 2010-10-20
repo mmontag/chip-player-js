@@ -424,10 +424,9 @@ Java_org_helllabs_android_xmp_Xmp_getInstruments(JNIEnv *env, jobject obj)
 	return stringArray;
 }
 
-JNIEXPORT jintArray JNICALL
-Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL
+Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj, jintArray vol)
 {
-	jintArray vol;
 	int i;
 
 	for (i = 0; i < 32; i++) {
@@ -441,8 +440,5 @@ Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj)
 		}
 	}
 
-	vol = (*env)->NewIntArray(env, 32);
 	(*env)->SetIntArrayRegion(env, vol, 0, 32, _cur_vol);
-
-	return vol;
 }

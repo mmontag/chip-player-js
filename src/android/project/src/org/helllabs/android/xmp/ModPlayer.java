@@ -53,7 +53,7 @@ public class ModPlayer {
     		short buffer[] = new short[minSize];
        		while (xmp.playFrame() == 0) {
        			String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
-       			xmp.optAmplify(Integer.valueOf(volBoost));
+       			xmp.optAmplify(Integer.parseInt(volBoost));
        			xmp.optMix(prefs.getBoolean(Settings.PREF_STEREO, true) ?
        					prefs.getInt(Settings.PREF_PAN_SEPARATION, 70): 0);
        			       			
@@ -137,8 +137,8 @@ public class ModPlayer {
 		return xmp.getInstruments();
 	}
 	
-	public int[] getVolumes() {
-		return xmp.getVolumes();
+	public void getVolumes(int[] volumes) {
+		xmp.getVolumes(volumes);
 	}
 }
 

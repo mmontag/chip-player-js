@@ -38,6 +38,7 @@ import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+//import android.os.Debug;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -111,6 +112,7 @@ public class Interface extends ListActivity {
     	private int oldBpm = -1;
     	private int oldPos = -1;
     	private int oldPat = -1;
+    	private int[] volumes = new int[32];
     	
         public void run() {
         	int tpo = player.getPlayTempo();
@@ -137,11 +139,12 @@ public class Interface extends ListActivity {
         		oldPat = pat;
         	}
 
-        	int meterType = Integer.valueOf(settings.getString(Settings.PREF_METERS, "2"));
+        	int meterType = Integer.parseInt(settings.getString(Settings.PREF_METERS, "2"));
         	if (infoMeter.getType() != meterType)
         		infoMeter = createMeter(meterType, infoMeter.getChannels());
-        	
-        	infoMeter.setVolumes(player.getVolumes());
+
+        	player.getVolumes(volumes);
+        	infoMeter.setVolumes(volumes);
         }
     };
     
@@ -256,6 +259,9 @@ public class Interface extends ListActivity {
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+				
+				//Debug.startMethodTracing("xmp");
+				
 				synchronized (this) {
 					if (playing) {
 						player.pause();
@@ -291,6 +297,7 @@ public class Interface extends ListActivity {
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				stopPlayingMod();
+				//Debug.stopMethodTracing();
 		    }
 		});
 		
@@ -437,7 +444,7 @@ public class Interface extends ListActivity {
        	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
        	
-       	int meterType = Integer.valueOf(settings.getString(Settings.PREF_METERS, "2"));
+       	int meterType = Integer.parseInt(settings.getString(Settings.PREF_METERS, "2"));
        	infoMeter = createMeter(meterType, m.chn);
        	       		
        	player.play(m.filename);
