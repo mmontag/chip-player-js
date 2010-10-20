@@ -32,8 +32,6 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -539,20 +537,8 @@ public class Interface extends ListActivity {
 			startActivity(new Intent(this, ListFormats.class));
 			break;
 		case R.id.menu_about:
-			String version = "";
-			
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-			try {
-				PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-				version = packageInfo.versionName;
-				int end = version.indexOf(' ');
-				if (end > 0) {
-					version = version.substring(0, end);
-				}
-				version = "Version" + version + "\n\n";
-			} catch (NameNotFoundException e) {
-				// Do nothing
-			}
+			String version = "Version " + AppInfo.getVersion(this) + "\n\n";
 			
 			alertDialog.setIcon(R.drawable.icon);
 			alertDialog.setTitle("Xmp for Android");
