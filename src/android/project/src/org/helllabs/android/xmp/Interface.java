@@ -113,6 +113,7 @@ public class Interface extends ListActivity {
     	private int oldPos = -1;
     	private int oldPat = -1;
     	private int[] volumes = new int[32];
+    	private int count = 0;
     	
         public void run() {
         	int tpo = player.getPlayTempo();
@@ -139,9 +140,12 @@ public class Interface extends ListActivity {
         		oldPat = pat;
         	}
 
-        	int meterType = Integer.parseInt(settings.getString(Settings.PREF_METERS, "2"));
-        	if (infoMeter.getType() != meterType)
-        		infoMeter = createMeter(meterType, infoMeter.getChannels());
+        	if (++count > 10) {
+        		int meterType = Integer.parseInt(settings.getString(Settings.PREF_METERS, "2"));
+        		if (infoMeter.getType() != meterType)
+        			infoMeter = createMeter(meterType, infoMeter.getChannels());
+        		count = 0;
+        	}
 
         	player.getVolumes(volumes);
         	infoMeter.setVolumes(volumes);

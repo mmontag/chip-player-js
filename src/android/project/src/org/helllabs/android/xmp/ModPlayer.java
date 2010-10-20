@@ -49,13 +49,18 @@ public class ModPlayer {
 	}
 	    
 	private class PlayRunnable implements Runnable {
+		int count = 0;
+		
     	public void run() {
     		short buffer[] = new short[minSize];
        		while (xmp.playFrame() == 0) {
-       			String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
-       			xmp.optAmplify(Integer.parseInt(volBoost));
-       			xmp.optMix(prefs.getBoolean(Settings.PREF_STEREO, true) ?
-       					prefs.getInt(Settings.PREF_PAN_SEPARATION, 70): 0);
+       			if (++count > 10) {
+       				String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
+       				xmp.optAmplify(Integer.parseInt(volBoost));
+       				xmp.optMix(prefs.getBoolean(Settings.PREF_STEREO, true) ?
+       						prefs.getInt(Settings.PREF_PAN_SEPARATION, 70): 0);
+       				count = 0;
+       			}
        			       			
        			int size = xmp.softmixer();
        			buffer = xmp.getBuffer(size, buffer);
