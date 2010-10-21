@@ -57,7 +57,7 @@ public class ModList extends ListActivity {
 	boolean shuffleMode = true;
 	boolean isBadDir = false;
 	boolean firstTime = true;
-	//private int playIndex;
+	int apiVersion;
 	RandomIndex ridx;
 	ProgressDialog progressDialog;
 	SharedPreferences settings;
@@ -83,6 +83,7 @@ public class ModList extends ListActivity {
 		ChangeLog changeLog = new ChangeLog(this);
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
+		apiVersion = android.os.Build.VERSION.SDK_INT;
 		
 		xmp.initContext();
 		
@@ -253,8 +254,8 @@ public class ModList extends ListActivity {
 			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
-			/* Nicer, but only for API level 5 :(
-			overridePendingTransition(int R.anim.slide_left, int R.anim.slide_right);
+			/* Nicer, but only for API level 5
+			overridePendingTransition(R.anim.slide_left, R.anim.slide_right);
 			*/
 			break;
 		case R.id.menu_refresh:
