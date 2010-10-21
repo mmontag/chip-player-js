@@ -190,19 +190,20 @@ public class ModList extends ListActivity {
 		while (element.hasNext()) {
 			mods[i++] = element.next().filename;
 		}
-		playModule(mods);
+		playModule(mods, false);
 	}
 	
 	void playModule(String mod) {
 		Log.v(getString(R.string.app_name), "mod = " + mod);
 		String[] mods = new String[1];
 		mods[0] = mod;
-		playModule(mods);
+		playModule(mods, true);
 	}
 	
-	void playModule(String[] mods) {
+	void playModule(String[] mods, boolean mode) {
 		Intent intent = new Intent(ModList.this, Player.class);
 		intent.putExtra("files", mods);
+		intent.putExtra("single", mode);
 		startActivity(intent);
 	}
 	

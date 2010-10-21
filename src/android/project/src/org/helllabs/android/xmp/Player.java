@@ -35,6 +35,7 @@ public class Player extends Activity {
 	boolean seeking = false;
 	boolean single = true;
 	boolean shuffleMode = true;
+	boolean loopListMode = false;
 	boolean paused = false;
 	boolean isBadDir = false;
 	TextView infoName, infoType, infoLen, infoTime;
@@ -53,26 +54,21 @@ public class Player extends Activity {
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
-        	if (++playIndex < fileArray.length) {
-        		playNewMod(fileArray[playIndex]);
-        	} else {
-        		finish();
-        	}
+        	playIndex++;
+        	int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
         	
-        	/*
-    		if (!single) {
-    			if (++playIndex >= modList.size()) {
-    				ridx.randomize();
-    				playIndex = 0;
-    			}
-    			playNewMod(playIndex);
-    		} else {
-    			flipper.setAnimation(AnimationUtils.loadAnimation(flipper.getContext(), R.anim.slide_right));
-    			flipper.showPrevious();
-    			playButton.setImageResource(R.drawable.play);
-    			playing = false;
-    		}
-    		*/
+        	if (playIndex < fileArray.length) {
+        		playNewMod(fileArray[idx]);
+        	} else {
+        		if (!single && loopListMode) {
+        			playIndex = 0;
+        			ridx.randomize();
+        			idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+        			playNewMod(fileArray[idx]);
+        		} else {
+        			finish();
+        		}
+        	}
         }
     };
     
@@ -161,13 +157,17 @@ public class Player extends Activity {
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
 		
+		settings = PreferenceManager.getDefaultSharedPreferences(this);
+		
 		Bundle extras = getIntent().getExtras();
 		if (extras == null)
 			return;
 		
 		fileArray = extras.getStringArray("files");
-		
-		settings = PreferenceManager.getDefaultSharedPreferences(this);
+		single = extras.getBoolean("single");
+		ridx = new RandomIndex(fileArray.length);		
+		shuffleMode = settings.getBoolean(Settings.PREF_SHUFFLE, true);
+		loopListMode = settings.getBoolean(Settings.PREF_LOOP_LIST, false);
 
 		modPlayer = ModPlayer.getInstance(this);
 		
@@ -263,7 +263,8 @@ public class Player extends Activity {
 
 		if (fileArray.length > 0) {
 			playIndex = 0;
-			playNewMod(fileArray[0]);
+			int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+			playNewMod(fileArray[idx]);
 		}
 	}
 	

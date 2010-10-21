@@ -18,6 +18,8 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_PAN_SEPARATION = "pan_separation";
 	public static final String PREF_EXAMPLES = "examples";
 	public static final String PREF_METERS = "meters";
+	public static final String PREF_SHUFFLE = "shuffle";
+	public static final String PREF_LOOP_LIST = "loop_list";
 	private SharedPreferences prefs;
 	private String oldPath;
 	

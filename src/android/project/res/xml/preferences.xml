@@ -19,6 +19,20 @@
       android:summary="@string/preferences_examples_summary"
       android:defaultValue="true" />
       
+    <CheckBoxPreference
+      android:key="shuffle"
+      android:persistent="true"
+      android:title="@string/preferences_shuffle_title"
+      android:summary="@string/preferences_shuffle_summary"
+      android:defaultValue="true" />
+      
+     <CheckBoxPreference
+      android:key="loop_list"
+      android:persistent="true"
+      android:title="@string/preferences_loop_list_title"
+      android:summary="@string/preferences_loop_list_summary"
+      android:defaultValue="false" />
+                 
   </PreferenceCategory>
   
   <PreferenceCategory

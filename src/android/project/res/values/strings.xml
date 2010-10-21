@@ -29,4 +29,8 @@
     <string name="preferences_meters_summary">Set the type of volume bars</string>
     <string name="preferences_category_interface">Interface settings</string>
 <string name="player_title">Player</string>
+<string name="preferences_loop_list_summary">Play files again after playlist ends</string>
+    <string name="preferences_loop_list_title">Loop playlists</string>
+    <string name="preferences_shuffle_title">Shuffle mode</string>
+    <string name="preferences_shuffle_summary">Play files in random order</string>
 </resources>
