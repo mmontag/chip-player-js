@@ -55,12 +55,12 @@ Java_org_helllabs_android_xmp_Xmp_initContext(JNIEnv *env, jobject obj)
 {
 	ctx = xmp_create_context();
 	xmp_init_formats(ctx);
+	xmp_drv_register(&drv_smix);
 }
 
 JNIEXPORT jint JNICALL
-Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj)
+Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj, jint rate)
 {
-	xmp_drv_register(&drv_smix);
 	xmp_init(ctx, 0, NULL);
 	opt = xmp_get_options(ctx);
 	opt->verbosity = 0;
@@ -68,7 +68,7 @@ Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj)
 	xmp_register_event_callback(ctx, process_echoback, NULL);
 	_playing = 0;
 
-	opt->freq = 44100;
+	opt->freq = rate;
 	opt->resol = 16;
 	opt->outfmt &= ~XMP_FMT_MONO;
 	opt->flags |= XMP_CTL_ITPT | XMP_CTL_FILTER;
@@ -87,7 +87,7 @@ Java_org_helllabs_android_xmp_Xmp_deinit(JNIEnv *env, jobject obj)
 {
 	xmp_close_audio(ctx);
 	xmp_deinit(ctx);
-	xmp_free_context(ctx);
+	//xmp_free_context(ctx);
 
 	return 0;
 }
@@ -99,7 +99,7 @@ Java_org_helllabs_android_xmp_Xmp_loadModule(JNIEnv *env, jobject obj, jstring n
 	int res;
 
 	filename = (*env)->GetStringUTFChars(env, name, NULL);
-	/*__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename);*/
+	/* __android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename); */
 	res = xmp_load_module(ctx, (char *)filename);
 	(*env)->ReleaseStringUTFChars(env, name, filename);
 

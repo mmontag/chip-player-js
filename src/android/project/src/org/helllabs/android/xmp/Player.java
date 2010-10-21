@@ -36,6 +36,7 @@ public class Player extends Activity {
 	boolean loopListMode = false;
 	boolean paused = false;
 	boolean isBadDir = false;
+	boolean finishing = false;
 	TextView infoName, infoType, infoLen, infoTime;
 	TextView infoNpat, infoChn, infoIns, infoSmp;
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
@@ -53,6 +54,9 @@ public class Player extends Activity {
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
         	int idx;
+        	
+        	if (finishing)
+        		return;
         	
         	if (++playIndex < fileArray.length) {
         		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
@@ -167,7 +171,7 @@ public class Player extends Activity {
 		loopListMode = settings.getBoolean(Settings.PREF_LOOP_LIST, false);
 
 		ridx = new RandomIndex(fileArray.length);
-		modPlayer = ModPlayer.getInstance(this);
+		modPlayer = new ModPlayer(this);
 		
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -216,7 +220,8 @@ public class Player extends Activity {
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				//Debug.stopMethodTracing();
-				stopPlayingMod();				
+				//stopPlayingMod();
+				stopPlayingMod();
 				finish();
 		    }
 		});
@@ -294,7 +299,7 @@ public class Player extends Activity {
        		infoMeter = new EmptyMeter(infoMeterLayout, m.chn);
        		break;       		
        	}
-       	       		
+ 
        	modPlayer.play(m.filename);
        	
        	/* Show list of instruments */
@@ -313,6 +318,7 @@ public class Player extends Activity {
 	}
 	
 	void stopPlayingMod() {
+		finishing = true;
 		modPlayer.stop();
 		paused = false;
 		playButton.setImageResource(R.drawable.play);

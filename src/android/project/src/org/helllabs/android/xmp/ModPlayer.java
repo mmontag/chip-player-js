@@ -6,10 +6,11 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 
 public class ModPlayer {
-	private static ModPlayer instance = null;
+	//private static ModPlayer instance = null;
 	private Xmp xmp = new Xmp();
 	private int minSize;
 	private int sampleRate;
@@ -19,7 +20,7 @@ public class ModPlayer {
 	private Thread playThread;
 	private SharedPreferences prefs;
 	
-	protected ModPlayer(Context context) {	
+	public ModPlayer(Context context) {	
    		prefs = PreferenceManager.getDefaultSharedPreferences(context);
    		
    		sampleRate = 44100;
@@ -41,16 +42,14 @@ public class ModPlayer {
 		paused = false;
 	}
 	
-	public static ModPlayer getInstance(Context context) {
+	/*public static ModPlayer getInstance(Context context) {
 		if(instance == null) {
 			instance = new ModPlayer(context);
 		}
 		return instance;
-	}
+	}*/
 	    
 	private class PlayRunnable implements Runnable {
-		int count = 0;
-		
     	public void run() {
     		short buffer[] = new short[minSize];
     		
@@ -79,26 +78,29 @@ public class ModPlayer {
     }
 
 
-	protected void finalize() {
+	protected void finalize() {	
     	xmp.stopModule();
     	paused = false;
     	try {
 			playThread.join();
 		} catch (InterruptedException e) { }
-
     	xmp.deinit();
-    	audio.flush();
     	audio.stop();
     	audio.release();
     }
    
     public void play(String file) {
+    	Log.v("+++", "ModPlayer.play file = " + file);
+    	
    		if (xmp.loadModule(file) < 0) {
    			return;
    		}
+   		Log.v("+++", "load ok");
 
    		audio.play();
+   		Log.v("+++", "audio.play() ok");
    		xmp.startPlayer();
+   		Log.v("+++", "xmp.startPlayer() ok");
    		
    		PlayRunnable playRunnable = new PlayRunnable();
    		playThread = new Thread(playRunnable);
