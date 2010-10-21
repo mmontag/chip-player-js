@@ -16,7 +16,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -31,7 +30,6 @@ public class Player extends Activity {
 	ImageButton playButton, stopButton, backButton, forwardButton;
 	SeekBar seekBar;
 	Thread progressThread;
-	boolean playing = false;
 	boolean seeking = false;
 	boolean single = true;
 	boolean shuffleMode = true;
@@ -249,13 +247,7 @@ public class Player extends Activity {
 				seeking = true;
 			}
 
-			public void onStopTrackingTouch(SeekBar s) {
-				
-				if (!playing) {
-					seekBar.setProgress(0);
-					return;
-				}
-				
+			public void onStopTrackingTouch(SeekBar s) {				
 				modPlayer.seek(s.getProgress());
 				seeking = false;
 			}
