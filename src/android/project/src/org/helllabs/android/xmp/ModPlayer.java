@@ -10,7 +10,6 @@ import android.util.Log;
 
 
 public class ModPlayer {
-	//private static ModPlayer instance = null;
 	private Xmp xmp = new Xmp();
 	private int minSize;
 	private int sampleRate;
@@ -41,13 +40,6 @@ public class ModPlayer {
 		xmp.init(sampleRate);
 		paused = false;
 	}
-	
-	/*public static ModPlayer getInstance(Context context) {
-		if(instance == null) {
-			instance = new ModPlayer(context);
-		}
-		return instance;
-	}*/
 	    
 	private class PlayRunnable implements Runnable {
     	public void run() {
