@@ -75,12 +75,11 @@ public class Player extends Activity {
     };
     
     final Runnable updateInfoRunnable = new Runnable() {
-    	private int oldTpo = -1;
-    	private int oldBpm = -1;
-    	private int oldPos = -1;
-    	private int oldPat = -1;
-    	private int[] volumes = new int[32];
-    	private int count = 0;
+    	int oldTpo = -1;
+    	int oldBpm = -1;
+    	int oldPos = -1;
+    	int oldPat = -1;
+    	int[] volumes = new int[32];
     	
         public void run() {
         	int tpo = modPlayer.getPlayTempo();
@@ -228,6 +227,9 @@ public class Player extends Activity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+				playIndex -= 2;
+				if (playIndex < -1)
+					playIndex += fileArray.length;
 				modPlayer.stop();
 				unpause();
 		    }
