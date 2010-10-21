@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent">
+
+   
+  <LinearLayout android:id="@+id/info_layout"
+		android:gravity="top"
+		android:layout_weight="1.0"
+		android:orientation="vertical"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:background="@drawable/logo">
+	
+	<TextView android:id="@+id/info_name"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge" />
+		
+	<TextView android:id="@+id/info_type"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceMedium" />
+		
+	<View
+		android:layout_width="fill_parent"
+		android:layout_height="2dp"/>		
+	<View
+	    android:layout_width="fill_parent"
+		android:layout_height="1dp"
+		android:background="#80c080" />
+	<View
+		android:layout_width="fill_parent"
+		android:layout_height="2dp"/>
+
+	<ScrollView
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+	
+	<LinearLayout
+	  android:orientation="vertical"
+	  android:layout_width="fill_parent"
+	  android:layout_height="wrap_content">
+	  	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="Module length: "/>		
+	  <TextView android:id="@+id/info_len"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text=" patterns"/>		 	
+	</LinearLayout>
+	    
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="Stored patterns: "/>		
+	  <TextView android:id="@+id/info_npat"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="Audio channels: "/>		
+	  <TextView android:id="@+id/info_chn"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="Instruments: "/>		
+	  <TextView android:id="@+id/info_ins"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" /> 	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text=", Samples: "/>		
+	  <TextView android:id="@+id/info_smp"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" /> 	
+	</LinearLayout>
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="Estimated play time: "/>		
+	  <TextView android:id="@+id/info_time"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />		 	
+	</LinearLayout>
+	
+	<LinearLayout
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content">	  	
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="Tempo["/>		
+	  <TextView android:id="@+id/info_tpo"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="] BPM["/>
+	  <TextView android:id="@+id/info_bpm"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="] Pos["/>
+	  <TextView android:id="@+id/info_pos"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="] Pat["/>	
+	  <TextView android:id="@+id/info_pat"
+	    android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" />
+	  <TextView
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:text="]"/>		 	
+	</LinearLayout>
+	
+	<LinearLayout android:id="@+id/info_meters"
+	  android:orientation="horizontal"
+	  android:layout_width="wrap_content" 
+	  android:layout_height="wrap_content"
+	  android:textAppearance="?android:attr/textAppearanceMedium"
+	  android:paddingTop="8dip"
+	  android:layout_gravity="center_horizontal"/>
+	
+	<TextView
+	  android:layout_width="wrap_content" 
+      android:layout_height="wrap_content"
+      android:textAppearance="?android:attr/textAppearanceMedium"
+      android:paddingTop="4dip"
+      android:text="Instruments"/>
+      	
+	<TextView android:id="@+id/info_ins_list"
+	  android:layout_width="wrap_content"
+	  android:layout_height="wrap_content" />
+
+  </LinearLayout>
+  
+  </ScrollView>
+  	  		
+  </LinearLayout>    
+   
+   <SeekBar android:id="@+id/seek"
+            android:gravity="bottom"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp" />
+        
+   <LinearLayout
+     android:gravity="bottom"
+     android:orientation="horizontal"
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content">
+     <ImageButton android:id="@+id/back"
+         android:src="@drawable/back"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Rew" />
+     <ImageButton android:id="@+id/play"
+         android:src="@drawable/play"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Play" />
+     <ImageButton android:id="@+id/stop"
+         android:src="@drawable/stop"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Stop" />
+     <ImageButton android:id="@+id/forward"
+         android:src="@drawable/forward"
+         android:layout_weight="1.0"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="FF" />       
+   </LinearLayout>   
+
+</LinearLayout>
+

@@ -49,11 +49,18 @@ static void process_echoback(unsigned long i, void *data)
 	}
 }
 
+/* For ModList */
+JNIEXPORT void JNICALL
+Java_org_helllabs_android_xmp_Xmp_initContext(JNIEnv *env, jobject obj)
+{
+	ctx = xmp_create_context();
+	xmp_init_formats(ctx);
+}
+
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj)
 {
 	xmp_drv_register(&drv_smix);
-	ctx = xmp_create_context();
 	xmp_init(ctx, 0, NULL);
 	opt = xmp_get_options(ctx);
 	opt->verbosity = 0;

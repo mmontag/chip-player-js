@@ -15,6 +15,8 @@
 #include "list.h"
 #include "loader.h"
 
+int pw_init(void);
+
 struct xmp_fmt_info *__fmt_head;
 
 LIST_HEAD(loader_list);
@@ -115,6 +117,8 @@ void xmp_init_formats(xmp_context ctx)
 
 	pw_loader.enable = 1;
 	list_add_tail(&pw_loader.list, &loader_list);
+
+	pw_init();
 }
 
 void xmp_deinit_formats(xmp_context ctx)

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:gravity="top" android:layout_weight="1.0" android:orientation="vertical"
+	android:layout_width="fill_parent" android:layout_height="fill_parent">
+
+	<LinearLayout android:gravity="top" android:layout_weight="1.0"
+		android:orientation="vertical" android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+		<ListView android:id="@+id/android:list"
+			android:layout_width="fill_parent" android:layout_height="fill_parent"
+			android:layout_weight="1" android:drawSelectorOnTop="false" />
+
+		<TextView android:id="@id/android:empty" android:gravity="top"
+			android:layout_width="fill_parent" android:layout_height="fill_parent"
+			android:text="No modules found on SD Card." />
+	</LinearLayout>
+
+	<LinearLayout android:gravity="bottom"
+		android:orientation="horizontal" android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		<Button android:id="@+id/play_all"
+			android:layout_weight="1.0" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Play all" />
+		<Button android:id="@+id/playlists"
+			android:layout_weight="1.0" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Playlists" />
+		<Button android:id="@+id/refresh"
+			android:layout_weight="1.0" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Refresh" />
+	</LinearLayout>
+
+</LinearLayout>

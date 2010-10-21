@@ -1,36 +1,6 @@
-/* Interface.java
- * Copyright (C) 2010 Claudio Matsuoka
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package org.helllabs.android.xmp;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.List;
-import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
@@ -42,54 +12,46 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.ViewFlipper;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import org.helllabs.android.xmp.R;
 
-public class Interface extends ListActivity {
-	private static final int SETTINGS_REQUEST = 45;
-	private String media_path;
-	private List<ModInfo> modList = new ArrayList<ModInfo>();
-	private Xmp xmp = new Xmp();	/* used to get mod info */
-	private ModPlayer player;		/* actual mod player */ 
-	private ImageButton playButton, stopButton, backButton, forwardButton;
-	private SeekBar seekBar;
-	private boolean playing = false;
-	private boolean seeking = false;
-	private boolean single = false;		/* play only one module */
-	private boolean shuffleMode = true;
-	private boolean paused = false;
-	private boolean isBadDir = false;
-	private boolean firstTime = true;
-	private ViewFlipper flipper;
-	private TextView infoName, infoType, infoLen, infoTime;
-	private TextView infoNpat, infoChn, infoIns, infoSmp;
-	private TextView infoTpo, infoBpm, infoPos, infoPat; 
-	private TextView infoInsList;
-	private int playIndex;
-	private RandomIndex ridx;
-	private ProgressDialog progressDialog;
-	private SharedPreferences settings;
-	private LinearLayout infoMeterLayout;
-	private Meter infoMeter;
-	private LinearLayout infoLayout;
-	private BitmapDrawable image;
+public class Player extends ListActivity {
+	static final int SETTINGS_REQUEST = 45;
+	String media_path;
+	Xmp xmp = new Xmp();	/* used to get mod info */
+	ModPlayer player;		/* actual mod player */ 
+	ImageButton playButton, stopButton, backButton, forwardButton;
+	SeekBar seekBar;
+	Thread progressThread;
+	boolean playing = false;
+	boolean seeking = false;
+	boolean shuffleMode = true;
+	boolean paused = false;
+	boolean isBadDir = false;
+	TextView infoName, infoType, infoLen, infoTime;
+	TextView infoNpat, infoChn, infoIns, infoSmp;
+	TextView infoTpo, infoBpm, infoPos, infoPat; 
+	TextView infoInsList;
+	int playIndex;
+	RandomIndex ridx;
+	SharedPreferences settings;
+	LinearLayout infoMeterLayout;
+	Meter infoMeter;
+	LinearLayout infoLayout;
+	BitmapDrawable image;
 	final Handler handler = new Handler();
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
+        	/*
     		if (!single) {
     			if (++playIndex >= modList.size()) {
     				ridx.randomize();
@@ -102,6 +64,7 @@ public class Interface extends ListActivity {
     			playButton.setImageResource(R.drawable.play);
     			playing = false;
     		}
+    		*/
         }
     };
     
@@ -177,15 +140,6 @@ public class Interface extends ListActivity {
     	}
     };
 
-    private ProgressThread progressThread;
-    
-	class ModFilter implements FilenameFilter {
-	    public boolean accept(File dir, String name) {
-	    	//Log.v(getString(R.string.app_name), "** " + dir + "/" + name);
-	        return (xmp.testModule(dir + "/" + name) == 0);
-	    }
-	}
-	
 	public void pause() {
 		paused = true;
 		playButton.setImageResource(R.drawable.play);
@@ -222,16 +176,12 @@ public class Interface extends ListActivity {
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		setContentView(R.layout.playlist);
-		
-		ChangeLog changeLog = new ChangeLog(this);
+		setContentView(R.layout.player);
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 
 		player = ModPlayer.getInstance(this);
 		
-		/* Info view widgets */
-		flipper = (ViewFlipper)findViewById(R.id.flipper);
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
 		infoLen = (TextView)findViewById(R.id.info_len);
@@ -280,16 +230,6 @@ public class Interface extends ListActivity {
 					playing = true;
 				}
 								
-				int idx[] = new int[modList.size()];
-				for (int i = 0; i < modList.size(); i++) {
-					idx[i] = i;
-				}
-				
-				ridx = new RandomIndex(idx.length);				
-				single = false;
-				
-				flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));				
-				flipper.showNext();
 				playIndex = 0;
 				unpause();
 				playNewMod(0);
@@ -305,22 +245,15 @@ public class Interface extends ListActivity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (playing && !single) {
-					playIndex -= 2;
-					if (playIndex < -1)
-						playIndex = -1;
-					player.stop();
-					unpause();
-				}
+				player.stop();
+				unpause();
 		    }
 		});
 		
 		forwardButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (playing && !single) {
-					player.stop();
-					unpause();
-				}
+				player.stop();
+				unpause();
 		    }
 		});
 		
@@ -347,92 +280,22 @@ public class Interface extends ListActivity {
 				seeking = false;
 			}
 		});
-		
-		updatePlaylist();
-		
-		changeLog.show();
 	}
 	
 	@Override
 	public void onDestroy() {
-		single = true;
 		player.stop();
 		super.onDestroy();
 	}
 	
-	public void updatePlaylist() {
-		stopPlayingMod();
-		
-		media_path = settings.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
-		//Log.v(getString(R.string.app_name), "path = " + media_path);
-
-		modList.clear();
-		
-		final File modDir = new File(media_path);
-		
-		if (!modDir.isDirectory()) {
-			final Examples examples = new Examples(this);
-			
-			isBadDir = true;
-			AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-			
-			alertDialog.setTitle("Oops");
-			alertDialog.setMessage(media_path + " not found. " +
-					"Create this directory or change the module path.");
-			alertDialog.setButton("Create", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					examples.install(media_path,
-							settings.getBoolean(Settings.PREF_EXAMPLES, true));
-					updatePlaylist();
-				}
-			});
-			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					startActivityForResult(new Intent(Interface.this, Settings.class), SETTINGS_REQUEST);
-				}
-			});
-			alertDialog.show();
-			return;
-		}
-		
-		isBadDir = false;
-		progressDialog = ProgressDialog.show(this,      
-				firstTime ? "Xmp for Android" : "Please wait",
-				"Scanning module files...", true);
-		firstTime = false;
-		
-		new Thread() { 
-			public void run() { 		
-            	for (File file : modDir.listFiles(new ModFilter())) {
-            		ModInfo m = xmp.getModInfo(media_path + "/" + file.getName());
-            		modList.add(m);
-            	}
-            	
-                final ModInfoAdapter playlist = new ModInfoAdapter(Interface.this,
-                			R.layout.song_item, R.id.info, modList);
-                
-                /* This one must run in the UI thread */
-                handler.post(new Runnable() {
-                	public void run() {
-                		 setListAdapter(playlist);
-                	 }
-                });
-            	
-                progressDialog.dismiss();
-			}
-		}.start();
-	}
-
-	void playNewMod(int position)
-	{
+	void playNewMod(int position) {
 		/* Sanity check */
+		/*
 		if (position < 0 || position >= modList.size())
 			position = 0;
+		*/
 						
-		if (shuffleMode && !single)
-			position = ridx.getIndex(position);
-
-		ModInfo m = modList.get(position);
+		ModInfo m = xmp.getModInfo(media_path + "/" + "bla");
        	seekBar.setProgress(0);
        	seekBar.setMax(m.time / 100);
         	
@@ -470,7 +333,6 @@ public class Interface extends ListActivity {
 		if (!playing)
 			return;
 		
-		single = true;
 		player.stop();
 		paused = false;
 		playButton.setImageResource(R.drawable.play);
@@ -489,29 +351,10 @@ public class Interface extends ListActivity {
 				return;
 			playing = true;
 		}
-		single = true;
-		flipper.setAnimation(AnimationUtils.loadAnimation(v.getContext(), R.anim.slide_left));
-		flipper.showNext();
+
 		unpause();
 		playNewMod(position);
 	}
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.options_menu, menu);
-	    return true;
-	}
-	
-	@Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
-    	if (requestCode == SETTINGS_REQUEST) {
-            if (isBadDir || resultCode == RESULT_OK) {
-            	updatePlaylist();
-            }
-        }
-    }
 	
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -529,39 +372,4 @@ public class Interface extends ListActivity {
     	
     	return super.onKeyDown(keyCode, event);
     }
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case R.id.menu_formats:
-			startActivity(new Intent(this, ListFormats.class));
-			break;
-		case R.id.menu_about:
-			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-			String version = "Version " + AppInfo.getVersion(this) + "\n\n";
-			
-			alertDialog.setIcon(R.drawable.icon);
-			alertDialog.setTitle("Xmp for Android");
-			alertDialog.setMessage(version + "Based on xmp " + xmp.getVersion() +
-					" written by Claudio Matsuoka and Hipolito Carraro Jr" +
-					"\n\nSupported module formats: " + xmp.getFormatCount() + "\n");
-			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					alertDialog.dismiss();
-				}
-			});
-			alertDialog.show();	
-			break;
-		case R.id.menu_prefs:		
-			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
-			/* Nicer, but only for API level 5 :(
-			overridePendingTransition(int R.anim.slide_left, int R.anim.slide_right);
-			*/
-			break;
-		case R.id.menu_refresh:
-			updatePlaylist();
-			break;
-		}
-		return true;
-	}
 }

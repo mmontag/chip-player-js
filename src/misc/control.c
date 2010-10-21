@@ -24,8 +24,6 @@
 static int drv_parm = 0;
 
 
-int pw_init(void);
-
 void *xmp_create_context()
 {
 	struct xmp_context *ctx;
@@ -82,8 +80,6 @@ void xmp_init(xmp_context ctx, int argc, char **argv)
 	int num;
 
 	xmp_init_formats(ctx);
-	pw_init();
-
 	p->event_callback = NULL;
 
 	/* must be parsed before loading the rc file. */
