@@ -54,10 +54,10 @@ public class Player extends Activity {
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
-        	playIndex++;
-        	int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+        	int idx;
         	
-        	if (playIndex < fileArray.length) {
+        	if (++playIndex < fileArray.length) {
+        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
         		playNewMod(fileArray[idx]);
         	} else {
         		if (!single && loopListMode) {
@@ -164,11 +164,11 @@ public class Player extends Activity {
 			return;
 		
 		fileArray = extras.getStringArray("files");
-		single = extras.getBoolean("single");
-		ridx = new RandomIndex(fileArray.length);		
+		single = extras.getBoolean("single");	
 		shuffleMode = settings.getBoolean(Settings.PREF_SHUFFLE, true);
 		loopListMode = settings.getBoolean(Settings.PREF_LOOP_LIST, false);
 
+		ridx = new RandomIndex(fileArray.length);
 		modPlayer = ModPlayer.getInstance(this);
 		
 		infoName = (TextView)findViewById(R.id.info_name);
