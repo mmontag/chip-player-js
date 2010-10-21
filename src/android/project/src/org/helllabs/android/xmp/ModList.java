@@ -25,6 +25,7 @@ package org.helllabs.android.xmp;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -36,6 +37,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -90,7 +92,7 @@ public class ModList extends ListActivity {
 		
 		playAllButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				
+				playModule(modList);
 			}
 		});
 		
@@ -181,14 +183,25 @@ public class ModList extends ListActivity {
 		}.start();
 	}
 
+	void playModule(List<ModInfo> list) {
+		String[] mods = new String[list.size()];
+		int i = 0;
+		Iterator<ModInfo> element = list.iterator();
+		while (element.hasNext()) {
+			mods[i++] = element.next().filename;
+		}
+		playModule(mods);
+	}
+	
 	void playModule(String mod) {
-		String[] modList = new String[1];
-		modList[0] = mod;
-		playModule(modList);
+		Log.v(getString(R.string.app_name), "mod = " + mod);
+		String[] mods = new String[1];
+		mods[0] = mod;
+		playModule(mods);
 	}
 	
 	void playModule(String[] mods) {
-		Intent intent = new Intent(this, org.helllabs.android.xmp.Player.class);
+		Intent intent = new Intent(ModList.this, Player.class);
 		intent.putExtra("files", mods);
 		startActivity(intent);
 	}

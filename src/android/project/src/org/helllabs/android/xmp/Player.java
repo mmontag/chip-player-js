@@ -1,6 +1,6 @@
 package org.helllabs.android.xmp;
 
-import android.app.ListActivity;
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
@@ -23,16 +23,17 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import org.helllabs.android.xmp.R;
 
-public class Player extends ListActivity {
+public class Player extends Activity {
 	static final int SETTINGS_REQUEST = 45;
 	String media_path;
 	Xmp xmp = new Xmp();	/* used to get mod info */
-	ModPlayer player;		/* actual mod player */ 
+	ModPlayer modPlayer;	/* actual mod player */ 
 	ImageButton playButton, stopButton, backButton, forwardButton;
 	SeekBar seekBar;
 	Thread progressThread;
 	boolean playing = false;
 	boolean seeking = false;
+	boolean single = true;
 	boolean shuffleMode = true;
 	boolean paused = false;
 	boolean isBadDir = false;
@@ -40,6 +41,7 @@ public class Player extends ListActivity {
 	TextView infoNpat, infoChn, infoIns, infoSmp;
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
 	TextView infoInsList;
+	String[] fileArray;
 	int playIndex;
 	RandomIndex ridx;
 	SharedPreferences settings;
@@ -51,6 +53,12 @@ public class Player extends ListActivity {
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
+        	if (++playIndex < fileArray.length) {
+        		playNewMod(fileArray[playIndex]);
+        	} else {
+        		finish();
+        	}
+        	
         	/*
     		if (!single) {
     			if (++playIndex >= modList.size()) {
@@ -77,38 +85,31 @@ public class Player extends ListActivity {
     	private int count = 0;
     	
         public void run() {
-        	int tpo = player.getPlayTempo();
+        	int tpo = modPlayer.getPlayTempo();
         	if (tpo != oldTpo) {
         		infoTpo.setText(Integer.toString(tpo));
         		oldTpo = tpo;
         	}
 
-        	int bpm = player.getPlayBpm();
+        	int bpm = modPlayer.getPlayBpm();
         	if (bpm != oldBpm) {
         		infoBpm.setText(Integer.toString(bpm));
         		oldBpm = bpm;
         	}
 
-        	int pos = player.getPlayPos();
+        	int pos = modPlayer.getPlayPos();
         	if (pos != oldPos) {
         		infoPos.setText(Integer.toString(pos));
         		oldPos = pos;
         	}
 
-        	int pat = player.getPlayPat();
+        	int pat = modPlayer.getPlayPat();
         	if (pat != oldPat) {
         		infoPat.setText(Integer.toString(pat));
         		oldPat = pat;
         	}
 
-        	if (++count > 10) {
-        		int meterType = Integer.parseInt(settings.getString(Settings.PREF_METERS, "2"));
-        		if (infoMeter.getType() != meterType)
-        			infoMeter = createMeter(meterType, infoMeter.getChannels());
-        		count = 0;
-        	}
-
-        	player.getVolumes(volumes);
+        	modPlayer.getVolumes(volumes);
         	infoMeter.setVolumes(volumes);
         }
     };
@@ -119,7 +120,7 @@ public class Player extends ListActivity {
     		int t = 0;
     		
     		do {
-    			t = player.time();
+    			t = modPlayer.time();
     			//Log.v(getString(R.string.app_name), "t = " + t);
     			if (t >= 0) {
     				if (!seeking && !paused)
@@ -149,24 +150,6 @@ public class Player extends ListActivity {
 		paused = false;
 		playButton.setImageResource(R.drawable.pause);
 	}
-    
-	private Meter createMeter(int type, int size) {
-       	Meter meter;
-		
-       	switch (type) {
-       	case 1:
-       		meter = new LedMeter(infoMeterLayout, size);
-       		break;
-       	case 2:
-       		meter = new BarMeter(infoMeterLayout, size);
-       		break;
-       	default:
-       		meter = new EmptyMeter(infoMeterLayout, size);
-       		break;       		
-       	}
-       	
-       	return meter;
-	}
 	
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
@@ -175,21 +158,18 @@ public class Player extends ListActivity {
 	
 	@Override
 	public void onCreate(Bundle icicle) {
-		String[] fileList;
-		
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
 		
-		Bundle extras = getIntent().getExtras(); 
-		if(extras != null) {
-			fileList = extras.getStringArray("files");
-		} else {
-			fileList = null;
-		}
+		Bundle extras = getIntent().getExtras();
+		if (extras == null)
+			return;
+		
+		fileArray = extras.getStringArray("files");
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 
-		player = ModPlayer.getInstance(this);
+		modPlayer = ModPlayer.getInstance(this);
 		
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -212,7 +192,7 @@ public class Player extends ListActivity {
 		backButton = (ImageButton)findViewById(R.id.back);
 		forwardButton = (ImageButton)findViewById(R.id.forward);
 		
-		/* Set background here because we want to keep aspect ratio */
+		// Set background here because we want to keep aspect ratio
 		image = new BitmapDrawable(BitmapFactory.decodeResource(getResources(),
 												R.drawable.logo));
 		image.setGravity(Gravity.CENTER);
@@ -224,7 +204,7 @@ public class Player extends ListActivity {
 				//Debug.startMethodTracing("xmp");
 				
 				synchronized (this) {
-					player.pause();
+					modPlayer.pause();
 					
 					if (paused) {
 						unpause();
@@ -237,21 +217,22 @@ public class Player extends ListActivity {
 		
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				stopPlayingMod();
 				//Debug.stopMethodTracing();
+				stopPlayingMod();				
+				finish();
 		    }
 		});
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				player.stop();
+				modPlayer.stop();
 				unpause();
 		    }
 		});
 		
 		forwardButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				player.stop();
+				modPlayer.stop();
 				unpause();
 		    }
 		});
@@ -275,31 +256,25 @@ public class Player extends ListActivity {
 					return;
 				}
 				
-				player.seek(s.getProgress());
+				modPlayer.seek(s.getProgress());
 				seeking = false;
 			}
 		});
 
-		if (fileList != null) {
-			for (String file : fileList) {
-				playNewMod(file);
-			}
+		if (fileArray.length > 0) {
+			playIndex = 0;
+			playNewMod(fileArray[0]);
 		}
 	}
 	
 	@Override
 	public void onDestroy() {
-		player.stop();
+		stopPlayingMod();
+		modPlayer.finalize();
 		super.onDestroy();
 	}
 	
 	void playNewMod(String fileName) {
-		/* Sanity check */
-		/*
-		if (position < 0 || position >= modList.size())
-			position = 0;
-		*/
-						
 		ModInfo m = xmp.getModInfo(fileName);
        	seekBar.setProgress(0);
        	seekBar.setMax(m.time / 100);
@@ -315,13 +290,23 @@ public class Player extends ListActivity {
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
        	
        	int meterType = Integer.parseInt(settings.getString(Settings.PREF_METERS, "2"));
-       	infoMeter = createMeter(meterType, m.chn);
+       	switch (meterType) {
+       	case 1:
+       		infoMeter = new LedMeter(infoMeterLayout, m.chn);
+       		break;
+       	case 2:
+       		infoMeter = new BarMeter(infoMeterLayout, m.chn);
+       		break;
+       	default:
+       		infoMeter = new EmptyMeter(infoMeterLayout, m.chn);
+       		break;       		
+       	}
        	       		
-       	player.play(m.filename);
+       	modPlayer.play(m.filename);
        	
        	/* Show list of instruments */
        	StringBuffer insList = new StringBuffer();
-       	String[] instrument = player.getInstruments();
+       	String[] instrument = modPlayer.getInstruments();
        	if (instrument.length > 0)
        		insList.append(instrument[0]);
        	for (int i = 1; i < instrument.length; i++) {
@@ -335,10 +320,7 @@ public class Player extends ListActivity {
 	}
 	
 	void stopPlayingMod() {
-		if (!playing)
-			return;
-		
-		player.stop();
+		modPlayer.stop();
 		paused = false;
 		playButton.setImageResource(R.drawable.play);
 		
@@ -354,11 +336,8 @@ public class Player extends ListActivity {
     	if(event.getAction() == KeyEvent.ACTION_DOWN) {
     		switch(keyCode) {
     		case KeyEvent.KEYCODE_BACK:
-    			if (playing) {
-    				stopPlayingMod();
-    			} else {
-    				finish();
-    			}
+    			stopPlayingMod();
+    			finish();
     			return true;
     		}
     	}

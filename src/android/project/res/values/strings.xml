@@ -28,4 +28,5 @@
 <string name="preferences_meters_title">Volume bars</string>
     <string name="preferences_meters_summary">Set the type of volume bars</string>
     <string name="preferences_category_interface">Interface settings</string>
+<string name="player_title">Player</string>
 </resources>

@@ -19,6 +19,9 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity android:name=".Player" 
+			android:label="@string/player_title">
+		</activity>
 		<activity android:name=".Settings" 
 			android:label="@string/settings_title">
 		</activity>
