@@ -175,8 +175,17 @@ public class Player extends ListActivity {
 	
 	@Override
 	public void onCreate(Bundle icicle) {
+		String[] fileList;
+		
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
+		
+		Bundle extras = getIntent().getExtras(); 
+		if(extras != null) {
+			fileList = extras.getStringArray("files");
+		} else {
+			fileList = null;
+		}
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -215,24 +224,14 @@ public class Player extends ListActivity {
 				//Debug.startMethodTracing("xmp");
 				
 				synchronized (this) {
-					if (playing) {
-						player.pause();
+					player.pause();
 					
-						if (paused) {
-							unpause();
-						} else {
-							pause();
-						}
-					
-						return;
+					if (paused) {
+						unpause();
+					} else {
+						pause();
 					}
-				
-					playing = true;
 				}
-								
-				playIndex = 0;
-				unpause();
-				playNewMod(0);
 		    }
 		});
 		
@@ -280,6 +279,12 @@ public class Player extends ListActivity {
 				seeking = false;
 			}
 		});
+
+		if (fileList != null) {
+			for (String file : fileList) {
+				playNewMod(file);
+			}
+		}
 	}
 	
 	@Override
@@ -288,14 +293,14 @@ public class Player extends ListActivity {
 		super.onDestroy();
 	}
 	
-	void playNewMod(int position) {
+	void playNewMod(String fileName) {
 		/* Sanity check */
 		/*
 		if (position < 0 || position >= modList.size())
 			position = 0;
 		*/
 						
-		ModInfo m = xmp.getModInfo(media_path + "/" + "bla");
+		ModInfo m = xmp.getModInfo(fileName);
        	seekBar.setProgress(0);
        	seekBar.setMax(m.time / 100);
         	
@@ -342,18 +347,6 @@ public class Player extends ListActivity {
 		} catch (InterruptedException e) {
 			Log.e(getString(R.string.app_name), e.getMessage());
 		}
-	}
-	
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
-		synchronized (this) {
-			if (playing)
-				return;
-			playing = true;
-		}
-
-		unpause();
-		playNewMod(position);
 	}
 	
     @Override

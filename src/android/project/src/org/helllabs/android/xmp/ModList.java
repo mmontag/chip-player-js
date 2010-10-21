@@ -181,29 +181,21 @@ public class ModList extends ListActivity {
 		}.start();
 	}
 
-	void playNewMod(int position) {
-		/* Sanity check */
-		if (position < 0 || position >= modList.size())
-			position = 0;
-						
-		if (shuffleMode && !single)
-			position = ridx.getIndex(position);
-
-		ModInfo m = modList.get(position);
-		
-       	//player.play(m.filename);
+	void playModule(String mod) {
+		String[] modList = new String[1];
+		modList[0] = mod;
+		playModule(modList);
+	}
+	
+	void playModule(String[] mods) {
+		Intent intent = new Intent(this, org.helllabs.android.xmp.Player.class);
+		intent.putExtra("files", mods);
+		startActivity(intent);
 	}
 	
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-//		synchronized (this) {
-//			if (playing)
-//				return;
-//			playing = true;
-//		}
-		single = true;
-
-		playNewMod(position);
+		playModule(modList.get(position).filename);
 	}
 	
 	@Override
