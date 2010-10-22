@@ -37,11 +37,14 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import org.helllabs.android.xmp.R;
@@ -88,6 +91,8 @@ public class ModList extends ListActivity {
 		playListsButton = (Button)findViewById(R.id.playlists);
 		refreshButton = (Button)findViewById(R.id.refresh);
 		
+		registerForContextMenu(getListView());
+		
 		playAllButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				playModule(modList);
@@ -114,13 +119,10 @@ public class ModList extends ListActivity {
 	@Override
 	public void onDestroy() {
 		single = true;
-		//player.stop();
 		super.onDestroy();
 	}
 	
 	public void updatePlaylist() {
-		//stopPlayingMod();
-		
 		media_path = settings.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		//Log.v(getString(R.string.app_name), "path = " + media_path);
 
@@ -207,6 +209,13 @@ public class ModList extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		playModule(modList.get(position).filename);
+	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		int i = 0;
+		menu.setHeaderTitle("Add to playlist");
+		menu.add(Menu.NONE, i, i, "New playlist...");
 	}
 	
 	@Override
