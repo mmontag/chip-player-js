@@ -211,20 +211,6 @@ public class ModList extends ListActivity {
 	}
 	
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		int i = 0;
-		menu.setHeaderTitle("Add to playlist");
-		menu.add(Menu.NONE, i, i, "New playlist...");
-	}
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.options_menu, menu);
-	    return true;
-	}
-	
-	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
     	if (requestCode == SETTINGS_REQUEST) {
@@ -233,6 +219,43 @@ public class ModList extends ListActivity {
             }
         }
     }
+
+	
+	// Context menu
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		int i = 0;
+		menu.setHeaderTitle("Add to playlist");
+		menu.add(Menu.NONE, i, i, "New playlist...");
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		//AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+		int index = item.getItemId();
+		
+		if (index == 0) {
+			PlayList.addNew(this);
+			return true;
+		}
+		//String[] menuItems = getResources().getStringArray(R.array.menu);
+		//String menuItemName = menuItems[menuItemIndex];
+		//String listItemName = Countries[info.position];
+		//TextView text = (TextView)findViewById(R.id.footer);
+		//text.setText(String.format("Selected %s for item %s", menuItemName, listItemName));
+		return true;
+	}
+
+
+	// Menu
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.options_menu, menu);
+	    return true;
+	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
