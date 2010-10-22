@@ -74,7 +74,7 @@ Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj, jint rate)
 	opt->flags |= XMP_CTL_ITPT | XMP_CTL_FILTER;
 
 	if (xmp_open_audio(ctx) < 0) {
-		xmp_deinit(ctx);
+		//xmp_deinit(ctx);
 		//xmp_free_context(ctx);
 		return -1;
 	}

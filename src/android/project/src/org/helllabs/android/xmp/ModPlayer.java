@@ -44,10 +44,6 @@ public class ModPlayer {
     	public void run() {
     		short buffer[] = new short[minSize];
     		
-			String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
-   			xmp.optAmplify(Integer.parseInt(volBoost));
-   			xmp.optMix(prefs.getBoolean(Settings.PREF_STEREO, true) ?
-   						prefs.getInt(Settings.PREF_PAN_SEPARATION, 70): 0);
        		while (xmp.playFrame() == 0) {
        			int size = xmp.softmixer();
        			buffer = xmp.getBuffer(size, buffer);
@@ -75,6 +71,7 @@ public class ModPlayer {
     	try {
 			playThread.join();
 		} catch (InterruptedException e) { }
+		xmp.deinit();
     	audio.release();
     }
    
@@ -82,7 +79,12 @@ public class ModPlayer {
    		if (xmp.loadModule(file) < 0) {
    			return;
    		}
-
+   		
+		String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
+		xmp.optAmplify(Integer.parseInt(volBoost));
+		xmp.optMix(prefs.getBoolean(Settings.PREF_STEREO, true) ?
+						prefs.getInt(Settings.PREF_PAN_SEPARATION, 70): 0);
+		
    		audio.play();
    		xmp.startPlayer();
    		
