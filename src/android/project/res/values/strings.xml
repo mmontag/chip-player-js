@@ -33,4 +33,8 @@
     <string name="preferences_loop_list_title">Loop playlists</string>
     <string name="preferences_shuffle_title">Shuffle mode</string>
     <string name="preferences_shuffle_summary">Play files in random order</string>
+<string name="preferences_sampling_rate_summary">Set the mixer sampling rate</string>
+    <string name="preferences_sampling_rate_title">Sampling rate</string>
+    <string name="preferences_buffer_size_summary">Sound buffer size in bytes (affects latency)</string>
+    <string name="preferences_buffer_size_title">Buffer size</string>
 </resources>

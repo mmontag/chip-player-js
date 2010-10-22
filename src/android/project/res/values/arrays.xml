@@ -10,9 +10,9 @@
         <item>1</item>
         <item>2</item>
         <item>3</item>
-        
-    </string-array>
-        <string-array name="meters_array">
+	</string-array>
+	
+	<string-array name="meters_array">
         <item>None</item>
         <item>Leds</item>
         <item>Bars</item>
@@ -23,4 +23,31 @@
         <item>1</item>
         <item>2</item>
     </string-array>
+            
+	<string-array name="sampling_rate_array">
+        <item>8kHz</item>
+        <item>22kHz</item>
+        <item>44.1kHz</item>
+        <item>48kHz</item>
+    </string-array>
+    
+    <string-array name="sampling_rate_values">
+        <item>8000</item>
+        <item>22050</item>
+        <item>44100</item>
+        <item>48000</item>
+    </string-array>
+        
+	<string-array name="buffer_size_array">
+        <item>4096</item>
+        <item>8192</item>
+        <item>16384</item>
+    </string-array>
+    
+    <string-array name="buffer_size_values">
+        <item>4096</item>
+        <item>8192</item>
+        <item>16384</item>
+    </string-array>
+    
 </resources>

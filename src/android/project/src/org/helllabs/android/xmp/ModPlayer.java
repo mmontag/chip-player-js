@@ -9,29 +9,36 @@ import android.preference.PreferenceManager;
 
 
 public class ModPlayer {
-	private Xmp xmp = new Xmp();
-	private int minSize;
-	private int sampleRate;
-	private int bufferSize;
-	private AudioTrack audio;
-	private boolean paused;
-	private Thread playThread;
-	private SharedPreferences prefs;
+	Xmp xmp = new Xmp();
+	AudioTrack audio;
+	boolean paused;
+	Thread playThread;
+	SharedPreferences prefs;
+	int minSize;
+	boolean stereo;
 	
 	public ModPlayer(Context context) {	
+		int sampleRate;
+		int bufferSize;		
+		
    		prefs = PreferenceManager.getDefaultSharedPreferences(context);
    		
-   		sampleRate = 44100;
-   		bufferSize = 4096;
+   		sampleRate = Integer.parseInt(prefs.getString(Settings.PREF_SAMPLING_RATE, "44100"));
+   		bufferSize = Integer.parseInt(prefs.getString(Settings.PREF_BUFFER_SIZE, "4096"));
+   		stereo = prefs.getBoolean(Settings.PREF_STEREO, true);
+   		
+   		int channelConfig = stereo ?
+   				AudioFormat.CHANNEL_CONFIGURATION_STEREO :
+   				AudioFormat.CHANNEL_CONFIGURATION_MONO;
    		
 		minSize = AudioTrack.getMinBufferSize(
 				sampleRate,
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+				channelConfig,
 				AudioFormat.ENCODING_PCM_16BIT);
 		
 		audio = new AudioTrack(
 				AudioManager.STREAM_MUSIC, sampleRate,
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+				channelConfig,
 				AudioFormat.ENCODING_PCM_16BIT,
 				minSize < bufferSize ? bufferSize : minSize,
 				AudioTrack.MODE_STREAM);
@@ -82,8 +89,8 @@ public class ModPlayer {
    		
 		String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
 		xmp.optAmplify(Integer.parseInt(volBoost));
-		xmp.optMix(prefs.getBoolean(Settings.PREF_STEREO, true) ?
-						prefs.getInt(Settings.PREF_PAN_SEPARATION, 70): 0);
+		xmp.optMix(prefs.getInt(Settings.PREF_PAN_SEPARATION, 70));
+		xmp.optStereo(prefs.getBoolean(Settings.PREF_STEREO, true));
 		
    		audio.play();
    		xmp.startPlayer();

@@ -20,6 +20,8 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_METERS = "meters";
 	public static final String PREF_SHUFFLE = "shuffle";
 	public static final String PREF_LOOP_LIST = "loop_list";
+	public static final String PREF_SAMPLING_RATE = "sampling_rate";
+	public static final String PREF_BUFFER_SIZE = "buffer_size";
 	private SharedPreferences prefs;
 	private String oldPath;
 	

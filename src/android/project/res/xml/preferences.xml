@@ -39,6 +39,24 @@
     android:title="@string/preferences_category_sound">
       
     <ListPreference
+      android:key="sampling_rate"
+      android:persistent="true"
+      android:title="@string/preferences_sampling_rate_title"
+      android:summary="@string/preferences_sampling_rate_summary"
+      android:defaultValue="44100"
+      android:entries="@array/sampling_rate_array"
+      android:entryValues="@array/sampling_rate_values" />
+      
+     <ListPreference
+      android:key="buffer_size"
+      android:persistent="true"
+      android:title="@string/preferences_buffer_size_title"
+      android:summary="@string/preferences_buffer_size_summary"
+      android:defaultValue="4096"
+      android:entries="@array/buffer_size_array"
+      android:entryValues="@array/buffer_size_values" />
+      
+     <ListPreference
       android:key="vol_boost"
       android:persistent="true"
       android:title="@string/preferences_vol_boost_title"
@@ -46,6 +64,7 @@
       android:defaultValue="1"
       android:entries="@array/vol_boost_array"
       android:entryValues="@array/vol_boost_values" />
+      
       
     <CheckBoxPreference
       android:key="stereo"

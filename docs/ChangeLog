@@ -7,12 +7,9 @@ Stable versions
 	- add interactive loop toggle (requested by Emanuel Haupt)
 	- add filter to prevent loading NoiseRunner modules as Protracker
 	- add NoiseRunner loader (requested by Johan Samuelsson)
-	- add QVGA support to Android application
-	- add volume boost option to Android application preferences
-	- add stereo and panning options to Android application preferences
+	- add many options to Android application preferences
 	- add list of supported formats to Android application menu
 	- add volume bars and list of instruments to Android application
-	- fix default mod directory setting in Android application
 	- code cleanup
 
 3.2.0 (20100530):

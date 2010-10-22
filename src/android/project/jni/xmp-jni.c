@@ -399,6 +399,21 @@ Java_org_helllabs_android_xmp_Xmp_optMix(JNIEnv *env, jobject obj, jint n)
 	return 0;
 }
 
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_optStereo(JNIEnv *env, jobject obj, jboolean b)
+{
+	struct xmp_options *opt;
+
+	opt = xmp_get_options(ctx);
+	if (b) {
+		opt->outfmt &= ~XMP_FMT_MONO;
+	} else {
+		opt->outfmt |= XMP_FMT_MONO;
+	}
+
+	return 0;
+}
+
 JNIEXPORT jobjectArray JNICALL
 Java_org_helllabs_android_xmp_Xmp_getInstruments(JNIEnv *env, jobject obj)
 {

@@ -37,6 +37,7 @@ public class Xmp {
 	public native void getVolumes(int[] volumes);
 	public native int optAmplify(int n);
 	public native int optMix(int n);
+	public native int optStereo(boolean b);
 	
 	static {
 		System.loadLibrary("xmp");
