@@ -75,7 +75,6 @@ public class ModPlayer {
     	try {
 			playThread.join();
 		} catch (InterruptedException e) { }
-    	xmp.deinit();
     	audio.release();
     }
    
