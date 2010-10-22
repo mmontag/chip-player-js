@@ -120,7 +120,21 @@ void CLIB_DECL _D(const char *text, ...) ATTR_PRINTF(1,2);
 void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #endif
 
-#else	/* !_MSC_VER */
+#elif defined ANDROID
+
+#ifdef _DEBUG
+#include <android/log.h>
+#define _D_CRIT "  Error: "
+#define _D_WARN "Warning: "
+#define _D_INFO "   Info: "
+#define _D(args...) do { \
+	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", args); \
+	} while (0)
+#else
+#define _D(args...) do {} while (0)
+#endif
+
+#else
 
 #ifdef _DEBUG
 #define _D_INFO "\x1b[33m"

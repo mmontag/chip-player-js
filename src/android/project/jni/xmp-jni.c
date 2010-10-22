@@ -75,7 +75,7 @@ Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj, jint rate)
 
 	if (xmp_open_audio(ctx) < 0) {
 		xmp_deinit(ctx);
-		xmp_free_context(ctx);
+		//xmp_free_context(ctx);
 		return -1;
 	}
 
@@ -86,7 +86,6 @@ JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_deinit(JNIEnv *env, jobject obj)
 {
 	xmp_close_audio(ctx);
-	xmp_deinit(ctx);
 	//xmp_free_context(ctx);
 
 	return 0;

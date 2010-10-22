@@ -37,7 +37,6 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -57,7 +56,6 @@ public class ModList extends ListActivity {
 	boolean shuffleMode = true;
 	boolean isBadDir = false;
 	boolean firstTime = true;
-	int apiVersion;
 	RandomIndex ridx;
 	ProgressDialog progressDialog;
 	SharedPreferences settings;
@@ -83,7 +81,6 @@ public class ModList extends ListActivity {
 		ChangeLog changeLog = new ChangeLog(this);
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
-		apiVersion = android.os.Build.VERSION.SDK_INT;
 		
 		xmp.initContext();
 		
@@ -195,7 +192,7 @@ public class ModList extends ListActivity {
 	}
 	
 	void playModule(String mod) {
-		Log.v(getString(R.string.app_name), "mod = " + mod);
+		//Log.v(getString(R.string.app_name), "mod = " + mod);
 		String[] mods = new String[1];
 		mods[0] = mod;
 		playModule(mods, true);

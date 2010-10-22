@@ -36,7 +36,6 @@
 #include "player.h"
 #include "synth.h"
 
-
 /* Values for multi-retrig */
 static struct retrig_t rval[] = {
     {   0,  1,  1 }, {  -1,  1,  1 }, {  -2,  1,  1 }, {  -4,  1,  1 },
@@ -1061,5 +1060,4 @@ void _xmp_player_end(struct xmp_context *ctx)
 	free(f->loop_start);
 	free(f->loop_stack);
 	free(p->fetch_ctl);
-
 }

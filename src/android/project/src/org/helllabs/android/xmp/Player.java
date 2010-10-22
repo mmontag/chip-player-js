@@ -157,7 +157,7 @@ public class Player extends Activity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
-		
+			
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		Bundle extras = getIntent().getExtras();
@@ -219,7 +219,6 @@ public class Player extends Activity {
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				//Debug.stopMethodTracing();
-				//stopPlayingMod();
 				stopPlayingMod();
 				finish();
 		    }
@@ -320,10 +319,12 @@ public class Player extends Activity {
 	}
 	
 	void stopPlayingMod() {
+		if (finishing)
+			return;
+		
 		finishing = true;
 		modPlayer.stop();
 		paused = false;
-		playButton.setImageResource(R.drawable.play);
 		
 		try {
 			progressThread.join();
