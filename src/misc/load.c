@@ -725,9 +725,9 @@ void xmp_release_module(xmp_context ctx)
 		free(m->xxp[i]);
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		free(m->xxfe[i]);
-		free(m->xxpe[i]);
-		free(m->xxae[i]);
+		if (m->xxfe[i]) free(m->xxfe[i]);
+		if (m->xxpe[i]) free(m->xxpe[i]);
+		if (m->xxae[i]) free(m->xxae[i]);
 		free(m->xxi[i]);
 	}
 

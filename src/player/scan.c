@@ -314,7 +314,8 @@ end_module:
     free(loop_row);
     free(loop_stk);
 
-    for (ord = m->xxh->len; ord--; free (tab_cnt[ord]));
+    for (ord = m->xxh->len; ord--; )
+	free(tab_cnt[ord]);
     free(tab_cnt);
 
     clock -= clock_rst;

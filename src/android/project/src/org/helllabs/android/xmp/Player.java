@@ -57,12 +57,17 @@ public class Player extends Activity {
         	
         	if (finishing)
         		return;
+
+        	if (single) {
+        		finish();
+        		return;
+        	}
         	
         	if (++playIndex < fileArray.length) {
         		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
         		playNewMod(fileArray[idx]);
         	} else {
-        		if (!single && loopListMode) {
+        		if (loopListMode) {
         			playIndex = 0;
         			ridx.randomize();
         			idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
@@ -157,7 +162,7 @@ public class Player extends Activity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
-			
+		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		Bundle extras = getIntent().getExtras();
@@ -168,7 +173,7 @@ public class Player extends Activity {
 		single = extras.getBoolean("single");	
 		shuffleMode = settings.getBoolean(Settings.PREF_SHUFFLE, true);
 		loopListMode = settings.getBoolean(Settings.PREF_LOOP_LIST, false);
-
+		
 		ridx = new RandomIndex(fileArray.length);
 		modPlayer = new ModPlayer(this);
 		
@@ -269,10 +274,10 @@ public class Player extends Activity {
 	@Override
 	public void onDestroy() {
 		stopPlayingMod();
-		modPlayer.finalize();
+		modPlayer.end();
 		super.onDestroy();
 	}
-	
+
 	void playNewMod(String fileName) {
 		ModInfo m = xmp.getModInfo(fileName);
        	seekBar.setProgress(0);

@@ -333,4 +333,14 @@ int	get_temp_dir		(char *, int);
 int	mkstemp			(char *);
 #endif
 
+#if 0
+#include <android/log.h>
+#define free(x) do { \
+	if ((x) == NULL) \
+		__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "DOUBLE FREE: %s (%s:%d)", __func__, __FILE__, __LINE__); \
+	free(x); \
+	x = NULL; \
+} while (0)
+#endif
+
 #endif /* __XMP_COMMON_H */

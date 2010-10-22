@@ -192,7 +192,6 @@ public class ModList extends ListActivity {
 	}
 	
 	void playModule(String mod) {
-		//Log.v(getString(R.string.app_name), "mod = " + mod);
 		String[] mods = new String[1];
 		mods[0] = mod;
 		playModule(mods, true);

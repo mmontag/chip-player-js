@@ -65,7 +65,7 @@ public class ModPlayer {
     }
 
 
-	protected void finalize() {	
+	public void end() {	
     	xmp.stopModule();
     	paused = false;
     	try {

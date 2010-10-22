@@ -323,7 +323,7 @@ static int ppcrack(FILE *fo, uint8 *data, uint32 len)
      success=-1;
 #endif
     }
-  free((void *) output);
+  free(output);
 return success;
 }
 
