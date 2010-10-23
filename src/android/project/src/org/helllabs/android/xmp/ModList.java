@@ -46,6 +46,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import org.helllabs.android.xmp.R;
 
@@ -54,7 +55,7 @@ public class ModList extends ListActivity {
 	String media_path;
 	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	Xmp xmp = new Xmp();	/* used to get mod info */
-	Button playAllButton, toggleLoopButton, toggleShuffleButton;
+	ImageButton playAllButton, toggleLoopButton, toggleShuffleButton;
 	boolean single = false;		/* play only one module */
 	boolean shuffleMode = true;
 	boolean loopMode = false;
@@ -88,29 +89,37 @@ public class ModList extends ListActivity {
 		
 		xmp.initContext();
 		
-		playAllButton = (Button)findViewById(R.id.play_all);
-		toggleLoopButton = (Button)findViewById(R.id.toggle_loop);
-		toggleShuffleButton = (Button)findViewById(R.id.toggle_shuffle);
+		playAllButton = (ImageButton)findViewById(R.id.play_all);
+		toggleLoopButton = (ImageButton)findViewById(R.id.toggle_loop);
+		toggleShuffleButton = (ImageButton)findViewById(R.id.toggle_shuffle);
 		
 		registerForContextMenu(getListView());
-		
+
+		playAllButton.setImageResource(R.drawable.list_play);
 		playAllButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				playModule(modList);
 			}
 		});
 		
+		toggleLoopButton.setImageResource(loopMode ?
+				R.drawable.list_loop_on : R.drawable.list_loop_off);
 		toggleLoopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				loopMode = !loopMode;
-				((Button)v).setText(loopMode ? "Loop on" : "Loop off");
+				((ImageButton)v).setImageResource(loopMode ?
+						R.drawable.list_loop_on : R.drawable.list_loop_off);
 		    }
 		});
-		
+
+		toggleShuffleButton.setImageResource(shuffleMode ?
+				R.drawable.list_shuffle_on : R.drawable.list_shuffle_off);
 		toggleShuffleButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				shuffleMode = !shuffleMode;
-				((Button)v).setText(shuffleMode ? "Shuffle on" : "Shuffle off");
+				((ImageButton)v).setImageResource(shuffleMode ?
+						R.drawable.list_shuffle_on : R.drawable.list_shuffle_off);
+				
 		    }
 		});
 

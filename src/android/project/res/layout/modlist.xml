@@ -28,21 +28,18 @@
 		android:orientation="horizontal"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content">
-		<Button android:id="@+id/play_all"
+		<ImageButton android:id="@+id/play_all"
 			android:layout_weight="0.34"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:text="Play all" />
-		<Button android:id="@+id/toggle_loop"
+			android:layout_height="wrap_content" />
+		<ImageButton android:id="@+id/toggle_loop"
 			android:layout_weight="0.33"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:text="Loop off" />
-		<Button android:id="@+id/toggle_shuffle"
+			android:layout_height="wrap_content" />
+		<ImageButton android:id="@+id/toggle_shuffle"
 			android:layout_weight="0.33"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:text="Shuffle on" />
+			android:layout_height="wrap_content" />
 	</LinearLayout>
 
 </LinearLayout>
