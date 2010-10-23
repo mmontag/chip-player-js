@@ -24,12 +24,19 @@ public class PlayList extends ListActivity {
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		setContentView(R.layout.playlist);
-		
+		setContentView(R.layout.playlist);		
 	}
 	
 	public static String[] list() {		
 		return Settings.dataDir.list(new PlayListFilter());
+	}
+	
+	public static String[] listNoSuffix() {
+		String[] pList = list();
+		for (int i = 0; i < pList.length; i++) {
+			pList[i] = pList[i].substring(0, pList[i].lastIndexOf(".playlist"));
+		}
+		return pList;
 	}
 	
 	public static void addNew(Context context) {
@@ -66,8 +73,9 @@ public class PlayList extends ListActivity {
 	public static void addToList(Context context, String list, String line) {
 		File file = new File(Settings.dataDir, list);
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(file));
-			out.write(line + "\n");
+			BufferedWriter out = new BufferedWriter(new FileWriter(file, true));
+			out.write(line);
+			out.newLine();
 			out.close();
 		} catch (IOException e) {
 			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();

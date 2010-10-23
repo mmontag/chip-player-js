@@ -22,15 +22,16 @@
 
 package org.helllabs.android.xmp;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -46,6 +47,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import org.helllabs.android.xmp.R;
@@ -102,7 +104,14 @@ public class ModList extends ListActivity {
 		
 		playListsButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-
+				Context context = v.getContext();
+				Dialog dialog = new Dialog(context);
+				dialog.setTitle("Select playlist");
+				ListView listView = new ListView(context);
+				dialog.setContentView(listView);
+				listView.setAdapter(new ArrayAdapter<String>(context,
+					android.R.layout.simple_list_item_1 , PlayList.listNoSuffix()));
+				dialog.show();
 		    }
 		});
 		
@@ -230,9 +239,8 @@ public class ModList extends ListActivity {
 		int i = 0;
 		menu.setHeaderTitle("Add to playlist");
 		menu.add(Menu.NONE, i, i, "New playlist...");
-		for (String each : PlayList.list()) {
+		for (String each : PlayList.listNoSuffix()) {
 			i++;
-			each = each.substring(0, each.lastIndexOf(".playlist"));
 			menu.add(Menu.NONE, i, i, each);
 		}
 	}
