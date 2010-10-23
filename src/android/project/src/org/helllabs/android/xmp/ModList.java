@@ -24,44 +24,33 @@ package org.helllabs.android.xmp;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import org.helllabs.android.xmp.R;
 
-public class ModList extends ListActivity {
+public class ModList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
 	String media_path;
-	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	Xmp xmp = new Xmp();	/* used to get mod info */
-	ImageButton playAllButton, toggleLoopButton, toggleShuffleButton;
-	boolean single = false;		/* play only one module */
-	boolean shuffleMode = true;
-	boolean loopMode = false;
 	boolean isBadDir = false;
 	boolean firstTime = true;
-	RandomIndex ridx;
 	ProgressDialog progressDialog;
 	SharedPreferences settings;
 	final Handler handler = new Handler();
@@ -74,73 +63,24 @@ public class ModList extends ListActivity {
 	}
 	
 	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
-		super.onConfigurationChanged(newConfig);
-	}
-	
-	@Override
 	public void onCreate(Bundle icicle) {
-		super.onCreate(icicle);
 		setContentView(R.layout.modlist);
-		
-		ChangeLog changeLog = new ChangeLog(this);
-		
-		settings = PreferenceManager.getDefaultSharedPreferences(this);
-		
-		xmp.initContext();
-		
-		playAllButton = (ImageButton)findViewById(R.id.play_all);
-		toggleLoopButton = (ImageButton)findViewById(R.id.toggle_loop);
-		toggleShuffleButton = (ImageButton)findViewById(R.id.toggle_shuffle);
-		
+		super.onCreate(icicle);	
+		ChangeLog changeLog = new ChangeLog(this);		
+		settings = PreferenceManager.getDefaultSharedPreferences(this);		
+		xmp.initContext();	
 		registerForContextMenu(getListView());
-
-		playAllButton.setImageResource(R.drawable.list_play);
-		playAllButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				playModule(modList);
-			}
-		});
-		
-		toggleLoopButton.setImageResource(loopMode ?
-				R.drawable.list_loop_on : R.drawable.list_loop_off);
-		toggleLoopButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				loopMode = !loopMode;
-				((ImageButton)v).setImageResource(loopMode ?
-						R.drawable.list_loop_on : R.drawable.list_loop_off);
-		    }
-		});
-
-		toggleShuffleButton.setImageResource(shuffleMode ?
-				R.drawable.list_shuffle_on : R.drawable.list_shuffle_off);
-		toggleShuffleButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				shuffleMode = !shuffleMode;
-				((ImageButton)v).setImageResource(shuffleMode ?
-						R.drawable.list_shuffle_on : R.drawable.list_shuffle_off);
-				
-		    }
-		});
-
+		changeLog.show();		
 		updatePlaylist();
-		
-		changeLog.show();
 	}
-	
-	@Override
-	public void onDestroy() {
-		single = true;
-		super.onDestroy();
-	}
-	
+
 	public void updatePlaylist() {
+		modList.clear();
+		
 		media_path = settings.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		//Log.v(getString(R.string.app_name), "path = " + media_path);
 		setTitle(media_path);
-
-		modList.clear();
-		
+	
 		final File modDir = new File(media_path);
 		
 		if (!modDir.isDirectory()) {
@@ -196,36 +136,6 @@ public class ModList extends ListActivity {
                 progressDialog.dismiss();
 			}
 		}.start();
-	}
-
-	void playModule(List<PlaylistInfo> list) {
-		String[] mods = new String[list.size()];
-		int i = 0;
-		Iterator<PlaylistInfo> element = list.iterator();
-		while (element.hasNext()) {
-			mods[i++] = element.next().filename;
-		}
-		playModule(mods, false);
-	}
-	
-	void playModule(String mod) {
-		String[] mods = new String[1];
-		mods[0] = mod;
-		playModule(mods, true);
-	}
-	
-	void playModule(String[] mods, boolean mode) {
-		Intent intent = new Intent(ModList.this, Player.class);
-		intent.putExtra("files", mods);
-		intent.putExtra("single", mode);
-		intent.putExtra("shuffle", shuffleMode);
-		intent.putExtra("loop", loopMode);
-		startActivity(intent);
-	}
-	
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
-		playModule(modList.get(position).filename);
 	}
 	
 	@Override

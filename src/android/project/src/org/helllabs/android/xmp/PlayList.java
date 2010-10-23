@@ -17,7 +17,11 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.Toast;
+import android.view.View;
+import android.view.View.OnClickListener;
 
 class PlayListFilter implements FilenameFilter {
 	public boolean accept(File dir, String name) {
@@ -25,13 +29,13 @@ class PlayListFilter implements FilenameFilter {
 	}
 }
 
-public class PlayList extends ListActivity {
+public class PlayList extends PlaylistActivity {
 	String name;
 	
 	@Override
-	public void onCreate(Bundle icicle) {		
-		super.onCreate(icicle);
+	public void onCreate(Bundle icicle) {	
 		setContentView(R.layout.playlist);
+		super.onCreate(icicle);
 		
 		Bundle extras = getIntent().getExtras();
 		if (extras == null)
@@ -39,16 +43,15 @@ public class PlayList extends ListActivity {
 		
 		name = extras.getString("name");
 		setTitle(name + " - " + "No comment");
-		
+
 		updateList();
 	}
 	
 	void updateList() {
-		List<PlaylistInfo> list = new ArrayList<PlaylistInfo>();
+		modList.clear();
+		
 		File file = new File(Settings.dataDir, name + ".playlist");
 		String line;
-		
-		list.clear();
 		
 	     //Open the file for reading
 	     try {
@@ -56,7 +59,7 @@ public class PlayList extends ListActivity {
 	    	 while ((line = in.readLine()) != null) {
 	    		 Log.v("asd", "line=" + line);
 	    		 String[] fields = line.split(":", 3);
-	    		 list.add(new PlaylistInfo(fields[2], fields[1], fields[0]));
+	    		 modList.add(new PlaylistInfo(fields[2], fields[1], fields[0]));
 	    	 }
 	    	 in.close();
 	     } catch (IOException e) {
@@ -64,11 +67,11 @@ public class PlayList extends ListActivity {
 	     }		
 		
 	     final PlaylistInfoAdapter plist = new PlaylistInfoAdapter(PlayList.this,
-    			R.layout.playlist_item, R.id.plist_info, list);
+    			R.layout.playlist_item, R.id.plist_info, modList);
         
 	     setListAdapter(plist);
 	}
-	
+
 	
 	// Static methods
 	
