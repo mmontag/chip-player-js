@@ -22,6 +22,7 @@
 
 package org.helllabs.android.xmp;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import org.helllabs.android.xmp.R;
@@ -221,29 +223,35 @@ public class ModList extends ListActivity {
     }
 
 	
-	// Context menu
+	// Playlist context menu
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		int i = 0;
 		menu.setHeaderTitle("Add to playlist");
 		menu.add(Menu.NONE, i, i, "New playlist...");
+		for (String each : PlayList.list()) {
+			i++;
+			each = each.substring(0, each.lastIndexOf(".playlist"));
+			menu.add(Menu.NONE, i, i, each);
+		}
 	}
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		//AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
 		
 		if (index == 0) {
 			PlayList.addNew(this);
 			return true;
 		}
-		//String[] menuItems = getResources().getStringArray(R.array.menu);
-		//String menuItemName = menuItems[menuItemIndex];
-		//String listItemName = Countries[info.position];
-		//TextView text = (TextView)findViewById(R.id.footer);
-		//text.setText(String.format("Selected %s for item %s", menuItemName, listItemName));
+		index--;
+		String[] menuItems = PlayList.list();
+		String line = modList.get(info.position).filename + ":" +
+						modList.get(info.position).name;
+		PlayList.addToList(this, menuItems[index], line);
+
 		return true;
 	}
 
