@@ -135,6 +135,7 @@ public class ModList extends ListActivity {
 	public void updatePlaylist() {
 		media_path = settings.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		//Log.v(getString(R.string.app_name), "path = " + media_path);
+		setTitle(media_path);
 
 		modList.clear();
 		
@@ -295,7 +296,7 @@ public class ModList extends ListActivity {
 			break;
 		*/
 		case R.id.menu_playlists:
-			startActivity(new Intent(this, MainMenu.class));
+			startActivity(new Intent(this, PlaylistMenu.class));
 			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);

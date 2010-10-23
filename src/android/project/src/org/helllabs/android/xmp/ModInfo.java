@@ -1,6 +1,6 @@
 package org.helllabs.android.xmp;
 
-class ModInfo {
+public class ModInfo {
 	String name;
 	String filename;
 	String type;
