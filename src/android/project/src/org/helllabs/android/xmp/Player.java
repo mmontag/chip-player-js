@@ -171,8 +171,8 @@ public class Player extends Activity {
 		
 		fileArray = extras.getStringArray("files");
 		single = extras.getBoolean("single");	
-		shuffleMode = settings.getBoolean(Settings.PREF_SHUFFLE, true);
-		loopListMode = settings.getBoolean(Settings.PREF_LOOP_LIST, false);
+		shuffleMode = extras.getBoolean("shuffle");
+		loopListMode = extras.getBoolean("loop");
 		
 		ridx = new RandomIndex(fileArray.length);
 		modPlayer = new ModPlayer(this);

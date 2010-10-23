@@ -28,10 +28,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -47,7 +45,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import org.helllabs.android.xmp.R;
@@ -57,9 +54,10 @@ public class ModList extends ListActivity {
 	String media_path;
 	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	Xmp xmp = new Xmp();	/* used to get mod info */
-	Button playAllButton, playListsButton, refreshButton;
+	Button playAllButton, toggleLoopButton, toggleShuffleButton;
 	boolean single = false;		/* play only one module */
 	boolean shuffleMode = true;
+	boolean loopMode = false;
 	boolean isBadDir = false;
 	boolean firstTime = true;
 	RandomIndex ridx;
@@ -91,8 +89,8 @@ public class ModList extends ListActivity {
 		xmp.initContext();
 		
 		playAllButton = (Button)findViewById(R.id.play_all);
-		playListsButton = (Button)findViewById(R.id.playlists);
-		refreshButton = (Button)findViewById(R.id.refresh);
+		toggleLoopButton = (Button)findViewById(R.id.toggle_loop);
+		toggleShuffleButton = (Button)findViewById(R.id.toggle_shuffle);
 		
 		registerForContextMenu(getListView());
 		
@@ -102,22 +100,17 @@ public class ModList extends ListActivity {
 			}
 		});
 		
-		playListsButton.setOnClickListener(new OnClickListener() {
+		toggleLoopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Context context = v.getContext();
-				Dialog dialog = new Dialog(context);
-				dialog.setTitle("Select playlist");
-				ListView listView = new ListView(context);
-				dialog.setContentView(listView);
-				listView.setAdapter(new ArrayAdapter<String>(context,
-					android.R.layout.simple_list_item_1 , PlayList.listNoSuffix()));
-				dialog.show();
+				loopMode = !loopMode;
+				((Button)v).setText(loopMode ? "Loop on" : "Loop off");
 		    }
 		});
 		
-		refreshButton.setOnClickListener(new OnClickListener() {
+		toggleShuffleButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				updatePlaylist();
+				shuffleMode = !shuffleMode;
+				((Button)v).setText(shuffleMode ? "Shuffle on" : "Shuffle off");
 		    }
 		});
 
@@ -216,6 +209,8 @@ public class ModList extends ListActivity {
 		Intent intent = new Intent(ModList.this, Player.class);
 		intent.putExtra("files", mods);
 		intent.putExtra("single", mode);
+		intent.putExtra("shuffle", shuffleMode);
+		intent.putExtra("loop", loopMode);
 		startActivity(intent);
 	}
 	
