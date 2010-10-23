@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -38,7 +39,7 @@ public class PlaylistMenu extends ListActivity {
 		}
 		
         final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(PlaylistMenu.this,
-    			R.layout.playlistmenu_item, R.id.plist_info, list);
+    			R.layout.playlist_item, R.id.plist_info, list);
         
         setListAdapter(playlist);
 	}
@@ -48,6 +49,10 @@ public class PlaylistMenu extends ListActivity {
 		if (position == 0) {
 			finish();
 			return;
+		} else {
+			Intent intent = new Intent(PlaylistMenu.this, PlayList.class);
+			intent.putExtra("name", PlayList.listNoSuffix()[position -1]);
+			startActivity(intent);
 		}
 	}
 	

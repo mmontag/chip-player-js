@@ -1,10 +1,14 @@
 package org.helllabs.android.xmp;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -22,11 +26,51 @@ class PlayListFilter implements FilenameFilter {
 }
 
 public class PlayList extends ListActivity {
+	String name;
+	
 	@Override
-	public void onCreate(Bundle icicle) {
+	public void onCreate(Bundle icicle) {		
 		super.onCreate(icicle);
-		setContentView(R.layout.playlist);		
+		setContentView(R.layout.playlist);
+		
+		Bundle extras = getIntent().getExtras();
+		if (extras == null)
+			return;
+		
+		name = extras.getString("name");
+		setTitle(name + " - " + "No comment");
+		
+		updateList();
 	}
+	
+	void updateList() {
+		List<PlaylistInfo> list = new ArrayList<PlaylistInfo>();
+		File file = new File(Settings.dataDir, name + ".playlist");
+		String line;
+		
+		list.clear();
+		
+	     //Open the file for reading
+	     try {
+	    	 BufferedReader in = new BufferedReader(new FileReader(file));
+	    	 while ((line = in.readLine()) != null) {
+	    		 Log.v("asd", "line=" + line);
+	    		 String[] fields = line.split(":", 3);
+	    		 list.add(new PlaylistInfo(fields[2], fields[1], fields[0]));
+	    	 }
+	    	 in.close();
+	     } catch (IOException e) {
+	    	 
+	     }		
+		
+	     final PlaylistInfoAdapter plist = new PlaylistInfoAdapter(PlayList.this,
+    			R.layout.playlist_item, R.id.plist_info, list);
+        
+	     setListAdapter(plist);
+	}
+	
+	
+	// Static methods
 	
 	public static String[] list() {		
 		return Settings.dataDir.list(new PlayListFilter());

@@ -24,7 +24,7 @@ public class PlaylistInfoAdapter extends ArrayAdapter<PlaylistInfo> {
     	View v = convertView;
     	if (v == null) {
     		LayoutInflater vi = (LayoutInflater)myContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    		v = vi.inflate(R.layout.playlistmenu_item, null);
+    		v = vi.inflate(R.layout.playlist_item, null);
     	}
     	PlaylistInfo o = items.get(position);
             

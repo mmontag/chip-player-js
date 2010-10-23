@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="4"
-	android:versionName="1.3 (Better performance)"
+	android:versionName="2.0 (Playlists, more options, better performance)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
@@ -21,6 +21,7 @@
 		<activity android:name=".Player" android:theme="@android:style/Theme.NoTitleBar" />
 		<activity android:name=".Settings" android:theme="@android:style/Theme.NoTitleBar" />
 		<activity android:name=".PlaylistMenu" />
+		<activity android:name=".PlayList" />
 		<activity android:name=".ListFormats" android:theme="@android:style/Theme.NoTitleBar">
 			<intent-filter>
 			    <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
