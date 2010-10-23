@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/menu_refresh"
+  <item android:id="@+id/menu_playlists"
+	android:icon="@drawable/ic_menu_list"
+	android:title="@string/menu_playlists" />
+  <item android:id="@+id/menu_refresh"
 	android:icon="@drawable/ic_menu_refresh"
 	android:title="@string/menu_refresh" />
-    <item android:id="@+id/menu_about"
-	android:icon="@drawable/ic_menu_info_details"
-	android:title="@string/menu_about" />
-    <item android:id="@+id/menu_formats"
-    	android:icon="@drawable/ic_menu_list"
-    	android:title="@string/menu_formats" />
-    <item android:id="@+id/menu_prefs"
+  <item android:id="@+id/menu_prefs"
 	android:icon="@drawable/ic_menu_preferences"
 	android:title="@string/menu_prefs" />
 </menu>

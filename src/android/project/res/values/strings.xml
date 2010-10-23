@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Xmp</string>
     <string name="app_description">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
-    <string name="settings_title">Settings</string>
+    
     
     <string name="preferences_media_path_title">Modules pathname</string>
     <string name="preferences_media_path_summary">The directory where mod files are located</string>
@@ -14,21 +14,21 @@
     <string name="preferences_pan_separation_title">Pan separation</string>
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
-    <string name="preferences_category_format">Format settings</string>
+    
     <string name="changelog_text">- Performance optimization</string>
     <string name="changelog_title">New in version 1.3</string>
-    <string name="menu_formats">Known formats</string>
+    
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
     <string name="menu_prefs">Settings</string>
-    <string name="menu_about">About</string>
-<string name="list_formats_title">Known module formats</string>
+    
+
 <string name="preferences_examples_title">Install modules</string>
     <string name="preferences_examples_summary">Install example music files when creating modules directory</string>
 <string name="preferences_meters_title">Volume bars</string>
     <string name="preferences_meters_summary">Set the type of volume bars</string>
     <string name="preferences_category_interface">Interface settings</string>
-<string name="player_title">Player</string>
+
 <string name="preferences_loop_list_summary">Play files again after playlist ends</string>
     <string name="preferences_loop_list_title">Loop playlists</string>
     <string name="preferences_shuffle_title">Shuffle mode</string>
@@ -37,4 +37,10 @@
     <string name="preferences_sampling_rate_title">Sampling rate</string>
     <string name="preferences_buffer_size_summary">Sound buffer size in bytes (affects latency)</string>
     <string name="preferences_buffer_size_title">Buffer size</string>
+<string name="preferences_list_formats_title">Known formats</string>
+    <string name="preferences_list_formats_summary">List all supported module formats</string>
+    <string name="preferences_category_information">Information</string>
+    <string name="preferences_about_title">About xmp</string>
+    <string name="preferences_about_summary">View version and application info</string>
+    <string name="menu_playlists">Playlists</string>
 </resources>

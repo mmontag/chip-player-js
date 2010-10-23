@@ -19,15 +19,21 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name=".Player" 
-			android:label="@string/player_title">
+		<activity android:name=".Player" />
+		<activity android:name=".Settings" />
+		<activity android:name=".MainMenu" />
+		<activity android:name=".ListFormats">
+			<intent-filter>
+			    <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
 		</activity>
-		<activity android:name=".Settings" 
-			android:label="@string/settings_title">
+		<activity android:name=".About">
+			<intent-filter>
+			    <action android:name="org.helllabs.android.xmp.ABOUT" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
 		</activity>
-		<activity android:name=".ListFormats" 
-			android:label="@string/list_formats_title">
-		</activity>		       
 	</application>
 	<supports-screens/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>

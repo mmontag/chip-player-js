@@ -100,4 +100,22 @@
           
   </PreferenceCategory>
   
+  <PreferenceCategory
+    android:title="@string/preferences_category_information">
+    
+    <Preference
+      android:title="@string/preferences_list_formats_title"
+      android:summary="@string/preferences_list_formats_summary">      
+      <intent
+        android:action="org.helllabs.android.xmp.LIST_FORMATS" />        
+    </Preference>
+    
+    <Preference
+      android:title="@string/preferences_about_title"
+      android:summary="@string/preferences_about_summary">      
+      <intent
+        android:action="org.helllabs.android.xmp.ABOUT" />        
+    </Preference>
+    
+  </PreferenceCategory>
 </PreferenceScreen>

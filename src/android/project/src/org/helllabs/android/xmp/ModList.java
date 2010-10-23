@@ -276,9 +276,7 @@ public class ModList extends ListActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
-		case R.id.menu_formats:
-			startActivity(new Intent(this, ListFormats.class));
-			break;
+		/*
 		case R.id.menu_about:
 			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 			String version = "Version " + AppInfo.getVersion(this) + "\n\n";
@@ -295,11 +293,12 @@ public class ModList extends ListActivity {
 			});
 			alertDialog.show();	
 			break;
+		*/
+		case R.id.menu_playlists:
+			startActivity(new Intent(this, MainMenu.class));
+			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
-			/* Nicer, but only for API level 5
-			overridePendingTransition(R.anim.slide_left, R.anim.slide_right);
-			*/
 			break;
 		case R.id.menu_refresh:
 			updatePlaylist();
