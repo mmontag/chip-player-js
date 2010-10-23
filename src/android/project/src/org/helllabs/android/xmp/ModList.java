@@ -55,7 +55,7 @@ import org.helllabs.android.xmp.R;
 public class ModList extends ListActivity {
 	static final int SETTINGS_REQUEST = 45;
 	String media_path;
-	List<ModInfo> modList = new ArrayList<ModInfo>();
+	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	Xmp xmp = new Xmp();	/* used to get mod info */
 	Button playAllButton, playListsButton, refreshButton;
 	boolean single = false;		/* play only one module */
@@ -176,10 +176,12 @@ public class ModList extends ListActivity {
 			public void run() { 		
             	for (File file : modDir.listFiles(new ModFilter())) {
             		ModInfo m = xmp.getModInfo(media_path + "/" + file.getName());
-            		modList.add(m);
+            		PlaylistInfo pi = new PlaylistInfo(m.name,
+            				m.chn + " chn " + m.type, m.filename);
+            		modList.add(pi);
             	}
             	
-                final ModInfoAdapter playlist = new ModInfoAdapter(ModList.this,
+                final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(ModList.this,
                 			R.layout.song_item, R.id.info, modList);
                 
                 /* This one must run in the UI thread */
@@ -194,10 +196,10 @@ public class ModList extends ListActivity {
 		}.start();
 	}
 
-	void playModule(List<ModInfo> list) {
+	void playModule(List<PlaylistInfo> list) {
 		String[] mods = new String[list.size()];
 		int i = 0;
-		Iterator<ModInfo> element = list.iterator();
+		Iterator<PlaylistInfo> element = list.iterator();
 		while (element.hasNext()) {
 			mods[i++] = element.next().filename;
 		}
@@ -257,10 +259,8 @@ public class ModList extends ListActivity {
 		}
 		index--;
 		String[] menuItems = PlayList.list();
-		ModInfo mi = modList.get(info.position);
-		String line = mi.filename + ":" +
-						mi.chn + " chn " + mi.type + ":" +
-						mi.name;
+		PlaylistInfo pi = modList.get(info.position);
+		String line = pi.filename + ":" + pi.comment + ":" + pi.name;
 		PlayList.addToList(this, menuItems[index], line);
 
 		return true;
