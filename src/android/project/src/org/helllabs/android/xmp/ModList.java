@@ -257,8 +257,10 @@ public class ModList extends ListActivity {
 		}
 		index--;
 		String[] menuItems = PlayList.list();
-		String line = modList.get(info.position).filename + ":" +
-						modList.get(info.position).name;
+		ModInfo mi = modList.get(info.position);
+		String line = mi.filename + ":" +
+						mi.chn + " chn " + mi.type + ":" +
+						mi.name;
 		PlayList.addToList(this, menuItems[index], line);
 
 		return true;
