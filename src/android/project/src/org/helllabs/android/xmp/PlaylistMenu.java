@@ -5,7 +5,12 @@ import java.util.List;
 
 import android.app.ListActivity;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 public class PlaylistMenu extends ListActivity {
@@ -17,6 +22,12 @@ public class PlaylistMenu extends ListActivity {
 		
 		setTitle("Playlists");
 		
+		registerForContextMenu(getListView());
+		
+		updateList();
+	}
+	
+	void updateList() {
 		List<PlaylistInfo> list = new ArrayList<PlaylistInfo>();
 		
 		list.clear();
@@ -39,5 +50,41 @@ public class PlaylistMenu extends ListActivity {
 			return;
 		}
 	}
+	
+	
+	// Playlist context menu
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+	    AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
+		int i = 0;
+		menu.setHeaderTitle("Playlist options");
+		
+		if (info.position == 0) {
+			menu.add(Menu.NONE, i, i, "Change directory");
+		} else {
+			menu.add(Menu.NONE, i, i, "Delete");
+		}
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+		int index = item.getItemId();
 
+		if (info.position == 0) {
+			if (index == 0) {
+				// change directory
+				return true;
+			}
+		} else {
+			if (index == 0) {
+				PlayList.deleteList(this, info.position - 1);
+				updateList();
+				return true;
+			}			
+		}
+
+		return true;
+	}
 }

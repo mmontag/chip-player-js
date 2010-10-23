@@ -11,6 +11,7 @@ import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -39,9 +40,14 @@ public class PlayList extends ListActivity {
 		return pList;
 	}
 	
+	public static void deleteList(Context context, int index) {
+		String list = listNoSuffix()[index];
+		File file = new File(Settings.dataDir, list + ".playlist");
+		file.delete();
+	}
+	
 	public static void addNew(Context context) {
-		AlertDialog.Builder alert = new AlertDialog.Builder(context);
-		  
+		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("New playlist");  
 		alert.setMessage("Enter the new playlist name:");  
 		     
