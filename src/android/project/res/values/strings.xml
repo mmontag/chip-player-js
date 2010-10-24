@@ -46,4 +46,25 @@
 <string name="dialog_new_comment">Comment</string>
     <string name="no_comment">No comment</string>
     <string name="dialog_new_playlist">New playlist name</string>
+<string name="empty_playlist">Empty playlist</string>
+    <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
+    <string name="about_author">Written by Claudio Matsuoka</string>
+    <string name="about_version">Version %s</string>
+    <string name="about_xmp">Based on xmp %s written by Claudio Matsuoka and Hipolito Carraro Jr.</string>
+<string name="about_license">License</string>
+    <string name="about_license_text">Extended Module Player (C)1996-2010 Claudio Matsuoka and Hipolito Carraro Jr.
+ulaw encoding function Copyright (C) 1989 Rich Gopstein and Harris Corp.
+XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn.
+ProWizard-PC decruncher Copyright (C) 1998 Sylvain Chipaux.
+IT sample decompression routine Copyright (C) 1998 Tammo Hinrichs.
+MMCMP and IT lowpass filter routines Copyright (C) 1998 Olivier Lapicque.
+LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks.
+Inflate decompression routine Copyright (C) 2005-2006 Michael Kohn.\n
+\nThis program is free software;  you can redistribute it  and/or modify it
+under  the terms of  the GNU General Public License  as published  by the
+Free Software Foundation;  either  version 2 of the License, or  (at your
+option) any later version. This program is distributed  in the  hope that
+it  will  be useful, but WITHOUT ANY WARRANTY;  without even the  implied
+warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.</string>
 </resources>

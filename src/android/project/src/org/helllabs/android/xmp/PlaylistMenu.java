@@ -30,6 +30,7 @@ import android.widget.Toast;
 public class PlaylistMenu extends ListActivity {
 	static final int SETTINGS_REQUEST = 45;
 	static final int PLAYLIST_REQUEST = 46;
+	Xmp xmp = new Xmp();
 	SharedPreferences prefs;
 	String media_path;
 	
@@ -38,6 +39,28 @@ public class PlaylistMenu extends ListActivity {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist_menu);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		xmp.initContext();
+		
+		if (!Settings.dataDir.isDirectory()) {
+			if (!Settings.dataDir.mkdirs()) {
+				// Error
+			} else {
+				final String name = getString(R.string.empty_playlist);
+				File file = new File(Settings.dataDir, name + ".playlist");
+				try {
+					file.createNewFile();
+					file = new File(Settings.dataDir, name + ".comment");
+					file.createNewFile();
+					BufferedWriter out = new BufferedWriter(new FileWriter(file));
+					out.write(getString(R.string.empty_comment));
+					out.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}				
+			}
+		}
+		
 		registerForContextMenu(getListView());
 		updateList();
 	}
@@ -82,6 +105,7 @@ public class PlaylistMenu extends ListActivity {
 		
 		if (info.position == 0) {
 			menu.add(Menu.NONE, 0, 0, "Change directory");
+			menu.add(Menu.NONE, 1, 1, "Files to new playlist");
 		} else {
 			menu.add(Menu.NONE, 0, 0, "Rename");
 			menu.add(Menu.NONE, 1, 1, "Edit comment");

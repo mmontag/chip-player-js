@@ -62,8 +62,7 @@ public class ModList extends PlaylistActivity {
 		setContentView(R.layout.modlist);
 		super.onCreate(icicle);	
 		ChangeLog changeLog = new ChangeLog(this);		
-		settings = PreferenceManager.getDefaultSharedPreferences(this);		
-		xmp.initContext();	
+		settings = PreferenceManager.getDefaultSharedPreferences(this);	
 		registerForContextMenu(getListView());
 		changeLog.show();		
 		updatePlaylist();
