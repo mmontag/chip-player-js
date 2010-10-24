@@ -40,7 +40,7 @@
 <string name="preferences_list_formats_title">Known formats</string>
     <string name="preferences_list_formats_summary">List all supported module formats</string>
     <string name="preferences_category_information">Information</string>
-    <string name="preferences_about_title">About xmp</string>
+    <string name="preferences_about_title">About</string>
     <string name="preferences_about_summary">View version and application info</string>
     <string name="menu_playlists">Playlists</string>
 <string name="dialog_new_comment">Comment</string>

@@ -43,11 +43,9 @@ import org.helllabs.android.xmp.R;
 
 public class ModList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
-	static final int PLAYLISTS_REQUEST = 46;
 	String media_path;
 	Xmp xmp = new Xmp();	/* used to get mod info */
 	boolean isBadDir = false;
-	boolean firstTime = true;
 	ProgressDialog progressDialog;
 	SharedPreferences settings;
 	final Handler handler = new Handler();
@@ -96,9 +94,9 @@ public class ModList extends PlaylistActivity {
 					updatePlaylist();
 				}
 			});
-			alertDialog.setButton2("Settings", new DialogInterface.OnClickListener() {
+			alertDialog.setButton2("Back", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					startActivityForResult(new Intent(ModList.this, Settings.class), SETTINGS_REQUEST);
+					finish();
 				}
 			});
 			alertDialog.show();
@@ -107,9 +105,7 @@ public class ModList extends PlaylistActivity {
 		
 		isBadDir = false;
 		progressDialog = ProgressDialog.show(this,      
-				firstTime ? "Xmp for Android" : "Please wait",
-				"Scanning module files...", true);
-		firstTime = false;
+				"Please wait", "Scanning module files...", true);
 		
 		new Thread() { 
 			public void run() { 		
@@ -141,10 +137,6 @@ public class ModList extends PlaylistActivity {
     	switch (requestCode) {
     	case SETTINGS_REQUEST:
             if (isBadDir || resultCode == RESULT_OK)
-            	updatePlaylist();
-    		break;
-    	case PLAYLISTS_REQUEST:
-            if (resultCode == RESULT_OK)
             	updatePlaylist();
             break;
         }
@@ -213,9 +205,6 @@ public class ModList extends PlaylistActivity {
 			alertDialog.show();	
 			break;
 		*/
-		case R.id.menu_playlists:
-			startActivityForResult(new Intent(this, PlaylistMenu.class), PLAYLISTS_REQUEST);
-			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
 			break;

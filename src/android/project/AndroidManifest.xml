@@ -11,7 +11,7 @@
 		android:icon="@drawable/icon"
 		android:label="@string/app_name"
 		android:description="@string/app_description">
-		<activity android:name=".ModList"
+		<activity android:name=".PlaylistMenu"
 			android:configChanges="keyboardHidden|orientation">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
@@ -20,7 +20,7 @@
 		</activity>
 		<activity android:name=".Player" android:theme="@android:style/Theme.NoTitleBar" />
 		<activity android:name=".Settings" android:theme="@android:style/Theme.NoTitleBar" />
-		<activity android:name=".PlaylistMenu" />
+		<activity android:name=".ModList" />
 		<activity android:name=".PlayList" />
 		<activity android:name=".ListFormats" android:theme="@android:style/Theme.NoTitleBar">
 			<intent-filter>

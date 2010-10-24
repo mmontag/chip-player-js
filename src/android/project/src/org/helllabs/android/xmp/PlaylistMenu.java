@@ -26,8 +26,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+
 public class PlaylistMenu extends ListActivity {
 	static final int SETTINGS_REQUEST = 45;
+	static final int PLAYLIST_REQUEST = 46;
 	SharedPreferences prefs;
 	String media_path;
 	
@@ -35,13 +37,8 @@ public class PlaylistMenu extends ListActivity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist_menu);
-		
-		setResult(RESULT_CANCELED);		// Our default
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		setTitle("Playlists");
-		
 		registerForContextMenu(getListView());
-		
 		updateList();
 	}
 	
@@ -51,7 +48,7 @@ public class PlaylistMenu extends ListActivity {
 		List<PlaylistInfo> list = new ArrayList<PlaylistInfo>();
 		
 		list.clear();
-		list.add(new PlaylistInfo("Mod List", "Files in " + media_path));
+		list.add(new PlaylistInfo("Module list", "Files in " + media_path));
 		
 		for (String p : PlayList.listNoSuffix()) {
 			list.add(new PlaylistInfo(p, PlayList.readComment(this, p)));
@@ -66,12 +63,12 @@ public class PlaylistMenu extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		if (position == 0) {
-			finish();
-			return;
+			Intent intent = new Intent(PlaylistMenu.this, ModList.class);
+			startActivityForResult(intent, PLAYLIST_REQUEST);
 		} else {
 			Intent intent = new Intent(PlaylistMenu.this, PlayList.class);
 			intent.putExtra("name", PlayList.listNoSuffix()[position -1]);
-			startActivity(intent);
+			startActivityForResult(intent, PLAYLIST_REQUEST);
 		}
 	}
 	
@@ -100,7 +97,6 @@ public class PlaylistMenu extends ListActivity {
 		if (info.position == 0) {		// First item of list
 			if (index == 0) {			// First item of context menu
 				changeDir(this);
-				setResult(RESULT_OK);	// Force rescan in ModList
 				return true;
 			}
 		} else {
@@ -181,7 +177,6 @@ public class PlaylistMenu extends ListActivity {
 					SharedPreferences.Editor editor = prefs.edit();
 					editor.putString(Settings.PREF_MEDIA_PATH, value);
 					editor.commit();
-					setResult(RESULT_OK);	// Force ModList rescan
 					updateList();
 				}
 			}  
@@ -234,13 +229,14 @@ public class PlaylistMenu extends ListActivity {
 	
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	if (requestCode == SETTINGS_REQUEST) {
-            if (resultCode == RESULT_OK) {
+    	switch (requestCode) {
+    	case SETTINGS_REQUEST:
+            if (resultCode == RESULT_OK)
             	updateList();
-                setResult(resultCode);
-            }
-        } else {
-        	setResult(RESULT_CANCELED);
+            break;
+    	case PLAYLIST_REQUEST:
+    		updateList();
+    		break;
         }
     }
 	
@@ -250,7 +246,7 @@ public class PlaylistMenu extends ListActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.playlist_menu, menu);
+	    inflater.inflate(R.menu.options_menu, menu);
 	    return true;
 	}
 

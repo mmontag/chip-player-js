@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-  <item android:id="@+id/menu_playlists"
-	android:icon="@drawable/ic_menu_list"
-	android:title="@string/menu_playlists" />
   <item android:id="@+id/menu_refresh"
 	android:icon="@drawable/ic_menu_refresh"
 	android:title="@string/menu_refresh" />
