@@ -1,9 +1,16 @@
 package org.helllabs.android.xmp;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -15,17 +22,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class PlaylistMenu extends ListActivity {
 	static final int SETTINGS_REQUEST = 45;
 	SharedPreferences prefs;
+	String media_path;
 	
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist_menu);
-
+		
+		setResult(RESULT_CANCELED);		// Our default
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		setTitle("Playlists");
 		
@@ -35,7 +46,7 @@ public class PlaylistMenu extends ListActivity {
 	}
 	
 	void updateList() {
-		String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
+		media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		
 		List<PlaylistInfo> list = new ArrayList<PlaylistInfo>();
 		
@@ -70,13 +81,14 @@ public class PlaylistMenu extends ListActivity {
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 	    AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
-		int i = 0;
 		menu.setHeaderTitle("Playlist options");
 		
 		if (info.position == 0) {
-			menu.add(Menu.NONE, i, i, "Change directory");
+			menu.add(Menu.NONE, 0, 0, "Change directory");
 		} else {
-			menu.add(Menu.NONE, i, i, "Delete");
+			menu.add(Menu.NONE, 0, 0, "Rename");
+			menu.add(Menu.NONE, 1, 1, "Edit comment");
+			menu.add(Menu.NONE, 2, 2, "Delete");
 		}
 	}
 	
@@ -85,13 +97,23 @@ public class PlaylistMenu extends ListActivity {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
 
-		if (info.position == 0) {
-			if (index == 0) {
-				// change directory
+		if (info.position == 0) {		// First item of list
+			if (index == 0) {			// First item of context menu
+				changeDir(this);
+				setResult(RESULT_OK);	// Force rescan in ModList
 				return true;
 			}
 		} else {
-			if (index == 0) {
+			switch (index) {
+			case 0:						// Rename
+				renameList(this, info.position -1);
+				updateList();
+				return true;
+			case 1:						// Edit comment
+				editComment(this, info.position -1);
+				updateList();
+				return true;
+			case 2:						// Delete
 				PlayList.deleteList(this, info.position - 1);
 				updateList();
 				return true;
@@ -100,7 +122,116 @@ public class PlaylistMenu extends ListActivity {
 
 		return true;
 	}
-		
+	
+	public void renameList(Context context, int index) {
+		final String name = PlayList.listNoSuffix()[index];
+		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
+		alert.setTitle("Rename playlist");  
+		alert.setMessage("Enter the new playlist name:");  
+		final EditText input = new EditText(context);
+		input.setText(name);
+		alert.setView(input);  
+
+		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {
+				boolean error = false;
+				String value = input.getText().toString();
+				File old1 = new File(Settings.dataDir, name + ".playlist");
+				File old2 = new File(Settings.dataDir, name + ".comment");
+				File new1 = new File(Settings.dataDir, value + ".playlist");
+				File new2 = new File(Settings.dataDir, value + ".comment");
+				
+				if (old1.renameTo(new1) == false) { 
+					error = true;
+				} else if (old2.renameTo(new2) == false) {
+					new1.renameTo(old1);
+					error = true;
+				}
+				
+				if (error) {
+					Toast.makeText(input.getContext(), "Rename failed", Toast.LENGTH_SHORT).show();
+				}
+				
+				updateList();
+			}  
+		});  
+			  
+		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {  
+				// Canceled.  
+			}  
+		});  
+
+		alert.show(); 
+
+	}
+	
+	public void changeDir(Context context) {
+		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
+		alert.setTitle("Change directory");  
+		alert.setMessage("Enter the mod directory:");  
+		final EditText input = new EditText(context);
+		input.setText(media_path);
+		alert.setView(input);  
+
+		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {  
+				String value = input.getText().toString();
+				if (!value.equals(media_path)) {
+					SharedPreferences.Editor editor = prefs.edit();
+					editor.putString(Settings.PREF_MEDIA_PATH, value);
+					editor.commit();
+					setResult(RESULT_OK);	// Force ModList rescan
+					updateList();
+				}
+			}  
+		});  
+			  
+		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {  
+				// Canceled.  
+			}  
+		});  
+
+		alert.show(); 
+	}
+	
+	public void editComment(Context context, int index) {
+		final String name = PlayList.listNoSuffix()[index];
+		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
+		alert.setTitle("Edit comment");  
+		alert.setMessage("Enter the new comment for " + name + ":");  
+		final EditText input = new EditText(context);
+		input.setText(PlayList.readComment(context, name));
+		alert.setView(input);  
+
+		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {  
+				String value = input.getText().toString();
+				File file = new File(Settings.dataDir, name + ".comment");
+				try {
+					file.createNewFile();
+					BufferedWriter out = new BufferedWriter(new FileWriter(file));
+					out.write(value);
+					out.close();
+				} catch (IOException e) {
+					Toast.makeText(input.getContext(), "Error", Toast.LENGTH_SHORT)
+						.show();
+				}
+				
+				updateList();
+			}  
+		});  
+			  
+		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {
+				// Canceled.  
+			}  
+		});  
+
+		alert.show(); 
+	}
+	
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if (requestCode == SETTINGS_REQUEST) {
