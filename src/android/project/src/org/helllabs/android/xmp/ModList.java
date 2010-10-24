@@ -24,8 +24,6 @@ package org.helllabs.android.xmp;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Iterator;
-import java.util.List;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -34,7 +32,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -42,11 +39,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ListView;
 import org.helllabs.android.xmp.R;
 
 public class ModList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
+	static final int PLAYLISTS_REQUEST = 46;
 	String media_path;
 	Xmp xmp = new Xmp();	/* used to get mod info */
 	boolean isBadDir = false;
@@ -141,10 +138,15 @@ public class ModList extends PlaylistActivity {
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
-    	if (requestCode == SETTINGS_REQUEST) {
-            if (isBadDir || resultCode == RESULT_OK) {
+    	switch (requestCode) {
+    	case SETTINGS_REQUEST:
+            if (isBadDir || resultCode == RESULT_OK)
             	updatePlaylist();
-            }
+    		break;
+    	case PLAYLISTS_REQUEST:
+            if (resultCode == RESULT_OK)
+            	updatePlaylist();
+            break;
         }
     }
 
@@ -212,7 +214,7 @@ public class ModList extends PlaylistActivity {
 			break;
 		*/
 		case R.id.menu_playlists:
-			startActivity(new Intent(this, PlaylistMenu.class));
+			startActivityForResult(new Intent(this, PlaylistMenu.class), PLAYLISTS_REQUEST);
 			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);

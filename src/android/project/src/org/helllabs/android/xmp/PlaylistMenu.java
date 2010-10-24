@@ -11,12 +11,14 @@ import android.preference.PreferenceManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
 public class PlaylistMenu extends ListActivity {
+	static final int SETTINGS_REQUEST = 45;
 	SharedPreferences prefs;
 	
 	@Override
@@ -98,4 +100,40 @@ public class PlaylistMenu extends ListActivity {
 
 		return true;
 	}
+		
+	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	if (requestCode == SETTINGS_REQUEST) {
+            if (resultCode == RESULT_OK) {
+            	updateList();
+                setResult(resultCode);
+            }
+        } else {
+        	setResult(RESULT_CANCELED);
+        }
+    }
+	
+	
+	// Menu
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.playlist_menu, menu);
+	    return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()) {
+		case R.id.menu_prefs:		
+			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
+			break;
+		case R.id.menu_refresh:
+			updateList();
+			break;
+		}
+		return true;
+	}
+
 }
