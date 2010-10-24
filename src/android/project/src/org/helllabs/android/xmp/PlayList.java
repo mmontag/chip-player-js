@@ -7,21 +7,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.Toast;
-import android.view.View;
-import android.view.View.OnClickListener;
 
 class PlayListFilter implements FilenameFilter {
 	public boolean accept(File dir, String name) {
@@ -42,7 +30,7 @@ public class PlayList extends PlaylistActivity {
 			return;
 		
 		name = extras.getString("name");
-		setTitle(name + " - " + "No comment");
+		setTitle(name + " - " + readComment(this, name));
 
 		updateList();
 	}
@@ -53,23 +41,21 @@ public class PlayList extends PlaylistActivity {
 		File file = new File(Settings.dataDir, name + ".playlist");
 		String line;
 		
-	     //Open the file for reading
-	     try {
-	    	 BufferedReader in = new BufferedReader(new FileReader(file));
-	    	 while ((line = in.readLine()) != null) {
-	    		 Log.v("asd", "line=" + line);
-	    		 String[] fields = line.split(":", 3);
-	    		 modList.add(new PlaylistInfo(fields[2], fields[1], fields[0]));
-	    	 }
-	    	 in.close();
-	     } catch (IOException e) {
+	    try {
+	    	BufferedReader in = new BufferedReader(new FileReader(file));
+	    	while ((line = in.readLine()) != null) {
+	    		String[] fields = line.split(":", 3);
+	    		modList.add(new PlaylistInfo(fields[2], fields[1], fields[0]));
+	    	}
+	    	in.close();
+	    } catch (IOException e) {
 	    	 
-	     }		
+	    }		
 		
-	     final PlaylistInfoAdapter plist = new PlaylistInfoAdapter(PlayList.this,
+	    final PlaylistInfoAdapter plist = new PlaylistInfoAdapter(PlayList.this,
     			R.layout.playlist_item, R.id.plist_info, modList);
         
-	     setListAdapter(plist);
+	    setListAdapter(plist);
 	}
 
 	
@@ -89,39 +75,10 @@ public class PlayList extends PlaylistActivity {
 	
 	public static void deleteList(Context context, int index) {
 		String list = listNoSuffix()[index];
-		File file = new File(Settings.dataDir, list + ".playlist");
-		file.delete();
+		(new File(Settings.dataDir, list + ".playlist")).delete();
+		(new File(Settings.dataDir, list + ".comment")).delete();
 	}
 	
-	public static void addNew(Context context) {
-		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
-		alert.setTitle("New playlist");  
-		alert.setMessage("Enter the new playlist name:");  
-		     
-		final EditText input = new EditText(context);  
-		alert.setView(input);  
-		  
-		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
-			public void onClick(DialogInterface dialog, int whichButton) {  
-				String value = input.getText().toString();
-				File file = new File(Settings.dataDir, value + ".playlist");
-				try {
-					file.createNewFile();
-				} catch (IOException e) {
-					Toast.makeText(input.getContext(), "Error", Toast.LENGTH_SHORT)
-						.show();
-				}
-			}  
-		});  
-		  
-		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {  
-			public void onClick(DialogInterface dialog, int whichButton) {  
-				// Canceled.  
-			}  
-		});  
-		  
-		alert.show(); 
-	}
 	
 	public static void addToList(Context context, String list, String line) {
 		File file = new File(Settings.dataDir, list);
@@ -133,5 +90,23 @@ public class PlayList extends PlaylistActivity {
 		} catch (IOException e) {
 			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();
 		}
+	}
+	
+	public static String readComment(Context context, String name) {
+		File file = new File(Settings.dataDir, name + ".comment");
+		String comment = null;
+		
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(file));
+	    	comment = in.readLine();
+	    	in.close();
+	    } catch (IOException e) {
+	    	 
+	    }
+	    
+	    if (comment == null || comment.trim().length() == 0)
+	    	comment = context.getString(R.string.no_comment);
+		return comment;
+		
 	}
 }

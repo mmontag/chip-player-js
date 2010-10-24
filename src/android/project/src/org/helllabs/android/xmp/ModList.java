@@ -168,7 +168,7 @@ public class ModList extends PlaylistActivity {
 		int index = item.getItemId();
 		
 		if (index == 0) {
-			PlayList.addNew(this);
+			newPlaylist(this);
 			return true;
 		}
 		index--;

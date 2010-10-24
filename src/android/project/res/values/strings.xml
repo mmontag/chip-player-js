@@ -15,8 +15,8 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     
-    <string name="changelog_text">- Performance optimization</string>
-    <string name="changelog_title">New in version 1.3</string>
+    <string name="changelog_text">-Playlists\n-More configuration options\n- Better performance</string>
+    <string name="changelog_title">New in version 1.9</string>
     
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
@@ -43,4 +43,7 @@
     <string name="preferences_about_title">About xmp</string>
     <string name="preferences_about_summary">View version and application info</string>
     <string name="menu_playlists">Playlists</string>
+<string name="dialog_new_comment">Comment</string>
+    <string name="no_comment">No comment</string>
+    <string name="dialog_new_playlist">New playlist name</string>
 </resources>

@@ -1,18 +1,28 @@
 package org.helllabs.android.xmp;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class PlaylistActivity extends ListActivity {
 	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
@@ -92,4 +102,43 @@ public class PlaylistActivity extends ListActivity {
 		intent.putExtra("loop", loopMode);
 		startActivity(intent);
 	}
+	
+	public void newPlaylist(Context context) {
+		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
+		alert.setTitle("New playlist");  	
+	    LayoutInflater inflater = (LayoutInflater)context.getSystemService(LAYOUT_INFLATER_SERVICE);
+	    final View layout = inflater.inflate(R.layout.newlist, (ViewGroup)findViewById(R.id.layout_root));
+
+	    alert.setView(layout);
+		  
+		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {
+				EditText e1 = (EditText)layout.findViewById(R.id.new_playlist_name);
+				EditText e2 = (EditText)layout.findViewById(R.id.new_playlist_comment);
+				String name = e1.getText().toString();
+				String comment = e2.getText().toString();
+				File file1 = new File(Settings.dataDir, name + ".playlist");
+				File file2 = new File(Settings.dataDir, name + ".comment");
+				try {
+					file1.createNewFile();
+					file2.createNewFile();
+					BufferedWriter out = new BufferedWriter(new FileWriter(file2));
+					out.write(comment);
+					out.close();
+				} catch (IOException e) {
+					Toast.makeText(e1.getContext(), "Error", Toast.LENGTH_SHORT)
+						.show();
+				}
+			}  
+		});  
+		  
+		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {  
+			public void onClick(DialogInterface dialog, int whichButton) {  
+				// Canceled.  
+			}  
+		});  
+		  
+		alert.show(); 
+	}
+
 }

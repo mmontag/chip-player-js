@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="4"
-	android:versionName="2.0 (Playlists, more options, better performance)"
+	android:versionName="1.9 (Playlists, more options, better performance)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
