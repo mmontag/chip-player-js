@@ -88,8 +88,7 @@ public class PlaylistActivity extends ListActivity {
 	}
 	
 	void playModule(String mod) {
-		String[] mods = new String[1];
-		mods[0] = mod;
+		String[] mods = { mod };
 		playModule(mods, true);
 	}
 	

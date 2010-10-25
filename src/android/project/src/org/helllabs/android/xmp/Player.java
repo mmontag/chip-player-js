@@ -164,15 +164,29 @@ public class Player extends Activity {
 		setContentView(R.layout.player);
 		
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+		String path = null;
+		if (getIntent().getData() != null) {
+			path = getIntent().getData().getEncodedPath();
+		}
 		
-		Bundle extras = getIntent().getExtras();
-		if (extras == null)
-			return;
+		if (path != null) {
+			xmp.initContext();
+			fileArray = new String[1];
+			fileArray[0] = path;
+			single = true;
+			shuffleMode = false;
+			loopListMode = false;
+		} else {
+			Bundle extras = getIntent().getExtras();
+			if (extras == null)
+				return;
 		
-		fileArray = extras.getStringArray("files");
-		single = extras.getBoolean("single");	
-		shuffleMode = extras.getBoolean("shuffle");
-		loopListMode = extras.getBoolean("loop");
+			fileArray = extras.getStringArray("files");
+			single = extras.getBoolean("single");	
+			shuffleMode = extras.getBoolean("shuffle");
+			loopListMode = extras.getBoolean("loop");
+		}
 		
 		ridx = new RandomIndex(fileArray.length);
 		modPlayer = new ModPlayer(this);

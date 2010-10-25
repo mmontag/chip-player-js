@@ -15,7 +15,7 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     
-    <string name="changelog_text">-Application redesign\n- Add playlists\n-More configuration options\n- Better performance</string>
+    <string name="changelog_text">- Application redesign\n- Add playlists\n- More configuration options\n- Handle common module mimetypes</string>
     <string name="changelog_title">New in version 1.9</string>
     
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>

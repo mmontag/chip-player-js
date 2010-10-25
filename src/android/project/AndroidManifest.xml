@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="4"
-	android:versionName="1.9 (Add playlists, more settings, better performance)"
+	android:versionName="1.9 (Add playlists, more settings, handle module mimetypes)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
@@ -18,7 +18,23 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name=".Player" android:theme="@android:style/Theme.NoTitleBar" />
+		<activity android:name=".Player" android:theme="@android:style/Theme.NoTitleBar">
+		    <intent-filter>
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+				<data android:scheme="file" />
+				<data android:mimeType="audio/mod" /> 
+				<data android:mimeType="audio/s3m" /> 
+				<data android:mimeType="audio/xm" /> 
+				<data android:mimeType="audio/it" />
+				<data android:mimeType="audio/x-mod" /> 
+				<data android:mimeType="audio/x-s3m" /> 
+				<data android:mimeType="audio/x-xm" /> 
+				<data android:mimeType="audio/x-it" />
+				<data android:host="*" />
+			</intent-filter>
+		</activity>
 		<activity android:name=".Settings" android:theme="@android:style/Theme.NoTitleBar" />
 		<activity android:name=".ModList" />
 		<activity android:name=".PlayList" />
