@@ -2,6 +2,7 @@ package org.helllabs.android.xmp;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -102,7 +103,15 @@ public class PlayList extends PlaylistActivity {
 	
 	public void removeFromPlaylist(String playlist, int position) {
 		File file = new File(Settings.dataDir, name + ".playlist");
-		FileUtils.removeLineFromFile(file, position);
+		try {
+			FileUtils.removeLineFromFile(file, position);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	// Menu
