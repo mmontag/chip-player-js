@@ -76,4 +76,8 @@ GNU General Public License for more details.</string>
     <string name="error_exist_dir">Directory does not exist.</string>
     <string name="error_write_to_playlist">Can\'t write to this playlist.</string>
     <string name="error_read_comment">Can\'t read comment.</string>
+    <string name="preferences_interpolation_title">Interpolation</string>
+    <string name="preferences_interpolation_summary">Interpolate samples when mixing</string>
+    <string name="preferences_filter_title">Resonant filters</string>
+    <string name="preferences_filter_summary">Enable IT lowpass filter effect</string>
 </resources>

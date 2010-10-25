@@ -16,6 +16,7 @@ public class ModPlayer {
 	SharedPreferences prefs;
 	int minSize;
 	boolean stereo;
+	boolean interpolate;
 	
 	public ModPlayer(Context context) {	
 		int sampleRate;
@@ -26,6 +27,7 @@ public class ModPlayer {
    		sampleRate = Integer.parseInt(prefs.getString(Settings.PREF_SAMPLING_RATE, "44100"));
    		bufferSize = Integer.parseInt(prefs.getString(Settings.PREF_BUFFER_SIZE, "4096"));
    		stereo = prefs.getBoolean(Settings.PREF_STEREO, true);
+   		interpolate = prefs.getBoolean(Settings.PREF_INTERPOLATION, true);
    		
    		int channelConfig = stereo ?
    				AudioFormat.CHANNEL_CONFIGURATION_STEREO :
@@ -83,6 +85,9 @@ public class ModPlayer {
     }
    
     public void play(String file) {
+		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
+		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
+		
    		if (xmp.loadModule(file) < 0) {
    			return;
    		}
@@ -91,6 +96,8 @@ public class ModPlayer {
 		xmp.optAmplify(Integer.parseInt(volBoost));
 		xmp.optMix(prefs.getInt(Settings.PREF_PAN_SEPARATION, 70));
 		xmp.optStereo(prefs.getBoolean(Settings.PREF_STEREO, true));
+		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
+		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
 		
    		audio.play();
    		xmp.startPlayer();

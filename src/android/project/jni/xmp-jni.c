@@ -71,7 +71,6 @@ Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj, jint rate)
 	opt->freq = rate;
 	opt->resol = 16;
 	opt->outfmt &= ~XMP_FMT_MONO;
-	opt->flags |= XMP_CTL_ITPT | XMP_CTL_FILTER;
 
 	if (xmp_open_audio(ctx) < 0) {
 		//xmp_deinit(ctx);
@@ -377,41 +376,61 @@ Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj)
 	return stringArray;
 }
 
-JNIEXPORT jint JNICALL
+JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_optAmplify(JNIEnv *env, jobject obj, jint n)
 {
 	struct xmp_options *opt;
 
 	opt = xmp_get_options(ctx);
 	opt->amplify = n;
-
-	return 0;
 }
 
-JNIEXPORT jint JNICALL
+JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_optMix(JNIEnv *env, jobject obj, jint n)
 {
 	struct xmp_options *opt;
 
 	opt = xmp_get_options(ctx);
 	opt->mix = n;
-
-	return 0;
 }
 
-JNIEXPORT jint JNICALL
+JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_optStereo(JNIEnv *env, jobject obj, jboolean b)
 {
 	struct xmp_options *opt;
 
 	opt = xmp_get_options(ctx);
-	if (b) {
+	if (b == JNI_TRUE) {
 		opt->outfmt &= ~XMP_FMT_MONO;
 	} else {
 		opt->outfmt |= XMP_FMT_MONO;
 	}
+}
 
-	return 0;
+JNIEXPORT void JNICALL
+Java_org_helllabs_android_xmp_Xmp_optInterpolation(JNIEnv *env, jobject obj, jboolean b)
+{
+	struct xmp_options *opt;
+
+	opt = xmp_get_options(ctx);
+	if (b == JNI_TRUE) {
+		opt->flags |= XMP_CTL_ITPT;
+	} else {
+		opt->flags &= ~XMP_CTL_ITPT;
+	}
+}
+
+JNIEXPORT void JNICALL
+Java_org_helllabs_android_xmp_Xmp_optFilter(JNIEnv *env, jobject obj, jboolean b)
+{
+	struct xmp_options *opt;
+
+	opt = xmp_get_options(ctx);
+	if (b == JNI_TRUE) {
+		opt->flags |= XMP_CTL_FILTER;
+	} else {
+		opt->flags &= ~XMP_CTL_FILTER;
+	}
 }
 
 JNIEXPORT jobjectArray JNICALL
