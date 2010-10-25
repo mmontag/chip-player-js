@@ -140,17 +140,30 @@ public class PlaylistUtils {
 	
 	
 	public static void addToList(Context context, String name, String line) {
-		if (FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), line) < 0)
+		try {
+			FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), line);
+		} catch (IOException e) {
 			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();
+		}
+			
 	}
 	
 	public static void addToList(Context context, String name, String[] lines) {
-		if (FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), lines) < 0)
+		try {
+			FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), lines);
+		} catch (IOException e) {
 			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();
+		}
 	}	
 	
 	public static String readComment(Context context, String name) {
-		String comment = FileUtils.readFromFile(new File(Settings.dataDir, name + ".comment"));	    
+		String comment = null;
+		try {
+			comment = FileUtils.readFromFile(new File(Settings.dataDir, name + ".comment"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	    
 	    if (comment == null || comment.trim().length() == 0)
 	    	comment = context.getString(R.string.no_comment);
 		return comment;		
