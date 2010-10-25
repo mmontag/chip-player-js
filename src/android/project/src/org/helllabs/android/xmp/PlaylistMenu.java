@@ -42,6 +42,8 @@ public class PlaylistMenu extends ListActivity {
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		xmp.initContext();
 		
+		ChangeLog changeLog = new ChangeLog(this);
+		
 		if (!Settings.dataDir.isDirectory()) {
 			if (!Settings.dataDir.mkdirs()) {
 				Message.fatalError(this, getString(R.string.error_datadir), PlaylistMenu.this);
@@ -56,11 +58,14 @@ public class PlaylistMenu extends ListActivity {
 					updateList();
 				} catch (IOException e) {
 					Message.error(this, getString(R.string.error_create_playlist));
+					return;
 				}				
 			}
 		} else {
 			updateList();
 		}
+		
+		changeLog.show();
 	}
 	
 	void updateList() {

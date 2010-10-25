@@ -57,10 +57,8 @@ public class ModList extends PlaylistActivity {
 	@Override
 	public void onCreate(Bundle icicle) {
 		setContentView(R.layout.modlist);
-		super.onCreate(icicle);	
-		ChangeLog changeLog = new ChangeLog(this);		
-		registerForContextMenu(getListView());
-		changeLog.show();		
+		super.onCreate(icicle);			
+		registerForContextMenu(getListView());		
 		updatePlaylist();
 	}
 
@@ -133,6 +131,7 @@ public class ModList extends PlaylistActivity {
     	case SETTINGS_REQUEST:
             if (isBadDir || resultCode == RESULT_OK)
             	updatePlaylist();
+            super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
             break;
         }
     }

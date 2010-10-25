@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -82,9 +83,14 @@ public class PlaylistActivity extends ListActivity {
 		int i = 0;
 		Iterator<PlaylistInfo> element = list.iterator();
 		while (element.hasNext()) {
-			mods[i++] = element.next().filename;
+			String name = element.next().filename;	
+			if ((new File(name)).exists()) {
+				mods[i++] = name;
+			}
 		}
-		playModule(mods, false);
+		if (i > 0) {
+			playModule(mods, false);
+		}
 	}
 	
 	void playModule(String mod) {
@@ -100,6 +106,4 @@ public class PlaylistActivity extends ListActivity {
 		intent.putExtra("loop", loopMode);
 		startActivity(intent);
 	}
-	
-
 }

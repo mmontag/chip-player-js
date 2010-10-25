@@ -65,7 +65,17 @@ public class PlayList extends PlaylistActivity {
         
 	    setListAdapter(plist);
 	}
-
+	
+	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
+    	switch (requestCode) {
+    	case SETTINGS_REQUEST:
+    		super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
+            break;
+        }
+    }
+	
 	
 	// Playlist context menu
 	
@@ -106,14 +116,13 @@ public class PlayList extends PlaylistActivity {
 		try {
 			FileUtils.removeLineFromFile(file, position);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
 		}
 	}
 
+	
 	// Menu
 	
 	@Override
@@ -131,6 +140,5 @@ public class PlayList extends PlaylistActivity {
 			break;
 		}
 		return true;
-	}
-	
+	}	
 }
