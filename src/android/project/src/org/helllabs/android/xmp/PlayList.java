@@ -8,7 +8,11 @@ import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 class PlayListFilter implements FilenameFilter {
@@ -18,6 +22,7 @@ class PlayListFilter implements FilenameFilter {
 }
 
 public class PlayList extends PlaylistActivity {
+	static final int SETTINGS_REQUEST = 45;
 	String name;
 	
 	@Override
@@ -57,4 +62,25 @@ public class PlayList extends PlaylistActivity {
         
 	    setListAdapter(plist);
 	}
+	
+
+	// Menu
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.playlist_menu, menu);
+	    return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()) {
+		case R.id.menu_prefs:		
+			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
+			break;
+		}
+		return true;
+	}
+	
 }

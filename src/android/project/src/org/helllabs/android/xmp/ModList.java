@@ -186,24 +186,6 @@ public class ModList extends PlaylistActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
-		/*
-		case R.id.menu_about:
-			final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-			String version = "Version " + AppInfo.getVersion(this) + "\n\n";
-			
-			alertDialog.setIcon(R.drawable.icon);
-			alertDialog.setTitle("Xmp for Android");
-			alertDialog.setMessage(version + "Based on xmp " + xmp.getVersion() +
-					" written by Claudio Matsuoka and Hipolito Carraro Jr" +
-					"\n\nSupported module formats: " + xmp.getFormatCount() + "\n");
-			alertDialog.setButton("Cool!", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					alertDialog.dismiss();
-				}
-			});
-			alertDialog.show();	
-			break;
-		*/
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
 			break;
