@@ -9,6 +9,7 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -33,6 +34,8 @@ public class PlaylistMenu extends ListActivity {
 	Xmp xmp = new Xmp();
 	SharedPreferences prefs;
 	String media_path;
+	ProgressDialog progressDialog;
+	
 	
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -73,8 +76,8 @@ public class PlaylistMenu extends ListActivity {
 		list.clear();
 		list.add(new PlaylistInfo("Module list", "Files in " + media_path));
 		
-		for (String p : PlayList.listNoSuffix()) {
-			list.add(new PlaylistInfo(p, PlayList.readComment(this, p)));
+		for (String p : PlaylistUtils.listNoSuffix()) {
+			list.add(new PlaylistInfo(p, PlaylistUtils.readComment(this, p)));
 		}
 		
         final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(PlaylistMenu.this,
@@ -90,7 +93,7 @@ public class PlaylistMenu extends ListActivity {
 			startActivityForResult(intent, PLAYLIST_REQUEST);
 		} else {
 			Intent intent = new Intent(PlaylistMenu.this, PlayList.class);
-			intent.putExtra("name", PlayList.listNoSuffix()[position -1]);
+			intent.putExtra("name", PlaylistUtils.listNoSuffix()[position -1]);
 			startActivityForResult(intent, PLAYLIST_REQUEST);
 		}
 	}
@@ -106,6 +109,11 @@ public class PlaylistMenu extends ListActivity {
 		if (info.position == 0) {
 			menu.add(Menu.NONE, 0, 0, "Change directory");
 			menu.add(Menu.NONE, 1, 1, "Files to new playlist");
+			int i = 2;
+			for (String s : PlaylistUtils.listNoSuffix()) {
+				menu.add(Menu.NONE, i, i, "Add to " + s);
+				i++;
+			}
 		} else {
 			menu.add(Menu.NONE, 0, 0, "Rename");
 			menu.add(Menu.NONE, 1, 1, "Edit comment");
@@ -117,10 +125,19 @@ public class PlaylistMenu extends ListActivity {
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
+		PlaylistUtils p = new PlaylistUtils();
 
 		if (info.position == 0) {		// First item of list
-			if (index == 0) {			// First item of context menu
+			switch (index) {
+			case 0:						// First item of context menu
 				changeDir(this);
+				return true;
+			case 1:
+				p.filesToNewPlaylist(this);
+				updateList();
+				return true;
+			default:
+				p.filesToPlaylist(this, PlaylistUtils.listNoSuffix()[index - 2]);
 				return true;
 			}
 		} else {
@@ -134,7 +151,7 @@ public class PlaylistMenu extends ListActivity {
 				updateList();
 				return true;
 			case 2:						// Delete
-				PlayList.deleteList(this, info.position - 1);
+				PlaylistUtils.deleteList(this, info.position - 1);
 				updateList();
 				return true;
 			}			
@@ -144,7 +161,7 @@ public class PlaylistMenu extends ListActivity {
 	}
 	
 	public void renameList(Context context, int index) {
-		final String name = PlayList.listNoSuffix()[index];
+		final String name = PlaylistUtils.listNoSuffix()[index];
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("Rename playlist");  
 		alert.setMessage("Enter the new playlist name:");  
@@ -216,12 +233,12 @@ public class PlaylistMenu extends ListActivity {
 	}
 	
 	public void editComment(Context context, int index) {
-		final String name = PlayList.listNoSuffix()[index];
+		final String name = PlaylistUtils.listNoSuffix()[index];
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("Edit comment");  
 		alert.setMessage("Enter the new comment for " + name + ":");  
 		final EditText input = new EditText(context);
-		input.setText(PlayList.readComment(context, name));
+		input.setText(PlaylistUtils.readComment(context, name));
 		alert.setView(input);  
 
 		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
