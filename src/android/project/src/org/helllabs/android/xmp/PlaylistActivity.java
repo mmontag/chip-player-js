@@ -6,8 +6,10 @@ import java.util.List;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
@@ -19,6 +21,8 @@ public class PlaylistActivity extends ListActivity {
 	boolean single = false;		/* play only one module */
 	boolean shuffleMode = true;
 	boolean loopMode = false;
+	SharedPreferences prefs;
+	boolean showToasts;
 	
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
@@ -28,6 +32,9 @@ public class PlaylistActivity extends ListActivity {
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
+		
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
 	
 		playAllButton = (ImageButton)findViewById(R.id.play_all);
 		toggleLoopButton = (ImageButton)findViewById(R.id.toggle_loop);
@@ -47,6 +54,8 @@ public class PlaylistActivity extends ListActivity {
 				loopMode = !loopMode;
 				((ImageButton)v).setImageResource(loopMode ?
 						R.drawable.list_loop_on : R.drawable.list_loop_off);
+				if (showToasts)
+					Message.toast(v.getContext(), loopMode ? "Loop on" : "Loop off");
 		    }
 		});
 
@@ -57,7 +66,8 @@ public class PlaylistActivity extends ListActivity {
 				shuffleMode = !shuffleMode;
 				((ImageButton)v).setImageResource(shuffleMode ?
 						R.drawable.list_shuffle_on : R.drawable.list_shuffle_off);
-				
+				if (showToasts)
+					Message.toast(v.getContext(), shuffleMode ? "Shuffle on" : "Shuffle off");				
 		    }
 		});
 	}

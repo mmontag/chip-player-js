@@ -21,6 +21,7 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_METERS = "meters";
 	public static final String PREF_SAMPLING_RATE = "sampling_rate";
 	public static final String PREF_BUFFER_SIZE = "buffer_size";
+	public static final String PREF_SHOW_TOAST = "show_toast";
 	private SharedPreferences prefs;
 	private String oldPath;
 	

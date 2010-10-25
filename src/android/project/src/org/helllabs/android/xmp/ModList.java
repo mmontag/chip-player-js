@@ -24,14 +24,13 @@ package org.helllabs.android.xmp;
 
 import java.io.File;
 import java.io.FilenameFilter;
+
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -39,7 +38,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import org.helllabs.android.xmp.R;
 
 public class ModList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
@@ -47,7 +45,6 @@ public class ModList extends PlaylistActivity {
 	Xmp xmp = new Xmp();	/* used to get mod info */
 	boolean isBadDir = false;
 	ProgressDialog progressDialog;
-	SharedPreferences settings;
 	final Handler handler = new Handler();
 	
 	class ModFilter implements FilenameFilter {
@@ -62,7 +59,6 @@ public class ModList extends PlaylistActivity {
 		setContentView(R.layout.modlist);
 		super.onCreate(icicle);	
 		ChangeLog changeLog = new ChangeLog(this);		
-		settings = PreferenceManager.getDefaultSharedPreferences(this);	
 		registerForContextMenu(getListView());
 		changeLog.show();		
 		updatePlaylist();
@@ -71,7 +67,7 @@ public class ModList extends PlaylistActivity {
 	public void updatePlaylist() {
 		modList.clear();
 		
-		media_path = settings.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
+		media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		//Log.v(getString(R.string.app_name), "path = " + media_path);
 		setTitle(media_path);
 	
@@ -89,7 +85,7 @@ public class ModList extends PlaylistActivity {
 			alertDialog.setButton("Create", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					examples.install(media_path,
-							settings.getBoolean(Settings.PREF_EXAMPLES, true));
+							prefs.getBoolean(Settings.PREF_EXAMPLES, true));
 					updatePlaylist();
 				}
 			});
