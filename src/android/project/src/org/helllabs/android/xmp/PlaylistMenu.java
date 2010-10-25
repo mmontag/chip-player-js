@@ -1,8 +1,6 @@
 package org.helllabs.android.xmp;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,9 +52,7 @@ public class PlaylistMenu extends ListActivity {
 					file.createNewFile();
 					file = new File(Settings.dataDir, name + ".comment");
 					file.createNewFile();
-					BufferedWriter out = new BufferedWriter(new FileWriter(file));
-					out.write(getString(R.string.empty_comment));
-					out.close();
+					FileUtils.writeToFile(file, getString(R.string.empty_comment));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -117,7 +113,7 @@ public class PlaylistMenu extends ListActivity {
 		} else {
 			menu.add(Menu.NONE, 0, 0, "Rename");
 			menu.add(Menu.NONE, 1, 1, "Edit comment");
-			menu.add(Menu.NONE, 2, 2, "Delete");
+			menu.add(Menu.NONE, 2, 2, "Delete playlist");
 		}
 	}
 	
@@ -250,9 +246,7 @@ public class PlaylistMenu extends ListActivity {
 				File file = new File(Settings.dataDir, name + ".comment");
 				try {
 					file.createNewFile();
-					BufferedWriter out = new BufferedWriter(new FileWriter(file));
-					out.write(value);
-					out.close();
+					FileUtils.writeToFile(file, value);
 				} catch (IOException e) {
 					Toast.makeText(input.getContext(), "Error", Toast.LENGTH_SHORT)
 						.show();

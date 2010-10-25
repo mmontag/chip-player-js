@@ -1,19 +1,20 @@
 package org.helllabs.android.xmp;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import android.content.Context;
+
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.AdapterView;
 
 class PlayListFilter implements FilenameFilter {
 	public boolean accept(File dir, String name) {
@@ -36,6 +37,7 @@ public class PlayList extends PlaylistActivity {
 		
 		name = extras.getString("name");
 		setTitle(name + " - " + PlaylistUtils.readComment(this, name));
+		registerForContextMenu(getListView());
 
 		updateList();
 	}
@@ -62,7 +64,46 @@ public class PlayList extends PlaylistActivity {
         
 	    setListAdapter(plist);
 	}
+
 	
+	// Playlist context menu
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		int i = 0;
+		menu.setHeaderTitle("Edit playlist");
+		menu.add(Menu.NONE, i, i, "Remove from playlist");
+		// TODO: find a good way to not list current playlist
+		/*for (String each : PlaylistUtils.listNoSuffix()) {
+			i++;
+			menu.add(Menu.NONE, i, i, "Copy to " + each);
+		}*/
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+		int index = item.getItemId();
+		
+		if (index == 0) {
+			removeFromPlaylist(name, info.position);
+			updateList();
+			return true;
+		}
+		/*
+		index--;
+		String[] menuItems = PlaylistUtils.list();
+		PlaylistInfo pi = modList.get(info.position);
+		String line = pi.filename + ":" + pi.comment + ":" + pi.name;
+		PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[index], line);*/
+
+		return true;
+	}
+	
+	public void removeFromPlaylist(String playlist, int position) {
+		File file = new File(Settings.dataDir, name + ".playlist");
+		FileUtils.removeLineFromFile(file, position);
+	}
 
 	// Menu
 	

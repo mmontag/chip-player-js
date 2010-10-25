@@ -1,10 +1,6 @@
 package org.helllabs.android.xmp;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,9 +41,7 @@ public class PlaylistUtils {
 				try {
 					file1.createNewFile();
 					file2.createNewFile();
-					BufferedWriter out = new BufferedWriter(new FileWriter(file2));
-					out.write(comment);
-					out.close();
+					FileUtils.writeToFile(file2, comment);
 				} catch (IOException e) {
 					Toast.makeText(e1.getContext(), "Error", Toast.LENGTH_SHORT)
 						.show();
@@ -89,7 +83,7 @@ public class PlaylistUtils {
             				":" + mi.name);
             	}
             	
-            	addToList(context, name + ".playlist", list.toArray(new String[1]));
+            	addToList(context, name, list.toArray(new String[1]));
             	
                 progressDialog.dismiss();
 			}
@@ -117,9 +111,7 @@ public class PlaylistUtils {
 				try {
 					file1.createNewFile();
 					file2.createNewFile();
-					BufferedWriter out = new BufferedWriter(new FileWriter(file2));
-					out.write(comment);
-					out.close();
+					FileUtils.writeToFile(file2, comment);
 				} catch (IOException e) {
 					Toast.makeText(e1.getContext(), "Error", Toast.LENGTH_SHORT)
 						.show();
@@ -148,47 +140,20 @@ public class PlaylistUtils {
 	
 	
 	public static void addToList(Context context, String name, String line) {
-		File file = new File(Settings.dataDir, name);
-		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(file, true));
-			out.write(line);
-			out.newLine();
-			out.close();
-		} catch (IOException e) {
+		if (FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), line) < 0)
 			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();
-		}
 	}
 	
-	public static void addToList(Context context, String list, String[] lines) {
-		File file = new File(Settings.dataDir, list);
-		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(file, true));
-			for (String s : lines) {
-				out.write(s);
-				out.newLine();
-			}
-			out.close();
-		} catch (IOException e) {
+	public static void addToList(Context context, String name, String[] lines) {
+		if (FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), lines) < 0)
 			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();
-		}
 	}	
 	
 	public static String readComment(Context context, String name) {
-		File file = new File(Settings.dataDir, name + ".comment");
-		String comment = null;
-		
-		try {
-			BufferedReader in = new BufferedReader(new FileReader(file));
-	    	comment = in.readLine();
-	    	in.close();
-	    } catch (IOException e) {
-	    	 
-	    }
-	    
+		String comment = FileUtils.readFromFile(new File(Settings.dataDir, name + ".comment"));	    
 	    if (comment == null || comment.trim().length() == 0)
 	    	comment = context.getString(R.string.no_comment);
-		return comment;
-		
+		return comment;		
 	}
 	
 	public static String[] list() {		

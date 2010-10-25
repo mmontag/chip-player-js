@@ -151,7 +151,7 @@ public class ModList extends PlaylistActivity {
 		menu.add(Menu.NONE, i, i, "New playlist...");
 		for (String each : PlaylistUtils.listNoSuffix()) {
 			i++;
-			menu.add(Menu.NONE, i, i, each);
+			menu.add(Menu.NONE, i, i, "Add to " + each);
 		}
 	}
 	
@@ -165,10 +165,9 @@ public class ModList extends PlaylistActivity {
 			return true;
 		}
 		index--;
-		String[] menuItems = PlaylistUtils.list();
 		PlaylistInfo pi = modList.get(info.position);
 		String line = pi.filename + ":" + pi.comment + ":" + pi.name;
-		PlaylistUtils.addToList(this, menuItems[index], line);
+		PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[index], line);
 
 		return true;
 	}
