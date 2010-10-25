@@ -23,7 +23,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 
 public class PlaylistMenu extends ListActivity {
@@ -39,12 +38,13 @@ public class PlaylistMenu extends ListActivity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.playlist_menu);
+		registerForContextMenu(getListView());
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		xmp.initContext();
 		
 		if (!Settings.dataDir.isDirectory()) {
 			if (!Settings.dataDir.mkdirs()) {
-				// Error
+				Message.fatalError(this, getString(R.string.error_datadir), PlaylistMenu.this);
 			} else {
 				final String name = getString(R.string.empty_playlist);
 				File file = new File(Settings.dataDir, name + ".playlist");
@@ -53,15 +53,14 @@ public class PlaylistMenu extends ListActivity {
 					file = new File(Settings.dataDir, name + ".comment");
 					file.createNewFile();
 					FileUtils.writeToFile(file, getString(R.string.empty_comment));
+					updateList();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Message.error(this, getString(R.string.error_create_playlist));
 				}				
 			}
+		} else {
+			updateList();
 		}
-		
-		registerForContextMenu(getListView());
-		updateList();
 	}
 	
 	void updateList() {
@@ -159,7 +158,7 @@ public class PlaylistMenu extends ListActivity {
 		return true;
 	}
 	
-	public void renameList(Context context, int index) {
+	public void renameList(final Context context, int index) {
 		final String name = PlaylistUtils.listNoSuffix()[index];
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("Rename playlist");  
@@ -185,7 +184,7 @@ public class PlaylistMenu extends ListActivity {
 				}
 				
 				if (error) {
-					Toast.makeText(input.getContext(), "Rename failed", Toast.LENGTH_SHORT).show();
+					Message.error(context, getString(R.string.error_rename_playlist));
 				}
 				
 				updateList();
@@ -231,7 +230,7 @@ public class PlaylistMenu extends ListActivity {
 		alert.show(); 
 	}
 	
-	public void editComment(Context context, int index) {
+	public void editComment(final Context context, int index) {
 		final String name = PlaylistUtils.listNoSuffix()[index];
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("Edit comment");  
@@ -248,8 +247,7 @@ public class PlaylistMenu extends ListActivity {
 					file.createNewFile();
 					FileUtils.writeToFile(file, value);
 				} catch (IOException e) {
-					Toast.makeText(input.getContext(), "Error", Toast.LENGTH_SHORT)
-						.show();
+					Message.error(context, getString(R.string.error_edit_comment));
 				}
 				
 				updateList();

@@ -69,4 +69,11 @@ warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.</string>
 <string name="preferences_show_toast_title">Display toasts</string>
     <string name="preferences_show_toast_summary">Enable interface help messages</string>
+<string name="error_datadir">Can\'t create data directory. Please check your storage card and try again.</string>
+    <string name="error_create_playlist">Can\'t create playlist.</string>
+    <string name="error_rename_playlist">Can\'t rename playlist.</string>
+    <string name="error_edit_comment">Can\'t edit comment.</string>
+    <string name="error_exist_dir">Directory does not exist.</string>
+    <string name="error_write_to_playlist">Can\'t write to this playlist.</string>
+    <string name="error_read_comment">Can\'t read comment.</string>
 </resources>

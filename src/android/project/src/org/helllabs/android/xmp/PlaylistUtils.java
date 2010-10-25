@@ -16,13 +16,13 @@ import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
+
 
 public class PlaylistUtils {
 	ProgressDialog progressDialog;
 	Xmp xmp = new Xmp();
 	
-	public void newPlaylist(Context context) {
+	public void newPlaylist(final Context context) {
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("New playlist");  	
 	    LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -43,8 +43,7 @@ public class PlaylistUtils {
 					file2.createNewFile();
 					FileUtils.writeToFile(file2, comment);
 				} catch (IOException e) {
-					Toast.makeText(e1.getContext(), "Error", Toast.LENGTH_SHORT)
-						.show();
+					Message.error(context, context.getString(R.string.error_create_playlist));
 				}
 			}  
 		});  
@@ -69,6 +68,11 @@ public class PlaylistUtils {
 		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		final File modDir = new File(media_path);
 		
+		if (!modDir.isDirectory()) {
+			Message.error(context, context.getString(R.string.error_exist_dir));
+			return;
+		}
+		
 		progressDialog = ProgressDialog.show(context,      
 				"Please wait", "Scanning module files...", true);
 		
@@ -92,6 +96,15 @@ public class PlaylistUtils {
 	
 	
 	public void filesToNewPlaylist(final Context context, final Runnable runnable) {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
+		final File modDir = new File(media_path);
+		
+		if (!modDir.isDirectory()) {
+			Message.error(context, context.getString(R.string.error_exist_dir));
+			return;
+		}
+		
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("New playlist");  	
 	    LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -113,8 +126,7 @@ public class PlaylistUtils {
 					file2.createNewFile();
 					FileUtils.writeToFile(file2, comment);
 				} catch (IOException e) {
-					Toast.makeText(e1.getContext(), "Error", Toast.LENGTH_SHORT)
-						.show();
+					Message.error(context, context.getString(R.string.error_create_playlist));
 				}
 				
 				filesToPlaylist(context, name);
@@ -143,7 +155,7 @@ public class PlaylistUtils {
 		try {
 			FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), line);
 		} catch (IOException e) {
-			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();
+			Message.error(context, context.getString(R.string.error_write_to_playlist));
 		}
 			
 	}
@@ -152,7 +164,7 @@ public class PlaylistUtils {
 		try {
 			FileUtils.writeToFile(new File(Settings.dataDir, name + ".playlist"), lines);
 		} catch (IOException e) {
-			Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show();
+			Message.error(context, context.getString(R.string.error_write_to_playlist));
 		}
 	}	
 	
@@ -161,8 +173,7 @@ public class PlaylistUtils {
 		try {
 			comment = FileUtils.readFromFile(new File(Settings.dataDir, name + ".comment"));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Message.error(context, context.getString(R.string.error_read_comment));
 		}	    
 	    if (comment == null || comment.trim().length() == 0)
 	    	comment = context.getString(R.string.no_comment);

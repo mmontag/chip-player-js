@@ -10,7 +10,7 @@ import android.view.KeyEvent;
 
 public class Settings extends android.preference.PreferenceActivity {
 	static File sdDir = Environment.getExternalStorageDirectory();
-	static File dataDir = new File(sdDir, "xmp");
+	static File dataDir = new File(sdDir, "Xmp for Android");
 	public static final String DEFAULT_MEDIA_PATH = sdDir.toString() + "/mod";
 	public static final String PREF_MEDIA_PATH = "media_path";
 	public static final String PREF_VOL_BOOST = "vol_boost";
