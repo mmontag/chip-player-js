@@ -133,8 +133,11 @@ public class PlaylistMenu extends ListActivity {
 				changeDir(this);
 				return true;
 			case 1:
-				p.filesToNewPlaylist(this);
-				updateList();
+				p.filesToNewPlaylist(this, new Runnable() {
+					public void run() {
+						updateList();
+					}
+				});
 				return true;
 			default:
 				p.filesToPlaylist(this, PlaylistUtils.listNoSuffix()[index - 2]);

@@ -15,6 +15,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -96,11 +97,12 @@ public class PlaylistUtils {
 	}
 	
 	
-	public void filesToNewPlaylist(final Context context) {
+	public void filesToNewPlaylist(final Context context, final Runnable runnable) {
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("New playlist");  	
 	    LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    final View layout = inflater.inflate(R.layout.newlist, null);
+	    final Handler handler = new Handler();
 
 	    alert.setView(layout);
 		  
@@ -124,6 +126,7 @@ public class PlaylistUtils {
 				}
 				
 				filesToPlaylist(context, name);
+				handler.post(runnable);
 			}  
 		});  
 		  
