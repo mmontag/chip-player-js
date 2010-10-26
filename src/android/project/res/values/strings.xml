@@ -15,8 +15,9 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     
-    <string name="changelog_text">- Application redesign\n- Add playlists\n- More configuration options\n- Handle common module mime types</string>
-    <string name="changelog_title">New in version 1.9</string>
+    <string name="changelog_text">• Buffer size setting in ms (improve sound quality when running in background)\n
+\nVersion 1.9\n• Application redesign\n• Add playlists\n• More configuration options\n• Handle common module mime types</string>
+    <string name="changelog_title">New in version 1.9.1</string>
     
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
@@ -35,8 +36,8 @@
     <string name="preferences_shuffle_summary">Play files in random order</string>
 <string name="preferences_sampling_rate_summary">Set the mixer sampling rate</string>
     <string name="preferences_sampling_rate_title">Sampling rate</string>
-    <string name="preferences_buffer_size_summary">Sound buffer size in bytes (affects latency)</string>
-    <string name="preferences_buffer_size_title">Buffer size</string>
+    
+    
 <string name="preferences_list_formats_title">Known formats</string>
     <string name="preferences_list_formats_summary">List all supported module formats</string>
     <string name="preferences_category_information">Information</string>
@@ -80,4 +81,7 @@ GNU General Public License for more details.</string>
     <string name="preferences_interpolation_summary">Interpolate samples when mixing</string>
     <string name="preferences_filter_title">Resonant filters</string>
     <string name="preferences_filter_summary">Enable IT lowpass filter effect</string>
+<string name="preferences_buffer_ms_summary">Sound buffer duration</string>
+    <string name="preferences_buffer_ms_title">Buffer size</string>
+    <string name="preferences_buffer_ms_dialog">Set the size of sound buffer in milliseconds:</string>
 </resources>

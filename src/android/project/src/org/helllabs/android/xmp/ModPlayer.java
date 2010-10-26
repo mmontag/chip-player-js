@@ -19,16 +19,15 @@ public class ModPlayer {
 	boolean interpolate;
 	
 	public ModPlayer(Context context) {	
-		int sampleRate;
-		int bufferSize;		
-		
    		prefs = PreferenceManager.getDefaultSharedPreferences(context);
    		
-   		sampleRate = Integer.parseInt(prefs.getString(Settings.PREF_SAMPLING_RATE, "44100"));
-   		bufferSize = Integer.parseInt(prefs.getString(Settings.PREF_BUFFER_SIZE, "4096"));
+   		int sampleRate = Integer.parseInt(prefs.getString(Settings.PREF_SAMPLING_RATE, "44100"));
+   		int bufferMs = prefs.getInt(Settings.PREF_BUFFER_MS, 150);
    		stereo = prefs.getBoolean(Settings.PREF_STEREO, true);
    		interpolate = prefs.getBoolean(Settings.PREF_INTERPOLATION, true);
    		
+   		int bufferSize = sampleRate * (stereo ? 2 : 1) * 2 * bufferMs / 1000;
+   			
    		int channelConfig = stereo ?
    				AudioFormat.CHANNEL_CONFIGURATION_STEREO :
    				AudioFormat.CHANNEL_CONFIGURATION_MONO;
