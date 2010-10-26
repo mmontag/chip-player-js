@@ -44,12 +44,13 @@ public class Player extends Activity {
 	String[] fileArray;
 	int playIndex;
 	RandomIndex ridx;
-	SharedPreferences settings;
+	SharedPreferences prefs;
 	LinearLayout infoMeterLayout;
 	Meter infoMeter;
 	LinearLayout infoLayout;
 	BitmapDrawable image;
 	final Handler handler = new Handler();
+	int latency;
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
@@ -84,7 +85,8 @@ public class Player extends Activity {
     	int oldBpm = -1;
     	int oldPos = -1;
     	int oldPat = -1;
-    	int[] volumes = new int[32];
+    	int[][] volumes = new int[10][32];
+    	int count = 0;
     	
         public void run() {
         	int tpo = modPlayer.getPlayTempo();
@@ -111,8 +113,11 @@ public class Player extends Activity {
         		oldPat = pat;
         	}
 
-        	modPlayer.getVolumes(volumes);
-        	infoMeter.setVolumes(volumes);
+        	modPlayer.getVolumes(volumes[(count + latency) % 10]);
+        	infoMeter.setVolumes(volumes[count]);
+        	count++;
+        	if (count >= 10)
+        		count = 0;
         }
     };
     
@@ -163,8 +168,8 @@ public class Player extends Activity {
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
 		
-		settings = PreferenceManager.getDefaultSharedPreferences(this);
-
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		
 		String path = null;
 		if (getIntent().getData() != null) {
 			path = getIntent().getData().getEncodedPath();
@@ -187,7 +192,11 @@ public class Player extends Activity {
 			shuffleMode = extras.getBoolean("shuffle");
 			loopListMode = extras.getBoolean("loop");
 		}
-		
+
+    	latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
+    	if (latency > 999)
+    		latency = 999;
+    	
 		ridx = new RandomIndex(fileArray.length);
 		modPlayer = new ModPlayer(this);
 		
@@ -307,7 +316,7 @@ public class Player extends Activity {
        	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
        			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
        	
-       	int meterType = Integer.parseInt(settings.getString(Settings.PREF_METERS, "2"));
+       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));
        	switch (meterType) {
        	case 1:
        		infoMeter = new LedMeter(infoMeterLayout, m.chn);

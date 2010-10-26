@@ -2,7 +2,6 @@ package org.helllabs.android.xmp;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import android.app.ListActivity;
@@ -79,13 +78,19 @@ public class PlaylistActivity extends ListActivity {
 	}
 	
 	void playModule(List<PlaylistInfo> list) {
-		String[] mods = new String[list.size()];
+		int num = 0;
+		for (PlaylistInfo p : list) {
+			if ((new File(p.filename).isFile()))
+				num++;
+		}
+		if (num == 0)
+			return;
+		
+		String[] mods = new String[num];
 		int i = 0;
-		Iterator<PlaylistInfo> element = list.iterator();
-		while (element.hasNext()) {
-			String name = element.next().filename;	
-			if ((new File(name)).exists()) {
-				mods[i++] = name;
+		for (PlaylistInfo p : list) {
+			if ((new File(p.filename)).isFile()) {
+				mods[i++] = p.filename;
 			}
 		}
 		if (i > 0) {
@@ -98,10 +103,10 @@ public class PlaylistActivity extends ListActivity {
 		playModule(mods, true);
 	}
 	
-	void playModule(String[] mods, boolean mode) {
+	void playModule(String[] mods, boolean single) {
 		Intent intent = new Intent(this, Player.class);
 		intent.putExtra("files", mods);
-		intent.putExtra("single", mode);
+		intent.putExtra("single", single);
 		intent.putExtra("shuffle", shuffleMode);
 		intent.putExtra("loop", loopMode);
 		startActivity(intent);

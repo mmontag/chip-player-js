@@ -33,15 +33,16 @@
       android:entries="@array/sampling_rate_array"
       android:entryValues="@array/sampling_rate_values" />
       
-     <ListPreference
-      android:key="buffer_size"
+    <org.helllabs.android.xmp.SeekBarPreference
+      android:key="buffer_ms"
       android:persistent="true"
-      android:title="@string/preferences_buffer_size_title"
-      android:summary="@string/preferences_buffer_size_summary"
-      android:defaultValue="4096"
-      android:entries="@array/buffer_size_array"
-      android:entryValues="@array/buffer_size_values" />
-      
+      android:title="@string/preferences_buffer_ms_title"
+      android:summary="@string/preferences_buffer_ms_summary"
+      android:dialogMessage="@string/preferences_buffer_ms_dialog"
+      android:defaultValue="500"
+      android:text="ms"
+      android:max="1000" />
+                  
      <ListPreference
       android:key="vol_boost"
       android:persistent="true"
