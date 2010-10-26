@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="6"
-	android:versionName="1.9.1 (Buffer size settings in ms, module list enters subdirectories)"
+	android:versionName="1.9.1 (Large audio buffer, module list enters subdirectories)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
