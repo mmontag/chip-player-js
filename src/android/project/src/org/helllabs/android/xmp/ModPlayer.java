@@ -22,7 +22,7 @@ public class ModPlayer {
    		prefs = PreferenceManager.getDefaultSharedPreferences(context);
    		
    		int sampleRate = Integer.parseInt(prefs.getString(Settings.PREF_SAMPLING_RATE, "44100"));
-   		int bufferMs = prefs.getInt(Settings.PREF_BUFFER_MS, 150);
+   		int bufferMs = prefs.getInt(Settings.PREF_BUFFER_MS, 300);
    		stereo = prefs.getBoolean(Settings.PREF_STEREO, true);
    		interpolate = prefs.getBoolean(Settings.PREF_INTERPOLATION, true);
    		
