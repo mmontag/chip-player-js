@@ -39,7 +39,7 @@
       android:title="@string/preferences_buffer_ms_title"
       android:summary="@string/preferences_buffer_ms_summary"
       android:dialogMessage="@string/preferences_buffer_ms_dialog"
-      android:defaultValue="300"
+      android:defaultValue="500"
       android:text="ms"
       android:max="1000" />
                   
