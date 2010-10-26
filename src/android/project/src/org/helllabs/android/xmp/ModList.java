@@ -38,19 +38,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ListView;
 
 public class ModList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
-	String media_path;
 	Xmp xmp = new Xmp();	/* used to get mod info */
 	boolean isBadDir = false;
 	ProgressDialog progressDialog;
 	final Handler handler = new Handler();
+	String currentDir;
+	int directoryNum;
 	
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
 	    	//Log.v(getString(R.string.app_name), "** " + dir + "/" + name);
-	        return (xmp.testModule(dir + "/" + name) == 0);
+	        return (new File(dir,name).isDirectory()) || (xmp.testModule(dir + "/" + name) == 0);
 	    }
 	}
 	
@@ -58,17 +60,10 @@ public class ModList extends PlaylistActivity {
 	public void onCreate(Bundle icicle) {
 		setContentView(R.layout.modlist);
 		super.onCreate(icicle);			
-		registerForContextMenu(getListView());		
-		updatePlaylist();
-	}
-
-	public void updatePlaylist() {
-		modList.clear();
+		registerForContextMenu(getListView());
+		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		
-		media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
-		//Log.v(getString(R.string.app_name), "path = " + media_path);
-		setTitle(media_path);
-	
+		// Check if directory exists
 		final File modDir = new File(media_path);
 		
 		if (!modDir.isDirectory()) {
@@ -84,7 +79,7 @@ public class ModList extends PlaylistActivity {
 				public void onClick(DialogInterface dialog, int which) {
 					examples.install(media_path,
 							prefs.getBoolean(Settings.PREF_EXAMPLES, true));
-					updatePlaylist();
+					updatePlaylist(media_path);
 				}
 			});
 			alertDialog.setButton2("Back", new DialogInterface.OnClickListener() {
@@ -96,17 +91,36 @@ public class ModList extends PlaylistActivity {
 			return;
 		}
 		
+		updatePlaylist(media_path);
+	}
+
+	public void updatePlaylist(final String path) {
+		modList.clear();
+		
+		currentDir = path;
+		setTitle(path);
+		
 		isBadDir = false;
 		progressDialog = ProgressDialog.show(this,      
 				"Please wait", "Scanning module files...", true);
-		
+
+		directoryNum = 1;	// we always have ..
+		final File modDir = new File(path);
 		new Thread() { 
-			public void run() { 		
+			public void run() {
+				modList.add(new PlaylistInfo("[..]", "Parent directory", path + "/.."));
             	for (File file : modDir.listFiles(new ModFilter())) {
-            		ModInfo m = xmp.getModInfo(media_path + "/" + file.getName());
-            		PlaylistInfo pi = new PlaylistInfo(m.name,
-            				m.chn + " chn " + m.type, m.filename);
-            		modList.add(pi);
+            		if (file.isDirectory()) {
+            			directoryNum++;
+            			modList.add(new PlaylistInfo("[" + file.getName() + "]", "Directory",
+            								file.getAbsolutePath()));
+            		}
+            	}
+            	for (File file : modDir.listFiles(new ModFilter())) {
+            		if (file.isFile()) {
+            			ModInfo m = xmp.getModInfo(path + "/" + file.getName());
+            			modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename));
+            		}
             	}
             	
                 final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(ModList.this,
@@ -125,12 +139,23 @@ public class ModList extends PlaylistActivity {
 	}
 	
 	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		String name = modList.get(position).filename;
+		File file = new File(name);
+		if (file.isDirectory()) {
+			updatePlaylist(name);
+		} else {
+			playModule(name);
+		}
+	}
+	
+	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
     	switch (requestCode) {
     	case SETTINGS_REQUEST:
             if (isBadDir || resultCode == RESULT_OK)
-            	updatePlaylist();
+            	updatePlaylist(currentDir);
             super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
             break;
         }
@@ -141,12 +166,21 @@ public class ModList extends PlaylistActivity {
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
 		int i = 0;
 		menu.setHeaderTitle("Add to playlist");
-		menu.add(Menu.NONE, i, i, "New playlist...");
-		for (String each : PlaylistUtils.listNoSuffix()) {
-			i++;
-			menu.add(Menu.NONE, i, i, "Add to " + each);
+		if (info.position < directoryNum) {
+			menu.add(Menu.NONE, i, i, "Files to new playlist");
+			for (String s : PlaylistUtils.listNoSuffix()) {
+				i++;
+				menu.add(Menu.NONE, i, i, "Add to " + s);
+			}			
+		} else {
+			menu.add(Menu.NONE, i, i, "New playlist...");
+			for (String each : PlaylistUtils.listNoSuffix()) {
+				i++;
+				menu.add(Menu.NONE, i, i, "Add to " + each);
+			}
 		}
 	}
 	
@@ -155,14 +189,24 @@ public class ModList extends PlaylistActivity {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
 		
-		if (index == 0) {
-			(new PlaylistUtils()).newPlaylist(this);
-			return true;
+		if (info.position < directoryNum) {			// Directories
+			PlaylistUtils p = new PlaylistUtils();
+			if (index == 0) {
+				p.filesToNewPlaylist(this, modList.get(info.position).filename, null);
+			} else {
+				index--;
+				p.filesToPlaylist(this, modList.get(info.position).filename, PlaylistUtils.listNoSuffix()[index]);
+			}
+		} else {				// Files
+			if (index == 0) {						// Files
+				(new PlaylistUtils()).newPlaylist(this);
+				return true;
+			}
+			index--;
+			PlaylistInfo pi = modList.get(info.position);
+			String line = pi.filename + ":" + pi.comment + ":" + pi.name;
+			PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[index], line);
 		}
-		index--;
-		PlaylistInfo pi = modList.get(info.position);
-		String line = pi.filename + ":" + pi.comment + ":" + pi.name;
-		PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[index], line);
 
 		return true;
 	}
@@ -184,7 +228,7 @@ public class ModList extends PlaylistActivity {
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
 			break;
 		case R.id.menu_refresh:
-			updatePlaylist();
+			updatePlaylist(currentDir);
 			break;
 		}
 		return true;

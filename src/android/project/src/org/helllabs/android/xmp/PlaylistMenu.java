@@ -123,9 +123,12 @@ public class PlaylistMenu extends ListActivity {
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
 		PlaylistUtils p = new PlaylistUtils();
+		
 
 		if (info.position == 0) {		// First item of list
 			switch (index) {
@@ -133,14 +136,14 @@ public class PlaylistMenu extends ListActivity {
 				changeDir(this);
 				return true;
 			case 1:
-				p.filesToNewPlaylist(this, new Runnable() {
+				p.filesToNewPlaylist(this, media_path, new Runnable() {
 					public void run() {
 						updateList();
 					}
 				});
 				return true;
 			default:
-				p.filesToPlaylist(this, PlaylistUtils.listNoSuffix()[index - 2]);
+				p.filesToPlaylist(this, media_path, PlaylistUtils.listNoSuffix()[index - 2]);
 				return true;
 			}
 		} else {

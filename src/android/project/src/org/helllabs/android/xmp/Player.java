@@ -281,6 +281,7 @@ public class Player extends Activity {
 		if (fileArray.length > 0) {
 			playIndex = 0;
 			int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+			Log.v("xxx", "will play = " + fileArray[idx]);
 			playNewMod(fileArray[idx]);
 		}
 	}

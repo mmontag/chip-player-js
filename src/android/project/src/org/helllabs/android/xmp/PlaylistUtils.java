@@ -10,9 +10,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -63,10 +61,8 @@ public class PlaylistUtils {
 	    }
 	}
 
-	public void filesToPlaylist(final Context context, final String name) {
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
-		final File modDir = new File(media_path);
+	public void filesToPlaylist(final Context context, final String path, final String name) {
+		final File modDir = new File(path);
 		
 		if (!modDir.isDirectory()) {
 			Message.error(context, context.getString(R.string.error_exist_dir));
@@ -81,7 +77,9 @@ public class PlaylistUtils {
 				List<String> list = new ArrayList<String>();
 				
             	for (File file : modDir.listFiles(new ModFilter())) {
-            		String filename = media_path + "/" + file.getName();
+            		if (file.isDirectory())
+            			continue;
+            		String filename = path + "/" + file.getName();
             		ModInfo mi = xmp.getModInfo(filename);
             		list.add(filename + ":" + mi.chn + " chn " + mi.type +
             				":" + mi.name);
@@ -95,10 +93,8 @@ public class PlaylistUtils {
 	}
 	
 	
-	public void filesToNewPlaylist(final Context context, final Runnable runnable) {
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
-		final File modDir = new File(media_path);
+	public void filesToNewPlaylist(final Context context, final String path, final Runnable runnable) {
+		final File modDir = new File(path);
 		
 		if (!modDir.isDirectory()) {
 			Message.error(context, context.getString(R.string.error_exist_dir));
@@ -129,8 +125,9 @@ public class PlaylistUtils {
 					Message.error(context, context.getString(R.string.error_create_playlist));
 				}
 				
-				filesToPlaylist(context, name);
-				handler.post(runnable);
+				filesToPlaylist(context, path, name);
+				if (runnable != null)
+					handler.post(runnable);
 			}  
 		});  
 		  
