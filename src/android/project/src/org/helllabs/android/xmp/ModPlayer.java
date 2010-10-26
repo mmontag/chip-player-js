@@ -26,7 +26,7 @@ public class ModPlayer {
    		stereo = prefs.getBoolean(Settings.PREF_STEREO, true);
    		interpolate = prefs.getBoolean(Settings.PREF_INTERPOLATION, true);
    		
-   		int bufferSize = sampleRate * (stereo ? 2 : 1) * 2 * bufferMs / 1000;
+   		int bufferSize = (sampleRate * (stereo ? 2 : 1) * 2 * bufferMs / 1000) & ~0x3;
    			
    		int channelConfig = stereo ?
    				AudioFormat.CHANNEL_CONFIGURATION_STEREO :
