@@ -249,6 +249,7 @@ public class PlaylistMenu extends ListActivity {
 				String value = input.getText().toString();
 				File file = new File(Settings.dataDir, name + ".comment");
 				try {
+					file.delete();
 					file.createNewFile();
 					FileUtils.writeToFile(file, value);
 				} catch (IOException e) {
