@@ -260,7 +260,7 @@ public class Player extends Activity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				playIndex -= 2;
+				playIndex -= modPlayer.time() < 20 ? 2 : 1;
 				if (playIndex < -1)
 					playIndex += fileArray.length;
 				modPlayer.stop();
