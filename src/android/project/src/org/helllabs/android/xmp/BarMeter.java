@@ -22,12 +22,12 @@ public class BarMeter extends Meter {
 	@Override
 	public void setVolumes(int[] vol) {
 		for (int i = 0; i < numChannels; i++) {
-			if (vol[i] != oldVol[i]) {
-				int v = vol[i] / 8;
-				if (v > 7)
-					v = 7;
+			int v = vol[i] / 8;
+			if (v > 7)
+				v = 7;
+			if (v != oldVol[i]) {
 				infoMeter[i].setText(bar[v]);
-				oldVol[i] = vol[i];
+				oldVol[i] = v;
 			}
 		}
 	}

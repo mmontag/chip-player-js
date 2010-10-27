@@ -81,43 +81,49 @@ public class Player extends Activity {
     };
     
     final Runnable updateInfoRunnable = new Runnable() {
+    	int[] tpo = new int[10];
+    	int[] bpm = new int[10];
+    	int[] pos = new int[10];
+    	int[] pat = new int[10];
     	int oldTpo = -1;
     	int oldBpm = -1;
     	int oldPos = -1;
     	int oldPat = -1;
     	int[][] volumes = new int[10][32];
-    	int count = 0;
+    	int before = 0, now;
     	
         public void run() {
-        	int tpo = modPlayer.getPlayTempo();
-        	if (tpo != oldTpo) {
-        		infoTpo.setText(Integer.toString(tpo));
-        		oldTpo = tpo;
+        	now = (before + latency) % 10;
+        	
+        	tpo[now] = modPlayer.getPlayTempo();
+        	if (tpo[before] != oldTpo) {
+        		infoTpo.setText(Integer.toString(tpo[before]));
+        		oldTpo = tpo[before];
         	}
 
-        	int bpm = modPlayer.getPlayBpm();
-        	if (bpm != oldBpm) {
-        		infoBpm.setText(Integer.toString(bpm));
-        		oldBpm = bpm;
+        	bpm[now] = modPlayer.getPlayBpm();
+        	if (bpm[before] != oldBpm) {
+        		infoBpm.setText(Integer.toString(bpm[before]));
+        		oldBpm = bpm[before];
         	}
 
-        	int pos = modPlayer.getPlayPos();
-        	if (pos != oldPos) {
-        		infoPos.setText(Integer.toString(pos));
-        		oldPos = pos;
+        	pos[now] = modPlayer.getPlayPos();
+        	if (pos[before] != oldPos) {
+        		infoPos.setText(Integer.toString(pos[before]));
+        		oldPos = pos[before];
         	}
 
-        	int pat = modPlayer.getPlayPat();
-        	if (pat != oldPat) {
-        		infoPat.setText(Integer.toString(pat));
-        		oldPat = pat;
+        	pat[now] = modPlayer.getPlayPat();
+        	if (pat[before] != oldPat) {
+        		infoPat.setText(Integer.toString(pat[before]));
+        		oldPat = pat[before];
         	}
 
-        	modPlayer.getVolumes(volumes[(count + latency) % 10]);
-        	infoMeter.setVolumes(volumes[count]);
-        	count++;
-        	if (count >= 10)
-        		count = 0;
+        	modPlayer.getVolumes(volumes[now]);
+        	infoMeter.setVolumes(volumes[before]);
+        	before++;
+        	if (before >= 10)
+        		before = 0;
         }
     };
     
@@ -194,8 +200,8 @@ public class Player extends Activity {
 		}
 
     	latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
-    	if (latency > 999)
-    		latency = 999;
+    	if (latency > 9)
+    		latency = 9;
     	
 		ridx = new RandomIndex(fileArray.length);
 		modPlayer = new ModPlayer(this);
