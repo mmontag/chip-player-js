@@ -76,6 +76,7 @@ public class PlaylistUtils {
 			public void run() { 	
 				List<String> list = new ArrayList<String>();
 				
+				int num = 0;
             	for (File file : modDir.listFiles(new ModFilter())) {
             		if (file.isDirectory())
             			continue;
@@ -83,9 +84,11 @@ public class PlaylistUtils {
             		ModInfo mi = xmp.getModInfo(filename);
             		list.add(filename + ":" + mi.chn + " chn " + mi.type +
             				":" + mi.name);
+            		num++;
             	}
             	
-            	addToList(context, name, list.toArray(new String[1]));
+            	if (num > 0)
+            		addToList(context, name, list.toArray(new String[num]));
             	
                 progressDialog.dismiss();
 			}
