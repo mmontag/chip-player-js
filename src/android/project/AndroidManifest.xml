@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="7"
-	android:versionName="1.9.2 (Fix latency compensation, fix orientation change handling, fix previous button during replay)"
+	android:versionName="1.9.2 (Fix latency compensation, fix orientation change handling, fix previous button during replay, fix FC when adding empty directory to playlist)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
