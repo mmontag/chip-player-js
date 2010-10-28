@@ -39,8 +39,13 @@ public class PlaylistInfoAdapter extends ArrayAdapter<PlaylistInfo> {
     		if (bt != null) {
     			bt.setText(o.comment);
     		}
-    		if (im != null && o.imageRes > 0) {
-    			im.setImageResource(o.imageRes);
+    		if (im != null) {
+    			if (o.imageRes > 0) {
+    				im.setImageResource(o.imageRes);
+    				im.setVisibility(View.VISIBLE);
+    			} else {
+    				im.setVisibility(View.GONE);
+    			}
     		}
     	}
             

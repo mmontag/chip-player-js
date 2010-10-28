@@ -12,6 +12,7 @@ public class InfoCache {
 	public static boolean testModule(String filename) {
 		File file = new File(filename);
 		File cacheFile = new File(Settings.cacheDir, filename + ".cache");
+		File skipFile = new File(Settings.cacheDir, filename + ".skip");
 
 		if (!Settings.cacheDir.isDirectory()) {
 			if (Settings.cacheDir.mkdirs() == false) {
@@ -21,6 +22,9 @@ public class InfoCache {
 		}
 		
 		try {
+			if (skipFile.isFile())
+				return false;
+			
 			// If cache file exists and size matches, file is mod
 			if (cacheFile.isFile()) {
 				int size = Integer.parseInt(FileUtils.readFromFile(cacheFile));
@@ -28,7 +32,15 @@ public class InfoCache {
 					return true;
 			}
 			
-			return xmp.testModule(filename);
+			Boolean isMod = xmp.testModule(filename);
+			if (!isMod) {
+				File dir = skipFile.getParentFile();
+				if (!dir.isDirectory())
+					dir.mkdirs();
+				skipFile.createNewFile();
+			}
+			
+			return isMod;
 		} catch (IOException e) {
 			return xmp.testModule(filename);
 		}	
