@@ -260,7 +260,7 @@ public class Player extends Activity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (modPlayer.time() < 20) {
+				if (modPlayer.time() > 20) {
 					modPlayer.seek(0);
 				} else {
 					playIndex -= 2;
