@@ -52,7 +52,7 @@ public class ModList extends PlaylistActivity {
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
 	    	//Log.v(getString(R.string.app_name), "** " + dir + "/" + name);
-	        return (new File(dir,name).isDirectory()) || (xmp.testModule(dir + "/" + name) == 0);
+	        return (new File(dir,name).isDirectory()) || InfoCache.testModule(dir + "/" + name);
 	    }
 	}
 	
@@ -118,7 +118,7 @@ public class ModList extends PlaylistActivity {
             	}
             	for (File file : modDir.listFiles(new ModFilter())) {
             		if (file.isFile()) {
-            			ModInfo m = xmp.getModInfo(path + "/" + file.getName());
+            			ModInfo m = InfoCache.getModInfo(path + "/" + file.getName());
             			modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename, -1));
             		}
             	}

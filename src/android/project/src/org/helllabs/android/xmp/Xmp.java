@@ -5,7 +5,7 @@ public class Xmp {
 	public native void initContext();
 	public native int init(int rate);
 	public native int deinit();
-	public native int testModule(String name);
+	public native boolean testModule(String name);
 	public native int loadModule(String name);
 	public native int releaseModule();
 	public native int startPlayer();

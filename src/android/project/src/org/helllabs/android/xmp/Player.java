@@ -308,7 +308,7 @@ public class Player extends Activity {
 	}
 
 	void playNewMod(String fileName) {
-		ModInfo m = xmp.getModInfo(fileName);
+		ModInfo m = InfoCache.getModInfo(fileName);
        	seekBar.setProgress(0);
        	seekBar.setMax(m.time / 100);
         	
