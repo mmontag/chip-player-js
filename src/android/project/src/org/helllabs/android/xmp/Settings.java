@@ -1,16 +1,20 @@
 package org.helllabs.android.xmp;
 
 import java.io.File;
+import java.io.IOException;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.Preference;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 
 public class Settings extends android.preference.PreferenceActivity {
 	static File sdDir = Environment.getExternalStorageDirectory();
 	static File dataDir = new File(sdDir, "Xmp for Android");
+	static File cacheDir = new File(dataDir, "cache");
 	public static final String DEFAULT_MEDIA_PATH = sdDir.toString() + "/mod";
 	public static final String PREF_MEDIA_PATH = "media_path";
 	public static final String PREF_VOL_BOOST = "vol_boost";
@@ -34,7 +38,21 @@ public class Settings extends android.preference.PreferenceActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         oldPath = prefs.getString(PREF_MEDIA_PATH, DEFAULT_MEDIA_PATH);
         addPreferencesFromResource(R.xml.preferences);
+        
+        Preference clearCache = (Preference)findPreference("clear_cache");
+        clearCache.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+        	public boolean onPreferenceClick(Preference preference) {
+        		try {
+					deleteCache(cacheDir);
+					Message.toast(getBaseContext(), getString(R.string.cache_clear));
+				} catch (IOException e) {
+					Message.toast(getBaseContext(), getString(R.string.cache_clear_error));
+				}
+        		return true;
+        	}
+        });
     }
+
         
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -49,4 +67,15 @@ public class Settings extends android.preference.PreferenceActivity {
 
     	return super.onKeyDown(keyCode, event);
     }
+    
+	private void deleteCache(File f) throws IOException {
+		if (!f.exists())
+			return;
+		
+		if (f.isDirectory()) {
+			for (File c : f.listFiles())
+				deleteCache(c);
+		}
+		f.delete();
+	}
 }

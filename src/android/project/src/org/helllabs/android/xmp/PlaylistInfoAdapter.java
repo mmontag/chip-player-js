@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class PlaylistInfoAdapter extends ArrayAdapter<PlaylistInfo> {
@@ -31,11 +32,20 @@ public class PlaylistInfoAdapter extends ArrayAdapter<PlaylistInfo> {
     	if (o != null) {                		
     		TextView tt = (TextView)v.findViewById(R.id.plist_title);
     		TextView bt = (TextView)v.findViewById(R.id.plist_info);
+    		ImageView im = (ImageView)v.findViewById(R.id.plist_image);
     		if (tt != null) {
     			tt.setText(o.name);
     		}
-    		if(bt != null){
+    		if (bt != null) {
     			bt.setText(o.comment);
+    		}
+    		if (im != null) {
+    			if (o.imageRes > 0) {
+    				im.setImageResource(o.imageRes);
+    				im.setVisibility(View.VISIBLE);
+    			} else {
+    				im.setVisibility(View.GONE);
+    			}
     		}
     	}
             

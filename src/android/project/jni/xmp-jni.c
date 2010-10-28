@@ -104,7 +104,7 @@ Java_org_helllabs_android_xmp_Xmp_loadModule(JNIEnv *env, jobject obj, jstring n
 	return res;
 }
 
-JNIEXPORT jint JNICALL
+JNIEXPORT jboolean JNICALL
 Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring name)
 {
 	const char *filename;
@@ -115,7 +115,7 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
 	res = xmp_test_module(ctx, (char *)filename, NULL);
 	(*env)->ReleaseStringUTFChars(env, name, filename);
 
-	return res;
+	return res == 0 ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL

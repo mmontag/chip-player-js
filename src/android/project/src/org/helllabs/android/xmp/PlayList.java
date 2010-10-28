@@ -53,7 +53,7 @@ public class PlayList extends PlaylistActivity {
 	    	BufferedReader in = new BufferedReader(new FileReader(file));
 	    	while ((line = in.readLine()) != null) {
 	    		String[] fields = line.split(":", 3);
-	    		modList.add(new PlaylistInfo(fields[2], fields[1], fields[0]));
+	    		modList.add(new PlaylistInfo(fields[2], fields[1], fields[0], -1));
 	    	}
 	    	in.close();
 	    } catch (IOException e) {

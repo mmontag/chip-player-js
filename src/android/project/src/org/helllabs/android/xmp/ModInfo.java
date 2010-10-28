@@ -14,6 +14,10 @@ public class ModInfo {
 	int tpo;
 	int time;
 	
+	public ModInfo() {
+		
+	}
+	
 	public ModInfo(String _name, String _type, String _filename,
 			int _chn, int _pat, int _ins, int _trk, int _smp, int _len,
 			int _bpm, int _tpo, int _time)

@@ -29,6 +29,8 @@ struct xmp_module_info *xmp_get_module_info(xmp_context ctx, struct xmp_module_i
     i->trk = m->xxh->trk;
     i->smp = m->xxh->smp;
     i->len = m->xxh->len;
+    i->bpm = m->xxh->bpm;
+    i->tpo = m->xxh->tpo;
     i->time = m->time;
 
     return i;

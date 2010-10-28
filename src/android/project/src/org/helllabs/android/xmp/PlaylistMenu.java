@@ -74,12 +74,14 @@ public class PlaylistMenu extends ListActivity {
 		List<PlaylistInfo> list = new ArrayList<PlaylistInfo>();
 		
 		list.clear();
-		list.add(new PlaylistInfo("Module list", "Files in " + media_path));
+		list.add(new PlaylistInfo("Module list", "Files in " + media_path,
+							R.drawable.folder));
 		
 		for (String p : PlaylistUtils.listNoSuffix()) {
-			list.add(new PlaylistInfo(p, PlaylistUtils.readComment(this, p)));
+			list.add(new PlaylistInfo(p, PlaylistUtils.readComment(this, p),
+							R.drawable.list));
 		}
-		
+
         final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(PlaylistMenu.this,
     			R.layout.playlist_item, R.id.plist_info, list);
         

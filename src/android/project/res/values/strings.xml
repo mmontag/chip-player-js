@@ -85,4 +85,8 @@ GNU General Public License for more details.</string>
 <string name="preferences_buffer_ms_summary">Sound buffer duration</string>
     <string name="preferences_buffer_ms_title">Buffer size</string>
     <string name="preferences_buffer_ms_dialog">Set the size of sound buffer in milliseconds:</string>
+<string name="preferences_clear_cache_summary">Clear modules directory cache</string>
+    <string name="preferences_clear_cache_title">Clear cache</string>
+    <string name="cache_clear">File cache cleared</string>
+    <string name="cache_clear_error">Error clearing cache</string>
 </resources>

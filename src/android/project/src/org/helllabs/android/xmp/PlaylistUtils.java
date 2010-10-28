@@ -57,7 +57,7 @@ public class PlaylistUtils {
 		
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
-	        return (xmp.testModule(dir + "/" + name) == 0);
+	        return InfoCache.testModule(dir + "/" + name);
 	    }
 	}
 
@@ -81,7 +81,7 @@ public class PlaylistUtils {
             		if (file.isDirectory())
             			continue;
             		String filename = path + "/" + file.getName();
-            		ModInfo mi = xmp.getModInfo(filename);
+            		ModInfo mi = InfoCache.getModInfo(filename);
             		list.add(filename + ":" + mi.chn + " chn " + mi.type +
             				":" + mi.name);
             		num++;
