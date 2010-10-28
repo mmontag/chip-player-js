@@ -119,8 +119,7 @@ public class ModList extends PlaylistActivity {
             	for (File file : modDir.listFiles(new ModFilter())) {
             		if (file.isFile()) {
             			ModInfo m = xmp.getModInfo(path + "/" + file.getName());
-            			modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename,
-            								R.drawable.module));
+            			modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename, -1));
             		}
             	}
             	
