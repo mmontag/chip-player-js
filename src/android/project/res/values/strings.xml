@@ -18,7 +18,7 @@
     <string name="changelog_text">• Faster directory reads\n• Fix encoding of URI paths\n• Fix filesystem navigation\n
 \nVersion 1.9.2:\n• Fix latency compensation\n• Fix orientation change handling\n• Fix previous button during replay\n• Fix FC when adding empty directory to playlist\n
 \nVersion 1.9.1:\n• Large buffer to improve sound quality when running in background\n• Module list can navigate to subdirectories\n</string>
-    <string name="changelog_title">New in version 1.9.2</string>
+    <string name="changelog_title">New in version 1.9.3</string>
     
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
