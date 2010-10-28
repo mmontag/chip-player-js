@@ -178,7 +178,7 @@ public class Player extends Activity {
 		
 		String path = null;
 		if (getIntent().getData() != null) {
-			path = getIntent().getData().getEncodedPath();
+			path = getIntent().getData().getPath();
 		}
 		
 		if (path != null) {
