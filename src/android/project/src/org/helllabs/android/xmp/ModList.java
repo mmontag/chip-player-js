@@ -108,18 +108,19 @@ public class ModList extends PlaylistActivity {
 		final File modDir = new File(path);
 		new Thread() { 
 			public void run() {
-				modList.add(new PlaylistInfo("[..]", "Parent directory", path + "/.."));
+				modList.add(new PlaylistInfo("[..]", "Parent directory", path + "/..", R.drawable.parent));
             	for (File file : modDir.listFiles(new ModFilter())) {
             		if (file.isDirectory()) {
             			directoryNum++;
             			modList.add(new PlaylistInfo("[" + file.getName() + "]", "Directory",
-            								file.getAbsolutePath()));
+            								file.getAbsolutePath(), R.drawable.folder));
             		}
             	}
             	for (File file : modDir.listFiles(new ModFilter())) {
             		if (file.isFile()) {
             			ModInfo m = xmp.getModInfo(path + "/" + file.getName());
-            			modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename));
+            			modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename,
+            								R.drawable.module));
             		}
             	}
             	
