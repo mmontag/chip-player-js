@@ -104,15 +104,18 @@ public class ModList extends PlaylistActivity {
 		progressDialog = ProgressDialog.show(this,      
 				"Please wait", "Scanning module files...", true);
 
-		directoryNum = 1;	// we always have ..
+		directoryNum = 0;
 		final File modDir = new File(path);
 		new Thread() { 
 			public void run() {
-				modList.add(new PlaylistInfo("[..]", "Parent directory", path + "/..", R.drawable.parent));
+				if (!path.equals("/")) {
+					modList.add(new PlaylistInfo("..", "Parent directory", path + "/..", R.drawable.parent));
+					directoryNum++;
+				}	
             	for (File file : modDir.listFiles(new ModFilter())) {
             		if (file.isDirectory()) {
             			directoryNum++;
-            			modList.add(new PlaylistInfo("[" + file.getName() + "]", "Directory",
+            			modList.add(new PlaylistInfo(file.getName(), "Directory",
             								file.getAbsolutePath(), R.drawable.folder));
             		}
             	}
@@ -142,7 +145,12 @@ public class ModList extends PlaylistActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		String name = modList.get(position).filename;
 		File file = new File(name);
-		if (file.isDirectory()) {
+		
+		if (file.isDirectory()) {	
+			if (file.getName().equals("..")) {
+				if ((name = file.getParentFile().getParent()) == null)
+					name = "/";
+			}
 			updatePlaylist(name);
 		} else {
 			playModule(name);

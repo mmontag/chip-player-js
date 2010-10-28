@@ -50,7 +50,7 @@ public class PlayList extends PlaylistActivity {
 		String line;
 		
 	    try {
-	    	BufferedReader in = new BufferedReader(new FileReader(file));
+	    	BufferedReader in = new BufferedReader(new FileReader(file), 512);
 	    	while ((line = in.readLine()) != null) {
 	    		String[] fields = line.split(":", 3);
 	    		modList.add(new PlaylistInfo(fields[2], fields[1], fields[0], -1));

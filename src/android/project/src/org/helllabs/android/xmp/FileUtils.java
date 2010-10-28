@@ -27,7 +27,7 @@ public class FileUtils {
 	public static String readFromFile(File file) throws IOException {
 		String line = null;
 		
-		BufferedReader in = new BufferedReader(new FileReader(file));
+		BufferedReader in = new BufferedReader(new FileReader(file), 512);
 	    line = in.readLine();
 	    in.close();
 		
@@ -39,7 +39,7 @@ public class FileUtils {
 
 		File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
 
-		BufferedReader br = new BufferedReader(new FileReader(inFile));
+		BufferedReader br = new BufferedReader(new FileReader(inFile), 512);
 		PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
 		
 		String line;

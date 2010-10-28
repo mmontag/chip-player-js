@@ -61,7 +61,7 @@ public class InfoCache {
 		try {
 			// If cache file exists and size matches, file is mod
 			if (cacheFile.isFile()) {
-				BufferedReader in = new BufferedReader(new FileReader(cacheFile));			
+				BufferedReader in = new BufferedReader(new FileReader(cacheFile), 512);			
 				int size = Integer.parseInt(in.readLine());
 				if (size == file.length()) {
 					mi = new ModInfo();

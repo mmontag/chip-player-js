@@ -260,12 +260,16 @@ public class Player extends Activity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				playIndex -= modPlayer.time() < 20 ? 2 : 1;
-				if (playIndex < -1)
-					playIndex += fileArray.length;
-				modPlayer.stop();
-				unpause();
-		    }
+				if (modPlayer.time() < 20) {
+					modPlayer.seek(0);
+				} else {
+					playIndex -= 2;
+					if (playIndex < -1)
+						playIndex += fileArray.length;
+					modPlayer.stop();
+					unpause();
+				}
+			}
 		});
 		
 		forwardButton.setOnClickListener(new OnClickListener() {

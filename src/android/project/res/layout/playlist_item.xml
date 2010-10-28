@@ -22,12 +22,12 @@
           
       <TextView android:id="@+id/plist_title"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"/>
         
       <TextView android:id="@+id/plist_info"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"/>
     </LinearLayout>
   </LinearLayout>
