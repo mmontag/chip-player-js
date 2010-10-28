@@ -236,7 +236,7 @@ Java_org_helllabs_android_xmp_Xmp_seek(JNIEnv *env, jobject obj, jint time)
         for (i = 0; i < p->m.xxh->len; i++) {
                 t = p->m.xxo_info[i].time;
 
-                if (t > time) {
+                if (t >= time) {
                         if (i > 0)
                                 i--;
                         xmp_ord_set(ctx, i);

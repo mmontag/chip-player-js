@@ -147,8 +147,12 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 			p->pos++;
 		return p->pos;
 	case XMP_ORD_SET:
-		if (arg < m->xxh->len && arg >= 0)
-			p->pos = arg;
+		if (arg < m->xxh->len && arg >= 0) {
+			if (p->pos == arg && arg == 0)	/* special case */
+				p->pos = -1;
+			else
+				p->pos = arg;
+		}
 		return p->pos;
 	case XMP_MOD_STOP:
 		p->pos = -2;
