@@ -23,6 +23,7 @@
 package org.helllabs.android.xmp;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
 
 import android.app.AlertDialog;
@@ -49,10 +50,16 @@ public class ModList extends PlaylistActivity {
 	String currentDir;
 	int directoryNum;
 	
+	class DirFilter implements FileFilter {
+	    public boolean accept(File dir) {
+	        return dir.isDirectory();
+	    }
+	}
+	
 	class ModFilter implements FilenameFilter {
 	    public boolean accept(File dir, String name) {
-	    	//Log.v(getString(R.string.app_name), "** " + dir + "/" + name);
-	        return (new File(dir,name).isDirectory()) || InfoCache.testModule(dir + "/" + name);
+	    	File f = new File(dir,name);
+	        return !f.isDirectory() && InfoCache.testModule(f.getPath());
 	    }
 	}
 	
@@ -112,18 +119,14 @@ public class ModList extends PlaylistActivity {
 					modList.add(new PlaylistInfo("..", "Parent directory", path + "/..", R.drawable.parent));
 					directoryNum++;
 				}	
-            	for (File file : modDir.listFiles(new ModFilter())) {
-            		if (file.isDirectory()) {
-            			directoryNum++;
-            			modList.add(new PlaylistInfo(file.getName(), "Directory",
-            								file.getAbsolutePath(), R.drawable.folder));
-            		}
+            	for (File file : modDir.listFiles(new DirFilter())) {
+            		directoryNum++;
+            		modList.add(new PlaylistInfo(file.getName(), "Directory",
+            						file.getAbsolutePath(), R.drawable.folder));
             	}
             	for (File file : modDir.listFiles(new ModFilter())) {
-            		if (file.isFile()) {
-            			ModInfo m = InfoCache.getModInfo(path + "/" + file.getName());
-            			modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename, -1));
-            		}
+            		ModInfo m = InfoCache.getModInfo(path + "/" + file.getName());
+            		modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename, -1));
             	}
             	
                 final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(ModList.this,

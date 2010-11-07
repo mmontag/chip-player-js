@@ -8,9 +8,10 @@ public class About extends Activity {
 	
 	@Override
 	public void onCreate(Bundle icicle) {	
-		setContentView(R.layout.about);
 		super.onCreate(icicle);
 		
+		setContentView(R.layout.about);
+
 		Xmp xmp = new Xmp();
 		
 		((TextView)findViewById(R.id.version_name))
