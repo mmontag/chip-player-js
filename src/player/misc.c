@@ -75,13 +75,17 @@ int get_temp_dir(char *buf, int size)
 #elif defined __AMIGA__
 	strncpy(buf, "T:", size);
 #elif defined ANDROID
+#define APPDIR "/sdcard/Xmp for Android"
 	struct stat st;
-	stat("/sdcard/xmp", &st);
-	if (!S_ISDIR(st.st_mode)) {
-		if (mkdir("/sdcard/xmp", 0777) < 0)
+	if (stat(APPDIR, &st) < 0) {
+		if (mkdir(APPDIR, 0777) < 0)
 			return -1;
 	}
-	strncpy(buf, "/sdcard/xmp", size);
+	if (stat(APPDIR "/tmp", &st) < 0) {
+		if (mkdir(APPDIR "/tmp", 0777) < 0)
+			return -1;
+	}
+	strncpy(buf, APPDIR "/tmp/", size);
 #else
 	char *def = "/tmp";
 	char *tmp = getenv("TMPDIR");
