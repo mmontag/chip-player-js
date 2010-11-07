@@ -18,7 +18,8 @@ public class LedMeter extends Meter {
 
 	@Override
 	public void setVolumes(int[] vol) {
-		for (int i = 0; i < numChannels; i++) {
+		int max = numChannels < MAX_METERS ? numChannels : MAX_METERS;
+		for (int i = 0; i < max; i++) {
 			if (vol[i] != oldVol[i]) {
 				infoMeter[i].setTextColor(Color.rgb(0, 50 + vol[i] * 3, 0));
 				oldVol[i] = vol[i];

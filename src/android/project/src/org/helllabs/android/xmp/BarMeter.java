@@ -21,7 +21,8 @@ public class BarMeter extends Meter {
 
 	@Override
 	public void setVolumes(int[] vol) {
-		for (int i = 0; i < numChannels; i++) {
+		int max = numChannels < MAX_METERS ? numChannels : MAX_METERS;
+		for (int i = 0; i < max; i++) {
 			int v = vol[i] / 8;
 			if (v > 7)
 				v = 7;
