@@ -1,6 +1,6 @@
 package org.helllabs.android.xmp;
 
-public class PlaylistInfo {
+public class PlaylistInfo implements Comparable<PlaylistInfo> {
 	String name;
 	String comment;
 	String filename;
@@ -18,4 +18,11 @@ public class PlaylistInfo {
 		filename = _filename;
 		imageRes = _imageRes;
 	}
+	
+	// Comparable
+	
+	public int compareTo(PlaylistInfo p) {
+		return this.name.compareTo(p.name);
+	}
+
 }

@@ -25,6 +25,9 @@ package org.helllabs.android.xmp;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -119,15 +122,23 @@ public class ModList extends PlaylistActivity {
 					modList.add(new PlaylistInfo("..", "Parent directory", path + "/..", R.drawable.parent));
 					directoryNum++;
 				}	
+				
+				List<PlaylistInfo> list = new ArrayList<PlaylistInfo>();
             	for (File file : modDir.listFiles(new DirFilter())) {
             		directoryNum++;
-            		modList.add(new PlaylistInfo(file.getName(), "Directory",
+            		list.add(new PlaylistInfo(file.getName(), "Directory",
             						file.getAbsolutePath(), R.drawable.folder));
             	}
+            	Collections.sort(list);
+            	modList.addAll(list);
+            	
+            	list.clear();
             	for (File file : modDir.listFiles(new ModFilter())) {
             		ModInfo m = InfoCache.getModInfo(path + "/" + file.getName());
-            		modList.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename, -1));
+            		list.add(new PlaylistInfo(m.name, m.chn + " chn " + m.type, m.filename, -1));
             	}
+            	Collections.sort(list);
+            	modList.addAll(list);
             	
                 final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(ModList.this,
                 			R.layout.song_item, R.id.info, modList);
