@@ -54,7 +54,8 @@
 struct it_file_header {
 	uint32 magic;		/* 'IMPM' */
 	uint8 name[26];		/* ASCIIZ Song name */
-	uint8 rsvd1[2];		/* Reserved */
+	uint8 hilite_min;	/* Pattern editor highlight */
+	uint8 hilite_maj;	/* Pattern editor highlight */
 	uint16 ordnum;		/* Number of orders (must be even) */
 	uint16 insnum;		/* Number of instruments */
 	uint16 smpnum;		/* Number of samples */
@@ -68,10 +69,10 @@ struct it_file_header {
 	uint8 is;		/* Initial speed */
 	uint8 it;		/* Initial tempo */
 	uint8 sep;		/* Panning separation */
-	uint8 zero;		/* Always zero */
+	uint8 pwd;		/* Pitch wheel depth */
 	uint16 msglen;		/* Message length */
 	uint32 msgofs;		/* Message offset */
-	uint8 rsvd2[4];		/* Reserved */
+	uint32 rsvd;		/* Reserved */
 	uint8 chpan[64];	/* Channel pan settings */
 	uint8 chvol[64];	/* Channel volume settings */
 };
