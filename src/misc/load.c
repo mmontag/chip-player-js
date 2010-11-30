@@ -75,7 +75,9 @@ char *test_xfd		(unsigned char *, int);
 #define REDIR_STDERR
 #endif
 
-static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
+#define DECRUNCH_MAX 5 /* don't recurse more than this */
+
+static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 {
     struct xmp_options *o = &ctx->o;
     unsigned char b[1024];
@@ -102,7 +104,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
 	builtin = BUILTIN_XFD;
     } else
 #endif
-    if (b[0] == 'P' && b[1] == 'K' && b[2] == 0x03 && b[3] == 0x04) {
+
+    if (b[0] == 'P' && b[1] == 'K' &&
+	((b[2] == 3 && b[3] == 4) || (b[2] == '0' && b[3] == '0' &&
+	b[4] == 'P' && b[5] == 'K' && b[6] == 3 && b[7] == 4))) {
+
 	packer = "Zip";
 #if defined WIN32
 	cmd = "unzip -pqqC \"%s\" -x readme *.diz *.nfo *.txt *.exe *.com "
@@ -325,8 +331,11 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
     fclose(*f);
     *f = t;
  
+    if (!--ttl)
+	    goto err;
+    
     temp2 = strdup(temp->name);
-    decrunch(ctx, f, &temp->name);
+    res = decrunch(ctx, f, &temp->name, ttl);
     unlink(temp2);
     free(temp2);
     /* Mirko: temp is now deallocated in xmp_unlink_tempfiles
@@ -336,7 +345,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s)
      * free(temp);
      */
 
-    return 1;
+    return res;
 
 err:
     return -1;
@@ -443,7 +452,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
     if (S_ISDIR(st.st_mode))
 	goto err;
 
-    if (decrunch((struct xmp_context *)ctx, &f, &s) < 0)
+    if (decrunch((struct xmp_context *)ctx, &f, &s, DECRUNCH_MAX) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -516,7 +525,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	goto err;
 
     _D(_D_INFO "decrunch");
-    if ((t = decrunch((struct xmp_context *)ctx, &f, &s)) < 0)
+    if ((t = decrunch((struct xmp_context *)ctx, &f, &s, DECRUNCH_MAX)) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
