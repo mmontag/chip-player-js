@@ -8,11 +8,13 @@ Stable versions
 	- add filter to prevent loading NoiseRunner modules as Protracker
 	- add NoiseRunner loader (requested by Johan Samuelsson)
 	- add improved Impulse Tracker fingerprinting (from Schism Tracker)
+	- add Archimedes Tracker StasisMod effects support (Tom Hargreaves)
 	- limit uncompression recursion (Tom Hargreaves)
 	- fix TP3 loader (Tom Hargreaves)
 	- fix load issue with BoobieSqueezer XMs (reported by Null Vista)
 	- fix modinfo tempo/bpm setting
 	- fix Zip file detection (Tom Hargreaves)
+	- fix Archimedes Tracker effects (Tom Hargreaves)
 	- code cleanup
 
 3.2.0 (20100530):
