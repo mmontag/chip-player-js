@@ -27,7 +27,6 @@ struct xmp_loader_info hvl_loader = {
 
 static int hvl_test(FILE *f, char *t, const int start)
 {
-
 	if (read32b(f) != MAGIC_HVL)
 		return -1;
 
@@ -40,109 +39,103 @@ static int hvl_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static void hvl_GenSawtooth( int8 *buf, uint32 len )
+static void hvl_GenSawtooth(int8 * buf, uint32 len)
 {
-  uint32 i;
-  int32  val, add;
-  
-  add = 256 / (len-1);
-  val = -128;
-  
-  for( i=0; i<len; i++, val += add )
-    *buf++ = (int8)val;  
+	uint32 i;
+	int32 val, add;
+
+	add = 256 / (len - 1);
+	val = -128;
+
+	for (i = 0; i < len; i++, val += add)
+		*buf++ = (int8) val;
 }
 
-static void hvl_GenTriangle( int8 *buf, uint32 len )
+static void hvl_GenTriangle(int8 * buf, uint32 len)
 {
-  uint32 i;
-  int32  d2, d5, d1, d4;
-  int32  val;
-  int8   *buf2;
-  
-  d2  = len;
-  d5  = len >> 2;
-  d1  = 128/d5;
-  d4  = -(d2 >> 1);
-  val = 0;
-  
-  for( i=0; i<d5; i++ )
-  {
-    *buf++ = val;
-    val += d1;
-  }
-  *buf++ = 0x7f;
+	uint32 i;
+	int32 d2, d5, d1, d4;
+	int32 val;
+	int8 *buf2;
 
-  if( d5 != 1 )
-  {
-    val = 128;
-    for( i=0; i<d5-1; i++ )
-    {
-      val -= d1;
-      *buf++ = val;
-    }
-  }
-  
-  buf2 = buf + d4;
-  for( i=0; i<d5*2; i++ )
-  {
-    int8 c;
-    
-    c = *buf2++;
-    if( c == 0x7f )
-      c = 0x80;
-    else
-      c = -c;
-    
-    *buf++ = c;
-  }
+	d2 = len;
+	d5 = len >> 2;
+	d1 = 128 / d5;
+	d4 = -(d2 >> 1);
+	val = 0;
+
+	for (i = 0; i < d5; i++) {
+		*buf++ = val;
+		val += d1;
+	}
+	*buf++ = 0x7f;
+
+	if (d5 != 1) {
+		val = 128;
+		for (i = 0; i < d5 - 1; i++) {
+			val -= d1;
+			*buf++ = val;
+		}
+	}
+
+	buf2 = buf + d4;
+	for (i = 0; i < d5 * 2; i++) {
+		int8 c;
+
+		c = *buf2++;
+		if (c == 0x7f)
+			c = 0x80;
+		else
+			c = -c;
+
+		*buf++ = c;
+	}
 }
 
-static void hvl_GenSquare( int8 *buf )
+static void hvl_GenSquare(int8 * buf)
 {
-  uint32 i, j;
-  
-  for( i=1; i<=0x20; i++ )
-  {
-    for( j=0; j<(0x40-i)*2; j++ )
-      *buf++ = 0x80;
-    for( j=0; j<i*2; j++ )
-      *buf++ = 0x7f;
-  }
+	uint32 i, j;
+
+	for (i = 1; i <= 0x20; i++) {
+		for (j = 0; j < (0x40 - i) * 2; j++)
+			*buf++ = 0x80;
+		for (j = 0; j < i * 2; j++)
+			*buf++ = 0x7f;
+	}
 }
 
-void hvl_GenWhiteNoise( int8 *buf, uint32 len )
+void hvl_GenWhiteNoise(int8 * buf, uint32 len)
 {
-  uint32 ays;
+	uint32 ays;
 
-  ays = 0x41595321;
+	ays = 0x41595321;
 
-  do {
-    uint16 ax, bx;
-    int8 s;
+	do {
+		uint16 ax, bx;
+		int8 s;
 
-    s = ays;
+		s = ays;
 
-    if( ays & 0x100 )
-    {
-      s = 0x80;
+		if (ays & 0x100) {
+			s = 0x80;
 
-      if( (int32)(ays & 0xffff) >= 0 )
-        s = 0x7f;
-    }
+			if ((int32) (ays & 0xffff) >= 0)
+				s = 0x7f;
+		}
 
-    *buf++ = s;
-    len--;
+		*buf++ = s;
+		len--;
 
-    ays = (ays >> 5) | (ays << 27);
-    ays = (ays & 0xffffff00) | ((ays & 0xff) ^ 0x9a);
-    bx  = ays;
-    ays = (ays << 2) | (ays >> 30);
-    ax  = ays;
-    bx  += ax;
-    ax  ^= bx;
-    ays  = (ays & 0xffff0000) | ax;
-    ays  = (ays >> 3) | (ays << 29);
-  } while( len );
+		ays = (ays >> 5) | (ays << 27);
+		ays = (ays & 0xffffff00) | ((ays & 0xff) ^ 0x9a);
+		bx = ays;
+		ays = (ays << 2) | (ays >> 30);
+		ax = ays;
+		bx += ax;
+		ax ^= bx;
+		ays = (ays & 0xffff0000) | ax;
+		ays = (ays >> 3) | (ays << 29);
+	} while (len);
 }
 
 static void fix_effect (uint8 *fx, uint8 *param) {
