@@ -414,6 +414,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	case 0x5:
 	    sprintf(tracker_name, "OpenMPT %d.%02x",
 			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+	    if (memcmp(&ifh.rsvd, "OMPT", 4))
+		strcat(tracker_name, " (compat.)");
 	    break;
 	default:
 	    sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
