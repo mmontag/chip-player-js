@@ -49,6 +49,9 @@
 #define XMP_GVOL_DEC		0x06
 #define XMP_TIMER_STOP          0x07
 #define XMP_TIMER_RESTART       0x08
+#define XMP_SET_FLAG		0x09
+#define XMP_RESET_FLAG		0x0a
+#define XMP_TEST_FLAG		0x0b
 
 /* Format quirks */
 #define XMP_QUIRK_ST3		(XMP_QRK_NCWINS | XMP_QRK_IGNWINS | \
@@ -65,7 +68,7 @@
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_ORD_NEXT, 0)
 #define xmp_ord_prev(p)		xmp_player_ctl((p), XMP_ORD_PREV, 0)
-#define xmp_ord_set(p,x)	xmp_player_ctl((p), XMP_ORD_SET, x)
+#define xmp_ord_set(p,x)	xmp_player_ctl((p), XMP_ORD_SET, (x))
 #define xmp_mod_stop(p)		xmp_player_ctl((p), XMP_MOD_STOP, 0)
 #define xmp_stop_module(p)	xmp_player_ctl((p), XMP_MOD_STOP, 0)
 #define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
@@ -74,6 +77,9 @@
 #define xmp_timer_restart(p)	xmp_player_ctl((p), XMP_TIMER_RESTART, 0)
 #define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_GVOL_INC, 0)
 #define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_GVOL_DEC, 0)
+#define xmp_set_flag(p,x)	xmp_player_ctl((p), XMP_SET_FLAG, (x))
+#define xmp_reset_flag(p,x)	xmp_player_ctl((p), XMP_RESET_FLAG, (x))
+#define xmp_test_flag(p,x)	xmp_player_ctl((p), XMP_TEST_FLAG, (x))
 #define xmp_mod_load		xmp_load_module
 #define xmp_mod_test		xmp_test_module
 #define xmp_mod_play		xmp_play_module

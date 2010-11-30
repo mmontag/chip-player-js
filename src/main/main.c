@@ -329,7 +329,7 @@ static void process_echoback(unsigned long i, void *data)
 	    }
 	    fprintf (stderr, "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%02X/%02X] Chn[%02X/%02X] %s",
 		(int)(msg & 0xff), (int)(msg >> 8), nch, max_nch,
-		opt->flags & XMP_CTL_LOOP ? "L\b\b\b" : " \b\b\b");
+		xmp_test_flag(ctx, XMP_CTL_LOOP) ? "L\b\b\b" : " \b\b\b");
 	    break;
 	}
     }
@@ -395,7 +395,10 @@ void read_keyboard()
 	    paused = 0;
 	    break;
 	case 'l':
-	    opt->flags ^= XMP_CTL_LOOP;
+	    if (xmp_test_flag(ctx, XMP_CTL_LOOP))
+		xmp_reset_flag(ctx, XMP_CTL_LOOP);
+	    else
+		xmp_set_flag(ctx, XMP_CTL_LOOP);
 	    break;
 	case ' ':	/* paused module */
 	    paused ^= 1;

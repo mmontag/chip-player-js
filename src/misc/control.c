@@ -174,6 +174,14 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	case XMP_TIMER_RESTART:
 		xmp_drv_starttimer((struct xmp_context *)ctx);
 		break;
+	case XMP_SET_FLAG:
+		m->flags |= arg;
+		break;
+	case XMP_RESET_FLAG:
+		m->flags &= ~arg;
+		break;
+	case XMP_TEST_FLAG:
+		return (m->flags & arg) != 0;
 	}
 
 	return 0;
