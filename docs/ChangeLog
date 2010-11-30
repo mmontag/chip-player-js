@@ -9,6 +9,7 @@ Stable versions
 	- add NoiseRunner loader (requested by Johan Samuelsson)
 	- add improved Impulse Tracker fingerprinting (from Schism Tracker)
 	- add Archimedes Tracker StasisMod effects support (Tom Hargreaves)
+	- add tarball decompressor (Tom Hargreaves)
 	- limit uncompression recursion (Tom Hargreaves)
 	- fix TP3 loader (Tom Hargreaves)
 	- fix load issue with BoobieSqueezer XMs (reported by Null Vista)
