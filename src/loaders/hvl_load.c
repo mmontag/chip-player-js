@@ -182,7 +182,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	struct xxm_event *event;
+	//struct xxm_event *event;
 	int i, j, tmp, blank;
 
 	LOAD_INIT();
@@ -207,6 +207,9 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	printf ("pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x\n",
 		pattlen, m->xxh->trk, m->xxh->ins, m->xxh->len, stereo);
+
+	sprintf(m->type, "HVL (Hively Tracker)");
+	MODULE_INFO();
 
 	m->xxh->pat = m->xxh->len;
 	m->xxh->smp = 20;
@@ -435,7 +438,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
         }
 
 #define LEN 64
-	char b[16384];
+	int8 b[16384];
 
 	for (i=0; i<20; i++) {
 		m->xxs[i].len = LEN;
@@ -465,7 +468,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
-				  XMP_SMP_NOLOAD, &m->xxs[i], b);
+				  XMP_SMP_NOLOAD, &m->xxs[i], (char *)b);
 	}
 
 
@@ -486,7 +489,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 //		printf ("len=%d, name=%s\n", len, m->name);
 		
 		for (i=0; nameptr < namebuf+len && i < m->xxh->ins; i++) {
-			nameptr += strlen(nameptr)+1;
+			nameptr += strlen((char *)nameptr)+1;
 			copy_adjust(m->xxih[i].name, nameptr, 32);
 
 			printf ("%02x: %s\n", i, nameptr);
@@ -498,9 +501,6 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->chn; i++)
                 m->xxc[i].pan = ((i&3)%3) ? 128+stereo*31 : 128-stereo*31;
 
-
-	sprintf(m->type, "HVL (Hively Tracker)");
-	MODULE_INFO();
 
 /*	m->quirk |= XMP_CTL_VBLANK;*/
 /*	m->quirk |= XMP_QRK_UNISLD;*/
