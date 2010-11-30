@@ -10,6 +10,8 @@ Stable versions
 	- add many options to Android application preferences
 	- add list of supported formats to Android application menu
 	- add volume bars and list of instruments to Android application
+	- TP3 loader fixes by Tom Hargreaves
+	- fix load issue with BoobieSqueezer XMs (reported by Null Vista)
 	- fix modinfo tempo/bpm setting
 	- code cleanup
 

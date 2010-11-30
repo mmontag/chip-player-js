@@ -85,7 +85,9 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
     xfh.flags = read16l(f);		/* 0=Amiga freq table, 1=Linear */
     xfh.tempo = read16l(f);		/* Default tempo */
     xfh.bpm = read16l(f);		/* Default BPM */
-    fread(&xfh.order, 256, 1, f);	/* Pattern order table */
+
+    /* Honor header size -- needed by BoobieSqueezer XMs */
+    fread(&xfh.order, xfh.headersz - 0x14, 1, f); /* Pattern order table */
 
     strncpy(m->name, (char *)xfh.name, 20);
 
@@ -317,60 +319,69 @@ load_instruments:
 	if (m->xxih[i].nsm) {
 	    m->xxi[i] = calloc (sizeof (struct xxm_instrument), m->xxih[i].nsm);
 
-	    fread(&xi.sample, 96, 1, f);	/* Sample map */
-	    for (j = 0; j < 24; j++)
-		xi.v_env[j] = read16l(f);	/* Points for volume envelope */
-	    for (j = 0; j < 24; j++)
-		xi.p_env[j] = read16l(f);	/* Points for pan envelope */
-	    xi.v_pts = read8(f);		/* Number of volume points */
-	    xi.p_pts = read8(f);		/* Number of pan points */
-	    xi.v_sus = read8(f);		/* Volume sustain point */
-	    xi.v_start = read8(f);		/* Volume loop start point */
-	    xi.v_end = read8(f);		/* Volume loop end point */
-	    xi.p_sus = read8(f);		/* Pan sustain point */
-	    xi.p_start = read8(f);		/* Pan loop start point */
-	    xi.p_end = read8(f);		/* Pan loop end point */
-	    xi.v_type = read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
-	    xi.p_type = read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
-	    xi.y_wave = read8(f);		/* Vibrato waveform */
-	    xi.y_sweep = read8(f);		/* Vibrato sweep */
-	    xi.y_depth = read8(f);		/* Vibrato depth */
-	    xi.y_rate = read8(f);		/* Vibrato rate */
-	    xi.v_fade = read16l(f);		/* Volume fadeout */
+	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)
+	     * It works pretty much the same way as Impulse Tracker's sample
+	     * only mode, where it will strip off the instrument data.
+	     */
+	    if (xih.size == 0x26) {
+		read8(f);
+		read32l(f);
+	    } else {
+		fread(&xi.sample, 96, 1, f);	/* Sample map */
+		for (j = 0; j < 24; j++)
+		    xi.v_env[j] = read16l(f);	/* Points for volume envelope */
+		for (j = 0; j < 24; j++)
+		    xi.p_env[j] = read16l(f);	/* Points for pan envelope */
+		xi.v_pts = read8(f);		/* Number of volume points */
+		xi.p_pts = read8(f);		/* Number of pan points */
+		xi.v_sus = read8(f);		/* Volume sustain point */
+		xi.v_start = read8(f);		/* Volume loop start point */
+		xi.v_end = read8(f);		/* Volume loop end point */
+		xi.p_sus = read8(f);		/* Pan sustain point */
+		xi.p_start = read8(f);		/* Pan loop start point */
+		xi.p_end = read8(f);		/* Pan loop end point */
+		xi.v_type = read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
+		xi.p_type = read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
+		xi.y_wave = read8(f);		/* Vibrato waveform */
+		xi.y_sweep = read8(f);		/* Vibrato sweep */
+		xi.y_depth = read8(f);		/* Vibrato depth */
+		xi.y_rate = read8(f);		/* Vibrato rate */
+		xi.v_fade = read16l(f);		/* Volume fadeout */
 
-	    /* Skip reserved space */
-	    fseek(f, (int)xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
+		/* Skip reserved space */
+		fseek(f, (int)xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
 
-	    /* Envelope */
-	    m->xxih[i].rls = xi.v_fade;
-	    m->xxih[i].aei.npt = xi.v_pts;
-	    m->xxih[i].aei.sus = xi.v_sus;
-	    m->xxih[i].aei.lps = xi.v_start;
-	    m->xxih[i].aei.lpe = xi.v_end;
-	    m->xxih[i].aei.flg = xi.v_type;
-	    m->xxih[i].pei.npt = xi.p_pts;
-	    m->xxih[i].pei.sus = xi.p_sus;
-	    m->xxih[i].pei.lps = xi.p_start;
-	    m->xxih[i].pei.lpe = xi.p_end;
-	    m->xxih[i].pei.flg = xi.p_type;
-	    if (m->xxih[i].aei.npt)
-		m->xxae[i] = calloc (4, m->xxih[i].aei.npt);
-	    else
-		m->xxih[i].aei.flg &= ~XXM_ENV_ON;
-	    if (m->xxih[i].pei.npt)
-		m->xxpe[i] = calloc (4, m->xxih[i].pei.npt);
-	    else
-		m->xxih[i].pei.flg &= ~XXM_ENV_ON;
-	    memcpy(m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
-	    memcpy(m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
+		/* Envelope */
+		m->xxih[i].rls = xi.v_fade;
+		m->xxih[i].aei.npt = xi.v_pts;
+		m->xxih[i].aei.sus = xi.v_sus;
+		m->xxih[i].aei.lps = xi.v_start;
+		m->xxih[i].aei.lpe = xi.v_end;
+		m->xxih[i].aei.flg = xi.v_type;
+		m->xxih[i].pei.npt = xi.p_pts;
+		m->xxih[i].pei.sus = xi.p_sus;
+		m->xxih[i].pei.lps = xi.p_start;
+		m->xxih[i].pei.lpe = xi.p_end;
+		m->xxih[i].pei.flg = xi.p_type;
+		if (m->xxih[i].aei.npt)
+		    m->xxae[i] = calloc (4, m->xxih[i].aei.npt);
+		else
+		    m->xxih[i].aei.flg &= ~XXM_ENV_ON;
+		if (m->xxih[i].pei.npt)
+		    m->xxpe[i] = calloc (4, m->xxih[i].pei.npt);
+		else
+		    m->xxih[i].pei.flg &= ~XXM_ENV_ON;
+		memcpy(m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
+		memcpy(m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
 
-	    for (j = 0; j < XXM_KEY_MAX; j++)
-		m->xxim[i].ins[j] = -1;
+		for (j = 0; j < XXM_KEY_MAX; j++)
+		    m->xxim[i].ins[j] = -1;
 
-	    memcpy(&m->xxim[i].ins, xi.sample, 96);
-	    for (j = 0; j < 96; j++) {
-		if (m->xxim[i].ins[j] >= m->xxih[i].nsm)
-		    m->xxim[i].ins[j] = (uint8)XMP_MAXPAT;
+		memcpy(&m->xxim[i].ins, xi.sample, 96);
+		for (j = 0; j < 96; j++) {
+		    if (m->xxim[i].ins[j] >= m->xxih[i].nsm)
+			m->xxim[i].ins[j] = (uint8)XMP_MAXPAT;
+		}
 	    }
 
 	    for (j = 0; j < m->xxih[i].nsm; j++, sample_num++) {
