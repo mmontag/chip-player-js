@@ -108,9 +108,8 @@ static int depack_tp3(FILE *in, FILE *out)
 
 				c1 = read8(in);
 				if ((c1 & 0xc0) == 0xc0) {
-					//k += (0x100 - c1);
-					//k -= 1;
-					k += 0x80 - (c1 & 0x3f);
+					k += (0x100 - c1);
+					k -= 1;
 					continue;
 				}
 
