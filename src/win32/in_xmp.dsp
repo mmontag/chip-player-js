@@ -650,6 +650,10 @@ SOURCE=..\player\mixer.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\player\hvl.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\drivers\smix.c
 # End Source File
 # Begin Source File

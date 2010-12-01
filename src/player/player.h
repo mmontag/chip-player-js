@@ -181,6 +181,9 @@ struct xmp_channel {
     int med_vib_wf;		/* MED synth vibrato waveform */
 
     /* AHX and Hively support */
+    int ahx_finit;		/* AHX filter init */
+    int ahx_fon;		/* AHX filter on */
+    int ahx_fwait;		/* AHX filter wait */
     int ahx_fslide;		/* AHX filter slide in */
     int ahx_fsign;		/* AHX filter sign */
     int ahx_fpos;		/* AHX filter pos */
