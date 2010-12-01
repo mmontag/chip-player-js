@@ -151,10 +151,16 @@ struct xmp_channel {
     int ns_fval;		/* OKT fine note slide amount */
     int ns_speed;		/* PTM note slide speed */
     int ns_count;		/* PTM note slide counter */
+
+    /* IT support */
     int cutoff;			/* IT filter cutoff frequency */
     int cutoff2;		/* IT filter cutoff frequency (with envelope) */
     int resonance;		/* IT filter resonance */
+    int flt_B0;			/* IT filter stuff */
+    int flt_B1;
+    int flt_B2;
     
+    /* MED support */
     int med_vp;			/* MED synth volume sequence table pointer */
     int med_vv;			/* MED synth volume slide value */
     int med_vs;			/* MED synth volume speed */
@@ -174,9 +180,15 @@ struct xmp_channel {
     int med_vib_idx;		/* MED synth vibrato index */
     int med_vib_wf;		/* MED synth vibrato waveform */
 
-    int flt_B0;			/* IT filter stuff */
-    int flt_B1;
-    int flt_B2;
+    /* AHX and Hively support */
+    int ahx_fslide;		/* AHX filter slide in */
+    int ahx_fsign;		/* AHX filter sign */
+    int ahx_fpos;		/* AHX filter pos */
+    int ahx_fmin;		/* AHX filter lower limit */
+    int ahx_fmax;		/* AHX filter upper limit */
+    int ahx_fspeed;		/* AHX filter speed */
+    int ahx_wave;		/* AHX waveform */
+    int ahx_newwave;		/* AHX new waveform */
 
     struct xxm_event *delayed_event;
     int delayed_ins;		/* IT save instrument emulation */
