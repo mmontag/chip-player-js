@@ -15,8 +15,6 @@
 #include "load.h"
 
 #define MAGIC_HVL	MAGIC4('H','V','L', 0)
-#define MAGIC_AHX0	MAGIC4('A','H','X', 0)
-#define MAGIC_AHX1	MAGIC4('A','H','X', 1)
 
 static int hvl_test (FILE *, char *, const int);
 static int hvl_load (struct xmp_context *, FILE *, const int);
@@ -28,15 +26,6 @@ struct xmp_loader_info hvl_loader = {
 	hvl_test,
 	hvl_load
 };
-
-#if 0
-struct xmp_loader_info ahx_loader = {
-	"AHX",
-	"AHX Sound System",
-	ahx_test,
-	hvl_load
-};
-#endif
 
 static int hvl_test(FILE *f, char *t, const int start)
 {
@@ -52,23 +41,6 @@ static int hvl_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-#if 0
-static int ahx_test(FILE *f, char *t, const int start)
-{
-	uint32 magic = read32b(f);
-
-	if (magic != MAGIC_AHX0 && magic != MAGIC_AHX1)
-		return -1;
-
-	uint16 off = read16b(f);
-	if (fseek(f, off + 1, SEEK_SET))
-		return -1;
-
-	read_title(f, t, 32);
-
-	return 0;
-}
-#endif
 
 static void hvl_GenSawtooth(int8 * buf, uint32 len)
 {
@@ -185,7 +157,7 @@ static void fix_effect (uint8 *fx, uint8 *param) {
 //		printf ("pan %02x\n", *param);
 		break;
 	case 9:
-		printf ("square %02x\n", *param);
+		_D(_D_INFO "square %02x", *param);
 		break;
 	case 12:
 		if (*param >= 0x50 && *param <= 0x90) {
@@ -339,34 +311,42 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 
 	for (i = 0; i < m->xxh->ins; i++) {
+		uint8 buf[22];
+		int vol, fspd, wavelen, flow, vibdel, hclen, hc;
+		int vibdep, vibspd, sqmin, sqmax, sqspd, fmax, plen, pspd;
 		int Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol;
                 m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-		int vol = read8(f);	/* Master volume (0 to 64) */
-		int tmp = read8(f);	/* 7-3:filter speed, 2-0:wave length */
+		fread(buf, 22, 1, f);
 
-		int wavelen = tmp & 7;
-		Alen = read8(f);	/* attack length, 1 to 255 */
-		Avol = read8(f);	/* attack volume, 0 to 64 */
-		Dlen = read8(f);	/* decay length, 1 to 255 */
-		Dvol = read8(f);	/* decay volume, 0 to 64 */
-		Slen = read8(f);	/* sustain length, 1 to 255 */
-		Rlen = read8(f);	/* release length, 1 to 255 */
-		Rvol = read8(f);	/* release volume, 0 to 64 */
-		read8(f);		/* reserved */
-		read8(f);		/* reserved */
-		read8(f);		/* reserved */
-		read8(f);		/* filter modulation speed and limit */
-					/* vibrato delay? */
-		int vibdep = read8(f);	/* hardcut, vibrato depth 0 to 15 */
-		int vibspd = read8(f);	/* vibrato speed, 0 to 63 */
-		int sqmin = read8(f);	/* square modulation lower limit */
-		int sqmax = read8(f);	/* square modulation upper limit */
-		read8(f);		/* square modulation speed */
-		read8(f);		/* filter modulation speed and limit */
-		read8(f);		/* ? */
-		int pspd = read8(f);	/* playlist default speed */	
-		int plen = read8(f);	/* playlist length */
+		vol = buf[0];		/* Master volume (0 to 64) */
+		fspd = ((buf[1] >> 3) & 0x1f) | ((buf[12] >> 2) & 0x20);
+					/* Filter speed */
+		wavelen = buf[1] & 7;	/* Wave length */
+
+		Alen = buf[2];		/* attack length, 1 to 255 */
+		Avol = buf[3];		/* attack volume, 0 to 64 */
+		Dlen = buf[4];		/* decay length, 1 to 255 */
+		Dvol = buf[5];		/* decay volume, 0 to 64 */
+		Slen = buf[6];		/* sustain length, 1 to 255 */
+		Rlen = buf[7];		/* release length, 1 to 255 */
+		Rvol = buf[8];		/* release volume, 0 to 64 */
+
+		flow = buf[12] & 0x7f;	/* filter modulation lower limit */
+		vibdel = buf[13];	/* vibrato delay */
+		hclen = (buf[14] >> 4) & 0x07;
+					/* Hardcut length */
+		hc = buf[14] & 0x80 ? 1 : 0;
+					/* Hardcut release */
+		vibdep = buf[14] & 15;	/* vibrato depth, 0 to 15 */
+		vibspd = buf[15];	/* vibrato speed, 0 to 63 */
+		sqmin = buf[16];	/* square modulation lower limit */
+		sqmax = buf[17];	/* square modulation upper limit */
+		sqspd = buf[18];	/* square modulation speed */
+		fmax = buf[19] & 0x3f;	/* filter modulation upper limit */
+		pspd = buf[20];		/* playlist default speed */	
+		plen = buf[21];		/* playlist length */
+
 		if (!pspd)
 			pspd=1;
 		int poff = 0;
@@ -383,11 +363,12 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		int jump = -1;
 		int dosq = -1;
 
-		for (j=0; j<plen; j++) {
+		for (j = 0; j < plen; j++) {
 			uint8 tmp[5];
 			fread (tmp, 1, 5, f);
-			int fx1 = tmp[0] &15;
-			int fx2 = (tmp[1]>>3)&15;
+
+			int fx1 = tmp[0] & 15;
+			int fx2 = (tmp[1] >> 3) & 15;
 
 			/* non-zero waveform means change to wf[waveform-1] */
 			/* 0: triangle
@@ -396,8 +377,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			   3: white noise
 			*/
 
-			int fixed=tmp[2] & 0x40;
-
+			int fixed = (tmp[2] >> 6) & 0x01;
 
 			if (tmp[2] & 0x3f) {
 				note = tmp[2] & 0x3f;
@@ -410,11 +390,11 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			else if (fx2 == 15)
 				pspd = tmp[4];
 
-			m->xxfe[i][j*4]=poff;
-			m->xxfe[i][j*4+1]=note*100;
+			m->xxfe[i][j*4] = poff;
+			m->xxfe[i][j*4+1] = note * 100;
 			poff += pspd;
-			m->xxfe[i][j*4+2]=poff;
-			m->xxfe[i][j*4+3]=note*100;
+			m->xxfe[i][j*4+2] = poff;
+			m->xxfe[i][j*4+3] = note * 100;
 
 			if (jump >= 0) 
 				continue;
@@ -428,8 +408,8 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			else if (fx2 == 3)
 				dosq = tmp[4] & 0x3f;
 
-			if ((tmp[1] &7))
-				wave = tmp[1] &7;
+			if ((tmp[1] & 7))
+				wave = tmp[1] & 7;
 			
 			if (fx1 == 5)
 				jump = tmp[3];
@@ -458,16 +438,16 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].aei.flg = XXM_ENV_ON;
 		m->xxih[i].aei.npt = 5;
 		m->xxae[i] = calloc (4, m->xxih[i].aei.npt);
-		m->xxae[i][0]=0;
-		m->xxae[i][1]=vol;
-		m->xxae[i][2]=Alen; /* these are *not* multiplied by pspd */
-		m->xxae[i][3]=Avol;
-		m->xxae[i][4]=(Alen+Dlen);
-		m->xxae[i][5]=Dvol;
-		m->xxae[i][6]=(Alen+Dlen+Slen);
-		m->xxae[i][7]=Dvol;
-		m->xxae[i][8]=(Alen+Dlen+Slen+Rlen);
-		m->xxae[i][9]=Rvol;
+		m->xxae[i][0] = 0;
+		m->xxae[i][1] = vol;
+		m->xxae[i][2] = Alen; /* these are *not* multiplied by pspd */
+		m->xxae[i][3] = Avol;
+		m->xxae[i][4] = (Alen+Dlen);
+		m->xxae[i][5] = Dvol;
+		m->xxae[i][6] = (Alen+Dlen+Slen);
+		m->xxae[i][7] = Dvol;
+		m->xxae[i][8] = (Alen+Dlen+Slen+Rlen);
+		m->xxae[i][9] = Rvol;
 
 		m->xxi[i][0].vol = 64;
 		m->xxi[i][0].sid = wave;
