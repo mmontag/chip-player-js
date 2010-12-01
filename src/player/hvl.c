@@ -12,8 +12,10 @@
 
 #include "common.h"
 #include "player.h"
+#include "effects.h"
 
-void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
+
+void hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 {
 	if (xc->ahx_fon && --xc->ahx_fwait <= 0) {
 		uint32 i, FMax;
@@ -58,7 +60,6 @@ void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 		if (xc->ahx_fwait < 1)
 			xc->ahx_fwait = 1;
 	}
-
 #if 0
 	if (xc->ahx_wave == 3 - 1 || xc->vc_PlantSquare) {
 		// CalcSquare
@@ -70,8 +71,8 @@ void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 		SquarePtr =
 		    &waves[WO_SQUARES +
 			   (xc->ahx_fpos - 0x20) * (0xfc + 0xfc +
-							   0x80 * 0x1f + 0x80 +
-							   0x280 * 3)];
+						    0x80 * 0x1f + 0x80 +
+						    0x280 * 3)];
 		X = xc->vc_SquarePos << (5 - xc->vc_WaveLength);
 
 		if (X > 0x20) {
@@ -118,8 +119,8 @@ void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 		if (xc->ahx_wave != 3 - 1)
 			AudioSource +=
 			    (xc->ahx_fpos - 0x20) * (0xfc + 0xfc +
-							    0x80 * 0x1f + 0x80 +
-							    0x280 * 3);
+						     0x80 * 0x1f + 0x80 +
+						     0x280 * 3);
 
 		if (xc->ahx_wave < 3 - 1) {
 			// GetWLWaveformlor2
@@ -128,13 +129,11 @@ void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 
 		if (xc->ahx_wave == 4 - 1) {
 			// AddRandomMoving
-			AudioSource +=
-			    (xc->vc_WNRandom & (2 * 0x280 - 1)) & ~1;
+			AudioSource += (xc->vc_WNRandom & (2 * 0x280 - 1)) & ~1;
 			// GoOnRandom
 			xc->vc_WNRandom += 2239384;
 			xc->vc_WNRandom =
-			    ((((xc->vc_WNRandom >> 8) | (xc->
-							    vc_WNRandom << 24))
+			    ((((xc->vc_WNRandom >> 8) | (xc->vc_WNRandom << 24))
 			      + 782323) ^ 75) - 6735;
 		}
 
@@ -151,8 +150,7 @@ void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 				    xc->vc_TrackPeriod - 1;
 			else
 				xc->vc_RingAudioPeriod +=
-				    xc->vc_Transpose +
-				    xc->vc_TrackPeriod - 1;
+				    xc->vc_Transpose + xc->vc_TrackPeriod - 1;
 		}
 
 		if (xc->vc_RingAudioPeriod > 5 * 12)
@@ -161,12 +159,10 @@ void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 		if (xc->vc_RingAudioPeriod < 0)
 			xc->vc_RingAudioPeriod = 0;
 
-		xc->vc_RingAudioPeriod =
-		    period_tab[xc->vc_RingAudioPeriod];
+		xc->vc_RingAudioPeriod = period_tab[xc->vc_RingAudioPeriod];
 
 		if (!(xc->vc_RingFixedPeriod))
-			xc->vc_RingAudioPeriod +=
-			    xc->vc_PeriodSlidePeriod;
+			xc->vc_RingAudioPeriod += xc->vc_PeriodSlidePeriod;
 
 		xc->vc_RingAudioPeriod +=
 		    xc->vc_PeriodPerfSlidePeriod + xc->vc_VibratoPeriod;
@@ -179,4 +175,50 @@ void xmp_hvl_effects(struct xmp_context *ctx, struct xmp_channel *xc)
 	}
 #endif
 
+}
+
+void hvl_process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt,
+		    uint8 fxp, struct xmp_channel *xc)
+{
+	switch (fxt) {
+	case FX_AHX_FILTER:
+		if (fxp > 0 && fxp < 0x40) {
+			if (xc->ahx_fignore) {
+				xc->ahx_fpos = xc->ahx_fignore;
+				xc->ahx_fignore = 0;
+			} else {
+				xc->ahx_fpos = fxp;
+			}
+
+			xc->ahx_newwave = 1;
+		}
+		break;
+	case FX_AHX_SQUARE:
+		if (xc->ahx_signore == 0)
+			xc->ahx_spos = fxp >> (5 - xc->ahx_wavelen);
+		else
+			xc->ahx_signore = 0;
+		break;
+	case FX_AHX_MODULATE:
+		if (fxp == 0) {
+			xc->ahx_sinit = (xc->ahx_son ^= 1);
+			xc->ahx_ssign = 1;
+		} else {
+			if (fxp & 0x0f) {
+				xc->ahx_sinit = (xc->ahx_son ^= 1);
+				xc->ahx_ssign = 1;
+
+				if ((fxp & 0x0f) == 0x0f)
+					xc->ahx_ssign = -1;
+			}
+
+			if (fxp & 0xf0) {
+				xc->ahx_finit = (xc->ahx_fon ^= 1);
+				xc->ahx_fsign = 1;
+				if ((fxp & 0xf0) == 0xf0)
+					xc->ahx_fsign = -1;
+			}
+		}
+		break;
+	}
 }

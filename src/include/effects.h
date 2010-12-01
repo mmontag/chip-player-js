@@ -75,10 +75,16 @@
 #define FX_FLT_CUTOFF	0x84
 #define FX_FLT_RESN	0x85
 #define FX_FINE2_VIBRA	0x86
+#define FX_IT_BPM	0x87
 
 /* MED effects */
 #define FX_HOLD_DECAY	0x90
 #define FX_SETPITCH	0x91
+
+/* AHX/Hively effects */
+#define FX_AHX_FILTER	0x98	/* null or set filter */
+#define FX_AHX_SQUARE	0x99	/* init square */
+#define FX_AHX_MODULATE	0x9a	/* toggle modulation */
 
 /* PTM effects */
 #define FX_NSLIDE_DN	0x9c	/* IMF/PTM note slide down */
@@ -97,6 +103,5 @@
 #define FX_REVERB	0xaa	/* IMF */
 #define FX_S3M_BPM	0xab	/* S3M */
 #define FX_FINE4_VIBRA	0xac	/* S3M/PTM/IMF/LIQ */
-#define FX_IT_BPM	0xad	/* IT */
 
 #endif /* __EFFECTS_H */

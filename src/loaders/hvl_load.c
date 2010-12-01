@@ -144,9 +144,15 @@ static void hvl_GenWhiteNoise(int8 * buf, uint32 len)
 static void fix_effect (uint8 *fx, uint8 *param) {
 	switch (*fx) {
 	case 0:
-		*param = 0;
+		if (*param)
+			*fx = FX_AHX_FILTER;
+		break;
+	case 3: /* init square */
+		*fx = FX_AHX_SQUARE;
 		break;
 	case 4: /* set filter */
+		*fx = FX_AHX_MODULATE;
+		break;
 	case 6: /* unused */
 	case 8: /* unused */
 		*fx = *param = 0;
