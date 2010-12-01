@@ -338,10 +338,6 @@ SOURCE=..\loaders\polly_load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\hvl_load.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
 # Begin Source File
@@ -647,10 +643,6 @@ SOURCE=..\player\effects.c
 # Begin Source File
 
 SOURCE=..\player\mixer.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\hvl.c
 # End Source File
 # Begin Source File
 

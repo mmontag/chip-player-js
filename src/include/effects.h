@@ -81,11 +81,6 @@
 #define FX_HOLD_DECAY	0x90
 #define FX_SETPITCH	0x91
 
-/* AHX/Hively effects */
-#define FX_AHX_FILTER	0x98	/* null or set filter */
-#define FX_AHX_SQUARE	0x99	/* init square */
-#define FX_AHX_MODULATE	0x9a	/* toggle modulation */
-
 /* PTM effects */
 #define FX_NSLIDE_DN	0x9c	/* IMF/PTM note slide down */
 #define FX_NSLIDE_UP	0x9d	/* IMF/PTM note slide up */

@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-3.3.0 ():
+3.3.0 (20101002):
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)
 	- fix OSS driver fragment setting
 	- add interactive loop toggle (requested by Emanuel Haupt)
@@ -11,7 +11,7 @@ Stable versions
 	- add Archimedes Tracker StasisMod effects support (Tom Hargreaves)
 	- add tarball decompressor (Tom Hargreaves)
 	- limit uncompression recursion (Tom Hargreaves)
-	- fix TP3 loader (Tom Hargreaves)
+	- fix Tracker Packer 3 loader (Tom Hargreaves)
 	- fix load issue with BoobieSqueezer XMs (reported by Null Vista)
 	- fix modinfo tempo/bpm setting
 	- fix Zip file detection (Tom Hargreaves)
