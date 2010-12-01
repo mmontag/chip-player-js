@@ -10,9 +10,13 @@
 #include "config.h"
 #endif
 
+#define _DEBUG
+
 #include "load.h"
 
-#define MAGIC_HVL	MAGIC4('H','V','L',0)
+#define MAGIC_HVL	MAGIC4('H','V','L', 0)
+#define MAGIC_AHX0	MAGIC4('A','H','X', 0)
+#define MAGIC_AHX1	MAGIC4('A','H','X', 1)
 
 static int hvl_test (FILE *, char *, const int);
 static int hvl_load (struct xmp_context *, FILE *, const int);
@@ -25,19 +29,46 @@ struct xmp_loader_info hvl_loader = {
 	hvl_load
 };
 
+#if 0
+struct xmp_loader_info ahx_loader = {
+	"AHX",
+	"AHX Sound System",
+	ahx_test,
+	hvl_load
+};
+#endif
+
 static int hvl_test(FILE *f, char *t, const int start)
 {
 	if (read32b(f) != MAGIC_HVL)
 		return -1;
 
 	uint16 off = read16b(f);
-	if (fseek (f, off+1, SEEK_SET))
+	if (fseek(f, off + 1, SEEK_SET))
 		return -1;
 
 	read_title(f, t, 32);
 
 	return 0;
 }
+
+#if 0
+static int ahx_test(FILE *f, char *t, const int start)
+{
+	uint32 magic = read32b(f);
+
+	if (magic != MAGIC_AHX0 && magic != MAGIC_AHX1)
+		return -1;
+
+	uint16 off = read16b(f);
+	if (fseek(f, off + 1, SEEK_SET))
+		return -1;
+
+	read_title(f, t, 32);
+
+	return 0;
+}
+#endif
 
 static void hvl_GenSawtooth(int8 * buf, uint32 len)
 {
@@ -104,7 +135,7 @@ static void hvl_GenSquare(int8 * buf)
 	}
 }
 
-void hvl_GenWhiteNoise(int8 * buf, uint32 len)
+static void hvl_GenWhiteNoise(int8 * buf, uint32 len)
 {
 	uint32 ays;
 
@@ -150,7 +181,7 @@ static void fix_effect (uint8 *fx, uint8 *param) {
 		break;
 	case 7:
 		*fx = FX_MASTER_PAN;
-		* param ^= 0x80;
+		*param ^= 0x80;
 //		printf ("pan %02x\n", *param);
 		break;
 	case 9:
@@ -175,7 +206,6 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	//struct xxm_event *event;
 	int i, j, tmp, blank;
 
 	LOAD_INIT();
@@ -185,20 +215,20 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	uint16 title_offset = read16b(f);
 	tmp = read16b(f);
 	m->xxh->len = tmp & 0xfff;
-	blank=(tmp & 0x8000);
+	blank = tmp & 0x8000;
 		
 	tmp = read16b(f);
-	m->xxh->chn = (tmp>>10)+4;
+	m->xxh->chn = (tmp >> 10) + 4;
 	m->xxh->rst = tmp & 1023;
 
 	int pattlen = read8(f);
-	m->xxh->trk = read8(f)+1;
+	m->xxh->trk = read8(f) + 1;
 	m->xxh->ins = read8(f);
 	int subsongs = read8(f);
 	int gain = read8(f);
 	int stereo = read8(f);
 
-	printf ("pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x\n",
+	_D(_D_WARN "pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x",
 		pattlen, m->xxh->trk, m->xxh->ins, m->xxh->len, stereo);
 
 	sprintf(m->type, "HVL (Hively Tracker)");
@@ -218,6 +248,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	uint8 **transbuf = malloc (m->xxh->len * m->xxh->chn * sizeof(uint8 *));
 	int transposed = 0;
 
+	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->len);
 
 	for (i = 0; i < m->xxh->len; i++) {
 		PATTERN_ALLOC(i);
@@ -228,20 +259,30 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxp[i]->info[j].index = m->xxh->trk + transposed;
 				transbuf[transposed] = seqptr;
 				transposed++;
-			} else
+			} else {
 				m->xxp[i]->info[j].index = seqptr[0];
+			}
 			seqptr += 2;
-//				printf ("%02x ", m->xxp[i]->info[j].index);
+//			printf ("%02x ", m->xxp[i]->info[j].index);
 		}
-//			printf ("\n");
+//		printf ("\n");
 		m->xxo[i] = i;
+		reportv(ctx, 0, ".");
 	}
+	reportv(ctx, 0, "\n");
 	
+
+	/*
+	 * tracks
+	 */
+
 	if (transposed) {
 		m->xxh->trk += transposed;
 		m->xxt = realloc(m->xxt, m->xxh->trk * sizeof (struct xxm_track *));
 	}
 	
+	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
+
 	for (i = 0; i < m->xxh->trk; i++) {
 		m->xxt[i] = calloc(sizeof(struct xxm_track) +
 				   sizeof(struct xxm_event) * pattlen - 1, 1);
@@ -285,45 +326,52 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			} //else 
 			//	printf (".");
 		}
+		if (V(0) && !(i % m->xxh->chn))
+			report (".");
 	}
+	reportv(ctx, 0, "\n");
 
-	free (seqbuf);
-	free (transbuf);
+	free(seqbuf);
+	free(transbuf);
+
+	/*
+	 * Instruments
+	 */
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		int Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol;
                 m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
-		int vol = read8(f);
-		int tmp = read8(f);
+		int vol = read8(f);	/* Master volume (0 to 64) */
+		int tmp = read8(f);	/* 7-3:filter speed, 2-0:wave length */
 
 		int wavelen = tmp & 7;
-		Alen = read8(f);
-		Avol = read8(f);
-		Dlen = read8(f);
-		Dvol = read8(f);
-		Slen = read8(f);
-		Rlen = read8(f);
-		Rvol = read8(f);
-
-		read8(f);
-		read8(f);
-		read8(f);
-		read8(f);
-		int vibdep = read8(f);
-		int vibspd = read8(f);
-		int sqmin = read8(f);
-		int sqmax = read8(f);
-		read8(f);
-		read8(f);
-		read8(f);
-		int pspd = read8(f);
-		int plen = read8(f);
+		Alen = read8(f);	/* attack length, 1 to 255 */
+		Avol = read8(f);	/* attack volume, 0 to 64 */
+		Dlen = read8(f);	/* decay length, 1 to 255 */
+		Dvol = read8(f);	/* decay volume, 0 to 64 */
+		Slen = read8(f);	/* sustain length, 1 to 255 */
+		Rlen = read8(f);	/* release length, 1 to 255 */
+		Rvol = read8(f);	/* release volume, 0 to 64 */
+		read8(f);		/* reserved */
+		read8(f);		/* reserved */
+		read8(f);		/* reserved */
+		read8(f);		/* filter modulation speed and limit */
+					/* vibrato delay? */
+		int vibdep = read8(f);	/* hardcut, vibrato depth 0 to 15 */
+		int vibspd = read8(f);	/* vibrato speed, 0 to 63 */
+		int sqmin = read8(f);	/* square modulation lower limit */
+		int sqmax = read8(f);	/* square modulation upper limit */
+		read8(f);		/* square modulation speed */
+		read8(f);		/* filter modulation speed and limit */
+		read8(f);		/* ? */
+		int pspd = read8(f);	/* playlist default speed */	
+		int plen = read8(f);	/* playlist length */
 		if (!pspd)
 			pspd=1;
 		int poff = 0;
 
-		printf ("I: %02x plen %02x pspd %02x vibdep=%d vibspd=%d sqmin=%d sqmax=%d\n", i, plen, pspd, vibdep, vibspd, sqmin, sqmax);
+		_D(_D_WARN "I: %02x plen %02x pspd %02x vibdep=%d vibspd=%d sqmin=%d sqmax=%d", i, plen, pspd, vibdep, vibspd, sqmin, sqmax);
 		int j;
 		int wave=0;
 
@@ -395,7 +443,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxih[i].fei.lpe = j*2+1;
 			}
 
-			printf ("[%d W:%x 1:%x%02x 2:%x%02x n:%02x]", j, tmp[1] &7, tmp[0]&15, tmp[3], (tmp[1]>>3)&15, tmp[4], tmp[2]);
+			_D(_D_INFO "[%d W:%x 1:%x%02x 2:%x%02x n:%02x]", j, tmp[1] &7, tmp[0]&15, tmp[3], (tmp[1]>>3)&15, tmp[4], tmp[2]);
 		}
 
 		if (!wave)
@@ -405,7 +453,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		else
 			wave--;
 
-		printf ("I: %02x V: %02x A: %02x %02x D: %02x %02x S:  %02x R: %02x %02x wave %02x\n",
+		_D(_D_INFO "I: %02x V: %02x A: %02x %02x D: %02x %02x S:  %02x R: %02x %02x wave %02x",
 			i, vol, Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol, wave);
 		m->xxih[i].aei.flg = XXM_ENV_ON;
 		m->xxih[i].aei.npt = 5;
