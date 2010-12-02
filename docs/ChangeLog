@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-3.3.0 (20101002):
+3.3.0 (20101202):
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)
 	- fix OSS driver fragment setting
 	- add interactive loop toggle (requested by Emanuel Haupt)
