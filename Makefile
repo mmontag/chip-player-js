@@ -1,5 +1,5 @@
 
-VERSION	= 3.3.0-pre
+VERSION	= 3.3.0
 DIST    = xmp-$(VERSION)
 MODULES = "graff-strange_land.xm"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
