@@ -29,6 +29,15 @@ struct xmp_loader_info it_loader = {
     it_load
 };
 
+#ifdef WIN32
+// FIXME: not thread-safe
+struct tm *localtime_r(const time_t *timep, struct tm *result)
+{
+    memcpy(result, localtime(timep), sizeof(struct tm));
+    return result;
+}
+#endif
+
 static int it_test(FILE *f, char *t, const int start)
 {
     if (read32b(f) != MAGIC_IMPM)
