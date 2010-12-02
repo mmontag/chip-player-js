@@ -16,6 +16,7 @@ Stable versions
 	- fix modinfo tempo/bpm setting
 	- fix Zip file detection (Tom Hargreaves)
 	- fix Archimedes Tracker effects (Tom Hargreaves)
+	- update Audacious plugin to API 16
 	- code cleanup
 
 3.2.0 (20100530):

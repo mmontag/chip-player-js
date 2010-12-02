@@ -14,8 +14,16 @@
 #include <ctype.h>
 
 #include <audacious/configdb.h>
-#include <audacious/util.h>
 #include <audacious/plugin.h>
+
+#if __AUDACIOUS_PLUGIN_API__ < 16
+#include <audacious/util.h>
+#else
+#include <gtk/gtk.h>
+#define aud_tuple_new_from_filename	tuple_new_from_filename
+#define aud_tuple_associate_string	tuple_associate_string
+#define aud_tuple_associate_int		tuple_associate_int
+#endif
 
 #include "xmp.h"
 #include "common.h"
@@ -61,7 +69,11 @@ static GStaticMutex load_mutex = G_STATIC_MUTEX_INIT;
 
 static struct {
 	InputPlayback *ipb;
+#if __AUDACIOUS_PLUGIN_API__ < 16
 	AFormat fmt;
+#else
+	int fmt;
+#endif
 	int nch;
 } play_data;
 
@@ -105,7 +117,7 @@ int skip = 0;
 static short audio_open = FALSE;
 
 /* Filtering files by suffix is really stupid. */
-static gchar *fmts[] = {
+static const gchar *fmts[] = {
 	"xm", "mod", "m15", "it", "s2m", "s3m", "stm", "stx", "med", "dmf",
 	"mtm", "ice", "imf", "ptm", "mdl", "ult", "liq", "psm", "amf",
         "rtm", "pt3", "tcb", "dt", "gtk", "dtt", "mgt", "digi", "dbm",
@@ -346,7 +358,11 @@ InputPlugin *get_iplugin_info()
 
 static void init(void)
 {
+#if __AUDACIOUS_PLUGIN_API__ < 16
 	ConfigDb *cfg;
+#else
+	mcs_handle_t *cfg;
+#endif
 
 	_D("Plugin init");
 	xmp_drv_register(&drv_smix);
@@ -884,7 +900,11 @@ static void configure()
 
 static void config_ok(GtkWidget *widget, gpointer data)
 {
+#if __AUDACIOUS_PLUGIN_API__ < 16
 	ConfigDb *cfg;
+#else
+	mcs_handle_t *cfg;
+#endif
 	struct xmp_options *opt;
 
 	opt = xmp_get_options(ctx);
