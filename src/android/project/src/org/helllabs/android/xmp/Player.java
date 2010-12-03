@@ -28,6 +28,7 @@ public class Player extends Activity {
 	Xmp xmp = new Xmp();	/* used to get mod info */
 	ModPlayer modPlayer;	/* actual mod player */ 
 	ImageButton playButton, stopButton, backButton, forwardButton;
+	ImageButton loopButton;
 	SeekBar seekBar;
 	Thread progressThread;
 	boolean seeking = false;
@@ -226,12 +227,24 @@ public class Player extends Activity {
 		stopButton = (ImageButton)findViewById(R.id.stop);
 		backButton = (ImageButton)findViewById(R.id.back);
 		forwardButton = (ImageButton)findViewById(R.id.forward);
+		loopButton = (ImageButton)findViewById(R.id.loop);
 		
 		// Set background here because we want to keep aspect ratio
 		image = new BitmapDrawable(BitmapFactory.decodeResource(getResources(),
 												R.drawable.logo));
 		image.setGravity(Gravity.CENTER);
 		infoLayout.setBackgroundDrawable(image.getCurrent());
+		loopButton.setImageResource(R.drawable.loop_off);
+		
+		loopButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (modPlayer.toggleLoop()) {
+					loopButton.setImageResource(R.drawable.loop_on);
+				} else {
+					loopButton.setImageResource(R.drawable.loop_off);
+				}
+			}
+		});
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {

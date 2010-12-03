@@ -482,3 +482,21 @@ Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj, jintArray
 
 	(*env)->SetIntArrayRegion(env, vol, 0, 32, _cur_vol);
 }
+
+JNIEXPORT jboolean JNICALL
+Java_org_helllabs_android_xmp_Xmp_testFlag(JNIEnv *env, jobject obj, jint flag)
+{
+	return xmp_test_flag(ctx, flag) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_org_helllabs_android_xmp_Xmp_setFlag(JNIEnv *env, jobject obj, jint flag)
+{
+	xmp_set_flag(ctx, flag);
+}
+
+JNIEXPORT void JNICALL
+Java_org_helllabs_android_xmp_Xmp_resetFlag(JNIEnv *env, jobject obj, jint flag)
+{
+	xmp_reset_flag(ctx, flag);
+}

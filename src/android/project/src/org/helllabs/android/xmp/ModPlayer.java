@@ -146,5 +146,15 @@ public class ModPlayer {
 	public void getVolumes(int[] volumes) {
 		xmp.getVolumes(volumes);
 	}
+	
+	public boolean toggleLoop() {
+		if (xmp.testFlag(Xmp.XMP_CTL_LOOP)) {
+			xmp.resetFlag(Xmp.XMP_CTL_LOOP);
+			return false;
+		} else {
+			xmp.setFlag(Xmp.XMP_CTL_LOOP);
+			return true;
+		}
+	}
 }
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
-	android:versionCode="9"
-	android:versionName="1.9.4 (Sort directory entries, fix FC with 32ch mods)"
+	android:versionCode="10"
+	android:versionName="1.9.5 (Add module loop toggle, fix IT fingerprinting, fix TP3 and XM loader, fix Archimedes Tracker effects)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"

@@ -180,16 +180,31 @@
   
   </ScrollView>
   	  		
-  </LinearLayout>    
-   
-   <SeekBar android:id="@+id/seek"
-            android:gravity="bottom"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp" />
+  </LinearLayout>
+      
+  <LinearLayout
+     android:gravity="center"
+     android:orientation="horizontal"
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content">
         
-   <LinearLayout
+    <SeekBar android:id="@+id/seek"
+        android:gravity="bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.95"
+        android:paddingBottom="10dp"
+        android:paddingTop="10dp" />
+                    
+    <ImageButton android:id="@+id/loop"
+        android:layout_weight="0.05"
+        android:layout_width="wrap_content"
+        android:layout_height="25dip"
+        android:background="@drawable/btn_small" />
+                
+  </LinearLayout>
+        
+  <LinearLayout
      android:gravity="bottom"
      android:orientation="horizontal"
      android:layout_width="fill_parent"
@@ -198,26 +213,22 @@
          android:src="@drawable/back"
          android:layout_weight="1.0"
          android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         android:text="Rew" />
+         android:layout_height="wrap_content" />
      <ImageButton android:id="@+id/play"
          android:src="@drawable/pause"
          android:layout_weight="1.0"
          android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         android:text="Play" />
+         android:layout_height="wrap_content" />
      <ImageButton android:id="@+id/stop"
          android:src="@drawable/stop"
          android:layout_weight="1.0"
          android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         android:text="Stop" />
+         android:layout_height="wrap_content" />
      <ImageButton android:id="@+id/forward"
          android:src="@drawable/forward"
          android:layout_weight="1.0"
          android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         android:text="FF" />       
+         android:layout_height="wrap_content" />       
    </LinearLayout>   
 
 </LinearLayout>

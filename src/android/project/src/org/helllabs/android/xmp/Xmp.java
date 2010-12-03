@@ -2,6 +2,8 @@ package org.helllabs.android.xmp;
 
 
 public class Xmp {
+	public static final int XMP_CTL_LOOP = 1 << 3;
+	
 	public native void initContext();
 	public native int init(int rate);
 	public native int deinit();
@@ -40,6 +42,9 @@ public class Xmp {
 	public native void optStereo(boolean b);
 	public native void optInterpolation(boolean b);
 	public native void optFilter(boolean b);
+	public native boolean testFlag(int flag);
+	public native void setFlag(int flag);
+	public native void resetFlag(int flag);
 	
 	static {
 		System.loadLibrary("xmp");
