@@ -1019,6 +1019,8 @@ next_order:
     				goto next_order;
 			}
 
+			f->time = (double)m->xxo_info[f->ord].time / 1000;
+
 			f->num_rows = m->xxp[m->xxo[f->ord]]->rows;
 			if (f->jumpline >= f->num_rows)
 				f->jumpline = 0;
