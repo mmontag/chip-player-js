@@ -15,11 +15,12 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     
-    <string name="changelog_text">• Add module loop toggle button\n• Enable fast scroll in long lists\n• Fix IT module fingerprinting\n• Fix TP3 module loader\n• Fix BoobieSqueezer XM loading\n• Fix Archimedes Tracker effects\n
+    <string name="changelog_text">• Storage directory fix for NOOKcolor\n• Add option to show replay time\n
+\nVersion 1.9.5:\n• Add module loop toggle button\n• Enable fast scroll in long lists\n• Fix IT module fingerprinting\n• Fix TP3 module loader\n• Fix BoobieSqueezer XM loading\n• Fix Archimedes Tracker effects\n
 \nVersion 1.9.4:\n• Sort directory entries\n• Fix FC with modules with more than 30 channels\n• Fix temporary directory location\n
 \nVersion 1.9.3:\n• Faster directory reads\n• Fix encoding of URI paths\n• Fix filesystem navigation\n• Fix prev button in single play mode\n
 \nVersion 1.9.2:\n• Fix latency compensation\n• Fix orientation change handling\n• Fix previous button during replay\n• Fix FC when adding empty directory to playlist\n</string>
-    <string name="changelog_title">New in version 1.9.5</string>
+    <string name="changelog_title">New in version 1.9.6</string>
     
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
@@ -90,4 +91,6 @@ GNU General Public License for more details.</string>
     <string name="preferences_clear_cache_title">Clear cache</string>
     <string name="cache_clear">File cache cleared</string>
     <string name="cache_clear_error">Error clearing cache</string>
+<string name="preferences_show_time_summary">Show elapsed replay time</string>
+    <string name="preferences_show_time_title">Display time</string>
 </resources>

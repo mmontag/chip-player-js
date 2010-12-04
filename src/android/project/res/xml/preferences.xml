@@ -103,7 +103,14 @@
       android:defaultValue="2"
       android:entries="@array/meters_array"
       android:entryValues="@array/meters_values" />
-       
+      
+    <CheckBoxPreference
+      android:key="show_time"
+      android:persistent="true"
+      android:title="@string/preferences_show_time_title"
+      android:summary="@string/preferences_show_time_summary"
+      android:defaultValue="false" />
+      
     <CheckBoxPreference
       android:key="show_toast"
       android:persistent="true"

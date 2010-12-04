@@ -38,10 +38,11 @@ public class Player extends Activity {
 	boolean paused = false;
 	boolean isBadDir = false;
 	boolean finishing = false;
+	boolean showTime;
 	TextView infoName, infoType, infoLen, infoTime;
 	TextView infoNpat, infoChn, infoIns, infoSmp;
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
-	TextView infoInsList;
+	TextView infoInsList, elapsedTime;
 	String[] fileArray;
 	int playIndex;
 	RandomIndex ridx;
@@ -86,10 +87,12 @@ public class Player extends Activity {
     	int[] bpm = new int[10];
     	int[] pos = new int[10];
     	int[] pat = new int[10];
+    	int[] time = new int[10];
     	int oldTpo = -1;
     	int oldBpm = -1;
     	int oldPos = -1;
     	int oldPat = -1;
+    	int oldTime = -1;
     	int[][] volumes = new int[10][32];
     	int before = 0, now;
     	
@@ -125,6 +128,17 @@ public class Player extends Activity {
         	before++;
         	if (before >= 10)
         		before = 0;
+
+        	if (showTime) {
+	        	time[now] = modPlayer.time() / 10;
+	        	if (time[before] != oldTime) {
+		        	int t = time[before];
+		        	if (t < 0)
+		        		t = 0;
+	        		elapsedTime.setText(String.format("%2d:%02d", t / 60, t % 60));
+	        		oldTime = time[before];
+	        	}
+        	}
         }
     };
     
@@ -177,6 +191,8 @@ public class Player extends Activity {
 		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
+		showTime = prefs.getBoolean(Settings.PREF_SHOW_TIME, false);
+		
 		String path = null;
 		if (getIntent().getData() != null) {
 			path = getIntent().getData().getPath();
@@ -222,6 +238,10 @@ public class Player extends Activity {
 		infoMeterLayout = (LinearLayout)findViewById(R.id.info_meters);
 		infoInsList = (TextView)findViewById(R.id.info_ins_list);
 		infoLayout = (LinearLayout)findViewById(R.id.info_layout);
+		elapsedTime = (TextView)findViewById(R.id.elapsed_time);
+		
+		if (!showTime)
+			elapsedTime.setVisibility(LinearLayout.GONE);
 		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);

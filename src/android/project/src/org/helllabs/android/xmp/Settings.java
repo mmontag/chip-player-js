@@ -30,6 +30,7 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_SAMPLING_RATE = "sampling_rate";
 	public static final String PREF_BUFFER_MS = "buffer_ms";
 	public static final String PREF_SHOW_TOAST = "show_toast";
+	public static final String PREF_SHOW_TIME = "show_time";
 	private SharedPreferences prefs;
 	private String oldPath;
 	
