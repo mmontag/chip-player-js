@@ -38,7 +38,7 @@ public class Player extends Activity {
 	boolean paused = false;
 	boolean isBadDir = false;
 	boolean finishing = false;
-	boolean showTime;
+	boolean showTime, showElapsed;
 	TextView infoName, infoType, infoLen, infoTime;
 	TextView infoNpat, infoChn, infoIns, infoSmp;
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
@@ -53,6 +53,7 @@ public class Player extends Activity {
 	BitmapDrawable image;
 	final Handler handler = new Handler();
 	int latency;
+	int totalTime;
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
@@ -95,6 +96,7 @@ public class Player extends Activity {
     	int oldTime = -1;
     	int[][] volumes = new int[10][32];
     	int before = 0, now;
+    	boolean oldShowElapsed;
     	
         public void run() {
         	now = (before + latency) % 10;
@@ -131,12 +133,18 @@ public class Player extends Activity {
 
         	if (showTime) {
 	        	time[now] = modPlayer.time() / 10;
-	        	if (time[before] != oldTime) {
+	        	if (time[before] != oldTime || showElapsed != oldShowElapsed) {
 		        	int t = time[before];
 		        	if (t < 0)
 		        		t = 0;
-	        		elapsedTime.setText(String.format("%2d:%02d", t / 60, t % 60));
+		        	if (showElapsed) {
+		        		elapsedTime.setText(String.format("%d:%02d", t / 60, t % 60));
+		        	} else {
+		        		t = totalTime - t;
+		        		elapsedTime.setText(String.format("-%d:%02d", t / 60, t % 60));
+		        	}
 	        		oldTime = time[before];
+	        		oldShowElapsed = showElapsed;
 	        	}
         	}
         }
@@ -192,6 +200,7 @@ public class Player extends Activity {
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		showTime = prefs.getBoolean(Settings.PREF_SHOW_TIME, false);
+		showElapsed = true;
 		
 		String path = null;
 		if (getIntent().getData() != null) {
@@ -312,6 +321,12 @@ public class Player extends Activity {
 		    }
 		});
 		
+		elapsedTime.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				showElapsed ^= true;
+		    }
+		});
+		
 		seekBar = (SeekBar)findViewById(R.id.seek);
 		seekBar.setProgress(0);
 		
@@ -346,6 +361,7 @@ public class Player extends Activity {
 
 	void playNewMod(String fileName) {
 		ModInfo m = InfoCache.getModInfo(fileName);
+		totalTime = m.time / 1000;
        	seekBar.setProgress(0);
        	seekBar.setMax(m.time / 100);
         	
