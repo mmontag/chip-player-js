@@ -3,6 +3,7 @@ Stable versions
 
 3.3.1 ():
 	- fix reported elapsed time with looped modules
+	- fix portamento of mapped instruments (reported by Null Vista)
 
 3.3.0 (20101202):
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)

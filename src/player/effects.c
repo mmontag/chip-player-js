@@ -21,8 +21,8 @@
 
 #define DO_TONEPORTA() { \
 	if (note-- && note < 0x60 && (uint32)xc->ins < p->m.xxh->ins) \
-	    xc->s_end = note_to_period (note + XXI[XXIM.ins[note]].xpo + \
-		XXIM.xpo[note], XXI[XXIM.ins[note]].fin, \
+	    xc->s_end = note_to_period (note + XXI[XXIM.ins[xc->key]].xpo + \
+		XXIM.xpo[xc->key], XXI[XXIM.ins[xc->key]].fin, \
 	 	p->m.xxh->flg & XXM_FLG_LINEAR); \
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 }
