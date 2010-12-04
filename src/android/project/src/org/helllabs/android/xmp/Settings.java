@@ -12,7 +12,9 @@ import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 
 public class Settings extends android.preference.PreferenceActivity {
-	static File sdDir = Environment.getExternalStorageDirectory();
+	// Workaround for NOOKcolor reporting bogus sdcard directory
+	static File sdDir = new File("/media/B&N Downloads").isDirectory() ?
+			new File("/media") : Environment.getExternalStorageDirectory();
 	static File dataDir = new File(sdDir, "Xmp for Android");
 	static File cacheDir = new File(dataDir, "cache");
 	public static final String DEFAULT_MEDIA_PATH = sdDir.toString() + "/mod";
