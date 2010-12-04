@@ -17,14 +17,12 @@
               android:paddingLeft="15px"       
               android:paddingBottom="5px" 
               android:layout_gravity="center_vertical"
-              android:textStyle="bold"
-              android:textColor="#ffffff" />  
+              android:textStyle="bold" />  
             <TextView android:text="@string/changelog_text"
               android:layout_width="fill_parent" 
               android:layout_height="wrap_content"
               android:paddingLeft="15px"      
-              android:paddingBottom="10px"            
-              android:textColor="#ffffff" />
+              android:paddingBottom="10px" />
         </LinearLayout>
     </ScrollView>                   
 </LinearLayout>
