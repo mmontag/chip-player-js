@@ -42,6 +42,42 @@ static int med4_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
+typedef int32 LONG;
+typedef uint32 ULONG;
+typedef int16 WORD;
+typedef uint16 UWORD;
+typedef int8 BYTE;
+typedef uint8 UBYTE;
+
+struct SynthInstr {
+	ULONG length;		/* length of this struct */
+	WORD type;		/* -1 or -2 (offs: 4) */
+	UBYTE defaultdecay;
+	UBYTE reserved[3];
+	UWORD rep;
+	UWORD replen;
+	UWORD voltbllen;	/* offs: 14 */
+	UWORD wftbllen;		/* offs: 16 */
+	UBYTE volspeed;		/* offs: 18 */
+	UBYTE wfspeed;		/* offs: 19 */
+	UWORD wforms;		/* offs: 20 */
+	UBYTE voltbl[128];	/* offs: 22 */
+	UBYTE wftbl[128];	/* offs: 150 */
+	ULONG wf[64];		/* offs: 278 */
+};
+
+static char *inst_type[] = {
+	"HYB",		/* -2 */
+	"SYN",		/* -1 */
+	"SMP",		/*  0 */
+	"I5O",		/*  1 */
+	"I3O",		/*  2 */
+	"I2O",		/*  3 */
+	"I4O",		/*  4 */
+	"I6O",		/*  5 */
+	"I7O",		/*  6 */
+	"EXT",		/*  7 */
+};
 
 static int read4_ctl;
 
@@ -117,6 +153,16 @@ static inline uint16 read12b(FILE *f)
 	return (a << 8) | (b << 4) | c;
 }
 
+struct temp_inst {
+	char name[32];
+	int loop_start;
+	int loop_end;
+	int volume;
+	int transpose;
+};
+
+struct temp_inst temp_inst[32];
+
 static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
@@ -128,7 +174,9 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	uint8 trkvol[16], buf[1024];
 	struct xxm_event *event;
 	int flags, hexvol = 0;
-
+	int num_ins;
+	int num_smp;
+	
 	LOAD_INIT();
 
 	read32b(f);
@@ -168,21 +216,23 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	mask <<= (32 - masksz * 8);
 
-	m->xxh->ins = m->xxh->smp = 32;
-	INSTRUMENT_INIT();
 
-	/* read instrument names */
+	/* read instrument names in temporary space */
+
+	num_ins = 0;
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		uint8 c, size, buf[40];
-		uint16 loop_len;
+		uint16 loop_len = 0;
 
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		memset(&temp_inst[i], 0, sizeof (struct temp_inst));
+
+		//m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
 		if (~mask & 0x80000000)
 			continue;
 
 		/* read flags */
-		c = read8(f);
+	   	c = read8(f);
 
 		/* read instrument name */
 		size = read8(f);
@@ -190,24 +240,24 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			buf[j] = read8(f);
 		buf[j] = 0;
 
-		m->xxs[i].lps = 0;
-		loop_len = 0;
-		m->xxi[i][0].vol = 0x40;
+		temp_inst[i].volume = 0x40;
 
 		if ((c & 0x01) == 0)
-			m->xxs[i].lps = read16b(f) << 1;
+			temp_inst[i].loop_start = read16b(f) << 1;
 		if ((c & 0x02) == 0)
 			loop_len = read16b(f) << 1;
 		if ((c & 0x20) == 0)
-			m->xxi[i][0].vol = read8(f);
+			temp_inst[i].volume = read8(f);
 		if ((c & 0x40) == 0)
-			m->xxi[i][0].xpo = read8s(f);
+			temp_inst[i].transpose = read8s(f);
 
-		m->xxs[i].lpe = m->xxs[i].lps + loop_len;
-		if (loop_len > 0)
-			m->xxs[i].flg |= WAVE_LOOPING;
+		temp_inst[i].loop_end = temp_inst[i].loop_start + loop_len;
+		/*if (loop_len > 0)
+			m->xxs[i].flg |= WAVE_LOOPING;*/
 
-		copy_adjust(m->xxih[i].name, buf, 32);
+		copy_adjust((uint8 *)temp_inst[i].name, buf, 32);
+
+		num_ins++;
 	}
 
 	m->xxh->pat = read16b(f);
@@ -239,7 +289,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	reportv(ctx, 0, "Play transpose : %d semitones\n", transp);
 
 	for (i = 0; i < 32; i++)
-		m->xxi[i][0].xpo += transp;
+		temp_inst[i].transpose += transp;
 
 	read8(f);
 	m->xxh->chn = read8(f);;
@@ -299,7 +349,6 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			reportv(ctx, 0, "error: module is corrupted\n");
 			TRACK_DEALLOC_ALL(i);
 			PATTERN_DEALLOC_ALL(i);
-			INSTRUMENT_DEALLOC_ALL(m->xxh->ins);
 			return -1;
 		}
 
@@ -399,40 +448,239 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	reportv(ctx, 0, "\n");
 
-	/* Load samples */
+	m->xxh->ins =  num_ins;
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Instrument name                  Len  LBeg LEnd L Vol Xpo");
+	m->med_vol_table = calloc(sizeof(uint8 *), m->xxh->ins);
+        m->med_wav_table = calloc(sizeof(uint8 *), m->xxh->ins);
 
+	/*
+	 * Load samples
+	 */
 	mask = read32b(f);
-
 	read16b(f);
 
 #ifdef MED4_DEBUG
 	printf("instrument mask: %08x\n", mask);
 #endif
 
+	read16b(f);	/* ?!? */
+
 	mask <<= 1;	/* no instrument #0 */
+
+	/* obtain number of samples */
+	pos = ftell(f);
+	num_smp = 0;
+	{
+		int _len, _type, _mask = mask;
+		for (i = 0; i < 32; i++, _mask <<= 1) {
+			if (~_mask & 0x80000000)
+				continue;
+			read16b(f);
+			_len = read16b(f);
+			_type = (int16)read16b(f);
+
+			int _pos = ftell(f);
+
+			if (_type == 0) {
+				num_smp++;
+			} else if (_type == -1) {
+				fseek(f, 20, SEEK_CUR);
+				num_smp += read16b(f);
+			}
+
+			fseek(f, _pos + _len, SEEK_SET);
+		}
+	}
+	fseek(f, pos, SEEK_SET);
+
+	m->xxh->smp = num_smp;
+
+	INSTRUMENT_INIT();
+
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	reportv(ctx, 1, "\n     Instrument name                  Typ Len  LBeg LEnd L Vol Xpo");
+
+
+	int smp_idx = 0;
 	for (i = 0; i < 32; i++, mask <<= 1) {
+		int x1, length, type;
+		struct SynthInstr synth;
+
 		if (~mask & 0x80000000)
 			continue;
 
-		read16b(f);	/* some flag? 0x202a, 0xfef9, 0x0a0a */
-		read16b(f);	/* 0x0000 */
-		m->xxs[i].len = read16b(f);
+		x1 = read16b(f);
+		length = read16b(f);
+		type = (int16)read16b(f);	/* instrument type */
 
-		m->xxi[i][0].sid = i;
-		m->xxih[i].nsm = !!(m->xxs[i].len);
+		strncpy((char *)m->xxih[i].name, temp_inst[i].name, 32);
 
-		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x %+03d ",
-			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-			m->xxs[i].lpe,
-			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		reportv(ctx, 1, "\n[%2X] %-32.32s %s ",
+			i, m->xxih[i].name, inst_type[type + 2]);
+
+		/* This is very similar to MMD1 synth/hybrid instruments,
+		 * but just different enough to be reimplemented here.
+		 */
+
+		if (type == -2) {			/* Hybrid */
+			int length, type;
+			int pos = ftell(f);
+
+			read32b(f);	/* ? - MSH 00 */
+			read16b(f);	/* ? - ffff */
+			read16b(f);	/* ? - 0000 */
+			read16b(f);	/* ? - 0000 */
+			synth.rep = read16b(f);		/* ? */
+			synth.replen = read16b(f);	/* ? */
+			synth.voltbllen = read16b(f);
+			synth.wftbllen = read16b(f);
+			synth.volspeed = read8(f);
+			synth.wfspeed = read8(f);
+			synth.wforms = read16b(f);
+			fread(synth.voltbl, 1, synth.voltbllen, f);;
+			fread(synth.wftbl, 1, synth.wftbllen, f);;
+
+			fseek(f,  pos + read32b(f), SEEK_SET);
+			length = read32b(f);
+			type = read16b(f);
+
+			m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+			m->xxih[i].nsm = 1;
+			m->xxih[i].vts = synth.volspeed;
+			m->xxih[i].wts = synth.wfspeed;
+			m->xxi[i][0].pan = 0x80;
+			m->xxi[i][0].vol = temp_inst[i].volume;
+			m->xxi[i][0].xpo = temp_inst[i].transpose;
+			m->xxi[i][0].sid = smp_idx;
+			m->xxi[i][0].fin = 0 /*exp_smp.finetune*/;
+			m->xxs[smp_idx].len = length;
+			m->xxs[smp_idx].lps = temp_inst[i].loop_start;
+			m->xxs[smp_idx].lpe = temp_inst[i].loop_end;
+			m->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
+						WAVE_LOOPING : 0;
+
+			reportv(ctx, 1, "%05x %05x %05x %02x %+03d ",
+				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
+				       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
+				       m->xxi[i][0].xpo /*,
+				       m->xxi[i][0].fin >> 4*/);
+
+			xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,
+					&m->xxs[smp_idx], NULL);
+
+			smp_idx++;
+
+			m->med_vol_table[i] = calloc(1, synth.voltbllen);
+			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
+
+			m->med_wav_table[i] = calloc(1, synth.wftbllen);
+			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+
+			reportv(ctx, 0, ".");
+
+			continue;
+		}
+
+		if (type == -1) {		/* Synthetic */
+			int pos = ftell(f);
+
+			read32b(f);	/* ? - MSH 00 */
+			read16b(f);	/* ? - ffff */
+			read16b(f);	/* ? - 0000 */
+			read16b(f);	/* ? - 0000 */
+			synth.rep = read16b(f);		/* ? */
+			synth.replen = read16b(f);	/* ? */
+			synth.voltbllen = read16b(f);
+			synth.wftbllen = read16b(f);
+			synth.volspeed = read8(f);
+			synth.wfspeed = read8(f);
+			synth.wforms = read16b(f);
+			fread(synth.voltbl, 1, synth.voltbllen, f);;
+			fread(synth.wftbl, 1, synth.wftbllen, f);;
+			for (j = 0; j < synth.wforms; j++)
+				synth.wf[j] = read32b(f);
+
+			reportv(ctx, 1, "VS:%02x WS:%02x WF:%02x %02x %+03d ",
+					synth.volspeed, synth.wfspeed,
+					synth.wforms & 0xff,
+					temp_inst[i].volume,
+					temp_inst[i].transpose /*,
+					exp_smp.finetune*/);
+
+			if (synth.wforms == 0xffff)	
+				continue;
+
+			m->xxi[i] = calloc(sizeof(struct xxm_instrument),
+							synth.wforms);
+			m->xxih[i].nsm = synth.wforms;
+			m->xxih[i].vts = synth.volspeed;
+			m->xxih[i].wts = synth.wfspeed;
+
+			for (j = 0; j < synth.wforms; j++) {
+				m->xxi[i][j].pan = 0x80;
+				m->xxi[i][j].vol = temp_inst[i].volume;
+				m->xxi[i][j].xpo = temp_inst[i].transpose - 24;
+				m->xxi[i][j].sid = smp_idx;
+				m->xxi[i][j].fin = 0 /*exp_smp.finetune*/;
+
+				fseek(f, pos + synth.wf[j], SEEK_SET);
+/*printf("pos=%lx tell=%lx ", pos, ftell(f));*/
+
+				m->xxs[smp_idx].len = read16b(f) * 2;
+/*printf("idx=%x len=%x\n", synth.wf[j], m->xxs[smp_idx].len);*/
+				m->xxs[smp_idx].lps = 0;
+				m->xxs[smp_idx].lpe = m->xxs[smp_idx].len;
+				m->xxs[smp_idx].flg = WAVE_LOOPING;
+
+				xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate,
+					XMP_SMP_8X, &m->xxs[smp_idx], NULL);
+
+				smp_idx++;
+			}
+
+			m->med_vol_table[i] = calloc(1, synth.voltbllen);
+			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
+
+			m->med_wav_table[i] = calloc(1, synth.wftbllen);
+			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+
+			reportv(ctx, 0, ".");
+
+			fseek(f, pos + length, SEEK_SET);
+			continue;
+		}
+
+		if (type != 0) {
+			fseek(f, length, SEEK_CUR);
+			continue;
+		}
+
+                /* instr type is sample */
+		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+                m->xxih[i].nsm = 1;
+		
+		m->xxi[i][0].vol = temp_inst[i].volume;
+		m->xxi[i][0].pan = 0x80;
+		m->xxi[i][0].xpo = temp_inst[i].transpose;
+		m->xxi[i][0].sid = smp_idx;
+
+		m->xxs[smp_idx].len = length;
+		m->xxs[smp_idx].lps = temp_inst[i].loop_start;
+		m->xxs[smp_idx].lpe = temp_inst[i].loop_end;
+		m->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
+						WAVE_LOOPING : 0;
+
+		reportv(ctx, 1, "%04x %04x %04x %c V%02x %+03d ",
+			m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
+			m->xxs[smp_idx].lpe,
+			m->xxs[smp_idx].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol, m->xxi[i][0].xpo);
 
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
 		reportv(ctx, 0, ".");
+
+		smp_idx++;
 	}
 	reportv(ctx, 0, "\n");
 
