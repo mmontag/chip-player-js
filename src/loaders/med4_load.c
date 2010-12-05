@@ -179,7 +179,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	
 	LOAD_INIT();
 
-	read32b(f);
+	read32b(f);		/* Skip magic */
 
 	vermaj = 2;
 	vermin = 10;
@@ -215,7 +215,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 	mask <<= (32 - masksz * 8);
-
+	/*printf("m0=%x mask=%x\n", m0, mask);*/
 
 	/* read instrument names in temporary space */
 
@@ -225,8 +225,6 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint16 loop_len = 0;
 
 		memset(&temp_inst[i], 0, sizeof (struct temp_inst));
-
-		//m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
 		if (~mask & 0x80000000)
 			continue;
@@ -239,9 +237,15 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		for (j = 0; j < size; j++)
 			buf[j] = read8(f);
 		buf[j] = 0;
+		/*printf("%02x %02x %2d [%s]\n", i, c, size, buf);*/
 
 		temp_inst[i].volume = 0x40;
 
+		/* ??!? -- workaround for Tim Newsham's "span" */
+		if (c == 0x67) {
+			read8(f);
+		} else {
+		
 		if ((c & 0x01) == 0)
 			temp_inst[i].loop_start = read16b(f) << 1;
 		if ((c & 0x02) == 0)
@@ -251,9 +255,9 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		if ((c & 0x40) == 0)
 			temp_inst[i].transpose = read8s(f);
 
+		}
+
 		temp_inst[i].loop_end = temp_inst[i].loop_start + loop_len;
-		/*if (loop_len > 0)
-			m->xxs[i].flg |= WAVE_LOOPING;*/
 
 		copy_adjust((uint8 *)temp_inst[i].name, buf, 32);
 
@@ -262,6 +266,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxh->pat = read16b(f);
 	m->xxh->len = read16b(f);
+	/*printf("pat=%x len=%x\n", m->xxh->pat, m->xxh->len);*/
 	fread(m->xxo, 1, m->xxh->len, f);
 	m->xxh->bpm = 125 * read16b(f) / 33;
         transp = read8s(f);
