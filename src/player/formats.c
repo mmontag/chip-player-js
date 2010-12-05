@@ -83,6 +83,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(gdm);
 	REG_LOADER(mmd1);
 	REG_LOADER(mmd3);
+	REG_LOADER(med2);
 	REG_LOADER(med3);
 	REG_LOADER(med4);
 	REG_LOADER(dmf);

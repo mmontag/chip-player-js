@@ -19,9 +19,32 @@
 
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 
+static int med2_test(FILE *, char *, const int);
+static int med2_load (struct xmp_context *, FILE *, const int);
 
-int med2_load(struct xmp_context *ctx, FILE *f)
+struct xmp_loader_info med2_loader = {
+	"MED2",
+	"MED 1.12",
+	med2_test,
+	med2_load
+};
+
+
+static int med2_test(FILE *f, char *t, const int start)
 {
+	if (read32b(f) !=  MAGIC_MED2)
+		return -1;
+
+        read_title(f, t, 0);
+
+        return 0;
+}
+
+
+int med2_load(struct xmp_context *ctx, FILE *f, const int start)
+{
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
 	int i, j, k;
 	int sliding;
 	struct xxm_event *event;
@@ -84,7 +107,7 @@ int med2_load(struct xmp_context *ctx, FILE *f)
 	reportv(ctx, 0, "Sliding        : %d\n", sliding);
 
 	if (sliding == 6)
-		m->fetch |= XMP_CTL_VSALL | XMP_CTL_PBALL;
+		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
 
 	PATTERN_INIT();
 
