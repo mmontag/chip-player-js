@@ -493,7 +493,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			}
 		}
 
-		fseek(f, start + pos, SEEK_SET);
+		fseek(f, pos, SEEK_SET);
 
 		if (instr.type == -2) {			/* Hybrid */
 			int length, type;
@@ -511,7 +511,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			fread(synth.voltbl, 1, 128, f);;
 			fread(synth.wftbl, 1, 128, f);;
 
-			fseek(f, start + pos - 6 + read32b(f), SEEK_SET);
+			fseek(f, pos - 6 + read32b(f), SEEK_SET);
 			length = read32b(f);
 			type = read16b(f);
 
@@ -593,7 +593,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxi[i][j].sid = smp_idx;
 				m->xxi[i][j].fin = exp_smp.finetune;
 
-				fseek(f, start + pos - 6 + synth.wf[j], SEEK_SET);
+				fseek(f, pos - 6 + synth.wf[j], SEEK_SET);
 
 				m->xxs[smp_idx].len = read16b(f) * 2;
 				m->xxs[smp_idx].lps = 0;
