@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -21,7 +20,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ListView;
 
 
@@ -32,7 +30,6 @@ public class PlaylistMenu extends ListActivity {
 	SharedPreferences prefs;
 	String media_path;
 	ProgressDialog progressDialog;
-	
 	
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -170,17 +167,15 @@ public class PlaylistMenu extends ListActivity {
 	
 	public void renameList(final Context context, int index) {
 		final String name = PlaylistUtils.listNoSuffix()[index];
-		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
-		alert.setTitle("Rename playlist");  
-		alert.setMessage("Enter the new playlist name:");  
-		final EditText input = new EditText(context);
-		input.setText(name);
-		alert.setView(input);  
+		final InputDialog alert = new InputDialog(context);		  
+		alert.setTitle("Rename playlist");
+		alert.setMessage("Enter the new playlist name:");
+		alert.input.setText(name);		
 
 		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
 			public void onClick(DialogInterface dialog, int whichButton) {
 				boolean error = false;
-				String value = input.getText().toString();
+				String value = alert.input.getText().toString();
 				File old1 = new File(Settings.dataDir, name + ".playlist");
 				File old2 = new File(Settings.dataDir, name + ".comment");
 				File new1 = new File(Settings.dataDir, value + ".playlist");
@@ -208,20 +203,17 @@ public class PlaylistMenu extends ListActivity {
 		});  
 
 		alert.show(); 
-
 	}
 	
 	public void changeDir(Context context) {
-		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
+		final InputDialog alert = new InputDialog(context);		  
 		alert.setTitle("Change directory");  
-		alert.setMessage("Enter the mod directory:");  
-		final EditText input = new EditText(context);
-		input.setText(media_path);
-		alert.setView(input);  
-
+		alert.setMessage("Enter the mod directory:");
+		alert.input.setText(media_path);
+ 
 		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
 			public void onClick(DialogInterface dialog, int whichButton) {  
-				String value = input.getText().toString();
+				String value = alert.input.getText().toString();
 				if (!value.equals(media_path)) {
 					SharedPreferences.Editor editor = prefs.edit();
 					editor.putString(Settings.PREF_MEDIA_PATH, value);
@@ -242,16 +234,14 @@ public class PlaylistMenu extends ListActivity {
 	
 	public void editComment(final Context context, int index) {
 		final String name = PlaylistUtils.listNoSuffix()[index];
-		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
+		final InputDialog alert = new InputDialog(context);		  
 		alert.setTitle("Edit comment");  
 		alert.setMessage("Enter the new comment for " + name + ":");  
-		final EditText input = new EditText(context);
-		input.setText(PlaylistUtils.readComment(context, name));
-		alert.setView(input);  
+		alert.input.setText(PlaylistUtils.readComment(context, name));
 
 		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {  
 			public void onClick(DialogInterface dialog, int whichButton) {  
-				String value = input.getText().toString();
+				String value = alert.input.getText().toString();
 				File file = new File(Settings.dataDir, name + ".comment");
 				try {
 					file.delete();
