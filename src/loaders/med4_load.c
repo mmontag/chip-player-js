@@ -238,25 +238,24 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		for (j = 0; j < size; j++)
 			buf[j] = read8(f);
 		buf[j] = 0;
-		/*printf("%02x %02x %2d [%s]\n", i, c, size, buf);*/
+#ifdef MED4_DEBUG
+		printf("%02x %02x %2d [%s]\n", i, c, size, buf);
+#endif
 
 		temp_inst[i].volume = 0x40;
 
-		/* ??!? -- workaround for Tim Newsham's "span" */
-		if (c == 0x67) {
-			read8(f);
-		} else {
-		
 		if ((c & 0x01) == 0)
 			temp_inst[i].loop_start = read16b(f) << 1;
 		if ((c & 0x02) == 0)
 			loop_len = read16b(f) << 1;
+		if ((c & 0x04) == 0)	/* ? Tanko2 (MED 3.00 demo) */
+			read8(f);
+		if ((c & 0x08) == 0)	/* Tim Newsham's "span" */
+			read8(f);
 		if ((c & 0x20) == 0)
 			temp_inst[i].volume = read8(f);
 		if ((c & 0x40) == 0)
 			temp_inst[i].transpose = read8s(f);
-
-		}
 
 		temp_inst[i].loop_end = temp_inst[i].loop_start + loop_len;
 
@@ -267,7 +266,9 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->xxh->pat = read16b(f);
 	m->xxh->len = read16b(f);
-	/*printf("pat=%x len=%x\n", m->xxh->pat, m->xxh->len);*/
+#ifdef MED4_DEBUG
+	printf("pat=%x len=%x\n", m->xxh->pat, m->xxh->len);
+#endif
 	fread(m->xxo, 1, m->xxh->len, f);
 
 	/* From MED V3.00 docs:
