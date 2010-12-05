@@ -491,7 +491,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		}
 
-		fseek(f, start, SEEK_SET);
+		fseek(f, pos, SEEK_SET);
 
 		if (instr.type == -2) {			/* Hybrid */
 			int length, type;
