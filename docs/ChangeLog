@@ -5,6 +5,7 @@ Stable versions
 	- fix reported elapsed time with looped modules
 	- fix portamento of mapped instruments (reported by Null Vista)
 	- add support for MED4 synth instruments (reported by Tim Newsham)
+	- fix MED4 Soundtracker-compatible tempo setting (Song2.med)
 
 3.3.0 (20101202):
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)

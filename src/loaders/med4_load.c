@@ -176,6 +176,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	int flags, hexvol = 0;
 	int num_ins, num_smp;
 	int smp_idx;
+	int tempo;
 	
 	LOAD_INIT();
 
@@ -268,7 +269,21 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->len = read16b(f);
 	/*printf("pat=%x len=%x\n", m->xxh->pat, m->xxh->len);*/
 	fread(m->xxo, 1, m->xxh->len, f);
-	m->xxh->bpm = 125 * read16b(f) / 33;
+
+	/* From MED V3.00 docs:
+	 *
+	 * The left proportional gadget controls the primary tempo. It canbe
+	 * 1 - 240. The bigger the number, the faster the speed. Note that
+	 * tempos 1 - 10 are Tracker-compatible (but obsolete, because
+	 * secondary tempo can be used now).
+	 */
+	tempo = read16b(f);
+	if (tempo <= 10) {
+		m->xxh->tpo = tempo;
+		m->xxh->bpm = 125;
+	} else {
+		m->xxh->bpm = 125 * tempo / 33;
+	}
         transp = read8s(f);
         read8s(f);
         flags = read8s(f);
