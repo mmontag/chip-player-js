@@ -174,8 +174,8 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	uint8 trkvol[16], buf[1024];
 	struct xxm_event *event;
 	int flags, hexvol = 0;
-	int num_ins;
-	int num_smp;
+	int num_ins, num_smp;
+	int smp_idx;
 	
 	LOAD_INIT();
 
@@ -481,7 +481,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			int _pos = ftell(f);
 
-			if (_type == 0) {
+			if (_type == 0 || _type == -2) {
 				num_smp++;
 			} else if (_type == -1) {
 				fseek(f, 20, SEEK_CUR);
@@ -500,8 +500,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 	reportv(ctx, 1, "\n     Instrument name                  Typ Len  LBeg LEnd L Vol Xpo");
 
-
-	int smp_idx = 0;
+	smp_idx = 0;
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		int x1, length, type;
 		struct SynthInstr synth;
