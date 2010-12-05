@@ -246,6 +246,10 @@ SOURCE=..\loaders\mmd3_load.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\med2_load.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\rtm_load.c
 # End Source File
 # Begin Source File
