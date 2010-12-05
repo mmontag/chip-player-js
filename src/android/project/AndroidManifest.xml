@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="10"
-	android:versionName="1.9.6 (Add elapsed time option, NOOKcolor compatibility, fix portamento of mapped instruments)"
+	android:versionName="1.9.6 (Add elapsed time option, NOOKcolor compatibility, fix portamento of mapped instruments, add support to MED4 synth instruments)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
