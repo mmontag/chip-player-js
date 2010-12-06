@@ -163,12 +163,16 @@ int check_filename_case(char *dir, char *name, char *new_name, int size)
 	return found;
 }
 
-void get_instrument_path(char *path, int size, char *var)
+void get_instrument_path(struct xmp_context *ctx, char *var, char *path, int size)
 {
-	if (var && getenv(var)) {
+	struct xmp_options *o = &ctx->o;
+
+	if (o->ins_path) {
+		strncpy(path, o->ins_path, size);
+	} else if (var && getenv(var)) {
 		strncpy(path, getenv(var), size);
-	else if (getenv("INSTRUMENT_PATH")) {
-		strncpy(path, getenv("INSTRUMENT_PATH"), size);
+	} else if (getenv("XMP_INSTRUMENT_PATH")) {
+		strncpy(path, getenv("XMP_INSTRUMENT_PATH"), size);
 	} else {
 		strncpy(path, ".", size);
 	}

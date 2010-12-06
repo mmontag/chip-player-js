@@ -149,6 +149,7 @@ struct xmp_options {
 	int reverb;		/* Reverb leval */
 	int skipsmp;		/* Don't load sample data */
 	int cf_cutoff;		/* Cutoff for filter-based anticlick */
+	char *ins_path;		/* External instrument path */
 	char *parm[16];		/* Driver parameter data */
 };
 

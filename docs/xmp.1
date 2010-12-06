@@ -16,6 +16,7 @@ xmp - Extended Module Player
 [\fB-F, --click-filter\fP]
 [\fB-f, --frequency\fP \fIrate\fP]
 [\fB-h, --help\fP]
+[\fB-I, --instrument-path\fP]
 [\fB-i, --interpolate\fP]
 [\fB--load-only\fP]
 [\fB-l, --loop\fP]
@@ -86,6 +87,8 @@ Use the LPF filter to remove clicks from the software mixer output\&.
 Set the software mixer sampling rate in hertz\&.
 .IP "\fB-h, --help\fP" 
 Show a short summary of command-line options\&.
+.IP "\fB-I, --instrument-path\fP \fIpath\fP" 
+Set the pathname to the directory containing external samples\&.
 .IP "\fB-i, --interpolate\fP" 
 Enable software mixer linear interpolation\&.
 .IP "\fB--load-only\fP" 
@@ -241,10 +244,10 @@ random order, ignoring any configuration set in the xmp\&.conf file\&:
 \f(CWxmp --norc -R `find /mod -name "*\&.xm*" -print`\fP
 .PP 
 .SH "ENVIRONMENT" 
-.IP "\fBINSTRUMENT_PATH\fP" 
+.IP "\fBXMP_INSTRUMENT_PATH\fP" 
 Pathname to directory containing samples if not contained in the module\&.
 .PP 
-.IP "\fBMED2_INSTRUMENT_PATH\fP" 
+.IP "\fBXMP_MED2_INSTRUMENT_PATH\fP" 
 Overrides samples directory for the MED2 loader\&.
 .PP 
 .SH "FILES" 

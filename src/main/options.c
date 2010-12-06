@@ -195,6 +195,9 @@ static void usage(char *s, struct xmp_options *opt)
 "   -o --output-file name  Mix the module to file ('-' for stdout)\n"
 "   -u --unsigned          Set the mixer to use unsigned samples\n"
 
+"\nEnvironment options:\n"
+"   -I --instrument-path   Set pathname to external samples\n"
+
 "\nInformation options:\n"
 "   -h --help              Print a summary of the command line options\n"
 "   --load-only            Load module and exit\n"
@@ -213,7 +216,7 @@ static void usage(char *s, struct xmp_options *opt)
 void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx)
 {
     int optidx = 0;
-#define OPTIONS "8a:b:cD:d:Ff:hilM:mno:P:qRrS:s:T:t:uVvx:"
+#define OPTIONS "8a:b:cD:d:Ff:hI:ilM:mno:P:qRrS:s:T:t:uVvx:"
     static struct option lopt[] = {
 	{ "8bit",		 0, 0, '8' },
 	{ "amplify",		 1, 0, 'a' },
@@ -226,6 +229,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "click-filter",	 0, 0, 'F' },
 	{ "offset-bug-emulation",0, 0, OPT_FX9BUG },
 	{ "help",		 0, 0, 'h' },
+	{ "instrument-path",	 1, 0, 'I' },
 	{ "interpolate",	 0, 0, 'i' },
 	{ "load-only",	 	 0, 0, OPT_LOADONLY },
 	{ "loop",		 0, 0, 'l' },
@@ -302,6 +306,9 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case 'f':
 	    opt->freq = strtoul(optarg, NULL, 0);
+	    break;
+	case 'I':
+	    opt->ins_path = optarg;
 	    break;
 	case 'i':
 	    opt->flags |= XMP_CTL_ITPT;

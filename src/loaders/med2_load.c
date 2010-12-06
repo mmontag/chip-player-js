@@ -175,7 +175,8 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		int found;
 		char c;
 
-		get_instrument_path(ins_path, 256, "MED2_INSTRUMENT_PATH");
+		get_instrument_path(ctx, "XMP_MED2_INSTRUMENT_PATH",
+				ins_path, 256);
 		found = check_filename_case(ins_path,
 				(char *)m->xxih[i].name, name, 256);
 
@@ -191,7 +192,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 
-		if (!found)
+		if (!strlen((char *)m->xxih[i].name) && !m->xxs[i].len)
 			continue;
 
 		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
