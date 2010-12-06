@@ -8,7 +8,7 @@
                               \_/     \/|_|    
                 E x t e n d e d   M o d u l e   P l a y e r
 
-			       Version 3.3
+			       Version 3.4
 
 
 OVERVIEW
@@ -77,7 +77,7 @@ The current version recognizes the following module formats:
   EMOD  ****	Quadra Composer		0001
   KRIS	*****	ChipTracker		KRIS
   MODL	*****	Protracker 3.59		PTDT
-  MED	** 	MED 2.10/3.00	 	MED3, MED4
+  MED	** 	MED 1.12/2.10/3.00 	MED2, MED3, MED4
   MED	***	MED 3.00/OctaMED	MMD0, MMD1, MMD2, MMD3
   MTN	****	ST 2.6, Ice Tracker	MTN, IT10
   OKT 	***	Oktalyzer		-
