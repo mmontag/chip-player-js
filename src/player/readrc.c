@@ -23,6 +23,7 @@
 /* TODO: use .ini file in Windows */
 
 static char drive_id[32];
+static char instrument_path[256];
 
 
 static void delete_spaces(char *l)
@@ -153,6 +154,11 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	    continue;
 	}
 
+	if (!strcmp (var, "instrument_path")) {
+	    strncpy (instrument_path, val, 256);
+	    o->ins_path = instrument_path;
+	    continue;
+	}
 	/* If the line does not match any of the previous parameter,
 	 * send it to the device driver
 	 */
