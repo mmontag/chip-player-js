@@ -226,7 +226,7 @@ When using the OSS sequencer with an AWE card, xmp will wipe out any
 soundfonts already loaded in the card\&.
 .PP
 .SH "EXAMPLES" 
-Play module muting channels 0 to 3 and 6:
+Play module muting channels 0 to 3 and 6\&:
 .IP "" 
 \f(CWxmp --mute=0-3,6 module\&.mod\&.gz\fP
 .PP 
@@ -236,13 +236,16 @@ Play modules in /dev/dsp using the default device settings (unsigned 8bit,
 \f(CWxmp -o/dev/dsp -f8000 -m -b8 -u module\&.lha\fP
 .PP 
 Play all XM modules in the /mod directory and all subdirectories in
-random order, ignoring any configuration set in the xmp\&.conf file:
+random order, ignoring any configuration set in the xmp\&.conf file\&:
 .IP "" 
 \f(CWxmp --norc -R `find /mod -name "*\&.xm*" -print`\fP
 .PP 
 .SH "ENVIRONMENT" 
 .IP "\fBINSTRUMENT_PATH\fP" 
-Pathname to directory containing samples if not contained in the module.
+Pathname to directory containing samples if not contained in the module\&.
+.PP 
+.IP "\fBMED2_INSTRUMENT_PATH\fP" 
+Overrides samples directory for the MED2 loader\&.
 .PP 
 .SH "FILES" 
 \f(CW/etc/xmp/xmp\&.conf\&, $HOME/\&.xmp/xmp\&.conf\&, /etc/xmp/modules\&.conf\&, $HOME/\&.xmp/modules\&.conf\fP

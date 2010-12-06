@@ -163,9 +163,11 @@ int check_filename_case(char *dir, char *name, char *new_name, int size)
 	return found;
 }
 
-void get_instrument_path(char *path, int size)
+void get_instrument_path(char *path, int size, char *var)
 {
-	if (getenv("INSTRUMENT_PATH")) {
+	if (var && getenv(var)) {
+		strncpy(path, getenv(var), size);
+	else if (getenv("INSTRUMENT_PATH")) {
 		strncpy(path, getenv("INSTRUMENT_PATH"), size);
 	} else {
 		strncpy(path, ".", size);

@@ -175,7 +175,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		int found;
 		char c;
 
-		get_instrument_path(ins_path, 256);
+		get_instrument_path(ins_path, 256, "MED2_INSTRUMENT_PATH");
 		found = check_filename_case(ins_path,
 				(char *)m->xxih[i].name, name, 256);
 
