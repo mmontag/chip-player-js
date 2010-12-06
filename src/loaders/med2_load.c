@@ -14,6 +14,9 @@
 #include "config.h"
 #endif
 
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "period.h"
 #include "load.h"
 
@@ -48,6 +51,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	int i, j, k;
 	int sliding;
 	struct xxm_event *event;
+	uint8 buf[40];
 
 	LOAD_INIT();
 
@@ -60,15 +64,16 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	/* read instrument names */
-	for (i = 0; i < 32; i++) {
-		uint8 buf[40];
+	fread(buf, 1, 40, f);	/* skip 0 */
+	for (i = 0; i < 31; i++) {
 		fread(buf, 1, 40, f);
 		copy_adjust(m->xxih[i].name, buf, 32);
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 	}
 
 	/* read instrument volumes */
-	for (i = 0; i < 32; i++) {
+	read8(f);		/* skip 0 */
+	for (i = 0; i < 31; i++) {
 		m->xxi[i][0].vol = read8(f);
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].fin = 0;
@@ -76,14 +81,15 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* read instrument loops */
-	for (i = 0; i < 32; i++) {
+	read16b(f);		/* skip 0 */
+	for (i = 0; i < 31; i++) {
 		m->xxs[i].lps = read16b(f);
 	}
 
 	/* read instrument loop length */
-	for (i = 0; i < 32; i++) {
+	read16b(f);		/* skip 0 */
+	for (i = 0; i < 31; i++) {
 		uint32 lsiz = read16b(f);
-		m->xxs[i].len = m->xxs[i].lps + lsiz;
 		m->xxs[i].lpe = m->xxs[i].lps + lsiz;
 		m->xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
 	}
@@ -160,12 +166,33 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 	reportv(ctx, 1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
 
-	for (i = 0; i < 32; i++) {
-		m->xxs[i].len = read32b(f);
-		if (read16b(f))		/* type */
-			continue;
+	for (i = 0; i < 31; i++) {
+		char path[PATH_MAX];
+		char ins_path[256];
+		char name[256];
+		FILE *s;
+		struct stat stat;
+		int found;
+		char c;
+
+		get_instrument_path(ins_path, 256);
+		found = check_filename_case(ins_path,
+				(char *)m->xxih[i].name, name, 256);
+
+		c = 'x';
+		if (found) {
+			sprintf(path, "%s/%s", ins_path, name);
+			if ((s = fopen(path, "rb"))) {
+				fstat(fileno(s), &stat);
+				m->xxs[i].len = stat.st_size;
+				c = '.';
+			}
+		}
 
 		m->xxih[i].nsm = !!(m->xxs[i].len);
+
+		if (!found)
+			continue;
 
 		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
@@ -173,9 +200,13 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
 			m->xxi[i][0].vol);
 
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
-				  &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
+		if (found) {
+			xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate,
+				0, &m->xxs[m->xxi[i][0].sid], NULL);
+			fclose(s);
+		}
+
+		reportv(ctx, 0, "%c", c);
 	}
 	reportv(ctx, 0, "\n");
 

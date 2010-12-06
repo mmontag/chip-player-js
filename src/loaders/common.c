@@ -11,6 +11,8 @@
 #endif
 
 #include <ctype.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "xmp.h"
 #include "common.h"
@@ -136,3 +138,36 @@ void clean_s3m_seq(struct xxm_header *xxh, uint8 *xxo)
     printf("\n");*/
 }
 
+
+int check_filename_case(char *dir, char *name, char *new_name, int size)
+{
+	int found = 0;
+	DIR *dirfd;
+	struct dirent *d;
+
+	dirfd = opendir(dir);
+	if (dirfd) {
+		while ((d = readdir(dirfd))) {
+			if (!strcasecmp(d->d_name, name)) {
+				found = 1;
+				break;
+			}
+		}
+	}
+
+	if (found)
+		strncpy(new_name, d->d_name, size);
+
+	closedir(dirfd);
+
+	return found;
+}
+
+void get_instrument_path(char *path, int size)
+{
+	if (getenv("INSTRUMENT_PATH")) {
+		strncpy(path, getenv("INSTRUMENT_PATH"), size);
+	} else {
+		strncpy(path, ".", size);
+	}
+}

@@ -1,4 +1,4 @@
-.TH "XMP" "1" "Version 3\&.2\&.0" "May 2010" "Extended Module Player" 
+.TH "XMP" "1" "Version 3\&.4\&.0" "Dec 2010" "Extended Module Player" 
 .PP 
 .SH "NAME" 
 xmp - Extended Module Player
@@ -239,6 +239,10 @@ Play all XM modules in the /mod directory and all subdirectories in
 random order, ignoring any configuration set in the xmp\&.conf file:
 .IP "" 
 \f(CWxmp --norc -R `find /mod -name "*\&.xm*" -print`\fP
+.PP 
+.SH "ENVIRONMENT" 
+.IP "\fBINSTRUMENT_PATH\fP" 
+Pathname to directory containing samples if not contained in the module.
 .PP 
 .SH "FILES" 
 \f(CW/etc/xmp/xmp\&.conf\&, $HOME/\&.xmp/xmp\&.conf\&, /etc/xmp/modules\&.conf\&, $HOME/\&.xmp/modules\&.conf\fP
