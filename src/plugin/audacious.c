@@ -605,6 +605,7 @@ static void play_file(InputPlayback *ipb)
 		xmp_ip.set_info_text("Error loading mod");
 #endif
 		ipb->playing = 0;
+		xmp_close_audio(ctx);
 		return;
 	}
 
