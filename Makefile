@@ -38,7 +38,7 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 .SUFFIXES: .c .o .lo .a .so .dll
 
 # Implicit rules for object generation. Position-independent code is intended
-# to be used in plugins, so it's also built thread-safe and with the callback
+# to be used in plugins, so it's also built thread-safe and with the smixer
 # driver only.
 
 .c.o:
