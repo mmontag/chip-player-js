@@ -170,7 +170,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		char path[PATH_MAX];
 		char ins_path[256];
 		char name[256];
-		FILE *s;
+		FILE *s = NULL;
 		struct stat stat;
 		int found;
 		char c;

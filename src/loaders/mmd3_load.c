@@ -275,6 +275,9 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (bpm_on) {
 		m->xxh->tpo = song.tempo2;
 		m->xxh->bpm = song.deftempo * bpmlen / 16;
+
+		if (m->xxh->bpm < 25)		/* ?? for superaxe.med */
+			m->xxh->bpm = 25;
 	} else {
 		m->xxh->tpo = song.tempo2;
 		m->xxh->bpm = song.deftempo;
