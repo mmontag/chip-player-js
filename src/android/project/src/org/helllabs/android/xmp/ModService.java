@@ -13,7 +13,6 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 
 public class ModService extends Service {
@@ -29,6 +28,9 @@ public class ModService extends Service {
     private static final int NOTIFY_ID = R.layout.player;
     int playIndex;
     RandomIndex ridx;
+	boolean shuffleMode = true;
+	boolean loopListMode = false;
+	
     String[] fileArray;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
@@ -45,6 +47,7 @@ public class ModService extends Service {
         		R.drawable.notification, null, System.currentTimeMillis());
         notification.setLatestEventInfo(this, getText(R.string.app_name),
         	      "bla", contentIntent);
+        notification.flags |= Notification.FLAG_ONGOING_EVENT;
         nm.notify(NOTIFY_ID, notification);
     	
    		prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -91,6 +94,7 @@ public class ModService extends Service {
 	private class PlayRunnable implements Runnable {
     	public void run() {
     		short buffer[] = new short[minSize];
+    		int idx;
     		
        		while (xmp.playFrame() == 0) {
        			int size = xmp.softmixer();
@@ -113,6 +117,21 @@ public class ModService extends Service {
        		       	
         	if (++playIndex < fileArray.length)
         		playMod(playIndex);
+        	
+        	if (++playIndex < fileArray.length) {
+        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+        		playMod(idx);
+        	} else {
+        		if (loopListMode) {
+        			playIndex = 0;
+        			ridx.randomize();
+	        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+	        		playMod(idx);
+        		} else {
+        			nm.cancel(NOTIFY_ID);
+        			stopSelf();
+        		}
+        	}
     	}
     }
 
@@ -128,8 +147,7 @@ public class ModService extends Service {
     }
 	
     public void playMod(int index) {
-    	//int idx = shuffleMode ? ridx.getIndex(index) : index;
-    	int idx = index;
+    	int idx = shuffleMode ? ridx.getIndex(index) : index;
 
 		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
@@ -162,8 +180,11 @@ public class ModService extends Service {
     }
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
-		public void play(String[] files) {
+		public void play(String[] files, boolean shuffle, boolean loopList) {
 			fileArray = files;
+			ridx = new RandomIndex(fileArray.length);
+			shuffleMode = shuffle;
+			loopListMode = loopList;
 			playMod(0);
 		}
 	    
@@ -205,11 +226,14 @@ public class ModService extends Service {
 		}
 		
 		public void nextSong() {
-			
+			xmp.stopModule();			
 		}
 		
 		public void prevSong() {
-			
+			playIndex -= 2;
+			if (playIndex < -1)
+				playIndex += fileArray.length;
+			xmp.stopModule();
 		}
 
 		public boolean toggleLoop() throws RemoteException {

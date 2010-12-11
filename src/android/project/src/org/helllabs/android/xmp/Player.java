@@ -91,7 +91,7 @@ public class Player extends Activity {
 
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
-        	int idx;
+        	//int idx;
         	
         	if (finishing)
         		return;
@@ -360,12 +360,8 @@ public class Player extends Activity {
 						modPlayer.seek(0);
 					} else {
 						modPlayer.prevSong();
-						/* playIndex -= 2;
-						if (playIndex < -1)
-							playIndex += fileArray.length;
-						modPlayer.stop(); */
-						unpause();
 					}
+					unpause();
 				} catch (RemoteException e) {
 
 				}
@@ -375,7 +371,7 @@ public class Player extends Activity {
 		forwardButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				try {
-					modPlayer.stop();
+					modPlayer.nextSong();
 				} catch (RemoteException e) {
 
 				}
@@ -477,16 +473,10 @@ public class Player extends Activity {
 		}
 	};
 	
-	void playNewMod(String[] files) {
-
-       	 
+	void playNewMod(String[] files) {      	 
        	try {
-			modPlayer.play(files);
-
-		} catch (RemoteException e) {
-			
-		}
-
+			modPlayer.play(files, shuffleMode, loopListMode);
+		} catch (RemoteException e) { }
 	}
 	
 	void stopPlayingMod() {
@@ -496,9 +486,7 @@ public class Player extends Activity {
 		finishing = true;
 		try {
 			modPlayer.stop();
-		} catch (RemoteException e1) {
-
-		}
+		} catch (RemoteException e1) { }
 		paused = false;
 		
 		try {
