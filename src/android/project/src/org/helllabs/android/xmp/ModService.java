@@ -114,9 +114,6 @@ public class ModService extends Service {
        		xmp.endPlayer();
        		xmp.releaseModule();
        		callbacks.finishBroadcast();
-       		       	
-        	if (++playIndex < fileArray.length)
-        		playMod(playIndex);
         	
         	if (++playIndex < fileArray.length) {
         		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
