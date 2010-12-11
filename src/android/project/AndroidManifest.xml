@@ -54,6 +54,7 @@
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
+		<service android:name=".ModService" android:process=":remote" />
 	</application>
 	<supports-screens/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>

@@ -1,11 +1,17 @@
 package org.helllabs.android.xmp;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 //import android.os.Debug;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -26,7 +32,7 @@ public class Player extends Activity {
 	static final int SETTINGS_REQUEST = 45;
 	String media_path;
 	Xmp xmp = new Xmp();	/* used to get mod info */
-	ModPlayer modPlayer;	/* actual mod player */ 
+	ModInterface modPlayer;	/* actual mod player */ 
 	ImageButton playButton, stopButton, backButton, forwardButton;
 	ImageButton loopButton;
 	SeekBar seekBar;
@@ -54,6 +60,23 @@ public class Player extends Activity {
 	final Handler handler = new Handler();
 	int latency;
 	int totalTime;
+	   
+	private ServiceConnection connection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			modPlayer = ModInterface.Stub.asInterface((IBinder)service);
+			
+			if (fileArray.length > 0) {
+				playIndex = 0;
+				int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+				playNewMod(fileArray[idx]);
+			}
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			modPlayer = null;
+		}
+	};
+
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
@@ -101,52 +124,57 @@ public class Player extends Activity {
         public void run() {
         	now = (before + latency) % 10;
         	
-        	tpo[now] = modPlayer.getPlayTempo();
-        	if (tpo[before] != oldTpo) {
-        		infoTpo.setText(Integer.toString(tpo[before]));
-        		oldTpo = tpo[before];
-        	}
+        	try {
+				tpo[now] = modPlayer.getPlayTempo();
 
-        	bpm[now] = modPlayer.getPlayBpm();
-        	if (bpm[before] != oldBpm) {
-        		infoBpm.setText(Integer.toString(bpm[before]));
-        		oldBpm = bpm[before];
-        	}
-
-        	pos[now] = modPlayer.getPlayPos();
-        	if (pos[before] != oldPos) {
-        		infoPos.setText(Integer.toString(pos[before]));
-        		oldPos = pos[before];
-        	}
-
-        	pat[now] = modPlayer.getPlayPat();
-        	if (pat[before] != oldPat) {
-        		infoPat.setText(Integer.toString(pat[before]));
-        		oldPat = pat[before];
-        	}
-
-        	modPlayer.getVolumes(volumes[now]);
-        	infoMeter.setVolumes(volumes[before]);
-        	before++;
-        	if (before >= 10)
-        		before = 0;
-
-        	if (showTime) {
-	        	time[now] = modPlayer.time() / 10;
-	        	if (time[before] != oldTime || showElapsed != oldShowElapsed) {
-		        	int t = time[before];
-		        	if (t < 0)
-		        		t = 0;
-		        	if (showElapsed) {
-		        		elapsedTime.setText(String.format("%d:%02d", t / 60, t % 60));
-		        	} else {
-		        		t = totalTime - t;
-		        		elapsedTime.setText(String.format("-%d:%02d", t / 60, t % 60));
-		        	}
-	        		oldTime = time[before];
-	        		oldShowElapsed = showElapsed;
+	        	if (tpo[before] != oldTpo) {
+	        		infoTpo.setText(Integer.toString(tpo[before]));
+	        		oldTpo = tpo[before];
 	        	}
-        	}
+	
+	        	bpm[now] = modPlayer.getPlayBpm();
+	        	if (bpm[before] != oldBpm) {
+	        		infoBpm.setText(Integer.toString(bpm[before]));
+	        		oldBpm = bpm[before];
+	        	}
+	
+	        	pos[now] = modPlayer.getPlayPos();
+	        	if (pos[before] != oldPos) {
+	        		infoPos.setText(Integer.toString(pos[before]));
+	        		oldPos = pos[before];
+	        	}
+	
+	        	pat[now] = modPlayer.getPlayPat();
+	        	if (pat[before] != oldPat) {
+	        		infoPat.setText(Integer.toString(pat[before]));
+	        		oldPat = pat[before];
+	        	}
+	
+	        	modPlayer.getVolumes(volumes[now]);
+	        	infoMeter.setVolumes(volumes[before]);
+	        	before++;
+	        	if (before >= 10)
+	        		before = 0;
+	
+	        	if (showTime) {
+		        	time[now] = modPlayer.time() / 10;
+		        	if (time[before] != oldTime || showElapsed != oldShowElapsed) {
+			        	int t = time[before];
+			        	if (t < 0)
+			        		t = 0;
+			        	if (showElapsed) {
+			        		elapsedTime.setText(String.format("%d:%02d", t / 60, t % 60));
+			        	} else {
+			        		t = totalTime - t;
+			        		elapsedTime.setText(String.format("-%d:%02d", t / 60, t % 60));
+			        	}
+		        		oldTime = time[before];
+		        		oldShowElapsed = showElapsed;
+		        	}
+	        	}
+			} catch (RemoteException e) {
+
+			}
         }
     };
     
@@ -156,7 +184,11 @@ public class Player extends Activity {
     		int t = 0;
     		
     		do {
-    			t = modPlayer.time();
+    			try {
+					t = modPlayer.time();
+				} catch (RemoteException e1) {
+
+				}
     			//Log.v(getString(R.string.app_name), "t = " + t);
     			if (t >= 0) {
     				if (!seeking && !paused)
@@ -230,7 +262,9 @@ public class Player extends Activity {
     		latency = 9;
     	
 		ridx = new RandomIndex(fileArray.length);
-		modPlayer = new ModPlayer(this);
+		//modPlayer = new ModPlayer(this);
+		bindService(new Intent(this, ModService.class),
+				connection, Context.BIND_AUTO_CREATE);
 		
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -267,10 +301,14 @@ public class Player extends Activity {
 		
 		loopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (modPlayer.toggleLoop()) {
-					loopButton.setImageResource(R.drawable.loop_on);
-				} else {
-					loopButton.setImageResource(R.drawable.loop_off);
+				try {
+					if (modPlayer.toggleLoop()) {
+						loopButton.setImageResource(R.drawable.loop_on);
+					} else {
+						loopButton.setImageResource(R.drawable.loop_off);
+					}
+				} catch (RemoteException e) {
+
 				}
 			}
 		});
@@ -281,7 +319,11 @@ public class Player extends Activity {
 				//Debug.startMethodTracing("xmp");
 				
 				synchronized (this) {
-					modPlayer.pause();
+					try {
+						modPlayer.pause();
+					} catch (RemoteException e) {
+
+					}
 					
 					if (paused) {
 						unpause();
@@ -302,21 +344,29 @@ public class Player extends Activity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (modPlayer.time() > 20) {
-					modPlayer.seek(0);
-				} else {
-					playIndex -= 2;
-					if (playIndex < -1)
-						playIndex += fileArray.length;
-					modPlayer.stop();
-					unpause();
+				try {
+					if (modPlayer.time() > 20) {
+						modPlayer.seek(0);
+					} else {
+						playIndex -= 2;
+						if (playIndex < -1)
+							playIndex += fileArray.length;
+						modPlayer.stop();
+						unpause();
+					}
+				} catch (RemoteException e) {
+
 				}
 			}
 		});
 		
 		forwardButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				modPlayer.stop();
+				try {
+					modPlayer.stop();
+				} catch (RemoteException e) {
+
+				}
 				unpause();
 		    }
 		});
@@ -340,22 +390,26 @@ public class Player extends Activity {
 			}
 
 			public void onStopTrackingTouch(SeekBar s) {				
-				modPlayer.seek(s.getProgress());
+				try {
+					modPlayer.seek(s.getProgress());
+				} catch (RemoteException e) {
+
+				}
 				seeking = false;
 			}
 		});
 
-		if (fileArray.length > 0) {
+		/*if (fileArray.length > 0) {
 			playIndex = 0;
 			int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
 			playNewMod(fileArray[idx]);
-		}
+		}*/
 	}
 	
 	@Override
 	public void onDestroy() {
 		stopPlayingMod();
-		modPlayer.end();
+		//modPlayer.end();
 		super.onDestroy();
 	}
 
@@ -387,22 +441,26 @@ public class Player extends Activity {
        		infoMeter = new EmptyMeter(infoMeterLayout, m.chn);
        		break;       		
        	}
- 
-       	modPlayer.play(m.filename);
-       	
-       	/* Show list of instruments */
-       	StringBuffer insList = new StringBuffer();
-       	String[] instrument = modPlayer.getInstruments();
-       	if (instrument.length > 0)
-       		insList.append(instrument[0]);
-       	for (int i = 1; i < instrument.length; i++) {
-       		insList.append('\n');
-       		insList.append(instrument[i]);
-       	}
-       	infoInsList.setText(insList.toString());
-
+       	 
+       	try {
+			modPlayer.play(m.filename);
+      	
+	       	/* Show list of instruments */
+	       	StringBuffer insList = new StringBuffer();
+	       	String[] instrument = modPlayer.getInstruments();
+	       	if (instrument.length > 0)
+	       		insList.append(instrument[0]);
+	       	for (int i = 1; i < instrument.length; i++) {
+	       		insList.append('\n');
+	       		insList.append(instrument[i]);
+	       	}
+	       	infoInsList.setText(insList.toString());
+		} catch (RemoteException e) {
+			
+		}
+		
         progressThread = new ProgressThread();
-        progressThread.start();	
+        progressThread.start();
 	}
 	
 	void stopPlayingMod() {
@@ -410,7 +468,11 @@ public class Player extends Activity {
 			return;
 		
 		finishing = true;
-		modPlayer.stop();
+		try {
+			modPlayer.stop();
+		} catch (RemoteException e1) {
+
+		}
 		paused = false;
 		
 		try {
@@ -433,4 +495,5 @@ public class Player extends Activity {
     	
     	return super.onKeyDown(keyCode, event);
     }
+
 }
