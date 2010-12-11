@@ -32,7 +32,7 @@ public class Player extends Activity {
 	static final int SETTINGS_REQUEST = 45;
 	String media_path;
 	Xmp xmp = new Xmp();	/* used to get mod info */
-	ModInterface modPlayer;	/* actual mod player */ 
+	ModInterface modPlayer;	/* actual mod player */
 	ImageButton playButton, stopButton, backButton, forwardButton;
 	ImageButton loopButton;
 	SeekBar seekBar;
@@ -50,8 +50,8 @@ public class Player extends Activity {
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
 	TextView infoInsList, elapsedTime;
 	String[] fileArray;
-	int playIndex;
-	RandomIndex ridx;
+	//int playIndex;
+	//RandomIndex ridx;
 	SharedPreferences prefs;
 	LinearLayout infoMeterLayout;
 	Meter infoMeter;
@@ -60,15 +60,20 @@ public class Player extends Activity {
 	final Handler handler = new Handler();
 	int latency;
 	int totalTime;
-	   
+	String fileName;
+
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
-			modPlayer = ModInterface.Stub.asInterface((IBinder)service);
+			modPlayer = ModInterface.Stub.asInterface(service);
+			
+			try {
+				modPlayer.registerCallback(playerCallback);
+			} catch (RemoteException e) { }
 			
 			if (fileArray.length > 0) {
-				playIndex = 0;
-				int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-				playNewMod(fileArray[idx]);
+				//playIndex = 0;
+				//int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+				playNewMod(fileArray);
 			}
 		}
 
@@ -76,7 +81,12 @@ public class Player extends Activity {
 			modPlayer = null;
 		}
 	};
-
+	
+    private PlayerCallback playerCallback = new PlayerCallback.Stub() {
+        public void newModCallback(String name) {
+            showNewMod(name);
+        }
+    };
 	
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
@@ -90,7 +100,7 @@ public class Player extends Activity {
         		return;
         	}
         	
-        	if (++playIndex < fileArray.length) {
+        	/*if (++playIndex < fileArray.length) {
         		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
         		playNewMod(fileArray[idx]);
         	} else {
@@ -102,7 +112,7 @@ public class Player extends Activity {
         		} else {
         			finish();
         		}
-        	}
+        	}*/
         }
     };
     
@@ -261,7 +271,7 @@ public class Player extends Activity {
     	if (latency > 9)
     		latency = 9;
     	
-		ridx = new RandomIndex(fileArray.length);
+		//ridx = new RandomIndex(fileArray.length);
 		//modPlayer = new ModPlayer(this);
 		bindService(new Intent(this, ModService.class),
 				connection, Context.BIND_AUTO_CREATE);
@@ -348,10 +358,11 @@ public class Player extends Activity {
 					if (modPlayer.time() > 20) {
 						modPlayer.seek(0);
 					} else {
-						playIndex -= 2;
+						modPlayer.prevSong();
+						/* playIndex -= 2;
 						if (playIndex < -1)
 							playIndex += fileArray.length;
-						modPlayer.stop();
+						modPlayer.stop(); */
 						unpause();
 					}
 				} catch (RemoteException e) {
@@ -413,40 +424,55 @@ public class Player extends Activity {
 		super.onDestroy();
 	}
 
-	void playNewMod(String fileName) {
-		ModInfo m = InfoCache.getModInfo(fileName);
-		totalTime = m.time / 1000;
-       	seekBar.setProgress(0);
-       	seekBar.setMax(m.time / 100);
-        	
-       	infoName.setText(m.name);
-       	infoType.setText(m.type);
-       	infoLen.setText(Integer.toString(m.len));
-       	infoNpat.setText(Integer.toString(m.pat));
-       	infoChn.setText(Integer.toString(m.chn));
-       	infoIns.setText(Integer.toString(m.ins));
-       	infoSmp.setText(Integer.toString(m.smp));
-       	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
-       			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
-       	
-       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));
-       	switch (meterType) {
-       	case 1:
-       		infoMeter = new LedMeter(infoMeterLayout, m.chn);
-       		break;
-       	case 2:
-       		infoMeter = new BarMeter(infoMeterLayout, m.chn);
-       		break;
-       	default:
-       		infoMeter = new EmptyMeter(infoMeterLayout, m.chn);
-       		break;       		
-       	}
+	void showNewMod(String fileName) {
+		this.fileName = fileName;
+		handler.post(showNewModRunnable);
+	}
+	
+	final Runnable showNewModRunnable = new Runnable() {
+		public void run() {
+			Log.i("aaa", "showNewMod: " + fileName);
+			ModInfo m = InfoCache.getModInfo(fileName);
+			totalTime = m.time / 1000;
+	       	seekBar.setProgress(0);
+	       	seekBar.setMax(m.time / 100);
+	        	
+	       	infoName.setText(m.name);
+	       	infoType.setText(m.type);
+	       	infoLen.setText(Integer.toString(m.len));
+	       	infoNpat.setText(Integer.toString(m.pat));
+	       	infoChn.setText(Integer.toString(m.chn));
+	       	infoIns.setText(Integer.toString(m.ins));
+	       	infoSmp.setText(Integer.toString(m.smp));
+	       	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
+	       			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
+	       	
+	       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));
+	       	switch (meterType) {
+	       	case 1:
+	       		infoMeter = new LedMeter(infoMeterLayout, m.chn);
+	       		break;
+	       	case 2:
+	       		infoMeter = new BarMeter(infoMeterLayout, m.chn);
+	       		break;
+	       	default:
+	       		infoMeter = new EmptyMeter(infoMeterLayout, m.chn);
+	       		break;       		
+	       	}
+	       	
+	        progressThread = new ProgressThread();
+	        progressThread.start();
+		}
+	};
+	
+	void playNewMod(String[] files) {
+
        	 
        	try {
-			modPlayer.play(m.filename);
+			modPlayer.play(files);
       	
 	       	/* Show list of instruments */
-	       	StringBuffer insList = new StringBuffer();
+	       	/*StringBuffer insList = new StringBuffer();
 	       	String[] instrument = modPlayer.getInstruments();
 	       	if (instrument.length > 0)
 	       		insList.append(instrument[0]);
@@ -454,13 +480,11 @@ public class Player extends Activity {
 	       		insList.append('\n');
 	       		insList.append(instrument[i]);
 	       	}
-	       	infoInsList.setText(insList.toString());
+	       	infoInsList.setText(insList.toString());*/
 		} catch (RemoteException e) {
 			
 		}
-		
-        progressThread = new ProgressThread();
-        progressThread.start();
+
 	}
 	
 	void stopPlayingMod() {

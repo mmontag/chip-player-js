@@ -9,6 +9,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 
@@ -24,7 +25,12 @@ public class ModService extends Service {
 	boolean interpolate;
     private NotificationManager nm;
     private static final int NOTIFY_ID = R.layout.player;
-    
+    int playIndex;
+    RandomIndex ridx;
+    String[] fileArray;
+    final RemoteCallbackList<PlayerCallback> callbacks =
+		new RemoteCallbackList<PlayerCallback>();
+       
     @Override
 	public void onCreate() {
     	super.onCreate();
@@ -70,7 +76,7 @@ public class ModService extends Service {
 	public IBinder onBind(Intent intent) {
 		return binder;
 	}
-	    
+	
 	private class PlayRunnable implements Runnable {
     	public void run() {
     		short buffer[] = new short[minSize];
@@ -92,6 +98,10 @@ public class ModService extends Service {
        		audio.stop();
        		xmp.endPlayer();
        		xmp.releaseModule();
+       		callbacks.finishBroadcast();
+       		       	
+        	if (++playIndex < fileArray.length)
+        		playMod(playIndex);
     	}
     }
 
@@ -103,39 +113,54 @@ public class ModService extends Service {
 		} catch (InterruptedException e) { }
     	xmp.deinit();
     	audio.release();
+    	callbacks.finishBroadcast();
+    }
+	
+    public void playMod(int index) {
+    	
+        /*nm.cancel(NOTIFY_ID);
+        Notification notification = new Notification(
+                        R.drawable.icon, file, null, file, null);
+        nm.notify(NOTIFY_ID, notification);*/
+    	
+    	//int idx = shuffleMode ? ridx.getIndex(index) : index;
+    	int idx = index;
+    	
+    	final int numClients = callbacks.beginBroadcast();
+    	for (int i = 0; i < numClients; i++) {
+    		try {
+				callbacks.getBroadcastItem(i).newModCallback(fileArray[idx]);
+			} catch (RemoteException e) { }
+    	}
+
+		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
+		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
+
+   		if (xmp.loadModule(fileArray[idx]) < 0) {
+   			return;
+   		}
+   		
+		String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
+		xmp.optAmplify(Integer.parseInt(volBoost));
+		xmp.optMix(prefs.getInt(Settings.PREF_PAN_SEPARATION, 70));
+		xmp.optStereo(prefs.getBoolean(Settings.PREF_STEREO, true));
+		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
+		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));	   		
+
+   		audio.play();
+   		xmp.startPlayer();
+   		
+   		PlayRunnable playRunnable = new PlayRunnable();
+   		playThread = new Thread(playRunnable);
+   		playThread.start();
     }
 
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
-		
-	    public void play(String file) {
-	    	
-            /*nm.cancel(NOTIFY_ID);
-            Notification notification = new Notification(
-                            R.drawable.icon, file, null, file, null);
-            nm.notify(NOTIFY_ID, notification);*/
-
-			xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
-			xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
-
-	   		if (xmp.loadModule(file) < 0) {
-	   			return;
-	   		}
-	   		
-			String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
-			xmp.optAmplify(Integer.parseInt(volBoost));
-			xmp.optMix(prefs.getInt(Settings.PREF_PAN_SEPARATION, 70));
-			xmp.optStereo(prefs.getBoolean(Settings.PREF_STEREO, true));
-			xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
-			xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));	   		
-	
-	   		audio.play();
-	   		xmp.startPlayer();
-	   		
-	   		PlayRunnable playRunnable = new PlayRunnable();
-	   		playThread = new Thread(playRunnable);
-	   		playThread.start();
-	    }
+		public void play(String[] files) {
+			fileArray = files;
+			playMod(0);
+		}
 	    
 	    public void stop() {
 	    	xmp.stopModule();
@@ -195,5 +220,15 @@ public class ModService extends Service {
 				return true;
 			}
 		}
+		
+		public void registerCallback(PlayerCallback cb) {
+        	if (cb != null)
+            	callbacks.register(cb);
+        }
+        
+        public void unregisterCallback(PlayerCallback cb) {
+            if (cb != null)
+            	callbacks.unregister(cb);
+        }
 	};
 }
