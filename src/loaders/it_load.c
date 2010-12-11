@@ -270,7 +270,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     int max_ch, flag;
     int inst_map[120], inst_rmap[XXM_KEY_MAX];
     char tracker_name[80];
-    int mpt = 0;	/* ModPlug Tracker has quirks */
 
     LOAD_INIT();
 
@@ -383,7 +382,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    sprintf(tracker_name, "ModPlug Tracker 1.16");
 	    /* ModPlug Tracker files aren't really IMPM 2.00 */
 	    ifh.cmwt = ifh.flags & IT_USE_INST ? 0x214 : 0x100;	
-	    mpt = 1;
 	} else if (ifh.cwt == 0x0216) {
 	    sprintf(tracker_name, "Impulse Tracker 2.14v3");
 	} else if (ifh.cwt == 0x0217) {
@@ -743,7 +741,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	ish.magic = read32b(f);
 	fread(&ish.dosname, 12, 1, f);
 	ish.zero = read8(f);
-	ish.gvl = mpt ? read8(f),0x40 : read8(f);
+	ish.gvl = read8(f);
 	ish.flags = read8(f);
 	ish.vol = read8(f);
 	fread(&ish.name, 26, 1, f);
