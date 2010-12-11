@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 
 public class ModService extends Service {
@@ -129,13 +130,6 @@ public class ModService extends Service {
     public void playMod(int index) {
     	//int idx = shuffleMode ? ridx.getIndex(index) : index;
     	int idx = index;
-    	
-    	final int numClients = callbacks.beginBroadcast();
-    	for (int i = 0; i < numClients; i++) {
-    		try {
-				callbacks.getBroadcastItem(i).newModCallback(fileArray[idx]);
-			} catch (RemoteException e) { }
-    	}
 
 		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
@@ -143,6 +137,14 @@ public class ModService extends Service {
    		if (xmp.loadModule(fileArray[idx]) < 0) {
    			return;
    		}
+   		    	
+    	final int numClients = callbacks.beginBroadcast();
+    	for (int i = 0; i < numClients; i++) {
+    		try {
+				callbacks.getBroadcastItem(i).newModCallback(
+							fileArray[idx],	xmp.getInstruments());
+			} catch (RemoteException e) { }
+    	}
    		
 		String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
 		xmp.optAmplify(Integer.parseInt(volBoost));
@@ -158,7 +160,6 @@ public class ModService extends Service {
    		playThread = new Thread(playRunnable);
    		playThread.start();
     }
-
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
 		public void play(String[] files) {
@@ -197,10 +198,6 @@ public class ModService extends Service {
 		
 		public int getPlayPat() {
 			return xmp.getPlayPat();
-		}
-		
-		public String[] getInstruments() {
-			return xmp.getInstruments();
 		}
 		
 		public void getVolumes(int[] volumes) {

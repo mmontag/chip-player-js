@@ -12,7 +12,6 @@ interface ModInterface {
 	int getPlayBpm();
 	int getPlayPos();
 	int getPlayPat();
-	String[] getInstruments();
 	void getVolumes(out int[] volumes);
 	void nextSong();
 	void prevSong(); 

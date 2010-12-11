@@ -60,7 +60,7 @@ public class Player extends Activity {
 	final Handler handler = new Handler();
 	int latency;
 	int totalTime;
-	String fileName;
+	String fileName, insList;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -83,11 +83,12 @@ public class Player extends Activity {
 	};
 	
     private PlayerCallback playerCallback = new PlayerCallback.Stub() {
-        public void newModCallback(String name) {
-            showNewMod(name);
+        public void newModCallback(String name, String[] instruments) {
+            showNewMod(name, instruments);
         }
     };
-	
+
+
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
         	int idx;
@@ -424,14 +425,24 @@ public class Player extends Activity {
 		super.onDestroy();
 	}
 
-	void showNewMod(String fileName) {
+	void showNewMod(String fileName, String[] instruments) {
 		this.fileName = fileName;
+		
+     	StringBuffer insList = new StringBuffer();
+       	if (instruments.length > 0)
+       		insList.append(instruments[0]);
+       	for (int i = 1; i < instruments.length; i++) {
+       		insList.append('\n');
+       		insList.append(instruments[i]);
+       	}
+       	
+       	this.insList = insList.toString();
+       	
 		handler.post(showNewModRunnable);
 	}
 	
 	final Runnable showNewModRunnable = new Runnable() {
 		public void run() {
-			Log.i("aaa", "showNewMod: " + fileName);
 			ModInfo m = InfoCache.getModInfo(fileName);
 			totalTime = m.time / 1000;
 	       	seekBar.setProgress(0);
@@ -446,6 +457,7 @@ public class Player extends Activity {
 	       	infoSmp.setText(Integer.toString(m.smp));
 	       	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
 	       			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
+	       	infoInsList.setText(insList);
 	       	
 	       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));
 	       	switch (meterType) {
@@ -470,17 +482,7 @@ public class Player extends Activity {
        	 
        	try {
 			modPlayer.play(files);
-      	
-	       	/* Show list of instruments */
-	       	/*StringBuffer insList = new StringBuffer();
-	       	String[] instrument = modPlayer.getInstruments();
-	       	if (instrument.length > 0)
-	       		insList.append(instrument[0]);
-	       	for (int i = 1; i < instrument.length; i++) {
-	       		insList.append('\n');
-	       		insList.append(instrument[i]);
-	       	}
-	       	infoInsList.setText(insList.toString());*/
+
 		} catch (RemoteException e) {
 			
 		}
@@ -506,7 +508,7 @@ public class Player extends Activity {
 		}
 	}
 	
-    @Override
+    /*@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
     	if(event.getAction() == KeyEvent.ACTION_DOWN) {
     		switch(keyCode) {
@@ -518,6 +520,6 @@ public class Player extends Activity {
     	}
     	
     	return super.onKeyDown(keyCode, event);
-    }
+    }*/
 
 }
