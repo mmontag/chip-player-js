@@ -2,6 +2,7 @@ package org.helllabs.android.xmp;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,7 +35,16 @@ public class ModService extends Service {
     @Override
 	public void onCreate() {
     	super.onCreate();
+    	
     	nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+    	PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+    					new Intent(this, Player.class), 0);
+        nm.cancel(NOTIFY_ID);
+        Notification notification = new Notification(
+        		R.drawable.notification, null, System.currentTimeMillis());
+        notification.setLatestEventInfo(this, getText(R.string.app_name),
+        	      "bla", contentIntent);
+        nm.notify(NOTIFY_ID, notification);
     	
    		prefs = PreferenceManager.getDefaultSharedPreferences(this);
    		
@@ -117,12 +127,6 @@ public class ModService extends Service {
     }
 	
     public void playMod(int index) {
-    	
-        /*nm.cancel(NOTIFY_ID);
-        Notification notification = new Notification(
-                        R.drawable.icon, file, null, file, null);
-        nm.notify(NOTIFY_ID, notification);*/
-    	
     	//int idx = shuffleMode ? ridx.getIndex(index) : index;
     	int idx = index;
     	
