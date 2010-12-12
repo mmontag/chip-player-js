@@ -46,8 +46,6 @@ public class Player extends Activity {
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
 	TextView infoInsList, elapsedTime;
 	String[] fileArray;
-	//int playIndex;
-	//RandomIndex ridx;
 	SharedPreferences prefs;
 	LinearLayout infoMeterLayout;
 	Meter infoMeter;
@@ -57,6 +55,8 @@ public class Player extends Activity {
 	int latency;
 	int totalTime;
 	String fileName, insList;
+	boolean reconnect = false;		// If launched from status bar
+	boolean endPlay = false;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -66,10 +66,14 @@ public class Player extends Activity {
 				modPlayer.registerCallback(playerCallback);
 			} catch (RemoteException e) { }
 			
-			if (fileArray.length > 0) {
-				//playIndex = 0;
-				//int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-				playNewMod(fileArray);
+			if (reconnect) {
+				try {
+					showNewMod(modPlayer.getFileName(), modPlayer.getInstruments());
+				} catch (RemoteException e) { }
+			} else {
+				if (fileArray.length > 0) {
+					playNewMod(fileArray);
+				}
 			}
 		}
 
@@ -82,6 +86,10 @@ public class Player extends Activity {
         public void newModCallback(String name, String[] instruments) {
             showNewMod(name, instruments);
         }
+        
+        public void endPlayCallback() {
+        	endPlay = true;
+        }
     };
 
 
@@ -90,7 +98,7 @@ public class Player extends Activity {
         	if (finishing)
         		return;
 
-        	if (single) {
+        	if (endPlay) {
         		finish();
         		return;
         	}
@@ -163,9 +171,7 @@ public class Player extends Activity {
 		        		oldShowElapsed = showElapsed;
 		        	}
 	        	}
-			} catch (RemoteException e) {
-
-			}
+			} catch (RemoteException e) { }
         }
     };
     
@@ -193,7 +199,7 @@ public class Player extends Activity {
 				}
 				
 				handler.post(updateInfoRunnable);
-    		} while (t >= 0);
+    		} while (t >= 0 && !endPlay);
     		
     		seekBar.setProgress(0);
     		handler.post(endSongRunnable);
@@ -225,6 +231,10 @@ public class Player extends Activity {
 		showTime = prefs.getBoolean(Settings.PREF_SHOW_TIME, false);
 		showElapsed = true;
 		
+    	latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
+    	if (latency > 9)
+    		latency = 9;
+		
 		String path = null;
 		if (getIntent().getData() != null) {
 			path = getIntent().getData().getPath();
@@ -239,27 +249,25 @@ public class Player extends Activity {
 			loopListMode = false;
 		} else {
 			Bundle extras = getIntent().getExtras();
-			if (extras == null) {	// From status bar
-				if (!bindService(new Intent(this, ModService.class), connection, 0))
-					finish();
-				
-				return;
+			if (extras == null) {
+				reconnect = true;
+			} else {
+				fileArray = extras.getStringArray("files");
+				single = extras.getBoolean("single");	
+				shuffleMode = extras.getBoolean("shuffle");
+				loopListMode = extras.getBoolean("loop");
 			}
-		
-			fileArray = extras.getStringArray("files");
-			single = extras.getBoolean("single");	
-			shuffleMode = extras.getBoolean("shuffle");
-			loopListMode = extras.getBoolean("loop");
 		}
-
-    	latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
-    	if (latency > 9)
-    		latency = 9;
     	
     	Intent service = new Intent(this, ModService.class);
-    	startService(service);
     	
-		bindService(service, connection, Context.BIND_AUTO_CREATE);
+    	if (reconnect) {
+    		if (!bindService(service, connection, 0))
+    			finish();
+    	} else {
+    		startService(service);
+    		bindService(service, connection, Context.BIND_AUTO_CREATE);
+    	}
 		
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -390,20 +398,13 @@ public class Player extends Activity {
 				seeking = false;
 			}
 		});
-
-		/*if (fileArray.length > 0) {
-			playIndex = 0;
-			int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-			playNewMod(fileArray[idx]);
-		}*/
 	}
 	
-	/*@Override
+	@Override
 	public void onDestroy() {
-		stopPlayingMod();
-		//modPlayer.end();
 		super.onDestroy();
-	}*/
+		unbindService(connection);
+	}
 
 	void showNewMod(String fileName, String[] instruments) {
 		this.fileName = fileName;

@@ -16,6 +16,8 @@ interface ModInterface {
 	void nextSong();
 	void prevSong(); 
 	boolean toggleLoop();
+	String getFileName();
+	String[] getInstruments();
 	
 	void registerCallback(PlayerCallback cb);
 	void unregisterCallback(PlayerCallback cb);

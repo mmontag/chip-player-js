@@ -30,8 +30,7 @@ public class ModService extends Service {
     RandomIndex ridx;
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
-	boolean playing;
-	
+	String fileName;			// currently playing file
     String[] fileArray;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
@@ -79,7 +78,6 @@ public class ModService extends Service {
 		xmp.initContext();
 		xmp.init(sampleRate);
 		paused = false;
-		playing = false;
     }
 
     @Override
@@ -90,18 +88,6 @@ public class ModService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		if (playing) {
-			int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-			final int numClients = callbacks.beginBroadcast();
-			for (int i = 0; i < numClients; i++) {
-				try {
-					callbacks.getBroadcastItem(i).newModCallback(
-							fileArray[idx],	xmp.getInstruments());
-				} catch (RemoteException e) { }
-			}
-			callbacks.finishBroadcast();
-		}
-    	
 		return binder;
 	}
 	
@@ -138,7 +124,6 @@ public class ModService extends Service {
 	        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
 	        		playMod(idx);
         		} else {
-        			playing = false;
         			nm.cancel(NOTIFY_ID);
         			stopSelf();
         			end();
@@ -155,6 +140,14 @@ public class ModService extends Service {
 		} catch (InterruptedException e) { }
     	xmp.deinit();
     	audio.release();
+    	
+    	final int numClients = callbacks.beginBroadcast();
+    	for (int i = 0; i < numClients; i++) {
+    		try {
+				callbacks.getBroadcastItem(i).endPlayCallback();
+			} catch (RemoteException e) { }
+    	}
+    	callbacks.finishBroadcast();
     }
 	
     public void playMod(int index) {
@@ -166,6 +159,7 @@ public class ModService extends Service {
    		if (xmp.loadModule(fileArray[idx]) < 0) {
    			return;
    		}
+   		fileName = fileArray[idx];
    		    	
     	final int numClients = callbacks.beginBroadcast();
     	for (int i = 0; i < numClients; i++) {
@@ -189,7 +183,6 @@ public class ModService extends Service {
    		PlayRunnable playRunnable = new PlayRunnable();
    		playThread = new Thread(playRunnable);
    		playThread.start();
-   		playing = true;
     }
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
@@ -258,6 +251,18 @@ public class ModService extends Service {
 				return true;
 			}
 		}
+		
+		// for Reconnection
+		
+		public String getFileName() {
+			return fileName;
+		}
+		
+		public String[] getInstruments() {
+			return xmp.getInstruments();
+		}
+		
+		// Callback
 		
 		public void registerCallback(PlayerCallback cb) {
         	if (cb != null)
