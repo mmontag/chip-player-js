@@ -30,6 +30,7 @@ public class ModService extends Service {
     RandomIndex ridx;
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
+	boolean playing;
 	
     String[] fileArray;
     final RemoteCallbackList<PlayerCallback> callbacks =
@@ -78,16 +79,29 @@ public class ModService extends Service {
 		xmp.initContext();
 		xmp.init(sampleRate);
 		paused = false;
+		playing = false;
     }
 
     @Override
 	public void onDestroy() {
-    	end();
     	nm.cancel(NOTIFY_ID);
+    	end();
     }
 
 	@Override
 	public IBinder onBind(Intent intent) {
+		if (playing) {
+			int idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
+			final int numClients = callbacks.beginBroadcast();
+			for (int i = 0; i < numClients; i++) {
+				try {
+					callbacks.getBroadcastItem(i).newModCallback(
+							fileArray[idx],	xmp.getInstruments());
+				} catch (RemoteException e) { }
+			}
+			callbacks.finishBroadcast();
+		}
+    	
 		return binder;
 	}
 	
@@ -109,11 +123,10 @@ public class ModService extends Service {
 					}
        			}
        		}
-       		
+      		
        		audio.stop();
        		xmp.endPlayer();
        		xmp.releaseModule();
-       		callbacks.finishBroadcast();
         	
         	if (++playIndex < fileArray.length) {
         		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
@@ -125,8 +138,10 @@ public class ModService extends Service {
 	        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
 	        		playMod(idx);
         		} else {
+        			playing = false;
         			nm.cancel(NOTIFY_ID);
         			stopSelf();
+        			end();
         		}
         	}
     	}
@@ -140,7 +155,6 @@ public class ModService extends Service {
 		} catch (InterruptedException e) { }
     	xmp.deinit();
     	audio.release();
-    	callbacks.finishBroadcast();
     }
 	
     public void playMod(int index) {
@@ -160,6 +174,7 @@ public class ModService extends Service {
 							fileArray[idx],	xmp.getInstruments());
 			} catch (RemoteException e) { }
     	}
+    	callbacks.finishBroadcast();
    		
 		String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
 		xmp.optAmplify(Integer.parseInt(volBoost));
@@ -174,6 +189,7 @@ public class ModService extends Service {
    		PlayRunnable playRunnable = new PlayRunnable();
    		playThread = new Thread(playRunnable);
    		playThread.start();
+   		playing = true;
     }
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {

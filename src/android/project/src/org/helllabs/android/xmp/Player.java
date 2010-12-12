@@ -10,23 +10,19 @@ import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-//import android.os.Debug;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-
-import org.helllabs.android.xmp.R;
+import android.widget.TextView;
 
 public class Player extends Activity {
 	static final int SETTINGS_REQUEST = 45;
@@ -91,8 +87,6 @@ public class Player extends Activity {
 
     final Runnable endSongRunnable = new Runnable() {
         public void run() {
-        	//int idx;
-        	
         	if (finishing)
         		return;
 
@@ -100,20 +94,6 @@ public class Player extends Activity {
         		finish();
         		return;
         	}
-        	
-        	/*if (++playIndex < fileArray.length) {
-        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-        		playNewMod(fileArray[idx]);
-        	} else {
-        		if (loopListMode) {
-        			playIndex = 0;
-        			ridx.randomize();
-        			idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-        			playNewMod(fileArray[idx]);
-        		} else {
-        			finish();
-        		}
-        	}*/
         }
     };
     
@@ -250,7 +230,7 @@ public class Player extends Activity {
 			path = getIntent().getData().getPath();
 		}
 		
-		if (path != null) {
+		if (path != null) {		// from intent filter
 			xmp.initContext();
 			fileArray = new String[1];
 			fileArray[0] = path;
@@ -259,8 +239,12 @@ public class Player extends Activity {
 			loopListMode = false;
 		} else {
 			Bundle extras = getIntent().getExtras();
-			if (extras == null)
+			if (extras == null) {	// From status bar
+				if (!bindService(new Intent(this, ModService.class), connection, 0))
+					finish();
+				
 				return;
+			}
 		
 			fileArray = extras.getStringArray("files");
 			single = extras.getBoolean("single");	
@@ -272,10 +256,10 @@ public class Player extends Activity {
     	if (latency > 9)
     		latency = 9;
     	
-		//ridx = new RandomIndex(fileArray.length);
-		//modPlayer = new ModPlayer(this);
-		bindService(new Intent(this, ModService.class),
-				connection, Context.BIND_AUTO_CREATE);
+    	Intent service = new Intent(this, ModService.class);
+    	startService(service);
+    	
+		bindService(service, connection, Context.BIND_AUTO_CREATE);
 		
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -414,12 +398,12 @@ public class Player extends Activity {
 		}*/
 	}
 	
-	@Override
+	/*@Override
 	public void onDestroy() {
 		stopPlayingMod();
 		//modPlayer.end();
 		super.onDestroy();
-	}
+	}*/
 
 	void showNewMod(String fileName, String[] instruments) {
 		this.fileName = fileName;
@@ -475,6 +459,7 @@ public class Player extends Activity {
 	
 	void playNewMod(String[] files) {      	 
        	try {
+       		modPlayer.stop();
 			modPlayer.play(files, shuffleMode, loopListMode);
 		} catch (RemoteException e) { }
 	}
@@ -501,7 +486,6 @@ public class Player extends Activity {
     	if(event.getAction() == KeyEvent.ACTION_DOWN) {
     		switch(keyCode) {
     		case KeyEvent.KEYCODE_BACK:
-    			stopPlayingMod();
     			finish();
     			return true;
     		}
