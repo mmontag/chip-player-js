@@ -64,8 +64,10 @@ public class Player extends Activity {
 			} catch (RemoteException e) { }
 			
 			if (fileArray != null && fileArray.length > 0) {
+				// Start new queue
 				playNewMod(fileArray);
 			} else {
+				// Reconnect to existing service
 				try {
 					showNewMod(modPlayer.getFileName(), modPlayer.getInstruments());
 				} catch (RemoteException e) { }
@@ -92,18 +94,6 @@ public class Player extends Activity {
 			finish();
         }
     };
-
-    /*final Runnable endSongRunnable = new Runnable() {
-        public void run() {
-        	if (finishing)
-        		return;
-
-        	if (endPlay) {
-        		finish();
-        		return;
-        	}
-        }
-    };*/
     
     final Runnable updateInfoRunnable = new Runnable() {
     	int[] tpo = new int[10];
@@ -260,7 +250,9 @@ public class Player extends Activity {
     	Log.i("Player", "reconnect=" + reconnect);
     	if (!reconnect) {
     		Log.i("Player", "start service");
-    		startService(service);
+    		if (startService(service) != null) {
+    			// already running
+    		}
     		reconnect = true;
     	}
     	
@@ -464,7 +456,7 @@ public class Player extends Activity {
 	
 	void playNewMod(String[] files) {      	 
        	try {
-       		modPlayer.stop();
+       		//modPlayer.stop();
 			modPlayer.play(files, shuffleMode, loopListMode);
 		} catch (RemoteException e) { }
 	}
@@ -483,18 +475,4 @@ public class Player extends Activity {
 			progressThread.join();
 		} catch (InterruptedException e) { }
 	}
-	
-    /*@Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-    	if(event.getAction() == KeyEvent.ACTION_DOWN) {
-    		switch(keyCode) {
-    		case KeyEvent.KEYCODE_BACK:
-    			finish();
-    			return true;
-    		}
-    	}
-    	
-    	return super.onKeyDown(keyCode, event);
-    }*/
-
 }
