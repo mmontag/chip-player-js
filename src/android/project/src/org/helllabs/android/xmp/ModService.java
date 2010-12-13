@@ -85,7 +85,6 @@ public class ModService extends Service {
 	private class PlayRunnable implements Runnable {
     	public void run() {
     		short buffer[] = new short[minSize];
-    		int idx;
     		
        		while (xmp.playFrame() == 0) {
        			int size = xmp.softmixer();

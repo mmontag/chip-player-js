@@ -20,7 +20,8 @@
 		</activity>
 		<activity android:name=".Player"
 			android:configChanges="keyboardHidden|orientation"
-			android:theme="@android:style/Theme.NoTitleBar">
+			android:theme="@android:style/Theme.NoTitleBar"
+			android:launchMode="singleInstance">
 		    <intent-filter>
 				<action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />
