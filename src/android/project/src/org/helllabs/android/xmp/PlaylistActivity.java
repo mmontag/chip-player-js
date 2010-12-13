@@ -18,7 +18,6 @@ import android.widget.ListView;
 public class PlaylistActivity extends ListActivity {
 	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	ImageButton playAllButton, toggleLoopButton, toggleShuffleButton;
-	boolean single = false;		/* play only one module */
 	boolean shuffleMode = true;
 	boolean loopMode = false;
 	SharedPreferences prefs;
@@ -106,7 +105,6 @@ public class PlaylistActivity extends ListActivity {
 	void playModule(String[] mods, boolean single) {
 		Intent intent = new Intent(this, Player.class);
 		intent.putExtra("files", mods);
-		intent.putExtra("single", single);
 		intent.putExtra("shuffle", shuffleMode);
 		intent.putExtra("loop", loopMode);
 		startActivity(intent);

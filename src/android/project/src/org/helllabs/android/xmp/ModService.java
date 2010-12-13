@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 
 public class ModService extends Service {
@@ -124,9 +125,10 @@ public class ModService extends Service {
 	        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
 	        		playMod(idx);
         		} else {
+        			Log.i("xxx", "asd");
         			nm.cancel(NOTIFY_ID);
-        			stopSelf();
         			end();
+        			stopSelf();
         		}
         	}
     	}
@@ -141,18 +143,16 @@ public class ModService extends Service {
     	xmp.deinit();
     	audio.release();
     	
-    	final int numClients = callbacks.beginBroadcast();
-    	for (int i = 0; i < numClients; i++) {
-    		try {
+	    final int numClients = callbacks.beginBroadcast();
+	    for (int i = 0; i < numClients; i++) {
+	    	try {
 				callbacks.getBroadcastItem(i).endPlayCallback();
 			} catch (RemoteException e) { }
-    	}
-    	callbacks.finishBroadcast();
+	    }
+	    callbacks.finishBroadcast();
     }
 	
-    public void playMod(int index) {
-    	int idx = shuffleMode ? ridx.getIndex(index) : index;
-
+    public void playMod(int idx) {
 		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
 

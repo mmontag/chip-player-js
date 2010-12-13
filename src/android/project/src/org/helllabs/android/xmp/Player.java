@@ -34,11 +34,9 @@ public class Player extends Activity {
 	SeekBar seekBar;
 	Thread progressThread;
 	boolean seeking = false;
-	boolean single = true;
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
 	boolean paused = false;
-	boolean isBadDir = false;
 	boolean finishing = false;
 	boolean showTime, showElapsed;
 	TextView infoName, infoType, infoLen, infoTime;
@@ -88,12 +86,16 @@ public class Player extends Activity {
         }
         
         public void endPlayCallback() {
-        	endPlay = true;
+        	Log.i("asd", "end callback");
+			endPlay = true;
+			try {
+				progressThread.join();
+			} catch (InterruptedException e) { }
+			//finish();
         }
     };
 
-
-    final Runnable endSongRunnable = new Runnable() {
+    /*final Runnable endSongRunnable = new Runnable() {
         public void run() {
         	if (finishing)
         		return;
@@ -103,7 +105,7 @@ public class Player extends Activity {
         		return;
         	}
         }
-    };
+    };*/
     
     final Runnable updateInfoRunnable = new Runnable() {
     	int[] tpo = new int[10];
@@ -183,7 +185,7 @@ public class Player extends Activity {
     		do {
     			try {
 					t = modPlayer.time();
-				} catch (RemoteException e1) {
+				} catch (RemoteException e) {
 
 				}
     			//Log.v(getString(R.string.app_name), "t = " + t);
@@ -194,15 +196,13 @@ public class Player extends Activity {
     			
     			try {
 					sleep(100);
-				} catch (InterruptedException e) {
-					Log.e(getString(R.string.app_name), e.getMessage());
-				}
+				} catch (InterruptedException e) { }
 				
 				handler.post(updateInfoRunnable);
     		} while (t >= 0 && !endPlay);
     		
     		seekBar.setProgress(0);
-    		handler.post(endSongRunnable);
+    		//handler.post(endSongRunnable);
     	}
     };
 
@@ -244,7 +244,6 @@ public class Player extends Activity {
 			xmp.initContext();
 			fileArray = new String[1];
 			fileArray[0] = path;
-			single = true;
 			shuffleMode = false;
 			loopListMode = false;
 		} else {
@@ -252,8 +251,7 @@ public class Player extends Activity {
 			if (extras == null) {
 				reconnect = true;
 			} else {
-				fileArray = extras.getStringArray("files");
-				single = extras.getBoolean("single");	
+				fileArray = extras.getStringArray("files");	
 				shuffleMode = extras.getBoolean("shuffle");
 				loopListMode = extras.getBoolean("loop");
 			}
@@ -477,9 +475,7 @@ public class Player extends Activity {
 		
 		try {
 			progressThread.join();
-		} catch (InterruptedException e) {
-			Log.e(getString(R.string.app_name), e.getMessage());
-		}
+		} catch (InterruptedException e) { }
 	}
 	
     /*@Override
