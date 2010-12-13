@@ -31,6 +31,7 @@ public class ModService extends Service {
     RandomIndex ridx;
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
+	boolean stopPlaying = false;
 	String fileName;			// currently playing file
     String[] fileArray;
     final RemoteCallbackList<PlayerCallback> callbacks =
@@ -103,6 +104,12 @@ public class ModService extends Service {
        		audio.stop();
        		xmp.endPlayer();
        		xmp.releaseModule();
+       		
+       		if (stopPlaying) {
+    			nm.cancel(NOTIFY_ID);
+    			end();
+    			stopSelf();	
+       		}
         	
         	if (++playIndex < fileArray.length) {
         		playMod(playIndex);
@@ -202,6 +209,7 @@ public class ModService extends Service {
 	    public void stop() {
 	    	xmp.stopModule();
 	    	paused = false;
+	    	stopPlaying = true;
 	    }
 	    
 	    public void pause() {
@@ -237,7 +245,8 @@ public class ModService extends Service {
 		}
 		
 		public void nextSong() {
-			xmp.stopModule();			
+			xmp.stopModule();
+			paused = false;
 		}
 		
 		public void prevSong() {
@@ -245,6 +254,7 @@ public class ModService extends Service {
 			if (playIndex < -1)
 				playIndex += fileArray.length;
 			xmp.stopModule();
+			paused = false;
 		}
 
 		public boolean toggleLoop() throws RemoteException {
