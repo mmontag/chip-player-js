@@ -376,6 +376,14 @@ Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj)
 	return stringArray;
 }
 
+JNIEXPORT jstring JNICALL
+Java_org_helllabs_android_xmp_Xmp_getTitle(JNIEnv *env, jobject obj)
+{
+	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+
+	return (*env)->NewStringUTF(env, p->m.name);
+}
+
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_optAmplify(JNIEnv *env, jobject obj, jint n)
 {

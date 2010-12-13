@@ -146,15 +146,16 @@ public class ModService extends Service {
     	audio.release();
     }
 
-    private void createNotification() {
+    private void createNotification(String message) {
     	nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+    	if (message == null)
+    		nm.cancel(NOTIFY_ID);
     	PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
     					new Intent(this, Player.class), 0);
-        nm.cancel(NOTIFY_ID);
         Notification notification = new Notification(
-        		R.drawable.notification, null, System.currentTimeMillis());
+        		R.drawable.notification, message, System.currentTimeMillis());   		
         notification.setLatestEventInfo(this, getText(R.string.app_name),
-        	      "bla", contentIntent);
+      	      message, contentIntent);
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         nm.notify(NOTIFY_ID, notification);    	
     }
@@ -169,6 +170,7 @@ public class ModService extends Service {
    			return;
    		}
    		fileName = fileArray[idx];
+   		createNotification(xmp.getTitle());
    		    	
     	final int numClients = callbacks.beginBroadcast();
     	for (int i = 0; i < numClients; i++) {
@@ -201,7 +203,7 @@ public class ModService extends Service {
 			
 			boolean isPlaying = fileArray != null;
 			
-			createNotification();
+			createNotification(null);
 			fileArray = files;
 			ridx = new RandomIndex(fileArray.length);
 			shuffleMode = shuffle;

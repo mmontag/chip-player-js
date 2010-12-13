@@ -33,6 +33,7 @@ public class Xmp {
 	public native int getPlayPos();
 	public native int getPlayPat();
 	public native String getVersion();
+	public native String getTitle();
 	public native int getFormatCount();
 	public native String[] getFormats();
 	public native String[] getInstruments();
