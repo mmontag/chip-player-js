@@ -13,7 +13,6 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 
 public class ModService extends Service {
@@ -128,7 +127,7 @@ public class ModService extends Service {
     }
 
 	protected void end() {    	
-		Log.i("ModService", "end");
+		//Log.i("ModService", "end");
 	    final int numClients = callbacks.beginBroadcast();
 	    for (int i = 0; i < numClients; i++) {
 	    	try {
@@ -198,8 +197,6 @@ public class ModService extends Service {
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
 		public void play(String[] files, boolean shuffle, boolean loopList) {
-			for (String s : files)
-				Log.i("ModService", "Play " + s);
 			
 			boolean isPlaying = fileArray != null;
 			

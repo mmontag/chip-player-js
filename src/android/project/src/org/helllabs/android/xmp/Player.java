@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -54,6 +53,7 @@ public class Player extends Activity {
 	String fileName, insList;
 	boolean reconnect = false;		// If launched from status bar
 	boolean endPlay = false;
+	boolean hasContext = false;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -85,8 +85,7 @@ public class Player extends Activity {
         }
         
         public void endPlayCallback() {
-        	Log.i("Player", "endPlayCallback");
-        	//unbindService(connection);
+        	//Log.i("Player", "endPlayCallback");
 			endPlay = true;
 			try {
 				progressThread.join();
@@ -190,7 +189,6 @@ public class Player extends Activity {
     		} while (t >= 0 && !endPlay);
     		
     		seekBar.setProgress(0);
-    		//handler.post(endSongRunnable);
     	}
     };
 
@@ -229,37 +227,37 @@ public class Player extends Activity {
 		}
 		
 		if (path != null) {		// from intent filter
-			xmp.initContext();
+			if (!hasContext)
+				xmp.initContext();
 			fileArray = new String[1];
 			fileArray[0] = path;
 			shuffleMode = false;
 			loopListMode = false;
 		} else {
 			Bundle extras = getIntent().getExtras();
-			if (extras == null) {
-				reconnect = true;
-			} else {
+			if (extras != null) {
 				fileArray = extras.getStringArray("files");	
 				shuffleMode = extras.getBoolean("shuffle");
 				loopListMode = extras.getBoolean("loop");
 			}
 		}
     	
+		hasContext = true;
+		
     	Intent service = new Intent(this, ModService.class);
+    	//startService(service);
     	
-    	Log.i("Player", "reconnect=" + reconnect);
+    	//Log.i("Player", "reconnect=" + reconnect);
     	if (!reconnect) {
-    		Log.i("Player", "start service");
+    		//Log.i("Player", "start service");
     		if (startService(service) != null) {
     			// already running
     		}
     		reconnect = true;
     	}
     	
-    	Log.i("Player", "bind service");
     	if (!bindService(service, connection, 0))
     		finish();
-    	Log.i("Player", "done");
 		
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -310,8 +308,9 @@ public class Player extends Activity {
 		
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				
-				//Debug.startMethodTracing("xmp");
+				//Debug.startMethodTracing("xmp");				
+				if (modPlayer == null)
+					return;
 				
 				synchronized (this) {
 					try {
@@ -332,6 +331,9 @@ public class Player extends Activity {
 		stopButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				//Debug.stopMethodTracing();
+				if (modPlayer == null)
+					return;
+				
 				stopPlayingMod();
 				finish();
 		    }
@@ -339,6 +341,9 @@ public class Player extends Activity {
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+				if (modPlayer == null)
+					return;
+				
 				try {
 					if (modPlayer.time() > 20) {
 						modPlayer.seek(0);
@@ -353,7 +358,10 @@ public class Player extends Activity {
 		});
 		
 		forwardButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
+			public void onClick(View v) {				
+				if (modPlayer == null)
+					return;
+				
 				try {
 					modPlayer.nextSong();
 				} catch (RemoteException e) {
@@ -398,7 +406,7 @@ public class Player extends Activity {
 		try {
 			modPlayer.unregisterCallback(playerCallback);
 		} catch (RemoteException e) { }
-		Log.i("Player", "Unbind service");
+		//Log.i("Player", "Unbind service");
 		unbindService(connection);
 	}
 
