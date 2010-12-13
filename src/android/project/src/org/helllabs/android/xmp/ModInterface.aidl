@@ -1,24 +1,12 @@
-package org.helllabs.android.xmp;
+package com.helloandroid.android.musicdroid3;
 
-import org.helllabs.android.xmp.PlayerCallback;
+interface MDSInterface {
+	void clearPlaylist();
+	void addSongPlaylist( in String song ); 
+	void playFile( in int position );
 
-interface ModInterface {
-	void play(in String[] files, boolean shuffle, boolean loopList);
-	void stop();
 	void pause();
-	int time();
-	void seek(in int seconds);
-	int getPlayTempo();
-	int getPlayBpm();
-	int getPlayPos();
-	int getPlayPat();
-	void getVolumes(out int[] volumes);
-	void nextSong();
-	void prevSong(); 
-	boolean toggleLoop();
-	String getFileName();
-	String[] getInstruments();
-	
-	void registerCallback(PlayerCallback cb);
-	void unregisterCallback(PlayerCallback cb);
+	void stop();
+	void skipForward();
+	void skipBack(); 
 } 

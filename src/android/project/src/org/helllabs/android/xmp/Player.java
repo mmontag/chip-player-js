@@ -2,7 +2,6 @@ package org.helllabs.android.xmp;
 
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -43,7 +42,7 @@ public class Player extends Activity {
 	TextView infoNpat, infoChn, infoIns, infoSmp;
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
 	TextView infoInsList, elapsedTime;
-	String[] fileArray;
+	String[] fileArray = null;
 	SharedPreferences prefs;
 	LinearLayout infoMeterLayout;
 	Meter infoMeter;
@@ -64,14 +63,12 @@ public class Player extends Activity {
 				modPlayer.registerCallback(playerCallback);
 			} catch (RemoteException e) { }
 			
-			if (reconnect) {
+			if (fileArray != null && fileArray.length > 0) {
+				playNewMod(fileArray);
+			} else {
 				try {
 					showNewMod(modPlayer.getFileName(), modPlayer.getInstruments());
 				} catch (RemoteException e) { }
-			} else {
-				if (fileArray.length > 0) {
-					playNewMod(fileArray);
-				}
 			}
 		}
 
@@ -86,12 +83,13 @@ public class Player extends Activity {
         }
         
         public void endPlayCallback() {
-        	Log.i("asd", "end callback");
+        	Log.i("Player", "endPlayCallback");
+        	//unbindService(connection);
 			endPlay = true;
 			try {
 				progressThread.join();
 			} catch (InterruptedException e) { }
-			//finish();
+			finish();
         }
     };
 
@@ -259,13 +257,17 @@ public class Player extends Activity {
     	
     	Intent service = new Intent(this, ModService.class);
     	
-    	if (reconnect) {
-    		if (!bindService(service, connection, 0))
-    			finish();
-    	} else {
+    	Log.i("Player", "reconnect=" + reconnect);
+    	if (!reconnect) {
+    		Log.i("Player", "start service");
     		startService(service);
-    		bindService(service, connection, Context.BIND_AUTO_CREATE);
+    		reconnect = true;
     	}
+    	
+    	Log.i("Player", "bind service");
+    	if (!bindService(service, connection, 0))
+    		finish();
+    	Log.i("Player", "done");
 		
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -401,6 +403,10 @@ public class Player extends Activity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		try {
+			modPlayer.unregisterCallback(playerCallback);
+		} catch (RemoteException e) { }
+		Log.i("Player", "Unbind service");
 		unbindService(connection);
 	}
 

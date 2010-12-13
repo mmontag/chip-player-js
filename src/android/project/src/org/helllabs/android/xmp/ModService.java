@@ -35,21 +35,11 @@ public class ModService extends Service {
     String[] fileArray;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
-       
+
+    
     @Override
 	public void onCreate() {
     	super.onCreate();
-    	
-    	nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-    	PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-    					new Intent(this, Player.class), 0);
-        nm.cancel(NOTIFY_ID);
-        Notification notification = new Notification(
-        		R.drawable.notification, null, System.currentTimeMillis());
-        notification.setLatestEventInfo(this, getText(R.string.app_name),
-        	      "bla", contentIntent);
-        notification.flags |= Notification.FLAG_ONGOING_EVENT;
-        nm.notify(NOTIFY_ID, notification);
     	
    		prefs = PreferenceManager.getDefaultSharedPreferences(this);
    		
@@ -116,16 +106,13 @@ public class ModService extends Service {
        		xmp.releaseModule();
         	
         	if (++playIndex < fileArray.length) {
-        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-        		playMod(idx);
+        		playMod(playIndex);
         	} else {
         		if (loopListMode) {
         			playIndex = 0;
         			ridx.randomize();
-	        		idx = shuffleMode ? ridx.getIndex(playIndex) : playIndex;
-	        		playMod(idx);
+	        		playMod(playIndex);
         		} else {
-        			Log.i("xxx", "asd");
         			nm.cancel(NOTIFY_ID);
         			end();
         			stopSelf();
@@ -134,7 +121,16 @@ public class ModService extends Service {
     	}
     }
 
-	protected void end() {
+	protected void end() {    	
+		Log.i("ModService", "end");
+	    final int numClients = callbacks.beginBroadcast();
+	    for (int i = 0; i < numClients; i++) {
+	    	try {
+				callbacks.getBroadcastItem(i).endPlayCallback();
+			} catch (RemoteException e) { }
+	    }	    
+	    callbacks.finishBroadcast();
+	    
     	xmp.stopModule();
     	paused = false;
     	try {
@@ -142,17 +138,24 @@ public class ModService extends Service {
 		} catch (InterruptedException e) { }
     	xmp.deinit();
     	audio.release();
-    	
-	    final int numClients = callbacks.beginBroadcast();
-	    for (int i = 0; i < numClients; i++) {
-	    	try {
-				callbacks.getBroadcastItem(i).endPlayCallback();
-			} catch (RemoteException e) { }
-	    }
-	    callbacks.finishBroadcast();
     }
-	
-    public void playMod(int idx) {
+
+    private void createNotification() {
+    	nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+    	PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+    					new Intent(this, Player.class), 0);
+        nm.cancel(NOTIFY_ID);
+        Notification notification = new Notification(
+        		R.drawable.notification, null, System.currentTimeMillis());
+        notification.setLatestEventInfo(this, getText(R.string.app_name),
+        	      "bla", contentIntent);
+        notification.flags |= Notification.FLAG_ONGOING_EVENT;
+        nm.notify(NOTIFY_ID, notification);    	
+    }
+    
+    public void playMod(int index) {
+    	int idx = shuffleMode ? ridx.getIndex(index) : index;
+    	
 		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
 
@@ -165,7 +168,7 @@ public class ModService extends Service {
     	for (int i = 0; i < numClients; i++) {
     		try {
 				callbacks.getBroadcastItem(i).newModCallback(
-							fileArray[idx],	xmp.getInstruments());
+							fileName, xmp.getInstruments());
 			} catch (RemoteException e) { }
     	}
     	callbacks.finishBroadcast();
@@ -187,11 +190,14 @@ public class ModService extends Service {
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
 		public void play(String[] files, boolean shuffle, boolean loopList) {
+			for (String s : files)
+				Log.i("ModService", "Play " + s);
+			createNotification();
 			fileArray = files;
 			ridx = new RandomIndex(fileArray.length);
 			shuffleMode = shuffle;
 			loopListMode = loopList;
-			playMod(0);
+			playMod(playIndex = 0);
 		}
 	    
 	    public void stop() {
