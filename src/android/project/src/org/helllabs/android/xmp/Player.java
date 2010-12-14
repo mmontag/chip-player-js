@@ -239,15 +239,17 @@ public class Player extends Activity {
 				fileArray = extras.getStringArray("files");	
 				shuffleMode = extras.getBoolean("shuffle");
 				loopListMode = extras.getBoolean("loop");
+			} else {
+				reconnect = true;
 			}
 		}
     	
 		hasContext = true;
 		
     	Intent service = new Intent(this, ModService.class);
-    	//startService(service);
-    	
-    	//Log.i("Player", "reconnect=" + reconnect);
+    	startService(service);
+  	
+/*    	//Log.i("Player", "reconnect=" + reconnect);
     	if (!reconnect) {
     		//Log.i("Player", "start service");
     		if (startService(service) != null) {
@@ -255,10 +257,10 @@ public class Player extends Activity {
     		}
     		reconnect = true;
     	}
-    	
+    	*/
     	if (!bindService(service, connection, 0))
     		finish();
-		
+    	
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
 		infoLen = (TextView)findViewById(R.id.info_len);

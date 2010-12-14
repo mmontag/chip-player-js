@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 
 public class ModService extends Service {
@@ -127,7 +128,7 @@ public class ModService extends Service {
     }
 
 	protected void end() {    	
-		//Log.i("ModService", "end");
+		Log.i("Xmp ModService", "end");
 	    final int numClients = callbacks.beginBroadcast();
 	    for (int i = 0; i < numClients; i++) {
 	    	try {

@@ -10,7 +10,7 @@
 
 extern struct xmp_drv_info drv_smix;
 
-static xmp_context ctx;
+static xmp_context ctx = NULL;
 static struct xmp_options *opt;
 static int _time, _bpm, _tpo, _pos, _pat;
 static int _playing = 0;
@@ -53,6 +53,9 @@ static void process_echoback(unsigned long i, void *data)
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_initContext(JNIEnv *env, jobject obj)
 {
+	if (ctx != NULL)
+		return;
+
 	ctx = xmp_create_context();
 	xmp_init_formats(ctx);
 	xmp_drv_register(&drv_smix);
@@ -252,7 +255,7 @@ Java_org_helllabs_android_xmp_Xmp_getModInfo(JNIEnv *env, jobject obj, jstring f
 {
 	const char *filename;
 	int res;
-	xmp_context ctx2;
+	xmp_context ctx2 = NULL;
 	struct xmp_options *opt;
 	struct xmp_module_info mi;
 	jobject modInfo;
