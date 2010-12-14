@@ -98,6 +98,7 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 {
     struct xmp_player_context *p = &ctx->p;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
+    int temp;
 
     if (p->m.med_vol_table == NULL || p->m.med_wav_table == NULL)
 	return;
@@ -132,7 +133,8 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
-		xc->med_vp = VT;
+		temp = VT;
+		xc->med_vp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfa:		/* JWS */
@@ -183,7 +185,8 @@ skip_vol:
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
-		xc->med_wp = WT;
+		temp = WT;
+		xc->med_wp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfd:		/* ARE */
