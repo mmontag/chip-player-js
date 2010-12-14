@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -50,7 +51,6 @@ public class Player extends Activity {
 	int latency;
 	int totalTime;
 	String fileName, insList;
-	//boolean reconnect = false;		// If launched from status bar
 	boolean endPlay = false;
 
 	private ServiceConnection connection = new ServiceConnection() {
@@ -83,7 +83,7 @@ public class Player extends Activity {
         }
         
         public void endPlayCallback() {
-        	//Log.i("Player", "endPlayCallback");
+        	Log.i("Xmp Player", "endPlayCallback");
 			endPlay = true;
 			try {
 				progressThread.join();
@@ -235,23 +235,12 @@ public class Player extends Activity {
 				fileArray = extras.getStringArray("files");	
 				shuffleMode = extras.getBoolean("shuffle");
 				loopListMode = extras.getBoolean("loop");
-			}/* else {
-				reconnect = true;
-			}*/
+			}
 		}
 		
     	Intent service = new Intent(this, ModService.class);
     	startService(service);
-  	
-/*    	//Log.i("Player", "reconnect=" + reconnect);
-    	if (!reconnect) {
-    		//Log.i("Player", "start service");
-    		if (startService(service) != null) {
-    			// already running
-    		}
-    		reconnect = true;
-    	}
-    	*/
+
     	if (!bindService(service, connection, 0))
     		finish();
     	
@@ -460,7 +449,6 @@ public class Player extends Activity {
 	
 	void playNewMod(String[] files) {      	 
        	try {
-       		//modPlayer.stop();
 			modPlayer.play(files, shuffleMode, loopListMode);
 		} catch (RemoteException e) { }
 	}

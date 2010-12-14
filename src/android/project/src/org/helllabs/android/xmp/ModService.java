@@ -209,7 +209,7 @@ public class ModService extends Service {
 			playIndex = 0;
 			stopPlaying = false;
 			paused = false;
-			Log.i("Xmp ModService", "isPlaying=" + isPlaying);
+			//Log.i("Xmp ModService", "isPlaying=" + isPlaying);
 			if (isPlaying) {
 				playIndex = -1;
 				nextSong();
