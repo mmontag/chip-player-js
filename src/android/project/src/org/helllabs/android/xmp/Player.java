@@ -25,7 +25,6 @@ import android.widget.TextView;
 public class Player extends Activity {
 	static final int SETTINGS_REQUEST = 45;
 	String media_path;
-	Xmp xmp = new Xmp();	/* used to get mod info */
 	ModInterface modPlayer;	/* actual mod player */
 	ImageButton playButton, stopButton, backButton, forwardButton;
 	ImageButton loopButton;
@@ -51,9 +50,8 @@ public class Player extends Activity {
 	int latency;
 	int totalTime;
 	String fileName, insList;
-	boolean reconnect = false;		// If launched from status bar
+	//boolean reconnect = false;		// If launched from status bar
 	boolean endPlay = false;
-	boolean hasContext = false;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -227,8 +225,6 @@ public class Player extends Activity {
 		}
 		
 		if (path != null) {		// from intent filter
-			if (!hasContext)
-				xmp.initContext();
 			fileArray = new String[1];
 			fileArray[0] = path;
 			shuffleMode = false;
@@ -239,12 +235,10 @@ public class Player extends Activity {
 				fileArray = extras.getStringArray("files");	
 				shuffleMode = extras.getBoolean("shuffle");
 				loopListMode = extras.getBoolean("loop");
-			} else {
+			}/* else {
 				reconnect = true;
-			}
+			}*/
 		}
-    	
-		hasContext = true;
 		
     	Intent service = new Intent(this, ModService.class);
     	startService(service);

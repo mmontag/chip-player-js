@@ -32,6 +32,7 @@ public class ModService extends Service {
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
 	boolean stopPlaying = false;
+	boolean isPlaying = false;
 	String fileName;			// currently playing file
     String[] fileArray = null;
     final RemoteCallbackList<PlayerCallback> callbacks =
@@ -137,6 +138,7 @@ public class ModService extends Service {
 	    }	    
 	    callbacks.finishBroadcast();
 	    
+	    isPlaying = false;
     	xmp.stopModule();
     	paused = false;
     	try {
@@ -166,6 +168,7 @@ public class ModService extends Service {
 		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
 
+		Log.i("Xmp ModService", "Load " + fileArray[idx]);
    		if (xmp.loadModule(fileArray[idx]) < 0) {
    			return;
    		}
@@ -197,10 +200,7 @@ public class ModService extends Service {
     }
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
-		public void play(String[] files, boolean shuffle, boolean loopList) {
-			
-			boolean isPlaying = fileArray != null;
-			
+		public void play(String[] files, boolean shuffle, boolean loopList) {			
 			createNotification(null);
 			fileArray = files;
 			ridx = new RandomIndex(fileArray.length);
@@ -209,12 +209,14 @@ public class ModService extends Service {
 			playIndex = 0;
 			stopPlaying = false;
 			paused = false;
+			Log.i("Xmp ModService", "isPlaying=" + isPlaying);
 			if (isPlaying) {
 				playIndex = -1;
 				nextSong();
 			} else {
 				playMod(playIndex);
 			}
+			isPlaying = true;
 		}
 	    
 	    public void stop() {
