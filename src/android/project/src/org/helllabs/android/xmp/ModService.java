@@ -19,7 +19,6 @@ import android.util.Log;
 public class ModService extends Service {
 	Xmp xmp = new Xmp();
 	AudioTrack audio;
-	boolean paused;
 	Thread playThread;
 	SharedPreferences prefs;
 	int minSize;
@@ -32,7 +31,8 @@ public class ModService extends Service {
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
 	boolean stopPlaying = false;
-	boolean isPlaying = false;
+	boolean isPlaying;
+	boolean paused;
 	String fileName;			// currently playing file
     String[] fileArray = null;
     final RemoteCallbackList<PlayerCallback> callbacks =
@@ -70,6 +70,8 @@ public class ModService extends Service {
 
 		xmp.initContext();
 		xmp.init(sampleRate);
+
+		isPlaying = false;
 		paused = false;
     }
 
