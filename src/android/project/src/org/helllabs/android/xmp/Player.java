@@ -221,7 +221,6 @@ public class Player extends Activity {
 		fileArray = null;
 		
 		if (path != null) {		// from intent filter
-			Log.i("Xmp Player", "Start from filter");
 			fileArray = new String[1];
 			fileArray[0] = path;
 			shuffleMode = false;
@@ -260,11 +259,11 @@ public class Player extends Activity {
 		showTime = prefs.getBoolean(Settings.PREF_SHOW_TIME, false);
 		showElapsed = true;
 		
-    	latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
-    	if (latency > 9)
-    		latency = 9;
+		latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
+		if (latency > 9)
+			latency = 9;
 		
-    	onNewIntent(getIntent());
+		onNewIntent(getIntent());
     	
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);

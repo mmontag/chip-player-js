@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="13"
-	android:versionName="2.0.2 (Fix mod restart on application reopen)"
+	android:versionName="2.0.2 (Fix mod restart on player relaunch)"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
