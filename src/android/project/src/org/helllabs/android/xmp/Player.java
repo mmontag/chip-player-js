@@ -208,8 +208,10 @@ public class Player extends Activity {
 	}
 	
 	@Override
-	protected void onNewIntent (Intent intent) {
+	protected void onNewIntent(Intent intent) {
 		boolean reconnect = false;
+		
+		Log.i("Xmp Player", "Start player interface");
 		
 		String path = null;
 		if (intent.getData() != null) {
@@ -221,7 +223,7 @@ public class Player extends Activity {
 			fileArray[0] = path;
 			shuffleMode = false;
 			loopListMode = false;
-		} else {			
+		} else {	
 			Bundle extras = intent.getExtras();
 			if (extras != null) {
 				fileArray = extras.getStringArray("files");	
@@ -233,17 +235,22 @@ public class Player extends Activity {
 		}
 		
     	Intent service = new Intent(this, ModService.class);
-    	if (!reconnect)
+    	if (!reconnect) {
+    		Log.i("Xmp Player", "Start service");
     		startService(service);
-
-    	if (!bindService(service, connection, 0))
+    	}
+    	if (!bindService(service, connection, 0)) {
+    		Log.e("Xmp Player", "Can't bind to service");
     		finish();
+    	}
 	}
 	
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
+		
+		Log.i("Xmp Player", "Create player interface");
 		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
