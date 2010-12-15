@@ -85,9 +85,11 @@ public class Player extends Activity {
         public void endPlayCallback() {
         	Log.i("Xmp Player", "endPlayCallback");
 			endPlay = true;
-			try {
-				progressThread.join();
-			} catch (InterruptedException e) { }
+			if (progressThread != null && progressThread.isAlive()) {
+				try {
+					progressThread.join();
+				} catch (InterruptedException e) { }
+			}
 			finish();
         }
     };

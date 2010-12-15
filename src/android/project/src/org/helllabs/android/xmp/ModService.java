@@ -26,12 +26,13 @@ public class ModService extends Service {
 	boolean interpolate;
     private NotificationManager nm;
     private static final int NOTIFY_ID = R.layout.player;
-    int playIndex;
     RandomIndex ridx;
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
 	boolean stopPlaying = false;
 	boolean isPlaying;
+	boolean restartList;
+	boolean returnToPrev;
 	boolean paused;
 	String fileName;			// currently playing file
     String[] fileArray = null;
@@ -88,45 +89,88 @@ public class ModService extends Service {
 	
 	private class PlayRunnable implements Runnable {
     	public void run() {
-    		short buffer[] = new short[minSize];
-    		
-       		while (xmp.playFrame() == 0) {
-       			int size = xmp.softmixer();
-       			buffer = xmp.getBuffer(size, buffer);
-       			audio.write(buffer, 0, size / 2);
-       			
-       			while (paused) {
-       				try {
-						Thread.sleep(500);
-					} catch (InterruptedException e) {
-						break;
-					}
-       			}
-       		}
-      		
-       		audio.stop();
-       		xmp.endPlayer();
-       		xmp.releaseModule();
+    		do {
+	    		for (int index = 0; index < fileArray.length; index++) {
+		        	int idx = shuffleMode ? ridx.getIndex(index) : index;
+		        	
+		    		Log.i("Xmp ModService", "Load " + fileArray[idx]);
+		       		if (xmp.loadModule(fileArray[idx]) < 0)
+		       			continue;
+
+		       		fileName = fileArray[idx];
+		       		createNotification(xmp.getTitle());
+		       		
+		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
+		    		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
+			       		    	
+		        	final int numClients = callbacks.beginBroadcast();
+		        	for (int i = 0; i < numClients; i++) {
+		        		try {
+		    				callbacks.getBroadcastItem(i).newModCallback(
+		    							fileName, xmp.getInstruments());
+		    			} catch (RemoteException e) { }
+		        	}
+		        	callbacks.finishBroadcast();
+		       		
+		    		String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
+		    		xmp.optAmplify(Integer.parseInt(volBoost));
+		    		xmp.optMix(prefs.getInt(Settings.PREF_PAN_SEPARATION, 70));
+		    		xmp.optStereo(prefs.getBoolean(Settings.PREF_STEREO, true));
+		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
+		    		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));	   		
+		
+		       		audio.play();
+		       		xmp.startPlayer();
+		    			    		
+		    		short buffer[] = new short[minSize];
+		    		
+		       		while (xmp.playFrame() == 0) {
+		       			int size = xmp.softmixer();
+		       			buffer = xmp.getBuffer(size, buffer);
+		       			audio.write(buffer, 0, size / 2);
+		       			
+		       			while (paused) {
+		       				try {
+								Thread.sleep(500);
+							} catch (InterruptedException e) {
+								break;
+							}
+		       			}
+		       		}
+		      		
+		       		audio.stop();
+		       		xmp.endPlayer();
+		       		xmp.releaseModule();
+		       		
+		       		if (restartList) {
+		       			index = -1;
+		       			restartList = false;
+		       			continue;
+		       		}
+		       		
+		       		if (returnToPrev) {
+		       			index -= 2;
+		       			if (index < -1) {
+		       				if (loopListMode)
+		       					index += fileArray.length;
+		       				else
+		       					index = -1;
+		       			}
+		       			returnToPrev = false;
+		       		}
+		       		
+		       		if (stopPlaying) {
+		       			loopListMode = false;
+		       			break;
+		       		}
+	    		}
+	    		if (loopListMode)
+	    			ridx.randomize();
+    		} while (loopListMode);
        		
-       		if (stopPlaying) {
-    			nm.cancel(NOTIFY_ID);
-    			end();
-    			stopSelf();	
-       		}
-        	
-        	if (++playIndex < fileArray.length) {
-        		playMod(playIndex);
-        	} else {
-        		if (loopListMode) {
-        			playIndex = 0;
-        			ridx.randomize();
-	        		playMod(playIndex);
-        		} else {
-        			nm.cancel(NOTIFY_ID);
-        			end();
-        			stopSelf();
-        		}
-        	}
+        	nm.cancel(NOTIFY_ID);
+        	end();
+        	stopSelf();
     	}
     }
 
@@ -163,43 +207,6 @@ public class ModService extends Service {
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         nm.notify(NOTIFY_ID, notification);    	
     }
-    
-    public void playMod(int index) {
-    	int idx = shuffleMode ? ridx.getIndex(index) : index;
-    	
-		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
-		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
-
-		Log.i("Xmp ModService", "Load " + fileArray[idx]);
-   		if (xmp.loadModule(fileArray[idx]) < 0) {
-   			return;
-   		}
-   		fileName = fileArray[idx];
-   		createNotification(xmp.getTitle());
-   		    	
-    	final int numClients = callbacks.beginBroadcast();
-    	for (int i = 0; i < numClients; i++) {
-    		try {
-				callbacks.getBroadcastItem(i).newModCallback(
-							fileName, xmp.getInstruments());
-			} catch (RemoteException e) { }
-    	}
-    	callbacks.finishBroadcast();
-   		
-		String volBoost = prefs.getString(Settings.PREF_VOL_BOOST, "1");
-		xmp.optAmplify(Integer.parseInt(volBoost));
-		xmp.optMix(prefs.getInt(Settings.PREF_PAN_SEPARATION, 70));
-		xmp.optStereo(prefs.getBoolean(Settings.PREF_STEREO, true));
-		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
-		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));	   		
-
-   		audio.play();
-   		xmp.startPlayer();
-   		
-   		PlayRunnable playRunnable = new PlayRunnable();
-   		playThread = new Thread(playRunnable);
-   		playThread.start();
-    }
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
 		public void play(String[] files, boolean shuffle, boolean loopList) {			
@@ -208,15 +215,20 @@ public class ModService extends Service {
 			ridx = new RandomIndex(fileArray.length);
 			shuffleMode = shuffle;
 			loopListMode = loopList;
-			playIndex = 0;
+			returnToPrev = false;
 			stopPlaying = false;
 			paused = false;
-			//Log.i("Xmp ModService", "isPlaying=" + isPlaying);
+
 			if (isPlaying) {
-				playIndex = -1;
+				Log.i("Xmp ModService", "use existing player");
+				restartList = true;
 				nextSong();
 			} else {
-				playMod(playIndex);
+				Log.i("Xmp ModService", "start player thread");
+				restartList = false;
+		   		PlayRunnable playRunnable = new PlayRunnable();
+		   		playThread = new Thread(playRunnable);
+		   		playThread.start();
 			}
 			isPlaying = true;
 		}
@@ -266,10 +278,9 @@ public class ModService extends Service {
 		}
 		
 		public void prevSong() {
-			playIndex -= 2;
-			if (playIndex < -1)
-				playIndex += fileArray.length;
+
 			xmp.stopModule();
+			returnToPrev = true;
 			stopPlaying = false;
 			paused = false;
 		}
