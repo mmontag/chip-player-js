@@ -217,8 +217,11 @@ public class Player extends Activity {
 		if (intent.getData() != null) {
 			path = intent.getData().getPath();
 		}
+
+		fileArray = null;
 		
 		if (path != null) {		// from intent filter
+			Log.i("Xmp Player", "Start from filter");
 			fileArray = new String[1];
 			fileArray[0] = path;
 			shuffleMode = false;
