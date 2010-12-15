@@ -12,7 +12,8 @@
 		android:label="@string/app_name"
 		android:description="@string/app_description">
 		<activity android:name=".PlaylistMenu"
-			android:configChanges="keyboardHidden|orientation">
+			android:configChanges="keyboardHidden|orientation"
+			android:launchMode="singleTask">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
@@ -21,7 +22,7 @@
 		<activity android:name=".Player"
 			android:configChanges="keyboardHidden|orientation"
 			android:theme="@android:style/Theme.NoTitleBar"
-			android:launchMode="singleInstance">
+			android:launchMode="singleTop">
 		    <intent-filter>
 				<action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />

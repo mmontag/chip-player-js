@@ -220,11 +220,11 @@ public class ModService extends Service {
 			paused = false;
 
 			if (isPlaying) {
-				Log.i("Xmp ModService", "use existing player");
+				Log.i("Xmp ModService", "Use existing player thread");
 				restartList = true;
 				nextSong();
 			} else {
-				Log.i("Xmp ModService", "start player thread");
+				Log.i("Xmp ModService", "Start player thread");
 				restartList = false;
 		   		PlayRunnable playRunnable = new PlayRunnable();
 		   		playThread = new Thread(playRunnable);

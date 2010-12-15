@@ -208,6 +208,39 @@ public class Player extends Activity {
 	}
 	
 	@Override
+	protected void onNewIntent (Intent intent) {
+		boolean reconnect = false;
+		
+		String path = null;
+		if (intent.getData() != null) {
+			path = intent.getData().getPath();
+		}
+		
+		if (path != null) {		// from intent filter
+			fileArray = new String[1];
+			fileArray[0] = path;
+			shuffleMode = false;
+			loopListMode = false;
+		} else {			
+			Bundle extras = intent.getExtras();
+			if (extras != null) {
+				fileArray = extras.getStringArray("files");	
+				shuffleMode = extras.getBoolean("shuffle");
+				loopListMode = extras.getBoolean("loop");
+			} else {
+				reconnect = true;
+			}
+		}
+		
+    	Intent service = new Intent(this, ModService.class);
+    	if (!reconnect)
+    		startService(service);
+
+    	if (!bindService(service, connection, 0))
+    		finish();
+	}
+	
+	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
@@ -221,30 +254,7 @@ public class Player extends Activity {
     	if (latency > 9)
     		latency = 9;
 		
-		String path = null;
-		if (getIntent().getData() != null) {
-			path = getIntent().getData().getPath();
-		}
-		
-		if (path != null) {		// from intent filter
-			fileArray = new String[1];
-			fileArray[0] = path;
-			shuffleMode = false;
-			loopListMode = false;
-		} else {
-			Bundle extras = getIntent().getExtras();
-			if (extras != null) {
-				fileArray = extras.getStringArray("files");	
-				shuffleMode = extras.getBoolean("shuffle");
-				loopListMode = extras.getBoolean("loop");
-			}
-		}
-		
-    	Intent service = new Intent(this, ModService.class);
-    	startService(service);
-
-    	if (!bindService(service, connection, 0))
-    		finish();
+    	onNewIntent(getIntent());
     	
 		infoName = (TextView)findViewById(R.id.info_name);
 		infoType = (TextView)findViewById(R.id.info_type);
@@ -393,7 +403,7 @@ public class Player extends Activity {
 		try {
 			modPlayer.unregisterCallback(playerCallback);
 		} catch (RemoteException e) { }
-		//Log.i("Player", "Unbind service");
+		Log.i("Xmp Player", "Unbind service");
 		unbindService(connection);
 	}
 
