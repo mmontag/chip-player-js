@@ -17,7 +17,7 @@ import android.util.Log;
 
 
 public class ModService extends Service {
-	Xmp xmp = new Xmp();
+	final Xmp xmp = new Xmp();
 	AudioTrack audio;
 	Thread playThread;
 	SharedPreferences prefs;
@@ -38,7 +38,6 @@ public class ModService extends Service {
     String[] fileArray = null;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
-
     
     @Override
 	public void onCreate() {
@@ -88,9 +87,10 @@ public class ModService extends Service {
 	}
 	
 	private class PlayRunnable implements Runnable {
-    	public void run() {
+    	public void run() {   
     		do {
-	    		for (int index = 0; index < fileArray.length; index++) {
+    			int length = fileArray.length;
+	    		for (int index = 0; index < length; index++) {
 		        	int idx = shuffleMode ? ridx.getIndex(index) : index;
 		        	
 		    		Log.i("Xmp ModService", "Load " + fileArray[idx]);
@@ -98,7 +98,10 @@ public class ModService extends Service {
 		       			continue;
 
 		       		fileName = fileArray[idx];
-		       		createNotification(xmp.getTitle());
+		       		String title = xmp.getTitle();
+		       		if (length > 1)
+		       			title += " (" + index + "/" + length + ")"; 
+		       		createNotification(title);
 		       		
 		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		    		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
@@ -226,8 +229,7 @@ public class ModService extends Service {
 			} else {
 				Log.i("Xmp ModService", "Start player thread");
 				restartList = false;
-		   		PlayRunnable playRunnable = new PlayRunnable();
-		   		playThread = new Thread(playRunnable);
+		   		playThread = new Thread(new PlayRunnable());
 		   		playThread.start();
 			}
 			isPlaying = true;
@@ -278,7 +280,6 @@ public class ModService extends Service {
 		}
 		
 		public void prevSong() {
-
 			xmp.stopModule();
 			returnToPrev = true;
 			stopPlaying = false;
