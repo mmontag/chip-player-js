@@ -146,12 +146,15 @@ public class ModService extends Service {
 		       			audio.write(buffer, 0, size / 2);
 		       			
 		       			while (paused) {
+		       				watchdog.refresh();
 		       				try {
 								Thread.sleep(500);
 							} catch (InterruptedException e) {
 								break;
 							}
 		       			}
+		       			
+		       			watchdog.refresh();
 		       		}
 		      		
 		       		audio.stop();
