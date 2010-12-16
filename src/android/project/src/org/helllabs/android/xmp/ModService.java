@@ -80,11 +80,13 @@ public class ModService extends Service {
 		watchdog = new Watchdog(20);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
 			public void onTimeout() {
+				Log.e("Xmp ModService", "Stopped by watchdog");
 				nm.cancel(NOTIFY_ID);
 		    	end();
 		    	stopSelf();
 			}
 		});
+ 		watchdog.start();
     }
 
     @Override
@@ -99,8 +101,7 @@ public class ModService extends Service {
 	}
 	
 	private class PlayRunnable implements Runnable {
-    	public void run() {   
-    		watchdog.start();
+    	public void run() {
     		do {
     			int length = fileArray.length;
 	    		for (int index = 0; index < length; index++) {
@@ -113,7 +114,7 @@ public class ModService extends Service {
 		       		fileName = fileArray[idx];
 		       		String title = xmp.getTitle();
 		       		if (length > 1)
-		       			title += " (" + index + "/" + length + ")"; 
+		       			title += " (" + (index + 1) + "/" + length + ")"; 
 		       		createNotification(title);
 		       		
 		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));

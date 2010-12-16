@@ -103,6 +103,12 @@ public class PlaylistActivity extends ListActivity {
 	}
 	
 	void playModule(String[] mods, boolean single) {
+		if (showToasts) {
+			if (mods.length > 1)
+				Message.toast(this, "Play all modules in list");
+			else
+				Message.toast(this, "Play only this module");
+		}
 		Intent intent = new Intent(this, Player.class);
 		intent.putExtra("files", mods);
 		intent.putExtra("shuffle", shuffleMode);
