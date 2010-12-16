@@ -15,13 +15,14 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     
-    <string name="changelog_text">• Fix module restart on application reopen\n
+    <string name="changelog_text">• Display song index\n• Clean up stale player service\n
+\nVersion 2.0.2:\n• Fix module restart on application reopen\n
 \nVersion 2.0.1:\n• Fix handling of invalid modules\n• Code cleanup\n
 \nVersion 2.0.0:\n• Player service\n• Storage directory fix for NOOKcolor\n• Add option to show replay time\n• Fix portamento of mapped instruments\n• Add support to MED4 synth instruments\n
 \nVersion 1.9.5:\n• Add module loop toggle button\n• Enable fast scroll in long lists\n• Fix IT module fingerprinting\n• Fix TP3 module loader\n• Fix BoobieSqueezer XM loading\n• Fix Archimedes Tracker effects\n
 \nVersion 1.9.4:\n• Sort directory entries\n• Fix FC with modules with more than 30 channels\n• Fix temporary directory location\n
-\nVersion 1.9.3:\n• Faster directory reads\n• Fix encoding of URI paths\n• Fix filesystem navigation\n• Fix prev button in single play mode</string>
-    <string name="changelog_title">New in version 2.0.2</string>
+\nVersion 1.9.3:\n• Faster directory reads\n• Fix encoding of URI paths\n• Fix filesystem navigation\n• Fix prev button in single play mode• </string>
+    <string name="changelog_title">New in version 2.0.3</string>
     
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
