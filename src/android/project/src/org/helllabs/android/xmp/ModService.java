@@ -15,12 +15,15 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import org.helllabs.android.xmp.Watchdog.onTimeoutListener;
+
 
 public class ModService extends Service {
 	final Xmp xmp = new Xmp();
 	AudioTrack audio;
 	Thread playThread;
 	SharedPreferences prefs;
+	Watchdog watchdog;
 	int minSize;
 	boolean stereo;
 	boolean interpolate;
@@ -73,6 +76,15 @@ public class ModService extends Service {
 
 		isPlaying = false;
 		paused = false;
+		
+		watchdog = new Watchdog(20);
+ 		watchdog.setOnTimeoutListener(new onTimeoutListener() {
+			public void onTimeout() {
+				nm.cancel(NOTIFY_ID);
+		    	end();
+		    	stopSelf();
+			}
+		});
     }
 
     @Override
@@ -88,6 +100,7 @@ public class ModService extends Service {
 	
 	private class PlayRunnable implements Runnable {
     	public void run() {   
+    		watchdog.start();
     		do {
     			int length = fileArray.length;
 	    		for (int index = 0; index < length; index++) {
@@ -170,6 +183,8 @@ public class ModService extends Service {
 	    		if (loopListMode)
 	    			ridx.randomize();
     		} while (loopListMode);
+    		
+    		watchdog.stop();
        		
         	nm.cancel(NOTIFY_ID);
         	end();
