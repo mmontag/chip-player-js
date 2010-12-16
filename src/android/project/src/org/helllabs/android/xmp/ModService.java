@@ -103,8 +103,7 @@ public class ModService extends Service {
 	private class PlayRunnable implements Runnable {
     	public void run() {
     		do {
-    			int length = fileArray.length;
-	    		for (int index = 0; index < length; index++) {
+	    		for (int index = 0; index < fileArray.length; index++) {
 		        	int idx = shuffleMode ? ridx.getIndex(index) : index;
 		        	
 		    		Log.i("Xmp ModService", "Load " + fileArray[idx]);
@@ -112,9 +111,9 @@ public class ModService extends Service {
 		       			continue;
 
 		       		fileName = fileArray[idx];
-		       		String title = xmp.getTitle();
-		       		if (length > 1)
-		       			title += " (" + (index + 1) + "/" + length + ")"; 
+		       		String title = fileArray.length > 1 ?
+		       			String.format("%s (%d/%d)",	xmp.getTitle(), index + 1, fileArray.length) :
+		       			xmp.getTitle(); 
 		       		createNotification(title);
 		       		
 		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
@@ -231,7 +230,7 @@ public class ModService extends Service {
     }
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
-		public void play(String[] files, boolean shuffle, boolean loopList) {			
+		public void play(String[] files, boolean shuffle, boolean loopList) {
 			createNotification(null);
 			fileArray = files;
 			ridx = new RandomIndex(fileArray.length);
