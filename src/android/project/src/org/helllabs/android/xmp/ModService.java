@@ -185,7 +185,8 @@ public class ModService extends Service {
 	    		if (loopListMode)
 	    			ridx.randomize();
     		} while (loopListMode);
-       		
+
+    		watchdog.stop();
         	nm.cancel(NOTIFY_ID);
         	end();
         	stopSelf();
