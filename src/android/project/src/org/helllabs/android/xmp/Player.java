@@ -79,11 +79,12 @@ public class Player extends Activity {
 	
     private PlayerCallback playerCallback = new PlayerCallback.Stub() {
         public void newModCallback(String name, String[] instruments) {
+        	Log.i("Xmp Player", "Show module data");
             showNewMod(name, instruments);
         }
         
         public void endPlayCallback() {
-        	Log.i("Xmp Player", "endPlayCallback");
+        	Log.i("Xmp Player", "End progress thread");
 			endPlay = true;
 			if (progressThread != null && progressThread.isAlive()) {
 				try {
@@ -409,9 +410,11 @@ public class Player extends Activity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		try {
-			modPlayer.unregisterCallback(playerCallback);
-		} catch (RemoteException e) { }
+		if (modPlayer != null) {
+			try {
+				modPlayer.unregisterCallback(playerCallback);
+			} catch (RemoteException e) { }
+		}
 		Log.i("Xmp Player", "Unbind service");
 		unbindService(connection);
 	}

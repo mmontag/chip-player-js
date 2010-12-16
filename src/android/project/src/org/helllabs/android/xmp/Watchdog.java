@@ -23,6 +23,7 @@ public class Watchdog implements Runnable {
 		while (running) {
 			if (--timer <= 0) {
 				listener.onTimeout();
+				break;
 			}
 			
 			try {

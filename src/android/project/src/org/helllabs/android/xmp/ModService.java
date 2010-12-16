@@ -77,12 +77,10 @@ public class ModService extends Service {
 		isPlaying = false;
 		paused = false;
 		
-		watchdog = new Watchdog(20);
+		watchdog = new Watchdog(15);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
 			public void onTimeout() {
 				Log.e("Xmp ModService", "Stopped by watchdog");
-				nm.cancel(NOTIFY_ID);
-		    	end();
 		    	stopSelf();
 			}
 		});
@@ -91,6 +89,7 @@ public class ModService extends Service {
 
     @Override
 	public void onDestroy() {
+    	watchdog.stop();
     	nm.cancel(NOTIFY_ID);
     	end();
     }
@@ -186,8 +185,6 @@ public class ModService extends Service {
 	    		if (loopListMode)
 	    			ridx.randomize();
     		} while (loopListMode);
-    		
-    		watchdog.stop();
        		
         	nm.cancel(NOTIFY_ID);
         	end();
@@ -196,7 +193,7 @@ public class ModService extends Service {
     }
 
 	protected void end() {    	
-		Log.i("Xmp ModService", "end");
+		Log.i("Xmp ModService", "End service");
 	    final int numClients = callbacks.beginBroadcast();
 	    for (int i = 0; i < numClients; i++) {
 	    	try {
