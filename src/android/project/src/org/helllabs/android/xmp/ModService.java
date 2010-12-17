@@ -1,5 +1,8 @@
 package org.helllabs.android.xmp;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -38,7 +41,7 @@ public class ModService extends Service {
 	boolean returnToPrev;
 	boolean paused;
 	String fileName;			// currently playing file
-    String[] fileArray = null;
+    ArrayList<String> fileArray = null;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
     
@@ -102,16 +105,16 @@ public class ModService extends Service {
 	private class PlayRunnable implements Runnable {
     	public void run() {
     		do {
-	    		for (int index = 0; index < fileArray.length; index++) {
+	    		for (int index = 0; index < fileArray.size(); index++) {
 		        	int idx = shuffleMode ? ridx.getIndex(index) : index;
 		        	
-		    		Log.i("Xmp ModService", "Load " + fileArray[idx]);
-		       		if (xmp.loadModule(fileArray[idx]) < 0)
+		    		Log.i("Xmp ModService", "Load " + fileArray.get(idx));
+		       		if (xmp.loadModule(fileArray.get(idx)) < 0)
 		       			continue;
 
-		       		fileName = fileArray[idx];
-		       		String title = fileArray.length > 1 ?
-		       			String.format("%s (%d/%d)",	xmp.getTitle(), index + 1, fileArray.length) :
+		       		fileName = fileArray.get(idx);
+		       		String title = fileArray.size() > 1 ?
+		       			String.format("%s (%d/%d)",	xmp.getTitle(), index + 1, fileArray.size()) :
 		       			xmp.getTitle(); 
 		       		createNotification(title);
 		       		
@@ -170,7 +173,7 @@ public class ModService extends Service {
 		       			index -= 2;
 		       			if (index < -1) {
 		       				if (loopListMode)
-		       					index += fileArray.length;
+		       					index += fileArray.size();
 		       				else
 		       					index = -1;
 		       			}
@@ -230,8 +233,8 @@ public class ModService extends Service {
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
 		public void play(String[] files, boolean shuffle, boolean loopList) {
 			createNotification(null);
-			fileArray = files;
-			ridx = new RandomIndex(fileArray.length);
+			fileArray = new ArrayList<String>(Arrays.asList(files));
+			ridx = new RandomIndex(fileArray.size());
 			shuffleMode = shuffle;
 			loopListMode = loopList;
 			returnToPrev = false;
