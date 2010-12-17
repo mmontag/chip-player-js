@@ -2,6 +2,7 @@ package org.helllabs.android.xmp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -30,9 +31,7 @@ public class ModService extends Service {
 	int minSize;
 	boolean stereo;
 	boolean interpolate;
-    private NotificationManager nm;
-    private static final int NOTIFY_ID = R.layout.player;
-    RandomIndex ridx;
+	Notifier notifier;
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
 	boolean stopPlaying = false;
@@ -41,6 +40,7 @@ public class ModService extends Service {
 	boolean returnToPrev;
 	boolean paused;
 	String fileName;			// currently playing file
+	String currentTitle;
     ArrayList<String> fileArray = null;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
@@ -80,6 +80,8 @@ public class ModService extends Service {
 		isPlaying = false;
 		paused = false;
 		
+		notifier = new Notifier();
+		
 		watchdog = new Watchdog(15);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
 			public void onTimeout() {
@@ -93,7 +95,7 @@ public class ModService extends Service {
     @Override
 	public void onDestroy() {
     	watchdog.stop();
-    	nm.cancel(NOTIFY_ID);
+    	notifier.cancel();
     	end();
     }
 
@@ -106,17 +108,12 @@ public class ModService extends Service {
     	public void run() {
     		do {
 	    		for (int index = 0; index < fileArray.size(); index++) {
-		        	int idx = shuffleMode ? ridx.getIndex(index) : index;
-		        	
-		    		Log.i("Xmp ModService", "Load " + fileArray.get(idx));
-		       		if (xmp.loadModule(fileArray.get(idx)) < 0)
+		    		Log.i("Xmp ModService", "Load " + fileArray.get(index));
+		       		if (xmp.loadModule(fileArray.get(index)) < 0)
 		       			continue;
 
-		       		fileName = fileArray.get(idx);
-		       		String title = fileArray.size() > 1 ?
-		       			String.format("%s (%d/%d)",	xmp.getTitle(), index + 1, fileArray.size()) :
-		       			xmp.getTitle(); 
-		       		createNotification(title);
+		       		fileName = fileArray.get(index);
+		       		notifier.notification(xmp.getTitle(), index);
 		       		
 		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		    		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
@@ -186,11 +183,11 @@ public class ModService extends Service {
 		       		}
 	    		}
 	    		if (loopListMode)
-	    			ridx.randomize();
+	    			Collections.shuffle(fileArray);
     		} while (loopListMode);
 
     		watchdog.stop();
-        	nm.cancel(NOTIFY_ID);
+    		notifier.cancel();
         	end();
         	stopSelf();
     	}
@@ -215,31 +212,66 @@ public class ModService extends Service {
     	xmp.deinit();
     	audio.release();
     }
+	
+	private class Notifier {
+	    private NotificationManager nm;
+	    PendingIntent contentIntent;
+	    private static final int NOTIFY_ID = R.layout.player;
+		String title;
+		int index;
 
-    private void createNotification(String message) {
-    	nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-    	if (message == null)
-    		nm.cancel(NOTIFY_ID);
-    	PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-    					new Intent(this, Player.class), 0);
-        Notification notification = new Notification(
-        		R.drawable.notification, message, System.currentTimeMillis());   		
-        notification.setLatestEventInfo(this, getText(R.string.app_name),
-      	      message, contentIntent);
-        notification.flags |= Notification.FLAG_ONGOING_EVENT;
-        nm.notify(NOTIFY_ID, notification);    	
-    }
+		public Notifier() {
+			nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+	    	contentIntent = PendingIntent.getActivity(ModService.this, 0,
+					new Intent(ModService.this, Player.class), 0);
+		}
+		
+		private String message() {
+			return fileArray.size() > 1 ?
+				String.format("%s (%d/%d)", title, index, fileArray.size()) :
+				title;
+		}
+		
+		public void cancel() {
+			nm.cancel(NOTIFY_ID);
+		}
+		
+		public void notification() {
+			notification(null, null);
+		}
+		
+		public void notification(String title, int index) {
+			this.title = title;
+			this.index = index + 1;			
+			notification(message(), message());
+		}
+		
+		public void notification(String ticker) {
+			notification(ticker, message());
+		}
+		
+		public void notification(String ticker, String latest) {
+	        Notification notification = new Notification(
+	        		R.drawable.notification, ticker, System.currentTimeMillis());
+	        notification.setLatestEventInfo(ModService.this, getText(R.string.app_name),
+	        		latest, contentIntent);
+	        notification.flags |= Notification.FLAG_ONGOING_EVENT;	        
+	        nm.notify(NOTIFY_ID, notification);				
+		}
+	}
 
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
-		public void play(String[] files, boolean shuffle, boolean loopList) {
-			createNotification(null);
+		public void play(String[] files, boolean shuffle, boolean loopList) {	
+			notifier.notification();
 			fileArray = new ArrayList<String>(Arrays.asList(files));
-			ridx = new RandomIndex(fileArray.size());
 			shuffleMode = shuffle;
 			loopListMode = loopList;
 			returnToPrev = false;
 			stopPlaying = false;
 			paused = false;
+			
+			if (shuffleMode)
+				Collections.shuffle(fileArray);
 
 			if (isPlaying) {
 				Log.i("Xmp ModService", "Use existing player thread");
@@ -252,6 +284,12 @@ public class ModService extends Service {
 		   		playThread.start();
 			}
 			isPlaying = true;
+		}
+		
+		public void add(String[] files) {				
+			for (String s : files)
+				fileArray.add(s);
+			notifier.notification("Added to play queue");			
 		}
 	    
 	    public void stop() {

@@ -21,13 +21,6 @@
       android:title="@string/preferences_examples_title"
       android:summary="@string/preferences_examples_summary"
       android:defaultValue="true" />
-      
-    <CheckBoxPreference
-      android:key="enqueue"
-      android:persistent="true"
-      android:title="@string/preferences_enqueue_title"
-      android:summary="@string/preferences_enqueue_summary"
-      android:defaultValue="false" />
                     
     <Preference
       android:key="clear_cache"
