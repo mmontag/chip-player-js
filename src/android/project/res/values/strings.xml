@@ -89,10 +89,13 @@ GNU General Public License for more details.</string>
 <string name="preferences_buffer_ms_summary">Sound buffer duration</string>
     <string name="preferences_buffer_ms_title">Buffer size</string>
     <string name="preferences_buffer_ms_dialog">Set the size of sound buffer in milliseconds:</string>
-<string name="preferences_clear_cache_summary">Clear modules directory cache</string>
+<string name="preferences_clear_cache_summary">Clear module information cache</string>
     <string name="preferences_clear_cache_title">Clear cache</string>
     <string name="cache_clear">File cache cleared</string>
     <string name="cache_clear_error">Error clearing cache</string>
 <string name="preferences_show_time_summary">Show elapsed replay time</string>
     <string name="preferences_show_time_title">Display time</string>
+<string name="preferences_enqueue_title">Enqueue new files</string>
+    <string name="preferences_category_preferences">Preferences</string>
+    <string name="preferences_enqueue_summary">If a new file is selected during playback, add to queue instead of replacing</string>
 </resources>

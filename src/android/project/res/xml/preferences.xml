@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-
+  
   <PreferenceCategory
+    android:title="@string/preferences_category_preferences">
+  
+  <PreferenceScreen
     android:title="@string/preferences_category_files">
 
     <EditTextPreference
@@ -18,15 +21,22 @@
       android:title="@string/preferences_examples_title"
       android:summary="@string/preferences_examples_summary"
       android:defaultValue="true" />
-              
+      
+    <CheckBoxPreference
+      android:key="enqueue"
+      android:persistent="true"
+      android:title="@string/preferences_enqueue_title"
+      android:summary="@string/preferences_enqueue_summary"
+      android:defaultValue="false" />
+                    
     <Preference
       android:key="clear_cache"
       android:title="@string/preferences_clear_cache_title"
       android:summary="@string/preferences_clear_cache_summary" />
                  
-  </PreferenceCategory>
+  </PreferenceScreen>
   
-  <PreferenceCategory
+  <PreferenceScreen
     android:title="@string/preferences_category_sound">
       
     <ListPreference
@@ -90,9 +100,9 @@
       android:text="%"
       android:max="100" />
       
-  </PreferenceCategory>
+  </PreferenceScreen>
   
-  <PreferenceCategory
+  <PreferenceScreen
     android:title="@string/preferences_category_interface">
     
     <ListPreference
@@ -118,6 +128,7 @@
       android:summary="@string/preferences_show_toast_summary"
       android:defaultValue="true" />     
             
+  </PreferenceScreen>
   </PreferenceCategory>
   
   <PreferenceCategory
