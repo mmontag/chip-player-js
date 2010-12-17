@@ -13,7 +13,7 @@ static int depack_starpack (FILE *, FILE *);
 static int test_starpack (uint8 *, int);
 
 struct pw_format pw_starpack = {
-	"STP",
+	"STAR",
 	"Startrekker Packer",
 	0x00,
 	test_starpack,
@@ -22,19 +22,19 @@ struct pw_format pw_starpack = {
 
 int depack_starpack(FILE *in, FILE *out)
 {
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00, c5;
+	uint8 c1, c2, c3, c4, c5;
 	uint8 pnum[128];
 	uint8 pnum_tmp[128];
 	uint8 pat_pos;
-	uint8 Pattern[1024];
-	uint8 PatMax = 0x00;
+	uint8 buffer[1024];
+	uint8 num_pat = 0x00;
 	int i = 0, j = 0, k = 0;
 	int size, ssize = 0;
 	int paddr[128];
 	int paddr_tmp[128];
 	int paddr_tmp2[128];
 	int tmp_ptr, tmp1, tmp2;
-	int sdataAddress = 0;
+	int smp_addr = 0;
 
 	memset(pnum, 0, 128);
 	memset(pnum_tmp, 0, 128);
@@ -42,7 +42,7 @@ int depack_starpack(FILE *in, FILE *out)
 	memset(paddr_tmp, 0, 128 * 4);
 	memset(paddr_tmp2, 0, 128 * 4);
 
-	pw_move_data(in, out, 20);		/* title */
+	pw_move_data(out, in, 20);		/* title */
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);		/* sample name */
@@ -124,10 +124,10 @@ int depack_starpack(FILE *in, FILE *out)
 	}
 
 	/* assign pattern list */
-	for (c1 = 0x00; c1 < 128; c1++) {
-		for (c2 = 0x00; c2 < 128; c2++)
-			if (paddr[c1] == paddr_tmp[c2]) {
-				pnum_tmp[c1] = c2;
+	for (i = 0; i < 128; i++) {
+		for (j = 0; j < 128; j++)
+			if (paddr[i] == paddr_tmp[j]) {
+				pnum_tmp[i] = j;
 				break;
 			}
 	}
@@ -141,8 +141,8 @@ int depack_starpack(FILE *in, FILE *out)
 
 	/* get highest pattern number */
 	for (i = 0; i < pat_pos; i++) {
-		if (pnum[i] > PatMax)
-			PatMax = pnum[i];
+		if (pnum[i] > num_pat)
+			num_pat = pnum[i];
 	}
 
 	write8(out, 0x7f);			/* write noisetracker byte */
@@ -151,45 +151,45 @@ int depack_starpack(FILE *in, FILE *out)
 
 	/* read sample data address */
 	fseek(in, 0x310, SEEK_SET);
-	sdataAddress = read32b(in) + 0x314;
+	smp_addr = read32b(in) + 0x314;
 
 	/* pattern data */
 	fseek (in, 0x314, SEEK_SET);
-	PatMax += 1;
-	for (i = 0; i < PatMax; i++) {
-		memset(Pattern, 0, 1024);
+	num_pat += 1;
+	for (i = 0; i < num_pat; i++) {
+		memset(buffer, 0, 1024);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
-				fread (&c1, 1, 1, in);
+				int ofs = j * 16 + k * 4;
+				c1 = read8(in);
 				if (c1 == 0x80) {
-					Pattern[j * 16 + k * 4] = 0x00;
-					Pattern[j * 16 + k * 4 + 1] = 0x00;
-					Pattern[j * 16 + k * 4 + 2] = 0x00;
-					Pattern[j * 16 + k * 4 + 3] = 0x00;
+					buffer[ofs] = 0;
+					buffer[ofs + 1] = 0;
+					buffer[ofs + 2] = 0;
+					buffer[ofs + 3] = 0;
 					continue;
 				}
-				fread (&c2, 1, 1, in);
-				fread (&c3, 1, 1, in);
-				fread (&c4, 1, 1, in);
-				Pattern[j * 16 + k * 4] = c1 & 0x0f;
-				Pattern[j * 16 + k * 4 + 1] = c2;
-				Pattern[j * 16 + k * 4 + 2] = c3 & 0x0f;
-				Pattern[j * 16 + k * 4 + 3] = c4;
+				c2 = read8(in);
+				c3 = read8(in);
+				c4 = read8(in);
+				buffer[ofs] = c1 & 0x0f;
+				buffer[ofs + 1] = c2;
+				buffer[ofs + 2] = c3 & 0x0f;
+				buffer[ofs + 3] = c4;
 
 				c5 = (c1 & 0xf0) | ((c3 >> 4) & 0x0f);
-				c5 /= 4;
-				Pattern[j * 16 + k * 4] |= (c5 & 0xf0);
-				Pattern[j * 16 + k * 4 + 2] |=
-					((c5 << 4) & 0xf0);
+				c5 >>= 2;
+				buffer[ofs] |= c5 & 0xf0;
+				buffer[ofs + 2] |= (c5 << 4) & 0xf0;
 			}
 		}
-		fwrite(Pattern, 1024, 1, out);
+		fwrite(buffer, 1024, 1, out);
 		/*printf ( "+" ); */
 	}
 	/*printf ( "\n" ); */
 
 	/* sample data */
-	fseek (in, sdataAddress, 0);
+	fseek(in, smp_addr, 0);
 	pw_move_data(in, out, ssize);
 
 	return 0;
@@ -231,7 +231,6 @@ int test_starpack(uint8 *data, int s)
 		if ((j + 2) < ssize)
 			return -1;
 	}
-printf("e\n");
 
 	/* test #4  finetunes & volumes */
 	/* l is still the size of the pattern list */

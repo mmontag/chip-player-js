@@ -12,6 +12,7 @@ Stable versions
 	- fix Audacious plugin seek widget position setting
 	- remove nonexistent Modplug Tracker IT quirk (reported by Johannes
 	  Schultz, voice samples shouldn't play in Deep in Her Eyes remake)
+	- fix Startrekker Packer loader
 
 3.3.0 (20101202):
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)
