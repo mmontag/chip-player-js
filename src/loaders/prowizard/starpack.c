@@ -154,7 +154,6 @@ int depack_starpack(FILE *in, FILE *out)
 	smp_addr = read32b(in) + 0x314;
 
 	/* pattern data */
-	fseek (in, 0x314, SEEK_SET);
 	num_pat += 1;
 	for (i = 0; i < num_pat; i++) {
 		memset(buffer, 0, 1024);
@@ -162,13 +161,8 @@ int depack_starpack(FILE *in, FILE *out)
 			for (k = 0; k < 4; k++) {
 				int ofs = j * 16 + k * 4;
 				c1 = read8(in);
-				if (c1 == 0x80) {
-					buffer[ofs] = 0;
-					buffer[ofs + 1] = 0;
-					buffer[ofs + 2] = 0;
-					buffer[ofs + 3] = 0;
+				if (c1 == 0x80)
 					continue;
-				}
 				c2 = read8(in);
 				c3 = read8(in);
 				c4 = read8(in);
@@ -177,8 +171,7 @@ int depack_starpack(FILE *in, FILE *out)
 				buffer[ofs + 2] = c3 & 0x0f;
 				buffer[ofs + 3] = c4;
 
-				c5 = (c1 & 0xf0) | ((c3 >> 4) & 0x0f);
-				c5 >>= 2;
+				c5 = ((c1 & 0xf0) | ((c3 >> 4) & 0x0f)) >> 2;
 				buffer[ofs] |= c5 & 0xf0;
 				buffer[ofs + 2] |= (c5 << 4) & 0xf0;
 			}
@@ -190,7 +183,7 @@ int depack_starpack(FILE *in, FILE *out)
 
 	/* sample data */
 	fseek(in, smp_addr, 0);
-	pw_move_data(in, out, ssize);
+	pw_move_data(out, in, ssize);
 
 	return 0;
 }
