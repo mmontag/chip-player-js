@@ -13,7 +13,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -32,7 +31,7 @@ public class PlayList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
 	String name;
 	ModInterface modPlayer;
-	int addPosition;
+	String[] addList;
 	
 	@Override
 	public void onCreate(Bundle icicle) {	
@@ -92,6 +91,7 @@ public class PlayList extends PlaylistActivity {
 		menu.setHeaderTitle("Edit playlist");
 		menu.add(Menu.NONE, 0, 0, "Remove from playlist");
 		menu.add(Menu.NONE, 1, 1, "Add to play queue");
+		menu.add(Menu.NONE, 2, 2, "Add all to play queue");
 		// TODO: find a good way to not list current playlist
 		/*for (String each : PlaylistUtils.listNoSuffix()) {
 			i++;
@@ -102,20 +102,31 @@ public class PlayList extends PlaylistActivity {
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
-		int index = item.getItemId();
+		int id = item.getItemId();
 		
-		switch (index) {
+		switch (id) {
 		case 0:
 			removeFromPlaylist(name, info.position);
 			updateList();
 			break;
 		case 1:
+		case 2:
 			Intent service = new Intent(this, ModService.class);
-			addPosition = info.position;
+			
+			if (id == 1) {
+				addList = new String[] {
+					modList.get(info.position).filename
+				};
+			} else {
+				int size = modList.size();
+				addList = new String[size];
+				for (int i = 0; i < size; i++)
+					addList[i] = modList.get(i).filename;
+			}
 			if (ModService.isPlaying) {
 				bindService(service, connection, 0);
 			} else {
-	    		playModule(modList.get(info.position).filename);
+	    		playModule(addList);
 	    	}
 	    	break;
 		}
@@ -132,11 +143,8 @@ public class PlayList extends PlaylistActivity {
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			modPlayer = ModInterface.Stub.asInterface(service);
-			String filename = modList.get(addPosition).filename;
-			Log.i("Xmp PlayList", "Add " + filename + " to player queue");
-			String[] files = { filename };
 			try {				
-				modPlayer.add(files);
+				modPlayer.add(addList);
 			} catch (RemoteException e) {
 				Message.toast(PlayList.this, "Error adding module");
 			}

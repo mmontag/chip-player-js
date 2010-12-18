@@ -93,16 +93,16 @@ public class PlaylistActivity extends ListActivity {
 			}
 		}
 		if (i > 0) {
-			playModule(mods, false);
+			playModule(mods);
 		}
 	}
 	
 	void playModule(String mod) {
 		String[] mods = { mod };
-		playModule(mods, true);
+		playModule(mods);
 	}
 	
-	void playModule(String[] mods, boolean single) {
+	void playModule(String[] mods) {
 		if (showToasts) {
 			if (mods.length > 1)
 				Message.toast(this, "Play all modules in list");
