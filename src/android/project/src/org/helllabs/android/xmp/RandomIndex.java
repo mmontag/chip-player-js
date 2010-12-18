@@ -32,6 +32,10 @@ public class RandomIndex {
 		}
 	}
 	
+	public void randomize() {
+		randomize(0, idx.length);
+	}
+	
 	public void extend(int amount) {
 		int length = idx.length;
 		int[] newIdx = new int[length + amount];

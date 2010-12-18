@@ -31,10 +31,12 @@ public class QueueManager {
     public boolean next() {
     	index++;
     	if (index >= array.size()) {
-    		if (loopListMode)
+    		if (loopListMode) {
+    			ridx.randomize();
     			index = 0;
-    		else
+    		} else {
     			return false;
+    		}
     	}
     	return true;
     }
