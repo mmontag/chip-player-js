@@ -36,14 +36,14 @@ public class RandomIndex {
 		randomize(0, idx.length);
 	}
 	
-	public void extend(int amount) {
+	public void extend(int amount, int index) {
 		int length = idx.length;
 		int[] newIdx = new int[length + amount];
 		System.arraycopy(idx, 0, newIdx, 0, length);
 		for (int i = length; i < length + amount; i++)
 			newIdx[i] = i;
 		idx = newIdx;
-		randomize(length, amount);
+		randomize(index, idx.length - index);
 	}
 	
 	public int getIndex(int n) {

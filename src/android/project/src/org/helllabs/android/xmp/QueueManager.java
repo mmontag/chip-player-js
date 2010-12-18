@@ -19,9 +19,11 @@ public class QueueManager {
     }
     
     public void add(String[] files) {
-    	ridx.extend(files.length);
-		for (String s : files)
-			array.add(s);
+    	if (files.length > 0) {
+    		ridx.extend(files.length, index + 1);
+    		for (String s : files)
+    			array.add(s);
+    	}
     }
     
     public int size() {
@@ -51,7 +53,7 @@ public class QueueManager {
     		if (loopListMode)
     			index += array.size();
     		else
-    			index = 0;
+    			index = -1;
     	}
     }
     
