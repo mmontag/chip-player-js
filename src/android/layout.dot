@@ -1,21 +1,28 @@
 digraph layout {
 	/*rankdir=LR;*/
 
-	"File list"			[shape=box];
 	"Playlist menu"			[shape=box];
+	"File list"			[shape=box];
 	"Playlist"			[shape=box];
 	"Player"			[shape=box, label="Interface"];
 	"Service";
 	"Notification";
 
-	subgraph a {
+	subgraph {
 		rank=same;
 		"Service";
-		"Notification";
+		"Player";
 	}
 
-	"Playlist menu" -> "Playlist"	[label="select"];	
+	subgraph {
+		rank=same;
+		"File list";
+		"Playlist";
+	}
+
 	"Playlist menu" -> "File list"	[label="select"];	
+	"Playlist menu" -> "Playlist"	[label="select"];	
+	"File list" -> "Playlist"	[label="add"];
 	"Playlist" -> "Player"		[label="play"];
 	"File list" -> "Player"		[label="play"];
 	"Player" -> "Service"		[label="command"];

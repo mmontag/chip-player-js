@@ -28,7 +28,6 @@ public class ModService extends Service {
 	boolean stereo;
 	boolean interpolate;
 	Notifier notifier;
-	boolean shuffleMode = true;
 	boolean loopListMode = false;
 	boolean stopPlaying = false;
 	static boolean isPlaying = false;
@@ -103,16 +102,13 @@ public class ModService extends Service {
 	private class PlayRunnable implements Runnable {
     	public void run() {
     		do {
-	    		for (int i = 0; i < queue.size(); i++) {
-	    			int index = i;
-	    			
-		    		Log.i("Xmp ModService", "Load " + queue.getFilename(index));
-		    		queue.setPlayed(index, true);
-		       		if (xmp.loadModule(queue.getFilename(index)) < 0)
+	    		for (int i = 0; i < queue.size(); i++) {	    			
+		    		Log.i("Xmp ModService", "Load " + queue.getFilename());
+		       		if (xmp.loadModule(queue.getFilename()) < 0)
 		       			continue;
 
-		       		fileName = queue.getFilename(index);
-		       		notifier.notification(xmp.getTitle(), index);
+		       		fileName = queue.getFilename();
+		       		notifier.notification(xmp.getTitle(), i);
 		       		
 		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		    		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
@@ -154,25 +150,19 @@ public class ModService extends Service {
 		       			
 		       			watchdog.refresh();
 		       		}
-		      		
+
+		       		queue.next();
 		       		audio.stop();
 		       		xmp.endPlayer();
 		       		xmp.releaseModule();
 		       		
 		       		if (restartList) {
-		       			index = -1;
 		       			restartList = false;
 		       			continue;
 		       		}
 		       		
 		       		if (returnToPrev) {
-		       			index -= 2;
-		       			if (index < -1) {
-		       				if (loopListMode)
-		       					index += queue.size();
-		       				else
-		       					index = -1;
-		       			}
+		       			queue.previous();
 		       			returnToPrev = false;
 		       		}
 		       		
@@ -260,13 +250,11 @@ public class ModService extends Service {
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
 		public void play(String[] files, boolean shuffle, boolean loopList) {	
 			notifier.notification();
-			queue = new QueueManager(files);
-			shuffleMode = shuffle;
+			queue = new QueueManager(files, shuffle);
 			loopListMode = loopList;
 			returnToPrev = false;
 			stopPlaying = false;
 			paused = false;
-
 
 			if (isPlaying) {
 				Log.i("Xmp ModService", "Use existing player thread");
