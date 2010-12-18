@@ -116,7 +116,7 @@ public class ModService extends Service {
 		        	final int numClients = callbacks.beginBroadcast();
 		        	for (int j = 0; j < numClients; j++) {
 		        		try {
-		    				callbacks.getBroadcastItem(i).newModCallback(
+		    				callbacks.getBroadcastItem(j).newModCallback(
 		    							fileName, xmp.getInstruments());
 		    			} catch (RemoteException e) { }
 		        	}
