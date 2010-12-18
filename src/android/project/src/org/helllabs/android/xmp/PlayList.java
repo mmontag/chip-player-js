@@ -7,8 +7,13 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -26,6 +31,8 @@ class PlayListFilter implements FilenameFilter {
 public class PlayList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
 	String name;
+	ModInterface modPlayer;
+	int addPosition;
 	
 	@Override
 	public void onCreate(Bundle icicle) {	
@@ -81,9 +88,10 @@ public class PlayList extends PlaylistActivity {
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		int i = 0;
+		//int i = 0;
 		menu.setHeaderTitle("Edit playlist");
-		menu.add(Menu.NONE, i, i, "Remove from playlist");
+		menu.add(Menu.NONE, 0, 0, "Remove from playlist");
+		menu.add(Menu.NONE, 1, 1, "Add to play queue");
 		// TODO: find a good way to not list current playlist
 		/*for (String each : PlaylistUtils.listNoSuffix()) {
 			i++;
@@ -96,10 +104,23 @@ public class PlayList extends PlaylistActivity {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
 		
-		if (index == 0) {
+		Log.i("asd", "index = " + index);
+		switch (index) {
+		case 0:
 			removeFromPlaylist(name, info.position);
 			updateList();
-			return true;
+			break;
+		case 1:
+			Intent service = new Intent(this, ModService.class);
+			addPosition = info.position;
+			if (ModService.isPlaying) {
+				Log.i("asd", "will bind");
+				bindService(service, connection, 0);
+			} else {
+	    		Log.i("asd", "play " + modList.get(info.position).filename);
+	    		playModule(modList.get(info.position).filename);
+	    	}
+	    	break;
 		}
 		/*
 		index--;
@@ -111,6 +132,24 @@ public class PlayList extends PlaylistActivity {
 		return true;
 	}
 	
+	private ServiceConnection connection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			modPlayer = ModInterface.Stub.asInterface(service);
+			String filename = modList.get(addPosition).filename;
+			Log.i("Xmp PlayList", "Add " + filename + " to player queue");
+			String[] files = { filename };
+			try {				
+				modPlayer.add(files);
+			} catch (RemoteException e) {
+				Message.toast(PlayList.this, "Error adding module");
+			}
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			modPlayer = null;
+		}
+	};
+		
 	public void removeFromPlaylist(String playlist, int position) {
 		File file = new File(Settings.dataDir, name + ".playlist");
 		try {

@@ -35,7 +35,7 @@ public class ModService extends Service {
 	boolean shuffleMode = true;
 	boolean loopListMode = false;
 	boolean stopPlaying = false;
-	boolean isPlaying;
+	static boolean isPlaying = false;
 	boolean restartList;
 	boolean returnToPrev;
 	boolean paused;
