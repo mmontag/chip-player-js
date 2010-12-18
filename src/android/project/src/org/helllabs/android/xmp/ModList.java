@@ -52,6 +52,7 @@ public class ModList extends PlaylistActivity {
 	final Handler handler = new Handler();
 	String currentDir;
 	int directoryNum;
+	int parentNum;
 	
 	class DirFilter implements FileFilter {
 	    public boolean accept(File dir) {
@@ -114,12 +115,13 @@ public class ModList extends PlaylistActivity {
 		progressDialog = ProgressDialog.show(this,      
 				"Please wait", "Scanning module files...", true);
 
-		directoryNum = 0;
+		parentNum = directoryNum = 0;
 		final File modDir = new File(path);
 		new Thread() { 
 			public void run() {
 				if (!path.equals("/")) {
 					modList.add(new PlaylistInfo("..", "Parent directory", path + "/..", R.drawable.parent));
+					parentNum++;
 					directoryNum++;
 				}	
 				
@@ -191,7 +193,9 @@ public class ModList extends PlaylistActivity {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
 		int i = 0;
 		menu.setHeaderTitle("Add to playlist");
-		if (info.position < directoryNum) {
+		if (info.position < parentNum) {
+			// Do nothing
+		} else if (info.position < directoryNum) {
 			menu.add(Menu.NONE, i, i, "Files to new playlist");
 			for (String s : PlaylistUtils.listNoSuffix()) {
 				i++;
@@ -210,8 +214,10 @@ public class ModList extends PlaylistActivity {
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
-		
-		if (info.position < directoryNum) {			// Directories
+
+		if (info.position < parentNum) {					// Parent dir
+			// Do nothing
+		} else if (info.position < directoryNum) {			// Directories
 			PlaylistUtils p = new PlaylistUtils();
 			if (index == 0) {
 				p.filesToNewPlaylist(this, modList.get(info.position).filename, null);
