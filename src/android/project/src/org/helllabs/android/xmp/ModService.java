@@ -1,8 +1,6 @@
 package org.helllabs.android.xmp;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import org.helllabs.android.xmp.Watchdog.onTimeoutListener;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -18,8 +16,6 @@ import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
-
-import org.helllabs.android.xmp.Watchdog.onTimeoutListener;
 
 
 public class ModService extends Service {
@@ -41,7 +37,7 @@ public class ModService extends Service {
 	boolean paused;
 	String fileName;			// currently playing file
 	String currentTitle;
-    ArrayList<String> fileArray = null;
+	QueueManager queue;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
     
@@ -107,19 +103,22 @@ public class ModService extends Service {
 	private class PlayRunnable implements Runnable {
     	public void run() {
     		do {
-	    		for (int index = 0; index < fileArray.size(); index++) {
-		    		Log.i("Xmp ModService", "Load " + fileArray.get(index));
-		       		if (xmp.loadModule(fileArray.get(index)) < 0)
+	    		for (int i = 0; i < queue.size(); i++) {
+	    			int index = i;
+	    			
+		    		Log.i("Xmp ModService", "Load " + queue.getFilename(index));
+		    		queue.setPlayed(index, true);
+		       		if (xmp.loadModule(queue.getFilename(index)) < 0)
 		       			continue;
 
-		       		fileName = fileArray.get(index);
+		       		fileName = queue.getFilename(index);
 		       		notifier.notification(xmp.getTitle(), index);
 		       		
 		    		xmp.optInterpolation(prefs.getBoolean(Settings.PREF_INTERPOLATION, true));
 		    		xmp.optFilter(prefs.getBoolean(Settings.PREF_FILTER, true));
 			       		    	
 		        	final int numClients = callbacks.beginBroadcast();
-		        	for (int i = 0; i < numClients; i++) {
+		        	for (int j = 0; j < numClients; j++) {
 		        		try {
 		    				callbacks.getBroadcastItem(i).newModCallback(
 		    							fileName, xmp.getInstruments());
@@ -170,7 +169,7 @@ public class ModService extends Service {
 		       			index -= 2;
 		       			if (index < -1) {
 		       				if (loopListMode)
-		       					index += fileArray.size();
+		       					index += queue.size();
 		       				else
 		       					index = -1;
 		       			}
@@ -182,8 +181,6 @@ public class ModService extends Service {
 		       			break;
 		       		}
 	    		}
-	    		if (loopListMode)
-	    			Collections.shuffle(fileArray);
     		} while (loopListMode);
 
     		watchdog.stop();
@@ -227,8 +224,8 @@ public class ModService extends Service {
 		}
 		
 		private String message() {
-			return fileArray.size() > 1 ?
-				String.format("%s (%d/%d)", title, index, fileArray.size()) :
+			return queue.size() > 1 ?
+				String.format("%s (%d/%d)", title, index, queue.size()) :
 				title;
 		}
 		
@@ -263,15 +260,13 @@ public class ModService extends Service {
 	private final ModInterface.Stub binder = new ModInterface.Stub() {
 		public void play(String[] files, boolean shuffle, boolean loopList) {	
 			notifier.notification();
-			fileArray = new ArrayList<String>(Arrays.asList(files));
+			queue = new QueueManager(files);
 			shuffleMode = shuffle;
 			loopListMode = loopList;
 			returnToPrev = false;
 			stopPlaying = false;
 			paused = false;
-			
-			if (shuffleMode)
-				Collections.shuffle(fileArray);
+
 
 			if (isPlaying) {
 				Log.i("Xmp ModService", "Use existing player thread");
@@ -286,9 +281,8 @@ public class ModService extends Service {
 			isPlaying = true;
 		}
 		
-		public void add(String[] files) {				
-			for (String s : files)
-				fileArray.add(s);
+		public void add(String[] files) {	
+			queue.add(files);
 			notifier.notification("Added to play queue");			
 		}
 	    
