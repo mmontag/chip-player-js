@@ -185,9 +185,11 @@ public class ModService extends Service {
 	    isPlaying = false;
     	xmp.stopModule();
     	paused = false;
-    	try {
-			playThread.join();
-		} catch (InterruptedException e) { }
+    	if (playThread != null && playThread.isAlive()) {
+    		try {
+    			playThread.join();
+    		} catch (InterruptedException e) { }
+    	}
     	xmp.deinit();
     	audio.release();
     }
