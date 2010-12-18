@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 
 public class Player extends Activity {
 	static final int SETTINGS_REQUEST = 45;
@@ -37,10 +38,14 @@ public class Player extends Activity {
 	boolean paused = false;
 	boolean finishing = false;
 	boolean showTime, showElapsed;
-	TextView infoName, infoType, infoLen, infoTime;
+	TextView[] infoName = new TextView[2];
+	TextView[] infoType = new TextView[2];
+	TextView infoLen, infoTime;
 	TextView infoNpat, infoChn, infoIns, infoSmp;
 	TextView infoTpo, infoBpm, infoPos, infoPat; 
 	TextView infoInsList, elapsedTime;
+	ViewFlipper flipper;
+	int flipperPage;
 	String[] fileArray = null;
 	SharedPreferences prefs;
 	LinearLayout infoMeterLayout;
@@ -56,6 +61,7 @@ public class Player extends Activity {
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			modPlayer = ModInterface.Stub.asInterface(service);
+	       	flipperPage = 0;
 			
 			try {
 				modPlayer.registerCallback(playerCallback);
@@ -266,8 +272,10 @@ public class Player extends Activity {
 		
 		onNewIntent(getIntent());
     	
-		infoName = (TextView)findViewById(R.id.info_name);
-		infoType = (TextView)findViewById(R.id.info_type);
+		infoName[0] = (TextView)findViewById(R.id.info_name_0);
+		infoType[0] = (TextView)findViewById(R.id.info_type_0);
+		infoName[1] = (TextView)findViewById(R.id.info_name_1);
+		infoType[1] = (TextView)findViewById(R.id.info_type_1);
 		infoLen = (TextView)findViewById(R.id.info_len);
 		infoNpat = (TextView)findViewById(R.id.info_npat);
 		infoChn = (TextView)findViewById(R.id.info_chn);
@@ -282,6 +290,10 @@ public class Player extends Activity {
 		infoInsList = (TextView)findViewById(R.id.info_ins_list);
 		infoLayout = (LinearLayout)findViewById(R.id.info_layout);
 		elapsedTime = (TextView)findViewById(R.id.elapsed_time);
+		flipper = (ViewFlipper)findViewById(R.id.info_flipper);
+		
+		flipper.setInAnimation(this, R.anim.slide_in_right);
+		flipper.setOutAnimation(this, R.anim.slide_out_left);
 		
 		if (!showTime)
 			elapsedTime.setVisibility(LinearLayout.GONE);
@@ -441,9 +453,12 @@ public class Player extends Activity {
 			totalTime = m.time / 1000;
 	       	seekBar.setProgress(0);
 	       	seekBar.setMax(m.time / 100);
-	        	
-	       	infoName.setText(m.name);
-	       	infoType.setText(m.type);
+	        
+	       	flipperPage = (flipperPage + 1) % 2;
+	       	infoName[flipperPage].setText(m.name);
+	       	infoType[flipperPage].setText(m.type);
+	       	flipper.showNext();
+	       	
 	       	infoLen.setText(Integer.toString(m.len));
 	       	infoNpat.setText(Integer.toString(m.pat));
 	       	infoChn.setText(Integer.toString(m.chn));
