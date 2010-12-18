@@ -104,7 +104,6 @@ public class PlayList extends PlaylistActivity {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
 		
-		Log.i("asd", "index = " + index);
 		switch (index) {
 		case 0:
 			removeFromPlaylist(name, info.position);
@@ -114,10 +113,8 @@ public class PlayList extends PlaylistActivity {
 			Intent service = new Intent(this, ModService.class);
 			addPosition = info.position;
 			if (ModService.isPlaying) {
-				Log.i("asd", "will bind");
 				bindService(service, connection, 0);
 			} else {
-	    		Log.i("asd", "play " + modList.get(info.position).filename);
 	    		playModule(modList.get(info.position).filename);
 	    	}
 	    	break;
@@ -143,6 +140,7 @@ public class PlayList extends PlaylistActivity {
 			} catch (RemoteException e) {
 				Message.toast(PlayList.this, "Error adding module");
 			}
+			unbindService(connection);
 		}
 
 		public void onServiceDisconnected(ComponentName className) {

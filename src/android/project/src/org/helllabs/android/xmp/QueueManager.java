@@ -8,12 +8,14 @@ public class QueueManager {
 	private RandomIndex ridx;
 	private int index;
 	private boolean shuffleMode;
+	private boolean loopListMode;
     
-    public QueueManager(String[] files, boolean shuffle) {
+    public QueueManager(String[] files, boolean shuffle, boolean loop) {
     	index = 0;
     	array = new ArrayList<String>(Arrays.asList(files));
     	ridx = new RandomIndex(files.length);
     	shuffleMode = shuffle;
+    	loopListMode = loop;
     }
     
     public void add(String[] files) {
@@ -26,16 +28,29 @@ public class QueueManager {
     	return array.size();
     }
     
-    public void next() {
+    public boolean next() {
     	index++;
-    	if (index >= array.size())
-    		index = 0;
+    	if (index >= array.size()) {
+    		if (loopListMode)
+    			index = 0;
+    		else
+    			return false;
+    	}
+    	return true;
+    }
+    
+    public int index() {
+    	return index;
     }
     
     public void previous() {
-    	index--;
-    	if (index < 0)
-    		index = array.size() - 1;
+    	index -= 2;
+    	if (index < -1) {
+    		if (loopListMode)
+    			index += array.size();
+    		else
+    			index = 0;
+    	}
     }
     
     public String getFilename() {

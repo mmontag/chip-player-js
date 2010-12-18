@@ -23,7 +23,8 @@ public class RandomIndex {
 	}
 
 	public void randomize(int start, int length) {
-		for (int i = start; i < length; i++) {				
+		int end = start + length;
+		for (int i = start; i < end; i++) {				
 			int r = start + random.nextInt(length);
 			int temp = idx[i];
 			idx[i] = idx[r];
@@ -34,7 +35,7 @@ public class RandomIndex {
 	public void extend(int amount) {
 		int length = idx.length;
 		int[] newIdx = new int[length + amount];
-		System.arraycopy(newIdx, 0, idx, 0, length);
+		System.arraycopy(idx, 0, newIdx, 0, length);
 		for (int i = length; i < length + amount; i++)
 			newIdx[i] = i;
 		idx = newIdx;
