@@ -238,7 +238,7 @@ public class ModList extends PlaylistActivity {
 			} else if (id == numPlists + 1) {
 				addToQueue(info.position, 1);
 			} else if (id == numPlists + 2) {
-				addToQueue(0, modList.size());
+				addToQueue(directoryNum, modList.size() - directoryNum);
 			}
 		}
 
