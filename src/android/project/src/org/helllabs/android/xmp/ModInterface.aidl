@@ -16,6 +16,7 @@ interface ModInterface {
 	void getVolumes(out int[] volumes);
 	void nextSong();
 	void prevSong(); 
+	boolean isPaused();
 	boolean toggleLoop();
 	String getFileName();
 	String[] getInstruments();

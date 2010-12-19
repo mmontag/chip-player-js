@@ -57,6 +57,10 @@ public class QueueManager {
     	}
     }
     
+    public void restart() {
+    	index = -1;
+    }
+    
     public String getFilename() {
     	int idx = shuffleMode ? ridx.getIndex(index) : index;
     	return array.get(idx);

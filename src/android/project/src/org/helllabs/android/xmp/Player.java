@@ -74,6 +74,12 @@ public class Player extends Activity {
 				// Reconnect to existing service
 				try {
 					showNewMod(modPlayer.getFileName(), modPlayer.getInstruments());
+						
+					if (modPlayer.isPaused()) {
+						pause();
+					} else {
+						unpause();
+					}
 				} catch (RemoteException e) { }
 			}
 		}
@@ -408,12 +414,10 @@ public class Player extends Activity {
 				seeking = true;
 			}
 
-			public void onStopTrackingTouch(SeekBar s) {				
+			public void onStopTrackingTouch(SeekBar s) {
 				try {
 					modPlayer.seek(s.getProgress());
-				} catch (RemoteException e) {
-
-				}
+				} catch (RemoteException e) { }
 				seeking = false;
 			}
 		});

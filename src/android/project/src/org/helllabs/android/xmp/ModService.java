@@ -32,7 +32,7 @@ public class ModService extends Service {
 	static boolean isPlaying = false;
 	boolean restartList;
 	boolean returnToPrev;
-	static boolean paused;
+	boolean paused;
 	String fileName;			// currently playing file
 	String currentTitle;
 	QueueManager queue;
@@ -100,7 +100,7 @@ public class ModService extends Service {
 	
 	private class PlayRunnable implements Runnable {
     	public void run() {
-    		do {	    			
+    		do {
 	    		Log.i("Xmp ModService", "Load " + queue.getFilename());
 	       		if (xmp.loadModule(queue.getFilename()) < 0)
 	       			continue;
@@ -154,6 +154,7 @@ public class ModService extends Service {
 	       		xmp.releaseModule();
 	       		
 	       		if (restartList) {
+	       			queue.restart();
 	       			restartList = false;
 	       			continue;
 	       		}
@@ -326,6 +327,10 @@ public class ModService extends Service {
 				xmp.setFlag(Xmp.XMP_CTL_LOOP);
 				return true;
 			}
+		}
+		
+		public boolean isPaused() {
+			return paused;
 		}
 		
 		// for Reconnection
