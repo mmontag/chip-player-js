@@ -415,9 +415,11 @@ public class Player extends Activity {
 			}
 
 			public void onStopTrackingTouch(SeekBar s) {
-				try {
-					modPlayer.seek(s.getProgress());
-				} catch (RemoteException e) { }
+				if (modPlayer != null) {
+					try {
+						modPlayer.seek(s.getProgress());
+					} catch (RemoteException e) { }
+				}
 				seeking = false;
 			}
 		});
