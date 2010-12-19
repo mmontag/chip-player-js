@@ -5,10 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -22,6 +26,8 @@ public class PlaylistActivity extends ListActivity {
 	boolean loopMode = false;
 	SharedPreferences prefs;
 	boolean showToasts;
+	ModInterface modPlayer;
+	String[] addList;
 	
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
@@ -75,7 +81,7 @@ public class PlaylistActivity extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		playModule(modList.get(position).filename);
 	}
-	
+
 	void playModule(List<PlaylistInfo> list) {
 		int num = 0;
 		for (PlaylistInfo p : list) {
@@ -114,5 +120,39 @@ public class PlaylistActivity extends ListActivity {
 		intent.putExtra("shuffle", shuffleMode);
 		intent.putExtra("loop", loopMode);
 		startActivity(intent);
+	}
+	
+	// Connection
+	
+	private ServiceConnection connection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			modPlayer = ModInterface.Stub.asInterface(service);
+			try {				
+				modPlayer.add(addList);
+			} catch (RemoteException e) {
+				Message.toast(PlaylistActivity.this, "Error adding module");
+			}
+			unbindService(connection);
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			modPlayer = null;
+		}
+	};
+	
+	protected void addToQueue(int start, int size) {
+		String[] list = new String[size];
+		
+		for (int i = 0; i < size; i++)
+			list[i] = modList.get(start + i).filename;
+		
+		Intent service = new Intent(this, ModService.class);
+		
+		if (ModService.isPlaying) {
+			addList = list;
+			bindService(service, connection, 0);
+		} else {
+    		playModule(list);
+    	}
 	}
 }

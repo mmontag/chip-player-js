@@ -72,7 +72,7 @@ public class PlaylistMenu extends ListActivity {
 		
 		list.clear();
 		list.add(new PlaylistInfo("Module list", "Files in " + media_path,
-							R.drawable.folder));
+							R.drawable.sdcard));
 		
 		for (String p : PlaylistUtils.listNoSuffix()) {
 			list.add(new PlaylistInfo(p, PlaylistUtils.readComment(this, p),

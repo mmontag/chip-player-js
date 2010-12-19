@@ -30,8 +30,6 @@ class PlayListFilter implements FilenameFilter {
 public class PlayList extends PlaylistActivity {
 	static final int SETTINGS_REQUEST = 45;
 	String name;
-	ModInterface modPlayer;
-	String[] addList;
 	
 	@Override
 	public void onCreate(Bundle icicle) {	
@@ -110,24 +108,10 @@ public class PlayList extends PlaylistActivity {
 			updateList();
 			break;
 		case 1:
+			addToQueue(info.position, 1);
+			break;
 		case 2:
-			Intent service = new Intent(this, ModService.class);
-			
-			if (id == 1) {
-				addList = new String[] {
-					modList.get(info.position).filename
-				};
-			} else {
-				int size = modList.size();
-				addList = new String[size];
-				for (int i = 0; i < size; i++)
-					addList[i] = modList.get(i).filename;
-			}
-			if (ModService.isPlaying) {
-				bindService(service, connection, 0);
-			} else {
-	    		playModule(addList);
-	    	}
+			addToQueue(0, modList.size());
 	    	break;
 		}
 		/*
@@ -140,22 +124,6 @@ public class PlayList extends PlaylistActivity {
 		return true;
 	}
 	
-	private ServiceConnection connection = new ServiceConnection() {
-		public void onServiceConnected(ComponentName className, IBinder service) {
-			modPlayer = ModInterface.Stub.asInterface(service);
-			try {				
-				modPlayer.add(addList);
-			} catch (RemoteException e) {
-				Message.toast(PlayList.this, "Error adding module");
-			}
-			unbindService(connection);
-		}
-
-		public void onServiceDisconnected(ComponentName className) {
-			modPlayer = null;
-		}
-	};
-		
 	public void removeFromPlaylist(String playlist, int position) {
 		File file = new File(Settings.dataDir, name + ".playlist");
 		try {

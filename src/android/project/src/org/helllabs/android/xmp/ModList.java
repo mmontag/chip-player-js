@@ -204,36 +204,42 @@ public class ModList extends PlaylistActivity {
 		} else {
 			menu.add(Menu.NONE, i, i, "New playlist...");
 			for (String each : PlaylistUtils.listNoSuffix()) {
-				i++;
-				menu.add(Menu.NONE, i, i, "Add to " + each);
+				i++; menu.add(Menu.NONE, i, i, "Add to " + each);
 			}
+			i++; menu.add(Menu.NONE, i, i, "Add to play queue");
+			i++; menu.add(Menu.NONE, i, i, "Add all to play queue");
 		}
 	}
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
-		int index = item.getItemId();
+		int id = item.getItemId();
 
 		if (info.position < parentNum) {					// Parent dir
 			// Do nothing
 		} else if (info.position < directoryNum) {			// Directories
 			PlaylistUtils p = new PlaylistUtils();
-			if (index == 0) {
+			if (id == 0) {
 				p.filesToNewPlaylist(this, modList.get(info.position).filename, null);
 			} else {
-				index--;
-				p.filesToPlaylist(this, modList.get(info.position).filename, PlaylistUtils.listNoSuffix()[index]);
+				id--;
+				p.filesToPlaylist(this, modList.get(info.position).filename, PlaylistUtils.listNoSuffix()[id]);
 			}
-		} else {				// Files
-			if (index == 0) {						// Files
+		} else {										// Files
+			int numPlists = PlaylistUtils.list().length;
+			if (id == 0) {
 				(new PlaylistUtils()).newPlaylist(this);
-				return true;
+			} else if (id <= numPlists) {
+				id--;
+				PlaylistInfo pi = modList.get(info.position);
+				String line = pi.filename + ":" + pi.comment + ":" + pi.name;
+				PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[id], line);
+			} else if (id == numPlists + 1) {
+				addToQueue(info.position, 1);
+			} else if (id == numPlists + 2) {
+				addToQueue(0, modList.size());
 			}
-			index--;
-			PlaylistInfo pi = modList.get(info.position);
-			String line = pi.filename + ":" + pi.comment + ":" + pi.name;
-			PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[index], line);
 		}
 
 		return true;
