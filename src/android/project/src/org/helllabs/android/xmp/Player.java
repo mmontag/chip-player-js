@@ -507,9 +507,11 @@ public class Player extends Activity {
 			modPlayer.stop();
 		} catch (RemoteException e1) { }
 		paused = false;
-		
-		try {
-			progressThread.join();
-		} catch (InterruptedException e) { }
+
+		if (progressThread != null && progressThread.isAlive()) {
+			try {
+				progressThread.join();
+			} catch (InterruptedException e) { }
+		}
 	}
 }

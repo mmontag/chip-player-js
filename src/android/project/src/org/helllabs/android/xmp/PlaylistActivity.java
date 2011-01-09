@@ -81,7 +81,7 @@ public class PlaylistActivity extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		playModule(modList.get(position).filename);
 	}
-
+	
 	void playModule(List<PlaylistInfo> list) {
 		int num = 0;
 		for (PlaylistInfo p : list) {
