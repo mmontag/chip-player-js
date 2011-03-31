@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.helllabs.android.xmp"
 	android:versionCode="16"
-	android:versionName="2.1.1 (Enqueue modules from file list, pause playback on phone call)"
+	android:versionName="2.1.1"
 	android:installLocation="auto">
 	<uses-sdk
 		android:minSdkVersion="3"
