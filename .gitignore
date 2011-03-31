@@ -5,10 +5,14 @@
 *.a
 *.obj
 *.mod
+*.xm
+*.s3m
 *.mod.nt
 mod.*
 *.zip
 *.tar.gz
+*.exe
+*.dll
 tags
 depend
 *~
