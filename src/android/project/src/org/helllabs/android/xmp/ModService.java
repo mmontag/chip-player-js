@@ -6,6 +6,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
@@ -15,6 +16,7 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 
@@ -38,6 +40,9 @@ public class ModService extends Service {
 	QueueManager queue;
     final RemoteCallbackList<PlayerCallback> callbacks =
 		new RemoteCallbackList<PlayerCallback>();
+    boolean autoPaused = false;		// paused on phone call
+    XmpPhoneStateListener listener;
+    TelephonyManager tm;
     
     @Override
 	public void onCreate() {
@@ -75,6 +80,10 @@ public class ModService extends Service {
 		paused = false;
 		
 		notifier = new Notifier();
+		listener = new XmpPhoneStateListener(this);
+		
+		tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+		tm.listen(listener, XmpPhoneStateListener.LISTEN_CALL_STATE);
 		
 		watchdog = new Watchdog(15);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
@@ -342,6 +351,7 @@ public class ModService extends Service {
 		public String[] getInstruments() {
 			return xmp.getInstruments();
 		}
+
 		
 		// Callback
 		
@@ -355,4 +365,20 @@ public class ModService extends Service {
             	callbacks.unregister(cb);
         }
 	};
+	
+	
+	// for Telephony
+	
+	public boolean autoPause(boolean pause) {
+		Log.i("Xmp ModService", "Auto pause changed to " + pause + ", previously " + autoPaused);
+		if (pause) {
+			paused = autoPaused = true;
+		} else {
+			if (autoPaused) {
+				paused = autoPaused = false;
+			}
+		}	
+		
+		return autoPaused;
+	}
 }
