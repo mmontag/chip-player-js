@@ -85,7 +85,7 @@ public class ModService extends Service {
 		tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 		tm.listen(listener, XmpPhoneStateListener.LISTEN_CALL_STATE);
 		
-		watchdog = new Watchdog(15);
+		watchdog = new Watchdog(10);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
 			public void onTimeout() {
 				Log.e("Xmp ModService", "Stopped by watchdog");
