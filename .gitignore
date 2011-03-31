@@ -7,10 +7,13 @@
 *.mod
 *.xm
 *.s3m
+*.it
+*.med
 *.mod.nt
 mod.*
 *.zip
 *.tar.gz
+*.rar
 *.exe
 *.dll
 tags
