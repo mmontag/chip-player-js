@@ -8,6 +8,7 @@
 
 /*
  * devfs /dev/sound/dsp support by Dirk Jagdmann
+ * resume/onpause by Test Rat <ttsestt@gmail.com>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,7 +41,8 @@ static void setaudio(struct xmp_options *);
 static int init(struct xmp_context *);
 static void shutdown(struct xmp_context *);
 static void bufdump(struct xmp_context *, int);
-static void flush(void);
+static void resume(void);
+static void onpause(void);
 
 static void dummy()
 {
@@ -71,8 +73,8 @@ struct xmp_drv_info drv_oss = {
 	xmp_smix_setpan,	/* setpan */
 	dummy,			/* setbend */
 	xmp_smix_seteffect,	/* seteffect */
-	dummy,			/* starttimer */
-	flush,			/* stoptimer */
+	resume,			/* starttimer */
+	onpause,		/* stoptimer */
 	dummy,			/* reset */
 	bufdump,		/* bufdump */
 	dummy,			/* bufwipe */
@@ -233,10 +235,23 @@ static void shutdown(struct xmp_context *ctx)
 	close(audio_fd);
 }
 
-static void flush()
+static void resume()
 {
-	if (!do_sync)
-		return;
+#ifdef SNDCTL_DSP_SETTRIGGER
+	int trig = PCM_ENABLE_OUTPUT;
+	ioctl(audio_fd, SNDCTL_DSP_SETTRIGGER, &trig);
+#endif
+}
 
-	ioctl(audio_fd, SNDCTL_DSP_SYNC, NULL);
+static void onpause()
+{
+#ifdef SNDCTL_DSP_SETTRIGGER
+	int trig = 0;
+	ioctl(audio_fd, SNDCTL_DSP_SETTRIGGER, &trig);
+#else
+	ioctl(audio_fd, SNDCTL_DSP_RESET, NULL);
+#endif
+
+	if (do_sync)
+		ioctl(audio_fd, SNDCTL_DSP_SYNC, NULL);
 }
