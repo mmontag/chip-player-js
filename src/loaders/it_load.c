@@ -852,7 +852,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    if (o->big_endian)
 			xmp_cvt_sex(m->xxs[i].len, buf);
 		} else {
-		    itsex_decompress8(f, buf, m->xxs[i].len, ifh.cmwt == 0x0215);
+		    itsex_decompress8(f, buf, m->xxs[i].len, 
+					ish.convert & IT_CVT_DIFF);
 		}
 
 		xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,

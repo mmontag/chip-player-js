@@ -40,9 +40,9 @@
 /* IT sample conversion flags */
 #define IT_CVT_SIGNED	0x01
 #define IT_CVT_BIGEND	0x02	/* 'safe to ignore' according to ittech.txt */
-#define IT_CVT_DIFF	0x04	/* idem */
-#define IT_CVT_BYTEDIFF	0x08	/* idem */
-#define IT_CVT_12BIT	0x10	/* idem */
+#define IT_CVT_DIFF	0x04	/* Compressed sample flag */
+#define IT_CVT_BYTEDIFF	0x08	/* 'safe to ignore' according to ittech.txt */
+#define IT_CVT_12BIT	0x10	/* 'safe to ignore' according to ittech.txt */
 
 /* IT envelope flags */
 #define IT_ENV_ON	0x01
