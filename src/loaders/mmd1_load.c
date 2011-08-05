@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2010 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2011 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -55,88 +55,7 @@ static int mmd1_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-#define NUM_INST_TYPES 9
-static char *inst_type[] = {
-	"HYB",			/* -2 */
-	"SYN",			/* -1 */
-	"SMP",			/*  0 */
-	"I5O",			/*  1 */
-	"I3O",			/*  2 */
-	"I2O",			/*  3 */
-	"I4O",			/*  4 */
-	"I6O",			/*  5 */
-	"I7O",			/*  6 */
-	"EXT",			/*  7 */
-};
-
-static int bpm_on, bpmlen;
-
-static void xlat_fx(struct xxm_event *event)
-{
-	if (event->fxt > 0x0f) {
-		event->fxt = event->fxp = 0;
-		return;
-	}
-
-	switch (event->fxt) {
-	case 0x05:		/* Old vibrato */
-		event->fxp = (LSN(event->fxp) << 4) | MSN(event->fxp);
-		break;
-	case 0x06:		/* Not defined in MED 3.2 */
-	case 0x07:		/* Not defined in MED 3.2 */
-		break;
-	case 0x08:		/* Set hold/decay */
-		break;
-	case 0x09:		/* Set secondary tempo */
-		event->fxt = FX_TEMPO;
-		break;
-	case 0x0d:		/* Volume slide */
-		event->fxt = FX_VOLSLIDE;
-		break;
-	case 0x0e:		/* Synth JMP */
-		break;
-	case 0x0f:
-		if (event->fxp == 0x00) {	/* Jump to next block */
-			event->fxt = 0x0d;
-			break;
-		} else if (event->fxp <= 0x0a) {
-			break;
-		} else if (event->fxp <= 0xf0) {
-			event->fxt = FX_S3M_BPM;
-			if (bpm_on)
-				event->fxp = event->fxp * 8 / bpmlen;
-			break;
-		} else switch (event->fxp) {
-		case 0xf1:	/* Play note twice */
-			event->fxt = FX_EXTENDED;
-			event->fxp = (EX_RETRIG << 4) | 3;
-			break;
-		case 0xf2:	/* Delay note */
-			event->fxt = FX_EXTENDED;
-			event->fxp = (EX_DELAY << 4) | 3;
-			break;
-		case 0xf3:	/* Play note three times */
-			event->fxt = FX_EXTENDED;
-			event->fxp = (EX_RETRIG << 4) | 2;
-			break;
-		case 0xf8:	/* Turn filter off */
-		case 0xf9:	/* Turn filter on */
-		case 0xfa:	/* MIDI pedal on */
-		case 0xfb:	/* MIDI pedal off */
-		case 0xfd:	/* Set pitch */
-		case 0xfe:	/* End of song */
-			event->fxt = event->fxp = 0;
-			break;
-		case 0xff:	/* Note cut */
-			event->fxt = FX_EXTENDED;
-			event->fxp = (EX_CUT << 4) | 3;
-			break;
-		default:
-			event->fxt = event->fxp = 0;
-		}
-		break;
-	}
-}
+static int bpm_on, bpmlen, med_8ch;
 
 static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 {
@@ -225,6 +144,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 	m->c4rate = C4_NTSC_RATE;
 	m->quirk |= song.flags & FLAG_STSLIDE ? 0 : XMP_QRK_VSALL;
+	med_8ch = song.flags & FLAG_8CHANNEL;
 	bpm_on = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
 	m->quirk |= XMP_QRK_MEDBPM;
@@ -237,25 +157,16 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * lower, the faster). Values 11-240 are equivalent to 10.
 	 */
 
-	/* Just a half-assed implementation of the spec above for tempo 1
-	 * in PrivInv.med
-	 */
-	if (!bpm_on && song.deftempo < 10)
-		song.deftempo = 0x35 - song.deftempo * 2;
-
-	/* FIXME: med tempos are incorrectly handled */
 	if (bpm_on) {
 		m->xxh->tpo = song.tempo2;
 		m->xxh->bpm = song.deftempo * bpmlen / 16;
 
-		if (m->xxh->bpm < 25)		/* ?? for superaxe.med */
-			m->xxh->bpm = 25;
+		if (m->xxh->bpm < 25)           /* ?? for superaxe.med */
+		  m->xxh->bpm = 25;
 	} else {
 		m->xxh->tpo = song.tempo2;
-		m->xxh->bpm = song.deftempo;
-
-		if (m->xxh->bpm <= 10)
-			m->xxh->bpm = m->xxh->bpm * 33 / 6;
+		m->xxh->bpm = med_8ch ?
+			mmd_get_8ch_tempo(song.deftempo) : song.deftempo;
 	}
 
 	m->xxh->pat = song.numblocks;
@@ -417,7 +328,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 					event->ins = e[1] & 0x3f;
 					event->fxt = e[2];
 					event->fxp = e[3];
-					xlat_fx(event);
+					mmd_xlat_fx(event, bpm_on,
+							bpmlen, med_8ch);
 				}
 			}
 		} else {		/* MMD0 */
@@ -436,7 +348,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 					    | ((e[0] & 0x40) >> 1);
 					event->fxt = e[1] & 0x0f;
 					event->fxp = e[2];
-					xlat_fx(event);
+					mmd_xlat_fx(event, bpm_on,
+							bpmlen, med_8ch);
 				}
 			}
 		}
@@ -479,8 +392,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			}
 
 			report("\n[%2x] %-40.40s %s ", i, name,
-				instr.type + 2 <= NUM_INST_TYPES ?
-					inst_type[instr.type + 2] : "???");
+				instr.type + 2 <= MMD_INST_TYPES ?
+					mmd_inst_type[instr.type + 2] : "???");
 		}
 
 		exp_smp.finetune = 0;

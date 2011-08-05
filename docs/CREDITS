@@ -110,6 +110,9 @@ The Authors
 * Geoff Reedy <vader21@imsa.edu>
 - xxmp window title patch
 
+* Francis Russell <francis@unchartedbackwaters.co.uk>
+- OctaMED tempo fixes
+
 * Adam Sampson <ats@offog.org>
 - buildsystem and configuration file location fixes
 
