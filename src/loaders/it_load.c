@@ -797,16 +797,19 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    copy_adjust(m->xxs[i].name, ish.name, 24);
 	}
 
+#define MAX(x) ((x) > 0xfffff ? 0xfffff : (x))
+
 	if (V(2) || (~ifh.flags & IT_USE_INST && V(1))) {
 	    if (strlen((char *) ish.name) || m->xxs[i].len > 1) {
 		report (
 		    "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 		    "%02x%02x %02x%02x %5d ",
-		    i, ish.name,
+		    i, ifh.flags & IT_USE_INST ?
+				m->xxih[i].name : m->xxs[i].name,
 		    m->xxs[i].len,
 		    ish.flags & IT_SMP_16BIT ? '+' : ' ',
-		    m->xxs[i].lps, m->xxs[i].lpe,
-		    ish.sloopbeg, ish.sloopend,
+		    MAX(m->xxs[i].lps), MAX(m->xxs[i].lpe),
+		    MAX(ish.sloopbeg), MAX(ish.sloopend),
 		    ish.flags, ish.convert,
 		    ish.vol, ish.gvl, ish.c5spd
 		);
