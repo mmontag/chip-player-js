@@ -394,8 +394,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	break;
     case 0x08:
+    case 0x7f:
 	if (ifh.cwt == 0x0888) {
 	    sprintf(tracker_name, "OpenMPT 1.17+");
+	} else if (ifh.cwt == 0x7fff) {
+	    sprintf(tracker_name, "munch.py");
 	} else {
 	    sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
 	}
@@ -859,7 +862,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
 				XMP_SMP_NOLOAD | cvt, &m->xxs[i], buf);
 		free (buf);
-		reportv(ctx, 0, "c");
+		reportv(ctx, 0, ish.convert & IT_CVT_DIFF ? "C" : "c");
 	    } else {
 		if (o->skipsmp) {
 		    fseek(f, m->xxs[i].len, SEEK_CUR);

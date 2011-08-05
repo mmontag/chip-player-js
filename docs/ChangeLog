@@ -16,6 +16,7 @@ Stable versions
 	- fix IT215 compressed sample loader (reported by Ben "GreaseMonkey"
 	  Russell)
 	- use start/stoptimer also for pause in OSS driver (by Test Rat)
+	- identify modules created with munch.py in IT loader
 
 3.3.0 (20101202):
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)
