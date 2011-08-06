@@ -1,7 +1,7 @@
 
 PLUGIN_OBJS	=
 PLUGIN_DFILES	= Makefile $(PLUGIN_OBJS:.o=.c) xmms.c bmp.c audacious.c \
-		  winamp.c resource.rc resource.h in2.h out.h
+		  audacious3.c winamp.c resource.rc resource.h in2.h out.h
 PLUGIN_PATH	= src/plugin
 
 dist-plugin:
@@ -11,6 +11,10 @@ dist-plugin:
 
 WINDRES = i586-mingw32msvc-windres
 
+
+# ------------------------------------------------------------------------
+# Audacious 2 plugin
+# ------------------------------------------------------------------------
 
 plugin-audacious: $(PLUGIN_PATH)/xmp-audacious.so
 
@@ -31,6 +35,32 @@ install-plugin-audacious:
 	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-audacious.so "$$DIR"
 
 
+# ------------------------------------------------------------------------
+# Audacious 3 plugin
+# ------------------------------------------------------------------------
+
+plugin-audacious3: $(PLUGIN_PATH)/xmp-audacious3.so
+
+$(PLUGIN_PATH)/xmp-audacious3.so: $(PLUGIN_PATH)/audacious3.lo $(LOBJS) $(D_LOBJS)
+	@CMD='$(LD) -shared -o $@ $(LOBJS) $(D_LOBJS) $(PLUGIN_PATH)/audacious3.lo `pkg-config --libs audacious`'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+$(PLUGIN_PATH)/audacious3.lo: $(PLUGIN_PATH)/audacious3.c $(PLUGIN_PATH)/Makefile
+	@CMD='$(CC) $(CFLAGS) -fPIC -D_REENTRANT $(XCFLAGS) `pkg-config --cflags audacious` -o $@ $(PLUGIN_PATH)/audacious3.c'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $@ ; fi; \
+	eval $$CMD
+
+install-plugin-audacious3:
+	@DIR="$(DESTDIR)`pkg-config --variable=input_plugin_dir audacious`"; \
+	echo "Installing xmp-audacious3.so in $$DIR"; \
+	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
+	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-audacious3.so "$$DIR"
+
+
+# ------------------------------------------------------------------------
+# BMP plugin
+# ------------------------------------------------------------------------
 
 plugin-bmp: $(PLUGIN_PATH)/xmp-bmp.so
 
@@ -51,6 +81,9 @@ install-plugin-bmp:
 	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-bmp.so "$$DIR"
 
 
+# ------------------------------------------------------------------------
+# XMMS plugin
+# ------------------------------------------------------------------------
 
 plugin-xmms: $(PLUGIN_PATH)/xmp-xmms.so
 
@@ -70,6 +103,10 @@ install-plugin-xmms:
 	[ -d "$$DIR" ] || mkdir -p "$$DIR"; \
 	$(INSTALL_PROGRAM) $(PLUGIN_PATH)/xmp-xmms.so "$$DIR"
 
+
+# ------------------------------------------------------------------------
+# Winamp plugin
+# ------------------------------------------------------------------------
 
 # A hack to make this link correctly. It should be D_LOBJS but smix.lo
 # fails to link (undefined _GLOBAL_OFFSET_TABLE_)

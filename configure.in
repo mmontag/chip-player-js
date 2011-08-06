@@ -239,10 +239,13 @@ dnl -----------------------------------------------------------------------
 if test "${enable_audacious_plugin}" = "yes"; then
     audacious_cflags="`pkg-config --cflags audacious 2>/dev/null`"
     if test ! -z "${audacious_cflags}"; then
-        AS_MESSAGE(checking for Audacious flags... ${audacious_cflags}...)
+        AS_MESSAGE(checking for Audacious flags... ${audacious_cflags})
+        audacious_version="`pkg-config --modversion audacious 2>/dev/null`"
+        audacious_version_maj="`echo ${audacious_version}|cut -f1 -d.`"
+        AS_MESSAGE(checking for Audacious version... ${audacious_version_maj})
     else
         if test "${enable_audacious_plugin}" = "yes"; then
-            AC_MSG_ERROR(Can't find Audacious files)
+            AC_MSG_ERROR(Can't find Audacious pkgconfig files)
         fi
         AC_MSG_WARN(not found)
         enable_audacious_plugin="no"
@@ -254,7 +257,11 @@ if test "${enable_audacious_plugin}" = "yes"; then
     AC_CHECK_HEADERS(audacious/plugin.h)
 
     if test "${ac_cv_header_audacious_plugin_h}" = "yes"; then
-        PLUGINS="$PLUGINS plugin-audacious"
+        if test "${audacious_version_maj}" -ge 3; then
+            PLUGINS="$PLUGINS plugin-audacious3"
+        else
+            PLUGINS="$PLUGINS plugin-audacious"
+	fi
     fi
 fi
 
