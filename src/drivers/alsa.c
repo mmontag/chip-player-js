@@ -84,8 +84,8 @@ static int init(struct xmp_context *ctx)
 	int ret;
 	char *token, **parm;
 	unsigned int channels, rate;
-	unsigned int btime = 2000000;	/* 2s */
-	unsigned int ptime = 100000;	/* 100ms */
+	unsigned int btime = 250000;	/* 250ms */
+	unsigned int ptime = 50000;	/* 50ms */
 	char *card_name = "default";
 	struct xmp_options *o = &ctx->o;
 
