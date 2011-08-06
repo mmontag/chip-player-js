@@ -591,7 +591,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 				/* Not a synth instrument */
 				if (!p->m.med_wav_table[event->ins - 1]) {
-					while (event->note > (35 + 36))
+					while (event->note > (36 + 36))
 						event->note -= 12;
 				}
 			}

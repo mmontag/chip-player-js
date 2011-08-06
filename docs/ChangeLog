@@ -18,6 +18,7 @@ Stable versions
 	- use start/stoptimer also for pause in OSS driver (by Test Rat)
 	- identify modules created with munch.py in IT loader
 	- OctaMED MMD0/1/2/3 tempo fixes (by Francis Russell)
+	- MMD0/1 note limit fix (by Francis Russell)
 
 3.3.0 (20101202):
 	- change MED BPM mode tempo setting (reported by Lorence Lombardo)
