@@ -62,13 +62,8 @@ void mmd_xlat_fx(struct xxm_event *event, int bpm_on, int bpmlen, int med_8ch)
 			event->fxt = 0x0d;
 			break;
 		} else if (event->fxp <= 0xf0) {
-                        if (bpm_on) {
-				event->fxt = FX_S3M_BPM;
-				event->fxp = event->fxp * 8 / bpmlen;
-			} else if (med_8ch) {
-				event->fxt = FX_S3M_BPM;
-		        	event->fxp = mmd_get_8ch_tempo(event->fxp);
-			}
+			event->fxt = FX_S3M_BPM;
+                        event->fxp = med_8ch ? mmd_get_8ch_tempo(event->fxp) : (bpm_on ? event->fxp/bpmlen : event->fxp);
 			break;
 		} else switch (event->fxp) {
 		case 0xf1:	/* Play note twice */

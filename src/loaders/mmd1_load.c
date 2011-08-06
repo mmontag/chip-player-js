@@ -157,17 +157,10 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * lower, the faster). Values 11-240 are equivalent to 10.
 	 */
 
-	if (bpm_on) {
-		m->xxh->tpo = song.tempo2;
-		m->xxh->bpm = song.deftempo * bpmlen / 16;
-
-		if (m->xxh->bpm < 25)           /* ?? for superaxe.med */
-		  m->xxh->bpm = 25;
-	} else {
-		m->xxh->tpo = song.tempo2;
-		m->xxh->bpm = med_8ch ?
-			mmd_get_8ch_tempo(song.deftempo) : song.deftempo;
-	}
+        m->xxh->tpo = song.tempo2;
+        m->xxh->bpm = med_8ch ?
+			mmd_get_8ch_tempo(song.deftempo) :
+			(bpm_on ? song.deftempo / bpmlen : song.deftempo);
 
 	m->xxh->pat = song.numblocks;
 	m->xxh->ins = song.numsamples;
