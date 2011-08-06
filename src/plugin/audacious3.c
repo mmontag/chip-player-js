@@ -42,6 +42,7 @@ struct {
 	gboolean fixloops, modrange, convert8bit, interpolation, filter;
 	gfloat panamp;
 } guicfg;
+
 static void configure_init(void);
 
 #define FREQ_SAMPLE_44 0
@@ -377,11 +378,11 @@ static gboolean play(InputPlayback *ipb, const gchar *_filename, VFSFile *file, 
 
 		xmp_get_buffer(ctx, &data, &size);
 
-        	if ( !stop_flag && jumpToTime<0 ) {
+        	if (!stop_flag && jumpToTime<0) {
 			ipb->output->write_audio(data,size);
         	}
 
-		if ( (xmp_player_frame(ctx) != 0) && jumpToTime<0 ) {
+		if ((xmp_player_frame(ctx) != 0) && jumpToTime<0) {
 			stop_flag = TRUE;
  DRAIN:
 			while (!stop_flag && ipb->output->buffer_playing()) {
@@ -437,15 +438,15 @@ static void configure_apply()
 
 #define CFGWRITEINT(x) aud_cfg_db_set_int (cfg, "XMP", #x, xmp_cfg.x)
 
-	CFGWRITEINT (mixing_freq);
-	CFGWRITEINT (force8bit);
-	CFGWRITEINT (convert8bit);
-	CFGWRITEINT (modrange);
-	CFGWRITEINT (fixloops);
-	CFGWRITEINT (force_mono);
-	CFGWRITEINT (interpolation);
-	CFGWRITEINT (filter);
-	CFGWRITEINT (pan_amplitude);
+	CFGWRITEINT(mixing_freq);
+	CFGWRITEINT(force8bit);
+	CFGWRITEINT(convert8bit);
+	CFGWRITEINT(modrange);
+	CFGWRITEINT(fixloops);
+	CFGWRITEINT(force_mono);
+	CFGWRITEINT(interpolation);
+	CFGWRITEINT(filter);
+	CFGWRITEINT(pan_amplitude);
 
 	aud_cfg_db_close(cfg);
 }
