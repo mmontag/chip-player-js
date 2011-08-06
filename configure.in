@@ -185,14 +185,15 @@ dnl Check for XMMS
 dnl -----------------------------------------------------------------------
 
 if test "${enable_xmms_plugin}" = "yes"; then
+    AS_ECHO_N("checking for XMMS flags... ")
     xmms_cflags="`xmms-config --cflags 2>/dev/null`"
     if test ! -z "${xmms_cflags}"; then
-        AS_MESSAGE(checking for XMMS flags... ${xmms_cflags}...)
+        AS_ECHO("found")
     else
+        AS_ECHO("not found")
         if test "${enable_xmms_plugin}" = "yes"; then
             AC_MSG_ERROR(Can't find XMMS files)
         fi
-        AC_MSG_WARN(not found)
         enable_xmms_plugin="no"
     fi
 fi
@@ -211,14 +212,15 @@ dnl Check for Beep Media Player
 dnl -----------------------------------------------------------------------
 
 if test "${enable_bmp_plugin}" = "yes"; then
+    AS_ECHO_N("checking for Beep Media Player flags... ")
     bmp_cflags="`pkg-config --cflags bmp 2>/dev/null`"
     if test ! -z "${bmp_cflags}"; then
-        AS_MESSAGE(checking for Beep Media Player flags... ${bmp_cflags}...)
+        AS_ECHO("found")
     else
+        AS_ECHO("not found")
         if test "${enable_bmp_plugin}" = "yes"; then
             AC_MSG_ERROR(Can't find Beep Media Player files)
         fi
-        AC_MSG_WARN(not found)
         enable_bmp_plugin="no"
     fi
 fi
@@ -237,17 +239,18 @@ dnl Check for Audacious
 dnl -----------------------------------------------------------------------
 
 if test "${enable_audacious_plugin}" = "yes"; then
+    AS_ECHO_N("checking for Audacious flags... ")
     audacious_cflags="`pkg-config --cflags audacious 2>/dev/null`"
     if test ! -z "${audacious_cflags}"; then
-        AS_MESSAGE(checking for Audacious flags... ${audacious_cflags})
+        AS_ECHO("found")
         audacious_version="`pkg-config --modversion audacious 2>/dev/null`"
         audacious_version_maj="`echo ${audacious_version}|cut -f1 -d.`"
-        AS_MESSAGE(checking for Audacious version... ${audacious_version_maj})
+        AS_ECHO("checking for Audacious version... ${audacious_version_maj}")
     else
+        AS_ECHO("not found")
         if test "${enable_audacious_plugin}" = "yes"; then
             AC_MSG_ERROR(Can't find Audacious pkgconfig files)
         fi
-        AC_MSG_WARN(not found)
         enable_audacious_plugin="no"
     fi
 fi
@@ -286,10 +289,12 @@ dnl Check for aRts
 dnl -----------------------------------------------------------------------
 
 if test "${enable_arts}" = "yes"; then
+    AS_ECHO_N("checking for aRts flags... ")
     arts_cflags="`artsc-config --cflags 2>/dev/null`"
     if test ! -z "${arts_cflags}"; then
-	AS_MESSAGE(checking for aRts flags... ${arts_cflags}...)
+	AS_ECHO("found")
     else
+	AS_ECHO("not found")
 	if test "${enable_arts}" = "yes"; then
 	    AC_MSG_ERROR(Can't find aRts files (is artsc-config in PATH?))
 	fi
