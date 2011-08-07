@@ -649,10 +649,12 @@ int main(int argc, char **argv)
 		read_keyboard();
 
 		if (paused) {
+			xmp_timer_stop(ctx);
 			usleep(100000);
 		} else {
 			if (xmp_player_frame(ctx) != 0)
 				break;
+			xmp_timer_restart(ctx);
 			xmp_play_buffer(ctx);
 		}
 	}
