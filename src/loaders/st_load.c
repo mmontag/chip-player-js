@@ -159,7 +159,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
     int i, j;
-    int smp_size, pat_size;
+    int smp_size;
     struct xxm_event ev, *event;
     struct st_header mh;
     uint8 mod_event[4];
@@ -174,7 +174,6 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->ins = 15;
     m->xxh->smp = m->xxh->ins;
     smp_size = 0;
-    pat_size = 0;
 
     fread(mh.name, 1, 20, f);
     for (i = 0; i < 15; i++) {
@@ -204,8 +203,6 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (m->xxo[i] > m->xxh->pat)
 	    m->xxh->pat = m->xxo[i];
     m->xxh->pat++;
-
-    pat_size = 256 * m->xxh->chn * m->xxh->pat;
 
     for (i = 0; i < m->xxh->ins; i++) {
 	/* UST: Volume word does not contain a "Finetuning" value in its
