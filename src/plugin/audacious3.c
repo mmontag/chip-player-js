@@ -262,7 +262,8 @@ Tuple *probe_for_tuple(const gchar *_filename, VFSFile *fd)
 }
 
 
-static gboolean play(InputPlayback *ipb, const gchar *_filename, VFSFile *file, gint start_time, gint stop_time, gboolean pause) {
+static gboolean play(InputPlayback *ipb, const gchar *_filename, VFSFile *file, gint start_time, gint stop_time, gboolean pause)
+{
 	int channelcnt = 1;
 	FILE *f;
 	struct xmp_options *opt;
@@ -285,7 +286,7 @@ static gboolean play(InputPlayback *ipb, const gchar *_filename, VFSFile *file, 
 	jumpToTime = (start_time > 0) ? start_time : -1;
 	stop_flag = FALSE;
 
-	if ((f = fopen(filename,"rb")) == 0) {
+	if ((f = fopen(filename, "rb")) == 0) {
 		goto PLAY_ERROR_1;
 	}
 	fclose(f);
@@ -378,11 +379,11 @@ static gboolean play(InputPlayback *ipb, const gchar *_filename, VFSFile *file, 
 
 		xmp_get_buffer(ctx, &data, &size);
 
-        	if (!stop_flag && jumpToTime<0) {
-			ipb->output->write_audio(data,size);
+        	if (!stop_flag && jumpToTime < 0) {
+			ipb->output->write_audio(data, size);
         	}
 
-		if ((xmp_player_frame(ctx) != 0) && jumpToTime<0) {
+		if ((xmp_player_frame(ctx) != 0) && jumpToTime < 0) {
 			stop_flag = TRUE;
  DRAIN:
 			while (!stop_flag && ipb->output->buffer_playing()) {
@@ -476,7 +477,7 @@ void xmp_aud_about()
 
 	audgui_simple_message(&about_window, GTK_MESSAGE_INFO,
                           g_strdup_printf(
-                "Extended Module Player %s",VERSION),
+                "Extended Module Player %s", VERSION),
                 "Written by Claudio Matsuoka and Hipolito Carraro Jr.\n"
                 "\n"
                 "Portions Copyright (C) 1998,2000 Olivier Lapicque,\n"
