@@ -402,8 +402,14 @@ void read_keyboard()
 	    break;
 	case ' ':	/* paused module */
 	    paused ^= 1;
+
+	    if (paused)
+		xmp_timer_stop(ctx);
+	    else
+		xmp_timer_restart(ctx);
+
 	    if (verbosity) {
-	    	fprintf (stderr, "%s",  paused ?
+	    	fprintf (stderr, "%s", paused ?
 				"] - PAUSED\b\b\b\b\b\b\b\b\b\b" :
 				"]         \b\b\b\b\b\b\b\b\b\b");
 	    }
@@ -649,12 +655,10 @@ int main(int argc, char **argv)
 		read_keyboard();
 
 		if (paused) {
-			xmp_timer_stop(ctx);
 			usleep(100000);
 		} else {
 			if (xmp_player_frame(ctx) != 0)
 				break;
-			xmp_timer_restart(ctx);
 			xmp_play_buffer(ctx);
 		}
 	}
