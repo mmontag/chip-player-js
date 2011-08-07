@@ -20,6 +20,7 @@ Stable versions
 	- OctaMED MMD0/1/2/3 tempo fixes (by Francis Russell)
 	- MMD0/1 note limit fix (by Francis Russell)
 	- improve latency in ALSA driver output
+	- Audacious 2.4 API 17 plugin fixes
 	- add Audacious 3.0 plugin (by Michael Schwendt)
 
 3.3.0 (20101202):

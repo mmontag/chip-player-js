@@ -644,7 +644,11 @@ static gpointer play_loop(gpointer arg)
 	while (xmp_player_frame(ctx) == 0) {
 		xmp_get_buffer(ctx, &data, &size);
 
-#if __AUDACIOUS_PLUGIN_API__ >= 2
+#if __AUDACIOUS_PLUGIN_API__ >= 17
+		while (ipb->playing && ipb->output->buffer_playing())
+			g_usleep (10000);
+		ipb->output->write_audio(data, size);
+#elif __AUDACIOUS_PLUGIN_API__ >= 2
 		play_data.ipb->pass_audio(play_data.ipb, play_data.fmt,
 			play_data.nch, size, data, &play_data.ipb->playing);
 
@@ -940,15 +944,15 @@ static void config_ok(GtkWidget *widget, gpointer data)
 
 #define CFGWRITEINT(x) aud_cfg_db_set_int (cfg, "XMP", #x, xmp_cfg.x)
 
-	CFGWRITEINT (mixing_freq);
-	CFGWRITEINT (force8bit);
-	CFGWRITEINT (convert8bit);
-	CFGWRITEINT (modrange);
-	CFGWRITEINT (fixloops);
-	CFGWRITEINT (force_mono);
-	CFGWRITEINT (interpolation);
-	CFGWRITEINT (filter);
-	CFGWRITEINT (pan_amplitude);
+	CFGWRITEINT(mixing_freq);
+	CFGWRITEINT(force8bit);
+	CFGWRITEINT(convert8bit);
+	CFGWRITEINT(modrange);
+	CFGWRITEINT(fixloops);
+	CFGWRITEINT(force_mono);
+	CFGWRITEINT(interpolation);
+	CFGWRITEINT(filter);
+	CFGWRITEINT(pan_amplitude);
 
 	aud_cfg_db_close(cfg);
 
