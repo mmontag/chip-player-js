@@ -480,6 +480,8 @@ void xmp_aud_about()
                 "Extended Module Player %s", VERSION),
                 "Written by Claudio Matsuoka and Hipolito Carraro Jr.\n"
                 "\n"
+		"Audacious 3 plugin by Michael Schwendt\n"
+                "\n"
                 "Portions Copyright (C) 1998,2000 Olivier Lapicque,\n"
                 "(C) 1998 Tammo Hinrichs, (C) 1998 Sylvain Chipaux,\n"
                 "(C) 1997 Bert Jahn, (C) 1999 Tatsuyuki Satoh, (C)\n"
