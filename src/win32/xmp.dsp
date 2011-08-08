@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "../include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.4.0-pre\"" /D "_CRT_SECURE_NO_WARNINGS" /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "../include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.4.0\"" /D "_CRT_SECURE_NO_WARNINGS" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "../win32" /I "../include" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.4.0-pre\"" /D "_CRT_SECURE_NO_WARNINGS" /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "../win32" /I "../include" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.4.0\"" /D "_CRT_SECURE_NO_WARNINGS" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
@@ -238,15 +238,15 @@ SOURCE=..\loaders\stim_load.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\mmd_common.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\mmd1_load.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\loaders\mmd3_load.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\loaders\med2_load.c
 # End Source File
 # Begin Source File
 
@@ -287,6 +287,10 @@ SOURCE=..\loaders\dtt_load.c
 # Begin Source File
 
 SOURCE=..\loaders\mgt_load.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\med2_load.c
 # End Source File
 # Begin Source File
 

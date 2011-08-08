@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-3.4.0 ():
+3.4.0 (20110808):
 	- fix reported elapsed time with looped modules
 	- fix portamento of mapped instruments (reported by Null Vista)
 	- add MED2 (MED 1.12) module support
