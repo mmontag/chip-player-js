@@ -343,7 +343,7 @@ void read_keyboard()
 
     /* Interactive commands */
 
-    if (nocmd)
+    if (nocmd || background)
 	return;
 
 #if defined HAVE_TERMIOS_H && !defined WIN32
