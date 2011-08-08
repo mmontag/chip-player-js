@@ -403,16 +403,17 @@ void read_keyboard()
 	case ' ':	/* paused module */
 	    paused ^= 1;
 
-	    if (paused)
-		xmp_timer_stop(ctx);
-	    else
-		xmp_timer_restart(ctx);
-
 	    if (verbosity) {
 	    	fprintf (stderr, "%s", paused ?
 				"] - PAUSED\b\b\b\b\b\b\b\b\b\b" :
 				"]         \b\b\b\b\b\b\b\b\b\b");
 	    }
+
+	    if (paused)
+		xmp_timer_stop(ctx);
+	    else
+		xmp_timer_restart(ctx);
+
 	    break;
 	case '1':
 	case '2':
