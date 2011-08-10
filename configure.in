@@ -684,12 +684,17 @@ dnl add extra gcc flags
 dnl -U_FORTIFY_SOURCE prevents ignored return value warnings
 
 if test "${GCC-no}" = yes; then
-    CFLAGS="${CFLAGS} -Wall -finline-functions -Wno-unknown-warning-option -Wno-unused-but-set-variable -U_FORTIFY_SOURCE"
+    CFLAGS="${CFLAGS} -Wall -finline-functions -U_FORTIFY_SOURCE"
     XMP_CACHED_TRY_RUN(whether gcc needs -fsigned-char,
         ac_cv_c_flag_f_signed_char,,[
         main(){char foo=0xff;return(foo<0);}],
 	CFLAGS="${CFLAGS} -fsigned-char")
 fi
+
+XMP_CACHED_TRY_RUN(whether gcc understands -Wunused-but-set-variable,
+    ac_cv_c_flag_w_no_unused_but_set_variable,,[
+    main(){int foo=0xff}],
+    CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")
 
 for sound_hdr in sys/soundcard.h machine/soundcard.h; do
     sound_safe=`echo "$sound_hdr" | sed 'y%./+-%__p_%'`
