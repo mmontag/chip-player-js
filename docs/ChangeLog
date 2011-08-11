@@ -5,7 +5,8 @@ Stable versions
 	- test for unused but set variable warning in gcc (needed to
 	  build on MacOS X, reported by Misty De Meo)
 	- fix format specifiers in CoreAudio driver messages (reported
-	  by Misty de Meo)
+	  by Misty De Meo)
+	- build audacious3 driver if system has Audacious 2.5
 
 3.4.0 (20110808):
 	- fix reported elapsed time with looped modules
