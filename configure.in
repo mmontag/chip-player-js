@@ -245,7 +245,8 @@ if test "${enable_audacious_plugin}" = "yes"; then
         AS_ECHO("found")
         audacious_version="`pkg-config --modversion audacious 2>/dev/null`"
         audacious_version_maj="`echo ${audacious_version}|cut -f1 -d.`"
-        AS_ECHO("checking for Audacious version... ${audacious_version_maj}")
+        audacious_version_min="`echo ${audacious_version}|cut -f2 -d.`"
+        AS_ECHO("checking for Audacious version... ${audacious_version_maj}.${audacious_version_min}")
     else
         AS_ECHO("not found")
         if test "${enable_audacious_plugin}" = "yes"; then
@@ -261,6 +262,8 @@ if test "${enable_audacious_plugin}" = "yes"; then
 
     if test "${ac_cv_header_audacious_plugin_h}" = "yes"; then
         if test "${audacious_version_maj}" -ge 3; then
+            PLUGINS="$PLUGINS plugin-audacious3"
+        elif test "${audacious_version_maj}" -ge 2 -a "${audacious_version_min}" -ge 5; then
             PLUGINS="$PLUGINS plugin-audacious3"
         else
             PLUGINS="$PLUGINS plugin-audacious"

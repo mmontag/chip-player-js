@@ -595,7 +595,9 @@ static PreferencesWidget prefs[] = {
 };
 
 PluginPreferences xmp_aud_preferences = {
+#if _AUD_PLUGIN_VERSION > 20
 	.domain = "xmpaudplugin",
+#endif
 	.title = "Extended Module Player Configuration",
 	.prefs = prefs,
 	.n_prefs = G_N_ELEMENTS(prefs),
@@ -604,6 +606,7 @@ PluginPreferences xmp_aud_preferences = {
 	.apply = configure_apply,
 };
 
+/* Filtering files by suffix is really stupid. */
 const gchar* const fmts[] = {
 	"xm", "mod", "m15", "it", "s2m", "s3m", "stm", "stx", "med", "dmf",
 	"mtm", "ice", "imf", "ptm", "mdl", "ult", "liq", "psm", "amf",
@@ -613,8 +616,16 @@ const gchar* const fmts[] = {
 	"zen", "crb", "tdd", "gmc", "gdm", "mdz", "xmz", "s3z", "j2b", NULL
 };
 
+#ifndef AUD_INPUT_PLUGIN
+#define AUD_INPUT_PLUGIN(x...) InputPlugin xmp_ip = { x };
+#endif
+
 AUD_INPUT_PLUGIN (
+#if _AUD_PLUGIN_VERSION > 20
 	.name		= "XMP Plugin " VERSION,
+#else
+	.description	= "XMP Plugin " VERSION,
+#endif
 	.init		= init,
 	.about		= xmp_aud_about,
 	.settings	= &xmp_aud_preferences,
@@ -625,5 +636,9 @@ AUD_INPUT_PLUGIN (
 	.is_our_file_from_vfs = is_our_file_from_vfs,
 	.cleanup	= cleanup,
 	.mseek		= mseek,
+#if _AUD_PLUGIN_VERSION > 20
 	.extensions	= fmts,
+#else
+	.vfs_extensions	= fmts,
+#endif
 )
