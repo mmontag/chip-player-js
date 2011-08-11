@@ -12,6 +12,7 @@ Stable versions
 	- fix reported elapsed time with looped modules
 	- fix portamento of mapped instruments (reported by Null Vista)
 	- add MED2 (MED 1.12) module support
+	- add Noiserunner module support
 	- add support for MED4 synth instruments (reported by Tim Newsham)
 	- fix MED4 Soundtracker-compatible tempo setting (Song2.med)
 	- fix Audacious plugin crash if module is invalid (reported by
