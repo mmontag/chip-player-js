@@ -76,7 +76,7 @@ depend:
 	@echo > $@
 	@for i in $(OBJS) $(D_OBJS) $(M_OBJS); do \
 	    c="$${i%.o}.c"; l="$${i%.o}.lo"; \
-	    $(CC) $(CFLAGS) $(XCFLAGS) -MM -MG $$c | \
+	    $(CC) $(CFLAGS) $(XCFLAGS) -MM $$c | \
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 	    
