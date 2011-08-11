@@ -206,26 +206,26 @@ static int init(struct xmp_context *ctx)
 	}
 
 	if ((err = OpenAComponent(comp, &au))) {
-		fprintf(stderr, "error: OpenAComponent (%ld)\n", err);
+		fprintf(stderr, "error: OpenAComponent (%d)\n", (int)err);
 		return XMP_ERR_DINIT;
 	}
 
 	if ((err = AudioUnitInitialize(au))) {
-		fprintf(stderr, "error: AudioUnitInitialize (%ld)\n", err);
+		fprintf(stderr, "error: AudioUnitInitialize (%d)\n", (int)err);
 		return XMP_ERR_DINIT;
 	}
 
 	if ((err = AudioUnitSetProperty(au, kAudioUnitProperty_StreamFormat,
 			kAudioUnitScope_Input, 0, &ad, sizeof(ad)))) {
-		fprintf(stderr, "error: AudioUnitSetProperty: StreamFormat (%ld)\n", err);
+		fprintf(stderr, "error: AudioUnitSetProperty: StreamFormat (%d)\n", (int)err);
 		fprintf(stderr, "mSampleRate = %lf\n", ad.mSampleRate);
-		fprintf(stderr, "mFormatID = 0x%lx\n", ad.mFormatID);
-		fprintf(stderr, "mFormatFlags = 0x%lx\n", ad.mFormatFlags);
-		fprintf(stderr, "mChannelsPerFrame = %ld\n", ad.mChannelsPerFrame);
-		fprintf(stderr, "mBitsPerChannel = %ld\n", ad.mBitsPerChannel);
-		fprintf(stderr, "mBytesPerFrame = %ld\n", ad.mBytesPerFrame);
-		fprintf(stderr, "mBytesPerPacket = %ld\n", ad.mBytesPerPacket);
-		fprintf(stderr, "mFramesPerPacket = %ld\n", ad.mFramesPerPacket);
+		fprintf(stderr, "mFormatID = 0x%x\n", (unsigned)ad.mFormatID);
+		fprintf(stderr, "mFormatFlags = 0x%x\n", (unsigned)ad.mFormatFlags);
+		fprintf(stderr, "mChannelsPerFrame = %d\n", (int)ad.mChannelsPerFrame);
+		fprintf(stderr, "mBitsPerChannel = %d\n", (int)ad.mBitsPerChannel);
+		fprintf(stderr, "mBytesPerFrame = %d\n", (int)ad.mBytesPerFrame);
+		fprintf(stderr, "mBytesPerPacket = %d\n", (int)ad.mBytesPerPacket);
+		fprintf(stderr, "mFramesPerPacket = %d\n", (int)ad.mFramesPerPacket);
 
 		return XMP_ERR_DINIT;
 	}
@@ -233,7 +233,7 @@ static int init(struct xmp_context *ctx)
 	size = sizeof(UInt32);
         if ((err = AudioUnitGetProperty(au, kAudioDevicePropertyBufferSize,
 			kAudioUnitScope_Input, 0, &max_frames, &size))) {
-		fprintf(stderr, "error: AudioUnitGetProperty: BufferSize (%ld)\n", err);
+		fprintf(stderr, "error: AudioUnitGetProperty: BufferSize (%d)\n", (int)err);
 		return XMP_ERR_DINIT;
 	}
 
@@ -252,7 +252,7 @@ static int init(struct xmp_context *ctx)
 
 	if ((err = AudioUnitSetProperty(au, kAudioUnitProperty_SetRenderCallback,
 			kAudioUnitScope_Input, 0, &rc, sizeof(rc)))) {
-		fprintf(stderr, "error: AudioUnitSetProperty: SetRenderCallback (%ld)\n", err);
+		fprintf(stderr, "error: AudioUnitSetProperty: SetRenderCallback (%d)\n", (int)err);
 		return XMP_ERR_DINIT;
 	}
 	
