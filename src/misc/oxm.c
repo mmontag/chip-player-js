@@ -53,7 +53,7 @@ int test_oxm(FILE *f)
 	uint8 buf[1024];
 
 	fseek(f, 0, SEEK_SET);
-	if (fread(buf, 16, 1, f) < 16)
+	if (fread(buf, 1, 16, f) < 16)
 		return -1;
 	if (memcmp(buf, "Extended Module:", 16))
 		return -1;

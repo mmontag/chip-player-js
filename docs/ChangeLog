@@ -9,6 +9,7 @@ Stable versions
 	- build audacious3 driver if system has Audacious 2.5
 	- change dependency generation flags for clang (reported by Misty
 	  De Meo)
+	- fix OXM module loading
 
 3.4.0 (20110808):
 	- fix reported elapsed time with looped modules
