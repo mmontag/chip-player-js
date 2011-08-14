@@ -14,7 +14,9 @@
 	
 	<ViewFlipper android:id="@+id/info_flipper"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content">
+		android:layout_height="wrap_content"
+		android:paddingLeft="2dp"
+		android:background="#1a305d">
 		<LinearLayout
 			android:orientation="vertical"
 			android:layout_width="fill_parent"
@@ -22,12 +24,23 @@
 			<TextView android:id="@+id/info_name_0"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
-				android:textAppearance="?android:attr/textAppearanceLarge" />
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:singleLine="true"
+				android:shadowColor="#101010"
+				android:shadowDx="1.0"
+				android:shadowDy="1.0"
+				android:shadowRadius="1.0" />
 				
 			<TextView android:id="@+id/info_type_0"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
-				android:textAppearance="?android:attr/textAppearanceMedium" />
+				android:textAppearance="?android:attr/textAppearanceMedium"
+				android:singleLine="true"
+				android:textColor="#c0c0c0"
+				android:shadowColor="#101010"
+				android:shadowDx="1.0"
+				android:shadowDy="1.0"
+				android:shadowRadius="1.0" />
 		</LinearLayout>
 		<LinearLayout
 			android:orientation="vertical"
@@ -36,25 +49,29 @@
 			<TextView android:id="@+id/info_name_1"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
-				android:textAppearance="?android:attr/textAppearanceLarge" />
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:singleLine="true"						
+				android:shadowColor="#101010"
+				android:shadowDx="1.0"
+				android:shadowDy="1.0"
+				android:shadowRadius="1.0" />
 				
 			<TextView android:id="@+id/info_type_1"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
-				android:textAppearance="?android:attr/textAppearanceMedium" />
+				android:textAppearance="?android:attr/textAppearanceMedium"
+				android:singleLine="true"
+				android:textColor="#c0c0c0"
+				android:shadowColor="#101010"
+				android:shadowDx="1.0"
+				android:shadowDy="1.0"
+				android:shadowRadius="1.0" />
+				
+			<View
+				android:layout_width="fill_parent"
+				android:layout_height="2dp"/>
 		</LinearLayout>
 	</ViewFlipper>
-		
-	<View
-		android:layout_width="fill_parent"
-		android:layout_height="2dp"/>		
-	<View
-	    android:layout_width="fill_parent"
-		android:layout_height="1dp"
-		android:background="#80c080" />
-	<View
-		android:layout_width="fill_parent"
-		android:layout_height="2dp"/>
 
 	<ScrollView
 		android:layout_width="fill_parent"
@@ -64,6 +81,10 @@
 		  android:orientation="vertical"
 		  android:layout_width="fill_parent"
 		  android:layout_height="wrap_content">
+		  		  		
+			<View
+			  android:layout_width="fill_parent"
+			  android:layout_height="2dp"/>
 		  	
 			<LinearLayout
 			  android:orientation="horizontal"
@@ -187,7 +208,7 @@
 			  android:paddingTop="8dip"
 			  android:layout_gravity="center_horizontal"/>
 			
-			<TextView
+			<TextView android:id="@+id/text_instruments"
 			  android:layout_width="wrap_content" 
 		      android:layout_height="wrap_content"
 		      android:textAppearance="?android:attr/textAppearanceMedium"
@@ -212,7 +233,8 @@
 	android:gravity="center"
 	android:orientation="horizontal"
 	android:layout_width="fill_parent"
-	android:layout_height="wrap_content">
+	android:layout_height="wrap_content"
+	android:background="#181818" >
       
     <SeekBar android:id="@+id/seek"
         android:gravity="bottom"
@@ -234,7 +256,9 @@
      android:gravity="bottom"
      android:orientation="horizontal"
      android:layout_width="fill_parent"
-     android:layout_height="wrap_content">
+     android:layout_height="wrap_content"
+     android:background="#181818" >
+     
      <ImageButton android:id="@+id/back"
          android:src="@drawable/back"
          android:layout_weight="1.0"

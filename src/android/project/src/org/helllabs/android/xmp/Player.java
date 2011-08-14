@@ -7,6 +7,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -260,6 +262,11 @@ public class Player extends Activity {
     	}
 	}
 	
+    void setFont(TextView name, String path, int res) {
+        Typeface font = Typeface.createFromAsset(this.getAssets(), path); 
+        name.setTypeface(font); 
+    }
+    
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
@@ -300,6 +307,20 @@ public class Player extends Activity {
 		
 		flipper.setInAnimation(this, R.anim.slide_in_right);
 		flipper.setOutAnimation(this, R.anim.slide_out_left);
+
+        Typeface font = Typeface.createFromAsset(this.getAssets(), "fonts/Michroma.ttf");
+        for (int i = 0; i < 2; i++) {
+        	infoName[i].setTypeface(font);
+        	//infoName[i].setLineSpacing(0, 0.9f);
+        	infoName[i].setIncludeFontPadding(false);
+        	infoType[i].setTypeface(font);
+        	infoType[i].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        }
+        
+        TextView instruments = (TextView)findViewById(R.id.text_instruments);
+        instruments.setTypeface(font);
+        instruments.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        instruments.setLineSpacing(0, 1.2f);
 		
 		if (!showTime)
 			elapsedTime.setVisibility(LinearLayout.GONE);
