@@ -1,5 +1,5 @@
 
-VERSION	= 3.4.1
+VERSION	= 3.5.0-pre
 DIST    = xmp-$(VERSION)
 MODULES = "SynthSong1"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \

@@ -1,6 +1,8 @@
 Stable versions
 ---------------
 
+3.5.0 ():
+
 3.4.1 (20110813):
 	- test for unused but set variable warning in gcc (needed to
 	  build on MacOS X, reported by Misty De Meo)
