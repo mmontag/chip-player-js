@@ -334,6 +334,7 @@ public class Player extends Activity {
 		image = new BitmapDrawable(BitmapFactory.decodeResource(getResources(),
 												R.drawable.logo));
 		image.setGravity(Gravity.CENTER);
+		image.setAlpha(48);
 		infoLayout.setBackgroundDrawable(image.getCurrent());
 		loopButton.setImageResource(R.drawable.loop_off);
 		
