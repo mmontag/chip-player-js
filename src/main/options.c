@@ -122,7 +122,7 @@ static void usage(char *s, struct xmp_options *opt)
 
     printf ("Usage: %s [options] [modules]\n", s);
 
-    printf ("\nSupported module formats:\n");
+    printf ("\nRegistered module loaders:\n");
     xmp_get_fmt_info(&fmt);
     list_wrap (NULL, 3, 78, 1);
 
