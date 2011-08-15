@@ -131,7 +131,7 @@ static void usage(char *s, struct xmp_options *opt)
         list_wrap(buf, 3, 0, 1);
     }
 
-    snprintf(buf, 80, "[%d known formats]", i);
+    snprintf(buf, 80, "[%d registered loaders]", i);
     list_wrap(buf, 3, 0, 0);
     printf ("\n");
 
