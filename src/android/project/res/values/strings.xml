@@ -15,14 +15,13 @@
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
     
-    <string name="changelog_text">• Modules can be enqueued from file list\n• Pause playback on incoming phone call\n• Prevent crash on module seek\n• Prevent crash on invalid thread\n
+    <string name="changelog_text">• Fix IT215 sample loading\n• Fix OctaMED tempo settings\n• Fix OctaMED note limits\n
+\nVersion 2.1.1:\n• Modules can be enqueued from file list\n• Pause playback on incoming phone call\n• Prevent crash on module seek\n• Prevent crash on invalid thread\n
 \nVersion 2.1.0:\n• Fix Startrekker Packer loader\n• Modules can be added to play queue\n• Fix pause button state on reconnection\n• Code refactor\n
 \nVersion 2.0.3:\n• Display song index\n• Clean up stale player service\n
 \nVersion 2.0.2:\n• Fix module restart on application reopen\n
-\nVersion 2.0.1:\n• Fix handling of invalid modules\n• Code cleanup\n
-\nVersion 2.0.0:\n• Player service\n• Storage directory fix for NOOKcolor\n• Add option to show replay time\n• Fix portamento of mapped instruments\n• Add support to MED4 synth instruments\n
-\nVersion 1.9.5:\n• Add module loop toggle button\n• Enable fast scroll in long lists\n• Fix IT module fingerprinting\n• Fix TP3 module loader\n• Fix BoobieSqueezer XM loading\n• Fix Archimedes Tracker effects\n</string>
-    <string name="changelog_title">New in version 2.1.1</string>
+\nVersion 2.0.1:\n• Fix handling of invalid modules\n• Code cleanup\n</string>
+    <string name="changelog_title">New in version 2.2.0</string>
     
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>

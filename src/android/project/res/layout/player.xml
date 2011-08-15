@@ -255,12 +255,12 @@
         android:layout_weight="0.95"
         android:paddingRight="4dp"
         android:paddingBottom="10dp"
-        android:paddingTop="9dp" />
+        android:paddingTop="10dp" />
                     
     <ImageButton android:id="@+id/loop"
         android:layout_weight="0.05"
         android:layout_width="wrap_content"
-        android:layout_height="23dip"
+        android:layout_height="25dip"
         android:background="@drawable/btn_small" />
                 
   </LinearLayout>
