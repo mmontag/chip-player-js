@@ -311,7 +311,6 @@ public class Player extends Activity {
         Typeface font = Typeface.createFromAsset(this.getAssets(), "fonts/Michroma.ttf");
         for (int i = 0; i < 2; i++) {
         	infoName[i].setTypeface(font);
-        	//infoName[i].setLineSpacing(0, 0.9f);
         	infoName[i].setIncludeFontPadding(false);
         	infoType[i].setTypeface(font);
         	infoType[i].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);

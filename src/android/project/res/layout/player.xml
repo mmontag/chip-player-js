@@ -70,6 +70,11 @@
 			<View
 				android:layout_width="fill_parent"
 				android:layout_height="2dp"/>
+			<View
+				android:layout_width="fill_parent"
+				android:layout_height="2dp"
+				android:background="#122241"/>
+				
 		</LinearLayout>
 	</ViewFlipper>
 
@@ -228,12 +233,19 @@
 	android:layout_height="wrap_content"
 	android:layout_gravity="center_horizontal"
 	android:textAppearance="?android:attr/textAppearanceMedium" />
-	      
+	
+  <View
+	android:layout_width="fill_parent"
+	android:layout_height="2dp"
+	android:background="#282828"/>
+		      
   <LinearLayout
 	android:gravity="center"
 	android:orientation="horizontal"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
+	android:paddingLeft="4dp"
+	android:paddingRight="2dp"
 	android:background="#181818" >
       
     <SeekBar android:id="@+id/seek"
@@ -241,13 +253,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0.95"
+        android:paddingRight="4dp"
         android:paddingBottom="10dp"
-        android:paddingTop="10dp" />
+        android:paddingTop="9dp" />
                     
     <ImageButton android:id="@+id/loop"
         android:layout_weight="0.05"
         android:layout_width="wrap_content"
-        android:layout_height="25dip"
+        android:layout_height="23dip"
         android:background="@drawable/btn_small" />
                 
   </LinearLayout>
