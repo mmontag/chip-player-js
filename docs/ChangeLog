@@ -2,7 +2,8 @@ Stable versions
 ---------------
 
 3.5.0 ():
-	- fix AMF 1.0 module loading (reported by Andre Timmermans)
+	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe
+	  for sample loop size
 	- fix AMF 1.1+ sample loops when loop start is zero
 	- fix AMF track index including track 0 as empty track (reported by
 	  Andre Timmermans)

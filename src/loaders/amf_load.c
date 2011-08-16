@@ -135,6 +135,52 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (V(1))
 		report("     Sample name                      Len   LBeg  LEnd  L Vol C2Spd\n");
 
+	/* Probe for 2-byte loop start 1.0 format
+	 * in facing_n.amf and sweetdrm.amf have only the sample
+	 * loop start specified in 2 bytes
+	 */
+	if (ver <= 0x0a) {
+		uint8 b;
+		int len, start, end;
+		long pos = ftell(f);
+		for (i = 0; i < m->xxh->ins; i++) {
+			b = read8(f);
+			if (b != 0 && b != 1) {
+				ver = 0x09;
+				break;
+			}
+			fseek(f, 32 + 13, SEEK_CUR);
+			if (read32l(f) > 0x100000) {	/* check index */
+				ver = 0x09;
+				break;
+			}
+			len = read32l(f);
+			if (len > 0x100000) {		/* check len */
+				ver = 0x09;
+				break;
+			}
+			if (read16l(f) == 0x0000) {	/* check c2spd */
+				ver = 0x09;
+				break;
+			}
+			if (read8(f) > 0x40) {		/* check volume */
+				ver = 0x09;
+				break;
+			}
+			start = read32l(f);
+			if (start > len) {		/* check loop start */
+				ver = 0x09;
+				break;
+			}
+			end = read32l(f);
+			if (end > len) {		/* check loop end */
+				ver = 0x09;
+				break;
+			}
+		}
+		fseek(f, pos, SEEK_SET);
+	}
+
 	for (i = 0; i < m->xxh->ins; i++) {
 		uint8 b;
 		int c2spd;
@@ -162,11 +208,12 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		 *
 		 * [Miodrag Vallat's] doc tells that in version 1.0 only
 		 * sample loop start is present (2 bytes) but the files I
-		 * have tells both start and end are present (2* 4 bytes).
+		 * have tells both start and end are present (2*4 bytes).
 		 * Maybe it should be read as version < 1.0.
 		 *
 		 * CM: confirmed with Maelcum's "The tribal zone"
 		 */
+
 		if (ver < 0x0a) {
 			m->xxs[i].lps = read16l(f);
 			m->xxs[i].lpe = m->xxs[i].len - 1;
