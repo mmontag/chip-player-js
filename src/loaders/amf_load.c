@@ -272,10 +272,6 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 					fxp = t3;
 					break;
 				case 0x82:
-					/* Problem with CannonFodder2-Done.AMF
-					 * main brass sound doesn't play
-					 */
-#if 0
 					if ((int8)t3 > 0) {
 						fxt = FX_VOLSLIDE;
 						fxp = t3 << 4;
@@ -283,7 +279,6 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 						fxt = FX_VOLSLIDE;
 						fxp = -(int8)t3 & 0x0f;
 					}
-#endif
 					break;
 				case 0x83:
 					event->vol = t3;
