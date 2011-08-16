@@ -163,3 +163,38 @@ ACKNOWLEDGMENTS
 - A 3 minute examination of an old DMP.EXE showed me the differences between
   AMF 1.2 and 1.3, since I don't have any m2amf.exe which generates AMF 1.2
   files.
+
+--8<-----------
+
+Notes by Andre Timmermans, Sat Aug 13 2011 at 1:51 PM:
+
+The AMF documentation written by Miograd Vallat seems inacurate in several
+points:
+ 
+1) Module header, the doc tells that in version 1.0 only sample loop start
+   is present (2 bytes) but the files I have tells both start and end are
+   present (2* 4 bytes). Maybe it should be read as version < 1.0.
+
+2) Order table: the track numbers in this table are not explained, but as
+   you noticed  you have to perform -1 to obtain the index in the track table.
+   For value 0, found in some files, I think it means an empty track.
+
+3) Pattern effects triples:
+   - The doc tells 0x7F is copy of last row info. Rarely used, but I found
+     2 files with it and it is always located in the middle of 3 triples for
+     the same row, an 0x80 setting the instrument, the 0x7f, then a 0x83
+     (alladin - alladd.pc.amf) or 0x90 (eye.amf). I have found the original
+     for eye.amf, ftp://ftp.modland.com/pub/modules/Protracker/Yolk/coop-
+     Legend/eyegabo0om%20final.mod and looking at it the contains for that
+     line an instrument and a set offset command but no note. So I guess 0x7f
+     is just a marker for such cases.
+   - Not explained for 0x84, pitch slide, value 0x00 corresponds to S3M E00
+     and 0x80 stands for S3M F00 (I checked with M2AMF).
+   - M2AMF maps both tremolo and tremor to 0x87. Since tremor is only found
+     in certains format, maybe it would be better to consider it is a tremolo.
+   - Extra fine porta 0x96 seems to be 4 times finer than S3M ones.
+   - I found a file with the 0x8E command ftp://ftp.amigascne.org/mirrors/
+     ftp.modland.com/pub/modules/Digital%20Sound%20And%20Music%20Interface/
+     Toal%20Nkor/far%20over%20the%20seas.amf but without the original I could
+     not guess the meaning of the mysterious command.
+
