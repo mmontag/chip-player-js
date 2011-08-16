@@ -2,6 +2,7 @@ Stable versions
 ---------------
 
 3.5.0 ():
+	- fix AMF 1.0 sample loops (reported by Andre Timmermans)
 
 3.4.1 (20110813):
 	- test for unused but set variable warning in gcc (needed to

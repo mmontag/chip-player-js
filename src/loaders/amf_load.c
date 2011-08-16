@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2010 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2011 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -147,7 +147,17 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 		m->xxi[i][0].vol = read8(f);
 
-		if (ver <= 0x0a) {
+		/*
+		 * Andre Timmermans <andre.timmermans@atos.net> says:
+		 *
+		 * [Miodrag Vallat's] doc tells that in version 1.0 only
+		 * sample loop start is present (2 bytes) but the files I
+		 * have tells both start and end are present (2* 4 bytes).
+		 * Maybe it should be read as version < 1.0.
+		 *
+		 * CM: confirmed with Maelcum's "The tribal zone"
+		 */
+		if (ver < 0x0a) {
 			m->xxs[i].lps = read16l(f);
 			m->xxs[i].lpe = m->xxs[i].len - 1;
 		} else {
