@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2010 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2011 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -17,7 +17,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef __native_client__
+#include <sys/syslimits.h>
+#else
 #include <limits.h>
+#endif
 
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "ptpopen.h"
@@ -188,7 +192,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     } else if (memcmp(b, "S404", 4) == 0) {
 	packer = "Stonecracker";
 	builtin = BUILTIN_S404;
-#if !defined WIN32 && !defined __AMIGA__
+#if !defined WIN32 && !defined __AMIGA__ && !defined __native_client__
     } else if (test_oxm(*f) == 0) {
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
@@ -233,7 +237,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     if (packer == NULL)
 	return 0;
 
-#ifdef ANDROID
+#if defined ANDROID || defined __native_client__
     /* Don't use external helpers in android */
     if (cmd)
 	return 0;
@@ -315,7 +319,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 	case BUILTIN_S404:
 	    res = decrunch_s404(*f, t);
 	    break;
-#if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__
+#if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);
 	    break;
@@ -612,7 +616,9 @@ int xmp_load_module(xmp_context ctx, char *s)
 	return i;
     }
 
+#ifndef __native_client__
     _xmp_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
+#endif
 
     for (i = 0; i < 64; i++) {
 	m->xxc[i].cho = o->chorus;	/* set after reading modconf */
