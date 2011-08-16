@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2010 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2011 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Pattern unpacking code by Teijo Kinnunen, 1990
  *
