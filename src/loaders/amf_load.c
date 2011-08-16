@@ -164,7 +164,13 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].lps = read32l(f);
 			m->xxs[i].lpe = read32l(f);
 		}
-		m->xxs[i].flg = m->xxs[i].lps > 0 ? WAVE_LOOPING : 0;
+
+		if (ver < 0x0a) {
+			m->xxs[i].flg = m->xxs[i].lps > 0 ? WAVE_LOOPING : 0;
+		} else {
+			m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ?
+							WAVE_LOOPING : 0;
+		}
 
 		if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
 			report ("[%2X] %-32.32s %05x %05x %05x %c V%02x %5d\n",
