@@ -99,6 +99,15 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Orders */
 
+	/*
+	 * Andre Timmermans <andre.timmermans@atos.net> says:
+	 *
+	 * Order table: track numbers in this table are not explained,
+	 * but as you noticed you have to perform -1 to obtain the index
+	 * in the track table. For value 0, found in some files, I think
+	 * it means an empty track.
+	 */
+
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = i;
 
@@ -189,7 +198,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->trk; i++) {		/* read track table */
 		uint16 t;
 		t = read16l(f);
-		trkmap[i] = t - 1;
+		trkmap[i] = t;
 		if (t > newtrk) newtrk = t;
 /*printf("%d -> %d\n", i, t);*/
 	}
@@ -197,19 +206,30 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->pat; i++) {		/* read track table */
 		for (j = 0; j < m->xxh->chn; j++) {
 			int k = m->xxp[i]->info[j].index - 1;
-			if (k < 0)		/* FIXME: what if k is 0? */
+
+			/* Use empty track if an invalid track is requested
+			 * (such as in Lasse Makkonen "faster and louder")
+			 */
+			if (k < 0 || k > m->xxh->trk)
 				k = 0;
 			m->xxp[i]->info[j].index = trkmap[k];
+/*printf("m->xxp[%d]->info[%d].index = %d (k = %d)\n", i, j, trkmap[k], k);*/
 		}
 	}
 
-	m->xxh->trk = newtrk;
+	m->xxh->trk = newtrk;		/* + empty track */
 	free(trkmap);
 
 	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
-	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
+	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk + 1);
 
-	for (i = 0; i < m->xxh->trk; i++) {
+	/* Alloc track 0 as empty track */
+	m->xxt[0] = calloc(sizeof(struct xxm_track) +
+				sizeof(struct xxm_event) * 64 - 1, 1);
+	m->xxt[0]->rows = 64;
+
+	/* Alloc rest of the tracks */
+	for (i = 1; i <= m->xxh->trk; i++) {
 		uint8 t1, t2, t3;
 		int size;
 
