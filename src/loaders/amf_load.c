@@ -6,7 +6,8 @@
  * for more information.
  */
 
-/* AMF loader written based on the format specs by Miodrag Vallat.
+/* AMF loader written based on the format specs by Miodrag Vallat with
+ * fixes by Andre Timmermans
  *
  * The AMF format is the internal format used by DSMI, the DOS Sound and Music
  * Interface, which is the engine of DMP. As DMP was able to play more and more
@@ -303,8 +304,14 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 					fxt = FX_TONEPORTA;
 					fxp = t3;
 					break;
+
+				/* AT: M2AMF maps both tremolo and tremor to
+				 * 0x87. Since tremor is only found in certain
+				 * formats, maybe it would be better to
+				 * consider it is a tremolo.
+				 */
 				case 0x87:
-					fxt = FX_TREMOR;
+					fxt = FX_TREMOLO;
 					fxp = t3;
 					break;
 				case 0x88:
