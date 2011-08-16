@@ -6,7 +6,7 @@ Stable versions
 	- fix AMF 1.1+ sample loops when loop start is zero
 	- fix AMF track index including track 0 as empty track (reported by
 	  Andre Timmermans)
-	- fix AMF tremolo effect (reported by Andre Timmermans)
+	- fix AMF tremolo and pitchbend effects (reported by Andre Timmermans)
 
 3.4.1 (20110813):
 	- test for unused but set variable warning in gcc (needed to

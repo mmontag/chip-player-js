@@ -289,9 +289,17 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 					event->vol = t3;
 					break;
 				case 0x84:
-					if ((int8)t3 > 0) {
+					/* AT: Not explained for 0x84, pitch
+					 * slide, value 0x00 corresponds to
+					 * S3M E00 and 0x80 stands for S3M F00
+					 * (I checked with M2AMF)
+					 */
+					if ((int8)t3 >= 0) {
 						fxt = FX_PORTA_DN;
 						fxp = t3;
+					} if (t3 == 0x80) {
+						fxt = FX_PORTA_UP;
+						fxp = 0;
 					} else {
 						fxt = FX_PORTA_UP;
 						fxp = -(int8)t3;
