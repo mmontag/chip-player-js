@@ -15,7 +15,7 @@ public class BarMeter extends Meter {
 		
 		if (chn <= 4)
 			scale = 2.0f;
-		else if (chn <= 12)
+		else if (chn <= 10)
 			scale = 1.5f;
 		else if (chn > 24)
 			scale = 0.8f;
