@@ -274,7 +274,7 @@ public class Player extends Activity {
 		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
-		showInfoLine = prefs.getBoolean(Settings.PREF_SHOW_INFO_LINE, false);
+		showInfoLine = prefs.getBoolean(Settings.PREF_SHOW_INFO_LINE, true);
 		showElapsed = true;
 		
 		latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
