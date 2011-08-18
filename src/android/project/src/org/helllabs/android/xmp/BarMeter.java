@@ -11,20 +11,20 @@ public class BarMeter extends Meter {
 	public BarMeter(LinearLayout layout, int chn) {
 		super(layout, chn);
 
-		float scale = 1.0f;
+		float scale = 0.6f;
 		
 		if (chn <= 4)
-			scale = 2.0f;
+			scale = 1.6f;
 		else if (chn <= 10)
-			scale = 1.5f;
-		else if (chn > 24)
 			scale = 0.8f;
+		else if (chn > 24)
+			scale = 0.4f;
 		
 		for (int i = 0; i < MAX_METERS; i++) {
 			infoMeter[i].setText(bar[0]);
 			infoMeter[i].setTextColor(Color.rgb(64, 112, 192));
 			infoMeter[i].setPadding(1, 0, 1, 0);
-			infoMeter[i].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+			infoMeter[i].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
 			infoMeter[i].setTextScaleX(scale);
 		}
 		

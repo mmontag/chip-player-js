@@ -42,9 +42,8 @@ public class Player extends Activity {
 	boolean showTime, showElapsed;
 	TextView[] infoName = new TextView[2];
 	TextView[] infoType = new TextView[2];
-	TextView infoLen, infoTime;
-	TextView infoNpat, infoChn, infoIns, infoSmp;
-	TextView infoTpo, infoBpm, infoPos, infoPat; 
+	TextView infoMod;
+	TextView infoLine;
 	TextView infoInsList, elapsedTime;
 	ViewFlipper flipper;
 	int flipperPage;
@@ -127,54 +126,51 @@ public class Player extends Activity {
         public void run() {
         	now = (before + latency) % 10;
         	
-        	try {
+			try {
 				tpo[now] = modPlayer.getPlayTempo();
+				bpm[now] = modPlayer.getPlayBpm();
+				pos[now] = modPlayer.getPlayPos();
+				pat[now] = modPlayer.getPlayPat();
+				time[now] = modPlayer.time() / 10;
 
-	        	if (tpo[before] != oldTpo) {
-	        		infoTpo.setText(Integer.toString(tpo[before]));
-	        		oldTpo = tpo[before];
-	        	}
-	
-	        	bpm[now] = modPlayer.getPlayBpm();
-	        	if (bpm[before] != oldBpm) {
-	        		infoBpm.setText(Integer.toString(bpm[before]));
-	        		oldBpm = bpm[before];
-	        	}
-	
-	        	pos[now] = modPlayer.getPlayPos();
-	        	if (pos[before] != oldPos) {
-	        		infoPos.setText(Integer.toString(pos[before]));
-	        		oldPos = pos[before];
-	        	}
-	
-	        	pat[now] = modPlayer.getPlayPat();
-	        	if (pat[before] != oldPat) {
-	        		infoPat.setText(Integer.toString(pat[before]));
-	        		oldPat = pat[before];
-	        	}
-	
-	        	modPlayer.getVolumes(volumes[now]);
-	        	infoMeter.setVolumes(volumes[before]);
-	        	before++;
-	        	if (before >= 10)
-	        		before = 0;
-	
-	        	if (showTime) {
-		        	time[now] = modPlayer.time() / 10;
-		        	if (time[before] != oldTime || showElapsed != oldShowElapsed) {
-			        	int t = time[before];
-			        	if (t < 0)
-			        		t = 0;
-			        	if (showElapsed) {
-			        		elapsedTime.setText(String.format("%d:%02d", t / 60, t % 60));
-			        	} else {
-			        		t = totalTime - t;
-			        		elapsedTime.setText(String.format("-%d:%02d", t / 60, t % 60));
-			        	}
-		        		oldTime = time[before];
-		        		oldShowElapsed = showElapsed;
-		        	}
-	        	}
+				if (tpo[before] != oldTpo || bpm[before] != oldBpm
+						|| pos[before] != oldPos || pat[before] != oldPat)
+
+				{
+					infoLine.setText(String.format(
+							"Tempo:%02x BPM:%02x Pos:%02x Pat:%02x",
+							tpo[before], bpm[before], pos[before], pat[before]));
+
+					oldTpo = tpo[before];
+					oldBpm = bpm[before];
+					oldPos = pos[before];
+					oldPat = pat[before];
+
+				}
+
+				if (time[before] != oldTime || showElapsed != oldShowElapsed) {
+					int t = time[before];
+					if (t < 0)
+						t = 0;
+					if (showElapsed) {
+						elapsedTime.setText(String.format("%d:%02d", t / 60,
+								t % 60));
+					} else {
+						t = totalTime - t;
+						elapsedTime.setText(String.format("-%d:%02d", t / 60,
+								t % 60));
+					}
+
+					oldTime = time[before];
+					oldShowElapsed = showElapsed;
+				}
+
+				modPlayer.getVolumes(volumes[now]);
+				infoMeter.setVolumes(volumes[before]);
+				before++;
+				if (before >= 10)
+					before = 0;
+
 			} catch (RemoteException e) { }
         }
     };
@@ -289,16 +285,8 @@ public class Player extends Activity {
 		infoType[0] = (TextView)findViewById(R.id.info_type_0);
 		infoName[1] = (TextView)findViewById(R.id.info_name_1);
 		infoType[1] = (TextView)findViewById(R.id.info_type_1);
-		infoLen = (TextView)findViewById(R.id.info_len);
-		infoNpat = (TextView)findViewById(R.id.info_npat);
-		infoChn = (TextView)findViewById(R.id.info_chn);
-		infoIns = (TextView)findViewById(R.id.info_ins);
-		infoSmp = (TextView)findViewById(R.id.info_smp);
-		infoTime = (TextView)findViewById(R.id.info_time);
-		infoTpo = (TextView)findViewById(R.id.info_tpo);
-		infoBpm = (TextView)findViewById(R.id.info_bpm);
-		infoPos = (TextView)findViewById(R.id.info_pos);
-		infoPat = (TextView)findViewById(R.id.info_pat);
+		infoMod = (TextView)findViewById(R.id.info_mod);
+		infoLine = (TextView)findViewById(R.id.info_line);
 		infoMeterLayout = (LinearLayout)findViewById(R.id.info_meters);
 		infoInsList = (TextView)findViewById(R.id.info_ins_list);
 		infoLayout = (LinearLayout)findViewById(R.id.info_layout);
@@ -309,6 +297,7 @@ public class Player extends Activity {
 		flipper.setOutAnimation(this, R.anim.slide_out_left);
 
         Typeface font = Typeface.createFromAsset(this.getAssets(), "fonts/Michroma.ttf");
+        
         for (int i = 0; i < 2; i++) {
         	infoName[i].setTypeface(font);
         	infoName[i].setIncludeFontPadding(false);
@@ -486,13 +475,14 @@ public class Player extends Activity {
 	       	infoType[flipperPage].setText(m.type);
 	       	flipper.showNext();
 	       	
-	       	infoLen.setText(Integer.toString(m.len));
-	       	infoNpat.setText(Integer.toString(m.pat));
-	       	infoChn.setText(Integer.toString(m.chn));
-	       	infoIns.setText(Integer.toString(m.ins));
-	       	infoSmp.setText(Integer.toString(m.smp));
-	       	infoTime.setText(Integer.toString((m.time + 500) / 60000) + "min" + 
-	       			Integer.toString(((m.time + 500) / 1000) % 60) + "s");
+	       	infoMod.setText(String.format("Module length: %d patterns\n" +
+	       			"Stored patterns: %d\n" +
+	       			"Audio channels: %d\n" +
+	       			"Instruments: %d, Samples: %d\n" +
+	       			"Estimated play time: %dmin%02ds",
+	       			m.len, m.pat, m.chn, m.ins, m.smp,
+	       			((m.time + 500) / 60000), ((m.time + 500) / 1000) % 60));
+
 	       	infoInsList.setText(insList);
 	       	
 	       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));
