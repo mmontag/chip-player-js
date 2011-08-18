@@ -7,6 +7,7 @@
 
 /* #include <android/log.h> */
 
+#define NCH 64
 
 extern struct xmp_drv_info drv_smix;
 
@@ -14,8 +15,9 @@ static xmp_context ctx = NULL;
 static struct xmp_options *opt;
 static int _time, _bpm, _tpo, _pos, _pat;
 static int _playing = 0;
-static int _vol[32], _cur_vol[32];
-static int _key[32];
+static int _vol[NCH], _cur_vol[NCH];
+static int _ins[NCH];
+static int _key[NCH];
 static int _chn;
 static int _decay = 8;
 
@@ -39,11 +41,13 @@ static void process_echoback(unsigned long i, void *data)
 		_chn = msg & 0xff;
 		break;
 	case XMP_ECHO_INS:
-		if (_chn < 32 && _key[_chn] == -1)
+		if (_chn < NCH && _key[_chn] == -1) {
+			_ins[_chn] = msg & 0xff;
 			_key[_chn] = msg >> 8;
+		}
 		break;
 	case XMP_ECHO_VOL:
-		if (_chn < 32)
+		if (_chn < NCH)
 			_vol[_chn] = msg & 0xff;
 		break;
 	}
@@ -133,7 +137,7 @@ Java_org_helllabs_android_xmp_Xmp_startPlayer(JNIEnv *env, jobject obj)
 {
 	int i;
 
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < NCH; i++) {
 		_key[i] = -1;
 		_vol[i] = 0;
 	}
@@ -476,11 +480,11 @@ Java_org_helllabs_android_xmp_Xmp_getInstruments(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT void JNICALL
-Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj, jintArray vol)
+Java_org_helllabs_android_xmp_Xmp_getChannelData(JNIEnv *env, jobject obj, jintArray vol, jintArray ins, jintArray key)
 {
 	int i;
 
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < NCH; i++) {
 		if (_key[i] > 0) {
 			_cur_vol[i] = _vol[i];
 			_key[i] = -1;
@@ -491,7 +495,9 @@ Java_org_helllabs_android_xmp_Xmp_getVolumes(JNIEnv *env, jobject obj, jintArray
 		}
 	}
 
-	(*env)->SetIntArrayRegion(env, vol, 0, 32, _cur_vol);
+	(*env)->SetIntArrayRegion(env, vol, 0, NCH, _cur_vol);
+	(*env)->SetIntArrayRegion(env, ins, 0, NCH, _ins);
+	(*env)->SetIntArrayRegion(env, key, 0, NCH, _key);
 }
 
 JNIEXPORT jboolean JNICALL

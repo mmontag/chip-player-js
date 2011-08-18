@@ -47,7 +47,7 @@ public class Player extends Activity {
 	TextView infoStatus;
 	TextView infoInsList, elapsedTime;
 	TextView textInstruments;
-	ViewFlipper flipper;
+	ViewFlipper titleFlipper, infoFlipper;
 	int flipperPage;
 	String[] fileArray = null;
 	SharedPreferences prefs;
@@ -121,7 +121,9 @@ public class Player extends Activity {
     	int oldPos = -1;
     	int oldPat = -1;
     	int oldTime = -1;
-    	int[][] volumes = new int[10][32];
+    	int[][] volumes = new int[10][64];
+    	int[][] instruments = new int[10][64];
+    	int[][] keys = new int[10][64];
     	int before = 0, now;
     	boolean oldShowElapsed;
     	
@@ -167,7 +169,7 @@ public class Player extends Activity {
 					oldShowElapsed = showElapsed;
 				}
 
-				modPlayer.getVolumes(volumes[now]);
+				modPlayer.getChannelData(volumes[now], instruments[now], keys[now]);
 				infoMeter.setVolumes(volumes[before]);
 				before++;
 				if (before >= 10)
@@ -294,10 +296,11 @@ public class Player extends Activity {
 		infoLayout = (FrameLayout)findViewById(R.id.info_layout);
 		elapsedTime = (TextView)findViewById(R.id.elapsed_time);
 		textInstruments = (TextView)findViewById(R.id.text_instruments);
-		flipper = (ViewFlipper)findViewById(R.id.info_flipper);
+		titleFlipper = (ViewFlipper)findViewById(R.id.title_flipper);
+		infoFlipper = (ViewFlipper)findViewById(R.id.info_flipper);
 		
-		flipper.setInAnimation(this, R.anim.slide_in_right);
-		flipper.setOutAnimation(this, R.anim.slide_out_left);
+		titleFlipper.setInAnimation(this, R.anim.slide_in_right);
+		titleFlipper.setOutAnimation(this, R.anim.slide_out_left);
 
         Typeface font = Typeface.createFromAsset(this.getAssets(), "fonts/Michroma.ttf");
         
@@ -329,7 +332,7 @@ public class Player extends Activity {
 												R.drawable.logo));
 		image.setGravity(Gravity.CENTER);
 		image.setAlpha(48);
-		infoLayout.setBackgroundDrawable(image.getCurrent());
+		infoFlipper.setBackgroundDrawable(image.getCurrent());
 		loopButton.setImageResource(R.drawable.loop_off);
 		
 		loopButton.setOnClickListener(new OnClickListener() {
@@ -478,7 +481,7 @@ public class Player extends Activity {
 	       	flipperPage = (flipperPage + 1) % 2;
 	       	infoName[flipperPage].setText(m.name);
 	       	infoType[flipperPage].setText(m.type);
-	       	flipper.showNext();
+	       	titleFlipper.showNext();
 	       	
 	       	infoMod.setText(String.format("Module length: %d patterns\n" +
 	       			"Stored patterns: %d\n" +

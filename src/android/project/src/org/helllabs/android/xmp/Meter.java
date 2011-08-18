@@ -4,7 +4,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 abstract public class Meter {
-	final int MAX_METERS = 30;
+	final int MAX_METERS = 32;
 	
 	int numChannels = 0;
 	int type;

@@ -13,7 +13,7 @@ interface ModInterface {
 	int getPlayBpm();
 	int getPlayPos();
 	int getPlayPat();
-	void getVolumes(out int[] volumes);
+	void getChannelData(out int[] volumes, out int[] instruments, out int[] keys);
 	void nextSong();
 	void prevSong(); 
 	boolean isPaused();

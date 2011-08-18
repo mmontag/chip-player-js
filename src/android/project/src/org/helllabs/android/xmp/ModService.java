@@ -311,8 +311,8 @@ public class ModService extends Service {
 			return xmp.getPlayPat();
 		}
 		
-		public void getVolumes(int[] volumes) {
-			xmp.getVolumes(volumes);
+		public void getChannelData(int[] volumes, int[] instruments, int[] keys) {
+			xmp.getChannelData(volumes, instruments, keys);
 		}
 		
 		public void nextSong() {

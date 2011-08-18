@@ -37,7 +37,7 @@ public class Xmp {
 	public native int getFormatCount();
 	public native String[] getFormats();
 	public native String[] getInstruments();
-	public native void getVolumes(int[] volumes);
+	public native void getChannelData(int[] volumes, int[] instruments, int[] keys);
 	public native void optAmplify(int n);
 	public native void optMix(int n);
 	public native void optStereo(boolean b);
