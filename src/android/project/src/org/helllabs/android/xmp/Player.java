@@ -19,6 +19,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -39,19 +40,20 @@ public class Player extends Activity {
 	boolean loopListMode = false;
 	boolean paused = false;
 	boolean finishing = false;
-	boolean showTime, showElapsed;
+	boolean showInfoLine, showElapsed;
 	TextView[] infoName = new TextView[2];
 	TextView[] infoType = new TextView[2];
 	TextView infoMod;
-	TextView infoLine;
+	TextView infoStatus;
 	TextView infoInsList, elapsedTime;
+	TextView textInstruments;
 	ViewFlipper flipper;
 	int flipperPage;
 	String[] fileArray = null;
 	SharedPreferences prefs;
 	LinearLayout infoMeterLayout;
 	Meter infoMeter;
-	LinearLayout infoLayout;
+	FrameLayout infoLayout;
 	BitmapDrawable image;
 	final Handler handler = new Handler();
 	int latency;
@@ -137,7 +139,7 @@ public class Player extends Activity {
 						|| pos[before] != oldPos || pat[before] != oldPat)
 
 				{
-					infoLine.setText(String.format(
+					infoStatus.setText(String.format(
 							"Tempo:%02x BPM:%02x Pos:%02x Pat:%02x",
 							tpo[before], bpm[before], pos[before], pat[before]));
 
@@ -272,7 +274,7 @@ public class Player extends Activity {
 		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
-		showTime = prefs.getBoolean(Settings.PREF_SHOW_TIME, false);
+		showInfoLine = prefs.getBoolean(Settings.PREF_SHOW_INFO_LINE, false);
 		showElapsed = true;
 		
 		latency = prefs.getInt(Settings.PREF_BUFFER_MS, 500) / 100;
@@ -286,11 +288,12 @@ public class Player extends Activity {
 		infoName[1] = (TextView)findViewById(R.id.info_name_1);
 		infoType[1] = (TextView)findViewById(R.id.info_type_1);
 		infoMod = (TextView)findViewById(R.id.info_mod);
-		infoLine = (TextView)findViewById(R.id.info_line);
+		infoStatus = (TextView)findViewById(R.id.info_status);
 		infoMeterLayout = (LinearLayout)findViewById(R.id.info_meters);
 		infoInsList = (TextView)findViewById(R.id.info_ins_list);
-		infoLayout = (LinearLayout)findViewById(R.id.info_layout);
+		infoLayout = (FrameLayout)findViewById(R.id.info_layout);
 		elapsedTime = (TextView)findViewById(R.id.elapsed_time);
+		textInstruments = (TextView)findViewById(R.id.text_instruments);
 		flipper = (ViewFlipper)findViewById(R.id.info_flipper);
 		
 		flipper.setInAnimation(this, R.anim.slide_in_right);
@@ -310,8 +313,10 @@ public class Player extends Activity {
         instruments.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         instruments.setLineSpacing(0, 1.2f);
 		
-		if (!showTime)
+		if (!showInfoLine) {
+			infoStatus.setVisibility(LinearLayout.GONE);
 			elapsedTime.setVisibility(LinearLayout.GONE);
+		}
 		
 		playButton = (ImageButton)findViewById(R.id.play);
 		stopButton = (ImageButton)findViewById(R.id.stop);
@@ -484,6 +489,7 @@ public class Player extends Activity {
 	       			((m.time + 500) / 60000), ((m.time + 500) / 1000) % 60));
 
 	       	infoInsList.setText(insList);
+	       	textInstruments.setText("Instruments");
 	       	
 	       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));
 	       	switch (meterType) {

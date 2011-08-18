@@ -92,9 +92,11 @@ GNU General Public License for more details.</string>
     <string name="preferences_clear_cache_title">Clear cache</string>
     <string name="cache_clear">File cache cleared</string>
     <string name="cache_clear_error">Error clearing cache</string>
-<string name="preferences_show_time_summary">Show elapsed replay time</string>
-    <string name="preferences_show_time_title">Display time</string>
+
+    
 
     <string name="preferences_category_preferences">Preferences</string>
     
+<string name="preferences_show_info_line_title">Display replay status</string>
+    <string name="preferences_show_info_line_summary">Show replay information and elapsed time</string>
 </resources>

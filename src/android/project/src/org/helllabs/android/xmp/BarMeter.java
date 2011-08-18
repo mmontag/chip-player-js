@@ -22,7 +22,7 @@ public class BarMeter extends Meter {
 		
 		for (int i = 0; i < MAX_METERS; i++) {
 			infoMeter[i].setText(bar[0]);
-			infoMeter[i].setTextColor(Color.rgb(64, 112, 192));
+			infoMeter[i].setTextColor(Color.rgb(52, 96, 186));
 			infoMeter[i].setPadding(1, 0, 1, 0);
 			infoMeter[i].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
 			infoMeter[i].setTextScaleX(scale);
