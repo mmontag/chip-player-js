@@ -33,13 +33,20 @@ public class InstrumentList extends LinearLayout {
 	 */
 	public void setVolumes(int[] volumes, int[] instruments) {
 		int nch = volumes.length;
+		boolean flag;
 		
 		for (int i = 0; i < num; i++) {
+			flag = false;
+			
 			for (int j = 0; j < nch; j++) {
 				if (instruments[j] == i) {
 					instrumentInfo[i].showVolume(volumes[j]);
-					break;
+					flag = true;
 				}
+			}
+			
+			if (!flag) {
+				instrumentInfo[i].showVolume(0);
 			}
 		}
 	}

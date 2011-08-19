@@ -6,9 +6,11 @@ import android.graphics.Typeface;
 import android.widget.TextView;
 
 public class InstrumentInfo extends TextView {
+	int curVol;
 	
 	public InstrumentInfo(Context context) {
 		super(context);
+		curVol = -1;
 	}
 	
 	public void setText(int i, CharSequence s) {
@@ -20,7 +22,10 @@ public class InstrumentInfo extends TextView {
 	}
 	
 	public void showVolume(int vol) {
-		int val = 0x80 + vol;
-		setTextColor(Color.rgb(val, val, val));
+		if (vol != curVol) {
+			int val = 0x80 + vol;
+			setTextColor(Color.rgb(val, val, val));
+			curVol = vol;
+		}
 	}
 }
