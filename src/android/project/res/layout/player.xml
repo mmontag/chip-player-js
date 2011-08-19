@@ -101,7 +101,8 @@
 	
 					<TextView android:id="@+id/info_mod"
 						android:layout_width="wrap_content"
-						android:layout_height="wrap_content" />
+						android:layout_height="wrap_content"
+						android:textScaleX="1.1" />
 	
 					<TextView android:id="@+id/text_instruments"
 						android:layout_width="wrap_content"
@@ -109,7 +110,8 @@
 						android:textAppearance="?android:attr/textAppearanceMedium"
 						android:paddingTop="4dip" />
 	
-					<TextView android:id="@+id/info_ins_list"
+					<LinearLayout android:id="@+id/info_ins_layout"
+						android:orientation="vertical"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content" />
 	

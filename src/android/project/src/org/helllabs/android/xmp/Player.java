@@ -45,8 +45,10 @@ public class Player extends Activity {
 	TextView[] infoType = new TextView[2];
 	TextView infoMod;
 	TextView infoStatus;
-	TextView infoInsList, elapsedTime;
+	TextView elapsedTime;
 	TextView textInstruments;
+	LinearLayout infoInsLayout;
+	InstrumentInfo[] instrumentInfo;
 	ViewFlipper titleFlipper, infoFlipper;
 	int flipperPage;
 	String[] fileArray = null;
@@ -58,7 +60,7 @@ public class Player extends Activity {
 	final Handler handler = new Handler();
 	int latency;
 	int totalTime;
-	String fileName, insList;
+	String fileName, insList[];
 	boolean endPlay = false;
 	LinearLayout channelLayout;
 	ChannelInfo[] channelInfo;
@@ -297,7 +299,7 @@ public class Player extends Activity {
 		infoMod = (TextView)findViewById(R.id.info_mod);
 		infoStatus = (TextView)findViewById(R.id.info_status);
 		infoMeterLayout = (LinearLayout)findViewById(R.id.info_meters);
-		infoInsList = (TextView)findViewById(R.id.info_ins_list);
+		infoInsLayout = (LinearLayout)findViewById(R.id.info_ins_layout);
 		infoLayout = (FrameLayout)findViewById(R.id.info_layout);
 		elapsedTime = (TextView)findViewById(R.id.elapsed_time);
 		textInstruments = (TextView)findViewById(R.id.text_instruments);
@@ -463,17 +465,7 @@ public class Player extends Activity {
 
 	void showNewMod(String fileName, String[] instruments) {
 		this.fileName = fileName;
-		
-     	StringBuffer insList = new StringBuffer();
-       	if (instruments.length > 0)
-       		insList.append(instruments[0]);
-       	for (int i = 1; i < instruments.length; i++) {
-       		insList.append('\n');
-       		insList.append(instruments[i]);
-       	}
-       	
-       	this.insList = insList.toString();
-       	
+		this.insList = instruments;
 		handler.post(showNewModRunnable);
 	}
 	
@@ -498,7 +490,13 @@ public class Player extends Activity {
 	       			m.len, m.pat, m.chn, m.ins, m.smp,
 	       			((m.time + 500) / 60000), ((m.time + 500) / 1000) % 60));
 
-	       	infoInsList.setText(insList);
+	       	instrumentInfo = new InstrumentInfo[m.ins];
+	       	for (int i = 0; i < m.ins; i++) {
+	       		instrumentInfo[i] = new InstrumentInfo(activity);
+	       		instrumentInfo[i].setText(i, insList[i]);
+	       		infoInsLayout.addView(instrumentInfo[i]);
+	       	}
+
 	       	textInstruments.setText("Instruments");
 	       	
 	       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));

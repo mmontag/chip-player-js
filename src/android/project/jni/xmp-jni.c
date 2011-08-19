@@ -470,7 +470,7 @@ Java_org_helllabs_android_xmp_Xmp_getInstruments(JNIEnv *env, jobject obj)
 		return NULL;
 
 	for (i = 0; i < mi.ins; i++) {
-		snprintf(buf, 80, "%02x: %s", i, p->m.xxih[i].name);
+		snprintf(buf, 80, "%s", p->m.xxih[i].name);
 		s = (*env)->NewStringUTF(env, buf);
 		(*env)->SetObjectArrayElement(env, stringArray, i, s);
 		(*env)->DeleteLocalRef(env, s);
