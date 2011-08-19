@@ -9,10 +9,18 @@ import java.io.IOException;
 public class InfoCache {
 	static Xmp xmp = new Xmp();
 	
+	public static boolean delete(String filename) {
+		final File file = new File(filename);
+		final File cacheFile = new File(Settings.cacheDir, filename + ".cache");
+		
+		cacheFile.delete();
+		return file.delete();
+	}
+	
 	public static boolean testModule(String filename) {
-		File file = new File(filename);
-		File cacheFile = new File(Settings.cacheDir, filename + ".cache");
-		File skipFile = new File(Settings.cacheDir, filename + ".skip");
+		final File file = new File(filename);
+		final File cacheFile = new File(Settings.cacheDir, filename + ".cache");
+		final File skipFile = new File(Settings.cacheDir, filename + ".skip");
 
 		if (!Settings.cacheDir.isDirectory()) {
 			if (Settings.cacheDir.mkdirs() == false) {
@@ -47,8 +55,8 @@ public class InfoCache {
 	}
 	
 	public static ModInfo getModInfo(String filename) {
-		File file = new File(filename);
-		File cacheFile = new File(Settings.cacheDir, filename + ".cache");
+		final File file = new File(filename);
+		final File cacheFile = new File(Settings.cacheDir, filename + ".cache");
 		ModInfo mi;
 
 		if (!Settings.cacheDir.isDirectory()) {

@@ -7,12 +7,8 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;

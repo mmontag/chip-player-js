@@ -4,8 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -28,6 +31,8 @@ public class PlaylistActivity extends ListActivity {
 	boolean showToasts;
 	ModInterface modPlayer;
 	String[] addList;
+	String deleteName;
+	Context context;
 	
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
@@ -38,6 +43,7 @@ public class PlaylistActivity extends ListActivity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		
+		context = this;
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
 	
@@ -141,7 +147,7 @@ public class PlaylistActivity extends ListActivity {
 	};
 	
 	protected void addToQueue(int start, int size) {
-		String[] list = new String[size];
+		final String[] list = new String[size];
 		
 		for (int i = 0; i < size; i++)
 			list[i] = modList.get(start + i).filename;

@@ -1,7 +1,9 @@
 package org.helllabs.android.xmp;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -65,6 +67,7 @@ public class Player extends Activity {
 	LinearLayout channelLayout;
 	ChannelInfo[] channelInfo;
 	Activity activity;
+	AlertDialog deleteDialog;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -394,6 +397,23 @@ public class Player extends Activity {
 		    }
 		});
 		
+		/*
+		 * Long click on the stop button deletes the current playing file
+		 * Feature requested by Jason <seglaran@gmail.com>
+		 */
+		/*stopButton.setOnLongClickListener(new OnLongClickListener() {
+			public boolean onLongClick(View v) {
+				//Debug.stopMethodTracing();
+				if (modPlayer == null)
+					return true;
+				
+				//stopPlayingMod();
+				//finish();
+				
+				return true;
+		    }
+		});*/
+	
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (modPlayer == null)
@@ -455,9 +475,26 @@ public class Player extends Activity {
 		});
 	}
 	
+	/* DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int which) {
+			switch (which) {
+			case DialogInterface.BUTTON_POSITIVE:
+
+	            break;
+
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            break;
+	        }
+	    }
+	}; */
+	
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		
+		if (deleteDialog != null)
+			deleteDialog.cancel();
+		
 		if (modPlayer != null) {
 			try {
 				modPlayer.unregisterCallback(playerCallback);
@@ -470,6 +507,8 @@ public class Player extends Activity {
 	void showNewMod(String fileName, String[] instruments) {
 		this.fileName = fileName;
 		this.insList = instruments;
+		if (deleteDialog != null)
+			deleteDialog.cancel();
 		handler.post(showNewModRunnable);
 	}
 	
@@ -533,6 +572,7 @@ public class Player extends Activity {
 			return;
 		
 		finishing = true;
+		
 		try {
 			modPlayer.stop();
 		} catch (RemoteException e1) { }

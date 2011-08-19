@@ -208,6 +208,7 @@ public class ModList extends PlaylistActivity {
 			}
 			i++; menu.add(Menu.NONE, i, i, "Add to play queue");
 			i++; menu.add(Menu.NONE, i, i, "Add all to play queue");
+			i++; menu.add(Menu.NONE, i, i, "Delete file");
 		}
 	}
 	
@@ -239,13 +240,43 @@ public class ModList extends PlaylistActivity {
 				addToQueue(info.position, 1);
 			} else if (id == numPlists + 2) {
 				addToQueue(directoryNum, modList.size() - directoryNum);
+			} else if (id == numPlists + 3) {
+				deleteFile(info.position);
 			}
 		}
 
 		return true;
 	}
 
+	protected void deleteFile(int start) {
+		deleteName = modList.get(start).filename;
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage(R.string.msg_really_delete)
+			.setPositiveButton(R.string.msg_yes, dialogClickListener)
+		    .setNegativeButton(R.string.msg_no, dialogClickListener)
+		    .show();
+		
+	}
+	
+	private DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+	    public void onClick(DialogInterface dialog, int which) {
+	        switch (which){
+	        case DialogInterface.BUTTON_POSITIVE:
+	        	if (InfoCache.delete(deleteName)) {
+	        		updatePlaylist(currentDir);
+	        		Message.toast(context, getString(R.string.msg_file_deleted));
+	        	} else {
+	        		Message.toast(context, getString(R.string.msg_cant_delete));
+	        	}
+	            break;
 
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            break;
+	        }
+	    }
+	};
+	
 	// Menu
 	
 	@Override
