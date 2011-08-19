@@ -13,8 +13,23 @@ public class InfoCache {
 		final File file = new File(filename);
 		final File cacheFile = new File(Settings.cacheDir, filename + ".cache");
 		
-		cacheFile.delete();
+		if (cacheFile.isFile())
+			cacheFile.delete();
+		
 		return file.delete();
+	}
+	
+	public static boolean fileExists(String filename) {
+		final File file = new File(filename);
+		final File cacheFile = new File(Settings.cacheDir, filename + ".cache");
+		
+		if (file.isFile())
+			return true;
+		
+		if (cacheFile.isFile())
+			cacheFile.delete();
+		
+		return false;
 	}
 	
 	public static boolean testModule(String filename) {

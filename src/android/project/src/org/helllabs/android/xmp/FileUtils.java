@@ -33,8 +33,14 @@ public class FileUtils {
 		
 	    return line;
 	}
-
+	
 	public static boolean removeLineFromFile(File inFile, int num)
+	throws FileNotFoundException, IOException {
+		int[] nums = { num };
+		return removeLineFromFile(inFile, nums);
+	}
+	
+	public static boolean removeLineFromFile(File inFile, int[] num)
 	throws IOException, FileNotFoundException {
 
 		File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
@@ -43,8 +49,16 @@ public class FileUtils {
 		PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
 		
 		String line;
+		boolean flag;
 		for (int lineNum = 0; (line = br.readLine()) != null; lineNum++) {
-			if (lineNum != num) {
+			flag = false;
+			for (int i = 0; i < num.length; i++) {
+				if (lineNum == num[i]) {
+					flag = true;
+					break;
+				}
+			}
+			if (!flag) {
 				pw.println(line);
 				pw.flush();
 			}

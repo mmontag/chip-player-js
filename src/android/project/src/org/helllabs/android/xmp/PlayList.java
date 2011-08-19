@@ -6,6 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -48,18 +51,43 @@ public class PlayList extends PlaylistActivity {
 		
 		File file = new File(Settings.dataDir, name + ".playlist");
 		String line;
+		int lineNum;
+		
+		List<Integer> invalidList = new ArrayList<Integer>();
+		int[] invalid;
 		
 	    try {
 	    	BufferedReader in = new BufferedReader(new FileReader(file), 512);
+	    	lineNum = 0;
 	    	while ((line = in.readLine()) != null) {
 	    		String[] fields = line.split(":", 3);
-	    		modList.add(new PlaylistInfo(fields[2], fields[1], fields[0], -1));
+	    		if (!InfoCache.fileExists(fields[0])) {
+	    			invalidList.add(lineNum);
+	    		} else {
+	    			modList.add(new PlaylistInfo(fields[2], fields[1], fields[0], -1));
+	    		}
+	    		lineNum++;
 	    	}
 	    	in.close();
 	    } catch (IOException e) {
 	    	 
 	    }		
 		
+	    if (!invalidList.isEmpty()) {
+	    	int[] x = new int[invalidList.size()];
+	    	Iterator<Integer> iterator = invalidList.iterator();
+	    	for (int i = 0; i < x.length; i++)
+	    		x[i] = iterator.next().intValue();
+	    	
+			try {
+				FileUtils.removeLineFromFile(file, x);
+			} catch (FileNotFoundException e) {
+
+			} catch (IOException e) {
+
+			}
+		}
+	    
 	    final PlaylistInfoAdapter plist = new PlaylistInfoAdapter(PlayList.this,
     			R.layout.playlist_item, R.id.plist_info, modList);
         
