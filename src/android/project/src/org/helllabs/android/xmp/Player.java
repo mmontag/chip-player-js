@@ -48,7 +48,7 @@ public class Player extends Activity {
 	TextView elapsedTime;
 	TextView textInstruments;
 	LinearLayout infoInsLayout;
-	InstrumentInfo[] instrumentInfo;
+	InstrumentList instrumentList;
 	ViewFlipper titleFlipper, infoFlipper;
 	int flipperPage;
 	String[] fileArray = null;
@@ -176,6 +176,7 @@ public class Player extends Activity {
 
 				modPlayer.getChannelData(volumes[now], instruments[now], keys[now]);
 				infoMeter.setVolumes(volumes[before]);
+				instrumentList.setVolumes(volumes[before], instruments[before]);
 				before++;
 				if (before >= 10)
 					before = 0;
@@ -306,6 +307,9 @@ public class Player extends Activity {
 		titleFlipper = (ViewFlipper)findViewById(R.id.title_flipper);
 		infoFlipper = (ViewFlipper)findViewById(R.id.info_flipper);
 		channelLayout = (LinearLayout)findViewById(R.id.channel_layout);
+		
+		instrumentList = new InstrumentList(this);
+		infoInsLayout.addView(instrumentList);
 		
 		titleFlipper.setInAnimation(this, R.anim.slide_in_right);
 		titleFlipper.setOutAnimation(this, R.anim.slide_out_left);
@@ -490,15 +494,8 @@ public class Player extends Activity {
 	       			m.len, m.pat, m.chn, m.ins, m.smp,
 	       			((m.time + 500) / 60000), ((m.time + 500) / 1000) % 60));
 
-	       	infoInsLayout.removeAllViews();
-	       	instrumentInfo = new InstrumentInfo[m.ins];
-	       	for (int i = 0; i < m.ins; i++) {
-	       		instrumentInfo[i] = new InstrumentInfo(activity);
-	       		instrumentInfo[i].setText(i, insList[i]);
-	       		infoInsLayout.addView(instrumentInfo[i]);
-	       	}
-
 	       	textInstruments.setText("Instruments");
+	       	instrumentList.setInstruments(insList);
 	       	
 	       	int meterType = Integer.parseInt(prefs.getString(Settings.PREF_METERS, "2"));
 	       	switch (meterType) {

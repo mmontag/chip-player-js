@@ -90,7 +90,7 @@
 				android:layout_width="fill_parent"
 				android:layout_height="fill_parent">
 	
-				<LinearLayout
+				<LinearLayout android:id="@+id/info_ins_layout"
 					android:orientation="vertical"
 					android:layout_width="fill_parent"
 					android:layout_height="wrap_content">
@@ -109,11 +109,6 @@
 						android:layout_height="wrap_content"
 						android:textAppearance="?android:attr/textAppearanceMedium"
 						android:paddingTop="4dip" />
-	
-					<LinearLayout android:id="@+id/info_ins_layout"
-						android:orientation="vertical"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content" />
 	
 				</LinearLayout>
 			</ScrollView>
