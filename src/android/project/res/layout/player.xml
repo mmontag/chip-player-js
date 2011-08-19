@@ -124,7 +124,7 @@
 				android:layout_gravity="bottom|center_horizontal" />
 		</FrameLayout>
 		
-		<LinearLayout
+		<LinearLayout android:id="@+id/channel_layout"
 			android:orientation="vertical"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content">

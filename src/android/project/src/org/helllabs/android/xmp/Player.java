@@ -60,6 +60,9 @@ public class Player extends Activity {
 	int totalTime;
 	String fileName, insList;
 	boolean endPlay = false;
+	LinearLayout channelLayout;
+	ChannelInfo[] channelInfo;
+	Activity activity;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -272,6 +275,8 @@ public class Player extends Activity {
 		super.onCreate(icicle);
 		setContentView(R.layout.player);
 		
+		activity = this;
+		
 		Log.i("Xmp Player", "Create player interface");
 		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -298,6 +303,7 @@ public class Player extends Activity {
 		textInstruments = (TextView)findViewById(R.id.text_instruments);
 		titleFlipper = (ViewFlipper)findViewById(R.id.title_flipper);
 		infoFlipper = (ViewFlipper)findViewById(R.id.info_flipper);
+		channelLayout = (LinearLayout)findViewById(R.id.channel_layout);
 		
 		titleFlipper.setInAnimation(this, R.anim.slide_in_right);
 		titleFlipper.setOutAnimation(this, R.anim.slide_out_left);
@@ -482,6 +488,7 @@ public class Player extends Activity {
 	       	infoName[flipperPage].setText(m.name);
 	       	infoType[flipperPage].setText(m.type);
 	       	titleFlipper.showNext();
+	       	//infoFlipper.showNext();
 	       	
 	       	infoMod.setText(String.format("Module length: %d patterns\n" +
 	       			"Stored patterns: %d\n" +
@@ -505,6 +512,13 @@ public class Player extends Activity {
 	       	default:
 	       		infoMeter = new EmptyMeter(infoMeterLayout, m.chn);
 	       		break;       		
+	       	}
+	       	
+	       	channelInfo = new ChannelInfo[m.chn];
+	       	for (int i = 0; i < m.chn; i++) {
+	       		channelInfo[i] = new ChannelInfo(activity);
+	       		channelInfo[i].setText(Integer.toString(i));
+	       		channelLayout.addView(channelInfo[i]);
 	       	}
 	       	
 	        progressThread = new ProgressThread();
