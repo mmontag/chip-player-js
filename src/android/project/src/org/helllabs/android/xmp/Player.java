@@ -490,6 +490,7 @@ public class Player extends Activity {
 	       			m.len, m.pat, m.chn, m.ins, m.smp,
 	       			((m.time + 500) / 60000), ((m.time + 500) / 1000) % 60));
 
+	       	infoInsLayout.removeAllViews();
 	       	instrumentInfo = new InstrumentInfo[m.ins];
 	       	for (int i = 0; i < m.ins; i++) {
 	       		instrumentInfo[i] = new InstrumentInfo(activity);
