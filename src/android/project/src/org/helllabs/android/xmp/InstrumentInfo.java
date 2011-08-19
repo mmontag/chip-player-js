@@ -22,10 +22,11 @@ public class InstrumentInfo extends TextView {
 	}
 	
 	public void showVolume(int vol) {
+		vol &= 0xf8;
 		if (vol != curVol) {
 			int val = 0x80 + vol;
 			setTextColor(Color.rgb(val, val, val));
-			curVol = vol;
+			curVol = vol & 0xf8;
 		}
 	}
 }

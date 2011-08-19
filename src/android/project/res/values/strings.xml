@@ -97,11 +97,13 @@ GNU General Public License for more details.</string>
 
     <string name="preferences_category_preferences">Preferences</string>
     
-<string name="preferences_show_info_line_title">Display replay status</string>
-    <string name="preferences_show_info_line_summary">Show replay information and elapsed time</string>
+<string name="preferences_show_info_line_title">Replay status</string>
+    <string name="preferences_show_info_line_summary">Show replay information and time</string>
 <string name="msg_yes">Yes</string>
     <string name="msg_really_delete">Really delete file?</string>
     <string name="msg_no">No</string>
 <string name="msg_file_deleted">File deleted</string>
     <string name="msg_cant_delete">Can\'t delete file</string>
+<string name="preferences_show_ins_highlight_summary">Highlight playing instruments</string>
+    <string name="preferences_show_ins_highlight_title">Instrument hightlight</string>
 </resources>

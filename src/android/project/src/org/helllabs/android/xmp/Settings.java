@@ -31,6 +31,7 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_BUFFER_MS = "buffer_ms";
 	public static final String PREF_SHOW_TOAST = "show_toast";
 	public static final String PREF_SHOW_INFO_LINE = "show_info_line";
+	public static final String PREF_SHOW_INS_HIGHLIGHT = "show_ins_highlight";
 	private SharedPreferences prefs;
 	private String oldPath;
 	
