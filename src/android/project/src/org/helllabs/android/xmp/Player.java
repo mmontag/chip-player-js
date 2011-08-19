@@ -3,7 +3,6 @@ package org.helllabs.android.xmp;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -64,8 +63,6 @@ public class Player extends Activity {
 	int totalTime;
 	String fileName, insList[];
 	boolean endPlay = false;
-	LinearLayout channelLayout;
-	ChannelInfo[] channelInfo;
 	Activity activity;
 	AlertDialog deleteDialog;
 
@@ -312,8 +309,6 @@ public class Player extends Activity {
 		elapsedTime = (TextView)findViewById(R.id.elapsed_time);
 		textInstruments = (TextView)findViewById(R.id.text_instruments);
 		titleFlipper = (ViewFlipper)findViewById(R.id.title_flipper);
-		infoFlipper = (ViewFlipper)findViewById(R.id.info_flipper);
-		channelLayout = (LinearLayout)findViewById(R.id.channel_layout);
 		
 		instrumentList = new InstrumentList(this);
 		infoInsLayout.addView(instrumentList);
@@ -553,12 +548,12 @@ public class Player extends Activity {
 	       		break;       		
 	       	}
 	       	
-	       	channelInfo = new ChannelInfo[m.chn];
+	       	/*channelInfo = new ChannelInfo[m.chn];
 	       	for (int i = 0; i < m.chn; i++) {
 	       		channelInfo[i] = new ChannelInfo(activity);
 	       		channelInfo[i].setText(Integer.toString(i));
 	       		channelLayout.addView(channelInfo[i]);
-	       	}
+	       	}*/
 	       	
 	        progressThread = new ProgressThread();
 	        progressThread.start();
