@@ -19,6 +19,7 @@
  * - Atari Octalyser CD61 and CD81
  * - Digital Tracker FA04, FA06 and FA08
  * - TakeTracker TDZ4
+ * - (unknown) NSMS
  */
 
 #ifdef HAVE_CONFIG_H
@@ -51,6 +52,7 @@ struct {
     { "FA04", 1, 0, "Digital Tracker", 4 },	/* Atari Falcon */
     { "FA06", 1, 0, "Digital Tracker", 6 },	/* Atari Falcon */
     { "FA08", 1, 0, "Digital Tracker", 8 },	/* Atari Falcon */
+    { "NSMS", 1, 0, "unknown", 4 },		/* in Kingdom.mod */
     { "", 0 }
 };
 

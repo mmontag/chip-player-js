@@ -10,6 +10,7 @@ Stable versions
 	- fix AMF tremolo effect (reported by Andre Timmermans)
 	- fix AMF pitchbend effects (reported by Andre Timmermans)
 	- fix AMF volume slide effect
+	- add support to DSMS mod files
 
 3.4.1 (20110813):
 	- test for unused but set variable warning in gcc (needed to
