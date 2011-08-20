@@ -2,8 +2,10 @@ package org.helllabs.android.xmp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -63,6 +65,7 @@ public class Player extends Activity {
 	int totalTime;
 	String fileName, insList[];
 	boolean endPlay = false;
+	boolean screenOn;
 	Activity activity;
 	AlertDialog deleteDialog;
 
@@ -116,19 +119,19 @@ public class Player extends Activity {
     };
     
     final Runnable updateInfoRunnable = new Runnable() {
-    	int[] tpo = new int[10];
-    	int[] bpm = new int[10];
-    	int[] pos = new int[10];
-    	int[] pat = new int[10];
-    	int[] time = new int[10];
+    	final int[] tpo = new int[10];
+    	final int[] bpm = new int[10];
+    	final int[] pos = new int[10];
+    	final int[] pat = new int[10];
+    	final int[] time = new int[10];
     	int oldTpo = -1;
     	int oldBpm = -1;
     	int oldPos = -1;
     	int oldPat = -1;
     	int oldTime = -1;
-    	int[][] volumes = new int[10][64];
-    	int[][] instruments = new int[10][64];
-    	int[][] keys = new int[10][64];
+    	final int[][] volumes = new int[10][64];
+    	final int[][] instruments = new int[10][64];
+    	final int[][] keys = new int[10][64];
     	int before = 0, now;
     	boolean oldShowElapsed;
     	
@@ -209,7 +212,8 @@ public class Player extends Activity {
 					sleep(100);
 				} catch (InterruptedException e) { }
 				
-				handler.post(updateInfoRunnable);
+				if (screenOn)
+					handler.post(updateInfoRunnable);
     		} while (t >= 0 && !endPlay);
     		
     		seekBar.setProgress(0);
@@ -284,6 +288,14 @@ public class Player extends Activity {
 		activity = this;
 		
 		Log.i("Xmp Player", "Create player interface");
+		
+        // INITIALIZE RECEIVER by jwei512
+		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		BroadcastReceiver mReceiver = new ScreenReceiver();
+		registerReceiver(mReceiver, filter);
+		
+		screenOn = true;
 		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
@@ -501,6 +513,26 @@ public class Player extends Activity {
 		}
 		Log.i("Xmp Player", "Unbind service");
 		unbindService(connection);
+	}
+	
+	/*
+	 * Stop screen updates when screen is off
+	 */
+	@Override
+	protected void onPause() {
+		// Screen is about to turn off
+		if (ScreenReceiver.wasScreenOn) {
+			screenOn = false;
+		} else {
+			// Screen state not changed
+		}
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+		screenOn = true;
+		super.onResume();
 	}
 
 	void showNewMod(String fileName, String[] instruments) {
