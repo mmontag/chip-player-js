@@ -50,7 +50,7 @@ public class Player extends Activity {
 	TextView textInstruments;
 	LinearLayout infoInsLayout;
 	InstrumentList instrumentList;
-	ViewFlipper titleFlipper, infoFlipper;
+	ViewFlipper titleFlipper;
 	int flipperPage;
 	String[] fileArray = null;
 	SharedPreferences prefs;
@@ -346,7 +346,7 @@ public class Player extends Activity {
 												R.drawable.logo));
 		image.setGravity(Gravity.CENTER);
 		image.setAlpha(48);
-		infoFlipper.setBackgroundDrawable(image.getCurrent());
+		infoLayout.setBackgroundDrawable(image.getCurrent());
 		loopButton.setImageResource(R.drawable.loop_off);
 		
 		loopButton.setOnClickListener(new OnClickListener() {

@@ -78,8 +78,9 @@
 	</ViewFlipper>	
 			
 	<FrameLayout android:id="@+id/info_layout"
+		android:layout_weight="1.0"
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent" >
+		android:layout_height="wrap_content" >
 
 		<ScrollView
 			android:layout_width="fill_parent"
@@ -112,7 +113,6 @@
 			android:orientation="horizontal"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:textAppearance="?android:attr/textAppearanceMedium"
 			android:layout_gravity="bottom|center_horizontal" />
 	</FrameLayout>
 

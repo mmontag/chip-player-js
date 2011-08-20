@@ -105,5 +105,5 @@ GNU General Public License for more details.</string>
 <string name="msg_file_deleted">File deleted</string>
     <string name="msg_cant_delete">Can\'t delete file</string>
 <string name="preferences_show_ins_highlight_summary">Highlight playing instruments</string>
-    <string name="preferences_show_ins_highlight_title">Instrument hightlight</string>
+    <string name="preferences_show_ins_highlight_title">Instrument highlight</string>
 </resources>
