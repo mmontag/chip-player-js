@@ -31,6 +31,7 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -53,6 +54,10 @@ public class ModList extends PlaylistActivity {
 	String currentDir;
 	int directoryNum;
 	int parentNum;
+	int playlistSelection;
+	int fileSelection;
+	int fileNum;
+	Context context;
 	
 	class DirFilter implements FileFilter {
 	    public boolean accept(File dir) {
@@ -73,6 +78,8 @@ public class ModList extends PlaylistActivity {
 		super.onCreate(icicle);			
 		registerForContextMenu(getListView());
 		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
+		
+		context = this;
 		
 		// Check if directory exists
 		final File modDir = new File(media_path);
@@ -191,77 +198,153 @@ public class ModList extends PlaylistActivity {
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
-		int i = 0;
 		menu.setHeaderTitle("Add to playlist");
 		if (info.position < parentNum) {
 			// Do nothing
-		} else if (info.position < directoryNum) {
-			menu.add(Menu.NONE, i, i, "Files to new playlist");
-			for (String s : PlaylistUtils.listNoSuffix()) {
-				i++;
-				menu.add(Menu.NONE, i, i, "Add to " + s);
-			}			
-		} else {
-			menu.add(Menu.NONE, i, i, "New playlist...");
-			for (String each : PlaylistUtils.listNoSuffix()) {
-				i++; menu.add(Menu.NONE, i, i, "Add to " + each);
-			}
-			i++; menu.add(Menu.NONE, i, i, "Add to play queue");
-			i++; menu.add(Menu.NONE, i, i, "Add all to play queue");
-			i++; menu.add(Menu.NONE, i, i, "Delete file");
+		} else if (info.position < directoryNum) {			// For directory
+			menu.add(Menu.NONE, 0, 0, "Add to playlist");		
+		} else {											// For files
+			menu.add(Menu.NONE, 0, 0, "Add to playlist");
+			menu.add(Menu.NONE, 1, 1, "Add all to playlist");
+			menu.add(Menu.NONE, 2, 2, "Add to play queue");
+			menu.add(Menu.NONE, 3, 3, "Add all to play queue");
+			menu.add(Menu.NONE, 4, 4, "Delete file");
 		}
 	}
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
-		int id = item.getItemId();
+		final int id = item.getItemId();
+		final PlaylistUtils p = new PlaylistUtils();
 
 		if (info.position < parentNum) {					// Parent dir
 			// Do nothing
 		} else if (info.position < directoryNum) {			// Directories
-			PlaylistUtils p = new PlaylistUtils();
-			if (id == 0) {
+			switch (id) {
+			/*case 0:
 				p.filesToNewPlaylist(this, modList.get(info.position).filename, null);
-			} else {
+				break;*/
+			case 0:
+				addToPlaylist(info.position, 1, addDirToPlaylistDialogClickListener);
+				break;
+			}
+			
+			/*} else {
 				id--;
 				p.filesToPlaylist(this, modList.get(info.position).filename, PlaylistUtils.listNoSuffix()[id]);
-			}
+			}*/
 		} else {										// Files
-			int numPlists = PlaylistUtils.list().length;
-			if (id == 0) {
+			switch (id) {
+			/*case 0:										// New playlist
 				(new PlaylistUtils()).newPlaylist(this);
-			} else if (id <= numPlists) {
-				id--;
-				PlaylistInfo pi = modList.get(info.position);
-				String line = pi.filename + ":" + pi.comment + ":" + pi.name;
-				PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[id], line);
-			} else if (id == numPlists + 1) {
+				break;*/
+			case 0:										// Add to playlist
+				addToPlaylist(info.position, 1, addFileToPlaylistDialogClickListener);
+				break;
+			case 1:										// Add all to playlist
+				addToPlaylist(directoryNum, modList.size() - directoryNum, addFileToPlaylistDialogClickListener);
+				break;
+			case 2:
 				addToQueue(info.position, 1);
-			} else if (id == numPlists + 2) {
+				break;
+			case 3:
 				addToQueue(directoryNum, modList.size() - directoryNum);
-			} else if (id == numPlists + 3) {
-				deleteFile(info.position);
+				break;
+			case 4:
+				deleteName = modList.get(info.position).filename;
+				Message.yesNoDialog(this, R.string.msg_really_delete, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						if (which == DialogInterface.BUTTON_POSITIVE) {
+							if (InfoCache.delete(deleteName)) {
+								updatePlaylist(currentDir);
+								Message.toast(context, getString(R.string.msg_file_deleted));
+							} else {
+								Message.toast(context, getString(R.string.msg_cant_delete));
+							}
+						}
+					}
+				});
+
+				break;
 			}
 		}
 
 		return true;
 	}
-
+	
+	protected void addToPlaylist(int start, int num, DialogInterface.OnClickListener listener) {
+		fileSelection = start;
+		fileNum = num;
+		playlistSelection = -1;
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.msg_select_playlist)
+		.setPositiveButton(R.string.msg_ok, listener)
+	    .setNegativeButton(R.string.msg_cancel, listener)
+	    .setSingleChoiceItems(PlaylistUtils.listNoSuffix(), -1, new DialogInterface.OnClickListener() {
+		    public void onClick(DialogInterface dialog, int which) {
+		        playlistSelection = which;
+		    }
+		})
+	    .show();
+	}	
+	
+	/*
+	 * Add directory to playlist
+	 */
+	private DialogInterface.OnClickListener addDirToPlaylistDialogClickListener = new DialogInterface.OnClickListener() {
+	    public void onClick(DialogInterface dialog, int which) {
+	    	PlaylistUtils p = new PlaylistUtils();
+	    	
+	        switch (which) {
+	        case DialogInterface.BUTTON_POSITIVE:
+	        	if (playlistSelection >= 0) {
+	        		p.filesToPlaylist(context, modList.get(fileSelection).filename,
+	        					PlaylistUtils.listNoSuffix()[playlistSelection]);
+	        	}
+	            break;
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            break;
+	        }
+	    }
+	};
+	
+	/*
+	 * Add Files to playlist
+	 */	
+	private DialogInterface.OnClickListener addFileToPlaylistDialogClickListener = new DialogInterface.OnClickListener() {
+	    public void onClick(DialogInterface dialog, int which) {
+	        switch (which) {
+	        case DialogInterface.BUTTON_POSITIVE:
+	        	if (playlistSelection >= 0) {
+	        		for (int i = fileSelection; i < fileSelection + fileNum; i++) {
+	        			PlaylistInfo pi = modList.get(i);
+	        			String line = pi.filename + ":" + pi.comment + ":" + pi.name;
+	        			PlaylistUtils.addToList(context, PlaylistUtils.listNoSuffix()[playlistSelection], line);
+	        		}
+	        	}
+	            break;
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            break;
+	        }
+	    }
+	};
+	
 	protected void deleteFile(int start) {
 		deleteName = modList.get(start).filename;
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage(R.string.msg_really_delete)
-			.setPositiveButton(R.string.msg_yes, dialogClickListener)
-		    .setNegativeButton(R.string.msg_no, dialogClickListener)
+			.setPositiveButton(R.string.msg_yes, deleteDialogClickListener)
+		    .setNegativeButton(R.string.msg_no, deleteDialogClickListener)
 		    .show();
 		
 	}
 	
-	private DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+	private DialogInterface.OnClickListener deleteDialogClickListener = new DialogInterface.OnClickListener() {
 	    public void onClick(DialogInterface dialog, int which) {
-	        switch (which){
+	        switch (which) {
 	        case DialogInterface.BUTTON_POSITIVE:
 	        	if (InfoCache.delete(deleteName)) {
 	        		updatePlaylist(currentDir);
@@ -289,6 +372,9 @@ public class ModList extends PlaylistActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
+		case R.id.menu_new_playlist:
+			(new PlaylistUtils()).newPlaylist(this);
+			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
 			break;

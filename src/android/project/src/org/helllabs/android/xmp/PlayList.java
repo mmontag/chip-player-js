@@ -54,7 +54,6 @@ public class PlayList extends PlaylistActivity {
 		int lineNum;
 		
 		List<Integer> invalidList = new ArrayList<Integer>();
-		int[] invalid;
 		
 	    try {
 	    	BufferedReader in = new BufferedReader(new FileReader(file), 512);
@@ -165,15 +164,21 @@ public class PlayList extends PlaylistActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.playlist_menu, menu);
+	    inflater.inflate(R.menu.options_menu, menu);
 	    return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
+		case R.id.menu_new_playlist:
+			(new PlaylistUtils()).newPlaylist(this);
+			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
+			break;
+		case R.id.menu_refresh:
+			updateList();
 			break;
 		}
 		return true;

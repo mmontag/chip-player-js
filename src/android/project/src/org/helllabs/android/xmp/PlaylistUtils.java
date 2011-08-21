@@ -21,10 +21,15 @@ public class PlaylistUtils {
 	Xmp xmp = new Xmp();
 	
 	public void newPlaylist(final Context context) {
+		newPlaylist(context, null);
+	}
+	
+	public void newPlaylist(final Context context, Runnable runnable) {
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);		  
 		alert.setTitle("New playlist");  	
 	    LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    final View layout = inflater.inflate(R.layout.newlist, null);
+	    final Runnable myRunnable = runnable;
 
 	    alert.setView(layout);
 		  
@@ -40,6 +45,10 @@ public class PlaylistUtils {
 					file1.createNewFile();
 					file2.createNewFile();
 					FileUtils.writeToFile(file2, comment);
+					
+					if (myRunnable != null) {
+						myRunnable.run();
+					}
 				} catch (IOException e) {
 					Message.error(context, context.getString(R.string.error_create_playlist));
 				}
@@ -61,6 +70,9 @@ public class PlaylistUtils {
 	    }
 	}
 
+	/*
+	 * Send files in directory to the specified playlist
+	 */
 	public void filesToPlaylist(final Context context, final String path, final String name) {
 		final File modDir = new File(path);
 		

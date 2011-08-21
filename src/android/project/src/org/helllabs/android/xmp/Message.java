@@ -38,5 +38,16 @@ public class Message {
 	public static void toast(Context context, String s) {
 		Toast.makeText(context, s, Toast.LENGTH_SHORT).show();		
 	}
-
+	
+	public static void yesNoDialog(Context context, String message, DialogInterface.OnClickListener listener) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		builder.setMessage(R.string.msg_really_delete)
+			.setPositiveButton(R.string.msg_yes, listener)
+		    .setNegativeButton(R.string.msg_no, listener)
+		    .show();		
+	}
+	
+	public static void yesNoDialog(Context context, int res, DialogInterface.OnClickListener listener) {
+		yesNoDialog(context, context.getString(res), listener);
+	}
 }

@@ -30,10 +30,13 @@ public class PlaylistMenu extends ListActivity {
 	SharedPreferences prefs;
 	String media_path;
 	ProgressDialog progressDialog;
+	int deletePosition;
+	Context context;
 	
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
+		context = this;
 		setContentView(R.layout.playlist_menu);
 		registerForContextMenu(getListView());
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -105,15 +108,10 @@ public class PlaylistMenu extends ListActivity {
 	    AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
 		menu.setHeaderTitle("Playlist options");
 		
-		if (info.position == 0) {
+		if (info.position == 0) {					// Module list
 			menu.add(Menu.NONE, 0, 0, "Change directory");
-			menu.add(Menu.NONE, 1, 1, "Files to new playlist");
-			int i = 2;
-			for (String s : PlaylistUtils.listNoSuffix()) {
-				menu.add(Menu.NONE, i, i, "Add to " + s);
-				i++;
-			}
-		} else {
+			//menu.add(Menu.NONE, 1, 1, "Add to playlist");
+		} else {									// Playlists
 			menu.add(Menu.NONE, 0, 0, "Rename");
 			menu.add(Menu.NONE, 1, 1, "Edit comment");
 			menu.add(Menu.NONE, 2, 2, "Delete playlist");
@@ -122,28 +120,20 @@ public class PlaylistMenu extends ListActivity {
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
+		//SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		//final String media_path = prefs.getString(Settings.PREF_MEDIA_PATH, Settings.DEFAULT_MEDIA_PATH);
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		int index = item.getItemId();
-		PlaylistUtils p = new PlaylistUtils();
+		//PlaylistUtils p = new PlaylistUtils();
 		
-
 		if (info.position == 0) {		// First item of list
 			switch (index) {
 			case 0:						// First item of context menu
 				changeDir(this);
 				return true;
-			case 1:
-				p.filesToNewPlaylist(this, media_path, new Runnable() {
-					public void run() {
-						updateList();
-					}
-				});
-				return true;
-			default:
+			/*default:
 				p.filesToPlaylist(this, media_path, PlaylistUtils.listNoSuffix()[index - 2]);
-				return true;
+				return true;*/
 			}
 		} else {
 			switch (index) {
@@ -156,8 +146,16 @@ public class PlaylistMenu extends ListActivity {
 				updateList();
 				return true;
 			case 2:						// Delete
-				PlaylistUtils.deleteList(this, info.position - 1);
-				updateList();
+				deletePosition = info.position - 1;
+				Message.yesNoDialog(this, R.string.msg_really_delete, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						if (which == DialogInterface.BUTTON_POSITIVE) {
+							PlaylistUtils.deleteList(context, deletePosition);
+							updateList();
+						}
+					}
+				});
+
 				return true;
 			}			
 		}
@@ -290,6 +288,14 @@ public class PlaylistMenu extends ListActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
+		case R.id.menu_new_playlist:
+			(new PlaylistUtils()).newPlaylist(this, new Runnable() {
+				public void run() {
+					updateList();
+				}
+			});
+			updateList();
+			break;
 		case R.id.menu_prefs:		
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
 			break;
