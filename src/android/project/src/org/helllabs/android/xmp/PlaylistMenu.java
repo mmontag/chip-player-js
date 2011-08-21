@@ -70,6 +70,14 @@ public class PlaylistMenu extends ListActivity {
 			updateList();
 		}
 		
+		// Clear old cache
+		if (Settings.oldCacheDir.isDirectory()) {
+			try {
+				Settings.deleteCache(Settings.oldCacheDir);
+			} catch (IOException e) {
+				Message.toast(this, "Can't delete old cache");
+			}
+		}
 		changeLog.show();
 	}
 	

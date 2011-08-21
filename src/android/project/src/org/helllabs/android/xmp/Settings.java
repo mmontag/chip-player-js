@@ -16,7 +16,8 @@ public class Settings extends android.preference.PreferenceActivity {
 	static File sdDir = new File("/media/B&N Downloads").isDirectory() ?
 			new File("/media") : Environment.getExternalStorageDirectory();
 	static File dataDir = new File(sdDir, "Xmp for Android");
-	static File cacheDir = new File(dataDir, "cache");
+	static File oldCacheDir = new File(dataDir, "cache");
+	static File cacheDir = new File(sdDir, "Android/data/org.helllabs.android.xmp/cache/");
 	public static final String DEFAULT_MEDIA_PATH = sdDir.toString() + "/mod";
 	public static final String PREF_MEDIA_PATH = "media_path";
 	public static final String PREF_VOL_BOOST = "vol_boost";
@@ -72,7 +73,7 @@ public class Settings extends android.preference.PreferenceActivity {
     	return super.onKeyDown(keyCode, event);
     }
     
-	private void deleteCache(File f) throws IOException {
+	public static void deleteCache(File f) throws IOException {
 		if (!f.exists())
 			return;
 		
