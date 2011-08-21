@@ -12,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -44,6 +45,10 @@ public class PlaylistMenu extends ListActivity {
 		
 		ChangeLog changeLog = new ChangeLog(this);
 		
+		if (!checkStorage()) {
+			Message.fatalError(this, getString(R.string.error_storage), PlaylistMenu.this);
+		}
+		
 		if (!Settings.dataDir.isDirectory()) {
 			if (!Settings.dataDir.mkdirs()) {
 				Message.fatalError(this, getString(R.string.error_datadir), PlaylistMenu.this);
@@ -66,6 +71,18 @@ public class PlaylistMenu extends ListActivity {
 		}
 		
 		changeLog.show();
+	}
+	
+	boolean checkStorage() {
+		String state = Environment.getExternalStorageState();
+
+		if (Environment.MEDIA_MOUNTED.equals(state)) {
+			return true;
+		} else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+		    return true;
+		} else {
+			return false;
+		}
 	}
 	
 	void updateList() {
