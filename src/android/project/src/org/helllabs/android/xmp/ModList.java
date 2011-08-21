@@ -216,29 +216,15 @@ public class ModList extends PlaylistActivity {
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
 		final int id = item.getItemId();
-		final PlaylistUtils p = new PlaylistUtils();
 
 		if (info.position < parentNum) {					// Parent dir
 			// Do nothing
 		} else if (info.position < directoryNum) {			// Directories
-			switch (id) {
-			/*case 0:
-				p.filesToNewPlaylist(this, modList.get(info.position).filename, null);
-				break;*/
-			case 0:
+			if (id == 0) {
 				addToPlaylist(info.position, 1, addDirToPlaylistDialogClickListener);
-				break;
 			}
-			
-			/*} else {
-				id--;
-				p.filesToPlaylist(this, modList.get(info.position).filename, PlaylistUtils.listNoSuffix()[id]);
-			}*/
 		} else {										// Files
 			switch (id) {
-			/*case 0:										// New playlist
-				(new PlaylistUtils()).newPlaylist(this);
-				break;*/
 			case 0:										// Add to playlist
 				addToPlaylist(info.position, 1, addFileToPlaylistDialogClickListener);
 				break;
