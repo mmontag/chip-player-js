@@ -211,12 +211,14 @@ public class ModList extends PlaylistActivity {
 		} else if (info.position < directoryNum) {			// For directory
 			menu.add(Menu.NONE, 0, 0, "Add to playlist");		
 		} else {											// For files
-			menu.add(Menu.NONE, 0, 0, "Add to playlist");
-			menu.add(Menu.NONE, 1, 1, "Add all to playlist");
+			menu.add(1, 0, 0, "Add to playlist");
+			menu.add(1, 1, 1, "Add all to playlist");
 			menu.add(Menu.NONE, 2, 2, "Add to play queue");
 			menu.add(Menu.NONE, 3, 3, "Add all to play queue");
 			menu.add(Menu.NONE, 4, 4, "Delete file");
 		}
+		
+		menu.setGroupEnabled(1, PlaylistUtils.list().length > 0);
 	}
 	
 	@Override
@@ -275,7 +277,7 @@ public class ModList extends PlaylistActivity {
 		builder.setTitle(R.string.msg_select_playlist)
 		.setPositiveButton(R.string.msg_ok, listener)
 	    .setNegativeButton(R.string.msg_cancel, listener)
-	    .setSingleChoiceItems(PlaylistUtils.listNoSuffix(), -1, new DialogInterface.OnClickListener() {
+	    .setSingleChoiceItems(PlaylistUtils.listNoSuffix(), 0, new DialogInterface.OnClickListener() {
 		    public void onClick(DialogInterface dialog, int which) {
 		        playlistSelection = which;
 		    }
