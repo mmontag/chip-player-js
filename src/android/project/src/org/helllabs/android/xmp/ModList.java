@@ -36,17 +36,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
 public class ModList extends PlaylistActivity {
-	static final int SETTINGS_REQUEST = 45;
 	Xmp xmp = new Xmp();	/* used to get mod info */
 	boolean isBadDir = false;
 	ProgressDialog progressDialog;
@@ -186,13 +185,17 @@ public class ModList extends PlaylistActivity {
 	
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
+    	Log.i("Xmp ModList", "Activity result " + requestCode + "," + resultCode);
     	switch (requestCode) {
     	case SETTINGS_REQUEST:
             if (isBadDir || resultCode == RESULT_OK)
             	updateModlist(currentDir);
             super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
             break;
+    	case PLAY_MODULE_REQUEST:
+    		if (resultCode != RESULT_OK)
+    			updateModlist(currentDir);
+    		break;
         }
     }
 
@@ -349,29 +352,4 @@ public class ModList extends PlaylistActivity {
 	        }
 	    }
 	};
-	
-	// Menu
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.options_menu, menu);
-	    return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case R.id.menu_new_playlist:
-			(new PlaylistUtils()).newPlaylist(this);
-			break;
-		case R.id.menu_prefs:		
-			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
-			break;
-		case R.id.menu_refresh:
-			updateModlist(currentDir);
-			break;
-		}
-		return true;
-	}
 }

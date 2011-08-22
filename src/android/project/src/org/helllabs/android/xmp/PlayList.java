@@ -12,10 +12,10 @@ import java.util.List;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,7 +27,6 @@ class PlayListFilter implements FilenameFilter {
 }
 
 public class PlayList extends PlaylistActivity {
-	static final int SETTINGS_REQUEST = 45;
 	String name;
 	
 	@Override
@@ -99,11 +98,15 @@ public class PlayList extends PlaylistActivity {
 	
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	//Log.v(getString(R.string.app_name), requestCode + ":" + resultCode);
+		Log.i("Xmp PlayList", "Activity result " + requestCode + "," + resultCode);
     	switch (requestCode) {
     	case SETTINGS_REQUEST:
     		super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
             break;
+    	case PLAY_MODULE_REQUEST:
+    		if (resultCode != RESULT_OK)
+    			updateList();
+    		break;
         }
     }
 	
@@ -150,30 +153,4 @@ public class PlayList extends PlaylistActivity {
 
 		}
 	}
-
-	
-	// Menu
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.options_menu, menu);
-	    return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case R.id.menu_new_playlist:
-			(new PlaylistUtils()).newPlaylist(this);
-			break;
-		case R.id.menu_prefs:		
-			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
-			break;
-		case R.id.menu_refresh:
-			updateList();
-			break;
-		}
-		return true;
-	}	
 }

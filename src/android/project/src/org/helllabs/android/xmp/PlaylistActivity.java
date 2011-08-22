@@ -16,13 +16,17 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
 public abstract class PlaylistActivity extends ListActivity {
-	final public static int PLAY_MODULE_REQUEST = 669; 
+	static final int SETTINGS_REQUEST = 45;
+	static final int PLAY_MODULE_REQUEST = 669; 
 	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	ImageButton playAllButton, toggleLoopButton, toggleShuffleButton;
 	boolean shuffleMode = true;
@@ -131,12 +135,6 @@ public abstract class PlaylistActivity extends ListActivity {
 		startActivityForResult(intent, PLAY_MODULE_REQUEST);
 	}
 	
-	@Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.i("Xmp PlaylistActivity","Activity result " + requestCode + "," + resultCode);
-    }
-	
 	// Connection
 	
 	private ServiceConnection connection = new ServiceConnection() {
@@ -170,4 +168,29 @@ public abstract class PlaylistActivity extends ListActivity {
     		playModule(list);
     	}
 	}
+		
+	// Menu
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.options_menu, menu);
+	    return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()) {
+		case R.id.menu_new_playlist:
+			(new PlaylistUtils()).newPlaylist(this);
+			break;
+		case R.id.menu_prefs:		
+			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
+			break;
+		case R.id.menu_refresh:
+			update();
+			break;
+		}
+		return true;
+	}	
 }

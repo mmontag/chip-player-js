@@ -115,7 +115,8 @@ public class Player extends Activity {
 				try {
 					progressThread.join();
 				} catch (InterruptedException e) { }
-			};
+			}
+			finish();
         }
     };
     
@@ -218,9 +219,6 @@ public class Player extends Activity {
     		} while (t >= 0 && !endPlay);
     		
     		seekBar.setProgress(0);
-    		
-    		setResult(5);
-    		finish();
     	}
     };
 
@@ -419,7 +417,6 @@ public class Player extends Activity {
 		 */
 		stopButton.setOnLongClickListener(new View.OnLongClickListener() {
 			public boolean onLongClick(View v) {
-				//Debug.stopMethodTracing();
 				if (modPlayer == null)
 					return true;
 				
@@ -623,6 +620,7 @@ public class Player extends Activity {
 				try {
 					if (modPlayer.deleteFile()) {
 						Message.toast(activity, "File deleted");
+						setResult(RESULT_FIRST_USER);
 						modPlayer.nextSong();
 					} else {
 						Message.toast(activity, "Can\'t delete file");
