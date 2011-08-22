@@ -72,12 +72,21 @@ public class PlaylistMenu extends ListActivity {
 		
 		// Clear old cache
 		if (Settings.oldCacheDir.isDirectory()) {
-			try {
-				Settings.deleteCache(Settings.oldCacheDir);
-			} catch (IOException e) {
-				Message.toast(this, "Can't delete old cache");
-			}
+			progressDialog = ProgressDialog.show(this,      
+					"Please wait", "Moving old cache files...", true);
+			
+			new Thread() { 
+				public void run() {
+					try {
+						Settings.deleteCache(Settings.oldCacheDir);
+					} catch (IOException e) {
+						Message.toast(context, "Can't delete old cache");
+					}	
+					progressDialog.dismiss();
+				}
+			}.start();
 		}
+				
 		changeLog.show();
 	}
 	
