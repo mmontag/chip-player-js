@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -68,6 +69,7 @@ public class Player extends Activity {
 	boolean screenOn;
 	Activity activity;
 	AlertDialog deleteDialog;
+	BroadcastReceiver screenReceiver;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -292,8 +294,8 @@ public class Player extends Activity {
         // INITIALIZE RECEIVER by jwei512
 		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
-		BroadcastReceiver mReceiver = new ScreenReceiver();
-		registerReceiver(mReceiver, filter);
+		screenReceiver = new ScreenReceiver();
+		registerReceiver(screenReceiver, filter);
 		
 		screenOn = true;
 		
@@ -412,19 +414,23 @@ public class Player extends Activity {
 		 * Long click on the stop button deletes the current playing file
 		 * Feature requested by Jason <seglaran@gmail.com>
 		 */
-		/*stopButton.setOnLongClickListener(new OnLongClickListener() {
+		stopButton.setOnLongClickListener(new View.OnLongClickListener() {
 			public boolean onLongClick(View v) {
 				//Debug.stopMethodTracing();
 				if (modPlayer == null)
 					return true;
 				
-				//stopPlayingMod();
-				//finish();
+				AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+				builder.setMessage(R.string.msg_really_delete)
+					.setPositiveButton(R.string.msg_yes, deleteDialogClickListener)
+				    .setNegativeButton(R.string.msg_no, deleteDialogClickListener);
+				
+				deleteDialog = builder.show();	
 				
 				return true;
 		    }
-		});*/
-	
+		});
+		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (modPlayer == null)
@@ -485,19 +491,7 @@ public class Player extends Activity {
 			}
 		});
 	}
-	
-	/* DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-		public void onClick(DialogInterface dialog, int which) {
-			switch (which) {
-			case DialogInterface.BUTTON_POSITIVE:
 
-	            break;
-
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            break;
-	        }
-	    }
-	}; */
 	
 	@Override
 	public void onDestroy() {
@@ -511,6 +505,9 @@ public class Player extends Activity {
 				modPlayer.unregisterCallback(playerCallback);
 			} catch (RemoteException e) { }
 		}
+		
+		unregisterReceiver(screenReceiver);
+		
 		Log.i("Xmp Player", "Unbind service");
 		unbindService(connection);
 	}
@@ -615,4 +612,26 @@ public class Player extends Activity {
 			} catch (InterruptedException e) { }
 		}
 	}
+	
+	DialogInterface.OnClickListener deleteDialogClickListener = new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int which) {
+			switch (which) {
+			case DialogInterface.BUTTON_POSITIVE:
+				try {
+					if (modPlayer.deleteFile()) {
+						Message.toast(activity, "File deleted");
+						modPlayer.nextSong();
+					} else {
+						Message.toast(activity, "Can\'t delete file");
+					}
+				} catch (RemoteException e) {
+					Message.toast(activity, "Can\'t connect service");
+				}
+	            break;
+
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            break;
+	        }
+	    }
+	};
 }

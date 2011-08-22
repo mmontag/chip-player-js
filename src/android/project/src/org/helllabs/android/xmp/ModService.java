@@ -351,6 +351,14 @@ public class ModService extends Service {
 		public String[] getInstruments() {
 			return xmp.getInstruments();
 		}
+		
+		
+		// File management
+		
+		public boolean deleteFile() {
+			Log.i("Xmp ModService", "Delete file " + fileName);
+			return InfoCache.delete(fileName);
+		}
 
 		
 		// Callback

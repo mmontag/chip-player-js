@@ -4,11 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -22,7 +20,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
-public class PlaylistActivity extends ListActivity {
+public abstract class PlaylistActivity extends ListActivity {
 	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	ImageButton playAllButton, toggleLoopButton, toggleShuffleButton;
 	boolean shuffleMode = true;
@@ -84,9 +82,17 @@ public class PlaylistActivity extends ListActivity {
 	}
 	
 	@Override
+	protected void onRestart() {
+		super.onRestart();
+		update();
+	}
+	
+	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		playModule(modList.get(position).filename);
 	}
+	
+	abstract void update();
 	
 	void playModule(List<PlaylistInfo> list) {
 		int num = 0;

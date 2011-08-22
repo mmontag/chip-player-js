@@ -20,6 +20,7 @@ interface ModInterface {
 	boolean toggleLoop();
 	String getFileName();
 	String[] getInstruments();
+	boolean deleteFile();
 	
 	void registerCallback(PlayerCallback cb);
 	void unregisterCallback(PlayerCallback cb);

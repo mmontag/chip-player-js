@@ -46,6 +46,10 @@ public class PlayList extends PlaylistActivity {
 		updateList();
 	}
 	
+	void update() {
+		updateList();
+	}
+	
 	void updateList() {
 		modList.clear();
 		
@@ -113,11 +117,6 @@ public class PlayList extends PlaylistActivity {
 		menu.add(Menu.NONE, 0, 0, "Remove from playlist");
 		menu.add(Menu.NONE, 1, 1, "Add to play queue");
 		menu.add(Menu.NONE, 2, 2, "Add all to play queue");
-		// TODO: find a good way to not list current playlist
-		/*for (String each : PlaylistUtils.listNoSuffix()) {
-			i++;
-			menu.add(Menu.NONE, i, i, "Copy to " + each);
-		}*/
 	}
 	
 	@Override
@@ -137,12 +136,6 @@ public class PlayList extends PlaylistActivity {
 			addToQueue(0, modList.size());
 	    	break;
 		}
-		/*
-		index--;
-		String[] menuItems = PlaylistUtils.list();
-		PlaylistInfo pi = modList.get(info.position);
-		String line = pi.filename + ":" + pi.comment + ":" + pi.name;
-		PlaylistUtils.addToList(this, PlaylistUtils.listNoSuffix()[index], line);*/
 
 		return true;
 	}

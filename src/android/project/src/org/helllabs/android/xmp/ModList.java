@@ -97,7 +97,7 @@ public class ModList extends PlaylistActivity {
 				public void onClick(DialogInterface dialog, int which) {
 					examples.install(media_path,
 							prefs.getBoolean(Settings.PREF_EXAMPLES, true));
-					updatePlaylist(media_path);
+					updateModlist(media_path);
 				}
 			});
 			alertDialog.setButton2("Back", new DialogInterface.OnClickListener() {
@@ -109,10 +109,14 @@ public class ModList extends PlaylistActivity {
 			return;
 		}
 		
-		updatePlaylist(media_path);
+		updateModlist(media_path);
 	}
 
-	public void updatePlaylist(final String path) {
+	public void update() {
+		updateModlist(currentDir);
+	}
+	
+	public void updateModlist(final String path) {
 		modList.clear();
 		
 		currentDir = path;
@@ -174,7 +178,7 @@ public class ModList extends PlaylistActivity {
 				if ((name = file.getParentFile().getParent()) == null)
 					name = "/";
 			}
-			updatePlaylist(name);
+			updateModlist(name);
 		} else {
 			playModule(name);
 		}
@@ -186,7 +190,7 @@ public class ModList extends PlaylistActivity {
     	switch (requestCode) {
     	case SETTINGS_REQUEST:
             if (isBadDir || resultCode == RESULT_OK)
-            	updatePlaylist(currentDir);
+            	updateModlist(currentDir);
             super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
             break;
         }
@@ -243,7 +247,7 @@ public class ModList extends PlaylistActivity {
 					public void onClick(DialogInterface dialog, int which) {
 						if (which == DialogInterface.BUTTON_POSITIVE) {
 							if (InfoCache.delete(deleteName)) {
-								updatePlaylist(currentDir);
+								updateModlist(currentDir);
 								Message.toast(context, getString(R.string.msg_file_deleted));
 							} else {
 								Message.toast(context, getString(R.string.msg_cant_delete));
@@ -333,7 +337,7 @@ public class ModList extends PlaylistActivity {
 	        switch (which) {
 	        case DialogInterface.BUTTON_POSITIVE:
 	        	if (InfoCache.delete(deleteName)) {
-	        		updatePlaylist(currentDir);
+	        		updateModlist(currentDir);
 	        		Message.toast(context, getString(R.string.msg_file_deleted));
 	        	} else {
 	        		Message.toast(context, getString(R.string.msg_cant_delete));
@@ -365,7 +369,7 @@ public class ModList extends PlaylistActivity {
 			startActivityForResult(new Intent(this, Settings.class), SETTINGS_REQUEST);
 			break;
 		case R.id.menu_refresh:
-			updatePlaylist(currentDir);
+			updateModlist(currentDir);
 			break;
 		}
 		return true;
