@@ -15,12 +15,14 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
 public abstract class PlaylistActivity extends ListActivity {
+	final public static int PLAY_MODULE_REQUEST = 669; 
 	List<PlaylistInfo> modList = new ArrayList<PlaylistInfo>();
 	ImageButton playAllButton, toggleLoopButton, toggleShuffleButton;
 	boolean shuffleMode = true;
@@ -82,12 +84,6 @@ public abstract class PlaylistActivity extends ListActivity {
 	}
 	
 	@Override
-	protected void onRestart() {
-		super.onRestart();
-		update();
-	}
-	
-	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		playModule(modList.get(position).filename);
 	}
@@ -131,8 +127,15 @@ public abstract class PlaylistActivity extends ListActivity {
 		intent.putExtra("files", mods);
 		intent.putExtra("shuffle", shuffleMode);
 		intent.putExtra("loop", loopMode);
-		startActivity(intent);
+		Log.i("Xmp PlaylistActivity", "Start activity Player");
+		startActivityForResult(intent, PLAY_MODULE_REQUEST);
 	}
+	
+	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.i("Xmp PlaylistActivity","Activity result " + requestCode + "," + resultCode);
+    }
 	
 	// Connection
 	

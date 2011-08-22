@@ -115,8 +115,7 @@ public class Player extends Activity {
 				try {
 					progressThread.join();
 				} catch (InterruptedException e) { }
-			}
-			finish();
+			};
         }
     };
     
@@ -219,6 +218,9 @@ public class Player extends Activity {
     		} while (t >= 0 && !endPlay);
     		
     		seekBar.setProgress(0);
+    		
+    		setResult(5);
+    		finish();
     	}
     };
 
@@ -299,6 +301,7 @@ public class Player extends Activity {
 		
 		screenOn = true;
 		
+		setResult(RESULT_OK);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		showInfoLine = prefs.getBoolean(Settings.PREF_SHOW_INFO_LINE, true);
@@ -406,7 +409,7 @@ public class Player extends Activity {
 					return;
 				
 				stopPlayingMod();
-				finish();
+				//finish();
 		    }
 		});
 		
