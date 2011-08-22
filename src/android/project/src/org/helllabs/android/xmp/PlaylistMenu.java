@@ -181,7 +181,7 @@ public class PlaylistMenu extends ListActivity {
 				return true;
 			case 2:						// Delete
 				deletePosition = info.position - 1;
-				Message.yesNoDialog(this, R.string.msg_really_delete, new DialogInterface.OnClickListener() {
+				Message.yesNoDialog(this, R.string.msg_really_delete_playlist, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						if (which == DialogInterface.BUTTON_POSITIVE) {
 							PlaylistUtils.deleteList(context, deletePosition);

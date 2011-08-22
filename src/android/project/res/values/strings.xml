@@ -100,7 +100,7 @@ GNU General Public License for more details.</string>
 <string name="preferences_show_info_line_title">Replay status</string>
     <string name="preferences_show_info_line_summary">Show replay information and time</string>
 <string name="msg_yes">Yes</string>
-    <string name="msg_really_delete">Really delete?</string>
+    
     <string name="msg_no">No</string>
 <string name="msg_file_deleted">File deleted</string>
     <string name="msg_cant_delete">Can\'t delete file</string>
@@ -111,4 +111,7 @@ GNU General Public License for more details.</string>
     <string name="msg_select_playlist">Select playlist</string>
 <string name="menu_new_playlist">New playlist</string>
 <string name="error_storage">Can\'t access external storage.</string>
+<string name="msg_really_delete_file">Really delete this file?</string>
+    <string name="msg_really_delete_playlist">Really delete playlist?</string>
+    <string name="msg_really_delete">Really delete?</string>
 </resources>

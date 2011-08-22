@@ -421,7 +421,7 @@ public class Player extends Activity {
 					return true;
 				
 				AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-				builder.setMessage(R.string.msg_really_delete)
+				builder.setMessage(R.string.msg_really_delete_file)
 					.setPositiveButton(R.string.msg_yes, deleteDialogClickListener)
 				    .setNegativeButton(R.string.msg_no, deleteDialogClickListener);
 				
