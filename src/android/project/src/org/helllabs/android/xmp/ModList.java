@@ -153,7 +153,8 @@ public class ModList extends PlaylistActivity {
             	modList.addAll(list);
             	
                 final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(ModList.this,
-                			R.layout.song_item, R.id.info, modList);
+                			R.layout.song_item, R.id.info, modList,
+                			prefs.getBoolean(Settings.PREF_USE_FILENAME, false));
                 
                 /* This one must run in the UI thread */
                 handler.post(new Runnable() {
@@ -182,23 +183,6 @@ public class ModList extends PlaylistActivity {
 			playModule(name);
 		}
 	}
-	
-	@Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	Log.i("Xmp ModList", "Activity result " + requestCode + "," + resultCode);
-    	switch (requestCode) {
-    	case SETTINGS_REQUEST:
-            if (isBadDir || resultCode == RESULT_OK)
-            	updateModlist(currentDir);
-            super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
-            break;
-    	case PLAY_MODULE_REQUEST:
-    		if (resultCode != RESULT_OK)
-    			updateModlist(currentDir);
-    		break;
-        }
-    }
-
 	
 	// Playlist context menu
 	
@@ -271,7 +255,7 @@ public class ModList extends PlaylistActivity {
 	protected void addToPlaylist(int start, int num, DialogInterface.OnClickListener listener) {
 		fileSelection = start;
 		fileNum = num;
-		playlistSelection = -1;
+		playlistSelection = 0;
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.msg_select_playlist)

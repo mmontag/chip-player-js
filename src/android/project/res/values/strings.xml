@@ -113,5 +113,7 @@ GNU General Public License for more details.</string>
 <string name="error_storage">Can\'t access external storage.</string>
 <string name="msg_really_delete_file">Really delete this file?</string>
     <string name="msg_really_delete_playlist">Really delete playlist?</string>
+    <string name="preferences_use_filename_title">Show file names</string>
     <string name="msg_really_delete">Really delete?</string>
+    <string name="preferences_use_filename_summary">Display file names instead of titles in file browser and playlists</string>
 </resources>

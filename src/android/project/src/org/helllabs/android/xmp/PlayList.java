@@ -91,25 +91,11 @@ public class PlayList extends PlaylistActivity {
 		}
 	    
 	    final PlaylistInfoAdapter plist = new PlaylistInfoAdapter(PlayList.this,
-    			R.layout.playlist_item, R.id.plist_info, modList);
+    				R.layout.playlist_item, R.id.plist_info, modList,
+    				prefs.getBoolean(Settings.PREF_USE_FILENAME, false));
         
 	    setListAdapter(plist);
 	}
-	
-	@Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.i("Xmp PlayList", "Activity result " + requestCode + "," + resultCode);
-    	switch (requestCode) {
-    	case SETTINGS_REQUEST:
-    		super.showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
-            break;
-    	case PLAY_MODULE_REQUEST:
-    		if (resultCode != RESULT_OK)
-    			updateList();
-    		break;
-        }
-    }
-	
 	
 	// Playlist context menu
 	

@@ -117,7 +117,7 @@ public class PlaylistMenu extends ListActivity {
 		}
 
         final PlaylistInfoAdapter playlist = new PlaylistInfoAdapter(PlaylistMenu.this,
-    			R.layout.playlist_item, R.id.plist_info, list);
+        				R.layout.playlist_item, R.id.plist_info, list, false);
         
         setListAdapter(playlist);
 	}

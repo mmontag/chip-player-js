@@ -134,6 +134,21 @@ public abstract class PlaylistActivity extends ListActivity {
 		Log.i("Xmp PlaylistActivity", "Start activity Player");
 		startActivityForResult(intent, PLAY_MODULE_REQUEST);
 	}
+		
+	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	Log.i("Xmp ModList", "Activity result " + requestCode + "," + resultCode);
+    	switch (requestCode) {
+    	case SETTINGS_REQUEST:
+            update();
+            showToasts = prefs.getBoolean(Settings.PREF_SHOW_TOAST, true);
+            break;
+    	case PLAY_MODULE_REQUEST:
+    		if (resultCode != RESULT_OK)
+    			update();
+    		break;
+        }
+    }
 	
 	// Connection
 	

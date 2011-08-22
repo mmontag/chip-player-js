@@ -14,11 +14,13 @@ import android.widget.TextView;
 public class PlaylistInfoAdapter extends ArrayAdapter<PlaylistInfo> {
     private List<PlaylistInfo> items;
     private Context myContext;
+    private boolean useFilename;
 
-    public PlaylistInfoAdapter(Context context, int resource, int textViewResourceId, List<PlaylistInfo> items) {
+    public PlaylistInfoAdapter(Context context, int resource, int textViewResourceId, List<PlaylistInfo> items, boolean useFilename) {
     	super(context, resource, textViewResourceId, items);
     	this.items = items;
     	this.myContext = context;
+    	this.useFilename = useFilename;
     }
     
     @Override
@@ -35,7 +37,7 @@ public class PlaylistInfoAdapter extends ArrayAdapter<PlaylistInfo> {
     		TextView bt = (TextView)v.findViewById(R.id.plist_info);
     		ImageView im = (ImageView)v.findViewById(R.id.plist_image);
     		
-   			tt.setText(o.name);
+   			tt.setText(useFilename ? FileUtils.basename(o.filename) : o.name);
    			bt.setText(o.comment);
    			
    			Typeface t = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL);

@@ -76,4 +76,8 @@ public class FileUtils {
 			
 		return true;
 	}
+	
+	static public String basename(String pathname) {
+		return new File(pathname).getName();
+	}
 }
