@@ -411,25 +411,27 @@ public class Player extends Activity {
 		    }
 		});
 		
-		/*
-		 * Long click on the stop button deletes the current playing file
-		 * Feature requested by Jason <seglaran@gmail.com>
-		 */
-		stopButton.setOnLongClickListener(new View.OnLongClickListener() {
-			public boolean onLongClick(View v) {
-				if (modPlayer == null)
+		if (prefs.getBoolean(Settings.PREF_ENABLE_DELETE, false)) {
+			/*
+			 * Long click on the stop button deletes the current playing file
+			 * Feature requested by Jason <seglaran@gmail.com>
+			 */
+			stopButton.setOnLongClickListener(new View.OnLongClickListener() {
+				public boolean onLongClick(View v) {
+					if (modPlayer == null)
+						return true;
+					
+					AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+					builder.setMessage(R.string.msg_really_delete_file)
+						.setPositiveButton(R.string.msg_yes, deleteDialogClickListener)
+					    .setNegativeButton(R.string.msg_no, deleteDialogClickListener);
+					
+					deleteDialog = builder.show();	
+					
 					return true;
-				
-				AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-				builder.setMessage(R.string.msg_really_delete_file)
-					.setPositiveButton(R.string.msg_yes, deleteDialogClickListener)
-				    .setNegativeButton(R.string.msg_no, deleteDialogClickListener);
-				
-				deleteDialog = builder.show();	
-				
-				return true;
-		    }
-		});
+			    }
+			});
+		}
 		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {

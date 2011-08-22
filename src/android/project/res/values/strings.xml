@@ -116,4 +116,7 @@ GNU General Public License for more details.</string>
     <string name="preferences_use_filename_title">Show file names</string>
     <string name="msg_really_delete">Really delete?</string>
     <string name="preferences_use_filename_summary">Display file names instead of titles in file browser and playlists</string>
+<string name="preferences_enable_delete_title">Enable file delete</string>
+    <string name="preferences_enable_delete_summary">If enabled, the currently playing file can be deleted by long pressing the stop button</string>
+<string name="preferences_category_experimental">Experimental (be careful)</string>
 </resources>

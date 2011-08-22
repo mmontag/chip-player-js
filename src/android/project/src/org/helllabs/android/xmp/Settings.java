@@ -34,6 +34,7 @@ public class Settings extends android.preference.PreferenceActivity {
 	public static final String PREF_SHOW_INFO_LINE = "show_info_line";
 	public static final String PREF_SHOW_INS_HIGHLIGHT = "show_ins_highlight";
 	public static final String PREF_USE_FILENAME = "use_filename";
+	public static final String PREF_ENABLE_DELETE = "enable_delete";
 	private SharedPreferences prefs;
 	private String oldPath;
 	

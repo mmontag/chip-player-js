@@ -133,8 +133,20 @@
       android:persistent="true"
       android:title="@string/preferences_show_toast_title"
       android:summary="@string/preferences_show_toast_summary"
-      android:defaultValue="true" />     
-            
+      android:defaultValue="true" />
+      
+    <PreferenceCategory
+      android:title="@string/preferences_category_experimental">
+          
+    <CheckBoxPreference
+      android:key="enable_delete"
+      android:persistent="true"
+      android:title="@string/preferences_enable_delete_title"
+      android:summary="@string/preferences_enable_delete_summary"
+      android:defaultValue="false" />
+      
+    </PreferenceCategory>
+                  
   </PreferenceScreen>
   </PreferenceCategory>
   
