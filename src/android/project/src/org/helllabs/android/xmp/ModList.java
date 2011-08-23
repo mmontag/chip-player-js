@@ -33,10 +33,8 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -232,19 +230,7 @@ public class ModList extends PlaylistActivity {
 				break;
 			case 4:
 				deleteName = modList.get(info.position).filename;
-				Message.yesNoDialog(this, R.string.msg_really_delete, new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						if (which == DialogInterface.BUTTON_POSITIVE) {
-							if (InfoCache.delete(deleteName)) {
-								updateModlist(currentDir);
-								Message.toast(context, getString(R.string.msg_file_deleted));
-							} else {
-								Message.toast(context, getString(R.string.msg_cant_delete));
-							}
-						}
-					}
-				});
-
+				Message.yesNoDialog(this, "Delete", "Are you sure to delete " + deleteName + "?", deleteDialogClickListener);
 				break;
 			}
 		}
@@ -276,15 +262,11 @@ public class ModList extends PlaylistActivity {
 	    public void onClick(DialogInterface dialog, int which) {
 	    	PlaylistUtils p = new PlaylistUtils();
 	    	
-	        switch (which) {
-	        case DialogInterface.BUTTON_POSITIVE:
+	        if (which == DialogInterface.BUTTON_POSITIVE) {
 	        	if (playlistSelection >= 0) {
 	        		p.filesToPlaylist(context, modList.get(fileSelection).filename,
 	        					PlaylistUtils.listNoSuffix()[playlistSelection]);
 	        	}
-	            break;
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            break;
 	        }
 	    }
 	};
@@ -294,8 +276,7 @@ public class ModList extends PlaylistActivity {
 	 */	
 	private DialogInterface.OnClickListener addFileToPlaylistDialogClickListener = new DialogInterface.OnClickListener() {
 	    public void onClick(DialogInterface dialog, int which) {
-	        switch (which) {
-	        case DialogInterface.BUTTON_POSITIVE:
+	        if (which == DialogInterface.BUTTON_POSITIVE) {
 	        	if (playlistSelection >= 0) {
 	        		for (int i = fileSelection; i < fileSelection + fileNum; i++) {
 	        			PlaylistInfo pi = modList.get(i);
@@ -303,39 +284,23 @@ public class ModList extends PlaylistActivity {
 	        			PlaylistUtils.addToList(context, PlaylistUtils.listNoSuffix()[playlistSelection], line);
 	        		}
 	        	}
-	            break;
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            break;
 	        }
 	    }
 	};
 	
-	protected void deleteFile(int start) {
-		deleteName = modList.get(start).filename;
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(R.string.msg_really_delete)
-			.setPositiveButton(R.string.msg_yes, deleteDialogClickListener)
-		    .setNegativeButton(R.string.msg_no, deleteDialogClickListener)
-		    .show();
-		
-	}
-	
+	/*
+	 * Delete file
+	 */
 	private DialogInterface.OnClickListener deleteDialogClickListener = new DialogInterface.OnClickListener() {
-	    public void onClick(DialogInterface dialog, int which) {
-	        switch (which) {
-	        case DialogInterface.BUTTON_POSITIVE:
-	        	if (InfoCache.delete(deleteName)) {
-	        		updateModlist(currentDir);
-	        		Message.toast(context, getString(R.string.msg_file_deleted));
-	        	} else {
-	        		Message.toast(context, getString(R.string.msg_cant_delete));
-	        	}
-	            break;
-
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            break;
-	        }
-	    }
+		public void onClick(DialogInterface dialog, int which) {
+			if (which == DialogInterface.BUTTON_POSITIVE) {
+				if (InfoCache.delete(deleteName)) {
+					updateModlist(currentDir);
+					Message.toast(context, getString(R.string.msg_file_deleted));
+				} else {
+					Message.toast(context, getString(R.string.msg_cant_delete));
+				}
+			}
+		}
 	};
 }

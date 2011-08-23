@@ -73,7 +73,7 @@ public class PlaylistMenu extends ListActivity {
 		// Clear old cache
 		if (Settings.oldCacheDir.isDirectory()) {
 			progressDialog = ProgressDialog.show(this,      
-					"Please wait", "Moving old cache files...", true);
+					"Please wait", "Removing old cache files...", true);
 			
 			new Thread() { 
 				public void run() {
@@ -181,7 +181,8 @@ public class PlaylistMenu extends ListActivity {
 				return true;
 			case 2:						// Delete
 				deletePosition = info.position - 1;
-				Message.yesNoDialog(this, R.string.msg_really_delete_playlist, new DialogInterface.OnClickListener() {
+				Message.yesNoDialog(this, "Delete", "Are you sure to delete playlist " +
+						PlaylistUtils.listNoSuffix()[deletePosition] + "?", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						if (which == DialogInterface.BUTTON_POSITIVE) {
 							PlaylistUtils.deleteList(context, deletePosition);

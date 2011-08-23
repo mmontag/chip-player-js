@@ -39,15 +39,12 @@ public class Message {
 		Toast.makeText(context, s, Toast.LENGTH_SHORT).show();		
 	}
 	
-	public static void yesNoDialog(Context context, String message, DialogInterface.OnClickListener listener) {
+	public static void yesNoDialog(Context context, String title, String message, DialogInterface.OnClickListener listener) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(context);
-		builder.setMessage(R.string.msg_really_delete)
+		builder.setTitle(title)
+			.setMessage(message)
 			.setPositiveButton(R.string.msg_yes, listener)
 		    .setNegativeButton(R.string.msg_no, listener)
 		    .show();		
-	}
-	
-	public static void yesNoDialog(Context context, int res, DialogInterface.OnClickListener listener) {
-		yesNoDialog(context, context.getString(res), listener);
 	}
 }

@@ -21,6 +21,9 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.FrameLayout;
@@ -411,28 +414,6 @@ public class Player extends Activity {
 		    }
 		});
 		
-		if (prefs.getBoolean(Settings.PREF_ENABLE_DELETE, false)) {
-			/*
-			 * Long click on the stop button deletes the current playing file
-			 * Feature requested by Jason <seglaran@gmail.com>
-			 */
-			stopButton.setOnLongClickListener(new View.OnLongClickListener() {
-				public boolean onLongClick(View v) {
-					if (modPlayer == null)
-						return true;
-					
-					AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-					builder.setMessage(R.string.msg_really_delete_file)
-						.setPositiveButton(R.string.msg_yes, deleteDialogClickListener)
-					    .setNegativeButton(R.string.msg_no, deleteDialogClickListener);
-					
-					deleteDialog = builder.show();	
-					
-					return true;
-			    }
-			});
-		}
-		
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (modPlayer == null)
@@ -615,10 +596,9 @@ public class Player extends Activity {
 		}
 	}
 	
-	DialogInterface.OnClickListener deleteDialogClickListener = new DialogInterface.OnClickListener() {
+	private DialogInterface.OnClickListener deleteDialogClickListener = new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int which) {
-			switch (which) {
-			case DialogInterface.BUTTON_POSITIVE:
+			if (which == DialogInterface.BUTTON_POSITIVE) {
 				try {
 					if (modPlayer.deleteFile()) {
 						Message.toast(activity, "File deleted");
@@ -630,11 +610,28 @@ public class Player extends Activity {
 				} catch (RemoteException e) {
 					Message.toast(activity, "Can\'t connect service");
 				}
-	            break;
-
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            break;
 	        }
 	    }
 	};
+		
+	// Menu
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		if (prefs.getBoolean(Settings.PREF_ENABLE_DELETE, false)) {
+			MenuInflater inflater = getMenuInflater();
+			inflater.inflate(R.menu.player_menu, menu);
+		}
+	    return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()) {
+		case R.id.menu_delete:
+			Message.yesNoDialog(activity, "Delete", "Are you sure to delete this file?", deleteDialogClickListener);
+			break;
+		}
+		return true;
+	}	
 }
