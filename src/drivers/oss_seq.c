@@ -313,11 +313,11 @@ static int writepatch(struct xmp_context *ctx, struct patch_info *patch)
 		return 0;
 	}
 
-	if ((!!(o->outfmt & XMP_FMT_FM)) ^ (patch->len == XMP_PATCH_FM))
+	if ((!!(o->outfmt & XMP_FMT_FM)) ^ PATCH_SYNTH(patch))
 		return XMP_ERR_PATCH;
 
 	patch->device_no = dev;
-	if (patch->len == XMP_PATCH_FM) {
+	if (PATCH_SYNTH(patch)) {
 		sbi.key = FM_PATCH;
 		sbi.device = dev;
 		sbi.channel = patch->instr_no;

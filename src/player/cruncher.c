@@ -77,7 +77,7 @@ int xmp_cvt_crunch (struct patch_info **patch, unsigned int ratio)
     if (ratio == 0x10000)
 	return ratio;
 	
-    if ((*patch)->len == XMP_PATCH_FM)
+    if (PATCH_SYNTH(*patch))
 	return 0;
 
     type = 0;

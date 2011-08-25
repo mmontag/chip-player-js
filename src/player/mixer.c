@@ -425,7 +425,7 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
     struct patch_info *pi = d->patch_array[vi->smp];
     int lpe, res, mode;
 
-    if (pi->len == XMP_PATCH_FM)
+    if (PATCH_SYNTH(pi))
 	return;
 
     res = !!(pi->mode & WAVE_16_BITS);
@@ -463,7 +463,7 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     vi->vol = 0;
     vi->freq = (int64)C4_FREQ * pi->base_freq / o->freq;
     
-    if (pi->len == XMP_PATCH_FM) {
+    if (PATCH_SYNTH(pi)) {
 	vi->fidx = FLAG_SYNTH;
 	if (o->outfmt & XMP_FMT_MONO)
 	    vi->pan = 0;
@@ -608,7 +608,7 @@ int xmp_smix_numvoices(struct xmp_context *ctx, int num)
 int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 {
     if (patch) {
-	if (patch->len == XMP_PATCH_FM)
+	if (PATCH_SYNTH(patch))
 	    return 0;
 
 	if (patch->len <= 0)

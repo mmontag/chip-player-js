@@ -115,6 +115,7 @@ void xmp_init_formats(xmp_context ctx)
 	REG_LOADER(mfp);
 	REG_LOADER(alm);
 	REG_LOADER(polly);
+	REG_LOADER(stc);
 
 	pw_loader.enable = 1;
 	list_add_tail(&pw_loader.list, &loader_list);

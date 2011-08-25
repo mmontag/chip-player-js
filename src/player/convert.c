@@ -151,8 +151,7 @@ void xmp_cvt_to8bit(struct xmp_context *ctx)
     for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
 
-	if (!(patch && (patch->mode & WAVE_16_BITS) &&
-	    (patch->len != XMP_PATCH_FM)))
+	if (!(patch && (patch->mode & WAVE_16_BITS) && !PATCH_SYNTH(patch)))
 	    continue;
 
 	patch->mode &= ~WAVE_16_BITS;
@@ -181,8 +180,7 @@ void xmp_cvt_to16bit(struct xmp_context *ctx)
 
     for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
-	if ((!patch) || patch->mode & WAVE_16_BITS ||
-	    (patch->len == XMP_PATCH_FM))
+	if ((!patch) || patch->mode & WAVE_16_BITS || PATCH_SYNTH(patch))
 	    continue;
 
 	patch->mode |= WAVE_16_BITS;
@@ -205,7 +203,7 @@ void xmp_cvt_to16bit(struct xmp_context *ctx)
 /* Hipolito's routine to minimize loop clicking */
 void xmp_cvt_anticlick (struct patch_info *patch)
 {
-    if (patch->len == XMP_PATCH_FM)
+    if (PATCH_SYNTH(patch))
 	return;
 
     /* Ok, I need this messy code to anticlick in AWE :-( */
@@ -247,8 +245,7 @@ void xmp_cvt_bid2und(struct xmp_context *ctx)
 
     for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
-	if (!(patch && (patch->mode & WAVE_BIDIR_LOOP) &&
-	    (patch->len != XMP_PATCH_FM)))
+	if (!(patch && (patch->mode & WAVE_BIDIR_LOOP) && !PATCH_SYNTH(patch)))
 	    continue;
 
 	patch->mode &= ~WAVE_BIDIR_LOOP;
