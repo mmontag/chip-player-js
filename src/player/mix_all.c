@@ -242,11 +242,3 @@ SMIX_MIXER(smix_mn16itpt_flt)
     SAVE_FILTER();
 }
 
-
-/* Handler for synthesized sounds
- */
-SMIX_MIXER(smix_synth)
-{
-    synth_mixer(tmp_bk, count, vl >> 7, vr >> 7, itpt_inc);
-}
-

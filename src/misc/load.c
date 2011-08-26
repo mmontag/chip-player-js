@@ -569,7 +569,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->xxh->tpo = 6;
     m->xxh->bpm = 125;
     m->xxh->chn = 4;
-    m->synth = NULL;
+    m->synth = &synth_null;
 
     for (i = 0; i < 64; i++) {
 	m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;

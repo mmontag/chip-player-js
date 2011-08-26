@@ -305,7 +305,6 @@ static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
 
 
 struct xmp_synth_info synth_ym3812 = {
-        "YM3812",
 	synth_init,
 	synth_deinit,
 	synth_reset,

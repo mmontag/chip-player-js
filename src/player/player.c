@@ -181,10 +181,11 @@ static inline void reset_channel(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
-    int i;
+    struct xmp_mod_context *m = &p->m;
     struct xmp_channel *xc;
+    int i;
 
-    synth_reset();
+    m->synth->reset();
     memset(p->xc_data, 0, sizeof (struct xmp_channel) * d->numchn);
 
     for (i = d->numchn; i--; ) {
@@ -193,8 +194,8 @@ static inline void reset_channel(struct xmp_context *ctx)
     }
     for (i = d->numtrk; i--; ) {
 	xc = &p->xc_data[i];
-	xc->masterpan = p->m.xxc[i].pan;
-	xc->mastervol = p->m.xxc[i].vol; //0x40;
+	xc->masterpan = m->xxc[i].pan;
+	xc->mastervol = m->xxc[i].vol; //0x40;
 	xc->cutoff = 0xff;
     }
 }
@@ -877,10 +878,10 @@ int _xmp_player_start(struct xmp_context *ctx)
 	if (!(p->fetch_ctl && f->loop_stack && f->loop_start && p->xc_data))
 		return XMP_ERR_ALLOC;
 
-	reset_channel(ctx);
+	m->synth->init(o->freq);
+	m->synth->reset();
 
-	synth_init(o->freq);
-	synth_reset();
+	reset_channel(ctx);
 
 	xmp_drv_starttimer(ctx);
 
@@ -1058,7 +1059,7 @@ void _xmp_player_end(struct xmp_context *ctx)
 
 	xmp_drv_stoptimer(ctx);
 	xmp_drv_off(ctx);
-	synth_deinit();
+	m->synth->deinit();
 
 	if (m->xxh->len == 0 || m->xxh->chn == 0)
                 return;

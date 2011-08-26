@@ -55,7 +55,6 @@ void    smix_mn16itpt_flt (struct voice_info *, int *, int, int, int, int);
 void    smix_st8itpt_flt  (struct voice_info *, int *, int, int, int, int);
 void    smix_st16itpt_flt (struct voice_info *, int *, int, int, int, int);
 
-void    smix_synth	  (struct voice_info *, int *, int, int, int, int);
 
 static void     out_su8norm     (char*, int*, int, int, int);
 static void     out_su16norm    (int16*, int*, int, int, int);
@@ -264,6 +263,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
+    struct xmp_mod_context *m = &ctx->p.m;
     struct voice_info *vi;
     struct patch_info *pi;
     int smp_cnt, tic_cnt, lps, lpe;
@@ -292,7 +292,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {
-		smix_synth(vi, buf_pos, s->ticksize, vol_l, vol_r,
+    		m->synth->mixer(buf_pos, s->ticksize, vol_l >> 7, vol_r >> 7,
 						vi->fidx & FLAG_STEREO);
 	        synth = 0;
 	    }
@@ -472,7 +472,7 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 	    vi->fidx |= FLAG_STEREO;
 	}
 
-	synth_setpatch(voc, (uint8 *)pi->data);
+	m->synth->setpatch(voc, (uint8 *)pi->data);
 
 	return;
     }
@@ -524,25 +524,27 @@ void smix_setnote(struct xmp_context *ctx, int voc, int note)
 void smix_setbend(struct xmp_context *ctx, int voc, int bend)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_mod_context *m = &ctx->p.m;
     struct voice_info *vi = &d->voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note, bend);
 
     if (vi->fidx & FLAG_SYNTH)
-	synth_setnote(voc, vi->note, bend);
+	m->synth->setnote(voc, vi->note, bend);
 }
 
 
 void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_mod_context *m = &ctx->p.m;
     struct voice_info *vi = &d->voice_array[voc];
  
     smix_anticlick(ctx, voc, vol, vi->pan, NULL, 0);
     vi->vol = vol;
 
     if (vi->fidx & FLAG_SYNTH)
-	synth_setvol(voc, vol >> 4);
+	m->synth->setvol(voc, vol >> 4);
 }
 
 
