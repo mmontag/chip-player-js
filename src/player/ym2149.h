@@ -18,6 +18,7 @@
 #define REPLAY_RATE_MIN 25
 #define SAMPLING_RATE_MIN 8000
 #define SAMPLING_RATE_MAX 48000
+#define SAMPLING_RATE_DEF 44100
 
 #ifdef __cplusplus
 extern "C" {
@@ -113,7 +114,7 @@ int YM_reset(void);
  *
  *  @see YM_reset()
  */
-int YM_init(int);
+int YM_init(void);
 
 /**@}*/
 

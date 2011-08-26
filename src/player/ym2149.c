@@ -232,12 +232,12 @@ static void init_output_level(unsigned int new_level)
   }
 }
 
-int YM_init(int srate)
+int YM_init()
 {
   init_output_level(0xD000);
   YM_reset();
   if (!ifrq) {
-    YM_sampling_rate(srate);
+    YM_sampling_rate(SAMPLING_RATE_DEF);
   }
   return 0;
 }
