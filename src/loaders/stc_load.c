@@ -47,7 +47,7 @@ static int stc_test(FILE * f, char *t, const int start)
 
 	fseek(f, start, SEEK_SET);
 
-	if (get8(f) > 0x20)			/* Check tempo */
+	if (read8(f) > 0x20)			/* Check tempo */
 		return -1;
 
 	pos_ptr = read16l(f);			/* Positions pointer */
