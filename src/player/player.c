@@ -879,6 +879,9 @@ int _xmp_player_start(struct xmp_context *ctx)
 
 	reset_channel(ctx);
 
+	synth_init(o->freq);
+	synth_reset();
+
 	xmp_drv_starttimer(ctx);
 
 	return 0;
@@ -1055,6 +1058,7 @@ void _xmp_player_end(struct xmp_context *ctx)
 
 	xmp_drv_stoptimer(ctx);
 	xmp_drv_off(ctx);
+	synth_deinit();
 
 	if (m->xxh->len == 0 || m->xxh->chn == 0)
                 return;

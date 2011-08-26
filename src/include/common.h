@@ -163,6 +163,7 @@ struct xmp_ord_info {
 
 #include "list.h"
 #include "xxm.h"
+#include "synth.h"
 
 struct xmp_mod_context {
 	int verbosity;			/* verbosity level */
@@ -200,6 +201,8 @@ struct xmp_mod_context {
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
 	uint8 **med_wav_table;		/* MED waveform sequence table */
+
+	struct xmp_synth_info *synth;
 };
 
 struct flow_control {

@@ -218,6 +218,8 @@ skip:
 	m->xxc[i].flg = XXM_CHANNEL_FM;
     }
 
+    m->synth = &synth_ym3812;
+
     return 0;
 }
 

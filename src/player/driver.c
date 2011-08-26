@@ -110,7 +110,7 @@ int xmp_drv_open(struct xmp_context *ctx)
     int status;
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
-    struct xmp_options *o = &ctx->o;
+    /*struct xmp_options *o = &ctx->o;*/
 
     d->memavl = 0;
     s->buf32b = NULL;
@@ -125,8 +125,8 @@ int xmp_drv_open(struct xmp_context *ctx)
 	return XMP_ERR_ALLOC;
     }
 
-    synth_init(o->freq);
-    synth_reset();
+    /*synth_init(o->freq);
+    synth_reset();*/
 
     return 0;
 }
@@ -160,7 +160,7 @@ void xmp_drv_close(struct xmp_context *ctx)
     memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
     d->driver->shutdown(ctx);
     free(d->patch_array);
-    synth_deinit();
+    /*synth_deinit();*/
 }
 
 
