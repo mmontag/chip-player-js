@@ -1,6 +1,7 @@
 
 DOCS_DFILES	= Makefile COPYING CREDITS README.awebug \
 		  README.unsqsh README.fixloop README.trackers ChangeLog \
+		  adlib_sb.txt ay-3-8912.txt \
 		  xmp.1 README.os2 pt_versions.txt st02-ok.sample formats
 DOCS_PATH	= docs
 
