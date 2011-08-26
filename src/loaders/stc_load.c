@@ -70,7 +70,7 @@ static int stc_test(FILE * f, char *t, const int start)
 
 	for (i = 0; i < max_pat; i++) {
 		int num = read8(f);		/* Check track pointers */
-		if (num != i)
+		if (num != (i + 1))
 			return -1;
 		read16l(f);
 		read16l(f);
