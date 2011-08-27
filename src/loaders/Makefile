@@ -12,7 +12,7 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  polly_load.o stc_load.o
 
 LOADERS_OBJS	= common.o iff.o itsex.o asif.o voltable.o $(LOADERS)
-LOADERS_DFILES	= Makefile $(LOADERS_OBJS:.o=.c) ftm_load.c med2_load.c \
+LOADERS_DFILES	= Makefile $(LOADERS_OBJS:.o=.c) ftm_load.c \
 		  asif.h far.h iff.h imf.h it.h liq.h load.h med.h mod.h \
 		  mtm.h ptm.h rtm.h s3m.h stm.h stx.h xm.h
 LOADERS_PATH	= src/loaders

@@ -12,6 +12,7 @@
 
 #include "load.h"
 #include "period.h"
+#include "spectrum.h"
 
 /* ZX Spectrum Sound Tracker loader
  * Sound Tracker written by Jarek Burczynski (Bzyk), 1990
@@ -89,7 +90,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	int i, j;
-	char buf[64];
+	char buf[100];
 	int pos_ptr, orn_ptr, pat_ptr;
 	struct stc_ord stc_ord[256];
 	struct stc_pat stc_pat[MAX_PAT];
@@ -230,13 +231,45 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	INSTRUMENT_INIT();
 
+	fseek(f, 27, SEEK_SET);
+
+	reportv(ctx, 1, "     Loop Len\n");
+
 	for (i = 0; i < m->xxh->ins; i++) {
+		struct spectrum_sample ss;
+
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 		m->xxih[i].nsm = 1;
 		m->xxi[i][0].vol = 0x40;
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].xpo = -1;
 		m->xxi[i][0].sid = i;
+
+		fread(buf, 1, 99, f);
+
+		if (buf[97] == 0) {
+			ss.loop = 32;
+			ss.length = 33;
+		} else {
+			ss.loop = buf[97] - 1;
+			if (ss.loop > 31)
+				ss.loop = 31;
+			ss.length = buf[97] + buf[98];
+			if (ss.length > 32)
+				ss.length = 32;
+			if (ss.length == 0)
+				ss.length = 1;
+			if (ss.loop >= ss.length)
+				ss.loop = ss.length - 1;
+
+			if (ss.length < 32) {
+				ss.length += 33 - (ss.loop + 1);
+				ss.loop = 32;
+			}
+		}
+
+		reportv(ctx, 1, "[%2X] %4d %3d\n", i, ss.loop, ss.length);
+		
 	}
 	
 	return 0;

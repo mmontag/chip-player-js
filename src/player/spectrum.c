@@ -14,6 +14,7 @@
 #include "common.h"
 #include "driver.h"
 #include "synth.h"
+#include "spectrum.h"
 #include "ym2149.h"
 
 
