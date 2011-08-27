@@ -228,7 +228,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxc[i].flg = XXM_CHANNEL_FM;
     }
 
-    m->synth = &synth_ym3812;
+    m->synth = &synth_adlib;
 
     return 0;
 }

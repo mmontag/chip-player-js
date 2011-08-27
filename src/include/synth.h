@@ -16,7 +16,7 @@ struct xmp_synth_info {
 };
 
 extern struct xmp_synth_info synth_null;
-extern struct xmp_synth_info synth_ym3812;
-extern struct xmp_synth_info synth_ym2149;
+extern struct xmp_synth_info synth_adlib;
+extern struct xmp_synth_info synth_spectrum;
 
 #endif

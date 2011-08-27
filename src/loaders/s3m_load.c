@@ -527,7 +527,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     free(pp_pat);
     free(pp_ins);
 
-    m->synth = &synth_ym3812;
+    m->synth = &synth_adlib;
     m->quirk |= XMP_QUIRK_ST3;
 
     return 0;
