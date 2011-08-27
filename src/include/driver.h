@@ -4,11 +4,9 @@
 
 #include "common.h"
 
-#define XMP_PATCH_YM3812	-1
-#define XMP_PATCH_YM2149	-2
+#define XMP_PATCH_SYNTH	-1
 
-#define PATCH_SYNTH(x) \
-	((x)->len == XMP_PATCH_YM3812 || (x)->len == XMP_PATCH_YM2149)
+#define PATCH_SYNTH(x) ((x)->len == XMP_PATCH_SYNTH)
 
 #if !defined(DRIVER_OSS_SEQ) && !defined(DRIVER_OSS)
 
@@ -44,8 +42,6 @@ struct patch_info {
 #define XMP_SMP_BIGEND		0x0040	/* Big-endian */
 #define XMP_SMP_VIDC		0x0080	/* Archimedes VIDC logarithmic */
 #define XMP_SMP_STEREO		0x0100	/* Interleaved stereo sample */
-#define XMP_SMP_YM3812		0x1000	/* YM3812 synthesizer */
-#define XMP_SMP_YM2749		0x2000	/* YM2749 synthesizer */
 
 #define XMP_ACT_CUT		XXM_NNA_CUT
 #define XMP_ACT_CONT		XXM_NNA_CONT

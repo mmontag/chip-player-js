@@ -699,11 +699,8 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 		continue;
 	    patch = d->patch_array[smp];
 
-	    if (patch->len == XMP_PATCH_YM3812) {
-		reportv(ctx, 0, "F");
-		continue;
-	    } else if (patch->len == XMP_PATCH_YM2149) {
-		reportv(ctx, 0, "Y");
+	    if (patch->len == XMP_PATCH_SYNTH) {
+		reportv(ctx, 0, "S");
 		continue;
 	    }
 
@@ -776,8 +773,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	      return XMP_ERR_ALLOC;
 	memcpy(patch->data, buffer, 11);
 	patch->instr_no = id;
-	patch->len = flags & XMP_SMP_YM2749 ?
-			XMP_PATCH_YM2149 : XMP_PATCH_YM3812;
+	patch->len = XMP_PATCH_SYNTH;
 	patch->base_note = 60;
 
 	return xmp_drv_writepatch(ctx, patch);
