@@ -1,49 +1,50 @@
 Programmable Sound Generator (AY-3-8912)
 
-Features
+FEATURES
 
-Full Software Control of Sound Generation
-Interface to Most 8-Bit and 16-Bit Microprocessors
-Three Independently Programmed Analog Outputs
-One 8-Bit General Purpose I/O Port
+o Full Software Control of Sound Generation
+o Interface to Most 8-Bit and 16-Bit Microprocessors
+o Three Independently Programmed Analog Outputs
+o One 8-Bit General Purpose I/O Port
  
 
-Description
+DESCRIPTION
 
-The AY-3-8912 Programmable Sound Generator (PSG) is a LSI Circuit
-which can produce a wide variety of complex sounds under software
-control. The AY-3-8912 is manufactured in the General Instrument
-N-Channel Ion Implant Process. Operation requires a single +5V power
-supply a TTL compatible clock, and a microprocessor controller such
-as the General Instrument 16-bit CP1610 or one of the PIC1650 series
-of 8-bit microcomputers.
+The AY-3-8912 Programmable Sound Generator (PSG) is
+a LSI Circuit which can produce a wide variety of complex sounds
+under software control. The AY-3-8912 is manufactured in
+the General Instrument N-Channel Ion Implant Process. Operation
+requires a single +5V power supply, a TTL compatible clock, and a
+microprocessor controller such as the General Instrument 16-bit
+CP1610 or one of the PIC1650 series of 8-bit microcomputers.
 
-The PSG is easily interfaced to any bus oriented system. Its
-flexibility makes it useful in applications such as music systems,
-sound effects generation, audible alarms, tone signalling and FSK
-modems. The analog sound outputs can provide 4 bits of logarithmic
+The PSG is easily interfaced to any bus oriented system. Its flexibility
+makes it useful in applications such as music systems, sound
+effects generation, audible alarms, tone signalling and FSK modems.
+The analog sound outputs can provide 4 bits of logarithmic
 digital to analog conversion, greatly enhancing the dynamic range of
 the sounds produced.
 
 In order to perform sound effects while allowing the processor to
-continue its other tasks, the PSG can continue to produce sound after
-the initial commands have been given by the control processor. The
-fact that realistic sound production often involves more than one
+continue its other tasks, the PSG can continue to produce sound
+after the initial commands have been given by the control processor.
+The fact that realistic sound production often involves more than one
 effect is satisfied by the three independently controllable channels
 available in the PSG.
 
-All of the circuit control signals are digital in nature and intended
-to be provided directly by a microprocessor/microcomputer. This means
-that one PSG can produce the full range of required sounds with no
-change in external circuitry. Since the frequency response of the PSG
-ranges from sub-audible at its lowest frequency to postaudible at its
-highest frequency, there are a few sounds which are beyond
-reproduction with only the simplest electrical connections.
+All of the circuit control signals are digital in nature and intended to
+be provided directly by a microprocessor/microcomputer. This
+means that one PSG can produce the full range of required sounds
+with no change in external circuitry. Since the frequency response of
+the PSG ranges from sub-audible at its lowest frequency to post-
+audible at its highest frequency, there are a few sounds which are
+beyond reproduction with only the simplest electrical connections.
 
 Since most applications of a microprecessor/PSG system would also
-require interfacing between outside world and the microprocessor this
-facility has been designed into the PSG. The AY-3-8912 has one port
-and 28 leads.
+require interfacing between outside world and the microproces-
+sor, this facility has been designed into the PSG. The AY-3-8912 has
+one port and 28 leads.
+
 
 PIN CONFIGURATION
 28 LEAD DUAL IN LINE
@@ -80,10 +81,12 @@ AY-3-8912
                 IOA0 -|14               15|- CLOCK
                       |___________________|
 
+
 PIN FUNCTIONS
 
-DA7-DA0 (input/output/high impedance)
+DA7--DA0 (input/output/high impedance)
 Data/Address 7--0:  pins 21--28
+
 These 8 lines comprise the 8-bit bidirectional bus used by the
 microprocessor to send both data and addresses to the PSG and to
 recieve data from the PSG. In the data mode, DA7--DA0 correspond
@@ -93,6 +96,7 @@ address inputs A8 for high order address (chip select).
 
 A8 (input): pin 17
 Address 8
+
 These "extra" address bit is made available to enable the positioning
 of the PSG (assigning a 16 word memory space) in a total 512
 word memory area rather than a 256 word memory area as defined
@@ -103,16 +107,19 @@ however, it is recommended that A8 is tied to +5V, if it is not to be
 used.
 _____
 RESET (input): pin 16
+
 For initialization/power-on purposes, applying a logic "0" (ground)
-to the reset pin will reset all registers to "0". The reset pin is provided
+to the Reset pin will reset all registers to "0". The Reset pin is provided
 with an on-chip pull-up resistor.
 
 CLOCK (input): pin 15
+
 This TTL-compatible input sipplies the timing reference for the
 Tone, Noise and Envelope Generators.
 
 BDIR, BC2, BC1 (inputs: pins 18, 19, 20
 Bus DIRection, Bus Control 2, 1
+
 These bus control signals are generated directly by the CP1610
 series of microprocessors to control all external and internal bus
 operations in the PSG. When using a processor other than the
@@ -163,6 +170,7 @@ the complex sound waveshape generated by the PSG.
 
 IOA7--IOA0 (input/output): pins 7--14
 Input/Output A7--A0
+
 This parallel input/output port provides 8 bits of
 prarllel data to/from the PSG/CPU bus from/to any external devices
 connected to the IOA pins. Each pin is provided with an on-chip
@@ -171,6 +179,7 @@ read normally high. Therefore, the recommended method for scanning
 external switches would be to ground the input bit.
 
 TEST 1: pin 2
+
 This pin is for General Instrument test purposes only and should
 be left open - do not use as tie-point.
 
@@ -186,8 +195,8 @@ ARCHITECTURE
 The AY-3-8912 is a register oriented Programmable Sound
 Generator (PSG). Communication between the processor and the
 PSG is based on the concept of memory-mapped I/O. Control
-commands are issued to the PSG by writing to 16 memory-mapped
-rigisters. Each of the 16 registers within the PSG is also readable
+commands are issued to the PSG by writing to 16 memory-mapped regis-
+ters. Each of the 16 registers within the PSG is also readable
 so that the mircroprocessor can determine, as necessary, present
 states or stored data values.
 
@@ -196,8 +205,9 @@ once programmed, generate and sustain the sounds, thus freeing the
 system processor for other tasks.
 
 REGISTER ARRAY
-The principle element of the PSG is the array of 16 read/write control
-registers. These 16 registers lock to the CPU as a block of memory
+
+The principal element of the PSG is the array of 16 read/write control
+registers. These 16 registers look to the CPU as a block of memory
 and as such occupy a 16 word block out of 512 possible addresses.
 The 9 address bits (8 bits on the common data/address bus, and 1
 separate address bit A8) are decoded as follows:
@@ -240,8 +250,10 @@ latch address, write data, or read) is accomplished by the Bus Control
 Decode block.
 
 SOUND GENERATING BLOCKS
+
 The basic blocks in the PSG which produce the programmed sounds
 include:
+
 Tone Generator          produce the basic square tone frequencies
                         for each channel (A, B, C)
 
@@ -267,6 +279,7 @@ D/A Converters          the three D/A Converters each produce up to
                         Amplitude Control
 
 I/O PORT
+
 One additional blcoks is shown in the PSG Block Diagramm which
 has nothing directly to do with the production of sound - this is
 an I/O Port (A). Since virtually all uses or microprocessor-based
@@ -302,9 +315,10 @@ Envelope Generator Control      R11--R13      Program envelope period
 
 Tone Generator Control
 (Registers R0, R1, R2, R3, R4, R5)
+
 The frequency of each square wave generated by the three Tone
 Generators (one each for Channels A, B, and C) is obtained in the
-PSG by first counting down the input clock by 16, the by further
+PSG by first counting down the input clock by 16, then by further
 counting down the result by the programmed 12-bit Tone Period
 value. Each 12-bit value is obtained in the PSG by combining the
 contents of the relative Coarse and Fine Tune registers, as illustrated
@@ -316,15 +330,16 @@ in the following:
           R5                    C                      R4
 
    B7 B6 B5 B4 B3 B2 B1 B0                      B7 B6 B5 B4 B3 B2 B1 B0
-   \_________/ I          \                    /                      /
-       \/      I            \                /                      /
-    NOT USED   I             I ____________/                      /
-             /               I/                              ___/
+   \_________/ |           \                   /                      /
+       \/      |            \                 /                      /
+    NOT USED   |             | ______________/                      /
+              /              |/                              ______/
             TP11 TP10 TP9 TP8 TP7 TP6 TP5 TP4 TP3 TP2 TP1 TP0
                 12-bit Tone Period (TP) to Tone Generator
 
 Noise Generator Control
 (Register R6)
+
 The frequency of the noise source is obtained in the PSG by first
 counting down the input clock by 16, then by further counting down
 the result by the programmed 5-bit Noise Period value. This 5-bit
@@ -340,7 +355,8 @@ illustrated in the following:
                           to Noise Generator
 
 Mixer Control-I/O Enable
-(Register R7)                     ______
+(Register R7)
+                                  ______
 Register R7 is a multi functional Enable register which controls the
 three Noise/Tone Mixers and the general purpose I/O Port.
 
@@ -357,14 +373,15 @@ These functions are illustrated in the following:
                Mixer Control-U/O Enable Register R7
 
                B7 B6 B5 B4 B3 B2 B1 B0
-   NOT USED____/  I  \______/ \______/
-                  I   __\/       \/_______
-    ____________ /   I___________        I__________
+   NOT USED____/  |  \______/ \______/
+                  |   __\/       \/_______
+    ____________ /   |___________        |__________
     Input Enable     Noise Enable        Tone Enable  <-- Function
     I/O Port A        C   B   A           C   B   A   <-- Channel
 
 Amplitude Control
 (Registers R8, R9, R10)
+
 The amplitudes of the signals generated by each of the three D/A
 Converters (one each for Channels A, B, and C) is determined by the
 contents of the lower 5 bits (B4--B0) of registers R8, R9, and R10 as
@@ -376,16 +393,17 @@ illustrated in the following:
                  R10                   C
 
                B7 B6 B5 B4 B3 B2 B1 B0
-               \______/  I \________/
-                  \/     I     \/
-               NOT USED  I     L3 L2 L1 L0
-                         I     4-bit "fixed" amplitude Level.
-                         I
-                         M
+               \______/  | \________/
+                  \/     |     \/
+               NOT USED  |     L3 L2 L1 L0
+                         |     4-bit "fixed" amplitude Level.
+                         |
+                         |
                    amplitude "Mode"
 
 Envelope Generator Control
 (Registers R11, R12, R13)
+
 To accomplish the generation of fairly complex envelope patterns,
 two independent methods of control are provided in the PSG: first, it
 is possible to vary the frequency of the envelope using registers R11
@@ -396,6 +414,7 @@ first the envelope period control and then the envelope shape/cycle
 control.
 
 ENVELOPE PERIOD CONTROL (Registers R11, R12)
+
 The frequency of the envelope is obtained in the PSG by first
 counting down the input clock by 256, then by further counting down
 the result by the programmed 16-bit Envelope Peroid value. This
@@ -403,19 +422,20 @@ the result by the programmed 16-bit Envelope Peroid value. This
 Envelope Coarse and Fine Tune registers, as illustrated in the
 following:
 
-       Envelope                                     Envelope
-   Coarse Tune Registers                        Fine Tune Register
-          R12                                          R11
+                Envelope                          Envelope
+          Coarse Tune Registers              Fine Tune Register
+                  R12                               R11
 
-   B7 B6 B5 B4 B3 B2 B1 B0 ____                B7 B6 B5 B4 B3 B2 B1 B0
-  /                            \              /                      I
- I                               \          /                        I
- I                                 \      /                          I
- I                                   \  /                            I
- TP15 TP14 TP13 TP12 TP11 TP10 TP9 TP8 TP7 TP6 TP5 TP4 TP3 TP2 TP1 TP0
+     __ B7 B6 B5 B4 B3 B2 B1 B0 __         B7 B6 B5 B4 B3 B2 B1 B0
+    /                             \       /                       \
+   /                               \     /                         \
+  /                                 \   /                           \
+ /                                   \ /                             \
+ EP15 EP14 EP13 EP12 EP11 EP10 EP9 EP8 EP7 EP6 EP5 EP4 EP3 EP2 EP1 EP0
             16-bit Envelope Period (EP) to Envelope Generator
 
 ENVELOPE SHAPE/CYCLE CONTROL (Register R13)
+
 The Envelope Generator further counts down the envelope frequency
 by 16, producing a 16-state per cycle envelope pattern as
 defined by its 4-bit counter output, E3, E2, E1, E0. The particular shape
@@ -437,12 +457,14 @@ the envelope generator, as illustrated in the following:
 
 I/O Port Data Store
 (Register R14)
+
 Register R14 functions as intermediate data storage register
 between PSG/CPU data bus (DA0--DA7) and the I/O port (IOA7--IOA0).
 Using register 14 for the transfer of I/O data has no effect on
 sound generation.
 
 D/A Converter Operation
+
 Since the primary use of the PSG is to produce sound for the highly
 imperfect amplitude detection mechanism of the human ear, the D/A
 conversion is performed in logarithmic steps with a normalized
@@ -450,4 +472,3 @@ voltage range of from 0 to 1 Volt. The specific amplitude control of
 each of the three D/A Converters is accomplished by the three sets of
 4-bit outputs of the Amplitude Control block, while the Mixer outputs
 provide the base signal frequency (Noise and/or Tone).
-
