@@ -106,8 +106,7 @@ static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
 	if (!tmp_bk)
 		return;
 
-	//YM3812UpdateOne(0, tmp_bk, count, vl, vr, stereo);
-	
+	YM_mix(SPECTRUM_CLOCK / 50);
 }
 
 

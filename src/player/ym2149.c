@@ -26,8 +26,8 @@
 
 #include "ym2149_vol.c"
 
-#define YM_MASTER_FRQ  2000000  /**< YM master frequency in Atari ST:2Mhz */
-#define YM_FRQ         250000   /**< Max frequency involved (for envelop) */
+#define YM_ATARI_FRQ	2000000	/**< YM master frequency in Atari ST:2Mhz */
+#define YM_FRQ		250000	/**< Max frequency involved (for envelop) */
 
 #define MAX_SPL_PER_PASS (YM_FRQ / REPLAY_RATE_MIN)+1
 #define MAX_VOLUME_ENTRY 2048

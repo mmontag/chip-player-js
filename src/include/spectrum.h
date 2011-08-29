@@ -5,8 +5,9 @@
 
 struct spectrum_stick {
 	int tone;
-	int toneinc;
+	int tone_inc;
 	int vol;
+	int env_inc;
 	int flags;
 #define SPECTRUM_FLAG_VOLSLIDE	0x0001
 #define SPECTRUM_FLAG_ENVELOPE	0x0004
@@ -17,7 +18,10 @@ struct spectrum_stick {
 struct spectrum_sample {
 	int loop;
 	int length;
-	struct spectrum_stick items[SPECTRUM_MAX_STICK];
+	struct spectrum_stick stick[SPECTRUM_MAX_STICK];
 };
+
+
+#define SPECTRUM_CLOCK		1773400
 
 #endif

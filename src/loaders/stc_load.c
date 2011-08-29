@@ -200,7 +200,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 					}
 
 					if (x <= 0x6f) {
-						event->ins = x - 0x5f;
+						event->ins = x - 0x5f - 1;
 					} else if (x <= 0x7f) {
 						/* ornament */
 					} else if (x == 0x80) {
@@ -268,8 +268,45 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			}
 		}
 
-		reportv(ctx, 1, "[%2X] %4d %3d\n", i, ss.loop, ss.length);
+		reportv(ctx, 1, "[%2X] %4d %3d  ", i, ss.loop, ss.length);
 		
+		for (j = 0; j < 31; j++) {
+			struct spectrum_stick *sst = &ss.stick[j];
+			uint8 *chdata = &buf[1 + j * 3];
+			
+			memset(sst, 0, sizeof (struct spectrum_stick));
+
+			if (~chdata[1] & 0x80) {
+				sst->flags |= SPECTRUM_FLAG_MIXNOISE;
+				sst->env_inc = chdata[1] & 0x1f;
+
+				if (sst->env_inc & 0x10)
+					sst->env_inc |= 0xf0;
+			}
+
+			if (~chdata[1] & 0x40)
+				sst->flags |= SPECTRUM_FLAG_MIXTONE;
+
+			sst->vol = chdata[0] & 0x0f;
+
+			sst->tone_inc = (((int)(chdata[0] & 0xf0)) << 4) |
+						chdata[2];
+
+			if (~chdata[1] & 0x20)
+				sst->tone_inc = -sst->tone_inc;
+
+			sst->flags |= SPECTRUM_FLAG_ENVELOPE;
+
+			if (j != 0) {
+				reportv(ctx, 1, "               ");
+			}
+			reportv(ctx, 1, "%02X %c%c%c %c%03x\n", j,
+				sst->flags & SPECTRUM_FLAG_MIXTONE ? 'T' : 't',
+				sst->flags & SPECTRUM_FLAG_MIXNOISE ? 'N' : 'n',
+				sst->flags & SPECTRUM_FLAG_ENVELOPE ? 'E' : 'e',
+				sst->tone_inc >= 0 ? '+' : '-',
+				sst->tone_inc >= 0 ? sst->tone_inc : -sst->tone_inc);
+		}
 	}
 	
 	return 0;
