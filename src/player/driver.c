@@ -18,6 +18,7 @@
 #include "period.h"
 #include "readlzw.h"
 #include "synth.h"
+#include "spectrum.h"
 #include "smix.h"
 
 #define	FREE	-1
@@ -765,13 +766,16 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     int datasize;
     char s[5];
 
-    /* FM patches
+    /* Synth patches
      * Default is YM3128 for historical reasons
      */
     if (!xxs) {
-	if ((patch = calloc(1, sizeof (struct patch_info) + 11)) == NULL)
+	int size = 11;		/* Adlib instrument size */
+	if (flags & XMP_SMP_SPECTRUM)
+		size = sizeof (struct spectrum_sample);
+	if ((patch = calloc(1, sizeof (struct patch_info) + size)) == NULL)
 	      return XMP_ERR_ALLOC;
-	memcpy(patch->data, buffer, 11);
+	memcpy(patch->data, buffer, size);
 	patch->instr_no = id;
 	patch->len = XMP_PATCH_SYNTH;
 	patch->base_note = 60;

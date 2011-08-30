@@ -90,7 +90,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	struct xmp_mod_context *m = &p->m;
 	struct xxm_event *event;
 	int i, j;
-	char buf[100];
+	uint8 buf[100];
 	int pos_ptr, orn_ptr, pat_ptr;
 	struct stc_ord stc_ord[256];
 	struct stc_pat stc_pat[MAX_PAT];
@@ -140,8 +140,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->ins = 15;
 	m->xxh->smp = m->xxh->ins;
-	m->xxc[0].pan = m->xxc[1].pan = m->xxc[2].pan = 0x80;
-	
+
 	MODULE_INFO();
 
 	/* Read patterns */
@@ -238,6 +237,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		struct spectrum_sample ss;
 
+		memset(&ss, 0, sizeof (struct spectrum_sample));
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 		m->xxih[i].nsm = 1;
 		m->xxi[i][0].vol = 0x40;
@@ -307,7 +307,17 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 				sst->tone_inc >= 0 ? '+' : '-',
 				sst->tone_inc >= 0 ? sst->tone_inc : -sst->tone_inc);
 		}
+
+		xmp_drv_loadpatch(ctx, f, i - 1, 0, XMP_SMP_SPECTRUM,
+							NULL, (char *)&ss);
 	}
 	
+	for (i = 0; i < 3; i++) {
+		m->xxc[i].pan = 0x80;
+		m->xxc[i].flg = XXM_CHANNEL_SYNTH;
+	}
+	
+	m->synth = &synth_spectrum;
+
 	return 0;
 }

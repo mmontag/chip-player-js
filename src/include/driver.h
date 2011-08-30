@@ -42,6 +42,8 @@ struct patch_info {
 #define XMP_SMP_BIGEND		0x0040	/* Big-endian */
 #define XMP_SMP_VIDC		0x0080	/* Archimedes VIDC logarithmic */
 #define XMP_SMP_STEREO		0x0100	/* Interleaved stereo sample */
+#define XMP_SMP_ADLIB		0x1000	/* Adlib synth instrument */
+#define XMP_SMP_SPECTRUM	0x2000	/* Spectrum synth instrument */
 
 #define XMP_ACT_CUT		XXM_NNA_CUT
 #define XMP_ACT_CONT		XXM_NNA_CONT

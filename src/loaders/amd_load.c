@@ -132,7 +132,8 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	if (V(0) == 1)
 	    report (".");
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, 0, NULL, regs);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, XMP_SMP_ADLIB,
+								NULL, regs);
     }
     if (V(0))
 	report ("\n");
@@ -225,7 +226,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 
     for (i = 0; i < m->xxh->chn; i++) {
 	m->xxc[i].pan = 0x80;
-	m->xxc[i].flg = XXM_CHANNEL_FM;
+	m->xxc[i].flg = XXM_CHANNEL_SYNTH;
     }
 
     m->synth = &synth_adlib;

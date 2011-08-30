@@ -133,7 +133,8 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			report("%2d  %2d\n", sid[10] >> 1, sid[10] & 0x01);
 		}
-		xmp_drv_loadpatch(ctx, f, b - 1, 0, 0, NULL, (char *)sid);
+		xmp_drv_loadpatch(ctx, f, b - 1, 0, XMP_SMP_ADLIB, NULL,
+								(char *)sid);
 	}
 
 	INSTRUMENT_INIT();
@@ -227,7 +228,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < m->xxh->chn; i++) {
 		m->xxc[i].pan = 0x80;
-		m->xxc[i].flg = XXM_CHANNEL_FM;
+		m->xxc[i].flg = XXM_CHANNEL_SYNTH;
 	}
 
 	m->synth = &synth_adlib;

@@ -10,6 +10,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include "xmp.h"
 #include "common.h"
 #include "driver.h"
@@ -17,9 +18,15 @@
 #include "spectrum.h"
 #include "ym2149.h"
 
+static struct spectrum_channel sc[3];
 
-static void synth_setpatch(int c, uint8 * data)
+static struct ym2149 *ym;
+
+
+static void synth_setpatch(int c, uint8 *data)
 {
+	memcpy(&sc[c].patch, data, sizeof (struct spectrum_sample));
+printf("%d: set patch\n", c);
 }
 
 /*
@@ -50,6 +57,11 @@ static void synth_setpatch(int c, uint8 * data)
 
 static void synth_setnote(int c, int note, int bend)
 {
+	sc[c].freq0 = 500;
+	sc[c].freq = 500;
+
+	ym2149_write_register(ym, YM_PERL(c), sc[c].freq & 0xff);
+	ym2149_write_register(ym, YM_PERH(c), sc[c].freq >> 8);
 }
 
 /*
@@ -79,24 +91,33 @@ static void synth_setnote(int c, int note, int bend)
 
 static void synth_setvol(int c, int vol)
 {
+	vol >>= 1;
+	if (vol > 0x3f)
+		vol = 0x3f;
+
+	ym2149_write_register(ym, YM_VOL(c), vol);
 }
 
 static int synth_init(int freq)
 {
-	YM_init();
-	YM_sampling_rate(freq);
+	ym = ym2149_new(SPECTRUM_CLOCK, 1, freq);
+	if (ym == NULL)
+		return -1;
 
 	return 0;
 }
 
 static int synth_reset()
 {
-	return YM_reset();
+	ym2149_reset(ym);
+
+	return 0;
 }
 
 static int synth_deinit()
 {
-	synth_reset();
+	ym2149_reset(ym);
+	ym2149_destroy(ym);
 
 	return 0;
 }
@@ -106,7 +127,7 @@ static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
 	if (!tmp_bk)
 		return;
 
-	YM_mix(SPECTRUM_CLOCK / 50);
+	//ym2149_update(ym, tmp_bk, count);
 }
 
 

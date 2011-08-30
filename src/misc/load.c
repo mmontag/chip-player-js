@@ -673,8 +673,8 @@ int xmp_load_module(xmp_context ctx, char *s)
 	for (i = 0; i < m->xxh->chn; i++) {
 	    if (m->xxc[i].flg & XXM_CHANNEL_MUTE)
 		report("- ");
-	    else if (m->xxc[i].flg & XXM_CHANNEL_FM)
-		report("F ");
+	    else if (m->xxc[i].flg & XXM_CHANNEL_SYNTH)
+		report("S ");
 	    else
 	        report("%x ", m->xxc[i].pan >> 4);
 	}
