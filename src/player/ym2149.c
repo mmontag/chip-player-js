@@ -448,15 +448,17 @@ void ym2149_write_register(struct ym2149 *ym, int reg, int data)
 	}
 }
 
-void ym2149_update(struct ym2149 *ym, ymsample *pSampleBuffer, int nbSample)
+void ym2149_update(struct ym2149 *ym, ymsample *pSampleBuffer, int nbSample, int vl, int vr, int stereo)
 {
 	ymsample *pBuffer = pSampleBuffer;
 	int nbs = nbSample;
 
-	if (nbSample > 0) {
-		do {
-			*pSampleBuffer++ = nextSample(ym);
-		} while (--nbSample);
+	for (; nbSample > 0; nbSample--) {
+		ymsample sample = nextSample(ym);
+
+		if (stereo)
+			*pSampleBuffer++ = sample * vr;
+		*pSampleBuffer++ = sample * vl;
 	}
 
 	lowpFilterProcess((ymsample *)pBuffer, nbs);

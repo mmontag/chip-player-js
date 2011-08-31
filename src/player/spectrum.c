@@ -127,7 +127,7 @@ static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
 	if (!tmp_bk)
 		return;
 
-	//ym2149_update(ym, tmp_bk, count);
+	ym2149_update(ym, tmp_bk, count, vl, vr, stereo);
 }
 
 

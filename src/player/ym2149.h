@@ -104,7 +104,7 @@ struct ym2149 {
 
 struct ym2149 *ym2149_new(int, int, int);
 void ym2149_reset(struct ym2149 *);
-void ym2149_update(struct ym2149 *, ymsample *, int);
+void ym2149_update(struct ym2149 *, ymsample *, int, int, int, int);
 void ym2149_write_register(struct ym2149 *, int, int);
 int ym2149_read_register(struct ym2149 *, int reg);
 void ym2149_destroy(struct ym2149 *);

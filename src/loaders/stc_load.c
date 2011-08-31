@@ -308,8 +308,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 				sst->tone_inc >= 0 ? sst->tone_inc : -sst->tone_inc);
 		}
 
-		xmp_drv_loadpatch(ctx, f, i - 1, 0, XMP_SMP_SPECTRUM,
-							NULL, (char *)&ss);
+		xmp_drv_loadpatch(ctx, f, i, 0, XMP_SMP_SPECTRUM, NULL,
+								(char *)&ss);
 	}
 	
 	for (i = 0; i < 3; i++) {
