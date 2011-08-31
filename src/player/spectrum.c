@@ -10,6 +10,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 #include "xmp.h"
 #include "common.h"
@@ -18,15 +19,50 @@
 #include "spectrum.h"
 #include "ym2149.h"
 
-static struct spectrum_channel sc[3];
 
-static struct ym2149 *ym;
+struct spectrum_channel {
+	int vol0;
+	int vol;
+	int freq0;
+	int freq;
+	int count;
+	struct spectrum_sample patch;
+};
+
+struct spectrum {
+	struct spectrum_channel sc[3];
+	struct ym2149 *ym;
+};
 
 
-static void synth_setpatch(int c, uint8 *data)
+/* FIXME: this should be an opaque handle provided by the main player */
+static struct spectrum *sp;
+
+static struct spectrum *spectrum_new(int freq)
 {
-	memcpy(&sc[c].patch, data, sizeof (struct spectrum_sample));
-printf("%d: set patch\n", c);
+	struct spectrum *sp;
+
+	sp = calloc(1, sizeof (struct spectrum));
+	if (sp == NULL)
+		goto err1;
+
+	sp->ym = ym2149_new(SPECTRUM_CLOCK, 1, freq);
+	if (sp->ym == NULL)
+		goto err2;
+
+	return sp;
+
+err2:
+	free(sp);
+err1:
+	return NULL;
+}
+
+static void spectrum_destroy(struct spectrum *sp)
+{
+	ym2149_reset(sp->ym);
+	ym2149_destroy(sp->ym);
+	free(sp);
 }
 
 /*
@@ -53,18 +89,49 @@ printf("%d: set patch\n", c);
  *               /              |/                              ______/
  *             TP11 TP10 TP9 TP8 TP7 TP6 TP5 TP4 TP3 TP2 TP1 TP0
  *                 12-bit Tone Period (TP) to Tone Generator
- */
-
-static void synth_setnote(int c, int note, int bend)
-{
-	sc[c].freq0 = 500;
-	sc[c].freq = 500;
-
-	ym2149_write_register(ym, YM_PERL(c), sc[c].freq & 0xff);
-	ym2149_write_register(ym, YM_PERH(c), sc[c].freq >> 8);
-}
-
-/*
+ *
+ * Noise Generator Control
+ * (Register R6)
+ * 
+ * The frequency of the noise source is obtained in the PSG by first
+ * counting down the input clock by 16, then by further counting down
+ * the result by the programmed 5-bit Noise Period value. This 5-bit
+ * value consists of the lower 5-bits (B4-B0) of register R6, as
+ * illustrated in the following:
+ * 
+ *                Noise Period Register R6
+ * 
+ *                B7 B6 B5 B4 B3 B2 B1 B0
+ *                \______/ \___________/
+ *                   \/         \/
+ *                NOT USED   5-bit Noise Period (NP)
+ *                           to Noise Generator
+ * 
+ * Mixer Control-I/O Enable
+ * (Register R7)
+ *                                   ______
+ * Register R7 is a multi functional Enable register which controls the
+ * three Noise/Tone Mixers and the general purpose I/O Port.
+ * 
+ * The Mixers, as previously described, combine the noise and tone
+ * frequencies for each of the three channels. The determination of
+ * combining neither/either/both noise and tone frequencies on each
+ * channel is made by the stae of bits B5-B0 or R7.
+ * 
+ * The direction (input or output) of the general purpose I/O Port
+ * (IOA) is determined by the state of bit B6 or R7.
+ * 
+ * These functions are illustrated in the following:
+ * 
+ *                Mixer Control-U/O Enable Register R7
+ * 
+ *                B7 B6 B5 B4 B3 B2 B1 B0
+ *    NOT USED____/  |  \______/ \______/
+ *                   |   __\/       \/_______
+ *     ____________ /   |___________        |__________
+ *     Input Enable     Noise Enable        Tone Enable  <-- Function
+ *     I/O Port A        C   B   A           C   B   A   <-- Channel
+ *
  * Amplitude Control
  * (Registers R8, R9, R10)
  * 
@@ -89,19 +156,54 @@ static void synth_setnote(int c, int note, int bend)
  * 
  */
 
+static void spectrum_update()
+{
+	int i;
+
+	for (i = 0; i < 3; i++) {
+		struct spectrum_channel *ch = &sp->sc[i];
+
+		/* freq */
+		ym2149_write_register(sp->ym, YM_PERL(i), ch->freq & 0xff);
+		ym2149_write_register(sp->ym, YM_PERH(i), ch->freq >> 8);
+
+		/* vol */
+		ym2149_write_register(sp->ym, YM_VOL(i), ch->vol);
+	}
+
+	/* mixer */
+	ym2149_write_register(sp->ym, YM_MIXER, 0x07);
+}
+
+
+/*
+ * Synth functions
+ */
+
+static void synth_setpatch(int c, uint8 *data)
+{
+	memcpy(&sp->sc[c].patch, data, sizeof (struct spectrum_sample));
+}
+
+
+static void synth_setnote(int c, int note, int bend)
+{
+	sp->sc[c].freq0 = sp->sc[c].freq = 100;
+}
+
 static void synth_setvol(int c, int vol)
 {
 	vol >>= 1;
 	if (vol > 0x3f)
 		vol = 0x3f;
 
-	ym2149_write_register(ym, YM_VOL(c), vol);
+	sp->sc[c].vol0 = sp->sc[c].vol = vol;
 }
 
 static int synth_init(int freq)
 {
-	ym = ym2149_new(SPECTRUM_CLOCK, 1, freq);
-	if (ym == NULL)
+	sp = spectrum_new(freq);
+	if (sp == NULL)
 		return -1;
 
 	return 0;
@@ -109,15 +211,14 @@ static int synth_init(int freq)
 
 static int synth_reset()
 {
-	ym2149_reset(ym);
+	ym2149_reset(sp->ym);
 
 	return 0;
 }
 
 static int synth_deinit()
 {
-	ym2149_reset(ym);
-	ym2149_destroy(ym);
+	spectrum_destroy(sp);
 
 	return 0;
 }
@@ -127,7 +228,8 @@ static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
 	if (!tmp_bk)
 		return;
 
-	ym2149_update(ym, tmp_bk, count, vl, vr, stereo);
+	spectrum_update();
+	ym2149_update(sp->ym, tmp_bk, count, vl, vr, stereo);
 }
 
 

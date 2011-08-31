@@ -21,12 +21,4 @@ struct spectrum_sample {
 	struct spectrum_stick stick[SPECTRUM_MAX_STICK];
 };
 
-struct spectrum_channel {
-	int vol;
-	int freq0;
-	int freq;
-	int count;
-	struct spectrum_sample patch;
-};
-
 #endif
