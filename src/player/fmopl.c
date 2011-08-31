@@ -1068,12 +1068,12 @@ void YM3812UpdateOne(FM_OPL *OPL, FMSAMPLE *bk, int len, int vl, int vr, int st)
 		if(rythm)
 			OPL_CALC_RH(S_CH);
 		/* limit check */
-		data = Limit( outd[0] , OPL_MAXOUT, OPL_MINOUT );
+		data = Limit(outd[0] , OPL_MAXOUT, OPL_MINOUT) >> OPL_OUTSB;
 
 		/* store to sound buffer - changed to use with xmp */
 		if (st) 
-			*(bk++) += (data >> OPL_OUTSB) * vr;
-		*(bk++) += (data >> OPL_OUTSB) * vl;
+			*(bk++) += data * vr;
+		*(bk++) += data * vl;
 	}
 
 	OPL->amsCnt = amsCnt;
