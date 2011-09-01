@@ -270,6 +270,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 		reportv(ctx, 1, "[%2X] %4d %3d  ", i, ss.loop, ss.length);
 		
+		/* Read sample ticks */
+
 		for (j = 0; j < 31; j++) {
 			struct spectrum_stick *sst = &ss.stick[j];
 			uint8 *chdata = &buf[1 + j * 3];
@@ -300,12 +302,14 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			if (j != 0) {
 				reportv(ctx, 1, "               ");
 			}
-			reportv(ctx, 1, "%02X %c%c%c %c%03x\n", j,
+			reportv(ctx, 1, "%02X %c%c%c %c%03x %x\n", j,
 				sst->flags & SPECTRUM_FLAG_MIXTONE ? 'T' : 't',
 				sst->flags & SPECTRUM_FLAG_MIXNOISE ? 'N' : 'n',
 				sst->flags & SPECTRUM_FLAG_ENVELOPE ? 'E' : 'e',
 				sst->tone_inc >= 0 ? '+' : '-',
-				sst->tone_inc >= 0 ? sst->tone_inc : -sst->tone_inc);
+				sst->tone_inc >= 0 ? sst->tone_inc : -sst->tone_inc,
+				sst->vol);
+			
 		}
 
 		xmp_drv_loadpatch(ctx, f, i, 0, XMP_SMP_SPECTRUM, NULL,

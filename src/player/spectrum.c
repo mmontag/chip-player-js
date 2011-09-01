@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "xmp.h"
 #include "common.h"
 #include "driver.h"
@@ -116,7 +117,7 @@ static void spectrum_destroy(struct spectrum *sp)
  * The Mixers, as previously described, combine the noise and tone
  * frequencies for each of the three channels. The determination of
  * combining neither/either/both noise and tone frequencies on each
- * channel is made by the stae of bits B5-B0 or R7.
+ * channel is made by the state of bits B5-B0 or R7.
  * 
  * The direction (input or output) of the general purpose I/O Port
  * (IOA) is determined by the state of bit B6 or R7.
@@ -127,8 +128,8 @@ static void spectrum_destroy(struct spectrum *sp)
  * 
  *                B7 B6 B5 B4 B3 B2 B1 B0
  *    NOT USED____/  |  \______/ \______/
- *                   |   __\/       \/_______
- *     ____________ /   |___________        |__________
+ *                   |   __\/       \/______
+ *     _____________/   |___________        |__________
  *     Input Enable     Noise Enable        Tone Enable  <-- Function
  *     I/O Port A        C   B   A           C   B   A   <-- Channel
  *
@@ -159,9 +160,11 @@ static void spectrum_destroy(struct spectrum *sp)
 static void spectrum_update()
 {
 	int i;
+	int mask = 0x7f;
 
 	for (i = 0; i < 3; i++) {
 		struct spectrum_channel *ch = &sp->sc[i];
+		struct spectrum_stick *st = &ch->patch.stick[ch->count];
 
 		/* freq */
 		ym2149_write_register(sp->ym, YM_PERL(i), ch->freq & 0xff);
@@ -169,10 +172,22 @@ static void spectrum_update()
 
 		/* vol */
 		ym2149_write_register(sp->ym, YM_VOL(i), ch->vol);
+
+		/* mixer */
+		if (st->flags & SPECTRUM_FLAG_MIXTONE)
+			mask &= ~(0x01 << i);
+
+		if (st->flags & SPECTRUM_FLAG_MIXNOISE)
+			mask &= ~(0x04 << i);
+
+		/* prepare next tick */
+		ch->count++;
+		if (ch->count >= ch->patch.length) {
+			ch->count = ch->patch.loop;
+		}
 	}
 
-	/* mixer */
-	ym2149_write_register(sp->ym, YM_MIXER, 0x07);
+	ym2149_write_register(sp->ym, YM_MIXER, mask);
 }
 
 
@@ -183,21 +198,28 @@ static void spectrum_update()
 static void synth_setpatch(int c, uint8 *data)
 {
 	memcpy(&sp->sc[c].patch, data, sizeof (struct spectrum_sample));
-}
+	sp->sc[c].count = 0;
+	sp->sc[c].vol = sp->sc[c].patch.stick[0].vol;
 
+}
 
 static void synth_setnote(int c, int note, int bend)
 {
-	sp->sc[c].freq0 = sp->sc[c].freq = 100;
+	double d = (double)note + (double)bend / 100;
+	int period = (int)(0xfff / pow(2, d / 12));
+
+	sp->sc[c].freq0 = sp->sc[c].freq = period;
 }
 
 static void synth_setvol(int c, int vol)
 {
+#if 0
 	vol >>= 1;
 	if (vol > 0x3f)
 		vol = 0x3f;
 
 	sp->sc[c].vol0 = sp->sc[c].vol = vol;
+#endif
 }
 
 static int synth_init(int freq)

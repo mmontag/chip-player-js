@@ -363,7 +363,7 @@ three Noise/Tone Mixers and the general purpose I/O Port.
 The Mixers, as previously described, combine the noise and tone
 frequencies for each of the three channels. The determination of
 combining neither/either/both noise and tone frequencies on each
-channel is made by the stae of bits B5-B0 or R7.
+channel is made by the state of bits B5-B0 or R7.
 
 The direction (input or output) of the general purpose I/O Port
 (IOA) is determined by the state of bit B6 or R7.
@@ -374,8 +374,8 @@ These functions are illustrated in the following:
 
                B7 B6 B5 B4 B3 B2 B1 B0
    NOT USED____/  |  \______/ \______/
-                  |   __\/       \/_______
-    ____________ /   |___________        |__________
+                  |   __\/       \/______
+    _____________/   |___________        |__________
     Input Enable     Noise Enable        Tone Enable  <-- Function
     I/O Port A        C   B   A           C   B   A   <-- Channel
 

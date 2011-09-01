@@ -270,6 +270,7 @@ static ymsample nextSample(struct ym2149 *ym)
 		}
 	}
 
+return vol;
 	/*---------------------------------------------------
 	 * Normalize process
 	 *--------------------------------------------------- */
@@ -280,7 +281,7 @@ static ymsample nextSample(struct ym2149 *ym)
 
 struct ym2149 *ym2149_new(int masterClock, int prediv, int playRate)
 {
-	int i, env;
+	int /*i,*/ env;
 	uint8 *pEnv;
 	struct ym2149 *ym;
 
@@ -294,12 +295,14 @@ struct ym2149 *ym2149_new(int masterClock, int prediv, int playRate)
 
 	ym->frameCycle = 0;
 
+#if 0
 	if (ymVolumeTable[15] == 32767)	/* excuse me for that bad trick ;-) */
 	{
 		for (i = 0; i < 16; i++) {
 			ymVolumeTable[i] = (ymVolumeTable[i] * 2) / 6;
 		}
 	}
+#endif
 
 	/*--------------------------------------------------------
 	 * build env shapes.
