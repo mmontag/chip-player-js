@@ -32,6 +32,7 @@ struct spectrum_channel {
 
 struct spectrum {
 	struct spectrum_channel sc[3];
+	int noise_offset;
 	struct ym2149 *ym;
 };
 
@@ -157,6 +158,31 @@ static void spectrum_destroy(struct spectrum *sp)
  * 
  */
 
+/*
+ * From http://chipmusic.org/forums/topic/27/vortex-tracker-ii/
+ *
+ * 1F|tne +000_ +00(00)_ F_ ***************
+ * 11 234 56667 899 AA B CD EEEEEEEEEEEEEEE
+ *
+ * 1 - Line number. Cannot be edited.
+ * 2 - If set to "T", a tone plays. If set to "t", it doesn't.
+ * 3 - If set to "N", white noise plays. If set to "n", it doesn't.
+ * 4 - If set to "E", envelope sound plays. If set to "e", it doesn't.
+ * 5 - Direction of pitch change.
+ * 6 - Amount of pitch change.
+ * 7 - If set to ^, pitch change adds up over time. If set to _, pitch
+ *     change is absolute.
+ * 8 - Direction of pitch change for noise and envelope sound.
+ * 9 - Amount of pitch change for noise and envelope sound.
+ * A - Displays the absolute value of pitch change for noise and envelope
+ *     sound. Cannot be edited.
+ * B - Like 7, but for noise and envelope sound.
+ * C - Volume of sound for this line.
+ * D - If set to _, nothing happens. If set to +, volume increases. If
+ *     set to -, volume decreases.
+ * E - Visual representation of the volume for that line. Cannot be edited.
+ */ 
+
 static void spectrum_update()
 {
 	int i;
@@ -171,7 +197,7 @@ static void spectrum_update()
 		ym2149_write_register(sp->ym, YM_PERH(i), ch->freq >> 8);
 
 		/* vol */
-		ym2149_write_register(sp->ym, YM_VOL(i), ch->vol);
+		ym2149_write_register(sp->ym, YM_VOL(i), st->vol);
 
 		/* mixer */
 		if (st->flags & SPECTRUM_FLAG_MIXTONE)
@@ -187,28 +213,38 @@ static void spectrum_update()
 		}
 	}
 
+	if (sp->noise_offset)
+		 ym2149_write_register(sp->ym, YM_NOISE, sp->noise_offset - 1);
+
 	ym2149_write_register(sp->ym, YM_MIXER, mask);
 }
 
 
 /*
  * Synth functions
+ *
+ * Channel 3 is reserved for noise
  */
 
 static void synth_setpatch(int c, uint8 *data)
 {
-	memcpy(&sp->sc[c].patch, data, sizeof (struct spectrum_sample));
-	sp->sc[c].count = 0;
-	sp->sc[c].vol = sp->sc[c].patch.stick[0].vol;
+	if (c < 3) {
+		memcpy(&sp->sc[c].patch, data, sizeof (struct spectrum_sample));
+		sp->sc[c].count = 0;
+		sp->sc[c].vol = sp->sc[c].patch.stick[0].vol;
+	}
 
 }
 
 static void synth_setnote(int c, int note, int bend)
 {
-	double d = (double)note + (double)bend / 100;
-	int period = (int)(0xfff / pow(2, d / 12));
-
-	sp->sc[c].freq0 = sp->sc[c].freq = period;
+	if (c < 3) {
+		double d = (double)note + (double)bend / 100;
+		int period = (int)(0xfff / pow(2, d / 12));
+		sp->sc[c].freq0 = sp->sc[c].freq = period;
+	} else if (c == 3) {
+		sp->noise_offset = note;
+	}
 }
 
 static void synth_setvol(int c, int vol)

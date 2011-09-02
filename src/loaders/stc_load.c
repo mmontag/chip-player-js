@@ -88,7 +88,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	struct xxm_event *event;
+	struct xxm_event *event, *noise;
 	int i, j;
 	uint8 buf[100];
 	int pos_ptr, orn_ptr, pat_ptr;
@@ -135,7 +135,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		//printf("%d\n", m->xxo[i]);
 	}
 
-	m->xxh->chn = 3;
+	m->xxh->chn = 4;
 	m->xxh->pat = num;
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->ins = 15;
@@ -191,6 +191,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	
 //printf("pat %d, channel %d, row %d, x = %02x\n", dest, j, row, x);
 					event = &EVENT(dest, j, row);
+					noise = &EVENT(dest, 3, row);
 				
 					if (x <= 0x5f) {
 						event->note = x + trans;
@@ -209,8 +210,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 					} else if (x == 0x82) {
 						/* envelope */
 					} else if (x < 0x8e) {
-						/* envelope */
-						read8(f);
+						/* noise */
+						noise->note = read8(f) + 1;
 					} else {
 						rowinc = x - 0xa1;
 					}
@@ -316,7 +317,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 								(char *)&ss);
 	}
 	
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 4; i++) {
 		m->xxc[i].pan = 0x80;
 		m->xxc[i].flg = XXM_CHANNEL_SYNTH;
 	}
