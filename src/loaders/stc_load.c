@@ -88,7 +88,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
-	struct xxm_event *event, *noise;
+	struct xxm_event *event /*, *noise*/;
 	int i, j;
 	uint8 buf[100];
 	int pos_ptr, orn_ptr, pat_ptr;
@@ -135,7 +135,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		//printf("%d\n", m->xxo[i]);
 	}
 
-	m->xxh->chn = 4;
+	m->xxh->chn = 3;
 	m->xxh->pat = num;
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->ins = 15;
@@ -177,12 +177,11 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			int row = 0;
 			int x;
 	
-//printf("---- %x\n", stc_pat[src].ch[j]);
 			fseek(f, stc_pat[src].ch[j], SEEK_SET);
 
-			do {
-				int rowinc = 0;
+			int rowinc = 0;
 
+			do {
 				for (;;) {
 					x = read8(f);
 
@@ -191,10 +190,10 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	
 //printf("pat %d, channel %d, row %d, x = %02x\n", dest, j, row, x);
 					event = &EVENT(dest, j, row);
-					noise = &EVENT(dest, 3, row);
+					//noise = &EVENT(dest, 3, row);
 				
 					if (x <= 0x5f) {
-						event->note = x + trans;
+						event->note = x + 6 + trans;
 						row += 1 + rowinc;
 						break;
 					}
@@ -202,16 +201,20 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 					if (x <= 0x6f) {
 						event->ins = x - 0x5f - 1;
 					} else if (x <= 0x7f) {
-						/* ornament */
+						/* ornament, effect F */
+						/* parameter = x - 0x70 */
 					} else if (x == 0x80) {
 						event->note = XMP_KEY_OFF;
+						row += 1 + rowinc;
+						break;
 					} else if (x == 0x81) {
 						/* ? */
 					} else if (x == 0x82) {
 						/* envelope */
 					} else if (x < 0x8e) {
 						/* noise */
-						noise->note = read8(f) + 1;
+						read8(f);
+						//noise->note = read8(f) + 1;
 					} else {
 						rowinc = x - 0xa1;
 					}
@@ -281,10 +284,10 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 			if (~chdata[1] & 0x80) {
 				sst->flags |= SPECTRUM_FLAG_MIXNOISE;
-				sst->env_inc = chdata[1] & 0x1f;
+				sst->noise_inc = chdata[1] & 0x1f;
 
-				if (sst->env_inc & 0x10)
-					sst->env_inc |= 0xf0;
+				if (sst->noise_inc & 0x10)
+					sst->noise_inc |= 0xf0;
 			}
 
 			if (~chdata[1] & 0x40)

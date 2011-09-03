@@ -22,9 +22,7 @@
 
 
 struct spectrum_channel {
-	int vol0;
 	int vol;
-	int freq0;
 	int freq;
 	int count;
 	struct spectrum_sample patch;
@@ -187,14 +185,16 @@ static void spectrum_update()
 {
 	int i;
 	int mask = 0x7f;
+	int noise = 0;
 
 	for (i = 0; i < 3; i++) {
-		struct spectrum_channel *ch = &sp->sc[i];
-		struct spectrum_stick *st = &ch->patch.stick[ch->count];
+		struct spectrum_channel *sc = &sp->sc[i];
+		struct spectrum_stick *st = &sc->patch.stick[sc->count];
+		int freq = sc->freq + st->tone_inc;
 
 		/* freq */
-		ym2149_write_register(sp->ym, YM_PERL(i), ch->freq & 0xff);
-		ym2149_write_register(sp->ym, YM_PERH(i), ch->freq >> 8);
+		ym2149_write_register(sp->ym, YM_PERL(i), freq & 0xff);
+		ym2149_write_register(sp->ym, YM_PERH(i), freq >> 8);
 
 		/* vol */
 		ym2149_write_register(sp->ym, YM_VOL(i), st->vol);
@@ -204,18 +204,19 @@ static void spectrum_update()
 			mask &= ~(0x01 << i);
 
 		if (st->flags & SPECTRUM_FLAG_MIXNOISE)
-			mask &= ~(0x04 << i);
+			mask &= ~(0x08 << i);
+
+		/* noise */
+		noise += st->noise_inc;
 
 		/* prepare next tick */
-		ch->count++;
-		if (ch->count >= ch->patch.length) {
-			ch->count = ch->patch.loop;
+		sc->count++;
+		if (sc->count >= sc->patch.length) {
+			sc->count = sc->patch.loop;
 		}
 	}
 
-	if (sp->noise_offset)
-		 ym2149_write_register(sp->ym, YM_NOISE, sp->noise_offset - 1);
-
+	ym2149_write_register(sp->ym, YM_NOISE, noise /*+ sp->noise_offset*/);
 	ym2149_write_register(sp->ym, YM_MIXER, mask);
 }
 
@@ -228,23 +229,17 @@ static void spectrum_update()
 
 static void synth_setpatch(int c, uint8 *data)
 {
-	if (c < 3) {
-		memcpy(&sp->sc[c].patch, data, sizeof (struct spectrum_sample));
-		sp->sc[c].count = 0;
-		sp->sc[c].vol = sp->sc[c].patch.stick[0].vol;
-	}
+	struct spectrum_channel *sc = &sp->sc[c];
+	memcpy(&sc->patch, data, sizeof (struct spectrum_sample));
+	sc->count = 0;
+	sc->vol = sc->patch.stick[0].vol;
 
 }
 
 static void synth_setnote(int c, int note, int bend)
 {
-	if (c < 3) {
-		double d = (double)note + (double)bend / 100;
-		int period = (int)(0xfff / pow(2, d / 12));
-		sp->sc[c].freq0 = sp->sc[c].freq = period;
-	} else if (c == 3) {
-		sp->noise_offset = note;
-	}
+	double d = (double)note + (double)bend / 100;
+	sp->sc[c].freq = (int)(0xfff / pow(2, d / 12));
 }
 
 static void synth_setvol(int c, int vol)

@@ -4,9 +4,9 @@
 #define SPECTRUM_MAX_STICK 48 
 
 struct spectrum_stick {
-	int tone_inc;
-	int vol;
-	int env_inc;
+	int16 tone_inc;
+	int8 vol;
+	int8 noise_inc;
 	int flags;
 #define SPECTRUM_FLAG_TONEINC	0x0001
 #define SPECTRUM_FLAG_VOLSLIDE	0x0002
