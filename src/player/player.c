@@ -185,7 +185,7 @@ static inline void reset_channel(struct xmp_context *ctx)
     struct xmp_channel *xc;
     int i;
 
-    m->synth->reset();
+    m->synth->reset(ctx);
     memset(p->xc_data, 0, sizeof (struct xmp_channel) * d->numchn);
 
     for (i = d->numchn; i--; ) {
@@ -878,8 +878,8 @@ int _xmp_player_start(struct xmp_context *ctx)
 	if (!(p->fetch_ctl && f->loop_stack && f->loop_start && p->xc_data))
 		return XMP_ERR_ALLOC;
 
-	m->synth->init(o->freq);
-	m->synth->reset();
+	m->synth->init(ctx, o->freq);
+	m->synth->reset(ctx);
 
 	reset_channel(ctx);
 
@@ -1059,7 +1059,7 @@ void _xmp_player_end(struct xmp_context *ctx)
 
 	xmp_drv_stoptimer(ctx);
 	xmp_drv_off(ctx);
-	m->synth->deinit();
+	m->synth->deinit(ctx);
 
 	if (m->xxh->len == 0 || m->xxh->chn == 0)
                 return;

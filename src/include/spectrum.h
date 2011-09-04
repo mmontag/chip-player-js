@@ -1,7 +1,20 @@
 #ifndef __SPECTRUM_H
 #define __SPECTRUM_H
 
-#define SPECTRUM_MAX_STICK 48 
+#include <synth.h>
+
+#define SPECTRUM_MAX_STICK	48 
+#define SPECTRUM_MAX_ORNAMENTS	80
+
+/* Effects */
+#define SPECTRUM_FX_NOISE	FX_SYNTH_0
+#define SPECTRUM_FX_ORNAMENT	FX_SYNTH_1
+
+struct spectrum_ornament {
+	int length;
+	int loop;
+	int8 val[15][SPECTRUM_MAX_ORNAMENTS];
+};
 
 struct spectrum_stick {
 	int16 tone_inc;

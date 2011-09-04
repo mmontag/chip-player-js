@@ -11,6 +11,9 @@ Stable versions
 	- fix AMF pitchbend effects (reported by Andre Timmermans)
 	- fix AMF volume slide effect
 	- add support to DSMS mod files
+	- add YM2149 emulator and improved chip sound support
+	- add support to ZX Spectrum AY-3-8192 chiptunes
+	- add ZX Spectrum Soundtracker module loader
 
 3.4.1 (20110813):
 	- test for unused but set variable warning in gcc (needed to

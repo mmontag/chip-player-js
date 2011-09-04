@@ -11,6 +11,7 @@
 #endif
 
 #include "load.h"
+#include "synth.h"
 
 /* Based on the HSC File Format Spec, by Simon Peter <dn.tlp@gmx.net>
  * 

@@ -5,13 +5,14 @@
 #include "list.h"
 
 struct xmp_synth_info {
-	int (*init)(int);
-	int (*deinit)(void);
-	int (*reset)(void);
-	void (*setpatch)(int, uint8 *);
-	void (*setnote)(int, int, int);
-	void (*setvol)(int, int);
-	void (*mixer)(int *, int, int, int, int);
+	int (*init)(struct xmp_context *, int);
+	int (*deinit)(struct xmp_context *);
+	int (*reset)(struct xmp_context *);
+	void (*setpatch)(struct xmp_context *, int, uint8 *);
+	void (*setnote)(struct xmp_context *, int, int, int);
+	void (*setvol)(struct xmp_context *, int, int);
+	void (*seteffect)(struct xmp_context *, int, int, int);
+	void (*mixer)(struct xmp_context *, int *, int, int, int, int);
         struct list_head list;
 };
 

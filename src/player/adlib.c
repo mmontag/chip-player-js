@@ -186,7 +186,7 @@ static void synth_chreset()
 		voc2ch[i] = 0;
 }
 
-static void synth_setpatch(int c, uint8 * data)
+static void synth_setpatch(struct xmp_context *ctx, int c, uint8 * data)
 {
 	int i, x;
 
@@ -222,7 +222,7 @@ static void synth_setpatch(int c, uint8 * data)
  *          bits 1-0 - Most significant bits of F-number.
  */
 
-static void synth_setnote(int c, int note, int bend)
+static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
 {
 	int n, f, o;
 
@@ -240,7 +240,7 @@ static void synth_setnote(int c, int note, int bend)
 	opl_write(0xb0 + c, 0x20 | ((o << 2) & 0x1c) | ((f >> 8) & 0x03));
 }
 
-static void synth_setvol(int c, int vol)
+static void synth_setvol(struct xmp_context *ctx, int c, int vol)
 {
 	int b, ofs;
 
@@ -262,7 +262,11 @@ static void synth_setvol(int c, int vol)
 	opl_write(0x40 + ofs, (b & 0xc0) | (63 - vol));
 }
 
-static int synth_init(int freq)
+static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
+{
+}
+
+static int synth_init(struct xmp_context *ctx, int freq)
 {
 #ifdef DEBUG_ADLIB
 	ioperm(0x388, 2, 1);
@@ -272,7 +276,7 @@ static int synth_init(int freq)
 	return YM3812Init(1, 3579545, freq);
 }
 
-static int synth_reset()
+static int synth_reset(struct xmp_context *ctx)
 {
 #ifdef DEBUG_ADLIB
 	int i;
@@ -287,15 +291,15 @@ static int synth_reset()
 	return 0;
 }
 
-static int synth_deinit()
+static int synth_deinit(struct xmp_context *ctx)
 {
-	synth_reset();
+	synth_reset(ctx);
 	YM3812Shutdown();
 
 	return 0;
 }
 
-static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
+static void synth_mixer(struct xmp_context *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
 {
 	if (!tmp_bk)
 		return;
@@ -311,6 +315,6 @@ struct xmp_synth_info synth_adlib = {
 	synth_setpatch,
 	synth_setnote,
 	synth_setvol,
+	synth_seteffect,
 	synth_mixer
 };
-

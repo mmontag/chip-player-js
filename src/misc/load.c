@@ -30,6 +30,7 @@
 #include "driver.h"
 #include "convert.h"
 #include "loader.h"
+#include "synth.h"
 
 #include "list.h"
 
@@ -570,6 +571,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->xxh->bpm = 125;
     m->xxh->chn = 4;
     m->synth = &synth_null;
+    m->extra = NULL;
 
     for (i = 0; i < 64; i++) {
 	m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
@@ -727,6 +729,9 @@ void xmp_release_module(xmp_context ctx)
 	int i;
 
 	_D(_D_INFO "Freeing memory");
+
+	if (m->extra)
+		free(m->extra);
 
 	if (m->med_vol_table) {
 		for (i = 0; i < m->xxh->ins; i++)

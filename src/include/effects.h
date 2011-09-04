@@ -99,4 +99,22 @@
 #define FX_S3M_BPM	0xab	/* S3M */
 #define FX_FINE4_VIBRA	0xac	/* S3M/PTM/IMF/LIQ */
 
+/* Reserved synth effects */
+#define FX_SYNTH_0	0xf0
+#define FX_SYNTH_1	0xf1
+#define FX_SYNTH_2	0xf2
+#define FX_SYNTH_3	0xf3
+#define FX_SYNTH_4	0xf4
+#define FX_SYNTH_5	0xf5
+#define FX_SYNTH_6	0xf6
+#define FX_SYNTH_7	0xf7
+#define FX_SYNTH_8	0xf8
+#define FX_SYNTH_9	0xf9
+#define FX_SYNTH_A	0xfa
+#define FX_SYNTH_B	0xfb
+#define FX_SYNTH_C	0xfc
+#define FX_SYNTH_D	0xfd
+#define FX_SYNTH_E	0xfe
+#define FX_SYNTH_F	0xff
+
 #endif /* __EFFECTS_H */

@@ -11,6 +11,7 @@
 #endif
 
 #include "load.h"
+#include "synth.h"
 
 
 static int amd_test (FILE *, char *, const int);

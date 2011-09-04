@@ -37,6 +37,11 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
     struct flow_control *f = &p->flow;
     int h, l;
 
+    if (fxt >= FX_SYNTH_0 && fxt <= FX_SYNTH_F) {
+	xmp_drv_seteffect(ctx, chn, fxt, fxp);
+	return;
+    }
+
     switch (fxt) {
     case FX_ARPEGGIO:
 	if (!fxp)

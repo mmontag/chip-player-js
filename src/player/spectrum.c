@@ -15,6 +15,7 @@
 #include <math.h>
 #include "xmp.h"
 #include "common.h"
+#include "effects.h"
 #include "driver.h"
 #include "synth.h"
 #include "spectrum.h"
@@ -25,6 +26,7 @@ struct spectrum_channel {
 	int vol;
 	int freq;
 	int count;
+	int orn;
 	struct spectrum_sample patch;
 };
 
@@ -216,7 +218,7 @@ static void spectrum_update()
 		}
 	}
 
-	ym2149_write_register(sp->ym, YM_NOISE, noise /*+ sp->noise_offset*/);
+	ym2149_write_register(sp->ym, YM_NOISE, noise + sp->noise_offset);
 	ym2149_write_register(sp->ym, YM_MIXER, mask);
 }
 
@@ -227,33 +229,48 @@ static void spectrum_update()
  * Channel 3 is reserved for noise
  */
 
-static void synth_setpatch(int c, uint8 *data)
+static void synth_setpatch(struct xmp_context *ctx, int c, uint8 *data)
 {
 	struct spectrum_channel *sc = &sp->sc[c];
+
 	memcpy(&sc->patch, data, sizeof (struct spectrum_sample));
 	sc->count = 0;
 	sc->vol = sc->patch.stick[0].vol;
 
 }
 
-static void synth_setnote(int c, int note, int bend)
+static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
 {
-	double d = (double)note + (double)bend / 100;
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &p->m;
+	struct spectrum_channel *sc = &sp->sc[c];
+	struct spectrum_ornament *so = m->extra;
+	double d;
+
+	note += so->val[sc->orn][sc->count];
+	d = (double)note + (double)bend / 100;
 	sp->sc[c].freq = (int)(0xfff / pow(2, d / 12));
 }
 
-static void synth_setvol(int c, int vol)
+static void synth_setvol(struct xmp_context *ctx, int c, int vol)
 {
-#if 0
-	vol >>= 1;
-	if (vol > 0x3f)
-		vol = 0x3f;
-
-	sp->sc[c].vol0 = sp->sc[c].vol = vol;
-#endif
 }
 
-static int synth_init(int freq)
+static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
+{
+	struct spectrum_channel *sc = &sp->sc[c];
+
+	switch (type) {
+	case SPECTRUM_FX_NOISE:
+		sp->noise_offset = val;
+		break;
+	case SPECTRUM_FX_ORNAMENT:
+		sc->orn = val;
+		break;
+	}
+}
+
+static int synth_init(struct xmp_context *ctx, int freq)
 {
 	sp = spectrum_new(freq);
 	if (sp == NULL)
@@ -262,21 +279,21 @@ static int synth_init(int freq)
 	return 0;
 }
 
-static int synth_reset()
+static int synth_reset(struct xmp_context *ctx)
 {
 	ym2149_reset(sp->ym);
 
 	return 0;
 }
 
-static int synth_deinit()
+static int synth_deinit(struct xmp_context *ctx)
 {
 	spectrum_destroy(sp);
 
 	return 0;
 }
 
-static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
+static void synth_mixer(struct xmp_context *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
 {
 	if (!tmp_bk)
 		return;
@@ -293,6 +310,7 @@ struct xmp_synth_info synth_spectrum = {
 	synth_setpatch,
 	synth_setnote,
 	synth_setvol,
+	synth_seteffect,
 	synth_mixer
 };
 

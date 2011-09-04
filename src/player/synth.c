@@ -14,34 +14,38 @@
 #include "common.h"
 #include "synth.h"
 
-static void synth_setpatch(int c, uint8 *data)
+static void synth_setpatch(struct xmp_context *ctx, int c, uint8 *data)
 {
 }
 
-static void synth_setnote(int c, int note, int bend)
+static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
 {
 }
 
-static void synth_setvol(int c, int vol)
+static void synth_setvol(struct xmp_context *ctx, int c, int vol)
 {
 }
 
-static int synth_init(int freq)
+static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 {
-	return 0;
 }
 
-static int synth_deinit()
-{
-	return 0;
-}
-
-static int synth_reset()
+static int synth_init(struct xmp_context *ctx, int freq)
 {
 	return 0;
 }
 
-static void synth_mixer(int *tmp_bk, int count, int vl, int vr, int stereo)
+static int synth_deinit(struct xmp_context *ctx)
+{
+	return 0;
+}
+
+static int synth_reset(struct xmp_context *ctx)
+{
+	return 0;
+}
+
+static void synth_mixer(struct xmp_context *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
 {
 }
 
@@ -52,5 +56,6 @@ struct xmp_synth_info synth_null = {
 	synth_setpatch,
 	synth_setnote,
 	synth_setvol,
+	synth_seteffect,
 	synth_mixer
 };

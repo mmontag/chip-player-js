@@ -21,6 +21,7 @@
 static int stc_test(FILE *, char *, const int);
 static int stc_load(struct xmp_context *, FILE *, const int);
 
+
 struct xmp_loader_info stc_loader = {
 	"STC",
 	"Sound Tracker",
@@ -94,8 +95,9 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	int pos_ptr, orn_ptr, pat_ptr;
 	struct stc_ord stc_ord[256];
 	struct stc_pat stc_pat[MAX_PAT];
-	int num, flag;
+	int num, flag, orn;
 	int *decoded;
+	struct spectrum_ornament *so;
 
 	LOAD_INIT();
 
@@ -140,6 +142,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	m->xxh->ins = 15;
 	m->xxh->smp = m->xxh->ins;
+	orn = (pat_ptr - orn_ptr) / 33;
 
 	MODULE_INFO();
 
@@ -201,7 +204,9 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 					if (x <= 0x6f) {
 						event->ins = x - 0x5f - 1;
 					} else if (x <= 0x7f) {
-						/* ornament, effect F */
+						event->f2t =
+							SPECTRUM_FX_ORNAMENT;
+						event->f2p = x - 0x70;
 						/* parameter = x - 0x70 */
 					} else if (x == 0x80) {
 						event->note = XMP_KEY_OFF;
@@ -214,7 +219,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 					} else if (x < 0x8e) {
 						/* noise */
 						read8(f);
-						//noise->note = read8(f) + 1;
+						event->fxt = SPECTRUM_FX_NOISE;
+						event->fxp = read8(f);
 					} else {
 						rowinc = x - 0xa1;
 					}
@@ -236,8 +242,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	fseek(f, 27, SEEK_SET);
 
-	reportv(ctx, 1, "     Loop Len\n");
-
+	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
 	for (i = 0; i < m->xxh->ins; i++) {
 		struct spectrum_sample ss;
 
@@ -272,8 +277,6 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			}
 		}
 
-		reportv(ctx, 1, "[%2X] %4d %3d  ", i, ss.loop, ss.length);
-		
 		/* Read sample ticks */
 
 		for (j = 0; j < 31; j++) {
@@ -303,7 +306,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 			sst->flags |= SPECTRUM_FLAG_ENVELOPE;
 
-			if (j != 0) {
+			/*if (j != 0) {
 				reportv(ctx, 1, "               ");
 			}
 			reportv(ctx, 1, "%02X %c%c%c %c%03x %x\n", j,
@@ -311,15 +314,39 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 				sst->flags & SPECTRUM_FLAG_MIXNOISE ? 'N' : 'n',
 				sst->flags & SPECTRUM_FLAG_ENVELOPE ? 'E' : 'e',
 				sst->tone_inc >= 0 ? '+' : '-',
-				sst->tone_inc >= 0 ? sst->tone_inc : -sst->tone_inc,
-				sst->vol);
+				sst->tone_inc >= 0 ?
+					sst->tone_inc : -sst->tone_inc,
+				sst->vol);*/
 			
 		}
 
 		xmp_drv_loadpatch(ctx, f, i, 0, XMP_SMP_SPECTRUM, NULL,
 								(char *)&ss);
+
+		reportv(ctx, 0, ".");
 	}
+	reportv(ctx, 0, "\n");
 	
+	/* Read ornaments */
+
+	fseek(f, orn_ptr, SEEK_SET);
+	m->extra = calloc(1, sizeof (struct spectrum_ornament));
+	so = m->extra;
+
+	reportv(ctx, 0, "Ornaments      : %d ", orn);
+	for (i = 0; i < orn; i++) {
+		int index;
+
+		memset(&so->val[i], 0, SPECTRUM_MAX_ORNAMENTS);
+		index = read8(f);		
+		for (j = 0; j < 32; j++) {
+			so->val[index][j] = read8s(f);
+		}
+
+		reportv(ctx, 0, ".");
+	}
+	reportv(ctx, 0, "\n");
+
 	for (i = 0; i < 4; i++) {
 		m->xxc[i].pan = 0x80;
 		m->xxc[i].flg = XXM_CHANNEL_SYNTH;

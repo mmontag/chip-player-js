@@ -292,8 +292,8 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 
 	if (vi->fidx & FLAG_SYNTH) {
 	    if (synth) {
-    		m->synth->mixer(buf_pos, s->ticksize, vol_l >> 7, vol_r >> 7,
-						vi->fidx & FLAG_STEREO);
+    		m->synth->mixer(ctx, buf_pos, s->ticksize, vol_l >> 7,
+					vol_r >> 7, vi->fidx & FLAG_STEREO);
 	        synth = 0;
 	    }
 	    continue;
@@ -472,7 +472,7 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 	    vi->fidx |= FLAG_STEREO;
 	}
 
-	m->synth->setpatch(voc, (uint8 *)pi->data);
+	m->synth->setpatch(ctx, voc, (uint8 *)pi->data);
 
 	return;
     }
@@ -530,7 +530,7 @@ void smix_setbend(struct xmp_context *ctx, int voc, int bend)
     vi->period = note_to_period_mix(vi->note, bend);
 
     if (vi->fidx & FLAG_SYNTH)
-	m->synth->setnote(voc, vi->note, bend);
+	m->synth->setnote(ctx, voc, vi->note, bend);
 }
 
 
@@ -544,13 +544,14 @@ void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
     vi->vol = vol;
 
     if (vi->fidx & FLAG_SYNTH)
-	m->synth->setvol(voc, vol >> 4);
+	m->synth->setvol(ctx, voc, vol >> 4);
 }
 
 
 void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_mod_context *m = &ctx->p.m;
     struct voice_info *vi = &d->voice_array[voc];
  
     switch (type) {
@@ -570,6 +571,9 @@ void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
         vi->flt_B2 = val;
 	break;
     }
+
+    if (vi->fidx & FLAG_SYNTH)
+	m->synth->seteffect(ctx, voc, type, val);
 }
 
 

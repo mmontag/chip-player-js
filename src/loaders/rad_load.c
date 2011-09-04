@@ -11,6 +11,7 @@
 #endif
 
 #include "load.h"
+#include "synth.h"
 
 static int rad_test(FILE *, char *, const int);
 static int rad_load(struct xmp_context *, FILE *, const int);

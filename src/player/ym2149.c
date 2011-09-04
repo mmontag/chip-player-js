@@ -112,7 +112,7 @@ static ymsample *pInternalInput = NULL;
 static int32 internalInputLen = 0;
 static ymsample oldFilter[2] = { 0, 0 };
 
-ymsample *getBufferCopy(ymsample * pIn, int len)
+ymsample *getBufferCopy(ymsample *pIn, int len)
 {
 	if (len > internalInputLen) {
 		if (pInternalInput)
@@ -128,7 +128,7 @@ ymsample *getBufferCopy(ymsample * pIn, int len)
 
 // Cheap but efficient low pass filter ( 0.25,0.5,0.25 )
 // filter: out -> out
-void lowpFilterProcess(ymsample * pOut, int len)	// private
+void lowpFilterProcess(ymsample *pOut, int len)	// private
 {
 	ymsample *pIn;
 	int i;
