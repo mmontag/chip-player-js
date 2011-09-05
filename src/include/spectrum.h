@@ -4,16 +4,22 @@
 #include <synth.h>
 
 #define SPECTRUM_MAX_STICK	48 
-#define SPECTRUM_MAX_ORNAMENTS	80
+#define SPECTRUM_MAX_OTICK	80
+#define SPECTRUM_NUM_ORNAMENTS	15
 
 /* Effects */
-#define SPECTRUM_FX_NOISE	FX_SYNTH_0
-#define SPECTRUM_FX_ORNAMENT	FX_SYNTH_1
+#define SPECTRUM_FX_ORNAMENT	FX_SYNTH_0
+#define SPECTRUM_FX_ENVELOPE	FX_SYNTH_1
+#define SPECTRUM_FX_NOISE	FX_SYNTH_2
 
 struct spectrum_ornament {
 	int length;
 	int loop;
-	int8 val[15][SPECTRUM_MAX_ORNAMENTS];
+	int8 val[SPECTRUM_MAX_OTICK];
+};
+
+struct spectrum_extra {
+	struct spectrum_ornament ornament[SPECTRUM_NUM_ORNAMENTS];
 };
 
 struct spectrum_stick {

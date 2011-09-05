@@ -97,7 +97,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	struct stc_pat stc_pat[MAX_PAT];
 	int num, flag, orn;
 	int *decoded;
-	struct spectrum_ornament *so;
+	struct spectrum_extra *se;
 
 	LOAD_INIT();
 
@@ -193,7 +193,6 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	
 //printf("pat %d, channel %d, row %d, x = %02x\n", dest, j, row, x);
 					event = &EVENT(dest, j, row);
-					//noise = &EVENT(dest, 3, row);
 				
 					if (x <= 0x5f) {
 						event->note = x + 6 + trans;
@@ -214,12 +213,15 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 						break;
 					} else if (x == 0x81) {
 						/* ? */
+						event->note = XMP_KEY_OFF;
+						row += 1 + rowinc;
 					} else if (x == 0x82) {
 						/* envelope */
 					} else if (x < 0x8e) {
 						/* noise */
 						read8(f);
-						event->fxt = SPECTRUM_FX_NOISE;
+						event->fxt =
+							SPECTRUM_FX_ENVELOPE;
 						event->fxp = read8(f);
 					} else {
 						rowinc = x - 0xa1;
@@ -330,17 +332,22 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	/* Read ornaments */
 
 	fseek(f, orn_ptr, SEEK_SET);
-	m->extra = calloc(1, sizeof (struct spectrum_ornament));
-	so = m->extra;
+	m->extra = calloc(1, sizeof (struct spectrum_extra));
+	se = m->extra;
 
 	reportv(ctx, 0, "Ornaments      : %d ", orn);
 	for (i = 0; i < orn; i++) {
 		int index;
+		struct spectrum_ornament *so;
 
-		memset(&so->val[i], 0, SPECTRUM_MAX_ORNAMENTS);
 		index = read8(f);		
+
+		so = &se->ornament[index];
+		so->length = 32;
+		so->loop = 31;
+
 		for (j = 0; j < 32; j++) {
-			so->val[index][j] = read8s(f);
+			so->val[j] = read8s(f);
 		}
 
 		reportv(ctx, 0, ".");

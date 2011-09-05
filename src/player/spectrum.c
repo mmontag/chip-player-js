@@ -213,9 +213,8 @@ static void spectrum_update()
 
 		/* prepare next tick */
 		sc->count++;
-		if (sc->count >= sc->patch.length) {
+		if (sc->count >= sc->patch.length)
 			sc->count = sc->patch.loop;
-		}
 	}
 
 	ym2149_write_register(sp->ym, YM_NOISE, noise + sp->noise_offset);
@@ -243,11 +242,11 @@ static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
+	struct spectrum_extra *se = m->extra;
 	struct spectrum_channel *sc = &sp->sc[c];
-	struct spectrum_ornament *so = m->extra;
 	double d;
 
-	note += so->val[sc->orn][sc->count];
+	note += se->ornament[sc->orn].val[sc->count];
 	d = (double)note + (double)bend / 100;
 	sp->sc[c].freq = (int)(0xfff / pow(2, d / 12));
 }
@@ -265,7 +264,8 @@ static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 		sp->noise_offset = val;
 		break;
 	case SPECTRUM_FX_ORNAMENT:
-		sc->orn = val;
+		if (val < SPECTRUM_NUM_ORNAMENTS)
+			sc->orn = val;
 		break;
 	}
 }
