@@ -145,7 +145,8 @@ static void aboutbox()
 		"Portions Copyright (C) 1998,2000 Olivier Lapicque,\n"
 		"(C) 1998 Tammo Hinrichs, (C) 1998 Sylvain Chipaux,\n"
 		"(C) 1997 Bert Jahn, (C) 1999 Tatsuyuki Satoh, (C)\n"
-		"2001-2006 Russell Marks, (C) 2005-2006 Michael Kohn\n"
+		"1995-1999 Arnaud Carre, (C) 2001-2006 Russell Marks,\n"
+		"(C) 2005-2006 Michael Kohn\n"
 		"\n"
 		"Supported module formats:"
 	);

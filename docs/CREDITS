@@ -142,6 +142,9 @@ Reused code
 * Stuart Caie <kyzer@4u.net>
 - PowerPack decruncher
 
+* Arnaud Carré <arnaud.carre@freesurf.fr>
+- YM2149 emulator
+
 * Martin Denn <mdenn@unix-ag.uni-kl.de>
 - portions of the NAS driver
 
