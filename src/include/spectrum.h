@@ -7,11 +7,6 @@
 #define SPECTRUM_MAX_OTICK	80
 #define SPECTRUM_NUM_ORNAMENTS	15
 
-/* Effects */
-#define SPECTRUM_FX_ORNAMENT	FX_SYNTH_0
-#define SPECTRUM_FX_ENVELOPE	FX_SYNTH_1
-#define SPECTRUM_FX_NOISE	FX_SYNTH_2
-
 struct spectrum_ornament {
 	int length;
 	int loop;
@@ -25,7 +20,7 @@ struct spectrum_extra {
 struct spectrum_stick {
 	int16 tone_inc;
 	int8 vol;
-	int8 noise_inc;
+	int8 noise_env_inc;
 	int flags;
 #define SPECTRUM_FLAG_TONEINC	0x0001
 #define SPECTRUM_FLAG_VOLSLIDE	0x0002

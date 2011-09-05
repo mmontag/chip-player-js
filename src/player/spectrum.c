@@ -33,6 +33,8 @@ struct spectrum_channel {
 struct spectrum {
 	struct spectrum_channel sc[3];
 	int noise_offset;
+	int envtype;
+	int env;
 	struct ym2149 *ym;
 };
 
@@ -201,6 +203,14 @@ static void spectrum_update()
 		/* vol */
 		ym2149_write_register(sp->ym, YM_VOL(i), st->vol);
 
+		/* ? */
+		/*if (st->flags & SPECTRUM_FLAG_ENVELOPE)
+			sp->env += st->noise_env_inc;
+		else
+			noise += st->noise_env_inc;*/
+
+		noise += st->noise_env_inc;
+
 		/* mixer */
 		if (st->flags & SPECTRUM_FLAG_MIXTONE)
 			mask &= ~(0x01 << i);
@@ -208,16 +218,21 @@ static void spectrum_update()
 		if (st->flags & SPECTRUM_FLAG_MIXNOISE)
 			mask &= ~(0x08 << i);
 
-		/* noise */
-		noise += st->noise_inc;
-
 		/* prepare next tick */
 		sc->count++;
 		if (sc->count >= sc->patch.length)
 			sc->count = sc->patch.loop;
 	}
 
-	ym2149_write_register(sp->ym, YM_NOISE, noise + sp->noise_offset);
+	/* envelope */
+	ym2149_write_register(sp->ym, YM_ENVL, sp->env & 0xff);
+	ym2149_write_register(sp->ym, YM_ENVH, (sp->env & 0xff00) >> 8);
+	ym2149_write_register(sp->ym, YM_ENVTYPE, sp->envtype);
+
+	/* noise */
+	ym2149_write_register(sp->ym, YM_NOISE, noise);
+
+	/* mixer */
 	ym2149_write_register(sp->ym, YM_MIXER, mask);
 }
 
@@ -260,12 +275,34 @@ static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 	struct spectrum_channel *sc = &sp->sc[c];
 
 	switch (type) {
-	case SPECTRUM_FX_NOISE:
-		sp->noise_offset = val;
-		break;
-	case SPECTRUM_FX_ORNAMENT:
+	case FX_SYNTH_0:
 		if (val < SPECTRUM_NUM_ORNAMENTS)
 			sc->orn = val;
+		sp->env = 0x000000;
+		break;
+	case FX_SYNTH_1:
+		/* set R12 */
+		sp->env = (sp->env & 0x00ff) | (val << 8);
+		break;
+	case FX_SYNTH_2:
+		sp->env = 0x000000;
+		break;
+	case FX_SYNTH_3:
+	case FX_SYNTH_4:
+	case FX_SYNTH_5:
+	case FX_SYNTH_6:
+	case FX_SYNTH_7:
+	case FX_SYNTH_8:
+	case FX_SYNTH_9:
+	case FX_SYNTH_A:
+	case FX_SYNTH_B:
+	case FX_SYNTH_C:
+	case FX_SYNTH_D:
+	case FX_SYNTH_E:
+		/* set R13 */
+		sp->envtype = type - FX_SYNTH_0;
+		/* set R11 */
+		sp->env = (sp->env & 0xff00) | val;
 		break;
 	}
 }

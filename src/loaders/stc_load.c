@@ -179,10 +179,9 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		for (j = 0; j < 3; j++) {		/* row */
 			int row = 0;
 			int x;
+			int rowinc = 0;
 	
 			fseek(f, stc_pat[src].ch[j], SEEK_SET);
-
-			int rowinc = 0;
 
 			do {
 				for (;;) {
@@ -203,26 +202,29 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 					if (x <= 0x6f) {
 						event->ins = x - 0x5f - 1;
 					} else if (x <= 0x7f) {
-						event->f2t =
-							SPECTRUM_FX_ORNAMENT;
-						event->f2p = x - 0x70;
-						/* parameter = x - 0x70 */
+						/* ornament*/
+						event->fxt = FX_SYNTH_0;
+						event->fxp = x - 0x70;
 					} else if (x == 0x80) {
 						event->note = XMP_KEY_OFF;
 						row += 1 + rowinc;
 						break;
 					} else if (x == 0x81) {
 						/* ? */
-						event->note = XMP_KEY_OFF;
 						row += 1 + rowinc;
 					} else if (x == 0x82) {
-						/* envelope */
+						/* disable ornament/envelope */
+						event->fxt = FX_SYNTH_0;
+						event->fxp = 0;
+						event->f2t = FX_SYNTH_2;
+						event->f2p = 0;
 					} else if (x < 0x8e) {
-						/* noise */
-						read8(f);
-						event->fxt =
-							SPECTRUM_FX_ENVELOPE;
-						event->fxp = read8(f);
+						/* envelope */
+						event->fxt = FX_SYNTH_0 +
+							x - 0x80;      /* R13 */
+						event->fxp = read8(f); /* R11 */
+						event->f2t = FX_SYNTH_1;
+						event->f2p = read8(f); /* R12 */
 					} else {
 						rowinc = x - 0xa1;
 					}
@@ -289,10 +291,10 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 			if (~chdata[1] & 0x80) {
 				sst->flags |= SPECTRUM_FLAG_MIXNOISE;
-				sst->noise_inc = chdata[1] & 0x1f;
+				sst->noise_env_inc = chdata[1] & 0x1f;
 
-				if (sst->noise_inc & 0x10)
-					sst->noise_inc |= 0xf0;
+				if (sst->noise_env_inc & 0x10)
+					sst->noise_env_inc |= 0xf0;
 			}
 
 			if (~chdata[1] & 0x40)
