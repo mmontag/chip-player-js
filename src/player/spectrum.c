@@ -278,14 +278,17 @@ static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 	case FX_SYNTH_0:
 		if (val < SPECTRUM_NUM_ORNAMENTS)
 			sc->orn = val;
-		sp->env = 0x000000;
+		sp->envtype = 15;
+		sp->env = 0x0000;
 		break;
 	case FX_SYNTH_1:
 		/* set R12 */
 		sp->env = (sp->env & 0x00ff) | (val << 8);
 		break;
 	case FX_SYNTH_2:
-		sp->env = 0x000000;
+		sp->envtype = 15;
+		sp->env = 0x0000;
+		sc->orn = 0;
 		break;
 	case FX_SYNTH_3:
 	case FX_SYNTH_4:
@@ -303,6 +306,7 @@ static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 		sp->envtype = type - FX_SYNTH_0;
 		/* set R11 */
 		sp->env = (sp->env & 0xff00) | val;
+		sc->orn = 0;
 		break;
 	}
 }

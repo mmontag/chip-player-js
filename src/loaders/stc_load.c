@@ -218,7 +218,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 						event->fxp = 0;
 						event->f2t = FX_SYNTH_2;
 						event->f2p = 0;
-					} else if (x < 0x8e) {
+					} else if (x <= 0x8e) {
 						/* envelope */
 						event->fxt = FX_SYNTH_0 +
 							x - 0x80;      /* R13 */
