@@ -20,4 +20,6 @@ extern struct xmp_synth_info synth_null;
 extern struct xmp_synth_info synth_adlib;
 extern struct xmp_synth_info synth_spectrum;
 
+#define SYNTH_CHIP(x) ((x)->p.m.chip)
+
 #endif

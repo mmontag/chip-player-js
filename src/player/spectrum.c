@@ -39,9 +39,6 @@ struct spectrum {
 };
 
 
-/* FIXME: this should be an opaque handle provided by the main player */
-static struct spectrum *sp;
-
 static struct spectrum *spectrum_new(int freq)
 {
 	struct spectrum *sp;
@@ -185,7 +182,7 @@ static void spectrum_destroy(struct spectrum *sp)
  * E - Visual representation of the volume for that line. Cannot be edited.
  */ 
 
-static void spectrum_update()
+static void spectrum_update(struct spectrum *sp)
 {
 	int i;
 	int mask = 0x7f;
@@ -245,6 +242,7 @@ static void spectrum_update()
 
 static void synth_setpatch(struct xmp_context *ctx, int c, uint8 *data)
 {
+	struct spectrum *sp = SYNTH_CHIP(ctx);
 	struct spectrum_channel *sc = &sp->sc[c];
 
 	memcpy(&sc->patch, data, sizeof (struct spectrum_sample));
@@ -257,6 +255,7 @@ static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
+	struct spectrum *sp = SYNTH_CHIP(ctx);
 	struct spectrum_extra *se = m->extra;
 	struct spectrum_channel *sc = &sp->sc[c];
 	double d;
@@ -272,6 +271,7 @@ static void synth_setvol(struct xmp_context *ctx, int c, int vol)
 
 static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 {
+	struct spectrum *sp = SYNTH_CHIP(ctx);
 	struct spectrum_channel *sc = &sp->sc[c];
 
 	switch (type) {
@@ -313,8 +313,8 @@ static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 
 static int synth_init(struct xmp_context *ctx, int freq)
 {
-	sp = spectrum_new(freq);
-	if (sp == NULL)
+	SYNTH_CHIP(ctx) = spectrum_new(freq);
+	if (SYNTH_CHIP(ctx) == NULL)
 		return -1;
 
 	return 0;
@@ -322,6 +322,7 @@ static int synth_init(struct xmp_context *ctx, int freq)
 
 static int synth_reset(struct xmp_context *ctx)
 {
+	struct spectrum *sp = SYNTH_CHIP(ctx);
 	ym2149_reset(sp->ym);
 
 	return 0;
@@ -329,6 +330,7 @@ static int synth_reset(struct xmp_context *ctx)
 
 static int synth_deinit(struct xmp_context *ctx)
 {
+	struct spectrum *sp = SYNTH_CHIP(ctx);
 	spectrum_destroy(sp);
 
 	return 0;
@@ -336,10 +338,12 @@ static int synth_deinit(struct xmp_context *ctx)
 
 static void synth_mixer(struct xmp_context *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
 {
+	struct spectrum *sp = SYNTH_CHIP(ctx);
+
 	if (!tmp_bk)
 		return;
 
-	spectrum_update();
+	spectrum_update(sp);
 	ym2149_update(sp->ym, tmp_bk, count, vl, vr, stereo);
 }
 

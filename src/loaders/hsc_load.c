@@ -41,7 +41,7 @@ static int hsc_test(FILE *f, char *t, const int start)
 
     if (fread(buf, 1, 51, f) != 51)
 	return -1;
-;
+
     for (p = i = 0; i < 51; i++) {
 	if (buf[i] == 0xff)
 	    break;

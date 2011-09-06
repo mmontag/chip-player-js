@@ -200,9 +200,11 @@ struct xmp_mod_context {
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
 	uint8 **med_wav_table;		/* MED waveform sequence table */
+
 	void *extra;			/* format-specific extra fields */
 
 	struct xmp_synth_info *synth;
+	void *chip;
 };
 
 struct flow_control {
@@ -334,16 +336,6 @@ uint32	readmem32b		(uint8 *);
 int	get_temp_dir		(char *, int);
 #ifdef WIN32
 int	mkstemp			(char *);
-#endif
-
-#if 0
-#include <android/log.h>
-#define free(x) do { \
-	if ((x) == NULL) \
-		__android_log_print(ANDROID_LOG_DEBUG, "libxmp", "DOUBLE FREE: %s (%s:%d)", __func__, __FILE__, __LINE__); \
-	free(x); \
-	x = NULL; \
-} while (0)
 #endif
 
 #endif /* __XMP_COMMON_H */
