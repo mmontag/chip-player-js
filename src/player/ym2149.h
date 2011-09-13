@@ -100,6 +100,11 @@ struct ym2149 {
 	int	envShape;
 	uint8	envData[16][2][16*2];
 	int	globalVolume;
+
+	/* filter */
+	ymsample *internalInput;
+	int	internalInputLen;
+	ymsample oldFilter[2];
 };
 
 struct ym2149 *ym2149_new(int, int, int);

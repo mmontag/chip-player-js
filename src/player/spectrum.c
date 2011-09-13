@@ -236,8 +236,6 @@ static void spectrum_update(struct spectrum *sp)
 
 /*
  * Synth functions
- *
- * Channel 3 is reserved for noise
  */
 
 static void synth_setpatch(struct xmp_context *ctx, int c, uint8 *data)

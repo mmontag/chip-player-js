@@ -108,45 +108,41 @@ void dc_adjuster_destroy(struct dc_adjuster *dc)
 // Very simple low pass filter.
 // Filter coefs are 0.25,0.5,0.25
 //----------------------------------------------------------------------
-static ymsample *pInternalInput = NULL;
-static int32 internalInputLen = 0;
-static ymsample oldFilter[2] = { 0, 0 };
-
-ymsample *getBufferCopy(ymsample *pIn, int len)
+inline ymsample *getBufferCopy(struct ym2149 *ym, ymsample *in, int len)
 {
-	if (len > internalInputLen) {
-		if (pInternalInput)
-			free(pInternalInput);
-		pInternalInput = (ymsample *) malloc(len * sizeof(ymsample));
-		internalInputLen = len;
+	if (len > ym->internalInputLen) {
+		ym->internalInput = (ymsample *)malloc(len * sizeof(ymsample));
+		ym->internalInputLen = len;
 	}
-	memcpy(pInternalInput, pIn, len * sizeof(ymsample));
-	return pInternalInput;
+	memcpy(ym->internalInput, in, len * sizeof(ymsample));
+	return ym->internalInput;
 }
 
 #define	DSP_FILTER(a,b,c)	(((int)(a)+((int)b+(int)b)+(int)(c))>>2)
 
-// Cheap but efficient low pass filter ( 0.25,0.5,0.25 )
-// filter: out -> out
-void lowpFilterProcess(ymsample *pOut, int len)	// private
+/* Cheap but efficient low pass filter ( 0.25,0.5,0.25 )
+ * filter: out -> out
+ */
+void lowpFilterProcess(struct ym2149 *ym, ymsample *out, int len)
 {
-	ymsample *pIn;
+	ymsample *in;
 	int i;
 
-	pIn = getBufferCopy(pOut, len);
+	in = getBufferCopy(ym, out, len);
 
-	if (len > 0)
-		*pOut++ = DSP_FILTER(oldFilter[0], oldFilter[1], pIn[0]);
+	if (len > 0) {
+		*out++ = DSP_FILTER(ym->oldFilter[0], ym->oldFilter[1], in[0]);
 
-	if (len > 1)
-		*pOut++ = DSP_FILTER(oldFilter[1], pIn[0], pIn[1]);
+		if (len > 1)
+			*out++ = DSP_FILTER(ym->oldFilter[1], in[0], in[1]);
+	}
 
-	oldFilter[0] = pIn[len - 2];
-	oldFilter[1] = pIn[len - 1];
+	ym->oldFilter[0] = in[len - 2];
+	ym->oldFilter[1] = in[len - 1];
 
 	for (i = 2; i < len; i++) {
-		*pOut++ = DSP_FILTER(pIn[0], pIn[1], pIn[2]);
-		pIn++;
+		*out++ = DSP_FILTER(in[0], in[1], in[2]);
+		in++;
 	}
 }
 
@@ -341,6 +337,7 @@ err1:
 void ym2149_destroy(struct ym2149 *ym)
 {
 	dc_adjuster_destroy(ym->dc);
+	free(ym->internalInput);
 	free(ym);
 }
 
@@ -464,7 +461,7 @@ void ym2149_update(struct ym2149 *ym, ymsample *pSampleBuffer, int nbSample, int
 		*pSampleBuffer++ = sample * vl;
 	}
 
-	lowpFilterProcess((ymsample *)pBuffer, nbs);
+	lowpFilterProcess(ym, (ymsample *)pBuffer, nbs);
 }
 
 void ym2149_reset(struct ym2149 *ym)
