@@ -13,6 +13,7 @@ extern struct xmp_drv_info drv_hpux;
 extern struct xmp_drv_info drv_bsd;
 extern struct xmp_drv_info drv_netbsd;
 extern struct xmp_drv_info drv_openbsd;
+extern struct xmp_drv_info drv_sndio;
 extern struct xmp_drv_info drv_sgi;
 extern struct xmp_drv_info drv_aix;
 extern struct xmp_drv_info drv_oss_seq;
@@ -50,6 +51,9 @@ void init_drivers()
 #endif
 #ifdef DRIVER_NETBSD
     xmp_drv_register(&drv_netbsd);
+#endif
+#ifdef DRIVER_SNDIO
+    xmp_drv_register(&drv_sndio);
 #endif
 #ifdef DRIVER_OPENBSD
     xmp_drv_register(&drv_openbsd);
@@ -98,6 +102,5 @@ void init_drivers()
 #endif
     xmp_drv_register(&drv_file);
     xmp_drv_register(&drv_wav);
-
 }
 

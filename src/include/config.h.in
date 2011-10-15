@@ -21,6 +21,9 @@
 /* Define to enable OpenBSD audio support */
 #undef DRIVER_OPENBSD
 
+/* Define to enable OpenBSD sndio audio support */
+#undef DRIVER_SNDIO
+
 /* Define to enable BSD audio support */
 #undef DRIVER_BSD
 

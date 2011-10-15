@@ -113,7 +113,7 @@ static int init(struct xmp_context *ctx)
 	if ((audio_fd = open("/dev/sound", O_WRONLY)) == -1)
 		return XMP_ERR_DINIT;
 
-	if (setaudio(ctl) != 0)
+	if (setaudio(&ctx->o) != 0)
 		return XMP_ERR_DINIT;
 
 	return xmp_smix_on(ctx);
@@ -131,7 +131,7 @@ static void bufdump(struct xmp_context *ctx, int i)
 	while (i) {
 		if ((j = write(audio_fd, b, i)) > 0) {
 			i -= j;
-			(char *)b += j;
+			b = (char *)b + j;
 		} else
 			break;
 	}
