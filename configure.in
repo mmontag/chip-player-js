@@ -389,7 +389,6 @@ else
     if test "${enable_alsa}" = "yes"; then
 	AC_MSG_ERROR(Can't find ALSA header files)
     fi
-    AC_MSG_WARN(ALSA support disabled) 
     enable_alsa="no"
 fi
 
