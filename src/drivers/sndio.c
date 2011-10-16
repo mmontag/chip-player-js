@@ -30,7 +30,7 @@ static void bufdump (struct xmp_context *, int);
 static void shutdown (struct xmp_context *);
 static void dummy (void);
 
-struct xmp_drv_info drv_openbsd = {
+struct xmp_drv_info drv_sndio = {
 	 "sndio",		/* driver ID */
 	 "OpenBSD sndio",	/* driver description */
 	 NULL,		   	/* help */
