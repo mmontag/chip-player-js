@@ -696,8 +696,9 @@ if test "${GCC-no}" = yes; then
 fi
 
 XMP_CACHED_TRY_RUN(whether gcc understands -Wunused-but-set-variable,
-    ac_cv_c_flag_w_no_unused_but_set_variable,,[
-    main(){int foo=0xff}],
+    ac_cv_c_flag_w_no_unused_but_set_variable,
+    -Wno-unused-but-set-variable,[
+    int main(){return 0;}],
     CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")
 
 for sound_hdr in sys/soundcard.h machine/soundcard.h; do
