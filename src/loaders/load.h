@@ -27,6 +27,7 @@ void disable_continue_fx(struct xxm_event *);
 void clean_s3m_seq(struct xxm_header *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct xmp_context *, char *, char *, int);
+void set_type(struct xmp_mod_context *, char *, ...);
 
 extern uint8 ord_xlat[];
 extern int arch_vol_table[];

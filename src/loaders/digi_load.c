@@ -126,7 +126,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->flg |= XXM_FLG_MODRNG;
 
     copy_adjust((uint8 *)m->name, dh.title, 32);
-    sprintf(m->type, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
+    set_type(m, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
 
     MODULE_INFO();
  

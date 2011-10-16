@@ -844,7 +844,7 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
     iff_idsize(2);
     iff_setflag(IFF_LITTLE_ENDIAN);
 
-    sprintf(m->type, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
+    set_type(m, "DMDL %d.%d (Digitrakker)", MSN(*buf), LSN(*buf));
 
     m->volbase = 0xff;
     m->c4rate = C4_NTSC_RATE;

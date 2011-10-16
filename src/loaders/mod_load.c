@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 #include "load.h"
 #include "mod.h"
 
@@ -184,7 +185,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xxm_event *event;
     struct mod_header mh;
     uint8 mod_event[4];
-    char *x, pathname[256] = "", *tracker = "";
+    char *x, pathname[PATH_MAX] = "", *tracker = "";
     int lps_mult = m->flags & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
     char magic[8], idbuffer[32];
@@ -506,12 +507,8 @@ skip_test:
 
     /* Load samples */
 
-    if ((x = strrchr(m->filename, '/'))) {
-	*x = 0;
-	strcpy(pathname, m->filename);
-	strcat(pathname, "/");
-	*x = '/';
-    }
+    if ((x = strrchr(m->filename, '/')))
+	strncpy(pathname, m->filename, x - m->filename);
 
     reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
 

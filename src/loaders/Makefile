@@ -19,7 +19,9 @@ LOADERS_PATH	= src/loaders
 
 OBJS += $(addprefix $(LOADERS_PATH)/,$(LOADERS_OBJS))
 
+default:
+	make -C ../..
+
 dist-loaders:
 	mkdir -p $(DIST)/$(LOADERS_PATH)
 	cp -RPp $(addprefix $(LOADERS_PATH)/,$(LOADERS_DFILES)) $(DIST)/$(LOADERS_PATH)
-

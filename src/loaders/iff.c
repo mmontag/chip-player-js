@@ -64,7 +64,7 @@ void iff_register(char *id, void (*loader)(struct xmp_context *, int, FILE *))
     __flags = 0;
 
     f = malloc(sizeof (struct iff_info));
-    strcpy(f->id, id);
+    strncpy(f->id, id, 5);
     f->loader = loader;
 
     list_add_tail(&f->list, &iff_list);

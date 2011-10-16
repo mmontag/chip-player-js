@@ -142,7 +142,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
     strncpy(m->name, (char *)sfh.name, 20);
     if (bmod2stm)
-	sprintf(m->type, "STMIK 0.2 (BMOD2STM)");
+	set_type(m, "STMIK 0.2 (BMOD2STM)");
     else
 	snprintf(m->type, XMP_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
 							broken ? 0 : 1);

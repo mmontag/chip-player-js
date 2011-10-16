@@ -105,7 +105,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->smp = m->xxh->ins;
     m->c4rate = C4_NTSC_RATE;
 
-    sprintf (m->type, "Aley's Module");
+    set_type(m, "Aley's Module");
 
     MODULE_INFO();
 

@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <stdarg.h>
 
 #include "xmp.h"
 #include "common.h"
@@ -176,4 +177,13 @@ void get_instrument_path(struct xmp_context *ctx, char *var, char *path, int siz
 	} else {
 		strncpy(path, ".", size);
 	}
+}
+
+void set_type(struct xmp_mod_context *m, char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+
+	vsnprintf(m->type, XMP_NAMESIZE, fmt, ap);
+	va_end(ap);
 }

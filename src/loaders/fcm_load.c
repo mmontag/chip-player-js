@@ -58,7 +58,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	return -1;
 
     strncpy (m->name, fh.name, 20);
-    sprintf (m->type, "FC-M %d.%d", fh.vmaj, fh.vmin);
+    set_type(m, "FC-M %d.%d", fh.vmaj, fh.vmin);
 
     MODULE_INFO();
 

@@ -282,9 +282,9 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
 	if (ver == 2)
-	    sprintf(m->type, "MMD%c (OctaMED v5)", '0' + ver);
+	    set_type(m, "MMD%c (OctaMED v5)", '0' + ver);
 	else
-	    sprintf(m->type, "MMD%c (OctaMED Soundstudio)", '0' + ver);
+	    set_type(m, "MMD%c (OctaMED Soundstudio)", '0' + ver);
 
 	MODULE_INFO();
 

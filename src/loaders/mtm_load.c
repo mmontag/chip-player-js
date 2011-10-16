@@ -80,7 +80,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->bpm = 125;
 
     strncpy(m->name, (char *)mfh.name, 20);
-    sprintf(m->type, "MTM (MultiTracker %d.%02d)",
+    set_type(m, "MTM (MultiTracker %d.%02d)",
 				MSN(mfh.version), LSN(mfh.version));
 
     MODULE_INFO();

@@ -116,7 +116,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	memcpy(m->name, buf + ORD_OFS + 160, 16);
 	memcpy(m->author, buf + ORD_OFS + 176, 16);
-	sprintf(m->type, "Polly Tracker");
+	set_type(m, "Polly Tracker");
 	MODULE_INFO();
 
 	m->xxh->tpo = 0x03;

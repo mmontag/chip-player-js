@@ -64,7 +64,7 @@ int ftm_load(FILE * f)
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = fh.order[i];
 
-	sprintf(m->type, "Face The Music");
+	set_type(m, "Face The Music");
 	MODULE_INFO();
 	PATTERN_INIT();
 

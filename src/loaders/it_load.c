@@ -269,7 +269,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     uint8 b, mask[L_CHANNELS];
     int max_ch, flag;
     int inst_map[120], inst_rmap[XXM_KEY_MAX];
-    char tracker_name[80];
+    char tracker_name[40];
 
     LOAD_INIT();
 
@@ -304,7 +304,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&ifh.chpan, 64, 1, f);
     fread(&ifh.chvol, 64, 1, f);
 
-    strcpy (m->name, (char *) ifh.name);
+    strncpy(m->name, (char *)ifh.name, XMP_NAMESIZE);
     m->xxh->len = ifh.ordnum;
     m->xxh->ins = ifh.insnum;
     m->xxh->smp = ifh.smpnum;
@@ -365,7 +365,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     switch (ifh.cwt >> 8) {
     case 0x00:
-	sprintf(tracker_name, "unmo3");
+	strcpy(tracker_name, "unmo3");
 	break;
     case 0x01:
     case 0x02:		/* test from Schism Tracker sources */
@@ -377,30 +377,30 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		&& ifh.sep == 128 && ifh.pwd == 0
 		&& ifh.msglen == 0 && ifh.msgofs == 0 && ifh.rsvd == 0)
 	{
-                sprintf(tracker_name, "OpenSPC conversion");
+                strcpy(tracker_name, "OpenSPC conversion");
 	} else if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0217) {
-	    sprintf(tracker_name, "ModPlug Tracker 1.16");
+	    strcpy(tracker_name, "ModPlug Tracker 1.16");
 	    /* ModPlug Tracker files aren't really IMPM 2.00 */
 	    ifh.cmwt = ifh.flags & IT_USE_INST ? 0x214 : 0x100;	
 	} else if (ifh.cwt == 0x0216) {
-	    sprintf(tracker_name, "Impulse Tracker 2.14v3");
+	    strcpy(tracker_name, "Impulse Tracker 2.14v3");
 	} else if (ifh.cwt == 0x0217) {
-	    sprintf(tracker_name, "Impulse Tracker 2.14v5");
+	    strcpy(tracker_name, "Impulse Tracker 2.14v5");
 	} else if (ifh.cwt == 0x0214 && !memcmp(&ifh.rsvd, "CHBI", 4)) {
-	    sprintf(tracker_name, "Chibi Tracker");
+	    strcpy(tracker_name, "Chibi Tracker");
 	} else {
-	    sprintf(tracker_name, "Impulse Tracker %d.%02x",
+	    snprintf(tracker_name, 40, "Impulse Tracker %d.%02x",
 			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
 	}
 	break;
     case 0x08:
     case 0x7f:
 	if (ifh.cwt == 0x0888) {
-	    sprintf(tracker_name, "OpenMPT 1.17+");
+	    strcpy(tracker_name, "OpenMPT 1.17+");
 	} else if (ifh.cwt == 0x7fff) {
-	    sprintf(tracker_name, "munch.py");
+	    strcpy(tracker_name, "munch.py");
 	} else {
-	    sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
+	    snprintf(tracker_name, 40, "unknown (%04x)", ifh.cwt);
 	}
 	break;
     default:
@@ -413,26 +413,26 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (cwtv > 0x50) {
 		version_sec = ((cwtv - 0x050) * 86400) + 1254355200;
 		if (localtime_r(&version_sec, &version)) {
-		    sprintf(tracker_name, "Schism Tracker %04d-%02d-%02d",
+		    snprintf(tracker_name, 40, "Schism Tracker %04d-%02d-%02d",
 				version.tm_year + 1900, version.tm_mon + 1,
 				version.tm_mday);
                 }
 	    } else {
-	    	sprintf(tracker_name, "Schism Tracker 0.%x", cwtv);
+	    	snprintf(tracker_name, 40, "Schism Tracker 0.%x", cwtv);
 	    }
 	    break; }
 	case 0x5:
-	    sprintf(tracker_name, "OpenMPT %d.%02x",
+	    snprintf(tracker_name, 40, "OpenMPT %d.%02x",
 			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
 	    if (memcmp(&ifh.rsvd, "OMPT", 4))
-		strcat(tracker_name, " (compat.)");
+		strncat(tracker_name, " (compat.)", 40);
 	    break;
 	default:
-	    sprintf(tracker_name, "unknown (%04x)", ifh.cwt);
+	    snprintf(tracker_name, 40, "unknown (%04x)", ifh.cwt);
 	}
     }
 
-    sprintf (m->type, "IMPM %d.%02x (%s)",
+    set_type(m, "IMPM %d.%02x (%s)",
 			ifh.cmwt >> 8, ifh.cmwt & 0xff, tracker_name);
 
     MODULE_INFO();

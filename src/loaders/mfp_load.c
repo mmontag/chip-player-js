@@ -101,7 +101,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	sprintf(m->type, "Magnetic Fields Packer");
+	set_type(m, "Magnetic Fields Packer");
 	MODULE_INFO();
 
 	m->xxh->chn = 4;

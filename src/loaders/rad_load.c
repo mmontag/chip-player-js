@@ -71,7 +71,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxh->tpo = 6;
 	m->xxh->smp = 0;
 
-	sprintf(m->type, "RAD %d.%d (Reality Adlib Tracker)",
+	set_type(m, "RAD %d.%d (Reality Adlib Tracker)",
 				MSN(version), LSN(version));
 
 	MODULE_INFO();

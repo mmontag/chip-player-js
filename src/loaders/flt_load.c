@@ -362,7 +362,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     strncpy(m->name, (char *) mh.name, 20);
-    sprintf(m->type, "%4.4s (%s)", mh.magic, tracker);
+    set_type(m, "%4.4s (%s)", mh.magic, tracker);
     MODULE_INFO();
 
     INSTRUMENT_INIT();

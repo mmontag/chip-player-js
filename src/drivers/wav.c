@@ -135,9 +135,10 @@ static int init(struct xmp_context *ctx)
 	}
 
 	if (strcmp(o->outfile, "-")) {
-		buf = malloc(strlen(drv_wav.description) +
-					strlen(o->outfile) + 8);
-		sprintf(buf, "%s: %s", drv_wav.description, o->outfile);
+		int len = strlen(drv_wav.description) + strlen(o->outfile) + 8;
+		if ((buf = malloc(len)) == NULL)
+			return -1;
+		snprintf(buf, len, "%s: %s", drv_wav.description, o->outfile);
 		drv_wav.description = buf;
 	} else {
 		drv_wav.description = strdup("WAV writer: stdout");

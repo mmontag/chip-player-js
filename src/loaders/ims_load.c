@@ -183,7 +183,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
 
     strncpy(m->name, (char *)ih.title, 20);
-    sprintf(m->type, "IMS (Images Music System)");
+    set_type(m, "IMS (Images Music System)");
 
     MODULE_INFO();
 

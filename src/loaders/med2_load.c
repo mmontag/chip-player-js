@@ -186,7 +186,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		c = 'x';
 		if (found) {
-			sprintf(path, "%s/%s", ins_path, name);
+			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
 			if ((s = fopen(path, "rb"))) {
 				fstat(fileno(s), &stat);
 				m->xxs[i].len = stat.st_size;

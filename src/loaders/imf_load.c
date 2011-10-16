@@ -210,7 +210,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->tpo = ih.tpo;
     m->xxh->bpm = ih.bpm;
 
-    sprintf(m->type, "IM10 (Imago Orpheus)");
+    set_type(m, "IM10 (Imago Orpheus)");
 
     MODULE_INFO();
 

@@ -54,7 +54,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(buffer, 4, 1, f);
 	ver = buffer[3];
 	fread(m->name, 32, 1, f);
-	sprintf(m->type, "GTK v%d (Graoumf Tracker)", ver);
+	set_type(m, "GTK v%d (Graoumf Tracker)", ver);
 	fseek(f, 160, SEEK_CUR);	/* skip comments */
 
 	m->xxh->ins = read16b(f);

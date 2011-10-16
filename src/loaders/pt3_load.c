@@ -113,7 +113,7 @@ static int pt3_load(struct xmp_context *ctx, FILE *f, const int start)
 	read32b(f);		/* VERS size */
 
 	fread(buf, 1, 10, f);
-	sprintf(m->type, "%-6.6s (Protracker IFFMODL)", buf + 4);
+	set_type(m, "%-6.6s (Protracker IFFMODL)", buf + 4);
 
 	/* IFF chunk IDs */
 	iff_register("INFO", get_info);

@@ -73,6 +73,13 @@ typedef unsigned long long uint64;
 typedef signed long long int64;
 #endif
 
+#ifdef HAVE_STRLCPY
+#define strcpy strlcpy
+#endif
+
+#ifdef HAVE_STRLCAT
+#define strcat strlcat
+#endif
 
 #include "xmp.h"
 #include "xxm.h"

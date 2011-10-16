@@ -100,7 +100,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->smp = 0;
     m->xxh->flg = XXM_FLG_LINEAR;
 
-    sprintf(m->type, "HSC (HSC-Tracker)");
+    set_type(m, "HSC (HSC-Tracker)");
 
     MODULE_INFO();
 

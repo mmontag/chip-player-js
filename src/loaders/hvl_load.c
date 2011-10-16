@@ -209,7 +209,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_WARN "pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x",
 		pattlen, m->xxh->trk, m->xxh->ins, m->xxh->len, stereo);
 
-	sprintf(m->type, "HVL (Hively Tracker)");
+	set_type(m, "HVL (Hively Tracker)");
 	MODULE_INFO();
 
 	m->xxh->pat = m->xxh->len;

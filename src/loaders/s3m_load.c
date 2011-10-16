@@ -206,7 +206,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     struct s3m_instrument_header sih;
     int pat_len;
     uint8 n, b, x8;
-    char tracker_name[80];
+    char tracker_name[40];
     int quirk87 = 0;
 
     LOAD_INIT();
@@ -307,12 +307,12 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     switch (sfh.version >> 12) {
     case 1:
-	sprintf(tracker_name, "Scream Tracker %d.%02x",
+	snprintf(tracker_name, 40, "Scream Tracker %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	m->quirk |= XMP_QRK_ST3GVOL;
 	break;
     case 2:
-	sprintf(tracker_name, "Imago Orpheus %d.%02x",
+	snprintf(tracker_name, 40, "Imago Orpheus %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	break;
     case 3:
@@ -321,20 +321,20 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	} else if (sfh.version == 0x3217) {
 		strcpy(tracker_name, "Impulse Tracker 2.14v5");
 	} else {
-		sprintf(tracker_name, "Impulse Tracker %d.%02x",
+		snprintf(tracker_name, 40, "Impulse Tracker %d.%02x",
 			(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	}
 	break;
     case 4:
-	sprintf(tracker_name, "Schism Tracker %d.%02x",
+	snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	break;
     case 5:
-	sprintf(tracker_name, "OpenMPT %d.%02x",
+	snprintf(tracker_name, 40, "OpenMPT %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	break;
     default:
-	snprintf(tracker_name, 80, "unknown (%04x)", sfh.version);
+	snprintf(tracker_name, 40, "unknown (%04x)", sfh.version);
     }
 
     snprintf(m->type, XMP_NAMESIZE, "SCRM (%s)", tracker_name);
