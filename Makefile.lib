@@ -1,0 +1,2 @@
+include mak/general.mak
+include mak/lib.mak
