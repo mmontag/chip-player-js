@@ -20,6 +20,8 @@
 #include "ym2151.h"
 #include "pcm8.h"
 
+#include "class.h"
+
 /* ------------------------------------------------------------------ */
 
 typedef struct _YM2151_LFO {
@@ -119,8 +121,6 @@ static int  reg_read( int );
 
 /* ------------------------------------------------------------------ */
 /* class interface */
-
-extern void* _get_mdx2151(void);
 
 static mdx2151_instances*
 __get_instances(void)

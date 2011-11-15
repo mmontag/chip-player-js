@@ -17,7 +17,8 @@
 #include "pcm8.h"
 #include "ym2151.h"
 
-extern void* ym2151_instance(void);
+#include "class.h"
+
 
 /* ------------------------------------------------------------------ */
 /* local instances */
@@ -169,19 +170,19 @@ stdout_open(MDX_DATA* mdx)
 static void
 pcm8_close_devs(void)
 {
-  __GETSELF;
+//  __GETSELF;
 }
 
 static void
 pcm8_write_dev(unsigned char* data, int len)
 {
-  __GETSELF;
+//  __GETSELF;
 }
 
 int pcm8_open( MDX_DATA *mdx )
 {
   int i;
-  unsigned char* dummy = NULL;
+//  unsigned char* dummy = NULL;
   __GETSELF;
 
 
@@ -472,7 +473,7 @@ static inline void pcm8( short *buffer , int buffer_size )
 #endif
   }
 
-  if (self->emdx->haspdx==FLAG_TRUE) {
+  { //if (self->emdx->haspdx==FLAG_TRUE) {
     for ( ch=0 ; ch<PCM8_MAX_NOTE ; ch++ ) {
       if ( !self->work[ch].ptr ) { continue; }
     
@@ -672,10 +673,10 @@ int pcm8_get_output_channels(void)
 
  
 
-void
+/*void
 pcm8_wait_for_pcm_write(void)
 {
-}
+}*/
 
 void
 pcm8_clear_buffer_flush_flag(void)

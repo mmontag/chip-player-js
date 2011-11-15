@@ -39,7 +39,7 @@ $(LIB):
 	make -f Makefile.lib
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $<
+	$(CC) -o $@ $< -c $(CFLAGS) $(SDL_CFLAGS) 
 
 clean :
 	make -f Makefile.lib clean

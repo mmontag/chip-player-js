@@ -23,9 +23,9 @@ int buf_ppos = 0;
 
 short buffer[ BUF_LEN ];
 
-void audio_callback(void *param,Uint8 *data,int len)
+static void audio_callback(void *param,Uint8 *data,int len)
 {
-	int i,j;
+	int i;
 	
 	short *pcm = (short *)data;
 
@@ -47,7 +47,7 @@ void audio_callback(void *param,Uint8 *data,int len)
 #include "fade.h"
 
 
-int init_audio( int freq )
+static int init_audio( int freq )
 {
 	SDL_AudioSpec af;
 
@@ -76,12 +76,12 @@ int init_audio( int freq )
 	return 0;
 }
 
-void free_audio(void)
+static void free_audio(void)
 {
 	SDL_CloseAudio();
 }
 
-void player_screen( t_mdxmini *data )
+static void player_screen( t_mdxmini *data )
 {
 	int i,n;
 	int notes[32];
@@ -98,10 +98,10 @@ void player_screen( t_mdxmini *data )
 		
 }
 
-void player_loop( t_mdxmini *data , int freq )
+static void player_loop( t_mdxmini *data , int freq )
 {
 
-	int i,j,len;
+	int len;
 	
 	int total;
 	int sec,old_sec;
@@ -109,7 +109,6 @@ void player_loop( t_mdxmini *data , int freq )
 	int next;
 
 	len = mdx_get_length( data );
-	
 //	len = 5;
 
 	mdx_set_max_loop( data , 0 );
@@ -169,14 +168,12 @@ void player_loop( t_mdxmini *data , int freq )
 
 int main ( int argc, char *argv[] )
 {
-	FILE *fp;
-	
 	t_mdxmini mini;
 	
-	int rate = 11025;
+	int rate = 44100;
 	
 	
-	printf("MDXPLAY on SDL Version 111022\n");
+	printf("MDXPLAY on SDL Version 111115\n");
 	
 	if (argc < 2)
 	{
@@ -184,23 +181,35 @@ int main ( int argc, char *argv[] )
 		return 1;
 	}
 	
-	if (init_audio( rate ))
+	if ( init_audio( rate ) )
 	{
+		printf("Failed to initialize audio\n");
+		
 		return 0;
 	}
 	
 	audio_on = 1;
 	
 	mdx_set_rate ( rate );
+
+	char buf[1024];
+	char *pcmdir = getenv( "HOME" );
 		
-	if (mdx_open(&mini,argv[1]))
+	if (pcmdir)
+	{
+		strcpy(buf,pcmdir);
+		strcat(buf,"/.mdxplay/");
+	}
+	else
+		buf[0] = 0;	
+		
+	if ( mdx_open( &mini , argv[1] , buf ) )
 	{
 		printf("File open error\n");
 		return 0;
 	}
 	
 	player_loop( &mini , rate );
-	
 	
 	mdx_stop( &mini );
 

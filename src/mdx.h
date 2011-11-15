@@ -124,6 +124,7 @@ typedef struct _MDX_DATA {
   int            length;  /* data length */
 
   char data_title[MDX_MAX_TITLE_LENGTH];
+  char pdx_dir[MDX_MAX_PDX_FILENAME_LENGTH];
   char pdx_name[MDX_MAX_PDX_FILENAME_LENGTH];
   int  base_pointer;
   int  voice_data_offset;

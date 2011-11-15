@@ -4,14 +4,14 @@ int   fade_count = 0;
 float fade_step = 0;
 float fade_volume = 1;
 
-void fade_init()
+static void fade_init()
 {
 	fade_count = 0;
 	fade_volume = 1;
 	fade_step = 0;
 }
 
-void fade_start(int rate,int sec)
+static void fade_start(int rate,int sec)
 {
 	fade_count = rate * sec;
 	fade_step = ((float)1)/fade_count;
@@ -19,7 +19,7 @@ void fade_start(int rate,int sec)
 	
 }
 
-void fade_stereo(short *data,int len)
+static void fade_stereo(short *data,int len)
 {
 	// stereo
 	int i = 0;
@@ -42,7 +42,7 @@ void fade_stereo(short *data,int len)
 	}
 }
 
-int is_fade_run(void)
+static int is_fade_run(void)
 {
 	if ( fade_count > 0 || fade_volume == 0 )
 		return 1;
@@ -50,7 +50,7 @@ int is_fade_run(void)
 	return 0;
 }
 
-int is_fade_end(void)
+static int is_fade_end(void)
 {
 	if ( fade_volume > 0 || fade_count > 0 )
 		return 0;

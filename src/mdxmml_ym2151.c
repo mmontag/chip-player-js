@@ -20,6 +20,8 @@
 #include "mdx2151.h"
 #include "pcm8.h"
 
+#include "class.h"
+
 /* ------------------------------------------------------------------ */
 /* export symbols */
 
@@ -81,10 +83,6 @@ static void set_hlfo( int, int, int, int, int, int );
 static void set_lfo_delay( int, int );
 
 static void do_quantize( int, int );
-
-/* externs */
-extern void pcm8_clear_buffer_flush_flag(void);
-extern int pcm8_buffer_flush_flag(void);
 
 /* ------------------------------------------------------------------ */
 /* class interface */
@@ -346,7 +344,7 @@ int mdx_parse_mml_ym2151_async_get_length(void* in_self)
 	next = mdx_parse_mml_ym2151_async(self);
   }
   
-  sec = self->mdx->elapsed_time / 1000000;
+  sec = (int)self->mdx->elapsed_time / 1000000;
 
   /* stop */
   ym2151_all_note_off();
@@ -722,9 +720,9 @@ note_on( int track, int note )
 	int n = note+mdx->track[track].voice*MDX_MAX_PDX_TONE_NUMBER;
 	pcm8_note_on( track-8,
 		      pdx->tone[n].data,
-		      pdx->tone[n].size, 
+		      (int)pdx->tone[n].size, 
 		      pdx->tone[n].orig_data,
-		      pdx->tone[n].orig_size ); 
+		      (int)pdx->tone[n].orig_size ); 
       }
     }
   }

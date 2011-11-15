@@ -28,7 +28,7 @@ PDX_DATA *mdx_open_pdx( unsigned char *buf, long length )
     return NULL;
   }
 
-  store_pdx_data( pdx, buf, length );
+  store_pdx_data( pdx, buf, (int)length );
 
   return pdx;
 }

@@ -17,7 +17,7 @@ $(LIB) : $(OBJS)
 	$(AR) r $@ $(OBJS)
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -o $@ $< -c $(CFLAGS)
 
 clean :
 	rm -rf $(OBJDIR)

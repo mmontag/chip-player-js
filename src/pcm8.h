@@ -64,6 +64,6 @@ extern int  pcm8_note_off( int );
 
 extern int  pcm8_set_master_volume( int );
 
-extern void pcm8_wait_for_pcm_write();
+// extern void pcm8_wait_for_pcm_write();
 
 #endif /* _PCM8_H_ */

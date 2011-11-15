@@ -43,7 +43,7 @@ __load_file(MDX_DATA* mdx, char* fnam)
   }
 
   fseek(fp, 0, SEEK_END);
-  len = ftell(fp);
+  len = (int)ftell(fp);
   fseek(fp, 0, SEEK_SET);
   buf = (unsigned char *)malloc(sizeof(unsigned char)*len);
   if (!buf) {
@@ -51,7 +51,7 @@ __load_file(MDX_DATA* mdx, char* fnam)
     return FLAG_FALSE;
   }
 
-  result = fread( buf, 1, len, fp );
+  result = (int)fread( buf, 1, len, fp );
   fclose(fp);
 
   if (result!=len) {
@@ -331,9 +331,9 @@ int mdx_get_voice_parameter( MDX_DATA *mdx ) {
       ptr++;
     }
 
-    if ( mdx->dump_voice == FLAG_TRUE ) {
-      dump_voices(mdx, num);
-    }
+    /* if ( mdx->dump_voice == FLAG_TRUE ) {
+       dump_voices(mdx, num);
+    } */
   }
 
   return 0;
@@ -343,7 +343,7 @@ int mdx_get_voice_parameter( MDX_DATA *mdx ) {
 
 int mdx_output_titles( MDX_DATA *mdx ) {
 
-  unsigned char *message;
+  // unsigned char *message;
 
   return 0;
 }

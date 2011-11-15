@@ -28,6 +28,7 @@
 
 
 #include "mdxmini.h"
+#include "class.h"
 
 /* ------------------------------------------------------------------ */
 #define PATH_BUF_SIZE 1024
@@ -39,10 +40,10 @@ static void self_destroy(void);
 static void usage( void );
 static void display_version( void );
 
-static char mdx_path[1024];
+// static char mdx_path[1024];
 
 /* ------------------------------------------------------------------ */
-static char *command_name;
+// static char *command_name;
 static char *pdx_pathname;
 static char *dsp_device;
 
@@ -76,13 +77,11 @@ static float reverb_wet;
 
 /* ------------------------------------------------------------------ */
 
-int mdx_open( t_mdxmini *data, char  * filename )
+int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 {
 
   MDX_DATA *mdx = NULL;
   PDX_DATA *pdx = NULL;
-
-  int num;
 
   pdx_pathname        = (char *)NULL;
   no_pdx              = FLAG_FALSE;
@@ -125,6 +124,9 @@ int mdx_open( t_mdxmini *data, char  * filename )
 		
 	mdx = data->mdx;
 	
+	if ( pcmdir )
+		strcpy(mdx->pdx_dir , pcmdir );
+	
 
     mdx->is_use_pcm8         = no_pdx      == FLAG_TRUE ? FLAG_FALSE:FLAG_TRUE;
     mdx->is_use_fm           = no_fm       == FLAG_TRUE ? FLAG_FALSE:FLAG_TRUE;
@@ -161,10 +163,8 @@ int mdx_open( t_mdxmini *data, char  * filename )
 		return -1;
 	
     /* load pdx data */
-    data->pdx = _get_pdx(mdx, filename );
-	
-	pdx = data->pdx;
-	
+    pdx = data->pdx = _get_pdx( mdx, filename );
+
 	data->self = mdx_parse_mml_ym2151_async_initialize(mdx, pdx);
 
 	if (!data->self)
@@ -175,6 +175,11 @@ int mdx_open( t_mdxmini *data, char  * filename )
 
 	return 0;
 
+}
+
+void mdx_set_dir ( t_mdxmini *data , char  * dir )
+{
+	strcpy(data->mdx->pdx_dir, dir );
 }
 
 void mdx_set_rate( int freq )
@@ -308,7 +313,6 @@ int  mdx_get_buffer_size ( void )
 static unsigned char*
 _load_pdx_data(char* name, long* out_length) 
 {
-  int i;
   int len;
   FILE *fp;
   unsigned char *buf = NULL;
@@ -318,7 +322,7 @@ _load_pdx_data(char* name, long* out_length)
 	return NULL;
 
   fseek(fp , 0 ,SEEK_END);
-  len = ftell(fp);
+  len = (int)ftell(fp);
   fseek(fp , 0 , SEEK_SET);
   
   
@@ -327,7 +331,7 @@ _load_pdx_data(char* name, long* out_length)
     goto error_end;
   }
 
-  len = fread(buf, 1, len, fp );
+  len = (int)fread(buf, 1, len, fp );
   if (len<0) {
     goto error_end;
   }
@@ -377,18 +381,37 @@ _get_pdx(MDX_DATA* mdx, char* mdxpath)
   
   memset(buf, 0, PATH_BUF_SIZE);
   strncpy( buf, mdxpath, PATH_BUF_SIZE-1 );
-  if ( (a=strrchr( buf, '/' )) != NULL ) {
+  if ( (a=strrchr( buf, '/' )) != NULL ) 
+  {
     *(a+1)='\0';
-    strcat( buf, mdx->pdx_name );
-    if ( (pdx=_open_pdx( buf )) != NULL ) goto get_pdx_file;
   }
+  else
+    buf[0] = 0;
+  
+  strcat( buf, mdx->pdx_name );
+  if ( (pdx=_open_pdx( buf )) == NULL ) 
+  {
+    // specified pdx directory
+	strcpy( buf, mdx->pdx_dir );
+	int len = (int)strlen( buf );
+	
+	if (len > 0 && buf [ len - 1 ] != '/' )
+			strcat( buf, "/" );
+	
+	strcat( buf, mdx->pdx_name );
+	if ((pdx=_open_pdx( buf )) != NULL )
+		goto get_pdx_file;
+  }
+  else
+    goto get_pdx_file;
+  
 
 no_pdx_file:
   goto unget_pdx_file;
     
 unget_pdx_file:
+// tempo could be changed in a pcm track
   mdx->haspdx = FLAG_FALSE;
-  mdx->tracks = 9;
   mdx->pdx_enable = FLAG_TRUE;
   return NULL;
 
@@ -396,16 +419,6 @@ get_pdx_file:
   mdx->pdx_enable = FLAG_TRUE;
   return pdx;
 }
-
-/* class initializations */
-extern void* _mdxmml_ym2151_initialize(void);
-extern void* _mdx2151_initialize(void);
-extern void* _pcm8_initialize(void);
-extern void* _ym2151_c_initialize(void);
-extern void  _mdxmml_ym2151_finalize(void* self);
-extern void  _mdx2151_finalize(void* in_self);
-extern void  _pcm8_finalize(void* in_self);
-extern void  _ym2151_c_finalize(void* in_self);
 
 static void* self_mdx2151 = NULL;
 static void* self_mdxmml_ym2151 = NULL;
