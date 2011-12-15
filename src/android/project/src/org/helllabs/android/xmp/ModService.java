@@ -6,8 +6,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -43,6 +45,7 @@ public class ModService extends Service {
     boolean autoPaused = false;		// paused on phone call
     XmpPhoneStateListener listener;
     TelephonyManager tm;
+    BroadcastReceiver remoteControlReceiver;
     
     @Override
 	public void onCreate() {
@@ -85,6 +88,11 @@ public class ModService extends Service {
 		tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 		tm.listen(listener, XmpPhoneStateListener.LISTEN_CALL_STATE);
 		
+		// Initialize receiver
+		IntentFilter filter = new IntentFilter(Intent.ACTION_MEDIA_BUTTON);
+		remoteControlReceiver = new RemoteControlReceiver();
+		registerReceiver(remoteControlReceiver, filter);
+		
 		watchdog = new Watchdog(10);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
 			public void onTimeout() {
@@ -97,6 +105,7 @@ public class ModService extends Service {
 
     @Override
 	public void onDestroy() {
+    	unregisterReceiver(remoteControlReceiver);
     	watchdog.stop();
     	notifier.cancel();
     	end();
