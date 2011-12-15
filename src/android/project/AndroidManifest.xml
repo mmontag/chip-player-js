@@ -58,6 +58,11 @@
 			</intent-filter>
 		</activity>
 		<service android:name=".ModService" />
+		<receiver android:name="RemoteControlReceiver">
+			<intent-filter>
+				<action android:name="android.intent.action.MEDIA_BUTTON" />
+			</intent-filter>
+		</receiver>
 	</application>
 	<supports-screens/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
