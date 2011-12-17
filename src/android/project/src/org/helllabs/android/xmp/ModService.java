@@ -6,10 +6,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -20,6 +18,7 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.KeyEvent;
 
 
 public class ModService extends Service {
@@ -45,7 +44,6 @@ public class ModService extends Service {
     boolean autoPaused = false;		// paused on phone call
     XmpPhoneStateListener listener;
     TelephonyManager tm;
-    BroadcastReceiver remoteControlReceiver;
     
     @Override
 	public void onCreate() {
@@ -88,11 +86,6 @@ public class ModService extends Service {
 		tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 		tm.listen(listener, XmpPhoneStateListener.LISTEN_CALL_STATE);
 		
-		// Initialize receiver
-		IntentFilter filter = new IntentFilter(Intent.ACTION_MEDIA_BUTTON);
-		remoteControlReceiver = new RemoteControlReceiver();
-		registerReceiver(remoteControlReceiver, filter);
-		
 		watchdog = new Watchdog(10);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
 			public void onTimeout() {
@@ -105,7 +98,6 @@ public class ModService extends Service {
 
     @Override
 	public void onDestroy() {
-    	unregisterReceiver(remoteControlReceiver);
     	watchdog.stop();
     	notifier.cancel();
     	end();
@@ -114,6 +106,44 @@ public class ModService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return binder;
+	}
+	
+	private void checkMediaButtons() {
+		int key = RemoteControlReceiver.keyCode;
+		
+		if (key > 0) {
+			switch (key) {
+			case KeyEvent.KEYCODE_MEDIA_NEXT:
+				Log.i("Xmp ModService", "Handle KEYCODE_MEDIA_NEXT");
+				xmp.stopModule();
+				stopPlaying = false;
+				paused = false;
+				break;
+			case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+				Log.i("Xmp ModService", "Handle KEYCODE_MEDIA_PREVIOUS");
+				if (xmp.time() > 20) {
+					xmp.seek(0);
+				} else {
+					xmp.stopModule();
+					returnToPrev = true;
+					stopPlaying = false;
+				}
+				paused = false;
+				break;
+			case KeyEvent.KEYCODE_MEDIA_STOP:
+				Log.i("Xmp ModService", "Handle KEYCODE_MEDIA_STOP");
+		    	xmp.stopModule();
+		    	paused = false;
+		    	stopPlaying = true;
+		    	break;
+			case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+				Log.i("Xmp ModService", "Handle KEYCODE_MEDIA_PLAY_PAUSE");
+				paused = !paused;
+				break;
+			}
+			
+			RemoteControlReceiver.keyCode = -1;
+		}
 	}
 	
 	private class PlayRunnable implements Runnable {
@@ -159,12 +189,14 @@ public class ModService extends Service {
 	       				watchdog.refresh();
 	       				try {
 							Thread.sleep(500);
+							checkMediaButtons();
 						} catch (InterruptedException e) {
 							break;
 						}
 	       			}
 	       			
 	       			watchdog.refresh();
+	       			checkMediaButtons();
 	       		}
 
 	       		audio.stop();

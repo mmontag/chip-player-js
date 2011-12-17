@@ -60,7 +60,7 @@
 		<service android:name=".ModService" />
 		<receiver android:name="RemoteControlReceiver">
 			<intent-filter>
-				<action android:name="android.intent.action.MEDIA_BUTTON" />
+			    <action android:name="android.intent.action.MEDIA_BUTTON" />
 			</intent-filter>
 		</receiver>
 	</application>
