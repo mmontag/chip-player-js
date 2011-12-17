@@ -17,7 +17,7 @@
 \nVersion 2.2.0:\n• Player interface changes\n• Fix AMF module loading\n• Fix IT215 sample loading\n• Fix OctaMED tempo settings\n• Fix OctaMED note limits\n
 \nVersion 2.1.1:\n• Modules can be enqueued from file list\n• Pause playback on incoming phone call\n• Prevent crash on module seek\n• Prevent crash on invalid thread\n
 \nVersion 2.1.0:\n• Fix Startrekker Packer loader\n• Modules can be added to play queue\n• Fix pause button state on reconnection\n• Code refactor\n</string>
-    <string name="changelog_title">New in version 2.3.0</string>
+    <string name="changelog_title">New in version 2.4.0</string>
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
     <string name="menu_prefs">Settings</string>
