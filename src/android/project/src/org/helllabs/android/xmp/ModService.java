@@ -1,11 +1,15 @@
 package org.helllabs.android.xmp;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
+
 import org.helllabs.android.xmp.Watchdog.onTimeoutListener;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -44,6 +48,16 @@ public class ModService extends Service {
     boolean autoPaused = false;		// paused on phone call
     XmpPhoneStateListener listener;
     TelephonyManager tm;
+    
+    // for media buttons
+    private AudioManager audioManager;
+    private ComponentName remoteControlResponder;
+    private static Method registerMediaButtonEventReceiver;
+    private static Method unregisterMediaButtonEventReceiver;
+
+	static {
+		initializeRemoteControlRegistrationMethods();
+	}
     
     @Override
 	public void onCreate() {
@@ -86,6 +100,10 @@ public class ModService extends Service {
 		tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 		tm.listen(listener, XmpPhoneStateListener.LISTEN_CALL_STATE);
 		
+		audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+		remoteControlResponder = new ComponentName(getPackageName(), RemoteControlReceiver.class.getName());
+		registerRemoteControl();
+		
 		watchdog = new Watchdog(10);
  		watchdog.setOnTimeoutListener(new onTimeoutListener() {
 			public void onTimeout() {
@@ -98,6 +116,7 @@ public class ModService extends Service {
 
     @Override
 	public void onDestroy() {
+    	unregisterRemoteControl();
     	watchdog.stop();
     	notifier.cancel();
     	end();
@@ -429,5 +448,72 @@ public class ModService extends Service {
 		}	
 		
 		return autoPaused;
+	}
+	
+	// for media buttons
+	// see http://android-developers.blogspot.com/2010/06/allowing-applications-to-play-nicer.html
+	
+	private static void initializeRemoteControlRegistrationMethods() {
+		try {
+			if (registerMediaButtonEventReceiver == null) {
+				registerMediaButtonEventReceiver = AudioManager.class
+						.getMethod("registerMediaButtonEventReceiver",
+								new Class[] { ComponentName.class });
+			}
+			if (unregisterMediaButtonEventReceiver == null) {
+				unregisterMediaButtonEventReceiver = AudioManager.class
+						.getMethod("unregisterMediaButtonEventReceiver",
+								new Class[] { ComponentName.class });
+			}
+			/* success, this device will take advantage of better remote */
+			/* control event handling */
+		} catch (NoSuchMethodException nsme) {
+			/* failure, still using the legacy behavior, but this app */
+			/* is future-proof! */
+		}
+	}
+
+	private void registerRemoteControl() {
+		try {
+			if (registerMediaButtonEventReceiver == null) {
+				return;
+			}
+			registerMediaButtonEventReceiver.invoke(audioManager, remoteControlResponder);
+		} catch (InvocationTargetException ite) {
+			/* unpack original exception when possible */
+			Throwable cause = ite.getCause();
+			if (cause instanceof RuntimeException) {
+				throw (RuntimeException) cause;
+			} else if (cause instanceof Error) {
+				throw (Error) cause;
+			} else {
+				/* unexpected checked exception; wrap and re-throw */
+				throw new RuntimeException(ite);
+			}
+		} catch (IllegalAccessException ie) {
+			Log.e("Xmp ModService", "Unexpected " + ie);
+		}
+	}
+
+	private void unregisterRemoteControl() {
+		try {
+			if (unregisterMediaButtonEventReceiver == null) {
+				return;
+			}
+			unregisterMediaButtonEventReceiver.invoke(audioManager,	remoteControlResponder);
+		} catch (InvocationTargetException ite) {
+			/* unpack original exception when possible */
+			Throwable cause = ite.getCause();
+			if (cause instanceof RuntimeException) {
+				throw (RuntimeException) cause;
+			} else if (cause instanceof Error) {
+				throw (Error) cause;
+			} else {
+				/* unexpected checked exception; wrap and re-throw */
+				throw new RuntimeException(ite);
+			}
+		} catch (IllegalAccessException ie) {
+			Log.e("Xmp ModService", "Unexpected " + ie);
+		}
 	}
 }
