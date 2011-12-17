@@ -2,67 +2,58 @@
 <resources>
     <string name="app_name">Xmp for Android</string>
     <string name="app_description">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
-    
-    
     <string name="preferences_media_path_title">Modules pathname</string>
     <string name="preferences_media_path_summary">The directory where mod files are located</string>
-<string name="preferences_vol_boost_title">Volume boost</string>
+    <string name="preferences_vol_boost_title">Volume boost</string>
     <string name="preferences_vol_boost_summary">Set output volume amplification factor</string>
-<string name="preferences_pan_separation_summary">Set the default mixing pan separation</string>
+    <string name="preferences_pan_separation_summary">Set the default mixing pan separation</string>
     <string name="preferences_stereo_summary">Mix channels to stereo</string>
     <string name="preferences_stereo_title">Stereo output</string>
     <string name="preferences_pan_separation_title">Pan separation</string>
     <string name="preferences_category_sound">Sound settings</string>
     <string name="preferences_category_files">Playlist settings</string>
-    
-    <string name="changelog_text">• Performance optimizations\n• Instrument highlighting\n• Delete files from file list\n• Delete files from player (experimental)\n• Option to display module file name\n• Menu reorganization\n
+    <string name="changelog_text">• Handle media buttons\n• Add YM2149 emulator\n• Add support to ZX Spectrum Sound Tracker modules\n
+\nVersion 2.3.0:\n• Performance optimizations\n• Instrument highlighting\n• Delete files from file list\n• Delete files from player (experimental)\n• Option to display module file name\n• Menu reorganization\n
 \nVersion 2.2.0:\n• Player interface changes\n• Fix AMF module loading\n• Fix IT215 sample loading\n• Fix OctaMED tempo settings\n• Fix OctaMED note limits\n
 \nVersion 2.1.1:\n• Modules can be enqueued from file list\n• Pause playback on incoming phone call\n• Prevent crash on module seek\n• Prevent crash on invalid thread\n
-\nVersion 2.1.0:\n• Fix Startrekker Packer loader\n• Modules can be added to play queue\n• Fix pause button state on reconnection\n• Code refactor\n
-\nVersion 2.0.3:\n• Display song index\n• Clean up stale player service\n
-\nVersion 2.0.2:\n• Fix module restart on application reopen\n</string>
+\nVersion 2.1.0:\n• Fix Startrekker Packer loader\n• Modules can be added to play queue\n• Fix pause button state on reconnection\n• Code refactor\n</string>
     <string name="changelog_title">New in version 2.3.0</string>
-    
     <string name="preferences_pan_separation_dialog">Set the pan separation for the channel mixer:</string>
     <string name="menu_refresh">Rescan</string>
     <string name="menu_prefs">Settings</string>
-    
-
-<string name="preferences_examples_title">Install modules</string>
+    <string name="preferences_examples_title">Install modules</string>
     <string name="preferences_examples_summary">Install example music files when creating modules directory</string>
-<string name="preferences_meters_title">Volume bars</string>
+    <string name="preferences_meters_title">Volume bars</string>
     <string name="preferences_meters_summary">Set the type of volume bars</string>
     <string name="preferences_category_interface">Interface settings</string>
-
-<string name="preferences_loop_list_summary">Play files again after playlist ends</string>
+    <string name="preferences_loop_list_summary">Play files again after playlist ends</string>
     <string name="preferences_loop_list_title">Loop playlists</string>
     <string name="preferences_shuffle_title">Shuffle mode</string>
     <string name="preferences_shuffle_summary">Play files in random order</string>
-<string name="preferences_sampling_rate_summary">Set the mixer sampling rate</string>
+    <string name="preferences_sampling_rate_summary">Set the mixer sampling rate</string>
     <string name="preferences_sampling_rate_title">Sampling rate</string>
-    
-    
-<string name="preferences_list_formats_title">Known formats</string>
+    <string name="preferences_list_formats_title">Known formats</string>
     <string name="preferences_list_formats_summary">List all supported module formats</string>
     <string name="preferences_category_information">Information</string>
     <string name="preferences_about_title">About</string>
     <string name="preferences_about_summary">View version and application info</string>
-    
-<string name="dialog_new_comment">Comment</string>
+    <string name="dialog_new_comment">Comment</string>
     <string name="no_comment">No comment</string>
     <string name="dialog_new_playlist">New playlist name</string>
-<string name="empty_playlist">Empty playlist</string>
+    <string name="empty_playlist">Empty playlist</string>
     <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
     <string name="about_author">Written by Claudio Matsuoka</string>
     <string name="about_version">Version %s</string>
     <string name="about_xmp">Based on xmp %s written by Claudio Matsuoka and Hipolito Carraro Jr.</string>
-<string name="about_license">License</string>
+    <string name="about_license">License</string>
     <string name="about_license_text">Extended Module Player (C)1996-2011 Claudio Matsuoka and Hipolito Carraro Jr.
 ulaw encoding function Copyright (C) 1989 Rich Gopstein and Harris Corp.
 XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn.
 ProWizard-PC decruncher Copyright (C) 1998 Sylvain Chipaux.
 IT sample decompression routine Copyright (C) 1998 Tammo Hinrichs.
 MMCMP and IT lowpass filter routines Copyright (C) 1998 Olivier Lapicque.
+YM-2149 emulator Copyright (C) 1995-1999 Arnaur Carre.
+YM-3812 emulator Copyright (C) 1999 Tatsuyuki Satoh.
 LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks.
 Inflate decompression routine Copyright (C) 2005-2006 Michael Kohn.\n
 \nThis program is free software;  you can redistribute it  and/or modify it
@@ -72,9 +63,9 @@ option) any later version. This program is distributed  in the  hope that
 it  will  be useful, but WITHOUT ANY WARRANTY;  without even the  implied
 warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.</string>
-<string name="preferences_show_toast_title">Display toasts</string>
+    <string name="preferences_show_toast_title">Display toasts</string>
     <string name="preferences_show_toast_summary">Enable interface help messages</string>
-<string name="error_datadir">Can\'t create data directory. Please check your storage card and try again.</string>
+    <string name="error_datadir">Can\'t create data directory. Please check your storage card and try again.</string>
     <string name="error_create_playlist">Can\'t create playlist.</string>
     <string name="error_rename_playlist">Can\'t rename playlist.</string>
     <string name="error_edit_comment">Can\'t edit comment.</string>
@@ -85,40 +76,32 @@ GNU General Public License for more details.</string>
     <string name="preferences_interpolation_summary">Interpolate samples when mixing</string>
     <string name="preferences_filter_title">Resonant filters</string>
     <string name="preferences_filter_summary">Enable IT lowpass filter effect</string>
-<string name="preferences_buffer_ms_summary">Sound buffer duration</string>
+    <string name="preferences_buffer_ms_summary">Sound buffer duration</string>
     <string name="preferences_buffer_ms_title">Buffer size</string>
     <string name="preferences_buffer_ms_dialog">Set the size of sound buffer in milliseconds:</string>
-<string name="preferences_clear_cache_summary">Clear module information cache</string>
+    <string name="preferences_clear_cache_summary">Clear module information cache</string>
     <string name="preferences_clear_cache_title">Clear cache</string>
     <string name="cache_clear">File cache cleared</string>
     <string name="cache_clear_error">Error clearing cache</string>
-
-    
-
     <string name="preferences_category_preferences">Preferences</string>
-    
-<string name="preferences_show_info_line_title">Replay status</string>
+    <string name="preferences_show_info_line_title">Replay status</string>
     <string name="preferences_show_info_line_summary">Show replay information and time</string>
-<string name="msg_yes">Yes</string>
-    
+    <string name="msg_yes">Yes</string>
     <string name="msg_no">No</string>
-<string name="msg_file_deleted">File deleted</string>
+    <string name="msg_file_deleted">File deleted</string>
     <string name="msg_cant_delete">Can\'t delete file</string>
-<string name="preferences_show_ins_highlight_summary">Highlight playing instruments</string>
+    <string name="preferences_show_ins_highlight_summary">Highlight playing instruments</string>
     <string name="preferences_show_ins_highlight_title">Instrument highlight</string>
     <string name="msg_cancel">Cancel</string>
     <string name="msg_ok">Ok</string>
     <string name="msg_select_playlist">Select playlist</string>
-<string name="menu_new_playlist">New playlist</string>
-<string name="error_storage">Can\'t access external storage.</string>
-
-    
+    <string name="menu_new_playlist">New playlist</string>
+    <string name="error_storage">Can\'t access external storage.</string>
     <string name="preferences_use_filename_title">Show file names</string>
-    
     <string name="preferences_use_filename_summary">Display file names instead of titles in file browser and playlists</string>
-<string name="preferences_enable_delete_title">Enable file delete</string>
+    <string name="preferences_enable_delete_title">Enable file delete</string>
     <string name="preferences_enable_delete_summary">Display a menu option to delete the currently playing file</string>
-<string name="preferences_category_experimental">Experimental (be careful)</string>
-<string name="msg_delete">Delete</string>
+    <string name="preferences_category_experimental">Experimental (be careful)</string>
+    <string name="msg_delete">Delete</string>
     <string name="menu_delete">Delete</string>
 </resources>
