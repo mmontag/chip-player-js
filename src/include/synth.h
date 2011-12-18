@@ -2,7 +2,6 @@
 #define __XMP_SYNTH_H
 
 #include "common.h"
-#include "list.h"
 
 struct xmp_synth_info {
 	int (*init)(struct xmp_context *, int);
@@ -13,7 +12,6 @@ struct xmp_synth_info {
 	void (*setvol)(struct xmp_context *, int, int);
 	void (*seteffect)(struct xmp_context *, int, int, int);
 	void (*mixer)(struct xmp_context *, int *, int, int, int, int);
-        struct list_head list;
 };
 
 extern struct xmp_synth_info synth_null;
