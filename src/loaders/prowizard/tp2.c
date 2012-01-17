@@ -18,7 +18,7 @@ void Depack_TP2 (FILE * in, FILE * out)
 	uint8 ptk_table[37][2];
 	uint8 pnum[128];
 	uint8 Pattern[1024];
-	uint8 *tmp;
+	uint8 tmp[30];
 	uint8 note, ins, fxt, fxp;
 	uint8 PatMax = 0x00;
 	uint8 PatPos;
@@ -88,7 +88,6 @@ void Depack_TP2 (FILE * in, FILE * out)
 		fwrite (&c2, 1, 1, out);
 
 	}
-	tmp = (uint8 *) malloc (30);
 	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 	while (i != 31) {
@@ -252,6 +251,7 @@ void Depack_TP2 (FILE * in, FILE * out)
 	fflush (out);
 
 	printf ("done\n");
+
 	return;			/* useless ... but */
 }
 
