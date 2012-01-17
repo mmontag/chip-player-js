@@ -218,6 +218,7 @@ struct flow_control {
 	int pbreak;
 	int jump;
 	int delay;
+	int skip_fetch;		/* To emulate delay + break quirk */
 	int jumpline;
 	int row;
 	int loop_chn;

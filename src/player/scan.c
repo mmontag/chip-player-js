@@ -47,6 +47,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
     int gvl, bpm, tempo, base_time, chn;
     int alltmp, clock, clock_rst, medbpm;
     int loop_chn, loop_flg;
+    int pdelay, skip_fetch;
     int* loop_stk;
     int* loop_row;
     char** tab_cnt;
@@ -94,6 +95,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
     ord = ctx->o.start - 1;
 
     gvol_slide = break_row = cnt_row = alltmp = clock_rst = clock = 0;
+    skip_fetch = 0;
 
     while (42) {
 	if ((uint32)++ord >= m->xxh->len) {
@@ -166,16 +168,25 @@ int _xmp_scan_module(struct xmp_context *ctx)
 	    }
 	    tab_cnt[ord][row]++;
 
+	    pdelay = 0;
+
 	    for (chn = 0; chn < m->xxh->chn; chn++) {
 		if (row >= m->xxt[m->xxp[m->xxo[ord]]->info[chn].index]->rows)
 		    continue;
 
 		event = &EVENT(m->xxo[ord], chn, row);
 
-		f1 = event->fxt;
-		p1 = event->fxp;
-		f2 = event->f2t;
-		p2 = event->f2p;
+		/* Pattern delay + pattern break cause target row events
+		 * to be ignored
+		 */
+		if (skip_fetch) {
+		    f1 = p1 = f2 = p2 = 0;
+		} else {
+		    f1 = event->fxt;
+		    p1 = event->fxp;
+		    f2 = event->f2t;
+		    p2 = event->f2p;
+		}
 
 		if (f1 == FX_GLOBALVOL || f2 == FX_GLOBALVOL) {
 		    gvl = (f1 == FX_GLOBALVOL) ? p1 : p2;
@@ -263,8 +274,10 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		if (f1 == FX_EXTENDED || f2 == FX_EXTENDED) {
 		    parm = (f1 == FX_EXTENDED) ? p1 : p2;
 
-		    if ((parm >> 4) == EX_PATT_DELAY)
-			alltmp += (parm & 0x0f) * tempo * base_time;
+		    if ((parm >> 4) == EX_PATT_DELAY) {
+			pdelay = parm & 0x0f;
+			alltmp += pdelay * tempo * base_time;
+		    }
 
 		    if ((parm >> 4) == EX_PATTERN_LOOP) {
 			if (parm &= 0x0f) {
@@ -289,11 +302,16 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		    }
 		}
 	    }
+	    skip_fetch = 0;
 
 	    if (loop_chn) {
 		row = loop_row[--loop_chn] - 1;
 		loop_chn = 0;
 	    }
+	}
+
+	if (break_row && pdelay) {
+	    skip_fetch = 1;
 	}
 
 	if (ord2 >= 0) {

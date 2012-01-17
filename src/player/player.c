@@ -945,7 +945,11 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		}
 
 		p->gvol_flag = 0;
-		fetch_row(ctx, m->xxo[f->ord], f->row);
+		if (f->skip_fetch) {
+			f->skip_fetch = 0;
+		} else {
+			fetch_row(ctx, m->xxo[f->ord], f->row);
+		}
 
 		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->bpm << 4) |
 							XMP_ECHO_BPM);
@@ -982,6 +986,15 @@ int _xmp_player_frame(struct xmp_context *ctx)
 
 	if (f->frame >= (p->tempo * (1 + f->delay))) {
 next_row:
+		/* If break during pattern delay, next row is skipped.
+		 * See corruption.mod order 1D (pattern 0D) last line:
+		 * EE2 + D31 ignores D00 in order 1C line 31
+		 * Reported by The Welder <welder@majesty.net>, Jan 14 2012
+		 */
+		if (f->delay && f->pbreak) {
+			f->skip_fetch = 1;
+		}
+
 		f->frame = 0;
 		f->delay = 0;
 

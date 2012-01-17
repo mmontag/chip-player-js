@@ -11,6 +11,7 @@ Stable versions
 	- fix AMF pitchbend effects (reported by Andre Timmermans)
 	- fix AMF volume slide effect
 	- fix OpenBSD driver configuration
+	- fix patern delay + pattern break command (reported by The Welder)
 	- add support to DSMS mod files
 	- add YM2149 emulator and improved chip sound support
 	- add support to ZX Spectrum AY-3-8192 chiptunes
