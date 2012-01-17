@@ -137,8 +137,10 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	if ((t = tmpfile()) == NULL)
 		return NULL;
 
-	if (pipe(p) < 0)
+	if (pipe(p) < 0) {
+		fclose(t);
 		return NULL;
+	}
 
 	if (fork() == 0) {		/* child process runs oggdec */
 		char b[10];
