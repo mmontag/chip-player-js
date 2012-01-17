@@ -12,6 +12,7 @@ Stable versions
 	- fix AMF volume slide effect
 	- fix OpenBSD driver configuration
 	- fix patern delay + pattern break command (reported by The Welder)
+	- fix memory leaks found by cppcheck (reported by Paul Wise)
 	- add support to DSMS mod files
 	- add YM2149 emulator and improved chip sound support
 	- add support to ZX Spectrum AY-3-8192 chiptunes
