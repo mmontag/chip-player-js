@@ -824,7 +824,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     xmp_drv_seteffect(ctx, chn, XMP_FX_REVERB, m->xxc[chn].rvb);
 }
 
-
 int _xmp_player_start(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
@@ -860,8 +859,10 @@ int _xmp_player_start(struct xmp_context *ctx)
 		f->ord++;
 
 	m->volume = m->xxo_info[f->ord].gvl;
-	p->tick_time = m->rrate / (p->bpm = m->xxo_info[f->ord].bpm);
+	p->bpm = m->xxo_info[f->ord].bpm;
 	p->tempo = m->xxo_info[f->ord].tempo;
+
+	p->tick_time = m->rrate / p->bpm;
 	f->jumpline = m->xxo_fstrow[f->ord];
 	f->playing_time = 0;
 	f->end_point = p->scan_num;
@@ -963,7 +964,6 @@ int _xmp_player_frame(struct xmp_context *ctx)
 							| XMP_ECHO_TIME);
 	}
 
-
 	xmp_drv_echoback(ctx, (f->frame << 4) | XMP_ECHO_FRM);
 	/* play_frame */
 	for (i = 0; i < d->numchn; i++)
@@ -1049,11 +1049,48 @@ next_order:
 			/* Reset persistent effects at new pattern */
 			if (HAS_QUIRK(XMP_QRK_PERPAT)) {
 				int chn;
-				for (chn = 0; chn < p->m.xxh->chn; chn++)
+				for (chn = 0; chn < m->xxh->chn; chn++)
 					p->xc_data[chn].per_flags = 0;
 			}
 		}
 	}
+
+#ifndef ANDROID
+	if (o->dump) {
+		int i;
+
+		for (i = 0; i < m->xxh->chn; i++) {
+			struct xmp_channel *c = &p->xc_data[i];
+
+			printf("%d %d %d %d %d %d %lf %d %d %d %d %lf "
+			       "%d %d %d %d %d %d %d %d %d %d\n",
+					f->ord,
+					m->xxo[f->ord],
+					f->row,
+					f->frame,
+					p->bpm,
+					p->tempo,
+					p->tick_time,
+					i,
+					c->note,
+					c->key,
+					c->volume,
+					c->period,
+
+					c->pitchbend,
+					c->finetune,
+					c->ins,
+					c->smp,
+					c->insdef,
+					c->pan,
+					c->masterpan,
+					c->mastervol,
+					c->delay,
+					c->rcount
+			);
+		}
+	}
+#endif
 
 	return 0;
 }

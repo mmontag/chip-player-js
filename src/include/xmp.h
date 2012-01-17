@@ -102,6 +102,7 @@ struct xmp_options {
 #define XMP_FMT_FM	(1 << 0)	/* Active mode FM */
 #define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */
 #define XMP_FMT_MONO	(1 << 2)	/* Mono output */
+	int dump;		/* Data dump for testing */
 	int amplify;		/* Software mixing amplify volume:
 				   0 = none, 1 = x2, 2 = x4, 3 = x8 */
 	int outfmt;		/* Software mixing output data format */

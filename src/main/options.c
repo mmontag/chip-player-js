@@ -49,6 +49,7 @@ extern int rt;
 #define OPT_NOFILTER	0x10f
 #define OPT_VBLANK	0x110
 #define OPT_SHOWTIME	0x111
+#define OPT_DUMP	0x112
 
 
 static void exclude_formats(char *list)
@@ -225,6 +226,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
 	{ "driver",		 1, 0, 'd' },
+	{ "dump",		 0, 0, OPT_DUMP },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
 	{ "frequency",		 1, 0, 'f' },
 	{ "click-filter",	 0, 0, 'F' },
@@ -294,6 +296,10 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case 'd':
 	    opt->drv_id = optarg;
+	    break;
+	case OPT_DUMP:
+	    opt->dump = 1;
+	    opt->verbosity = 0;
 	    break;
 	case OPT_FIXLOOP:
 	    opt->flags |= XMP_CTL_FIXLOOP;
