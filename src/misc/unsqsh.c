@@ -43,7 +43,7 @@ static int unsqsh(FILE *in, FILE *out)
       'P' != fgetc (in) ||
       'K' != fgetc (in) ||
       'F' != fgetc (in)) {
-    return -1;
+    goto err;
   }
 
   srclen  = fgetc (in); srclen <<= 8;
@@ -55,7 +55,7 @@ static int unsqsh(FILE *in, FILE *out)
       'Q' != fgetc (in) ||
       'S' != fgetc (in) ||
       'H' != fgetc (in)) {
-    return -1;
+    goto err;
   }
 
   dstlen  = fgetc (in); dstlen <<= 8;
@@ -66,21 +66,28 @@ static int unsqsh(FILE *in, FILE *out)
   src=(unsigned char*)malloc(srclen+3);
   dst=(unsigned char*)malloc(dstlen+100);
   if (src==NULL || dst==NULL)
-    return -1;
+    goto err;
 
   if (1 != fread(src,srclen-8,1,in))
-    return -1;
+    goto err1;
 
   if (unpack(src,dst,dstlen)!=dstlen)
-    return -1;
+    goto err1;
 
   if (1 != fwrite(dst,dstlen,1,out))
-    return -1;
+    goto err1;
     
   free(src);
   free(dst);
 
   return 0;
+
+err1:
+  free(src);
+  free(dst);
+
+err:
+  return -1;
 }
 
 static uint16 xchecksum(uint32* ptr, uint32 count)
