@@ -140,13 +140,14 @@ void xmp_cvt_vidc(int l, char *p)
 
 
 /* Convert all patches with 16 bit samples to 8 bit (for crunching) */
-void xmp_cvt_to8bit(struct xmp_context *ctx)
+int xmp_cvt_to8bit(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     int l, smp;
     int8 *p8; 
     int16 *p16;
-    struct patch_info *patch;
+    struct patch_info *patch, *tmp;
+    int ret = 0;
 
     for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
@@ -163,20 +164,30 @@ void xmp_cvt_to8bit(struct xmp_context *ctx)
 	patch->loop_start >>= 1;
 	for (l = (patch->len >>= 1); l--; *p8++ = (int8) *p16++ >> 8);
 
-	d->patch_array[smp] = realloc(patch,
+	tmp = (struct patch_info *)realloc(patch,
 				sizeof (struct patch_info) + patch->len);
+	if (tmp != NULL) {
+	    patch = tmp;
+	} else {
+            ret = -1;
+        }
+
+	d->patch_array[smp] = patch;
     }
+
+    return ret;
 }
 
 
 /* Convert all patches with 8 bit samples to 16 bit (for AWE) */
-void xmp_cvt_to16bit(struct xmp_context *ctx)
+int xmp_cvt_to16bit(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     int l, smp;
     int8 *p8;
     int16 *p16;
-    struct patch_info *patch;
+    struct patch_info *patch, *tmp;
+    int ret = 0;
 
     for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
@@ -186,17 +197,23 @@ void xmp_cvt_to16bit(struct xmp_context *ctx)
 	patch->mode |= WAVE_16_BITS;
 
 	l = patch->len;
-	patch = realloc(patch,
-	    sizeof (struct patch_info) + (patch->len <<= 1));
-	patch->loop_start <<= 1;
-	patch->loop_end <<= 1;
+	tmp = realloc(patch, sizeof (struct patch_info) + (patch->len <<= 1));
+	if (tmp != NULL) {
+	    patch = tmp;
+	    patch->loop_start <<= 1;
+	    patch->loop_end <<= 1;
 
-	p8 = (int8 *)patch->data;
-	p16= (int16 *)patch->data;
-	for (p8 += l, p16 += l; l--; *(--p16) = (int16) *(--p8) << 8);
+	    p8 = (int8 *)patch->data;
+	    p16= (int16 *)patch->data;
+	    for (p8 += l, p16 += l; l--; *(--p16) = (int16) *(--p8) << 8);
+	} else {
+	    ret = -1;
+	}
 
 	d->patch_array[smp] = patch;
     }
+
+    return ret;
 }
 
 
@@ -235,13 +252,14 @@ void xmp_cvt_anticlick (struct patch_info *patch)
 
 
 /* Unroll bidirectional loops for AWE */
-void xmp_cvt_bid2und(struct xmp_context *ctx)
+int xmp_cvt_bid2und(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     int8 *s8;
     int16 *s16;
     int r, l, le, smp;
-    struct patch_info *patch;
+    struct patch_info *patch, *tmp;
+    int ret = 0;
 
     for (smp = XMP_MAXPAT; smp--;) {
 	patch = d->patch_array[smp];
@@ -256,19 +274,26 @@ void xmp_cvt_bid2und(struct xmp_context *ctx)
 	le = l = l > le ? le : l - 1;
 	l -= patch->loop_start >> r;
 	patch->len = patch->loop_end = (--le + l) << r;
-	patch = realloc (patch,
-	    sizeof (struct patch_info) + patch->len + sizeof (int));
-
-	s8 = (int8 *)patch->data;
-	s16 = (int16 *)patch->data;
-	if (r)
-	    for (s16 += le; l--; *(s16 + l) = *(s16 - l));
-	else 
-	    for (s8 += le; l--; *(s8 + l) = *(s8 - l));
+	tmp = realloc (patch, sizeof (struct patch_info) +
+					patch->len + sizeof (int));
+	if (tmp != NULL) {
+	    patch = tmp;
+	    s8 = (int8 *)patch->data;
+	    s16 = (int16 *)patch->data;
+	    if (r) {
+	        for (s16 += le; l--; *(s16 + l) = *(s16 - l));
+	    } else  {
+	        for (s8 += le; l--; *(s8 + l) = *(s8 - l));
+            }
+        } else {
+            ret = -1;
+        }
 
 	xmp_cvt_anticlick(patch);
 	d->patch_array[smp] = patch;
     }
+
+    return ret;
 }
 
 
