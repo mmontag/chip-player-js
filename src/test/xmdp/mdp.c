@@ -499,6 +499,7 @@ int main (int argc, char **argv)
 	line = malloc (strlen (argv[0]) + strlen (argv[optind]) + 10);
 	sprintf (line, "%s: %s", argv[0], argv[optind]);
 	perror (line);
+	free(line);
 	return 1;
 	}
     }
