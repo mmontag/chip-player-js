@@ -45,7 +45,12 @@ static int pw_test(FILE *f, char *t, const int start)
 	fread(b, s, 1, f);
 
 	while ((extra = pw_check(b, s)) > 0) {
-		b = realloc(b, s + extra);
+		unsigned char *buf = realloc(b, s + extra);
+		if (buf == NULL) {
+			free(b);
+			return -1;
+		}
+		b = buf;
 		fread(b + s, extra, 1, f);
 		s += extra;
 	}
