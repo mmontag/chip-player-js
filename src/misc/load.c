@@ -256,14 +256,14 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     if ((fd = mkstemp(temp->name)) < 0) {
 	if (o->verbosity > 0)
 	    report("failed\n");
-	goto err;
+	goto err1;
     }
 
     list_add_tail(&temp->list, &tmpfiles_list);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	reportv(ctx, 0, "failed\n");
-	goto err;
+	goto err1;
     }
 
     if (cmd) {
@@ -289,7 +289,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 #endif
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
-	    goto err;
+	    goto err1;
 	}
 	while ((n = fread(buf, 1, BSIZE, p)) > 0)
 	    fwrite(buf, 1, n, t);
@@ -336,7 +336,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     if (res < 0) {
 	reportv(ctx, 0, "failed\n");
 	fclose(t);
-	goto err;
+	goto err1;
     }
 
     reportv(ctx, 0, "done\n");
@@ -344,8 +344,9 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     fclose(*f);
     *f = t;
  
-    if (!--ttl)
-	    goto err;
+    if (!--ttl) {
+	    goto err1;
+    }
     
     temp2 = strdup(temp->name);
     res = decrunch(ctx, f, &temp->name, ttl);
@@ -360,6 +361,8 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 
     return res;
 
+err1:
+    free(temp);
 err:
     return -1;
 }
