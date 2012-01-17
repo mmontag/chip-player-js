@@ -1005,6 +1005,8 @@ printf("FLEVEL: %d\n\n",(FLG>6)&3);
   if ((CMF&15)!=8)
   {
     printf("Unsupported compression used.\n");
+    free(huffman_tree_dist);
+    free(huffman_tree_len);
     return -1;
   }
 
