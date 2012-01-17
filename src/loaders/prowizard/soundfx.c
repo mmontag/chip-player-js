@@ -75,7 +75,6 @@ void Depack_SoundFX13 (FILE * in, FILE * out)
 		fwrite (&c1, 1, 1, out);
 		fwrite (&c2, 1, 1, out);
 	}
-	free (tmp);
 	tmp = (uint8 *) malloc (30);
 	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
