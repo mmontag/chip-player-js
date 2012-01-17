@@ -344,7 +344,7 @@ int decrunch_pp(FILE *f, FILE *fo)
     struct stat st;
 
     if (fo == NULL)
-	return -1;
+        goto err;
 
     fstat(fileno(f), &st);
     plen = st.st_size;
@@ -359,13 +359,13 @@ int decrunch_pp(FILE *f, FILE *fo)
 
     if ((plen != (plen / 2) * 2)) {    
 	 fprintf(stderr, "filesize not even\n");
-	 return -1 ;
+         goto err;
     }
 
     packed = malloc(plen);
-    if (!packed) {
+    if (packed == NULL) {
 	 fprintf(stderr, "can't allocate memory for packed data\n");
-	 return -1;
+	 goto err;
     }
 
     fread (packed, plen, 1, f);
@@ -382,27 +382,32 @@ int decrunch_pp(FILE *f, FILE *fo)
 
     if (((packed[4] < 9) || (packed[5] < 9) || (packed[6] < 9) || (packed[7] < 9))) {
 	 fprintf(stderr, "invalid efficiency\n");
-	 return -1;
+         goto err1;
     }
 
 
     if (((((val (packed +4) ) * 256 ) + packed[7] ) & 0xf0f0f0f0) != 0 ) {
 	 fprintf(stderr, "invalid efficiency(?)\n");
-	 return -1;
+         goto err1;
     }
 
     unplen = val (packed + plen - 4);
     if (!unplen) {
-	  fprintf(stderr, "not a powerpacked file\n");
-	  return -1;
+	 fprintf(stderr, "not a powerpacked file\n");
+         goto err1;
     }
     
     if (ppdepack (packed, plen, fo) == -1) {
 	 fprintf(stderr, "error while decrunching data...");
-	 return -1;
+         goto err1;
     }
      
     free (packed);
 
     return 0;
+
+err1:
+    free(packed);
+err:
+    return -1;
 }
