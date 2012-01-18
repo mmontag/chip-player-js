@@ -97,5 +97,8 @@ $(OBJS): Makefile.rules
 
 $(LOBJS): Makefile.rules
 
+check:
+	@(cd test; ./run-tests.py)
+
 sinclude depend
 
