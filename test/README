@@ -1,0 +1,31 @@
+File format
+===========
+
+The test scripts runs all test files in the t/ directory. Test file
+format is:
+
+Line 1: Test type. This is the parameter passed to xmp --dump.
+Line 2: Test name.
+Line 3: Parameters passed to xmp --dump <type>, including the file name
+Line 4: Optional comments
+Line n: ---
+Line n+1: Actual reference results
+
+
+Example
+=======
+
+0001
+Condom corruption pattern delay + break
+-s 0x19 -t 20 mod/corruption.mod.zip
+---
+25 28 0 1 133 6 1.879699 0 65 65 64 160.295446 0 0 25 25 25 128 0 64 0 0
+25 28 0 1 133 6 1.879699 1 49 49 64 403.919214 0 0 17 17 17 128 255 64 0 0
+25 28 0 1 133 6 1.879699 2 69 69 64 125.402558 24 32 10 10 10 128 255 64 0 0
+(...)
+
+
+Test types
+==========
+
+0001 - Event sequencer

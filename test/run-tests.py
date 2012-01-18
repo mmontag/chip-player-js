@@ -41,6 +41,8 @@ class Test:
 			line = f.readline()
 			if (line == "---\n"):
 				break
+
+			# Copy comments to log file
 			if (line == "\n"):
 				if (firstline):
 					firstline = False
@@ -50,7 +52,7 @@ class Test:
 			else:
 				self.log.i(" %s" % (line));
 
-		# Testfile positioned at results
+		# Test file positioned at results
 		self.testfile = f
 
 	def __del__(self):
