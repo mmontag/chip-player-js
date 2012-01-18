@@ -83,13 +83,14 @@ class Test:
 
 		p = Popen(args, stdout=PIPE)
 
-		if (self.__compare(p.stdout, self.testfile) == 0):
+		res = self.__compare(p.stdout, self.testfile)
+		if (res == 0):
 			print "pass"
 			self.log.i("Result: pass")
 			return 0
 		else:
 			print "**fail**"
-			self.log.i("Result: **fail**")
+			self.log.i("Result: **fail** in line %d" % (res))
 			return -1
 		
 total = 0
