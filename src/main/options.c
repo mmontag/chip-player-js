@@ -226,7 +226,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "crunch",		 1, 0, OPT_CRUNCH },
 	{ "driver",		 1, 0, 'd' },
-	{ "dump",		 0, 0, OPT_DUMP },
+	{ "dump",		 1, 0, OPT_DUMP },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
 	{ "frequency",		 1, 0, 'f' },
 	{ "click-filter",	 0, 0, 'F' },
@@ -298,7 +298,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    opt->drv_id = optarg;
 	    break;
 	case OPT_DUMP:
-	    opt->dump = 1;
+	    opt->dump = strtoul(optarg, NULL, 0);
 	    opt->verbosity = 0;
 	    break;
 	case OPT_FIXLOOP:

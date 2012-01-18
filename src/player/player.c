@@ -1056,7 +1056,7 @@ next_order:
 	}
 
 #ifndef ANDROID
-	if (o->dump) {
+	if (o->dump == 1) {
 		int i;
 
 		for (i = 0; i < m->xxh->chn; i++) {
