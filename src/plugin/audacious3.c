@@ -643,3 +643,7 @@ AUD_INPUT_PLUGIN (
 	.vfs_extensions	= fmts,
 #endif
 )
+
+static InputPlugin *xmp_iplist[] = { &xmp_ip, NULL };
+
+SIMPLE_INPUT_PLUGIN(xmp, xmp_iplist);
