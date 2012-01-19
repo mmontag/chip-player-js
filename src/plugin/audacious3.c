@@ -644,6 +644,8 @@ AUD_INPUT_PLUGIN (
 #endif
 )
 
+#if _AUD_PLUGIN_VERSION <= 20
 static InputPlugin *xmp_iplist[] = { &xmp_ip, NULL };
 
 SIMPLE_INPUT_PLUGIN(xmp, xmp_iplist);
+#endif
