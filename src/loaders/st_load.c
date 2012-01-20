@@ -54,6 +54,7 @@ static int st_test(FILE *f, char *t, const int start)
 
     smp_size = 0;
 
+    fseek(f, start, SEEK_SET);
     fread(mh.name, 1, 20, f);
     if (test_name(mh.name, 20) < 0)
 	return -1;
