@@ -397,7 +397,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 		    if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1) {
 			switch (m->xxh->chn) {
 			case 4:
-		            tracker = "old Noisetracker/Octalyzer";
+		            tracker = "Noisetracker";	/* or Octalyzer */
 			    break;
 			case 6:
 			case 8:

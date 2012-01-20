@@ -291,7 +291,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     else if ((fxused & ~0xd007) == 0)
 	modtype = "Soundtracker IX";	/* or MasterSoundtracker? */
     else if ((fxused & ~0xf807) == 0)
-	modtype = "D.O.C. Soundtracker";
+	modtype = "D.O.C. Soundtracker 2.0";
     else if ((fxused & ~0xfc07) == 0)
 	modtype = "Soundtracker 2.3/2.4";
     else if ((fxused & ~0xfc3f) == 0)
