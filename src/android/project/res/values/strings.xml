@@ -52,7 +52,7 @@ XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn.
 ProWizard-PC decruncher Copyright (C) 1998 Sylvain Chipaux.
 IT sample decompression routine Copyright (C) 1998 Tammo Hinrichs.
 MMCMP and IT lowpass filter routines Copyright (C) 1998 Olivier Lapicque.
-YM-2149 emulator Copyright (C) 1995-1999 Arnaur Carre.
+YM-2149 emulator Copyright (C) 1995-1999 Arnaud Carre.
 YM-3812 emulator Copyright (C) 1999 Tatsuyuki Satoh.
 LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks.
 Inflate decompression routine Copyright (C) 2005-2006 Michael Kohn.\n
