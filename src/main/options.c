@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2011 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -104,7 +104,7 @@ static void list_wrap(char *s, int l, int r, int v)
 static void copyright_header()
 {
     printf("Extended Module Player " VERSION "\n"
-"Copyright (C) 1996-2011 Claudio Matsuoka and Hipolito Carraro Jr\n"
+"Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr\n"
 "Portions Copyright (C) 1996-1997 Takashi Iwai, (C) 1988 Tammo Hinrichs,\n"
 "(C) 1989 Rich Gopstein and Harris Corporation, (C) 1997 Bert Jahn, (C) 1998\n"
 "Sylvain Chipaux, (C) 1998,2000 Olivier Lapicque, (C) 1999 Tatsuyuki Satoh,\n"

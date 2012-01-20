@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2011 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * DMF sample decompressor Copyright (C) 2000 Olivier Lapicque
  *

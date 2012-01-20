@@ -46,7 +46,7 @@
     <string name="about_version">Version %s</string>
     <string name="about_xmp">Based on xmp %s written by Claudio Matsuoka and Hipolito Carraro Jr.</string>
     <string name="about_license">License</string>
-    <string name="about_license_text">Extended Module Player (C)1996-2011 Claudio Matsuoka and Hipolito Carraro Jr.
+    <string name="about_license_text">Extended Module Player (C)1996-2012 Claudio Matsuoka and Hipolito Carraro Jr.
 ulaw encoding function Copyright (C) 1989 Rich Gopstein and Harris Corp.
 XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn.
 ProWizard-PC decruncher Copyright (C) 1998 Sylvain Chipaux.
