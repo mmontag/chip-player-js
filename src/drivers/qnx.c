@@ -23,7 +23,7 @@
 static int fd_audio;
 
 static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, int);
+static void bufdump(struct xmp_context *, void *, int);
 static void myshutdown(struct xmp_context *);
 static void mysync();
 
@@ -43,25 +43,9 @@ struct xmp_drv_info drv_qnx = {
 	NULL,			/* help */
 	init,			/* init */
 	myshutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
 	dummy,			/* flush */
-	dummy,			/* resetvoices */
 	bufdump,		/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	mysync,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static int init(struct xmp_context *ctx)
@@ -115,19 +99,17 @@ static int init(struct xmp_context *ctx)
 		goto error;
 	}
 
-	return xmp_smix_on(ctx);
+	return 0;
 
       error:
 	close(fd_audio);
 	return XMP_ERR_DINIT;
 }
 
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
 	int j;
-	void *b;
 
-	b = xmp_smix_buffer(ctx);
 	do {
 		if ((j = write(fd_audio, b, i)) > 0) {
 			i -= j;
@@ -139,7 +121,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 
 static void myshutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off(ctx);
 	close(fd_audio);
 }
 

@@ -26,7 +26,7 @@
 static struct sio_hdl *hdl;
 
 static int init (struct xmp_context *);
-static void bufdump (struct xmp_context *, int);
+static void bufdump (struct xmp_context *, void *, int);
 static void shutdown (struct xmp_context *);
 static void dummy (void);
 
@@ -36,25 +36,9 @@ struct xmp_drv_info drv_sndio = {
 	 NULL,		   	/* help */
 	 init,		   	/* init */
 	 shutdown,		/* shutdown */
-	 xmp_smix_numvoices,	/* numvoices */
-	 dummy,			/* voicepos */
-	 xmp_smix_echoback,	/* echoback */
-	 dummy,			/* setpatch */
-	 xmp_smix_setvol,	/* setvol */
-	 dummy,			/* setnote */
-	 xmp_smix_setpan,	/* setpan */
-	 dummy,		  	/* setbend */
-	 xmp_smix_seteffect,	/* seteffect */
 	 dummy,			/* starttimer */
-	 dummy,			/* stctlimer */
-	 dummy,			/* reset */
+	 dummy,			/* stoptimer */
 	 bufdump,		/* bufdump */
-	 dummy,			/* bufwipe */
-	 dummy,			/* clearmem */
-	 dummy,			/* sync */
-	 xmp_smix_writepatch,	/* writepatch */
-	 xmp_smix_getmsg,	/* getmsg */
-	 NULL
 };
 
 static void
@@ -104,7 +88,7 @@ init (struct xmp_context *ctx)
 			 __func__);
 		 goto error;
 	 }
-	 return xmp_smix_on (ctx);
+	 return 0;
 
 error:
 	 sio_close (hdl);
@@ -112,18 +96,15 @@ error:
 }
 
 static void
-bufdump (struct xmp_context *ctx, int len)
+bufdump (struct xmp_context *ctx, void *b, int len)
 {
-	 void *buf;
-
-	 if ((buf = xmp_smix_buffer (ctx)) != NULL)
+	 if (b != NULL)
 		 sio_write (hdl, buf, len);
 }
 
 static void
 shutdown (struct xmp_context *ctx)
 {
-	 xmp_smix_off (ctx);
 	 sio_close (hdl);
 	 hdl = NULL;
 }

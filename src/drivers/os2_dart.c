@@ -38,7 +38,7 @@
 
 static int init(struct xmp_context *);
 static int setaudio(struct xmp_options *);
-static void bufdump(struct xmp_context *, int);
+static void bufdump(struct xmp_context *, void *, int);
 static void shutdown(struct xmp_context *);
 
 static MCI_MIX_BUFFER MixBuffers[BUFFERCOUNT];
@@ -70,25 +70,9 @@ struct xmp_drv_info drv_os2dart = {
 	help,			/* help       */
 	init,			/* init       */
 	shutdown,		/* shutdown   */
-	xmp_smix_numvoices,	/* numvoices  */
-	dummy,			/* voicepos   */
-	xmp_smix_echoback,	/* echoback   */
-	dummy,			/* setpatch   */
-	xmp_smix_setvol,	/* setvol     */
-	dummy,			/* setnote    */
-	xmp_smix_setpan,	/* setpan     */
-	dummy,			/* setbend    */
-	xmp_smix_seteffect,	/* seteffect  */
 	dummy,			/* starttimer */
 	dummy,			/* flush  */
-	dummy,			/* reset      */
 	bufdump,		/* bufdump    */
-	dummy,			/* bufwipe    */
-	dummy,			/* clearmem   */
-	dummy,			/* sync       */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg     */
-	NULL
 };
 
 // Buffer update thread (created and called by DART) 
@@ -218,23 +202,18 @@ static int init(struct xmp_context *ctx)
 	memset(MixBuffers[1].pBuffer, /*32767 */ 0, bsize);
 	MixSetupParms.pmixWrite(MixSetupParms.ulMixHandle, MixBuffers, 2);
 
-	//printf("Starting the Mixer!\n");
-	return xmp_smix_on(ctx);
-
-	//printf("Init Done!!\n");
+	return 0;
 }
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
 	static int index = 0;
-	void *b;
 
 	//printf( "In BufDump...\n" );
 
-	b = xmp_smix_buffer(ctx);
 	if (index + i > bsize) {
 
 		//printf("Next = %d, ready = %d\n", next, ready);
@@ -267,8 +246,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 static void shutdown(struct xmp_context *ctx)
 {
 	//printf( "In ShutDown...\n" );
-
-	xmp_smix_off(ctx);
 
 	if (MixBuffers[0].pBuffer) {
 		mciSendCommand(DeviceID, MCI_BUFFER,

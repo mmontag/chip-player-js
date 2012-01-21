@@ -69,6 +69,8 @@ static int drv_select(struct xmp_context *ctx)
     d->help = drv->help;
     d->driver = drv;
 
+    xmp_smix_on(ctx);
+
     return 0;
 }
 
@@ -82,7 +84,7 @@ void xmp_drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
 	return;
 
     if (mute)
-	d->driver->setvol(ctx, voc, 0);
+	xmp_smix_setvol(ctx, voc, 0);
 
     d->curvoc--;
     d->ch2vo_count[vi->root]--;
@@ -115,7 +117,6 @@ int xmp_drv_open(struct xmp_context *ctx)
 
     d->memavl = 0;
     s->buf32b = NULL;
-    d->ext = 1;
     if ((status = drv_select(ctx)) != 0)
 	return status;
 
@@ -123,6 +124,7 @@ int xmp_drv_open(struct xmp_context *ctx)
 
     if (d->patch_array == NULL) {
 	d->driver->shutdown(ctx);
+	xmp_smix_off(ctx);
 	return XMP_ERR_ALLOC;
     }
 
@@ -160,6 +162,7 @@ void xmp_drv_close(struct xmp_context *ctx)
 
     memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
     d->driver->shutdown(ctx);
+    xmp_smix_off(ctx);
     free(d->patch_array);
     /*synth_deinit();*/
 }
@@ -175,8 +178,7 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     struct xmp_options *o = &ctx->o;
 
     d->numtrk = num;
-    num = d->driver->numvoices(ctx, 135711);
-    d->driver->reset();
+    num = xmp_smix_numvoices(ctx, -1);
 
     d->numchn = d->numtrk;
     d->chnvoc = m->flags & XMP_CTL_VIRTUAL ? MAX_VOICES_CHANNEL : 1;
@@ -186,7 +188,7 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
     else if (num > d->numchn)
 	num = d->numchn;
 
-    num = d->maxvoc = d->driver->numvoices(ctx, num);
+    num = d->maxvoc = xmp_smix_numvoices(ctx, num);
 
     d->voice_array = calloc(d->maxvoc, sizeof (struct voice_info));
     d->ch2vo_array = calloc(d->numchn, sizeof (int));
@@ -226,15 +228,6 @@ void xmp_drv_off(struct xmp_context *ctx)
 }
 
 
-void xmp_drv_clearmem(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-
-    if (d->driver)
-	d->driver->clearmem();
-}
-
-
 void xmp_drv_reset(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
@@ -243,9 +236,7 @@ void xmp_drv_reset(struct xmp_context *ctx)
     if (d->numchn < 1)
 	return;
 
-    d->driver->numvoices(ctx, d->driver->numvoices(ctx, 43210));
-    d->driver->reset();
-    d->driver->numvoices(ctx, d->maxvoc);
+    xmp_smix_numvoices(ctx, d->maxvoc);
 
     memset(d->ch2vo_count, 0, d->numchn * sizeof (int));
     memset(d->voice_array, 0, d->maxvoc * sizeof (struct voice_info));
@@ -270,7 +261,7 @@ void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
     if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
-    d->driver->setvol(ctx, voc, 0);
+    xmp_smix_setvol(ctx, voc, 0);
 
     d->curvoc--;
     d->ch2vo_count[d->voice_array[voc].root]--;
@@ -337,7 +328,7 @@ void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
     if (d->voice_array[voc].root < XMP_MAXCH && d->cmute_array[d->voice_array[voc].root])
 	vol = 0;
 
-    d->driver->setvol(ctx, voc, vol);
+    xmp_smix_setvol(ctx, voc, vol);
 
     if (!(vol || chn < d->numtrk))
 	xmp_drv_resetvoice(ctx, voc, 1);
@@ -354,7 +345,7 @@ void xmp_drv_setpan(struct xmp_context *ctx, int chn, int pan)
     if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
-    d->driver->setpan(ctx, voc, pan);
+    xmp_smix_setpan(ctx, voc, pan);
 }
 
 
@@ -368,7 +359,7 @@ void xmp_drv_seteffect(struct xmp_context *ctx, int chn, int type, int val)
     if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
-    d->driver->seteffect(ctx, voc, type, val);
+    xmp_smix_seteffect(ctx, voc, type, val);
 }
 
 
@@ -392,13 +383,6 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 
     smix_setpatch(ctx, voc, smp);
     smix_voicepos(ctx, voc, pos, itp);
-
-    if (d->ext) {
-	d->driver->setpatch(voc, smp);
-	d->driver->setnote(voc, vi->note);
-	d->driver->voicepos(voc,
-			pos << !!(d->patch_array[smp]->mode & WAVE_16_BITS));
-    }
 }
 
 
@@ -462,13 +446,6 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
     smix_setnote(ctx, voc, note);
     d->voice_array[voc].ins = ins;
     d->voice_array[voc].act = nna;
-
-    if (d->ext) {
-	if (!cont_sample)
-	    d->driver->setpatch(voc, smp);
-	d->driver->setnote(voc, note);
-    }
-
     d->agevoc++;
 
     return chn;
@@ -500,9 +477,6 @@ void xmp_drv_setbend(struct xmp_context *ctx, int chn, int bend)
 	return;
 
     smix_setbend(ctx, voc, bend);
-
-    if (d->ext)
-	d->driver->setbend(voc, bend);
 }
 
 
@@ -517,9 +491,6 @@ void xmp_drv_retrig(struct xmp_context *ctx, int chn)
 	return;
 
     smix_voicepos(ctx, voc, 0, 0);
-
-    if (d->ext)
-	d->driver->setnote(voc, d->voice_array[voc].note);
 }
 
 
@@ -558,9 +529,6 @@ void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
 	return;
 
     smix_voicepos(ctx, voc, pos, 0);
-
-    if (d->ext)
-	d->driver->voicepos(voc, pos << !!(pi->mode & WAVE_16_BITS));
 }
 
 
@@ -580,17 +548,13 @@ int xmp_drv_cstat(struct xmp_context *ctx, int chn)
 
 void xmp_drv_echoback(struct xmp_context *ctx, int msg)
 {
-    struct xmp_driver_context *d = &ctx->d;
-
-    d->driver->echoback(ctx, msg);
+    xmp_smix_echoback(ctx, msg);
 }
 
 
 int xmp_drv_getmsg(struct xmp_context *ctx)
 {
-    struct xmp_driver_context *d = &ctx->d;
-
-    return d->driver->getmsg(ctx);
+    return xmp_smix_getmsg(ctx);
 }
 
 
@@ -598,8 +562,9 @@ void xmp_drv_bufdump(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     int i = xmp_smix_softmixer(ctx);
+    void *b =  xmp_smix_buffer(ctx);
 
-    d->driver->bufdump(ctx, i);
+    d->driver->bufdump(ctx, b, i);
 }
 
 
@@ -607,7 +572,6 @@ void xmp_drv_starttimer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    xmp_drv_sync(ctx, 0);
     d->driver->starttimer();
 }
 
@@ -618,33 +582,11 @@ void xmp_drv_stoptimer(struct xmp_context *ctx)
     int voc;
 
     for (voc = d->maxvoc; voc--; )
-	d->driver->setvol(ctx, voc, 0);
+	xmp_smix_setvol(ctx, voc, 0);
 
     d->driver->stoptimer();
 
     xmp_drv_bufdump(ctx);
-}
-
-
-double xmp_drv_sync(struct xmp_context *ctx, double step)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    static double next_time = 0;
-
-    if (step == 0)
-	next_time = step;
-
-    d->driver->sync(next_time += step);
-
-    return next_time;
-}
-
-
-void xmp_drv_bufwipe(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-
-    d->driver->bufwipe();
 }
 
 
@@ -657,7 +599,7 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
     	return 0;
 
     if (!patch) {
-	d->driver->writepatch(ctx, patch);
+	xmp_smix_writepatch(ctx, patch);
 
 	for (num = XMP_MAXPAT; num--;) {
 	    if (d->patch_array[num]) {
@@ -678,9 +620,8 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_options *o = &ctx->o;
     struct patch_info *patch;
-    int smp, num, crunch;
+    int smp, num;
 
     if (!d->patch_array)		/* FIXME -- this makes xmms happy */
 	return 0;
@@ -692,48 +633,16 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 	if (d->patch_array[smp])
 	    num++;
 
-    if (d->ext) {
-	reportv(ctx, 0, "Uploading smps : %d ", num);
-
-	for (smp = XMP_MAXPAT; smp--;) {
-	    if (!d->patch_array[smp])
-		continue;
-	    patch = d->patch_array[smp];
-
-	    if (patch->len == XMP_PATCH_SYNTH) {
-		reportv(ctx, 0, "S");
-		continue;
-	    }
-
-	    crunch = xmp_cvt_crunch(&patch, ratio);
-	    xmp_cvt_anticlick (patch);
-	    if ((num = d->driver->writepatch(ctx, patch)) != 0) {
-		d->patch_array[smp] = NULL;	/* Bad type, reset array */
-		free (patch);
-	    } else 
-		d->patch_array[smp] = realloc(patch, sizeof (struct patch_info));
-
-	    if (o->verbosity) {
-		if (num)
-		    report ("E");		/* Show type error */
-		else if (!crunch)
-		    report ("i");		/* Show sbi patch type */
-		else report (crunch < 0x10000 ?
-		    "c" : crunch > 0x10000 ? "x" : ".");
-	    }
-	}
-	reportv(ctx, 0, "\n");
-    } else {					/* Softmixer writepatch */
-	for (smp = XMP_MAXPAT; smp--;) {
+    /* Softmixer writepatch */
+    for (smp = XMP_MAXPAT; smp--;) {
 	    if (!d->patch_array[smp])
 		continue;
 	    patch = d->patch_array[smp];
 	    xmp_cvt_anticlick (patch);
-	    if (d->driver->writepatch(ctx, patch) != 0) {
+	    if (xmp_smix_writepatch(ctx, patch) != 0) {
 		d->patch_array[smp] = NULL;	/* Bad type, reset array */
 		free (patch);
 	    }
-	}
     }
 
     return 0;

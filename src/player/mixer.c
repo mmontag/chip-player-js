@@ -221,9 +221,6 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
     struct xmp_smixer_context *s = &ctx->s;
     struct voice_info *vi = &d->voice_array[voc];
 
-    if (d->ext)
-	return;			/* Anticlick is useful for softmixer only */
-
     /* From: Mirko Buffoni <mirbuf@gmail.com>
      * To: Claudio Matsuoka <cmatsuoka@gmail.com>
      * Date: Nov 29, 2007 6:45 AM
@@ -272,8 +269,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
     int synth = 1;
     int *buf_pos;
 
-    if (!d->ext)
-	smix_rampdown(ctx, -1, NULL, 0);	/* Anti-click */
+    smix_rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
     for (voc = d->maxvoc; voc--; ) {
 	vi = &d->voice_array[voc];
@@ -479,7 +475,7 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     
     xmp_smix_setvol(ctx, voc, 0);
 
-    vi->sptr = d->ext ? NULL : pi->data;
+    vi->sptr = pi->data;
     vi->fidx = m->flags & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
 
     if (o->outfmt & XMP_FMT_MONO) {
@@ -605,7 +601,12 @@ int xmp_smix_getmsg(struct xmp_context *ctx)
 int xmp_smix_numvoices(struct xmp_context *ctx, int num)
 {
     struct xmp_smixer_context *s = &ctx->s;
-    return num > s->numvoc ? s->numvoc : num;
+
+    if (num > s->numvoc || num < 0) {
+	return s->numvoc;
+    } else {
+	return num;
+    }
 }
 
 /* WARNING! Output samples must have the same byte order of the host machine!
@@ -653,7 +654,6 @@ int xmp_smix_on(struct xmp_context *ctx)
     }
 
     s->numvoc = SMIX_NUMVOC;
-    d->ext = 0;
 
     return 0;
 }
@@ -661,7 +661,6 @@ int xmp_smix_on(struct xmp_context *ctx)
 
 void xmp_smix_off(struct xmp_context *ctx)
 {
-    struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
 
     while (s->numbuf)
@@ -671,7 +670,6 @@ void xmp_smix_off(struct xmp_context *ctx)
     free(s->buffer);
     s->buf32b = NULL;
     s->buffer = NULL;
-    d->ext = 1;
 }
 
 

@@ -40,7 +40,7 @@
 
 static int init (struct xmp_context *ctx);
 static void dshutdown (struct xmp_context *);
-static void bufdump (struct xmp_context *, int);
+static void bufdump (struct xmp_context *, void *, int);
 static void bufwipe (void);
 static void flush (void);
 
@@ -60,24 +60,9 @@ struct xmp_drv_info drv_alsa05 = {
 	help,			/* help */
 	init,			/* init */
 	dshutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	flush,			/* flush */
-	dummy,			/* reset */
+	flush,			/* stoptimer */
 	bufdump,		/* bufdump */
-	bufwipe,		/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
 	NULL
 };
 
@@ -211,22 +196,14 @@ static int init(struct xmp_context *ctx)
 		return XMP_ERR_DINIT;
 	}
 
-	return xmp_smix_on(ctx);
-}
-
-static void bufwipe(void)
-{
-	mybuffer_nextfree = mybuffer;
+	return 0;
 }
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
-	void *b;
-
-	b = xmp_smix_buffer(ctx);
 	/* Note this assumes a fragment size of (frag_size) */
 	while (i > 0) {
 		size_t f = (frag_size) - (mybuffer_nextfree - mybuffer);
@@ -246,7 +223,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 
 static void dshutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off(ctx);
 	snd_pcm_close(pcm_handle);
 	free(mybuffer);
 }

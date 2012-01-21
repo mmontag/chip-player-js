@@ -31,7 +31,6 @@
 #endif
 
 #include "driver.h"
-#include "mixer.h"
 
 static int audio_fd;
 
@@ -40,13 +39,9 @@ static int to_fmt(struct xmp_options *);
 static void setaudio(struct xmp_options *);
 static int init(struct xmp_context *);
 static void shutdown(struct xmp_context *);
-static void bufdump(struct xmp_context *, int);
+static void bufdump(struct xmp_context *, void *, int);
 static void resume(void);
 static void onpause(void);
-
-static void dummy()
-{
-}
 
 static char *help[] = {
 	"frag=num,size", "Set the number and size of fragments",
@@ -64,25 +59,9 @@ struct xmp_drv_info drv_oss = {
 	help,			/* help */
 	init,			/* init */
 	shutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	resume,			/* starttimer */
 	onpause,		/* stoptimer */
-	dummy,			/* reset */
 	bufdump,		/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static int fragnum, fragsize;
@@ -207,18 +186,16 @@ static int init(struct xmp_context *ctx)
 	}
 #endif
 
-	return xmp_smix_on(ctx);
+	return 0;
 }
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
 	int j;
-	void *b;
 
-	b = xmp_smix_buffer(ctx);
 	while (i) {
 		if ((j = write(audio_fd, b, i)) > 0) {
 			i -= j;
@@ -230,7 +207,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 
 static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off(ctx);
 	ioctl(audio_fd, SNDCTL_DSP_RESET, NULL);
 	close(audio_fd);
 }

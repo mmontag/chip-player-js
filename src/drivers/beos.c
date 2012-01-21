@@ -31,7 +31,7 @@ extern "C" {
 }
 
 static int init (struct xmp_context *ctx);
-static void bufdump (struct xmp_context *, int);
+static void bufdump (struct xmp_context *, void *, int);
 static void myshutdown (struct xmp_context *);
 
 static void dummy()
@@ -49,25 +49,9 @@ struct xmp_drv_info drv_beos = {
 	NULL,				/* help */
 	(int (*)())init,		/* init */
 	(void (*)())myshutdown,		/* shutdown */
-	(int (*)())xmp_smix_numvoices,	/* numvoices */
-	dummy,				/* voicepos */
-	(void (*)())xmp_smix_echoback,	/* echoback */
-	dummy,				/* setpatch */
-	(void (*)())xmp_smix_setvol,	/* setvol */
-	dummy,				/* setnote */
-	(void (*)())xmp_smix_setpan,	/* setpan */
-	dummy,				/* setbend */
-	(void (*)())xmp_smix_seteffect,	/* seteffect */
 	dummy,				/* starttimer */
 	dummy,				/* flush */
-	dummy,				/* resetvoices */
 	(void (*)())bufdump,		/* bufdump */
-	dummy,				/* bufwipe */
-	dummy,				/* clearmem */
-	dummy,				/* sync */
-	(int (*)())xmp_smix_writepatch,	/* writepatch */
-	(int (*)())xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static media_raw_audio_format fmt;
@@ -207,26 +191,23 @@ static int init(struct xmp_context *ctx)
 	
 	player = new BSoundPlayer(&fmt, "xmp output", render_proc);
 
-	return xmp_smix_on(ctx);
+	return 0;
 }
 
 
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
-	uint8 *b;
 	int j = 0;
 
 	/* block until we have enough free space in the buffer */
 	while (buf_free() < i)
 		snooze(100000);
 
-	b = (uint8 *)xmp_smix_buffer(ctx);
-
 	while (i) {
-        	if ((j = write_buffer(b, i)) > 0) {
+        	if ((j = write_buffer((uint8 *)b, i)) > 0) {
 			i -= j;
 			b += j;
 		} else
@@ -243,7 +224,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 static void myshutdown(struct xmp_context *ctx)
 {
 	player->Stop(); 
-	xmp_smix_off(ctx);
 	be_app->Lock();
 	be_app->Quit();
 }

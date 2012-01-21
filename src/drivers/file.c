@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include "common.h"
 #include "driver.h"
-#include "mixer.h"
 #include "convert.h"
 
 #ifndef O_BINARY
@@ -33,7 +32,7 @@ struct data {
 };
 
 static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, int);
+static void bufdump(struct xmp_context *, void *, int);
 static void shutdown(struct xmp_context *);
 
 static void dummy()
@@ -52,24 +51,9 @@ struct xmp_drv_info drv_file = {
 	help,			/* help */
 	init,			/* init */
 	shutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
 	dummy,			/* stoptimer */
-	dummy,			/* resetvoices */
 	bufdump,		/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
 };
 
 static int init(struct xmp_context *ctx)
@@ -111,16 +95,14 @@ static int init(struct xmp_context *ctx)
 		drv_file.description = strdup("Output to stdout");
 	}
 
-	return xmp_smix_on(ctx);
+	return 0;
 }
 
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
 	struct xmp_options *o = &ctx->o;
 	int j;
-	void *b;
 
-	b = xmp_smix_buffer(ctx);
 	if ((o->big_endian && DATA(endian) == -1) ||
 				(!o->big_endian && DATA(endian) == 1)) {
 		xmp_cvt_sex(i, b);
@@ -137,8 +119,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 
 static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off(ctx);
-
 	if (DATA(fd) > 0)
 		close(DATA(fd));
 

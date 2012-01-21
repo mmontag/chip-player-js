@@ -935,7 +935,6 @@ int _xmp_player_frame(struct xmp_context *ctx)
 			p->pos++;		/* restart module */
 
 		if (p->pos == -2) {		/* set by xmp_module_stop */
-			xmp_drv_bufwipe(ctx);
 			return -1;		/* that's all folks */
 		}
 
@@ -954,8 +953,6 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		f->row = -1;
 		f->pbreak = 1;
 		f->ord--;
-		xmp_drv_bufwipe(ctx);
-		xmp_drv_sync(ctx, 0);
 		xmp_drv_reset(ctx);
 		reset_channel(ctx);
 		goto next_row;
@@ -999,11 +996,9 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		return -1;
 
 	if (HAS_QUIRK(XMP_QRK_MEDBPM)) {
-		xmp_drv_sync(ctx, p->tick_time * 33 / 125);
 		f->playing_time += m->rrate * 33 / (100 * p->bpm * 125);
 		f->time += m->rrate * 33 / (100 * p->bpm * 125);
 	} else {
-		xmp_drv_sync(ctx, p->tick_time);
 		f->playing_time += m->rrate / (100 * p->bpm);
 		f->time += m->rrate / (100 * p->bpm);
 	}

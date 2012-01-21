@@ -544,9 +544,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 
     split_name(s, &m->dirname, &m->basename);
 
-    _D(_D_INFO "clear mem");
-    xmp_drv_clearmem((struct xmp_context *)ctx);
-
     /* Reset variables */
     memset(m->name, 0, XMP_NAMESIZE);
     memset(m->type, 0, XMP_NAMESIZE);

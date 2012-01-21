@@ -259,7 +259,6 @@ struct xmp_driver_context {
 	char *description;		/* Driver description */
 	char **help;			/* Driver help info */
 
-	int ext;			/* External non-softmixer driver */
 	int memavl;			/* Memory availble in sound card */
 	int numtrk;			/* Number of tracks */
 	int numchn;			/* Number of virtual channels */

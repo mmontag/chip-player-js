@@ -1,7 +1,6 @@
 
 /* Define DRIVER_OSS* to enable OSS /dev/sequencer and /dev/dsp support */
 #undef DRIVER_OSS
-#undef DRIVER_OSS_SEQ
 
 /* Define to enable OSX CoreAudio support */
 #undef DRIVER_OSX
@@ -52,7 +51,6 @@
 #undef DRIVER_PULSEAUDIO
 
 /* Define to enable ALSA support */
-#undef DRIVER_ALSA_SEQ
 #undef DRIVER_ALSA
 
 /* Define to enable ALSA 0.5 support */

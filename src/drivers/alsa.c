@@ -25,14 +25,12 @@
 #include <alsa/pcm.h>
 
 #include "driver.h"
-#include "mixer.h"
 
 static int init (struct xmp_context *);
 static int prepare_driver (void);
-static void echoback (struct xmp_context *, int);
 static void dshutdown (struct xmp_context *);
 static int to_fmt (struct xmp_options *);
-static void bufdump (struct xmp_context *, int);
+static void bufdump (struct xmp_context *, void *, int);
 static void flush (void);
 
 static void dummy () { }
@@ -50,33 +48,13 @@ struct xmp_drv_info drv_alsa = {
 	help,			/* help */
 	init,			/* init */
 	dshutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	echoback,		/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	flush,			/* flush */
-	dummy,			/* reset */
+	flush,			/* stoptimer */
 	bufdump,		/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static snd_pcm_t *pcm_handle;
 
-static void echoback(struct xmp_context *ctx, int msg)
-{
-	xmp_smix_echoback(ctx, msg);
-}
 
 static int init(struct xmp_context *ctx)
 {
@@ -127,7 +105,7 @@ static int init(struct xmp_context *ctx)
   
 	o->freq = rate;
 
-	return xmp_smix_on(ctx);
+	return 0;
 }
 
 static int prepare_driver()
@@ -175,12 +153,10 @@ static int to_fmt(struct xmp_options *o)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
-	void *b;
 	int frames;
 
-	b = xmp_smix_buffer(ctx);
 	frames = snd_pcm_bytes_to_frames(pcm_handle, i);
 	if (snd_pcm_writei(pcm_handle, b, frames) < 0) {
 		snd_pcm_prepare(pcm_handle);
@@ -189,7 +165,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 
 static void dshutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off(ctx);
 	snd_pcm_close(pcm_handle);
 }
 

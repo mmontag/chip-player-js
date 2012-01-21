@@ -27,33 +27,16 @@ struct xmp_drv_info drv_smix = {
 	NULL,			/* help */
 	init,			/* init */
 	shutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	dummy,			/* flush */
-	dummy,			/* resetvoices */
+	dummy,			/* stoptimer */
 	dummy,			/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
 	NULL
 };
 
 static int init(struct xmp_context *ctx)
 {
-	return xmp_smix_on(ctx);
 }
 
 static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off(ctx);
 }

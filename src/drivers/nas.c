@@ -46,7 +46,7 @@ static char *help[] = {
 static InfoRec info;
 
 static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, int);
+static void bufdump(struct xmp_context *, void *, int);
 static void myshutdown(struct xmp_context *);
 
 static void dummy()
@@ -59,25 +59,9 @@ struct xmp_drv_info drv_nas = {
 	help,			/* help */
 	init,			/* init */
 	myshutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
 	dummy,			/* flush */
-	dummy,			/* resetvoices */
 	bufdump,		/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static void nas_send(AuServer * aud, InfoPtr i, AuUint32 numBytes)
@@ -246,13 +230,12 @@ static int init(struct xmp_context *ctx)
 
 	AuStartFlow(info.aud, info.flow, NULL);
 
-	return xmp_smix_on(ctx);
+	return 0;
 }
 
-static void bufdump(struct xmp_context *ctx, int len)
+static void bufdump(struct xmp_context *ctx, void *buf, int len)
 {
 	int buf_cnt = 0;
-	unsigned char *buf = xmp_smix_buffer(ctx);
 
 	_D(_D_INFO "bufdump: %d", len);
 
@@ -274,7 +257,6 @@ static void myshutdown(struct xmp_context *ctx)
 		nas_flush();
 	}
 
-	xmp_smix_off(ctx);
 	AuDestroyFlow(info.aud, info.flow, NULL);
 	AuCloseServer(info.aud);
 	free(info.buf);

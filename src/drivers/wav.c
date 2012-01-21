@@ -19,7 +19,6 @@
 #include <limits.h>
 #include "common.h"
 #include "driver.h"
-#include "mixer.h"
 #include "convert.h"
 
 #ifndef O_BINARY
@@ -34,7 +33,7 @@ struct data {
 };
 
 static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, int);
+static void bufdump(struct xmp_context *, void *, int);
 static void shutdown(struct xmp_context *);
 
 static void dummy()
@@ -47,25 +46,9 @@ struct xmp_drv_info drv_wav = {
 	NULL,			/* help */
 	init,			/* init */
 	shutdown,		/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
-	dummy,			/* flush */
-	dummy,			/* resetvoices */
+	dummy,			/* stoptimer */
 	bufdump,		/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static void writeval_16l(int fd, uint16 v)
@@ -171,15 +154,13 @@ static int init(struct xmp_context *ctx)
 
 	DATA(size) = 0;
 
-	return xmp_smix_on(ctx);
+	return 0;
 }
 
-static void bufdump(struct xmp_context *ctx, int i)
+static void bufdump(struct xmp_context *ctx, void *b, int i)
 {
 	struct xmp_options *o = &ctx->o;
-	char *b;
 
-	b = xmp_smix_buffer(ctx);
 	if (o->big_endian)
 		xmp_cvt_sex(i, b);
 	write(DATA(fd), b, i);
@@ -188,8 +169,6 @@ static void bufdump(struct xmp_context *ctx, int i)
 
 static void shutdown(struct xmp_context *ctx)
 {
-	xmp_smix_off(ctx);
-
 	lseek(DATA(fd), 40, SEEK_SET);
 	writeval_32l(DATA(fd), DATA(size));
 

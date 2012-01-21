@@ -29,7 +29,7 @@ static WORD nextbuffer;				/* next buffer to be mixed */
 static int num_buffers;
 
 static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, int);
+static void bufdump(struct xmp_context *, void *, int);
 static void deinit(struct xmp_context *);
 
 static void dummy()
@@ -47,25 +47,9 @@ struct xmp_drv_info drv_win32 = {
 	help,			/* help */
 	init,			/* init */
 	deinit,			/* shutdown */
-	xmp_smix_numvoices,	/* numvoices */
-	dummy,			/* voicepos */
-	xmp_smix_echoback,	/* echoback */
-	dummy,			/* setpatch */
-	xmp_smix_setvol,	/* setvol */
-	dummy,			/* setnote */
-	xmp_smix_setpan,	/* setpan */
-	dummy,			/* setbend */
-	xmp_smix_seteffect,	/* seteffect */
 	dummy,			/* starttimer */
 	dummy,			/* flush */
-	dummy,			/* resetvoices */
 	bufdump,		/* bufdump */
-	dummy,			/* bufwipe */
-	dummy,			/* clearmem */
-	dummy,			/* sync */
-	xmp_smix_writepatch,	/* writepatch */
-	xmp_smix_getmsg,	/* getmsg */
-	NULL
 };
 
 static void show_error(int res)
@@ -157,12 +141,12 @@ static int init(struct xmp_context *ctx)
 
 	freebuffer = nextbuffer = 0;
 
-	return xmp_smix_on(ctx);
+	return 0;
 }
 
-static void bufdump(struct xmp_context *ctx, int len)
+static void bufdump(struct xmp_context *ctx, void *b, int len)
 {
-	memcpy(buffer[nextbuffer], xmp_smix_buffer(ctx), len);
+	memcpy(buffer[nextbuffer], b, len);
 
 	while ((nextbuffer + 1) % num_buffers == freebuffer)
 		Sleep(10);
@@ -178,8 +162,6 @@ static void bufdump(struct xmp_context *ctx, int len)
 static void deinit(struct xmp_context *ctx)
 {
 	int i;
-
-	xmp_smix_off(ctx);
 
 	if (hwaveout) {
 		for (i = 0; i < num_buffers; i++) {
