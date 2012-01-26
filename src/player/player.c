@@ -283,12 +283,18 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 	xc->per_flags = 0;
 
-	if (HAS_QUIRK(XMP_QRK_OINSMOD)) {
+	/* Benjamin Shadwick <benshadwick@gmail.com> informs that Vestiges.xm
+	 * has sticky note issues around time 0:51. Tested it with FT2 and
+	 * a new note with invalid instrument should cut current note
+	 */
+	/*if (HAS_QUIRK(XMP_QRK_OINSMOD)) {
 	    if (TEST(IS_READY)) {
 		xins = xc->insdef;
 		RESET(IS_READY);
 	    }
-	} else if ((uint32)ins < m->xxh->ins && m->xxih[ins].nsm) {	/* valid ins */
+	} else */
+
+	if ((uint32)ins < m->xxh->ins && m->xxih[ins].nsm) {	/* valid ins */
 	    if (!key && HAS_QUIRK(XMP_QRK_INSPRI)) {
 		if (xins == ins)
 		    flg = NEW_INS | RESET_VOL;
