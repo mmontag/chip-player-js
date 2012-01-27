@@ -10,6 +10,7 @@ Stable versions
 	- fix AMF tremolo effect (reported by Andre Timmermans)
 	- fix AMF pitchbend effects (reported by Andre Timmermans)
 	- fix AMF volume slide effect
+	- fix AMF track allocation
 	- fix OpenBSD driver configuration
 	- fix patern delay + pattern break command (reported by The Welder)
 	- fix memory leaks found by cppcheck (reported by Paul Wise)

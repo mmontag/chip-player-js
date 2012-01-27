@@ -269,7 +269,8 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	free(trkmap);
 
 	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
-	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk + 1);
+	m->xxh->trk++;
+	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
 
 	/* Alloc track 0 as empty track */
 	m->xxt[0] = calloc(sizeof(struct xxm_track) +
@@ -277,7 +278,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxt[0]->rows = 64;
 
 	/* Alloc rest of the tracks */
-	for (i = 1; i <= m->xxh->trk; i++) {
+	for (i = 1; i < m->xxh->trk; i++) {
 		uint8 t1, t2, t3;
 		int size;
 
