@@ -76,6 +76,8 @@ static int waveform[4][64] = {
      -32, -24, -16,  -8  }	/* Ramp up */
 };
 
+static struct xxm_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
+
 /*
  * "Anyway I think this is the most brilliant piece of crap we
  *  have managed to put up!"
@@ -201,15 +203,22 @@ static inline void reset_channel(struct xmp_context *ctx)
 }
 
 
-static inline void fetch_row(struct xmp_context *ctx, int ord, int row)
+static inline void fetch_row(struct xmp_context *ctx, int pat, int row)
 {
     int count, chn;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    struct xxm_event *event;
 
     count = 0;
     for (chn = 0; chn < p->m.xxh->chn; chn++) {
-	if (fetch_channel(ctx, &EVENT(ord, chn, row), chn, 1) != 0) {
+	if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
+	    event = &EVENT(pat, chn, row);
+	} else {
+	    event = &empty_event;
+	}
+
+	if (fetch_channel(ctx, event, chn, 1) != 0) {
 	    p->fetch_ctl[chn]++;
 	    count++;
 	}
@@ -217,7 +226,12 @@ static inline void fetch_row(struct xmp_context *ctx, int ord, int row)
 
     for (chn = 0; count; chn++) {
 	if (p->fetch_ctl[chn]) {
-	    fetch_channel(ctx, &EVENT(ord, chn, row), chn, 0);
+	    if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
+	        event = &EVENT(pat, chn, row);
+	    } else {
+	        event = &empty_event;
+	    }
+	    fetch_channel(ctx, &EVENT(pat, chn, row), chn, 0);
 	    p->fetch_ctl[chn] = 0;
 	    count--;
 	}

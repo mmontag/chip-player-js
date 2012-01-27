@@ -867,8 +867,6 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
     iff_release();
 
-#define EVENT(a, c, r)  m->xxt[m->xxp[a]->info[c].index]->event[r]
-
     /* Re-index instruments & samples */
 
     for (i = 0; i < m->xxh->pat; i++)

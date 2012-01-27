@@ -13,6 +13,7 @@ Stable versions
 	- fix OpenBSD driver configuration
 	- fix patern delay + pattern break command (reported by The Welder)
 	- fix memory leaks found by cppcheck (reported by Paul Wise)
+	- fix invalid memory access in case of mismatched track/pattern lengths
 	- fix plugin for Audacious 2.5.4
 	- add support to DSMS mod files
 	- add YM2149 emulator and improved chip sound support

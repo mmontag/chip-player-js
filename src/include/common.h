@@ -109,7 +109,8 @@ typedef signed long long int64;
 #define RESET_FLAG(a,b)	((a)&=~(b))
 #define TEST_FLAG(a,b)	!!((a)&(b))
 
-#define EVENT(a, c, r)	m->xxt[m->xxp[a]->info[c].index]->event[r]
+#define TRACK_NUM(a,c)	m->xxp[a]->info[c].index
+#define EVENT(a,c,r)	m->xxt[TRACK_NUM((a),(c))]->event[r]
 
 #ifdef _MSC_VER
 #define _D_CRIT "  Error: "
