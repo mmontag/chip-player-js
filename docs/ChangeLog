@@ -15,6 +15,7 @@ Stable versions
 	- fix memory leaks found by cppcheck (reported by Paul Wise)
 	- fix XM note cut on invalid instrument (reported by Benjamin Shadwick)
 	- fix invalid memory access in case of mismatched track/pattern lengths
+	- fix uninitialized values when loading BoobieSqueezer XM modules
 	- fix plugin for Audacious 2.5.4
 	- add support to DSMS mod files
 	- add YM2149 emulator and improved chip sound support

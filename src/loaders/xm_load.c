@@ -326,6 +326,7 @@ load_instruments:
 	    if (xih.size == 0x26) {
 		read8(f);
 		read32l(f);
+		memset(&xi, 0, sizeof (struct xm_instrument));
 	    } else {
 		fread(&xi.sample, 96, 1, f);	/* Sample map */
 		for (j = 0; j < 24; j++)
