@@ -249,21 +249,21 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     temp = calloc(sizeof (struct tmpfilename), 1);
     if (!temp) {
 	report("calloc failed\n");
-	goto err;
+	return -1;
     }
 
     temp->name = strdup(tmp);
     if ((fd = mkstemp(temp->name)) < 0) {
 	if (o->verbosity > 0)
 	    report("failed\n");
-	goto err1;
+	return -1;
     }
 
     list_add_tail(&temp->list, &tmpfiles_list);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	reportv(ctx, 0, "failed\n");
-	goto err1;
+	return -1;
     }
 
     if (cmd) {
@@ -289,7 +289,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 #endif
 	    reportv(ctx, 0, "failed\n");
 	    fclose(t);
-	    goto err1;
+	    return -1;
 	}
 	while ((n = fread(buf, 1, BSIZE, p)) > 0)
 	    fwrite(buf, 1, n, t);
@@ -336,7 +336,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     if (res < 0) {
 	reportv(ctx, 0, "failed\n");
 	fclose(t);
-	goto err1;
+	return -1;
     }
 
     reportv(ctx, 0, "done\n");
@@ -345,7 +345,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     *f = t;
  
     if (!--ttl) {
-	    goto err1;
+	    return -1;
     }
     
     temp2 = strdup(temp->name);
@@ -360,11 +360,6 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
      */
 
     return res;
-
-err1:
-    free(temp);
-err:
-    return -1;
 }
 
 
