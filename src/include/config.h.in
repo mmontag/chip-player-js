@@ -38,15 +38,6 @@
 /* Define to enable Win32 audio support */
 #undef DRIVER_WIN32
 
-/* Define to enable ESD (Enlghtened Sound Daemon) support */
-#undef DRIVER_ESD
-
-/* Define to enable aRts (KDE sound server) support */
-#undef DRIVER_ARTS
-
-/* Define to enable NAS (Network Audio System) support */
-#undef DRIVER_NAS
-
 /* Define to enable PulseAudio support */
 #undef DRIVER_PULSEAUDIO
 
@@ -101,20 +92,8 @@
 /* Define if you have the <sbus/audio/audio.h> header file.  */
 #undef HAVE_SBUS_AUDIO_AUDIO_H
 
-/* Define if you have the <awe_voice.h> header file.  */
-#undef HAVE_AWE_VOICE_H
-
-/* Define if you have the <linux/awe_voice.h> header file.  */
-#undef HAVE_LINUX_AWE_VOICE_H
-
 /* Define if you have the <machine/soundcard.h> header file.  */
 #undef HAVE_MACHINE_SOUNDCARD_H
-
-/* Define if you have the <linux/ultrasound.h> header file.  */
-#undef HAVE_LINUX_ULTRASOUND_H
-
-/* Define if you have the <machine/ultrasound.h> header file.  */
-#undef HAVE_MACHINE_ULTRASOUND_H
 
 /* Define if you have the <sys/audioio.h> header file.  */
 #undef HAVE_SYS_AUDIOIO_H
@@ -130,9 +109,6 @@
 
 /* Define if you have the <getopt.h> header file.  */
 #undef HAVE_GETOPT_H
-
-/* Define if you have the <sys/awe_voice.h> header file.  */
-#undef HAVE_SYS_AWE_VOICE_H
 
 /* Define if you have the <sys/select.h> header file.  */
 #undef HAVE_SYS_SELECT_H

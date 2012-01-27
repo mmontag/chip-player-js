@@ -39,12 +39,6 @@ AC_ARG_ENABLE(oss,
 AC_ARG_ENABLE(alsa,
     [  --disable-alsa          Don't compile ALSA support])
 
-AC_ARG_ENABLE(arts,
-    [  --enable-arts           Compile aRts support])
-
-AC_ARG_ENABLE(nas,
-    [  --enable-nas            Compile NAS support])
-
 AC_ARG_ENABLE(pulseaudio,
     [  --enable-pulseaudio     Compile PulseAudio support])
 
@@ -63,22 +57,11 @@ AC_ARG_ENABLE(winamp-plugin,
 AC_ARG_ENABLE(tunenet-plugin,
     [  --enable-tunenet-plugin Compile the TuneNet plugin])
 
-AC_ARG_ENABLE(esd,
-    [  --enable-esd            Compile ESD support])
-
 AC_ARG_WITH(oss,
     [  --with-oss=<path>       OSS prefix (optional)],
     oss_path="$withval",
     oss_path="/usr/lib/oss")
 
-AC_ARG_WITH(esd,
-    [  --with-esd=<path>       ESD prefix (optional)],
-    esd_path="$withval")
-
-AC_ARG_WITH(nas,
-    [  --with-nas=<path>       NAS prefix (optional)],
-    nas_path="$withval")
- 
 AC_ARG_WITH(pulseaudio,
     [  --with-pulseaudio=<path> PulseAudio prefix (optional)],
     pulseaudio_path="$withval")
@@ -131,7 +114,6 @@ cygwin*|mingw*)
 	;;
     esac
     is_win32=yes
-    enable_arts=no
     enable_xmms_plugin=no
     enable_bmp_plugin=no
     enable_audacious_plugin=no
@@ -285,40 +267,8 @@ if test "${enable_tunenet_plugin}" = "yes"; then
 fi
 
 dnl -----------------------------------------------------------------------
-dnl Check for aRts
-dnl -----------------------------------------------------------------------
-
-if test "${enable_arts}" = "yes"; then
-    AS_ECHO_N("checking for aRts flags... ")
-    arts_cflags="`artsc-config --cflags 2>/dev/null`"
-    if test ! -z "${arts_cflags}"; then
-	AS_ECHO("found")
-    else
-	AS_ECHO("not found")
-	if test "${enable_arts}" = "yes"; then
-	    AC_MSG_ERROR(Can't find aRts files (is artsc-config in PATH?))
-	fi
-        AC_MSG_WARN(artsc-config not found)
-	enable_arts="no"
-    fi
-fi
-
-if test "${enable_arts}" = "yes"; then
-    CPPFLAGS="${CINCS} `artsc-config --cflags`"
-    AC_CHECK_HEADERS(artsc.h)
-fi
-
-dnl -----------------------------------------------------------------------
 dnl Check for header files
 dnl -----------------------------------------------------------------------
-
-if test "$esd_path" != ""; then
-    CINCS="${CINCS} -I${esd_path}/include"
-fi
-
-if test "$nas_path" != ""; then
-    CINCS="${CINCS} -I${nas_path}/include"
-fi
 
 if test "$pulseaudio_path" != ""; then
     CINCS="${CINCS} -I${pulseaudio_path}/include"
@@ -328,23 +278,11 @@ CPPFLAGS="${CINCS}"
 
 AC_CHECK_HEADERS(getopt.h signal.h sys/select.h \
     sys/param.h termios.h sys/soundcard.h machine/soundcard.h \
-    sys/ultrasound.h linux/ultrasound.h machine/ultrasound.h awe_voice.h \
-    sys/awe_voice.h linux/awe_voice.h alsa/asoundlib.h esd.h pulse/simple.h)
-
-AC_CHECK_HEADERS(audio/audiolib.h audio/soundlib.h,,,
-[[#if HAVE_AUDIO_AUDIOLIB_H
-#include <audio/audiolib.h>
-#endif
-]])
+    alsa/asoundlib.h pulse/simple.h)
 
 dnl -----------------------------------------------------------------------
 dnl Check OS/architecture independent drivers
 dnl -----------------------------------------------------------------------
-
-dnl Needed by NAS
-if test "${ac_cv_header_audio_audiolib_h}" = "yes"; then
-    AC_PATH_XTRA
-fi
 
 dnl Don't use NetBSD's Linux OSS emulation
 case ${target_os} in
@@ -375,50 +313,6 @@ else
 	AC_MSG_ERROR(Can't find ALSA header files)
     fi
     enable_alsa="no"
-fi
-
-if test "${enable_esd}" = "yes"; then
-    if test "${ac_cv_header_esd_h}" = "yes"; then
-        if test "$esd_path" != ""; then
-            LIBS="${LIBS} -L${esd_path}/lib"
-        fi
-        AC_CHECK_LIB(esd, esd_play_stream, [
-            LIBS="${LIBS} -lesd"
-            DRIVERS="${DRIVERS} esd.o"
-            AC_DEFINE(DRIVER_ESD)
-        ])
-    else
-        AC_MSG_ERROR(Can't find EsounD header files)
-    fi
-else
-    enable_esd="no"
-fi
-
-if test "${enable_arts}" = "yes"; then
-    if test "${ac_cv_header_artsc_h}" = "yes"; then
-        AC_CHECK_LIB(artsc, arts_init, [
-            LIBS="${LIBS} `artsc-config --libs`"
-            DRIVERS="${DRIVERS} arts.o"
-            AC_DEFINE(DRIVER_ARTS)
-        ])
-    else
-        AC_MSG_ERROR(Can't find aRts header files)
-    fi
-else
-    enable_arts="no"
-fi
-
-if test "${ac_cv_header_audio_audiolib_h}" = "yes" && \
-    test "${ac_cv_header_audio_soundlib_h}" = "yes"; then
-    OLDLIBS="${LIBS}"
-    LIBS="-L${ac_x_libraries} -lXt -lX11"
-    AC_CHECK_LIB(audio, AuOpenServer, [
-    if test "${enable_nas}" = yes; then
-	OLDLIBS="${OLDLIBS} -laudio -L${ac_x_libraries} -lXt -lX11"
-	DRIVERS="${DRIVERS} nas.o"
-	AC_DEFINE(DRIVER_NAS)
-    fi])
-    LIBS="$OLDLIBS"
 fi
 
 if test "${enable_pulseaudio}" = "yes"; then
@@ -458,30 +352,6 @@ dnl OS/Architecture dependent options
 dnl -----------------------------------------------------------------------
 
 case ${target_os} in
-dnl
-dnl	Tests for non-OSS Linux
-dnl
-linux*) 
-    case ${target_cpu} in
-    dnl
-    dnl	S/Linux
-    dnl
-    sparc)
-	CINCS="${CINCS} -I/usr/src/linux/drivers"
-	CPPFLAGS="${CINCS}"
-	AC_CHECK_HEADERS(sbus/audio/audio.h)
-	if test "${ac_cv_header_sbus_audio_audio_h}" = "yes"; then
-	    DRIVERS="${DRIVERS} solaris.o"
-	    AC_DEFINE(DRIVER_SOLARIS)
-	fi
-	;;
-    dnl
-    dnl	Linux/Alpha
-    dnl
-    alpha)
-        ;;
-    esac
-    ;;
 dnl
 dnl	Test for OSX
 dnl
@@ -685,28 +555,6 @@ XMP_CACHED_TRY_RUN(whether gcc understands -Wunused-but-set-variable,
     -Wno-unused-but-set-variable,[
     int main(){return 0;}],
     CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")
-
-for sound_hdr in sys/soundcard.h machine/soundcard.h; do
-    sound_safe=`echo "$sound_hdr" | sed 'y%./+-%__p_%'`
-    if eval "test \"`echo '$ac_cv_header_'$sound_safe`\" = yes"; then
-	XMP_CACHED_TRY_COMPILE(whether $sound_hdr knows about audio_buf_info,
-	    ac_cv_audio_buf_info,[
-#include <$sound_hdr>],
-	audio_buf_info info;,
-	AC_DEFINE(HAVE_AUDIO_BUF_INFO),)
-    fi
-done
-
-for sound_hdr in awe_voice.h sys/awe_voice.h linux/awe_voice.h; do
-    sound_safe=`echo "$sound_hdr" | sed 'y%./+-%__p_%'`
-    if eval "test \"`echo '$ac_cv_header_'$sound_safe`\" = yes"; then
-	XMP_CACHED_TRY_COMPILE(whether $sound_hdr knows about AWE_MD_NEW_VOLUME_CALC,
-	    ac_cv_awe_md_new_volume_calc,[
-#include <$sound_hdr>],
-	int foo=AWE_MD_NEW_VOLUME_CALC;,
-	AC_DEFINE(HAVE_AWE_MD_NEW_VOLUME_CALC),)
-    fi
-done
 
 if test "${GCC-no}" != yes; then
     dnl For the XL C compiler

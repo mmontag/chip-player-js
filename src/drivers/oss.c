@@ -47,9 +47,6 @@ static char *help[] = {
 	"frag=num,size", "Set the number and size of fragments",
 	"dev=<device_name>", "Audio device to use (default /dev/dsp)",
 	"nosync", "Don't flush OSS buffers between modules",
-#ifdef HAVE_AUDIO_BUF_INFO
-	"voxware", "For VoxWare 2.90 (used in Linux 1.2.13)",
-#endif
 	NULL
 };
 
@@ -66,9 +63,6 @@ struct xmp_drv_info drv_oss = {
 
 static int fragnum, fragsize;
 static int do_sync = 1;
-#ifdef HAVE_AUDIO_BUF_INFO
-static int voxware = 0;		/* For Linux 1.2.13 */
-#endif
 
 static int to_fmt(struct xmp_options *o)
 {
@@ -143,11 +137,8 @@ static int init(struct xmp_context *ctx)
 {
 	char *dev_audio[] = { "/dev/dsp", "/dev/sound/dsp" };
 	struct xmp_options *o = &ctx->o;
-
-#ifdef HAVE_AUDIO_BUF_INFO
 	audio_buf_info info;
 	static char buf[80];
-#endif
 	char *token, **parm;
 	int i;
 
@@ -157,9 +148,6 @@ static int init(struct xmp_context *ctx)
 	parm_init();
 	chkparm2("frag", "%d,%d", &fragnum, &i);
 	chkparm1("dev", dev_audio[0] = token);
-#ifdef HAVE_AUDIO_BUF_INFO
-	chkparm0("voxware", voxware = 1);
-#endif
 	chkparm0("nosync", do_sync = 0);
 	parm_end();
 
@@ -175,16 +163,12 @@ static int init(struct xmp_context *ctx)
 
 	setaudio(o);
 
-#ifdef HAVE_AUDIO_BUF_INFO
-	if (!voxware) {
-		if (ioctl(audio_fd, SNDCTL_DSP_GETOSPACE, &info) == 0) {
-			snprintf(buf, 80, "%s [%d fragments of %d bytes]",
-				 drv_oss.description, info.fragstotal,
-				 info.fragsize);
-			drv_oss.description = buf;
-		}
+	if (ioctl(audio_fd, SNDCTL_DSP_GETOSPACE, &info) == 0) {
+		snprintf(buf, 80, "%s [%d fragments of %d bytes]",
+			 drv_oss.description, info.fragstotal,
+			 info.fragsize);
+		drv_oss.description = buf;
 	}
-#endif
 
 	return 0;
 }
