@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-3.5.0 (20120121):
+3.5.0 (20120127):
 	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe
 	  for sample loop size
 	- fix AMF 1.1+ sample loops when loop start is zero
@@ -13,6 +13,7 @@ Stable versions
 	- fix OpenBSD driver configuration
 	- fix patern delay + pattern break command (reported by The Welder)
 	- fix memory leaks found by cppcheck (reported by Paul Wise)
+	- fix XM note cut on invalid instrument (reported by Benjamin Shadwick)
 	- fix invalid memory access in case of mismatched track/pattern lengths
 	- fix plugin for Audacious 2.5.4
 	- add support to DSMS mod files

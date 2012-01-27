@@ -13,9 +13,6 @@ class Log:
 	def __init__(self, filename):
 		self.f = open(filename, "w")
 
-	def __del__(self):
-		self.f.close()
-
 	def i(self, string):
 		self.f.write(string.rstrip() + "\n")
 
@@ -54,9 +51,6 @@ class Test:
 
 		# Test file positioned at results
 		self.testfile = f
-
-	def __del__(self):
-		self.testfile.close()
 
 	def __compare(self, f1, f2):
 		linecount = 1
