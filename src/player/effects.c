@@ -19,13 +19,12 @@
 
 #define NOT_IMPLEMENTED
 
-#define DO_TONEPORTA() { \
+#define DO_TONEPORTA() do { \
 	if (note-- && note < 0x60 && (uint32)xc->ins < p->m.xxh->ins) \
-	    xc->s_end = note_to_period (note + XXI[XXIM.ins[xc->key]].xpo + \
-		XXIM.xpo[xc->key], XXI[XXIM.ins[xc->key]].fin, \
-	 	p->m.xxh->flg & XXM_FLG_LINEAR); \
+	    xc->s_end = note_to_period (note + XXI.xpo + XXIM.xpo[xc->key], \
+	    XXI.fin, p->m.xxh->flg & XXM_FLG_LINEAR); \
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
-}
+} while (0)
 
 #define HAS_QUIRK(x) (m->quirk & (x))
 

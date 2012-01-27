@@ -33,7 +33,7 @@
 #define XXAE p->m.xxae[xc->ins]
 #define XXPE p->m.xxpe[xc->ins]
 #define XXFE p->m.xxfe[xc->ins]
-#define XXI p->m.xxi[xc->ins]
+#define XXI p->m.xxi[xc->ins][XXIM.ins[xc->key]]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
 

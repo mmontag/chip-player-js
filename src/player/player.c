@@ -485,17 +485,17 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	RESET(RELEASE | FADEOUT);
 
 	/* H: where should I put these? */
-	xc->gvl = XXI[XXIM.ins[xc->key]].gvl;
-	xc->insvib_swp = XXI->vsw;
+	xc->gvl = XXI.gvl;
+	xc->insvib_swp = XXI.vsw;
 	xc->insvib_idx = 0;
 
 	xc->v_idx = xc->p_idx = xc->f_idx = 0;
-	xc->cutoff = XXI->ifc & 0x80 ? (XXI->ifc - 0x80) * 2 : 0xff;
-	xc->resonance = XXI->ifr & 0x80 ? (XXI->ifr - 0x80) * 2 : 0;
+	xc->cutoff = XXI.ifc & 0x80 ? (XXI.ifc - 0x80) * 2 : 0xff;
+	xc->resonance = XXI.ifr & 0x80 ? (XXI.ifr - 0x80) * 2 : 0;
     }
 
     if (TEST(RESET_VOL)) {
-	xc->volume = XXI[XXIM.ins[xc->key]].vol;
+	xc->volume = XXI.vol;
 	SET(ECHOBACK | NEW_VOL);
     }
 
@@ -632,12 +632,18 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     if (m->xxh->flg & XXM_FLG_INSVOL)
 	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;
 
+
+    /* Vibrato */
+
     med_vibrato = get_med_vibrato(xc);
 
-    vibrato = ((TEST(VIBRATO) || TEST_PER(VIBRATO)) ?
-	(waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10 : 0) +
-	waveform[XXI->vwf][xc->insvib_idx] * XXI->vde / (1024 *
-	(1 + xc->insvib_swp));
+    vibrato = waveform[XXI.vwf][xc->insvib_idx] * XXI.vde /
+				(1024 * (1 + xc->insvib_swp));
+
+    if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
+	vibrato += (waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10;
+    }
+
 
     /* IT pitch envelopes are always linear, even in Amiga period mode.
      * Each unit in the envelope scale is 1/25 semitone.
@@ -806,7 +812,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     }
 
     /* Update vibrato, tremolo and arpeggio indexes */
-    xc->insvib_idx += XXI->vra >> 2;
+    xc->insvib_idx += XXI.vra >> 2;
     xc->insvib_idx %= 64;
     if (xc->insvib_swp > 1)
 	xc->insvib_swp -= 2;
