@@ -27,31 +27,29 @@ struct pw_format pw_p60a = {
 	depack_p60a
 };
 
-#define ON 1
-#define OFF 2
 
 static int depack_p60a(FILE *in, FILE *out)
 {
     uint8 c1, c2, c3, c4, c5, c6;
     int max_row;
     signed char *smp_buffer;
-    uint8 PatPos = 0x00;
-    uint8 npat = 0x00;
-    uint8 nins = 0x00;
+    int PatPos = 0;
+    int npat = 0;
+    int nins = 0;
     uint8 tdata[512][256];
     uint8 ptable[128];
     int isize[31];
     uint8 PACK[31];
 /*  uint8 DELTA[31];*/
-    uint8 GLOBAL_DELTA = OFF;
-    uint8 GLOBAL_PACK = OFF;
+    uint8 delta = 0;
+    uint8 pack = 0;
     int taddr[128][4];
     int tdata_addr = 0;
     int sdata_addr = 0;
     int ssize = 0;
     int i = 0, j, k, l, a, b;
     int smp_size[31];
-    int saddr[32];
+    int saddr[31];
     int unpacked_ssize;
     int val;
     uint8 buf[1024];
@@ -60,33 +58,33 @@ static int depack_p60a(FILE *in, FILE *out)
     memset(tdata, 0, 512 << 8);
     memset(ptable, 0, 128);
     memset(smp_size, 0, 31 * 4);
-    memset(saddr, 0, 32 * 4);
     memset(isize, 0, 31 * sizeof(int));
     for (i = 0; i < 31; i++) {
-	PACK[i] = OFF;
-/*    DELTA[i] = OFF;*/
+	PACK[i] = 0;
+/*    DELTA[i] = 0;*/
     }
 
+    saddr[0] = 0;
     sdata_addr = read16b(in);		/* read sample data address */
     npat = read8(in);			/* read real number of patterns */
     nins = read8(in);			/* read number of samples */
 
     if ((nins & 0x80) == 0x80) {
 	/*printf ( "Samples are saved as delta values !\n" ); */
-	GLOBAL_DELTA = ON;
+	delta = 1;
     }
     if ((nins & 0x40) == 0x40) {
 	/*printf ( "some samples are packed !\n" ); */
 	/*printf ( "\n! Since I could not understand the packing method of the\n" */
 	/*	 "! samples, neither could I do a depacker .. . mission ends here :)\n" ); */
-	GLOBAL_PACK = ON;
+	pack = 1;
 
 	return -1;
     }
 
     nins &= 0x3f;
 
-    if (GLOBAL_PACK == ON)
+    if (pack == 1)
 	unpacked_ssize = read32b(in);	/* unpacked sample data size */
 
     pw_write_zero(out, 20);		/* write title */
@@ -100,9 +98,11 @@ static int depack_p60a(FILE *in, FILE *out)
 	if (j > 0xff00) {
 	    smp_size[i] = smp_size[0xffff - j];
 	    isize[i] = isize[0xffff - j];
-	    saddr[i + 1] = saddr[0xffff - j + 1];
+	    saddr[i] = saddr[0xffff - j];
 	} else {
-	    saddr[i + 1] = saddr[i] + smp_size[i - 1];
+	    if (i > 0) {
+	        saddr[i] = saddr[i - 1] + smp_size[i - 1];
+            }
 	    smp_size[i] = j * 2;
 	    ssize += smp_size[i];
 	}
@@ -112,7 +112,7 @@ static int depack_p60a(FILE *in, FILE *out)
 
 	c1 = read8(in);			/* finetune */
 	if ((c1 & 0x40) == 0x40)
-	    PACK[i] = ON;
+	    PACK[i] = 1;
 	write8(out, c1 & 0x3f);
 
 	write8(out, read8(in));		/* volume */
@@ -349,11 +349,11 @@ static int depack_p60a(FILE *in, FILE *out)
 
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
-	fseek(in, sdata_addr + saddr[i + 1], SEEK_SET);
+	fseek(in, sdata_addr + saddr[i], SEEK_SET);
 	smp_buffer = malloc(smp_size[i]);
 	memset(smp_buffer, 0, smp_size[i]);
 	fread(smp_buffer, smp_size[i], 1, in);
-	if (GLOBAL_DELTA == ON) {
+	if (delta == 1) {
 	    c1 = 0x00;
 	    for (j = 1; j < smp_size[i]; j++) {
 		c2 = smp_buffer[j];
@@ -367,7 +367,7 @@ static int depack_p60a(FILE *in, FILE *out)
 	free(smp_buffer);
     }
 
-    if (GLOBAL_DELTA == ON)
+    if (delta == 1)
 	pw_p60a.flags |= PW_DELTA;
 
     return 0;

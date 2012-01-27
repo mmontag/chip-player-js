@@ -27,20 +27,18 @@ struct pw_format pw_p50a = {
 	depack_p50a
 };
 
-#define ON 1
-#define OFF 2
 
 static int depack_p50a(FILE *in, FILE *out)
 {
     uint8 c1, c2, c3, c4, c5, c6;
     int max_row;
     signed char *smp_buffer;
-    uint8 PatPos = 0x00;
-    uint8 npat = 0x00;
-    uint8 nins = 0x00;
+    int PatPos = 0;
+    int npat = 0;
+    int nins = 0;
     uint8 tdata[512][256];
     uint8 ptable[128];
-    uint8 GLOBAL_DELTA = OFF;
+    int delta = 0;
     int isize[31];
     int taddr[128][4];
     int tdata_addr = 0;
@@ -48,7 +46,7 @@ static int depack_p50a(FILE *in, FILE *out)
     int ssize = 0;
     int i = 0, j, k, l, a, b;
     int smp_size[31];
-    int saddr[32];
+    int saddr[31];
     int val;
     uint8 buf[1024];
 
@@ -56,16 +54,16 @@ static int depack_p50a(FILE *in, FILE *out)
     memset(tdata, 0, 512 << 8);
     memset(ptable, 0, 128);
     memset(smp_size, 0, 31 * 4);
-    memset(saddr, 0, 32 * 4);
     memset(isize, 0, 31 * sizeof(int));
 
+    saddr[0] = 0;
     sdata_addr = read16b(in);		/* read sample data address */
     npat = read8(in);			/* read real number of patterns */
     nins = read8(in);			/* read number of samples */
 
     if (nins & 0x80) {
 	/*printf ( "Samples are saved as delta values !\n" ); */
-	GLOBAL_DELTA = ON;
+	delta = 1;
     }
     nins &= 0x3f;
 
@@ -80,9 +78,11 @@ static int depack_p50a(FILE *in, FILE *out)
 	if (j > 0xff00) {
 	    smp_size[i] = smp_size[0xffff - j];
 	    isize[i] = isize[0xffff - j];
-	    saddr[i + 1] = saddr[0xffff - j + 1];
+	    saddr[i] = saddr[0xffff - j];
 	} else {
-	    saddr[i + 1] = saddr[i] + smp_size[i - 1];
+	    if (i > 0) {
+	    	saddr[i] = saddr[i - 1] + smp_size[i - 1];
+	    }
 	    smp_size[i] = j * 2;
 	    ssize += smp_size[i];
 	}
@@ -324,11 +324,11 @@ static int depack_p50a(FILE *in, FILE *out)
 
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
-	fseek(in, sdata_addr + saddr[i + 1], SEEK_SET);
+	fseek(in, sdata_addr + saddr[i], SEEK_SET);
 	smp_buffer = malloc(smp_size[i]);
 	memset(smp_buffer, 0, smp_size[i]);
 	fread(smp_buffer, smp_size[i], 1, in);
-	if (GLOBAL_DELTA == ON) {
+	if (delta == 1) {
 	    c1 = smp_buffer[0];
 	    for (j = 1; j < smp_size[i]; j++) {
 		c2 = smp_buffer[j];
@@ -341,7 +341,7 @@ static int depack_p50a(FILE *in, FILE *out)
 	free(smp_buffer);
     }
 
-    if (GLOBAL_DELTA == ON)
+    if (delta == 1)
 	pw_p50a.flags |= PW_DELTA;
 
     return 0;
