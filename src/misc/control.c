@@ -76,11 +76,9 @@ void xmp_set_flags(xmp_context ctx, int flags)
 
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
 	int num;
 
 	xmp_init_formats(ctx);
-	p->event_callback = NULL;
 
 #ifndef __native_client__
 	/* must be parsed before loading the rc file. */
@@ -114,14 +112,6 @@ void xmp_set_driver_parameter(struct xmp_options *o, char *s)
 	while (isspace(*o->parm[drv_parm]))
 		o->parm[drv_parm]++;
 	drv_parm++;
-}
-
-void xmp_register_event_callback(xmp_context ctx, void (*cb)(unsigned long, void *), void *data)
-{
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-
-	p->event_callback = cb;
-	p->callback_data = data;
 }
 
 void xmp_channel_mute(xmp_context ctx, int from, int num, int on)

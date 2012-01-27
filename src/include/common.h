@@ -248,8 +248,6 @@ struct xmp_player_context {
 	int scan_row;
 	int scan_num;
 	int bpm;
-	void (*event_callback)(unsigned long, void *);
-	void *callback_data;
 
 	struct xmp_mod_context m;
 };
@@ -289,7 +287,6 @@ struct xmp_smixer_context {
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
-	int echo_msg;		/* echoback message */
 };
 
 struct xmp_context {
@@ -298,11 +295,6 @@ struct xmp_context {
 	struct xmp_player_context p;
 	struct xmp_smixer_context s;
 };
-
-
-/* Externs */
-
-extern void (*xmp_event_callback)(unsigned long);
 
 
 /* Prototypes */

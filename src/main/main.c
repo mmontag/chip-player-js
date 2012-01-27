@@ -257,85 +257,6 @@ static int stdin_ready_for_reading()
 }
 #endif
 
-static void process_echoback(unsigned long i, void *data)
-{
-    unsigned long msg = i >> 4;
-    static int _pos = -1;
-    static int tpo, bpm, nch, _tpo = -1, _bpm = -1;
-    static int pos, pat;
-
-#ifdef SIGUSR1
-    if (sigusr == SIGUSR1) {
-	skip = 1;
-	xmp_mod_stop(ctx);
-	paused = 0;
-	sigusr = 0;
-    } else if (sigusr == SIGUSR2) {
-	skip = -1;
-	xmp_mod_stop(ctx);
-	paused = 0;
-	sigusr = 0;
-    }
-#endif
-
-    if (background)
-	return;
-
-    if (showtime) {
-	int rem;
-
-	switch (i & 0xf) {
-	case XMP_ECHO_TIME:
-	    rem = mi.time / 100 - msg;
-	    fprintf(stderr, "\r%02d:%02d:%02d.%d  ",
-			(int)(msg / (60 * 600)), (int)((msg / 600) % 60),
-			(int)((msg / 10) % 60), (int)(msg % 10));
-	    fprintf(stderr, "-%02d:%02d:%02d.%d",
-			(int)(rem / (60 * 600)), (int)((rem / 600) % 60),
-			(int)((rem / 10) % 60), (int)(rem % 10));
-	    break;
-	}
-    }
-    if (verbosity) {
-	switch (i & 0xf) {
-	case XMP_ECHO_BPM:
-	    _bpm = bpm;
-	    _tpo = tpo;
-	    bpm = msg & 0xff;
-	    tpo = msg >> 8;
-	    break;
-	case XMP_ECHO_ORD:
-	    pos = msg & 0xff;
-	    pat = msg >> 8;
-	    break;
-	case XMP_ECHO_NCH:
-	    nch = msg & 0xff;
-	    if (nch > max_nch)
-		max_nch = nch;
-	    break;
-	case XMP_ECHO_ROW:
-	    if (showtime)
-		break;
-	    rows += 1;
-	    tot_nch += nch;
-	    if
-(refresh_status || !(msg & 0xff) || pos != _pos || bpm != _bpm || tpo != _tpo) {
-	        fprintf (stderr,
-"\rTempo[%02X] BPM[%02X] Pos[%02X/%02X] Pat[%02X/%02X] Row[  /  ] Chn[  /  ]\b",
-		    tpo, bpm, pos, mi.len - 1, pat, mi.pat - 1);
-		_pos = pos;
-		if (refresh_status)
-		    refresh_status = 0;
-	    }
-	    fprintf (stderr, "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%02X/%02X] Chn[%02X/%02X] %s",
-		(int)(msg & 0xff), (int)(msg >> 8), nch, max_nch,
-		xmp_test_flag(ctx, XMP_CTL_LOOP) ? "L\b\b\b" : " \b\b\b");
-	    break;
-	}
-    }
-}
-
-
 void read_keyboard()
 {
     unsigned char cmd;
@@ -528,8 +449,6 @@ int main(int argc, char **argv)
 	    return -128;
 	}
     }
-
-    xmp_register_event_callback(ctx, process_echoback, NULL);
 
     if (opt->verbosity) {
 	fprintf(stderr, "Extended Module Player " VERSION "\n"

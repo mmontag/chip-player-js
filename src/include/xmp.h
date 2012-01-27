@@ -24,21 +24,6 @@
 #define XMP_FX_FILTER_B1	0xb1
 #define XMP_FX_FILTER_B2	0xb2
 
-/* Event echo messages */
-#define XMP_ECHO_NONE		0x00
-#define XMP_ECHO_END		0x01
-#define XMP_ECHO_BPM		0x02
-#define XMP_ECHO_VOL		0x03
-#define XMP_ECHO_INS		0x04
-#define XMP_ECHO_ORD		0x05
-#define XMP_ECHO_ROW		0x06
-#define XMP_ECHO_CHN		0x07
-#define XMP_ECHO_PBD		0x08
-#define XMP_ECHO_GVL		0x09
-#define XMP_ECHO_NCH		0x0a
-#define XMP_ECHO_FRM		0x0b
-#define XMP_ECHO_TIME		0x0c
-
 /* xmp_player_ctl arguments */
 #define XMP_ORD_NEXT		0x00
 #define XMP_ORD_PREV		0x01
@@ -210,7 +195,6 @@ char *xmp_get_driver_description(xmp_context);
 void xmp_set_driver_parameter(struct xmp_options *, char *);
 void xmp_get_driver_cfg(xmp_context, int *, int *, int *, int *);
 void xmp_channel_mute(xmp_context, int, int, int);
-void xmp_register_event_callback(xmp_context, void (*)(unsigned long, void *), void *);
 int xmp_player_ctl(xmp_context, int, int);
 int xmp_open_audio(xmp_context);
 void xmp_close_audio(xmp_context);

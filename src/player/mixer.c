@@ -582,22 +582,6 @@ void xmp_smix_setpan(struct xmp_context *ctx, int voc, int pan)
 }
 
 
-void xmp_smix_echoback(struct xmp_context *ctx, int msg)
-{
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_smixer_context *s = &ctx->s;
-
-    p->event_callback(s->echo_msg = msg, p->callback_data);
-}
-
-
-int xmp_smix_getmsg(struct xmp_context *ctx)
-{
-    struct xmp_smixer_context *s = &ctx->s;
-    return s->echo_msg;
-}
-
-
 int xmp_smix_numvoices(struct xmp_context *ctx, int num)
 {
     struct xmp_smixer_context *s = &ctx->s;

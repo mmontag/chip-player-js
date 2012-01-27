@@ -97,11 +97,9 @@ void	xmp_drv_resetchannel	(struct xmp_context *, int);
 void	xmp_drv_resetvoice	(struct xmp_context *, int, int);
 void	xmp_drv_reset		(struct xmp_context *);
 double	xmp_drv_sync		(struct xmp_context *, double);
-int	xmp_drv_getmsg		(struct xmp_context *);
 void	xmp_drv_stoptimer	(struct xmp_context *);
 void	xmp_drv_clearmem	(struct xmp_context *);
 void	xmp_drv_starttimer	(struct xmp_context *);
-void	xmp_drv_echoback	(struct xmp_context *, int);
 void	xmp_drv_bufwipe		(struct xmp_context *);
 void	xmp_drv_bufdump		(struct xmp_context *);
 int	xmp_drv_loadpatch 	(struct xmp_context *, FILE *, int, int, int,

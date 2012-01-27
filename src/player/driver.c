@@ -546,18 +546,6 @@ int xmp_drv_cstat(struct xmp_context *ctx, int chn)
 }
 
 
-void xmp_drv_echoback(struct xmp_context *ctx, int msg)
-{
-    xmp_smix_echoback(ctx, msg);
-}
-
-
-int xmp_drv_getmsg(struct xmp_context *ctx)
-{
-    return xmp_smix_getmsg(ctx);
-}
-
-
 void xmp_drv_bufdump(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;

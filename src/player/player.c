@@ -88,12 +88,6 @@ static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
 static void play_channel (struct xmp_context *, int, int);
 
 
-static void dummy(unsigned long ul, void *data)
-{
-    /* dummy */
-}
-
-
 static int get_envelope(int16 *env, int p, int x)
 {
     int x1, x2, y1, y2;
@@ -473,8 +467,6 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 			m->xxh->flg & XXM_FLG_LINEAR);
 
 	xc->y_idx = xc->t_idx = 0;	/* H: where should I put this? */
-
-	SET(ECHOBACK);
     }
 
     if (xc->key < 0 || XXIM.ins[xc->key] == 0xff)
@@ -496,7 +488,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
     if (TEST(RESET_VOL)) {
 	xc->volume = XXI.vol;
-	SET(ECHOBACK | NEW_VOL);
+	SET(NEW_VOL);
     }
 
     if (HAS_QUIRK(XMP_QRK_ST3GVOL) && TEST(NEW_VOL))
@@ -514,7 +506,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     int med_arp, vibrato, med_vibrato;
     uint16 vol_envelope;
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
 
@@ -677,20 +668,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     } else {
 	cutoff = XXIH.fei.flg & XXM_ENV_FLT ? frq_envelope : 0xff;
 	cutoff = xc->cutoff * cutoff / 0xff;
-    }
-
-    /* Echoback events */
-    if (chn < d->numtrk) {
-	xmp_drv_echoback(ctx, (finalpan << 12) | (chn << 4) | XMP_ECHO_CHN);
-
-	if (TEST(ECHOBACK | PITCHBEND | TONEPORTA) ||
-					TEST_PER(PITCHBEND | TONEPORTA)) {
-	    xmp_drv_echoback(ctx, (xc->key << 12)|(xc->ins << 4)|XMP_ECHO_INS);
-	    xmp_drv_echoback(ctx, (xc->volume << 4) * 0x40 / p->gvol_base |
-							XMP_ECHO_VOL);
-
-	    xmp_drv_echoback(ctx, (xc->pitchbend << 4) | XMP_ECHO_PBD);
-	}
     }
 
     /* Do tremor */
@@ -859,9 +836,6 @@ int _xmp_player_start(struct xmp_context *ctx)
 	struct flow_control *f = &p->flow;
 	int ret;
 
-	if (p->event_callback == NULL)
-		p->event_callback = dummy;
-
 	p->gvol_slide = 0;
 	p->gvol_base = m->volbase;
 	p->pos = f->ord = o->start;
@@ -925,7 +899,6 @@ int _xmp_player_frame(struct xmp_context *ctx)
 	int i;
 
 	if (p->pause) {
-		p->event_callback(0, p->callback_data);
 		return 0;
 	}
 
@@ -974,20 +947,8 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		} else {
 			fetch_row(ctx, m->xxo[f->ord], f->row);
 		}
-
-		xmp_drv_echoback(ctx, (p->tempo << 12) | (p->bpm << 4) |
-							XMP_ECHO_BPM);
-		xmp_drv_echoback(ctx, (m->volume << 4) | XMP_ECHO_GVL);
-		xmp_drv_echoback(ctx, (m->xxo[f->ord] << 12) | (f->ord << 4) |
-							XMP_ECHO_ORD);
-		xmp_drv_echoback(ctx, (d->curvoc << 4) | XMP_ECHO_NCH);
-		xmp_drv_echoback(ctx, ((m->xxp[m->xxo[f->ord]]->rows - 1)
-				<< 12) | (f->row << 4) | XMP_ECHO_ROW);
-		xmp_drv_echoback(ctx, ((int)(f->time * 10) << 4)
-							| XMP_ECHO_TIME);
 	}
 
-	xmp_drv_echoback(ctx, (f->frame << 4) | XMP_ECHO_FRM);
 	/* play_frame */
 	for (i = 0; i < d->numchn; i++)
 		play_channel(ctx, i, f->frame);
@@ -1122,11 +1083,6 @@ void _xmp_player_end(struct xmp_context *ctx)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	struct flow_control *f = &p->flow;
-
-	xmp_drv_echoback(ctx, XMP_ECHO_END);
-
-	while (xmp_drv_getmsg(ctx) != XMP_ECHO_END)
-		xmp_drv_bufdump(ctx);
 
 	xmp_drv_stoptimer(ctx);
 	xmp_drv_off(ctx);
