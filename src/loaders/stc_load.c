@@ -56,6 +56,9 @@ static int stc_test(FILE * f, char *t, const int start)
 	orn_ptr = read16l(f);			/* Ornaments pointer */
 	pat_ptr = read16l(f);			/* Patterns pointer */
 
+	if (pos_ptr < 138 || orn_ptr < 138 || pat_ptr < 138)
+		return -1;
+
 	fseek(f, start + pos_ptr, SEEK_SET);
 	len = read8(f) + 1;
 
