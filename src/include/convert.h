@@ -11,8 +11,6 @@ void xmp_cvt_sig2uns (int, int, char *);
 void xmp_cvt_sex (int, char *);
 void xmp_cvt_2xsmp (int, char *);
 void xmp_cvt_vidc (int, char *);
-int xmp_cvt_to8bit (struct xmp_context *);
-int xmp_cvt_to16bit (struct xmp_context *);
 
 void xmp_cvt_anticlick (struct patch_info *);
 
