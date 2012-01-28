@@ -363,7 +363,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	}
 
 	xc->insdef = ins;
-	xc->med_arp = xc->med_aidx = 0;
+
+	xc->med.arp = xc->med.aidx = 0;
     }
 
     /* Check note */

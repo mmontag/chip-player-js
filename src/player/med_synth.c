@@ -39,10 +39,10 @@
 extern uint8 **med_vol_table;
 extern uint8 **med_wav_table;
 
-#define VT p->m.med_vol_table[xc->ins][xc->med_vp++]
-#define WT p->m.med_wav_table[xc->ins][xc->med_wp++]
-#define VT_SKIP xc->med_vp++
-#define WT_SKIP xc->med_wp++
+#define VT p->m.med_vol_table[xc->ins][xc->med.vp++]
+#define WT p->m.med_wav_table[xc->ins][xc->med.wp++]
+#define VT_SKIP xc->med.vp++
+#define WT_SKIP xc->med.wp++
 
 
 static int sine[32] = {
@@ -57,18 +57,18 @@ int get_med_vibrato(struct xmp_channel *xc)
 	int vib;
 
 #if 0
-	if (xc->med_vib_wf >= xxih[xc->ins].nsm)	/* invalid waveform */
+	if (xc->med.vib_wf >= xxih[xc->ins].nsm)	/* invalid waveform */
 		return 0;
 
-	if (xxs[xxi[xc->ins][xc->med_vib_wf].sid].len != 32)
+	if (xxs[xxi[xc->ins][xc->med.vib_wf].sid].len != 32)
 		return 0;
 #endif
 
 	/* FIXME: always using sine waveform */
 
-	vib = (sine[xc->med_vib_idx >> 5] * xc->med_vib_depth) >> 11;
-	xc->med_vib_idx += xc->med_vib_speed;
-	xc->med_vib_idx %= (32 << 5);
+	vib = (sine[xc->med.vib_idx >> 5] * xc->med.vib_depth) >> 11;
+	xc->med.vib_idx += xc->med.vib_speed;
+	xc->med.vib_idx %= (32 << 5);
 
 	return vib;
 }
@@ -78,16 +78,16 @@ int get_med_arp(struct xmp_player_context *p, struct xmp_channel *xc)
 {
 	int arp;
 
-	if (xc->med_arp == 0)
+	if (xc->med.arp == 0)
 		return 0;
 
-	if (p->m.med_wav_table[xc->ins][xc->med_arp] == 0xfd) /* empty arpeggio */
+	if (p->m.med_wav_table[xc->ins][xc->med.arp] == 0xfd) /* empty arpeggio */
 		return 0;
 
-	arp = p->m.med_wav_table[xc->ins][xc->med_aidx++];
+	arp = p->m.med_wav_table[xc->ins][xc->med.aidx++];
 	if (arp == 0xfd) {
-		xc->med_aidx = xc->med_arp;
-		arp = p->m.med_wav_table[xc->ins][xc->med_aidx++];
+		xc->med.aidx = xc->med.arp;
+		arp = p->m.med_wav_table[xc->ins][xc->med.aidx++];
 	}
 
 	return 100 * arp;
@@ -107,19 +107,19 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 	return;
 
     if (rst) {
-	xc->med_arp = xc->med_aidx = 0;
-	xc->med_period = xc->period;
-	xc->med_vp = xc->med_vc = xc->med_vw = 0;
-	xc->med_wp = xc->med_wc = xc->med_ww = 0;
-	xc->med_vs = p->m.xxih[xc->ins].vts;
-	xc->med_ws = p->m.xxih[xc->ins].wts;
+	xc->med.arp = xc->med.aidx = 0;
+	xc->med.period = xc->period;
+	xc->med.vp = xc->med.vc = xc->med.vw = 0;
+	xc->med.wp = xc->med.wc = xc->med.ww = 0;
+	xc->med.vs = p->m.xxih[xc->ins].vts;
+	xc->med.ws = p->m.xxih[xc->ins].wts;
     }
 
-    if (xc->med_vs > 0 && xc->med_vc-- == 0) {
-	xc->med_vc = xc->med_vs - 1;
+    if (xc->med.vs > 0 && xc->med.vc-- == 0) {
+	xc->med.vc = xc->med.vs - 1;
 
-	if (xc->med_vw > 0) {
-	    xc->med_vw--;
+	if (xc->med.vw > 0) {
+	    xc->med.vw--;
 	    goto skip_vol;
 	}
 
@@ -128,13 +128,13 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 	    while (jump--) {
 	    case 0xff:		/* END */
 	    case 0xfb:		/* HLT */
-		xc->med_vp--;
+		xc->med.vp--;
 		break;
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
 		temp = VT;
-		xc->med_vp = temp;
+		xc->med.vp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfa:		/* JWS */
@@ -145,16 +145,16 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 		VT_SKIP;	/* Not implemented */
 		break;
 	    case 0xf3:		/* CHU */
-		xc->med_vv = VT;
+		xc->med.vv = VT;
 		break;
 	    case 0xf2:		/* CHD */
-		xc->med_vv = -VT;
+		xc->med.vv = -VT;
 		break;
 	    case 0xf1:		/* WAI */
-		xc->med_vw = VT;
+		xc->med.vw = VT;
 		break;
 	    case 0xf0:		/* SPD */
-		xc->med_vs = VT;
+		xc->med.vs = VT;
 		break;
 	    default:
 		if (b >= 0x00 && b <= 0x40)
@@ -162,7 +162,7 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 	    }
 	}
 
-	xc->volume += xc->med_vv;
+	xc->volume += xc->med.vv;
 	if (xc->volume < 0)
 	    xc->volume = 0;
 	if (xc->volume > 64)
@@ -170,8 +170,8 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 
 skip_vol:
 
-	if (xc->med_ww > 0) {
-	    xc->med_ww--;
+	if (xc->med.ww > 0) {
+	    xc->med.ww--;
 	    goto skip_wav;
 	}
 
@@ -180,47 +180,47 @@ skip_vol:
 	    while (jump--) {
 	    case 0xff:		/* END */
 	    case 0xfb:		/* HLT */
-		xc->med_wp--;
+		xc->med.wp--;
 		break;
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
 		temp = WT;
-		xc->med_wp = temp;
+		xc->med.wp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfd:		/* ARE */
 		break;
 	    case 0xfc:		/* ARP */
-		xc->med_arp = xc->med_aidx = xc->med_wp++;
+		xc->med.arp = xc->med.aidx = xc->med.wp++;
 		while (WT != 0xfd);
 		break;
 	    case 0xfa:		/* JVS */
 		jws = WT;
 		break;
 	    case 0xf7:		/* VWF */
-		xc->med_vwf = WT;
+		xc->med.vwf = WT;
 		break;
 	    case 0xf6:		/* RES */
-		xc->period = xc->med_period;
+		xc->period = xc->med.period;
 		break;
 	    case 0xf5:		/* VBS */
-		xc->med_vib_speed = WT;
+		xc->med.vib_speed = WT;
 		break;
 	    case 0xf4:		/* VBD */
-		xc->med_vib_depth = WT;
+		xc->med.vib_depth = WT;
 		break;
 	    case 0xf3:		/* CHU */
-		xc->med_wv = -WT;
+		xc->med.wv = -WT;
 		break;
 	    case 0xf2:		/* CHD */
-		xc->med_wv = WT;
+		xc->med.wv = WT;
 		break;
 	    case 0xf1:		/* WAI */
-		xc->med_ww = WT;
+		xc->med.ww = WT;
 		break;
 	    case 0xf0:		/* SPD */
-		xc->med_ws = WT;
+		xc->med.ws = WT;
 		break;
 	    default:
 		if (b < p->m.xxih[xc->ins].nsm && p->m.xxi[xc->ins][b].sid != xc->smp) {
@@ -231,16 +231,16 @@ skip_vol:
 	}
 skip_wav:
 	;
-	/* xc->period += xc->med_wv; */
+	/* xc->period += xc->med.wv; */
     }
 
     if (jws) {
-	xc->med_wp = jws;
+	xc->med.wp = jws;
 	jws = 0;
     }
 
     if (jvs) {
-	xc->med_vp = jvs;
+	xc->med.vp = jvs;
 	jvs = 0;
     }
 }

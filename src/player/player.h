@@ -90,6 +90,29 @@ struct instrument_vibrato {
 };
 
 
+/* MED support */
+
+struct med_channel {
+	int vp;			/* MED synth volume sequence table pointer */
+	int vv;			/* MED synth volume slide value */
+	int vs;			/* MED synth volume speed */
+	int vc;			/* MED synth volume speed counter */
+	int vw;			/* MED synth volume wait counter */
+	int wp;			/* MED synth waveform sequence table pointer */
+	int wv;			/* MED synth waveform slide value */
+	int ws;			/* MED synth waveform speed */
+	int wc;			/* MED synth waveform speed counter */
+	int ww;			/* MED synth waveform wait counter */
+	int period;		/* MED synth period for RES */
+	int arp;		/* MED synth arpeggio start */
+	int aidx;		/* MED synth arpeggio index */
+	int vwf;		/* MED synth vibrato waveform */
+	int vib_depth;		/* MED synth vibrato depth */
+	int vib_speed;		/* MED synth vibrato speed */
+	int vib_idx;		/* MED synth vibrato index */
+	int vib_wf;		/* MED synth vibrato waveform */
+};
+
 struct xmp_channel {
     int flags;			/* Channel flags */
     int per_flags;		/* Persistent effect channel flags */
@@ -154,25 +177,7 @@ struct xmp_channel {
     int flt_B1;
     int flt_B2;
     
-    /* MED support */
-    int med_vp;			/* MED synth volume sequence table pointer */
-    int med_vv;			/* MED synth volume slide value */
-    int med_vs;			/* MED synth volume speed */
-    int med_vc;			/* MED synth volume speed counter */
-    int med_vw;			/* MED synth volume wait counter */
-    int med_wp;			/* MED synth waveform sequence table pointer */
-    int med_wv;			/* MED synth waveform slide value */
-    int med_ws;			/* MED synth waveform speed */
-    int med_wc;			/* MED synth waveform speed counter */
-    int med_ww;			/* MED synth waveform wait counter */
-    int med_period;		/* MED synth period for RES */
-    int med_arp;		/* MED synth arpeggio start */
-    int med_aidx;		/* MED synth arpeggio index */
-    int med_vwf;		/* MED synth vibrato waveform */
-    int med_vib_depth;		/* MED synth vibrato depth */
-    int med_vib_speed;		/* MED synth vibrato speed */
-    int med_vib_idx;		/* MED synth vibrato index */
-    int med_vib_wf;		/* MED synth vibrato waveform */
+	struct med_channel med;
 
     /* AHX and Hively support */
     int ahx_finit;		/* AHX filter init */
