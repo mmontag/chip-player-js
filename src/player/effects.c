@@ -177,36 +177,46 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
     case FX_PER_CANCEL:				/* Cancel persistent effects */
 	xc->per_flags = 0;
 	break;
-    case FX_VIBRATO:				/* Vibrato */
-	SET(VIBRATO);
-	if (LSN(fxp))
-	    xc->y_depth = LSN(fxp) * 4;
-	if (MSN(fxp))
-	    xc->y_rate = MSN(fxp);
-	break;
-    case FX_FINE2_VIBRA:			/* Fine vibrato (2x) */
-	SET(VIBRATO);
-	if (LSN(fxp))
-	    xc->y_depth = LSN(fxp) * 2;
-	if (MSN(fxp))
-	    xc->y_rate = MSN(fxp);
-	break;
-    case FX_FINE4_VIBRA:			/* Fine vibrato (4x) */
-	SET(VIBRATO);
-	if (LSN(fxp))
-	    xc->y_depth = LSN(fxp);
-	if (MSN(fxp))
-	    xc->y_rate = MSN(fxp);
-	break;
-    case FX_PER_VIBRATO:			/* Persistent vibrato */
-	SET_PER(VIBRATO);
-	if (LSN(fxp))
-	    xc->y_depth = LSN(fxp) * 4;
-	else
-	    RESET_PER(VIBRATO);
-	if (MSN(fxp))
-	    xc->y_rate = MSN(fxp);
-	break;
+
+	case FX_VIBRATO:			/* Vibrato */
+		SET(VIBRATO);
+		if (LSN(fxp)) {
+			xc->vibrato.depth = LSN(fxp) * 4;
+		}
+		if (MSN(fxp)) {
+			xc->vibrato.rate = MSN(fxp);
+		}
+		break;
+	case FX_FINE2_VIBRA:			/* Fine vibrato (2x) */
+		SET(VIBRATO);
+		if (LSN(fxp)) {
+			xc->vibrato.depth = LSN(fxp) * 2;
+		}
+		if (MSN(fxp)) {
+			xc->vibrato.rate = MSN(fxp);
+		}
+		break;
+	case FX_FINE4_VIBRA:			/* Fine vibrato (4x) */
+		SET(VIBRATO);
+		if (LSN(fxp)) {
+			xc->vibrato.depth = LSN(fxp);
+		}
+		if (MSN(fxp)) {
+			xc->vibrato.rate = MSN(fxp);
+		}
+		break;
+	case FX_PER_VIBRATO:			/* Persistent vibrato */
+		SET_PER(VIBRATO);
+		if (LSN(fxp)) {
+			xc->vibrato.depth = LSN(fxp) * 4;
+		} else {
+			RESET_PER(VIBRATO);
+		}
+		if (MSN(fxp)) {
+			xc->vibrato.rate = MSN(fxp);
+		}
+		break;
+
     case FX_TONE_VSLIDE:			/* Toneporta + vol slide */
 	if (!TEST (IS_VALID))
 	    break;
@@ -216,13 +226,17 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
     case FX_VIBRA_VSLIDE:			/* Vibrato + vol slide */
 	SET(VIBRATO);
 	goto fx_volslide;
-    case FX_TREMOLO:				/* Tremolo */
-	SET(TREMOLO);
-	if (MSN(fxp))
-	    xc->t_rate = MSN(fxp);
-	if (LSN(fxp))
-	    xc->t_depth = LSN(fxp);
-	break;
+
+	case FX_TREMOLO:			/* Tremolo */
+		SET(TREMOLO);
+		if (MSN(fxp)) {
+			xc->tremolo.rate = MSN(fxp);
+		}
+		if (LSN(fxp)) {
+			xc->tremolo.depth = LSN(fxp);
+		}
+		break;
+
     case FX_SETPAN:				/* Set pan */
 	SET(NEW_PAN);
 	xc->pan = fxp;
@@ -339,9 +353,11 @@ ex_f_porta_dn:
 	case EX_GLISS:				/* Glissando toggle */
 	    xc->gliss = fxp;
 	    break;
-	case EX_VIBRATO_WF:			/* Set vibrato waveform */
-	    xc->y_type = fxp & 3;
-	    break;
+
+		case EX_VIBRATO_WF:		/* Set vibrato waveform */
+			xc->vibrato.type = fxp & 3;
+			break;
+
 	case EX_FINETUNE:			/* Set finetune */
 	    fxp <<= 4;
 	    goto fx_finetune;
@@ -366,9 +382,11 @@ ex_f_porta_dn:
 		}
 	    }
 	    break;
-	case EX_TREMOLO_WF:			/* Set tremolo waveform */
-	    xc->t_type = fxp & 3;
-	    break;
+
+		case EX_TREMOLO_WF:		/* Set tremolo waveform */
+			xc->tremolo.type = fxp & 3;
+			break;
+
 	case EX_RETRIG:				/* Retrig note */
 	    xc->retrig = xc->rcount = fxp ? fxp : xc->rval;
 	    xc->rval = xc->retrig;

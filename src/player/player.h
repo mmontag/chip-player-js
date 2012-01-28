@@ -80,10 +80,20 @@ struct retrig_t {
  * v_ for volume slide
  * p_ for pan
  * f_ for frequency (period) slide
- * y_ for vibrato (v is already being used by volume)
  * s_ for slide to note (tone portamento)
- * t_ for tremolo
  */
+
+struct lfo {
+	int type;
+	int rate;
+	int depth;
+	int phase;
+};
+
+struct instrument_vibrato {
+	int phase;
+	int sweep;
+};
 
 struct xmp_channel {
     int flags;			/* Channel flags */
@@ -122,15 +132,8 @@ struct xmp_channel {
     uint16 v_idx;		/* Volume envelope index */
     uint16 p_idx;		/* Pan envelope index */
     uint16 f_idx;		/* Freq envelope index */
-    int y_type;			/* Vibrato waveform */
-    int y_depth;		/* Vibrato depth */
-    int y_sweep;		/* Vibrato sweep */
-    int y_rate;			/* Vibrato rate */
-    int y_idx;			/* Vibrato index */
-    int t_type;			/* Tremolo waveform */
-    int t_depth;		/* Tremolo depth */
-    int t_rate;			/* Tremolo rate */
-    int t_idx;			/* Tremolo index */
+	struct lfo vibrato;
+	struct lfo tremolo;
     int f_val;			/* Frequency slide value */
     int f_fval;			/* Fine frequency slide value */
     int porta;			/* Portamento effect memory */
@@ -142,8 +145,7 @@ struct xmp_channel {
     int a_val[ARP_SIZE];	/* Arpeggio relative notes */
     int a_idx;			/* Arpeggio index */
     int a_size;			/* Arpeggio size */
-    int insvib_idx;		/* Instrument vibrato index */
-    int insvib_swp;		/* Instrument vibrato sweep */
+	struct instrument_vibrato instrument_vibrato;
     int offset;			/* Sample offset memory */
     int offset_val;		/* Sample offset */
     int ns_val;			/* PTM note slide amount */

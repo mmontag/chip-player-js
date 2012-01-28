@@ -45,8 +45,10 @@ static struct retrig_t rval[] = {
     {   0,  0,  1 }	/* Note cut */
 };
 
+#define WAVEFORM_SIZE 64
+
 /* Vibrato/tremolo waveform tables */
-static int waveform[4][64] = {
+static int waveform[4][WAVEFORM_SIZE] = {
    {   0,  24,  49,  74,  97, 120, 141, 161, 180, 197, 212, 224,
      235, 244, 250, 253, 255, 253, 250, 244, 235, 224, 212, 197,
      180, 161, 141, 120,  97,  74,  49,  24,   0, -24, -49, -74,
@@ -87,6 +89,61 @@ static struct xxm_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
 static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
 static void play_channel (struct xmp_context *, int, int);
 
+/* */
+
+static inline struct xxm_instrument *
+get_instrument(struct xmp_mod_context *m, struct xmp_channel *xc)
+{
+	int mapped = m->xxim->ins[xc->key];
+	return &m->xxi[xc->ins][mapped];
+}
+
+
+/* LFO */
+
+static inline int get_lfo(struct lfo *lfo)
+{
+	return waveform[lfo->type][lfo->phase] * lfo->depth;
+}
+
+static inline void update_lfo(struct lfo *lfo)
+{
+	lfo->phase += lfo->rate;
+	lfo->phase %= WAVEFORM_SIZE;
+}
+
+
+/* Instrument vibrato */
+
+static inline int
+get_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
+{
+	struct xxm_instrument *instrument = get_instrument(m, xc);
+	int type = instrument->vwf;
+	int depth = instrument->vde;
+	int phase = xc->instrument_vibrato.phase;
+	int sweep = xc->instrument_vibrato.sweep;
+
+	return waveform[type][phase] * depth / (1024 * (1 + sweep));
+}
+
+static inline void
+update_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
+{
+	struct xxm_instrument *instrument = get_instrument(m, xc);
+	int rate = instrument->vra;
+
+	xc->instrument_vibrato.phase += rate >> 2;
+	xc->instrument_vibrato.phase %= WAVEFORM_SIZE;
+
+	if (xc->instrument_vibrato.sweep > 1)
+		xc->instrument_vibrato.sweep -= 2;
+	else
+		xc->instrument_vibrato.sweep = 0;
+}
+
+
+/* Envelope */
 
 static int get_envelope(int16 *env, int p, int x)
 {
@@ -466,7 +523,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 			m->xxh->flg & XXM_FLG_LINEAR);
 
-	xc->y_idx = xc->t_idx = 0;	/* H: where should I put this? */
+	xc->vibrato.phase = 0;
+	xc->tremolo.phase = 0;
     }
 
     if (xc->key < 0 || XXIM.ins[xc->key] == 0xff)
@@ -478,8 +536,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
 	/* H: where should I put these? */
 	xc->gvl = XXI.gvl;
-	xc->insvib_swp = XXI.vsw;
-	xc->insvib_idx = 0;
+	xc->instrument_vibrato.sweep = XXI.vsw;
+	xc->instrument_vibrato.phase = 0;
 
 	xc->v_idx = xc->p_idx = xc->f_idx = 0;
 	xc->cutoff = XXI.ifc & 0x80 ? (XXI.ifc - 0x80) * 2 : 0xff;
@@ -601,7 +659,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     finalvol = xc->volume;
 
     if (TEST(TREMOLO))
-	finalvol += waveform[xc->t_type][xc->t_idx] * xc->t_depth / 512;
+	finalvol += get_lfo(&xc->tremolo) / 512;
     if (finalvol > p->gvol_base)
 	finalvol = p->gvol_base;
     if (finalvol < 0)
@@ -628,11 +686,9 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     med_vibrato = get_med_vibrato(xc);
 
-    vibrato = waveform[XXI.vwf][xc->insvib_idx] * XXI.vde /
-				(1024 * (1 + xc->insvib_swp));
-
+    vibrato = get_instrument_vibrato(m, xc);
     if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
-	vibrato += (waveform[xc->y_type][xc->y_idx] * xc->y_depth) >> 10;
+	vibrato += get_lfo(&xc->vibrato) >> 10;
     }
 
 
@@ -789,16 +845,9 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     }
 
     /* Update vibrato, tremolo and arpeggio indexes */
-    xc->insvib_idx += XXI.vra >> 2;
-    xc->insvib_idx %= 64;
-    if (xc->insvib_swp > 1)
-	xc->insvib_swp -= 2;
-    else
-	xc->insvib_swp = 0;
-    xc->y_idx += xc->y_rate;
-    xc->y_idx %= 64;
-    xc->t_idx += xc->t_rate;
-    xc->t_idx %= 64;
+    update_instrument_vibrato(m, xc);
+    update_lfo(&xc->vibrato);
+    update_lfo(&xc->tremolo);
     xc->a_idx++;
     xc->a_idx %= xc->a_size;
 
