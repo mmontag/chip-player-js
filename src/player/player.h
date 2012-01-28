@@ -179,26 +179,6 @@ struct xmp_channel {
     
 	struct med_channel med;
 
-    /* AHX and Hively support */
-    int ahx_finit;		/* AHX filter init */
-    int ahx_fon;		/* AHX filter on */
-    int ahx_fpos;		/* AHX filter pos */
-    int ahx_fsign;		/* AHX filter sign */
-    int ahx_fignore;		/* AHX filter ignore */
-    int ahx_fwait;		/* AHX filter wait */
-    int ahx_fslide;		/* AHX filter slide in */
-    int ahx_fmin;		/* AHX filter lower limit */
-    int ahx_fmax;		/* AHX filter upper limit */
-    int ahx_fspeed;		/* AHX filter speed */
-    int ahx_wave;		/* AHX waveform */
-    int ahx_newwave;		/* AHX new waveform */
-    int ahx_sinit;		/* AHX square init */
-    int ahx_son;		/* AHX square on */
-    int ahx_spos;		/* AHX square pos */
-    int ahx_ssign;		/* AHX square sign */
-    int ahx_signore;		/* AHX square ignore */
-    int ahx_wavelen;		/* AHX wave length */
-
     struct xxm_event *delayed_event;
     int delayed_ins;		/* IT save instrument emulation */
 };
