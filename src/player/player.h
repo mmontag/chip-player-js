@@ -9,6 +9,8 @@
 #ifndef __XMP_PLAYER_H
 #define __XMP_PLAYER_H
 
+#include "stepper.h"
+
 /* Quirk control */
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -36,8 +38,6 @@
 #define XXI p->m.xxi[xc->ins][XXIM.ins[xc->key]]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
-
-#define ARP_SIZE 4
 
 struct retrig_t {
     int s;
@@ -95,6 +95,7 @@ struct instrument_vibrato {
 	int sweep;
 };
 
+
 struct xmp_channel {
     int flags;			/* Channel flags */
     int per_flags;		/* Persistent effect channel flags */
@@ -142,9 +143,7 @@ struct xmp_channel {
     int s_end;			/* Target period for tone portamento */
     int s_sgn;			/* Tone portamento up/down switch */
     int s_val;			/* Delta for tone portamento */
-    int a_val[ARP_SIZE];	/* Arpeggio relative notes */
-    int a_idx;			/* Arpeggio index */
-    int a_size;			/* Arpeggio size */
+	struct stepper arpeggio;
 	struct instrument_vibrato instrument_vibrato;
     int offset;			/* Sample offset memory */
     int offset_val;		/* Sample offset */

@@ -469,9 +469,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     xc->delay = xc->retrig = 0;
     xc->flags = flg | (xc->flags & 0xff000000);	/* keep persistent flags */
 
-    xc->a_idx = 0;
-    xc->a_size = 1;
-    xc->a_val[0] = 0;
+    reset_stepper(&xc->arpeggio);
     xc->tremor = 0;
 
     if ((uint32)xins >= m->xxh->ins || !m->xxih[xins].nsm) {
@@ -583,9 +581,8 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	    xmp_drv_resetchannel(ctx, chn);
 	    return;
 	}
-	xc->delay = xc->retrig = xc->a_idx = 0;
-	xc->a_size = 1;
-	xc->a_val[0] = 0;
+	xc->delay = xc->retrig = 0;
+	reset_stepper(&xc->arpeggio);
 	xc->flags &= (0xff000000 | IS_VALID);	/* keep persistent flags */
     }
 
@@ -848,8 +845,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     update_instrument_vibrato(m, xc);
     update_lfo(&xc->vibrato);
     update_lfo(&xc->tremolo);
-    xc->a_idx++;
-    xc->a_idx %= xc->a_size;
+    update_stepper(&xc->arpeggio);
 
     /* Process MED synth arpeggio */
     med_arp = get_med_arp(p, xc);
@@ -857,7 +853,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* Adjust pitch and pan, then play the note */
     finalpan = o->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * o->mix / 100;
-    xmp_drv_setbend(ctx, chn, xc->pitchbend + xc->a_val[xc->a_idx] + med_arp);
+    xmp_drv_setbend(ctx, chn, xc->pitchbend + get_stepper(&xc->arpeggio) + med_arp);
     xmp_drv_setpan(ctx, chn, m->flags & XMP_CTL_REVERSE ? -finalpan : finalpan);
     xmp_drv_setvol(ctx, chn, finalvol);
 
