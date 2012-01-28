@@ -385,68 +385,6 @@ void xmp_unlink_tempfiles(void)
 }
 
 
-static void get_smp_size(struct xmp_player_context *p, int awe, int *a, int *b)
-{
-    int i, len, smp_size, smp_4kb;
-
-    for (smp_4kb = smp_size = i = 0; i < p->m.xxh->smp; i++) {
-	len = p->m.xxs[i].len;
-
-	/* AWE cards work with 16 bit samples only and expand bidirectional
-	 * loops.
-	 */
-	if (awe) {
-	    if (p->m.xxs[i].flg & WAVE_BIDIR_LOOP)
-		len += p->m.xxs[i].lpe - p->m.xxs[i].lps;
-	    if (awe && (~p->m.xxs[i].flg & WAVE_16_BITS))
-		len <<= 1;
-	}
-
-	smp_size += (len += sizeof (int)); 
-	if (len < 0x1000)
-	    smp_4kb += len;
-    }
-
-    *a = smp_size;
-    *b = smp_4kb;
-}
-
-
-static int crunch_ratio(struct xmp_context *ctx, int awe)
-{
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_driver_context *d = &ctx->d;
-    struct xmp_options *o = &ctx->o;
-    int memavl, smp_size, ratio, smp_4kb;
-
-    ratio = 0x10000;
-    memavl = d->memavl;
-
-    if (memavl == 0)
-	return ratio;
-
-    memavl = memavl * 100 / (100 + o->crunch);
-
-    get_smp_size(p, awe, &smp_size, &smp_4kb);
-
-    if (smp_size > memavl) {
-	if (!awe)
-	    xmp_cvt_to8bit(ctx);
-	get_smp_size(p, awe, &smp_size, &smp_4kb);
-    }
-
-    if (smp_size > memavl) {
-	ratio = (int)
-	    (((int64)(memavl - smp_4kb) << 16) / (smp_size - smp_4kb));
-	if (o->verbosity)
-	    report ("Crunch ratio   : %d%% [Mem:%.3fMb Smp:%.3fMb]\n",
-		100 - 100 * ratio / 0x10000, .000001 * d->memavl,
-		.000001 * smp_size);
-    }
-	
-    return ratio;
-}
-
 int xmp_test_module(xmp_context ctx, char *s, char *n)
 {
     FILE *f;
@@ -519,7 +457,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct list_head *head;
     struct stat st;
     struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-    struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
     uint32 crc = 0;
@@ -623,12 +560,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	m->xxc[i].rvb = o->reverb;
     }
 
-    if (d->description && (i = (strstr(d->description, " [AWE") != NULL))) {
-	xmp_cvt_to16bit((struct xmp_context *)ctx);
-	xmp_cvt_bid2und((struct xmp_context *)ctx);
-    }
-
-    xmp_drv_flushpatch((struct xmp_context *)ctx, crunch_ratio((struct xmp_context *)ctx, i));
+    xmp_drv_flushpatch((struct xmp_context *)ctx);
 
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
      * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by

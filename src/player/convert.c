@@ -251,52 +251,6 @@ void xmp_cvt_anticlick (struct patch_info *patch)
 }
 
 
-/* Unroll bidirectional loops for AWE */
-int xmp_cvt_bid2und(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    int8 *s8;
-    int16 *s16;
-    int r, l, le, smp;
-    struct patch_info *patch, *tmp;
-    int ret = 0;
-
-    for (smp = XMP_MAXPAT; smp--;) {
-	patch = d->patch_array[smp];
-	if (!(patch && (patch->mode & WAVE_BIDIR_LOOP) && !PATCH_SYNTH(patch)))
-	    continue;
-
-	patch->mode &= ~WAVE_BIDIR_LOOP;
-
-	r = !!(patch->mode & WAVE_16_BITS);
-	le = patch->loop_end >> r;
-	l = patch->len >> r;
-	le = l = l > le ? le : l - 1;
-	l -= patch->loop_start >> r;
-	patch->len = patch->loop_end = (--le + l) << r;
-	tmp = realloc (patch, sizeof (struct patch_info) +
-					patch->len + sizeof (int));
-	if (tmp != NULL) {
-	    patch = tmp;
-	    s8 = (int8 *)patch->data;
-	    s16 = (int16 *)patch->data;
-	    if (r) {
-	        for (s16 += le; l--; *(s16 + l) = *(s16 - l));
-	    } else  {
-	        for (s8 += le; l--; *(s8 + l) = *(s8 - l));
-            }
-        } else {
-            ret = -1;
-        }
-
-	xmp_cvt_anticlick(patch);
-	d->patch_array[smp] = patch;
-    }
-
-    return ret;
-}
-
-
 /* Convert HSC OPL2 instrument data to SBI instrument data */
 void xmp_cvt_hsc2sbi(char *a)
 {

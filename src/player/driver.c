@@ -605,7 +605,7 @@ int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 }
 
 
-int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
+int xmp_drv_flushpatch(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct patch_info *patch;
@@ -613,9 +613,6 @@ int xmp_drv_flushpatch(struct xmp_context *ctx, int ratio)
 
     if (!d->patch_array)		/* FIXME -- this makes xmms happy */
 	return 0;
-
-    if (!ratio)
-	ratio = 0x10000;
 
     for (smp = XMP_MAXPAT, num = 0; smp--;)
 	if (d->patch_array[smp])
@@ -781,8 +778,6 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     patch->volume = 120;
     patch->detuning = 0;
     patch->panning = 0;
-
-    xmp_cvt_crunch(&patch, flags & XMP_SMP_8X ? 0x80000 : 0x10000);
 
     return xmp_drv_writepatch(ctx, patch);
 }

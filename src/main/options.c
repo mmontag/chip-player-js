@@ -224,7 +224,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "amplify",		 1, 0, 'a' },
 	{ "bits",		 1, 0, 'b' },
 	{ "chorus",		 1, 0, OPT_CHORUS },
-	{ "crunch",		 1, 0, OPT_CRUNCH },
 	{ "driver",		 1, 0, 'd' },
 	{ "dump",		 1, 0, OPT_DUMP },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
@@ -284,9 +283,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case OPT_CHORUS:
 	    opt->chorus = strtoul(optarg, NULL, 0);
-	    break;
-	case OPT_CRUNCH:
-	    opt->crunch = strtoul(optarg, NULL, 0);
 	    break;
 	case 'c':
 	    opt->outfile = "-";

@@ -126,7 +126,6 @@ struct xmp_options {
 #define XMP_QRK_SAVEINS	(1 << 19)	/* Always save instrument number */
 #define XMP_QRK_ITVPOR	(1 << 20)	/* Disable fine bends in IT vol fx */
 	int quirk;		/* extra control flags */
-	int crunch;		/* Sample crunching ratio */
 	int start;		/* Set initial order (default = 0) */
 	int mix;		/* Percentage of L/R channel separation */
 	int time;		/* Maximum playing time in seconds */

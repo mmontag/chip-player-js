@@ -126,7 +126,6 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
 	getval_no("amplify", o->amplify);
 	getval_no("mix", o->mix);
-	getval_no("crunch", o->crunch);
 	getval_no("chorus", o->chorus);
 	getval_no("reverb", o->reverb);
 	getval_no("srate", o->freq);
@@ -226,7 +225,6 @@ static void parse_modconf(struct xmp_context *ctx, char *s, unsigned crc, unsign
 	getval_yn(m->flags, "vblank", XMP_CTL_VBLANK);
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
 	getval_no("mix", o->mix);
-	getval_no("crunch", o->crunch);
 	getval_no("chorus", o->chorus);
 	getval_no("reverb", o->reverb);
 

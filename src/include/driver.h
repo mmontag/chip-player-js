@@ -38,7 +38,6 @@ struct patch_info {
 #define XMP_SMP_8BDIFF		0x0004
 #define XMP_SMP_7BIT		0x0008
 #define XMP_SMP_NOLOAD		0x0010	/* Get from buffer, don't load */
-#define XMP_SMP_8X		0x0020
 #define XMP_SMP_BIGEND		0x0040	/* Big-endian */
 #define XMP_SMP_VIDC		0x0080	/* Archimedes VIDC logarithmic */
 #define XMP_SMP_STEREO		0x0100	/* Interleaved stereo sample */
@@ -78,7 +77,7 @@ void	xmp_drv_close		(struct xmp_context *);
 int	xmp_drv_on		(struct xmp_context *, int);
 void	xmp_drv_off		(struct xmp_context *);
 void	xmp_drv_mute		(struct xmp_context *, int, int);
-int	xmp_drv_flushpatch	(struct xmp_context *, int);
+int	xmp_drv_flushpatch	(struct xmp_context *);
 int	xmp_drv_writepatch	(struct xmp_context *, struct patch_info *);
 int	xmp_drv_setpatch	(struct xmp_context *, int, int, int, int, int, int, int, int, int);
 int	xmp_drv_cvt8bit		(void);

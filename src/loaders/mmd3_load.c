@@ -507,7 +507,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxs[smp_idx].flg = WAVE_LOOPING;
 
 				xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate,
-					XMP_SMP_8X, &m->xxs[smp_idx], NULL);
+					0, &m->xxs[smp_idx], NULL);
 
 
 				smp_idx++;
