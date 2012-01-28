@@ -310,7 +310,6 @@ void	_xmp_player_end		(struct xmp_context *);
 int	_xmp_tell_wait		(void);
 int	_xmp_select_read	(int, int);
 int	_xmp_read_rc		(struct xmp_context *);
-void	_xmp_read_modconf	(struct xmp_context *, uint32, long);
 int	cksum			(FILE *);
 
 int8	read8s			(FILE *);

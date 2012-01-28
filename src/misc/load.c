@@ -459,7 +459,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
-    uint32 crc = 0;
 
     _D(_D_WARN "s = %s", s);
 
@@ -530,14 +529,11 @@ int xmp_load_module(xmp_context ctx, char *s)
 		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
 	    _D(_D_WARN "load format: %s (%s)", li->id, li->name);
-	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) == 0)) {
-		crc = cksum(f);
-	        break;
-	    } else {
+	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) != 0)) {
 		report("can't load module, possibly corrupted file\n");
 		i = -1;
-		break;
 	    }
+	    break;
 	}
     }
 
@@ -550,10 +546,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 	free(m->xxh);
 	return i;
     }
-
-#ifndef __native_client__
-    _xmp_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
-#endif
 
     xmp_drv_flushpatch((struct xmp_context *)ctx);
 
@@ -588,7 +580,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 	report("Channel mixing : %d%% (dynamic pan %s)\n",
 		m->flags & XMP_CTL_REVERSE ? -o->mix : o->mix,
 		m->flags & XMP_CTL_DYNPAN ? "enabled" : "disabled");
-	report("Checksum       : %u %ld\n", crc, st.st_size);
 	report("Volume amplify : %s\n", amp_factor[o->amplify]);
     }
 
