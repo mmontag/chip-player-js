@@ -98,21 +98,6 @@ get_instrument(struct xmp_mod_context *m, struct xmp_channel *xc)
 	return &m->xxi[xc->ins][mapped];
 }
 
-
-/* LFO */
-
-static inline int get_lfo(struct lfo *lfo)
-{
-	return waveform[lfo->type][lfo->phase] * lfo->depth;
-}
-
-static inline void update_lfo(struct lfo *lfo)
-{
-	lfo->phase += lfo->rate;
-	lfo->phase %= WAVEFORM_SIZE;
-}
-
-
 /* Instrument vibrato */
 
 static inline int
@@ -521,8 +506,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 			m->xxh->flg & XXM_FLG_LINEAR);
 
-	xc->vibrato.phase = 0;
-	xc->tremolo.phase = 0;
+	set_lfo_phase(&xc->vibrato, 0);
+	set_lfo_phase(&xc->tremolo, 0);
     }
 
     if (xc->key < 0 || XXIM.ins[xc->key] == 0xff)

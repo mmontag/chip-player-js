@@ -10,6 +10,7 @@
 #define __XMP_PLAYER_H
 
 #include "stepper.h"
+#include "lfo.h"
 
 /* Quirk control */
 #define HAS_QUIRK(x)	(m->quirk & (x))
@@ -82,13 +83,6 @@ struct retrig_t {
  * f_ for frequency (period) slide
  * s_ for slide to note (tone portamento)
  */
-
-struct lfo {
-	int type;
-	int rate;
-	int depth;
-	int phase;
-};
 
 struct instrument_vibrato {
 	int phase;

@@ -173,41 +173,23 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
 
 	case FX_VIBRATO:			/* Vibrato */
 		SET(VIBRATO);
-		if (LSN(fxp)) {
-			xc->vibrato.depth = LSN(fxp) * 4;
-		}
-		if (MSN(fxp)) {
-			xc->vibrato.rate = MSN(fxp);
-		}
+		set_lfo_notzero(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
 		break;
 	case FX_FINE2_VIBRA:			/* Fine vibrato (2x) */
 		SET(VIBRATO);
-		if (LSN(fxp)) {
-			xc->vibrato.depth = LSN(fxp) * 2;
-		}
-		if (MSN(fxp)) {
-			xc->vibrato.rate = MSN(fxp);
-		}
+		set_lfo_notzero(&xc->vibrato, LSN(fxp) * 2, MSN(fxp));
 		break;
 	case FX_FINE4_VIBRA:			/* Fine vibrato (4x) */
 		SET(VIBRATO);
-		if (LSN(fxp)) {
-			xc->vibrato.depth = LSN(fxp);
-		}
-		if (MSN(fxp)) {
-			xc->vibrato.rate = MSN(fxp);
-		}
+		set_lfo_notzero(&xc->vibrato, LSN(fxp), MSN(fxp));
 		break;
 	case FX_PER_VIBRATO:			/* Persistent vibrato */
-		SET_PER(VIBRATO);
-		if (LSN(fxp)) {
-			xc->vibrato.depth = LSN(fxp) * 4;
+		if (LSN(fxp) != 0) {
+			SET_PER(VIBRATO);
 		} else {
 			RESET_PER(VIBRATO);
 		}
-		if (MSN(fxp)) {
-			xc->vibrato.rate = MSN(fxp);
-		}
+		set_lfo_notzero(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
 		break;
 
     case FX_TONE_VSLIDE:			/* Toneporta + vol slide */
@@ -222,12 +204,7 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
 
 	case FX_TREMOLO:			/* Tremolo */
 		SET(TREMOLO);
-		if (MSN(fxp)) {
-			xc->tremolo.rate = MSN(fxp);
-		}
-		if (LSN(fxp)) {
-			xc->tremolo.depth = LSN(fxp);
-		}
+		set_lfo_notzero(&xc->tremolo, LSN(fxp), MSN(fxp));
 		break;
 
     case FX_SETPAN:				/* Set pan */
@@ -348,7 +325,7 @@ ex_f_porta_dn:
 	    break;
 
 		case EX_VIBRATO_WF:		/* Set vibrato waveform */
-			xc->vibrato.type = fxp & 3;
+			set_lfo_waveform(&xc->vibrato, fxp & 3);
 			break;
 
 	case EX_FINETUNE:			/* Set finetune */
@@ -377,7 +354,7 @@ ex_f_porta_dn:
 	    break;
 
 		case EX_TREMOLO_WF:		/* Set tremolo waveform */
-			xc->tremolo.type = fxp & 3;
+			set_lfo_waveform(&xc->tremolo, fxp & 3);
 			break;
 
 	case EX_RETRIG:				/* Retrig note */
