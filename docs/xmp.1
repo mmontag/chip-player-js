@@ -9,7 +9,6 @@ xmp - Extended Module Player
 [\fB-a, --amplify\fP \fIfactor\fP]
 [\fB-b, --bits\fP \fIbits\fP]
 [\fB-c, --stdout\fP]
-[\fB--chorus\fP \fIdepth\fP]
 [\fB-D\fP \fIdevice-specific parameters\fP]
 [\fB-d, --driver\fP \fIdriver\fP]
 [\fB--fix-sample-loop\fP]
@@ -32,7 +31,6 @@ xmp - Extended Module Player
 [\fB--probe-only\fP]
 [\fB-R --random\fP]
 [\fB--realtime\fP]
-[\fB--reverb\fP \fIdepth\fP]
 [\fB-r --reverse\fP]
 [\fB--show-time\fP]
 [\fB-S, --solo\fP \fIchannel-list\fP]
@@ -69,8 +67,6 @@ Set the software mixer resolution (8 or 16 bits)\&. If ommited,
 The audio device will be opened at the highest resolution available\&.
 .IP "\fB-c, --stdout\fP" 
 Mix the module to stdout\&.
-.IP "\fB--chorus\fP \fIdepth\fP" 
-Set chorus depth (if available)\&.
 .IP "\fB-D\fP \fIdevice-specific parameter\fP" 
 Pass a configuration parameter to the device driver\&. See the
 \fBDEVICE DRIVER PARAMETERS\fP section below for a
@@ -128,8 +124,6 @@ Play modules in random order\&.
 Play modules in realtime priority (available for FreeBSD)\&.
 .IP "\fB-r, --reverse\fP" 
 Reverse the left/right stereo channels\&.
-.IP "\fB--reverb\fP \fIdepth\fP" 
-Set reverb depth (if available)\&.
 .IP "\fB--show-time\fP" 
 Display elapsed and remaining time\&.
 .IP "\fB-S, --solo\fP \fIchannel-list\fP" 
@@ -156,21 +150,6 @@ when the player runs in background)\&.
 .SH "DEVICE DRIVER PARAMETERS" 
 Use the option \fB-D\fP to send parameters directly to the device
 drivers\&. Multiple \fB-D\fP options can be specified in the command line\&.
-.PP 
-OSS sequencer:
-.IP "\fB-D\fP \fIawechorus=mode\fP" 
-Set the chorus mode in AWE cards. Valid modes range from 0 to 7
-(CHORUS_1, CHORUS_2, CHORUS_3, CHORUS_4, FEEDBACK, FLANGER,
-SHORTDELAY, SHORTDELAY2)\&.
-.IP "\fB-D\fP \fIawereverb=mode\fP" 
-Set the reverb mode in AWE cards\&. Valid modes range from 0 to 7
-(ROOM1, ROOM2, ROOM3, HALL1, HALL2, PLATE, DELAY, PANNINGDELAY)\&.
-.IP "\fB-D\fP \fIopl2\fP" 
-Open the sequencer in OPL2 FM mode instead of sample mode\&. This
-parameter is required to play modules with FM instruments (RAD,
-AMD, S3M)\&.
-.IP "\fB-D\fP \fIdev=device_name\fP" 
-Set the sequencer device to open\&. Default is /dev/sequencer\&.
 .PP 
 OSS software mixing:
 .IP "\fB-D\fP \fIfrag=num,size\fP" 
