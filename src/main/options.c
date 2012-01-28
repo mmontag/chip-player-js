@@ -33,8 +33,6 @@ extern int showtime;
 extern int rt;
 #endif
 
-#define OPT_CHORUS	0x100
-#define OPT_REVERB	0x101
 #define OPT_NOPAN	0x102
 #define OPT_LOADONLY	0x103
 #define OPT_NORC	0x104
@@ -177,13 +175,11 @@ static void usage(char *s, struct xmp_options *opt)
 
 "\nPlayer sound options:\n"
 "   -8 --8bit              Convert 16 bit samples to 8 bit\n"
-"   --chorus num           Chorus depth (if supported)\n"
 "   -m --mono              Mono output\n"
 "   --nofilter             Disable IT filter\n"
 "   --nopan                Disable dynamic panning\n"
 "   -P --pan pan           Percentual pan amplitude (default %d%%)\n"
 "   -r --reverse           Reverse left/right stereo channels\n"
-"   --reverb num           Reverb depth (if supported)\n"
 "   --stereo               Stereo output\n"
 
 "\nSoftware mixer options:\n"
@@ -223,7 +219,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "8bit",		 0, 0, '8' },
 	{ "amplify",		 1, 0, 'a' },
 	{ "bits",		 1, 0, 'b' },
-	{ "chorus",		 1, 0, OPT_CHORUS },
 	{ "driver",		 1, 0, 'd' },
 	{ "dump",		 1, 0, OPT_DUMP },
 	{ "fix-sample-loops",	 0, 0, OPT_FIXLOOP },
@@ -250,7 +245,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 #ifdef HAVE_SYS_RTPRIO_H
 	{ "realtime",		 0, 0, OPT_REALTIME },
 #endif
-	{ "reverb",		 1, 0, OPT_CHORUS },
 	{ "reverse",		 0, 0, 'r' },
 	{ "show-time",		 0, 0, OPT_SHOWTIME },
 	{ "solo",		 1, 0, 'S' },
@@ -280,9 +274,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    opt->resol = atoi(optarg);
 	    if (opt->resol != 8 && opt->resol != 16)
 		opt->resol = 16;
-	    break;
-	case OPT_CHORUS:
-	    opt->chorus = strtoul(optarg, NULL, 0);
 	    break;
 	case 'c':
 	    opt->outfile = "-";
@@ -365,9 +356,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    rt = 1;
 	    break;
 #endif
-	case OPT_REVERB:
-	    opt->reverb = strtoul (optarg, NULL, 0);
-	    break;
 	case 'R':
 	    randomize = 1;
 	    break;

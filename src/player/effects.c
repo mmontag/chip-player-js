@@ -574,10 +574,16 @@ fx_finetune:
 	xc->resonance = fxp;
 	break;
     case FX_CHORUS:
+#if 0
+	/* FIXME */
 	m->xxc[chn].cho = fxp;
+#endif
 	break;
     case FX_REVERB:
+#if 0
+	/* FIXME */
 	m->xxc[chn].rvb = fxp;
+#endif
 	break;
     case FX_NSLIDE_R_DN:
 	xc->retrig = xc->rcount = MSN(fxp) ? MSN(fxp) : xc->rval;

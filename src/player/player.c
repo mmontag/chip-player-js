@@ -823,8 +823,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     xmp_drv_seteffect(ctx, chn, XMP_FX_RESONANCE, xc->resonance);
     xmp_drv_seteffect(ctx, chn, XMP_FX_CUTOFF, cutoff);
-    xmp_drv_seteffect(ctx, chn, XMP_FX_CHORUS, m->xxc[chn].cho);
-    xmp_drv_seteffect(ctx, chn, XMP_FX_REVERB, m->xxc[chn].rvb);
 }
 
 int _xmp_player_start(struct xmp_context *ctx)

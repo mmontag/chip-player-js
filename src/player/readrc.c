@@ -126,8 +126,6 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
 	getval_no("amplify", o->amplify);
 	getval_no("mix", o->mix);
-	getval_no("chorus", o->chorus);
-	getval_no("reverb", o->reverb);
 	getval_no("srate", o->freq);
 	getval_no("time", o->time);
 	getval_no("verbosity", o->verbosity);
@@ -225,8 +223,6 @@ static void parse_modconf(struct xmp_context *ctx, char *s, unsigned crc, unsign
 	getval_yn(m->flags, "vblank", XMP_CTL_VBLANK);
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
 	getval_no("mix", o->mix);
-	getval_no("chorus", o->chorus);
-	getval_no("reverb", o->reverb);
 
 	if (!strcmp (var, "clickfilter")) {
 	    if (get_yesno(val)) {

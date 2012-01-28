@@ -555,11 +555,6 @@ int xmp_load_module(xmp_context ctx, char *s)
     _xmp_read_modconf((struct xmp_context *)ctx, crc, st.st_size);
 #endif
 
-    for (i = 0; i < 64; i++) {
-	m->xxc[i].cho = o->chorus;	/* set after reading modconf */
-	m->xxc[i].rvb = o->reverb;
-    }
-
     xmp_drv_flushpatch((struct xmp_context *)ctx);
 
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm

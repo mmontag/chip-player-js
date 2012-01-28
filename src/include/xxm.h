@@ -27,8 +27,6 @@ struct xxm_channel {
 #define XXM_CHANNEL_FX    0x02
 #define XXM_CHANNEL_MUTE  0x04
 	int flg;
-	int cho;
-	int rvb;
 };
 
 struct xxm_trackinfo {

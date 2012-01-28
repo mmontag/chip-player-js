@@ -220,8 +220,11 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	else
 	    continue;
 	m->xxc[i].pan = ih.chn[i].pan;
+#if 0
+	/* FIXME */
 	m->xxc[i].cho = ih.chn[i].chorus;
 	m->xxc[i].rvb = ih.chn[i].reverb;
+#endif
 	m->xxc[i].flg |= XXM_CHANNEL_FX;
     }
     m->xxh->trk = m->xxh->pat * m->xxh->chn;

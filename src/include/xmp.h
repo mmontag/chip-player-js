@@ -16,8 +16,6 @@
 #define XMP_KEY_FADE		0x83
 
 /* DSP effects */
-#define XMP_FX_CHORUS		0x00
-#define XMP_FX_REVERB		0x01
 #define XMP_FX_CUTOFF		0x02
 #define XMP_FX_RESONANCE	0x03
 #define XMP_FX_FILTER_B0	0xb0
@@ -130,8 +128,6 @@ struct xmp_options {
 	int mix;		/* Percentage of L/R channel separation */
 	int time;		/* Maximum playing time in seconds */
 	int tempo;		/* Set initial tempo */
-	int chorus;		/* Chorus level */
-	int reverb;		/* Reverb leval */
 	int skipsmp;		/* Don't load sample data */
 	int cf_cutoff;		/* Cutoff for filter-based anticlick */
 	char *ins_path;		/* External instrument path */
