@@ -58,6 +58,7 @@ struct xxm_envelope {
 #define XXM_ENV_SUS	0x02
 #define XXM_ENV_LOOP	0x04
 #define XXM_ENV_FLT	0x08
+#define XXM_ENV_SLOOP	0x10
 	int flg;		/* Flags */
 	int npt;		/* Number of envelope points */
 	int scl;		/* Envelope scaling */

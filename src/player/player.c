@@ -162,55 +162,67 @@ static int get_envelope(struct xxm_envelope *env, int x, int def)
 }
 
 
-static int do_envelope(struct xmp_context *ctx, struct xxm_envelope *ei, uint16 *x, int rl, int chn)
+static void update_envelope(struct xxm_envelope *ei, uint16 *x, int release)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
-    int16 *env = ei->data;
-    int loop;
+	int16 *env = ei->data;
+	int has_loop, has_sus;
 
-    if (*x < 0xffff)
-	(*x)++;
+	if (*x < 0xffff)		/* increment tick */
+		(*x)++;
 
-    if (!(ei->flg & XXM_ENV_ON))
-	return 0;
+	if (~ei->flg & XXM_ENV_ON)
+		return;
 
-    if (ei->npt <= 0)
-	return 0;
+	if (ei->npt <= 0)
+		return;
 
-    if (ei->lps >= ei->npt || ei->lpe >= ei->npt)
-	loop = 0;
-    else
-	loop = ei->flg & XXM_ENV_LOOP;
-
-    if (HAS_QUIRK(XMP_QRK_ITENV)) {
-	if (!rl && (ei->flg & XXM_ENV_SUS)) {
-	    if (*x >= env[ei->sue << 1])
-		*x = env[ei->sus << 1];
-	}
-	else if (loop) {
-	    if (*x >= env[ei->lpe << 1])
-		*x = env[ei->lps << 1];
-	}
-    } else {
-	if (!rl && (ei->flg & XXM_ENV_SUS) && *x > env[ei->sus << 1])
-	    *x = env[ei->sus << 1];
-	if (loop && *x >= env[ei->lpe << 1])
-	    if (!(rl && (ei->flg & XXM_ENV_SUS) && ei->sus == ei->lpe))
-		*x = env[ei->lps << 1];
-    }
-
-    if (chn < 0)
-	return 0;
-
-    if (*x > env[rl = (ei->npt - 1) << 1]) {
-	if (!env[rl + 1])
-	    xmp_drv_resetchannel(ctx, chn);
+	if (ei->lps >= ei->npt || ei->lpe >= ei->npt)
+		has_loop = 0;
 	else
-	    return HAS_QUIRK(XMP_QRK_ENVFADE);
-    }
+		has_loop = ei->flg & XXM_ENV_LOOP;
 
-    return 0;
+	has_sus = ei->flg & XXM_ENV_SUS;
+
+	if (ei->flg & XXM_ENV_SLOOP) {
+		if (!release && has_sus) {
+			if (*x >= env[ei->sue << 1])
+				*x = env[ei->sus << 1];
+		} else if (has_loop) {
+			if (*x >= env[ei->lpe << 1])
+				*x = env[ei->lps << 1];
+		}
+	} else {
+		if (!release && has_sus && *x > env[ei->sus << 1]) {
+			/* stay in the sustain point */
+			*x = env[ei->sus << 1];
+		}
+
+		if (has_loop && *x >= env[ei->lpe << 1]) {
+	    		if (!(release && has_sus && ei->sus == ei->lpe))
+				*x = env[ei->lps << 1];
+		}
+	}
+}
+
+
+/* Returns: 0 if do nothing, <0 to reset channel, >0 if has fade */
+static int check_envelope_fade(struct xxm_envelope *ei, int x)
+{
+	int16 *env = ei->data;
+	int index;
+
+	if (~ei->flg & XXM_ENV_ON)
+		return 0;
+
+	index = (ei->npt - 1) * 2;		/* last node */
+	if (x > env[index]) {
+		if (env[index + 1] == 0)
+			return -1;
+		else
+			return 1;
+	}
+
+	return 0;
 }
 
 
@@ -615,10 +627,21 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     frq_envelope = get_envelope(&XXIH.fei, xc->f_idx, 0);
 
     /* Update envelopes */
-    if (do_envelope(ctx, &XXIH.aei, &xc->v_idx, DOENV_RELEASE, chn))
-	SET(FADEOUT);
-    do_envelope(ctx, &XXIH.pei, &xc->p_idx, DOENV_RELEASE, -1323);
-    do_envelope(ctx, &XXIH.fei, &xc->f_idx, DOENV_RELEASE, -1137);
+    update_envelope(&XXIH.aei, &xc->v_idx, DOENV_RELEASE);
+    update_envelope(&XXIH.pei, &xc->p_idx, DOENV_RELEASE);
+    update_envelope(&XXIH.fei, &xc->f_idx, DOENV_RELEASE);
+
+    switch (check_envelope_fade(&XXIH.aei, xc->v_idx)) {
+    case -1:
+	xmp_drv_resetchannel(ctx, chn);
+	break;
+    case 0:
+	break;
+    default:
+	if (HAS_QUIRK(XMP_QRK_ENVFADE)) {
+		SET(FADEOUT);
+	}
+    }
 
     /* Do note slide */
     if (TEST(NOTE_SLIDE)) {
