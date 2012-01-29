@@ -130,28 +130,35 @@ update_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 
 /* Envelope */
 
-static int get_envelope(int16 *env, int p, int x)
+static int get_envelope(struct xxm_envelope *env, int x, int def)
 {
-    int x1, x2, y1, y2;
+	int x1, x2, y1, y2;
+	int16 *data = env->data;
+	int index;
 
-    if (--p < 0)
-	return 64;
+	if (~env->flg & XXM_ENV_ON)
+		return def;
 
-    p <<= 1;
+	if (env->npt <= 0)
+		return 64;
 
-    if ((x1 = env[p]) <= x)
-	return env[p + 1];
+	index = (env->npt - 1) * 2;
 
-    do {
-	p -= 2;
-	x1 = env[p];
-    } while ((x1 > x) && p);
+	x1 = data[index];		/* last node */
+	if (x > x1)
+		return data[index + 1];
 
-    y1 = env[p + 1];
-    x2 = env[p + 2];
-    y2 = env[p + 3];
+	do {
+		index -= 2;
+		x1 = data[index];
+	} while (index > 0 && x1 > x);
 
-    return ((y2 - y1) * (x - x1) / (x2 - x1)) + y1;
+	/* interpolate */
+	y1 = data[index + 1];
+	x2 = data[index + 2];
+	y2 = data[index + 3];
+
+	return ((y2 - y1) * (x - x1) / (x2 - x1)) + y1;
 }
 
 
@@ -603,14 +610,9 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	}
     }
 
-    vol_envelope = XXIH.aei.flg & XXM_ENV_ON ?
-	get_envelope((int16 *)XXAE, XXIH.aei.npt, xc->v_idx) : 64;
-
-    pan_envelope = XXIH.pei.flg & XXM_ENV_ON ?
-	get_envelope((int16 *)XXPE, XXIH.pei.npt, xc->p_idx) : 32;
-
-    frq_envelope = XXIH.fei.flg & XXM_ENV_ON ?
-	(int16)get_envelope((int16 *)XXFE, XXIH.fei.npt, xc->f_idx) : 0;
+    vol_envelope = get_envelope(&XXIH.aei, xc->v_idx, 64);
+    pan_envelope = get_envelope(&XXIH.pei, xc->p_idx, 32);
+    frq_envelope = get_envelope(&XXIH.fei, xc->f_idx, 0);
 
     /* Update envelopes */
     if (do_envelope(ctx, &XXIH.aei, &xc->v_idx, DOENV_RELEASE, chn))
