@@ -540,7 +540,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
             env.unused = read8(f); \
 	    m->xxih[i].X##ei.flg = env.flg & IT_ENV_ON ? XXM_ENV_ON : 0; \
 	    m->xxih[i].X##ei.flg |= env.flg & IT_ENV_LOOP ? XXM_ENV_LOOP : 0; \
-	    m->xxih[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? XXM_ENV_SUS : 0; \
+	    m->xxih[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0; \
 	    m->xxih[i].X##ei.npt = env.num; \
 	    m->xxih[i].X##ei.sus = env.slb; \
 	    m->xxih[i].X##ei.sue = env.sle; \
@@ -665,7 +665,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    m->xxih[i].aei.flg = i1h.flags & IT_ENV_ON ? XXM_ENV_ON : 0;
 	    m->xxih[i].aei.flg |= i1h.flags & IT_ENV_LOOP ? XXM_ENV_LOOP : 0;
-	    m->xxih[i].aei.flg |= i1h.flags & IT_ENV_SLOOP ? XXM_ENV_SUS : 0;
+	    m->xxih[i].aei.flg |= i1h.flags & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0;
 	    m->xxih[i].aei.lps = i1h.vls;
 	    m->xxih[i].aei.lpe = i1h.vle;
 	    m->xxih[i].aei.sus = i1h.sls;

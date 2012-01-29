@@ -44,7 +44,7 @@
 				 XMP_QRK_OFSRST)
 #define XMP_QUIRK_IT		(XMP_QRK_NCWINS | XMP_QRK_INSPRI | \
 				 XMP_QRK_ENVFADE | XMP_QRK_S3MLOOP | \
-				 XMP_QRK_OFSRST | XMP_QRK_ITENV | \
+				 XMP_QRK_OFSRST | \
 				 XMP_QRK_VOLPDN | XMP_QRK_RTGINS | \
 				 XMP_QRK_SAVEINS | XMP_QRK_ITVPOR)
 
@@ -105,7 +105,6 @@ struct xmp_options {
 #define XMP_QRK_MEDBPM	(1 << 0)	/* Enable MED BPM timing */
 #define XMP_QRK_S3MLOOP	(1 << 1)	/* S3M loop mode */
 #define XMP_QRK_ENVFADE	(1 << 2)	/* Fade at end of envelope */
-#define XMP_QRK_ITENV	(1 << 3)	/* IT envelope mode */
 #define XMP_QRK_IGNWINS	(1 << 4)	/* Ignore invalid instrument */
 #define XMP_QRK_NCWINS	(1 << 5)	/* Don't cut invalid instrument */
 #define XMP_QRK_INSPRI	(1 << 6)	/* Reset note for every new != ins */
