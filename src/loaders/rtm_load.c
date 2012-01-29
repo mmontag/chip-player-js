@@ -296,22 +296,20 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].pei.lps = ri.panningEnv.loopstart;
 		m->xxih[i].pei.lpe = ri.panningEnv.loopend;
 		m->xxih[i].pei.flg = ri.panningEnv.flags;
-		if (m->xxih[i].aei.npt)
-			m->xxae[i] = calloc(4, m->xxih[i].aei.npt);
-		else
+
+		if (m->xxih[i].aei.npt <= 0)
 			m->xxih[i].aei.flg &= ~XXM_ENV_ON;
-		if (m->xxih[i].pei.npt)
-			m->xxpe[i] = calloc(4, m->xxih[i].pei.npt);
-		else
+
+		if (m->xxih[i].pei.npt <= 0)
 			m->xxih[i].pei.flg &= ~XXM_ENV_ON;
 
 		for (j = 0; j < m->xxih[i].aei.npt; j++) {
-			m->xxae[i][j * 2 + 0] = ri.volumeEnv.point[j].x;
-			m->xxae[i][j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
+			m->xxih[i].aei.data[j * 2 + 0] = ri.volumeEnv.point[j].x;
+			m->xxih[i].aei.data[j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
 		}
 		for (j = 0; j < m->xxih[i].pei.npt; j++) {
-			m->xxpe[i][j * 2 + 0] = ri.panningEnv.point[j].x;
-			m->xxpe[i][j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
+			m->xxih[i].pei.data[j * 2 + 0] = ri.panningEnv.point[j].x;
+			m->xxih[i].pei.data[j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
 		}
 
 		/* For each sample */

@@ -364,16 +364,15 @@ load_instruments:
 		m->xxih[i].pei.lps = xi.p_start;
 		m->xxih[i].pei.lpe = xi.p_end;
 		m->xxih[i].pei.flg = xi.p_type;
-		if (m->xxih[i].aei.npt)
-		    m->xxae[i] = calloc (4, m->xxih[i].aei.npt);
-		else
+
+		if (m->xxih[i].aei.npt <= 0 || m->xxih[i].aei.npt > XMP_MAXENV)
 		    m->xxih[i].aei.flg &= ~XXM_ENV_ON;
-		if (m->xxih[i].pei.npt)
-		    m->xxpe[i] = calloc (4, m->xxih[i].pei.npt);
-		else
+
+		if (m->xxih[i].pei.npt <= 0 || m->xxih[i].pei.npt > XMP_MAXENV)
 		    m->xxih[i].pei.flg &= ~XXM_ENV_ON;
-		memcpy(m->xxae[i], xi.v_env, m->xxih[i].aei.npt * 4);
-		memcpy(m->xxpe[i], xi.p_env, m->xxih[i].pei.npt * 4);
+
+		memcpy(m->xxih[i].aei.data, xi.v_env, m->xxih[i].aei.npt * 4);
+		memcpy(m->xxih[i].pei.data, xi.p_env, m->xxih[i].pei.npt * 4);
 
 		for (j = 0; j < XXM_KEY_MAX; j++)
 		    m->xxim[i].ins[j] = -1;

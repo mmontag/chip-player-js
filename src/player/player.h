@@ -33,9 +33,9 @@
 
 #define XXIH p->m.xxih[xc->ins]
 #define XXIM p->m.xxim[xc->ins]
-#define XXAE p->m.xxae[xc->ins]
-#define XXPE p->m.xxpe[xc->ins]
-#define XXFE p->m.xxfe[xc->ins]
+#define XXAE p->m.xxih[xc->ins].aei.data
+#define XXPE p->m.xxih[xc->ins].pei.data
+#define XXFE p->m.xxih[xc->ins].fei.data
 #define XXI p->m.xxi[xc->ins][XXIM.ins[xc->key]]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))

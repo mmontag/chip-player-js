@@ -356,12 +356,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].aei.flg |= ii.env[0].flg & 0x02 ? XXM_ENV_SUS : 0;
 	m->xxih[i].aei.flg |= ii.env[0].flg & 0x04 ?  XXM_ENV_LOOP : 0;
 
-	if (m->xxih[i].aei.npt)
-	    m->xxae[i] = calloc (4, m->xxih[i].aei.npt);
-
 	for (j = 0; j < m->xxih[i].aei.npt; j++) {
-	    m->xxae[i][j * 2] = ii.vol_env[j * 2];
-	    m->xxae[i][j * 2 + 1] = ii.vol_env[j * 2 + 1];
+	    m->xxih[i].aei.data[j * 2] = ii.vol_env[j * 2];
+	    m->xxih[i].aei.data[j * 2 + 1] = ii.vol_env[j * 2 + 1];
 	}
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {

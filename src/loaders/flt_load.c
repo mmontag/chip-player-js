@@ -187,10 +187,9 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 
     m->xxih[i].aei.npt = 6;
     m->xxih[i].aei.flg = XXM_ENV_ON;
-    m->xxae[i] = calloc(4, m->xxih[i].aei.npt);
 
-    m->xxae[i][0] = 0;
-    m->xxae[i][1] = am.l0 / 4;
+    m->xxih[i].aei.data[0] = 0;
+    m->xxih[i].aei.data[1] = am.l0 / 4;
 
     /*
      * Startrekker increments/decrements the envelope by the stage speed
@@ -221,9 +220,9 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
     if (b == 0) b = 1;
 
-    m->xxae[i][2] = m->xxae[i][0] + (256 * a) / (am.a1s * b);
+    m->xxih[i].aei.data[2] = m->xxih[i].aei.data[0] + (256 * a) / (am.a1s * b);
 
-    m->xxae[i][3] = am.a1l / 4;
+    m->xxih[i].aei.data[3] = am.a1l / 4;
 
     if (am.a2l > am.a1l) {
 	a = am.a2l - am.a1l;
@@ -234,9 +233,9 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
     if (b == 0) b = 1;
 
-    m->xxae[i][4] = m->xxae[i][2] + (256 * a) / (am.a2s * b);
+    m->xxih[i].aei.data[4] = m->xxih[i].aei.data[2] + (256 * a) / (am.a2s * b);
 
-    m->xxae[i][5] = am.a2l / 4;
+    m->xxih[i].aei.data[5] = am.a2l / 4;
 
     if (am.sl > am.a2l) {
 	a = am.sl - am.a2l;
@@ -247,13 +246,13 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
     if (b == 0) b = 1;
 
-    m->xxae[i][6] = m->xxae[i][4] + (256 * a) / (am.ds * b);
+    m->xxih[i].aei.data[6] = m->xxih[i].aei.data[4] + (256 * a) / (am.ds * b);
 
-    m->xxae[i][7] = am.sl / 4;
-    m->xxae[i][8] = m->xxae[i][6] + am.st;
-    m->xxae[i][9] = am.sl / 4;
-    m->xxae[i][10] = m->xxae[i][8] + (256 / am.rs);
-    m->xxae[i][11] = 0;
+    m->xxih[i].aei.data[7] = am.sl / 4;
+    m->xxih[i].aei.data[8] = m->xxih[i].aei.data[6] + am.st;
+    m->xxih[i].aei.data[9] = am.sl / 4;
+    m->xxih[i].aei.data[10] = m->xxih[i].aei.data[8] + (256 / am.rs);
+    m->xxih[i].aei.data[11] = 0;
 
     /*
      * Implement P.FALL using pitch envelope
@@ -262,13 +261,12 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     if (am.p_fall) {
 	m->xxih[i].fei.npt = 2;
 	m->xxih[i].fei.flg = XXM_ENV_ON;
-	m->xxfe[i] = calloc(4, m->xxih[i].fei.npt);
 
-	m->xxfe[i][0] = 0;
-	m->xxfe[i][1] = 0;
+	m->xxih[i].fei.data[0] = 0;
+	m->xxih[i].fei.data[1] = 0;
 
-	m->xxfe[i][2] = 1024 / abs(am.p_fall);
-	m->xxfe[i][3] = 10 * (am.p_fall < 0 ? -256 : 256);
+	m->xxih[i].fei.data[2] = 1024 / abs(am.p_fall);
+	m->xxih[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
     }
 
     xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, m->c4rate, XMP_SMP_NOLOAD,

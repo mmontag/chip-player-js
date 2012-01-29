@@ -546,10 +546,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxih[i].X##ei.sue = env.sle; \
 	    m->xxih[i].X##ei.lps = env.lpb; \
 	    m->xxih[i].X##ei.lpe = env.lpe; \
-	    if (env.num) m->xx##X##e[i] = calloc (4, env.num); \
 	    for (j = 0; j < env.num; j++) { \
-		m->xx##X##e[i][j * 2] = env.node[j].x; \
-		m->xx##X##e[i][j * 2 + 1] = env.node[j].y; \
+		m->xxih[i].X##ei.data[j * 2] = env.node[j].x; \
+		m->xxih[i].X##ei.data[j * 2 + 1] = env.node[j].y; \
 	    } \
 }
 
@@ -559,18 +558,18 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    
 	    if (m->xxih[i].pei.flg & XXM_ENV_ON)
 		for (j = 0; j < m->xxih[i].pei.npt; j++)
-		    m->xxpe[i][j * 2 + 1] += 32;
+		    m->xxih[i].pei.data[j * 2 + 1] += 32;
 
 	    if (env.flg & IT_ENV_FILTER) {
 		m->xxih[i].fei.flg |= XXM_ENV_FLT;
 		for (j = 0; j < env.num; j++) {
-		    m->xxfe[i][j * 2 + 1] += 32;
-		    m->xxfe[i][j * 2 + 1] *= 4;
+		    m->xxih[i].fei.data[j * 2 + 1] += 32;
+		    m->xxih[i].fei.data[j * 2 + 1] *= 4;
 		}
 	    } else {
 		/* Pitch envelope is *50 to get fine interpolation */
 		for (j = 0; j < env.num; j++)
-		    m->xxfe[i][j * 2 + 1] *= 50;
+		    m->xxih[i].fei.data[j * 2 + 1] *= 50;
 	    }
 
 	    /* See how many different instruments we have */
@@ -673,10 +672,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxih[i].aei.sue = i1h.sle;
 
 	    for (k = 0; i1h.enode[k * 2] != 0xff; k++);
-	    m->xxae[i] = calloc (4, k);
 	    for (m->xxih[i].aei.npt = k; k--; ) {
-		m->xxae[i][k * 2] = i1h.enode[k * 2];
-		m->xxae[i][k * 2 + 1] = i1h.enode[k * 2 + 1];
+		m->xxih[i].aei.data[k * 2] = i1h.enode[k * 2];
+		m->xxih[i].aei.data[k * 2 + 1] = i1h.enode[k * 2 + 1];
 	    }
 	    
 	    /* See how many different instruments we have */

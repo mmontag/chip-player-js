@@ -155,10 +155,11 @@ static int get_envelope(int16 *env, int p, int x)
 }
 
 
-static int do_envelope(struct xmp_context *ctx, struct xxm_envinfo *ei, uint16 *env, uint16 *x, int rl, int chn)
+static int do_envelope(struct xmp_context *ctx, struct xxm_envelope *ei, uint16 *x, int rl, int chn)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
+    int16 *env = ei->data;
     int loop;
 
     if (*x < 0xffff)
@@ -612,10 +613,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	(int16)get_envelope((int16 *)XXFE, XXIH.fei.npt, xc->f_idx) : 0;
 
     /* Update envelopes */
-    if (do_envelope(ctx, &XXIH.aei, XXAE, &xc->v_idx, DOENV_RELEASE, chn))
+    if (do_envelope(ctx, &XXIH.aei, &xc->v_idx, DOENV_RELEASE, chn))
 	SET(FADEOUT);
-    do_envelope(ctx, &XXIH.pei, XXPE, &xc->p_idx, DOENV_RELEASE, -1323);
-    do_envelope(ctx, &XXIH.fei, XXFE, &xc->f_idx, DOENV_RELEASE, -1137);
+    do_envelope(ctx, &XXIH.pei, &xc->p_idx, DOENV_RELEASE, -1323);
+    do_envelope(ctx, &XXIH.fei, &xc->f_idx, DOENV_RELEASE, -1137);
 
     /* Do note slide */
     if (TEST(NOTE_SLIDE)) {

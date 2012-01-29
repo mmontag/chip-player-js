@@ -277,10 +277,6 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 
 	reportv(ctx, 1, "Vol envelopes  : %d ", nenv);
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxae[i] = calloc(4, 32);
-	}
-
 	for (i = 0; i < nenv; i++) {
 		ins = read16b(f) - 1;
 		m->xxih[ins].aei.flg = read8(f) & 0x07;
@@ -292,8 +288,8 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 		//read8(f);	/* reserved */
 
 		for (j = 0; j < 32; j++) {
-			m->xxae[ins][j * 2 + 0] = read16b(f);
-			m->xxae[ins][j * 2 + 1] = read16b(f);
+			m->xxih[ins].aei.data[j * 2 + 0] = read16b(f);
+			m->xxih[ins].aei.data[j * 2 + 1] = read16b(f);
 		}
 		reportv(ctx, 1, ".");
 	}

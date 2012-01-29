@@ -242,26 +242,22 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	m->xxih[i].aei.lpe = LSN(val);
 	m->xxih[i].pei.lpe = MSN(val);
 
-	if (m->xxih[i].aei.npt)
-		m->xxae[i] = calloc(4, m->xxih[i].aei.npt);
-	else
+	if (m->xxih[i].aei.npt <= 0 || m->xxih[i].aei.npt >= XMP_MAXENV)
 		m->xxih[i].aei.flg &= ~XXM_ENV_ON;
 
-	if (m->xxih[i].pei.npt)
-		m->xxpe[i] = calloc(4, m->xxih[i].pei.npt);
-	else
+	if (m->xxih[i].pei.npt <= 0 || m->xxih[i].pei.npt >= XMP_MAXENV)
 		m->xxih[i].pei.flg &= ~XXM_ENV_ON;
 
 	fread(buf, 1, 30, f);		/* volume envelope points */;
 	for (j = 0; j < m->xxih[i].aei.npt; j++) {
-		m->xxae[i][j * 2] = readmem16l(buf + j * 3) / 16;
-		m->xxae[i][j * 2 + 1] = buf[j * 3 + 2];
+		m->xxih[i].aei.data[j * 2] = readmem16l(buf + j * 3) / 16;
+		m->xxih[i].aei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	fread(buf, 1, 30, f);		/* pan envelope points */;
 	for (j = 0; j < m->xxih[i].pei.npt; j++) {
-		m->xxpe[i][j * 2] = readmem16l(buf + j * 3) / 16;
-		m->xxpe[i][j * 2 + 1] = buf[j * 3 + 2];
+		m->xxih[i].pei.data[j * 2] = readmem16l(buf + j * 3) / 16;
+		m->xxih[i].pei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	fade = read8(f);		/* fadeout - 0x80->0x02 0x310->0x0c */

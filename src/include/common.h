@@ -25,6 +25,7 @@
 #define XMP_MINLEN	0x1000
 #define XMP_MAXCH	64		/* max virtual channels */
 #define XMP_MAXVOC	64		/* max physical voices */
+#define XMP_MAXENV	32		/* max envelope points */
 
 #if defined (DRIVER_OSS) || defined (DRIVER_OSS_SEQ)
 #  if defined (HAVE_SYS_SOUNDCARD_H)
@@ -198,9 +199,6 @@ struct xmp_mod_context {
 	struct xxm_instrument_map *xxim;	/* Instrument map */
 	struct xxm_instrument **xxi;	/* Instruments */
 	struct xxm_sample *xxs;		/* Samples */
-	uint16 **xxae;			/* Amplitude envelope */
-	uint16 **xxpe;			/* Pan envelope */
-	uint16 **xxfe;			/* Pitch envelope */
 	struct xxm_channel xxc[64];	/* Channel info */
 	struct xmp_ord_info xxo_info[XMP_MAXORD];
 	int xxo_fstrow[XMP_MAXORD];

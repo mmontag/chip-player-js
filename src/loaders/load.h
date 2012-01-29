@@ -57,9 +57,6 @@ extern int arch_vol_table[];
     m->xxim = calloc(sizeof (struct xxm_instrument_map), m->xxh->ins); \
     m->xxi = calloc(sizeof (struct xxm_instrument *), m->xxh->ins); \
     if (m->xxh->smp) { m->xxs = calloc (sizeof (struct xxm_sample), m->xxh->smp); }\
-    m->xxae = calloc(sizeof (uint16 *), m->xxh->ins); \
-    m->xxpe = calloc(sizeof (uint16 *), m->xxh->ins); \
-    m->xxfe = calloc(sizeof (uint16 *), m->xxh->ins); \
 } while (0)
 
 #define PATTERN_INIT() do { \

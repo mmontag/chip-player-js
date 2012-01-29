@@ -666,12 +666,8 @@ void xmp_release_module(xmp_context ctx)
 	for (i = 0; i < m->xxh->pat; i++)
 		free(m->xxp[i]);
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		if (m->xxfe[i]) free(m->xxfe[i]);
-		if (m->xxpe[i]) free(m->xxpe[i]);
-		if (m->xxae[i]) free(m->xxae[i]);
+	for (i = 0; i < m->xxh->ins; i++)
 		free(m->xxi[i]);
-	}
 
 	free(m->xxt);
 	free(m->xxp);
@@ -680,9 +676,6 @@ void xmp_release_module(xmp_context ctx)
 		free(m->xxs);
 	free(m->xxim);
 	free(m->xxih);
-	free(m->xxfe);
-	free(m->xxpe);
-	free(m->xxae);
 	free(m->xxh);
 	if (m->comment)
 		free(m->comment);

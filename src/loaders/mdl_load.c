@@ -890,7 +890,6 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (v_index[i] >= 0) {
 	    m->xxih[i].aei.flg = XXM_ENV_ON;
 	    m->xxih[i].aei.npt = 16;
-	    m->xxae[i] = calloc (4, m->xxih[i].aei.npt);
 
 	    for (j = 0; j < v_envnum; j++) {
 		if (v_index[i] == j) {
@@ -899,13 +898,15 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 		    m->xxih[i].aei.sus = v_env[j].sus & 0x0f;
 		    m->xxih[i].aei.lps = v_env[j].loop & 0x0f;
 		    m->xxih[i].aei.lpe = v_env[j].loop & 0xf0;
-		    m->xxae[i][0] = 0;
+		    m->xxih[i].aei.data[0] = 0;
 		    for (k = 1; k < m->xxih[i].aei.npt; k++) {
-			m->xxae[i][k * 2] = m->xxae[i][(k - 1) * 2] +
+			m->xxih[i].aei.data[k * 2] = m->xxih[i].aei.data[(k - 1) * 2] +
 						v_env[j].data[(k - 1) * 2];
+
 			if (v_env[j].data[k * 2] == 0)
 			    break;
-			m->xxae[i][k * 2 + 1] = v_env[j].data[(k - 1) * 2 + 1];
+
+			m->xxih[i].aei.data[k * 2 + 1] = v_env[j].data[(k - 1) * 2 + 1];
 		    }
 		    m->xxih[i].aei.npt = k;
 		    break;
@@ -917,7 +918,6 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (p_index[i] >= 0) {
 	    m->xxih[i].pei.flg = XXM_ENV_ON;
 	    m->xxih[i].pei.npt = 16;
-	    m->xxpe[i] = calloc (4, m->xxih[i].pei.npt);
 
 	    for (j = 0; j < p_envnum; j++) {
 		if (p_index[i] == j) {
@@ -926,14 +926,14 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 		    m->xxih[i].pei.sus = p_env[j].sus & 0x0f;
 		    m->xxih[i].pei.lps = p_env[j].loop & 0x0f;
 		    m->xxih[i].pei.lpe = p_env[j].loop & 0xf0;
-		    m->xxpe[i][0] = 0;
+		    m->xxih[i].pei.data[0] = 0;
 
 		    for (k = 1; k < m->xxih[i].pei.npt; k++) {
-			m->xxpe[i][k * 2] = m->xxpe[i][(k - 1) * 2] +
+			m->xxih[i].pei.data[k * 2] = m->xxih[i].pei.data[(k - 1) * 2] +
 						p_env[j].data[(k - 1) * 2];
 			if (p_env[j].data[k * 2] == 0)
 			    break;
-			m->xxpe[i][k * 2 + 1] = p_env[j].data[(k - 1) * 2 + 1];
+			m->xxih[i].pei.data[k * 2 + 1] = p_env[j].data[(k - 1) * 2 + 1];
 		    }
 		    m->xxih[i].pei.npt = k;
 		    break;
@@ -945,7 +945,6 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (f_index[i] >= 0) {
 	    m->xxih[i].fei.flg = XXM_ENV_ON;
 	    m->xxih[i].fei.npt = 16;
-	    m->xxfe[i] = calloc (4, m->xxih[i].fei.npt);
 
 	    for (j = 0; j < f_envnum; j++) {
 		if (f_index[i] == j) {
@@ -954,15 +953,15 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 		    m->xxih[i].fei.sus = f_env[j].sus & 0x0f;
 		    m->xxih[i].fei.lps = f_env[j].loop & 0x0f;
 		    m->xxih[i].fei.lpe = f_env[j].loop & 0xf0;
-		    m->xxfe[i][0] = 0;
-		    m->xxfe[i][1] = 32;
+		    m->xxih[i].fei.data[0] = 0;
+		    m->xxih[i].fei.data[1] = 32;
 
 		    for (k = 1; k < m->xxih[i].fei.npt; k++) {
-			m->xxfe[i][k * 2] = m->xxfe[i][(k - 1) * 2] +
+			m->xxih[i].fei.data[k * 2] = m->xxih[i].fei.data[(k - 1) * 2] +
 						f_env[j].data[(k - 1) * 2];
 			if (f_env[j].data[k * 2] == 0)
 			    break;
-			m->xxfe[i][k * 2 + 1] = f_env[j].data[(k - 1) * 2 + 1] * 4;
+			m->xxih[i].fei.data[k * 2 + 1] = f_env[j].data[(k - 1) * 2 + 1] * 4;
 		    }
 
 		    m->xxih[i].fei.npt = k;
