@@ -53,7 +53,7 @@ struct xxm_track {
 	struct xxm_event event[1];
 };
 
-struct xxm_envelope {
+struct xmp_envelope {
 #define XXM_ENV_ON	0x01
 #define XXM_ENV_SUS	0x02
 #define XXM_ENV_LOOP	0x04
@@ -74,9 +74,9 @@ struct xxm_instrument_header {
 	int vol;		/* Volume */
 	int nsm;		/* Number of samples */
 	int rls;		/* Release (fadeout) */
-	struct xxm_envelope aei;	/* Amplitude envelope info */
-	struct xxm_envelope pei;	/* Pan envelope info */
-	struct xxm_envelope fei;	/* Frequency envelope info */
+	struct xmp_envelope aei;	/* Amplitude envelope info */
+	struct xmp_envelope pei;	/* Pan envelope info */
+	struct xmp_envelope fei;	/* Frequency envelope info */
 	int vts;		/* Volume table speed -- for MED */
 	int wts;		/* Waveform table speed -- for MED */
 };

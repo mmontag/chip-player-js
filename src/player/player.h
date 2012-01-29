@@ -11,6 +11,7 @@
 
 #include "stepper.h"
 #include "lfo.h"
+#include "envelope.h"
 
 /* Quirk control */
 #define HAS_QUIRK(x)	(m->quirk & (x))
