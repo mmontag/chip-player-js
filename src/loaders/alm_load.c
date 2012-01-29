@@ -150,7 +150,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (!b) {		/* Instrument with header */
 	    m->xxs[i].lps = read16l(f);
 	    m->xxs[i].lpe = read16l(f);
-	    m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ? WAVE_LOOPING : 0;
+	    m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ? XMP_SAMPLE_LOOP : 0;
 	} else {
 	    fseek(s, 0, SEEK_SET);
 	}
@@ -163,7 +163,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 		(m->xxs[i].len > 1))) {
 	    report ("\n[%2X] %-14.14s %04x %04x %04x %c V%02x ", i,
 		filename, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol);
+		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
 	}
 
 	xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate,

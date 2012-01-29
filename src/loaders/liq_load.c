@@ -464,10 +464,10 @@ next_pattern:
 	m->xxs[i].lpe = li.loopend;
 
 	if (li.flags & 0x01)
-	    m->xxs[i].flg = WAVE_16_BITS;
+	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
 
 	if (li.loopend > 0)
-	    m->xxs[i].flg = WAVE_LOOPING;
+	    m->xxs[i].flg = XMP_SAMPLE_LOOP;
 
 	/* FIXME: LDSS 1.0 have global vol == 0 ? */
 	/* if (li.gvl == 0) */
@@ -483,9 +483,9 @@ next_pattern:
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d ",
 		i, m->xxih[i].name, m->xxs[i].len,
-		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, m->xxi[i][0].gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 	}

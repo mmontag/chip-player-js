@@ -352,20 +352,20 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smpnum].len = rs.length;
 			m->xxs[smpnum].lps = rs.loopbegin;
 			m->xxs[smpnum].lpe = rs.loopend;
-			m->xxs[smpnum].flg = rs.flags & 0x02 ?  WAVE_16_BITS : 0;
-			m->xxs[smpnum].flg |= rs.loop & 0x03 ?  WAVE_LOOPING : 0;
-			m->xxs[smpnum].flg |= rs.loop == 2 ? WAVE_BIDIR_LOOP : 0;
+			m->xxs[smpnum].flg = rs.flags & 0x02 ?  XMP_SAMPLE_16BIT : 0;
+			m->xxs[smpnum].flg |= rs.loop & 0x03 ?  XMP_SAMPLE_LOOP : 0;
+			m->xxs[smpnum].flg |= rs.loop == 2 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
 			if ((V(1)) && rs.length) {
 				report ("%s[%1x] %05x%c%05x %05x %c "
 						"V%02x F%+04d P%02x R%+03d",
 					j ? "\n\t\t\t\t    " : " ", j,
 					m->xxs[m->xxi[i][j].sid].len,
-					m->xxs[m->xxi[i][j].sid].flg & WAVE_16_BITS ? '+' : ' ',
+					m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 					m->xxs[m->xxi[i][j].sid].lps,
 					m->xxs[m->xxi[i][j].sid].lpe,
-					m->xxs[m->xxi[i][j].sid].flg & WAVE_BIDIR_LOOP ? 'B' :
-					m->xxs[m->xxi[i][j].sid].flg & WAVE_LOOPING ? 'L' : ' ',
+					m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+					m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 					m->xxi[i][j].vol, m->xxi[i][j].fin,
 					m->xxi[i][j].pan, m->xxi[i][j].xpo);
 

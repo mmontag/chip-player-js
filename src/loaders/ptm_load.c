@@ -140,9 +140,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxs[i].lpe = pih.loopend;
 	if (m->xxs[i].lpe)
 		m->xxs[i].lpe--;
-	m->xxs[i].flg = pih.type & 0x04 ? WAVE_LOOPING : 0;
-	m->xxs[i].flg |= pih.type & 0x08 ? WAVE_LOOPING | WAVE_BIDIR_LOOP : 0;
-	m->xxs[i].flg |= pih.type & 0x10 ? WAVE_16_BITS : 0;
+	m->xxs[i].flg = pih.type & 0x04 ? XMP_SAMPLE_LOOP : 0;
+	m->xxs[i].flg |= pih.type & 0x08 ? XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR : 0;
+	m->xxs[i].flg |= pih.type & 0x10 ? XMP_SAMPLE_16BIT : 0;
 	m->xxi[i][0].vol = pih.vol;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
@@ -153,7 +153,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len))
 	    report ("[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d\n",
 		i, m->xxih[i].name, m->xxs[i].len, pih.type & 0x10 ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */

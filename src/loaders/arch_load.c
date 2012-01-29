@@ -334,12 +334,12 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	m->volbase = 0xff;
 
 	if (m->xxs[i].lpe > 2) {
-		m->xxs[i].flg = WAVE_LOOPING;
+		m->xxs[i].flg = XMP_SAMPLE_LOOP;
 		m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
 	} else if (m->xxs[i].lpe == 2 && m->xxs[i].lps > 0) {
 		/* non-zero repeat offset and repeat length of 2
 		 * means loop to end of sample */
-		m->xxs[i].flg = WAVE_LOOPING;
+		m->xxs[i].flg = XMP_SAMPLE_LOOP;
 		m->xxs[i].lpe = m->xxs[i].len;
 	}
 
@@ -353,7 +353,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 				m->xxs[i].len,
 				m->xxs[i].lps,
 				m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol);
 		else
 			reportv(ctx, 0, ".");

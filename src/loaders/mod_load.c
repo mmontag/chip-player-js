@@ -275,7 +275,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (m->xxs[i].lpe > m->xxs[i].len)
 		m->xxs[i].lpe = m->xxs[i].len;
 	m->xxs[i].flg = (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
-		WAVE_LOOPING : 0;
+		XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
 	m->xxi[i][0].vol = mh.ins[i].volume;
 	m->xxi[i][0].pan = 0x80;
@@ -516,9 +516,9 @@ skip_test:
 	if (!m->xxs[i].len)
 	    continue;
 
-	if (m->xxs[i].flg & WAVE_LOOPING) {
+	if (m->xxs[i].flg & XMP_SAMPLE_LOOP) {
 	    if (ptkloop && m->xxs[i].lps == 0 && m->xxs[i].len > m->xxs[i].lpe)
-		m->xxs[i].flg |= WAVE_PTKLOOP;
+		m->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
 	}
 
 	if (ptsong) {

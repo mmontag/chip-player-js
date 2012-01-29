@@ -142,7 +142,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 	m->xxih[i].nsm = !!(m->xxs[i].len = ins_size[i]);
 	m->xxs[i].lps = ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * ins[i].loop_length;
-	m->xxs[i].flg = ins[i].loop_length > 1 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].vol = ins[i].volume;
 	m->xxi[i][0].fin = (int8)(ins[i].finetune << 4); 
 	m->xxi[i][0].pan = 0x80;
@@ -153,7 +153,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report("[%2X] %-22.22s %04x %04x %04x %c  %02x %+d\n",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol,
 		m->xxi[i][0].fin >> 4);
     }
 

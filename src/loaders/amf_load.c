@@ -223,16 +223,16 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		if (ver < 0x0a) {
-			m->xxs[i].flg = m->xxs[i].lps > 0 ? WAVE_LOOPING : 0;
+			m->xxs[i].flg = m->xxs[i].lps > 0 ? XMP_SAMPLE_LOOP : 0;
 		} else {
 			m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ?
-							WAVE_LOOPING : 0;
+							XMP_SAMPLE_LOOP : 0;
 		}
 
 		if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
 			report ("[%2X] %-32.32s %05x %05x %05x %c V%02x %5d\n",
 				i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-				m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ?
+				m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
 				'L' : ' ', m->xxi[i][0].vol, c2spd);
 		}
 	}

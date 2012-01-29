@@ -296,7 +296,7 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].sid = i;
 		flag = read8(f);
-		m->xxs[i].flg = flag & 0x01 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = flag & 0x01 ? XMP_SAMPLE_LOOP : 0;
 		if (ver >= 8)
 			fseek(f, 8, SEEK_CUR);	/* library name */
 		read16l(f);	/* reserved -- specs say 1 byte only*/
@@ -307,7 +307,7 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 			report("[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x\n",
 				i, name, m->xxs[i].len, m->xxs[i].lps & 0xfffff,
 				m->xxs[i].lpe & 0xfffff,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				'0' + packtype[i],
 				c3spd, m->xxi[i][0].vol);
 		}

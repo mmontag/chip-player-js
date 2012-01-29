@@ -166,7 +166,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = 0;
-		m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 		m->xxi[i][0].fin = 0;
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].sid = i;
@@ -176,7 +176,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 						"V%02x  %02x %02x %02x\n",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, unk1[i], unk2[i], unk3[i]);
 		}
 	}

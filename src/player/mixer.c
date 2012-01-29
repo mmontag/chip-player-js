@@ -261,8 +261,8 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
     struct xmp_mod_context *m = &ctx->p.m;
+    struct xxm_sample *xxs;
     struct voice_info *vi;
-    struct patch_info *pi;
     int smp_cnt, tic_cnt, lps, lpe;
     int vol_l, vol_r, itp_inc, voc;
     int prv_l, prv_r;
@@ -300,7 +300,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	if (itp_inc == 0)	/* otherwise m5v-nwlf.t crashes */
 	    continue;
 
-	pi = d->patch_array[vi->smp];
+	xxs = &m->xxs[vi->smp];
 
 	/* This is for bidirectional sample loops */
 	if (vi->fidx & FLAG_REVLOOP)
@@ -308,16 +308,16 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 
 	/* Sample loop processing. Offsets in samples, not bytes */
 	if (vi->fidx & FLAG_16_BITS) {
-	    lps = pi->loop_start >> 1;
-	    lpe = pi->loop_end >> 1;
+	    lps = xxs->lps >> 1;
+	    lpe = xxs->lpe >> 1;
 	} else {
-	    lps = pi->loop_start;
-	    lpe = pi->loop_end;
+	    lps = xxs->lps;
+	    lpe = xxs->lpe;
 	}
 
 	/* check for Protracker loop */
-	if (pi->mode & WAVE_PTKLOOP && pi->mode & WAVE_FIRSTRUN) {
-	    lpe = pi->len - 2;
+	if (xxs->flg & XMP_SAMPLE_LOOP_FULL && xxs->flg & XMP_SAMPLE_LOOP_FIRST) {
+	    lpe = xxs->len - 2;
 	    if (vi->fidx & FLAG_16_BITS)
 		lpe >>= 1;
 	}
@@ -395,9 +395,9 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
 		vi->pos -= lpe - lps;			/* forward loop */
-		if (pi->mode & WAVE_PTKLOOP) {
-	            vi->end = lpe = pi->loop_end;
-	            pi->mode &= ~WAVE_FIRSTRUN;
+		if (xxs->flg & XMP_SAMPLE_LOOP_FULL) {
+	            vi->end = lpe = xxs->lpe;
+	            xxs->flg &= ~XMP_SAMPLE_LOOP_FIRST;
 		}
 	    } else {
 		itp_inc = -itp_inc;			/* invert dir */
@@ -417,20 +417,21 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
 {
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_mod_context *m = &ctx->p.m;
     struct voice_info *vi = &d->voice_array[voc];
-    struct patch_info *pi = d->patch_array[vi->smp];
+    struct xxm_sample *xxs = &m->xxs[vi->smp];
     int lpe, res, mode;
 
-    if (PATCH_SYNTH(pi))
+    if (xxs->flg & XMP_SAMPLE_SYNTH)
 	return;
 
-    res = !!(pi->mode & WAVE_16_BITS);
-    mode = (pi->mode & WAVE_LOOPING) && !(pi->mode & WAVE_BIDIR_LOOP);
+    res = xxs->flg & XMP_SAMPLE_16BIT ? 1 : 0;
+    mode = (xxs->flg & XMP_SAMPLE_LOOP) && !(xxs->flg & XMP_SAMPLE_LOOP_BIDIR);
     mode = (mode << res) + res + 1;	/* see xmp_cvt_anticlick */
 
-    lpe = pi->len - mode;
-    if (pi->mode & WAVE_LOOPING && ~pi->mode & WAVE_FIRSTRUN)
-	lpe = lpe > pi->loop_end ? pi->loop_end : lpe;
+    lpe = xxs->len - mode;
+    if (xxs->flg & XMP_SAMPLE_LOOP && ~xxs->flg & XMP_SAMPLE_LOOP_FIRST)
+	lpe = lpe > xxs->lpe ? xxs->lpe : lpe;
 
     lpe >>= res;
 
@@ -453,54 +454,47 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     struct xmp_mod_context *m = &p->m;
     struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &d->voice_array[voc];
-    struct patch_info *pi = d->patch_array[smp];
+    struct xxm_sample *xxs = &m->xxs[smp];
 
     vi->smp = smp;
     vi->vol = 0;
-    vi->freq = (int64)C4_FREQ * pi->base_freq / o->freq;
+    vi->pan = 0;
     
-    if (PATCH_SYNTH(pi)) {
+    if (~o->outfmt & XMP_FMT_MONO) {
+	vi->fidx |= FLAG_STEREO;
+    }
+
+    if (xxs->flg & XMP_SAMPLE_SYNTH) {
 	vi->fidx = FLAG_SYNTH;
-	if (o->outfmt & XMP_FMT_MONO)
-	    vi->pan = 0;
-	else {
-	    vi->pan = pi->panning;
-	    vi->fidx |= FLAG_STEREO;
-	}
-
-	m->synth->setpatch(ctx, voc, (uint8 *)pi->data);
-
+	m->synth->setpatch(ctx, voc, xxs->data);
 	return;
     }
     
     xmp_smix_setvol(ctx, voc, 0);
 
-    vi->sptr = pi->data;
+    vi->sptr = xxs->data;
     vi->fidx = m->flags & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
 
-    if (o->outfmt & XMP_FMT_MONO) {
-	vi->pan = 0;
-    } else {
-	vi->pan = pi->panning;
+    if (~o->outfmt & XMP_FMT_MONO) {
 	vi->fidx |= FLAG_STEREO;
     }
 
-    if (pi->mode & WAVE_16_BITS)
+    if (xxs->flg & XMP_SAMPLE_16BIT)
 	vi->fidx |= FLAG_16_BITS;
 
     if (m->flags & XMP_CTL_FILTER)
 	vi->fidx |= FLAG_FILTER;
 
-    if (pi->mode & WAVE_LOOPING)
-	vi->fxor = pi->mode & WAVE_BIDIR_LOOP ? FLAG_REVLOOP : 0;
+    if (xxs->flg & XMP_SAMPLE_LOOP)
+	vi->fxor = xxs->flg & XMP_SAMPLE_LOOP_BIDIR ? FLAG_REVLOOP : 0;
     else
 	vi->fxor = vi->fidx;
 
     if (o->cf_cutoff)			/* Filter-based anticlick */
 	vi->fidx |= FLAG_FILTER;
 
-    if (pi->mode & WAVE_PTKLOOP)
-	pi->mode |= WAVE_FIRSTRUN;
+    if (xxs->flg & XMP_SAMPLE_LOOP_FULL)
+	xxs->flg |= XMP_SAMPLE_LOOP_FIRST;
 
     smix_voicepos(ctx, voc, 0, 0);
 }
@@ -508,11 +502,14 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 
 void smix_setnote(struct xmp_context *ctx, int voc, int note)
 {
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_mod_context *m = &p->m;
+    struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &d->voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note = note, 0);
-    vi->pbase = SMIX_C4NOTE * vi->freq / d->patch_array[vi->smp]->base_note;
+    vi->pbase = SMIX_C4NOTE * m->c4rate / o->freq;
     vi->attack = SLOW_ATTACK;
 }
 
@@ -593,6 +590,7 @@ int xmp_smix_numvoices(struct xmp_context *ctx, int num)
     }
 }
 
+#if 0
 /* WARNING! Output samples must have the same byte order of the host machine!
  * (That's what happens in most cases anyway)
  */
@@ -606,13 +604,13 @@ int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
 	    return XMP_ERR_PATCH;
 
 	if (patch->mode & WAVE_UNSIGNED)
-	    xmp_cvt_sig2uns (patch->len, patch->mode & WAVE_16_BITS,
+	    xmp_cvt_sig2uns (patch->len, patch->mode & XMP_SAMPLE_16BIT,
 		patch->data);
     }
 
     return 0;
 }
-
+#endif
 
 int xmp_smix_on(struct xmp_context *ctx)
 {

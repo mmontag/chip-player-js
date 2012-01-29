@@ -179,10 +179,10 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].len = 2 * mh.ins[i].size;
 		m->xxs[i].lps = 2 * mh.ins[i].loop_start;
 		m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
-		m->xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
-		if (m->xxs[i].flg & WAVE_LOOPING) {
+		m->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+		if (m->xxs[i].flg & XMP_SAMPLE_LOOP) {
 			if (m->xxs[i].len == 0 && m->xxs[i].len > m->xxs[i].lpe)
-				m->xxs[i].flg |= WAVE_PTKLOOP;
+				m->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
 		}
 		m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
 		m->xxi[i][0].vol = mh.ins[i].volume;
@@ -201,7 +201,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 				mh.ins[i].loop_size > 1 ? 'L' : ' ',
 				m->xxi[i][0].vol,
 				m->xxi[i][0].fin >> 4,
-				m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
+				m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 		}
 	}
 

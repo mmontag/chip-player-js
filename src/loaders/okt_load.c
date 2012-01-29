@@ -139,7 +139,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	mode[i] = read16b(f);
 
 	m->xxih[i].nsm = !!(m->xxs[i].len);
-	m->xxs[i].flg = looplen > 2 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = j;
 
@@ -148,7 +148,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
 	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, mode[i]);
+		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol, mode[i]);
 	if (m->xxih[i].nsm)
 	    j++;
     }

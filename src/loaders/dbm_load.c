@@ -115,8 +115,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		if (m->xxi[i][0].pan > 0xff)
 			m->xxi[i][0].pan = 0xff;
 		flags = read16b(f);
-		m->xxs[snum].flg = flags & 0x03 ? WAVE_LOOPING : 0;
-		m->xxs[snum].flg |= flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
+		m->xxs[snum].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
+		m->xxs[snum].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
 		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 
@@ -237,7 +237,7 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 		m->xxs[i].len = read32b(f);
 
 		if (flags & 0x02) {
-			m->xxs[i].flg |= WAVE_16_BITS;
+			m->xxs[i].flg |= XMP_SAMPLE_16BIT;
 			m->xxs[i].len <<= 1;
 			m->xxs[i].lps <<= 1;
 			m->xxs[i].lpe <<= 1;
@@ -257,10 +257,10 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 
 		reportv(ctx, 2, "\n[%2X] %08x %05x%c%05x %05x %c ",
 			i, flags, m->xxs[i].len,
-			m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+			m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
-			m->xxs[i].flg & WAVE_LOOPING ?
-			(m->xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' : 'L') : ' ');
+			m->xxs[i].flg & XMP_SAMPLE_LOOP ?
+			(m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 'L') : ' ');
 
 		reportv(ctx, 0, ".");
 	}

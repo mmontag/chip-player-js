@@ -212,7 +212,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
                 m->xxs[i].lpe = m->xxs[i].lps + read32l(f);
 		if (m->xxs[i].lpe)
 			m->xxs[i].lpe -= 1;
-		m->xxs[i].flg = m->xxs[i].lps > 0 ?  WAVE_LOOPING : 0;
+		m->xxs[i].flg = m->xxs[i].lps > 0 ?  XMP_SAMPLE_LOOP : 0;
 		fread(m->xxih[i].name, 1, 11, f);
 		for (j = 0; j < 11; j++) {
 			if (m->xxih[i].name[j] == 0x0d)
@@ -227,7 +227,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 			report("[%2X] %-10.10s  %05x %05x %05x %c V%02x\n",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol);
 		}
 	}

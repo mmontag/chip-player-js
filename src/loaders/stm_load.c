@@ -144,7 +144,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxs[i].lpe = sfh.ins[i].loopend;
 	if (m->xxs[i].lpe == 0xffff)
 	    m->xxs[i].lpe = 0;
-	m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].vol = sfh.ins[i].volume;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
@@ -154,7 +154,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
 	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, sfh.ins[i].c2spd);
+		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol, sfh.ins[i].c2spd);
 	}
 
 	sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;

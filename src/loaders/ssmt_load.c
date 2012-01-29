@@ -208,7 +208,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 #if 0
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = 0;
-		m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 		m->xxi[i][0].fin = 0;
 		m->xxi[i][0].pan = 0x80;
 #endif
@@ -217,7 +217,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 			report("\n[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
 				m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol);
 		}
 	}

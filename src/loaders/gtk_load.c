@@ -104,8 +104,8 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		m->xxih[i].nsm = !!m->xxs[i].len;
 		m->xxi[i][0].sid = i;
-		m->xxs[i].flg = size > 2 ? WAVE_LOOPING : 0;
-		m->xxs[i].flg |= bits > 1 ? WAVE_16_BITS : 0;
+		m->xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;
+		m->xxs[i].flg |= bits > 1 ? XMP_SAMPLE_16BIT : 0;
 
 		if (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1)) {
 			if (V(1)) {
@@ -116,7 +116,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 					bits > 1 ? '+' : ' ',
 					m->xxs[i].lps,
 					size,
-					m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+					m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 					m->xxi[i][0].vol, m->xxi[i][0].fin,
 					c2spd);
 			} else {

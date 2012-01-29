@@ -84,7 +84,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	m->xxs[i].len = 2 * fh.ins[i].size;
 	m->xxs[i].lps = 2 * fh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * fh.ins[i].loop_size;
-	m->xxs[i].flg = fh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = fh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].fin = (int8)fh.ins[i].finetune << 4;
 	m->xxi[i][0].vol = fh.ins[i].volume;
 	m->xxi[i][0].pan = 0x80;

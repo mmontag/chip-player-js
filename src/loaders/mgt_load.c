@@ -132,8 +132,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		read8(f);		/* vol R */
 		m->xxi[i][0].pan = 0x80;
 		flags = read8(f);
-		m->xxs[i].flg = flags & 0x03 ? WAVE_LOOPING : 0;
-		m->xxs[i].flg |= flags & 0x02 ? WAVE_BIDIR_LOOP : 0;
+		m->xxs[i].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
+		m->xxs[i].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 		m->xxi[i][0].fin += 0 * read8(f);	// FIXME
 		read8(f);		/* unused */
 		read8(f);
@@ -150,8 +150,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 			report("[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' :
-					m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+					m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, c2spd);
 		}
 	}

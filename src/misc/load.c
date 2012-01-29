@@ -547,7 +547,7 @@ int xmp_load_module(xmp_context ctx, char *s)
 	return i;
     }
 
-    xmp_drv_flushpatch((struct xmp_context *)ctx);
+    /*xmp_drv_flushpatch((struct xmp_context *)ctx);*/
 
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
      * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
@@ -672,8 +672,13 @@ void xmp_release_module(xmp_context ctx)
 	free(m->xxt);
 	free(m->xxp);
 	free(m->xxi);
-	if (m->xxh->smp > 0)
+	if (m->xxh->smp > 0) {
+		for (i = 0; i < m->xxh->smp; i++) {
+			if (m->xxs[i].data != NULL)
+				free(m->xxs[i].data);
+		}
 		free(m->xxs);
+	}
 	free(m->xxim);
 	free(m->xxih);
 	free(m->xxh);

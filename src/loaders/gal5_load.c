@@ -236,13 +236,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	m->xxs[i].flg = 0;
 	if (flags & 0x04)
-		m->xxs[i].flg |= WAVE_16_BITS;
+		m->xxs[i].flg |= XMP_SAMPLE_16BIT;
 	if (flags & 0x08)
-		m->xxs[i].flg |= WAVE_LOOPING;
+		m->xxs[i].flg |= XMP_SAMPLE_LOOP;
 	if (flags & 0x10)
-		m->xxs[i].flg |= WAVE_LOOPING | WAVE_BIDIR_LOOP;
+		m->xxs[i].flg |= XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR;
 	if (~flags & 0x80)
-		m->xxs[i].flg |= WAVE_UNSIGNED;
+		m->xxs[i].flg |= XMP_SAMPLE_UNSIGNED;
 
 	srate = read32l(f);
 	finetune = 0;
@@ -254,11 +254,11 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	reportv(ctx, 1, "[%x] %05x%c%05x %05x %c V%02x %04x %5d ",
 		0, m->xxs[i].len,
-		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps,
 		m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_BIDIR_LOOP ? 'B' : 
-			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
+			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, flags, srate);
 
 	if (m->xxs[i].len > 1) {

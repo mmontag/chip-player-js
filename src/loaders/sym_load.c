@@ -385,7 +385,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].lps = read24l(f) << 1;
 			looplen = read24l(f) << 1;
 			if (looplen > 2)
-				m->xxs[i].flg |= WAVE_LOOPING;
+				m->xxs[i].flg |= XMP_SAMPLE_LOOP;
 			m->xxs[i].lpe = m->xxs[i].lps + looplen;
 			m->xxih[i].nsm = 1;
 			m->xxi[i][0].vol = read8(f);
@@ -400,7 +400,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			report("\n[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d ",
 				i, m->xxih[i].name, m->xxs[i].len,
 				m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, m->xxi[i][0].fin);
 		}
 

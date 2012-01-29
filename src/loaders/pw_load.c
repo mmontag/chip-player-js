@@ -156,7 +156,7 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].len = 2 * mh.ins[i].size;
 		m->xxs[i].lps = 2 * mh.ins[i].loop_start;
 		m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
-		m->xxs[i].flg = mh.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 		m->xxi[i][0].fin = (int8) (mh.ins[i].finetune << 4);
 		m->xxi[i][0].vol = mh.ins[i].volume;
 		m->xxi[i][0].pan = 0x80;
@@ -164,9 +164,9 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 		m->xxih[i].rls = 0xfff;
 
-		if (m->xxs[i].flg & WAVE_LOOPING) {
+		if (m->xxs[i].flg & XMP_SAMPLE_LOOP) {
 			if (m->xxs[i].lps == 0 && m->xxs[i].len > m->xxs[i].lpe)
-				m->xxs[i].flg |= WAVE_PTKLOOP;
+				m->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
 		}
 
 		copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
@@ -179,7 +179,7 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 				     m->xxs[i].lps, m->xxs[i].lpe,
 				     mh.ins[i].loop_size > 1 ? 'L' : ' ',
 				     m->xxi[i][0].vol, m->xxi[i][0].fin >> 4,
-				     m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
+				     m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 			}
 		}
 	}

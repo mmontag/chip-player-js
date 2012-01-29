@@ -76,7 +76,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].vol = read8(f);
 	m->xxs[i].len = 2 * read16b(f);
 	fread(m->xxih[i].name, 1, 20, f);
-	m->xxs[i].flg = read8(f) & 1 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = read8(f) & 1 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].fin = read8(f);
 	m->xxs[i].lps = 2 * read16b(f);
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * read16b(f);
@@ -89,7 +89,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 	if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 2))) {
 	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x %+d\n",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-			m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+			m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
 	}
     }

@@ -113,7 +113,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].nsm = !!(m->xxs[i].len = 2 * ih.ins[i].len);
 	m->xxs[i].lps = 2 * ih.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * ih.ins[i].loop_size;
-	m->xxs[i].flg = ih.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].vol = ih.ins[i].volume;
 	m->xxi[i][0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
 	m->xxi[i][0].pan = 0x80;
@@ -121,7 +121,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (V(1) && m->xxs[i].len > 2)
 	    report ("[%2X] %-22.22s %04x %04x %04x %c %02x %+01x\n",
 		i, ih.ins[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol,
 		m->xxi[i][0].fin >> 4);
     }
 

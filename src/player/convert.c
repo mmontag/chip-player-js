@@ -51,7 +51,7 @@ static int8 vdic_table[128] = {
 
 
 /* Convert differential to absolute sample data */
-void xmp_cvt_diff2abs (int l, int r, char *p)
+void xmp_cvt_diff2abs (int l, int r, uint8 *p)
 {
     uint16* w = (uint16*) p;
     uint16 abs = 0;
@@ -86,7 +86,7 @@ void xmp_cvt_sig2uns(int l, int r, char *p)
 
 
 /* Convert little-endian 16 bit samples to big-endian */
-void xmp_cvt_sex(int l, char *p)
+void xmp_cvt_sex(int l, uint8 *p)
 {
     uint8 b;
 
@@ -100,7 +100,7 @@ void xmp_cvt_sex(int l, char *p)
 
 
 /* Downmix stereo samples to mono */
-void xmp_cvt_stdownmix(int l, int r, char *p)
+void xmp_cvt_stdownmix(int l, int r, uint8 *p)
 {
     int16 *b = (int16 *)p;
     int i;
@@ -118,14 +118,14 @@ void xmp_cvt_stdownmix(int l, int r, char *p)
 
 
 /* Convert 7 bit samples to 8 bit */
-void xmp_cvt_2xsmp(int l, char *p)
+void xmp_cvt_2xsmp(int l, uint8 *p)
 {
     for (; l--; *p++ <<= 1);
 }
 
 
 /* Convert Archimedes VIDC samples to linear */
-void xmp_cvt_vidc(int l, char *p)
+void xmp_cvt_vidc(int l, uint8 *p)
 {
 	int i;
 	uint8 x;
@@ -140,34 +140,33 @@ void xmp_cvt_vidc(int l, char *p)
 
 
 /* Hipolito's routine to minimize loop clicking */
-void xmp_cvt_anticlick (struct patch_info *patch)
+void xmp_cvt_anticlick (struct xxm_sample *xxs)
 {
-    if (PATCH_SYNTH(patch))
+    if (xxs->flg & XMP_SAMPLE_SYNTH)
 	return;
 
     /* Ok, I need this messy code to anticlick in AWE :-( */
 
-    if ((patch->mode & WAVE_LOOPING) && !(patch->mode & WAVE_BIDIR_LOOP)) {
-	if (patch->mode & WAVE_16_BITS) {
-	    patch->data[patch->loop_end++] = patch->data[patch->loop_start++];
-	    patch->data[patch->loop_end++] = patch->data[patch->loop_start++];
-	    patch->data[patch->loop_end] = patch->data[patch->loop_start];
-	    patch->data[patch->loop_end + 1] = patch->data[patch->loop_start + 1];
-	    patch->len += 4;
+    if ((xxs->flg & XMP_SAMPLE_LOOP) && !(xxs->flg & XMP_SAMPLE_LOOP_BIDIR)) {
+	if (xxs->flg & XMP_SAMPLE_16BIT) {
+	    xxs->data[xxs->lpe++] = xxs->data[xxs->lps++];
+	    xxs->data[xxs->lpe++] = xxs->data[xxs->lps++];
+	    xxs->data[xxs->lpe] = xxs->data[xxs->lps];
+	    xxs->data[xxs->lpe + 1] = xxs->data[xxs->lps + 1];
+	    xxs->len += 4;
 	} else {
-	    patch->data[patch->loop_end++] = patch->data[patch->loop_start++];
-	    patch->data[patch->loop_end] = patch->data[patch->loop_start];
-	    patch->len += 2;
+	    xxs->data[xxs->lpe++] = xxs->data[xxs->lps++];
+	    xxs->data[xxs->lpe] = xxs->data[xxs->lps];
+	    xxs->len += 2;
 	}
-    }
-    else {
-	if (patch->mode & WAVE_16_BITS) {
-	    patch->data[patch->len] = patch->data[patch->len - 2];
-	    patch->data[patch->len + 1] = patch->data[patch->len - 1];
-	    patch->len += 2;
+    } else {
+	if (xxs->flg & XMP_SAMPLE_16BIT) {
+	    xxs->data[xxs->len] = xxs->data[xxs->len - 2];
+	    xxs->data[xxs->len + 1] = xxs->data[xxs->len - 1];
+	    xxs->len += 2;
 	} else {
-	    patch->data[patch->len] = patch->data[patch->len - 1];
-	    patch->len++;
+	    xxs->data[xxs->len] = xxs->data[xxs->len - 1];
+	    xxs->len++;
 	}
     }
 }

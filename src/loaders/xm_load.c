@@ -380,7 +380,7 @@ load_instruments:
 		memcpy(&m->xxim[i].ins, xi.sample, 96);
 		for (j = 0; j < 96; j++) {
 		    if (m->xxim[i].ins[j] >= m->xxih[i].nsm)
-			m->xxim[i].ins[j] = (uint8)XMP_MAXPAT;
+			m->xxim[i].ins[j] = 255;
 		}
 	    }
 
@@ -416,11 +416,11 @@ load_instruments:
 		    m->xxs[sample_num].lps--;
 		m->xxs[sample_num].lpe = xsh[j].loop_start + xsh[j].loop_length;
 		m->xxs[sample_num].flg = xsh[j].type & XM_SAMPLE_16BIT ?
-		    WAVE_16_BITS : 0;
+		    XMP_SAMPLE_16BIT : 0;
 		m->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_FORWARD ?
-		    WAVE_LOOPING : 0;
+		    XMP_SAMPLE_LOOP : 0;
 		m->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_PINGPONG ?
-		    WAVE_LOOPING | WAVE_BIDIR_LOOP : 0;
+		    XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR : 0;
 	    }
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
 		if (sample_num >= MAX_SAMP)
@@ -430,11 +430,11 @@ load_instruments:
 			"V%02x F%+04d P%02x R%+03d",
 			j ? "\n\t\t\t\t" : "\t", j,
 			m->xxs[m->xxi[i][j].sid].len,
-			m->xxs[m->xxi[i][j].sid].flg & WAVE_16_BITS ? '+' : ' ',
+			m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			m->xxs[m->xxi[i][j].sid].lps,
 			m->xxs[m->xxi[i][j].sid].lpe,
-			m->xxs[m->xxi[i][j].sid].flg & WAVE_BIDIR_LOOP ? 'B' :
-			m->xxs[m->xxi[i][j].sid].flg & WAVE_LOOPING ? 'L' : ' ',
+			m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+			m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			m->xxi[i][j].vol, m->xxi[i][j].fin,
 			m->xxi[i][j].pan, m->xxi[i][j].xpo);
 

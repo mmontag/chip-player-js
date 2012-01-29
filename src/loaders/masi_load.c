@@ -153,7 +153,7 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	m->xxih[i].nsm = !!(m->xxs[i].len);
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);
-	m->xxs[i].flg = m->xxs[i].lpe > 2 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = m->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
 	read16l(f);
 
 	if ((int32)m->xxs[i].lpe < 0)
@@ -178,7 +178,7 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1)))
 	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol, finetune, srate);
+		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol, finetune, srate);
 
 	srate = 8363 * srate / 8448;
 	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);

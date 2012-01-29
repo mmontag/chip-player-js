@@ -258,7 +258,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint32 lsiz = mask & MASK ? read16b(f) : 0;
 		m->xxs[i].len = m->xxs[i].lps + lsiz;
 		m->xxs[i].lpe = m->xxs[i].lps + lsiz;
-		m->xxs[i].flg = lsiz > 1 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
 	}
 
 	m->xxh->chn = 4;
@@ -381,7 +381,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe,
-			m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			m->xxi[i][0].vol);
 
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,

@@ -774,15 +774,15 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[i].len = ish.length * 2;
 	    m->xxs[i].lps = ish.loopbeg * 2;
 	    m->xxs[i].lpe = ish.loopend * 2;
-	    m->xxs[i].flg = WAVE_16_BITS;
+	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
 	} else {
 	    m->xxs[i].len = ish.length;
 	    m->xxs[i].lps = ish.loopbeg;
 	    m->xxs[i].lpe = ish.loopend;
 	}
 
-	m->xxs[i].flg |= ish.flags & IT_SMP_LOOP ? WAVE_LOOPING : 0;
-	m->xxs[i].flg |= ish.flags & IT_SMP_BLOOP ? WAVE_BIDIR_LOOP : 0;
+	m->xxs[i].flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
+	m->xxs[i].flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
 	if (~ifh.flags & IT_USE_INST) {
 	    /* Create an instrument for each sample */
@@ -844,7 +844,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    /* Handle compressed samples using Tammo Hinrichs' routine */
 	    if (ish.flags & IT_SMP_COMP) {
-		char *buf;
+		uint8 *buf;
 		buf = calloc(1, m->xxs[i].len);
 
 		if (ish.flags & IT_SMP_16BIT) {

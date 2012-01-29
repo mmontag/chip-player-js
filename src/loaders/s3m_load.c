@@ -451,7 +451,8 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxi[i][0].vol = sah.vol;
 	    c2spd_to_note(sah.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 	    m->xxi[i][0].xpo += 12;
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, 0, NULL, (char *)&sah.reg);
+	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, XMP_SMP_ADLIB,
+					&m->xxs[i], (char *)&sah.reg);
 	    if (V(0)) {
 	        if (V(1)) {
 		    report ("\n[%2X] %-28.28s ", i, m->xxih[i].name);
@@ -499,8 +500,8 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxs[i].lps = sih.loopbeg;
 	m->xxs[i].lpe = sih.loopend;
 
-	m->xxs[i].flg = sih.flags & 1 ? WAVE_LOOPING : 0;
-	m->xxs[i].flg |= sih.flags & 4 ? WAVE_16_BITS : 0;
+	m->xxs[i].flg = sih.flags & 1 ? XMP_SAMPLE_LOOP : 0;
+	m->xxs[i].flg |= sih.flags & 4 ? XMP_SAMPLE_16BIT : 0;
 	m->xxi[i][0].vol = sih.vol;
 	sih.magic = 0;
 
@@ -509,9 +510,9 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	if ((V(1)) && (strlen((char *) sih.name) || m->xxs[i].len))
 	    report ("\n[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d ",
 			i, m->xxih[i].name, m->xxs[i].len,
-			m->xxs[i].flg & WAVE_16_BITS ?'+' : ' ',
+			m->xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
-			m->xxs[i].flg & WAVE_LOOPING ?  'L' : ' ',
+			m->xxs[i].flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
 			m->xxi[i][0].vol, sih.c2spd);
 
 	c2spd_to_note(sih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);

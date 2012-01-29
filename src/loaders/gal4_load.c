@@ -298,15 +298,15 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	
 		m->xxs[snum].flg = 0;
 		if (flags & 0x04)
-			m->xxs[snum].flg |= WAVE_16_BITS;
+			m->xxs[snum].flg |= XMP_SAMPLE_16BIT;
 		if (flags & 0x08)
-			m->xxs[snum].flg |= WAVE_LOOPING;
+			m->xxs[snum].flg |= XMP_SAMPLE_LOOP;
 		if (flags & 0x10)
-			m->xxs[snum].flg |= WAVE_BIDIR_LOOP;
+			m->xxs[snum].flg |= XMP_SAMPLE_LOOP_BIDIR;
 		/* if (flags & 0x80)
 			m->xxs[snum].flg |= ? */
 	
-		if (m->xxs[snum].flg & WAVE_16_BITS) {
+		if (m->xxs[snum].flg & XMP_SAMPLE_16BIT) {
 			m->xxs[snum].len <<= 1;
 			m->xxs[snum].lps <<= 1;
 			m->xxs[snum].lpe <<= 1;
@@ -325,11 +325,11 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	
 		reportv(ctx, 1, "[%X] %05x%c%05x %05x %c V%02x P%02x %5d ",
 			j, m->xxs[snum].len,
-			m->xxs[snum].flg & WAVE_16_BITS ? '+' : ' ',
+			m->xxs[snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			m->xxs[snum].lps,
 			m->xxs[snum].lpe,
-			m->xxs[snum].flg & WAVE_BIDIR_LOOP ? 'B' : 
-				m->xxs[snum].flg & WAVE_LOOPING ? 'L' : ' ',
+			m->xxs[snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
+				m->xxs[snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			m->xxi[i][j].vol,
 			m->xxi[i][j].pan,
 			srate);

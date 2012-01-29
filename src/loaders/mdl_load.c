@@ -590,24 +590,24 @@ static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);
 
-	m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
 	if (m->xxs[i].lpe > 0)
 	    m->xxs[i].lpe--;
 
 	read8(f);			/* Volume in DMDL 0.0 */
 	x = read8(f);
-	m->xxs[i].flg |= (x & 0x01) ? WAVE_16_BITS : 0;
-	m->xxs[i].flg |= (x & 0x02) ? WAVE_BIDIR_LOOP : 0;
+	m->xxs[i].flg |= (x & 0x01) ? XMP_SAMPLE_16BIT : 0;
+	m->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	packinfo[i] = (x & 0x0c) >> 2;
 
 	if (V(2)) {
 	    report ("%05x%c %05x %05x %c %6d ",
 		m->xxs[i].len,
-		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps,
 		m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		c2spd[i]);
 	    switch (packinfo[i]) {
 	    case 0:
@@ -663,21 +663,21 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);
 
-	m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
 
 	m->xxi[i][0].vol = read8(f);	/* Volume */
 	m->xxi[i][0].pan = 0x80;
 
 	x = read8(f);
-	m->xxs[i].flg |= (x & 0x01) ? WAVE_16_BITS : 0;
-	m->xxs[i].flg |= (x & 0x02) ? WAVE_BIDIR_LOOP : 0;
+	m->xxs[i].flg |= (x & 0x01) ? XMP_SAMPLE_16BIT : 0;
+	m->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	packinfo[i] = (x & 0x0c) >> 2;
 
 	if (V(1)) {
 	    report ("%5d V%02x %05x%c %05x %05x ",
 		c2spd[i],  m->xxi[i][0].vol,
-		m->xxs[i].len, m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].len, m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe);
 	    switch (packinfo[i]) {
 	    case 0:
@@ -714,7 +714,7 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
     reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
-	smpbuf = calloc (1, m->xxs[i].flg & WAVE_16_BITS ?
+	smpbuf = calloc (1, m->xxs[i].flg & XMP_SAMPLE_16BIT ?
 		m->xxs[i].len << 1 : m->xxs[i].len);
 
 	switch (packinfo[i]) {

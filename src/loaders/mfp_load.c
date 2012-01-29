@@ -123,7 +123,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		loop_size = read16b(f);
 
 		m->xxs[i].lpe = m->xxs[i].lps + 2 * loop_size;
-		m->xxs[i].flg = loop_size > 1 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].sid = i;
 		m->xxih[i].nsm = !!(m->xxs[i].len);
@@ -135,7 +135,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
                         	m->xxs[i].lpe,
 				loop_size > 1 ? 'L' : ' ',
                         	m->xxi[i][0].vol, m->xxi[i][0].fin >> 4,
-                        	m->xxs[i].flg & WAVE_PTKLOOP ? '!' : ' ');
+                        	m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 		}
 	}
 

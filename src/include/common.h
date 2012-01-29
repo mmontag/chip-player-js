@@ -17,7 +17,6 @@
  * number above the limit.
  */
 
-#define XMP_MAXPAT	1024		/* max number of samples in driver */
 #define XMP_MAXORD	256		/* max number of patterns in module */
 #define XMP_MAXROW	256		/* pattern loop stack size */
 #define XMP_MAXVOL	(0x400 * 0x7fff)
@@ -26,27 +25,6 @@
 #define XMP_MAXCH	64		/* max virtual channels */
 #define XMP_MAXVOC	64		/* max physical voices */
 #define XMP_MAXENV	32		/* max envelope points */
-
-#if defined (DRIVER_OSS) || defined (DRIVER_OSS_SEQ)
-#  if defined (HAVE_SYS_SOUNDCARD_H)
-#    include <sys/soundcard.h>
-#  elif defined (HAVE_MACHINE_SOUNDCARD_H)
-#    include <machine/soundcard.h>
-#  endif
-#else
-#  undef USE_ISA_CARDS
-#  define WAVE_16_BITS    0x01	/* bit 0 = 8 or 16 bit wave data. */
-#  define WAVE_UNSIGNED   0x02 	/* bit 1 = Signed - Unsigned data. */
-#  define WAVE_LOOPING    0x04	/* bit 2 = looping enabled-1. */
-#  define WAVE_BIDIR_LOOP 0x08	/* bit 3 = Set is bidirectional looping. */
-#  define WAVE_LOOP_BACK  0x10	/* bit 4 = Set is looping backward. */
-#endif
-
-/* For emulation of Amiga Protracker-style sample loops: play entire
- * sample once before looping -- see menowantmiseria.mod
- */
-#define WAVE_PTKLOOP	0x80	/* bit 7 = Protracker loop enable */
-#define WAVE_FIRSTRUN	0x40	/* bit 6 = Protracker loop control */
 
 #include <stdio.h>
 #include <signal.h>
@@ -269,7 +247,7 @@ struct xmp_driver_context {
 	int *ch2vo_count;
 	int *ch2vo_array;
 	struct voice_info *voice_array;
-	struct patch_info **patch_array;
+	/* struct patch_info **patch_array; */
 
 	void *buffer;
 	int size;

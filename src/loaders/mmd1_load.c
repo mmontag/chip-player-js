@@ -436,7 +436,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].lpe = m->xxs[smp_idx].lps +
 						2 * song.sample[i].replen;
 			m->xxs[smp_idx].flg = song.sample[i].replen > 1 ?
-						WAVE_LOOPING : 0;
+						XMP_SAMPLE_LOOP : 0;
 
 			reportv(ctx, 1, "%05x %05x %05x %02x %+3d %+1d ",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
@@ -505,7 +505,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxs[smp_idx].len = read16b(f) * 2;
 				m->xxs[smp_idx].lps = 0;
 				m->xxs[smp_idx].lpe = m->xxs[smp_idx].len;
-				m->xxs[smp_idx].flg = WAVE_LOOPING;
+				m->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
 				xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate,
 					0, &m->xxs[smp_idx], NULL);
@@ -545,7 +545,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		m->xxs[smp_idx].flg = 0;
 		if (song.sample[i].replen > 1)
-			m->xxs[smp_idx].flg |= WAVE_LOOPING;
+			m->xxs[smp_idx].flg |= XMP_SAMPLE_LOOP;
 
 		reportv(ctx, 1, "%05x %05x %05x %02x %+3d %+1d ",
 				m->xxs[smp_idx].len,

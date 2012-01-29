@@ -119,13 +119,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		m->xxs[i].lps = read32b(f);
 		replen = read32b(f);
 		m->xxs[i].lpe = m->xxs[i].lps + replen - 1;
-		m->xxs[i].flg = replen > 2 ?  WAVE_LOOPING : 0;
+		m->xxs[i].flg = replen > 2 ?  XMP_SAMPLE_LOOP : 0;
 
 		fread(name, 22, 1, f);
 		copy_adjust(m->xxih[i].name, name, 22);
 
 		flag = read16b(f);	/* bit 0-7:resol 8:stereo */
-		m->xxs[i].flg |= (flag & 0xff) > 8 ? WAVE_16_BITS : 0;
+		m->xxs[i].flg |= (flag & 0xff) > 8 ? XMP_SAMPLE_16BIT : 0;
 
 		read32b(f);		/* midi note (0x00300000) */
 		c2spd = read32b(f);	/* frequency */
@@ -141,10 +141,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 				report("\n[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
 					i, m->xxih[i].name,
 					m->xxs[i].len,
-					m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+					m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 					m->xxs[i].lps,
 					replen,
-					m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+					m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 					flag & 0x100 ? 'S' : ' ',
 					flag & 0xff,
 					m->xxi[i][0].vol,

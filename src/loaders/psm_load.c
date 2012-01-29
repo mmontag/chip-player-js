@@ -123,15 +123,15 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].sid = i;
 		m->xxih[i].nsm = !!m->xxs[i].len;
-		m->xxs[i].flg = flags & 0x80 ? WAVE_LOOPING : 0;
-		m->xxs[i].flg |= flags & 0x20 ? WAVE_BIDIR_LOOP : 0;
+		m->xxs[i].flg = flags & 0x80 ? XMP_SAMPLE_LOOP : 0;
+		m->xxs[i].flg |= flags & 0x20 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 		m->xxi[i][0].fin += finetune;
 
 		if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %5d\n",
 				i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-				m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ?
+				m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
 				'L' : ' ', m->xxi[i][0].vol, c2spd);
 		}
 	}

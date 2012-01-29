@@ -120,14 +120,6 @@ int xmp_drv_open(struct xmp_context *ctx)
     if ((status = drv_select(ctx)) != 0)
 	return status;
 
-    d->patch_array = calloc(XMP_MAXPAT, sizeof(struct patch_info *));
-
-    if (d->patch_array == NULL) {
-	d->driver->shutdown(ctx);
-	xmp_smix_off(ctx);
-	return XMP_ERR_ALLOC;
-    }
-
     /*synth_init(o->freq);
     synth_reset();*/
 
@@ -163,7 +155,6 @@ void xmp_drv_close(struct xmp_context *ctx)
     memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
     d->driver->shutdown(ctx);
     xmp_smix_off(ctx);
-    free(d->patch_array);
     /*synth_deinit();*/
 }
 
@@ -214,7 +205,7 @@ void xmp_drv_off(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    xmp_drv_writepatch(ctx, NULL);
+    /*xmp_drv_writepatch(ctx, NULL);*/
 
     if (d->numchn < 1)
 	return;
@@ -375,7 +366,7 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 	return;
 
     vi = &d->voice_array[voc];
-    if ((uint32)smp >= XMP_MAXPAT || !d->patch_array[smp] || vi->smp == smp)
+    if (vi->smp == smp)
 	return;
 
     pos = vi->pos;
@@ -394,7 +385,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
     if ((uint32)chn >= d->numchn)
 	return -1;
 
-    if (ins < 0 || (uint32)smp >= XMP_MAXPAT || !d->patch_array[smp])
+    if (ins < 0)
 	smp = -1;
 
     if (dct) {
@@ -512,20 +503,18 @@ void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
 
 void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
 {
+    struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
+    struct xmp_mod_context *m = &p->m;
+    struct xxm_sample *xxs;
     int voc;
-    struct patch_info *pi;
 
     if ((uint32)chn >= d->numchn || (uint32) (voc = d->ch2vo_array[chn]) >= d->maxvoc)
 	return;
 
-    pi = d->patch_array[d->voice_array[voc].smp];
+    xxs = &m->xxs[d->voice_array[voc].smp];
 
-    if (pi->base_note != C4_FREQ)	/* process crunching samples */
-	pos = ((int64)pos << SMIX_SHIFT) / (int)
-	    (((int64)pi->base_note << SMIX_SHIFT) / C4_FREQ);
-
-    if (pos > pi->len)	/* Attempt to set offset beyond the end of sample */
+    if (pos > xxs->len)	/* Attempt to set offset beyond the end of sample */
 	return;
 
     smix_voicepos(ctx, voc, pos, 0);
@@ -578,62 +567,6 @@ void xmp_drv_stoptimer(struct xmp_context *ctx)
 }
 
 
-int xmp_drv_writepatch(struct xmp_context *ctx, struct patch_info *patch)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    int num;
-
-    if (!d->patch_array)
-    	return 0;
-
-    if (!patch) {
-	xmp_smix_writepatch(ctx, patch);
-
-	for (num = XMP_MAXPAT; num--;) {
-	    if (d->patch_array[num]) {
-		free(d->patch_array[num]);
-	    }
-	    d->patch_array[num] = NULL;
-	}
-	return 0;
-    }
-    if (patch->instr_no >= XMP_MAXPAT)
-	return XMP_ERR_PATCH;
-    d->patch_array[patch->instr_no] = patch;
-
-    return 0;
-}
-
-
-int xmp_drv_flushpatch(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    struct patch_info *patch;
-    int smp, num;
-
-    if (!d->patch_array)		/* FIXME -- this makes xmms happy */
-	return 0;
-
-    for (smp = XMP_MAXPAT, num = 0; smp--;)
-	if (d->patch_array[smp])
-	    num++;
-
-    /* Softmixer writepatch */
-    for (smp = XMP_MAXPAT; smp--;) {
-	    if (!d->patch_array[smp])
-		continue;
-	    patch = d->patch_array[smp];
-	    xmp_cvt_anticlick (patch);
-	    if (xmp_smix_writepatch(ctx, patch) != 0) {
-		d->patch_array[smp] = NULL;	/* Bad type, reset array */
-		free (patch);
-	    }
-    }
-
-    return 0;
-}
-
-
 static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 {
     char delta = 0;
@@ -653,28 +586,28 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, int flags, struct xxm_sample *xxs, char *buffer)
+int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, int flags, struct xxm_sample *xxs, void *buffer)
 {
     struct xmp_options *o = &ctx->o;
-    struct patch_info *patch;
-    int datasize;
-    char s[5];
+    uint8 s[5];
 
     /* Synth patches
      * Default is YM3128 for historical reasons
      */
-    if (!xxs) {
+    if (flags & XMP_SMP_SYNTH) {
 	int size = 11;		/* Adlib instrument size */
-	if (flags & XMP_SMP_SPECTRUM)
-		size = sizeof (struct spectrum_sample);
-	if ((patch = calloc(1, sizeof (struct patch_info) + size)) == NULL)
-	      return XMP_ERR_ALLOC;
-	memcpy(patch->data, buffer, size);
-	patch->instr_no = id;
-	patch->len = XMP_PATCH_SYNTH;
-	patch->base_note = 60;
 
-	return xmp_drv_writepatch(ctx, patch);
+	if (flags & XMP_SMP_SPECTRUM)
+	    size = sizeof (struct spectrum_sample);
+
+	if ((xxs->data = malloc(size)) == NULL)
+	    return XMP_ERR_ALLOC;
+
+	memcpy(xxs->data, buffer, size);
+
+	xxs->flg |= XMP_SAMPLE_SYNTH;
+
+	return 0;
     }
 
     if (o->skipsmp) {		/* Will fail for ADPCM samples */
@@ -685,19 +618,17 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
     /* Empty samples
      */
-    if (xxs->len < 4) {
-	if (~flags & XMP_SMP_NOLOAD)
-	    fread(s, 1, xxs->len, f);
+    if (xxs->len == 0) {
 	return 0;
     }
+
     /* Patches with samples
      */
-    datasize = sizeof (struct patch_info) + xxs->len + sizeof (int);
-    if ((patch = calloc(1, datasize)) == NULL)
+    if ((xxs->data = malloc(xxs->len + 4)) == NULL)
 	return XMP_ERR_ALLOC;
 
     if (flags & XMP_SMP_NOLOAD) {
-	memcpy(patch->data, buffer, xxs->len);
+	memcpy(xxs->data, buffer, xxs->len);
     } else {
 	int pos = ftell(f);
 	int num = fread(s, 1, 5, f);
@@ -710,76 +641,48 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
 	    fseek(f, 5, SEEK_CUR);	/* Skip "ADPCM" */
 	    fread(table, 1, 16, f);
-	    fread(patch->data + x2, 1, x2, f);
-	    adpcm4_decoder((uint8 *)patch->data + x2, (uint8 *)patch->data,
+	    fread(xxs->data + x2, 1, x2, f);
+	    adpcm4_decoder((uint8 *)xxs->data + x2, (uint8 *)xxs->data,
 						table, xxs->len);
 	} else {
-	    fread(patch->data, 1, xxs->len, f);
+	    fread(xxs->data, 1, xxs->len, f);
 	}
     }
 
     /* Fix endianism if needed */
-    if (xxs->flg & WAVE_16_BITS) {
+    if (xxs->flg & XMP_SAMPLE_16BIT) {
 	if (!!o->big_endian ^ !!(flags & XMP_SMP_BIGEND))
-	    xmp_cvt_sex(xxs->len, patch->data);
+	    xmp_cvt_sex(xxs->len, xxs->data);
     }
 
     if (flags & XMP_SMP_STEREO) {	/* Downmix stereo samples */
-	xmp_cvt_stdownmix(xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
+	xmp_cvt_stdownmix(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
 	xxs->len /= 2;
     }
 
     if (flags & XMP_SMP_7BIT)
-	xmp_cvt_2xsmp(xxs->len, patch->data);
+	xmp_cvt_2xsmp(xxs->len, xxs->data);
 
     if (flags & XMP_SMP_DIFF)
-	xmp_cvt_diff2abs(xxs->len, xxs->flg & WAVE_16_BITS, patch->data);
+	xmp_cvt_diff2abs(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
     else if (flags & XMP_SMP_8BDIFF)
-	xmp_cvt_diff2abs(xxs->len, 0, patch->data);
+	xmp_cvt_diff2abs(xxs->len, 0, xxs->data);
 
     if (flags & XMP_SMP_VIDC)
-	xmp_cvt_vidc(xxs->len, patch->data);
+	xmp_cvt_vidc(xxs->len, xxs->data);
 
 
     /* Duplicate last sample -- prevent click in bidir loops */
-    if (xxs->flg & WAVE_16_BITS) {
-	patch->data[xxs->len] = patch->data[xxs->len - 2];
-	patch->data[xxs->len + 1] = patch->data[xxs->len - 1];
+    if (xxs->flg & XMP_SAMPLE_16BIT) {
+	xxs->data[xxs->len] = xxs->data[xxs->len - 2];
+	xxs->data[xxs->len + 1] = xxs->data[xxs->len - 1];
 	xxs->len += 2;
     } else {
-	patch->data[xxs->len] = patch->data[xxs->len - 1];
+	xxs->data[xxs->len] = xxs->data[xxs->len - 1];
 	xxs->len++;
     }
 
-#if 0
-    /* dump patch to file */
-    if (id == 0x12) {
-	printf("dump patch\n");
-	FILE *f = fopen("patch_data", "w");
-	fwrite(patch->data, 1, xxs->len, f);
-	fclose(f);
-    }
-#endif
-
-    patch->key = GUS_PATCH;
-    patch->instr_no = id;
-    patch->mode = xxs->flg;
-    patch->mode |= (flags & XMP_SMP_UNS) ? WAVE_UNSIGNED : 0;
-    patch->len = xxs->len;
-    patch->loop_start = (xxs->lps > xxs->len) ? xxs->len : xxs->lps;
-    patch->loop_end = (xxs->lpe > xxs->len) ? xxs->len : xxs->lpe;
-    if (patch->loop_end <= patch->loop_start || !(patch->mode & WAVE_LOOPING))
-	patch->mode &= ~(WAVE_LOOPING | WAVE_BIDIR_LOOP | WAVE_LOOP_BACK);
-
-    patch->base_note = C4_FREQ;
-    patch->base_freq = basefreq;
-    patch->high_note = 0x7fffffff;
-    patch->low_note = 0;
-    patch->volume = 120;
-    patch->detuning = 0;
-    patch->panning = 0;
-
-    return xmp_drv_writepatch(ctx, patch);
+    return 0;
 }
 
 

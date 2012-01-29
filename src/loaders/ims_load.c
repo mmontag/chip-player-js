@@ -193,7 +193,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxs[i].len = 2 * ih.ins[i].size;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * ih.ins[i].loop_size;
-	m->xxs[i].flg = ih.ins[i].loop_size > 1 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].fin = 0; /* ih.ins[i].finetune; */
 	m->xxi[i][0].vol = ih.ins[i].volume;
 	m->xxi[i][0].pan = 0x80;

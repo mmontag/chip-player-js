@@ -177,7 +177,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (m->xxs[i].lps == -1)
 	    m->xxs[i].lps = 0;
 	m->xxs[i].lpe = ffh.fih[i].length;
-	m->xxs[i].flg = ffh.fih[i].loop_start != -1 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = ffh.fih[i].loop_start != -1 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].vol = ffh.fih[i].volume;
 	m->xxi[i][0].pan = ffh.fih[i].pan;
 	m->xxi[i][0].sid = i;
@@ -188,7 +188,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x\n", i,
 		m->xxih[i].name,
 		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, m->xxi[i][0].pan);
     }
 

@@ -145,7 +145,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].nsm = !!(m->xxs[i].len = dh.slen[i]);
 	m->xxs[i].lps = dh.sloop[i];
 	m->xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
-	m->xxs[i].flg = m->xxs[i].lpe > 0 ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].vol = dh.vol[i];
 	m->xxi[i][0].fin = dh.fin[i];
 	m->xxi[i][0].pan = 0x80;
@@ -156,7 +156,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 	    report ("[%2X] %-30.30s %04x %04x %04x %c V%02x\n", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& WAVE_LOOPING ? 'L' : ' ', m->xxi[i][0].vol);
+		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
 	}
     }
 

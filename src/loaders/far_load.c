@@ -253,8 +253,8 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].nsm = !!(m->xxs[i].len = fih.length);
 	m->xxs[i].lps = fih.loop_start;
 	m->xxs[i].lpe = fih.loopend;
-	m->xxs[i].flg = fih.sampletype ? WAVE_16_BITS : 0;
-	m->xxs[i].flg |= fih.loopmode ? WAVE_LOOPING : 0;
+	m->xxs[i].flg = fih.sampletype ? XMP_SAMPLE_16BIT : 0;
+	m->xxs[i].flg |= fih.loopmode ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].vol = 0xff; /* fih.volume; */
 	m->xxi[i][0].sid = i;
 

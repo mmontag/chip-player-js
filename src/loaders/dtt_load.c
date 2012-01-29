@@ -104,7 +104,7 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 		read32l(f);			/* sustain length */
 		m->xxs[i].lps = read32l(f);
 		looplen = read32l(f);
-		m->xxs[i].flg = looplen > 0 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = looplen > 0 ? XMP_SAMPLE_LOOP : 0;
 		m->xxs[i].lpe = m->xxs[i].lps + looplen;
 		m->xxs[i].len = read32l(f);
 		fread(buf, 1, 32, f);
@@ -118,7 +118,7 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 			report("[%2X] %-32.32s  %04x %04x %04x %c V%02x\n",
 				i, m->xxih[i].name, m->xxs[i].len,
 				m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, c2spd);
 		}
 	}

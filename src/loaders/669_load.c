@@ -145,7 +145,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].nsm = !!(m->xxs[i].len = sih.length);
 	m->xxs[i].lps = sih.loop_start;
 	m->xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
-	m->xxs[i].flg = m->xxs[i].lpe ? WAVE_LOOPING : 0;	/* 1 == Forward loop */
+	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
 	m->xxi[i][0].vol = 0x40;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
@@ -155,7 +155,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
 	    report ("[%2X] %-14.14s %04x %04x %04x %c\n", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ');
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
     PATTERN_INIT();

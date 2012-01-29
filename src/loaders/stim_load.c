@@ -163,7 +163,7 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 		m->xxs[i].len = 2 * si.size;
 		m->xxs[i].lps = 2 * si.loop_start;
 		m->xxs[i].lpe = m->xxs[i].lps + 2 * si.loop_size;
-		m->xxs[i].flg = si.loop_size > 1 ? WAVE_LOOPING : 0;
+		m->xxs[i].flg = si.loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 		m->xxi[i][0].fin = (int8) (si.finetune << 4);
 		m->xxi[i][0].vol = si.volume;
 		m->xxi[i][0].pan = 0x80;

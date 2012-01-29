@@ -102,8 +102,8 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxih[i].nsm = !!(m->xxs[i].len = mih.length);
 	m->xxs[i].lps = mih.loop_start;
 	m->xxs[i].lpe = mih.loopend;
-	m->xxs[i].flg = m->xxs[i].lpe ? WAVE_LOOPING : 0;	/* 1 == Forward loop */
-	m->xxs[i].flg |= mfh.attr & 1 ? WAVE_16_BITS : 0;
+	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
+	m->xxs[i].flg |= mfh.attr & 1 ? XMP_SAMPLE_16BIT : 0;
 	m->xxi[i][0].vol = mih.volume;
 	m->xxi[i][0].fin = 0x80 + (int8)(mih.finetune << 4);
 	m->xxi[i][0].pan = 0x80;
@@ -113,8 +113,8 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	if ((V(1)) && (strlen((char *) m->xxih[i].name) || m->xxs[i].len))
 	    report ("[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, m->xxi[i][0].fin - 0x80);
     }
 

@@ -471,7 +471,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].len = LEN;
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = LEN;
-		m->xxs[i].flg |= WAVE_LOOPING;
+		m->xxs[i].flg |= XMP_SAMPLE_LOOP;
 
 		switch (i) {
 		case 0:

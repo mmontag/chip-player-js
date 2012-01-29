@@ -577,7 +577,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].lps = temp_inst[i].loop_start;
 			m->xxs[smp_idx].lpe = temp_inst[i].loop_end;
 			m->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
-						WAVE_LOOPING : 0;
+						XMP_SAMPLE_LOOP : 0;
 
 			reportv(ctx, 1, "%05x %05x %05x %02x %+03d ",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
@@ -650,7 +650,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 /*printf("idx=%x len=%x\n", synth.wf[j], m->xxs[smp_idx].len);*/
 				m->xxs[smp_idx].lps = 0;
 				m->xxs[smp_idx].lpe = m->xxs[smp_idx].len;
-				m->xxs[smp_idx].flg = WAVE_LOOPING;
+				m->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
 				xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate,
 					0, &m->xxs[smp_idx], NULL);
@@ -688,12 +688,12 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[smp_idx].lps = temp_inst[i].loop_start;
 		m->xxs[smp_idx].lpe = temp_inst[i].loop_end;
 		m->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
-						WAVE_LOOPING : 0;
+						XMP_SAMPLE_LOOP : 0;
 
 		reportv(ctx, 1, "%04x %04x %04x %c V%02x %+03d ",
 			m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 			m->xxs[smp_idx].lpe,
-			m->xxs[smp_idx].flg & WAVE_LOOPING ? 'L' : ' ',
+			m->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			m->xxi[i][0].vol, m->xxi[i][0].xpo);
 
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,

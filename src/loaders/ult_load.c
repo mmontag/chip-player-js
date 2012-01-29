@@ -176,16 +176,16 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	switch (uih.bidiloop) {
 	case 20:		/* Type 20 is in seasons.ult */
 	case 4:
-	    m->xxs[i].flg = WAVE_16_BITS;
+	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
 	    m->xxs[i].len <<= 1;
 	    break;
 	case 8:
 	case 24:
-	    m->xxs[i].flg = WAVE_LOOPING;
+	    m->xxs[i].flg = XMP_SAMPLE_LOOP;
 	    break;
 	case 12:
 	case 28:
-	    m->xxs[i].flg = WAVE_16_BITS | WAVE_LOOPING;
+	    m->xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP;
 	    m->xxs[i].len <<= 1;
 	    break;
 	}
@@ -200,9 +200,9 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	if ((V(1)) && (strlen((char *) uih.name) || m->xxs[i].len)) {
 	    report ("\n[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, m->xxs[i].len,
-		m->xxs[i].flg & WAVE_16_BITS ? '+' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & WAVE_LOOPING ? 'L' : ' ',
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, uih.finetune, uih.c2spd);
 	}
 
