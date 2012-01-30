@@ -94,7 +94,7 @@ static void play_channel (struct xmp_context *, int, int);
 static inline struct xxm_instrument *
 get_instrument(struct xmp_mod_context *m, struct xmp_channel *xc)
 {
-	int mapped = m->xxim->ins[xc->key];
+	int mapped = m->xxim[xc->ins].ins[xc->key];
 	return &m->xxi[xc->ins][mapped];
 }
 
