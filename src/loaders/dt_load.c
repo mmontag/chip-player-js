@@ -125,7 +125,12 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		copy_adjust(m->xxih[i].name, name, 22);
 
 		flag = read16b(f);	/* bit 0-7:resol 8:stereo */
-		m->xxs[i].flg |= (flag & 0xff) > 8 ? XMP_SAMPLE_16BIT : 0;
+		if ((flag & 0xff) > 8) {
+			m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+			m->xxs[i].len >>= 1;
+			m->xxs[i].lps >>= 1;
+			m->xxs[i].lpe >>= 1;
+		}
 
 		read32b(f);		/* midi note (0x00300000) */
 		c2spd = read32b(f);	/* frequency */

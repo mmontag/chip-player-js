@@ -463,8 +463,12 @@ next_pattern:
 	m->xxs[i].lps = li.loopstart;
 	m->xxs[i].lpe = li.loopend;
 
-	if (li.flags & 0x01)
+	if (li.flags & 0x01) {
 	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
+	    m->xxs[i].len >>= 1;
+	    m->xxs[i].lps >>= 1;
+	    m->xxs[i].lpe >>= 1;
+	}
 
 	if (li.loopend > 0)
 	    m->xxs[i].flg = XMP_SAMPLE_LOOP;

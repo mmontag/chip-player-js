@@ -385,7 +385,13 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[smp_num].lps = is.lps;
 	    m->xxs[smp_num].lpe = is.lpe;
 	    m->xxs[smp_num].flg = is.flg & 1 ? XMP_SAMPLE_LOOP : 0;
-	    m->xxs[smp_num].flg |= is.flg & 4 ? XMP_SAMPLE_16BIT : 0;
+
+	    if (is.flg & 4) {
+	        m->xxs[smp_num].flg |= XMP_SAMPLE_16BIT;
+	        m->xxs[smp_num].len >>= 1;
+	        m->xxs[smp_num].lps >>= 1;
+	        m->xxs[smp_num].lpe >>= 1;
+	    }
 
 	    if (V(1)) {
 		if (j)

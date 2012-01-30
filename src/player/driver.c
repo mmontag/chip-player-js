@@ -590,6 +590,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 {
     struct xmp_options *o = &ctx->o;
     uint8 s[5];
+    int bytelen;
 
     /* Synth patches
      * Default is YM3128 for historical reasons
@@ -624,12 +625,16 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
     /* Patches with samples
      */
-    if ((xxs->data = malloc(xxs->len + 4)) == NULL)
+    bytelen = xxs->len;
+    if (xxs->flg & XMP_SAMPLE_16BIT)
+	bytelen *= 2;
+
+    if ((xxs->data = malloc(bytelen + 4)) == NULL)
 	return XMP_ERR_ALLOC;
-    memset(xxs->data + xxs->len, 0, 4); 
+    memset(xxs->data + bytelen, 0, 4);
 
     if (flags & XMP_SMP_NOLOAD) {
-	memcpy(xxs->data, buffer, xxs->len);
+	memcpy(xxs->data, buffer, bytelen);
     } else {
 	int pos = ftell(f);
 	int num = fread(s, 1, 5, f);
@@ -637,16 +642,18 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	fseek(f, pos, SEEK_SET);
 
 	if (num == 5 && !memcmp(s, "ADPCM", 5)) {
-	    int x2 = xxs->len >> 1;
+	    int x2 = bytelen >> 1;
 	    char table[16];
 
 	    fseek(f, 5, SEEK_CUR);	/* Skip "ADPCM" */
 	    fread(table, 1, 16, f);
 	    fread(xxs->data + x2, 1, x2, f);
 	    adpcm4_decoder((uint8 *)xxs->data + x2, (uint8 *)xxs->data,
-						table, xxs->len);
+						table, bytelen);
 	} else {
-	    fread(xxs->data, 1, xxs->len, f);
+	    int x = fread(xxs->data, 1, bytelen, f);
+	    if (x != bytelen)
+		fprintf(stderr, "short read: %d\n", bytelen - x);
 	}
     }
 
@@ -675,13 +682,12 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 
     /* Duplicate last sample -- prevent click in bidir loops */
     if (xxs->flg & XMP_SAMPLE_16BIT) {
-	xxs->data[xxs->len] = xxs->data[xxs->len - 2];
-	xxs->data[xxs->len + 1] = xxs->data[xxs->len - 1];
-	xxs->len += 2;
+	xxs->data[bytelen] = xxs->data[bytelen - 2];
+	xxs->data[bytelen + 1] = xxs->data[bytelen - 1];
     } else {
-	xxs->data[xxs->len] = xxs->data[xxs->len - 1];
-	xxs->len++;
+	xxs->data[bytelen] = xxs->data[bytelen - 1];
     }
+    xxs->len++;
 
     return 0;
 }

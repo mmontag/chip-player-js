@@ -496,12 +496,19 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fix87(sih.flags);
 	}
 
-	m->xxih[i].nsm = !!(m->xxs[i].len = sih.length);
+	m->xxs[i].len = sih.length;
+	m->xxih[i].nsm = sih.length > 0 ? 1 : 0;
 	m->xxs[i].lps = sih.loopbeg;
 	m->xxs[i].lpe = sih.loopend;
 
 	m->xxs[i].flg = sih.flags & 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxs[i].flg |= sih.flags & 4 ? XMP_SAMPLE_16BIT : 0;
+
+	if (sih.flags & 4) {
+	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->xxs[i].len >>= 1;
+	    m->xxs[i].lps >>= 1;
+	    m->xxs[i].lpe >>= 1;
+	}
 	m->xxi[i][0].vol = sih.vol;
 	sih.magic = 0;
 

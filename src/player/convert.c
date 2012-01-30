@@ -57,7 +57,7 @@ void xmp_cvt_diff2abs (int l, int r, uint8 *p)
     uint16 abs = 0;
 
     if (r) {
-	for (l >>= 1; l--;) {
+	for (; l--;) {
 	    abs = *w + abs;
 	    *w++ = abs;
 	}
@@ -76,7 +76,7 @@ void xmp_cvt_sig2uns(int l, int r, char *p)
     uint16* w = (uint16*)p;
 
     if (r) {
-	for (l >>= 1; l--; w++)
+	for (; l--; w++)
 	    *w += 0x8000;
     } else {
 	for (; l--; p++)
@@ -89,8 +89,9 @@ void xmp_cvt_sig2uns(int l, int r, char *p)
 void xmp_cvt_sex(int l, uint8 *p)
 {
     uint8 b;
+    int i;
 
-    for (l >>= 1; l--;) {
+    for (i = 0; i < l; i++) {
 	b = p[0];
 	p[0] = p[1];
 	p[1] = b;
@@ -106,11 +107,10 @@ void xmp_cvt_stdownmix(int l, int r, uint8 *p)
     int i;
 
     if (r) {
-	l /= 4;
+	l /= 2;
 	for (i = 0; i < l; i++)
 	    b[i] = (b[i * 2] + b[i * 2 + 1]) / 2;
     } else {
-	l /= 2;
 	for (i = 0; i < l; i++)
 	    p[i] = (p[i * 2] + p[i * 2 + 1]) / 2;
     }

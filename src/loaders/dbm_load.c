@@ -238,9 +238,6 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 
 		if (flags & 0x02) {
 			m->xxs[i].flg |= XMP_SAMPLE_16BIT;
-			m->xxs[i].len <<= 1;
-			m->xxs[i].lps <<= 1;
-			m->xxs[i].lpe <<= 1;
 		}
 
 		if (flags & 0x04) {	/* Skip 32-bit samples */

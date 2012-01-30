@@ -307,19 +307,12 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	    itp_inc = -itp_inc;
 
 	/* Sample loop processing. Offsets in samples, not bytes */
-	if (vi->fidx & FLAG_16_BITS) {
-	    lps = xxs->lps >> 1;
-	    lpe = xxs->lpe >> 1;
-	} else {
-	    lps = xxs->lps;
-	    lpe = xxs->lpe;
-	}
+	lps = xxs->lps;
+	lpe = xxs->lpe;
 
 	/* check for Protracker loop */
 	if (xxs->flg & XMP_SAMPLE_LOOP_FULL && xxs->flg & XMP_SAMPLE_LOOP_FIRST) {
-	    lpe = xxs->len - 2;
-	    if (vi->fidx & FLAG_16_BITS)
-		lpe >>= 1;
+	    lpe = xxs->len - 1;
 	}
 
 	for (tic_cnt = s->ticksize; tic_cnt; ) {
@@ -425,11 +418,13 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
     if (xxs->flg & XMP_SAMPLE_SYNTH)
 	return;
 
+#if 0
     res = xxs->flg & XMP_SAMPLE_16BIT ? 1 : 0;
     mode = (xxs->flg & XMP_SAMPLE_LOOP) && !(xxs->flg & XMP_SAMPLE_LOOP_BIDIR);
     mode = (mode << res) + res + 1;	/* see xmp_cvt_anticlick */
+#endif
 
-    lpe = xxs->len - mode;
+    lpe = xxs->len - 1;
     if (xxs->flg & XMP_SAMPLE_LOOP && ~xxs->flg & XMP_SAMPLE_LOOP_FIRST)
 	lpe = lpe > xxs->lpe ? xxs->lpe : lpe;
 

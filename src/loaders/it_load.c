@@ -771,15 +771,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    continue;
 	
 	if (ish.flags & IT_SMP_16BIT) {
-	    m->xxs[i].len = ish.length * 2;
-	    m->xxs[i].lps = ish.loopbeg * 2;
-	    m->xxs[i].lpe = ish.loopend * 2;
 	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
-	} else {
-	    m->xxs[i].len = ish.length;
-	    m->xxs[i].lps = ish.loopbeg;
-	    m->xxs[i].lpe = ish.loopend;
 	}
+	m->xxs[i].len = ish.length;
+	m->xxs[i].lps = ish.loopbeg;
+	m->xxs[i].lpe = ish.loopend;
 
 	m->xxs[i].flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
 	m->xxs[i].flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
@@ -848,7 +844,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		buf = calloc(1, m->xxs[i].len);
 
 		if (ish.flags & IT_SMP_16BIT) {
-		    itsex_decompress16(f, buf, m->xxs[i].len >> 1, 
+		    itsex_decompress16(f, buf, m->xxs[i].len, 
 					ish.convert & IT_CVT_DIFF);
 
 		    /* decompression generates native-endian samples, but

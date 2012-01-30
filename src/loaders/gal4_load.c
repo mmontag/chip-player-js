@@ -306,12 +306,6 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		/* if (flags & 0x80)
 			m->xxs[snum].flg |= ? */
 	
-		if (m->xxs[snum].flg & XMP_SAMPLE_16BIT) {
-			m->xxs[snum].len <<= 1;
-			m->xxs[snum].lps <<= 1;
-			m->xxs[snum].lpe <<= 1;
-		}
-	
 		srate = read32l(f);
 		finetune = 0;
 		c2spd_to_note(srate, &m->xxi[i][j].xpo, &m->xxi[i][j].fin);

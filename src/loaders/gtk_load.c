@@ -105,7 +105,13 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!m->xxs[i].len;
 		m->xxi[i][0].sid = i;
 		m->xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;
-		m->xxs[i].flg |= bits > 1 ? XMP_SAMPLE_16BIT : 0;
+
+		if (bits > 1) {
+			m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+			m->xxs[i].len >>= 1;
+			m->xxs[i].lps >>= 1;
+			m->xxs[i].lpe >>= 1;
+		}
 
 		if (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1)) {
 			if (V(1)) {

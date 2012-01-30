@@ -597,7 +597,12 @@ static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
 
 	read8(f);			/* Volume in DMDL 0.0 */
 	x = read8(f);
-	m->xxs[i].flg |= (x & 0x01) ? XMP_SAMPLE_16BIT : 0;
+	if (x & 0x01) {
+	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->xxs[i].len >>= 1;
+	    m->xxs[i].lps >>= 1;
+	    m->xxs[i].lpe >>= 1;
+        }
 	m->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	packinfo[i] = (x & 0x0c) >> 2;
 
@@ -670,7 +675,12 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].pan = 0x80;
 
 	x = read8(f);
-	m->xxs[i].flg |= (x & 0x01) ? XMP_SAMPLE_16BIT : 0;
+	if (x & 0x01) {
+	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->xxs[i].len >>= 1;
+	    m->xxs[i].lps >>= 1;
+	    m->xxs[i].lpe >>= 1;
+	}
 	m->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	packinfo[i] = (x & 0x0c) >> 2;
 
@@ -732,7 +742,7 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
 	    len = read32l(f);
 	    buf = malloc(len + 4);
 	    fread(buf, 1, len, f);
-	    unpack_sample16(smpbuf, buf, len, m->xxs[i].len >> 1);
+	    unpack_sample16(smpbuf, buf, len, m->xxs[i].len);
 	    free(buf);
 	    break;
 	}

@@ -542,10 +542,15 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[smp_idx].lpe = m->xxs[smp_idx].lps + 2 *
 						song.sample[i].replen;
 		m->xxs[smp_idx].flg = 0;
-		if (song.sample[i].replen > 1)
+		if (song.sample[i].replen > 1) {
 			m->xxs[smp_idx].flg |= XMP_SAMPLE_LOOP;
-		if (instr.type & S_16)
+		}
+		if (instr.type & S_16) {
 			m->xxs[smp_idx].flg |= XMP_SAMPLE_16BIT;
+			m->xxs[smp_idx].len >>= 1;
+			m->xxs[smp_idx].lps >>= 1;
+			m->xxs[smp_idx].lpe >>= 1;
+		}
 
 		/* STEREO means that this is a stereo sample. The sample
 		 * is not interleaved. The left channel comes first,

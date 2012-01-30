@@ -99,11 +99,18 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	mih.volume = read8(f);			/* Playback volume */
 	mih.attr = read8(f);			/* &0x01: 16bit sample */
 
-	m->xxih[i].nsm = !!(m->xxs[i].len = mih.length);
+	m->xxs[i].len = mih.length;
+	m->xxih[i].nsm = mih.length > 0 ? 1 : 0;
 	m->xxs[i].lps = mih.loop_start;
 	m->xxs[i].lpe = mih.loopend;
 	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
-	m->xxs[i].flg |= mfh.attr & 1 ? XMP_SAMPLE_16BIT : 0;
+	if (mfh.attr & 1) {
+	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->xxs[i].len >>= 1;
+	    m->xxs[i].lps >>= 1;
+	    m->xxs[i].lpe >>= 1;
+	}
+
 	m->xxi[i][0].vol = mih.volume;
 	m->xxi[i][0].fin = 0x80 + (int8)(mih.finetune << 4);
 	m->xxi[i][0].pan = 0x80;

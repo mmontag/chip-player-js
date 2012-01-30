@@ -135,14 +135,22 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    continue;
 
 	smp_ofs[i] = pih.smpofs;
-	m->xxih[i].nsm = !!(m->xxs[i].len = pih.length);
+	m->xxs[i].len = pih.length;
+	m->xxih[i].nsm = pih.length > 0 ? 1 : 0;
 	m->xxs[i].lps = pih.loopbeg;
 	m->xxs[i].lpe = pih.loopend;
 	if (m->xxs[i].lpe)
 		m->xxs[i].lpe--;
 	m->xxs[i].flg = pih.type & 0x04 ? XMP_SAMPLE_LOOP : 0;
 	m->xxs[i].flg |= pih.type & 0x08 ? XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR : 0;
-	m->xxs[i].flg |= pih.type & 0x10 ? XMP_SAMPLE_16BIT : 0;
+
+	if (pih.type & 0x10) {
+	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->xxs[i].len >>= 1;
+	    m->xxs[i].lps >>= 1;
+	    m->xxs[i].lpe >>= 1;
+	}
+
 	m->xxi[i][0].vol = pih.vol;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;

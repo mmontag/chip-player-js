@@ -177,16 +177,18 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	case 20:		/* Type 20 is in seasons.ult */
 	case 4:
 	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
-	    m->xxs[i].len <<= 1;
 	    break;
 	case 8:
-	case 24:
 	    m->xxs[i].flg = XMP_SAMPLE_LOOP;
 	    break;
 	case 12:
-	case 28:
 	    m->xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP;
-	    m->xxs[i].len <<= 1;
+	    break;
+	case 24:
+	    m->xxs[i].flg = XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
+	    break;
+	case 28:
+	    m->xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
 	    break;
 	}
 

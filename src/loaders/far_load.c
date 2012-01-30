@@ -250,10 +250,19 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	fih.length &= 0xffff;
 	fih.loop_start &= 0xffff;
 	fih.loopend &= 0xffff;
-	m->xxih[i].nsm = !!(m->xxs[i].len = fih.length);
+	m->xxs[i].len = fih.length;
+	m->xxih[i].nsm = fih.length > 0 ? 1 : 0;
 	m->xxs[i].lps = fih.loop_start;
 	m->xxs[i].lpe = fih.loopend;
-	m->xxs[i].flg = fih.sampletype ? XMP_SAMPLE_16BIT : 0;
+	m->xxs[i].flg = 0;
+
+	if (fih.sampletype != 0) {
+		m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+		m->xxs[i].len >>= 1;
+		m->xxs[i].lps >>= 1;
+		m->xxs[i].lpe >>= 1;
+	}
+
 	m->xxs[i].flg |= fih.loopmode ? XMP_SAMPLE_LOOP : 0;
 	m->xxi[i][0].vol = 0xff; /* fih.volume; */
 	m->xxi[i][0].sid = i;

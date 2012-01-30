@@ -415,8 +415,15 @@ load_instruments:
 		if (fix_loop && m->xxs[sample_num].lps > 0)
 		    m->xxs[sample_num].lps--;
 		m->xxs[sample_num].lpe = xsh[j].loop_start + xsh[j].loop_length;
-		m->xxs[sample_num].flg = xsh[j].type & XM_SAMPLE_16BIT ?
-		    XMP_SAMPLE_16BIT : 0;
+
+		m->xxs[sample_num].flg = 0;
+		if (xsh[j].type & XM_SAMPLE_16BIT) {
+		    m->xxs[sample_num].flg |= XMP_SAMPLE_16BIT;
+		    m->xxs[sample_num].len >>= 1;
+		    m->xxs[sample_num].lps >>= 1;
+		    m->xxs[sample_num].lpe >>= 1;
+		}
+
 		m->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_FORWARD ?
 		    XMP_SAMPLE_LOOP : 0;
 		m->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_PINGPONG ?

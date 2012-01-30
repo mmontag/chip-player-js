@@ -352,7 +352,15 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smpnum].len = rs.length;
 			m->xxs[smpnum].lps = rs.loopbegin;
 			m->xxs[smpnum].lpe = rs.loopend;
-			m->xxs[smpnum].flg = rs.flags & 0x02 ?  XMP_SAMPLE_16BIT : 0;
+
+			m->xxs[smpnum].flg = 0;
+			if (rs.flags & 0x02) {
+				m->xxs[smpnum].flg |= XMP_SAMPLE_16BIT;
+				m->xxs[smpnum].len >>= 1;
+				m->xxs[smpnum].lps >>= 1;
+				m->xxs[smpnum].lpe >>= 1;
+			}
+
 			m->xxs[smpnum].flg |= rs.loop & 0x03 ?  XMP_SAMPLE_LOOP : 0;
 			m->xxs[smpnum].flg |= rs.loop == 2 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 

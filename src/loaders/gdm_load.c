@@ -211,10 +211,15 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxi[i][0].sid = i;
 		m->xxs[i].flg = 0;
 
-		if (flg & 0x01)
+		if (flg & 0x01) {
 			m->xxs[i].flg |= XMP_SAMPLE_LOOP;
-		if (flg & 0x02)
+		}
+		if (flg & 0x02) {
 			m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+			m->xxs[i].len >>= 1;
+			m->xxs[i].lps >>= 1;
+			m->xxs[i].lpe >>= 1;
+		}
 
 		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
 			report("[%2X] %-32.32s %05x%c%05x %05x %c V%02x P%02x %5d\n",
