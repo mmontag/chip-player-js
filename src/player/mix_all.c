@@ -24,16 +24,16 @@
  */
 #define INTERPOLATE() do { \
     if (frac >> SMIX_SHIFT) { \
-	cur_bk += frac >> SMIX_SHIFT; \
-	smp_x1 = in_bk[cur_bk]; \
-	smp_dt = in_bk[cur_bk + 1] - smp_x1; \
+	pos += frac >> SMIX_SHIFT; \
+	smp_x1 = sptr[pos]; \
+	smp_dt = sptr[pos + 1] - smp_x1; \
 	frac &= SMIX_MASK; \
     } \
     smp_in = smp_x1 + ((frac * smp_dt) >> SMIX_SHIFT); \
 } while (0)
 
 #define DONT_INTERPOLATE() do { \
-    smp_in = in_bk[frac >> SMIX_SHIFT]; \
+    smp_in = sptr[frac >> SMIX_SHIFT]; \
 } while (0)
 
 #define DO_FILTER() do { \
@@ -82,8 +82,8 @@
 
 #define VAR_NORM(x) \
     register int smp_in; \
-    x *in_bk = vi->sptr; \
-    int cur_bk = vi->pos - 1; \
+    x *sptr = vi->sptr; \
+    int pos = vi->pos - 1; \
     int frac = vi->frac + (1 << SMIX_SHIFT)
 
 #define VAR_ITPT(x) \
@@ -124,7 +124,7 @@ SMIX_MIXER(smix_st8norm)
 {
     VAR_NORM(int8);
 
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
 
@@ -137,7 +137,7 @@ SMIX_MIXER(smix_st16norm)
 
     vl >>= 8;
     vr >>= 8;
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
 
@@ -171,7 +171,7 @@ SMIX_MIXER(smix_mn8norm)
     VAR_NORM(int8);
 
     vl <<= 1;
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
 
@@ -183,7 +183,7 @@ SMIX_MIXER(smix_mn16norm)
     VAR_NORM(int16);
 
     vl >>= 7;
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
 
