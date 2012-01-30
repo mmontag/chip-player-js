@@ -128,7 +128,6 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	getval_no("mix", o->mix);
 	getval_no("srate", o->freq);
 	getval_no("time", o->time);
-	getval_no("verbosity", o->verbosity);
 
 	/* don't parse clickfilter in general config */
 	/* don't parse vblank in general config */

@@ -22,18 +22,6 @@
 #define MAGIC_GDM	MAGIC4('G','D','M',0xfe)
 #define MAGIC_GMFS	MAGIC4('G','M','F','S')
 
-static char *fmt[] = {
-	"?",
-	"MOD",
-	"MTM",
-	"S3M",
-	"669",
-	"FAR",
-	"ULT",
-	"STM",
-	"MED",
-	"unknown"
-};
 
 static int gdm_test(FILE *, char *, const int);
 static int gdm_load (struct xmp_context *, FILE *, const int);
@@ -169,10 +157,6 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 	
 	MODULE_INFO();
-
-	if (origfmt > 9)
-		origfmt = 9;
-	reportv(ctx, 0, "Orig format    : %s\n", fmt[origfmt]);
 
 	fseek(f, start + ord_ofs, SEEK_SET);
 

@@ -217,17 +217,6 @@ void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,
 	*itpt = !!(o->flags & XMP_CTL_ITPT);
 }
 
-int xmp_verbosity_level(xmp_context ctx, int i)
-{
-	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
-	int tmp;
-
-	tmp = o->verbosity;
-	o->verbosity = i;
-
-	return tmp;
-}
-
 int xmp_seek_time(xmp_context ctx, int time)
 {
 	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;

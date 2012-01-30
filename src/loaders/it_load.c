@@ -90,8 +90,6 @@ static uint8 fx[] = {
 	/* Z */ FX_FLT_CUTOFF
 };
 
-static char *nna[] = { "cut", "cont", "off", "fade" };
-static char *dct[] = { "off", "note", "smp", "inst" };
 static int dca2nna[] = { 0, 2, 3 };
 static int new_fx;
 

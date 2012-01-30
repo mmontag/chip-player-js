@@ -84,7 +84,6 @@ char *test_xfd		(unsigned char *, int);
 
 static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 {
-    struct xmp_options *o = &ctx->o;
     unsigned char b[1024];
     char *cmd;
     FILE *t;
@@ -244,25 +243,24 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 	return 0;
 #endif
 
-    reportv(ctx, 0, "Depacking %s file... ", packer);
+    _D(_D_WARN "Depacking %s file... ", packer);
 
     temp = calloc(sizeof (struct tmpfilename), 1);
     if (!temp) {
-	report("calloc failed\n");
+	_D(_D_CRIT "calloc failed");
 	return -1;
     }
 
     temp->name = strdup(tmp);
     if ((fd = mkstemp(temp->name)) < 0) {
-	if (o->verbosity > 0)
-	    report("failed\n");
+	_D(_D_CRIT "failed");
 	return -1;
     }
 
     list_add_tail(&temp->list, &tmpfiles_list);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
-	reportv(ctx, 0, "failed\n");
+	_D(_D_CRIT "failed");
 	return -1;
     }
 
@@ -287,7 +285,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
 	/* Linux popen fails with "rb" */
 	if ((p = popen(line, "r")) == NULL) {
 #endif
-	    reportv(ctx, 0, "failed\n");
+	    _D(_D_CRIT "failed");
 	    fclose(t);
 	    return -1;
 	}
@@ -334,12 +332,12 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     }
 
     if (res < 0) {
-	reportv(ctx, 0, "failed\n");
+	_D(_D_CRIT "failed");
 	fclose(t);
 	return -1;
     }
 
-    reportv(ctx, 0, "done\n");
+    _D(_D_INFO "done");
 
     fclose(*f);
     *f = t;
@@ -510,8 +508,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 	m->xxc[i].flg = 0;
     }
 
-    m->verbosity = o->verbosity;
-
     _D(_D_WARN "load");
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
@@ -521,16 +517,12 @@ int xmp_load_module(xmp_context ctx, char *s)
 	    continue;
         _D(_D_INFO "not excluded");
 	
-	if (o->verbosity > 3)
-	    report("Test format: %s (%s)\n", li->id, li->name);
 	fseek(f, 0, SEEK_SET);
    	if ((i = li->test(f, NULL, 0)) == 0) {
-	    if (o->verbosity > 3)
-		report("Identified as %s\n", li->id);
 	    fseek(f, 0, SEEK_SET);
 	    _D(_D_WARN "load format: %s (%s)", li->id, li->name);
 	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) != 0)) {
-		report("can't load module, possibly corrupted file\n");
+		_D(_D_CRIT "can't load module, possibly corrupted file");
 		i = -1;
 	    }
 	    break;
@@ -560,56 +552,13 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->flags &= ~(~o->flags & XMP_CTL_FILTER);
 
     str_adj(m->name);
-    if (!*m->name)
+    if (!*m->name) {
 	strncpy(m->name, m->basename, XMP_NAMESIZE);
-
-    if (o->verbosity > 1) {
-	report("Module looping : %s\n",
-	    m->flags & XMP_CTL_LOOP ? "yes" : "no");
-	report("Period mode    : %s\n",
-	    m->xxh->flg & XXM_FLG_LINEAR ? "linear" : "Amiga");
     }
 
-    if (o->verbosity > 2) {
-	char * amp_factor[] = { "Normal", "x2", "x4", "x8" };
-	report("Amiga range    : %s\n", m->xxh->flg & XXM_FLG_MODRNG ?
-		"yes" : "no");
-	report("Restart pos    : %d\n", m->xxh->rst);
-	report("Base volume    : %d\n", m->volbase);
-	report("C4 replay rate : %d\n", m->c4rate);
-	report("Channel mixing : %d%% (dynamic pan %s)\n",
-		m->flags & XMP_CTL_REVERSE ? -o->mix : o->mix,
-		m->flags & XMP_CTL_DYNPAN ? "enabled" : "disabled");
-	report("Volume amplify : %s\n", amp_factor[o->amplify]);
-    }
+    m->time = _xmp_scan_module((struct xmp_context *)ctx);
 
-    if (o->verbosity) {
-	report("Channels       : %d [ ", m->xxh->chn);
-	for (i = 0; i < m->xxh->chn; i++) {
-	    if (m->xxc[i].flg & XXM_CHANNEL_MUTE)
-		report("- ");
-	    else if (m->xxc[i].flg & XXM_CHANNEL_SYNTH)
-		report("S ");
-	    else
-	        report("%x ", m->xxc[i].pan >> 4);
-	}
-	report("]\n");
-    }
-
-    t = _xmp_scan_module((struct xmp_context *)ctx);
-
-    if (o->verbosity) {
-	if (m->flags & XMP_CTL_LOOP)
-	    report ("One loop time  : %dmin%02ds\n",
-		(t + 500) / 60000, ((t + 500) / 1000) % 60);
-	else
-	    report ("Estimated time : %dmin%02ds\n",
-		(t + 500) / 60000, ((t + 500) / 1000) % 60);
-    }
-
-    m->time = t;
-
-    return t;
+    return m->time;
 
 err:
     fclose(f);

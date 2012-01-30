@@ -286,7 +286,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case OPT_DUMP:
 	    opt->dump = strtoul(optarg, NULL, 0);
-	    opt->verbosity = 0;
+	    //opt->verbosity = 0;
 	    break;
 	case OPT_FIXLOOP:
 	    opt->flags |= XMP_CTL_FIXLOOP;
@@ -346,10 +346,10 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case OPT_PROBEONLY:
 	    probeonly = 1;
-	    opt->verbosity = 0;
+	    //opt->verbosity = 0;
 	    break;
 	case 'q':
-	    opt->verbosity = 0;
+	    //opt->verbosity = 0;
 	    break;
 #ifdef HAVE_SYS_RTPRIO_H
 	case OPT_REALTIME:
@@ -411,7 +411,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    puts("Extended Module Player " VERSION);
 	    exit(0);
 	case 'v':
-	    opt->verbosity++;
+	    //opt->verbosity++;
 	    break;
 	case 'x':
 	    exclude_formats(optarg);

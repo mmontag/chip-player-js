@@ -49,16 +49,10 @@ static int drv_select(struct xmp_context *ctx)
 	ret = XMP_ERR_DSPEC;
 
 	for (drv = drv_array; drv; drv = drv->next) {
-	    if (o->verbosity > 2)
-		report ("Probing %s... ", drv->description);
 	    if (drv->init(ctx) == 0) {
-		if (o->verbosity > 2)
-		    report ("found\n");
 		ret = 0;
 		break;
 	    }
-	    if (o->verbosity > 2)
-		report ("not found\n");
 	}
     }
     if (ret)

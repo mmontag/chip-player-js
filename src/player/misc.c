@@ -14,7 +14,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #ifdef ANDROID
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -22,33 +21,6 @@
 #endif
 #include "common.h"
 
-int report(char *fmt, ...)
-{
-	va_list a;
-	int n;
-
-	va_start(a, fmt);
-	n = vfprintf(stderr, fmt, a);
-	va_end(a);
-
-	return n;
-}
-
-int reportv(struct xmp_context *ctx, int v, char *fmt, ...)
-{
-	va_list a;
-	int n;
-	struct xmp_options *o = &ctx->o;
-
-	if (o->verbosity <= v)
-		return 0;
-
-	va_start(a, fmt);
-	n = vfprintf(stderr, fmt, a);
-	va_end(a);
-
-	return n;
-}
 
 char *str_adj(char *s)
 {

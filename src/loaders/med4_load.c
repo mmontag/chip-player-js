@@ -66,6 +66,7 @@ struct SynthInstr {
 	ULONG wf[64];		/* offs: 278 */
 };
 
+#if 0
 static char *inst_type[] = {
 	"HYB",		/* -2 */
 	"SYN",		/* -1 */
@@ -78,6 +79,7 @@ static char *inst_type[] = {
 	"I7O",		/*  6 */
 	"EXT",		/*  7 */
 };
+#endif
 
 static int read4_ctl;
 

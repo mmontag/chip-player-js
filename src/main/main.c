@@ -374,7 +374,7 @@ static void shuffle (int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-    int i, t, lf_flag, first, num_mod, verb = 0;
+    int i, t, lf_flag, first, num_mod;
     time_t t0, t1, t2, t3;
 #ifndef WIN32
     struct timeval tv;
@@ -395,9 +395,9 @@ int main(int argc, char **argv)
     xmp_init(ctx, argc, argv);
     opt = xmp_get_options(ctx);
 
-    opt->verbosity = 1;
+    //opt->verbosity = 1;
     get_options(argc, argv, opt, ctx);
-    verbosity = opt->verbosity;
+    //verbosity = opt->verbosity;
 
     if (!(probeonly || argv[optind])) {
 	fprintf (stderr, "%s: no modules to play\n"
@@ -422,10 +422,10 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_TERMIOS_H
     if ((background = (tcgetpgrp (0) == getppid ()))) {
-	verb = opt->verbosity;
-	opt->verbosity = 0;
+	//verb = opt->verbosity;
+	//opt->verbosity = 0;
 	i = xmp_open_audio(ctx);
-	xmp_verbosity_level(ctx, opt->verbosity = verb);
+	//xmp_verbosity_level(ctx, opt->verbosity = verb);
     } else
 #endif
     {
@@ -450,12 +450,10 @@ int main(int argc, char **argv)
 	}
     }
 
-    if (opt->verbosity) {
-	fprintf(stderr, "Extended Module Player " VERSION "\n"
-	"Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr\n");
-    }
+    fprintf(stderr, "Extended Module Player " VERSION "\n"
+ 	"Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr\n");
 
-    if (probeonly || (opt->verbosity)) {
+    if (1) {
 	int srate, res, chn, itpt;
 	
 	xmp_get_driver_cfg(ctx, &srate, &res, &chn, &itpt);
@@ -524,7 +522,7 @@ int main(int argc, char **argv)
 	    }
 	}
 
-	if (opt->verbosity > 0 && !background) {
+	if (!background) {
 	    if (lf_flag)
 		fprintf (stderr, "\n");
 	    lf_flag = fprintf (stderr, "Loading %s... (%d of %d)\n",
@@ -532,9 +530,9 @@ int main(int argc, char **argv)
 	}
 
 	if (background) {
-	    verb = xmp_verbosity_level(ctx, 0);
+	    //verb = xmp_verbosity_level(ctx, 0);
 	    t = xmp_load_module(ctx, argv[optind]);
-	    xmp_verbosity_level(ctx, verb);
+	    //xmp_verbosity_level(ctx, verb);
 	} else {
 	    t = xmp_load_module(ctx, argv[optind]);
 	}
@@ -591,7 +589,7 @@ int main(int argc, char **argv)
 	if (showtime) {
 	    fprintf(stderr, "\r                       \r");
 	}
-	if (opt->verbosity && !background) {
+	if (!background) {
 	    fprintf (stderr,
 "\rElapsed time   : %dmin%02ds %s                                \n",
 	    t / 60, t % 60, skip ? "(SKIPPED)" : "         ");
@@ -619,7 +617,7 @@ skip_play:
 
     time (&t1);
 
-    if (!loadonly && opt->verbosity && !background && num_mod > 1) {
+    if (!loadonly && !background && num_mod > 1) {
 	t = difftime (t1, t0);
 	fprintf (stderr, "\n\t%d modules played, total time %dh%02dmin%02ds\n",
 	     num_mod, t / 3600, (t % 3600) / 60, t % 60); 
