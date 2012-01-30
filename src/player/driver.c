@@ -626,6 +626,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
      */
     if ((xxs->data = malloc(xxs->len + 4)) == NULL)
 	return XMP_ERR_ALLOC;
+    memset(xxs->data + xxs->len, 0, 4); 
 
     if (flags & XMP_SMP_NOLOAD) {
 	memcpy(xxs->data, buffer, xxs->len);
