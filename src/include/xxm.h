@@ -124,13 +124,12 @@ struct xxm_sample {
 	int lps;		/* Loop start */
 	int lpe;		/* Loop end */
 #define XMP_SAMPLE_16BIT	0x0001
-#define XMP_SAMPLE_UNSIGNED	0x0002
-#define XMP_SAMPLE_LOOP		0x0004
-#define XMP_SAMPLE_LOOP_BIDIR	0x0008	/* Bidirectional loop */
-#define XMP_SAMPLE_LOOP_REVERSE	0x0010	/* Backwards loop */
-#define XMP_SAMPLE_LOOP_FULL	0x0040	/* Play entire sample before looping */
-#define XMP_SAMPLE_LOOP_FIRST	0x0080	/* First run control bit */
-#define XMP_SAMPLE_SYNTH	0x0100
+#define XMP_SAMPLE_LOOP		0x0002
+#define XMP_SAMPLE_LOOP_BIDIR	0x0004	/* Bidirectional loop */
+#define XMP_SAMPLE_LOOP_REVERSE	0x0008	/* Backwards loop */
+#define XMP_SAMPLE_LOOP_FULL	0x0010	/* Play entire sample before looping */
+#define XMP_SAMPLE_LOOP_FIRST	0x0020	/* First run control bit */
+#define XMP_SAMPLE_SYNTH	0x1000
 	int flg;		/* Flags */
 	uint8 *data;
 };

@@ -186,6 +186,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &p->m;
 	int i, srate, finetune, flags;
+	int has_unsigned_sample;
 
 	read32b(f);		/* 42 01 00 00 */
 	read8(f);		/* 00 */
@@ -235,6 +236,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	m->xxs[i].lpe = read32l(f);
 
 	m->xxs[i].flg = 0;
+	has_unsigned_sample = 1;
 	if (flags & 0x04)
 		m->xxs[i].flg |= XMP_SAMPLE_16BIT;
 	if (flags & 0x08)
@@ -242,7 +244,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	if (flags & 0x10)
 		m->xxs[i].flg |= XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR;
 	if (~flags & 0x80)
-		m->xxs[i].flg |= XMP_SAMPLE_UNSIGNED;
+		has_unsigned_sample = 1;
 
 	srate = read32l(f);
 	finetune = 0;
@@ -262,7 +264,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		m->xxi[i][0].vol, flags, srate);
 
 	if (m->xxs[i].len > 1) {
-		xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
+		xmp_drv_loadpatch(ctx, f, i, m->c4rate, has_unsigned_sample ? XMP_SMP_UNS : 0, &m->xxs[i], NULL);
 		reportv(ctx, 0, ".");
 	}
 }

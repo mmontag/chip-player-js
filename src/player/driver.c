@@ -659,15 +659,15 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	}
     }
 
+    /* Convert samples to signed */
+    if (flags & XMP_SMP_UNS) {
+        xmp_cvt_sig2uns(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
+    }
+
     /* Fix endianism if needed */
     if (xxs->flg & XMP_SAMPLE_16BIT) {
 	if (!!o->big_endian ^ !!(flags & XMP_SMP_BIGEND))
 	    xmp_cvt_sex(xxs->len, xxs->data);
-    }
-
-    /* Convert samples to signed */
-    if (xxs->flg & XMP_SAMPLE_UNSIGNED) {
-        xmp_cvt_sig2uns(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
     }
 
     /* Downmix stereo samples */
