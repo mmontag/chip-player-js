@@ -342,10 +342,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 		int mix_size = s->mode * smp_cnt;
 		int mixer = vi->fidx & FIDX_FLAGMASK;
 
-		/* Something for Hipolito's anticlick routine */
-
-		/* Workaround to prevent memory access violaton -- we should
-		 * fix it properly later */
+		/* Hipolito's anticlick routine */
 		idx = mix_size;
 		if (idx < 2)
 		    idx = 2;
@@ -360,7 +357,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 		mix_fn[mixer](vi, buf_pos, smp_cnt, vol_l, vol_r, itp_inc);
 		buf_pos += s->mode * smp_cnt;
 
-		/* More stuff for Hipolito's anticlick routine */
+		/* Hipolito's anticlick routine */
 		idx = 0;
 		if (mix_size < 2)
 		    idx = 2;
@@ -413,22 +410,14 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
     struct xmp_mod_context *m = &ctx->p.m;
     struct voice_info *vi = &d->voice_array[voc];
     struct xxm_sample *xxs = &m->xxs[vi->smp];
-    int lpe, res, mode;
+    int lpe;
 
     if (xxs->flg & XMP_SAMPLE_SYNTH)
 	return;
 
-#if 0
-    res = xxs->flg & XMP_SAMPLE_16BIT ? 1 : 0;
-    mode = (xxs->flg & XMP_SAMPLE_LOOP) && !(xxs->flg & XMP_SAMPLE_LOOP_BIDIR);
-    mode = (mode << res) + res + 1;	/* see xmp_cvt_anticlick */
-#endif
-
     lpe = xxs->len - 1;
     if (xxs->flg & XMP_SAMPLE_LOOP && ~xxs->flg & XMP_SAMPLE_LOOP_FIRST)
 	lpe = lpe > xxs->lpe ? xxs->lpe : lpe;
-
-    lpe >>= res;
 
     if (pos >= lpe)			/* Happens often in MED synth */
 	pos = 0;
@@ -584,28 +573,6 @@ int xmp_smix_numvoices(struct xmp_context *ctx, int num)
 	return num;
     }
 }
-
-#if 0
-/* WARNING! Output samples must have the same byte order of the host machine!
- * (That's what happens in most cases anyway)
- */
-int xmp_smix_writepatch(struct xmp_context *ctx, struct patch_info *patch)
-{
-    if (patch) {
-	if (PATCH_SYNTH(patch))
-	    return 0;
-
-	if (patch->len <= 0)
-	    return XMP_ERR_PATCH;
-
-	if (patch->mode & WAVE_UNSIGNED)
-	    xmp_cvt_sig2uns (patch->len, patch->mode & XMP_SAMPLE_16BIT,
-		patch->data);
-    }
-
-    return 0;
-}
-#endif
 
 int xmp_smix_on(struct xmp_context *ctx)
 {

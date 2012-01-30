@@ -590,7 +590,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 {
     struct xmp_options *o = &ctx->o;
     uint8 s[5];
-    int bytelen;
+    int bytelen, extralen;
 
     /* Synth patches
      * Default is YM3128 for historical reasons
@@ -626,12 +626,14 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     /* Patches with samples
      */
     bytelen = xxs->len;
-    if (xxs->flg & XMP_SAMPLE_16BIT)
+    extralen = 1;
+    if (xxs->flg & XMP_SAMPLE_16BIT) {
 	bytelen *= 2;
+	extralen = 2;
+    }
 
-    if ((xxs->data = malloc(bytelen + 4)) == NULL)
+    if ((xxs->data = malloc(bytelen + extralen)) == NULL)
 	return XMP_ERR_ALLOC;
-    memset(xxs->data + bytelen, 0, 4);
 
     if (flags & XMP_SMP_NOLOAD) {
 	memcpy(xxs->data, buffer, bytelen);
@@ -663,7 +665,13 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
 	    xmp_cvt_sex(xxs->len, xxs->data);
     }
 
-    if (flags & XMP_SMP_STEREO) {	/* Downmix stereo samples */
+    /* Convert samples to signed */
+    if (xxs->flg & XMP_SAMPLE_UNSIGNED) {
+        xmp_cvt_sig2uns(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
+    }
+
+    /* Downmix stereo samples */
+    if (flags & XMP_SMP_STEREO) {
 	xmp_cvt_stdownmix(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
 	xxs->len /= 2;
     }
@@ -679,7 +687,6 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     if (flags & XMP_SMP_VIDC)
 	xmp_cvt_vidc(xxs->len, xxs->data);
 
-
     /* Duplicate last sample -- prevent click in bidir loops */
     if (xxs->flg & XMP_SAMPLE_16BIT) {
 	xxs->data[bytelen] = xxs->data[bytelen - 2];
@@ -687,7 +694,7 @@ int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, in
     } else {
 	xxs->data[bytelen] = xxs->data[bytelen - 1];
     }
-    xxs->len++;
+    //xxs->len++;
 
     return 0;
 }

@@ -71,7 +71,7 @@ void xmp_cvt_diff2abs (int l, int r, uint8 *p)
 
 
 /* Convert signed to unsigned sample data */
-void xmp_cvt_sig2uns(int l, int r, char *p)
+void xmp_cvt_sig2uns(int l, int r, uint8 *p)
 {
     uint16* w = (uint16*)p;
 
@@ -136,39 +136,6 @@ void xmp_cvt_vidc(int l, uint8 *p)
 		if (x & 0x01)
 			p[i] *= -1;
 	}
-}
-
-
-/* Hipolito's routine to minimize loop clicking */
-void xmp_cvt_anticlick (struct xxm_sample *xxs)
-{
-    if (xxs->flg & XMP_SAMPLE_SYNTH)
-	return;
-
-    /* Ok, I need this messy code to anticlick in AWE :-( */
-
-    if ((xxs->flg & XMP_SAMPLE_LOOP) && !(xxs->flg & XMP_SAMPLE_LOOP_BIDIR)) {
-	if (xxs->flg & XMP_SAMPLE_16BIT) {
-	    xxs->data[xxs->lpe++] = xxs->data[xxs->lps++];
-	    xxs->data[xxs->lpe++] = xxs->data[xxs->lps++];
-	    xxs->data[xxs->lpe] = xxs->data[xxs->lps];
-	    xxs->data[xxs->lpe + 1] = xxs->data[xxs->lps + 1];
-	    xxs->len += 4;
-	} else {
-	    xxs->data[xxs->lpe++] = xxs->data[xxs->lps++];
-	    xxs->data[xxs->lpe] = xxs->data[xxs->lps];
-	    xxs->len += 2;
-	}
-    } else {
-	if (xxs->flg & XMP_SAMPLE_16BIT) {
-	    xxs->data[xxs->len] = xxs->data[xxs->len - 2];
-	    xxs->data[xxs->len + 1] = xxs->data[xxs->len - 1];
-	    xxs->len += 2;
-	} else {
-	    xxs->data[xxs->len] = xxs->data[xxs->len - 1];
-	    xxs->len++;
-	}
-    }
 }
 
 
