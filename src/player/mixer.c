@@ -263,8 +263,8 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
     struct xmp_mod_context *m = &ctx->p.m;
     struct xxm_sample *xxs;
     struct voice_info *vi;
-    int smp_cnt, tic_cnt, lps, lpe;
-    int vol_l, vol_r, itp_inc, voc;
+    int samples, tick, lps, lpe;
+    int vol_l, vol_r, step, voc;
     int prv_l, prv_r;
     int synth = 1;
     int *buf_pos;
@@ -295,16 +295,16 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	    continue;
 	}
 
-	itp_inc = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
+	step = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
 
-	if (itp_inc == 0)	/* otherwise m5v-nwlf.t crashes */
+	if (step == 0)	/* otherwise m5v-nwlf.t crashes */
 	    continue;
 
 	xxs = &m->xxs[vi->smp];
 
 	/* This is for bidirectional sample loops */
 	if (vi->fidx & FLAG_REVLOOP)
-	    itp_inc = -itp_inc;
+	    step = -step;
 
 	/* Sample loop processing. Offsets in samples, not bytes */
 	lps = xxs->lps;
@@ -315,31 +315,31 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	    lpe = xxs->len - 1;
 	}
 
-	for (tic_cnt = s->ticksize; tic_cnt; ) {
+	for (tick = s->ticksize; tick; ) {
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
-	    smp_cnt = 1 + (((int64)(vi->end - vi->pos) << SMIX_SHIFT)
-		- vi->itpt) / itp_inc;
+	    samples = 1 + (((int64)(vi->end - vi->pos) << SMIX_SHIFT)
+		- vi->frac) / step;
 
-	    if (itp_inc > 0) {
+	    if (step > 0) {
 		if (vi->end < vi->pos)
-		    smp_cnt = 0;
+		    samples = 0;
 	    } else {
 		if (vi->end > vi->pos)
-		    smp_cnt = 0;
+		    samples = 0;
 	    }
 
 	    /* Ok, this shouldn't happen, but in 'Languede.mod'... */
-	    if (smp_cnt < 0)
-		smp_cnt = 0;
+	    if (samples < 0)
+		samples = 0;
 	    
 	    /* ...inside the tick boundaries */
-	    if (smp_cnt > tic_cnt)
-		smp_cnt = tic_cnt;
+	    if (samples > tick)
+		samples = tick;
 
 	    if (vi->vol) {
 		int idx;
-		int mix_size = s->mode * smp_cnt;
+		int mix_size = s->mode * samples;
 		int mixer = vi->fidx & FIDX_FLAGMASK;
 
 		/* Hipolito's anticlick routine */
@@ -354,8 +354,8 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 		    mixer &= ~FLAG_FILTER;
 
 		/* Call the output handler */
-		mix_fn[mixer](vi, buf_pos, smp_cnt, vol_l, vol_r, itp_inc);
-		buf_pos += s->mode * smp_cnt;
+		mix_fn[mixer](vi, buf_pos, samples, vol_l, vol_r, step);
+		buf_pos += s->mode * samples;
 
 		/* Hipolito's anticlick routine */
 		idx = 0;
@@ -365,21 +365,21 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 		vi->sleft = buf_pos[idx - 1] - prv_l;
 	    }
 
-	    vi->itpt += itp_inc * smp_cnt;
-	    vi->pos += vi->itpt >> SMIX_SHIFT;
-	    vi->itpt &= SMIX_MASK;
+	    vi->frac += step * samples;
+	    vi->pos += vi->frac >> SMIX_SHIFT;
+	    vi->frac &= SMIX_MASK;
 
 	    /* No more samples in this tick */
-	    if (!(tic_cnt -= smp_cnt))
+	    if (!(tick -= samples))
 		continue;
 
 	    vi->fidx ^= vi->fxor;
 
 	    /* First sample loop run */
             if (vi->fidx == 0 || lps >= lpe) {
-		smix_anticlick(ctx, voc, 0, 0, buf_pos, tic_cnt);
+		smix_anticlick(ctx, voc, 0, 0, buf_pos, tick);
 		xmp_drv_resetvoice(ctx, voc, 0);
-		tic_cnt = 0;
+		tick = 0;
 		continue;
 	    }
 
@@ -390,12 +390,12 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	            xxs->flg &= ~XMP_SAMPLE_LOOP_FIRST;
 		}
 	    } else {
-		itp_inc = -itp_inc;			/* invert dir */
-		vi->itpt += itp_inc;
+		step = -step;			/* invert dir */
+		vi->frac += step;
 		/* keep bidir loop at the same size of forward loop */
-		vi->pos += (vi->itpt >> SMIX_SHIFT) + 1;
-		vi->itpt &= SMIX_MASK;
-		vi->end = itp_inc > 0 ? lpe : lps;
+		vi->pos += (vi->frac >> SMIX_SHIFT) + 1;
+		vi->frac &= SMIX_MASK;
+		vi->end = step > 0 ? lpe : lps;
 	    }
 	}
     }
@@ -404,7 +404,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 }
 
 
-void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
+void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &ctx->p.m;
@@ -423,7 +423,7 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
 	pos = 0;
 
     vi->pos = pos;
-    vi->itpt = itp;
+    vi->frac = frac;
     vi->end = lpe;
 
     if (vi->fidx & FLAG_REVLOOP)

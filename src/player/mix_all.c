@@ -23,17 +23,17 @@
  * and number of channels.
  */
 #define INTERPOLATE() do { \
-    if (itpt >> SMIX_SHIFT) { \
-	cur_bk += itpt >> SMIX_SHIFT; \
-	smp_x1 = in_bk[cur_bk]; \
-	smp_dt = in_bk[cur_bk + 1] - smp_x1; \
-	itpt &= SMIX_MASK; \
+    if (frac >> SMIX_SHIFT) { \
+	pos += frac >> SMIX_SHIFT; \
+	smp_x1 = sptr[pos]; \
+	smp_dt = sptr[pos + 1] - smp_x1; \
+	frac &= SMIX_MASK; \
     } \
-    smp_in = smp_x1 + ((itpt * smp_dt) >> SMIX_SHIFT); \
+    smp_in = smp_x1 + ((frac * smp_dt) >> SMIX_SHIFT); \
 } while (0)
 
 #define DONT_INTERPOLATE() do { \
-    smp_in = in_bk[itpt >> SMIX_SHIFT]; \
+    smp_in = sptr[frac >> SMIX_SHIFT]; \
 } while (0)
 
 #define DO_FILTER() do { \
@@ -49,12 +49,12 @@
 #define MIX_STEREO() do { \
     *(tmp_bk++) += smp_in * vr; \
     *(tmp_bk++) += smp_in * vl; \
-    itpt += itpt_inc; \
+    frac += step; \
 } while (0)
 
 #define MIX_MONO() do { \
     *(tmp_bk++) += smp_in * vl; \
-    itpt += itpt_inc; \
+    frac += step; \
 } while (0)
 
 #define MIX_STEREO_AC() do { \
@@ -67,7 +67,7 @@
 	*(tmp_bk++) += smp_in * vr; \
 	*(tmp_bk++) += smp_in * vl; \
     } \
-    itpt += itpt_inc; \
+    frac += step; \
 } while (0)
 
 #define MIX_MONO_AC() do { \
@@ -77,14 +77,14 @@
     } else { \
 	*(tmp_bk++) += smp_in * vl; \
     } \
-    itpt += itpt_inc; \
+    frac += step; \
 } while (0)
 
 #define VAR_NORM(x) \
     register int smp_in; \
-    x *in_bk = vi->sptr; \
-    int cur_bk = vi->pos - 1; \
-    int itpt = vi->itpt + (1 << SMIX_SHIFT)
+    x *sptr = vi->sptr; \
+    int pos = vi->pos; \
+    int frac = vi->frac + (1 << SMIX_SHIFT)
 
 #define VAR_ITPT(x) \
     VAR_NORM(x); \
@@ -94,7 +94,7 @@
     int fx1 = vi->flt_X1, fx2 = vi->flt_X2
 
 #define SMIX_MIXER(f) void f(struct voice_info *vi, int* tmp_bk, \
-    int count, int vl, int vr, int itpt_inc)
+    int count, int vl, int vr, int step)
 
 
 /* Handler for 8 bit samples, interpolated stereo output
@@ -124,7 +124,7 @@ SMIX_MIXER(smix_st8norm)
 {
     VAR_NORM(int8);
 
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
 
@@ -137,7 +137,7 @@ SMIX_MIXER(smix_st16norm)
 
     vl >>= 8;
     vr >>= 8;
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
 }
 
@@ -171,7 +171,7 @@ SMIX_MIXER(smix_mn8norm)
     VAR_NORM(int8);
 
     vl <<= 1;
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
 
@@ -183,7 +183,7 @@ SMIX_MIXER(smix_mn16norm)
     VAR_NORM(int16);
 
     vl >>= 7;
-    in_bk += cur_bk;
+    sptr += pos;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
 }
 

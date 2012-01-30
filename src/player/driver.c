@@ -357,7 +357,7 @@ void xmp_drv_seteffect(struct xmp_context *ctx, int chn, int type, int val)
 void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 {
     struct xmp_driver_context *d = &ctx->d;
-    int voc, pos, itp;
+    int voc, pos, frac;
     struct voice_info *vi;
 
     voc = d->ch2vo_array[chn];
@@ -370,10 +370,10 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 	return;
 
     pos = vi->pos;
-    itp = vi->itpt;
+    frac = vi->frac;
 
     smix_setpatch(ctx, voc, smp);
-    smix_voicepos(ctx, voc, pos, itp);
+    smix_voicepos(ctx, voc, pos, frac);
 }
 
 
