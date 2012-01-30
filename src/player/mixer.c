@@ -264,7 +264,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
     struct xxm_sample *xxs;
     struct voice_info *vi;
     int samples, tick, lps, lpe;
-    int vol_l, vol_r, itp_inc, voc;
+    int vol_l, vol_r, step, voc;
     int prv_l, prv_r;
     int synth = 1;
     int *buf_pos;
@@ -295,16 +295,16 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	    continue;
 	}
 
-	itp_inc = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
+	step = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
 
-	if (itp_inc == 0)	/* otherwise m5v-nwlf.t crashes */
+	if (step == 0)	/* otherwise m5v-nwlf.t crashes */
 	    continue;
 
 	xxs = &m->xxs[vi->smp];
 
 	/* This is for bidirectional sample loops */
 	if (vi->fidx & FLAG_REVLOOP)
-	    itp_inc = -itp_inc;
+	    step = -step;
 
 	/* Sample loop processing. Offsets in samples, not bytes */
 	lps = xxs->lps;
@@ -319,9 +319,9 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
 	    samples = 1 + (((int64)(vi->end - vi->pos) << SMIX_SHIFT)
-		- vi->itpt) / itp_inc;
+		- vi->frac) / step;
 
-	    if (itp_inc > 0) {
+	    if (step > 0) {
 		if (vi->end < vi->pos)
 		    samples = 0;
 	    } else {
@@ -354,7 +354,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 		    mixer &= ~FLAG_FILTER;
 
 		/* Call the output handler */
-		mix_fn[mixer](vi, buf_pos, samples, vol_l, vol_r, itp_inc);
+		mix_fn[mixer](vi, buf_pos, samples, vol_l, vol_r, step);
 		buf_pos += s->mode * samples;
 
 		/* Hipolito's anticlick routine */
@@ -365,9 +365,9 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 		vi->sleft = buf_pos[idx - 1] - prv_l;
 	    }
 
-	    vi->itpt += itp_inc * samples;
-	    vi->pos += vi->itpt >> SMIX_SHIFT;
-	    vi->itpt &= SMIX_MASK;
+	    vi->frac += step * samples;
+	    vi->pos += vi->frac >> SMIX_SHIFT;
+	    vi->frac &= SMIX_MASK;
 
 	    /* No more samples in this tick */
 	    if (!(tick -= samples))
@@ -390,12 +390,12 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	            xxs->flg &= ~XMP_SAMPLE_LOOP_FIRST;
 		}
 	    } else {
-		itp_inc = -itp_inc;			/* invert dir */
-		vi->itpt += itp_inc;
+		step = -step;			/* invert dir */
+		vi->frac += step;
 		/* keep bidir loop at the same size of forward loop */
-		vi->pos += (vi->itpt >> SMIX_SHIFT) + 1;
-		vi->itpt &= SMIX_MASK;
-		vi->end = itp_inc > 0 ? lpe : lps;
+		vi->pos += (vi->frac >> SMIX_SHIFT) + 1;
+		vi->frac &= SMIX_MASK;
+		vi->end = step > 0 ? lpe : lps;
 	    }
 	}
     }
@@ -404,7 +404,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 }
 
 
-void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
+void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &ctx->p.m;
@@ -423,7 +423,7 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int itp)
 	pos = 0;
 
     vi->pos = pos;
-    vi->itpt = itp;
+    vi->frac = frac;
     vi->end = lpe;
 
     if (vi->fidx & FLAG_REVLOOP)

@@ -31,8 +31,8 @@ struct voice_info {
 	int vol;		/* */
 	int period;		/* current period */
 	int pbase;		/* base period */
-	int itpt;		/* interpolation */
 	int pos;		/* position in sample */
+	int frac;		/* interpolation */
 	int fidx;		/* function index */
 	int fxor;		/* function xor control */
 	int ins;		/* instrument number */
