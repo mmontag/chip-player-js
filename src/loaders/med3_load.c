@@ -380,7 +380,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			m->xxi[i][0].vol);
 
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
 	}
 

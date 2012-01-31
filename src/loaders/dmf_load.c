@@ -337,13 +337,13 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 
 		switch (packtype[i]) {
 		case 0:
-			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
 						0, &m->xxs[m->xxi[i][0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
 			unpack(data, ibuf, ibuf + smpsize, m->xxs[i].len);
-			xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
+			xmp_drv_loadpatch(ctx, NULL, i,
 					XMP_SMP_NOLOAD, &m->xxs[i], (char *)data);
 			break;
 		default:

@@ -581,7 +581,7 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int basefreq, int flags, struct xxm_sample *xxs, void *buffer)
+int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int flags, struct xxm_sample *xxs, void *buffer)
 {
     struct xmp_options *o = &ctx->o;
     uint8 s[5];

@@ -269,7 +269,7 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
 
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, &m->xxs[i], NULL);
     }
 
     m->volbase = 0xff;

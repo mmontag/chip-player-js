@@ -167,7 +167,7 @@ static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
     _D(_D_INFO, "Stored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
-	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, i, 0, &m->xxs[i], NULL);
     }
 }
 

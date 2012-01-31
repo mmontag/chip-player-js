@@ -436,7 +436,7 @@ load_instruments:
 		    m->xxi[i][j].pan, m->xxi[i][j].xpo);
 
 		if (xfh.version > 0x0103)
-		    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
+		    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 	    }
 	} else {
@@ -477,7 +477,7 @@ load_samples:
     if (xfh.version <= 0x0103) {
 	for (i = 0; i < m->xxh->ins; i++) {
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid,
 		    XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 	    }
 	}

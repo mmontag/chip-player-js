@@ -289,7 +289,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (m->xxs[i].len <= 2)
 	    continue;
 
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
 							&m->xxs[i], NULL);
 
     }

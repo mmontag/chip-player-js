@@ -237,7 +237,7 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 			continue;
 		}
 		
-		xmp_drv_loadpatch(ctx, f, i, m->c4rate, XMP_SMP_BIGEND,
+		xmp_drv_loadpatch(ctx, f, i, XMP_SMP_BIGEND,
 							&m->xxs[i], NULL);
 
 		if (m->xxs[i].len == 0)

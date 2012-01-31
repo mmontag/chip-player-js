@@ -465,7 +465,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
 			XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 	}
 

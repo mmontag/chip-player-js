@@ -269,7 +269,7 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	m->xxih[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
     }
 
-    xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, m->c4rate, XMP_SMP_NOLOAD,
+    xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, XMP_SMP_NOLOAD,
 					&m->xxs[m->xxi[i][0].sid], wave);
 }
 
@@ -451,7 +451,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    continue;
 	}
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
 					&m->xxs[m->xxi[i][0].sid], NULL);
     }
 

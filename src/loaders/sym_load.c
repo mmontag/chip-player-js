@@ -409,14 +409,14 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			read_lzw_dynamic(f, b, 13, 0, m->xxs[i].len,
 					m->xxs[i].len, XMP_LZW_QUIRK_DSYM);
 			xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid,
-				m->c4rate, XMP_SMP_NOLOAD | XMP_SMP_DIFF,
+				XMP_SMP_NOLOAD | XMP_SMP_DIFF,
 				&m->xxs[m->xxi[i][0].sid], (char*)b);
 			free(b);
 		} else if (a == 4) {
-			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 		} else {
-			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 		}
 	}

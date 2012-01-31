@@ -368,7 +368,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxi[i][j].vol, m->xxi[i][j].fin,
 				m->xxi[i][j].pan, m->xxi[i][j].xpo);
 
-			xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid,
 				XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 		}
 	}

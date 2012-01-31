@@ -199,7 +199,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxi[i][0].vol);
 
 		if (found) {
-			xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate,
+			xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid,
 				0, &m->xxs[m->xxi[i][0].sid], NULL);
 			fclose(s);
 		}

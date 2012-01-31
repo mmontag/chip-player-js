@@ -433,7 +433,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 				       m->xxi[i][0].xpo,
 				       m->xxi[i][0].fin >> 4);
 
-			xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,
+			xmp_drv_loadpatch(ctx, f, smp_idx, 0,
 					&m->xxs[smp_idx], NULL);
 
 			smp_idx++;
@@ -494,7 +494,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxs[smp_idx].lpe = m->xxs[smp_idx].len;
 				m->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
-				xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate,
+				xmp_drv_loadpatch(ctx, f, smp_idx,
 					0, &m->xxs[smp_idx], NULL);
 
 
@@ -555,7 +555,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxi[i][0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, XMP_SMP_BIGEND,
+		xmp_drv_loadpatch(ctx, f, smp_idx, XMP_SMP_BIGEND,
 				  &m->xxs[smp_idx], NULL);
 
 		smp_idx++;

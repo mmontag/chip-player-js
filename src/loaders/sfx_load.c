@@ -211,7 +211,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, i, 0, &m->xxs[i], NULL);
     }
 
     return 0;

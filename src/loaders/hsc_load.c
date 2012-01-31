@@ -121,7 +121,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxi[i][0].sid = i;
 	m->xxih[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
-	xmp_drv_loadpatch(ctx, f, i, 0, XMP_SMP_ADLIB, NULL, (char *)sid);
+	xmp_drv_loadpatch(ctx, f, i, XMP_SMP_ADLIB, NULL, (char *)sid);
     }
 
     /* Read orders */

@@ -259,7 +259,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		m->xxi[i][0].vol, flags, srate);
 
 	if (m->xxs[i].len > 1) {
-		xmp_drv_loadpatch(ctx, f, i, m->c4rate, has_unsigned_sample ?
+		xmp_drv_loadpatch(ctx, f, i, has_unsigned_sample ?
 			XMP_SMP_UNS : 0, &m->xxs[i], NULL);
 	}
 }

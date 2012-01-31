@@ -394,7 +394,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (!m->xxs[smp_num].len)
 		continue;
 
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate, 0,
+	    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, 0,
 		&m->xxs[m->xxi[i][j].sid], NULL);
 	}
     }

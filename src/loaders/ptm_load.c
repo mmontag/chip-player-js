@@ -257,7 +257,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (!m->xxs[i].len)
 	    continue;
 	fseek(f, start + smp_ofs[m->xxi[i][0].sid], SEEK_SET);
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
 			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i][0].sid], NULL);
     }
 

@@ -324,7 +324,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			srate);
 	
 		if (m->xxs[snum].len > 1) {
-			xmp_drv_loadpatch(ctx, f, snum, m->c4rate, 0, &m->xxs[snum], NULL);
+			xmp_drv_loadpatch(ctx, f, snum, 0, &m->xxs[snum], NULL);
 		}
 	}
 }

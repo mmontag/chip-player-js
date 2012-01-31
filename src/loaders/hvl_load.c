@@ -494,7 +494,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			break;
 		}
 
-		xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
+		xmp_drv_loadpatch(ctx, NULL, i,
 				  XMP_SMP_NOLOAD, &m->xxs[i], (char *)b);
 	}
 

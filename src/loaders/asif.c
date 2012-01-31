@@ -56,7 +56,7 @@ int asif_load(struct xmp_context *ctx, FILE *f, int i)
 				read16l(f);		/* SampRate */
 			}
 		
-			xmp_drv_loadpatch(ctx, f, i, m->c4rate,
+			xmp_drv_loadpatch(ctx, f, i, 
 					XMP_SMP_UNS, &m->xxs[i], NULL);
 
 			chunk++;

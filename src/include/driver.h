@@ -72,7 +72,7 @@ void	xmp_drv_clearmem	(struct xmp_context *);
 void	xmp_drv_starttimer	(struct xmp_context *);
 void	xmp_drv_bufwipe		(struct xmp_context *);
 void	xmp_drv_bufdump		(struct xmp_context *);
-int	xmp_drv_loadpatch 	(struct xmp_context *, FILE *, int, int, int,
+int	xmp_drv_loadpatch 	(struct xmp_context *, FILE *, int, int,
 				 struct xxm_sample *, void *);
 
 struct xmp_drv_info *xmp_drv_array (void);

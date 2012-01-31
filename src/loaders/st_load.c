@@ -379,7 +379,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
     }
 

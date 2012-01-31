@@ -272,7 +272,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + smp_ptr[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
+		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
 	}
 

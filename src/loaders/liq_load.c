@@ -494,7 +494,7 @@ next_pattern:
 
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, &m->xxs[i], NULL);
     }
 
     return 0;

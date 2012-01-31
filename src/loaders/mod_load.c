@@ -520,11 +520,11 @@ skip_test:
 	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, m->xxih[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate, 0,
+	        xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, 0,
 		    &m->xxs[m->xxi[i][0].sid], NULL);
 	    }
 	} else {
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
+	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
 	        &m->xxs[m->xxi[i][0].sid], NULL);
 	}
     }
