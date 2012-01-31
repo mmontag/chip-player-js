@@ -334,7 +334,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	str_adj ((char *) ii.name);
 	strncpy ((char *) m->xxih[i].name, ii.name, 24);
 
-	memcpy (m->xxim[i].ins, ii.map, XXM_KEY_MAX);
+	for (j = 0; j < 108; j++) {
+		m->xxih[i].map[j].ins = ii.map[j];
+	}
 
 	_D(_D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,
 		ii.fadeout, ii.env[0].flg & 0x01 ? 'V' : '-');

@@ -197,7 +197,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	m->xxih[i].nsm = read8(f);
 	fseek(f, 12, SEEK_CUR);		/* Sample map - 1st octave */
-	fread(&m->xxim[i].ins, 1, 96, f);
+
+	for (j = 0; j < 96; j++) {
+		m->xxih[i].map[j].ins = read8(f);
+	}
 
 	fseek(f, 11, SEEK_CUR);		/* unknown */
 	vwf = read8(f);			/* vibrato waveform */

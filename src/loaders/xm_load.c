@@ -368,13 +368,12 @@ load_instruments:
 		memcpy(m->xxih[i].aei.data, xi.v_env, m->xxih[i].aei.npt * 4);
 		memcpy(m->xxih[i].pei.data, xi.p_env, m->xxih[i].pei.npt * 4);
 
-		for (j = 0; j < XXM_KEY_MAX; j++)
-		    m->xxim[i].ins[j] = -1;
+		for (j = 0; j < 96; j++)
+		    m->xxih[i].map[j].ins = xi.sample[j];
 
-		memcpy(&m->xxim[i].ins, xi.sample, 96);
 		for (j = 0; j < 96; j++) {
-		    if (m->xxim[i].ins[j] >= m->xxih[i].nsm)
-			m->xxim[i].ins[j] = 255;
+		    if (m->xxih[i].map[j].ins >= m->xxih[i].nsm)
+			m->xxih[i].map[j].ins = -1;
 		}
 	    }
 

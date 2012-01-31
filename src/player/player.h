@@ -32,9 +32,8 @@
 #define MODULE_ABORT	0x0004 
 #define MODULE_RESTART	0x0008 
 
-#define XXIH p->m.xxih[xc->ins]
-#define XXIM p->m.xxim[xc->ins]
-#define XXI p->m.xxi[xc->ins][XXIM.ins[xc->key]]
+#define XXIH m->xxih[xc->ins]
+#define XXI m->xxi[xc->ins][XXIH.map[xc->key].ins]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
 

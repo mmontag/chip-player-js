@@ -48,7 +48,6 @@ extern int arch_vol_table[];
 
 #define INSTRUMENT_INIT() do { \
     m->xxih = calloc(sizeof (struct xxm_instrument_header), m->xxh->ins); \
-    m->xxim = calloc(sizeof (struct xxm_instrument_map), m->xxh->ins); \
     m->xxi = calloc(sizeof (struct xxm_instrument *), m->xxh->ins); \
     if (m->xxh->smp) { m->xxs = calloc (sizeof (struct xxm_sample), m->xxh->smp); }\
 } while (0)

@@ -89,21 +89,13 @@ static struct xxm_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
 static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
 static void play_channel (struct xmp_context *, int, int);
 
-/* */
-
-static inline struct xxm_instrument *
-get_instrument(struct xmp_mod_context *m, struct xmp_channel *xc)
-{
-	int mapped = m->xxim[xc->ins].ins[xc->key];
-	return &m->xxi[xc->ins][mapped];
-}
 
 /* Instrument vibrato */
 
 static inline int
 get_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 {
-	struct xxm_instrument *instrument = get_instrument(m, xc);
+	struct xxm_instrument *instrument = &XXI;
 	int type = instrument->vwf;
 	int depth = instrument->vde;
 	int phase = xc->instrument_vibrato.phase;
@@ -115,7 +107,7 @@ get_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 static inline void
 update_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 {
-	struct xxm_instrument *instrument = get_instrument(m, xc);
+	struct xxm_instrument *instrument = &XXI;
 	int rate = instrument->vra;
 
 	xc->instrument_vibrato.phase += rate >> 2;
@@ -348,10 +340,12 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	xc->key = --key;
 
 	if (flg & IS_VALID && key < XXM_KEY_MAX) {
-	    if (m->xxim[ins].ins[key] != 0xff) {
-		note = key + m->xxi[ins][m->xxim[ins].ins[key]].xpo +
-						m->xxim[ins].xpo[key];
-		smp = m->xxi[ins][m->xxim[ins].ins[key]].sid;
+	    if (m->xxih[ins].map[key].ins != 0xff) {
+		int mapped = m->xxih[ins].map[key].ins;
+		int transp = m->xxih[ins].map[key].xpo;
+
+		note = key + m->xxi[ins][mapped].xpo + transp;
+		smp = m->xxi[ins][mapped].sid;
 	    } else {
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
@@ -362,11 +356,11 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     }
 
     if (smp >= 0) {
+	int mapped = m->xxih[ins].map[key].ins;
+
 	if (copy_channel(p, xmp_drv_setpatch(ctx, chn, ins, smp, note,
-	 		m->xxi[ins][m->xxim[ins].ins[key]].nna,
-	   		m->xxi[ins][m->xxim[ins].ins[key]].dct,
-			m->xxi[ins][m->xxim[ins].ins[key]].dca, ctl,
-			cont_sample), chn) < 0)
+	 		m->xxi[ins][mapped].nna, m->xxi[ins][mapped].dct,
+			m->xxi[ins][mapped].dca, ctl, cont_sample), chn) < 0)
 	{
 	    return XMP_ERR_VIRTC;
 	}
@@ -410,6 +404,8 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
     }
 
     if (note >= 0) {
+	int mapped = m->xxih[ins].map[key].ins;
+
 	xc->note = note;
 
 	if (cont_sample == 0) {
@@ -421,10 +417,10 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
 	/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
 	if (!TEST(NEW_PAN))
-	    xc->pan = m->xxi[ins][m->xxim[ins].ins[key]].pan;
+	    xc->pan = m->xxi[ins][mapped].pan;
 
 	if (!TEST(FINETUNE))
-	    xc->finetune = m->xxi[ins][m->xxim[ins].ins[key]].fin;
+	    xc->finetune = m->xxi[ins][mapped].fin;
 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 			m->xxh->flg & XXM_FLG_LINEAR);
@@ -433,7 +429,7 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 	set_lfo_phase(&xc->tremolo, 0);
     }
 
-    if (xc->key < 0 || XXIM.ins[xc->key] == 0xff)
+    if (xc->key < 0 || p->m.xxih[xc->ins].map[xc->key].ins == 0xff)
 	return 0;
 
     if (TEST(RESET_ENV)) {

@@ -170,16 +170,15 @@ struct xmp_mod_context {
 	int quirk;			/* Copy from options */
 
 	struct xxm_header *xxh;		/* Header */
+	uint8 xxo[XMP_MAXORD];		/* Orders */
 	struct xxm_pattern **xxp;	/* Patterns */
 	struct xxm_track **xxt;		/* Tracks */
 	struct xxm_instrument_header *xxih;	/* Instrument headers */
-	struct xxm_instrument_map *xxim;	/* Instrument map */
 	struct xxm_instrument **xxi;	/* Instruments */
 	struct xxm_sample *xxs;		/* Samples */
 	struct xxm_channel xxc[64];	/* Channel info */
 	struct xmp_ord_info xxo_info[XMP_MAXORD];
 	int xxo_fstrow[XMP_MAXORD];
-	uint8 xxo[XMP_MAXORD];		/* Orders */
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
 	uint8 **med_wav_table;		/* MED waveform sequence table */

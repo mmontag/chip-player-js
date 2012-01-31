@@ -626,7 +626,6 @@ void xmp_release_module(xmp_context ctx)
 		}
 		free(m->xxs);
 	}
-	free(m->xxim);
 	free(m->xxih);
 	free(m->xxh);
 	if (m->comment)

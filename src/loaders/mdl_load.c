@@ -487,7 +487,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), m->xxih[i].nsm);
 
 	for (j = 0; j < XXM_KEY_MAX; j++)
-	    m->xxim[i].ins[j] = -1;
+	    m->xxih[i].map[j].ins = -1;
 
 	for (last_map = j = 0; j < m->xxih[i].nsm; j++) {
 	    int x;
@@ -497,7 +497,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 	    m->xxi[i][j].vol = read8(f);
 	    for (k = last_map; k <= map; k++) {
 		if (k < XXM_KEY_MAX)
-		    m->xxim[i].ins[k] = j;
+		    m->xxih[i].map[k].ins = j;
 	    }
 	    last_map = map + 1;
 

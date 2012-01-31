@@ -566,8 +566,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    for (k = j = 0; j < XXM_KEY_MAX; j++) {
 		c = i2h.keys[25 + j * 2] - 1;
 		if (c < 0) {
-		    m->xxim[i].ins[j] = 0xff;	/* No sample */
-		    m->xxim[i].xpo[j] = 0;
+		    m->xxih[i].map[j].ins = 0xff;	/* No sample */
+		    m->xxih[i].map[j].xpo = 0;
 		    continue;
 		}
 		if (inst_map[c] == -1) {
@@ -575,8 +575,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    inst_rmap[k] = c;
 		    k++;
 		}
-		m->xxim[i].ins[j] = inst_map[c];
-		m->xxim[i].xpo[j] = i2h.keys[24 + j * 2] - (j + 12);
+		m->xxih[i].map[j].ins = inst_map[c];
+		m->xxih[i].map[j].xpo = i2h.keys[24 + j * 2] - (j + 12);
 	    }
 
 	    m->xxih[i].nsm = k;
@@ -670,8 +670,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    for (k = j = 0; j < XXM_KEY_MAX; j++) {
 		c = i1h.keys[25 + j * 2] - 1;
 		if (c < 0) {
-		    m->xxim[i].ins[j] = 0xff;	/* No sample */
-		    m->xxim[i].xpo[j] = 0;
+		    m->xxih[i].map[j].ins = 0xff;	/* No sample */
+		    m->xxih[i].map[j].xpo = 0;
 		    continue;
 		}
 		if (inst_map[c] == -1) {
@@ -679,8 +679,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    inst_rmap[k] = c;
 		    k++;
 		}
-		m->xxim[i].ins[j] = inst_map[c];
-		m->xxim[i].xpo[j] = i1h.keys[24 + j * 2] - (j + 12);
+		m->xxih[i].map[j].ins = inst_map[c];
+		m->xxih[i].map[j].xpo = i1h.keys[24 + j * 2] - (j + 12);
 	    }
 
 	    m->xxih[i].nsm = k;
