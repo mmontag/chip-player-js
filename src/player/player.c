@@ -86,7 +86,7 @@ static struct xxm_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
  *			  -- Ice of FC about "Mental Surgery"
  */
 
-static int fetch_channel (struct xmp_context *, struct xxm_event *, int, int);
+static int read_event (struct xmp_context *, struct xxm_event *, int, int);
 static void play_channel (struct xmp_context *, int, int);
 
 
@@ -153,43 +153,7 @@ static inline void reset_channel(struct xmp_context *ctx)
 }
 
 
-static inline void fetch_row(struct xmp_context *ctx, int pat, int row)
-{
-    int count, chn;
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
-    struct xxm_event *event;
-
-    count = 0;
-    for (chn = 0; chn < p->m.xxh->chn; chn++) {
-	if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
-	    event = &EVENT(pat, chn, row);
-	} else {
-	    event = &empty_event;
-	}
-
-	if (fetch_channel(ctx, event, chn, 1) != 0) {
-	    p->fetch_ctl[chn]++;
-	    count++;
-	}
-    }
-
-    for (chn = 0; count; chn++) {
-	if (p->fetch_ctl[chn]) {
-	    if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
-	        event = &EVENT(pat, chn, row);
-	    } else {
-	        event = &empty_event;
-	    }
-	    fetch_channel(ctx, &EVENT(pat, chn, row), chn, 0);
-	    p->fetch_ctl[chn] = 0;
-	    count--;
-	}
-    }
-}
-
-
-static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, int ctl)
+static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int ctl)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
@@ -458,6 +422,42 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 }
 
 
+static inline void read_row(struct xmp_context *ctx, int pat, int row)
+{
+    int count, chn;
+    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &p->m;
+    struct xxm_event *event;
+
+    count = 0;
+    for (chn = 0; chn < p->m.xxh->chn; chn++) {
+	if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
+	    event = &EVENT(pat, chn, row);
+	} else {
+	    event = &empty_event;
+	}
+
+	if (read_event(ctx, event, chn, 1) != 0) {
+	    p->fetch_ctl[chn]++;
+	    count++;
+	}
+    }
+
+    for (chn = 0; count; chn++) {
+	if (p->fetch_ctl[chn]) {
+	    if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
+	        event = &EVENT(pat, chn, row);
+	    } else {
+	        event = &empty_event;
+	    }
+	    read_event(ctx, &EVENT(pat, chn, row), chn, 0);
+	    p->fetch_ctl[chn] = 0;
+	    count--;
+	}
+    }
+}
+
+
 static void play_channel(struct xmp_context *ctx, int chn, int t)
 {
     struct xmp_channel *xc;
@@ -473,8 +473,8 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     /* Do delay */
     if (xc->delay && !--xc->delay) {
-	if (fetch_channel(ctx, xc->delayed_event, chn, 1) != 0)
-	    fetch_channel(ctx, xc->delayed_event, chn, 0);
+	if (read_event(ctx, xc->delayed_event, chn, 1) != 0)
+	    read_event(ctx, xc->delayed_event, chn, 0);
     }
 
     if ((act = xmp_drv_cstat(ctx, chn)) == XMP_CHN_DUMB)
@@ -898,7 +898,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		if (f->skip_fetch) {
 			f->skip_fetch = 0;
 		} else {
-			fetch_row(ctx, m->xxo[f->ord], f->row);
+			read_row(ctx, m->xxo[f->ord], f->row);
 		}
 	}
 
