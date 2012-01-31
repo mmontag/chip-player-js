@@ -428,6 +428,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 
     if (!cont_sample)
 	smix_setpatch(ctx, voc, smp);
+
     smix_setnote(ctx, voc, note);
     d->voice_array[voc].ins = ins;
     d->voice_array[voc].act = nna;

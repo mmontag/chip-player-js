@@ -357,11 +357,11 @@ static int fetch_channel(struct xmp_context *ctx, struct xxm_event *e, int chn, 
 
     if (smp >= 0) {
 	int mapped = m->xxih[ins].map[key].ins;
+	int to = xmp_drv_setpatch(ctx, chn, ins, smp, note,
+			m->xxi[ins][mapped].nna, m->xxi[ins][mapped].dct,
+			m->xxi[ins][mapped].dca, ctl, cont_sample);
 
-	if (copy_channel(p, xmp_drv_setpatch(ctx, chn, ins, smp, note,
-	 		m->xxi[ins][mapped].nna, m->xxi[ins][mapped].dct,
-			m->xxi[ins][mapped].dca, ctl, cont_sample), chn) < 0)
-	{
+	if (copy_channel(p, to, chn) < 0) {
 	    return XMP_ERR_VIRTC;
 	}
 	xc->smp = smp;
