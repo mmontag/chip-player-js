@@ -539,8 +539,6 @@ int xmp_load_module(xmp_context ctx, char *s)
 	return i;
     }
 
-    /*xmp_drv_flushpatch((struct xmp_context *)ctx);*/
-
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
      * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
      * Ralf Hoffmann <ralf@boomerangsworld.de>)

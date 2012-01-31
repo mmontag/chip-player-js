@@ -203,6 +203,5 @@ int xmp_seek_time(xmp_context, int);
 void xmp_init_formats(xmp_context);
 void xmp_deinit_formats(xmp_context);
 int xmp_enable_format(char *, int);
-int xmp_checksum(char *, unsigned int *, unsigned int *);
 
 #endif	/* __XMP_H */
