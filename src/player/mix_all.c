@@ -84,7 +84,7 @@
     register int smp_in; \
     x *sptr = vi->sptr; \
     int pos = vi->pos; \
-    int frac = vi->frac + (1 << SMIX_SHIFT)
+    int frac = vi->frac
 
 #define VAR_ITPT(x) \
     VAR_NORM(x); \
