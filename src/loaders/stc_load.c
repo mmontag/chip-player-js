@@ -155,7 +155,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	fseek(f, pat_ptr, SEEK_SET);
 	decoded = calloc(m->xxh->pat, sizeof(int));
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < MAX_PAT; i++) {
 		if (read8(f) == 0xff)
@@ -236,10 +236,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		}
 
 		decoded[dest] = 1;
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	free(decoded);
 
@@ -249,7 +246,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	fseek(f, 27, SEEK_SET);
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 	for (i = 0; i < m->xxh->ins; i++) {
 		struct spectrum_sample ss;
 
@@ -329,10 +326,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 		xmp_drv_loadpatch(ctx, f, i, 0, XMP_SMP_SPECTRUM, NULL,
 								(char *)&ss);
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 	
 	/* Read ornaments */
 
@@ -340,7 +334,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	m->extra = calloc(1, sizeof (struct spectrum_extra));
 	se = m->extra;
 
-	reportv(ctx, 0, "Ornaments      : %d ", orn);
+	_D(_D_INFO "Ornaments: %d", orn);
 	for (i = 0; i < orn; i++) {
 		int index;
 		struct spectrum_ornament *so;
@@ -354,10 +348,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		for (j = 0; j < 32; j++) {
 			so->val[j] = read8s(f);
 		}
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < 4; i++) {
 		m->xxc[i].pan = 0x80;

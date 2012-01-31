@@ -114,7 +114,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	reportv(ctx, 0, "Sliding        : %d\n", sliding);
+	_D(_D_INFO, "Sliding: %d", sliding);
 
 	if (sliding == 6)
 		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
@@ -122,7 +122,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -160,15 +160,11 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Load samples */
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Instrument name                  Len  LBeg LEnd L Vol");
+	_D(_D_INFO "Instruments    : %d ", m->xxh->ins);
 
 	for (i = 0; i < 31; i++) {
 		char path[PATH_MAX];
@@ -177,20 +173,17 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		FILE *s = NULL;
 		struct stat stat;
 		int found;
-		char c;
 
 		get_instrument_path(ctx, "XMP_MED2_INSTRUMENT_PATH",
 				ins_path, 256);
 		found = check_filename_case(ins_path,
 				(char *)m->xxih[i].name, name, 256);
 
-		c = 'x';
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
 			if ((s = fopen(path, "rb"))) {
 				fstat(fileno(s), &stat);
 				m->xxs[i].len = stat.st_size;
-				c = '.';
 			}
 		}
 
@@ -199,7 +192,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (!strlen((char *)m->xxih[i].name) && !m->xxs[i].len)
 			continue;
 
-		reportv(ctx, 1, "\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
+		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -210,10 +203,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 				0, &m->xxs[m->xxi[i][0].sid], NULL);
 			fclose(s);
 		}
-
-		reportv(ctx, 0, "%c", c);
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

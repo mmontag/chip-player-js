@@ -169,8 +169,6 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 1, "     Name                             Len   LBeg  LEnd  L Vol Pan C4Spd\n");
-
 	for (i = 0; i < m->xxh->ins; i++) {
 		int flg, c4spd, vol, pan;
 
@@ -205,8 +203,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].lpe >>= 1;
 		}
 
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-32.32s %05x%c%05x %05x %c V%02x P%02x %5d\n",
+		_D(_D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x P%02x %5d",
 				i, m->xxih[i].name,
 				m->xxs[i].len,
 				m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
@@ -216,7 +213,6 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxi[i][0].vol,
 				m->xxi[i][0].pan,
 				c4spd);
-		}
 	}
 
 	/* Read and convert patterns */
@@ -225,7 +221,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		int len, c, r, k;
@@ -280,22 +276,18 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 				} while (k & 0x20);
 			}
 		}
-		
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
 
 	fseek(f, start + smp_ofs, SEEK_SET);
 
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
+
 	for (i = 0; i < m->xxh->ins; i++) {
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

@@ -67,8 +67,6 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 1, "     Instrument name      Len  LBeg LEnd L Vol Fin\n");
-
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 
@@ -86,12 +84,10 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
 
-	if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 2))) {
-	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x %+d\n",
-			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-			m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
-	}
+	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x %+d",
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
     }
 
     read8(f);			/* pad */
@@ -114,7 +110,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 
     m->xxh->len = read8(f);
 
-    reportv(ctx, 0, "Module length  : %d\n", m->xxh->len);
+    _D(_D_INFO "Module length: %d", m->xxh->len);
 
     for (i = 0; i < m->xxh->len; i++)
 	m->xxo[i] = reorder[read8(f)];
@@ -129,7 +125,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
     struct xxm_event *event;
     uint8 x;
 
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	for (j = 0; j < m->xxp[i]->rows; j++) {
@@ -158,9 +154,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 		}
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 }
 
 
@@ -170,13 +164,11 @@ static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
     struct xmp_mod_context *m = &p->m;
     int i;
 
-    reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+    _D(_D_INFO, "Stored samples : %d ", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 }
 
 

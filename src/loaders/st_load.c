@@ -308,8 +308,9 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     MODULE_INFO();
 
-    if (serr && V(2))
-	report ("File size error: %d\n", serr);
+    if (serr) {
+	_D(_D_CRIT "File size error: %d", serr);
+    }
 
     fseek(f, start + pos, SEEK_SET);
 
@@ -317,7 +318,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load and convert patterns */
 
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -329,19 +330,13 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    cvt_pt_event(event, mod_event);
 	}
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
-    reportv(ctx, 1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
-
-    for (i = 0; (V(1)) && (i < m->xxh->ins); i++) {
-	if (*m->xxih[i].name || m->xxs[i].len > 2) {
-	    report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d\n",
+    for (i = 0; i < m->xxh->ins; i++) {
+	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
 		m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
-	}
     }
 
     m->xxh->flg |= XXM_FLG_MODRNG;
@@ -379,16 +374,14 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load samples */
 
-    reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     return 0;
 }

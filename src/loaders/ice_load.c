@@ -106,8 +106,6 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 1, "     Instrument name        Len  LBeg LEnd L Vl Ft\n");
-
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxih[i].nsm = !!(m->xxs[i].len = 2 * ih.ins[i].len);
@@ -118,8 +116,8 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxi[i][0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
 	m->xxi[i][0].pan = 0x80;
 	m->xxi[i][0].sid = i;
-	if (V(1) && m->xxs[i].len > 2)
-	    report ("[%2X] %-22.22s %04x %04x %04x %c %02x %+01x\n",
+
+	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c %02x %+01x",
 		i, ih.ins[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol,
 		m->xxi[i][0].fin >> 4);
@@ -127,8 +125,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 
     PATTERN_INIT();
 
-    if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -137,11 +134,9 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxp[i]->info[j].index =  ih.ord[i][j];
 	}
 	m->xxo[i] = i;
-
-	reportv(ctx, 0, ".");
     }
 
-    reportv(ctx, 0, "\nStored tracks  : %d ", m->xxh->trk);
+    _D(_D_INFO "Stored tracks: %d", m->xxh->trk);
 
     for (i = 0; i < m->xxh->trk; i++) {
 	m->xxt[i] = calloc (sizeof (struct xxm_track) + sizeof
@@ -152,24 +147,19 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 		fread (ev, 1, 4, f);
 		cvt_pt_event (event, ev);
 	}
-
-	if (V(0) && !(i % m->xxh->chn))
-	    report (".");
     }
 
     m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Read samples */
 
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 4)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     return 0;
 }

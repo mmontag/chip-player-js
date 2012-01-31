@@ -192,8 +192,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 	PATTERN_INIT();
 
-	if (V(0))
-		report("Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -256,9 +255,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 				}
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 }
 
 static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
@@ -272,7 +269,7 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 0, "Instruments    : %d\n", m->xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		int x;
@@ -303,14 +300,12 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 		read32l(f);	/* sampledata crc32 */
 
 		packtype[i] = (flag & 0x0c) >> 2;
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x\n",
+		_D(_D_INFO "[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x",
 				i, name, m->xxs[i].len, m->xxs[i].lps & 0xfffff,
 				m->xxs[i].lpe & 0xfffff,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				'0' + packtype[i],
 				c3spd, m->xxi[i][0].vol);
-		}
 	}
 }
 
@@ -322,7 +317,7 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 	int smpsize;
 	uint8 *data, *ibuf;
 
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->ins);
+	_D(_D_INFO "Stored samples: %d", m->xxh->ins);
 
 	for (smpsize = i = 0; i < m->xxh->smp; i++) {
 		if (m->xxs[i].len > smpsize)
@@ -354,9 +349,7 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 		default:
 			fseek(f, smpsize, SEEK_CUR);
 		}
-		reportv(ctx, 0, packtype[i] ? "c" : ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	free(ibuf);
 	free(data);
@@ -384,7 +377,7 @@ static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(date, 3, 1, f);
 	
 	MODULE_INFO();
-	reportv(ctx, 0, "Creation date  : %02d/%02d/%04d\n", date[0],
+	_D(_D_INFO "Creation date: %02d/%02d/%04d", date[0],
 						date[1], 1900 + date[2]);
 	
 	/* IFF chunk IDs */

@@ -66,8 +66,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Name                          Len   LBeg  LSiz  L Vol Fin  C2spd");
+	_D(_D_INFO "Instruments    : %d ", m->xxh->ins);
 
 	INSTRUMENT_INIT();
 	for (i = 0; i < m->xxh->ins; i++) {
@@ -113,24 +112,17 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].lpe >>= 1;
 		}
 
-		if (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1)) {
-			if (V(1)) {
-				report("\n[%2X] %-28.28s  %05x%c%05x %05x %c "
+		_D(_D_INFO "[%2X] %-28.28s  %05x%c%05x %05x %c "
 						"V%02x F%+03d %5d", i,
-			 		m->xxih[i].name,
-					m->xxs[i].len,
-					bits > 1 ? '+' : ' ',
-					m->xxs[i].lps,
-					size,
-					m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-					m->xxi[i][0].vol, m->xxi[i][0].fin,
-					c2spd);
-			} else {
-				report(".");
-			}
-		}
+			 	m->xxih[i].name,
+				m->xxs[i].len,
+				bits > 1 ? '+' : ' ',
+				m->xxs[i].lps,
+				size,
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->xxi[i][0].vol, m->xxi[i][0].fin,
+				c2spd);
 	}
-	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < 256; i++)
 		m->xxo[i] = read16b(f);
@@ -146,7 +138,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -173,20 +165,17 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
+
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
-						&m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
+					&m->xxs[m->xxi[i][0].sid], NULL);
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

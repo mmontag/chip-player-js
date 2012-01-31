@@ -100,11 +100,11 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	uint8 name[30];
 
 	m->xxh->ins = m->xxh->smp = read16b(f);
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+
+	_D(_D_INFO "Instruments    : %d ", m->xxh->ins);
 
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 1, "\n     Instrument name        Len   LBeg  LSize LS Res Vol Fine C2Spd");
 	for (i = 0; i < m->xxh->ins; i++) {
 		int fine, replen, flag;
 
@@ -141,25 +141,19 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 		m->xxi[i][0].sid = i;
 
-		if (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 0) {
-			if (V(1))
-				report("\n[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
-					i, m->xxih[i].name,
-					m->xxs[i].len,
-					m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-					m->xxs[i].lps,
-					replen,
-					m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-					flag & 0x100 ? 'S' : ' ',
-					flag & 0xff,
-					m->xxi[i][0].vol,
-					fine,
-					c2spd);
-			else
-				report(".");
-		}
+		_D(_D_INFO "[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
+			i, m->xxih[i].name,
+			m->xxs[i].len,
+			m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+			m->xxs[i].lps,
+			replen,
+			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+			flag & 0x100 ? 'S' : ' ',
+			flag & 0xff,
+			m->xxi[i][0].vol,
+			fine,
+			c2spd);
 	}
-	reportv(ctx, 0, "\n");
 }
 
 static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
@@ -172,7 +166,7 @@ static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 	int rows;
 
 	if (!pflag) {
-		reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+		_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 		pflag = 1;
 		last_pat = 0;
 		PATTERN_INIT();
@@ -208,8 +202,6 @@ static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 			event->fxp = d;
 		}
 	}
-
-	reportv(ctx, 0, ".");
 }
 
 static void get_dait(struct xmp_context *ctx, int size, FILE *f)
@@ -219,15 +211,14 @@ static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 	static int i = 0;
 
 	if (!sflag) {
-		reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+		_D(_D_INFO "Stored samples : %d ", m->xxh->smp);
 		sflag = 1;
 		i = 0;
 	}
 
 	if (size > 2) {
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
-				XMP_SMP_BIGEND, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
+			XMP_SMP_BIGEND, &m->xxs[m->xxi[i][0].sid], NULL);
 	}
 
 	i++;
@@ -253,8 +244,6 @@ static int dt_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Load IFF chunks */
 	while (!feof(f))
 		iff_chunk(ctx, f);
-
-	reportv(ctx, 0, "\n");
 
 	iff_release();
 

@@ -109,8 +109,6 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    reportv(ctx, 1, "     Instrument name              Len   LBeg  LEnd  L Vol C4Spd\n");
-
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 
@@ -158,10 +156,11 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, pih.name, 28);
 
-	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len))
-	    report ("[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d\n",
-		i, m->xxih[i].name, m->xxs[i].len, pih.type & 0x10 ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+	_D(_D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
+		i, m->xxih[i].name, m->xxs[i].len,
+		pih.type & 0x10 ? '+' : ' ',
+		m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */
@@ -171,7 +170,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	if (!pfh.patseg[i])
@@ -250,10 +249,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 		event->vol = read8(f) + 1;
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
 
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
@@ -261,9 +259,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, start + smp_ofs[m->xxi[i][0].sid], SEEK_SET);
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     m->vol_table = ptm_vol;
 

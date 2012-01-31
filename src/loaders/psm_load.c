@@ -97,8 +97,6 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 1, "     Sample name           Len   LBeg LEnd L Vol C2Spd\n");
-
 	fseek(f, start + p_ins, SEEK_SET);
 	for (i = 0; i < m->xxh->ins; i++) {
 		uint16 flags, c2spd;
@@ -128,18 +126,16 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 		m->xxi[i][0].fin += finetune;
 
-		if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %5d\n",
-				i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-				m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
-				'L' : ' ', m->xxi[i][0].vol, c2spd);
-		}
+		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %5d",
+			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
+			'L' : ' ', m->xxi[i][0].vol, c2spd);
 	}
 	
 
 	PATTERN_INIT();
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	fseek(f, start + p_pat, SEEK_SET);
 	for (i = 0; i < m->xxh->pat; i++) {
@@ -187,23 +183,17 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		if (len > 0)
 			fseek(f, len, SEEK_CUR);
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
 
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }
-

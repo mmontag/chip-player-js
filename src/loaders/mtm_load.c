@@ -118,10 +118,11 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, mih.name, 22);
 
-	if ((V(1)) && (strlen((char *) m->xxih[i].name) || m->xxs[i].len))
-	    report ("[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+	_D(_D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
+		m->xxih[i].name, m->xxs[i].len,
+		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, m->xxi[i][0].fin - 0x80);
     }
 
@@ -129,7 +130,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     PATTERN_INIT();
 
-    reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk - 1);
+    _D(_D_INFO "Stored tracks: %d", m->xxh->trk - 1);
 
     for (i = 0; i < m->xxh->trk; i++) {
 	m->xxt[i] = calloc (sizeof (struct xxm_track) +
@@ -153,13 +154,10 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxt[i]->event[j].fxp <<= 4;
 	    }
 	}
-	if (V(0) && !(i % m->xxh->chn))
-	    report (".");
     }
-    reportv(ctx, 0, "\n");
 
     /* Read patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat - 1);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat - 1);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -168,20 +166,18 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    mp[j] = read16l(f);
 	for (j = 0; j < m->xxh->chn; j++)
 	    m->xxp[i]->info[j].index = mp[j];
-	reportv(ctx, 0, ".");
     }
 
     /* Comments */
     fseek(f, mfh.extralen, SEEK_CUR);
 
     /* Read samples */
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = mfh.pan[i] << 4;

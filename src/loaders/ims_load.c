@@ -203,19 +203,16 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, ih.ins[i].name, 20);
 
-	if (V(1) &&
-		(strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2))) {
-	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x %+d\n",
+	_D(_D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x %+d",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, ih.ins[i].loop_size > 1 ? 'L' : ' ',
 		m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
-	}
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC(i);
@@ -255,22 +252,20 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (event->fxt == 0x0d)
 		 event->fxp = (event->fxp / 10) << 4 | (event->fxp % 10);
 	}
-	reportv(ctx, 0, ".");
     }
 
     m->xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     return 0;
 }

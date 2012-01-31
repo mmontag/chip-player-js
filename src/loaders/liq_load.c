@@ -248,7 +248,7 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     x1 = x2 = 0;
     for (i = 0; i < m->xxh->pat; i++) {
@@ -408,17 +408,14 @@ next_row:
 	goto read_event;
 
 next_pattern:
-	reportv(ctx, 0, ".");
+	;
     }
 
     /* Read and convert instruments */
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 0, "\nInstruments    : %d ", m->xxh->ins);
-
-    reportv(ctx, 1, "\n"
-"     Instrument name                Size  Start End Loop Vol   Ver  C2Spd");
+    _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	unsigned char b[4];
@@ -484,15 +481,13 @@ next_pattern:
 
 	copy_adjust(m->xxih[i].name, li.name, 31);
 
-	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
-	    report ("\n[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d ",
+	_D(_D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
 		i, m->xxih[i].name, m->xxs[i].len,
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, m->xxi[i][0].gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
-	}
 
 	c2spd_to_note (li.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 	fseek(f, li.hdrsz - 0x90, SEEK_CUR);
@@ -500,9 +495,7 @@ next_pattern:
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     return 0;
 }

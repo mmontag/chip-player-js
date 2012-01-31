@@ -138,9 +138,6 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	fseek(f, 8, SEEK_CUR);			/* songname */
 	fseek(f, sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
-	if (V(1) && cur_ins == 0)
-	    report("\n     Instrument name                  Len   LBeg  LEnd  L Vol Fine C2Spd");
-
 	i = cur_ins;
 	m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
@@ -175,10 +172,10 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	m->xxi[i][0].sid = i;
 	srate = read32l(f);
 
-	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report ("\n[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol, finetune, srate);
+	_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol,
+		finetune, srate);
 
 	srate = 8363 * srate / 8448;
 	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
@@ -358,7 +355,7 @@ static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 	fread(buf, 1, 9, f);
 	read16l(f);
 
-	reportv(ctx, 2, "\nSubsong title  : %-9.9s", buf);
+	_D(_D_INFO "Subsong title: %-9.9s", buf);
 
 	magic = read32b(f);
 	while (magic != MAGIC_OPLH) {
@@ -446,10 +443,8 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	if (V(0)) {
-	    report("Stored patterns: %d\n", m->xxh->pat);
-	    report("Stored samples : %d", m->xxh->smp);
-	}
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored samples : %d", m->xxh->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 
@@ -480,8 +475,6 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	free(pnam);
 	free(pord);
-
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

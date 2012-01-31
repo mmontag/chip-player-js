@@ -435,7 +435,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     MODULE_INFO();
 
-    reportv(ctx, 0, "Instr/FX mode  : %s/%s",
+    _D(_D_INFO "Instrument/FX mode: %s/%s",
 			ifh.flags & IT_USE_INST ? ifh.cmwt >= 0x200 ?
 			"new" : "old" : "sample",
 			ifh.flags & IT_OLD_FX ? "old" : "IT");
@@ -448,7 +448,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    return -1;
 	i = ftell(f);
 	fseek(f, start + ifh.msgofs, SEEK_SET);
-	reportv(ctx, 2, "\nMessage length : %d\n| ", ifh.msglen);
+
+	_D(_D_INFO "Message length : %d", ifh.msglen);
+
 	for (j = 0; j < ifh.msglen; j++) {
 	    b = read8(f);
 	    if (b == '\r')
@@ -456,9 +458,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if ((b < 32 || b > 127) && b != '\n' && b != '\t')
 		b = '.';
 	    m->comment[j] = b;
-	    reportv(ctx, 2, "%c", b);
-	    if (b == '\n')
-		reportv(ctx, 2, "| ");
 	}
 	m->comment[j] = 0;
 
@@ -467,17 +466,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    if (m->xxh->ins && V(0) && (ifh.flags & IT_USE_INST)) {
-	report ("\nInstruments    : %d ", m->xxh->ins);
-	if (V(1)) {
-	    if (ifh.cmwt >= 0x200)
-		report ("\n     Instrument name            NNA  DCT  DCA  "
-		    "Fade  GbV Pan RV Env NSm FC FR");
-	    else
-		report ("\n     Instrument name            NNA  DNC  "
-		    "Fade  VolEnv NSm");
-	}
-    }
+    _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	/*
@@ -606,9 +595,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	        }
 	    }
 
-	    reportv(ctx, 1,
-			"\n[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
-			"%02x %c%c%c %3d %02x %02x ",
+	    _D(_D_INFO
+			"[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
+			"%02x %c%c%c %3d %02x %02x",
 		i, i2h.name,
 		i2h.nna < 4 ? nna[i2h.nna] : "none",
 		i2h.dct < 4 ? dct[i2h.dct] : "none",
@@ -624,7 +613,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		i2h.ifc,
 		i2h.ifr
 	    );
-	    reportv(ctx, 0, ".");
 
 	} else if (ifh.flags & IT_USE_INST) {
 /* Old instrument format */
@@ -709,8 +697,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	        }
 	    }
 
-	    reportv(ctx, 1, "\n[%2X] %-26.26s %-4.4s %-4.4s %4d  "
-			"%2d %c%c%c %3d ",
+	    _D(_D_INFO "[%2X] %-26.26s %-4.4s %-4.4s %4d %2d %c%c%c %3d",
 		i, i1h.name,
 		i1h.nna < 4 ? nna[i1h.nna] : "none",
 		i1h.dnc ? "on" : "off",
@@ -721,17 +708,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].aei.flg & XXM_ENV_SUS ? 'S' : '-',
 		m->xxih[i].nsm
 	    );
-	    reportv(ctx, 0, ".");
 	}
     }
 
-    reportv(ctx, 0, "\nStored Samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored Samples: %d", m->xxh->smp);
 
-    if (V(2) || (~ifh.flags & IT_USE_INST && V(1)))
-	report (
-"\n     Sample name                Len   LBeg  LEnd  SBeg  SEnd  FlCv VlGv C5Spd"
-	);
-    
     for (i = 0; i < m->xxh->smp; i++) {
 	if (~ifh.flags & IT_USE_INST)
 	    m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -791,10 +772,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 #define MAX(x) ((x) > 0xfffff ? 0xfffff : (x))
 
-	if (V(2) || (~ifh.flags & IT_USE_INST && V(1))) {
-	    if (strlen((char *) ish.name) || m->xxs[i].len > 1) {
-		report (
-		    "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
+	_D(_D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 		    "%02x%02x %02x%02x %5d ",
 		    i, ifh.flags & IT_USE_INST ?
 				m->xxih[i].name : m->xxs[i].name,
@@ -803,10 +781,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    MAX(m->xxs[i].lps), MAX(m->xxs[i].lpe),
 		    MAX(ish.sloopbeg), MAX(ish.sloopend),
 		    ish.flags, ish.convert,
-		    ish.vol, ish.gvl, ish.c5spd
-		);
-	    }
-	}
+		    ish.vol, ish.gvl, ish.c5spd);
 
 	/* Convert C5SPD to relnote/finetune
 	 *
@@ -857,7 +832,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		xmp_drv_loadpatch(ctx, NULL, i, m->c4rate,
 				XMP_SMP_NOLOAD | cvt, &m->xxs[i], buf);
 		free (buf);
-		reportv(ctx, 0, ish.convert & IT_CVT_DIFF ? "C" : "c");
 	    } else {
 		if (o->skipsmp) {
 		    fseek(f, m->xxs[i].len, SEEK_CUR);
@@ -865,13 +839,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		xmp_drv_loadpatch(ctx, f, i, m->c4rate, cvt, &m->xxs[i], NULL);
-
-		reportv(ctx, 0, ".");
 	    }
 	}
     }
 
-    reportv(ctx, 0, "\nStored Patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored Patterns: %d", m->xxh->pat);
 
     m->xxh->trk = m->xxh->pat * m->xxh->chn;
     memset(arpeggio_val, 0, 64);
@@ -981,7 +953,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		event->fxp = lastevent[c].fxp;
 	    }
 	}
-	reportv(ctx, 0, ".");
 
 	/* Scan channels, look for unused tracks */
 	for (c = m->xxh->chn - 1; c >= max_ch; c--) {
@@ -1008,8 +979,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     m->quirk |= XMP_QUIRK_IT;
     if (~ifh.flags & IT_LINK_GXX)
 	m->quirk |= XMP_QRK_UNISLD;
-
-    reportv(ctx, 0, "\n");
 
     return 0;
 }

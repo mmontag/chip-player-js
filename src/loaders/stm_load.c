@@ -134,8 +134,6 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 1, "     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
-
     /* Read and convert instruments and samples */
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -151,11 +149,10 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, sfh.ins[i].name, 12);
 
-	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
-	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol, sfh.ins[i].c2spd);
-	}
+	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->xxi[i][0].vol, sfh.ins[i].c2spd);
 
 	sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;
 	c2spd_to_note (sfh.ins[i].c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
@@ -169,12 +166,12 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     m->xxh->len = i;
 
-    reportv(ctx, 0, "Module length  : %d patterns\n", m->xxh->len);
+    _D(_D_INFO "Module length: %d", m->xxh->len);
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -214,18 +211,15 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
 
     /* Read samples */
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     m->quirk |= XMP_QRK_VSALL | XMP_QUIRK_ST3;
 

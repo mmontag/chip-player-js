@@ -100,7 +100,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -133,15 +133,12 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	base_offs = ftell(f);
 	read32b(f);	/* remaining size */
 
 	/* Read instrument data */
-	reportv(ctx, 1, "     Name      Len  LBeg LEnd L Vol  ?? ?? ??\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxi[i][0].vol = read8(f) / 2;
@@ -171,25 +168,23 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxi[i][0].pan = 0x80;
 		m->xxi[i][0].sid = i;
 
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-8.8s  %04x %04x %04x %c "
+		_D(_D_INFO "[%2X] %-8.8s  %04x %04x %04x %c "
 						"V%02x  %02x %02x %02x\n",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, unk1[i], unk2[i], unk3[i]);
-		}
 	}
 
 	/* Read samples */
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
+
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, start + base_offs + soffs[i], SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

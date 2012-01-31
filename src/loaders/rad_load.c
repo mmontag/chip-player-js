@@ -78,62 +78,19 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read description */
 	if (flags & 0x80) {
-		reportv(ctx, 1, "|");
-		while ((b = read8(f)) != 0) {
-			if (V(1)) {
-				if (b == 1) {
-					report("\n|");
-				} else if (b < 0x20) {
-					for (i = 0; i < b; i++)
-						report(" ");
-				} else if (b < 0x80) {
-					report("%c", b);
-				} else {
-					report(".");
-				}
-			}
-		}
-		reportv(ctx, 1, "\n");
+		while ((b = read8(f)) != 0);
 	}
-
-	reportv(ctx, 1,
-"               Modulator                       Carrier             Common\n"
-"     Char Fr LS OL At De Su Re WS   Char Fr LS OL At De Su Re WS   Fbk Alg\n"
-		);
 
 	/* Read instruments */
 	m->xxh->ins = 0;
+
+	_D(_D_INFO "Read instruments");
 
 	while ((b = read8(f)) != 0) {
 		m->xxh->ins = b;
 
 		fread(sid, 1, 11, f);
 		xmp_cvt_hsc2sbi((char *)sid);
-		if (V(1)) {
-			report("[%2X] ", b - 1);
-
-			report("%c%c%c%c %2d ",
-			       sid[0] & 0x80 ? 'a' : '-',
-			       sid[0] & 0x40 ? 'v' : '-',
-			       sid[0] & 0x20 ? 's' : '-',
-			       sid[0] & 0x10 ? 'e' : '-', sid[0] & 0x0f);
-			report("%2d %2d ", sid[2] >> 6, sid[2] & 0x3f);
-			report("%2d %2d ", sid[4] >> 4, sid[4] & 0x0f);
-			report("%2d %2d ", sid[6] >> 4, sid[6] & 0x0f);
-			report("%2d   ", sid[8]);
-
-			report("%c%c%c%c %2d ",
-			       sid[1] & 0x80 ? 'a' : '-',
-			       sid[1] & 0x40 ? 'v' : '-',
-			       sid[1] & 0x20 ? 's' : '-',
-			       sid[1] & 0x10 ? 'e' : '-', sid[1] & 0x0f);
-			report("%2d %2d ", sid[3] >> 6, sid[3] & 0x3f);
-			report("%2d %2d ", sid[5] >> 4, sid[5] & 0x0f);
-			report("%2d %2d ", sid[7] >> 4, sid[7] & 0x0f);
-			report("%2d   ", sid[9]);
-
-			report("%2d  %2d\n", sid[10] >> 1, sid[10] & 0x01);
-		}
 		xmp_drv_loadpatch(ctx, f, b - 1, 0, XMP_SMP_ADLIB, NULL,
 								(char *)sid);
 	}
@@ -166,11 +123,10 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	m->xxh->trk = m->xxh->pat * m->xxh->chn;
 
-	if (V(0)) {
-		report("Module length  : %d patterns\n", m->xxh->len);
-		report("Instruments    : %d\n", m->xxh->ins);
-		report("Stored patterns: %d ", m->xxh->pat);
-	}
+	_D(_D_INFO "Module length: %d", m->xxh->len);
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
@@ -187,14 +143,16 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 		do {
 			r = read8(f);		/* Row number */
 
-			if ((r & 0x7f) >= 64)
-				report("** Whoops! row = %d\n", r);
+			if ((r & 0x7f) >= 64) {
+				_D(_D_CRIT "** Whoops! row = %d\n", r);
+			}
 
 			do {
 				c = read8(f);	/* Channel number */
 
-				if ((c & 0x7f) >= m->xxh->chn)
-					report("** Whoops! channel = %d\n", c);
+				if ((c & 0x7f) >= m->xxh->chn) {
+					_D(_D_CRIT "** Whoops! channel = %d\n", c);
+				}
 
 				event = &EVENT(i, c & 0x7f, r & 0x7f);
 
@@ -222,10 +180,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			} while (~c & 0x80);
 		} while (~r & 0x80);
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < m->xxh->chn; i++) {
 		m->xxc[i].pan = 0x80;

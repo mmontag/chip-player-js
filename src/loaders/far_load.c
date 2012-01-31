@@ -130,10 +130,8 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    if (V(0)) {
-	report("Comment bytes  : %d\n", ffh.textlen);
-	report("Stored patterns: %d ", m->xxh->pat);
-    }
+    _D(_D_INFO "Comment bytes  : %d", ffh.textlen);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	uint8 brk, note, ins, vol, fxb;
@@ -214,7 +212,6 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 		break;
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
 
     m->xxh->ins = -1;
@@ -230,7 +227,6 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
-    reportv(ctx, 0, "\nInstruments    : %d ", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
@@ -269,16 +265,12 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, fih.name, 32);
 
-	if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len) && m->xxs[i].lps != 0xffff) {
-	    report ("\n[%2X] %-32.32s %04x %04x %04x %c V%02x ",
-			i, m->xxih[i].name,
-			m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-			fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
-	    reportv(ctx, 0, ".");
-	}
+	_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
+		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
+
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0, &m->xxs[i], NULL);
     }
-    reportv(ctx, 0, "\n");
 
     m->volbase = 0xff;
 

@@ -175,8 +175,6 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    reportv(ctx, 1, "     Sample name    Len  LBeg LEnd L Vol C2Spd\n");
-
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	fseek(f, start + (pp_ins[i] << 4), SEEK_SET);
@@ -212,12 +210,10 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, sih.name, 12);
 
-	if (V(1) &&
-	    (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 1))) {
-	    report ("[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol, sih.c2spd);
-	}
+	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->xxi[i][0].vol, sih.c2spd);
 
 	sih.c2spd = 8363 * sih.c2spd / 8448;
 	c2spd_to_note (sih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
@@ -226,7 +222,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -287,22 +283,18 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	}
 
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     free (pp_pat);
     free (pp_ins);
 
     /* Read samples */
-    reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     m->quirk |= XMP_QRK_VSALL | XMP_QUIRK_ST3;
 

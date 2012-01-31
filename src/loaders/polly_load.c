@@ -140,7 +140,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -162,15 +162,10 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 				event->ins = MSN(x);
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
-
 
 	m->xxh->ins = m->xxh->smp = 15;
 	INSTRUMENT_INIT();
-
-	reportv(ctx, 1, "     Len  LBeg LEnd L Vol\n");
 
 	for (i = 0; i < 15; i++) {
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -186,11 +181,9 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 		m->xxih[i].rls = 0xfff;
 
-		if (V(1) && m->xxs[i].len > 0) {
-                	report("[%2X] %04x %04x %04x %c V%02x\n",
+                _D(_D_INFO "[%2X] %04x %04x %04x %c V%02x",
                        		i, m->xxs[i].len, m->xxs[i].lps,
                         	m->xxs[i].lpe, ' ', m->xxi[i][0].vol);
-		}
 	}
 
 	/* Convert samples from 6 to 8 bits */
@@ -198,7 +191,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		buf[i] = buf[i] << 2;
 
 	/* Read samples */
-	reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
+	_D(_D_INFO "Loading samples: %d", m->xxh->ins);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
@@ -208,9 +201,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 				&m->xxs[m->xxi[i][0].sid],
 				(char*)buf + ORD_OFS + 256 +
 					256 * (buf[ORD_OFS + 129 + i] - 0x10));
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	free(buf);
 

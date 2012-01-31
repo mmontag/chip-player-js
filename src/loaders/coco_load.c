@@ -199,8 +199,6 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
 
-	reportv(ctx, 1, "     Name          Len  LBeg  LEnd L Vol\n");
-
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
 
@@ -223,13 +221,11 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!m->xxs[i].len;
 		m->xxi[i][0].sid = i;
 
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-10.10s  %05x %05x %05x %c V%02x\n",
+		_D(_D_INFO "[%2X] %-10.10s  %05x %05x %05x %c V%02x",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol);
-		}
 	}
 
 	/* Sequence */
@@ -249,7 +245,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC (i);
@@ -265,14 +261,11 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			fix_effect(event);
 		}
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
 
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples : %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxih[i].nsm == 0)
@@ -281,9 +274,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, start + smp_ptr[i], SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < m->xxh->chn; i++)
 		m->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;

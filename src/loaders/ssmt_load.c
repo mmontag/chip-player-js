@@ -117,7 +117,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	/* Load notes */
 	for (i = 0; i < m->xxh->pat; i++) {
@@ -133,7 +133,6 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 					event->note += 12;
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
 
 	/* Load fx1 */
@@ -183,11 +182,8 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	reportv(ctx, 0, "\n");
-
 	/* Read instrument data */
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Name                   Len  LBeg LEnd L Vol");
+	_D(_D_INFO "Instruments    : %d ", m->xxh->ins);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		char filename[1024];
@@ -213,15 +209,12 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxi[i][0].pan = 0x80;
 #endif
 
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("\n[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
+		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
 				m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol);
-		}
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

@@ -192,18 +192,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
 	
-	if (V(1) && i == 0) {
-	    report("\n     Instrument name                  Smp Len   LBeg  LEnd  L Vol Flag C2Spd");
-	}
-
 	fread(&m->xxih[i].name, 1, 28, f);
 	str_adj((char *)m->xxih[i].name);
 
 	fseek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
 	m->xxih[i].nsm = read16l(f);
 
-	reportv(ctx, 1, "\n[%2X] %-28.28s  %2d ", i, m->xxih[i].name,
-							m->xxih[i].nsm);
+	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->xxih[i].name, m->xxih[i].nsm);
 
 	if (m->xxih[i].nsm == 0)
 		return;
@@ -254,7 +249,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
 
-	reportv(ctx, 1, "[%x] %05x%c%05x %05x %c V%02x %04x %5d ",
+	_D(_D_INFO "  %x: %05x%c%05x %05x %c V%02x %04x %5d",
 		0, m->xxs[i].len,
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps,
@@ -264,8 +259,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		m->xxi[i][0].vol, flags, srate);
 
 	if (m->xxs[i].len > 1) {
-		xmp_drv_loadpatch(ctx, f, i, m->c4rate, has_unsigned_sample ? XMP_SMP_UNS : 0, &m->xxs[i], NULL);
-		reportv(ctx, 0, ".");
+		xmp_drv_loadpatch(ctx, f, i, m->c4rate, has_unsigned_sample ?
+			XMP_SMP_UNS : 0, &m->xxs[i], NULL);
 	}
 }
 
@@ -306,10 +301,8 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	if (V(0)) {
-	    report("Stored patterns: %d\n", m->xxh->pat);
-	    report("Stored samples : %d ", m->xxh->smp);
-	}
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored samples: %d ", m->xxh->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 
@@ -324,8 +317,6 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 		iff_chunk(ctx, f);
 
 	iff_release();
-
-	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < m->xxh->chn; i++)
 		m->xxc[i].pan = chn_pan[i] * 2;

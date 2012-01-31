@@ -32,10 +32,6 @@ void set_type(struct xmp_mod_context *, char *, ...);
 extern uint8 ord_xlat[];
 extern int arch_vol_table[];
 
-#define V(x) (m->verbosity > (x))
-#define report(x...) _D(_D_INFO x)
-#define reportv(a,b,x...) _D(_D_INFO x)
-
 #define MAGIC4(a,b,c,d) \
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
@@ -46,9 +42,8 @@ extern int arch_vol_table[];
 } while (0)
 
 #define MODULE_INFO() do { \
-    if (*m->name) report("Module title   : %s\n", m->name); \
-    if (*m->type) report("Module type    : %s\n", m->type); \
-    if (m->xxh->len) report("Module length  : %d patterns\n", m->xxh->len); \
+    _D(_D_WARN "Module title: \"%s\"", m->name); \
+    _D(_D_WARN "Module type: %s", m->type); \
 } while (0)
 
 #define INSTRUMENT_INIT() do { \

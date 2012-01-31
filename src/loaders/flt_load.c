@@ -271,8 +271,6 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 
     xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, m->c4rate, XMP_SMP_NOLOAD,
 					&m->xxs[m->xxi[i][0].sid], wave);
-
-    reportv(ctx, 0, "A");
 }
 
 
@@ -365,8 +363,6 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 1, "     Instrument name        Len  LBeg LEnd L Vol Fin\n");
-
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxs[i].len = 2 * mh.ins[i].size;
@@ -387,24 +383,22 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
 
-	if (V(1)) {
-	    if (am_synth && is_am_instrument(nt, i)) {
-	        report("[%2X] %-22.22s SYNT ---- ----   V40 %+d\n",
+	if (am_synth && is_am_instrument(nt, i)) {
+	    _D(_D_INFO "[%2X] %-22.22s SYNT ---- ----   V40 %+d",
 			i, m->xxih[i].name, m->xxi[i][0].fin >> 4);
-	    } else if (*m->xxih[i].name || m->xxs[i].len > 2) {
-	        report("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
+	} else if (*m->xxih[i].name || m->xxs[i].len > 2) {
+	    _D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
 			m->xxi[i][0].vol, m->xxi[i][0].fin >> 4,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
-	    }
 	}
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     /* The format you are looking for is FLT8, and the ONLY two differences
      * are: It says FLT8 instead of FLT4 or M.K., AND, the patterns are PAIRED.
@@ -437,7 +431,6 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 		   event->fxt = event->fxp = 0;
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
 
     /* no such limit for synth instruments
@@ -449,7 +442,8 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load samples */
 
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+
     for (i = 0; i < m->xxh->smp; i++) {
 	if (m->xxs[i].len == 0) {
 	    if (am_synth && is_am_instrument(nt, i)) {
@@ -459,9 +453,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 					&m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     if (nt)
 	fclose(nt);

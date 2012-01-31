@@ -164,8 +164,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     m->xxh->flg |= XXM_FLG_LINEAR;
 
     MODULE_INFO();
-
-    reportv(ctx, 0, "Creation date  : %02d/%02d/%04d\n", day, month, year);
+    _D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 
     INSTRUMENT_INIT();
 
@@ -184,8 +183,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, ffh.fih[i].name, 19);
 
-	if ((V(1)) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 2))
-	    report ("[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x\n", i,
+	_D(_D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x", i,
 		m->xxih[i].name,
 		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -195,7 +193,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -282,11 +280,10 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
 
     /* Read samples */
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
@@ -295,10 +292,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 							&m->xxs[i], NULL);
 
-	reportv(ctx, 0, ".");
     }
-
-    reportv(ctx, 0, "\n");
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = 0x80;

@@ -466,27 +466,21 @@ skip_test:
     snprintf(m->type, XMP_NAMESIZE, "%s (%s)", magic, tracker);
     MODULE_INFO();
 
-    if (V(1)) {
-	report ("     Instrument name        Len  LBeg LEnd L Vol Fin\n");
-
-	for (i = 0; i < m->xxh->ins; i++) {
-	    if (V(1) && (*m->xxih[i].name || m->xxs[i].len > 2))
-		report ("[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
-			i, m->xxih[i].name,
-			m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-			(mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
-				'L' : ' ', m->xxi[i][0].vol,
-			m->xxi[i][0].fin >> 4,
-			ptkloop && m->xxs[i].lps == 0 &&
-				mh.ins[i].loop_size > 1 &&
-				m->xxs[i].len > m->xxs[i].lpe ? '!' : ' ');
-	}
+    for (i = 0; i < m->xxh->ins; i++) {
+	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
+		i, m->xxih[i].name,
+		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		(mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
+			'L' : ' ', m->xxi[i][0].vol,
+		m->xxi[i][0].fin >> 4,
+		ptkloop && m->xxs[i].lps == 0 && mh.ins[i].loop_size > 1 &&
+			m->xxs[i].len > m->xxs[i].lpe ? '!' : ' ');
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -498,7 +492,6 @@ skip_test:
 
 	    cvt_pt_event(event, mod_event);
 	}
-	reportv(ctx, 0, ".");
     }
 
     /* Keep the test to avoid problems with ADPCM samples */
@@ -510,7 +503,7 @@ skip_test:
     if ((x = strrchr(m->filename, '/')))
 	strncpy(pathname, m->filename, x - m->filename);
 
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
@@ -529,15 +522,12 @@ skip_test:
 	    if ((s = fopen (sn, "rb"))) {
 	        xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate, 0,
 		    &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	    }
 	} else {
 	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	        &m->xxs[m->xxi[i][0].sid], NULL);
-	    reportv(ctx, 0, ".");
 	}
     }
-    reportv(ctx, 0, "\n");
 
     if (m->xxh->chn > 4) {
 	m->xxh->flg &= ~XXM_FLG_MODRNG;

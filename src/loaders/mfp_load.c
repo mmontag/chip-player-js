@@ -109,8 +109,6 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->ins = m->xxh->smp = 31;
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 1, "     Len  LBeg LEnd L Vol Fin\n");
-
 	for (i = 0; i < 31; i++) {
 		int loop_size;
 
@@ -129,14 +127,12 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 		m->xxih[i].rls = 0xfff;
 
-		if (V(1) && m->xxs[i].len > 2) {
-                	report("[%2X] %04x %04x %04x %c V%02x %+d %c\n",
-                       		i, m->xxs[i].len, m->xxs[i].lps,
-                        	m->xxs[i].lpe,
-				loop_size > 1 ? 'L' : ' ',
-                        	m->xxi[i][0].vol, m->xxi[i][0].fin >> 4,
-                        	m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
-		}
+               	_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d %c",
+                       	i, m->xxs[i].len, m->xxs[i].lps,
+                       	m->xxs[i].lpe,
+			loop_size > 1 ? 'L' : ' ',
+                       	m->xxi[i][0].vol, m->xxi[i][0].fin >> 4,
+                       	m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
 
 	m->xxh->len = m->xxh->pat = read8(f);
@@ -169,7 +165,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->xxh->pat);
 
 	pat_addr = ftell(f);
 
@@ -193,12 +189,10 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
-	reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
+	_D(_D_INFO "Loading samples: %d", m->xxh->ins);
 
 	/* first check smp.filename */
 	m->basename[0] = 's';
@@ -211,21 +205,19 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		if ((x = strchr(smp_filename, '-')))
 			strcpy(x, ".set");
 		if (stat(smp_filename, &st) < 0) {
-			report("sample file %s is missing!\n", smp_filename);
+			_D(_D_CRIT "sample file %s is missing!", smp_filename);
 			return 0;
 		}
 	}
 	if ((s = fopen(smp_filename, "rb")) == NULL) {
-		report("can't open sample file %s!\n", smp_filename);
+		_D(_D_CRIT "can't open sample file %s!", smp_filename);
 		return 0;
 	}
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	fclose(s);
 

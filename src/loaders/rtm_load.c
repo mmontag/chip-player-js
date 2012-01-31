@@ -129,7 +129,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	offset = 42 + oh.headerSize + rh.extraDataSize;
 
@@ -139,7 +139,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, start + offset, SEEK_SET);
 
 		if (read_object_header(f, &oh, "RTND") < 0) {
-			reportv(ctx, 0, "Error reading pattern %d\n", i);
+			_D(_D_CRIT "Error reading pattern %d", i);
 			return -1;
 		}
 	
@@ -163,8 +163,8 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 				/* should never happen! */
 				if (j >= rp.ntrack) {
-					reportv(ctx, 0, "error: decoding "
-						"pattern %d row %d\n", i, r);
+					_D(_D_CRIT "error: decoding "
+						"pattern %d row %d", i, r);
 					break;
 				}
 
@@ -191,16 +191,13 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 					event->f2p = read8(f);
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/*
 	 * load instruments
 	 */
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n");
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 
 	fseek(f, start + offset, SEEK_SET);
 
@@ -212,20 +209,16 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	smpnum = 0;
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (read_object_header(f, &oh, "RTIN") < 0) {
-			reportv(ctx, 0, "Error reading instrument %d\n", i);
+			_D(_D_CRIT "Error reading instrument %d", i);
 			return -1;
 		}
 
 		copy_adjust(m->xxih[i].name, (uint8 *)&oh.name, 32);
 
 		if (oh.headerSize == 0) {
-			if (V(1) && strlen((char *)m->xxih[i].name)) {
-				report("[%2X] %-26.26s %2d ", i, m->xxih[i].name,
-								m->xxih[i].nsm);
-			}
+			_D(_D_INFO "[%2X] %-26.26s %2d ", i,
+					m->xxih[i].name, m->xxih[i].nsm);
 			ri.nsample = 0;
-			if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxih[i].nsm))
-				report("\n");
 			continue;
 		}
 
@@ -273,10 +266,10 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		m->xxih[i].nsm = ri.nsample;
-		if (V(1) && (strlen((char *)m->xxih[i].name) || ri.nsample)) {
-			report("[%2X] %-26.26s %2d ", i, m->xxih[i].name,
+
+		_D(_D_INFO "[%2X] %-26.26s %2d", i, m->xxih[i].name,
 							m->xxih[i].nsm);
-		}
+
 		if (m->xxih[i].nsm > 16)
 			m->xxih[i].nsm = 16;
 		m->xxi[i] = calloc(sizeof (struct xxm_instrument), m->xxih[i].nsm);
@@ -315,7 +308,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		/* For each sample */
 		for (j = 0; j < m->xxih[i].nsm; j++, smpnum++) {
 			if (read_object_header(f, &oh, "RTSM") < 0) {
-				reportv(ctx, 0, "Error reading sample %d\n", j);
+				_D(_D_CRIT "Error reading sample %d", j);
 				return -1;
 			}
 
@@ -364,32 +357,21 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smpnum].flg |= rs.loop & 0x03 ?  XMP_SAMPLE_LOOP : 0;
 			m->xxs[smpnum].flg |= rs.loop == 2 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
-			if ((V(1)) && rs.length) {
-				report ("%s[%1x] %05x%c%05x %05x %c "
+			_D(_D_INFO "  [%1x] %05x%c%05x %05x %c "
 						"V%02x F%+04d P%02x R%+03d",
-					j ? "\n\t\t\t\t    " : " ", j,
-					m->xxs[m->xxi[i][j].sid].len,
-					m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-					m->xxs[m->xxi[i][j].sid].lps,
-					m->xxs[m->xxi[i][j].sid].lpe,
-					m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-					m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-					m->xxi[i][j].vol, m->xxi[i][j].fin,
-					m->xxi[i][j].pan, m->xxi[i][j].xpo);
-
-			}
+				j, m->xxs[m->xxi[i][j].sid].len,
+				m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+				m->xxs[m->xxi[i][j].sid].lps,
+				m->xxs[m->xxi[i][j].sid].lpe,
+				m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+				m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->xxi[i][j].vol, m->xxi[i][j].fin,
+				m->xxi[i][j].pan, m->xxi[i][j].xpo);
 
 			xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
 				XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 		}
-		if (m->verbosity == 1)
-			report (".");
-
-		if ((V(1)) && (strlen((char *) m->xxih[i].name) || ri.nsample))
-			report ("\n");
 	}
-	if (m->verbosity == 1)
-		report ("\n");
 
 	m->xxh->smp = smpnum;
 	m->xxs = realloc(m->xxs, sizeof (struct xxm_sample) * m->xxh->smp);

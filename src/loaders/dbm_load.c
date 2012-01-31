@@ -76,11 +76,11 @@ static void get_song(struct xmp_context *ctx, int size, FILE *f)
 	have_song = 1;
 
 	fread(buffer, 44, 1, f);
-	if (V(0) && *buffer)
-		report("Song name      : %s\n", buffer);
+	_D(_D_INFO "Song name: %s", buffer);
 
 	m->xxh->len = read16b(f);
-	reportv(ctx, 0, "Song length    : %d patterns\n", m->xxh->len);
+	_D(_D_INFO "Song length: %d patterns", m->xxh->len);
+
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = read16b(f);
 }
@@ -93,9 +93,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	int c2spd, flags, snum;
 	uint8 buffer[50];
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-
-	reportv(ctx, 1, "\n     Instrument name                Smp Vol Pan C2Spd");
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
@@ -120,13 +118,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
 
-		reportv(ctx, 1, "\n[%2X] %-30.30s #%02X V%02x P%02x %5d ",
+		_D(_D_INFO "[%2X] %-30.30s #%02X V%02x P%02x %5d",
 			i, m->xxih[i].name, snum,
 			m->xxi[i][0].vol, m->xxi[i][0].pan, c2spd);
-
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
@@ -139,7 +134,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 	PATTERN_INIT();
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->xxh->pat);
 
 	/*
 	 * Note: channel and flag bytes are inverted in the format
@@ -217,9 +212,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 			if (event->f2t > 0x1c)
 				event->f2t = event->f2p = 0;
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 }
 
 static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
@@ -228,9 +221,7 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &p->m;
 	int i, flags;
 
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
-
-	reportv(ctx, 2, "\n     Flags    Len   LBeg  LEnd  L");
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->smp; i++) {
 		flags = read32b(f);
@@ -252,16 +243,14 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 		if (m->xxs[i].len == 0)
 			continue;
 
-		reportv(ctx, 2, "\n[%2X] %08x %05x%c%05x %05x %c ",
+		_D(_D_INFO "[%2X] %08x %05x%c%05x %05x %c",
 			i, flags, m->xxs[i].len,
 			m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ?
 			(m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 'L') : ' ');
 
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 }
 
 static void get_venv(struct xmp_context *ctx, int size, FILE *f)
@@ -272,7 +261,7 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 
 	nenv = read16b(f);
 
-	reportv(ctx, 1, "Vol envelopes  : %d ", nenv);
+	_D(_D_INFO "Vol envelopes  : %d ", nenv);
 
 	for (i = 0; i < nenv; i++) {
 		ins = read16b(f) - 1;
@@ -288,9 +277,7 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 			m->xxih[ins].aei.data[j * 2 + 0] = read16b(f);
 			m->xxih[ins].aei.data[j * 2 + 1] = read16b(f);
 		}
-		reportv(ctx, 1, ".");
 	}
-	reportv(ctx, 1, "\n");
 }
 
 static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)

@@ -111,7 +111,6 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	fseek(f, start + ins_ptr, SEEK_SET);
-	reportv(ctx, 1, "     Name                             Len  LBeg LEnd L Vol C2Spd\n");
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		int c2spd, flags;
@@ -146,20 +145,18 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!m->xxs[i].len;
 		m->xxi[i][0].sid = i;
 		
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
+		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-					m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, c2spd);
-		}
 	}
 
 	/* PATTERN_INIT - alloc extra track*/
 	PATTERN_INIT();
 
-	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
+	_D(_D_INFO "Stored tracks: %d", m->xxh->trk);
 
 	/* Tracks */
 
@@ -279,11 +276,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 				j, event->note, event->ins, event->vol,
 				event->fxt, event->fxp);*/
 		}
-
-		if (V(0) && i % m->xxh->chn == 0)
-			report(".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Extra track */
 	m->xxt[0] = calloc(sizeof(struct xxm_track) +
@@ -291,8 +284,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxt[0]->rows = 64;
 
 	/* Read and convert patterns */
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
 	fseek(f, start + pat_ptr, SEEK_SET);
 
 	for (i = 0; i < m->xxh->pat; i++) {
@@ -301,17 +294,12 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxp[i]->rows = read16b(f);
 		for (j = 0; j < m->xxh->chn; j++) {
 			m->xxp[i]->info[j].index = read16b(f) - 1;
-			//printf("%3d ", m->xxp[i]->info[j].index);
 		}
-
-		reportv(ctx, 0, ".");
-		//printf("\n");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
 
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxih[i].nsm == 0)
@@ -319,10 +307,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		fseek(f, start + sdata[i], SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
-						&m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
+					&m->xxs[m->xxi[i][0].sid], NULL);
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

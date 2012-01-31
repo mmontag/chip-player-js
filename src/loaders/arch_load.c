@@ -234,7 +234,7 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 	strcpy(m->type, "MUSX (Archimedes Tracker)");
 
 	MODULE_INFO();
-	reportv(ctx, 0, "Creation date  : %02d/%02d/%04d\n", day, month, year);
+	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
@@ -246,7 +246,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	struct xxm_event *event;
 
 	if (!pflag) {
-		reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+		_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 		pflag = 1;
 		i = 0;
 		m->xxh->trk = m->xxh->pat * m->xxh->chn;
@@ -274,7 +274,6 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	}
 
 	i++;
-	reportv(ctx, 0, ".");
 }
 
 static void get_samp(struct xmp_context *ctx, int size, FILE *f)
@@ -286,8 +285,9 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if (!sflag) {
 		m->xxh->smp = m->xxh->ins = 36;
 		INSTRUMENT_INIT();
-		reportv(ctx, 0, "\nInstruments    : %d ", m->xxh->ins);
-	        reportv(ctx, 1, "\n     Instrument name      Len   LBeg  LEnd  L Vol");
+
+		_D(_D_INFO "Instruments: %d", m->xxh->ins);
+
 		sflag = 1;
 		max_ins = 0;
 		i = 0;
@@ -346,18 +346,13 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, XMP_SMP_VIDC,
 					&m->xxs[m->xxi[i][0].sid], NULL);
 
-	if (strlen((char *)m->xxih[i].name) || m->xxs[i].len > 0) {
-		if (V(1))
-			report("\n[%2X] %-20.20s %05x %05x %05x %c V%02x",
+	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
 				i, m->xxih[i].name,
 				m->xxs[i].len,
 				m->xxs[i].lps,
 				m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol);
-		else
-			reportv(ctx, 0, ".");
-	}
 
 	i++;
 	max_ins++;
@@ -394,8 +389,6 @@ static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Load IFF chunks */
 	while (!feof(f))
 		iff_chunk(ctx, f);
-
-	reportv(ctx, 0, "\n");
 
 	iff_release();
 

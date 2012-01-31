@@ -90,7 +90,7 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	/* Read instrument names */
-	reportv(ctx, 1, "     Name                              Len  LBeg LEnd L Vol\n");
+
 	for (i = 0; i < m->xxh->ins; i++) {
 		int c2spd, looplen;
 
@@ -114,19 +114,17 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 		m->xxi[i][0].sid = i;
 
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("[%2X] %-32.32s  %04x %04x %04x %c V%02x\n",
+		_D(_D_INFO "[%2X] %-32.32s  %04x %04x %04x %c V%02x\n",
 				i, m->xxih[i].name, m->xxs[i].len,
 				m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, c2spd);
-		}
 	}
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -160,19 +158,15 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	/* Read samples */
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, start + sdata[i], SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	return 0;
 }

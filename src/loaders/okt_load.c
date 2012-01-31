@@ -123,7 +123,6 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 1, "     Instrument name      Len   Lbeg  Lend  L Vol Mod\n");
     for (j = i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
 
@@ -145,10 +144,11 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 
 	idx[j] = i;
 
-	if ((V(1)) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1)))
-	    report ("[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol, mode[i]);
+	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->xxi[i][0].vol, mode[i]);
+
 	if (m->xxih[i].nsm)
 	    j++;
     }
@@ -181,7 +181,7 @@ static void get_plen(struct xmp_context *ctx, int size, FILE *f)
     struct xmp_mod_context *m = &p->m;
 
     m->xxh->len = read16b(f);
-    reportv(ctx, 0, "Module length  : %d patterns\n", m->xxh->len);
+    _D(_D_INFO "Module length: %d", m->xxh->len);
 }
 
 
@@ -208,7 +208,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 
     if (!pattern) {
 	PATTERN_INIT();
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
     }
 
     rows = read16b(f);
@@ -254,7 +254,6 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 	if (event->fxt == NONE)
 	    event->fxt = event->fxp = 0;
     }
-    reportv(ctx, 0, ".");
     pattern++;
 }
 
@@ -270,16 +269,13 @@ static void get_sbod(struct xmp_context *ctx, int size, FILE *f)
     if (sample >= m->xxh->ins)
 	return;
 
-    if (!sample && V(0))
-	report ("\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     i = idx[sample];
     if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
 	flags = XMP_SMP_7BIT;
 
     xmp_drv_loadpatch(ctx, f, sample, m->c4rate, flags, &m->xxs[i], NULL);
-
-    reportv(ctx, 0, ".");
 
     sample++;
 }
@@ -315,8 +311,6 @@ static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
 	iff_chunk(ctx, f);
 
     iff_release();
-
-    reportv(ctx, 0, "\n");
 
     return 0;
 }

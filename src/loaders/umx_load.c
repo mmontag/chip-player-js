@@ -101,7 +101,7 @@ static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	reportv(ctx, 0, "Container type : Epic Games UMX\n");
+	_D(_D_INFO "Container type : Epic Games UMX");
 
 	fread(buf, 1, TEST_SIZE, f);
 

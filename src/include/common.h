@@ -152,7 +152,6 @@ struct xmp_ord_info {
 #include "xxm.h"
 
 struct xmp_mod_context {
-	int verbosity;			/* verbosity level */
 	int time;			/* replay time in ms */
 	char *dirname;			/* file dirname */
 	char *basename;			/* file basename */

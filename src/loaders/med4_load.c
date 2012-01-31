@@ -309,7 +309,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	reportv(ctx, 0, "Play transpose : %d semitones\n", transp);
+	_D(_D_INFO "Play transpose: %d", transp);
 
 	for (i = 0; i < 32; i++)
 		temp_inst[i].transpose += transp;
@@ -322,7 +322,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		int size, plen;
@@ -369,7 +369,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		/* check block end */
 		if (read8(f) != 0xff) {
-			reportv(ctx, 0, "error: module is corrupted\n");
+			_D(_D_CRIT "error: module is corrupted");
 			TRACK_DEALLOC_ALL(i);
 			PATTERN_DEALLOC_ALL(i);
 			return -1;
@@ -467,9 +467,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 #endif
 		}
 
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	m->xxh->ins =  num_ins;
 
@@ -520,8 +518,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Instrument name                  Typ Len  LBeg LEnd L Vol Xpo");
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 
 	smp_idx = 0;
 	for (i = 0; i < 32; i++, mask <<= 1) {
@@ -537,7 +534,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		strncpy((char *)m->xxih[i].name, temp_inst[i].name, 32);
 
-		reportv(ctx, 1, "\n[%2X] %-32.32s %s ",
+		_D(_D_INFO "\n[%2X] %-32.32s %s",
 			i, m->xxih[i].name, inst_type[type + 2]);
 
 		/* This is very similar to MMD1 synth/hybrid instruments,
@@ -581,7 +578,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
-			reportv(ctx, 1, "%05x %05x %05x %02x %+03d ",
+			_D(_D_INFO "  %05x %05x %05x %02x %+03d",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 				       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
 				       m->xxi[i][0].xpo /*,
@@ -597,8 +594,6 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			m->med_wav_table[i] = calloc(1, synth.wftbllen);
 			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
-
-			reportv(ctx, 0, ".");
 
 			continue;
 		}
@@ -622,7 +617,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			for (j = 0; j < synth.wforms; j++)
 				synth.wf[j] = read32b(f);
 
-			reportv(ctx, 1, "VS:%02x WS:%02x WF:%02x %02x %+03d ",
+			_D(_D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+03d",
 					synth.volspeed, synth.wfspeed,
 					synth.wforms & 0xff,
 					temp_inst[i].volume,
@@ -666,8 +661,6 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->med_wav_table[i] = calloc(1, synth.wftbllen);
 			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
 
-			reportv(ctx, 0, ".");
-
 			fseek(f, pos + length, SEEK_SET);
 			continue;
 		}
@@ -692,7 +685,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
-		reportv(ctx, 1, "%04x %04x %04x %c V%02x %+03d ",
+		_D(_D_INFO, "  %04x %04x %04x %c V%02x %+03d",
 			m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 			m->xxs[smp_idx].lpe,
 			m->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -700,11 +693,9 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 
 		smp_idx++;
 	}
-	reportv(ctx, 0, "\n");
 
 	read16b(f);	/* unknown */
 
@@ -723,7 +714,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		switch (id) {
 		case MAGIC4('M','E','D','V'):
 			ver = read32b(f);
-			reportv(ctx, 2, "MED Version    : %d.%0d\n",
+			_D(_D_INFO "MED Version: %d.%0d\n",
 					(ver & 0xff00) >> 8, ver & 0xff);
 			break;
 		case MAGIC4('A','N','N','O'):
@@ -731,7 +722,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			s2 = size < 1023 ? size : 1023;
 			fread(buf, 1, s2, f);
 			buf[s2] = 0;
-			reportv(ctx, 2, "Annotation     : %s\n", buf);
+			_D(_D_INFO "Annotation: %s\n", buf);
 			break;
 		case MAGIC4('H','L','D','C'):
 			/* hold & decay */

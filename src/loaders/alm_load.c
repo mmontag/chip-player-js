@@ -112,7 +112,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -125,15 +125,13 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 		event->note = (b == 37) ? 0x61 : b + 36;
 	    event->ins = read8(f);
 	}
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    reportv(ctx, 0, "Loading samples: %d ", m->xxh->ins);
+    _D(_D_INFO "Loading samples: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -159,21 +157,15 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxi[i][0].vol = 0x40;
 	m->xxi[i][0].sid = i;
 
-	if ((V(1)) && (strlen((char *) m->xxih[i].name) ||
-		(m->xxs[i].len > 1))) {
-	    report ("\n[%2X] %-14.14s %04x %04x %04x %c V%02x ", i,
-		filename, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
-	}
+	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x", i,
+		filename, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
 
 	xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
 
 	fclose(s);
-
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     /* ALM is LRLR, not LRRL */
     for (i = 0; i < m->xxh->chn; i++)

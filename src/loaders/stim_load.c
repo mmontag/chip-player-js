@@ -99,7 +99,7 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	for (i = 0; i < m->xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -143,12 +143,11 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 				disable_continue_fx(event);
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
 
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
 	fseek(f, start + sh.smpaddr + m->xxh->smp * 4, SEEK_SET);
 
@@ -171,20 +170,16 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 		m->xxih[i].nsm = !!(m->xxs[i].len);
 		m->xxih[i].rls = 0xfff;
 
-		if (V(1) && m->xxs[i].len > 2) {
-			report("\n[%2X] %04x %04x %04x %c V%02x %+d ",
+		_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
 			       i, m->xxs[i].len, m->xxs[i].lps,
 			       m->xxs[i].lpe, si.loop_size > 1 ? 'L' : ' ',
 			       m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
-		}
 
 		if (!m->xxs[i].len)
 			continue;
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 				  &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	m->xxh->flg |= XXM_FLG_MODRNG;
 

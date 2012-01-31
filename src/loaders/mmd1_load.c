@@ -266,15 +266,9 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	
 	MODULE_INFO();
 
-	if (V(0)) {
-		report("BPM mode       : %s", bpm_on ? "on" : "off");
-		if (bpm_on)
-			report(" (length = %d)", bpmlen);
-		report("\n");
-		if (V(1) && song.playtransp)
-			report("Song transpose : %d\n", song.playtransp);
-		report("Stored patterns: %d ", m->xxh->pat);
-	}
+	_D(_D_INFO "BPM mode: %s (length = %d)", bpm_on ? "on" : "off", bpmlen);
+	_D(_D_INFO "Song transpose: %d", song.playtransp);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	/*
 	 * Read and convert patterns
@@ -346,9 +340,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	m->med_vol_table = calloc(sizeof(uint8 *), m->xxh->ins);
 	m->med_wav_table = calloc(sizeof(uint8 *), m->xxh->ins);
@@ -359,14 +351,17 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_WARN "read instruments");
 	INSTRUMENT_INIT();
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Instrument name                          Typ Len   LBeg  LEnd  Vl Xpo Ft");
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 
 	for (smp_idx = i = 0; i < m->xxh->ins; i++) {
 		int smpl_offset;
+		char name[40] = "";
+
 		fseek(f, start + smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = read32b(f);
-		//_D(_D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
+
+		_D(_D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
+
 		if (smpl_offset == 0)
 			continue;
 
@@ -376,18 +371,14 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		pos = ftell(f);
 
-		if (V(1)) {
-			char name[40] = "";
-			if (expdata_offset && i < expdata.i_ext_entries) {
-				fseek(f, iinfo_offset +
-					i * expdata.i_ext_entrsz, SEEK_SET);
-				fread(name, 40, 1, f);
-			}
+		if (expdata_offset && i < expdata.i_ext_entries) {
+		    fseek(f, iinfo_offset + i * expdata.i_ext_entrsz, SEEK_SET);
+		    fread(name, 40, 1, f);
+		}
 
-			report("\n[%2x] %-40.40s %s ", i, name,
+		_D(_D_INFO "\n[%2x] %-40.40s %s", i, name,
 				instr.type + 2 <= MMD_INST_TYPES ?
 					mmd_inst_type[instr.type + 2] : "???");
-		}
 
 		exp_smp.finetune = 0;
 		if (expdata_offset && i < expdata.s_ext_entries) {
@@ -438,7 +429,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].flg = song.sample[i].replen > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
-			reportv(ctx, 1, "%05x %05x %05x %02x %+3d %+1d ",
+			_D(_D_INFO "  %05x %05x %05x %02x %+3d %+1d",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 				       m->xxs[smp_idx].lpe, m->xxi[i][0].vol,
 				       m->xxi[i][0].xpo,
@@ -454,8 +445,6 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			m->med_wav_table[i] = calloc(1, synth.wftbllen);
 			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
-
-			reportv(ctx, 0, ".");
 
 			continue;
 		}
@@ -477,7 +466,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			for (j = 0; j < 64; j++)
 				synth.wf[j] = read32b(f);
 
-			reportv(ctx, 1, "VS:%02x WS:%02x WF:%02x %02x %+3d %+1d ",
+			_D(_D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+3d %+1d",
 					synth.volspeed, synth.wfspeed,
 					synth.wforms & 0xff,
 					song.sample[i].svol,
@@ -520,8 +509,6 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->med_wav_table[i] = calloc(1, synth.wftbllen);
 			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
 
-			reportv(ctx, 0, ".");
-
 			continue;
 		}
 
@@ -547,7 +534,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (song.sample[i].replen > 1)
 			m->xxs[smp_idx].flg |= XMP_SAMPLE_LOOP;
 
-		reportv(ctx, 1, "%05x %05x %05x %02x %+3d %+1d ",
+		_D(_D_INFO "  %05x %05x %05x %02x %+3d %+1d",
 				m->xxs[smp_idx].len,
 				m->xxs[smp_idx].lps,
 				m->xxs[smp_idx].lpe,
@@ -559,12 +546,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		xmp_drv_loadpatch(ctx, f, smp_idx, m->c4rate, 0,
 				  &m->xxs[smp_idx], NULL);
 
-		reportv(ctx, 0, ".");
-
 		smp_idx++;
 	}
-
-	reportv(ctx, 0, "\n");
 
 	/*
 	 * Adjust event note data in patterns

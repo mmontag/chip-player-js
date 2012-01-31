@@ -284,7 +284,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (a != 0 && a != 1)
 		return -1;
 
-	reportv(ctx, 1, "Packed sequence: %s\n", a ? "yes" : "no");
+	_D(_D_INFO "Packed sequence: %s", a ? "yes" : "no");
 
 	size = m->xxh->len * m->xxh->chn * 2;
 	buf = malloc(size);
@@ -317,8 +317,8 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (a != 0 && a != 1)
 		return -1;
 
-	reportv(ctx, 1, "Packed tracks  : %s\n", a ? "yes" : "no");
-	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk - 1);
+	_D(_D_INFO "Packed tracks: %s", a ? "yes" : "no");
+	_D(_D_INFO "Stored tracks: %d", m->xxh->trk - 1);
 
 	size = 64 * (m->xxh->trk - 1) * 4;
 	buf = malloc(size);
@@ -353,12 +353,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 				event->fxt = 0;
 			}
 		}
-		if (V(0)) {
-			if (i % m->xxh->chn == 0)
-				reportv(ctx, 0, ".");
-		}
 	}
-	reportv(ctx, 0, "\n");
 
 	free(buf);
 
@@ -369,8 +364,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Load and convert instruments */
 
-	reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-	reportv(ctx, 1, "\n     Instrument Name        Len   LBeg  LEnd  L Vol Fin");
+	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		uint8 buf[128];
@@ -396,13 +390,11 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxi[i][0].sid = i;
 		}
 
-		if (V(1) && (strlen((char*)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-			report("\n[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d ",
+		_D(_D_INFO "[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d",
 				i, m->xxih[i].name, m->xxs[i].len,
 				m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				m->xxi[i][0].vol, m->xxi[i][0].fin);
-		}
 
 		if (sn[i] & 0x80 || m->xxs[i].len == 0)
 			continue;
@@ -420,18 +412,14 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->c4rate, XMP_SMP_NOLOAD | XMP_SMP_DIFF,
 				&m->xxs[m->xxi[i][0].sid], (char*)b);
 			free(b);
-			reportv(ctx, 0, "c");
 		} else if (a == 4) {
 			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
-			reportv(ctx, 0, "C");
 		} else {
 			xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
-			reportv(ctx, 0, ".");
 		}
 	}
-	reportv(ctx, 0, "\n");
 
 	for (i = 0; i < m->xxh->chn; i++)
 		m->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;

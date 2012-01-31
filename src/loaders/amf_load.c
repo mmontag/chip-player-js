@@ -112,7 +112,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->len; i++)
 		m->xxo[i] = i;
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
 	m->xxp = calloc(sizeof(struct xxm_pattern *), m->xxh->pat + 1);
 
@@ -123,17 +123,11 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 			uint16 t = read16l(f);
 			m->xxp[i]->info[j].index = t;
 		}
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
-
 
 	/* Instruments */
 
 	INSTRUMENT_INIT();
-
-	if (V(1))
-		report("     Sample name                      Len   LBeg  LEnd  L Vol C2Spd\n");
 
 	/* Probe for 2-byte loop start 1.0 format
 	 * in facing_n.amf and sweetdrm.amf have only the sample
@@ -229,12 +223,10 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 							XMP_SAMPLE_LOOP : 0;
 		}
 
-		if (V(1) && (strlen((char *)m->xxih[i].name) || m->xxs[i].len)) {
-			report ("[%2X] %-32.32s %05x %05x %05x %c V%02x %5d\n",
-				i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-				m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
-				'L' : ' ', m->xxi[i][0].vol, c2spd);
-		}
+		_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %5d",
+			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
+			'L' : ' ', m->xxi[i][0].vol, c2spd);
 	}
 				
 
@@ -268,7 +260,8 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxh->trk = newtrk;		/* + empty track */
 	free(trkmap);
 
-	reportv(ctx, 0, "Stored tracks  : %d ", m->xxh->trk);
+	_D(_D_INFO "Stored tracks: %d", m->xxh->trk);
+
 	m->xxh->trk++;
 	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
 
@@ -464,21 +457,17 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 			}
 
 		}
-		if (V(0) & !(i % 4)) report(".");
 	}
-	reportv(ctx, 0, "\n");
 
 
 	/* Samples */
 
-	reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 			XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
-		reportv(ctx, 0, ".");
 	}
-	reportv(ctx, 0, "\n");
 
 	m->quirk |= XMP_QRK_FINEFX;
 

@@ -102,9 +102,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
     strncpy(m->author, (char *)afh.author, 24);
 
     MODULE_INFO();
-
-    if (V(0))
-	report ("Instruments    : %d ", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     INSTRUMENT_INIT();
 
@@ -123,29 +121,19 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
 
-	if (V(1)) {
-	    report ("\n[%2X] %-23.23s ", i, m->xxih[i].name);
-	    if (regs[0] | regs[1] | regs[2] | regs[3] | regs[4] | regs[5] | regs[6]
-		| regs[7] | regs[8] | regs[9] | regs[10]) {
-		for (j = 0; j < 11; j++)
-		    report ("%02x ", (uint8) regs[j]);
-	    }
-	}
-	if (V(0) == 1)
-	    report (".");
+	_D(_D_INFO "\n[%2X] %-23.23s", i, m->xxih[i].name);
+
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, XMP_SMP_ADLIB,
 								NULL, regs);
     }
-    if (V(0))
-	report ("\n");
 
     if (!afh.version) {
-	report (
-	    "Aborting: Unpacked modules not supported. Please contact the authors.\n");
+	_D(_D_CRIT "error: Unpacked module not supported");
 	return -1;
     }
-    if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+
     m->xxp = calloc (sizeof (struct xxm_pattern *), m->xxh->pat + 1);
 
     for (i = 0; i < m->xxh->pat; i++) {
@@ -157,14 +145,13 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxh->trk = w;
 	}
 	m->xxp[i]->rows = 64;
-	if (V(0))
-	    report (".");
     }
     m->xxh->trk++;
 
     w = read16l(f);
-    if (V(0))
-	report ("\nStored tracks  : %d ", w);
+
+    _D(_D_INFO "Stored tracks: %d", w);
+
     m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
     m->xxh->trk = w;
 
@@ -219,11 +206,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if ((event->note = MSN (b)))
 		event->note += (1 + ((b & 0xe) >> 1)) * 12;
 	}
-	if (V(0) && !(i % 9))
-	    report (".");
     }
-    if (V(0))
-	report ("\n");
 
     for (i = 0; i < m->xxh->chn; i++) {
 	m->xxc[i].pan = 0x80;

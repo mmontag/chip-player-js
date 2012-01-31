@@ -199,7 +199,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &p->m;
-    int c, r, i, j;
+    int c, r, i;
     struct s3m_adlib_header sah;
     struct xxm_event *event = 0, dummy;
     struct s3m_file_header sfh;
@@ -345,7 +345,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read patterns */
 
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     memset (arpeggio_val, 0, 32);
 
@@ -404,18 +404,16 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 		pat_len -= 2;
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
-    reportv(ctx, 1, "Stereo enabled : %s\n", sfh.mv & 0x80 ? "yes" : "no");
-    reportv(ctx, 1, "Pan settings   : %s\n", sfh.dp ? "no" : "yes");
+    _D(_D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
+    _D(_D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
 
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -440,7 +438,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    sah.magic = read32b(f);		/* 'SCRI' */
 
 	    if (sah.magic != MAGIC_SCRI) {
-		reportv(ctx, 0, "error: FM instrument magic\n");
+		_D(_D_CRIT "error: FM instrument magic");
 		return -2;
 	    }
 	    sah.magic = 0;
@@ -453,15 +451,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxi[i][0].xpo += 12;
 	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, XMP_SMP_ADLIB,
 					&m->xxs[i], (char *)&sah.reg);
-	    if (V(0)) {
-	        if (V(1)) {
-		    report ("\n[%2X] %-28.28s ", i, m->xxih[i].name);
-	            for (j = 0; j < 11; j++)
-		        report ("%02x ", (uint8) sah.reg[j]);
-		} else {
-		    report (".");
-		}
-	    }
+	    _D(_D_INFO "[%2X] %-28.28s", i, m->xxih[i].name);
 
 	    continue;
 	}
@@ -485,7 +475,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	sih.magic = read32b(f);			/* 'SCRS' */
 
 	if (x8 == 1 && sih.magic != MAGIC_SCRS) {
-	    reportv(ctx, 0, "error: instrument magic\n");
+	    _D(_D_CRIT "error: instrument magic");
 	    return -2;
 	}
 
@@ -514,8 +504,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, sih.name, 28);
 
-	if ((V(1)) && (strlen((char *) sih.name) || m->xxs[i].len))
-	    report ("\n[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d ",
+	_D(_D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
 			i, m->xxih[i].name, m->xxs[i].len,
 			m->xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
@@ -527,11 +516,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
-
-	if (V(0) && m->xxs[i].len)
-		report(".");
     }
-    reportv(ctx, 0, "\n");
 
     free(pp_pat);
     free(pp_ins);

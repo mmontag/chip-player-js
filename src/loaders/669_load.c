@@ -121,18 +121,11 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     memcpy(m->comment, sfh.message, 108);
     m->comment[108] = 0;
     
-    if (V(1)) {
-	report ("| %-36.36s\n", sfh.message);
-	report ("| %-36.36s\n", sfh.message + 36);
-	report ("| %-36.36s\n", sfh.message + 72);
-    }
-
     /* Read and convert instruments and samples */
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 0, "Instruments    : %d\n", m->xxh->pat);
-    reportv(ctx, 1, "     Instrument     Len  LBeg LEnd L\n");
+    _D(_D_INFO "Instruments: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -152,8 +145,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, sih.name, 13);
 
-	if ((V(1)) && (strlen((char *) m->xxih[i].name) || (m->xxs[i].len > 2)))
-	    report ("[%2X] %-14.14s %04x %04x %04x %c\n", i,
+	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
@@ -161,7 +153,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
@@ -216,20 +208,17 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
 
     /* Read samples */
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate,
 	    XMP_SMP_UNS, &m->xxs[i], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     for (i = 0; i < m->xxh->chn; i++)
 	m->xxc[i].pan = (i % 2) * 0xff;

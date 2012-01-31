@@ -137,9 +137,6 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    if (V(1))
-	report ("     Sample name                    Len  LBeg LEnd L Vol\n");
-
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
 	m->xxih[i].nsm = !!(m->xxs[i].len = dh.slen[i]);
@@ -153,17 +150,15 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, dh.insname[i], 30);
 
-	if (V(1) && (strlen((char *)m->xxih[i].name) || (m->xxs[i].len > 1))) {
-	    report ("[%2X] %-30.30s %04x %04x %04x %c V%02x\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe, m->xxs[i].flg
-		& XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
-	}
+	_D(_D_INFO "[%2X] %-30.30s %04x %04x %04x %c V%02x", i,
+		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
     }
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -207,23 +202,17 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	}
 
-	if (w)
-	    report ("WARNING! Corrupted file (w = %d)", w);
-
-	reportv(ctx, 0, ".");
+	if (w) {
+	    _D(_D_CRIT "Corrupted file (w = %d)", w);
+	}
     }
-    reportv(ctx, 0, "\n");
 
     /* Read samples */
-    reportv(ctx, 0, "Stored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
     for (i = 0; i < m->xxh->ins; i++) {
 	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, m->c4rate, 0,
 	    &m->xxs[m->xxi[i][0].sid], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
-
-    /* m->fetch |= 0; */
 
     return 0;
 }

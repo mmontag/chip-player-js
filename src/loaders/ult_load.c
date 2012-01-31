@@ -129,7 +129,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    reportv(ctx, 1, "Instruments    : %d ", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
@@ -199,20 +199,16 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	copy_adjust(m->xxih[i].name, uih.name, 24);
 
-	if ((V(1)) && (strlen((char *) uih.name) || m->xxs[i].len)) {
-	    report ("\n[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
+	_D(_D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, m->xxs[i].len,
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		m->xxi[i][0].vol, uih.finetune, uih.c2spd);
-	}
 
 	if (ver > 3)
 	    c2spd_to_note(uih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
     }
-
-    reportv(ctx, 1, "\n");
 
     fread(&ufh2.order, 256, 1, f);
     ufh2.channels = read8(f);
@@ -243,8 +239,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     /* Events are stored by channel */
     for (i = 0; i < m->xxh->pat; i++) {
@@ -330,20 +325,16 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 	    }
-	    if (V(0) && (j % (64 * m->xxh->chn) == 0))
-		report (".");
 	}
     }
 
-    reportv(ctx, 0, "\nStored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
 	if (!m->xxs[i].len)
 	    continue;
 	xmp_drv_loadpatch(ctx, f, i, m->c4rate, 0, &m->xxs[i], NULL);
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     m->volbase = 0x100;
 

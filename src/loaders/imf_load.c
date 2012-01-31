@@ -241,7 +241,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read patterns */
 
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     memset(arpeggio_val, 0, 32);
 
@@ -293,21 +293,15 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 		pat_len -= 2;
 	    }
 	}
-	reportv(ctx, 0, ".");
     }
-    reportv(ctx, 0, "\n");
 
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-
-    reportv(ctx, 1, 
-"\n     Instrument name                NSm Fade Env Smp# Len   Start End   C2Spd");
+    _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (smp_num = i = 0; i < m->xxh->ins; i++) {
-
 	fread(&ii.name, 32, 1, f);
 	fread(&ii.map, 120, 1, f);
 	fread(&ii.unused, 8, 1, f);
@@ -342,11 +336,8 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	memcpy (m->xxim[i].ins, ii.map, XXM_KEY_MAX);
 
-	if (V(1) && (strlen((char *) ii.name) || ii.nsm))
-	    report ("\n[%2X] %-31.31s %2d %4x %c%c%c ",
-		i, ii.name, ii.nsm, ii.fadeout,
-		ii.env[0].flg & 0x01 ? 'V' : '-',
-		'-', '-');
+	_D(_D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,
+		ii.fadeout, ii.env[0].flg & 0x01 ? 'V' : '-');
 
 	m->xxih[i].aei.npt = ii.env[0].npt;
 	m->xxih[i].aei.sus = ii.env[0].sus;
@@ -393,12 +384,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	        m->xxs[smp_num].lpe >>= 1;
 	    }
 
-	    if (V(1)) {
-		if (j)
-		    report("\n\t\t\t\t\t\t ");
-		report ("[%02x] %05x %05x %05x %5d ",
+	    _D(_D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
-	    }
+
 	    c2spd_to_note (is.rate, &m->xxi[i][j].xpo, &m->xxi[i][j].fin);
 
 	    if (!m->xxs[smp_num].len)
@@ -406,14 +394,10 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate, 0,
 		&m->xxs[m->xxi[i][j].sid], NULL);
-
-	    reportv(ctx, 0, ".");
 	}
     }
     m->xxh->smp = smp_num;
     m->xxs = realloc(m->xxs, sizeof (struct xxm_sample) * m->xxh->smp);
-
-    reportv(ctx, 0, "\n");
 
     m->flags |= XMP_CTL_FILTER;
     m->quirk |= XMP_QUIRK_ST3;

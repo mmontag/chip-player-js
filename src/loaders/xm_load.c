@@ -143,7 +143,7 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 load_patterns:
     PATTERN_INIT();
 
-    reportv(ctx, 0, "Stored patterns: %d ", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
 
     /* Endianism fixed by Miodrag Vallat <miodrag@multimania.com>
      * Mon, 04 Jan 1999 11:17:20 +0100
@@ -252,8 +252,6 @@ load_patterns:
 		event->vol = 0;
 	    }
 	    free (patbuf);
-	    if (V(0))
-		report (".");
 	}
     }
 
@@ -269,14 +267,11 @@ load_patterns:
     m->xxh->pat++;
 
     if (xfh.version <= 0x0103) {
-	reportv(ctx, 0, "\n");
 	goto load_samples;
     }
-    reportv(ctx, 0, "\n");
 
 load_instruments:
-    reportv(ctx, 0, "Instruments    : %d ", m->xxh->ins);
-    reportv(ctx, 1, "\n     Instrument name            Smp Size   LStart LEnd   L Vol Fine  Pan Xpo\n");
+    _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     /* ESTIMATED value! We don't know the actual value at this point */
     m->xxh->smp = MAX_SAMP;
@@ -313,8 +308,7 @@ load_instruments:
 	if (m->xxih[i].nsm > 16)
 	    m->xxih[i].nsm = 16;
 
-	if (V(1) && (strlen((char *) m->xxih[i].name) || m->xxih[i].nsm))
-	    report ("[%2X] %-22.22s %2d ", i, m->xxih[i].name, m->xxih[i].nsm);
+	_D(_D_INFO "[%2X] %-22.22s %2d", i, m->xxih[i].name, m->xxih[i].nsm);
 
 	if (m->xxih[i].nsm) {
 	    m->xxi[i] = calloc (sizeof (struct xxm_instrument), m->xxih[i].nsm);
@@ -432,25 +426,20 @@ load_instruments:
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
 		if (sample_num >= MAX_SAMP)
 		    continue;
-		if ((V(1)) && xsh[j].length)
-		    report ("%s[%1x] %06x%c%06x %06x %c "
-			"V%02x F%+04d P%02x R%+03d",
-			j ? "\n\t\t\t\t" : "\t", j,
-			m->xxs[m->xxi[i][j].sid].len,
-			m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-			m->xxs[m->xxi[i][j].sid].lps,
-			m->xxs[m->xxi[i][j].sid].lpe,
-			m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-			m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxi[i][j].vol, m->xxi[i][j].fin,
-			m->xxi[i][j].pan, m->xxi[i][j].xpo);
+		_D(_D_INFO " %1x: %06x%c%06x %06x %c V%02x F%+04d P%02x R%+03d",
+		    j, m->xxs[m->xxi[i][j].sid].len,
+		    m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		    m->xxs[m->xxi[i][j].sid].lps,
+		    m->xxs[m->xxi[i][j].sid].lpe,
+		    m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+		    m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		    m->xxi[i][j].vol, m->xxi[i][j].fin,
+		    m->xxi[i][j].pan, m->xxi[i][j].xpo);
 
 		if (xfh.version > 0x0103)
 		    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
 			XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
 	    }
-	    if (m->verbosity == 1)
-		report (".");
 	} else {
 	    /* The sample size is a field of struct xm_instrument_header that
 	     * should be in struct xm_instrument according to the (official)
@@ -473,22 +462,16 @@ load_instruments:
 
 	     fseek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
-
-	if ((V(1)) && (strlen((char *) m->xxih[i].name) || xih.samples))
-	    report ("\n");
     }
     m->xxh->smp = sample_num;
     m->xxs = realloc(m->xxs, sizeof (struct xxm_sample) * m->xxh->smp);
 
     if (xfh.version <= 0x0103) {
-	if (m->verbosity > 0 && m->verbosity < 2)
-	    report ("\n");
 	goto load_patterns;
     }
 
 load_samples:
-    if ((V(0) && xfh.version <= 0x0103) || V(1))
-	report ("Stored samples : %d ", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     /* XM 1.02 stores all samples after the patterns */
 
@@ -497,11 +480,9 @@ load_samples:
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
 		xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, m->c4rate,
 		    XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
-		reportv(ctx, 0, ".");
 	    }
 	}
     }
-    reportv(ctx, 0, "\n");
 
     /* If dynamic pan is disabled, XM modules will use the standard
      * MOD channel panning (LRRL). Moved to module_play() --Hipolito.
