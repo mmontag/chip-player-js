@@ -300,10 +300,10 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxp[i]->rows = 64;
 		for (j = 0; j < m->xxh->chn; j++) {
 			int idx = 2 * (i * m->xxh->chn + j);
-			m->xxp[i]->info[j].index = readptr16l(&buf[idx]);
+			m->xxp[i]->index[j] = readptr16l(&buf[idx]);
 
-			if (m->xxp[i]->info[j].index == 0x1000) /* empty trk */
-				m->xxp[i]->info[j].index = m->xxh->trk - 1;
+			if (m->xxp[i]->index[j] == 0x1000) /* empty trk */
+				m->xxp[i]->index[j] = m->xxh->trk - 1;
 
 		}
 		m->xxo[i] = i;

@@ -165,7 +165,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (j = 0; j < 32; j++)
 	    mp[j] = read16l(f);
 	for (j = 0; j < m->xxh->chn; j++)
-	    m->xxp[i]->info[j].index = mp[j];
+	    m->xxp[i]->index[j] = mp[j];
     }
 
     /* Comments */

@@ -140,7 +140,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_ALLOC (i);
 	for (j = 0; j < 9; j++) {
 	    w = read16l(f);
-	    m->xxp[i]->info[j].index = w;
+	    m->xxp[i]->index[j] = w;
 	    if (w > m->xxh->trk)
 		m->xxh->trk = w;
 	}

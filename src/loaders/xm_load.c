@@ -263,7 +263,7 @@ load_patterns:
 	sizeof (struct xxm_event) * 64);
     m->xxt[i * m->xxh->chn]->rows = 64;
     for (j = 0; j < m->xxh->chn; j++)
-	m->xxp[i]->info[j].index = i * m->xxh->chn;
+	m->xxp[i]->index[j] = i * m->xxh->chn;
     m->xxh->pat++;
 
     if (xfh.version <= 0x0103) {

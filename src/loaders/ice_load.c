@@ -131,7 +131,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_ALLOC (i);
 	m->xxp[i]->rows = 64;
 	for (j = 0; j < m->xxh->chn; j++) {
-	    m->xxp[i]->info[j].index =  ih.ord[i][j];
+	    m->xxp[i]->index[j] = ih.ord[i][j];
 	}
 	m->xxo[i] = i;
     }

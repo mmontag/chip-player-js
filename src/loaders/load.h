@@ -60,13 +60,13 @@ extern int arch_vol_table[];
 
 #define PATTERN_ALLOC(x) do { \
     m->xxp[x] = calloc(1, sizeof (struct xxm_pattern) + \
-	sizeof (struct xxm_trackinfo) * (m->xxh->chn - 1)); \
+	sizeof (int) * (m->xxh->chn - 1)); \
 } while (0)
 
 #define TRACK_ALLOC(i) do { \
     int j; \
     for (j = 0; j < m->xxh->chn; j++) { \
-	m->xxp[i]->info[j].index = i * m->xxh->chn + j; \
+	m->xxp[i]->index[j] = i * m->xxh->chn + j; \
 	m->xxt[i * m->xxh->chn + j] = calloc (sizeof (struct xxm_track) + \
 	    sizeof (struct xxm_event) * m->xxp[i]->rows, 1); \
 	m->xxt[i * m->xxh->chn + j]->rows = m->xxp[i]->rows; \

@@ -88,7 +88,7 @@ typedef signed long long int64;
 #define RESET_FLAG(a,b)	((a)&=~(b))
 #define TEST_FLAG(a,b)	!!((a)&(b))
 
-#define TRACK_NUM(a,c)	m->xxp[a]->info[c].index
+#define TRACK_NUM(a,c)	m->xxp[a]->index[c]
 #define EVENT(a,c,r)	m->xxt[TRACK_NUM((a),(c))]->event[r]
 
 #ifdef _MSC_VER

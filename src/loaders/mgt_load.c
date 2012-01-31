@@ -293,7 +293,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		m->xxp[i]->rows = read16b(f);
 		for (j = 0; j < m->xxh->chn; j++) {
-			m->xxp[i]->info[j].index = read16b(f) - 1;
+			m->xxp[i]->index[j] = read16b(f) - 1;
 		}
 	}
 

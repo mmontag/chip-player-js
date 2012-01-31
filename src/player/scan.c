@@ -171,7 +171,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 	    pdelay = 0;
 
 	    for (chn = 0; chn < m->xxh->chn; chn++) {
-		if (row >= m->xxt[m->xxp[m->xxo[ord]]->info[chn].index]->rows)
+		if (row >= m->xxt[m->xxp[m->xxo[ord]]->index[chn]]->rows)
 		    continue;
 
 		event = &EVENT(m->xxo[ord], chn, row);

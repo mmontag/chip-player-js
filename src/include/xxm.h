@@ -29,13 +29,9 @@ struct xxm_channel {
 	int flg;
 };
 
-struct xxm_trackinfo {
-	int index;		/* Track index */
-};
-
 struct xxm_pattern {
 	int rows;		/* Number of rows */
-	struct xxm_trackinfo info[1];
+	int index[1];
 };
 
 struct xxm_event {

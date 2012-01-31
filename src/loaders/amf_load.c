@@ -121,7 +121,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
 		for (j = 0; j < m->xxh->chn; j++) {
 			uint16 t = read16l(f);
-			m->xxp[i]->info[j].index = t;
+			m->xxp[i]->index[j] = t;
 		}
 	}
 
@@ -245,14 +245,14 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < m->xxh->pat; i++) {		/* read track table */
 		for (j = 0; j < m->xxh->chn; j++) {
-			int k = m->xxp[i]->info[j].index - 1;
+			int k = m->xxp[i]->index[j] - 1;
 
 			/* Use empty track if an invalid track is requested
 			 * (such as in Lasse Makkonen "faster and louder")
 			 */
 			if (k < 0 || k > m->xxh->trk)
 				k = 0;
-			m->xxp[i]->info[j].index = trkmap[k];
+			m->xxp[i]->index[j] = trkmap[k];
 /*printf("m->xxp[%d]->info[%d].index = %d (k = %d)\n", i, j, trkmap[k], k);*/
 		}
 	}

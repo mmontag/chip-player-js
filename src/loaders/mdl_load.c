@@ -342,7 +342,7 @@ static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
 	for (j = 0; j < chn; j++) {
 	    x = read16l(f);
 	    if (j < m->xxh->chn)
-		m->xxp[i]->info[j].index = x;
+		m->xxp[i]->index[j] = x;
 	}
     }
 }
@@ -367,7 +367,7 @@ static void get_chunk_p0(struct xmp_context *ctx, int size, FILE *f)
 	for (j = 0; j < 32; j++) {
 	    x16 = read16l(f);
 	    if (j < m->xxh->chn)
-		m->xxp[i]->info[j].index = x16;
+		m->xxp[i]->index[j] = x16;
 	}
     }
 }
@@ -816,7 +816,7 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (j = 0; j < m->xxp[i]->rows; j++)
 	    for (k = 0; k < m->xxh->chn; k++)
 		for (l = 0; l < m->xxh->ins; l++) {
-		    if (j >= m->xxt[m->xxp[i]->info[k].index]->rows)
+		    if (j >= m->xxt[m->xxp[i]->index[k]]->rows)
 			continue;
 		    
 		    if (EVENT(i, k, j).ins && EVENT(i, k, j).ins == i_index[l]) {

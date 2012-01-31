@@ -863,7 +863,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		sizeof (struct xxm_event) * 64, 1);
 	    m->xxt[i * m->xxh->chn]->rows = 64;
 	    for (j = 0; j < m->xxh->chn; j++)
-		m->xxp[i]->info[j].index = i * m->xxh->chn;
+		m->xxp[i]->index[j] = i * m->xxh->chn;
 	    continue;
 	}
 	fseek(f, start + pp_pat[i], SEEK_SET);
@@ -956,7 +956,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Scan channels, look for unused tracks */
 	for (c = m->xxh->chn - 1; c >= max_ch; c--) {
-	    for (flag = j = 0; j < m->xxt[m->xxp[i]->info[c].index]->rows; j++) {
+	    for (flag = j = 0; j < m->xxt[m->xxp[i]->index[c]]->rows; j++) {
 		event = &EVENT (i, c, j);
 		if (event->note || event->vol || event->ins || event->fxt ||
 		    event->fxp || event->f2t || event->f2p) {
