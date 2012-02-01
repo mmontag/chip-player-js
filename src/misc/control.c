@@ -48,7 +48,7 @@ void *xmp_create_context()
 	o->freq = 44100;
 	o->mix = 70;
 	o->resol = 16;
-	o->flags = XMP_CTL_DYNPAN | XMP_CTL_FILTER | XMP_CTL_ITPT;
+	o->flags = XMP_CTL_FILTER | XMP_CTL_ITPT;
 	o->cf_cutoff = 0;
 
 	return ctx;

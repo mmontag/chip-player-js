@@ -121,7 +121,6 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	getval_yn(o->flags, "interpolate", XMP_CTL_ITPT);
 	getval_yn(o->flags, "loop", XMP_CTL_LOOP);
 	getval_yn(o->flags, "reverse", XMP_CTL_REVERSE);
-	getval_yn(o->flags, "pan", XMP_CTL_DYNPAN);
 	getval_yn(o->flags, "filter", XMP_CTL_FILTER);
 	getval_yn(o->outfmt, "mono", XMP_FMT_MONO);
 	getval_no("amplify", o->amplify);

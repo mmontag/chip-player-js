@@ -621,8 +621,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
      *       it may be a bug.
      */
 
-    finalpan = m->flags & XMP_CTL_DYNPAN ?  xc->pan + (pan_envelope - 32) *
-			(128 - abs (xc->pan - 128)) / 32 : 0x80;
+    finalpan = xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32;
     finalpan = xc->masterpan + (finalpan - 128) *
 			(128 - abs (xc->masterpan - 128)) / 128;
 

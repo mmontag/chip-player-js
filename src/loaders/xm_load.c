@@ -486,9 +486,9 @@ load_samples:
      * MOD channel panning (LRRL). Moved to module_play() --Hipolito.
      */
 
-    for (i = 0; i < m->mod.xxh->chn; i++)
-        m->mod.xxc[i].pan = m->flags & XMP_CTL_DYNPAN ?
-            0x80 : (((i + 1) / 2) % 2) * 0xff;
+    for (i = 0; i < m->mod.xxh->chn; i++) {
+        m->mod.xxc[i].pan = 0x80;
+    }
 
     m->quirk |= XMP_QUIRK_FT2;
 

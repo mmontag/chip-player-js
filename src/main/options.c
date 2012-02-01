@@ -33,7 +33,6 @@ extern int showtime;
 extern int rt;
 #endif
 
-#define OPT_NOPAN	0x102
 #define OPT_LOADONLY	0x103
 #define OPT_NORC	0x104
 #define OPT_FX9BUG	0x105
@@ -235,7 +234,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	{ "nocmd",		 0, 0, OPT_NOCMD },
 	{ "nofilter",		 0, 0, OPT_NOFILTER },
 	{ "nearest",		 0, 0, 'n' },
-	{ "nopan",		 0, 0, OPT_NOPAN },
 	{ "norc",		 0, 0, OPT_NORC },
 	{ "output-file",	 1, 0, 'o' },
 	{ "pan",		 1, 0, 'P' },
@@ -324,9 +322,6 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    break;
 	case 'n':
 	    opt->flags &= ~XMP_CTL_ITPT;
-	    break;
-	case OPT_NOPAN:
-	    opt->flags &= ~XMP_CTL_DYNPAN;
 	    break;
 	case OPT_NORC:
 	    break;

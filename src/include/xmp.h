@@ -96,7 +96,6 @@ struct xmp_options {
 #define XMP_CTL_LOOP	(1 << 3)	/* Enable module looping */
 #define XMP_CTL_VBLANK	(1 << 4)	/* Use vblank timing only */
 #define XMP_CTL_VIRTUAL	(1 << 5)	/* Enable virtual channels */
-#define XMP_CTL_DYNPAN	(1 << 6)	/* Enable dynamic pan */
 #define XMP_CTL_FIXLOOP	(1 << 7)	/* Fix sample loop start */
 #define XMP_CTL_FILTER	(1 << 8)	/* IT lowpass filter */
 	int flags;		/* internal control flags, set default mode */
