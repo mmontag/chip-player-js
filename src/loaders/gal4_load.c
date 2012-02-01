@@ -53,7 +53,6 @@ static int snum;
 
 static void get_main(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
 	char buf[64];
 	int flags;
@@ -75,7 +74,6 @@ static void get_main(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
@@ -87,7 +85,6 @@ static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
@@ -99,7 +96,6 @@ static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
@@ -116,9 +112,8 @@ static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event, dummy;
+	struct xmp_event *event, dummy;
 	int i, len, chan;
 	int rows, r;
 	uint8 flag;
@@ -182,7 +177,6 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
 	int i, j;
 	int srate, finetune, flags;
@@ -267,7 +261,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	if (m->mod.xxi[i].nsm == 0)
 		return;
 
-	m->mod.xxi[i].sub = calloc(sizeof(struct xxm_subinstrument), m->mod.xxi[i].nsm);
+	m->mod.xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), m->mod.xxi[i].nsm);
 
 	for (j = 0; j < m->mod.xxi[i].nsm; j++, snum++) {
 		read32b(f);	/* SAMP */
@@ -331,7 +325,6 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
 	int i, offset;
 
