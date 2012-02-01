@@ -68,26 +68,26 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc(sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	read8(f);		/* num */
-	m->xxi[i][0].vol = read8(f);
+	m->xxih[i].sub[0].vol = read8(f);
 	m->xxs[i].len = 2 * read16b(f);
 	fread(m->xxih[i].name, 1, 20, f);
 	m->xxs[i].flg = read8(f) & 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].fin = read8(f);
+	m->xxih[i].sub[0].fin = read8(f);
 	m->xxs[i].lps = 2 * read16b(f);
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * read16b(f);
 	read32b(f);		/* ptr */
 
 	m->xxih[i].nsm = 1;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x %+d",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
+		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin >> 4);
     }
 
     read8(f);			/* pad */

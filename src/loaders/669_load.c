@@ -128,7 +128,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
 	sih.length = read32l(f);		/* Instrument size */
@@ -139,9 +139,9 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->xxs[i].lps = sih.loop_start;
 	m->xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
 	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
-	m->xxi[i][0].vol = 0x40;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = 0x40;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	copy_adjust(m->xxih[i].name, sih.name, 13);
 
@@ -216,7 +216,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
 	    XMP_SMP_UNS, &m->xxs[i], NULL);
     }
 

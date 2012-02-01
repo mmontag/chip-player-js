@@ -80,27 +80,27 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	B_ENDIAN16 (fh.ins[i].size);
 	B_ENDIAN16 (fh.ins[i].loop_start);
 	B_ENDIAN16 (fh.ins[i].loop_size);
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxs[i].len = 2 * fh.ins[i].size;
 	m->xxs[i].lps = 2 * fh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * fh.ins[i].loop_size;
 	m->xxs[i].flg = fh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].fin = (int8)fh.ins[i].finetune << 4;
-	m->xxi[i][0].vol = fh.ins[i].volume;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].fin = (int8)fh.ins[i].finetune << 4;
+	m->xxih[i].sub[0].vol = fh.ins[i].volume;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 	m->xxih[i].nsm = !!(m->xxs[i].len);
 	m->xxih[i].rls = 0xfff;
-	if (m->xxi[i][0].fin > 48)
-	    m->xxi[i][0].xpo = -1;
-	if (m->xxi[i][0].fin < -48)
-	    m->xxi[i][0].xpo = 1;
+	if (m->xxih[i].sub[0].fin > 48)
+	    m->xxih[i].sub[0].xpo = -1;
+	if (m->xxih[i].sub[0].fin < -48)
+	    m->xxih[i].sub[0].xpo = 1;
 
 	if (V(1) && (strlen(m->xxih[i].name) || m->xxs[i].len > 2)) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
 		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		fh.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->xxi[i][0].vol, m->xxi[i][0].fin >> 4);
+		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin >> 4);
 	}
     }
 
@@ -139,8 +139,8 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-	    &m->xxs[m->xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+	    &m->xxs[m->xxih[i].sub[0].sid], NULL);
 	if (V(0))
 	    report (".");
     }

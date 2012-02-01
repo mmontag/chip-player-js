@@ -89,7 +89,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		fread(buffer, 1, 22, f);
 		if (buffer[0]) {
@@ -97,8 +97,8 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 			copy_adjust(m->xxih[i].name, buffer + 1, 22);
 		}
 		read16l(f);		/* skip 2 reserved bytes */
-		m->xxi[i][0].vol = read8(f) >> 2;
-		m->xxi[i][0].pan = 0x80;
+		m->xxih[i].sub[0].vol = read8(f) >> 2;
+		m->xxih[i].sub[0].pan = 0x80;
 		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
 	}
 
@@ -205,15 +205,15 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = 0;
 		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-		m->xxi[i][0].fin = 0;
-		m->xxi[i][0].pan = 0x80;
+		m->xxih[i].sub[0].fin = 0;
+		m->xxih[i].sub[0].pan = 0x80;
 #endif
 
 		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
 				m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i][0].vol);
+				m->xxih[i].sub[0].vol);
 	}
 
 	return 0;

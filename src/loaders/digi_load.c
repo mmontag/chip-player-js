@@ -138,21 +138,21 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxih[i].nsm = !!(m->xxs[i].len = dh.slen[i]);
 	m->xxs[i].lps = dh.sloop[i];
 	m->xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
 	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].vol = dh.vol[i];
-	m->xxi[i][0].fin = dh.fin[i];
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = dh.vol[i];
+	m->xxih[i].sub[0].fin = dh.fin[i];
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	copy_adjust(m->xxih[i].name, dh.insname[i], 30);
 
 	_D(_D_INFO "[%2X] %-30.30s %04x %04x %04x %c V%02x", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxih[i].sub[0].vol);
     }
 
     PATTERN_INIT();
@@ -210,8 +210,8 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read samples */
     _D(_D_INFO "Stored samples: %d", m->xxh->smp);
     for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-	    &m->xxs[m->xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+	    &m->xxs[m->xxih[i].sub[0].sid], NULL);
     }
 
     return 0;

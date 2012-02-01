@@ -94,10 +94,10 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		int c2spd, looplen;
 
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		read8(f);			/* note */
-		m->xxi[i][0].vol = read8(f) >> 1;
-		m->xxi[i][0].pan = 0x80;
+		m->xxih[i].sub[0].vol = read8(f) >> 1;
+		m->xxih[i].sub[0].pan = 0x80;
 		read16l(f);			/* not used */
 		c2spd = read32l(f);		/* period? */
 		read32l(f);			/* sustain start */
@@ -112,13 +112,13 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 		sdata[i] = read32l(f);
 
 		m->xxih[i].nsm = !!(m->xxs[i].len);
-		m->xxi[i][0].sid = i;
+		m->xxih[i].sub[0].sid = i;
 
 		_D(_D_INFO "[%2X] %-32.32s  %04x %04x %04x %c V%02x\n",
 				i, m->xxih[i].name, m->xxs[i].len,
 				m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i][0].vol, c2spd);
+				m->xxih[i].sub[0].vol, c2spd);
 	}
 
 	PATTERN_INIT();
@@ -164,8 +164,8 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, start + sdata[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
-				XMP_SMP_VIDC, &m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
+				XMP_SMP_VIDC, &m->xxs[m->xxih[i].sub[0].sid], NULL);
 	}
 
 	return 0;

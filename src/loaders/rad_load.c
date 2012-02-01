@@ -98,12 +98,12 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		m->xxih[i].nsm = 1;
-		m->xxi[i][0].vol = 0x40;
-		m->xxi[i][0].pan = 0x80;
-		m->xxi[i][0].xpo = -1;
-		m->xxi[i][0].sid = i;
+		m->xxih[i].sub[0].vol = 0x40;
+		m->xxih[i].sub[0].pan = 0x80;
+		m->xxih[i].sub[0].xpo = -1;
+		m->xxih[i].sub[0].sid = i;
 	}
 
 	/* Read orders */

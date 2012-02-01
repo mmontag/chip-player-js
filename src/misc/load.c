@@ -614,11 +614,10 @@ void xmp_release_module(xmp_context ctx)
 		free(m->xxp[i]);
 
 	for (i = 0; i < m->xxh->ins; i++)
-		free(m->xxi[i]);
+		free(m->xxih[i].sub);
 
 	free(m->xxt);
 	free(m->xxp);
-	free(m->xxi);
 	if (m->xxh->smp > 0) {
 		for (i = 0; i < m->xxh->smp; i++) {
 			if (m->xxs[i].data != NULL)

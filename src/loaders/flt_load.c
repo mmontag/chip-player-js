@@ -159,12 +159,12 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
 
     m->xxs[i].flg = XMP_SAMPLE_LOOP;
-    m->xxi[i][0].vol = 0x40;		/* prelude.mod has 0 in instrument */
+    m->xxih[i].sub[0].vol = 0x40;		/* prelude.mod has 0 in instrument */
     m->xxih[i].nsm = 1;
-    m->xxi[i][0].xpo = -12 * am.fq;
-    m->xxi[i][0].vwf = 0;
-    m->xxi[i][0].vde = am.v_amp;
-    m->xxi[i][0].vra = am.v_spd;
+    m->xxih[i].sub[0].xpo = -12 * am.fq;
+    m->xxih[i].sub[0].vwf = 0;
+    m->xxih[i].sub[0].vde = am.v_amp;
+    m->xxih[i].sub[0].vra = am.v_spd;
 
     /*
      * AM synth envelope parameters based on the Startrekker 1.2 docs
@@ -269,8 +269,8 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	m->xxih[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
     }
 
-    xmp_drv_loadpatch(ctx, NULL, m->xxi[i][0].sid, XMP_SMP_NOLOAD,
-					&m->xxs[m->xxi[i][0].sid], wave);
+    xmp_drv_loadpatch(ctx, NULL, m->xxih[i].sub[0].sid, XMP_SMP_NOLOAD,
+					&m->xxs[m->xxih[i].sub[0].sid], wave);
 }
 
 
@@ -364,15 +364,15 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxs[i].len = 2 * mh.ins[i].size;
 	m->xxs[i].lps = 2 * mh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
 	m->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
-	m->xxi[i][0].vol = mh.ins[i].volume;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->xxih[i].sub[0].vol = mh.ins[i].volume;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 	m->xxih[i].nsm = !!(m->xxs[i].len);
 	m->xxih[i].rls = 0xfff;
 
@@ -385,12 +385,12 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	if (am_synth && is_am_instrument(nt, i)) {
 	    _D(_D_INFO "[%2X] %-22.22s SYNT ---- ----   V40 %+d",
-			i, m->xxih[i].name, m->xxi[i][0].fin >> 4);
+			i, m->xxih[i].name, m->xxih[i].sub[0].fin >> 4);
 	} else if (*m->xxih[i].name || m->xxs[i].len > 2) {
 	    _D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			m->xxi[i][0].vol, m->xxi[i][0].fin >> 4,
+			m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin >> 4,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
     }
@@ -451,8 +451,8 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    continue;
 	}
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-					&m->xxs[m->xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+					&m->xxs[m->xxih[i].sub[0].sid], NULL);
     }
 
     if (nt)

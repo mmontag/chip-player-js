@@ -420,7 +420,7 @@ next_pattern:
     for (i = 0; i < m->xxh->ins; i++) {
 	unsigned char b[4];
 
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	fread (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
@@ -474,10 +474,10 @@ next_pattern:
 	/* if (li.gvl == 0) */
 	    li.gvl = 0x40;
 
-	m->xxi[i][0].vol = li.vol;
-	m->xxi[i][0].gvl = li.gvl;
-	m->xxi[i][0].pan = li.pan;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = li.vol;
+	m->xxih[i].sub[0].gvl = li.gvl;
+	m->xxih[i].sub[0].pan = li.pan;
+	m->xxih[i].sub[0].sid = i;
 
 	copy_adjust(m->xxih[i].name, li.name, 31);
 
@@ -486,15 +486,15 @@ next_pattern:
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i][0].vol, m->xxi[i][0].gvl,
+		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 
-	c2spd_to_note (li.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	c2spd_to_note (li.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
 	fseek(f, li.hdrsz - 0x90, SEEK_CUR);
 
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0, &m->xxs[i], NULL);
     }
 
     return 0;

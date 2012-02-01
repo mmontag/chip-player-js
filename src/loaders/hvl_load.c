@@ -321,7 +321,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		int vol, fspd, wavelen, flow, vibdel, hclen, hc;
 		int vibdep, vibspd, sqmin, sqmax, sqspd, fmax, plen, pspd;
 		int Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol;
-                m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+                m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		fread(buf, 22, 1, f);
 
@@ -455,12 +455,12 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxae[i][8] = (Alen+Dlen+Slen+Rlen);
 		m->xxae[i][9] = Rvol;
 
-		m->xxi[i][0].vol = 64;
-		m->xxi[i][0].sid = wave;
-		m->xxi[i][0].pan = 128;
-		m->xxi[i][0].xpo = (3-wavelen) * 12 - 1;
-		/*m->xxi[i][0].vde = vibdep;
-		  m->xxi[i][0].vra = vibspd; */
+		m->xxih[i].sub[0].vol = 64;
+		m->xxih[i].sub[0].sid = wave;
+		m->xxih[i].sub[0].pan = 128;
+		m->xxih[i].sub[0].xpo = (3-wavelen) * 12 - 1;
+		/*m->xxih[i].sub[0].vde = vibdep;
+		  m->xxih[i].sub[0].vra = vibspd; */
 		m->xxih[i].nsm = 1;
         }
 

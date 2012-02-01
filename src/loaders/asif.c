@@ -77,9 +77,9 @@ int asif_load(struct xmp_context *ctx, FILE *f, int i)
 			read8(f);			/* UpdateRate */
 		
 			m->xxih[i].nsm = 1;
-			m->xxi[i][0].vol = 0x40;
-			m->xxi[i][0].pan = 0x80;
-			m->xxi[i][0].sid = i;
+			m->xxih[i].sub[0].vol = 0x40;
+			m->xxih[i].sub[0].pan = 0x80;
+			m->xxih[i].sub[0].sid = i;
 
 			chunk++;
 		}

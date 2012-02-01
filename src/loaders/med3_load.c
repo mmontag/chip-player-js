@@ -234,16 +234,16 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 				break;
 		}
 		copy_adjust(m->xxih[i].name, buf, 32);
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	}
 
 	/* read instrument volumes */
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		m->xxi[i][0].vol = mask & MASK ? read8(f) : 0;
-		m->xxi[i][0].pan = 0x80;
-		m->xxi[i][0].fin = 0;
-		m->xxi[i][0].sid = i;
+		m->xxih[i].sub[0].vol = mask & MASK ? read8(f) : 0;
+		m->xxih[i].sub[0].pan = 0x80;
+		m->xxih[i].sub[0].fin = 0;
+		m->xxih[i].sub[0].sid = i;
 	}
 
 	/* read instrument loops */
@@ -301,7 +301,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
 
 	for (i = 0; i < 32; i++)
-		m->xxi[i][0].xpo = transp;
+		m->xxih[i].sub[0].xpo = transp;
 
 	PATTERN_INIT();
 
@@ -378,10 +378,10 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxi[i][0].vol);
+			m->xxih[i].sub[0].vol);
 
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-				  &m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+				  &m->xxs[m->xxih[i].sub[0].sid], NULL);
 	}
 
 	return 0;

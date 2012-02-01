@@ -232,7 +232,7 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
 		continue;
 
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = read32l(f);	/* Length of sample (up to 64Kb) */
@@ -260,16 +260,16 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	m->xxs[i].flg |= fih.loopmode ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].vol = 0xff; /* fih.volume; */
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = 0xff; /* fih.volume; */
+	m->xxih[i].sub[0].sid = i;
 
 	copy_adjust(m->xxih[i].name, fih.name, 32);
 
 	_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
 		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
-		m->xxs[i].lpe, fih.loopmode ? 'L' : ' ', m->xxi[i][0].vol);
+		m->xxs[i].lpe, fih.loopmode ? 'L' : ' ', m->xxih[i].sub[0].vol);
 
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0, &m->xxs[i], NULL);
     }
 
     m->volbase = 0xff;

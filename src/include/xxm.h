@@ -65,25 +65,7 @@ struct xmp_envelope {
 	int16 data[XMP_MAXENV * 2];
 };
 
-struct xxm_instrument_header {
-	uint8 name[32];		/* Instrument name */
-	int vol;		/* Volume */
-	int nsm;		/* Number of samples */
-	int rls;		/* Release (fadeout) */
-	struct xmp_envelope aei;	/* Amplitude envelope info */
-	struct xmp_envelope pei;	/* Pan envelope info */
-	struct xmp_envelope fei;	/* Frequency envelope info */
-	int vts;		/* Volume table speed -- for MED */
-	int wts;		/* Waveform table speed -- for MED */
-
-#define XXM_KEY_MAX 108
-	struct {
-		uint8 ins;	/* Instrument number for each key */
-		int8 xpo;	/* Instrument transpose for each key */
-	} map[XXM_KEY_MAX];
-};
-
-struct xxm_instrument {
+struct xxm_subinstrument {
 	int vol;		/* [default] Volume */
 	int gvl;		/* [global] Volume */
 	int pan;		/* Pan */
@@ -112,6 +94,26 @@ struct xxm_instrument {
 	int ifc;		/* Initial filter cutoff -- for IT */
 	int ifr;		/* Initial filter resonance -- for IT */
 	int hld;		/* Hold -- for MED */
+};
+
+struct xxm_instrument {
+	uint8 name[32];		/* Instrument name */
+	int vol;		/* Volume */
+	int nsm;		/* Number of samples */
+	int rls;		/* Release (fadeout) */
+	struct xmp_envelope aei;	/* Amplitude envelope info */
+	struct xmp_envelope pei;	/* Pan envelope info */
+	struct xmp_envelope fei;	/* Frequency envelope info */
+	int vts;		/* Volume table speed -- for MED */
+	int wts;		/* Waveform table speed -- for MED */
+
+#define XXM_KEY_MAX 108
+	struct {
+		uint8 ins;	/* Instrument number for each key */
+		int8 xpo;	/* Instrument transpose for each key */
+	} map[XXM_KEY_MAX];
+
+	struct xxm_subinstrument *sub;
 };
 
 struct xxm_sample {

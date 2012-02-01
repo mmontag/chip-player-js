@@ -132,7 +132,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&uih.name, 32, 1, f);
 	fread(&uih.dosname, 12, 1, f);
@@ -193,9 +193,9 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 /* TODO: Add logarithmic volume support */
-	m->xxi[i][0].vol = uih.volume;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = uih.volume;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	copy_adjust(m->xxih[i].name, uih.name, 24);
 
@@ -204,10 +204,10 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i][0].vol, uih.finetune, uih.c2spd);
+		m->xxih[i].sub[0].vol, uih.finetune, uih.c2spd);
 
 	if (ver > 3)
-	    c2spd_to_note(uih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	    c2spd_to_note(uih.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
     }
 
     fread(&ufh2.order, 256, 1, f);

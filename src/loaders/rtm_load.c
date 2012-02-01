@@ -272,7 +272,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		if (m->xxih[i].nsm > 16)
 			m->xxih[i].nsm = 16;
-		m->xxi[i] = calloc(sizeof (struct xxm_instrument), m->xxih[i].nsm);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), m->xxih[i].nsm);
 
 		for (j = 0; j < 108; j++)
 			m->xxih[i].map[j].ins = ri.table[j + 12];
@@ -324,16 +324,16 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			rs.panning = read8(f);
 
 			c2spd_to_note(rs.basefreq,
-					&m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-			m->xxi[i][j].xpo += 48 - rs.basenote;
+					&m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+			m->xxih[i].sub[j].xpo += 48 - rs.basenote;
 
-			m->xxi[i][j].vol = rs.defaultvolume * rs.basevolume / 0x40;
-			m->xxi[i][j].pan = 0x80 + rs.panning * 2;
-			m->xxi[i][j].vwf = ri.vibflg;
-			m->xxi[i][j].vde = ri.vibdepth;
-			m->xxi[i][j].vra = ri.vibrate;
-			m->xxi[i][j].vsw = ri.vibsweep;
-			m->xxi[i][j].sid = smpnum;
+			m->xxih[i].sub[j].vol = rs.defaultvolume * rs.basevolume / 0x40;
+			m->xxih[i].sub[j].pan = 0x80 + rs.panning * 2;
+			m->xxih[i].sub[j].vwf = ri.vibflg;
+			m->xxih[i].sub[j].vde = ri.vibdepth;
+			m->xxih[i].sub[j].vra = ri.vibrate;
+			m->xxih[i].sub[j].vsw = ri.vibsweep;
+			m->xxih[i].sub[j].sid = smpnum;
 
 			if (smpnum >= MAX_SAMP) {
 				fseek(f, rs.length, SEEK_CUR);
@@ -359,17 +359,17 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			_D(_D_INFO "  [%1x] %05x%c%05x %05x %c "
 						"V%02x F%+04d P%02x R%+03d",
-				j, m->xxs[m->xxi[i][j].sid].len,
-				m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-				m->xxs[m->xxi[i][j].sid].lps,
-				m->xxs[m->xxi[i][j].sid].lpe,
-				m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-				m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i][j].vol, m->xxi[i][j].fin,
-				m->xxi[i][j].pan, m->xxi[i][j].xpo);
+				j, m->xxs[m->xxih[i].sub[j].sid].len,
+				m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+				m->xxs[m->xxih[i].sub[j].sid].lps,
+				m->xxs[m->xxih[i].sub[j].sid].lpe,
+				m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+				m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->xxih[i].sub[j].vol, m->xxih[i].sub[j].fin,
+				m->xxih[i].sub[j].pan, m->xxih[i].sub[j].xpo);
 
-			xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid,
-				XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
+			xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[j].sid,
+				XMP_SMP_DIFF, &m->xxs[m->xxih[i].sub[j].sid], NULL);
 		}
 	}
 

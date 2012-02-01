@@ -107,20 +107,20 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxih[i].nsm = !!(m->xxs[i].len = 2 * ih.ins[i].len);
 	m->xxs[i].lps = 2 * ih.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * ih.ins[i].loop_size;
 	m->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].vol = ih.ins[i].volume;
-	m->xxi[i][0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = ih.ins[i].volume;
+	m->xxih[i].sub[0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c %02x %+01x",
 		i, ih.ins[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol,
-		m->xxi[i][0].fin >> 4);
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxih[i].sub[0].vol,
+		m->xxih[i].sub[0].fin >> 4);
     }
 
     PATTERN_INIT();

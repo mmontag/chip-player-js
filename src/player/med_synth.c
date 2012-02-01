@@ -223,8 +223,8 @@ skip_vol:
 		xc->med.ws = WT;
 		break;
 	    default:
-		if (b < p->m.xxih[xc->ins].nsm && p->m.xxi[xc->ins][b].sid != xc->smp) {
-		    xc->smp = p->m.xxi[xc->ins][b].sid;
+		if (b < p->m.xxih[xc->ins].nsm && p->m.xxih[xc->ins].sub[b].sid != xc->smp) {
+		    xc->smp = p->m.xxih[xc->ins].sub[b].sid;
 		    xmp_drv_setsmp(ctx, chn, xc->smp);
 		}
 	    }

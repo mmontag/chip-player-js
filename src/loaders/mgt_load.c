@@ -115,7 +115,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		int c2spd, flags;
 
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		fread(m->xxih[i].name, 1, 32, f);
 		sdata[i] = read32b(f);
@@ -125,15 +125,15 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		read32b(f);
 		read32b(f);
 		c2spd = read32b(f);
-		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-		m->xxi[i][0].vol = read16b(f) >> 4;
+		c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+		m->xxih[i].sub[0].vol = read16b(f) >> 4;
 		read8(f);		/* vol L */
 		read8(f);		/* vol R */
-		m->xxi[i][0].pan = 0x80;
+		m->xxih[i].sub[0].pan = 0x80;
 		flags = read8(f);
 		m->xxs[i].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
 		m->xxs[i].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
-		m->xxi[i][0].fin += 0 * read8(f);	// FIXME
+		m->xxih[i].sub[0].fin += 0 * read8(f);	// FIXME
 		read8(f);		/* unused */
 		read8(f);
 		read8(f);
@@ -143,14 +143,14 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		read32b(f);
 
 		m->xxih[i].nsm = !!m->xxs[i].len;
-		m->xxi[i][0].sid = i;
+		m->xxih[i].sub[0].sid = i;
 		
 		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i][0].vol, c2spd);
+				m->xxih[i].sub[0].vol, c2spd);
 	}
 
 	/* PATTERN_INIT - alloc extra track*/
@@ -306,8 +306,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + sdata[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-					&m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+					&m->xxs[m->xxih[i].sub[0].sid], NULL);
 	}
 
 	return 0;

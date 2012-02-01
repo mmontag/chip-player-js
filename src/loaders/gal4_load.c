@@ -267,7 +267,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	if (m->xxih[i].nsm == 0)
 		return;
 
-	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
+	m->xxih[i].sub = calloc(sizeof(struct xxm_subinstrument), m->xxih[i].nsm);
 
 	for (j = 0; j < m->xxih[i].nsm; j++, snum++) {
 		read32b(f);	/* SAMP */
@@ -276,19 +276,19 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		fread(&m->xxs[snum].name, 1, 28, f);
 		str_adj((char *)m->xxs[snum].name);
 	
-		m->xxi[i][j].pan = read8(f) * 4;
-		if (m->xxi[i][j].pan == 0)	/* not sure about this */
-			m->xxi[i][j].pan = 0x80;
+		m->xxih[i].sub[j].pan = read8(f) * 4;
+		if (m->xxih[i].sub[j].pan == 0)	/* not sure about this */
+			m->xxih[i].sub[j].pan = 0x80;
 		
-		m->xxi[i][j].vol = read8(f);
+		m->xxih[i].sub[j].vol = read8(f);
 		flags = read8(f);
 		read8(f);	/* unknown - 0x80 */
 
-		m->xxi[i][j].vwf = vwf;
-		m->xxi[i][j].vde = vde;
-		m->xxi[i][j].vra = vra;
-		m->xxi[i][j].vsw = vsw;
-		m->xxi[i][j].sid = snum;
+		m->xxih[i].sub[j].vwf = vwf;
+		m->xxih[i].sub[j].vde = vde;
+		m->xxih[i].sub[j].vra = vra;
+		m->xxih[i].sub[j].vsw = vsw;
+		m->xxih[i].sub[j].sid = snum;
 	
 		m->xxs[snum].len = read32l(f);
 		m->xxs[snum].lps = read32l(f);
@@ -306,8 +306,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	
 		srate = read32l(f);
 		finetune = 0;
-		c2spd_to_note(srate, &m->xxi[i][j].xpo, &m->xxi[i][j].fin);
-		m->xxi[i][j].fin += finetune;
+		c2spd_to_note(srate, &m->xxih[i].sub[j].xpo, &m->xxih[i].sub[j].fin);
+		m->xxih[i].sub[j].fin += finetune;
 	
 		read32l(f);			/* 0x00000000 */
 		read32l(f);			/* unknown */
@@ -319,8 +319,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			m->xxs[snum].lpe,
 			m->xxs[snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
 			m->xxs[snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxi[i][j].vol,
-			m->xxi[i][j].pan,
+			m->xxih[i].sub[j].vol,
+			m->xxih[i].sub[j].pan,
 			srate);
 	
 		if (m->xxs[snum].len > 1) {

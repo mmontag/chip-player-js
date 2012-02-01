@@ -110,7 +110,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	pih.type = read8(f);			/* Sample type */
 	fread(&pih.dosname, 12, 1, f);		/* DOS file name */
@@ -149,9 +149,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[i].lpe >>= 1;
 	}
 
-	m->xxi[i][0].vol = pih.vol;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = pih.vol;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 	pih.magic = 0;
 
 	copy_adjust(m->xxih[i].name, pih.name, 28);
@@ -161,10 +161,10 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 		pih.type & 0x10 ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i][0].vol, pih.c4spd);
+		m->xxih[i].sub[0].vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */
-	c2spd_to_note (pih.c4spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	c2spd_to_note (pih.c4spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
     }
 
     PATTERN_INIT();
@@ -256,9 +256,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	fseek(f, start + smp_ofs[m->xxi[i][0].sid], SEEK_SET);
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
-			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i][0].sid], NULL);
+	fseek(f, start + smp_ofs[m->xxih[i].sub[0].sid], SEEK_SET);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
+			XMP_SMP_8BDIFF, &m->xxs[m->xxih[i].sub[0].sid], NULL);
     }
 
     m->vol_table = ptm_vol;

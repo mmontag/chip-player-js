@@ -33,7 +33,7 @@
 #define MODULE_RESTART	0x0008 
 
 #define XXIH m->xxih[xc->ins]
-#define XXI m->xxi[xc->ins][XXIH.map[xc->key].ins]
+#define XXI m->xxih[xc->ins].sub[XXIH.map[xc->key].ins]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
 

@@ -134,7 +134,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Loading samples: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = fopen (filename, "rb");
 
@@ -153,16 +153,16 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fseek(s, 0, SEEK_SET);
 	}
 
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].vol = 0x40;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].vol = 0x40;
+	m->xxih[i].sub[0].sid = i;
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x", i,
 		filename, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i][0].vol);
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxih[i].sub[0].vol);
 
-	xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid,
-	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch(ctx, s, m->xxih[i].sub[0].sid,
+	    XMP_SMP_UNS, &m->xxs[m->xxih[i].sub[0].sid], NULL);
 
 	fclose(s);
     }

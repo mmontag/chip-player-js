@@ -416,11 +416,11 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	fseek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = read8(f);
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	if (x8 >= 2) {
 	    /* OPL2 FM instrument */
@@ -446,10 +446,10 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    copy_adjust(m->xxih[i].name, sah.name, 28);
 
 	    m->xxih[i].nsm = 1;
-	    m->xxi[i][0].vol = sah.vol;
-	    c2spd_to_note(sah.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-	    m->xxi[i][0].xpo += 12;
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, XMP_SMP_ADLIB,
+	    m->xxih[i].sub[0].vol = sah.vol;
+	    c2spd_to_note(sah.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+	    m->xxih[i].sub[0].xpo += 12;
+	    xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, XMP_SMP_ADLIB,
 					&m->xxs[i], (char *)&sah.reg);
 	    _D(_D_INFO "[%2X] %-28.28s", i, m->xxih[i].name);
 
@@ -499,7 +499,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[i].lps >>= 1;
 	    m->xxs[i].lpe >>= 1;
 	}
-	m->xxi[i][0].vol = sih.vol;
+	m->xxih[i].sub[0].vol = sih.vol;
 	sih.magic = 0;
 
 	copy_adjust(m->xxih[i].name, sih.name, 28);
@@ -509,12 +509,12 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
-			m->xxi[i][0].vol, sih.c2spd);
+			m->xxih[i].sub[0].vol, sih.c2spd);
 
-	c2spd_to_note(sih.c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	c2spd_to_note(sih.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
 
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
     }
 

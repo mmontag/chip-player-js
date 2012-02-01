@@ -484,7 +484,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 	_D(_D_INFO "[%2X] %-32.32s %2d", i_index[i],
 				m->xxih[i].name, m->xxih[i].nsm);
 
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), m->xxih[i].nsm);
+	m->xxih[i].sub = calloc (sizeof (struct xxm_subinstrument), m->xxih[i].nsm);
 
 	for (j = 0; j < XXM_KEY_MAX; j++)
 	    m->xxih[i].map[j].ins = -1;
@@ -492,9 +492,9 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 	for (last_map = j = 0; j < m->xxih[i].nsm; j++) {
 	    int x;
 
-	    m->xxi[i][j].sid = read8(f);
+	    m->xxih[i].sub[j].sid = read8(f);
 	    map = read8(f);
-	    m->xxi[i][j].vol = read8(f);
+	    m->xxih[i].sub[j].vol = read8(f);
 	    for (k = last_map; k <= map; k++) {
 		if (k < XXM_KEY_MAX)
 		    m->xxih[i].map[k].ins = j;
@@ -505,24 +505,24 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 	    if (j == 0)
 		v_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
-		m->xxi[i][j].vol = 0xff;
+		m->xxih[i].sub[j].vol = 0xff;
 
-	    m->xxi[i][j].pan = read8(f) << 1;
+	    m->xxih[i].sub[j].pan = read8(f) << 1;
 
 	    x = read8(f);		/* Pan envelope */
 	    if (j == 0)
 		p_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
-		m->xxi[i][j].pan = 0x80;
+		m->xxih[i].sub[j].pan = 0x80;
 
 	    x = read16l(f);
 	    if (j == 0)
 		m->xxih[i].rls = x;
 
-	    m->xxi[i][j].vra = read8(f);	/* vibrato rate */
-	    m->xxi[i][j].vde = read8(f);	/* vibrato delay */
-	    m->xxi[i][j].vsw = read8(f);	/* vibrato sweep */
-	    m->xxi[i][j].vwf = read8(f);	/* vibrato waveform */
+	    m->xxih[i].sub[j].vra = read8(f);	/* vibrato rate */
+	    m->xxih[i].sub[j].vde = read8(f);	/* vibrato delay */
+	    m->xxih[i].sub[j].vsw = read8(f);	/* vibrato sweep */
+	    m->xxih[i].sub[j].vwf = read8(f);	/* vibrato waveform */
 	    read8(f);			/* Reserved */
 
 	    x = read8(f);		/* Pitch envelope */
@@ -530,7 +530,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 		f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
 	    _D(_D_INFO "  %2x: V%02x S%02x v%02x p%02x f%02x",
-				j, m->xxi[i][j].vol, m->xxi[i][j].sid,
+				j, m->xxih[i].sub[j].vol, m->xxih[i].sub[j].sid,
 				v_index[i], p_index[i], f_index[i]);
 	}
     }
@@ -609,8 +609,8 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 
     for (i = 0; i < m->xxh->ins; i++) {
 	m->xxih[i].nsm = 1;
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
-	m->xxi[i][0].sid = i_index[i] = s_index[i] = read8(f);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxih[i].sub[0].sid = i_index[i] = s_index[i] = read8(f);
 
 	fread(buf, 1, 32, f);
 	buf[32] = 0;
@@ -626,8 +626,8 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
 
-	m->xxi[i][0].vol = read8(f);	/* Volume */
-	m->xxi[i][0].pan = 0x80;
+	m->xxih[i].sub[0].vol = read8(f);	/* Volume */
+	m->xxih[i].sub[0].pan = 0x80;
 
 	x = read8(f);
 	if (x & 0x01) {
@@ -640,7 +640,7 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 	packinfo[i] = (x & 0x0c) >> 2;
 
 	_D(_D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
-		i_index[i], buf, c2spd[i],  m->xxi[i][0].vol,
+		i_index[i], buf, c2spd[i],  m->xxih[i].sub[0].vol,
 		m->xxs[i].len,m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe, packinfo[i]);
     }
@@ -915,9 +915,9 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (j = 0; j < m->xxih[i].nsm; j++)
 	    for (k = 0; k < m->xxh->smp; k++)
-		if (m->xxi[i][j].sid == s_index[k]) {
-		    m->xxi[i][j].sid = k;
-		    c2spd_to_note (c2spd[k], &m->xxi[i][j].xpo, &m->xxi[i][j].fin);
+		if (m->xxih[i].sub[j].sid == s_index[k]) {
+		    m->xxih[i].sub[j].sid = k;
+		    c2spd_to_note (c2spd[k], &m->xxih[i].sub[j].xpo, &m->xxih[i].sub[j].fin);
 		    break;
 		}
     }

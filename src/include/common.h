@@ -173,8 +173,7 @@ struct xmp_mod_context {
 	uint8 xxo[XMP_MAXORD];		/* Orders */
 	struct xxm_pattern **xxp;	/* Patterns */
 	struct xxm_track **xxt;		/* Tracks */
-	struct xxm_instrument_header *xxih;	/* Instrument headers */
-	struct xxm_instrument **xxi;	/* Instruments */
+	struct xxm_instrument *xxih;	/* Instrument headers */
 	struct xxm_sample *xxs;		/* Samples */
 	struct xxm_channel xxc[64];	/* Channel info */
 	struct xmp_ord_info xxo_info[XMP_MAXORD];

@@ -136,26 +136,26 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxih[i].nsm = !!(m->xxs[i].len = sfh.ins[i].length);
 	m->xxs[i].lps = sfh.ins[i].loopbeg;
 	m->xxs[i].lpe = sfh.ins[i].loopend;
 	if (m->xxs[i].lpe == 0xffff)
 	    m->xxs[i].lpe = 0;
 	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].vol = sfh.ins[i].volume;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = sfh.ins[i].volume;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	copy_adjust(m->xxih[i].name, sfh.ins[i].name, 12);
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
 		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i][0].vol, sfh.ins[i].c2spd);
+		m->xxih[i].sub[0].vol, sfh.ins[i].c2spd);
 
 	sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;
-	c2spd_to_note (sfh.ins[i].c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+	c2spd_to_note (sfh.ins[i].c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
     }
 
     fread(m->xxo, 1, 128, f);
@@ -217,8 +217,8 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-	    &m->xxs[m->xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+	    &m->xxs[m->xxih[i].sub[0].sid], NULL);
     }
 
     m->quirk |= XMP_QRK_VSALL | XMP_QUIRK_ST3;

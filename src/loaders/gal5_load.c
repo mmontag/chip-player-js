@@ -203,7 +203,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	if (m->xxih[i].nsm == 0)
 		return;
 
-	m->xxi[i] = calloc(sizeof(struct xxm_instrument), m->xxih[i].nsm);
+	m->xxih[i].sub = calloc(sizeof(struct xxm_subinstrument), m->xxih[i].nsm);
 
 	/* FIXME: Currently reading only the first sample */
 
@@ -220,10 +220,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32b(f);	/* unknown - 0x0000 */
 	read8(f);	/* unknown - 0x00 */
 
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].sid = i;
 	m->xxih[i].vol = read8(f);
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].vol = (read16l(f) + 1) / 512;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].vol = (read16l(f) + 1) / 512;
 	flags = read16l(f);
 	read16l(f);			/* unknown - 0x0080 */
 	m->xxs[i].len = read32l(f);
@@ -243,8 +243,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	srate = read32l(f);
 	finetune = 0;
-	c2spd_to_note(srate, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
-	m->xxi[i][0].fin += finetune;
+	c2spd_to_note(srate, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+	m->xxih[i].sub[0].fin += finetune;
 
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
@@ -256,7 +256,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i][0].vol, flags, srate);
+		m->xxih[i].sub[0].vol, flags, srate);
 
 	if (m->xxs[i].len > 1) {
 		xmp_drv_loadpatch(ctx, f, i, has_unsigned_sample ?

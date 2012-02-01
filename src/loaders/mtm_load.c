@@ -89,7 +89,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments */
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&mih.name, 22, 1, f);		/* Instrument name */
 	mih.length = read32l(f);		/* Instrument length in bytes */
@@ -111,10 +111,10 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[i].lpe >>= 1;
 	}
 
-	m->xxi[i][0].vol = mih.volume;
-	m->xxi[i][0].fin = 0x80 + (int8)(mih.finetune << 4);
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].vol = mih.volume;
+	m->xxih[i].sub[0].fin = 0x80 + (int8)(mih.finetune << 4);
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 
 	copy_adjust(m->xxih[i].name, mih.name, 22);
 
@@ -123,7 +123,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i][0].vol, m->xxi[i][0].fin - 0x80);
+		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin - 0x80);
     }
 
     fread(m->xxo, 1, 128, f);
@@ -175,8 +175,8 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
-	    XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
+	    XMP_SMP_UNS, &m->xxs[m->xxih[i].sub[0].sid], NULL);
     }
 
     for (i = 0; i < m->xxh->chn; i++)

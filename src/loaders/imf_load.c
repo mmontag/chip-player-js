@@ -327,7 +327,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    return -2;
 
         if (ii.nsm)
- 	    m->xxi[i] = calloc (sizeof (struct xxm_instrument), ii.nsm);
+ 	    m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), ii.nsm);
 
 	m->xxih[i].nsm = ii.nsm;
 
@@ -371,9 +371,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    is.dram = read32l(f);
 	    is.magic = read32b(f);
 
-	    m->xxi[i][j].sid = smp_num;
-	    m->xxi[i][j].vol = is.vol;
-	    m->xxi[i][j].pan = is.pan;
+	    m->xxih[i].sub[j].sid = smp_num;
+	    m->xxih[i].sub[j].vol = is.vol;
+	    m->xxih[i].sub[j].pan = is.pan;
 	    m->xxs[smp_num].len = is.len;
 	    m->xxs[smp_num].lps = is.lps;
 	    m->xxs[smp_num].lpe = is.lpe;
@@ -389,13 +389,13 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    _D(_D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
-	    c2spd_to_note (is.rate, &m->xxi[i][j].xpo, &m->xxi[i][j].fin);
+	    c2spd_to_note (is.rate, &m->xxih[i].sub[j].xpo, &m->xxih[i].sub[j].fin);
 
 	    if (!m->xxs[smp_num].len)
 		continue;
 
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid, 0,
-		&m->xxs[m->xxi[i][j].sid], NULL);
+	    xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[j].sid, 0,
+		&m->xxs[m->xxih[i].sub[j].sid], NULL);
 	}
     }
     m->xxh->smp = smp_num;

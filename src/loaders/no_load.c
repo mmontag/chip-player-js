@@ -111,7 +111,7 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		int hasname, c2spd;
 
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		nsize = read8(f);
 		hasname = 0;
@@ -127,7 +127,7 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		read32l(f);
 		read32l(f);
-		m->xxi[i][0].vol = read8(f);
+		m->xxih[i].sub[0].vol = read8(f);
 		c2spd = read16l(f);
 		m->xxs[i].len = read16l(f);
 		m->xxs[i].lps = read16l(f);
@@ -139,18 +139,18 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = 0;
 		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-		m->xxi[i][0].fin = 0;
-		m->xxi[i][0].pan = 0x80;
-		m->xxi[i][0].sid = i;
+		m->xxih[i].sub[0].fin = 0;
+		m->xxih[i].sub[0].pan = 0x80;
+		m->xxih[i].sub[0].sid = i;
 
 		_D(_D_INFO "[%2X] %-22.22s  %04x %04x %04x %c V%02x %5d",
 				i, m->xxih[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i][0].vol, c2spd);
+				m->xxih[i].sub[0].vol, c2spd);
 
 		c2spd = 8363 * c2spd / 8448;
-		c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+		c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
 	}
 
 	PATTERN_INIT();
@@ -197,8 +197,8 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid,
-				XMP_SMP_UNS, &m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
+				XMP_SMP_UNS, &m->xxs[m->xxih[i].sub[0].sid], NULL);
 	}
 
 	return 0;

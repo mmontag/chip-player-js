@@ -268,7 +268,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i] = calloc (sizeof (struct xxm_instrument), 1);
+	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxs[i].len = 2 * mh.ins[i].size;
 	m->xxs[i].lps = lps_mult * mh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
@@ -276,10 +276,10 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].lpe = m->xxs[i].len;
 	m->xxs[i].flg = (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
 		XMP_SAMPLE_LOOP : 0;
-	m->xxi[i][0].fin = (int8)(mh.ins[i].finetune << 4);
-	m->xxi[i][0].vol = mh.ins[i].volume;
-	m->xxi[i][0].pan = 0x80;
-	m->xxi[i][0].sid = i;
+	m->xxih[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->xxih[i].sub[0].vol = mh.ins[i].volume;
+	m->xxih[i].sub[0].pan = 0x80;
+	m->xxih[i].sub[0].sid = i;
 	m->xxih[i].nsm = !!(m->xxs[i].len);
 	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
     }
@@ -471,8 +471,8 @@ skip_test:
 		i, m->xxih[i].name,
 		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		(mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
-			'L' : ' ', m->xxi[i][0].vol,
-		m->xxi[i][0].fin >> 4,
+			'L' : ' ', m->xxih[i].sub[0].vol,
+		m->xxih[i].sub[0].fin >> 4,
 		ptkloop && m->xxs[i].lps == 0 && mh.ins[i].loop_size > 1 &&
 			m->xxs[i].len > m->xxs[i].lpe ? '!' : ' ');
     }
@@ -520,12 +520,12 @@ skip_test:
 	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, m->xxih[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        xmp_drv_loadpatch(ctx, s, m->xxi[i][0].sid, 0,
-		    &m->xxs[m->xxi[i][0].sid], NULL);
+	        xmp_drv_loadpatch(ctx, s, m->xxih[i].sub[0].sid, 0,
+		    &m->xxs[m->xxih[i].sub[0].sid], NULL);
 	    }
 	} else {
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-	        &m->xxs[m->xxi[i][0].sid], NULL);
+	    xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+	        &m->xxs[m->xxih[i].sub[0].sid], NULL);
 	}
     }
 

@@ -95,9 +95,9 @@ static void play_channel (struct xmp_context *, int, int);
 static inline int
 get_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 {
-	struct xxm_instrument *instrument = &XXI;
-	int type = instrument->vwf;
-	int depth = instrument->vde;
+	struct xxm_subinstrument *sub = &XXI;
+	int type = sub->vwf;
+	int depth = sub->vde;
 	int phase = xc->instrument_vibrato.phase;
 	int sweep = xc->instrument_vibrato.sweep;
 
@@ -107,8 +107,8 @@ get_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 static inline void
 update_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 {
-	struct xxm_instrument *instrument = &XXI;
-	int rate = instrument->vra;
+	struct xxm_subinstrument *sub = &XXI;
+	int rate = sub->vra;
 
 	xc->instrument_vibrato.phase += rate >> 2;
 	xc->instrument_vibrato.phase %= WAVEFORM_SIZE;
@@ -308,8 +308,8 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
 		int mapped = m->xxih[ins].map[key].ins;
 		int transp = m->xxih[ins].map[key].xpo;
 
-		note = key + m->xxi[ins][mapped].xpo + transp;
-		smp = m->xxi[ins][mapped].sid;
+		note = key + m->xxih[ins].sub[mapped].xpo + transp;
+		smp = m->xxih[ins].sub[mapped].sid;
 	    } else {
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
@@ -322,8 +322,8 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     if (smp >= 0) {
 	int mapped = m->xxih[ins].map[key].ins;
 	int to = xmp_drv_setpatch(ctx, chn, ins, smp, note,
-			m->xxi[ins][mapped].nna, m->xxi[ins][mapped].dct,
-			m->xxi[ins][mapped].dca, ctl, cont_sample);
+			m->xxih[ins].sub[mapped].nna, m->xxih[ins].sub[mapped].dct,
+			m->xxih[ins].sub[mapped].dca, ctl, cont_sample);
 
 	if (copy_channel(p, to, chn) < 0) {
 	    return XMP_ERR_VIRTC;
@@ -381,10 +381,10 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
 
 	/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
 	if (!TEST(NEW_PAN))
-	    xc->pan = m->xxi[ins][mapped].pan;
+	    xc->pan = m->xxih[ins].sub[mapped].pan;
 
 	if (!TEST(FINETUNE))
-	    xc->finetune = m->xxi[ins][mapped].fin;
+	    xc->finetune = m->xxih[ins].sub[mapped].fin;
 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 			m->xxh->flg & XXM_FLG_LINEAR);

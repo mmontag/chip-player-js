@@ -70,7 +70,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i] = calloc(sizeof(struct xxm_instrument), 1);
+		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		fread(buffer, 28, 1, f);
 		copy_adjust(m->xxih[i].name, buffer, 28);
 
@@ -82,8 +82,8 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].lpe = m->xxs[i].lps + size - 1;
 			read16b(f);
 			read16b(f);
-			m->xxi[i][0].vol = 0x40;
-			m->xxi[i][0].pan = 0x80;
+			m->xxih[i].sub[0].vol = 0x40;
+			m->xxih[i].sub[0].pan = 0x80;
 			bits = 1;
 			c2spd = 8363;
 		} else {
@@ -91,18 +91,18 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 			read16b(f);		/* autobal */
 			bits = read16b(f);	/* 1 = 8 bits, 2 = 16 bits */
 			c2spd = read16b(f);
-			c2spd_to_note(c2spd, &m->xxi[i][0].xpo, &m->xxi[i][0].fin);
+			c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
 			m->xxs[i].len = read32b(f);
 			m->xxs[i].lps = read32b(f);
 			size = read32b(f);
 			m->xxs[i].lpe = m->xxs[i].lps + size - 1;
-			m->xxi[i][0].vol = read16b(f) / 4;
+			m->xxih[i].sub[0].vol = read16b(f) / 4;
 			read8(f);
-			m->xxi[i][0].fin = read8s(f);
+			m->xxih[i].sub[0].fin = read8s(f);
 		}
 
 		m->xxih[i].nsm = !!m->xxs[i].len;
-		m->xxi[i][0].sid = i;
+		m->xxih[i].sub[0].sid = i;
 		m->xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;
 
 		if (bits > 1) {
@@ -120,7 +120,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxs[i].lps,
 				size,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i][0].vol, m->xxi[i][0].fin,
+				m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin,
 				c2spd);
 	}
 
@@ -173,8 +173,8 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][0].sid, 0,
-					&m->xxs[m->xxi[i][0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+					&m->xxs[m->xxih[i].sub[0].sid], NULL);
 	}
 
 	return 0;

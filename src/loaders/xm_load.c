@@ -311,7 +311,7 @@ load_instruments:
 	_D(_D_INFO "[%2X] %-22.22s %2d", i, m->xxih[i].name, m->xxih[i].nsm);
 
 	if (m->xxih[i].nsm) {
-	    m->xxi[i] = calloc (sizeof (struct xxm_instrument), m->xxih[i].nsm);
+	    m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), m->xxih[i].nsm);
 
 	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)
 	     * It works pretty much the same way as Impulse Tracker's sample
@@ -389,15 +389,15 @@ load_instruments:
 		xsh[j].reserved = read8(f);
 		fread(&xsh[j].name, 22, 1, f);	/* Sample_name */
 
-		m->xxi[i][j].vol = xsh[j].volume;
-		m->xxi[i][j].pan = xsh[j].pan;
-		m->xxi[i][j].xpo = xsh[j].relnote;
-		m->xxi[i][j].fin = xsh[j].finetune;
-		m->xxi[i][j].vwf = xi.y_wave;
-		m->xxi[i][j].vde = xi.y_depth;
-		m->xxi[i][j].vra = xi.y_rate;
-		m->xxi[i][j].vsw = xi.y_sweep;
-		m->xxi[i][j].sid = sample_num;
+		m->xxih[i].sub[j].vol = xsh[j].volume;
+		m->xxih[i].sub[j].pan = xsh[j].pan;
+		m->xxih[i].sub[j].xpo = xsh[j].relnote;
+		m->xxih[i].sub[j].fin = xsh[j].finetune;
+		m->xxih[i].sub[j].vwf = xi.y_wave;
+		m->xxih[i].sub[j].vde = xi.y_depth;
+		m->xxih[i].sub[j].vra = xi.y_rate;
+		m->xxih[i].sub[j].vsw = xi.y_sweep;
+		m->xxih[i].sub[j].sid = sample_num;
 		if (sample_num >= MAX_SAMP)
 		    continue;
 
@@ -426,18 +426,18 @@ load_instruments:
 		if (sample_num >= MAX_SAMP)
 		    continue;
 		_D(_D_INFO " %1x: %06x%c%06x %06x %c V%02x F%+04d P%02x R%+03d",
-		    j, m->xxs[m->xxi[i][j].sid].len,
-		    m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		    m->xxs[m->xxi[i][j].sid].lps,
-		    m->xxs[m->xxi[i][j].sid].lpe,
-		    m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-		    m->xxs[m->xxi[i][j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		    m->xxi[i][j].vol, m->xxi[i][j].fin,
-		    m->xxi[i][j].pan, m->xxi[i][j].xpo);
+		    j, m->xxs[m->xxih[i].sub[j].sid].len,
+		    m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		    m->xxs[m->xxih[i].sub[j].sid].lps,
+		    m->xxs[m->xxih[i].sub[j].sid].lpe,
+		    m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+		    m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		    m->xxih[i].sub[j].vol, m->xxih[i].sub[j].fin,
+		    m->xxih[i].sub[j].pan, m->xxih[i].sub[j].xpo);
 
 		if (xfh.version > 0x0103)
-		    xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid,
-			XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
+		    xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[j].sid,
+			XMP_SMP_DIFF, &m->xxs[m->xxih[i].sub[j].sid], NULL);
 	    }
 	} else {
 	    /* The sample size is a field of struct xm_instrument_header that
@@ -477,8 +477,8 @@ load_samples:
     if (xfh.version <= 0x0103) {
 	for (i = 0; i < m->xxh->ins; i++) {
 	    for (j = 0; j < m->xxih[i].nsm; j++) {
-		xmp_drv_loadpatch(ctx, f, m->xxi[i][j].sid,
-		    XMP_SMP_DIFF, &m->xxs[m->xxi[i][j].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[j].sid,
+		    XMP_SMP_DIFF, &m->xxs[m->xxih[i].sub[j].sid], NULL);
 	    }
 	}
     }
