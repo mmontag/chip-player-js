@@ -157,7 +157,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->mod.xxh->ins; i++) {
 	if (m->mod.xxs[i].len <= 4)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
+	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
     }
 
     return 0;

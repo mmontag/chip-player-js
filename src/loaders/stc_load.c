@@ -323,7 +323,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			
 		}
 
-		xmp_drv_loadpatch(ctx, f, i, XMP_SMP_SPECTRUM, NULL,
+		load_patch(ctx, f, i, XMP_SMP_SPECTRUM, NULL,
 								(char *)&ss);
 	}
 	

@@ -190,7 +190,7 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 			XMP_SMP_DIFF, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 

@@ -232,7 +232,7 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 			continue;
 		}
 		
-		xmp_drv_loadpatch(ctx, f, i, XMP_SMP_BIGEND,
+		load_patch(ctx, f, i, XMP_SMP_BIGEND,
 							&m->mod.xxs[i], NULL);
 
 		if (m->mod.xxs[i].len == 0)

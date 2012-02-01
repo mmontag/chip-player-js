@@ -195,7 +195,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		if (m->mod.xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(ctx, NULL, m->mod.xxi[i].sub[0].sid,
+		load_patch(ctx, NULL, m->mod.xxi[i].sub[0].sid,
 				XMP_SMP_NOLOAD | XMP_SMP_UNS,
 				&m->mod.xxs[m->mod.xxi[i].sub[0].sid],
 				(char*)buf + ORD_OFS + 256 +

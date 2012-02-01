@@ -318,7 +318,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			srate);
 	
 		if (m->mod.xxs[snum].len > 1) {
-			xmp_drv_loadpatch(ctx, f, snum, 0, &m->mod.xxs[snum], NULL);
+			load_patch(ctx, f, snum, 0, &m->mod.xxs[snum], NULL);
 		}
 	}
 }

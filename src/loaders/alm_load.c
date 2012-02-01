@@ -160,7 +160,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 		filename, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
 		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->mod.xxi[i].sub[0].vol);
 
-	xmp_drv_loadpatch(ctx, s, m->mod.xxi[i].sub[0].sid,
+	load_patch(ctx, s, m->mod.xxi[i].sub[0].sid,
 	    XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 
 	fclose(s);

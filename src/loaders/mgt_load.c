@@ -305,7 +305,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + sdata[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
 					&m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 

@@ -334,7 +334,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 		m->mod.xxs[i].lpe = m->mod.xxs[i].len;
 	}
 
-	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_VIDC,
+	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_VIDC,
 					&m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",

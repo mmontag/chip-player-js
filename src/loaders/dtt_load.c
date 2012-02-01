@@ -163,7 +163,7 @@ static int dtt_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		fseek(f, start + sdata[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 				XMP_SMP_VIDC, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 

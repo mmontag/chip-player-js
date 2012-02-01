@@ -209,7 +209,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read samples */
     _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
 	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 

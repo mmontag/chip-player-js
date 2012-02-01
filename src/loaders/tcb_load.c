@@ -181,7 +181,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		fseek(f, start + base_offs + soffs[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 				XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 

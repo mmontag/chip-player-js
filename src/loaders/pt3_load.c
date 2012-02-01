@@ -221,7 +221,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->mod.xxh->smp; i++) {
 		if (!m->mod.xxs[i].len)
 			continue;
-		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
 				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 

@@ -493,7 +493,7 @@ next_pattern:
 
 	if (!m->mod.xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0, &m->mod.xxs[i], NULL);
+	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0, &m->mod.xxs[i], NULL);
     }
 
     return 0;

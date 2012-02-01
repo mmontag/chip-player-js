@@ -27,6 +27,8 @@ void clean_s3m_seq(struct xmp_module_header *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct xmp_context *, char *, char *, int);
 void set_type(struct xmp_mod_context *, char *, ...);
+int load_patch(struct xmp_context *, FILE *, int, int, struct xmp_sample *, void *);
+
 
 extern uint8 ord_xlat[];
 extern int arch_vol_table[];

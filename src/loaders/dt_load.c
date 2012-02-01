@@ -211,7 +211,7 @@ static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 	}
 
 	if (size > 2) {
-		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 			XMP_SMP_BIGEND, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 

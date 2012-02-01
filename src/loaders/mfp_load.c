@@ -214,7 +214,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		xmp_drv_loadpatch(ctx, s, m->mod.xxi[i].sub[0].sid, 0,
+		load_patch(ctx, s, m->mod.xxi[i].sub[0].sid, 0,
 				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 

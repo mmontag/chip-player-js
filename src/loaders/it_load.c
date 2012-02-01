@@ -828,7 +828,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 					ish.convert & IT_CVT_DIFF);
 		}
 
-		xmp_drv_loadpatch(ctx, NULL, i,
+		load_patch(ctx, NULL, i,
 				XMP_SMP_NOLOAD | cvt, &m->mod.xxs[i], buf);
 		free (buf);
 	    } else {
@@ -837,7 +837,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    continue;
 		}
 
-		xmp_drv_loadpatch(ctx, f, i, cvt, &m->mod.xxs[i], NULL);
+		load_patch(ctx, f, i, cvt, &m->mod.xxs[i], NULL);
 	    }
 	}
     }

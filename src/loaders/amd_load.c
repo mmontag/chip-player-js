@@ -121,7 +121,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	_D(_D_INFO "\n[%2X] %-23.23s", i, m->mod.xxi[i].name);
 
-	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
+	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
     }
 
     if (!afh.version) {

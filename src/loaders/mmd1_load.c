@@ -434,7 +434,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 				       m->mod.xxi[i].sub[0].xpo,
 				       m->mod.xxi[i].sub[0].fin >> 4);
 
-			xmp_drv_loadpatch(ctx, f, smp_idx, 0,
+			load_patch(ctx, f, smp_idx, 0,
 					&m->mod.xxs[smp_idx], NULL);
 
 			smp_idx++;
@@ -495,7 +495,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->mod.xxs[smp_idx].lpe = m->mod.xxs[smp_idx].len;
 				m->mod.xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
-				xmp_drv_loadpatch(ctx, f, smp_idx,
+				load_patch(ctx, f, smp_idx,
 					0, &m->mod.xxs[smp_idx], NULL);
 
 
@@ -542,7 +542,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->mod.xxi[i].sub[0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, smp_idx, 0,
+		load_patch(ctx, f, smp_idx, 0,
 				  &m->mod.xxs[smp_idx], NULL);
 
 		smp_idx++;

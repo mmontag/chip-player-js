@@ -267,7 +267,7 @@ static void get_sbod(struct xmp_context *ctx, int size, FILE *f)
     if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
 	flags = XMP_SMP_7BIT;
 
-    xmp_drv_loadpatch(ctx, f, sample, flags, &m->mod.xxs[i], NULL);
+    load_patch(ctx, f, sample, flags, &m->mod.xxs[i], NULL);
 
     sample++;
 }

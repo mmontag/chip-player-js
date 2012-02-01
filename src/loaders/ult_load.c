@@ -332,7 +332,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->mod.xxh->ins; i++) {
 	if (!m->mod.xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
+	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
     }
 
     m->volbase = 0x100;

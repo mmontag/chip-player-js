@@ -675,7 +675,7 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
 	    break;
 	}
 	
-	xmp_drv_loadpatch(ctx, NULL, i, XMP_SMP_NOLOAD, &m->mod.xxs[i],
+	load_patch(ctx, NULL, i, XMP_SMP_NOLOAD, &m->mod.xxs[i],
 					(char *)smpbuf);
 
 	free (smpbuf);
