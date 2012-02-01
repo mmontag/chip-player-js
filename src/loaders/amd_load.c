@@ -108,22 +108,22 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load instruments */
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
-	copy_adjust(m->xxih[i].name, afh.ins[i].name, 23);
+	copy_adjust(m->xxi[i].name, afh.ins[i].name, 23);
 
-	m->xxih[i].nsm = 1;
-	m->xxih[i].sub[0].vol = 0x40;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
-	m->xxih[i].sub[0].xpo = -1;
+	m->xxi[i].nsm = 1;
+	m->xxi[i].sub[0].vol = 0x40;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
+	m->xxi[i].sub[0].xpo = -1;
 
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
 
-	_D(_D_INFO "\n[%2X] %-23.23s", i, m->xxih[i].name);
+	_D(_D_INFO "\n[%2X] %-23.23s", i, m->xxi[i].name);
 
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
     }
 
     if (!afh.version) {

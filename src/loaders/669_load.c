@@ -128,25 +128,25 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->xxh->pat);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
 	sih.length = read32l(f);		/* Instrument size */
 	sih.loop_start = read32l(f);		/* Instrument loop start */
 	sih.loopend = read32l(f);		/* Instrument loop end */
 
-	m->xxih[i].nsm = !!(m->xxs[i].len = sih.length);
+	m->xxi[i].nsm = !!(m->xxs[i].len = sih.length);
 	m->xxs[i].lps = sih.loop_start;
 	m->xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
 	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
-	m->xxih[i].sub[0].vol = 0x40;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].vol = 0x40;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxih[i].name, sih.name, 13);
+	copy_adjust(m->xxi[i].name, sih.name, 13);
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
@@ -216,7 +216,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->ins; i++) {
 	if (m->xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
 	    XMP_SMP_UNS, &m->xxs[i], NULL);
     }
 

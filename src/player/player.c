@@ -222,7 +222,7 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
 	    }
 	} else */
 
-	if ((uint32)ins < m->xxh->ins && m->xxih[ins].nsm) {	/* valid ins */
+	if ((uint32)ins < m->xxh->ins && m->xxi[ins].nsm) {	/* valid ins */
 	    if (!key && HAS_QUIRK(XMP_QRK_INSPRI)) {
 		if (xins == ins)
 		    flg = NEW_INS | RESET_VOL;
@@ -297,19 +297,19 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     if (!key || key >= XMP_KEY_OFF)
 	ins = xins;
 
-    if ((uint32)ins < m->xxh->ins && m->xxih[ins].nsm)
+    if ((uint32)ins < m->xxh->ins && m->xxi[ins].nsm)
 	flg |= IS_VALID;
 
     if ((uint32)key < XMP_KEY_OFF && key > 0) {
 	xc->key = --key;
 
 	if (flg & IS_VALID && key < XXM_KEY_MAX) {
-	    if (m->xxih[ins].map[key].ins != 0xff) {
-		int mapped = m->xxih[ins].map[key].ins;
-		int transp = m->xxih[ins].map[key].xpo;
+	    if (m->xxi[ins].map[key].ins != 0xff) {
+		int mapped = m->xxi[ins].map[key].ins;
+		int transp = m->xxi[ins].map[key].xpo;
 
-		note = key + m->xxih[ins].sub[mapped].xpo + transp;
-		smp = m->xxih[ins].sub[mapped].sid;
+		note = key + m->xxi[ins].sub[mapped].xpo + transp;
+		smp = m->xxi[ins].sub[mapped].sid;
 	    } else {
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
@@ -320,10 +320,10 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     }
 
     if (smp >= 0) {
-	int mapped = m->xxih[ins].map[key].ins;
+	int mapped = m->xxi[ins].map[key].ins;
 	int to = xmp_drv_setpatch(ctx, chn, ins, smp, note,
-			m->xxih[ins].sub[mapped].nna, m->xxih[ins].sub[mapped].dct,
-			m->xxih[ins].sub[mapped].dca, ctl, cont_sample);
+			m->xxi[ins].sub[mapped].nna, m->xxi[ins].sub[mapped].dct,
+			m->xxi[ins].sub[mapped].dca, ctl, cont_sample);
 
 	if (copy_channel(p, to, chn) < 0) {
 	    return XMP_ERR_VIRTC;
@@ -338,7 +338,7 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     reset_stepper(&xc->arpeggio);
     xc->tremor = 0;
 
-    if ((uint32)xins >= m->xxh->ins || !m->xxih[xins].nsm) {
+    if ((uint32)xins >= m->xxh->ins || !m->xxi[xins].nsm) {
 	RESET(IS_VALID);
     } else {
 	SET(IS_VALID);
@@ -368,7 +368,7 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     }
 
     if (note >= 0) {
-	int mapped = m->xxih[ins].map[key].ins;
+	int mapped = m->xxi[ins].map[key].ins;
 
 	xc->note = note;
 
@@ -381,10 +381,10 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
 
 	/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
 	if (!TEST(NEW_PAN))
-	    xc->pan = m->xxih[ins].sub[mapped].pan;
+	    xc->pan = m->xxi[ins].sub[mapped].pan;
 
 	if (!TEST(FINETUNE))
-	    xc->finetune = m->xxih[ins].sub[mapped].fin;
+	    xc->finetune = m->xxi[ins].sub[mapped].fin;
 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 			m->xxh->flg & XXM_FLG_LINEAR);
@@ -393,7 +393,7 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
 	set_lfo_phase(&xc->tremolo, 0);
     }
 
-    if (xc->key < 0 || p->m.xxih[xc->ins].map[xc->key].ins == 0xff)
+    if (xc->key < 0 || p->m.xxi[xc->ins].map[xc->key].ins == 0xff)
 	return 0;
 
     if (TEST(RESET_ENV)) {

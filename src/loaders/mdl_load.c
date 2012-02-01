@@ -475,29 +475,29 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 
     for (i = 0; i < m->xxh->ins; i++) {
 	i_index[i] = read8(f);
-	m->xxih[i].nsm = read8(f);
+	m->xxi[i].nsm = read8(f);
 	fread(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);
-	strncpy((char *)m->xxih[i].name, buf, 32);
+	strncpy((char *)m->xxi[i].name, buf, 32);
 
 	_D(_D_INFO "[%2X] %-32.32s %2d", i_index[i],
-				m->xxih[i].name, m->xxih[i].nsm);
+				m->xxi[i].name, m->xxi[i].nsm);
 
-	m->xxih[i].sub = calloc (sizeof (struct xxm_subinstrument), m->xxih[i].nsm);
+	m->xxi[i].sub = calloc (sizeof (struct xxm_subinstrument), m->xxi[i].nsm);
 
 	for (j = 0; j < XXM_KEY_MAX; j++)
-	    m->xxih[i].map[j].ins = -1;
+	    m->xxi[i].map[j].ins = -1;
 
-	for (last_map = j = 0; j < m->xxih[i].nsm; j++) {
+	for (last_map = j = 0; j < m->xxi[i].nsm; j++) {
 	    int x;
 
-	    m->xxih[i].sub[j].sid = read8(f);
+	    m->xxi[i].sub[j].sid = read8(f);
 	    map = read8(f);
-	    m->xxih[i].sub[j].vol = read8(f);
+	    m->xxi[i].sub[j].vol = read8(f);
 	    for (k = last_map; k <= map; k++) {
 		if (k < XXM_KEY_MAX)
-		    m->xxih[i].map[k].ins = j;
+		    m->xxi[i].map[k].ins = j;
 	    }
 	    last_map = map + 1;
 
@@ -505,24 +505,24 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 	    if (j == 0)
 		v_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
-		m->xxih[i].sub[j].vol = 0xff;
+		m->xxi[i].sub[j].vol = 0xff;
 
-	    m->xxih[i].sub[j].pan = read8(f) << 1;
+	    m->xxi[i].sub[j].pan = read8(f) << 1;
 
 	    x = read8(f);		/* Pan envelope */
 	    if (j == 0)
 		p_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
-		m->xxih[i].sub[j].pan = 0x80;
+		m->xxi[i].sub[j].pan = 0x80;
 
 	    x = read16l(f);
 	    if (j == 0)
-		m->xxih[i].rls = x;
+		m->xxi[i].rls = x;
 
-	    m->xxih[i].sub[j].vra = read8(f);	/* vibrato rate */
-	    m->xxih[i].sub[j].vde = read8(f);	/* vibrato delay */
-	    m->xxih[i].sub[j].vsw = read8(f);	/* vibrato sweep */
-	    m->xxih[i].sub[j].vwf = read8(f);	/* vibrato waveform */
+	    m->xxi[i].sub[j].vra = read8(f);	/* vibrato rate */
+	    m->xxi[i].sub[j].vde = read8(f);	/* vibrato delay */
+	    m->xxi[i].sub[j].vsw = read8(f);	/* vibrato sweep */
+	    m->xxi[i].sub[j].vwf = read8(f);	/* vibrato waveform */
 	    read8(f);			/* Reserved */
 
 	    x = read8(f);		/* Pitch envelope */
@@ -530,7 +530,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 		f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
 	    _D(_D_INFO "  %2x: V%02x S%02x v%02x p%02x f%02x",
-				j, m->xxih[i].sub[j].vol, m->xxih[i].sub[j].sid,
+				j, m->xxi[i].sub[j].vol, m->xxi[i].sub[j].sid,
 				v_index[i], p_index[i], f_index[i]);
 	}
     }
@@ -608,9 +608,9 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
     packinfo = calloc (sizeof (int), m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].nsm = 1;
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxih[i].sub[0].sid = i_index[i] = s_index[i] = read8(f);
+	m->xxi[i].nsm = 1;
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub[0].sid = i_index[i] = s_index[i] = read8(f);
 
 	fread(buf, 1, 32, f);
 	buf[32] = 0;
@@ -626,8 +626,8 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
 
-	m->xxih[i].sub[0].vol = read8(f);	/* Volume */
-	m->xxih[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].vol = read8(f);	/* Volume */
+	m->xxi[i].sub[0].pan = 0x80;
 
 	x = read8(f);
 	if (x & 0x01) {
@@ -640,7 +640,7 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 	packinfo[i] = (x & 0x0c) >> 2;
 
 	_D(_D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
-		i_index[i], buf, c2spd[i],  m->xxih[i].sub[0].vol,
+		i_index[i], buf, c2spd[i],  m->xxi[i].sub[0].vol,
 		m->xxs[i].len,m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe, packinfo[i]);
     }
@@ -831,27 +831,27 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* volume envelopes */
 	if (v_index[i] >= 0) {
-	    m->xxih[i].aei.flg = XXM_ENV_ON;
-	    m->xxih[i].aei.npt = 16;
+	    m->xxi[i].aei.flg = XXM_ENV_ON;
+	    m->xxi[i].aei.npt = 16;
 
 	    for (j = 0; j < v_envnum; j++) {
 		if (v_index[i] == j) {
-		    m->xxih[i].aei.flg |= v_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
-		    m->xxih[i].aei.flg |= v_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
-		    m->xxih[i].aei.sus = v_env[j].sus & 0x0f;
-		    m->xxih[i].aei.lps = v_env[j].loop & 0x0f;
-		    m->xxih[i].aei.lpe = v_env[j].loop & 0xf0;
-		    m->xxih[i].aei.data[0] = 0;
-		    for (k = 1; k < m->xxih[i].aei.npt; k++) {
-			m->xxih[i].aei.data[k * 2] = m->xxih[i].aei.data[(k - 1) * 2] +
+		    m->xxi[i].aei.flg |= v_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
+		    m->xxi[i].aei.flg |= v_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
+		    m->xxi[i].aei.sus = v_env[j].sus & 0x0f;
+		    m->xxi[i].aei.lps = v_env[j].loop & 0x0f;
+		    m->xxi[i].aei.lpe = v_env[j].loop & 0xf0;
+		    m->xxi[i].aei.data[0] = 0;
+		    for (k = 1; k < m->xxi[i].aei.npt; k++) {
+			m->xxi[i].aei.data[k * 2] = m->xxi[i].aei.data[(k - 1) * 2] +
 						v_env[j].data[(k - 1) * 2];
 
 			if (v_env[j].data[k * 2] == 0)
 			    break;
 
-			m->xxih[i].aei.data[k * 2 + 1] = v_env[j].data[(k - 1) * 2 + 1];
+			m->xxi[i].aei.data[k * 2 + 1] = v_env[j].data[(k - 1) * 2 + 1];
 		    }
-		    m->xxih[i].aei.npt = k;
+		    m->xxi[i].aei.npt = k;
 		    break;
 		}
 	    }
@@ -859,26 +859,26 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* pan envelopes */
 	if (p_index[i] >= 0) {
-	    m->xxih[i].pei.flg = XXM_ENV_ON;
-	    m->xxih[i].pei.npt = 16;
+	    m->xxi[i].pei.flg = XXM_ENV_ON;
+	    m->xxi[i].pei.npt = 16;
 
 	    for (j = 0; j < p_envnum; j++) {
 		if (p_index[i] == j) {
-		    m->xxih[i].pei.flg |= p_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
-		    m->xxih[i].pei.flg |= p_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
-		    m->xxih[i].pei.sus = p_env[j].sus & 0x0f;
-		    m->xxih[i].pei.lps = p_env[j].loop & 0x0f;
-		    m->xxih[i].pei.lpe = p_env[j].loop & 0xf0;
-		    m->xxih[i].pei.data[0] = 0;
+		    m->xxi[i].pei.flg |= p_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
+		    m->xxi[i].pei.flg |= p_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
+		    m->xxi[i].pei.sus = p_env[j].sus & 0x0f;
+		    m->xxi[i].pei.lps = p_env[j].loop & 0x0f;
+		    m->xxi[i].pei.lpe = p_env[j].loop & 0xf0;
+		    m->xxi[i].pei.data[0] = 0;
 
-		    for (k = 1; k < m->xxih[i].pei.npt; k++) {
-			m->xxih[i].pei.data[k * 2] = m->xxih[i].pei.data[(k - 1) * 2] +
+		    for (k = 1; k < m->xxi[i].pei.npt; k++) {
+			m->xxi[i].pei.data[k * 2] = m->xxi[i].pei.data[(k - 1) * 2] +
 						p_env[j].data[(k - 1) * 2];
 			if (p_env[j].data[k * 2] == 0)
 			    break;
-			m->xxih[i].pei.data[k * 2 + 1] = p_env[j].data[(k - 1) * 2 + 1];
+			m->xxi[i].pei.data[k * 2 + 1] = p_env[j].data[(k - 1) * 2 + 1];
 		    }
-		    m->xxih[i].pei.npt = k;
+		    m->xxi[i].pei.npt = k;
 		    break;
 		}
 	    }
@@ -886,38 +886,38 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* pitch envelopes */
 	if (f_index[i] >= 0) {
-	    m->xxih[i].fei.flg = XXM_ENV_ON;
-	    m->xxih[i].fei.npt = 16;
+	    m->xxi[i].fei.flg = XXM_ENV_ON;
+	    m->xxi[i].fei.npt = 16;
 
 	    for (j = 0; j < f_envnum; j++) {
 		if (f_index[i] == j) {
-		    m->xxih[i].fei.flg |= f_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
-		    m->xxih[i].fei.flg |= f_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
-		    m->xxih[i].fei.sus = f_env[j].sus & 0x0f;
-		    m->xxih[i].fei.lps = f_env[j].loop & 0x0f;
-		    m->xxih[i].fei.lpe = f_env[j].loop & 0xf0;
-		    m->xxih[i].fei.data[0] = 0;
-		    m->xxih[i].fei.data[1] = 32;
+		    m->xxi[i].fei.flg |= f_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
+		    m->xxi[i].fei.flg |= f_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
+		    m->xxi[i].fei.sus = f_env[j].sus & 0x0f;
+		    m->xxi[i].fei.lps = f_env[j].loop & 0x0f;
+		    m->xxi[i].fei.lpe = f_env[j].loop & 0xf0;
+		    m->xxi[i].fei.data[0] = 0;
+		    m->xxi[i].fei.data[1] = 32;
 
-		    for (k = 1; k < m->xxih[i].fei.npt; k++) {
-			m->xxih[i].fei.data[k * 2] = m->xxih[i].fei.data[(k - 1) * 2] +
+		    for (k = 1; k < m->xxi[i].fei.npt; k++) {
+			m->xxi[i].fei.data[k * 2] = m->xxi[i].fei.data[(k - 1) * 2] +
 						f_env[j].data[(k - 1) * 2];
 			if (f_env[j].data[k * 2] == 0)
 			    break;
-			m->xxih[i].fei.data[k * 2 + 1] = f_env[j].data[(k - 1) * 2 + 1] * 4;
+			m->xxi[i].fei.data[k * 2 + 1] = f_env[j].data[(k - 1) * 2 + 1] * 4;
 		    }
 
-		    m->xxih[i].fei.npt = k;
+		    m->xxi[i].fei.npt = k;
 		    break;
 		}
 	    }
 	}
 
-	for (j = 0; j < m->xxih[i].nsm; j++)
+	for (j = 0; j < m->xxi[i].nsm; j++)
 	    for (k = 0; k < m->xxh->smp; k++)
-		if (m->xxih[i].sub[j].sid == s_index[k]) {
-		    m->xxih[i].sub[j].sid = k;
-		    c2spd_to_note (c2spd[k], &m->xxih[i].sub[j].xpo, &m->xxih[i].sub[j].fin);
+		if (m->xxi[i].sub[j].sid == s_index[k]) {
+		    m->xxi[i].sub[j].sid = k;
+		    c2spd_to_note (c2spd[k], &m->xxi[i].sub[j].xpo, &m->xxi[i].sub[j].fin);
 		    break;
 		}
     }

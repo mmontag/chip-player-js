@@ -57,7 +57,7 @@ int get_med_vibrato(struct xmp_channel *xc)
 	int vib;
 
 #if 0
-	if (xc->med.vib_wf >= xxih[xc->ins].nsm)	/* invalid waveform */
+	if (xc->med.vib_wf >= xxi[xc->ins].nsm)	/* invalid waveform */
 		return 0;
 
 	if (xxs[xxi[xc->ins][xc->med.vib_wf].sid].len != 32)
@@ -111,8 +111,8 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 	xc->med.period = xc->period;
 	xc->med.vp = xc->med.vc = xc->med.vw = 0;
 	xc->med.wp = xc->med.wc = xc->med.ww = 0;
-	xc->med.vs = p->m.xxih[xc->ins].vts;
-	xc->med.ws = p->m.xxih[xc->ins].wts;
+	xc->med.vs = p->m.xxi[xc->ins].vts;
+	xc->med.ws = p->m.xxi[xc->ins].wts;
     }
 
     if (xc->med.vs > 0 && xc->med.vc-- == 0) {
@@ -223,8 +223,8 @@ skip_vol:
 		xc->med.ws = WT;
 		break;
 	    default:
-		if (b < p->m.xxih[xc->ins].nsm && p->m.xxih[xc->ins].sub[b].sid != xc->smp) {
-		    xc->smp = p->m.xxih[xc->ins].sub[b].sid;
+		if (b < p->m.xxi[xc->ins].nsm && p->m.xxi[xc->ins].sub[b].sid != xc->smp) {
+		    xc->smp = p->m.xxi[xc->ins].sub[b].sid;
 		    xmp_drv_setsmp(ctx, chn, xc->smp);
 		}
 	    }

@@ -132,7 +132,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&uih.name, 32, 1, f);
 	fread(&uih.dosname, 12, 1, f);
@@ -151,7 +151,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	    uih.c2spd ^= uih.finetune;
 	}
 	m->xxs[i].len = uih.sizeend - uih.sizestart;
-	m->xxih[i].nsm = !!m->xxs[i].len;
+	m->xxi[i].nsm = !!m->xxs[i].len;
 	m->xxs[i].lps = uih.loop_start;
 	m->xxs[i].lpe = uih.loopend;
 
@@ -193,21 +193,21 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 /* TODO: Add logarithmic volume support */
-	m->xxih[i].sub[0].vol = uih.volume;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].vol = uih.volume;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxih[i].name, uih.name, 24);
+	copy_adjust(m->xxi[i].name, uih.name, 24);
 
 	_D(_D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, m->xxs[i].len,
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, uih.finetune, uih.c2spd);
+		m->xxi[i].sub[0].vol, uih.finetune, uih.c2spd);
 
 	if (ver > 3)
-	    c2spd_to_note(uih.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+	    c2spd_to_note(uih.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
     }
 
     fread(&ufh2.order, 256, 1, f);

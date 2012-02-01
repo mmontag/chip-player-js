@@ -102,12 +102,12 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint16 flags, c2spd;
 		int finetune;
 
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		fread(buf, 1, 13, f);		/* sample filename */
 		fread(buf, 1, 24, f);		/* sample description */
-		strncpy((char *)m->xxih[i].name, (char *)buf, 24);
-		str_adj((char *)m->xxih[i].name);
+		strncpy((char *)m->xxi[i].name, (char *)buf, 24);
+		str_adj((char *)m->xxi[i].name);
 		p_smp[i] = read32l(f);
 		read32l(f);			/* memory location */
 		read16l(f);			/* sample number */
@@ -116,20 +116,20 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].lps = read32l(f);
 		m->xxs[i].lpe = read32l(f);
 		finetune = (int8)(read8(f) << 4);
-		m->xxih[i].sub[0].vol = read8(f);
+		m->xxi[i].sub[0].vol = read8(f);
 		c2spd = 8363 * read16l(f) / 8448;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].sid = i;
-		m->xxih[i].nsm = !!m->xxs[i].len;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].sid = i;
+		m->xxi[i].nsm = !!m->xxs[i].len;
 		m->xxs[i].flg = flags & 0x80 ? XMP_SAMPLE_LOOP : 0;
 		m->xxs[i].flg |= flags & 0x20 ? XMP_SAMPLE_LOOP_BIDIR : 0;
-		c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
-		m->xxih[i].sub[0].fin += finetune;
+		c2spd_to_note(c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+		m->xxi[i].sub[0].fin += finetune;
 
 		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %5d",
-			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
-			'L' : ' ', m->xxih[i].sub[0].vol, c2spd);
+			'L' : ' ', m->xxi[i].sub[0].vol, c2spd);
 	}
 	
 
@@ -191,8 +191,8 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-			XMP_SMP_DIFF, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+			XMP_SMP_DIFF, &m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

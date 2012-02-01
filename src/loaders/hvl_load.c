@@ -321,7 +321,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		int vol, fspd, wavelen, flow, vibdel, hclen, hc;
 		int vibdep, vibspd, sqmin, sqmax, sqspd, fmax, plen, pspd;
 		int Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol;
-                m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+                m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		fread(buf, 22, 1, f);
 
@@ -361,9 +361,9 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		int j;
 		int wave=0;
 
-		m->xxih[i].fei.flg = XXM_ENV_ON; /* | XXM_ENV_LOOP;*/
-		m->xxih[i].fei.npt = plen*2;
-		m->xxfe[i] = calloc (4, m->xxih[i].fei.npt);
+		m->xxi[i].fei.flg = XXM_ENV_ON; /* | XXM_ENV_LOOP;*/
+		m->xxi[i].fei.npt = plen*2;
+		m->xxfe[i] = calloc (4, m->xxi[i].fei.npt);
 
 		int note=0;
 		int jump = -1;
@@ -424,9 +424,9 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			
 			if (jump >= 0) {
 				printf ("jump %d-%d\n", jump,j);
-				m->xxih[i].fei.flg |= XXM_ENV_LOOP;
-				m->xxih[i].fei.lps = jump*2;
-				m->xxih[i].fei.lpe = j*2+1;
+				m->xxi[i].fei.flg |= XXM_ENV_LOOP;
+				m->xxi[i].fei.lps = jump*2;
+				m->xxi[i].fei.lpe = j*2+1;
 			}
 
 			_D(_D_INFO "[%d W:%x 1:%x%02x 2:%x%02x n:%02x]", j, tmp[1] &7, tmp[0]&15, tmp[3], (tmp[1]>>3)&15, tmp[4], tmp[2]);
@@ -441,9 +441,9 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		_D(_D_INFO "I: %02x V: %02x A: %02x %02x D: %02x %02x S:  %02x R: %02x %02x wave %02x",
 			i, vol, Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol, wave);
-		m->xxih[i].aei.flg = XXM_ENV_ON;
-		m->xxih[i].aei.npt = 5;
-		m->xxae[i] = calloc (4, m->xxih[i].aei.npt);
+		m->xxi[i].aei.flg = XXM_ENV_ON;
+		m->xxi[i].aei.npt = 5;
+		m->xxae[i] = calloc (4, m->xxi[i].aei.npt);
 		m->xxae[i][0] = 0;
 		m->xxae[i][1] = vol;
 		m->xxae[i][2] = Alen; /* these are *not* multiplied by pspd */
@@ -455,13 +455,13 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxae[i][8] = (Alen+Dlen+Slen+Rlen);
 		m->xxae[i][9] = Rvol;
 
-		m->xxih[i].sub[0].vol = 64;
-		m->xxih[i].sub[0].sid = wave;
-		m->xxih[i].sub[0].pan = 128;
-		m->xxih[i].sub[0].xpo = (3-wavelen) * 12 - 1;
-		/*m->xxih[i].sub[0].vde = vibdep;
-		  m->xxih[i].sub[0].vra = vibspd; */
-		m->xxih[i].nsm = 1;
+		m->xxi[i].sub[0].vol = 64;
+		m->xxi[i].sub[0].sid = wave;
+		m->xxi[i].sub[0].pan = 128;
+		m->xxi[i].sub[0].xpo = (3-wavelen) * 12 - 1;
+		/*m->xxi[i].sub[0].vde = vibdep;
+		  m->xxi[i].sub[0].vra = vibspd; */
+		m->xxi[i].nsm = 1;
         }
 
 #define LEN 64
@@ -517,7 +517,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		
 		for (i=0; nameptr < namebuf+len && i < m->xxh->ins; i++) {
 			nameptr += strlen((char *)nameptr)+1;
-			copy_adjust(m->xxih[i].name, nameptr, 32);
+			copy_adjust(m->xxi[i].name, nameptr, 32);
 
 			printf ("%02x: %s\n", i, nameptr);
 		}

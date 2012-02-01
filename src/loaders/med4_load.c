@@ -532,10 +532,10 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		length = read16b(f);
 		type = (int16)read16b(f);	/* instrument type */
 
-		strncpy((char *)m->xxih[i].name, temp_inst[i].name, 32);
+		strncpy((char *)m->xxi[i].name, temp_inst[i].name, 32);
 
 		_D(_D_INFO "\n[%2X] %-32.32s %s",
-			i, m->xxih[i].name, inst_type[type + 2]);
+			i, m->xxi[i].name, inst_type[type + 2]);
 
 		/* This is very similar to MMD1 synth/hybrid instruments,
 		 * but just different enough to be reimplemented here.
@@ -563,15 +563,15 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			length = read32b(f);
 			type = read16b(f);
 
-			m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-			m->xxih[i].nsm = 1;
-			m->xxih[i].vts = synth.volspeed;
-			m->xxih[i].wts = synth.wfspeed;
-			m->xxih[i].sub[0].pan = 0x80;
-			m->xxih[i].sub[0].vol = temp_inst[i].volume;
-			m->xxih[i].sub[0].xpo = temp_inst[i].transpose;
-			m->xxih[i].sub[0].sid = smp_idx;
-			m->xxih[i].sub[0].fin = 0 /*exp_smp.finetune*/;
+			m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+			m->xxi[i].nsm = 1;
+			m->xxi[i].vts = synth.volspeed;
+			m->xxi[i].wts = synth.wfspeed;
+			m->xxi[i].sub[0].pan = 0x80;
+			m->xxi[i].sub[0].vol = temp_inst[i].volume;
+			m->xxi[i].sub[0].xpo = temp_inst[i].transpose;
+			m->xxi[i].sub[0].sid = smp_idx;
+			m->xxi[i].sub[0].fin = 0 /*exp_smp.finetune*/;
 			m->xxs[smp_idx].len = length;
 			m->xxs[smp_idx].lps = temp_inst[i].loop_start;
 			m->xxs[smp_idx].lpe = temp_inst[i].loop_end;
@@ -580,9 +580,9 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			_D(_D_INFO "  %05x %05x %05x %02x %+03d",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
-				       m->xxs[smp_idx].lpe, m->xxih[i].sub[0].vol,
-				       m->xxih[i].sub[0].xpo /*,
-				       m->xxih[i].sub[0].fin >> 4*/);
+				       m->xxs[smp_idx].lpe, m->xxi[i].sub[0].vol,
+				       m->xxi[i].sub[0].xpo /*,
+				       m->xxi[i].sub[0].fin >> 4*/);
 
 			xmp_drv_loadpatch(ctx, f, smp_idx, 0,
 					&m->xxs[smp_idx], NULL);
@@ -627,18 +627,18 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (synth.wforms == 0xffff)	
 				continue;
 
-			m->xxih[i].sub = calloc(sizeof(struct xxm_subinstrument),
+			m->xxi[i].sub = calloc(sizeof(struct xxm_subinstrument),
 							synth.wforms);
-			m->xxih[i].nsm = synth.wforms;
-			m->xxih[i].vts = synth.volspeed;
-			m->xxih[i].wts = synth.wfspeed;
+			m->xxi[i].nsm = synth.wforms;
+			m->xxi[i].vts = synth.volspeed;
+			m->xxi[i].wts = synth.wfspeed;
 
 			for (j = 0; j < synth.wforms; j++) {
-				m->xxih[i].sub[j].pan = 0x80;
-				m->xxih[i].sub[j].vol = temp_inst[i].volume;
-				m->xxih[i].sub[j].xpo = temp_inst[i].transpose - 24;
-				m->xxih[i].sub[j].sid = smp_idx;
-				m->xxih[i].sub[j].fin = 0 /*exp_smp.finetune*/;
+				m->xxi[i].sub[j].pan = 0x80;
+				m->xxi[i].sub[j].vol = temp_inst[i].volume;
+				m->xxi[i].sub[j].xpo = temp_inst[i].transpose - 24;
+				m->xxi[i].sub[j].sid = smp_idx;
+				m->xxi[i].sub[j].fin = 0 /*exp_smp.finetune*/;
 
 				fseek(f, pos + synth.wf[j], SEEK_SET);
 /*printf("pos=%lx tell=%lx ", pos, ftell(f));*/
@@ -671,13 +671,13 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
                 /* instr type is sample */
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-                m->xxih[i].nsm = 1;
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+                m->xxi[i].nsm = 1;
 		
-		m->xxih[i].sub[0].vol = temp_inst[i].volume;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].xpo = temp_inst[i].transpose;
-		m->xxih[i].sub[0].sid = smp_idx;
+		m->xxi[i].sub[0].vol = temp_inst[i].volume;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].xpo = temp_inst[i].transpose;
+		m->xxi[i].sub[0].sid = smp_idx;
 
 		m->xxs[smp_idx].len = length;
 		m->xxs[smp_idx].lps = temp_inst[i].loop_start;
@@ -689,10 +689,10 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
 			m->xxs[smp_idx].lpe,
 			m->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxih[i].sub[0].vol, m->xxih[i].sub[0].xpo);
+			m->xxi[i].sub[0].vol, m->xxi[i].sub[0].xpo);
 
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
-				  &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
+				  &m->xxs[m->xxi[i].sub[0].sid], NULL);
 
 		smp_idx++;
 	}

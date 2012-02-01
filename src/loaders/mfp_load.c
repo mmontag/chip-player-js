@@ -112,26 +112,26 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < 31; i++) {
 		int loop_size;
 
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		
 		m->xxs[i].len = 2 * read16b(f);
-		m->xxih[i].sub[0].fin = (int8)(read8(f) << 4);
-		m->xxih[i].sub[0].vol = read8(f);
+		m->xxi[i].sub[0].fin = (int8)(read8(f) << 4);
+		m->xxi[i].sub[0].vol = read8(f);
 		m->xxs[i].lps = 2 * read16b(f);
 		loop_size = read16b(f);
 
 		m->xxs[i].lpe = m->xxs[i].lps + 2 * loop_size;
 		m->xxs[i].flg = loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].sid = i;
-		m->xxih[i].nsm = !!(m->xxs[i].len);
-		m->xxih[i].rls = 0xfff;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].sid = i;
+		m->xxi[i].nsm = !!(m->xxs[i].len);
+		m->xxi[i].rls = 0xfff;
 
                	_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d %c",
                        	i, m->xxs[i].len, m->xxs[i].lps,
                        	m->xxs[i].lpe,
 			loop_size > 1 ? 'L' : ' ',
-                       	m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin >> 4,
+                       	m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin >> 4,
                        	m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
 
@@ -215,8 +215,8 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		xmp_drv_loadpatch(ctx, s, m->xxih[i].sub[0].sid, 0,
-				  &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, s, m->xxi[i].sub[0].sid, 0,
+				  &m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	fclose(s);

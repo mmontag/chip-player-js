@@ -274,11 +274,11 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 	for (i = 0; i < m->xxh->ins; i++) {
 		int x;
 
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		
 		namelen = read8(f);
 		x = namelen - fread(name, 1, namelen > 30 ? 30 : namelen, f);
-		copy_adjust(m->xxih[i].name, name, namelen);
+		copy_adjust(m->xxi[i].name, name, namelen);
 		name[namelen] = 0;
 		while (x--)
 			read8(f);
@@ -286,12 +286,12 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 		m->xxs[i].len = read32l(f);
 		m->xxs[i].lps = read32l(f);
 		m->xxs[i].lpe = read32l(f);
-		m->xxih[i].nsm = !!m->xxs[i].len;
+		m->xxi[i].nsm = !!m->xxs[i].len;
 		c3spd = read16l(f);
-		c2spd_to_note(c3spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
-		m->xxih[i].sub[0].vol = read8(f);
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].sid = i;
+		c2spd_to_note(c3spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+		m->xxi[i].sub[0].vol = read8(f);
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].sid = i;
 		flag = read8(f);
 		m->xxs[i].flg = flag & 0x01 ? XMP_SAMPLE_LOOP : 0;
 		if (ver >= 8)
@@ -305,7 +305,7 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 				m->xxs[i].lpe & 0xfffff,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				'0' + packtype[i],
-				c3spd, m->xxih[i].sub[0].vol);
+				c3spd, m->xxi[i].sub[0].vol);
 	}
 }
 
@@ -337,8 +337,8 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 
 		switch (packtype[i]) {
 		case 0:
-			xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-						0, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+			xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+						0, &m->xxs[m->xxi[i].sub[0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);

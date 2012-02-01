@@ -96,31 +96,31 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	_D(_D_INFO "Instruments: %d", m->xxh->ins);
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
-		m->xxih[i].nsm = 1;
+		m->xxi[i].nsm = 1;
 		fread(buffer, 30, 1, f);
-		copy_adjust(m->xxih[i].name, buffer, 30);
+		copy_adjust(m->xxi[i].name, buffer, 30);
 		snum = read16b(f);
 		if (snum == 0 || snum > m->xxh->smp)
 			continue;
-		m->xxih[i].sub[0].sid = --snum;
-		m->xxih[i].sub[0].vol = read16b(f);
+		m->xxi[i].sub[0].sid = --snum;
+		m->xxi[i].sub[0].vol = read16b(f);
 		c2spd = read32b(f);
 		m->xxs[snum].lps = read32b(f);
 		m->xxs[snum].lpe = m->xxs[i].lps + read32b(f);
-		m->xxih[i].sub[0].pan = 0x80 + (int16)read16b(f);
-		if (m->xxih[i].sub[0].pan > 0xff)
-			m->xxih[i].sub[0].pan = 0xff;
+		m->xxi[i].sub[0].pan = 0x80 + (int16)read16b(f);
+		if (m->xxi[i].sub[0].pan > 0xff)
+			m->xxi[i].sub[0].pan = 0xff;
 		flags = read16b(f);
 		m->xxs[snum].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
 		m->xxs[snum].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
-		c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+		c2spd_to_note(c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
 
 		_D(_D_INFO "[%2X] %-30.30s #%02X V%02x P%02x %5d",
-			i, m->xxih[i].name, snum,
-			m->xxih[i].sub[0].vol, m->xxih[i].sub[0].pan, c2spd);
+			i, m->xxi[i].name, snum,
+			m->xxi[i].sub[0].vol, m->xxi[i].sub[0].pan, c2spd);
 	}
 }
 
@@ -265,17 +265,17 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 
 	for (i = 0; i < nenv; i++) {
 		ins = read16b(f) - 1;
-		m->xxih[ins].aei.flg = read8(f) & 0x07;
-		m->xxih[ins].aei.npt = read8(f);
-		m->xxih[ins].aei.sus = read8(f);
-		m->xxih[ins].aei.lps = read8(f);
-		m->xxih[ins].aei.lpe = read8(f);
+		m->xxi[ins].aei.flg = read8(f) & 0x07;
+		m->xxi[ins].aei.npt = read8(f);
+		m->xxi[ins].aei.sus = read8(f);
+		m->xxi[ins].aei.lps = read8(f);
+		m->xxi[ins].aei.lpe = read8(f);
 		read8(f);	/* 2nd sustain */
 		//read8(f);	/* reserved */
 
 		for (j = 0; j < 32; j++) {
-			m->xxih[ins].aei.data[j * 2 + 0] = read16b(f);
-			m->xxih[ins].aei.data[j * 2 + 1] = read16b(f);
+			m->xxi[ins].aei.data[j * 2 + 0] = read16b(f);
+			m->xxi[ins].aei.data[j * 2 + 1] = read16b(f);
 		}
 	}
 }

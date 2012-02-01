@@ -159,12 +159,12 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
 
     m->xxs[i].flg = XMP_SAMPLE_LOOP;
-    m->xxih[i].sub[0].vol = 0x40;		/* prelude.mod has 0 in instrument */
-    m->xxih[i].nsm = 1;
-    m->xxih[i].sub[0].xpo = -12 * am.fq;
-    m->xxih[i].sub[0].vwf = 0;
-    m->xxih[i].sub[0].vde = am.v_amp;
-    m->xxih[i].sub[0].vra = am.v_spd;
+    m->xxi[i].sub[0].vol = 0x40;		/* prelude.mod has 0 in instrument */
+    m->xxi[i].nsm = 1;
+    m->xxi[i].sub[0].xpo = -12 * am.fq;
+    m->xxi[i].sub[0].vwf = 0;
+    m->xxi[i].sub[0].vde = am.v_amp;
+    m->xxi[i].sub[0].vra = am.v_spd;
 
     /*
      * AM synth envelope parameters based on the Startrekker 1.2 docs
@@ -185,11 +185,11 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     if (am.ds  == 0) am.ds  = 1;
     if (am.rs  == 0) am.rs  = 1;
 
-    m->xxih[i].aei.npt = 6;
-    m->xxih[i].aei.flg = XXM_ENV_ON;
+    m->xxi[i].aei.npt = 6;
+    m->xxi[i].aei.flg = XXM_ENV_ON;
 
-    m->xxih[i].aei.data[0] = 0;
-    m->xxih[i].aei.data[1] = am.l0 / 4;
+    m->xxi[i].aei.data[0] = 0;
+    m->xxi[i].aei.data[1] = am.l0 / 4;
 
     /*
      * Startrekker increments/decrements the envelope by the stage speed
@@ -220,9 +220,9 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
     if (b == 0) b = 1;
 
-    m->xxih[i].aei.data[2] = m->xxih[i].aei.data[0] + (256 * a) / (am.a1s * b);
+    m->xxi[i].aei.data[2] = m->xxi[i].aei.data[0] + (256 * a) / (am.a1s * b);
 
-    m->xxih[i].aei.data[3] = am.a1l / 4;
+    m->xxi[i].aei.data[3] = am.a1l / 4;
 
     if (am.a2l > am.a1l) {
 	a = am.a2l - am.a1l;
@@ -233,9 +233,9 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
     if (b == 0) b = 1;
 
-    m->xxih[i].aei.data[4] = m->xxih[i].aei.data[2] + (256 * a) / (am.a2s * b);
+    m->xxi[i].aei.data[4] = m->xxi[i].aei.data[2] + (256 * a) / (am.a2s * b);
 
-    m->xxih[i].aei.data[5] = am.a2l / 4;
+    m->xxi[i].aei.data[5] = am.a2l / 4;
 
     if (am.sl > am.a2l) {
 	a = am.sl - am.a2l;
@@ -246,31 +246,31 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     }
     if (b == 0) b = 1;
 
-    m->xxih[i].aei.data[6] = m->xxih[i].aei.data[4] + (256 * a) / (am.ds * b);
+    m->xxi[i].aei.data[6] = m->xxi[i].aei.data[4] + (256 * a) / (am.ds * b);
 
-    m->xxih[i].aei.data[7] = am.sl / 4;
-    m->xxih[i].aei.data[8] = m->xxih[i].aei.data[6] + am.st;
-    m->xxih[i].aei.data[9] = am.sl / 4;
-    m->xxih[i].aei.data[10] = m->xxih[i].aei.data[8] + (256 / am.rs);
-    m->xxih[i].aei.data[11] = 0;
+    m->xxi[i].aei.data[7] = am.sl / 4;
+    m->xxi[i].aei.data[8] = m->xxi[i].aei.data[6] + am.st;
+    m->xxi[i].aei.data[9] = am.sl / 4;
+    m->xxi[i].aei.data[10] = m->xxi[i].aei.data[8] + (256 / am.rs);
+    m->xxi[i].aei.data[11] = 0;
 
     /*
      * Implement P.FALL using pitch envelope
      */
 
     if (am.p_fall) {
-	m->xxih[i].fei.npt = 2;
-	m->xxih[i].fei.flg = XXM_ENV_ON;
+	m->xxi[i].fei.npt = 2;
+	m->xxi[i].fei.flg = XXM_ENV_ON;
 
-	m->xxih[i].fei.data[0] = 0;
-	m->xxih[i].fei.data[1] = 0;
+	m->xxi[i].fei.data[0] = 0;
+	m->xxi[i].fei.data[1] = 0;
 
-	m->xxih[i].fei.data[2] = 1024 / abs(am.p_fall);
-	m->xxih[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
+	m->xxi[i].fei.data[2] = 1024 / abs(am.p_fall);
+	m->xxi[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
     }
 
-    xmp_drv_loadpatch(ctx, NULL, m->xxih[i].sub[0].sid, XMP_SMP_NOLOAD,
-					&m->xxs[m->xxih[i].sub[0].sid], wave);
+    xmp_drv_loadpatch(ctx, NULL, m->xxi[i].sub[0].sid, XMP_SMP_NOLOAD,
+					&m->xxs[m->xxi[i].sub[0].sid], wave);
 }
 
 
@@ -364,33 +364,33 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxs[i].len = 2 * mh.ins[i].size;
 	m->xxs[i].lps = 2 * mh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
 	m->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxih[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
-	m->xxih[i].sub[0].vol = mh.ins[i].volume;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
-	m->xxih[i].nsm = !!(m->xxs[i].len);
-	m->xxih[i].rls = 0xfff;
+	m->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->xxi[i].sub[0].vol = mh.ins[i].volume;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
+	m->xxi[i].nsm = !!(m->xxs[i].len);
+	m->xxi[i].rls = 0xfff;
 
 	if (m->xxs[i].flg & XMP_SAMPLE_LOOP) {
 	    if (m->xxs[i].lps == 0 && m->xxs[i].len > m->xxs[i].lpe)
 		m->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
 	}
 
-	copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
+	copy_adjust(m->xxi[i].name, mh.ins[i].name, 22);
 
 	if (am_synth && is_am_instrument(nt, i)) {
 	    _D(_D_INFO "[%2X] %-22.22s SYNT ---- ----   V40 %+d",
-			i, m->xxih[i].name, m->xxih[i].sub[0].fin >> 4);
-	} else if (*m->xxih[i].name || m->xxs[i].len > 2) {
+			i, m->xxi[i].name, m->xxi[i].sub[0].fin >> 4);
+	} else if (*m->xxi[i].name || m->xxs[i].len > 2) {
 	    _D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
-			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin >> 4,
+			m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin >> 4,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
     }
@@ -451,8 +451,8 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    continue;
 	}
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
-					&m->xxs[m->xxih[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
+					&m->xxs[m->xxi[i].sub[0].sid], NULL);
     }
 
     if (nt)

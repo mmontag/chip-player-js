@@ -614,7 +614,7 @@ void xmp_release_module(xmp_context ctx)
 		free(m->xxp[i]);
 
 	for (i = 0; i < m->xxh->ins; i++)
-		free(m->xxih[i].sub);
+		free(m->xxi[i].sub);
 
 	free(m->xxt);
 	free(m->xxp);
@@ -625,7 +625,7 @@ void xmp_release_module(xmp_context ctx)
 		}
 		free(m->xxs);
 	}
-	free(m->xxih);
+	free(m->xxi);
 	free(m->xxh);
 	if (m->comment)
 		free(m->comment);

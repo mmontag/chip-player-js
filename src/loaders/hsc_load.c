@@ -112,14 +112,14 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->ins; i++, sid += 12) {
 	xmp_cvt_hsc2sbi((char *)sid);
 
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxih[i].nsm = 1;
-	m->xxih[i].sub[0].vol = 0x40;
-	m->xxih[i].sub[0].fin = (int8)sid[11] / 4;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].xpo = 0;
-	m->xxih[i].sub[0].sid = i;
-	m->xxih[i].rls = LSN(sid[7]) * 32;	/* carrier release */
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].nsm = 1;
+	m->xxi[i].sub[0].vol = 0x40;
+	m->xxi[i].sub[0].fin = (int8)sid[11] / 4;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].xpo = 0;
+	m->xxi[i].sub[0].sid = i;
+	m->xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
 	xmp_drv_loadpatch(ctx, f, i, XMP_SMP_ADLIB, NULL, (char *)sid);
     }

@@ -70,9 +70,9 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		fread(buffer, 28, 1, f);
-		copy_adjust(m->xxih[i].name, buffer, 28);
+		copy_adjust(m->xxi[i].name, buffer, 28);
 
 		if (ver == 1) {
 			read32b(f);
@@ -82,8 +82,8 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 			m->xxs[i].lpe = m->xxs[i].lps + size - 1;
 			read16b(f);
 			read16b(f);
-			m->xxih[i].sub[0].vol = 0x40;
-			m->xxih[i].sub[0].pan = 0x80;
+			m->xxi[i].sub[0].vol = 0x40;
+			m->xxi[i].sub[0].pan = 0x80;
 			bits = 1;
 			c2spd = 8363;
 		} else {
@@ -91,18 +91,18 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 			read16b(f);		/* autobal */
 			bits = read16b(f);	/* 1 = 8 bits, 2 = 16 bits */
 			c2spd = read16b(f);
-			c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+			c2spd_to_note(c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
 			m->xxs[i].len = read32b(f);
 			m->xxs[i].lps = read32b(f);
 			size = read32b(f);
 			m->xxs[i].lpe = m->xxs[i].lps + size - 1;
-			m->xxih[i].sub[0].vol = read16b(f) / 4;
+			m->xxi[i].sub[0].vol = read16b(f) / 4;
 			read8(f);
-			m->xxih[i].sub[0].fin = read8s(f);
+			m->xxi[i].sub[0].fin = read8s(f);
 		}
 
-		m->xxih[i].nsm = !!m->xxs[i].len;
-		m->xxih[i].sub[0].sid = i;
+		m->xxi[i].nsm = !!m->xxs[i].len;
+		m->xxi[i].sub[0].sid = i;
 		m->xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;
 
 		if (bits > 1) {
@@ -114,13 +114,13 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		_D(_D_INFO "[%2X] %-28.28s  %05x%c%05x %05x %c "
 						"V%02x F%+03d %5d", i,
-			 	m->xxih[i].name,
+			 	m->xxi[i].name,
 				m->xxs[i].len,
 				bits > 1 ? '+' : ' ',
 				m->xxs[i].lps,
 				size,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin,
+				m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin,
 				c2spd);
 	}
 
@@ -173,8 +173,8 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
-					&m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
+					&m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

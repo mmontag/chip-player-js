@@ -192,14 +192,14 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
 
-	fread(&m->xxih[i].name, 1, 28, f);
-	str_adj((char *)m->xxih[i].name);
+	fread(&m->xxi[i].name, 1, 28, f);
+	str_adj((char *)m->xxi[i].name);
 
-	m->xxih[i].nsm = read8(f);
+	m->xxi[i].nsm = read8(f);
 	fseek(f, 12, SEEK_CUR);		/* Sample map - 1st octave */
 
 	for (j = 0; j < 96; j++) {
-		m->xxih[i].map[j].ins = read8(f);
+		m->xxi[i].map[j].ins = read8(f);
 	}
 
 	fseek(f, 11, SEEK_CUR);		/* unknown */
@@ -213,82 +213,82 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	val = read8(f);			/* PV envelopes flags */
 	if (LSN(val) & 0x01)
-		m->xxih[i].aei.flg |= XXM_ENV_ON;
+		m->xxi[i].aei.flg |= XXM_ENV_ON;
 	if (LSN(val) & 0x02)
-		m->xxih[i].aei.flg |= XXM_ENV_SUS;
+		m->xxi[i].aei.flg |= XXM_ENV_SUS;
 	if (LSN(val) & 0x04)
-		m->xxih[i].aei.flg |= XXM_ENV_LOOP;
+		m->xxi[i].aei.flg |= XXM_ENV_LOOP;
 	if (MSN(val) & 0x01)
-		m->xxih[i].pei.flg |= XXM_ENV_ON;
+		m->xxi[i].pei.flg |= XXM_ENV_ON;
 	if (MSN(val) & 0x02)
-		m->xxih[i].pei.flg |= XXM_ENV_SUS;
+		m->xxi[i].pei.flg |= XXM_ENV_SUS;
 	if (MSN(val) & 0x04)
-		m->xxih[i].pei.flg |= XXM_ENV_LOOP;
+		m->xxi[i].pei.flg |= XXM_ENV_LOOP;
 
 	val = read8(f);			/* PV envelopes points */
-	m->xxih[i].aei.npt = LSN(val) + 1;
-	m->xxih[i].pei.npt = MSN(val) + 1;
+	m->xxi[i].aei.npt = LSN(val) + 1;
+	m->xxi[i].pei.npt = MSN(val) + 1;
 
 	val = read8(f);			/* PV envelopes sustain point */
-	m->xxih[i].aei.sus = LSN(val);
-	m->xxih[i].pei.sus = MSN(val);
+	m->xxi[i].aei.sus = LSN(val);
+	m->xxi[i].pei.sus = MSN(val);
 
 	val = read8(f);			/* PV envelopes loop start */
-	m->xxih[i].aei.lps = LSN(val);
-	m->xxih[i].pei.lps = MSN(val);
+	m->xxi[i].aei.lps = LSN(val);
+	m->xxi[i].pei.lps = MSN(val);
 
 	read8(f);			/* PV envelopes loop end */
-	m->xxih[i].aei.lpe = LSN(val);
-	m->xxih[i].pei.lpe = MSN(val);
+	m->xxi[i].aei.lpe = LSN(val);
+	m->xxi[i].pei.lpe = MSN(val);
 
-	if (m->xxih[i].aei.npt <= 0 || m->xxih[i].aei.npt >= XMP_MAXENV)
-		m->xxih[i].aei.flg &= ~XXM_ENV_ON;
+	if (m->xxi[i].aei.npt <= 0 || m->xxi[i].aei.npt >= XMP_MAXENV)
+		m->xxi[i].aei.flg &= ~XXM_ENV_ON;
 
-	if (m->xxih[i].pei.npt <= 0 || m->xxih[i].pei.npt >= XMP_MAXENV)
-		m->xxih[i].pei.flg &= ~XXM_ENV_ON;
+	if (m->xxi[i].pei.npt <= 0 || m->xxi[i].pei.npt >= XMP_MAXENV)
+		m->xxi[i].pei.flg &= ~XXM_ENV_ON;
 
 	fread(buf, 1, 30, f);		/* volume envelope points */;
-	for (j = 0; j < m->xxih[i].aei.npt; j++) {
-		m->xxih[i].aei.data[j * 2] = readmem16l(buf + j * 3) / 16;
-		m->xxih[i].aei.data[j * 2 + 1] = buf[j * 3 + 2];
+	for (j = 0; j < m->xxi[i].aei.npt; j++) {
+		m->xxi[i].aei.data[j * 2] = readmem16l(buf + j * 3) / 16;
+		m->xxi[i].aei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	fread(buf, 1, 30, f);		/* pan envelope points */;
-	for (j = 0; j < m->xxih[i].pei.npt; j++) {
-		m->xxih[i].pei.data[j * 2] = readmem16l(buf + j * 3) / 16;
-		m->xxih[i].pei.data[j * 2 + 1] = buf[j * 3 + 2];
+	for (j = 0; j < m->xxi[i].pei.npt; j++) {
+		m->xxi[i].pei.data[j * 2] = readmem16l(buf + j * 3) / 16;
+		m->xxi[i].pei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	fade = read8(f);		/* fadeout - 0x80->0x02 0x310->0x0c */
 	read8(f);			/* unknown */
 
-	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->xxih[i].name, m->xxih[i].nsm);
+	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->xxi[i].name, m->xxi[i].nsm);
 
-	if (m->xxih[i].nsm == 0)
+	if (m->xxi[i].nsm == 0)
 		return;
 
-	m->xxih[i].sub = calloc(sizeof(struct xxm_subinstrument), m->xxih[i].nsm);
+	m->xxi[i].sub = calloc(sizeof(struct xxm_subinstrument), m->xxi[i].nsm);
 
-	for (j = 0; j < m->xxih[i].nsm; j++, snum++) {
+	for (j = 0; j < m->xxi[i].nsm; j++, snum++) {
 		read32b(f);	/* SAMP */
 		read32b(f);	/* size */
 	
 		fread(&m->xxs[snum].name, 1, 28, f);
 		str_adj((char *)m->xxs[snum].name);
 	
-		m->xxih[i].sub[j].pan = read8(f) * 4;
-		if (m->xxih[i].sub[j].pan == 0)	/* not sure about this */
-			m->xxih[i].sub[j].pan = 0x80;
+		m->xxi[i].sub[j].pan = read8(f) * 4;
+		if (m->xxi[i].sub[j].pan == 0)	/* not sure about this */
+			m->xxi[i].sub[j].pan = 0x80;
 		
-		m->xxih[i].sub[j].vol = read8(f);
+		m->xxi[i].sub[j].vol = read8(f);
 		flags = read8(f);
 		read8(f);	/* unknown - 0x80 */
 
-		m->xxih[i].sub[j].vwf = vwf;
-		m->xxih[i].sub[j].vde = vde;
-		m->xxih[i].sub[j].vra = vra;
-		m->xxih[i].sub[j].vsw = vsw;
-		m->xxih[i].sub[j].sid = snum;
+		m->xxi[i].sub[j].vwf = vwf;
+		m->xxi[i].sub[j].vde = vde;
+		m->xxi[i].sub[j].vra = vra;
+		m->xxi[i].sub[j].vsw = vsw;
+		m->xxi[i].sub[j].sid = snum;
 	
 		m->xxs[snum].len = read32l(f);
 		m->xxs[snum].lps = read32l(f);
@@ -306,8 +306,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	
 		srate = read32l(f);
 		finetune = 0;
-		c2spd_to_note(srate, &m->xxih[i].sub[j].xpo, &m->xxih[i].sub[j].fin);
-		m->xxih[i].sub[j].fin += finetune;
+		c2spd_to_note(srate, &m->xxi[i].sub[j].xpo, &m->xxi[i].sub[j].fin);
+		m->xxi[i].sub[j].fin += finetune;
 	
 		read32l(f);			/* 0x00000000 */
 		read32l(f);			/* unknown */
@@ -319,8 +319,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			m->xxs[snum].lpe,
 			m->xxs[snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
 			m->xxs[snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxih[i].sub[j].vol,
-			m->xxih[i].sub[j].pan,
+			m->xxi[i].sub[j].vol,
+			m->xxi[i].sub[j].pan,
 			srate);
 	
 		if (m->xxs[snum].len > 1) {

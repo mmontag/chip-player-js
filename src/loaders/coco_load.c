@@ -200,32 +200,32 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->volbase = 0xff;
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		smp_ptr[i] = read32l(f);
 		m->xxs[i].len = read32l(f);
-		m->xxih[i].sub[0].vol = 0xff - read32l(f);
-		m->xxih[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].vol = 0xff - read32l(f);
+		m->xxi[i].sub[0].pan = 0x80;
 		m->xxs[i].lps = read32l(f);
                 m->xxs[i].lpe = m->xxs[i].lps + read32l(f);
 		if (m->xxs[i].lpe)
 			m->xxs[i].lpe -= 1;
 		m->xxs[i].flg = m->xxs[i].lps > 0 ?  XMP_SAMPLE_LOOP : 0;
-		fread(m->xxih[i].name, 1, 11, f);
+		fread(m->xxi[i].name, 1, 11, f);
 		for (j = 0; j < 11; j++) {
-			if (m->xxih[i].name[j] == 0x0d)
-				m->xxih[i].name[j] = 0;
+			if (m->xxi[i].name[j] == 0x0d)
+				m->xxi[i].name[j] = 0;
 		}
 		read8(f);	/* unused */
 
-		m->xxih[i].nsm = !!m->xxs[i].len;
-		m->xxih[i].sub[0].sid = i;
+		m->xxi[i].nsm = !!m->xxs[i].len;
+		m->xxi[i].sub[0].sid = i;
 
 		_D(_D_INFO "[%2X] %-10.10s  %05x %05x %05x %c V%02x",
-				i, m->xxih[i].name,
+				i, m->xxi[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxih[i].sub[0].vol);
+				m->xxi[i].sub[0].vol);
 	}
 
 	/* Sequence */
@@ -268,12 +268,12 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples : %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		if (m->xxih[i].nsm == 0)
+		if (m->xxi[i].nsm == 0)
 			continue;
 
 		fseek(f, start + smp_ptr[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-				XMP_SMP_VIDC, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+				XMP_SMP_VIDC, &m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	for (i = 0; i < m->xxh->chn; i++)

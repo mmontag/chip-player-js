@@ -251,12 +251,12 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		struct spectrum_sample ss;
 
 		memset(&ss, 0, sizeof (struct spectrum_sample));
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-		m->xxih[i].nsm = 1;
-		m->xxih[i].sub[0].vol = 0x40;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].xpo = -1;
-		m->xxih[i].sub[0].sid = i;
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].nsm = 1;
+		m->xxi[i].sub[0].vol = 0x40;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].xpo = -1;
+		m->xxi[i].sub[0].sid = i;
 
 		fread(buf, 1, 99, f);
 

@@ -84,9 +84,9 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read instrument names */
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		fread(buffer, 8, 1, f);
-		copy_adjust(m->xxih[i].name, buffer, 8);
+		copy_adjust(m->xxi[i].name, buffer, 8);
 	}
 
 	read16b(f);	/* ? */
@@ -141,8 +141,8 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Read instrument data */
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].sub[0].vol = read8(f) / 2;
-		m->xxih[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].vol = read8(f) / 2;
+		m->xxi[i].sub[0].pan = 0x80;
 		unk1[i] = read8(f);
 		unk2[i] = read8(f);
 		unk3[i] = read8(f);
@@ -160,20 +160,20 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	read32b(f);
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].nsm = !!(m->xxs[i].len);
+		m->xxi[i].nsm = !!(m->xxs[i].len);
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = 0;
 		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-		m->xxih[i].sub[0].fin = 0;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].sid = i;
+		m->xxi[i].sub[0].fin = 0;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].sid = i;
 
 		_D(_D_INFO "[%2X] %-8.8s  %04x %04x %04x %c "
 						"V%02x  %02x %02x %02x\n",
-				i, m->xxih[i].name,
+				i, m->xxi[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxih[i].sub[0].vol, unk1[i], unk2[i], unk3[i]);
+				m->xxi[i].sub[0].vol, unk1[i], unk2[i], unk3[i]);
 	}
 
 	/* Read samples */
@@ -182,8 +182,8 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < m->xxh->ins; i++) {
 		fseek(f, start + base_offs + soffs[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-				XMP_SMP_UNS, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+				XMP_SMP_UNS, &m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

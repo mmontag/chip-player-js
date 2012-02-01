@@ -420,7 +420,7 @@ next_pattern:
     for (i = 0; i < m->xxh->ins; i++) {
 	unsigned char b[4];
 
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	fread (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
@@ -454,8 +454,8 @@ next_pattern:
 	fread(&li.rsvd, 11, 1, f);
 	fread(&li.filename, 25, 1, f);
 
-	m->xxih[i].nsm = !!(li.length);
-	m->xxih[i].vol = 0x40;
+	m->xxi[i].nsm = !!(li.length);
+	m->xxi[i].vol = 0x40;
 	m->xxs[i].len = li.length;
 	m->xxs[i].lps = li.loopstart;
 	m->xxs[i].lpe = li.loopend;
@@ -474,27 +474,27 @@ next_pattern:
 	/* if (li.gvl == 0) */
 	    li.gvl = 0x40;
 
-	m->xxih[i].sub[0].vol = li.vol;
-	m->xxih[i].sub[0].gvl = li.gvl;
-	m->xxih[i].sub[0].pan = li.pan;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].vol = li.vol;
+	m->xxi[i].sub[0].gvl = li.gvl;
+	m->xxi[i].sub[0].pan = li.pan;
+	m->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxih[i].name, li.name, 31);
+	copy_adjust(m->xxi[i].name, li.name, 31);
 
 	_D(_D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
-		i, m->xxih[i].name, m->xxs[i].len,
+		i, m->xxi[i].name, m->xxs[i].len,
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].gvl,
+		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 
-	c2spd_to_note (li.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+	c2spd_to_note (li.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
 	fseek(f, li.hdrsz - 0x90, SEEK_CUR);
 
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0, &m->xxs[i], NULL);
     }
 
     return 0;

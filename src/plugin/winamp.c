@@ -646,7 +646,7 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		ListView_InsertColumn( lvm, column.iSubItem, &column);
 
 		for (i = 0; i < mi.ins; i++) {
-			if (p->m.xxih[i].name[0] != 0) { 
+			if (p->m.xxi[i].name[0] != 0) { 
 				empty_names = 0; break; 
 			}
 		}
@@ -661,10 +661,10 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				snprintf(tmpbuf, 256, "%d", i + 1);
 				SetItem(&item, i, 0, tmpbuf);
 				ListView_InsertItem(lvm, &item);
-				snprintf(tmpbuf, 256, "%s", p->m.xxih[i].name);
+				snprintf(tmpbuf, 256, "%s", p->m.xxi[i].name);
 				SetItem(&item, i, 1, tmpbuf);
 				ListView_SetItem(lvm, &item);
-				snprintf(tmpbuf, 256, "%d", p->m.xxih[i].nsm);
+				snprintf(tmpbuf, 256, "%d", p->m.xxi[i].nsm);
 				SetItem(&item, i, 2, tmpbuf);
 				ListView_SetItem(lvm, &item);
 			}

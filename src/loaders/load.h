@@ -47,7 +47,7 @@ extern int arch_vol_table[];
 } while (0)
 
 #define INSTRUMENT_INIT() do { \
-    m->xxih = calloc(sizeof (struct xxm_instrument), m->xxh->ins); \
+    m->xxi = calloc(sizeof (struct xxm_instrument), m->xxh->ins); \
     if (m->xxh->smp) { m->xxs = calloc (sizeof (struct xxm_sample), m->xxh->smp); }\
 } while (0)
 
@@ -80,7 +80,7 @@ extern int arch_vol_table[];
     if (m->xxh->smp) free(m->xxs); \
     free(m->xxi); \
     free(m->xxim); \
-    free(m->xxih); \
+    free(m->xxi); \
 } while (0)
 
 #define PATTERN_DEALLOC_ALL(x) do { \

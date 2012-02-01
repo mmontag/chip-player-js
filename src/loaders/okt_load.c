@@ -124,32 +124,32 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
     INSTRUMENT_INIT();
 
     for (j = i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
-	fread(m->xxih[i].name, 1, 20, f);
-	str_adj((char *)m->xxih[i].name);
+	fread(m->xxi[i].name, 1, 20, f);
+	str_adj((char *)m->xxi[i].name);
 
 	/* Sample size is always rounded down */
 	m->xxs[i].len = read32b(f) & ~1;
 	m->xxs[i].lps = read16b(f);
 	looplen = read16b(f);
 	m->xxs[i].lpe = m->xxs[i].lps + looplen;
-	m->xxih[i].sub[0].vol = read16b(f);
+	m->xxi[i].sub[0].vol = read16b(f);
 	mode[i] = read16b(f);
 
-	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxi[i].nsm = !!(m->xxs[i].len);
 	m->xxs[i].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = j;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = j;
 
 	idx[j] = i;
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, mode[i]);
+		m->xxi[i].sub[0].vol, mode[i]);
 
-	if (m->xxih[i].nsm)
+	if (m->xxi[i].nsm)
 	    j++;
     }
 }

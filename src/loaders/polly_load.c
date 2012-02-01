@@ -168,22 +168,22 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < 15; i++) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		m->xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
 					256 * buf[ORD_OFS + 145 + i];
-		m->xxih[i].sub[0].fin = 0;
-		m->xxih[i].sub[0].vol = 0x40;
+		m->xxi[i].sub[0].fin = 0;
+		m->xxi[i].sub[0].vol = 0x40;
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = 0;
 		m->xxs[i].flg = 0;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].sid = i;
-		m->xxih[i].nsm = !!(m->xxs[i].len);
-		m->xxih[i].rls = 0xfff;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].sid = i;
+		m->xxi[i].nsm = !!(m->xxs[i].len);
+		m->xxi[i].rls = 0xfff;
 
                 _D(_D_INFO "[%2X] %04x %04x %04x %c V%02x",
                        		i, m->xxs[i].len, m->xxs[i].lps,
-                        	m->xxs[i].lpe, ' ', m->xxih[i].sub[0].vol);
+                        	m->xxs[i].lpe, ' ', m->xxi[i].sub[0].vol);
 	}
 
 	/* Convert samples from 6 to 8 bits */
@@ -196,9 +196,9 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		if (m->xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(ctx, NULL, m->xxih[i].sub[0].sid,
+		xmp_drv_loadpatch(ctx, NULL, m->xxi[i].sub[0].sid,
 				XMP_SMP_NOLOAD | XMP_SMP_UNS,
-				&m->xxs[m->xxih[i].sub[0].sid],
+				&m->xxs[m->xxi[i].sub[0].sid],
 				(char*)buf + ORD_OFS + 256 +
 					256 * (buf[ORD_OFS + 129 + i] - 0x10));
 	}

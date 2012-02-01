@@ -89,16 +89,16 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		fread(buffer, 1, 22, f);
 		if (buffer[0]) {
 			buffer[buffer[0] + 1] = 0;
-			copy_adjust(m->xxih[i].name, buffer + 1, 22);
+			copy_adjust(m->xxi[i].name, buffer + 1, 22);
 		}
 		read16l(f);		/* skip 2 reserved bytes */
-		m->xxih[i].sub[0].vol = read8(f) >> 2;
-		m->xxih[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].vol = read8(f) >> 2;
+		m->xxi[i].sub[0].pan = 0x80;
 		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
 	}
 
@@ -188,13 +188,13 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->ins; i++) {
 		char filename[1024];
 
-		if (!m->xxih[i].name[0])
+		if (!m->xxi[i].name[0])
 			continue;
 
 		strncpy(filename, m->dirname, NAME_SIZE);
 		if (*filename)
 			strncat(filename, "/", NAME_SIZE);
-		strncat(filename, (char *)m->xxih[i].name, NAME_SIZE);
+		strncat(filename, (char *)m->xxi[i].name, NAME_SIZE);
 
 		if ((s = fopen(filename, "rb")) != NULL) {
 			asif_load(ctx, s, i);
@@ -205,15 +205,15 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->xxs[i].lps = 0;
 		m->xxs[i].lpe = 0;
 		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-		m->xxih[i].sub[0].fin = 0;
-		m->xxih[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].fin = 0;
+		m->xxi[i].sub[0].pan = 0x80;
 #endif
 
 		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
-				m->xxih[i].name,
+				m->xxi[i].name,
 				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxih[i].sub[0].vol);
+				m->xxi[i].sub[0].vol);
 	}
 
 	return 0;

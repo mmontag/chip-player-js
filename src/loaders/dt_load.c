@@ -108,21 +108,21 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	for (i = 0; i < m->xxh->ins; i++) {
 		int fine, replen, flag;
 
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		read32b(f);		/* reserved */
 		m->xxs[i].len = read32b(f);
-		m->xxih[i].nsm = !!m->xxs[i].len;
+		m->xxi[i].nsm = !!m->xxs[i].len;
 		fine = read8s(f);	/* finetune */
-		m->xxih[i].sub[0].vol = read8(f);
-		m->xxih[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].vol = read8(f);
+		m->xxi[i].sub[0].pan = 0x80;
 		m->xxs[i].lps = read32b(f);
 		replen = read32b(f);
 		m->xxs[i].lpe = m->xxs[i].lps + replen - 1;
 		m->xxs[i].flg = replen > 2 ?  XMP_SAMPLE_LOOP : 0;
 
 		fread(name, 22, 1, f);
-		copy_adjust(m->xxih[i].name, name, 22);
+		copy_adjust(m->xxi[i].name, name, 22);
 
 		flag = read16b(f);	/* bit 0-7:resol 8:stereo */
 		if ((flag & 0xff) > 8) {
@@ -134,15 +134,15 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 		read32b(f);		/* midi note (0x00300000) */
 		c2spd = read32b(f);	/* frequency */
-		c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+		c2spd_to_note(c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
 
 		/* It's strange that we have both c2spd and finetune */
-		m->xxih[i].sub[0].fin += fine;
+		m->xxi[i].sub[0].fin += fine;
 
-		m->xxih[i].sub[0].sid = i;
+		m->xxi[i].sub[0].sid = i;
 
 		_D(_D_INFO "[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
-			i, m->xxih[i].name,
+			i, m->xxi[i].name,
 			m->xxs[i].len,
 			m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			m->xxs[i].lps,
@@ -150,7 +150,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			flag & 0x100 ? 'S' : ' ',
 			flag & 0xff,
-			m->xxih[i].sub[0].vol,
+			m->xxi[i].sub[0].vol,
 			fine,
 			c2spd);
 	}
@@ -217,8 +217,8 @@ static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 	}
 
 	if (size > 2) {
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-			XMP_SMP_BIGEND, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+			XMP_SMP_BIGEND, &m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	i++;

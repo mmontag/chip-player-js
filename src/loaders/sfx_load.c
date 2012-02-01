@@ -136,22 +136,22 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxih[i].nsm = !!(m->xxs[i].len = ins_size[i]);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].nsm = !!(m->xxs[i].len = ins_size[i]);
 	m->xxs[i].lps = ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * ins[i].loop_length;
 	m->xxs[i].flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxih[i].sub[0].vol = ins[i].volume;
-	m->xxih[i].sub[0].fin = (int8)(ins[i].finetune << 4); 
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].vol = ins[i].volume;
+	m->xxi[i].sub[0].fin = (int8)(ins[i].finetune << 4); 
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxih[i].name, ins[i].name, 22);
+	copy_adjust(m->xxi[i].name, ins[i].name, 22);
 
 	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c  %02x %+d",
-		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxih[i].sub[0].vol,
-		m->xxih[i].sub[0].fin >> 4);
+		i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i].sub[0].vol,
+		m->xxi[i].sub[0].fin >> 4);
     }
 
     PATTERN_INIT();

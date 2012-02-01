@@ -508,8 +508,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    i2h.mbnk = read16l(f);
 	    fread(&i2h.keys, 240, 1, f);
 
-	    copy_adjust(m->xxih[i].name, i2h.name, 24);
-	    m->xxih[i].rls = i2h.fadeout << 6;
+	    copy_adjust(m->xxi[i].name, i2h.name, 24);
+	    m->xxi[i].rls = i2h.fadeout << 6;
 
 	    /* Envelopes */
 
@@ -525,17 +525,17 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
             	env.node[j].x = read16l(f); \
             } \
             env.unused = read8(f); \
-	    m->xxih[i].X##ei.flg = env.flg & IT_ENV_ON ? XXM_ENV_ON : 0; \
-	    m->xxih[i].X##ei.flg |= env.flg & IT_ENV_LOOP ? XXM_ENV_LOOP : 0; \
-	    m->xxih[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0; \
-	    m->xxih[i].X##ei.npt = env.num; \
-	    m->xxih[i].X##ei.sus = env.slb; \
-	    m->xxih[i].X##ei.sue = env.sle; \
-	    m->xxih[i].X##ei.lps = env.lpb; \
-	    m->xxih[i].X##ei.lpe = env.lpe; \
+	    m->xxi[i].X##ei.flg = env.flg & IT_ENV_ON ? XXM_ENV_ON : 0; \
+	    m->xxi[i].X##ei.flg |= env.flg & IT_ENV_LOOP ? XXM_ENV_LOOP : 0; \
+	    m->xxi[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0; \
+	    m->xxi[i].X##ei.npt = env.num; \
+	    m->xxi[i].X##ei.sus = env.slb; \
+	    m->xxi[i].X##ei.sue = env.sle; \
+	    m->xxi[i].X##ei.lps = env.lpb; \
+	    m->xxi[i].X##ei.lpe = env.lpe; \
 	    for (j = 0; j < env.num; j++) { \
-		m->xxih[i].X##ei.data[j * 2] = env.node[j].x; \
-		m->xxih[i].X##ei.data[j * 2 + 1] = env.node[j].y; \
+		m->xxi[i].X##ei.data[j * 2] = env.node[j].x; \
+		m->xxi[i].X##ei.data[j * 2 + 1] = env.node[j].y; \
 	    } \
 }
 
@@ -543,20 +543,20 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    BUILD_ENV(p);
 	    BUILD_ENV(f);
 	    
-	    if (m->xxih[i].pei.flg & XXM_ENV_ON)
-		for (j = 0; j < m->xxih[i].pei.npt; j++)
-		    m->xxih[i].pei.data[j * 2 + 1] += 32;
+	    if (m->xxi[i].pei.flg & XXM_ENV_ON)
+		for (j = 0; j < m->xxi[i].pei.npt; j++)
+		    m->xxi[i].pei.data[j * 2 + 1] += 32;
 
 	    if (env.flg & IT_ENV_FILTER) {
-		m->xxih[i].fei.flg |= XXM_ENV_FLT;
+		m->xxi[i].fei.flg |= XXM_ENV_FLT;
 		for (j = 0; j < env.num; j++) {
-		    m->xxih[i].fei.data[j * 2 + 1] += 32;
-		    m->xxih[i].fei.data[j * 2 + 1] *= 4;
+		    m->xxi[i].fei.data[j * 2 + 1] += 32;
+		    m->xxi[i].fei.data[j * 2 + 1] *= 4;
 		}
 	    } else {
 		/* Pitch envelope is *50 to get fine interpolation */
 		for (j = 0; j < env.num; j++)
-		    m->xxih[i].fei.data[j * 2 + 1] *= 50;
+		    m->xxi[i].fei.data[j * 2 + 1] *= 50;
 	    }
 
 	    /* See how many different instruments we have */
@@ -566,8 +566,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    for (k = j = 0; j < XXM_KEY_MAX; j++) {
 		c = i2h.keys[25 + j * 2] - 1;
 		if (c < 0) {
-		    m->xxih[i].map[j].ins = 0xff;	/* No sample */
-		    m->xxih[i].map[j].xpo = 0;
+		    m->xxi[i].map[j].ins = 0xff;	/* No sample */
+		    m->xxi[i].map[j].xpo = 0;
 		    continue;
 		}
 		if (inst_map[c] == -1) {
@@ -575,23 +575,23 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    inst_rmap[k] = c;
 		    k++;
 		}
-		m->xxih[i].map[j].ins = inst_map[c];
-		m->xxih[i].map[j].xpo = i2h.keys[24 + j * 2] - (j + 12);
+		m->xxi[i].map[j].ins = inst_map[c];
+		m->xxi[i].map[j].xpo = i2h.keys[24 + j * 2] - (j + 12);
 	    }
 
-	    m->xxih[i].nsm = k;
-	    m->xxih[i].vol = i2h.gbv >> 1;
+	    m->xxi[i].nsm = k;
+	    m->xxi[i].vol = i2h.gbv >> 1;
 
 	    if (k) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), k);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), k);
 		for (j = 0; j < k; j++) {
-		    m->xxih[i].sub[j].sid = inst_rmap[j];
-		    m->xxih[i].sub[j].nna = i2h.nna;
-		    m->xxih[i].sub[j].dct = i2h.dct;
-		    m->xxih[i].sub[j].dca = dca2nna[i2h.dca & 0x03];
-		    m->xxih[i].sub[j].pan = i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4;
-		    m->xxih[i].sub[j].ifc = i2h.ifc;
-		    m->xxih[i].sub[j].ifr = i2h.ifr;
+		    m->xxi[i].sub[j].sid = inst_rmap[j];
+		    m->xxi[i].sub[j].nna = i2h.nna;
+		    m->xxi[i].sub[j].dct = i2h.dct;
+		    m->xxi[i].sub[j].dca = dca2nna[i2h.dca & 0x03];
+		    m->xxi[i].sub[j].pan = i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4;
+		    m->xxi[i].sub[j].ifc = i2h.ifc;
+		    m->xxi[i].sub[j].ifr = i2h.ifr;
 	        }
 	    }
 
@@ -606,10 +606,10 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		i2h.gbv,
 		i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4,
 		i2h.rv,
-		m->xxih[i].aei.flg & XXM_ENV_ON ? 'V' : '-',
-		m->xxih[i].pei.flg & XXM_ENV_ON ? 'P' : '-',
+		m->xxi[i].aei.flg & XXM_ENV_ON ? 'V' : '-',
+		m->xxi[i].pei.flg & XXM_ENV_ON ? 'P' : '-',
 		env.flg & 0x01 ? env.flg & 0x80 ? 'F' : 'P' : '-',
-		m->xxih[i].nsm,
+		m->xxi[i].nsm,
 		i2h.ifc,
 		i2h.ifr
 	    );
@@ -645,22 +645,22 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fread(&i1h.epoint, 200, 1, f);
 	    fread(&i1h.enode, 50, 1, f);
 
-	    copy_adjust(m->xxih[i].name, i1h.name, 24);
+	    copy_adjust(m->xxi[i].name, i1h.name, 24);
 
-	    m->xxih[i].rls = i1h.fadeout << 7;
+	    m->xxi[i].rls = i1h.fadeout << 7;
 
-	    m->xxih[i].aei.flg = i1h.flags & IT_ENV_ON ? XXM_ENV_ON : 0;
-	    m->xxih[i].aei.flg |= i1h.flags & IT_ENV_LOOP ? XXM_ENV_LOOP : 0;
-	    m->xxih[i].aei.flg |= i1h.flags & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0;
-	    m->xxih[i].aei.lps = i1h.vls;
-	    m->xxih[i].aei.lpe = i1h.vle;
-	    m->xxih[i].aei.sus = i1h.sls;
-	    m->xxih[i].aei.sue = i1h.sle;
+	    m->xxi[i].aei.flg = i1h.flags & IT_ENV_ON ? XXM_ENV_ON : 0;
+	    m->xxi[i].aei.flg |= i1h.flags & IT_ENV_LOOP ? XXM_ENV_LOOP : 0;
+	    m->xxi[i].aei.flg |= i1h.flags & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0;
+	    m->xxi[i].aei.lps = i1h.vls;
+	    m->xxi[i].aei.lpe = i1h.vle;
+	    m->xxi[i].aei.sus = i1h.sls;
+	    m->xxi[i].aei.sue = i1h.sle;
 
 	    for (k = 0; i1h.enode[k * 2] != 0xff; k++);
-	    for (m->xxih[i].aei.npt = k; k--; ) {
-		m->xxih[i].aei.data[k * 2] = i1h.enode[k * 2];
-		m->xxih[i].aei.data[k * 2 + 1] = i1h.enode[k * 2 + 1];
+	    for (m->xxi[i].aei.npt = k; k--; ) {
+		m->xxi[i].aei.data[k * 2] = i1h.enode[k * 2];
+		m->xxi[i].aei.data[k * 2 + 1] = i1h.enode[k * 2 + 1];
 	    }
 	    
 	    /* See how many different instruments we have */
@@ -670,8 +670,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    for (k = j = 0; j < XXM_KEY_MAX; j++) {
 		c = i1h.keys[25 + j * 2] - 1;
 		if (c < 0) {
-		    m->xxih[i].map[j].ins = 0xff;	/* No sample */
-		    m->xxih[i].map[j].xpo = 0;
+		    m->xxi[i].map[j].ins = 0xff;	/* No sample */
+		    m->xxi[i].map[j].xpo = 0;
 		    continue;
 		}
 		if (inst_map[c] == -1) {
@@ -679,21 +679,21 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		    inst_rmap[k] = c;
 		    k++;
 		}
-		m->xxih[i].map[j].ins = inst_map[c];
-		m->xxih[i].map[j].xpo = i1h.keys[24 + j * 2] - (j + 12);
+		m->xxi[i].map[j].ins = inst_map[c];
+		m->xxi[i].map[j].xpo = i1h.keys[24 + j * 2] - (j + 12);
 	    }
 
-	    m->xxih[i].nsm = k;
-	    m->xxih[i].vol = i2h.gbv >> 1;
+	    m->xxi[i].nsm = k;
+	    m->xxi[i].vol = i2h.gbv >> 1;
 
 	    if (k) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), k);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), k);
 		for (j = 0; j < k; j++) {
-		    m->xxih[i].sub[j].sid = inst_rmap[j];
-		    m->xxih[i].sub[j].nna = i1h.nna;
-		    m->xxih[i].sub[j].dct = i1h.dnc ? XXM_DCT_NOTE : XXM_DCT_OFF;
-		    m->xxih[i].sub[j].dca = XXM_DCA_CUT;
-		    m->xxih[i].sub[j].pan = 0x80;
+		    m->xxi[i].sub[j].sid = inst_rmap[j];
+		    m->xxi[i].sub[j].nna = i1h.nna;
+		    m->xxi[i].sub[j].dct = i1h.dnc ? XXM_DCT_NOTE : XXM_DCT_OFF;
+		    m->xxi[i].sub[j].dca = XXM_DCA_CUT;
+		    m->xxi[i].sub[j].pan = 0x80;
 	        }
 	    }
 
@@ -702,11 +702,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		i1h.nna < 4 ? nna[i1h.nna] : "none",
 		i1h.dnc ? "on" : "off",
 		i1h.fadeout,
-		m->xxih[i].aei.npt,
-		m->xxih[i].aei.flg & XXM_ENV_ON ? 'V' : '-',
-		m->xxih[i].aei.flg & XXM_ENV_LOOP ? 'L' : '-',
-		m->xxih[i].aei.flg & XXM_ENV_SUS ? 'S' : '-',
-		m->xxih[i].nsm
+		m->xxi[i].aei.npt,
+		m->xxi[i].aei.flg & XXM_ENV_ON ? 'V' : '-',
+		m->xxi[i].aei.flg & XXM_ENV_LOOP ? 'L' : '-',
+		m->xxi[i].aei.flg & XXM_ENV_SUS ? 'S' : '-',
+		m->xxi[i].nsm
 	    );
 	}
     }
@@ -715,7 +715,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     for (i = 0; i < m->xxh->smp; i++) {
 	if (~ifh.flags & IT_USE_INST)
-	    m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	    m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	fseek(f, start + pp_smp[i], SEEK_SET);
 
 	ish.magic = read32b(f);
@@ -761,11 +761,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	if (~ifh.flags & IT_USE_INST) {
 	    /* Create an instrument for each sample */
-	    m->xxih[i].sub[0].vol = ish.vol;
-	    m->xxih[i].sub[0].pan = 0x80;
-	    m->xxih[i].sub[0].sid = i;
-	    m->xxih[i].nsm = !!(m->xxs[i].len);
-	    copy_adjust(m->xxih[i].name, ish.name, 24);
+	    m->xxi[i].sub[0].vol = ish.vol;
+	    m->xxi[i].sub[0].pan = 0x80;
+	    m->xxi[i].sub[0].sid = i;
+	    m->xxi[i].nsm = !!(m->xxs[i].len);
+	    copy_adjust(m->xxi[i].name, ish.name, 24);
 	} else {
 	    copy_adjust(m->xxs[i].name, ish.name, 24);
 	}
@@ -775,7 +775,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 		    "%02x%02x %02x%02x %5d ",
 		    i, ifh.flags & IT_USE_INST ?
-				m->xxih[i].name : m->xxs[i].name,
+				m->xxi[i].name : m->xxs[i].name,
 		    m->xxs[i].len,
 		    ish.flags & IT_SMP_16BIT ? '+' : ' ',
 		    MAX(m->xxs[i].lps), MAX(m->xxs[i].lpe),
@@ -791,11 +791,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 	
 	for (j = 0; j < m->xxh->ins; j++) {
-	    for (k = 0; k < m->xxih[j].nsm; k++) {
-		if (m->xxih[j].sub[k].sid == i) {
-		    m->xxih[j].sub[k].vol = ish.vol;
-		    m->xxih[j].sub[k].gvl = ish.gvl;
-		    c2spd_to_note(ish.c5spd, &m->xxih[j].sub[k].xpo, &m->xxih[j].sub[k].fin);
+	    for (k = 0; k < m->xxi[j].nsm; k++) {
+		if (m->xxi[j].sub[k].sid == i) {
+		    m->xxi[j].sub[k].vol = ish.vol;
+		    m->xxi[j].sub[k].gvl = ish.gvl;
+		    c2spd_to_note(ish.c5spd, &m->xxi[j].sub[k].xpo, &m->xxi[j].sub[k].fin);
 		}
 	    }
 	}

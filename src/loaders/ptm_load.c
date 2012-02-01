@@ -110,7 +110,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	pih.type = read8(f);			/* Sample type */
 	fread(&pih.dosname, 12, 1, f);		/* DOS file name */
@@ -134,7 +134,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	smp_ofs[i] = pih.smpofs;
 	m->xxs[i].len = pih.length;
-	m->xxih[i].nsm = pih.length > 0 ? 1 : 0;
+	m->xxi[i].nsm = pih.length > 0 ? 1 : 0;
 	m->xxs[i].lps = pih.loopbeg;
 	m->xxs[i].lpe = pih.loopend;
 	if (m->xxs[i].lpe)
@@ -149,22 +149,22 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[i].lpe >>= 1;
 	}
 
-	m->xxih[i].sub[0].vol = pih.vol;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].vol = pih.vol;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
 	pih.magic = 0;
 
-	copy_adjust(m->xxih[i].name, pih.name, 28);
+	copy_adjust(m->xxi[i].name, pih.name, 28);
 
 	_D(_D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
-		i, m->xxih[i].name, m->xxs[i].len,
+		i, m->xxi[i].name, m->xxs[i].len,
 		pih.type & 0x10 ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, pih.c4spd);
+		m->xxi[i].sub[0].vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */
-	c2spd_to_note (pih.c4spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+	c2spd_to_note (pih.c4spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
     }
 
     PATTERN_INIT();
@@ -256,9 +256,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	fseek(f, start + smp_ofs[m->xxih[i].sub[0].sid], SEEK_SET);
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-			XMP_SMP_8BDIFF, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+	fseek(f, start + smp_ofs[m->xxi[i].sub[0].sid], SEEK_SET);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i].sub[0].sid], NULL);
     }
 
     m->vol_table = ptm_vol;

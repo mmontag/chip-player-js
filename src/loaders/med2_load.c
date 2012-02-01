@@ -71,17 +71,17 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(buf, 1, 40, f);	/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		fread(buf, 1, 40, f);
-		copy_adjust(m->xxih[i].name, buf, 32);
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		copy_adjust(m->xxi[i].name, buf, 32);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	}
 
 	/* read instrument volumes */
 	read8(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		m->xxih[i].sub[0].vol = read8(f);
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].fin = 0;
-		m->xxih[i].sub[0].sid = i;
+		m->xxi[i].sub[0].vol = read8(f);
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].fin = 0;
+		m->xxi[i].sub[0].sid = i;
 	}
 
 	/* read instrument loops */
@@ -177,7 +177,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		get_instrument_path(ctx, "XMP_MED2_INSTRUMENT_PATH",
 				ins_path, 256);
 		found = check_filename_case(ins_path,
-				(char *)m->xxih[i].name, name, 256);
+				(char *)m->xxi[i].name, name, 256);
 
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
@@ -187,20 +187,20 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 			}
 		}
 
-		m->xxih[i].nsm = !!(m->xxs[i].len);
+		m->xxi[i].nsm = !!(m->xxs[i].len);
 
-		if (!strlen((char *)m->xxih[i].name) && !m->xxs[i].len)
+		if (!strlen((char *)m->xxi[i].name) && !m->xxs[i].len)
 			continue;
 
 		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
-			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxih[i].sub[0].vol);
+			m->xxi[i].sub[0].vol);
 
 		if (found) {
-			xmp_drv_loadpatch(ctx, s, m->xxih[i].sub[0].sid,
-				0, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+			xmp_drv_loadpatch(ctx, s, m->xxi[i].sub[0].sid,
+				0, &m->xxs[m->xxi[i].sub[0].sid], NULL);
 			fclose(s);
 		}
 	}

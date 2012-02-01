@@ -170,24 +170,24 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Convert instruments */
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxih[i].nsm = !!(m->xxs[i].len = ffh.fih[i].length);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].nsm = !!(m->xxs[i].len = ffh.fih[i].length);
 	m->xxs[i].lps = ffh.fih[i].loop_start;
 	if (m->xxs[i].lps == -1)
 	    m->xxs[i].lps = 0;
 	m->xxs[i].lpe = ffh.fih[i].length;
 	m->xxs[i].flg = ffh.fih[i].loop_start != -1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxih[i].sub[0].vol = ffh.fih[i].volume;
-	m->xxih[i].sub[0].pan = ffh.fih[i].pan;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].vol = ffh.fih[i].volume;
+	m->xxi[i].sub[0].pan = ffh.fih[i].pan;
+	m->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxih[i].name, ffh.fih[i].name, 19);
+	copy_adjust(m->xxi[i].name, ffh.fih[i].name, 19);
 
 	_D(_D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x", i,
-		m->xxih[i].name,
+		m->xxi[i].name,
 		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].pan);
+		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].pan);
     }
 
     PATTERN_INIT();
@@ -289,7 +289,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (m->xxs[i].len <= 2)
 	    continue;
 
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
 							&m->xxs[i], NULL);
 
     }

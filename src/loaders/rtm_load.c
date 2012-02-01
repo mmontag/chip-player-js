@@ -213,11 +213,11 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			return -1;
 		}
 
-		copy_adjust(m->xxih[i].name, (uint8 *)&oh.name, 32);
+		copy_adjust(m->xxi[i].name, (uint8 *)&oh.name, 32);
 
 		if (oh.headerSize == 0) {
 			_D(_D_INFO "[%2X] %-26.26s %2d ", i,
-					m->xxih[i].name, m->xxih[i].nsm);
+					m->xxi[i].name, m->xxi[i].nsm);
 			ri.nsample = 0;
 			continue;
 		}
@@ -265,48 +265,48 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			ri.midiUseVelocity = read8(f);
 		}
 
-		m->xxih[i].nsm = ri.nsample;
+		m->xxi[i].nsm = ri.nsample;
 
-		_D(_D_INFO "[%2X] %-26.26s %2d", i, m->xxih[i].name,
-							m->xxih[i].nsm);
+		_D(_D_INFO "[%2X] %-26.26s %2d", i, m->xxi[i].name,
+							m->xxi[i].nsm);
 
-		if (m->xxih[i].nsm > 16)
-			m->xxih[i].nsm = 16;
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), m->xxih[i].nsm);
+		if (m->xxi[i].nsm > 16)
+			m->xxi[i].nsm = 16;
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), m->xxi[i].nsm);
 
 		for (j = 0; j < 108; j++)
-			m->xxih[i].map[j].ins = ri.table[j + 12];
+			m->xxi[i].map[j].ins = ri.table[j + 12];
 
 		/* Envelope */
-		m->xxih[i].rls = ri.volfade;
-		m->xxih[i].aei.npt = ri.volumeEnv.npoint;
-		m->xxih[i].aei.sus = ri.volumeEnv.sustain;
-		m->xxih[i].aei.lps = ri.volumeEnv.loopstart;
-		m->xxih[i].aei.lpe = ri.volumeEnv.loopend;
-		m->xxih[i].aei.flg = ri.volumeEnv.flags;
-		m->xxih[i].pei.npt = ri.panningEnv.npoint;
-		m->xxih[i].pei.sus = ri.panningEnv.sustain;
-		m->xxih[i].pei.lps = ri.panningEnv.loopstart;
-		m->xxih[i].pei.lpe = ri.panningEnv.loopend;
-		m->xxih[i].pei.flg = ri.panningEnv.flags;
+		m->xxi[i].rls = ri.volfade;
+		m->xxi[i].aei.npt = ri.volumeEnv.npoint;
+		m->xxi[i].aei.sus = ri.volumeEnv.sustain;
+		m->xxi[i].aei.lps = ri.volumeEnv.loopstart;
+		m->xxi[i].aei.lpe = ri.volumeEnv.loopend;
+		m->xxi[i].aei.flg = ri.volumeEnv.flags;
+		m->xxi[i].pei.npt = ri.panningEnv.npoint;
+		m->xxi[i].pei.sus = ri.panningEnv.sustain;
+		m->xxi[i].pei.lps = ri.panningEnv.loopstart;
+		m->xxi[i].pei.lpe = ri.panningEnv.loopend;
+		m->xxi[i].pei.flg = ri.panningEnv.flags;
 
-		if (m->xxih[i].aei.npt <= 0)
-			m->xxih[i].aei.flg &= ~XXM_ENV_ON;
+		if (m->xxi[i].aei.npt <= 0)
+			m->xxi[i].aei.flg &= ~XXM_ENV_ON;
 
-		if (m->xxih[i].pei.npt <= 0)
-			m->xxih[i].pei.flg &= ~XXM_ENV_ON;
+		if (m->xxi[i].pei.npt <= 0)
+			m->xxi[i].pei.flg &= ~XXM_ENV_ON;
 
-		for (j = 0; j < m->xxih[i].aei.npt; j++) {
-			m->xxih[i].aei.data[j * 2 + 0] = ri.volumeEnv.point[j].x;
-			m->xxih[i].aei.data[j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
+		for (j = 0; j < m->xxi[i].aei.npt; j++) {
+			m->xxi[i].aei.data[j * 2 + 0] = ri.volumeEnv.point[j].x;
+			m->xxi[i].aei.data[j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
 		}
-		for (j = 0; j < m->xxih[i].pei.npt; j++) {
-			m->xxih[i].pei.data[j * 2 + 0] = ri.panningEnv.point[j].x;
-			m->xxih[i].pei.data[j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
+		for (j = 0; j < m->xxi[i].pei.npt; j++) {
+			m->xxi[i].pei.data[j * 2 + 0] = ri.panningEnv.point[j].x;
+			m->xxi[i].pei.data[j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
 		}
 
 		/* For each sample */
-		for (j = 0; j < m->xxih[i].nsm; j++, smpnum++) {
+		for (j = 0; j < m->xxi[i].nsm; j++, smpnum++) {
 			if (read_object_header(f, &oh, "RTSM") < 0) {
 				_D(_D_CRIT "Error reading sample %d", j);
 				return -1;
@@ -324,16 +324,16 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			rs.panning = read8(f);
 
 			c2spd_to_note(rs.basefreq,
-					&m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
-			m->xxih[i].sub[j].xpo += 48 - rs.basenote;
+					&m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+			m->xxi[i].sub[j].xpo += 48 - rs.basenote;
 
-			m->xxih[i].sub[j].vol = rs.defaultvolume * rs.basevolume / 0x40;
-			m->xxih[i].sub[j].pan = 0x80 + rs.panning * 2;
-			m->xxih[i].sub[j].vwf = ri.vibflg;
-			m->xxih[i].sub[j].vde = ri.vibdepth;
-			m->xxih[i].sub[j].vra = ri.vibrate;
-			m->xxih[i].sub[j].vsw = ri.vibsweep;
-			m->xxih[i].sub[j].sid = smpnum;
+			m->xxi[i].sub[j].vol = rs.defaultvolume * rs.basevolume / 0x40;
+			m->xxi[i].sub[j].pan = 0x80 + rs.panning * 2;
+			m->xxi[i].sub[j].vwf = ri.vibflg;
+			m->xxi[i].sub[j].vde = ri.vibdepth;
+			m->xxi[i].sub[j].vra = ri.vibrate;
+			m->xxi[i].sub[j].vsw = ri.vibsweep;
+			m->xxi[i].sub[j].sid = smpnum;
 
 			if (smpnum >= MAX_SAMP) {
 				fseek(f, rs.length, SEEK_CUR);
@@ -359,17 +359,17 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			_D(_D_INFO "  [%1x] %05x%c%05x %05x %c "
 						"V%02x F%+04d P%02x R%+03d",
-				j, m->xxs[m->xxih[i].sub[j].sid].len,
-				m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-				m->xxs[m->xxih[i].sub[j].sid].lps,
-				m->xxs[m->xxih[i].sub[j].sid].lpe,
-				m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-				m->xxs[m->xxih[i].sub[j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxih[i].sub[j].vol, m->xxih[i].sub[j].fin,
-				m->xxih[i].sub[j].pan, m->xxih[i].sub[j].xpo);
+				j, m->xxs[m->xxi[i].sub[j].sid].len,
+				m->xxs[m->xxi[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+				m->xxs[m->xxi[i].sub[j].sid].lps,
+				m->xxs[m->xxi[i].sub[j].sid].lpe,
+				m->xxs[m->xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+				m->xxs[m->xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->xxi[i].sub[j].vol, m->xxi[i].sub[j].fin,
+				m->xxi[i].sub[j].pan, m->xxi[i].sub[j].xpo);
 
-			xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[j].sid,
-				XMP_SMP_DIFF, &m->xxs[m->xxih[i].sub[j].sid], NULL);
+			xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[j].sid,
+				XMP_SMP_DIFF, &m->xxs[m->xxi[i].sub[j].sid], NULL);
 		}
 	}
 

@@ -89,7 +89,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments */
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&mih.name, 22, 1, f);		/* Instrument name */
 	mih.length = read32l(f);		/* Instrument length in bytes */
@@ -100,7 +100,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	mih.attr = read8(f);			/* &0x01: 16bit sample */
 
 	m->xxs[i].len = mih.length;
-	m->xxih[i].nsm = mih.length > 0 ? 1 : 0;
+	m->xxi[i].nsm = mih.length > 0 ? 1 : 0;
 	m->xxs[i].lps = mih.loop_start;
 	m->xxs[i].lpe = mih.loopend;
 	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
@@ -111,19 +111,19 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[i].lpe >>= 1;
 	}
 
-	m->xxih[i].sub[0].vol = mih.volume;
-	m->xxih[i].sub[0].fin = 0x80 + (int8)(mih.finetune << 4);
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].vol = mih.volume;
+	m->xxi[i].sub[0].fin = 0x80 + (int8)(mih.finetune << 4);
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxih[i].name, mih.name, 22);
+	copy_adjust(m->xxi[i].name, mih.name, 22);
 
 	_D(_D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
-		m->xxih[i].name, m->xxs[i].len,
+		m->xxi[i].name, m->xxs[i].len,
 		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		m->xxs[i].lps, m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin - 0x80);
+		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin - 0x80);
     }
 
     fread(m->xxo, 1, 128, f);
@@ -175,8 +175,8 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-	    XMP_SMP_UNS, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+	    XMP_SMP_UNS, &m->xxs[m->xxi[i].sub[0].sid], NULL);
     }
 
     for (i = 0; i < m->xxh->chn; i++)

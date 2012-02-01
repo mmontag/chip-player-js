@@ -327,31 +327,31 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    return -2;
 
         if (ii.nsm)
- 	    m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), ii.nsm);
+ 	    m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), ii.nsm);
 
-	m->xxih[i].nsm = ii.nsm;
+	m->xxi[i].nsm = ii.nsm;
 
 	str_adj ((char *) ii.name);
-	strncpy ((char *) m->xxih[i].name, ii.name, 24);
+	strncpy ((char *) m->xxi[i].name, ii.name, 24);
 
 	for (j = 0; j < 108; j++) {
-		m->xxih[i].map[j].ins = ii.map[j];
+		m->xxi[i].map[j].ins = ii.map[j];
 	}
 
 	_D(_D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,
 		ii.fadeout, ii.env[0].flg & 0x01 ? 'V' : '-');
 
-	m->xxih[i].aei.npt = ii.env[0].npt;
-	m->xxih[i].aei.sus = ii.env[0].sus;
-	m->xxih[i].aei.lps = ii.env[0].lps;
-	m->xxih[i].aei.lpe = ii.env[0].lpe;
-	m->xxih[i].aei.flg = ii.env[0].flg & 0x01 ? XXM_ENV_ON : 0;
-	m->xxih[i].aei.flg |= ii.env[0].flg & 0x02 ? XXM_ENV_SUS : 0;
-	m->xxih[i].aei.flg |= ii.env[0].flg & 0x04 ?  XXM_ENV_LOOP : 0;
+	m->xxi[i].aei.npt = ii.env[0].npt;
+	m->xxi[i].aei.sus = ii.env[0].sus;
+	m->xxi[i].aei.lps = ii.env[0].lps;
+	m->xxi[i].aei.lpe = ii.env[0].lpe;
+	m->xxi[i].aei.flg = ii.env[0].flg & 0x01 ? XXM_ENV_ON : 0;
+	m->xxi[i].aei.flg |= ii.env[0].flg & 0x02 ? XXM_ENV_SUS : 0;
+	m->xxi[i].aei.flg |= ii.env[0].flg & 0x04 ?  XXM_ENV_LOOP : 0;
 
-	for (j = 0; j < m->xxih[i].aei.npt; j++) {
-	    m->xxih[i].aei.data[j * 2] = ii.vol_env[j * 2];
-	    m->xxih[i].aei.data[j * 2 + 1] = ii.vol_env[j * 2 + 1];
+	for (j = 0; j < m->xxi[i].aei.npt; j++) {
+	    m->xxi[i].aei.data[j * 2] = ii.vol_env[j * 2];
+	    m->xxi[i].aei.data[j * 2 + 1] = ii.vol_env[j * 2 + 1];
 	}
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {
@@ -371,9 +371,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    is.dram = read32l(f);
 	    is.magic = read32b(f);
 
-	    m->xxih[i].sub[j].sid = smp_num;
-	    m->xxih[i].sub[j].vol = is.vol;
-	    m->xxih[i].sub[j].pan = is.pan;
+	    m->xxi[i].sub[j].sid = smp_num;
+	    m->xxi[i].sub[j].vol = is.vol;
+	    m->xxi[i].sub[j].pan = is.pan;
 	    m->xxs[smp_num].len = is.len;
 	    m->xxs[smp_num].lps = is.lps;
 	    m->xxs[smp_num].lpe = is.lpe;
@@ -389,13 +389,13 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    _D(_D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
-	    c2spd_to_note (is.rate, &m->xxih[i].sub[j].xpo, &m->xxih[i].sub[j].fin);
+	    c2spd_to_note (is.rate, &m->xxi[i].sub[j].xpo, &m->xxi[i].sub[j].fin);
 
 	    if (!m->xxs[smp_num].len)
 		continue;
 
-	    xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[j].sid, 0,
-		&m->xxs[m->xxih[i].sub[j].sid], NULL);
+	    xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[j].sid, 0,
+		&m->xxs[m->xxi[i].sub[j].sid], NULL);
 	}
     }
     m->xxh->smp = smp_num;

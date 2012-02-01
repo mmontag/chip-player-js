@@ -179,23 +179,23 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 b;
 		int c2spd;
 
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		b = read8(f);
-		m->xxih[i].nsm = b ? 1 : 0;
+		m->xxi[i].nsm = b ? 1 : 0;
 
 		fread(buf, 1, 32, f);
-		copy_adjust(m->xxih[i].name, buf, 32);
+		copy_adjust(m->xxi[i].name, buf, 32);
 
 		fread(buf, 1, 13, f);	/* sample name */
 		read32l(f);		/* sample index */
 
-		m->xxih[i].sub[0].sid = i;
-		m->xxih[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].sid = i;
+		m->xxi[i].sub[0].pan = 0x80;
 		m->xxs[i].len = read32l(f);
 		c2spd = read16l(f);
-		c2spd_to_note(c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
-		m->xxih[i].sub[0].vol = read8(f);
+		c2spd_to_note(c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+		m->xxi[i].sub[0].vol = read8(f);
 
 		/*
 		 * Andre Timmermans <andre.timmermans@atos.net> says:
@@ -224,9 +224,9 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %5d",
-			i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+			i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
 			m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
-			'L' : ' ', m->xxih[i].sub[0].vol, c2spd);
+			'L' : ' ', m->xxi[i].sub[0].vol, c2spd);
 	}
 				
 
@@ -465,8 +465,8 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
-			XMP_SMP_UNS, &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
+			XMP_SMP_UNS, &m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	m->quirk |= XMP_QRK_FINEFX;

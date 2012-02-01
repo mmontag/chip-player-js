@@ -416,11 +416,11 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->xxh->ins);
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	fseek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = read8(f);
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
 
 	if (x8 >= 2) {
 	    /* OPL2 FM instrument */
@@ -443,15 +443,15 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    sah.magic = 0;
 
-	    copy_adjust(m->xxih[i].name, sah.name, 28);
+	    copy_adjust(m->xxi[i].name, sah.name, 28);
 
-	    m->xxih[i].nsm = 1;
-	    m->xxih[i].sub[0].vol = sah.vol;
-	    c2spd_to_note(sah.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
-	    m->xxih[i].sub[0].xpo += 12;
-	    xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, XMP_SMP_ADLIB,
+	    m->xxi[i].nsm = 1;
+	    m->xxi[i].sub[0].vol = sah.vol;
+	    c2spd_to_note(sah.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	    m->xxi[i].sub[0].xpo += 12;
+	    xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, XMP_SMP_ADLIB,
 					&m->xxs[i], (char *)&sah.reg);
-	    _D(_D_INFO "[%2X] %-28.28s", i, m->xxih[i].name);
+	    _D(_D_INFO "[%2X] %-28.28s", i, m->xxi[i].name);
 
 	    continue;
 	}
@@ -487,7 +487,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	m->xxs[i].len = sih.length;
-	m->xxih[i].nsm = sih.length > 0 ? 1 : 0;
+	m->xxi[i].nsm = sih.length > 0 ? 1 : 0;
 	m->xxs[i].lps = sih.loopbeg;
 	m->xxs[i].lpe = sih.loopend;
 
@@ -499,22 +499,22 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->xxs[i].lps >>= 1;
 	    m->xxs[i].lpe >>= 1;
 	}
-	m->xxih[i].sub[0].vol = sih.vol;
+	m->xxi[i].sub[0].vol = sih.vol;
 	sih.magic = 0;
 
-	copy_adjust(m->xxih[i].name, sih.name, 28);
+	copy_adjust(m->xxi[i].name, sih.name, 28);
 
 	_D(_D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
-			i, m->xxih[i].name, m->xxs[i].len,
+			i, m->xxi[i].name, m->xxs[i].len,
 			m->xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
 			m->xxs[i].lps, m->xxs[i].lpe,
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
-			m->xxih[i].sub[0].vol, sih.c2spd);
+			m->xxi[i].sub[0].vol, sih.c2spd);
 
-	c2spd_to_note(sih.c2spd, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
+	c2spd_to_note(sih.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
 
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid,
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
 	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
     }
 

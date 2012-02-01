@@ -229,18 +229,18 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->xxh->ins; i++) {
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	m->xxs[i].len = 2 * mh.ins[i].size;
 	m->xxs[i].lps = mh.ins[i].loop_start;
 	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
 	m->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxih[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
-	m->xxih[i].sub[0].vol = mh.ins[i].volume;
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
-	m->xxih[i].nsm = !!(m->xxs[i].len);
-	strncpy((char *)m->xxih[i].name, (char *)mh.ins[i].name, 22);
-	str_adj((char *)m->xxih[i].name);
+	m->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->xxi[i].sub[0].vol = mh.ins[i].volume;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
+	m->xxi[i].nsm = !!(m->xxs[i].len);
+	strncpy((char *)m->xxi[i].name, (char *)mh.ins[i].name, 22);
+	str_adj((char *)m->xxi[i].name);
     }
 
     m->xxh->trk = m->xxh->chn * m->xxh->pat;
@@ -334,9 +334,9 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     for (i = 0; i < m->xxh->ins; i++) {
 	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
-		i, m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps,
+		i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
 		m->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, m->xxih[i].sub[0].fin >> 4);
+		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin >> 4);
     }
 
     m->xxh->flg |= XXM_FLG_MODRNG;
@@ -379,8 +379,8 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->xxh->smp; i++) {
 	if (!m->xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
-	    &m->xxs[m->xxih[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
+	    &m->xxs[m->xxi[i].sub[0].sid], NULL);
     }
 
     return 0;

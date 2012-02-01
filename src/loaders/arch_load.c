@@ -300,18 +300,18 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if (i >= 36)
 		return;
 
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	read32l(f);	/* SNAM */
 	{
 		/* should usually be 0x14 but zero is not unknown */
 		int name_len = read32l(f);
 		if (name_len < 32)
-			fread(m->xxih[i].name, 1, name_len, f);
+			fread(m->xxi[i].name, 1, name_len, f);
 	}
 	read32l(f);	/* SVOL */
 	read32l(f);
-	/* m->xxih[i].sub[0].vol = convert_vol(read32l(f)); */
-	m->xxih[i].sub[0].vol = read32l(f) & 0xff;
+	/* m->xxi[i].sub[0].vol = convert_vol(read32l(f)); */
+	m->xxi[i].sub[0].vol = read32l(f) & 0xff;
 	read32l(f);	/* SLEN */
 	read32l(f);
 	m->xxs[i].len = read32l(f);
@@ -326,9 +326,9 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	read32l(f);
 	read32l(f);	/* 0x00000000 */
 
-	m->xxih[i].nsm = 1;
-	m->xxih[i].sub[0].sid = i;
-	m->xxih[i].sub[0].pan = 0x80;
+	m->xxi[i].nsm = 1;
+	m->xxi[i].sub[0].sid = i;
+	m->xxi[i].sub[0].pan = 0x80;
 
 	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
@@ -343,16 +343,16 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 		m->xxs[i].lpe = m->xxs[i].len;
 	}
 
-	xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, XMP_SMP_VIDC,
-					&m->xxs[m->xxih[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, XMP_SMP_VIDC,
+					&m->xxs[m->xxi[i].sub[0].sid], NULL);
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
-				i, m->xxih[i].name,
+				i, m->xxi[i].name,
 				m->xxs[i].len,
 				m->xxs[i].lps,
 				m->xxs[i].lpe,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxih[i].sub[0].vol);
+				m->xxi[i].sub[0].vol);
 
 	i++;
 	max_ins++;

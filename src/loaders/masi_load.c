@@ -139,15 +139,15 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	fseek(f, sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	i = cur_ins;
-	m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
-	fread(&m->xxih[i].name, 1, 34, f);
-	str_adj((char *)m->xxih[i].name);
+	fread(&m->xxi[i].name, 1, 34, f);
+	str_adj((char *)m->xxi[i].name);
 	fseek(f, 5, SEEK_CUR);
 	read8(f);		/* insno */
 	read8(f);
 	m->xxs[i].len = read32l(f);
-	m->xxih[i].nsm = !!(m->xxs[i].len);
+	m->xxi[i].nsm = !!(m->xxs[i].len);
 	m->xxs[i].lps = read32l(f);
 	m->xxs[i].lpe = read32l(f);
 	m->xxs[i].flg = m->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
@@ -166,20 +166,20 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 		finetune = (int8)(read8s(f) << 4);
 	}
 
-	m->xxih[i].sub[0].vol = read8(f) / 2 + 1;
+	m->xxi[i].sub[0].vol = read8(f) / 2 + 1;
 	read32l(f);
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].sid = i;
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].sid = i;
 	srate = read32l(f);
 
 	_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
-		m->xxih[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxih[i].sub[0].vol,
+		m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i].sub[0].vol,
 		finetune, srate);
 
 	srate = 8363 * srate / 8448;
-	c2spd_to_note(srate, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
-	m->xxih[i].sub[0].fin += finetune;
+	c2spd_to_note(srate, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	m->xxi[i].sub[0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
 	xmp_drv_loadpatch(ctx, f, i, XMP_SMP_8BDIFF, &m->xxs[i], NULL);

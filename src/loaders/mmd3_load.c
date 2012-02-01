@@ -411,15 +411,15 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			length = read32b(f);
 			type = read16b(f);
 
-			m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-			m->xxih[i].nsm = 1;
-			m->xxih[i].vts = synth.volspeed;
-			m->xxih[i].wts = synth.wfspeed;
-			m->xxih[i].sub[0].pan = 0x80;
-			m->xxih[i].sub[0].vol = song.sample[i].svol;
-			m->xxih[i].sub[0].xpo = song.sample[i].strans;
-			m->xxih[i].sub[0].sid = smp_idx;
-			m->xxih[i].sub[0].fin = exp_smp.finetune;
+			m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+			m->xxi[i].nsm = 1;
+			m->xxi[i].vts = synth.volspeed;
+			m->xxi[i].wts = synth.wfspeed;
+			m->xxi[i].sub[0].pan = 0x80;
+			m->xxi[i].sub[0].vol = song.sample[i].svol;
+			m->xxi[i].sub[0].xpo = song.sample[i].strans;
+			m->xxi[i].sub[0].sid = smp_idx;
+			m->xxi[i].sub[0].fin = exp_smp.finetune;
 			m->xxs[smp_idx].len = length;
 			m->xxs[smp_idx].lps = 2 * song.sample[i].rep;
 			m->xxs[smp_idx].lpe = m->xxs[smp_idx].lps +
@@ -429,9 +429,9 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 			_D(_D_INFO "  %05x %05x %05x %02x %+3d %+1d",
 				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
-				       m->xxs[smp_idx].lpe, m->xxih[i].sub[0].vol,
-				       m->xxih[i].sub[0].xpo,
-				       m->xxih[i].sub[0].fin >> 4);
+				       m->xxs[smp_idx].lpe, m->xxi[i].sub[0].vol,
+				       m->xxi[i].sub[0].xpo,
+				       m->xxi[i].sub[0].fin >> 4);
 
 			xmp_drv_loadpatch(ctx, f, smp_idx, 0,
 					&m->xxs[smp_idx], NULL);
@@ -474,18 +474,18 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (synth.wforms == 0xffff)
 				continue;
 
-			m->xxih[i].sub = calloc(sizeof(struct xxm_subinstrument),
+			m->xxi[i].sub = calloc(sizeof(struct xxm_subinstrument),
 							synth.wforms);
-			m->xxih[i].nsm = synth.wforms;
-			m->xxih[i].vts = synth.volspeed;
-			m->xxih[i].wts = synth.wfspeed;
+			m->xxi[i].nsm = synth.wforms;
+			m->xxi[i].vts = synth.volspeed;
+			m->xxi[i].wts = synth.wfspeed;
 
 			for (j = 0; j < synth.wforms; j++) {
-				m->xxih[i].sub[j].pan = 0x80;
-				m->xxih[i].sub[j].vol = song.sample[i].svol;
-				m->xxih[i].sub[j].xpo = song.sample[i].strans - 24;
-				m->xxih[i].sub[j].sid = smp_idx;
-				m->xxih[i].sub[j].fin = exp_smp.finetune;
+				m->xxi[i].sub[j].pan = 0x80;
+				m->xxi[i].sub[j].vol = song.sample[i].svol;
+				m->xxi[i].sub[j].xpo = song.sample[i].strans - 24;
+				m->xxi[i].sub[j].sid = smp_idx;
+				m->xxi[i].sub[j].fin = exp_smp.finetune;
 
 				fseek(f, pos - 6 + synth.wf[j], SEEK_SET);
 
@@ -514,14 +514,14 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		/* instr type is sample */
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-		m->xxih[i].nsm = 1;
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].nsm = 1;
 
-		m->xxih[i].sub[0].vol = song.sample[i].svol;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].xpo = song.sample[i].strans;
-		m->xxih[i].sub[0].sid = smp_idx;
-		m->xxih[i].sub[0].fin = exp_smp.finetune << 4;
+		m->xxi[i].sub[0].vol = song.sample[i].svol;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].xpo = song.sample[i].strans;
+		m->xxi[i].sub[0].sid = smp_idx;
+		m->xxi[i].sub[0].fin = exp_smp.finetune << 4;
 
 		m->xxs[smp_idx].len = instr.length;
 		m->xxs[smp_idx].lps = 2 * song.sample[i].rep;
@@ -550,9 +550,9 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 				m->xxs[smp_idx].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 				m->xxs[smp_idx].lps,
 				m->xxs[smp_idx].lpe,
-				m->xxih[i].sub[0].vol,
-				m->xxih[i].sub[0].xpo,
-				m->xxih[i].sub[0].fin >> 4);
+				m->xxi[i].sub[0].vol,
+				m->xxi[i].sub[0].xpo,
+				m->xxi[i].sub[0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, smp_idx, XMP_SMP_BIGEND,

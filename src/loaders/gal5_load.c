@@ -192,18 +192,18 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
 	
-	fread(&m->xxih[i].name, 1, 28, f);
-	str_adj((char *)m->xxih[i].name);
+	fread(&m->xxi[i].name, 1, 28, f);
+	str_adj((char *)m->xxi[i].name);
 
 	fseek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
-	m->xxih[i].nsm = read16l(f);
+	m->xxi[i].nsm = read16l(f);
 
-	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->xxih[i].name, m->xxih[i].nsm);
+	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->xxi[i].name, m->xxi[i].nsm);
 
-	if (m->xxih[i].nsm == 0)
+	if (m->xxi[i].nsm == 0)
 		return;
 
-	m->xxih[i].sub = calloc(sizeof(struct xxm_subinstrument), m->xxih[i].nsm);
+	m->xxi[i].sub = calloc(sizeof(struct xxm_subinstrument), m->xxi[i].nsm);
 
 	/* FIXME: Currently reading only the first sample */
 
@@ -220,10 +220,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32b(f);	/* unknown - 0x0000 */
 	read8(f);	/* unknown - 0x00 */
 
-	m->xxih[i].sub[0].sid = i;
-	m->xxih[i].vol = read8(f);
-	m->xxih[i].sub[0].pan = 0x80;
-	m->xxih[i].sub[0].vol = (read16l(f) + 1) / 512;
+	m->xxi[i].sub[0].sid = i;
+	m->xxi[i].vol = read8(f);
+	m->xxi[i].sub[0].pan = 0x80;
+	m->xxi[i].sub[0].vol = (read16l(f) + 1) / 512;
 	flags = read16l(f);
 	read16l(f);			/* unknown - 0x0080 */
 	m->xxs[i].len = read32l(f);
@@ -243,8 +243,8 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	srate = read32l(f);
 	finetune = 0;
-	c2spd_to_note(srate, &m->xxih[i].sub[0].xpo, &m->xxih[i].sub[0].fin);
-	m->xxih[i].sub[0].fin += finetune;
+	c2spd_to_note(srate, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	m->xxi[i].sub[0].fin += finetune;
 
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
@@ -256,7 +256,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 		m->xxs[i].lpe,
 		m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
 			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxih[i].sub[0].vol, flags, srate);
+		m->xxi[i].sub[0].vol, flags, srate);
 
 	if (m->xxs[i].len > 1) {
 		xmp_drv_loadpatch(ctx, f, i, has_unsigned_sample ?

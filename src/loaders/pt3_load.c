@@ -172,7 +172,7 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxih[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		m->xxs[i].len = 2 * mh.ins[i].size;
 		m->xxs[i].lps = 2 * mh.ins[i].loop_start;
 		m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
@@ -181,22 +181,22 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (m->xxs[i].len == 0 && m->xxs[i].len > m->xxs[i].lpe)
 				m->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
 		}
-		m->xxih[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
-		m->xxih[i].sub[0].vol = mh.ins[i].volume;
-		m->xxih[i].sub[0].pan = 0x80;
-		m->xxih[i].sub[0].sid = i;
-		m->xxih[i].nsm = !!(m->xxs[i].len);
-		m->xxih[i].rls = 0xfff;
+		m->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
+		m->xxi[i].sub[0].vol = mh.ins[i].volume;
+		m->xxi[i].sub[0].pan = 0x80;
+		m->xxi[i].sub[0].sid = i;
+		m->xxi[i].nsm = !!(m->xxs[i].len);
+		m->xxi[i].rls = 0xfff;
 
-		copy_adjust(m->xxih[i].name, mh.ins[i].name, 22);
+		copy_adjust(m->xxi[i].name, mh.ins[i].name, 22);
 
 		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
-				i, m->xxih[i].name,
+				i, m->xxi[i].name,
 				m->xxs[i].len, m->xxs[i].lps,
 				m->xxs[i].lpe,
 				mh.ins[i].loop_size > 1 ? 'L' : ' ',
-				m->xxih[i].sub[0].vol,
-				m->xxih[i].sub[0].fin >> 4,
+				m->xxi[i].sub[0].vol,
+				m->xxi[i].sub[0].fin >> 4,
 				m->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
 
@@ -224,8 +224,8 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->xxh->smp; i++) {
 		if (!m->xxs[i].len)
 			continue;
-		xmp_drv_loadpatch(ctx, f, m->xxih[i].sub[0].sid, 0,
-				  &m->xxs[m->xxih[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
+				  &m->xxs[m->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;
