@@ -86,14 +86,14 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 128; i++)
 	pfh.patseg[i] = read16l(f);
 
-    m->mod.xxh->len = pfh.ordnum;
-    m->mod.xxh->ins = pfh.insnum;
-    m->mod.xxh->pat = pfh.patnum;
-    m->mod.xxh->chn = pfh.chnnum;
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->bpm = 125;
+    m->mod.len = pfh.ordnum;
+    m->mod.ins = pfh.insnum;
+    m->mod.pat = pfh.patnum;
+    m->mod.chn = pfh.chnnum;
+    m->mod.trk = m->mod.pat * m->mod.chn;
+    m->mod.smp = m->mod.ins;
+    m->mod.tpo = 6;
+    m->mod.bpm = 125;
     memcpy (m->mod.xxo, pfh.order, 256);
 
     m->c4rate = C4_NTSC_RATE;
@@ -108,7 +108,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	pih.type = read8(f);			/* Sample type */
@@ -169,9 +169,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	if (!pfh.patseg[i])
 	    continue;
 	PATTERN_ALLOC (i);
@@ -187,7 +187,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & PTM_CH_MASK;
-	    if (c >= m->mod.xxh->chn)
+	    if (c >= m->mod.chn)
 		continue;
 
 	    event = &EVENT (i, c, r);
@@ -250,9 +250,9 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	if (!m->mod.xxs[i].len)
 	    continue;
 	fseek(f, start + smp_ofs[m->mod.xxi[i].sub[0].sid], SEEK_SET);
@@ -262,7 +262,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     m->vol_table = ptm_vol;
 
-    for (i = 0; i < m->mod.xxh->chn; i++)
+    for (i = 0; i < m->mod.chn; i++)
 	m->mod.xxc[i].pan = pfh.chset[i] << 4;
 
     return 0;

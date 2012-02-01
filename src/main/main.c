@@ -80,7 +80,6 @@ int showtime = 0;
 int rt = 0;
 #endif
 
-static struct xmp_module_info mi;
 static struct xmp_options *opt;
 
 static int verbosity;
@@ -387,6 +386,7 @@ int main(int argc, char **argv)
 #ifdef __EMX__
     long rc;
 #endif
+    struct xmp_module_info mi;
 
     init_drivers();
 
@@ -561,7 +561,7 @@ int main(int argc, char **argv)
 	rows = tot_nch = max_nch = getprevious = skipprev = 0;
         num_mod++;
 
-	xmp_get_module_info(ctx, &mi);
+	//xmp_get_module_info(ctx, &mi);
 
 	if (loadonly)
 	    goto skip_play;
@@ -578,6 +578,9 @@ int main(int argc, char **argv)
 			if (xmp_player_frame(ctx) != 0)
 				break;
 			xmp_play_buffer(ctx);
+			xmp_player_get_info(ctx, &mi);
+			printf("%2d %2d %2d\r", mi.order, mi.pattern, mi.row);
+			fflush(stdout);
 		}
 	}
 	xmp_player_end(ctx);
@@ -594,12 +597,14 @@ int main(int argc, char **argv)
 "\rElapsed time   : %dmin%02ds %s                                \n",
 	    t / 60, t % 60, skip ? "(SKIPPED)" : "         ");
 
+#if 0
 	    fprintf (stderr, "Channels used  : %d/%d", max_nch, mi.chn);
 	    if (max_nch)
 		fprintf (stderr, ", avg %.2f (%.1f%%)\n",
 			tot_nch / rows, 100.0 * tot_nch / rows / mi.chn);
 	    else
 		fprintf (stderr, "\n");
+#endif
 	}
 
 skip_play:

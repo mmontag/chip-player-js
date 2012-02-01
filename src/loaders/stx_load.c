@@ -121,12 +121,12 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
 #endif
 
-    m->mod.xxh->ins = sfh.insnum;
-    m->mod.xxh->pat = sfh.patnum;
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-    m->mod.xxh->len = sfh.ordnum;
-    m->mod.xxh->tpo = MSN (sfh.tempo);
-    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.ins = sfh.insnum;
+    m->mod.pat = sfh.patnum;
+    m->mod.trk = m->mod.pat * m->mod.chn;
+    m->mod.len = sfh.ordnum;
+    m->mod.tpo = MSN (sfh.tempo);
+    m->mod.smp = m->mod.ins;
     m->c4rate = C4_NTSC_RATE;
 
     /* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
@@ -148,24 +148,24 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
     MODULE_INFO();
  
-    pp_pat = calloc (2, m->mod.xxh->pat);
-    pp_ins = calloc (2, m->mod.xxh->ins);
+    pp_pat = calloc (2, m->mod.pat);
+    pp_ins = calloc (2, m->mod.ins);
 
     /* Read pattern pointers */
     fseek(f, start + (sfh.pp_pat << 4), SEEK_SET);
-    for (i = 0; i < m->mod.xxh->pat; i++)
+    for (i = 0; i < m->mod.pat; i++)
 	pp_pat[i] = read16l(f);
 
     /* Read instrument pointers */
     fseek(f, start + (sfh.pp_ins << 4), SEEK_SET);
-    for (i = 0; i < m->mod.xxh->ins; i++)
+    for (i = 0; i < m->mod.ins; i++)
 	pp_ins[i] = read16l(f);
 
     /* Skip channel table (?) */
     fseek(f, start + (sfh.pp_chn << 4) + 32, SEEK_SET);
 
     /* Read orders */
-    for (i = 0; i < m->mod.xxh->len; i++) {
+    for (i = 0; i < m->mod.len; i++) {
 	m->mod.xxo[i] = read8(f);
 	fseek(f, 4, SEEK_CUR);
     }
@@ -174,7 +174,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fseek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
@@ -221,9 +221,9 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
@@ -244,7 +244,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & S3M_CH_MASK;
-	    event = c >= m->mod.xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->mod.chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
 		n = read8(f);
@@ -288,9 +288,9 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     free (pp_ins);
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
 	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }

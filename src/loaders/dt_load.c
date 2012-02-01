@@ -52,9 +52,9 @@ static void get_d_t_(struct xmp_context *ctx, int size, FILE *f)
 	read16b(f);			/* type */
 	read16b(f);			/* 0xff then mono */
 	read16b(f);			/* reserved */
-	m->mod.xxh->tpo = read16b(f);
+	m->mod.tpo = read16b(f);
 	if ((b = read16b(f)) > 0)	/* RAMBO.DTM has bpm 0 */
-		m->mod.xxh->bpm = b;
+		m->mod.bpm = b;
 	read32b(f);			/* undocumented */
 
 	fread(m->mod.name, 32, 1, f);
@@ -68,8 +68,8 @@ static void get_s_q_(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &ctx->m;
 	int i, maxpat;
 
-	m->mod.xxh->len = read16b(f);
-	m->mod.xxh->rst = read16b(f);
+	m->mod.len = read16b(f);
+	m->mod.rst = read16b(f);
 	read32b(f);	/* reserved */
 
 	for (maxpat = i = 0; i < 128; i++) {
@@ -77,16 +77,16 @@ static void get_s_q_(struct xmp_context *ctx, int size, FILE *f)
 		if (m->mod.xxo[i] > maxpat)
 			maxpat = m->mod.xxo[i];
 	}
-	m->mod.xxh->pat = maxpat + 1;
+	m->mod.pat = maxpat + 1;
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 
-	m->mod.xxh->chn = read16b(f);
+	m->mod.chn = read16b(f);
 	realpat = read16b(f);
-	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+	m->mod.trk = m->mod.chn * m->mod.pat;
 }
 
 static void get_inst(struct xmp_context *ctx, int size, FILE *f)
@@ -95,13 +95,13 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	int i, c2spd;
 	uint8 name[30];
 
-	m->mod.xxh->ins = m->mod.xxh->smp = read16b(f);
+	m->mod.ins = m->mod.smp = read16b(f);
 
-	_D(_D_INFO "Instruments    : %d ", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments    : %d ", m->mod.ins);
 
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		int fine, replen, flag;
 
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -161,7 +161,7 @@ static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 	int rows;
 
 	if (!pflag) {
-		_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+		_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 		pflag = 1;
 		last_pat = 0;
 		PATTERN_INIT();
@@ -179,7 +179,7 @@ static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 	last_pat = pat + 1;
 
 	for (j = 0; j < rows; j++) {
-		for (k = 0; k < m->mod.xxh->chn; k++) {
+		for (k = 0; k < m->mod.chn; k++) {
 			uint8 a, b, c, d;
 
 			event = &EVENT(pat, k, j);
@@ -205,7 +205,7 @@ static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 	static int i = 0;
 
 	if (!sflag) {
-		_D(_D_INFO "Stored samples : %d ", m->mod.xxh->smp);
+		_D(_D_INFO "Stored samples : %d ", m->mod.smp);
 		sflag = 1;
 		i = 0;
 	}

@@ -81,13 +81,13 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		return -1;
 
 	blocksize = read16l(f);
-	m->mod.xxh->tpo = read16l(f);
+	m->mod.tpo = read16l(f);
 	fseek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
-	m->mod.xxh->ins = m->mod.xxh->smp = 15;
+	m->mod.ins = m->mod.smp = 15;
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		fread(buffer, 1, 22, f);
@@ -101,7 +101,7 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
 	}
 
-	m->mod.xxh->len = read8(f) & 0x7f;
+	m->mod.len = read8(f) & 0x7f;
 	read8(f);
 	fread(m->mod.xxo, 1, 128, f);
 
@@ -109,23 +109,23 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fseek(f, start + 600, SEEK_SET);
 
-	m->mod.xxh->chn = 14;
-	m->mod.xxh->pat = blocksize / (14 * 64);
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.chn = 14;
+	m->mod.pat = blocksize / (14 * 64);
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
 	/* Load notes */
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-			for (k = 0; k < m->mod.xxh->chn; k++) {
+			for (k = 0; k < m->mod.chn; k++) {
 				event = &EVENT(i, k, j);
 				event->note = read8(f);;
 				if (event->note)
@@ -135,9 +135,9 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Load fx1 */
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-			for (k = 0; k < m->mod.xxh->chn; k++) {
+			for (k = 0; k < m->mod.chn; k++) {
 				uint8 x;
 				event = &EVENT(i, k, j);
 				x = read8(f);;
@@ -165,9 +165,9 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Load fx2 */
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-			for (k = 0; k < m->mod.xxh->chn; k++) {
+			for (k = 0; k < m->mod.chn; k++) {
 				event = &EVENT(i, k, j);
 				event->fxp = read8(f);;
 
@@ -182,9 +182,9 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read instrument data */
-	_D(_D_INFO "Instruments    : %d ", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments    : %d ", m->mod.ins);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		char filename[1024];
 
 		if (!m->mod.xxi[i].name[0])

@@ -103,7 +103,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	LOAD_INIT();
 
-	m->mod.xxh->tpo = read8(f);		/* Tempo */
+	m->mod.tpo = read8(f);		/* Tempo */
 	pos_ptr = read16l(f);		/* Positions pointer */
 	orn_ptr = read16l(f);		/* Ornaments pointer */
 	pat_ptr = read16l(f);		/* Patterns pointer */
@@ -117,9 +117,9 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	/* Read orders */
 
 	fseek(f, pos_ptr, SEEK_SET);
-	m->mod.xxh->len = read8(f) + 1;
+	m->mod.len = read8(f) + 1;
 
-	for (num = i = 0; i < m->mod.xxh->len; i++) {
+	for (num = i = 0; i < m->mod.len; i++) {
 		stc_ord[i].pattern = read8(f);
 		stc_ord[i].height = read8s(f);
 		//printf("%d %d -- ", stc_ord[i].pattern, stc_ord[i].height);
@@ -139,11 +139,11 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		//printf("%d\n", m->mod.xxo[i]);
 	}
 
-	m->mod.xxh->chn = 3;
-	m->mod.xxh->pat = num;
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-	m->mod.xxh->ins = 15;
-	m->mod.xxh->smp = m->mod.xxh->ins;
+	m->mod.chn = 3;
+	m->mod.pat = num;
+	m->mod.trk = m->mod.pat * m->mod.chn;
+	m->mod.ins = 15;
+	m->mod.smp = m->mod.ins;
 	orn = (pat_ptr - orn_ptr) / 33;
 
 	MODULE_INFO();
@@ -153,8 +153,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	PATTERN_INIT();
 
 	fseek(f, pat_ptr, SEEK_SET);
-	decoded = calloc(m->mod.xxh->pat, sizeof(int));
-	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
+	decoded = calloc(m->mod.pat, sizeof(int));
+	_D(_D_INFO "Stored patterns: %d ", m->mod.pat);
 
 	for (i = 0; i < MAX_PAT; i++) {
 		if (read8(f) == 0xff)
@@ -164,7 +164,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		stc_pat[i].ch[2] = read16l(f);
 	}
 
-	for (i = 0; i < m->mod.xxh->len; i++) {		/* pattern */
+	for (i = 0; i < m->mod.len; i++) {		/* pattern */
 		int src = stc_ord[i].pattern - 1;
 		int dest = m->mod.xxo[i];
 		int trans = stc_ord[i].height;
@@ -172,7 +172,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		if (decoded[dest])
 			continue;
 
-		//printf("%d/%d) Read pattern %d -> %d\n", i, m->mod.xxh->len, src, dest);
+		//printf("%d/%d) Read pattern %d -> %d\n", i, m->mod.len, src, dest);
 
 		PATTERN_ALLOC(dest);
 		m->mod.xxp[dest]->rows = 64;
@@ -245,8 +245,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	fseek(f, 27, SEEK_SET);
 
-	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	_D(_D_INFO "Instruments: %d", m->mod.ins);
+	for (i = 0; i < m->mod.ins; i++) {
 		struct spectrum_sample ss;
 
 		memset(&ss, 0, sizeof (struct spectrum_sample));

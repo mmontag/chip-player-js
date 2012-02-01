@@ -72,13 +72,19 @@ void read_title(FILE *f, char *t, int s)
 	copy_adjust(t, buf, s);
 }
 
-void set_xxh_defaults(struct xmp_module_header *xxh)
+void set_xxh_defaults(struct xmp_module *mod)
 {
-	memset(xxh, 0, sizeof(struct xmp_module_header));
-	xxh->gvl = 0x40;
-	xxh->tpo = 6;
-	xxh->bpm = 125;
-	xxh->chn = 4;
+	mod->flg = 0;
+	mod->pat = 0;
+	mod->trk = 0;
+	mod->chn = 4;
+	mod->ins = 0;
+	mod->smp = 0;
+	mod->tpo = 6;
+	mod->bpm = 125;
+	mod->len = 0;
+	mod->rst = 0;
+	mod->gvl = 0x40;
 }
 
 void cvt_pt_event(struct xmp_event *event, uint8 *mod_event)
@@ -113,31 +119,31 @@ void disable_continue_fx(struct xmp_event *event)
 uint8 ord_xlat[255];
 
 /* normalize pattern sequence */
-void clean_s3m_seq(struct xmp_module_header *xxh, uint8 *xxo)
+void clean_s3m_seq(struct xmp_module *mod, uint8 *xxo)
 {
     int i, j;
     
-    /*for (i = 0; i < xxh->len; i++) printf("%02x ", xxo[i]);
+    /*for (i = 0; i < len; i++) printf("%02x ", xxo[i]);
     printf("\n");*/
-    for (i = j = 0; i < xxh->len; i++, j++) {
+    for (i = j = 0; i < mod->len; i++, j++) {
 	while (xxo[i] == 0xfe) {
-	    xxh->len--;
+	    mod->len--;
 	    ord_xlat[j] = i;
             //printf("xlat %d -> %d\n", j, i);
 	    j++;
-	    //printf("move %d from %d to %d\n", xxh->len - i, i + 1, i);
-	    memmove(xxo + i, xxo + i + 1, xxh->len - i);
+	    //printf("move %d from %d to %d\n", len - i, i + 1, i);
+	    memmove(xxo + i, xxo + i + 1, mod->len - i);
         }
 
 	ord_xlat[j] = i;
         //printf("xlat %d -> %d\n", j, i);
 
 	if (xxo[i] == 0xff) {
-	    xxh->len = i;
+	    mod->len = i;
 	    break;
 	}
     }
-    /*for (i = 0; i < xxh->len; i++) printf("%02x ", xxo[i]);
+    /*for (i = 0; i < len; i++) printf("%02x ", xxo[i]);
     printf("\n");*/
 }
 

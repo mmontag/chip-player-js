@@ -170,7 +170,7 @@ static void get_mvox(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 
-	m->mod.xxh->chn = read32l(f);
+	m->mod.chn = read32l(f);
 }
 
 static void get_ster(struct xmp_context *ctx, int size, FILE *f)
@@ -180,7 +180,7 @@ static void get_ster(struct xmp_context *ctx, int size, FILE *f)
 
 	fread(ster, 1, 8, f);
 	
-	for (i=0; i < m->mod.xxh->chn; i++)
+	for (i=0; i < m->mod.chn; i++)
 		if (ster[i] > 0 && ster[i] < 8) 
 			m->mod.xxc[i].pan = 42*ster[i]-40;
 }
@@ -203,14 +203,14 @@ static void get_mlen(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 
-	m->mod.xxh->len = read32l(f);
+	m->mod.len = read32l(f);
 }
 
 static void get_pnum(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 
-	m->mod.xxh->pat = read32l(f);
+	m->mod.pat = read32l(f);
 }
 
 static void get_plen(struct xmp_context *ctx, int size, FILE *f)
@@ -238,10 +238,10 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_event *event;
 
 	if (!pflag) {
-		_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+		_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 		pflag = 1;
 		i = 0;
-		m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+		m->mod.trk = m->mod.pat * m->mod.chn;
 		PATTERN_INIT();
 	}
 
@@ -250,7 +250,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	TRACK_ALLOC(i);
 
 	for (j = 0; j < rows[i]; j++) {
-		for (k = 0; k < m->mod.xxh->chn; k++) {
+		for (k = 0; k < m->mod.chn; k++) {
 			event = &EVENT(i, k, j);
 
 			event->fxp = read8(f);
@@ -274,10 +274,10 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	static int i = 0;
 
 	if (!sflag) {
-		m->mod.xxh->smp = m->mod.xxh->ins = 36;
+		m->mod.smp = m->mod.ins = 36;
 		INSTRUMENT_INIT();
 
-		_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+		_D(_D_INFO "Instruments: %d", m->mod.ins);
 
 		sflag = 1;
 		max_ins = 0;
@@ -382,7 +382,7 @@ static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 		m->mod.xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
 
 	return 0;

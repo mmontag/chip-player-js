@@ -494,11 +494,10 @@ int xmp_load_module(xmp_context opaque, char *s)
     m->quirk = o->quirk;
     m->comment = NULL;
 
-    m->mod.xxh = calloc(sizeof (struct xmp_module_header), 1);
     /* Set defaults */
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->bpm = 125;
-    m->mod.xxh->chn = 4;
+    m->mod.tpo = 6;
+    m->mod.bpm = 125;
+    m->mod.chn = 4;
     m->synth = &synth_null;
     m->extra = NULL;
 
@@ -535,7 +534,6 @@ int xmp_load_module(xmp_context opaque, char *s)
     if (i < 0) {
 	free(m->basename);
 	free(m->dirname);
-	free(m->mod.xxh);
 	return i;
     }
 
@@ -543,8 +541,8 @@ int xmp_load_module(xmp_context opaque, char *s)
      * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
      * Ralf Hoffmann <ralf@boomerangsworld.de>)
      */
-    if (m->mod.xxh->rst >= m->mod.xxh->len)
-	m->mod.xxh->rst = 0;
+    if (m->mod.rst >= m->mod.len)
+	m->mod.rst = 0;
 
     /* Disable filter if --nofilter is specified */
     m->flags &= ~(~o->flags & XMP_CTL_FILTER);
@@ -594,39 +592,38 @@ void xmp_release_module(xmp_context opaque)
 		free(m->extra);
 
 	if (m->med_vol_table) {
-		for (i = 0; i < m->mod.xxh->ins; i++)
+		for (i = 0; i < m->mod.ins; i++)
 			if (m->med_vol_table[i])
 				free(m->med_vol_table[i]);
 		free(m->med_vol_table);
 	}
 
 	if (m->med_wav_table) {
-		for (i = 0; i < m->mod.xxh->ins; i++)
+		for (i = 0; i < m->mod.ins; i++)
 			if (m->med_wav_table[i])
 				free(m->med_wav_table[i]);
 		free(m->med_wav_table);
 	}
 
-	for (i = 0; i < m->mod.xxh->trk; i++)
+	for (i = 0; i < m->mod.trk; i++)
 		free(m->mod.xxt[i]);
 
-	for (i = 0; i < m->mod.xxh->pat; i++)
+	for (i = 0; i < m->mod.pat; i++)
 		free(m->mod.xxp[i]);
 
-	for (i = 0; i < m->mod.xxh->ins; i++)
+	for (i = 0; i < m->mod.ins; i++)
 		free(m->mod.xxi[i].sub);
 
 	free(m->mod.xxt);
 	free(m->mod.xxp);
-	if (m->mod.xxh->smp > 0) {
-		for (i = 0; i < m->mod.xxh->smp; i++) {
+	if (m->mod.smp > 0) {
+		for (i = 0; i < m->mod.smp; i++) {
 			if (m->mod.xxs[i].data != NULL)
 				free(m->mod.xxs[i].data);
 		}
 		free(m->mod.xxs);
 	}
 	free(m->mod.xxi);
-	free(m->mod.xxh);
 	if (m->comment)
 		free(m->comment);
 

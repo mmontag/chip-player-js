@@ -96,7 +96,7 @@ static void unpack_block(struct xmp_context *ctx, uint16 bnum, uint8 *from)
 	uint16 fromn = 0, lmsk;
 	uint8 *fromst = from + 16, bcnt, *tmpto;
 	uint8 *patbuf, *to;
-	int i, j, trkn = m->mod.xxh->chn;
+	int i, j, trkn = m->mod.chn;
 
 	from += 16;
 	patbuf = to = calloc(3, 4 * 64);
@@ -219,7 +219,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	strcpy(m->mod.type, "MED3 (MED 2.00)");
 
-	m->mod.xxh->ins = m->mod.xxh->smp = 32;
+	m->mod.ins = m->mod.smp = 32;
 	INSTRUMENT_INIT();
 
 	/* read instrument names */
@@ -259,16 +259,16 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->mod.xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
 	}
 
-	m->mod.xxh->chn = 4;
-	m->mod.xxh->pat = read16b(f);
-	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+	m->mod.chn = 4;
+	m->mod.pat = read16b(f);
+	m->mod.trk = m->mod.chn * m->mod.pat;
 
-	m->mod.xxh->len = read16b(f);
-	fread(m->mod.xxo, 1, m->mod.xxh->len, f);
-	m->mod.xxh->tpo = read16b(f);
-	if (m->mod.xxh->tpo > 10) {
-		m->mod.xxh->bpm = 125 * m->mod.xxh->tpo / 33;
-		m->mod.xxh->tpo = 6;
+	m->mod.len = read16b(f);
+	fread(m->mod.xxo, 1, m->mod.len, f);
+	m->mod.tpo = read16b(f);
+	if (m->mod.tpo > 10) {
+		m->mod.bpm = 125 * m->mod.tpo / 33;
+		m->mod.tpo = 6;
 	}
 	transp = read8s(f);
 	read8(f);			/* flags */
@@ -304,9 +304,9 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		uint32 *conv;
 		uint8 b, tracks;
 		uint16 convsz;
@@ -359,7 +359,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Load samples */
 
-	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.ins);
 
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {

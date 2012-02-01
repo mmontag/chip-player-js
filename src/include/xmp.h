@@ -150,42 +150,11 @@ struct xmp_drv_info {
 	struct xmp_drv_info *next;
 };
 
-struct xmp_module_info {
-	char name[0x40];
-	char type[0x40];
-	int chn;
-	int pat;
-	int ins;
-	int trk;
-	int smp;
-	int len;
-	int bpm;
-	int tpo;
-	int time;
-};
-
 
 #define XXM_KEY_MAX 108
 #define XMP_MAXENV	32		/* max envelope points */
 #define XMP_MAXORD	256		/* max number of patterns in module */
-
-struct xmp_module_header {
-#define XXM_FLG_LINEAR	0x01
-#define XXM_FLG_MODRNG	0x02
-#define XXM_FLG_INSVOL  0x04
-	int flg;		/* Flags */
-	int pat;		/* Number of patterns */
-	int ptc;		/* Number of patches */
-	int trk;		/* Number of tracks */
-	int chn;		/* Tracks per pattern */
-	int ins;		/* Number of instruments */
-	int smp;		/* Number of samples */
-	int tpo;		/* Initial tempo */
-	int bpm;		/* Initial BPM */
-	int len;		/* Module length in patterns */
-	int rst;		/* Restart position */
-	int gvl;		/* Global volume */
-};
+#define XMP_MAXCH	64		/* max channels */
 
 struct xmp_channel {
 	int pan;
@@ -304,13 +273,54 @@ struct xmp_sample {
 struct xmp_module {
 	char name[XMP_NAMESIZE];	/* module name */
 	char type[XMP_NAMESIZE];	/* module type */
-	struct xmp_module_header *xxh;		/* Header */
+#define XXM_FLG_LINEAR	0x01
+#define XXM_FLG_MODRNG	0x02
+#define XXM_FLG_INSVOL  0x04
+	int flg;		/* Flags */
+	int pat;		/* Number of patterns */
+	//int ptc;		/* Number of patches */
+	int trk;		/* Number of tracks */
+	int chn;		/* Tracks per pattern */
+	int ins;		/* Number of instruments */
+	int smp;		/* Number of samples */
+	int tpo;		/* Initial tempo */
+	int bpm;		/* Initial BPM */
+	int len;		/* Module length in patterns */
+	int rst;		/* Restart position */
+	int gvl;		/* Global volume */
+
 	struct xmp_pattern **xxp;	/* Patterns */
 	struct xmp_track **xxt;		/* Tracks */
 	struct xmp_instrument *xxi;	/* Instruments */
 	struct xmp_sample *xxs;		/* Samples */
 	struct xmp_channel xxc[64];	/* Channel info */
 	unsigned char xxo[XMP_MAXORD];		/* Orders */
+};
+
+/*
+ * Playing module information
+ */
+struct xmp_module_info {
+	int order;
+	int pattern;
+	int row;
+	int frame;
+	int tempo;
+	int bpm;
+	int time;
+
+	struct {
+		int period;
+		int position;
+		unsigned short flags;
+		unsigned char note;
+		unsigned char instrument;
+		unsigned char sample;
+		unsigned char volume;
+		unsigned char pan;
+	} channel_info[XMP_MAXCH];
+
+	struct xmp_module *mod;
 };
 
 
@@ -340,9 +350,9 @@ void xmp_channel_mute(xmp_context, int, int, int);
 int xmp_player_ctl(xmp_context, int, int);
 int xmp_open_audio(xmp_context);
 void xmp_close_audio(xmp_context);
-int xmp_play_module(xmp_context);
 int xmp_player_start(xmp_context);
 int xmp_player_frame(xmp_context);
+void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);
 void xmp_play_buffer(xmp_context);
 void xmp_get_buffer(xmp_context, void **, int *);

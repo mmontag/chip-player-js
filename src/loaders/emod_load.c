@@ -55,18 +55,18 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
     ver = read16b(f);
     fread(m->mod.name, 1, 20, f);
     fseek(f, 20, SEEK_CUR);
-    m->mod.xxh->bpm = read8(f);
-    m->mod.xxh->ins = read8(f);
-    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.bpm = read8(f);
+    m->mod.ins = read8(f);
+    m->mod.smp = m->mod.ins;
 
-    m->mod.xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.flg |= XXM_FLG_MODRNG;
 
     snprintf(m->mod.type, XMP_NAMESIZE, "EMOD v%d (Quadra Composer)", ver);
     MODULE_INFO();
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	read8(f);		/* num */
@@ -90,15 +90,15 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
     }
 
     read8(f);			/* pad */
-    m->mod.xxh->pat = read8(f);
+    m->mod.pat = read8(f);
 
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.trk = m->mod.pat * m->mod.chn;
 
     PATTERN_INIT();
 
     reorder = calloc(1, 256);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	reorder[read8(f)] = i;
 	PATTERN_ALLOC(i);
 	m->mod.xxp[i]->rows = read8(f) + 1;
@@ -107,11 +107,11 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 	read32b(f);			/* ptr */
     }
 
-    m->mod.xxh->len = read8(f);
+    m->mod.len = read8(f);
 
-    _D(_D_INFO "Module length: %d", m->mod.xxh->len);
+    _D(_D_INFO "Module length: %d", m->mod.len);
 
-    for (i = 0; i < m->mod.xxh->len; i++)
+    for (i = 0; i < m->mod.len; i++)
 	m->mod.xxo[i] = reorder[read8(f)];
 }
 
@@ -123,11 +123,11 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
     struct xmp_event *event;
     uint8 x;
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-	    for (k = 0; k < m->mod.xxh->chn; k++) {
+	    for (k = 0; k < m->mod.chn; k++) {
 		event = &EVENT(i, k, j);
 		event->ins = read8(f);
 		event->note = read8(f) + 1;
@@ -161,9 +161,9 @@ static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
     struct xmp_mod_context *m = &ctx->m;
     int i;
 
-    _D(_D_INFO, "Stored samples : %d ", m->mod.xxh->smp);
+    _D(_D_INFO, "Stored samples : %d ", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
     }
 }

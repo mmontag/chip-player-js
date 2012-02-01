@@ -195,14 +195,14 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, -2, SEEK_CUR);
     }
 
-    m->mod.xxh->tpo = lh.speed;
-    m->mod.xxh->bpm = lh.bpm;
-    m->mod.xxh->chn = lh.chn;
-    m->mod.xxh->pat = lh.pat;
-    m->mod.xxh->ins = m->mod.xxh->smp = lh.ins;
-    m->mod.xxh->len = lh.len;
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
-    m->mod.xxh->flg = XXM_FLG_INSVOL;
+    m->mod.tpo = lh.speed;
+    m->mod.bpm = lh.bpm;
+    m->mod.chn = lh.chn;
+    m->mod.pat = lh.pat;
+    m->mod.ins = m->mod.smp = lh.ins;
+    m->mod.len = lh.len;
+    m->mod.trk = m->mod.chn * m->mod.pat;
+    m->mod.flg = XXM_FLG_INSVOL;
 
     strncpy(m->mod.name, (char *)lh.name, 30);
     strncpy(tracker_name, (char *)lh.tracker, 20);
@@ -218,16 +218,16 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 		lh.version >> 8, lh.version & 0x00ff, tracker_name);
 
     if (lh.version > 0) {
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 	    m->mod.xxc[i].pan = read8(f) << 2;
 
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 	    m->mod.xxc[i].vol = read8(f);
 
-	fread(m->mod.xxo, 1, m->mod.xxh->len, f);
+	fread(m->mod.xxo, 1, m->mod.len, f);
 
 	/* Skip 1.01 echo pools */
-	fseek(f, lh.hdrsz - (0x6d + m->mod.xxh->chn * 2 + m->mod.xxh->len), SEEK_CUR);
+	fseek(f, lh.hdrsz - (0x6d + m->mod.chn * 2 + m->mod.len), SEEK_CUR);
     } else {
 	fseek(f, start + 0xf0, SEEK_SET);
 	fread (m->mod.xxo, 1, 256, f);
@@ -237,7 +237,7 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (m->mod.xxo[i] == 0xff)
 		break;
 	}
-	m->mod.xxh->len = i;
+	m->mod.len = i;
     }
 
     MODULE_INFO();
@@ -247,10 +247,10 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
     x1 = x2 = 0;
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	int row, channel, count;
 
 	PATTERN_ALLOC (i);
@@ -310,7 +310,7 @@ test_event:
 	case 0xa0:			/* next channel */
 	    _D(_D_INFO "  [next channel]");
 	    channel++;
-	    if (channel >= m->mod.xxh->chn) {
+	    if (channel >= m->mod.chn) {
 		_D(_D_CRIT "uh-oh! bad channel number!");
 		channel--;
 	    }
@@ -399,7 +399,7 @@ next_row:
 	    channel++;
 
 	    /* FIXME */
-	    if (channel >= m->mod.xxh->chn) {
+	    if (channel >= m->mod.chn) {
 		channel = 0;
 	    }
 	}
@@ -414,9 +414,9 @@ next_pattern:
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	unsigned char b[4];
 
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);

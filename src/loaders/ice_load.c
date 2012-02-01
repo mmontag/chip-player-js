@@ -94,18 +94,18 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
     else
 	return -1;
 
-    m->mod.xxh->ins = 31;
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->pat = ih.len;
-    m->mod.xxh->len = ih.len;
-    m->mod.xxh->trk = ih.trk;
+    m->mod.ins = 31;
+    m->mod.smp = m->mod.ins;
+    m->mod.pat = ih.len;
+    m->mod.len = ih.len;
+    m->mod.trk = ih.trk;
 
     strncpy (m->mod.name, (char *) ih.title, 20);
     MODULE_INFO();
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = 2 * ih.ins[i].len);
 	m->mod.xxs[i].lps = 2 * ih.ins[i].loop_start;
@@ -124,20 +124,20 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
-	for (j = 0; j < m->mod.xxh->chn; j++) {
+	for (j = 0; j < m->mod.chn; j++) {
 	    m->mod.xxp[i]->index[j] = ih.ord[i][j];
 	}
 	m->mod.xxo[i] = i;
     }
 
-    _D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
+    _D(_D_INFO "Stored tracks: %d", m->mod.trk);
 
-    for (i = 0; i < m->mod.xxh->trk; i++) {
+    for (i = 0; i < m->mod.trk; i++) {
 	m->mod.xxt[i] = calloc (sizeof (struct xmp_track) + sizeof
 		(struct xmp_event) * 64, 1);
 	m->mod.xxt[i]->rows = 64;
@@ -148,13 +148,13 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    m->mod.xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.flg |= XXM_FLG_MODRNG;
 
     /* Read samples */
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	if (m->mod.xxs[i].len <= 4)
 	    continue;
 	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);

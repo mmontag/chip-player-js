@@ -83,15 +83,15 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	read16l(f);
 	read16l(f);
 	read8(f);
-	m->mod.xxh->pat = read8(f);
+	m->mod.pat = read8(f);
 	read8(f);
-	m->mod.xxh->chn = read8(f);
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.chn = read8(f);
+	m->mod.trk = m->mod.pat * m->mod.chn;
 	read8(f);
 	read16l(f);
 	read16l(f);
 	read8(f);
-	m->mod.xxh->ins = m->mod.xxh->smp = 63;
+	m->mod.ins = m->mod.smp = 63;
 
 	for (i = 0; i < 256; i++) {
 		uint8 x = read8(f);
@@ -100,14 +100,14 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->mod.xxo[i] = x;
 	}
 	fseek(f, 255 - i, SEEK_CUR);
-	m->mod.xxh->len = i;
+	m->mod.len = i;
 
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();
 
 	/* Read instrument names */
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		int hasname, c2spd;
 
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -155,16 +155,16 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 //printf("%d  %x\n", i, ftell(f));
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-			for (k = 0; k < m->mod.xxh->chn; k++) {
+			for (k = 0; k < m->mod.chn; k++) {
 				uint32 x, note, ins, vol, fxt, fxp;
 
 				event = &EVENT (i, k, j);
@@ -191,9 +191,9 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		if (m->mod.xxs[i].len == 0)
 			continue;
 		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,

@@ -56,19 +56,19 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	set_type(m, "GTK v%d (Graoumf Tracker)", ver);
 	fseek(f, 160, SEEK_CUR);	/* skip comments */
 
-	m->mod.xxh->ins = read16b(f);
-	m->mod.xxh->smp = m->mod.xxh->ins;
+	m->mod.ins = read16b(f);
+	m->mod.smp = m->mod.ins;
 	rows = read16b(f);
-	m->mod.xxh->chn = read16b(f);
-	m->mod.xxh->len = read16b(f);
-	m->mod.xxh->rst = read16b(f);
+	m->mod.chn = read16b(f);
+	m->mod.len = read16b(f);
+	m->mod.rst = read16b(f);
 
 	MODULE_INFO();
 
-	_D(_D_INFO "Instruments    : %d ", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments    : %d ", m->mod.ins);
 
 	INSTRUMENT_INIT();
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		fread(buffer, 28, 1, f);
 		copy_adjust(m->mod.xxi[i].name, buffer, 28);
@@ -126,26 +126,26 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < 256; i++)
 		m->mod.xxo[i] = read16b(f);
 
-	for (patmax = i = 0; i < m->mod.xxh->len; i++) {
+	for (patmax = i = 0; i < m->mod.len; i++) {
 		if (m->mod.xxo[i] > patmax)
 			patmax = m->mod.xxo[i];
 	}
 
-	m->mod.xxh->pat = patmax + 1;
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.pat = patmax + 1;
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = rows;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-			for (k = 0; k < m->mod.xxh->chn; k++) {
+			for (k = 0; k < m->mod.chn; k++) {
 				event = &EVENT (i, k, j);
 
 				event->note = read8(f);
@@ -167,9 +167,9 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		if (m->mod.xxs[i].len == 0)
 			continue;
 		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,

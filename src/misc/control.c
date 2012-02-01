@@ -138,11 +138,11 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 			p->pos--;
 		return p->pos;
 	case XMP_ORD_NEXT:
-		if (p->pos < m->mod.xxh->len)
+		if (p->pos < m->mod.len)
 			p->pos++;
 		return p->pos;
 	case XMP_ORD_SET:
-		if (arg < m->mod.xxh->len && arg >= 0) {
+		if (arg < m->mod.len && arg >= 0) {
 			if (p->pos == arg && arg == 0)	/* special case */
 				p->pos = -1;
 			else
@@ -182,27 +182,6 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 	return 0;
 }
 
-int xmp_player_start(xmp_context opaque)
-{
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-
-	return _xmp_player_start(ctx);
-}
-
-int xmp_player_frame(xmp_context opaque)
-{
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-
-	return _xmp_player_frame(ctx);
-}
-
-void xmp_player_end(xmp_context opaque)
-{
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-
-	_xmp_player_end(ctx);
-}
-
 void xmp_play_buffer(xmp_context opaque)
 {
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
@@ -239,7 +218,7 @@ int xmp_seek_time(xmp_context opaque, int time)
 	/* _D("seek to %d, total %d", time, xmp_cfg.time); */
 
 	time *= 1000;
-	for (i = 0; i < m->mod.xxh->len; i++) {
+	for (i = 0; i < m->mod.len; i++) {
 		t = m->xxo_info[i].time;
 
 		_D("%2d: %d %d", i, time, t);

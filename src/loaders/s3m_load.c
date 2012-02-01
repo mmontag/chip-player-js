@@ -250,25 +250,25 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     copy_adjust(m->mod.name, sfh.name, 28);
 
     /* Load and convert header */
-    m->mod.xxh->len = sfh.ordnum;
-    m->mod.xxh->ins = sfh.insnum;
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->pat = sfh.patnum;
-    pp_ins = calloc (2, m->mod.xxh->ins);
-    pp_pat = calloc (2, m->mod.xxh->pat);
+    m->mod.len = sfh.ordnum;
+    m->mod.ins = sfh.insnum;
+    m->mod.smp = m->mod.ins;
+    m->mod.pat = sfh.patnum;
+    pp_ins = calloc (2, m->mod.ins);
+    pp_pat = calloc (2, m->mod.pat);
     if (sfh.flags & S3M_AMIGA_RANGE)
-	m->mod.xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.flg |= XXM_FLG_MODRNG;
     if (sfh.flags & S3M_ST300_VOLS)
 	m->quirk |= XMP_QRK_VSALL;
     /* m->volbase = 4096 / sfh.gv; */
-    m->mod.xxh->tpo = sfh.is;
-    m->mod.xxh->bpm = sfh.it;
+    m->mod.tpo = sfh.is;
+    m->mod.bpm = sfh.it;
 
     for (i = 0; i < 32; i++) {
 	if (sfh.chset[i] == S3M_CH_OFF)
 	    continue;
 
-	m->mod.xxh->chn = i + 1;
+	m->mod.chn = i + 1;
 
 	if (sfh.mv & 0x80) {	/* stereo */
 		int x = sfh.chset[i] & S3M_CH_PAN;
@@ -277,15 +277,15 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->mod.xxc[i].pan = 0x80;
 	}
     }
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.trk = m->mod.pat * m->mod.chn;
 
-    fread(m->mod.xxo, 1, m->mod.xxh->len, f);
-    clean_s3m_seq(m->mod.xxh, m->mod.xxo);
+    fread(m->mod.xxo, 1, m->mod.len, f);
+    clean_s3m_seq(&m->mod, m->mod.xxo);
 
-    for (i = 0; i < m->mod.xxh->ins; i++)
+    for (i = 0; i < m->mod.ins; i++)
 	pp_ins[i] = read16l(f);
  
-    for (i = 0; i < m->mod.xxh->pat; i++)
+    for (i = 0; i < m->mod.pat; i++)
 	pp_pat[i] = read16l(f);
 
     /* Default pan positions */
@@ -344,11 +344,11 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
     memset (arpeggio_val, 0, 32);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
@@ -373,7 +373,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & S3M_CH_MASK;
-	    event = c >= m->mod.xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->mod.chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
 		switch(n = read8(f)) {
@@ -412,9 +412,9 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fseek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = read8(f);

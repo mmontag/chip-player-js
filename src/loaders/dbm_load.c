@@ -51,13 +51,13 @@ static void get_info(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 
-	m->mod.xxh->ins = read16b(f);
-	m->mod.xxh->smp = read16b(f);
+	m->mod.ins = read16b(f);
+	m->mod.smp = read16b(f);
 	read16b(f);			/* Songs */
-	m->mod.xxh->pat = read16b(f);
-	m->mod.xxh->chn = read16b(f);
+	m->mod.pat = read16b(f);
+	m->mod.chn = read16b(f);
 
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
 	INSTRUMENT_INIT();
 }
@@ -76,10 +76,10 @@ static void get_song(struct xmp_context *ctx, int size, FILE *f)
 	fread(buffer, 44, 1, f);
 	_D(_D_INFO "Song name: %s", buffer);
 
-	m->mod.xxh->len = read16b(f);
-	_D(_D_INFO "Song length: %d patterns", m->mod.xxh->len);
+	m->mod.len = read16b(f);
+	_D(_D_INFO "Song length: %d patterns", m->mod.len);
 
-	for (i = 0; i < m->mod.xxh->len; i++)
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = read16b(f);
 }
 
@@ -90,16 +90,16 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	int c2spd, flags, snum;
 	uint8 buffer[50];
 
-	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.ins);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		m->mod.xxi[i].nsm = 1;
 		fread(buffer, 30, 1, f);
 		copy_adjust(m->mod.xxi[i].name, buffer, 30);
 		snum = read16b(f);
-		if (snum == 0 || snum > m->mod.xxh->smp)
+		if (snum == 0 || snum > m->mod.smp)
 			continue;
 		m->mod.xxi[i].sub[0].sid = --snum;
 		m->mod.xxi[i].sub[0].vol = read16b(f);
@@ -130,14 +130,14 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->mod.pat);
 
 	/*
 	 * Note: channel and flag bytes are inverted in the format
 	 * description document
 	 */
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = read16b(f);
 		TRACK_ALLOC(i);
@@ -165,7 +165,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 			if (--sz <= 0) break;
 			//printf("    n = %d\n", n);
 
-			if (c >= m->mod.xxh->chn || r >= m->mod.xxp[i]->rows)
+			if (c >= m->mod.chn || r >= m->mod.xxp[i]->rows)
 				event = &dummy;
 			else
 				event = &EVENT(i, c, r);
@@ -216,9 +216,9 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &ctx->m;
 	int i, flags;
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->smp; i++) {
+	for (i = 0; i < m->mod.smp; i++) {
 		flags = read32b(f);
 		m->mod.xxs[i].len = read32b(f);
 
@@ -310,7 +310,7 @@ static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 		m->mod.xxc[i].pan = 0x80;
 
 	return 0;

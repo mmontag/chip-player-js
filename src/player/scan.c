@@ -56,24 +56,24 @@ int _xmp_scan_module(struct xmp_context *ctx)
     struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
 
-    if (m->mod.xxh->len == 0)
+    if (m->mod.len == 0)
 	return 0;
 
     medbpm = m->quirk & XMP_QRK_MEDBPM;
 
-    tab_cnt = calloc (sizeof (char *), m->mod.xxh->len);
-    for (ord = m->mod.xxh->len; ord--;)
-	tab_cnt[ord] = calloc(1, m->mod.xxo[ord] >= m->mod.xxh->pat ?  1 :
+    tab_cnt = calloc (sizeof (char *), m->mod.len);
+    for (ord = m->mod.len; ord--;)
+	tab_cnt[ord] = calloc(1, m->mod.xxo[ord] >= m->mod.pat ?  1 :
 		m->mod.xxp[m->mod.xxo[ord]]->rows ? m->mod.xxp[m->mod.xxo[ord]]->rows : 1);
 
-    loop_stk = calloc(sizeof (int), m->mod.xxh->chn);
-    loop_row = calloc(sizeof (int), m->mod.xxh->chn);
+    loop_stk = calloc(sizeof (int), m->mod.chn);
+    loop_row = calloc(sizeof (int), m->mod.chn);
     loop_chn = loop_flg = 0;
 
-    gvl = m->mod.xxh->gvl;
-    bpm = m->mod.xxh->bpm;
+    gvl = m->mod.gvl;
+    bpm = m->mod.bpm;
 
-    tempo = (tempo = o->tempo ? o->tempo : m->mod.xxh->tpo) ? tempo : TIME;
+    tempo = (tempo = o->tempo ? o->tempo : m->mod.tpo) ? tempo : TIME;
     base_time = m->rrate;
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
@@ -96,20 +96,20 @@ int _xmp_scan_module(struct xmp_context *ctx)
     skip_fetch = 0;
 
     while (42) {
-	if ((uint32)++ord >= m->mod.xxh->len) {
-	    /*if ((uint32)++ord >= m->mod.xxh->len)*/
-		ord = ((uint32)m->mod.xxh->rst > m->mod.xxh->len ||
-			(uint32)m->mod.xxo[m->mod.xxh->rst] >= m->mod.xxh->pat) ?
-			0 : m->mod.xxh->rst;
+	if ((uint32)++ord >= m->mod.len) {
+	    /*if ((uint32)++ord >= m->mod.len)*/
+		ord = ((uint32)m->mod.rst > m->mod.len ||
+			(uint32)m->mod.xxo[m->mod.rst] >= m->mod.pat) ?
+			0 : m->mod.rst;
 		//if (m->mod.xxo[ord] == S3M_END)
 		 //   break;
 	} 
 
 	/* All invalid patterns skipped, only S3M_END aborts replay */
-	if ((uint32)m->mod.xxo[ord] >= m->mod.xxh->pat) {
+	if ((uint32)m->mod.xxo[ord] >= m->mod.pat) {
 	    /*if (m->mod.xxo[ord] == S3M_SKIP) ord++;*/
 	    if (m->mod.xxo[ord] == S3M_END) {
-		ord = m->mod.xxh->len;
+		ord = m->mod.len;
 	        continue;
 	    }
 	    continue;
@@ -168,7 +168,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 
 	    pdelay = 0;
 
-	    for (chn = 0; chn < m->mod.xxh->chn; chn++) {
+	    for (chn = 0; chn < m->mod.chn; chn++) {
 		if (row >= m->mod.xxt[m->mod.xxp[m->mod.xxo[ord]]->index[chn]]->rows)
 		    continue;
 
@@ -330,7 +330,7 @@ end_module:
     free(loop_row);
     free(loop_stk);
 
-    for (ord = m->mod.xxh->len; ord--; )
+    for (ord = m->mod.len; ord--; )
 	free(tab_cnt[ord]);
     free(tab_cnt);
 

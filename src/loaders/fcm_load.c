@@ -62,21 +62,21 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 
     MODULE_INFO();
 
-    m->mod.xxh->len = fh.len;
+    m->mod.len = fh.len;
 
-    fread (m->mod.xxo, 1, m->mod.xxh->len, f);
+    fread (m->mod.xxo, 1, m->mod.len, f);
 
-    for (m->mod.xxh->pat = i = 0; i < m->mod.xxh->len; i++) {
-	if (m->mod.xxo[i] > m->mod.xxh->pat)
-	    m->mod.xxh->pat = m->mod.xxo[i];
+    for (m->mod.pat = i = 0; i < m->mod.len; i++) {
+	if (m->mod.xxo[i] > m->mod.pat)
+	    m->mod.pat = m->mod.xxo[i];
     }
-    m->mod.xxh->pat++;
+    m->mod.pat++;
 
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.trk = m->mod.pat * m->mod.chn;
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	B_ENDIAN16 (fh.ins[i].size);
 	B_ENDIAN16 (fh.ins[i].loop_start);
 	B_ENDIAN16 (fh.ins[i].loop_size);
@@ -108,11 +108,11 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 
     /* Load and convert patterns */
     if (V(0))
-	report ("Stored patterns: %d ", m->mod.xxh->pat);
+	report ("Stored patterns: %d ", m->mod.pat);
 
     fread (fe, 4, 1, f);	/* Skip 'SONG' pseudo chunk ID */
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
@@ -128,15 +128,15 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	    report (".");
     }
 
-    m->mod.xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     fread (fe, 4, 1, f);	/* Skip 'SAMP' pseudo chunk ID */
 
     if (V(0))
-	report ("\nStored samples : %d ", m->mod.xxh->smp);
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+	report ("\nStored samples : %d ", m->mod.smp);
+    for (i = 0; i < m->mod.smp; i++) {
 	if (!m->mod.xxs[i].len)
 	    continue;
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,

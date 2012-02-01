@@ -103,9 +103,9 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	set_type(m, "Magnetic Fields Packer");
 	MODULE_INFO();
 
-	m->mod.xxh->chn = 4;
+	m->mod.chn = 4;
 
-	m->mod.xxh->ins = m->mod.xxh->smp = 31;
+	m->mod.ins = m->mod.smp = 31;
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < 31; i++) {
@@ -134,7 +134,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
                        	m->mod.xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
 
-	m->mod.xxh->len = m->mod.xxh->pat = read8(f);
+	m->mod.len = m->mod.pat = read8(f);
 	read8(f);		/* restart */
 
 	for (i = 0; i < 128; i++)
@@ -143,13 +143,13 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 #if 0
 	for (i = 0; i < 128; i++) {
 		m->mod.xxo[i] = read8(f);
-		if (m->mod.xxo[i] > m->mod.xxh->pat)
-			m->mod.xxh->pat = m->mod.xxo[i];
+		if (m->mod.xxo[i] > m->mod.pat)
+			m->mod.pat = m->mod.xxo[i];
 	}
-	m->mod.xxh->pat++;
+	m->mod.pat++;
 #endif
 
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
 	/* Read and convert patterns */
 
@@ -164,11 +164,11 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->mod.pat);
 
 	pat_addr = ftell(f);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
@@ -191,7 +191,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Loading samples: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Loading samples: %d", m->mod.ins);
 
 	/* first check smp.filename */
 	m->basename[0] = 's';
@@ -213,14 +213,14 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		return 0;
 	}
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		load_patch(ctx, s, m->mod.xxi[i].sub[0].sid, 0,
 				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
 	fclose(s);
 
-	m->mod.xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }

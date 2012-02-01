@@ -121,16 +121,16 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     fseek(f, ufh.msgsize * 32, SEEK_CUR);
 
-    m->mod.xxh->ins = m->mod.xxh->smp = read8(f);
-    /* m->mod.xxh->flg |= XXM_FLG_LINEAR; */
+    m->mod.ins = m->mod.smp = read8(f);
+    /* m->mod.flg |= XXM_FLG_LINEAR; */
 
     /* Read and convert instruments */
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(&uih.name, 32, 1, f);
@@ -218,14 +218,14 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	    break;
 	m->mod.xxo[i] = ufh2.order[i];
     }
-    m->mod.xxh->len = i;
-    m->mod.xxh->chn = ufh2.channels + 1;
-    m->mod.xxh->pat = ufh2.patterns + 1;
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->bpm = 125;
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.len = i;
+    m->mod.chn = ufh2.channels + 1;
+    m->mod.pat = ufh2.patterns + 1;
+    m->mod.tpo = 6;
+    m->mod.bpm = 125;
+    m->mod.trk = m->mod.chn * m->mod.pat;
 
-    for (i = 0; i < m->mod.xxh->chn; i++) {
+    for (i = 0; i < m->mod.chn; i++) {
 	if (ver >= 3) {
 	    x8 = read8(f);
 	    m->mod.xxc[i].pan = 255 * x8 / 15;
@@ -238,17 +238,17 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
     /* Events are stored by channel */
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
     }
 
-    for (i = 0; i < m->mod.xxh->chn; i++) {
-	for (j = 0; j < 64 * m->mod.xxh->pat; ) {
+    for (i = 0; i < m->mod.chn; i++) {
+	for (j = 0; j < 64 * m->mod.pat; ) {
 	    cnt = 1;
 	    x8 = read8(f);		/* Read note or repeat code (0xfc) */
 	    if (x8 == 0xfc) {
@@ -327,9 +327,9 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	if (!m->mod.xxs[i].len)
 	    continue;
 	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);

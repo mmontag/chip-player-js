@@ -69,14 +69,14 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
 #endif
 
-    m->mod.xxh->trk = mfh.tracks + 1;
-    m->mod.xxh->pat = mfh.patterns + 1;
-    m->mod.xxh->len = mfh.modlen + 1;
-    m->mod.xxh->ins = mfh.samples;
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->chn = mfh.channels;
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->bpm = 125;
+    m->mod.trk = mfh.tracks + 1;
+    m->mod.pat = mfh.patterns + 1;
+    m->mod.len = mfh.modlen + 1;
+    m->mod.ins = mfh.samples;
+    m->mod.smp = m->mod.ins;
+    m->mod.chn = mfh.channels;
+    m->mod.tpo = 6;
+    m->mod.bpm = 125;
 
     strncpy(m->mod.name, (char *)mfh.name, 20);
     set_type(m, "MTM (MultiTracker %d.%02d)",
@@ -87,7 +87,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Read and convert instruments */
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(&mih.name, 22, 1, f);		/* Instrument name */
@@ -129,9 +129,9 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk - 1);
+    _D(_D_INFO "Stored tracks: %d", m->mod.trk - 1);
 
-    for (i = 0; i < m->mod.xxh->trk; i++) {
+    for (i = 0; i < m->mod.trk; i++) {
 	m->mod.xxt[i] = calloc (sizeof (struct xmp_track) +
 	    sizeof (struct xmp_event) * mfh.rows, 1);
 	m->mod.xxt[i]->rows = mfh.rows;
@@ -156,14 +156,14 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat - 1);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat - 1);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	for (j = 0; j < 32; j++)
 	    mp[j] = read16l(f);
-	for (j = 0; j < m->mod.xxh->chn; j++)
+	for (j = 0; j < m->mod.chn; j++)
 	    m->mod.xxp[i]->index[j] = mp[j];
     }
 
@@ -171,14 +171,14 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     fseek(f, mfh.extralen, SEEK_CUR);
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 	    XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 
-    for (i = 0; i < m->mod.xxh->chn; i++)
+    for (i = 0; i < m->mod.chn; i++)
 	m->mod.xxc[i].pan = mfh.pan[i] << 4;
 
     return 0;

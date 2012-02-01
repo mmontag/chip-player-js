@@ -20,9 +20,9 @@
 #define NOT_IMPLEMENTED
 
 #define DO_TONEPORTA() do { \
-	if (note-- && note < 0x60 && (uint32)xc->ins < m->mod.xxh->ins) \
+	if (note-- && note < 0x60 && (uint32)xc->ins < m->mod.ins) \
 	    xc->s_end = note_to_period(note + XXI.xpo + XXIH.map[xc->key].xpo, \
-	    XXI.fin, m->mod.xxh->flg & XXM_FLG_LINEAR); \
+	    XXI.fin, m->mod.flg & XXM_FLG_LINEAR); \
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 } while (0)
 
@@ -334,7 +334,7 @@ ex_f_porta_dn:
 	case EX_PATTERN_LOOP:			/* Loop pattern */
 	    if (fxp == 0) {
 		/* mark start of loop */
-		f->loop_start[chn] = p->flow.row;
+		f->loop_start[chn] = p->row;
 	    } else {
 		/* end of loop */
 		if (f->loop_stack[chn]) {
@@ -342,10 +342,10 @@ ex_f_porta_dn:
 			f->loop_chn = ++chn;	/* **** H:FIXME **** */
 		    } else {
 			if (m->quirk & XMP_QRK_S3MLOOP)
-			    f->loop_start[chn] = f->row + 1;
+			    f->loop_start[chn] = p->row + 1;
 		    }
 		} else {
-		    if (f->loop_start[chn] <= f->row) {
+		    if (f->loop_start[chn] <= p->row) {
 			f->loop_stack[chn] = fxp;
 			f->loop_chn = ++chn;
 		    }

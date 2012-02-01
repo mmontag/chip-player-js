@@ -87,25 +87,25 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&afh.magic, 9, 1, f);
     afh.version = read8(f);
 
-    m->mod.xxh->chn = 9;
-    m->mod.xxh->bpm = 125;
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->len = afh.len;
-    m->mod.xxh->pat = afh.pat + 1;
-    m->mod.xxh->ins = 26;
-    m->mod.xxh->smp = 0;
-    memcpy (m->mod.xxo, afh.order, m->mod.xxh->len);
+    m->mod.chn = 9;
+    m->mod.bpm = 125;
+    m->mod.tpo = 6;
+    m->mod.len = afh.len;
+    m->mod.pat = afh.pat + 1;
+    m->mod.ins = 26;
+    m->mod.smp = 0;
+    memcpy (m->mod.xxo, afh.order, m->mod.len);
 
     strcpy(m->mod.type, "Amusic");
     strncpy(m->mod.name, (char *)afh.name, 24);
 
     MODULE_INFO();
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
     INSTRUMENT_INIT();
 
     /* Load instruments */
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	copy_adjust(m->mod.xxi[i].name, afh.ins[i].name, 23);
@@ -129,30 +129,30 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
     }
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    m->mod.xxp = calloc (sizeof (struct xmp_pattern *), m->mod.xxh->pat + 1);
+    m->mod.xxp = calloc (sizeof (struct xmp_pattern *), m->mod.pat + 1);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	for (j = 0; j < 9; j++) {
 	    w = read16l(f);
 	    m->mod.xxp[i]->index[j] = w;
-	    if (w > m->mod.xxh->trk)
-		m->mod.xxh->trk = w;
+	    if (w > m->mod.trk)
+		m->mod.trk = w;
 	}
 	m->mod.xxp[i]->rows = 64;
     }
-    m->mod.xxh->trk++;
+    m->mod.trk++;
 
     w = read16l(f);
 
     _D(_D_INFO "Stored tracks: %d", w);
 
-    m->mod.xxt = calloc (sizeof (struct xmp_track *), m->mod.xxh->trk);
-    m->mod.xxh->trk = w;
+    m->mod.xxt = calloc (sizeof (struct xmp_track *), m->mod.trk);
+    m->mod.trk = w;
 
-    for (i = 0; i < m->mod.xxh->trk; i++) {
+    for (i = 0; i < m->mod.trk; i++) {
 	w = read16l(f);
 	m->mod.xxt[w] = calloc (sizeof (struct xmp_track) +
 	    sizeof (struct xmp_event) * 64, 1);
@@ -205,7 +205,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    for (i = 0; i < m->mod.xxh->chn; i++) {
+    for (i = 0; i < m->mod.chn; i++) {
 	m->mod.xxc[i].pan = 0x80;
 	m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
     }

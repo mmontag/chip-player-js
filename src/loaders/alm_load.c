@@ -80,7 +80,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&afh.id, 7, 1, f);
 
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
-	m->mod.xxh->tpo = afh.speed / 2;
+	m->mod.tpo = afh.speed / 2;
 
     strncpy(modulename, m->filename, NAME_SIZE);
     basename = strtok (modulename, ".");
@@ -90,18 +90,18 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     afh.restart = read8(f);
     fread(&afh.order, 128, 1, f);
 
-    m->mod.xxh->len = afh.length;
-    m->mod.xxh->rst = afh.restart;
-    memcpy (m->mod.xxo, afh.order, m->mod.xxh->len);
+    m->mod.len = afh.length;
+    m->mod.rst = afh.restart;
+    memcpy (m->mod.xxo, afh.order, m->mod.len);
 
-    for (m->mod.xxh->pat = i = 0; i < m->mod.xxh->len; i++)
-	if (m->mod.xxh->pat < afh.order[i])
-	    m->mod.xxh->pat = afh.order[i];
-    m->mod.xxh->pat++;
+    for (m->mod.pat = i = 0; i < m->mod.len; i++)
+	if (m->mod.pat < afh.order[i])
+	    m->mod.pat = afh.order[i];
+    m->mod.pat++;
 
-    m->mod.xxh->ins = 31;
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.ins = 31;
+    m->mod.trk = m->mod.pat * m->mod.chn;
+    m->mod.smp = m->mod.ins;
     m->c4rate = C4_NTSC_RATE;
 
     set_type(m, "Aley's Module");
@@ -111,14 +111,14 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
-	    event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+	for (j = 0; j < 64 * m->mod.chn; j++) {
+	    event = &EVENT (i, j % m->mod.chn, j / m->mod.chn);
 	    b = read8(f);
 	    if (b)
 		event->note = (b == 37) ? 0x61 : b + 36;
@@ -130,9 +130,9 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Loading samples: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Loading samples: %d", m->mod.ins);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = fopen (filename, "rb");
@@ -167,7 +167,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* ALM is LRLR, not LRRL */
-    for (i = 0; i < m->mod.xxh->chn; i++)
+    for (i = 0; i < m->mod.chn; i++)
 	m->mod.xxc[i].pan = (i % 2) * 0xff;
 
     return 0;

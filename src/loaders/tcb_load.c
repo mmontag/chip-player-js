@@ -61,19 +61,19 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	set_type(m, "%-8.8s (TCB Tracker)", buffer);
 
 	read16b(f);	/* ? */
-	m->mod.xxh->pat = read16b(f);
-	m->mod.xxh->ins = 16;
-	m->mod.xxh->smp = m->mod.xxh->ins;
-	m->mod.xxh->chn = 4;
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-	m->mod.xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.pat = read16b(f);
+	m->mod.ins = 16;
+	m->mod.smp = m->mod.ins;
+	m->mod.chn = 4;
+	m->mod.trk = m->mod.pat * m->mod.chn;
+	m->mod.flg |= XXM_FLG_MODRNG;
 
 	read16b(f);	/* ? */
 
 	for (i = 0; i < 128; i++)
 		m->mod.xxo[i] = read8(f);
 
-	m->mod.xxh->len = read8(f);
+	m->mod.len = read8(f);
 	read8(f);	/* ? */
 	read16b(f);	/* ? */
 
@@ -82,7 +82,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	/* Read instrument names */
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		fread(buffer, 8, 1, f);
 		copy_adjust(m->mod.xxi[i].name, buffer, 8);
@@ -99,15 +99,15 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-			for (k = 0; k < m->mod.xxh->chn; k++) {
+			for (k = 0; k < m->mod.chn; k++) {
 				int b;
 				event = &EVENT (i, k, j);
 
@@ -139,7 +139,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read instrument data */
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].sub[0].vol = read8(f) / 2;
 		m->mod.xxi[i].sub[0].pan = 0x80;
 		unk1[i] = read8(f);
@@ -148,7 +148,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		soffs[i] = read32b(f);
 		m->mod.xxs[i].len = read32b(f);
 	}
@@ -158,7 +158,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	read32b(f);
 	read32b(f);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
 		m->mod.xxs[i].lps = 0;
 		m->mod.xxs[i].lpe = 0;
@@ -177,9 +177,9 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		fseek(f, start + base_offs + soffs[i], SEEK_SET);
 		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 				XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);

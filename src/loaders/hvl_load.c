@@ -192,49 +192,49 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	uint16 title_offset = read16b(f);
 	tmp = read16b(f);
-	m->mod.xxh->len = tmp & 0xfff;
+	m->mod.len = tmp & 0xfff;
 	blank = tmp & 0x8000;
 		
 	tmp = read16b(f);
-	m->mod.xxh->chn = (tmp >> 10) + 4;
-	m->mod.xxh->rst = tmp & 1023;
+	m->mod.chn = (tmp >> 10) + 4;
+	m->mod.rst = tmp & 1023;
 
 	int pattlen = read8(f);
-	m->mod.xxh->trk = read8(f) + 1;
-	m->mod.xxh->ins = read8(f);
+	m->mod.trk = read8(f) + 1;
+	m->mod.ins = read8(f);
 	int subsongs = read8(f);
 	int gain = read8(f);
 	int stereo = read8(f);
 
 	_D(_D_WARN "pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x",
-		pattlen, m->mod.xxh->trk, m->mod.xxh->ins, m->mod.xxh->len, stereo);
+		pattlen, m->mod.trk, m->mod.ins, m->mod.len, stereo);
 
 	set_type(m, "HVL (Hively Tracker)");
 	MODULE_INFO();
 
-	m->mod.xxh->pat = m->mod.xxh->len;
-	m->mod.xxh->smp = 20;
+	m->mod.pat = m->mod.len;
+	m->mod.smp = 20;
 	PATTERN_INIT();
 	INSTRUMENT_INIT();
 
 	fseek (f, subsongs*2, SEEK_CUR);
 
-	uint8 *seqbuf = malloc(m->mod.xxh->len * m->mod.xxh->chn * 2);
+	uint8 *seqbuf = malloc(m->mod.len * m->mod.chn * 2);
 	uint8 *seqptr = seqbuf;
-	fread (seqbuf, 1, m->mod.xxh->len * m->mod.xxh->chn * 2, f);
+	fread (seqbuf, 1, m->mod.len * m->mod.chn * 2, f);
 
-	uint8 **transbuf = malloc (m->mod.xxh->len * m->mod.xxh->chn * sizeof(uint8 *));
+	uint8 **transbuf = malloc (m->mod.len * m->mod.chn * sizeof(uint8 *));
 	int transposed = 0;
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->mod.xxh->len);
+	reportv(ctx, 0, "Stored patterns: %d ", m->mod.len);
 
-	for (i = 0; i < m->mod.xxh->len; i++) {
+	for (i = 0; i < m->mod.len; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = pattlen;
-		for (j = 0; j < m->mod.xxh->chn; j++) {
+		for (j = 0; j < m->mod.chn; j++) {
 			if (seqptr[1]) {
 //				printf ("%d: transpose %02x by %d\n", i, seqptr[0], seqptr[1]);
-				m->mod.xxp[i]->info[j].index = m->mod.xxh->trk + transposed;
+				m->mod.xxp[i]->info[j].index = m->mod.trk + transposed;
 				transbuf[transposed] = seqptr;
 				transposed++;
 			} else {
@@ -255,13 +255,13 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 
 	if (transposed) {
-		m->mod.xxh->trk += transposed;
-		m->mod.xxt = realloc(m->mod.xxt, m->mod.xxh->trk * sizeof (struct xmp_track *));
+		m->mod.trk += transposed;
+		m->mod.xxt = realloc(m->mod.xxt, m->mod.trk * sizeof (struct xmp_track *));
 	}
 	
-	reportv(ctx, 0, "Stored tracks  : %d ", m->mod.xxh->trk);
+	reportv(ctx, 0, "Stored tracks  : %d ", m->mod.trk);
 
-	for (i = 0; i < m->mod.xxh->trk; i++) {
+	for (i = 0; i < m->mod.trk; i++) {
 		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
 				   sizeof(struct xmp_event) * pattlen - 1, 1);
                 m->mod.xxt[i]->rows = pattlen;
@@ -269,8 +269,8 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		if (!i && blank)
 			continue;
 
-		if (i >= m->mod.xxh->trk-transposed) {
-			int n=i-(m->mod.xxh->trk - transposed);
+		if (i >= m->mod.trk-transposed) {
+			int n=i-(m->mod.trk - transposed);
 			int o=transbuf[n][1];
 			if (o>127)
 				o-=256;
@@ -304,7 +304,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			} //else 
 			//	printf (".");
 		}
-		if (V(0) && !(i % m->mod.xxh->chn))
+		if (V(0) && !(i % m->mod.chn))
 			report (".");
 	}
 	reportv(ctx, 0, "\n");
@@ -316,7 +316,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * Instruments
 	 */
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		uint8 buf[22];
 		int vol, fspd, wavelen, flow, vibdel, hclen, hc;
 		int vibdep, vibspd, sqmin, sqmax, sqspd, fmax, plen, pspd;
@@ -515,7 +515,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->mod.name[31]=0;
 //		printf ("len=%d, name=%s\n", len, m->mod.name);
 		
-		for (i=0; nameptr < namebuf+len && i < m->mod.xxh->ins; i++) {
+		for (i=0; nameptr < namebuf+len && i < m->mod.ins; i++) {
 			nameptr += strlen((char *)nameptr)+1;
 			copy_adjust(m->mod.xxi[i].name, nameptr, 32);
 
@@ -525,7 +525,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		free (namebuf);
 	}
 
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
                 m->mod.xxc[i].pan = ((i&3)%3) ? 128+stereo*31 : 128-stereo*31;
 
 

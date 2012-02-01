@@ -222,7 +222,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	    }
 	} else */
 
-	if ((uint32)ins < m->mod.xxh->ins && m->mod.xxi[ins].nsm) {	/* valid ins */
+	if ((uint32)ins < m->mod.ins && m->mod.xxi[ins].nsm) {	/* valid ins */
 	    if (!key && HAS_QUIRK(XMP_QRK_INSPRI)) {
 		if (xins == ins)
 		    flg = NEW_INS | RESET_VOL;
@@ -297,7 +297,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
     if (!key || key >= XMP_KEY_OFF)
 	ins = xins;
 
-    if ((uint32)ins < m->mod.xxh->ins && m->mod.xxi[ins].nsm)
+    if ((uint32)ins < m->mod.ins && m->mod.xxi[ins].nsm)
 	flg |= IS_VALID;
 
     if ((uint32)key < XMP_KEY_OFF && key > 0) {
@@ -338,7 +338,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
     reset_stepper(&xc->arpeggio);
     xc->tremor = 0;
 
-    if ((uint32)xins >= m->mod.xxh->ins || !m->mod.xxi[xins].nsm) {
+    if ((uint32)xins >= m->mod.ins || !m->mod.xxi[xins].nsm) {
 	RESET(IS_VALID);
     } else {
 	SET(IS_VALID);
@@ -387,7 +387,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	    xc->finetune = m->mod.xxi[ins].sub[mapped].fin;
 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
-			m->mod.xxh->flg & XXM_FLG_LINEAR);
+			m->mod.flg & XXM_FLG_LINEAR);
 
 	set_lfo_phase(&xc->vibrato, 0);
 	set_lfo_phase(&xc->tremolo, 0);
@@ -430,7 +430,7 @@ static inline void read_row(struct xmp_context *ctx, int pat, int row)
     struct xmp_event *event;
 
     count = 0;
-    for (chn = 0; chn < m->mod.xxh->chn; chn++) {
+    for (chn = 0; chn < m->mod.chn; chn++) {
 	if (row < m->mod.xxt[TRACK_NUM(pat, chn)]->rows) {
 	    event = &EVENT(pat, chn, row);
 	} else {
@@ -546,7 +546,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	if (!--xc->ns_count) {
 	    xc->note += xc->ns_val;
 	    xc->period = note_to_period(xc->note, xc->finetune,
-				m->mod.xxh->flg & XXM_FLG_LINEAR);
+				m->mod.flg & XXM_FLG_LINEAR);
 	    xc->ns_count = xc->ns_speed;
 	}
     }
@@ -585,7 +585,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 		m->vol_table[finalvol >> 4] << 4;
     }
 
-    if (m->mod.xxh->flg & XXM_FLG_INSVOL)
+    if (m->mod.flg & XXM_FLG_INSVOL)
 	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;
 
 
@@ -606,9 +606,9 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	xc->period + vibrato + med_vibrato,
 	xc->note,
 	/* xc->finetune, */
-	m->mod.xxh->flg & XXM_FLG_MODRNG,
+	m->mod.flg & XXM_FLG_MODRNG,
 	xc->gliss,
-	m->mod.xxh->flg & XXM_FLG_LINEAR);
+	m->mod.flg & XXM_FLG_LINEAR);
 
     xc->pitchbend += XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope;
 
@@ -724,7 +724,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	if (TEST(FINE_NSLIDE)) {
 	    xc->note += xc->ns_fval;
 	    xc->period = note_to_period(xc->note, xc->finetune,
-				m->mod.xxh->flg & XXM_FLG_LINEAR);
+				m->mod.flg & XXM_FLG_LINEAR);
 	}
     }
 
@@ -738,7 +738,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     else if (xc->mastervol > p->gvol_base)
 	xc->mastervol = p->gvol_base;
 
-    if (m->mod.xxh->flg & XXM_FLG_LINEAR) {
+    if (m->mod.flg & XXM_FLG_LINEAR) {
 	if (xc->period < MIN_PERIOD_L)
 	    xc->period = MIN_PERIOD_L;
 	else if (xc->period > MAX_PERIOD_L)
@@ -779,8 +779,9 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     xmp_drv_seteffect(ctx, chn, XMP_FX_CUTOFF, cutoff);
 }
 
-int _xmp_player_start(struct xmp_context *ctx)
+int xmp_player_start(xmp_context opaque)
 {
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_driver_context *d = &ctx->d;
 	struct xmp_mod_context *m = &ctx->m;
@@ -791,15 +792,15 @@ int _xmp_player_start(struct xmp_context *ctx)
 	p->gvol_slide = 0;
 	p->gvol_base = m->volbase;
 	p->pos = f->ord = o->start;
-	f->frame = 0;
-	f->row = 0;
-	f->time = 0;
+	p->frame = 0;
+	p->row = 0;
+	p->time = 0;
 
-	if (m->mod.xxh->len == 0 || m->mod.xxh->chn == 0) {
+	if (m->mod.len == 0 || m->mod.chn == 0) {
 		/* set variables to sane state */
 		m->flags &= ~XMP_CTL_LOOP;
 		f->ord = p->scan_ord = 0;
-		f->row = p->scan_row = 0;
+		p->row = p->scan_row = 0;
 		f->end_point = 0;
 		return 0;
 	}
@@ -807,7 +808,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 	f->num_rows = m->mod.xxp[m->mod.xxo[f->ord]]->rows;
 
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
-	while (f->ord < m->mod.xxh->len && m->mod.xxo[f->ord] >= m->mod.xxh->pat)
+	while (f->ord < m->mod.len && m->mod.xxo[f->ord] >= m->mod.pat)
 		f->ord++;
 
 	m->volume = m->xxo_info[f->ord].gvl;
@@ -819,12 +820,12 @@ int _xmp_player_start(struct xmp_context *ctx)
 	f->playing_time = 0;
 	f->end_point = p->scan_num;
 
-	if ((ret = xmp_drv_on(ctx, m->mod.xxh->chn)) != 0)
+	if ((ret = xmp_drv_on(ctx, m->mod.chn)) != 0)
 		return ret;
 
 	f->jump = -1;
 
-	p->fetch_ctl = calloc(m->mod.xxh->chn, sizeof (int));
+	p->fetch_ctl = calloc(m->mod.chn, sizeof (int));
 	f->loop_stack = calloc(d->numchn, sizeof (int));
 	f->loop_start = calloc(d->numchn, sizeof (int));
 	p->xc_data = calloc(d->numchn, sizeof (struct channel_data));
@@ -841,8 +842,9 @@ int _xmp_player_start(struct xmp_context *ctx)
 	return 0;
 }
 
-int _xmp_player_frame(struct xmp_context *ctx)
+int xmp_player_frame(xmp_context opaque)
 {
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_driver_context *d = &ctx->d;
 	struct xmp_mod_context *m = &ctx->m;
@@ -873,9 +875,9 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		p->tick_time = m->rrate / p->bpm;
 		m->volume = m->xxo_info[f->ord].gvl;
 		f->jump = f->ord;
-		f->time = (double)m->xxo_info[f->ord].time / 1000;
+		p->time = (double)m->xxo_info[f->ord].time / 1000;
 		f->jumpline = m->xxo_info[f->ord].start_row;
-		f->row = -1;
+		p->row = -1;
 		f->pbreak = 1;
 		f->ord--;
 		xmp_drv_reset(ctx);
@@ -885,10 +887,10 @@ int _xmp_player_frame(struct xmp_context *ctx)
 
 	/* check new row */
 
-	if (f->frame == 0) {			/* first frame in row */
+	if (p->frame == 0) {			/* first frame in row */
 		/* check end of module */
 	    	if ((~m->flags & XMP_CTL_LOOP) && f->ord == p->scan_ord &&
-					f->row == p->scan_row) {
+					p->row == p->scan_row) {
 			if (!f->end_point--)
 				return -1;
 		}
@@ -897,28 +899,28 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		if (f->skip_fetch) {
 			f->skip_fetch = 0;
 		} else {
-			read_row(ctx, m->mod.xxo[f->ord], f->row);
+			read_row(ctx, m->mod.xxo[f->ord], p->row);
 		}
 	}
 
 	/* play_frame */
 	for (i = 0; i < d->numchn; i++)
-		play_channel(ctx, i, f->frame);
+		play_channel(ctx, i, p->frame);
 
 	if (o->time && (o->time < f->playing_time))	/* expired time */
 		return -1;
 
 	if (HAS_QUIRK(XMP_QRK_MEDBPM)) {
 		f->playing_time += m->rrate * 33 / (100 * p->bpm * 125);
-		f->time += m->rrate * 33 / (100 * p->bpm * 125);
+		p->time += m->rrate * 33 / (100 * p->bpm * 125);
 	} else {
 		f->playing_time += m->rrate / (100 * p->bpm);
-		f->time += m->rrate / (100 * p->bpm);
+		p->time += m->rrate / (100 * p->bpm);
 	}
 
-	f->frame++;
+	p->frame++;
 
-	if (f->frame >= (p->tempo * (1 + f->delay))) {
+	if (p->frame >= (p->tempo * (1 + f->delay))) {
 next_row:
 		/* If break during pattern delay, next row is skipped.
 		 * See corruption.mod order 1D (pattern 0D) last line:
@@ -929,7 +931,7 @@ next_row:
 			f->skip_fetch = 1;
 		}
 
-		f->frame = 0;
+		p->frame = 0;
 		f->delay = 0;
 
 		if (f->pbreak) {
@@ -945,37 +947,37 @@ next_row:
 		}
 
 		if (f->loop_chn) {
-			f->row = f->loop_start[--f->loop_chn] - 1;
+			p->row = f->loop_start[--f->loop_chn] - 1;
 			f->loop_chn = 0;
 		}
 
-		f->row++;
+		p->row++;
 
 		/* check end of pattern */
-		if (f->row >= f->num_rows) {
+		if (p->row >= f->num_rows) {
 next_order:
     			f->ord++;
 
 			/* Restart module */
-			if (f->ord >= m->mod.xxh->len) {
-    				f->ord = ((uint32)m->mod.xxh->rst > m->mod.xxh->len ||
-					(uint32)m->mod.xxo[m->mod.xxh->rst] >=
-					m->mod.xxh->pat) ?  0 : m->mod.xxh->rst;
+			if (f->ord >= m->mod.len) {
+    				f->ord = ((uint32)m->mod.rst > m->mod.len ||
+					(uint32)m->mod.xxo[m->mod.rst] >=
+					m->mod.pat) ?  0 : m->mod.rst;
 				m->volume = m->xxo_info[f->ord].gvl;
 			}
 
 			/* Skip invalid patterns */
-			if (m->mod.xxo[f->ord] >= m->mod.xxh->pat) {
+			if (m->mod.xxo[f->ord] >= m->mod.pat) {
     				f->ord++;
     				goto next_order;
 			}
 
-			f->time = (double)m->xxo_info[f->ord].time / 1000;
+			p->time = (double)m->xxo_info[f->ord].time / 1000;
 
 			f->num_rows = m->mod.xxp[m->mod.xxo[f->ord]]->rows;
 			if (f->jumpline >= f->num_rows)
 				f->jumpline = 0;
-			f->row = f->jumpline;
+			p->row = f->jumpline;
 			f->jumpline = 0;
 
 			p->pos = f->ord;
@@ -983,7 +985,7 @@ next_order:
 			/* Reset persistent effects at new pattern */
 			if (HAS_QUIRK(XMP_QRK_PERPAT)) {
 				int chn;
-				for (chn = 0; chn < m->mod.xxh->chn; chn++)
+				for (chn = 0; chn < m->mod.chn; chn++)
 					p->xc_data[chn].per_flags = 0;
 			}
 		}
@@ -993,15 +995,15 @@ next_order:
 	if (o->dump == 1) {
 		int i;
 
-		for (i = 0; i < m->mod.xxh->chn; i++) {
+		for (i = 0; i < m->mod.chn; i++) {
 			struct channel_data *c = &p->xc_data[i];
 
 			printf("%d %d %d %d %d %d %lf %d %d %d %d %lf "
 			       "%d %d %d %d %d %d %d %d %d %d\n",
 					f->ord,
 					m->mod.xxo[f->ord],
-					f->row,
-					f->frame,
+					p->row,
+					p->frame,
 					p->bpm,
 					p->tempo,
 					p->tick_time,
@@ -1030,8 +1032,9 @@ next_order:
 }
     
 
-void _xmp_player_end(struct xmp_context *ctx)
+void xmp_player_end(xmp_context opaque)
 {
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
 	struct flow_control *f = &p->flow;
@@ -1040,11 +1043,46 @@ void _xmp_player_end(struct xmp_context *ctx)
 	xmp_drv_off(ctx);
 	m->synth->deinit(ctx);
 
-	if (m->mod.xxh->len == 0 || m->mod.xxh->chn == 0)
+	if (m->mod.len == 0 || m->mod.chn == 0)
                 return;
 
 	free(p->xc_data);
 	free(f->loop_start);
 	free(f->loop_stack);
 	free(p->fetch_ctl);
+}
+
+
+void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
+{
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &ctx->m;
+	int chn, i;
+
+	chn = m->mod.chn;
+
+	info->mod = &m->mod;
+	info->order = p->pos;
+	info->pattern = m->mod.xxo[p->pos];
+	info->row = p->row;
+	info->frame = p->frame;
+	info->tempo = p->tempo;
+	info->bpm = p->bpm;
+
+	if (p->xc_data == NULL)
+		return;
+
+	for (i = 0; i < chn; i++) {
+		struct channel_data *c = &p->xc_data[i];
+
+		info->channel_info[i].period = c->period * 1000000;
+		info->channel_info[i].note = c->key;
+		info->channel_info[i].instrument = c->ins;
+		info->channel_info[i].sample = c->smp;
+		info->channel_info[i].volume = c->volume;
+		info->channel_info[i].pan = c->pan;
+	}
+
+	info->mod = &m->mod;
 }

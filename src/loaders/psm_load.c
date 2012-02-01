@@ -66,17 +66,17 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 	set_type(m, "PSM %d.%02d (Protracker Studio)",
 						MSN(ver), LSN(ver));
 
-	m->mod.xxh->tpo = read8(f);
-	m->mod.xxh->bpm = read8(f);
+	m->mod.tpo = read8(f);
+	m->mod.bpm = read8(f);
 	read8(f);		/* master volume */
 	read16l(f);		/* song length */
-	m->mod.xxh->len = read16l(f);
-	m->mod.xxh->pat = read16l(f);
-	m->mod.xxh->ins = read16l(f);
-	m->mod.xxh->chn = read16l(f);
+	m->mod.len = read16l(f);
+	m->mod.pat = read16l(f);
+	m->mod.ins = read16l(f);
+	m->mod.chn = read16l(f);
 	read16l(f);		/* channels used */
-	m->mod.xxh->smp = m->mod.xxh->ins;
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.smp = m->mod.ins;
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
 	p_ord = read32l(f);
 	p_chn = read32l(f);
@@ -84,12 +84,12 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 	p_ins = read32l(f);
 
 	/* should be this way but fails with Silverball song 6 */
-	//m->mod.xxh->flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
+	//m->mod.flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
 
 	MODULE_INFO();
 
 	fseek(f, start + p_ord, SEEK_SET);
-	fread(m->mod.xxo, 1, m->mod.xxh->len, f);
+	fread(m->mod.xxo, 1, m->mod.len, f);
 
 	fseek(f, start + p_chn, SEEK_SET);
 	fread(buf, 1, 16, f);
@@ -97,7 +97,7 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	fseek(f, start + p_ins, SEEK_SET);
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		uint16 flags, c2spd;
 		int finetune;
 
@@ -134,10 +134,10 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
 	fseek(f, start + p_pat, SEEK_SET);
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		int len;
 		uint8 b, rows, chan;
 
@@ -186,9 +186,9 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);
 		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 			XMP_SMP_DIFF, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);

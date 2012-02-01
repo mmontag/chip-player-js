@@ -96,19 +96,19 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&sfh.tempo, 128, 1, f);	/* Tempo list for patterns */
     fread(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
 
-    m->mod.xxh->chn = 8;
-    m->mod.xxh->ins = sfh.nos;
-    m->mod.xxh->pat = sfh.nop;
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.chn = 8;
+    m->mod.ins = sfh.nos;
+    m->mod.pat = sfh.nop;
+    m->mod.trk = m->mod.chn * m->mod.pat;
     for (i = 0; i < 128; i++)
 	if (sfh.order[i] > sfh.nop)
 	    break;
-    m->mod.xxh->len = i;
-    memcpy (m->mod.xxo, sfh.order, m->mod.xxh->len);
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->bpm = 76;		/* adjusted using Flux/sober.669 */
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->flg |= XXM_FLG_LINEAR;
+    m->mod.len = i;
+    memcpy (m->mod.xxo, sfh.order, m->mod.len);
+    m->mod.tpo = 6;
+    m->mod.bpm = 76;		/* adjusted using Flux/sober.669 */
+    m->mod.smp = m->mod.ins;
+    m->mod.flg |= XXM_FLG_LINEAR;
 
     copy_adjust(m->mod.name, sfh.message, 36);
     strcpy(m->mod.type, strncmp((char *)sfh.marker, "if", 2) ?
@@ -124,9 +124,9 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Instruments: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
@@ -152,8 +152,8 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
@@ -210,16 +210,16 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	if (m->mod.xxs[i].len <= 2)
 	    continue;
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 	    XMP_SMP_UNS, &m->mod.xxs[i], NULL);
     }
 
-    for (i = 0; i < m->mod.xxh->chn; i++)
+    for (i = 0; i < m->mod.chn; i++)
 	m->mod.xxc[i].pan = (i % 2) * 0xff;
 
     m->quirk |= XMP_QRK_PERPAT;	    /* Cancel persistent fx at each new pat */

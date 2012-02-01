@@ -99,11 +99,11 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
     if (sfx.magic != MAGIC_SONG)
 	return -1;
 
-    m->mod.xxh->ins = nins;
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->bpm = 14565 * 122 / sfx.delay;
+    m->mod.ins = nins;
+    m->mod.smp = m->mod.ins;
+    m->mod.bpm = 14565 * 122 / sfx.delay;
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	fread(&ins[i].name, 22, 1, f);
 	ins[i].len = read16b(f);
 	ins[i].finetune = read8(f);
@@ -116,25 +116,25 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
     sfx2.restart = read8(f);
     fread(&sfx2.order, 128, 1, f);
 
-    m->mod.xxh->len = sfx2.len;
-    if (m->mod.xxh->len > 0x7f)
+    m->mod.len = sfx2.len;
+    if (m->mod.len > 0x7f)
 	return -1;
 
-    memcpy (m->mod.xxo, sfx2.order, m->mod.xxh->len);
-    for (m->mod.xxh->pat = i = 0; i < m->mod.xxh->len; i++)
-	if (m->mod.xxo[i] > m->mod.xxh->pat)
-	    m->mod.xxh->pat = m->mod.xxo[i];
-    m->mod.xxh->pat++;
+    memcpy (m->mod.xxo, sfx2.order, m->mod.len);
+    for (m->mod.pat = i = 0; i < m->mod.len; i++)
+	if (m->mod.xxo[i] > m->mod.pat)
+	    m->mod.pat = m->mod.xxo[i];
+    m->mod.pat++;
 
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.trk = m->mod.chn * m->mod.pat;
 
-    strcpy (m->mod.type, m->mod.xxh->ins == 15 ? "SoundFX 1.3" : "SoundFX 2.0");
+    strcpy (m->mod.type, m->mod.ins == 15 ? "SoundFX 1.3" : "SoundFX 2.0");
 
     MODULE_INFO();
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = ins_size[i]);
 	m->mod.xxs[i].lps = ins[i].loop_start;
@@ -155,15 +155,15 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC(i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
 
-	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
-	    event = &EVENT(i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+	for (j = 0; j < 64 * m->mod.chn; j++) {
+	    event = &EVENT(i, j % m->mod.chn, j / m->mod.chn);
 	    fread(ev, 1, 4, f);
 
 	    event->note = period_to_note ((LSN (ev[0]) << 8) | ev[1]);
@@ -201,13 +201,13 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 	}
     }
 
-    m->mod.xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.flg |= XXM_FLG_MODRNG;
 
     /* Read samples */
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	if (m->mod.xxs[i].len <= 2)
 	    continue;
 	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);

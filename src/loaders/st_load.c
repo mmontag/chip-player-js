@@ -171,8 +171,8 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     LOAD_INIT();
 
-    m->mod.xxh->ins = 15;
-    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.ins = 15;
+    m->mod.smp = m->mod.ins;
     smp_size = 0;
 
     fread(mh.name, 1, 20, f);
@@ -188,23 +188,23 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     mh.restart = read8(f);
     fread(mh.order, 1, 128, f);
 	
-    m->mod.xxh->len = mh.len;
-    m->mod.xxh->rst = mh.restart;
+    m->mod.len = mh.len;
+    m->mod.rst = mh.restart;
 
     /* UST: The byte at module offset 471 is BPM, not the song restart
      *      The default for UST modules is 0x78 = 120 BPM = 48 Hz.
      */
-    if (m->mod.xxh->rst < 0x40)	/* should be 0x20 */
+    if (m->mod.rst < 0x40)	/* should be 0x20 */
 	ust = 0;
 
     memcpy (m->mod.xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++)
-	if (m->mod.xxo[i] > m->mod.xxh->pat)
-	    m->mod.xxh->pat = m->mod.xxo[i];
-    m->mod.xxh->pat++;
+	if (m->mod.xxo[i] > m->mod.pat)
+	    m->mod.pat = m->mod.xxo[i];
+    m->mod.pat++;
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	/* UST: Volume word does not contain a "Finetuning" value in its
 	 * high-byte.
 	 */
@@ -227,7 +227,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxs[i].len = 2 * mh.ins[i].size;
 	m->mod.xxs[i].lps = mh.ins[i].loop_start;
@@ -242,7 +242,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	str_adj((char *)m->mod.xxi[i].name);
     }
 
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.trk = m->mod.chn * m->mod.pat;
 
     strncpy (m->mod.name, (char *) mh.name, 20);
 
@@ -250,8 +250,8 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     fxused = 0;
     pos = ftell(f);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
-	for (j = 0; j < (64 * m->mod.xxh->chn); j++) {
+    for (i = 0; i < m->mod.pat; i++) {
+	for (j = 0; j < (64 * m->mod.chn); j++) {
 	    fread (mod_event, 1, 4, f);
 
 	    cvt_pt_event (&ev, mod_event);
@@ -317,44 +317,44 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < (64 * m->mod.xxh->chn); j++) {
-	    event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+	for (j = 0; j < (64 * m->mod.chn); j++) {
+	    event = &EVENT (i, j % m->mod.chn, j / m->mod.chn);
 	    fread (mod_event, 1, 4, f);
 
 	    cvt_pt_event(event, mod_event);
 	}
     }
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 		i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
 		m->mod.xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
 		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4);
     }
 
-    m->mod.xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.flg |= XXM_FLG_MODRNG;
 
     /* Perform the necessary conversions for Ultimate Soundtracker */
     if (ust) {
 	/* Fix restart & bpm */
-	m->mod.xxh->bpm = m->mod.xxh->rst;
-	m->mod.xxh->rst = 0;
+	m->mod.bpm = m->mod.rst;
+	m->mod.rst = 0;
 
 	/* Fix sample loops */
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 	    /* FIXME */	
 	}
 
 	/* Fix effects (arpeggio and pitchbending) */
-	for (i = 0; i < m->mod.xxh->pat; i++) {
-	    for (j = 0; j < (64 * m->mod.xxh->chn); j++) {
-		event = &EVENT(i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+	for (i = 0; i < m->mod.pat; i++) {
+	    for (j = 0; j < (64 * m->mod.chn); j++) {
+		event = &EVENT(i, j % m->mod.chn, j / m->mod.chn);
 		if (event->fxt == 1)
 		    event->fxt = 0;
 		else if (event->fxt == 2 && (event->fxp & 0xf0) == 0)
@@ -364,8 +364,8 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	}
     } else {
-	if (m->mod.xxh->rst >= m->mod.xxh->len)
-	    m->mod.xxh->rst = 0;
+	if (m->mod.rst >= m->mod.len)
+	    m->mod.rst = 0;
     }
 
     if (o->skipsmp)
@@ -373,9 +373,9 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load samples */
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	if (!m->mod.xxs[i].len)
 	    continue;
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,

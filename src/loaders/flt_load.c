@@ -334,26 +334,26 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&mh.magic, 4, 1, f);
 
     if (mh.magic[3] == '4')
-	m->mod.xxh->chn = 4;
+	m->mod.chn = 4;
     else
-	m->mod.xxh->chn = 8;
+	m->mod.chn = 8;
 
-    m->mod.xxh->ins = 31;
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->len = mh.len;
-    m->mod.xxh->rst = mh.restart;
+    m->mod.ins = 31;
+    m->mod.smp = m->mod.ins;
+    m->mod.len = mh.len;
+    m->mod.rst = mh.restart;
     memcpy(m->mod.xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++) {
-	if (m->mod.xxh->chn > 4)
+	if (m->mod.chn > 4)
 	    m->mod.xxo[i] >>= 1;
-	if (m->mod.xxo[i] > m->mod.xxh->pat)
-	    m->mod.xxh->pat = m->mod.xxo[i];
+	if (m->mod.xxo[i] > m->mod.pat)
+	    m->mod.pat = m->mod.xxo[i];
     }
 
-    m->mod.xxh->pat++;
+    m->mod.pat++;
 
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.trk = m->mod.chn * m->mod.pat;
 
     strncpy(m->mod.name, (char *) mh.name, 20);
     set_type(m, "%4.4s (%s)", mh.magic, tracker);
@@ -361,7 +361,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxs[i].len = 2 * mh.ins[i].size;
 	m->mod.xxs[i].lps = 2 * mh.ins[i].loop_start;
@@ -396,7 +396,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
     /* The format you are looking for is FLT8, and the ONLY two differences
      * are: It says FLT8 instead of FLT4 or M.K., AND, the patterns are PAIRED.
@@ -409,7 +409,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
      * the portamento command uses a different "scale" than the normal
      * portamento command, that would be hard to patch).
      */
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC(i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
@@ -418,7 +418,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fread(mod_event, 1, 4, f);
 	    cvt_pt_event(event, mod_event);
 	}
-	if (m->mod.xxh->chn > 4) {
+	if (m->mod.chn > 4) {
 	    for (j = 0; j < (64 * 4); j++) {
 		event = &EVENT(i, (j % 4) + 4, j / 4);
 		fread(mod_event, 1, 4, f);
@@ -432,7 +432,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* no such limit for synth instruments
-     * m->mod.xxh->flg |= XXM_FLG_MODRNG;
+     * m->mod.flg |= XXM_FLG_MODRNG;
      */
 
     if (o->skipsmp)
@@ -440,9 +440,9 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load samples */
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	if (m->mod.xxs[i].len == 0) {
 	    if (am_synth && is_am_instrument(nt, i)) {
 		read_am_instrument(ctx, nt, i);

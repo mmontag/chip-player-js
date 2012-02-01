@@ -174,7 +174,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	m->mod.xxh->chn = read8(f) & 0x3f;
+	m->mod.chn = read8(f) & 0x3f;
 	read_title(f, m->mod.name, 20);
 
 	for (i = 0; i < 20; i++) {
@@ -184,10 +184,10 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	strcpy(m->mod.type, "Coconizer");
 
-	m->mod.xxh->ins = m->mod.xxh->smp = read8(f);
-	m->mod.xxh->len = read8(f);
-	m->mod.xxh->pat = read8(f);
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.ins = m->mod.smp = read8(f);
+	m->mod.len = read8(f);
+	m->mod.pat = read8(f);
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
 	seq_ptr = read32l(f);
 	pat_ptr = read32l(f);
@@ -198,7 +198,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		smp_ptr[i] = read32l(f);
@@ -244,15 +244,15 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC (i);
 		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC (i);
 
-		for (j = 0; j < (64 * m->mod.xxh->chn); j++) {
-			event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+		for (j = 0; j < (64 * m->mod.chn); j++) {
+			event = &EVENT (i, j % m->mod.chn, j / m->mod.chn);
 			event->fxp = read8(f);
 			event->fxt = read8(f);
 			event->ins = read8(f);
@@ -264,9 +264,9 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples : %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples : %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		if (m->mod.xxi[i].nsm == 0)
 			continue;
 
@@ -275,7 +275,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 				XMP_SMP_VIDC, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 		m->mod.xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
 
 	return 0;

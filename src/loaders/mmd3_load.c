@@ -161,8 +161,8 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, 32, SEEK_CUR);	/* skip name */
 	read32b(f);
 	read32b(f);
-	m->mod.xxh->len = read16b(f);
-	for (i = 0; i < m->mod.xxh->len; i++)
+	m->mod.len = read16b(f);
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = read16b(f);
 
 	/*
@@ -183,23 +183,23 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * lower, the faster). Values 11-240 are equivalent to 10.
 	 */
 
-	m->mod.xxh->tpo = song.tempo2;
-	m->mod.xxh->bpm = med_8ch ?
+	m->mod.tpo = song.tempo2;
+	m->mod.bpm = med_8ch ?
 			mmd_get_8ch_tempo(song.deftempo) :
 			(bpm_on ? song.deftempo / bpmlen : song.deftempo);
 
-	m->mod.xxh->pat = song.numblocks;
-	m->mod.xxh->ins = song.numsamples;
-	//m->mod.xxh->smp = m->mod.xxh->ins;
-	m->mod.xxh->rst = 0;
-	m->mod.xxh->chn = 0;
+	m->mod.pat = song.numblocks;
+	m->mod.ins = song.numsamples;
+	//m->mod.smp = m->mod.ins;
+	m->mod.rst = 0;
+	m->mod.chn = 0;
 	m->mod.name[0] = 0;
 
 	/*
 	 * Obtain number of samples from each instrument
 	 */
-	m->mod.xxh->smp = 0;
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.smp = 0;
+	for (i = 0; i < m->mod.ins; i++) {
 		uint32 smpl_offset;
 		int16 type;
 		fseek(f, start + smplarr_offset + i * 4, SEEK_SET);
@@ -211,9 +211,9 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 		type = read16b(f);
 		if (type == -1) {			/* type is synth? */
 			fseek(f, 14, SEEK_CUR);
-			m->mod.xxh->smp += read16b(f);		/* wforms */
+			m->mod.smp += read16b(f);		/* wforms */
 		} else {
-			m->mod.xxh->smp++;
+			m->mod.smp++;
 		}
 	}
 
@@ -261,7 +261,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 	_D(_D_WARN "find number of channels");
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		int block_offset;
 
 		fseek(f, start + blockarr_offset + i * 4, SEEK_SET);
@@ -274,11 +274,11 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 		block.numtracks = read16b(f);
 		block.lines = read16b(f);
 
-		if (block.numtracks > m->mod.xxh->chn)
-			m->mod.xxh->chn = block.numtracks;
+		if (block.numtracks > m->mod.chn)
+			m->mod.chn = block.numtracks;
 	}
 
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
 	if (ver == 2)
 	    set_type(m, "MMD%c (OctaMED v5)", '0' + ver);
@@ -289,7 +289,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	_D(_D_INFO "BPM mode: %s (length = %d)", bpm_on ? "on" : "off", bpmlen);
 	_D(_D_INFO "Song transpose : %d", song.playtransp);
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
 	/*
 	 * Read and convert patterns
@@ -297,7 +297,7 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_WARN "read patterns");
 	PATTERN_INIT();
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		int block_offset;
 
 		fseek(f, start + blockarr_offset + i * 4, SEEK_SET);
@@ -334,8 +334,8 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->med_vol_table = calloc(sizeof(uint8 *), m->mod.xxh->ins);
-	m->med_wav_table = calloc(sizeof(uint8 *), m->mod.xxh->ins);
+	m->med_vol_table = calloc(sizeof(uint8 *), m->mod.ins);
+	m->med_wav_table = calloc(sizeof(uint8 *), m->mod.ins);
 
 	/*
 	 * Read and convert instruments and samples
@@ -343,9 +343,9 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_WARN "read instruments");
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.ins);
 
-	for (smp_idx = i = 0; i < m->mod.xxh->ins; i++) {
+	for (smp_idx = i = 0; i < m->mod.ins; i++) {
 		int smpl_offset;
 		int t;
 		char name[40] = "";
@@ -561,17 +561,17 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	fseek(f, start + trackvols_offset, SEEK_SET);
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 		m->mod.xxc[i].vol = read8(f);;
 
 	if (trackpans_offset) {
 		fseek(f, start + trackpans_offset, SEEK_SET);
-		for (i = 0; i < m->mod.xxh->chn; i++) {
+		for (i = 0; i < m->mod.chn; i++) {
 			int p = 8 * read8s(f);
 			m->mod.xxc[i].pan = 0x80 + (p > 127 ? 127 : p);
 		}
 	} else {
-		for (i = 0; i < m->mod.xxh->chn; i++)
+		for (i = 0; i < m->mod.chn; i++)
 			m->mod.xxc[i].pan = 0x80;
 	}
 

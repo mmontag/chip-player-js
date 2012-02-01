@@ -299,11 +299,11 @@ static void get_chunk_in(struct xmp_context *ctx, int size, FILE *f)
     fread(m->mod.name, 1, 32, f);
     fseek(f, 20, SEEK_CUR);
 
-    m->mod.xxh->len = read16l(f);
-    m->mod.xxh->rst = read16l(f);
+    m->mod.len = read16l(f);
+    m->mod.rst = read16l(f);
     read8(f);			/* gvol */
-    m->mod.xxh->tpo = read8(f);
-    m->mod.xxh->bpm = read8(f);
+    m->mod.tpo = read8(f);
+    m->mod.bpm = read8(f);
 
     for (i = 0; i < 32; i++) {
 	uint8 chinfo = read8(f);
@@ -311,10 +311,10 @@ static void get_chunk_in(struct xmp_context *ctx, int size, FILE *f)
 	    break;
 	m->mod.xxc[i].pan = chinfo << 1;
     }
-    m->mod.xxh->chn = i;
+    m->mod.chn = i;
     fseek(f, 32 - i - 1, SEEK_CUR);
 
-    fread(m->mod.xxo, 1, m->mod.xxh->len, f);
+    fread(m->mod.xxo, 1, m->mod.len, f);
 
     MODULE_INFO();
 }
@@ -325,13 +325,13 @@ static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
     int i, j, chn;
     int x;
 
-    m->mod.xxh->pat = read8(f);
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn + 1;	/* Max */
+    m->mod.pat = read8(f);
+    m->mod.trk = m->mod.pat * m->mod.chn + 1;	/* Max */
 
     PATTERN_INIT();
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	chn = read8(f);
 	m->mod.xxp[i]->rows = (int)read8(f) + 1;
@@ -339,7 +339,7 @@ static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
 	fseek(f, 16, SEEK_CUR);		/* Skip pattern name */
 	for (j = 0; j < chn; j++) {
 	    x = read16l(f);
-	    if (j < m->mod.xxh->chn)
+	    if (j < m->mod.chn)
 		m->mod.xxp[i]->index[j] = x;
 	}
     }
@@ -351,19 +351,19 @@ static void get_chunk_p0(struct xmp_context *ctx, int size, FILE *f)
     int i, j;
     uint16 x16;
 
-    m->mod.xxh->pat = read8(f);
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn + 1;	/* Max */
+    m->mod.pat = read8(f);
+    m->mod.trk = m->mod.pat * m->mod.chn + 1;	/* Max */
 
     PATTERN_INIT();
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 
 	for (j = 0; j < 32; j++) {
 	    x16 = read16l(f);
-	    if (j < m->mod.xxh->chn)
+	    if (j < m->mod.chn)
 		m->mod.xxp[i]->index[j] = x16;
 	}
     }
@@ -375,10 +375,10 @@ static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
     int i, j, k, row, len;
     struct xmp_track *track;
 
-    m->mod.xxh->trk = read16l(f) + 1;
-    m->mod.xxt = realloc(m->mod.xxt, sizeof (struct xmp_track *) * m->mod.xxh->trk);
+    m->mod.trk = read16l(f) + 1;
+    m->mod.xxt = realloc(m->mod.xxt, sizeof (struct xmp_track *) * m->mod.trk);
 
-    _D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
+    _D(_D_INFO "Stored tracks: %d", m->mod.trk);
 
     track = calloc (1, sizeof (struct xmp_track) +
 	sizeof (struct xmp_event) * 256);
@@ -388,7 +388,7 @@ static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
 	256 * sizeof (struct xmp_event));
     m->mod.xxt[0]->rows = 256;
 
-    for (i = 1; i < m->mod.xxh->trk; i++) {
+    for (i = 1; i < m->mod.trk; i++) {
 	/* Length of the track in bytes */
 	len = read16l(f);
 
@@ -463,12 +463,12 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
     int map, last_map;
     char buf[40];
 
-    m->mod.xxh->ins = read8(f);
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    m->mod.ins = read8(f);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	i_index[i] = read8(f);
 	m->mod.xxi[i].nsm = read8(f);
 	fread(buf, 1, 32, f);
@@ -538,13 +538,13 @@ static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
     char buf[64];
     uint8 x;
 
-    m->mod.xxh->smp = read8(f);
-    m->mod.xxs = calloc(sizeof (struct xmp_sample), m->mod.xxh->smp);
-    packinfo = calloc(sizeof (int), m->mod.xxh->smp);
+    m->mod.smp = read8(f);
+    m->mod.xxs = calloc(sizeof (struct xmp_sample), m->mod.smp);
+    packinfo = calloc(sizeof (int), m->mod.smp);
 
-    _D(_D_INFO "Sample infos: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Sample infos: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	s_index[i] = read8(f);		/* Sample number */
 	fread(buf, 1, 32, f);
 	buf[32] = 0;
@@ -592,15 +592,15 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
     char buf[64];
     uint8 x;
 
-    m->mod.xxh->ins = m->mod.xxh->smp = read8(f);
+    m->mod.ins = m->mod.smp = read8(f);
 
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
     INSTRUMENT_INIT();
 
-    packinfo = calloc (sizeof (int), m->mod.xxh->smp);
+    packinfo = calloc (sizeof (int), m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].nsm = 1;
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].sub[0].sid = i_index[i] = s_index[i] = read8(f);
@@ -649,9 +649,9 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
     if (o->skipsmp)
 	return;
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	smpbuf = calloc (1, m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ?
 		m->mod.xxs[i].len << 1 : m->mod.xxs[i].len);
 
@@ -803,10 +803,10 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Re-index instruments & samples */
 
-    for (i = 0; i < m->mod.xxh->pat; i++)
+    for (i = 0; i < m->mod.pat; i++)
 	for (j = 0; j < m->mod.xxp[i]->rows; j++)
-	    for (k = 0; k < m->mod.xxh->chn; k++)
-		for (l = 0; l < m->mod.xxh->ins; l++) {
+	    for (k = 0; k < m->mod.chn; k++)
+		for (l = 0; l < m->mod.ins; l++) {
 		    if (j >= m->mod.xxt[m->mod.xxp[i]->index[k]]->rows)
 			continue;
 		    
@@ -816,7 +816,7 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 		    }
 		}
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 
 	/* FIXME: envelope timing is wrong */
 
@@ -905,7 +905,7 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	for (j = 0; j < m->mod.xxi[i].nsm; j++)
-	    for (k = 0; k < m->mod.xxh->smp; k++)
+	    for (k = 0; k < m->mod.smp; k++)
 		if (m->mod.xxi[i].sub[j].sid == s_index[k]) {
 		    m->mod.xxi[i].sub[j].sid = k;
 		    c2spd_to_note (c2spd[k], &m->mod.xxi[i].sub[j].xpo, &m->mod.xxi[i].sub[j].fin);

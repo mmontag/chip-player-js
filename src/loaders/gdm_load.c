@@ -136,30 +136,30 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(panmap, 32, 1, f);
 	for (i = 0; i < 32; i++) {
 		if (panmap[i] != 0xff)
-			m->mod.xxh->chn = i + 1;
+			m->mod.chn = i + 1;
 		if (panmap[i] == 16)
 			panmap[i] = 8;
 		m->mod.xxc[i].pan = 0x80 + (panmap[i] - 8) * 16;
 	}
 
-	m->mod.xxh->gvl = read8(f);
-	m->mod.xxh->tpo = read8(f);
-	m->mod.xxh->bpm = read8(f);
+	m->mod.gvl = read8(f);
+	m->mod.tpo = read8(f);
+	m->mod.bpm = read8(f);
 	origfmt = read16l(f);
 	ord_ofs = read32l(f);
-	m->mod.xxh->len = read8(f) + 1;
+	m->mod.len = read8(f) + 1;
 	pat_ofs = read32l(f);
-	m->mod.xxh->pat = read8(f) + 1;
+	m->mod.pat = read8(f) + 1;
 	ins_ofs = read32l(f);
 	smp_ofs = read32l(f);
-	m->mod.xxh->ins = m->mod.xxh->smp = read8(f) + 1;
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.ins = m->mod.smp = read8(f) + 1;
+	m->mod.trk = m->mod.pat * m->mod.chn;
 	
 	MODULE_INFO();
 
 	fseek(f, start + ord_ofs, SEEK_SET);
 
-	for (i = 0; i < m->mod.xxh->len; i++)
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = read8(f);
 
 	/* Read instrument data */
@@ -168,7 +168,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		int flg, c4spd, vol, pan;
 
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -220,9 +220,9 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		int len, c, r, k;
 
 		PATTERN_ALLOC(i);
@@ -241,7 +241,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 				continue;
 			}
 
-			assert((c & 0x1f) < m->mod.xxh->chn);
+			assert((c & 0x1f) < m->mod.chn);
 			event = &EVENT (i, c & 0x1f, r);
 
 			if (c & 0x20) {		/* note and sample follows */
@@ -281,9 +281,9 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fseek(f, start + smp_ofs, SEEK_SET);
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 				XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}

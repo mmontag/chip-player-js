@@ -116,27 +116,27 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 31; i++)
         fread(&dh.insname[i], 30, 1, f);
 
-    m->mod.xxh->ins = 31;
-    m->mod.xxh->smp = m->mod.xxh->ins;
-    m->mod.xxh->pat = dh.pat + 1;
-    m->mod.xxh->chn = dh.chn;
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-    m->mod.xxh->len = dh.len + 1;
-    m->mod.xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.ins = 31;
+    m->mod.smp = m->mod.ins;
+    m->mod.pat = dh.pat + 1;
+    m->mod.chn = dh.chn;
+    m->mod.trk = m->mod.pat * m->mod.chn;
+    m->mod.len = dh.len + 1;
+    m->mod.flg |= XXM_FLG_MODRNG;
 
     copy_adjust(m->mod.name, dh.title, 32);
     set_type(m, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
 
     MODULE_INFO();
  
-    for (i = 0; i < m->mod.xxh->len; i++)
+    for (i = 0; i < m->mod.len; i++)
 	m->mod.xxo[i] = dh.ord[i];
  
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = dh.slen[i]);
 	m->mod.xxs[i].lps = dh.sloop[i];
@@ -157,9 +157,9 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
@@ -168,12 +168,12 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 	    w = (read16b(f) - 64) >> 2;
 	    fread (chn_table, 1, 64, f);
 	} else {
-	    w = 64 * m->mod.xxh->chn;
+	    w = 64 * m->mod.chn;
 	    memset (chn_table, 0xff, 64);
 	}
 
 	for (j = 0; j < 64; j++) {
-	    for (c = 0, k = 0x80; c < m->mod.xxh->chn; c++, k >>= 1) {
+	    for (c = 0, k = 0x80; c < m->mod.chn; c++, k >>= 1) {
 	        if (chn_table[j] & k) {
 		    fread (digi_event, 4, 1, f);
 		    event = &EVENT (i, c, j);
@@ -207,8 +207,8 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    for (i = 0; i < m->mod.ins; i++) {
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
 	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }

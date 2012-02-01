@@ -89,15 +89,15 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	    break;
     }
 
-    m->mod.xxh->ins = i;
+    m->mod.ins = i;
 
     fseek(f, start + 0, SEEK_SET);
 
-    m->mod.xxh->chn = 9;
-    m->mod.xxh->bpm = 135;
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->smp = 0;
-    m->mod.xxh->flg = XXM_FLG_LINEAR;
+    m->mod.chn = 9;
+    m->mod.bpm = 135;
+    m->mod.tpo = 6;
+    m->mod.smp = 0;
+    m->mod.flg = XXM_FLG_LINEAR;
 
     set_type(m, "HSC (HSC-Tracker)");
 
@@ -108,7 +108,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 
     fread (buf, 1, 128 * 12, f);
     sid = buf;
-    for (i = 0; i < m->mod.xxh->ins; i++, sid += 12) {
+    for (i = 0; i < m->mod.ins; i++, sid += 12) {
 	xmp_cvt_hsc2sbi((char *)sid);
 
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -132,18 +132,18 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	    pat = m->mod.xxo[i];
     }
     fseek(f, 50 - i, SEEK_CUR);
-    m->mod.xxh->len = i;
-    m->mod.xxh->pat = pat + 1;
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.len = i;
+    m->mod.pat = pat + 1;
+    m->mod.trk = m->mod.pat * m->mod.chn;
 
-    _D(_D_INFO "Module length: %d", m->mod.xxh->len);
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Module length: %d", m->mod.len);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	int ins[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
 	PATTERN_ALLOC (i);
@@ -173,7 +173,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    for (i = 0; i < m->mod.xxh->chn; i++) {
+    for (i = 0; i < m->mod.chn; i++) {
 	m->mod.xxc[i].pan = 0x80;
 	m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
     }

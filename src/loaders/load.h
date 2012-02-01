@@ -20,10 +20,10 @@
 char *copy_adjust(char *, uint8 *, int);
 int test_name(uint8 *, int);
 void read_title(FILE *, char *, int);
-void set_xxh_defaults(struct xmp_module_header *);
+void set_xxh_defaults(struct xmp_module *);
 void cvt_pt_event(struct xmp_event *, uint8 *);
 void disable_continue_fx(struct xmp_event *);
-void clean_s3m_seq(struct xmp_module_header *, uint8 *);
+void clean_s3m_seq(struct xmp_module *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct xmp_context *, char *, char *, int);
 void set_type(struct xmp_mod_context *, char *, ...);
@@ -39,7 +39,7 @@ extern int arch_vol_table[];
 #define LOAD_INIT() do { \
     fseek(f, start, SEEK_SET); \
     m->med_vol_table = m->med_wav_table = NULL; \
-    set_xxh_defaults(m->mod.xxh); \
+    set_xxh_defaults(&m->mod); \
 } while (0)
 
 #define MODULE_INFO() do { \
@@ -48,27 +48,27 @@ extern int arch_vol_table[];
 } while (0)
 
 #define INSTRUMENT_INIT() do { \
-    m->mod.xxi = calloc(sizeof (struct xmp_instrument), m->mod.xxh->ins); \
-    if (m->mod.xxh->smp) { m->mod.xxs = calloc (sizeof (struct xmp_sample), m->mod.xxh->smp); }\
+    m->mod.xxi = calloc(sizeof (struct xmp_instrument), m->mod.ins); \
+    if (m->mod.smp) { m->mod.xxs = calloc (sizeof (struct xmp_sample), m->mod.smp); }\
 } while (0)
 
 #define PATTERN_INIT() do { \
-    m->mod.xxt = calloc(sizeof (struct xmp_track *), m->mod.xxh->trk); \
-    m->mod.xxp = calloc(sizeof (struct xmp_pattern *), m->mod.xxh->pat + 1); \
+    m->mod.xxt = calloc(sizeof (struct xmp_track *), m->mod.trk); \
+    m->mod.xxp = calloc(sizeof (struct xmp_pattern *), m->mod.pat + 1); \
 } while (0)
 
 #define PATTERN_ALLOC(x) do { \
     m->mod.xxp[x] = calloc(1, sizeof (struct xmp_pattern) + \
-	sizeof (int) * (m->mod.xxh->chn - 1)); \
+	sizeof (int) * (m->mod.chn - 1)); \
 } while (0)
 
 #define TRACK_ALLOC(i) do { \
     int j; \
-    for (j = 0; j < m->mod.xxh->chn; j++) { \
-	m->mod.xxp[i]->index[j] = i * m->mod.xxh->chn + j; \
-	m->mod.xxt[i * m->mod.xxh->chn + j] = calloc (sizeof (struct xmp_track) + \
+    for (j = 0; j < m->mod.chn; j++) { \
+	m->mod.xxp[i]->index[j] = i * m->mod.chn + j; \
+	m->mod.xxt[i * m->mod.chn + j] = calloc (sizeof (struct xmp_track) + \
 	    sizeof (struct xmp_event) * m->mod.xxp[i]->rows, 1); \
-	m->mod.xxt[i * m->mod.xxh->chn + j]->rows = m->mod.xxp[i]->rows; \
+	m->mod.xxt[i * m->mod.chn + j]->rows = m->mod.xxp[i]->rows; \
     } \
 } while (0)
 
@@ -78,7 +78,7 @@ extern int arch_vol_table[];
     free(m->mod.xxfe); \
     free(m->mod.xxpe); \
     free(m->mod.xxae); \
-    if (m->mod.xxh->smp) free(m->mod.xxs); \
+    if (m->mod.smp) free(m->mod.xxs); \
     free(m->mod.xxi); \
     free(m->mod.xxim); \
     free(m->mod.xxi); \
@@ -93,8 +93,8 @@ extern int arch_vol_table[];
 #define TRACK_DEALLOC_ALL(i) do { \
     int j, k; \
     for (k = i; k >= 0; k--) { \
-	for (j = 0; j < m->mod.xxh->chn; j++) \
-	    free(m->mod.xxt[k * m->mod.xxh->chn + j]); \
+	for (j = 0; j < m->mod.chn; j++) \
+	    free(m->mod.xxt[k * m->mod.chn + j]); \
     } \
     free(m->mod.xxt); \
 } while (0)

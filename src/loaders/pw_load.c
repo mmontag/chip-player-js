@@ -123,23 +123,23 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (memcmp(mh.magic, "M.K.", 4))
 		goto err;
 		
-	m->mod.xxh->ins = 31;
-	m->mod.xxh->smp = m->mod.xxh->ins;
-	m->mod.xxh->chn = 4;
-	m->mod.xxh->len = mh.len;
-	m->mod.xxh->rst = mh.restart;
+	m->mod.ins = 31;
+	m->mod.smp = m->mod.ins;
+	m->mod.chn = 4;
+	m->mod.len = mh.len;
+	m->mod.rst = mh.restart;
 	memcpy(m->mod.xxo, mh.order, 128);
 
 	for (i = 0; i < 128; i++) {
-		if (m->mod.xxh->chn > 4)
+		if (m->mod.chn > 4)
 			m->mod.xxo[i] >>= 1;
-		if (m->mod.xxo[i] > m->mod.xxh->pat)
-			m->mod.xxh->pat = m->mod.xxo[i];
+		if (m->mod.xxo[i] > m->mod.pat)
+			m->mod.pat = m->mod.xxo[i];
 	}
 
-	m->mod.xxh->pat++;
+	m->mod.pat++;
 
-	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+	m->mod.trk = m->mod.chn * m->mod.pat;
 
 	snprintf(m->mod.name, XMP_NAMESIZE, "%s", (char *)mh.name);
 	snprintf(m->mod.type, XMP_NAMESIZE, "%s (%s)", fmt->id, fmt->name);
@@ -147,7 +147,7 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		m->mod.xxs[i].len = 2 * mh.ins[i].size;
 		m->mod.xxs[i].lps = 2 * mh.ins[i].loop_start;
@@ -178,9 +178,9 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
@@ -191,15 +191,15 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->mod.xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.flg |= XXM_FLG_MODRNG;
 
 	if (o->skipsmp)
 		goto end;
 
 	/* Load samples */
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
-	for (i = 0; i < m->mod.xxh->smp; i++) {
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
+	for (i = 0; i < m->mod.smp; i++) {
 		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
 				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}

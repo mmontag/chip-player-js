@@ -65,10 +65,10 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 	strcpy(m->mod.type, "Galaxy Music System 5.0");
 	flags = read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
-		m->mod.xxh->flg = XXM_FLG_LINEAR;
-	m->mod.xxh->chn = read8(f);
-	m->mod.xxh->tpo = read8(f);
-	m->mod.xxh->bpm = read8(f);
+		m->mod.flg = XXM_FLG_LINEAR;
+	m->mod.chn = read8(f);
+	m->mod.tpo = read8(f);
+	m->mod.bpm = read8(f);
 	read16l(f);		/* unknown - 0x01c5 */
 	read16l(f);		/* unknown - 0xff00 */
 	read8(f);		/* unknown - 0x80 */
@@ -80,10 +80,10 @@ static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
-	m->mod.xxh->len = read8(f) + 1;
+	m->mod.len = read8(f) + 1;
 	/* Don't follow Dr.Eggman's specs here */
 
-	for (i = 0; i < m->mod.xxh->len; i++)
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = read8(f);
 }
 
@@ -94,8 +94,8 @@ static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 
 	i = read8(f) + 1;	/* pattern number */
 
-	if (i > m->mod.xxh->pat)
-		m->mod.xxh->pat = i;
+	if (i > m->mod.pat)
+		m->mod.pat = i;
 }
 
 static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
@@ -107,8 +107,8 @@ static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);		/* 00 */
 	i = read8(f) + 1;	/* instrument number */
 
-	if (i > m->mod.xxh->ins)
-		m->mod.xxh->ins = i;
+	if (i > m->mod.ins)
+		m->mod.ins = i;
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
@@ -136,7 +136,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 		chan = flag & 0x1f;
 
-		event = chan < m->mod.xxh->chn ? &EVENT(i, chan, r) : &dummy;
+		event = chan < m->mod.chn ? &EVENT(i, chan, r) : &dummy;
 
 		if (flag & 0x80) {
 			uint8 fxp = read8(f);
@@ -271,7 +271,7 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	offset = ftell(f);
 
-	m->mod.xxh->smp = m->mod.xxh->ins = 0;
+	m->mod.smp = m->mod.ins = 0;
 
 	iff_register("INIT", get_init);		/* Galaxy 5.0 */
 	iff_register("ORDR", get_ordr);
@@ -287,15 +287,15 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-	m->mod.xxh->smp = m->mod.xxh->ins;
+	m->mod.trk = m->mod.pat * m->mod.chn;
+	m->mod.smp = m->mod.ins;
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
-	_D(_D_INFO "Stored samples: %d ", m->mod.xxh->smp);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored samples: %d ", m->mod.smp);
 
 	fseek(f, start + offset, SEEK_SET);
 
@@ -311,7 +311,7 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 		m->mod.xxc[i].pan = chn_pan[i] * 2;
 
 	return 0;

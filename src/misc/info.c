@@ -16,6 +16,7 @@
 extern struct xmp_fmt_info *__fmt_head;
 
 
+#if 0
 struct xmp_module_info *xmp_get_module_info(xmp_context opaque, struct xmp_module_info *i)
 {
     struct xmp_context *ctx = (struct xmp_context *)opaque;
@@ -23,18 +24,19 @@ struct xmp_module_info *xmp_get_module_info(xmp_context opaque, struct xmp_modul
 
     strncpy(i->name, m->mod.name, 0x40);
     strncpy(i->type, m->mod.type, 0x40);
-    i->chn = m->mod.xxh->chn;
-    i->pat = m->mod.xxh->pat;
-    i->ins = m->mod.xxh->ins;
-    i->trk = m->mod.xxh->trk;
-    i->smp = m->mod.xxh->smp;
-    i->len = m->mod.xxh->len;
-    i->bpm = m->mod.xxh->bpm;
-    i->tpo = m->mod.xxh->tpo;
+    i->chn = m->mod.chn;
+    i->pat = m->mod.pat;
+    i->ins = m->mod.ins;
+    i->trk = m->mod.trk;
+    i->smp = m->mod.smp;
+    i->len = m->mod.len;
+    i->bpm = m->mod.bpm;
+    i->tpo = m->mod.tpo;
     i->time = m->time;
 
     return i;
 }
+#endif
 
 
 char *xmp_get_driver_description(xmp_context opaque)

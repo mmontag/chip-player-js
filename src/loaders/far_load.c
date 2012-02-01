@@ -106,19 +106,19 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 256; i++)
 	ffh2.patsize[i] = read16l(f);	/* Size of each pattern in bytes */
 
-    m->mod.xxh->chn = 16;
-    /*m->mod.xxh->pat=ffh2.patterns; (Error in specs? --claudio) */
-    m->mod.xxh->len = ffh2.songlen;
-    m->mod.xxh->tpo = 6;
-    m->mod.xxh->bpm = 8 * 60 / ffh.tempo;
-    memcpy (m->mod.xxo, ffh2.order, m->mod.xxh->len);
+    m->mod.chn = 16;
+    /*m->mod.pat=ffh2.patterns; (Error in specs? --claudio) */
+    m->mod.len = ffh2.songlen;
+    m->mod.tpo = 6;
+    m->mod.bpm = 8 * 60 / ffh.tempo;
+    memcpy (m->mod.xxo, ffh2.order, m->mod.len);
 
-    for (m->mod.xxh->pat = i = 0; i < 256; i++) {
+    for (m->mod.pat = i = 0; i < 256; i++) {
 	if (ffh2.patsize[i])
-	    m->mod.xxh->pat = i + 1;
+	    m->mod.pat = i + 1;
     }
 
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.trk = m->mod.chn * m->mod.pat;
 
     strncpy(m->mod.name, (char *)ffh.name, 40);
     set_type(m, "FAR (Farandole Composer %d.%d)",
@@ -130,9 +130,9 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
     _D(_D_INFO "Comment bytes  : %d", ffh.textlen);
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	uint8 brk, note, ins, vol, fxb;
 
 	PATTERN_ALLOC(i);
@@ -144,10 +144,10 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	brk = read8(f) + 1;
 	read8(f);
 
-	for (j = 0; j < m->mod.xxp[i]->rows * m->mod.xxh->chn; j++) {
-	    event = &EVENT(i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+	for (j = 0; j < m->mod.xxp[i]->rows * m->mod.chn; j++) {
+	    event = &EVENT(i, j % m->mod.chn, j / m->mod.chn);
 
-	    if ((j % m->mod.xxh->chn) == 0 && (j / m->mod.xxh->chn) == brk)
+	    if ((j % m->mod.chn) == 0 && (j / m->mod.chn) == brk)
 		event->f2t = FX_BREAK;
 	
 	    note = read8(f);
@@ -213,21 +213,21 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    m->mod.xxh->ins = -1;
+    m->mod.ins = -1;
     fread(sample_map, 1, 8, f);
     for (i = 0; i < 64; i++) {
 	if (sample_map[i / 8] & (1 << (i % 8)))
-		m->mod.xxh->ins = i;
+		m->mod.ins = i;
     }
-    m->mod.xxh->ins++;
+    m->mod.ins++;
 
-    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.smp = m->mod.ins;
 
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
 		continue;
 

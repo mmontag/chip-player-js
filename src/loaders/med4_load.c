@@ -265,12 +265,12 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		num_ins++;
 	}
 
-	m->mod.xxh->pat = read16b(f);
-	m->mod.xxh->len = read16b(f);
+	m->mod.pat = read16b(f);
+	m->mod.len = read16b(f);
 #ifdef MED4_DEBUG
-	printf("pat=%x len=%x\n", m->mod.xxh->pat, m->mod.xxh->len);
+	printf("pat=%x len=%x\n", m->mod.pat, m->mod.len);
 #endif
-	fread(m->mod.xxo, 1, m->mod.xxh->len, f);
+	fread(m->mod.xxo, 1, m->mod.len, f);
 
 	/* From MED V3.00 docs:
 	 *
@@ -281,15 +281,15 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 	tempo = read16b(f);
 	if (tempo <= 10) {
-		m->mod.xxh->tpo = tempo;
-		m->mod.xxh->bpm = 125;
+		m->mod.tpo = tempo;
+		m->mod.bpm = 125;
 	} else {
-		m->mod.xxh->bpm = 125 * tempo / 33;
+		m->mod.bpm = 125 * tempo / 33;
 	}
         transp = read8s(f);
         read8s(f);
         flags = read8s(f);
-	m->mod.xxh->tpo = read8(f);
+	m->mod.tpo = read8(f);
 
 	if (~flags & 0x20)	/* sliding */
 		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
@@ -299,7 +299,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* This is just a guess... */
 	if (vermaj == 2)	/* Happy.med has tempo 5 but loads as 6 */
-		m->mod.xxh->tpo = flags & 0x20 ? 5 : 6;
+		m->mod.tpo = flags & 0x20 ? 5 : 6;
 
 	fseek(f, 20, SEEK_CUR);
 
@@ -314,16 +314,16 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		temp_inst[i].transpose += transp;
 
 	read8(f);
-	m->mod.xxh->chn = read8(f);;
+	m->mod.chn = read8(f);;
 	fseek(f, -2, SEEK_CUR);
-	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+	m->mod.trk = m->mod.chn * m->mod.pat;
 
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		int size, plen;
 		uint8 ctl, chmsk, chn, rows;
 		uint32 linemsk0, fxmsk0, linemsk1, fxmsk1, x;
@@ -468,10 +468,10 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	}
 
-	m->mod.xxh->ins =  num_ins;
+	m->mod.ins =  num_ins;
 
-	m->med_vol_table = calloc(sizeof(uint8 *), m->mod.xxh->ins);
-        m->med_wav_table = calloc(sizeof(uint8 *), m->mod.xxh->ins);
+	m->med_vol_table = calloc(sizeof(uint8 *), m->mod.ins);
+        m->med_wav_table = calloc(sizeof(uint8 *), m->mod.ins);
 
 	/*
 	 * Load samples
@@ -513,11 +513,11 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 	fseek(f, pos, SEEK_SET);
 
-	m->mod.xxh->smp = num_smp;
+	m->mod.smp = num_smp;
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.ins);
 
 	smp_idx = 0;
 	for (i = 0; i < 32; i++, mask <<= 1) {

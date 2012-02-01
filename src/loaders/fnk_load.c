@@ -118,20 +118,20 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     month = ((ffh.info[1] & 0x01) << 3) | ((ffh.info[0] & 0xe0) >> 5);
     year = 1980 + ((ffh.info[1] & 0xfe) >> 1);
 
-    m->mod.xxh->smp = m->mod.xxh->ins = 64;
+    m->mod.smp = m->mod.ins = 64;
 
     for (i = 0; i < 256 && ffh.order[i] != 0xff; i++) {
-	if (ffh.order[i] > m->mod.xxh->pat)
-	    m->mod.xxh->pat = ffh.order[i];
+	if (ffh.order[i] > m->mod.pat)
+	    m->mod.pat = ffh.order[i];
     }
-    m->mod.xxh->pat++;
+    m->mod.pat++;
 
-    m->mod.xxh->len = i;
-    memcpy (m->mod.xxo, ffh.order, m->mod.xxh->len);
+    m->mod.len = i;
+    memcpy (m->mod.xxo, ffh.order, m->mod.len);
 
-    m->mod.xxh->tpo = 4;
-    m->mod.xxh->bpm = 125;
-    m->mod.xxh->chn = 0;
+    m->mod.tpo = 4;
+    m->mod.bpm = 125;
+    m->mod.chn = 0;
 
     /*
      * If an R1 fmt (funktype = Fk** or Fv**), then ignore byte 3. It's
@@ -139,28 +139,28 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
      */
     if (ffh.fmt[0] == 'F' && ffh.fmt[1] == '2') {
 	if (((int8)ffh.info[3] >> 1) & 0x40)
-	    m->mod.xxh->bpm -= (ffh.info[3] >> 1) & 0x3f;
+	    m->mod.bpm -= (ffh.info[3] >> 1) & 0x3f;
 	else
-	    m->mod.xxh->bpm += (ffh.info[3] >> 1) & 0x3f;
+	    m->mod.bpm += (ffh.info[3] >> 1) & 0x3f;
 
 	strcpy(m->mod.type, "FNK R2 (FunktrackerGOLD)");
     } else if (ffh.fmt[0] == 'F' && (ffh.fmt[1] == 'v' || ffh.fmt[1] == 'k')) {
 	strcpy(m->mod.type, "FNK R1 (Funktracker)");
     } else {
-	m->mod.xxh->chn = 8;
+	m->mod.chn = 8;
 	strcpy(m->mod.type, "FNK R0 (Funktracker DOS32)");
     }
 
-    if (m->mod.xxh->chn == 0) {
-	m->mod.xxh->chn = (ffh.fmt[2] < '0') || (ffh.fmt[2] > '9') ||
+    if (m->mod.chn == 0) {
+	m->mod.chn = (ffh.fmt[2] < '0') || (ffh.fmt[2] > '9') ||
 		(ffh.fmt[3] < '0') || (ffh.fmt[3] > '9') ? 8 :
 		(ffh.fmt[2] - '0') * 10 + ffh.fmt[3] - '0';
     }
 
-    m->mod.xxh->bpm = 4 * m->mod.xxh->bpm / 5;
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.bpm = 4 * m->mod.bpm / 5;
+    m->mod.trk = m->mod.chn * m->mod.pat;
     /* FNK allows mode per instrument but we don't, so use linear like 669 */
-    m->mod.xxh->flg |= XXM_FLG_LINEAR;
+    m->mod.flg |= XXM_FLG_LINEAR;
 
     MODULE_INFO();
     _D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
@@ -168,7 +168,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Convert instruments */
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = ffh.fih[i].length);
 	m->mod.xxs[i].lps = ffh.fih[i].loop_start;
@@ -192,17 +192,17 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	EVENT(i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
 
-	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
-	    event = &EVENT(i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+	for (j = 0; j < 64 * m->mod.chn; j++) {
+	    event = &EVENT(i, j % m->mod.chn, j / m->mod.chn);
 	    fread(&ev, 1, 3, f);
 
 	    switch (ev[0] >> 2) {
@@ -282,9 +282,9 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	if (m->mod.xxs[i].len <= 2)
 	    continue;
 
@@ -293,7 +293,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
     }
 
-    for (i = 0; i < m->mod.xxh->chn; i++)
+    for (i = 0; i < m->mod.chn; i++)
 	m->mod.xxc[i].pan = 0x80;
 
     m->volbase = 0xff;

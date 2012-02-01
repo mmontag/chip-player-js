@@ -198,24 +198,24 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     copy_adjust(m->mod.name, (uint8 *)ih.name, 32);
 
-    m->mod.xxh->len = ih.len;
-    m->mod.xxh->ins = ih.ins;
-    m->mod.xxh->smp = 1024;
-    m->mod.xxh->pat = ih.pat;
+    m->mod.len = ih.len;
+    m->mod.ins = ih.ins;
+    m->mod.smp = 1024;
+    m->mod.pat = ih.pat;
 
     if (ih.flg & 0x01)
-	m->mod.xxh->flg |= XXM_FLG_LINEAR;
+	m->mod.flg |= XXM_FLG_LINEAR;
 
-    m->mod.xxh->tpo = ih.tpo;
-    m->mod.xxh->bpm = ih.bpm;
+    m->mod.tpo = ih.tpo;
+    m->mod.bpm = ih.bpm;
 
     set_type(m, "IM10 (Imago Orpheus)");
 
     MODULE_INFO();
 
-    for (m->mod.xxh->chn = i = 0; i < 32; i++) {
+    for (m->mod.chn = i = 0; i < 32; i++) {
 	if (ih.chn[i].status != 0x00)
-	    m->mod.xxh->chn = i + 1;
+	    m->mod.chn = i + 1;
 	else
 	    continue;
 	m->mod.xxc[i].pan = ih.chn[i].pan;
@@ -226,10 +226,10 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 #endif
 	m->mod.xxc[i].flg |= XXM_CHANNEL_FX;
     }
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.trk = m->mod.pat * m->mod.chn;
  
-    memcpy(m->mod.xxo, ih.pos, m->mod.xxh->len);
-    for (i = 0; i < m->mod.xxh->len; i++)
+    memcpy(m->mod.xxo, ih.pos, m->mod.len);
+    for (i = 0; i < m->mod.len; i++)
 	if (m->mod.xxo[i] == 0xff)
 	    m->mod.xxo[i]--;
 
@@ -240,11 +240,11 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
     memset(arpeggio_val, 0, 32);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 
 	pat_len = read16l(f) - 4;
@@ -262,7 +262,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & IMF_CH_MASK;
-	    event = c >= m->mod.xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->mod.chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & IMF_NI_FOLLOW) {
 		n = read8(f);
@@ -298,9 +298,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
-    for (smp_num = i = 0; i < m->mod.xxh->ins; i++) {
+    for (smp_num = i = 0; i < m->mod.ins; i++) {
 	fread(&ii.name, 32, 1, f);
 	fread(&ii.map, 120, 1, f);
 	fread(&ii.unused, 8, 1, f);
@@ -397,8 +397,8 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 		&m->mod.xxs[m->mod.xxi[i].sub[j].sid], NULL);
 	}
     }
-    m->mod.xxh->smp = smp_num;
-    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.xxh->smp);
+    m->mod.smp = smp_num;
+    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.smp);
 
     m->flags |= XMP_CTL_FILTER;
     m->quirk |= XMP_QUIRK_ST3;

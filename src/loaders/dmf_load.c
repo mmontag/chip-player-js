@@ -167,11 +167,11 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 	read16l(f);	/* sequencer loop start */
 	read16l(f);	/* sequencer loop end */
 
-	m->mod.xxh->len = (size - 4) / 2;
-	if (m->mod.xxh->len > 255)
-		m->mod.xxh->len = 255;
+	m->mod.len = (size - 4) / 2;
+	if (m->mod.len > 255)
+		m->mod.len = 255;
 
-	for (i = 0; i < m->mod.xxh->len; i++)
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = read16l(f);
 }
 
@@ -184,15 +184,15 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	int track_counter[32];
 	struct xmp_event *event;
 
-	m->mod.xxh->pat = read16l(f);
-	m->mod.xxh->chn = read8(f);
-	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+	m->mod.pat = read16l(f);
+	m->mod.chn = read8(f);
+	m->mod.trk = m->mod.chn * m->mod.pat;
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		chn = read8(f);
 		read8(f);		/* beat */
@@ -262,13 +262,13 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
 
-	m->mod.xxh->ins = m->mod.xxh->smp = read8(f);
+	m->mod.ins = m->mod.smp = read8(f);
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.ins);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		int x;
 
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -313,9 +313,9 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 	int smpsize;
 	uint8 *data, *ibuf;
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Stored samples: %d", m->mod.ins);
 
-	for (smpsize = i = 0; i < m->mod.xxh->smp; i++) {
+	for (smpsize = i = 0; i < m->mod.smp; i++) {
 		if (m->mod.xxs[i].len > smpsize)
 			smpsize = m->mod.xxs[i].len;
 	}
@@ -326,7 +326,7 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 	ibuf = malloc(smpsize);
 	assert(ibuf != NULL);
 
-	for (i = 0; i < m->mod.xxh->smp; i++) {
+	for (i = 0; i < m->mod.smp; i++) {
 		smpsize = read32l(f);
 		if (smpsize == 0)
 			continue;

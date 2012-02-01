@@ -21,7 +21,6 @@
 #define XMP_MAXVOL	(0x400 * 0x7fff)
 #define XMP_EXTDRV	0xffff
 #define XMP_MINLEN	0x1000
-#define XMP_MAXCH	64		/* max virtual channels */
 #define XMP_MAXVOC	64		/* max physical voices */
 
 #include <stdio.h>
@@ -179,21 +178,21 @@ struct flow_control {
 	int delay;
 	int skip_fetch;		/* To emulate delay + break quirk */
 	int jumpline;
-	int row;
 	int loop_chn;
 	int* loop_start;
 	int* loop_stack;
-	int frame;
 	int num_rows;
 	int ord;
 	int end_point;
-	double time;
 	double playing_time;
 };
 
 struct xmp_player_context {
+	double time;
 	int pause;
 	int pos;
+	int row;
+	int frame;
 	int tempo;
 	int gvol_slide;
 	int gvol_flag;

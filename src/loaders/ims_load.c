@@ -148,8 +148,8 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 
     LOAD_INIT();
 
-    m->mod.xxh->ins = 31;
-    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.ins = 31;
+    m->mod.smp = m->mod.ins;
     smp_size = 0;
 
     fread (&ih.title, 20, 1, f);
@@ -171,15 +171,15 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     fread (&ih.orders, 128, 1, f);
     fread (&ih.magic, 4, 1, f);
   
-    m->mod.xxh->len = ih.len;
-    memcpy (m->mod.xxo, ih.orders, m->mod.xxh->len);
+    m->mod.len = ih.len;
+    memcpy (m->mod.xxo, ih.orders, m->mod.len);
 
-    for (i = 0; i < m->mod.xxh->len; i++)
-	if (m->mod.xxo[i] > m->mod.xxh->pat)
-	    m->mod.xxh->pat = m->mod.xxo[i];
+    for (i = 0; i < m->mod.len; i++)
+	if (m->mod.xxo[i] > m->mod.pat)
+	    m->mod.pat = m->mod.xxo[i];
 
-    m->mod.xxh->pat++;
-    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.pat++;
+    m->mod.trk = m->mod.chn * m->mod.pat;
 
     strncpy(m->mod.name, (char *)ih.title, 20);
     set_type(m, "IMS (Images Music System)");
@@ -188,7 +188,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxs[i].len = 2 * ih.ins[i].size;
 	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * ih.ins[i].loop_size;
@@ -211,9 +211,9 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC(i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
@@ -253,13 +253,13 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    m->mod.xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	if (!m->mod.xxs[i].len)
 	    continue;
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,

@@ -113,11 +113,11 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     if (!strncmp ((char *)sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
 
-    m->mod.xxh->pat = sfh.patterns;
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
-    m->mod.xxh->tpo = MSN (sfh.tempo);
-    m->mod.xxh->ins = 31;
-    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.pat = sfh.patterns;
+    m->mod.trk = m->mod.pat * m->mod.chn;
+    m->mod.tpo = MSN (sfh.tempo);
+    m->mod.ins = 31;
+    m->mod.smp = m->mod.ins;
     m->c4rate = C4_NTSC_RATE;
 
     copy_adjust(m->mod.name, sfh.name, 20);
@@ -134,7 +134,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = sfh.ins[i].length);
 	m->mod.xxs[i].lps = sfh.ins[i].loopbeg;
@@ -160,24 +160,24 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(m->mod.xxo, 1, 128, f);
 
     for (i = 0; i < 128; i++)
-	if (m->mod.xxo[i] >= m->mod.xxh->pat)
+	if (m->mod.xxo[i] >= m->mod.pat)
 	    break;
 
-    m->mod.xxh->len = i;
+    m->mod.len = i;
 
-    _D(_D_INFO "Module length: %d", m->mod.xxh->len);
+    _D(_D_INFO "Module length: %d", m->mod.len);
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-    for (i = 0; i < m->mod.xxh->pat; i++) {
+    for (i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
-	    event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
+	for (j = 0; j < 64 * m->mod.chn; j++) {
+	    event = &EVENT (i, j % m->mod.chn, j / m->mod.chn);
 	    b = read8(f);
 	    memset (event, 0, sizeof (struct xmp_event));
 	    switch (b) {
@@ -213,9 +213,9 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
 	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }

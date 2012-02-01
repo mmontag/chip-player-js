@@ -112,27 +112,27 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 			version >> 8, version & 0xff, tracker_name);
 	/* strncpy(m->author, composer, XMP_NAMESIZE); */
 
-	m->mod.xxh->len = rh.nposition;
-	m->mod.xxh->pat = rh.npattern;
-	m->mod.xxh->chn = rh.ntrack;
-	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat + 1;
-	m->mod.xxh->ins = rh.ninstr;
-	m->mod.xxh->tpo = rh.speed;
-	m->mod.xxh->bpm = rh.tempo;
-	m->mod.xxh->flg = rh.flags & 0x01 ? XXM_FLG_LINEAR : 0;
+	m->mod.len = rh.nposition;
+	m->mod.pat = rh.npattern;
+	m->mod.chn = rh.ntrack;
+	m->mod.trk = m->mod.chn * m->mod.pat + 1;
+	m->mod.ins = rh.ninstr;
+	m->mod.tpo = rh.speed;
+	m->mod.bpm = rh.tempo;
+	m->mod.flg = rh.flags & 0x01 ? XXM_FLG_LINEAR : 0;
 
 	MODULE_INFO();
 
-	for (i = 0; i < m->mod.xxh->chn; i++)
+	for (i = 0; i < m->mod.chn; i++)
 		m->mod.xxc[i].pan = rh.panning[i] & 0xff;
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
 	offset = 42 + oh.headerSize + rh.extraDataSize;
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		uint8 c;
 
 		fseek(f, start + offset, SEEK_SET);
@@ -196,17 +196,17 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * load instruments
 	 */
 
-	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.ins);
 
 	fseek(f, start + offset, SEEK_SET);
 
 	/* ESTIMATED value! We don't know the actual value at this point */
-	m->mod.xxh->smp = MAX_SAMP;
+	m->mod.smp = MAX_SAMP;
 
 	INSTRUMENT_INIT();
 
 	smpnum = 0;
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		if (read_object_header(f, &oh, "RTIN") < 0) {
 			_D(_D_CRIT "Error reading instrument %d", i);
 			return -1;
@@ -372,8 +372,8 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->mod.xxh->smp = smpnum;
-	m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.xxh->smp);
+	m->mod.smp = smpnum;
+	m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.smp);
 
 	m->quirk |= XMP_QUIRK_FT2;
 

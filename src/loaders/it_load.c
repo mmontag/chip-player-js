@@ -302,20 +302,20 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&ifh.chvol, 64, 1, f);
 
     strncpy(m->mod.name, (char *)ifh.name, XMP_NAMESIZE);
-    m->mod.xxh->len = ifh.ordnum;
-    m->mod.xxh->ins = ifh.insnum;
-    m->mod.xxh->smp = ifh.smpnum;
-    m->mod.xxh->pat = ifh.patnum;
-    pp_ins = m->mod.xxh->ins ? calloc(4, m->mod.xxh->ins) : NULL;
-    pp_smp = calloc(4, m->mod.xxh->smp);
-    pp_pat = calloc(4, m->mod.xxh->pat);
-    m->mod.xxh->tpo = ifh.is;
-    m->mod.xxh->bpm = ifh.it;
-    m->mod.xxh->flg = ifh.flags & IT_LINEAR_FREQ ? XXM_FLG_LINEAR : 0;
-    m->mod.xxh->flg |= (ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200) ?
+    m->mod.len = ifh.ordnum;
+    m->mod.ins = ifh.insnum;
+    m->mod.smp = ifh.smpnum;
+    m->mod.pat = ifh.patnum;
+    pp_ins = m->mod.ins ? calloc(4, m->mod.ins) : NULL;
+    pp_smp = calloc(4, m->mod.smp);
+    pp_pat = calloc(4, m->mod.pat);
+    m->mod.tpo = ifh.is;
+    m->mod.bpm = ifh.it;
+    m->mod.flg = ifh.flags & IT_LINEAR_FREQ ? XXM_FLG_LINEAR : 0;
+    m->mod.flg |= (ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200) ?
 					XXM_FLG_INSVOL : 0;
 
-    m->mod.xxh->chn = 64;	/* Effects in muted channels are still processed! */
+    m->mod.chn = 64;	/* Effects in muted channels are still processed! */
 
     for (i = 0; i < 64; i++) {
 	if (ifh.chpan[i] == 100)	/* Surround -> center */
@@ -336,23 +336,23 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->mod.xxc[i].vol = ifh.chvol[i];
     }
-    fread(m->mod.xxo, 1, m->mod.xxh->len, f);
-    clean_s3m_seq(m->mod.xxh, m->mod.xxo);
+    fread(m->mod.xxo, 1, m->mod.len, f);
+    clean_s3m_seq(&m->mod, m->mod.xxo);
 
     new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
     /* S3M skips pattern 0xfe */
-    for (i = 0; i < (m->mod.xxh->len - 1); i++) {
+    for (i = 0; i < (m->mod.len - 1); i++) {
 	if (m->mod.xxo[i] == 0xfe) {
-	    memmove(&m->mod.xxo[i], &m->mod.xxo[i + 1], m->mod.xxh->len - i - 1);
-	    m->mod.xxh->len--;
+	    memmove(&m->mod.xxo[i], &m->mod.xxo[i + 1], m->mod.len - i - 1);
+	    m->mod.len--;
 	}
     }
-    for (i = 0; i < m->mod.xxh->ins; i++)
+    for (i = 0; i < m->mod.ins; i++)
 	pp_ins[i] = read32l(f);
-    for (i = 0; i < m->mod.xxh->smp; i++)
+    for (i = 0; i < m->mod.smp; i++)
 	pp_smp[i] = read32l(f);
-    for (i = 0; i < m->mod.xxh->pat; i++)
+    for (i = 0; i < m->mod.pat; i++)
 	pp_pat[i] = read32l(f);
 
     m->c4rate = C4_NTSC_RATE;
@@ -440,7 +440,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 			ifh.flags & IT_OLD_FX ? "old" : "IT");
 
     if (~ifh.flags & IT_USE_INST)
-	m->mod.xxh->ins = m->mod.xxh->smp;
+	m->mod.ins = m->mod.smp;
 
     if (ifh.special & IT_HAS_MSG) {
 	if ((m->comment = malloc(ifh.msglen + 1)) == NULL)
@@ -465,9 +465,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.ins);
 
-    for (i = 0; i < m->mod.xxh->ins; i++) {
+    for (i = 0; i < m->mod.ins; i++) {
 	/*
 	 * IT files can have three different instrument types: 'New'
 	 * instruments, 'old' instruments or just samples. We need a
@@ -710,9 +710,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored Samples: %d", m->mod.xxh->smp);
+    _D(_D_INFO "Stored Samples: %d", m->mod.smp);
 
-    for (i = 0; i < m->mod.xxh->smp; i++) {
+    for (i = 0; i < m->mod.smp; i++) {
 	if (~ifh.flags & IT_USE_INST)
 	    m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fseek(f, start + pp_smp[i], SEEK_SET);
@@ -789,7 +789,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * scan all xmp instruments to set the correct transposition
 	 */
 	
-	for (j = 0; j < m->mod.xxh->ins; j++) {
+	for (j = 0; j < m->mod.ins; j++) {
 	    for (k = 0; k < m->mod.xxi[j].nsm; k++) {
 		if (m->mod.xxi[j].sub[k].sid == i) {
 		    m->mod.xxi[j].sub[k].vol = ish.vol;
@@ -842,9 +842,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored Patterns: %d", m->mod.xxh->pat);
+    _D(_D_INFO "Stored Patterns: %d", m->mod.pat);
 
-    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.trk = m->mod.pat * m->mod.chn;
     memset(arpeggio_val, 0, 64);
     memset(last_h, 0, 64);
     memset(last_fxp, 0, 64);
@@ -852,17 +852,17 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read patterns */
-    for (max_ch = i = 0; i < m->mod.xxh->pat; i++) {
+    for (max_ch = i = 0; i < m->mod.pat; i++) {
 	PATTERN_ALLOC (i);
 	r = 0;
 	/* If the offset to a pattern is 0, the pattern is empty */
 	if (!pp_pat[i]) {
 	    m->mod.xxp[i]->rows = 64;
-	    m->mod.xxt[i * m->mod.xxh->chn] = calloc (sizeof (struct xmp_track) +
+	    m->mod.xxt[i * m->mod.chn] = calloc (sizeof (struct xmp_track) +
 		sizeof (struct xmp_event) * 64, 1);
-	    m->mod.xxt[i * m->mod.xxh->chn]->rows = 64;
-	    for (j = 0; j < m->mod.xxh->chn; j++)
-		m->mod.xxp[i]->index[j] = i * m->mod.xxh->chn;
+	    m->mod.xxt[i * m->mod.chn]->rows = 64;
+	    for (j = 0; j < m->mod.chn; j++)
+		m->mod.xxp[i]->index[j] = i * m->mod.chn;
 	    continue;
 	}
 	fseek(f, start + pp_pat[i], SEEK_SET);
@@ -891,7 +891,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	     * real number of channels before loading the patterns and
 	     * we don't want to set it to 64 channels.
 	     */
-	    event = c >= m->mod.xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->mod.chn ? &dummy : &EVENT (i, c, r);
 	    if (mask[c] & 0x01) {
 		b = read8(f);
 
@@ -954,7 +954,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Scan channels, look for unused tracks */
-	for (c = m->mod.xxh->chn - 1; c >= max_ch; c--) {
+	for (c = m->mod.chn - 1; c >= max_ch; c--) {
 	    for (flag = j = 0; j < m->mod.xxt[m->mod.xxp[i]->index[c]]->rows; j++) {
 		event = &EVENT (i, c, j);
 		if (event->note || event->vol || event->ins || event->fxt ||
@@ -973,7 +973,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     if (pp_ins)		/* sample mode has no instruments */
 	free(pp_ins);
 
-    m->mod.xxh->chn = max_ch + 1;
+    m->mod.chn = max_ch + 1;
     m->flags |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
     m->quirk |= XMP_QUIRK_IT;
     if (~ifh.flags & IT_LINK_GXX)

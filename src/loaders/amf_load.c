@@ -72,13 +72,13 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	strncpy(m->mod.name, (char *)buf, 32);
 	set_type(m, "DSMI %d.%d", ver / 10, ver % 10);
 
-	m->mod.xxh->ins = read8(f);
-	m->mod.xxh->len = read8(f);
-	m->mod.xxh->trk = read16l(f);
-	m->mod.xxh->chn = read8(f);
+	m->mod.ins = read8(f);
+	m->mod.len = read8(f);
+	m->mod.trk = read16l(f);
+	m->mod.chn = read8(f);
 
-	m->mod.xxh->smp = m->mod.xxh->ins;
-	m->mod.xxh->pat = m->mod.xxh->len;
+	m->mod.smp = m->mod.ins;
+	m->mod.pat = m->mod.len;
 
 	if (ver == 0x0a)
 		fread(buf, 1, 16, f);		/* channel remap table */
@@ -88,8 +88,8 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		for (i = 0; i < 32; i++) {
 			m->mod.xxc->pan = 0x80 + 2 * (int8)buf[i];
 		}
-		m->mod.xxh->bpm = read8(f);
-		m->mod.xxh->tpo = read8(f);
+		m->mod.bpm = read8(f);
+		m->mod.tpo = read8(f);
 	} else if (ver >= 0x0b) {
 		fread(buf, 1, 16, f);
 	}
@@ -108,17 +108,17 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * it means an empty track.
 	 */
 
-	for (i = 0; i < m->mod.xxh->len; i++)
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = i;
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	m->mod.xxp = calloc(sizeof(struct xmp_pattern *), m->mod.xxh->pat + 1);
+	m->mod.xxp = calloc(sizeof(struct xmp_pattern *), m->mod.pat + 1);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
-		for (j = 0; j < m->mod.xxh->chn; j++) {
+		for (j = 0; j < m->mod.chn; j++) {
 			uint16 t = read16l(f);
 			m->mod.xxp[i]->index[j] = t;
 		}
@@ -136,7 +136,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 b;
 		int len, start, end;
 		long pos = ftell(f);
-		for (i = 0; i < m->mod.xxh->ins; i++) {
+		for (i = 0; i < m->mod.ins; i++) {
 			b = read8(f);
 			if (b != 0 && b != 1) {
 				ver = 0x09;
@@ -174,7 +174,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, pos, SEEK_SET);
 	}
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		uint8 b;
 		int c2spd;
 
@@ -231,10 +231,10 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Tracks */
 
-	trkmap = calloc(sizeof(int), m->mod.xxh->trk);
+	trkmap = calloc(sizeof(int), m->mod.trk);
 	newtrk = 0;
 
-	for (i = 0; i < m->mod.xxh->trk; i++) {		/* read track table */
+	for (i = 0; i < m->mod.trk; i++) {		/* read track table */
 		uint16 t;
 		t = read16l(f);
 		trkmap[i] = t;
@@ -242,27 +242,27 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 /*printf("%d -> %d\n", i, t);*/
 	}
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {		/* read track table */
-		for (j = 0; j < m->mod.xxh->chn; j++) {
+	for (i = 0; i < m->mod.pat; i++) {		/* read track table */
+		for (j = 0; j < m->mod.chn; j++) {
 			int k = m->mod.xxp[i]->index[j] - 1;
 
 			/* Use empty track if an invalid track is requested
 			 * (such as in Lasse Makkonen "faster and louder")
 			 */
-			if (k < 0 || k > m->mod.xxh->trk)
+			if (k < 0 || k > m->mod.trk)
 				k = 0;
 			m->mod.xxp[i]->index[j] = trkmap[k];
 /*printf("m->mod.xxp[%d]->info[%d].index = %d (k = %d)\n", i, j, trkmap[k], k);*/
 		}
 	}
 
-	m->mod.xxh->trk = newtrk;		/* + empty track */
+	m->mod.trk = newtrk;		/* + empty track */
 	free(trkmap);
 
-	_D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
+	_D(_D_INFO "Stored tracks: %d", m->mod.trk);
 
-	m->mod.xxh->trk++;
-	m->mod.xxt = calloc (sizeof (struct xmp_track *), m->mod.xxh->trk);
+	m->mod.trk++;
+	m->mod.xxt = calloc (sizeof (struct xmp_track *), m->mod.trk);
 
 	/* Alloc track 0 as empty track */
 	m->mod.xxt[0] = calloc(sizeof(struct xmp_track) +
@@ -270,7 +270,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->mod.xxt[0]->rows = 64;
 
 	/* Alloc rest of the tracks */
-	for (i = 1; i < m->mod.xxh->trk; i++) {
+	for (i = 1; i < m->mod.trk; i++) {
 		uint8 t1, t2, t3;
 		int size;
 
@@ -461,9 +461,9 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Samples */
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
 			XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}

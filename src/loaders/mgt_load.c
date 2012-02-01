@@ -63,12 +63,12 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	set_type(m, "MGT v%d.%d (Megatracker)", MSN(ver), LSN(ver));
 
-	m->mod.xxh->chn = read16b(f);
+	m->mod.chn = read16b(f);
 	read16b(f);			/* number of songs */
-	m->mod.xxh->len = read16b(f);
-	m->mod.xxh->pat = read16b(f);
-	m->mod.xxh->trk = read16b(f);
-	m->mod.xxh->ins = m->mod.xxh->smp = read16b(f);
+	m->mod.len = read16b(f);
+	m->mod.pat = read16b(f);
+	m->mod.trk = read16b(f);
+	m->mod.ins = m->mod.smp = read16b(f);
 	read16b(f);			/* reserved */
 	read32b(f);			/* reserved */
 
@@ -85,15 +85,15 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fread(m->mod.name, 1, 32, f);
 	seq_ptr = read32b(f);
-	m->mod.xxh->len = read16b(f);
-	m->mod.xxh->rst = read16b(f);
-	m->mod.xxh->bpm = read8(f);
-	m->mod.xxh->tpo = read8(f);
+	m->mod.len = read16b(f);
+	m->mod.rst = read16b(f);
+	m->mod.bpm = read8(f);
+	m->mod.tpo = read8(f);
 	read16b(f);			/* global volume */
 	read8(f);			/* master L */
 	read8(f);			/* master R */
 
-	for (i = 0; i < m->mod.xxh->chn; i++) {
+	for (i = 0; i < m->mod.chn; i++) {
 		read16b(f);		/* pan */
 	}
 	
@@ -102,7 +102,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Sequence */
 
 	fseek(f, start + seq_ptr, SEEK_SET);
-	for (i = 0; i < m->mod.xxh->len; i++)
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = read16b(f);
 
 	/* Instruments */
@@ -111,7 +111,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fseek(f, start + ins_ptr, SEEK_SET);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		int c2spd, flags;
 
 		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -155,11 +155,11 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* PATTERN_INIT - alloc extra track*/
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
+	_D(_D_INFO "Stored tracks: %d", m->mod.trk);
 
 	/* Tracks */
 
-	for (i = 1; i < m->mod.xxh->trk; i++) {
+	for (i = 1; i < m->mod.trk; i++) {
 		int offset, rows;
 		uint8 b;
 
@@ -283,24 +283,24 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->mod.xxt[0]->rows = 64;
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
 	fseek(f, start + pat_ptr, SEEK_SET);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 
 		m->mod.xxp[i]->rows = read16b(f);
-		for (j = 0; j < m->mod.xxh->chn; j++) {
+		for (j = 0; j < m->mod.chn; j++) {
 			m->mod.xxp[i]->index[j] = read16b(f) - 1;
 		}
 	}
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	for (i = 0; i < m->mod.xxh->ins; i++) {
+	for (i = 0; i < m->mod.ins; i++) {
 		if (m->mod.xxi[i].nsm == 0)
 			continue;
 

@@ -82,13 +82,13 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	for (i = 0; i < 64; i++)
 		sh.pataddr[i] = read32b(f) + 0x0c;
 
-	m->mod.xxh->len = sh.len;
-	m->mod.xxh->pat = sh.pat;
-	m->mod.xxh->ins = sh.nos;
-	m->mod.xxh->smp = m->mod.xxh->ins;
-	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.len = sh.len;
+	m->mod.pat = sh.pat;
+	m->mod.ins = sh.nos;
+	m->mod.smp = m->mod.ins;
+	m->mod.trk = m->mod.pat * m->mod.chn;
 
-	for (i = 0; i < m->mod.xxh->len; i++)
+	for (i = 0; i < m->mod.len; i++)
 		m->mod.xxo[i] = sh.order[i];
 
 	set_type(m, "STIM (Slamtilt)");
@@ -98,9 +98,9 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
 
-	for (i = 0; i < m->mod.xxh->pat; i++) {
+	for (i = 0; i < m->mod.pat; i++) {
 		PATTERN_ALLOC(i);
 		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
@@ -146,11 +146,11 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.smp);
 
-	fseek(f, start + sh.smpaddr + m->mod.xxh->smp * 4, SEEK_SET);
+	fseek(f, start + sh.smpaddr + m->mod.smp * 4, SEEK_SET);
 
-	for (i = 0; i < m->mod.xxh->smp; i++) {
+	for (i = 0; i < m->mod.smp; i++) {
 		si.size = read16b(f);
 		si.finetune = read8(f);
 		si.volume = read8(f);
@@ -180,7 +180,7 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
-	m->mod.xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }
