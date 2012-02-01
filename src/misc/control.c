@@ -247,7 +247,7 @@ int xmp_seek_time(xmp_context opaque, int time)
 		if (t > time) {
 			if (i > 0)
 				i--;
-			xmp_ord_set(ctx, i);
+			xmp_ord_set(opaque, i);
 			return 0;
 		}
 	}
