@@ -103,7 +103,7 @@ static int coco_test(FILE *f, char *t, const int start)
 }
 
 
-static void fix_effect(struct xxm_event *e)
+static void fix_effect(struct xmp_event *e)
 {
 	switch (e->fxt) {
 	case 0x00:			/* 00 xy Normal play or Arpeggio */
@@ -168,7 +168,7 @@ static void fix_effect(struct xxm_event *e)
 static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int i, j;
 	int seq_ptr, pat_ptr, smp_ptr[100];
 
@@ -199,7 +199,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->volbase = 0xff;
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		smp_ptr[i] = read32l(f);
 		m->mod.xxs[i].len = read32l(f);

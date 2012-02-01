@@ -59,7 +59,7 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
     int i, j, r;
     int sample_num = 0;
     uint8 *patbuf, *pat, b;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct xm_file_header xfh;
     struct xm_pattern_header xph;
     struct xm_instrument_header xih;
@@ -258,8 +258,8 @@ load_patterns:
     PATTERN_ALLOC(i);
 
     m->mod.xxp[i]->rows = 64;
-    m->mod.xxt[i * m->mod.xxh->chn] = calloc (1, sizeof (struct xxm_track) +
-	sizeof (struct xxm_event) * 64);
+    m->mod.xxt[i * m->mod.xxh->chn] = calloc (1, sizeof (struct xmp_track) +
+	sizeof (struct xmp_event) * 64);
     m->mod.xxt[i * m->mod.xxh->chn]->rows = 64;
     for (j = 0; j < m->mod.xxh->chn; j++)
 	m->mod.xxp[i]->index[j] = i * m->mod.xxh->chn;
@@ -310,7 +310,7 @@ load_instruments:
 	_D(_D_INFO "[%2X] %-22.22s %2d", i, m->mod.xxi[i].name, m->mod.xxi[i].nsm);
 
 	if (m->mod.xxi[i].nsm) {
-	    m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), m->mod.xxi[i].nsm);
+	    m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), m->mod.xxi[i].nsm);
 
 	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)
 	     * It works pretty much the same way as Impulse Tracker's sample
@@ -462,7 +462,7 @@ load_instruments:
 	}
     }
     m->mod.xxh->smp = sample_num;
-    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xxm_sample) * m->mod.xxh->smp);
+    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.xxh->smp);
 
     if (xfh.version <= 0x0103) {
 	goto load_patterns;

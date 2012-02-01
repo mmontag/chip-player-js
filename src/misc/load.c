@@ -494,7 +494,7 @@ int xmp_load_module(xmp_context opaque, char *s)
     m->quirk = o->quirk;
     m->comment = NULL;
 
-    m->mod.xxh = calloc(sizeof (struct xxm_header), 1);
+    m->mod.xxh = calloc(sizeof (struct xmp_module_header), 1);
     /* Set defaults */
     m->mod.xxh->tpo = 6;
     m->mod.xxh->bpm = 125;

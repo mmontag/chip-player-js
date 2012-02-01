@@ -17,17 +17,17 @@
  * number above the limit.
  */
 
-#define XMP_MAXORD	256		/* max number of patterns in module */
 #define XMP_MAXROW	256		/* pattern loop stack size */
 #define XMP_MAXVOL	(0x400 * 0x7fff)
 #define XMP_EXTDRV	0xffff
 #define XMP_MINLEN	0x1000
 #define XMP_MAXCH	64		/* max virtual channels */
 #define XMP_MAXVOC	64		/* max physical voices */
-#define XMP_MAXENV	32		/* max envelope points */
 
 #include <stdio.h>
 #include <signal.h>
+#include "xmp.h"
+
 
 /* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
  */
@@ -59,9 +59,6 @@ typedef signed long long int64;
 #ifdef HAVE_STRLCAT
 #define strcat strlcat
 #endif
-
-#include "xmp.h"
-#include "xxm.h"
 
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
@@ -149,21 +146,6 @@ struct xmp_ord_info {
 
 /* Context */
 
-#include "list.h"
-#include "xxm.h"
-
-struct xmp_module {
-	char name[XMP_NAMESIZE];	/* module name */
-	char type[XMP_NAMESIZE];	/* module type */
-	struct xxm_header *xxh;		/* Header */
-	struct xxm_pattern **xxp;	/* Patterns */
-	struct xxm_track **xxt;		/* Tracks */
-	struct xxm_instrument *xxi;	/* Instruments */
-	struct xxm_sample *xxs;		/* Samples */
-	struct xxm_channel xxc[64];	/* Channel info */
-	uint8 xxo[XMP_MAXORD];		/* Orders */
-};
-
 struct xmp_mod_context {
 	struct xmp_module mod;
 
@@ -218,7 +200,7 @@ struct xmp_player_context {
 	int gvol_base;
 	double tick_time;
 	struct flow_control flow;
-	struct xmp_channel *xc_data;
+	struct channel_data *xc_data;
 	int *fetch_ctl;
 	int scan_ord;
 	int scan_row;

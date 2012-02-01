@@ -89,7 +89,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_mod_context *m = &ctx->m;
     int i, j;
     int day, month, year;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct fnk_header ffh;
     uint8 ev[3];
 
@@ -169,7 +169,7 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Convert instruments */
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = ffh.fih[i].length);
 	m->mod.xxs[i].lps = ffh.fih[i].loop_start;
 	if (m->mod.xxs[i].lps == -1)

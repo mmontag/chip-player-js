@@ -71,7 +71,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int i, j, r;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	struct ObjectHeader oh;
 	struct RTMMHeader rh;
 	struct RTNDHeader rp;
@@ -271,7 +271,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		if (m->mod.xxi[i].nsm > 16)
 			m->mod.xxi[i].nsm = 16;
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), m->mod.xxi[i].nsm);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), m->mod.xxi[i].nsm);
 
 		for (j = 0; j < 108; j++)
 			m->mod.xxi[i].map[j].ins = ri.table[j + 12];
@@ -373,7 +373,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	m->mod.xxh->smp = smpnum;
-	m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xxm_sample) * m->mod.xxh->smp);
+	m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.xxh->smp);
 
 	m->quirk |= XMP_QUIRK_FT2;
 

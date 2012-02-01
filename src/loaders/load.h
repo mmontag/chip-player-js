@@ -12,19 +12,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
-#include "xxm.h"
 #include "effects.h"
 #include "driver.h"
 #include "convert.h"
 #include "loader.h"
 
-char *copy_adjust(uint8 *, uint8 *, int);
+char *copy_adjust(char *, uint8 *, int);
 int test_name(uint8 *, int);
 void read_title(FILE *, char *, int);
-void set_xxh_defaults(struct xxm_header *);
-void cvt_pt_event(struct xxm_event *, uint8 *);
-void disable_continue_fx(struct xxm_event *);
-void clean_s3m_seq(struct xxm_header *, uint8 *);
+void set_xxh_defaults(struct xmp_module_header *);
+void cvt_pt_event(struct xmp_event *, uint8 *);
+void disable_continue_fx(struct xmp_event *);
+void clean_s3m_seq(struct xmp_module_header *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct xmp_context *, char *, char *, int);
 void set_type(struct xmp_mod_context *, char *, ...);
@@ -47,17 +46,17 @@ extern int arch_vol_table[];
 } while (0)
 
 #define INSTRUMENT_INIT() do { \
-    m->mod.xxi = calloc(sizeof (struct xxm_instrument), m->mod.xxh->ins); \
-    if (m->mod.xxh->smp) { m->mod.xxs = calloc (sizeof (struct xxm_sample), m->mod.xxh->smp); }\
+    m->mod.xxi = calloc(sizeof (struct xmp_instrument), m->mod.xxh->ins); \
+    if (m->mod.xxh->smp) { m->mod.xxs = calloc (sizeof (struct xmp_sample), m->mod.xxh->smp); }\
 } while (0)
 
 #define PATTERN_INIT() do { \
-    m->mod.xxt = calloc(sizeof (struct xxm_track *), m->mod.xxh->trk); \
-    m->mod.xxp = calloc(sizeof (struct xxm_pattern *), m->mod.xxh->pat + 1); \
+    m->mod.xxt = calloc(sizeof (struct xmp_track *), m->mod.xxh->trk); \
+    m->mod.xxp = calloc(sizeof (struct xmp_pattern *), m->mod.xxh->pat + 1); \
 } while (0)
 
 #define PATTERN_ALLOC(x) do { \
-    m->mod.xxp[x] = calloc(1, sizeof (struct xxm_pattern) + \
+    m->mod.xxp[x] = calloc(1, sizeof (struct xmp_pattern) + \
 	sizeof (int) * (m->mod.xxh->chn - 1)); \
 } while (0)
 
@@ -65,8 +64,8 @@ extern int arch_vol_table[];
     int j; \
     for (j = 0; j < m->mod.xxh->chn; j++) { \
 	m->mod.xxp[i]->index[j] = i * m->mod.xxh->chn + j; \
-	m->mod.xxt[i * m->mod.xxh->chn + j] = calloc (sizeof (struct xxm_track) + \
-	    sizeof (struct xxm_event) * m->mod.xxp[i]->rows, 1); \
+	m->mod.xxt[i * m->mod.xxh->chn + j] = calloc (sizeof (struct xmp_track) + \
+	    sizeof (struct xmp_event) * m->mod.xxp[i]->rows, 1); \
 	m->mod.xxt[i * m->mod.xxh->chn + j]->rows = m->mod.xxp[i]->rows; \
     } \
 } while (0)

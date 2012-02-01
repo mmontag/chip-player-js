@@ -89,7 +89,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int i, j, k, x, y;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	struct stat st;
 	char smp_filename[PATH_MAX];
 	FILE *s;
@@ -111,7 +111,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < 31; i++) {
 		int loop_size;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		
 		m->mod.xxs[i].len = 2 * read16b(f);
 		m->mod.xxi[i].sub[0].fin = (int8)(read8(f) << 4);

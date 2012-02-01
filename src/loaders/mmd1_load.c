@@ -68,7 +68,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct SynthInstr synth;
 	struct InstrExt exp_smp;
 	struct MMD0exp expdata;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int ver = 0;
 	int smp_idx = 0;
 	uint8 e[4];
@@ -412,7 +412,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			length = read32b(f);
 			type = read16b(f);
 
-			m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+			m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 			m->mod.xxi[i].nsm = 1;
 			m->mod.xxi[i].vts = synth.volspeed;
 			m->mod.xxi[i].wts = synth.wfspeed;
@@ -475,7 +475,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (synth.wforms == 0xffff)	
 				continue;
 
-			m->mod.xxi[i].sub = calloc(sizeof(struct xxm_subinstrument),
+			m->mod.xxi[i].sub = calloc(sizeof(struct xmp_subinstrument),
 							synth.wforms);
 			m->mod.xxi[i].nsm = synth.wforms;
 			m->mod.xxi[i].vts = synth.volspeed;
@@ -515,7 +515,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		/* instr type is sample */
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		m->mod.xxi[i].nsm = 1;
 
 		m->mod.xxi[i].sub[0].vol = song.sample[i].svol;

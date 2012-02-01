@@ -61,7 +61,7 @@ static int sym_test(FILE * f, char *t, const int start)
 
 
 
-static void fix_effect(struct xxm_event *e, int parm)
+static void fix_effect(struct xmp_event *e, int parm)
 {
 	switch (e->fxt) {
 	case 0x00:	/* 00 xyz Normal play or Arpeggio + Volume Slide Up */
@@ -234,7 +234,7 @@ static uint32 readptr16l(uint8 *p)
 static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int i, j;
 	int ver, infolen, sn[64];
 	uint32 a, b;
@@ -259,7 +259,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		sn[i] = read8(f);	/* sample name length */
 
@@ -329,8 +329,8 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	for (i = 0; i < m->mod.xxh->trk - 1; i++) {
-		m->mod.xxt[i] = calloc(sizeof(struct xxm_track) +
-				sizeof(struct xxm_event) * 64 - 1, 1);
+		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+				sizeof(struct xmp_event) * 64 - 1, 1);
 		m->mod.xxt[i]->rows = 64;
 
 		for (j = 0; j < m->mod.xxt[i]->rows; j++) {
@@ -357,8 +357,8 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	free(buf);
 
 	/* Extra track */
-	m->mod.xxt[i] = calloc(sizeof(struct xxm_track) +
-				sizeof(struct xxm_event) * 64 - 1, 1);
+	m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+				sizeof(struct xmp_event) * 64 - 1, 1);
 	m->mod.xxt[i]->rows = 64;
 
 	/* Load and convert instruments */

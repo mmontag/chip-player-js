@@ -58,7 +58,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int i, j;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	uint8 buf[1024];
 	int *trkmap, newtrk;
 	int ver;
@@ -113,7 +113,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	m->mod.xxp = calloc(sizeof(struct xxm_pattern *), m->mod.xxh->pat + 1);
+	m->mod.xxp = calloc(sizeof(struct xmp_pattern *), m->mod.xxh->pat + 1);
 
 	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -178,7 +178,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 b;
 		int c2spd;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		b = read8(f);
 		m->mod.xxi[i].nsm = b ? 1 : 0;
@@ -262,11 +262,11 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
 
 	m->mod.xxh->trk++;
-	m->mod.xxt = calloc (sizeof (struct xxm_track *), m->mod.xxh->trk);
+	m->mod.xxt = calloc (sizeof (struct xmp_track *), m->mod.xxh->trk);
 
 	/* Alloc track 0 as empty track */
-	m->mod.xxt[0] = calloc(sizeof(struct xxm_track) +
-				sizeof(struct xxm_event) * 64 - 1, 1);
+	m->mod.xxt[0] = calloc(sizeof(struct xmp_track) +
+				sizeof(struct xmp_event) * 64 - 1, 1);
 	m->mod.xxt[0]->rows = 64;
 
 	/* Alloc rest of the tracks */
@@ -274,8 +274,8 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 t1, t2, t3;
 		int size;
 
-		m->mod.xxt[i] = calloc(sizeof(struct xxm_track) +
-			sizeof(struct xxm_event) * 64 - 1, 1);
+		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+			sizeof(struct xmp_event) * 64 - 1, 1);
 		m->mod.xxt[i]->rows = 64;
 
 		size = read24l(f);
@@ -298,7 +298,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 				event->vol = t3;
 			} else if (t2 == 0x7f) {	/* copy previous */
 				memcpy(event, &m->mod.xxt[i]->event[t1 - 1],
-					sizeof(struct xxm_event));
+					sizeof(struct xmp_event));
 			} else if (t2 == 0x80) {	/* instrument */
 				event->ins = t3 + 1;
 			} else  {			/* effects */

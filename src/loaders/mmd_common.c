@@ -33,7 +33,7 @@ int mmd_get_8ch_tempo(int tempo)
 	}
 }
 
-void mmd_xlat_fx(struct xxm_event *event, int bpm_on, int bpmlen, int med_8ch)
+void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 {
 	if (event->fxt > 0x0f) {
 		event->fxt = event->fxp = 0;

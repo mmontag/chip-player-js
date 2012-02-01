@@ -36,7 +36,7 @@ struct ftm_header {
 int ftm_load(FILE * f)
 {
 	int i, j, k;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	struct ftm_header fh;
 	struct ftm_instrument si;
 	uint8 b1, b2, b3;

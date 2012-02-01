@@ -64,7 +64,7 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int i, j, k;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	struct stim_header sh;
 	struct stim_instrument si;
 	uint8 b1, b2, b3;
@@ -157,7 +157,7 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 		si.loop_start = read16b(f);
 		si.loop_size = read16b(f);
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		m->mod.xxs[i].len = 2 * si.size;
 		m->mod.xxs[i].lps = 2 * si.loop_start;
 		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * si.loop_size;

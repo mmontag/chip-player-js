@@ -67,7 +67,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_mod_context *m = &ctx->m;
     int i, j;
     struct alm_file_header afh;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct stat stat;
     uint8 b;
     char *basename;
@@ -133,7 +133,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Loading samples: %d", m->mod.xxh->ins);
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = fopen (filename, "rb");
 

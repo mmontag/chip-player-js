@@ -80,7 +80,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct sfx_header sfx;
     struct sfx_header2 sfx2;
     uint8 ev[4];
@@ -135,7 +135,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = ins_size[i]);
 	m->mod.xxs[i].lps = ins[i].loop_start;
 	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * ins[i].loop_length;

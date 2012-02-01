@@ -82,7 +82,7 @@ static int year=0, month=0, day=0;
 static int pflag, sflag, max_ins;
 static uint8 ster[8], rows[64];
 
-static void fix_effect(struct xxm_event *e)
+static void fix_effect(struct xmp_event *e)
 {
 #if 0
 	/* for debugging */
@@ -235,7 +235,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	struct xmp_mod_context *m = &ctx->m;
 	static int i = 0;
 	int j, k;
-	struct xxm_event *event;
+	struct xmp_event *event;
 
 	if (!pflag) {
 		_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
@@ -291,7 +291,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if (i >= 36)
 		return;
 
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	read32l(f);	/* SNAM */
 	{
 		/* should usually be 0x14 but zero is not unknown */

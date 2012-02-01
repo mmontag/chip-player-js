@@ -114,7 +114,7 @@ static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event, dummy;
+	struct xmp_event *event, dummy;
 	int i, len, chan;
 	int rows, r;
 	uint8 flag;
@@ -197,7 +197,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	if (m->mod.xxi[i].nsm == 0)
 		return;
 
-	m->mod.xxi[i].sub = calloc(sizeof(struct xxm_subinstrument), m->mod.xxi[i].nsm);
+	m->mod.xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), m->mod.xxi[i].nsm);
 
 	/* FIXME: Currently reading only the first sample */
 

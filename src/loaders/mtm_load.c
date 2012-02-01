@@ -88,7 +88,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments */
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(&mih.name, 22, 1, f);		/* Instrument name */
 	mih.length = read32l(f);		/* Instrument length in bytes */
@@ -132,8 +132,8 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk - 1);
 
     for (i = 0; i < m->mod.xxh->trk; i++) {
-	m->mod.xxt[i] = calloc (sizeof (struct xxm_track) +
-	    sizeof (struct xxm_event) * mfh.rows, 1);
+	m->mod.xxt[i] = calloc (sizeof (struct xmp_track) +
+	    sizeof (struct xmp_event) * mfh.rows, 1);
 	m->mod.xxt[i]->rows = mfh.rows;
 	if (!i)
 	    continue;

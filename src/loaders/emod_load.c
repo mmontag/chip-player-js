@@ -67,7 +67,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	read8(f);		/* num */
 	m->mod.xxi[i].sub[0].vol = read8(f);
@@ -120,7 +120,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j, k;
-    struct xxm_event *event;
+    struct xmp_event *event;
     uint8 x;
 
     _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);

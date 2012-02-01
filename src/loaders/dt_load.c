@@ -104,7 +104,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		int fine, replen, flag;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		read32b(f);		/* reserved */
 		m->mod.xxs[i].len = read32b(f);
@@ -156,7 +156,7 @@ static void get_dapt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int pat, i, j, k;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	static int last_pat;
 	int rows;
 

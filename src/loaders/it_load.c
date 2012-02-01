@@ -97,7 +97,7 @@ int itsex_decompress8 (FILE *, void *, int, int);
 int itsex_decompress16 (FILE *, void *, int, int);
 
 
-static void xlat_fx(int c, struct xxm_event *e)
+static void xlat_fx(int c, struct xmp_event *e)
 {
     uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
@@ -192,7 +192,7 @@ static void xlat_fx(int c, struct xxm_event *e)
 }
 
 
-static void xlat_volfx(struct xxm_event *event)
+static void xlat_volfx(struct xmp_event *event)
 {
     int b;
 
@@ -257,7 +257,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     int r, c, i, j, k, pat_len;
-    struct xxm_event *event, dummy, lastevent[L_CHANNELS];
+    struct xmp_event *event, dummy, lastevent[L_CHANNELS];
     struct it_file_header ifh;
     struct it_instrument1_header i1h;
     struct it_instrument2_header i2h;
@@ -582,7 +582,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->mod.xxi[i].vol = i2h.gbv >> 1;
 
 	    if (k) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), k);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), k);
 		for (j = 0; j < k; j++) {
 		    m->mod.xxi[i].sub[j].sid = inst_rmap[j];
 		    m->mod.xxi[i].sub[j].nna = i2h.nna;
@@ -686,7 +686,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->mod.xxi[i].vol = i2h.gbv >> 1;
 
 	    if (k) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), k);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), k);
 		for (j = 0; j < k; j++) {
 		    m->mod.xxi[i].sub[j].sid = inst_rmap[j];
 		    m->mod.xxi[i].sub[j].nna = i1h.nna;
@@ -714,7 +714,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
     for (i = 0; i < m->mod.xxh->smp; i++) {
 	if (~ifh.flags & IT_USE_INST)
-	    m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	    m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fseek(f, start + pp_smp[i], SEEK_SET);
 
 	ish.magic = read32b(f);
@@ -858,8 +858,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* If the offset to a pattern is 0, the pattern is empty */
 	if (!pp_pat[i]) {
 	    m->mod.xxp[i]->rows = 64;
-	    m->mod.xxt[i * m->mod.xxh->chn] = calloc (sizeof (struct xxm_track) +
-		sizeof (struct xxm_event) * 64, 1);
+	    m->mod.xxt[i * m->mod.xxh->chn] = calloc (sizeof (struct xmp_track) +
+		sizeof (struct xmp_event) * 64, 1);
 	    m->mod.xxt[i * m->mod.xxh->chn]->rows = 64;
 	    for (j = 0; j < m->mod.xxh->chn; j++)
 		m->mod.xxp[i]->index[j] = i * m->mod.xxh->chn;

@@ -97,7 +97,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j, k, ver, cnt;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct ult_header ufh;
     struct ult_header2 ufh2;
     struct ult_instrument uih;
@@ -131,7 +131,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(&uih.name, 32, 1, f);
 	fread(&uih.dosname, 12, 1, f);
@@ -262,7 +262,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    for (k = 0; k < cnt; k++, j++) {
 		event = &EVENT (j >> 6, i , j & 0x3f);
-		memset(event, 0, sizeof (struct xxm_event));
+		memset(event, 0, sizeof (struct xmp_event));
 		if (x8)
 		    event->note = x8 + 24;
 		event->ins = ue.ins;

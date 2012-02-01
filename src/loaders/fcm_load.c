@@ -45,7 +45,7 @@ struct fcm_header {
 int fcm_load(struct xmp_context *ctx, FILE *f)
 {
     int i, j, k;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct fcm_header fh;
     uint8 fe[4];
 
@@ -80,7 +80,7 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	B_ENDIAN16 (fh.ins[i].size);
 	B_ENDIAN16 (fh.ins[i].loop_start);
 	B_ENDIAN16 (fh.ins[i].loop_size);
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxs[i].len = 2 * fh.ins[i].size;
 	m->mod.xxs[i].lps = 2 * fh.ins[i].loop_start;
 	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * fh.ins[i].loop_size;

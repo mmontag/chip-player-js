@@ -93,7 +93,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		m->mod.xxi[i].nsm = 1;
 		fread(buffer, 30, 1, f);
@@ -125,7 +125,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int i, c, r, n, sz;
-	struct xxm_event *event, dummy;
+	struct xmp_event *event, dummy;
 	uint8 x;
 
 	PATTERN_INIT();

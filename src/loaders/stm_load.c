@@ -77,7 +77,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct stm_file_header sfh;
     uint8 b;
     int bmod2stm = 0;
@@ -120,7 +120,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     m->mod.xxh->smp = m->mod.xxh->ins;
     m->c4rate = C4_NTSC_RATE;
 
-    copy_adjust((uint8 *)m->mod.name, sfh.name, 20);
+    copy_adjust(m->mod.name, sfh.name, 20);
 
     if (bmod2stm) {
 	snprintf(m->mod.type, XMP_NAMESIZE, "!Scream! (BMOD2STM)");
@@ -135,7 +135,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = sfh.ins[i].length);
 	m->mod.xxs[i].lps = sfh.ins[i].loopbeg;
 	m->mod.xxs[i].lpe = sfh.ins[i].loopend;
@@ -179,7 +179,7 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
 	    event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
 	    b = read8(f);
-	    memset (event, 0, sizeof (struct xxm_event));
+	    memset (event, 0, sizeof (struct xmp_event));
 	    switch (b) {
 	    case 251:
 	    case 252:

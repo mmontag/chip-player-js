@@ -68,7 +68,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_mod_context *m = &ctx->m;
     int r, i, j, tmode = 1;
     struct amd_file_header afh;
-    struct xxm_event *event;
+    struct xmp_event *event;
     char regs[11];
     uint16 w;
     uint8 b;
@@ -106,7 +106,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Load instruments */
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	copy_adjust(m->mod.xxi[i].name, afh.ins[i].name, 23);
 
@@ -131,7 +131,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 
     _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    m->mod.xxp = calloc (sizeof (struct xxm_pattern *), m->mod.xxh->pat + 1);
+    m->mod.xxp = calloc (sizeof (struct xmp_pattern *), m->mod.xxh->pat + 1);
 
     for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -149,13 +149,13 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 
     _D(_D_INFO "Stored tracks: %d", w);
 
-    m->mod.xxt = calloc (sizeof (struct xxm_track *), m->mod.xxh->trk);
+    m->mod.xxt = calloc (sizeof (struct xmp_track *), m->mod.xxh->trk);
     m->mod.xxh->trk = w;
 
     for (i = 0; i < m->mod.xxh->trk; i++) {
 	w = read16l(f);
-	m->mod.xxt[w] = calloc (sizeof (struct xxm_track) +
-	    sizeof (struct xxm_event) * 64, 1);
+	m->mod.xxt[w] = calloc (sizeof (struct xmp_track) +
+	    sizeof (struct xmp_event) * 64, 1);
 	m->mod.xxt[w]->rows = 64;
 	for (r = 0; r < 64; r++) {
 	    event = &m->mod.xxt[w]->event[r];

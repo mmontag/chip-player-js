@@ -21,22 +21,22 @@
 #include "load.h"
 
 
-char *copy_adjust(uint8 *s, uint8 *r, int n)
+char *copy_adjust(char *s, uint8 *r, int n)
 {
 	int i;
 
 	memset(s, 0, n + 1);
-	strncpy((char *)s, (char *)r, n);
+	strncpy(s, (char *)r, n);
 
 	for (i = 0; s[i] && i < n; i++) {
 		if (!isprint(s[i]) || ((uint8)s[i] > 127))
 			s[i] = '.';
 	}
 
-	while (*s && (s[strlen((char *)s) - 1] == ' '))
-		s[strlen((char *)s) - 1] = 0;
+	while (*s && (s[strlen(s) - 1] == ' '))
+		s[strlen(s) - 1] = 0;
 
-	return (char *)s;
+	return s;
 }
 
 int test_name(uint8 *s, int n)
@@ -67,19 +67,19 @@ void read_title(FILE *f, char *t, int s)
 
 	fread(buf, 1, s, f);
 	buf[s] = 0;
-	copy_adjust((uint8 *)t, buf, s);
+	copy_adjust(t, buf, s);
 }
 
-void set_xxh_defaults(struct xxm_header *xxh)
+void set_xxh_defaults(struct xmp_module_header *xxh)
 {
-	memset(xxh, 0, sizeof(struct xxm_header));
+	memset(xxh, 0, sizeof(struct xmp_module_header));
 	xxh->gvl = 0x40;
 	xxh->tpo = 6;
 	xxh->bpm = 125;
 	xxh->chn = 4;
 }
 
-void cvt_pt_event(struct xxm_event *event, uint8 *mod_event)
+void cvt_pt_event(struct xmp_event *event, uint8 *mod_event)
 {
 	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
 	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
@@ -89,7 +89,7 @@ void cvt_pt_event(struct xxm_event *event, uint8 *mod_event)
 	disable_continue_fx(event);
 }
 
-void disable_continue_fx(struct xxm_event *event)
+void disable_continue_fx(struct xmp_event *event)
 {
 	if (!event->fxp) {
 		switch (event->fxt) {
@@ -111,7 +111,7 @@ void disable_continue_fx(struct xxm_event *event)
 uint8 ord_xlat[255];
 
 /* normalize pattern sequence */
-void clean_s3m_seq(struct xxm_header *xxh, uint8 *xxo)
+void clean_s3m_seq(struct xmp_module_header *xxh, uint8 *xxo)
 {
     int i, j;
     

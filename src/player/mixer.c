@@ -261,7 +261,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
     struct xmp_mod_context *m = &ctx->m;
-    struct xxm_sample *xxs;
+    struct xmp_sample *xxs;
     struct voice_info *vi;
     int samples, tick, lps, lpe;
     int vol_l, vol_r, step, voc;
@@ -409,7 +409,7 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &ctx->m;
     struct voice_info *vi = &d->voice_array[voc];
-    struct xxm_sample *xxs = &m->mod.xxs[vi->smp];
+    struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
     int lpe;
 
     if (xxs->flg & XMP_SAMPLE_SYNTH)
@@ -437,7 +437,7 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &d->voice_array[voc];
-    struct xxm_sample *xxs = &m->mod.xxs[smp];
+    struct xmp_sample *xxs = &m->mod.xxs[smp];
 
     vi->smp = smp;
     vi->vol = 0;

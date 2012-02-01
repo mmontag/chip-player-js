@@ -135,7 +135,7 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	fseek(f, sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	i = cur_ins;
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(&m->mod.xxi[i].name, 1, 34, f);
 	str_adj((char *)m->mod.xxi[i].name);
@@ -188,7 +188,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int i, r;
-	struct xxm_event *event, dummy;
+	struct xmp_event *event, dummy;
 	uint8 flag, chan;
 	uint32 len;
 	int rows, rowlen;

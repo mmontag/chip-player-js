@@ -53,7 +53,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	struct xmp_mod_context *m = &ctx->m;
 	int i, j, k;
 	int sliding;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	uint8 buf[40];
 
 	LOAD_INIT();
@@ -71,7 +71,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < 31; i++) {
 		fread(buf, 1, 40, f);
 		copy_adjust(m->mod.xxi[i].name, buf, 32);
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	}
 
 	/* read instrument volumes */

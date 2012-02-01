@@ -53,7 +53,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int c, r, i, smp_ofs[256];
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct ptm_file_header pfh;
     struct ptm_instrument_header pih;
     uint8 n, b;
@@ -98,7 +98,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     m->c4rate = C4_NTSC_RATE;
 
-    copy_adjust((uint8 *)m->mod.name, pfh.name, 28);
+    copy_adjust(m->mod.name, pfh.name, 28);
     set_type(m, "PTMF %d.%02x (Poly Tracker)",
 	pfh.vermaj, pfh.vermin);
 
@@ -109,7 +109,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	pih.type = read8(f);			/* Sample type */
 	fread(&pih.dosname, 12, 1, f);		/* DOS file name */

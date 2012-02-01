@@ -91,7 +91,7 @@ static int stc_test(FILE * f, char *t, const int start)
 static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event /*, *noise*/;
+	struct xmp_event *event /*, *noise*/;
 	int i, j;
 	uint8 buf[100];
 	int pos_ptr, orn_ptr, pat_ptr;
@@ -109,7 +109,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	pat_ptr = read16l(f);		/* Patterns pointer */
 
 	fread(buf, 18, 1, f);		/* Title */
-	copy_adjust((uint8 *)m->mod.name, (uint8 *)buf, 18);
+	copy_adjust(m->mod.name, (uint8 *)buf, 18);
 	strcpy(m->mod.type, "STC (ZX Spectrum Sound Tracker)");
 
 	read16l(f);			/* Size */
@@ -250,7 +250,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		struct spectrum_sample ss;
 
 		memset(&ss, 0, sizeof (struct spectrum_sample));
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		m->mod.xxi[i].nsm = 1;
 		m->mod.xxi[i].sub[0].vol = 0x40;
 		m->mod.xxi[i].sub[0].pan = 0x80;

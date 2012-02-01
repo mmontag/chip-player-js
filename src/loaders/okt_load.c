@@ -122,7 +122,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
     INSTRUMENT_INIT();
 
     for (j = i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(m->mod.xxi[i].name, 1, 20, f);
 	str_adj((char *)m->mod.xxi[i].name);
@@ -194,7 +194,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 
     int j;
     uint16 rows;
-    struct xxm_event *event;
+    struct xmp_event *event;
 
     if (pattern >= m->mod.xxh->pat)
 	return;
@@ -214,7 +214,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 	uint8 note, ins;
 
 	event = &EVENT(pattern, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
-	memset(event, 0, sizeof(struct xxm_event));
+	memset(event, 0, sizeof(struct xmp_event));
 
 	note = read8(f);
 	ins = read8(f);

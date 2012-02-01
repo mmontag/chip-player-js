@@ -74,7 +74,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int pat, i, r, c;
-    struct xxm_event *event;
+    struct xmp_event *event;
     uint8 *x, *sid, e[2], buf[128 * 12];
 
     LOAD_INIT();
@@ -111,7 +111,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->mod.xxh->ins; i++, sid += 12) {
 	xmp_cvt_hsc2sbi((char *)sid);
 
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = 1;
 	m->mod.xxi[i].sub[0].vol = 0x40;
 	m->mod.xxi[i].sub[0].fin = (int8)sid[11] / 4;

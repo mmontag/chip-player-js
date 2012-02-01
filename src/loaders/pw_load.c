@@ -71,7 +71,7 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	struct xmp_options *o = &ctx->o;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	struct mod_header mh;
 	uint8 mod_event[4];
 	struct pw_format *fmt;
@@ -148,7 +148,7 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		m->mod.xxs[i].len = 2 * mh.ins[i].size;
 		m->mod.xxs[i].lps = 2 * mh.ins[i].loop_start;
 		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * mh.ins[i].loop_size;

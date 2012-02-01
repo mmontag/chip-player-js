@@ -83,7 +83,7 @@ static char *inst_type[] = {
 
 static int read4_ctl;
 
-static void fix_effect(struct xxm_event *event)
+static void fix_effect(struct xmp_event *event)
 {
 	switch (event->fxt) {
 	case 0x00:	/* arpeggio */
@@ -173,7 +173,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	int transp, masksz;
 	int pos, vermaj, vermin;
 	uint8 trkvol[16], buf[1024];
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int flags, hexvol = 0;
 	int num_ins, num_smp;
 	int smp_idx;
@@ -260,7 +260,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		temp_inst[i].loop_end = temp_inst[i].loop_start + loop_len;
 
-		copy_adjust((uint8 *)temp_inst[i].name, buf, 32);
+		copy_adjust(temp_inst[i].name, buf, 32);
 
 		num_ins++;
 	}
@@ -562,7 +562,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			length = read32b(f);
 			type = read16b(f);
 
-			m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+			m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 			m->mod.xxi[i].nsm = 1;
 			m->mod.xxi[i].vts = synth.volspeed;
 			m->mod.xxi[i].wts = synth.wfspeed;
@@ -626,7 +626,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (synth.wforms == 0xffff)	
 				continue;
 
-			m->mod.xxi[i].sub = calloc(sizeof(struct xxm_subinstrument),
+			m->mod.xxi[i].sub = calloc(sizeof(struct xmp_subinstrument),
 							synth.wforms);
 			m->mod.xxi[i].nsm = synth.wforms;
 			m->mod.xxi[i].vts = synth.volspeed;
@@ -670,7 +670,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
                 /* instr type is sample */
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
                 m->mod.xxi[i].nsm = 1;
 		
 		m->mod.xxi[i].sub[0].vol = temp_inst[i].volume;

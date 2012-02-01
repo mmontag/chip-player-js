@@ -29,7 +29,7 @@
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 
-void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc, int fnum)
+void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct channel_data *xc, int fnum)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;

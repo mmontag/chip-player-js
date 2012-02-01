@@ -182,7 +182,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	int patsize;
 	int info, counter, data;
 	int track_counter[32];
-	struct xxm_event *event;
+	struct xmp_event *event;
 
 	m->mod.xxh->pat = read16l(f);
 	m->mod.xxh->chn = read8(f);
@@ -271,7 +271,7 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		int x;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		
 		namelen = read8(f);
 		x = namelen - fread(name, 1, namelen > 30 ? 30 : namelen, f);

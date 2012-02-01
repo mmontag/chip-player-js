@@ -89,7 +89,7 @@ static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
 static void unpack_block(struct xmp_context *ctx, uint16 bnum, uint8 *from)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	uint32 linemsk0 = *((uint32 *)from), linemsk1 = *((uint32 *)from + 1);
 	uint32 fxmsk0 = *((uint32 *)from + 2), fxmsk1 = *((uint32 *)from + 3);
 	uint32 *lmptr = &linemsk0, *fxptr = &fxmsk0;
@@ -232,7 +232,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 				break;
 		}
 		copy_adjust(m->mod.xxi[i].name, buf, 32);
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	}
 
 	/* read instrument volumes */

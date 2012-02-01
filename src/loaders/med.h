@@ -12,7 +12,7 @@
 #define MMD_INST_TYPES 9
 extern char *mmd_inst_type[];
 int mmd_get_8ch_tempo(int);
-void mmd_xlat_fx(struct xxm_event *, int, int, int);
+void mmd_xlat_fx(struct xmp_event *, int, int, int);
 
 
 typedef int32 LONG;

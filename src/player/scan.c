@@ -51,7 +51,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
     int* loop_stk;
     int* loop_row;
     char** tab_cnt;
-    struct xxm_event* event;
+    struct xmp_event* event;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;

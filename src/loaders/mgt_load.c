@@ -49,7 +49,7 @@ static int mgt_test(FILE *f, char *t, const int start)
 static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int i, j;
 	int ver;
 	int sng_ptr, seq_ptr, ins_ptr, pat_ptr, trk_ptr, smp_ptr;
@@ -114,7 +114,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		int c2spd, flags;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		fread(m->mod.xxi[i].name, 1, 32, f);
 		sdata[i] = read32b(f);
@@ -168,8 +168,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, start + offset, SEEK_SET);
 
 		rows = read16b(f);
-		m->mod.xxt[i] = calloc(sizeof(struct xxm_track) +
-				sizeof(struct xxm_event) * rows, 1);
+		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+				sizeof(struct xmp_event) * rows, 1);
 		m->mod.xxt[i]->rows = rows;
 
 		//printf("\n=== Track %d ===\n\n", i);
@@ -278,8 +278,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Extra track */
-	m->mod.xxt[0] = calloc(sizeof(struct xxm_track) +
-			sizeof(struct xxm_event) * 64 - 1, 1);
+	m->mod.xxt[0] = calloc(sizeof(struct xmp_track) +
+			sizeof(struct xmp_event) * 64 - 1, 1);
 	m->mod.xxt[0]->rows = 64;
 
 	/* Read and convert patterns */

@@ -48,7 +48,7 @@ static int tcb_test(FILE *f, char *t, const int start)
 static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int i, j, k;
 	uint8 buffer[10];
 	int base_offs, soffs[16];
@@ -83,7 +83,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read instrument names */
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		fread(buffer, 8, 1, f);
 		copy_adjust(m->mod.xxi[i].name, buffer, 8);
 	}

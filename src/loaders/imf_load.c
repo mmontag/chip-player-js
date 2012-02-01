@@ -158,7 +158,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int c, r, i, j;
-    struct xxm_event *event = 0, dummy;
+    struct xmp_event *event = 0, dummy;
     struct imf_header ih;
     struct imf_instrument ii;
     struct imf_sample is;
@@ -196,7 +196,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
 #endif
 
-    copy_adjust((uint8 *)m->mod.name, (uint8 *)ih.name, 32);
+    copy_adjust(m->mod.name, (uint8 *)ih.name, 32);
 
     m->mod.xxh->len = ih.len;
     m->mod.xxh->ins = ih.ins;
@@ -326,7 +326,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    return -2;
 
         if (ii.nsm)
- 	    m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), ii.nsm);
+ 	    m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), ii.nsm);
 
 	m->mod.xxi[i].nsm = ii.nsm;
 
@@ -398,7 +398,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
     m->mod.xxh->smp = smp_num;
-    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xxm_sample) * m->mod.xxh->smp);
+    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.xxh->smp);
 
     m->flags |= XMP_CTL_FILTER;
     m->quirk |= XMP_QUIRK_ST3;

@@ -140,7 +140,7 @@ static uint8 fx[] =
 
 
 /* Effect translation */
-static void xlat_fx (int c, struct xxm_event *e)
+static void xlat_fx (int c, struct xmp_event *e)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
 
@@ -200,7 +200,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_mod_context *m = &ctx->m;
     int c, r, i;
     struct s3m_adlib_header sah;
-    struct xxm_event *event = 0, dummy;
+    struct xmp_event *event = 0, dummy;
     struct s3m_file_header sfh;
     struct s3m_instrument_header sih;
     int pat_len;
@@ -247,7 +247,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	fix87(sfh.flags);
     }
 
-    copy_adjust((uint8 *)m->mod.name, sfh.name, 28);
+    copy_adjust(m->mod.name, sfh.name, 28);
 
     /* Load and convert header */
     m->mod.xxh->len = sfh.ordnum;
@@ -415,7 +415,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fseek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = read8(f);
 	m->mod.xxi[i].sub[0].pan = 0x80;

@@ -79,7 +79,7 @@ static uint8 fx[] = {
 
 
 /* Effect translation */
-static void xlat_fx(int c, struct xxm_event *e)
+static void xlat_fx(int c, struct xmp_event *e)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
 
@@ -122,11 +122,11 @@ static void xlat_fx(int c, struct xxm_event *e)
 }
 
 
-static void decode_event(uint8 x1, struct xxm_event *event, FILE *f)
+static void decode_event(uint8 x1, struct xmp_event *event, FILE *f)
 {
     uint8 x2;
 
-    memset (event, 0, sizeof (struct xxm_event));
+    memset (event, 0, sizeof (struct xmp_event));
 
     if (x1 & 0x01) {
 	x2 = read8(f);
@@ -161,7 +161,7 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i;
-    struct xxm_event *event = NULL;
+    struct xmp_event *event = NULL;
     struct liq_header lh;
     struct liq_instrument li;
     struct liq_pattern lp;
@@ -348,7 +348,7 @@ test_event:
 	    xlat_fx (channel, event); 
 	    while (x2) {
 	        row++;
-		memcpy(&EVENT(i, channel, row), event, sizeof (struct xxm_event));
+		memcpy(&EVENT(i, channel, row), event, sizeof (struct xmp_event));
 		x2--;
 	    }
 	    goto next_row;
@@ -419,7 +419,7 @@ next_pattern:
     for (i = 0; i < m->mod.xxh->ins; i++) {
 	unsigned char b[4];
 
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fread (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')

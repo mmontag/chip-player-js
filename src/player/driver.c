@@ -499,7 +499,7 @@ void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &ctx->m;
-    struct xxm_sample *xxs;
+    struct xmp_sample *xxs;
     int voc;
 
     if ((uint32)chn >= d->numchn || (uint32) (voc = d->ch2vo_array[chn]) >= d->maxvoc)
@@ -579,7 +579,7 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int flags, struct xxm_sample *xxs, void *buffer)
+int xmp_drv_loadpatch(struct xmp_context *ctx, FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer)
 {
     struct xmp_options *o = &ctx->o;
     uint8 s[5];

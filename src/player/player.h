@@ -110,7 +110,7 @@ struct med_channel {
 	int vib_wf;		/* MED synth vibrato waveform */
 };
 
-struct xmp_channel {
+struct channel_data {
     int flags;			/* Channel flags */
     int per_flags;		/* Persistent effect channel flags */
     int note;			/* Note number */
@@ -176,15 +176,15 @@ struct xmp_channel {
     
 	struct med_channel med;
 
-    struct xxm_event *delayed_event;
+    struct xmp_event *delayed_event;
     int delayed_ins;		/* IT save instrument emulation */
 };
 
 
-void process_fx(struct xmp_context *, int, uint8, uint8, uint8, struct xmp_channel *, int);
-void xmp_med_synth(struct xmp_context *, int, struct xmp_channel *, int);
-int get_med_arp(struct xmp_mod_context *, struct xmp_channel *);
-int get_med_vibrato(struct xmp_channel *);
-void filter_setup(struct xmp_context *, struct xmp_channel *, int);
+void process_fx(struct xmp_context *, int, uint8, uint8, uint8, struct channel_data *, int);
+void xmp_med_synth(struct xmp_context *, int, struct channel_data *, int);
+int get_med_arp(struct xmp_mod_context *, struct channel_data *);
+int get_med_vibrato(struct channel_data *);
+void filter_setup(struct xmp_context *, struct channel_data *, int);
 
 #endif /* __XMP_PLAYER_H */

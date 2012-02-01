@@ -78,7 +78,7 @@ static int waveform[4][WAVEFORM_SIZE] = {
      -32, -24, -16,  -8  }	/* Ramp up */
 };
 
-static struct xxm_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
+static struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
 
 /*
  * "Anyway I think this is the most brilliant piece of crap we
@@ -86,16 +86,16 @@ static struct xxm_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
  *			  -- Ice of FC about "Mental Surgery"
  */
 
-static int read_event (struct xmp_context *, struct xxm_event *, int, int);
+static int read_event (struct xmp_context *, struct xmp_event *, int, int);
 static void play_channel (struct xmp_context *, int, int);
 
 
 /* Instrument vibrato */
 
 static inline int
-get_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
+get_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 {
-	struct xxm_subinstrument *sub = &XXI;
+	struct xmp_subinstrument *sub = &XXI;
 	int type = sub->vwf;
 	int depth = sub->vde;
 	int phase = xc->instrument_vibrato.phase;
@@ -105,9 +105,9 @@ get_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 }
 
 static inline void
-update_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
+update_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 {
-	struct xxm_subinstrument *sub = &XXI;
+	struct xmp_subinstrument *sub = &XXI;
 	int rate = sub->vra;
 
 	xc->instrument_vibrato.phase += rate >> 2;
@@ -123,7 +123,7 @@ update_instrument_vibrato(struct xmp_mod_context *m, struct xmp_channel *xc)
 static inline int copy_channel(struct xmp_player_context *p, int to, int from)
 {
     if (to > 0 && to != from)
-	memcpy(&p->xc_data[to], &p->xc_data[from], sizeof (struct xmp_channel));
+	memcpy(&p->xc_data[to], &p->xc_data[from], sizeof (struct channel_data));
 
     return to;
 }
@@ -134,11 +134,11 @@ static inline void reset_channel(struct xmp_context *ctx)
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &ctx->m;
-    struct xmp_channel *xc;
+    struct channel_data *xc;
     int i;
 
     m->synth->reset(ctx);
-    memset(p->xc_data, 0, sizeof (struct xmp_channel) * d->numchn);
+    memset(p->xc_data, 0, sizeof (struct channel_data) * d->numchn);
 
     for (i = d->numchn; i--; ) {
 	xc = &p->xc_data[i];
@@ -153,12 +153,12 @@ static inline void reset_channel(struct xmp_context *ctx)
 }
 
 
-static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int ctl)
+static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int ctl)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
     int xins, ins, smp, note, key, flg;
-    struct xmp_channel *xc;
+    struct channel_data *xc;
     int cont_sample;
 
     xc = &p->xc_data[chn];
@@ -427,7 +427,7 @@ static inline void read_row(struct xmp_context *ctx, int pat, int row)
     int count, chn;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
-    struct xxm_event *event;
+    struct xmp_event *event;
 
     count = 0;
     for (chn = 0; chn < m->mod.xxh->chn; chn++) {
@@ -460,7 +460,7 @@ static inline void read_row(struct xmp_context *ctx, int pat, int row)
 
 static void play_channel(struct xmp_context *ctx, int chn, int t)
 {
-    struct xmp_channel *xc;
+    struct channel_data *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
     int med_arp, vibrato, med_vibrato;
@@ -828,7 +828,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 	p->fetch_ctl = calloc(m->mod.xxh->chn, sizeof (int));
 	f->loop_stack = calloc(d->numchn, sizeof (int));
 	f->loop_start = calloc(d->numchn, sizeof (int));
-	p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
+	p->xc_data = calloc(d->numchn, sizeof (struct channel_data));
 	if (!(p->fetch_ctl && f->loop_stack && f->loop_start && p->xc_data))
 		return XMP_ERR_ALLOC;
 
@@ -995,7 +995,7 @@ next_order:
 		int i;
 
 		for (i = 0; i < m->mod.xxh->chn; i++) {
-			struct xmp_channel *c = &p->xc_data[i];
+			struct channel_data *c = &p->xc_data[i];
 
 			printf("%d %d %d %d %d %d %lf %d %d %d %d %lf "
 			       "%d %d %d %d %d %d %d %d %d %d\n",

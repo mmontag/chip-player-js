@@ -77,7 +77,7 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j, vib = 0;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct far_header ffh;
     struct far_header2 ffh2;
     struct far_instrument fih;
@@ -231,7 +231,7 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
 		continue;
 
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(&fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = read32l(f);	/* Length of sample (up to 64Kb) */

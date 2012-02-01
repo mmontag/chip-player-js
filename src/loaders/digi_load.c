@@ -81,7 +81,7 @@ struct digi_header {
 static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
-    struct xxm_event *event = 0;
+    struct xmp_event *event = 0;
     struct digi_header dh;
     uint8 digi_event[4], chn_table[64];
     uint16 w;
@@ -124,7 +124,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     m->mod.xxh->len = dh.len + 1;
     m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
-    copy_adjust((uint8 *)m->mod.name, dh.title, 32);
+    copy_adjust(m->mod.name, dh.title, 32);
     set_type(m, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
 
     MODULE_INFO();
@@ -137,7 +137,7 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = dh.slen[i]);
 	m->mod.xxs[i].lps = dh.sloop[i];
 	m->mod.xxs[i].lpe = dh.sloop[i] + dh.sllen[i];

@@ -80,7 +80,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct ssn_file_header sfh;
     struct ssn_instrument_header sih;
     uint8 ev[3];
@@ -110,7 +110,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     m->mod.xxh->smp = m->mod.xxh->ins;
     m->mod.xxh->flg |= XXM_FLG_LINEAR;
 
-    copy_adjust((uint8 *)m->mod.name, sfh.message, 36);
+    copy_adjust(m->mod.name, sfh.message, 36);
     strcpy(m->mod.type, strncmp((char *)sfh.marker, "if", 2) ?
 				"669 (UNIS 669)" : "669 (Composer 669)");
 
@@ -127,7 +127,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Instruments: %d", m->mod.xxh->pat);
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
 	sih.length = read32l(f);		/* Instrument size */

@@ -141,7 +141,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_mod_context *m = &ctx->m;
     int i, j;
     int smp_size;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct ims_header ih;
     uint8 ims_event[3];
     int xpo = 21;		/* Tuned against UADE */
@@ -189,7 +189,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxs[i].len = 2 * ih.ins[i].size;
 	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * ih.ins[i].loop_size;
 	m->mod.xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;

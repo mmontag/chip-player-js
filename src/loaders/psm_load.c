@@ -43,7 +43,7 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
 	int c, r, i;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	uint8 buf[1024];
 	uint32 p_ord, p_chn, p_pat, p_ins;
 	uint32 p_smp[64];
@@ -101,7 +101,7 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint16 flags, c2spd;
 		int finetune;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		fread(buf, 1, 13, f);		/* sample filename */
 		fread(buf, 1, 24, f);		/* sample description */

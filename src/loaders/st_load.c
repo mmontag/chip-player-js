@@ -160,7 +160,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     struct xmp_options *o = &ctx->o;
     int i, j;
     int smp_size;
-    struct xxm_event ev, *event;
+    struct xmp_event ev, *event;
     struct st_header mh;
     uint8 mod_event[4];
     int ust = 1, nt = 0, serr = 0;
@@ -228,7 +228,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxs[i].len = 2 * mh.ins[i].size;
 	m->mod.xxs[i].lps = mh.ins[i].loop_start;
 	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * mh.ins[i].loop_size;

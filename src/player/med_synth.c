@@ -52,7 +52,7 @@ static int sine[32] = {
     -255,-250,-235,-212,-180,-141, -97, -49
 };
 
-int get_med_vibrato(struct xmp_channel *xc)
+int get_med_vibrato(struct channel_data *xc)
 {
 	int vib;
 
@@ -74,7 +74,7 @@ int get_med_vibrato(struct xmp_channel *xc)
 }
 
 
-int get_med_arp(struct xmp_mod_context *m, struct xmp_channel *xc)
+int get_med_arp(struct xmp_mod_context *m, struct channel_data *xc)
 {
 	int arp;
 
@@ -94,7 +94,7 @@ int get_med_arp(struct xmp_mod_context *m, struct xmp_channel *xc)
 }
 
 
-void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int rst)
+void xmp_med_synth(struct xmp_context *ctx, int chn, struct channel_data *xc, int rst)
 {
     struct xmp_mod_context *m = &ctx->m;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;

@@ -373,27 +373,27 @@ static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j, k, row, len;
-    struct xxm_track *track;
+    struct xmp_track *track;
 
     m->mod.xxh->trk = read16l(f) + 1;
-    m->mod.xxt = realloc(m->mod.xxt, sizeof (struct xxm_track *) * m->mod.xxh->trk);
+    m->mod.xxt = realloc(m->mod.xxt, sizeof (struct xmp_track *) * m->mod.xxh->trk);
 
     _D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
 
-    track = calloc (1, sizeof (struct xxm_track) +
-	sizeof (struct xxm_event) * 256);
+    track = calloc (1, sizeof (struct xmp_track) +
+	sizeof (struct xmp_event) * 256);
 
     /* Empty track 0 is not stored in the file */
-    m->mod.xxt[0] = calloc (1, sizeof (struct xxm_track) +
-	256 * sizeof (struct xxm_event));
+    m->mod.xxt[0] = calloc (1, sizeof (struct xmp_track) +
+	256 * sizeof (struct xmp_event));
     m->mod.xxt[0]->rows = 256;
 
     for (i = 1; i < m->mod.xxh->trk; i++) {
 	/* Length of the track in bytes */
 	len = read16l(f);
 
-	memset (track, 0, sizeof (struct xxm_track) +
-            sizeof (struct xxm_event) * 256);
+	memset (track, 0, sizeof (struct xmp_track) +
+            sizeof (struct xmp_event) * 256);
 
 	for (row = 0; len;) {
 	    j = read8(f);
@@ -405,12 +405,12 @@ static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
 	    case 1:
 		for (k = 0; k <= (j >> 2); k++)
 		    memcpy (&track->event[row + k], &track->event[row - 1],
-			sizeof (struct xxm_event));
+			sizeof (struct xmp_event));
 		row += k - 1;
 		break;
 	    case 2:
 		memcpy (&track->event[row], &track->event[j >> 2],
-		    sizeof (struct xxm_event));
+		    sizeof (struct xmp_event));
 		break;
 	    case 3:
 		if (j & MDL_NOTE_FOLLOWS) {
@@ -446,10 +446,10 @@ static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
 	    row = 128;
 	else row = 256;
 
-	m->mod.xxt[i] = calloc (1, sizeof (struct xxm_track) +
-	    sizeof (struct xxm_event) * row);
-	memcpy (m->mod.xxt[i], track, sizeof (struct xxm_track) +
-	    sizeof (struct xxm_event) * row);
+	m->mod.xxt[i] = calloc (1, sizeof (struct xmp_track) +
+	    sizeof (struct xmp_event) * row);
+	memcpy (m->mod.xxt[i], track, sizeof (struct xmp_track) +
+	    sizeof (struct xmp_event) * row);
 	m->mod.xxt[i]->rows = row;
     }
 
@@ -479,7 +479,7 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
 	_D(_D_INFO "[%2X] %-32.32s %2d", i_index[i],
 				m->mod.xxi[i].name, m->mod.xxi[i].nsm);
 
-	m->mod.xxi[i].sub = calloc (sizeof (struct xxm_subinstrument), m->mod.xxi[i].nsm);
+	m->mod.xxi[i].sub = calloc (sizeof (struct xmp_subinstrument), m->mod.xxi[i].nsm);
 
 	for (j = 0; j < XXM_KEY_MAX; j++)
 	    m->mod.xxi[i].map[j].ins = -1;
@@ -539,7 +539,7 @@ static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
     uint8 x;
 
     m->mod.xxh->smp = read8(f);
-    m->mod.xxs = calloc(sizeof (struct xxm_sample), m->mod.xxh->smp);
+    m->mod.xxs = calloc(sizeof (struct xmp_sample), m->mod.xxh->smp);
     packinfo = calloc(sizeof (int), m->mod.xxh->smp);
 
     _D(_D_INFO "Sample infos: %d", m->mod.xxh->smp);
@@ -602,7 +602,7 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
 	m->mod.xxi[i].nsm = 1;
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].sub[0].sid = i_index[i] = s_index[i] = read8(f);
 
 	fread(buf, 1, 32, f);

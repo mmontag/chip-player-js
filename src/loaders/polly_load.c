@@ -93,7 +93,7 @@ static int polly_test(FILE *f, char *t, const int start)
 static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	uint8 *buf;
 	int i, j, k;
 
@@ -167,7 +167,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < 15; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		m->mod.xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
 					256 * buf[ORD_OFS + 145 + i];
 		m->mod.xxi[i].sub[0].fin = 0;

@@ -105,7 +105,7 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int vermaj, vermin, tvmaj, tvmin, tracker;
 	int origfmt, ord_ofs, pat_ofs, ins_ofs, smp_ofs;
 	uint8 buffer[32], panmap[32];
@@ -171,7 +171,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < m->mod.xxh->ins; i++) {
 		int flg, c4spd, vol, pan;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		fread(buffer, 32, 1, f);
 		copy_adjust(m->mod.xxi[i].name, buffer, 32);
 		fseek(f, 12, SEEK_CUR);		/* skip filename */

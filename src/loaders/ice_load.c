@@ -67,7 +67,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int i, j;
-    struct xxm_event *event;
+    struct xmp_event *event;
     struct ice_header ih;
     uint8 ev[4];
 
@@ -106,7 +106,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = 2 * ih.ins[i].len);
 	m->mod.xxs[i].lps = 2 * ih.ins[i].loop_start;
 	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * ih.ins[i].loop_size;
@@ -138,8 +138,8 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
 
     for (i = 0; i < m->mod.xxh->trk; i++) {
-	m->mod.xxt[i] = calloc (sizeof (struct xxm_track) + sizeof
-		(struct xxm_event) * 64, 1);
+	m->mod.xxt[i] = calloc (sizeof (struct xmp_track) + sizeof
+		(struct xmp_event) * 64, 1);
 	m->mod.xxt[i]->rows = 64;
 	for (j = 0; j < m->mod.xxt[i]->rows; j++) {
 		event = &m->mod.xxt[i]->event[j];

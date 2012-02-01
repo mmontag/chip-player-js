@@ -256,14 +256,14 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	if (transposed) {
 		m->mod.xxh->trk += transposed;
-		m->mod.xxt = realloc(m->mod.xxt, m->mod.xxh->trk * sizeof (struct xxm_track *));
+		m->mod.xxt = realloc(m->mod.xxt, m->mod.xxh->trk * sizeof (struct xmp_track *));
 	}
 	
 	reportv(ctx, 0, "Stored tracks  : %d ", m->mod.xxh->trk);
 
 	for (i = 0; i < m->mod.xxh->trk; i++) {
-		m->mod.xxt[i] = calloc(sizeof(struct xxm_track) +
-				   sizeof(struct xxm_event) * pattlen - 1, 1);
+		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+				   sizeof(struct xmp_event) * pattlen - 1, 1);
                 m->mod.xxt[i]->rows = pattlen;
 
 		if (!i && blank)
@@ -276,10 +276,10 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 				o-=256;
 //			printf ("pattern %02x: source %02x offset %d\n", i, n, o);
 			memcpy (m->mod.xxt[i], m->mod.xxt[transbuf[n][0]],
-				sizeof(struct xxm_track) +
-				sizeof(struct xxm_event) * pattlen - 1);
+				sizeof(struct xmp_track) +
+				sizeof(struct xmp_event) * pattlen - 1);
 			for (j = 0; j < m->mod.xxt[i]->rows; j++) {
-				struct xxm_event *event = &m->mod.xxt[i]->event[j];
+				struct xmp_event *event = &m->mod.xxt[i]->event[j];
 				if (event->note)
 					event->note+=o;
 			}
@@ -287,7 +287,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		for (j = 0; j < m->mod.xxt[i]->rows; j++) {
-			struct xxm_event *event = &m->mod.xxt[i]->event[j];
+			struct xmp_event *event = &m->mod.xxt[i]->event[j];
 			int note = read8(f);			
 
 			if (note != 0x3f) {
@@ -321,7 +321,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		int vol, fspd, wavelen, flow, vibdel, hclen, hc;
 		int vibdep, vibspd, sqmin, sqmax, sqspd, fmax, plen, pspd;
 		int Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol;
-                m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+                m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		fread(buf, 22, 1, f);
 

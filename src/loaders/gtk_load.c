@@ -42,7 +42,7 @@ static int gtk_test(FILE * f, char *t, const int start)
 static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int i, j, k;
 	uint8 buffer[40];
 	int rows, bits, c2spd, size;
@@ -69,7 +69,7 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		fread(buffer, 28, 1, f);
 		copy_adjust(m->mod.xxi[i].name, buffer, 28);
 

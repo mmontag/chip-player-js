@@ -47,7 +47,7 @@ struct rad_instrument {
 static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xxm_event *event;
+	struct xmp_event *event;
 	int i, j;
 	uint8 sid[11];
 	uint16 ppat[32];
@@ -97,7 +97,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < m->mod.xxh->ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		m->mod.xxi[i].nsm = 1;
 		m->mod.xxi[i].sub[0].vol = 0x40;
 		m->mod.xxi[i].sub[0].pan = 0x80;

@@ -81,7 +81,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
     int c, r, i, broken = 0;
-    struct xxm_event *event = 0, dummy;
+    struct xmp_event *event = 0, dummy;
     struct stx_file_header sfh;
     struct stx_instrument_header sih;
     uint8 n, b;
@@ -175,7 +175,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < m->mod.xxh->ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fseek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
 	sih.type = read8(f);
