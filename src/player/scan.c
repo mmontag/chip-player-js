@@ -70,8 +70,6 @@ int _xmp_scan_module(struct xmp_context *ctx)
     loop_row = calloc(sizeof (int), m->xxh->chn);
     loop_chn = loop_flg = 0;
 
-    memset(m->xxo_fstrow, 0, XMP_MAXORD);
-
     gvl = m->xxh->gvl;
     bpm = m->xxh->bpm;
 
@@ -129,7 +127,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 	else
 	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
 
-	if (!m->xxo_fstrow[ord] && ord) {
+	if (!m->xxo_info[ord].start_row && ord) {
 	    if (ord == o->start && !(m->flags & XMP_CTL_LOOP)) {
 		if (medbpm)
 	            clock_rst = clock + 132 * alltmp / 5 / bpm;
@@ -137,7 +135,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		    clock_rst = clock + 100 * alltmp / bpm;
 	    }
 
-	    m->xxo_fstrow[ord] = break_row;
+	    m->xxo_info[ord].start_row = break_row;
 	}
 
 	last_row = m->xxp[m->xxo[ord]]->rows;

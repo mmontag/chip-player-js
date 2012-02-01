@@ -816,7 +816,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 	p->tempo = m->xxo_info[f->ord].tempo;
 
 	p->tick_time = m->rrate / p->bpm;
-	f->jumpline = m->xxo_fstrow[f->ord];
+	f->jumpline = m->xxo_info[f->ord].start_row;
 	f->playing_time = 0;
 	f->end_point = p->scan_num;
 
@@ -875,7 +875,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		m->volume = m->xxo_info[f->ord].gvl;
 		f->jump = f->ord;
 		f->time = (double)m->xxo_info[f->ord].time / 1000;
-		f->jumpline = m->xxo_fstrow[f->ord];
+		f->jumpline = m->xxo_info[f->ord].start_row;
 		f->row = -1;
 		f->pbreak = 1;
 		f->ord--;

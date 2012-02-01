@@ -142,6 +142,7 @@ struct xmp_ord_info {
 	int tempo;
 	int gvl;
 	int time;
+	int start_row;
 };
 
 
@@ -168,6 +169,7 @@ struct xmp_mod_context {
 	int *vol_table;			/* Volume translation table */
 	int flags;			/* Copy from options */
 	int quirk;			/* Copy from options */
+	struct xmp_ord_info xxo_info[XMP_MAXORD];
 
 	struct xxm_header *xxh;		/* Header */
 	uint8 xxo[XMP_MAXORD];		/* Orders */
@@ -176,8 +178,6 @@ struct xmp_mod_context {
 	struct xxm_instrument *xxi;	/* Instruments */
 	struct xxm_sample *xxs;		/* Samples */
 	struct xxm_channel xxc[64];	/* Channel info */
-	struct xmp_ord_info xxo_info[XMP_MAXORD];
-	int xxo_fstrow[XMP_MAXORD];
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
 	uint8 **med_wav_table;		/* MED waveform sequence table */
