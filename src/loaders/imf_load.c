@@ -156,8 +156,7 @@ static void xlat_fx (int c, uint8 *fxt, uint8 *fxp)
 
 static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int c, r, i, j;
     struct xxm_event *event = 0, dummy;
     struct imf_header ih;
@@ -197,42 +196,42 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
 #endif
 
-    copy_adjust((uint8 *)m->name, (uint8 *)ih.name, 32);
+    copy_adjust((uint8 *)m->mod.name, (uint8 *)ih.name, 32);
 
-    m->xxh->len = ih.len;
-    m->xxh->ins = ih.ins;
-    m->xxh->smp = 1024;
-    m->xxh->pat = ih.pat;
+    m->mod.xxh->len = ih.len;
+    m->mod.xxh->ins = ih.ins;
+    m->mod.xxh->smp = 1024;
+    m->mod.xxh->pat = ih.pat;
 
     if (ih.flg & 0x01)
-	m->xxh->flg |= XXM_FLG_LINEAR;
+	m->mod.xxh->flg |= XXM_FLG_LINEAR;
 
-    m->xxh->tpo = ih.tpo;
-    m->xxh->bpm = ih.bpm;
+    m->mod.xxh->tpo = ih.tpo;
+    m->mod.xxh->bpm = ih.bpm;
 
     set_type(m, "IM10 (Imago Orpheus)");
 
     MODULE_INFO();
 
-    for (m->xxh->chn = i = 0; i < 32; i++) {
+    for (m->mod.xxh->chn = i = 0; i < 32; i++) {
 	if (ih.chn[i].status != 0x00)
-	    m->xxh->chn = i + 1;
+	    m->mod.xxh->chn = i + 1;
 	else
 	    continue;
-	m->xxc[i].pan = ih.chn[i].pan;
+	m->mod.xxc[i].pan = ih.chn[i].pan;
 #if 0
 	/* FIXME */
-	m->xxc[i].cho = ih.chn[i].chorus;
-	m->xxc[i].rvb = ih.chn[i].reverb;
+	m->mod.xxc[i].cho = ih.chn[i].chorus;
+	m->mod.xxc[i].rvb = ih.chn[i].reverb;
 #endif
-	m->xxc[i].flg |= XXM_CHANNEL_FX;
+	m->mod.xxc[i].flg |= XXM_CHANNEL_FX;
     }
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
  
-    memcpy(m->xxo, ih.pos, m->xxh->len);
-    for (i = 0; i < m->xxh->len; i++)
-	if (m->xxo[i] == 0xff)
-	    m->xxo[i]--;
+    memcpy(m->mod.xxo, ih.pos, m->mod.xxh->len);
+    for (i = 0; i < m->mod.xxh->len; i++)
+	if (m->mod.xxo[i] == 0xff)
+	    m->mod.xxo[i]--;
 
     m->c4rate = C4_NTSC_RATE;
     m->quirk |= XMP_QRK_FINEFX;
@@ -241,15 +240,15 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
     memset(arpeggio_val, 0, 32);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 
 	pat_len = read16l(f) - 4;
-	m->xxp[i]->rows = read16l(f);
+	m->mod.xxp[i]->rows = read16l(f);
 	TRACK_ALLOC (i);
 
 	r = 0;
@@ -263,7 +262,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & IMF_CH_MASK;
-	    event = c >= m->xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->mod.xxh->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & IMF_NI_FOLLOW) {
 		n = read8(f);
@@ -299,9 +298,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Instruments: %d", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
-    for (smp_num = i = 0; i < m->xxh->ins; i++) {
+    for (smp_num = i = 0; i < m->mod.xxh->ins; i++) {
 	fread(&ii.name, 32, 1, f);
 	fread(&ii.map, 120, 1, f);
 	fread(&ii.unused, 8, 1, f);
@@ -327,31 +326,31 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    return -2;
 
         if (ii.nsm)
- 	    m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), ii.nsm);
+ 	    m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), ii.nsm);
 
-	m->xxi[i].nsm = ii.nsm;
+	m->mod.xxi[i].nsm = ii.nsm;
 
 	str_adj ((char *) ii.name);
-	strncpy ((char *) m->xxi[i].name, ii.name, 24);
+	strncpy ((char *) m->mod.xxi[i].name, ii.name, 24);
 
 	for (j = 0; j < 108; j++) {
-		m->xxi[i].map[j].ins = ii.map[j];
+		m->mod.xxi[i].map[j].ins = ii.map[j];
 	}
 
 	_D(_D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,
 		ii.fadeout, ii.env[0].flg & 0x01 ? 'V' : '-');
 
-	m->xxi[i].aei.npt = ii.env[0].npt;
-	m->xxi[i].aei.sus = ii.env[0].sus;
-	m->xxi[i].aei.lps = ii.env[0].lps;
-	m->xxi[i].aei.lpe = ii.env[0].lpe;
-	m->xxi[i].aei.flg = ii.env[0].flg & 0x01 ? XXM_ENV_ON : 0;
-	m->xxi[i].aei.flg |= ii.env[0].flg & 0x02 ? XXM_ENV_SUS : 0;
-	m->xxi[i].aei.flg |= ii.env[0].flg & 0x04 ?  XXM_ENV_LOOP : 0;
+	m->mod.xxi[i].aei.npt = ii.env[0].npt;
+	m->mod.xxi[i].aei.sus = ii.env[0].sus;
+	m->mod.xxi[i].aei.lps = ii.env[0].lps;
+	m->mod.xxi[i].aei.lpe = ii.env[0].lpe;
+	m->mod.xxi[i].aei.flg = ii.env[0].flg & 0x01 ? XXM_ENV_ON : 0;
+	m->mod.xxi[i].aei.flg |= ii.env[0].flg & 0x02 ? XXM_ENV_SUS : 0;
+	m->mod.xxi[i].aei.flg |= ii.env[0].flg & 0x04 ?  XXM_ENV_LOOP : 0;
 
-	for (j = 0; j < m->xxi[i].aei.npt; j++) {
-	    m->xxi[i].aei.data[j * 2] = ii.vol_env[j * 2];
-	    m->xxi[i].aei.data[j * 2 + 1] = ii.vol_env[j * 2 + 1];
+	for (j = 0; j < m->mod.xxi[i].aei.npt; j++) {
+	    m->mod.xxi[i].aei.data[j * 2] = ii.vol_env[j * 2];
+	    m->mod.xxi[i].aei.data[j * 2 + 1] = ii.vol_env[j * 2 + 1];
 	}
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {
@@ -371,35 +370,35 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    is.dram = read32l(f);
 	    is.magic = read32b(f);
 
-	    m->xxi[i].sub[j].sid = smp_num;
-	    m->xxi[i].sub[j].vol = is.vol;
-	    m->xxi[i].sub[j].pan = is.pan;
-	    m->xxs[smp_num].len = is.len;
-	    m->xxs[smp_num].lps = is.lps;
-	    m->xxs[smp_num].lpe = is.lpe;
-	    m->xxs[smp_num].flg = is.flg & 1 ? XMP_SAMPLE_LOOP : 0;
+	    m->mod.xxi[i].sub[j].sid = smp_num;
+	    m->mod.xxi[i].sub[j].vol = is.vol;
+	    m->mod.xxi[i].sub[j].pan = is.pan;
+	    m->mod.xxs[smp_num].len = is.len;
+	    m->mod.xxs[smp_num].lps = is.lps;
+	    m->mod.xxs[smp_num].lpe = is.lpe;
+	    m->mod.xxs[smp_num].flg = is.flg & 1 ? XMP_SAMPLE_LOOP : 0;
 
 	    if (is.flg & 4) {
-	        m->xxs[smp_num].flg |= XMP_SAMPLE_16BIT;
-	        m->xxs[smp_num].len >>= 1;
-	        m->xxs[smp_num].lps >>= 1;
-	        m->xxs[smp_num].lpe >>= 1;
+	        m->mod.xxs[smp_num].flg |= XMP_SAMPLE_16BIT;
+	        m->mod.xxs[smp_num].len >>= 1;
+	        m->mod.xxs[smp_num].lps >>= 1;
+	        m->mod.xxs[smp_num].lpe >>= 1;
 	    }
 
 	    _D(_D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
-	    c2spd_to_note (is.rate, &m->xxi[i].sub[j].xpo, &m->xxi[i].sub[j].fin);
+	    c2spd_to_note (is.rate, &m->mod.xxi[i].sub[j].xpo, &m->mod.xxi[i].sub[j].fin);
 
-	    if (!m->xxs[smp_num].len)
+	    if (!m->mod.xxs[smp_num].len)
 		continue;
 
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[j].sid, 0,
-		&m->xxs[m->xxi[i].sub[j].sid], NULL);
+	    xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[j].sid, 0,
+		&m->mod.xxs[m->mod.xxi[i].sub[j].sid], NULL);
 	}
     }
-    m->xxh->smp = smp_num;
-    m->xxs = realloc(m->xxs, sizeof (struct xxm_sample) * m->xxh->smp);
+    m->mod.xxh->smp = smp_num;
+    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xxm_sample) * m->mod.xxh->smp);
 
     m->flags |= XMP_CTL_FILTER;
     m->quirk |= XMP_QUIRK_ST3;

@@ -168,55 +168,49 @@ static void get_tinf(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_mvox(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
-	m->xxh->chn = read32l(f);
+	m->mod.xxh->chn = read32l(f);
 }
 
 static void get_ster(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
 	fread(ster, 1, 8, f);
 	
-	for (i=0; i < m->xxh->chn; i++)
+	for (i=0; i < m->mod.xxh->chn; i++)
 		if (ster[i] > 0 && ster[i] < 8) 
-			m->xxc[i].pan = 42*ster[i]-40;
+			m->mod.xxc[i].pan = 42*ster[i]-40;
 }
 
 static void get_mnam(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
-	fread(m->name, 1, 32, f);
+	fread(m->mod.name, 1, 32, f);
 }
 
 static void get_anam(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	/* struct xmp_mod_context *m = &ctx->m;
 
-	fread(m->author, 1, 32, f);
+	fread(m->author, 1, 32, f); */
 }
 
 static void get_mlen(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
-	m->xxh->len = read32l(f);
+	m->mod.xxh->len = read32l(f);
 }
 
 static void get_pnum(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
-	m->xxh->pat = read32l(f);
+	m->mod.xxh->pat = read32l(f);
 }
 
 static void get_plen(struct xmp_context *ctx, int size, FILE *f)
@@ -226,12 +220,11 @@ static void get_plen(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
-	fread(m->xxo, 1, 128, f);
+	fread(m->mod.xxo, 1, 128, f);
 
-	strcpy(m->type, "MUSX (Archimedes Tracker)");
+	strcpy(m->mod.type, "MUSX (Archimedes Tracker)");
 
 	MODULE_INFO();
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
@@ -239,26 +232,25 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	static int i = 0;
 	int j, k;
 	struct xxm_event *event;
 
 	if (!pflag) {
-		_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+		_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 		pflag = 1;
 		i = 0;
-		m->xxh->trk = m->xxh->pat * m->xxh->chn;
+		m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 		PATTERN_INIT();
 	}
 
 	PATTERN_ALLOC(i);
-	m->xxp[i]->rows = rows[i];
+	m->mod.xxp[i]->rows = rows[i];
 	TRACK_ALLOC(i);
 
 	for (j = 0; j < rows[i]; j++) {
-		for (k = 0; k < m->xxh->chn; k++) {
+		for (k = 0; k < m->mod.xxh->chn; k++) {
 			event = &EVENT(i, k, j);
 
 			event->fxp = read8(f);
@@ -278,15 +270,14 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	static int i = 0;
 
 	if (!sflag) {
-		m->xxh->smp = m->xxh->ins = 36;
+		m->mod.xxh->smp = m->mod.xxh->ins = 36;
 		INSTRUMENT_INIT();
 
-		_D(_D_INFO "Instruments: %d", m->xxh->ins);
+		_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
 		sflag = 1;
 		max_ins = 0;
@@ -300,59 +291,59 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if (i >= 36)
 		return;
 
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	read32l(f);	/* SNAM */
 	{
 		/* should usually be 0x14 but zero is not unknown */
 		int name_len = read32l(f);
 		if (name_len < 32)
-			fread(m->xxi[i].name, 1, name_len, f);
+			fread(m->mod.xxi[i].name, 1, name_len, f);
 	}
 	read32l(f);	/* SVOL */
 	read32l(f);
-	/* m->xxi[i].sub[0].vol = convert_vol(read32l(f)); */
-	m->xxi[i].sub[0].vol = read32l(f) & 0xff;
+	/* m->mod.xxi[i].sub[0].vol = convert_vol(read32l(f)); */
+	m->mod.xxi[i].sub[0].vol = read32l(f) & 0xff;
 	read32l(f);	/* SLEN */
 	read32l(f);
-	m->xxs[i].len = read32l(f);
+	m->mod.xxs[i].len = read32l(f);
 	read32l(f);	/* ROFS */
 	read32l(f);
-	m->xxs[i].lps = read32l(f);
+	m->mod.xxs[i].lps = read32l(f);
 	read32l(f);	/* RLEN */
 	read32l(f);
-	m->xxs[i].lpe = read32l(f);
+	m->mod.xxs[i].lpe = read32l(f);
 
 	read32l(f);	/* SDAT */
 	read32l(f);
 	read32l(f);	/* 0x00000000 */
 
-	m->xxi[i].nsm = 1;
-	m->xxi[i].sub[0].sid = i;
-	m->xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].nsm = 1;
+	m->mod.xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].pan = 0x80;
 
 	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
 
-	if (m->xxs[i].lpe > 2) {
-		m->xxs[i].flg = XMP_SAMPLE_LOOP;
-		m->xxs[i].lpe = m->xxs[i].lps + m->xxs[i].lpe;
-	} else if (m->xxs[i].lpe == 2 && m->xxs[i].lps > 0) {
+	if (m->mod.xxs[i].lpe > 2) {
+		m->mod.xxs[i].flg = XMP_SAMPLE_LOOP;
+		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + m->mod.xxs[i].lpe;
+	} else if (m->mod.xxs[i].lpe == 2 && m->mod.xxs[i].lps > 0) {
 		/* non-zero repeat offset and repeat length of 2
 		 * means loop to end of sample */
-		m->xxs[i].flg = XMP_SAMPLE_LOOP;
-		m->xxs[i].lpe = m->xxs[i].len;
+		m->mod.xxs[i].flg = XMP_SAMPLE_LOOP;
+		m->mod.xxs[i].lpe = m->mod.xxs[i].len;
 	}
 
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, XMP_SMP_VIDC,
-					&m->xxs[m->xxi[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_VIDC,
+					&m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
-				i, m->xxi[i].name,
-				m->xxs[i].len,
-				m->xxs[i].lps,
-				m->xxs[i].lpe,
-				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i].sub[0].vol);
+				i, m->mod.xxi[i].name,
+				m->mod.xxs[i].len,
+				m->mod.xxs[i].lps,
+				m->mod.xxs[i].lpe,
+				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->mod.xxi[i].sub[0].vol);
 
 	i++;
 	max_ins++;
@@ -360,8 +351,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 
 static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
 	LOAD_INIT();
@@ -392,8 +382,8 @@ static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->xxh->chn; i++)
-		m->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
+	for (i = 0; i < m->mod.xxh->chn; i++)
+		m->mod.xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
 
 	return 0;
 }

@@ -65,8 +65,7 @@ static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
 static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int r, i, j, tmode = 1;
     struct amd_file_header afh;
     struct xxm_event *event;
@@ -88,42 +87,41 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&afh.magic, 9, 1, f);
     afh.version = read8(f);
 
-    m->xxh->chn = 9;
-    m->xxh->bpm = 125;
-    m->xxh->tpo = 6;
-    m->xxh->len = afh.len;
-    m->xxh->pat = afh.pat + 1;
-    m->xxh->ins = 26;
-    m->xxh->smp = 0;
-    memcpy (m->xxo, afh.order, m->xxh->len);
+    m->mod.xxh->chn = 9;
+    m->mod.xxh->bpm = 125;
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->len = afh.len;
+    m->mod.xxh->pat = afh.pat + 1;
+    m->mod.xxh->ins = 26;
+    m->mod.xxh->smp = 0;
+    memcpy (m->mod.xxo, afh.order, m->mod.xxh->len);
 
-    strcpy(m->type, "Amusic");
-    strncpy(m->name, (char *)afh.name, 24);
-    strncpy(m->author, (char *)afh.author, 24);
+    strcpy(m->mod.type, "Amusic");
+    strncpy(m->mod.name, (char *)afh.name, 24);
 
     MODULE_INFO();
-    _D(_D_INFO "Instruments: %d", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
     INSTRUMENT_INIT();
 
     /* Load instruments */
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
-	copy_adjust(m->xxi[i].name, afh.ins[i].name, 23);
+	copy_adjust(m->mod.xxi[i].name, afh.ins[i].name, 23);
 
-	m->xxi[i].nsm = 1;
-	m->xxi[i].sub[0].vol = 0x40;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
-	m->xxi[i].sub[0].xpo = -1;
+	m->mod.xxi[i].nsm = 1;
+	m->mod.xxi[i].sub[0].vol = 0x40;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].xpo = -1;
 
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
 
-	_D(_D_INFO "\n[%2X] %-23.23s", i, m->xxi[i].name);
+	_D(_D_INFO "\n[%2X] %-23.23s", i, m->mod.xxi[i].name);
 
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
     }
 
     if (!afh.version) {
@@ -131,36 +129,36 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
     }
 
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    m->xxp = calloc (sizeof (struct xxm_pattern *), m->xxh->pat + 1);
+    m->mod.xxp = calloc (sizeof (struct xxm_pattern *), m->mod.xxh->pat + 1);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
 	for (j = 0; j < 9; j++) {
 	    w = read16l(f);
-	    m->xxp[i]->index[j] = w;
-	    if (w > m->xxh->trk)
-		m->xxh->trk = w;
+	    m->mod.xxp[i]->index[j] = w;
+	    if (w > m->mod.xxh->trk)
+		m->mod.xxh->trk = w;
 	}
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
     }
-    m->xxh->trk++;
+    m->mod.xxh->trk++;
 
     w = read16l(f);
 
     _D(_D_INFO "Stored tracks: %d", w);
 
-    m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
-    m->xxh->trk = w;
+    m->mod.xxt = calloc (sizeof (struct xxm_track *), m->mod.xxh->trk);
+    m->mod.xxh->trk = w;
 
-    for (i = 0; i < m->xxh->trk; i++) {
+    for (i = 0; i < m->mod.xxh->trk; i++) {
 	w = read16l(f);
-	m->xxt[w] = calloc (sizeof (struct xxm_track) +
+	m->mod.xxt[w] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * 64, 1);
-	m->xxt[w]->rows = 64;
+	m->mod.xxt[w]->rows = 64;
 	for (r = 0; r < 64; r++) {
-	    event = &m->xxt[w]->event[r];
+	    event = &m->mod.xxt[w]->event[r];
 	    b = read8(f);		/* Effect parameter */
 	    if (b & 0x80) {
 		r += (b & 0x7f) - 1;
@@ -207,9 +205,9 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    for (i = 0; i < m->xxh->chn; i++) {
-	m->xxc[i].pan = 0x80;
-	m->xxc[i].flg = XXM_CHANNEL_SYNTH;
+    for (i = 0; i < m->mod.xxh->chn; i++) {
+	m->mod.xxc[i].pan = 0x80;
+	m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
     }
 
     m->synth = &synth_adlib;

@@ -75,8 +75,7 @@ static uint8 fx[] = {
 
 static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j, vib = 0;
     struct xxm_event *event;
     struct far_header ffh;
@@ -107,21 +106,21 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 256; i++)
 	ffh2.patsize[i] = read16l(f);	/* Size of each pattern in bytes */
 
-    m->xxh->chn = 16;
-    /*m->xxh->pat=ffh2.patterns; (Error in specs? --claudio) */
-    m->xxh->len = ffh2.songlen;
-    m->xxh->tpo = 6;
-    m->xxh->bpm = 8 * 60 / ffh.tempo;
-    memcpy (m->xxo, ffh2.order, m->xxh->len);
+    m->mod.xxh->chn = 16;
+    /*m->mod.xxh->pat=ffh2.patterns; (Error in specs? --claudio) */
+    m->mod.xxh->len = ffh2.songlen;
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->bpm = 8 * 60 / ffh.tempo;
+    memcpy (m->mod.xxo, ffh2.order, m->mod.xxh->len);
 
-    for (m->xxh->pat = i = 0; i < 256; i++) {
+    for (m->mod.xxh->pat = i = 0; i < 256; i++) {
 	if (ffh2.patsize[i])
-	    m->xxh->pat = i + 1;
+	    m->mod.xxh->pat = i + 1;
     }
 
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
 
-    strncpy(m->name, (char *)ffh.name, 40);
+    strncpy(m->mod.name, (char *)ffh.name, 40);
     set_type(m, "FAR (Farandole Composer %d.%d)",
 				MSN(ffh.version), LSN(ffh.version));
 
@@ -131,24 +130,24 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
     _D(_D_INFO "Comment bytes  : %d", ffh.textlen);
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	uint8 brk, note, ins, vol, fxb;
 
 	PATTERN_ALLOC(i);
 	if (!ffh2.patsize[i])
 	    continue;
-	m->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
+	m->mod.xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
 	TRACK_ALLOC(i);
 
 	brk = read8(f) + 1;
 	read8(f);
 
-	for (j = 0; j < m->xxp[i]->rows * m->xxh->chn; j++) {
-	    event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
+	for (j = 0; j < m->mod.xxp[i]->rows * m->mod.xxh->chn; j++) {
+	    event = &EVENT(i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
 
-	    if ((j % m->xxh->chn) == 0 && (j / m->xxh->chn) == brk)
+	    if ((j % m->mod.xxh->chn) == 0 && (j / m->mod.xxh->chn) == brk)
 		event->f2t = FX_BREAK;
 	
 	    note = read8(f);
@@ -214,25 +213,25 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    m->xxh->ins = -1;
+    m->mod.xxh->ins = -1;
     fread(sample_map, 1, 8, f);
     for (i = 0; i < 64; i++) {
 	if (sample_map[i / 8] & (1 << (i % 8)))
-		m->xxh->ins = i;
+		m->mod.xxh->ins = i;
     }
-    m->xxh->ins++;
+    m->mod.xxh->ins++;
 
-    m->xxh->smp = m->xxh->ins;
+    m->mod.xxh->smp = m->mod.xxh->ins;
 
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->xxh->ins; i++) {
+    for (i = 0; i < m->mod.xxh->ins; i++) {
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
 		continue;
 
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = read32l(f);	/* Length of sample (up to 64Kb) */
@@ -246,30 +245,30 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
 	fih.length &= 0xffff;
 	fih.loop_start &= 0xffff;
 	fih.loopend &= 0xffff;
-	m->xxs[i].len = fih.length;
-	m->xxi[i].nsm = fih.length > 0 ? 1 : 0;
-	m->xxs[i].lps = fih.loop_start;
-	m->xxs[i].lpe = fih.loopend;
-	m->xxs[i].flg = 0;
+	m->mod.xxs[i].len = fih.length;
+	m->mod.xxi[i].nsm = fih.length > 0 ? 1 : 0;
+	m->mod.xxs[i].lps = fih.loop_start;
+	m->mod.xxs[i].lpe = fih.loopend;
+	m->mod.xxs[i].flg = 0;
 
 	if (fih.sampletype != 0) {
-		m->xxs[i].flg |= XMP_SAMPLE_16BIT;
-		m->xxs[i].len >>= 1;
-		m->xxs[i].lps >>= 1;
-		m->xxs[i].lpe >>= 1;
+		m->mod.xxs[i].flg |= XMP_SAMPLE_16BIT;
+		m->mod.xxs[i].len >>= 1;
+		m->mod.xxs[i].lps >>= 1;
+		m->mod.xxs[i].lpe >>= 1;
 	}
 
-	m->xxs[i].flg |= fih.loopmode ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i].sub[0].vol = 0xff; /* fih.volume; */
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxs[i].flg |= fih.loopmode ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxi[i].sub[0].vol = 0xff; /* fih.volume; */
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, fih.name, 32);
+	copy_adjust(m->mod.xxi[i].name, fih.name, 32);
 
 	_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
-		i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
-		m->xxs[i].lpe, fih.loopmode ? 'L' : ' ', m->xxi[i].sub[0].vol);
+		i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+		m->mod.xxs[i].lpe, fih.loopmode ? 'L' : ' ', m->mod.xxi[i].sub[0].vol);
 
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0, &m->mod.xxs[i], NULL);
     }
 
     m->volbase = 0xff;

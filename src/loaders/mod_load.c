@@ -177,8 +177,7 @@ static int is_st_ins (char *s)
 
 static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;
@@ -193,13 +192,13 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 
     LOAD_INIT();
 
-    m->xxh->ins = 31;
-    m->xxh->smp = m->xxh->ins;
-    m->xxh->chn = 0;
+    m->mod.xxh->ins = 31;
+    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.xxh->chn = 0;
     smp_size = 0;
     pat_size = 0;
 
-    m->xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
     fread(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
@@ -220,7 +219,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 
     for (i = 0; mod_magic[i].ch; i++) {
 	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
-	    m->xxh->chn = mod_magic[i].ch;
+	    m->mod.xxh->chn = mod_magic[i].ch;
 	    tracker = mod_magic[i].tracker;
 	    detected = mod_magic[i].flag;
 	    ptkloop = mod_magic[i].ptkloop;
@@ -228,60 +227,60 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    if (!m->xxh->chn) {
+    if (!m->mod.xxh->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
 	    isdigit(magic[0]) && isdigit(magic[1])) {
-	    if ((m->xxh->chn = (*magic - '0') *
+	    if ((m->mod.xxh->chn = (*magic - '0') *
 		10 + magic[1] - '0') > 32)
 		return -1;
 	} else if (!strncmp(magic + 1, "CHN", 3) &&
 	    isdigit(*magic)) {
-	    if (!(m->xxh->chn = (*magic - '0')))
+	    if (!(m->mod.xxh->chn = (*magic - '0')))
 		return -1;
 	} else
 	    return -1;
 	tracker = "TakeTracker/FastTracker II";
 	detected = 1;
-	m->xxh->flg &= ~XXM_FLG_MODRNG;
+	m->mod.xxh->flg &= ~XXM_FLG_MODRNG;
     }
 
-    strncpy (m->name, (char *) mh.name, 20);
+    strncpy (m->mod.name, (char *) mh.name, 20);
 
-    m->xxh->len = mh.len;
-    /* m->xxh->rst = mh.restart; */
+    m->mod.xxh->len = mh.len;
+    /* m->mod.xxh->rst = mh.restart; */
 
-    if (m->xxh->rst >= m->xxh->len)
-	m->xxh->rst = 0;
-    memcpy(m->xxo, mh.order, 128);
+    if (m->mod.xxh->rst >= m->mod.xxh->len)
+	m->mod.xxh->rst = 0;
+    memcpy(m->mod.xxo, mh.order, 128);
 
     for (i = 0; i < 128; i++) {
 	/* This fixes dragnet.mod (garbage in the order list) */
-	if (m->xxo[i] > 0x7f)
+	if (m->mod.xxo[i] > 0x7f)
 		break;
-	if (m->xxo[i] > m->xxh->pat)
-	    m->xxh->pat = m->xxo[i];
+	if (m->mod.xxo[i] > m->mod.xxh->pat)
+	    m->mod.xxh->pat = m->mod.xxo[i];
     }
-    m->xxh->pat++;
+    m->mod.xxh->pat++;
 
-    pat_size = 256 * m->xxh->chn * m->xxh->pat;
+    pat_size = 256 * m->mod.xxh->chn * m->mod.xxh->pat;
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxs[i].len = 2 * mh.ins[i].size;
-	m->xxs[i].lps = lps_mult * mh.ins[i].loop_start;
-	m->xxs[i].lpe = m->xxs[i].lps + 2 * mh.ins[i].loop_size;
-	if (m->xxs[i].lpe > m->xxs[i].len)
-		m->xxs[i].lpe = m->xxs[i].len;
-	m->xxs[i].flg = (mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxs[i].len = 2 * mh.ins[i].size;
+	m->mod.xxs[i].lps = lps_mult * mh.ins[i].loop_start;
+	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * mh.ins[i].loop_size;
+	if (m->mod.xxs[i].lpe > m->mod.xxs[i].len)
+		m->mod.xxs[i].lpe = m->mod.xxs[i].len;
+	m->mod.xxs[i].flg = (mh.ins[i].loop_size > 1 && m->mod.xxs[i].lpe > 8) ?
 		XMP_SAMPLE_LOOP : 0;
-	m->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
-	m->xxi[i].sub[0].vol = mh.ins[i].volume;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
-	m->xxi[i].nsm = !!(m->xxs[i].len);
-	copy_adjust(m->xxi[i].name, mh.ins[i].name, 22);
+	m->mod.xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
+	m->mod.xxi[i].sub[0].vol = mh.ins[i].volume;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+	copy_adjust(m->mod.xxi[i].name, mh.ins[i].name, 22);
     }
 
     /*
@@ -301,9 +300,9 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
      * and delay.
      */
 
-    if (0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size < m->size) {
+    if (0x43c + m->mod.xxh->pat * 4 * m->mod.xxh->chn * 0x40 + smp_size < m->size) {
 	int pos = ftell(f);
-	fseek(f, start + 0x43c + m->xxh->pat * 4 * m->xxh->chn * 0x40 + smp_size, SEEK_SET);
+	fseek(f, start + 0x43c + m->mod.xxh->pat * 4 * m->mod.xxh->chn * 0x40 + smp_size, SEEK_SET);
 	fread(idbuffer, 1, 4, f);
 	fseek(f, start + pos, SEEK_SET);
 
@@ -324,8 +323,8 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
      */
 
     if ((wow = (!strncmp(magic, "M.K.", 4) &&
-		(0x43c + m->xxh->pat * 32 * 0x40 + smp_size == m->size)))) {
-	m->xxh->chn = 8;
+		(0x43c + m->mod.xxh->pat * 32 * 0x40 + smp_size == m->size)))) {
+	m->mod.xxh->chn = 8;
 	tracker = "Mod's Grave";
 	ptkloop = 0;
 	goto skip_test;
@@ -334,36 +333,36 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Test for Protracker song files
      */
     else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
-		(0x43c + m->xxh->pat * 0x400 == m->size)))) {
+		(0x43c + m->mod.xxh->pat * 0x400 == m->size)))) {
 	tracker = "Protracker";
 	goto skip_test;
     }
 
     /* Test Protracker-like files
      */
-    if (m->xxh->chn == 4 && mh.restart == m->xxh->pat) {
+    if (m->mod.xxh->chn == 4 && mh.restart == m->mod.xxh->pat) {
 	tracker = "Soundtracker";
-    } else if (m->xxh->chn == 4 && mh.restart == 0x78) {
+    } else if (m->mod.xxh->chn == 4 && mh.restart == 0x78) {
 	tracker = "Noisetracker" /*" (0x78)"*/;
 	ptkloop = 1;
     } else if (mh.restart < 0x7f) {
-	if (m->xxh->chn == 4) {
+	if (m->mod.xxh->chn == 4) {
 	    tracker = "Noisetracker";
 	    ptkloop = 1;
 	} else {
 	    tracker = "unknown tracker";
 	    ptkloop = 0;
 	}
-	m->xxh->rst = mh.restart;
+	m->mod.xxh->rst = mh.restart;
     }
 
-    if (m->xxh->chn != 4 && mh.restart == 0x7f) {
+    if (m->mod.xxh->chn != 4 && mh.restart == 0x7f) {
 	tracker = "Scream Tracker 3";
 	ptkloop = 0;
-	m->xxh->flg &= ~XXM_FLG_MODRNG;
+	m->mod.xxh->flg &= ~XXM_FLG_MODRNG;
     }
 
-    if (m->xxh->chn == 4 && mh.restart == 0x7f) {
+    if (m->mod.xxh->chn == 4 && mh.restart == 0x7f) {
 	for (i = 0; i < 31; i++) {
 	    if (mh.ins[i].loop_size == 0)
 		break;
@@ -395,7 +394,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (i == 31) {	/* No st- instruments */
 	        for (i = 0; i < 31; i++) {
 		    if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1) {
-			switch (m->xxh->chn) {
+			switch (m->mod.xxh->chn) {
 			case 4:
 		            tracker = "Noisetracker";	/* or Octalyzer */
 			    break;
@@ -412,13 +411,13 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 		    }
 	        }
 
-		if (m->xxh->chn == 4) {
+		if (m->mod.xxh->chn == 4) {
 	    	    tracker = "Maybe Protracker";
 		    ptkloop = 0;
-		} else if (m->xxh->chn == 6 || m->xxh->chn == 8) {
+		} else if (m->mod.xxh->chn == 6 || m->mod.xxh->chn == 8) {
 	    	    tracker = "FastTracker 1.01?";
 		    ptkloop = 0;
-		    m->xxh->flg &= ~XXM_FLG_MODRNG;
+		    m->mod.xxh->flg &= ~XXM_FLG_MODRNG;
 		} else {
 	    	    tracker = "unknown tracker";
 		    ptkloop = 0;
@@ -446,10 +445,10 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 		goto skip_test;
 	    }
 
-	    if (m->xxh->chn == 4 || m->xxh->chn == 6 || m->xxh->chn == 8) {
+	    if (m->mod.xxh->chn == 4 || m->mod.xxh->chn == 6 || m->mod.xxh->chn == 8) {
 	    	tracker = "Fast Tracker";
 		ptkloop = 0;
-	        m->xxh->flg &= ~XXM_FLG_MODRNG;
+	        m->mod.xxh->flg &= ~XXM_FLG_MODRNG;
 		goto skip_test;
 	    }
 
@@ -461,33 +460,33 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 skip_test:
 
 
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
 
-    snprintf(m->type, XMP_NAMESIZE, "%s (%s)", magic, tracker);
+    snprintf(m->mod.type, XMP_NAMESIZE, "%s (%s)", magic, tracker);
     MODULE_INFO();
 
-    for (i = 0; i < m->xxh->ins; i++) {
+    for (i = 0; i < m->mod.xxh->ins; i++) {
 	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
-		i, m->xxi[i].name,
-		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		(mh.ins[i].loop_size > 1 && m->xxs[i].lpe > 8) ?
-			'L' : ' ', m->xxi[i].sub[0].vol,
-		m->xxi[i].sub[0].fin >> 4,
-		ptkloop && m->xxs[i].lps == 0 && mh.ins[i].loop_size > 1 &&
-			m->xxs[i].len > m->xxs[i].lpe ? '!' : ' ');
+		i, m->mod.xxi[i].name,
+		m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		(mh.ins[i].loop_size > 1 && m->mod.xxs[i].lpe > 8) ?
+			'L' : ' ', m->mod.xxi[i].sub[0].vol,
+		m->mod.xxi[i].sub[0].fin >> 4,
+		ptkloop && m->mod.xxs[i].lps == 0 && mh.ins[i].loop_size > 1 &&
+			m->mod.xxs[i].len > m->mod.xxs[i].lpe ? '!' : ' ');
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < (64 * m->xxh->chn); j++) {
-	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
+	for (j = 0; j < (64 * m->mod.xxh->chn); j++) {
+	    event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
 	    fread (mod_event, 1, 4, f);
 
 	    cvt_pt_event(event, mod_event);
@@ -503,34 +502,34 @@ skip_test:
     if ((x = strrchr(m->filename, '/')))
 	strncpy(pathname, m->filename, x - m->filename);
 
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->smp; i++) {
-	if (!m->xxs[i].len)
+    for (i = 0; i < m->mod.xxh->smp; i++) {
+	if (!m->mod.xxs[i].len)
 	    continue;
 
-	if (m->xxs[i].flg & XMP_SAMPLE_LOOP) {
-	    if (ptkloop && m->xxs[i].lps == 0 && m->xxs[i].len > m->xxs[i].lpe)
-		m->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
+	if (m->mod.xxs[i].flg & XMP_SAMPLE_LOOP) {
+	    if (ptkloop && m->mod.xxs[i].lps == 0 && m->mod.xxs[i].len > m->mod.xxs[i].lpe)
+		m->mod.xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
 	}
 
 	if (ptsong) {
 	    FILE *s;
 	    char sn[256];
-	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, m->xxi[i].name);
+	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, m->mod.xxi[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        xmp_drv_loadpatch(ctx, s, m->xxi[i].sub[0].sid, 0,
-		    &m->xxs[m->xxi[i].sub[0].sid], NULL);
+	        xmp_drv_loadpatch(ctx, s, m->mod.xxi[i].sub[0].sid, 0,
+		    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	    }
 	} else {
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-	        &m->xxs[m->xxi[i].sub[0].sid], NULL);
+	    xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+	        &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
     }
 
-    if (m->xxh->chn > 4) {
-	m->xxh->flg &= ~XXM_FLG_MODRNG;
+    if (m->mod.xxh->chn > 4) {
+	m->mod.xxh->flg &= ~XXM_FLG_MODRNG;
 	m->quirk |= XMP_QUIRK_FT2;
     }
 

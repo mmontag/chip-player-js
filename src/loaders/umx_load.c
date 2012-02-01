@@ -93,8 +93,7 @@ static int load(struct xmp_context *ctx, FILE *f, char *fmt, int offset)
 
 static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 	uint8 buf[TEST_SIZE], *b = buf;
 	uint32 id;

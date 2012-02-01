@@ -47,8 +47,7 @@ static int tcb_test(FILE *f, char *t, const int start)
 
 static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event;
 	int i, j, k;
 	uint8 buffer[10];
@@ -62,19 +61,19 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	set_type(m, "%-8.8s (TCB Tracker)", buffer);
 
 	read16b(f);	/* ? */
-	m->xxh->pat = read16b(f);
-	m->xxh->ins = 16;
-	m->xxh->smp = m->xxh->ins;
-	m->xxh->chn = 4;
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
-	m->xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.xxh->pat = read16b(f);
+	m->mod.xxh->ins = 16;
+	m->mod.xxh->smp = m->mod.xxh->ins;
+	m->mod.xxh->chn = 4;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
 	read16b(f);	/* ? */
 
 	for (i = 0; i < 128; i++)
-		m->xxo[i] = read8(f);
+		m->mod.xxo[i] = read8(f);
 
-	m->xxh->len = read8(f);
+	m->mod.xxh->len = read8(f);
 	read8(f);	/* ? */
 	read16b(f);	/* ? */
 
@@ -83,10 +82,10 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	/* Read instrument names */
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		fread(buffer, 8, 1, f);
-		copy_adjust(m->xxi[i].name, buffer, 8);
+		copy_adjust(m->mod.xxi[i].name, buffer, 8);
 	}
 
 	read16b(f);	/* ? */
@@ -100,15 +99,15 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		for (j = 0; j < m->xxp[i]->rows; j++) {
-			for (k = 0; k < m->xxh->chn; k++) {
+		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
+			for (k = 0; k < m->mod.xxh->chn; k++) {
 				int b;
 				event = &EVENT (i, k, j);
 
@@ -140,18 +139,18 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read instrument data */
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i].sub[0].vol = read8(f) / 2;
-		m->xxi[i].sub[0].pan = 0x80;
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		m->mod.xxi[i].sub[0].vol = read8(f) / 2;
+		m->mod.xxi[i].sub[0].pan = 0x80;
 		unk1[i] = read8(f);
 		unk2[i] = read8(f);
 		unk3[i] = read8(f);
 	}
 
 
-	for (i = 0; i < m->xxh->ins; i++) {
+	for (i = 0; i < m->mod.xxh->ins; i++) {
 		soffs[i] = read32b(f);
-		m->xxs[i].len = read32b(f);
+		m->mod.xxs[i].len = read32b(f);
 	}
 
 	read32b(f);
@@ -159,31 +158,31 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	read32b(f);
 	read32b(f);
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i].nsm = !!(m->xxs[i].len);
-		m->xxs[i].lps = 0;
-		m->xxs[i].lpe = 0;
-		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-		m->xxi[i].sub[0].fin = 0;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].sid = i;
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+		m->mod.xxs[i].lps = 0;
+		m->mod.xxs[i].lpe = 0;
+		m->mod.xxs[i].flg = m->mod.xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+		m->mod.xxi[i].sub[0].fin = 0;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].sid = i;
 
 		_D(_D_INFO "[%2X] %-8.8s  %04x %04x %04x %c "
 						"V%02x  %02x %02x %02x\n",
-				i, m->xxi[i].name,
-				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i].sub[0].vol, unk1[i], unk2[i], unk3[i]);
+				i, m->mod.xxi[i].name,
+				m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->mod.xxi[i].sub[0].vol, unk1[i], unk2[i], unk3[i]);
 	}
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-	for (i = 0; i < m->xxh->ins; i++) {
+	for (i = 0; i < m->mod.xxh->ins; i++) {
 		fseek(f, start + base_offs + soffs[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-				XMP_SMP_UNS, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+				XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

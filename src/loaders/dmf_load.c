@@ -161,44 +161,42 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
 
 static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
 	read16l(f);	/* sequencer loop start */
 	read16l(f);	/* sequencer loop end */
 
-	m->xxh->len = (size - 4) / 2;
-	if (m->xxh->len > 255)
-		m->xxh->len = 255;
+	m->mod.xxh->len = (size - 4) / 2;
+	if (m->mod.xxh->len > 255)
+		m->mod.xxh->len = 255;
 
-	for (i = 0; i < m->xxh->len; i++)
-		m->xxo[i] = read16l(f);
+	for (i = 0; i < m->mod.xxh->len; i++)
+		m->mod.xxo[i] = read16l(f);
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, j, r, chn;
 	int patsize;
 	int info, counter, data;
 	int track_counter[32];
 	struct xxm_event *event;
 
-	m->xxh->pat = read16l(f);
-	m->xxh->chn = read8(f);
-	m->xxh->trk = m->xxh->chn * m->xxh->pat;
+	m->mod.xxh->pat = read16l(f);
+	m->mod.xxh->chn = read8(f);
+	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
 		chn = read8(f);
 		read8(f);		/* beat */
-		m->xxp[i]->rows = read16l(f);
+		m->mod.xxp[i]->rows = read16l(f);
 		TRACK_ALLOC(i);
 
 		patsize = read32l(f);
@@ -206,7 +204,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 		for (j = 0; j < chn; j++)
 			track_counter[j] = 0;
 
-		for (counter = r = 0; r < m->xxp[i]->rows; r++) {
+		for (counter = r = 0; r < m->mod.xxp[i]->rows; r++) {
 			if (counter == 0) {
 				/* global track */
 				info = read8(f);
@@ -260,40 +258,39 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
 
-	m->xxh->ins = m->xxh->smp = read8(f);
+	m->mod.xxh->ins = m->mod.xxh->smp = read8(f);
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", m->xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
-	for (i = 0; i < m->xxh->ins; i++) {
+	for (i = 0; i < m->mod.xxh->ins; i++) {
 		int x;
 
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 		
 		namelen = read8(f);
 		x = namelen - fread(name, 1, namelen > 30 ? 30 : namelen, f);
-		copy_adjust(m->xxi[i].name, name, namelen);
+		copy_adjust(m->mod.xxi[i].name, name, namelen);
 		name[namelen] = 0;
 		while (x--)
 			read8(f);
 
-		m->xxs[i].len = read32l(f);
-		m->xxs[i].lps = read32l(f);
-		m->xxs[i].lpe = read32l(f);
-		m->xxi[i].nsm = !!m->xxs[i].len;
+		m->mod.xxs[i].len = read32l(f);
+		m->mod.xxs[i].lps = read32l(f);
+		m->mod.xxs[i].lpe = read32l(f);
+		m->mod.xxi[i].nsm = !!m->mod.xxs[i].len;
 		c3spd = read16l(f);
-		c2spd_to_note(c3spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
-		m->xxi[i].sub[0].vol = read8(f);
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].sid = i;
+		c2spd_to_note(c3spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+		m->mod.xxi[i].sub[0].vol = read8(f);
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].sid = i;
 		flag = read8(f);
-		m->xxs[i].flg = flag & 0x01 ? XMP_SAMPLE_LOOP : 0;
+		m->mod.xxs[i].flg = flag & 0x01 ? XMP_SAMPLE_LOOP : 0;
 		if (ver >= 8)
 			fseek(f, 8, SEEK_CUR);	/* library name */
 		read16l(f);	/* reserved -- specs say 1 byte only*/
@@ -301,27 +298,26 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 
 		packtype[i] = (flag & 0x0c) >> 2;
 		_D(_D_INFO "[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x",
-				i, name, m->xxs[i].len, m->xxs[i].lps & 0xfffff,
-				m->xxs[i].lpe & 0xfffff,
-				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				i, name, m->mod.xxs[i].len, m->mod.xxs[i].lps & 0xfffff,
+				m->mod.xxs[i].lpe & 0xfffff,
+				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				'0' + packtype[i],
-				c3spd, m->xxi[i].sub[0].vol);
+				c3spd, m->mod.xxi[i].sub[0].vol);
 	}
 }
 
 static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 	int smpsize;
 	uint8 *data, *ibuf;
 
-	_D(_D_INFO "Stored samples: %d", m->xxh->ins);
+	_D(_D_INFO "Stored samples: %d", m->mod.xxh->ins);
 
-	for (smpsize = i = 0; i < m->xxh->smp; i++) {
-		if (m->xxs[i].len > smpsize)
-			smpsize = m->xxs[i].len;
+	for (smpsize = i = 0; i < m->mod.xxh->smp; i++) {
+		if (m->mod.xxs[i].len > smpsize)
+			smpsize = m->mod.xxs[i].len;
 	}
 
 	/* why didn't we mmap this? */
@@ -330,21 +326,21 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 	ibuf = malloc(smpsize);
 	assert(ibuf != NULL);
 
-	for (i = 0; i < m->xxh->smp; i++) {
+	for (i = 0; i < m->mod.xxh->smp; i++) {
 		smpsize = read32l(f);
 		if (smpsize == 0)
 			continue;
 
 		switch (packtype[i]) {
 		case 0:
-			xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-						0, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+			xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+						0, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
-			unpack(data, ibuf, ibuf + smpsize, m->xxs[i].len);
+			unpack(data, ibuf, ibuf + smpsize, m->mod.xxs[i].len);
 			xmp_drv_loadpatch(ctx, NULL, i,
-					XMP_SMP_NOLOAD, &m->xxs[i], (char *)data);
+					XMP_SMP_NOLOAD, &m->mod.xxs[i], (char *)data);
 			break;
 		default:
 			fseek(f, smpsize, SEEK_CUR);
@@ -357,8 +353,7 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 
 static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	uint8 date[3];
 	char tracker_name[10];
 
@@ -369,11 +364,11 @@ static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 	ver = read8(f);
 	fread(tracker_name, 8, 1, f);
 	tracker_name[8] = 0;
-	snprintf(m->type, XMP_NAMESIZE,
+	snprintf(m->mod.type, XMP_NAMESIZE,
 		"D-Lusion Digital Music File v%d (%s)", ver, tracker_name);
 	tracker_name[8] = 0;
-	fread(m->name, 30, 1, f);
-	fread(m->author, 20, 1, f);
+	fread(m->mod.name, 30, 1, f);
+	fseek(f, 20, SEEK_CUR);
 	fread(date, 3, 1, f);
 	
 	MODULE_INFO();

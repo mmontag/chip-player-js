@@ -59,8 +59,7 @@ static int bpm_on, bpmlen, med_8ch;
 
 static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, j, k;
 	struct MMD0 header;
 	struct MMD0song song;
@@ -157,25 +156,25 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * lower, the faster). Values 11-240 are equivalent to 10.
 	 */
 
-        m->xxh->tpo = song.tempo2;
-        m->xxh->bpm = med_8ch ?
+        m->mod.xxh->tpo = song.tempo2;
+        m->mod.xxh->bpm = med_8ch ?
 			mmd_get_8ch_tempo(song.deftempo) :
 			(bpm_on ? song.deftempo / bpmlen : song.deftempo);
 
-	m->xxh->pat = song.numblocks;
-	m->xxh->ins = song.numsamples;
-	//m->xxh->smp = m->xxh->ins;
-	m->xxh->len = song.songlen;
-	m->xxh->rst = 0;
-	m->xxh->chn = 0;
-	memcpy(m->xxo, song.playseq, m->xxh->len);
-	m->name[0] = 0;
+	m->mod.xxh->pat = song.numblocks;
+	m->mod.xxh->ins = song.numsamples;
+	//m->mod.xxh->smp = m->mod.xxh->ins;
+	m->mod.xxh->len = song.songlen;
+	m->mod.xxh->rst = 0;
+	m->mod.xxh->chn = 0;
+	memcpy(m->mod.xxo, song.playseq, m->mod.xxh->len);
+	m->mod.name[0] = 0;
 
 	/*
 	 * Obtain number of samples from each instrument
 	 */
-	m->xxh->smp = 0;
-	for (i = 0; i < m->xxh->ins; i++) {
+	m->mod.xxh->smp = 0;
+	for (i = 0; i < m->mod.xxh->ins; i++) {
 		uint32 smpl_offset;
 		int16 type;
 		fseek(f, start + smplarr_offset + i * 4, SEEK_SET);
@@ -187,9 +186,9 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		type = read16b(f);
 		if (type == -1) {			/* type is synth? */
 			fseek(f, 14, SEEK_CUR);
-			m->xxh->smp += read16b(f);		/* wforms */
+			m->mod.xxh->smp += read16b(f);		/* wforms */
 		} else {
-			m->xxh->smp++;
+			m->mod.xxh->smp++;
 		}
 	}
 
@@ -228,7 +227,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_NAMESIZE)
 				break;
-			m->name[i] = read8(f);
+			m->mod.name[i] = read8(f);
 		}
 	}
 
@@ -237,7 +236,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 	_D(_D_WARN "find number of channels");
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		int block_offset;
 
 		fseek(f, start + blockarr_offset + i * 4, SEEK_SET);
@@ -255,20 +254,20 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			block.lines = read8(f);
 		}
 
-		if (block.numtracks > m->xxh->chn)
-			m->xxh->chn = block.numtracks;
+		if (block.numtracks > m->mod.xxh->chn)
+			m->mod.xxh->chn = block.numtracks;
 	}
 
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
-	strcpy(m->type, ver == 0 ? m->xxh->chn > 4 ? "MMD0 (OctaMED 2.00)" :
+	strcpy(m->mod.type, ver == 0 ? m->mod.xxh->chn > 4 ? "MMD0 (OctaMED 2.00)" :
 			"MMD0 (MED 2.10)" : "MMD1 (OctaMED 4.00)");
 	
 	MODULE_INFO();
 
 	_D(_D_INFO "BPM mode: %s (length = %d)", bpm_on ? "on" : "off", bpmlen);
 	_D(_D_INFO "Song transpose: %d", song.playtransp);
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
 	/*
 	 * Read and convert patterns
@@ -276,7 +275,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_WARN "read patterns");
 	PATTERN_INIT();
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		int block_offset;
 
 		fseek(f, start + blockarr_offset + i * 4, SEEK_SET);
@@ -296,11 +295,11 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		PATTERN_ALLOC(i);
 
-		m->xxp[i]->rows = block.lines + 1;
+		m->mod.xxp[i]->rows = block.lines + 1;
 		TRACK_ALLOC(i);
 
 		if (ver > 0) {		/* MMD1 */
-			for (j = 0; j < m->xxp[i]->rows; j++) {
+			for (j = 0; j < m->mod.xxp[i]->rows; j++) {
 				for (k = 0; k < block.numtracks; k++) {
 					e[0] = read8(f);
 					e[1] = read8(f);
@@ -320,7 +319,7 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 				}
 			}
 		} else {		/* MMD0 */
-			for (j = 0; j < m->xxp[i]->rows; j++) {
+			for (j = 0; j < m->mod.xxp[i]->rows; j++) {
 				for (k = 0; k < block.numtracks; k++) {
 					e[0] = read8(f);
 					e[1] = read8(f);
@@ -342,8 +341,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->med_vol_table = calloc(sizeof(uint8 *), m->xxh->ins);
-	m->med_wav_table = calloc(sizeof(uint8 *), m->xxh->ins);
+	m->med_vol_table = calloc(sizeof(uint8 *), m->mod.xxh->ins);
+	m->med_wav_table = calloc(sizeof(uint8 *), m->mod.xxh->ins);
 
 	/*
 	 * Read and convert instruments and samples
@@ -351,9 +350,9 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_WARN "read instruments");
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", m->xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
-	for (smp_idx = i = 0; i < m->xxh->ins; i++) {
+	for (smp_idx = i = 0; i < m->mod.xxh->ins; i++) {
 		int smpl_offset;
 		char name[40] = "";
 
@@ -413,30 +412,30 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			length = read32b(f);
 			type = read16b(f);
 
-			m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-			m->xxi[i].nsm = 1;
-			m->xxi[i].vts = synth.volspeed;
-			m->xxi[i].wts = synth.wfspeed;
-			m->xxi[i].sub[0].pan = 0x80;
-			m->xxi[i].sub[0].vol = song.sample[i].svol;
-			m->xxi[i].sub[0].xpo = song.sample[i].strans;
-			m->xxi[i].sub[0].sid = smp_idx;
-			m->xxi[i].sub[0].fin = exp_smp.finetune;
-			m->xxs[smp_idx].len = length;
-			m->xxs[smp_idx].lps = 2 * song.sample[i].rep;
-			m->xxs[smp_idx].lpe = m->xxs[smp_idx].lps +
+			m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+			m->mod.xxi[i].nsm = 1;
+			m->mod.xxi[i].vts = synth.volspeed;
+			m->mod.xxi[i].wts = synth.wfspeed;
+			m->mod.xxi[i].sub[0].pan = 0x80;
+			m->mod.xxi[i].sub[0].vol = song.sample[i].svol;
+			m->mod.xxi[i].sub[0].xpo = song.sample[i].strans;
+			m->mod.xxi[i].sub[0].sid = smp_idx;
+			m->mod.xxi[i].sub[0].fin = exp_smp.finetune;
+			m->mod.xxs[smp_idx].len = length;
+			m->mod.xxs[smp_idx].lps = 2 * song.sample[i].rep;
+			m->mod.xxs[smp_idx].lpe = m->mod.xxs[smp_idx].lps +
 						2 * song.sample[i].replen;
-			m->xxs[smp_idx].flg = song.sample[i].replen > 1 ?
+			m->mod.xxs[smp_idx].flg = song.sample[i].replen > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
 			_D(_D_INFO "  %05x %05x %05x %02x %+3d %+1d",
-				       m->xxs[smp_idx].len, m->xxs[smp_idx].lps,
-				       m->xxs[smp_idx].lpe, m->xxi[i].sub[0].vol,
-				       m->xxi[i].sub[0].xpo,
-				       m->xxi[i].sub[0].fin >> 4);
+				       m->mod.xxs[smp_idx].len, m->mod.xxs[smp_idx].lps,
+				       m->mod.xxs[smp_idx].lpe, m->mod.xxi[i].sub[0].vol,
+				       m->mod.xxi[i].sub[0].xpo,
+				       m->mod.xxi[i].sub[0].fin >> 4);
 
 			xmp_drv_loadpatch(ctx, f, smp_idx, 0,
-					&m->xxs[smp_idx], NULL);
+					&m->mod.xxs[smp_idx], NULL);
 
 			smp_idx++;
 
@@ -476,28 +475,28 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (synth.wforms == 0xffff)	
 				continue;
 
-			m->xxi[i].sub = calloc(sizeof(struct xxm_subinstrument),
+			m->mod.xxi[i].sub = calloc(sizeof(struct xxm_subinstrument),
 							synth.wforms);
-			m->xxi[i].nsm = synth.wforms;
-			m->xxi[i].vts = synth.volspeed;
-			m->xxi[i].wts = synth.wfspeed;
+			m->mod.xxi[i].nsm = synth.wforms;
+			m->mod.xxi[i].vts = synth.volspeed;
+			m->mod.xxi[i].wts = synth.wfspeed;
 
 			for (j = 0; j < synth.wforms; j++) {
-				m->xxi[i].sub[j].pan = 0x80;
-				m->xxi[i].sub[j].vol = song.sample[i].svol;
-				m->xxi[i].sub[j].xpo = song.sample[i].strans - 24;
-				m->xxi[i].sub[j].sid = smp_idx;
-				m->xxi[i].sub[j].fin = exp_smp.finetune;
+				m->mod.xxi[i].sub[j].pan = 0x80;
+				m->mod.xxi[i].sub[j].vol = song.sample[i].svol;
+				m->mod.xxi[i].sub[j].xpo = song.sample[i].strans - 24;
+				m->mod.xxi[i].sub[j].sid = smp_idx;
+				m->mod.xxi[i].sub[j].fin = exp_smp.finetune;
 
 				fseek(f, pos - 6 + synth.wf[j], SEEK_SET);
 
-				m->xxs[smp_idx].len = read16b(f) * 2;
-				m->xxs[smp_idx].lps = 0;
-				m->xxs[smp_idx].lpe = m->xxs[smp_idx].len;
-				m->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
+				m->mod.xxs[smp_idx].len = read16b(f) * 2;
+				m->mod.xxs[smp_idx].lps = 0;
+				m->mod.xxs[smp_idx].lpe = m->mod.xxs[smp_idx].len;
+				m->mod.xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
 				xmp_drv_loadpatch(ctx, f, smp_idx,
-					0, &m->xxs[smp_idx], NULL);
+					0, &m->mod.xxs[smp_idx], NULL);
 
 
 				smp_idx++;
@@ -516,35 +515,35 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		/* instr type is sample */
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-		m->xxi[i].nsm = 1;
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].nsm = 1;
 
-		m->xxi[i].sub[0].vol = song.sample[i].svol;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].xpo = song.sample[i].strans;
-		m->xxi[i].sub[0].sid = smp_idx;
-		m->xxi[i].sub[0].fin = exp_smp.finetune << 4;
+		m->mod.xxi[i].sub[0].vol = song.sample[i].svol;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].xpo = song.sample[i].strans;
+		m->mod.xxi[i].sub[0].sid = smp_idx;
+		m->mod.xxi[i].sub[0].fin = exp_smp.finetune << 4;
 
-		m->xxs[smp_idx].len = instr.length;
-		m->xxs[smp_idx].lps = 2 * song.sample[i].rep;
-		m->xxs[smp_idx].lpe = m->xxs[smp_idx].lps + 2 *
+		m->mod.xxs[smp_idx].len = instr.length;
+		m->mod.xxs[smp_idx].lps = 2 * song.sample[i].rep;
+		m->mod.xxs[smp_idx].lpe = m->mod.xxs[smp_idx].lps + 2 *
 						song.sample[i].replen;
 
-		m->xxs[smp_idx].flg = 0;
+		m->mod.xxs[smp_idx].flg = 0;
 		if (song.sample[i].replen > 1)
-			m->xxs[smp_idx].flg |= XMP_SAMPLE_LOOP;
+			m->mod.xxs[smp_idx].flg |= XMP_SAMPLE_LOOP;
 
 		_D(_D_INFO "  %05x %05x %05x %02x %+3d %+1d",
-				m->xxs[smp_idx].len,
-				m->xxs[smp_idx].lps,
-				m->xxs[smp_idx].lpe,
-				m->xxi[i].sub[0].vol,
-				m->xxi[i].sub[0].xpo,
-				m->xxi[i].sub[0].fin >> 4);
+				m->mod.xxs[smp_idx].len,
+				m->mod.xxs[smp_idx].lps,
+				m->mod.xxs[smp_idx].lpe,
+				m->mod.xxi[i].sub[0].vol,
+				m->mod.xxi[i].sub[0].xpo,
+				m->mod.xxi[i].sub[0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
 		xmp_drv_loadpatch(ctx, f, smp_idx, 0,
-				  &m->xxs[smp_idx], NULL);
+				  &m->mod.xxs[smp_idx], NULL);
 
 		smp_idx++;
 	}
@@ -557,16 +556,16 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * Checked in MMD0 with med.egypian/med.medieval from Lemmings 2
 	 * and MED.ParasolStars, MMD1 with med.Lemmings2
 	 */
-	for (i = 0; i < m->xxh->pat; i++) {
-		for (j = 0; j < m->xxp[i]->rows; j++) {
-			for (k = 0; k < m->xxh->chn; k++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
+		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
+			for (k = 0; k < m->mod.xxh->chn; k++) {
 				event = &EVENT(i, k, j);
 
 				if (!event->note || !event->ins)
 					continue;
 
 				/* Not a synth instrument */
-				if (!p->m.med_wav_table[event->ins - 1]) {
+				if (!m->med_wav_table[event->ins - 1]) {
 					while (event->note > (36 + 36))
 						event->note -= 12;
 				}
@@ -574,9 +573,9 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	for (i = 0; i < m->xxh->chn; i++) {
-		m->xxc[i].vol = song.trkvol[i];
-		m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
+	for (i = 0; i < m->mod.xxh->chn; i++) {
+		m->mod.xxc[i].vol = song.trkvol[i];
+		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
 	}
 
 	return 0;

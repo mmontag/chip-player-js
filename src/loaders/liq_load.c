@@ -159,8 +159,7 @@ static void decode_event(uint8 x1, struct xxm_event *event, FILE *f)
 
 static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i;
     struct xxm_event *event = NULL;
     struct liq_header lh;
@@ -196,18 +195,18 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, -2, SEEK_CUR);
     }
 
-    m->xxh->tpo = lh.speed;
-    m->xxh->bpm = lh.bpm;
-    m->xxh->chn = lh.chn;
-    m->xxh->pat = lh.pat;
-    m->xxh->ins = m->xxh->smp = lh.ins;
-    m->xxh->len = lh.len;
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
-    m->xxh->flg = XXM_FLG_INSVOL;
+    m->mod.xxh->tpo = lh.speed;
+    m->mod.xxh->bpm = lh.bpm;
+    m->mod.xxh->chn = lh.chn;
+    m->mod.xxh->pat = lh.pat;
+    m->mod.xxh->ins = m->mod.xxh->smp = lh.ins;
+    m->mod.xxh->len = lh.len;
+    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
+    m->mod.xxh->flg = XXM_FLG_INSVOL;
 
-    strncpy(m->name, (char *)lh.name, 30);
+    strncpy(m->mod.name, (char *)lh.name, 30);
     strncpy(tracker_name, (char *)lh.tracker, 20);
-    strncpy(m->author, (char *)lh.author, 20);
+    /* strncpy(m->author, (char *)lh.author, 20); */
     tracker_name[20] = 0;
     for (i = 20; i >= 0; i--) {
 	if (tracker_name[i] == 0x20)
@@ -215,30 +214,30 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (tracker_name[i])
 	   break;
     }
-    snprintf(m->type, XMP_NAMESIZE, "LIQ %d.%02d (%s)",
+    snprintf(m->mod.type, XMP_NAMESIZE, "LIQ %d.%02d (%s)",
 		lh.version >> 8, lh.version & 0x00ff, tracker_name);
 
     if (lh.version > 0) {
-	for (i = 0; i < m->xxh->chn; i++)
-	    m->xxc[i].pan = read8(f) << 2;
+	for (i = 0; i < m->mod.xxh->chn; i++)
+	    m->mod.xxc[i].pan = read8(f) << 2;
 
-	for (i = 0; i < m->xxh->chn; i++)
-	    m->xxc[i].vol = read8(f);
+	for (i = 0; i < m->mod.xxh->chn; i++)
+	    m->mod.xxc[i].vol = read8(f);
 
-	fread(m->xxo, 1, m->xxh->len, f);
+	fread(m->mod.xxo, 1, m->mod.xxh->len, f);
 
 	/* Skip 1.01 echo pools */
-	fseek(f, lh.hdrsz - (0x6d + m->xxh->chn * 2 + m->xxh->len), SEEK_CUR);
+	fseek(f, lh.hdrsz - (0x6d + m->mod.xxh->chn * 2 + m->mod.xxh->len), SEEK_CUR);
     } else {
 	fseek(f, start + 0xf0, SEEK_SET);
-	fread (m->xxo, 1, 256, f);
+	fread (m->mod.xxo, 1, 256, f);
 	fseek(f, start + lh.hdrsz, SEEK_SET);
 
 	for (i = 0; i < 256; i++) {
-	    if (m->xxo[i] == 0xff)
+	    if (m->mod.xxo[i] == 0xff)
 		break;
 	}
-	m->xxh->len = i;
+	m->mod.xxh->len = i;
     }
 
     MODULE_INFO();
@@ -248,10 +247,10 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
     x1 = x2 = 0;
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	int row, channel, count;
 
 	PATTERN_ALLOC (i);
@@ -266,7 +265,7 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 	lp.reserved = read32l(f);
 
 	_D(_D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
-	m->xxp[i]->rows = lp.rows;
+	m->mod.xxp[i]->rows = lp.rows;
 	TRACK_ALLOC (i);
 
 	row = 0;
@@ -311,7 +310,7 @@ test_event:
 	case 0xa0:			/* next channel */
 	    _D(_D_INFO "  [next channel]");
 	    channel++;
-	    if (channel >= m->xxh->chn) {
+	    if (channel >= m->mod.xxh->chn) {
 		_D(_D_CRIT "uh-oh! bad channel number!");
 		channel--;
 	    }
@@ -394,13 +393,13 @@ test_event:
 
 next_row:
 	row++;
-	if (row >= m->xxp[i]->rows) {
+	if (row >= m->mod.xxp[i]->rows) {
 	    row = 0;
 	    x2 = 0;
 	    channel++;
 
 	    /* FIXME */
-	    if (channel >= m->xxh->chn) {
+	    if (channel >= m->mod.xxh->chn) {
 		channel = 0;
 	    }
 	}
@@ -415,12 +414,12 @@ next_pattern:
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
-    for (i = 0; i < m->xxh->ins; i++) {
+    for (i = 0; i < m->mod.xxh->ins; i++) {
 	unsigned char b[4];
 
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	fread (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
@@ -454,47 +453,47 @@ next_pattern:
 	fread(&li.rsvd, 11, 1, f);
 	fread(&li.filename, 25, 1, f);
 
-	m->xxi[i].nsm = !!(li.length);
-	m->xxi[i].vol = 0x40;
-	m->xxs[i].len = li.length;
-	m->xxs[i].lps = li.loopstart;
-	m->xxs[i].lpe = li.loopend;
+	m->mod.xxi[i].nsm = !!(li.length);
+	m->mod.xxi[i].vol = 0x40;
+	m->mod.xxs[i].len = li.length;
+	m->mod.xxs[i].lps = li.loopstart;
+	m->mod.xxs[i].lpe = li.loopend;
 
 	if (li.flags & 0x01) {
-	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
-	    m->xxs[i].len >>= 1;
-	    m->xxs[i].lps >>= 1;
-	    m->xxs[i].lpe >>= 1;
+	    m->mod.xxs[i].flg = XMP_SAMPLE_16BIT;
+	    m->mod.xxs[i].len >>= 1;
+	    m->mod.xxs[i].lps >>= 1;
+	    m->mod.xxs[i].lpe >>= 1;
 	}
 
 	if (li.loopend > 0)
-	    m->xxs[i].flg = XMP_SAMPLE_LOOP;
+	    m->mod.xxs[i].flg = XMP_SAMPLE_LOOP;
 
 	/* FIXME: LDSS 1.0 have global vol == 0 ? */
 	/* if (li.gvl == 0) */
 	    li.gvl = 0x40;
 
-	m->xxi[i].sub[0].vol = li.vol;
-	m->xxi[i].sub[0].gvl = li.gvl;
-	m->xxi[i].sub[0].pan = li.pan;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].vol = li.vol;
+	m->mod.xxi[i].sub[0].gvl = li.gvl;
+	m->mod.xxi[i].sub[0].pan = li.pan;
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, li.name, 31);
+	copy_adjust(m->mod.xxi[i].name, li.name, 31);
 
 	_D(_D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
-		i, m->xxi[i].name, m->xxs[i].len,
-		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].gvl,
+		i, m->mod.xxi[i].name, m->mod.xxs[i].len,
+		m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 
-	c2spd_to_note (li.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	c2spd_to_note (li.c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
 	fseek(f, li.hdrsz - 0x90, SEEK_CUR);
 
-	if (!m->xxs[i].len)
+	if (!m->mod.xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0, &m->mod.xxs[i], NULL);
     }
 
     return 0;

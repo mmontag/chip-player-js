@@ -38,7 +38,7 @@ extern int arch_vol_table[];
 #define LOAD_INIT() do { \
     fseek(f, start, SEEK_SET); \
     m->med_vol_table = m->med_wav_table = NULL; \
-    set_xxh_defaults(m->xxh); \
+    set_xxh_defaults(m->mod.xxh); \
 } while (0)
 
 #define MODULE_INFO() do { \
@@ -47,55 +47,55 @@ extern int arch_vol_table[];
 } while (0)
 
 #define INSTRUMENT_INIT() do { \
-    m->xxi = calloc(sizeof (struct xxm_instrument), m->xxh->ins); \
-    if (m->xxh->smp) { m->xxs = calloc (sizeof (struct xxm_sample), m->xxh->smp); }\
+    m->mod.xxi = calloc(sizeof (struct xxm_instrument), m->mod.xxh->ins); \
+    if (m->mod.xxh->smp) { m->mod.xxs = calloc (sizeof (struct xxm_sample), m->mod.xxh->smp); }\
 } while (0)
 
 #define PATTERN_INIT() do { \
-    m->xxt = calloc(sizeof (struct xxm_track *), m->xxh->trk); \
-    m->xxp = calloc(sizeof (struct xxm_pattern *), m->xxh->pat + 1); \
+    m->mod.xxt = calloc(sizeof (struct xxm_track *), m->mod.xxh->trk); \
+    m->mod.xxp = calloc(sizeof (struct xxm_pattern *), m->mod.xxh->pat + 1); \
 } while (0)
 
 #define PATTERN_ALLOC(x) do { \
-    m->xxp[x] = calloc(1, sizeof (struct xxm_pattern) + \
-	sizeof (int) * (m->xxh->chn - 1)); \
+    m->mod.xxp[x] = calloc(1, sizeof (struct xxm_pattern) + \
+	sizeof (int) * (m->mod.xxh->chn - 1)); \
 } while (0)
 
 #define TRACK_ALLOC(i) do { \
     int j; \
-    for (j = 0; j < m->xxh->chn; j++) { \
-	m->xxp[i]->index[j] = i * m->xxh->chn + j; \
-	m->xxt[i * m->xxh->chn + j] = calloc (sizeof (struct xxm_track) + \
-	    sizeof (struct xxm_event) * m->xxp[i]->rows, 1); \
-	m->xxt[i * m->xxh->chn + j]->rows = m->xxp[i]->rows; \
+    for (j = 0; j < m->mod.xxh->chn; j++) { \
+	m->mod.xxp[i]->index[j] = i * m->mod.xxh->chn + j; \
+	m->mod.xxt[i * m->mod.xxh->chn + j] = calloc (sizeof (struct xxm_track) + \
+	    sizeof (struct xxm_event) * m->mod.xxp[i]->rows, 1); \
+	m->mod.xxt[i * m->mod.xxh->chn + j]->rows = m->mod.xxp[i]->rows; \
     } \
 } while (0)
 
 #define INSTRUMENT_DEALLOC_ALL(i) do { \
     int k; \
-    for (k = (i) - 1; k >= 0; k--) free(m->xxi[k]); \
-    free(m->xxfe); \
-    free(m->xxpe); \
-    free(m->xxae); \
-    if (m->xxh->smp) free(m->xxs); \
-    free(m->xxi); \
-    free(m->xxim); \
-    free(m->xxi); \
+    for (k = (i) - 1; k >= 0; k--) free(m->mod.xxi[k]); \
+    free(m->mod.xxfe); \
+    free(m->mod.xxpe); \
+    free(m->mod.xxae); \
+    if (m->mod.xxh->smp) free(m->mod.xxs); \
+    free(m->mod.xxi); \
+    free(m->mod.xxim); \
+    free(m->mod.xxi); \
 } while (0)
 
 #define PATTERN_DEALLOC_ALL(x) do { \
     int k; \
-    for (k = x; k >= 0; k--) free(m->xxp[k]); \
-    free(m->xxp); \
+    for (k = x; k >= 0; k--) free(m->mod.xxp[k]); \
+    free(m->mod.xxp); \
 } while (0)
 
 #define TRACK_DEALLOC_ALL(i) do { \
     int j, k; \
     for (k = i; k >= 0; k--) { \
-	for (j = 0; j < m->xxh->chn; j++) \
-	    free(m->xxt[k * m->xxh->chn + j]); \
+	for (j = 0; j < m->mod.xxh->chn; j++) \
+	    free(m->mod.xxt[k * m->mod.xxh->chn + j]); \
     } \
-    free(m->xxt); \
+    free(m->mod.xxt); \
 } while (0)
 
 #endif

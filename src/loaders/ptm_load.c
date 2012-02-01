@@ -51,8 +51,7 @@ static int ptm_vol[] = {
 
 static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int c, r, i, smp_ofs[256];
     struct xxm_event *event;
     struct ptm_file_header pfh;
@@ -87,19 +86,19 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 128; i++)
 	pfh.patseg[i] = read16l(f);
 
-    m->xxh->len = pfh.ordnum;
-    m->xxh->ins = pfh.insnum;
-    m->xxh->pat = pfh.patnum;
-    m->xxh->chn = pfh.chnnum;
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
-    m->xxh->smp = m->xxh->ins;
-    m->xxh->tpo = 6;
-    m->xxh->bpm = 125;
-    memcpy (m->xxo, pfh.order, 256);
+    m->mod.xxh->len = pfh.ordnum;
+    m->mod.xxh->ins = pfh.insnum;
+    m->mod.xxh->pat = pfh.patnum;
+    m->mod.xxh->chn = pfh.chnnum;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->bpm = 125;
+    memcpy (m->mod.xxo, pfh.order, 256);
 
     m->c4rate = C4_NTSC_RATE;
 
-    copy_adjust((uint8 *)m->name, pfh.name, 28);
+    copy_adjust((uint8 *)m->mod.name, pfh.name, 28);
     set_type(m, "PTMF %d.%02x (Poly Tracker)",
 	pfh.vermaj, pfh.vermin);
 
@@ -109,8 +108,8 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	pih.type = read8(f);			/* Sample type */
 	fread(&pih.dosname, 12, 1, f);		/* DOS file name */
@@ -133,50 +132,50 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    continue;
 
 	smp_ofs[i] = pih.smpofs;
-	m->xxs[i].len = pih.length;
-	m->xxi[i].nsm = pih.length > 0 ? 1 : 0;
-	m->xxs[i].lps = pih.loopbeg;
-	m->xxs[i].lpe = pih.loopend;
-	if (m->xxs[i].lpe)
-		m->xxs[i].lpe--;
-	m->xxs[i].flg = pih.type & 0x04 ? XMP_SAMPLE_LOOP : 0;
-	m->xxs[i].flg |= pih.type & 0x08 ? XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR : 0;
+	m->mod.xxs[i].len = pih.length;
+	m->mod.xxi[i].nsm = pih.length > 0 ? 1 : 0;
+	m->mod.xxs[i].lps = pih.loopbeg;
+	m->mod.xxs[i].lpe = pih.loopend;
+	if (m->mod.xxs[i].lpe)
+		m->mod.xxs[i].lpe--;
+	m->mod.xxs[i].flg = pih.type & 0x04 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxs[i].flg |= pih.type & 0x08 ? XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR : 0;
 
 	if (pih.type & 0x10) {
-	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
-	    m->xxs[i].len >>= 1;
-	    m->xxs[i].lps >>= 1;
-	    m->xxs[i].lpe >>= 1;
+	    m->mod.xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->mod.xxs[i].len >>= 1;
+	    m->mod.xxs[i].lps >>= 1;
+	    m->mod.xxs[i].lpe >>= 1;
 	}
 
-	m->xxi[i].sub[0].vol = pih.vol;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].vol = pih.vol;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 	pih.magic = 0;
 
-	copy_adjust(m->xxi[i].name, pih.name, 28);
+	copy_adjust(m->mod.xxi[i].name, pih.name, 28);
 
 	_D(_D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
-		i, m->xxi[i].name, m->xxs[i].len,
+		i, m->mod.xxi[i].name, m->mod.xxs[i].len,
 		pih.type & 0x10 ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, pih.c4spd);
+		m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */
-	c2spd_to_note (pih.c4spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	c2spd_to_note (pih.c4spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
     }
 
     PATTERN_INIT();
 
     /* Read patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	if (!pfh.patseg[i])
 	    continue;
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	fseek(f, start + 16L * pfh.patseg[i], SEEK_SET);
 	r = 0;
@@ -188,7 +187,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & PTM_CH_MASK;
-	    if (c >= m->xxh->chn)
+	    if (c >= m->mod.xxh->chn)
 		continue;
 
 	    event = &EVENT (i, c, r);
@@ -251,20 +250,20 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->smp; i++) {
-	if (!m->xxs[i].len)
+    for (i = 0; i < m->mod.xxh->smp; i++) {
+	if (!m->mod.xxs[i].len)
 	    continue;
-	fseek(f, start + smp_ofs[m->xxi[i].sub[0].sid], SEEK_SET);
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-			XMP_SMP_8BDIFF, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+	fseek(f, start + smp_ofs[m->mod.xxi[i].sub[0].sid], SEEK_SET);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+			XMP_SMP_8BDIFF, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 
     m->vol_table = ptm_vol;
 
-    for (i = 0; i < m->xxh->chn; i++)
-	m->xxc[i].pan = pfh.chset[i] << 4;
+    for (i = 0; i < m->mod.xxh->chn; i++)
+	m->mod.xxc[i].pan = pfh.chset[i] << 4;
 
     return 0;
 }

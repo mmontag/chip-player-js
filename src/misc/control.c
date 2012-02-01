@@ -36,7 +36,7 @@ void *xmp_create_context()
 		return NULL;
 
 	/* Explicitly initialize to keep valgrind happy */
-	*ctx->p.m.name = *ctx->p.m.type = 0;
+	*ctx->m.mod.name = *ctx->m.mod.type = 0;
 
 	o = &ctx->o;
 
@@ -66,12 +66,12 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 
 int xmp_get_flags(xmp_context ctx)
 {
-	return ((struct xmp_context *)ctx)->p.m.flags;
+	return ((struct xmp_context *)ctx)->m.flags;
 }
 
 void xmp_set_flags(xmp_context ctx, int flags)
 {
-	((struct xmp_context *)ctx)->p.m.flags = flags;
+	((struct xmp_context *)ctx)->m.flags = flags;
 }
 
 void xmp_init(xmp_context ctx, int argc, char **argv)
@@ -114,20 +114,23 @@ void xmp_set_driver_parameter(struct xmp_options *o, char *s)
 	drv_parm++;
 }
 
-void xmp_channel_mute(xmp_context ctx, int from, int num, int on)
+void xmp_channel_mute(xmp_context opaque, int from, int num, int on)
 {
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+
 	from += num - 1;
 
 	if (num > 0) {
 		while (num--)
-			xmp_drv_mute((struct xmp_context *)ctx, from - num, on);
+			xmp_drv_mute(ctx, from - num, on);
 	}
 }
 
-int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
+int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 {
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+	struct xmp_player_context *p = &ctx->p;
+	struct xmp_mod_context *m = &ctx->m;
 
 	switch (cmd) {
 	case XMP_ORD_PREV:
@@ -135,11 +138,11 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 			p->pos--;
 		return p->pos;
 	case XMP_ORD_NEXT:
-		if (p->pos < m->xxh->len)
+		if (p->pos < m->mod.xxh->len)
 			p->pos++;
 		return p->pos;
 	case XMP_ORD_SET:
-		if (arg < m->xxh->len && arg >= 0) {
+		if (arg < m->mod.xxh->len && arg >= 0) {
 			if (p->pos == arg && arg == 0)	/* special case */
 				p->pos = -1;
 			else
@@ -179,37 +182,48 @@ int xmp_player_ctl(xmp_context ctx, int cmd, int arg)
 	return 0;
 }
 
-int xmp_player_start(xmp_context ctx)
+int xmp_player_start(xmp_context opaque)
 {
-	return _xmp_player_start((struct xmp_context *)ctx);
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+
+	return _xmp_player_start(ctx);
 }
 
-int xmp_player_frame(xmp_context ctx)
+int xmp_player_frame(xmp_context opaque)
 {
-	return _xmp_player_frame((struct xmp_context *)ctx);
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+
+	return _xmp_player_frame(ctx);
 }
 
-void xmp_player_end(xmp_context ctx)
+void xmp_player_end(xmp_context opaque)
 {
-	_xmp_player_end((struct xmp_context *)ctx);
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+
+	_xmp_player_end(ctx);
 }
 
-void xmp_play_buffer(xmp_context ctx)
+void xmp_play_buffer(xmp_context opaque)
 {
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+
 	xmp_drv_bufdump((struct xmp_context *)ctx);
 }
 
-void xmp_get_buffer(xmp_context ctx, void **buffer, int *size)
+void xmp_get_buffer(xmp_context opaque, void **buffer, int *size)
 {
-	*size = xmp_smix_softmixer((struct xmp_context *)ctx);
-	*buffer = xmp_smix_buffer((struct xmp_context *)ctx);
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+
+	*size = xmp_smix_softmixer(ctx);
+	*buffer = xmp_smix_buffer(ctx);
 }
 
-void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,
+void xmp_get_driver_cfg(xmp_context opaque, int *srate, int *res, int *chn,
 			int *itpt)
 {
-	struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
-	struct xmp_options *o = &((struct xmp_context *)ctx)->o;
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+	struct xmp_driver_context *d = &ctx->d;
+	struct xmp_options *o = &ctx->o;
 
 	*srate = d->memavl ? 0 : o->freq;
 	*res = o->resol ? o->resol : 8 /* U_LAW */ ;
@@ -217,15 +231,16 @@ void xmp_get_driver_cfg(xmp_context ctx, int *srate, int *res, int *chn,
 	*itpt = !!(o->flags & XMP_CTL_ITPT);
 }
 
-int xmp_seek_time(xmp_context ctx, int time)
+int xmp_seek_time(xmp_context opaque, int time)
 {
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, t;
 	/* _D("seek to %d, total %d", time, xmp_cfg.time); */
 
 	time *= 1000;
-	for (i = 0; i < p->m.xxh->len; i++) {
-		t = p->m.xxo_info[i].time;
+	for (i = 0; i < m->mod.xxh->len; i++) {
+		t = m->xxo_info[i].time;
 
 		_D("%2d: %d %d", i, time, t);
 

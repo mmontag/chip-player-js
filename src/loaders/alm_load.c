@@ -64,8 +64,7 @@ struct alm_file_header {
 
 static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j;
     struct alm_file_header afh;
     struct xxm_event *event;
@@ -81,7 +80,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&afh.id, 7, 1, f);
 
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
-	m->xxh->tpo = afh.speed / 2;
+	m->mod.xxh->tpo = afh.speed / 2;
 
     strncpy(modulename, m->filename, NAME_SIZE);
     basename = strtok (modulename, ".");
@@ -91,18 +90,18 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     afh.restart = read8(f);
     fread(&afh.order, 128, 1, f);
 
-    m->xxh->len = afh.length;
-    m->xxh->rst = afh.restart;
-    memcpy (m->xxo, afh.order, m->xxh->len);
+    m->mod.xxh->len = afh.length;
+    m->mod.xxh->rst = afh.restart;
+    memcpy (m->mod.xxo, afh.order, m->mod.xxh->len);
 
-    for (m->xxh->pat = i = 0; i < m->xxh->len; i++)
-	if (m->xxh->pat < afh.order[i])
-	    m->xxh->pat = afh.order[i];
-    m->xxh->pat++;
+    for (m->mod.xxh->pat = i = 0; i < m->mod.xxh->len; i++)
+	if (m->mod.xxh->pat < afh.order[i])
+	    m->mod.xxh->pat = afh.order[i];
+    m->mod.xxh->pat++;
 
-    m->xxh->ins = 31;
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
-    m->xxh->smp = m->xxh->ins;
+    m->mod.xxh->ins = 31;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.xxh->smp = m->mod.xxh->ins;
     m->c4rate = C4_NTSC_RATE;
 
     set_type(m, "Aley's Module");
@@ -112,14 +111,14 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * m->xxh->chn; j++) {
-	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
+	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
+	    event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
 	    b = read8(f);
 	    if (b)
 		event->note = (b == 37) ? 0x61 : b + 36;
@@ -131,45 +130,45 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Loading samples: %d", m->xxh->ins);
+    _D(_D_INFO "Loading samples: %d", m->mod.xxh->ins);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = fopen (filename, "rb");
 
-	if (!(m->xxi[i].nsm = (s != NULL)))
+	if (!(m->mod.xxi[i].nsm = (s != NULL)))
 	    continue;
 
 	fstat (fileno (s), &stat);
 	b = read8(s);		/* Get first octet */
-	m->xxs[i].len = stat.st_size - 5 * !b;
+	m->mod.xxs[i].len = stat.st_size - 5 * !b;
 
 	if (!b) {		/* Instrument with header */
-	    m->xxs[i].lps = read16l(f);
-	    m->xxs[i].lpe = read16l(f);
-	    m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ? XMP_SAMPLE_LOOP : 0;
+	    m->mod.xxs[i].lps = read16l(f);
+	    m->mod.xxs[i].lpe = read16l(f);
+	    m->mod.xxs[i].flg = m->mod.xxs[i].lpe > m->mod.xxs[i].lps ? XMP_SAMPLE_LOOP : 0;
 	} else {
 	    fseek(s, 0, SEEK_SET);
 	}
 
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].vol = 0x40;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].vol = 0x40;
+	m->mod.xxi[i].sub[0].sid = i;
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x", i,
-		filename, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i].sub[0].vol);
+		filename, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->mod.xxi[i].sub[0].vol);
 
-	xmp_drv_loadpatch(ctx, s, m->xxi[i].sub[0].sid,
-	    XMP_SMP_UNS, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, s, m->mod.xxi[i].sub[0].sid,
+	    XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 
 	fclose(s);
     }
 
     /* ALM is LRLR, not LRRL */
-    for (i = 0; i < m->xxh->chn; i++)
-	m->xxc[i].pan = (i % 2) * 0xff;
+    for (i = 0; i < m->mod.xxh->chn; i++)
+	m->mod.xxc[i].pan = (i % 2) * 0xff;
 
     return 0;
 }

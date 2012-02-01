@@ -86,8 +86,7 @@ struct fnk_header {
 
 static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j;
     int day, month, year;
     struct xxm_event *event;
@@ -119,20 +118,20 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     month = ((ffh.info[1] & 0x01) << 3) | ((ffh.info[0] & 0xe0) >> 5);
     year = 1980 + ((ffh.info[1] & 0xfe) >> 1);
 
-    m->xxh->smp = m->xxh->ins = 64;
+    m->mod.xxh->smp = m->mod.xxh->ins = 64;
 
     for (i = 0; i < 256 && ffh.order[i] != 0xff; i++) {
-	if (ffh.order[i] > m->xxh->pat)
-	    m->xxh->pat = ffh.order[i];
+	if (ffh.order[i] > m->mod.xxh->pat)
+	    m->mod.xxh->pat = ffh.order[i];
     }
-    m->xxh->pat++;
+    m->mod.xxh->pat++;
 
-    m->xxh->len = i;
-    memcpy (m->xxo, ffh.order, m->xxh->len);
+    m->mod.xxh->len = i;
+    memcpy (m->mod.xxo, ffh.order, m->mod.xxh->len);
 
-    m->xxh->tpo = 4;
-    m->xxh->bpm = 125;
-    m->xxh->chn = 0;
+    m->mod.xxh->tpo = 4;
+    m->mod.xxh->bpm = 125;
+    m->mod.xxh->chn = 0;
 
     /*
      * If an R1 fmt (funktype = Fk** or Fv**), then ignore byte 3. It's
@@ -140,28 +139,28 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
      */
     if (ffh.fmt[0] == 'F' && ffh.fmt[1] == '2') {
 	if (((int8)ffh.info[3] >> 1) & 0x40)
-	    m->xxh->bpm -= (ffh.info[3] >> 1) & 0x3f;
+	    m->mod.xxh->bpm -= (ffh.info[3] >> 1) & 0x3f;
 	else
-	    m->xxh->bpm += (ffh.info[3] >> 1) & 0x3f;
+	    m->mod.xxh->bpm += (ffh.info[3] >> 1) & 0x3f;
 
-	strcpy(m->type, "FNK R2 (FunktrackerGOLD)");
+	strcpy(m->mod.type, "FNK R2 (FunktrackerGOLD)");
     } else if (ffh.fmt[0] == 'F' && (ffh.fmt[1] == 'v' || ffh.fmt[1] == 'k')) {
-	strcpy(m->type, "FNK R1 (Funktracker)");
+	strcpy(m->mod.type, "FNK R1 (Funktracker)");
     } else {
-	m->xxh->chn = 8;
-	strcpy(m->type, "FNK R0 (Funktracker DOS32)");
+	m->mod.xxh->chn = 8;
+	strcpy(m->mod.type, "FNK R0 (Funktracker DOS32)");
     }
 
-    if (m->xxh->chn == 0) {
-	m->xxh->chn = (ffh.fmt[2] < '0') || (ffh.fmt[2] > '9') ||
+    if (m->mod.xxh->chn == 0) {
+	m->mod.xxh->chn = (ffh.fmt[2] < '0') || (ffh.fmt[2] > '9') ||
 		(ffh.fmt[3] < '0') || (ffh.fmt[3] > '9') ? 8 :
 		(ffh.fmt[2] - '0') * 10 + ffh.fmt[3] - '0';
     }
 
-    m->xxh->bpm = 4 * m->xxh->bpm / 5;
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    m->mod.xxh->bpm = 4 * m->mod.xxh->bpm / 5;
+    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
     /* FNK allows mode per instrument but we don't, so use linear like 669 */
-    m->xxh->flg |= XXM_FLG_LINEAR;
+    m->mod.xxh->flg |= XXM_FLG_LINEAR;
 
     MODULE_INFO();
     _D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
@@ -169,41 +168,41 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Convert instruments */
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxi[i].nsm = !!(m->xxs[i].len = ffh.fih[i].length);
-	m->xxs[i].lps = ffh.fih[i].loop_start;
-	if (m->xxs[i].lps == -1)
-	    m->xxs[i].lps = 0;
-	m->xxs[i].lpe = ffh.fih[i].length;
-	m->xxs[i].flg = ffh.fih[i].loop_start != -1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i].sub[0].vol = ffh.fih[i].volume;
-	m->xxi[i].sub[0].pan = ffh.fih[i].pan;
-	m->xxi[i].sub[0].sid = i;
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = ffh.fih[i].length);
+	m->mod.xxs[i].lps = ffh.fih[i].loop_start;
+	if (m->mod.xxs[i].lps == -1)
+	    m->mod.xxs[i].lps = 0;
+	m->mod.xxs[i].lpe = ffh.fih[i].length;
+	m->mod.xxs[i].flg = ffh.fih[i].loop_start != -1 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxi[i].sub[0].vol = ffh.fih[i].volume;
+	m->mod.xxi[i].sub[0].pan = ffh.fih[i].pan;
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, ffh.fih[i].name, 19);
+	copy_adjust(m->mod.xxi[i].name, ffh.fih[i].name, 19);
 
 	_D(_D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x", i,
-		m->xxi[i].name,
-		m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].pan);
+		m->mod.xxi[i].name,
+		m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].pan);
     }
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	EVENT(i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
 
-	for (j = 0; j < 64 * m->xxh->chn; j++) {
-	    event = &EVENT(i, j % m->xxh->chn, j / m->xxh->chn);
+	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
+	    event = &EVENT(i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
 	    fread(&ev, 1, 3, f);
 
 	    switch (ev[0] >> 2) {
@@ -283,19 +282,19 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	if (m->xxs[i].len <= 2)
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	if (m->mod.xxs[i].len <= 2)
 	    continue;
 
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-							&m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+							&m->mod.xxs[i], NULL);
 
     }
 
-    for (i = 0; i < m->xxh->chn; i++)
-	m->xxc[i].pan = 0x80;
+    for (i = 0; i < m->mod.xxh->chn; i++)
+	m->mod.xxc[i].pan = 0x80;
 
     m->volbase = 0xff;
     m->quirk = XMP_QRK_VSALL;

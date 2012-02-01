@@ -16,8 +16,7 @@
 
 int asif_load(struct xmp_context *ctx, FILE *f, int i)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int size, pos;
 	uint32 id;
 	int chunk;
@@ -43,7 +42,7 @@ int asif_load(struct xmp_context *ctx, FILE *f, int i)
 			//printf("wave chunk\n");
 		
 			fseek(f, read8(f), SEEK_CUR);	/* skip name */
-			m->xxs[i].len = read16l(f) + 1;
+			m->mod.xxs[i].len = read16l(f) + 1;
 			size = read16l(f);		/* NumSamples */
 			
 			//printf("WaveSize = %d\n", xxs[i].len);
@@ -51,13 +50,13 @@ int asif_load(struct xmp_context *ctx, FILE *f, int i)
 
 			for (j = 0; j < size; j++) {
 				read16l(f);		/* Location */
-				m->xxs[j].len = 256 * read16l(f);
+				m->mod.xxs[j].len = 256 * read16l(f);
 				read16l(f);		/* OrigFreq */
 				read16l(f);		/* SampRate */
 			}
 		
 			xmp_drv_loadpatch(ctx, f, i, 
-					XMP_SMP_UNS, &m->xxs[i], NULL);
+					XMP_SMP_UNS, &m->mod.xxs[i], NULL);
 
 			chunk++;
 			break;
@@ -76,10 +75,10 @@ int asif_load(struct xmp_context *ctx, FILE *f, int i)
 			read8(f);			/* VibratoSpeed */
 			read8(f);			/* UpdateRate */
 		
-			m->xxi[i].nsm = 1;
-			m->xxi[i].sub[0].vol = 0x40;
-			m->xxi[i].sub[0].pan = 0x80;
-			m->xxi[i].sub[0].sid = i;
+			m->mod.xxi[i].nsm = 1;
+			m->mod.xxi[i].sub[0].vol = 0x40;
+			m->mod.xxi[i].sub[0].pan = 0x80;
+			m->mod.xxi[i].sub[0].sid = i;
 
 			chunk++;
 		}

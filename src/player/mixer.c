@@ -153,7 +153,7 @@ static void out_u8ulaw(char *dest, int *src, int num, int amp, int flags)
 void smix_resetvar(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_smixer_context *s = &ctx->s;
     struct xmp_options *o = &ctx->o;
 
@@ -260,7 +260,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
-    struct xmp_mod_context *m = &ctx->p.m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xxm_sample *xxs;
     struct voice_info *vi;
     int samples, tick, lps, lpe;
@@ -300,7 +300,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	if (step == 0)	/* otherwise m5v-nwlf.t crashes */
 	    continue;
 
-	xxs = &m->xxs[vi->smp];
+	xxs = &m->mod.xxs[vi->smp];
 
 	/* This is for bidirectional sample loops */
 	if (vi->fidx & FLAG_REVLOOP)
@@ -407,9 +407,9 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &ctx->p.m;
+    struct xmp_mod_context *m = &ctx->m;
     struct voice_info *vi = &d->voice_array[voc];
-    struct xxm_sample *xxs = &m->xxs[vi->smp];
+    struct xxm_sample *xxs = &m->mod.xxs[vi->smp];
     int lpe;
 
     if (xxs->flg & XMP_SAMPLE_SYNTH)
@@ -433,12 +433,11 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 
 void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 {
-    struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &d->voice_array[voc];
-    struct xxm_sample *xxs = &m->xxs[smp];
+    struct xxm_sample *xxs = &m->mod.xxs[smp];
 
     vi->smp = smp;
     vi->vol = 0;
@@ -486,9 +485,8 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 
 void smix_setnote(struct xmp_context *ctx, int voc, int note)
 {
-    struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &d->voice_array[voc];
 
@@ -501,7 +499,7 @@ void smix_setnote(struct xmp_context *ctx, int voc, int note)
 void smix_setbend(struct xmp_context *ctx, int voc, int bend)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &ctx->p.m;
+    struct xmp_mod_context *m = &ctx->m;
     struct voice_info *vi = &d->voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note, bend);
@@ -514,7 +512,7 @@ void smix_setbend(struct xmp_context *ctx, int voc, int bend)
 void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &ctx->p.m;
+    struct xmp_mod_context *m = &ctx->m;
     struct voice_info *vi = &d->voice_array[voc];
  
     smix_anticlick(ctx, voc, vol, vi->pan, NULL, 0);
@@ -528,7 +526,7 @@ void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
 void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &ctx->p.m;
+    struct xmp_mod_context *m = &ctx->m;
     struct voice_info *vi = &d->voice_array[voc];
  
     switch (type) {

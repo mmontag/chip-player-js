@@ -75,8 +75,7 @@ static uint8 fx[] = {
 
 static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j;
     struct xxm_event *event;
     struct stm_file_header sfh;
@@ -114,19 +113,19 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     if (!strncmp ((char *)sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
 
-    m->xxh->pat = sfh.patterns;
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
-    m->xxh->tpo = MSN (sfh.tempo);
-    m->xxh->ins = 31;
-    m->xxh->smp = m->xxh->ins;
+    m->mod.xxh->pat = sfh.patterns;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.xxh->tpo = MSN (sfh.tempo);
+    m->mod.xxh->ins = 31;
+    m->mod.xxh->smp = m->mod.xxh->ins;
     m->c4rate = C4_NTSC_RATE;
 
-    copy_adjust((uint8 *)m->name, sfh.name, 20);
+    copy_adjust((uint8 *)m->mod.name, sfh.name, 20);
 
     if (bmod2stm) {
-	snprintf(m->type, XMP_NAMESIZE, "!Scream! (BMOD2STM)");
+	snprintf(m->mod.type, XMP_NAMESIZE, "!Scream! (BMOD2STM)");
     } else {
-	snprintf(m->type, XMP_NAMESIZE, "!Scream! "
+	snprintf(m->mod.type, XMP_NAMESIZE, "!Scream! "
 			"(Scream Tracker %d.%02d)", sfh.vermaj, sfh.vermin);
     }
 
@@ -135,50 +134,50 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxi[i].nsm = !!(m->xxs[i].len = sfh.ins[i].length);
-	m->xxs[i].lps = sfh.ins[i].loopbeg;
-	m->xxs[i].lpe = sfh.ins[i].loopend;
-	if (m->xxs[i].lpe == 0xffff)
-	    m->xxs[i].lpe = 0;
-	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i].sub[0].vol = sfh.ins[i].volume;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = sfh.ins[i].length);
+	m->mod.xxs[i].lps = sfh.ins[i].loopbeg;
+	m->mod.xxs[i].lpe = sfh.ins[i].loopend;
+	if (m->mod.xxs[i].lpe == 0xffff)
+	    m->mod.xxs[i].lpe = 0;
+	m->mod.xxs[i].flg = m->mod.xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxi[i].sub[0].vol = sfh.ins[i].volume;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, sfh.ins[i].name, 12);
+	copy_adjust(m->mod.xxi[i].name, sfh.ins[i].name, 12);
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
-		m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
-		m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, sfh.ins[i].c2spd);
+		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+		m->mod.xxs[i].lpe, m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, sfh.ins[i].c2spd);
 
 	sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;
-	c2spd_to_note (sfh.ins[i].c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	c2spd_to_note (sfh.ins[i].c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
     }
 
-    fread(m->xxo, 1, 128, f);
+    fread(m->mod.xxo, 1, 128, f);
 
     for (i = 0; i < 128; i++)
-	if (m->xxo[i] >= m->xxh->pat)
+	if (m->mod.xxo[i] >= m->mod.xxh->pat)
 	    break;
 
-    m->xxh->len = i;
+    m->mod.xxh->len = i;
 
-    _D(_D_INFO "Module length: %d", m->xxh->len);
+    _D(_D_INFO "Module length: %d", m->mod.xxh->len);
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * m->xxh->chn; j++) {
-	    event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
+	for (j = 0; j < 64 * m->mod.xxh->chn; j++) {
+	    event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
 	    b = read8(f);
 	    memset (event, 0, sizeof (struct xxm_event));
 	    switch (b) {
@@ -214,11 +213,11 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-	    &m->xxs[m->xxi[i].sub[0].sid], NULL);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 
     m->quirk |= XMP_QRK_VSALL | XMP_QUIRK_ST3;

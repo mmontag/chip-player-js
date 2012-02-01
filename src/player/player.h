@@ -32,8 +32,8 @@
 #define MODULE_ABORT	0x0004 
 #define MODULE_RESTART	0x0008 
 
-#define XXIH m->xxi[xc->ins]
-#define XXI m->xxi[xc->ins].sub[XXIH.map[xc->key].ins]
+#define XXIH m->mod.xxi[xc->ins]
+#define XXI m->mod.xxi[xc->ins].sub[XXIH.map[xc->key].ins]
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
 
@@ -183,7 +183,7 @@ struct xmp_channel {
 
 void process_fx(struct xmp_context *, int, uint8, uint8, uint8, struct xmp_channel *, int);
 void xmp_med_synth(struct xmp_context *, int, struct xmp_channel *, int);
-int get_med_arp(struct xmp_player_context *, struct xmp_channel *);
+int get_med_arp(struct xmp_mod_context *, struct xmp_channel *);
 int get_med_vibrato(struct xmp_channel *);
 void filter_setup(struct xmp_context *, struct xmp_channel *, int);
 

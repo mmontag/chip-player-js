@@ -167,28 +167,27 @@ static void fix_effect(struct xxm_event *e)
 
 static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event;
 	int i, j;
 	int seq_ptr, pat_ptr, smp_ptr[100];
 
 	LOAD_INIT();
 
-	m->xxh->chn = read8(f) & 0x3f;
-	read_title(f, m->name, 20);
+	m->mod.xxh->chn = read8(f) & 0x3f;
+	read_title(f, m->mod.name, 20);
 
 	for (i = 0; i < 20; i++) {
-		if (m->name[i] == 0x0d)
-			m->name[i] = 0;
+		if (m->mod.name[i] == 0x0d)
+			m->mod.name[i] = 0;
 	}
 
-	strcpy(m->type, "Coconizer");
+	strcpy(m->mod.type, "Coconizer");
 
-	m->xxh->ins = m->xxh->smp = read8(f);
-	m->xxh->len = read8(f);
-	m->xxh->pat = read8(f);
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	m->mod.xxh->ins = m->mod.xxh->smp = read8(f);
+	m->mod.xxh->len = read8(f);
+	m->mod.xxh->pat = read8(f);
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
 	seq_ptr = read32l(f);
 	pat_ptr = read32l(f);
@@ -199,33 +198,33 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		smp_ptr[i] = read32l(f);
-		m->xxs[i].len = read32l(f);
-		m->xxi[i].sub[0].vol = 0xff - read32l(f);
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxs[i].lps = read32l(f);
-                m->xxs[i].lpe = m->xxs[i].lps + read32l(f);
-		if (m->xxs[i].lpe)
-			m->xxs[i].lpe -= 1;
-		m->xxs[i].flg = m->xxs[i].lps > 0 ?  XMP_SAMPLE_LOOP : 0;
-		fread(m->xxi[i].name, 1, 11, f);
+		m->mod.xxs[i].len = read32l(f);
+		m->mod.xxi[i].sub[0].vol = 0xff - read32l(f);
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxs[i].lps = read32l(f);
+                m->mod.xxs[i].lpe = m->mod.xxs[i].lps + read32l(f);
+		if (m->mod.xxs[i].lpe)
+			m->mod.xxs[i].lpe -= 1;
+		m->mod.xxs[i].flg = m->mod.xxs[i].lps > 0 ?  XMP_SAMPLE_LOOP : 0;
+		fread(m->mod.xxi[i].name, 1, 11, f);
 		for (j = 0; j < 11; j++) {
-			if (m->xxi[i].name[j] == 0x0d)
-				m->xxi[i].name[j] = 0;
+			if (m->mod.xxi[i].name[j] == 0x0d)
+				m->mod.xxi[i].name[j] = 0;
 		}
 		read8(f);	/* unused */
 
-		m->xxi[i].nsm = !!m->xxs[i].len;
-		m->xxi[i].sub[0].sid = i;
+		m->mod.xxi[i].nsm = !!m->mod.xxs[i].len;
+		m->mod.xxi[i].sub[0].sid = i;
 
 		_D(_D_INFO "[%2X] %-10.10s  %05x %05x %05x %c V%02x",
-				i, m->xxi[i].name,
-				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i].sub[0].vol);
+				i, m->mod.xxi[i].name,
+				m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->mod.xxi[i].sub[0].vol);
 	}
 
 	/* Sequence */
@@ -235,7 +234,7 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 x = read8(f);
 		if (x == 0xff)
 			break;
-		m->xxo[i] = x;
+		m->mod.xxo[i] = x;
 	}
 	for (i++; i % 4; i++)	/* for alignment */
 		read8(f);
@@ -245,15 +244,15 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC (i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC (i);
 
-		for (j = 0; j < (64 * m->xxh->chn); j++) {
-			event = &EVENT (i, j % m->xxh->chn, j / m->xxh->chn);
+		for (j = 0; j < (64 * m->mod.xxh->chn); j++) {
+			event = &EVENT (i, j % m->mod.xxh->chn, j / m->mod.xxh->chn);
 			event->fxp = read8(f);
 			event->fxt = read8(f);
 			event->ins = read8(f);
@@ -265,19 +264,19 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples : %d", m->xxh->smp);
+	_D(_D_INFO "Stored samples : %d", m->mod.xxh->smp);
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		if (m->xxi[i].nsm == 0)
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		if (m->mod.xxi[i].nsm == 0)
 			continue;
 
 		fseek(f, start + smp_ptr[i], SEEK_SET);
-		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-				XMP_SMP_VIDC, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+				XMP_SMP_VIDC, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
-	for (i = 0; i < m->xxh->chn; i++)
-		m->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
+	for (i = 0; i < m->mod.xxh->chn; i++)
+		m->mod.xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
 
 	return 0;
 }

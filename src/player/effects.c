@@ -20,9 +20,9 @@
 #define NOT_IMPLEMENTED
 
 #define DO_TONEPORTA() do { \
-	if (note-- && note < 0x60 && (uint32)xc->ins < p->m.xxh->ins) \
+	if (note-- && note < 0x60 && (uint32)xc->ins < m->mod.xxh->ins) \
 	    xc->s_end = note_to_period(note + XXI.xpo + XXIH.map[xc->key].xpo, \
-	    XXI.fin, p->m.xxh->flg & XXM_FLG_LINEAR); \
+	    XXI.fin, m->mod.xxh->flg & XXM_FLG_LINEAR); \
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 } while (0)
 
@@ -32,7 +32,7 @@
 void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct xmp_channel *xc, int fnum)
 {
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct flow_control *f = &p->flow;
     int h, l;
 
@@ -564,13 +564,13 @@ fx_finetune:
     case FX_CHORUS:
 #if 0
 	/* FIXME */
-	m->xxc[chn].cho = fxp;
+	m->mod.xxc[chn].cho = fxp;
 #endif
 	break;
     case FX_REVERB:
 #if 0
 	/* FIXME */
-	m->xxc[chn].rvb = fxp;
+	m->mod.xxc[chn].rvb = fxp;
 #endif
 	break;
     case FX_NSLIDE_R_DN:

@@ -92,8 +92,7 @@ static int polly_test(FILE *f, char *t, const int start)
 
 static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event;
 	uint8 *buf;
 	int i, j, k;
@@ -111,16 +110,16 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	decode_rle(buf, f, 0x10000);
 
 	for (i = 0; buf[ORD_OFS + i] != 0 && i < 128; i++)
-		m->xxo[i] = buf[ORD_OFS + i] - 0xe0;
-	m->xxh->len = i;
+		m->mod.xxo[i] = buf[ORD_OFS + i] - 0xe0;
+	m->mod.xxh->len = i;
 
-	memcpy(m->name, buf + ORD_OFS + 160, 16);
-	memcpy(m->author, buf + ORD_OFS + 176, 16);
+	memcpy(m->mod.name, buf + ORD_OFS + 160, 16);
+	/* memcpy(m->author, buf + ORD_OFS + 176, 16); */
 	set_type(m, "Polly Tracker");
 	MODULE_INFO();
 
-	m->xxh->tpo = 0x03;
-	m->xxh->bpm = 0x7d * buf[ORD_OFS + 193] / 0x88;
+	m->mod.xxh->tpo = 0x03;
+	m->mod.xxh->bpm = 0x7d * buf[ORD_OFS + 193] / 0x88;
 #if 0
 	for (i = 0; i < 1024; i++) {
 		if ((i % 16) == 0) printf("\n");
@@ -128,23 +127,23 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 #endif
 
-	m->xxh->pat = 0;
-	for (i = 0; i < m->xxh->len; i++) {
-		if (m->xxo[i] > m->xxh->pat)
-			m->xxh->pat = m->xxo[i];
+	m->mod.xxh->pat = 0;
+	for (i = 0; i < m->mod.xxh->len; i++) {
+		if (m->mod.xxo[i] > m->mod.xxh->pat)
+			m->mod.xxh->pat = m->mod.xxo[i];
 	}
-	m->xxh->pat++;
+	m->mod.xxh->pat++;
 	
-	m->xxh->chn = 4;
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	m->mod.xxh->chn = 4;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < 64; j++) {
@@ -164,26 +163,26 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->xxh->ins = m->xxh->smp = 15;
+	m->mod.xxh->ins = m->mod.xxh->smp = 15;
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < 15; i++) {
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-		m->xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
 					256 * buf[ORD_OFS + 145 + i];
-		m->xxi[i].sub[0].fin = 0;
-		m->xxi[i].sub[0].vol = 0x40;
-		m->xxs[i].lps = 0;
-		m->xxs[i].lpe = 0;
-		m->xxs[i].flg = 0;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].sid = i;
-		m->xxi[i].nsm = !!(m->xxs[i].len);
-		m->xxi[i].rls = 0xfff;
+		m->mod.xxi[i].sub[0].fin = 0;
+		m->mod.xxi[i].sub[0].vol = 0x40;
+		m->mod.xxs[i].lps = 0;
+		m->mod.xxs[i].lpe = 0;
+		m->mod.xxs[i].flg = 0;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].sid = i;
+		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+		m->mod.xxi[i].rls = 0xfff;
 
                 _D(_D_INFO "[%2X] %04x %04x %04x %c V%02x",
-                       		i, m->xxs[i].len, m->xxs[i].lps,
-                        	m->xxs[i].lpe, ' ', m->xxi[i].sub[0].vol);
+                       		i, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+                        	m->mod.xxs[i].lpe, ' ', m->mod.xxi[i].sub[0].vol);
 	}
 
 	/* Convert samples from 6 to 8 bits */
@@ -191,14 +190,14 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		buf[i] = buf[i] << 2;
 
 	/* Read samples */
-	_D(_D_INFO "Loading samples: %d", m->xxh->ins);
+	_D(_D_INFO "Loading samples: %d", m->mod.xxh->ins);
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		if (m->xxs[i].len == 0)
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		if (m->mod.xxs[i].len == 0)
 			continue;
-		xmp_drv_loadpatch(ctx, NULL, m->xxi[i].sub[0].sid,
+		xmp_drv_loadpatch(ctx, NULL, m->mod.xxi[i].sub[0].sid,
 				XMP_SMP_NOLOAD | XMP_SMP_UNS,
-				&m->xxs[m->xxi[i].sub[0].sid],
+				&m->mod.xxs[m->mod.xxi[i].sub[0].sid],
 				(char*)buf + ORD_OFS + 256 +
 					256 * (buf[ORD_OFS + 129 + i] - 0x10));
 	}
@@ -206,10 +205,10 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	free(buf);
 
 	/* make it mono */
-	for (i = 0; i < m->xxh->chn; i++)
-		m->xxc[i].pan = 0x80;
+	for (i = 0; i < m->mod.xxh->chn; i++)
+		m->mod.xxc[i].pan = 0x80;
 
-	m->xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }

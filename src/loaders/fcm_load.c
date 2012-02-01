@@ -57,50 +57,50 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	fh.magic[3] != 'M' || fh.name_id[0] != 'N')
 	return -1;
 
-    strncpy (m->name, fh.name, 20);
+    strncpy (m->mod.name, fh.name, 20);
     set_type(m, "FC-M %d.%d", fh.vmaj, fh.vmin);
 
     MODULE_INFO();
 
-    m->xxh->len = fh.len;
+    m->mod.xxh->len = fh.len;
 
-    fread (m->xxo, 1, m->xxh->len, f);
+    fread (m->mod.xxo, 1, m->mod.xxh->len, f);
 
-    for (m->xxh->pat = i = 0; i < m->xxh->len; i++) {
-	if (m->xxo[i] > m->xxh->pat)
-	    m->xxh->pat = m->xxo[i];
+    for (m->mod.xxh->pat = i = 0; i < m->mod.xxh->len; i++) {
+	if (m->mod.xxo[i] > m->mod.xxh->pat)
+	    m->mod.xxh->pat = m->mod.xxo[i];
     }
-    m->xxh->pat++;
+    m->mod.xxh->pat++;
 
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->xxh->ins; i++) {
+    for (i = 0; i < m->mod.xxh->ins; i++) {
 	B_ENDIAN16 (fh.ins[i].size);
 	B_ENDIAN16 (fh.ins[i].loop_start);
 	B_ENDIAN16 (fh.ins[i].loop_size);
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxs[i].len = 2 * fh.ins[i].size;
-	m->xxs[i].lps = 2 * fh.ins[i].loop_start;
-	m->xxs[i].lpe = m->xxs[i].lps + 2 * fh.ins[i].loop_size;
-	m->xxs[i].flg = fh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i].sub[0].fin = (int8)fh.ins[i].finetune << 4;
-	m->xxi[i].sub[0].vol = fh.ins[i].volume;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
-	m->xxi[i].nsm = !!(m->xxs[i].len);
-	m->xxi[i].rls = 0xfff;
-	if (m->xxi[i].sub[0].fin > 48)
-	    m->xxi[i].sub[0].xpo = -1;
-	if (m->xxi[i].sub[0].fin < -48)
-	    m->xxi[i].sub[0].xpo = 1;
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxs[i].len = 2 * fh.ins[i].size;
+	m->mod.xxs[i].lps = 2 * fh.ins[i].loop_start;
+	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * fh.ins[i].loop_size;
+	m->mod.xxs[i].flg = fh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxi[i].sub[0].fin = (int8)fh.ins[i].finetune << 4;
+	m->mod.xxi[i].sub[0].vol = fh.ins[i].volume;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+	m->mod.xxi[i].rls = 0xfff;
+	if (m->mod.xxi[i].sub[0].fin > 48)
+	    m->mod.xxi[i].sub[0].xpo = -1;
+	if (m->mod.xxi[i].sub[0].fin < -48)
+	    m->mod.xxi[i].sub[0].xpo = 1;
 
-	if (V(1) && (strlen(m->xxi[i].name) || m->xxs[i].len > 2)) {
+	if (V(1) && (strlen(m->mod.xxi[i].name) || m->mod.xxs[i].len > 2)) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
-		i, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
+		i, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
 		fh.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin >> 4);
+		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4);
 	}
     }
 
@@ -108,13 +108,13 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 
     /* Load and convert patterns */
     if (V(0))
-	report ("Stored patterns: %d ", m->xxh->pat);
+	report ("Stored patterns: %d ", m->mod.xxh->pat);
 
     fread (fe, 4, 1, f);	/* Skip 'SONG' pseudo chunk ID */
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64; j++) {
 	    for (k = 0; k < 4; k++) {
@@ -128,19 +128,19 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	    report (".");
     }
 
-    m->xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     fread (fe, 4, 1, f);	/* Skip 'SAMP' pseudo chunk ID */
 
     if (V(0))
-	report ("\nStored samples : %d ", m->xxh->smp);
-    for (i = 0; i < m->xxh->smp; i++) {
-	if (!m->xxs[i].len)
+	report ("\nStored samples : %d ", m->mod.xxh->smp);
+    for (i = 0; i < m->mod.xxh->smp; i++) {
+	if (!m->mod.xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-	    &m->xxs[m->xxi[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	if (V(0))
 	    report (".");
     }

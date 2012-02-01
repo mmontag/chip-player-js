@@ -42,8 +42,7 @@ static int mtm_test(FILE *f, char *t, const int start)
 
 static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j;
     struct mtm_file_header mfh;
     struct mtm_instrument_header mih;
@@ -70,16 +69,16 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
 #endif
 
-    m->xxh->trk = mfh.tracks + 1;
-    m->xxh->pat = mfh.patterns + 1;
-    m->xxh->len = mfh.modlen + 1;
-    m->xxh->ins = mfh.samples;
-    m->xxh->smp = m->xxh->ins;
-    m->xxh->chn = mfh.channels;
-    m->xxh->tpo = 6;
-    m->xxh->bpm = 125;
+    m->mod.xxh->trk = mfh.tracks + 1;
+    m->mod.xxh->pat = mfh.patterns + 1;
+    m->mod.xxh->len = mfh.modlen + 1;
+    m->mod.xxh->ins = mfh.samples;
+    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.xxh->chn = mfh.channels;
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->bpm = 125;
 
-    strncpy(m->name, (char *)mfh.name, 20);
+    strncpy(m->mod.name, (char *)mfh.name, 20);
     set_type(m, "MTM (MultiTracker %d.%02d)",
 				MSN(mfh.version), LSN(mfh.version));
 
@@ -88,8 +87,8 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Read and convert instruments */
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&mih.name, 22, 1, f);		/* Instrument name */
 	mih.length = read32l(f);		/* Instrument length in bytes */
@@ -99,88 +98,88 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	mih.volume = read8(f);			/* Playback volume */
 	mih.attr = read8(f);			/* &0x01: 16bit sample */
 
-	m->xxs[i].len = mih.length;
-	m->xxi[i].nsm = mih.length > 0 ? 1 : 0;
-	m->xxs[i].lps = mih.loop_start;
-	m->xxs[i].lpe = mih.loopend;
-	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
+	m->mod.xxs[i].len = mih.length;
+	m->mod.xxi[i].nsm = mih.length > 0 ? 1 : 0;
+	m->mod.xxs[i].lps = mih.loop_start;
+	m->mod.xxs[i].lpe = mih.loopend;
+	m->mod.xxs[i].flg = m->mod.xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
 	if (mfh.attr & 1) {
-	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
-	    m->xxs[i].len >>= 1;
-	    m->xxs[i].lps >>= 1;
-	    m->xxs[i].lpe >>= 1;
+	    m->mod.xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->mod.xxs[i].len >>= 1;
+	    m->mod.xxs[i].lps >>= 1;
+	    m->mod.xxs[i].lpe >>= 1;
 	}
 
-	m->xxi[i].sub[0].vol = mih.volume;
-	m->xxi[i].sub[0].fin = 0x80 + (int8)(mih.finetune << 4);
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].vol = mih.volume;
+	m->mod.xxi[i].sub[0].fin = 0x80 + (int8)(mih.finetune << 4);
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, mih.name, 22);
+	copy_adjust(m->mod.xxi[i].name, mih.name, 22);
 
 	_D(_D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
-		m->xxi[i].name, m->xxs[i].len,
-		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin - 0x80);
+		m->mod.xxi[i].name, m->mod.xxs[i].len,
+		m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin - 0x80);
     }
 
-    fread(m->xxo, 1, 128, f);
+    fread(m->mod.xxo, 1, 128, f);
 
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored tracks: %d", m->xxh->trk - 1);
+    _D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk - 1);
 
-    for (i = 0; i < m->xxh->trk; i++) {
-	m->xxt[i] = calloc (sizeof (struct xxm_track) +
+    for (i = 0; i < m->mod.xxh->trk; i++) {
+	m->mod.xxt[i] = calloc (sizeof (struct xxm_track) +
 	    sizeof (struct xxm_event) * mfh.rows, 1);
-	m->xxt[i]->rows = mfh.rows;
+	m->mod.xxt[i]->rows = mfh.rows;
 	if (!i)
 	    continue;
 	fread (&mt, 3, 64, f);
 	for (j = 0; j < 64; j++) {
-	    if ((m->xxt[i]->event[j].note = mt[j * 3] >> 2))
-		m->xxt[i]->event[j].note += 25;
-	    m->xxt[i]->event[j].ins = ((mt[j * 3] & 0x3) << 4) + MSN (mt[j * 3 + 1]);
-	    m->xxt[i]->event[j].fxt = LSN (mt[j * 3 + 1]);
-	    m->xxt[i]->event[j].fxp = mt[j * 3 + 2];
-	    if (m->xxt[i]->event[j].fxt > FX_TEMPO)
-		m->xxt[i]->event[j].fxt = m->xxt[i]->event[j].fxp = 0;
+	    if ((m->mod.xxt[i]->event[j].note = mt[j * 3] >> 2))
+		m->mod.xxt[i]->event[j].note += 25;
+	    m->mod.xxt[i]->event[j].ins = ((mt[j * 3] & 0x3) << 4) + MSN (mt[j * 3 + 1]);
+	    m->mod.xxt[i]->event[j].fxt = LSN (mt[j * 3 + 1]);
+	    m->mod.xxt[i]->event[j].fxp = mt[j * 3 + 2];
+	    if (m->mod.xxt[i]->event[j].fxt > FX_TEMPO)
+		m->mod.xxt[i]->event[j].fxt = m->mod.xxt[i]->event[j].fxp = 0;
 	    /* Set pan effect translation */
-	    if ((m->xxt[i]->event[j].fxt == FX_EXTENDED) &&
-		(MSN (m->xxt[i]->event[j].fxp) == 0x8)) {
-		m->xxt[i]->event[j].fxt = FX_SETPAN;
-		m->xxt[i]->event[j].fxp <<= 4;
+	    if ((m->mod.xxt[i]->event[j].fxt == FX_EXTENDED) &&
+		(MSN (m->mod.xxt[i]->event[j].fxp) == 0x8)) {
+		m->mod.xxt[i]->event[j].fxt = FX_SETPAN;
+		m->mod.xxt[i]->event[j].fxp <<= 4;
 	    }
 	}
     }
 
     /* Read patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat - 1);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat - 1);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	for (j = 0; j < 32; j++)
 	    mp[j] = read16l(f);
-	for (j = 0; j < m->xxh->chn; j++)
-	    m->xxp[i]->index[j] = mp[j];
+	for (j = 0; j < m->mod.xxh->chn; j++)
+	    m->mod.xxp[i]->index[j] = mp[j];
     }
 
     /* Comments */
     fseek(f, mfh.extralen, SEEK_CUR);
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-	    XMP_SMP_UNS, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+	    XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 
-    for (i = 0; i < m->xxh->chn; i++)
-	m->xxc[i].pan = mfh.pan[i] << 4;
+    for (i = 0; i < m->mod.xxh->chn; i++)
+	m->mod.xxc[i].pan = mfh.pan[i] << 4;
 
     return 0;
 }

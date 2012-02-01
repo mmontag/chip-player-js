@@ -62,8 +62,7 @@ static int mtp_test(FILE *f, char *t, const int start)
 
 static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event;
 	int i, j, k;
 	uint8 buffer[25];
@@ -75,58 +74,58 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(buffer, 6, 1, f);
 
 	if (!memcmp(buffer, "SONGOK", 6))
-		strcpy(m->type, "IIgs SoundSmith");
+		strcpy(m->mod.type, "IIgs SoundSmith");
 	else if (!memcmp(buffer, "IAN92a", 8))
-		strcpy(m->type, "IIgs MegaTracker");
+		strcpy(m->mod.type, "IIgs MegaTracker");
 	else
 		return -1;
 
 	blocksize = read16l(f);
-	m->xxh->tpo = read16l(f);
+	m->mod.xxh->tpo = read16l(f);
 	fseek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
-	m->xxh->ins = m->xxh->smp = 15;
+	m->mod.xxh->ins = m->mod.xxh->smp = 15;
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		fread(buffer, 1, 22, f);
 		if (buffer[0]) {
 			buffer[buffer[0] + 1] = 0;
-			copy_adjust(m->xxi[i].name, buffer + 1, 22);
+			copy_adjust(m->mod.xxi[i].name, buffer + 1, 22);
 		}
 		read16l(f);		/* skip 2 reserved bytes */
-		m->xxi[i].sub[0].vol = read8(f) >> 2;
-		m->xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].vol = read8(f) >> 2;
+		m->mod.xxi[i].sub[0].pan = 0x80;
 		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
 	}
 
-	m->xxh->len = read8(f) & 0x7f;
+	m->mod.xxh->len = read8(f) & 0x7f;
 	read8(f);
-	fread(m->xxo, 1, 128, f);
+	fread(m->mod.xxo, 1, 128, f);
 
 	MODULE_INFO();
 
 	fseek(f, start + 600, SEEK_SET);
 
-	m->xxh->chn = 14;
-	m->xxh->pat = blocksize / (14 * 64);
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	m->mod.xxh->chn = 14;
+	m->mod.xxh->pat = blocksize / (14 * 64);
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
 	/* Load notes */
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		for (j = 0; j < m->xxp[i]->rows; j++) {
-			for (k = 0; k < m->xxh->chn; k++) {
+		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
+			for (k = 0; k < m->mod.xxh->chn; k++) {
 				event = &EVENT(i, k, j);
 				event->note = read8(f);;
 				if (event->note)
@@ -136,9 +135,9 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Load fx1 */
-	for (i = 0; i < m->xxh->pat; i++) {
-		for (j = 0; j < m->xxp[i]->rows; j++) {
-			for (k = 0; k < m->xxh->chn; k++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
+		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
+			for (k = 0; k < m->mod.xxh->chn; k++) {
 				uint8 x;
 				event = &EVENT(i, k, j);
 				x = read8(f);;
@@ -166,9 +165,9 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Load fx2 */
-	for (i = 0; i < m->xxh->pat; i++) {
-		for (j = 0; j < m->xxp[i]->rows; j++) {
-			for (k = 0; k < m->xxh->chn; k++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
+		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
+			for (k = 0; k < m->mod.xxh->chn; k++) {
 				event = &EVENT(i, k, j);
 				event->fxp = read8(f);;
 
@@ -183,18 +182,18 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read instrument data */
-	_D(_D_INFO "Instruments    : %d ", m->xxh->ins);
+	_D(_D_INFO "Instruments    : %d ", m->mod.xxh->ins);
 
-	for (i = 0; i < m->xxh->ins; i++) {
+	for (i = 0; i < m->mod.xxh->ins; i++) {
 		char filename[1024];
 
-		if (!m->xxi[i].name[0])
+		if (!m->mod.xxi[i].name[0])
 			continue;
 
 		strncpy(filename, m->dirname, NAME_SIZE);
 		if (*filename)
 			strncat(filename, "/", NAME_SIZE);
-		strncat(filename, (char *)m->xxi[i].name, NAME_SIZE);
+		strncat(filename, (char *)m->mod.xxi[i].name, NAME_SIZE);
 
 		if ((s = fopen(filename, "rb")) != NULL) {
 			asif_load(ctx, s, i);
@@ -202,18 +201,18 @@ static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 #if 0
-		m->xxs[i].lps = 0;
-		m->xxs[i].lpe = 0;
-		m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-		m->xxi[i].sub[0].fin = 0;
-		m->xxi[i].sub[0].pan = 0x80;
+		m->mod.xxs[i].lps = 0;
+		m->mod.xxs[i].lpe = 0;
+		m->mod.xxs[i].flg = m->mod.xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+		m->mod.xxi[i].sub[0].fin = 0;
+		m->mod.xxi[i].sub[0].pan = 0x80;
 #endif
 
 		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
-				m->xxi[i].name,
-				m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-				m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->xxi[i].sub[0].vol);
+				m->mod.xxi[i].name,
+				m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				m->mod.xxi[i].sub[0].vol);
 	}
 
 	return 0;

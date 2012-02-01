@@ -72,8 +72,7 @@ static int hsc_test(FILE *f, char *t, const int start)
 
 static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int pat, i, r, c;
     struct xxm_event *event;
     uint8 *x, *sid, e[2], buf[128 * 12];
@@ -90,15 +89,15 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	    break;
     }
 
-    m->xxh->ins = i;
+    m->mod.xxh->ins = i;
 
     fseek(f, start + 0, SEEK_SET);
 
-    m->xxh->chn = 9;
-    m->xxh->bpm = 135;
-    m->xxh->tpo = 6;
-    m->xxh->smp = 0;
-    m->xxh->flg = XXM_FLG_LINEAR;
+    m->mod.xxh->chn = 9;
+    m->mod.xxh->bpm = 135;
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->smp = 0;
+    m->mod.xxh->flg = XXM_FLG_LINEAR;
 
     set_type(m, "HSC (HSC-Tracker)");
 
@@ -109,48 +108,48 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 
     fread (buf, 1, 128 * 12, f);
     sid = buf;
-    for (i = 0; i < m->xxh->ins; i++, sid += 12) {
+    for (i = 0; i < m->mod.xxh->ins; i++, sid += 12) {
 	xmp_cvt_hsc2sbi((char *)sid);
 
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxi[i].nsm = 1;
-	m->xxi[i].sub[0].vol = 0x40;
-	m->xxi[i].sub[0].fin = (int8)sid[11] / 4;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].xpo = 0;
-	m->xxi[i].sub[0].sid = i;
-	m->xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].nsm = 1;
+	m->mod.xxi[i].sub[0].vol = 0x40;
+	m->mod.xxi[i].sub[0].fin = (int8)sid[11] / 4;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].xpo = 0;
+	m->mod.xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
 	xmp_drv_loadpatch(ctx, f, i, XMP_SMP_ADLIB, NULL, (char *)sid);
     }
 
     /* Read orders */
     for (pat = i = 0; i < 51; i++) {
-	fread (&m->xxo[i], 1, 1, f);
-	if (m->xxo[i] & 0x80)
+	fread (&m->mod.xxo[i], 1, 1, f);
+	if (m->mod.xxo[i] & 0x80)
 	    break;			/* FIXME: jump line */
-	if (m->xxo[i] > pat)
-	    pat = m->xxo[i];
+	if (m->mod.xxo[i] > pat)
+	    pat = m->mod.xxo[i];
     }
     fseek(f, 50 - i, SEEK_CUR);
-    m->xxh->len = i;
-    m->xxh->pat = pat + 1;
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->mod.xxh->len = i;
+    m->mod.xxh->pat = pat + 1;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
-    _D(_D_INFO "Module length: %d", m->xxh->len);
-    _D(_D_INFO "Instruments: %d", m->xxh->ins);
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Module length: %d", m->mod.xxh->len);
+    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	int ins[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-        for (r = 0; r < m->xxp[i]->rows; r++) {
+        for (r = 0; r < m->mod.xxp[i]->rows; r++) {
             for (c = 0; c < 9; c++) {
 	        fread (e, 1, 2, f);
 	        event = &EVENT (i, c, r);
@@ -174,9 +173,9 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    for (i = 0; i < m->xxh->chn; i++) {
-	m->xxc[i].pan = 0x80;
-	m->xxc[i].flg = XXM_CHANNEL_SYNTH;
+    for (i = 0; i < m->mod.xxh->chn; i++) {
+	m->mod.xxc[i].pan = 0x80;
+	m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
     }
 
     m->synth = &synth_adlib;

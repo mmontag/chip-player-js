@@ -78,8 +78,7 @@ static uint8 fx[] = {
 
 static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j;
     struct xxm_event *event;
     struct ssn_file_header sfh;
@@ -97,22 +96,22 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&sfh.tempo, 128, 1, f);	/* Tempo list for patterns */
     fread(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
 
-    m->xxh->chn = 8;
-    m->xxh->ins = sfh.nos;
-    m->xxh->pat = sfh.nop;
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    m->mod.xxh->chn = 8;
+    m->mod.xxh->ins = sfh.nos;
+    m->mod.xxh->pat = sfh.nop;
+    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
     for (i = 0; i < 128; i++)
 	if (sfh.order[i] > sfh.nop)
 	    break;
-    m->xxh->len = i;
-    memcpy (m->xxo, sfh.order, m->xxh->len);
-    m->xxh->tpo = 6;
-    m->xxh->bpm = 76;		/* adjusted using Flux/sober.669 */
-    m->xxh->smp = m->xxh->ins;
-    m->xxh->flg |= XXM_FLG_LINEAR;
+    m->mod.xxh->len = i;
+    memcpy (m->mod.xxo, sfh.order, m->mod.xxh->len);
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->bpm = 76;		/* adjusted using Flux/sober.669 */
+    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.xxh->flg |= XXM_FLG_LINEAR;
 
-    copy_adjust((uint8 *)m->name, sfh.message, 36);
-    strcpy(m->type, strncmp((char *)sfh.marker, "if", 2) ?
+    copy_adjust((uint8 *)m->mod.name, sfh.message, 36);
+    strcpy(m->mod.type, strncmp((char *)sfh.marker, "if", 2) ?
 				"669 (UNIS 669)" : "669 (Composer 669)");
 
     MODULE_INFO();
@@ -125,38 +124,38 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->xxh->pat);
+    _D(_D_INFO "Instruments: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
 	sih.length = read32l(f);		/* Instrument size */
 	sih.loop_start = read32l(f);		/* Instrument loop start */
 	sih.loopend = read32l(f);		/* Instrument loop end */
 
-	m->xxi[i].nsm = !!(m->xxs[i].len = sih.length);
-	m->xxs[i].lps = sih.loop_start;
-	m->xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
-	m->xxs[i].flg = m->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
-	m->xxi[i].sub[0].vol = 0x40;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = sih.length);
+	m->mod.xxs[i].lps = sih.loop_start;
+	m->mod.xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
+	m->mod.xxs[i].flg = m->mod.xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
+	m->mod.xxi[i].sub[0].vol = 0x40;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, sih.name, 13);
+	copy_adjust(m->mod.xxi[i].name, sih.name, 13);
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
-		m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
+		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
-    for (i = 0; i < m->xxh->pat; i++) {
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	EVENT(i, 0, 0).f2t = FX_TEMPO_CP;
@@ -211,17 +210,17 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	if (m->xxs[i].len <= 2)
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	if (m->mod.xxs[i].len <= 2)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-	    XMP_SMP_UNS, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+	    XMP_SMP_UNS, &m->mod.xxs[i], NULL);
     }
 
-    for (i = 0; i < m->xxh->chn; i++)
-	m->xxc[i].pan = (i % 2) * 0xff;
+    for (i = 0; i < m->mod.xxh->chn; i++)
+	m->mod.xxc[i].pan = (i % 2) * 0xff;
 
     m->quirk |= XMP_QRK_PERPAT;	    /* Cancel persistent fx at each new pat */
 

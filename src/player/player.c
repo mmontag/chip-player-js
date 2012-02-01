@@ -133,7 +133,7 @@ static inline void reset_channel(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_channel *xc;
     int i;
 
@@ -146,8 +146,8 @@ static inline void reset_channel(struct xmp_context *ctx)
     }
     for (i = d->numtrk; i--; ) {
 	xc = &p->xc_data[i];
-	xc->masterpan = m->xxc[i].pan;
-	xc->mastervol = m->xxc[i].vol; //0x40;
+	xc->masterpan = m->mod.xxc[i].pan;
+	xc->mastervol = m->mod.xxc[i].vol; //0x40;
 	xc->cutoff = 0xff;
     }
 }
@@ -156,7 +156,7 @@ static inline void reset_channel(struct xmp_context *ctx)
 static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int ctl)
 {
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int xins, ins, smp, note, key, flg;
     struct xmp_channel *xc;
     int cont_sample;
@@ -222,7 +222,7 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
 	    }
 	} else */
 
-	if ((uint32)ins < m->xxh->ins && m->xxi[ins].nsm) {	/* valid ins */
+	if ((uint32)ins < m->mod.xxh->ins && m->mod.xxi[ins].nsm) {	/* valid ins */
 	    if (!key && HAS_QUIRK(XMP_QRK_INSPRI)) {
 		if (xins == ins)
 		    flg = NEW_INS | RESET_VOL;
@@ -297,19 +297,19 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     if (!key || key >= XMP_KEY_OFF)
 	ins = xins;
 
-    if ((uint32)ins < m->xxh->ins && m->xxi[ins].nsm)
+    if ((uint32)ins < m->mod.xxh->ins && m->mod.xxi[ins].nsm)
 	flg |= IS_VALID;
 
     if ((uint32)key < XMP_KEY_OFF && key > 0) {
 	xc->key = --key;
 
 	if (flg & IS_VALID && key < XXM_KEY_MAX) {
-	    if (m->xxi[ins].map[key].ins != 0xff) {
-		int mapped = m->xxi[ins].map[key].ins;
-		int transp = m->xxi[ins].map[key].xpo;
+	    if (m->mod.xxi[ins].map[key].ins != 0xff) {
+		int mapped = m->mod.xxi[ins].map[key].ins;
+		int transp = m->mod.xxi[ins].map[key].xpo;
 
-		note = key + m->xxi[ins].sub[mapped].xpo + transp;
-		smp = m->xxi[ins].sub[mapped].sid;
+		note = key + m->mod.xxi[ins].sub[mapped].xpo + transp;
+		smp = m->mod.xxi[ins].sub[mapped].sid;
 	    } else {
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
@@ -320,10 +320,10 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     }
 
     if (smp >= 0) {
-	int mapped = m->xxi[ins].map[key].ins;
+	int mapped = m->mod.xxi[ins].map[key].ins;
 	int to = xmp_drv_setpatch(ctx, chn, ins, smp, note,
-			m->xxi[ins].sub[mapped].nna, m->xxi[ins].sub[mapped].dct,
-			m->xxi[ins].sub[mapped].dca, ctl, cont_sample);
+			m->mod.xxi[ins].sub[mapped].nna, m->mod.xxi[ins].sub[mapped].dct,
+			m->mod.xxi[ins].sub[mapped].dca, ctl, cont_sample);
 
 	if (copy_channel(p, to, chn) < 0) {
 	    return XMP_ERR_VIRTC;
@@ -338,7 +338,7 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     reset_stepper(&xc->arpeggio);
     xc->tremor = 0;
 
-    if ((uint32)xins >= m->xxh->ins || !m->xxi[xins].nsm) {
+    if ((uint32)xins >= m->mod.xxh->ins || !m->mod.xxi[xins].nsm) {
 	RESET(IS_VALID);
     } else {
 	SET(IS_VALID);
@@ -368,7 +368,7 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
     }
 
     if (note >= 0) {
-	int mapped = m->xxi[ins].map[key].ins;
+	int mapped = m->mod.xxi[ins].map[key].ins;
 
 	xc->note = note;
 
@@ -381,19 +381,19 @@ static int read_event(struct xmp_context *ctx, struct xxm_event *e, int chn, int
 
 	/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
 	if (!TEST(NEW_PAN))
-	    xc->pan = m->xxi[ins].sub[mapped].pan;
+	    xc->pan = m->mod.xxi[ins].sub[mapped].pan;
 
 	if (!TEST(FINETUNE))
-	    xc->finetune = m->xxi[ins].sub[mapped].fin;
+	    xc->finetune = m->mod.xxi[ins].sub[mapped].fin;
 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
-			m->xxh->flg & XXM_FLG_LINEAR);
+			m->mod.xxh->flg & XXM_FLG_LINEAR);
 
 	set_lfo_phase(&xc->vibrato, 0);
 	set_lfo_phase(&xc->tremolo, 0);
     }
 
-    if (xc->key < 0 || p->m.xxi[xc->ins].map[xc->key].ins == 0xff)
+    if (xc->key < 0 || m->mod.xxi[xc->ins].map[xc->key].ins == 0xff)
 	return 0;
 
     if (TEST(RESET_ENV)) {
@@ -426,12 +426,12 @@ static inline void read_row(struct xmp_context *ctx, int pat, int row)
 {
     int count, chn;
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xxm_event *event;
 
     count = 0;
-    for (chn = 0; chn < p->m.xxh->chn; chn++) {
-	if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
+    for (chn = 0; chn < m->mod.xxh->chn; chn++) {
+	if (row < m->mod.xxt[TRACK_NUM(pat, chn)]->rows) {
 	    event = &EVENT(pat, chn, row);
 	} else {
 	    event = &empty_event;
@@ -445,7 +445,7 @@ static inline void read_row(struct xmp_context *ctx, int pat, int row)
 
     for (chn = 0; count; chn++) {
 	if (p->fetch_ctl[chn]) {
-	    if (row < m->xxt[TRACK_NUM(pat, chn)]->rows) {
+	    if (row < m->mod.xxt[TRACK_NUM(pat, chn)]->rows) {
 	        event = &EVENT(pat, chn, row);
 	    } else {
 	        event = &empty_event;
@@ -466,7 +466,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     int med_arp, vibrato, med_vibrato;
     uint16 vol_envelope;
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
 
     xc = &p->xc_data[chn];
@@ -546,7 +546,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	if (!--xc->ns_count) {
 	    xc->note += xc->ns_val;
 	    xc->period = note_to_period(xc->note, xc->finetune,
-				m->xxh->flg & XXM_FLG_LINEAR);
+				m->mod.xxh->flg & XXM_FLG_LINEAR);
 	    xc->ns_count = xc->ns_speed;
 	}
     }
@@ -585,7 +585,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 		m->vol_table[finalvol >> 4] << 4;
     }
 
-    if (m->xxh->flg & XXM_FLG_INSVOL)
+    if (m->mod.xxh->flg & XXM_FLG_INSVOL)
 	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;
 
 
@@ -606,9 +606,9 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	xc->period + vibrato + med_vibrato,
 	xc->note,
 	/* xc->finetune, */
-	m->xxh->flg & XXM_FLG_MODRNG,
+	m->mod.xxh->flg & XXM_FLG_MODRNG,
 	xc->gliss,
-	m->xxh->flg & XXM_FLG_LINEAR);
+	m->mod.xxh->flg & XXM_FLG_LINEAR);
 
     xc->pitchbend += XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope;
 
@@ -725,7 +725,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	if (TEST(FINE_NSLIDE)) {
 	    xc->note += xc->ns_fval;
 	    xc->period = note_to_period(xc->note, xc->finetune,
-				m->xxh->flg & XXM_FLG_LINEAR);
+				m->mod.xxh->flg & XXM_FLG_LINEAR);
 	}
     }
 
@@ -739,7 +739,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     else if (xc->mastervol > p->gvol_base)
 	xc->mastervol = p->gvol_base;
 
-    if (m->xxh->flg & XXM_FLG_LINEAR) {
+    if (m->mod.xxh->flg & XXM_FLG_LINEAR) {
 	if (xc->period < MIN_PERIOD_L)
 	    xc->period = MIN_PERIOD_L;
 	else if (xc->period > MAX_PERIOD_L)
@@ -758,7 +758,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     update_stepper(&xc->arpeggio);
 
     /* Process MED synth arpeggio */
-    med_arp = get_med_arp(p, xc);
+    med_arp = get_med_arp(m, xc);
 
     /* Adjust pitch and pan, then play the note */
     finalpan = o->outfmt & XMP_FMT_MONO ?
@@ -784,7 +784,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_driver_context *d = &ctx->d;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
 	int ret;
@@ -796,7 +796,7 @@ int _xmp_player_start(struct xmp_context *ctx)
 	f->row = 0;
 	f->time = 0;
 
-	if (m->xxh->len == 0 || m->xxh->chn == 0) {
+	if (m->mod.xxh->len == 0 || m->mod.xxh->chn == 0) {
 		/* set variables to sane state */
 		m->flags &= ~XMP_CTL_LOOP;
 		f->ord = p->scan_ord = 0;
@@ -805,10 +805,10 @@ int _xmp_player_start(struct xmp_context *ctx)
 		return 0;
 	}
 
-	f->num_rows = m->xxp[m->xxo[f->ord]]->rows;
+	f->num_rows = m->mod.xxp[m->mod.xxo[f->ord]]->rows;
 
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
-	while (f->ord < m->xxh->len && m->xxo[f->ord] >= m->xxh->pat)
+	while (f->ord < m->mod.xxh->len && m->mod.xxo[f->ord] >= m->mod.xxh->pat)
 		f->ord++;
 
 	m->volume = m->xxo_info[f->ord].gvl;
@@ -820,12 +820,12 @@ int _xmp_player_start(struct xmp_context *ctx)
 	f->playing_time = 0;
 	f->end_point = p->scan_num;
 
-	if ((ret = xmp_drv_on(ctx, m->xxh->chn)) != 0)
+	if ((ret = xmp_drv_on(ctx, m->mod.xxh->chn)) != 0)
 		return ret;
 
 	f->jump = -1;
 
-	p->fetch_ctl = calloc(m->xxh->chn, sizeof (int));
+	p->fetch_ctl = calloc(m->mod.xxh->chn, sizeof (int));
 	f->loop_stack = calloc(d->numchn, sizeof (int));
 	f->loop_start = calloc(d->numchn, sizeof (int));
 	p->xc_data = calloc(d->numchn, sizeof (struct xmp_channel));
@@ -846,7 +846,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_driver_context *d = &ctx->d;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
 	int i;
@@ -898,7 +898,7 @@ int _xmp_player_frame(struct xmp_context *ctx)
 		if (f->skip_fetch) {
 			f->skip_fetch = 0;
 		} else {
-			read_row(ctx, m->xxo[f->ord], f->row);
+			read_row(ctx, m->mod.xxo[f->ord], f->row);
 		}
 	}
 
@@ -958,22 +958,22 @@ next_order:
     			f->ord++;
 
 			/* Restart module */
-			if (f->ord >= m->xxh->len) {
-    				f->ord = ((uint32)m->xxh->rst > m->xxh->len ||
-					(uint32)m->xxo[m->xxh->rst] >=
-					m->xxh->pat) ?  0 : m->xxh->rst;
+			if (f->ord >= m->mod.xxh->len) {
+    				f->ord = ((uint32)m->mod.xxh->rst > m->mod.xxh->len ||
+					(uint32)m->mod.xxo[m->mod.xxh->rst] >=
+					m->mod.xxh->pat) ?  0 : m->mod.xxh->rst;
 				m->volume = m->xxo_info[f->ord].gvl;
 			}
 
 			/* Skip invalid patterns */
-			if (m->xxo[f->ord] >= m->xxh->pat) {
+			if (m->mod.xxo[f->ord] >= m->mod.xxh->pat) {
     				f->ord++;
     				goto next_order;
 			}
 
 			f->time = (double)m->xxo_info[f->ord].time / 1000;
 
-			f->num_rows = m->xxp[m->xxo[f->ord]]->rows;
+			f->num_rows = m->mod.xxp[m->mod.xxo[f->ord]]->rows;
 			if (f->jumpline >= f->num_rows)
 				f->jumpline = 0;
 			f->row = f->jumpline;
@@ -984,7 +984,7 @@ next_order:
 			/* Reset persistent effects at new pattern */
 			if (HAS_QUIRK(XMP_QRK_PERPAT)) {
 				int chn;
-				for (chn = 0; chn < m->xxh->chn; chn++)
+				for (chn = 0; chn < m->mod.xxh->chn; chn++)
 					p->xc_data[chn].per_flags = 0;
 			}
 		}
@@ -994,13 +994,13 @@ next_order:
 	if (o->dump == 1) {
 		int i;
 
-		for (i = 0; i < m->xxh->chn; i++) {
+		for (i = 0; i < m->mod.xxh->chn; i++) {
 			struct xmp_channel *c = &p->xc_data[i];
 
 			printf("%d %d %d %d %d %d %lf %d %d %d %d %lf "
 			       "%d %d %d %d %d %d %d %d %d %d\n",
 					f->ord,
-					m->xxo[f->ord],
+					m->mod.xxo[f->ord],
 					f->row,
 					f->frame,
 					p->bpm,
@@ -1034,14 +1034,14 @@ next_order:
 void _xmp_player_end(struct xmp_context *ctx)
 {
 	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct flow_control *f = &p->flow;
 
 	xmp_drv_stoptimer(ctx);
 	xmp_drv_off(ctx);
 	m->synth->deinit(ctx);
 
-	if (m->xxh->len == 0 || m->xxh->chn == 0)
+	if (m->mod.xxh->len == 0 || m->mod.xxh->chn == 0)
                 return;
 
 	free(p->xc_data);

@@ -62,8 +62,7 @@ struct stim_header {
 
 static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, j, k;
 	struct xxm_event *event;
 	struct stim_header sh;
@@ -83,14 +82,14 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	for (i = 0; i < 64; i++)
 		sh.pataddr[i] = read32b(f) + 0x0c;
 
-	m->xxh->len = sh.len;
-	m->xxh->pat = sh.pat;
-	m->xxh->ins = sh.nos;
-	m->xxh->smp = m->xxh->ins;
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	m->mod.xxh->len = sh.len;
+	m->mod.xxh->pat = sh.pat;
+	m->mod.xxh->ins = sh.nos;
+	m->mod.xxh->smp = m->mod.xxh->ins;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
-	for (i = 0; i < m->xxh->len; i++)
-		m->xxo[i] = sh.order[i];
+	for (i = 0; i < m->mod.xxh->len; i++)
+		m->mod.xxo[i] = sh.order[i];
 
 	set_type(m, "STIM (Slamtilt)");
 
@@ -99,11 +98,11 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		fseek(f, start + sh.pataddr[i] + 8, SEEK_SET);
@@ -147,41 +146,41 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-	fseek(f, start + sh.smpaddr + m->xxh->smp * 4, SEEK_SET);
+	fseek(f, start + sh.smpaddr + m->mod.xxh->smp * 4, SEEK_SET);
 
-	for (i = 0; i < m->xxh->smp; i++) {
+	for (i = 0; i < m->mod.xxh->smp; i++) {
 		si.size = read16b(f);
 		si.finetune = read8(f);
 		si.volume = read8(f);
 		si.loop_start = read16b(f);
 		si.loop_size = read16b(f);
 
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-		m->xxs[i].len = 2 * si.size;
-		m->xxs[i].lps = 2 * si.loop_start;
-		m->xxs[i].lpe = m->xxs[i].lps + 2 * si.loop_size;
-		m->xxs[i].flg = si.loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-		m->xxi[i].sub[0].fin = (int8) (si.finetune << 4);
-		m->xxi[i].sub[0].vol = si.volume;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].sid = i;
-		m->xxi[i].nsm = !!(m->xxs[i].len);
-		m->xxi[i].rls = 0xfff;
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxs[i].len = 2 * si.size;
+		m->mod.xxs[i].lps = 2 * si.loop_start;
+		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * si.loop_size;
+		m->mod.xxs[i].flg = si.loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+		m->mod.xxi[i].sub[0].fin = (int8) (si.finetune << 4);
+		m->mod.xxi[i].sub[0].vol = si.volume;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].sid = i;
+		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+		m->mod.xxi[i].rls = 0xfff;
 
 		_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
-			       i, m->xxs[i].len, m->xxs[i].lps,
-			       m->xxs[i].lpe, si.loop_size > 1 ? 'L' : ' ',
-			       m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin >> 4);
+			       i, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+			       m->mod.xxs[i].lpe, si.loop_size > 1 ? 'L' : ' ',
+			       m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4);
 
-		if (!m->xxs[i].len)
+		if (!m->mod.xxs[i].len)
 			continue;
-		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-				  &m->xxs[m->xxi[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
-	m->xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }

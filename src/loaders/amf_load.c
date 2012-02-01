@@ -56,8 +56,7 @@ static int amf_test(FILE * f, char *t, const int start)
 
 static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, j;
 	struct xxm_event *event;
 	uint8 buf[1024];
@@ -70,16 +69,16 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	ver = read8(f);
 
 	fread(buf, 1, 32, f);
-	strncpy(m->name, (char *)buf, 32);
+	strncpy(m->mod.name, (char *)buf, 32);
 	set_type(m, "DSMI %d.%d", ver / 10, ver % 10);
 
-	m->xxh->ins = read8(f);
-	m->xxh->len = read8(f);
-	m->xxh->trk = read16l(f);
-	m->xxh->chn = read8(f);
+	m->mod.xxh->ins = read8(f);
+	m->mod.xxh->len = read8(f);
+	m->mod.xxh->trk = read16l(f);
+	m->mod.xxh->chn = read8(f);
 
-	m->xxh->smp = m->xxh->ins;
-	m->xxh->pat = m->xxh->len;
+	m->mod.xxh->smp = m->mod.xxh->ins;
+	m->mod.xxh->pat = m->mod.xxh->len;
 
 	if (ver == 0x0a)
 		fread(buf, 1, 16, f);		/* channel remap table */
@@ -87,10 +86,10 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (ver >= 0x0d) {
 		fread(buf, 1, 32, f);		/* panning table */
 		for (i = 0; i < 32; i++) {
-			m->xxc->pan = 0x80 + 2 * (int8)buf[i];
+			m->mod.xxc->pan = 0x80 + 2 * (int8)buf[i];
 		}
-		m->xxh->bpm = read8(f);
-		m->xxh->tpo = read8(f);
+		m->mod.xxh->bpm = read8(f);
+		m->mod.xxh->tpo = read8(f);
 	} else if (ver >= 0x0b) {
 		fread(buf, 1, 16, f);
 	}
@@ -109,19 +108,19 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * it means an empty track.
 	 */
 
-	for (i = 0; i < m->xxh->len; i++)
-		m->xxo[i] = i;
+	for (i = 0; i < m->mod.xxh->len; i++)
+		m->mod.xxo[i] = i;
 
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	m->xxp = calloc(sizeof(struct xxm_pattern *), m->xxh->pat + 1);
+	m->mod.xxp = calloc(sizeof(struct xxm_pattern *), m->mod.xxh->pat + 1);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
-		for (j = 0; j < m->xxh->chn; j++) {
+		m->mod.xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
+		for (j = 0; j < m->mod.xxh->chn; j++) {
 			uint16 t = read16l(f);
-			m->xxp[i]->index[j] = t;
+			m->mod.xxp[i]->index[j] = t;
 		}
 	}
 
@@ -137,7 +136,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		uint8 b;
 		int len, start, end;
 		long pos = ftell(f);
-		for (i = 0; i < m->xxh->ins; i++) {
+		for (i = 0; i < m->mod.xxh->ins; i++) {
 			b = read8(f);
 			if (b != 0 && b != 1) {
 				ver = 0x09;
@@ -175,27 +174,27 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, pos, SEEK_SET);
 	}
 
-	for (i = 0; i < m->xxh->ins; i++) {
+	for (i = 0; i < m->mod.xxh->ins; i++) {
 		uint8 b;
 		int c2spd;
 
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 		b = read8(f);
-		m->xxi[i].nsm = b ? 1 : 0;
+		m->mod.xxi[i].nsm = b ? 1 : 0;
 
 		fread(buf, 1, 32, f);
-		copy_adjust(m->xxi[i].name, buf, 32);
+		copy_adjust(m->mod.xxi[i].name, buf, 32);
 
 		fread(buf, 1, 13, f);	/* sample name */
 		read32l(f);		/* sample index */
 
-		m->xxi[i].sub[0].sid = i;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxs[i].len = read32l(f);
+		m->mod.xxi[i].sub[0].sid = i;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxs[i].len = read32l(f);
 		c2spd = read16l(f);
-		c2spd_to_note(c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
-		m->xxi[i].sub[0].vol = read8(f);
+		c2spd_to_note(c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+		m->mod.xxi[i].sub[0].vol = read8(f);
 
 		/*
 		 * Andre Timmermans <andre.timmermans@atos.net> says:
@@ -209,33 +208,33 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 		 */
 
 		if (ver < 0x0a) {
-			m->xxs[i].lps = read16l(f);
-			m->xxs[i].lpe = m->xxs[i].len - 1;
+			m->mod.xxs[i].lps = read16l(f);
+			m->mod.xxs[i].lpe = m->mod.xxs[i].len - 1;
 		} else {
-			m->xxs[i].lps = read32l(f);
-			m->xxs[i].lpe = read32l(f);
+			m->mod.xxs[i].lps = read32l(f);
+			m->mod.xxs[i].lpe = read32l(f);
 		}
 
 		if (ver < 0x0a) {
-			m->xxs[i].flg = m->xxs[i].lps > 0 ? XMP_SAMPLE_LOOP : 0;
+			m->mod.xxs[i].flg = m->mod.xxs[i].lps > 0 ? XMP_SAMPLE_LOOP : 0;
 		} else {
-			m->xxs[i].flg = m->xxs[i].lpe > m->xxs[i].lps ?
+			m->mod.xxs[i].flg = m->mod.xxs[i].lpe > m->mod.xxs[i].lps ?
 							XMP_SAMPLE_LOOP : 0;
 		}
 
 		_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %5d",
-			i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
-			m->xxs[i].lpe, m->xxs[i].flg & XMP_SAMPLE_LOOP ?
-			'L' : ' ', m->xxi[i].sub[0].vol, c2spd);
+			i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+			m->mod.xxs[i].lpe, m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ?
+			'L' : ' ', m->mod.xxi[i].sub[0].vol, c2spd);
 	}
 				
 
 	/* Tracks */
 
-	trkmap = calloc(sizeof(int), m->xxh->trk);
+	trkmap = calloc(sizeof(int), m->mod.xxh->trk);
 	newtrk = 0;
 
-	for (i = 0; i < m->xxh->trk; i++) {		/* read track table */
+	for (i = 0; i < m->mod.xxh->trk; i++) {		/* read track table */
 		uint16 t;
 		t = read16l(f);
 		trkmap[i] = t;
@@ -243,41 +242,41 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 /*printf("%d -> %d\n", i, t);*/
 	}
 
-	for (i = 0; i < m->xxh->pat; i++) {		/* read track table */
-		for (j = 0; j < m->xxh->chn; j++) {
-			int k = m->xxp[i]->index[j] - 1;
+	for (i = 0; i < m->mod.xxh->pat; i++) {		/* read track table */
+		for (j = 0; j < m->mod.xxh->chn; j++) {
+			int k = m->mod.xxp[i]->index[j] - 1;
 
 			/* Use empty track if an invalid track is requested
 			 * (such as in Lasse Makkonen "faster and louder")
 			 */
-			if (k < 0 || k > m->xxh->trk)
+			if (k < 0 || k > m->mod.xxh->trk)
 				k = 0;
-			m->xxp[i]->index[j] = trkmap[k];
-/*printf("m->xxp[%d]->info[%d].index = %d (k = %d)\n", i, j, trkmap[k], k);*/
+			m->mod.xxp[i]->index[j] = trkmap[k];
+/*printf("m->mod.xxp[%d]->info[%d].index = %d (k = %d)\n", i, j, trkmap[k], k);*/
 		}
 	}
 
-	m->xxh->trk = newtrk;		/* + empty track */
+	m->mod.xxh->trk = newtrk;		/* + empty track */
 	free(trkmap);
 
-	_D(_D_INFO "Stored tracks: %d", m->xxh->trk);
+	_D(_D_INFO "Stored tracks: %d", m->mod.xxh->trk);
 
-	m->xxh->trk++;
-	m->xxt = calloc (sizeof (struct xxm_track *), m->xxh->trk);
+	m->mod.xxh->trk++;
+	m->mod.xxt = calloc (sizeof (struct xxm_track *), m->mod.xxh->trk);
 
 	/* Alloc track 0 as empty track */
-	m->xxt[0] = calloc(sizeof(struct xxm_track) +
+	m->mod.xxt[0] = calloc(sizeof(struct xxm_track) +
 				sizeof(struct xxm_event) * 64 - 1, 1);
-	m->xxt[0]->rows = 64;
+	m->mod.xxt[0]->rows = 64;
 
 	/* Alloc rest of the tracks */
-	for (i = 1; i < m->xxh->trk; i++) {
+	for (i = 1; i < m->mod.xxh->trk; i++) {
 		uint8 t1, t2, t3;
 		int size;
 
-		m->xxt[i] = calloc(sizeof(struct xxm_track) +
+		m->mod.xxt[i] = calloc(sizeof(struct xxm_track) +
 			sizeof(struct xxm_event) * 64 - 1, 1);
-		m->xxt[i]->rows = 64;
+		m->mod.xxt[i]->rows = 64;
 
 		size = read24l(f);
 /*printf("TRACK %d SIZE %d\n", i, size);*/
@@ -291,14 +290,14 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (t1 == 0xff && t2 == 0xff && t3 == 0xff)
 				break;
 
-			event = &m->xxt[i]->event[t1];
+			event = &m->mod.xxt[i]->event[t1];
 
 			if (t2 < 0x7f) {		/* note */
 				if (t2 > 12)
 					event->note = t2 + 1 - 12;
 				event->vol = t3;
 			} else if (t2 == 0x7f) {	/* copy previous */
-				memcpy(event, &m->xxt[i]->event[t1 - 1],
+				memcpy(event, &m->mod.xxt[i]->event[t1 - 1],
 					sizeof(struct xxm_event));
 			} else if (t2 == 0x80) {	/* instrument */
 				event->ins = t3 + 1;
@@ -462,11 +461,11 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Samples */
 
-	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-			XMP_SMP_UNS, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+			XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
 	m->quirk |= XMP_QRK_FINEFX;

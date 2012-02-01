@@ -46,8 +46,7 @@ struct rad_instrument {
 
 static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event;
 	int i, j;
 	uint8 sid[11];
@@ -62,14 +61,14 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	version = read8(f);
 	flags = read8(f);
 
-	m->xxh->chn = 9;
-	m->xxh->bpm = 125;
-	m->xxh->tpo = flags & 0x1f;
-	m->xxh->flg = XXM_FLG_LINEAR;
+	m->mod.xxh->chn = 9;
+	m->mod.xxh->bpm = 125;
+	m->mod.xxh->tpo = flags & 0x1f;
+	m->mod.xxh->flg = XXM_FLG_LINEAR;
 	/* FIXME: tempo setting in RAD modules */
-	if (m->xxh->tpo <= 2)
-		m->xxh->tpo = 6;
-	m->xxh->smp = 0;
+	if (m->mod.xxh->tpo <= 2)
+		m->mod.xxh->tpo = 6;
+	m->mod.xxh->smp = 0;
 
 	set_type(m, "RAD %d.%d (Reality Adlib Tracker)",
 				MSN(version), LSN(version));
@@ -82,12 +81,12 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read instruments */
-	m->xxh->ins = 0;
+	m->mod.xxh->ins = 0;
 
 	_D(_D_INFO "Read instruments");
 
 	while ((b = read8(f)) != 0) {
-		m->xxh->ins = b;
+		m->mod.xxh->ins = b;
 
 		fread(sid, 1, 11, f);
 		xmp_cvt_hsc2sbi((char *)sid);
@@ -97,42 +96,42 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-		m->xxi[i].nsm = 1;
-		m->xxi[i].sub[0].vol = 0x40;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].xpo = -1;
-		m->xxi[i].sub[0].sid = i;
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].nsm = 1;
+		m->mod.xxi[i].sub[0].vol = 0x40;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].xpo = -1;
+		m->mod.xxi[i].sub[0].sid = i;
 	}
 
 	/* Read orders */
-	m->xxh->len = read8(f);
+	m->mod.xxh->len = read8(f);
 
-	for (j = i = 0; i < m->xxh->len; i++) {
+	for (j = i = 0; i < m->mod.xxh->len; i++) {
 		b = read8(f);
 		if (b < 0x80)
-			m->xxo[j++] = b;
+			m->mod.xxo[j++] = b;
 	}
 
 	/* Read pattern pointers */
-	for (m->xxh->pat = i = 0; i < 32; i++) {
+	for (m->mod.xxh->pat = i = 0; i < 32; i++) {
 		ppat[i] = read16l(f);
 		if (ppat[i])
-			m->xxh->pat++;
+			m->mod.xxh->pat++;
 	}
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
-	_D(_D_INFO "Module length: %d", m->xxh->len);
-	_D(_D_INFO "Instruments: %d", m->xxh->ins);
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Module length: %d", m->mod.xxh->len);
+	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		if (ppat[i] == 0)
@@ -150,7 +149,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 			do {
 				c = read8(f);	/* Channel number */
 
-				if ((c & 0x7f) >= m->xxh->chn) {
+				if ((c & 0x7f) >= m->mod.xxh->chn) {
 					_D(_D_CRIT "** Whoops! channel = %d\n", c);
 				}
 
@@ -182,9 +181,9 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 		} while (~r & 0x80);
 	}
 
-	for (i = 0; i < m->xxh->chn; i++) {
-		m->xxc[i].pan = 0x80;
-		m->xxc[i].flg = XXM_CHANNEL_SYNTH;
+	for (i = 0; i < m->mod.xxh->chn; i++) {
+		m->mod.xxc[i].pan = 0x80;
+		m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
 	}
 
 	m->synth = &synth_adlib;

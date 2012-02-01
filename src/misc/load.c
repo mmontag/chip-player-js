@@ -447,15 +447,15 @@ static void split_name(char *s, char **d, char **b)
 }
 
 
-int xmp_load_module(xmp_context ctx, char *s)
+int xmp_load_module(xmp_context opaque, char *s)
 {
+    struct xmp_context *ctx = (struct xmp_context *)opaque;
     FILE *f;
     int i, t;
     struct xmp_loader_info *li;
     struct list_head *head;
     struct stat st;
-    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
 
     _D(_D_WARN "s = %s", s);
@@ -479,9 +479,9 @@ int xmp_load_module(xmp_context ctx, char *s)
     split_name(s, &m->dirname, &m->basename);
 
     /* Reset variables */
-    memset(m->name, 0, XMP_NAMESIZE);
-    memset(m->type, 0, XMP_NAMESIZE);
-    memset(m->author, 0, XMP_NAMESIZE);
+    memset(m->mod.name, 0, XMP_NAMESIZE);
+    memset(m->mod.type, 0, XMP_NAMESIZE);
+    /* memset(m->author, 0, XMP_NAMESIZE); */
     m->filename = s;		/* For ALM, SSMT, etc */
     m->size = st.st_size;
     m->rrate = PAL_RATE;
@@ -494,18 +494,18 @@ int xmp_load_module(xmp_context ctx, char *s)
     m->quirk = o->quirk;
     m->comment = NULL;
 
-    m->xxh = calloc(sizeof (struct xxm_header), 1);
+    m->mod.xxh = calloc(sizeof (struct xxm_header), 1);
     /* Set defaults */
-    m->xxh->tpo = 6;
-    m->xxh->bpm = 125;
-    m->xxh->chn = 4;
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->bpm = 125;
+    m->mod.xxh->chn = 4;
     m->synth = &synth_null;
     m->extra = NULL;
 
     for (i = 0; i < 64; i++) {
-	m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
-	m->xxc[i].vol = 0x40;
-	m->xxc[i].flg = 0;
+	m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
+	m->mod.xxc[i].vol = 0x40;
+	m->mod.xxc[i].flg = 0;
     }
 
     _D(_D_WARN "load");
@@ -535,7 +535,7 @@ int xmp_load_module(xmp_context ctx, char *s)
     if (i < 0) {
 	free(m->basename);
 	free(m->dirname);
-	free(m->xxh);
+	free(m->mod.xxh);
 	return i;
     }
 
@@ -543,15 +543,15 @@ int xmp_load_module(xmp_context ctx, char *s)
      * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
      * Ralf Hoffmann <ralf@boomerangsworld.de>)
      */
-    if (m->xxh->rst >= m->xxh->len)
-	m->xxh->rst = 0;
+    if (m->mod.xxh->rst >= m->mod.xxh->len)
+	m->mod.xxh->rst = 0;
 
     /* Disable filter if --nofilter is specified */
     m->flags &= ~(~o->flags & XMP_CTL_FILTER);
 
-    str_adj(m->name);
-    if (!*m->name) {
-	strncpy(m->name, m->basename, XMP_NAMESIZE);
+    str_adj(m->mod.name);
+    if (!*m->mod.name) {
+	strncpy(m->mod.name, m->basename, XMP_NAMESIZE);
     }
 
     m->time = _xmp_scan_module((struct xmp_context *)ctx);
@@ -582,10 +582,10 @@ int xmp_enable_format(char *id, int enable)
 }
 
 
-void xmp_release_module(xmp_context ctx)
+void xmp_release_module(xmp_context opaque)
 {
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_context *ctx = (struct xmp_context *)opaque;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
 	_D(_D_INFO "Freeing memory");
@@ -594,39 +594,39 @@ void xmp_release_module(xmp_context ctx)
 		free(m->extra);
 
 	if (m->med_vol_table) {
-		for (i = 0; i < m->xxh->ins; i++)
+		for (i = 0; i < m->mod.xxh->ins; i++)
 			if (m->med_vol_table[i])
 				free(m->med_vol_table[i]);
 		free(m->med_vol_table);
 	}
 
 	if (m->med_wav_table) {
-		for (i = 0; i < m->xxh->ins; i++)
+		for (i = 0; i < m->mod.xxh->ins; i++)
 			if (m->med_wav_table[i])
 				free(m->med_wav_table[i]);
 		free(m->med_wav_table);
 	}
 
-	for (i = 0; i < m->xxh->trk; i++)
-		free(m->xxt[i]);
+	for (i = 0; i < m->mod.xxh->trk; i++)
+		free(m->mod.xxt[i]);
 
-	for (i = 0; i < m->xxh->pat; i++)
-		free(m->xxp[i]);
+	for (i = 0; i < m->mod.xxh->pat; i++)
+		free(m->mod.xxp[i]);
 
-	for (i = 0; i < m->xxh->ins; i++)
-		free(m->xxi[i].sub);
+	for (i = 0; i < m->mod.xxh->ins; i++)
+		free(m->mod.xxi[i].sub);
 
-	free(m->xxt);
-	free(m->xxp);
-	if (m->xxh->smp > 0) {
-		for (i = 0; i < m->xxh->smp; i++) {
-			if (m->xxs[i].data != NULL)
-				free(m->xxs[i].data);
+	free(m->mod.xxt);
+	free(m->mod.xxp);
+	if (m->mod.xxh->smp > 0) {
+		for (i = 0; i < m->mod.xxh->smp; i++) {
+			if (m->mod.xxs[i].data != NULL)
+				free(m->mod.xxs[i].data);
 		}
-		free(m->xxs);
+		free(m->mod.xxs);
 	}
-	free(m->xxi);
-	free(m->xxh);
+	free(m->mod.xxi);
+	free(m->mod.xxh);
 	if (m->comment)
 		free(m->comment);
 

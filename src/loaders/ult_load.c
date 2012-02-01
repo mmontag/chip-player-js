@@ -95,8 +95,7 @@ static char *verstr[4] = {
 
 static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j, k, ver, cnt;
     struct xxm_event *event;
     struct ult_header ufh;
@@ -114,7 +113,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     ver = ufh.magic[14] - '0';
 
-    strncpy(m->name, (char *)ufh.name, 32);
+    strncpy(m->mod.name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
     set_type(m, "ULT V%04d (Ultra Tracker %s)", ver, verstr[ver - 1]);
 
@@ -122,17 +121,17 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     fseek(f, ufh.msgsize * 32, SEEK_CUR);
 
-    m->xxh->ins = m->xxh->smp = read8(f);
-    /* m->xxh->flg |= XXM_FLG_LINEAR; */
+    m->mod.xxh->ins = m->mod.xxh->smp = read8(f);
+    /* m->mod.xxh->flg |= XXM_FLG_LINEAR; */
 
     /* Read and convert instruments */
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
 	fread(&uih.name, 32, 1, f);
 	fread(&uih.dosname, 12, 1, f);
@@ -150,10 +149,10 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	    uih.finetune ^= uih.c2spd;
 	    uih.c2spd ^= uih.finetune;
 	}
-	m->xxs[i].len = uih.sizeend - uih.sizestart;
-	m->xxi[i].nsm = !!m->xxs[i].len;
-	m->xxs[i].lps = uih.loop_start;
-	m->xxs[i].lpe = uih.loopend;
+	m->mod.xxs[i].len = uih.sizeend - uih.sizestart;
+	m->mod.xxi[i].nsm = !!m->mod.xxs[i].len;
+	m->mod.xxs[i].lps = uih.loop_start;
+	m->mod.xxs[i].lpe = uih.loopend;
 
 	/* BiDi Loop : (Bidirectional Loop)
 	 *
@@ -176,38 +175,38 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	switch (uih.bidiloop) {
 	case 20:		/* Type 20 is in seasons.ult */
 	case 4:
-	    m->xxs[i].flg = XMP_SAMPLE_16BIT;
+	    m->mod.xxs[i].flg = XMP_SAMPLE_16BIT;
 	    break;
 	case 8:
-	    m->xxs[i].flg = XMP_SAMPLE_LOOP;
+	    m->mod.xxs[i].flg = XMP_SAMPLE_LOOP;
 	    break;
 	case 12:
-	    m->xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP;
+	    m->mod.xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP;
 	    break;
 	case 24:
-	    m->xxs[i].flg = XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
+	    m->mod.xxs[i].flg = XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
 	    break;
 	case 28:
-	    m->xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
+	    m->mod.xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
 	    break;
 	}
 
 /* TODO: Add logarithmic volume support */
-	m->xxi[i].sub[0].vol = uih.volume;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].vol = uih.volume;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, uih.name, 24);
+	copy_adjust(m->mod.xxi[i].name, uih.name, 24);
 
 	_D(_D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
-		i, uih.name, m->xxs[i].len,
-		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, uih.finetune, uih.c2spd);
+		i, uih.name, m->mod.xxs[i].len,
+		m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, uih.finetune, uih.c2spd);
 
 	if (ver > 3)
-	    c2spd_to_note(uih.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	    c2spd_to_note(uih.c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
     }
 
     fread(&ufh2.order, 256, 1, f);
@@ -217,21 +216,21 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 256; i++) {
 	if (ufh2.order[i] == 0xff)
 	    break;
-	m->xxo[i] = ufh2.order[i];
+	m->mod.xxo[i] = ufh2.order[i];
     }
-    m->xxh->len = i;
-    m->xxh->chn = ufh2.channels + 1;
-    m->xxh->pat = ufh2.patterns + 1;
-    m->xxh->tpo = 6;
-    m->xxh->bpm = 125;
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    m->mod.xxh->len = i;
+    m->mod.xxh->chn = ufh2.channels + 1;
+    m->mod.xxh->pat = ufh2.patterns + 1;
+    m->mod.xxh->tpo = 6;
+    m->mod.xxh->bpm = 125;
+    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
 
-    for (i = 0; i < m->xxh->chn; i++) {
+    for (i = 0; i < m->mod.xxh->chn; i++) {
 	if (ver >= 3) {
 	    x8 = read8(f);
-	    m->xxc[i].pan = 255 * x8 / 15;
+	    m->mod.xxc[i].pan = 255 * x8 / 15;
 	} else {
-	    m->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
+	    m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
 	}
     }
 
@@ -239,17 +238,17 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
     /* Events are stored by channel */
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
     }
 
-    for (i = 0; i < m->xxh->chn; i++) {
-	for (j = 0; j < 64 * m->xxh->pat; ) {
+    for (i = 0; i < m->mod.xxh->chn; i++) {
+	for (j = 0; j < 64 * m->mod.xxh->pat; ) {
 	    cnt = 1;
 	    x8 = read8(f);		/* Read note or repeat code (0xfc) */
 	    if (x8 == 0xfc) {
@@ -328,12 +327,12 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	if (!m->xxs[i].len)
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	if (!m->mod.xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, i, 0, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
     }
 
     m->volbase = 0x100;

@@ -90,8 +90,7 @@ static int stc_test(FILE * f, char *t, const int start)
 
 static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event /*, *noise*/;
 	int i, j;
 	uint8 buf[100];
@@ -104,23 +103,23 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	LOAD_INIT();
 
-	m->xxh->tpo = read8(f);		/* Tempo */
+	m->mod.xxh->tpo = read8(f);		/* Tempo */
 	pos_ptr = read16l(f);		/* Positions pointer */
 	orn_ptr = read16l(f);		/* Ornaments pointer */
 	pat_ptr = read16l(f);		/* Patterns pointer */
 
 	fread(buf, 18, 1, f);		/* Title */
-	copy_adjust((uint8 *)m->name, (uint8 *)buf, 18);
-	strcpy(m->type, "STC (ZX Spectrum Sound Tracker)");
+	copy_adjust((uint8 *)m->mod.name, (uint8 *)buf, 18);
+	strcpy(m->mod.type, "STC (ZX Spectrum Sound Tracker)");
 
 	read16l(f);			/* Size */
 
 	/* Read orders */
 
 	fseek(f, pos_ptr, SEEK_SET);
-	m->xxh->len = read8(f) + 1;
+	m->mod.xxh->len = read8(f) + 1;
 
-	for (num = i = 0; i < m->xxh->len; i++) {
+	for (num = i = 0; i < m->mod.xxh->len; i++) {
 		stc_ord[i].pattern = read8(f);
 		stc_ord[i].height = read8s(f);
 		//printf("%d %d -- ", stc_ord[i].pattern, stc_ord[i].height);
@@ -129,22 +128,22 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			if (stc_ord[i].pattern == stc_ord[j].pattern &&
 				stc_ord[i].height == stc_ord[j].height)
 			{
-				m->xxo[i] = m->xxo[j];
+				m->mod.xxo[i] = m->mod.xxo[j];
 				flag = 1;
 				break;
 			}
 		}
 		if (!flag) {
-			m->xxo[i] = num++;
+			m->mod.xxo[i] = num++;
 		}
-		//printf("%d\n", m->xxo[i]);
+		//printf("%d\n", m->mod.xxo[i]);
 	}
 
-	m->xxh->chn = 3;
-	m->xxh->pat = num;
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
-	m->xxh->ins = 15;
-	m->xxh->smp = m->xxh->ins;
+	m->mod.xxh->chn = 3;
+	m->mod.xxh->pat = num;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.xxh->ins = 15;
+	m->mod.xxh->smp = m->mod.xxh->ins;
 	orn = (pat_ptr - orn_ptr) / 33;
 
 	MODULE_INFO();
@@ -154,8 +153,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	PATTERN_INIT();
 
 	fseek(f, pat_ptr, SEEK_SET);
-	decoded = calloc(m->xxh->pat, sizeof(int));
-	_D(_D_INFO "Stored patterns: %d ", m->xxh->pat);
+	decoded = calloc(m->mod.xxh->pat, sizeof(int));
+	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
 
 	for (i = 0; i < MAX_PAT; i++) {
 		if (read8(f) == 0xff)
@@ -165,18 +164,18 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		stc_pat[i].ch[2] = read16l(f);
 	}
 
-	for (i = 0; i < m->xxh->len; i++) {		/* pattern */
+	for (i = 0; i < m->mod.xxh->len; i++) {		/* pattern */
 		int src = stc_ord[i].pattern - 1;
-		int dest = m->xxo[i];
+		int dest = m->mod.xxo[i];
 		int trans = stc_ord[i].height;
 
 		if (decoded[dest])
 			continue;
 
-		//printf("%d/%d) Read pattern %d -> %d\n", i, m->xxh->len, src, dest);
+		//printf("%d/%d) Read pattern %d -> %d\n", i, m->mod.xxh->len, src, dest);
 
 		PATTERN_ALLOC(dest);
-		m->xxp[dest]->rows = 64;
+		m->mod.xxp[dest]->rows = 64;
 		TRACK_ALLOC(dest);
 
 		for (j = 0; j < 3; j++) {		/* row */
@@ -246,17 +245,17 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	fseek(f, 27, SEEK_SET);
 
-	_D(_D_INFO "Instruments: %d", m->xxh->ins);
-	for (i = 0; i < m->xxh->ins; i++) {
+	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
+	for (i = 0; i < m->mod.xxh->ins; i++) {
 		struct spectrum_sample ss;
 
 		memset(&ss, 0, sizeof (struct spectrum_sample));
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-		m->xxi[i].nsm = 1;
-		m->xxi[i].sub[0].vol = 0x40;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].xpo = -1;
-		m->xxi[i].sub[0].sid = i;
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		m->mod.xxi[i].nsm = 1;
+		m->mod.xxi[i].sub[0].vol = 0x40;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].xpo = -1;
+		m->mod.xxi[i].sub[0].sid = i;
 
 		fread(buf, 1, 99, f);
 
@@ -351,8 +350,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	}
 
 	for (i = 0; i < 4; i++) {
-		m->xxc[i].pan = 0x80;
-		m->xxc[i].flg = XXM_CHANNEL_SYNTH;
+		m->mod.xxc[i].pan = 0x80;
+		m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
 	}
 	
 	m->synth = &synth_spectrum;

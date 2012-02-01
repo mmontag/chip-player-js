@@ -39,8 +39,8 @@
 extern uint8 **med_vol_table;
 extern uint8 **med_wav_table;
 
-#define VT p->m.med_vol_table[xc->ins][xc->med.vp++]
-#define WT p->m.med_wav_table[xc->ins][xc->med.wp++]
+#define VT m->med_vol_table[xc->ins][xc->med.vp++]
+#define WT m->med_wav_table[xc->ins][xc->med.wp++]
 #define VT_SKIP xc->med.vp++
 #define WT_SKIP xc->med.wp++
 
@@ -74,20 +74,20 @@ int get_med_vibrato(struct xmp_channel *xc)
 }
 
 
-int get_med_arp(struct xmp_player_context *p, struct xmp_channel *xc)
+int get_med_arp(struct xmp_mod_context *m, struct xmp_channel *xc)
 {
 	int arp;
 
 	if (xc->med.arp == 0)
 		return 0;
 
-	if (p->m.med_wav_table[xc->ins][xc->med.arp] == 0xfd) /* empty arpeggio */
+	if (m->med_wav_table[xc->ins][xc->med.arp] == 0xfd) /* empty arpeggio */
 		return 0;
 
-	arp = p->m.med_wav_table[xc->ins][xc->med.aidx++];
+	arp = m->med_wav_table[xc->ins][xc->med.aidx++];
 	if (arp == 0xfd) {
 		xc->med.aidx = xc->med.arp;
-		arp = p->m.med_wav_table[xc->ins][xc->med.aidx++];
+		arp = m->med_wav_table[xc->ins][xc->med.aidx++];
 	}
 
 	return 100 * arp;
@@ -96,14 +96,14 @@ int get_med_arp(struct xmp_player_context *p, struct xmp_channel *xc)
 
 void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int rst)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct xmp_mod_context *m = &ctx->m;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
     int temp;
 
-    if (p->m.med_vol_table == NULL || p->m.med_wav_table == NULL)
+    if (m->med_vol_table == NULL || m->med_wav_table == NULL)
 	return;
 
-    if (p->m.med_vol_table[xc->ins] == NULL || p->m.med_wav_table[xc->ins] == NULL)
+    if (m->med_vol_table[xc->ins] == NULL || m->med_wav_table[xc->ins] == NULL)
 	return;
 
     if (rst) {
@@ -111,8 +111,8 @@ void xmp_med_synth(struct xmp_context *ctx, int chn, struct xmp_channel *xc, int
 	xc->med.period = xc->period;
 	xc->med.vp = xc->med.vc = xc->med.vw = 0;
 	xc->med.wp = xc->med.wc = xc->med.ww = 0;
-	xc->med.vs = p->m.xxi[xc->ins].vts;
-	xc->med.ws = p->m.xxi[xc->ins].wts;
+	xc->med.vs = m->mod.xxi[xc->ins].vts;
+	xc->med.ws = m->mod.xxi[xc->ins].wts;
     }
 
     if (xc->med.vs > 0 && xc->med.vc-- == 0) {
@@ -223,8 +223,8 @@ skip_vol:
 		xc->med.ws = WT;
 		break;
 	    default:
-		if (b < p->m.xxi[xc->ins].nsm && p->m.xxi[xc->ins].sub[b].sid != xc->smp) {
-		    xc->smp = p->m.xxi[xc->ins].sub[b].sid;
+		if (b < m->mod.xxi[xc->ins].nsm && m->mod.xxi[xc->ins].sub[b].sid != xc->smp) {
+		    xc->smp = m->mod.xxi[xc->ins].sub[b].sid;
 		    xmp_drv_setsmp(ctx, chn, xc->smp);
 		}
 	    }

@@ -88,8 +88,8 @@ typedef signed long long int64;
 #define RESET_FLAG(a,b)	((a)&=~(b))
 #define TEST_FLAG(a,b)	!!((a)&(b))
 
-#define TRACK_NUM(a,c)	m->xxp[a]->index[c]
-#define EVENT(a,c,r)	m->xxt[TRACK_NUM((a),(c))]->event[r]
+#define TRACK_NUM(a,c)	m->mod.xxp[a]->index[c]
+#define EVENT(a,c,r)	m->mod.xxt[TRACK_NUM((a),(c))]->event[r]
 
 #ifdef _MSC_VER
 #define _D_CRIT "  Error: "
@@ -152,13 +152,24 @@ struct xmp_ord_info {
 #include "list.h"
 #include "xxm.h"
 
+struct xmp_module {
+	char name[XMP_NAMESIZE];	/* module name */
+	char type[XMP_NAMESIZE];	/* module type */
+	struct xxm_header *xxh;		/* Header */
+	struct xxm_pattern **xxp;	/* Patterns */
+	struct xxm_track **xxt;		/* Tracks */
+	struct xxm_instrument *xxi;	/* Instruments */
+	struct xxm_sample *xxs;		/* Samples */
+	struct xxm_channel xxc[64];	/* Channel info */
+	uint8 xxo[XMP_MAXORD];		/* Orders */
+};
+
 struct xmp_mod_context {
+	struct xmp_module mod;
+
 	int time;			/* replay time in ms */
 	char *dirname;			/* file dirname */
 	char *basename;			/* file basename */
-	char name[XMP_NAMESIZE];	/* module name */
-	char type[XMP_NAMESIZE];	/* module type */
-	char author[XMP_NAMESIZE];	/* module author */
 	char *filename;			/* Module file name */
 	char *comment;			/* Comments, if any */
 	int size;			/* File size */
@@ -170,14 +181,6 @@ struct xmp_mod_context {
 	int flags;			/* Copy from options */
 	int quirk;			/* Copy from options */
 	struct xmp_ord_info xxo_info[XMP_MAXORD];
-
-	struct xxm_header *xxh;		/* Header */
-	uint8 xxo[XMP_MAXORD];		/* Orders */
-	struct xxm_pattern **xxp;	/* Patterns */
-	struct xxm_track **xxt;		/* Tracks */
-	struct xxm_instrument *xxi;	/* Instruments */
-	struct xxm_sample *xxs;		/* Samples */
-	struct xxm_channel xxc[64];	/* Channel info */
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
 	uint8 **med_wav_table;		/* MED waveform sequence table */
@@ -221,8 +224,6 @@ struct xmp_player_context {
 	int scan_row;
 	int scan_num;
 	int bpm;
-
-	struct xmp_mod_context m;
 };
 
 struct xmp_driver_context {
@@ -267,6 +268,7 @@ struct xmp_context {
 	struct xmp_driver_context d;
 	struct xmp_player_context p;
 	struct xmp_smixer_context s;
+	struct xmp_mod_context m;
 };
 
 

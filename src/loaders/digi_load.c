@@ -80,8 +80,7 @@ struct digi_header {
 
 static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xxm_event *event = 0;
     struct digi_header dh;
     uint8 digi_event[4], chn_table[64];
@@ -117,64 +116,64 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 31; i++)
         fread(&dh.insname[i], 30, 1, f);
 
-    m->xxh->ins = 31;
-    m->xxh->smp = m->xxh->ins;
-    m->xxh->pat = dh.pat + 1;
-    m->xxh->chn = dh.chn;
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
-    m->xxh->len = dh.len + 1;
-    m->xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.xxh->ins = 31;
+    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.xxh->pat = dh.pat + 1;
+    m->mod.xxh->chn = dh.chn;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+    m->mod.xxh->len = dh.len + 1;
+    m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
-    copy_adjust((uint8 *)m->name, dh.title, 32);
+    copy_adjust((uint8 *)m->mod.name, dh.title, 32);
     set_type(m, "DIGI (DIGI Booster %-4.4s)", dh.vstr);
 
     MODULE_INFO();
  
-    for (i = 0; i < m->xxh->len; i++)
-	m->xxo[i] = dh.ord[i];
+    for (i = 0; i < m->mod.xxh->len; i++)
+	m->mod.xxo[i] = dh.ord[i];
  
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxi[i].nsm = !!(m->xxs[i].len = dh.slen[i]);
-	m->xxs[i].lps = dh.sloop[i];
-	m->xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
-	m->xxs[i].flg = m->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i].sub[0].vol = dh.vol[i];
-	m->xxi[i].sub[0].fin = dh.fin[i];
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = dh.slen[i]);
+	m->mod.xxs[i].lps = dh.sloop[i];
+	m->mod.xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
+	m->mod.xxs[i].flg = m->mod.xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxi[i].sub[0].vol = dh.vol[i];
+	m->mod.xxi[i].sub[0].fin = dh.fin[i];
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->xxi[i].name, dh.insname[i], 30);
+	copy_adjust(m->mod.xxi[i].name, dh.insname[i], 30);
 
 	_D(_D_INFO "[%2X] %-30.30s %04x %04x %04x %c V%02x", i,
-		m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i].sub[0].vol);
+		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->mod.xxi[i].sub[0].vol);
     }
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	if (dh.pack) {
 	    w = (read16b(f) - 64) >> 2;
 	    fread (chn_table, 1, 64, f);
 	} else {
-	    w = 64 * m->xxh->chn;
+	    w = 64 * m->mod.xxh->chn;
 	    memset (chn_table, 0xff, 64);
 	}
 
 	for (j = 0; j < 64; j++) {
-	    for (c = 0, k = 0x80; c < m->xxh->chn; c++, k >>= 1) {
+	    for (c = 0, k = 0x80; c < m->mod.xxh->chn; c++, k >>= 1) {
 	        if (chn_table[j] & k) {
 		    fread (digi_event, 4, 1, f);
 		    event = &EVENT (i, c, j);
@@ -208,10 +207,10 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
-    for (i = 0; i < m->xxh->ins; i++) {
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-	    &m->xxs[m->xxi[i].sub[0].sid], NULL);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 
     return 0;

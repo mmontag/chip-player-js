@@ -53,27 +53,27 @@ int _xmp_scan_module(struct xmp_context *ctx)
     char** tab_cnt;
     struct xxm_event* event;
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
 
-    if (m->xxh->len == 0)
+    if (m->mod.xxh->len == 0)
 	return 0;
 
     medbpm = m->quirk & XMP_QRK_MEDBPM;
 
-    tab_cnt = calloc (sizeof (char *), m->xxh->len);
-    for (ord = m->xxh->len; ord--;)
-	tab_cnt[ord] = calloc(1, m->xxo[ord] >= m->xxh->pat ?  1 :
-		m->xxp[m->xxo[ord]]->rows ? m->xxp[m->xxo[ord]]->rows : 1);
+    tab_cnt = calloc (sizeof (char *), m->mod.xxh->len);
+    for (ord = m->mod.xxh->len; ord--;)
+	tab_cnt[ord] = calloc(1, m->mod.xxo[ord] >= m->mod.xxh->pat ?  1 :
+		m->mod.xxp[m->mod.xxo[ord]]->rows ? m->mod.xxp[m->mod.xxo[ord]]->rows : 1);
 
-    loop_stk = calloc(sizeof (int), m->xxh->chn);
-    loop_row = calloc(sizeof (int), m->xxh->chn);
+    loop_stk = calloc(sizeof (int), m->mod.xxh->chn);
+    loop_row = calloc(sizeof (int), m->mod.xxh->chn);
     loop_chn = loop_flg = 0;
 
-    gvl = m->xxh->gvl;
-    bpm = m->xxh->bpm;
+    gvl = m->mod.xxh->gvl;
+    bpm = m->mod.xxh->bpm;
 
-    tempo = (tempo = o->tempo ? o->tempo : m->xxh->tpo) ? tempo : TIME;
+    tempo = (tempo = o->tempo ? o->tempo : m->mod.xxh->tpo) ? tempo : TIME;
     base_time = m->rrate;
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
@@ -96,26 +96,26 @@ int _xmp_scan_module(struct xmp_context *ctx)
     skip_fetch = 0;
 
     while (42) {
-	if ((uint32)++ord >= m->xxh->len) {
-	    /*if ((uint32)++ord >= m->xxh->len)*/
-		ord = ((uint32)m->xxh->rst > m->xxh->len ||
-			(uint32)m->xxo[m->xxh->rst] >= m->xxh->pat) ?
-			0 : m->xxh->rst;
-		//if (m->xxo[ord] == S3M_END)
+	if ((uint32)++ord >= m->mod.xxh->len) {
+	    /*if ((uint32)++ord >= m->mod.xxh->len)*/
+		ord = ((uint32)m->mod.xxh->rst > m->mod.xxh->len ||
+			(uint32)m->mod.xxo[m->mod.xxh->rst] >= m->mod.xxh->pat) ?
+			0 : m->mod.xxh->rst;
+		//if (m->mod.xxo[ord] == S3M_END)
 		 //   break;
 	} 
 
 	/* All invalid patterns skipped, only S3M_END aborts replay */
-	if ((uint32)m->xxo[ord] >= m->xxh->pat) {
-	    /*if (m->xxo[ord] == S3M_SKIP) ord++;*/
-	    if (m->xxo[ord] == S3M_END) {
-		ord = m->xxh->len;
+	if ((uint32)m->mod.xxo[ord] >= m->mod.xxh->pat) {
+	    /*if (m->mod.xxo[ord] == S3M_SKIP) ord++;*/
+	    if (m->mod.xxo[ord] == S3M_END) {
+		ord = m->mod.xxh->len;
 	        continue;
 	    }
 	    continue;
 	}
 
-	if (break_row < m->xxp[m->xxo[ord]]->rows && tab_cnt[ord][break_row])
+	if (break_row < m->mod.xxp[m->mod.xxo[ord]]->rows && tab_cnt[ord][break_row])
 	    break;
 
 	m->xxo_info[ord].gvl = gvl;
@@ -138,7 +138,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 	    m->xxo_info[ord].start_row = break_row;
 	}
 
-	last_row = m->xxp[m->xxo[ord]]->rows;
+	last_row = m->mod.xxp[m->mod.xxo[ord]]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
 	    /* Prevent crashes caused by large softmixer frames */
 	    if (bpm < SMIX_MINBPM)
@@ -168,11 +168,11 @@ int _xmp_scan_module(struct xmp_context *ctx)
 
 	    pdelay = 0;
 
-	    for (chn = 0; chn < m->xxh->chn; chn++) {
-		if (row >= m->xxt[m->xxp[m->xxo[ord]]->index[chn]]->rows)
+	    for (chn = 0; chn < m->mod.xxh->chn; chn++) {
+		if (row >= m->mod.xxt[m->mod.xxp[m->mod.xxo[ord]]->index[chn]]->rows)
 		    continue;
 
-		event = &EVENT(m->xxo[ord], chn, row);
+		event = &EVENT(m->mod.xxo[ord], chn, row);
 
 		/* Pattern delay + pattern break cause target row events
 		 * to be ignored
@@ -330,7 +330,7 @@ end_module:
     free(loop_row);
     free(loop_stk);
 
-    for (ord = m->xxh->len; ord--; )
+    for (ord = m->mod.xxh->len; ord--; )
 	free(tab_cnt[ord]);
     free(tab_cnt);
 

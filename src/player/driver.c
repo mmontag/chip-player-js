@@ -156,10 +156,9 @@ void xmp_drv_close(struct xmp_context *ctx)
 /* xmp_drv_on (number of tracks) */
 int xmp_drv_on(struct xmp_context *ctx, int num)
 {
-    struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
 
     d->numtrk = num;
@@ -498,16 +497,15 @@ void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
 
 void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
 {
-    struct xmp_player_context *p = &ctx->p;
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     struct xxm_sample *xxs;
     int voc;
 
     if ((uint32)chn >= d->numchn || (uint32) (voc = d->ch2vo_array[chn]) >= d->maxvoc)
 	return;
 
-    xxs = &m->xxs[d->voice_array[voc].smp];
+    xxs = &m->mod.xxs[d->voice_array[voc].smp];
 
     if (pos > xxs->len)	/* Attempt to set offset beyond the end of sample */
 	return;

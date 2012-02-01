@@ -16,30 +16,31 @@
 extern struct xmp_fmt_info *__fmt_head;
 
 
-struct xmp_module_info *xmp_get_module_info(xmp_context ctx, struct xmp_module_info *i)
+struct xmp_module_info *xmp_get_module_info(xmp_context opaque, struct xmp_module_info *i)
 {
-    struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_context *ctx = (struct xmp_context *)opaque;
+    struct xmp_mod_context *m = &ctx->m;
 
-    strncpy(i->name, m->name, 0x40);
-    strncpy(i->type, m->type, 0x40);
-    i->chn = m->xxh->chn;
-    i->pat = m->xxh->pat;
-    i->ins = m->xxh->ins;
-    i->trk = m->xxh->trk;
-    i->smp = m->xxh->smp;
-    i->len = m->xxh->len;
-    i->bpm = m->xxh->bpm;
-    i->tpo = m->xxh->tpo;
+    strncpy(i->name, m->mod.name, 0x40);
+    strncpy(i->type, m->mod.type, 0x40);
+    i->chn = m->mod.xxh->chn;
+    i->pat = m->mod.xxh->pat;
+    i->ins = m->mod.xxh->ins;
+    i->trk = m->mod.xxh->trk;
+    i->smp = m->mod.xxh->smp;
+    i->len = m->mod.xxh->len;
+    i->bpm = m->mod.xxh->bpm;
+    i->tpo = m->mod.xxh->tpo;
     i->time = m->time;
 
     return i;
 }
 
 
-char *xmp_get_driver_description(xmp_context ctx)
+char *xmp_get_driver_description(xmp_context opaque)
 {
-    struct xmp_driver_context *d = &((struct xmp_context *)ctx)->d;
+    struct xmp_context *ctx = (struct xmp_context *)opaque;
+    struct xmp_driver_context *d = &ctx->d;
 
     return d->description;
 }

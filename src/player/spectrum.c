@@ -251,8 +251,7 @@ static void synth_setpatch(struct xmp_context *ctx, int c, uint8 *data)
 
 static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct spectrum *sp = SYNTH_CHIP(ctx);
 	struct spectrum_extra *se = m->extra;
 	struct spectrum_channel *sc = &sp->sc[c];

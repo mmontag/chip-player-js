@@ -138,8 +138,7 @@ static int ims_test(FILE *f, char *t, const int start)
 
 static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int i, j;
     int smp_size;
     struct xxm_event *event;
@@ -149,8 +148,8 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 
     LOAD_INIT();
 
-    m->xxh->ins = 31;
-    m->xxh->smp = m->xxh->ins;
+    m->mod.xxh->ins = 31;
+    m->mod.xxh->smp = m->mod.xxh->ins;
     smp_size = 0;
 
     fread (&ih.title, 20, 1, f);
@@ -172,51 +171,51 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     fread (&ih.orders, 128, 1, f);
     fread (&ih.magic, 4, 1, f);
   
-    m->xxh->len = ih.len;
-    memcpy (m->xxo, ih.orders, m->xxh->len);
+    m->mod.xxh->len = ih.len;
+    memcpy (m->mod.xxo, ih.orders, m->mod.xxh->len);
 
-    for (i = 0; i < m->xxh->len; i++)
-	if (m->xxo[i] > m->xxh->pat)
-	    m->xxh->pat = m->xxo[i];
+    for (i = 0; i < m->mod.xxh->len; i++)
+	if (m->mod.xxo[i] > m->mod.xxh->pat)
+	    m->mod.xxh->pat = m->mod.xxo[i];
 
-    m->xxh->pat++;
-    m->xxh->trk = m->xxh->chn * m->xxh->pat;
+    m->mod.xxh->pat++;
+    m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
 
-    strncpy(m->name, (char *)ih.title, 20);
+    strncpy(m->mod.name, (char *)ih.title, 20);
     set_type(m, "IMS (Images Music System)");
 
     MODULE_INFO();
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
-	m->xxs[i].len = 2 * ih.ins[i].size;
-	m->xxs[i].lpe = m->xxs[i].lps + 2 * ih.ins[i].loop_size;
-	m->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->xxi[i].sub[0].fin = 0; /* ih.ins[i].finetune; */
-	m->xxi[i].sub[0].vol = ih.ins[i].volume;
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
-	m->xxi[i].nsm = !!(m->xxs[i].len);
-	m->xxi[i].rls = 0xfff;
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxs[i].len = 2 * ih.ins[i].size;
+	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * ih.ins[i].loop_size;
+	m->mod.xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxi[i].sub[0].fin = 0; /* ih.ins[i].finetune; */
+	m->mod.xxi[i].sub[0].vol = ih.ins[i].volume;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+	m->mod.xxi[i].rls = 0xfff;
 
-	copy_adjust(m->xxi[i].name, ih.ins[i].name, 20);
+	copy_adjust(m->mod.xxi[i].name, ih.ins[i].name, 20);
 
 	_D(_D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x %+d",
-		i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
-		m->xxs[i].lpe, ih.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, m->xxi[i].sub[0].fin >> 4);
+		i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+		m->mod.xxs[i].lpe, ih.ins[i].loop_size > 1 ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4);
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC(i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
 	for (j = 0; j < 0x100; j++) {
 	    event = &EVENT (i, j & 0x3, j >> 2);
@@ -254,17 +253,17 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    m->xxh->flg |= XXM_FLG_MODRNG;
+    m->mod.xxh->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    _D(_D_INFO "Stored samples: %d", m->xxh->smp);
+    _D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-    for (i = 0; i < m->xxh->smp; i++) {
-	if (!m->xxs[i].len)
+    for (i = 0; i < m->mod.xxh->smp; i++) {
+	if (!m->mod.xxs[i].len)
 	    continue;
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-	    &m->xxs[m->xxi[i].sub[0].sid], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 
     return 0;

@@ -50,8 +50,7 @@ static int med2_test(FILE *f, char *t, const int start)
 
 int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, j, k;
 	int sliding;
 	struct xxm_event *event;
@@ -62,50 +61,50 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (read32b(f) !=  MAGIC_MED2)
 		return -1;
 
-	strcpy(m->type, "MED2 (MED 1.12)");
+	strcpy(m->mod.type, "MED2 (MED 1.12)");
 
-	m->xxh->ins = m->xxh->smp = 32;
+	m->mod.xxh->ins = m->mod.xxh->smp = 32;
 	INSTRUMENT_INIT();
 
 	/* read instrument names */
 	fread(buf, 1, 40, f);	/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		fread(buf, 1, 40, f);
-		copy_adjust(m->xxi[i].name, buf, 32);
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		copy_adjust(m->mod.xxi[i].name, buf, 32);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	}
 
 	/* read instrument volumes */
 	read8(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		m->xxi[i].sub[0].vol = read8(f);
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].fin = 0;
-		m->xxi[i].sub[0].sid = i;
+		m->mod.xxi[i].sub[0].vol = read8(f);
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].fin = 0;
+		m->mod.xxi[i].sub[0].sid = i;
 	}
 
 	/* read instrument loops */
 	read16b(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		m->xxs[i].lps = read16b(f);
+		m->mod.xxs[i].lps = read16b(f);
 	}
 
 	/* read instrument loop length */
 	read16b(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		uint32 lsiz = read16b(f);
-		m->xxs[i].lpe = m->xxs[i].lps + lsiz;
-		m->xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
+		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + lsiz;
+		m->mod.xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
 	}
 
-	m->xxh->chn = 4;
-	m->xxh->pat = read16b(f);
-	m->xxh->trk = m->xxh->chn * m->xxh->pat;
+	m->mod.xxh->chn = 4;
+	m->mod.xxh->pat = read16b(f);
+	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
 
-	fread(m->xxo, 1, 100, f);
-	m->xxh->len = read16b(f);
+	fread(m->mod.xxo, 1, 100, f);
+	m->mod.xxh->len = read16b(f);
 
-	m->xxh->tpo = 192 / read16b(f);
+	m->mod.xxh->tpo = 192 / read16b(f);
 
 	read16b(f);			/* flags */
 	sliding = read16b(f);		/* sliding */
@@ -122,11 +121,11 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		read32b(f);
@@ -164,7 +163,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Load samples */
 
-	_D(_D_INFO "Instruments    : %d ", m->xxh->ins);
+	_D(_D_INFO "Instruments    : %d ", m->mod.xxh->ins);
 
 	for (i = 0; i < 31; i++) {
 		char path[PATH_MAX];
@@ -177,30 +176,30 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		get_instrument_path(ctx, "XMP_MED2_INSTRUMENT_PATH",
 				ins_path, 256);
 		found = check_filename_case(ins_path,
-				(char *)m->xxi[i].name, name, 256);
+				(char *)m->mod.xxi[i].name, name, 256);
 
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
 			if ((s = fopen(path, "rb"))) {
 				fstat(fileno(s), &stat);
-				m->xxs[i].len = stat.st_size;
+				m->mod.xxs[i].len = stat.st_size;
 			}
 		}
 
-		m->xxi[i].nsm = !!(m->xxs[i].len);
+		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
 
-		if (!strlen((char *)m->xxi[i].name) && !m->xxs[i].len)
+		if (!strlen((char *)m->mod.xxi[i].name) && !m->mod.xxs[i].len)
 			continue;
 
 		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
-			i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
-			m->xxs[i].lpe,
-			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxi[i].sub[0].vol);
+			i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+			m->mod.xxs[i].lpe,
+			m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+			m->mod.xxi[i].sub[0].vol);
 
 		if (found) {
-			xmp_drv_loadpatch(ctx, s, m->xxi[i].sub[0].sid,
-				0, &m->xxs[m->xxi[i].sub[0].sid], NULL);
+			xmp_drv_loadpatch(ctx, s, m->mod.xxi[i].sub[0].sid,
+				0, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 			fclose(s);
 		}
 	}

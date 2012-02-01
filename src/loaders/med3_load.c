@@ -88,8 +88,7 @@ static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
 
 static void unpack_block(struct xmp_context *ctx, uint16 bnum, uint8 *from)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event;
 	uint32 linemsk0 = *((uint32 *)from), linemsk1 = *((uint32 *)from + 1);
 	uint32 fxmsk0 = *((uint32 *)from + 2), fxmsk1 = *((uint32 *)from + 3);
@@ -97,7 +96,7 @@ static void unpack_block(struct xmp_context *ctx, uint16 bnum, uint8 *from)
 	uint16 fromn = 0, lmsk;
 	uint8 *fromst = from + 16, bcnt, *tmpto;
 	uint8 *patbuf, *to;
-	int i, j, trkn = m->xxh->chn;
+	int i, j, trkn = m->mod.xxh->chn;
 
 	from += 16;
 	patbuf = to = calloc(3, 4 * 64);
@@ -209,8 +208,7 @@ static void unpack_block(struct xmp_context *ctx, uint16 bnum, uint8 *from)
 
 static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, j;
 	uint32 mask;
 	int transp, sliding;
@@ -219,9 +217,9 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	read32b(f);
 
-	strcpy(m->type, "MED3 (MED 2.00)");
+	strcpy(m->mod.type, "MED3 (MED 2.00)");
 
-	m->xxh->ins = m->xxh->smp = 32;
+	m->mod.xxh->ins = m->mod.xxh->smp = 32;
 	INSTRUMENT_INIT();
 
 	/* read instrument names */
@@ -233,44 +231,44 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 			if (c == 0)
 				break;
 		}
-		copy_adjust(m->xxi[i].name, buf, 32);
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+		copy_adjust(m->mod.xxi[i].name, buf, 32);
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	}
 
 	/* read instrument volumes */
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		m->xxi[i].sub[0].vol = mask & MASK ? read8(f) : 0;
-		m->xxi[i].sub[0].pan = 0x80;
-		m->xxi[i].sub[0].fin = 0;
-		m->xxi[i].sub[0].sid = i;
+		m->mod.xxi[i].sub[0].vol = mask & MASK ? read8(f) : 0;
+		m->mod.xxi[i].sub[0].pan = 0x80;
+		m->mod.xxi[i].sub[0].fin = 0;
+		m->mod.xxi[i].sub[0].sid = i;
 	}
 
 	/* read instrument loops */
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		m->xxs[i].lps = mask & MASK ? read16b(f) : 0;
+		m->mod.xxs[i].lps = mask & MASK ? read16b(f) : 0;
 	}
 
 	/* read instrument loop length */
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		uint32 lsiz = mask & MASK ? read16b(f) : 0;
-		m->xxs[i].len = m->xxs[i].lps + lsiz;
-		m->xxs[i].lpe = m->xxs[i].lps + lsiz;
-		m->xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
+		m->mod.xxs[i].len = m->mod.xxs[i].lps + lsiz;
+		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + lsiz;
+		m->mod.xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
 	}
 
-	m->xxh->chn = 4;
-	m->xxh->pat = read16b(f);
-	m->xxh->trk = m->xxh->chn * m->xxh->pat;
+	m->mod.xxh->chn = 4;
+	m->mod.xxh->pat = read16b(f);
+	m->mod.xxh->trk = m->mod.xxh->chn * m->mod.xxh->pat;
 
-	m->xxh->len = read16b(f);
-	fread(m->xxo, 1, m->xxh->len, f);
-	m->xxh->tpo = read16b(f);
-	if (m->xxh->tpo > 10) {
-		m->xxh->bpm = 125 * m->xxh->tpo / 33;
-		m->xxh->tpo = 6;
+	m->mod.xxh->len = read16b(f);
+	fread(m->mod.xxo, 1, m->mod.xxh->len, f);
+	m->mod.xxh->tpo = read16b(f);
+	if (m->mod.xxh->tpo > 10) {
+		m->mod.xxh->bpm = 125 * m->mod.xxh->tpo / 33;
+		m->mod.xxh->tpo = 6;
 	}
 	transp = read8s(f);
 	read8(f);			/* flags */
@@ -301,20 +299,20 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
 
 	for (i = 0; i < 32; i++)
-		m->xxi[i].sub[0].xpo = transp;
+		m->mod.xxi[i].sub[0].xpo = transp;
 
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		uint32 *conv;
 		uint8 b, tracks;
 		uint16 convsz;
 
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = 64;
+		m->mod.xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		tracks = read8(f);
@@ -361,27 +359,27 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Load samples */
 
-	_D(_D_INFO "Instruments: %d", m->xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		if (~mask & MASK)
 			continue;
 
-		m->xxs[i].len = read32b(f);
+		m->mod.xxs[i].len = read32b(f);
 		if (read16b(f))		/* type */
 			continue;
 
-		m->xxi[i].nsm = !!(m->xxs[i].len);
+		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
 
 		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x ",
-			i, m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps,
-			m->xxs[i].lpe,
-			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->xxi[i].sub[0].vol);
+			i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
+			m->mod.xxs[i].lpe,
+			m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+			m->mod.xxi[i].sub[0].vol);
 
-		xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, 0,
-				  &m->xxs[m->xxi[i].sub[0].sid], NULL);
+		xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
+				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

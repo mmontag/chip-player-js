@@ -49,24 +49,22 @@ static int have_song;
 
 static void get_info(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
-	m->xxh->ins = read16b(f);
-	m->xxh->smp = read16b(f);
+	m->mod.xxh->ins = read16b(f);
+	m->mod.xxh->smp = read16b(f);
 	read16b(f);			/* Songs */
-	m->xxh->pat = read16b(f);
-	m->xxh->chn = read16b(f);
+	m->mod.xxh->pat = read16b(f);
+	m->mod.xxh->chn = read16b(f);
 
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
 	INSTRUMENT_INIT();
 }
 
 static void get_song(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 	char buffer[50];
 
@@ -78,76 +76,74 @@ static void get_song(struct xmp_context *ctx, int size, FILE *f)
 	fread(buffer, 44, 1, f);
 	_D(_D_INFO "Song name: %s", buffer);
 
-	m->xxh->len = read16b(f);
-	_D(_D_INFO "Song length: %d patterns", m->xxh->len);
+	m->mod.xxh->len = read16b(f);
+	_D(_D_INFO "Song length: %d patterns", m->mod.xxh->len);
 
-	for (i = 0; i < m->xxh->len; i++)
-		m->xxo[i] = read16b(f);
+	for (i = 0; i < m->mod.xxh->len; i++)
+		m->mod.xxo[i] = read16b(f);
 }
 
 static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 	int c2spd, flags, snum;
 	uint8 buffer[50];
 
-	_D(_D_INFO "Instruments: %d", m->xxh->ins);
+	_D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
-	for (i = 0; i < m->xxh->ins; i++) {
-		m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	for (i = 0; i < m->mod.xxh->ins; i++) {
+		m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
-		m->xxi[i].nsm = 1;
+		m->mod.xxi[i].nsm = 1;
 		fread(buffer, 30, 1, f);
-		copy_adjust(m->xxi[i].name, buffer, 30);
+		copy_adjust(m->mod.xxi[i].name, buffer, 30);
 		snum = read16b(f);
-		if (snum == 0 || snum > m->xxh->smp)
+		if (snum == 0 || snum > m->mod.xxh->smp)
 			continue;
-		m->xxi[i].sub[0].sid = --snum;
-		m->xxi[i].sub[0].vol = read16b(f);
+		m->mod.xxi[i].sub[0].sid = --snum;
+		m->mod.xxi[i].sub[0].vol = read16b(f);
 		c2spd = read32b(f);
-		m->xxs[snum].lps = read32b(f);
-		m->xxs[snum].lpe = m->xxs[i].lps + read32b(f);
-		m->xxi[i].sub[0].pan = 0x80 + (int16)read16b(f);
-		if (m->xxi[i].sub[0].pan > 0xff)
-			m->xxi[i].sub[0].pan = 0xff;
+		m->mod.xxs[snum].lps = read32b(f);
+		m->mod.xxs[snum].lpe = m->mod.xxs[i].lps + read32b(f);
+		m->mod.xxi[i].sub[0].pan = 0x80 + (int16)read16b(f);
+		if (m->mod.xxi[i].sub[0].pan > 0xff)
+			m->mod.xxi[i].sub[0].pan = 0xff;
 		flags = read16b(f);
-		m->xxs[snum].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
-		m->xxs[snum].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
+		m->mod.xxs[snum].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
+		m->mod.xxs[snum].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
-		c2spd_to_note(c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+		c2spd_to_note(c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
 
 		_D(_D_INFO "[%2X] %-30.30s #%02X V%02x P%02x %5d",
-			i, m->xxi[i].name, snum,
-			m->xxi[i].sub[0].vol, m->xxi[i].sub[0].pan, c2spd);
+			i, m->mod.xxi[i].name, snum,
+			m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].pan, c2spd);
 	}
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, c, r, n, sz;
 	struct xxm_event *event, dummy;
 	uint8 x;
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d ", m->xxh->pat);
+	_D(_D_INFO "Stored patterns: %d ", m->mod.xxh->pat);
 
 	/*
 	 * Note: channel and flag bytes are inverted in the format
 	 * description document
 	 */
 
-	for (i = 0; i < m->xxh->pat; i++) {
+	for (i = 0; i < m->mod.xxh->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->xxp[i]->rows = read16b(f);
+		m->mod.xxp[i]->rows = read16b(f);
 		TRACK_ALLOC(i);
 
 		sz = read32b(f);
-		//printf("rows = %d, size = %d\n", m->xxp[i]->rows, sz);
+		//printf("rows = %d, size = %d\n", m->mod.xxp[i]->rows, sz);
 
 		r = 0;
 		c = -1;
@@ -169,7 +165,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 			if (--sz <= 0) break;
 			//printf("    n = %d\n", n);
 
-			if (c >= m->xxh->chn || r >= m->xxp[i]->rows)
+			if (c >= m->mod.xxh->chn || r >= m->mod.xxp[i]->rows)
 				event = &dummy;
 			else
 				event = &EVENT(i, c, r);
@@ -217,46 +213,44 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, flags;
 
-	_D(_D_INFO "Stored samples: %d", m->xxh->smp);
+	_D(_D_INFO "Stored samples: %d", m->mod.xxh->smp);
 
-	for (i = 0; i < m->xxh->smp; i++) {
+	for (i = 0; i < m->mod.xxh->smp; i++) {
 		flags = read32b(f);
-		m->xxs[i].len = read32b(f);
+		m->mod.xxs[i].len = read32b(f);
 
 		if (flags & 0x02) {
-			m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+			m->mod.xxs[i].flg |= XMP_SAMPLE_16BIT;
 		}
 
 		if (flags & 0x04) {	/* Skip 32-bit samples */
-			m->xxs[i].len <<= 2;
-			fseek(f, m->xxs[i].len, SEEK_CUR);
+			m->mod.xxs[i].len <<= 2;
+			fseek(f, m->mod.xxs[i].len, SEEK_CUR);
 			continue;
 		}
 		
 		xmp_drv_loadpatch(ctx, f, i, XMP_SMP_BIGEND,
-							&m->xxs[i], NULL);
+							&m->mod.xxs[i], NULL);
 
-		if (m->xxs[i].len == 0)
+		if (m->mod.xxs[i].len == 0)
 			continue;
 
 		_D(_D_INFO "[%2X] %08x %05x%c%05x %05x %c",
-			i, flags, m->xxs[i].len,
-			m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-			m->xxs[i].lps, m->xxs[i].lpe,
-			m->xxs[i].flg & XMP_SAMPLE_LOOP ?
-			(m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 'L') : ' ');
+			i, flags, m->mod.xxs[i].len,
+			m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+			m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+			m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ?
+			(m->mod.xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 'L') : ' ');
 
 	}
 }
 
 static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, j, nenv, ins;
 
 	nenv = read16b(f);
@@ -265,25 +259,24 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 
 	for (i = 0; i < nenv; i++) {
 		ins = read16b(f) - 1;
-		m->xxi[ins].aei.flg = read8(f) & 0x07;
-		m->xxi[ins].aei.npt = read8(f);
-		m->xxi[ins].aei.sus = read8(f);
-		m->xxi[ins].aei.lps = read8(f);
-		m->xxi[ins].aei.lpe = read8(f);
+		m->mod.xxi[ins].aei.flg = read8(f) & 0x07;
+		m->mod.xxi[ins].aei.npt = read8(f);
+		m->mod.xxi[ins].aei.sus = read8(f);
+		m->mod.xxi[ins].aei.lps = read8(f);
+		m->mod.xxi[ins].aei.lpe = read8(f);
 		read8(f);	/* 2nd sustain */
 		//read8(f);	/* reserved */
 
 		for (j = 0; j < 32; j++) {
-			m->xxi[ins].aei.data[j * 2 + 0] = read16b(f);
-			m->xxi[ins].aei.data[j * 2 + 1] = read16b(f);
+			m->mod.xxi[ins].aei.data[j * 2 + 0] = read16b(f);
+			m->mod.xxi[ins].aei.data[j * 2 + 1] = read16b(f);
 		}
 	}
 }
 
 static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	char name[44];
 	uint16 version;
 	int i;
@@ -306,8 +299,8 @@ static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 	iff_register("SMPL", get_smpl);
 	iff_register("VENV", get_venv);
 
-	strncpy(m->name, name, XMP_NAMESIZE);
-	snprintf(m->type, XMP_NAMESIZE, "DBM0 (DigiBooster Pro "
+	strncpy(m->mod.name, name, XMP_NAMESIZE);
+	snprintf(m->mod.type, XMP_NAMESIZE, "DBM0 (DigiBooster Pro "
 				"%d.%02x)", version >> 8, version & 0xff);
 	MODULE_INFO();
 
@@ -317,8 +310,8 @@ static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->xxh->chn; i++)
-		m->xxc[i].pan = 0x80;
+	for (i = 0; i < m->mod.xxh->chn; i++)
+		m->mod.xxc[i].pan = 0x80;
 
 	return 0;
 }

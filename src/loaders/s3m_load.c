@@ -197,8 +197,7 @@ static void xlat_fx (int c, struct xxm_event *e)
 
 static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &p->m;
+    struct xmp_mod_context *m = &ctx->m;
     int c, r, i;
     struct s3m_adlib_header sah;
     struct xxm_event *event = 0, dummy;
@@ -248,45 +247,45 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	fix87(sfh.flags);
     }
 
-    copy_adjust((uint8 *)m->name, sfh.name, 28);
+    copy_adjust((uint8 *)m->mod.name, sfh.name, 28);
 
     /* Load and convert header */
-    m->xxh->len = sfh.ordnum;
-    m->xxh->ins = sfh.insnum;
-    m->xxh->smp = m->xxh->ins;
-    m->xxh->pat = sfh.patnum;
-    pp_ins = calloc (2, m->xxh->ins);
-    pp_pat = calloc (2, m->xxh->pat);
+    m->mod.xxh->len = sfh.ordnum;
+    m->mod.xxh->ins = sfh.insnum;
+    m->mod.xxh->smp = m->mod.xxh->ins;
+    m->mod.xxh->pat = sfh.patnum;
+    pp_ins = calloc (2, m->mod.xxh->ins);
+    pp_pat = calloc (2, m->mod.xxh->pat);
     if (sfh.flags & S3M_AMIGA_RANGE)
-	m->xxh->flg |= XXM_FLG_MODRNG;
+	m->mod.xxh->flg |= XXM_FLG_MODRNG;
     if (sfh.flags & S3M_ST300_VOLS)
 	m->quirk |= XMP_QRK_VSALL;
     /* m->volbase = 4096 / sfh.gv; */
-    m->xxh->tpo = sfh.is;
-    m->xxh->bpm = sfh.it;
+    m->mod.xxh->tpo = sfh.is;
+    m->mod.xxh->bpm = sfh.it;
 
     for (i = 0; i < 32; i++) {
 	if (sfh.chset[i] == S3M_CH_OFF)
 	    continue;
 
-	m->xxh->chn = i + 1;
+	m->mod.xxh->chn = i + 1;
 
 	if (sfh.mv & 0x80) {	/* stereo */
 		int x = sfh.chset[i] & S3M_CH_PAN;
-		m->xxc[i].pan = (x & 0x0f) < 8 ? 0x00 : 0xff;
+		m->mod.xxc[i].pan = (x & 0x0f) < 8 ? 0x00 : 0xff;
 	} else {
-		m->xxc[i].pan = 0x80;
+		m->mod.xxc[i].pan = 0x80;
 	}
     }
-    m->xxh->trk = m->xxh->pat * m->xxh->chn;
+    m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
 
-    fread(m->xxo, 1, m->xxh->len, f);
-    clean_s3m_seq(m->xxh, m->xxo);
+    fread(m->mod.xxo, 1, m->mod.xxh->len, f);
+    clean_s3m_seq(m->mod.xxh, m->mod.xxo);
 
-    for (i = 0; i < m->xxh->ins; i++)
+    for (i = 0; i < m->mod.xxh->ins; i++)
 	pp_ins[i] = read16l(f);
  
-    for (i = 0; i < m->xxh->pat; i++)
+    for (i = 0; i < m->mod.xxh->pat; i++)
 	pp_pat[i] = read16l(f);
 
     /* Default pan positions */
@@ -294,9 +293,9 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */ && (i < 32); i++) {
 	uint8 x = read8(f);
 	if (x & S3M_PAN_SET)
-	    m->xxc[i].pan = (x << 4) & 0xff;
+	    m->mod.xxc[i].pan = (x << 4) & 0xff;
 	else
-	    m->xxc[i].pan = sfh.mv % 0x80 ? 0x30 + 0xa0 * (i & 1) : 0x80;
+	    m->mod.xxc[i].pan = sfh.mv % 0x80 ? 0x30 + 0xa0 * (i & 1) : 0x80;
     }
 
     m->c4rate = C4_NTSC_RATE;
@@ -337,7 +336,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	snprintf(tracker_name, 40, "unknown (%04x)", sfh.version);
     }
 
-    snprintf(m->type, XMP_NAMESIZE, "SCRM (%s)", tracker_name);
+    snprintf(m->mod.type, XMP_NAMESIZE, "SCRM (%s)", tracker_name);
 
     MODULE_INFO();
 
@@ -345,13 +344,13 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->xxh->pat);
+    _D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
 
     memset (arpeggio_val, 0, 32);
 
-    for (i = 0; i < m->xxh->pat; i++) {
+    for (i = 0; i < m->mod.xxh->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->xxp[i]->rows = 64;
+	m->mod.xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	if (!pp_pat[i])
@@ -365,7 +364,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * <cejkar@dcse.fee.vutbr.cz>, fixes hunt.s3m
 	 * ftp://us.aminet.net/pub/aminet/mods/8voic/s3m_hunt.lha
 	 */
-	while (r < m->xxp[i]->rows) {
+	while (r < m->mod.xxp[i]->rows) {
 	    b = read8(f);
 
 	    if (b == S3M_EOR) {
@@ -374,7 +373,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & S3M_CH_MASK;
-	    event = c >= m->xxh->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= m->mod.xxh->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
 		switch(n = read8(f)) {
@@ -413,14 +412,14 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Instruments: %d", m->xxh->ins);
+    _D(_D_INFO "Instruments: %d", m->mod.xxh->ins);
 
-    for (i = 0; i < m->xxh->ins; i++) {
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+    for (i = 0; i < m->mod.xxh->ins; i++) {
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 	fseek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = read8(f);
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 
 	if (x8 >= 2) {
 	    /* OPL2 FM instrument */
@@ -443,15 +442,15 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    sah.magic = 0;
 
-	    copy_adjust(m->xxi[i].name, sah.name, 28);
+	    copy_adjust(m->mod.xxi[i].name, sah.name, 28);
 
-	    m->xxi[i].nsm = 1;
-	    m->xxi[i].sub[0].vol = sah.vol;
-	    c2spd_to_note(sah.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
-	    m->xxi[i].sub[0].xpo += 12;
-	    xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid, XMP_SMP_ADLIB,
-					&m->xxs[i], (char *)&sah.reg);
-	    _D(_D_INFO "[%2X] %-28.28s", i, m->xxi[i].name);
+	    m->mod.xxi[i].nsm = 1;
+	    m->mod.xxi[i].sub[0].vol = sah.vol;
+	    c2spd_to_note(sah.c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+	    m->mod.xxi[i].sub[0].xpo += 12;
+	    xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_ADLIB,
+					&m->mod.xxs[i], (char *)&sah.reg);
+	    _D(_D_INFO "[%2X] %-28.28s", i, m->mod.xxi[i].name);
 
 	    continue;
 	}
@@ -486,36 +485,36 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fix87(sih.flags);
 	}
 
-	m->xxs[i].len = sih.length;
-	m->xxi[i].nsm = sih.length > 0 ? 1 : 0;
-	m->xxs[i].lps = sih.loopbeg;
-	m->xxs[i].lpe = sih.loopend;
+	m->mod.xxs[i].len = sih.length;
+	m->mod.xxi[i].nsm = sih.length > 0 ? 1 : 0;
+	m->mod.xxs[i].lps = sih.loopbeg;
+	m->mod.xxs[i].lpe = sih.loopend;
 
-	m->xxs[i].flg = sih.flags & 1 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxs[i].flg = sih.flags & 1 ? XMP_SAMPLE_LOOP : 0;
 
 	if (sih.flags & 4) {
-	    m->xxs[i].flg |= XMP_SAMPLE_16BIT;
-	    m->xxs[i].len >>= 1;
-	    m->xxs[i].lps >>= 1;
-	    m->xxs[i].lpe >>= 1;
+	    m->mod.xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    m->mod.xxs[i].len >>= 1;
+	    m->mod.xxs[i].lps >>= 1;
+	    m->mod.xxs[i].lpe >>= 1;
 	}
-	m->xxi[i].sub[0].vol = sih.vol;
+	m->mod.xxi[i].sub[0].vol = sih.vol;
 	sih.magic = 0;
 
-	copy_adjust(m->xxi[i].name, sih.name, 28);
+	copy_adjust(m->mod.xxi[i].name, sih.name, 28);
 
 	_D(_D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
-			i, m->xxi[i].name, m->xxs[i].len,
-			m->xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
-			m->xxs[i].lps, m->xxs[i].lpe,
-			m->xxs[i].flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
-			m->xxi[i].sub[0].vol, sih.c2spd);
+			i, m->mod.xxi[i].name, m->mod.xxs[i].len,
+			m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
+			m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+			m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
+			m->mod.xxi[i].sub[0].vol, sih.c2spd);
 
-	c2spd_to_note(sih.c2spd, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
+	c2spd_to_note(sih.c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
 
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
-	xmp_drv_loadpatch(ctx, f, m->xxi[i].sub[0].sid,
-	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, m->mod.xxi[i].sub[0].sid,
+	    (sfh.ffi - 1) * XMP_SMP_UNS, &m->mod.xxs[i], NULL);
     }
 
     free(pp_pat);

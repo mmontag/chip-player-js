@@ -97,30 +97,27 @@ static void get_sdft(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_titl(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	char buf[40];
 	
 	fread(buf, 1, 40, f);
-	strncpy(m->name, buf, size > 32 ? 32 : size);
+	strncpy(m->mod.name, buf, size > 32 ? 32 : size);
 }
 
 static void get_dsmp_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
-	m->xxh->ins++;
-	m->xxh->smp = m->xxh->ins;
+	m->mod.xxh->ins++;
+	m->mod.xxh->smp = m->mod.xxh->ins;
 }
 
 static void get_pbod_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	char buf[20];
 
-	m->xxh->pat++;
+	m->mod.xxh->pat++;
 	fread(buf, 1, 20, f);
 	if (buf[9] != 0 && buf[13] == 0)
 		sinaria = 1;
@@ -129,8 +126,7 @@ static void get_pbod_cnt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, srate;
 	int finetune;
 
@@ -139,50 +135,50 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	fseek(f, sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	i = cur_ins;
-	m->xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
+	m->mod.xxi[i].sub = calloc(sizeof (struct xxm_subinstrument), 1);
 
-	fread(&m->xxi[i].name, 1, 34, f);
-	str_adj((char *)m->xxi[i].name);
+	fread(&m->mod.xxi[i].name, 1, 34, f);
+	str_adj((char *)m->mod.xxi[i].name);
 	fseek(f, 5, SEEK_CUR);
 	read8(f);		/* insno */
 	read8(f);
-	m->xxs[i].len = read32l(f);
-	m->xxi[i].nsm = !!(m->xxs[i].len);
-	m->xxs[i].lps = read32l(f);
-	m->xxs[i].lpe = read32l(f);
-	m->xxs[i].flg = m->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
+	m->mod.xxs[i].len = read32l(f);
+	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+	m->mod.xxs[i].lps = read32l(f);
+	m->mod.xxs[i].lpe = read32l(f);
+	m->mod.xxs[i].flg = m->mod.xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
 	read16l(f);
 
-	if ((int32)m->xxs[i].lpe < 0)
-		m->xxs[i].lpe = 0;
+	if ((int32)m->mod.xxs[i].lpe < 0)
+		m->mod.xxs[i].lpe = 0;
 
 	finetune = 0;
 	if (sinaria) {
-		if (m->xxs[i].len > 2)
-			m->xxs[i].len -= 2;
-		if (m->xxs[i].lpe > 2)
-			m->xxs[i].lpe -= 2;
+		if (m->mod.xxs[i].len > 2)
+			m->mod.xxs[i].len -= 2;
+		if (m->mod.xxs[i].lpe > 2)
+			m->mod.xxs[i].lpe -= 2;
 
 		finetune = (int8)(read8s(f) << 4);
 	}
 
-	m->xxi[i].sub[0].vol = read8(f) / 2 + 1;
+	m->mod.xxi[i].sub[0].vol = read8(f) / 2 + 1;
 	read32l(f);
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].sid = i;
 	srate = read32l(f);
 
 	_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
-		m->xxi[i].name, m->xxs[i].len, m->xxs[i].lps, m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->xxi[i].sub[0].vol,
+		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->mod.xxi[i].sub[0].vol,
 		finetune, srate);
 
 	srate = 8363 * srate / 8448;
-	c2spd_to_note(srate, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
-	m->xxi[i].sub[0].fin += finetune;
+	c2spd_to_note(srate, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+	m->mod.xxi[i].sub[0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
-	xmp_drv_loadpatch(ctx, f, i, XMP_SMP_8BDIFF, &m->xxs[i], NULL);
+	xmp_drv_loadpatch(ctx, f, i, XMP_SMP_8BDIFF, &m->mod.xxs[i], NULL);
 
 	cur_ins++;
 }
@@ -190,8 +186,7 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, r;
 	struct xxm_event *event, dummy;
 	uint8 flag, chan;
@@ -206,7 +201,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 	rows = read16l(f);
 
 	PATTERN_ALLOC(i);
-	m->xxp[i]->rows = rows;
+	m->mod.xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
 	r = 0;
@@ -222,7 +217,7 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 			chan = read8(f);
 			rowlen -= 2;
 	
-			event = chan < m->xxh->chn ? &EVENT(i, chan, r) : &dummy;
+			event = chan < m->mod.xxh->chn ? &EVENT(i, chan, r) : &dummy;
 	
 			if (flag & 0x80) {
 				uint8 note = read8(f);
@@ -337,17 +332,15 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 
 static void get_song(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 
 	fseek(f, 10, SEEK_CUR);
-	m->xxh->chn = read8(f);
+	m->mod.xxh->chn = read8(f);
 }
 
 static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	uint32 magic;
 	char c, buf[20];
 	int i;
@@ -373,13 +366,13 @@ static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 	for (i = 0; c != 0x01; c = read8(f)) {
 		switch (c) {
 		case 0x07:
-			m->xxh->tpo = read8(f);
+			m->mod.xxh->tpo = read8(f);
 			read8(f);		/* 08 */
-			m->xxh->bpm = read8(f);
+			m->mod.xxh->bpm = read8(f);
 			break;
 		case 0x0d:
 			read8(f);		/* channel number? */
-			m->xxc[i].pan = read8(f);
+			m->mod.xxc[i].pan = read8(f);
 			read8(f);		/* flags? */
 			i++;
 			break;
@@ -393,15 +386,14 @@ static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 	}
 
 	for (; c == 0x01; c = read8(f)) {
-		fread(pord + m->xxh->len * 8, 1, sinaria ? 8 : 4, f);
-		m->xxh->len++;
+		fread(pord + m->mod.xxh->len * 8, 1, sinaria ? 8 : 4, f);
+		m->mod.xxh->len++;
 	}
 }
 
 static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int offset;
 	int i, j;
 
@@ -410,10 +402,10 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 	read32b(f);
 
 	sinaria = 0;
-	m->name[0] = 0;
+	m->mod.name[0] = 0;
 
 	fseek(f, 8, SEEK_CUR);		/* skip file size and FILE */
-	m->xxh->smp = m->xxh->ins = 0;
+	m->mod.xxh->smp = m->mod.xxh->ins = 0;
 	cur_pat = 0;
 	cur_ins = 0;
 	offset = ftell(f);
@@ -432,23 +424,23 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
-	pnam = malloc(m->xxh->pat * 8);		/* pattern names */
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	pnam = malloc(m->mod.xxh->pat * 8);		/* pattern names */
 	pord = malloc(255 * 8);			/* pattern orders */
 
-	strcpy (m->type, sinaria ?
+	strcpy (m->mod.type, sinaria ?
 		"MASI (Sinaria PSM)" : "MASI (Epic MegaGames MASI)");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
-	_D(_D_INFO "Stored samples : %d", m->xxh->smp);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored samples : %d", m->mod.xxh->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 
-	m->xxh->len = 0;
+	m->mod.xxh->len = 0;
 
 	iff_register("SONG", get_song_2);
 	iff_register("DSMP", get_dsmp);
@@ -461,15 +453,15 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->xxh->len; i++) {
-		for (j = 0; j < m->xxh->pat; j++) {
+	for (i = 0; i < m->mod.xxh->len; i++) {
+		for (j = 0; j < m->mod.xxh->pat; j++) {
 			if (!memcmp(pord + i * 8, pnam + j * 8, sinaria ? 8 : 4)) {
-				m->xxo[i] = j;
+				m->mod.xxo[i] = j;
 				break;
 			}
 		}
 
-		if (j == m->xxh->pat)
+		if (j == m->mod.xxh->pat)
 			break;
 	}
 

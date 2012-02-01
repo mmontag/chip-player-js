@@ -56,20 +56,19 @@ static int gal5_test(FILE *f, char *t, const int start)
 
 static void get_init(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	char buf[64];
 	int flags;
 	
 	fread(buf, 1, 64, f);
-	strncpy(m->name, buf, 64);
-	strcpy(m->type, "Galaxy Music System 5.0");
+	strncpy(m->mod.name, buf, 64);
+	strcpy(m->mod.type, "Galaxy Music System 5.0");
 	flags = read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
-		m->xxh->flg = XXM_FLG_LINEAR;
-	m->xxh->chn = read8(f);
-	m->xxh->tpo = read8(f);
-	m->xxh->bpm = read8(f);
+		m->mod.xxh->flg = XXM_FLG_LINEAR;
+	m->mod.xxh->chn = read8(f);
+	m->mod.xxh->tpo = read8(f);
+	m->mod.xxh->bpm = read8(f);
 	read16l(f);		/* unknown - 0x01c5 */
 	read16l(f);		/* unknown - 0xff00 */
 	read8(f);		/* unknown - 0x80 */
@@ -78,47 +77,43 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
-	m->xxh->len = read8(f) + 1;
+	m->mod.xxh->len = read8(f) + 1;
 	/* Don't follow Dr.Eggman's specs here */
 
-	for (i = 0; i < m->xxh->len; i++)
-		m->xxo[i] = read8(f);
+	for (i = 0; i < m->mod.xxh->len; i++)
+		m->mod.xxo[i] = read8(f);
 }
 
 static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
 	i = read8(f) + 1;	/* pattern number */
 
-	if (i > m->xxh->pat)
-		m->xxh->pat = i;
+	if (i > m->mod.xxh->pat)
+		m->mod.xxh->pat = i;
 }
 
 static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
 	read32b(f);		/* 42 01 00 00 */
 	read8(f);		/* 00 */
 	i = read8(f) + 1;	/* instrument number */
 
-	if (i > m->xxh->ins)
-		m->xxh->ins = i;
+	if (i > m->mod.xxh->ins)
+		m->mod.xxh->ins = i;
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	struct xxm_event *event, dummy;
 	int i, len, chan;
 	int rows, r;
@@ -130,7 +125,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	rows = read8(f) + 1;
 
 	PATTERN_ALLOC(i);
-	m->xxp[i]->rows = rows;
+	m->mod.xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
 	for (r = 0; r < rows; ) {
@@ -141,7 +136,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 		chan = flag & 0x1f;
 
-		event = chan < m->xxh->chn ? &EVENT(i, chan, r) : &dummy;
+		event = chan < m->mod.xxh->chn ? &EVENT(i, chan, r) : &dummy;
 
 		if (flag & 0x80) {
 			uint8 fxp = read8(f);
@@ -183,8 +178,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, srate, finetune, flags;
 	int has_unsigned_sample;
 
@@ -192,18 +186,18 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
 	
-	fread(&m->xxi[i].name, 1, 28, f);
-	str_adj((char *)m->xxi[i].name);
+	fread(&m->mod.xxi[i].name, 1, 28, f);
+	str_adj((char *)m->mod.xxi[i].name);
 
 	fseek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
-	m->xxi[i].nsm = read16l(f);
+	m->mod.xxi[i].nsm = read16l(f);
 
-	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->xxi[i].name, m->xxi[i].nsm);
+	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->mod.xxi[i].name, m->mod.xxi[i].nsm);
 
-	if (m->xxi[i].nsm == 0)
+	if (m->mod.xxi[i].nsm == 0)
 		return;
 
-	m->xxi[i].sub = calloc(sizeof(struct xxm_subinstrument), m->xxi[i].nsm);
+	m->mod.xxi[i].sub = calloc(sizeof(struct xxm_subinstrument), m->mod.xxi[i].nsm);
 
 	/* FIXME: Currently reading only the first sample */
 
@@ -214,60 +208,59 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read32b(f);	/* size */
 	read32b(f);	/* unknown - usually 0x40000000 */
 
-	fread(&m->xxs[i].name, 1, 28, f);
-	str_adj((char *)m->xxs[i].name);
+	fread(&m->mod.xxs[i].name, 1, 28, f);
+	str_adj((char *)m->mod.xxs[i].name);
 
 	read32b(f);	/* unknown - 0x0000 */
 	read8(f);	/* unknown - 0x00 */
 
-	m->xxi[i].sub[0].sid = i;
-	m->xxi[i].vol = read8(f);
-	m->xxi[i].sub[0].pan = 0x80;
-	m->xxi[i].sub[0].vol = (read16l(f) + 1) / 512;
+	m->mod.xxi[i].sub[0].sid = i;
+	m->mod.xxi[i].vol = read8(f);
+	m->mod.xxi[i].sub[0].pan = 0x80;
+	m->mod.xxi[i].sub[0].vol = (read16l(f) + 1) / 512;
 	flags = read16l(f);
 	read16l(f);			/* unknown - 0x0080 */
-	m->xxs[i].len = read32l(f);
-	m->xxs[i].lps = read32l(f);
-	m->xxs[i].lpe = read32l(f);
+	m->mod.xxs[i].len = read32l(f);
+	m->mod.xxs[i].lps = read32l(f);
+	m->mod.xxs[i].lpe = read32l(f);
 
-	m->xxs[i].flg = 0;
+	m->mod.xxs[i].flg = 0;
 	has_unsigned_sample = 1;
 	if (flags & 0x04)
-		m->xxs[i].flg |= XMP_SAMPLE_16BIT;
+		m->mod.xxs[i].flg |= XMP_SAMPLE_16BIT;
 	if (flags & 0x08)
-		m->xxs[i].flg |= XMP_SAMPLE_LOOP;
+		m->mod.xxs[i].flg |= XMP_SAMPLE_LOOP;
 	if (flags & 0x10)
-		m->xxs[i].flg |= XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR;
+		m->mod.xxs[i].flg |= XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR;
 	if (~flags & 0x80)
 		has_unsigned_sample = 1;
 
 	srate = read32l(f);
 	finetune = 0;
-	c2spd_to_note(srate, &m->xxi[i].sub[0].xpo, &m->xxi[i].sub[0].fin);
-	m->xxi[i].sub[0].fin += finetune;
+	c2spd_to_note(srate, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+	m->mod.xxi[i].sub[0].fin += finetune;
 
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
 
 	_D(_D_INFO "  %x: %05x%c%05x %05x %c V%02x %04x %5d",
-		0, m->xxs[i].len,
-		m->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		m->xxs[i].lps,
-		m->xxs[i].lpe,
-		m->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
-			m->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->xxi[i].sub[0].vol, flags, srate);
+		0, m->mod.xxs[i].len,
+		m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		m->mod.xxs[i].lps,
+		m->mod.xxs[i].lpe,
+		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
+			m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		m->mod.xxi[i].sub[0].vol, flags, srate);
 
-	if (m->xxs[i].len > 1) {
+	if (m->mod.xxs[i].len > 1) {
 		xmp_drv_loadpatch(ctx, f, i, has_unsigned_sample ?
-			XMP_SMP_UNS : 0, &m->xxs[i], NULL);
+			XMP_SMP_UNS : 0, &m->mod.xxs[i], NULL);
 	}
 }
 
 static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &p->m;
+	struct xmp_mod_context *m = &ctx->m;
 	int i, offset;
 
 	LOAD_INIT();
@@ -278,7 +271,7 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	offset = ftell(f);
 
-	m->xxh->smp = m->xxh->ins = 0;
+	m->mod.xxh->smp = m->mod.xxh->ins = 0;
 
 	iff_register("INIT", get_init);		/* Galaxy 5.0 */
 	iff_register("ORDR", get_ordr);
@@ -294,15 +287,15 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	m->xxh->trk = m->xxh->pat * m->xxh->chn;
-	m->xxh->smp = m->xxh->ins;
+	m->mod.xxh->trk = m->mod.xxh->pat * m->mod.xxh->chn;
+	m->mod.xxh->smp = m->mod.xxh->ins;
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->xxh->pat);
-	_D(_D_INFO "Stored samples: %d ", m->xxh->smp);
+	_D(_D_INFO "Stored patterns: %d", m->mod.xxh->pat);
+	_D(_D_INFO "Stored samples: %d ", m->mod.xxh->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 
@@ -318,8 +311,8 @@ static int gal5_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->xxh->chn; i++)
-		m->xxc[i].pan = chn_pan[i] * 2;
+	for (i = 0; i < m->mod.xxh->chn; i++)
+		m->mod.xxc[i].pan = chn_pan[i] * 2;
 
 	return 0;
 }
