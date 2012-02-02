@@ -789,6 +789,8 @@ int xmp_player_start(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int ret;
 
+	xmp_smix_on(ctx);
+
 	p->gvol_slide = 0;
 	p->gvol_base = m->volbase;
 	p->pos = f->ord = o->start;
@@ -1050,6 +1052,8 @@ void xmp_player_end(xmp_context opaque)
 	free(f->loop_start);
 	free(f->loop_stack);
 	free(p->fetch_ctl);
+
+	xmp_smix_off(ctx);
 }
 
 
@@ -1069,9 +1073,6 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->frame = p->frame;
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
-
-	if (p->xc_data == NULL)
-		return;
 
 	for (i = 0; i < chn; i++) {
 		struct channel_data *c = &p->xc_data[i];

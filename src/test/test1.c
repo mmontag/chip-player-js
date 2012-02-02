@@ -40,21 +40,17 @@ int main(int argc, char **argv)
 	ctx = xmp_create_context();
 	xmp_init(ctx, argc, argv);
 
-	if (xmp_open_audio(ctx) < 0) {
-		fprintf(stderr, "%s: can't open audio device", argv[0]);
-		return -1;
-	}
-
 	for (i = 1; i < argc; i++) {
 		if (xmp_load_module(ctx, argv[i]) < 0) {
 			fprintf(stderr, "%s: error loading %s\n", argv[0],
 				argv[i]);
 			continue;
 		}
+		xmp_player_start(ctx);
+
 		xmp_player_get_info(ctx, &mi);
 		printf("%s (%s)\n", mi.mod->name, mi.mod->type);
 
-		xmp_player_start(ctx);
 		while (xmp_player_frame(ctx) == 0) {
 			xmp_get_buffer(ctx, &buffer, &size);
 			pa_simple_write(s, buffer, size, &error);
@@ -64,7 +60,7 @@ int main(int argc, char **argv)
 		xmp_release_module(ctx);
 		printf("\n");
 	}
-	xmp_close_audio(ctx);
+
 	xmp_free_context(ctx);
 
 	return 0;

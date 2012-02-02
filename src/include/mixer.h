@@ -38,8 +38,6 @@ struct voice_info {
 	int ins;		/* instrument number */
 	int smp;		/* sample number */
 	int end;		/* loop end */
-	//int freq;
-	int shl8;
 	int act;		/* nna info & status of voice */
 	int sleft;		/* last left sample output, in 32bit */
 	int sright;		/* last right sample output, in 32bit */
@@ -62,8 +60,6 @@ void    xmp_smix_setvol		(struct xmp_context *, int, int);
 void    xmp_smix_seteffect	(struct xmp_context *, int, int, int);
 void    xmp_smix_setpan		(struct xmp_context *, int, int);
 int	xmp_smix_numvoices	(struct xmp_context *, int);
-void	xmp_smix_starttimer	(void);
-void	xmp_smix_stoptimer	(void);
 int	xmp_smix_softmixer	(struct xmp_context *);
 void    *xmp_smix_buffer	(struct xmp_context *);
 

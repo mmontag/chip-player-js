@@ -208,11 +208,6 @@ struct xmp_player_context {
 };
 
 struct xmp_driver_context {
-	struct xmp_drv_info *driver;	/* Driver */
-	char *description;		/* Driver description */
-	char **help;			/* Driver help info */
-
-	int memavl;			/* Memory availble in sound card */
 	int numtrk;			/* Number of tracks */
 	int numchn;			/* Number of virtual channels */
 	int curvoc;			/* Number of voices currently in use */
@@ -225,7 +220,6 @@ struct xmp_driver_context {
 	int *ch2vo_count;
 	int *ch2vo_array;
 	struct voice_info *voice_array;
-	/* struct patch_info **patch_array; */
 
 	void *buffer;
 	int size;

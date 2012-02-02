@@ -15,10 +15,7 @@
 #include "driver.h"
 #include "convert.h"
 #include "mixer.h"
-#include "period.h"
-#include "readlzw.h"
 #include "synth.h"
-#include "spectrum.h"
 #include "smix.h"
 
 #define	FREE	-1

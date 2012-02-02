@@ -326,8 +326,6 @@ void xmp_set_driver_parameter(struct xmp_options *, char *);
 void xmp_get_driver_cfg(xmp_context, int *, int *, int *, int *);
 void xmp_channel_mute(xmp_context, int, int, int);
 int xmp_player_ctl(xmp_context, int, int);
-int xmp_open_audio(xmp_context);
-void xmp_close_audio(xmp_context);
 int xmp_player_start(xmp_context);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);

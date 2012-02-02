@@ -96,18 +96,6 @@ void xmp_deinit(xmp_context ctx)
 	xmp_deinit_formats(ctx);
 }
 
-int xmp_open_audio(xmp_context ctx)
-{
-	//return xmp_drv_open((struct xmp_context *)ctx);
-	return xmp_smix_on((struct xmp_context *)ctx);
-}
-
-void xmp_close_audio(xmp_context ctx)
-{
-	//xmp_drv_close((struct xmp_context *)ctx);
-	return xmp_smix_off((struct xmp_context *)ctx);
-}
-
 void xmp_set_driver_parameter(struct xmp_options *o, char *s)
 {
 	o->parm[drv_parm] = s;
@@ -178,15 +166,6 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 	return 0;
 }
 
-#if 0
-void xmp_play_buffer(xmp_context opaque)
-{
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-
-	xmp_drv_bufdump((struct xmp_context *)ctx);
-}
-#endif
-
 void xmp_get_buffer(xmp_context opaque, void **buffer, int *size)
 {
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
@@ -199,10 +178,9 @@ void xmp_get_driver_cfg(xmp_context opaque, int *srate, int *res, int *chn,
 			int *itpt)
 {
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_driver_context *d = &ctx->d;
 	struct xmp_options *o = &ctx->o;
 
-	*srate = d->memavl ? 0 : o->freq;
+	*srate = o->freq;
 	*res = o->resol ? o->resol : 8 /* U_LAW */ ;
 	*chn = o->outfmt & XMP_FMT_MONO ? 1 : 2;
 	*itpt = !!(o->flags & XMP_CTL_ITPT);
