@@ -11,10 +11,6 @@
  * Innocenti's XModule 3.4 sources.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include "iff.h"
 

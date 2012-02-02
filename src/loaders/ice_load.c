@@ -8,10 +8,6 @@
 
 /* Loader for Soundtracker 2.6/Ice Tracker modules */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 
 #define MAGIC_MTN_	MAGIC4('M','T','N',0)

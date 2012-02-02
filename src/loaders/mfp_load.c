@@ -12,10 +12,6 @@
  * more information see http://www.exotica.org.uk/wiki/Magnetic_Fields_Packer
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include <sys/types.h>
 #include <sys/stat.h>

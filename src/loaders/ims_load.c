@@ -25,10 +25,6 @@
  * tunes as a UNIC file.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <ctype.h>
 #include <sys/types.h>
 

@@ -10,10 +10,6 @@
  * MED 1.12 is in Fish disk #255
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #ifdef __native_client__
 #include <sys/syslimits.h>
 #else

@@ -13,10 +13,6 @@
  * from ftp://ftp.funet.fi/pub/amiga/fish/301-400/ff349
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <assert.h>
 #include "load.h"
 

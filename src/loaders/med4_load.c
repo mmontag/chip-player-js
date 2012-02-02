@@ -12,10 +12,6 @@
  * HappySong MED4 is in ff401. MED 3.00 is in ff476.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <assert.h>
 #include "load.h"
 

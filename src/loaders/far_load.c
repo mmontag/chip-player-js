@@ -13,10 +13,6 @@
  */
 
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include "far.h"
 

@@ -19,10 +19,6 @@
  * samples recognized by the player.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include "xm.h"
 

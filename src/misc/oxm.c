@@ -8,10 +8,6 @@
 
 #if !defined WIN32 && !defined __AMIGA__ && !defined __AROS__
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

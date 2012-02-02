@@ -10,10 +10,6 @@
  * by Nir Oren. Tested with Shell.liq sent by Adi Sapir.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <assert.h>
 #include "period.h"
 #include "load.h"

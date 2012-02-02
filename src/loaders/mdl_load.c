@@ -13,10 +13,6 @@
  * will be taken.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include "iff.h"
 #include "period.h"

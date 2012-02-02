@@ -12,10 +12,6 @@
    (couldn't keep stdint types, some platforms we build on didn't like them)
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -20,10 +20,6 @@
  * actually worth listening to.  
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <string.h>
 #include "load.h"
 #include "asif.h"

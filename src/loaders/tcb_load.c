@@ -14,10 +14,6 @@
  * We only support the old format --claudio
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 
 

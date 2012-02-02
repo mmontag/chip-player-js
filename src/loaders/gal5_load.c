@@ -6,10 +6,6 @@
  * for more information.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <unistd.h>
 #include <limits.h>
 #include "load.h"

@@ -15,10 +15,6 @@
  * - MAS_UTrack_V004: Ultra Tracker version 1.6
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "period.h"
 #include "load.h"
 

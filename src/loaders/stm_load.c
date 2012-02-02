@@ -6,10 +6,6 @@
  * for more information.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include "stm.h"
 #include "period.h"

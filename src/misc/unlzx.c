@@ -17,10 +17,6 @@
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -1381,10 +1377,6 @@ int main(int argc, char **argv)
   UBYTE packed[4]; bit 0 is MSB, 31 is LSB
 ; bit # 0-4=Day 5-8=Month 9-14=Year 15-19=Hour 20-25=Minute 26-31=Second
 } */ /* SIZE = 4 */
-#endif
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
 #endif
 
 #include "common.h"

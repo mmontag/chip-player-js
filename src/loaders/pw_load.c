@@ -6,10 +6,6 @@
  * for more information.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <unistd.h>
 #ifdef __native_client__
 #include <sys/syslimits.h>

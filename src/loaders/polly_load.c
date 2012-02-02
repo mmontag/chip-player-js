@@ -13,10 +13,6 @@
  * information.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 
 static int polly_test(FILE *, char *, const int);

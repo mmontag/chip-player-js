@@ -22,10 +22,6 @@
  * - (unknown) NSMS
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>

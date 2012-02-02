@@ -13,10 +13,6 @@
  * Mon Dec 25 10:49:19 BRST 2000
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <math.h>
 #include "xmp.h"
 #include "common.h"

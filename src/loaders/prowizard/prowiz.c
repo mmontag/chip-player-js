@@ -5,10 +5,6 @@
  * Copyright (C) 2006-2007 Claudio Matsuoka
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>

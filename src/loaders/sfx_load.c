@@ -16,10 +16,6 @@
  * uses 31 samples [instead of 15].
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "period.h"
 #include "load.h"
 

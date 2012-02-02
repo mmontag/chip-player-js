@@ -2,10 +2,6 @@
 #ifndef __PROWIZ_H
 #define __PROWIZ_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include "list.h"
 #include "common.h"

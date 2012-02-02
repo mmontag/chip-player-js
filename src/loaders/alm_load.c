@@ -15,10 +15,6 @@
  * from different files. Using *module into a global variable is a hack.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include <sys/types.h>
 #include <sys/stat.h>

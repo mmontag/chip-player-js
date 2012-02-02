@@ -15,10 +15,6 @@
  * official formats, numbered from 10 (AMF 1.0) to 14 (AMF 1.4).
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 #include "period.h"
 

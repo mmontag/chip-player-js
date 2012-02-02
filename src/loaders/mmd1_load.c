@@ -10,10 +10,6 @@
  * OctaMED v1.00b: ftp://ftp.funet.fi/pub/amiga/fish/501-600/ff579
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "med.h"
 #include "load.h"
 

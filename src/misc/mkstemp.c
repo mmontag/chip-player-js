@@ -1,9 +1,5 @@
 #ifdef WIN32
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 /* Copyright (C) 1991, 1992, 1996, 1998, 2001 Free Software Foundation, Inc.
    This file is derived from mkstemps.c from the GNU Libiberty Library
    which in turn is derived from the GNU C Library.

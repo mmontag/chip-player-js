@@ -13,10 +13,6 @@
 
 /* Tested with the Slamtilt modules sent by Sipos Attila */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "load.h"
 
 #define MAGIC_STIM	MAGIC4('S','T','I','M')
