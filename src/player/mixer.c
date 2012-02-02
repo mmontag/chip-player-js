@@ -600,7 +600,6 @@ void xmp_smix_off(struct xmp_context *ctx)
 
     free(s->buffer);
     free(s->buf32b);
-    free(s->buffer);
     s->buf32b = NULL;
     s->buffer = NULL;
 }
