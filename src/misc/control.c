@@ -66,19 +66,7 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {
-	int num;
-
 	xmp_init_formats(ctx);
-
-#ifndef __native_client__
-	/* must be parsed before loading the rc file. */
-	for (num = 1; num < argc; num++) {
-		if (!strcmp(argv[num], "--norc"))
-			break;
-	}
-	if (num >= argc)
-		_xmp_read_rc((struct xmp_context *)ctx);
-#endif
 }
 
 void xmp_deinit(xmp_context ctx)
