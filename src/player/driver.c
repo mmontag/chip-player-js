@@ -15,7 +15,6 @@
 #include "driver.h"
 #include "convert.h"
 #include "mixer.h"
-#include "synth.h"
 #include "smix.h"
 
 #define	FREE	-1
@@ -44,41 +43,54 @@ void xmp_drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
 /* xmp_drv_on (number of tracks) */
 int xmp_drv_on(struct xmp_context *ctx, int num)
 {
-    struct xmp_driver_context *d = &ctx->d;
-    struct xmp_smixer_context *s = &ctx->s;
-    struct xmp_mod_context *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
+	struct xmp_driver_context *d = &ctx->d;
+	struct xmp_mod_context *m = &ctx->m;
+	int i;
 
-    d->numtrk = num;
-    num = xmp_smix_numvoices(ctx, -1);
+	d->numtrk = num;
+	num = xmp_smix_numvoices(ctx, -1);
 
-    d->numchn = d->numtrk;
-    d->chnvoc = m->flags & XMP_CTL_VIRTUAL ? MAX_VOICES_CHANNEL : 1;
+	d->numchn = d->numtrk;
+	d->chnvoc = m->flags & XMP_CTL_VIRTUAL ? MAX_VOICES_CHANNEL : 1;
 
-    if (d->chnvoc > 1)
-	d->numchn += num;
-    else if (num > d->numchn)
-	num = d->numchn;
+	if (d->chnvoc > 1)
+		d->numchn += num;
+	else if (num > d->numchn)
+		num = d->numchn;
 
-    num = d->maxvoc = xmp_smix_numvoices(ctx, num);
+	num = d->maxvoc = xmp_smix_numvoices(ctx, num);
 
-    d->voice_array = calloc(d->maxvoc, sizeof (struct voice_info));
-    d->ch2vo_array = calloc(d->numchn, sizeof (int));
-    d->ch2vo_count = calloc(d->numchn, sizeof (int));
+	d->voice_array = calloc(d->maxvoc, sizeof(struct voice_info));
+	if (d->voice_array == NULL)
+		goto err;
 
-    if (!(d->voice_array && d->ch2vo_array && d->ch2vo_count))
+	d->ch2vo_array = calloc(d->numchn, sizeof(int));
+	if (d->ch2vo_array == NULL)
+		goto err1;
+
+	d->ch2vo_count = calloc(d->numchn, sizeof(int));
+	if (d->ch2vo_count == NULL)
+		goto err2;
+
+	for (i = 0; i < d->maxvoc; i++) {
+		d->voice_array[i].chn = FREE;
+		d->voice_array[i].root = FREE;
+	}
+
+	for (i = 0; i < d->numchn; i++) {
+		 d->ch2vo_array[i] = FREE;
+	}
+
+	d->curvoc = d->agevoc = 0;
+
+	return 0;
+
+err2:
+	free(d->ch2vo_array);
+err1:
+	free(d->voice_array);
+err:
 	return XMP_ERR_ALLOC;
-
-    for (; num--; d->voice_array[num].chn = d->voice_array[num].root = FREE);
-    for (num = d->numchn; num--; d->ch2vo_array[num] = FREE);
-
-    d->curvoc = d->agevoc = 0;
-
-    s->mode = o->outfmt & XMP_FMT_MONO ? 1 : 2;
-    s->resol = o->resol > 8 ? 2 : 1;
-    smix_resetvar(ctx);
-
-    return 0;
 }
 
 

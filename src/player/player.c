@@ -147,7 +147,7 @@ static inline void reset_channel(struct xmp_context *ctx)
     for (i = d->numtrk; i--; ) {
 	xc = &p->xc_data[i];
 	xc->masterpan = m->mod.xxc[i].pan;
-	xc->mastervol = m->mod.xxc[i].vol; //0x40;
+	xc->mastervol = m->mod.xxc[i].vol;
 	xc->cutoff = 0xff;
     }
 }
@@ -825,6 +825,8 @@ int xmp_player_start(xmp_context opaque)
 	if ((ret = xmp_drv_on(ctx, m->mod.chn)) != 0)
 		return ret;
 
+	smix_resetvar(ctx);
+
 	f->jump = -1;
 
 	p->fetch_ctl = calloc(m->mod.chn, sizeof (int));
@@ -838,8 +840,6 @@ int xmp_player_start(xmp_context opaque)
 	m->synth->reset(ctx);
 
 	reset_channel(ctx);
-
-	//xmp_drv_starttimer(ctx);
 
 	return 0;
 }
@@ -1041,7 +1041,6 @@ void xmp_player_end(xmp_context opaque)
 	struct xmp_mod_context *m = &ctx->m;
 	struct flow_control *f = &p->flow;
 
-	//xmp_drv_stoptimer(ctx);
 	xmp_drv_off(ctx);
 	m->synth->deinit(ctx);
 
