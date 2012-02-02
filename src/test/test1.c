@@ -1,54 +1,49 @@
 /* A simple frontend for xmp */
 
 #include <stdio.h>
+#include <pulse/simple.h>
+#include <pulse/error.h>
+
 #include "xmp.h"
-
-void init_drivers (void);
-
-static xmp_context ctx;
-static struct xmp_module_info mi;
-
-static void process_echoback(unsigned long i)
-{
-	unsigned long msg = i >> 4;
-	static int oldpos = -1;
-	static int pos, pat;
-
-	switch (i & 0xf) {
-	case XMP_ECHO_ORD:
-		pos = msg & 0xff;
-		pat = msg >> 8;
-		break;
-	case XMP_ECHO_ROW:
-		if (!(msg & 0xff) || pos != oldpos) {
-			printf
-			    ("\rOrder %02X/%02X - Pattern %02X/%02X - Row      ",
-			     pos, mi.len, pat, mi.pat - 1);
-			oldpos = pos;
-		}
-		printf("\b\b\b\b\b%02X/%02X", (int)(msg & 0xff),
-		       (int)(msg >> 8));
-		break;
-	}
-}
 
 int main(int argc, char **argv)
 {
+	static xmp_context ctx;
+	static struct xmp_module_info mi;
 	int i;
+	pa_simple *s;
+	pa_sample_spec ss;
+	int error;
+	void *buffer;
+	int size;
 
 	setbuf(stdout, NULL);
 
-	init_drivers();
+	ss.format = PA_SAMPLE_S16NE;
+	ss.channels = 2;
+	ss.rate = 44100;
+
+	s = pa_simple_new(NULL,	/* Use the default server */
+		  "test",	/* Our application's name */
+		  PA_STREAM_PLAYBACK, NULL,	/* Use the default device */
+		  "Music",	/* Description of our stream */
+		  &ss,		/* Our sample format */
+		  NULL,		/* Use default channel map */
+		  NULL,		/* Use default buffering attributes */
+		  &error);	/* Ignore error code */
+
+	if (s == 0) {
+		fprintf(stderr, "pulseaudio error: %s\n", pa_strerror(error));
+		return XMP_ERR_DINIT;
+	}
+
 	ctx = xmp_create_context();
 	xmp_init(ctx, argc, argv);
 
-	xmp_verbosity_level(ctx, 0);
 	if (xmp_open_audio(ctx) < 0) {
 		fprintf(stderr, "%s: can't open audio device", argv[0]);
 		return -1;
 	}
-
-	xmp_register_event_callback(ctx, process_echoback);
 
 	for (i = 1; i < argc; i++) {
 		if (xmp_load_module(ctx, argv[i]) < 0) {
@@ -56,9 +51,16 @@ int main(int argc, char **argv)
 				argv[i]);
 			continue;
 		}
-		xmp_get_module_info(ctx, &mi);
-		printf("%s (%s)\n", mi.name, mi.type);
-		xmp_play_module(ctx);
+		xmp_player_get_info(ctx, &mi);
+		printf("%s (%s)\n", mi.mod->name, mi.mod->type);
+
+		xmp_player_start(ctx);
+		while (xmp_player_frame(ctx) == 0) {
+			xmp_get_buffer(ctx, &buffer, &size);
+			pa_simple_write(s, buffer, size, &error);
+		}
+		xmp_player_end(ctx);
+
 		xmp_release_module(ctx);
 		printf("\n");
 	}

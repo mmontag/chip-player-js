@@ -31,7 +31,7 @@ include src/plugin/tunenet/Makefile
 include docs/Makefile
 include etc/Makefile
 
-sinclude src/test/Makefile
+include src/test/Makefile
 
 XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
