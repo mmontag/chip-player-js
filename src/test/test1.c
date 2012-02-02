@@ -9,15 +9,12 @@
 int main(int argc, char **argv)
 {
 	static xmp_context ctx;
-	static struct xmp_module_info mi;
+	static struct xmp_module_info mi[2];
+	int current, prev;
 	int i;
 	pa_simple *s;
 	pa_sample_spec ss;
 	int error;
-	void *buffer;
-	int size;
-
-	setbuf(stdout, NULL);
 
 	ss.format = PA_SAMPLE_S16NE;
 	ss.channels = 2;
@@ -48,12 +45,28 @@ int main(int argc, char **argv)
 		}
 		xmp_player_start(ctx);
 
-		xmp_player_get_info(ctx, &mi);
-		printf("%s (%s)\n", mi.mod->name, mi.mod->type);
+		xmp_player_get_info(ctx, &mi[0]);
+		printf("%s (%s)\n", mi[0].mod->name, mi[0].mod->type);
+		mi[0].order = -1;
+		mi[0].row = -1;
+		current = 0;
 
 		while (xmp_player_frame(ctx) == 0) {
-			xmp_get_buffer(ctx, &buffer, &size);
-			pa_simple_write(s, buffer, size, &error);
+			prev = current;
+			current ^= 1;
+
+			xmp_player_get_info(ctx, &mi[current]);
+			pa_simple_write(s, mi[current].buffer,
+					mi[current].size, &error);
+
+			if (mi[current].row != mi[prev].row) {
+				struct xmp_module_info *mc = &mi[current];
+
+				printf("%3d/%3d %3d/%3d\r",
+					mc->order,  mc->mod->len,
+					mc->row, mc->mod->xxp[mc->pattern]->rows);
+				fflush(stdout);
+			}
 		}
 		xmp_player_end(ctx);
 

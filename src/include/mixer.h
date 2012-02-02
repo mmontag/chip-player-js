@@ -60,7 +60,6 @@ void    xmp_smix_setvol		(struct xmp_context *, int, int);
 void    xmp_smix_seteffect	(struct xmp_context *, int, int, int);
 void    xmp_smix_setpan		(struct xmp_context *, int, int);
 int	xmp_smix_numvoices	(struct xmp_context *, int);
-int	xmp_smix_softmixer	(struct xmp_context *);
-void    *xmp_smix_buffer	(struct xmp_context *);
+void	xmp_smix_softmixer	(struct xmp_context *);
 
 #endif /* __MIXER_H */

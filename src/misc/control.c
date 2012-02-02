@@ -166,14 +166,6 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 	return 0;
 }
 
-void xmp_get_buffer(xmp_context opaque, void **buffer, int *size)
-{
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-
-	*size = xmp_smix_softmixer(ctx);
-	*buffer = xmp_smix_buffer(ctx);
-}
-
 void xmp_get_driver_cfg(xmp_context opaque, int *srate, int *res, int *chn,
 			int *itpt)
 {

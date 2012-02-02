@@ -35,6 +35,7 @@
 #include "effects.h"
 #include "player.h"
 #include "synth.h"
+#include "mixer.h"
 
 /* Values for multi-retrig */
 static struct retrig_t rval[] = {
@@ -993,6 +994,8 @@ next_order:
 		}
 	}
 
+	xmp_smix_softmixer(ctx);
+
 #ifndef ANDROID
 	if (o->dump == 1) {
 		int i;
@@ -1060,6 +1063,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 {
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
 	struct xmp_player_context *p = &ctx->p;
+	struct xmp_smixer_context *s = &ctx->s;
 	struct xmp_mod_context *m = &ctx->m;
 	int chn, i;
 
@@ -1072,6 +1076,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->frame = p->frame;
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
+	info->buffer = s->buffer;
+	info->size = s->ticksize * s->mode * s->resol;
 
 	for (i = 0; i < chn; i++) {
 		struct channel_data *c = &p->xc_data[i];

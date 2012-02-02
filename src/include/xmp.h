@@ -289,6 +289,8 @@ struct xmp_module_info {
 	int tempo;
 	int bpm;
 	int time;
+	void *buffer;
+	int size;
 
 	struct {
 		int period;
@@ -330,7 +332,6 @@ int xmp_player_start(xmp_context);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);
-void xmp_get_buffer(xmp_context, void **, int *);
 void xmp_release_module(xmp_context);
 int xmp_verbosity_level(xmp_context, int);
 int xmp_seek_time(xmp_context, int);

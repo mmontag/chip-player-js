@@ -254,11 +254,12 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
-int xmp_smix_softmixer(struct xmp_context *ctx)
+void xmp_smix_softmixer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_options *o = &ctx->o;
     struct xmp_sample *xxs;
     struct voice_info *vi;
     int samples, tick, lps, lpe;
@@ -266,6 +267,7 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
     int prv_l, prv_r;
     int synth = 1;
     int *buf_pos;
+    int fmt, size;
 
     smix_rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
@@ -398,7 +400,21 @@ int xmp_smix_softmixer(struct xmp_context *ctx)
 	}
     }
 
-    return s->ticksize * s->mode * s->resol;
+    /* Render final frame */
+
+    if (!o->resol)
+	fmt = OUT_U8ULAW;
+    else if (o->resol > 8)
+	fmt = OUT_SU16NORM;
+    else
+	fmt = OUT_SU8NORM;
+
+    size = s->mode * s->ticksize;
+    assert(size <= OUT_MAXLEN);
+
+    out_fn[fmt](s->buffer, s->buf32b, size, o->amplify, o->outfmt);
+
+    smix_resetvar(ctx);
 }
 
 
@@ -606,27 +622,4 @@ void xmp_smix_off(struct xmp_context *ctx)
     s->buffer = NULL;
 }
 
-
-void *xmp_smix_buffer(struct xmp_context *ctx)
-{
-    int fmt, size;
-    struct xmp_smixer_context *s = &ctx->s;
-    struct xmp_options *o = &ctx->o;
-
-    if (!o->resol)
-	fmt = OUT_U8ULAW;
-    else if (o->resol > 8)
-	fmt = OUT_SU16NORM;
-    else
-	fmt = OUT_SU8NORM;
-
-    size = s->mode * s->ticksize;
-    assert(size <= OUT_MAXLEN);
-
-    out_fn[fmt](s->buffer, s->buf32b, size, o->amplify, o->outfmt);
-
-    smix_resetvar(ctx);
-
-    return s->buffer; 
-}
 
