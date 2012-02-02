@@ -215,7 +215,6 @@ struct xmp_driver_context {
 	int memavl;			/* Memory availble in sound card */
 	int numtrk;			/* Number of tracks */
 	int numchn;			/* Number of virtual channels */
-	int numbuf;			/* Number of output buffers */
 	int curvoc;			/* Number of voices currently in use */
 	int maxvoc;			/* Number of sound card voices */
 	int chnvoc;			/* Number of voices per channel */
@@ -233,10 +232,9 @@ struct xmp_driver_context {
 };
 
 struct xmp_smixer_context {
-	char** buffer;		/* array of output buffers */
+	char* buffer;		/* output buffer */
 	int* buf32b;		/* temp buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
-	int numbuf;		/* number of buffer to output */
 	int mode;		/* mode = 0:OFF, 1:MONO, 2:STEREO */
 	int resol;		/* resolution output 1:8bit, 2:16bit */
 	int ticksize;

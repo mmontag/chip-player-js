@@ -574,30 +574,23 @@ int xmp_smix_numvoices(struct xmp_context *ctx, int num)
 
 int xmp_smix_on(struct xmp_context *ctx)
 {
-    struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
-    int cnt;
 
-    if (s->numbuf)
-	return 0;
-
-    if (d->numbuf < 1)
-	d->numbuf = 1;
-    cnt = s->numbuf = d->numbuf;
-
-    s->buffer = calloc(sizeof (void *), cnt);
+    s->buffer = calloc(SMIX_RESMAX, OUT_MAXLEN);
+    if (s->buffer == NULL)
+	goto err;
     s->buf32b = calloc(sizeof (int), OUT_MAXLEN);
-    if (!(s->buffer && s->buf32b))
-	return XMP_ERR_ALLOC;
-
-    while (cnt--) {
-	if (!(s->buffer[cnt] = calloc(SMIX_RESMAX, OUT_MAXLEN)))
-	    return XMP_ERR_ALLOC;
-    }
+    if (s->buf32b == NULL)
+	goto err1;
 
     s->numvoc = SMIX_NUMVOC;
 
     return 0;
+
+err1:
+    free(s->buffer);
+err:
+    return XMP_ERR_ALLOC;
 }
 
 
@@ -605,9 +598,7 @@ void xmp_smix_off(struct xmp_context *ctx)
 {
     struct xmp_smixer_context *s = &ctx->s;
 
-    while (s->numbuf)
-	free(s->buffer[--s->numbuf]);
-
+    free(s->buffer);
     free(s->buf32b);
     free(s->buffer);
     s->buf32b = NULL;
@@ -617,7 +608,6 @@ void xmp_smix_off(struct xmp_context *ctx)
 
 void *xmp_smix_buffer(struct xmp_context *ctx)
 {
-    static int outbuf;
     int fmt, size;
     struct xmp_smixer_context *s = &ctx->s;
     struct xmp_options *o = &ctx->o;
@@ -629,20 +619,13 @@ void *xmp_smix_buffer(struct xmp_context *ctx)
     else
 	fmt = OUT_SU8NORM;
 
-    /* The mixer works with multiple buffers -- this is useless when using
-     * multi-buffered sound output (e.g. OSS fragments) but can be useful for
-     * DMA transfers in DOS.
-     */
-    if (++outbuf >= s->numbuf)
-	outbuf = 0;
-
     size = s->mode * s->ticksize;
     assert(size <= OUT_MAXLEN);
 
-    out_fn[fmt](s->buffer[outbuf], s->buf32b, size, o->amplify, o->outfmt);
+    out_fn[fmt](s->buffer, s->buf32b, size, o->amplify, o->outfmt);
 
     smix_resetvar(ctx);
 
-    return s->buffer[outbuf]; 
+    return s->buffer; 
 }
 
