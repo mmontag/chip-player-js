@@ -52,7 +52,8 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 	eval $$CMD
 
 
-binaries: src/main/xmp $(PLUGINS)
+#binaries: src/main/xmp $(PLUGINS)
+binaries: src/test/test1
 
 # Legacy libxmp.a creation, in case someone needs it
 #$(LIB): $(OBJS)

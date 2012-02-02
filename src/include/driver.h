@@ -45,9 +45,6 @@
 
 /* PROTOTYPES */
 
-int	xmp_drv_open		(struct xmp_context *);
-int	xmp_drv_set		(struct xmp_context *);
-void	xmp_drv_close		(struct xmp_context *);
 int	xmp_drv_on		(struct xmp_context *, int);
 void	xmp_drv_off		(struct xmp_context *);
 void	xmp_drv_mute		(struct xmp_context *, int, int);
@@ -66,12 +63,6 @@ int	xmp_drv_cstat		(struct xmp_context *, int);
 void	xmp_drv_resetchannel	(struct xmp_context *, int);
 void	xmp_drv_resetvoice	(struct xmp_context *, int, int);
 void	xmp_drv_reset		(struct xmp_context *);
-double	xmp_drv_sync		(struct xmp_context *, double);
-void	xmp_drv_stoptimer	(struct xmp_context *);
-void	xmp_drv_clearmem	(struct xmp_context *);
-void	xmp_drv_starttimer	(struct xmp_context *);
-void	xmp_drv_bufwipe		(struct xmp_context *);
-void	xmp_drv_bufdump		(struct xmp_context *);
 
 struct xmp_drv_info *xmp_drv_array (void);
 

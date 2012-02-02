@@ -165,12 +165,6 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 		if (m->volume < 64)
 			m->volume++;
 		return m->volume;
-	case XMP_TIMER_STOP:
-		xmp_drv_stoptimer((struct xmp_context *)ctx);
-		break;
-	case XMP_TIMER_RESTART:
-		xmp_drv_starttimer((struct xmp_context *)ctx);
-		break;
 	case XMP_SET_FLAG:
 		m->flags |= arg;
 		break;
@@ -184,12 +178,14 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 	return 0;
 }
 
+#if 0
 void xmp_play_buffer(xmp_context opaque)
 {
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
 
 	xmp_drv_bufdump((struct xmp_context *)ctx);
 }
+#endif
 
 void xmp_get_buffer(xmp_context opaque, void **buffer, int *size)
 {

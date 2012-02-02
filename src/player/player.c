@@ -837,7 +837,7 @@ int xmp_player_start(xmp_context opaque)
 
 	reset_channel(ctx);
 
-	xmp_drv_starttimer(ctx);
+	//xmp_drv_starttimer(ctx);
 
 	return 0;
 }
@@ -1039,7 +1039,7 @@ void xmp_player_end(xmp_context opaque)
 	struct xmp_mod_context *m = &ctx->m;
 	struct flow_control *f = &p->flow;
 
-	xmp_drv_stoptimer(ctx);
+	//xmp_drv_stoptimer(ctx);
 	xmp_drv_off(ctx);
 	m->synth->deinit(ctx);
 

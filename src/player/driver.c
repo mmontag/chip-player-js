@@ -24,51 +24,6 @@
 #define	FREE	-1
 #define MAX_VOICES_CHANNEL 16
 
-static struct xmp_drv_info *drv_array = NULL;
-
-extern struct xmp_drv_info drv_smix;
-
-static int drv_select(struct xmp_context *ctx)
-{
-    struct xmp_drv_info *drv;
-    int ret;
-    struct xmp_driver_context *d = &ctx->d;
-    struct xmp_options *o = &ctx->o;
-
-    if (!drv_array)
-	return XMP_ERR_NODRV;
-
-    if (o->drv_id) {
- 	ret = XMP_ERR_NODRV;
-	for (drv = drv_array; drv; drv = drv->next) {
-	    if (!strcmp (drv->id, o->drv_id)) {
-		if ((ret = drv->init(ctx)) == 0)
-		    break;
-	    }
-	}
-    } else {
-	ret = XMP_ERR_DSPEC;
-
-	for (drv = drv_array; drv; drv = drv->next) {
-	    if (drv->init(ctx) == 0) {
-		ret = 0;
-		break;
-	    }
-	}
-    }
-    if (ret)
-	return ret;
-
-    o->drv_id = drv->id;
-    d->description = drv->description;
-    d->help = drv->help;
-    d->driver = drv;
-
-    xmp_smix_on(ctx);
-
-    return 0;
-}
-
 
 void xmp_drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
 {
@@ -86,71 +41,6 @@ void xmp_drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
     d->ch2vo_array[vi->chn] = FREE;
     memset(vi, 0, sizeof (struct voice_info));
     vi->chn = vi->root = FREE;
-}
-
-
-void xmp_drv_register(struct xmp_drv_info *drv)
-{
-    if (!drv_array) {
-	drv_array = drv;
-    } else {
-	struct xmp_drv_info *tmp;
-
-	for (tmp = drv_array; tmp->next; tmp = tmp->next);
-	tmp->next = drv;
-    }
-    drv->next = NULL;
-}
-
-
-int xmp_drv_open(struct xmp_context *ctx)
-{
-    int status;
-    struct xmp_driver_context *d = &ctx->d;
-    struct xmp_smixer_context *s = &ctx->s;
-    /*struct xmp_options *o = &ctx->o;*/
-
-    d->memavl = 0;
-    s->buf32b = NULL;
-    if ((status = drv_select(ctx)) != 0)
-	return status;
-
-    /*synth_init(o->freq);
-    synth_reset();*/
-
-    return 0;
-}
-
-
-/* for the XMMS/BMP/Audacious plugin */
-int xmp_drv_set(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    struct xmp_options *o = &ctx->o;
-    struct xmp_drv_info *drv;
-
-    if (!drv_array)
-	return XMP_ERR_NODRV;
-
-    for (drv = drv_array; drv; drv = drv->next) {
-	if (!strcmp (drv->id, o->drv_id)) {
-	    d->driver = drv;
-	    return 0;
-	}
-    }
-
-    return XMP_ERR_NODRV;
-}
-
-
-void xmp_drv_close(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-
-    memset(d->cmute_array, 0, XMP_MAXCH * sizeof(int));
-    d->driver->shutdown(ctx);
-    xmp_smix_off(ctx);
-    /*synth_deinit();*/
 }
 
 
@@ -198,8 +88,6 @@ int xmp_drv_on(struct xmp_context *ctx, int num)
 void xmp_drv_off(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
-
-    /*xmp_drv_writepatch(ctx, NULL);*/
 
     if (d->numchn < 1)
 	return;
@@ -526,42 +414,4 @@ int xmp_drv_cstat(struct xmp_context *ctx, int chn)
 	return XMP_CHN_DUMB;
 
     return chn < d->numtrk ? XMP_CHN_ACTIVE : d->voice_array[voc].act;
-}
-
-
-void xmp_drv_bufdump(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    int i = xmp_smix_softmixer(ctx);
-    void *b =  xmp_smix_buffer(ctx);
-
-    d->driver->bufdump(ctx, b, i);
-}
-
-
-void xmp_drv_starttimer(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-
-    //d->driver->starttimer();
-}
-
-
-void xmp_drv_stoptimer(struct xmp_context *ctx)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    int voc;
-
-    for (voc = d->maxvoc; voc--; )
-	xmp_smix_setvol(ctx, voc, 0);
-
-    //d->driver->stoptimer();
-
-    xmp_drv_bufdump(ctx);
-}
-
-
-struct xmp_drv_info *xmp_drv_array()
-{
-    return drv_array;
 }

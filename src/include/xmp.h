@@ -30,8 +30,6 @@
 #define XMP_MOD_RESTART		0x04
 #define XMP_GVOL_INC		0x05
 #define XMP_GVOL_DEC		0x06
-#define XMP_TIMER_STOP          0x07
-#define XMP_TIMER_RESTART       0x08
 #define XMP_SET_FLAG		0x09
 #define XMP_RESET_FLAG		0x0a
 #define XMP_TEST_FLAG		0x0b
@@ -56,8 +54,6 @@
 #define xmp_stop_module(p)	xmp_player_ctl((p), XMP_MOD_STOP, 0)
 #define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
 #define xmp_restart_module(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
-#define xmp_timer_stop(p)	xmp_player_ctl((p), XMP_TIMER_STOP, 0)
-#define xmp_timer_restart(p)	xmp_player_ctl((p), XMP_TIMER_RESTART, 0)
 #define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_GVOL_INC, 0)
 #define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_GVOL_DEC, 0)
 #define xmp_set_flag(p,x)	xmp_player_ctl((p), XMP_SET_FLAG, (x))
@@ -136,20 +132,6 @@ struct xmp_fmt_info {
 	char *id;
 	char *tracker;
 };
-
-struct xmp_drv_info {
-	char *id;
-	char *description;
-	char **help;
-	int (*init) ();
-	void (*shutdown) ();
-	void (*starttimer) ();
-	void (*stoptimer) ();
-	void (*bufdump) ();
-	void *data;
-	struct xmp_drv_info *next;
-};
-
 
 #define XXM_KEY_MAX 108
 #define XMP_MAXENV	32		/* max envelope points */
@@ -278,7 +260,6 @@ struct xmp_module {
 #define XXM_FLG_INSVOL  0x04
 	int flg;		/* Flags */
 	int pat;		/* Number of patterns */
-	//int ptc;		/* Number of patches */
 	int trk;		/* Number of tracks */
 	int chn;		/* Tracks per pattern */
 	int ins;		/* Number of instruments */
@@ -337,13 +318,10 @@ void xmp_set_flags(xmp_context, int);
 
 void xmp_init(xmp_context, int, char **);
 void xmp_deinit(xmp_context);
-void xmp_drv_register(struct xmp_drv_info *);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);
 struct xmp_module_info *xmp_get_module_info(xmp_context, struct xmp_module_info *);
 struct xmp_fmt_info *xmp_get_fmt_info(struct xmp_fmt_info **);
-struct xmp_drv_info *xmp_get_drv_info(struct xmp_drv_info **);
-char *xmp_get_driver_description(xmp_context);
 void xmp_set_driver_parameter(struct xmp_options *, char *);
 void xmp_get_driver_cfg(xmp_context, int *, int *, int *, int *);
 void xmp_channel_mute(xmp_context, int, int, int);
@@ -354,7 +332,6 @@ int xmp_player_start(xmp_context);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);
-void xmp_play_buffer(xmp_context);
 void xmp_get_buffer(xmp_context, void **, int *);
 void xmp_release_module(xmp_context);
 int xmp_verbosity_level(xmp_context, int);
