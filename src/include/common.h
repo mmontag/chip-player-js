@@ -247,7 +247,6 @@ struct xmp_context {
 
 /* Prototypes */
 
-int	ulaw_encode		(int);
 char	*str_adj		(char *);
 int	_xmp_scan_module	(struct xmp_context *);
 

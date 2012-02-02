@@ -56,10 +56,6 @@ void    smix_st8itpt_flt  (struct voice_info *, int *, int, int, int, int);
 void    smix_st16itpt_flt (struct voice_info *, int *, int, int, int, int);
 
 
-static void     out_su8norm     (char*, int*, int, int, int);
-static void     out_su16norm    (int16*, int*, int, int, int);
-static void     out_u8ulaw      (char*, int*, int, int, int);
-
 /* Array index:
  *
  * bit 0: 0=non-interpolated, 1=interpolated
@@ -89,15 +85,6 @@ static void (*mix_fn[])() = {
     smix_st16itpt_flt
 };
 
-#define OUT_U8ULAW	0
-#define OUT_SU8NORM	1
-#define OUT_SU16NORM	2
-
-static void (*out_fn[])() = {
-    out_u8ulaw,
-    out_su8norm,
-    out_su16norm
-};
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
 static void out_su8norm(char *dest, int *src, int num, int amp, int flags)
@@ -131,20 +118,6 @@ static void out_su16norm(int16 *dest, int *src, int num, int amp, int flags)
     for (; num--; ++src, ++dest) {
 	smp = *src >> shift;
 	*dest = smp > LIM16_HI ? lhi : smp < LIM16_LO ? llo : smp + offs;
-    }
-}
-
-
-/* Downmix 32bit samples to 8bit, unsigned ulaw, mono or stereo output */
-static void out_u8ulaw(char *dest, int *src, int num, int amp, int flags)
-{
-    int smp;
-    int shift = DOWNMIX_SHIFT + 4 - amp;
-
-    for (; num--; ++src, ++dest) {
-	smp = *src >> shift;
-	*dest = smp > LIM12_HI ? ulaw_encode(LIM12_HI) :
-		smp < LIM12_LO ? ulaw_encode(LIM12_LO) : ulaw_encode (smp);
     }
 }
 
@@ -267,7 +240,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
     int prv_l, prv_r;
     int synth = 1;
     int *buf_pos;
-    int fmt, size;
+    int size;
 
     smix_rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
@@ -402,17 +375,14 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 
     /* Render final frame */
 
-    if (!o->resol)
-	fmt = OUT_U8ULAW;
-    else if (o->resol > 8)
-	fmt = OUT_SU16NORM;
-    else
-	fmt = OUT_SU8NORM;
-
     size = s->mode * s->ticksize;
     assert(size <= OUT_MAXLEN);
 
-    out_fn[fmt](s->buffer, s->buf32b, size, o->amplify, o->outfmt);
+    if (o->resol > 8) {
+	out_su16norm((int16 *)s->buffer, s->buf32b, size, o->amplify, o->outfmt);
+    } else {
+	out_su8norm(s->buffer, s->buf32b, size, o->amplify, o->outfmt);
+    }
 
     smix_resetvar(ctx);
 }
@@ -621,5 +591,3 @@ void xmp_smix_off(struct xmp_context *ctx)
     s->buf32b = NULL;
     s->buffer = NULL;
 }
-
-
