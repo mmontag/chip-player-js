@@ -156,30 +156,42 @@ void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
 static int drv_allocvoice(struct xmp_context *ctx, int chn)
 {
     struct xmp_driver_context *d = &ctx->d;
-    int voc, vfree;
+    int i, num;
     uint32 age;
 
     if (d->ch2vo_count[chn] < d->chnvoc) {
-	for (voc = d->maxvoc; voc-- && d->voice_array[voc].chn != FREE;);
-	if (voc < 0)
-	    return voc;
 
-	d->voice_array[voc].age = d->agevoc;
+	/* Find free voice */
+	for (i = 0; i < d->maxvoc; i++) {
+	    if (d->voice_array[i].chn == FREE)
+		break;
+	}
+
+	/* not found */
+	if (i == d->maxvoc)
+	    return -1;
+
+	d->voice_array[i].age = d->agevoc;
 	d->ch2vo_count[chn]++;
 	d->curvoc++;
 
-	return voc;
+	return i;
     }
 
-    for (voc = d->maxvoc, vfree = age = FREE; voc--;) {
-	if (d->voice_array[voc].root == chn && d->voice_array[voc].age < age)
-	    age = d->voice_array[vfree = voc].age;
+    /* Find oldest voice */
+    num = age = FREE;
+    for (i = 0; i < d->maxvoc; i++) {
+	if (d->voice_array[i].root == chn && d->voice_array[i].age < age) {
+	    num = i;
+	    age = d->voice_array[num].age;
+	}
     }
 
-    d->ch2vo_array[d->voice_array[vfree].chn] = FREE;
-    d->voice_array[vfree].age = d->agevoc;
+    /* Free oldest voice */
+    d->ch2vo_array[d->voice_array[num].chn] = FREE;
+    d->voice_array[num].age = d->agevoc;
 
-    return vfree;
+    return num;
 }
 
 
