@@ -64,16 +64,6 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 	return &((struct xmp_context *)ctx)->o;
 }
 
-int xmp_get_flags(xmp_context ctx)
-{
-	return ((struct xmp_context *)ctx)->m.flags;
-}
-
-void xmp_set_flags(xmp_context ctx, int flags)
-{
-	((struct xmp_context *)ctx)->m.flags = flags;
-}
-
 void xmp_init(xmp_context ctx, int argc, char **argv)
 {
 	int num;
@@ -164,18 +154,6 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 	}
 
 	return 0;
-}
-
-void xmp_get_driver_cfg(xmp_context opaque, int *srate, int *res, int *chn,
-			int *itpt)
-{
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_options *o = &ctx->o;
-
-	*srate = o->freq;
-	*res = o->resol ? o->resol : 8 /* U_LAW */ ;
-	*chn = o->outfmt & XMP_FMT_MONO ? 1 : 2;
-	*itpt = !!(o->flags & XMP_CTL_ITPT);
 }
 
 int xmp_seek_time(xmp_context opaque, int time)

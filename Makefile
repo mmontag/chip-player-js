@@ -24,10 +24,10 @@ include src/win32/Makefile
 LOBJS = $(OBJS:.o=.lo)
 
 # These are the applications
-include src/drivers/Makefile
-include src/main/Makefile
-include src/plugin/Makefile
-include src/plugin/tunenet/Makefile
+#include src/drivers/Makefile
+#include src/main/Makefile
+#include src/plugin/Makefile
+#include src/plugin/tunenet/Makefile
 include docs/Makefile
 include etc/Makefile
 

@@ -158,7 +158,7 @@ int _xmp_read_rc(struct xmp_context *ctx)
 	 * send it to the device driver
 	 */
 	snprintf(cparm, 512, "%s=%s", var, val);
-	xmp_set_driver_parameter(&ctx->o, cparm);
+	//xmp_set_driver_parameter(&ctx->o, cparm);
     }
 
     fclose (rc);
