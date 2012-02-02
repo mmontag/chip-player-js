@@ -98,12 +98,14 @@ void xmp_deinit(xmp_context ctx)
 
 int xmp_open_audio(xmp_context ctx)
 {
-	return xmp_drv_open((struct xmp_context *)ctx);
+	//return xmp_drv_open((struct xmp_context *)ctx);
+	return xmp_smix_on((struct xmp_context *)ctx);
 }
 
 void xmp_close_audio(xmp_context ctx)
 {
-	xmp_drv_close((struct xmp_context *)ctx);
+	//xmp_drv_close((struct xmp_context *)ctx);
+	return xmp_smix_off((struct xmp_context *)ctx);
 }
 
 void xmp_set_driver_parameter(struct xmp_options *o, char *s)

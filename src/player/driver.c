@@ -26,6 +26,7 @@
 
 static struct xmp_drv_info *drv_array = NULL;
 
+extern struct xmp_drv_info drv_smix;
 
 static int drv_select(struct xmp_context *ctx)
 {
@@ -542,7 +543,7 @@ void xmp_drv_starttimer(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    d->driver->starttimer();
+    //d->driver->starttimer();
 }
 
 
@@ -554,7 +555,7 @@ void xmp_drv_stoptimer(struct xmp_context *ctx)
     for (voc = d->maxvoc; voc--; )
 	xmp_smix_setvol(ctx, voc, 0);
 
-    d->driver->stoptimer();
+    //d->driver->stoptimer();
 
     xmp_drv_bufdump(ctx);
 }
