@@ -85,36 +85,38 @@ static void (*mix_fn[])() = {
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
 static void out_su8norm(char *dest, int *src, int num, int amp, int flags)
 {
-    int smp, lhi, llo, offs;
-    int shift = DOWNMIX_SHIFT + 8 - amp;
+	int smp;
+	int shift = DOWNMIX_SHIFT + 8 - amp;
 
-    offs = (flags & XMP_FMT_UNS) ? 0x80 : 0;
-
-    lhi = LIM8_HI + offs;
-    llo = LIM8_LO + offs;
-
-    for (; num--; ++src, ++dest) {
-	smp = *src >> shift;
-	*dest = smp > LIM8_HI ? lhi : smp < LIM8_LO ? llo : smp + offs;
-    }
+	for (; num--; src++, dest++) {
+		smp = *src >> shift;
+		if (smp > LIM8_HI) {
+			*dest = LIM8_HI;
+		} else if (smp < LIM8_LO) {
+			*dest = LIM8_LO;
+		} else {
+			*dest = smp;
+		}
+	}
 }
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void out_su16norm(int16 *dest, int *src, int num, int amp, int flags)
+static void out_su16norm(int16 * dest, int *src, int num, int amp, int flags)
 {
-    int smp, lhi, llo, offs;
-    int shift = DOWNMIX_SHIFT - amp;
+	int smp;
+	int shift = DOWNMIX_SHIFT - amp;
 
-    offs = (flags & XMP_FMT_UNS) ? 0x8000 : 0;
-
-    lhi = LIM16_HI + offs;
-    llo = LIM16_LO + offs;
-
-    for (; num--; ++src, ++dest) {
-	smp = *src >> shift;
-	*dest = smp > LIM16_HI ? lhi : smp < LIM16_LO ? llo : smp + offs;
-    }
+	for (; num--; src++, dest++) {
+		smp = *src >> shift;
+		if (smp > LIM16_HI) {
+			*dest = LIM16_HI;
+		} else if (smp < LIM16_LO) {
+			*dest = LIM16_LO;
+		} else {
+			*dest = smp;
+		}
+	}
 }
 
 

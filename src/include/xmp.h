@@ -44,12 +44,11 @@ struct xmp_options {
 	int big_endian;		/* Machine byte order */
 	char *drv_id;		/* Driver ID */
 	char *outfile;		/* Output file name when mixing to file */
-#define XMP_FMT_FM	(1 << 0)	/* Active mode FM */
-#define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */
-#define XMP_FMT_MONO	(1 << 2)	/* Mono output */
 	int dump;		/* Data dump for testing */
 	int amplify;		/* Software mixing amplify volume:
 				   0 = none, 1 = x2, 2 = x4, 3 = x8 */
+#define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */
+#define XMP_FMT_MONO	(1 << 2)	/* Mono output */
 	int outfmt;		/* Software mixing output data format */
 	int resol;		/* Software mixing resolution output */
 	int freq;		/* Software mixing rate (Hz) */
