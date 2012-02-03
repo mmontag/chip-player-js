@@ -290,7 +290,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	while (size > 0) {
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
-	    samples = 1 + (((int64)(vi->end - vi->pos) << SMIX_SHIFT)
+	    samples = (((int64)(vi->end - vi->pos + 1) << SMIX_SHIFT)
 		- vi->frac) / step;
 
 	    if (step > 0) {
