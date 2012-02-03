@@ -1,10 +1,20 @@
 /* A simple frontend for xmp */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <pulse/simple.h>
 #include <pulse/error.h>
 
 #include "xmp.h"
+
+static void display_data(struct xmp_module_info *mi)
+{
+	printf("%3d/%3d %3d/%3d\r",
+		mi->order, mi->mod->len,
+		mi->row, mi->mod->xxp[mi->pattern]->rows);
+
+	fflush(stdout);
+}
 
 int main(int argc, char **argv)
 {
@@ -31,7 +41,7 @@ int main(int argc, char **argv)
 
 	if (s == 0) {
 		fprintf(stderr, "pulseaudio error: %s\n", pa_strerror(error));
-		return XMP_ERR_DINIT;
+		exit(1);
 	}
 
 	ctx = xmp_create_context();
@@ -43,32 +53,33 @@ int main(int argc, char **argv)
 				argv[i]);
 			continue;
 		}
-		xmp_player_start(ctx);
 
-		xmp_player_get_info(ctx, &mi[0]);
-		printf("%s (%s)\n", mi[0].mod->name, mi[0].mod->type);
-		mi[0].order = -1;
-		mi[0].row = -1;
-		current = 0;
+		if (xmp_player_start(ctx) == 0) {
 
-		while (xmp_player_frame(ctx) == 0) {
-			prev = current;
-			current ^= 1;
+			/* Show module data */
 
-			xmp_player_get_info(ctx, &mi[current]);
-			pa_simple_write(s, mi[current].buffer,
-					mi[current].size, &error);
+			xmp_player_get_info(ctx, &mi[0]);
+			printf("%s (%s)\n", mi[0].mod->name, mi[0].mod->type);
+			mi[0].order = -1;
+			mi[0].row = -1;
+			current = 0;
+	
+			/* Play module */
 
-			if (mi[current].row != mi[prev].row) {
-				struct xmp_module_info *mc = &mi[current];
-
-				printf("%3d/%3d %3d/%3d\r",
-					mc->order,  mc->mod->len,
-					mc->row, mc->mod->xxp[mc->pattern]->rows);
-				fflush(stdout);
+			while (xmp_player_frame(ctx) == 0) {
+				prev = current;
+				current ^= 1;
+	
+				xmp_player_get_info(ctx, &mi[current]);
+				pa_simple_write(s, mi[current].buffer,
+						mi[current].size, &error);
+	
+				if (mi[current].row != mi[prev].row) {
+					display_data(&mi[current]);
+				}
 			}
+			xmp_player_end(ctx);
 		}
-		xmp_player_end(ctx);
 
 		xmp_release_module(ctx);
 		printf("\n");

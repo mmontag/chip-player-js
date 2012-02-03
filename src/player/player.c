@@ -829,18 +829,40 @@ int xmp_player_start(xmp_context opaque)
 	f->jump = -1;
 
 	p->fetch_ctl = calloc(m->mod.chn, sizeof (int));
-	f->loop_stack = calloc(d->numchn, sizeof (int));
-	f->loop_start = calloc(d->numchn, sizeof (int));
-	p->xc_data = calloc(d->numchn, sizeof (struct channel_data));
-	if (!(p->fetch_ctl && f->loop_stack && f->loop_start && p->xc_data))
-		return -1;
+	if (p->fetch_ctl == NULL)
+		goto err;
 
-	m->synth->init(ctx, o->freq);
+	f->loop_stack = calloc(d->numchn, sizeof (int));
+	if (f->loop_stack == NULL)
+		goto err1;
+
+	f->loop_start = calloc(d->numchn, sizeof (int));
+	if (f->loop_start == NULL)
+		goto err2;
+
+	p->xc_data = calloc(d->numchn, sizeof (struct channel_data));
+	if (p->xc_data == NULL)
+		goto err3;
+
+	if (m->synth->init(ctx, o->freq) < 0)
+		goto err4;
+
 	m->synth->reset(ctx);
 
 	reset_channel(ctx);
 
 	return 0;
+
+err4:
+	free(p->xc_data);
+err3:
+	free(f->loop_start);
+err2:
+	free(f->loop_stack);
+err1:
+	free(p->fetch_ctl);
+err:
+	return -1;
 }
 
 int xmp_player_frame(xmp_context opaque)
