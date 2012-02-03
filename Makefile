@@ -53,7 +53,7 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
 
 #binaries: src/main/xmp $(PLUGINS)
-binaries: src/test/test1
+binaries: src/test/test1 src/test/test2
 
 library: $(LIB)
 
