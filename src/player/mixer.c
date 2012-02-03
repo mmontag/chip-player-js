@@ -319,7 +319,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 		prv_l = buf_pos[idx - 1];
 
 		/* "Beautiful Ones" apparently uses 0xfe as 'no filter' :\ */
-		if (vi->cutoff >= 0xfe)
+		if (vi->filter.cutoff >= 0xfe)
 		    mixer &= ~FLAG_FILTER;
 
 		/* Call the output handler */
@@ -511,19 +511,19 @@ void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
  
     switch (type) {
     case XMP_FX_CUTOFF:
-        vi->cutoff = val;
+        vi->filter.cutoff = val;
 	break;
     case XMP_FX_RESONANCE:
-        vi->resonance = val;
+        vi->filter.resonance = val;
 	break;
     case XMP_FX_FILTER_B0:
-        vi->flt_B0 = val;
+        vi->filter.B0 = val;
 	break;
     case XMP_FX_FILTER_B1:
-        vi->flt_B1 = val;
+        vi->filter.B1 = val;
 	break;
     case XMP_FX_FILTER_B2:
-        vi->flt_B2 = val;
+        vi->filter.B2 = val;
 	break;
     }
 

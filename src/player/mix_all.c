@@ -33,13 +33,13 @@
 } while (0)
 
 #define DO_FILTER() do { \
-    smp_in = (smp_in * vi->flt_B0 + fx1 * vi->flt_B1 + fx2 * vi->flt_B2) / FILTER_PRECISION; \
+    smp_in = (smp_in * vi->filter.B0 + fx1 * vi->filter.B1 + fx2 * vi->filter.B2) / FILTER_PRECISION; \
     fx2 = fx1; fx1 = smp_in; \
 } while (0)
 
 #define SAVE_FILTER() do { \
-    vi->flt_X1 = fx1; \
-    vi->flt_X2 = fx2; \
+    vi->filter.X1 = fx1; \
+    vi->filter.X2 = fx2; \
 } while (0)
 
 #define MIX_STEREO() do { \
@@ -87,7 +87,7 @@
     int smp_x1 = 0, smp_dt = 0
 
 #define VAR_FILT \
-    int fx1 = vi->flt_X1, fx2 = vi->flt_X2
+    int fx1 = vi->filter.X1, fx2 = vi->filter.X2
 
 #define SMIX_MIXER(f) void f(struct voice_info *vi, int* tmp_bk, \
     int count, int vl, int vr, int step)

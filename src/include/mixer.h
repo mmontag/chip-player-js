@@ -43,13 +43,15 @@ struct voice_info {
 	int sright;		/* last right sample output, in 32bit */
 	void *sptr;		/* sample pointer */
 
-	int flt_X1;		/* filter variables */
-	int flt_X2;
-	int flt_B0;
-	int flt_B1;
-	int flt_B2;
-	int cutoff;
-	int resonance;
+	struct {
+		int X1;		/* filter variables */
+		int X2;
+		int B0;
+		int B1;
+		int B2;
+		int cutoff;
+		int resonance;
+	} filter;
 
 	int attack;		/* ramp up anticlick */
 };
