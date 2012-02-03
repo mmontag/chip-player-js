@@ -58,8 +58,7 @@ struct xmp_options {
 #define XMP_CTL_LOOP	(1 << 2)	/* Enable module looping */
 #define XMP_CTL_VBLANK	(1 << 3)	/* Use vblank timing only */
 #define XMP_CTL_VIRTUAL	(1 << 4)	/* Enable virtual channels */
-#define XMP_CTL_FIXLOOP	(1 << 5)	/* Fix sample loop start */
-#define XMP_CTL_FILTER	(1 << 6)	/* IT lowpass filter */
+#define XMP_CTL_FILTER	(1 << 5)	/* IT lowpass filter */
 	int flags;		/* internal control flags, set default mode */
 	int start;		/* Set initial order (default = 0) */
 	int mix;		/* Percentage of L/R channel separation */

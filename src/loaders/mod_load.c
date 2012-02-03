@@ -180,7 +180,6 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     struct mod_header mh;
     uint8 mod_event[4];
     char *x, pathname[PATH_MAX] = "", *tracker = "";
-    int lps_mult = m->flags & XMP_CTL_FIXLOOP ? 1 : 2;
     int detected = 0;
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
@@ -264,7 +263,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->mod.ins; i++) {
 	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	m->mod.xxs[i].len = 2 * mh.ins[i].size;
-	m->mod.xxs[i].lps = lps_mult * mh.ins[i].loop_start;
+	m->mod.xxs[i].lps = 2 * mh.ins[i].loop_start;
 	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * mh.ins[i].loop_size;
 	if (m->mod.xxs[i].lpe > m->mod.xxs[i].len)
 		m->mod.xxs[i].lpe = m->mod.xxs[i].len;
