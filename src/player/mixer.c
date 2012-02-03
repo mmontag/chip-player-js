@@ -574,7 +574,7 @@ int xmp_smix_on(struct xmp_context *ctx)
 err1:
 	free(s->buffer);
 err:
-	return XMP_ERR_ALLOC;
+	return -1;
 }
 
 

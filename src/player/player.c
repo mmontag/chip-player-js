@@ -117,12 +117,12 @@ update_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 }
 
 
-static inline int copy_channel(struct xmp_player_context *p, int to, int from)
+static inline void copy_channel(struct xmp_player_context *p, int to, int from)
 {
-    if (to > 0 && to != from)
-	memcpy(&p->xc_data[to], &p->xc_data[from], sizeof (struct channel_data));
-
-    return to;
+	if (to > 0 && to != from) {
+		memcpy(&p->xc_data[to], &p->xc_data[from],
+					sizeof (struct channel_data));
+	}
 }
 
 
@@ -322,9 +322,11 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 			m->mod.xxi[ins].sub[mapped].nna, m->mod.xxi[ins].sub[mapped].dct,
 			m->mod.xxi[ins].sub[mapped].dca, ctl, cont_sample);
 
-	if (copy_channel(p, to, chn) < 0) {
-	    return XMP_ERR_VIRTC;
-	}
+	if (to < 0)
+		return -1;
+
+	copy_channel(p, to, chn);
+
 	xc->smp = smp;
     }
 
@@ -831,7 +833,7 @@ int xmp_player_start(xmp_context opaque)
 	f->loop_start = calloc(d->numchn, sizeof (int));
 	p->xc_data = calloc(d->numchn, sizeof (struct channel_data));
 	if (!(p->fetch_ctl && f->loop_stack && f->loop_start && p->xc_data))
-		return XMP_ERR_ALLOC;
+		return -1;
 
 	m->synth->init(ctx, o->freq);
 	m->synth->reset(ctx);

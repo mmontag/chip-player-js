@@ -30,9 +30,6 @@
 #define XMP_MOD_RESTART		0x04
 #define XMP_GVOL_INC		0x05
 #define XMP_GVOL_DEC		0x06
-#define XMP_SET_FLAG		0x09
-#define XMP_RESET_FLAG		0x0a
-#define XMP_TEST_FLAG		0x0b
 
 /* Format quirks */
 #define XMP_QUIRK_ST3		(XMP_QRK_NCWINS | XMP_QRK_IGNWINS | \
@@ -56,22 +53,7 @@
 #define xmp_restart_module(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
 #define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_GVOL_INC, 0)
 #define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_GVOL_DEC, 0)
-#define xmp_set_flag(p,x)	xmp_player_ctl((p), XMP_SET_FLAG, (x))
-#define xmp_reset_flag(p,x)	xmp_player_ctl((p), XMP_RESET_FLAG, (x))
-#define xmp_test_flag(p,x)	xmp_player_ctl((p), XMP_TEST_FLAG, (x))
-#define xmp_mod_load		xmp_load_module
-#define xmp_mod_test		xmp_test_module
-#define xmp_mod_play		xmp_play_module
 
-/* Error messages */
-#define XMP_ERR_NOCTL		-1
-#define XMP_ERR_NODRV		-2
-#define XMP_ERR_DSPEC		-3
-#define XMP_ERR_DOPEN		-4
-#define XMP_ERR_DINIT		-5
-#define XMP_ERR_PATCH		-6
-#define XMP_ERR_VIRTC		-7
-#define XMP_ERR_ALLOC		-8
 
 struct xmp_options {
 	int big_endian;		/* Machine byte order */

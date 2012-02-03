@@ -229,7 +229,7 @@ int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
 			size = sizeof(struct spectrum_sample);
 
 		if ((xxs->data = malloc(size)) == NULL)
-			return XMP_ERR_ALLOC;
+			return -1;
 
 		memcpy(xxs->data, buffer, size);
 
@@ -260,7 +260,7 @@ int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
 	}
 
 	if ((xxs->data = malloc(bytelen + extralen)) == NULL)
-		return XMP_ERR_ALLOC;
+		return -1;
 
 	if (flags & XMP_SMP_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);

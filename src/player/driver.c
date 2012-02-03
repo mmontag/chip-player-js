@@ -86,7 +86,7 @@ err2:
 err1:
 	free(d->voice_array);
 err:
-	return XMP_ERR_ALLOC;
+	return -1;
 }
 
 

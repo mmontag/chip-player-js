@@ -127,14 +127,6 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 		if (m->volume < 64)
 			m->volume++;
 		return m->volume;
-	case XMP_SET_FLAG:
-		m->flags |= arg;
-		break;
-	case XMP_RESET_FLAG:
-		m->flags &= ~arg;
-		break;
-	case XMP_TEST_FLAG:
-		return (m->flags & arg) != 0;
 	}
 
 	return 0;
