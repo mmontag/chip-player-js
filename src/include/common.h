@@ -169,6 +169,13 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 				 XMP_QRK_VOLPDN | XMP_QRK_RTGINS | \
 				 XMP_QRK_SAVEINS | XMP_QRK_ITVPOR)
 
+/* DSP effects */
+#define XMP_FX_CUTOFF		0x02
+#define XMP_FX_RESONANCE	0x03
+#define XMP_FX_FILTER_B0	0xb0
+#define XMP_FX_FILTER_B1	0xb1
+#define XMP_FX_FILTER_B2	0xb2
+
 
 struct xmp_ord_info {
 	int bpm;

@@ -15,13 +15,6 @@
 #define XMP_KEY_CUT		0x82
 #define XMP_KEY_FADE		0x83
 
-/* DSP effects */
-#define XMP_FX_CUTOFF		0x02
-#define XMP_FX_RESONANCE	0x03
-#define XMP_FX_FILTER_B0	0xb0
-#define XMP_FX_FILTER_B1	0xb1
-#define XMP_FX_FILTER_B2	0xb2
-
 /* xmp_player_ctl arguments */
 #define XMP_ORD_NEXT		0x00
 #define XMP_ORD_PREV		0x01
