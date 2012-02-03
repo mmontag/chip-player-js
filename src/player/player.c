@@ -761,7 +761,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     finalpan = o->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * o->mix / 100;
     xmp_drv_setbend(ctx, chn, xc->pitchbend + get_stepper(&xc->arpeggio) + med_arp);
-    xmp_drv_setpan(ctx, chn, m->flags & XMP_CTL_REVERSE ? -finalpan : finalpan);
+    xmp_drv_setpan(ctx, chn, finalpan);
     xmp_drv_setvol(ctx, chn, finalvol);
 
     if (cutoff < 0xff && (m->flags & XMP_CTL_FILTER)) {
