@@ -87,5 +87,8 @@ int main(int argc, char **argv)
 
 	xmp_free_context(ctx);
 
+	pa_simple_drain(s, &error);
+	pa_simple_free(s);
+
 	return 0;
 }
