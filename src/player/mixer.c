@@ -266,7 +266,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	    continue;
 	}
 
-	step = ((int64)vi->pbase << SMIX_SHIFT) / vi->period;
+	step = ((int64)s->pbase << SMIX_SHIFT) / vi->period;
 
 	if (step == 0)	/* otherwise m5v-nwlf.t crashes */
 	    continue;
@@ -465,12 +465,9 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 void smix_setnote(struct xmp_context *ctx, int voc, int note)
 {
     struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &d->voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note = note, 0);
-    vi->pbase = SMIX_C4NOTE * m->c4rate / o->freq;
     vi->attack = SLOW_ATTACK;
 }
 

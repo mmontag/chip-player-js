@@ -782,6 +782,7 @@ int xmp_player_start(xmp_context opaque)
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_driver_context *d = &ctx->d;
+	struct xmp_smixer_context *s = &ctx->s;
 	struct xmp_mod_context *m = &ctx->m;
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
@@ -795,6 +796,7 @@ int xmp_player_start(xmp_context opaque)
 	p->frame = 0;
 	p->row = 0;
 	p->time = 0;
+	s->pbase = SMIX_C4NOTE * m->c4rate / o->freq;
 
 	if (m->mod.len == 0 || m->mod.chn == 0) {
 		/* set variables to sane state */

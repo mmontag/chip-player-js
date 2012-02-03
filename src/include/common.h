@@ -278,6 +278,7 @@ struct xmp_smixer_context {
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
+	int pbase;		/* period base */
 };
 
 struct xmp_context {

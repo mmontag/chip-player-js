@@ -30,7 +30,6 @@ struct voice_info {
 	int pan;		/* */
 	int vol;		/* */
 	int period;		/* current period */
-	int pbase;		/* base period */
 	int pos;		/* position in sample */
 	int frac;		/* interpolation */
 	int fidx;		/* function index */
