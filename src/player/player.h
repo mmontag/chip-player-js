@@ -166,13 +166,14 @@ struct channel_data {
     int ns_speed;		/* PTM note slide speed */
     int ns_count;		/* PTM note slide counter */
 
-    /* IT support */
-    int cutoff;			/* IT filter cutoff frequency */
-    int cutoff2;		/* IT filter cutoff frequency (with envelope) */
-    int resonance;		/* IT filter resonance */
-    int flt_B0;			/* IT filter stuff */
-    int flt_B1;
-    int flt_B2;
+	struct {
+		int cutoff;	/* IT filter cutoff frequency */
+		int cutoff2;	/* IT filter cutoff frequency (with envelope) */
+    		int resonance;	/* IT filter resonance */
+    		int B0;		/* IT filter variables */
+    		int B1;
+    		int B2;
+	} filter;
     
 	struct med_channel med;
 

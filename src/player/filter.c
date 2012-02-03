@@ -104,7 +104,7 @@ void filter_setup(struct xmp_context *ctx, struct channel_data *xc, int cutoff)
 	float d2, d, e;
 
 	fc *= 3.14159265358979 * 2 / fs;
-	d2 = (float)dmpfac[xc->resonance] / 0x8000;
+	d2 = (float)dmpfac[xc->filter.resonance] / 0x8000;
 	d = (1.0 - d2) * fc;
 
 	if (d > 2.0)
@@ -117,8 +117,8 @@ void filter_setup(struct xmp_context *ctx, struct channel_data *xc, int cutoff)
 	fb0 = (d + e + e) / (1 + d + e);
 	fb1 = -e / (1 + d + e);
 
-	xc->flt_B0 = (int)(fg * FILTER_PRECISION);
-	xc->flt_B1 = (int)(fb0 * FILTER_PRECISION);
-	xc->flt_B2 = (int)(fb1 * FILTER_PRECISION);
+	xc->filter.B0 = (int)(fg * FILTER_PRECISION);
+	xc->filter.B1 = (int)(fb0 * FILTER_PRECISION);
+	xc->filter.B2 = (int)(fb1 * FILTER_PRECISION);
 }
 

@@ -551,12 +551,12 @@ fx_finetune:
 	    break;
 	}
 	break;
-    case FX_FLT_CUTOFF:
-	xc->cutoff = fxp;
-	break;
-    case FX_FLT_RESN:
-	xc->resonance = fxp;
-	break;
+	case FX_FLT_CUTOFF:
+		xc->filter.cutoff = fxp;
+		break;
+	case FX_FLT_RESN:
+		xc->filter.resonance = fxp;
+		break;
     case FX_CHORUS:
 #if 0
 	/* FIXME */

@@ -145,7 +145,7 @@ static inline void reset_channel(struct xmp_context *ctx)
 	xc = &p->xc_data[i];
 	xc->masterpan = m->mod.xxc[i].pan;
 	xc->mastervol = m->mod.xxc[i].vol;
-	xc->cutoff = 0xff;
+	xc->filter.cutoff = 0xff;
     }
 }
 
@@ -405,8 +405,8 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	xc->instrument_vibrato.phase = 0;
 
 	xc->v_idx = xc->p_idx = xc->f_idx = 0;
-	xc->cutoff = XXI.ifc & 0x80 ? (XXI.ifc - 0x80) * 2 : 0xff;
-	xc->resonance = XXI.ifr & 0x80 ? (XXI.ifr - 0x80) * 2 : 0;
+	xc->filter.cutoff = XXI.ifc & 0x80 ? (XXI.ifc - 0x80) * 2 : 0xff;
+	xc->filter.resonance = XXI.ifr & 0x80 ? (XXI.ifr - 0x80) * 2 : 0;
     }
 
     if (TEST(RESET_VOL)) {
@@ -628,7 +628,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	cutoff = o->cf_cutoff;		/* Click-filter cutoff */
     } else {
 	cutoff = XXIH.fei.flg & XXM_ENV_FLT ? frq_envelope : 0xff;
-	cutoff = xc->cutoff * cutoff / 0xff;
+	cutoff = xc->filter.cutoff * cutoff / 0xff;
     }
 
     /* Do tremor */
@@ -767,14 +767,14 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     if (cutoff < 0xff && (m->flags & XMP_CTL_FILTER)) {
 	filter_setup(ctx, xc, cutoff);
-	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B0, xc->flt_B0);
-	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B1, xc->flt_B1);
-	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B2, xc->flt_B2);
+	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B0, xc->filter.B0);
+	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B1, xc->filter.B1);
+	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B2, xc->filter.B2);
     } else {
 	cutoff = 0xff;
     }
 
-    xmp_drv_seteffect(ctx, chn, XMP_FX_RESONANCE, xc->resonance);
+    xmp_drv_seteffect(ctx, chn, XMP_FX_RESONANCE, xc->filter.resonance);
     xmp_drv_seteffect(ctx, chn, XMP_FX_CUTOFF, cutoff);
 }
 
