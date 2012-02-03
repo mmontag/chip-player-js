@@ -66,7 +66,6 @@ struct xmp_options {
 	int mix;		/* Percentage of L/R channel separation */
 	int time;		/* Maximum playing time in seconds */
 	int tempo;		/* Set initial tempo */
-	int skipsmp;		/* Don't load sample data */
 	char *ins_path;		/* External instrument path */
 	char *parm[16];		/* Driver parameter data */
 };

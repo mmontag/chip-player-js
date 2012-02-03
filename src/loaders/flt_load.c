@@ -272,7 +272,6 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
     int i, j;
     struct xmp_event *event;
     struct mod_header mh;
@@ -430,9 +429,6 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
     /* no such limit for synth instruments
      * m->mod.flg |= XXM_FLG_MODRNG;
      */
-
-    if (o->skipsmp)
-	return 0;
 
     /* Load samples */
 

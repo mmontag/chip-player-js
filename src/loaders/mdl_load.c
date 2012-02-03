@@ -638,12 +638,8 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
 static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
     int i, len;
     uint8 *smpbuf, *buf;
-
-    if (o->skipsmp)
-	return;
 
     _D(_D_INFO "Stored samples: %d", m->mod.smp);
 

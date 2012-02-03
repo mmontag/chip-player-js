@@ -66,7 +66,6 @@ static int pw_test(FILE *f, char *t, const int start)
 static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
-	struct xmp_options *o = &ctx->o;
 	struct xmp_event *event;
 	struct mod_header mh;
 	uint8 mod_event[4];
@@ -189,9 +188,6 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	m->mod.flg |= XXM_FLG_MODRNG;
 
-	if (o->skipsmp)
-		goto end;
-
 	/* Load samples */
 
 	_D(_D_INFO "Stored samples: %d", m->mod.smp);
@@ -200,7 +196,6 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
-end:
 	fclose(f);
 	unlink(tmp);
 	return 0;

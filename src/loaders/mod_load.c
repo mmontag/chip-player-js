@@ -174,7 +174,6 @@ static int is_st_ins (char *s)
 static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;
     struct xmp_event *event;
@@ -488,10 +487,6 @@ skip_test:
 	    cvt_pt_event(event, mod_event);
 	}
     }
-
-    /* Keep the test to avoid problems with ADPCM samples */
-    if (o->skipsmp)
-	return 0;
 
     /* Load samples */
 

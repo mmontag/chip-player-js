@@ -153,7 +153,6 @@ static int st_test(FILE *f, char *t, const int start)
 static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
     int i, j;
     int smp_size;
     struct xmp_event ev, *event;
@@ -363,9 +362,6 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (m->mod.rst >= m->mod.len)
 	    m->mod.rst = 0;
     }
-
-    if (o->skipsmp)
-	return 0;
 
     /* Load samples */
 

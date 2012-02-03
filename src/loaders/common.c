@@ -238,12 +238,6 @@ int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
 		return 0;
 	}
 
-	if (o->skipsmp) {	/* Will fail for ADPCM samples */
-		if (~flags & XMP_SMP_NOLOAD)
-			fseek(f, xxs->len, SEEK_CUR);
-		return 0;
-	}
-
 	/* Empty samples
 	 */
 	if (xxs->len == 0) {

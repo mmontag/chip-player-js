@@ -798,9 +798,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (ish.flags & IT_SMP_SAMPLE && m->mod.xxs[i].len > 1) {
 	    int cvt = 0;
 
-	    if (o->skipsmp)
-		continue;
-
 	    fseek(f, start + ish.sample_ptr, SEEK_SET);
 
 	    if (~ish.convert & IT_CVT_SIGNED)
@@ -828,11 +825,6 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 				XMP_SMP_NOLOAD | cvt, &m->mod.xxs[i], buf);
 		free (buf);
 	    } else {
-		if (o->skipsmp) {
-		    fseek(f, m->mod.xxs[i].len, SEEK_CUR);
-		    continue;
-		}
-
 		load_patch(ctx, f, i, cvt, &m->mod.xxs[i], NULL);
 	    }
 	}
