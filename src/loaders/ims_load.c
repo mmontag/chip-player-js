@@ -135,6 +135,7 @@ static int ims_test(FILE *f, char *t, const int start)
 static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j;
     int smp_size;
     struct xmp_event *event;
@@ -144,8 +145,8 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 
     LOAD_INIT();
 
-    m->mod.ins = 31;
-    m->mod.smp = m->mod.ins;
+    mod->ins = 31;
+    mod->smp = mod->ins;
     smp_size = 0;
 
     fread (&ih.title, 20, 1, f);
@@ -167,51 +168,51 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     fread (&ih.orders, 128, 1, f);
     fread (&ih.magic, 4, 1, f);
   
-    m->mod.len = ih.len;
-    memcpy (m->mod.xxo, ih.orders, m->mod.len);
+    mod->len = ih.len;
+    memcpy (mod->xxo, ih.orders, mod->len);
 
-    for (i = 0; i < m->mod.len; i++)
-	if (m->mod.xxo[i] > m->mod.pat)
-	    m->mod.pat = m->mod.xxo[i];
+    for (i = 0; i < mod->len; i++)
+	if (mod->xxo[i] > mod->pat)
+	    mod->pat = mod->xxo[i];
 
-    m->mod.pat++;
-    m->mod.trk = m->mod.chn * m->mod.pat;
+    mod->pat++;
+    mod->trk = mod->chn * mod->pat;
 
-    strncpy(m->mod.name, (char *)ih.title, 20);
+    strncpy(mod->name, (char *)ih.title, 20);
     set_type(m, "IMS (Images Music System)");
 
     MODULE_INFO();
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	m->mod.xxs[i].len = 2 * ih.ins[i].size;
-	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * ih.ins[i].loop_size;
-	m->mod.xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->mod.xxi[i].sub[0].fin = 0; /* ih.ins[i].finetune; */
-	m->mod.xxi[i].sub[0].vol = ih.ins[i].volume;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
-	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
-	m->mod.xxi[i].rls = 0xfff;
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxs[i].len = 2 * ih.ins[i].size;
+	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * ih.ins[i].loop_size;
+	mod->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].sub[0].fin = 0; /* ih.ins[i].finetune; */
+	mod->xxi[i].sub[0].vol = ih.ins[i].volume;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
+	mod->xxi[i].nsm = !!(mod->xxs[i].len);
+	mod->xxi[i].rls = 0xfff;
 
-	copy_adjust(m->mod.xxi[i].name, ih.ins[i].name, 20);
+	copy_adjust(mod->xxi[i].name, ih.ins[i].name, 20);
 
 	_D(_D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x %+d",
-		i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
-		m->mod.xxs[i].lpe, ih.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4);
+		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
+		mod->xxs[i].lpe, ih.ins[i].loop_size > 1 ? 'L' : ' ',
+		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
     }
 
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC(i);
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC(i);
 	for (j = 0; j < 0x100; j++) {
 	    event = &EVENT (i, j & 0x3, j >> 2);
@@ -249,17 +250,17 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    m->mod.flg |= XXM_FLG_MODRNG;
+    mod->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
-    for (i = 0; i < m->mod.smp; i++) {
-	if (!m->mod.xxs[i].len)
+    for (i = 0; i < mod->smp; i++) {
+	if (!mod->xxs[i].len)
 	    continue;
-	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+	load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 
     return 0;

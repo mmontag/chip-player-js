@@ -92,14 +92,15 @@ static int fx[] = {
 static void get_cmod(struct xmp_context *ctx, int size, FILE *f)
 { 
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j, k;
 
-    m->mod.chn = 0;
+    mod->chn = 0;
     for (i = 0; i < 4; i++) {
 	j = read16b(f);
 	for (k = !!j; k >= 0; k--) {
-	    m->mod.xxc[m->mod.chn].pan = (((i + 1) / 2) % 2) * 0xff;
-	    m->mod.chn++;
+	    mod->xxc[mod->chn].pan = (((i + 1) / 2) % 2) * 0xff;
+	    mod->chn++;
 	}
     }
 }
@@ -108,42 +109,43 @@ static void get_cmod(struct xmp_context *ctx, int size, FILE *f)
 static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j;
     int looplen;
 
     /* Should be always 36 */
-    m->mod.ins = size / 32;  /* sizeof(struct okt_instrument_header); */
-    m->mod.smp = m->mod.ins;
+    mod->ins = size / 32;  /* sizeof(struct okt_instrument_header); */
+    mod->smp = mod->ins;
 
     INSTRUMENT_INIT();
 
-    for (j = i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+    for (j = i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	fread(m->mod.xxi[i].name, 1, 20, f);
-	str_adj((char *)m->mod.xxi[i].name);
+	fread(mod->xxi[i].name, 1, 20, f);
+	str_adj((char *)mod->xxi[i].name);
 
 	/* Sample size is always rounded down */
-	m->mod.xxs[i].len = read32b(f) & ~1;
-	m->mod.xxs[i].lps = read16b(f);
+	mod->xxs[i].len = read32b(f) & ~1;
+	mod->xxs[i].lps = read16b(f);
 	looplen = read16b(f);
-	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + looplen;
-	m->mod.xxi[i].sub[0].vol = read16b(f);
+	mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
+	mod->xxi[i].sub[0].vol = read16b(f);
 	mode[i] = read16b(f);
 
-	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
-	m->mod.xxs[i].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = j;
+	mod->xxi[i].nsm = !!(mod->xxs[i].len);
+	mod->xxs[i].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = j;
 
 	idx[j] = i;
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
-		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
-		m->mod.xxs[i].lpe, m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->mod.xxi[i].sub[0].vol, mode[i]);
+		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
+		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		mod->xxi[i].sub[0].vol, mode[i]);
 
-	if (m->mod.xxi[i].nsm)
+	if (mod->xxi[i].nsm)
 	    j++;
     }
 }
@@ -152,64 +154,69 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 static void get_spee(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
 
-    m->mod.tpo = read16b(f);
-    m->mod.bpm = 125;
+    mod->tpo = read16b(f);
+    mod->bpm = 125;
 }
 
 
 static void get_slen(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
 
-    m->mod.pat = read16b(f);
-    m->mod.trk = m->mod.pat * m->mod.chn;
+    mod->pat = read16b(f);
+    mod->trk = mod->pat * mod->chn;
 }
 
 
 static void get_plen(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
 
-    m->mod.len = read16b(f);
-    _D(_D_INFO "Module length: %d", m->mod.len);
+    mod->len = read16b(f);
+    _D(_D_INFO "Module length: %d", mod->len);
 }
 
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
 
-    fread(m->mod.xxo, 1, m->mod.len, f);
+    fread(mod->xxo, 1, mod->len, f);
 }
 
 
 static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
 
     int j;
     uint16 rows;
     struct xmp_event *event;
 
-    if (pattern >= m->mod.pat)
+    if (pattern >= mod->pat)
 	return;
 
     if (!pattern) {
 	PATTERN_INIT();
-	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d", mod->pat);
     }
 
     rows = read16b(f);
 
     PATTERN_ALLOC (pattern);
-    m->mod.xxp[pattern]->rows = rows;
+    mod->xxp[pattern]->rows = rows;
     TRACK_ALLOC (pattern);
 
-    for (j = 0; j < rows * m->mod.chn; j++) {
+    for (j = 0; j < rows * mod->chn; j++) {
 	uint8 note, ins;
 
-	event = &EVENT(pattern, j % m->mod.chn, j / m->mod.chn);
+	event = &EVENT(pattern, j % mod->chn, j / mod->chn);
 	memset(event, 0, sizeof(struct xmp_event));
 
 	note = read8(f);
@@ -250,20 +257,21 @@ static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
 static void get_sbod(struct xmp_context *ctx, int size, FILE *f)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
 
     int flags = 0;
     int i;
 
-    if (sample >= m->mod.ins)
+    if (sample >= mod->ins)
 	return;
 
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
     i = idx[sample];
     if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
 	flags = XMP_SMP_7BIT;
 
-    load_patch(ctx, f, sample, flags, &m->mod.xxs[i], NULL);
+    load_patch(ctx, f, sample, flags, &mod->xxs[i], NULL);
 
     sample++;
 }
@@ -272,6 +280,7 @@ static void get_sbod(struct xmp_context *ctx, int size, FILE *f)
 static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
 
     LOAD_INIT();
 
@@ -289,7 +298,7 @@ static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
     iff_register("PBOD", get_pbod);
     iff_register("SBOD", get_sbod);
 
-    strcpy (m->mod.type, "OKT (Oktalyzer)");
+    strcpy (mod->type, "OKT (Oktalyzer)");
 
     MODULE_INFO();
 

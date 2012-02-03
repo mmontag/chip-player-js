@@ -52,6 +52,7 @@ static int xm_test(FILE *f, char *t, const int start)
 static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j, r;
     int sample_num = 0;
     uint8 *patbuf, *pat, b;
@@ -84,18 +85,18 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
     /* Honor header size -- needed by BoobieSqueezer XMs */
     fread(&xfh.order, xfh.headersz - 0x14, 1, f); /* Pattern order table */
 
-    strncpy(m->mod.name, (char *)xfh.name, 20);
+    strncpy(mod->name, (char *)xfh.name, 20);
 
-    m->mod.len = xfh.songlen;
-    m->mod.rst = xfh.restart;
-    m->mod.chn = xfh.channels;
-    m->mod.pat = xfh.patterns;
-    m->mod.trk = m->mod.chn * m->mod.pat + 1;
-    m->mod.ins = xfh.instruments;
-    m->mod.tpo = xfh.tempo;
-    m->mod.bpm = xfh.bpm;
-    m->mod.flg = xfh.flags & XM_LINEAR_PERIOD_MODE ? XXM_FLG_LINEAR : 0;
-    memcpy(m->mod.xxo, xfh.order, m->mod.len);
+    mod->len = xfh.songlen;
+    mod->rst = xfh.restart;
+    mod->chn = xfh.channels;
+    mod->pat = xfh.patterns;
+    mod->trk = mod->chn * mod->pat + 1;
+    mod->ins = xfh.instruments;
+    mod->tpo = xfh.tempo;
+    mod->bpm = xfh.bpm;
+    mod->flg = xfh.flags & XM_LINEAR_PERIOD_MODE ? XXM_FLG_LINEAR : 0;
+    memcpy(mod->xxo, xfh.order, mod->len);
     tracker_name[20] = 0;
     snprintf(tracker_name, 20, "%-20.20s", xfh.tracker);
     for (i = 20; i >= 0; i--) {
@@ -114,13 +115,13 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* See MMD1 loader for explanation */
     if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19))
-	if (m->mod.bpm <= 10)
-	    m->mod.bpm = 125 * (0x35 - m->mod.bpm * 2) / 33;
+	if (mod->bpm <= 10)
+	    mod->bpm = 125 * (0x35 - mod->bpm * 2) / 33;
 
     if (!strncmp(tracker_name, "FastTracker v 2.00", 18))
 	strcpy(tracker_name, "old ModPlug Tracker");
 
-    snprintf(m->mod.type, XMP_NAMESIZE, "XM %d.%02d (%s)",
+    snprintf(mod->type, XMP_NAMESIZE, "XM %d.%02d (%s)",
 			xfh.version >> 8, xfh.version & 0xff, tracker_name);
 
     MODULE_INFO();
@@ -138,29 +139,29 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
 load_patterns:
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
     /* Endianism fixed by Miodrag Vallat <miodrag@multimania.com>
      * Mon, 04 Jan 1999 11:17:20 +0100
      */
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	xph.length = read32l(f);
 	xph.packing = read8(f);
 	xph.rows = xfh.version > 0x0102 ? read16l(f) : read8(f) + 1;
 	xph.datasize = read16l(f);
 
 	PATTERN_ALLOC(i);
-	if (!(r = m->mod.xxp[i]->rows = xph.rows))
-	    r = m->mod.xxp[i]->rows = 0x100;
+	if (!(r = mod->xxp[i]->rows = xph.rows))
+	    r = mod->xxp[i]->rows = 0x100;
 	TRACK_ALLOC(i);
 
 	if (xph.datasize) {
 	    pat = patbuf = calloc(1, xph.datasize);
 	    fread (patbuf, 1, xph.datasize, f);
-	    for (j = 0; j < (m->mod.chn * r); j++) {
+	    for (j = 0; j < (mod->chn * r); j++) {
 		if ((pat - patbuf) >= xph.datasize)
 		    break;
-		event = &EVENT(i, j % m->mod.chn, j / m->mod.chn);
+		event = &EVENT(i, j % mod->chn, j / mod->chn);
 		if ((b = *pat++) & XM_EVENT_PACKING) {
 		    if (b & XM_EVENT_NOTE_FOLLOWS)
 			event->note = *pat++;
@@ -253,27 +254,27 @@ load_patterns:
     /* Alloc one extra pattern */
     PATTERN_ALLOC(i);
 
-    m->mod.xxp[i]->rows = 64;
-    m->mod.xxt[i * m->mod.chn] = calloc (1, sizeof (struct xmp_track) +
+    mod->xxp[i]->rows = 64;
+    mod->xxt[i * mod->chn] = calloc (1, sizeof (struct xmp_track) +
 	sizeof (struct xmp_event) * 64);
-    m->mod.xxt[i * m->mod.chn]->rows = 64;
-    for (j = 0; j < m->mod.chn; j++)
-	m->mod.xxp[i]->index[j] = i * m->mod.chn;
-    m->mod.pat++;
+    mod->xxt[i * mod->chn]->rows = 64;
+    for (j = 0; j < mod->chn; j++)
+	mod->xxp[i]->index[j] = i * mod->chn;
+    mod->pat++;
 
     if (xfh.version <= 0x0103) {
 	goto load_samples;
     }
 
 load_instruments:
-    _D(_D_INFO "Instruments: %d", m->mod.ins);
+    _D(_D_INFO "Instruments: %d", mod->ins);
 
     /* ESTIMATED value! We don't know the actual value at this point */
-    m->mod.smp = MAX_SAMP;
+    mod->smp = MAX_SAMP;
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.ins; i++) {
+    for (i = 0; i < mod->ins; i++) {
 
 	xih.size = read32l(f);			/* Instrument size */
 
@@ -282,7 +283,7 @@ load_instruments:
 	 * will not work if file has trailing garbage.
 	 */
 	if (feof(f)) {
-		m->mod.ins = i;
+		mod->ins = i;
 		break;
 	}
 
@@ -293,20 +294,20 @@ load_instruments:
 
 	/* Sanity check */
 	if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
-		m->mod.ins = i;
+		mod->ins = i;
 		break;
 	}
 
-	copy_adjust(m->mod.xxi[i].name, xih.name, 22);
+	copy_adjust(mod->xxi[i].name, xih.name, 22);
 
-	m->mod.xxi[i].nsm = xih.samples;
-	if (m->mod.xxi[i].nsm > 16)
-	    m->mod.xxi[i].nsm = 16;
+	mod->xxi[i].nsm = xih.samples;
+	if (mod->xxi[i].nsm > 16)
+	    mod->xxi[i].nsm = 16;
 
-	_D(_D_INFO "[%2X] %-22.22s %2d", i, m->mod.xxi[i].name, m->mod.xxi[i].nsm);
+	_D(_D_INFO "[%2X] %-22.22s %2d", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
-	if (m->mod.xxi[i].nsm) {
-	    m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), m->mod.xxi[i].nsm);
+	if (mod->xxi[i].nsm) {
+	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
 
 	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)
 	     * It works pretty much the same way as Impulse Tracker's sample
@@ -342,37 +343,37 @@ load_instruments:
 		fseek(f, (int)xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
 
 		/* Envelope */
-		m->mod.xxi[i].rls = xi.v_fade;
-		m->mod.xxi[i].aei.npt = xi.v_pts;
-		m->mod.xxi[i].aei.sus = xi.v_sus;
-		m->mod.xxi[i].aei.lps = xi.v_start;
-		m->mod.xxi[i].aei.lpe = xi.v_end;
-		m->mod.xxi[i].aei.flg = xi.v_type;
-		m->mod.xxi[i].pei.npt = xi.p_pts;
-		m->mod.xxi[i].pei.sus = xi.p_sus;
-		m->mod.xxi[i].pei.lps = xi.p_start;
-		m->mod.xxi[i].pei.lpe = xi.p_end;
-		m->mod.xxi[i].pei.flg = xi.p_type;
+		mod->xxi[i].rls = xi.v_fade;
+		mod->xxi[i].aei.npt = xi.v_pts;
+		mod->xxi[i].aei.sus = xi.v_sus;
+		mod->xxi[i].aei.lps = xi.v_start;
+		mod->xxi[i].aei.lpe = xi.v_end;
+		mod->xxi[i].aei.flg = xi.v_type;
+		mod->xxi[i].pei.npt = xi.p_pts;
+		mod->xxi[i].pei.sus = xi.p_sus;
+		mod->xxi[i].pei.lps = xi.p_start;
+		mod->xxi[i].pei.lpe = xi.p_end;
+		mod->xxi[i].pei.flg = xi.p_type;
 
-		if (m->mod.xxi[i].aei.npt <= 0 || m->mod.xxi[i].aei.npt > XMP_MAXENV)
-		    m->mod.xxi[i].aei.flg &= ~XXM_ENV_ON;
+		if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt > XMP_MAXENV)
+		    mod->xxi[i].aei.flg &= ~XXM_ENV_ON;
 
-		if (m->mod.xxi[i].pei.npt <= 0 || m->mod.xxi[i].pei.npt > XMP_MAXENV)
-		    m->mod.xxi[i].pei.flg &= ~XXM_ENV_ON;
+		if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt > XMP_MAXENV)
+		    mod->xxi[i].pei.flg &= ~XXM_ENV_ON;
 
-		memcpy(m->mod.xxi[i].aei.data, xi.v_env, m->mod.xxi[i].aei.npt * 4);
-		memcpy(m->mod.xxi[i].pei.data, xi.p_env, m->mod.xxi[i].pei.npt * 4);
+		memcpy(mod->xxi[i].aei.data, xi.v_env, mod->xxi[i].aei.npt * 4);
+		memcpy(mod->xxi[i].pei.data, xi.p_env, mod->xxi[i].pei.npt * 4);
 
 		for (j = 0; j < 96; j++)
-		    m->mod.xxi[i].map[j].ins = xi.sample[j];
+		    mod->xxi[i].map[j].ins = xi.sample[j];
 
 		for (j = 0; j < 96; j++) {
-		    if (m->mod.xxi[i].map[j].ins >= m->mod.xxi[i].nsm)
-			m->mod.xxi[i].map[j].ins = -1;
+		    if (mod->xxi[i].map[j].ins >= mod->xxi[i].nsm)
+			mod->xxi[i].map[j].ins = -1;
 		}
 	    }
 
-	    for (j = 0; j < m->mod.xxi[i].nsm; j++, sample_num++) {
+	    for (j = 0; j < mod->xxi[i].nsm; j++, sample_num++) {
 		xsh[j].length = read32l(f);	/* Sample length */
 		xsh[j].loop_start = read32l(f);	/* Sample loop start */
 		xsh[j].loop_length = read32l(f);/* Sample loop length */
@@ -384,55 +385,55 @@ load_instruments:
 		xsh[j].reserved = read8(f);
 		fread(&xsh[j].name, 22, 1, f);	/* Sample_name */
 
-		m->mod.xxi[i].sub[j].vol = xsh[j].volume;
-		m->mod.xxi[i].sub[j].pan = xsh[j].pan;
-		m->mod.xxi[i].sub[j].xpo = xsh[j].relnote;
-		m->mod.xxi[i].sub[j].fin = xsh[j].finetune;
-		m->mod.xxi[i].sub[j].vwf = xi.y_wave;
-		m->mod.xxi[i].sub[j].vde = xi.y_depth;
-		m->mod.xxi[i].sub[j].vra = xi.y_rate;
-		m->mod.xxi[i].sub[j].vsw = xi.y_sweep;
-		m->mod.xxi[i].sub[j].sid = sample_num;
+		mod->xxi[i].sub[j].vol = xsh[j].volume;
+		mod->xxi[i].sub[j].pan = xsh[j].pan;
+		mod->xxi[i].sub[j].xpo = xsh[j].relnote;
+		mod->xxi[i].sub[j].fin = xsh[j].finetune;
+		mod->xxi[i].sub[j].vwf = xi.y_wave;
+		mod->xxi[i].sub[j].vde = xi.y_depth;
+		mod->xxi[i].sub[j].vra = xi.y_rate;
+		mod->xxi[i].sub[j].vsw = xi.y_sweep;
+		mod->xxi[i].sub[j].sid = sample_num;
 		if (sample_num >= MAX_SAMP)
 		    continue;
 
-		copy_adjust(m->mod.xxs[sample_num].name, xsh[j].name, 22);
+		copy_adjust(mod->xxs[sample_num].name, xsh[j].name, 22);
 
-		m->mod.xxs[sample_num].len = xsh[j].length;
-		m->mod.xxs[sample_num].lps = xsh[j].loop_start;
-		if (fix_loop && m->mod.xxs[sample_num].lps > 0)
-		    m->mod.xxs[sample_num].lps--;
-		m->mod.xxs[sample_num].lpe = xsh[j].loop_start + xsh[j].loop_length;
+		mod->xxs[sample_num].len = xsh[j].length;
+		mod->xxs[sample_num].lps = xsh[j].loop_start;
+		if (fix_loop && mod->xxs[sample_num].lps > 0)
+		    mod->xxs[sample_num].lps--;
+		mod->xxs[sample_num].lpe = xsh[j].loop_start + xsh[j].loop_length;
 
-		m->mod.xxs[sample_num].flg = 0;
+		mod->xxs[sample_num].flg = 0;
 		if (xsh[j].type & XM_SAMPLE_16BIT) {
-		    m->mod.xxs[sample_num].flg |= XMP_SAMPLE_16BIT;
-		    m->mod.xxs[sample_num].len >>= 1;
-		    m->mod.xxs[sample_num].lps >>= 1;
-		    m->mod.xxs[sample_num].lpe >>= 1;
+		    mod->xxs[sample_num].flg |= XMP_SAMPLE_16BIT;
+		    mod->xxs[sample_num].len >>= 1;
+		    mod->xxs[sample_num].lps >>= 1;
+		    mod->xxs[sample_num].lpe >>= 1;
 		}
 
-		m->mod.xxs[sample_num].flg |= xsh[j].type & XM_LOOP_FORWARD ?
+		mod->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_FORWARD ?
 		    XMP_SAMPLE_LOOP : 0;
-		m->mod.xxs[sample_num].flg |= xsh[j].type & XM_LOOP_PINGPONG ?
+		mod->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_PINGPONG ?
 		    XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR : 0;
 	    }
-	    for (j = 0; j < m->mod.xxi[i].nsm; j++) {
+	    for (j = 0; j < mod->xxi[i].nsm; j++) {
 		if (sample_num >= MAX_SAMP)
 		    continue;
 		_D(_D_INFO " %1x: %06x%c%06x %06x %c V%02x F%+04d P%02x R%+03d",
-		    j, m->mod.xxs[m->mod.xxi[i].sub[j].sid].len,
-		    m->mod.xxs[m->mod.xxi[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		    m->mod.xxs[m->mod.xxi[i].sub[j].sid].lps,
-		    m->mod.xxs[m->mod.xxi[i].sub[j].sid].lpe,
-		    m->mod.xxs[m->mod.xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-		    m->mod.xxs[m->mod.xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		    m->mod.xxi[i].sub[j].vol, m->mod.xxi[i].sub[j].fin,
-		    m->mod.xxi[i].sub[j].pan, m->mod.xxi[i].sub[j].xpo);
+		    j, mod->xxs[mod->xxi[i].sub[j].sid].len,
+		    mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		    mod->xxs[mod->xxi[i].sub[j].sid].lps,
+		    mod->xxs[mod->xxi[i].sub[j].sid].lpe,
+		    mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+		    mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		    mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].fin,
+		    mod->xxi[i].sub[j].pan, mod->xxi[i].sub[j].xpo);
 
 		if (xfh.version > 0x0103)
-		    load_patch(ctx, f, m->mod.xxi[i].sub[j].sid,
-			XMP_SMP_DIFF, &m->mod.xxs[m->mod.xxi[i].sub[j].sid], NULL);
+		    load_patch(ctx, f, mod->xxi[i].sub[j].sid,
+			XMP_SMP_DIFF, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 	    }
 	} else {
 	    /* The sample size is a field of struct xm_instrument_header that
@@ -457,23 +458,23 @@ load_instruments:
 	     fseek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
     }
-    m->mod.smp = sample_num;
-    m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.smp);
+    mod->smp = sample_num;
+    mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
 
     if (xfh.version <= 0x0103) {
 	goto load_patterns;
     }
 
 load_samples:
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
     /* XM 1.02 stores all samples after the patterns */
 
     if (xfh.version <= 0x0103) {
-	for (i = 0; i < m->mod.ins; i++) {
-	    for (j = 0; j < m->mod.xxi[i].nsm; j++) {
-		load_patch(ctx, f, m->mod.xxi[i].sub[j].sid,
-		    XMP_SMP_DIFF, &m->mod.xxs[m->mod.xxi[i].sub[j].sid], NULL);
+	for (i = 0; i < mod->ins; i++) {
+	    for (j = 0; j < mod->xxi[i].nsm; j++) {
+		load_patch(ctx, f, mod->xxi[i].sub[j].sid,
+		    XMP_SMP_DIFF, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 	    }
 	}
     }
@@ -482,8 +483,8 @@ load_samples:
      * MOD channel panning (LRRL). Moved to module_play() --Hipolito.
      */
 
-    for (i = 0; i < m->mod.chn; i++) {
-        m->mod.xxc[i].pan = 0x80;
+    for (i = 0; i < mod->chn; i++) {
+        mod->xxc[i].pan = 0x80;
     }
 
     m->quirk |= QUIRKS_FT2;

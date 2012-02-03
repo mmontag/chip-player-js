@@ -76,6 +76,7 @@ static uint8 fx[] = {
 static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int c, r, i, broken = 0;
     struct xmp_event *event = 0, dummy;
     struct stx_file_header sfh;
@@ -117,12 +118,12 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
 #endif
 
-    m->mod.ins = sfh.insnum;
-    m->mod.pat = sfh.patnum;
-    m->mod.trk = m->mod.pat * m->mod.chn;
-    m->mod.len = sfh.ordnum;
-    m->mod.tpo = MSN (sfh.tempo);
-    m->mod.smp = m->mod.ins;
+    mod->ins = sfh.insnum;
+    mod->pat = sfh.patnum;
+    mod->trk = mod->pat * mod->chn;
+    mod->len = sfh.ordnum;
+    mod->tpo = MSN (sfh.tempo);
+    mod->smp = mod->ins;
     m->c4rate = C4_NTSC_RATE;
 
     /* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
@@ -135,34 +136,34 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     if (x16 == sfh.psize)
 	broken = 1;
 
-    strncpy(m->mod.name, (char *)sfh.name, 20);
+    strncpy(mod->name, (char *)sfh.name, 20);
     if (bmod2stm)
 	set_type(m, "STMIK 0.2 (BMOD2STM)");
     else
-	snprintf(m->mod.type, XMP_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
+	snprintf(mod->type, XMP_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
 							broken ? 0 : 1);
 
     MODULE_INFO();
  
-    pp_pat = calloc (2, m->mod.pat);
-    pp_ins = calloc (2, m->mod.ins);
+    pp_pat = calloc (2, mod->pat);
+    pp_ins = calloc (2, mod->ins);
 
     /* Read pattern pointers */
     fseek(f, start + (sfh.pp_pat << 4), SEEK_SET);
-    for (i = 0; i < m->mod.pat; i++)
+    for (i = 0; i < mod->pat; i++)
 	pp_pat[i] = read16l(f);
 
     /* Read instrument pointers */
     fseek(f, start + (sfh.pp_ins << 4), SEEK_SET);
-    for (i = 0; i < m->mod.ins; i++)
+    for (i = 0; i < mod->ins; i++)
 	pp_ins[i] = read16l(f);
 
     /* Skip channel table (?) */
     fseek(f, start + (sfh.pp_chn << 4) + 32, SEEK_SET);
 
     /* Read orders */
-    for (i = 0; i < m->mod.len; i++) {
-	m->mod.xxo[i] = read8(f);
+    for (i = 0; i < mod->len; i++) {
+	mod->xxo[i] = read8(f);
 	fseek(f, 4, SEEK_CUR);
     }
  
@@ -170,8 +171,8 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	fseek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
 	sih.type = read8(f);
@@ -193,35 +194,35 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	fread(&sih.name, 28, 1, f);
 	fread(&sih.magic, 4, 1, f);
 
-	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = sih.length);
-	m->mod.xxs[i].lps = sih.loopbeg;
-	m->mod.xxs[i].lpe = sih.loopend;
-	if (m->mod.xxs[i].lpe == 0xffff)
-	    m->mod.xxs[i].lpe = 0;
-	m->mod.xxs[i].flg = m->mod.xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	m->mod.xxi[i].sub[0].vol = sih.vol;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
+	mod->xxi[i].nsm = !!(mod->xxs[i].len = sih.length);
+	mod->xxs[i].lps = sih.loopbeg;
+	mod->xxs[i].lpe = sih.loopend;
+	if (mod->xxs[i].lpe == 0xffff)
+	    mod->xxs[i].lpe = 0;
+	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].sub[0].vol = sih.vol;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->mod.xxi[i].name, sih.name, 12);
+	copy_adjust(mod->xxi[i].name, sih.name, 12);
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
-		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
-		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->mod.xxi[i].sub[0].vol, sih.c2spd);
+		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
+		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		mod->xxi[i].sub[0].vol, sih.c2spd);
 
 	sih.c2spd = 8363 * sih.c2spd / 8448;
-	c2spd_to_note (sih.c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+	c2spd_to_note (sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	if (!pp_pat[i])
@@ -240,7 +241,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    c = b & S3M_CH_MASK;
-	    event = c >= m->mod.chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
 		n = read8(f);
@@ -284,11 +285,11 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     free (pp_ins);
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+    for (i = 0; i < mod->ins; i++) {
+	load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 
     m->quirk |= QUIRK_VSALL | QUIRKS_ST3;

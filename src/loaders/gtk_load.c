@@ -38,6 +38,7 @@ static int gtk_test(FILE * f, char *t, const int start)
 static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j, k;
 	uint8 buffer[40];
@@ -48,37 +49,37 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fread(buffer, 4, 1, f);
 	ver = buffer[3];
-	fread(m->mod.name, 32, 1, f);
+	fread(mod->name, 32, 1, f);
 	set_type(m, "GTK v%d (Graoumf Tracker)", ver);
 	fseek(f, 160, SEEK_CUR);	/* skip comments */
 
-	m->mod.ins = read16b(f);
-	m->mod.smp = m->mod.ins;
+	mod->ins = read16b(f);
+	mod->smp = mod->ins;
 	rows = read16b(f);
-	m->mod.chn = read16b(f);
-	m->mod.len = read16b(f);
-	m->mod.rst = read16b(f);
+	mod->chn = read16b(f);
+	mod->len = read16b(f);
+	mod->rst = read16b(f);
 
 	MODULE_INFO();
 
-	_D(_D_INFO "Instruments    : %d ", m->mod.ins);
+	_D(_D_INFO "Instruments    : %d ", mod->ins);
 
 	INSTRUMENT_INIT();
-	for (i = 0; i < m->mod.ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	for (i = 0; i < mod->ins; i++) {
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		fread(buffer, 28, 1, f);
-		copy_adjust(m->mod.xxi[i].name, buffer, 28);
+		copy_adjust(mod->xxi[i].name, buffer, 28);
 
 		if (ver == 1) {
 			read32b(f);
-			m->mod.xxs[i].len = read32b(f);
-			m->mod.xxs[i].lps = read32b(f);
+			mod->xxs[i].len = read32b(f);
+			mod->xxs[i].lps = read32b(f);
 			size = read32b(f);
-			m->mod.xxs[i].lpe = m->mod.xxs[i].lps + size - 1;
+			mod->xxs[i].lpe = mod->xxs[i].lps + size - 1;
 			read16b(f);
 			read16b(f);
-			m->mod.xxi[i].sub[0].vol = 0x40;
-			m->mod.xxi[i].sub[0].pan = 0x80;
+			mod->xxi[i].sub[0].vol = 0x40;
+			mod->xxi[i].sub[0].pan = 0x80;
 			bits = 1;
 			c2spd = 8363;
 		} else {
@@ -86,62 +87,62 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 			read16b(f);		/* autobal */
 			bits = read16b(f);	/* 1 = 8 bits, 2 = 16 bits */
 			c2spd = read16b(f);
-			c2spd_to_note(c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
-			m->mod.xxs[i].len = read32b(f);
-			m->mod.xxs[i].lps = read32b(f);
+			c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+			mod->xxs[i].len = read32b(f);
+			mod->xxs[i].lps = read32b(f);
 			size = read32b(f);
-			m->mod.xxs[i].lpe = m->mod.xxs[i].lps + size - 1;
-			m->mod.xxi[i].sub[0].vol = read16b(f) / 4;
+			mod->xxs[i].lpe = mod->xxs[i].lps + size - 1;
+			mod->xxi[i].sub[0].vol = read16b(f) / 4;
 			read8(f);
-			m->mod.xxi[i].sub[0].fin = read8s(f);
+			mod->xxi[i].sub[0].fin = read8s(f);
 		}
 
-		m->mod.xxi[i].nsm = !!m->mod.xxs[i].len;
-		m->mod.xxi[i].sub[0].sid = i;
-		m->mod.xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;
+		mod->xxi[i].nsm = !!mod->xxs[i].len;
+		mod->xxi[i].sub[0].sid = i;
+		mod->xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;
 
 		if (bits > 1) {
-			m->mod.xxs[i].flg |= XMP_SAMPLE_16BIT;
-			m->mod.xxs[i].len >>= 1;
-			m->mod.xxs[i].lps >>= 1;
-			m->mod.xxs[i].lpe >>= 1;
+			mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
+			mod->xxs[i].len >>= 1;
+			mod->xxs[i].lps >>= 1;
+			mod->xxs[i].lpe >>= 1;
 		}
 
 		_D(_D_INFO "[%2X] %-28.28s  %05x%c%05x %05x %c "
 						"V%02x F%+03d %5d", i,
-			 	m->mod.xxi[i].name,
-				m->mod.xxs[i].len,
+			 	mod->xxi[i].name,
+				mod->xxs[i].len,
 				bits > 1 ? '+' : ' ',
-				m->mod.xxs[i].lps,
+				mod->xxs[i].lps,
 				size,
-				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin,
+				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin,
 				c2spd);
 	}
 
 	for (i = 0; i < 256; i++)
-		m->mod.xxo[i] = read16b(f);
+		mod->xxo[i] = read16b(f);
 
-	for (patmax = i = 0; i < m->mod.len; i++) {
-		if (m->mod.xxo[i] > patmax)
-			patmax = m->mod.xxo[i];
+	for (patmax = i = 0; i < mod->len; i++) {
+		if (mod->xxo[i] > patmax)
+			patmax = mod->xxo[i];
 	}
 
-	m->mod.pat = patmax + 1;
-	m->mod.trk = m->mod.pat * m->mod.chn;
+	mod->pat = patmax + 1;
+	mod->trk = mod->pat * mod->chn;
 
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d", mod->pat);
 
-	for (i = 0; i < m->mod.pat; i++) {
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = rows;
+		mod->xxp[i]->rows = rows;
 		TRACK_ALLOC(i);
 
-		for (j = 0; j < m->mod.xxp[i]->rows; j++) {
-			for (k = 0; k < m->mod.chn; k++) {
+		for (j = 0; j < mod->xxp[i]->rows; j++) {
+			for (k = 0; k < mod->chn; k++) {
 				event = &EVENT (i, k, j);
 
 				event->note = read8(f);
@@ -163,13 +164,13 @@ static int gtk_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Stored samples: %d", m->mod.smp);
+	_D(_D_INFO "Stored samples: %d", mod->smp);
 
-	for (i = 0; i < m->mod.ins; i++) {
-		if (m->mod.xxs[i].len == 0)
+	for (i = 0; i < mod->ins; i++) {
+		if (mod->xxs[i].len == 0)
 			continue;
-		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-					&m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+		load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

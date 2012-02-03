@@ -59,6 +59,7 @@ struct stim_header {
 static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	struct xmp_event *event;
 	struct stim_header sh;
@@ -78,14 +79,14 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	for (i = 0; i < 64; i++)
 		sh.pataddr[i] = read32b(f) + 0x0c;
 
-	m->mod.len = sh.len;
-	m->mod.pat = sh.pat;
-	m->mod.ins = sh.nos;
-	m->mod.smp = m->mod.ins;
-	m->mod.trk = m->mod.pat * m->mod.chn;
+	mod->len = sh.len;
+	mod->pat = sh.pat;
+	mod->ins = sh.nos;
+	mod->smp = mod->ins;
+	mod->trk = mod->pat * mod->chn;
 
-	for (i = 0; i < m->mod.len; i++)
-		m->mod.xxo[i] = sh.order[i];
+	for (i = 0; i < mod->len; i++)
+		mod->xxo[i] = sh.order[i];
 
 	set_type(m, "STIM (Slamtilt)");
 
@@ -94,11 +95,11 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d", mod->pat);
 
-	for (i = 0; i < m->mod.pat; i++) {
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = 64;
+		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		fseek(f, start + sh.pataddr[i] + 8, SEEK_SET);
@@ -142,41 +143,41 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Stored samples: %d", m->mod.smp);
+	_D(_D_INFO "Stored samples: %d", mod->smp);
 
-	fseek(f, start + sh.smpaddr + m->mod.smp * 4, SEEK_SET);
+	fseek(f, start + sh.smpaddr + mod->smp * 4, SEEK_SET);
 
-	for (i = 0; i < m->mod.smp; i++) {
+	for (i = 0; i < mod->smp; i++) {
 		si.size = read16b(f);
 		si.finetune = read8(f);
 		si.volume = read8(f);
 		si.loop_start = read16b(f);
 		si.loop_size = read16b(f);
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-		m->mod.xxs[i].len = 2 * si.size;
-		m->mod.xxs[i].lps = 2 * si.loop_start;
-		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * si.loop_size;
-		m->mod.xxs[i].flg = si.loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-		m->mod.xxi[i].sub[0].fin = (int8) (si.finetune << 4);
-		m->mod.xxi[i].sub[0].vol = si.volume;
-		m->mod.xxi[i].sub[0].pan = 0x80;
-		m->mod.xxi[i].sub[0].sid = i;
-		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
-		m->mod.xxi[i].rls = 0xfff;
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxs[i].len = 2 * si.size;
+		mod->xxs[i].lps = 2 * si.loop_start;
+		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * si.loop_size;
+		mod->xxs[i].flg = si.loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+		mod->xxi[i].sub[0].fin = (int8) (si.finetune << 4);
+		mod->xxi[i].sub[0].vol = si.volume;
+		mod->xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].sid = i;
+		mod->xxi[i].nsm = !!(mod->xxs[i].len);
+		mod->xxi[i].rls = 0xfff;
 
 		_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
-			       i, m->mod.xxs[i].len, m->mod.xxs[i].lps,
-			       m->mod.xxs[i].lpe, si.loop_size > 1 ? 'L' : ' ',
-			       m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4);
+			       i, mod->xxs[i].len, mod->xxs[i].lps,
+			       mod->xxs[i].lpe, si.loop_size > 1 ? 'L' : ' ',
+			       mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
 
-		if (!m->mod.xxs[i].len)
+		if (!mod->xxs[i].len)
 			continue;
-		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+		load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
-	m->mod.flg |= XXM_FLG_MODRNG;
+	mod->flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }

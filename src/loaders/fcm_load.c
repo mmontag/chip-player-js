@@ -53,50 +53,50 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	fh.magic[3] != 'M' || fh.name_id[0] != 'N')
 	return -1;
 
-    strncpy (m->mod.name, fh.name, 20);
+    strncpy (mod->name, fh.name, 20);
     set_type(m, "FC-M %d.%d", fh.vmaj, fh.vmin);
 
     MODULE_INFO();
 
-    m->mod.len = fh.len;
+    mod->len = fh.len;
 
-    fread (m->mod.xxo, 1, m->mod.len, f);
+    fread (mod->xxo, 1, mod->len, f);
 
-    for (m->mod.pat = i = 0; i < m->mod.len; i++) {
-	if (m->mod.xxo[i] > m->mod.pat)
-	    m->mod.pat = m->mod.xxo[i];
+    for (mod->pat = i = 0; i < mod->len; i++) {
+	if (mod->xxo[i] > mod->pat)
+	    mod->pat = mod->xxo[i];
     }
-    m->mod.pat++;
+    mod->pat++;
 
-    m->mod.trk = m->mod.pat * m->mod.chn;
+    mod->trk = mod->pat * mod->chn;
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.ins; i++) {
+    for (i = 0; i < mod->ins; i++) {
 	B_ENDIAN16 (fh.ins[i].size);
 	B_ENDIAN16 (fh.ins[i].loop_start);
 	B_ENDIAN16 (fh.ins[i].loop_size);
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	m->mod.xxs[i].len = 2 * fh.ins[i].size;
-	m->mod.xxs[i].lps = 2 * fh.ins[i].loop_start;
-	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * fh.ins[i].loop_size;
-	m->mod.xxs[i].flg = fh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->mod.xxi[i].sub[0].fin = (int8)fh.ins[i].finetune << 4;
-	m->mod.xxi[i].sub[0].vol = fh.ins[i].volume;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
-	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
-	m->mod.xxi[i].rls = 0xfff;
-	if (m->mod.xxi[i].sub[0].fin > 48)
-	    m->mod.xxi[i].sub[0].xpo = -1;
-	if (m->mod.xxi[i].sub[0].fin < -48)
-	    m->mod.xxi[i].sub[0].xpo = 1;
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxs[i].len = 2 * fh.ins[i].size;
+	mod->xxs[i].lps = 2 * fh.ins[i].loop_start;
+	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * fh.ins[i].loop_size;
+	mod->xxs[i].flg = fh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].sub[0].fin = (int8)fh.ins[i].finetune << 4;
+	mod->xxi[i].sub[0].vol = fh.ins[i].volume;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
+	mod->xxi[i].nsm = !!(mod->xxs[i].len);
+	mod->xxi[i].rls = 0xfff;
+	if (mod->xxi[i].sub[0].fin > 48)
+	    mod->xxi[i].sub[0].xpo = -1;
+	if (mod->xxi[i].sub[0].fin < -48)
+	    mod->xxi[i].sub[0].xpo = 1;
 
-	if (V(1) && (strlen(m->mod.xxi[i].name) || m->mod.xxs[i].len > 2)) {
+	if (V(1) && (strlen(mod->xxi[i].name) || mod->xxs[i].len > 2)) {
 	    report ("[%2X] %04x %04x %04x %c V%02x %+d\n",
-		i, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+		i, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		fh.ins[i].loop_size > 1 ? 'L' : ' ',
-		m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4);
+		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
 	}
     }
 
@@ -104,13 +104,13 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 
     /* Load and convert patterns */
     if (V(0))
-	report ("Stored patterns: %d ", m->mod.pat);
+	report ("Stored patterns: %d ", mod->pat);
 
     fread (fe, 4, 1, f);	/* Skip 'SONG' pseudo chunk ID */
 
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64; j++) {
 	    for (k = 0; k < 4; k++) {
@@ -124,19 +124,19 @@ int fcm_load(struct xmp_context *ctx, FILE *f)
 	    report (".");
     }
 
-    m->mod.flg |= XXM_FLG_MODRNG;
+    mod->flg |= XXM_FLG_MODRNG;
 
     /* Load samples */
 
     fread (fe, 4, 1, f);	/* Skip 'SAMP' pseudo chunk ID */
 
     if (V(0))
-	report ("\nStored samples : %d ", m->mod.smp);
-    for (i = 0; i < m->mod.smp; i++) {
-	if (!m->mod.xxs[i].len)
+	report ("\nStored samples : %d ", mod->smp);
+    for (i = 0; i < mod->smp; i++) {
+	if (!mod->xxs[i].len)
 	    continue;
-	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+	load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	if (V(0))
 	    report (".");
     }

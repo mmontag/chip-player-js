@@ -230,6 +230,7 @@ static uint32 readptr16l(uint8 *p)
 static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j;
 	int ver, infolen, sn[64];
@@ -245,32 +246,32 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	ver = read8(f);
 	set_type(m, "BASSTRAK v%d (Digital Symphony)", ver);
 
-	m->mod.chn = read8(f);
-	m->mod.len = m->mod.pat = read16l(f);
-	m->mod.trk = read16l(f);	/* Symphony patterns are actually tracks */
+	mod->chn = read8(f);
+	mod->len = mod->pat = read16l(f);
+	mod->trk = read16l(f);	/* Symphony patterns are actually tracks */
 	infolen = read24l(f);
 
-	m->mod.ins = m->mod.smp = 63;
+	mod->ins = mod->smp = 63;
 
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->mod.ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	for (i = 0; i < mod->ins; i++) {
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		sn[i] = read8(f);	/* sample name length */
 
 		if (~sn[i] & 0x80)
-			m->mod.xxs[i].len = read24l(f) << 1;
+			mod->xxs[i].len = read24l(f) << 1;
 	}
 
 	a = read8(f);			/* track name length */
 
-	fread(m->mod.name, 1, a, f);
+	fread(mod->name, 1, a, f);
 	fread(&allowed_effects, 1, 8, f);
 
 	MODULE_INFO();
 
-	m->mod.trk++;			/* alloc extra empty track */
+	mod->trk++;			/* alloc extra empty track */
 	PATTERN_INIT();
 
 	/* Sequence */
@@ -281,7 +282,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	_D(_D_INFO "Packed sequence: %s", a ? "yes" : "no");
 
-	size = m->mod.len * m->mod.chn * 2;
+	size = mod->len * mod->chn * 2;
 	buf = malloc(size);
 
 	if (a) {
@@ -290,18 +291,18 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		fread(buf, 1, size, f);
 	}
 
-	for (i = 0; i < m->mod.len; i++) {	/* len == pat */
+	for (i = 0; i < mod->len; i++) {	/* len == pat */
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = 64;
-		for (j = 0; j < m->mod.chn; j++) {
-			int idx = 2 * (i * m->mod.chn + j);
-			m->mod.xxp[i]->index[j] = readptr16l(&buf[idx]);
+		mod->xxp[i]->rows = 64;
+		for (j = 0; j < mod->chn; j++) {
+			int idx = 2 * (i * mod->chn + j);
+			mod->xxp[i]->index[j] = readptr16l(&buf[idx]);
 
-			if (m->mod.xxp[i]->index[j] == 0x1000) /* empty trk */
-				m->mod.xxp[i]->index[j] = m->mod.trk - 1;
+			if (mod->xxp[i]->index[j] == 0x1000) /* empty trk */
+				mod->xxp[i]->index[j] = mod->trk - 1;
 
 		}
-		m->mod.xxo[i] = i;
+		mod->xxo[i] = i;
 	}
 	free(buf);
 
@@ -313,9 +314,9 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		return -1;
 
 	_D(_D_INFO "Packed tracks: %s", a ? "yes" : "no");
-	_D(_D_INFO "Stored tracks: %d", m->mod.trk - 1);
+	_D(_D_INFO "Stored tracks: %d", mod->trk - 1);
 
-	size = 64 * (m->mod.trk - 1) * 4;
+	size = 64 * (mod->trk - 1) * 4;
 	buf = malloc(size);
 
 	if (a) {
@@ -324,15 +325,15 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 		fread(buf, 1, size, f);
 	}
 
-	for (i = 0; i < m->mod.trk - 1; i++) {
-		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+	for (i = 0; i < mod->trk - 1; i++) {
+		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
 				sizeof(struct xmp_event) * 64 - 1, 1);
-		m->mod.xxt[i]->rows = 64;
+		mod->xxt[i]->rows = 64;
 
-		for (j = 0; j < m->mod.xxt[i]->rows; j++) {
+		for (j = 0; j < mod->xxt[i]->rows; j++) {
 			int parm;
 
-			event = &m->mod.xxt[i]->event[j];
+			event = &mod->xxt[i]->event[j];
 
 			b = readptr32l(&buf[4 * (i * 64 + j)]);
 			event->note = b & 0x0000003f;
@@ -353,45 +354,45 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	free(buf);
 
 	/* Extra track */
-	m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+	mod->xxt[i] = calloc(sizeof(struct xmp_track) +
 				sizeof(struct xmp_event) * 64 - 1, 1);
-	m->mod.xxt[i]->rows = 64;
+	mod->xxt[i]->rows = 64;
 
 	/* Load and convert instruments */
 
-	_D(_D_INFO "Instruments: %d", m->mod.ins);
+	_D(_D_INFO "Instruments: %d", mod->ins);
 
-	for (i = 0; i < m->mod.ins; i++) {
+	for (i = 0; i < mod->ins; i++) {
 		uint8 buf[128];
 
 		memset(buf, 0, 128);
 		fread(buf, 1, sn[i] & 0x7f, f);
-		copy_adjust(m->mod.xxi[i].name, buf, 32);
+		copy_adjust(mod->xxi[i].name, buf, 32);
 
 		if (~sn[i] & 0x80) {
 			int looplen;
 
-			m->mod.xxs[i].lps = read24l(f) << 1;
+			mod->xxs[i].lps = read24l(f) << 1;
 			looplen = read24l(f) << 1;
 			if (looplen > 2)
-				m->mod.xxs[i].flg |= XMP_SAMPLE_LOOP;
-			m->mod.xxs[i].lpe = m->mod.xxs[i].lps + looplen;
-			m->mod.xxi[i].nsm = 1;
-			m->mod.xxi[i].sub[0].vol = read8(f);
-			m->mod.xxi[i].sub[0].pan = 0x80;
+				mod->xxs[i].flg |= XMP_SAMPLE_LOOP;
+			mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
+			mod->xxi[i].nsm = 1;
+			mod->xxi[i].sub[0].vol = read8(f);
+			mod->xxi[i].sub[0].pan = 0x80;
 			/* finetune adjusted comparing DSym and S3M versions
 			 * of "inside out" */
-			m->mod.xxi[i].sub[0].fin = (int8)(read8(f) << 4);
-			m->mod.xxi[i].sub[0].sid = i;
+			mod->xxi[i].sub[0].fin = (int8)(read8(f) << 4);
+			mod->xxi[i].sub[0].sid = i;
 		}
 
 		_D(_D_INFO "[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d",
-				i, m->mod.xxi[i].name, m->mod.xxs[i].len,
-				m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
-				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin);
+				i, mod->xxi[i].name, mod->xxs[i].len,
+				mod->xxs[i].lps, mod->xxs[i].lpe,
+				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin);
 
-		if (sn[i] & 0x80 || m->mod.xxs[i].len == 0)
+		if (sn[i] & 0x80 || mod->xxs[i].len == 0)
 			continue;
 
 		a = read8(f);
@@ -400,24 +401,24 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			return -1;
 
 		if (a == 1) {
-			uint8 *b = malloc(m->mod.xxs[i].len);
-			read_lzw_dynamic(f, b, 13, 0, m->mod.xxs[i].len,
-					m->mod.xxs[i].len, XMP_LZW_QUIRK_DSYM);
-			load_patch(ctx, NULL, m->mod.xxi[i].sub[0].sid,
+			uint8 *b = malloc(mod->xxs[i].len);
+			read_lzw_dynamic(f, b, 13, 0, mod->xxs[i].len,
+					mod->xxs[i].len, XMP_LZW_QUIRK_DSYM);
+			load_patch(ctx, NULL, mod->xxi[i].sub[0].sid,
 				XMP_SMP_NOLOAD | XMP_SMP_DIFF,
-				&m->mod.xxs[m->mod.xxi[i].sub[0].sid], (char*)b);
+				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);
 			free(b);
 		} else if (a == 4) {
-			load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
-				XMP_SMP_VIDC, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+			load_patch(ctx, f, mod->xxi[i].sub[0].sid,
+				XMP_SMP_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		} else {
-			load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
-				XMP_SMP_VIDC, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+			load_patch(ctx, f, mod->xxi[i].sub[0].sid,
+				XMP_SMP_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		}
 	}
 
-	for (i = 0; i < m->mod.chn; i++)
-		m->mod.xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
+	for (i = 0; i < mod->chn; i++)
+		mod->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
 
 	return 0;
 }

@@ -62,6 +62,7 @@ struct ice_header {
 static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
     struct ice_header ih;
@@ -84,76 +85,76 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
     ih.magic = read32b(f);
 
     if (ih.magic == MAGIC_IT10)
-        strcpy(m->mod.type, "IT10 (Ice Tracker)");
+        strcpy(mod->type, "IT10 (Ice Tracker)");
     else if (ih.magic == MAGIC_MTN_)
-        strcpy(m->mod.type, "MTN (Soundtracker 2.6)");
+        strcpy(mod->type, "MTN (Soundtracker 2.6)");
     else
 	return -1;
 
-    m->mod.ins = 31;
-    m->mod.smp = m->mod.ins;
-    m->mod.pat = ih.len;
-    m->mod.len = ih.len;
-    m->mod.trk = ih.trk;
+    mod->ins = 31;
+    mod->smp = mod->ins;
+    mod->pat = ih.len;
+    mod->len = ih.len;
+    mod->trk = ih.trk;
 
-    strncpy (m->mod.name, (char *) ih.title, 20);
+    strncpy (mod->name, (char *) ih.title, 20);
     MODULE_INFO();
 
     INSTRUMENT_INIT();
 
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = 2 * ih.ins[i].len);
-	m->mod.xxs[i].lps = 2 * ih.ins[i].loop_start;
-	m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * ih.ins[i].loop_size;
-	m->mod.xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	m->mod.xxi[i].sub[0].vol = ih.ins[i].volume;
-	m->mod.xxi[i].sub[0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = !!(mod->xxs[i].len = 2 * ih.ins[i].len);
+	mod->xxs[i].lps = 2 * ih.ins[i].loop_start;
+	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * ih.ins[i].loop_size;
+	mod->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].sub[0].vol = ih.ins[i].volume;
+	mod->xxi[i].sub[0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
 
 	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c %02x %+01x",
-		i, ih.ins[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
-		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->mod.xxi[i].sub[0].vol,
-		m->mod.xxi[i].sub[0].fin >> 4);
+		i, ih.ins[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
+		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol,
+		mod->xxi[i].sub[0].fin >> 4);
     }
 
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->mod.xxp[i]->rows = 64;
-	for (j = 0; j < m->mod.chn; j++) {
-	    m->mod.xxp[i]->index[j] = ih.ord[i][j];
+	mod->xxp[i]->rows = 64;
+	for (j = 0; j < mod->chn; j++) {
+	    mod->xxp[i]->index[j] = ih.ord[i][j];
 	}
-	m->mod.xxo[i] = i;
+	mod->xxo[i] = i;
     }
 
-    _D(_D_INFO "Stored tracks: %d", m->mod.trk);
+    _D(_D_INFO "Stored tracks: %d", mod->trk);
 
-    for (i = 0; i < m->mod.trk; i++) {
-	m->mod.xxt[i] = calloc (sizeof (struct xmp_track) + sizeof
+    for (i = 0; i < mod->trk; i++) {
+	mod->xxt[i] = calloc (sizeof (struct xmp_track) + sizeof
 		(struct xmp_event) * 64, 1);
-	m->mod.xxt[i]->rows = 64;
-	for (j = 0; j < m->mod.xxt[i]->rows; j++) {
-		event = &m->mod.xxt[i]->event[j];
+	mod->xxt[i]->rows = 64;
+	for (j = 0; j < mod->xxt[i]->rows; j++) {
+		event = &mod->xxt[i]->event[j];
 		fread (ev, 1, 4, f);
 		cvt_pt_event (event, ev);
 	}
     }
 
-    m->mod.flg |= XXM_FLG_MODRNG;
+    mod->flg |= XXM_FLG_MODRNG;
 
     /* Read samples */
 
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	if (m->mod.xxs[i].len <= 4)
+    for (i = 0; i < mod->ins; i++) {
+	if (mod->xxs[i].len <= 4)
 	    continue;
-	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
+	load_patch(ctx, f, i, 0, &mod->xxs[i], NULL);
     }
 
     return 0;

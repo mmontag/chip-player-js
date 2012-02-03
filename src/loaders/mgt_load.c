@@ -45,6 +45,7 @@ static int mgt_test(FILE *f, char *t, const int start)
 static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j;
 	int ver;
@@ -59,12 +60,12 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	set_type(m, "MGT v%d.%d (Megatracker)", MSN(ver), LSN(ver));
 
-	m->mod.chn = read16b(f);
+	mod->chn = read16b(f);
 	read16b(f);			/* number of songs */
-	m->mod.len = read16b(f);
-	m->mod.pat = read16b(f);
-	m->mod.trk = read16b(f);
-	m->mod.ins = m->mod.smp = read16b(f);
+	mod->len = read16b(f);
+	mod->pat = read16b(f);
+	mod->trk = read16b(f);
+	mod->ins = mod->smp = read16b(f);
 	read16b(f);			/* reserved */
 	read32b(f);			/* reserved */
 
@@ -79,17 +80,17 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fseek(f, start + sng_ptr, SEEK_SET);
 
-	fread(m->mod.name, 1, 32, f);
+	fread(mod->name, 1, 32, f);
 	seq_ptr = read32b(f);
-	m->mod.len = read16b(f);
-	m->mod.rst = read16b(f);
-	m->mod.bpm = read8(f);
-	m->mod.tpo = read8(f);
+	mod->len = read16b(f);
+	mod->rst = read16b(f);
+	mod->bpm = read8(f);
+	mod->tpo = read8(f);
 	read16b(f);			/* global volume */
 	read8(f);			/* master L */
 	read8(f);			/* master R */
 
-	for (i = 0; i < m->mod.chn; i++) {
+	for (i = 0; i < mod->chn; i++) {
 		read16b(f);		/* pan */
 	}
 	
@@ -98,8 +99,8 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	/* Sequence */
 
 	fseek(f, start + seq_ptr, SEEK_SET);
-	for (i = 0; i < m->mod.len; i++)
-		m->mod.xxo[i] = read16b(f);
+	for (i = 0; i < mod->len; i++)
+		mod->xxo[i] = read16b(f);
 
 	/* Instruments */
 
@@ -107,28 +108,28 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fseek(f, start + ins_ptr, SEEK_SET);
 
-	for (i = 0; i < m->mod.ins; i++) {
+	for (i = 0; i < mod->ins; i++) {
 		int c2spd, flags;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		fread(m->mod.xxi[i].name, 1, 32, f);
+		fread(mod->xxi[i].name, 1, 32, f);
 		sdata[i] = read32b(f);
-		m->mod.xxs[i].len = read32b(f);
-		m->mod.xxs[i].lps = read32b(f);
-		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + read32b(f);
+		mod->xxs[i].len = read32b(f);
+		mod->xxs[i].lps = read32b(f);
+		mod->xxs[i].lpe = mod->xxs[i].lps + read32b(f);
 		read32b(f);
 		read32b(f);
 		c2spd = read32b(f);
-		c2spd_to_note(c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
-		m->mod.xxi[i].sub[0].vol = read16b(f) >> 4;
+		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+		mod->xxi[i].sub[0].vol = read16b(f) >> 4;
 		read8(f);		/* vol L */
 		read8(f);		/* vol R */
-		m->mod.xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].pan = 0x80;
 		flags = read8(f);
-		m->mod.xxs[i].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
-		m->mod.xxs[i].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
-		m->mod.xxi[i].sub[0].fin += 0 * read8(f);	// FIXME
+		mod->xxs[i].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
+		mod->xxs[i].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
+		mod->xxi[i].sub[0].fin += 0 * read8(f);	// FIXME
 		read8(f);		/* unused */
 		read8(f);
 		read8(f);
@@ -137,25 +138,25 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		read32b(f);
 		read32b(f);
 
-		m->mod.xxi[i].nsm = !!m->mod.xxs[i].len;
-		m->mod.xxi[i].sub[0].sid = i;
+		mod->xxi[i].nsm = !!mod->xxs[i].len;
+		mod->xxi[i].sub[0].sid = i;
 		
 		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
-				i, m->mod.xxi[i].name,
-				m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
-				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->mod.xxi[i].sub[0].vol, c2spd);
+				i, mod->xxi[i].name,
+				mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
+				mod->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				mod->xxi[i].sub[0].vol, c2spd);
 	}
 
 	/* PATTERN_INIT - alloc extra track*/
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored tracks: %d", m->mod.trk);
+	_D(_D_INFO "Stored tracks: %d", mod->trk);
 
 	/* Tracks */
 
-	for (i = 1; i < m->mod.trk; i++) {
+	for (i = 1; i < mod->trk; i++) {
 		int offset, rows;
 		uint8 b;
 
@@ -164,9 +165,9 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 		fseek(f, start + offset, SEEK_SET);
 
 		rows = read16b(f);
-		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
 				sizeof(struct xmp_event) * rows, 1);
-		m->mod.xxt[i]->rows = rows;
+		mod->xxt[i]->rows = rows;
 
 		//printf("\n=== Track %d ===\n\n", i);
 		for (j = 0; j < rows; j++) {
@@ -176,7 +177,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 			j += b & 0x03;
 
 			note = 0;
-			event = &m->mod.xxt[i]->event[j];
+			event = &mod->xxt[i]->event[j];
 			if (b & 0x04)
 				note = read8(f);
 			if (b & 0x08)
@@ -274,35 +275,35 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Extra track */
-	m->mod.xxt[0] = calloc(sizeof(struct xmp_track) +
+	mod->xxt[0] = calloc(sizeof(struct xmp_track) +
 			sizeof(struct xmp_event) * 64 - 1, 1);
-	m->mod.xxt[0]->rows = 64;
+	mod->xxt[0]->rows = 64;
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d", mod->pat);
 
 	fseek(f, start + pat_ptr, SEEK_SET);
 
-	for (i = 0; i < m->mod.pat; i++) {
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
 
-		m->mod.xxp[i]->rows = read16b(f);
-		for (j = 0; j < m->mod.chn; j++) {
-			m->mod.xxp[i]->index[j] = read16b(f) - 1;
+		mod->xxp[i]->rows = read16b(f);
+		for (j = 0; j < mod->chn; j++) {
+			mod->xxp[i]->index[j] = read16b(f) - 1;
 		}
 	}
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", m->mod.smp);
+	_D(_D_INFO "Stored samples: %d", mod->smp);
 
-	for (i = 0; i < m->mod.ins; i++) {
-		if (m->mod.xxi[i].nsm == 0)
+	for (i = 0; i < mod->ins; i++) {
+		if (mod->xxi[i].nsm == 0)
 			continue;
 
 		fseek(f, start + sdata[i], SEEK_SET);
-		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-					&m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+		load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

@@ -52,13 +52,13 @@ int ftm_load(FILE * f)
 	fread(&fh.author, 32, 1, f);
 	read16b(f);
 
-	//m->mod.len = fh.len;
-	//m->mod.pat = fh.pat;
-	m->mod.ins = fh.nos;
-	m->mod.smp = m->mod.ins;
-	m->mod.trk = m->mod.pat * m->mod.chn;
-	for (i = 0; i < m->mod.len; i++)
-		m->mod.xxo[i] = fh.order[i];
+	//mod->len = fh.len;
+	//mod->pat = fh.pat;
+	mod->ins = fh.nos;
+	mod->smp = mod->ins;
+	mod->trk = mod->pat * mod->chn;
+	for (i = 0; i < mod->len; i++)
+		mod->xxo[i] = fh.order[i];
 
 	set_type(m, "Face The Music");
 	MODULE_INFO();
@@ -66,10 +66,10 @@ int ftm_load(FILE * f)
 
 	/* Load and convert patterns */
 	if (V(0))
-		report("Stored patterns: %d ", m->mod.pat);
-	for (i = 0; i < m->mod.pat; i++) {
+		report("Stored patterns: %d ", mod->pat);
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = 64;
+		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 		for (j = 0; j < 4; j++) {
 		}
@@ -78,14 +78,14 @@ int ftm_load(FILE * f)
 	}
 
 	INSTRUMENT_INIT();
-	reportv(ctx, 0, "\nStored samples : %d ", m->mod.smp);
+	reportv(ctx, 0, "\nStored samples : %d ", mod->smp);
 
-	for (i = 0; i < m->mod.smp; i++) {
+	for (i = 0; i < mod->smp; i++) {
 		reportv(ctx, 0, ".");
 	}
 
 	reportv(ctx, 0, "\n");
-	m->mod.flg |= XXM_FLG_MODRNG;
+	mod->flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }

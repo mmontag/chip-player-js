@@ -62,6 +62,7 @@ static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int r, i, j, tmode = 1;
     struct amd_file_header afh;
     struct xmp_event *event;
@@ -83,41 +84,41 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&afh.magic, 9, 1, f);
     afh.version = read8(f);
 
-    m->mod.chn = 9;
-    m->mod.bpm = 125;
-    m->mod.tpo = 6;
-    m->mod.len = afh.len;
-    m->mod.pat = afh.pat + 1;
-    m->mod.ins = 26;
-    m->mod.smp = 0;
-    memcpy (m->mod.xxo, afh.order, m->mod.len);
+    mod->chn = 9;
+    mod->bpm = 125;
+    mod->tpo = 6;
+    mod->len = afh.len;
+    mod->pat = afh.pat + 1;
+    mod->ins = 26;
+    mod->smp = 0;
+    memcpy (mod->xxo, afh.order, mod->len);
 
-    strcpy(m->mod.type, "Amusic");
-    strncpy(m->mod.name, (char *)afh.name, 24);
+    strcpy(mod->type, "Amusic");
+    strncpy(mod->name, (char *)afh.name, 24);
 
     MODULE_INFO();
-    _D(_D_INFO "Instruments: %d", m->mod.ins);
+    _D(_D_INFO "Instruments: %d", mod->ins);
 
     INSTRUMENT_INIT();
 
     /* Load instruments */
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	copy_adjust(m->mod.xxi[i].name, afh.ins[i].name, 23);
+	copy_adjust(mod->xxi[i].name, afh.ins[i].name, 23);
 
-	m->mod.xxi[i].nsm = 1;
-	m->mod.xxi[i].sub[0].vol = 0x40;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
-	m->mod.xxi[i].sub[0].xpo = -1;
+	mod->xxi[i].nsm = 1;
+	mod->xxi[i].sub[0].vol = 0x40;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
+	mod->xxi[i].sub[0].xpo = -1;
 
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
 
-	_D(_D_INFO "\n[%2X] %-23.23s", i, m->mod.xxi[i].name);
+	_D(_D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
-	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
+	load_patch(ctx, f, mod->xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
     }
 
     if (!afh.version) {
@@ -125,36 +126,36 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	return -1;
     }
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
-    m->mod.xxp = calloc (sizeof (struct xmp_pattern *), m->mod.pat + 1);
+    mod->xxp = calloc (sizeof (struct xmp_pattern *), mod->pat + 1);
 
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
 	for (j = 0; j < 9; j++) {
 	    w = read16l(f);
-	    m->mod.xxp[i]->index[j] = w;
-	    if (w > m->mod.trk)
-		m->mod.trk = w;
+	    mod->xxp[i]->index[j] = w;
+	    if (w > mod->trk)
+		mod->trk = w;
 	}
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
     }
-    m->mod.trk++;
+    mod->trk++;
 
     w = read16l(f);
 
     _D(_D_INFO "Stored tracks: %d", w);
 
-    m->mod.xxt = calloc (sizeof (struct xmp_track *), m->mod.trk);
-    m->mod.trk = w;
+    mod->xxt = calloc (sizeof (struct xmp_track *), mod->trk);
+    mod->trk = w;
 
-    for (i = 0; i < m->mod.trk; i++) {
+    for (i = 0; i < mod->trk; i++) {
 	w = read16l(f);
-	m->mod.xxt[w] = calloc (sizeof (struct xmp_track) +
+	mod->xxt[w] = calloc (sizeof (struct xmp_track) +
 	    sizeof (struct xmp_event) * 64, 1);
-	m->mod.xxt[w]->rows = 64;
+	mod->xxt[w]->rows = 64;
 	for (r = 0; r < 64; r++) {
-	    event = &m->mod.xxt[w]->event[r];
+	    event = &mod->xxt[w]->event[r];
 	    b = read8(f);		/* Effect parameter */
 	    if (b & 0x80) {
 		r += (b & 0x7f) - 1;
@@ -201,9 +202,9 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    for (i = 0; i < m->mod.chn; i++) {
-	m->mod.xxc[i].pan = 0x80;
-	m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
+    for (i = 0; i < mod->chn; i++) {
+	mod->xxc[i].pan = 0x80;
+	mod->xxc[i].flg = XXM_CHANNEL_SYNTH;
     }
 
     m->synth = &synth_adlib;

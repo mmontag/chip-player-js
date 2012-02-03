@@ -180,6 +180,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_player_context *p = &ctx->p;
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i, j, tmp, blank;
 
 	LOAD_INIT();
@@ -188,59 +189,59 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	uint16 title_offset = read16b(f);
 	tmp = read16b(f);
-	m->mod.len = tmp & 0xfff;
+	mod->len = tmp & 0xfff;
 	blank = tmp & 0x8000;
 		
 	tmp = read16b(f);
-	m->mod.chn = (tmp >> 10) + 4;
-	m->mod.rst = tmp & 1023;
+	mod->chn = (tmp >> 10) + 4;
+	mod->rst = tmp & 1023;
 
 	int pattlen = read8(f);
-	m->mod.trk = read8(f) + 1;
-	m->mod.ins = read8(f);
+	mod->trk = read8(f) + 1;
+	mod->ins = read8(f);
 	int subsongs = read8(f);
 	int gain = read8(f);
 	int stereo = read8(f);
 
 	_D(_D_WARN "pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x",
-		pattlen, m->mod.trk, m->mod.ins, m->mod.len, stereo);
+		pattlen, mod->trk, mod->ins, mod->len, stereo);
 
 	set_type(m, "HVL (Hively Tracker)");
 	MODULE_INFO();
 
-	m->mod.pat = m->mod.len;
-	m->mod.smp = 20;
+	mod->pat = mod->len;
+	mod->smp = 20;
 	PATTERN_INIT();
 	INSTRUMENT_INIT();
 
 	fseek (f, subsongs*2, SEEK_CUR);
 
-	uint8 *seqbuf = malloc(m->mod.len * m->mod.chn * 2);
+	uint8 *seqbuf = malloc(mod->len * mod->chn * 2);
 	uint8 *seqptr = seqbuf;
-	fread (seqbuf, 1, m->mod.len * m->mod.chn * 2, f);
+	fread (seqbuf, 1, mod->len * mod->chn * 2, f);
 
-	uint8 **transbuf = malloc (m->mod.len * m->mod.chn * sizeof(uint8 *));
+	uint8 **transbuf = malloc (mod->len * mod->chn * sizeof(uint8 *));
 	int transposed = 0;
 
-	reportv(ctx, 0, "Stored patterns: %d ", m->mod.len);
+	reportv(ctx, 0, "Stored patterns: %d ", mod->len);
 
-	for (i = 0; i < m->mod.len; i++) {
+	for (i = 0; i < mod->len; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = pattlen;
-		for (j = 0; j < m->mod.chn; j++) {
+		mod->xxp[i]->rows = pattlen;
+		for (j = 0; j < mod->chn; j++) {
 			if (seqptr[1]) {
 //				printf ("%d: transpose %02x by %d\n", i, seqptr[0], seqptr[1]);
-				m->mod.xxp[i]->info[j].index = m->mod.trk + transposed;
+				mod->xxp[i]->info[j].index = mod->trk + transposed;
 				transbuf[transposed] = seqptr;
 				transposed++;
 			} else {
-				m->mod.xxp[i]->info[j].index = seqptr[0];
+				mod->xxp[i]->info[j].index = seqptr[0];
 			}
 			seqptr += 2;
-//			printf ("%02x ", m->mod.xxp[i]->info[j].index);
+//			printf ("%02x ", mod->xxp[i]->info[j].index);
 		}
 //		printf ("\n");
-		m->mod.xxo[i] = i;
+		mod->xxo[i] = i;
 		reportv(ctx, 0, ".");
 	}
 	reportv(ctx, 0, "\n");
@@ -251,39 +252,39 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	 */
 
 	if (transposed) {
-		m->mod.trk += transposed;
-		m->mod.xxt = realloc(m->mod.xxt, m->mod.trk * sizeof (struct xmp_track *));
+		mod->trk += transposed;
+		mod->xxt = realloc(mod->xxt, mod->trk * sizeof (struct xmp_track *));
 	}
 	
-	reportv(ctx, 0, "Stored tracks  : %d ", m->mod.trk);
+	reportv(ctx, 0, "Stored tracks  : %d ", mod->trk);
 
-	for (i = 0; i < m->mod.trk; i++) {
-		m->mod.xxt[i] = calloc(sizeof(struct xmp_track) +
+	for (i = 0; i < mod->trk; i++) {
+		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
 				   sizeof(struct xmp_event) * pattlen - 1, 1);
-                m->mod.xxt[i]->rows = pattlen;
+                mod->xxt[i]->rows = pattlen;
 
 		if (!i && blank)
 			continue;
 
-		if (i >= m->mod.trk-transposed) {
-			int n=i-(m->mod.trk - transposed);
+		if (i >= mod->trk-transposed) {
+			int n=i-(mod->trk - transposed);
 			int o=transbuf[n][1];
 			if (o>127)
 				o-=256;
 //			printf ("pattern %02x: source %02x offset %d\n", i, n, o);
-			memcpy (m->mod.xxt[i], m->mod.xxt[transbuf[n][0]],
+			memcpy (mod->xxt[i], mod->xxt[transbuf[n][0]],
 				sizeof(struct xmp_track) +
 				sizeof(struct xmp_event) * pattlen - 1);
-			for (j = 0; j < m->mod.xxt[i]->rows; j++) {
-				struct xmp_event *event = &m->mod.xxt[i]->event[j];
+			for (j = 0; j < mod->xxt[i]->rows; j++) {
+				struct xmp_event *event = &mod->xxt[i]->event[j];
 				if (event->note)
 					event->note+=o;
 			}
 			continue;
 		}
 
-		for (j = 0; j < m->mod.xxt[i]->rows; j++) {
-			struct xmp_event *event = &m->mod.xxt[i]->event[j];
+		for (j = 0; j < mod->xxt[i]->rows; j++) {
+			struct xmp_event *event = &mod->xxt[i]->event[j];
 			int note = read8(f);			
 
 			if (note != 0x3f) {
@@ -300,7 +301,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			} //else 
 			//	printf (".");
 		}
-		if (V(0) && !(i % m->mod.chn))
+		if (V(0) && !(i % mod->chn))
 			report (".");
 	}
 	reportv(ctx, 0, "\n");
@@ -312,12 +313,12 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 	 * Instruments
 	 */
 
-	for (i = 0; i < m->mod.ins; i++) {
+	for (i = 0; i < mod->ins; i++) {
 		uint8 buf[22];
 		int vol, fspd, wavelen, flow, vibdel, hclen, hc;
 		int vibdep, vibspd, sqmin, sqmax, sqspd, fmax, plen, pspd;
 		int Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol;
-                m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+                mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 		fread(buf, 22, 1, f);
 
@@ -357,9 +358,9 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		int j;
 		int wave=0;
 
-		m->mod.xxi[i].fei.flg = XXM_ENV_ON; /* | XXM_ENV_LOOP;*/
-		m->mod.xxi[i].fei.npt = plen*2;
-		m->mod.xxfe[i] = calloc (4, m->mod.xxi[i].fei.npt);
+		mod->xxi[i].fei.flg = XXM_ENV_ON; /* | XXM_ENV_LOOP;*/
+		mod->xxi[i].fei.npt = plen*2;
+		mod->xxfe[i] = calloc (4, mod->xxi[i].fei.npt);
 
 		int note=0;
 		int jump = -1;
@@ -392,11 +393,11 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			else if (fx2 == 15)
 				pspd = tmp[4];
 
-			m->mod.xxfe[i][j*4] = poff;
-			m->mod.xxfe[i][j*4+1] = note * 100;
+			mod->xxfe[i][j*4] = poff;
+			mod->xxfe[i][j*4+1] = note * 100;
 			poff += pspd;
-			m->mod.xxfe[i][j*4+2] = poff;
-			m->mod.xxfe[i][j*4+3] = note * 100;
+			mod->xxfe[i][j*4+2] = poff;
+			mod->xxfe[i][j*4+3] = note * 100;
 
 			if (jump >= 0) 
 				continue;
@@ -420,9 +421,9 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			
 			if (jump >= 0) {
 				printf ("jump %d-%d\n", jump,j);
-				m->mod.xxi[i].fei.flg |= XXM_ENV_LOOP;
-				m->mod.xxi[i].fei.lps = jump*2;
-				m->mod.xxi[i].fei.lpe = j*2+1;
+				mod->xxi[i].fei.flg |= XXM_ENV_LOOP;
+				mod->xxi[i].fei.lps = jump*2;
+				mod->xxi[i].fei.lpe = j*2+1;
 			}
 
 			_D(_D_INFO "[%d W:%x 1:%x%02x 2:%x%02x n:%02x]", j, tmp[1] &7, tmp[0]&15, tmp[3], (tmp[1]>>3)&15, tmp[4], tmp[2]);
@@ -437,37 +438,37 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		_D(_D_INFO "I: %02x V: %02x A: %02x %02x D: %02x %02x S:  %02x R: %02x %02x wave %02x",
 			i, vol, Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol, wave);
-		m->mod.xxi[i].aei.flg = XXM_ENV_ON;
-		m->mod.xxi[i].aei.npt = 5;
-		m->mod.xxae[i] = calloc (4, m->mod.xxi[i].aei.npt);
-		m->mod.xxae[i][0] = 0;
-		m->mod.xxae[i][1] = vol;
-		m->mod.xxae[i][2] = Alen; /* these are *not* multiplied by pspd */
-		m->mod.xxae[i][3] = Avol;
-		m->mod.xxae[i][4] = (Alen+Dlen);
-		m->mod.xxae[i][5] = Dvol;
-		m->mod.xxae[i][6] = (Alen+Dlen+Slen);
-		m->mod.xxae[i][7] = Dvol;
-		m->mod.xxae[i][8] = (Alen+Dlen+Slen+Rlen);
-		m->mod.xxae[i][9] = Rvol;
+		mod->xxi[i].aei.flg = XXM_ENV_ON;
+		mod->xxi[i].aei.npt = 5;
+		mod->xxae[i] = calloc (4, mod->xxi[i].aei.npt);
+		mod->xxae[i][0] = 0;
+		mod->xxae[i][1] = vol;
+		mod->xxae[i][2] = Alen; /* these are *not* multiplied by pspd */
+		mod->xxae[i][3] = Avol;
+		mod->xxae[i][4] = (Alen+Dlen);
+		mod->xxae[i][5] = Dvol;
+		mod->xxae[i][6] = (Alen+Dlen+Slen);
+		mod->xxae[i][7] = Dvol;
+		mod->xxae[i][8] = (Alen+Dlen+Slen+Rlen);
+		mod->xxae[i][9] = Rvol;
 
-		m->mod.xxi[i].sub[0].vol = 64;
-		m->mod.xxi[i].sub[0].sid = wave;
-		m->mod.xxi[i].sub[0].pan = 128;
-		m->mod.xxi[i].sub[0].xpo = (3-wavelen) * 12 - 1;
-		/*m->mod.xxi[i].sub[0].vde = vibdep;
-		  m->mod.xxi[i].sub[0].vra = vibspd; */
-		m->mod.xxi[i].nsm = 1;
+		mod->xxi[i].sub[0].vol = 64;
+		mod->xxi[i].sub[0].sid = wave;
+		mod->xxi[i].sub[0].pan = 128;
+		mod->xxi[i].sub[0].xpo = (3-wavelen) * 12 - 1;
+		/*mod->xxi[i].sub[0].vde = vibdep;
+		  mod->xxi[i].sub[0].vra = vibspd; */
+		mod->xxi[i].nsm = 1;
         }
 
 #define LEN 64
 	int8 b[16384];
 
 	for (i=0; i<20; i++) {
-		m->mod.xxs[i].len = LEN;
-		m->mod.xxs[i].lps = 0;
-		m->mod.xxs[i].lpe = LEN;
-		m->mod.xxs[i].flg |= XMP_SAMPLE_LOOP;
+		mod->xxs[i].len = LEN;
+		mod->xxs[i].lps = 0;
+		mod->xxs[i].lpe = LEN;
+		mod->xxs[i].flg |= XMP_SAMPLE_LOOP;
 
 		switch (i) {
 		case 0:
@@ -481,7 +482,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			memset (b+LEN/2, 0x7f, LEN/2);
 			break;
 		case 3:
-			m->mod.xxs[i].len = m->mod.xxs[i].lpe = 16384;
+			mod->xxs[i].len = mod->xxs[i].lpe = 16384;
 			hvl_GenWhiteNoise (b, 16384);
 			break;
 		default:
@@ -491,7 +492,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 
 		load_patch(ctx, NULL, i,
-				  XMP_SMP_NOLOAD, &m->mod.xxs[i], (char *)b);
+				  XMP_SMP_NOLOAD, &mod->xxs[i], (char *)b);
 	}
 
 
@@ -507,13 +508,13 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		fread (namebuf, 1, len, f);
 		namebuf[len]=0;
 
-		copy_adjust ((uint8 *)m->mod.name, namebuf, 32);
-		m->mod.name[31]=0;
-//		printf ("len=%d, name=%s\n", len, m->mod.name);
+		copy_adjust ((uint8 *)mod->name, namebuf, 32);
+		mod->name[31]=0;
+//		printf ("len=%d, name=%s\n", len, mod->name);
 		
-		for (i=0; nameptr < namebuf+len && i < m->mod.ins; i++) {
+		for (i=0; nameptr < namebuf+len && i < mod->ins; i++) {
 			nameptr += strlen((char *)nameptr)+1;
-			copy_adjust(m->mod.xxi[i].name, nameptr, 32);
+			copy_adjust(mod->xxi[i].name, nameptr, 32);
 
 			printf ("%02x: %s\n", i, nameptr);
 		}
@@ -521,8 +522,8 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		free (namebuf);
 	}
 
-	for (i = 0; i < m->mod.chn; i++)
-                m->mod.xxc[i].pan = ((i&3)%3) ? 128+stereo*31 : 128-stereo*31;
+	for (i = 0; i < mod->chn; i++)
+                mod->xxc[i].pan = ((i&3)%3) ? 128+stereo*31 : 128-stereo*31;
 
 
 /*	m->quirk |= XMP_CTL_VBLANK;*/

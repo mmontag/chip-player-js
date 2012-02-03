@@ -75,6 +75,7 @@ static uint8 fx[] = {
 static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
     struct ssn_file_header sfh;
@@ -92,22 +93,22 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&sfh.tempo, 128, 1, f);	/* Tempo list for patterns */
     fread(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
 
-    m->mod.chn = 8;
-    m->mod.ins = sfh.nos;
-    m->mod.pat = sfh.nop;
-    m->mod.trk = m->mod.chn * m->mod.pat;
+    mod->chn = 8;
+    mod->ins = sfh.nos;
+    mod->pat = sfh.nop;
+    mod->trk = mod->chn * mod->pat;
     for (i = 0; i < 128; i++)
 	if (sfh.order[i] > sfh.nop)
 	    break;
-    m->mod.len = i;
-    memcpy (m->mod.xxo, sfh.order, m->mod.len);
-    m->mod.tpo = 6;
-    m->mod.bpm = 76;		/* adjusted using Flux/sober.669 */
-    m->mod.smp = m->mod.ins;
-    m->mod.flg |= XXM_FLG_LINEAR;
+    mod->len = i;
+    memcpy (mod->xxo, sfh.order, mod->len);
+    mod->tpo = 6;
+    mod->bpm = 76;		/* adjusted using Flux/sober.669 */
+    mod->smp = mod->ins;
+    mod->flg |= XXM_FLG_LINEAR;
 
-    copy_adjust(m->mod.name, sfh.message, 36);
-    strcpy(m->mod.type, strncmp((char *)sfh.marker, "if", 2) ?
+    copy_adjust(mod->name, sfh.message, 36);
+    strcpy(mod->type, strncmp((char *)sfh.marker, "if", 2) ?
 				"669 (UNIS 669)" : "669 (Composer 669)");
 
     MODULE_INFO();
@@ -120,38 +121,38 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->mod.pat);
+    _D(_D_INFO "Instruments: %d", mod->pat);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
 	sih.length = read32l(f);		/* Instrument size */
 	sih.loop_start = read32l(f);		/* Instrument loop start */
 	sih.loopend = read32l(f);		/* Instrument loop end */
 
-	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = sih.length);
-	m->mod.xxs[i].lps = sih.loop_start;
-	m->mod.xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
-	m->mod.xxs[i].flg = m->mod.xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
-	m->mod.xxi[i].sub[0].vol = 0x40;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
+	mod->xxi[i].nsm = !!(mod->xxs[i].len = sih.length);
+	mod->xxs[i].lps = sih.loop_start;
+	mod->xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
+	mod->xxs[i].flg = mod->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
+	mod->xxi[i].sub[0].vol = 0x40;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->mod.xxi[i].name, sih.name, 13);
+	copy_adjust(mod->xxi[i].name, sih.name, 13);
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
-		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
-		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
+		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
+		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
-    for (i = 0; i < m->mod.pat; i++) {
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
 	EVENT(i, 0, 0).f2t = FX_TEMPO_CP;
@@ -206,17 +207,17 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	if (m->mod.xxs[i].len <= 2)
+    for (i = 0; i < mod->ins; i++) {
+	if (mod->xxs[i].len <= 2)
 	    continue;
-	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid,
-	    XMP_SMP_UNS, &m->mod.xxs[i], NULL);
+	load_patch(ctx, f, mod->xxi[i].sub[0].sid,
+	    XMP_SMP_UNS, &mod->xxs[i], NULL);
     }
 
-    for (i = 0; i < m->mod.chn; i++)
-	m->mod.xxc[i].pan = (i % 2) * 0xff;
+    for (i = 0; i < mod->chn; i++)
+	mod->xxc[i].pan = (i % 2) * 0xff;
 
     m->quirk |= QUIRK_PERPAT;	    /* Cancel persistent fx at each new pat */
 

@@ -87,6 +87,7 @@ static int stc_test(FILE * f, char *t, const int start)
 static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event /*, *noise*/;
 	int i, j;
 	uint8 buf[100];
@@ -99,23 +100,23 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	LOAD_INIT();
 
-	m->mod.tpo = read8(f);		/* Tempo */
+	mod->tpo = read8(f);		/* Tempo */
 	pos_ptr = read16l(f);		/* Positions pointer */
 	orn_ptr = read16l(f);		/* Ornaments pointer */
 	pat_ptr = read16l(f);		/* Patterns pointer */
 
 	fread(buf, 18, 1, f);		/* Title */
-	copy_adjust(m->mod.name, (uint8 *)buf, 18);
-	strcpy(m->mod.type, "STC (ZX Spectrum Sound Tracker)");
+	copy_adjust(mod->name, (uint8 *)buf, 18);
+	strcpy(mod->type, "STC (ZX Spectrum Sound Tracker)");
 
 	read16l(f);			/* Size */
 
 	/* Read orders */
 
 	fseek(f, pos_ptr, SEEK_SET);
-	m->mod.len = read8(f) + 1;
+	mod->len = read8(f) + 1;
 
-	for (num = i = 0; i < m->mod.len; i++) {
+	for (num = i = 0; i < mod->len; i++) {
 		stc_ord[i].pattern = read8(f);
 		stc_ord[i].height = read8s(f);
 		//printf("%d %d -- ", stc_ord[i].pattern, stc_ord[i].height);
@@ -124,22 +125,22 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			if (stc_ord[i].pattern == stc_ord[j].pattern &&
 				stc_ord[i].height == stc_ord[j].height)
 			{
-				m->mod.xxo[i] = m->mod.xxo[j];
+				mod->xxo[i] = mod->xxo[j];
 				flag = 1;
 				break;
 			}
 		}
 		if (!flag) {
-			m->mod.xxo[i] = num++;
+			mod->xxo[i] = num++;
 		}
-		//printf("%d\n", m->mod.xxo[i]);
+		//printf("%d\n", mod->xxo[i]);
 	}
 
-	m->mod.chn = 3;
-	m->mod.pat = num;
-	m->mod.trk = m->mod.pat * m->mod.chn;
-	m->mod.ins = 15;
-	m->mod.smp = m->mod.ins;
+	mod->chn = 3;
+	mod->pat = num;
+	mod->trk = mod->pat * mod->chn;
+	mod->ins = 15;
+	mod->smp = mod->ins;
 	orn = (pat_ptr - orn_ptr) / 33;
 
 	MODULE_INFO();
@@ -149,8 +150,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	PATTERN_INIT();
 
 	fseek(f, pat_ptr, SEEK_SET);
-	decoded = calloc(m->mod.pat, sizeof(int));
-	_D(_D_INFO "Stored patterns: %d ", m->mod.pat);
+	decoded = calloc(mod->pat, sizeof(int));
+	_D(_D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < MAX_PAT; i++) {
 		if (read8(f) == 0xff)
@@ -160,18 +161,18 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 		stc_pat[i].ch[2] = read16l(f);
 	}
 
-	for (i = 0; i < m->mod.len; i++) {		/* pattern */
+	for (i = 0; i < mod->len; i++) {		/* pattern */
 		int src = stc_ord[i].pattern - 1;
-		int dest = m->mod.xxo[i];
+		int dest = mod->xxo[i];
 		int trans = stc_ord[i].height;
 
 		if (decoded[dest])
 			continue;
 
-		//printf("%d/%d) Read pattern %d -> %d\n", i, m->mod.len, src, dest);
+		//printf("%d/%d) Read pattern %d -> %d\n", i, mod->len, src, dest);
 
 		PATTERN_ALLOC(dest);
-		m->mod.xxp[dest]->rows = 64;
+		mod->xxp[dest]->rows = 64;
 		TRACK_ALLOC(dest);
 
 		for (j = 0; j < 3; j++) {		/* row */
@@ -241,17 +242,17 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	fseek(f, 27, SEEK_SET);
 
-	_D(_D_INFO "Instruments: %d", m->mod.ins);
-	for (i = 0; i < m->mod.ins; i++) {
+	_D(_D_INFO "Instruments: %d", mod->ins);
+	for (i = 0; i < mod->ins; i++) {
 		struct spectrum_sample ss;
 
 		memset(&ss, 0, sizeof (struct spectrum_sample));
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-		m->mod.xxi[i].nsm = 1;
-		m->mod.xxi[i].sub[0].vol = 0x40;
-		m->mod.xxi[i].sub[0].pan = 0x80;
-		m->mod.xxi[i].sub[0].xpo = -1;
-		m->mod.xxi[i].sub[0].sid = i;
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		mod->xxi[i].sub[0].vol = 0x40;
+		mod->xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].xpo = -1;
+		mod->xxi[i].sub[0].sid = i;
 
 		fread(buf, 1, 99, f);
 
@@ -346,8 +347,8 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 	}
 
 	for (i = 0; i < 4; i++) {
-		m->mod.xxc[i].pan = 0x80;
-		m->mod.xxc[i].flg = XXM_CHANNEL_SYNTH;
+		mod->xxc[i].pan = 0x80;
+		mod->xxc[i].flg = XXM_CHANNEL_SYNTH;
 	}
 	
 	m->synth = &synth_spectrum;

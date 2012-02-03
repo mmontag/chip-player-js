@@ -165,27 +165,30 @@ static void get_tinf(struct xmp_context *ctx, int size, FILE *f)
 static void get_mvox(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 
-	m->mod.chn = read32l(f);
+	mod->chn = read32l(f);
 }
 
 static void get_ster(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i;
 
 	fread(ster, 1, 8, f);
 	
-	for (i=0; i < m->mod.chn; i++)
+	for (i=0; i < mod->chn; i++)
 		if (ster[i] > 0 && ster[i] < 8) 
-			m->mod.xxc[i].pan = 42*ster[i]-40;
+			mod->xxc[i].pan = 42*ster[i]-40;
 }
 
 static void get_mnam(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 
-	fread(m->mod.name, 1, 32, f);
+	fread(mod->name, 1, 32, f);
 }
 
 static void get_anam(struct xmp_context *ctx, int size, FILE *f)
@@ -198,15 +201,17 @@ static void get_anam(struct xmp_context *ctx, int size, FILE *f)
 static void get_mlen(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 
-	m->mod.len = read32l(f);
+	mod->len = read32l(f);
 }
 
 static void get_pnum(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 
-	m->mod.pat = read32l(f);
+	mod->pat = read32l(f);
 }
 
 static void get_plen(struct xmp_context *ctx, int size, FILE *f)
@@ -217,10 +222,11 @@ static void get_plen(struct xmp_context *ctx, int size, FILE *f)
 static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 
-	fread(m->mod.xxo, 1, 128, f);
+	fread(mod->xxo, 1, 128, f);
 
-	strcpy(m->mod.type, "MUSX (Archimedes Tracker)");
+	strcpy(mod->type, "MUSX (Archimedes Tracker)");
 
 	MODULE_INFO();
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
@@ -229,24 +235,25 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	static int i = 0;
 	int j, k;
 	struct xmp_event *event;
 
 	if (!pflag) {
-		_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+		_D(_D_INFO "Stored patterns: %d", mod->pat);
 		pflag = 1;
 		i = 0;
-		m->mod.trk = m->mod.pat * m->mod.chn;
+		mod->trk = mod->pat * mod->chn;
 		PATTERN_INIT();
 	}
 
 	PATTERN_ALLOC(i);
-	m->mod.xxp[i]->rows = rows[i];
+	mod->xxp[i]->rows = rows[i];
 	TRACK_ALLOC(i);
 
 	for (j = 0; j < rows[i]; j++) {
-		for (k = 0; k < m->mod.chn; k++) {
+		for (k = 0; k < mod->chn; k++) {
 			event = &EVENT(i, k, j);
 
 			event->fxp = read8(f);
@@ -267,13 +274,14 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	static int i = 0;
 
 	if (!sflag) {
-		m->mod.smp = m->mod.ins = 36;
+		mod->smp = mod->ins = 36;
 		INSTRUMENT_INIT();
 
-		_D(_D_INFO "Instruments: %d", m->mod.ins);
+		_D(_D_INFO "Instruments: %d", mod->ins);
 
 		sflag = 1;
 		max_ins = 0;
@@ -287,59 +295,59 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	if (i >= 36)
 		return;
 
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	read32l(f);	/* SNAM */
 	{
 		/* should usually be 0x14 but zero is not unknown */
 		int name_len = read32l(f);
 		if (name_len < 32)
-			fread(m->mod.xxi[i].name, 1, name_len, f);
+			fread(mod->xxi[i].name, 1, name_len, f);
 	}
 	read32l(f);	/* SVOL */
 	read32l(f);
-	/* m->mod.xxi[i].sub[0].vol = convert_vol(read32l(f)); */
-	m->mod.xxi[i].sub[0].vol = read32l(f) & 0xff;
+	/* mod->xxi[i].sub[0].vol = convert_vol(read32l(f)); */
+	mod->xxi[i].sub[0].vol = read32l(f) & 0xff;
 	read32l(f);	/* SLEN */
 	read32l(f);
-	m->mod.xxs[i].len = read32l(f);
+	mod->xxs[i].len = read32l(f);
 	read32l(f);	/* ROFS */
 	read32l(f);
-	m->mod.xxs[i].lps = read32l(f);
+	mod->xxs[i].lps = read32l(f);
 	read32l(f);	/* RLEN */
 	read32l(f);
-	m->mod.xxs[i].lpe = read32l(f);
+	mod->xxs[i].lpe = read32l(f);
 
 	read32l(f);	/* SDAT */
 	read32l(f);
 	read32l(f);	/* 0x00000000 */
 
-	m->mod.xxi[i].nsm = 1;
-	m->mod.xxi[i].sub[0].sid = i;
-	m->mod.xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].nsm = 1;
+	mod->xxi[i].sub[0].sid = i;
+	mod->xxi[i].sub[0].pan = 0x80;
 
 	m->vol_table = arch_vol_table;
 	m->volbase = 0xff;
 
-	if (m->mod.xxs[i].lpe > 2) {
-		m->mod.xxs[i].flg = XMP_SAMPLE_LOOP;
-		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + m->mod.xxs[i].lpe;
-	} else if (m->mod.xxs[i].lpe == 2 && m->mod.xxs[i].lps > 0) {
+	if (mod->xxs[i].lpe > 2) {
+		mod->xxs[i].flg = XMP_SAMPLE_LOOP;
+		mod->xxs[i].lpe = mod->xxs[i].lps + mod->xxs[i].lpe;
+	} else if (mod->xxs[i].lpe == 2 && mod->xxs[i].lps > 0) {
 		/* non-zero repeat offset and repeat length of 2
 		 * means loop to end of sample */
-		m->mod.xxs[i].flg = XMP_SAMPLE_LOOP;
-		m->mod.xxs[i].lpe = m->mod.xxs[i].len;
+		mod->xxs[i].flg = XMP_SAMPLE_LOOP;
+		mod->xxs[i].lpe = mod->xxs[i].len;
 	}
 
-	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, XMP_SMP_VIDC,
-					&m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+	load_patch(ctx, f, mod->xxi[i].sub[0].sid, XMP_SMP_VIDC,
+					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
-				i, m->mod.xxi[i].name,
-				m->mod.xxs[i].len,
-				m->mod.xxs[i].lps,
-				m->mod.xxs[i].lpe,
-				m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				m->mod.xxi[i].sub[0].vol);
+				i, mod->xxi[i].name,
+				mod->xxs[i].len,
+				mod->xxs[i].lps,
+				mod->xxs[i].lpe,
+				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				mod->xxi[i].sub[0].vol);
 
 	i++;
 	max_ins++;
@@ -348,6 +356,7 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i;
 
 	LOAD_INIT();
@@ -378,8 +387,8 @@ static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->mod.chn; i++)
-		m->mod.xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
+	for (i = 0; i < mod->chn; i++)
+		mod->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
 
 	return 0;
 }

@@ -66,6 +66,7 @@ static int pw_test(FILE *f, char *t, const int start)
 static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	struct mod_header mh;
 	uint8 mod_event[4];
@@ -118,66 +119,66 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (memcmp(mh.magic, "M.K.", 4))
 		goto err;
 		
-	m->mod.ins = 31;
-	m->mod.smp = m->mod.ins;
-	m->mod.chn = 4;
-	m->mod.len = mh.len;
-	m->mod.rst = mh.restart;
-	memcpy(m->mod.xxo, mh.order, 128);
+	mod->ins = 31;
+	mod->smp = mod->ins;
+	mod->chn = 4;
+	mod->len = mh.len;
+	mod->rst = mh.restart;
+	memcpy(mod->xxo, mh.order, 128);
 
 	for (i = 0; i < 128; i++) {
-		if (m->mod.chn > 4)
-			m->mod.xxo[i] >>= 1;
-		if (m->mod.xxo[i] > m->mod.pat)
-			m->mod.pat = m->mod.xxo[i];
+		if (mod->chn > 4)
+			mod->xxo[i] >>= 1;
+		if (mod->xxo[i] > mod->pat)
+			mod->pat = mod->xxo[i];
 	}
 
-	m->mod.pat++;
+	mod->pat++;
 
-	m->mod.trk = m->mod.chn * m->mod.pat;
+	mod->trk = mod->chn * mod->pat;
 
-	snprintf(m->mod.name, XMP_NAMESIZE, "%s", (char *)mh.name);
-	snprintf(m->mod.type, XMP_NAMESIZE, "%s (%s)", fmt->id, fmt->name);
+	snprintf(mod->name, XMP_NAMESIZE, "%s", (char *)mh.name);
+	snprintf(mod->type, XMP_NAMESIZE, "%s (%s)", fmt->id, fmt->name);
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();
 
-	for (i = 0; i < m->mod.ins; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-		m->mod.xxs[i].len = 2 * mh.ins[i].size;
-		m->mod.xxs[i].lps = 2 * mh.ins[i].loop_start;
-		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * mh.ins[i].loop_size;
-		m->mod.xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-		m->mod.xxi[i].sub[0].fin = (int8) (mh.ins[i].finetune << 4);
-		m->mod.xxi[i].sub[0].vol = mh.ins[i].volume;
-		m->mod.xxi[i].sub[0].pan = 0x80;
-		m->mod.xxi[i].sub[0].sid = i;
-		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
-		m->mod.xxi[i].rls = 0xfff;
+	for (i = 0; i < mod->ins; i++) {
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxs[i].len = 2 * mh.ins[i].size;
+		mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
+		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
+		mod->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+		mod->xxi[i].sub[0].fin = (int8) (mh.ins[i].finetune << 4);
+		mod->xxi[i].sub[0].vol = mh.ins[i].volume;
+		mod->xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].sid = i;
+		mod->xxi[i].nsm = !!(mod->xxs[i].len);
+		mod->xxi[i].rls = 0xfff;
 
-		if (m->mod.xxs[i].flg & XMP_SAMPLE_LOOP) {
-			if (m->mod.xxs[i].lps == 0 && m->mod.xxs[i].len > m->mod.xxs[i].lpe)
-				m->mod.xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
+		if (mod->xxs[i].flg & XMP_SAMPLE_LOOP) {
+			if (mod->xxs[i].lps == 0 && mod->xxs[i].len > mod->xxs[i].lpe)
+				mod->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
 		}
 
-		copy_adjust(m->mod.xxi[i].name, mh.ins[i].name, 22);
+		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
 		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
-			     i, m->mod.xxi[i].name, m->mod.xxs[i].len,
-			     m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
+			     i, mod->xxi[i].name, mod->xxs[i].len,
+			     mod->xxs[i].lps, mod->xxs[i].lpe,
 			     mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			     m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4,
-			     m->mod.xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
+			     mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4,
+			     mod->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
 
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d", mod->pat);
 
-	for (i = 0; i < m->mod.pat; i++) {
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = 64;
+		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
@@ -186,14 +187,14 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->mod.flg |= XXM_FLG_MODRNG;
+	mod->flg |= XXM_FLG_MODRNG;
 
 	/* Load samples */
 
-	_D(_D_INFO "Stored samples: %d", m->mod.smp);
-	for (i = 0; i < m->mod.smp; i++) {
-		load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+	_D(_D_INFO "Stored samples: %d", mod->smp);
+	for (i = 0; i < mod->smp; i++) {
+		load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	fclose(f);

@@ -89,6 +89,7 @@ static int polly_test(FILE *f, char *t, const int start)
 static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	uint8 *buf;
 	int i, j, k;
@@ -106,16 +107,16 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	decode_rle(buf, f, 0x10000);
 
 	for (i = 0; buf[ORD_OFS + i] != 0 && i < 128; i++)
-		m->mod.xxo[i] = buf[ORD_OFS + i] - 0xe0;
-	m->mod.len = i;
+		mod->xxo[i] = buf[ORD_OFS + i] - 0xe0;
+	mod->len = i;
 
-	memcpy(m->mod.name, buf + ORD_OFS + 160, 16);
+	memcpy(mod->name, buf + ORD_OFS + 160, 16);
 	/* memcpy(m->author, buf + ORD_OFS + 176, 16); */
 	set_type(m, "Polly Tracker");
 	MODULE_INFO();
 
-	m->mod.tpo = 0x03;
-	m->mod.bpm = 0x7d * buf[ORD_OFS + 193] / 0x88;
+	mod->tpo = 0x03;
+	mod->bpm = 0x7d * buf[ORD_OFS + 193] / 0x88;
 #if 0
 	for (i = 0; i < 1024; i++) {
 		if ((i % 16) == 0) printf("\n");
@@ -123,23 +124,23 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 #endif
 
-	m->mod.pat = 0;
-	for (i = 0; i < m->mod.len; i++) {
-		if (m->mod.xxo[i] > m->mod.pat)
-			m->mod.pat = m->mod.xxo[i];
+	mod->pat = 0;
+	for (i = 0; i < mod->len; i++) {
+		if (mod->xxo[i] > mod->pat)
+			mod->pat = mod->xxo[i];
 	}
-	m->mod.pat++;
+	mod->pat++;
 	
-	m->mod.chn = 4;
-	m->mod.trk = m->mod.pat * m->mod.chn;
+	mod->chn = 4;
+	mod->trk = mod->pat * mod->chn;
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d", mod->pat);
 
-	for (i = 0; i < m->mod.pat; i++) {
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = 64;
+		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < 64; j++) {
@@ -159,26 +160,26 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	m->mod.ins = m->mod.smp = 15;
+	mod->ins = mod->smp = 15;
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < 15; i++) {
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-		m->mod.xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
 					256 * buf[ORD_OFS + 145 + i];
-		m->mod.xxi[i].sub[0].fin = 0;
-		m->mod.xxi[i].sub[0].vol = 0x40;
-		m->mod.xxs[i].lps = 0;
-		m->mod.xxs[i].lpe = 0;
-		m->mod.xxs[i].flg = 0;
-		m->mod.xxi[i].sub[0].pan = 0x80;
-		m->mod.xxi[i].sub[0].sid = i;
-		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
-		m->mod.xxi[i].rls = 0xfff;
+		mod->xxi[i].sub[0].fin = 0;
+		mod->xxi[i].sub[0].vol = 0x40;
+		mod->xxs[i].lps = 0;
+		mod->xxs[i].lpe = 0;
+		mod->xxs[i].flg = 0;
+		mod->xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].sid = i;
+		mod->xxi[i].nsm = !!(mod->xxs[i].len);
+		mod->xxi[i].rls = 0xfff;
 
                 _D(_D_INFO "[%2X] %04x %04x %04x %c V%02x",
-                       		i, m->mod.xxs[i].len, m->mod.xxs[i].lps,
-                        	m->mod.xxs[i].lpe, ' ', m->mod.xxi[i].sub[0].vol);
+                       		i, mod->xxs[i].len, mod->xxs[i].lps,
+                        	mod->xxs[i].lpe, ' ', mod->xxi[i].sub[0].vol);
 	}
 
 	/* Convert samples from 6 to 8 bits */
@@ -186,14 +187,14 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 		buf[i] = buf[i] << 2;
 
 	/* Read samples */
-	_D(_D_INFO "Loading samples: %d", m->mod.ins);
+	_D(_D_INFO "Loading samples: %d", mod->ins);
 
-	for (i = 0; i < m->mod.ins; i++) {
-		if (m->mod.xxs[i].len == 0)
+	for (i = 0; i < mod->ins; i++) {
+		if (mod->xxs[i].len == 0)
 			continue;
-		load_patch(ctx, NULL, m->mod.xxi[i].sub[0].sid,
+		load_patch(ctx, NULL, mod->xxi[i].sub[0].sid,
 				XMP_SMP_NOLOAD | XMP_SMP_UNS,
-				&m->mod.xxs[m->mod.xxi[i].sub[0].sid],
+				&mod->xxs[mod->xxi[i].sub[0].sid],
 				(char*)buf + ORD_OFS + 256 +
 					256 * (buf[ORD_OFS + 129 + i] - 0x10));
 	}
@@ -201,10 +202,10 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	free(buf);
 
 	/* make it mono */
-	for (i = 0; i < m->mod.chn; i++)
-		m->mod.xxc[i].pan = 0x80;
+	for (i = 0; i < mod->chn; i++)
+		mod->xxc[i].pan = 0x80;
 
-	m->mod.flg |= XXM_FLG_MODRNG;
+	mod->flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }

@@ -50,19 +50,20 @@ static int snum;
 static void get_main(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	char buf[64];
 	int flags;
 	
 	fread(buf, 1, 64, f);
-	strncpy(m->mod.name, buf, 64);
-	strcpy(m->mod.type, "Galaxy Music System 4.0");
+	strncpy(mod->name, buf, 64);
+	strcpy(mod->type, "Galaxy Music System 4.0");
 
 	flags = read8(f);
 	if (~flags & 0x01)
-		m->mod.flg = XXM_FLG_LINEAR;
-	m->mod.chn = read8(f);
-	m->mod.tpo = read8(f);
-	m->mod.bpm = read8(f);
+		mod->flg = XXM_FLG_LINEAR;
+	mod->chn = read8(f);
+	mod->tpo = read8(f);
+	mod->bpm = read8(f);
 	read16l(f);		/* unknown - 0x01c5 */
 	read16l(f);		/* unknown - 0xff00 */
 	read8(f);		/* unknown - 0x80 */
@@ -71,44 +72,48 @@ static void get_main(struct xmp_context *ctx, int size, FILE *f)
 static void get_ordr(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i;
 
-	m->mod.len = read8(f);
+	mod->len = read8(f);
 
-	for (i = 0; i < m->mod.len; i++)
-		m->mod.xxo[i] = read8(f);
+	for (i = 0; i < mod->len; i++)
+		mod->xxo[i] = read8(f);
 }
 
 static void get_patt_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i;
 
 	i = read8(f) + 1;		/* pattern number */
 
-	if (i > m->mod.pat)
-		m->mod.pat = i;
+	if (i > mod->pat)
+		mod->pat = i;
 }
 
 static void get_inst_cnt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i;
 
 	read8(f);			/* 00 */
 	i = read8(f) + 1;		/* instrument number */
 	
-	if (i > m->mod.ins)
-		m->mod.ins = i;
+	if (i > mod->ins)
+		mod->ins = i;
 
 	fseek(f, 28, SEEK_CUR);		/* skip name */
 
-	m->mod.smp += read8(f);
+	mod->smp += read8(f);
 }
 
 static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy;
 	int i, len, chan;
 	int rows, r;
@@ -120,7 +125,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	rows = read8(f) + 1;
 
 	PATTERN_ALLOC(i);
-	m->mod.xxp[i]->rows = rows;
+	mod->xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
 	for (r = 0; r < rows; ) {
@@ -131,7 +136,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 
 		chan = flag & 0x1f;
 
-		event = chan < m->mod.chn ? &EVENT(i, chan, r) : &dummy;
+		event = chan < mod->chn ? &EVENT(i, chan, r) : &dummy;
 
 		if (flag & 0x80) {
 			uint8 fxp = read8(f);
@@ -174,6 +179,7 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i, j;
 	int srate, finetune, flags;
 	int val, vwf, vra, vde, vsw, fade;
@@ -182,14 +188,14 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	read8(f);		/* 00 */
 	i = read8(f);		/* instrument number */
 
-	fread(&m->mod.xxi[i].name, 1, 28, f);
-	str_adj((char *)m->mod.xxi[i].name);
+	fread(&mod->xxi[i].name, 1, 28, f);
+	str_adj((char *)mod->xxi[i].name);
 
-	m->mod.xxi[i].nsm = read8(f);
+	mod->xxi[i].nsm = read8(f);
 	fseek(f, 12, SEEK_CUR);		/* Sample map - 1st octave */
 
 	for (j = 0; j < 96; j++) {
-		m->mod.xxi[i].map[j].ins = read8(f);
+		mod->xxi[i].map[j].ins = read8(f);
 	}
 
 	fseek(f, 11, SEEK_CUR);		/* unknown */
@@ -203,118 +209,118 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	val = read8(f);			/* PV envelopes flags */
 	if (LSN(val) & 0x01)
-		m->mod.xxi[i].aei.flg |= XXM_ENV_ON;
+		mod->xxi[i].aei.flg |= XXM_ENV_ON;
 	if (LSN(val) & 0x02)
-		m->mod.xxi[i].aei.flg |= XXM_ENV_SUS;
+		mod->xxi[i].aei.flg |= XXM_ENV_SUS;
 	if (LSN(val) & 0x04)
-		m->mod.xxi[i].aei.flg |= XXM_ENV_LOOP;
+		mod->xxi[i].aei.flg |= XXM_ENV_LOOP;
 	if (MSN(val) & 0x01)
-		m->mod.xxi[i].pei.flg |= XXM_ENV_ON;
+		mod->xxi[i].pei.flg |= XXM_ENV_ON;
 	if (MSN(val) & 0x02)
-		m->mod.xxi[i].pei.flg |= XXM_ENV_SUS;
+		mod->xxi[i].pei.flg |= XXM_ENV_SUS;
 	if (MSN(val) & 0x04)
-		m->mod.xxi[i].pei.flg |= XXM_ENV_LOOP;
+		mod->xxi[i].pei.flg |= XXM_ENV_LOOP;
 
 	val = read8(f);			/* PV envelopes points */
-	m->mod.xxi[i].aei.npt = LSN(val) + 1;
-	m->mod.xxi[i].pei.npt = MSN(val) + 1;
+	mod->xxi[i].aei.npt = LSN(val) + 1;
+	mod->xxi[i].pei.npt = MSN(val) + 1;
 
 	val = read8(f);			/* PV envelopes sustain point */
-	m->mod.xxi[i].aei.sus = LSN(val);
-	m->mod.xxi[i].pei.sus = MSN(val);
+	mod->xxi[i].aei.sus = LSN(val);
+	mod->xxi[i].pei.sus = MSN(val);
 
 	val = read8(f);			/* PV envelopes loop start */
-	m->mod.xxi[i].aei.lps = LSN(val);
-	m->mod.xxi[i].pei.lps = MSN(val);
+	mod->xxi[i].aei.lps = LSN(val);
+	mod->xxi[i].pei.lps = MSN(val);
 
 	read8(f);			/* PV envelopes loop end */
-	m->mod.xxi[i].aei.lpe = LSN(val);
-	m->mod.xxi[i].pei.lpe = MSN(val);
+	mod->xxi[i].aei.lpe = LSN(val);
+	mod->xxi[i].pei.lpe = MSN(val);
 
-	if (m->mod.xxi[i].aei.npt <= 0 || m->mod.xxi[i].aei.npt >= XMP_MAXENV)
-		m->mod.xxi[i].aei.flg &= ~XXM_ENV_ON;
+	if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt >= XMP_MAXENV)
+		mod->xxi[i].aei.flg &= ~XXM_ENV_ON;
 
-	if (m->mod.xxi[i].pei.npt <= 0 || m->mod.xxi[i].pei.npt >= XMP_MAXENV)
-		m->mod.xxi[i].pei.flg &= ~XXM_ENV_ON;
+	if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt >= XMP_MAXENV)
+		mod->xxi[i].pei.flg &= ~XXM_ENV_ON;
 
 	fread(buf, 1, 30, f);		/* volume envelope points */;
-	for (j = 0; j < m->mod.xxi[i].aei.npt; j++) {
-		m->mod.xxi[i].aei.data[j * 2] = readmem16l(buf + j * 3) / 16;
-		m->mod.xxi[i].aei.data[j * 2 + 1] = buf[j * 3 + 2];
+	for (j = 0; j < mod->xxi[i].aei.npt; j++) {
+		mod->xxi[i].aei.data[j * 2] = readmem16l(buf + j * 3) / 16;
+		mod->xxi[i].aei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	fread(buf, 1, 30, f);		/* pan envelope points */;
-	for (j = 0; j < m->mod.xxi[i].pei.npt; j++) {
-		m->mod.xxi[i].pei.data[j * 2] = readmem16l(buf + j * 3) / 16;
-		m->mod.xxi[i].pei.data[j * 2 + 1] = buf[j * 3 + 2];
+	for (j = 0; j < mod->xxi[i].pei.npt; j++) {
+		mod->xxi[i].pei.data[j * 2] = readmem16l(buf + j * 3) / 16;
+		mod->xxi[i].pei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	fade = read8(f);		/* fadeout - 0x80->0x02 0x310->0x0c */
 	read8(f);			/* unknown */
 
-	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, m->mod.xxi[i].name, m->mod.xxi[i].nsm);
+	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
-	if (m->mod.xxi[i].nsm == 0)
+	if (mod->xxi[i].nsm == 0)
 		return;
 
-	m->mod.xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), m->mod.xxi[i].nsm);
+	mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), mod->xxi[i].nsm);
 
-	for (j = 0; j < m->mod.xxi[i].nsm; j++, snum++) {
+	for (j = 0; j < mod->xxi[i].nsm; j++, snum++) {
 		read32b(f);	/* SAMP */
 		read32b(f);	/* size */
 	
-		fread(&m->mod.xxs[snum].name, 1, 28, f);
-		str_adj((char *)m->mod.xxs[snum].name);
+		fread(&mod->xxs[snum].name, 1, 28, f);
+		str_adj((char *)mod->xxs[snum].name);
 	
-		m->mod.xxi[i].sub[j].pan = read8(f) * 4;
-		if (m->mod.xxi[i].sub[j].pan == 0)	/* not sure about this */
-			m->mod.xxi[i].sub[j].pan = 0x80;
+		mod->xxi[i].sub[j].pan = read8(f) * 4;
+		if (mod->xxi[i].sub[j].pan == 0)	/* not sure about this */
+			mod->xxi[i].sub[j].pan = 0x80;
 		
-		m->mod.xxi[i].sub[j].vol = read8(f);
+		mod->xxi[i].sub[j].vol = read8(f);
 		flags = read8(f);
 		read8(f);	/* unknown - 0x80 */
 
-		m->mod.xxi[i].sub[j].vwf = vwf;
-		m->mod.xxi[i].sub[j].vde = vde;
-		m->mod.xxi[i].sub[j].vra = vra;
-		m->mod.xxi[i].sub[j].vsw = vsw;
-		m->mod.xxi[i].sub[j].sid = snum;
+		mod->xxi[i].sub[j].vwf = vwf;
+		mod->xxi[i].sub[j].vde = vde;
+		mod->xxi[i].sub[j].vra = vra;
+		mod->xxi[i].sub[j].vsw = vsw;
+		mod->xxi[i].sub[j].sid = snum;
 	
-		m->mod.xxs[snum].len = read32l(f);
-		m->mod.xxs[snum].lps = read32l(f);
-		m->mod.xxs[snum].lpe = read32l(f);
+		mod->xxs[snum].len = read32l(f);
+		mod->xxs[snum].lps = read32l(f);
+		mod->xxs[snum].lpe = read32l(f);
 	
-		m->mod.xxs[snum].flg = 0;
+		mod->xxs[snum].flg = 0;
 		if (flags & 0x04)
-			m->mod.xxs[snum].flg |= XMP_SAMPLE_16BIT;
+			mod->xxs[snum].flg |= XMP_SAMPLE_16BIT;
 		if (flags & 0x08)
-			m->mod.xxs[snum].flg |= XMP_SAMPLE_LOOP;
+			mod->xxs[snum].flg |= XMP_SAMPLE_LOOP;
 		if (flags & 0x10)
-			m->mod.xxs[snum].flg |= XMP_SAMPLE_LOOP_BIDIR;
+			mod->xxs[snum].flg |= XMP_SAMPLE_LOOP_BIDIR;
 		/* if (flags & 0x80)
-			m->mod.xxs[snum].flg |= ? */
+			mod->xxs[snum].flg |= ? */
 	
 		srate = read32l(f);
 		finetune = 0;
-		c2spd_to_note(srate, &m->mod.xxi[i].sub[j].xpo, &m->mod.xxi[i].sub[j].fin);
-		m->mod.xxi[i].sub[j].fin += finetune;
+		c2spd_to_note(srate, &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+		mod->xxi[i].sub[j].fin += finetune;
 	
 		read32l(f);			/* 0x00000000 */
 		read32l(f);			/* unknown */
 	
 		_D(_D_INFO, "  %X: %05x%c%05x %05x %c V%02x P%02x %5d",
-			j, m->mod.xxs[snum].len,
-			m->mod.xxs[snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-			m->mod.xxs[snum].lps,
-			m->mod.xxs[snum].lpe,
-			m->mod.xxs[snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
-			m->mod.xxs[snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->mod.xxi[i].sub[j].vol,
-			m->mod.xxi[i].sub[j].pan,
+			j, mod->xxs[snum].len,
+			mod->xxs[snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+			mod->xxs[snum].lps,
+			mod->xxs[snum].lpe,
+			mod->xxs[snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
+			mod->xxs[snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+			mod->xxi[i].sub[j].vol,
+			mod->xxi[i].sub[j].pan,
 			srate);
 	
-		if (m->mod.xxs[snum].len > 1) {
-			load_patch(ctx, f, snum, 0, &m->mod.xxs[snum], NULL);
+		if (mod->xxs[snum].len > 1) {
+			load_patch(ctx, f, snum, 0, &mod->xxs[snum], NULL);
 		}
 	}
 }
@@ -322,6 +328,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i, offset;
 
 	LOAD_INIT();
@@ -332,7 +339,7 @@ static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	offset = ftell(f);
 
-	m->mod.smp = m->mod.ins = 0;
+	mod->smp = mod->ins = 0;
 
 	iff_register("MAIN", get_main);
 	iff_register("ORDR", get_ordr);
@@ -347,14 +354,14 @@ static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	m->mod.trk = m->mod.pat * m->mod.chn;
+	mod->trk = mod->pat * mod->chn;
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d\n", m->mod.pat);
-	_D(_D_INFO "Stored samples : %d ", m->mod.smp);
+	_D(_D_INFO "Stored patterns: %d\n", mod->pat);
+	_D(_D_INFO "Stored samples : %d ", mod->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 	snum = 0;
@@ -370,8 +377,8 @@ static int gal4_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	iff_release();
 
-	for (i = 0; i < m->mod.chn; i++)
-		m->mod.xxc[i].pan = 0x80;
+	for (i = 0; i < mod->chn; i++)
+		mod->xxc[i].pan = 0x80;
 
 	return 0;
 }

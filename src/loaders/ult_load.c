@@ -92,6 +92,7 @@ static char *verstr[4] = {
 static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j, k, ver, cnt;
     struct xmp_event *event;
     struct ult_header ufh;
@@ -109,7 +110,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     ver = ufh.magic[14] - '0';
 
-    strncpy(m->mod.name, (char *)ufh.name, 32);
+    strncpy(mod->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
     set_type(m, "ULT V%04d (Ultra Tracker %s)", ver, verstr[ver - 1]);
 
@@ -117,17 +118,17 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     fseek(f, ufh.msgsize * 32, SEEK_CUR);
 
-    m->mod.ins = m->mod.smp = read8(f);
-    /* m->mod.flg |= XXM_FLG_LINEAR; */
+    mod->ins = mod->smp = read8(f);
+    /* mod->flg |= XXM_FLG_LINEAR; */
 
     /* Read and convert instruments */
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", m->mod.ins);
+    _D(_D_INFO "Instruments: %d", mod->ins);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
 	fread(&uih.name, 32, 1, f);
 	fread(&uih.dosname, 12, 1, f);
@@ -145,10 +146,10 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	    uih.finetune ^= uih.c2spd;
 	    uih.c2spd ^= uih.finetune;
 	}
-	m->mod.xxs[i].len = uih.sizeend - uih.sizestart;
-	m->mod.xxi[i].nsm = !!m->mod.xxs[i].len;
-	m->mod.xxs[i].lps = uih.loop_start;
-	m->mod.xxs[i].lpe = uih.loopend;
+	mod->xxs[i].len = uih.sizeend - uih.sizestart;
+	mod->xxi[i].nsm = !!mod->xxs[i].len;
+	mod->xxs[i].lps = uih.loop_start;
+	mod->xxs[i].lpe = uih.loopend;
 
 	/* BiDi Loop : (Bidirectional Loop)
 	 *
@@ -171,38 +172,38 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	switch (uih.bidiloop) {
 	case 20:		/* Type 20 is in seasons.ult */
 	case 4:
-	    m->mod.xxs[i].flg = XMP_SAMPLE_16BIT;
+	    mod->xxs[i].flg = XMP_SAMPLE_16BIT;
 	    break;
 	case 8:
-	    m->mod.xxs[i].flg = XMP_SAMPLE_LOOP;
+	    mod->xxs[i].flg = XMP_SAMPLE_LOOP;
 	    break;
 	case 12:
-	    m->mod.xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP;
+	    mod->xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP;
 	    break;
 	case 24:
-	    m->mod.xxs[i].flg = XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
+	    mod->xxs[i].flg = XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
 	    break;
 	case 28:
-	    m->mod.xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
+	    mod->xxs[i].flg = XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_REVERSE;
 	    break;
 	}
 
 /* TODO: Add logarithmic volume support */
-	m->mod.xxi[i].sub[0].vol = uih.volume;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
+	mod->xxi[i].sub[0].vol = uih.volume;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->mod.xxi[i].name, uih.name, 24);
+	copy_adjust(mod->xxi[i].name, uih.name, 24);
 
 	_D(_D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
-		i, uih.name, m->mod.xxs[i].len,
-		m->mod.xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
-		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->mod.xxi[i].sub[0].vol, uih.finetune, uih.c2spd);
+		i, uih.name, mod->xxs[i].len,
+		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		mod->xxs[i].lps, mod->xxs[i].lpe,
+		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		mod->xxi[i].sub[0].vol, uih.finetune, uih.c2spd);
 
 	if (ver > 3)
-	    c2spd_to_note(uih.c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+	    c2spd_to_note(uih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
     fread(&ufh2.order, 256, 1, f);
@@ -212,21 +213,21 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < 256; i++) {
 	if (ufh2.order[i] == 0xff)
 	    break;
-	m->mod.xxo[i] = ufh2.order[i];
+	mod->xxo[i] = ufh2.order[i];
     }
-    m->mod.len = i;
-    m->mod.chn = ufh2.channels + 1;
-    m->mod.pat = ufh2.patterns + 1;
-    m->mod.tpo = 6;
-    m->mod.bpm = 125;
-    m->mod.trk = m->mod.chn * m->mod.pat;
+    mod->len = i;
+    mod->chn = ufh2.channels + 1;
+    mod->pat = ufh2.patterns + 1;
+    mod->tpo = 6;
+    mod->bpm = 125;
+    mod->trk = mod->chn * mod->pat;
 
-    for (i = 0; i < m->mod.chn; i++) {
+    for (i = 0; i < mod->chn; i++) {
 	if (ver >= 3) {
 	    x8 = read8(f);
-	    m->mod.xxc[i].pan = 255 * x8 / 15;
+	    mod->xxc[i].pan = 255 * x8 / 15;
 	} else {
-	    m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
+	    mod->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
 	}
     }
 
@@ -234,17 +235,17 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
     /* Events are stored by channel */
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
     }
 
-    for (i = 0; i < m->mod.chn; i++) {
-	for (j = 0; j < 64 * m->mod.pat; ) {
+    for (i = 0; i < mod->chn; i++) {
+	for (j = 0; j < 64 * mod->pat; ) {
 	    cnt = 1;
 	    x8 = read8(f);		/* Read note or repeat code (0xfc) */
 	    if (x8 == 0xfc) {
@@ -323,12 +324,12 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	if (!m->mod.xxs[i].len)
+    for (i = 0; i < mod->ins; i++) {
+	if (!mod->xxs[i].len)
 	    continue;
-	load_patch(ctx, f, i, 0, &m->mod.xxs[i], NULL);
+	load_patch(ctx, f, i, 0, &mod->xxs[i], NULL);
     }
 
     m->volbase = 0x100;

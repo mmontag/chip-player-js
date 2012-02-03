@@ -84,6 +84,7 @@ static int mfp_test(FILE *f, char *t, const int start)
 static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i, j, k, x, y;
 	struct xmp_event *event;
 	struct stat st;
@@ -99,53 +100,53 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	set_type(m, "Magnetic Fields Packer");
 	MODULE_INFO();
 
-	m->mod.chn = 4;
+	mod->chn = 4;
 
-	m->mod.ins = m->mod.smp = 31;
+	mod->ins = mod->smp = 31;
 	INSTRUMENT_INIT();
 
 	for (i = 0; i < 31; i++) {
 		int loop_size;
 
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		
-		m->mod.xxs[i].len = 2 * read16b(f);
-		m->mod.xxi[i].sub[0].fin = (int8)(read8(f) << 4);
-		m->mod.xxi[i].sub[0].vol = read8(f);
-		m->mod.xxs[i].lps = 2 * read16b(f);
+		mod->xxs[i].len = 2 * read16b(f);
+		mod->xxi[i].sub[0].fin = (int8)(read8(f) << 4);
+		mod->xxi[i].sub[0].vol = read8(f);
+		mod->xxs[i].lps = 2 * read16b(f);
 		loop_size = read16b(f);
 
-		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + 2 * loop_size;
-		m->mod.xxs[i].flg = loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-		m->mod.xxi[i].sub[0].pan = 0x80;
-		m->mod.xxi[i].sub[0].sid = i;
-		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
-		m->mod.xxi[i].rls = 0xfff;
+		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * loop_size;
+		mod->xxs[i].flg = loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+		mod->xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].sid = i;
+		mod->xxi[i].nsm = !!(mod->xxs[i].len);
+		mod->xxi[i].rls = 0xfff;
 
                	_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d %c",
-                       	i, m->mod.xxs[i].len, m->mod.xxs[i].lps,
-                       	m->mod.xxs[i].lpe,
+                       	i, mod->xxs[i].len, mod->xxs[i].lps,
+                       	mod->xxs[i].lpe,
 			loop_size > 1 ? 'L' : ' ',
-                       	m->mod.xxi[i].sub[0].vol, m->mod.xxi[i].sub[0].fin >> 4,
-                       	m->mod.xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
+                       	mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4,
+                       	mod->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
 	}
 
-	m->mod.len = m->mod.pat = read8(f);
+	mod->len = mod->pat = read8(f);
 	read8(f);		/* restart */
 
 	for (i = 0; i < 128; i++)
-		m->mod.xxo[i] = read8(f);
+		mod->xxo[i] = read8(f);
 
 #if 0
 	for (i = 0; i < 128; i++) {
-		m->mod.xxo[i] = read8(f);
-		if (m->mod.xxo[i] > m->mod.pat)
-			m->mod.pat = m->mod.xxo[i];
+		mod->xxo[i] = read8(f);
+		if (mod->xxo[i] > mod->pat)
+			mod->pat = mod->xxo[i];
 	}
-	m->mod.pat++;
+	mod->pat++;
 #endif
 
-	m->mod.trk = m->mod.pat * m->mod.chn;
+	mod->trk = mod->pat * mod->chn;
 
 	/* Read and convert patterns */
 
@@ -160,13 +161,13 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	_D(_D_INFO "Stored patterns: %d ", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d ", mod->pat);
 
 	pat_addr = ftell(f);
 
-	for (i = 0; i < m->mod.pat; i++) {
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = 64;
+		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < 4; j++) {
@@ -187,7 +188,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Loading samples: %d", m->mod.ins);
+	_D(_D_INFO "Loading samples: %d", mod->ins);
 
 	/* first check smp.filename */
 	m->basename[0] = 's';
@@ -209,14 +210,14 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		return 0;
 	}
 
-	for (i = 0; i < m->mod.ins; i++) {
-		load_patch(ctx, s, m->mod.xxi[i].sub[0].sid, 0,
-				  &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+	for (i = 0; i < mod->ins; i++) {
+		load_patch(ctx, s, mod->xxi[i].sub[0].sid, 0,
+				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	fclose(s);
 
-	m->mod.flg |= XXM_FLG_MODRNG;
+	mod->flg |= XXM_FLG_MODRNG;
 
 	return 0;
 }

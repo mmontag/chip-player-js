@@ -72,6 +72,7 @@ static uint8 fx[] = {
 static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
     struct stm_file_header sfh;
@@ -109,19 +110,19 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     if (!strncmp ((char *)sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;
 
-    m->mod.pat = sfh.patterns;
-    m->mod.trk = m->mod.pat * m->mod.chn;
-    m->mod.tpo = MSN (sfh.tempo);
-    m->mod.ins = 31;
-    m->mod.smp = m->mod.ins;
+    mod->pat = sfh.patterns;
+    mod->trk = mod->pat * mod->chn;
+    mod->tpo = MSN (sfh.tempo);
+    mod->ins = 31;
+    mod->smp = mod->ins;
     m->c4rate = C4_NTSC_RATE;
 
-    copy_adjust(m->mod.name, sfh.name, 20);
+    copy_adjust(mod->name, sfh.name, 20);
 
     if (bmod2stm) {
-	snprintf(m->mod.type, XMP_NAMESIZE, "!Scream! (BMOD2STM)");
+	snprintf(mod->type, XMP_NAMESIZE, "!Scream! (BMOD2STM)");
     } else {
-	snprintf(m->mod.type, XMP_NAMESIZE, "!Scream! "
+	snprintf(mod->type, XMP_NAMESIZE, "!Scream! "
 			"(Scream Tracker %d.%02d)", sfh.vermaj, sfh.vermin);
     }
 
@@ -130,50 +131,50 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len = sfh.ins[i].length);
-	m->mod.xxs[i].lps = sfh.ins[i].loopbeg;
-	m->mod.xxs[i].lpe = sfh.ins[i].loopend;
-	if (m->mod.xxs[i].lpe == 0xffff)
-	    m->mod.xxs[i].lpe = 0;
-	m->mod.xxs[i].flg = m->mod.xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	m->mod.xxi[i].sub[0].vol = sfh.ins[i].volume;
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].sid = i;
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = !!(mod->xxs[i].len = sfh.ins[i].length);
+	mod->xxs[i].lps = sfh.ins[i].loopbeg;
+	mod->xxs[i].lpe = sfh.ins[i].loopend;
+	if (mod->xxs[i].lpe == 0xffff)
+	    mod->xxs[i].lpe = 0;
+	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].sub[0].vol = sfh.ins[i].volume;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(m->mod.xxi[i].name, sfh.ins[i].name, 12);
+	copy_adjust(mod->xxi[i].name, sfh.ins[i].name, 12);
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
-		m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
-		m->mod.xxs[i].lpe, m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		m->mod.xxi[i].sub[0].vol, sfh.ins[i].c2spd);
+		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
+		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		mod->xxi[i].sub[0].vol, sfh.ins[i].c2spd);
 
 	sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;
-	c2spd_to_note (sfh.ins[i].c2spd, &m->mod.xxi[i].sub[0].xpo, &m->mod.xxi[i].sub[0].fin);
+	c2spd_to_note (sfh.ins[i].c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
-    fread(m->mod.xxo, 1, 128, f);
+    fread(mod->xxo, 1, 128, f);
 
     for (i = 0; i < 128; i++)
-	if (m->mod.xxo[i] >= m->mod.pat)
+	if (mod->xxo[i] >= mod->pat)
 	    break;
 
-    m->mod.len = i;
+    mod->len = i;
 
-    _D(_D_INFO "Module length: %d", m->mod.len);
+    _D(_D_INFO "Module length: %d", mod->len);
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * m->mod.chn; j++) {
-	    event = &EVENT (i, j % m->mod.chn, j / m->mod.chn);
+	for (j = 0; j < 64 * mod->chn; j++) {
+	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    b = read8(f);
 	    memset (event, 0, sizeof (struct xmp_event));
 	    switch (b) {
@@ -209,11 +210,11 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", m->mod.smp);
+    _D(_D_INFO "Stored samples: %d", mod->smp);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	load_patch(ctx, f, m->mod.xxi[i].sub[0].sid, 0,
-	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+    for (i = 0; i < mod->ins; i++) {
+	load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 
     m->quirk |= QUIRK_VSALL | QUIRKS_ST3;

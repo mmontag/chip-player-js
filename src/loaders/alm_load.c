@@ -61,6 +61,7 @@ struct alm_file_header {
 static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 {
     struct xmp_mod_context *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int i, j;
     struct alm_file_header afh;
     struct xmp_event *event;
@@ -76,7 +77,7 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     fread(&afh.id, 7, 1, f);
 
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
-	m->mod.tpo = afh.speed / 2;
+	mod->tpo = afh.speed / 2;
 
     strncpy(modulename, m->filename, NAME_SIZE);
     basename = strtok (modulename, ".");
@@ -86,18 +87,18 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     afh.restart = read8(f);
     fread(&afh.order, 128, 1, f);
 
-    m->mod.len = afh.length;
-    m->mod.rst = afh.restart;
-    memcpy (m->mod.xxo, afh.order, m->mod.len);
+    mod->len = afh.length;
+    mod->rst = afh.restart;
+    memcpy (mod->xxo, afh.order, mod->len);
 
-    for (m->mod.pat = i = 0; i < m->mod.len; i++)
-	if (m->mod.pat < afh.order[i])
-	    m->mod.pat = afh.order[i];
-    m->mod.pat++;
+    for (mod->pat = i = 0; i < mod->len; i++)
+	if (mod->pat < afh.order[i])
+	    mod->pat = afh.order[i];
+    mod->pat++;
 
-    m->mod.ins = 31;
-    m->mod.trk = m->mod.pat * m->mod.chn;
-    m->mod.smp = m->mod.ins;
+    mod->ins = 31;
+    mod->trk = mod->pat * mod->chn;
+    mod->smp = mod->ins;
     m->c4rate = C4_NTSC_RATE;
 
     set_type(m, "Aley's Module");
@@ -107,14 +108,14 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", m->mod.pat);
+    _D(_D_INFO "Stored patterns: %d", mod->pat);
 
-    for (i = 0; i < m->mod.pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	m->mod.xxp[i]->rows = 64;
+	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
-	for (j = 0; j < 64 * m->mod.chn; j++) {
-	    event = &EVENT (i, j % m->mod.chn, j / m->mod.chn);
+	for (j = 0; j < 64 * mod->chn; j++) {
+	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    b = read8(f);
 	    if (b)
 		event->note = (b == 37) ? 0x61 : b + 36;
@@ -126,45 +127,45 @@ static int alm_load(struct xmp_context *ctx, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Loading samples: %d", m->mod.ins);
+    _D(_D_INFO "Loading samples: %d", mod->ins);
 
-    for (i = 0; i < m->mod.ins; i++) {
-	m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+    for (i = 0; i < mod->ins; i++) {
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = fopen (filename, "rb");
 
-	if (!(m->mod.xxi[i].nsm = (s != NULL)))
+	if (!(mod->xxi[i].nsm = (s != NULL)))
 	    continue;
 
 	fstat (fileno (s), &stat);
 	b = read8(s);		/* Get first octet */
-	m->mod.xxs[i].len = stat.st_size - 5 * !b;
+	mod->xxs[i].len = stat.st_size - 5 * !b;
 
 	if (!b) {		/* Instrument with header */
-	    m->mod.xxs[i].lps = read16l(f);
-	    m->mod.xxs[i].lpe = read16l(f);
-	    m->mod.xxs[i].flg = m->mod.xxs[i].lpe > m->mod.xxs[i].lps ? XMP_SAMPLE_LOOP : 0;
+	    mod->xxs[i].lps = read16l(f);
+	    mod->xxs[i].lpe = read16l(f);
+	    mod->xxs[i].flg = mod->xxs[i].lpe > mod->xxs[i].lps ? XMP_SAMPLE_LOOP : 0;
 	} else {
 	    fseek(s, 0, SEEK_SET);
 	}
 
-	m->mod.xxi[i].sub[0].pan = 0x80;
-	m->mod.xxi[i].sub[0].vol = 0x40;
-	m->mod.xxi[i].sub[0].sid = i;
+	mod->xxi[i].sub[0].pan = 0x80;
+	mod->xxi[i].sub[0].vol = 0x40;
+	mod->xxi[i].sub[0].sid = i;
 
 	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x", i,
-		filename, m->mod.xxs[i].len, m->mod.xxs[i].lps, m->mod.xxs[i].lpe,
-		m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', m->mod.xxi[i].sub[0].vol);
+		filename, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
+		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	load_patch(ctx, s, m->mod.xxi[i].sub[0].sid,
-	    XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+	load_patch(ctx, s, mod->xxi[i].sub[0].sid,
+	    XMP_SMP_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 	fclose(s);
     }
 
     /* ALM is LRLR, not LRRL */
-    for (i = 0; i < m->mod.chn; i++)
-	m->mod.xxc[i].pan = (i % 2) * 0xff;
+    for (i = 0; i < mod->chn; i++)
+	mod->xxc[i].pan = (i % 2) * 0xff;
 
     return 0;
 }

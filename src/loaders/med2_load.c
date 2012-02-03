@@ -47,6 +47,7 @@ static int med2_test(FILE *f, char *t, const int start)
 int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	int sliding;
 	struct xmp_event *event;
@@ -57,50 +58,50 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (read32b(f) !=  MAGIC_MED2)
 		return -1;
 
-	strcpy(m->mod.type, "MED2 (MED 1.12)");
+	strcpy(mod->type, "MED2 (MED 1.12)");
 
-	m->mod.ins = m->mod.smp = 32;
+	mod->ins = mod->smp = 32;
 	INSTRUMENT_INIT();
 
 	/* read instrument names */
 	fread(buf, 1, 40, f);	/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		fread(buf, 1, 40, f);
-		copy_adjust(m->mod.xxi[i].name, buf, 32);
-		m->mod.xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		copy_adjust(mod->xxi[i].name, buf, 32);
+		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	}
 
 	/* read instrument volumes */
 	read8(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		m->mod.xxi[i].sub[0].vol = read8(f);
-		m->mod.xxi[i].sub[0].pan = 0x80;
-		m->mod.xxi[i].sub[0].fin = 0;
-		m->mod.xxi[i].sub[0].sid = i;
+		mod->xxi[i].sub[0].vol = read8(f);
+		mod->xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].fin = 0;
+		mod->xxi[i].sub[0].sid = i;
 	}
 
 	/* read instrument loops */
 	read16b(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		m->mod.xxs[i].lps = read16b(f);
+		mod->xxs[i].lps = read16b(f);
 	}
 
 	/* read instrument loop length */
 	read16b(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		uint32 lsiz = read16b(f);
-		m->mod.xxs[i].lpe = m->mod.xxs[i].lps + lsiz;
-		m->mod.xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
+		mod->xxs[i].lpe = mod->xxs[i].lps + lsiz;
+		mod->xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
 	}
 
-	m->mod.chn = 4;
-	m->mod.pat = read16b(f);
-	m->mod.trk = m->mod.chn * m->mod.pat;
+	mod->chn = 4;
+	mod->pat = read16b(f);
+	mod->trk = mod->chn * mod->pat;
 
-	fread(m->mod.xxo, 1, 100, f);
-	m->mod.len = read16b(f);
+	fread(mod->xxo, 1, 100, f);
+	mod->len = read16b(f);
 
-	m->mod.tpo = 192 / read16b(f);
+	mod->tpo = 192 / read16b(f);
 
 	read16b(f);			/* flags */
 	sliding = read16b(f);		/* sliding */
@@ -117,11 +118,11 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", m->mod.pat);
+	_D(_D_INFO "Stored patterns: %d", mod->pat);
 
-	for (i = 0; i < m->mod.pat; i++) {
+	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		m->mod.xxp[i]->rows = 64;
+		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
 		read32b(f);
@@ -159,7 +160,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* Load samples */
 
-	_D(_D_INFO "Instruments    : %d ", m->mod.ins);
+	_D(_D_INFO "Instruments    : %d ", mod->ins);
 
 	for (i = 0; i < 31; i++) {
 		char path[PATH_MAX];
@@ -172,30 +173,30 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 		get_instrument_path(ctx, "XMP_MED2_INSTRUMENT_PATH",
 				ins_path, 256);
 		found = check_filename_case(ins_path,
-				(char *)m->mod.xxi[i].name, name, 256);
+				(char *)mod->xxi[i].name, name, 256);
 
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
 			if ((s = fopen(path, "rb"))) {
 				fstat(fileno(s), &stat);
-				m->mod.xxs[i].len = stat.st_size;
+				mod->xxs[i].len = stat.st_size;
 			}
 		}
 
-		m->mod.xxi[i].nsm = !!(m->mod.xxs[i].len);
+		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 
-		if (!strlen((char *)m->mod.xxi[i].name) && !m->mod.xxs[i].len)
+		if (!strlen((char *)mod->xxi[i].name) && !mod->xxs[i].len)
 			continue;
 
 		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
-			i, m->mod.xxi[i].name, m->mod.xxs[i].len, m->mod.xxs[i].lps,
-			m->mod.xxs[i].lpe,
-			m->mod.xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			m->mod.xxi[i].sub[0].vol);
+			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
+			mod->xxs[i].lpe,
+			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+			mod->xxi[i].sub[0].vol);
 
 		if (found) {
-			load_patch(ctx, s, m->mod.xxi[i].sub[0].sid,
-				0, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
+			load_patch(ctx, s, mod->xxi[i].sub[0].sid,
+				0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			fclose(s);
 		}
 	}
