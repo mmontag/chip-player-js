@@ -9,6 +9,10 @@
 #ifndef __XMP_H
 #define __XMP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define XMP_NAMESIZE		64
 
 #define XMP_KEY_OFF		0x81
@@ -273,5 +277,9 @@ int xmp_seek_time(xmp_context, int);
 void xmp_init_formats(xmp_context);
 void xmp_deinit_formats(xmp_context);
 int xmp_enable_format(char *, int);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* __XMP_H */
