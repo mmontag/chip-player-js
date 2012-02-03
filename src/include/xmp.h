@@ -67,7 +67,6 @@ struct xmp_options {
 	int time;		/* Maximum playing time in seconds */
 	int tempo;		/* Set initial tempo */
 	int skipsmp;		/* Don't load sample data */
-	int cf_cutoff;		/* Cutoff for filter-based anticlick */
 	char *ins_path;		/* External instrument path */
 	char *parm[16];		/* Driver parameter data */
 };

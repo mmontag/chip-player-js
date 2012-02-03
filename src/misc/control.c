@@ -45,7 +45,6 @@ void *xmp_create_context()
 	o->mix = 70;
 	o->resol = 16;
 	o->flags = XMP_CTL_FILTER | XMP_CTL_ITPT;
-	o->cf_cutoff = 0;
 
 	return ctx;
 }

@@ -453,9 +453,6 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     else
 	vi->fxor = vi->fidx;
 
-    if (o->cf_cutoff)			/* Filter-based anticlick */
-	vi->fidx |= FLAG_FILTER;
-
     if (xxs->flg & XMP_SAMPLE_LOOP_FULL)
 	xxs->flg |= XMP_SAMPLE_LOOP_FIRST;
 

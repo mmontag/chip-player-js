@@ -624,11 +624,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     finalpan = xc->masterpan + (finalpan - 128) *
 			(128 - abs (xc->masterpan - 128)) / 128;
 
-    if (o->cf_cutoff) {
-	cutoff = o->cf_cutoff;		/* Click-filter cutoff */
+    if (XXIH.fei.flg & XXM_ENV_FLT) {
+	cutoff = xc->filter.cutoff * frq_envelope / 0xff;
     } else {
-	cutoff = XXIH.fei.flg & XXM_ENV_FLT ? frq_envelope : 0xff;
-	cutoff = xc->filter.cutoff * cutoff / 0xff;
+	cutoff = 0xff;
     }
 
     /* Do tremor */
