@@ -19,12 +19,10 @@
  * and number of channels.
  */
 #define INTERPOLATE() do { \
-    if (frac >> SMIX_SHIFT) { \
-	pos += frac >> SMIX_SHIFT; \
-	smp_x1 = sptr[pos]; \
-	smp_dt = sptr[pos + 1] - smp_x1; \
-	frac &= SMIX_MASK; \
-    } \
+    pos += frac >> SMIX_SHIFT; \
+    smp_x1 = sptr[pos]; \
+    smp_dt = sptr[pos + 1] - smp_x1; \
+    frac &= SMIX_MASK; \
     smp_in = smp_x1 + ((frac * smp_dt) >> SMIX_SHIFT); \
 } while (0)
 
