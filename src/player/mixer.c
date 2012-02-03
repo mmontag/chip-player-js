@@ -138,7 +138,7 @@ void smix_resetvar(struct xmp_context *ctx)
 
 
 /* Hipolito's rampdown anticlick */
-static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
+static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int count)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct xmp_smixer_context *s = &ctx->s;
@@ -160,15 +160,15 @@ static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
 
     if (!buf) {
 	buf = s->buf32b;
-	cnt = SLOW_RELEASE; //s->ticksize;
+	count = SLOW_RELEASE;
     }
-    if (!cnt)
+    if (!count)
 	return;
 
-    dec_r = smp_r / cnt;
-    dec_l = smp_l / cnt;
+    dec_r = smp_r / count;
+    dec_l = smp_l / count;
 
-    while ((smp_r || smp_l) && cnt--) {
+    while ((smp_r || smp_l) && count--) {
 	if (dec_r > 0)
 	    *(buf++) += smp_r > dec_r ? (smp_r -= dec_r) : (smp_r = 0);
 	else
@@ -183,7 +183,7 @@ static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int cnt)
 
 
 /* Ok, it's messy, but it works :-) Hipolito */
-static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, int *buf, int cnt)
+static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, int *buf, int count)
 {
     int oldvol, newvol, pan0;
     struct xmp_driver_context *d = &ctx->d;
@@ -217,7 +217,7 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 	s->dtleft += vi->sleft;
 	vi->sright = vi->sleft = 0;
     } else {
-	smix_rampdown(ctx, voc, buf, cnt);
+	smix_rampdown(ctx, voc, buf, count);
     }
 }
 
@@ -235,7 +235,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
     struct voice_info *vi;
     int samples, size, lps, lpe;
     int vol_l, vol_r, step, voc;
-    int prv_l, prv_r;
+    int prev_l, prev_r;
     int synth = 1;
     int *buf_pos;
 
@@ -318,8 +318,8 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 		idx = mix_size;
 		if (idx < 2)
 		    idx = 2;
-		prv_r = buf_pos[idx - 2];
-		prv_l = buf_pos[idx - 1];
+		prev_r = buf_pos[idx - 2];
+		prev_l = buf_pos[idx - 1];
 
 		/* "Beautiful Ones" apparently uses 0xfe as 'no filter' :\ */
 		if (vi->filter.cutoff >= 0xfe)
@@ -333,8 +333,8 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 		idx = 0;
 		if (mix_size < 2)
 		    idx = 2;
-		vi->sright = buf_pos[idx - 2] - prv_r;
-		vi->sleft = buf_pos[idx - 1] - prv_l;
+		vi->sright = buf_pos[idx - 2] - prev_r;
+		vi->sleft = buf_pos[idx - 1] - prev_l;
 	    }
 
 	    vi->frac += step * samples;
