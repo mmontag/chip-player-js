@@ -3,8 +3,8 @@ TEST_PATH	= src/test
 include src/test/xmdp/Makefile
 
 
-$(TEST_PATH)/test1: $(OBJS) $(TEST_PATH)/test1.o
-	@CMD='$(LD) -o $@ $(LDFLAGS) $+ $(LIBS) -lpulse-simple -lpulse'; \
+$(TEST_PATH)/test1: $(TEST_PATH)/test1.o $(LIB)
+	@CMD='$(LD) -o $@ $(LDFLAGS) $(TEST_PATH)/test1.o $(LIBS) -lpulse-simple -lpulse -lxmp -lm'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 

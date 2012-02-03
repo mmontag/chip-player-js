@@ -1,15 +1,15 @@
 
-VERSION	= 3.5.0
+VERSION	= 3.9.0
 DIST    = xmp-$(VERSION)
 MODULES = "SynthSong1"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  scripts $(MODULES)
 DDIRS	= docs drivers etc include loaders misc player plugin prowiz win32 \
 	  tunenet main
-LIB	= libxmp.a
 V	= 0
+LIB	= lib/libxmp.a
 
-all: binaries
+all: library binaries
 
 include Makefile.rules
 
@@ -55,12 +55,13 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 #binaries: src/main/xmp $(PLUGINS)
 binaries: src/test/test1
 
-# Legacy libxmp.a creation, in case someone needs it
-#$(LIB): $(OBJS)
-#	@CMD='$(AR) r $@ $(LOBJS)'; \
-#	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
-#	eval $$CMD
-#	ranlib libxmp.a
+library: $(LIB)
+
+$(LIB): $(OBJS)
+	@CMD='$(AR) r $@ $(OBJS)'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
+	eval $$CMD
+	ranlib $@
 
 clean:
 	@rm -f $(OBJS) $(LIB) $(OBJS:.o=.lo) $(M_OBJS) $(D_OBJS) $(CLEAN)
