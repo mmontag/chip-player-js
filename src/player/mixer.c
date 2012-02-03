@@ -233,16 +233,15 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
     struct xmp_options *o = &ctx->o;
     struct xmp_sample *xxs;
     struct voice_info *vi;
-    int samples, tick, lps, lpe;
+    int samples, size, lps, lpe;
     int vol_l, vol_r, step, voc;
     int prv_l, prv_r;
     int synth = 1;
     int *buf_pos;
-    int size;
 
     smix_rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
-    for (voc = d->maxvoc; voc--; ) {
+    for (voc = 0; voc < d->maxvoc; voc++) {
 	vi = &d->voice_array[voc];
 
 	if (vi->chn < 0)
@@ -286,17 +285,19 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	    lpe = xxs->len - 1;
 	}
 
-	for (tick = s->ticksize; tick; ) {
+	size = s->ticksize;
+
+	while (size > 0) {
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
 	    samples = 1 + (((int64)(vi->end - vi->pos) << SMIX_SHIFT)
 		- vi->frac) / step;
 
 	    if (step > 0) {
-		if (vi->end < vi->pos)
+		if (vi->pos > vi->end)
 		    samples = 0;
 	    } else {
-		if (vi->end > vi->pos)
+		if (vi->pos < vi->end)
 		    samples = 0;
 	    }
 
@@ -305,8 +306,8 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 		samples = 0;
 	    
 	    /* ...inside the tick boundaries */
-	    if (samples > tick)
-		samples = tick;
+	    if (samples > size)
+		samples = size;
 
 	    if (vi->vol) {
 		int idx;
@@ -341,16 +342,17 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	    vi->frac &= SMIX_MASK;
 
 	    /* No more samples in this tick */
-	    if (!(tick -= samples))
+	    size -= samples;
+	    if (size <= 0)
 		continue;
 
 	    vi->fidx ^= vi->fxor;
 
 	    /* First sample loop run */
             if (vi->fidx == 0 || lps >= lpe) {
-		smix_anticlick(ctx, voc, 0, 0, buf_pos, tick);
+		smix_anticlick(ctx, voc, 0, 0, buf_pos, size);
 		xmp_drv_resetvoice(ctx, voc, 0);
-		tick = 0;
+		size = 0;
 		continue;
 	    }
 
