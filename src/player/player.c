@@ -467,6 +467,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
+    int linear_bend;
 
     xc = &p->xc_data[chn];
 
@@ -601,7 +602,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* IT pitch envelopes are always linear, even in Amiga period mode.
      * Each unit in the envelope scale is 1/25 semitone.
      */
-    xc->pitchbend = period_to_bend(
+    linear_bend = period_to_bend(
 	xc->period + vibrato + med_vibrato,
 	xc->note,
 	/* xc->finetune, */
@@ -609,7 +610,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	xc->gliss,
 	m->mod.flg & XXM_FLG_LINEAR);
 
-    xc->pitchbend += XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope;
+    linear_bend += XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope;
 
     /* From Takashi Iwai's awedrv FAQ:
      *
@@ -760,7 +761,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* Adjust pitch and pan, then play the note */
     finalpan = o->outfmt & XMP_FMT_MONO ?
 	0 : (finalpan - 0x80) * o->mix / 100;
-    xmp_drv_setbend(ctx, chn, xc->pitchbend + get_stepper(&xc->arpeggio) + med_arp);
+
+    linear_bend += get_stepper(&xc->arpeggio) + med_arp;
+
+    xmp_drv_setbend(ctx, chn, linear_bend);
     xmp_drv_setpan(ctx, chn, finalpan);
     xmp_drv_setvol(ctx, chn, finalvol);
 
@@ -1025,7 +1029,7 @@ next_order:
 			struct channel_data *c = &p->xc_data[i];
 
 			printf("%d %d %d %d %d %d %lf %d %d %d %d %lf "
-			       "%d %d %d %d %d %d %d %d %d %d\n",
+			       "%d %d %d %d %d %d %d %d %d\n",
 					f->ord,
 					m->mod.xxo[f->ord],
 					p->row,
@@ -1039,7 +1043,7 @@ next_order:
 					c->volume,
 					c->period,
 
-					c->pitchbend,
+					/* c->pitchbend, */
 					c->finetune,
 					c->ins,
 					c->smp,

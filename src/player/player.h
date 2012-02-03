@@ -116,7 +116,6 @@ struct channel_data {
     int note;			/* Note number */
     int key;			/* Key number */
     double period;		/* Amiga or linear period */
-    int pitchbend;		/* Pitch bender value */
     int finetune;		/* Guess what */
     int ins;			/* Instrument number */
     int smp;			/* Sample number */
