@@ -487,7 +487,7 @@ int xmp_load_module(xmp_context opaque, char *s)
     m->vol_table = NULL;
     /* Reset control for next module */
     m->flags = o->flags & ~XMP_CTL_FILTER;	/* verify this later */
-    m->quirk = o->quirk;
+    m->quirk = 0;
     m->comment = NULL;
 
     /* Set defaults */
