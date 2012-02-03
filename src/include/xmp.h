@@ -55,12 +55,11 @@ struct xmp_options {
 	int freq;		/* Software mixing rate (Hz) */
 #define XMP_CTL_ITPT	(1 << 0)	/* Mixer interpolation */
 #define XMP_CTL_REVERSE	(1 << 1)	/* Reverse stereo */
-#define XMP_CTL_8BIT	(1 << 2)	/* Convert 16 bit samples to 8 bit */
-#define XMP_CTL_LOOP	(1 << 3)	/* Enable module looping */
-#define XMP_CTL_VBLANK	(1 << 4)	/* Use vblank timing only */
-#define XMP_CTL_VIRTUAL	(1 << 5)	/* Enable virtual channels */
-#define XMP_CTL_FIXLOOP	(1 << 7)	/* Fix sample loop start */
-#define XMP_CTL_FILTER	(1 << 8)	/* IT lowpass filter */
+#define XMP_CTL_LOOP	(1 << 2)	/* Enable module looping */
+#define XMP_CTL_VBLANK	(1 << 3)	/* Use vblank timing only */
+#define XMP_CTL_VIRTUAL	(1 << 4)	/* Enable virtual channels */
+#define XMP_CTL_FIXLOOP	(1 << 5)	/* Fix sample loop start */
+#define XMP_CTL_FILTER	(1 << 6)	/* IT lowpass filter */
 	int flags;		/* internal control flags, set default mode */
 	int start;		/* Set initial order (default = 0) */
 	int mix;		/* Percentage of L/R channel separation */
