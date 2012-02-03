@@ -53,7 +53,6 @@ int	xmp_drv_cvt8bit		(void);
 void	xmp_drv_setsmp		(struct xmp_context *, int, int);
 void	xmp_drv_setnna		(struct xmp_context *, int, int);
 void	xmp_drv_pastnote	(struct xmp_context *, int, int);
-void	xmp_drv_retrig		(struct xmp_context *, int);
 void	xmp_drv_setvol		(struct xmp_context *, int, int);
 void	xmp_drv_voicepos	(struct xmp_context *, int, int);
 void	xmp_drv_setbend		(struct xmp_context *, int, int);

@@ -352,12 +352,17 @@ ex_f_porta_dn:
 		case EX_TREMOLO_WF:		/* Set tremolo waveform */
 			set_lfo_waveform(&xc->tremolo, fxp & 3);
 			break;
+		case EX_RETRIG:				/* Retrig note */
+			if (fxp > 0) {
+				xc->retrig.delay = fxp;
+			} else {
+				xc->retrig.delay = xc->retrig.val;
+			}
+			xc->retrig.count = xc->retrig.delay;
+			xc->retrig.val = xc->retrig.delay;
+			xc->retrig.type = 0;
+			break;
 
-	case EX_RETRIG:				/* Retrig note */
-	    xc->retrig = xc->rcount = fxp ? fxp : xc->rval;
-	    xc->rval = xc->retrig;
-	    xc->rtype = 0;
-	    break;
 	case EX_F_VSLIDE_UP:			/* Fine volume slide up */
 ex_f_vslide_up:
 	    SET(FINE_VOLS);
@@ -370,10 +375,13 @@ ex_f_vslide_dn:
 	    if (fxp)
 		xc->v_fval = -fxp;
 	    break;
-	case EX_CUT:				/* Cut note */
-	    xc->retrig = xc->rcount = fxp + 1;
-	    xc->rtype = 0x10;
-	    break;
+
+		case EX_CUT:				/* Cut note */
+			xc->retrig.delay = fxp + 1;
+			xc->retrig.count = xc->retrig.delay;
+			xc->retrig.type = 0x10;
+			break;
+
 	case EX_DELAY:				/* Note delay */
 	    xc->delay = fxp + 1;
 	    break;
@@ -449,17 +457,20 @@ ex_f_vslide_dn:
 	if (fxp)
 	    xc->p_val = MSN(fxp) - LSN(fxp);
 	break;
-    case FX_MULTI_RETRIG:			/* Multi retrig */
-	if (LSN(fxp)) {
-		xc->retrig = xc->rcount = LSN(fxp);
-		xc->rval = xc->retrig;
-	} else {
-		xc->retrig = xc->rcount = xc->rval;
-	}
-	if (MSN(fxp)) {
-		xc->rtype = MSN(fxp);
-	}
-	break;
+
+	case FX_MULTI_RETRIG:			/* Multi retrig */
+		if (LSN(fxp)) {
+			xc->retrig.delay = LSN(fxp);
+			xc->retrig.val = xc->retrig.delay;
+		} else {
+			xc->retrig.delay = xc->retrig.val;
+		}
+		xc->retrig.count = xc->retrig.delay;
+		if (MSN(fxp)) {
+			xc->retrig.type = MSN(fxp);
+		}
+		break;
+
     case FX_TREMOR:				/* Tremor */
 	xc->tremor = fxp;
 	xc->tcnt_up = MSN(fxp);
@@ -569,26 +580,38 @@ fx_finetune:
 	m->mod.xxc[chn].rvb = fxp;
 #endif
 	break;
-    case FX_NSLIDE_R_DN:
-	xc->retrig = xc->rcount = MSN(fxp) ? MSN(fxp) : xc->rval;
-	xc->rval = xc->retrig;
-	xc->rtype = 0;
-	/* fall through */
-    case FX_NSLIDE_DN:
-	SET(NOTE_SLIDE);
-	xc->ns_val = -LSN(fxp);
-	xc->ns_count = xc->ns_speed = MSN(fxp);
-	break;
-    case FX_NSLIDE_R_UP:
-	xc->retrig = xc->rcount = MSN(fxp) ? MSN(fxp) : xc->rval;
-	xc->rval = xc->retrig;
-	xc->rtype = 0;
-	/* fall through */
-    case FX_NSLIDE_UP:
-	SET(NOTE_SLIDE);
-	xc->ns_val = LSN(fxp);
-	xc->ns_count = xc->ns_speed = MSN(fxp);
-	break;
+
+	case FX_NSLIDE_R_DN:
+		if (MSN(fxp)) {
+			xc->retrig.delay = MSN(fxp);
+		} else {
+			xc->retrig.delay = xc->retrig.val;
+		}
+		xc->retrig.count = xc->retrig.delay;
+		xc->retrig.val = xc->retrig.delay;
+		xc->retrig.type = 0;
+		/* fall through */
+	case FX_NSLIDE_DN:
+		SET(NOTE_SLIDE);
+		xc->ns_val = -LSN(fxp);
+		xc->ns_count = xc->ns_speed = MSN(fxp);
+		break;
+	case FX_NSLIDE_R_UP:
+		if (MSN(fxp)) {
+			xc->retrig.delay = MSN(fxp);
+		} else {
+			xc->retrig.delay = xc->retrig.val;
+		}
+		xc->retrig.count = xc->retrig.delay;
+		xc->retrig.val = xc->retrig.delay;
+		xc->retrig.type = 0;
+		/* fall through */
+	case FX_NSLIDE_UP:
+		SET(NOTE_SLIDE);
+		xc->ns_val = LSN(fxp);
+		xc->ns_count = xc->ns_speed = MSN(fxp);
+		break;
+
     case FX_NSLIDE2_DN:
 	SET(NOTE_SLIDE);
 	xc->ns_val = -fxp;

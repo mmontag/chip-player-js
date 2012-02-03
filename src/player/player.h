@@ -125,10 +125,12 @@ struct channel_data {
     int masterpan;		/* Master pan -- for S3M set pan effect */
     int mastervol;		/* Master vol -- for IT track vol effect */
     int delay;			/* Note delay in frames */
-    int retrig;			/* Retrig delay in frames */
-    int rval;			/* Retrig parameters */
-    int rtype;			/* Retrig type */
-    int rcount;			/* Retrig counter */
+	struct {
+		int type;	/* Retrig type */
+		int count;	/* Retrig counter */
+    		int delay;	/* Retrig delay in frames */
+    		int val;	/* Retrig parameters */
+	} retrig;
     int tremor;			/* Tremor */
     int tcnt_up;		/* Tremor counter (up cycle) */
     int tcnt_dn;		/* Tremor counter (down cycle) */

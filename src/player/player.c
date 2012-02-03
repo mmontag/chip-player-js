@@ -331,7 +331,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
     }
 
     /* Reset flags */
-    xc->delay = xc->retrig = 0;
+    xc->delay = xc->retrig.delay = 0;
     xc->flags = flg | (xc->flags & 0xff000000);	/* keep persistent flags */
 
     reset_stepper(&xc->arpeggio);
@@ -484,7 +484,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	    xmp_drv_resetchannel(ctx, chn);
 	    return;
 	}
-	xc->delay = xc->retrig = 0;
+	xc->delay = xc->retrig.delay = 0;
 	reset_stepper(&xc->arpeggio);
 	xc->flags &= (0xff000000 | IS_VALID);	/* keep persistent flags */
     }
@@ -551,14 +551,14 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     }
 
     /* Do cut/retrig */
-    if (xc->retrig) {
-	if (!--xc->rcount) {
-	    if (xc->rtype < 0x10)
-		xmp_drv_retrig(ctx, chn);	/* don't retrig on cut */
-	    xc->volume += rval[xc->rtype].s;
-	    xc->volume *= rval[xc->rtype].m;
-	    xc->volume /= rval[xc->rtype].d;
-	    xc->rcount = xc->retrig;
+    if (xc->retrig.delay) {
+	if (!--xc->retrig.count) {
+	    if (xc->retrig.type < 0x10)
+		xmp_drv_voicepos(ctx, chn, 0);	/* don't retrig on cut */
+	    xc->volume += rval[xc->retrig.type].s;
+	    xc->volume *= rval[xc->retrig.type].m;
+	    xc->volume /= rval[xc->retrig.type].d;
+	    xc->retrig.count = xc->retrig.delay;
 	}
     }
 
@@ -1046,7 +1046,7 @@ next_order:
 					c->masterpan,
 					c->mastervol,
 					c->delay,
-					c->rcount
+					c->retrig.count
 			);
 		}
 	}

@@ -256,7 +256,7 @@ void xmp_drv_seteffect(struct xmp_context *ctx, int chn, int type, int val)
 void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 {
     struct xmp_driver_context *d = &ctx->d;
-    int voc, pos, frac;
+    int voc;
     struct voice_info *vi;
 
     voc = d->ch2vo_array[chn];
@@ -268,11 +268,8 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
     if (vi->smp == smp)
 	return;
 
-    pos = vi->pos;
-    frac = vi->frac;
-
     smix_setpatch(ctx, voc, smp);
-    smix_voicepos(ctx, voc, pos, frac);
+    smix_voicepos(ctx, voc, vi->pos, vi->frac);
 }
 
 
@@ -371,7 +368,7 @@ void xmp_drv_setbend(struct xmp_context *ctx, int chn, int bend)
 }
 
 
-void xmp_drv_retrig(struct xmp_context *ctx, int chn)
+void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -381,7 +378,7 @@ void xmp_drv_retrig(struct xmp_context *ctx, int chn)
     if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
-    smix_voicepos(ctx, voc, 0, 0);
+    smix_voicepos(ctx, voc, pos, 0);
 }
 
 
@@ -398,25 +395,6 @@ void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
 		d->voice_array[voc].act = act;
 	}
     }
-}
-
-
-void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
-{
-    struct xmp_driver_context *d = &ctx->d;
-    struct xmp_mod_context *m = &ctx->m;
-    struct xmp_sample *xxs;
-    int voc;
-
-    if ((uint32)chn >= d->numchn || (uint32) (voc = d->ch2vo_array[chn]) >= d->maxvoc)
-	return;
-
-    xxs = &m->mod.xxs[d->voice_array[voc].smp];
-
-    if (pos > xxs->len)	/* Attempt to set offset beyond the end of sample */
-	return;
-
-    smix_voicepos(ctx, voc, pos, 0);
 }
 
 
