@@ -19,7 +19,7 @@
 
 /* Anticlick ramps */
 #define SLOW_ATTACK	64
-#define SLOW_RELEASE	16
+#define SLOW_RELEASE	8
 
 
 struct voice_info {
