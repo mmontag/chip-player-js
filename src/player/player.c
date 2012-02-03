@@ -612,15 +612,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     linear_bend += XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope;
 
-    /* From Takashi Iwai's awedrv FAQ:
-     *
-     * Q3.9: Many clicking noises can be heard in some midi files.
-     *    A: If this happens when panning status changes, it is due to the
-     *       restriction of Emu8000 chip. Try -P option with drvmidi. This
-     *       option suppress the realtime pan position change. Otherwise,
-     *       it may be a bug.
-     */
-
     finalpan = xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32;
     finalpan = xc->masterpan + (finalpan - 128) *
 			(128 - abs (xc->masterpan - 128)) / 128;
