@@ -292,7 +292,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Play transpose: %d", transp);
 
 	if (sliding == 6)
-		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
+		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
 
 	for (i = 0; i < 32; i++)
 		m->mod.xxi[i].sub[0].xpo = transp;

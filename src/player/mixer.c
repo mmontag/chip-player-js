@@ -126,7 +126,7 @@ void smix_resetvar(struct xmp_context *ctx)
     struct xmp_smixer_context *s = &ctx->s;
     struct xmp_options *o = &ctx->o;
 
-    s->ticksize = m->quirk & XMP_QRK_MEDBPM ?
+    s->ticksize = m->quirk & QUIRK_MEDBPM ?
 	o->freq * m->rrate * 33 / p->bpm / 12500 :
     	o->freq * m->rrate / p->bpm / 100;
 

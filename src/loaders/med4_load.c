@@ -288,7 +288,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->mod.tpo = read8(f);
 
 	if (~flags & 0x20)	/* sliding */
-		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
+		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
 
 	if (flags & 0x10)	/* dec/hex volumes */
 		hexvol = 1;	/* not implemented */

@@ -112,7 +112,7 @@ int med2_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO, "Sliding: %d", sliding);
 
 	if (sliding == 6)
-		m->quirk |= XMP_QRK_VSALL | XMP_QRK_PBALL;
+		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
 
 	PATTERN_INIT();
 

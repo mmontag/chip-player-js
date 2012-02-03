@@ -486,7 +486,7 @@ load_samples:
         m->mod.xxc[i].pan = 0x80;
     }
 
-    m->quirk |= XMP_QUIRK_FT2;
+    m->quirk |= QUIRKS_FT2;
 
     return 0;
 }

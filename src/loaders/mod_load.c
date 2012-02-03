@@ -526,7 +526,7 @@ skip_test:
 
     if (m->mod.chn > 4) {
 	m->mod.flg &= ~XXM_FLG_MODRNG;
-	m->quirk |= XMP_QUIRK_FT2;
+	m->quirk |= QUIRKS_FT2;
     }
 
     return 0;

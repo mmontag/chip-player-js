@@ -230,7 +230,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    m->mod.xxo[i]--;
 
     m->c4rate = C4_NTSC_RATE;
-    m->quirk |= XMP_QRK_FINEFX;
+    m->quirk |= QUIRK_FINEFX;
 
     PATTERN_INIT();
 
@@ -397,7 +397,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
     m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.smp);
 
     m->flags |= XMP_CTL_FILTER;
-    m->quirk |= XMP_QUIRK_ST3;
+    m->quirk |= QUIRKS_ST3;
 
     return 0;
 }

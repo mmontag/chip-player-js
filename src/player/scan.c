@@ -55,7 +55,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
     if (m->mod.len == 0)
 	return 0;
 
-    medbpm = m->quirk & XMP_QRK_MEDBPM;
+    medbpm = m->quirk & QUIRK_MEDBPM;
 
     tab_cnt = calloc (sizeof (char *), m->mod.len);
     for (ord = m->mod.len; ord--;)
@@ -191,7 +191,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 		    parm = (f1 == FX_G_VOLSLIDE) ? p1 : p2;
 		    if (parm)
 			gvol_slide = MSN(parm) - LSN(parm);
-		    gvl += gvol_slide * (tempo - !(m->quirk & XMP_QRK_VSALL));
+		    gvl += gvol_slide * (tempo - !(m->quirk & QUIRK_VSALL));
 		}
 
 		if ((f1 == FX_TEMPO && p1) || (f2 == FX_TEMPO && p2)) {
@@ -280,7 +280,7 @@ int _xmp_scan_module(struct xmp_context *ctx)
 				    loop_chn = chn + 1;
 				else {
 				    loop_flg--;
-				    if (m->quirk & XMP_QRK_S3MLOOP)
+				    if (m->quirk & QUIRK_S3MLOOP)
 					loop_row[chn] = row + 1;
 				}
 			    } else {

@@ -291,7 +291,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 	    &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
     }
 
-    m->quirk |= XMP_QRK_VSALL | XMP_QUIRK_ST3;
+    m->quirk |= QUIRK_VSALL | QUIRKS_ST3;
 
     return 0;
 }

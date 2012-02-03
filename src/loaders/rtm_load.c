@@ -371,7 +371,7 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	m->mod.smp = smpnum;
 	m->mod.xxs = realloc(m->mod.xxs, sizeof (struct xmp_sample) * m->mod.smp);
 
-	m->quirk |= XMP_QUIRK_FT2;
+	m->quirk |= QUIRKS_FT2;
 
 	return 0;
 }

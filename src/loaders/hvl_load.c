@@ -526,7 +526,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 
 /*	m->quirk |= XMP_CTL_VBLANK;*/
-/*	m->quirk |= XMP_QRK_UNISLD;*/
+/*	m->quirk |= QUIRK_UNISLD;*/
 	return 0;
 }
 

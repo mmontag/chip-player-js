@@ -135,39 +135,39 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 
 
 	/* Format quirks */
-#define XMP_QRK_MEDBPM	(1 << 0)	/* Enable MED BPM timing */
-#define XMP_QRK_S3MLOOP	(1 << 1)	/* S3M loop mode */
-#define XMP_QRK_ENVFADE	(1 << 2)	/* Fade at end of envelope */
-#define XMP_QRK_IGNWINS	(1 << 4)	/* Ignore invalid instrument */
-#define XMP_QRK_NCWINS	(1 << 5)	/* Don't cut invalid instrument */
-#define XMP_QRK_INSPRI	(1 << 6)	/* Reset note for every new != ins */
-#define XMP_QRK_CUTNWI	(1 << 7)	/* Cut only when note + invalid ins */
-#define XMP_QRK_OINSMOD	(1 << 8)	/* XM old instrument mode */
-#define XMP_QRK_OFSRST	(1 << 9)	/* Always reset sample offset */
-#define XMP_QRK_FX9BUG	(1 << 10)	/* Protracker effect 9 bug emulation */
-#define XMP_QRK_ST3GVOL	(1 << 11)	/* ST 3 weird global volume effect */
-#define XMP_QRK_FINEFX	(1 << 12)	/* Enable 0xf/0xe for fine effects */
-#define XMP_QRK_VSALL	(1 << 13)	/* Volume slides in all frames */
-#define XMP_QRK_RTGINS	(1 << 14)	/* Retrig instrument on toneporta */
-#define XMP_QRK_PBALL	(1 << 15)	/* Pitch bending in all frames */
-#define XMP_QRK_PERPAT	(1 << 16)	/* Cancel persistent fx at pat start */
-#define XMP_QRK_VOLPDN	(1 << 17)	/* Set priority to volume slide down */
-#define XMP_QRK_UNISLD	(1 << 18)	/* Unified pitch slide/portamento */
-#define XMP_QRK_SAVEINS	(1 << 19)	/* Always save instrument number */
-#define XMP_QRK_ITVPOR	(1 << 20)	/* Disable fine bends in IT vol fx */
+#define QUIRK_MEDBPM	(1 << 0)	/* Enable MED BPM timing */
+#define QUIRK_S3MLOOP	(1 << 1)	/* S3M loop mode */
+#define QUIRK_ENVFADE	(1 << 2)	/* Fade at end of envelope */
+#define QUIRK_IGNWINS	(1 << 4)	/* Ignore invalid instrument */
+#define QUIRK_NCWINS	(1 << 5)	/* Don't cut invalid instrument */
+#define QUIRK_INSPRI	(1 << 6)	/* Reset note for every new != ins */
+#define QUIRK_CUTNWI	(1 << 7)	/* Cut only when note + invalid ins */
+#define QUIRK_OINSMOD	(1 << 8)	/* XM old instrument mode */
+#define QUIRK_OFSRST	(1 << 9)	/* Always reset sample offset */
+#define QUIRK_FX9BUG	(1 << 10)	/* Protracker effect 9 bug emulation */
+#define QUIRK_ST3GVOL	(1 << 11)	/* ST 3 weird global volume effect */
+#define QUIRK_FINEFX	(1 << 12)	/* Enable 0xf/0xe for fine effects */
+#define QUIRK_VSALL	(1 << 13)	/* Volume slides in all frames */
+#define QUIRK_RTGINS	(1 << 14)	/* Retrig instrument on toneporta */
+#define QUIRK_PBALL	(1 << 15)	/* Pitch bending in all frames */
+#define QUIRK_PERPAT	(1 << 16)	/* Cancel persistent fx at pat start */
+#define QUIRK_VOLPDN	(1 << 17)	/* Set priority to volume slide down */
+#define QUIRK_UNISLD	(1 << 18)	/* Unified pitch slide/portamento */
+#define QUIRK_SAVEINS	(1 << 19)	/* Always save instrument number */
+#define QUIRK_ITVPOR	(1 << 20)	/* Disable fine bends in IT vol fx */
 
 
 /* Format quirks */
-#define XMP_QUIRK_ST3		(XMP_QRK_NCWINS | XMP_QRK_IGNWINS | \
-				 XMP_QRK_S3MLOOP | XMP_QRK_RTGINS | \
-				 XMP_QRK_VOLPDN)
-#define XMP_QUIRK_FT2		(XMP_QRK_OINSMOD | XMP_QRK_CUTNWI | \
-				 XMP_QRK_OFSRST)
-#define XMP_QUIRK_IT		(XMP_QRK_NCWINS | XMP_QRK_INSPRI | \
-				 XMP_QRK_ENVFADE | XMP_QRK_S3MLOOP | \
-				 XMP_QRK_OFSRST | \
-				 XMP_QRK_VOLPDN | XMP_QRK_RTGINS | \
-				 XMP_QRK_SAVEINS | XMP_QRK_ITVPOR)
+#define QUIRKS_ST3		(QUIRK_NCWINS | QUIRK_IGNWINS | \
+				 QUIRK_S3MLOOP | QUIRK_RTGINS | \
+				 QUIRK_VOLPDN)
+#define QUIRKS_FT2		(QUIRK_OINSMOD | QUIRK_CUTNWI | \
+				 QUIRK_OFSRST)
+#define QUIRKS_IT		(QUIRK_NCWINS | QUIRK_INSPRI | \
+				 QUIRK_ENVFADE | QUIRK_S3MLOOP | \
+				 QUIRK_OFSRST | \
+				 QUIRK_VOLPDN | QUIRK_RTGINS | \
+				 QUIRK_SAVEINS | QUIRK_ITVPOR)
 
 /* DSP effects */
 #define XMP_FX_CUTOFF		0x02
@@ -204,7 +204,7 @@ struct xmp_mod_context {
 	int volume;			/* Global volume */
 	int *vol_table;			/* Volume translation table */
 	int flags;			/* Copy from options */
-	int quirk;			/* Copy from options */
+	int quirk;			/* player quirks */
 	struct xmp_ord_info xxo_info[XMP_MAXORD];
 
 	uint8 **med_vol_table;		/* MED volume sequence table */

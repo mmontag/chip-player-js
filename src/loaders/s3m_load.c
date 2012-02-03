@@ -255,7 +255,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     if (sfh.flags & S3M_AMIGA_RANGE)
 	m->mod.flg |= XXM_FLG_MODRNG;
     if (sfh.flags & S3M_ST300_VOLS)
-	m->quirk |= XMP_QRK_VSALL;
+	m->quirk |= QUIRK_VSALL;
     /* m->volbase = 4096 / sfh.gv; */
     m->mod.tpo = sfh.is;
     m->mod.bpm = sfh.it;
@@ -295,16 +295,16 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     }
 
     m->c4rate = C4_NTSC_RATE;
-    m->quirk |= XMP_QRK_FINEFX;
+    m->quirk |= QUIRK_FINEFX;
 
     if (sfh.version == 0x1300)
-	m->quirk |= XMP_QRK_VSALL;
+	m->quirk |= QUIRK_VSALL;
 
     switch (sfh.version >> 12) {
     case 1:
 	snprintf(tracker_name, 40, "Scream Tracker %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-	m->quirk |= XMP_QRK_ST3GVOL;
+	m->quirk |= QUIRK_ST3GVOL;
 	break;
     case 2:
 	snprintf(tracker_name, 40, "Imago Orpheus %d.%02x",
@@ -517,7 +517,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     free(pp_ins);
 
     m->synth = &synth_adlib;
-    m->quirk |= XMP_QUIRK_ST3;
+    m->quirk |= QUIRKS_ST3;
 
     return 0;
 }

@@ -464,7 +464,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 			XMP_SMP_UNS, &m->mod.xxs[m->mod.xxi[i].sub[0].sid], NULL);
 	}
 
-	m->quirk |= XMP_QRK_FINEFX;
+	m->quirk |= QUIRK_FINEFX;
 
 	return 0;
 }

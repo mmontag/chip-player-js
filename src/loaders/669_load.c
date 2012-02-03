@@ -218,7 +218,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < m->mod.chn; i++)
 	m->mod.xxc[i].pan = (i % 2) * 0xff;
 
-    m->quirk |= XMP_QRK_PERPAT;	    /* Cancel persistent fx at each new pat */
+    m->quirk |= QUIRK_PERPAT;	    /* Cancel persistent fx at each new pat */
 
     return 0;
 }

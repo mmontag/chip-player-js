@@ -923,7 +923,7 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
     if (f_envnum)
 	free(f_env);
 
-    m->quirk |= XMP_QRK_FINEFX;
+    m->quirk |= QUIRK_FINEFX;
 
     return 0;
 }

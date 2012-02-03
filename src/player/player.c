@@ -189,7 +189,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
     }
 
     /* Emulate Impulse Tracker "always read instrument" bug */
-    if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(XMP_QRK_SAVEINS)) {
+    if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(QUIRK_SAVEINS)) {
 	e->ins = xc->delayed_ins;
 	xc->delayed_ins = 0;
     }
@@ -212,7 +212,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	 * has sticky note issues around time 0:51. Tested it with FT2 and
 	 * a new note with invalid instrument should cut current note
 	 */
-	/*if (HAS_QUIRK(XMP_QRK_OINSMOD)) {
+	/*if (HAS_QUIRK(QUIRK_OINSMOD)) {
 	    if (TEST(IS_READY)) {
 		xins = xc->insdef;
 		RESET(IS_READY);
@@ -220,7 +220,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	} else */
 
 	if ((uint32)ins < m->mod.ins && m->mod.xxi[ins].nsm) {	/* valid ins */
-	    if (!key && HAS_QUIRK(XMP_QRK_INSPRI)) {
+	    if (!key && HAS_QUIRK(QUIRK_INSPRI)) {
 		if (xins == ins)
 		    flg = NEW_INS | RESET_VOL;
 		else 
@@ -228,10 +228,10 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	    }
 	    xins = ins;
 	} else {					/* invalid ins */
-	    if (!HAS_QUIRK(XMP_QRK_NCWINS))
+	    if (!HAS_QUIRK(QUIRK_NCWINS))
 		xmp_drv_resetchannel(ctx, chn);
 
-	    if (HAS_QUIRK(XMP_QRK_IGNWINS)) {
+	    if (HAS_QUIRK(QUIRK_IGNWINS)) {
 		ins = -1;
 		flg = 0;
 	    }
@@ -258,7 +258,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 		|| e->fxt == FX_TONE_VSLIDE || e->f2t == FX_TONE_VSLIDE) {
 	    /* Fix portamento in 7spirits.s3m and mod.Biomechanoid */
-	    if (HAS_QUIRK(XMP_QRK_RTGINS) && e->ins && xc->ins != ins) {
+	    if (HAS_QUIRK(QUIRK_RTGINS) && e->ins && xc->ins != ins) {
 		flg |= NEW_INS;
 		xins = ins;
 	    } else {
@@ -311,7 +311,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
 	} else {
-	    if (!HAS_QUIRK(XMP_QRK_CUTNWI))
+	    if (!HAS_QUIRK(QUIRK_CUTNWI))
 		xmp_drv_resetchannel(ctx, chn);
 	}
     }
@@ -352,7 +352,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	SET(NEW_VOL);
     }
 
-    if (TEST(NEW_INS) || HAS_QUIRK(XMP_QRK_OFSRST))
+    if (TEST(NEW_INS) || HAS_QUIRK(QUIRK_OFSRST))
 	xc->offset_val = 0;
 
     /* Secondary effect is processed _first_ and can be overriden
@@ -373,7 +373,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 
 	if (cont_sample == 0) {
 	    xmp_drv_voicepos(ctx, chn, xc->offset_val);
-	    if (TEST(OFFSET) && HAS_QUIRK(XMP_QRK_FX9BUG))
+	    if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG))
 		xc->offset_val <<= 1;
 	}
 	RESET(OFFSET);
@@ -414,7 +414,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	SET(NEW_VOL);
     }
 
-    if (HAS_QUIRK(XMP_QRK_ST3GVOL) && TEST(NEW_VOL))
+    if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL))
 	xc->volume = xc->volume * m->volume / m->volbase;
 
     return 0;
@@ -535,7 +535,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     case 0:
 	break;
     default:
-	if (HAS_QUIRK(XMP_QRK_ENVFADE)) {
+	if (HAS_QUIRK(QUIRK_ENVFADE)) {
 		SET(FADEOUT);
 	}
     }
@@ -574,7 +574,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     finalvol = (finalvol * xc->fadeout) >> 5;	/* 16 bit output */
 
     finalvol = (uint32) (vol_envelope *
-	(HAS_QUIRK(XMP_QRK_ST3GVOL) ? 0x40 : m->volume) *
+	(HAS_QUIRK(QUIRK_ST3GVOL) ? 0x40 : m->volume) *
 	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 18;
 
     /* Volume translation table (for PTM, ARCH, COCO) */
@@ -652,7 +652,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* Volume slides happen in all frames but the first, except when the
      * "volume slide on all frames" flag is set.
      */
-    if (t % p->tempo || HAS_QUIRK(XMP_QRK_VSALL)) {
+    if (t % p->tempo || HAS_QUIRK(QUIRK_VSALL)) {
 	if (!chn && p->gvol_flag) {
 	    m->volume += p->gvol_slide;
 	    if (m->volume < 0)
@@ -684,7 +684,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* "Fine" sliding effects are processed in the first frame of each row,
      * and standard slides in the rest of the frames.
      */
-    if (t % p->tempo || HAS_QUIRK(XMP_QRK_PBALL)) {
+    if (t % p->tempo || HAS_QUIRK(QUIRK_PBALL)) {
 	/* Do pan and pitch sliding */
 	if (TEST(PAN_SLIDE)) {
 	    xc->pan += xc->p_val;
@@ -933,7 +933,7 @@ int xmp_player_frame(xmp_context opaque)
 	if (o->time && (o->time < f->playing_time))	/* expired time */
 		return -1;
 
-	if (HAS_QUIRK(XMP_QRK_MEDBPM)) {
+	if (HAS_QUIRK(QUIRK_MEDBPM)) {
 		f->playing_time += m->rrate * 33 / (100 * p->bpm * 125);
 		p->time += m->rrate * 33 / (100 * p->bpm * 125);
 	} else {
@@ -1006,7 +1006,7 @@ next_order:
 			p->pos = f->ord;
 
 			/* Reset persistent effects at new pattern */
-			if (HAS_QUIRK(XMP_QRK_PERPAT)) {
+			if (HAS_QUIRK(QUIRK_PERPAT)) {
 				int chn;
 				for (chn = 0; chn < m->mod.chn; chn++)
 					p->xc_data[chn].per_flags = 0;
