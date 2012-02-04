@@ -2,16 +2,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pulse/simple.h>
-#include <pulse/error.h>
-
 #include "xmp.h"
+#include "sound.h"
 
 static void display_data(struct xmp_module_info *mi)
 {
 	printf("%3d/%3d %3d/%3d\r",
-		mi->order, mi->mod->len,
-		mi->row, mi->mod->xxp[mi->pattern]->rows);
+	       mi->order, mi->mod->len,
+	       mi->row, mi->mod->xxp[mi->pattern]->rows);
 
 	fflush(stdout);
 }
@@ -22,25 +20,9 @@ int main(int argc, char **argv)
 	static struct xmp_module_info mi[2];
 	int current, prev;
 	int i;
-	pa_simple *s;
-	pa_sample_spec ss;
-	int error;
 
-	ss.format = PA_SAMPLE_S16NE;
-	ss.channels = 2;
-	ss.rate = 44100;
-
-	s = pa_simple_new(NULL,	/* Use the default server */
-		  "test",	/* Our application's name */
-		  PA_STREAM_PLAYBACK, NULL,	/* Use the default device */
-		  "Music",	/* Description of our stream */
-		  &ss,		/* Our sample format */
-		  NULL,		/* Use default channel map */
-		  NULL,		/* Use default buffering attributes */
-		  &error);	/* Ignore error code */
-
-	if (s == 0) {
-		fprintf(stderr, "pulseaudio error: %s\n", pa_strerror(error));
+	if (sound_init(44100, 2) < 0) {
+		fprintf(stderr, "%s: can't initialize sound\n", argv[0]);
 		exit(1);
 	}
 
@@ -63,17 +45,17 @@ int main(int argc, char **argv)
 			mi[0].order = -1;
 			mi[0].row = -1;
 			current = 0;
-	
+
 			/* Play module */
 
 			while (xmp_player_frame(ctx) == 0) {
 				prev = current;
 				current ^= 1;
-	
+
 				xmp_player_get_info(ctx, &mi[current]);
-				pa_simple_write(s, mi[current].buffer,
-						mi[current].size, &error);
-	
+				sound_play(mi[current].buffer,
+					   mi[current].size);
+
 				if (mi[current].row != mi[prev].row) {
 					display_data(&mi[current]);
 				}
@@ -86,9 +68,7 @@ int main(int argc, char **argv)
 	}
 
 	xmp_free_context(ctx);
-
-	pa_simple_drain(s, &error);
-	pa_simple_free(s);
+	sound_deinit();
 
 	return 0;
 }
