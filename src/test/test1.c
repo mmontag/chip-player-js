@@ -26,8 +26,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	xmp_init();
 	ctx = xmp_create_context();
-	xmp_init(ctx, argc, argv);
 
 	for (i = 1; i < argc; i++) {
 		if (xmp_load_module(ctx, argv[i]) < 0) {
@@ -68,6 +68,7 @@ int main(int argc, char **argv)
 	}
 
 	xmp_free_context(ctx);
+	xmp_deinit();
 	sound_deinit();
 
 	return 0;

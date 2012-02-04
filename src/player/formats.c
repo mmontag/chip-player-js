@@ -50,7 +50,7 @@ static void register_loader(struct xmp_loader_info *l)
 	register_loader(&x##_loader); \
 } while (0)
 
-void xmp_init_formats(xmp_context ctx)
+void xmp_init_formats()
 {
 	if (!list_empty(&loader_list))
 		return;
@@ -119,7 +119,7 @@ void xmp_init_formats(xmp_context ctx)
 	pw_init();
 }
 
-void xmp_deinit_formats(xmp_context ctx)
+void xmp_deinit_formats()
 {
 	struct xmp_fmt_info *f = __fmt_head, *g;
 

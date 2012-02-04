@@ -59,14 +59,14 @@ struct xmp_options *xmp_get_options(xmp_context ctx)
 	return &((struct xmp_context *)ctx)->o;
 }
 
-void xmp_init(xmp_context ctx, int argc, char **argv)
+void xmp_init()
 {
-	xmp_init_formats(ctx);
+	xmp_init_formats();
 }
 
-void xmp_deinit(xmp_context ctx)
+void xmp_deinit()
 {
-	xmp_deinit_formats(ctx);
+	xmp_deinit_formats();
 }
 
 void xmp_set_driver_parameter(struct xmp_options *o, char *s)

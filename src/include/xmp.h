@@ -255,8 +255,8 @@ void xmp_free_context(xmp_context);
 void xmp_unlink_tempfiles(void);
 struct xmp_options *xmp_get_options(xmp_context);
 
-void xmp_init(xmp_context, int, char **);
-void xmp_deinit(xmp_context);
+void xmp_init(void);
+void xmp_deinit(void);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);
 struct xmp_fmt_info *xmp_get_fmt_info(struct xmp_fmt_info **);
@@ -268,9 +268,6 @@ void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);
 void xmp_release_module(xmp_context);
 int xmp_seek_time(xmp_context, int);
-void xmp_init_formats(xmp_context);
-void xmp_deinit_formats(xmp_context);
-int xmp_enable_format(char *, int);
 
 #ifdef __cplusplus
 }
