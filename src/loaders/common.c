@@ -312,6 +312,12 @@ int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
 	if (flags & XMP_SMP_VIDC)
 		xmp_cvt_vidc(xxs->len, xxs->data);
 
+	/* Check for full loop samples */
+	if (flags & XMP_SMP_FULLREP) {
+	    if (xxs->lps == 0 && xxs->len > xxs->lpe)
+		xxs->flg |= XMP_SAMPLE_LOOP_FULL;
+	}
+
 	/* Duplicate last sample -- prevent click in bidir loops */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		xxs->data[bytelen] = xxs->data[bytelen - 2];

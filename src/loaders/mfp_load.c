@@ -123,12 +123,11 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].rls = 0xfff;
 
-               	_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d %c",
+               	_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
                        	i, mod->xxs[i].len, mod->xxs[i].lps,
                        	mod->xxs[i].lpe,
 			loop_size > 1 ? 'L' : ' ',
-                       	mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4,
-                       	mod->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
+                       	mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
 	}
 
 	mod->len = mod->pat = read8(f);
@@ -211,7 +210,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		load_patch(ctx, s, mod->xxi[i].sub[0].sid, 0,
+		load_patch(ctx, s, mod->xxi[i].sub[0].sid, XMP_SMP_FULLREP,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

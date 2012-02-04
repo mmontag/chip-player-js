@@ -172,10 +172,6 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 		mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
 		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
 		mod->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-		if (mod->xxs[i].flg & XMP_SAMPLE_LOOP) {
-			if (mod->xxs[i].len == 0 && mod->xxs[i].len > mod->xxs[i].lpe)
-				mod->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
-		}
 		mod->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
 		mod->xxi[i].sub[0].vol = mh.ins[i].volume;
 		mod->xxi[i].sub[0].pan = 0x80;
@@ -185,14 +181,13 @@ static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
-		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
+		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len, mod->xxs[i].lps,
 				mod->xxs[i].lpe,
 				mh.ins[i].loop_size > 1 ? 'L' : ' ',
 				mod->xxi[i].sub[0].vol,
-				mod->xxi[i].sub[0].fin >> 4,
-				mod->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
+				mod->xxi[i].sub[0].fin >> 4);
 	}
 
 	PATTERN_INIT();

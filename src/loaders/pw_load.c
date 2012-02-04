@@ -156,19 +156,14 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].rls = 0xfff;
 
-		if (mod->xxs[i].flg & XMP_SAMPLE_LOOP) {
-			if (mod->xxs[i].lps == 0 && mod->xxs[i].len > mod->xxs[i].lpe)
-				mod->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
-		}
-
 		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
-		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
+		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 			     i, mod->xxi[i].name, mod->xxs[i].len,
 			     mod->xxs[i].lps, mod->xxs[i].lpe,
 			     mh.ins[i].loop_size > 1 ? 'L' : ' ',
-			     mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4,
-			     mod->xxs[i].flg & XMP_SAMPLE_LOOP_FULL ? '!' : ' ');
+			     mod->xxi[i].sub[0].vol,
+			     mod->xxi[i].sub[0].fin >> 4);
 	}
 
 	PATTERN_INIT();

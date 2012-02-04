@@ -17,6 +17,22 @@
 #include "convert.h"
 #include "loader.h"
 
+/* Sample flags */
+#define XMP_SMP_DIFF		0x0001	/* Differential */
+#define XMP_SMP_UNS		0x0002	/* Unsigned */
+#define XMP_SMP_8BDIFF		0x0004
+#define XMP_SMP_7BIT		0x0008
+#define XMP_SMP_NOLOAD		0x0010	/* Get from buffer, don't load */
+#define XMP_SMP_BIGEND		0x0040	/* Big-endian */
+#define XMP_SMP_VIDC		0x0080	/* Archimedes VIDC logarithmic */
+#define XMP_SMP_STEREO		0x0100	/* Interleaved stereo sample */
+#define XMP_SMP_FULLREP		0x0200	/* Play full sample before looping */
+#define XMP_SMP_ADLIB		0x1000	/* Adlib synth instrument */
+#define XMP_SMP_SPECTRUM	0x2000	/* Spectrum synth instrument */
+
+#define XMP_SMP_SYNTH		(XMP_SMP_ADLIB | XMP_SMP_SPECTRUM)
+
+
 char *copy_adjust(char *, uint8 *, int);
 int test_name(uint8 *, int);
 void read_title(FILE *, char *, int);

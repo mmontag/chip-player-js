@@ -496,13 +496,12 @@ skip_test:
     _D(_D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
+	int flags;
+
 	if (!mod->xxs[i].len)
 	    continue;
 
-	if (mod->xxs[i].flg & XMP_SAMPLE_LOOP) {
-	    if (ptkloop && mod->xxs[i].lps == 0 && mod->xxs[i].len > mod->xxs[i].lpe)
-		mod->xxs[i].flg |= XMP_SAMPLE_LOOP_FULL;
-	}
+	flags = ptkloop ? XMP_SMP_FULLREP : 0;
 
 	if (ptsong) {
 	    FILE *s;
@@ -510,11 +509,11 @@ skip_test:
 	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, mod->xxi[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        load_patch(ctx, s, mod->xxi[i].sub[0].sid, 0,
+	        load_patch(ctx, s, mod->xxi[i].sub[0].sid, flags,
 		    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	    }
 	} else {
-	    load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	    load_patch(ctx, f, mod->xxi[i].sub[0].sid, flags,
 	        &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
     }
