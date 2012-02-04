@@ -204,7 +204,7 @@ struct xmp_mod_context {
 	int *vol_table;			/* Volume translation table */
 	int flags;			/* Copy from options */
 	int quirk;			/* player quirks */
-	struct xmp_ord_info xxo_info[XMP_MAXORD];
+	struct xmp_ord_info xxo_info[XMP_MAX_MOD_LENGTH];
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
 	uint8 **med_wav_table;		/* MED waveform sequence table */
@@ -258,7 +258,7 @@ struct xmp_driver_context {
 	int chnvoc;			/* Number of voices per channel */
 	int agevoc;			/* Voice age control (?) */
 
-	int cmute_array[XMP_MAXCH];
+	int cmute_array[XMP_MAX_CHANNELS];
 
 	int *ch2vo_count;
 	int *ch2vo_array;

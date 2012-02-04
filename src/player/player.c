@@ -300,7 +300,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
     if ((uint32)key < XMP_KEY_OFF && key > 0) {
 	xc->key = --key;
 
-	if (flg & IS_VALID && key < XXM_KEY_MAX) {
+	if (flg & IS_VALID && key < XMP_MAX_KEYS) {
 	    if (m->mod.xxi[ins].map[key].ins != 0xff) {
 		int mapped = m->mod.xxi[ins].map[key].ins;
 		int transp = m->mod.xxi[ins].map[key].xpo;

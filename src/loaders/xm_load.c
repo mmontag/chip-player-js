@@ -355,10 +355,10 @@ load_instruments:
 		mod->xxi[i].pei.lpe = xi.p_end;
 		mod->xxi[i].pei.flg = xi.p_type;
 
-		if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt > XMP_MAXENV)
+		if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt > XMP_MAX_ENV_POINTS)
 		    mod->xxi[i].aei.flg &= ~XXM_ENV_ON;
 
-		if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt > XMP_MAXENV)
+		if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt > XMP_MAX_ENV_POINTS)
 		    mod->xxi[i].pei.flg &= ~XXM_ENV_ON;
 
 		memcpy(mod->xxi[i].aei.data, xi.v_env, mod->xxi[i].aei.npt * 4);

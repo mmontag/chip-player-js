@@ -68,10 +68,10 @@ struct xmp_fmt_info {
 	char *tracker;
 };
 
-#define XXM_KEY_MAX 108
-#define XMP_MAXENV	32		/* max envelope points */
-#define XMP_MAXORD	256		/* max number of patterns in module */
-#define XMP_MAXCH	64		/* max channels */
+#define XMP_MAX_KEYS		108
+#define XMP_MAX_ENV_POINTS	32	/* max envelope points */
+#define XMP_MAX_MOD_LENGTH	256	/* max number of patterns in module */
+#define XMP_MAX_CHANNELS	64
 
 struct xmp_channel {
 	int pan;
@@ -116,7 +116,7 @@ struct xmp_envelope {
 	int sue;		/* Sustain end point */
 	int lps;		/* Loop start point */
 	int lpe;		/* Loop end point */
-	short data[XMP_MAXENV * 2];
+	short data[XMP_MAX_ENV_POINTS * 2];
 };
 
 struct xmp_subinstrument {
@@ -164,7 +164,7 @@ struct xmp_instrument {
 	struct {
 		unsigned char ins;	/* Instrument number for each key */
 		signed char xpo;	/* Instrument transpose for each key */
-	} map[XXM_KEY_MAX];
+	} map[XMP_MAX_KEYS];
 
 	struct xmp_subinstrument *sub;
 };
@@ -210,7 +210,7 @@ struct xmp_module {
 	struct xmp_instrument *xxi;	/* Instruments */
 	struct xmp_sample *xxs;		/* Samples */
 	struct xmp_channel xxc[64];	/* Channel info */
-	unsigned char xxo[XMP_MAXORD];		/* Orders */
+	unsigned char xxo[XMP_MAX_MOD_LENGTH];		/* Orders */
 };
 
 /*
@@ -238,7 +238,7 @@ struct xmp_module_info {
 		unsigned char sample;
 		unsigned char volume;
 		unsigned char pan;
-	} channel_info[XMP_MAXCH];
+	} channel_info[XMP_MAX_CHANNELS];
 
 	struct xmp_module *mod;
 };

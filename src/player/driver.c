@@ -195,7 +195,7 @@ void xmp_drv_mute(struct xmp_context *ctx, int chn, int status)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    if ((uint32)chn >= XMP_MAXCH)
+    if ((uint32)chn >= XMP_MAX_CHANNELS)
 	return;
 
     if (status < 0)
@@ -215,7 +215,7 @@ void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
     if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
 	return;
 
-    if (d->voice_array[voc].root < XMP_MAXCH && d->cmute_array[d->voice_array[voc].root])
+    if (d->voice_array[voc].root < XMP_MAX_CHANNELS && d->cmute_array[d->voice_array[voc].root])
 	vol = 0;
 
     xmp_smix_setvol(ctx, voc, vol);

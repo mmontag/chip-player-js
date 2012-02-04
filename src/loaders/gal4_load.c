@@ -237,10 +237,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	mod->xxi[i].aei.lpe = LSN(val);
 	mod->xxi[i].pei.lpe = MSN(val);
 
-	if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt >= XMP_MAXENV)
+	if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt >= XMP_MAX_ENV_POINTS)
 		mod->xxi[i].aei.flg &= ~XXM_ENV_ON;
 
-	if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt >= XMP_MAXENV)
+	if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt >= XMP_MAX_ENV_POINTS)
 		mod->xxi[i].pei.flg &= ~XXM_ENV_ON;
 
 	fread(buf, 1, 30, f);		/* volume envelope points */;

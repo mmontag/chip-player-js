@@ -262,7 +262,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     struct it_envelope env;
     uint8 b, mask[L_CHANNELS];
     int max_ch, flag;
-    int inst_map[120], inst_rmap[XXM_KEY_MAX];
+    int inst_map[120], inst_rmap[XMP_MAX_KEYS];
     char tracker_name[40];
 
     LOAD_INIT();
@@ -556,10 +556,10 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 
 	    /* See how many different instruments we have */
-	    for (j = 0; j < XXM_KEY_MAX; j++)
+	    for (j = 0; j < XMP_MAX_KEYS; j++)
 		inst_map[j] = -1;
 
-	    for (k = j = 0; j < XXM_KEY_MAX; j++) {
+	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
 		c = i2h.keys[25 + j * 2] - 1;
 		if (c < 0) {
 		    mod->xxi[i].map[j].ins = 0xff;	/* No sample */
@@ -660,10 +660,10 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    
 	    /* See how many different instruments we have */
-	    for (j = 0; j < XXM_KEY_MAX; j++)
+	    for (j = 0; j < XMP_MAX_KEYS; j++)
 		inst_map[j] = -1;
 
-	    for (k = j = 0; j < XXM_KEY_MAX; j++) {
+	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
 		c = i1h.keys[25 + j * 2] - 1;
 		if (c < 0) {
 		    mod->xxi[i].map[j].ins = 0xff;	/* No sample */
