@@ -35,7 +35,6 @@ extern "C" {
 #define xmp_mod_stop(p)		xmp_player_ctl((p), XMP_MOD_STOP, 0)
 #define xmp_stop_module(p)	xmp_player_ctl((p), XMP_MOD_STOP, 0)
 #define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
-#define xmp_restart_module(p)	xmp_player_ctl((p), XMP_MOD_RESTART, 0)
 #define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_GVOL_INC, 0)
 #define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_GVOL_DEC, 0)
 
