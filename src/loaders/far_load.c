@@ -118,8 +118,7 @@ static int far_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->trk = mod->chn * mod->pat;
 
     strncpy(mod->name, (char *)ffh.name, 40);
-    set_type(m, "FAR (Farandole Composer %d.%d)",
-				MSN(ffh.version), LSN(ffh.version));
+    set_type(m, "Farandole Composer %d.%d", MSN(ffh.version), LSN(ffh.version));
 
     MODULE_INFO();
 

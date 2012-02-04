@@ -66,7 +66,7 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	read32b(f);			/* NO 0x00 0x00 */
 
-	strcpy(mod->type, "NO (old Liquid Tracker)");
+	strcpy(mod->type, "Liquid Tracker");
 
 	nsize = read8(f);
 	for (i = 0; i < nsize; i++) {

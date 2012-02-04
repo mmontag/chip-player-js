@@ -226,7 +226,7 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 
 	fread(mod->xxo, 1, 128, f);
 
-	strcpy(mod->type, "MUSX (Archimedes Tracker)");
+	strcpy(mod->type, "Archimedes Tracker");
 
 	MODULE_INFO();
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);

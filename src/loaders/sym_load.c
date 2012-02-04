@@ -244,7 +244,7 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 	fseek(f, 8, SEEK_CUR);			/* BASSTRAK */
 
 	ver = read8(f);
-	set_type(m, "BASSTRAK v%d (Digital Symphony)", ver);
+	set_type(m, "Digital Symphony BASSTRAK v%d", ver);
 
 	mod->chn = read8(f);
 	mod->len = mod->pat = read16l(f);

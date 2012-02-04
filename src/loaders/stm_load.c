@@ -120,10 +120,10 @@ static int stm_load(struct xmp_context *ctx, FILE *f, const int start)
     copy_adjust(mod->name, sfh.name, 20);
 
     if (bmod2stm) {
-	snprintf(mod->type, XMP_NAMESIZE, "!Scream! (BMOD2STM)");
+	snprintf(mod->type, XMP_NAMESIZE, "BMOD2STM STM");
     } else {
-	snprintf(mod->type, XMP_NAMESIZE, "!Scream! "
-			"(Scream Tracker %d.%02d)", sfh.vermaj, sfh.vermin);
+	snprintf(mod->type, XMP_NAMESIZE, "Scream Tracker %d.%02d STM",
+						sfh.vermaj, sfh.vermin);
     }
 
     MODULE_INFO();

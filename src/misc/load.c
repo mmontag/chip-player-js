@@ -30,7 +30,6 @@
 
 #include "list.h"
 
-int pw_enable(char *, int);
 
 extern struct list_head loader_list;
 
@@ -408,13 +407,11 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
-	if (li->enable) {
-	    fseek(f, 0, SEEK_SET);
-	    if (li->test(f, n, 0) == 0) {
-	        fclose(f);
-		unlink_tempfiles();
-	        return 0;
-	    }
+	fseek(f, 0, SEEK_SET);
+	 if (li->test(f, n, 0) == 0) {
+	    fclose(f);
+	    unlink_tempfiles();
+	    return 0;
 	}
     }
 
@@ -506,11 +503,6 @@ int xmp_load_module(xmp_context opaque, char *s)
     list_for_each(head, &loader_list) {
 	li = list_entry(head, struct xmp_loader_info, list);
 
-        _D(_D_INFO "check exclusion");
-	if (li->enable == 0)
-	    continue;
-        _D(_D_INFO "not excluded");
-	
 	fseek(f, 0, SEEK_SET);
    	if ((i = li->test(f, NULL, 0)) == 0) {
 	    fseek(f, 0, SEEK_SET);
@@ -555,23 +547,6 @@ err:
     fclose(f);
     unlink_tempfiles();
     return -1;
-}
-
-
-int xmp_enable_format(char *id, int enable)
-{
-    struct list_head *head;
-    struct xmp_loader_info *li;
-
-    list_for_each(head, &loader_list) {
-	li = list_entry(head, struct xmp_loader_info, list);
-	if (!strcasecmp(id, li->id)) {
-	    li->enable = enable;
-	    return 0;
-        }
-    }
-
-    return pw_enable(id, enable);
 }
 
 

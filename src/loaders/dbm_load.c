@@ -303,8 +303,8 @@ static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
 	iff_register("VENV", get_venv);
 
 	strncpy(mod->name, name, XMP_NAMESIZE);
-	snprintf(mod->type, XMP_NAMESIZE, "DBM0 (DigiBooster Pro "
-				"%d.%02x)", version >> 8, version & 0xff);
+	snprintf(mod->type, XMP_NAMESIZE, "DigiBooster Pro %d.%02x DBM0",
+					version >> 8, version & 0xff);
 	MODULE_INFO();
 
 	/* Load IFF chunks */

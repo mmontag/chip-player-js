@@ -88,7 +88,7 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = sh.order[i];
 
-	set_type(m, "STIM (Slamtilt)");
+	set_type(m, "Slamtilt");
 
 	MODULE_INFO();
 

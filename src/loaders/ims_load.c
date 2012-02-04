@@ -179,7 +179,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->trk = mod->chn * mod->pat;
 
     strncpy(mod->name, (char *)ih.title, 20);
-    set_type(m, "IMS (Images Music System)");
+    set_type(m, "Images Music System");
 
     MODULE_INFO();
 

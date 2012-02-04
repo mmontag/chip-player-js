@@ -123,7 +123,7 @@ static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
 	tvmin = read8(f);
 
 	if (tracker == 0) {
-		set_type(m, "GDM %d.%02d, (2GDM %d.%02d)",
+		set_type(m, "GDM %d.%02d (2GDM %d.%02d)",
 					vermaj, vermin, tvmaj, tvmin);
 	} else {
 		set_type(m, "GDM %d.%02d (unknown tracker %d.%02d)",

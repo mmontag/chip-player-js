@@ -138,10 +138,9 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
 
     strncpy(mod->name, (char *)sfh.name, 20);
     if (bmod2stm)
-	set_type(m, "STMIK 0.2 (BMOD2STM)");
+	set_type(m, "BMOD2STM STX");
     else
-	snprintf(mod->type, XMP_NAMESIZE, "STMIK 0.2 (STM2STX 1.%d)",
-							broken ? 0 : 1);
+	snprintf(mod->type, XMP_NAMESIZE, "STM2STX 1.%d STX", broken ? 0 : 1);
 
     MODULE_INFO();
  

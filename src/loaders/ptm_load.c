@@ -96,7 +96,7 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
     m->c4rate = C4_NTSC_RATE;
 
     copy_adjust(mod->name, pfh.name, 28);
-    set_type(m, "PTMF %d.%02x (Poly Tracker)",
+    set_type(m, "Poly Tracker PTMF %d.%02x",
 	pfh.vermaj, pfh.vermin);
 
     MODULE_INFO();

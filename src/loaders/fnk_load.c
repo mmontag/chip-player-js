@@ -140,12 +140,12 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 	else
 	    mod->bpm += (ffh.info[3] >> 1) & 0x3f;
 
-	strcpy(mod->type, "FNK R2 (FunktrackerGOLD)");
+	strcpy(mod->type, "FunktrackerGOLD");
     } else if (ffh.fmt[0] == 'F' && (ffh.fmt[1] == 'v' || ffh.fmt[1] == 'k')) {
-	strcpy(mod->type, "FNK R1 (Funktracker)");
+	strcpy(mod->type, "Funktracker");
     } else {
 	mod->chn = 8;
-	strcpy(mod->type, "FNK R0 (Funktracker DOS32)");
+	strcpy(mod->type, "Funktracker DOS32");
     }
 
     if (mod->chn == 0) {

@@ -109,7 +109,7 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
 
     copy_adjust(mod->name, sfh.message, 36);
     strcpy(mod->type, strncmp((char *)sfh.marker, "if", 2) ?
-				"669 (UNIS 669)" : "669 (Composer 669)");
+				"UNIS 669" : "Composer 669");
 
     MODULE_INFO();
 

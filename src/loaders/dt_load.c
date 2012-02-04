@@ -55,7 +55,7 @@ static void get_d_t_(struct xmp_context *ctx, int size, FILE *f)
 	read32b(f);			/* undocumented */
 
 	fread(mod->name, 32, 1, f);
-	strcpy(mod->type, "DTM (Digital Tracker)");
+	strcpy(mod->type, "Digital Tracker DTM");
 
 	MODULE_INFO();
 }

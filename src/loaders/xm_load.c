@@ -121,8 +121,8 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
     if (!strncmp(tracker_name, "FastTracker v 2.00", 18))
 	strcpy(tracker_name, "old ModPlug Tracker");
 
-    snprintf(mod->type, XMP_NAMESIZE, "XM %d.%02d (%s)",
-			xfh.version >> 8, xfh.version & 0xff, tracker_name);
+    snprintf(mod->type, XMP_NAMESIZE, "%s XM %d.%02d",
+			tracker_name, xfh.version >> 8, xfh.version & 0xff);
 
     MODULE_INFO();
 

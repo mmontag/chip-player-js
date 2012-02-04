@@ -60,8 +60,7 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (type & 0x01)	/* song mode not supported */
 		return -1;
 
-	set_type(m, "PSM %d.%02d (Protracker Studio)",
-						MSN(ver), LSN(ver));
+	set_type(m, "Protracker Studio PSM %d.%02d", MSN(ver), LSN(ver));
 
 	mod->tpo = read8(f);
 	mod->bpm = read8(f);

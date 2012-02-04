@@ -85,9 +85,9 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
     ih.magic = read32b(f);
 
     if (ih.magic == MAGIC_IT10)
-        strcpy(mod->type, "IT10 (Ice Tracker)");
+        strcpy(mod->type, "Ice Tracker IT10");
     else if (ih.magic == MAGIC_MTN_)
-        strcpy(mod->type, "MTN (Soundtracker 2.6)");
+        strcpy(mod->type, "Soundtracker 2.6 MTN");
     else
 	return -1;
 

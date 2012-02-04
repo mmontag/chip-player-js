@@ -298,7 +298,7 @@ static int okt_load(struct xmp_context *ctx, FILE *f, const int start)
     iff_register("PBOD", get_pbod);
     iff_register("SBOD", get_sbod);
 
-    strcpy (mod->type, "OKT (Oktalyzer)");
+    strcpy (mod->type, "Oktalyzer");
 
     MODULE_INFO();
 

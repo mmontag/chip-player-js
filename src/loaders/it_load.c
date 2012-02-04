@@ -426,8 +426,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    set_type(m, "IMPM %d.%02x (%s)",
-			ifh.cmwt >> 8, ifh.cmwt & 0xff, tracker_name);
+    set_type(m, "%s IMPM %d.%02x", tracker_name,
+			ifh.cmwt >> 8, ifh.cmwt & 0xff);
 
     MODULE_INFO();
 

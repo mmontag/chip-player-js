@@ -58,7 +58,7 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 
     mod->flg |= XXM_FLG_MODRNG;
 
-    snprintf(mod->type, XMP_NAMESIZE, "EMOD v%d (Quadra Composer)", ver);
+    snprintf(mod->type, XMP_NAMESIZE, "Quadra Composer EMOD v%d", ver);
     MODULE_INFO();
 
     INSTRUMENT_INIT();

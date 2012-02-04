@@ -67,7 +67,7 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fread(buf, 1, 32, f);
 	strncpy(mod->name, (char *)buf, 32);
-	set_type(m, "DSMI %d.%d", ver / 10, ver % 10);
+	set_type(m, "DSMI %d.%d AMF", ver / 10, ver % 10);
 
 	mod->ins = read8(f);
 	mod->len = read8(f);

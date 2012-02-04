@@ -365,8 +365,7 @@ static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
 	ver = read8(f);
 	fread(tracker_name, 8, 1, f);
 	tracker_name[8] = 0;
-	snprintf(mod->type, XMP_NAMESIZE,
-		"D-Lusion Digital Music File v%d (%s)", ver, tracker_name);
+	snprintf(mod->type, XMP_NAMESIZE, "%s DMF v%d", tracker_name, ver);
 	tracker_name[8] = 0;
 	fread(mod->name, 30, 1, f);
 	fseek(f, 20, SEEK_CUR);

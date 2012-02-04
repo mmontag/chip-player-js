@@ -433,7 +433,7 @@ static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
 	pord = malloc(255 * 8);			/* pattern orders */
 
 	strcpy (mod->type, sinaria ?
-		"MASI (Sinaria PSM)" : "MASI (Epic MegaGames MASI)");
+		"Sinaria PSM" : "Epic MegaGames MASI PSM");
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();

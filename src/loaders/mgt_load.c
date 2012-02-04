@@ -58,7 +58,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 	ver = read8(f);
 	read32b(f);		/* MCS */
 
-	set_type(m, "MGT v%d.%d (Megatracker)", MSN(ver), LSN(ver));
+	set_type(m, "Megatracker MGT v%d.%d", MSN(ver), LSN(ver));
 
 	mod->chn = read16b(f);
 	read16b(f);			/* number of songs */

@@ -278,9 +278,9 @@ static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->trk = mod->pat * mod->chn;
 
 	if (ver == 2)
-	    set_type(m, "MMD%c (OctaMED v5)", '0' + ver);
+	    set_type(m, "OctaMED v5 MMD2");
 	else
-	    set_type(m, "MMD%c (OctaMED Soundstudio)", '0' + ver);
+	    set_type(m, "OctaMED Soundstudio MMD%c", '0' + ver);
 
 	MODULE_INFO();
 

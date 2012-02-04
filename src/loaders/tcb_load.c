@@ -55,7 +55,7 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fread(buffer, 8, 1, f);
 
-	set_type(m, "%-8.8s (TCB Tracker)", buffer);
+	set_type(m, "TCB Tracker", buffer);
 
 	read16b(f);	/* ? */
 	mod->pat = read16b(f);

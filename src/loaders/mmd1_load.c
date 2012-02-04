@@ -257,8 +257,8 @@ static int mmd1_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	mod->trk = mod->pat * mod->chn;
 
-	strcpy(mod->type, ver == 0 ? mod->chn > 4 ? "MMD0 (OctaMED 2.00)" :
-			"MMD0 (MED 2.10)" : "MMD1 (OctaMED 4.00)");
+	strcpy(mod->type, ver == 0 ? mod->chn > 4 ? "OctaMED 2.00 MMD0" :
+				"MED 2.10 MMD0" : "OctaMED 4.00 MMD1");
 	
 	MODULE_INFO();
 

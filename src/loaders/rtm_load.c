@@ -105,8 +105,8 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		mod->xxo[i] = read16l(f);
 	
 	strncpy(mod->name, oh.name, 20);
-	snprintf(mod->type, XMP_NAMESIZE, "RTMM %x.%02x (%s)",
-			version >> 8, version & 0xff, tracker_name);
+	snprintf(mod->type, XMP_NAMESIZE, "%s RTM %x.%02x",
+				tracker_name, version >> 8, version & 0xff);
 	/* strncpy(m->author, composer, XMP_NAMESIZE); */
 
 	mod->len = rh.nposition;

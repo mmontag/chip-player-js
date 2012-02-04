@@ -76,8 +76,7 @@ static int mtm_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->bpm = 125;
 
     strncpy(mod->name, (char *)mfh.name, 20);
-    set_type(m, "MTM (MultiTracker %d.%02d)",
-				MSN(mfh.version), LSN(mfh.version));
+    set_type(m, "MultiTracker %d.%02d MTM", MSN(mfh.version), LSN(mfh.version));
 
     MODULE_INFO();
 

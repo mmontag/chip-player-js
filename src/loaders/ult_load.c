@@ -112,7 +112,7 @@ static int ult_load(struct xmp_context *ctx, FILE *f, const int start)
 
     strncpy(mod->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
-    set_type(m, "ULT V%04d (Ultra Tracker %s)", ver, verstr[ver - 1]);
+    set_type(m, "Ultra Tracker %s ULT V%04d", verstr[ver - 1], ver);
 
     MODULE_INFO();
 

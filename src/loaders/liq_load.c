@@ -211,8 +211,8 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (tracker_name[i])
 	   break;
     }
-    snprintf(mod->type, XMP_NAMESIZE, "LIQ %d.%02d (%s)",
-		lh.version >> 8, lh.version & 0x00ff, tracker_name);
+    snprintf(mod->type, XMP_NAMESIZE, "%s LIQ %d.%02d",
+		tracker_name, lh.version >> 8, lh.version & 0x00ff);
 
     if (lh.version > 0) {
 	for (i = 0; i < mod->chn; i++)
