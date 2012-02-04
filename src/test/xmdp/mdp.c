@@ -10,16 +10,25 @@
  * 0.0.1: X11 supported hacked into the code.
  */
 
-#include "config.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <SDL/SDL.h>
-#include "mdp.h"
 #include "xmp.h"
 #include "font.h"
+#include "../sound.h"
+
+#define MAX_TIMER 1600		/* Expire time */
+
+struct channel_info {
+    int timer;
+    int vol;
+    int note;
+    int bend;
+    int y2, y3;
+};
+
 
 #define rightmsg(f,x,y,s,c,b)						\
     writemsg (f, (x) - writemsg (f,0,0,s,-1,0), y, s, c, b)
@@ -32,7 +41,6 @@
     }									\
 }
 
-void init_drivers(void);
 
 extern char *mdp_font1[];
 extern char *mdp_font2[];
@@ -41,7 +49,6 @@ extern struct font_header font2;
 
 static SDL_Surface *screen;
 static struct channel_info ci[40];
-static struct xmp_module_info mi;
 
 static int palette[] = {
     0x00, 0x00, 0x00,	/*  0 */	0x3f, 0x3f, 0x25,	/*  1 */
@@ -59,7 +66,6 @@ static Uint32 mapped_color[16];
 static int __color;
 static xmp_context ctx;
 static int paused;
-static int menu;
 
 static inline void setcolor(int c)
 {
@@ -208,7 +214,7 @@ void draw_lines (int i, int a, int b, int c)
 }
 
 
-void draw_bars ()
+void draw_bars()
 {
     int p, v, i, y0, y1, y2, y3, k;
 
@@ -379,62 +385,59 @@ void process_events ()
 }
 
 
-static void event_callback(unsigned long i, void *data)
+static void draw_screen(struct xmp_module_info
+					   *mi)
 {
-    static int ord = -1, pat = -1, row = -1, gvl = -1, ins = 0;
-    static int global_vol;
-    static char buf[80];
-    long msg = i >> 4;
+	static int ord = -1, pat = -1, row = -1, gvl = -1;
+	char buf[80];
+	int i;
 
-    switch (i & 0xf) {
-    case XMP_ECHO_ORD:
-	update_counter (msg & 0xff, ord, 20);
-	update_counter (msg >> 8, pat, 36);
-	break;
-    case XMP_ECHO_GVL:
-	global_vol = msg & 0xff;
-	break;
-    case XMP_ECHO_ROW:
-	update_counter (msg & 0xff, row, 52);
-	update_counter (global_vol, gvl, 68); 
-	draw_progress (ord * 126 / mi.len +
-	    (msg & 0xff) * 126 / mi.len / (msg >> 8));
-	break;
-    case XMP_ECHO_INS:
-	ins = msg &0xff;
-	if (ins < 40)
-	    ci[ins].note = msg >> 8;
-	break;
-    case XMP_ECHO_PBD:
-	if (ins < 40)
-	    ci[ins].bend = msg / 25;
-	break;
-    case XMP_ECHO_VOL:
-	if (ins < 40) {
-            ci[ins].vol = msg & 0xff;
-	    ci[ins].timer = MAX_TIMER / 30;
-            if (ci[ins].vol > 8)
-		ci[ins].vol = 8;
+	update_counter(mi->order, ord, 20);
+	update_counter(mi->pattern, pat, 36);
+	update_counter(mi->volume, gvl, 68);
+
+	if (mi->row != row) {
+		draw_progress(ord * 126 / mi->mod->len +
+			      mi->row * 126 / mi->mod->len / mi->num_rows);
 	}
-	break;
-    }
+	update_counter(mi->row, row, 52);
+
+	for (i = 0; i < mi->mod->chn; i++) {
+		int ins = mi->channel_info[i].instrument;
+		int note = mi->channel_info[i].note;
+		int vol = mi->channel_info[i].volume;
+
+		if (ins < 40) {
+			ci[ins].note = note;
+			ci[ins].vol = vol;
+			ci[ins].timer = MAX_TIMER / 30;
+
+			if (ci[ins].vol > 8) {
+				ci[ins].vol = 8;
+			}
+		}
+#if 0
+		case XMP_ECHO_PBD:
+			if (ins < 40)
+				ci[ins].bend = msg / 25;
+			break;
+#endif
+	}
+
+	draw_bars();
 }
 
 
 void usage ()
 {
-    printf ("Usage: xmdp [-v] [-r refresh_rate] module\n");
+    printf ("Usage: xmdp [-v] module\n");
 }
 
 
 int main (int argc, char **argv)
 {
     int o;
-    /* struct xmp_options opt; */
-
-    init_drivers();
-    ctx = xmp_create_context();
-    xmp_init(ctx, argc, argv);
+    struct xmp_module_info mi;
 
     while ((o = getopt (argc, argv, "v")) != -1) {
 	switch (o) {
@@ -451,59 +454,17 @@ int main (int argc, char **argv)
 	exit (-1);
     }
 
-    xmp_open_audio(ctx);
+    xmp_init();
+    ctx = xmp_create_context();
 
-    {
-        int srate, res, chn, itpt;
-
-        xmp_get_driver_cfg(ctx, &srate, &res, &chn, &itpt);
-        fprintf (stderr, "Using %s\n", xmp_get_driver_description(ctx));
-        if (srate) {
-            fprintf (stderr, "Mixer set to %dbit, %d Hz, %s%s\n", res, srate,
-                itpt ? "interpolated " : "", chn > 1 ? "stereo" : "mono");
-        }
+    if (xmp_load_module(ctx, argv[optind]) < 0) {
+	fprintf (stderr, "%s: can't load %s\n", argv[0], argv[optind]);
+	goto err1;
     }
+
+    sound_init(44100, 2);
 
     init_video();
-
-#if 0
-    shmid = shmget (IPC_PRIVATE, 40 * sizeof (struct channel_info),
-	IPC_CREAT | 0600);
-
-    if (shmid < 0) {
-        fprintf (stderr, "Cannot allocate shared memory");
-        exit (-1);
-    }
-
-    ci = (struct channel_info*)shmat (shmid, 0, 0);
-
-    if ((int)ci == -1) {
-        fprintf (stderr, "Error attaching shared memory segment\n");
-        exit (-1);
-    }
-#endif
-
-    xmp_register_event_callback(ctx, event_callback, NULL);
-
-    switch (xmp_load_module(ctx, argv[optind])) {
-    case -1:
-	fprintf (stderr, "%s: %s: unrecognized file format\n",
-	    argv[0], argv[optind]);
-	return 1;
-    case -2:
-	fprintf (stderr, "%s: %s: possibly corrupted file\n",
-	    argv[0], argv[optind]);
-	return 1;
-    case -3: {
-	char *line;
-	line = malloc (strlen (argv[0]) + strlen (argv[optind]) + 10);
-	sprintf (line, "%s: %s", argv[0], argv[optind]);
-	perror (line);
-	free(line);
-	return 1;
-	}
-    }
-
     prepare_screen ();
 
     /* Pipc->pctl.gvl = 64; */
@@ -522,11 +483,11 @@ int main (int argc, char **argv)
 
     SDL_UpdateRect(screen, 0, 0, 640, 480);
 
-    xmp_get_module_info(ctx, &mi);
-    shadowmsg(&font1, 10, 26, mi.name, 15, -1);
-
     paused = 0;
     xmp_player_start(ctx);
+    xmp_player_get_info(ctx, &mi);
+    shadowmsg(&font1, 10, 26, mi.mod->name, 15, -1);
+
     for (;;) {
 	process_events();
 	if (paused) {
@@ -534,13 +495,23 @@ int main (int argc, char **argv)
 	} else {
 	    if (xmp_player_frame(ctx) != 0)
 		break;
-	    xmp_play_buffer(ctx);
-	    draw_bars();
+	    xmp_player_get_info(ctx, &mi);
+	    sound_play(mi.buffer, mi.buffer_size);
+	    draw_screen(&mi);
 	}
     }
     xmp_player_end(ctx);
 
-    xmp_close_audio(ctx);
+    sound_deinit();
+    xmp_free_context(ctx);
+    xmp_deinit();
 
-    return 0;
+    exit(0);
+
+err1:
+    sound_deinit();
+    xmp_free_context(ctx);
+    xmp_deinit();
+
+    exit(1);
 }
