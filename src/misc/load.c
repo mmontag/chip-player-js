@@ -483,7 +483,6 @@ int xmp_load_module(xmp_context opaque, char *s)
     m->rrate = PAL_RATE;
     m->c4rate = C4_PAL_RATE;
     m->volbase = 0x40;
-    m->volume = 0x40;
     m->vol_table = NULL;
     /* Reset control for next module */
     m->flags = o->flags & ~XMP_CTL_FILTER;	/* verify this later */

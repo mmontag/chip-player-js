@@ -8,8 +8,7 @@
 static void display_data(struct xmp_module_info *mi)
 {
 	printf("%3d/%3d %3d/%3d\r",
-	       mi->order, mi->mod->len,
-	       mi->row, mi->mod->xxp[mi->pattern]->rows);
+	       mi->order, mi->mod->len, mi->row, mi->num_rows);
 
 	fflush(stdout);
 }

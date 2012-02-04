@@ -427,7 +427,7 @@ ex_f_vslide_dn:
 	p->tick_time = m->rrate / p->bpm;
 	break;
     case FX_GLOBALVOL:				/* Set global volume */
-	m->volume = fxp > m->volbase ? m->volbase : fxp;
+	p->volume = fxp > m->volbase ? m->volbase : fxp;
 	break;
     case FX_G_VOLSLIDE:				/* Global volume slide */
 	p->gvol_flag = 1;

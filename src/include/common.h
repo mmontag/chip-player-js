@@ -201,7 +201,6 @@ struct xmp_mod_context {
 	double rrate;			/* Replay rate */
 	int c4rate;			/* C4 replay rate */
 	int volbase;			/* Volume base */
-	int volume;			/* Global volume */
 	int *vol_table;			/* Volume translation table */
 	int flags;			/* Copy from options */
 	int quirk;			/* player quirks */
@@ -238,9 +237,9 @@ struct xmp_player_context {
 	int row;
 	int frame;
 	int tempo;
+	int volume;			/* Global volume */
 	int gvol_slide;
 	int gvol_flag;
-	int gvol_base;
 	double tick_time;
 	struct flow_control flow;
 	struct channel_data *xc_data;

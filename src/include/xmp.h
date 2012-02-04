@@ -224,12 +224,14 @@ struct xmp_module_info {
 	int order;
 	int pattern;
 	int row;
+	int num_rows;
 	int frame;
 	int tempo;
 	int bpm;
 	int time;
 	void *buffer;
 	int buffer_size;
+	int volume;
 
 	struct {
 		int period;

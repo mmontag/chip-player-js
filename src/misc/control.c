@@ -119,13 +119,13 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 		p->pos = -1;
 		break;
 	case XMP_GVOL_DEC:
-		if (m->volume > 0)
-			m->volume--;
-		return m->volume;
+		if (p->volume > 0)
+			p->volume--;
+		return p->volume;
 	case XMP_GVOL_INC:
-		if (m->volume < 64)
-			m->volume++;
-		return m->volume;
+		if (p->volume < 64)
+			p->volume++;
+		return p->volume;
 	}
 
 	return 0;

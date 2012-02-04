@@ -415,7 +415,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
     }
 
     if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL))
-	xc->volume = xc->volume * m->volume / m->volbase;
+	xc->volume = xc->volume * p->volume / m->volbase;
 
     return 0;
 }
@@ -567,16 +567,16 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     if (TEST(TREMOLO))
 	finalvol += get_lfo(&xc->tremolo) / 512;
-    if (finalvol > p->gvol_base)
-	finalvol = p->gvol_base;
+    if (finalvol > m->volbase)
+	finalvol = m->volbase;
     if (finalvol < 0)
 	finalvol = 0;
 
     finalvol = (finalvol * xc->fadeout) >> 5;	/* 16 bit output */
 
     finalvol = (uint32) (vol_envelope *
-	(HAS_QUIRK(QUIRK_ST3GVOL) ? 0x40 : m->volume) *
-	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / p->gvol_base)) >> 18;
+	(HAS_QUIRK(QUIRK_ST3GVOL) ? 0x40 : p->volume) *
+	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / m->volbase)) >> 18;
 
     /* Volume translation table (for PTM, ARCH, COCO) */
     if (m->vol_table) {
@@ -645,11 +645,11 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
      */
     if (t % p->tempo || HAS_QUIRK(QUIRK_VSALL)) {
 	if (!chn && p->gvol_flag) {
-	    m->volume += p->gvol_slide;
-	    if (m->volume < 0)
-		m->volume = 0;
-	    else if (m->volume > p->gvol_base)
-		m->volume = p->gvol_base;
+	    p->volume += p->gvol_slide;
+	    if (p->volume < 0)
+		p->volume = 0;
+	    else if (p->volume > m->volbase)
+		p->volume = m->volbase;
 	}
 	if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE))
 	    xc->volume += xc->v_val;
@@ -720,13 +720,13 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     if (xc->volume < 0)
 	xc->volume = 0;
-    else if (xc->volume > p->gvol_base)
-	xc->volume = p->gvol_base;
+    else if (xc->volume > m->volbase)
+	xc->volume = m->volbase;
 
     if (xc->mastervol < 0)
 	xc->mastervol = 0;
-    else if (xc->mastervol > p->gvol_base)
-	xc->mastervol = p->gvol_base;
+    else if (xc->mastervol > m->volbase)
+	xc->mastervol = m->volbase;
 
     if (m->mod.flg & XXM_FLG_LINEAR) {
 	if (xc->period < MIN_PERIOD_L)
@@ -786,7 +786,7 @@ int xmp_player_start(xmp_context opaque)
 	xmp_smix_on(ctx);
 
 	p->gvol_slide = 0;
-	p->gvol_base = m->volbase;
+	p->volume = m->volbase;
 	p->pos = f->ord = o->start;
 	p->frame = 0;
 	p->row = 0;
@@ -808,7 +808,7 @@ int xmp_player_start(xmp_context opaque)
 	while (f->ord < m->mod.len && m->mod.xxo[f->ord] >= m->mod.pat)
 		f->ord++;
 
-	m->volume = m->xxo_info[f->ord].gvl;
+	p->volume = m->xxo_info[f->ord].gvl;
 	p->bpm = m->xxo_info[f->ord].bpm;
 	p->tempo = m->xxo_info[f->ord].tempo;
 
@@ -892,7 +892,7 @@ int xmp_player_frame(xmp_context opaque)
 			p->tempo = m->xxo_info[f->ord].tempo;
 		p->bpm = m->xxo_info[f->ord].bpm;
 		p->tick_time = m->rrate / p->bpm;
-		m->volume = m->xxo_info[f->ord].gvl;
+		p->volume = m->xxo_info[f->ord].gvl;
 		f->jump = f->ord;
 		p->time = (double)m->xxo_info[f->ord].time / 1000;
 		f->jumpline = m->xxo_info[f->ord].start_row;
@@ -982,7 +982,7 @@ next_order:
     				f->ord = ((uint32)m->mod.rst > m->mod.len ||
 					(uint32)m->mod.xxo[m->mod.rst] >=
 					m->mod.pat) ?  0 : m->mod.rst;
-				m->volume = m->xxo_info[f->ord].gvl;
+				p->volume = m->xxo_info[f->ord].gvl;
 			}
 
 			/* Skip invalid patterns */
@@ -1089,11 +1089,13 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->order = p->pos;
 	info->pattern = m->mod.xxo[p->pos];
 	info->row = p->row;
+	info->num_rows = m->mod.xxp[info->pattern]->rows;
 	info->frame = p->frame;
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
 	info->buffer = s->buffer;
 	info->buffer_size = s->ticksize * s->mode * s->resol;
+	info->volume = p->volume;
 
 	for (i = 0; i < chn; i++) {
 		struct channel_data *c = &p->xc_data[i];
