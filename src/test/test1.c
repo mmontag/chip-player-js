@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
 				xmp_player_get_info(ctx, &mi[current]);
 				sound_play(mi[current].buffer,
-					   mi[current].size);
+					   mi[current].buffer_size);
 
 				if (mi[current].row != mi[prev].row) {
 					display_data(&mi[current]);

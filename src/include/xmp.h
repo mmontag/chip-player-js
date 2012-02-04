@@ -229,7 +229,7 @@ struct xmp_module_info {
 	int bpm;
 	int time;
 	void *buffer;
-	int size;
+	int buffer_size;
 
 	struct {
 		int period;

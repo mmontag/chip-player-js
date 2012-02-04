@@ -1093,7 +1093,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
 	info->buffer = s->buffer;
-	info->size = s->ticksize * s->mode * s->resol;
+	info->buffer_size = s->ticksize * s->mode * s->resol;
 
 	for (i = 0; i < chn; i++) {
 		struct channel_data *c = &p->xc_data[i];
