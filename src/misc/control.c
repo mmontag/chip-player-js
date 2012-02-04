@@ -17,8 +17,6 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int drv_parm = 0;
-
 
 void *xmp_create_context()
 {
@@ -31,7 +29,6 @@ void *xmp_create_context()
 	if (ctx == NULL)
 		return NULL;
 
-	/* Explicitly initialize to keep valgrind happy */
 	*ctx->m.mod.name = *ctx->m.mod.type = 0;
 
 	o = &ctx->o;
@@ -54,11 +51,6 @@ void xmp_free_context(xmp_context ctx)
 	free(ctx);
 }
 
-struct xmp_options *xmp_get_options(xmp_context ctx)
-{
-	return &((struct xmp_context *)ctx)->o;
-}
-
 void xmp_init()
 {
 	xmp_init_formats();
@@ -67,14 +59,6 @@ void xmp_init()
 void xmp_deinit()
 {
 	xmp_deinit_formats();
-}
-
-void xmp_set_driver_parameter(struct xmp_options *o, char *s)
-{
-	o->parm[drv_parm] = s;
-	while (isspace(*o->parm[drv_parm]))
-		o->parm[drv_parm]++;
-	drv_parm++;
 }
 
 void xmp_channel_mute(xmp_context opaque, int from, int num, int on)

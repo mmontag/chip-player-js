@@ -42,8 +42,6 @@ extern "C" {
 
 struct xmp_options {
 	int big_endian;		/* Machine byte order */
-	char *drv_id;		/* Driver ID */
-	char *outfile;		/* Output file name when mixing to file */
 	int dump;		/* Data dump for testing */
 	int amplify;		/* Software mixing amplify volume:
 				   0 = none, 1 = x2, 2 = x4, 3 = x8 */
@@ -63,7 +61,6 @@ struct xmp_options {
 	int time;		/* Maximum playing time in seconds */
 	int tempo;		/* Set initial tempo */
 	char *ins_path;		/* External instrument path */
-	char *parm[16];		/* Driver parameter data */
 };
 
 struct xmp_fmt_info {
@@ -254,9 +251,6 @@ extern char *global_filename;	/* FIXME: hack for the wav driver */
 
 void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
-void xmp_unlink_tempfiles(void);
-struct xmp_options *xmp_get_options(xmp_context);
-
 void xmp_init(void);
 void xmp_deinit(void);
 int xmp_load_module(xmp_context, char *);

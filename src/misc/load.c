@@ -346,8 +346,8 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
     res = decrunch(ctx, f, &temp->name, ttl);
     unlink(temp2);
     free(temp2);
-    /* Mirko: temp is now deallocated in xmp_unlink_tempfiles
-     * not a problem, since xmp_unlink_tempfiles is called after decrunch
+    /* Mirko: temp is now deallocated in unlink_tempfiles()
+     * not a problem, since unlink_tempfiles() is called after decrunch
      * in loader routines
      *
      * free(temp);
@@ -361,7 +361,7 @@ static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
  * Windows doesn't allow you to unlink an open file, so we changed the
  * temp file cleanup system to remove temporary files after we close it
  */
-void xmp_unlink_tempfiles(void)
+static void unlink_tempfiles(void)
 {
 	struct tmpfilename *li;
 	struct list_head *tmp;
@@ -412,7 +412,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 	    fseek(f, 0, SEEK_SET);
 	    if (li->test(f, n, 0) == 0) {
 	        fclose(f);
-		xmp_unlink_tempfiles();
+		unlink_tempfiles();
 	        return 0;
 	    }
 	}
@@ -420,7 +420,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 
 err:
     fclose (f);
-    xmp_unlink_tempfiles();
+    unlink_tempfiles();
     return -1;
 }
 
@@ -524,7 +524,7 @@ int xmp_load_module(xmp_context opaque, char *s)
     }
 
     fclose(f);
-    xmp_unlink_tempfiles();
+    unlink_tempfiles();
 
     if (i < 0) {
 	free(m->basename);
@@ -553,7 +553,7 @@ int xmp_load_module(xmp_context opaque, char *s)
 
 err:
     fclose(f);
-    xmp_unlink_tempfiles();
+    unlink_tempfiles();
     return -1;
 }
 
