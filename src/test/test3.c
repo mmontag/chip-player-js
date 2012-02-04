@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include "xmp.h"
 
-extern struct xmp_drv_info drv_smix;
-
 /*
  * Test case for tunenet plugin crash
  *
@@ -32,44 +30,34 @@ int main(int argc, char **argv)
 	struct xmp_module_info mi1, mi2;
 	int res1, res2;
 
-	setbuf(stdout, NULL);
+	xmp_init();
 
-	xmp_drv_register(&drv_smix);
-
-	/* open player 1 */
+	/* create player 1 */
 	ctx1 = xmp_create_context();
-	xmp_init(ctx1, argc, argv);
-	if (xmp_open_audio(ctx1) < 0) {
-		fprintf(stderr, "%s: can't open audio device", argv[0]);
-		exit(1);
-	}
+
 	if (xmp_load_module(ctx1, argv[1]) < 0) {
 		fprintf(stderr, "%s: error loading %s\n", argv[0], argv[1]);
 		exit(1);
 	}
-	xmp_get_module_info(ctx1, &mi1);
-	printf("1: %s (%s)\n", mi1.name, mi1.type);
+	xmp_player_start(ctx1);
+	xmp_player_get_info(ctx1, &mi1);
+	printf("1: %s (%s)\n", mi1.mod->name, mi1.mod->type);
 
 	/* play a bit of file 1 */
-	xmp_player_start(ctx1);
 	res1 = xmp_player_frame(ctx1);
 
-	/* open player 2 */
+	/* create player 2 */
 	ctx2 = xmp_create_context();
-	xmp_init(ctx2, argc, argv);
-	if (xmp_open_audio(ctx2) < 0) {
-		fprintf(stderr, "%s: can't open audio device", argv[0]);
-		exit(1);
-	}
+
 	if (xmp_load_module(ctx2, argv[2]) < 0) {
 		fprintf(stderr, "%s: error loading %s\n", argv[0], argv[2]);
 		exit(1);
 	}
-	xmp_get_module_info(ctx2, &mi2);
-	printf("2: %s (%s)\n", mi2.name, mi2.type);
+	xmp_player_start(ctx2);
+	xmp_player_get_info(ctx2, &mi2);
+	printf("2: %s (%s)\n", mi2.mod->name, mi2.mod->type);
 
 	/* play file 2 */
-	xmp_player_start(ctx2);
 	res2 = xmp_player_frame(ctx2);
 
 	/* play file 1 again */
@@ -80,16 +68,17 @@ int main(int argc, char **argv)
 
 	/* play file 2 again */
 	res1 = xmp_player_frame(ctx2);
+
+	/* close player 2 */
 	xmp_player_end(ctx2);
 
 	xmp_release_module(ctx1);
 	xmp_release_module(ctx2);
 
-	xmp_close_audio(ctx1);
-	xmp_close_audio(ctx2);
-
 	xmp_free_context(ctx1);
 	xmp_free_context(ctx2);
+
+	xmp_deinit();
 
 	return 0;
 }
