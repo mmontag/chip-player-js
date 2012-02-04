@@ -376,7 +376,7 @@ static int med3_load(struct xmp_context *ctx, FILE *f, const int start)
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol);
 
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

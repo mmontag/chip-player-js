@@ -259,7 +259,7 @@ static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
 	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

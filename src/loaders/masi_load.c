@@ -178,7 +178,7 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 	mod->xxi[i].sub[0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
-	load_patch(ctx, f, i, XMP_SMP_8BDIFF, &mod->xxs[i], NULL);
+	load_sample(ctx, f, i, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL);
 
 	cur_ins++;
 }

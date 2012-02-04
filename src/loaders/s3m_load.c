@@ -445,7 +445,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    mod->xxi[i].sub[0].vol = sah.vol;
 	    c2spd_to_note(sah.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	    mod->xxi[i].sub[0].xpo += 12;
-	    load_patch(ctx, f, mod->xxi[i].sub[0].sid, XMP_SMP_ADLIB,
+	    load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_ADLIB,
 					&mod->xxs[i], (char *)&sah.reg);
 	    _D(_D_INFO "[%2X] %-28.28s", i, mod->xxi[i].name);
 
@@ -510,8 +510,8 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-	    (sfh.ffi - 1) * XMP_SMP_UNS, &mod->xxs[i], NULL);
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+	    (sfh.ffi - 1) * SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
     }
 
     free(pp_pat);

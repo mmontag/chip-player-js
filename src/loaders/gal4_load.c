@@ -320,7 +320,7 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 			srate);
 	
 		if (mod->xxs[snum].len > 1) {
-			load_patch(ctx, f, snum, 0, &mod->xxs[snum], NULL);
+			load_sample(ctx, f, snum, 0, &mod->xxs[snum], NULL);
 		}
 	}
 }

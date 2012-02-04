@@ -265,7 +265,7 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	mod->xxi[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
     }
 
-    load_patch(ctx, NULL, mod->xxi[i].sub[0].sid, XMP_SMP_NOLOAD,
+    load_sample(ctx, NULL, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_NOLOAD,
 					&mod->xxs[mod->xxi[i].sub[0].sid], wave);
 }
 
@@ -437,7 +437,7 @@ static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
 	    }
 	    continue;
 	}
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid, XMP_SMP_FULLREP,
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
 					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

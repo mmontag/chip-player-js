@@ -118,7 +118,7 @@ static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	_D(_D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid, XMP_SMP_ADLIB, NULL, regs);
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_ADLIB, NULL, regs);
     }
 
     if (!afh.version) {

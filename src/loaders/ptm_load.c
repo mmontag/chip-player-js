@@ -253,8 +253,8 @@ static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
 	if (!mod->xxs[i].len)
 	    continue;
 	fseek(f, start + smp_ofs[mod->xxi[i].sub[0].sid], SEEK_SET);
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-			XMP_SMP_8BDIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+			SAMPLE_FLAG_8BDIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 
     m->vol_table = ptm_vol;

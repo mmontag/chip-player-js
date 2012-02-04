@@ -580,7 +580,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 				       mod->xxi[i].sub[0].xpo /*,
 				       mod->xxi[i].sub[0].fin >> 4*/);
 
-			load_patch(ctx, f, smp_idx, 0,
+			load_sample(ctx, f, smp_idx, 0,
 					&mod->xxs[smp_idx], NULL);
 
 			smp_idx++;
@@ -645,7 +645,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 				mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
 				mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
-				load_patch(ctx, f, smp_idx,
+				load_sample(ctx, f, smp_idx,
 					0, &mod->xxs[smp_idx], NULL);
 
 				smp_idx++;
@@ -687,7 +687,7 @@ static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
 			mod->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].xpo);
 
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 		smp_idx++;

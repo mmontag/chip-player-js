@@ -268,8 +268,8 @@ static int coco_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + smp_ptr[i], SEEK_SET);
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-				XMP_SMP_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	for (i = 0; i < mod->chn; i++)

@@ -371,7 +371,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid, XMP_SMP_FULLREP,
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
 	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

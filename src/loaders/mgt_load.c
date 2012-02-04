@@ -302,7 +302,7 @@ static int mgt_load(struct xmp_context *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + sdata[i], SEEK_SET);
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
 					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

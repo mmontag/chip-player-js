@@ -187,8 +187,8 @@ static int psm_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-			XMP_SMP_DIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+			SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

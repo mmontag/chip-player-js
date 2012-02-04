@@ -210,7 +210,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		load_patch(ctx, s, mod->xxi[i].sub[0].sid, XMP_SMP_FULLREP,
+		load_sample(ctx, s, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

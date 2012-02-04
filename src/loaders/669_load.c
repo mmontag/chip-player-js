@@ -212,8 +212,8 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)
 	    continue;
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-	    XMP_SMP_UNS, &mod->xxs[i], NULL);
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+	    SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
     }
 
     for (i = 0; i < mod->chn; i++)

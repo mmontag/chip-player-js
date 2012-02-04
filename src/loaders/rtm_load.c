@@ -364,8 +364,8 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 				mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].fin,
 				mod->xxi[i].sub[j].pan, mod->xxi[i].sub[j].xpo);
 
-			load_patch(ctx, f, mod->xxi[i].sub[j].sid,
-				XMP_SMP_DIFF, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
+			load_sample(ctx, f, mod->xxi[i].sub[j].sid,
+				SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 		}
 	}
 

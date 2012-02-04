@@ -18,19 +18,19 @@
 #include "loader.h"
 
 /* Sample flags */
-#define XMP_SMP_DIFF		0x0001	/* Differential */
-#define XMP_SMP_UNS		0x0002	/* Unsigned */
-#define XMP_SMP_8BDIFF		0x0004
-#define XMP_SMP_7BIT		0x0008
-#define XMP_SMP_NOLOAD		0x0010	/* Get from buffer, don't load */
-#define XMP_SMP_BIGEND		0x0040	/* Big-endian */
-#define XMP_SMP_VIDC		0x0080	/* Archimedes VIDC logarithmic */
-#define XMP_SMP_STEREO		0x0100	/* Interleaved stereo sample */
-#define XMP_SMP_FULLREP		0x0200	/* Play full sample before looping */
-#define XMP_SMP_ADLIB		0x1000	/* Adlib synth instrument */
-#define XMP_SMP_SPECTRUM	0x2000	/* Spectrum synth instrument */
+#define SAMPLE_FLAG_DIFF	0x0001	/* Differential */
+#define SAMPLE_FLAG_UNS		0x0002	/* Unsigned */
+#define SAMPLE_FLAG_8BDIFF	0x0004
+#define SAMPLE_FLAG_7BIT	0x0008
+#define SAMPLE_FLAG_NOLOAD	0x0010	/* Get from buffer, don't load */
+#define SAMPLE_FLAG_BIGEND	0x0040	/* Big-endian */
+#define SAMPLE_FLAG_VIDC	0x0080	/* Archimedes VIDC logarithmic */
+#define SAMPLE_FLAG_STEREO	0x0100	/* Interleaved stereo sample */
+#define SAMPLE_FLAG_FULLREP	0x0200	/* Play full sample before looping */
+#define SAMPLE_FLAG_ADLIB	0x1000	/* Adlib synth instrument */
+#define SAMPLE_FLAG_SPECTRUM	0x2000	/* Spectrum synth instrument */
 
-#define XMP_SMP_SYNTH		(XMP_SMP_ADLIB | XMP_SMP_SPECTRUM)
+#define SAMPLE_FLAG_SYNTH	(SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_SPECTRUM)
 
 
 char *copy_adjust(char *, uint8 *, int);
@@ -43,7 +43,7 @@ void clean_s3m_seq(struct xmp_module *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct xmp_context *, char *, char *, int);
 void set_type(struct xmp_mod_context *, char *, ...);
-int load_patch(struct xmp_context *, FILE *, int, int, struct xmp_sample *, void *);
+int load_sample(struct xmp_context *, FILE *, int, int, struct xmp_sample *, void *);
 
 
 extern uint8 ord_xlat[];

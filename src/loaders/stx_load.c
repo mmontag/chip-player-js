@@ -288,7 +288,7 @@ static int stx_load(struct xmp_context *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
-	load_patch(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
 	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

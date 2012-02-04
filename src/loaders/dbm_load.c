@@ -233,7 +233,7 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 			continue;
 		}
 		
-		load_patch(ctx, f, i, XMP_SMP_BIGEND,
+		load_sample(ctx, f, i, SAMPLE_FLAG_BIGEND,
 							&mod->xxs[i], NULL);
 
 		if (mod->xxs[i].len == 0)

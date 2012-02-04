@@ -390,7 +390,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (!mod->xxs[smp_num].len)
 		continue;
 
-	    load_patch(ctx, f, mod->xxi[i].sub[j].sid, 0,
+	    load_sample(ctx, f, mod->xxi[i].sub[j].sid, 0,
 		&mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 	}
     }

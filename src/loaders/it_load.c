@@ -802,7 +802,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    fseek(f, start + ish.sample_ptr, SEEK_SET);
 
 	    if (~ish.convert & IT_CVT_SIGNED)
-		cvt |= XMP_SMP_UNS;
+		cvt |= SAMPLE_FLAG_UNS;
 
 	    /* Handle compressed samples using Tammo Hinrichs' routine */
 	    if (ish.flags & IT_SMP_COMP) {
@@ -822,11 +822,11 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 					ish.convert & IT_CVT_DIFF);
 		}
 
-		load_patch(ctx, NULL, i,
-				XMP_SMP_NOLOAD | cvt, &mod->xxs[i], buf);
+		load_sample(ctx, NULL, i,
+				SAMPLE_FLAG_NOLOAD | cvt, &mod->xxs[i], buf);
 		free (buf);
 	    } else {
-		load_patch(ctx, f, i, cvt, &mod->xxs[i], NULL);
+		load_sample(ctx, f, i, cvt, &mod->xxs[i], NULL);
 	    }
 	}
     }

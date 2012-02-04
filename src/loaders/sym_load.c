@@ -404,16 +404,16 @@ static int sym_load(struct xmp_context *ctx, FILE *f, const int start)
 			uint8 *b = malloc(mod->xxs[i].len);
 			read_lzw_dynamic(f, b, 13, 0, mod->xxs[i].len,
 					mod->xxs[i].len, XMP_LZW_QUIRK_DSYM);
-			load_patch(ctx, NULL, mod->xxi[i].sub[0].sid,
-				XMP_SMP_NOLOAD | XMP_SMP_DIFF,
+			load_sample(ctx, NULL, mod->xxi[i].sub[0].sid,
+				SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);
 			free(b);
 		} else if (a == 4) {
-			load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-				XMP_SMP_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		} else {
-			load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-				XMP_SMP_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		}
 	}
 

@@ -193,8 +193,8 @@ static int no_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)
 			continue;
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-				XMP_SMP_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+				SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

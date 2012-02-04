@@ -207,7 +207,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)
 	    continue;
-	load_patch(ctx, f, i, 0, &mod->xxs[i], NULL);
+	load_sample(ctx, f, i, 0, &mod->xxs[i], NULL);
     }
 
     return 0;

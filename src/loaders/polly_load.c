@@ -192,8 +192,8 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)
 			continue;
-		load_patch(ctx, NULL, mod->xxi[i].sub[0].sid,
-				XMP_SMP_NOLOAD | XMP_SMP_UNS,
+		load_sample(ctx, NULL, mod->xxi[i].sub[0].sid,
+				SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS,
 				&mod->xxs[mod->xxi[i].sub[0].sid],
 				(char*)buf + ORD_OFS + 256 +
 					256 * (buf[ORD_OFS + 129 + i] - 0x10));

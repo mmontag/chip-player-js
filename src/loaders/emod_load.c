@@ -163,7 +163,7 @@ static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
     _D(_D_INFO, "Stored samples : %d ", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	load_patch(ctx, f, i, 0, &mod->xxs[i], NULL);
+	load_sample(ctx, f, i, 0, &mod->xxs[i], NULL);
     }
 }
 

@@ -461,8 +461,8 @@ static int amf_load(struct xmp_context *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-			XMP_SMP_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+			SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	m->quirk |= QUIRK_FINEFX;

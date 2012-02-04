@@ -212,7 +212,7 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
+int load_sample(struct xmp_context *ctx, FILE * f, int id, int flags,
 	       struct xmp_sample *xxs, void *buffer)
 {
 	struct xmp_options *o = &ctx->o;
@@ -222,10 +222,10 @@ int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
 	/* Synth patches
 	 * Default is YM3128 for historical reasons
 	 */
-	if (flags & XMP_SMP_SYNTH) {
+	if (flags & SAMPLE_FLAG_SYNTH) {
 		int size = 11;	/* Adlib instrument size */
 
-		if (flags & XMP_SMP_SPECTRUM)
+		if (flags & SAMPLE_FLAG_SPECTRUM)
 			size = sizeof(struct spectrum_sample);
 
 		if ((xxs->data = malloc(size)) == NULL)
@@ -256,7 +256,7 @@ int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
 	if ((xxs->data = malloc(bytelen + extralen)) == NULL)
 		return -1;
 
-	if (flags & XMP_SMP_NOLOAD) {
+	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
 		int pos = ftell(f);
@@ -282,38 +282,38 @@ int load_patch(struct xmp_context *ctx, FILE * f, int id, int flags,
 	}
 
 	/* Convert samples to signed */
-	if (flags & XMP_SMP_UNS) {
+	if (flags & SAMPLE_FLAG_UNS) {
 		xmp_cvt_sig2uns(xxs->len, xxs->flg & XMP_SAMPLE_16BIT,
 				xxs->data);
 	}
 
 	/* Fix endianism if needed */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		if (!!o->big_endian ^ !!(flags & XMP_SMP_BIGEND))
+		if (!!o->big_endian ^ !!(flags & SAMPLE_FLAG_BIGEND))
 			xmp_cvt_sex(xxs->len, xxs->data);
 	}
 
 	/* Downmix stereo samples */
-	if (flags & XMP_SMP_STEREO) {
+	if (flags & SAMPLE_FLAG_STEREO) {
 		xmp_cvt_stdownmix(xxs->len, xxs->flg & XMP_SAMPLE_16BIT,
 				  xxs->data);
 		xxs->len /= 2;
 	}
 
-	if (flags & XMP_SMP_7BIT)
+	if (flags & SAMPLE_FLAG_7BIT)
 		xmp_cvt_2xsmp(xxs->len, xxs->data);
 
-	if (flags & XMP_SMP_DIFF)
+	if (flags & SAMPLE_FLAG_DIFF)
 		xmp_cvt_diff2abs(xxs->len, xxs->flg & XMP_SAMPLE_16BIT,
 				 xxs->data);
-	else if (flags & XMP_SMP_8BDIFF)
+	else if (flags & SAMPLE_FLAG_8BDIFF)
 		xmp_cvt_diff2abs(xxs->len, 0, xxs->data);
 
-	if (flags & XMP_SMP_VIDC)
+	if (flags & SAMPLE_FLAG_VIDC)
 		xmp_cvt_vidc(xxs->len, xxs->data);
 
 	/* Check for full loop samples */
-	if (flags & XMP_SMP_FULLREP) {
+	if (flags & SAMPLE_FLAG_FULLREP) {
 	    if (xxs->lps == 0 && xxs->len > xxs->lpe)
 		xxs->flg |= XMP_SAMPLE_LOOP_FULL;
 	}

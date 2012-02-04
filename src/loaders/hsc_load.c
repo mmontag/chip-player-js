@@ -117,7 +117,7 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
-	load_patch(ctx, f, i, XMP_SMP_ADLIB, NULL, (char *)sid);
+	load_sample(ctx, f, i, SAMPLE_FLAG_ADLIB, NULL, (char *)sid);
     }
 
     /* Read orders */

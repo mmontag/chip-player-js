@@ -491,8 +491,8 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			break;
 		}
 
-		load_patch(ctx, NULL, i,
-				  XMP_SMP_NOLOAD, &mod->xxs[i], (char *)b);
+		load_sample(ctx, NULL, i,
+				  SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)b);
 	}
 
 

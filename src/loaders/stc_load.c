@@ -320,7 +320,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 			
 		}
 
-		load_patch(ctx, f, i, XMP_SMP_SPECTRUM, NULL,
+		load_sample(ctx, f, i, SAMPLE_FLAG_SPECTRUM, NULL,
 								(char *)&ss);
 	}
 	

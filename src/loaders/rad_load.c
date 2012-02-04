@@ -87,7 +87,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		fread(sid, 1, 11, f);
 		xmp_cvt_hsc2sbi((char *)sid);
-		load_patch(ctx, f, b - 1, XMP_SMP_ADLIB, NULL,
+		load_sample(ctx, f, b - 1, SAMPLE_FLAG_ADLIB, NULL,
 								(char *)sid);
 	}
 

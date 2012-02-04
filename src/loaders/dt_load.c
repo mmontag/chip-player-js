@@ -213,8 +213,8 @@ static void get_dait(struct xmp_context *ctx, int size, FILE *f)
 	}
 
 	if (size > 2) {
-		load_patch(ctx, f, mod->xxi[i].sub[0].sid,
-			XMP_SMP_BIGEND, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+			SAMPLE_FLAG_BIGEND, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	i++;

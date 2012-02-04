@@ -333,14 +333,14 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 
 		switch (packtype[i]) {
 		case 0:
-			load_patch(ctx, f, mod->xxi[i].sub[0].sid,
+			load_sample(ctx, f, mod->xxi[i].sub[0].sid,
 						0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
 			unpack(data, ibuf, ibuf + smpsize, mod->xxs[i].len);
-			load_patch(ctx, NULL, i,
-					XMP_SMP_NOLOAD, &mod->xxs[i], (char *)data);
+			load_sample(ctx, NULL, i,
+					SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)data);
 			break;
 		default:
 			fseek(f, smpsize, SEEK_CUR);
