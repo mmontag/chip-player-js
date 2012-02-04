@@ -807,7 +807,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    /* Handle compressed samples using Tammo Hinrichs' routine */
 	    if (ish.flags & IT_SMP_COMP) {
 		uint8 *buf;
-		buf = calloc(1, mod->xxs[i].len);
+		buf = calloc(1, mod->xxs[i].len * 2);
 
 		if (ish.flags & IT_SMP_16BIT) {
 		    itsex_decompress16(f, buf, mod->xxs[i].len, 
