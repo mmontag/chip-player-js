@@ -409,12 +409,16 @@ static void draw_screen(struct xmp_module_info
 		struct channel_info *ci = &channel_info[info->instrument];
 
 		if (info->instrument < 40) {
-			ci->note = info->note;
-			ci->bend = info->pitchbend;
-			ci->vol = info->volume;
-			ci->timer = MAX_TIMER / 30;
-			if (ci->vol > 8) {
-				ci->vol = 8;
+			if (info->note < 0x80) {
+				ci->note = info->note;
+				ci->bend = info->pitchbend;
+				ci->vol = info->volume;
+				ci->timer = MAX_TIMER / 30;
+				if (ci->vol > 8) {
+					ci->vol = 8;
+				}
+			} else {
+				ci->note = 0;
 			}
 		}
 	}
