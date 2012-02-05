@@ -206,28 +206,10 @@ struct xmp_mod_context {
 	void *chip;
 };
 
-struct flow_control {
-	int pbreak;
-	int jump;
-	int delay;
-	int skip_fetch;		/* To emulate delay + break quirk */
-	int jumpline;
-	int loop_chn;
-
-	struct pattern_loop {
-		int start;
-		int count;
-	} *loop;
-
-	int num_rows;
-	int ord;
-	int end_point;
-	double playing_time;
-};
 
 struct xmp_player_context {
 	double time;
-	int pause;
+	int ord;
 	int pos;
 	int row;
 	int frame;
@@ -236,9 +218,26 @@ struct xmp_player_context {
 	int gvol_slide;
 	int gvol_flag;
 	double tick_time;
-	struct flow_control flow;
+
+	struct flow_control {
+		int pbreak;
+		int jump;
+		int delay;
+		int skip_fetch;		/* To emulate delay + break quirk */
+		int jumpline;
+		int loop_chn;
+	
+		struct pattern_loop {
+			int start;
+			int count;
+		} *loop;
+	
+		int num_rows;
+		int end_point;
+		double playing_time;
+	} flow;
+
 	struct channel_data *xc_data;
-	int *fetch_ctl;
 	int scan_ord;
 	int scan_row;
 	int scan_num;

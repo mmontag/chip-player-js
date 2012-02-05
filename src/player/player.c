@@ -424,12 +424,14 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 static inline void read_row(struct xmp_context *ctx, int pat, int row)
 {
     int count, chn;
-    struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
     struct xmp_event *event;
+    int control[XMP_MAX_CHANNELS];
 
     count = 0;
     for (chn = 0; chn < m->mod.chn; chn++) {
+        control[chn] = 0;
+
 	if (row < m->mod.xxt[TRACK_NUM(pat, chn)]->rows) {
 	    event = &EVENT(pat, chn, row);
 	} else {
@@ -437,20 +439,19 @@ static inline void read_row(struct xmp_context *ctx, int pat, int row)
 	}
 
 	if (read_event(ctx, event, chn, 1) != 0) {
-	    p->fetch_ctl[chn]++;
+	    control[chn]++;
 	    count++;
 	}
     }
 
-    for (chn = 0; count; chn++) {
-	if (p->fetch_ctl[chn]) {
+    for (chn = 0; count > 0; chn++) {
+	if (control[chn]) {
 	    if (row < m->mod.xxt[TRACK_NUM(pat, chn)]->rows) {
 	        event = &EVENT(pat, chn, row);
 	    } else {
 	        event = &empty_event;
 	    }
 	    read_event(ctx, &EVENT(pat, chn, row), chn, 0);
-	    p->fetch_ctl[chn] = 0;
 	    count--;
 	}
     }
@@ -789,7 +790,7 @@ int xmp_player_start(xmp_context opaque)
 
 	p->gvol_slide = 0;
 	p->volume = m->volbase;
-	p->pos = f->ord = o->start;
+	p->pos = p->ord = o->start;
 	p->frame = 0;
 	p->row = 0;
 	p->time = 0;
@@ -798,24 +799,24 @@ int xmp_player_start(xmp_context opaque)
 	if (m->mod.len == 0 || m->mod.chn == 0) {
 		/* set variables to sane state */
 		m->flags &= ~XMP_CTL_LOOP;
-		f->ord = p->scan_ord = 0;
+		p->ord = p->scan_ord = 0;
 		p->row = p->scan_row = 0;
 		f->end_point = 0;
 		return 0;
 	}
 
-	f->num_rows = m->mod.xxp[m->mod.xxo[f->ord]]->rows;
+	f->num_rows = m->mod.xxp[m->mod.xxo[p->ord]]->rows;
 
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
-	while (f->ord < m->mod.len && m->mod.xxo[f->ord] >= m->mod.pat)
-		f->ord++;
+	while (p->ord < m->mod.len && m->mod.xxo[p->ord] >= m->mod.pat)
+		p->ord++;
 
-	p->volume = m->xxo_info[f->ord].gvl;
-	p->bpm = m->xxo_info[f->ord].bpm;
-	p->tempo = m->xxo_info[f->ord].tempo;
+	p->volume = m->xxo_info[p->ord].gvl;
+	p->bpm = m->xxo_info[p->ord].bpm;
+	p->tempo = m->xxo_info[p->ord].tempo;
 
 	p->tick_time = m->rrate / p->bpm;
-	f->jumpline = m->xxo_info[f->ord].start_row;
+	f->jumpline = m->xxo_info[p->ord].start_row;
 	f->playing_time = 0;
 	f->end_point = p->scan_num;
 
@@ -826,20 +827,16 @@ int xmp_player_start(xmp_context opaque)
 
 	f->jump = -1;
 
-	p->fetch_ctl = calloc(m->mod.chn, sizeof (int));
-	if (p->fetch_ctl == NULL)
-		goto err;
-
 	f->loop = calloc(d->virt_channels, sizeof (struct pattern_loop));
 	if (f->loop == NULL)
-		goto err1;
+		goto err;
 
 	p->xc_data = calloc(d->virt_channels, sizeof (struct channel_data));
 	if (p->xc_data == NULL)
-		goto err2;
+		goto err1;
 
 	if (m->synth->init(ctx, o->freq) < 0)
-		goto err3;
+		goto err2;
 
 	m->synth->reset(ctx);
 
@@ -847,12 +844,10 @@ int xmp_player_start(xmp_context opaque)
 
 	return 0;
 
-err3:
-	free(p->xc_data);
 err2:
-	free(f->loop);
+	free(p->xc_data);
 err1:
-	free(p->fetch_ctl);
+	free(f->loop);
 err:
 	return -1;
 }
@@ -867,12 +862,8 @@ int xmp_player_frame(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int i;
 
-	if (p->pause) {
-		return 0;
-	}
-
 	/* check reposition */
-	if (f->ord != p->pos) {
+	if (p->ord != p->pos) {
 		if (p->pos == -1)
 			p->pos++;		/* restart module */
 
@@ -883,18 +874,18 @@ int xmp_player_frame(xmp_context opaque)
 		if (p->pos == 0)
 			f->end_point = p->scan_num;
 
-		f->ord = p->pos;
-		if (m->xxo_info[f->ord].tempo)
-			p->tempo = m->xxo_info[f->ord].tempo;
-		p->bpm = m->xxo_info[f->ord].bpm;
+		p->ord = p->pos;
+		if (m->xxo_info[p->ord].tempo)
+			p->tempo = m->xxo_info[p->ord].tempo;
+		p->bpm = m->xxo_info[p->ord].bpm;
 		p->tick_time = m->rrate / p->bpm;
-		p->volume = m->xxo_info[f->ord].gvl;
-		f->jump = f->ord;
-		p->time = (double)m->xxo_info[f->ord].time / 1000;
-		f->jumpline = m->xxo_info[f->ord].start_row;
+		p->volume = m->xxo_info[p->ord].gvl;
+		f->jump = p->ord;
+		p->time = (double)m->xxo_info[p->ord].time / 1000;
+		f->jumpline = m->xxo_info[p->ord].start_row;
 		p->row = -1;
 		f->pbreak = 1;
-		f->ord--;
+		p->ord--;
 		virtch_reset(ctx);
 		reset_channel(ctx);
 		goto next_row;
@@ -904,7 +895,7 @@ int xmp_player_frame(xmp_context opaque)
 
 	if (p->frame == 0) {			/* first frame in row */
 		/* check end of module */
-	    	if ((~m->flags & XMP_CTL_LOOP) && f->ord == p->scan_ord &&
+	    	if ((~m->flags & XMP_CTL_LOOP) && p->ord == p->scan_ord &&
 					p->row == p->scan_row) {
 			if (!f->end_point--)
 				return -1;
@@ -914,7 +905,7 @@ int xmp_player_frame(xmp_context opaque)
 		if (f->skip_fetch) {
 			f->skip_fetch = 0;
 		} else {
-			read_row(ctx, m->mod.xxo[f->ord], p->row);
+			read_row(ctx, m->mod.xxo[p->ord], p->row);
 		}
 	}
 
@@ -953,7 +944,7 @@ next_row:
 			f->pbreak = 0;
 
 			if (f->jump != -1) {
-				f->ord = f->jump - 1;
+				p->ord = f->jump - 1;
 				f->jump = -1;
 				goto next_order;
 			}
@@ -971,31 +962,31 @@ next_row:
 		/* check end of pattern */
 		if (p->row >= f->num_rows) {
 next_order:
-    			f->ord++;
+    			p->ord++;
 
 			/* Restart module */
-			if (f->ord >= m->mod.len) {
-    				f->ord = ((uint32)m->mod.rst > m->mod.len ||
+			if (p->ord >= m->mod.len) {
+    				p->ord = ((uint32)m->mod.rst > m->mod.len ||
 					(uint32)m->mod.xxo[m->mod.rst] >=
 					m->mod.pat) ?  0 : m->mod.rst;
-				p->volume = m->xxo_info[f->ord].gvl;
+				p->volume = m->xxo_info[p->ord].gvl;
 			}
 
 			/* Skip invalid patterns */
-			if (m->mod.xxo[f->ord] >= m->mod.pat) {
-    				f->ord++;
+			if (m->mod.xxo[p->ord] >= m->mod.pat) {
+    				p->ord++;
     				goto next_order;
 			}
 
-			p->time = (double)m->xxo_info[f->ord].time / 1000;
+			p->time = (double)m->xxo_info[p->ord].time / 1000;
 
-			f->num_rows = m->mod.xxp[m->mod.xxo[f->ord]]->rows;
+			f->num_rows = m->mod.xxp[m->mod.xxo[p->ord]]->rows;
 			if (f->jumpline >= f->num_rows)
 				f->jumpline = 0;
 			p->row = f->jumpline;
 			f->jumpline = 0;
 
-			p->pos = f->ord;
+			p->pos = p->ord;
 
 			/* Reset persistent effects at new pattern */
 			if (HAS_QUIRK(QUIRK_PERPAT)) {
@@ -1017,8 +1008,8 @@ next_order:
 
 			printf("%d %d %d %d %d %d %lf %d %d %d %d %lf "
 			       "%d %d %d %d %d %d %d %d %d\n",
-					f->ord,
-					m->mod.xxo[f->ord],
+					p->ord,
+					m->mod.xxo[p->ord],
 					p->row,
 					p->frame,
 					p->bpm,
@@ -1064,7 +1055,6 @@ void xmp_player_end(xmp_context opaque)
 
 	free(p->xc_data);
 	free(f->loop);
-	free(p->fetch_ctl);
 
 	xmp_smix_off(ctx);
 }

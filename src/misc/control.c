@@ -58,7 +58,6 @@ void xmp_init()
 
 void xmp_deinit()
 {
-	xmp_deinit_formats();
 }
 
 void xmp_channel_mute(xmp_context opaque, int from, int num, int on)

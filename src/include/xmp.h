@@ -71,7 +71,7 @@ struct xmp_fmt_info {
 #define XMP_MAX_KEYS		108
 #define XMP_MAX_ENV_POINTS	32	/* max envelope points */
 #define XMP_MAX_MOD_LENGTH	256	/* max number of patterns in module */
-#define XMP_MAX_CHANNELS	64
+#define XMP_MAX_CHANNELS	64	/* max number of channels in module */
 
 struct xmp_channel {
 	int pan;
