@@ -763,15 +763,15 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     if (cutoff < 0xff && (m->flags & XMP_CTL_FILTER)) {
 	filter_setup(ctx, xc, cutoff);
-	virtch_seteffect(ctx, chn, XMP_FX_FILTER_B0, xc->filter.B0);
-	virtch_seteffect(ctx, chn, XMP_FX_FILTER_B1, xc->filter.B1);
-	virtch_seteffect(ctx, chn, XMP_FX_FILTER_B2, xc->filter.B2);
+	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, xc->filter.B0);
+	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, xc->filter.B1);
+	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B2, xc->filter.B2);
     } else {
 	cutoff = 0xff;
     }
 
-    virtch_seteffect(ctx, chn, XMP_FX_RESONANCE, xc->filter.resonance);
-    virtch_seteffect(ctx, chn, XMP_FX_CUTOFF, cutoff);
+    virtch_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
+    virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 }
 
 int xmp_player_start(xmp_context opaque)

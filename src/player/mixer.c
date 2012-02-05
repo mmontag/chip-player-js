@@ -508,19 +508,19 @@ void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
     struct voice_info *vi = &d->voice_array[voc];
  
     switch (type) {
-    case XMP_FX_CUTOFF:
+    case DSP_EFFECT_CUTOFF:
         vi->filter.cutoff = val;
 	break;
-    case XMP_FX_RESONANCE:
+    case DSP_EFFECT_RESONANCE:
         vi->filter.resonance = val;
 	break;
-    case XMP_FX_FILTER_B0:
+    case DSP_EFFECT_FILTER_B0:
         vi->filter.B0 = val;
 	break;
-    case XMP_FX_FILTER_B1:
+    case DSP_EFFECT_FILTER_B1:
         vi->filter.B1 = val;
 	break;
-    case XMP_FX_FILTER_B2:
+    case DSP_EFFECT_FILTER_B2:
         vi->filter.B2 = val;
 	break;
     }

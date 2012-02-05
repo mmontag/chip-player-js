@@ -24,7 +24,6 @@
 #define XMP_MAXVOC	64		/* max physical voices */
 
 #include <stdio.h>
-#include <signal.h>
 #include "xmp.h"
 
 
@@ -51,14 +50,6 @@ typedef unsigned long long uint64;
 typedef signed long long int64;
 #endif
 
-#ifdef HAVE_STRLCPY
-#define strcpy strlcpy
-#endif
-
-#ifdef HAVE_STRLCAT
-#define strcat strlcat
-#endif
-
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
 #define NTSC_RATE	208.0		/* 1 / (60Hz * 80us)		  */
@@ -69,7 +60,7 @@ typedef signed long long int64;
 /* [Amiga] PAL color carrier frequency (PCCF) = 4.43361825 MHz */
 /* [Amiga] CPU clock = 1.6 * PCCF = 7.0937892 MHz */
 
-#define DEFAULT_AMPLIFY	0
+#define DEFAULT_AMPLIFY	1
 
 /* Global flags */
 #define PATTERN_BREAK	0x0001 
@@ -170,11 +161,11 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 				 QUIRK_SAVEINS | QUIRK_ITVPOR)
 
 /* DSP effects */
-#define XMP_FX_CUTOFF		0x02
-#define XMP_FX_RESONANCE	0x03
-#define XMP_FX_FILTER_B0	0xb0
-#define XMP_FX_FILTER_B1	0xb1
-#define XMP_FX_FILTER_B2	0xb2
+#define DSP_EFFECT_CUTOFF	0x02
+#define DSP_EFFECT_RESONANCE	0x03
+#define DSP_EFFECT_FILTER_B0	0xb0
+#define DSP_EFFECT_FILTER_B1	0xb1
+#define DSP_EFFECT_FILTER_B2	0xb2
 
 
 struct xmp_ord_info {
