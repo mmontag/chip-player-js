@@ -216,6 +216,9 @@ struct xmp_module {
 /*
  * Playing module information
  */
+
+#define XMP_PERIOD_BASE	3424
+
 struct xmp_module_info {
 	int order;
 	int pattern;
@@ -229,15 +232,16 @@ struct xmp_module_info {
 	int buffer_size;
 	int volume;
 
-	struct {
-		int period;
-		int position;
-		unsigned short flags;
+	struct xmp_channel_info {
+		unsigned int period;
+		unsigned int position;
+		unsigned short pitchbend;
 		unsigned char note;
 		unsigned char instrument;
 		unsigned char sample;
 		unsigned char volume;
 		unsigned char pan;
+		unsigned char reserved;
 	} channel_info[XMP_MAX_CHANNELS];
 
 	struct xmp_module *mod;

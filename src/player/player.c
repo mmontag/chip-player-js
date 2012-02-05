@@ -754,6 +754,8 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	0 : (finalpan - 0x80) * o->mix / 100;
 
     linear_bend += get_stepper(&xc->arpeggio) + med_arp;
+    xc->pitchbend = linear_bend;
+    xc->final_period = note_to_period_mix(xc->note, linear_bend);
 
     xmp_drv_setbend(ctx, chn, linear_bend);
     xmp_drv_setpan(ctx, chn, finalpan);
@@ -1099,13 +1101,15 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 
 	for (i = 0; i < chn; i++) {
 		struct channel_data *c = &p->xc_data[i];
+		struct xmp_channel_info *ci = &info->channel_info[i];
 
-		info->channel_info[i].period = c->period * 1000000;
-		info->channel_info[i].note = c->key;
-		info->channel_info[i].instrument = c->ins;
-		info->channel_info[i].sample = c->smp;
-		info->channel_info[i].volume = c->volume;
-		info->channel_info[i].pan = c->pan;
+		ci->note = c->key;
+		ci->pitchbend = c->pitchbend;
+		ci->period = c->final_period;
+		ci->instrument = c->ins;
+		ci->sample = c->smp;
+		ci->volume = c->volume;
+		ci->pan = c->pan;
 	}
 
 	info->mod = &m->mod;

@@ -48,7 +48,7 @@ extern struct font_header font1;
 extern struct font_header font2;
 
 static SDL_Surface *screen;
-static struct channel_info ci[40];
+static struct channel_info channel_info[40];
 
 static int palette[] = {
     0x00, 0x00, 0x00,	/*  0 */	0x3f, 0x3f, 0x25,	/*  1 */
@@ -219,22 +219,24 @@ void draw_bars()
     int p, v, i, y0, y1, y2, y3, k;
 
     for (i = 0; i < 40; i++) {
-	y2 = ci[i].y2;
-	y3 = ci[i].y3;
+	struct channel_info *ci = &channel_info[i];
 
-	if ((v = ci[i].vol))
-	    ci[i].vol--;
+	y2 = ci->y2;
+	y3 = ci->y3;
 
-	if (ci[i].timer && !--ci[i].timer) {
+	if ((v = ci->vol))
+	    ci->vol--;
+
+	if (ci->timer && !--ci->timer) {
 	    draw_lines (i, y2, y3, 0);
-	    ci[i].y2 = ci[i].y3 = ci[i].note = 0;
+	    ci->y2 = ci->y3 = ci->note = 0;
 	    continue;
 	}
 
-	if (!ci[i].note)
+	if (ci->note == 0)
 	    continue;
 
-	p = 470 - ci[i].note * 4 - ci[i].bend;
+	p = 470 - ci->note * 4 - ci->bend / 25;
 
 	if (p < 86)
 	    p = 86;
@@ -242,8 +244,8 @@ void draw_bars()
 	    p = 470;
 	v++;
 
-	ci[i].y2 = y0 = p - v;
-	ci[i].y3 = y1 = p + v;
+	ci->y2 = y0 = p - v;
+	ci->y3 = y1 = p + v;
 	k = abs (((i + 10) % 12) - 6) + 1;
 
 	if ((y0 == y2) && (y1 == y3))
@@ -403,25 +405,18 @@ static void draw_screen(struct xmp_module_info
 	update_counter(mi->row, row, 52);
 
 	for (i = 0; i < mi->mod->chn; i++) {
-		int ins = mi->channel_info[i].instrument;
-		int note = mi->channel_info[i].note;
-		int vol = mi->channel_info[i].volume;
+		struct xmp_channel_info *info = &mi->channel_info[i];
+		struct channel_info *ci = &channel_info[info->instrument];
 
-		if (ins < 40) {
-			ci[ins].note = note;
-			ci[ins].vol = vol;
-			ci[ins].timer = MAX_TIMER / 30;
-
-			if (ci[ins].vol > 8) {
-				ci[ins].vol = 8;
+		if (info->instrument < 40) {
+			ci->note = info->note;
+			ci->bend = info->pitchbend;
+			ci->vol = info->volume;
+			ci->timer = MAX_TIMER / 30;
+			if (ci->vol > 8) {
+				ci->vol = 8;
 			}
 		}
-#if 0
-		case XMP_ECHO_PBD:
-			if (ins < 40)
-				ci[ins].bend = msg / 25;
-			break;
-#endif
 	}
 
 	draw_bars();
