@@ -17,7 +17,7 @@
 #define MAX_VOICES_CHANNEL 16
 
 
-void xmp_drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
+void virtch_resetvoice(struct xmp_context *ctx, int voc, int mute)
 {
     struct xmp_driver_context *d = &ctx->d;
     struct voice_info *vi = &d->voice_array[voc];
@@ -36,8 +36,8 @@ void xmp_drv_resetvoice(struct xmp_context *ctx, int voc, int mute)
 }
 
 
-/* xmp_drv_on (number of tracks) */
-int xmp_drv_on(struct xmp_context *ctx, int num)
+/* virtch_on (number of tracks) */
+int virtch_on(struct xmp_context *ctx, int num)
 {
 	struct xmp_driver_context *d = &ctx->d;
 	struct xmp_mod_context *m = &ctx->m;
@@ -90,7 +90,7 @@ err:
 }
 
 
-void xmp_drv_off(struct xmp_context *ctx)
+void virtch_off(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
@@ -106,7 +106,7 @@ void xmp_drv_off(struct xmp_context *ctx)
 }
 
 
-void xmp_drv_reset(struct xmp_context *ctx)
+void virtch_reset(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
     int i;
@@ -129,7 +129,7 @@ void xmp_drv_reset(struct xmp_context *ctx)
 }
 
 
-void xmp_drv_resetchannel(struct xmp_context *ctx, int chn)
+void virtch_resetchannel(struct xmp_context *ctx, int chn)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -191,7 +191,7 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
 }
 
 
-void xmp_drv_mute(struct xmp_context *ctx, int chn, int status)
+void virtch_mute(struct xmp_context *ctx, int chn, int status)
 {
     struct xmp_driver_context *d = &ctx->d;
 
@@ -205,7 +205,7 @@ void xmp_drv_mute(struct xmp_context *ctx, int chn, int status)
 }
 
 
-void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
+void virtch_setvol(struct xmp_context *ctx, int chn, int vol)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -221,11 +221,11 @@ void xmp_drv_setvol(struct xmp_context *ctx, int chn, int vol)
     xmp_smix_setvol(ctx, voc, vol);
 
     if (!(vol || chn < d->numtrk))
-	xmp_drv_resetvoice(ctx, voc, 1);
+	virtch_resetvoice(ctx, voc, 1);
 }
 
 
-void xmp_drv_setpan(struct xmp_context *ctx, int chn, int pan)
+void virtch_setpan(struct xmp_context *ctx, int chn, int pan)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -239,7 +239,7 @@ void xmp_drv_setpan(struct xmp_context *ctx, int chn, int pan)
 }
 
 
-void xmp_drv_seteffect(struct xmp_context *ctx, int chn, int type, int val)
+void virtch_seteffect(struct xmp_context *ctx, int chn, int type, int val)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -253,7 +253,7 @@ void xmp_drv_seteffect(struct xmp_context *ctx, int chn, int type, int val)
 }
 
 
-void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
+void virtch_setsmp(struct xmp_context *ctx, int chn, int smp)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -273,7 +273,7 @@ void xmp_drv_setsmp(struct xmp_context *ctx, int chn, int smp)
 }
 
 
-int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg, int cont_sample)
+int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg, int cont_sample)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc, vfree;
@@ -294,7 +294,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 			if (voc != d->ch2vo_array[chn] || d->voice_array[voc].act)
 			    d->voice_array[voc].act = dca;
 		    } else {
-			xmp_drv_resetvoice(ctx, voc, 1);
+			virtch_resetvoice(ctx, voc, 1);
 		    }
 		}
 	    }
@@ -324,7 +324,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
     }
 
     if (smp < 0) {
-	xmp_drv_resetvoice(ctx, voc, 1);
+	virtch_resetvoice(ctx, voc, 1);
 	return chn;	/* was -1 */
     }
 
@@ -340,7 +340,7 @@ int xmp_drv_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int not
 }
 
 
-void xmp_drv_setnna(struct xmp_context *ctx, int chn, int nna)
+void virtch_setnna(struct xmp_context *ctx, int chn, int nna)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -354,7 +354,7 @@ void xmp_drv_setnna(struct xmp_context *ctx, int chn, int nna)
 }
 
 
-void xmp_drv_setbend(struct xmp_context *ctx, int chn, int bend)
+void virtch_setbend(struct xmp_context *ctx, int chn, int bend)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -368,7 +368,7 @@ void xmp_drv_setbend(struct xmp_context *ctx, int chn, int bend)
 }
 
 
-void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
+void virtch_voicepos(struct xmp_context *ctx, int chn, int pos)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -382,7 +382,7 @@ void xmp_drv_voicepos(struct xmp_context *ctx, int chn, int pos)
 }
 
 
-void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
+void virtch_pastnote(struct xmp_context *ctx, int chn, int act)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;
@@ -390,7 +390,7 @@ void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
     for (voc = d->maxvoc; voc--;) {
 	if (d->voice_array[voc].root == chn && d->voice_array[voc].chn >= d->numtrk) {
 	    if (act == XMP_ACT_CUT)
-		xmp_drv_resetvoice(ctx, voc, 1);
+		virtch_resetvoice(ctx, voc, 1);
 	    else
 		d->voice_array[voc].act = act;
 	}
@@ -398,7 +398,7 @@ void xmp_drv_pastnote(struct xmp_context *ctx, int chn, int act)
 }
 
 
-int xmp_drv_cstat(struct xmp_context *ctx, int chn)
+int virtch_cstat(struct xmp_context *ctx, int chn)
 {
     struct xmp_driver_context *d = &ctx->d;
     int voc;

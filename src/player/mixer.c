@@ -248,7 +248,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	    continue;
 
 	if (vi->period < 1) {
-	    xmp_drv_resetvoice(ctx, voc, 1);
+	    virtch_resetvoice(ctx, voc, 1);
 	    continue;
 	}
 
@@ -351,7 +351,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	    /* First sample loop run */
             if (vi->fidx == 0 || lps >= lpe) {
 		smix_anticlick(ctx, voc, 0, 0, buf_pos, size);
-		xmp_drv_resetvoice(ctx, voc, 0);
+		virtch_resetvoice(ctx, voc, 0);
 		size = 0;
 		continue;
 	    }

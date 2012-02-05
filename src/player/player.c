@@ -229,7 +229,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	    xins = ins;
 	} else {					/* invalid ins */
 	    if (!HAS_QUIRK(QUIRK_NCWINS))
-		xmp_drv_resetchannel(ctx, chn);
+		virtch_resetchannel(ctx, chn);
 
 	    if (HAS_QUIRK(QUIRK_IGNWINS)) {
 		ins = -1;
@@ -251,7 +251,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	    SET(FADEOUT);
 	    flg &= ~(RESET_VOL | RESET_ENV);
 	} else if (key == XMP_KEY_CUT) {
-	    xmp_drv_resetchannel(ctx, chn);
+	    virtch_resetchannel(ctx, chn);
 	} else if (key == XMP_KEY_OFF) {
 	    SET(RELEASE);
 	    flg &= ~(RESET_VOL | RESET_ENV);
@@ -312,13 +312,13 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	    }
 	} else {
 	    if (!HAS_QUIRK(QUIRK_CUTNWI))
-		xmp_drv_resetchannel(ctx, chn);
+		virtch_resetchannel(ctx, chn);
 	}
     }
 
     if (smp >= 0) {
 	int mapped = m->mod.xxi[ins].map[key].ins;
-	int to = xmp_drv_setpatch(ctx, chn, ins, smp, note,
+	int to = virtch_setpatch(ctx, chn, ins, smp, note,
 			m->mod.xxi[ins].sub[mapped].nna, m->mod.xxi[ins].sub[mapped].dct,
 			m->mod.xxi[ins].sub[mapped].dca, ctl, cont_sample);
 
@@ -372,7 +372,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	xc->note = note;
 
 	if (cont_sample == 0) {
-	    xmp_drv_voicepos(ctx, chn, xc->offset_val);
+	    virtch_voicepos(ctx, chn, xc->offset_val);
 	    if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG))
 		xc->offset_val <<= 1;
 	}
@@ -477,12 +477,12 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	    read_event(ctx, xc->delayed_event, chn, 0);
     }
 
-    if ((act = xmp_drv_cstat(ctx, chn)) == XMP_CHN_DUMB)
+    if ((act = virtch_cstat(ctx, chn)) == XMP_CHN_DUMB)
 	return;
 
     if (!t && act != XMP_CHN_ACTIVE) {
 	if (!TEST(IS_VALID) || act == XMP_ACT_CUT) {
-	    xmp_drv_resetchannel(ctx, chn);
+	    virtch_resetchannel(ctx, chn);
 	    return;
 	}
 	xc->delay = xc->retrig.delay = 0;
@@ -512,7 +512,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	     * can release it.
 	     */
 	     if (m->flags & XMP_CTL_VIRTUAL) {
-		 xmp_drv_resetchannel(ctx, chn);
+		 virtch_resetchannel(ctx, chn);
 		 return;
 	     } else {
 		 xc->volume = 0;
@@ -531,7 +531,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
     switch (check_envelope_fade(&XXIH.aei, xc->v_idx)) {
     case -1:
-	xmp_drv_resetchannel(ctx, chn);
+	virtch_resetchannel(ctx, chn);
 	break;
     case 0:
 	break;
@@ -555,7 +555,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     if (xc->retrig.delay) {
 	if (!--xc->retrig.count) {
 	    if (xc->retrig.type < 0x10)
-		xmp_drv_voicepos(ctx, chn, 0);	/* don't retrig on cut */
+		virtch_voicepos(ctx, chn, 0);	/* don't retrig on cut */
 	    xc->volume += rval[xc->retrig.type].s;
 	    xc->volume *= rval[xc->retrig.type].m;
 	    xc->volume /= rval[xc->retrig.type].d;
@@ -757,21 +757,21 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     xc->pitchbend = linear_bend;
     xc->final_period = note_to_period_mix(xc->note, linear_bend);
 
-    xmp_drv_setbend(ctx, chn, linear_bend);
-    xmp_drv_setpan(ctx, chn, finalpan);
-    xmp_drv_setvol(ctx, chn, finalvol);
+    virtch_setbend(ctx, chn, linear_bend);
+    virtch_setpan(ctx, chn, finalpan);
+    virtch_setvol(ctx, chn, finalvol);
 
     if (cutoff < 0xff && (m->flags & XMP_CTL_FILTER)) {
 	filter_setup(ctx, xc, cutoff);
-	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B0, xc->filter.B0);
-	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B1, xc->filter.B1);
-	xmp_drv_seteffect(ctx, chn, XMP_FX_FILTER_B2, xc->filter.B2);
+	virtch_seteffect(ctx, chn, XMP_FX_FILTER_B0, xc->filter.B0);
+	virtch_seteffect(ctx, chn, XMP_FX_FILTER_B1, xc->filter.B1);
+	virtch_seteffect(ctx, chn, XMP_FX_FILTER_B2, xc->filter.B2);
     } else {
 	cutoff = 0xff;
     }
 
-    xmp_drv_seteffect(ctx, chn, XMP_FX_RESONANCE, xc->filter.resonance);
-    xmp_drv_seteffect(ctx, chn, XMP_FX_CUTOFF, cutoff);
+    virtch_seteffect(ctx, chn, XMP_FX_RESONANCE, xc->filter.resonance);
+    virtch_seteffect(ctx, chn, XMP_FX_CUTOFF, cutoff);
 }
 
 int xmp_player_start(xmp_context opaque)
@@ -819,7 +819,7 @@ int xmp_player_start(xmp_context opaque)
 	f->playing_time = 0;
 	f->end_point = p->scan_num;
 
-	if ((ret = xmp_drv_on(ctx, m->mod.chn)) != 0)
+	if ((ret = virtch_on(ctx, m->mod.chn)) != 0)
 		return ret;
 
 	smix_resetvar(ctx);
@@ -901,7 +901,7 @@ int xmp_player_frame(xmp_context opaque)
 		p->row = -1;
 		f->pbreak = 1;
 		f->ord--;
-		xmp_drv_reset(ctx);
+		virtch_reset(ctx);
 		reset_channel(ctx);
 		goto next_row;
 	}
@@ -1062,7 +1062,7 @@ void xmp_player_end(xmp_context opaque)
 	struct xmp_mod_context *m = &ctx->m;
 	struct flow_control *f = &p->flow;
 
-	xmp_drv_off(ctx);
+	virtch_off(ctx);
 	m->synth->deinit(ctx);
 
 	if (m->mod.len == 0 || m->mod.chn == 0)

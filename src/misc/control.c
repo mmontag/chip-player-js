@@ -69,7 +69,7 @@ void xmp_channel_mute(xmp_context opaque, int from, int num, int on)
 
 	if (num > 0) {
 		while (num--)
-			xmp_drv_mute(ctx, from - num, on);
+			virtch_mute(ctx, from - num, on);
 	}
 }
 

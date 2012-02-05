@@ -221,7 +221,7 @@ skip_vol:
 	    default:
 		if (b < m->mod.xxi[xc->ins].nsm && m->mod.xxi[xc->ins].sub[b].sid != xc->smp) {
 		    xc->smp = m->mod.xxi[xc->ins].sub[b].sid;
-		    xmp_drv_setsmp(ctx, chn, xc->smp);
+		    virtch_setsmp(ctx, chn, xc->smp);
 		}
 	    }
 	}

@@ -31,24 +31,24 @@
 
 /* PROTOTYPES */
 
-int	xmp_drv_on		(struct xmp_context *, int);
-void	xmp_drv_off		(struct xmp_context *);
-void	xmp_drv_mute		(struct xmp_context *, int, int);
-int	xmp_drv_setpatch	(struct xmp_context *, int, int, int, int, int, int, int, int, int);
-int	xmp_drv_cvt8bit		(void);
-void	xmp_drv_setsmp		(struct xmp_context *, int, int);
-void	xmp_drv_setnna		(struct xmp_context *, int, int);
-void	xmp_drv_pastnote	(struct xmp_context *, int, int);
-void	xmp_drv_setvol		(struct xmp_context *, int, int);
-void	xmp_drv_voicepos	(struct xmp_context *, int, int);
-void	xmp_drv_setbend		(struct xmp_context *, int, int);
-void	xmp_drv_setpan		(struct xmp_context *, int, int);
-void	xmp_drv_seteffect	(struct xmp_context *, int, int, int);
-int	xmp_drv_cstat		(struct xmp_context *, int);
-void	xmp_drv_resetchannel	(struct xmp_context *, int);
-void	xmp_drv_resetvoice	(struct xmp_context *, int, int);
-void	xmp_drv_reset		(struct xmp_context *);
+int	virtch_on		(struct xmp_context *, int);
+void	virtch_off		(struct xmp_context *);
+void	virtch_mute		(struct xmp_context *, int, int);
+int	virtch_setpatch	(struct xmp_context *, int, int, int, int, int, int, int, int, int);
+int	virtch_cvt8bit		(void);
+void	virtch_setsmp		(struct xmp_context *, int, int);
+void	virtch_setnna		(struct xmp_context *, int, int);
+void	virtch_pastnote	(struct xmp_context *, int, int);
+void	virtch_setvol		(struct xmp_context *, int, int);
+void	virtch_voicepos	(struct xmp_context *, int, int);
+void	virtch_setbend		(struct xmp_context *, int, int);
+void	virtch_setpan		(struct xmp_context *, int, int);
+void	virtch_seteffect	(struct xmp_context *, int, int, int);
+int	virtch_cstat		(struct xmp_context *, int);
+void	virtch_resetchannel	(struct xmp_context *, int);
+void	virtch_resetvoice	(struct xmp_context *, int, int);
+void	virtch_reset		(struct xmp_context *);
 
-struct xmp_drv_info *xmp_drv_array (void);
+struct virtch_info *virtch_array (void);
 
 #endif /* __XMP_DRIVER_H */

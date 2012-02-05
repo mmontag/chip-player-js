@@ -33,7 +33,7 @@ void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 f
     int h, l;
 
     if (fxt >= FX_SYNTH_0 && fxt <= FX_SYNTH_F) {
-	xmp_drv_seteffect(ctx, chn, fxt, fxp);
+	virtch_seteffect(ctx, chn, fxt, fxp);
 	return;
     }
 
@@ -536,25 +536,25 @@ fx_finetune:
     case FX_IT_INSTFUNC:
 	switch (fxp) {
 	case 0:			/* Past note cut */
-	    xmp_drv_pastnote(ctx, chn, XXM_NNA_CUT);
+	    virtch_pastnote(ctx, chn, XXM_NNA_CUT);
 	    break;
 	case 1:			/* Past note off */
-	    xmp_drv_pastnote(ctx, chn, XXM_NNA_OFF);
+	    virtch_pastnote(ctx, chn, XXM_NNA_OFF);
 	    break;
 	case 2:			/* Past note fade */
-	    xmp_drv_pastnote(ctx, chn, XXM_NNA_FADE);
+	    virtch_pastnote(ctx, chn, XXM_NNA_FADE);
 	    break;
 	case 3:			/* Set NNA to note cut */
-	    xmp_drv_setnna(ctx, chn, XXM_NNA_CUT);
+	    virtch_setnna(ctx, chn, XXM_NNA_CUT);
 	    break;
 	case 4:			/* Set NNA to continue */
-	    xmp_drv_setnna(ctx, chn, XXM_NNA_CONT);
+	    virtch_setnna(ctx, chn, XXM_NNA_CONT);
 	    break;
 	case 5:			/* Set NNA to note off */
-	    xmp_drv_setnna(ctx, chn, XXM_NNA_OFF);
+	    virtch_setnna(ctx, chn, XXM_NNA_OFF);
 	    break;
 	case 6:			/* Set NNA to note fade */
-	    xmp_drv_setnna(ctx, chn, XXM_NNA_FADE);
+	    virtch_setnna(ctx, chn, XXM_NNA_FADE);
 	    break;
 	case 7:			/* Turn off volume envelope */
 	    break;
