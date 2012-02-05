@@ -477,11 +477,11 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	    read_event(ctx, xc->delayed_event, chn, 0);
     }
 
-    if ((act = virtch_cstat(ctx, chn)) == XMP_CHN_DUMB)
+    if ((act = virtch_cstat(ctx, chn)) == VIRTCH_INVALID)
 	return;
 
-    if (!t && act != XMP_CHN_ACTIVE) {
-	if (!TEST(IS_VALID) || act == XMP_ACT_CUT) {
+    if (!t && act != VIRTCH_ACTIVE) {
+	if (!TEST(IS_VALID) || act == VIRTCH_ACTION_CUT) {
 	    virtch_resetchannel(ctx, chn);
 	    return;
 	}
@@ -496,10 +496,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     /* Process MED synth instruments */
     xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
 
-    if (TEST(RELEASE) && !(XXIH.aei.flg & XXM_ENV_ON))
+    if (TEST(RELEASE) && !(XXIH.aei.flg & XMP_ENVELOPE_ON))
 	xc->fadeout = 0;
  
-    if (TEST(FADEOUT | RELEASE) || act == XMP_ACT_FADE || act == XMP_ACT_OFF) {
+    if (TEST(FADEOUT | RELEASE) || act == VIRTCH_ACTION_FADE || act == VIRTCH_ACTION_OFF) {
 	xc->fadeout = xc->fadeout > XXIH.rls ? xc->fadeout - XXIH.rls : 0;
 
 	if (xc->fadeout == 0) {
@@ -610,13 +610,13 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	xc->gliss,
 	m->mod.flg & XXM_FLG_LINEAR);
 
-    linear_bend += XXIH.fei.flg & XXM_ENV_FLT ? 0 : frq_envelope;
+    linear_bend += XXIH.fei.flg & XMP_ENVELOPE_FLT ? 0 : frq_envelope;
 
     finalpan = xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32;
     finalpan = xc->masterpan + (finalpan - 128) *
 			(128 - abs (xc->masterpan - 128)) / 128;
 
-    if (XXIH.fei.flg & XXM_ENV_FLT) {
+    if (XXIH.fei.flg & XMP_ENVELOPE_FLT) {
 	cutoff = xc->filter.cutoff * frq_envelope / 0xff;
     } else {
 	cutoff = 0xff;

@@ -4,32 +4,13 @@
 
 #include "common.h"
 
-#define XMP_ACT_CUT		XXM_NNA_CUT
-#define XMP_ACT_CONT		XXM_NNA_CONT
-#define XMP_ACT_OFF		XXM_NNA_OFF
-#define XMP_ACT_FADE		XXM_NNA_FADE
+#define VIRTCH_ACTION_CUT	XMP_INST_NNA_CUT
+#define VIRTCH_ACTION_CONT	XMP_INST_NNA_CONT
+#define VIRTCH_ACTION_OFF	XMP_INST_NNA_OFF
+#define VIRTCH_ACTION_FADE	XMP_INST_NNA_FADE
 
-#define XMP_CHN_ACTIVE		0x100
-#define XMP_CHN_DUMB		-1
-
-#define parm_init() for (parm = o->parm; *parm; parm++) { \
-	char s[80]; strncpy(s, *parm, 80); \
-	token = strtok(s, ":="); token = strtok(NULL, "");
-#define parm_end() }
-#define parm_error() do { \
-	fprintf(stderr, "xmp: incorrect parameters in -D %s\n", s); \
-	exit(-4); } while (0)
-#define chkparm0(x,y) { \
-	if (!strcmp(s, x)) { \
-	    if (token != NULL) parm_error(); else { y; } } }
-#define chkparm1(x,y) { \
-	if (!strcmp(s, x)) { \
-	    if (token == NULL) parm_error(); else { y; } } }
-#define chkparm2(x,y,z,w) { if (!strcmp(s, x)) { \
-	if (2 > sscanf(token, y, z, w)) parm_error(); } }
-
-
-/* PROTOTYPES */
+#define VIRTCH_ACTIVE		0x100
+#define VIRTCH_INVALID		-1
 
 int	virtch_on		(struct xmp_context *, int);
 void	virtch_off		(struct xmp_context *);
@@ -48,7 +29,5 @@ int	virtch_cstat		(struct xmp_context *, int);
 void	virtch_resetchannel	(struct xmp_context *, int);
 void	virtch_resetvoice	(struct xmp_context *, int, int);
 void	virtch_reset		(struct xmp_context *);
-
-struct virtch_info *virtch_array (void);
 
 #endif /* __XMP_VIRTUAL_H */

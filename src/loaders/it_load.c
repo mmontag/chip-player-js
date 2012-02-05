@@ -521,9 +521,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
             	env.node[j].x = read16l(f); \
             } \
             env.unused = read8(f); \
-	    mod->xxi[i].X##ei.flg = env.flg & IT_ENV_ON ? XXM_ENV_ON : 0; \
-	    mod->xxi[i].X##ei.flg |= env.flg & IT_ENV_LOOP ? XXM_ENV_LOOP : 0; \
-	    mod->xxi[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0; \
+	    mod->xxi[i].X##ei.flg = env.flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0; \
+	    mod->xxi[i].X##ei.flg |= env.flg & IT_ENV_LOOP ? XMP_ENVELOPE_LOOP : 0; \
+	    mod->xxi[i].X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XMP_ENVELOPE_SUS|XMP_ENVELOPE_SLOOP) : 0; \
 	    mod->xxi[i].X##ei.npt = env.num; \
 	    mod->xxi[i].X##ei.sus = env.slb; \
 	    mod->xxi[i].X##ei.sue = env.sle; \
@@ -539,12 +539,12 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	    BUILD_ENV(p);
 	    BUILD_ENV(f);
 	    
-	    if (mod->xxi[i].pei.flg & XXM_ENV_ON)
+	    if (mod->xxi[i].pei.flg & XMP_ENVELOPE_ON)
 		for (j = 0; j < mod->xxi[i].pei.npt; j++)
 		    mod->xxi[i].pei.data[j * 2 + 1] += 32;
 
 	    if (env.flg & IT_ENV_FILTER) {
-		mod->xxi[i].fei.flg |= XXM_ENV_FLT;
+		mod->xxi[i].fei.flg |= XMP_ENVELOPE_FLT;
 		for (j = 0; j < env.num; j++) {
 		    mod->xxi[i].fei.data[j * 2 + 1] += 32;
 		    mod->xxi[i].fei.data[j * 2 + 1] *= 4;
@@ -602,8 +602,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		i2h.gbv,
 		i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4,
 		i2h.rv,
-		mod->xxi[i].aei.flg & XXM_ENV_ON ? 'V' : '-',
-		mod->xxi[i].pei.flg & XXM_ENV_ON ? 'P' : '-',
+		mod->xxi[i].aei.flg & XMP_ENVELOPE_ON ? 'V' : '-',
+		mod->xxi[i].pei.flg & XMP_ENVELOPE_ON ? 'P' : '-',
 		env.flg & 0x01 ? env.flg & 0x80 ? 'F' : 'P' : '-',
 		mod->xxi[i].nsm,
 		i2h.ifc,
@@ -645,9 +645,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	    mod->xxi[i].rls = i1h.fadeout << 7;
 
-	    mod->xxi[i].aei.flg = i1h.flags & IT_ENV_ON ? XXM_ENV_ON : 0;
-	    mod->xxi[i].aei.flg |= i1h.flags & IT_ENV_LOOP ? XXM_ENV_LOOP : 0;
-	    mod->xxi[i].aei.flg |= i1h.flags & IT_ENV_SLOOP ? (XXM_ENV_SUS|XXM_ENV_SLOOP) : 0;
+	    mod->xxi[i].aei.flg = i1h.flags & IT_ENV_ON ? XMP_ENVELOPE_ON : 0;
+	    mod->xxi[i].aei.flg |= i1h.flags & IT_ENV_LOOP ? XMP_ENVELOPE_LOOP : 0;
+	    mod->xxi[i].aei.flg |= i1h.flags & IT_ENV_SLOOP ? (XMP_ENVELOPE_SUS|XMP_ENVELOPE_SLOOP) : 0;
 	    mod->xxi[i].aei.lps = i1h.vls;
 	    mod->xxi[i].aei.lpe = i1h.vle;
 	    mod->xxi[i].aei.sus = i1h.sls;
@@ -687,8 +687,8 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		for (j = 0; j < k; j++) {
 		    mod->xxi[i].sub[j].sid = inst_rmap[j];
 		    mod->xxi[i].sub[j].nna = i1h.nna;
-		    mod->xxi[i].sub[j].dct = i1h.dnc ? XXM_DCT_NOTE : XXM_DCT_OFF;
-		    mod->xxi[i].sub[j].dca = XXM_DCA_CUT;
+		    mod->xxi[i].sub[j].dct = i1h.dnc ? XMP_INST_DCT_NOTE : XMP_INST_DCT_OFF;
+		    mod->xxi[i].sub[j].dca = XMP_INST_DCA_CUT;
 		    mod->xxi[i].sub[j].pan = 0x80;
 	        }
 	    }
@@ -699,9 +699,9 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 		i1h.dnc ? "on" : "off",
 		i1h.fadeout,
 		mod->xxi[i].aei.npt,
-		mod->xxi[i].aei.flg & XXM_ENV_ON ? 'V' : '-',
-		mod->xxi[i].aei.flg & XXM_ENV_LOOP ? 'L' : '-',
-		mod->xxi[i].aei.flg & XXM_ENV_SUS ? 'S' : '-',
+		mod->xxi[i].aei.flg & XMP_ENVELOPE_ON ? 'V' : '-',
+		mod->xxi[i].aei.flg & XMP_ENVELOPE_LOOP ? 'L' : '-',
+		mod->xxi[i].aei.flg & XMP_ENVELOPE_SUS ? 'S' : '-',
 		mod->xxi[i].nsm
 	    );
 	}

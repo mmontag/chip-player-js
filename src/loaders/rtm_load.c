@@ -287,10 +287,10 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 		mod->xxi[i].pei.flg = ri.panningEnv.flags;
 
 		if (mod->xxi[i].aei.npt <= 0)
-			mod->xxi[i].aei.flg &= ~XXM_ENV_ON;
+			mod->xxi[i].aei.flg &= ~XMP_ENVELOPE_ON;
 
 		if (mod->xxi[i].pei.npt <= 0)
-			mod->xxi[i].pei.flg &= ~XXM_ENV_ON;
+			mod->xxi[i].pei.flg &= ~XMP_ENVELOPE_ON;
 
 		for (j = 0; j < mod->xxi[i].aei.npt; j++) {
 			mod->xxi[i].aei.data[j * 2 + 0] = ri.volumeEnv.point[j].x;

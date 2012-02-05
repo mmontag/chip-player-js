@@ -182,7 +182,7 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
     if (am.rs  == 0) am.rs  = 1;
 
     mod->xxi[i].aei.npt = 6;
-    mod->xxi[i].aei.flg = XXM_ENV_ON;
+    mod->xxi[i].aei.flg = XMP_ENVELOPE_ON;
 
     mod->xxi[i].aei.data[0] = 0;
     mod->xxi[i].aei.data[1] = am.l0 / 4;
@@ -256,7 +256,7 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 
     if (am.p_fall) {
 	mod->xxi[i].fei.npt = 2;
-	mod->xxi[i].fei.flg = XXM_ENV_ON;
+	mod->xxi[i].fei.flg = XMP_ENVELOPE_ON;
 
 	mod->xxi[i].fei.data[0] = 0;
 	mod->xxi[i].fei.data[1] = 0;

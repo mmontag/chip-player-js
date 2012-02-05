@@ -104,11 +104,11 @@ struct xmp_track {
 
 
 struct xmp_envelope {
-#define XXM_ENV_ON	0x01
-#define XXM_ENV_SUS	0x02
-#define XXM_ENV_LOOP	0x04
-#define XXM_ENV_FLT	0x08
-#define XXM_ENV_SLOOP	0x10
+#define XMP_ENVELOPE_ON		0x01
+#define XMP_ENVELOPE_SUS	0x02
+#define XMP_ENVELOPE_LOOP	0x04
+#define XMP_ENVELOPE_FLT	0x08
+#define XMP_ENVELOPE_SLOOP	0x10
 	int flg;		/* Flags */
 	int npt;		/* Number of envelope points */
 	int scl;		/* Envelope scaling */
@@ -117,37 +117,6 @@ struct xmp_envelope {
 	int lps;		/* Loop start point */
 	int lpe;		/* Loop end point */
 	short data[XMP_MAX_ENV_POINTS * 2];
-};
-
-struct xmp_subinstrument {
-	int vol;		/* [default] Volume */
-	int gvl;		/* [global] Volume */
-	int pan;		/* Pan */
-	int xpo;		/* Transpose */
-	int fin;		/* Finetune */
-	int vwf;		/* Vibrato waveform */
-	int vde;		/* Vibrato depth */
-	int vra;		/* Vibrato rate */
-	int vsw;		/* Vibrato sweep */
-	int rvv;		/* Random volume var -- for IT */
-	int sid;		/* Sample number */
-#define XXM_NNA_CUT	0x00
-#define XXM_NNA_CONT	0x01
-#define XXM_NNA_OFF	0x02
-#define XXM_NNA_FADE	0x03
-	int nna;		/* New note action -- for IT */
-#define XXM_DCT_OFF	0x00
-#define XXM_DCT_NOTE	0x01
-#define XXM_DCT_SMP	0x02
-#define XXM_DCT_INST	0x03
-	int dct;		/* Duplicate check type -- for IT */
-#define XXM_DCA_CUT	XXM_NNA_CUT
-#define XXM_DCA_OFF	XXM_NNA_OFF
-#define XXM_DCA_FADE	XXM_NNA_FADE
-	int dca;		/* Duplicate check action -- for IT */
-	int ifc;		/* Initial filter cutoff -- for IT */
-	int ifr;		/* Initial filter resonance -- for IT */
-	int hld;		/* Hold -- for MED */
 };
 
 struct xmp_instrument {
@@ -166,7 +135,36 @@ struct xmp_instrument {
 		signed char xpo;	/* Instrument transpose for each key */
 	} map[XMP_MAX_KEYS];
 
-	struct xmp_subinstrument *sub;
+	struct xmp_subinstrument {
+		int vol;		/* [default] Volume */
+		int gvl;		/* [global] Volume */
+		int pan;		/* Pan */
+		int xpo;		/* Transpose */
+		int fin;		/* Finetune */
+		int vwf;		/* Vibrato waveform */
+		int vde;		/* Vibrato depth */
+		int vra;		/* Vibrato rate */
+		int vsw;		/* Vibrato sweep */
+		int rvv;		/* Random volume var -- for IT */
+		int sid;		/* Sample number */
+#define XMP_INST_NNA_CUT	0x00
+#define XMP_INST_NNA_CONT	0x01
+#define XMP_INST_NNA_OFF	0x02
+#define XMP_INST_NNA_FADE	0x03
+		int nna;		/* New note action -- for IT */
+#define XMP_INST_DCT_OFF	0x00
+#define XMP_INST_DCT_NOTE	0x01
+#define XMP_INST_DCT_SMP	0x02
+#define XMP_INST_DCT_INST	0x03
+		int dct;		/* Duplicate check type -- for IT */
+#define XMP_INST_DCA_CUT	XMP_INST_NNA_CUT
+#define XMP_INST_DCA_OFF	XMP_INST_NNA_OFF
+#define XMP_INST_DCA_FADE	XMP_INST_NNA_FADE
+		int dca;		/* Duplicate check action -- for IT */
+		int ifc;		/* Initial filter cutoff -- for IT */
+		int ifr;		/* Initial filter resonance -- for IT */
+		int hld;		/* Hold -- for MED */
+	} *sub;
 };
 
 struct xmp_sample {

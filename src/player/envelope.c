@@ -9,7 +9,7 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 	int16 *data = env->data;
 	int index;
 
-	if (~env->flg & XXM_ENV_ON)
+	if (~env->flg & XMP_ENVELOPE_ON)
 		return def;
 
 	if (env->npt <= 0)
@@ -43,7 +43,7 @@ int update_envelope(struct xmp_envelope *ei, int x, int release)
 	if (x < 0xffff)		/* increment tick */
 		x++;
 
-	if (~ei->flg & XXM_ENV_ON)
+	if (~ei->flg & XMP_ENVELOPE_ON)
 		return x;
 
 	if (ei->npt <= 0)
@@ -52,11 +52,11 @@ int update_envelope(struct xmp_envelope *ei, int x, int release)
 	if (ei->lps >= ei->npt || ei->lpe >= ei->npt)
 		has_loop = 0;
 	else
-		has_loop = ei->flg & XXM_ENV_LOOP;
+		has_loop = ei->flg & XMP_ENVELOPE_LOOP;
 
-	has_sus = ei->flg & XXM_ENV_SUS;
+	has_sus = ei->flg & XMP_ENVELOPE_SUS;
 
-	if (ei->flg & XXM_ENV_SLOOP) {
+	if (ei->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
 			if (x >= env[ei->sue << 1])
 				x = env[ei->sus << 1];
@@ -86,7 +86,7 @@ int check_envelope_fade(struct xmp_envelope *ei, int x)
 	int16 *env = ei->data;
 	int index;
 
-	if (~ei->flg & XXM_ENV_ON)
+	if (~ei->flg & XMP_ENVELOPE_ON)
 		return 0;
 
 	index = (ei->npt - 1) * 2;		/* last node */

@@ -358,7 +358,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 		int j;
 		int wave=0;
 
-		mod->xxi[i].fei.flg = XXM_ENV_ON; /* | XXM_ENV_LOOP;*/
+		mod->xxi[i].fei.flg = XMP_ENVELOPE_ON; /* | XMP_ENVELOPE_LOOP;*/
 		mod->xxi[i].fei.npt = plen*2;
 		mod->xxfe[i] = calloc (4, mod->xxi[i].fei.npt);
 
@@ -421,7 +421,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 			
 			if (jump >= 0) {
 				printf ("jump %d-%d\n", jump,j);
-				mod->xxi[i].fei.flg |= XXM_ENV_LOOP;
+				mod->xxi[i].fei.flg |= XMP_ENVELOPE_LOOP;
 				mod->xxi[i].fei.lps = jump*2;
 				mod->xxi[i].fei.lpe = j*2+1;
 			}
@@ -438,7 +438,7 @@ static int hvl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 		_D(_D_INFO "I: %02x V: %02x A: %02x %02x D: %02x %02x S:  %02x R: %02x %02x wave %02x",
 			i, vol, Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol, wave);
-		mod->xxi[i].aei.flg = XXM_ENV_ON;
+		mod->xxi[i].aei.flg = XMP_ENVELOPE_ON;
 		mod->xxi[i].aei.npt = 5;
 		mod->xxae[i] = calloc (4, mod->xxi[i].aei.npt);
 		mod->xxae[i][0] = 0;

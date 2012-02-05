@@ -209,17 +209,17 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 
 	val = read8(f);			/* PV envelopes flags */
 	if (LSN(val) & 0x01)
-		mod->xxi[i].aei.flg |= XXM_ENV_ON;
+		mod->xxi[i].aei.flg |= XMP_ENVELOPE_ON;
 	if (LSN(val) & 0x02)
-		mod->xxi[i].aei.flg |= XXM_ENV_SUS;
+		mod->xxi[i].aei.flg |= XMP_ENVELOPE_SUS;
 	if (LSN(val) & 0x04)
-		mod->xxi[i].aei.flg |= XXM_ENV_LOOP;
+		mod->xxi[i].aei.flg |= XMP_ENVELOPE_LOOP;
 	if (MSN(val) & 0x01)
-		mod->xxi[i].pei.flg |= XXM_ENV_ON;
+		mod->xxi[i].pei.flg |= XMP_ENVELOPE_ON;
 	if (MSN(val) & 0x02)
-		mod->xxi[i].pei.flg |= XXM_ENV_SUS;
+		mod->xxi[i].pei.flg |= XMP_ENVELOPE_SUS;
 	if (MSN(val) & 0x04)
-		mod->xxi[i].pei.flg |= XXM_ENV_LOOP;
+		mod->xxi[i].pei.flg |= XMP_ENVELOPE_LOOP;
 
 	val = read8(f);			/* PV envelopes points */
 	mod->xxi[i].aei.npt = LSN(val) + 1;
@@ -238,10 +238,10 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	mod->xxi[i].pei.lpe = MSN(val);
 
 	if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt >= XMP_MAX_ENV_POINTS)
-		mod->xxi[i].aei.flg &= ~XXM_ENV_ON;
+		mod->xxi[i].aei.flg &= ~XMP_ENVELOPE_ON;
 
 	if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt >= XMP_MAX_ENV_POINTS)
-		mod->xxi[i].pei.flg &= ~XXM_ENV_ON;
+		mod->xxi[i].pei.flg &= ~XMP_ENVELOPE_ON;
 
 	fread(buf, 1, 30, f);		/* volume envelope points */;
 	for (j = 0; j < mod->xxi[i].aei.npt; j++) {

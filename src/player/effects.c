@@ -536,25 +536,25 @@ fx_finetune:
     case FX_IT_INSTFUNC:
 	switch (fxp) {
 	case 0:			/* Past note cut */
-	    virtch_pastnote(ctx, chn, XXM_NNA_CUT);
+	    virtch_pastnote(ctx, chn, XMP_INST_NNA_CUT);
 	    break;
 	case 1:			/* Past note off */
-	    virtch_pastnote(ctx, chn, XXM_NNA_OFF);
+	    virtch_pastnote(ctx, chn, XMP_INST_NNA_OFF);
 	    break;
 	case 2:			/* Past note fade */
-	    virtch_pastnote(ctx, chn, XXM_NNA_FADE);
+	    virtch_pastnote(ctx, chn, XMP_INST_NNA_FADE);
 	    break;
 	case 3:			/* Set NNA to note cut */
-	    virtch_setnna(ctx, chn, XXM_NNA_CUT);
+	    virtch_setnna(ctx, chn, XMP_INST_NNA_CUT);
 	    break;
 	case 4:			/* Set NNA to continue */
-	    virtch_setnna(ctx, chn, XXM_NNA_CONT);
+	    virtch_setnna(ctx, chn, XMP_INST_NNA_CONT);
 	    break;
 	case 5:			/* Set NNA to note off */
-	    virtch_setnna(ctx, chn, XXM_NNA_OFF);
+	    virtch_setnna(ctx, chn, XMP_INST_NNA_OFF);
 	    break;
 	case 6:			/* Set NNA to note fade */
-	    virtch_setnna(ctx, chn, XXM_NNA_FADE);
+	    virtch_setnna(ctx, chn, XMP_INST_NNA_FADE);
 	    break;
 	case 7:			/* Turn off volume envelope */
 	    break;

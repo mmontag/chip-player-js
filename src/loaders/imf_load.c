@@ -341,9 +341,9 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->xxi[i].aei.sus = ii.env[0].sus;
 	mod->xxi[i].aei.lps = ii.env[0].lps;
 	mod->xxi[i].aei.lpe = ii.env[0].lpe;
-	mod->xxi[i].aei.flg = ii.env[0].flg & 0x01 ? XXM_ENV_ON : 0;
-	mod->xxi[i].aei.flg |= ii.env[0].flg & 0x02 ? XXM_ENV_SUS : 0;
-	mod->xxi[i].aei.flg |= ii.env[0].flg & 0x04 ?  XXM_ENV_LOOP : 0;
+	mod->xxi[i].aei.flg = ii.env[0].flg & 0x01 ? XMP_ENVELOPE_ON : 0;
+	mod->xxi[i].aei.flg |= ii.env[0].flg & 0x02 ? XMP_ENVELOPE_SUS : 0;
+	mod->xxi[i].aei.flg |= ii.env[0].flg & 0x04 ?  XMP_ENVELOPE_LOOP : 0;
 
 	for (j = 0; j < mod->xxi[i].aei.npt; j++) {
 	    mod->xxi[i].aei.data[j * 2] = ii.vol_env[j * 2];

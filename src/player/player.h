@@ -35,7 +35,7 @@
 #define XXIH m->mod.xxi[xc->ins]
 #define XXI m->mod.xxi[xc->ins].sub[XXIH.map[xc->key].ins]
 
-#define DOENV_RELEASE	((TEST (RELEASE) || act == XMP_ACT_OFF))
+#define DOENV_RELEASE	((TEST (RELEASE) || act == VIRTCH_ACTION_OFF))
 
 struct retrig_t {
     int s;

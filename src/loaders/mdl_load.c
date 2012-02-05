@@ -823,13 +823,13 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* volume envelopes */
 	if (v_index[i] >= 0) {
-	    mod->xxi[i].aei.flg = XXM_ENV_ON;
+	    mod->xxi[i].aei.flg = XMP_ENVELOPE_ON;
 	    mod->xxi[i].aei.npt = 16;
 
 	    for (j = 0; j < v_envnum; j++) {
 		if (v_index[i] == j) {
-		    mod->xxi[i].aei.flg |= v_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
-		    mod->xxi[i].aei.flg |= v_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
+		    mod->xxi[i].aei.flg |= v_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+		    mod->xxi[i].aei.flg |= v_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
 		    mod->xxi[i].aei.sus = v_env[j].sus & 0x0f;
 		    mod->xxi[i].aei.lps = v_env[j].loop & 0x0f;
 		    mod->xxi[i].aei.lpe = v_env[j].loop & 0xf0;
@@ -851,13 +851,13 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* pan envelopes */
 	if (p_index[i] >= 0) {
-	    mod->xxi[i].pei.flg = XXM_ENV_ON;
+	    mod->xxi[i].pei.flg = XMP_ENVELOPE_ON;
 	    mod->xxi[i].pei.npt = 16;
 
 	    for (j = 0; j < p_envnum; j++) {
 		if (p_index[i] == j) {
-		    mod->xxi[i].pei.flg |= p_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
-		    mod->xxi[i].pei.flg |= p_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
+		    mod->xxi[i].pei.flg |= p_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+		    mod->xxi[i].pei.flg |= p_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
 		    mod->xxi[i].pei.sus = p_env[j].sus & 0x0f;
 		    mod->xxi[i].pei.lps = p_env[j].loop & 0x0f;
 		    mod->xxi[i].pei.lpe = p_env[j].loop & 0xf0;
@@ -878,13 +878,13 @@ static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	/* pitch envelopes */
 	if (f_index[i] >= 0) {
-	    mod->xxi[i].fei.flg = XXM_ENV_ON;
+	    mod->xxi[i].fei.flg = XMP_ENVELOPE_ON;
 	    mod->xxi[i].fei.npt = 16;
 
 	    for (j = 0; j < f_envnum; j++) {
 		if (f_index[i] == j) {
-		    mod->xxi[i].fei.flg |= f_env[j].sus & 0x10 ? XXM_ENV_SUS : 0;
-		    mod->xxi[i].fei.flg |= f_env[j].sus & 0x20 ? XXM_ENV_LOOP : 0;
+		    mod->xxi[i].fei.flg |= f_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+		    mod->xxi[i].fei.flg |= f_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
 		    mod->xxi[i].fei.sus = f_env[j].sus & 0x0f;
 		    mod->xxi[i].fei.lps = f_env[j].loop & 0x0f;
 		    mod->xxi[i].fei.lpe = f_env[j].loop & 0xf0;

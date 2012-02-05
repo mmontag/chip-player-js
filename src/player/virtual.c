@@ -287,9 +287,9 @@ int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note
     if (dct) {
 	for (voc = d->maxvoc; voc--;) {
 	    if (d->voice_array[voc].root == chn && d->voice_array[voc].ins == ins) {
-		if ((dct == XXM_DCT_INST) ||
-		    (dct == XXM_DCT_SMP && d->voice_array[voc].smp == smp) ||
-		    (dct == XXM_DCT_NOTE && d->voice_array[voc].note == note)) {
+		if ((dct == XMP_INST_DCT_INST) ||
+		    (dct == XMP_INST_DCT_SMP && d->voice_array[voc].smp == smp) ||
+		    (dct == XMP_INST_DCT_NOTE && d->voice_array[voc].note == note)) {
 		    if (dca) {
 			if (voc != d->ch2vo_array[chn] || d->voice_array[voc].act)
 			    d->voice_array[voc].act = dca;
@@ -389,7 +389,7 @@ void virtch_pastnote(struct xmp_context *ctx, int chn, int act)
 
     for (voc = d->maxvoc; voc--;) {
 	if (d->voice_array[voc].root == chn && d->voice_array[voc].chn >= d->numtrk) {
-	    if (act == XMP_ACT_CUT)
+	    if (act == VIRTCH_ACTION_CUT)
 		virtch_resetvoice(ctx, voc, 1);
 	    else
 		d->voice_array[voc].act = act;
@@ -406,7 +406,7 @@ int virtch_cstat(struct xmp_context *ctx, int chn)
     voc = d->ch2vo_array[chn];
 
     if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
-	return XMP_CHN_DUMB;
+	return VIRTCH_INVALID;
 
-    return chn < d->numtrk ? XMP_CHN_ACTIVE : d->voice_array[voc].act;
+    return chn < d->numtrk ? VIRTCH_ACTIVE : d->voice_array[voc].act;
 }
