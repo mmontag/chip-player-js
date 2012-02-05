@@ -135,13 +135,13 @@ static inline void reset_channel(struct xmp_context *ctx)
     int i;
 
     m->synth->reset(ctx);
-    memset(p->xc_data, 0, sizeof (struct channel_data) * d->numchn);
+    memset(p->xc_data, 0, sizeof (struct channel_data) * d->virt_channels);
 
-    for (i = d->numchn; i--; ) {
+    for (i = d->virt_channels; i--; ) {
 	xc = &p->xc_data[i];
 	xc->insdef = xc->ins = xc->key = -1;
     }
-    for (i = d->numtrk; i--; ) {
+    for (i = d->num_tracks; i--; ) {
 	xc = &p->xc_data[i];
 	xc->masterpan = m->mod.xxc[i].pan;
 	xc->mastervol = m->mod.xxc[i].vol;
@@ -830,15 +830,15 @@ int xmp_player_start(xmp_context opaque)
 	if (p->fetch_ctl == NULL)
 		goto err;
 
-	f->loop_stack = calloc(d->numchn, sizeof (int));
+	f->loop_stack = calloc(d->virt_channels, sizeof (int));
 	if (f->loop_stack == NULL)
 		goto err1;
 
-	f->loop_start = calloc(d->numchn, sizeof (int));
+	f->loop_start = calloc(d->virt_channels, sizeof (int));
 	if (f->loop_start == NULL)
 		goto err2;
 
-	p->xc_data = calloc(d->numchn, sizeof (struct channel_data));
+	p->xc_data = calloc(d->virt_channels, sizeof (struct channel_data));
 	if (p->xc_data == NULL)
 		goto err3;
 
@@ -925,7 +925,7 @@ int xmp_player_frame(xmp_context opaque)
 	}
 
 	/* play_frame */
-	for (i = 0; i < d->numchn; i++)
+	for (i = 0; i < d->virt_channels; i++)
 		play_channel(ctx, i, p->frame);
 
 	if (o->time && (o->time < f->playing_time))	/* expired time */

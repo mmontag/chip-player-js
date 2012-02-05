@@ -28,7 +28,7 @@ void virtch_resetvoice(struct xmp_context *ctx, int voc, int mute)
     if (mute)
 	xmp_smix_setvol(ctx, voc, 0);
 
-    d->curvoc--;
+    d->virt_used--;
     d->virt_channel[vi->root].count--;
     d->virt_channel[vi->chn].map = FREE;
     memset(vi, 0, sizeof (struct voice_info));
@@ -43,16 +43,16 @@ int virtch_on(struct xmp_context *ctx, int num)
 	struct xmp_mod_context *m = &ctx->m;
 	int i;
 
-	d->numtrk = num;
+	d->num_tracks = num;
 	num = xmp_smix_numvoices(ctx, -1);
 
-	d->numchn = d->numtrk;
+	d->virt_channels = d->num_tracks;
 	d->chnvoc = m->flags & XMP_CTL_VIRTUAL ? MAX_VOICES_CHANNEL : 1;
 
 	if (d->chnvoc > 1)
-		d->numchn += num;
-	else if (num > d->numchn)
-		num = d->numchn;
+		d->virt_channels += num;
+	else if (num > d->virt_channels)
+		num = d->virt_channels;
 
 	num = d->maxvoc = xmp_smix_numvoices(ctx, num);
 
@@ -65,16 +65,16 @@ int virtch_on(struct xmp_context *ctx, int num)
 		d->voice_array[i].root = FREE;
 	}
 
-	d->virt_channel = malloc(d->numchn * sizeof(struct virt_channel));
+	d->virt_channel = malloc(d->virt_channels * sizeof(struct virt_channel));
 	if (d->virt_channel == NULL)
 		goto err1;
 
-	for (i = 0; i < d->numchn; i++) {
+	for (i = 0; i < d->virt_channels; i++) {
 		 d->virt_channel[i].map = FREE;
 		 d->virt_channel[i].count = 0;
 	}
 
-	d->curvoc = d->agevoc = 0;
+	d->virt_used = d->age = 0;
 
 	return 0;
 
@@ -89,12 +89,12 @@ void virtch_off(struct xmp_context *ctx)
 {
     struct xmp_driver_context *d = &ctx->d;
 
-    if (d->numchn < 1)
+    if (d->virt_channels < 1)
 	return;
 
-    d->curvoc = d->maxvoc = 0;
-    d->numchn = 0;
-    d->numtrk = 0;
+    d->virt_used = d->maxvoc = 0;
+    d->virt_channels = 0;
+    d->num_tracks = 0;
     free(d->voice_array);
     free(d->virt_channel);
 }
@@ -105,7 +105,7 @@ void virtch_reset(struct xmp_context *ctx)
     struct xmp_driver_context *d = &ctx->d;
     int i;
 
-    if (d->numchn < 1)
+    if (d->virt_channels < 1)
 	return;
 
     xmp_smix_numvoices(ctx, d->maxvoc);
@@ -116,12 +116,12 @@ void virtch_reset(struct xmp_context *ctx)
 	d->voice_array[i].root = FREE;
     }
 
-    for (i = 0; i < d->numchn; i++) {
+    for (i = 0; i < d->virt_channels; i++) {
 	d->virt_channel[i].map = FREE;
 	d->virt_channel[i].count = 0;
     }
 
-    d->curvoc = d->agevoc = 0;
+    d->virt_used = d->age = 0;
 }
 
 
@@ -132,12 +132,12 @@ void virtch_resetchannel(struct xmp_context *ctx, int chn)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     xmp_smix_setvol(ctx, voc, 0);
 
-    d->curvoc--;
+    d->virt_used--;
     d->virt_channel[d->voice_array[voc].root].count--;
     d->virt_channel[chn].map = FREE;
     memset(&d->voice_array[voc], 0, sizeof (struct voice_info));
@@ -163,9 +163,9 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
 	if (i == d->maxvoc)
 	    return -1;
 
-	d->voice_array[i].age = d->agevoc;
+	d->voice_array[i].age = d->age;
 	d->virt_channel[chn].count++;
-	d->curvoc++;
+	d->virt_used++;
 
 	return i;
     }
@@ -181,7 +181,7 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
 
     /* Free oldest voice */
     d->virt_channel[d->voice_array[num].chn].map = FREE;
-    d->voice_array[num].age = d->agevoc;
+    d->voice_array[num].age = d->age;
 
     return num;
 }
@@ -208,7 +208,7 @@ void virtch_setvol(struct xmp_context *ctx, int chn, int vol)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     if (d->voice_array[voc].root < XMP_MAX_CHANNELS && d->cmute_array[d->voice_array[voc].root])
@@ -216,7 +216,7 @@ void virtch_setvol(struct xmp_context *ctx, int chn, int vol)
 
     xmp_smix_setvol(ctx, voc, vol);
 
-    if (!(vol || chn < d->numtrk))
+    if (!(vol || chn < d->num_tracks))
 	virtch_resetvoice(ctx, voc, 1);
 }
 
@@ -228,7 +228,7 @@ void virtch_setpan(struct xmp_context *ctx, int chn, int pan)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     xmp_smix_setpan(ctx, voc, pan);
@@ -242,7 +242,7 @@ void virtch_seteffect(struct xmp_context *ctx, int chn, int type, int val)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     xmp_smix_seteffect(ctx, voc, type, val);
@@ -257,7 +257,7 @@ void virtch_setsmp(struct xmp_context *ctx, int chn, int smp)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     vi = &d->voice_array[voc];
@@ -274,7 +274,7 @@ int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note
     struct xmp_driver_context *d = &ctx->d;
     int voc, vfree;
 
-    if ((uint32)chn >= d->numchn)
+    if ((uint32)chn >= d->virt_channels)
 	return -1;
 
     if (ins < 0)
@@ -305,7 +305,7 @@ int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note
 		d->voice_array[vfree].root = chn;
 		d->virt_channel[chn].map = vfree;
 		d->voice_array[d->virt_channel[chn].map].chn = chn;
-		for (chn = d->numtrk; d->virt_channel[chn++].map > FREE; );
+		for (chn = d->num_tracks; d->virt_channel[chn++].map > FREE; );
 		d->voice_array[voc].chn = --chn;
 		d->virt_channel[chn].map = voc;
 		voc = vfree;
@@ -332,7 +332,7 @@ int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note
     smix_setnote(ctx, voc, note);
     d->voice_array[voc].ins = ins;
     d->voice_array[voc].act = nna;
-    d->agevoc++;
+    d->age++;
 
     return chn;
 }
@@ -345,7 +345,7 @@ void virtch_setnna(struct xmp_context *ctx, int chn, int nna)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     d->voice_array[voc].act = nna;
@@ -359,7 +359,7 @@ void virtch_setbend(struct xmp_context *ctx, int chn, int bend)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     smix_setbend(ctx, voc, bend);
@@ -373,7 +373,7 @@ void virtch_voicepos(struct xmp_context *ctx, int chn, int pos)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return;
 
     smix_voicepos(ctx, voc, pos, 0);
@@ -386,7 +386,7 @@ void virtch_pastnote(struct xmp_context *ctx, int chn, int act)
     int voc;
 
     for (voc = d->maxvoc; voc--;) {
-	if (d->voice_array[voc].root == chn && d->voice_array[voc].chn >= d->numtrk) {
+	if (d->voice_array[voc].root == chn && d->voice_array[voc].chn >= d->num_tracks) {
 	    if (act == VIRTCH_ACTION_CUT)
 		virtch_resetvoice(ctx, voc, 1);
 	    else
@@ -403,8 +403,8 @@ int virtch_cstat(struct xmp_context *ctx, int chn)
 
     voc = d->virt_channel[chn].map;
 
-    if ((uint32)chn >= d->numchn || (uint32)voc >= d->maxvoc)
+    if ((uint32)chn >= d->virt_channels || (uint32)voc >= d->maxvoc)
 	return VIRTCH_INVALID;
 
-    return chn < d->numtrk ? VIRTCH_ACTIVE : d->voice_array[voc].act;
+    return chn < d->num_tracks ? VIRTCH_ACTIVE : d->voice_array[voc].act;
 }

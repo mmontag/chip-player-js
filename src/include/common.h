@@ -242,12 +242,12 @@ struct xmp_player_context {
 };
 
 struct xmp_driver_context {
-	int numtrk;			/* Number of tracks */
-	int numchn;			/* Number of virtual channels */
-	int curvoc;			/* Number of voices currently in use */
+	int num_tracks;			/* Number of tracks */
+	int virt_channels;		/* Number of virtual channels */
+	int virt_used;			/* Number of voices currently in use */
 	int maxvoc;			/* Number of sound card voices */
 	int chnvoc;			/* Number of voices per channel */
-	int agevoc;			/* Voice age control (?) */
+	int age;			/* Voice age control (?) */
 
 	int cmute_array[XMP_MAX_CHANNELS];
 
