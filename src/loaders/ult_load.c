@@ -22,7 +22,7 @@
 static int ult_test (FILE *, char *, const int);
 static int ult_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info ult_loader = {
+struct format_loader ult_loader = {
     "ULT",
     "Ultra Tracker",
     ult_test,

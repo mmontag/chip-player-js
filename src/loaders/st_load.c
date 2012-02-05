@@ -21,7 +21,7 @@
 static int st_test (FILE *, char *, const int);
 static int st_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info st_loader = {
+struct format_loader st_loader = {
     "ST",
     "Soundtracker",
     st_test,

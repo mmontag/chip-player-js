@@ -18,7 +18,7 @@
 static int okt_test (FILE *, char *, const int);
 static int okt_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info okt_loader = {
+struct format_loader okt_loader = {
     "OKT",
     "Oktalyzer",
     okt_test,

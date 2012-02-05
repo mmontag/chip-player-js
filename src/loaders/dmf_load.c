@@ -20,7 +20,7 @@
 static int dmf_test(FILE *, char *, const int);
 static int dmf_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info dmf_loader = {
+struct format_loader dmf_loader = {
 	"DMF",
 	"X-Tracker",
 	dmf_test,

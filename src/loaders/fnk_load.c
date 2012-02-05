@@ -16,7 +16,7 @@
 static int fnk_test (FILE *, char *, const int);
 static int fnk_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info fnk_loader = {
+struct format_loader fnk_loader = {
     "FNK",
     "Funktracker",
     fnk_test,

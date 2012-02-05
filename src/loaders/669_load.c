@@ -12,7 +12,7 @@
 static int ssn_test (FILE *, char *, const int);
 static int ssn_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info ssn_loader = {
+struct format_loader ssn_loader = {
     "669",
     "Composer 669",
     ssn_test,

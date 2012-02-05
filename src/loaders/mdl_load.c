@@ -23,7 +23,7 @@
 static int mdl_test (FILE *, char *, const int);
 static int mdl_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mdl_loader = {
+struct format_loader mdl_loader = {
     "MDL",
     "Digitrakker",
     mdl_test,

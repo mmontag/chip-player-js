@@ -20,7 +20,7 @@
 static int stim_test(FILE *, char *, const int);
 static int stim_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info stim_loader = {
+struct format_loader stim_loader = {
 	"STIM",
 	"Slamtilt",
 	stim_test,

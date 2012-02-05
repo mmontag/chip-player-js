@@ -27,7 +27,7 @@
 static int digi_test (FILE *, char *, const int);
 static int digi_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info digi_loader = {
+struct format_loader digi_loader = {
     "DIGI",
     "DIGI Booster",
     digi_test,

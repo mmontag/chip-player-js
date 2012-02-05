@@ -57,7 +57,7 @@ struct {
 static int mod_test (FILE *, char *, const int);
 static int mod_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mod_loader = {
+struct format_loader mod_loader = {
     "MOD",
     "Noise/Fast/Protracker",
     mod_test,

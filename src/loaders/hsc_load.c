@@ -21,7 +21,7 @@
 static int hsc_test (FILE *, char *, const int);
 static int hsc_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info hsc_loader = {
+struct format_loader hsc_loader = {
     "HSC",
     "HSC-Tracker",
     hsc_test,

@@ -12,7 +12,7 @@
 static int mtm_test (FILE *, char *, const int);
 static int mtm_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mtm_loader = {
+struct format_loader mtm_loader = {
     "MTM",
     "Multitracker",
     mtm_test,

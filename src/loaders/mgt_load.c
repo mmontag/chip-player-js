@@ -16,7 +16,7 @@
 static int mgt_test (FILE *, char *, const int);
 static int mgt_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mgt_loader = {
+struct format_loader mgt_loader = {
 	"MGT",
 	"Megatracker",
 	mgt_test,

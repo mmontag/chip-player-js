@@ -13,7 +13,7 @@
 static int sym_test(FILE *, char *, const int);
 static int sym_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info sym_loader = {
+struct format_loader sym_loader = {
 	"DSYM",
 	"Digital Symphony",
 	sym_test,

@@ -54,7 +54,7 @@ struct ims_header {
 static int ims_test (FILE *, char *, const int);
 static int ims_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info ims_loader = {
+struct format_loader ims_loader = {
     "IMS",
     "Images Music System",
     ims_test,

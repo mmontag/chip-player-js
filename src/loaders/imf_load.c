@@ -20,7 +20,7 @@
 static int imf_test (FILE *, char *, const int);
 static int imf_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info imf_loader = {
+struct format_loader imf_loader = {
     "IMF",
     "Imago Orpheus",
     imf_test,

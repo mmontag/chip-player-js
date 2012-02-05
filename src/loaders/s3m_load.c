@@ -69,7 +69,7 @@
 static int s3m_test (FILE *, char *, const int);
 static int s3m_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info s3m_loader = {
+struct format_loader s3m_loader = {
     "S3M",
     "Scream Tracker 3",
     s3m_test,

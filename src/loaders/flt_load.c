@@ -13,7 +13,7 @@
 static int flt_test (FILE *, char *, const int);
 static int flt_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info flt_loader = {
+struct format_loader flt_loader = {
     "FLT",
     "Startrekker/Audio Sculpture",
     flt_test,

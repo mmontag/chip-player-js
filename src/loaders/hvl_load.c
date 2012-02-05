@@ -16,7 +16,7 @@ static int hvl_test (FILE *, char *, const int);
 static int hvl_load (struct xmp_context *, FILE *, const int);
 
 
-struct xmp_loader_info hvl_loader = {
+struct format_loader hvl_loader = {
 	"HVL",
 	"Hively Tracker",
 	hvl_test,

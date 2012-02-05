@@ -17,7 +17,7 @@
 static int ice_test (FILE *, char *, const int);
 static int ice_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info ice_loader = {
+struct format_loader ice_loader = {
     "MTN",
     "Soundtracker 2.6/Ice Tracker",
     ice_test,

@@ -18,7 +18,7 @@
 static int dt_test(FILE *, char *, const int);
 static int dt_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info dt_loader = {
+struct format_loader dt_loader = {
 	"DTM",
 	"Digital Tracker",
 	dt_test,

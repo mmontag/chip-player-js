@@ -18,7 +18,7 @@ static int stc_test(FILE *, char *, const int);
 static int stc_load(struct xmp_context *, FILE *, const int);
 
 
-struct xmp_loader_info stc_loader = {
+struct format_loader stc_loader = {
 	"STC",
 	"Sound Tracker",
 	stc_test,

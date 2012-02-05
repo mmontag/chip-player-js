@@ -14,7 +14,7 @@
 static int rtm_test(FILE *, char *, const int);
 static int rtm_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info rtm_loader = {
+struct format_loader rtm_loader = {
 	"RTM",
 	"Real Tracker",
 	rtm_test,

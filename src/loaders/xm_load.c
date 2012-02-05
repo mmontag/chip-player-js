@@ -27,7 +27,7 @@
 static int xm_test (FILE *, char *, const int);
 static int xm_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info xm_loader = {
+struct format_loader xm_loader = {
     "XM",
     "Fast Tracker II",
     xm_test,

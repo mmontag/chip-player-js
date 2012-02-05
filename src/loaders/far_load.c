@@ -22,7 +22,7 @@
 static int far_test (FILE *, char *, const int);
 static int far_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info far_loader = {
+struct format_loader far_loader = {
     "FAR",
     "Farandole Composer",
     far_test,

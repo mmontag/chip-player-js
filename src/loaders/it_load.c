@@ -18,7 +18,7 @@
 static int it_test (FILE *, char *, const int);
 static int it_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info it_loader = {
+struct format_loader it_loader = {
     "IT",
     "Impulse Tracker",
     it_test,

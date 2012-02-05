@@ -24,7 +24,7 @@
 static int alm_test (FILE *, char *, const int);
 static int alm_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info alm_loader = {
+struct format_loader alm_loader = {
     "ALM",
     "Aley Keptr",
     alm_test,

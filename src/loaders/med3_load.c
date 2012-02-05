@@ -22,7 +22,7 @@
 static int med3_test(FILE *, char *, const int);
 static int med3_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info med3_loader = {
+struct format_loader med3_loader = {
 	"MED3",
 	"MED 2.00",
 	med3_test,

@@ -30,7 +30,8 @@
 #include "list.h"
 
 
-extern struct list_head loader_list;
+extern struct format_loader *format_loader[];
+
 
 LIST_HEAD(tmpfiles_list);
 
@@ -380,9 +381,8 @@ static void unlink_tempfiles(void)
 int xmp_test_module(xmp_context ctx, char *s, char *n)
 {
     FILE *f;
-    struct xmp_loader_info *li;
-    struct list_head *head;
     struct stat st;
+    int i;
 
     if ((f = fopen(s, "rb")) == NULL)
 	return -3;
@@ -404,10 +404,9 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
 
     if (n) *n = 0;			/* reset name prior to testing */
 
-    list_for_each(head, &loader_list) {
-	li = list_entry(head, struct xmp_loader_info, list);
+    for (i = 0; format_loader[i] != NULL; i++) {
 	fseek(f, 0, SEEK_SET);
-	 if (li->test(f, n, 0) == 0) {
+	 if (format_loader[i]->test(f, n, 0) == 0) {
 	    fclose(f);
 	    unlink_tempfiles();
 	    return 0;
@@ -443,9 +442,7 @@ int xmp_load_module(xmp_context opaque, char *s)
 {
     struct xmp_context *ctx = (struct xmp_context *)opaque;
     FILE *f;
-    int i, t;
-    struct xmp_loader_info *li;
-    struct list_head *head;
+    int i, t, val;
     struct stat st;
     struct xmp_mod_context *m = &ctx->m;
     struct xmp_options *o = &((struct xmp_context *)ctx)->o;
@@ -499,16 +496,16 @@ int xmp_load_module(xmp_context opaque, char *s)
     }
 
     _D(_D_WARN "load");
-    list_for_each(head, &loader_list) {
-	li = list_entry(head, struct xmp_loader_info, list);
-
+    for (i = 0; format_loader[i] != NULL; i++) {
 	fseek(f, 0, SEEK_SET);
-   	if ((i = li->test(f, NULL, 0)) == 0) {
+	val = format_loader[i]->test(f, NULL, 0);
+   	if (val == 0) {
 	    fseek(f, 0, SEEK_SET);
-	    _D(_D_WARN "load format: %s (%s)", li->id, li->name);
-	    if ((i = li->loader((struct xmp_context *)ctx, f, 0) != 0)) {
+	    _D(_D_WARN "load format: %s", format_loader[i]->name);
+
+	    val = format_loader[i]->loader((struct xmp_context *)ctx, f, 0);
+	    if (val != 0) {
 		_D(_D_CRIT "can't load module, possibly corrupted file");
-		i = -1;
 	    }
 	    break;
 	}
@@ -517,10 +514,10 @@ int xmp_load_module(xmp_context opaque, char *s)
     fclose(f);
     unlink_tempfiles();
 
-    if (i < 0) {
+    if (val < 0) {
 	free(m->basename);
 	free(m->dirname);
-	return i;
+	return val;
     }
 
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm

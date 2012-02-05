@@ -23,7 +23,7 @@
 static int gal5_test(FILE *, char *, const int);
 static int gal5_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info gal5_loader = {
+struct format_loader gal5_loader = {
 	"GAL5",
 	"Galaxy Music System 5.0",
 	gal5_test,

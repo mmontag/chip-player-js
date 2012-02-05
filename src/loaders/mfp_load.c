@@ -25,7 +25,7 @@
 static int mfp_test(FILE *, char *, const int);
 static int mfp_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mfp_loader = {
+struct format_loader mfp_loader = {
 	"MFP",
 	"Magnetic Fields Packer",
 	mfp_test,

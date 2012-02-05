@@ -18,7 +18,7 @@ static int pt3_test(FILE *, char *, const int);
 static int pt3_load(struct xmp_context *, FILE *, const int);
 static int ptdt_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info pt3_loader = {
+struct format_loader pt3_loader = {
 	"PT3",
 	"Protracker 3",
 	pt3_test,

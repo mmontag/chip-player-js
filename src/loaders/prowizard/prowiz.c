@@ -41,7 +41,7 @@ int pw_register(struct pw_format *f)
 {
 	f->enable = 1;
 	list_add_tail(&f->list, &pw_format_list);
-	register_format(f->id, f->name);
+	//register_format(f->id, f->name);
 	return 0;
 }
 

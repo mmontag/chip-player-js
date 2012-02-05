@@ -17,7 +17,7 @@
 static int mmd1_test(FILE *, char *, const int);
 static int mmd1_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mmd1_loader = {
+struct format_loader mmd1_loader = {
 	"MMD0/1",
 	"MED 2.10/OctaMED",
 	mmd1_test,

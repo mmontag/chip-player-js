@@ -18,7 +18,7 @@
 static int polly_test(FILE *, char *, const int);
 static int polly_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info polly_loader = {
+struct format_loader polly_loader = {
 	"POLLY",
 	"Polly Tracer",
 	polly_test,

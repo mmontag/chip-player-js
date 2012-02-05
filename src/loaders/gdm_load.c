@@ -22,7 +22,7 @@
 static int gdm_test(FILE *, char *, const int);
 static int gdm_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info gdm_loader = {
+struct format_loader gdm_loader = {
 	"GDM",
 	"Generic Digital Music",
 	gdm_test,

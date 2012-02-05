@@ -22,7 +22,7 @@ extern struct list_head *checked_format;
 static int pw_test(FILE *, char *, const int);
 static int pw_load(struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info pw_loader = {
+struct format_loader pw_loader = {
 	"pw",
 	"prowizard",
 	pw_test,

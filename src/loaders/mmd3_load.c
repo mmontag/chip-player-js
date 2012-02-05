@@ -13,7 +13,7 @@
 static int mmd3_test (FILE *, char *, const int);
 static int mmd3_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mmd3_loader = {
+struct format_loader mmd3_loader = {
 	"MMD2/3",
 	"OctaMED v5/OctaMED SS",
 	mmd3_test,

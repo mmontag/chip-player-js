@@ -20,7 +20,7 @@
 static int dbm_test(FILE *, char *, const int);
 static int dbm_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info dbm_loader = {
+struct format_loader dbm_loader = {
 	"DBM",
 	"DigiBooster Pro",
 	dbm_test,

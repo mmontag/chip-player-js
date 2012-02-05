@@ -7,7 +7,6 @@
  */
 
 #include "load.h"
-#include "list.h"
 
 #define TEST_SIZE 1500
 
@@ -16,12 +15,15 @@
 #define MAGIC_SCRM	MAGIC4('S','C','R','M')
 #define MAGIC_M_K_	MAGIC4('M','.','K','.')
 
-extern struct list_head loader_list;
+extern struct format_loader xm_loader;
+extern struct format_loader it_loader;
+extern struct format_loader s3m_loader;
+extern struct format_loader mod_loader;
 
 static int umx_test (FILE *, char *, const int);
 static int umx_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info umx_loader = {
+struct format_loader umx_loader = {
 	"UMX",
 	"Epic Games Unreal/UT",
 	umx_test,
@@ -69,24 +71,6 @@ static int umx_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-
-static int load(struct xmp_context *ctx, FILE *f, char *fmt, int offset)
-{
-	struct xmp_loader_info *li;
-	struct list_head *head;
-
-	list_for_each(head, &loader_list) {
-		li = list_entry(head, struct xmp_loader_info, list);
-		if (strcmp(li->id, fmt) == 0) {
-			if (li->loader(ctx, f, offset) == 0)
-				return 0;
-		}
-	}
-
-	return -1;
-}
-
-
 static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
 {
 	struct xmp_mod_context *m = &ctx->m;
@@ -104,13 +88,16 @@ static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
 		id = readmem32b(b);
 
 		if (!memcmp(b, "Extended Module:", 16))
-			return load(ctx, f, "XM", i);
+			return xm_loader.loader(ctx, f, i);
+
 		if (id == MAGIC_IMPM)
-			return load(ctx, f, "IT", i);
+			return it_loader.loader(ctx, f, i);
+
 		if (i > 44 && id == MAGIC_SCRM)
-			return load(ctx, f, "S3M", i - 44);
+			return s3m_loader.loader(ctx, f, i - 44);
+
 		if (i > 1080 && id == MAGIC_M_K_)
-			return load(ctx, f, "MOD", i - 1080);
+			return mod_loader.loader(ctx, f, i - 1080);
 	}
 	
 	return -1;

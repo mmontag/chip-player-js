@@ -25,7 +25,7 @@
 static int med2_test(FILE *, char *, const int);
 static int med2_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info med2_loader = {
+struct format_loader med2_loader = {
 	"MED2",
 	"MED 1.12",
 	med2_test,

@@ -17,7 +17,7 @@
 static int emod_test (FILE *, char *, const int);
 static int emod_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info emod_loader = {
+struct format_loader emod_loader = {
     "EMOD",
     "Quadra Composer",
     emod_test,

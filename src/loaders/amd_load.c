@@ -13,7 +13,7 @@
 static int amd_test (FILE *, char *, const int);
 static int amd_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info amd_loader = {
+struct format_loader amd_loader = {
     "AMD",
     "Amusic Adlib Tracker",
     amd_test,

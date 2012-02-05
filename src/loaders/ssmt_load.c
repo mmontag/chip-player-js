@@ -28,7 +28,7 @@
 static int mtp_test (FILE *, char *, const int);
 static int mtp_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info mtp_loader = {
+struct format_loader mtp_loader = {
 	"MTP",
 	"Soundsmith/MegaTracker",
 	mtp_test,

@@ -19,7 +19,7 @@
 static int liq_test (FILE *, char *, const int);
 static int liq_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info liq_loader = {
+struct format_loader liq_loader = {
     "LIQ",
     "Liquid Tracker",
     liq_test,

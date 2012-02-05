@@ -25,7 +25,7 @@
 static int sfx_test (FILE *, char *, const int);
 static int sfx_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info sfx_loader = {
+struct format_loader sfx_loader = {
     "SFX",
     "SoundFX",
     sfx_test,

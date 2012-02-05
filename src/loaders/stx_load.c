@@ -29,7 +29,7 @@
 static int stx_test (FILE *, char *, const int);
 static int stx_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info stx_loader = {
+struct format_loader stx_loader = {
     "STX",
     "STMIK 0.2",
     stx_test,

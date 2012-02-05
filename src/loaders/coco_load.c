@@ -11,7 +11,7 @@
 static int coco_test (FILE *, char *, const int);
 static int coco_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info coco_loader = {
+struct format_loader coco_loader = {
 	"COCO",
 	"Coconizer",
 	coco_test,

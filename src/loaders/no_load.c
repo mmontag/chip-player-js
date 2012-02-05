@@ -17,7 +17,7 @@
 static int no_test (FILE *, char *, const int);
 static int no_load (struct xmp_context *, FILE *, const int);
 
-struct xmp_loader_info no_loader = {
+struct format_loader no_loader = {
 	"NO",
 	"Liquid Tracker (old)",
 	no_test,
