@@ -251,8 +251,11 @@ struct xmp_driver_context {
 
 	int cmute_array[XMP_MAX_CHANNELS];
 
-	int *ch2vo_count;
-	int *ch2vo_array;
+	struct virt_channel {
+		int count;
+		int map;
+	} *virt_channel;
+
 	struct voice_info *voice_array;
 
 	void *buffer;
