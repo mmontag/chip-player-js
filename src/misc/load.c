@@ -23,7 +23,6 @@
 #include "ptpopen.h"
 #endif
 
-#include "driver.h"
 #include "convert.h"
 #include "loader.h"
 #include "synth.h"

@@ -11,7 +11,7 @@
 #include <assert.h>
 
 #include "common.h"
-#include "driver.h"
+#include "virtual.h"
 #include "mixer.h"
 #include "synth.h"
 #include "smix.h"

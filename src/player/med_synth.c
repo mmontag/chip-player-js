@@ -8,7 +8,7 @@
 
 #include "common.h"
 #include "player.h"
-#include "driver.h"
+#include "virtual.h"
 
 /* Commands in the volume and waveform sequence table:
  *

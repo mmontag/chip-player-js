@@ -12,7 +12,7 @@
 #include "xmp.h"
 #include "common.h"
 #include "effects.h"
-#include "driver.h"
+#include "virtual.h"
 #include "synth.h"
 #include "spectrum.h"
 #include "ym2149.h"

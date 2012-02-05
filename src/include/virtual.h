@@ -1,6 +1,6 @@
 
-#ifndef __XMP_DRIVER_H
-#define __XMP_DRIVER_H
+#ifndef __XMP_VIRTUAL_H
+#define __XMP_VIRTUAL_H
 
 #include "common.h"
 
@@ -51,4 +51,4 @@ void	virtch_reset		(struct xmp_context *);
 
 struct virtch_info *virtch_array (void);
 
-#endif /* __XMP_DRIVER_H */
+#endif /* __XMP_VIRTUAL_H */

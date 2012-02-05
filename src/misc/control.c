@@ -14,7 +14,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "driver.h"
+#include "virtual.h"
 #include "mixer.h"
 
 

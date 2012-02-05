@@ -10,7 +10,7 @@
 #include "player.h"
 #include "effects.h"
 #include "period.h"
-#include "driver.h"
+#include "virtual.h"
 #include "mixer.h"
 
 #define NOT_IMPLEMENTED

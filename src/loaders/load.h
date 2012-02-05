@@ -13,7 +13,6 @@
 #include <string.h>
 #include "common.h"
 #include "effects.h"
-#include "driver.h"
 #include "convert.h"
 #include "loader.h"
 
