@@ -330,19 +330,19 @@ ex_f_porta_dn:
 	case EX_PATTERN_LOOP:			/* Loop pattern */
 	    if (fxp == 0) {
 		/* mark start of loop */
-		f->loop_start[chn] = p->row;
+		f->loop[chn].start = p->row;
 	    } else {
 		/* end of loop */
-		if (f->loop_stack[chn]) {
-		    if (--f->loop_stack[chn]) {
+		if (f->loop[chn].count) {
+		    if (--f->loop[chn].count) {
 			f->loop_chn = ++chn;	/* **** H:FIXME **** */
 		    } else {
 			if (m->quirk & QUIRK_S3MLOOP)
-			    f->loop_start[chn] = p->row + 1;
+			    f->loop[chn].start = p->row + 1;
 		    }
 		} else {
-		    if (f->loop_start[chn] <= p->row) {
-			f->loop_stack[chn] = fxp;
+		    if (f->loop[chn].start <= p->row) {
+			f->loop[chn].count = fxp;
 			f->loop_chn = ++chn;
 		    }
 		}

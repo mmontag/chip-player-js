@@ -830,20 +830,16 @@ int xmp_player_start(xmp_context opaque)
 	if (p->fetch_ctl == NULL)
 		goto err;
 
-	f->loop_stack = calloc(d->virt_channels, sizeof (int));
-	if (f->loop_stack == NULL)
+	f->loop = calloc(d->virt_channels, sizeof (struct pattern_loop));
+	if (f->loop == NULL)
 		goto err1;
-
-	f->loop_start = calloc(d->virt_channels, sizeof (int));
-	if (f->loop_start == NULL)
-		goto err2;
 
 	p->xc_data = calloc(d->virt_channels, sizeof (struct channel_data));
 	if (p->xc_data == NULL)
-		goto err3;
+		goto err2;
 
 	if (m->synth->init(ctx, o->freq) < 0)
-		goto err4;
+		goto err3;
 
 	m->synth->reset(ctx);
 
@@ -851,12 +847,10 @@ int xmp_player_start(xmp_context opaque)
 
 	return 0;
 
-err4:
-	free(p->xc_data);
 err3:
-	free(f->loop_start);
+	free(p->xc_data);
 err2:
-	free(f->loop_stack);
+	free(f->loop);
 err1:
 	free(p->fetch_ctl);
 err:
@@ -968,7 +962,7 @@ next_row:
 		}
 
 		if (f->loop_chn) {
-			p->row = f->loop_start[--f->loop_chn] - 1;
+			p->row = f->loop[f->loop_chn - 1].start - 1;
 			f->loop_chn = 0;
 		}
 
@@ -1069,8 +1063,7 @@ void xmp_player_end(xmp_context opaque)
                 return;
 
 	free(p->xc_data);
-	free(f->loop_start);
-	free(f->loop_stack);
+	free(f->loop);
 	free(p->fetch_ctl);
 
 	xmp_smix_off(ctx);

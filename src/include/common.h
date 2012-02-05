@@ -213,8 +213,12 @@ struct flow_control {
 	int skip_fetch;		/* To emulate delay + break quirk */
 	int jumpline;
 	int loop_chn;
-	int* loop_start;
-	int* loop_stack;
+
+	struct pattern_loop {
+		int start;
+		int count;
+	} *loop;
+
 	int num_rows;
 	int ord;
 	int end_point;
