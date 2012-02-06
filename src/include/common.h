@@ -242,27 +242,27 @@ struct xmp_player_context {
 	int scan_row;
 	int scan_num;
 	int bpm;
-};
-
-struct xmp_driver_context {
-	int num_tracks;			/* Number of tracks */
-	int virt_channels;		/* Number of virtual channels */
-	int virt_used;			/* Number of voices currently in use */
-	int maxvoc;			/* Number of sound card voices */
-	int chnvoc;			/* Number of voices per channel */
-	int age;			/* Voice age control (?) */
 
 	int cmute_array[XMP_MAX_CHANNELS];
 
-	struct virt_channel {
-		int count;
-		int map;
-	} *virt_channel;
-
-	struct voice_info *voice_array;
-
-	void *buffer;
-	int size;
+	struct virt_control {
+		int num_tracks;		/* Number of tracks */
+		int virt_channels;	/* Number of virtual channels */
+		int virt_used;		/* Number of voices currently in use */
+		int maxvoc;		/* Number of sound card voices */
+		int chnvoc;		/* Number of voices per channel */
+		int age;		/* Voice age control (?) */
+	
+		struct virt_channel {
+			int count;
+			int map;
+		} *virt_channel;
+	
+		struct voice_info *voice_array;
+	
+		void *buffer;
+		int size;
+	} virt;
 };
 
 struct xmp_smixer_context {
@@ -279,7 +279,6 @@ struct xmp_smixer_context {
 
 struct xmp_context {
 	struct xmp_options o;
-	struct xmp_driver_context d;
 	struct xmp_player_context p;
 	struct xmp_smixer_context s;
 	struct xmp_mod_context m;

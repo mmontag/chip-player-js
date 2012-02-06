@@ -129,19 +129,18 @@ static inline void copy_channel(struct xmp_player_context *p, int to, int from)
 static inline void reset_channel(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
-    struct xmp_driver_context *d = &ctx->d;
     struct xmp_mod_context *m = &ctx->m;
     struct channel_data *xc;
     int i;
 
     m->synth->reset(ctx);
-    memset(p->xc_data, 0, sizeof (struct channel_data) * d->virt_channels);
+    memset(p->xc_data, 0, sizeof (struct channel_data) * p->virt.virt_channels);
 
-    for (i = d->virt_channels; i--; ) {
+    for (i = p->virt.virt_channels; i--; ) {
 	xc = &p->xc_data[i];
 	xc->insdef = xc->ins = xc->key = -1;
     }
-    for (i = d->num_tracks; i--; ) {
+    for (i = p->virt.num_tracks; i--; ) {
 	xc = &p->xc_data[i];
 	xc->masterpan = m->mod.xxc[i].pan;
 	xc->mastervol = m->mod.xxc[i].vol;
@@ -779,7 +778,6 @@ int xmp_player_start(xmp_context opaque)
 {
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
 	struct xmp_player_context *p = &ctx->p;
-	struct xmp_driver_context *d = &ctx->d;
 	struct xmp_smixer_context *s = &ctx->s;
 	struct xmp_mod_context *m = &ctx->m;
 	struct xmp_options *o = &ctx->o;
@@ -827,11 +825,11 @@ int xmp_player_start(xmp_context opaque)
 
 	f->jump = -1;
 
-	f->loop = calloc(d->virt_channels, sizeof (struct pattern_loop));
+	f->loop = calloc(p->virt.virt_channels, sizeof (struct pattern_loop));
 	if (f->loop == NULL)
 		goto err;
 
-	p->xc_data = calloc(d->virt_channels, sizeof (struct channel_data));
+	p->xc_data = calloc(p->virt.virt_channels, sizeof (struct channel_data));
 	if (p->xc_data == NULL)
 		goto err1;
 
@@ -856,7 +854,6 @@ int xmp_player_frame(xmp_context opaque)
 {
 	struct xmp_context *ctx = (struct xmp_context *)opaque;
 	struct xmp_player_context *p = &ctx->p;
-	struct xmp_driver_context *d = &ctx->d;
 	struct xmp_mod_context *m = &ctx->m;
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
@@ -910,7 +907,7 @@ int xmp_player_frame(xmp_context opaque)
 	}
 
 	/* play_frame */
-	for (i = 0; i < d->virt_channels; i++)
+	for (i = 0; i < p->virt.virt_channels; i++)
 		play_channel(ctx, i, p->frame);
 
 	if (o->time && (o->time < f->playing_time))	/* expired time */
