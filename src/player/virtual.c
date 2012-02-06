@@ -281,7 +281,7 @@ int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note
 	smp = -1;
 
     if (dct) {
-	for (voc = p->virt.maxvoc; voc--;) {
+	for (voc = 0; voc < p->virt.maxvoc; voc++) {
 	    if (p->virt.voice_array[voc].root == chn && p->virt.voice_array[voc].ins == ins) {
 		if ((dct == XMP_INST_DCT_INST) ||
 		    (dct == XMP_INST_DCT_SMP && p->virt.voice_array[voc].smp == smp) ||
