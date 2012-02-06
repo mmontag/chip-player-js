@@ -111,8 +111,15 @@ get_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 static inline void
 update_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 {
-	struct xmp_subinstrument *sub = &XXI;
-	int rate = sub->vra;
+	struct xmp_subinstrument *sub;
+	int mapped, rate;
+
+	mapped = XXIH.map[xc->key].ins;
+	if (mapped == 0xff)
+		return;
+
+	sub = &m->mod.xxi[xc->ins].sub[mapped];
+	rate = sub->vra;
 
 	xc->instrument_vibrato.phase += rate >> 2;
 	xc->instrument_vibrato.phase %= WAVEFORM_SIZE;
@@ -324,10 +331,11 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	}
     }
 
-    if (smp >= 0) {
+    if (smp >= 0 && smp < mod->smp) {
 	int mapped = mod->xxi[ins].map[key].ins;
 	int to = virtch_setpatch(ctx, chn, ins, smp, note,
-			mod->xxi[ins].sub[mapped].nna, mod->xxi[ins].sub[mapped].dct,
+			mod->xxi[ins].sub[mapped].nna,
+			mod->xxi[ins].sub[mapped].dct,
 			mod->xxi[ins].sub[mapped].dca, ctl, cont_sample);
 
 	if (to < 0)
