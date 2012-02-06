@@ -19,8 +19,13 @@ int main(int argc, char **argv)
 	static struct xmp_module_info mi[2];
 	int current, prev;
 	int i;
+	int silent = 0;
 
-	if (sound_init(44100, 2) < 0) {
+	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 's') {
+		silent = 1;
+	}
+
+	if (!silent && sound_init(44100, 2) < 0) {
 		fprintf(stderr, "%s: can't initialize sound\n", argv[0]);
 		exit(1);
 	}
@@ -52,8 +57,11 @@ int main(int argc, char **argv)
 				current ^= 1;
 
 				xmp_player_get_info(ctx, &mi[current]);
-				sound_play(mi[current].buffer,
-					   mi[current].buffer_size);
+
+				if (!silent) {
+					sound_play(mi[current].buffer,
+						   mi[current].buffer_size);
+				}
 
 				if (mi[current].row != mi[prev].row) {
 					display_data(&mi[current]);
@@ -68,7 +76,10 @@ int main(int argc, char **argv)
 
 	xmp_free_context(ctx);
 	xmp_deinit();
-	sound_deinit();
+
+	if (!silent) {
+		sound_deinit();
+	}
 
 	return 0;
 }
