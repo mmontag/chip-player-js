@@ -234,7 +234,7 @@ static void spectrum_update(struct spectrum *sp)
  * Synth functions
  */
 
-static void synth_setpatch(struct xmp_context *ctx, int c, uint8 *data)
+static void synth_setpatch(struct context_data *ctx, int c, uint8 *data)
 {
 	struct spectrum *sp = SYNTH_CHIP(ctx);
 	struct spectrum_channel *sc = &sp->sc[c];
@@ -245,9 +245,9 @@ static void synth_setpatch(struct xmp_context *ctx, int c, uint8 *data)
 
 }
 
-static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
+static void synth_setnote(struct context_data *ctx, int c, int note, int bend)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct spectrum *sp = SYNTH_CHIP(ctx);
 	struct spectrum_extra *se = m->extra;
 	struct spectrum_channel *sc = &sp->sc[c];
@@ -258,11 +258,11 @@ static void synth_setnote(struct xmp_context *ctx, int c, int note, int bend)
 	sp->sc[c].freq = (int)(0xfff / pow(2, d / 12));
 }
 
-static void synth_setvol(struct xmp_context *ctx, int c, int vol)
+static void synth_setvol(struct context_data *ctx, int c, int vol)
 {
 }
 
-static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
+static void synth_seteffect(struct context_data *ctx, int c, int type, int val)
 {
 	struct spectrum *sp = SYNTH_CHIP(ctx);
 	struct spectrum_channel *sc = &sp->sc[c];
@@ -304,7 +304,7 @@ static void synth_seteffect(struct xmp_context *ctx, int c, int type, int val)
 	}
 }
 
-static int synth_init(struct xmp_context *ctx, int freq)
+static int synth_init(struct context_data *ctx, int freq)
 {
 	SYNTH_CHIP(ctx) = spectrum_new(freq);
 	if (SYNTH_CHIP(ctx) == NULL)
@@ -313,7 +313,7 @@ static int synth_init(struct xmp_context *ctx, int freq)
 	return 0;
 }
 
-static int synth_reset(struct xmp_context *ctx)
+static int synth_reset(struct context_data *ctx)
 {
 	struct spectrum *sp = SYNTH_CHIP(ctx);
 	ym2149_reset(sp->ym);
@@ -321,7 +321,7 @@ static int synth_reset(struct xmp_context *ctx)
 	return 0;
 }
 
-static int synth_deinit(struct xmp_context *ctx)
+static int synth_deinit(struct context_data *ctx)
 {
 	struct spectrum *sp = SYNTH_CHIP(ctx);
 	spectrum_destroy(sp);
@@ -329,7 +329,7 @@ static int synth_deinit(struct xmp_context *ctx)
 	return 0;
 }
 
-static void synth_mixer(struct xmp_context *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
+static void synth_mixer(struct context_data *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
 {
 	struct spectrum *sp = SYNTH_CHIP(ctx);
 

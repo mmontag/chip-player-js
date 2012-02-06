@@ -56,17 +56,17 @@ struct voice_info {
 	int looped_sample;	/* set if sample has looped */
 };
 
-int	mixer_on		(struct xmp_context *);
-void	mixer_off		(struct xmp_context *);
-void    mixer_setvol		(struct xmp_context *, int, int);
-void    mixer_seteffect		(struct xmp_context *, int, int, int);
-void    mixer_setpan		(struct xmp_context *, int, int);
-int	mixer_numvoices		(struct xmp_context *, int);
-void	mixer_softmixer		(struct xmp_context *);
-void	mixer_reset		(struct xmp_context *);
-void	mixer_setpatch		(struct xmp_context *, int, int);
-void	mixer_voicepos		(struct xmp_context *, int, int, int);
-void	mixer_setnote		(struct xmp_context *, int, int);
-void	mixer_setbend		(struct xmp_context *, int, int);
+int	mixer_on		(struct context_data *);
+void	mixer_off		(struct context_data *);
+void    mixer_setvol		(struct context_data *, int, int);
+void    mixer_seteffect		(struct context_data *, int, int, int);
+void    mixer_setpan		(struct context_data *, int, int);
+int	mixer_numvoices		(struct context_data *, int);
+void	mixer_softmixer		(struct context_data *);
+void	mixer_reset		(struct context_data *);
+void	mixer_setpatch		(struct context_data *, int, int);
+void	mixer_voicepos		(struct context_data *, int, int, int);
+void	mixer_setnote		(struct context_data *, int, int);
+void	mixer_setbend		(struct context_data *, int, int);
 
 #endif /* __MIXER_H */

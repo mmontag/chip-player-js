@@ -25,10 +25,10 @@
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 
-void process_fx(struct xmp_context *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct channel_data *xc, int fnum)
+void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt, uint8 fxp, struct channel_data *xc, int fnum)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct flow_control *f = &p->flow;
     int h, l;
 

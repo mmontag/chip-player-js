@@ -23,7 +23,7 @@
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 
 static int med2_test(FILE *, char *, const int);
-static int med2_load (struct xmp_context *, FILE *, const int);
+static int med2_load (struct context_data *, FILE *, const int);
 
 struct format_loader med2_loader = {
 	"MED2",
@@ -44,9 +44,9 @@ static int med2_test(FILE *f, char *t, const int start)
 }
 
 
-int med2_load(struct xmp_context *ctx, FILE *f, const int start)
+int med2_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	int sliding;

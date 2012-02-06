@@ -21,7 +21,7 @@ extern struct format_loader s3m_loader;
 extern struct format_loader mod_loader;
 
 static int umx_test (FILE *, char *, const int);
-static int umx_load (struct xmp_context *, FILE *, const int);
+static int umx_load (struct context_data *, FILE *, const int);
 
 struct format_loader umx_loader = {
 	"UMX",
@@ -71,9 +71,9 @@ static int umx_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int umx_load(struct xmp_context *ctx, FILE *f, const int start)
+static int umx_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	int i;
 	uint8 buf[TEST_SIZE], *b = buf;
 	uint32 id;

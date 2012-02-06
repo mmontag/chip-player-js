@@ -37,9 +37,9 @@ static int audio_fd;
 static void from_fmt(struct xmp_options *, int);
 static int to_fmt(struct xmp_options *);
 static void setaudio(struct xmp_options *);
-static int init(struct xmp_context *);
-static void shutdown(struct xmp_context *);
-static void bufdump(struct xmp_context *, void *, int);
+static int init(struct context_data *);
+static void shutdown(struct context_data *);
+static void bufdump(struct context_data *, void *, int);
 static void resume(void);
 static void onpause(void);
 
@@ -133,7 +133,7 @@ static void setaudio(struct xmp_options *o)
 	}
 }
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	char *dev_audio[] = { "/dev/dsp", "/dev/sound/dsp" };
 	struct xmp_options *o = &ctx->o;
@@ -176,7 +176,7 @@ static int init(struct xmp_context *ctx)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	int j;
 
@@ -189,7 +189,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 	};
 }
 
-static void shutdown(struct xmp_context *ctx)
+static void shutdown(struct context_data *ctx)
 {
 	ioctl(audio_fd, SNDCTL_DSP_RESET, NULL);
 	close(audio_fd);

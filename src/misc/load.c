@@ -77,7 +77,7 @@ char *test_xfd		(unsigned char *, int);
 
 #define DECRUNCH_MAX 5 /* don't recurse more than this */
 
-static int decrunch(struct xmp_context *ctx, FILE **f, char **s, int ttl)
+static int decrunch(struct context_data *ctx, FILE **f, char **s, int ttl)
 {
     unsigned char b[1024];
     char *cmd;
@@ -393,7 +393,7 @@ int xmp_test_module(xmp_context ctx, char *s, char *n)
     if (S_ISDIR(st.st_mode))
 	goto err;
 
-    if (decrunch((struct xmp_context *)ctx, &f, &s, DECRUNCH_MAX) < 0)
+    if (decrunch((struct context_data *)ctx, &f, &s, DECRUNCH_MAX) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -440,12 +440,12 @@ static void split_name(char *s, char **d, char **b)
 
 int xmp_load_module(xmp_context opaque, char *s)
 {
-    struct xmp_context *ctx = (struct xmp_context *)opaque;
+    struct context_data *ctx = (struct context_data *)opaque;
     FILE *f;
     int i, t, val;
     struct stat st;
-    struct xmp_mod_context *m = &ctx->m;
-    struct xmp_options *o = &((struct xmp_context *)ctx)->o;
+    struct module_data *m = &ctx->m;
+    struct xmp_options *o = &((struct context_data *)ctx)->o;
 
     _D(_D_WARN "s = %s", s);
 
@@ -459,7 +459,7 @@ int xmp_load_module(xmp_context opaque, char *s)
 	goto err;
 
     _D(_D_INFO "decrunch");
-    if ((t = decrunch((struct xmp_context *)ctx, &f, &s, DECRUNCH_MAX)) < 0)
+    if ((t = decrunch((struct context_data *)ctx, &f, &s, DECRUNCH_MAX)) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -503,7 +503,7 @@ int xmp_load_module(xmp_context opaque, char *s)
 	    fseek(f, 0, SEEK_SET);
 	    _D(_D_WARN "load format: %s", format_loader[i]->name);
 
-	    val = format_loader[i]->loader((struct xmp_context *)ctx, f, 0);
+	    val = format_loader[i]->loader((struct context_data *)ctx, f, 0);
 	    if (val != 0) {
 		_D(_D_CRIT "can't load module, possibly corrupted file");
 	    }
@@ -535,7 +535,7 @@ int xmp_load_module(xmp_context opaque, char *s)
 	strncpy(m->mod.name, m->basename, XMP_NAMESIZE);
     }
 
-    m->time = _xmp_scan_module((struct xmp_context *)ctx);
+    m->time = _xmp_scan_module((struct context_data *)ctx);
 
     return m->time;
 
@@ -548,8 +548,8 @@ err:
 
 void xmp_release_module(xmp_context opaque)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_mod_context *m = &ctx->m;
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
 	int i;
 
 	_D(_D_INFO "Freeing memory");

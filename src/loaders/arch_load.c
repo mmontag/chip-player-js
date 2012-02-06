@@ -14,7 +14,7 @@
 
 
 static int arch_test (FILE *, char *, const int);
-static int arch_load (struct xmp_context *, FILE *, const int);
+static int arch_load (struct context_data *, FILE *, const int);
 
 
 struct format_loader arch_loader = {
@@ -146,7 +146,7 @@ static void fix_effect(struct xmp_event *e)
 	}
 }
 
-static void get_tinf(struct xmp_context *ctx, int size, FILE *f)
+static void get_tinf(struct context_data *ctx, int size, FILE *f)
 {
 	int x;
 
@@ -162,17 +162,17 @@ static void get_tinf(struct xmp_context *ctx, int size, FILE *f)
 	day = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 }
 
-static void get_mvox(struct xmp_context *ctx, int size, FILE *f)
+static void get_mvox(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->chn = read32l(f);
 }
 
-static void get_ster(struct xmp_context *ctx, int size, FILE *f)
+static void get_ster(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -183,45 +183,45 @@ static void get_ster(struct xmp_context *ctx, int size, FILE *f)
 			mod->xxc[i].pan = 42*ster[i]-40;
 }
 
-static void get_mnam(struct xmp_context *ctx, int size, FILE *f)
+static void get_mnam(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	fread(mod->name, 1, 32, f);
 }
 
-static void get_anam(struct xmp_context *ctx, int size, FILE *f)
+static void get_anam(struct context_data *ctx, int size, FILE *f)
 {
-	/* struct xmp_mod_context *m = &ctx->m;
+	/* struct module_data *m = &ctx->m;
 
 	fread(m->author, 1, 32, f); */
 }
 
-static void get_mlen(struct xmp_context *ctx, int size, FILE *f)
+static void get_mlen(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->len = read32l(f);
 }
 
-static void get_pnum(struct xmp_context *ctx, int size, FILE *f)
+static void get_pnum(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->pat = read32l(f);
 }
 
-static void get_plen(struct xmp_context *ctx, int size, FILE *f)
+static void get_plen(struct context_data *ctx, int size, FILE *f)
 {
 	fread(rows, 1, 64, f);
 }
 
-static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
+static void get_sequ(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	fread(mod->xxo, 1, 128, f);
@@ -232,9 +232,9 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 }
 
-static void get_patt(struct xmp_context *ctx, int size, FILE *f)
+static void get_patt(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	static int i = 0;
 	int j, k;
@@ -271,9 +271,9 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	i++;
 }
 
-static void get_samp(struct xmp_context *ctx, int size, FILE *f)
+static void get_samp(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	static int i = 0;
 
@@ -353,9 +353,9 @@ static void get_samp(struct xmp_context *ctx, int size, FILE *f)
 	max_ins++;
 }
 
-static int arch_load(struct xmp_context *ctx, FILE *f, const int start)
+static int arch_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 

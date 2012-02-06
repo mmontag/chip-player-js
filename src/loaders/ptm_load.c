@@ -14,7 +14,7 @@
 
 
 static int ptm_test (FILE *, char *, const int);
-static int ptm_load (struct xmp_context *, FILE *, const int);
+static int ptm_load (struct context_data *, FILE *, const int);
 
 struct format_loader ptm_loader = {
     "PTM",
@@ -45,9 +45,9 @@ static int ptm_vol[] = {
 };
 
 
-static int ptm_load(struct xmp_context *ctx, FILE *f, const int start)
+static int ptm_load(struct context_data *ctx, FILE *f, const int start)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int c, r, i, smp_ofs[256];
     struct xmp_event *event;

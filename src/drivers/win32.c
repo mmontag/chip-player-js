@@ -28,9 +28,9 @@ static WORD freebuffer;				/*  */
 static WORD nextbuffer;				/* next buffer to be mixed */
 static int num_buffers;
 
-static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, void *, int);
-static void deinit(struct xmp_context *);
+static int init(struct context_data *);
+static void bufdump(struct context_data *, void *, int);
+static void deinit(struct context_data *);
 
 static void dummy()
 {
@@ -91,7 +91,7 @@ static void CALLBACK wave_callback(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance,
 	}
 }
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	MMRESULT res;
@@ -144,7 +144,7 @@ static int init(struct xmp_context *ctx)
 	return 0;
 }
 
-static void bufdump(struct xmp_context *ctx, void *b, int len)
+static void bufdump(struct context_data *ctx, void *b, int len)
 {
 	memcpy(buffer[nextbuffer], b, len);
 
@@ -159,7 +159,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int len)
 	nextbuffer %= num_buffers;
 }
 
-static void deinit(struct xmp_context *ctx)
+static void deinit(struct context_data *ctx)
 {
 	int i;
 

@@ -15,7 +15,7 @@
 
 
 static int emod_test (FILE *, char *, const int);
-static int emod_load (struct xmp_context *, FILE *, const int);
+static int emod_load (struct context_data *, FILE *, const int);
 
 struct format_loader emod_loader = {
     "EMOD",
@@ -43,9 +43,9 @@ static int emod_test(FILE *f, char *t, const int start)
 static uint8 *reorder;
 
 
-static void get_emic(struct xmp_context *ctx, int size, FILE *f)
+static void get_emic(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, ver;
 
@@ -113,9 +113,9 @@ static void get_emic(struct xmp_context *ctx, int size, FILE *f)
 }
 
 
-static void get_patt(struct xmp_context *ctx, int size, FILE *f)
+static void get_patt(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, k;
     struct xmp_event *event;
@@ -154,9 +154,9 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 }
 
 
-static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
+static void get_8smp(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i;
 
@@ -168,9 +168,9 @@ static void get_8smp(struct xmp_context *ctx, int size, FILE *f)
 }
 
 
-static int emod_load(struct xmp_context *ctx, FILE *f, const int start)
+static int emod_load(struct context_data *ctx, FILE *f, const int start)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
 
     LOAD_INIT();
 

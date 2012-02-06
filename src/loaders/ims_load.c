@@ -52,7 +52,7 @@ struct ims_header {
 
 
 static int ims_test (FILE *, char *, const int);
-static int ims_load (struct xmp_context *, FILE *, const int);
+static int ims_load (struct context_data *, FILE *, const int);
 
 struct format_loader ims_loader = {
     "IMS",
@@ -132,9 +132,9 @@ static int ims_test(FILE *f, char *t, const int start)
 }
 
 
-static int ims_load(struct xmp_context *ctx, FILE *f, const int start)
+static int ims_load(struct context_data *ctx, FILE *f, const int start)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     int smp_size;

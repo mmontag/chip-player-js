@@ -20,11 +20,11 @@
 
 void *xmp_create_context()
 {
-	struct xmp_context *ctx;
+	struct context_data *ctx;
 	struct xmp_options *o;
 	uint16 w;
 
-	ctx = calloc(1, sizeof(struct xmp_context));
+	ctx = calloc(1, sizeof(struct context_data));
 
 	if (ctx == NULL)
 		return NULL;
@@ -62,7 +62,7 @@ void xmp_deinit()
 
 void xmp_channel_mute(xmp_context opaque, int from, int num, int on)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
+	struct context_data *ctx = (struct context_data *)opaque;
 
 	from += num - 1;
 
@@ -74,9 +74,9 @@ void xmp_channel_mute(xmp_context opaque, int from, int num, int on)
 
 int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &ctx->m;
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 
 	switch (cmd) {
 	case XMP_ORD_PREV:
@@ -116,8 +116,8 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 
 int xmp_seek_time(xmp_context opaque, int time)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_mod_context *m = &ctx->m;
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
 	int i, t;
 	/* _D("seek to %d, total %d", time, xmp_cfg.time); */
 

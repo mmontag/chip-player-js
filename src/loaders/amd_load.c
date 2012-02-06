@@ -11,7 +11,7 @@
 
 
 static int amd_test (FILE *, char *, const int);
-static int amd_load (struct xmp_context *, FILE *, const int);
+static int amd_load (struct context_data *, FILE *, const int);
 
 struct format_loader amd_loader = {
     "AMD",
@@ -59,9 +59,9 @@ struct amd_file_header {
 static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
 
-static int amd_load(struct xmp_context *ctx, FILE *f, const int start)
+static int amd_load(struct context_data *ctx, FILE *f, const int start)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int r, i, j, tmode = 1;
     struct amd_file_header afh;

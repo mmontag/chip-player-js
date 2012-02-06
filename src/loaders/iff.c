@@ -20,7 +20,7 @@ static LIST_HEAD(iff_list);
 static int __id_size;
 static int __flags;
 
-void iff_chunk(struct xmp_context *ctx, FILE *f)
+void iff_chunk(struct context_data *ctx, FILE *f)
 {
     long size;
     char id[17] = "";
@@ -52,7 +52,7 @@ void iff_chunk(struct xmp_context *ctx, FILE *f)
 }
 
 
-void iff_register(char *id, void (*loader)(struct xmp_context *, int, FILE *))
+void iff_register(char *id, void (*loader)(struct context_data *, int, FILE *))
 {
     struct iff_info *f;
 
@@ -82,7 +82,7 @@ void iff_release()
 }
 
 
-int iff_process(struct xmp_context *ctx, char *id, long size, FILE *f)
+int iff_process(struct context_data *ctx, char *id, long size, FILE *f)
 {
     struct list_head *tmp;
     struct iff_info *i;

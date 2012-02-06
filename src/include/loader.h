@@ -8,7 +8,7 @@ struct format_loader {
 	char *id;
 	char *name;
 	int (*test)(FILE *, char *, const int);
-	int (*loader)(struct xmp_context *, FILE *, const int);
+	int (*loader)(struct context_data *, FILE *, const int);
 };
 
 #endif

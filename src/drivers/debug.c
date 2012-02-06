@@ -18,8 +18,8 @@
 static void starttimer(void);
 static void stoptimer(void);
 static void bufdump(void);
-static int init(struct xmp_context *ctx);
-static void shutdown(struct xmp_context *);
+static int init(struct context_data *ctx);
+static void shutdown(struct context_data *);
 
 struct xmp_drv_info drv_debug = {
 	"debug",		/* driver ID */
@@ -46,12 +46,12 @@ static void bufdump()
 {
 }
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	return 0;
 }
 
-static void shutdown(struct xmp_context *ctx)
+static void shutdown(struct context_data *ctx)
 {
 	printf("** shutdown\n");
 }

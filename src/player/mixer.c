@@ -120,11 +120,11 @@ static void out_su16norm(int16 * dest, int *src, int num, int amp, int flags)
 
 
 /* Prepare the mixer for the next tick */
-void mixer_reset(struct xmp_context *ctx)
+void mixer_reset(struct context_data *ctx)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
-    struct xmp_smixer_context *s = &ctx->s;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+    struct mixer_data *s = &ctx->s;
     struct xmp_options *o = &ctx->o;
 
     s->ticksize = m->quirk & QUIRK_MEDBPM ?
@@ -137,10 +137,10 @@ void mixer_reset(struct xmp_context *ctx)
 
 
 /* Hipolito's rampdown anticlick */
-static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int count)
+static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_smixer_context *s = &ctx->s;
+    struct player_data *p = &ctx->p;
+    struct mixer_data *s = &ctx->s;
     int smp_l, smp_r;
     int dec_l, dec_r;
 
@@ -182,11 +182,11 @@ static void smix_rampdown(struct xmp_context *ctx, int voc, int32 *buf, int coun
 
 
 /* Ok, it's messy, but it works :-) Hipolito */
-static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, int *buf, int count)
+static void anticlick(struct context_data *ctx, int voc, int vol, int pan, int *buf, int count)
 {
     int oldvol, newvol, pan0;
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_smixer_context *s = &ctx->s;
+    struct player_data *p = &ctx->p;
+    struct mixer_data *s = &ctx->s;
     struct voice_info *vi = &p->virt.voice_array[voc];
 
     /* From: Mirko Buffoni <mirbuf@gmail.com>
@@ -216,7 +216,7 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 	s->dtleft += vi->sleft;
 	vi->sright = vi->sleft = 0;
     } else {
-	smix_rampdown(ctx, voc, buf, count);
+	rampdown(ctx, voc, buf, count);
     }
 }
 
@@ -224,11 +224,11 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
-void mixer_softmixer(struct xmp_context *ctx)
+void mixer_softmixer(struct context_data *ctx)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_smixer_context *s = &ctx->s;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct mixer_data *s = &ctx->s;
+    struct module_data *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     struct xmp_sample *xxs;
     struct voice_info *vi;
@@ -238,7 +238,7 @@ void mixer_softmixer(struct xmp_context *ctx)
     int synth = 1;
     int *buf_pos;
 
-    smix_rampdown(ctx, -1, NULL, 0);	/* Anti-click */
+    rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
     for (voc = 0; voc < p->virt.maxvoc; voc++) {
 	vi = &p->virt.voice_array[voc];
@@ -349,7 +349,7 @@ void mixer_softmixer(struct xmp_context *ctx)
 
 	    /* First sample loop run */
             if (vi->fidx == 0 || lps >= lpe) {
-		smix_anticlick(ctx, voc, 0, 0, buf_pos, size);
+		anticlick(ctx, voc, 0, 0, buf_pos, size);
 		virtch_resetvoice(ctx, voc, 0);
 		size = 0;
 		continue;
@@ -390,10 +390,10 @@ void mixer_softmixer(struct xmp_context *ctx)
 }
 
 
-void mixer_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
+void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct voice_info *vi = &p->virt.voice_array[voc];
     struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
     int lpe;
@@ -417,10 +417,10 @@ void mixer_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 }
 
 
-void mixer_setpatch(struct xmp_context *ctx, int voc, int smp)
+void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     struct voice_info *vi = &p->virt.voice_array[voc];
     struct xmp_sample *xxs = &m->mod.xxs[smp];
@@ -464,9 +464,9 @@ void mixer_setpatch(struct xmp_context *ctx, int voc, int smp)
 }
 
 
-void mixer_setnote(struct xmp_context *ctx, int voc, int note)
+void mixer_setnote(struct context_data *ctx, int voc, int note)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     struct voice_info *vi = &p->virt.voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note = note, 0);
@@ -474,10 +474,10 @@ void mixer_setnote(struct xmp_context *ctx, int voc, int note)
 }
 
 
-void mixer_setbend(struct xmp_context *ctx, int voc, int bend)
+void mixer_setbend(struct context_data *ctx, int voc, int bend)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct voice_info *vi = &p->virt.voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note, bend);
@@ -487,13 +487,13 @@ void mixer_setbend(struct xmp_context *ctx, int voc, int bend)
 }
 
 
-void mixer_setvol(struct xmp_context *ctx, int voc, int vol)
+void mixer_setvol(struct context_data *ctx, int voc, int vol)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct voice_info *vi = &p->virt.voice_array[voc];
  
-    smix_anticlick(ctx, voc, vol, vi->pan, NULL, 0);
+    anticlick(ctx, voc, vol, vi->pan, NULL, 0);
     vi->vol = vol;
 
     if (vi->fidx & FLAG_SYNTH)
@@ -501,10 +501,10 @@ void mixer_setvol(struct xmp_context *ctx, int voc, int vol)
 }
 
 
-void mixer_seteffect(struct xmp_context *ctx, int voc, int type, int val)
+void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct voice_info *vi = &p->virt.voice_array[voc];
  
     switch (type) {
@@ -530,18 +530,18 @@ void mixer_seteffect(struct xmp_context *ctx, int voc, int type, int val)
 }
 
 
-void mixer_setpan(struct xmp_context *ctx, int voc, int pan)
+void mixer_setpan(struct context_data *ctx, int voc, int pan)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     struct voice_info *vi = &p->virt.voice_array[voc];
  
     vi->pan = pan;
 }
 
 
-int mixer_numvoices(struct xmp_context *ctx, int num)
+int mixer_numvoices(struct context_data *ctx, int num)
 {
-    struct xmp_smixer_context *s = &ctx->s;
+    struct mixer_data *s = &ctx->s;
 
     if (num > s->numvoc || num < 0) {
 	return s->numvoc;
@@ -550,9 +550,9 @@ int mixer_numvoices(struct xmp_context *ctx, int num)
     }
 }
 
-int mixer_on(struct xmp_context *ctx)
+int mixer_on(struct context_data *ctx)
 {
-	struct xmp_smixer_context *s = &ctx->s;
+	struct mixer_data *s = &ctx->s;
 	struct xmp_options *o = &ctx->o;
 
 	s->buffer = calloc(SMIX_RESMAX, OUT_MAXLEN);
@@ -576,9 +576,9 @@ err:
 }
 
 
-void mixer_off(struct xmp_context *ctx)
+void mixer_off(struct context_data *ctx)
 {
-    struct xmp_smixer_context *s = &ctx->s;
+    struct mixer_data *s = &ctx->s;
 
     free(s->buffer);
     free(s->buf32b);

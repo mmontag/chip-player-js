@@ -167,7 +167,7 @@ int check_filename_case(char *dir, char *name, char *new_name, int size)
 	return found;
 }
 
-void get_instrument_path(struct xmp_context *ctx, char *var, char *path, int size)
+void get_instrument_path(struct context_data *ctx, char *var, char *path, int size)
 {
 	struct xmp_options *o = &ctx->o;
 
@@ -182,7 +182,7 @@ void get_instrument_path(struct xmp_context *ctx, char *var, char *path, int siz
 	}
 }
 
-void set_type(struct xmp_mod_context *m, char *fmt, ...)
+void set_type(struct module_data *m, char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -211,7 +211,7 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int load_sample(struct xmp_context *ctx, FILE * f, int id, int flags,
+int load_sample(struct context_data *ctx, FILE * f, int id, int flags,
 	       struct xmp_sample *xxs, void *buffer)
 {
 	struct xmp_options *o = &ctx->o;

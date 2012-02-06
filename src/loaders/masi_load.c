@@ -60,7 +60,7 @@
 
 
 static int masi_test (FILE *, char *, const int);
-static int masi_load (struct xmp_context *, FILE *, const int);
+static int masi_load (struct context_data *, FILE *, const int);
 
 struct format_loader masi_loader = {
 	"MASI",
@@ -87,13 +87,13 @@ uint8 *pnam;
 uint8 *pord;
 
 
-static void get_sdft(struct xmp_context *ctx, int size, FILE *f)
+static void get_sdft(struct context_data *ctx, int size, FILE *f)
 {
 }
 
-static void get_titl(struct xmp_context *ctx, int size, FILE *f)
+static void get_titl(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	char buf[40];
 	
@@ -101,18 +101,18 @@ static void get_titl(struct xmp_context *ctx, int size, FILE *f)
 	strncpy(mod->name, buf, size > 32 ? 32 : size);
 }
 
-static void get_dsmp_cnt(struct xmp_context *ctx, int size, FILE *f)
+static void get_dsmp_cnt(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->ins++;
 	mod->smp = mod->ins;
 }
 
-static void get_pbod_cnt(struct xmp_context *ctx, int size, FILE *f)
+static void get_pbod_cnt(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	char buf[20];
 
@@ -123,9 +123,9 @@ static void get_pbod_cnt(struct xmp_context *ctx, int size, FILE *f)
 }
 
 
-static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
+static void get_dsmp(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, srate;
 	int finetune;
@@ -184,9 +184,9 @@ static void get_dsmp(struct xmp_context *ctx, int size, FILE *f)
 }
 
 
-static void get_pbod(struct xmp_context *ctx, int size, FILE *f)
+static void get_pbod(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, r;
 	struct xmp_event *event, dummy;
@@ -331,18 +331,18 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 	cur_pat++;
 }
 
-static void get_song(struct xmp_context *ctx, int size, FILE *f)
+static void get_song(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	fseek(f, 10, SEEK_CUR);
 	mod->chn = read8(f);
 }
 
-static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
+static void get_song_2(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	uint32 magic;
 	char c, buf[20];
@@ -394,9 +394,9 @@ static void get_song_2(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static int masi_load(struct xmp_context *ctx, FILE *f, const int start)
+static int masi_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int offset;
 	int i, j;

@@ -94,7 +94,7 @@ int dmpfac[] = {
 /*
  * Simple 2-poles resonant filter
  */
-void filter_setup(struct xmp_context *ctx, struct channel_data *xc, int cutoff)
+void filter_setup(struct context_data *ctx, struct channel_data *xc, int cutoff)
 {
 	struct xmp_options *o = &ctx->o;
 	/* [0-255] => [100Hz-8000Hz] */

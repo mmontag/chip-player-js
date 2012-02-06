@@ -302,7 +302,7 @@ static void seek(InputPlayback *ipb, int time)
 static void mseek(InputPlayback *ipb, unsigned long time)
 {
 	int i, t;
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	struct player_data *p = &((struct context_data *)ctx)->p;
 
 	_D("seek to %ld, total %d", time, xmp_cfg.time);
 

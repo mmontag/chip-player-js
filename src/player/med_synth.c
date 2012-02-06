@@ -70,7 +70,7 @@ int get_med_vibrato(struct channel_data *xc)
 }
 
 
-int get_med_arp(struct xmp_mod_context *m, struct channel_data *xc)
+int get_med_arp(struct module_data *m, struct channel_data *xc)
 {
 	int arp;
 
@@ -90,9 +90,9 @@ int get_med_arp(struct xmp_mod_context *m, struct channel_data *xc)
 }
 
 
-void xmp_med_synth(struct xmp_context *ctx, int chn, struct channel_data *xc, int rst)
+void xmp_med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int rst)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
     int temp;
 

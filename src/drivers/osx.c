@@ -22,9 +22,9 @@
 #include "mixer.h"
 
 
-static int init (struct xmp_context *ctx);
-static void bufdump (struct xmp_context *, void *, int);
-static void shutdown (struct xmp_context *);
+static int init (struct context_data *ctx);
+static void bufdump (struct context_data *, void *, int);
+static void shutdown (struct context_data *);
 
 static void dummy () { }
 
@@ -145,7 +145,7 @@ OSStatus render_proc(void *inRefCon,
  */
 
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	AudioStreamBasicDescription ad;
@@ -247,7 +247,7 @@ static int init(struct xmp_context *ctx)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	int j = 0;
 
@@ -270,7 +270,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 }
 
 
-static void shutdown(struct xmp_context *ctx)
+static void shutdown(struct context_data *ctx)
 {
         AudioOutputUnitStop(au);
 	AudioUnitUninitialize(au);

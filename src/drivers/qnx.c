@@ -22,9 +22,9 @@
 
 static int fd_audio;
 
-static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, void *, int);
-static void myshutdown(struct xmp_context *);
+static int init(struct context_data *);
+static void bufdump(struct context_data *, void *, int);
+static void myshutdown(struct context_data *);
 static void mysync();
 
 static void dummy()
@@ -48,7 +48,7 @@ struct xmp_drv_info drv_qnx = {
 	bufdump,		/* bufdump */
 };
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	int rc, rate, bits, stereo, bsize;
@@ -106,7 +106,7 @@ static int init(struct xmp_context *ctx)
 	return XMP_ERR_DINIT;
 }
 
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	int j;
 
@@ -119,7 +119,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 	} while (i);
 }
 
-static void myshutdown(struct xmp_context *ctx)
+static void myshutdown(struct context_data *ctx)
 {
 	close(fd_audio);
 }

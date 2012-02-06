@@ -38,7 +38,7 @@ struct fcm_header {
 };
     
 
-int fcm_load(struct xmp_context *ctx, FILE *f)
+int fcm_load(struct context_data *ctx, FILE *f)
 {
     int i, j, k;
     struct xmp_event *event;

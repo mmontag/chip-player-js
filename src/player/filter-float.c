@@ -41,7 +41,7 @@ static float filter_cutoff(int cutoff /*, int modifier */)
 /*
  * Simple 2-poles resonant filter
  */
-void filter_setup(struct xmp_context *ctx, struct xmp_channel *xc, int cutoff)
+void filter_setup(struct context_data *ctx, struct xmp_channel *xc, int cutoff)
 {
 	struct xmp_options *o = &ctx->o;
 	float fc, fs, dmpfac, d, e;

@@ -26,11 +26,11 @@
 
 #include "driver.h"
 
-static int init (struct xmp_context *);
+static int init (struct context_data *);
 static int prepare_driver (void);
-static void dshutdown (struct xmp_context *);
+static void dshutdown (struct context_data *);
 static int to_fmt (struct xmp_options *);
-static void bufdump (struct xmp_context *, void *, int);
+static void bufdump (struct context_data *, void *, int);
 static void flush (void);
 
 static void dummy () { }
@@ -56,7 +56,7 @@ struct xmp_drv_info drv_alsa = {
 static snd_pcm_t *pcm_handle;
 
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	snd_pcm_hw_params_t *hwparams;
 	int ret;
@@ -153,7 +153,7 @@ static int to_fmt(struct xmp_options *o)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	int frames;
 
@@ -163,7 +163,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 	}
 }
 
-static void dshutdown(struct xmp_context *ctx)
+static void dshutdown(struct context_data *ctx)
 {
 	snd_pcm_close(pcm_handle);
 }

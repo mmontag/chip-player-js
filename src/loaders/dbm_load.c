@@ -18,7 +18,7 @@
 
 
 static int dbm_test(FILE *, char *, const int);
-static int dbm_load (struct xmp_context *, FILE *, const int);
+static int dbm_load (struct context_data *, FILE *, const int);
 
 struct format_loader dbm_loader = {
 	"DBM",
@@ -43,9 +43,9 @@ static int dbm_test(FILE * f, char *t, const int start)
 static int have_song;
 
 
-static void get_info(struct xmp_context *ctx, int size, FILE *f)
+static void get_info(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->ins = read16b(f);
@@ -59,9 +59,9 @@ static void get_info(struct xmp_context *ctx, int size, FILE *f)
 	INSTRUMENT_INIT();
 }
 
-static void get_song(struct xmp_context *ctx, int size, FILE *f)
+static void get_song(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 	char buffer[50];
@@ -81,9 +81,9 @@ static void get_song(struct xmp_context *ctx, int size, FILE *f)
 		mod->xxo[i] = read16b(f);
 }
 
-static void get_inst(struct xmp_context *ctx, int size, FILE *f)
+static void get_inst(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 	int c2spd, flags, snum;
@@ -120,9 +120,9 @@ static void get_inst(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static void get_patt(struct xmp_context *ctx, int size, FILE *f)
+static void get_patt(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, c, r, n, sz;
 	struct xmp_event *event, dummy;
@@ -211,9 +211,9 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
+static void get_smpl(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, flags;
 
@@ -249,9 +249,9 @@ static void get_smpl(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static void get_venv(struct xmp_context *ctx, int size, FILE *f)
+static void get_venv(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, nenv, ins;
 
@@ -276,9 +276,9 @@ static void get_venv(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static int dbm_load(struct xmp_context *ctx, FILE *f, const int start)
+static int dbm_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	char name[44];
 	uint16 version;

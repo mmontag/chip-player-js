@@ -40,9 +40,9 @@ void cvt_pt_event(struct xmp_event *, uint8 *);
 void disable_continue_fx(struct xmp_event *);
 void clean_s3m_seq(struct xmp_module *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
-void get_instrument_path(struct xmp_context *, char *, char *, int);
-void set_type(struct xmp_mod_context *, char *, ...);
-int load_sample(struct xmp_context *, FILE *, int, int, struct xmp_sample *, void *);
+void get_instrument_path(struct context_data *, char *, char *, int);
+void set_type(struct module_data *, char *, ...);
+int load_sample(struct context_data *, FILE *, int, int, struct xmp_sample *, void *);
 
 
 extern uint8 ord_xlat[];

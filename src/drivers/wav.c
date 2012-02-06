@@ -32,9 +32,9 @@ struct data {
 	uint32 size;
 };
 
-static int init(struct xmp_context *);
-static void bufdump(struct xmp_context *, void *, int);
-static void shutdown(struct xmp_context *);
+static int init(struct context_data *);
+static void bufdump(struct context_data *, void *, int);
+static void shutdown(struct context_data *);
 
 static void dummy()
 {
@@ -79,7 +79,7 @@ static void writeval_32l(int fd, uint32 v)
 	write(DATA(fd), &x, 1);
 }
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	char *buf;
 	uint32 len = 0;
@@ -157,7 +157,7 @@ static int init(struct xmp_context *ctx)
 	return 0;
 }
 
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	struct xmp_options *o = &ctx->o;
 
@@ -167,7 +167,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 	DATA(size) += i;
 }
 
-static void shutdown(struct xmp_context *ctx)
+static void shutdown(struct context_data *ctx)
 {
 	lseek(DATA(fd), 40, SEEK_SET);
 	writeval_32l(DATA(fd), DATA(size));

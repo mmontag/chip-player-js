@@ -126,7 +126,7 @@ static void mseek(InputPlayback *playback, gint msec)
 static void seek_ctx(gint time)
 {
 	int i, t;
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	struct player_data *p = &((struct context_data *)ctx)->p;
 
 	_D("seek to %ld, total %d", time, xmp_cfg.time);
 

@@ -22,15 +22,15 @@ struct iff_header {
 
 struct iff_info {
     char id[5];
-    void (*loader)(struct xmp_context *, int, FILE *);
+    void (*loader)(struct context_data *, int, FILE *);
     struct list_head list;
 };
 
-void iff_chunk (struct xmp_context *, FILE *);
-void iff_register (char *, void(*loader)(struct xmp_context *, int, FILE *));
+void iff_chunk (struct context_data *, FILE *);
+void iff_register (char *, void(*loader)(struct context_data *, int, FILE *));
 void iff_idsize (int);
 void iff_setflag (int);
 void iff_release (void);
-int iff_process (struct xmp_context *, char *, long, FILE *);
+int iff_process (struct context_data *, char *, long, FILE *);
 
 #endif /* __IFF_H */

@@ -15,8 +15,8 @@
 #define MAGIC_MODL	MAGIC4('M','O','D','L')
 
 static int pt3_test(FILE *, char *, const int);
-static int pt3_load(struct xmp_context *, FILE *, const int);
-static int ptdt_load(struct xmp_context *, FILE *, const int);
+static int pt3_load(struct context_data *, FILE *, const int);
+static int ptdt_load(struct context_data *, FILE *, const int);
 
 struct format_loader pt3_loader = {
 	"PT3",
@@ -51,9 +51,9 @@ static int pt3_test(FILE *f, char *t, const int start)
 #define PT3_FLAG_RAWPAT	0x0080	/* Packed patterns if not set */
 
 
-static void get_info(struct xmp_context *ctx, int size, FILE *f)
+static void get_info(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int flags;
 	int day, month, year, hour, min, sec;
@@ -83,19 +83,19 @@ static void get_info(struct xmp_context *ctx, int size, FILE *f)
 	_D(_D_INFO "Playing time: %02d:%02d:%02d", dhour, dmin, dsec);
 }
 
-static void get_cmnt(struct xmp_context *ctx, int size, FILE *f)
+static void get_cmnt(struct context_data *ctx, int size, FILE *f)
 {
 	_D(_D_INFO "Comment size: %d", size);
 }
 
-static void get_ptdt(struct xmp_context *ctx, int size, FILE *f)
+static void get_ptdt(struct context_data *ctx, int size, FILE *f)
 {
 	ptdt_load(ctx, f, 0);
 }
 
-static int pt3_load(struct xmp_context *ctx, FILE *f, const int start)
+static int pt3_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	char buf[20];
 
 	LOAD_INIT();
@@ -126,9 +126,9 @@ static int pt3_load(struct xmp_context *ctx, FILE *f, const int start)
 	return 0;
 }
 
-static int ptdt_load(struct xmp_context *ctx, FILE *f, const int start)
+static int ptdt_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j;
 	struct xmp_event *event;

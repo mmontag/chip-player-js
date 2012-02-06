@@ -19,7 +19,7 @@
 #undef MED4_DEBUG
 
 static int med4_test(FILE *, char *, const int);
-static int med4_load (struct xmp_context *, FILE *, const int);
+static int med4_load (struct context_data *, FILE *, const int);
 
 struct format_loader med4_loader = {
 	"MED4",
@@ -161,9 +161,9 @@ struct temp_inst {
 
 struct temp_inst temp_inst[32];
 
-static int med4_load(struct xmp_context *ctx, FILE *f, const int start)
+static int med4_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	uint32 m0, mask;

@@ -211,7 +211,7 @@ static void stop()
 static void seek(int time)
 {
 	int i, t;
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	struct player_data *p = &((struct context_data *)ctx)->p;
 
 	_D("seek to %d, total %d", time, xmp_cfg.time);
 

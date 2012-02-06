@@ -11,7 +11,7 @@
 
 
 static int mmd3_test (FILE *, char *, const int);
-static int mmd3_load (struct xmp_context *, FILE *, const int);
+static int mmd3_load (struct context_data *, FILE *, const int);
 
 struct format_loader mmd3_loader = {
 	"MMD2/3",
@@ -49,9 +49,9 @@ static int mmd3_test(FILE *f, char *t, const int start)
 
 static int bpm_on, bpmlen, med_8ch;
 
-static int mmd3_load(struct xmp_context *ctx, FILE *f, const int start)
+static int mmd3_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	struct MMD0 header;

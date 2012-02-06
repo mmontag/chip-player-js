@@ -16,9 +16,9 @@
 #define MAX_VOICES_CHANNEL 16
 
 
-void virtch_resetvoice(struct xmp_context *ctx, int voc, int mute)
+void virtch_resetvoice(struct context_data *ctx, int voc, int mute)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     struct voice_info *vi = &p->virt.voice_array[voc];
 
     if ((uint32)voc >= p->virt.maxvoc)
@@ -36,10 +36,10 @@ void virtch_resetvoice(struct xmp_context *ctx, int voc, int mute)
 
 
 /* virtch_on (number of tracks) */
-int virtch_on(struct xmp_context *ctx, int num)
+int virtch_on(struct context_data *ctx, int num)
 {
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &ctx->m;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 	int i;
 
 	p->virt.num_tracks = num;
@@ -84,9 +84,9 @@ err:
 }
 
 
-void virtch_off(struct xmp_context *ctx)
+void virtch_off(struct context_data *ctx)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
 
     if (p->virt.virt_channels < 1)
 	return;
@@ -99,9 +99,9 @@ void virtch_off(struct xmp_context *ctx)
 }
 
 
-void virtch_reset(struct xmp_context *ctx)
+void virtch_reset(struct context_data *ctx)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int i;
 
     if (p->virt.virt_channels < 1)
@@ -124,9 +124,9 @@ void virtch_reset(struct xmp_context *ctx)
 }
 
 
-void virtch_resetchannel(struct xmp_context *ctx, int chn)
+void virtch_resetchannel(struct context_data *ctx, int chn)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;
@@ -144,9 +144,9 @@ void virtch_resetchannel(struct xmp_context *ctx, int chn)
 }
 
 
-static int drv_allocvoice(struct xmp_context *ctx, int chn)
+static int drv_allocvoice(struct context_data *ctx, int chn)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int i, num;
     uint32 age;
 
@@ -186,9 +186,9 @@ static int drv_allocvoice(struct xmp_context *ctx, int chn)
 }
 
 
-void virtch_mute(struct xmp_context *ctx, int chn, int status)
+void virtch_mute(struct context_data *ctx, int chn, int status)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
 
     if ((uint32)chn >= XMP_MAX_CHANNELS)
 	return;
@@ -200,9 +200,9 @@ void virtch_mute(struct xmp_context *ctx, int chn, int status)
 }
 
 
-void virtch_setvol(struct xmp_context *ctx, int chn, int vol)
+void virtch_setvol(struct context_data *ctx, int chn, int vol)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;
@@ -220,9 +220,9 @@ void virtch_setvol(struct xmp_context *ctx, int chn, int vol)
 }
 
 
-void virtch_setpan(struct xmp_context *ctx, int chn, int pan)
+void virtch_setpan(struct context_data *ctx, int chn, int pan)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;
@@ -234,9 +234,9 @@ void virtch_setpan(struct xmp_context *ctx, int chn, int pan)
 }
 
 
-void virtch_seteffect(struct xmp_context *ctx, int chn, int type, int val)
+void virtch_seteffect(struct context_data *ctx, int chn, int type, int val)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;
@@ -248,9 +248,9 @@ void virtch_seteffect(struct xmp_context *ctx, int chn, int type, int val)
 }
 
 
-void virtch_setsmp(struct xmp_context *ctx, int chn, int smp)
+void virtch_setsmp(struct context_data *ctx, int chn, int smp)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
     struct voice_info *vi;
 
@@ -268,9 +268,9 @@ void virtch_setsmp(struct xmp_context *ctx, int chn, int smp)
 }
 
 
-int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg, int cont_sample)
+int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg, int cont_sample)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc, vfree;
 
     if ((uint32)chn >= p->virt.virt_channels)
@@ -337,9 +337,9 @@ int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note
 }
 
 
-void virtch_setnna(struct xmp_context *ctx, int chn, int nna)
+void virtch_setnna(struct context_data *ctx, int chn, int nna)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;
@@ -351,9 +351,9 @@ void virtch_setnna(struct xmp_context *ctx, int chn, int nna)
 }
 
 
-void virtch_setbend(struct xmp_context *ctx, int chn, int bend)
+void virtch_setbend(struct context_data *ctx, int chn, int bend)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;
@@ -365,9 +365,9 @@ void virtch_setbend(struct xmp_context *ctx, int chn, int bend)
 }
 
 
-void virtch_voicepos(struct xmp_context *ctx, int chn, int pos)
+void virtch_voicepos(struct context_data *ctx, int chn, int pos)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;
@@ -379,9 +379,9 @@ void virtch_voicepos(struct xmp_context *ctx, int chn, int pos)
 }
 
 
-void virtch_pastnote(struct xmp_context *ctx, int chn, int act)
+void virtch_pastnote(struct context_data *ctx, int chn, int act)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     for (voc = p->virt.maxvoc; voc--;) {
@@ -395,9 +395,9 @@ void virtch_pastnote(struct xmp_context *ctx, int chn, int act)
 }
 
 
-int virtch_cstat(struct xmp_context *ctx, int chn)
+int virtch_cstat(struct context_data *ctx, int chn)
 {
-    struct xmp_player_context *p = &ctx->p;
+    struct player_data *p = &ctx->p;
     int voc;
 
     voc = p->virt.virt_channel[chn].map;

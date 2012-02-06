@@ -183,7 +183,7 @@ struct xmp_ord_info {
 
 /* Context */
 
-struct xmp_mod_context {
+struct module_data {
 	struct xmp_module mod;
 
 	int time;			/* replay time in ms */
@@ -210,7 +210,7 @@ struct xmp_mod_context {
 };
 
 
-struct xmp_player_context {
+struct player_data {
 	double time;
 	int ord;
 	int pos;
@@ -268,7 +268,7 @@ struct xmp_player_context {
 	} virt;
 };
 
-struct xmp_smixer_context {
+struct mixer_data {
 	char* buffer;		/* output buffer */
 	int* buf32b;		/* temp buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
@@ -280,18 +280,18 @@ struct xmp_smixer_context {
 	int pbase;		/* period base */
 };
 
-struct xmp_context {
+struct context_data {
 	struct xmp_options o;
-	struct xmp_player_context p;
-	struct xmp_smixer_context s;
-	struct xmp_mod_context m;
+	struct player_data p;
+	struct mixer_data s;
+	struct module_data m;
 };
 
 
 /* Prototypes */
 
 char	*str_adj		(char *);
-int	_xmp_scan_module	(struct xmp_context *);
+int	_xmp_scan_module	(struct context_data *);
 
 int8	read8s			(FILE *);
 uint8	read8			(FILE *);

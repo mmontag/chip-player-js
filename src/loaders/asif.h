@@ -5,6 +5,6 @@
 #include <stdio.h>
 #include "common.h"
 
-int asif_load(struct xmp_context *, FILE *, int);
+int asif_load(struct context_data *, FILE *, int);
 
 #endif

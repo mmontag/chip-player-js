@@ -16,7 +16,7 @@
 #include "load.h"
 
 static int polly_test(FILE *, char *, const int);
-static int polly_load(struct xmp_context *, FILE *, const int);
+static int polly_load(struct context_data *, FILE *, const int);
 
 struct format_loader polly_loader = {
 	"POLLY",
@@ -86,9 +86,9 @@ static int polly_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
+static int polly_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	uint8 *buf;

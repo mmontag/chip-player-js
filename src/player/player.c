@@ -83,14 +83,14 @@ static struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
  *			  -- Ice of FC about "Mental Surgery"
  */
 
-static int read_event (struct xmp_context *, struct xmp_event *, int, int);
-static void play_channel (struct xmp_context *, int, int);
+static int read_event (struct context_data *, struct xmp_event *, int, int);
+static void play_channel (struct context_data *, int, int);
 
 
 /* Instrument vibrato */
 
 static inline int
-get_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
+get_instrument_vibrato(struct module_data *m, struct channel_data *xc)
 {
 	int mapped, type, depth, phase, sweep;
 	struct xmp_subinstrument *sub;
@@ -109,7 +109,7 @@ get_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 }
 
 static inline void
-update_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
+update_instrument_vibrato(struct module_data *m, struct channel_data *xc)
 {
 	struct xmp_subinstrument *sub;
 	int mapped, rate;
@@ -131,7 +131,7 @@ update_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 }
 
 
-static inline void copy_channel(struct xmp_player_context *p, int to, int from)
+static inline void copy_channel(struct player_data *p, int to, int from)
 {
 	if (to > 0 && to != from) {
 		memcpy(&p->xc_data[to], &p->xc_data[from],
@@ -140,10 +140,10 @@ static inline void copy_channel(struct xmp_player_context *p, int to, int from)
 }
 
 
-static inline void reset_channel(struct xmp_context *ctx)
+static inline void reset_channel(struct context_data *ctx)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     struct channel_data *xc;
     int i;
@@ -164,10 +164,10 @@ static inline void reset_channel(struct xmp_context *ctx)
 }
 
 
-static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int ctl)
+static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
 {
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int xins, ins, smp, note, key, flg;
     struct channel_data *xc;
@@ -437,10 +437,10 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 }
 
 
-static inline void read_row(struct xmp_context *ctx, int pat, int row)
+static inline void read_row(struct context_data *ctx, int pat, int row)
 {
     int count, chn;
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     struct xmp_event *event;
     int control[XMP_MAX_CHANNELS];
@@ -475,15 +475,15 @@ static inline void read_row(struct xmp_context *ctx, int pat, int row)
 }
 
 
-static void play_channel(struct xmp_context *ctx, int chn, int t)
+static void play_channel(struct context_data *ctx, int chn, int t)
 {
     struct channel_data *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
     int med_arp, vibrato, med_vibrato;
     uint16 vol_envelope;
-    struct xmp_player_context *p = &ctx->p;
-    struct xmp_mod_context *m = &ctx->m;
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     int linear_bend;
 
@@ -794,10 +794,10 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 
 int xmp_player_start(xmp_context opaque)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_smixer_context *s = &ctx->s;
-	struct xmp_mod_context *m = &ctx->m;
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct mixer_data *s = &ctx->s;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
@@ -871,9 +871,9 @@ err:
 
 int xmp_player_frame(xmp_context opaque)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &ctx->m;
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
@@ -1022,9 +1022,9 @@ next_order:
 
 void xmp_player_end(xmp_context opaque)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_mod_context *m = &ctx->m;
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 	struct flow_control *f = &p->flow;
 
 	virtch_off(ctx);
@@ -1042,10 +1042,10 @@ void xmp_player_end(xmp_context opaque)
 
 void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 {
-	struct xmp_context *ctx = (struct xmp_context *)opaque;
-	struct xmp_player_context *p = &ctx->p;
-	struct xmp_smixer_context *s = &ctx->s;
-	struct xmp_mod_context *m = &ctx->m;
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct mixer_data *s = &ctx->s;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int chn, i;
 

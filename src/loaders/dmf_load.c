@@ -18,7 +18,7 @@
 
 
 static int dmf_test(FILE *, char *, const int);
-static int dmf_load (struct xmp_context *, FILE *, const int);
+static int dmf_load (struct context_data *, FILE *, const int);
 
 struct format_loader dmf_loader = {
 	"DMF",
@@ -155,9 +155,9 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
  * IFF chunk handlers
  */
 
-static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
+static void get_sequ(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -172,9 +172,9 @@ static void get_sequ(struct xmp_context *ctx, int size, FILE *f)
 		mod->xxo[i] = read16l(f);
 }
 
-static void get_patt(struct xmp_context *ctx, int size, FILE *f)
+static void get_patt(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, r, chn;
 	int patsize;
@@ -254,9 +254,9 @@ static void get_patt(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
+static void get_smpi(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
@@ -305,9 +305,9 @@ static void get_smpi(struct xmp_context *ctx, int size, FILE *f)
 	}
 }
 
-static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
+static void get_smpd(struct context_data *ctx, int size, FILE *f)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 	int smpsize;
@@ -351,9 +351,9 @@ static void get_smpd(struct xmp_context *ctx, int size, FILE *f)
 	free(data);
 }
 
-static int dmf_load(struct xmp_context *ctx, FILE *f, const int start)
+static int dmf_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	uint8 date[3];
 	char tracker_name[10];

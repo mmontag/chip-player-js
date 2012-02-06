@@ -38,9 +38,9 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int init (struct xmp_context *ctx);
-static void dshutdown (struct xmp_context *);
-static void bufdump (struct xmp_context *, void *, int);
+static int init (struct context_data *ctx);
+static void dshutdown (struct context_data *);
+static void bufdump (struct context_data *, void *, int);
 static void bufwipe (void);
 static void flush (void);
 
@@ -117,7 +117,7 @@ static int to_fmt(struct xmp_options *o)
 	return fmt;
 }
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	snd_pcm_channel_params_t params;
@@ -202,7 +202,7 @@ static int init(struct xmp_context *ctx)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	/* Note this assumes a fragment size of (frag_size) */
 	while (i > 0) {
@@ -221,7 +221,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 	}
 }
 
-static void dshutdown(struct xmp_context *ctx)
+static void dshutdown(struct context_data *ctx)
 {
 	snd_pcm_close(pcm_handle);
 	free(mybuffer);

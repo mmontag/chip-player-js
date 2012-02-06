@@ -21,7 +21,7 @@
 
 
 static int mdl_test (FILE *, char *, const int);
-static int mdl_load (struct xmp_context *, FILE *, const int);
+static int mdl_load (struct context_data *, FILE *, const int);
 
 struct format_loader mdl_loader = {
     "MDL",
@@ -287,9 +287,9 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
  * IFF chunk handlers
  */
 
-static void get_chunk_in(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_in(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i;
 
@@ -316,9 +316,9 @@ static void get_chunk_in(struct xmp_context *ctx, int size, FILE *f)
     MODULE_INFO();
 }
 
-static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_pa(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, chn;
     int x;
@@ -343,9 +343,9 @@ static void get_chunk_pa(struct xmp_context *ctx, int size, FILE *f)
     }
 }
 
-static void get_chunk_p0(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_p0(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     uint16 x16;
@@ -368,9 +368,9 @@ static void get_chunk_p0(struct xmp_context *ctx, int size, FILE *f)
     }
 }
 
-static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_tr(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, k, row, len;
     struct xmp_track *track;
@@ -456,9 +456,9 @@ static void get_chunk_tr(struct xmp_context *ctx, int size, FILE *f)
     free (track);
 }
 
-static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_ii(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, k;
     int map, last_map;
@@ -532,9 +532,9 @@ static void get_chunk_ii(struct xmp_context *ctx, int size, FILE *f)
     }
 }
 
-static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_is(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i;
     char buf[64];
@@ -587,9 +587,9 @@ static void get_chunk_is(struct xmp_context *ctx, int size, FILE *f)
     }
 }
 
-static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_i0(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i;
     char buf[64];
@@ -642,9 +642,9 @@ static void get_chunk_i0(struct xmp_context *ctx, int size, FILE *f)
     }
 }
 
-static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_sa(struct context_data *ctx, int size, FILE *f)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, len;
     uint8 *smpbuf, *buf;
@@ -684,7 +684,7 @@ static void get_chunk_sa(struct xmp_context *ctx, int size, FILE *f)
     free(packinfo);
 }
 
-static void get_chunk_ve(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_ve(struct context_data *ctx, int size, FILE *f)
 {
     int i;
 
@@ -703,7 +703,7 @@ static void get_chunk_ve(struct xmp_context *ctx, int size, FILE *f)
     }
 }
 
-static void get_chunk_pe(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_pe(struct context_data *ctx, int size, FILE *f)
 {
     int i;
 
@@ -722,7 +722,7 @@ static void get_chunk_pe(struct xmp_context *ctx, int size, FILE *f)
     }
 }
 
-static void get_chunk_fe(struct xmp_context *ctx, int size, FILE *f)
+static void get_chunk_fe(struct context_data *ctx, int size, FILE *f)
 {
     int i;
 
@@ -742,9 +742,9 @@ static void get_chunk_fe(struct xmp_context *ctx, int size, FILE *f)
 }
 
 
-static int mdl_load(struct xmp_context *ctx, FILE *f, const int start)
+static int mdl_load(struct context_data *ctx, FILE *f, const int start)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, k, l;
     char buf[8];

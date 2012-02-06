@@ -11,7 +11,7 @@
 #include "period.h"
 
 static int flt_test (FILE *, char *, const int);
-static int flt_load (struct xmp_context *, FILE *, const int);
+static int flt_load (struct context_data *, FILE *, const int);
 
 struct format_loader flt_loader = {
     "FLT",
@@ -106,9 +106,9 @@ static int is_am_instrument(FILE *nt, int i)
     return 1;
 }
 
-static void read_am_instrument(struct xmp_context *ctx, FILE *nt, int i)
+static void read_am_instrument(struct context_data *ctx, FILE *nt, int i)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     struct am_instrument am;
     char *wave;
@@ -270,9 +270,9 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 }
 
 
-static int flt_load(struct xmp_context *ctx, FILE *f, const int start)
+static int flt_load(struct context_data *ctx, FILE *f, const int start)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;

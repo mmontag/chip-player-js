@@ -26,10 +26,10 @@ static ALport audio_port;
 /* Hack to get 16 bit sound working - 19990706 bdowning */
 static int al_sample_16;
 
-static int init(struct xmp_context *);
+static int init(struct context_data *);
 static int setaudio(struct xmp_options *);
-static void bufdump(struct xmp_context *, void *, int);
-static void shutdown(struct xmp_context *);
+static void bufdump(struct context_data *, void *, int);
+static void shutdown(struct context_data *);
 
 static void dummy()
 {
@@ -192,7 +192,7 @@ static int setaudio(struct xmp_options *o)
 	return 0;
 }
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	if (setaudio(&ctx->o) != 0)
 		return XMP_ERR_DINIT;
@@ -207,7 +207,7 @@ static int init(struct xmp_context *ctx)
  * the number of bytes, which is what I assume i is.  This was a
  * trial-and-error fix, but it appears to work. - 19990706 bdowning
  */
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	if (al_sample_16)
 		i /= 2;
@@ -215,7 +215,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 	ALwritesamps(audio_port, b, i);
 }
 
-static void shutdown(struct xmp_context *ctx)
+static void shutdown(struct context_data *ctx)
 {
 	ALcloseport(audio_port);
 }

@@ -25,9 +25,9 @@
 
 static struct sio_hdl *hdl;
 
-static int init (struct xmp_context *);
-static void bufdump (struct xmp_context *, void *, int);
-static void shutdown (struct xmp_context *);
+static int init (struct context_data *);
+static void bufdump (struct context_data *, void *, int);
+static void shutdown (struct context_data *);
 static void dummy (void);
 
 struct xmp_drv_info drv_sndio = {
@@ -47,7 +47,7 @@ dummy (void)
 }
 
 static int
-init (struct xmp_context *ctx)
+init (struct context_data *ctx)
 {
 	 struct sio_par par, askpar;
 	 struct xmp_options *opt = &ctx->o;
@@ -96,14 +96,14 @@ error:
 }
 
 static void
-bufdump (struct xmp_context *ctx, void *b, int len)
+bufdump (struct context_data *ctx, void *b, int len)
 {
 	 if (b != NULL)
 		 sio_write (hdl, buf, len);
 }
 
 static void
-shutdown (struct xmp_context *ctx)
+shutdown (struct context_data *ctx)
 {
 	 sio_close (hdl);
 	 hdl = NULL;

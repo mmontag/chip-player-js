@@ -22,7 +22,7 @@ extern "C" {
 
 #include "xmp.h"
 
-/* g++ doesn't like typedef xmp_context and struct xmp_context */
+/* g++ doesn't like typedef xmp_context and struct context_data */
 #define xmp_context _xmp_context
 #include "common.h"
 
@@ -30,9 +30,9 @@ extern "C" {
 #include "mixer.h"
 }
 
-static int init (struct xmp_context *ctx);
-static void bufdump (struct xmp_context *, void *, int);
-static void myshutdown (struct xmp_context *);
+static int init (struct context_data *ctx);
+static void bufdump (struct context_data *, void *, int);
+static void myshutdown (struct context_data *);
 
 static void dummy()
 {
@@ -156,7 +156,7 @@ void render_proc(void *theCookie, void *buffer, size_t req,
 }
 
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	char *dev;
@@ -198,7 +198,7 @@ static int init(struct xmp_context *ctx)
 /* Build and write one tick (one PAL frame or 1/50 s in standard vblank
  * timed mods) of audio data to the output device.
  */
-static void bufdump(struct xmp_context *ctx, void *b, int i)
+static void bufdump(struct context_data *ctx, void *b, int i)
 {
 	int j = 0;
 
@@ -221,7 +221,7 @@ static void bufdump(struct xmp_context *ctx, void *b, int i)
 	}
 }
 
-static void myshutdown(struct xmp_context *ctx)
+static void myshutdown(struct context_data *ctx)
 {
 	player->Stop(); 
 	be_app->Lock();

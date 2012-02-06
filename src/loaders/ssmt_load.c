@@ -26,7 +26,7 @@
 
 
 static int mtp_test (FILE *, char *, const int);
-static int mtp_load (struct xmp_context *, FILE *, const int);
+static int mtp_load (struct context_data *, FILE *, const int);
 
 struct format_loader mtp_loader = {
 	"MTP",
@@ -56,9 +56,9 @@ static int mtp_test(FILE *f, char *t, const int start)
 #define NAME_SIZE 255
 
 
-static int mtp_load(struct xmp_context *ctx, FILE *f, const int start)
+static int mtp_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j, k;

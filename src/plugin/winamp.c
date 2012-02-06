@@ -531,7 +531,7 @@ static int getoutputtime()
 static void setoutputtime(int time)
 {
 	int i, t;
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	struct player_data *p = &((struct context_data *)ctx)->p;
 
 	_D("seek to %d, total %d", time, xmp_cfg.time);
 
@@ -592,7 +592,7 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	LV_ITEM item;
 	int i,t;
 	struct xmp_module_info mi;
-	struct xmp_player_context *p = &((struct xmp_context *)ctx)->p;
+	struct player_data *p = &((struct context_data *)ctx)->p;
 	int empty_names = 1;
 
 	switch (uMsg) {
@@ -612,7 +612,7 @@ static BOOL CALLBACK info_dialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		// Set module type
 		SetWindowText(GetDlgItem(hDlg, IDC_MODULE_TYPE), mi.type);
 		// Calculate estimated time
-		t = _xmp_scan_module((struct xmp_context *)ctx);
+		t = _xmp_scan_module((struct context_data *)ctx);
 		snprintf(tmpbuf, 256, "%dm %02ds\n",
 			(t + 500) / 60000, ((t + 500) / 1000) % 60);
 		SetWindowText(GetDlgItem(hDlg, IDC_MODULE_EST), tmpbuf);

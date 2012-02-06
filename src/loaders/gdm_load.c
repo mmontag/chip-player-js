@@ -20,7 +20,7 @@
 
 
 static int gdm_test(FILE *, char *, const int);
-static int gdm_load (struct xmp_context *, FILE *, const int);
+static int gdm_load (struct context_data *, FILE *, const int);
 
 struct format_loader gdm_loader = {
 	"GDM",
@@ -98,9 +98,9 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 }
 
 
-static int gdm_load(struct xmp_context *ctx, FILE *f, const int start)
+static int gdm_load(struct context_data *ctx, FILE *f, const int start)
 {
-	struct xmp_mod_context *m = &ctx->m;
+	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int vermaj, vermin, tvmaj, tvmin, tracker;

@@ -14,8 +14,8 @@
 #include "driver.h"
 #include "mixer.h"
 
-static int init(struct xmp_context *);
-static void shutdown(struct xmp_context *);
+static int init(struct context_data *);
+static void shutdown(struct context_data *);
 
 static void dummy()
 {
@@ -33,10 +33,10 @@ struct xmp_drv_info drv_smix = {
 	NULL
 };
 
-static int init(struct xmp_context *ctx)
+static int init(struct context_data *ctx)
 {
 }
 
-static void shutdown(struct xmp_context *ctx)
+static void shutdown(struct context_data *ctx)
 {
 }

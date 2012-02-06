@@ -67,7 +67,7 @@
 #define MAGIC_SCRS	MAGIC4('S','C','R','S')
 
 static int s3m_test (FILE *, char *, const int);
-static int s3m_load (struct xmp_context *, FILE *, const int);
+static int s3m_load (struct context_data *, FILE *, const int);
 
 struct format_loader s3m_loader = {
     "S3M",
@@ -191,9 +191,9 @@ static void xlat_fx (int c, struct xmp_event *e)
 }
 
 
-static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
+static int s3m_load(struct context_data *ctx, FILE *f, const int start)
 {
-    struct xmp_mod_context *m = &ctx->m;
+    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int c, r, i;
     struct s3m_adlib_header sah;
