@@ -92,11 +92,18 @@ static void play_channel (struct xmp_context *, int, int);
 static inline int
 get_instrument_vibrato(struct xmp_mod_context *m, struct channel_data *xc)
 {
-	struct xmp_subinstrument *sub = &XXI;
-	int type = sub->vwf;
-	int depth = sub->vde;
-	int phase = xc->instrument_vibrato.phase;
-	int sweep = xc->instrument_vibrato.sweep;
+	int mapped, type, depth, phase, sweep;
+	struct xmp_subinstrument *sub;
+
+	mapped = XXIH.map[xc->key].ins;
+	if (mapped == 0xff)
+		return 0;
+
+	sub = &m->mod.xxi[xc->ins].sub[mapped];
+	type = sub->vwf;
+	depth = sub->vde;
+	phase = xc->instrument_vibrato.phase;
+	sweep = xc->instrument_vibrato.sweep;
 
 	return waveform[type][phase] * depth / (1024 * (1 + sweep));
 }
