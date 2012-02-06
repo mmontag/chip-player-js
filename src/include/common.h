@@ -317,6 +317,5 @@ int	mkstemp			(char *);
 
 
 void xmp_init_formats(void);
-void xmp_deinit_formats(void);
 
 #endif /* __XMP_COMMON_H */
