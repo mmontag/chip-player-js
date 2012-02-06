@@ -453,7 +453,6 @@ int main (int argc, char **argv)
 	exit (-1);
     }
 
-    xmp_init();
     ctx = xmp_create_context();
 
     if (xmp_load_module(ctx, argv[optind]) < 0) {
@@ -495,6 +494,8 @@ int main (int argc, char **argv)
 	    if (xmp_player_frame(ctx) != 0)
 		break;
 	    xmp_player_get_info(ctx, &mi);
+	    if (mi.loop_count > 0)
+		break;
 	    sound_play(mi.buffer, mi.buffer_size);
 	    draw_screen(&mi);
 	}
@@ -503,14 +504,12 @@ int main (int argc, char **argv)
 
     sound_deinit();
     xmp_free_context(ctx);
-    xmp_deinit();
 
     exit(0);
 
 err1:
     sound_deinit();
     xmp_free_context(ctx);
-    xmp_deinit();
 
     exit(1);
 }

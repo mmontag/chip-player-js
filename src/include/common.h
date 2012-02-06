@@ -271,6 +271,8 @@ struct player_data {
 		void *buffer;
 		int size;
 	} virt;
+
+	int loop_count;
 };
 
 struct mixer_data {

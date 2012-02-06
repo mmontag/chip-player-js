@@ -124,7 +124,7 @@ int _xmp_scan_module(struct context_data *ctx)
 	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
 
 	if (!m->xxo_info[ord].start_row && ord) {
-	    if (ord == o->start && !(m->flags & XMP_CTL_LOOP)) {
+	    if (ord == o->start) {
 		if (medbpm)
 	            clock_rst = clock + 132 * alltmp / 5 / bpm;
 		else

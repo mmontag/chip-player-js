@@ -47,7 +47,6 @@ struct xmp_options {
 	int outfmt;			/* Output data format */
 	int freq;			/* Software mixing rate (Hz) */
 #define XMP_CTL_ITPT	(1 << 0)	/* Mixer interpolation */
-#define XMP_CTL_LOOP	(1 << 1)	/* Enable module looping */
 	int flags;			/* internal control flags */
 	int start;			/* Set initial order (default = 0) */
 	int mix;			/* L/R channel separation percent */
@@ -213,6 +212,7 @@ struct xmp_module_info {
 	void *buffer;
 	int buffer_size;
 	int volume;
+	int loop_count;
 
 	struct xmp_channel_info {
 		unsigned int period;

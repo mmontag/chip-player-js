@@ -56,6 +56,8 @@ int main(int argc, char **argv)
 				current ^= 1;
 
 				xmp_player_get_info(ctx, &mi[current]);
+				if (mi[current].loop_count > 0)
+					break;
 
 				if (!silent) {
 					sound_play(mi[current].buffer,

@@ -811,11 +811,11 @@ int xmp_player_start(xmp_context opaque)
 	p->frame = 0;
 	p->row = 0;
 	p->time = 0;
+	p->loop_count = 0;
 	s->pbase = SMIX_C4NOTE * m->c4rate / o->freq;
 
 	if (mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
-		m->flags &= ~XMP_CTL_LOOP;
 		p->ord = p->scan_ord = 0;
 		p->row = p->scan_row = 0;
 		f->end_point = 0;
@@ -912,10 +912,11 @@ int xmp_player_frame(xmp_context opaque)
 
 	if (p->frame == 0) {			/* first frame in row */
 		/* check end of module */
-	    	if ((~m->flags & XMP_CTL_LOOP) && p->ord == p->scan_ord &&
-					p->row == p->scan_row) {
-			if (!f->end_point--)
-				return -1;
+	    	if (p->ord == p->scan_ord && p->row == p->scan_row) {
+			if (!f->end_point--) {
+				p->loop_count++;
+				/* return -1; */
+			}
 		}
 
 		p->gvol_flag = 0;
@@ -1062,6 +1063,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->buffer = s->buffer;
 	info->buffer_size = s->ticksize * s->mode * s->resol;
 	info->volume = p->volume;
+	info->loop_count = p->loop_count;
 
 	for (i = 0; i < chn; i++) {
 		struct channel_data *c = &p->xc_data[i];
