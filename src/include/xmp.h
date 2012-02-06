@@ -46,8 +46,6 @@ struct xmp_options {
 #define XMP_FMT_MONO	(1 << 2)	/* Mono output */
 	int outfmt;			/* Output data format */
 	int freq;			/* Software mixing rate (Hz) */
-#define XMP_CTL_ITPT	(1 << 0)	/* Mixer interpolation */
-	int flags;			/* internal control flags */
 	int start;			/* Set initial order (default = 0) */
 	int mix;			/* L/R channel separation percent */
 	int time;			/* Maximum replay time in seconds */

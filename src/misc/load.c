@@ -445,7 +445,6 @@ int xmp_load_module(xmp_context opaque, char *s)
     int i, t, val;
     struct stat st;
     struct module_data *m = &ctx->m;
-    struct xmp_options *o = &((struct context_data *)ctx)->o;
 
     _D(_D_WARN "s = %s", s);
 
@@ -478,7 +477,6 @@ int xmp_load_module(xmp_context opaque, char *s)
     m->volbase = 0x40;
     m->vol_table = NULL;
     /* Reset control for next module */
-    m->flags = o->flags;
     m->quirk = 0;
     m->comment = NULL;
 

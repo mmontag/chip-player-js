@@ -47,7 +47,6 @@ void *xmp_create_context()
 	o->freq = 44100;
 	o->mix = 70;
 	o->outfmt = XMP_FMT_16BIT;
-	o->flags = XMP_CTL_ITPT;
 
 	return ctx;
 }

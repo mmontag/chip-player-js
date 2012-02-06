@@ -443,7 +443,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
     mixer_setvol(ctx, voc, 0);
 
     vi->sptr = xxs->data;
-    vi->fidx = m->flags & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
+    vi->fidx = FLAG_ITPT | FLAG_ACTIVE;
 
     if (~o->outfmt & XMP_FMT_MONO) {
 	vi->fidx |= FLAG_STEREO;

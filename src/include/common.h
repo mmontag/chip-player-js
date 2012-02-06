@@ -201,7 +201,6 @@ struct module_data {
 	int c4rate;			/* C4 replay rate */
 	int volbase;			/* Volume base */
 	int *vol_table;			/* Volume translation table */
-	int flags;			/* Copy from options */
 	int quirk;			/* player quirks */
 	struct xmp_ord_info xxo_info[XMP_MAX_MOD_LENGTH];
 
