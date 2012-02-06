@@ -11,7 +11,6 @@
 #include "virtual.h"
 #include "convert.h"
 #include "mixer.h"
-#include "smix.h"
 
 #define	FREE	-1
 #define MAX_VOICES_CHANNEL 16
@@ -26,7 +25,7 @@ void virtch_resetvoice(struct xmp_context *ctx, int voc, int mute)
 	return;
 
     if (mute)
-	xmp_smix_setvol(ctx, voc, 0);
+	mixer_setvol(ctx, voc, 0);
 
     p->virt.virt_used--;
     p->virt.virt_channel[vi->root].count--;
@@ -44,7 +43,7 @@ int virtch_on(struct xmp_context *ctx, int num)
 	int i;
 
 	p->virt.num_tracks = num;
-	num = xmp_smix_numvoices(ctx, -1);
+	num = mixer_numvoices(ctx, -1);
 
 	p->virt.virt_channels = p->virt.num_tracks;
 	p->virt.chnvoc = m->flags & XMP_CTL_VIRTUAL ? MAX_VOICES_CHANNEL : 1;
@@ -54,7 +53,7 @@ int virtch_on(struct xmp_context *ctx, int num)
 	else if (num > p->virt.virt_channels)
 		num = p->virt.virt_channels;
 
-	num = p->virt.maxvoc = xmp_smix_numvoices(ctx, num);
+	num = p->virt.maxvoc = mixer_numvoices(ctx, num);
 
 	p->virt.voice_array = calloc(p->virt.maxvoc, sizeof(struct voice_info));
 	if (p->virt.voice_array == NULL)
@@ -108,7 +107,7 @@ void virtch_reset(struct xmp_context *ctx)
     if (p->virt.virt_channels < 1)
 	return;
 
-    xmp_smix_numvoices(ctx, p->virt.maxvoc);
+    mixer_numvoices(ctx, p->virt.maxvoc);
 
     memset(p->virt.voice_array, 0, p->virt.maxvoc * sizeof (struct voice_info));
     for (i = 0; i < p->virt.maxvoc; i++) {
@@ -135,7 +134,7 @@ void virtch_resetchannel(struct xmp_context *ctx, int chn)
     if ((uint32)chn >= p->virt.virt_channels || (uint32)voc >= p->virt.maxvoc)
 	return;
 
-    xmp_smix_setvol(ctx, voc, 0);
+    mixer_setvol(ctx, voc, 0);
 
     p->virt.virt_used--;
     p->virt.virt_channel[p->virt.voice_array[voc].root].count--;
@@ -214,7 +213,7 @@ void virtch_setvol(struct xmp_context *ctx, int chn, int vol)
     if (p->virt.voice_array[voc].root < XMP_MAX_CHANNELS && p->cmute_array[p->virt.voice_array[voc].root])
 	vol = 0;
 
-    xmp_smix_setvol(ctx, voc, vol);
+    mixer_setvol(ctx, voc, vol);
 
     if (!(vol || chn < p->virt.num_tracks))
 	virtch_resetvoice(ctx, voc, 1);
@@ -231,7 +230,7 @@ void virtch_setpan(struct xmp_context *ctx, int chn, int pan)
     if ((uint32)chn >= p->virt.virt_channels || (uint32)voc >= p->virt.maxvoc)
 	return;
 
-    xmp_smix_setpan(ctx, voc, pan);
+    mixer_setpan(ctx, voc, pan);
 }
 
 
@@ -245,7 +244,7 @@ void virtch_seteffect(struct xmp_context *ctx, int chn, int type, int val)
     if ((uint32)chn >= p->virt.virt_channels || (uint32)voc >= p->virt.maxvoc)
 	return;
 
-    xmp_smix_seteffect(ctx, voc, type, val);
+    mixer_seteffect(ctx, voc, type, val);
 }
 
 
@@ -264,8 +263,8 @@ void virtch_setsmp(struct xmp_context *ctx, int chn, int smp)
     if (vi->smp == smp)
 	return;
 
-    smix_setpatch(ctx, voc, smp);
-    smix_voicepos(ctx, voc, vi->pos, vi->frac);
+    mixer_setpatch(ctx, voc, smp);
+    mixer_voicepos(ctx, voc, vi->pos, vi->frac);
 }
 
 
@@ -327,9 +326,9 @@ int virtch_setpatch(struct xmp_context *ctx, int chn, int ins, int smp, int note
     }
 
     if (!cont_sample)
-	smix_setpatch(ctx, voc, smp);
+	mixer_setpatch(ctx, voc, smp);
 
-    smix_setnote(ctx, voc, note);
+    mixer_setnote(ctx, voc, note);
     p->virt.voice_array[voc].ins = ins;
     p->virt.voice_array[voc].act = nna;
     p->virt.age++;
@@ -362,7 +361,7 @@ void virtch_setbend(struct xmp_context *ctx, int chn, int bend)
     if ((uint32)chn >= p->virt.virt_channels || (uint32)voc >= p->virt.maxvoc)
 	return;
 
-    smix_setbend(ctx, voc, bend);
+    mixer_setbend(ctx, voc, bend);
 }
 
 
@@ -376,7 +375,7 @@ void virtch_voicepos(struct xmp_context *ctx, int chn, int pos)
     if ((uint32)chn >= p->virt.virt_channels || (uint32)voc >= p->virt.maxvoc)
 	return;
 
-    smix_voicepos(ctx, voc, pos, 0);
+    mixer_voicepos(ctx, voc, pos, 0);
 }
 
 

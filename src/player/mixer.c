@@ -14,7 +14,6 @@
 #include "virtual.h"
 #include "mixer.h"
 #include "synth.h"
-#include "smix.h"
 #include "period.h"
 #include "convert.h"
 
@@ -121,7 +120,7 @@ static void out_su16norm(int16 * dest, int *src, int num, int amp, int flags)
 
 
 /* Prepare the mixer for the next tick */
-void smix_resetvar(struct xmp_context *ctx)
+void mixer_reset(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
@@ -225,7 +224,7 @@ static void smix_anticlick(struct xmp_context *ctx, int voc, int vol, int pan, i
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
-void xmp_smix_softmixer(struct xmp_context *ctx)
+void mixer_softmixer(struct xmp_context *ctx)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_smixer_context *s = &ctx->s;
@@ -387,11 +386,11 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	out_su8norm(s->buffer, s->buf32b, size, o->amplify, o->outfmt);
     }
 
-    smix_resetvar(ctx);
+    mixer_reset(ctx);
 }
 
 
-void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
+void mixer_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
@@ -418,7 +417,7 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 }
 
 
-void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
+void mixer_setpatch(struct xmp_context *ctx, int voc, int smp)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
@@ -441,7 +440,7 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 	return;
     }
     
-    xmp_smix_setvol(ctx, voc, 0);
+    mixer_setvol(ctx, voc, 0);
 
     vi->sptr = xxs->data;
     vi->fidx = m->flags & XMP_CTL_ITPT ? FLAG_ITPT | FLAG_ACTIVE : FLAG_ACTIVE;
@@ -461,11 +460,11 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     else
 	vi->fxor = vi->fidx;
 
-    smix_voicepos(ctx, voc, 0, 0);
+    mixer_voicepos(ctx, voc, 0, 0);
 }
 
 
-void smix_setnote(struct xmp_context *ctx, int voc, int note)
+void mixer_setnote(struct xmp_context *ctx, int voc, int note)
 {
     struct xmp_player_context *p = &ctx->p;
     struct voice_info *vi = &p->virt.voice_array[voc];
@@ -475,7 +474,7 @@ void smix_setnote(struct xmp_context *ctx, int voc, int note)
 }
 
 
-void smix_setbend(struct xmp_context *ctx, int voc, int bend)
+void mixer_setbend(struct xmp_context *ctx, int voc, int bend)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
@@ -488,7 +487,7 @@ void smix_setbend(struct xmp_context *ctx, int voc, int bend)
 }
 
 
-void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
+void mixer_setvol(struct xmp_context *ctx, int voc, int vol)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
@@ -502,7 +501,7 @@ void xmp_smix_setvol(struct xmp_context *ctx, int voc, int vol)
 }
 
 
-void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
+void mixer_seteffect(struct xmp_context *ctx, int voc, int type, int val)
 {
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
@@ -531,7 +530,7 @@ void xmp_smix_seteffect(struct xmp_context *ctx, int voc, int type, int val)
 }
 
 
-void xmp_smix_setpan(struct xmp_context *ctx, int voc, int pan)
+void mixer_setpan(struct xmp_context *ctx, int voc, int pan)
 {
     struct xmp_player_context *p = &ctx->p;
     struct voice_info *vi = &p->virt.voice_array[voc];
@@ -540,7 +539,7 @@ void xmp_smix_setpan(struct xmp_context *ctx, int voc, int pan)
 }
 
 
-int xmp_smix_numvoices(struct xmp_context *ctx, int num)
+int mixer_numvoices(struct xmp_context *ctx, int num)
 {
     struct xmp_smixer_context *s = &ctx->s;
 
@@ -551,7 +550,7 @@ int xmp_smix_numvoices(struct xmp_context *ctx, int num)
     }
 }
 
-int xmp_smix_on(struct xmp_context *ctx)
+int mixer_on(struct xmp_context *ctx)
 {
 	struct xmp_smixer_context *s = &ctx->s;
 	struct xmp_options *o = &ctx->o;
@@ -577,7 +576,7 @@ err:
 }
 
 
-void xmp_smix_off(struct xmp_context *ctx)
+void mixer_off(struct xmp_context *ctx)
 {
     struct xmp_smixer_context *s = &ctx->s;
 

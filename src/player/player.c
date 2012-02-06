@@ -803,7 +803,7 @@ int xmp_player_start(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int ret;
 
-	xmp_smix_on(ctx);
+	mixer_on(ctx);
 
 	p->gvol_slide = 0;
 	p->volume = m->volbase;
@@ -840,7 +840,7 @@ int xmp_player_start(xmp_context opaque)
 	if ((ret = virtch_on(ctx, mod->chn)) != 0)
 		return ret;
 
-	smix_resetvar(ctx);
+	mixer_reset(ctx);
 
 	f->jump = -1;
 
@@ -1014,7 +1014,7 @@ next_order:
 		}
 	}
 
-	xmp_smix_softmixer(ctx);
+	mixer_softmixer(ctx);
 
 	return 0;
 }
@@ -1036,7 +1036,7 @@ void xmp_player_end(xmp_context opaque)
 	free(p->xc_data);
 	free(f->loop);
 
-	xmp_smix_off(ctx);
+	mixer_off(ctx);
 }
 
 
