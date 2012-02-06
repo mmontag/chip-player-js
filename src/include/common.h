@@ -149,6 +149,10 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_LINEAR	(1 << 21)	/* Linear periods */
 #define QUIRK_MODRNG	(1 << 22)	/* Limit periods to MOD range */
 #define QUIRK_INSVOL	(1 << 23)	/* Use instrument volume */
+#define QUIRK_VIRTUAL	(1 << 24)	/* Enable virtual channels */
+#define QUIRK_FILTER	(1 << 25)	/* Enable filter */
+
+#define HAS_QUIRK(x)	(m->quirk & (x))
 
 
 /* Format quirks */
@@ -161,7 +165,8 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 				 QUIRK_ENVFADE | QUIRK_S3MLOOP | \
 				 QUIRK_OFSRST | \
 				 QUIRK_VOLPDN | QUIRK_RTGINS | \
-				 QUIRK_SAVEINS | QUIRK_ITVPOR)
+				 QUIRK_SAVEINS | QUIRK_ITVPOR | \
+				 QUIRK_FILTER | QUIRK_VIRTUAL)
 
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02

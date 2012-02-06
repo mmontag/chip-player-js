@@ -449,16 +449,19 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	vi->fidx |= FLAG_STEREO;
     }
 
-    if (xxs->flg & XMP_SAMPLE_16BIT)
-	vi->fidx |= FLAG_16_BITS;
-
-    if (m->flags & XMP_CTL_FILTER)
+    if (HAS_QUIRK(QUIRK_FILTER)) {
 	vi->fidx |= FLAG_FILTER;
+    }
 
-    if (xxs->flg & XMP_SAMPLE_LOOP)
+    if (xxs->flg & XMP_SAMPLE_16BIT) {
+	vi->fidx |= FLAG_16_BITS;
+    }
+
+    if (xxs->flg & XMP_SAMPLE_LOOP) {
 	vi->fxor = xxs->flg & XMP_SAMPLE_LOOP_BIDIR ? FLAG_REVLOOP : 0;
-    else
+    } else {
 	vi->fxor = vi->fidx;
+    }
 
     mixer_voicepos(ctx, voc, 0, 0);
 }

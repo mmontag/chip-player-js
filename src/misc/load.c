@@ -478,7 +478,7 @@ int xmp_load_module(xmp_context opaque, char *s)
     m->volbase = 0x40;
     m->vol_table = NULL;
     /* Reset control for next module */
-    m->flags = o->flags & ~XMP_CTL_FILTER;	/* verify this later */
+    m->flags = o->flags;
     m->quirk = 0;
     m->comment = NULL;
 
@@ -526,9 +526,6 @@ int xmp_load_module(xmp_context opaque, char *s)
      */
     if (m->mod.rst >= m->mod.len)
 	m->mod.rst = 0;
-
-    /* Disable filter if --nofilter is specified */
-    m->flags &= ~(~o->flags & XMP_CTL_FILTER);
 
     str_adj(m->mod.name);
     if (!*m->mod.name) {

@@ -529,7 +529,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	     * Only reset the channel in virtual channel mode so we
 	     * can release it.
 	     */
-	     if (m->flags & XMP_CTL_VIRTUAL) {
+	     if (HAS_QUIRK(QUIRK_VIRTUAL)) {
 		 virtch_resetchannel(ctx, chn);
 		 return;
 	     } else {
@@ -779,7 +779,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     virtch_setpan(ctx, chn, finalpan);
     virtch_setvol(ctx, chn, finalvol);
 
-    if (cutoff < 0xff && (m->flags & XMP_CTL_FILTER)) {
+    if (cutoff < 0xff && HAS_QUIRK(QUIRK_FILTER)) {
 	filter_setup(ctx, xc, cutoff);
 	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, xc->filter.B0);
 	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, xc->filter.B1);

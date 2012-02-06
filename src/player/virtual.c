@@ -46,7 +46,7 @@ int virtch_on(struct context_data *ctx, int num)
 	num = mixer_numvoices(ctx, -1);
 
 	p->virt.virt_channels = p->virt.num_tracks;
-	p->virt.chnvoc = m->flags & XMP_CTL_VIRTUAL ? MAX_VOICES_CHANNEL : 1;
+	p->virt.chnvoc = HAS_QUIRK(QUIRK_VIRTUAL) ? MAX_VOICES_CHANNEL : 1;
 
 	if (p->virt.chnvoc > 1)
 		p->virt.virt_channels += num;

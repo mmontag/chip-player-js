@@ -49,9 +49,6 @@ struct xmp_options {
 	int freq;			/* Software mixing rate (Hz) */
 #define XMP_CTL_ITPT	(1 << 0)	/* Mixer interpolation */
 #define XMP_CTL_LOOP	(1 << 1)	/* Enable module looping */
-#define XMP_CTL_VBLANK	(1 << 2)	/* Use vblank timing only */
-#define XMP_CTL_VIRTUAL	(1 << 3)	/* Enable virtual channels */
-#define XMP_CTL_FILTER	(1 << 4)	/* IT lowpass filter */
 	int flags;			/* internal control flags */
 	int start;			/* Set initial order (default = 0) */
 	int mix;			/* L/R channel separation percent */

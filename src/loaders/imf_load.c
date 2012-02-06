@@ -397,8 +397,7 @@ static int imf_load(struct context_data *ctx, FILE *f, const int start)
     mod->smp = smp_num;
     mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
 
-    m->flags |= XMP_CTL_FILTER;
-    m->quirk |= QUIRKS_ST3;
+    m->quirk |= QUIRK_FILTER | QUIRKS_ST3;
 
     return 0;
 }

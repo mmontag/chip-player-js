@@ -394,7 +394,7 @@ ex_f_vslide_dn:
 	if (fxp) {
 	    if (fxp < 0x20)	/* speedup.xm needs BPM = 20 */
 		p->tempo = fxp;
-	    else if (~m->flags & XMP_CTL_VBLANK)
+	    else
 		p->tick_time = m->rrate / (p->bpm = fxp);
 	}
 	break;

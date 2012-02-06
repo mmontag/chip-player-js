@@ -964,7 +964,6 @@ static int it_load(struct context_data *ctx, FILE *f, const int start)
 	free(pp_ins);
 
     mod->chn = max_ch + 1;
-    m->flags |= XMP_CTL_VIRTUAL | XMP_CTL_FILTER;
     m->quirk |= QUIRKS_IT;
     if (~ifh.flags & IT_LINK_GXX)
 	m->quirk |= QUIRK_UNISLD;
