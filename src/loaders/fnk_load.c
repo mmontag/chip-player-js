@@ -156,8 +156,9 @@ static int fnk_load(struct xmp_context *ctx, FILE *f, const int start)
 
     mod->bpm = 4 * mod->bpm / 5;
     mod->trk = mod->chn * mod->pat;
+
     /* FNK allows mode per instrument but we don't, so use linear like 669 */
-    mod->flg |= XXM_FLG_LINEAR;
+    m->quirk |= QUIRK_LINEAR;
 
     MODULE_INFO();
     _D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);

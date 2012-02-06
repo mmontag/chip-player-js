@@ -193,7 +193,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     smp_size = 0;
     pat_size = 0;
 
-    mod->flg |= XXM_FLG_MODRNG;
+    m->quirk |= QUIRK_MODRNG;
 
     fread(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
@@ -236,7 +236,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	    return -1;
 	tracker = "TakeTracker/FastTracker II";
 	detected = 1;
-	mod->flg &= ~XXM_FLG_MODRNG;
+	m->quirk &= ~QUIRK_MODRNG;
     }
 
     strncpy (mod->name, (char *) mh.name, 20);
@@ -354,7 +354,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
     if (mod->chn != 4 && mh.restart == 0x7f) {
 	tracker = "Scream Tracker 3";
 	ptkloop = 0;
-	mod->flg &= ~XXM_FLG_MODRNG;
+	m->quirk &= ~QUIRK_MODRNG;
     }
 
     if (mod->chn == 4 && mh.restart == 0x7f) {
@@ -412,7 +412,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 		} else if (mod->chn == 6 || mod->chn == 8) {
 	    	    tracker = "FastTracker 1.01?";
 		    ptkloop = 0;
-		    mod->flg &= ~XXM_FLG_MODRNG;
+		    m->quirk &= ~QUIRK_MODRNG;
 		} else {
 	    	    tracker = "unknown tracker";
 		    ptkloop = 0;
@@ -443,7 +443,7 @@ static int mod_load(struct xmp_context *ctx, FILE *f, const int start)
 	    if (mod->chn == 4 || mod->chn == 6 || mod->chn == 8) {
 	    	tracker = "Fast Tracker";
 		ptkloop = 0;
-	        mod->flg &= ~XXM_FLG_MODRNG;
+	        m->quirk &= ~QUIRK_MODRNG;
 		goto skip_test;
 	    }
 
@@ -519,7 +519,7 @@ skip_test:
     }
 
     if (mod->chn > 4) {
-	mod->flg &= ~XXM_FLG_MODRNG;
+	m->quirk &= ~QUIRK_MODRNG;
 	m->quirk |= QUIRKS_FT2;
     }
 

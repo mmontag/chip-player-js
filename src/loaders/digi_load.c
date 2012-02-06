@@ -119,7 +119,8 @@ static int digi_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->chn = dh.chn;
     mod->trk = mod->pat * mod->chn;
     mod->len = dh.len + 1;
-    mod->flg |= XXM_FLG_MODRNG;
+
+    m->quirk |= QUIRK_MODRNG;
 
     copy_adjust(mod->name, dh.title, 32);
     set_type(m, "DIGI Booster %-4.4s", dh.vstr);

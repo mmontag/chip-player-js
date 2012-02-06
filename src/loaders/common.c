@@ -70,7 +70,6 @@ void read_title(FILE *f, char *t, int s)
 
 void set_xxh_defaults(struct xmp_module *mod)
 {
-	mod->flg = 0;
 	mod->pat = 0;
 	mod->trk = 0;
 	mod->chn = 4;

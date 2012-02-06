@@ -177,7 +177,7 @@ static int stim_load(struct xmp_context *ctx, FILE * f, const int start)
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
-	mod->flg |= XXM_FLG_MODRNG;
+	m->quirk |= QUIRK_MODRNG;
 
 	return 0;
 }

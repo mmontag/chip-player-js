@@ -62,7 +62,7 @@ static void get_init(struct xmp_context *ctx, int size, FILE *f)
 	strcpy(mod->type, "Galaxy Music System 5.0");
 	flags = read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
-		mod->flg = XXM_FLG_LINEAR;
+		m->quirk |= QUIRK_LINEAR;
 	mod->chn = read8(f);
 	mod->tpo = read8(f);
 	mod->bpm = read8(f);

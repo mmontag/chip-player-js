@@ -308,9 +308,10 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
     pp_pat = calloc(4, mod->pat);
     mod->tpo = ifh.is;
     mod->bpm = ifh.it;
-    mod->flg = ifh.flags & IT_LINEAR_FREQ ? XXM_FLG_LINEAR : 0;
-    mod->flg |= (ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200) ?
-					XXM_FLG_INSVOL : 0;
+
+    m->quirk |= ifh.flags & IT_LINEAR_FREQ ? QUIRK_LINEAR : 0;
+    m->quirk |= (ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200) ?
+						QUIRK_INSVOL : 0;
 
     mod->chn = 64;	/* Effects in muted channels are still processed! */
 

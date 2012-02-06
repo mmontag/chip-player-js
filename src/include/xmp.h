@@ -187,10 +187,6 @@ struct xmp_sample {
 struct xmp_module {
 	char name[XMP_NAMESIZE];	/* module name */
 	char type[XMP_NAMESIZE];	/* module type */
-#define XXM_FLG_LINEAR	0x01
-#define XXM_FLG_MODRNG	0x02
-#define XXM_FLG_INSVOL  0x04
-	int flg;		/* Flags */
 	int pat;		/* Number of patterns */
 	int trk;		/* Number of tracks */
 	int chn;		/* Tracks per pattern */

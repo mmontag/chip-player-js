@@ -199,7 +199,8 @@ static int liq_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->ins = mod->smp = lh.ins;
     mod->len = lh.len;
     mod->trk = mod->chn * mod->pat;
-    mod->flg = XXM_FLG_INSVOL;
+
+    m->quirk |= QUIRK_INSVOL;
 
     strncpy(mod->name, (char *)lh.name, 30);
     strncpy(tracker_name, (char *)lh.tracker, 20);

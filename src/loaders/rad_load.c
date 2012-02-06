@@ -61,7 +61,7 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->chn = 9;
 	mod->bpm = 125;
 	mod->tpo = flags & 0x1f;
-	mod->flg = XXM_FLG_LINEAR;
+
 	/* FIXME: tempo setting in RAD modules */
 	if (mod->tpo <= 2)
 		mod->tpo = 6;
@@ -183,6 +183,8 @@ static int rad_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
 
 	m->synth = &synth_adlib;
+
+	m->quirk |= QUIRK_LINEAR;
 
 	return 0;
 }

@@ -94,7 +94,8 @@ static int hsc_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->bpm = 135;
     mod->tpo = 6;
     mod->smp = 0;
-    mod->flg = XXM_FLG_LINEAR;
+
+    m->quirk |= QUIRK_LINEAR;
 
     set_type(m, "HSC-Tracker");
 

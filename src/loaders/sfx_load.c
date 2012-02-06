@@ -198,7 +198,7 @@ static int sfx_13_20_load(struct xmp_context *ctx, FILE *f, const int nins, cons
 	}
     }
 
-    mod->flg |= XXM_FLG_MODRNG;
+    m->quirk |= QUIRK_MODRNG;
 
     /* Read samples */
 

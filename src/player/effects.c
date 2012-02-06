@@ -18,7 +18,7 @@
 #define DO_TONEPORTA() do { \
 	if (note-- && note < 0x60 && (uint32)xc->ins < m->mod.ins) \
 	    xc->s_end = note_to_period(note + XXI.xpo + XXIH.map[xc->key].xpo, \
-	    XXI.fin, m->mod.flg & XXM_FLG_LINEAR); \
+	    XXI.fin, HAS_QUIRK(QUIRK_LINEAR)); \
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 } while (0)
 

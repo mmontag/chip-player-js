@@ -201,7 +201,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->pat = ih.pat;
 
     if (ih.flg & 0x01)
-	mod->flg |= XXM_FLG_LINEAR;
+	m->quirk |= QUIRK_LINEAR;
 
     mod->tpo = ih.tpo;
     mod->bpm = ih.bpm;

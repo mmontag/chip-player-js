@@ -146,6 +146,9 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_UNISLD	(1 << 18)	/* Unified pitch slide/portamento */
 #define QUIRK_SAVEINS	(1 << 19)	/* Always save instrument number */
 #define QUIRK_ITVPOR	(1 << 20)	/* Disable fine bends in IT vol fx */
+#define QUIRK_LINEAR	(1 << 21)	/* Linear periods */
+#define QUIRK_MODRNG	(1 << 22)	/* Limit periods to MOD range */
+#define QUIRK_INSVOL	(1 << 23)	/* Use instrument volume */
 
 
 /* Format quirks */

@@ -63,7 +63,8 @@ static int tcb_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->smp = mod->ins;
 	mod->chn = 4;
 	mod->trk = mod->pat * mod->chn;
-	mod->flg |= XXM_FLG_MODRNG;
+
+	m->quirk |= QUIRK_MODRNG;
 
 	read16b(f);	/* ? */
 

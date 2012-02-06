@@ -254,7 +254,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
     pp_ins = calloc (2, mod->ins);
     pp_pat = calloc (2, mod->pat);
     if (sfh.flags & S3M_AMIGA_RANGE)
-	mod->flg |= XXM_FLG_MODRNG;
+	m->quirk |= QUIRK_MODRNG;
     if (sfh.flags & S3M_ST300_VOLS)
 	m->quirk |= QUIRK_VSALL;
     /* m->volbase = 4096 / sfh.gv; */

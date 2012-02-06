@@ -182,7 +182,7 @@ static int pw_load(struct xmp_context *ctx, FILE *f, const int start)
 		}
 	}
 
-	mod->flg |= XXM_FLG_MODRNG;
+	m->quirk |= QUIRK_MODRNG;
 
 	/* Load samples */
 

@@ -216,7 +216,7 @@ static int mfp_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	fclose(s);
 
-	mod->flg |= XXM_FLG_MODRNG;
+	m->quirk |= QUIRK_MODRNG;
 
 	return 0;
 }

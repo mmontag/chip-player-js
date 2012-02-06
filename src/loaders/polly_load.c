@@ -205,7 +205,7 @@ static int polly_load(struct xmp_context *ctx, FILE *f, const int start)
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = 0x80;
 
-	mod->flg |= XXM_FLG_MODRNG;
+	m->quirk |= QUIRK_MODRNG;
 
 	return 0;
 }

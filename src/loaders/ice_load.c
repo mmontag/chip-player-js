@@ -145,7 +145,7 @@ static int ice_load(struct xmp_context *ctx, FILE *f, const int start)
 	}
     }
 
-    mod->flg |= XXM_FLG_MODRNG;
+    m->quirk |= QUIRK_MODRNG;
 
     /* Read samples */
 

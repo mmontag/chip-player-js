@@ -60,7 +60,7 @@ static void get_main(struct xmp_context *ctx, int size, FILE *f)
 
 	flags = read8(f);
 	if (~flags & 0x01)
-		mod->flg = XXM_FLG_LINEAR;
+		m->quirk = QUIRK_LINEAR;
 	mod->chn = read8(f);
 	mod->tpo = read8(f);
 	mod->bpm = read8(f);

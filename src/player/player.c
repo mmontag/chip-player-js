@@ -402,7 +402,7 @@ static int read_event(struct xmp_context *ctx, struct xmp_event *e, int chn, int
 	    xc->finetune = mod->xxi[ins].sub[mapped].fin;
 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
-			mod->flg & XXM_FLG_LINEAR);
+					HAS_QUIRK(QUIRK_LINEAR));
 
 	set_lfo_phase(&xc->vibrato, 0);
 	set_lfo_phase(&xc->tremolo, 0);
@@ -484,7 +484,6 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     uint16 vol_envelope;
     struct xmp_player_context *p = &ctx->p;
     struct xmp_mod_context *m = &ctx->m;
-    struct xmp_module *mod = &m->mod;
     struct xmp_options *o = &ctx->o;
     int linear_bend;
 
@@ -565,7 +564,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	if (!--xc->ns_count) {
 	    xc->note += xc->ns_val;
 	    xc->period = note_to_period(xc->note, xc->finetune,
-				mod->flg & XXM_FLG_LINEAR);
+					HAS_QUIRK(QUIRK_LINEAR));
 	    xc->ns_count = xc->ns_speed;
 	}
     }
@@ -604,7 +603,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 		m->vol_table[finalvol >> 4] << 4;
     }
 
-    if (mod->flg & XXM_FLG_INSVOL)
+    if (HAS_QUIRK(QUIRK_INSVOL))
 	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;
 
 
@@ -625,9 +624,9 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	xc->period + vibrato + med_vibrato,
 	xc->note,
 	/* xc->finetune, */
-	mod->flg & XXM_FLG_MODRNG,
+	HAS_QUIRK(QUIRK_MODRNG),
 	xc->gliss,
-	mod->flg & XXM_FLG_LINEAR);
+	HAS_QUIRK(QUIRK_LINEAR));
 
     linear_bend += XXIH.fei.flg & XMP_ENVELOPE_FLT ? 0 : frq_envelope;
 
@@ -733,7 +732,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
 	if (TEST(FINE_NSLIDE)) {
 	    xc->note += xc->ns_fval;
 	    xc->period = note_to_period(xc->note, xc->finetune,
-				mod->flg & XXM_FLG_LINEAR);
+					HAS_QUIRK(QUIRK_LINEAR));
 	}
     }
 
@@ -747,7 +746,7 @@ static void play_channel(struct xmp_context *ctx, int chn, int t)
     else if (xc->mastervol > m->volbase)
 	xc->mastervol = m->volbase;
 
-    if (mod->flg & XXM_FLG_LINEAR) {
+    if (HAS_QUIRK(QUIRK_LINEAR)) {
 	if (xc->period < MIN_PERIOD_L)
 	    xc->period = MIN_PERIOD_L;
 	else if (xc->period > MAX_PERIOD_L)

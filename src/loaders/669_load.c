@@ -105,7 +105,8 @@ static int ssn_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->tpo = 6;
     mod->bpm = 76;		/* adjusted using Flux/sober.669 */
     mod->smp = mod->ins;
-    mod->flg |= XXM_FLG_LINEAR;
+
+    m->quirk |= QUIRK_LINEAR;
 
     copy_adjust(mod->name, sfh.message, 36);
     strcpy(mod->type, strncmp((char *)sfh.marker, "if", 2) ?

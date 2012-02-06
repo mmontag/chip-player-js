@@ -116,7 +116,8 @@ static int rtm_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->ins = rh.ninstr;
 	mod->tpo = rh.speed;
 	mod->bpm = rh.tempo;
-	mod->flg = rh.flags & 0x01 ? XXM_FLG_LINEAR : 0;
+
+	m->quirk |= rh.flags & 0x01 ? QUIRK_LINEAR : 0;
 
 	MODULE_INFO();
 

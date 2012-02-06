@@ -334,7 +334,7 @@ static int st_load(struct xmp_context *ctx, FILE *f, const int start)
 		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
     }
 
-    mod->flg |= XXM_FLG_MODRNG;
+    m->quirk |= QUIRK_MODRNG;
 
     /* Perform the necessary conversions for Ultimate Soundtracker */
     if (ust) {

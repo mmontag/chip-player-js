@@ -95,7 +95,9 @@ static int xm_load(struct xmp_context *ctx, FILE *f, const int start)
     mod->ins = xfh.instruments;
     mod->tpo = xfh.tempo;
     mod->bpm = xfh.bpm;
-    mod->flg = xfh.flags & XM_LINEAR_PERIOD_MODE ? XXM_FLG_LINEAR : 0;
+
+    m->quirk |= xfh.flags & XM_LINEAR_PERIOD_MODE ? QUIRK_LINEAR : 0;
+
     memcpy(mod->xxo, xfh.order, mod->len);
     tracker_name[20] = 0;
     snprintf(tracker_name, 20, "%-20.20s", xfh.tracker);
