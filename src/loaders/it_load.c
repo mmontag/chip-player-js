@@ -752,6 +752,10 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->xxs[i].lps = ish.loopbeg;
 	mod->xxs[i].lpe = ish.loopend;
 
+	/* IT loop end points to first sample after the loop */
+	if (mod->xxs[i].lpe > 0)
+		mod->xxs[i].lpe--;
+
 	mod->xxs[i].flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
 	mod->xxs[i].flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
