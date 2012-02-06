@@ -366,7 +366,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 		step = -step;			/* invert dir */
 		vi->frac += step;
 		/* keep bidir loop at the same size of forward loop */
-		vi->pos += (vi->frac >> SMIX_SHIFT) + 1;
+		vi->pos += (vi->frac >> SMIX_SHIFT);
 		vi->frac &= SMIX_MASK;
 		vi->end = step > 0 ? lpe : lps;
 	    }
