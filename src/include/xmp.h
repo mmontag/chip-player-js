@@ -41,7 +41,6 @@ extern "C" {
 
 struct xmp_options {
 	int big_endian;		/* Machine byte order */
-	int dump;		/* Data dump for testing */
 	int amplify;		/* Software mixing amplify volume:
 				   0 = none, 1 = x2, 2 = x4, 3 = x8 */
 #define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */

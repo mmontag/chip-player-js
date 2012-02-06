@@ -999,43 +999,6 @@ next_order:
 
 	xmp_smix_softmixer(ctx);
 
-#ifndef ANDROID
-	if (o->dump == 1) {
-		int i;
-
-		for (i = 0; i < m->mod.chn; i++) {
-			struct channel_data *c = &p->xc_data[i];
-
-			printf("%d %d %d %d %d %d %lf %d %d %d %d %lf "
-			       "%d %d %d %d %d %d %d %d %d\n",
-					p->ord,
-					m->mod.xxo[p->ord],
-					p->row,
-					p->frame,
-					p->bpm,
-					p->tempo,
-					p->tick_time,
-					i,
-					c->note,
-					c->key,
-					c->volume,
-					c->period,
-
-					/* c->pitchbend, */
-					c->finetune,
-					c->ins,
-					c->smp,
-					c->insdef,
-					c->pan,
-					c->masterpan,
-					c->mastervol,
-					c->delay,
-					c->retrig.count
-			);
-		}
-	}
-#endif
-
 	return 0;
 }
     
