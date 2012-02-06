@@ -34,7 +34,7 @@ void *xmp_create_context()
 	o = &ctx->o;
 
 	w = 0x00ff;
-	o->big_endian = (*(char *)&w == 0x00);
+	ctx->s.big_endian = (*(char *)&w == 0x00);
 
 	/* Set defaults */
 	o->amplify = DEFAULT_AMPLIFY;

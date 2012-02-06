@@ -214,8 +214,7 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 int load_sample(struct context_data *ctx, FILE * f, int id, int flags,
 	       struct xmp_sample *xxs, void *buffer)
 {
-	struct xmp_options *o = &ctx->o;
-	uint8 s[5];
+	struct mixer_data *s = &ctx->s;
 	int bytelen, extralen;
 
 	/* Synth patches
@@ -266,12 +265,13 @@ int load_sample(struct context_data *ctx, FILE * f, int id, int flags,
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
+		uint8 buf[5];
 		int pos = ftell(f);
-		int num = fread(s, 1, 5, f);
+		int num = fread(buf, 1, 5, f);
 
 		fseek(f, pos, SEEK_SET);
 
-		if (num == 5 && !memcmp(s, "ADPCM", 5)) {
+		if (num == 5 && !memcmp(buf, "ADPCM", 5)) {
 			int x2 = bytelen >> 1;
 			char table[16];
 
@@ -296,7 +296,7 @@ int load_sample(struct context_data *ctx, FILE * f, int id, int flags,
 
 	/* Fix endianism if needed */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		if (!!o->big_endian ^ !!(flags & SAMPLE_FLAG_BIGEND))
+		if (!!s->big_endian ^ !!(flags & SAMPLE_FLAG_BIGEND))
 			xmp_cvt_sex(xxs->len, xxs->data);
 	}
 
