@@ -348,7 +348,7 @@ static int stc_load(struct xmp_context *ctx, FILE * f, const int start)
 
 	for (i = 0; i < 4; i++) {
 		mod->xxc[i].pan = 0x80;
-		mod->xxc[i].flg = XXM_CHANNEL_SYNTH;
+		mod->xxc[i].flg = XMP_CHANNEL_SYNTH;
 	}
 	
 	m->synth = &synth_spectrum;

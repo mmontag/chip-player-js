@@ -321,7 +321,7 @@ static int it_load(struct xmp_context *ctx, FILE *f, const int start)
 
 	if (ifh.chpan[i] & 0x80) {	/* Channel mute */
 	    ifh.chvol[i] = 0;
-	    mod->xxc[i].flg |= XXM_CHANNEL_MUTE;
+	    mod->xxc[i].flg |= XMP_CHANNEL_MUTE;
 	}
 
 	if (ifh.flags & IT_STEREO) {

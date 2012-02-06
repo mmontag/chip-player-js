@@ -221,7 +221,7 @@ static int imf_load(struct xmp_context *ctx, FILE *f, const int start)
 	mod->xxc[i].cho = ih.chn[i].chorus;
 	mod->xxc[i].rvb = ih.chn[i].reverb;
 #endif
-	mod->xxc[i].flg |= XXM_CHANNEL_FX;
+	mod->xxc[i].flg |= XMP_CHANNEL_FX;
     }
     mod->trk = mod->pat * mod->chn;
  

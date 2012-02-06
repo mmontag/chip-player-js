@@ -75,9 +75,9 @@ struct xmp_fmt_info {
 struct xmp_channel {
 	int pan;
 	int vol;
-#define XXM_CHANNEL_SYNTH 0x01
-#define XXM_CHANNEL_FX    0x02
-#define XXM_CHANNEL_MUTE  0x04
+#define XMP_CHANNEL_SYNTH 0x01
+#define XMP_CHANNEL_FX    0x02
+#define XMP_CHANNEL_MUTE  0x04
 	int flg;
 };
 
@@ -120,7 +120,7 @@ struct xmp_envelope {
 
 struct xmp_instrument {
 	char name[32];		/* Instrument name */
-	int vol;		/* Volume */
+	int vol;		/* Volume if QUIRK_INSVOL enabled */
 	int nsm;		/* Number of samples */
 	int rls;		/* Release (fadeout) */
 	struct xmp_envelope aei;	/* Amplitude envelope info */
