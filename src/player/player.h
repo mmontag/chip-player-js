@@ -37,10 +37,10 @@
 
 #define DOENV_RELEASE	((TEST (RELEASE) || act == VIRTCH_ACTION_OFF))
 
-struct retrig_t {
-    int s;
-    int m;
-    int d;
+struct retrig_control {
+	int s;
+	int m;
+	int d;
 };
 
 /* The following macros are used to set the flags for each channel */
@@ -89,99 +89,99 @@ struct instrument_vibrato {
 
 /* MED support */
 
-struct med_channel {
-	int vp;			/* MED synth volume sequence table pointer */
-	int vv;			/* MED synth volume slide value */
-	int vs;			/* MED synth volume speed */
-	int vc;			/* MED synth volume speed counter */
-	int vw;			/* MED synth volume wait counter */
-	int wp;			/* MED synth waveform sequence table pointer */
-	int wv;			/* MED synth waveform slide value */
-	int ws;			/* MED synth waveform speed */
-	int wc;			/* MED synth waveform speed counter */
-	int ww;			/* MED synth waveform wait counter */
-	int period;		/* MED synth period for RES */
-	int arp;		/* MED synth arpeggio start */
-	int aidx;		/* MED synth arpeggio index */
-	int vwf;		/* MED synth vibrato waveform */
-	int vib_depth;		/* MED synth vibrato depth */
-	int vib_speed;		/* MED synth vibrato speed */
-	int vib_idx;		/* MED synth vibrato index */
-	int vib_wf;		/* MED synth vibrato waveform */
-};
-
 struct channel_data {
-    int flags;			/* Channel flags */
-    int per_flags;		/* Persistent effect channel flags */
-    int note;			/* Note number */
-    int key;			/* Key number */
-    double period;		/* Amiga or linear period */
+	int flags;		/* Channel flags */
+	int per_flags;		/* Persistent effect channel flags */
+	int note;		/* Note number */
+	int key;		/* Key number */
+	double period;		/* Amiga or linear period */
 	int final_period;
 	int pitchbend;		/* Linear pitchbend */
-    int finetune;		/* Guess what */
-    int ins;			/* Instrument number */
-    int smp;			/* Sample number */
-    int insdef;			/* Instrument default */
-    int pan;			/* Current pan */
-    int masterpan;		/* Master pan -- for S3M set pan effect */
-    int mastervol;		/* Master vol -- for IT track vol effect */
-    int delay;			/* Note delay in frames */
+	int finetune;		/* Guess what */
+	int ins;		/* Instrument number */
+	int smp;		/* Sample number */
+	int insdef;		/* Instrument default */
+	int pan;		/* Current pan */
+	int masterpan;		/* Master pan -- for S3M set pan effect */
+	int mastervol;		/* Master vol -- for IT track vol effect */
+	int delay;		/* Note delay in frames */
+
 	struct {
 		int type;	/* Retrig type */
 		int count;	/* Retrig counter */
-    		int delay;	/* Retrig delay in frames */
-    		int val;	/* Retrig parameters */
+		int delay;	/* Retrig delay in frames */
+		int val;	/* Retrig parameters */
 	} retrig;
-    int tremor;			/* Tremor */
-    int tcnt_up;		/* Tremor counter (up cycle) */
-    int tcnt_dn;		/* Tremor counter (down cycle) */
-    int keyoff;			/* Key off counter */
-    int volume;			/* Current volume */
-    int gvl;			/* Global volume for instrument for IT */
-    int v_val;			/* Volume slide value */
-    int v_fval;			/* Fine volume slide value */
-    int v_val2;			/* Volume slide value */
-    int volslide;		/* Volume slide effect memory */
-    int fvolslide;		/* Fine volume slide effect memory */
-    int p_val;			/* Current pan value */
-    int trk_val;		/* Track volume slide value */
-    int trk_fval;		/* Track fine volume slide value */
-    int trkvsld;		/* Track volume slide effect memory */
-    uint16 v_idx;		/* Volume envelope index */
-    uint16 p_idx;		/* Pan envelope index */
-    uint16 f_idx;		/* Freq envelope index */
+
+	int tremor;		/* Tremor */
+	int tcnt_up;		/* Tremor counter (up cycle) */
+	int tcnt_dn;		/* Tremor counter (down cycle) */
+	int keyoff;		/* Key off counter */
+	int volume;		/* Current volume */
+	int gvl;		/* Global volume for instrument for IT */
+	int v_val;		/* Volume slide value */
+	int v_fval;		/* Fine volume slide value */
+	int v_val2;		/* Volume slide value */
+	int volslide;		/* Volume slide effect memory */
+	int fvolslide;		/* Fine volume slide effect memory */
+	int p_val;		/* Current pan value */
+	int trk_val;		/* Track volume slide value */
+	int trk_fval;		/* Track fine volume slide value */
+	int trkvsld;		/* Track volume slide effect memory */
+	uint16 v_idx;		/* Volume envelope index */
+	uint16 p_idx;		/* Pan envelope index */
+	uint16 f_idx;		/* Freq envelope index */
 	struct lfo vibrato;
 	struct lfo tremolo;
-    int f_val;			/* Frequency slide value */
-    int f_fval;			/* Fine frequency slide value */
-    int porta;			/* Portamento effect memory */
-    int fadeout;		/* Current fadeout (release) value */
-    int gliss;			/* Glissando active */
-    int s_end;			/* Target period for tone portamento */
-    int s_sgn;			/* Tone portamento up/down switch */
-    int s_val;			/* Delta for tone portamento */
+	int f_val;		/* Frequency slide value */
+	int f_fval;		/* Fine frequency slide value */
+	int porta;		/* Portamento effect memory */
+	int fadeout;		/* Current fadeout (release) value */
+	int gliss;		/* Glissando active */
+	int s_end;		/* Target period for tone portamento */
+	int s_sgn;		/* Tone portamento up/down switch */
+	int s_val;		/* Delta for tone portamento */
 	struct stepper arpeggio;
 	struct instrument_vibrato instrument_vibrato;
-    int offset;			/* Sample offset memory */
-    int offset_val;		/* Sample offset */
-    int ns_val;			/* PTM note slide amount */
-    int ns_fval;		/* OKT fine note slide amount */
-    int ns_speed;		/* PTM note slide speed */
-    int ns_count;		/* PTM note slide counter */
+	int offset;		/* Sample offset memory */
+	int offset_val;		/* Sample offset */
+	int ns_val;		/* PTM note slide amount */
+	int ns_fval;		/* OKT fine note slide amount */
+	int ns_speed;		/* PTM note slide speed */
+	int ns_count;		/* PTM note slide counter */
 
 	struct {
 		int cutoff;	/* IT filter cutoff frequency */
 		int cutoff2;	/* IT filter cutoff frequency (with envelope) */
-    		int resonance;	/* IT filter resonance */
-    		int B0;		/* IT filter variables */
-    		int B1;
-    		int B2;
+		int resonance;	/* IT filter resonance */
+		int B0;		/* IT filter variables */
+		int B1;
+		int B2;
 	} filter;
 
-	struct med_channel med;
+	struct med_channel {
+		int vp;		/* MED synth volume sequence table pointer */
+		int vv;		/* MED synth volume slide value */
+		int vs;		/* MED synth volume speed */
+		int vc;		/* MED synth volume speed counter */
+		int vw;		/* MED synth volume wait counter */
+		int wp;		/* MED synth waveform sequence table pointer */
+		int wv;		/* MED synth waveform slide value */
+		int ws;		/* MED synth waveform speed */
+		int wc;		/* MED synth waveform speed counter */
+		int ww;		/* MED synth waveform wait counter */
+		int period;	/* MED synth period for RES */
+		int arp;	/* MED synth arpeggio start */
+		int aidx;	/* MED synth arpeggio index */
+		int vwf;	/* MED synth vibrato waveform */
+		int vib_depth;	/* MED synth vibrato depth */
+		int vib_speed;	/* MED synth vibrato speed */
+		int vib_idx;	/* MED synth vibrato index */
+		int vib_wf;	/* MED synth vibrato waveform */
+	} med;
 
-    struct xmp_event *delayed_event;
-    int delayed_ins;		/* IT save instrument emulation */
+	struct xmp_event *delayed_event;
+	int delayed_ins;	/* IT save instrument emulation */
 };
 
 

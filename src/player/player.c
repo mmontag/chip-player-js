@@ -34,7 +34,7 @@
 #include "mixer.h"
 
 /* Values for multi-retrig */
-static struct retrig_t rval[] = {
+static struct retrig_control rval[] = {
     {   0,  1,  1 }, {  -1,  1,  1 }, {  -2,  1,  1 }, {  -4,  1,  1 },
     {  -8,  1,  1 }, { -16,  1,  1 }, {   0,  2,  3 }, {   0,  1,  2 },
     {   0,  1,  1 }, {   1,  1,  1 }, {   2,  1,  1 }, {   4,  1,  1 },
