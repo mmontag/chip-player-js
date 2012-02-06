@@ -196,7 +196,7 @@ struct xmp_module {
  * Playing module information
  */
 
-#define XMP_PERIOD_BASE	3424
+#define XMP_PERIOD_BASE	6847		/* C4 period */
 
 struct xmp_module_info {
 	int order;
