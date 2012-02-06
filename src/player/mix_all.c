@@ -89,7 +89,7 @@
 #define VAR_FILT \
     int fx1 = vi->filter.X1, fx2 = vi->filter.X2
 
-#define SMIX_MIXER(f) void f(struct voice_info *vi, int *buffer, \
+#define SMIX_MIXER(f) void f(struct mixer_voice *vi, int *buffer, \
     int count, int vl, int vr, int step)
 
 

@@ -22,7 +22,7 @@
 #define SLOW_RELEASE	8
 
 
-struct voice_info {
+struct mixer_voice {
 	int chn;		/* channel link */
 	int root;		/* */
 	unsigned int age;	/* */

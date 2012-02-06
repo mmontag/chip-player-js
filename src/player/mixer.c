@@ -36,19 +36,19 @@
 #define LIM16_LO	-32768
 
 
-void    smix_mn8norm      (struct voice_info *, int *, int, int, int, int);
-void    smix_mn8itpt      (struct voice_info *, int *, int, int, int, int);
-void    smix_mn16norm     (struct voice_info *, int *, int, int, int, int);
-void    smix_mn16itpt     (struct voice_info *, int *, int, int, int, int);
-void    smix_st8norm      (struct voice_info *, int *, int, int, int, int);
-void    smix_st8itpt      (struct voice_info *, int *, int, int, int, int);
-void    smix_st16norm     (struct voice_info *, int *, int, int, int, int);
-void    smix_st16itpt	  (struct voice_info *, int *, int, int, int, int);
+void    smix_mn8norm      (struct mixer_voice *, int *, int, int, int, int);
+void    smix_mn8itpt      (struct mixer_voice *, int *, int, int, int, int);
+void    smix_mn16norm     (struct mixer_voice *, int *, int, int, int, int);
+void    smix_mn16itpt     (struct mixer_voice *, int *, int, int, int, int);
+void    smix_st8norm      (struct mixer_voice *, int *, int, int, int, int);
+void    smix_st8itpt      (struct mixer_voice *, int *, int, int, int, int);
+void    smix_st16norm     (struct mixer_voice *, int *, int, int, int, int);
+void    smix_st16itpt	  (struct mixer_voice *, int *, int, int, int, int);
 
-void    smix_mn8itpt_flt  (struct voice_info *, int *, int, int, int, int);
-void    smix_mn16itpt_flt (struct voice_info *, int *, int, int, int, int);
-void    smix_st8itpt_flt  (struct voice_info *, int *, int, int, int, int);
-void    smix_st16itpt_flt (struct voice_info *, int *, int, int, int, int);
+void    smix_mn8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
+void    smix_mn16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
+void    smix_st8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
+void    smix_st16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
 
 
 /* Array index:
@@ -187,7 +187,7 @@ static void anticlick(struct context_data *ctx, int voc, int vol, int pan, int *
     int oldvol, newvol, pan0;
     struct player_data *p = &ctx->p;
     struct mixer_data *s = &ctx->s;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
 
     /* From: Mirko Buffoni <mirbuf@gmail.com>
      * To: Claudio Matsuoka <cmatsuoka@gmail.com>
@@ -231,7 +231,7 @@ void mixer_softmixer(struct context_data *ctx)
     struct module_data *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
     struct xmp_sample *xxs;
-    struct voice_info *vi;
+    struct mixer_voice *vi;
     int samples, size, lps, lpe;
     int vol_l, vol_r, step, voc;
     int prev_l, prev_r;
@@ -394,7 +394,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 {
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
     struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
     int lpe;
 
@@ -422,7 +422,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
     struct xmp_options *o = &ctx->o;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
     struct xmp_sample *xxs = &m->mod.xxs[smp];
 
     vi->smp = smp;
@@ -467,7 +467,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 void mixer_setnote(struct context_data *ctx, int voc, int note)
 {
     struct player_data *p = &ctx->p;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note = note, 0);
     vi->attack = SLOW_ATTACK;
@@ -478,7 +478,7 @@ void mixer_setbend(struct context_data *ctx, int voc, int bend)
 {
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
 
     vi->period = note_to_period_mix(vi->note, bend);
 
@@ -491,7 +491,7 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 {
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
  
     anticlick(ctx, voc, vol, vi->pan, NULL, 0);
     vi->vol = vol;
@@ -505,7 +505,7 @@ void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 {
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
  
     switch (type) {
     case DSP_EFFECT_CUTOFF:
@@ -533,7 +533,7 @@ void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 void mixer_setpan(struct context_data *ctx, int voc, int pan)
 {
     struct player_data *p = &ctx->p;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
  
     vi->pan = pan;
 }

@@ -19,7 +19,7 @@
 void virtch_resetvoice(struct context_data *ctx, int voc, int mute)
 {
     struct player_data *p = &ctx->p;
-    struct voice_info *vi = &p->virt.voice_array[voc];
+    struct mixer_voice *vi = &p->virt.voice_array[voc];
 
     if ((uint32)voc >= p->virt.maxvoc)
 	return;
@@ -30,7 +30,7 @@ void virtch_resetvoice(struct context_data *ctx, int voc, int mute)
     p->virt.virt_used--;
     p->virt.virt_channel[vi->root].count--;
     p->virt.virt_channel[vi->chn].map = FREE;
-    memset(vi, 0, sizeof (struct voice_info));
+    memset(vi, 0, sizeof (struct mixer_voice));
     vi->chn = vi->root = FREE;
 }
 
@@ -55,7 +55,7 @@ int virtch_on(struct context_data *ctx, int num)
 
 	num = p->virt.maxvoc = mixer_numvoices(ctx, num);
 
-	p->virt.voice_array = calloc(p->virt.maxvoc, sizeof(struct voice_info));
+	p->virt.voice_array = calloc(p->virt.maxvoc, sizeof(struct mixer_voice));
 	if (p->virt.voice_array == NULL)
 		goto err;
 
@@ -109,7 +109,7 @@ void virtch_reset(struct context_data *ctx)
 
     mixer_numvoices(ctx, p->virt.maxvoc);
 
-    memset(p->virt.voice_array, 0, p->virt.maxvoc * sizeof (struct voice_info));
+    memset(p->virt.voice_array, 0, p->virt.maxvoc * sizeof (struct mixer_voice));
     for (i = 0; i < p->virt.maxvoc; i++) {
 	p->virt.voice_array[i].chn = FREE;
 	p->virt.voice_array[i].root = FREE;
@@ -139,7 +139,7 @@ void virtch_resetchannel(struct context_data *ctx, int chn)
     p->virt.virt_used--;
     p->virt.virt_channel[p->virt.voice_array[voc].root].count--;
     p->virt.virt_channel[chn].map = FREE;
-    memset(&p->virt.voice_array[voc], 0, sizeof (struct voice_info));
+    memset(&p->virt.voice_array[voc], 0, sizeof (struct mixer_voice));
     p->virt.voice_array[voc].chn = p->virt.voice_array[voc].root = FREE;
 }
 
@@ -251,8 +251,8 @@ void virtch_seteffect(struct context_data *ctx, int chn, int type, int val)
 void virtch_setsmp(struct context_data *ctx, int chn, int smp)
 {
     struct player_data *p = &ctx->p;
+    struct mixer_voice *vi;
     int voc;
-    struct voice_info *vi;
 
     voc = p->virt.virt_channel[chn].map;
 

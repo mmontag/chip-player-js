@@ -261,7 +261,7 @@ struct player_data {
 			int map;
 		} *virt_channel;
 	
-		struct voice_info *voice_array;
+		struct mixer_voice *voice_array;
 	
 		void *buffer;
 		int size;
