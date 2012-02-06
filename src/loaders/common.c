@@ -247,9 +247,17 @@ int load_sample(struct xmp_context *ctx, FILE * f, int id, int flags,
 	 */
 	bytelen = xxs->len;
 	extralen = 1;
+
+	/* S3M and IT loop end point to first sample after the loop
+	 * so allocate one more sample
+	 */
+	if (xxs->lpe == xxs->len) {
+		extralen++;
+	}
+
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		bytelen *= 2;
-		extralen = 2;
+		extralen *= 2;
 	}
 
 	if ((xxs->data = malloc(bytelen + extralen)) == NULL)
@@ -324,7 +332,17 @@ int load_sample(struct xmp_context *ctx, FILE * f, int id, int flags,
 	} else {
 		xxs->data[bytelen] = xxs->data[bytelen - 1];
 	}
-	/* xxs->len++; */
+
+	/* Add extra sample if we have S3M-style loop ends */
+	if (xxs->lpe == xxs->len) {
+		if (xxs->flg & XMP_SAMPLE_16BIT) {
+			xxs->data[bytelen + 2] = xxs->data[bytelen];
+			xxs->data[bytelen + 3] = xxs->data[bytelen + 1];
+		} else {
+			xxs->data[bytelen + 1] = xxs->data[bytelen];
+		}
+		xxs->len++;
+	}
 
 	return 0;
 }

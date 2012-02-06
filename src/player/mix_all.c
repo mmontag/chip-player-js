@@ -43,35 +43,35 @@
 } while (0)
 
 #define MIX_STEREO() do { \
-    *(tmp_bk++) += smp_in * vr; \
-    *(tmp_bk++) += smp_in * vl; \
+    *(buffer++) += smp_in * vr; \
+    *(buffer++) += smp_in * vl; \
     frac += step; \
 } while (0)
 
 #define MIX_MONO() do { \
-    *(tmp_bk++) += smp_in * vl; \
+    *(buffer++) += smp_in * vl; \
     frac += step; \
 } while (0)
 
 #define MIX_STEREO_AC() do { \
     if (vi->attack) { \
 	int a = SLOW_ATTACK - vi->attack; \
-	*(tmp_bk++) += smp_in * vr * a / SLOW_ATTACK; \
-	*(tmp_bk++) += smp_in * vl * a / SLOW_ATTACK; \
+	*(buffer++) += smp_in * vr * a / SLOW_ATTACK; \
+	*(buffer++) += smp_in * vl * a / SLOW_ATTACK; \
 	vi->attack--; \
     } else { \
-	*(tmp_bk++) += smp_in * vr; \
-	*(tmp_bk++) += smp_in * vl; \
+	*(buffer++) += smp_in * vr; \
+	*(buffer++) += smp_in * vl; \
     } \
     frac += step; \
 } while (0)
 
 #define MIX_MONO_AC() do { \
     if (vi->attack) { \
-	*(tmp_bk++) += smp_in * vl * (SLOW_ATTACK - vi->attack) / SLOW_ATTACK; \
+	*(buffer++) += smp_in * vl * (SLOW_ATTACK - vi->attack) / SLOW_ATTACK; \
 	vi->attack--; \
     } else { \
-	*(tmp_bk++) += smp_in * vl; \
+	*(buffer++) += smp_in * vl; \
     } \
     frac += step; \
 } while (0)
@@ -89,12 +89,7 @@
 #define VAR_FILT \
     int fx1 = vi->filter.X1, fx2 = vi->filter.X2
 
-#define UPDATE_VARS() do { \
-    vi->pos = pos + (frac >> SMIX_SHIFT); \
-    vi->frac = frac & SMIX_MASK; \
-} while (0)
-
-#define SMIX_MIXER(f) void f(struct voice_info *vi, int* tmp_bk, \
+#define SMIX_MIXER(f) void f(struct voice_info *vi, int *buffer, \
     int count, int vl, int vr, int step)
 
 
@@ -104,7 +99,6 @@ SMIX_MIXER(smix_st8itpt)
 {
     VAR_ITPT(int8);
     while (count--) { INTERPOLATE(); MIX_STEREO_AC(); }
-    UPDATE_VARS();
 }
 
 
@@ -117,7 +111,6 @@ SMIX_MIXER(smix_st16itpt)
     vl >>= 8;
     vr >>= 8;
     while (count--) { INTERPOLATE(); MIX_STEREO_AC(); }
-    UPDATE_VARS();
 }
 
 
@@ -127,7 +120,6 @@ SMIX_MIXER(smix_st8norm)
 {
     VAR_NORM(int8);
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
-    UPDATE_VARS();
 }
 
 
@@ -140,7 +132,6 @@ SMIX_MIXER(smix_st16norm)
     vl >>= 8;
     vr >>= 8;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
-    UPDATE_VARS();
 }
 
 
@@ -152,7 +143,6 @@ SMIX_MIXER(smix_mn8itpt)
 
     vl <<= 1;
     while (count--) { INTERPOLATE(); MIX_MONO_AC(); }
-    UPDATE_VARS();
 }
 
 
@@ -164,7 +154,6 @@ SMIX_MIXER(smix_mn16itpt)
 
     vl >>= 7;
     while (count--) { INTERPOLATE(); MIX_MONO_AC(); }
-    UPDATE_VARS();
 }
 
 
@@ -176,7 +165,6 @@ SMIX_MIXER(smix_mn8norm)
 
     vl <<= 1;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
-    UPDATE_VARS();
 }
 
 
@@ -188,7 +176,6 @@ SMIX_MIXER(smix_mn16norm)
 
     vl >>= 7;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
-    UPDATE_VARS();
 }
 
 /*
@@ -203,7 +190,6 @@ SMIX_MIXER(smix_st8itpt_flt)
     VAR_FILT;
 
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO_AC(); }
-    UPDATE_VARS();
     SAVE_FILTER();
 }
 
@@ -218,7 +204,6 @@ SMIX_MIXER(smix_st16itpt_flt)
     vl >>= 8;
     vr >>= 8;
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_STEREO_AC(); }
-    UPDATE_VARS();
     SAVE_FILTER();
 }
 
@@ -232,7 +217,6 @@ SMIX_MIXER(smix_mn8itpt_flt)
 
     vl <<= 1;
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO_AC(); }
-    UPDATE_VARS();
     SAVE_FILTER();
 }
 
@@ -246,7 +230,6 @@ SMIX_MIXER(smix_mn16itpt_flt)
 
     vl >>= 7;
     while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO_AC(); }
-    UPDATE_VARS();
     SAVE_FILTER();
 }
 

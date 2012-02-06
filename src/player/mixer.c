@@ -291,9 +291,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	    /* How many samples we can write before the loop break or
 	     * sample end... */
 	    samples = (((int64)(vi->end - vi->pos + 1) << SMIX_SHIFT)
-		- vi->frac + (step - 1)) / step;
-
-	    /* + (step - 1) for interpolation of the last sample */
+				- vi->frac) / step;
 
 	    if (step > 0) {
 		if (vi->pos > vi->end)
@@ -339,6 +337,10 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 		vi->sleft = buf_pos[idx - 1] - prev_l;
 	    }
 
+	    vi->frac += step * samples;
+	    vi->pos += vi->frac >> SMIX_SHIFT;
+	    vi->frac &= SMIX_MASK;
+
 	    /* No more samples in this tick */
 	    size -= samples;
 	    if (size <= 0)
@@ -355,7 +357,8 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	    }
 
 	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
-		vi->pos -= lpe - lps;			/* forward loop */
+		vi->pos = lps;			/* forward loop */
+
 		if (xxs->flg & XMP_SAMPLE_LOOP_FULL) {
 	            vi->end = lpe = xxs->lpe;
 	            xxs->flg &= ~XMP_SAMPLE_LOOP_FIRST;

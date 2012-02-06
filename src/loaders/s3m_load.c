@@ -495,6 +495,7 @@ static int s3m_load(struct xmp_context *ctx, FILE *f, const int start)
 	    mod->xxs[i].lps >>= 1;
 	    mod->xxs[i].lpe >>= 1;
 	}
+
 	mod->xxi[i].sub[0].vol = sih.vol;
 	sih.magic = 0;
 
