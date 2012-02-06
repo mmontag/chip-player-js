@@ -17,3 +17,8 @@ $(TEST_PATH)/test3: $(TEST_PATH)/test3.o $(LIB)
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
+$(TEST_PATH)/test4: $(TEST_PATH)/test4.o $(LIB)
+	@CMD='$(LD) -o $@ $(LDFLAGS) $(TEST_PATH)/test4.o -lxmp -lm'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
