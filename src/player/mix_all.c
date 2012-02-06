@@ -20,9 +20,9 @@
  */
 #define INTERPOLATE() do { \
     pos += frac >> SMIX_SHIFT; \
+    frac &= SMIX_MASK; \
     smp_x1 = sptr[pos]; \
     smp_dt = sptr[pos + 1] - smp_x1; \
-    frac &= SMIX_MASK; \
     smp_in = smp_x1 + ((frac * smp_dt) >> SMIX_SHIFT); \
 } while (0)
 
@@ -82,7 +82,7 @@
 
 #define VAR_ITPT(x) \
     VAR_NORM(x); \
-    int smp_x1 = 0, smp_dt = 0
+    int smp_x1, smp_dt
 
 #define VAR_FILT \
     int fx1 = vi->filter.X1, fx2 = vi->filter.X2
