@@ -56,11 +56,6 @@ struct xmp_options {
 	char *ins_path;			/* External instrument path */
 };
 
-struct xmp_fmt_info {
-	struct xmp_fmt_info *next;
-	char *id;
-	char *tracker;
-};
 
 #define XMP_MAX_KEYS		108
 #define XMP_MAX_ENV_POINTS	32	/* max envelope points */
@@ -239,11 +234,8 @@ typedef char *xmp_context;
 
 void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
-void xmp_init(void);
-void xmp_deinit(void);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);
-struct xmp_fmt_info *xmp_get_fmt_info(struct xmp_fmt_info **);
 void xmp_channel_mute(xmp_context, int, int, int);
 int xmp_player_ctl(xmp_context, int, int);
 int xmp_player_start(xmp_context);

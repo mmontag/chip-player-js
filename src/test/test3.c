@@ -30,8 +30,6 @@ int main(int argc, char **argv)
 	struct xmp_module_info mi1, mi2;
 	int res1, res2;
 
-	xmp_init();
-
 	/* create player 1 */
 	ctx1 = xmp_create_context();
 
@@ -77,8 +75,6 @@ int main(int argc, char **argv)
 
 	xmp_free_context(ctx1);
 	xmp_free_context(ctx2);
-
-	xmp_deinit();
 
 	return 0;
 }

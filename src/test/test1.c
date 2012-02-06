@@ -30,7 +30,6 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	xmp_init();
 	ctx = xmp_create_context();
 
 	for (i = 1; i < argc; i++) {
@@ -75,7 +74,6 @@ int main(int argc, char **argv)
 	}
 
 	xmp_free_context(ctx);
-	xmp_deinit();
 
 	if (!silent) {
 		sound_deinit();

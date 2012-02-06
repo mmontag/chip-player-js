@@ -22,7 +22,13 @@ void *xmp_create_context()
 {
 	struct context_data *ctx;
 	struct xmp_options *o;
+	static int first = 1;
 	uint16 w;
+
+	if (first) {
+		xmp_init_formats();
+		first = 0;
+	}
 
 	ctx = calloc(1, sizeof(struct context_data));
 
@@ -49,15 +55,6 @@ void *xmp_create_context()
 void xmp_free_context(xmp_context ctx)
 {
 	free(ctx);
-}
-
-void xmp_init()
-{
-	xmp_init_formats();
-}
-
-void xmp_deinit()
-{
 }
 
 void xmp_channel_mute(xmp_context opaque, int from, int num, int on)

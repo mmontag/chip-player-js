@@ -71,7 +71,6 @@ int main(int argc, char **argv)
 	static struct xmp_module_info mi;
 	int i;
 
-	xmp_init();
 	ctx = xmp_create_context();
 
 	for (i = 1; i < argc; i++) {
@@ -91,7 +90,6 @@ int main(int argc, char **argv)
 	}
 
 	xmp_free_context(ctx);
-	xmp_deinit();
 
 	return 0;
 }
