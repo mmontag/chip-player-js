@@ -380,7 +380,7 @@ void mixer_softmixer(struct context_data *ctx)
     size = s->mode * s->ticksize;
     assert(size <= OUT_MAXLEN);
 
-    if (o->resol > 8) {
+    if (o->outfmt & XMP_FMT_16BIT) {
 	out_su16norm((int16 *)s->buffer, s->buf32b, size, o->amplify, o->outfmt);
     } else {
 	out_su8norm(s->buffer, s->buf32b, size, o->amplify, o->outfmt);
@@ -565,7 +565,7 @@ int mixer_on(struct context_data *ctx)
 
 	s->numvoc = SMIX_NUMVOC;
 	s->mode = o->outfmt & XMP_FMT_MONO ? 1 : 2;
-	s->resol = o->resol > 8 ? 2 : 1;
+	s->resol = o->outfmt & XMP_FMT_16BIT ? 2 : 1;
 
 	return 0;
 

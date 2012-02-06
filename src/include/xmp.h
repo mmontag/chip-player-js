@@ -42,10 +42,10 @@ extern "C" {
 struct xmp_options {
 	int big_endian;			/* Machine byte order */
 	int amplify;			/* Amplification multiplier */
+#define XMP_FMT_16BIT	(1 << 0)	/* Unsigned samples */
 #define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */
 #define XMP_FMT_MONO	(1 << 2)	/* Mono output */
 	int outfmt;			/* Output data format */
-	int resol;			/* Resolution */
 	int freq;			/* Software mixing rate (Hz) */
 #define XMP_CTL_ITPT	(1 << 0)	/* Mixer interpolation */
 #define XMP_CTL_LOOP	(1 << 1)	/* Enable module looping */
