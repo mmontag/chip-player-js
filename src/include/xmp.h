@@ -176,7 +176,6 @@ struct xmp_sample {
 #define XMP_SAMPLE_LOOP_BIDIR	0x0004	/* Bidirectional loop */
 #define XMP_SAMPLE_LOOP_REVERSE	0x0008	/* Backwards loop */
 #define XMP_SAMPLE_LOOP_FULL	0x0010	/* Play entire sample before looping */
-#define XMP_SAMPLE_LOOP_FIRST	0x0020	/* First run control bit */
 #define XMP_SAMPLE_SYNTH	0x1000
 	int flg;		/* Flags */
 	unsigned char *data;

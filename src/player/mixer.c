@@ -281,7 +281,7 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 	lpe = xxs->lpe;
 
 	/* check for Protracker loop */
-	if (xxs->flg & XMP_SAMPLE_LOOP_FULL && xxs->flg & XMP_SAMPLE_LOOP_FIRST) {
+	if (xxs->flg & XMP_SAMPLE_LOOP_FULL && !vi->looped_sample) {
 	    lpe = xxs->len - 1;
 	}
 
@@ -361,8 +361,10 @@ void xmp_smix_softmixer(struct xmp_context *ctx)
 
 		if (xxs->flg & XMP_SAMPLE_LOOP_FULL) {
 	            vi->end = lpe = xxs->lpe;
-	            xxs->flg &= ~XMP_SAMPLE_LOOP_FIRST;
 		}
+
+		vi->looped_sample = 1;
+
 	    } else {
 		step = -step;			/* invert dir */
 		vi->frac += step;
@@ -401,7 +403,7 @@ void smix_voicepos(struct xmp_context *ctx, int voc, int pos, int frac)
 	return;
 
     lpe = xxs->len - 1;
-    if (xxs->flg & XMP_SAMPLE_LOOP && ~xxs->flg & XMP_SAMPLE_LOOP_FIRST)
+    if (xxs->flg & XMP_SAMPLE_LOOP && vi->looped_sample)
 	lpe = lpe > xxs->lpe ? xxs->lpe : lpe;
 
     if (pos >= lpe)			/* Happens often in MED synth */
@@ -427,6 +429,7 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
     vi->smp = smp;
     vi->vol = 0;
     vi->pan = 0;
+    vi->looped_sample = 0;
     
     if (~o->outfmt & XMP_FMT_MONO) {
 	vi->fidx |= FLAG_STEREO;
@@ -457,9 +460,6 @@ void smix_setpatch(struct xmp_context *ctx, int voc, int smp)
 	vi->fxor = xxs->flg & XMP_SAMPLE_LOOP_BIDIR ? FLAG_REVLOOP : 0;
     else
 	vi->fxor = vi->fidx;
-
-    if (xxs->flg & XMP_SAMPLE_LOOP_FULL)
-	xxs->flg |= XMP_SAMPLE_LOOP_FIRST;
 
     smix_voicepos(ctx, voc, 0, 0);
 }

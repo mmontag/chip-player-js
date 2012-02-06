@@ -1,4 +1,3 @@
-
 #ifndef __XMP_VIRTUAL_H
 #define __XMP_VIRTUAL_H
 
@@ -15,13 +14,14 @@
 int	virtch_on		(struct xmp_context *, int);
 void	virtch_off		(struct xmp_context *);
 void	virtch_mute		(struct xmp_context *, int, int);
-int	virtch_setpatch	(struct xmp_context *, int, int, int, int, int, int, int, int, int);
+int	virtch_setpatch		(struct xmp_context *, int, int, int, int,
+				 int, int, int, int, int);
 int	virtch_cvt8bit		(void);
 void	virtch_setsmp		(struct xmp_context *, int, int);
 void	virtch_setnna		(struct xmp_context *, int, int);
-void	virtch_pastnote	(struct xmp_context *, int, int);
+void	virtch_pastnote		(struct xmp_context *, int, int);
 void	virtch_setvol		(struct xmp_context *, int, int);
-void	virtch_voicepos	(struct xmp_context *, int, int);
+void	virtch_voicepos		(struct xmp_context *, int, int);
 void	virtch_setbend		(struct xmp_context *, int, int);
 void	virtch_setpan		(struct xmp_context *, int, int);
 void	virtch_seteffect	(struct xmp_context *, int, int, int);

@@ -53,6 +53,7 @@ struct voice_info {
 	} filter;
 
 	int attack;		/* ramp up anticlick */
+	int looped_sample;	/* set if sample has looped */
 };
 
 int	xmp_smix_on		(struct xmp_context *);

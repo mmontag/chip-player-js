@@ -177,7 +177,7 @@ struct channel_data {
     		int B1;
     		int B2;
 	} filter;
-    
+
 	struct med_channel med;
 
     struct xmp_event *delayed_event;
