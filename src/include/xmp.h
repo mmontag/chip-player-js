@@ -40,25 +40,24 @@ extern "C" {
 
 
 struct xmp_options {
-	int big_endian;		/* Machine byte order */
-	int amplify;		/* Software mixing amplify volume:
-				   0 = none, 1 = x2, 2 = x4, 3 = x8 */
+	int big_endian;			/* Machine byte order */
+	int amplify;			/* Amplification multiplier */
 #define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */
 #define XMP_FMT_MONO	(1 << 2)	/* Mono output */
-	int outfmt;		/* Software mixing output data format */
-	int resol;		/* Software mixing resolution output */
-	int freq;		/* Software mixing rate (Hz) */
+	int outfmt;			/* Output data format */
+	int resol;			/* Resolution */
+	int freq;			/* Software mixing rate (Hz) */
 #define XMP_CTL_ITPT	(1 << 0)	/* Mixer interpolation */
 #define XMP_CTL_LOOP	(1 << 1)	/* Enable module looping */
 #define XMP_CTL_VBLANK	(1 << 2)	/* Use vblank timing only */
 #define XMP_CTL_VIRTUAL	(1 << 3)	/* Enable virtual channels */
 #define XMP_CTL_FILTER	(1 << 4)	/* IT lowpass filter */
-	int flags;		/* internal control flags, set default mode */
-	int start;		/* Set initial order (default = 0) */
-	int mix;		/* Percentage of L/R channel separation */
-	int time;		/* Maximum playing time in seconds */
-	int tempo;		/* Set initial tempo */
-	char *ins_path;		/* External instrument path */
+	int flags;			/* internal control flags */
+	int start;			/* Set initial order (default = 0) */
+	int mix;			/* L/R channel separation percent */
+	int time;			/* Maximum replay time in seconds */
+	int tempo;			/* Set initial tempo */
+	char *ins_path;			/* External instrument path */
 };
 
 struct xmp_fmt_info {
@@ -82,8 +81,8 @@ struct xmp_channel {
 };
 
 struct xmp_pattern {
-	int rows;		/* Number of rows */
-	int index[1];
+	int rows;			/* Number of rows */
+	int index[1];			/* Track index */
 };
 
 struct xmp_event {
@@ -97,8 +96,8 @@ struct xmp_event {
 };
 
 struct xmp_track {
-	int rows;		/* Number of rows */
-	struct xmp_event event[1];
+	int rows;			/* Number of rows */
+	struct xmp_event event[1];	/* Event data */
 };
 
 
@@ -108,26 +107,26 @@ struct xmp_envelope {
 #define XMP_ENVELOPE_LOOP	0x04
 #define XMP_ENVELOPE_FLT	0x08
 #define XMP_ENVELOPE_SLOOP	0x10
-	int flg;		/* Flags */
-	int npt;		/* Number of envelope points */
-	int scl;		/* Envelope scaling */
-	int sus;		/* Sustain start point */
-	int sue;		/* Sustain end point */
-	int lps;		/* Loop start point */
-	int lpe;		/* Loop end point */
+	int flg;			/* Flags */
+	int npt;			/* Number of envelope points */
+	int scl;			/* Envelope scaling */
+	int sus;			/* Sustain start point */
+	int sue;			/* Sustain end point */
+	int lps;			/* Loop start point */
+	int lpe;			/* Loop end point */
 	short data[XMP_MAX_ENV_POINTS * 2];
 };
 
 struct xmp_instrument {
-	char name[32];		/* Instrument name */
-	int vol;		/* Volume if QUIRK_INSVOL enabled */
-	int nsm;		/* Number of samples */
-	int rls;		/* Release (fadeout) */
+	char name[32];			/* Instrument name */
+	int vol;			/* Volume if QUIRK_INSVOL enabled */
+	int nsm;			/* Number of samples */
+	int rls;			/* Release (fadeout) */
 	struct xmp_envelope aei;	/* Amplitude envelope info */
 	struct xmp_envelope pei;	/* Pan envelope info */
 	struct xmp_envelope fei;	/* Frequency envelope info */
-	int vts;		/* Volume table speed -- for MED */
-	int wts;		/* Waveform table speed -- for MED */
+	int vts;			/* Volume table speed -- for MED */
+	int wts;			/* Waveform table speed -- for MED */
 
 	struct {
 		unsigned char ins;	/* Instrument number for each key */
@@ -167,17 +166,17 @@ struct xmp_instrument {
 };
 
 struct xmp_sample {
-	char name[32];		/* Sample name */
-	int len;		/* Sample length */
-	int lps;		/* Loop start */
-	int lpe;		/* Loop end */
+	char name[32];			/* Sample name */
+	int len;			/* Sample length */
+	int lps;			/* Loop start */
+	int lpe;			/* Loop end */
 #define XMP_SAMPLE_16BIT	0x0001
 #define XMP_SAMPLE_LOOP		0x0002
 #define XMP_SAMPLE_LOOP_BIDIR	0x0004	/* Bidirectional loop */
 #define XMP_SAMPLE_LOOP_REVERSE	0x0008	/* Backwards loop */
 #define XMP_SAMPLE_LOOP_FULL	0x0010	/* Play entire sample before looping */
 #define XMP_SAMPLE_SYNTH	0x1000
-	int flg;		/* Flags */
+	int flg;			/* Flags */
 	unsigned char *data;
 };
 
@@ -186,16 +185,16 @@ struct xmp_sample {
 struct xmp_module {
 	char name[XMP_NAMESIZE];	/* module name */
 	char type[XMP_NAMESIZE];	/* module type */
-	int pat;		/* Number of patterns */
-	int trk;		/* Number of tracks */
-	int chn;		/* Tracks per pattern */
-	int ins;		/* Number of instruments */
-	int smp;		/* Number of samples */
-	int tpo;		/* Initial tempo */
-	int bpm;		/* Initial BPM */
-	int len;		/* Module length in patterns */
-	int rst;		/* Restart position */
-	int gvl;		/* Global volume */
+	int pat;			/* Number of patterns */
+	int trk;			/* Number of tracks */
+	int chn;			/* Tracks per pattern */
+	int ins;			/* Number of instruments */
+	int smp;			/* Number of samples */
+	int tpo;			/* Initial tempo */
+	int bpm;			/* Initial BPM */
+	int len;			/* Module length in patterns */
+	int rst;			/* Restart position */
+	int gvl;			/* Global volume */
 
 	struct xmp_pattern **xxp;	/* Patterns */
 	struct xmp_track **xxt;		/* Tracks */
@@ -241,8 +240,6 @@ struct xmp_module_info {
 
 
 typedef char *xmp_context;
-
-extern char *global_filename;	/* FIXME: hack for the wav driver */
 
 void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
