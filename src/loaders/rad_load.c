@@ -51,6 +51,7 @@ static int rad_load(struct context_data *ctx, FILE *f, const int start)
 	uint8 b, r, c;
 	uint8 version;		/* Version in BCD */
 	uint8 flags;		/* bit 7=descr,6=slow-time,4..0=tempo */
+	int pos;
 
 	LOAD_INIT();
 
@@ -77,20 +78,27 @@ static int rad_load(struct context_data *ctx, FILE *f, const int start)
 	}
 
 	/* Read instruments */
-	mod->ins = 0;
-
 	_D(_D_INFO "Read instruments");
 
+	pos = ftell(f);
+
+	mod->ins = 0;
 	while ((b = read8(f)) != 0) {
 		mod->ins = b;
-
 		fread(sid, 1, 11, f);
-		xmp_cvt_hsc2sbi((char *)sid);
-		load_sample(ctx, f, b - 1, SAMPLE_FLAG_ADLIB, NULL,
-								(char *)sid);
 	}
 
+	fseek(f, pos, SEEK_SET);
+	mod->smp = mod->ins;
+
 	INSTRUMENT_INIT();
+
+	while ((b = read8(f)) != 0) {
+		fread(sid, 1, 11, f);
+		xmp_cvt_hsc2sbi((char *)sid);
+		load_sample(ctx, f, b - 1, SAMPLE_FLAG_ADLIB, &mod->xxs[b - 1],
+								(char *)sid);
+	}
 
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);

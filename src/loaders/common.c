@@ -211,7 +211,7 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int load_sample(struct context_data *ctx, FILE * f, int id, int flags,
+int load_sample(struct context_data *ctx, FILE *f, int id, int flags,
 	       struct xmp_sample *xxs, void *buffer)
 {
 	struct mixer_data *s = &ctx->s;
