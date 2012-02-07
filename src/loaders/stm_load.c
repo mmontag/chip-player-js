@@ -213,8 +213,9 @@ static int stm_load(struct context_data *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
-	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	if (mod->xxs[i].len > 1) {
+	    load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
+	}
     }
 
     m->quirk |= QUIRK_VSALL | QUIRKS_ST3;
