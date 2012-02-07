@@ -54,7 +54,7 @@ struct xmp_options {
 };
 
 
-#define XMP_MAX_KEYS		108
+#define XMP_MAX_KEYS		109
 #define XMP_MAX_ENV_POINTS	32	/* max envelope points */
 #define XMP_MAX_MOD_LENGTH	256	/* max number of patterns in module */
 #define XMP_MAX_CHANNELS	64	/* max number of channels in module */
