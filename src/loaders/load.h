@@ -63,55 +63,55 @@ extern int arch_vol_table[];
 } while (0)
 
 #define INSTRUMENT_INIT() do { \
-    m->mod.xxi = calloc(sizeof (struct xmp_instrument), m->mod.ins); \
-    if (m->mod.smp) { m->mod.xxs = calloc (sizeof (struct xmp_sample), m->mod.smp); }\
+    mod->xxi = calloc(sizeof (struct xmp_instrument), mod->ins); \
+    if (mod->smp) { mod->xxs = calloc (sizeof (struct xmp_sample), mod->smp); }\
 } while (0)
 
 #define PATTERN_INIT() do { \
-    m->mod.xxt = calloc(sizeof (struct xmp_track *), m->mod.trk); \
-    m->mod.xxp = calloc(sizeof (struct xmp_pattern *), m->mod.pat + 1); \
+    mod->xxt = calloc(sizeof (struct xmp_track *), mod->trk); \
+    mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat + 1); \
 } while (0)
 
 #define PATTERN_ALLOC(x) do { \
-    m->mod.xxp[x] = calloc(1, sizeof (struct xmp_pattern) + \
-	sizeof (int) * (m->mod.chn - 1)); \
+    mod->xxp[x] = calloc(1, sizeof (struct xmp_pattern) + \
+	sizeof (int) * (mod->chn - 1)); \
 } while (0)
 
 #define TRACK_ALLOC(i) do { \
     int j; \
-    for (j = 0; j < m->mod.chn; j++) { \
-	m->mod.xxp[i]->index[j] = i * m->mod.chn + j; \
-	m->mod.xxt[i * m->mod.chn + j] = calloc (sizeof (struct xmp_track) + \
-	    sizeof (struct xmp_event) * m->mod.xxp[i]->rows, 1); \
-	m->mod.xxt[i * m->mod.chn + j]->rows = m->mod.xxp[i]->rows; \
+    for (j = 0; j < mod->chn; j++) { \
+	mod->xxp[i]->index[j] = i * mod->chn + j; \
+	mod->xxt[i * mod->chn + j] = calloc (sizeof (struct xmp_track) + \
+	    sizeof (struct xmp_event) * mod->xxp[i]->rows, 1); \
+	mod->xxt[i * mod->chn + j]->rows = mod->xxp[i]->rows; \
     } \
 } while (0)
 
 #define INSTRUMENT_DEALLOC_ALL(i) do { \
     int k; \
-    for (k = (i) - 1; k >= 0; k--) free(m->mod.xxi[k]); \
-    free(m->mod.xxfe); \
-    free(m->mod.xxpe); \
-    free(m->mod.xxae); \
-    if (m->mod.smp) free(m->mod.xxs); \
-    free(m->mod.xxi); \
-    free(m->mod.xxim); \
-    free(m->mod.xxi); \
+    for (k = (i) - 1; k >= 0; k--) free(mod->xxi[k]); \
+    free(mod->xxfe); \
+    free(mod->xxpe); \
+    free(mod->xxae); \
+    if (mod->smp) free(mod->xxs); \
+    free(mod->xxi); \
+    free(mod->xxim); \
+    free(mod->xxi); \
 } while (0)
 
 #define PATTERN_DEALLOC_ALL(x) do { \
     int k; \
-    for (k = x; k >= 0; k--) free(m->mod.xxp[k]); \
-    free(m->mod.xxp); \
+    for (k = x; k >= 0; k--) free(mod->xxp[k]); \
+    free(mod->xxp); \
 } while (0)
 
 #define TRACK_DEALLOC_ALL(i) do { \
     int j, k; \
     for (k = i; k >= 0; k--) { \
-	for (j = 0; j < m->mod.chn; j++) \
-	    free(m->mod.xxt[k * m->mod.chn + j]); \
+	for (j = 0; j < mod->chn; j++) \
+	    free(mod->xxt[k * mod->chn + j]); \
     } \
-    free(m->mod.xxt); \
+    free(mod->xxt); \
 } while (0)
 
 #endif
