@@ -316,7 +316,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	key--;
 
 	if (key < XMP_MAX_KEYS) {
-	    xc->key = --key;
+	    xc->key = key;
 	} else {
 	    flg &= ~IS_VALID;
 	}
