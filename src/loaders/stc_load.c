@@ -320,7 +320,7 @@ static int stc_load(struct context_data *ctx, FILE * f, const int start)
 			
 		}
 
-		load_sample(ctx, f, i, SAMPLE_FLAG_SPECTRUM, NULL,
+		load_sample(ctx, f, i, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i],
 								(char *)&ss);
 	}
 	
