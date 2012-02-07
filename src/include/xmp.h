@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#define XMP_NAMESIZE		64
+#define XMP_NAME_SIZE		64
 
 #define XMP_KEY_OFF		0x81
 #define XMP_KEY_CUT		0x82
@@ -41,10 +41,10 @@ extern "C" {
 
 struct xmp_options {
 	int amplify;			/* Amplification multiplier */
-#define XMP_FMT_16BIT	(1 << 0)	/* Unsigned samples */
-#define XMP_FMT_UNS	(1 << 1)	/* Unsigned samples */
-#define XMP_FMT_MONO	(1 << 2)	/* Mono output */
-	int outfmt;			/* Output data format */
+#define XMP_FORMAT_16BIT	(1 << 0)
+#define XMP_FORMAT_UNSIGNED	(1 << 1)
+#define XMP_FORMAT_MONO		(1 << 2)
+	int format;			/* Output data format */
 	int freq;			/* Software mixing rate (Hz) */
 	int start;			/* Set initial order (default = 0) */
 	int mix;			/* L/R channel separation percent */
@@ -90,11 +90,11 @@ struct xmp_track {
 
 
 struct xmp_envelope {
-#define XMP_ENVELOPE_ON		0x01
-#define XMP_ENVELOPE_SUS	0x02
-#define XMP_ENVELOPE_LOOP	0x04
-#define XMP_ENVELOPE_FLT	0x08
-#define XMP_ENVELOPE_SLOOP	0x10
+#define XMP_ENVELOPE_ON		(1 << 0)
+#define XMP_ENVELOPE_SUS	(1 << 1)
+#define XMP_ENVELOPE_LOOP	(1 << 2)
+#define XMP_ENVELOPE_FLT	(1 << 3)
+#define XMP_ENVELOPE_SLOOP	(1 << 4)
 	int flg;			/* Flags */
 	int npt;			/* Number of envelope points */
 	int scl;			/* Envelope scaling */
@@ -158,12 +158,12 @@ struct xmp_sample {
 	int len;			/* Sample length */
 	int lps;			/* Loop start */
 	int lpe;			/* Loop end */
-#define XMP_SAMPLE_16BIT	0x0001
-#define XMP_SAMPLE_LOOP		0x0002
-#define XMP_SAMPLE_LOOP_BIDIR	0x0004	/* Bidirectional loop */
-#define XMP_SAMPLE_LOOP_REVERSE	0x0008	/* Backwards loop */
-#define XMP_SAMPLE_LOOP_FULL	0x0010	/* Play entire sample before looping */
-#define XMP_SAMPLE_SYNTH	0x1000
+#define XMP_SAMPLE_16BIT	(1 << 0)
+#define XMP_SAMPLE_LOOP		(1 << 1)
+#define XMP_SAMPLE_LOOP_BIDIR	(1 << 2)
+#define XMP_SAMPLE_LOOP_REVERSE	(1 << 3)
+#define XMP_SAMPLE_LOOP_FULL	(1 << 4) /* Play entire sample before looping */
+#define XMP_SAMPLE_SYNTH	(1 << 15)
 	int flg;			/* Flags */
 	unsigned char *data;
 };
@@ -171,8 +171,8 @@ struct xmp_sample {
 
 
 struct xmp_module {
-	char name[XMP_NAMESIZE];	/* module name */
-	char type[XMP_NAMESIZE];	/* module type */
+	char name[XMP_NAME_SIZE];	/* module name */
+	char type[XMP_NAME_SIZE];	/* module type */
 	int pat;			/* Number of patterns */
 	int trk;			/* Number of tracks */
 	int chn;			/* Tracks per pattern */

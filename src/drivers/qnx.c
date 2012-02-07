@@ -71,7 +71,7 @@ static int init(struct context_data *ctx)
 		return XMP_ERR_DINIT;
 	}
 
-	if (o->outfmt & XMP_FMT_MONO)
+	if (o->outfmt & XMP_FORMAT_MONO)
 		stereo = 0;
 
 	if (ioctl(fd_audio, SOUND_PCM_WRITE_BITS, &bits) < 0) {

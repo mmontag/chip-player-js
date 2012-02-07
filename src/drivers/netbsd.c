@@ -113,7 +113,7 @@ static int setaudio(struct xmp_options *o)
 	AUDIO_INITINFO(&ainfo);
 
 	ainfo.play.sample_rate = o->freq;
-	ainfo.play.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	ainfo.play.channels = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	ainfo.play.precision = o->resol;
 	/* ainfo.play.precision = AUDIO_ENCODING_ULINEAR; */
 	ainfo.play.encoding = o->resol > 8 ?
@@ -129,7 +129,7 @@ static int setaudio(struct xmp_options *o)
 
 	/* o->resol = 0; */
 	/* o->freq = 8000; */
-	/* o->outfmt |=XMP_FMT_MONO; */
+	/* o->outfmt |=XMP_FORMAT_MONO; */
 	o->freq = 44000;
 	drv_netbsd.description = "NetBSD PCM audio";
 	return 0;

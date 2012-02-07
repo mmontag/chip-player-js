@@ -161,17 +161,17 @@ static int setaudio(struct xmp_options *o)
 	 * Set number of channels; 4 channel output is not currently supported
 	 */
 
-	if (o->outfmt & XMP_FMT_MONO) {
+	if (o->outfmt & XMP_FORMAT_MONO) {
 		if (ALsetchannels(config, AL_MONO) < 0) {
 			if (ALsetchannels(config, AL_STEREO) < 0)
 				return XMP_ERR_DINIT;
-			o->outfmt &= ~XMP_FMT_MONO;
+			o->outfmt &= ~XMP_FORMAT_MONO;
 		}
 	} else {
 		if (ALsetchannels(config, AL_STEREO) < 0) {
 			if (ALsetchannels(config, AL_MONO) < 0)
 				return XMP_ERR_DINIT;
-			o->outfmt |= XMP_FMT_MONO;
+			o->outfmt |= XMP_FORMAT_MONO;
 		}
 	}
 

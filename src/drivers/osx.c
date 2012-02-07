@@ -168,7 +168,7 @@ static int init(struct context_data *ctx)
 	else
 		ad.mFormatFlags &= ~kAudioFormatFlagIsBigEndian;
 
-	ad.mChannelsPerFrame = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	ad.mChannelsPerFrame = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	ad.mBitsPerChannel = o->resol;
 
 	ad.mBytesPerFrame = o->resol / 8 * ad.mChannelsPerFrame;

@@ -113,7 +113,7 @@ static int init(struct context_data *ctx)
 
 	wfe.wFormatTag = WAVE_FORMAT_PCM;
 	wfe.wBitsPerSample = o->resol;
-	wfe.nChannels = o->flags & XMP_FMT_MONO ? 1 : 2;
+	wfe.nChannels = o->flags & XMP_FORMAT_MONO ? 1 : 2;
 	wfe.nSamplesPerSec = o->freq;
 	wfe.nAvgBytesPerSec = wfe.nSamplesPerSec * wfe.nChannels *
 	    wfe.wBitsPerSample / 8;

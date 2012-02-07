@@ -146,7 +146,7 @@ static int setaudio(struct xmp_options *o)
 	AUDIO_INITINFO(&ainfo2);	/* For AMD 7930 if needed */
 
 	ainfo.play.sample_rate = o->freq;
-	ainfo.play.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	ainfo.play.channels = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	ainfo.play.precision = o->resol;
 	ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
 	ainfo2.play.gain = ainfo.play.gain = gain;
@@ -162,7 +162,7 @@ static int setaudio(struct xmp_options *o)
 
 		o->resol = 0;
 		o->freq = 8000;
-		o->outfmt |= XMP_FMT_MONO;
+		o->outfmt |= XMP_FORMAT_MONO;
 		drv_solaris.description = "Solaris AMD7930 PCM audio";
 	} else {
 		drv_solaris.description = "Solaris CS4231 PCM audio";

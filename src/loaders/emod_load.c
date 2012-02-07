@@ -58,7 +58,7 @@ static void get_emic(struct context_data *ctx, int size, FILE *f)
 
     m->quirk |= QUIRK_MODRNG;
 
-    snprintf(mod->type, XMP_NAMESIZE, "Quadra Composer EMOD v%d", ver);
+    snprintf(mod->type, XMP_NAME_SIZE, "Quadra Composer EMOD v%d", ver);
     MODULE_INFO();
 
     INSTRUMENT_INIT();

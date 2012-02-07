@@ -365,7 +365,7 @@ static int dmf_load(struct context_data *ctx, FILE *f, const int start)
 	ver = read8(f);
 	fread(tracker_name, 8, 1, f);
 	tracker_name[8] = 0;
-	snprintf(mod->type, XMP_NAMESIZE, "%s DMF v%d", tracker_name, ver);
+	snprintf(mod->type, XMP_NAME_SIZE, "%s DMF v%d", tracker_name, ver);
 	tracker_name[8] = 0;
 	fread(mod->name, 30, 1, f);
 	fseek(f, 20, SEEK_CUR);

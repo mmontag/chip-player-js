@@ -298,7 +298,7 @@ static int it_load(struct context_data *ctx, FILE *f, const int start)
     fread(&ifh.chpan, 64, 1, f);
     fread(&ifh.chvol, 64, 1, f);
 
-    strncpy(mod->name, (char *)ifh.name, XMP_NAMESIZE);
+    strncpy(mod->name, (char *)ifh.name, XMP_NAME_SIZE);
     mod->len = ifh.ordnum;
     mod->ins = ifh.insnum;
     mod->smp = ifh.smpnum;

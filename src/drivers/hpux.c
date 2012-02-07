@@ -99,11 +99,11 @@ static int setaudio(struct xmp_options *o)
 		return XMP_ERR_DINIT;
 
 	if (ioctl(audio_fd, AUDIO_SET_CHANNELS,
-		  o->outfmt & XMP_FMT_MONO ? 1 : 2) == -1) {
-		o->outfmt ^= XMP_FMT_MONO;
+		  o->outfmt & XMP_FORMAT_MONO ? 1 : 2) == -1) {
+		o->outfmt ^= XMP_FORMAT_MONO;
 
 		if (ioctl(audio_fd, AUDIO_SET_CHANNELS,
-			  o->outfmt & XMP_FMT_MONO ? 1 : 2) == -1)
+			  o->outfmt & XMP_FORMAT_MONO ? 1 : 2) == -1)
 			return XMP_ERR_DINIT;
 	}
 

@@ -457,7 +457,7 @@ skip_test:
 
     mod->trk = mod->chn * mod->pat;
 
-    snprintf(mod->type, XMP_NAMESIZE, "%s %s", tracker, magic);
+    snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
     MODULE_INFO();
 
     for (i = 0; i < mod->ins; i++) {
@@ -506,7 +506,7 @@ skip_test:
 	if (ptsong) {
 	    FILE *s;
 	    char sn[256];
-	    snprintf(sn, XMP_NAMESIZE, "%s%s", pathname, mod->xxi[i].name);
+	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
 	        load_sample(ctx, s, mod->xxi[i].sub[0].sid, flags,

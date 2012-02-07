@@ -297,9 +297,9 @@ static int st_load(struct context_data *ctx, FILE *f, const int start)
 	modtype = "unknown tracker";
 
     if (ust)
-	snprintf(mod->type, XMP_NAMESIZE, "%s", modtype);
+	snprintf(mod->type, XMP_NAME_SIZE, "%s", modtype);
     else
-	snprintf(mod->type, XMP_NAMESIZE, "%s", modtype);
+	snprintf(mod->type, XMP_NAME_SIZE, "%s", modtype);
 
     MODULE_INFO();
 

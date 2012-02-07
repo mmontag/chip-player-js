@@ -54,7 +54,7 @@ static int init(struct context_data *ctx)
 {
 	struct xmp_options *o = &ctx->o;
 	char outfile[256];
-	int nch = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	int nch = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	int bsize = o->freq * nch * o->resol / 4;
 	char *token, **parm;
 	

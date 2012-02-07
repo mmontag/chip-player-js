@@ -47,7 +47,7 @@ static int init(struct context_data *ctx)
 	int error;
 
 	ss.format = PA_SAMPLE_S16NE;
-	ss.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	ss.channels = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	ss.rate = o->freq;
 
 	s = pa_simple_new(NULL,		/* Use the default server */

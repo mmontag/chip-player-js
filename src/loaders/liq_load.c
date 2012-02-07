@@ -212,7 +212,7 @@ static int liq_load(struct context_data *ctx, FILE *f, const int start)
 	if (tracker_name[i])
 	   break;
     }
-    snprintf(mod->type, XMP_NAMESIZE, "%s LIQ %d.%02d",
+    snprintf(mod->type, XMP_NAME_SIZE, "%s LIQ %d.%02d",
 		tracker_name, lh.version >> 8, lh.version & 0x00ff);
 
     if (lh.version > 0) {

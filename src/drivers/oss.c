@@ -116,12 +116,12 @@ static void setaudio(struct xmp_options *o)
 	ioctl(audio_fd, SNDCTL_DSP_SETFMT, &fmt);
 	from_fmt(o, fmt);
 
-	fmt = !(o->outfmt & XMP_FMT_MONO);
+	fmt = !(o->outfmt & XMP_FORMAT_MONO);
 	ioctl(audio_fd, SNDCTL_DSP_STEREO, &fmt);
 	if (fmt)
-		o->outfmt &= ~XMP_FMT_MONO;
+		o->outfmt &= ~XMP_FORMAT_MONO;
 	else
-		o->outfmt |= XMP_FMT_MONO;
+		o->outfmt |= XMP_FORMAT_MONO;
 
 	ioctl(audio_fd, SNDCTL_DSP_SPEED, &o->freq);
 

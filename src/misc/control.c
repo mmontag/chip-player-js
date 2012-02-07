@@ -46,7 +46,7 @@ void *xmp_create_context()
 	o->amplify = DEFAULT_AMPLIFY;
 	o->freq = 44100;
 	o->mix = 70;
-	o->outfmt = XMP_FMT_16BIT;
+	o->format = XMP_FORMAT_16BIT;
 
 	return ctx;
 }

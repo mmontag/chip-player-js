@@ -53,13 +53,13 @@ int test_name(uint8 *s, int n)
 
 void read_title(FILE *f, char *t, int s)
 {
-	uint8 buf[XMP_NAMESIZE];
+	uint8 buf[XMP_NAME_SIZE];
 
 	if (t == NULL)
 		return;
 
-	if (s >= XMP_NAMESIZE)
-		s = XMP_NAMESIZE -1;
+	if (s >= XMP_NAME_SIZE)
+		s = XMP_NAME_SIZE -1;
 
 	memset(t, 0, s + 1);
 
@@ -187,7 +187,7 @@ void set_type(struct module_data *m, char *fmt, ...)
 	va_list ap;
 	va_start(ap, fmt);
 
-	vsnprintf(m->mod.type, XMP_NAMESIZE, fmt, ap);
+	vsnprintf(m->mod.type, XMP_NAME_SIZE, fmt, ap);
 	va_end(ap);
 }
 

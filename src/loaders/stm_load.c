@@ -120,9 +120,9 @@ static int stm_load(struct context_data *ctx, FILE *f, const int start)
     copy_adjust(mod->name, sfh.name, 20);
 
     if (bmod2stm) {
-	snprintf(mod->type, XMP_NAMESIZE, "BMOD2STM STM");
+	snprintf(mod->type, XMP_NAME_SIZE, "BMOD2STM STM");
     } else {
-	snprintf(mod->type, XMP_NAMESIZE, "Scream Tracker %d.%02d STM",
+	snprintf(mod->type, XMP_NAME_SIZE, "Scream Tracker %d.%02d STM",
 						sfh.vermaj, sfh.vermin);
     }
 

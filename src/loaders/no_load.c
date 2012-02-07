@@ -71,7 +71,7 @@ static int no_load(struct context_data *ctx, FILE *f, const int start)
 	nsize = read8(f);
 	for (i = 0; i < nsize; i++) {
 		uint8 x = read8(f);
-		if (i < XMP_NAMESIZE)
+		if (i < XMP_NAME_SIZE)
 			mod->name[i] = x;
 	}
 

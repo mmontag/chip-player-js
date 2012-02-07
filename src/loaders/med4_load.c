@@ -201,7 +201,7 @@ static int med4_load(struct context_data *ctx, FILE *f, const int start)
 	}
 	fseek(f, start + pos, SEEK_SET);
 
-	snprintf(mod->type, XMP_NAMESIZE, "MED %d.%02d MED4", vermaj, vermin);
+	snprintf(mod->type, XMP_NAME_SIZE, "MED %d.%02d MED4", vermaj, vermin);
 
 	m0 = read8(f);
 

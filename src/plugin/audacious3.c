@@ -312,9 +312,9 @@ static gboolean play(InputPlayback *ipb, const gchar *_filename, VFSFile *file, 
 
 	if (xmp_cfg.force_mono == 0) {
 		channelcnt = 2;
-		opt->outfmt &= ~XMP_FMT_MONO;
+		opt->outfmt &= ~XMP_FORMAT_MONO;
 	} else {
-		opt->outfmt |= XMP_FMT_MONO;
+		opt->outfmt |= XMP_FORMAT_MONO;
 	}
 
 	if (xmp_cfg.interpolation == 1)
@@ -330,7 +330,7 @@ static gboolean play(InputPlayback *ipb, const gchar *_filename, VFSFile *file, 
 	opt->mix = xmp_cfg.pan_amplitude;
 
 	fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
-	nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	nch = opt->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	
 	if (!ipb->output->open_audio(fmt, opt->freq, nch)) {
 		goto PLAY_ERROR_1;

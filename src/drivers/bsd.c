@@ -73,7 +73,7 @@ static int setaudio(struct xmp_options *o)
 	AUDIO_INITINFO(&ainfo);
 
 	ainfo.play.sample_rate = o->freq;
-	ainfo.play.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	ainfo.play.channels = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	ainfo.play.precision = o->resol;
 	ainfo.play.encoding = o->resol > 8 ?
 	    AUDIO_ENCODING_SLINEAR : AUDIO_ENCODING_ULINEAR;

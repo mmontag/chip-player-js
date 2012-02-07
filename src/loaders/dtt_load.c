@@ -52,9 +52,9 @@ static int dtt_load(struct context_data *ctx, FILE *f, const int start)
 	strcpy(mod->type, "Desktop Tracker");
 
 	fread(buf, 1, 64, f);
-	strncpy(mod->name, (char *)buf, XMP_NAMESIZE);
+	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);
 	fread(buf, 1, 64, f);
-	/* strncpy(m->author, (char *)buf, XMP_NAMESIZE); */
+	/* strncpy(m->author, (char *)buf, XMP_NAME_SIZE); */
 	
 	flags = read32l(f);
 	mod->chn = read32l(f);

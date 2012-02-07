@@ -467,9 +467,9 @@ int xmp_load_module(xmp_context opaque, char *s)
     split_name(s, &m->dirname, &m->basename);
 
     /* Reset variables */
-    memset(m->mod.name, 0, XMP_NAMESIZE);
-    memset(m->mod.type, 0, XMP_NAMESIZE);
-    /* memset(m->author, 0, XMP_NAMESIZE); */
+    memset(m->mod.name, 0, XMP_NAME_SIZE);
+    memset(m->mod.type, 0, XMP_NAME_SIZE);
+    /* memset(m->author, 0, XMP_NAME_SIZE); */
     m->filename = s;		/* For ALM, SSMT, etc */
     m->size = st.st_size;
     m->rrate = PAL_RATE;
@@ -527,7 +527,7 @@ int xmp_load_module(xmp_context opaque, char *s)
 
     str_adj(m->mod.name);
     if (!*m->mod.name) {
-	strncpy(m->mod.name, m->basename, XMP_NAMESIZE);
+	strncpy(m->mod.name, m->basename, XMP_NAME_SIZE);
     }
 
     m->time = _xmp_scan_module((struct context_data *)ctx);

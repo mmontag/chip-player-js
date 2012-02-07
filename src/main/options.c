@@ -312,7 +312,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    loadonly = 1;
 	    break;
 	case 'm':
-	    opt->outfmt |= XMP_FMT_MONO;
+	    opt->outfmt |= XMP_FORMAT_MONO;
 	    break;
 	case OPT_NOCMD:
 	    nocmd = 1;
@@ -388,7 +388,7 @@ void get_options(int argc, char **argv, struct xmp_options *opt, xmp_context ctx
 	    showtime = 1;
 	    break;
 	case OPT_STEREO:
-	    opt->outfmt &= ~XMP_FMT_MONO;
+	    opt->outfmt &= ~XMP_FORMAT_MONO;
 	    break;
 	case 'T':
 	    opt->tempo = strtoul(optarg, NULL, 0);

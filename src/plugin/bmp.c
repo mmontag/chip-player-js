@@ -382,9 +382,9 @@ static void play_file(char *filename)
 
 	if (xmp_cfg.force_mono == 0) {
 		channelcnt = 2;
-		opt->outfmt &= ~XMP_FMT_MONO;
+		opt->outfmt &= ~XMP_FORMAT_MONO;
 	} else {
-		opt->outfmt |= XMP_FMT_MONO;
+		opt->outfmt |= XMP_FORMAT_MONO;
 	}
 
 	if (xmp_cfg.interpolation == 1)
@@ -400,7 +400,7 @@ static void play_file(char *filename)
 	opt->mix = xmp_cfg.pan_amplitude;
 
 	fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
-	nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	nch = opt->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	
 	if (audio_open)
 	    xmp_ip.output->close_audio();

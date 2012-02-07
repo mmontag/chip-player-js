@@ -84,7 +84,7 @@ static int setaudio(struct xmp_options *o)
 	init.mode = PCM;	/* audio format */
 	init.srate = o->freq;	/* sample rate */
 	init.operation = PLAY;	/* PLAY or RECORD */
-	init.channels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	init.channels = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	init.bits_per_sample = o->resol;	/* bits per sample */
 	init.flags = BIG_ENDIAN | TWOS_COMPLEMENT;
 

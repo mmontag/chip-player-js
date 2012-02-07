@@ -561,9 +561,9 @@ static void play_file(InputPlayback *ipb)
 
 	if (xmp_cfg.force_mono == 0) {
 		channelcnt = 2;
-		opt->outfmt &= ~XMP_FMT_MONO;
+		opt->outfmt &= ~XMP_FORMAT_MONO;
 	} else {
-		opt->outfmt |= XMP_FMT_MONO;
+		opt->outfmt |= XMP_FORMAT_MONO;
 	}
 
 	if (xmp_cfg.interpolation == 1)
@@ -580,7 +580,7 @@ static void play_file(InputPlayback *ipb)
 
 	play_data.ipb = ipb;
 	play_data.fmt = opt->resol == 16 ? FMT_S16_NE : FMT_U8;
-	play_data.nch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	play_data.nch = opt->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	
 	if (audio_open)
 	    ipb->output->close_audio();

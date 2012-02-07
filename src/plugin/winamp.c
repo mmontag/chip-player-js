@@ -379,9 +379,9 @@ static int play_file(char *fn)
 		opt->flags &= ~XMP_CTL_LOOP;
 
 	if (xmp_cfg.force_mono)
-		opt->outfmt |= XMP_FMT_MONO;
+		opt->outfmt |= XMP_FORMAT_MONO;
 	else
-		opt->outfmt &= ~XMP_FMT_MONO;
+		opt->outfmt &= ~XMP_FORMAT_MONO;
 
 	if (xmp_cfg.interpolation)
 		opt->flags |= XMP_CTL_ITPT;
@@ -396,7 +396,7 @@ static int play_file(char *fn)
 	opt->mix = xmp_cfg.pan_amplitude;
 	opt->amplify = xmp_cfg.amplify;
 
-	numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	numch = opt->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 
 	if (audio_open)
 		mod.outMod->Close();
@@ -443,7 +443,7 @@ static int play_file(char *fn)
 static DWORD WINAPI __stdcall play_loop(void *x)
 {
 	int n, dsp;
-	int numch = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	int numch = opt->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	int ssize = opt->resol / 8;
 	int t, todo;
 	char *data;

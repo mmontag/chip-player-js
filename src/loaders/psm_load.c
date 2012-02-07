@@ -51,7 +51,7 @@ static int psm_load(struct context_data *ctx, FILE *f, const int start)
 	read32b(f);
 
 	fread(buf, 1, 60, f);
-	strncpy(mod->name, (char *)buf, XMP_NAMESIZE);
+	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);
 
 	type = read8(f);	/* song type */
 	ver = read8(f);		/* song version */

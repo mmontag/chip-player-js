@@ -145,7 +145,7 @@ static int setaudio(struct xmp_options *o)
 	MixSetupParms.ulBitsPerSample = o->resol;
 	MixSetupParms.ulFormatTag = MCI_WAVE_FORMAT_PCM;
 	MixSetupParms.ulSamplesPerSec = o->freq;
-	MixSetupParms.ulChannels = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	MixSetupParms.ulChannels = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	MixSetupParms.ulFormatMode = MCI_PLAY;
 	MixSetupParms.ulDeviceType = MCI_DEVTYPE_WAVEFORM_AUDIO;
 	MixSetupParms.pmixEvent = OS2_Dart_UpdateBuffers;

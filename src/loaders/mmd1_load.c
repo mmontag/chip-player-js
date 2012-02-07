@@ -222,7 +222,7 @@ static int mmd1_load(struct context_data *ctx, FILE *f, const int start)
 		fseek(f, start + songname_offset, SEEK_SET);
 		_D(_D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
-			if (i >= XMP_NAMESIZE)
+			if (i >= XMP_NAME_SIZE)
 				break;
 			mod->name[i] = read8(f);
 		}

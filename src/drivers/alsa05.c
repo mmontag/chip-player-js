@@ -176,7 +176,7 @@ static int init(struct context_data *ctx)
 	params.format.interleave = 1;
 	params.format.format = to_fmt(o);
 	params.format.rate = o->freq;
-	params.format.voices = (o->outfmt & XMP_FMT_MONO) ? 1 : 2;
+	params.format.voices = (o->outfmt & XMP_FORMAT_MONO) ? 1 : 2;
 
 	if ((rc = snd_pcm_plugin_params(pcm_handle, &params)) < 0) {
 		printf("Unable to set output parameters: %s\n",

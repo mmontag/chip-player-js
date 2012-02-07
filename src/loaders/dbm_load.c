@@ -302,8 +302,8 @@ static int dbm_load(struct context_data *ctx, FILE *f, const int start)
 	iff_register("SMPL", get_smpl);
 	iff_register("VENV", get_venv);
 
-	strncpy(mod->name, name, XMP_NAMESIZE);
-	snprintf(mod->type, XMP_NAMESIZE, "DigiBooster Pro %d.%02x DBM0",
+	strncpy(mod->name, name, XMP_NAME_SIZE);
+	snprintf(mod->type, XMP_NAME_SIZE, "DigiBooster Pro %d.%02x DBM0",
 					version >> 8, version & 0xff);
 	MODULE_INFO();
 

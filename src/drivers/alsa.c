@@ -80,7 +80,7 @@ static int init(struct context_data *ctx)
 		return XMP_ERR_DINIT;
 	}
 
-	channels = (o->outfmt & XMP_FMT_MONO) ? 1 : 2;
+	channels = (o->outfmt & XMP_FORMAT_MONO) ? 1 : 2;
 	rate = o->freq;
 
 	snd_pcm_hw_params_alloca(&hwparams);

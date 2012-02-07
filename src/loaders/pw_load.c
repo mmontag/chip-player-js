@@ -137,8 +137,8 @@ static int pw_load(struct context_data *ctx, FILE *f, const int start)
 
 	mod->trk = mod->chn * mod->pat;
 
-	snprintf(mod->name, XMP_NAMESIZE, "%s", (char *)mh.name);
-	snprintf(mod->type, XMP_NAMESIZE, "%s", fmt->name);
+	snprintf(mod->name, XMP_NAME_SIZE, "%s", (char *)mh.name);
+	snprintf(mod->type, XMP_NAME_SIZE, "%s", fmt->name);
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();

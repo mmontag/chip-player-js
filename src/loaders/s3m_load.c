@@ -333,7 +333,7 @@ static int s3m_load(struct context_data *ctx, FILE *f, const int start)
 	snprintf(tracker_name, 40, "unknown (%04x)", sfh.version);
     }
 
-    snprintf(mod->type, XMP_NAMESIZE, "%s S3M", tracker_name);
+    snprintf(mod->type, XMP_NAME_SIZE, "%s S3M", tracker_name);
 
     MODULE_INFO();
 

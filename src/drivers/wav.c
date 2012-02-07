@@ -132,7 +132,7 @@ static int init(struct context_data *ctx)
 	writeval_32l(DATA(fd), len);
 	write(DATA(fd), "WAVE", 4);
 
-	chan = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	chan = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	sampling_rate = o->freq;
 	bits_per_sample = o->resol;
 	if (bits_per_sample == 8)

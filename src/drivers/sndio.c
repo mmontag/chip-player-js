@@ -60,7 +60,7 @@ init (struct context_data *ctx)
 	 }
 
 	 sio_initpar (&par);
-	 par.pchan = opt->outfmt & XMP_FMT_MONO ? 1 : 2;
+	 par.pchan = opt->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	 par.rate = opt->freq;
 	 par.bits = opt->resol;
 	 par.sig = opt->resol > 8 ? 1 : 0;

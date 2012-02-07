@@ -177,7 +177,7 @@ static int init(struct context_data *ctx)
 	drv_beos.description = desc;
 
 	fmt.frame_rate = o->freq;
-	fmt.channel_count = o->outfmt & XMP_FMT_MONO ? 1 : 2;
+	fmt.channel_count = o->outfmt & XMP_FORMAT_MONO ? 1 : 2;
 	fmt.format = o->resol > 8 ? B_AUDIO_SHORT : B_AUDIO_CHAR;
 	fmt.byte_order = B_HOST_IS_LENDIAN ?
 				B_MEDIA_LITTLE_ENDIAN : B_MEDIA_BIG_ENDIAN;
