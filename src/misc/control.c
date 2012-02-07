@@ -56,16 +56,11 @@ void xmp_free_context(xmp_context ctx)
 	free(ctx);
 }
 
-void xmp_channel_mute(xmp_context opaque, int from, int num, int on)
+void xmp_channel_mute(xmp_context opaque, int num, int on)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 
-	from += num - 1;
-
-	if (num > 0) {
-		while (num--)
-			virtch_mute(ctx, from - num, on);
-	}
+	virtch_mute(ctx, num, on);
 }
 
 int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
@@ -75,15 +70,15 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 	struct module_data *m = &ctx->m;
 
 	switch (cmd) {
-	case XMP_ORD_PREV:
+	case XMP_CTL_ORD_PREV:
 		if (p->pos > 0)
 			p->pos--;
 		return p->pos;
-	case XMP_ORD_NEXT:
+	case XMP_CTL_ORD_NEXT:
 		if (p->pos < m->mod.len)
 			p->pos++;
 		return p->pos;
-	case XMP_ORD_SET:
+	case XMP_CTL_ORD_SET:
 		if (arg < m->mod.len && arg >= 0) {
 			if (p->pos == arg && arg == 0)	/* special case */
 				p->pos = -1;
@@ -91,17 +86,17 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 				p->pos = arg;
 		}
 		return p->pos;
-	case XMP_MOD_STOP:
+	case XMP_CTL_MOD_STOP:
 		p->pos = -2;
 		break;
-	case XMP_MOD_RESTART:
+	case XMP_CTL_MOD_RESTART:
 		p->pos = -1;
 		break;
-	case XMP_GVOL_DEC:
+	case XMP_CTL_GVOL_DEC:
 		if (p->volume > 0)
 			p->volume--;
 		return p->volume;
-	case XMP_GVOL_INC:
+	case XMP_CTL_GVOL_INC:
 		if (p->volume < 64)
 			p->volume++;
 		return p->volume;

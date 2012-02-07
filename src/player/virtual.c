@@ -194,23 +194,24 @@ void virtch_mute(struct context_data *ctx, int chn, int status)
 	return;
 
     if (status < 0)
-	p->cmute_array[chn] = !p->cmute_array[chn];
+	p->channel_mute[chn] = !p->channel_mute[chn];
     else
-	p->cmute_array[chn] = status;
+	p->channel_mute[chn] = status;
 }
 
 
 void virtch_setvol(struct context_data *ctx, int chn, int vol)
 {
     struct player_data *p = &ctx->p;
-    int voc;
+    int voc, root;
 
     voc = p->virt.virt_channel[chn].map;
 
     if ((uint32)chn >= p->virt.virt_channels || (uint32)voc >= p->virt.maxvoc)
 	return;
 
-    if (p->virt.voice_array[voc].root < XMP_MAX_CHANNELS && p->cmute_array[p->virt.voice_array[voc].root])
+    root = p->virt.voice_array[voc].root;
+    if (root < XMP_MAX_CHANNELS && p->channel_mute[root])
 	vol = 0;
 
     mixer_setvol(ctx, voc, vol);

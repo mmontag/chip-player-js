@@ -250,7 +250,7 @@ struct player_data {
 	int scan_num;
 	int bpm;
 
-	int cmute_array[XMP_MAX_CHANNELS];
+	char channel_mute[XMP_MAX_CHANNELS];
 
 	struct virt_control {
 		int num_tracks;		/* Number of tracks */
