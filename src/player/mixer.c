@@ -82,7 +82,7 @@ static void (*mix_fn[])() = {
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
-static void out_su8norm(char *dest, int *src, int num, int amp, int flags)
+static void out_su8norm(char *dest, int *src, int num, int amp)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT + 8 - amp;
@@ -101,7 +101,7 @@ static void out_su8norm(char *dest, int *src, int num, int amp, int flags)
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void out_su16norm(int16 * dest, int *src, int num, int amp, int flags)
+static void out_su16norm(int16 *dest, int *src, int num, int amp)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT - amp;
@@ -381,9 +381,9 @@ void mixer_softmixer(struct context_data *ctx)
     assert(size <= OUT_MAXLEN);
 
     if (o->outfmt & XMP_FMT_16BIT) {
-	out_su16norm((int16 *)s->buffer, s->buf32b, size, o->amplify, o->outfmt);
+	out_su16norm((int16 *)s->buffer, s->buf32b, size, o->amplify);
     } else {
-	out_su8norm(s->buffer, s->buf32b, size, o->amplify, o->outfmt);
+	out_su8norm(s->buffer, s->buf32b, size, o->amplify);
     }
 
     mixer_reset(ctx);
@@ -430,12 +430,14 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
     vi->pan = 0;
     vi->looped_sample = 0;
     
+    vi->fidx = 0;
+
     if (~o->outfmt & XMP_FMT_MONO) {
 	vi->fidx |= FLAG_STEREO;
     }
 
     if (xxs->flg & XMP_SAMPLE_SYNTH) {
-	vi->fidx = FLAG_SYNTH;
+	vi->fidx |= FLAG_SYNTH;
 	m->synth->setpatch(ctx, voc, xxs->data);
 	return;
     }
@@ -443,11 +445,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
     mixer_setvol(ctx, voc, 0);
 
     vi->sptr = xxs->data;
-    vi->fidx = FLAG_ITPT | FLAG_ACTIVE;
-
-    if (~o->outfmt & XMP_FMT_MONO) {
-	vi->fidx |= FLAG_STEREO;
-    }
+    vi->fidx |= FLAG_ITPT | FLAG_ACTIVE;
 
     if (HAS_QUIRK(QUIRK_FILTER)) {
 	vi->fidx |= FLAG_FILTER;
