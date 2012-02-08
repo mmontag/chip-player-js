@@ -251,7 +251,6 @@ static void fix_name(uint8 *s, int l)
 static int it_load(struct context_data *ctx, FILE *f, const int start)
 {
     struct module_data *m = &ctx->m;
-    struct mixer_data *s = &ctx->s;
     struct xmp_module *mod = &m->mod;
     int r, c, i, j, k, pat_len;
     struct xmp_event *event, dummy, lastevent[L_CHANNELS];
@@ -816,8 +815,9 @@ static int it_load(struct context_data *ctx, FILE *f, const int start)
 
 		    /* decompression generates native-endian samples, but
 		     * we want little-endian */
-		    if (s->big_endian)
+		    if (is_big_endian()) {
 			xmp_cvt_sex(mod->xxs[i].len, buf);
+		    }
 		} else {
 		    itsex_decompress8(f, buf, mod->xxs[i].len, 
 					ish.convert & IT_CVT_DIFF);

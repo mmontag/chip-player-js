@@ -23,7 +23,6 @@ xmp_context xmp_create_context()
 	struct context_data *ctx;
 	struct xmp_options *o;
 	static int first = 1;
-	uint16 w;
 
 	if (first) {
 		xmp_init_formats();
@@ -38,9 +37,6 @@ xmp_context xmp_create_context()
 	*ctx->m.mod.name = *ctx->m.mod.type = 0;
 
 	o = &ctx->o;
-
-	w = 0x00ff;
-	ctx->s.big_endian = (*(char *)&w == 0x00);
 
 	/* Set defaults */
 	o->amplify = DEFAULT_AMPLIFY;

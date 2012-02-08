@@ -275,7 +275,6 @@ struct player_data {
 };
 
 struct mixer_data {
-	int big_endian;
 	char* buffer;		/* output buffer */
 	int* buf32b;		/* temp buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
