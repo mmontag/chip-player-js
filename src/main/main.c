@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "xmp.h"
+#include <xmp.h>
 //#include "sound.h"
 
 static void shuffle(int argc, char **argv)
@@ -18,24 +18,17 @@ static void shuffle(int argc, char **argv)
 	}
 }
 
-static void display_data(struct xmp_module_info *mi)
-{
-	printf("%3d/%3d %3d/%3d\r",
-	       mi->order, mi->mod->len, mi->row, mi->num_rows);
-
-	fflush(stdout);
-}
-
 int main(int argc, char **argv)
 {
 	static xmp_context ctx;
-	static struct xmp_module_info mi[2];
-	int current, prev;
+	static struct xmp_module_info mi;
 	int i;
 	int silent = 0;
+	int optind = 1;
 
 	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 's') {
 		silent = 1;
+		optind++;
 	}
 
 #if 0
@@ -47,7 +40,10 @@ int main(int argc, char **argv)
 
 	ctx = xmp_create_context();
 
-	for (i = 1; i < argc; i++) {
+	for (i = optind; i < argc; i++) {
+		printf("\nLoading %s... (%d of %d)\n",
+                	argv[i], i - optind + 1, argc - optind);
+
 		if (xmp_load_module(ctx, argv[i]) < 0) {
 			fprintf(stderr, "%s: error loading %s\n", argv[0],
 				argv[i]);
@@ -58,32 +54,26 @@ int main(int argc, char **argv)
 
 			/* Show module data */
 
-			xmp_player_get_info(ctx, &mi[0]);
-			printf("%s (%s)\n", mi[0].mod->name, mi[0].mod->type);
-			mi[0].order = -1;
-			mi[0].row = -1;
-			current = 0;
+			xmp_player_get_info(ctx, &mi);
+
+			info_mod(&mi);
 
 			/* Play module */
 
 			while (xmp_player_frame(ctx) == 0) {
-				prev = current;
-				current ^= 1;
 
-				xmp_player_get_info(ctx, &mi[current]);
-				if (mi[current].loop_count > 0)
+				xmp_player_get_info(ctx, &mi);
+				if (mi.loop_count > 0)
 					break;
 
+				info_frame(&mi);
 #if 0
 				if (!silent) {
-					sound_play(mi[current].buffer,
-						   mi[current].buffer_size);
+					sound_play(mi.buffer,
+						   mi.buffer_size);
 				}
 #endif
 
-				if (mi[current].row != mi[prev].row) {
-					display_data(&mi[current]);
-				}
 			}
 			xmp_player_end(ctx);
 		}
