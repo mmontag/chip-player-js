@@ -27,6 +27,7 @@ extern "C" {
 #define XMP_CTL_MOD_RESTART	0x04
 #define XMP_CTL_GVOL_INC	0x05
 #define XMP_CTL_GVOL_DEC	0x06
+#define XMP_CTL_PLAYER_SEEK	0x07
 
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_CTL_ORD_NEXT, 0)
@@ -37,6 +38,7 @@ extern "C" {
 #define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_CTL_MOD_RESTART, 0)
 #define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_CTL_GVOL_INC, 0)
 #define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_CTL_GVOL_DEC, 0)
+#define xmp_player_seek(p,x)	xmp_player_ctl((p), XMP_CTL_PLAYER_SEEK, (x))
 
 
 struct xmp_options {
@@ -234,14 +236,13 @@ void *xmp_create_context(void);
 void xmp_free_context(xmp_context);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);
+void xmp_release_module(xmp_context);
 void xmp_channel_mute(xmp_context, int, int);
 int xmp_player_ctl(xmp_context, int, int);
 int xmp_player_start(xmp_context);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);
-void xmp_release_module(xmp_context);
-int xmp_seek_time(xmp_context, int);
 
 #ifdef __cplusplus
 }
