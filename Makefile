@@ -25,7 +25,7 @@ LOBJS = $(OBJS:.o=.lo)
 
 # These are the applications
 #include src/drivers/Makefile
-#include src/main/Makefile
+include src/main/Makefile
 #include src/plugin/Makefile
 #include src/plugin/tunenet/Makefile
 include docs/Makefile
@@ -53,7 +53,7 @@ XCFLAGS = -Isrc/include -DSYSCONFDIR=\"$(SYSCONFDIR)\" -DVERSION=\"$(VERSION)\"
 
 
 #binaries: src/main/xmp $(PLUGINS)
-binaries: src/test/test1 src/test/test2 src/test/test3 src/test/test4
+binaries: src/main/xmp src/test/test1 src/test/test2 src/test/test3 src/test/test4
 
 library: $(LIB)
 

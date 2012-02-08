@@ -1,5 +1,6 @@
 
-MAIN_OBJS	= getopt.o getopt1.o options.o drivers.o main.o
+#MAIN_OBJS	= getopt.o getopt1.o options.o drivers.o main.o
+MAIN_OBJS	= main.o
 MAIN_DFILES	= Makefile $(MAIN_OBJS:.o=.c)
 MAIN_PATH	= src/main
 
@@ -11,8 +12,8 @@ $(MAIN_PATH)/options.o: Makefile
 
 M_OBJS	= $(addprefix $(MAIN_PATH)/,$(MAIN_OBJS))
 
-$(MAIN_PATH)/xmp: $(OBJS) $(M_OBJS) $(D_OBJS)
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(OBJS) $(M_OBJS) $(D_OBJS) $(LIBS)'; \
+$(MAIN_PATH)/xmp: $(M_OBJS) $(LIB)
+	@CMD='$(LD) -o $@ $(LDFLAGS) $(M_OBJS) -lxmp -lm'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
