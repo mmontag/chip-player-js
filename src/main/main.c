@@ -31,12 +31,10 @@ int main(int argc, char **argv)
 		optind++;
 	}
 
-#if 0
 	if (!silent && sound_init(44100, 2) < 0) {
 		fprintf(stderr, "%s: can't initialize sound\n", argv[0]);
 		exit(1);
 	}
-#endif
 
 	ctx = xmp_create_context();
 
@@ -67,12 +65,10 @@ int main(int argc, char **argv)
 					break;
 
 				info_frame(&mi);
-#if 0
 				if (!silent) {
 					sound_play(mi.buffer,
 						   mi.buffer_size);
 				}
-#endif
 
 			}
 			xmp_player_end(ctx);
@@ -84,11 +80,9 @@ int main(int argc, char **argv)
 
 	xmp_free_context(ctx);
 
-#if 0
 	if (!silent) {
 		sound_deinit();
 	}
-#endif
 
 	return 0;
 }
