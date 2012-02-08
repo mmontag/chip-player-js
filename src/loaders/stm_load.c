@@ -215,6 +215,8 @@ static int stm_load(struct context_data *ctx, FILE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len > 1) {
 	    load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
+	} else {
+	    mod->xxi[i].nsm = 0;
 	}
     }
 
