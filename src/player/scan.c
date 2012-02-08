@@ -32,7 +32,6 @@
 
 #define S3M_END		0xff
 #define S3M_SKIP	0xff
-#define TIME		6
 #define MAX_GVL		0x40
 
 
@@ -69,7 +68,7 @@ int _xmp_scan_module(struct context_data *ctx)
     gvl = m->mod.gvl;
     bpm = m->mod.bpm;
 
-    tempo = (tempo = o->tempo ? o->tempo : m->mod.tpo) ? tempo : TIME;
+    tempo = m->mod.tpo;
     base_time = m->rrate;
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>

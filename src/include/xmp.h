@@ -51,7 +51,6 @@ struct xmp_options {
 	int start;			/* Set initial order (default = 0) */
 	int mix;			/* L/R channel separation percent */
 	int time;			/* Maximum replay time in seconds */
-	int tempo;			/* Set initial tempo */
 	char *ins_path;			/* External instrument path */
 };
 
