@@ -232,7 +232,7 @@ struct xmp_module_info {
 
 typedef char *xmp_context;
 
-void *xmp_create_context(void);
+xmp_context xmp_create_context(void);
 void xmp_free_context(xmp_context);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);

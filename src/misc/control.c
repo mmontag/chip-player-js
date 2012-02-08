@@ -18,7 +18,7 @@
 #include "mixer.h"
 
 
-void *xmp_create_context()
+xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
 	struct xmp_options *o;
@@ -48,7 +48,7 @@ void *xmp_create_context()
 	o->mix = 70;
 	o->format = XMP_FORMAT_16BIT;
 
-	return ctx;
+	return (xmp_context)ctx;
 }
 
 void xmp_free_context(xmp_context ctx)
