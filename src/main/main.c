@@ -49,6 +49,7 @@ int main(int argc, char **argv)
 		}
 
 		if (xmp_player_start(ctx) == 0) {
+			int start = 1;
 
 			/* Show module data */
 
@@ -64,11 +65,13 @@ int main(int argc, char **argv)
 				if (mi.loop_count > 0)
 					break;
 
-				info_frame(&mi);
+				info_frame(&mi, start);
 				if (!silent) {
 					sound_play(mi.buffer,
 						   mi.buffer_size);
 				}
+
+				start = 0;
 
 			}
 			xmp_player_end(ctx);

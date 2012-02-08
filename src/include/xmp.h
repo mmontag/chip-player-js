@@ -212,6 +212,8 @@ struct xmp_module_info {
 	int buffer_size;
 	int volume;
 	int loop_count;
+	int virt_channels;
+	int virt_used;
 
 	struct xmp_channel_info {
 		unsigned int period;

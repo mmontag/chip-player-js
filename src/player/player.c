@@ -1070,6 +1070,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->buffer_size = s->ticksize * s->mode * s->resol;
 	info->volume = p->volume;
 	info->loop_count = p->loop_count;
+	info->virt_channels = p->virt.virt_channels;
+	info->virt_used = p->virt.virt_used;
 
 	for (i = 0; i < chn; i++) {
 		struct channel_data *c = &p->xc_data[i];
