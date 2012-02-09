@@ -558,7 +558,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    for (j = 0; j < XMP_MAX_KEYS; j++)
 		inst_map[j] = -1;
 
-	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
+	    for (k = j = 0; j < 108 && j < XMP_MAX_KEYS; j++) {
 		c = i2h.keys[25 + j * 2] - 1;
 		if (c < 0) {
 		    mod->xxi[i].map[j].ins = 0xff;	/* No sample */
