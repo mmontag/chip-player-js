@@ -1,7 +1,6 @@
 #ifndef __IFF_H
 #define __IFF_H
 
-#include <stdio.h>
 #include "list.h"
 
 #define IFF_NOBUFFER 0x0001
@@ -16,23 +15,24 @@
 typedef void *iff_handle;
 
 struct iff_header {
-    char form[4];	/* FORM */
-    int len;		/* File length */
-    char id[4];		/* IFF type identifier */
+	char form[4];		/* FORM */
+	int len;		/* File length */
+	char id[4];		/* IFF type identifier */
 };
 
 struct iff_info {
-    char id[5];
-    void (*loader)(struct module_data *, int, FILE *);
-    struct list_head list;
+	char id[5];
+	void (*loader) (struct module_data *, int, FILE *);
+	struct list_head list;
 };
 
 iff_handle iff_new(void);
-void iff_chunk (iff_handle, struct module_data *, FILE *);
-void iff_register (iff_handle, char *, void(*loader)(struct module_data *, int, FILE *));
-void iff_id_size (iff_handle, int);
-void iff_set_quirk (iff_handle, int);
-void iff_release (iff_handle);
-int iff_process (iff_handle, struct module_data *, char *, long, FILE *);
+void iff_chunk(iff_handle, struct module_data *, FILE *);
+void iff_register(iff_handle, char *,
+		  void (*loader) (struct module_data *, int, FILE *));
+void iff_id_size(iff_handle, int);
+void iff_set_quirk(iff_handle, int);
+void iff_release(iff_handle);
+int iff_process(iff_handle, struct module_data *, char *, long, FILE *);
 
 #endif /* __IFF_H */
