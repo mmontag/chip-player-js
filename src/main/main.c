@@ -1,9 +1,28 @@
 /* A simple frontend for xmp */
 
+#define HAVE_TERMIOS_H
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <xmp.h>
 //#include "sound.h"
+#include "terminal.h"
+
+
+static void cleanup()
+{
+	signal(SIGTERM, SIG_DFL);
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+	signal(SIGFPE, SIG_DFL);
+	signal(SIGSEGV, SIG_DFL);
+
+	sound_deinit();
+	reset_tty();
+	exit(EXIT_FAILURE);
+}
+
 
 static void shuffle(int argc, char **argv)
 {
@@ -33,8 +52,16 @@ int main(int argc, char **argv)
 
 	if (!silent && sound_init(44100, 2) < 0) {
 		fprintf(stderr, "%s: can't initialize sound\n", argv[0]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
+
+	signal(SIGTERM, cleanup);
+	signal(SIGINT, cleanup);
+	signal(SIGFPE, cleanup);
+	signal(SIGSEGV, cleanup);
+	signal(SIGQUIT, cleanup);
+
+	set_tty();
 
 	ctx = xmp_create_context();
 
@@ -83,9 +110,11 @@ int main(int argc, char **argv)
 
 	xmp_free_context(ctx);
 
+	reset_tty();
+
 	if (!silent) {
 		sound_deinit();
 	}
 
-	return 0;
+	exit(EXIT_SUCCESS);
 }
