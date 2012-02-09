@@ -221,7 +221,7 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 	mod->xxs[i].lpe = read32l(f);
 
 	mod->xxs[i].flg = 0;
-	has_unsigned_sample = 1;
+	has_unsigned_sample = 0;
 	if (flags & 0x04)
 		mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
 	if (flags & 0x08)
