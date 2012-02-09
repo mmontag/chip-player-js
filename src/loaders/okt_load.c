@@ -272,6 +272,7 @@ static void get_sbod(struct module_data *m, int size, FILE *f)
 static int okt_load(struct module_data *m, FILE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
+    iff_handle handle;
 
     LOAD_INIT();
 
@@ -279,15 +280,19 @@ static int okt_load(struct module_data *m, FILE *f, const int start)
 
     pattern = sample = 0;
 
+    handle = iff_new();
+    if (handle == NULL)
+	return -1;
+
     /* IFF chunk IDs */
-    iff_register("CMOD", get_cmod);
-    iff_register("SAMP", get_samp);
-    iff_register("SPEE", get_spee);
-    iff_register("SLEN", get_slen);
-    iff_register("PLEN", get_plen);
-    iff_register("PATT", get_patt);
-    iff_register("PBOD", get_pbod);
-    iff_register("SBOD", get_sbod);
+    iff_register(handle, "CMOD", get_cmod);
+    iff_register(handle, "SAMP", get_samp);
+    iff_register(handle, "SPEE", get_spee);
+    iff_register(handle, "SLEN", get_slen);
+    iff_register(handle, "PLEN", get_plen);
+    iff_register(handle, "PATT", get_patt);
+    iff_register(handle, "PBOD", get_pbod);
+    iff_register(handle, "SBOD", get_sbod);
 
     strcpy (mod->type, "Oktalyzer");
 
@@ -295,9 +300,9 @@ static int okt_load(struct module_data *m, FILE *f, const int start)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(m, f);
+	iff_chunk(handle, m, f);
 
-    iff_release();
+    iff_release(handle);
 
     return 0;
 }

@@ -216,24 +216,29 @@ static void get_dait(struct module_data *m, int size, FILE *f)
 
 static int dt_load(struct module_data *m, FILE *f, const int start)
 {
+	iff_handle handle;
 
 	LOAD_INIT();
 
 	pflag = sflag = 0;
 	
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
+
 	/* IFF chunk IDs */
-	iff_register("D.T.", get_d_t_);
-	iff_register("S.Q.", get_s_q_);
-	iff_register("PATT", get_patt);
-	iff_register("INST", get_inst);
-	iff_register("DAPT", get_dapt);
-	iff_register("DAIT", get_dait);
+	iff_register(handle, "D.T.", get_d_t_);
+	iff_register(handle, "S.Q.", get_s_q_);
+	iff_register(handle, "PATT", get_patt);
+	iff_register(handle, "INST", get_inst);
+	iff_register(handle, "DAPT", get_dapt);
+	iff_register(handle, "DAIT", get_dait);
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	return 0;
 }

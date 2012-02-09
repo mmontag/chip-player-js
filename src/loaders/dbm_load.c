@@ -273,6 +273,7 @@ static void get_venv(struct module_data *m, int size, FILE *f)
 static int dbm_load(struct module_data *m, FILE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
+	iff_handle handle;
 	char name[44];
 	uint16 version;
 	int i;
@@ -287,13 +288,17 @@ static int dbm_load(struct module_data *m, FILE *f, const int start)
 	fseek(f, 10, SEEK_CUR);
 	fread(name, 1, 44, f);
 
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
+
 	/* IFF chunk IDs */
-	iff_register("INFO", get_info);
-	iff_register("SONG", get_song);
-	iff_register("INST", get_inst);
-	iff_register("PATT", get_patt);
-	iff_register("SMPL", get_smpl);
-	iff_register("VENV", get_venv);
+	iff_register(handle, "INFO", get_info);
+	iff_register(handle, "SONG", get_song);
+	iff_register(handle, "INST", get_inst);
+	iff_register(handle, "PATT", get_patt);
+	iff_register(handle, "SMPL", get_smpl);
+	iff_register(handle, "VENV", get_venv);
 
 	strncpy(mod->name, name, XMP_NAME_SIZE);
 	snprintf(mod->type, XMP_NAME_SIZE, "DigiBooster Pro %d.%02x DBM0",
@@ -302,9 +307,9 @@ static int dbm_load(struct module_data *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = 0x80;

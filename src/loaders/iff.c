@@ -15,84 +15,101 @@
 
 #include "load.h"
 
-static LIST_HEAD(iff_list);
+struct iff_data {
+	struct list_head iff_list;
+	int id_size;
+	int flags;
+};
 
-static int __id_size;
-static int __flags;
-
-void iff_chunk(struct module_data *m, FILE *f)
+iff_handle iff_new()
 {
+	struct iff_data *data = malloc(sizeof (struct iff_data));
+	if (data == NULL)
+		return NULL;
+
+	INIT_LIST_HEAD(&data->iff_list);
+	data->id_size = 4;
+	data->flags = 0;
+
+	return (iff_handle)data; 
+}
+
+void iff_chunk(iff_handle opaque, struct module_data *m, FILE *f)
+{
+    struct iff_data *data = (struct iff_data *)opaque;
     long size;
     char id[17] = "";
 
-    if (fread(id, 1, __id_size, f) != __id_size)
+    if (fread(id, 1, data->id_size, f) != data->id_size)
 	return;
 
-    if (__flags & IFF_SKIP_EMBEDDED) {
+    if (data->flags & IFF_SKIP_EMBEDDED) {
 	/* embedded RIFF hack */
 	if (!strncmp(id, "RIFF", 4)) {
 	    read32b(f);
 	    read32b(f);
-	    fread(id, 1, __id_size, f);	/* read first chunk ID instead */
+	    fread(id, 1, data->id_size, f); /* read first chunk ID instead */
         }
     }
 
-    size = (__flags & IFF_LITTLE_ENDIAN) ? read32l(f) : read32b(f);
+    size = (data->flags & IFF_LITTLE_ENDIAN) ? read32l(f) : read32b(f);
 
-    if (__flags & IFF_CHUNK_ALIGN2)
+    if (data->flags & IFF_CHUNK_ALIGN2)
 	size = (size + 1) & ~1;
 
-    if (__flags & IFF_CHUNK_ALIGN4)
+    if (data->flags & IFF_CHUNK_ALIGN4)
 	size = (size + 3) & ~3;
 
-    if (__flags & IFF_FULL_CHUNK_SIZE)
-	size -= __id_size + 4;
+    if (data->flags & IFF_FULL_CHUNK_SIZE)
+	size -= data->id_size + 4;
 
-    iff_process(m, id, size, f);
+    iff_process(opaque, m, id, size, f);
 }
 
 
-void iff_register(char *id, void (*loader)(struct module_data *, int, FILE *))
+void iff_register(iff_handle opaque, char *id, void (*loader)(struct module_data *, int, FILE *))
 {
+    struct iff_data *data = (struct iff_data *)opaque;
     struct iff_info *f;
-
-    __id_size = 4;
-    __flags = 0;
 
     f = malloc(sizeof (struct iff_info));
     strncpy(f->id, id, 5);
     f->loader = loader;
 
-    list_add_tail(&f->list, &iff_list);
+    list_add_tail(&f->list, &data->iff_list);
 }
 
 
-void iff_release()
+void iff_release(iff_handle opaque)
 {
+    struct iff_data *data = (struct iff_data *)opaque;
     struct list_head *tmp;
     struct iff_info *i;
 
     /* can't use list_for_each because we free the node before incrementing */
-    for (tmp = (&iff_list)->next; tmp != (&iff_list); ) {
+    for (tmp = (&data->iff_list)->next; tmp != (&data->iff_list); ) {
 	i = list_entry(tmp, struct iff_info, list);
 	list_del(&i->list);
 	tmp = tmp->next;
 	free(i);
     }
+
+    free(data);
 }
 
 
-int iff_process(struct module_data *m, char *id, long size, FILE *f)
+int iff_process(iff_handle opaque, struct module_data *m, char *id, long size, FILE *f)
 {
+    struct iff_data *data = (struct iff_data *)opaque;
     struct list_head *tmp;
     struct iff_info *i;
     int pos;
 
     pos = ftell(f);
 
-    list_for_each(tmp, &iff_list) {
+    list_for_each(tmp, &data->iff_list) {
 	i = list_entry(tmp, struct iff_info, list);
-	if (id && !strncmp(id, i->id, __id_size)) {
+	if (id && !strncmp(id, i->id, data->id_size)) {
 	    i->loader(m, size, f);
 	    break;
 	}
@@ -106,13 +123,17 @@ int iff_process(struct module_data *m, char *id, long size, FILE *f)
 
 /* Functions to tune IFF mutations */
 
-void iff_idsize (int n)
+void iff_id_size(iff_handle opaque, int n)
 {
-    __id_size = n;
+    struct iff_data *data = (struct iff_data *)opaque;
+
+    data->id_size = n;
 }
 
-void iff_setflag (int i)
+void iff_set_quirk(iff_handle opaque, int i)
 {
-    __flags |= i;
+    struct iff_data *data = (struct iff_data *)opaque;
+
+    data->flags |= i;
 }
 

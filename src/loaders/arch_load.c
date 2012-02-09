@@ -347,6 +347,7 @@ static void get_samp(struct module_data *m, int size, FILE *f)
 static int arch_load(struct module_data *m, FILE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
+	iff_handle handle;
 	int i;
 
 	LOAD_INIT();
@@ -356,26 +357,30 @@ static int arch_load(struct module_data *m, FILE *f, const int start)
 
 	pflag = sflag = 0;
 
-	/* IFF chunk IDs */
-	iff_register("TINF", get_tinf);
-	iff_register("MVOX", get_mvox);
-	iff_register("STER", get_ster);
-	iff_register("MNAM", get_mnam);
-	iff_register("ANAM", get_anam);
-	iff_register("MLEN", get_mlen);
-	iff_register("PNUM", get_pnum);
-	iff_register("PLEN", get_plen);
-	iff_register("SEQU", get_sequ);
-	iff_register("PATT", get_patt);
-	iff_register("SAMP", get_samp);
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
 
-	iff_setflag(IFF_LITTLE_ENDIAN);
+	/* IFF chunk IDs */
+	iff_register(handle, "TINF", get_tinf);
+	iff_register(handle, "MVOX", get_mvox);
+	iff_register(handle, "STER", get_ster);
+	iff_register(handle, "MNAM", get_mnam);
+	iff_register(handle, "ANAM", get_anam);
+	iff_register(handle, "MLEN", get_mlen);
+	iff_register(handle, "PNUM", get_pnum);
+	iff_register(handle, "PLEN", get_plen);
+	iff_register(handle, "SEQU", get_sequ);
+	iff_register(handle, "PATT", get_patt);
+	iff_register(handle, "SAMP", get_samp);
+
+	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;

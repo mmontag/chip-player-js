@@ -350,6 +350,7 @@ static void get_smpd(struct module_data *m, int size, FILE *f)
 static int dmf_load(struct module_data *m, FILE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
+	iff_handle handle;
 	uint8 date[3];
 	char tracker_name[10];
 
@@ -370,20 +371,24 @@ static int dmf_load(struct module_data *m, FILE *f, const int start)
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", date[0],
 						date[1], 1900 + date[2]);
 	
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
+
 	/* IFF chunk IDs */
-	iff_register("SEQU", get_sequ);
-	iff_register("PATT", get_patt);
-	iff_register("SMPI", get_smpi);
-	iff_register("SMPD", get_smpd);
-	iff_setflag(IFF_LITTLE_ENDIAN);
+	iff_register(handle, "SEQU", get_sequ);
+	iff_register(handle, "PATT", get_patt);
+	iff_register(handle, "SMPI", get_smpi);
+	iff_register(handle, "SMPD", get_smpd);
+	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
 	m->volbase = 0xff;
 
-	iff_release();
+	iff_release(handle);
 
 	return 0;
 }

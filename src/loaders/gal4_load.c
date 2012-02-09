@@ -322,6 +322,7 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 static int gal4_load(struct module_data *m, FILE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
+	iff_handle handle;
 	int i, offset;
 
 	LOAD_INIT();
@@ -334,18 +335,23 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 
 	mod->smp = mod->ins = 0;
 
-	iff_register("MAIN", get_main);
-	iff_register("ORDR", get_ordr);
-	iff_register("PATT", get_patt_cnt);
-	iff_register("INST", get_inst_cnt);
-	iff_setflag(IFF_LITTLE_ENDIAN);
-	iff_setflag(IFF_CHUNK_TRUNC4);
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
+
+	/* IFF chunk IDs */
+	iff_register(handle, "MAIN", get_main);
+	iff_register(handle, "ORDR", get_ordr);
+	iff_register(handle, "PATT", get_patt_cnt);
+	iff_register(handle, "INST", get_inst_cnt);
+	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	mod->trk = mod->pat * mod->chn;
 
@@ -359,16 +365,21 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 	fseek(f, start + offset, SEEK_SET);
 	snum = 0;
 
-	iff_register("PATT", get_patt);
-	iff_register("INST", get_inst);
-	iff_setflag(IFF_LITTLE_ENDIAN);
-	iff_setflag(IFF_CHUNK_TRUNC4);
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
+
+	/* IFF chunk IDs */
+	iff_register(handle, "PATT", get_patt);
+	iff_register(handle, "INST", get_inst);
+	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
 	while (!feof (f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = 0x80;

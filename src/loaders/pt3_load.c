@@ -94,6 +94,7 @@ static void get_ptdt(struct module_data *m, int size, FILE *f)
 
 static int pt3_load(struct module_data *m, FILE *f, const int start)
 {
+	iff_handle handle;
 	char buf[20];
 
 	LOAD_INIT();
@@ -108,18 +109,22 @@ static int pt3_load(struct module_data *m, FILE *f, const int start)
 	fread(buf, 1, 10, f);
 	set_type(m, "%-6.6s IFFMODL", buf + 4);
 
-	/* IFF chunk IDs */
-	iff_register("INFO", get_info);
-	iff_register("CMNT", get_cmnt);
-	iff_register("PTDT", get_ptdt);
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
 
-	iff_setflag(IFF_FULL_CHUNK_SIZE);
+	/* IFF chunk IDs */
+	iff_register(handle, "INFO", get_info);
+	iff_register(handle, "CMNT", get_cmnt);
+	iff_register(handle, "PTDT", get_ptdt);
+
+	iff_set_quirk(handle, IFF_FULL_CHUNK_SIZE);
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	return 0;
 }

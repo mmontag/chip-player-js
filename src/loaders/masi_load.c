@@ -390,6 +390,7 @@ static void get_song_2(struct module_data *m, int size, FILE *f)
 static int masi_load(struct module_data *m, FILE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
+	iff_handle handle;
 	int offset;
 	int i, j;
 
@@ -406,19 +407,23 @@ static int masi_load(struct module_data *m, FILE *f, const int start)
 	cur_ins = 0;
 	offset = ftell(f);
 
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
+
 	/* IFF chunk IDs */
-	iff_register("TITL", get_titl);
-	iff_register("SDFT", get_sdft);
-	iff_register("SONG", get_song);
-	iff_register("DSMP", get_dsmp_cnt);
-	iff_register("PBOD", get_pbod_cnt);
-	iff_setflag(IFF_LITTLE_ENDIAN);
+	iff_register(handle, "TITL", get_titl);
+	iff_register(handle, "SDFT", get_sdft);
+	iff_register(handle, "SONG", get_song);
+	iff_register(handle, "DSMP", get_dsmp_cnt);
+	iff_register(handle, "PBOD", get_pbod_cnt);
+	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	mod->trk = mod->pat * mod->chn;
 	pnam = malloc(mod->pat * 8);		/* pattern names */
@@ -438,16 +443,21 @@ static int masi_load(struct module_data *m, FILE *f, const int start)
 
 	mod->len = 0;
 
-	iff_register("SONG", get_song_2);
-	iff_register("DSMP", get_dsmp);
-	iff_register("PBOD", get_pbod);
-	iff_setflag(IFF_LITTLE_ENDIAN);
+	handle = iff_new();
+	if (handle == NULL)
+		return -1;
+
+	/* IFF chunk IDs */
+	iff_register(handle, "SONG", get_song_2);
+	iff_register(handle, "DSMP", get_dsmp);
+	iff_register(handle, "PBOD", get_pbod);
+	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
 	while (!feof (f))
-		iff_chunk(m, f);
+		iff_chunk(handle, m, f);
 
-	iff_release();
+	iff_release(handle);
 
 	for (i = 0; i < mod->len; i++) {
 		for (j = 0; j < mod->pat; j++) {

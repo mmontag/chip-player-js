@@ -167,6 +167,7 @@ static void get_8smp(struct module_data *m, int size, FILE *f)
 
 static int emod_load(struct module_data *m, FILE *f, const int start)
 {
+    iff_handle handle;
 
     LOAD_INIT();
 
@@ -174,16 +175,20 @@ static int emod_load(struct module_data *m, FILE *f, const int start)
     read32b(f);
     read32b(f);		/* EMOD */
 
+    handle = iff_new();
+    if (handle == NULL)
+	return -1;
+
     /* IFF chunk IDs */
-    iff_register("EMIC", get_emic);
-    iff_register("PATT", get_patt);
-    iff_register("8SMP", get_8smp);
+    iff_register(handle, "EMIC", get_emic);
+    iff_register(handle, "PATT", get_patt);
+    iff_register(handle, "8SMP", get_8smp);
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(m, f);
+	iff_chunk(handle, m, f);
 
-    iff_release();
+    iff_release(handle);
     free(reorder);
 
     return 0;

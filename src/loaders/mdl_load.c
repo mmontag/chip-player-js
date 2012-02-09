@@ -737,6 +737,7 @@ static void get_chunk_fe(struct module_data *m, int size, FILE *f)
 static int mdl_load(struct module_data *m, FILE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
+    iff_handle handle;
     int i, j, k, l;
     char buf[8];
 
@@ -746,29 +747,33 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
     read32b(f);
     fread(buf, 1, 1, f);
 
+    handle = iff_new();
+    if (handle == NULL)
+	return -1;
+
     /* IFFoid chunk IDs */
-    iff_register ("IN", get_chunk_in);	/* Module info */
-    iff_register ("TR", get_chunk_tr);	/* Tracks */
-    iff_register ("SA", get_chunk_sa);	/* Sampled data */
-    iff_register ("VE", get_chunk_ve);	/* Volume envelopes */
-    iff_register ("PE", get_chunk_pe);	/* Pan envelopes */
-    iff_register ("FE", get_chunk_fe);	/* Pitch envelopes */
+    iff_register (handle, "IN", get_chunk_in);	/* Module info */
+    iff_register (handle, "TR", get_chunk_tr);	/* Tracks */
+    iff_register (handle, "SA", get_chunk_sa);	/* Sampled data */
+    iff_register (handle, "VE", get_chunk_ve);	/* Volume envelopes */
+    iff_register (handle, "PE", get_chunk_pe);	/* Pan envelopes */
+    iff_register (handle, "FE", get_chunk_fe);	/* Pitch envelopes */
 
     if (MSN(*buf)) {
-	iff_register ("II", get_chunk_ii);	/* Instruments */
-	iff_register ("PA", get_chunk_pa);	/* Patterns */
-	iff_register ("IS", get_chunk_is);	/* Sample info */
+	iff_register (handle, "II", get_chunk_ii);	/* Instruments */
+	iff_register (handle, "PA", get_chunk_pa);	/* Patterns */
+	iff_register (handle, "IS", get_chunk_is);	/* Sample info */
     } else {
-	iff_register ("PA", get_chunk_p0);	/* Old 0.0 patterns */
-	iff_register ("IS", get_chunk_i0);	/* Old 0.0 Sample info */
+	iff_register (handle, "PA", get_chunk_p0);	/* Old 0.0 patterns */
+	iff_register (handle, "IS", get_chunk_i0);	/* Old 0.0 Sample info */
     }
 
     /* MDL uses a degenerated IFF-style file format with 16 bit IDs and
      * little endian 32 bit chunk size. There's only one chunk per data
      * type i.e. one huge chunk for all the sampled instruments.
      */
-    iff_idsize(2);
-    iff_setflag(IFF_LITTLE_ENDIAN);
+    iff_id_size(handle, 2);
+    iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
     set_type(m, "Digitrakker MDL %d.%d", MSN(*buf), LSN(*buf));
 
@@ -789,9 +794,9 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 
     /* Load IFFoid chunks */
     while (!feof(f))
-	iff_chunk(m, f);
+	iff_chunk(handle, m, f);
 
-    iff_release();
+    iff_release(handle);
 
     /* Re-index instruments & samples */
 
