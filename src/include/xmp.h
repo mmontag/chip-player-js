@@ -52,9 +52,9 @@ extern "C" {
 struct xmp_channel {
 	int pan;
 	int vol;
-#define XMP_CHANNEL_SYNTH	0x01
-#define XMP_CHANNEL_FX    	0x02
-#define XMP_CHANNEL_MUTE  	0x04
+#define XMP_CHANNEL_SYNTH	(1 << 0)  /* Channel is synthesized */
+#define XMP_CHANNEL_FX    	(1 << 1)  /* Channel has effects attached */
+#define XMP_CHANNEL_MUTE  	(1 << 2)  /* Channel is muted */
 	int flg;
 };
 
@@ -80,11 +80,11 @@ struct xmp_track {
 
 
 struct xmp_envelope {
-#define XMP_ENVELOPE_ON		(1 << 0)
-#define XMP_ENVELOPE_SUS	(1 << 1)
-#define XMP_ENVELOPE_LOOP	(1 << 2)
-#define XMP_ENVELOPE_FLT	(1 << 3)
-#define XMP_ENVELOPE_SLOOP	(1 << 4)
+#define XMP_ENVELOPE_ON		(1 << 0)  /* Envelope is enabled */
+#define XMP_ENVELOPE_SUS	(1 << 1)  /* Envelope has sustain point */
+#define XMP_ENVELOPE_LOOP	(1 << 2)  /* Envelope has loop */
+#define XMP_ENVELOPE_FLT	(1 << 3)  /* Envelope is used for filter */
+#define XMP_ENVELOPE_SLOOP	(1 << 4)  /* Envelope has sustain loop */
 	int flg;			/* Flags */
 	int npt;			/* Number of envelope points */
 	int scl;			/* Envelope scaling */
@@ -148,14 +148,14 @@ struct xmp_sample {
 	int len;			/* Sample length */
 	int lps;			/* Loop start */
 	int lpe;			/* Loop end */
-#define XMP_SAMPLE_16BIT	(1 << 0)
-#define XMP_SAMPLE_LOOP		(1 << 1)
-#define XMP_SAMPLE_LOOP_BIDIR	(1 << 2)
-#define XMP_SAMPLE_LOOP_REVERSE	(1 << 3)
-#define XMP_SAMPLE_LOOP_FULL	(1 << 4) /* Play entire sample before looping */
-#define XMP_SAMPLE_SYNTH	(1 << 15)
+#define XMP_SAMPLE_16BIT	(1 << 0)  /* 16bit sample */
+#define XMP_SAMPLE_LOOP		(1 << 1)  /* Sample is looped */
+#define XMP_SAMPLE_LOOP_BIDIR	(1 << 2)  /* Bidirectional sample loop */
+#define XMP_SAMPLE_LOOP_REVERSE	(1 << 3)  /* Backwards sample loop */
+#define XMP_SAMPLE_LOOP_FULL	(1 << 4)  /* Play full sample before looping */
+#define XMP_SAMPLE_SYNTH	(1 << 15) /* Data contains synth patch */
 	int flg;			/* Flags */
-	unsigned char *data;
+	unsigned char *data;		/* Sample data */
 };
 
 
