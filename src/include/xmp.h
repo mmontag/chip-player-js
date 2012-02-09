@@ -43,7 +43,7 @@ extern "C" {
 
 struct xmp_options {
 	int amplify;			/* Amplification multiplier */
-#define XMP_FORMAT_16BIT	(1 << 0)
+#define XMP_FORMAT_8BIT		(1 << 0)
 #define XMP_FORMAT_UNSIGNED	(1 << 1)
 #define XMP_FORMAT_MONO		(1 << 2)
 	int format;			/* Output data format */

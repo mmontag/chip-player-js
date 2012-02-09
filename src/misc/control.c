@@ -42,7 +42,7 @@ xmp_context xmp_create_context()
 	o->amplify = DEFAULT_AMPLIFY;
 	o->freq = 44100;
 	o->mix = 70;
-	o->format = XMP_FORMAT_16BIT;
+	o->format = 0;
 
 	return (xmp_context)ctx;
 }
