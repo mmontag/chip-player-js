@@ -53,8 +53,7 @@ struct xmp_channel {
 	int pan;
 	int vol;
 #define XMP_CHANNEL_SYNTH	(1 << 0)  /* Channel is synthesized */
-#define XMP_CHANNEL_FX    	(1 << 1)  /* Channel has effects attached */
-#define XMP_CHANNEL_MUTE  	(1 << 2)  /* Channel is muted */
+#define XMP_CHANNEL_MUTE  	(1 << 1)  /* Channel is muted */
 	int flg;
 };
 

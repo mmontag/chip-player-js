@@ -219,8 +219,8 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 	/* FIXME */
 	mod->xxc[i].cho = ih.chn[i].chorus;
 	mod->xxc[i].rvb = ih.chn[i].reverb;
-#endif
 	mod->xxc[i].flg |= XMP_CHANNEL_FX;
+#endif
     }
     mod->trk = mod->pat * mod->chn;
  
