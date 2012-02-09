@@ -383,7 +383,6 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 			exp_smp.decay = read8(f);
 			exp_smp.suppress_midi_off = read8(f);
 			exp_smp.finetune = read8(f);
-
 		}
 
 		fseek(f, pos, SEEK_SET);
@@ -425,13 +424,14 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 						XMP_SAMPLE_LOOP : 0;
 
 			_D(_D_INFO "  %05x %05x %05x %02x %+3d %+1d",
-				       mod->xxs[smp_idx].len, mod->xxs[smp_idx].lps,
-				       mod->xxs[smp_idx].lpe, mod->xxi[i].sub[0].vol,
+				       mod->xxs[smp_idx].len,
+				       mod->xxs[smp_idx].lps,
+				       mod->xxs[smp_idx].lpe,
+				       mod->xxi[i].sub[0].vol,
 				       mod->xxi[i].sub[0].xpo,
 				       mod->xxi[i].sub[0].fin >> 4);
 
-			load_sample(f, smp_idx, 0,
-					&mod->xxs[smp_idx], NULL);
+			load_sample(f, smp_idx, 0, &mod->xxs[smp_idx], NULL);
 
 			smp_idx++;
 
@@ -494,7 +494,6 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 				load_sample(f, smp_idx,
 					0, &mod->xxs[smp_idx], NULL);
 
-
 				smp_idx++;
 			}
 
@@ -538,8 +537,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 				mod->xxi[i].sub[0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
-		load_sample(f, smp_idx, 0,
-				  &mod->xxs[smp_idx], NULL);
+		load_sample(f, smp_idx, 0, &mod->xxs[smp_idx], NULL);
 
 		smp_idx++;
 	}
