@@ -253,7 +253,7 @@ void virtch_setsmp(struct context_data *ctx, int chn, int smp)
 {
     struct player_data *p = &ctx->p;
     struct mixer_voice *vi;
-    int voc;
+    int voc, pos, frac;
 
     voc = p->virt.virt_channel[chn].map;
 
@@ -264,8 +264,11 @@ void virtch_setsmp(struct context_data *ctx, int chn, int smp)
     if (vi->smp == smp)
 	return;
 
+    pos = vi->pos;
+    frac = vi->frac;
+
     mixer_setpatch(ctx, voc, smp);
-    mixer_voicepos(ctx, voc, vi->pos, vi->frac);
+    mixer_voicepos(ctx, voc, pos, frac);	/* Restore old position */
 }
 
 
