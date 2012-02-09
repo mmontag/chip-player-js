@@ -49,7 +49,6 @@ int _xmp_scan_module(struct context_data *ctx)
     struct xmp_event* event;
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
 
     if (m->mod.len == 0)
 	return 0;
@@ -85,7 +84,7 @@ int _xmp_scan_module(struct context_data *ctx)
      * was: ord2 = ord = -1;
      */
     ord2 = -1;
-    ord = ctx->o.start - 1;
+    ord = ctx->p.start - 1;
 
     gvol_slide = break_row = cnt_row = alltmp = clock_rst = clock = 0;
     skip_fetch = 0;
@@ -123,7 +122,7 @@ int _xmp_scan_module(struct context_data *ctx)
 	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
 
 	if (!m->xxo_info[ord].start_row && ord) {
-	    if (ord == o->start) {
+	    if (ord == p->start) {
 		if (medbpm)
 	            clock_rst = clock + 132 * alltmp / 5 / bpm;
 		else
@@ -318,7 +317,7 @@ int _xmp_scan_module(struct context_data *ctx)
     row = break_row;
 
 end_module:
-    p->scan_num = o->start > ord ? 0: tab_cnt[ord][row];
+    p->scan_num = p->start > ord ? 0: tab_cnt[ord][row];
     p->scan_row = row;
     p->scan_ord = ord;
 

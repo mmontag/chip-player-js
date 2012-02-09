@@ -490,7 +490,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     uint16 vol_envelope;
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
+    struct mixer_data *s = &ctx->s;
     int linear_bend;
 
     xc = &p->xc_data[chn];
@@ -774,8 +774,8 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     med_arp = get_med_arp(m, xc);
 
     /* Adjust pitch and pan, then play the note */
-    finalpan = o->format & XMP_FORMAT_MONO ?
-	0 : (finalpan - 0x80) * o->mix / 100;
+    finalpan = s->format & XMP_FORMAT_MONO ?
+	0 : (finalpan - 0x80) * s->mix / 100;
 
     linear_bend += get_stepper(&xc->arpeggio) + med_arp;
     xc->pitchbend = linear_bend;
@@ -798,14 +798,13 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 }
 
-int xmp_player_start(xmp_context opaque)
+int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
-	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
 	int ret;
 
@@ -813,13 +812,19 @@ int xmp_player_start(xmp_context opaque)
 
 	p->gvol_slide = 0;
 	p->volume = m->volbase;
-	p->pos = p->ord = o->start;
+	p->pos = p->ord = p->start = start;
 	p->frame = 0;
 	p->row = 0;
 	p->time = 0;
 	p->playing_time = 0;
 	p->loop_count = 0;
-	s->pbase = SMIX_C4NOTE * m->c4rate / o->freq;
+	s->freq = freq;
+	s->format = format;
+	s->amplify = DEFAULT_AMPLIFY;
+	s->mix = DEFAULT_MIX;
+	s->pbase = SMIX_C4NOTE * m->c4rate / s->freq;
+
+	m->time = _xmp_scan_module((struct context_data *)ctx);
 
 	if (mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
@@ -838,7 +843,6 @@ int xmp_player_start(xmp_context opaque)
 	p->volume = m->xxo_info[p->ord].gvl;
 	p->bpm = m->xxo_info[p->ord].bpm;
 	p->tempo = m->xxo_info[p->ord].tempo;
-
 	p->tick_time = m->rrate / p->bpm;
 	f->jumpline = m->xxo_info[p->ord].start_row;
 	f->end_point = p->scan_num;
@@ -858,7 +862,7 @@ int xmp_player_start(xmp_context opaque)
 	if (p->xc_data == NULL)
 		goto err1;
 
-	if (m->synth->init(ctx, o->freq) < 0)
+	if (m->synth->init(ctx, s->freq) < 0)
 		goto err2;
 
 	m->synth->reset(ctx);
@@ -881,7 +885,6 @@ int xmp_player_frame(xmp_context opaque)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
-	struct xmp_options *o = &ctx->o;
 	struct flow_control *f = &p->flow;
 	int i;
 
@@ -936,9 +939,6 @@ int xmp_player_frame(xmp_context opaque)
 	/* play_frame */
 	for (i = 0; i < p->virt.virt_channels; i++)
 		play_channel(ctx, i, p->frame);
-
-	if (o->time && (o->time < p->playing_time))	/* expired time */
-		return -1;
 
 	if (HAS_QUIRK(QUIRK_MEDBPM)) {
 		double delta =  m->rrate * 1000 * 33 / (100 * p->bpm * 125);
@@ -1071,7 +1071,15 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->total_time = m->time;
 	info->current_time = p->time;
 	info->buffer = s->buffer;
-	info->buffer_size = s->ticksize * s->mode * s->resol;
+
+	info->buffer_size = s->ticksize;
+	if (~s->format & XMP_FORMAT_MONO) {
+		info->buffer_size *= 2;
+	}
+	if (~s->format & XMP_FORMAT_8BIT) {
+		info->buffer_size *= 2;
+	}
+
 	info->volume = p->volume;
 	info->loop_count = p->loop_count;
 	info->virt_channels = p->virt.virt_channels;

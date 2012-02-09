@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s: error loading %s\n", argv[0], argv[1]);
 		exit(1);
 	}
-	xmp_player_start(ctx1);
+	xmp_player_start(ctx1, 0, 44100, 0);
 	xmp_player_get_info(ctx1, &mi1);
 	printf("1: %s (%s)\n", mi1.mod->name, mi1.mod->type);
 
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s: error loading %s\n", argv[0], argv[2]);
 		exit(1);
 	}
-	xmp_player_start(ctx2);
+	xmp_player_start(ctx2, 0, 44100, 0);
 	xmp_player_get_info(ctx2, &mi2);
 	printf("2: %s (%s)\n", mi2.mod->name, mi2.mod->type);
 

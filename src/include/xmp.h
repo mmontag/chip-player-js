@@ -40,20 +40,9 @@ extern "C" {
 #define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_CTL_GVOL_DEC, 0)
 #define xmp_player_seek(p,x)	xmp_player_ctl((p), XMP_CTL_PLAYER_SEEK, (x))
 
-
-struct xmp_options {
-	int amplify;			/* Amplification multiplier */
 #define XMP_FORMAT_8BIT		(1 << 0)
 #define XMP_FORMAT_UNSIGNED	(1 << 1)
 #define XMP_FORMAT_MONO		(1 << 2)
-	int format;			/* Output data format */
-	int freq;			/* Software mixing rate (Hz) */
-	int start;			/* Set initial order (default = 0) */
-	int mix;			/* L/R channel separation percent */
-	int time;			/* Maximum replay time in seconds */
-	char *instrument_path;		/* External instrument path */
-};
-
 
 #define XMP_MAX_KEYS		109
 #define XMP_MAX_ENV_POINTS	32	/* max envelope points */
@@ -241,7 +230,7 @@ int xmp_test_module(xmp_context, char *, char *);
 void xmp_release_module(xmp_context);
 void xmp_channel_mute(xmp_context, int, int);
 int xmp_player_ctl(xmp_context, int, int);
-int xmp_player_start(xmp_context);
+int xmp_player_start(xmp_context, int, int, int);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);

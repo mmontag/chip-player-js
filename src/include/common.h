@@ -61,6 +61,7 @@ typedef signed long long int64;
 /* [Amiga] CPU clock = 1.6 * PCCF = 7.0937892 MHz */
 
 #define DEFAULT_AMPLIFY	1
+#define DEFAULT_MIX	70
 
 /* Global flags */
 #define PATTERN_BREAK	0x0001 
@@ -219,6 +220,7 @@ struct module_data {
 struct player_data {
 	double time;
 	double playing_time;
+	int start;
 	int ord;
 	int pos;
 	int row;
@@ -277,11 +279,13 @@ struct player_data {
 };
 
 struct mixer_data {
+	int freq;		/* sampling rate */
+	int format;		/* sample format */
+	int amplify;		/* amplification multiplier */
+	int mix;		/* percentage of channel separation */
 	char* buffer;		/* output buffer */
 	int* buf32b;		/* temp buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
-	int mode;		/* mode = 0:OFF, 1:MONO, 2:STEREO */
-	int resol;		/* resolution output 1:8bit, 2:16bit */
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
@@ -289,7 +293,6 @@ struct mixer_data {
 };
 
 struct context_data {
-	struct xmp_options o;
 	struct player_data p;
 	struct mixer_data s;
 	struct module_data m;

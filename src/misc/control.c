@@ -21,7 +21,6 @@
 xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
-	struct xmp_options *o;
 	static int first = 1;
 
 	if (first) {
@@ -33,16 +32,6 @@ xmp_context xmp_create_context()
 
 	if (ctx == NULL)
 		return NULL;
-
-	*ctx->m.mod.name = *ctx->m.mod.type = 0;
-
-	o = &ctx->o;
-
-	/* Set defaults */
-	o->amplify = DEFAULT_AMPLIFY;
-	o->freq = 44100;
-	o->mix = 70;
-	o->format = 0;
 
 	return (xmp_context)ctx;
 }

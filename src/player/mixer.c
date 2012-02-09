@@ -125,14 +125,19 @@ void mixer_reset(struct context_data *ctx)
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
     struct mixer_data *s = &ctx->s;
-    struct xmp_options *o = &ctx->o;
+    int bytelen;
 
     s->ticksize = m->quirk & QUIRK_MEDBPM ?
-	o->freq * m->rrate * 33 / p->bpm / 12500 :
-    	o->freq * m->rrate / p->bpm / 100;
+	s->freq * m->rrate * 33 / p->bpm / 12500 :
+    	s->freq * m->rrate / p->bpm / 100;
 
     s->dtright = s->dtleft = 0;
-    memset(s->buf32b, 0, s->ticksize * s->mode * sizeof (int));
+
+    bytelen = s->ticksize * sizeof (int);
+    if (~s->format & XMP_FORMAT_MONO) {
+	bytelen *= 2;
+    }
+    memset(s->buf32b, 0, bytelen);
 }
 
 
@@ -229,7 +234,6 @@ void mixer_softmixer(struct context_data *ctx)
     struct player_data *p = &ctx->p;
     struct mixer_data *s = &ctx->s;
     struct module_data *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
     struct xmp_sample *xxs;
     struct mixer_voice *vi;
     int samples, size, lps, lpe;
@@ -310,8 +314,12 @@ void mixer_softmixer(struct context_data *ctx)
 
 	    if (vi->vol) {
 		int idx;
-		int mix_size = s->mode * samples;
+		int mix_size = samples;
 		int mixer = vi->fidx & FIDX_FLAGMASK;
+
+		if (~s->format & XMP_FORMAT_MONO) {
+		    mix_size *= 2;
+		}
 
 		/* Hipolito's anticlick routine */
 		idx = mix_size;
@@ -326,7 +334,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 		/* Call the output handler */
 		mix_fn[mixer](vi, buf_pos, samples, vol_l, vol_r, step);
-		buf_pos += s->mode * samples;
+		buf_pos += mix_size;
 
 		/* Hipolito's anticlick routine */
 		idx = 0;
@@ -377,13 +385,16 @@ void mixer_softmixer(struct context_data *ctx)
 
     /* Render final frame */
 
-    size = s->mode * s->ticksize;
+    size = s->ticksize;
+    if (~s->format & XMP_FORMAT_MONO) {
+	size *= 2;
+    }
     assert(size <= OUT_MAXLEN);
 
-    if (o->format & XMP_FORMAT_8BIT) {
-	out_su8norm(s->buffer, s->buf32b, size, o->amplify);
+    if (s->format & XMP_FORMAT_8BIT) {
+	out_su8norm(s->buffer, s->buf32b, size, s->amplify);
     } else {
-	out_su16norm((int16 *)s->buffer, s->buf32b, size, o->amplify);
+	out_su16norm((int16 *)s->buffer, s->buf32b, size, s->amplify);
     }
 
     mixer_reset(ctx);
@@ -421,7 +432,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 {
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
+    struct mixer_data *s = &ctx->s;
     struct mixer_voice *vi = &p->virt.voice_array[voc];
     struct xmp_sample *xxs = &m->mod.xxs[smp];
 
@@ -432,7 +443,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
     
     vi->fidx = 0;
 
-    if (~o->format & XMP_FORMAT_MONO) {
+    if (~s->format & XMP_FORMAT_MONO) {
 	vi->fidx |= FLAG_STEREO;
     }
 
@@ -554,7 +565,6 @@ int mixer_numvoices(struct context_data *ctx, int num)
 int mixer_on(struct context_data *ctx)
 {
 	struct mixer_data *s = &ctx->s;
-	struct xmp_options *o = &ctx->o;
 
 	s->buffer = calloc(SMIX_RESMAX, OUT_MAXLEN);
 	if (s->buffer == NULL)
@@ -565,8 +575,10 @@ int mixer_on(struct context_data *ctx)
 		goto err1;
 
 	s->numvoc = SMIX_NUMVOC;
-	s->mode = o->format & XMP_FORMAT_MONO ? 1 : 2;
-	s->resol = o->format & XMP_FORMAT_8BIT ? 1 : 2;
+#if 0
+	s->mode = s->format & XMP_FORMAT_MONO ? 1 : 2;
+	s->resol = s->format & XMP_FORMAT_8BIT ? 1 : 2;
+#endif
 
 	return 0;
 

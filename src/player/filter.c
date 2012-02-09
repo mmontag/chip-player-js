@@ -96,10 +96,10 @@ int dmpfac[] = {
  */
 void filter_setup(struct context_data *ctx, struct channel_data *xc, int cutoff)
 {
-	struct xmp_options *o = &ctx->o;
+	struct mixer_data *s = &ctx->s;
 	/* [0-255] => [100Hz-8000Hz] */
 	float fc = (float)filter_cutoff[cutoff];
-	float fs = (float)o->freq;
+	float fs = (float)s->freq;
 	float fg, fb0, fb1;
 	float d2, d, e;
 

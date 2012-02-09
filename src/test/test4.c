@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		if (xmp_player_start(ctx) == 0) {
+		if (xmp_player_start(ctx, 0, 44100, 0) == 0) {
 			xmp_player_get_info(ctx, &mi);
 			display_info(&mi);
 			xmp_player_end(ctx);

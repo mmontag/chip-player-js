@@ -445,7 +445,6 @@ int xmp_load_module(xmp_context opaque, char *s)
     int i, t, val;
     struct stat st;
     struct module_data *m = &ctx->m;
-    struct xmp_options *o = &ctx->o;
 
     _D(_D_WARN "s = %s", s);
 
@@ -480,7 +479,6 @@ int xmp_load_module(xmp_context opaque, char *s)
     /* Reset control for next module */
     m->quirk = 0;
     m->comment = NULL;
-    m->instrument_path = o->instrument_path;
 
     /* Set defaults */
     m->mod.tpo = 6;
@@ -532,9 +530,7 @@ int xmp_load_module(xmp_context opaque, char *s)
 	strncpy(m->mod.name, m->basename, XMP_NAME_SIZE);
     }
 
-    m->time = _xmp_scan_module((struct context_data *)ctx);
-
-    return m->time;
+    return 0;
 
 err:
     fclose(f);
