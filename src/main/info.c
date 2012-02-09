@@ -18,8 +18,8 @@ void info_mod(struct xmp_module_info *mi)
 	}
 	printf("]\n");
 
-	printf("Estimated time : %dmin%ds\n", (mi->time + 500) / 60000,
-					((mi->time + 500) / 1000) % 60);
+	printf("Estimated time : %dmin%ds\n", (mi->total_time + 500) / 60000,
+					((mi->total_time + 500) / 1000) % 60);
 }
 
 
@@ -27,6 +27,7 @@ void info_frame(struct xmp_module_info *mi, int reset)
 {
 	static int ord = -1, tpo = -1, bpm = -1;
 	static int max_channels = -1;
+	int time;
 
 	if (reset) {
 		ord = -1;
@@ -38,6 +39,8 @@ void info_frame(struct xmp_module_info *mi, int reset)
 
 	if (mi->frame != 0)
 		return;
+
+	time = mi->current_time / 100;
 
 	if (mi->order != ord || mi->bpm != bpm || mi->tempo != tpo) {
 	        printf("\rTempo[%02X] BPM[%02X] Pos[%02X/%02X] "
@@ -53,8 +56,8 @@ void info_frame(struct xmp_module_info *mi, int reset)
 	printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
 	       "%02X/%02X] Chn[%02X/%02X] %3d:%02d:%02d.%d",
 		mi->row, mi->num_rows - 1, mi->virt_used, max_channels,
-		(int)(mi->time / (60 * 600)), (int)((mi->time / 600) % 60),
-		(int)((mi->time / 10) % 60), (int)(mi->time % 10));
+		(int)(time / (60 * 600)), (int)((time / 600) % 60),
+		(int)((time / 10) % 60), (int)(time % 10));
 
 	fflush(stdout);
 }

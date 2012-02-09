@@ -216,6 +216,7 @@ struct module_data {
 
 struct player_data {
 	double time;
+	double playing_time;
 	int ord;
 	int pos;
 	int row;
@@ -241,7 +242,6 @@ struct player_data {
 	
 		int num_rows;
 		int end_point;
-		double playing_time;
 	} flow;
 
 	struct channel_data *xc_data;

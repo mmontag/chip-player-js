@@ -817,6 +817,7 @@ int xmp_player_start(xmp_context opaque)
 	p->frame = 0;
 	p->row = 0;
 	p->time = 0;
+	p->playing_time = 0;
 	p->loop_count = 0;
 	s->pbase = SMIX_C4NOTE * m->c4rate / o->freq;
 
@@ -840,7 +841,6 @@ int xmp_player_start(xmp_context opaque)
 
 	p->tick_time = m->rrate / p->bpm;
 	f->jumpline = m->xxo_info[p->ord].start_row;
-	f->playing_time = 0;
 	f->end_point = p->scan_num;
 
 	if ((ret = virtch_on(ctx, mod->chn)) != 0)
@@ -904,7 +904,7 @@ int xmp_player_frame(xmp_context opaque)
 		p->tick_time = m->rrate / p->bpm;
 		p->volume = m->xxo_info[p->ord].gvl;
 		f->jump = p->ord;
-		p->time = (double)m->xxo_info[p->ord].time / 1000;
+		p->time = (double)m->xxo_info[p->ord].time;
 		f->jumpline = m->xxo_info[p->ord].start_row;
 		p->row = -1;
 		f->pbreak = 1;
@@ -937,15 +937,17 @@ int xmp_player_frame(xmp_context opaque)
 	for (i = 0; i < p->virt.virt_channels; i++)
 		play_channel(ctx, i, p->frame);
 
-	if (o->time && (o->time < f->playing_time))	/* expired time */
+	if (o->time && (o->time < p->playing_time))	/* expired time */
 		return -1;
 
 	if (HAS_QUIRK(QUIRK_MEDBPM)) {
-		f->playing_time += m->rrate * 33 / (100 * p->bpm * 125);
-		p->time += m->rrate * 33 / (100 * p->bpm * 125);
+		double delta =  m->rrate * 1000 * 33 / (100 * p->bpm * 125);
+		p->playing_time += delta;
+		p->time += delta;
 	} else {
-		f->playing_time += m->rrate / (100 * p->bpm);
-		p->time += m->rrate / (100 * p->bpm);
+		double delta = m->rrate * 1000 / (100 * p->bpm);
+		p->playing_time += delta;
+		p->time += delta;
 	}
 
 	p->frame++;
@@ -1002,7 +1004,7 @@ next_order:
     				goto next_order;
 			}
 
-			p->time = (double)m->xxo_info[p->ord].time / 1000;
+			p->time = (double)m->xxo_info[p->ord].time;
 
 			f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
 			if (f->jumpline >= f->num_rows)
@@ -1066,6 +1068,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->frame = p->frame;
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
+	info->total_time = m->time;
+	info->current_time = p->time;
 	info->buffer = s->buffer;
 	info->buffer_size = s->ticksize * s->mode * s->resol;
 	info->volume = p->volume;

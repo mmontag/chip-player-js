@@ -207,7 +207,8 @@ struct xmp_module_info {
 	int frame;
 	int tempo;
 	int bpm;
-	int time;
+	int total_time;
+	int current_time;
 	void *buffer;
 	int buffer_size;
 	int volume;

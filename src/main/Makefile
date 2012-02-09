@@ -17,6 +17,8 @@ $(MAIN_PATH)/xmp: $(M_OBJS) $(LIB)
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
+$(M_OBJS): $(LIB)
+
 install-xmp: $(MAIN_PATH)/xmp
 	@echo Installing xmp in $(DESTDIR)$(BINDIR)
 	@[ -d $(DESTDIR)$(BINDIR) ] || mkdir -p $(DESTDIR)$(BINDIR)
