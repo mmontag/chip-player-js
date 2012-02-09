@@ -287,12 +287,6 @@ static int st_load(struct context_data *ctx, FILE *f, const int start)
 	modtype = "Soundtracker IX";	/* or MasterSoundtracker? */
     else if ((fxused & ~0xf807) == 0)
 	modtype = "D.O.C Soundtracker 2.0";
-    else if ((fxused & ~0xfc07) == 0)
-	modtype = "Soundtracker 2.3/2.4";
-    else if ((fxused & ~0xfc3f) == 0)
-	modtype = "Noisetracker 1.0/1.2";
-    else if ((fxused & ~0xfcbf) == 0)
-	modtype = "Noisetracker 2.0";
     else
 	modtype = "unknown tracker";
 

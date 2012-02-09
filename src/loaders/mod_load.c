@@ -407,8 +407,7 @@ static int mod_load(struct context_data *ctx, FILE *f, const int start)
 	        }
 
 		if (mod->chn == 4) {
-	    	    tracker = "Maybe Protracker";
-		    ptkloop = 0;
+	    	    tracker = "Protracker";
 		} else if (mod->chn == 6 || mod->chn == 8) {
 	    	    tracker = "FastTracker 1.01?";
 		    ptkloop = 0;
