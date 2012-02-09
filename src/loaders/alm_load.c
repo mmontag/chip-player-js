@@ -22,7 +22,7 @@
 
 
 static int alm_test (FILE *, char *, const int);
-static int alm_load (struct context_data *, FILE *, const int);
+static int alm_load (struct module_data *, FILE *, const int);
 
 struct format_loader alm_loader = {
     "ALM",
@@ -58,9 +58,8 @@ struct alm_file_header {
 
 #define NAME_SIZE 255
 
-static int alm_load(struct context_data *ctx, FILE *f, const int start)
+static int alm_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     struct alm_file_header afh;
@@ -157,7 +156,7 @@ static int alm_load(struct context_data *ctx, FILE *f, const int start)
 		filename, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	load_sample(ctx, s, mod->xxi[i].sub[0].sid,
+	load_sample(s, mod->xxi[i].sub[0].sid,
 	    SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 	fclose(s);

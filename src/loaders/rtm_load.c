@@ -12,7 +12,7 @@
 
 
 static int rtm_test(FILE *, char *, const int);
-static int rtm_load (struct context_data *, FILE *, const int);
+static int rtm_load (struct module_data *, FILE *, const int);
 
 struct format_loader rtm_loader = {
 	"RTM",
@@ -63,9 +63,8 @@ static int read_object_header(FILE *f, struct ObjectHeader *h, char *id)
 }
 
 
-static int rtm_load(struct context_data *ctx, FILE *f, const int start)
+static int rtm_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, r;
 	struct xmp_event *event;
@@ -365,7 +364,7 @@ static int rtm_load(struct context_data *ctx, FILE *f, const int start)
 				mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].fin,
 				mod->xxi[i].sub[j].pan, mod->xxi[i].sub[j].xpo);
 
-			load_sample(ctx, f, mod->xxi[i].sub[j].sid,
+			load_sample(f, mod->xxi[i].sub[j].sid,
 				SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 		}
 	}

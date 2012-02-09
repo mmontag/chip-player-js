@@ -13,7 +13,7 @@
 
 
 static int psm_test (FILE *, char *, const int);
-static int psm_load (struct context_data *, FILE *, const int);
+static int psm_load (struct module_data *, FILE *, const int);
 
 struct format_loader psm_loader = {
 	"PSM",
@@ -35,9 +35,8 @@ static int psm_test(FILE *f, char *t, const int start)
 
 /* FIXME: effects translation */
 
-static int psm_load(struct context_data *ctx, FILE *f, const int start)
+static int psm_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int c, r, i;
 	struct xmp_event *event;
@@ -186,7 +185,7 @@ static int psm_load(struct context_data *ctx, FILE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+		load_sample(f, mod->xxi[i].sub[0].sid,
 			SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

@@ -26,7 +26,7 @@
 
 
 static int mtp_test (FILE *, char *, const int);
-static int mtp_load (struct context_data *, FILE *, const int);
+static int mtp_load (struct module_data *, FILE *, const int);
 
 struct format_loader mtp_loader = {
 	"MTP",
@@ -56,9 +56,8 @@ static int mtp_test(FILE *f, char *t, const int start)
 #define NAME_SIZE 255
 
 
-static int mtp_load(struct context_data *ctx, FILE *f, const int start)
+static int mtp_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j, k;
@@ -193,7 +192,7 @@ static int mtp_load(struct context_data *ctx, FILE *f, const int start)
 		strncat(filename, (char *)mod->xxi[i].name, NAME_SIZE);
 
 		if ((s = fopen(filename, "rb")) != NULL) {
-			asif_load(ctx, s, i);
+			asif_load(m, s, i);
 			fclose(s);
 		}
 

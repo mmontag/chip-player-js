@@ -20,7 +20,7 @@ static LIST_HEAD(iff_list);
 static int __id_size;
 static int __flags;
 
-void iff_chunk(struct context_data *ctx, FILE *f)
+void iff_chunk(struct module_data *m, FILE *f)
 {
     long size;
     char id[17] = "";
@@ -48,11 +48,11 @@ void iff_chunk(struct context_data *ctx, FILE *f)
     if (__flags & IFF_FULL_CHUNK_SIZE)
 	size -= __id_size + 4;
 
-    iff_process(ctx, id, size, f);
+    iff_process(m, id, size, f);
 }
 
 
-void iff_register(char *id, void (*loader)(struct context_data *, int, FILE *))
+void iff_register(char *id, void (*loader)(struct module_data *, int, FILE *))
 {
     struct iff_info *f;
 
@@ -82,7 +82,7 @@ void iff_release()
 }
 
 
-int iff_process(struct context_data *ctx, char *id, long size, FILE *f)
+int iff_process(struct module_data *m, char *id, long size, FILE *f)
 {
     struct list_head *tmp;
     struct iff_info *i;
@@ -93,7 +93,7 @@ int iff_process(struct context_data *ctx, char *id, long size, FILE *f)
     list_for_each(tmp, &iff_list) {
 	i = list_entry(tmp, struct iff_info, list);
 	if (id && !strncmp(id, i->id, __id_size)) {
-	    i->loader(ctx, size, f);
+	    i->loader(m, size, f);
 	    break;
 	}
     }

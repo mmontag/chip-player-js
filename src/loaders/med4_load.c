@@ -19,7 +19,7 @@
 #undef MED4_DEBUG
 
 static int med4_test(FILE *, char *, const int);
-static int med4_load (struct context_data *, FILE *, const int);
+static int med4_load (struct module_data *, FILE *, const int);
 
 struct format_loader med4_loader = {
 	"MED4",
@@ -161,9 +161,8 @@ struct temp_inst {
 
 struct temp_inst temp_inst[32];
 
-static int med4_load(struct context_data *ctx, FILE *f, const int start)
+static int med4_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	uint32 m0, mask;
@@ -580,7 +579,7 @@ static int med4_load(struct context_data *ctx, FILE *f, const int start)
 				       mod->xxi[i].sub[0].xpo /*,
 				       mod->xxi[i].sub[0].fin >> 4*/);
 
-			load_sample(ctx, f, smp_idx, 0,
+			load_sample(f, smp_idx, 0,
 					&mod->xxs[smp_idx], NULL);
 
 			smp_idx++;
@@ -645,7 +644,7 @@ static int med4_load(struct context_data *ctx, FILE *f, const int start)
 				mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
 				mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
-				load_sample(ctx, f, smp_idx,
+				load_sample(f, smp_idx,
 					0, &mod->xxs[smp_idx], NULL);
 
 				smp_idx++;
@@ -687,7 +686,7 @@ static int med4_load(struct context_data *ctx, FILE *f, const int start)
 			mod->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].xpo);
 
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(f, mod->xxi[i].sub[0].sid, 0,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 		smp_idx++;

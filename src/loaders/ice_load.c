@@ -15,7 +15,7 @@
 
 
 static int ice_test (FILE *, char *, const int);
-static int ice_load (struct context_data *, FILE *, const int);
+static int ice_load (struct module_data *, FILE *, const int);
 
 struct format_loader ice_loader = {
     "MTN",
@@ -59,9 +59,8 @@ struct ice_header {
 };
 
 
-static int ice_load(struct context_data *ctx, FILE *f, const int start)
+static int ice_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
@@ -154,7 +153,7 @@ static int ice_load(struct context_data *ctx, FILE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 4)
 	    continue;
-	load_sample(ctx, f, i, 0, &mod->xxs[i], NULL);
+	load_sample(f, i, 0, &mod->xxs[i], NULL);
     }
 
     return 0;

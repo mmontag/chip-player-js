@@ -17,7 +17,7 @@
 
 
 static int liq_test (FILE *, char *, const int);
-static int liq_load (struct context_data *, FILE *, const int);
+static int liq_load (struct module_data *, FILE *, const int);
 
 struct format_loader liq_loader = {
     "LIQ",
@@ -153,9 +153,8 @@ static void decode_event(uint8 x1, struct xmp_event *event, FILE *f)
     assert (event->fxt <= 26);
 }
 
-static int liq_load(struct context_data *ctx, FILE *f, const int start)
+static int liq_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i;
     struct xmp_event *event = NULL;
@@ -491,7 +490,7 @@ next_pattern:
 
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
+	load_sample(f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
     }
 
     return 0;

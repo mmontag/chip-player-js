@@ -18,7 +18,7 @@
 
 
 static int dmf_test(FILE *, char *, const int);
-static int dmf_load (struct context_data *, FILE *, const int);
+static int dmf_load (struct module_data *, FILE *, const int);
 
 struct format_loader dmf_loader = {
 	"DMF",
@@ -155,9 +155,8 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
  * IFF chunk handlers
  */
 
-static void get_sequ(struct context_data *ctx, int size, FILE *f)
+static void get_sequ(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -172,9 +171,8 @@ static void get_sequ(struct context_data *ctx, int size, FILE *f)
 		mod->xxo[i] = read16l(f);
 }
 
-static void get_patt(struct context_data *ctx, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, r, chn;
 	int patsize;
@@ -254,9 +252,8 @@ static void get_patt(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_smpi(struct context_data *ctx, int size, FILE *f)
+static void get_smpi(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
@@ -305,9 +302,8 @@ static void get_smpi(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_smpd(struct context_data *ctx, int size, FILE *f)
+static void get_smpd(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 	int smpsize;
@@ -333,13 +329,13 @@ static void get_smpd(struct context_data *ctx, int size, FILE *f)
 
 		switch (packtype[i]) {
 		case 0:
-			load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+			load_sample(f, mod->xxi[i].sub[0].sid,
 						0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
 			unpack(data, ibuf, ibuf + smpsize, mod->xxs[i].len);
-			load_sample(ctx, NULL, i,
+			load_sample(NULL, i,
 					SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)data);
 			break;
 		default:
@@ -351,9 +347,8 @@ static void get_smpd(struct context_data *ctx, int size, FILE *f)
 	free(data);
 }
 
-static int dmf_load(struct context_data *ctx, FILE *f, const int start)
+static int dmf_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	uint8 date[3];
 	char tracker_name[10];
@@ -384,7 +379,7 @@ static int dmf_load(struct context_data *ctx, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(ctx, f);
+		iff_chunk(m, f);
 
 	m->volbase = 0xff;
 

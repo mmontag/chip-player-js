@@ -5,6 +5,6 @@
 #include <stdio.h>
 #include "common.h"
 
-int asif_load(struct context_data *, FILE *, int);
+int asif_load(struct module_data *, FILE *, int);
 
 #endif

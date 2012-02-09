@@ -22,15 +22,15 @@ struct iff_header {
 
 struct iff_info {
     char id[5];
-    void (*loader)(struct context_data *, int, FILE *);
+    void (*loader)(struct module_data *, int, FILE *);
     struct list_head list;
 };
 
-void iff_chunk (struct context_data *, FILE *);
-void iff_register (char *, void(*loader)(struct context_data *, int, FILE *));
+void iff_chunk (struct module_data *, FILE *);
+void iff_register (char *, void(*loader)(struct module_data *, int, FILE *));
 void iff_idsize (int);
 void iff_setflag (int);
 void iff_release (void);
-int iff_process (struct context_data *, char *, long, FILE *);
+int iff_process (struct module_data *, char *, long, FILE *);
 
 #endif /* __IFF_H */

@@ -20,7 +20,7 @@
 
 
 static int ult_test (FILE *, char *, const int);
-static int ult_load (struct context_data *, FILE *, const int);
+static int ult_load (struct module_data *, FILE *, const int);
 
 struct format_loader ult_loader = {
     "ULT",
@@ -89,9 +89,8 @@ static char *verstr[4] = {
 };
 
 
-static int ult_load(struct context_data *ctx, FILE *f, const int start)
+static int ult_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, k, ver, cnt;
     struct xmp_event *event;
@@ -329,7 +328,7 @@ static int ult_load(struct context_data *ctx, FILE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(ctx, f, i, 0, &mod->xxs[i], NULL);
+	load_sample(f, i, 0, &mod->xxs[i], NULL);
     }
 
     m->volbase = 0x100;

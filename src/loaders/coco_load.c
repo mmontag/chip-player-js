@@ -9,7 +9,7 @@
 #include "load.h"
 
 static int coco_test (FILE *, char *, const int);
-static int coco_load (struct context_data *, FILE *, const int);
+static int coco_load (struct module_data *, FILE *, const int);
 
 struct format_loader coco_loader = {
 	"COCO",
@@ -161,9 +161,8 @@ static void fix_effect(struct xmp_event *e)
 	}
 }
 
-static int coco_load(struct context_data *ctx, FILE *f, const int start)
+static int coco_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j;
@@ -268,7 +267,7 @@ static int coco_load(struct context_data *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + smp_ptr[i], SEEK_SET);
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+		load_sample(f, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

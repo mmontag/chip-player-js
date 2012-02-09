@@ -23,7 +23,7 @@
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 
 static int med2_test(FILE *, char *, const int);
-static int med2_load (struct context_data *, FILE *, const int);
+static int med2_load (struct module_data *, FILE *, const int);
 
 struct format_loader med2_loader = {
 	"MED2",
@@ -44,9 +44,8 @@ static int med2_test(FILE *f, char *t, const int start)
 }
 
 
-int med2_load(struct context_data *ctx, FILE *f, const int start)
+int med2_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	int sliding;
@@ -170,7 +169,7 @@ int med2_load(struct context_data *ctx, FILE *f, const int start)
 		struct stat stat;
 		int found;
 
-		get_instrument_path(ctx, "XMP_MED2_INSTRUMENT_PATH",
+		get_instrument_path(m, "XMP_MED2_INSTRUMENT_PATH",
 				ins_path, 256);
 		found = check_filename_case(ins_path,
 				(char *)mod->xxi[i].name, name, 256);
@@ -195,7 +194,7 @@ int med2_load(struct context_data *ctx, FILE *f, const int start)
 			mod->xxi[i].sub[0].vol);
 
 		if (found) {
-			load_sample(ctx, s, mod->xxi[i].sub[0].sid,
+			load_sample(s, mod->xxi[i].sub[0].sid,
 				0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			fclose(s);
 		}

@@ -12,7 +12,7 @@
 
 
 static int stm_test (FILE *, char *, const int);
-static int stm_load (struct context_data *, FILE *, const int);
+static int stm_load (struct module_data *, FILE *, const int);
 
 struct format_loader stm_loader = {
     "STM",
@@ -69,9 +69,8 @@ static uint8 fx[] = {
 };
 
 
-static int stm_load(struct context_data *ctx, FILE *f, const int start)
+static int stm_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
@@ -214,7 +213,7 @@ static int stm_load(struct context_data *ctx, FILE *f, const int start)
 
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len > 1) {
-	    load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
+	    load_sample(f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
 	} else {
 	    mod->xxi[i].nsm = 0;
 	}

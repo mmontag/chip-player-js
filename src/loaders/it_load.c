@@ -16,7 +16,7 @@
 
 
 static int it_test (FILE *, char *, const int);
-static int it_load (struct context_data *, FILE *, const int);
+static int it_load (struct module_data *, FILE *, const int);
 
 struct format_loader it_loader = {
     "IT",
@@ -248,9 +248,8 @@ static void fix_name(uint8 *s, int l)
 }
 
 
-static int it_load(struct context_data *ctx, FILE *f, const int start)
+static int it_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int r, c, i, j, k, pat_len;
     struct xmp_event *event, dummy, lastevent[L_CHANNELS];
@@ -823,11 +822,11 @@ static int it_load(struct context_data *ctx, FILE *f, const int start)
 					ish.convert & IT_CVT_DIFF);
 		}
 
-		load_sample(ctx, NULL, i,
+		load_sample(NULL, i,
 				SAMPLE_FLAG_NOLOAD | cvt, &mod->xxs[i], buf);
 		free (buf);
 	    } else {
-		load_sample(ctx, f, i, cvt, &mod->xxs[i], NULL);
+		load_sample(f, i, cvt, &mod->xxs[i], NULL);
 	    }
 	}
     }

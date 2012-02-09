@@ -14,7 +14,7 @@
 
 
 static int mgt_test (FILE *, char *, const int);
-static int mgt_load (struct context_data *, FILE *, const int);
+static int mgt_load (struct module_data *, FILE *, const int);
 
 struct format_loader mgt_loader = {
 	"MGT",
@@ -42,9 +42,8 @@ static int mgt_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int mgt_load(struct context_data *ctx, FILE *f, const int start)
+static int mgt_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j;
@@ -302,7 +301,7 @@ static int mgt_load(struct context_data *ctx, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + sdata[i], SEEK_SET);
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(f, mod->xxi[i].sub[0].sid, 0,
 					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

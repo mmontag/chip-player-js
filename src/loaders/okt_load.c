@@ -16,7 +16,7 @@
 
 
 static int okt_test (FILE *, char *, const int);
-static int okt_load (struct context_data *, FILE *, const int);
+static int okt_load (struct module_data *, FILE *, const int);
 
 struct format_loader okt_loader = {
     "OKT",
@@ -89,9 +89,8 @@ static int fx[] = {
 };
 
 
-static void get_cmod(struct context_data *ctx, int size, FILE *f)
+static void get_cmod(struct module_data *m, int size, FILE *f)
 { 
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, k;
 
@@ -106,9 +105,8 @@ static void get_cmod(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_samp(struct context_data *ctx, int size, FILE *f)
+static void get_samp(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     int looplen;
@@ -151,9 +149,8 @@ static void get_samp(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_spee(struct context_data *ctx, int size, FILE *f)
+static void get_spee(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
 
     mod->tpo = read16b(f);
@@ -161,9 +158,8 @@ static void get_spee(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_slen(struct context_data *ctx, int size, FILE *f)
+static void get_slen(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
 
     mod->pat = read16b(f);
@@ -171,9 +167,8 @@ static void get_slen(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_plen(struct context_data *ctx, int size, FILE *f)
+static void get_plen(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
 
     mod->len = read16b(f);
@@ -181,18 +176,16 @@ static void get_plen(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_patt(struct context_data *ctx, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
 
     fread(mod->xxo, 1, mod->len, f);
 }
 
 
-static void get_pbod(struct context_data *ctx, int size, FILE *f)
+static void get_pbod(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
 
     int j;
@@ -254,9 +247,8 @@ static void get_pbod(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_sbod(struct context_data *ctx, int size, FILE *f)
+static void get_sbod(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
 
     int flags = 0;
@@ -271,15 +263,14 @@ static void get_sbod(struct context_data *ctx, int size, FILE *f)
     if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
 	flags = SAMPLE_FLAG_7BIT;
 
-    load_sample(ctx, f, sample, flags, &mod->xxs[i], NULL);
+    load_sample(f, sample, flags, &mod->xxs[i], NULL);
 
     sample++;
 }
 
 
-static int okt_load(struct context_data *ctx, FILE *f, const int start)
+static int okt_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
 
     LOAD_INIT();
@@ -304,7 +295,7 @@ static int okt_load(struct context_data *ctx, FILE *f, const int start)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(ctx, f);
+	iff_chunk(m, f);
 
     iff_release();
 

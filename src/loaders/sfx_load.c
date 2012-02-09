@@ -23,7 +23,7 @@
 
 
 static int sfx_test (FILE *, char *, const int);
-static int sfx_load (struct context_data *, FILE *, const int);
+static int sfx_load (struct module_data *, FILE *, const int);
 
 struct format_loader sfx_loader = {
     "SFX",
@@ -72,9 +72,8 @@ struct sfx_header2 {
 };
 
 
-static int sfx_13_20_load(struct context_data *ctx, FILE *f, const int nins, const int start)
+static int sfx_13_20_load(struct module_data *m, FILE *f, const int nins, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
@@ -207,16 +206,16 @@ static int sfx_13_20_load(struct context_data *ctx, FILE *f, const int nins, con
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)
 	    continue;
-	load_sample(ctx, f, i, 0, &mod->xxs[i], NULL);
+	load_sample(f, i, 0, &mod->xxs[i], NULL);
     }
 
     return 0;
 }
 
 
-static int sfx_load(struct context_data *ctx, FILE *f, const int start)
+static int sfx_load(struct module_data *m, FILE *f, const int start)
 {
-    if (sfx_13_20_load(ctx, f, 15, start) < 0)
-	return sfx_13_20_load(ctx, f, 31, start);
+    if (sfx_13_20_load(m, f, 15, start) < 0)
+	return sfx_13_20_load(m, f, 31, start);
     return 0;
 }

@@ -11,7 +11,7 @@
 
 
 static int sym_test(FILE *, char *, const int);
-static int sym_load (struct context_data *, FILE *, const int);
+static int sym_load (struct module_data *, FILE *, const int);
 
 struct format_loader sym_loader = {
 	"DSYM",
@@ -227,9 +227,8 @@ static uint32 readptr16l(uint8 *p)
 	return (b << 8) | a;
 }
 
-static int sym_load(struct context_data *ctx, FILE *f, const int start)
+static int sym_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j;
@@ -404,15 +403,15 @@ static int sym_load(struct context_data *ctx, FILE *f, const int start)
 			uint8 *b = malloc(mod->xxs[i].len);
 			read_lzw_dynamic(f, b, 13, 0, mod->xxs[i].len,
 					mod->xxs[i].len, XMP_LZW_QUIRK_DSYM);
-			load_sample(ctx, NULL, mod->xxi[i].sub[0].sid,
+			load_sample(NULL, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);
 			free(b);
 		} else if (a == 4) {
-			load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+			load_sample(f, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		} else {
-			load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+			load_sample(f, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		}
 	}

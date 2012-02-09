@@ -20,7 +20,7 @@
 
 
 static int amf_test(FILE *, char *, const int);
-static int amf_load (struct context_data *, FILE *, const int);
+static int amf_load (struct module_data *, FILE *, const int);
 
 struct format_loader amf_loader = {
 	"AMF",
@@ -50,9 +50,8 @@ static int amf_test(FILE * f, char *t, const int start)
 }
 
 
-static int amf_load(struct context_data *ctx, FILE *f, const int start)
+static int amf_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j;
 	struct xmp_event *event;
@@ -461,7 +460,7 @@ static int amf_load(struct context_data *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+		load_sample(f, mod->xxi[i].sub[0].sid,
 			SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

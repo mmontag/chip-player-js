@@ -10,9 +10,8 @@
 #define MAGIC_INST	MAGIC4('I','N','S','T')
 #define MAGIC_WAVE	MAGIC4('W','A','V','E')
 
-int asif_load(struct context_data *ctx, FILE *f, int i)
+int asif_load(struct module_data *m, FILE *f, int i)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int size, pos;
 	uint32 id;
@@ -52,8 +51,7 @@ int asif_load(struct context_data *ctx, FILE *f, int i)
 				read16l(f);		/* SampRate */
 			}
 		
-			load_sample(ctx, f, i, 
-					SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
+			load_sample(f, i, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
 
 			chunk++;
 			break;

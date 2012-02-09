@@ -14,7 +14,7 @@
 
 
 static int fnk_test (FILE *, char *, const int);
-static int fnk_load (struct context_data *, FILE *, const int);
+static int fnk_load (struct module_data *, FILE *, const int);
 
 struct format_loader fnk_loader = {
     "FNK",
@@ -80,9 +80,8 @@ struct fnk_header {
 };
 
 
-static int fnk_load(struct context_data *ctx, FILE *f, const int start)
+static int fnk_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     int day, month, year;
@@ -286,7 +285,7 @@ static int fnk_load(struct context_data *ctx, FILE *f, const int start)
 	if (mod->xxs[i].len <= 2)
 	    continue;
 
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	load_sample(f, mod->xxi[i].sub[0].sid, 0,
 							&mod->xxs[i], NULL);
 
     }

@@ -67,7 +67,7 @@
 #define MAGIC_SCRS	MAGIC4('S','C','R','S')
 
 static int s3m_test (FILE *, char *, const int);
-static int s3m_load (struct context_data *, FILE *, const int);
+static int s3m_load (struct module_data *, FILE *, const int);
 
 struct format_loader s3m_loader = {
     "S3M",
@@ -191,9 +191,8 @@ static void xlat_fx (int c, struct xmp_event *e)
 }
 
 
-static int s3m_load(struct context_data *ctx, FILE *f, const int start)
+static int s3m_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int c, r, i;
     struct s3m_adlib_header sah;
@@ -445,7 +444,7 @@ static int s3m_load(struct context_data *ctx, FILE *f, const int start)
 	    mod->xxi[i].sub[0].vol = sah.vol;
 	    c2spd_to_note(sah.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	    mod->xxi[i].sub[0].xpo += 12;
-	    load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_ADLIB,
+	    load_sample(f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_ADLIB,
 					&mod->xxs[i], (char *)&sah.reg);
 	    _D(_D_INFO "[%2X] %-28.28s", i, mod->xxi[i].name);
 
@@ -511,7 +510,7 @@ static int s3m_load(struct context_data *ctx, FILE *f, const int start)
 	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
 	fseek(f, start + 16L * sih.memseg, SEEK_SET);
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+	load_sample(f, mod->xxi[i].sub[0].sid,
 	    (sfh.ffi - 1) * SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
     }
 

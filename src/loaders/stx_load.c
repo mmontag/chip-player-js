@@ -27,7 +27,7 @@
 
 
 static int stx_test (FILE *, char *, const int);
-static int stx_load (struct context_data *, FILE *, const int);
+static int stx_load (struct module_data *, FILE *, const int);
 
 struct format_loader stx_loader = {
     "STX",
@@ -73,9 +73,8 @@ static uint8 fx[] = {
 };
 
 
-static int stx_load(struct context_data *ctx, FILE *f, const int start)
+static int stx_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int c, r, i, broken = 0;
     struct xmp_event *event = 0, dummy;
@@ -287,7 +286,7 @@ static int stx_load(struct context_data *ctx, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	load_sample(f, mod->xxi[i].sub[0].sid, 0,
 	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

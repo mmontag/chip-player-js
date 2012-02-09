@@ -20,7 +20,7 @@
 
 
 static int gdm_test(FILE *, char *, const int);
-static int gdm_load (struct context_data *, FILE *, const int);
+static int gdm_load (struct module_data *, FILE *, const int);
 
 struct format_loader gdm_loader = {
 	"GDM",
@@ -98,9 +98,8 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 }
 
 
-static int gdm_load(struct context_data *ctx, FILE *f, const int start)
+static int gdm_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int vermaj, vermin, tvmaj, tvmin, tracker;
@@ -281,7 +280,7 @@ static int gdm_load(struct context_data *ctx, FILE *f, const int start)
 	_D(_D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+		load_sample(f, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

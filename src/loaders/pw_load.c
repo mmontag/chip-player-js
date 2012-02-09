@@ -20,7 +20,7 @@
 extern struct list_head *checked_format;
 
 static int pw_test(FILE *, char *, const int);
-static int pw_load(struct context_data *, FILE *, const int);
+static int pw_load(struct module_data *, FILE *, const int);
 
 struct format_loader pw_loader = {
 	"pw",
@@ -63,9 +63,8 @@ static int pw_test(FILE *f, char *t, const int start)
 	return -1;
 }
 
-static int pw_load(struct context_data *ctx, FILE *f, const int start)
+static int pw_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	struct mod_header mh;
@@ -188,7 +187,7 @@ static int pw_load(struct context_data *ctx, FILE *f, const int start)
 
 	_D(_D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->smp; i++) {
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(f, mod->xxi[i].sub[0].sid, 0,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

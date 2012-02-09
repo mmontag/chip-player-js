@@ -52,7 +52,7 @@ struct ims_header {
 
 
 static int ims_test (FILE *, char *, const int);
-static int ims_load (struct context_data *, FILE *, const int);
+static int ims_load (struct module_data *, FILE *, const int);
 
 struct format_loader ims_loader = {
     "IMS",
@@ -132,9 +132,8 @@ static int ims_test(FILE *f, char *t, const int start)
 }
 
 
-static int ims_load(struct context_data *ctx, FILE *f, const int start)
+static int ims_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     int smp_size;
@@ -259,7 +258,7 @@ static int ims_load(struct context_data *ctx, FILE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	load_sample(f, mod->xxi[i].sub[0].sid, 0,
 	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

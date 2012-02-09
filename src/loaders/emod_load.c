@@ -15,7 +15,7 @@
 
 
 static int emod_test (FILE *, char *, const int);
-static int emod_load (struct context_data *, FILE *, const int);
+static int emod_load (struct module_data *, FILE *, const int);
 
 struct format_loader emod_loader = {
     "EMOD",
@@ -43,9 +43,8 @@ static int emod_test(FILE *f, char *t, const int start)
 static uint8 *reorder;
 
 
-static void get_emic(struct context_data *ctx, int size, FILE *f)
+static void get_emic(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, ver;
 
@@ -113,9 +112,8 @@ static void get_emic(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_patt(struct context_data *ctx, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, k;
     struct xmp_event *event;
@@ -154,23 +152,21 @@ static void get_patt(struct context_data *ctx, int size, FILE *f)
 }
 
 
-static void get_8smp(struct context_data *ctx, int size, FILE *f)
+static void get_8smp(struct module_data *m, int size, FILE *f)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i;
 
     _D(_D_INFO, "Stored samples : %d ", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	load_sample(ctx, f, i, 0, &mod->xxs[i], NULL);
+	load_sample(f, i, 0, &mod->xxs[i], NULL);
     }
 }
 
 
-static int emod_load(struct context_data *ctx, FILE *f, const int start)
+static int emod_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
 
     LOAD_INIT();
 
@@ -185,7 +181,7 @@ static int emod_load(struct context_data *ctx, FILE *f, const int start)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(ctx, f);
+	iff_chunk(m, f);
 
     iff_release();
     free(reorder);

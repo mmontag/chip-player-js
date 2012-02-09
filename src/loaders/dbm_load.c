@@ -18,7 +18,7 @@
 
 
 static int dbm_test(FILE *, char *, const int);
-static int dbm_load (struct context_data *, FILE *, const int);
+static int dbm_load (struct module_data *, FILE *, const int);
 
 struct format_loader dbm_loader = {
 	"DBM",
@@ -43,9 +43,8 @@ static int dbm_test(FILE * f, char *t, const int start)
 static int have_song;
 
 
-static void get_info(struct context_data *ctx, int size, FILE *f)
+static void get_info(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->ins = read16b(f);
@@ -59,9 +58,8 @@ static void get_info(struct context_data *ctx, int size, FILE *f)
 	INSTRUMENT_INIT();
 }
 
-static void get_song(struct context_data *ctx, int size, FILE *f)
+static void get_song(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 	char buffer[50];
@@ -81,9 +79,8 @@ static void get_song(struct context_data *ctx, int size, FILE *f)
 		mod->xxo[i] = read16b(f);
 }
 
-static void get_inst(struct context_data *ctx, int size, FILE *f)
+static void get_inst(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 	int c2spd, flags, snum;
@@ -120,9 +117,8 @@ static void get_inst(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_patt(struct context_data *ctx, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, c, r, n, sz;
 	struct xmp_event *event, dummy;
@@ -211,9 +207,8 @@ static void get_patt(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_smpl(struct context_data *ctx, int size, FILE *f)
+static void get_smpl(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, flags;
 
@@ -233,7 +228,7 @@ static void get_smpl(struct context_data *ctx, int size, FILE *f)
 			continue;
 		}
 		
-		load_sample(ctx, f, i, SAMPLE_FLAG_BIGEND,
+		load_sample(f, i, SAMPLE_FLAG_BIGEND,
 							&mod->xxs[i], NULL);
 
 		if (mod->xxs[i].len == 0)
@@ -249,9 +244,8 @@ static void get_smpl(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_venv(struct context_data *ctx, int size, FILE *f)
+static void get_venv(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, nenv, ins;
 
@@ -276,9 +270,8 @@ static void get_venv(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static int dbm_load(struct context_data *ctx, FILE *f, const int start)
+static int dbm_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	char name[44];
 	uint16 version;
@@ -309,7 +302,7 @@ static int dbm_load(struct context_data *ctx, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(ctx, f);
+		iff_chunk(m, f);
 
 	iff_release();
 

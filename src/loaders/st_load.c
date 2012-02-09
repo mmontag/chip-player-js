@@ -19,7 +19,7 @@
 #include "period.h"
 
 static int st_test (FILE *, char *, const int);
-static int st_load (struct context_data *, FILE *, const int);
+static int st_load (struct module_data *, FILE *, const int);
 
 struct format_loader st_loader = {
     "ST",
@@ -150,9 +150,8 @@ static int st_test(FILE *f, char *t, const int start)
     return 0;
 }
 
-static int st_load(struct context_data *ctx, FILE *f, const int start)
+static int st_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     int smp_size;
@@ -365,7 +364,7 @@ static int st_load(struct context_data *ctx, FILE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
+	load_sample(f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
 	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

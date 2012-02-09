@@ -11,7 +11,7 @@
 #include "period.h"
 
 static int flt_test (FILE *, char *, const int);
-static int flt_load (struct context_data *, FILE *, const int);
+static int flt_load (struct module_data *, FILE *, const int);
 
 struct format_loader flt_loader = {
     "FLT",
@@ -106,9 +106,8 @@ static int is_am_instrument(FILE *nt, int i)
     return 1;
 }
 
-static void read_am_instrument(struct context_data *ctx, FILE *nt, int i)
+static void read_am_instrument(struct module_data *m, FILE *nt, int i)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     struct am_instrument am;
     char *wave;
@@ -265,14 +264,13 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	mod->xxi[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
     }
 
-    load_sample(ctx, NULL, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_NOLOAD,
+    load_sample(NULL, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_NOLOAD,
 					&mod->xxs[mod->xxi[i].sub[0].sid], wave);
 }
 
 
-static int flt_load(struct context_data *ctx, FILE *f, const int start)
+static int flt_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
@@ -433,11 +431,11 @@ static int flt_load(struct context_data *ctx, FILE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (mod->xxs[i].len == 0) {
 	    if (am_synth && is_am_instrument(nt, i)) {
-		read_am_instrument(ctx, nt, i);
+		read_am_instrument(m, nt, i);
 	    }
 	    continue;
 	}
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
+	load_sample(f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
 					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

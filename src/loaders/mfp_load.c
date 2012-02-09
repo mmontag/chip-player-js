@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 static int mfp_test(FILE *, char *, const int);
-static int mfp_load(struct context_data *, FILE *, const int);
+static int mfp_load(struct module_data *, FILE *, const int);
 
 struct format_loader mfp_loader = {
 	"MFP",
@@ -81,9 +81,8 @@ static int mfp_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int mfp_load(struct context_data *ctx, FILE *f, const int start)
+static int mfp_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, k, x, y;
 	struct xmp_event *event;
@@ -210,7 +209,7 @@ static int mfp_load(struct context_data *ctx, FILE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		load_sample(ctx, s, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
+		load_sample(s, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_FULLREP,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

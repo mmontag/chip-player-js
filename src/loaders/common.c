@@ -167,12 +167,10 @@ int check_filename_case(char *dir, char *name, char *new_name, int size)
 	return found;
 }
 
-void get_instrument_path(struct context_data *ctx, char *var, char *path, int size)
+void get_instrument_path(struct module_data *m, char *var, char *path, int size)
 {
-	struct xmp_options *o = &ctx->o;
-
-	if (o->ins_path) {
-		strncpy(path, o->ins_path, size);
+	if (m->instrument_path) {
+		strncpy(path, m->instrument_path, size);
 	} else if (var && getenv(var)) {
 		strncpy(path, getenv(var), size);
 	} else if (getenv("XMP_INSTRUMENT_PATH")) {
@@ -211,8 +209,7 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 }
 
 
-int load_sample(struct context_data *ctx, FILE *f, int id, int flags,
-	       struct xmp_sample *xxs, void *buffer)
+int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer)
 {
 	int bytelen, extralen;
 

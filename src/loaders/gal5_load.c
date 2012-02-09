@@ -21,7 +21,7 @@
  */
 
 static int gal5_test(FILE *, char *, const int);
-static int gal5_load(struct context_data *, FILE *, const int);
+static int gal5_load(struct module_data *, FILE *, const int);
 
 struct format_loader gal5_loader = {
 	"GAL5",
@@ -50,9 +50,8 @@ static int gal5_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static void get_init(struct context_data *ctx, int size, FILE *f)
+static void get_init(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	char buf[64];
 	int flags;
@@ -72,9 +71,8 @@ static void get_init(struct context_data *ctx, int size, FILE *f)
 	fread(chn_pan, 1, 64, f);
 }
 
-static void get_ordr(struct context_data *ctx, int size, FILE *f)
+static void get_ordr(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -85,9 +83,8 @@ static void get_ordr(struct context_data *ctx, int size, FILE *f)
 		mod->xxo[i] = read8(f);
 }
 
-static void get_patt_cnt(struct context_data *ctx, int size, FILE *f)
+static void get_patt_cnt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -97,9 +94,8 @@ static void get_patt_cnt(struct context_data *ctx, int size, FILE *f)
 		mod->pat = i;
 }
 
-static void get_inst_cnt(struct context_data *ctx, int size, FILE *f)
+static void get_inst_cnt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -111,9 +107,8 @@ static void get_inst_cnt(struct context_data *ctx, int size, FILE *f)
 		mod->ins = i;
 }
 
-static void get_patt(struct context_data *ctx, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy;
 	int i, len, chan;
@@ -177,9 +172,8 @@ static void get_patt(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_inst(struct context_data *ctx, int size, FILE *f)
+static void get_inst(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, srate, finetune, flags;
 	int has_unsigned_sample;
@@ -255,14 +249,13 @@ static void get_inst(struct context_data *ctx, int size, FILE *f)
 		mod->xxi[i].sub[0].vol, flags, srate);
 
 	if (mod->xxs[i].len > 1) {
-		load_sample(ctx, f, i, has_unsigned_sample ?
+		load_sample(f, i, has_unsigned_sample ?
 			SAMPLE_FLAG_UNS : 0, &mod->xxs[i], NULL);
 	}
 }
 
-static int gal5_load(struct context_data *ctx, FILE *f, const int start)
+static int gal5_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, offset;
 
@@ -286,7 +279,7 @@ static int gal5_load(struct context_data *ctx, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(ctx, f);
+		iff_chunk(m, f);
 
 	iff_release();
 
@@ -310,7 +303,7 @@ static int gal5_load(struct context_data *ctx, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof (f))
-		iff_chunk(ctx, f);
+		iff_chunk(m, f);
 
 	iff_release();
 

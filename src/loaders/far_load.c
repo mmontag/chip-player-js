@@ -20,7 +20,7 @@
 
 
 static int far_test (FILE *, char *, const int);
-static int far_load (struct context_data *, FILE *, const int);
+static int far_load (struct module_data *, FILE *, const int);
 
 struct format_loader far_loader = {
     "FAR",
@@ -69,9 +69,8 @@ static uint8 fx[] = {
 };
 
 
-static int far_load(struct context_data *ctx, FILE *f, const int start)
+static int far_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j, vib = 0;
     struct xmp_event *event;
@@ -264,7 +263,7 @@ static int far_load(struct context_data *ctx, FILE *f, const int start)
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, fih.loopmode ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
+	load_sample(f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
     }
 
     m->volbase = 0xff;

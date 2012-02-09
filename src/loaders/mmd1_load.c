@@ -15,7 +15,7 @@
 
 
 static int mmd1_test(FILE *, char *, const int);
-static int mmd1_load (struct context_data *, FILE *, const int);
+static int mmd1_load (struct module_data *, FILE *, const int);
 
 struct format_loader mmd1_loader = {
 	"MMD0/1",
@@ -53,9 +53,8 @@ static int mmd1_test(FILE *f, char *t, const int start)
 
 static int bpm_on, bpmlen, med_8ch;
 
-static int mmd1_load(struct context_data *ctx, FILE *f, const int start)
+static int mmd1_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
 	struct MMD0 header;
@@ -431,7 +430,7 @@ static int mmd1_load(struct context_data *ctx, FILE *f, const int start)
 				       mod->xxi[i].sub[0].xpo,
 				       mod->xxi[i].sub[0].fin >> 4);
 
-			load_sample(ctx, f, smp_idx, 0,
+			load_sample(f, smp_idx, 0,
 					&mod->xxs[smp_idx], NULL);
 
 			smp_idx++;
@@ -492,7 +491,7 @@ static int mmd1_load(struct context_data *ctx, FILE *f, const int start)
 				mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
 				mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
-				load_sample(ctx, f, smp_idx,
+				load_sample(f, smp_idx,
 					0, &mod->xxs[smp_idx], NULL);
 
 
@@ -539,7 +538,7 @@ static int mmd1_load(struct context_data *ctx, FILE *f, const int start)
 				mod->xxi[i].sub[0].fin >> 4);
 
 		fseek(f, start + smpl_offset + 6, SEEK_SET);
-		load_sample(ctx, f, smp_idx, 0,
+		load_sample(f, smp_idx, 0,
 				  &mod->xxs[smp_idx], NULL);
 
 		smp_idx++;

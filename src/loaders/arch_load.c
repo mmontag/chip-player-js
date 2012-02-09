@@ -14,7 +14,7 @@
 
 
 static int arch_test (FILE *, char *, const int);
-static int arch_load (struct context_data *, FILE *, const int);
+static int arch_load (struct module_data *, FILE *, const int);
 
 
 struct format_loader arch_loader = {
@@ -146,7 +146,7 @@ static void fix_effect(struct xmp_event *e)
 	}
 }
 
-static void get_tinf(struct context_data *ctx, int size, FILE *f)
+static void get_tinf(struct module_data *m, int size, FILE *f)
 {
 	int x;
 
@@ -162,17 +162,15 @@ static void get_tinf(struct context_data *ctx, int size, FILE *f)
 	day = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 }
 
-static void get_mvox(struct context_data *ctx, int size, FILE *f)
+static void get_mvox(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->chn = read32l(f);
 }
 
-static void get_ster(struct context_data *ctx, int size, FILE *f)
+static void get_ster(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -183,45 +181,40 @@ static void get_ster(struct context_data *ctx, int size, FILE *f)
 			mod->xxc[i].pan = 42*ster[i]-40;
 }
 
-static void get_mnam(struct context_data *ctx, int size, FILE *f)
+static void get_mnam(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	fread(mod->name, 1, 32, f);
 }
 
-static void get_anam(struct context_data *ctx, int size, FILE *f)
+static void get_anam(struct module_data *m, int size, FILE *f)
 {
-	/* struct module_data *m = &ctx->m;
 
-	fread(m->author, 1, 32, f); */
+	/*fread(m->author, 1, 32, f); */
 }
 
-static void get_mlen(struct context_data *ctx, int size, FILE *f)
+static void get_mlen(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->len = read32l(f);
 }
 
-static void get_pnum(struct context_data *ctx, int size, FILE *f)
+static void get_pnum(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->pat = read32l(f);
 }
 
-static void get_plen(struct context_data *ctx, int size, FILE *f)
+static void get_plen(struct module_data *m, int size, FILE *f)
 {
 	fread(rows, 1, 64, f);
 }
 
-static void get_sequ(struct context_data *ctx, int size, FILE *f)
+static void get_sequ(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	fread(mod->xxo, 1, 128, f);
@@ -232,9 +225,8 @@ static void get_sequ(struct context_data *ctx, int size, FILE *f)
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 }
 
-static void get_patt(struct context_data *ctx, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	static int i = 0;
 	int j, k;
@@ -271,9 +263,8 @@ static void get_patt(struct context_data *ctx, int size, FILE *f)
 	i++;
 }
 
-static void get_samp(struct context_data *ctx, int size, FILE *f)
+static void get_samp(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	static int i = 0;
 
@@ -338,7 +329,7 @@ static void get_samp(struct context_data *ctx, int size, FILE *f)
 		mod->xxs[i].lpe = mod->xxs[i].len;
 	}
 
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_VIDC,
+	load_sample(f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_VIDC,
 					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
@@ -353,9 +344,8 @@ static void get_samp(struct context_data *ctx, int size, FILE *f)
 	max_ins++;
 }
 
-static int arch_load(struct context_data *ctx, FILE *f, const int start)
+static int arch_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
 
@@ -383,7 +373,7 @@ static int arch_load(struct context_data *ctx, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(ctx, f);
+		iff_chunk(m, f);
 
 	iff_release();
 

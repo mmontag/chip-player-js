@@ -16,7 +16,7 @@
 #include "load.h"
 
 static int polly_test(FILE *, char *, const int);
-static int polly_load(struct context_data *, FILE *, const int);
+static int polly_load(struct module_data *, FILE *, const int);
 
 struct format_loader polly_loader = {
 	"POLLY",
@@ -86,9 +86,8 @@ static int polly_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int polly_load(struct context_data *ctx, FILE *f, const int start)
+static int polly_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	uint8 *buf;
@@ -192,7 +191,7 @@ static int polly_load(struct context_data *ctx, FILE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)
 			continue;
-		load_sample(ctx, NULL, mod->xxi[i].sub[0].sid,
+		load_sample(NULL, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS,
 				&mod->xxs[mod->xxi[i].sub[0].sid],
 				(char*)buf + ORD_OFS + 256 +

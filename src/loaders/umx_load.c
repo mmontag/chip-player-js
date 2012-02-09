@@ -21,7 +21,7 @@ extern struct format_loader s3m_loader;
 extern struct format_loader mod_loader;
 
 static int umx_test (FILE *, char *, const int);
-static int umx_load (struct context_data *, FILE *, const int);
+static int umx_load (struct module_data *, FILE *, const int);
 
 struct format_loader umx_loader = {
 	"UMX",
@@ -71,9 +71,8 @@ static int umx_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int umx_load(struct context_data *ctx, FILE *f, const int start)
+static int umx_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	int i;
 	uint8 buf[TEST_SIZE], *b = buf;
 	uint32 id;
@@ -88,16 +87,16 @@ static int umx_load(struct context_data *ctx, FILE *f, const int start)
 		id = readmem32b(b);
 
 		if (!memcmp(b, "Extended Module:", 16))
-			return xm_loader.loader(ctx, f, i);
+			return xm_loader.loader(m, f, i);
 
 		if (id == MAGIC_IMPM)
-			return it_loader.loader(ctx, f, i);
+			return it_loader.loader(m, f, i);
 
 		if (i > 44 && id == MAGIC_SCRM)
-			return s3m_loader.loader(ctx, f, i - 44);
+			return s3m_loader.loader(m, f, i - 44);
 
 		if (i > 1080 && id == MAGIC_M_K_)
-			return mod_loader.loader(ctx, f, i - 1080);
+			return mod_loader.loader(m, f, i - 1080);
 	}
 	
 	return -1;

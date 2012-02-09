@@ -16,7 +16,7 @@
 
 
 static int dt_test(FILE *, char *, const int);
-static int dt_load (struct context_data *, FILE *, const int);
+static int dt_load (struct module_data *, FILE *, const int);
 
 struct format_loader dt_loader = {
 	"DTM",
@@ -40,9 +40,8 @@ static int pflag, sflag;
 static int realpat;
 
 
-static void get_d_t_(struct context_data *ctx, int size, FILE *f)
+static void get_d_t_(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int b;
 
@@ -60,9 +59,8 @@ static void get_d_t_(struct context_data *ctx, int size, FILE *f)
 	MODULE_INFO();
 }
 
-static void get_s_q_(struct context_data *ctx, int size, FILE *f)
+static void get_s_q_(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, maxpat;
 
@@ -78,9 +76,8 @@ static void get_s_q_(struct context_data *ctx, int size, FILE *f)
 	mod->pat = maxpat + 1;
 }
 
-static void get_patt(struct context_data *ctx, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
 	mod->chn = read16b(f);
@@ -88,9 +85,8 @@ static void get_patt(struct context_data *ctx, int size, FILE *f)
 	mod->trk = mod->chn * mod->pat;
 }
 
-static void get_inst(struct context_data *ctx, int size, FILE *f)
+static void get_inst(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, c2spd;
 	uint8 name[30];
@@ -152,9 +148,8 @@ static void get_inst(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_dapt(struct context_data *ctx, int size, FILE *f)
+static void get_dapt(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int pat, i, j, k;
 	struct xmp_event *event;
@@ -200,9 +195,8 @@ static void get_dapt(struct context_data *ctx, int size, FILE *f)
 	}
 }
 
-static void get_dait(struct context_data *ctx, int size, FILE *f)
+static void get_dait(struct module_data *m, int size, FILE *f)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	static int i = 0;
 
@@ -213,16 +207,15 @@ static void get_dait(struct context_data *ctx, int size, FILE *f)
 	}
 
 	if (size > 2) {
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid,
+		load_sample(f, mod->xxi[i].sub[0].sid,
 			SAMPLE_FLAG_BIGEND, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	i++;
 }
 
-static int dt_load(struct context_data *ctx, FILE *f, const int start)
+static int dt_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 
 	LOAD_INIT();
 
@@ -238,7 +231,7 @@ static int dt_load(struct context_data *ctx, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(ctx, f);
+		iff_chunk(m, f);
 
 	iff_release();
 

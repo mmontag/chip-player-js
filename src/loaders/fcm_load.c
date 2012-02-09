@@ -38,7 +38,7 @@ struct fcm_header {
 };
     
 
-int fcm_load(struct context_data *ctx, FILE *f)
+int fcm_load(struct module_data *m, FILE *f)
 {
     int i, j, k;
     struct xmp_event *event;
@@ -135,7 +135,7 @@ int fcm_load(struct context_data *ctx, FILE *f)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+	load_sample(f, mod->xxi[i].sub[0].sid, 0,
 	    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	if (V(0))
 	    report (".");

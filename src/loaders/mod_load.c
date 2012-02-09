@@ -55,7 +55,7 @@ struct {
 
 
 static int mod_test (FILE *, char *, const int);
-static int mod_load (struct context_data *, FILE *, const int);
+static int mod_load (struct module_data *, FILE *, const int);
 
 struct format_loader mod_loader = {
     "MOD",
@@ -171,9 +171,8 @@ static int is_st_ins (char *s)
 }
 
 
-static int mod_load(struct context_data *ctx, FILE *f, const int start)
+static int mod_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int i, j;
     int smp_size, pat_size, wow, ptsong = 0;
@@ -508,11 +507,11 @@ skip_test:
 	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        load_sample(ctx, s, mod->xxi[i].sub[0].sid, flags,
+	        load_sample(s, mod->xxi[i].sub[0].sid, flags,
 		    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	    }
 	} else {
-	    load_sample(ctx, f, mod->xxi[i].sub[0].sid, flags,
+	    load_sample(f, mod->xxi[i].sub[0].sid, flags,
 	        &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
     }

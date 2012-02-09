@@ -13,7 +13,7 @@
 #define MAGIC_HVL	MAGIC4('H','V','L', 0)
 
 static int hvl_test (FILE *, char *, const int);
-static int hvl_load (struct context_data *, FILE *, const int);
+static int hvl_load (struct module_data *, FILE *, const int);
 
 
 struct format_loader hvl_loader = {
@@ -176,10 +176,9 @@ static void fix_effect (uint8 *fx, uint8 *param) {
 	}
 }
 
-static int hvl_load(struct context_data *ctx, FILE *f, const int start)
+static int hvl_load(struct module_data *m, FILE *f, const int start)
 {
 	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j, tmp, blank;
 
@@ -491,7 +490,7 @@ static int hvl_load(struct context_data *ctx, FILE *f, const int start)
 			break;
 		}
 
-		load_sample(ctx, NULL, i,
+		load_sample(NULL, i,
 				  SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)b);
 	}
 

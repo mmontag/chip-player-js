@@ -20,7 +20,7 @@
 
 
 static int med3_test(FILE *, char *, const int);
-static int med3_load (struct context_data *, FILE *, const int);
+static int med3_load (struct module_data *, FILE *, const int);
 
 struct format_loader med3_loader = {
 	"MED3",
@@ -82,9 +82,8 @@ static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
 	return res;
 }
 
-static void unpack_block(struct context_data *ctx, uint16 bnum, uint8 *from)
+static void unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	uint32 linemsk0 = *((uint32 *)from), linemsk1 = *((uint32 *)from + 1);
@@ -203,9 +202,8 @@ static void unpack_block(struct context_data *ctx, uint16 bnum, uint8 *from)
 }
 
 
-static int med3_load(struct context_data *ctx, FILE *f, const int start)
+static int med3_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, j;
 	uint32 mask;
@@ -350,7 +348,7 @@ static int med3_load(struct context_data *ctx, FILE *f, const int start)
 
 		fread(conv + 4, 1, convsz, f);
 
-                unpack_block(ctx, i, (uint8 *)conv);
+                unpack_block(m, i, (uint8 *)conv);
 
 		free(conv);
 	}
@@ -376,7 +374,7 @@ static int med3_load(struct context_data *ctx, FILE *f, const int start)
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol);
 
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(f, mod->xxi[i].sub[0].sid, 0,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

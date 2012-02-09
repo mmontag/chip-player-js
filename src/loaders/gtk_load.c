@@ -11,7 +11,7 @@
 
 
 static int gtk_test(FILE *, char *, const int);
-static int gtk_load (struct context_data *, FILE *, const int);
+static int gtk_load (struct module_data *, FILE *, const int);
 
 struct format_loader gtk_loader = {
 	"GTK",
@@ -35,9 +35,8 @@ static int gtk_test(FILE * f, char *t, const int start)
 	return 0;
 }
 
-static int gtk_load(struct context_data *ctx, FILE *f, const int start)
+static int gtk_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j, k;
@@ -169,7 +168,7 @@ static int gtk_load(struct context_data *ctx, FILE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)
 			continue;
-		load_sample(ctx, f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(f, mod->xxi[i].sub[0].sid, 0,
 					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

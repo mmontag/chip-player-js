@@ -11,7 +11,7 @@
 
 
 static int amd_test (FILE *, char *, const int);
-static int amd_load (struct context_data *, FILE *, const int);
+static int amd_load (struct module_data *, FILE *, const int);
 
 struct format_loader amd_loader = {
     "AMD",
@@ -59,9 +59,8 @@ struct amd_file_header {
 static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
 
-static int amd_load(struct context_data *ctx, FILE *f, const int start)
+static int amd_load(struct module_data *m, FILE *f, const int start)
 {
-    struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
     int r, i, j, tmode = 1;
     struct amd_file_header afh;
@@ -118,7 +117,7 @@ static int amd_load(struct context_data *ctx, FILE *f, const int start)
 
 	_D(_D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
-	load_sample(ctx, f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_ADLIB, NULL, regs);
+	load_sample(f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_ADLIB, NULL, regs);
     }
 
     if (!afh.version) {

@@ -10,7 +10,7 @@
 #include "synth.h"
 
 static int rad_test(FILE *, char *, const int);
-static int rad_load(struct context_data *, FILE *, const int);
+static int rad_load(struct module_data *, FILE *, const int);
 
 struct format_loader rad_loader = {
 	"RAD",
@@ -40,9 +40,8 @@ struct rad_instrument {
 };
 
 
-static int rad_load(struct context_data *ctx, FILE *f, const int start)
+static int rad_load(struct module_data *m, FILE *f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j;
@@ -96,7 +95,7 @@ static int rad_load(struct context_data *ctx, FILE *f, const int start)
 	while ((b = read8(f)) != 0) {
 		fread(sid, 1, 11, f);
 		xmp_cvt_hsc2sbi((char *)sid);
-		load_sample(ctx, f, b - 1, SAMPLE_FLAG_ADLIB, &mod->xxs[b - 1],
+		load_sample(f, b - 1, SAMPLE_FLAG_ADLIB, &mod->xxs[b - 1],
 								(char *)sid);
 	}
 

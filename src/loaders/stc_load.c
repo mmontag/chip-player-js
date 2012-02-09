@@ -15,7 +15,7 @@
  */
 
 static int stc_test(FILE *, char *, const int);
-static int stc_load(struct context_data *, FILE *, const int);
+static int stc_load(struct module_data *, FILE *, const int);
 
 
 struct format_loader stc_loader = {
@@ -84,9 +84,8 @@ static int stc_test(FILE * f, char *t, const int start)
 	return 0;
 }
 
-static int stc_load(struct context_data *ctx, FILE * f, const int start)
+static int stc_load(struct module_data *m, FILE * f, const int start)
 {
-	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event /*, *noise*/;
 	int i, j;
@@ -320,7 +319,7 @@ static int stc_load(struct context_data *ctx, FILE * f, const int start)
 			
 		}
 
-		load_sample(ctx, f, i, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i],
+		load_sample(f, i, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i],
 								(char *)&ss);
 	}
 	
