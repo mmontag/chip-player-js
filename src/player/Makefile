@@ -1,6 +1,6 @@
 
 PLAYER_OBJS	= convert.o virtual.o formats.o misc.o period.o player.o \
-		  stepper.o lfo.o envelope.o \
+		  stepper.o lfo.o envelope.o control.o \
 		  scan.o med_synth.o filter.o \
 		  fmopl.o synth.o mix_all.o effects.o mixer.o ym2149.o \
 		  adlib.o spectrum.o

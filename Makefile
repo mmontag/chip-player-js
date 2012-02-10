@@ -4,7 +4,7 @@ DIST    = xmp-$(VERSION)
 MODULES = "SynthSong1"
 DFILES  = README INSTALL configure configure.in Makefile Makefile.rules.in \
 	  scripts $(MODULES)
-DDIRS	= docs drivers etc include loaders misc player plugin prowiz win32 \
+DDIRS	= docs drivers etc include loaders player plugin win32 \
 	  tunenet main
 V	= 0
 LIB	= lib/libxmp.a
@@ -17,7 +17,6 @@ include Makefile.rules
 include src/include/Makefile
 include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
-include src/misc/Makefile
 include src/player/Makefile
 include src/win32/Makefile
 
