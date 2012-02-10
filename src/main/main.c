@@ -4,11 +4,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
+#include <sys/time.h>
 #include <xmp.h>
 //#include "sound.h"
-#include "terminal.h"
+#include "common.h"
 
+extern int optind;
 
 static void cleanup()
 {
@@ -39,15 +42,27 @@ static void shuffle(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-	static xmp_context ctx;
-	static struct xmp_module_info mi;
+	xmp_context ctx;
+	struct xmp_module_info mi;
+	struct options options;
 	int i;
 	int silent = 0;
-	int optind = 1;
+	int first;
+#ifndef WIN32
+	struct timeval tv;
+	struct timezone tz;
 
-	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 's') {
-		silent = 1;
-		optind++;
+	gettimeofday(&tv, &tz);
+	srand(tv.tv_usec);
+#else
+	srand(GetTickCount());
+#endif
+
+	memset(&options, 0, sizeof (struct options));
+	get_options(argc, argv, &options);
+
+	if (options.random) {
+		shuffle(argc - optind + 1, &argv[optind - 1]);
 	}
 
 	if (!silent && sound_init(44100, 2) < 0) {
@@ -65,18 +80,18 @@ int main(int argc, char **argv)
 
 	ctx = xmp_create_context();
 
-	for (i = optind; i < argc; i++) {
+	for (first = optind; optind < argc; optind++) {
 		printf("\nLoading %s... (%d of %d)\n",
-                	argv[i], i - optind + 1, argc - optind);
+			argv[optind], optind - first + 1, argc - first);
 
-		if (xmp_load_module(ctx, argv[i]) < 0) {
+		if (xmp_load_module(ctx, argv[optind]) < 0) {
 			fprintf(stderr, "%s: error loading %s\n", argv[0],
 				argv[i]);
 			continue;
 		}
 
-		if (xmp_player_start(ctx, 0, 44100, 0) == 0) {
-			int start = 1;
+		if (xmp_player_start(ctx, options.start, 44100, 0) == 0) {
+			int new_mod = 1;
 
 			/* Show module data */
 
@@ -92,13 +107,13 @@ int main(int argc, char **argv)
 				if (mi.loop_count > 0)
 					break;
 
-				info_frame(&mi, start);
+				info_frame(&mi, new_mod);
 				if (!silent) {
-					sound_play(mi.buffer,
-						   mi.buffer_size);
+					sound_play(mi.buffer, mi.buffer_size);
 				}
 
-				start = 0;
+				new_mod = 0;
+				options.start = 0;
 
 			}
 			xmp_player_end(ctx);

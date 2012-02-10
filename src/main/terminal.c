@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <termios.h>
-#include "terminal.h"
+
+#include "common.h"
 
 static int background = 0;
 static struct termios term;

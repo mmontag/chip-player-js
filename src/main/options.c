@@ -6,18 +6,15 @@
  * for more information.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <xmp.h>
 
-#include "xmp.h"
+#include "common.h"
 
 extern char *optarg;
 static int o, i;
@@ -92,7 +89,7 @@ static void list_wrap(char *s, int l, int r, int v)
 	}
 }
 
-static void usage(char *s, struct xmp_options *opt)
+static void usage(char *s)
 {
 	struct xmp_fmt_info *f, *fmt;
 	struct xmp_drv_info *d, *drv;
@@ -101,6 +98,7 @@ static void usage(char *s, struct xmp_options *opt)
 
 	printf("Usage: %s [options] [modules]\n", s);
 
+#if 0
 	printf("\nRegistered module loaders:\n");
 	xmp_get_fmt_info(&fmt);
 	list_wrap(NULL, 3, 78, 1);
@@ -131,6 +129,7 @@ static void usage(char *s, struct xmp_options *opt)
 		for (hlp = d->help; hlp && *hlp; hlp += 2)
 			printf("   -D%-20.20s %s\n", hlp[0], hlp[1]);
 	}
+#endif
 
 	printf("\nPlayer control options:\n"
 	       "   -D parameter[=val]     Pass configuration parameter to the output driver\n"
@@ -153,9 +152,7 @@ static void usage(char *s, struct xmp_options *opt)
 	       "\nPlayer sound options:\n"
 	       "   -8 --8bit              Convert 16 bit samples to 8 bit\n"
 	       "   -m --mono              Mono output\n"
-	       "   --nofilter             Disable IT filter\n"
-	       "   --nopan                Disable dynamic panning\n"
-	       "   -P --pan pan           Percentual pan amplitude (default %d%%)\n"
+	       "   -P --pan pan           Percentual pan amplitude\n"
 	       "   -r --reverse           Reverse left/right stereo channels\n"
 	       "   --stereo               Stereo output\n"
 	       "\nSoftware mixer options:\n"
@@ -163,8 +160,7 @@ static void usage(char *s, struct xmp_options *opt)
 	       "   -b --bits {8|16}       Software mixer resolution (8 or 16 bits)\n"
 	       "   -c --stdout            Mix the module to stdout\n"
 	       "   -F --click-filter      Apply low pass filter to reduce clicks\n"
-	       "   -f --frequency rate    Sampling rate in hertz (default %d Hz)\n"
-	       "   -i --interpolate       Use linear interpolation (default %s)\n"
+	       "   -f --frequency rate    Sampling rate in hertz (default 44100)\n"
 	       "   -n --nearest           Use nearest neighbor interpolation\n"
 	       "   -o --output-file name  Mix the module to file ('-' for stdout)\n"
 	       "   -u --unsigned          Set the mixer to use unsigned samples\n"
@@ -177,13 +173,10 @@ static void usage(char *s, struct xmp_options *opt)
 	       "   -q --quiet             Quiet mode (verbosity level = 0)\n"
 	       "   --show-time            Display elapsed and remaining time\n"
 	       "   -V --version           Print version information\n"
-	       "   -v --verbose           Verbose mode (incremental)\n",
-	       opt->mix, opt->freq,
-	       opt->flags & XMP_CTL_ITPT ? "enabled" : "disabled");
+	       "   -v --verbose           Verbose mode (incremental)\n");
 }
 
-void get_options(int argc, char **argv, struct xmp_options *opt,
-		 xmp_context ctx)
+void get_options(int argc, char **argv, struct options *options)
 {
 	int optidx = 0;
 #define OPTIONS "a:b:cD:d:f:hI:lM:mo:qRS:s:T:t:uVv"
@@ -219,60 +212,63 @@ void get_options(int argc, char **argv, struct xmp_options *opt,
 	while ((o = getopt_long(argc, argv, OPTIONS, lopt, &optidx)) != -1) {
 		switch (o) {
 		case 'a':
-			opt->amplify = atoi(optarg);
+			options->amplify = atoi(optarg);
 			break;
 		case 'b':
-			opt->resol = atoi(optarg);
-			if (opt->resol != 8 && opt->resol != 16)
-				opt->resol = 16;
+			if (atoi(optarg) == 8) {
+				options->format |= XMP_FORMAT_8BIT;
+			}
 			break;
 		case 'c':
-			opt->outfile = "-";
+			options->out_file = "-";
 			break;
+#if 0
 		case 'D':
 			xmp_set_driver_parameter(opt, optarg);
 			break;
 		case 'd':
-			opt->drv_id = optarg;
+			options->drv_id = optarg;
 			break;
 		case OPT_FX9BUG:
-			opt->quirk |= XMP_QRK_FX9BUG;
+			options->quirk |= XMP_QRK_FX9BUG;
 			break;
+#endif
 		case 'f':
-			opt->freq = strtoul(optarg, NULL, 0);
+			options->freq = strtoul(optarg, NULL, 0);
 			break;
 		case 'I':
-			opt->ins_path = optarg;
+			options->ins_path = optarg;
 			break;
 		case 'l':
-			opt->flags |= XMP_CTL_LOOP;
+			options->loop = 1;
 			break;
 		case OPT_LOADONLY:
-			loadonly = 1;
+			options->load_only = 1;
 			break;
 		case 'm':
-			opt->outfmt |= XMP_FORMAT_MONO;
+			options->format |= XMP_FORMAT_MONO;
 			break;
 		case 'o':
-			opt->outfile = optarg;
+			options->out_file = optarg;
 			if (strlen(optarg) >= 4 &&
 			    !strcasecmp(optarg + strlen(optarg) - 4, ".wav")) {
-				opt->drv_id = "wav";
+				//options->drv_id = "wav";
 			}
 			break;
 		case 'P':
-			opt->mix = strtoul(optarg, NULL, 0);
-			if (opt->mix < 0)
-				opt->mix = 0;
-			if (opt->mix > 100)
-				opt->mix = 100;
+			options->mix = strtoul(optarg, NULL, 0);
+			if (options->mix < 0)
+				options->mix = 0;
+			if (options->mix > 100)
+				options->mix = 100;
 			break;
 		case 'q':
-			//opt->verbosity = 0;
+			//options->verbosity = 0;
 			break;
 		case 'R':
-			randomize = 1;
+			options->random = 1;
 			break;
+#if 0
 		case 'M':
 		case 'S':
 			if (o == 'S')
@@ -298,37 +294,32 @@ void get_options(int argc, char **argv, struct xmp_options *opt,
 				token = strtok(NULL, ",");
 			}
 			break;
+#endif
 		case 's':
-			opt->start = strtoul(optarg, NULL, 0);
-			break;
-		case OPT_STEREO:
-			opt->outfmt &= ~XMP_FORMAT_MONO;
-			break;
-		case 'T':
-			opt->tempo = strtoul(optarg, NULL, 0);
+			options->start = strtoul(optarg, NULL, 0);
 			break;
 		case 't':
-			opt->time = strtoul(optarg, NULL, 0);
+			options->time = strtoul(optarg, NULL, 0);
 			break;
 		case 'u':
-			opt->outfmt |= XMP_FMT_UNS;
+			options->format |= XMP_FORMAT_UNSIGNED;
 			break;
 		case 'V':
 			puts("Extended Module Player " VERSION);
 			exit(0);
 		case 'v':
-			//opt->verbosity++;
+			//options->verbosity++;
 			break;
 		case 'h':
-			usage(argv[0], opt);
+			usage(argv[0]);
 		default:
 			exit(-1);
 		}
 	}
 
 	/* Set limits */
-	if (opt->freq < 1000)
-		opt->freq = 1000;	/* Min. rate 1 kHz */
-	if (opt->freq > 48000)
-		opt->freq = 48000;	/* Max. rate 48 kHz */
+	if (options->freq < 1000)
+		options->freq = 1000;	/* Min. rate 1 kHz */
+	if (options->freq > 48000)
+		options->freq = 48000;	/* Max. rate 48 kHz */
 }
