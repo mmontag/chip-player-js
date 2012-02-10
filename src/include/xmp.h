@@ -29,7 +29,7 @@ extern "C" {
 #define XMP_CTL_MOD_RESTART	0x04
 #define XMP_CTL_GVOL_INC	0x05
 #define XMP_CTL_GVOL_DEC	0x06
-#define XMP_CTL_PLAYER_SEEK	0x07
+#define XMP_CTL_SEEK_TIME	0x07
 
 /* Player control macros */
 #define xmp_ord_next(p)		xmp_player_ctl((p), XMP_CTL_ORD_NEXT, 0)
@@ -40,7 +40,7 @@ extern "C" {
 #define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_CTL_MOD_RESTART, 0)
 #define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_CTL_GVOL_INC, 0)
 #define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_CTL_GVOL_DEC, 0)
-#define xmp_player_seek(p,x)	xmp_player_ctl((p), XMP_CTL_PLAYER_SEEK, (x))
+#define xmp_seek_time(p,x)	xmp_player_ctl((p), XMP_CTL_SEEK_TIME, (x))
 
 #define XMP_FORMAT_8BIT		(1 << 0)
 #define XMP_FORMAT_UNSIGNED	(1 << 1)

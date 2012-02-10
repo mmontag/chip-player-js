@@ -17,7 +17,6 @@
 #include "virtual.h"
 #include "mixer.h"
 
-
 xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
@@ -33,7 +32,7 @@ xmp_context xmp_create_context()
 	if (ctx == NULL)
 		return NULL;
 
-	return (xmp_context)ctx;
+	return (xmp_context) ctx;
 }
 
 void xmp_free_context(xmp_context ctx)
@@ -85,30 +84,20 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 		if (p->volume < 64)
 			p->volume++;
 		return p->volume;
+	case XMP_CTL_SEEK_TIME: {
+		int i, t;
+		arg *= 1000;
+		for (i = 0; i < m->mod.len; i++) {
+			t = m->xxo_info[i].time;
+			if (t > arg) {
+				if (i > 0)
+					i--;
+				xmp_ord_set(opaque, i);
+				return 0;
+			}
+		}
+		return -1; }
 	}
 
 	return 0;
-}
-
-int xmp_seek_time(xmp_context opaque, int time)
-{
-	struct context_data *ctx = (struct context_data *)opaque;
-	struct module_data *m = &ctx->m;
-	int i, t;
-	/* _D("seek to %d, total %d", time, xmp_cfg.time); */
-
-	time *= 1000;
-	for (i = 0; i < m->mod.len; i++) {
-		t = m->xxo_info[i].time;
-
-		_D("%2d: %d %d", i, time, t);
-
-		if (t > time) {
-			if (i > 0)
-				i--;
-			xmp_ord_set(opaque, i);
-			return 0;
-		}
-	}
-	return -1;
 }
