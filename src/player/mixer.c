@@ -575,10 +575,6 @@ int mixer_on(struct context_data *ctx)
 		goto err1;
 
 	s->numvoc = SMIX_NUMVOC;
-#if 0
-	s->mode = s->format & XMP_FORMAT_MONO ? 1 : 2;
-	s->resol = s->format & XMP_FORMAT_8BIT ? 1 : 2;
-#endif
 
 	return 0;
 
