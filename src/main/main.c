@@ -23,6 +23,7 @@ static void cleanup()
 
 	sound_deinit();
 	reset_tty();
+	printf("\n");
 	exit(EXIT_FAILURE);
 }
 
