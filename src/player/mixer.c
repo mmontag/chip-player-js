@@ -36,19 +36,18 @@
 #define LIM16_LO	-32768
 
 
-void    smix_mn8norm      (struct mixer_voice *, int *, int, int, int, int);
-void    smix_mn8itpt      (struct mixer_voice *, int *, int, int, int, int);
-void    smix_mn16norm     (struct mixer_voice *, int *, int, int, int, int);
-void    smix_mn16itpt     (struct mixer_voice *, int *, int, int, int, int);
-void    smix_st8norm      (struct mixer_voice *, int *, int, int, int, int);
-void    smix_st8itpt      (struct mixer_voice *, int *, int, int, int, int);
-void    smix_st16norm     (struct mixer_voice *, int *, int, int, int, int);
-void    smix_st16itpt	  (struct mixer_voice *, int *, int, int, int, int);
-
-void    smix_mn8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
-void    smix_mn16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
-void    smix_st8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
-void    smix_st16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
+void smix_mn8norm      (struct mixer_voice *, int *, int, int, int, int);
+void smix_mn8itpt      (struct mixer_voice *, int *, int, int, int, int);
+void smix_mn16norm     (struct mixer_voice *, int *, int, int, int, int);
+void smix_mn16itpt     (struct mixer_voice *, int *, int, int, int, int);
+void smix_st8norm      (struct mixer_voice *, int *, int, int, int, int);
+void smix_st8itpt      (struct mixer_voice *, int *, int, int, int, int);
+void smix_st16norm     (struct mixer_voice *, int *, int, int, int, int);
+void smix_st16itpt     (struct mixer_voice *, int *, int, int, int, int);
+void smix_mn8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
+void smix_mn16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
+void smix_st8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
+void smix_st16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
 
 
 /* Array index:
@@ -59,25 +58,25 @@ void    smix_st16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
  */
 
 static void (*mix_fn[])() = {
-    /* unfiltered */
-    smix_mn8norm,
-    smix_mn8itpt,
-    smix_mn16norm,
-    smix_mn16itpt,
-    smix_st8norm,
-    smix_st8itpt,
-    smix_st16norm,
-    smix_st16itpt,
+	/* unfiltered */
+	smix_mn8norm,
+	smix_mn8itpt,
+	smix_mn16norm,
+	smix_mn16itpt,
+	smix_st8norm,
+	smix_st8itpt,
+	smix_st16norm,
+	smix_st16itpt,
 
-    /* filtered */
-    smix_mn8norm,
-    smix_mn8itpt_flt,
-    smix_mn16norm,
-    smix_mn16itpt_flt,
-    smix_st8norm,
-    smix_st8itpt_flt,
-    smix_st16norm,
-    smix_st16itpt_flt
+	/* filtered */
+	smix_mn8norm,
+	smix_mn8itpt_flt,
+	smix_mn16norm,
+	smix_mn16itpt_flt,
+	smix_st8norm,
+	smix_st8itpt_flt,
+	smix_st16norm,
+	smix_st16itpt_flt
 };
 
 
@@ -122,22 +121,22 @@ static void out_su16norm(int16 *dest, int *src, int num, int amp)
 /* Prepare the mixer for the next tick */
 void mixer_reset(struct context_data *ctx)
 {
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
-    struct mixer_data *s = &ctx->s;
-    int bytelen;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_data *s = &ctx->s;
+	int bytelen;
 
-    s->ticksize = m->quirk & QUIRK_MEDBPM ?
-	s->freq * m->rrate * 33 / p->bpm / 12500 :
-    	s->freq * m->rrate / p->bpm / 100;
+	s->ticksize = m->quirk & QUIRK_MEDBPM ?
+	    s->freq * m->rrate * 33 / p->bpm / 12500 :
+	    s->freq * m->rrate / p->bpm / 100;
 
-    s->dtright = s->dtleft = 0;
+	s->dtright = s->dtleft = 0;
 
-    bytelen = s->ticksize * sizeof (int);
-    if (~s->format & XMP_FORMAT_MONO) {
-	bytelen *= 2;
-    }
-    memset(s->buf32b, 0, bytelen);
+	bytelen = s->ticksize * sizeof(int);
+	if (~s->format & XMP_FORMAT_MONO) {
+		bytelen *= 2;
+	}
+	memset(s->buf32b, 0, bytelen);
 }
 
 
@@ -400,166 +399,165 @@ void mixer_softmixer(struct context_data *ctx)
     mixer_reset(ctx);
 }
 
-
 void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 {
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
-    struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
-    int lpe;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
+	struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
+	int lpe;
 
-    if (xxs->flg & XMP_SAMPLE_SYNTH)
-	return;
+	if (xxs->flg & XMP_SAMPLE_SYNTH) {
+		return;
+	}
 
-    lpe = xxs->len - 1;
-    if (xxs->flg & XMP_SAMPLE_LOOP && vi->looped_sample)
-	lpe = lpe > xxs->lpe ? xxs->lpe : lpe;
+	lpe = xxs->len - 1;
+	if (xxs->flg & XMP_SAMPLE_LOOP && vi->looped_sample) {
+		lpe = lpe > xxs->lpe ? xxs->lpe : lpe;
+	}
 
-    if (pos >= lpe)			/* Happens often in MED synth */
-	pos = 0;
+	if (pos >= lpe) {		/* Happens often in MED synth */
+		pos = 0;
+	}
 
-    vi->pos = pos;
-    vi->frac = frac;
-    vi->end = lpe;
+	vi->pos = pos;
+	vi->frac = frac;
+	vi->end = lpe;
 
-    if (vi->fidx & FLAG_REVLOOP)
-	vi->fidx ^= vi->fxor;
+	if (vi->fidx & FLAG_REVLOOP) {
+		vi->fidx ^= vi->fxor;
+	}
 }
-
 
 void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 {
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
-    struct mixer_data *s = &ctx->s;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
-    struct xmp_sample *xxs = &m->mod.xxs[smp];
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_data *s = &ctx->s;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
+	struct xmp_sample *xxs = &m->mod.xxs[smp];
 
-    vi->smp = smp;
-    vi->vol = 0;
-    vi->pan = 0;
-    vi->looped_sample = 0;
-    
-    vi->fidx = 0;
+	vi->smp = smp;
+	vi->vol = 0;
+	vi->pan = 0;
+	vi->looped_sample = 0;
 
-    if (~s->format & XMP_FORMAT_MONO) {
-	vi->fidx |= FLAG_STEREO;
-    }
+	vi->fidx = 0;
 
-    if (xxs->flg & XMP_SAMPLE_SYNTH) {
-	vi->fidx |= FLAG_SYNTH;
-	m->synth->setpatch(ctx, voc, xxs->data);
-	return;
-    }
-    
-    mixer_setvol(ctx, voc, 0);
+	if (~s->format & XMP_FORMAT_MONO) {
+		vi->fidx |= FLAG_STEREO;
+	}
 
-    vi->sptr = xxs->data;
-    vi->fidx |= FLAG_ITPT | FLAG_ACTIVE;
+	if (xxs->flg & XMP_SAMPLE_SYNTH) {
+		vi->fidx |= FLAG_SYNTH;
+		m->synth->setpatch(ctx, voc, xxs->data);
+		return;
+	}
 
-    if (HAS_QUIRK(QUIRK_FILTER)) {
-	vi->fidx |= FLAG_FILTER;
-    }
+	mixer_setvol(ctx, voc, 0);
 
-    if (xxs->flg & XMP_SAMPLE_16BIT) {
-	vi->fidx |= FLAG_16_BITS;
-    }
+	vi->sptr = xxs->data;
+	vi->fidx |= FLAG_ITPT | FLAG_ACTIVE;
 
-    if (xxs->flg & XMP_SAMPLE_LOOP) {
-	vi->fxor = xxs->flg & XMP_SAMPLE_LOOP_BIDIR ? FLAG_REVLOOP : 0;
-    } else {
-	vi->fxor = vi->fidx;
-    }
+	if (HAS_QUIRK(QUIRK_FILTER)) {
+		vi->fidx |= FLAG_FILTER;
+	}
 
-    mixer_voicepos(ctx, voc, 0, 0);
+	if (xxs->flg & XMP_SAMPLE_16BIT) {
+		vi->fidx |= FLAG_16_BITS;
+	}
+
+	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		vi->fxor = xxs->flg & XMP_SAMPLE_LOOP_BIDIR ? FLAG_REVLOOP : 0;
+	} else {
+		vi->fxor = vi->fidx;
+	}
+
+	mixer_voicepos(ctx, voc, 0, 0);
 }
-
 
 void mixer_setnote(struct context_data *ctx, int voc, int note)
 {
-    struct player_data *p = &ctx->p;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
+	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-    vi->period = note_to_period_mix(vi->note = note, 0);
-    vi->attack = SLOW_ATTACK;
+	vi->period = note_to_period_mix(vi->note = note, 0);
+	vi->attack = SLOW_ATTACK;
 }
-
 
 void mixer_setbend(struct context_data *ctx, int voc, int bend)
 {
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-    vi->period = note_to_period_mix(vi->note, bend);
+	vi->period = note_to_period_mix(vi->note, bend);
 
-    if (vi->fidx & FLAG_SYNTH)
-	m->synth->setnote(ctx, voc, vi->note, bend);
+	if (vi->fidx & FLAG_SYNTH) {
+		m->synth->setnote(ctx, voc, vi->note, bend);
+	}
 }
-
 
 void mixer_setvol(struct context_data *ctx, int voc, int vol)
 {
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
- 
-    anticlick(ctx, voc, vol, vi->pan, NULL, 0);
-    vi->vol = vol;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-    if (vi->fidx & FLAG_SYNTH)
-	m->synth->setvol(ctx, voc, vol >> 4);
+	anticlick(ctx, voc, vol, vi->pan, NULL, 0);
+	vi->vol = vol;
+
+	if (vi->fidx & FLAG_SYNTH) {
+		m->synth->setvol(ctx, voc, vol >> 4);
+	}
 }
-
 
 void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 {
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
- 
-    switch (type) {
-    case DSP_EFFECT_CUTOFF:
-        vi->filter.cutoff = val;
-	break;
-    case DSP_EFFECT_RESONANCE:
-        vi->filter.resonance = val;
-	break;
-    case DSP_EFFECT_FILTER_B0:
-        vi->filter.B0 = val;
-	break;
-    case DSP_EFFECT_FILTER_B1:
-        vi->filter.B1 = val;
-	break;
-    case DSP_EFFECT_FILTER_B2:
-        vi->filter.B2 = val;
-	break;
-    }
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-    if (vi->fidx & FLAG_SYNTH)
-	m->synth->seteffect(ctx, voc, type, val);
+	switch (type) {
+	case DSP_EFFECT_CUTOFF:
+		vi->filter.cutoff = val;
+		break;
+	case DSP_EFFECT_RESONANCE:
+		vi->filter.resonance = val;
+		break;
+	case DSP_EFFECT_FILTER_B0:
+		vi->filter.B0 = val;
+		break;
+	case DSP_EFFECT_FILTER_B1:
+		vi->filter.B1 = val;
+		break;
+	case DSP_EFFECT_FILTER_B2:
+		vi->filter.B2 = val;
+		break;
+	}
+
+	if (vi->fidx & FLAG_SYNTH) {
+		m->synth->seteffect(ctx, voc, type, val);
+	}
 }
-
 
 void mixer_setpan(struct context_data *ctx, int voc, int pan)
 {
-    struct player_data *p = &ctx->p;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
- 
-    vi->pan = pan;
-}
+	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
+	vi->pan = pan;
+}
 
 int mixer_numvoices(struct context_data *ctx, int num)
 {
-    struct mixer_data *s = &ctx->s;
+	struct mixer_data *s = &ctx->s;
 
-    if (num > s->numvoc || num < 0) {
-	return s->numvoc;
-    } else {
-	return num;
-    }
+	if (num > s->numvoc || num < 0) {
+		return s->numvoc;
+	} else {
+		return num;
+	}
 }
 
 int mixer_on(struct context_data *ctx)
@@ -570,7 +568,7 @@ int mixer_on(struct context_data *ctx)
 	if (s->buffer == NULL)
 		goto err;
 
-	s->buf32b = calloc(sizeof (int), OUT_MAXLEN);
+	s->buf32b = calloc(sizeof(int), OUT_MAXLEN);
 	if (s->buf32b == NULL)
 		goto err1;
 
@@ -578,19 +576,18 @@ int mixer_on(struct context_data *ctx)
 
 	return 0;
 
-err1:
+      err1:
 	free(s->buffer);
-err:
+      err:
 	return -1;
 }
 
-
 void mixer_off(struct context_data *ctx)
 {
-    struct mixer_data *s = &ctx->s;
+	struct mixer_data *s = &ctx->s;
 
-    free(s->buffer);
-    free(s->buf32b);
-    s->buf32b = NULL;
-    s->buffer = NULL;
+	free(s->buffer);
+	free(s->buf32b);
+	s->buf32b = NULL;
+	s->buffer = NULL;
 }
