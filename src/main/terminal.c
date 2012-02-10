@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <termios.h>
-
+#include <xmp.h>
 #include "common.h"
 
 static int background = 0;

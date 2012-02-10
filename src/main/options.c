@@ -268,11 +268,11 @@ void get_options(int argc, char **argv, struct options *options)
 		case 'R':
 			options->random = 1;
 			break;
-#if 0
 		case 'M':
 		case 'S':
-			if (o == 'S')
-				xmp_channel_mute(ctx, 0, 64, 1);
+			if (o == 'S') {
+				memset(options->mute, 1, XMP_MAX_CHANNELS);
+			}
 			token = strtok(optarg, ",");
 			while (token) {
 				int a, b;
@@ -287,14 +287,12 @@ void get_options(int argc, char **argv, struct options *options)
 				} else
 					a = b = atoi(token);
 				for (; b >= a; b--) {
-					if (b < 64)
-						xmp_channel_mute(ctx, b, 1,
-								 (o == 'M'));
+					if (b < XMP_MAX_CHANNELS)
+						options->mute[b] = (o == 'M');
 				}
 				token = strtok(NULL, ",");
 			}
 			break;
-#endif
 		case 's':
 			options->start = strtoul(optarg, NULL, 0);
 			break;

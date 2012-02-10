@@ -11,6 +11,7 @@ struct options {
 	int load_only;		/* load module and exit */
 	char *out_file;		/* output file name */
 	char *ins_path;		/* instrument path */
+	char mute[XMP_MAX_CHANNELS];
 };
 
 int set_tty(void);

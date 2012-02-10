@@ -40,11 +40,11 @@ void xmp_free_context(xmp_context ctx)
 	free(ctx);
 }
 
-void xmp_channel_mute(xmp_context opaque, int num, int on)
+void xmp_channel_mute(xmp_context opaque, int num, int mute)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 
-	virtch_mute(ctx, num, on);
+	virtch_mute(ctx, num, mute);
 }
 
 int xmp_player_ctl(xmp_context opaque, int cmd, int arg)

@@ -93,6 +93,12 @@ int main(int argc, char **argv)
 		if (xmp_player_start(ctx, options.start, 44100, 0) == 0) {
 			int new_mod = 1;
 
+			/* Mute channels */
+
+			for (i = 0; i < XMP_MAX_CHANNELS; i++) {
+				xmp_channel_mute(ctx, i, options.mute[i]);
+			}
+
 			/* Show module data */
 
 			xmp_player_get_info(ctx, &mi);
