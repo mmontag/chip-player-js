@@ -269,6 +269,15 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 		return 0;
 	}
 
+	/* Loop parameters sanity check
+	 * Allow loop ends one sample after the end of the sample, some
+	 * formats work this way. Last sample will be copied (see below)
+	 */
+	if (xxs->lps >= xxs->len || xxs->lpe > (xxs->len + 1)) {
+		xxs->lps = xxs->lpe = 0;
+		xxs->flg &= ~(XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
+	}
+
 	/* Patches with samples
 	 * Allocate extra sample for interpolation.
 	 * S3M and IT loop end point to first sample after the loop
