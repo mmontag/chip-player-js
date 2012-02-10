@@ -22,9 +22,8 @@
 #define FLAG_16_BITS	0x02
 #define FLAG_STEREO	0x04
 #define FLAG_FILTER	0x08
-#define FLAG_REVLOOP	0x10
-#define FLAG_ACTIVE	0x20
-#define FLAG_SYNTH	0x40
+#define FLAG_ACTIVE	0x10
+#define FLAG_SYNTH	0x20
 #define FIDX_FLAGMASK	(FLAG_ITPT | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
 
 #define DOWNMIX_SHIFT	 12
@@ -274,10 +273,6 @@ void mixer_softmixer(struct context_data *ctx)
 
 	xxs = &m->mod.xxs[vi->smp];
 
-	/* This is for bidirectional sample loops */
-	if (vi->fidx & FLAG_REVLOOP)
-	    step = -step;
-
 	/* Sample loop processing. Offsets in samples, not bytes */
 	lps = xxs->lps;
 	lpe = xxs->lpe;
@@ -352,33 +347,21 @@ void mixer_softmixer(struct context_data *ctx)
 	    if (size <= 0)
 		continue;
 
-	    vi->fidx ^= vi->fxor;
-
 	    /* First sample loop run */
-            if (vi->fidx == 0 || lps >= lpe) {
+            if (~xxs->flg & XMP_SAMPLE_LOOP || lps >= lpe) {
 		anticlick(ctx, voc, 0, 0, buf_pos, size);
 		virtch_resetvoice(ctx, voc, 0);
 		size = 0;
 		continue;
 	    }
 
-	    if ((~vi->fidx & FLAG_REVLOOP) && vi->fxor == 0) {
-		vi->pos = lps;			/* forward loop */
+	    vi->pos = lps;			/* forward loop */
 
-		if (xxs->flg & XMP_SAMPLE_LOOP_FULL) {
+	    if (xxs->flg & XMP_SAMPLE_LOOP_FULL) {
 	            vi->end = lpe = xxs->lpe;
-		}
-
-		vi->looped_sample = 1;
-
-	    } else {
-		step = -step;			/* invert dir */
-		vi->frac += step;
-		/* keep bidir loop at the same size of forward loop */
-		vi->pos += (vi->frac >> SMIX_SHIFT);
-		vi->frac &= SMIX_MASK;
-		vi->end = step > 0 ? lpe : lps;
 	    }
+
+	    vi->looped_sample = 1;
 	}
     }
 
@@ -422,10 +405,11 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 
 	vi->pos = pos;
 	vi->frac = frac;
+
 	vi->end = lpe;
 
-	if (vi->fidx & FLAG_REVLOOP) {
-		vi->fidx ^= vi->fxor;
+	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		vi->end = xxs->lpe + (xxs->lpe - xxs->lps + 1);
 	}
 }
 
@@ -465,12 +449,6 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		vi->fidx |= FLAG_16_BITS;
-	}
-
-	if (xxs->flg & XMP_SAMPLE_LOOP) {
-		vi->fxor = xxs->flg & XMP_SAMPLE_LOOP_BIDIR ? FLAG_REVLOOP : 0;
-	} else {
-		vi->fxor = vi->fidx;
 	}
 
 	mixer_voicepos(ctx, voc, 0, 0);

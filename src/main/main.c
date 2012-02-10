@@ -129,7 +129,6 @@ int main(int argc, char **argv)
 		xmp_release_module(ctx);
 		printf("\n");
 	}
-
 	xmp_free_context(ctx);
 
 	reset_tty();

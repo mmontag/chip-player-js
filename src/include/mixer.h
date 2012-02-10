@@ -33,7 +33,6 @@ struct mixer_voice {
 	int pos;		/* position in sample */
 	int frac;		/* interpolation */
 	int fidx;		/* function index */
-	int fxor;		/* function xor control */
 	int ins;		/* instrument number */
 	int smp;		/* sample number */
 	int end;		/* loop end */

@@ -189,7 +189,6 @@ void set_type(struct module_data *m, char *fmt, ...)
 	va_end(ap);
 }
 
-
 static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 {
     char delta = 0;
@@ -208,10 +207,42 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
     }
 }
 
+static void unroll_loop(struct xmp_sample *xxs)
+{
+	int8 *s8;
+	int16 *s16;
+	int start, loop_size;
+	int i;
+
+	s16 = (int16 *)xxs->data;
+	s8 = (int8 *)xxs->data;
+
+	if (xxs->len > xxs->lpe + 1) {
+		start = xxs->lpe + 1;
+	} else {
+		start = xxs->len;
+	}
+
+	loop_size = xxs->lpe - xxs->lps + 1;
+
+	if (xxs->flg & XMP_SAMPLE_16BIT) {
+		s16 += start;
+		for (i = 0; i < loop_size; i++) {
+			*(s16 + i) = *(s16 - i - 1);	
+		}
+	} else {
+		s8 += start;
+		for (i = 0; i < loop_size; i++) {
+			*(s8 + i) = *(s8 - i - 1);	
+		}
+	}
+}
+
 
 int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer)
 {
-	int bytelen, extralen;
+	int bytelen, extralen, unroll_extralen;
+	int bidir_loop = 0;
 
 	/* Synth patches
 	 * Default is YM3128 for historical reasons
@@ -239,21 +270,38 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 	}
 
 	/* Patches with samples
-	 */
-	bytelen = xxs->len;
-	extralen = 1;
-
-	/* S3M and IT loop end point to first sample after the loop
+	 * Allocate extra sample for interpolation.
+	 * S3M and IT loop end point to first sample after the loop
 	 * so allocate one more sample
 	 */
-	if (xxs->lpe == xxs->len) {
-		extralen++;
+	bytelen = xxs->len;
+	extralen = 2;
+	unroll_extralen = 0;
+
+	/* Disable birectional loop flag if sample is not looped
+	 */
+	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		if (~xxs->flg & XMP_SAMPLE_LOOP)
+			xxs->flg &= ~XMP_SAMPLE_LOOP_BIDIR;
+	}
+	/* Unroll bidirectional loops
+	 */
+	if (XMP_SAMPLE_LOOP_BIDIR) {
+		unroll_extralen = (xxs->lpe - xxs->lps + 1) -
+				(xxs->len - xxs->lpe - 1);
+
+		if (unroll_extralen < 0)
+			unroll_extralen = 0;
+
 	}
 
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		bytelen *= 2;
 		extralen *= 2;
+		unroll_extralen *= 2;
 	}
+
+	extralen += unroll_extralen;
 
 	if ((xxs->data = malloc(bytelen + extralen)) == NULL)
 		return -1;
@@ -321,23 +369,31 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 		xxs->flg |= XMP_SAMPLE_LOOP_FULL;
 	}
 
-	/* Duplicate last sample -- prevent click in bidir loops */
+	/* Increment sample size if loop size exceeds sample limits */
+	if (xxs->lpe == xxs->len) {
+		xxs->len++;
+		if (xxs->flg & XMP_SAMPLE_16BIT) {
+			xxs->data[bytelen] = xxs->data[bytelen - 2];
+			xxs->data[bytelen + 1] = xxs->data[bytelen - 1];
+			bytelen += 2;
+		} else {
+			xxs->data[bytelen] = xxs->data[bytelen - 1];
+			bytelen++;
+		}
+	}
+
+	/* Unroll bidirectional loops */
+	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		unroll_loop(xxs);
+		bytelen += unroll_extralen;
+	}
+	
+	/* Add extra samples at end */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		xxs->data[bytelen] = xxs->data[bytelen - 2];
 		xxs->data[bytelen + 1] = xxs->data[bytelen - 1];
 	} else {
 		xxs->data[bytelen] = xxs->data[bytelen - 1];
-	}
-
-	/* Add extra sample if we have S3M-style loop ends */
-	if (xxs->lpe == xxs->len) {
-		if (xxs->flg & XMP_SAMPLE_16BIT) {
-			xxs->data[bytelen + 2] = xxs->data[bytelen];
-			xxs->data[bytelen + 3] = xxs->data[bytelen + 1];
-		} else {
-			xxs->data[bytelen + 1] = xxs->data[bytelen];
-		}
-		xxs->len++;
 	}
 
 	return 0;
