@@ -1,0 +1,101 @@
+VERSION	= 3.9.0
+
+CC		= @CC@
+CFLAGS		= -c @CFLAGS@ @DEFS@ #-D_DEBUG
+LD		= @CC@
+LDFLAGS		= @LDFLAGS@
+RANLIB		= @RANLIB@
+INSTALL		= @INSTALL@
+DESTDIR		=
+prefix		= @prefix@
+exec_prefix	= @prefix@
+datarootdir	= @datarootdir@
+BINDIR		= @bindir@
+LIBDIR		= @libdir@
+MANDIR		= @mandir@/man1
+SYSCONFDIR	= @sysconfdir@/xmp
+SHELL		= /bin/sh
+
+DIST		= xmp-$(VERSION)
+DFILES		= README INSTALL configure configure.ac Makefile.in scripts
+DDIRS		= docs drivers include loaders player plugin win32 \
+		  tunenet main
+SHELL		= /bin/sh
+V		= 0
+LIB		= lib/libxmp.a
+
+all: library binaries
+
+include docs/Makefile
+include src/include/Makefile
+include src/loaders/Makefile
+include src/loaders/prowizard/Makefile
+include src/player/Makefile
+include src/win32/Makefile
+
+LOBJS = $(OBJS:.o=.lo)
+
+# These are the applications
+include src/main/Makefile
+include src/test/Makefile
+
+CFLAGS += -Isrc/include -DVERSION=\"$(VERSION)\"
+
+.SUFFIXES: .c .o .lo .a .so .dll
+
+.c.o:
+	@CMD='$(CC) $(CFLAGS) -o $*.o $<'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.o ; fi; \
+	eval $$CMD
+
+.c.lo:
+	@CMD='$(CC) $(CFLAGS) -fPIC -D_REENTRANT -o $*.lo $<'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
+	eval $$CMD
+
+
+#binaries: src/main/xmp $(PLUGINS)
+binaries: src/main/xmp
+
+library: $(LIB)
+
+$(LIB): $(OBJS)
+	@mkdir -p lib
+	@CMD='$(AR) r $@ $(OBJS)'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
+	eval $$CMD
+	ranlib $@
+
+clean:
+	@rm -f $(OBJS) $(LIB) $(OBJS:.o=.lo) $(M_OBJS)
+
+install: install-xmp install-docs
+
+depend:
+	@echo Building dependencies...
+	@echo > $@
+	@for i in $(OBJS) $(M_OBJS); do \
+	    c="$${i%.o}.c"; l="$${i%.o}.lo"; \
+	    $(CC) $(CFLAGS) -MM $$c | \
+		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
+	done
+	    
+dist: dist-prepare dist-subdirs
+
+dist-prepare:
+	rm -Rf $(DIST) $(DIST).tar.gz
+	mkdir -p $(DIST)
+	cp -RPp $(DFILES) $(DIST)/
+
+dist-subdirs: $(addprefix dist-,$(DDIRS))
+	chmod -R u+w $(DIST)/*
+	tar cvf - $(DIST) | gzip -9c > $(DIST).tar.gz
+	rm -Rf $(DIST)
+	ls -l $(DIST).tar.gz
+
+$(OBJS): Makefile
+
+$(LOBJS): Makefile
+
+sinclude depend
+

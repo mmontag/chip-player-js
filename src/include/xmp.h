@@ -13,8 +13,6 @@
 extern "C" {
 #endif
 
-#define XMP_VERSION		0x0400
-
 #define XMP_NAME_SIZE		64
 
 #define XMP_KEY_OFF		0x81
