@@ -280,11 +280,9 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 
 	/* Patches with samples
 	 * Allocate extra sample for interpolation.
-	 * S3M and IT loop end point to first sample after the loop
-	 * so allocate one more sample
 	 */
 	bytelen = xxs->len;
-	extralen = 2;
+	extralen = 1;
 	unroll_extralen = 0;
 
 	/* Disable birectional loop flag if sample is not looped
@@ -295,24 +293,32 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 	}
 	/* Unroll bidirectional loops
 	 */
-	if (XMP_SAMPLE_LOOP_BIDIR) {
+	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 		unroll_extralen = (xxs->lpe - xxs->lps + 1) -
 				(xxs->len - xxs->lpe - 1);
 
-		if (unroll_extralen < 0)
-			unroll_extralen = 0;
+		/* In this case, xxs->len will be incremented later */
+		if (xxs->lpe == xxs->len)
+			unroll_extralen--;
 
+		if (unroll_extralen < 0) {
+			unroll_extralen = 0;
+		}
 	}
 
+	/* S3M and IT loop end point to first sample after the loop
+	 * so allocate one more sample
+	 */
+	if (xxs->lpe == xxs->len) {
+		extralen++;
+	}
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		bytelen *= 2;
 		extralen *= 2;
 		unroll_extralen *= 2;
 	}
 
-	extralen += unroll_extralen;
-
-	if ((xxs->data = malloc(bytelen + extralen)) == NULL)
+	if ((xxs->data = malloc(bytelen + extralen + unroll_extralen)) == NULL)
 		return -1;
 
 	if (flags & SAMPLE_FLAG_NOLOAD) {
