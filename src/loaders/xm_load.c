@@ -62,7 +62,6 @@ static int xm_load(struct module_data *m, FILE *f, const int start)
     struct xm_instrument xi;
     struct xm_sample_header xsh[16];
     char tracker_name[21];
-    int fix_loop = 0;
 
     LOAD_INIT();
 
@@ -111,7 +110,6 @@ static int xm_load(struct module_data *m, FILE *f, const int start)
 	strcpy(tracker_name, "unknown tracker");
     } else if (*tracker_name == 0) {
 	strcpy(tracker_name, "Digitrakker");	/* best guess */
-	fix_loop = 1;
     }
 
     /* See MMD1 loader for explanation */
@@ -402,8 +400,6 @@ load_instruments:
 
 		mod->xxs[sample_num].len = xsh[j].length;
 		mod->xxs[sample_num].lps = xsh[j].loop_start;
-		if (fix_loop && mod->xxs[sample_num].lps > 0)
-		    mod->xxs[sample_num].lps--;
 		mod->xxs[sample_num].lpe = xsh[j].loop_start + xsh[j].loop_length;
 
 		mod->xxs[sample_num].flg = 0;
