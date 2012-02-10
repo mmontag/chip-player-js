@@ -277,6 +277,7 @@ void get_options(int argc, char **argv, struct options *options)
 			while (token) {
 				int a, b;
 				char buf[40];
+				memset(buf, 0, 40);
 				if (strchr(token, '-')) {
 					b = strcspn(token, "-");
 					strncpy(buf, token, b);
@@ -284,8 +285,9 @@ void get_options(int argc, char **argv, struct options *options)
 					strncpy(buf, token + b + 1,
 						strlen(token) - b - 1);
 					b = atoi(buf);
-				} else
+				} else {
 					a = b = atoi(token);
+				}
 				for (; b >= a; b--) {
 					if (b < XMP_MAX_CHANNELS)
 						options->mute[b] = (o == 'M');
