@@ -188,22 +188,22 @@ struct xmp_module {
 #define XMP_PERIOD_BASE	6847		/* C4 period */
 
 struct xmp_module_info {
-	int order;
-	int pattern;
-	int row;
-	int num_rows;
-	int frame;
-	int tempo;
-	int bpm;
-	int total_time;
-	int current_time;
-	void *buffer;
-	int buffer_size;
-	int total_size;
-	int volume;
-	int loop_count;
-	int virt_channels;
-	int virt_used;
+	int order;			/* Current position */
+	int pattern;			/* Current pattern */
+	int row;			/* Current row in pattern */
+	int num_rows;			/* Number of rows in current pattern */
+	int frame;			/* Current frame */
+	int tempo;			/* Current replay speed */
+	int bpm;			/* Current bpm */
+	int total_time;			/* Estimated replay time */
+	int current_time;		/* Current replay time */
+	void *buffer;			/* Pointer to sound buffer */
+	int buffer_size;		/* Used buffer size */
+	int total_size;			/* Total buffer size */
+	int volume;			/* Current master volume */
+	int loop_count;			/* Loop counter */
+	int virt_channels;		/* Number of virtual channels */
+	int virt_used;			/* Used virtual channels */
 
 	struct xmp_channel_info {
 		unsigned int period;
@@ -217,7 +217,7 @@ struct xmp_module_info {
 		unsigned char reserved;
 	} channel_info[XMP_MAX_CHANNELS];
 
-	struct xmp_module *mod;
+	struct xmp_module *mod;		/* Pointer to module data */
 };
 
 
