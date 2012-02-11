@@ -966,7 +966,6 @@ int xmp_player_frame(xmp_context opaque)
 	p->frame++;
 
 	if (p->frame >= (p->tempo * (1 + f->delay))) {
-next_row:
 		next_row(ctx);
 	}
 
@@ -996,7 +995,7 @@ next_row:
 		p->ord--;
 		virtch_reset(ctx);
 		reset_channel(ctx);
-		goto next_row;
+		next_row(ctx);
 	}
 
 	/* check new row */
