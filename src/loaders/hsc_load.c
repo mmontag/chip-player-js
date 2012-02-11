@@ -106,7 +106,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
     fread (buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < mod->ins; i++, sid += 12) {
-	xmp_cvt_hsc2sbi((char *)sid);
+	convert_hsc_to_sbi((char *)sid);
 
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	mod->xxi[i].nsm = 1;

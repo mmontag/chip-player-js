@@ -15,7 +15,6 @@
 #include "mixer.h"
 #include "synth.h"
 #include "period.h"
-#include "convert.h"
 
 
 #define FLAG_ITPT	0x01

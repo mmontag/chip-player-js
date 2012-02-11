@@ -45,83 +45,79 @@ static int8 vdic_table[128] = {
 };
 
 
-
 /* Convert differential to absolute sample data */
-void xmp_cvt_diff2abs (int l, int r, uint8 *p)
+void convert_delta(int l, int r, uint8 * p)
 {
-    uint16* w = (uint16*) p;
-    uint16 abs = 0;
+	uint16 *w = (uint16 *) p;
+	uint16 abs = 0;
 
-    if (r) {
-	for (; l--;) {
-	    abs = *w + abs;
-	    *w++ = abs;
+	if (r) {
+		for (; l--;) {
+			abs = *w + abs;
+			*w++ = abs;
+		}
+	} else {
+		for (; l--;) {
+			abs = *p + abs;
+			*p++ = (uint8) abs;
+		}
 	}
-    } else {
-	for (; l--;) {
-	    abs = *p + abs;
-	    *p++ = (uint8) abs;
-	}
-    }
 }
-
 
 /* Convert signed to unsigned sample data */
-void xmp_cvt_sig2uns(int l, int r, uint8 *p)
+void convert_signal(int l, int r, uint8 * p)
 {
-    uint16* w = (uint16*)p;
+	uint16 *w = (uint16 *) p;
 
-    if (r) {
-	for (; l--; w++)
-	    *w += 0x8000;
-    } else {
-	for (; l--; p++)
-	    *p += (char)0x80;		/* cast needed by MSVC++ */
-    }
+	if (r) {
+		for (; l--; w++)
+			*w += 0x8000;
+	} else {
+		for (; l--; p++)
+			*p += (char)0x80;	/* cast needed by MSVC++ */
+	}
 }
-
 
 /* Convert little-endian 16 bit samples to big-endian */
-void xmp_cvt_sex(int l, uint8 *p)
+void convert_endian(int l, uint8 * p)
 {
-    uint8 b;
-    int i;
+	uint8 b;
+	int i;
 
-    for (i = 0; i < l; i++) {
-	b = p[0];
-	p[0] = p[1];
-	p[1] = b;
-	p += 2;
-    }
+	for (i = 0; i < l; i++) {
+		b = p[0];
+		p[0] = p[1];
+		p[1] = b;
+		p += 2;
+	}
 }
-
 
 /* Downmix stereo samples to mono */
-void xmp_cvt_stdownmix(int l, int r, uint8 *p)
+void convert_stereo_to_mono(int l, int r, uint8 * p)
 {
-    int16 *b = (int16 *)p;
-    int i;
+	int16 *b = (int16 *) p;
+	int i;
 
-    if (r) {
-	l /= 2;
-	for (i = 0; i < l; i++)
-	    b[i] = (b[i * 2] + b[i * 2 + 1]) / 2;
-    } else {
-	for (i = 0; i < l; i++)
-	    p[i] = (p[i * 2] + p[i * 2 + 1]) / 2;
-    }
+	if (r) {
+		l /= 2;
+		for (i = 0; i < l; i++)
+			b[i] = (b[i * 2] + b[i * 2 + 1]) / 2;
+	} else {
+		for (i = 0; i < l; i++)
+			p[i] = (p[i * 2] + p[i * 2 + 1]) / 2;
+	}
 }
-
 
 /* Convert 7 bit samples to 8 bit */
-void xmp_cvt_2xsmp(int l, uint8 *p)
+void convert_7bit_to_8bit(int l, uint8 * p)
 {
-    for (; l--; *p++ <<= 1);
+	for (; l--; p++) {
+		*p <<= 1;
+	}
 }
 
-
 /* Convert Archimedes VIDC samples to linear */
-void xmp_cvt_vidc(int l, uint8 *p)
+void convert_vidc_to_linear(int l, uint8 * p)
 {
 	int i;
 	uint8 x;
@@ -134,22 +130,21 @@ void xmp_cvt_vidc(int l, uint8 *p)
 	}
 }
 
-
 /* Convert HSC OPL2 instrument data to SBI instrument data */
-void xmp_cvt_hsc2sbi(char *a)
+void convert_hsc_to_sbi(char *a)
 {
-    char b[11];
-    int i;
+	char b[11];
+	int i;
 
-    for (i = 0; i < 10; i += 2) {
-	uint8 x;
- 	x = a[i];
-	a[i] = a[i + 1];
-	a[i + 1] = x;
-    }
+	for (i = 0; i < 10; i += 2) {
+		uint8 x;
+		x = a[i];
+		a[i] = a[i + 1];
+		a[i + 1] = x;
+	}
 
-    memcpy (b, a, 11);
-    a[8] = b[10];
-    a[10] = b[9];
-    a[9] = b[8];
+	memcpy(b, a, 11);
+	a[8] = b[10];
+	a[10] = b[9];
+	a[9] = b[8];
 }

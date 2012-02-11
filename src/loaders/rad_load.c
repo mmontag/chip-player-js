@@ -94,7 +94,7 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 
 	while ((b = read8(f)) != 0) {
 		fread(sid, 1, 11, f);
-		xmp_cvt_hsc2sbi((char *)sid);
+		convert_hsc_to_sbi((char *)sid);
 		load_sample(f, b - 1, SAMPLE_FLAG_ADLIB, &mod->xxs[b - 1],
 								(char *)sid);
 	}

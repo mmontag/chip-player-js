@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "virtual.h"
-#include "convert.h"
 #include "mixer.h"
 
 #define	FREE	-1

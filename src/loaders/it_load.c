@@ -815,7 +815,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		    /* decompression generates native-endian samples, but
 		     * we want little-endian */
 		    if (is_big_endian()) {
-			xmp_cvt_sex(mod->xxs[i].len, buf);
+			convert_endian(mod->xxs[i].len, buf);
 		    }
 		} else {
 		    itsex_decompress8(f, buf, mod->xxs[i].len, 
