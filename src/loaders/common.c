@@ -189,22 +189,22 @@ void set_type(struct module_data *m, char *fmt, ...)
 	va_end(ap);
 }
 
-static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
+static void adpcm4_decoder(uint8 * inp, uint8 *outp, char *tab, int len)
 {
-    char delta = 0;
-    uint8 b0, b1;
-    int i;
+	char delta = 0;
+	uint8 b0, b1;
+	int i;
 
-    len = (len + 1) / 2;
+	len = (len + 1) / 2;
 
-    for (i = 0; i < len; i++) {
-	b0 = *inp;
-	b1 = *inp++ >> 4;
-        delta += tab[b0 & 0x0f];
-	*outp++ = delta;
-        delta += tab[b1 & 0x0f];
-        *outp++ = delta;
-    }
+	for (i = 0; i < len; i++) {
+		b0 = *inp;
+		b1 = *inp++ >> 4;
+		delta += tab[b0 & 0x0f];
+		*outp++ = delta;
+		delta += tab[b1 & 0x0f];
+		*outp++ = delta;
+	}
 }
 
 static void unroll_loop(struct xmp_sample *xxs)
