@@ -890,7 +890,7 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	p->gvol_slide = 0;
 	p->volume = m->volbase;
 	p->pos = p->ord = p->start = start;
-	p->frame = 0;
+	p->frame = -1;
 	p->row = 0;
 	p->time = 0;
 	p->playing_time = 0;
@@ -963,6 +963,13 @@ int xmp_player_frame(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int i;
 
+	p->frame++;
+
+	if (p->frame >= (p->tempo * (1 + f->delay))) {
+next_row:
+		next_row(ctx);
+	}
+
 	/* check reposition */
 	if (p->ord != p->pos) {
 		if (p->pos == -1)
@@ -1023,13 +1030,6 @@ int xmp_player_frame(xmp_context opaque)
 		double delta = m->rrate * 1000 / (100 * p->bpm);
 		p->playing_time += delta;
 		p->time += delta;
-	}
-
-	p->frame++;
-
-	if (p->frame >= (p->tempo * (1 + f->delay))) {
-next_row:
-		next_row(ctx);
 	}
 
 	mixer_softmixer(ctx);
