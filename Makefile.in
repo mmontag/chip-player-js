@@ -19,7 +19,6 @@ SHELL		= /bin/sh
 DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL configure configure.ac Makefile.in
 DDIRS		= docs include src loaders prowiz win32
-SHELL		= /bin/sh
 V		= 0
 LIB		= lib/libxmp.a
 SHLIB		= lib/libxmp.so.$(VERSION)
