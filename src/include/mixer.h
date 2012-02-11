@@ -2,23 +2,23 @@
 #ifndef __MIXER_H
 #define __MIXER_H
 
-/*#define SMIX_C4NOTE	6947*/
 #define SMIX_C4NOTE	6864
 
 #define SMIX_NUMVOC	64	/* default number of softmixer voices */
 #define SMIX_MAXRATE	48000	/* max sampling rate (Hz) */
-#define SMIX_MINBPM	5	/* min BPM */
-#define SMIX_RESMAX	(sizeof (int16))	/* max output resolution */
+#define SMIX_MINBPM	20	/* min BPM */
 
 #define SMIX_SHIFT	16
 #define SMIX_MASK	0xffff
 
-#define OUT_MAXLEN	(5 * 2 * SMIX_MAXRATE * SMIX_RESMAX / SMIX_MINBPM / 3)
+/* frame rate = (50 * bpm / 125) Hz */
+/* frame size = (sampling rate * channels * size) / frame rate */
+#define OUT_MAXLEN	(5 * SMIX_MAXRATE * 2 / SMIX_MINBPM)
 
 #define FILTER_PRECISION (1 << 12)
 
 /* Anticlick ramps */
-#define SLOW_ATTACK	64
+#define SLOW_ATTACK	8
 #define SLOW_RELEASE	8
 
 

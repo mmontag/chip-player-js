@@ -542,7 +542,7 @@ int mixer_on(struct context_data *ctx)
 {
 	struct mixer_data *s = &ctx->s;
 
-	s->buffer = calloc(SMIX_RESMAX, OUT_MAXLEN);
+	s->buffer = calloc(2, OUT_MAXLEN);
 	if (s->buffer == NULL)
 		goto err;
 
