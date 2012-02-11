@@ -1,5 +1,5 @@
 
-INCLUDE_DFILES	= xmp.h
+INCLUDE_DFILES	= Makefile xmp.h
 
 INCLUDE_PATH	= include
 

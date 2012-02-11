@@ -668,6 +668,10 @@ SOURCE=..\win32\debug.c
 
 SOURCE=..\win32\usleep.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\win32\mkstemp.c
+# End Source File
 
 # Begin Source File
 

@@ -16,14 +16,14 @@ MANDIR		= @mandir@/man1
 SYSCONFDIR	= @sysconfdir@/xmp
 SHELL		= /bin/sh
 
-DIST		= xmp-$(VERSION)
-DFILES		= README INSTALL configure configure.ac Makefile.in scripts
+DIST		= libxmp-$(VERSION)
+DFILES		= README INSTALL configure configure.ac Makefile.in
 DDIRS		= docs include src loaders prowiz win32
 SHELL		= /bin/sh
 V		= 0
 LIB		= lib/libxmp.a
 SHLIB		= lib/libxmp.so.$(VERSION)
-SONAME		= lib/libxmp.so.4
+SONAME		= lib/libxmp.so.3
 
 all: @STATIC@ shared binaries
 
