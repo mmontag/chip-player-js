@@ -1070,6 +1070,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->current_time = p->time;
 	info->buffer = s->buffer;
 
+	info->total_size = OUT_MAXLEN;
 	info->buffer_size = s->ticksize;
 	if (~s->format & XMP_FORMAT_MONO) {
 		info->buffer_size *= 2;

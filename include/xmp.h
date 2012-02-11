@@ -199,6 +199,7 @@ struct xmp_module_info {
 	int current_time;
 	void *buffer;
 	int buffer_size;
+	int total_size;
 	int volume;
 	int loop_count;
 	int virt_channels;
