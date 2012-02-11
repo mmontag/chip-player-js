@@ -117,7 +117,7 @@ static void out_su16norm(int16 *dest, int *src, int num, int amp)
 
 
 /* Prepare the mixer for the next tick */
-void mixer_reset(struct context_data *ctx)
+void mixer_prepare(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -238,6 +238,8 @@ void mixer_softmixer(struct context_data *ctx)
     int prev_l, prev_r;
     int synth = 1;
     int *buf_pos;
+
+    mixer_prepare(ctx);
 
     rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
@@ -377,8 +379,6 @@ void mixer_softmixer(struct context_data *ctx)
     } else {
 	out_su16norm((int16 *)s->buffer, s->buf32b, size, s->amplify);
     }
-
-    mixer_reset(ctx);
 }
 
 void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)

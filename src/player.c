@@ -850,8 +850,6 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	if ((ret = virtch_on(ctx, mod->chn)) != 0)
 		return ret;
 
-	mixer_reset(ctx);
-
 	f->jump = -1;
 
 	f->loop = calloc(p->virt.virt_channels, sizeof (struct pattern_loop));
