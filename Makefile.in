@@ -18,8 +18,7 @@ SHELL		= /bin/sh
 
 DIST		= xmp-$(VERSION)
 DFILES		= README INSTALL configure configure.ac Makefile.in scripts
-DDIRS		= docs drivers include loaders player plugin win32 \
-		  tunenet main
+DDIRS		= docs include src loaders prowiz win32
 SHELL		= /bin/sh
 V		= 0
 LIB		= lib/libxmp.a
@@ -27,19 +26,19 @@ LIB		= lib/libxmp.a
 all: library binaries
 
 include docs/Makefile
-include src/include/Makefile
+include include/Makefile
+include src/Makefile
 include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
-include src/player/Makefile
 include src/win32/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
 # These are the applications
-include src/main/Makefile
+include players/xmp/Makefile
 include src/test/Makefile
 
-CFLAGS += -Isrc/include -DVERSION=\"$(VERSION)\"
+CFLAGS += -Iinclude -Isrc -DVERSION=\"$(VERSION)\"
 
 .SUFFIXES: .c .o .lo .a .so .dll
 
@@ -55,7 +54,7 @@ CFLAGS += -Isrc/include -DVERSION=\"$(VERSION)\"
 
 
 #binaries: src/main/xmp $(PLUGINS)
-binaries: src/main/xmp
+binaries: players/xmp/xmp
 
 library: $(LIB)
 

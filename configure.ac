@@ -1,7 +1,8 @@
-AC_CONFIG_AUX_DIR(./scripts)
+dnl AC_CONFIG_AUX_DIR(./scripts)
 AC_INIT
 0>confdefs.h
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "../include" /D "ENABLE_PLUGIN" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.5.0\"" /D "_CRT_SECURE_NO_WARNINGS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "../win32" /I "../include" /D "ENABLE_PLUGIN" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.9.0\"" /D "_CRT_SECURE_NO_WARNINGS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "../win32" /I "../include" /D "_DEBUG" /D "ENABLE_PLUGIN" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.5.0\"" /D "_CRT_SECURE_NO_WARNINGS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "../win32" /I "../include" /D "_DEBUG" /D "ENABLE_PLUGIN" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "IN_XMP_EXPORTS" /D "HAVE_CONFIG_H" /D "VERSION=\"3.9.0\"" /D "_CRT_SECURE_NO_WARNINGS" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -92,6 +92,150 @@ LINK32=link.exe
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 
+# Begin Source File
+
+SOURCE=..\convert.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\virtual.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\format.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\misc.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\period.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\player.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\stepper.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\lfo.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\envelope.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\control.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scan.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\med_synth.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\filter.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\fmopl.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\synth.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\mix_all.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\effects.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\mixer.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\ym2149.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\adlib.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\spectrum.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\load.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\ppdepack.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\unsqsh.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\mmcmp.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\readrle.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\readhuff.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\readlzw.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\unarc.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\arcfs.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\oxm.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\xfd.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\inflate.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\muse.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\unlzx.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\s404_dec.c
+# End Source File
 # Begin Source File
 
 SOURCE=..\loaders\common.c
@@ -350,6 +494,10 @@ SOURCE=..\loaders\stc_load.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\loaders\readdata.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
 # Begin Source File
@@ -507,170 +655,6 @@ SOURCE=..\loaders\prowizard\hrt.c
 # Begin Source File
 
 SOURCE=..\loaders\prowizard\noiserun.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\control.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\info.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\readdata.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\load.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\ppdepack.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\unsqsh.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\mmcmp.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\readrle.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\readhuff.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\readlzw.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\unarc.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\arcfs.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\oxm.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\mkstemp.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\xfd.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\crc32.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\inflate.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\muse.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\unlzx.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\misc\s404_dec.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\convert.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\driver.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\formats.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\misc.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\period.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\player.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\readrc.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\scan.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\ulaw.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\cruncher.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\med_synth.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\filter.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\fmopl.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\synth.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\mix_all.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\effects.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\mixer.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\ym2149.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\adlib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\player\spectrum.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\drivers\smix.c
 # End Source File
 # Begin Source File
 

@@ -10,10 +10,7 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  med4_load.o ssmt_load.o dbm_load.o umx_load.o gdm_load.o \
 	  coco_load.o pw_load.o gal5_load.o gal4_load.o mfp_load.o \
 	  polly_load.o stc_load.o \
-	  \
-	  readdata.o load.o ppdepack.o unsqsh.o mmcmp.o readrle.o readhuff.o \
-	  readlzw.o unarc.o arcfs.o oxm.o mkstemp.o xfd.o inflate.o muse.o \
-	  unlzx.o s404_dec.o
+	  readdata.o
 
 
 LOADERS_OBJS	= common.o iff.o itsex.o asif.o voltable.o $(LOADERS)

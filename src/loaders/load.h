@@ -14,7 +14,7 @@
 #include "common.h"
 #include "effects.h"
 #include "convert.h"
-#include "loader.h"
+#include "format.h"
 
 /* Sample flags */
 #define SAMPLE_FLAG_DIFF	0x0001	/* Differential */
