@@ -23,6 +23,6 @@ config.log
 config.status
 configure
 autom4te.cache
-Makefile.rules
-Makefile.rules.old
-src/main/xmp
+players/xmp/Makefile
+players/xmp/src/xmp
+
