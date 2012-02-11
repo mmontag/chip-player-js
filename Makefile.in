@@ -22,8 +22,10 @@ DDIRS		= docs include src loaders prowiz win32
 SHELL		= /bin/sh
 V		= 0
 LIB		= lib/libxmp.a
+SHLIB		= lib/libxmp.so.$(VERSION)
+SONAME		= lib/libxmp.so.4
 
-all: library binaries
+all: @STATIC@ shared binaries
 
 include docs/Makefile
 include include/Makefile
@@ -56,7 +58,9 @@ CFLAGS += -Iinclude -Isrc -DVERSION=\"$(VERSION)\"
 #binaries: src/main/xmp $(PLUGINS)
 binaries: players/xmp/xmp
 
-library: $(LIB)
+static: $(LIB)
+
+shared: $(SHLIB)
 
 $(LIB): $(OBJS)
 	@mkdir -p lib
@@ -65,8 +69,16 @@ $(LIB): $(OBJS)
 	eval $$CMD
 	ranlib $@
 
+$(SHLIB): $(LOBJS)
+	@mkdir -p lib
+	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -o $@ $(LOBJS)'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+	ln -sf `basename $(SHLIB)` $(SONAME)
+	ln -sf `basename $(SONAME)` lib/libxmp.so
+
 clean:
-	@rm -f $(OBJS) $(LIB) $(OBJS:.o=.lo) $(M_OBJS)
+	@rm -f $(OBJS) $(LIB) $(LOBJS) $(SHLIB) $(SONAME) lib/libxmp.so
 
 install: install-xmp install-docs
 
