@@ -25,7 +25,7 @@ LIB		= lib/libxmp.a
 SHLIB		= lib/libxmp.so.$(VERSION)
 SONAME		= lib/libxmp.so.3
 
-all: @STATIC@ shared binaries
+all: @STATIC@ @SHARED@ binaries
 
 include docs/Makefile
 include include/Makefile
