@@ -13,6 +13,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include "virtual.h"
 #include "mixer.h"
@@ -40,36 +41,38 @@ void xmp_free_context(xmp_context ctx)
 	free(ctx);
 }
 
-void xmp_channel_mute(xmp_context opaque, int num, int mute)
+int xmp_player_ctl(xmp_context opaque, int cmd, ...)
 {
-	struct context_data *ctx = (struct context_data *)opaque;
-
-	virtch_mute(ctx, num, mute);
-}
-
-int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
-{
+	va_list ap;
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+	int ret = 0;
+
+	va_start(ap, cmd);
 
 	switch (cmd) {
 	case XMP_CTL_ORD_PREV:
 		if (p->pos > 0)
 			p->pos--;
-		return p->pos;
+		ret = p->pos;
+		break;
 	case XMP_CTL_ORD_NEXT:
 		if (p->pos < m->mod.len)
 			p->pos++;
-		return p->pos;
-	case XMP_CTL_ORD_SET:
+		ret = p->pos;
+		break;
+	case XMP_CTL_ORD_SET: {
+		int arg = va_arg(ap, int);
+
 		if (arg < m->mod.len && arg >= 0) {
 			if (p->pos == arg && arg == 0)	/* special case */
 				p->pos = -1;
 			else
 				p->pos = arg;
 		}
-		return p->pos;
+		ret = p->pos;
+		break; }
 	case XMP_CTL_MOD_STOP:
 		p->pos = -2;
 		break;
@@ -79,13 +82,17 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 	case XMP_CTL_GVOL_DEC:
 		if (p->volume > 0)
 			p->volume--;
-		return p->volume;
+		ret = p->volume;
+		break;
 	case XMP_CTL_GVOL_INC:
 		if (p->volume < 64)
 			p->volume++;
-		return p->volume;
+		ret = p->volume;
+		break;
 	case XMP_CTL_SEEK_TIME: {
+		int arg = va_arg(ap, int);
 		int i, t;
+
 		arg *= 1000;
 		for (i = 0; i < m->mod.len; i++) {
 			t = m->xxo_info[i].time;
@@ -93,11 +100,20 @@ int xmp_player_ctl(xmp_context opaque, int cmd, int arg)
 				if (i > 0)
 					i--;
 				xmp_ord_set(opaque, i);
-				return 0;
+				break;
 			}
 		}
-		return -1; }
+		ret = -1;
+		break; }
+	case XMP_CTL_CH_MUTE: {
+		int arg1 = va_arg(ap, int);
+		int arg2 = va_arg(ap, int);
+
+		virtch_mute(ctx, arg1, arg2);
+		break; }
 	}
+
+	va_end(ap);
 
 	return 0;
 }
