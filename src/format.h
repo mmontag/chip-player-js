@@ -12,5 +12,9 @@ struct format_loader {
 	int (*loader)(struct module_data *, FILE *, const int);
 };
 
+int format_init(void);
+void format_deinit(void);
+void format_list(char ***);
+
 #endif
 

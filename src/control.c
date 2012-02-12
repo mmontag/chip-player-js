@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 
+#include "format.h"
 #include "virtual.h"
 #include "mixer.h"
 
@@ -24,8 +25,10 @@ xmp_context xmp_create_context()
 	static int first = 1;
 
 	if (first) {
-		xmp_init_formats();
+		if (format_init() < 0)
+			return NULL;
 		first = 0;
+		atexit(format_deinit);
 	}
 
 	ctx = calloc(1, sizeof(struct context_data));
@@ -33,7 +36,7 @@ xmp_context xmp_create_context()
 	if (ctx == NULL)
 		return NULL;
 
-	return (xmp_context) ctx;
+	return (xmp_context)ctx;
 }
 
 void xmp_free_context(xmp_context ctx)
@@ -41,7 +44,7 @@ void xmp_free_context(xmp_context ctx)
 	free(ctx);
 }
 
-int xmp_player_ctl(xmp_context opaque, int cmd, ...)
+int _xmp_ctl(xmp_context opaque, int cmd, ...)
 {
 	va_list ap;
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -103,7 +106,6 @@ int xmp_player_ctl(xmp_context opaque, int cmd, ...)
 				break;
 			}
 		}
-		ret = -1;
 		break; }
 	case XMP_CTL_CH_MUTE: {
 		int arg1 = va_arg(ap, int);
@@ -111,6 +113,12 @@ int xmp_player_ctl(xmp_context opaque, int cmd, ...)
 
 		virtch_mute(ctx, arg1, arg2);
 		break; }
+	case XMP_CTL_GET_FORMATS: {
+		char ***arg = va_arg(ap, char ***);
+		format_list(arg);
+		break; }
+	default:
+		ret = -1;
 	}
 
 	va_end(ap);

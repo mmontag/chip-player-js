@@ -329,7 +329,4 @@ int	get_temp_dir		(char *, int);
 int	mkstemp			(char *);
 #endif
 
-
-void xmp_init_formats(void);
-
 #endif /* __XMP_COMMON_H */

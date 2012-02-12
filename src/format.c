@@ -133,7 +133,34 @@ struct format_loader *format_loader[] = {
 	NULL
 };
 
-void xmp_init_formats()
+static char **farray;
+
+int format_init()
 {
+	int i;
+
 	pw_init();
+
+	for (i = 0; format_loader[i] != NULL; i++);
+
+	farray = malloc((i + 1) * sizeof(char *));
+	if (farray == NULL)
+		return -1;
+
+	for (i = 0; format_loader[i] != NULL; i++) {
+		farray[i] = format_loader[i]->name;
+	}
+	farray[i] = NULL;
+	
+	return 0;
+}
+
+void format_deinit()
+{
+	free(farray);
+}
+
+void format_list(char ***array)
+{
+	*array = farray;
 }

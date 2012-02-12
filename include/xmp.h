@@ -19,7 +19,7 @@ extern "C" {
 #define XMP_KEY_CUT		0x82
 #define XMP_KEY_FADE		0x83
 
-/* xmp_player_ctl arguments */
+/* _xmp_ctl arguments */
 #define XMP_CTL_ORD_NEXT	0x00
 #define XMP_CTL_ORD_PREV	0x01
 #define XMP_CTL_ORD_SET		0x02
@@ -29,18 +29,7 @@ extern "C" {
 #define XMP_CTL_GVOL_DEC	0x06
 #define XMP_CTL_SEEK_TIME	0x07
 #define XMP_CTL_CH_MUTE		0x08
-
-/* Player control macros */
-#define xmp_ord_next(p)		xmp_player_ctl((p), XMP_CTL_ORD_NEXT)
-#define xmp_ord_prev(p)		xmp_player_ctl((p), XMP_CTL_ORD_PREV)
-#define xmp_ord_set(p,x)	xmp_player_ctl((p), XMP_CTL_ORD_SET, (x))
-#define xmp_mod_stop(p)		xmp_player_ctl((p), XMP_CTL_MOD_STOP)
-#define xmp_stop_module(p)	xmp_player_ctl((p), XMP_CTL_MOD_STOP)
-#define xmp_mod_restart(p)	xmp_player_ctl((p), XMP_CTL_MOD_RESTART)
-#define xmp_gvol_inc(p)		xmp_player_ctl((p), XMP_CTL_GVOL_INC)
-#define xmp_gvol_dec(p)		xmp_player_ctl((p), XMP_CTL_GVOL_DEC)
-#define xmp_seek_time(p,x)	xmp_player_ctl((p), XMP_CTL_SEEK_TIME, (x))
-#define xmp_channel_mute(p,x,y)	xmp_player_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
+#define XMP_CTL_GET_FORMATS	0x09
 
 #define XMP_FORMAT_8BIT		(1 << 0)
 #define XMP_FORMAT_UNSIGNED	(1 << 1)
@@ -225,12 +214,25 @@ struct xmp_module_info {
 
 typedef char *xmp_context;
 
+/* Player control macros */
+#define xmp_ord_next(p)		_xmp_ctl((p), XMP_CTL_ORD_NEXT)
+#define xmp_ord_prev(p)		_xmp_ctl((p), XMP_CTL_ORD_PREV)
+#define xmp_ord_set(p,x)	_xmp_ctl((p), XMP_CTL_ORD_SET, (x))
+#define xmp_mod_stop(p)		_xmp_ctl((p), XMP_CTL_MOD_STOP)
+#define xmp_stop_module(p)	_xmp_ctl((p), XMP_CTL_MOD_STOP)
+#define xmp_mod_restart(p)	_xmp_ctl((p), XMP_CTL_MOD_RESTART)
+#define xmp_gvol_inc(p)		_xmp_ctl((p), XMP_CTL_GVOL_INC)
+#define xmp_gvol_dec(p)		_xmp_ctl((p), XMP_CTL_GVOL_DEC)
+#define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))
+#define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
+#define xmp_get_formats(p,x)	_xmp_ctl((p), XMP_CTL_GET_FORMATS, (x))
+
 xmp_context xmp_create_context(void);
 void xmp_free_context(xmp_context);
 int xmp_load_module(xmp_context, char *);
 int xmp_test_module(xmp_context, char *, char *);
 void xmp_release_module(xmp_context);
-int xmp_player_ctl(xmp_context, int, ...);
+int _xmp_ctl(xmp_context, int, ...);
 int xmp_player_start(xmp_context, int, int, int);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);
