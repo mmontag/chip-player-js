@@ -918,7 +918,6 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	p->frame = -1;
 	p->row = 0;
 	p->time = 0;
-	p->playing_time = 0;
 	p->loop_count = 0;
 	s->freq = freq;
 	s->format = format;
@@ -1056,11 +1055,9 @@ int xmp_player_frame(xmp_context opaque)
 
 	if (HAS_QUIRK(QUIRK_MEDBPM)) {
 		double delta =  m->rrate * 1000 * 33 / (100 * p->bpm * 125);
-		p->playing_time += delta;
 		p->time += delta;
 	} else {
 		double delta = m->rrate * 1000 / (100 * p->bpm);
-		p->playing_time += delta;
 		p->time += delta;
 	}
 

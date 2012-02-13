@@ -219,7 +219,6 @@ struct module_data {
 
 struct player_data {
 	double time;
-	double playing_time;
 	int start;
 	int ord;
 	int pos;
