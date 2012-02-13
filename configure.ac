@@ -13,4 +13,5 @@ if test "${enable_shared}" != no; then
   AC_SUBST(SHARED,shared)
 fi
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([xmp.pc])
 AC_OUTPUT
