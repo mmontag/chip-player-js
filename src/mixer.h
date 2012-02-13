@@ -52,7 +52,7 @@ struct mixer_voice {
 	} filter;
 
 	int attack;		/* ramp up anticlick */
-	int looped_sample;	/* set if sample has looped */
+	int sample_loop;	/* set if sample has looped */
 };
 
 int	mixer_on		(struct context_data *);

@@ -141,85 +141,95 @@ void mixer_prepare(struct context_data *ctx)
 /* Hipolito's rampdown anticlick */
 static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 {
-    struct player_data *p = &ctx->p;
-    struct mixer_data *s = &ctx->s;
-    int smp_l, smp_r;
-    int dec_l, dec_r;
+	struct player_data *p = &ctx->p;
+	struct mixer_data *s = &ctx->s;
+	int smp_l, smp_r;
+	int dec_l, dec_r;
 
-    if (voc < 0) {
-	/* initialize */
-	smp_r = s->dtright;
-	smp_l = s->dtleft;
-    } else {
-	smp_r = p->virt.voice_array[voc].sright;
-	smp_l = p->virt.voice_array[voc].sleft;
-	p->virt.voice_array[voc].sright = p->virt.voice_array[voc].sleft = 0;
-    }
+	if (voc < 0) {
+		/* initialize */
+		smp_r = s->dtright;
+		smp_l = s->dtleft;
+	} else {
+		smp_r = p->virt.voice_array[voc].sright;
+		smp_l = p->virt.voice_array[voc].sleft;
+		p->virt.voice_array[voc].sright = 0;
+		p->virt.voice_array[voc].sleft = 0;
+	}
 
-    if (!smp_l && !smp_r)
-	return;
+	if (smp_l == 0 && smp_r == 0) {
+		return;
+	}
 
-    if (!buf) {
-	buf = s->buf32b;
-	count = SLOW_RELEASE;
-    }
-    if (!count)
-	return;
+	if (buf == NULL) {
+		buf = s->buf32b;
+		count = SLOW_RELEASE;
+	}
 
-    dec_r = smp_r / count;
-    dec_l = smp_l / count;
+	if (count <= 0) {
+		return;
+	}
 
-    while ((smp_r || smp_l) && count--) {
-	if (dec_r > 0)
-	    *(buf++) += smp_r > dec_r ? (smp_r -= dec_r) : (smp_r = 0);
-	else
-	    *(buf++) += smp_r < dec_r ? (smp_r -= dec_r) : (smp_r = 0);
+	dec_r = smp_r / count;
+	dec_l = smp_l / count;
 
-	if (dec_l > 0)
-	    *(buf++) += smp_l > dec_l ? (smp_l -= dec_l) : (smp_l = 0);
-	else
-	    *(buf++) += smp_l < dec_l ? (smp_l -= dec_l) : (smp_l = 0);
-    }
+	while ((smp_r || smp_l) && count--) {
+		buf++;
+
+		if (dec_r > 0) {
+			*buf += smp_r > dec_r ? (smp_r -= dec_r) : (smp_r = 0);
+		} else {
+			*buf += smp_r < dec_r ? (smp_r -= dec_r) : (smp_r = 0);
+		}
+
+		if (dec_l > 0) {
+			*buf += smp_l > dec_l ? (smp_l -= dec_l) : (smp_l = 0);
+		} else {
+			*buf += smp_l < dec_l ? (smp_l -= dec_l) : (smp_l = 0);
+		}
+	}
 }
 
 
 /* Ok, it's messy, but it works :-) Hipolito */
-static void anticlick(struct context_data *ctx, int voc, int vol, int pan, int *buf, int count)
+static void anticlick(struct context_data *ctx, int voc, int vol, int pan,
+		      int *buf, int count)
 {
-    int oldvol, newvol, pan0;
-    struct player_data *p = &ctx->p;
-    struct mixer_data *s = &ctx->s;
-    struct mixer_voice *vi = &p->virt.voice_array[voc];
+	int oldvol, newvol, pan0;
+	struct player_data *p = &ctx->p;
+	struct mixer_data *s = &ctx->s;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-    /* From: Mirko Buffoni <mirbuf@gmail.com>
-     * To: Claudio Matsuoka <cmatsuoka@gmail.com>
-     * Date: Nov 29, 2007 6:45 AM
-     *	
-     * Put PAN SEPARATION to 100. Then it crashes. Other modules crash when
-     * PAN SEPARATION = 100, (...) moving separation one step behind, stop
-     * crashes.
-     */
-    pan0 = vi->pan;
-    if (pan0 < -127)
-	pan0 = -127;
+	/* From: Mirko Buffoni <mirbuf@gmail.com>
+	 * To: Claudio Matsuoka <cmatsuoka@gmail.com>
+	 * Date: Nov 29, 2007 6:45 AM
+	 *  
+	 * Put PAN SEPARATION to 100. Then it crashes. Other modules crash when
+	 * PAN SEPARATION = 100, (...) moving separation one step behind, stop
+	 * crashes.
+	 */
+	pan0 = vi->pan;
+	if (pan0 < -127) {
+		pan0 = -127;
+	}
 
-    if (vi->vol) {
-	oldvol = vi->vol * (0x80 - pan0);
-	newvol = vol * (0x80 - pan);
-	vi->sright -= vi->sright / oldvol * newvol;
+	if (vi->vol) {
+		oldvol = vi->vol * (0x80 - pan0);
+		newvol = vol * (0x80 - pan);
+		vi->sright -= vi->sright / oldvol * newvol;
 
-	oldvol = vi->vol * (0x80 + pan0);
-	newvol = vol * (0x80 + pan);
-	vi->sleft -= vi->sleft / oldvol * newvol;
-    }
+		oldvol = vi->vol * (0x80 + pan0);
+		newvol = vol * (0x80 + pan);
+		vi->sleft -= vi->sleft / oldvol * newvol;
+	}
 
-    if (!buf) {
-	s->dtright += vi->sright;
-	s->dtleft += vi->sleft;
-	vi->sright = vi->sleft = 0;
-    } else {
-	rampdown(ctx, voc, buf, count);
-    }
+	if (!buf) {
+		s->dtright += vi->sright;
+		s->dtleft += vi->sleft;
+		vi->sright = vi->sleft = 0;
+	} else {
+		rampdown(ctx, voc, buf, count);
+	}
 }
 
 
@@ -228,148 +238,149 @@ static void anticlick(struct context_data *ctx, int voc, int vol, int pan, int *
  */
 void mixer_softmixer(struct context_data *ctx)
 {
-    struct player_data *p = &ctx->p;
-    struct mixer_data *s = &ctx->s;
-    struct module_data *m = &ctx->m;
-    struct xmp_sample *xxs;
-    struct mixer_voice *vi;
-    int samples, size;
-    int vol_l, vol_r, step, voc;
-    int prev_l, prev_r;
-    int synth = 1;
-    int *buf_pos;
+	struct player_data *p = &ctx->p;
+	struct mixer_data *s = &ctx->s;
+	struct module_data *m = &ctx->m;
+	struct xmp_sample *xxs;
+	struct mixer_voice *vi;
+	int samples, size;
+	int vol_l, vol_r, step, voc;
+	int prev_l, prev_r;
+	int synth = 1;
+	int *buf_pos;
 
-    mixer_prepare(ctx);
+	mixer_prepare(ctx);
 
-    rampdown(ctx, -1, NULL, 0);	/* Anti-click */
+	rampdown(ctx, -1, NULL, 0);	/* Anti-click */
 
-    for (voc = 0; voc < p->virt.maxvoc; voc++) {
-	vi = &p->virt.voice_array[voc];
+	for (voc = 0; voc < p->virt.maxvoc; voc++) {
+		vi = &p->virt.voice_array[voc];
 
-	if (vi->chn < 0)
-	    continue;
+		if (vi->chn < 0)
+			continue;
 
-	if (vi->period < 1) {
-	    virtch_resetvoice(ctx, voc, 1);
-	    continue;
-	}
-
-	buf_pos = s->buf32b;
-	vol_r = vi->vol * (0x80 - vi->pan);
-	vol_l = vi->vol * (0x80 + vi->pan);
-
-	if (vi->fidx & FLAG_SYNTH) {
-	    if (synth) {
-    		m->synth->mixer(ctx, buf_pos, s->ticksize, vol_l >> 7,
-					vol_r >> 7, vi->fidx & FLAG_STEREO);
-	        synth = 0;
-	    }
-	    continue;
-	}
-
-	step = ((int64)s->pbase << SMIX_SHIFT) / vi->period;
-
-	if (step == 0)	/* otherwise m5v-nwlf.t crashes */
-	    continue;
-
-	xxs = &m->mod.xxs[vi->smp];
-
-	size = s->ticksize;
-
-	while (size > 0) {
-	    /* How many samples we can write before the loop break or
-	     * sample end... */
-	    samples = (((int64)(vi->end - vi->pos + 1) << SMIX_SHIFT)
-				- vi->frac) / step;
-
-	    if (step > 0) {
-		if (vi->pos >= vi->end)
-		    samples = 0;
-	    } else {
-		if (vi->pos <= vi->end)
-		    samples = 0;
-	    }
-
-	    /* Ok, this shouldn't happen, but in 'Languede.mod'... */
-	    if (samples < 0)
-		samples = 0;
-	    
-	    /* ...inside the tick boundaries */
-	    if (samples > size)
-		samples = size;
-
-	    if (vi->vol) {
-		int idx;
-		int mix_size = samples;
-		int mixer = vi->fidx & FIDX_FLAGMASK;
-
-		if (~s->format & XMP_FORMAT_MONO) {
-		    mix_size *= 2;
+		if (vi->period < 1) {
+			virtch_resetvoice(ctx, voc, 1);
+			continue;
 		}
 
-		/* Hipolito's anticlick routine */
-		idx = mix_size;
-		if (idx < 2)
-		    idx = 2;
-		prev_r = buf_pos[idx - 2];
-		prev_l = buf_pos[idx - 1];
+		buf_pos = s->buf32b;
+		vol_r = vi->vol * (0x80 - vi->pan);
+		vol_l = vi->vol * (0x80 + vi->pan);
 
-		/* "Beautiful Ones" apparently uses 0xfe as 'no filter' :\ */
-		if (vi->filter.cutoff >= 0xfe)
-		    mixer &= ~FLAG_FILTER;
+		if (vi->fidx & FLAG_SYNTH) {
+			if (synth) {
+				m->synth->mixer(ctx, buf_pos, s->ticksize,
+						vol_l >> 7, vol_r >> 7,
+						vi->fidx & FLAG_STEREO);
+				synth = 0;
+			}
+			continue;
+		}
 
-		/* Call the output handler */
-		mix_fn[mixer](vi, buf_pos, samples, vol_l, vol_r, step);
-		buf_pos += mix_size;
+		step = ((int64) s->pbase << SMIX_SHIFT) / vi->period;
 
-		/* Hipolito's anticlick routine */
-		idx = 0;
-		if (mix_size < 2)
-		    idx = 2;
-		vi->sright = buf_pos[idx - 2] - prev_r;
-		vi->sleft = buf_pos[idx - 1] - prev_l;
-	    }
+		if (step == 0)	/* otherwise m5v-nwlf.t crashes */
+			continue;
 
-	    vi->frac += step * samples;
-	    vi->pos += vi->frac >> SMIX_SHIFT;
-	    vi->frac &= SMIX_MASK;
+		xxs = &m->mod.xxs[vi->smp];
 
-	    /* No more samples in this tick */
-	    size -= samples;
-	    if (size <= 0)
-		continue;
+		size = s->ticksize;
 
-	    /* First sample loop run */
-            if (~xxs->flg & XMP_SAMPLE_LOOP) {
-		anticlick(ctx, voc, 0, 0, buf_pos, size);
-		virtch_resetvoice(ctx, voc, 0);
-		size = 0;
-		continue;
-	    }
+		while (size > 0) {
+			/* How many samples we can write before the loop break
+			 * or sample end... */
+			samples =
+			    (((int64) (vi->end - vi->pos + 1) << SMIX_SHIFT)
+			     - vi->frac) / step;
 
-	    vi->pos = xxs->lps;			/* forward loop */
-	    vi->end = xxs->lpe;
-	    vi->looped_sample = 1;
+			if (step > 0) {
+				if (vi->pos >= vi->end)
+					samples = 0;
+			} else {
+				if (vi->pos <= vi->end)
+					samples = 0;
+			}
 
-	    if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-		vi->end += (xxs->lpe - xxs->lps);
-	    }
+			/* ...inside the tick boundaries */
+			if (samples > size) {
+				samples = size;
+			}
+
+			if (vi->vol) {
+				int idx;
+				int mix_size = samples;
+				int mixer = vi->fidx & FIDX_FLAGMASK;
+
+				if (~s->format & XMP_FORMAT_MONO) {
+					mix_size *= 2;
+				}
+
+				/* Hipolito's anticlick routine */
+				idx = mix_size;
+				if (idx < 2)
+					idx = 2;
+				prev_r = buf_pos[idx - 2];
+				prev_l = buf_pos[idx - 1];
+
+				/* "Beautiful Ones" apparently uses 0xfe as
+				 * 'no filter' :\ */
+				if (vi->filter.cutoff >= 0xfe)
+					mixer &= ~FLAG_FILTER;
+
+				/* Call the output handler */
+				mix_fn[mixer] (vi, buf_pos, samples, vol_l,
+					       vol_r, step);
+				buf_pos += mix_size;
+
+				/* Hipolito's anticlick routine */
+				idx = 0;
+				if (mix_size < 2)
+					idx = 2;
+				vi->sright = buf_pos[idx - 2] - prev_r;
+				vi->sleft = buf_pos[idx - 1] - prev_l;
+			}
+
+			vi->frac += step * samples;
+			vi->pos += vi->frac >> SMIX_SHIFT;
+			vi->frac &= SMIX_MASK;
+
+			/* No more samples in this tick */
+			size -= samples;
+			if (size <= 0)
+				continue;
+
+			/* First sample loop run */
+			if (~xxs->flg & XMP_SAMPLE_LOOP) {
+				anticlick(ctx, voc, 0, 0, buf_pos, size);
+				virtch_resetvoice(ctx, voc, 0);
+				size = 0;
+				continue;
+			}
+
+			vi->pos = xxs->lps;	/* forward loop */
+			vi->end = xxs->lpe;
+			vi->sample_loop = 1;
+
+			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+				vi->end += (xxs->lpe - xxs->lps);
+			}
+		}
 	}
-    }
 
-    /* Render final frame */
+	/* Render final frame */
 
-    size = s->ticksize;
-    if (~s->format & XMP_FORMAT_MONO) {
-	size *= 2;
-    }
-    assert(size <= OUT_MAXLEN);
+	size = s->ticksize;
+	if (~s->format & XMP_FORMAT_MONO) {
+		size *= 2;
+	}
+	assert(size <= OUT_MAXLEN);
 
-    if (s->format & XMP_FORMAT_8BIT) {
-	out_su8norm(s->buffer, s->buf32b, size, s->amplify);
-    } else {
-	out_su16norm((int16 *)s->buffer, s->buf32b, size, s->amplify);
-    }
+	if (s->format & XMP_FORMAT_8BIT) {
+		out_su8norm(s->buffer, s->buf32b, size, s->amplify);
+	} else {
+		out_su16norm((int16 *) s->buffer, s->buf32b, size, s->amplify);
+	}
 }
 
 void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
@@ -385,7 +396,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	}
 
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
-		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->looped_sample == 0) {
+		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
 			vi->end = xxs->len;
 		} else {
 			vi->end = xxs->lpe;
@@ -417,7 +428,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	vi->smp = smp;
 	vi->vol = 0;
 	vi->pan = 0;
-	vi->looped_sample = 0;
+	vi->sample_loop = 0;
 
 	vi->fidx = 0;
 
