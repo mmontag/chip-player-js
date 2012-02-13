@@ -93,13 +93,16 @@ static inline int
 get_instrument_vibrato(struct module_data *m, struct channel_data *xc)
 {
 	int mapped, type, depth, phase, sweep;
+	struct xmp_instrument *instrument;
 	struct xmp_subinstrument *sub;
 
-	mapped = XXIH.map[xc->key].ins;
+	instrument = &m->mod.xxi[xc->ins];
+
+	mapped = instrument->map[xc->key].ins;
 	if (mapped == 0xff)
 		return 0;
 
-	sub = &m->mod.xxi[xc->ins].sub[mapped];
+	sub = &instrument->sub[mapped];
 	type = sub->vwf;
 	depth = sub->vde;
 	phase = xc->instrument_vibrato.phase;
@@ -111,14 +114,17 @@ get_instrument_vibrato(struct module_data *m, struct channel_data *xc)
 static inline void
 update_instrument_vibrato(struct module_data *m, struct channel_data *xc)
 {
-	struct xmp_subinstrument *sub;
 	int mapped, rate;
+	struct xmp_instrument *instrument;
+	struct xmp_subinstrument *sub;
 
-	mapped = XXIH.map[xc->key].ins;
+	instrument = &m->mod.xxi[xc->ins];
+
+	mapped = instrument->map[xc->key].ins;
 	if (mapped == 0xff)
 		return;
 
-	sub = &m->mod.xxi[xc->ins].sub[mapped];
+	sub = &instrument->sub[mapped];
 	rate = sub->vra;
 
 	xc->instrument_vibrato.phase += rate >> 2;
@@ -172,6 +178,9 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
     int xins, ins, smp, note, key, flg;
     struct channel_data *xc;
     int cont_sample;
+    int mapped;
+    struct xmp_instrument *instrument;
+    struct xmp_subinstrument *sub;
 
     xc = &p->xc_data[chn];
 
@@ -388,9 +397,14 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	return 0;
     }
 
-    if (note >= 0) {
-	int mapped = mod->xxi[ins].map[key].ins;
+    instrument = &m->mod.xxi[xc->ins];
+    mapped = instrument->map[xc->key].ins;
+    if (mapped == 0xff) {
+	return 0;
+    }
+    sub = &instrument->sub[mapped];
 
+    if (note >= 0) {
 	xc->note = note;
 
 	if (cont_sample == 0) {
@@ -402,42 +416,44 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 
 	/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
 	if (!TEST(NEW_PAN))
-	    xc->pan = mod->xxi[ins].sub[mapped].pan;
+	    xc->pan = sub->pan;
 
 	if (!TEST(FINETUNE))
-	    xc->finetune = mod->xxi[ins].sub[mapped].fin;
+	    xc->finetune = sub->fin;
 
 	xc->s_end = xc->period = note_to_period(note, xc->finetune,
 					HAS_QUIRK(QUIRK_LINEAR));
+
+	xc->gvl = sub->gvl;
+	xc->instrument_vibrato.sweep = sub->vsw;
+	xc->instrument_vibrato.phase = 0;
+
+	xc->v_idx = xc->p_idx = xc->f_idx = 0;
+	xc->filter.cutoff = sub->ifc & 0x80 ? (sub->ifc - 0x80) * 2 : 0xff;
+	xc->filter.resonance = sub->ifr & 0x80 ? (sub->ifr - 0x80) * 2 : 0;
 
 	set_lfo_phase(&xc->vibrato, 0);
 	set_lfo_phase(&xc->tremolo, 0);
     }
 
-    if (xc->key < 0 || mod->xxi[xc->ins].map[xc->key].ins == 0xff)
+    if (xc->key < 0) {
 	return 0;
+    }
 
     if (TEST(RESET_ENV)) {
 	/* xc->fadeout = 0x8000; -- moved to fetch */
 	RESET(RELEASE | FADEOUT);
 
-	/* H: where should I put these? */
-	xc->gvl = XXI.gvl;
-	xc->instrument_vibrato.sweep = XXI.vsw;
-	xc->instrument_vibrato.phase = 0;
-
-	xc->v_idx = xc->p_idx = xc->f_idx = 0;
-	xc->filter.cutoff = XXI.ifc & 0x80 ? (XXI.ifc - 0x80) * 2 : 0xff;
-	xc->filter.resonance = XXI.ifr & 0x80 ? (XXI.ifr - 0x80) * 2 : 0;
     }
 
     if (TEST(RESET_VOL)) {
-	xc->volume = XXI.vol;
+	xc->volume = sub->vol;
 	SET(NEW_VOL);
     }
 
-    if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL))
+    if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL)) {
 	xc->volume = xc->volume * p->volume / m->volbase;
+    }
 
     return 0;
 }
@@ -483,7 +499,6 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 
 static void play_channel(struct context_data *ctx, int chn, int t)
 {
-    struct channel_data *xc;
     int finalvol, finalpan, cutoff, act;
     int pan_envelope, frq_envelope;
     int med_arp, vibrato, med_vibrato;
@@ -491,9 +506,9 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
     struct mixer_data *s = &ctx->s;
+    struct channel_data *xc = &p->xc_data[chn];
+    struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
     int linear_bend;
-
-    xc = &p->xc_data[chn];
 
     /* Do delay */
     if (xc->delay && !--xc->delay) {
@@ -520,11 +535,15 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     /* Process MED synth instruments */
     xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
 
-    if (TEST(RELEASE) && !(XXIH.aei.flg & XMP_ENVELOPE_ON))
+    if (TEST(RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
 	xc->fadeout = 0;
  
     if (TEST(FADEOUT | RELEASE) || act == VIRTCH_ACTION_FADE || act == VIRTCH_ACTION_OFF) {
-	xc->fadeout = xc->fadeout > XXIH.rls ? xc->fadeout - XXIH.rls : 0;
+        if (xc->fadeout > instrument->rls) {
+	    xc->fadeout -= instrument->rls;
+        } else {
+            xc->fadeout = 0;
+        }
 
 	if (xc->fadeout == 0) {
 
@@ -544,16 +563,16 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	}
     }
 
-    vol_envelope = get_envelope(&XXIH.aei, xc->v_idx, 64);
-    pan_envelope = get_envelope(&XXIH.pei, xc->p_idx, 32);
-    frq_envelope = get_envelope(&XXIH.fei, xc->f_idx, 0);
+    vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
+    pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
+    frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 
     /* Update envelopes */
-    xc->v_idx = update_envelope(&XXIH.aei, xc->v_idx, DOENV_RELEASE);
-    xc->p_idx = update_envelope(&XXIH.pei, xc->p_idx, DOENV_RELEASE);
-    xc->f_idx = update_envelope(&XXIH.fei, xc->f_idx, DOENV_RELEASE);
+    xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
+    xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
+    xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
 
-    switch (check_envelope_fade(&XXIH.aei, xc->v_idx)) {
+    switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
     case -1:
 	virtch_resetchannel(ctx, chn);
 	break;
@@ -610,7 +629,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     }
 
     if (HAS_QUIRK(QUIRK_INSVOL))
-	finalvol = (finalvol * XXIH.vol * xc->gvl) >> 12;
+	finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
 
 
     /* Vibrato */
@@ -634,13 +653,17 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	xc->gliss,
 	HAS_QUIRK(QUIRK_LINEAR));
 
-    linear_bend += XXIH.fei.flg & XMP_ENVELOPE_FLT ? 0 : frq_envelope;
+    if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
+        linear_bend += frq_envelope;
+    }
+
+    /* Pan */
 
     finalpan = xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32;
     finalpan = xc->masterpan + (finalpan - 128) *
 			(128 - abs (xc->masterpan - 128)) / 128;
 
-    if (XXIH.fei.flg & XMP_ENVELOPE_FLT) {
+    if (instrument->fei.flg & XMP_ENVELOPE_FLT) {
 	cutoff = xc->filter.cutoff * frq_envelope / 0xff;
     } else {
 	cutoff = 0xff;

@@ -16,9 +16,13 @@
 #define NOT_IMPLEMENTED
 
 #define DO_TONEPORTA() do { \
-	if (note-- && note < 0x60 && (uint32)xc->ins < m->mod.ins) \
-	    xc->s_end = note_to_period(note + XXI.xpo + XXIH.map[xc->key].xpo, \
-	    XXI.fin, HAS_QUIRK(QUIRK_LINEAR)); \
+	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins]; \
+	int mapped = instrument->map[xc->key].ins; \
+	struct xmp_subinstrument *sub = &instrument->sub[mapped]; \
+	if (note-- && note < 0x60 && (uint32)xc->ins < m->mod.ins) { \
+	    xc->s_end = note_to_period(note + sub->xpo + \
+	    instrument->map[xc->key].xpo, sub->fin, HAS_QUIRK(QUIRK_LINEAR)); \
+	} \
 	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
 } while (0)
 

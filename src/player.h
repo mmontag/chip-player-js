@@ -32,9 +32,6 @@
 #define MODULE_ABORT	0x0004 
 #define MODULE_RESTART	0x0008 
 
-#define XXIH m->mod.xxi[xc->ins]
-#define XXI m->mod.xxi[xc->ins].sub[XXIH.map[xc->key].ins]
-
 #define DOENV_RELEASE	((TEST (RELEASE) || act == VIRTCH_ACTION_OFF))
 
 struct retrig_control {
