@@ -19,6 +19,13 @@
 #include "virtual.h"
 #include "mixer.h"
 
+/**
+ * @brief Create player context
+ *
+ * Create and initialize a handle used to identify this player context.
+ *
+ * @return Player context handle.
+ */
 xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
@@ -39,15 +46,22 @@ xmp_context xmp_create_context()
 	return (xmp_context)ctx;
 }
 
-void xmp_free_context(xmp_context ctx)
+/**
+ * @brief Destroy player context
+ *
+ * Release all context data referenced by the given handle.
+ *
+ * @param handle Player context handle.
+ */
+void xmp_free_context(xmp_context handle)
 {
-	free(ctx);
+	free(handle);
 }
 
-int _xmp_ctl(xmp_context opaque, int cmd, ...)
+int _xmp_ctl(xmp_context handle, int cmd, ...)
 {
 	va_list ap;
-	struct context_data *ctx = (struct context_data *)opaque;
+	struct context_data *ctx = (struct context_data *)handle;
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	int ret = 0;
@@ -102,7 +116,7 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 			if (t > arg) {
 				if (i > 0)
 					i--;
-				xmp_ord_set(opaque, i);
+				xmp_ord_set(handle, i);
 				break;
 			}
 		}

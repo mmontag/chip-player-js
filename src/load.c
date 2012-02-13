@@ -437,19 +437,28 @@ static void split_name(char *s, char **d, char **b)
 	}
 }
 
-
-int xmp_load_module(xmp_context opaque, char *s)
+/**
+ * @brief Load module
+ *
+ * Load module into the player context referenced by handle.
+ *
+ * @param handle Player context handle.
+ * @param path Module file name.
+ *
+ * @return 0 if the module is successfully loaded, -1 otherwise.
+ */
+int xmp_load_module(xmp_context handle, char *path)
 {
-    struct context_data *ctx = (struct context_data *)opaque;
+    struct context_data *ctx = (struct context_data *)handle;
     FILE *f;
     int i, t, val;
     struct stat st;
     struct module_data *m = &ctx->m;
 
-    _D(_D_WARN "s = %s", s);
+    _D(_D_WARN "path = %s", path);
 
-    if ((f = fopen(s, "rb")) == NULL)
-	return -3;
+    if ((f = fopen(path, "rb")) == NULL)
+	return -1;
 
     if (fstat(fileno (f), &st) < 0)
 	goto err;
@@ -458,19 +467,19 @@ int xmp_load_module(xmp_context opaque, char *s)
 	goto err;
 
     _D(_D_INFO "decrunch");
-    if ((t = decrunch((struct context_data *)ctx, &f, &s, DECRUNCH_MAX)) < 0)
+    if ((t = decrunch((struct context_data *)ctx, &f, &path, DECRUNCH_MAX)) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
 	goto err;
 
-    split_name(s, &m->dirname, &m->basename);
+    split_name(path, &m->dirname, &m->basename);
 
     /* Reset variables */
     memset(m->mod.name, 0, XMP_NAME_SIZE);
     memset(m->mod.type, 0, XMP_NAME_SIZE);
     /* memset(m->author, 0, XMP_NAME_SIZE); */
-    m->filename = s;		/* For ALM, SSMT, etc */
+    m->filename = path;		/* For ALM, SSMT, etc */
     m->size = st.st_size;
     m->rrate = PAL_RATE;
     m->c4rate = C4_PAL_RATE;
@@ -539,9 +548,17 @@ err:
 }
 
 
-void xmp_release_module(xmp_context opaque)
+/**
+ * @brief Free current module data
+ *
+ * Release all data from the currently loaded module in the given player
+ * context.
+ *
+ * @param handle Player context handle.
+ */
+void xmp_release_module(xmp_context handle)
 {
-	struct context_data *ctx = (struct context_data *)opaque;
+	struct context_data *ctx = (struct context_data *)handle;
 	struct module_data *m = &ctx->m;
 	int i;
 

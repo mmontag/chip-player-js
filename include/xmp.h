@@ -6,6 +6,11 @@
  * for more information.
  */
 
+/** 
+ * @file xmp.h
+ * @brief libxmp header file
+ */
+
 #ifndef __XMP_H
 #define __XMP_H
 
@@ -35,10 +40,10 @@ extern "C" {
 #define XMP_FORMAT_UNSIGNED	(1 << 1)
 #define XMP_FORMAT_MONO		(1 << 2)
 
-#define XMP_MAX_KEYS		109
-#define XMP_MAX_ENV_POINTS	32	/* max envelope points */
-#define XMP_MAX_MOD_LENGTH	256	/* max number of patterns in module */
-#define XMP_MAX_CHANNELS	64	/* max number of channels in module */
+#define XMP_MAX_KEYS		109	/**< Number of valid keys */
+#define XMP_MAX_ENV_POINTS	32	/**< Max number of envelope points */
+#define XMP_MAX_MOD_LENGTH	256	/**< Max number of patterns in module */
+#define XMP_MAX_CHANNELS	64	/**< Max number of channels in module */
 
 struct xmp_channel {
 	int pan;
