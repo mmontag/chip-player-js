@@ -217,13 +217,13 @@ static void unroll_loop(struct xmp_sample *xxs)
 	s16 = (int16 *)xxs->data;
 	s8 = (int8 *)xxs->data;
 
-	if (xxs->len > xxs->lpe + 1) {
-		start = xxs->lpe + 1;
+	if (xxs->len > xxs->lpe) {
+		start = xxs->lpe;
 	} else {
 		start = xxs->len;
 	}
 
-	loop_size = xxs->lpe - xxs->lps + 1;
+	loop_size = xxs->lpe - xxs->lps;
 
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		s16 += start;
@@ -242,7 +242,6 @@ static void unroll_loop(struct xmp_sample *xxs)
 int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer)
 {
 	int bytelen, extralen, unroll_extralen;
-	int bidir_loop = 0;
 
 	/* Synth patches
 	 * Default is YM3128 for historical reasons
@@ -270,10 +269,11 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 	}
 
 	/* Loop parameters sanity check
-	 * Allow loop ends one sample after the end of the sample, some
-	 * formats work this way. Last sample will be copied (see below)
 	 */
-	if (xxs->lps >= xxs->len || xxs->lpe > (xxs->len + 1)) {
+	if (xxs->lpe > xxs->len) {
+		xxs->lpe = xxs->len;
+	}
+	if (xxs->lps >= xxs->len || xxs->lps > xxs->lpe) {
 		xxs->lps = xxs->lpe = 0;
 		xxs->flg &= ~(XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
 	}
@@ -282,7 +282,7 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 	 * Allocate extra sample for interpolation.
 	 */
 	bytelen = xxs->len;
-	extralen = 1;
+	extralen = 2;
 	unroll_extralen = 0;
 
 	/* Disable birectional loop flag if sample is not looped
@@ -294,24 +294,14 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 	/* Unroll bidirectional loops
 	 */
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-		unroll_extralen = (xxs->lpe - xxs->lps + 1) -
-				(xxs->len - xxs->lpe - 1);
-
-		/* In this case, xxs->len will be incremented later */
-		if (xxs->lpe == xxs->len)
-			unroll_extralen--;
+		unroll_extralen = (xxs->lpe - xxs->lps) -
+				(xxs->len - xxs->lpe);
 
 		if (unroll_extralen < 0) {
 			unroll_extralen = 0;
 		}
 	}
 
-	/* S3M and IT loop end point to first sample after the loop
-	 * so allocate one more sample
-	 */
-	if (xxs->lpe == xxs->len) {
-		extralen++;
-	}
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		bytelen *= 2;
 		extralen *= 2;
@@ -384,19 +374,6 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 		xxs->flg |= XMP_SAMPLE_LOOP_FULL;
 	}
 
-	/* Increment sample size if loop size exceeds sample limits */
-	if (xxs->lpe == xxs->len) {
-		xxs->len++;
-		if (xxs->flg & XMP_SAMPLE_16BIT) {
-			xxs->data[bytelen] = xxs->data[bytelen - 2];
-			xxs->data[bytelen + 1] = xxs->data[bytelen - 1];
-			bytelen += 2;
-		} else {
-			xxs->data[bytelen] = xxs->data[bytelen - 1];
-			bytelen++;
-		}
-	}
-
 	/* Unroll bidirectional loops */
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 		unroll_loop(xxs);
@@ -407,8 +384,11 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		xxs->data[bytelen] = xxs->data[bytelen - 2];
 		xxs->data[bytelen + 1] = xxs->data[bytelen - 1];
+		xxs->data[bytelen + 2] = xxs->data[xxs->lps * 2];
+		xxs->data[bytelen + 3] = xxs->data[xxs->lps * 2 + 1];
 	} else {
 		xxs->data[bytelen] = xxs->data[bytelen - 1];
+		xxs->data[bytelen + 1] = xxs->data[xxs->lps];
 	}
 
 	return 0;

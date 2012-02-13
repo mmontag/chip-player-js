@@ -233,7 +233,7 @@ void mixer_softmixer(struct context_data *ctx)
     struct module_data *m = &ctx->m;
     struct xmp_sample *xxs;
     struct mixer_voice *vi;
-    int samples, size, lps, lpe;
+    int samples, size;
     int vol_l, vol_r, step, voc;
     int prev_l, prev_r;
     int synth = 1;
@@ -274,15 +274,6 @@ void mixer_softmixer(struct context_data *ctx)
 
 	xxs = &m->mod.xxs[vi->smp];
 
-	/* Sample loop processing. Offsets in samples, not bytes */
-	lps = xxs->lps;
-	lpe = xxs->lpe;
-
-	/* check for Protracker loop */
-	if (xxs->flg & XMP_SAMPLE_LOOP_FULL && !vi->looped_sample) {
-	    lpe = xxs->len - 1;
-	}
-
 	size = s->ticksize;
 
 	while (size > 0) {
@@ -292,10 +283,10 @@ void mixer_softmixer(struct context_data *ctx)
 				- vi->frac) / step;
 
 	    if (step > 0) {
-		if (vi->pos > vi->end)
+		if (vi->pos >= vi->end)
 		    samples = 0;
 	    } else {
-		if (vi->pos < vi->end)
+		if (vi->pos <= vi->end)
 		    samples = 0;
 	    }
 
@@ -349,20 +340,20 @@ void mixer_softmixer(struct context_data *ctx)
 		continue;
 
 	    /* First sample loop run */
-            if (~xxs->flg & XMP_SAMPLE_LOOP || lps >= lpe) {
+            if (~xxs->flg & XMP_SAMPLE_LOOP) {
 		anticlick(ctx, voc, 0, 0, buf_pos, size);
 		virtch_resetvoice(ctx, voc, 0);
 		size = 0;
 		continue;
 	    }
 
-	    vi->pos = lps;			/* forward loop */
-
-	    if (xxs->flg & XMP_SAMPLE_LOOP_FULL) {
-	            vi->end = lpe = xxs->lpe;
-	    }
-
+	    vi->pos = xxs->lps;			/* forward loop */
+	    vi->end = xxs->lpe;
 	    vi->looped_sample = 1;
+
+	    if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		vi->end += (xxs->lpe - xxs->lps);
+	    }
 	}
     }
 
@@ -393,22 +384,25 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 		return;
 	}
 
-	lpe = xxs->len - 1;
-	if (xxs->flg & XMP_SAMPLE_LOOP && vi->looped_sample) {
-		lpe = lpe > xxs->lpe ? xxs->lpe : lpe;
+	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->looped_sample == 0) {
+			vi->end = xxs->len;
+		} else {
+			vi->end = xxs->lpe;
+		}
+	} else {
+		vi->end = xxs->len;
 	}
 
-	if (pos >= lpe) {		/* Happens often in MED synth */
+	if (pos >= vi->end) {		/* Happens often in MED synth */
 		pos = 0;
 	}
 
 	vi->pos = pos;
 	vi->frac = frac;
 
-	vi->end = lpe;
-
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-		vi->end = xxs->lpe + (xxs->lpe - xxs->lps + 1);
+		vi->end += (xxs->lpe - xxs->lps);
 	}
 }
 

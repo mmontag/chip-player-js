@@ -410,9 +410,6 @@ load_instruments:
 		    mod->xxs[sample_num].lpe >>= 1;
 		}
 
-		if (mod->xxs[sample_num].lpe > 0)
-			mod->xxs[sample_num].lpe--;
-
 		mod->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_FORWARD ?
 		    XMP_SAMPLE_LOOP : 0;
 		mod->xxs[sample_num].flg |= xsh[j].type & XM_LOOP_PINGPONG ?
