@@ -186,12 +186,14 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 
     /* Tempo affects delay and must be computed first */
     if ((e->fxt == FX_TEMPO && e->fxp < 0x20) || e->fxt == FX_S3M_TEMPO) {
-	if (e->fxp)
+	if (e->fxp) {
 	    p->tempo = e->fxp;
+	}
     }
     if ((e->f2t == FX_TEMPO && e->f2p < 0x20) || e->f2t == FX_S3M_TEMPO) {
-	if (e->f2p)
+	if (e->f2p) {
 	    p->tempo = e->f2p;
+	}
     }
 
     /* Delay the entire fetch cycle */
@@ -924,6 +926,14 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	s->mix = DEFAULT_MIX;
 	s->pbase = SMIX_C4NOTE * m->c4rate / s->freq;
 
+	/* Sanity check */
+	if (mod->tpo == 0) {
+		mod->tpo = 6;
+	}
+	if (mod->bpm == 0) {
+		mod->bpm = 125;
+	}
+
 	m->time = _xmp_scan_module((struct context_data *)ctx);
 
 	if (mod->len == 0 || mod->chn == 0) {
@@ -952,11 +962,11 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 
 	f->jump = -1;
 
-	f->loop = calloc(p->virt.virt_channels, sizeof (struct pattern_loop));
+	f->loop = calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
 	if (f->loop == NULL)
 		goto err;
 
-	p->xc_data = calloc(p->virt.virt_channels, sizeof (struct channel_data));
+	p->xc_data = calloc(p->virt.virt_channels, sizeof(struct channel_data));
 	if (p->xc_data == NULL)
 		goto err1;
 
