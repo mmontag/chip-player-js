@@ -8,7 +8,7 @@ SRC_OBJS	= convert.o virtual.o format.o misc.o period.o player.o \
 		  unlzx.o s404_dec.o
 
 SRC_DFILES	= Makefile $(SRC_OBJS:.o=.c) common.h convert.h effects.h \
-		  envelope.h fmopl.h format.h getopt.h lfo.h list.h mixer.h \
+		  envelope.h fmopl.h format.h lfo.h list.h mixer.h \
 		  period.h player.h readhuff.h readlzw.h readrle.h spectrum.h \
 		  stepper.h synth.h virtual.h ym2149.h
 
