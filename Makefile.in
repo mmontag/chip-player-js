@@ -20,9 +20,10 @@ DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL configure configure.ac Makefile.in xmp.pc.in
 DDIRS		= docs include src loaders prowiz win32
 V		= 0
-LIB		= lib/libxmp.a
-SHLIB		= lib/libxmp.so.$(VERSION)
-SONAME		= lib/libxmp.so.3
+LIB		= libxmp.a
+SOLIB		= libxmp.so
+SHLIB		= $(SOLIB).$(VERSION)
+SONAME		= $(SOLIB).3
 
 all: @STATIC@ @SHARED@
 
@@ -49,27 +50,27 @@ CFLAGS += -Iinclude -Isrc -DVERSION=\"$(VERSION)\"
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
 	eval $$CMD
 
-static: $(LIB)
+static: lib/$(LIB)
 
-shared: $(SHLIB)
+shared: lib/$(SHLIB)
 
-$(LIB): $(OBJS)
+lib/$(LIB): $(OBJS)
 	@mkdir -p lib
 	@CMD='$(AR) r $@ $(OBJS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
 	eval $$CMD
 	ranlib $@
 
-$(SHLIB): $(LOBJS)
+lib/$(SHLIB): $(LOBJS)
 	@mkdir -p lib
 	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -o $@ $(LOBJS) -lm'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
-	ln -sf `basename $(SHLIB)` $(SONAME)
-	ln -sf `basename $(SONAME)` lib/libxmp.so
+	ln -sf $(SHLIB) lib/$(SONAME)
+	ln -sf $(SONAME) lib/$(SOLIB)
 
 clean:
-	@rm -f $(OBJS) $(LIB) $(LOBJS) $(SHLIB) $(SONAME) lib/libxmp.so
+	@rm -f $(OBJS) $(LOBJS) lib/lib*
 
 install: install-xmp install-docs
 
