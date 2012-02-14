@@ -151,10 +151,11 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 		smp_r = s->dtright;
 		smp_l = s->dtleft;
 	} else {
-		smp_r = p->virt.voice_array[voc].sright;
-		smp_l = p->virt.voice_array[voc].sleft;
-		p->virt.voice_array[voc].sright = 0;
-		p->virt.voice_array[voc].sleft = 0;
+		struct mixer_voice *vi = &p->virt.voice_array[voc];
+		smp_r = vi->sright;
+		smp_l = vi->sleft;
+		vi->sright = 0;
+		vi->sleft = 0;
 	}
 
 	if (smp_l == 0 && smp_r == 0) {
@@ -316,12 +317,12 @@ void mixer_softmixer(struct context_data *ctx)
 					mix_size *= 2;
 				}
 
-				/* Hipolito's anticlick routine */
+				/* For Hipolito's anticlick routine */
 				idx = mix_size;
-				if (idx < 2)
-					idx = 2;
-				prev_r = buf_pos[idx - 2];
-				prev_l = buf_pos[idx - 1];
+				if (mix_size >= 2) {
+					prev_r = buf_pos[idx - 2];
+					prev_l = buf_pos[idx - 1];
+				}
 
 				/* "Beautiful Ones" apparently uses 0xfe as
 				 * 'no filter' :\ */
@@ -333,12 +334,12 @@ void mixer_softmixer(struct context_data *ctx)
 					       vol_r, step);
 				buf_pos += mix_size;
 
-				/* Hipolito's anticlick routine */
+				/* For Hipolito's anticlick routine */
 				idx = 0;
-				if (mix_size < 2)
-					idx = 2;
-				vi->sright = buf_pos[idx - 2] - prev_r;
-				vi->sleft = buf_pos[idx - 1] - prev_l;
+				if (mix_size >= 2) {
+					vi->sright = buf_pos[idx - 2] - prev_r;
+					vi->sleft = buf_pos[idx - 1] - prev_l;
+				}
 			}
 
 			vi->frac += step * samples;
