@@ -389,7 +389,6 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
-	int lpe;
 
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		return;

@@ -823,12 +823,47 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 }
 
-static void next_row(struct context_data *ctx)
+static void next_order(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct flow_control *f = &p->flow;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+
+	do {
+    		p->ord++;
+
+		/* Restart module */
+		if (p->ord >= mod->len) {
+    			p->ord = ((uint32)mod->rst > mod->len ||
+				(uint32)mod->xxo[mod->rst] >=
+				mod->pat) ?  0 : mod->rst;
+			p->volume = m->xxo_info[p->ord].gvl;
+		}
+	} while (mod->xxo[p->ord] >= mod->pat);
+
+	p->time = (double)m->xxo_info[p->ord].time;
+
+	f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
+	if (f->jumpline >= f->num_rows)
+		f->jumpline = 0;
+	p->row = f->jumpline;
+	f->jumpline = 0;
+
+	p->pos = p->ord;
+
+	/* Reset persistent effects at new pattern */
+	if (HAS_QUIRK(QUIRK_PERPAT)) {
+		int chn;
+		for (chn = 0; chn < mod->chn; chn++)
+			p->xc_data[chn].per_flags = 0;
+	}
+}
+
+static void next_row(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct flow_control *f = &p->flow;
 
 	/* If break during pattern delay, next row is skipped.
 	 * See corruption.mod order 1D (pattern 0D) last line:
@@ -848,53 +883,20 @@ static void next_row(struct context_data *ctx)
 		if (f->jump != -1) {
 			p->ord = f->jump - 1;
 			f->jump = -1;
-			goto next_order;
 		}
 
-		goto next_order;
-	}
-
-	if (f->loop_chn) {
-		p->row = f->loop[f->loop_chn - 1].start - 1;
-		f->loop_chn = 0;
-	}
-
-	p->row++;
-
-	/* check end of pattern */
-	if (p->row >= f->num_rows) {
-next_order:
-    		p->ord++;
-
-		/* Restart module */
-		if (p->ord >= mod->len) {
-    			p->ord = ((uint32)mod->rst > mod->len ||
-				(uint32)mod->xxo[mod->rst] >=
-				mod->pat) ?  0 : mod->rst;
-			p->volume = m->xxo_info[p->ord].gvl;
+		next_order(ctx);
+	} else {
+		if (f->loop_chn) {
+			p->row = f->loop[f->loop_chn - 1].start - 1;
+			f->loop_chn = 0;
 		}
-
-		/* Skip invalid patterns */
-		if (mod->xxo[p->ord] >= mod->pat) {
-    			p->ord++;
-    			goto next_order;
-		}
-
-		p->time = (double)m->xxo_info[p->ord].time;
-
-		f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
-		if (f->jumpline >= f->num_rows)
-			f->jumpline = 0;
-		p->row = f->jumpline;
-		f->jumpline = 0;
-
-		p->pos = p->ord;
-
-		/* Reset persistent effects at new pattern */
-		if (HAS_QUIRK(QUIRK_PERPAT)) {
-			int chn;
-			for (chn = 0; chn < mod->chn; chn++)
-				p->xc_data[chn].per_flags = 0;
+	
+		p->row++;
+	
+		/* check end of pattern */
+		if (p->row >= f->num_rows) {
+			next_order(ctx);
 		}
 	}
 }
@@ -995,12 +997,6 @@ int xmp_player_frame(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int i;
 
-	p->frame++;
-
-	if (p->frame >= (p->tempo * (1 + f->delay))) {
-		next_row(ctx);
-	}
-
 	/* check reposition */
 	if (p->ord != p->pos) {
 		if (p->pos == -1)
@@ -1014,7 +1010,9 @@ int xmp_player_frame(xmp_context opaque)
 			f->end_point = p->scan_num;
 		}
 
-		p->ord = p->pos;
+		p->ord = p->pos - 1;
+		next_order(ctx);
+
 		if (m->xxo_info[p->ord].tempo)
 			p->tempo = m->xxo_info[p->ord].tempo;
 		p->bpm = m->xxo_info[p->ord].bpm;
@@ -1023,12 +1021,14 @@ int xmp_player_frame(xmp_context opaque)
 		f->jump = p->ord;
 		p->time = (double)m->xxo_info[p->ord].time;
 		f->jumpline = m->xxo_info[p->ord].start_row;
-		p->row = -1;
-		f->pbreak = 1;
-		p->ord--;
+
 		virtch_reset(ctx);
 		reset_channel(ctx);
-		next_row(ctx);
+	} else {
+		p->frame++;
+		if (p->frame >= (p->tempo * (1 + f->delay))) {
+			next_row(ctx);
+		}
 	}
 
 	/* check new row */
@@ -1053,8 +1053,9 @@ int xmp_player_frame(xmp_context opaque)
 	}
 
 	/* play_frame */
-	for (i = 0; i < p->virt.virt_channels; i++)
+	for (i = 0; i < p->virt.virt_channels; i++) {
 		play_channel(ctx, i, p->frame);
+	}
 
 	if (HAS_QUIRK(QUIRK_MEDBPM)) {
 		double delta =  m->rrate * 1000 * 33 / (100 * p->bpm * 125);
