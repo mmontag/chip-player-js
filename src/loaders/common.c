@@ -239,7 +239,8 @@ static void unroll_loop(struct xmp_sample *xxs)
 }
 
 
-int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer)
+int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
+                void *buffer)
 {
 	int bytelen, extralen, unroll_extralen;
 
@@ -331,9 +332,11 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs, void *buffer
 				       (uint8 *) xxs->data, table, bytelen);
 		} else {
 			int x = fread(xxs->data, 1, bytelen, f);
-			if (x != bytelen)
-				fprintf(stderr, "short read: %d\n",
-					bytelen - x);
+			if (x != bytelen) {
+				fprintf(stderr, "libxmp: short read (%d) in "
+					"sample load\n", x - bytelen);
+				memset(xxs->data + x, 0, bytelen - x);
+			}
 		}
 	}
 
