@@ -842,8 +842,6 @@ static void next_order(struct context_data *ctx)
 		}
 	} while (mod->xxo[p->ord] >= mod->pat);
 
-	p->time = (double)m->xxo_info[p->ord].time;
-
 	f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
 	if (f->jumpline >= f->num_rows)
 		f->jumpline = 0;
@@ -1019,7 +1017,6 @@ int xmp_player_frame(xmp_context opaque)
 		p->tick_time = m->rrate / p->bpm;
 		p->volume = m->xxo_info[p->ord].gvl;
 		f->jump = p->ord;
-		p->time = (double)m->xxo_info[p->ord].time;
 		f->jumpline = m->xxo_info[p->ord].start_row;
 
 		virtch_reset(ctx);
