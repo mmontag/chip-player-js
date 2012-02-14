@@ -1010,8 +1010,9 @@ int xmp_player_frame(xmp_context opaque)
 			return -1;		/* that's all folks */
 		}
 
-		if (p->pos == 0)
+		if (p->pos == 0) {
 			f->end_point = p->scan_num;
+		}
 
 		p->ord = p->pos;
 		if (m->xxo_info[p->ord].tempo)
@@ -1035,10 +1036,12 @@ int xmp_player_frame(xmp_context opaque)
 	if (p->frame == 0) {			/* first frame in row */
 		/* check end of module */
 	    	if (p->ord == p->scan_ord && p->row == p->scan_row) {
-			if (!f->end_point--) {
+			if (f->end_point == 0) {
 				p->loop_count++;
+				f->end_point = p->scan_num;
 				/* return -1; */
 			}
+			f->end_point--;
 		}
 
 		p->gvol_flag = 0;
