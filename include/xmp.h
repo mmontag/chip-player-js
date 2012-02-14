@@ -178,6 +178,15 @@ struct xmp_module {
 };
 
 /*
+ *
+ */
+
+struct xmp_test_info {
+	char name[XMP_NAME_SIZE];
+	char type[XMP_NAME_SIZE];
+};
+
+/*
  * Playing module information
  */
 
@@ -235,7 +244,7 @@ typedef char *xmp_context;
 xmp_context xmp_create_context(void);
 void xmp_free_context(xmp_context);
 int xmp_load_module(xmp_context, char *);
-int xmp_test_module(xmp_context, char *, char *);
+int xmp_test_module(xmp_context, char *, struct xmp_test_info *);
 void xmp_release_module(xmp_context);
 int _xmp_ctl(xmp_context, int, ...);
 int xmp_player_start(xmp_context, int, int, int);

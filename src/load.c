@@ -378,45 +378,54 @@ static void unlink_tempfiles(void)
 }
 
 
-int xmp_test_module(xmp_context ctx, char *s, char *n)
+int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
 {
-    FILE *f;
-    struct stat st;
-    int i;
+	FILE *f;
+	struct stat st;
+	char buf[XMP_NAME_SIZE];
+	int i;
 
-    if ((f = fopen(s, "rb")) == NULL)
-	return -3;
+	if ((f = fopen(path, "rb")) == NULL)
+		return -1;
 
-    if (fstat(fileno(f), &st) < 0)
-	goto err;
+	if (fstat(fileno(f), &st) < 0)
+		goto err;
 
-    if (S_ISDIR(st.st_mode))
-	goto err;
+	if (S_ISDIR(st.st_mode))
+		goto err;
 
-    if (decrunch((struct context_data *)ctx, &f, &s, DECRUNCH_MAX) < 0)
-	goto err;
+	if (decrunch((struct context_data *)ctx, &f, &path, DECRUNCH_MAX) < 0)
+		goto err;
 
-    if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
-	goto err;
+	if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
+		goto err;
 
-    if (st.st_size < 500)		/* set minimum valid module size */
-	goto err;
+	if (st.st_size < 500)		/* set minimum valid module size */
+		goto err;
 
-    if (n) *n = 0;			/* reset name prior to testing */
-
-    for (i = 0; format_loader[i] != NULL; i++) {
-	fseek(f, 0, SEEK_SET);
-	 if (format_loader[i]->test(f, n, 0) == 0) {
-	    fclose(f);
-	    unlink_tempfiles();
-	    return 0;
+	if (info != NULL) {
+		*info->name = 0;	/* reset name prior to testing */
+		*info->type = 0;	/* reset name prior to testing */
 	}
-    }
 
-err:
-    fclose (f);
-    unlink_tempfiles();
-    return -1;
+	for (i = 0; format_loader[i] != NULL; i++) {
+		fseek(f, 0, SEEK_SET);
+		if (format_loader[i]->test(f, buf, 0) == 0) {
+			fclose(f);
+			unlink_tempfiles();
+			if (info != NULL) {
+				strncpy(info->name, buf, XMP_NAME_SIZE);
+				strncpy(info->type, format_loader[i]->name,
+							XMP_NAME_SIZE);
+			}
+			return 0;
+		}
+	}
+
+      err:
+	fclose(f);
+	unlink_tempfiles();
+	return -1;
 }
 
 
@@ -503,6 +512,7 @@ int xmp_load_module(xmp_context handle, char *path)
     }
 
     _D(_D_WARN "load");
+    val = 0;
     for (i = 0; format_loader[i] != NULL; i++) {
 	fseek(f, 0, SEEK_SET);
 	val = format_loader[i]->test(f, NULL, 0);
