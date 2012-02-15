@@ -253,6 +253,7 @@ static void synth_setnote(struct context_data *ctx, int c, int note, int bend)
 	struct spectrum_channel *sc = &sp->sc[c];
 	double d;
 
+	note -= 12;
 	note += se->ornament[sc->orn].val[sc->count];
 	d = (double)note + (double)bend / 100;
 	sp->sc[c].freq = (int)(0xfff / pow(2, d / 12));

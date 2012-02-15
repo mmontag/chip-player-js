@@ -227,7 +227,7 @@ static void synth_setnote(struct context_data *ctx, int c, int note, int bend)
 
 	n = note % 12;
 	f = ym3812_note[n] + (ym3812_note[n + 1] - ym3812_note[n]) * bend / 100;
-	o = note / 12 - 1;
+	o = note / 12 - 2;
 
 	if (o < 0)
 		o = 0;
