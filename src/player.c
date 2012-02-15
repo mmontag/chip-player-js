@@ -175,7 +175,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
-    int xins, ins, smp, note, key, flg;
+    int xins, ins, note, key, flg;
     struct channel_data *xc;
     int cont_sample;
     int mapped;
@@ -221,7 +221,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
     }
 
     flg = 0;
-    smp = ins = note = -1;
+    ins = note = -1;
     xins = xc->ins;
     key = e->note;
     cont_sample = 0;
@@ -336,9 +336,25 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	    if (mod->xxi[ins].map[key].ins != 0xff) {
 		int mapped = mod->xxi[ins].map[key].ins;
 		int transp = mod->xxi[ins].map[key].xpo;
+		int smp;
 
 		note = key + mod->xxi[ins].sub[mapped].xpo + transp;
 		smp = mod->xxi[ins].sub[mapped].sid;
+
+		if (smp >= 0 && smp < mod->smp) {
+	            int mapped = mod->xxi[ins].map[key].ins;
+	            int to = virtch_setpatch(ctx, chn, ins, smp, note,
+			mod->xxi[ins].sub[mapped].nna,
+			mod->xxi[ins].sub[mapped].dct,
+			mod->xxi[ins].sub[mapped].dca, ctl, cont_sample);
+
+	            if (to < 0)
+		        return -1;
+
+	            copy_channel(p, to, chn);
+
+	            xc->smp = smp;
+		}
 	    } else {
 		flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 	    }
@@ -348,20 +364,6 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	}
     }
 
-    if (smp >= 0 && smp < mod->smp) {
-	int mapped = mod->xxi[ins].map[key].ins;
-	int to = virtch_setpatch(ctx, chn, ins, smp, note,
-			mod->xxi[ins].sub[mapped].nna,
-			mod->xxi[ins].sub[mapped].dct,
-			mod->xxi[ins].sub[mapped].dca, ctl, cont_sample);
-
-	if (to < 0)
-		return -1;
-
-	copy_channel(p, to, chn);
-
-	xc->smp = smp;
-    }
 
     /* Reset flags */
     xc->delay = xc->retrig.delay = 0;
