@@ -277,7 +277,7 @@ void virtch_setsmp(struct context_data *ctx, int chn, int smp)
 int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp, int note, int nna, int dct, int dca, int flg, int cont_sample)
 {
     struct player_data *p = &ctx->p;
-    int voc, vfree;
+    int i, voc, vfree;
 
     if ((uint32)chn >= p->virt.virt_channels)
 	return -1;
@@ -285,31 +285,35 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp, int not
     if (ins < 0)
 	smp = -1;
 
+    voc = p->virt.virt_channel[chn].map;
+
     if (dct) {
-	for (voc = 0; voc < p->virt.maxvoc; voc++) {
-	    if (p->virt.voice_array[voc].root == chn && p->virt.voice_array[voc].ins == ins) {
+	for (i = 0; i < p->virt.maxvoc; i++) {
+            struct mixer_voice *vi = &p->virt.voice_array[i];
+	    if (vi->root == chn && vi->ins == ins) {
 		if ((dct == XMP_INST_DCT_INST) ||
-		    (dct == XMP_INST_DCT_SMP && p->virt.voice_array[voc].smp == smp) ||
-		    (dct == XMP_INST_DCT_NOTE && p->virt.voice_array[voc].note == note)) {
+		    (dct == XMP_INST_DCT_SMP && vi->smp == smp) ||
+		    (dct == XMP_INST_DCT_NOTE && vi->note == note)) {
 		    if (dca) {
-			if (voc != p->virt.virt_channel[chn].map || p->virt.voice_array[voc].act)
-			    p->virt.voice_array[voc].act = dca;
+			if (i != voc || vi->act) {
+			    vi->act = dca;
+			}
 		    } else {
-			virtch_resetvoice(ctx, voc, 1);
+			virtch_resetvoice(ctx, i, 1);
 		    }
 		}
 	    }
 	}
     }
 
-    voc = p->virt.virt_channel[chn].map;
 
     if (voc > FREE) {
 	if (p->virt.voice_array[voc].act && p->virt.chnvoc > 1) {
-	    if ((vfree = alloc_voice(ctx, chn)) > FREE) {
+	    vfree = alloc_voice(ctx, chn);
+	    if (vfree > FREE) {
 		p->virt.voice_array[vfree].root = chn;
 		p->virt.virt_channel[chn].map = vfree;
-		p->virt.voice_array[p->virt.virt_channel[chn].map].chn = chn;
+		p->virt.voice_array[vfree].chn = chn;
 		for (chn = p->virt.num_tracks; p->virt.virt_channel[chn++].map > FREE; );
 		p->virt.voice_array[voc].chn = --chn;
 		p->virt.virt_channel[chn].map = voc;
@@ -319,10 +323,11 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp, int not
 	    }
 	}
     } else {
-	if ((voc = alloc_voice(ctx, chn)) < 0)
+	voc = alloc_voice(ctx, chn);
+	if (voc < 0)
 	    return -1;
 	p->virt.virt_channel[chn].map = voc;
-	p->virt.voice_array[p->virt.virt_channel[chn].map].chn = chn;
+	p->virt.voice_array[voc].chn = chn;
 	p->virt.voice_array[voc].root = chn;
     }
 
@@ -331,8 +336,9 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp, int not
 	return chn;	/* was -1 */
     }
 
-    if (!cont_sample)
+    if (!cont_sample) {
 	mixer_setpatch(ctx, voc, smp);
+    }
 
     mixer_setnote(ctx, voc, note);
     p->virt.voice_array[voc].ins = ins;
