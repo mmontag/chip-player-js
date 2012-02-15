@@ -387,11 +387,26 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		xxs->data[bytelen] = xxs->data[bytelen - 2];
 		xxs->data[bytelen + 1] = xxs->data[bytelen - 1];
-		xxs->data[bytelen + 2] = xxs->data[xxs->lps * 2];
-		xxs->data[bytelen + 3] = xxs->data[xxs->lps * 2 + 1];
+		xxs->data[bytelen + 2] = xxs->data[bytelen];
+		xxs->data[bytelen + 3] = xxs->data[bytelen + 1];
 	} else {
 		xxs->data[bytelen] = xxs->data[bytelen - 1];
-		xxs->data[bytelen + 1] = xxs->data[xxs->lps];
+		xxs->data[bytelen + 1] = xxs->data[bytelen];
+	}
+
+	/* Fix sample at loop */
+	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		if (xxs->flg & XMP_SAMPLE_16BIT) {
+			int lpe = xxs->lpe * 2;
+			int lps = xxs->lps * 2;
+			xxs->data[lpe] = xxs->data[lpe - 2];
+			xxs->data[lpe + 1] = xxs->data[lpe - 1];
+			xxs->data[lpe + 2] = xxs->data[lps];
+			xxs->data[lpe + 3] = xxs->data[lps + 1];
+		} else {
+			xxs->data[xxs->lpe] = xxs->data[xxs->lpe - 1];
+			xxs->data[xxs->lpe + 1] = xxs->data[xxs->lps];
+		}
 	}
 
 	return 0;

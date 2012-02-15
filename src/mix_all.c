@@ -84,7 +84,7 @@
 
 #define VAR_ITPT(x) \
     VAR_NORM(x); \
-    int smp_x1, smp_dt
+    int smp_x1, smp_dt;
 
 #define VAR_FILT \
     int fx1 = vi->filter.X1, fx2 = vi->filter.X2
