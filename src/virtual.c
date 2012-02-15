@@ -22,8 +22,9 @@ void virtch_resetvoice(struct context_data *ctx, int voc, int mute)
 	if ((uint32) voc >= p->virt.maxvoc)
 		return;
 
-	if (mute)
+	if (mute) {
 		mixer_setvol(ctx, voc, 0);
+	}
 
 	p->virt.virt_used--;
 	p->virt.virt_channel[vi->root].count--;
@@ -45,15 +46,16 @@ int virtch_on(struct context_data *ctx, int num)
 	p->virt.virt_channels = p->virt.num_tracks;
 	p->virt.chnvoc = HAS_QUIRK(QUIRK_VIRTUAL) ? MAX_VOICES_CHANNEL : 1;
 
-	if (p->virt.chnvoc > 1)
+	if (p->virt.chnvoc > 1) {
 		p->virt.virt_channels += num;
-	else if (num > p->virt.virt_channels)
+	} else if (num > p->virt.virt_channels) {
 		num = p->virt.virt_channels;
+	}
 
 	num = p->virt.maxvoc = mixer_numvoices(ctx, num);
 
-	p->virt.voice_array =
-	    calloc(p->virt.maxvoc, sizeof(struct mixer_voice));
+	p->virt.voice_array = calloc(p->virt.maxvoc,
+				sizeof(struct mixer_voice));
 	if (p->virt.voice_array == NULL)
 		goto err;
 
@@ -62,8 +64,8 @@ int virtch_on(struct context_data *ctx, int num)
 		p->virt.voice_array[i].root = FREE;
 	}
 
-	p->virt.virt_channel =
-	    malloc(p->virt.virt_channels * sizeof(struct virt_channel));
+	p->virt.virt_channel = malloc(p->virt.virt_channels *
+				sizeof(struct virt_channel));
 	if (p->virt.virt_channel == NULL)
 		goto err1;
 
@@ -170,10 +172,11 @@ void virtch_mute(struct context_data *ctx, int chn, int status)
 	if ((uint32) chn >= XMP_MAX_CHANNELS)
 		return;
 
-	if (status < 0)
+	if (status < 0) {
 		p->channel_mute[chn] = !p->channel_mute[chn];
-	else
+	} else {
 		p->channel_mute[chn] = status;
+	}
 }
 
 static inline int map_virt_channel(struct player_data *p, int chn)
@@ -278,8 +281,9 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	if ((uint32) chn >= p->virt.virt_channels)
 		return -1;
 
-	if (ins < 0)
+	if (ins < 0) {
 		smp = -1;
+	}
 
 	voc = p->virt.virt_channel[chn].map;
 
@@ -389,10 +393,11 @@ void virtch_pastnote(struct context_data *ctx, int chn, int act)
 	for (voc = p->virt.maxvoc; voc--;) {
 		if (p->virt.voice_array[voc].root == chn
 		    && p->virt.voice_array[voc].chn >= p->virt.num_tracks) {
-			if (act == VIRTCH_ACTION_CUT)
+			if (act == VIRTCH_ACTION_CUT) {
 				virtch_resetvoice(ctx, voc, 1);
-			else
+			} else {
 				p->virt.voice_array[voc].act = act;
+			}
 		}
 	}
 }
@@ -405,6 +410,8 @@ int virtch_cstat(struct context_data *ctx, int chn)
 	if ((voc = map_virt_channel(p, chn)) < 0)
 		return VIRTCH_INVALID;
 
-	return chn <
-	    p->virt.num_tracks ? VIRTCH_ACTIVE : p->virt.voice_array[voc].act;
+	if (chn < p->virt.num_tracks)
+		return VIRTCH_ACTIVE;
+
+	return p->virt.voice_array[voc].act;
 }
