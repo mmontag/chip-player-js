@@ -151,7 +151,8 @@ static int alloc_voice(struct context_data *ctx, int chn)
     /* Find oldest voice */
     num = age = FREE;
     for (i = 0; i < p->virt.maxvoc; i++) {
-	if (p->virt.voice_array[i].root == chn && p->virt.voice_array[i].age < age) {
+        struct mixer_voice *vi = &p->virt.voice_array[i];
+	if (vi->root == chn && vi->age < age) {
 	    num = i;
 	    age = p->virt.voice_array[num].age;
 	}
@@ -290,22 +291,23 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp, int not
     if (dct) {
 	for (i = 0; i < p->virt.maxvoc; i++) {
             struct mixer_voice *vi = &p->virt.voice_array[i];
-	    if (vi->root == chn && vi->ins == ins) {
-		if ((dct == XMP_INST_DCT_INST) ||
-		    (dct == XMP_INST_DCT_SMP && vi->smp == smp) ||
-		    (dct == XMP_INST_DCT_NOTE && vi->note == note)) {
-		    if (dca) {
-			if (i != voc || vi->act) {
-			    vi->act = dca;
-			}
-		    } else {
-			virtch_resetvoice(ctx, i, 1);
-		    }
-		}
-	    }
-	}
-    }
+            if (vi->root == chn && vi->ins == ins) {
+		int cond1 = (dct == XMP_INST_DCT_INST);
+		int cond2 = (dct == XMP_INST_DCT_SMP && vi->smp == smp);
+		int cond3 = (dct == XMP_INST_DCT_NOTE && vi->note == note);
 
+                if (cond1 || cond2 || cond3) {
+                    if (dca) {
+                        if (i != voc || vi->act) {
+                            vi->act = dca;
+                        }
+                    } else {
+                        virtch_resetvoice(ctx, i, 1);
+                    }
+                }
+	    }
+        }
+    }
 
     if (voc > FREE) {
 	if (p->virt.voice_array[voc].act && p->virt.chnvoc > 1) {
@@ -314,7 +316,7 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp, int not
 		p->virt.voice_array[vfree].root = chn;
 		p->virt.virt_channel[chn].map = vfree;
 		p->virt.voice_array[vfree].chn = chn;
-		for (chn = p->virt.num_tracks; p->virt.virt_channel[chn++].map > FREE; );
+		for (chn = p->virt.num_tracks; p->virt.virt_channel[chn].map > FREE; chn++);
 		p->virt.voice_array[voc].chn = --chn;
 		p->virt.virt_channel[chn].map = voc;
 		voc = vfree;
