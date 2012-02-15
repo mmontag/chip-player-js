@@ -863,6 +863,8 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	read16l(f);
 
 	while (--pat_len >= 0) {
+	    int ignore_event;
+
 	    b = read8(f);
 	    if (!b) {
 		r++;
@@ -881,6 +883,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	     * we don't want to set it to 64 channels.
 	     */
 	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
+	    ignore_event = 0;
 	    if (mask[c] & 0x01) {
 		b = read8(f);
 
@@ -898,27 +901,35 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		    b = XMP_KEY_FADE;
 		    break;
 		default:
-		    if (b < 11)
+		    if (b < 11) {
 			b = 0;
-		    else
+			ignore_event = 1;
+		    } else {
 			b -= 11;
+		    }
 		}
 		lastevent[c].note = event->note = b;
 		pat_len--;
 	    }
 	    if (mask[c] & 0x02) {
 		b = read8(f);
+		if (ignore_event)
+		    b = 0;
 		lastevent[c].ins = event->ins = b;
 		pat_len--;
 	    }
 	    if (mask[c] & 0x04) {
 		b = read8(f);
+		if (ignore_event)
+		    b = 0;
 		lastevent[c].vol = event->vol = b;
 		xlat_volfx (event);
 		pat_len--;
 	    }
 	    if (mask[c] & 0x08) {
 		b = read8(f);
+		if (ignore_event)
+		    b = 0;
 		event->fxt = b;
 		event->fxp = read8(f);
 		xlat_fx (c, event);
