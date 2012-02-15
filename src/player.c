@@ -509,7 +509,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     struct module_data *m = &ctx->m;
     struct mixer_data *s = &ctx->s;
     struct channel_data *xc = &p->xc_data[chn];
-    struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+    struct xmp_instrument *instrument;
     int linear_bend;
 
     /* Do delay */
@@ -518,7 +518,10 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	    read_event(ctx, xc->delayed_event, chn, 0);
     }
 
-    if ((act = virtch_cstat(ctx, chn)) == VIRTCH_INVALID)
+    instrument = &m->mod.xxi[xc->ins];
+
+    act = virtch_cstat(ctx, chn);
+    if (act == VIRTCH_INVALID)
 	return;
 
     if (!t && act != VIRTCH_ACTIVE) {
