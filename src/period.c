@@ -39,7 +39,7 @@ inline double note_to_period(int n, int f, int type)
 
     return type ?
 	(120.0 - d) * 16 :			/* Linear */
-        6847.0 / pow(2, d / 12);		/* Amiga */
+        13694.0 / pow(2, d / 12);		/* Amiga */
 }
 
 
@@ -47,7 +47,7 @@ inline double note_to_period(int n, int f, int type)
 int note_to_period_mix(int n, int b)
 {
     double d = (double)n + (double)b / 100;
-    return (int)(16.0 * 6847.0 / pow(2, d / 12));
+    return (int)(16.0 * 13694.0 / pow(2, d / 12));
 }
 
 
@@ -59,7 +59,7 @@ int period_to_note(int p)
 
     if (!p)
 	return 0;
-    for (n = NOTE_Bb0; p <= (MAX_PERIOD / 2); n += 12, p <<= 1);
+    for (n = 12 + NOTE_Bb0; p <= (MAX_PERIOD / 2); n += 12, p <<= 1);
     for (; p > *t; t -= 8, n--);
     for (f = 7; f && (*t > p); t++, f--);
     return n - (f >> 2);

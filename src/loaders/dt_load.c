@@ -19,8 +19,7 @@ static int dt_test(FILE *, char *, const int);
 static int dt_load (struct module_data *, FILE *, const int);
 
 struct format_loader dt_loader = {
-	"DTM",
-	"Digital Tracker",
+	"Digital Tracker (DTM)",
 	dt_test,
 	dt_load
 };
@@ -185,7 +184,7 @@ static void get_dapt(struct module_data *m, int size, FILE *f)
 			d = read8(f);
 			if (a) {
 				a--;
-				event->note = 12 * (a >> 4) + (a & 0x0f);
+				event->note = 12 * (a >> 4) + (a & 0x0f) + 12;
 			}
 			event->vol = (b & 0xfc) >> 2;
 			event->ins = ((b & 0x03) << 4) + (c >> 4);

@@ -21,7 +21,6 @@ static int tcb_test(FILE *, char *, const int);
 static int tcb_load (struct module_data *, FILE *, const int);
 
 struct format_loader tcb_loader = {
-	"TCB",
 	"TCB Tracker",
 	tcb_test,
 	tcb_load
@@ -111,7 +110,7 @@ static int tcb_load(struct module_data *m, FILE *f, const int start)
 				b = read8(f);
 				if (b) {
 					event->note = 12 * (b >> 4);
-					event->note += (b & 0xf) + 24;
+					event->note += (b & 0xf) + 36;
 				}
 				b = read8(f);
 				event->ins = b >> 4;

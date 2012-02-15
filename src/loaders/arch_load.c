@@ -18,7 +18,6 @@ static int arch_load (struct module_data *, FILE *, const int);
 
 
 struct format_loader arch_loader = {
-	"MUSX",
 	"Archimedes Tracker",
 	arch_test,
 	arch_load
@@ -254,7 +253,7 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 			event->note = read8(f);
 
 			if (event->note)
-				event->note += 36;
+				event->note += 48;
 
 			fix_effect(event);
 		}

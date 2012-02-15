@@ -14,7 +14,6 @@ static int sym_test(FILE *, char *, const int);
 static int sym_load (struct module_data *, FILE *, const int);
 
 struct format_loader sym_loader = {
-	"DSYM",
 	"Digital Symphony",
 	sym_test,
 	sym_load
@@ -337,7 +336,7 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 			b = readptr32l(&buf[4 * (i * 64 + j)]);
 			event->note = b & 0x0000003f;
 			if (event->note)
-				event->note += 36;
+				event->note += 48;
 			event->ins = (b & 0x00001fc0) >> 6;
 			event->fxt = (b & 0x000fc000) >> 14;
 			parm = (b & 0xfff00000) >> 20;

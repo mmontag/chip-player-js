@@ -19,7 +19,6 @@ static int okt_test (FILE *, char *, const int);
 static int okt_load (struct module_data *, FILE *, const int);
 
 struct format_loader okt_loader = {
-    "OKT",
     "Oktalyzer",
     okt_test,
     okt_load
@@ -216,7 +215,7 @@ static void get_pbod(struct module_data *m, int size, FILE *f)
 	ins = read8(f);
 
 	if (note) {
-	    event->note = 36 + note;
+	    event->note = 48 + note;
 	    event->ins = 1 + ins;
 	}
 

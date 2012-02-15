@@ -30,8 +30,7 @@ static int stx_test (FILE *, char *, const int);
 static int stx_load (struct module_data *, FILE *, const int);
 
 struct format_loader stx_loader = {
-    "STX",
-    "STMIK 0.2",
+    "STMIK 0.2 (STX)",
     stx_test,
     stx_load
 };
@@ -210,7 +209,7 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].sub[0].vol, sih.c2spd);
 
 	sih.c2spd = 8363 * sih.c2spd / 8448;
-	c2spd_to_note (sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
     PATTERN_INIT();
@@ -252,7 +251,7 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 		    n = XMP_KEY_OFF;
 		    break;	/* Key off */
 		default:
-		    n = 25 + 12 * MSN (n) + LSN (n);
+		    n = 37 + 12 * MSN (n) + LSN (n);
 		}
 
 		event->note = n;

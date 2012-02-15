@@ -19,7 +19,6 @@ static int pt3_load(struct module_data *, FILE *, const int);
 static int ptdt_load(struct module_data *, FILE *, const int);
 
 struct format_loader pt3_loader = {
-	"PT3",
 	"Protracker 3",
 	pt3_test,
 	pt3_load

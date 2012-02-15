@@ -18,8 +18,7 @@ static int mmd1_test(FILE *, char *, const int);
 static int mmd1_load (struct module_data *, FILE *, const int);
 
 struct format_loader mmd1_loader = {
-	"MMD0/1",
-	"MED 2.10/OctaMED",
+	"MED 2.10/OctaMED MMD0/1 (MED)",
 	mmd1_test,
 	mmd1_load
 };
@@ -306,7 +305,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 					event->note = e[0] & 0x7f;
 					if (event->note)
 						event->note +=
-						    36 + song.playtransp;
+						    48 + song.playtransp;
 					event->ins = e[1] & 0x3f;
 					event->fxt = e[2];
 					event->fxp = e[3];
@@ -324,7 +323,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 					event = &EVENT(i, k, j);
 					event->note = e[0] & 0x3f;
 					if (event->note)
-						event->note += 36;
+						event->note += 48;
 					event->ins =
 					    (e[1] >> 4) | ((e[0] & 0x80) >> 3)
 					    | ((e[0] & 0x40) >> 1);
@@ -560,7 +559,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 
 				/* Not a synth instrument */
 				if (!m->med_wav_table[event->ins - 1]) {
-					while (event->note > (36 + 36))
+					while (event->note > (48 + 36))
 						event->note -= 12;
 				}
 			}

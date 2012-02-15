@@ -24,8 +24,7 @@ static int mdl_test (FILE *, char *, const int);
 static int mdl_load (struct module_data *, FILE *, const int);
 
 struct format_loader mdl_loader = {
-    "MDL",
-    "Digitrakker",
+    "Digitrakker (MDL)",
     mdl_test,
     mdl_load
 };
@@ -412,7 +411,7 @@ static void get_chunk_tr(struct module_data *m, int size, FILE *f)
 		if (j & MDL_NOTE_FOLLOWS) {
 		    uint8 b = read8(f);
 		    len--;
-		    track->event[row].note = b == 0xff ? XMP_KEY_OFF : b;
+		    track->event[row].note = b == 0xff ? XMP_KEY_OFF : b + 12;
 		}
 		if (j & MDL_INSTRUMENT_FOLLOWS)
 		    len--, track->event[row].ins = read8(f);
@@ -484,7 +483,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f)
 	    int x;
 
 	    mod->xxi[i].sub[j].sid = read8(f);
-	    map = read8(f);
+	    map = read8(f) + 12;
 	    mod->xxi[i].sub[j].vol = read8(f);
 	    for (k = last_map; k <= map; k++) {
 		if (k < XMP_MAX_KEYS)

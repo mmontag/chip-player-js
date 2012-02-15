@@ -23,8 +23,7 @@ static int amf_test(FILE *, char *, const int);
 static int amf_load (struct module_data *, FILE *, const int);
 
 struct format_loader amf_loader = {
-	"AMF",
-	"DSMI Advanced Module Format",
+	"DSMI Advanced Module Format (AMF)",
 	amf_test,
 	amf_load
 };
@@ -289,8 +288,8 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 			event = &mod->xxt[i]->event[t1];
 
 			if (t2 < 0x7f) {		/* note */
-				if (t2 > 12)
-					event->note = t2 + 1 - 12;
+				if (t2 > 0)
+					event->note = t2 + 1;
 				event->vol = t3;
 			} else if (t2 == 0x7f) {	/* copy previous */
 				memcpy(event, &mod->xxt[i]->event[t1 - 1],

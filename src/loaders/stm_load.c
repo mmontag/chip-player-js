@@ -15,8 +15,7 @@ static int stm_test (FILE *, char *, const int);
 static int stm_load (struct module_data *, FILE *, const int);
 
 struct format_loader stm_loader = {
-    "STM",
-    "Scream Tracker 2",
+    "Scream Tracker 2 (STM)",
     stm_test,
     stm_load
 };
@@ -184,7 +183,7 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
 	    case 255:
 		b = 0;
 	    default:
-		event->note = b ? 1 + LSN(b) + 12 * (2 + MSN(b)) : 0;
+		event->note = b ? 13 + LSN(b) + 12 * (2 + MSN(b)) : 0;
 		b = read8(f);
 		event->vol = b & 0x07;
 		event->ins = (b & 0xf8) >> 3;

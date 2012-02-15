@@ -12,7 +12,6 @@ static int coco_test (FILE *, char *, const int);
 static int coco_load (struct module_data *, FILE *, const int);
 
 struct format_loader coco_loader = {
-	"COCO",
 	"Coconizer",
 	coco_test,
 	coco_load
@@ -253,6 +252,8 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 			event->fxt = read8(f);
 			event->ins = read8(f);
 			event->note = read8(f);
+			if (event->note)
+				event->note += 12;
 
 			fix_effect(event);
 		}

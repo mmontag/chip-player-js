@@ -17,8 +17,7 @@ static int fnk_test (FILE *, char *, const int);
 static int fnk_load (struct module_data *, FILE *, const int);
 
 struct format_loader fnk_loader = {
-    "FNK",
-    "Funktracker",
+    "Funktracker (FNK)",
     fnk_test,
     fnk_load
 };
@@ -208,7 +207,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
 	    case 0x3d:
 		break;
 	    default:
-		event->note = 25 + (ev[0] >> 2);
+		event->note = 37 + (ev[0] >> 2);
 		event->ins = 1 + MSN(ev[1]) + ((ev[0] & 0x03) << 4);
 		event->vol = ffh.fih[event->ins - 1].volume;
 	    }

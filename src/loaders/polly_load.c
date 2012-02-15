@@ -19,8 +19,7 @@ static int polly_test(FILE *, char *, const int);
 static int polly_load(struct module_data *, FILE *, const int);
 
 struct format_loader polly_loader = {
-	"POLLY",
-	"Polly Tracer",
+	"Polly Tracker",
 	polly_test,
 	polly_load
 };
@@ -153,7 +152,7 @@ static int polly_load(struct module_data *m, FILE *f, const int start)
 				}
 				event->note = LSN(x);
 				if (event->note)
-					event->note += 36;
+					event->note += 48;
 				event->ins = MSN(x);
 			}
 		}

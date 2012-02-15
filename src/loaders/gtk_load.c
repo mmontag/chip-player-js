@@ -14,8 +14,7 @@ static int gtk_test(FILE *, char *, const int);
 static int gtk_load (struct module_data *, FILE *, const int);
 
 struct format_loader gtk_loader = {
-	"GTK",
-	"Graoumf Tracker",
+	"Graoumf Tracker (GTK)",
 	gtk_test,
 	gtk_load
 };
@@ -145,6 +144,9 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 				event = &EVENT (i, k, j);
 
 				event->note = read8(f);
+				if (event->note) {
+					event->note += 12;
+				}
 				event->ins = read8(f);
 				event->fxt = read8(f);
 				event->fxp = read8(f);

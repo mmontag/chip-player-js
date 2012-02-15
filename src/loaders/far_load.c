@@ -23,8 +23,7 @@ static int far_test (FILE *, char *, const int);
 static int far_load (struct module_data *, FILE *, const int);
 
 struct format_loader far_loader = {
-    "FAR",
-    "Farandole Composer",
+    "Farandole Composer (FAR)",
     far_test,
     far_load
 };
@@ -151,7 +150,7 @@ static int far_load(struct module_data *m, FILE *f, const int start)
 	    fxb = read8(f);
 
 	    if (note)
-		event->note = note + 36;
+		event->note = note + 48;
 	    if (event->note || ins)
 		event->ins = ins + 1;
 

@@ -29,8 +29,7 @@ static int mtp_test (FILE *, char *, const int);
 static int mtp_load (struct module_data *, FILE *, const int);
 
 struct format_loader mtp_loader = {
-	"MTP",
-	"Soundsmith/MegaTracker",
+	"Soundsmith/MegaTracker (MTP)",
 	mtp_test,
 	mtp_load
 };
@@ -125,7 +124,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 				event = &EVENT(i, k, j);
 				event->note = read8(f);;
 				if (event->note)
-					event->note += 12;
+					event->note += 24;
 			}
 		}
 	}

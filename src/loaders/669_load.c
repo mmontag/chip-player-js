@@ -13,7 +13,6 @@ static int ssn_test (FILE *, char *, const int);
 static int ssn_load (struct module_data *, FILE *, const int);
 
 struct format_loader ssn_loader = {
-    "669",
     "Composer 669",
     ssn_test,
     ssn_load
@@ -165,7 +164,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 	    fread(&ev, 1, 3, f);
 
 	    if ((ev[0] & 0xfe) != 0xfe) {
-		event->note = 1 + 24 + (ev[0] >> 2);
+		event->note = 1 + 36 + (ev[0] >> 2);
 		event->ins = 1 + MSN(ev[1]) + ((ev[0] & 0x03) << 4);
 	    }
 

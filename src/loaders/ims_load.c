@@ -55,8 +55,7 @@ static int ims_test (FILE *, char *, const int);
 static int ims_load (struct module_data *, FILE *, const int);
 
 struct format_loader ims_loader = {
-    "IMS",
-    "Images Music System",
+    "Images Music System (IMS)",
     ims_test,
     ims_load
 };
@@ -228,7 +227,7 @@ static int ims_load(struct module_data *m, FILE *f, const int start)
 	     */
 	    event->note = ims_event[0] & 0x3f;
 	    if (event->note != 0x00 && event->note != 0x3f)
-		event->note += xpo;
+		event->note += xpo + 12;
 	    else
 		event->note = 0;
 	    event->ins = ((ims_event[0] & 0x40) >> 2) | MSN(ims_event[1]);

@@ -17,8 +17,7 @@ static int ptm_test (FILE *, char *, const int);
 static int ptm_load (struct module_data *, FILE *, const int);
 
 struct format_loader ptm_loader = {
-    "PTM",
-    "Poly Tracker",
+    "Poly Tracker (PTM)",
     ptm_test,
     ptm_load
 };
@@ -159,7 +158,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].sub[0].vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */
-	c2spd_to_note (pih.c4spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	c2spd_to_note(pih.c4spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
     PATTERN_INIT();
@@ -196,6 +195,8 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 		case 254:
 		    n = XMP_KEY_OFF;
 		    break;	/* Key off */
+		default:
+		    n += 12;
 		}
 		event->note = n;
 		event->ins = read8(f);

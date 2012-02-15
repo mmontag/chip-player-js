@@ -16,8 +16,7 @@ static int psm_test (FILE *, char *, const int);
 static int psm_load (struct module_data *, FILE *, const int);
 
 struct format_loader psm_loader = {
-	"PSM",
-	"Protracker Studio",
+	"Protracker Studio (PSM)",
 	psm_test,
 	psm_load
 };
@@ -156,7 +155,7 @@ static int psm_load(struct module_data *m, FILE *f, const int start)
 				event = &EVENT(i, c, r);
 	
 				if (b & 0x80) {
-					event->note = read8(f) + 24 + 1;
+					event->note = read8(f) + 36 + 1;
 					event->ins = read8(f);
 					len -= 2;
 				}

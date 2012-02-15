@@ -23,8 +23,7 @@ static int med3_test(FILE *, char *, const int);
 static int med3_load (struct module_data *, FILE *, const int);
 
 struct format_loader med3_loader = {
-	"MED3",
-	"MED 2.00",
+	"MED 2.00 MED3 (MED)",
 	med3_test,
 	med3_load
 };
@@ -148,7 +147,7 @@ static void unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 
 			event->note = patbuf[i * 12 + j * 3 + 0];
 			if (event->note)
-				event->note += 36;
+				event->note += 48;
 			event->ins  = patbuf[i * 12 + j * 3 + 1] >> 4;
 			if (event->ins)
 				event->ins++;

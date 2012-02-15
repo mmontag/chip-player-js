@@ -15,8 +15,7 @@ static int rtm_test(FILE *, char *, const int);
 static int rtm_load (struct module_data *, FILE *, const int);
 
 struct format_loader rtm_loader = {
-	"RTM",
-	"Real Tracker",
+	"Real Tracker (RTM)",
 	rtm_test,
 	rtm_load
 };
@@ -172,8 +171,11 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 				}
 				if (c & 0x02) {		/* read note */
 					event->note = read8(f) + 1;
-					if (event->note == 0xff)
+					if (event->note == 0xff) {
 						event->note = XMP_KEY_OFF;
+					} else {
+						event->note += 12;
+					}
 				}
 				if (c & 0x04)		/* read instrument */
 					event->ins = read8(f);
@@ -270,8 +272,8 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 			mod->xxi[i].nsm = 16;
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
 
-		for (j = 0; j < 108; j++)
-			mod->xxi[i].map[j].ins = ri.table[j + 12];
+		for (j = 0; j < 120; j++)
+			mod->xxi[i].map[j].ins = ri.table[j];
 
 		/* Envelope */
 		mod->xxi[i].rls = ri.volfade;

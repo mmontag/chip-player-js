@@ -21,7 +21,6 @@ static int gal4_test(FILE *, char *, const int);
 static int gal4_load(struct module_data *, FILE *, const int);
 
 struct format_loader gal4_loader = {
-	"GAL4",
 	"Galaxy Music System 4.0",
 	gal4_test,
 	gal4_load
@@ -158,10 +157,6 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 
 			if (event->note == 128) {
 				event->note = XMP_KEY_OFF;
-			} else if (event->note > 12) {
-				event->note -= 12;
-			} else {
-				event->note = 0;
 			}
 		}
 
@@ -186,9 +181,8 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 	str_adj((char *)mod->xxi[i].name);
 
 	mod->xxi[i].nsm = read8(f);
-	fseek(f, 12, SEEK_CUR);		/* Sample map - 1st octave */
 
-	for (j = 0; j < 96; j++) {
+	for (j = 0; j < 108; j++) {
 		mod->xxi[i].map[j].ins = read8(f);
 	}
 

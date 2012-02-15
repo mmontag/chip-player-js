@@ -13,8 +13,7 @@ static int rad_test(FILE *, char *, const int);
 static int rad_load(struct module_data *, FILE *, const int);
 
 struct format_loader rad_loader = {
-	"RAD",
-	"Reality Adlib Tracker",
+	"Reality Adlib Tracker (RAD)",
 	rad_test,
 	rad_load
 };
@@ -165,7 +164,7 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 				if (event->note == 15)
 					event->note = XMP_KEY_OFF;
 				else if (event->note)
-					event->note += 14 +
+					event->note += 26 +
 						12 * ((b & 0x70) >> 4);
 
 				b = read8(f);	/* Instrument + effect */

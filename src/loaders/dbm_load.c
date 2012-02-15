@@ -21,8 +21,7 @@ static int dbm_test(FILE *, char *, const int);
 static int dbm_load (struct module_data *, FILE *, const int);
 
 struct format_loader dbm_loader = {
-	"DBM",
-	"DigiBooster Pro",
+	"DigiBooster Pro (DBM)",
 	dbm_test,
 	dbm_load
 };
@@ -168,7 +167,7 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 
 			if (n & 0x01) {
 				x = read8(f);
-				event->note = 1 + MSN(x) * 12 + LSN(x);
+				event->note = 13 + MSN(x) * 12 + LSN(x);
 				if (--sz <= 0) break;
 			}
 			if (n & 0x02) {

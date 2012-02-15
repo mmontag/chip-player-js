@@ -22,7 +22,6 @@ static int hsc_test (FILE *, char *, const int);
 static int hsc_load (struct module_data *, FILE *, const int);
 
 struct format_loader hsc_loader = {
-    "HSC",
     "HSC-Tracker",
     hsc_test,
     hsc_load
@@ -155,7 +154,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
 		} else if (e[0] == 0x7f) {
 		    event->note = XMP_KEY_OFF;
 		} else if (e[0] > 0) {
-		    event->note = e[0] + 13;
+		    event->note = e[0] + 25;
 		    event->ins = ins[c];
 		}
 

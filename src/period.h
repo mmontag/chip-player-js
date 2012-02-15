@@ -4,8 +4,8 @@
 
 /* Macros for period conversion */
 #define NOTE_B0		11
-#define NOTE_Bb0	NOTE_B0+1 
-#define MAX_NOTE	NOTE_B0*8
+#define NOTE_Bb0	(NOTE_B0 + 1)
+#define MAX_NOTE	(NOTE_B0 * 8)
 #define MAX_PERIOD	0x1c56
 #define MIN_PERIOD_A	0x0008
 #define MAX_PERIOD_A	0x1abf

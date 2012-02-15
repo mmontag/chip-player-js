@@ -17,8 +17,7 @@ static int mgt_test (FILE *, char *, const int);
 static int mgt_load (struct module_data *, FILE *, const int);
 
 struct format_loader mgt_loader = {
-	"MGT",
-	"Megatracker",
+	"Megatracker (MGT)",
 	mgt_test,
 	mgt_load
 };
@@ -193,7 +192,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 			if (note == 1)
 				event->note = XMP_KEY_OFF;
 			else if (note > 11) /* adjusted to play codeine.mgt */
-				event->note = note - 11;
+				event->note = note + 1;
 
 			/* effects */
 			if (event->fxt < 0x10)

@@ -23,7 +23,6 @@ static int pw_test(FILE *, char *, const int);
 static int pw_load(struct module_data *, FILE *, const int);
 
 struct format_loader pw_loader = {
-	"pw",
 	"prowizard",
 	pw_test,
 	pw_load

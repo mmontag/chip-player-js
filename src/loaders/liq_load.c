@@ -20,8 +20,7 @@ static int liq_test (FILE *, char *, const int);
 static int liq_load (struct module_data *, FILE *, const int);
 
 struct format_loader liq_loader = {
-    "LIQ",
-    "Liquid Tracker",
+    "Liquid Tracker (LIQ)",
     liq_test,
     liq_load
 };
@@ -129,7 +128,7 @@ static void decode_event(uint8 x1, struct xmp_event *event, FILE *f)
 	if (x2 == 0xfe)
 	    event->note = XMP_KEY_OFF;
 	else
-	    event->note = x2 + 1 + 24;
+	    event->note = x2 + 1 + 36;
     }
 
     if (x1 & 0x02)
@@ -354,7 +353,7 @@ test_event:
 	/* unpacked data */
 	_D (_D_INFO "  [unpacked data]");
 	if (x1 != 0xff)
-	    event->note = 1 + 24 + x1;
+	    event->note = 1 + 36 + x1;
 	else if (x1 == 0xfe)
 	    event->note = XMP_KEY_OFF;
 
@@ -384,7 +383,7 @@ test_event:
 	_D(_D_INFO "  event: %02x %02x %02x %02x %02x\n",
 	    event->note, event->ins, event->vol, event->fxt, event->fxp);
 
-	assert (event->note <= 107 || event->note == XMP_KEY_OFF);
+	assert (event->note <= 119 || event->note == XMP_KEY_OFF);
 	assert (event->ins <= 100);
 	assert (event->vol <= 65);
 

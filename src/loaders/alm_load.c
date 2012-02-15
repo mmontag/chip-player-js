@@ -25,8 +25,7 @@ static int alm_test (FILE *, char *, const int);
 static int alm_load (struct module_data *, FILE *, const int);
 
 struct format_loader alm_loader = {
-    "ALM",
-    "Aley Keptr",
+    "Aley Keptr (ALM)",
     alm_test,
     alm_load
 };
@@ -117,7 +116,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    b = read8(f);
 	    if (b)
-		event->note = (b == 37) ? 0x61 : b + 36;
+		event->note = (b == 37) ? 0x61 : b + 48;
 	    event->ins = read8(f);
 	}
     }

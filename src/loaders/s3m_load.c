@@ -70,8 +70,7 @@ static int s3m_test (FILE *, char *, const int);
 static int s3m_load (struct module_data *, FILE *, const int);
 
 struct format_loader s3m_loader = {
-    "S3M",
-    "Scream Tracker 3",
+    "Scream Tracker 3 (S3M)",
     s3m_test,
     s3m_load
 };
@@ -380,7 +379,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 		    n = XMP_KEY_OFF;
 		    break;	/* Key off */
 		default:
-		    n = 1 + 12 * MSN (n) + LSN (n);
+		    n = 13 + 12 * MSN (n) + LSN (n);
 		}
 		event->note = n;
 		event->ins = read8(f);

@@ -23,8 +23,7 @@ static int gdm_test(FILE *, char *, const int);
 static int gdm_load (struct module_data *, FILE *, const int);
 
 struct format_loader gdm_loader = {
-	"GDM",
-	"Generic Digital Music",
+	"Generic Digital Music (GDM)",
 	gdm_test,
 	gdm_load
 };
@@ -242,7 +241,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 
 			if (c & 0x20) {		/* note and sample follows */
 				k = read8(f);
-				event->note = 12 * MSN(k & 0x7f) + LSN(k);
+				event->note = 12 + 12 * MSN(k & 0x7f) + LSN(k);
 				event->ins = read8(f);
 				len -= 2;
 			}

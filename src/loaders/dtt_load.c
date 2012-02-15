@@ -16,8 +16,7 @@ static int dtt_test(FILE *, char *, const int);
 static int dtt_load (struct module_data *, FILE *, const int);
 
 struct format_loader dtt_loader = {
-	"DTT",
-	"Desktop Tracker",
+	"Desktop Tracker (DTT)",
 	dtt_test,
 	dtt_load
 };
@@ -140,7 +139,7 @@ static int dtt_load(struct module_data *m, FILE *f, const int start)
 				event->fxt  = (x & 0x0001f000) >> 12;
 
 				if (event->note)
-					event->note += 36;
+					event->note += 48;
 
 				/* sorry, we only have room for two effects */
 				if (x & (0x1f << 17)) {

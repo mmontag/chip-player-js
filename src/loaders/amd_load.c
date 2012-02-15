@@ -14,8 +14,7 @@ static int amd_test (FILE *, char *, const int);
 static int amd_load (struct module_data *, FILE *, const int);
 
 struct format_loader amd_loader = {
-    "AMD",
-    "Amusic Adlib Tracker",
+    "Amusic Adlib Tracker (AMD)",
     amd_test,
     amd_load
 };
@@ -197,7 +196,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 	    b = read8(f);	/* Note + octave + instrument */
 	    event->ins |= (b & 1) << 4;
 	    if ((event->note = MSN (b)))
-		event->note += (1 + ((b & 0xe) >> 1)) * 12;
+		event->note += (2 + ((b & 0xe) >> 1)) * 12;
 	}
     }
 

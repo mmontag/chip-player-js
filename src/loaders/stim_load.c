@@ -21,7 +21,6 @@ static int stim_test(FILE *, char *, const int);
 static int stim_load(struct module_data *, FILE *, const int);
 
 struct format_loader stim_loader = {
-	"STIM",
 	"Slamtilt",
 	stim_test,
 	stim_load
@@ -130,7 +129,7 @@ static int stim_load(struct module_data *m, FILE * f, const int start)
 				b3 = read8(f);
 
 				if ((event->note = b2 & 0x3f) != 0)
-					event->note += 35;
+					event->note += 47;
 				event->ins = b1 & 0x1f;
 				event->fxt = ((b2 >> 4) & 0x0c) | (b1 >> 5);
 				event->fxp = b3;

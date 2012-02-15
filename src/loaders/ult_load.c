@@ -23,8 +23,7 @@ static int ult_test (FILE *, char *, const int);
 static int ult_load (struct module_data *, FILE *, const int);
 
 struct format_loader ult_loader = {
-    "ULT",
-    "Ultra Tracker",
+    "Ultra Tracker (ULT)",
     ult_test,
     ult_load
 };
@@ -260,7 +259,7 @@ static int ult_load(struct module_data *m, FILE *f, const int start)
 		event = &EVENT (j >> 6, i , j & 0x3f);
 		memset(event, 0, sizeof (struct xmp_event));
 		if (x8)
-		    event->note = x8 + 24;
+		    event->note = x8 + 36;
 		event->ins = ue.ins;
 		event->fxt = MSN (ue.fxt);
 		event->f2t = LSN (ue.fxt);

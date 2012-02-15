@@ -28,8 +28,7 @@ static int xm_test (FILE *, char *, const int);
 static int xm_load (struct module_data *, FILE *, const int);
 
 struct format_loader xm_loader = {
-    "XM",
-    "Fast Tracker II",
+    "Fast Tracker II (XM)",
     xm_test,
     xm_load
 };
@@ -163,7 +162,7 @@ load_patterns:
 		event = &EVENT(i, j % mod->chn, j / mod->chn);
 		if ((b = *pat++) & XM_EVENT_PACKING) {
 		    if (b & XM_EVENT_NOTE_FOLLOWS)
-			event->note = *pat++;
+			event->note = *pat++ + 12;
 		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS) {
 			if (*pat & XM_END_OF_SONG)
 			    break;
@@ -363,10 +362,8 @@ load_instruments:
 		memcpy(mod->xxi[i].aei.data, xi.v_env, mod->xxi[i].aei.npt * 4);
 		memcpy(mod->xxi[i].pei.data, xi.p_env, mod->xxi[i].pei.npt * 4);
 
-		for (j = 0; j < 96; j++)
+		for (j = 12; j < 108; j++) {
 		    mod->xxi[i].map[j].ins = xi.sample[j];
-
-		for (j = 0; j < 96; j++) {
 		    if (mod->xxi[i].map[j].ins >= mod->xxi[i].nsm)
 			mod->xxi[i].map[j].ins = -1;
 		}

@@ -18,8 +18,7 @@ static int no_test (FILE *, char *, const int);
 static int no_load (struct module_data *, FILE *, const int);
 
 struct format_loader no_loader = {
-	"NO",
-	"Liquid Tracker (old)",
+	"Liquid Tracker NO (LIQ)",
 	no_test,
 	no_load
 };
@@ -173,7 +172,7 @@ static int no_load(struct module_data *m, FILE *f, const int start)
 				fxp = (x & 0xff000000) >> 24;
 
 				if (note != 0x3f)
-					event->note = 24 + note;
+					event->note = 36 + note;
 				if (ins != 0x7f)
 					event->ins = 1 + ins;
 				if (vol != 0x7f)

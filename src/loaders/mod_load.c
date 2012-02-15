@@ -58,8 +58,7 @@ static int mod_test (FILE *, char *, const int);
 static int mod_load (struct module_data *, FILE *, const int);
 
 struct format_loader mod_loader = {
-    "MOD",
-    "Noise/Fast/Protracker",
+    "Protracker (MOD)",
     mod_test,
     mod_load
 };

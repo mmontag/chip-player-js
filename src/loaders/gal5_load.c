@@ -24,8 +24,7 @@ static int gal5_test(FILE *, char *, const int);
 static int gal5_load(struct module_data *, FILE *, const int);
 
 struct format_loader gal5_loader = {
-	"GAL5",
-	"Galaxy Music System 5.0",
+	"Galaxy Music System 5.0 (J2B)",
 	gal5_test,
 	gal5_load
 };
@@ -159,10 +158,6 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 
 			if (event->note == 128) {
 				event->note = XMP_KEY_OFF;
-			} else if (event->note > 12) {
-				event->note -= 12;
-			} else {
-				event->note = 0;
 			}
 		}
 

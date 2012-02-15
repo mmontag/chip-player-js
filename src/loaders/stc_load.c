@@ -19,8 +19,7 @@ static int stc_load(struct module_data *, FILE *, const int);
 
 
 struct format_loader stc_loader = {
-	"STC",
-	"Sound Tracker",
+	"ZX Spectrum Sound Tracker (STC)",
 	stc_test,
 	stc_load
 };
@@ -192,7 +191,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 					event = &EVENT(dest, j, row);
 				
 					if (x <= 0x5f) {
-						event->note = x + 6 + trans;
+						event->note = x + 18 + trans;
 						row += 1 + rowinc;
 						break;
 					}

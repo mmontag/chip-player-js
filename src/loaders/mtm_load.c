@@ -13,8 +13,7 @@ static int mtm_test (FILE *, char *, const int);
 static int mtm_load (struct module_data *, FILE *, const int);
 
 struct format_loader mtm_loader = {
-    "MTM",
-    "Multitracker",
+    "Multitracker (MTM)",
     mtm_test,
     mtm_load
 };
@@ -135,7 +134,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
 	fread (&mt, 3, 64, f);
 	for (j = 0; j < 64; j++) {
 	    if ((mod->xxt[i]->event[j].note = mt[j * 3] >> 2))
-		mod->xxt[i]->event[j].note += 25;
+		mod->xxt[i]->event[j].note += 37;
 	    mod->xxt[i]->event[j].ins = ((mt[j * 3] & 0x3) << 4) + MSN (mt[j * 3 + 1]);
 	    mod->xxt[i]->event[j].fxt = LSN (mt[j * 3 + 1]);
 	    mod->xxt[i]->event[j].fxp = mt[j * 3 + 2];

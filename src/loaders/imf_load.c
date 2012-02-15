@@ -21,8 +21,7 @@ static int imf_test (FILE *, char *, const int);
 static int imf_load (struct module_data *, FILE *, const int);
 
 struct format_loader imf_loader = {
-    "IMF",
-    "Imago Orpheus",
+    "Imago Orpheus (IMF)",
     imf_test,
     imf_load
 };
@@ -268,7 +267,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 		    n = XMP_KEY_OFF;
 		    break;	/* Key off */
 		default:
-		    n = 1 + 12 * MSN (n) + LSN (n);
+		    n = 13 + 12 * MSN (n) + LSN (n);
 		}
 
 		event->note = n;
@@ -330,7 +329,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 	strncpy ((char *) mod->xxi[i].name, ii.name, 24);
 
 	for (j = 0; j < 108; j++) {
-		mod->xxi[i].map[j].ins = ii.map[j];
+		mod->xxi[i].map[j + 12].ins = ii.map[j];
 	}
 
 	_D(_D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,

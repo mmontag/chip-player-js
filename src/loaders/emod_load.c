@@ -18,8 +18,7 @@ static int emod_test (FILE *, char *, const int);
 static int emod_load (struct module_data *, FILE *, const int);
 
 struct format_loader emod_loader = {
-    "EMOD",
-    "Quadra Composer",
+    "Quadra Composer (EMOD)",
     emod_test,
     emod_load
 };
@@ -128,7 +127,7 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 		event->ins = read8(f);
 		event->note = read8(f) + 1;
 		if (event->note != 0)
-		    event->note += 36;
+		    event->note += 48;
 		event->fxt = read8(f) & 0x0f;
 		event->fxp = read8(f);
 

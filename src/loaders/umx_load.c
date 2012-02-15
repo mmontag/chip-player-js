@@ -24,8 +24,7 @@ static int umx_test (FILE *, char *, const int);
 static int umx_load (struct module_data *, FILE *, const int);
 
 struct format_loader umx_loader = {
-	"UMX",
-	"Epic Games Unreal/UT",
+	"Epic Games Unreal/UT (UMX)",
 	umx_test,
 	umx_load
 };

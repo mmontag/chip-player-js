@@ -28,7 +28,6 @@ static int digi_test (FILE *, char *, const int);
 static int digi_load (struct module_data *, FILE *, const int);
 
 struct format_loader digi_loader = {
-    "DIGI",
     "DIGI Booster",
     digi_test,
     digi_load
@@ -174,7 +173,7 @@ static int digi_load(struct module_data *m, FILE *f, const int start)
 	        if (chn_table[j] & k) {
 		    fread (digi_event, 4, 1, f);
 		    event = &EVENT (i, c, j);
-	            cvt_pt_event (event, digi_event);
+	            cvt_pt_event(event, digi_event);
 		    switch (event->fxt) {
 		    case 0x08:		/* Robot */
 			event->fxt = event->fxp = 0;

@@ -19,8 +19,7 @@ static int it_test (FILE *, char *, const int);
 static int it_load (struct module_data *, FILE *, const int);
 
 struct format_loader it_loader = {
-    "IT",
-    "Impulse Tracker",
+    "Impulse Tracker (IT)",
     it_test,
     it_load
 };
@@ -558,8 +557,8 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    for (j = 0; j < XMP_MAX_KEYS; j++)
 		inst_map[j] = -1;
 
-	    for (k = j = 0; j < 108 && j < XMP_MAX_KEYS; j++) {
-		c = i2h.keys[25 + j * 2] - 1;
+	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
+		c = i2h.keys[j * 2 + 1] - 1;
 		if (c < 0) {
 		    mod->xxi[i].map[j].ins = 0xff;	/* No sample */
 		    mod->xxi[i].map[j].xpo = 0;
@@ -571,7 +570,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		    k++;
 		}
 		mod->xxi[i].map[j].ins = inst_map[c];
-		mod->xxi[i].map[j].xpo = i2h.keys[24 + j * 2] - (j + 12);
+		mod->xxi[i].map[j].xpo = i2h.keys[j * 2] - j;
 	    }
 
 	    mod->xxi[i].nsm = k;
@@ -863,8 +862,6 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	read16l(f);
 
 	while (--pat_len >= 0) {
-	    int ignore_event;
-
 	    b = read8(f);
 	    if (!b) {
 		r++;
@@ -883,7 +880,6 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	     * we don't want to set it to 64 channels.
 	     */
 	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
-	    ignore_event = 0;
 	    if (mask[c] & 0x01) {
 		b = read8(f);
 
@@ -901,35 +897,24 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		    b = XMP_KEY_FADE;
 		    break;
 		default:
-		    if (b < 11) {
-			b = 0;
-			ignore_event = 1;
-		    } else {
-			b -= 11;
-		    }
+		    b++;
 		}
 		lastevent[c].note = event->note = b;
 		pat_len--;
 	    }
 	    if (mask[c] & 0x02) {
 		b = read8(f);
-		if (ignore_event)
-		    b = 0;
 		lastevent[c].ins = event->ins = b;
 		pat_len--;
 	    }
 	    if (mask[c] & 0x04) {
 		b = read8(f);
-		if (ignore_event)
-		    b = 0;
 		lastevent[c].vol = event->vol = b;
 		xlat_volfx (event);
 		pat_len--;
 	    }
 	    if (mask[c] & 0x08) {
 		b = read8(f);
-		if (ignore_event)
-		    b = 0;
 		event->fxt = b;
 		event->fxp = read8(f);
 		xlat_fx (c, event);

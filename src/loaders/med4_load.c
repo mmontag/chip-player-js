@@ -22,8 +22,7 @@ static int med4_test(FILE *, char *, const int);
 static int med4_load (struct module_data *, FILE *, const int);
 
 struct format_loader med4_loader = {
-	"MED4",
-	"MED 2.10",
+	"MED 2.10 MED4 (MED)",
 	med4_test,
 	med4_load
 };
@@ -382,7 +381,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 						x = read12b(f);
 						event->note = x >> 4;
 						if (event->note)
-							event->note += 36;
+							event->note += 48;
 						event->ins  = x & 0x0f;
 					}
 				}
@@ -427,7 +426,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 						x = read12b(f);
 						event->note = x >> 4;
 						if (event->note)
-							event->note += 36;
+							event->note += 48;
 						event->ins  = x & 0x0f;
 					}
 				}

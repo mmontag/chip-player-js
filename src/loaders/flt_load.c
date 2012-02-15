@@ -14,7 +14,6 @@ static int flt_test (FILE *, char *, const int);
 static int flt_load (struct module_data *, FILE *, const int);
 
 struct format_loader flt_loader = {
-    "FLT",
     "Startrekker/Audio Sculpture",
     flt_test,
     flt_load

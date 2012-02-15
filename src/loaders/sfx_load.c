@@ -26,7 +26,6 @@ static int sfx_test (FILE *, char *, const int);
 static int sfx_load (struct module_data *, FILE *, const int);
 
 struct format_loader sfx_loader = {
-    "SFX",
     "SoundFX",
     sfx_test,
     sfx_load
@@ -162,7 +161,7 @@ static int sfx_13_20_load(struct module_data *m, FILE *f, const int nins, const 
 	    event = &EVENT(i, j % mod->chn, j / mod->chn);
 	    fread(ev, 1, 4, f);
 
-	    event->note = period_to_note ((LSN (ev[0]) << 8) | ev[1]);
+	    event->note = period_to_note((LSN (ev[0]) << 8) | ev[1]);
 	    event->ins = (MSN (ev[0]) << 4) | MSN (ev[2]);
 	    event->fxp = ev[3];
 

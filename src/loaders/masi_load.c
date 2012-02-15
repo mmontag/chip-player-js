@@ -63,8 +63,7 @@ static int masi_test (FILE *, char *, const int);
 static int masi_load (struct module_data *, FILE *, const int);
 
 struct format_loader masi_loader = {
-	"MASI",
-	"Epic MegaGames MASI",
+	"Epic MegaGames MASI (PSM)",
 	masi_test,
 	masi_load
 };
@@ -219,9 +218,9 @@ static void get_pbod(struct module_data *m, int size, FILE *f)
 				uint8 note = read8(f);
 				rowlen--;
 				if (sinaria)
-					note += 25;
+					note += 37;
 				else
-					note = (note >> 4) * 12 + (note & 0x0f) + 2;
+					note = (note >> 4) * 12 + (note & 0x0f) + 2 + 12;
 				event->note = note;
 			}
 

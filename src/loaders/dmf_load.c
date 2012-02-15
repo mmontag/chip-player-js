@@ -21,8 +21,7 @@ static int dmf_test(FILE *, char *, const int);
 static int dmf_load (struct module_data *, FILE *, const int);
 
 struct format_loader dmf_loader = {
-	"DMF",
-	"X-Tracker",
+	"X-Tracker (DMF)",
 	dmf_test,
 	dmf_load
 };
@@ -223,7 +222,7 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 					if (b & 0x40)
 						event->ins = read8(f);
 					if (b & 0x20)
-						event->note = 12 + read8(f);
+						event->note = 24 + read8(f);
 					if (b & 0x10)
 						event->vol = read8(f);
 					if (b & 0x08) {	/* instrument effect */
