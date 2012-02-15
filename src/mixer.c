@@ -296,10 +296,10 @@ void mixer_softmixer(struct context_data *ctx)
 			     - vi->frac) / step;
 
 			if (step > 0) {
-				if (vi->pos >= vi->end)
+				if (vi->pos > vi->end)
 					samples = 0;
 			} else {
-				if (vi->pos <= vi->end)
+				if (vi->pos < vi->end)
 					samples = 0;
 			}
 
