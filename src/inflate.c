@@ -52,27 +52,27 @@ struct huffman_tree_t
   short int right;
 };
 
-static int length_codes[29] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,
+static const int length_codes[29] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,
                          23,27,31,35,43,51,59,67,83,99,115,
                          131,163,195,227,258 };
 
-static int length_extra_bits[29] = { 0,0,0,0,0,0,0,0,1,1,1,1,
+static const int length_extra_bits[29] = { 0,0,0,0,0,0,0,0,1,1,1,1,
                               2,2,2,2,3,3,3,3,4,4,4,4,
                               5,5,5,5,0 };
 
-static int dist_codes[30] = { 1,2,3,4,5,7,9,13,17,25,
+static const int dist_codes[30] = { 1,2,3,4,5,7,9,13,17,25,
                              33,49,65,97,129,193,257,385,513,769,
                              1025,1537,2049,3073,4097,6145,8193,
                              12289,16385,24577 };
 
-static int dist_extra_bits[30] = { 0,0,0,0,1,1,2,2,3,3,
+static const int dist_extra_bits[30] = { 0,0,0,0,1,1,2,2,3,3,
                             4,4,5,5,6,6,7,7,8,8,
                             9,9,10,10,11,11,12,12,13,13 };
 
-static int dyn_huff_trans[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5,
+static const int dyn_huff_trans[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5,
                            11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
-static unsigned char reverse[256] = {
+static const unsigned char reverse[256] = {
 0, 128, 64, 192, 32, 160, 96, 224, 16, 144, 80, 208, 48, 176, 112, 240,
 8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248,
 4, 132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244,
@@ -90,9 +90,11 @@ static unsigned char reverse[256] = {
 7, 135, 71, 199, 39, 167, 103, 231, 23, 151, 87, 215, 55, 183, 119, 247,
 15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95, 223, 63, 191, 127, 255 };
 
-static struct huffman_tree_t *huffman_tree_len_static=0;
-static int crc_built=0;
-static unsigned int crc_table[256];
+struct local_data {
+  struct huffman_tree_t *huffman_tree_len_static;
+  /* int crc_built; */
+  unsigned int crc_table[256];
+};
 
 #ifdef DEBUG
 int print_binary(int b, int l)
@@ -108,7 +110,7 @@ int print_binary(int b, int l)
 
 /* These CRC32 functions were taken from the gzip spec and kohninized */
 
-static int build_crc32()
+static int build_crc32(struct local_data *data)
 {
 unsigned int c;
 int n,k;
@@ -123,27 +125,27 @@ int n,k;
         else
       { c=c>>1; }
     }
-    crc_table[n]=c;
+    data->crc_table[n]=c;
   }
 
-  crc_built=1;
+  /* data->crc_built=1; */
 
   return 0;
 }
 
-static unsigned int crc32(unsigned char *buffer, int len, unsigned int crc)
+static unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct local_data *data)
 {
 int t;
 
   for (t=0; t<len; t++)
   {
-    crc=crc_table[(crc^buffer[t])&0xff]^(crc>>8);
+    crc=data->crc_table[(crc^buffer[t])&0xff]^(crc>>8);
   }
 
   return crc;
 }
 
-int kunzip_inflate_init()
+int kunzip_inflate_init(struct local_data *data)
 {
 /*
 int t,r,b,rev_code;
@@ -161,15 +163,15 @@ int t,r,b,rev_code;
     reverse[t]=rev_code;
   }
 */
-  if (crc_built==0) build_crc32();
+  /* if (data->crc_built==0) */ build_crc32(data);
 
   return 0;
 }
 
-int kunzip_inflate_free()
+int kunzip_inflate_free(struct local_data *data)
 {
-  if (huffman_tree_len_static!=0)
-  { free(huffman_tree_len_static); }
+  if (data->huffman_tree_len_static!=0)
+  { free(data->huffman_tree_len_static); }
 
   return 0;
 }
@@ -702,7 +704,7 @@ for (t=0; t<hlit; t++)
   return 0;
 }
 
-int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist, FILE *out)
+int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist, FILE *out, struct local_data *data)
 {
 int code=0,len,dist;
 int t,r;
@@ -785,7 +787,7 @@ if (code>=32 && code<=128)
       if (window_ptr>=WINDOW_SIZE)
       {
         fwrite(window,1,WINDOW_SIZE,out);
-        huffman->checksum=crc32(huffman->window,WINDOW_SIZE,huffman->checksum);
+        huffman->checksum=crc32(huffman->window,WINDOW_SIZE,huffman->checksum,data);
         window_ptr=0;
       }
     }
@@ -943,7 +945,7 @@ exit(0);
           if (window_ptr>=WINDOW_SIZE)
           {
             fwrite(window,1,WINDOW_SIZE,out);
-            huffman->checksum=crc32(huffman->window,WINDOW_SIZE,huffman->checksum);
+            huffman->checksum=crc32(huffman->window,WINDOW_SIZE,huffman->checksum, data);
             window_ptr=0;
           }
         }
@@ -975,10 +977,11 @@ int block_len,bfinal;
 int t;
 struct huffman_tree_t *huffman_tree_len;
 struct huffman_tree_t *huffman_tree_dist;
+struct local_data data;
 
   huffman.checksum=0xffffffff;
 
-  huffman_tree_len_static=0;
+  data.huffman_tree_len_static=0;
   huffman_tree_len=malloc(1024*sizeof(struct huffman_tree_t));
   huffman_tree_dist=malloc(1024*sizeof(struct huffman_tree_t));
 
@@ -1021,6 +1024,7 @@ printf("FLEVEL: %d\n\n",(FLG>6)&3);
   }
 #endif
 
+  kunzip_inflate_init(&data);
 
   bitstream.holding=0;
   bitstream.bitptr=0;
@@ -1070,7 +1074,7 @@ printf("comp_method=%d  bfinal=%d\n",comp_method,bfinal);
         if (huffman.window_ptr>=WINDOW_SIZE)
         {
           fwrite(huffman.window,1,WINDOW_SIZE,out);
-          huffman.checksum=crc32(huffman.window,WINDOW_SIZE,huffman.checksum);
+          huffman.checksum=crc32(huffman.window,WINDOW_SIZE,huffman.checksum,&data);
           huffman.window_ptr=0;
         }
       }
@@ -1079,9 +1083,9 @@ printf("comp_method=%d  bfinal=%d\n",comp_method,bfinal);
     if (comp_method==2)
     {
       /* Fixed Huffman */
-      if (huffman_tree_len_static==0)
-      { load_fixed_huffman(&huffman, &huffman_tree_len_static); }
-      decompress(in, &huffman, &bitstream, huffman_tree_len_static, 0, out);
+      if (data.huffman_tree_len_static==0)
+      { load_fixed_huffman(&huffman, &data.huffman_tree_len_static); }
+      decompress(in, &huffman, &bitstream, data.huffman_tree_len_static, 0, out, &data);
 /*
       free(huffman_tree_len);
       huffman_tree_len=0;
@@ -1093,7 +1097,7 @@ printf("comp_method=%d  bfinal=%d\n",comp_method,bfinal);
 
       /* Dynamic Huffman */
       load_dynamic_huffman(in,&huffman,&bitstream,huffman_tree_len,huffman_tree_dist);
-      decompress(in, &huffman, &bitstream, huffman_tree_len, huffman_tree_dist, out);
+      decompress(in, &huffman, &bitstream, huffman_tree_len, huffman_tree_dist, out, &data);
 
     }
       else
@@ -1110,7 +1114,7 @@ printf("comp_method=%d  bfinal=%d\n",comp_method,bfinal);
   if (huffman.window_ptr!=0)
   {
     fwrite(huffman.window,1,huffman.window_ptr,out);
-    huffman.checksum=crc32(huffman.window,huffman.window_ptr,huffman.checksum);
+    huffman.checksum=crc32(huffman.window,huffman.window_ptr,huffman.checksum, &data);
   }
 
 /*
@@ -1127,6 +1131,8 @@ printf("comp_method=%d  bfinal=%d\n",comp_method,bfinal);
   huffman_tree_len=0;
   huffman_tree_dist=0;
 */
+
+  kunzip_inflate_free(&data);
 
   return 0;
 }

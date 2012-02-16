@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include "common.h"
 
-int kunzip_inflate_init(void);
-int kunzip_inflate_free(void);
 int inflate(FILE *, FILE *, unsigned int *);
 
 
@@ -24,9 +22,7 @@ int decrunch_muse(FILE *f, FILE *fo)
 
 	fseek(f, 24, SEEK_SET);
 
-	kunzip_inflate_init();
 	inflate(f, fo, &checksum);
-	kunzip_inflate_free();
 
 	return 0;
 }
