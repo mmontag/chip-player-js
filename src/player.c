@@ -34,7 +34,7 @@
 #include "mixer.h"
 
 /* Values for multi-retrig */
-static struct retrig_control rval[] = {
+static const struct retrig_control rval[] = {
     {   0,  1,  1 }, {  -1,  1,  1 }, {  -2,  1,  1 }, {  -4,  1,  1 },
     {  -8,  1,  1 }, { -16,  1,  1 }, {   0,  2,  3 }, {   0,  1,  2 },
     {   0,  1,  1 }, {   1,  1,  1 }, {   2,  1,  1 }, {   4,  1,  1 },
@@ -45,7 +45,7 @@ static struct retrig_control rval[] = {
 #define WAVEFORM_SIZE 64
 
 /* Vibrato/tremolo waveform tables */
-static int waveform[4][WAVEFORM_SIZE] = {
+static const int waveform[4][WAVEFORM_SIZE] = {
    {   0,  24,  49,  74,  97, 120, 141, 161, 180, 197, 212, 224,
      235, 244, 250, 253, 255, 253, 250, 244, 235, 224, 212, 197,
      180, 161, 141, 120,  97,  74,  49,  24,   0, -24, -49, -74,
@@ -75,7 +75,7 @@ static int waveform[4][WAVEFORM_SIZE] = {
      -32, -24, -16,  -8  }	/* Ramp up */
 };
 
-static struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
+static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
 
 /*
  * "Anyway I think this is the most brilliant piece of crap we
@@ -89,8 +89,8 @@ static void play_channel (struct context_data *, int, int);
 
 /* Instrument vibrato */
 
-static inline int
-get_instrument_vibrato(struct module_data *m, struct channel_data *xc)
+static inline int get_instrument_vibrato(struct module_data *m,
+					 struct channel_data *xc)
 {
 	int mapped, type, depth, phase, sweep;
 	struct xmp_instrument *instrument;
@@ -111,8 +111,8 @@ get_instrument_vibrato(struct module_data *m, struct channel_data *xc)
 	return waveform[type][phase] * depth / (1024 * (1 + sweep));
 }
 
-static inline void
-update_instrument_vibrato(struct module_data *m, struct channel_data *xc)
+static inline void update_instrument_vibrato(struct module_data *m,
+					     struct channel_data *xc)
 {
 	int mapped, rate;
 	struct xmp_instrument *instrument;
@@ -481,7 +481,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	if (row < mod->xxt[TRACK_NUM(pat, chn)]->rows) {
 	    event = &EVENT(pat, chn, row);
 	} else {
-	    event = &empty_event;
+	    event = (struct xmp_event *)&empty_event;
 	}
 
 	if (read_event(ctx, event, chn, 1) != 0) {
@@ -495,7 +495,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	    if (row < mod->xxt[TRACK_NUM(pat, chn)]->rows) {
 	        event = &EVENT(pat, chn, row);
 	    } else {
-	        event = &empty_event;
+	        event = (struct xmp_event *)&empty_event;
 	    }
 	    read_event(ctx, &EVENT(pat, chn, row), chn, 0);
 	    count--;
