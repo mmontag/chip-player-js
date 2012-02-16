@@ -35,7 +35,7 @@ static int ptm_test(FILE *f, char *t, const int start)
 }
 
 
-static int ptm_vol[] = {
+static const int ptm_vol[] = {
      0,  5,  8, 10, 12, 14, 15, 17, 18, 20, 21, 22, 23, 25, 26,
     27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 37, 38, 39, 40,
     41, 42, 42, 43, 44, 45, 46, 46, 47, 48, 49, 49, 50, 51, 51,
@@ -257,7 +257,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 			SAMPLE_FLAG_8BDIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 
-    m->vol_table = ptm_vol;
+    m->vol_table = (int *)ptm_vol;
 
     for (i = 0; i < mod->chn; i++)
 	mod->xxc[i].pan = pfh.chset[i] << 4;

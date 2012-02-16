@@ -39,13 +39,11 @@ static int emod_test(FILE *f, char *t, const int start)
 }
 
 
-static uint8 *reorder;
-
-
-static void get_emic(struct module_data *m, int size, FILE *f)
+static void get_emic(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, ver;
+    uint8 reorder[256];
 
     ver = read16b(f);
     fread(mod->name, 1, 20, f);
@@ -91,7 +89,7 @@ static void get_emic(struct module_data *m, int size, FILE *f)
 
     PATTERN_INIT();
 
-    reorder = calloc(1, 256);
+    memset(reorder, 0, 256);
 
     for (i = 0; i < mod->pat; i++) {
 	reorder[read8(f)] = i;
@@ -111,7 +109,7 @@ static void get_emic(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, k;
@@ -151,7 +149,7 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_8smp(struct module_data *m, int size, FILE *f)
+static void get_8smp(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i;
@@ -185,10 +183,9 @@ static int emod_load(struct module_data *m, FILE *f, const int start)
 
     /* Load IFF chunks */
     while (!feof(f))
-	iff_chunk(handle, m, f);
+	iff_chunk(handle, m, f, NULL);
 
     iff_release(handle);
-    free(reorder);
 
     return 0;
 }

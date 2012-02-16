@@ -73,9 +73,11 @@ static int arch_test(FILE *f, char *t, const int start)
 }
 
 
-static int year=0, month=0, day=0;
-static int pflag, sflag, max_ins;
-static uint8 ster[8], rows[64];
+struct local_data {
+    int year, month, day;
+    int pflag, sflag, max_ins;
+    uint8 ster[8], rows[64];
+};
 
 static void fix_effect(struct xmp_event *e)
 {
@@ -145,74 +147,79 @@ static void fix_effect(struct xmp_event *e)
 	}
 }
 
-static void get_tinf(struct module_data *m, int size, FILE *f)
+static void get_tinf(struct module_data *m, int size, FILE *f, void *parm)
 {
+	struct local_data *data = (struct local_data *)parm;
 	int x;
 
 	x = read8(f);
-	year = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
+	data->year = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 	x = read8(f);
-	year += ((x & 0xf0) >> 4) * 1000 + (x & 0x0f) * 100;
+	data->year += ((x & 0xf0) >> 4) * 1000 + (x & 0x0f) * 100;
 
 	x = read8(f);
-	month = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
+	data->month = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 
 	x = read8(f);
-	day = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
+	data->day = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 }
 
-static void get_mvox(struct module_data *m, int size, FILE *f)
+static void get_mvox(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	mod->chn = read32l(f);
 }
 
-static void get_ster(struct module_data *m, int size, FILE *f)
+static void get_ster(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	int i;
 
-	fread(ster, 1, 8, f);
+	fread(data->ster, 1, 8, f);
 	
-	for (i=0; i < mod->chn; i++)
-		if (ster[i] > 0 && ster[i] < 8) 
-			mod->xxc[i].pan = 42*ster[i]-40;
+	for (i=0; i < mod->chn; i++) {
+		if (data->ster[i] > 0 && data->ster[i] < 8) {
+			mod->xxc[i].pan = 42 * data->ster[i] - 40;
+		}
+	}
 }
 
-static void get_mnam(struct module_data *m, int size, FILE *f)
+static void get_mnam(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	fread(mod->name, 1, 32, f);
 }
 
-static void get_anam(struct module_data *m, int size, FILE *f)
+static void get_anam(struct module_data *m, int size, FILE *f, void *parm)
 {
-
 	/*fread(m->author, 1, 32, f); */
 }
 
-static void get_mlen(struct module_data *m, int size, FILE *f)
+static void get_mlen(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	mod->len = read32l(f);
 }
 
-static void get_pnum(struct module_data *m, int size, FILE *f)
+static void get_pnum(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	mod->pat = read32l(f);
 }
 
-static void get_plen(struct module_data *m, int size, FILE *f)
+static void get_plen(struct module_data *m, int size, FILE *f, void *parm)
 {
-	fread(rows, 1, 64, f);
+	struct local_data *data = (struct local_data *)parm;
+
+	fread(data->rows, 1, 64, f);
 }
 
-static void get_sequ(struct module_data *m, int size, FILE *f)
+static void get_sequ(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
@@ -224,26 +231,27 @@ static void get_sequ(struct module_data *m, int size, FILE *f)
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	static int i = 0;
 	int j, k;
 	struct xmp_event *event;
 
-	if (!pflag) {
+	if (!data->pflag) {
 		_D(_D_INFO "Stored patterns: %d", mod->pat);
-		pflag = 1;
+		data->pflag = 1;
 		i = 0;
 		mod->trk = mod->pat * mod->chn;
 		PATTERN_INIT();
 	}
 
 	PATTERN_ALLOC(i);
-	mod->xxp[i]->rows = rows[i];
+	mod->xxp[i]->rows = data->rows[i];
 	TRACK_ALLOC(i);
 
-	for (j = 0; j < rows[i]; j++) {
+	for (j = 0; j < data->rows[i]; j++) {
 		for (k = 0; k < mod->chn; k++) {
 			event = &EVENT(i, k, j);
 
@@ -262,19 +270,20 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 	i++;
 }
 
-static void get_samp(struct module_data *m, int size, FILE *f)
+static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	static int i = 0;
 
-	if (!sflag) {
+	if (!data->sflag) {
 		mod->smp = mod->ins = 36;
 		INSTRUMENT_INIT();
 
 		_D(_D_INFO "Instruments: %d", mod->ins);
 
-		sflag = 1;
-		max_ins = 0;
+		data->sflag = 1;
+		data->max_ins = 0;
 		i = 0;
 	}
 
@@ -340,7 +349,7 @@ static void get_samp(struct module_data *m, int size, FILE *f)
 				mod->xxi[i].sub[0].vol);
 
 	i++;
-	max_ins++;
+	data->max_ins++;
 }
 
 static int arch_load(struct module_data *m, FILE *f, const int start)
@@ -348,13 +357,15 @@ static int arch_load(struct module_data *m, FILE *f, const int start)
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
 	int i;
+	struct local_data data;
 
 	LOAD_INIT();
 
 	read32b(f);	/* MUSX */
 	read32b(f);
 
-	pflag = sflag = 0;
+	data.pflag = data.sflag = 0;
+	data.year = data.month = data.day = 0;
 
 	handle = iff_new();
 	if (handle == NULL)
@@ -376,8 +387,9 @@ static int arch_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!feof(f))
-		iff_chunk(handle, m, f);
+	while (!feof(f)) {
+		iff_chunk(handle, m, f, &data);
+	}
 
 	iff_release(handle);
 

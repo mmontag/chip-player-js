@@ -29,7 +29,10 @@ struct format_loader gal5_loader = {
 	gal5_load
 };
 
-static uint8 chn_pan[64];
+
+struct local_data {
+    uint8 chn_pan[64];
+};
 
 static int gal5_test(FILE *f, char *t, const int start)
 {
@@ -49,9 +52,10 @@ static int gal5_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static void get_init(struct module_data *m, int size, FILE *f)
+static void get_init(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	char buf[64];
 	int flags;
 	
@@ -67,10 +71,10 @@ static void get_init(struct module_data *m, int size, FILE *f)
 	read16l(f);		/* unknown - 0x01c5 */
 	read16l(f);		/* unknown - 0xff00 */
 	read8(f);		/* unknown - 0x80 */
-	fread(chn_pan, 1, 64, f);
+	fread(data->chn_pan, 1, 64, f);
 }
 
-static void get_ordr(struct module_data *m, int size, FILE *f)
+static void get_ordr(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -82,7 +86,7 @@ static void get_ordr(struct module_data *m, int size, FILE *f)
 		mod->xxo[i] = read8(f);
 }
 
-static void get_patt_cnt(struct module_data *m, int size, FILE *f)
+static void get_patt_cnt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -93,7 +97,7 @@ static void get_patt_cnt(struct module_data *m, int size, FILE *f)
 		mod->pat = i;
 }
 
-static void get_inst_cnt(struct module_data *m, int size, FILE *f)
+static void get_inst_cnt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -106,7 +110,7 @@ static void get_inst_cnt(struct module_data *m, int size, FILE *f)
 		mod->ins = i;
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy;
@@ -167,7 +171,7 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_inst(struct module_data *m, int size, FILE *f)
+static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, srate, finetune, flags;
@@ -254,6 +258,7 @@ static int gal5_load(struct module_data *m, FILE *f, const int start)
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
 	int i, offset;
+	struct local_data data;
 
 	LOAD_INIT();
 
@@ -279,8 +284,9 @@ static int gal5_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
-	while (!feof(f))
-		iff_chunk(handle, m, f);
+	while (!feof(f)) {
+		iff_chunk(handle, m, f, &data);
+	}
 
 	iff_release(handle);
 
@@ -308,13 +314,15 @@ static int gal5_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
-	while (!feof (f))
-		iff_chunk(handle, m, f);
+	while (!feof (f)) {
+		iff_chunk(handle, m, f, &data);
+	}
 
 	iff_release(handle);
 
-	for (i = 0; i < mod->chn; i++)
-		mod->xxc[i].pan = chn_pan[i] * 2;
+	for (i = 0; i < mod->chn; i++) {
+		mod->xxc[i].pan = data.chn_pan[i] * 2;
+	}
 
 	return 0;
 }

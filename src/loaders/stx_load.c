@@ -59,10 +59,7 @@ static int stx_test(FILE *f, char *t, const int start)
 
 #define FX_NONE 0xff
 
-static uint16 *pp_ins;		/* Parapointers to instruments */
-static uint16 *pp_pat;		/* Parapointers to patterns */
-
-static uint8 fx[] = {
+static const uint8 fx[] = {
     FX_NONE,		FX_TEMPO,
     FX_JUMP,		FX_BREAK,
     FX_VOLSLIDE,	FX_PORTA_DN,
@@ -82,6 +79,8 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
     uint8 n, b;
     uint16 x16;
     int bmod2stm = 0;
+    uint16 *pp_ins;		/* Parapointers to instruments */
+    uint16 *pp_pat;		/* Parapointers to patterns */
 
     LOAD_INIT();
 

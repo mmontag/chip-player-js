@@ -58,7 +58,7 @@ static int stm_test(FILE *f, char *t, const int start)
  * in ModPlug Tracker, this effect doesn't work the way it did back then.
  */
 
-static uint8 fx[] = {
+static const uint8 fx[] = {
     FX_NONE,		FX_TEMPO,
     FX_JUMP,		FX_BREAK,
     FX_VOLSLIDE,	FX_PORTA_DN,

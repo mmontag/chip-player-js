@@ -38,8 +38,10 @@ static int dmf_test(FILE * f, char *t, const int start)
 }
 
 
-static int ver;
-static uint8 packtype[256];
+struct local_data {
+    int ver;
+    uint8 packtype[256];
+};
 
 
 struct hnode {
@@ -154,7 +156,7 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
  * IFF chunk handlers
  */
 
-static void get_sequ(struct module_data *m, int size, FILE *f)
+static void get_sequ(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -170,7 +172,7 @@ static void get_sequ(struct module_data *m, int size, FILE *f)
 		mod->xxo[i] = read16l(f);
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, r, chn;
@@ -251,9 +253,10 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_smpi(struct module_data *m, int size, FILE *f)
+static void get_smpi(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
 
@@ -286,12 +289,12 @@ static void get_smpi(struct module_data *m, int size, FILE *f)
 		mod->xxi[i].sub[0].sid = i;
 		flag = read8(f);
 		mod->xxs[i].flg = flag & 0x01 ? XMP_SAMPLE_LOOP : 0;
-		if (ver >= 8)
+		if (data->ver >= 8)
 			fseek(f, 8, SEEK_CUR);	/* library name */
 		read16l(f);	/* reserved -- specs say 1 byte only*/
 		read32l(f);	/* sampledata crc32 */
 
-		packtype[i] = (flag & 0x0c) >> 2;
+		data->packtype[i] = (flag & 0x0c) >> 2;
 		_D(_D_INFO "[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x",
 				i, name, mod->xxs[i].len, mod->xxs[i].lps & 0xfffff,
 				mod->xxs[i].lpe & 0xfffff,
@@ -301,12 +304,13 @@ static void get_smpi(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_smpd(struct module_data *m, int size, FILE *f)
+static void get_smpd(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	int i;
 	int smpsize;
-	uint8 *data, *ibuf;
+	uint8 *sbuf, *ibuf;
 
 	_D(_D_INFO "Stored samples: %d", mod->ins);
 
@@ -316,8 +320,8 @@ static void get_smpd(struct module_data *m, int size, FILE *f)
 	}
 
 	/* why didn't we mmap this? */
-	data = malloc(smpsize);
-	assert(data != NULL);
+	sbuf = malloc(smpsize);
+	assert(sbuf != NULL);
 	ibuf = malloc(smpsize);
 	assert(ibuf != NULL);
 
@@ -326,16 +330,16 @@ static void get_smpd(struct module_data *m, int size, FILE *f)
 		if (smpsize == 0)
 			continue;
 
-		switch (packtype[i]) {
+		switch (data->packtype[i]) {
 		case 0:
 			load_sample(f, mod->xxi[i].sub[0].sid,
-						0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+				0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
-			unpack(data, ibuf, ibuf + smpsize, mod->xxs[i].len);
+			unpack(sbuf, ibuf, ibuf + smpsize, mod->xxs[i].len);
 			load_sample(NULL, i,
-					SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)data);
+				SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)sbuf);
 			break;
 		default:
 			fseek(f, smpsize, SEEK_CUR);
@@ -343,7 +347,7 @@ static void get_smpd(struct module_data *m, int size, FILE *f)
 	}
 
 	free(ibuf);
-	free(data);
+	free(sbuf);
 }
 
 static int dmf_load(struct module_data *m, FILE *f, const int start)
@@ -352,15 +356,17 @@ static int dmf_load(struct module_data *m, FILE *f, const int start)
 	iff_handle handle;
 	uint8 date[3];
 	char tracker_name[10];
+	struct local_data data;
 
 	LOAD_INIT();
 
 	read32b(f);		/* DDMF */
 
-	ver = read8(f);
+	data.ver = read8(f);
 	fread(tracker_name, 8, 1, f);
 	tracker_name[8] = 0;
-	snprintf(mod->type, XMP_NAME_SIZE, "%s DMF v%d", tracker_name, ver);
+	snprintf(mod->type, XMP_NAME_SIZE, "%s DMF v%d",
+				tracker_name, data.ver);
 	tracker_name[8] = 0;
 	fread(mod->name, 30, 1, f);
 	fseek(f, 20, SEEK_CUR);
@@ -382,8 +388,9 @@ static int dmf_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!feof(f))
-		iff_chunk(handle, m, f);
+	while (!feof(f)) {
+		iff_chunk(handle, m, f, &data);
+	}
 
 	m->volbase = 0xff;
 

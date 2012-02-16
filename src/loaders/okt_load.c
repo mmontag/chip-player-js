@@ -46,13 +46,14 @@ static int okt_test(FILE *f, char *t, const int start)
 
 #define NONE 0xff
 
-static int mode[36];
-static int idx[36];
-static int pattern = 0;
-static int sample = 0;
+struct local_data {
+    int mode[36];
+    int idx[36];
+    int pattern;
+    int sample;
+};
 
-
-static int fx[] = {
+static const int fx[] = {
     NONE,
     FX_PORTA_UP,	/*  1 */
     FX_PORTA_DN,	/*  2 */
@@ -88,7 +89,7 @@ static int fx[] = {
 };
 
 
-static void get_cmod(struct module_data *m, int size, FILE *f)
+static void get_cmod(struct module_data *m, int size, FILE *f, void *parm)
 { 
     struct xmp_module *mod = &m->mod;
     int i, j, k;
@@ -104,9 +105,10 @@ static void get_cmod(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_samp(struct module_data *m, int size, FILE *f)
+static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
+    struct local_data *data = (struct local_data *)parm;
     int i, j;
     int looplen;
 
@@ -128,14 +130,14 @@ static void get_samp(struct module_data *m, int size, FILE *f)
 	looplen = read16b(f);
 	mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
 	mod->xxi[i].sub[0].vol = read16b(f);
-	mode[i] = read16b(f);
+	data->mode[i] = read16b(f);
 
 	mod->xxi[i].nsm = !!(mod->xxs[i].len);
 	mod->xxs[i].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = j;
 
-	idx[j] = i;
+	data->idx[j] = i;
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
@@ -148,7 +150,7 @@ static void get_samp(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_spee(struct module_data *m, int size, FILE *f)
+static void get_spee(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
@@ -157,7 +159,7 @@ static void get_spee(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_slen(struct module_data *m, int size, FILE *f)
+static void get_slen(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
@@ -166,7 +168,7 @@ static void get_slen(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_plen(struct module_data *m, int size, FILE *f)
+static void get_plen(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
@@ -175,7 +177,7 @@ static void get_plen(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
@@ -183,32 +185,33 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 }
 
 
-static void get_pbod(struct module_data *m, int size, FILE *f)
+static void get_pbod(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
+    struct local_data *data = (struct local_data *)parm;
 
     int j;
     uint16 rows;
     struct xmp_event *event;
 
-    if (pattern >= mod->pat)
+    if (data->pattern >= mod->pat)
 	return;
 
-    if (!pattern) {
+    if (!data->pattern) {
 	PATTERN_INIT();
 	_D(_D_INFO "Stored patterns: %d", mod->pat);
     }
 
     rows = read16b(f);
 
-    PATTERN_ALLOC (pattern);
-    mod->xxp[pattern]->rows = rows;
-    TRACK_ALLOC (pattern);
+    PATTERN_ALLOC(data->pattern);
+    mod->xxp[data->pattern]->rows = rows;
+    TRACK_ALLOC(data->pattern);
 
     for (j = 0; j < rows * mod->chn; j++) {
 	uint8 note, ins;
 
-	event = &EVENT(pattern, j % mod->chn, j / mod->chn);
+	event = &EVENT(data->pattern, j % mod->chn, j / mod->chn);
 	memset(event, 0, sizeof(struct xmp_event));
 
 	note = read8(f);
@@ -242,29 +245,29 @@ static void get_pbod(struct module_data *m, int size, FILE *f)
 	if (event->fxt == NONE)
 	    event->fxt = event->fxp = 0;
     }
-    pattern++;
+    data->pattern++;
 }
 
 
-static void get_sbod(struct module_data *m, int size, FILE *f)
+static void get_sbod(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
-
+    struct local_data *data = (struct local_data *)parm;
     int flags = 0;
     int i;
 
-    if (sample >= mod->ins)
+    if (data->sample >= mod->ins)
 	return;
 
     _D(_D_INFO "Stored samples: %d", mod->smp);
 
-    i = idx[sample];
-    if (mode[i] == OKT_MODE8 || mode[i] == OKT_MODEB)
+    i = data->idx[data->sample];
+    if (data->mode[i] == OKT_MODE8 || data->mode[i] == OKT_MODEB)
 	flags = SAMPLE_FLAG_7BIT;
 
-    load_sample(f, sample, flags, &mod->xxs[i], NULL);
+    load_sample(f, data->sample, flags, &mod->xxs[i], NULL);
 
-    sample++;
+    data->sample++;
 }
 
 
@@ -272,16 +275,17 @@ static int okt_load(struct module_data *m, FILE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     iff_handle handle;
+    struct local_data data;
 
     LOAD_INIT();
 
     fseek(f, 8, SEEK_CUR);	/* OKTASONG */
 
-    pattern = sample = 0;
-
     handle = iff_new();
     if (handle == NULL)
 	return -1;
+
+    memset(&data, 0, sizeof(struct local_data));
 
     /* IFF chunk IDs */
     iff_register(handle, "CMOD", get_cmod);
@@ -298,8 +302,9 @@ static int okt_load(struct module_data *m, FILE *f, const int start)
     MODULE_INFO();
 
     /* Load IFF chunks */
-    while (!feof(f))
-	iff_chunk(handle, m, f);
+    while (!feof(f)) {
+	iff_chunk(handle, m, f, &data);
+    }
 
     iff_release(handle);
 

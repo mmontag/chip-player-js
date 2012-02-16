@@ -44,7 +44,7 @@ static int liq_test(FILE *f, char *t, const int start)
 #define NONE 0xff
 
 
-static uint8 fx[] = {
+static const uint8 fx[] = {
 	FX_ARPEGGIO,
 	FX_S3M_BPM,
 	FX_BREAK,

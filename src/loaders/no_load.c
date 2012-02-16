@@ -34,7 +34,7 @@ static int no_test(FILE *f, char *t, const int start)
 }
 
 
-static uint8 fx[] = {
+static const uint8 fx[] = {
 	FX_ARPEGGIO,
 	0,
 	FX_BREAK,

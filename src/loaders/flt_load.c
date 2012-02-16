@@ -44,7 +44,7 @@ static int flt_test(FILE *f, char *t, const int start)
 
 /* Waveforms from the Startrekker 1.2 AM synth replayer code */
 
-static int8 am_waveform[3][32] = {
+static const int8 am_waveform[3][32] = {
 	{    0,   25,   49,   71,   90,  106,  117,  125,	/* Sine */
 	   127,  125,  117,  106,   90,   71,   49,   25,
 	     0,  -25,  -49,  -71,  -90, -106, -117, -125,
@@ -63,8 +63,6 @@ static int8 am_waveform[3][32] = {
 	   127,  127,  127,  127,  127,  127,  127,  127
 	},
 };
-
-static int8 am_noise[1024];
 
 
 struct am_instrument {
@@ -111,6 +109,7 @@ static void read_am_instrument(struct module_data *m, FILE *nt, int i)
     struct am_instrument am;
     char *wave;
     int a, b;
+    int8 am_noise[1024];
 
     fseek(nt, 144 + i * 120 + 2 + 4, SEEK_SET);
     am.l0 = read16b(nt);

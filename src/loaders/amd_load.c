@@ -55,7 +55,6 @@ struct amd_file_header {
     uint8 version;		/* 0x10=normal module, 0x11=packed */
 };
 
-static int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
 
 static int amd_load(struct module_data *m, FILE *f, const int start)
@@ -65,6 +64,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     struct amd_file_header afh;
     struct xmp_event *event;
     char regs[11];
+    const int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
     uint16 w;
     uint8 b;
 

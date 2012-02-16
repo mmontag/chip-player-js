@@ -50,7 +50,6 @@ static int mmd1_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int bpm_on, bpmlen, med_8ch;
 
 static int mmd1_load(struct module_data *m, FILE *f, const int start)
 {
@@ -75,6 +74,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 	int songname_offset;
 	int iinfo_offset;
 	int pos;
+	int bpm_on, bpmlen, med_8ch;
 
 	LOAD_INIT();
 

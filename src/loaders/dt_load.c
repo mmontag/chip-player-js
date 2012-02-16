@@ -35,11 +35,13 @@ static int dt_test(FILE *f, char *t, const int start)
 }
 
 
-static int pflag, sflag;
-static int realpat;
+struct local_data {
+    int pflag, sflag;
+    int realpat;
+};
 
 
-static void get_d_t_(struct module_data *m, int size, FILE *f)
+static void get_d_t_(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int b;
@@ -58,7 +60,7 @@ static void get_d_t_(struct module_data *m, int size, FILE *f)
 	MODULE_INFO();
 }
 
-static void get_s_q_(struct module_data *m, int size, FILE *f)
+static void get_s_q_(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, maxpat;
@@ -75,16 +77,17 @@ static void get_s_q_(struct module_data *m, int size, FILE *f)
 	mod->pat = maxpat + 1;
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 
 	mod->chn = read16b(f);
-	realpat = read16b(f);
+	data->realpat = read16b(f);
 	mod->trk = mod->chn * mod->pat;
 }
 
-static void get_inst(struct module_data *m, int size, FILE *f)
+static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, c2spd;
@@ -147,17 +150,18 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_dapt(struct module_data *m, int size, FILE *f)
+static void get_dapt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	int pat, i, j, k;
 	struct xmp_event *event;
 	static int last_pat;
 	int rows;
 
-	if (!pflag) {
+	if (!data->pflag) {
 		_D(_D_INFO "Stored patterns: %d", mod->pat);
-		pflag = 1;
+		data->pflag = 1;
 		last_pat = 0;
 		PATTERN_INIT();
 	}
@@ -194,20 +198,21 @@ static void get_dapt(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_dait(struct module_data *m, int size, FILE *f)
+static void get_dait(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	static int i = 0;
 
-	if (!sflag) {
+	if (!data->sflag) {
 		_D(_D_INFO "Stored samples : %d ", mod->smp);
-		sflag = 1;
+		data->sflag = 1;
 		i = 0;
 	}
 
 	if (size > 2) {
-		load_sample(f, mod->xxi[i].sub[0].sid,
-			SAMPLE_FLAG_BIGEND, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_BIGEND,
+				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	i++;
@@ -216,10 +221,11 @@ static void get_dait(struct module_data *m, int size, FILE *f)
 static int dt_load(struct module_data *m, FILE *f, const int start)
 {
 	iff_handle handle;
+	struct local_data data;
 
 	LOAD_INIT();
 
-	pflag = sflag = 0;
+	data.pflag = data.sflag = 0;
 	
 	handle = iff_new();
 	if (handle == NULL)
@@ -234,8 +240,9 @@ static int dt_load(struct module_data *m, FILE *f, const int start)
 	iff_register(handle, "DAIT", get_dait);
 
 	/* Load IFF chunks */
-	while (!feof(f))
-		iff_chunk(handle, m, f);
+	while (!feof(f)) {
+		iff_chunk(handle, m, f , &data);
+	}
 
 	iff_release(handle);
 

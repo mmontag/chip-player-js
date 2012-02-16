@@ -49,13 +49,7 @@ static int it_test(FILE *f, char *t, const int start)
 #define L_CHANNELS 64
 
 
-static uint32 *pp_ins;		/* Pointers to instruments */
-static uint32 *pp_smp;		/* Pointers to samples */
-static uint32 *pp_pat;		/* Pointers to patterns */
-static uint8 arpeggio_val[64];
-static uint8 last_h[64], last_fxp[64];
-
-static uint8 fx[] = {
+static const uint8 fx[] = {
 	/*   */ FX_NONE,
 	/* A */ FX_S3M_TEMPO,
 	/* B */ FX_JUMP,
@@ -85,14 +79,13 @@ static uint8 fx[] = {
 	/* Z */ FX_FLT_CUTOFF
 };
 
-static int dca2nna[] = { 0, 2, 3 };
-static int new_fx;
 
 int itsex_decompress8 (FILE *, void *, int, int);
 int itsex_decompress16 (FILE *, void *, int, int);
 
 
-static void xlat_fx(int c, struct xmp_event *e)
+static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
+                    uint8 *last_h, uint8 *last_fxp, int new_fx)
 {
     uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
@@ -261,6 +254,13 @@ static int it_load(struct module_data *m, FILE *f, const int start)
     int max_ch, flag;
     int inst_map[120], inst_rmap[XMP_MAX_KEYS];
     char tracker_name[40];
+    uint32 *pp_ins;		/* Pointers to instruments */
+    uint32 *pp_smp;		/* Pointers to samples */
+    uint32 *pp_pat;		/* Pointers to patterns */
+    uint8 arpeggio_val[64];
+    uint8 last_h[64], last_fxp[64];
+    int dca2nna[] = { 0, 2, 3 };
+    int new_fx;
 
     LOAD_INIT();
 
@@ -910,14 +910,14 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    if (mask[c] & 0x04) {
 		b = read8(f);
 		lastevent[c].vol = event->vol = b;
-		xlat_volfx (event);
+		xlat_volfx(event);
 		pat_len--;
 	    }
 	    if (mask[c] & 0x08) {
 		b = read8(f);
 		event->fxt = b;
 		event->fxp = read8(f);
-		xlat_fx (c, event);
+		xlat_fx(c, event, arpeggio_val, last_h, last_fxp, new_fx);
 		lastevent[c].fxt = event->fxt;
 		lastevent[c].fxp = event->fxp;
 		pat_len -= 2;
@@ -930,7 +930,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    }
 	    if (mask[c] & 0x40) {
 		event->vol = lastevent[c].vol;
-		xlat_volfx (event);
+		xlat_volfx(event);
 	    }
 	    if (mask[c] & 0x80) {
 		event->fxt = lastevent[c].fxt;

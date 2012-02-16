@@ -41,10 +41,9 @@ static int imf_test(FILE *f, char *t, const int start)
 #define FX_IMF_FPORTA_UP 0xfe
 #define FX_IMF_FPORTA_DN 0xfd
 
-static uint8 arpeggio_val[32];
 
 /* Effect conversion table */
-static uint8 fx[] = {
+static const uint8 fx[] = {
 	NONE,
 	FX_S3M_TEMPO,
 	FX_S3M_BPM,
@@ -85,7 +84,7 @@ static uint8 fx[] = {
 
 
 /* Effect translation */
-static void xlat_fx (int c, uint8 *fxt, uint8 *fxp)
+static void xlat_fx (int c, uint8 *fxt, uint8 *fxp, uint8 *arpeggio_val)
 {
     uint8 h = MSN (*fxp), l = LSN (*fxp);
 
@@ -159,6 +158,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
     struct imf_sample is;
     int pat_len, smp_num;
     uint8 n, b;
+    uint8 arpeggio_val[32];
 
     LOAD_INIT();
 
@@ -277,13 +277,13 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 	    if (b & IMF_FX_FOLLOWS) {
 		event->fxt = read8(f);
 		event->fxp = read8(f);
-		xlat_fx (c, &event->fxt, &event->fxp);
+		xlat_fx(c, &event->fxt, &event->fxp, arpeggio_val);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_F2_FOLLOWS) {
 		event->f2t = read8(f);
 		event->f2p = read8(f);
-		xlat_fx (c, &event->f2t, &event->f2p);
+		xlat_fx(c, &event->f2t, &event->f2p, arpeggio_val);
 		pat_len -= 2;
 	    }
 	}

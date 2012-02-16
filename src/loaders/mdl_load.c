@@ -65,19 +65,21 @@ struct mdl_envelope {
     uint8 loop;
 };
 
-static int *i_index;
-static int *s_index;
-static int *v_index;	/* volume envelope */
-static int *p_index;	/* pan envelope */
-static int *f_index;	/* pitch envelope */
-static int *c2spd;
-static int *packinfo;
-static int v_envnum;
-static int p_envnum;
-static int f_envnum;
-static struct mdl_envelope *v_env;
-static struct mdl_envelope *p_env;
-static struct mdl_envelope *f_env;
+struct local_data {
+    int *i_index;
+    int *s_index;
+    int *v_index;	/* volume envelope */
+    int *p_index;	/* pan envelope */
+    int *f_index;	/* pitch envelope */
+    int *c2spd;
+    int *packinfo;
+    int v_envnum;
+    int p_envnum;
+    int f_envnum;
+    struct mdl_envelope *v_env;
+    struct mdl_envelope *p_env;
+    struct mdl_envelope *f_env;
+};
 
 
 /* Effects 1-6 (note effects) can only be entered in the first effect
@@ -286,7 +288,7 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
  * IFF chunk handlers
  */
 
-static void get_chunk_in(struct module_data *m, int size, FILE *f)
+static void get_chunk_in(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i;
@@ -314,7 +316,7 @@ static void get_chunk_in(struct module_data *m, int size, FILE *f)
     MODULE_INFO();
 }
 
-static void get_chunk_pa(struct module_data *m, int size, FILE *f)
+static void get_chunk_pa(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, chn;
@@ -340,7 +342,7 @@ static void get_chunk_pa(struct module_data *m, int size, FILE *f)
     }
 }
 
-static void get_chunk_p0(struct module_data *m, int size, FILE *f)
+static void get_chunk_p0(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -364,7 +366,7 @@ static void get_chunk_p0(struct module_data *m, int size, FILE *f)
     }
 }
 
-static void get_chunk_tr(struct module_data *m, int size, FILE *f)
+static void get_chunk_tr(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, k, row, len;
@@ -429,8 +431,8 @@ static void get_chunk_tr(struct module_data *m, int size, FILE *f)
 		break;
 	    }
 
-	    xlat_fx1 (&track->event[row].fxt, &track->event[row].fxp);
-	    xlat_fx2 (&track->event[row].f2t, &track->event[row].f2p);
+	    xlat_fx1(&track->event[row].fxt, &track->event[row].fxp);
+	    xlat_fx2(&track->event[row].f2t, &track->event[row].f2p);
 
 	    row++;
 	}
@@ -443,17 +445,18 @@ static void get_chunk_tr(struct module_data *m, int size, FILE *f)
 
 	mod->xxt[i] = calloc (1, sizeof (struct xmp_track) +
 	    sizeof (struct xmp_event) * row);
-	memcpy (mod->xxt[i], track, sizeof (struct xmp_track) +
+	memcpy(mod->xxt[i], track, sizeof (struct xmp_track) +
 	    sizeof (struct xmp_event) * row);
 	mod->xxt[i]->rows = row;
     }
 
-    free (track);
+    free(track);
 }
 
-static void get_chunk_ii(struct module_data *m, int size, FILE *f)
+static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
+    struct local_data *data = (struct local_data *)parm;
     int i, j, k;
     int map, last_map;
     char buf[40];
@@ -464,7 +467,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f)
     INSTRUMENT_INIT();
 
     for (i = 0; i < mod->ins; i++) {
-	i_index[i] = read8(f);
+	data->i_index[i] = read8(f);
 	mod->xxi[i].nsm = read8(f);
 	fread(buf, 1, 32, f);
 	buf[32] = 0;
@@ -493,7 +496,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f)
 
 	    x = read8(f);		/* Volume envelope */
 	    if (j == 0)
-		v_index[i] = x & 0x80 ? x & 0x3f : -1;
+		data->v_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
 		mod->xxi[i].sub[j].vol = 0xff;
 
@@ -501,7 +504,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f)
 
 	    x = read8(f);		/* Pan envelope */
 	    if (j == 0)
-		p_index[i] = x & 0x80 ? x & 0x3f : -1;
+		data->p_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
 		mod->xxi[i].sub[j].pan = 0x80;
 
@@ -517,7 +520,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f)
 
 	    x = read8(f);		/* Pitch envelope */
 	    if (j == 0)
-		f_index[i] = x & 0x80 ? x & 0x3f : -1;
+		data->f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
 	    _D(_D_INFO "  %2x: V%02x S%02x v%02x p%02x f%02x",
 				j, mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].sid,
@@ -526,28 +529,29 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f)
     }
 }
 
-static void get_chunk_is(struct module_data *m, int size, FILE *f)
+static void get_chunk_is(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
+    struct local_data *data = (struct local_data *)parm;
     int i;
     char buf[64];
     uint8 x;
 
     mod->smp = read8(f);
     mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
-    packinfo = calloc(sizeof (int), mod->smp);
+    data->packinfo = calloc(sizeof (int), mod->smp);
 
     _D(_D_INFO "Sample infos: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	s_index[i] = read8(f);		/* Sample number */
+	data->s_index[i] = read8(f);		/* Sample number */
 	fread(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);
 
 	fseek(f, 8, SEEK_CUR);		/* Sample filename */
 
-	c2spd[i] = read32l(f);
+	data->c2spd[i] = read32l(f);
 
 	mod->xxs[i].len = read32l(f);
 	mod->xxs[i].lps = read32l(f);
@@ -567,7 +571,7 @@ static void get_chunk_is(struct module_data *m, int size, FILE *f)
 	    mod->xxs[i].lpe >>= 1;
         }
 	mod->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
-	packinfo[i] = (x & 0x0c) >> 2;
+	data->packinfo[i] = (x & 0x0c) >> 2;
 
 	_D(_D_INFO "[%2X] %-32.32s %05x%c %05x %05x %c %6d %d",
 			s_index[i], buf,
@@ -576,13 +580,14 @@ static void get_chunk_is(struct module_data *m, int size, FILE *f)
 			mod->xxs[i].lps,
 			mod->xxs[i].lpe,
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			c2spd[i], packinfo[i]);
+			data->c2spd[i], data->packinfo[i]);
     }
 }
 
-static void get_chunk_i0(struct module_data *m, int size, FILE *f)
+static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
+    struct local_data *data = (struct local_data *)parm;
     int i;
     char buf[64];
     uint8 x;
@@ -593,19 +598,19 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f)
 
     INSTRUMENT_INIT();
 
-    packinfo = calloc (sizeof (int), mod->smp);
+    data->packinfo = calloc (sizeof (int), mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	mod->xxi[i].sub[0].sid = i_index[i] = s_index[i] = read8(f);
+	mod->xxi[i].sub[0].sid = data->i_index[i] = data->s_index[i] = read8(f);
 
 	fread(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);			/* Sample name */
 	fseek(f, 8, SEEK_CUR);		/* Sample filename */
 
-	c2spd[i] = read16l(f);
+	data->c2spd[i] = read16l(f);
 
 	mod->xxs[i].len = read32l(f);
 	mod->xxs[i].lps = read32l(f);
@@ -625,7 +630,7 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f)
 	    mod->xxs[i].lpe >>= 1;
 	}
 	mod->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
-	packinfo[i] = (x & 0x0c) >> 2;
+	data->packinfo[i] = (x & 0x0c) >> 2;
 
 	_D(_D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
 		i_index[i], buf, c2spd[i],  mod->xxi[i].sub[0].vol,
@@ -634,9 +639,10 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f)
     }
 }
 
-static void get_chunk_sa(struct module_data *m, int size, FILE *f)
+static void get_chunk_sa(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
+    struct local_data *data = (struct local_data *)parm;
     int i, len;
     uint8 *smpbuf, *buf;
 
@@ -646,7 +652,7 @@ static void get_chunk_sa(struct module_data *m, int size, FILE *f)
 	smpbuf = calloc (1, mod->xxs[i].flg & XMP_SAMPLE_16BIT ?
 		mod->xxs[i].len << 1 : mod->xxs[i].len);
 
-	switch (packinfo[i]) {
+	switch (data->packinfo[i]) {
 	case 0:
 	    fread(smpbuf, 1, mod->xxs[i].len, f);
 	    break;
@@ -672,63 +678,66 @@ static void get_chunk_sa(struct module_data *m, int size, FILE *f)
 	free (smpbuf);
     }
 
-    free(packinfo);
+    free(data->packinfo);
 }
 
-static void get_chunk_ve(struct module_data *m, int size, FILE *f)
+static void get_chunk_ve(struct module_data *m, int size, FILE *f, void *parm)
 {
+    struct local_data *data = (struct local_data *)parm;
     int i;
 
-    if ((v_envnum = read8(f)) == 0)
+    if ((data->v_envnum = read8(f)) == 0)
 	return;
 
-    _D(_D_INFO "Vol envelopes: %d", v_envnum);
+    _D(_D_INFO "Vol envelopes: %d", data->v_envnum);
 
-    v_env = calloc(v_envnum, sizeof (struct mdl_envelope));
+    data->v_env = calloc(data->v_envnum, sizeof (struct mdl_envelope));
 
-    for (i = 0; i < v_envnum; i++) {
-	v_env[i].num = read8(f);
-	fread(v_env[i].data, 1, 30, f);
-	v_env[i].sus = read8(f);
-	v_env[i].loop = read8(f);
+    for (i = 0; i < data->v_envnum; i++) {
+	data->v_env[i].num = read8(f);
+	fread(data->v_env[i].data, 1, 30, f);
+	data->v_env[i].sus = read8(f);
+	data->v_env[i].loop = read8(f);
     }
 }
 
-static void get_chunk_pe(struct module_data *m, int size, FILE *f)
+static void get_chunk_pe(struct module_data *m, int size, FILE *f, void *parm)
 {
+    struct local_data *data = (struct local_data *)parm;
     int i;
 
-    if ((p_envnum = read8(f)) == 0)
+    if ((data->p_envnum = read8(f)) == 0)
 	return;
 
-    _D(_D_INFO "Pan envelopes: %d", p_envnum);
+    _D(_D_INFO "Pan envelopes: %d", data->p_envnum);
 
-    p_env = calloc (p_envnum, sizeof (struct mdl_envelope));
+    data->p_env = calloc(data->p_envnum, sizeof (struct mdl_envelope));
 
-    for (i = 0; i < p_envnum; i++) {
-	p_env[i].num = read8(f);
-	fread(p_env[i].data, 1, 30, f);
-	p_env[i].sus = read8(f);
-	p_env[i].loop = read8(f);
+    for (i = 0; i < data->p_envnum; i++) {
+	data->p_env[i].num = read8(f);
+	fread(data->p_env[i].data, 1, 30, f);
+	data->p_env[i].sus = read8(f);
+	data->p_env[i].loop = read8(f);
     }
 }
 
-static void get_chunk_fe(struct module_data *m, int size, FILE *f)
+static void get_chunk_fe(struct module_data *m, int size, FILE *f, void *parm)
 {
+    struct local_data *data = (struct local_data *)parm;
     int i;
 
-    if ((f_envnum = read8(f)) == 0)
+    if ((data->f_envnum = read8(f)) == 0)
 	return;
 
-    _D(_D_INFO "Pitch envelopes: %d", f_envnum);
+    _D(_D_INFO "Pitch envelopes: %d", data->f_envnum);
 
-    f_env = calloc (f_envnum, sizeof (struct mdl_envelope));
+    data->f_env = calloc(data->f_envnum, sizeof (struct mdl_envelope));
 
-    for (i = 0; i < f_envnum; i++) {
-	f_env[i].num = read8(f);
-	fread(f_env[i].data, 1, 30, f);
-	f_env[i].sus = read8(f);
-	f_env[i].loop = read8(f);
+    for (i = 0; i < data->f_envnum; i++) {
+	data->f_env[i].num = read8(f);
+	fread(data->f_env[i].data, 1, 30, f);
+	data->f_env[i].sus = read8(f);
+	data->f_env[i].loop = read8(f);
     }
 }
 
@@ -739,6 +748,7 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
     iff_handle handle;
     int i, j, k, l;
     char buf[8];
+    struct local_data data;
 
     LOAD_INIT();
 
@@ -751,20 +761,20 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 	return -1;
 
     /* IFFoid chunk IDs */
-    iff_register (handle, "IN", get_chunk_in);	/* Module info */
-    iff_register (handle, "TR", get_chunk_tr);	/* Tracks */
-    iff_register (handle, "SA", get_chunk_sa);	/* Sampled data */
-    iff_register (handle, "VE", get_chunk_ve);	/* Volume envelopes */
-    iff_register (handle, "PE", get_chunk_pe);	/* Pan envelopes */
-    iff_register (handle, "FE", get_chunk_fe);	/* Pitch envelopes */
+    iff_register(handle, "IN", get_chunk_in);	/* Module info */
+    iff_register(handle, "TR", get_chunk_tr);	/* Tracks */
+    iff_register(handle, "SA", get_chunk_sa);	/* Sampled data */
+    iff_register(handle, "VE", get_chunk_ve);	/* Volume envelopes */
+    iff_register(handle, "PE", get_chunk_pe);	/* Pan envelopes */
+    iff_register(handle, "FE", get_chunk_fe);	/* Pitch envelopes */
 
     if (MSN(*buf)) {
-	iff_register (handle, "II", get_chunk_ii);	/* Instruments */
-	iff_register (handle, "PA", get_chunk_pa);	/* Patterns */
-	iff_register (handle, "IS", get_chunk_is);	/* Sample info */
+	iff_register(handle, "II", get_chunk_ii);	/* Instruments */
+	iff_register(handle, "PA", get_chunk_pa);	/* Patterns */
+	iff_register(handle, "IS", get_chunk_is);	/* Sample info */
     } else {
-	iff_register (handle, "PA", get_chunk_p0);	/* Old 0.0 patterns */
-	iff_register (handle, "IS", get_chunk_i0);	/* Old 0.0 Sample info */
+	iff_register(handle, "PA", get_chunk_p0);	/* Old 0.0 patterns */
+	iff_register(handle, "IS", get_chunk_i0);	/* Old 0.0 Sample info */
     }
 
     /* MDL uses a degenerated IFF-style file format with 16 bit IDs and
@@ -779,21 +789,22 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
     m->volbase = 0xff;
     m->c4rate = C4_NTSC_RATE;
 
-    v_envnum = p_envnum = f_envnum = 0;
-    s_index = calloc(256, sizeof (int));
-    i_index = calloc(256, sizeof (int));
-    v_index = malloc(256 * sizeof (int));
-    p_index = malloc(256 * sizeof (int));
-    f_index = malloc(256 * sizeof (int));
-    c2spd = calloc(256, sizeof (int));
+    data.v_envnum = data.p_envnum = data.f_envnum = 0;
+    data.s_index = calloc(256, sizeof (int));
+    data.i_index = calloc(256, sizeof (int));
+    data.v_index = malloc(256 * sizeof (int));
+    data.p_index = malloc(256 * sizeof (int));
+    data.f_index = malloc(256 * sizeof (int));
+    data.c2spd = calloc(256, sizeof (int));
 
     for (i = 0; i < 256; i++) {
-	v_index[i] = p_index[i] = f_index[i] = -1;
+	data.v_index[i] = data.p_index[i] = data.f_index[i] = -1;
     }
 
     /* Load IFFoid chunks */
-    while (!feof(f))
-	iff_chunk(handle, m, f);
+    while (!feof(f)) {
+	iff_chunk(handle, m, f, &data);
+    }
 
     iff_release(handle);
 
@@ -806,7 +817,7 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 		    if (j >= mod->xxt[mod->xxp[i]->index[k]]->rows)
 			continue;
 		    
-		    if (EVENT(i, k, j).ins && EVENT(i, k, j).ins == i_index[l]) {
+		    if (EVENT(i, k, j).ins && EVENT(i, k, j).ins == data.i_index[l]) {
 		    	EVENT(i, k, j).ins = l + 1;
 			break;
 		    }
@@ -817,26 +828,26 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 	/* FIXME: envelope timing is wrong */
 
 	/* volume envelopes */
-	if (v_index[i] >= 0) {
+	if (data.v_index[i] >= 0) {
 	    mod->xxi[i].aei.flg = XMP_ENVELOPE_ON;
 	    mod->xxi[i].aei.npt = 16;
 
-	    for (j = 0; j < v_envnum; j++) {
-		if (v_index[i] == j) {
-		    mod->xxi[i].aei.flg |= v_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
-		    mod->xxi[i].aei.flg |= v_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
-		    mod->xxi[i].aei.sus = v_env[j].sus & 0x0f;
-		    mod->xxi[i].aei.lps = v_env[j].loop & 0x0f;
-		    mod->xxi[i].aei.lpe = v_env[j].loop & 0xf0;
+	    for (j = 0; j < data.v_envnum; j++) {
+		if (data.v_index[i] == j) {
+		    mod->xxi[i].aei.flg |= data.v_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+		    mod->xxi[i].aei.flg |= data.v_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
+		    mod->xxi[i].aei.sus = data.v_env[j].sus & 0x0f;
+		    mod->xxi[i].aei.lps = data.v_env[j].loop & 0x0f;
+		    mod->xxi[i].aei.lpe = data.v_env[j].loop & 0xf0;
 		    mod->xxi[i].aei.data[0] = 0;
 		    for (k = 1; k < mod->xxi[i].aei.npt; k++) {
 			mod->xxi[i].aei.data[k * 2] = mod->xxi[i].aei.data[(k - 1) * 2] +
-						v_env[j].data[(k - 1) * 2];
+						data.v_env[j].data[(k - 1) * 2];
 
-			if (v_env[j].data[k * 2] == 0)
+			if (data.v_env[j].data[k * 2] == 0)
 			    break;
 
-			mod->xxi[i].aei.data[k * 2 + 1] = v_env[j].data[(k - 1) * 2 + 1];
+			mod->xxi[i].aei.data[k * 2 + 1] = data.v_env[j].data[(k - 1) * 2 + 1];
 		    }
 		    mod->xxi[i].aei.npt = k;
 		    break;
@@ -845,25 +856,25 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* pan envelopes */
-	if (p_index[i] >= 0) {
+	if (data.p_index[i] >= 0) {
 	    mod->xxi[i].pei.flg = XMP_ENVELOPE_ON;
 	    mod->xxi[i].pei.npt = 16;
 
-	    for (j = 0; j < p_envnum; j++) {
-		if (p_index[i] == j) {
-		    mod->xxi[i].pei.flg |= p_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
-		    mod->xxi[i].pei.flg |= p_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
-		    mod->xxi[i].pei.sus = p_env[j].sus & 0x0f;
-		    mod->xxi[i].pei.lps = p_env[j].loop & 0x0f;
-		    mod->xxi[i].pei.lpe = p_env[j].loop & 0xf0;
+	    for (j = 0; j < data.p_envnum; j++) {
+		if (data.p_index[i] == j) {
+		    mod->xxi[i].pei.flg |= data.p_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+		    mod->xxi[i].pei.flg |= data.p_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
+		    mod->xxi[i].pei.sus = data.p_env[j].sus & 0x0f;
+		    mod->xxi[i].pei.lps = data.p_env[j].loop & 0x0f;
+		    mod->xxi[i].pei.lpe = data.p_env[j].loop & 0xf0;
 		    mod->xxi[i].pei.data[0] = 0;
 
 		    for (k = 1; k < mod->xxi[i].pei.npt; k++) {
 			mod->xxi[i].pei.data[k * 2] = mod->xxi[i].pei.data[(k - 1) * 2] +
-						p_env[j].data[(k - 1) * 2];
-			if (p_env[j].data[k * 2] == 0)
+						data.p_env[j].data[(k - 1) * 2];
+			if (data.p_env[j].data[k * 2] == 0)
 			    break;
-			mod->xxi[i].pei.data[k * 2 + 1] = p_env[j].data[(k - 1) * 2 + 1];
+			mod->xxi[i].pei.data[k * 2 + 1] = data.p_env[j].data[(k - 1) * 2 + 1];
 		    }
 		    mod->xxi[i].pei.npt = k;
 		    break;
@@ -872,26 +883,26 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* pitch envelopes */
-	if (f_index[i] >= 0) {
+	if (data.f_index[i] >= 0) {
 	    mod->xxi[i].fei.flg = XMP_ENVELOPE_ON;
 	    mod->xxi[i].fei.npt = 16;
 
-	    for (j = 0; j < f_envnum; j++) {
-		if (f_index[i] == j) {
-		    mod->xxi[i].fei.flg |= f_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
-		    mod->xxi[i].fei.flg |= f_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
-		    mod->xxi[i].fei.sus = f_env[j].sus & 0x0f;
-		    mod->xxi[i].fei.lps = f_env[j].loop & 0x0f;
-		    mod->xxi[i].fei.lpe = f_env[j].loop & 0xf0;
+	    for (j = 0; j < data.f_envnum; j++) {
+		if (data.f_index[i] == j) {
+		    mod->xxi[i].fei.flg |= data.f_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+		    mod->xxi[i].fei.flg |= data.f_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
+		    mod->xxi[i].fei.sus = data.f_env[j].sus & 0x0f;
+		    mod->xxi[i].fei.lps = data.f_env[j].loop & 0x0f;
+		    mod->xxi[i].fei.lpe = data.f_env[j].loop & 0xf0;
 		    mod->xxi[i].fei.data[0] = 0;
 		    mod->xxi[i].fei.data[1] = 32;
 
 		    for (k = 1; k < mod->xxi[i].fei.npt; k++) {
 			mod->xxi[i].fei.data[k * 2] = mod->xxi[i].fei.data[(k - 1) * 2] +
-						f_env[j].data[(k - 1) * 2];
-			if (f_env[j].data[k * 2] == 0)
+						data.f_env[j].data[(k - 1) * 2];
+			if (data.f_env[j].data[k * 2] == 0)
 			    break;
-			mod->xxi[i].fei.data[k * 2 + 1] = f_env[j].data[(k - 1) * 2 + 1] * 4;
+			mod->xxi[i].fei.data[k * 2 + 1] = data.f_env[j].data[(k - 1) * 2 + 1] * 4;
 		    }
 
 		    mod->xxi[i].fei.npt = k;
@@ -902,29 +913,28 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 
 	for (j = 0; j < mod->xxi[i].nsm; j++)
 	    for (k = 0; k < mod->smp; k++)
-		if (mod->xxi[i].sub[j].sid == s_index[k]) {
+		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
 		    mod->xxi[i].sub[j].sid = k;
-		    c2spd_to_note (c2spd[k], &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+		    c2spd_to_note (data.c2spd[k], &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
 		    break;
 		}
     }
 
-    free (c2spd);
-    free (f_index);
-    free (p_index);
-    free (v_index);
-    free (i_index);
-    free (s_index);
+    free(data.c2spd);
+    free(data.f_index);
+    free(data.p_index);
+    free(data.v_index);
+    free(data.i_index);
+    free(data.s_index);
 
-    if (v_envnum)
-	free(v_env);
-    if (p_envnum)
-	free(p_env);
-    if (f_envnum)
-	free(f_env);
+    if (data.v_envnum)
+	free(data.v_env);
+    if (data.p_envnum)
+	free(data.p_env);
+    if (data.f_envnum)
+	free(data.f_env);
 
     m->quirk |= QUIRK_FINEFX;
 
     return 0;
 }
-

@@ -50,7 +50,7 @@ static int pt3_test(FILE *f, char *t, const int start)
 #define PT3_FLAG_RAWPAT	0x0080	/* Packed patterns if not set */
 
 
-static void get_info(struct module_data *m, int size, FILE *f)
+static void get_info(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int flags;
@@ -81,12 +81,12 @@ static void get_info(struct module_data *m, int size, FILE *f)
 	_D(_D_INFO "Playing time: %02d:%02d:%02d", dhour, dmin, dsec);
 }
 
-static void get_cmnt(struct module_data *m, int size, FILE *f)
+static void get_cmnt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	_D(_D_INFO "Comment size: %d", size);
 }
 
-static void get_ptdt(struct module_data *m, int size, FILE *f)
+static void get_ptdt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	ptdt_load(m, f, 0);
 }
@@ -121,7 +121,7 @@ static int pt3_load(struct module_data *m, FILE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!feof(f))
-		iff_chunk(handle, m, f);
+		iff_chunk(handle, m, f, NULL);
 
 	iff_release(handle);
 

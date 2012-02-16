@@ -61,7 +61,7 @@ struct ssn_instrument_header {
 
 /* Effects bug fixed by Miod Vallat <miodrag@multimania.com> */
 
-static uint8 fx[] = {
+static const uint8 fx[] = {
     FX_PER_PORTA_UP,
     FX_PER_PORTA_DN,
     FX_PER_TPORTA,

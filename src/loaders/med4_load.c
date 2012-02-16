@@ -61,8 +61,8 @@ struct SynthInstr {
 	ULONG wf[64];		/* offs: 278 */
 };
 
-#if 0
-static char *inst_type[] = {
+#ifdef _DEBUG
+static const char *inst_type[] = {
 	"HYB",		/* -2 */
 	"SYN",		/* -1 */
 	"SMP",		/*  0 */
@@ -76,7 +76,6 @@ static char *inst_type[] = {
 };
 #endif
 
-static int read4_ctl;
 
 static void fix_effect(struct xmp_event *event)
 {
@@ -122,30 +121,30 @@ static void fix_effect(struct xmp_event *event)
 	}
 }
 
-static inline uint8 read4(FILE *f)
+static inline uint8 read4(FILE *f, int *read4_ctl)
 {
 	static uint8 b = 0;
 	uint8 ret;
 
-	if (read4_ctl & 0x01) {
+	if (*read4_ctl & 0x01) {
 		ret = b & 0x0f;
 	} else {
 		b = read8(f);
 		ret = b >> 4;
 	}
 
-	read4_ctl ^= 0x01;
+	*read4_ctl ^= 0x01;
 
 	return ret;
 }
 
-static inline uint16 read12b(FILE *f)
+static inline uint16 read12b(FILE *f, int *read4_ctl)
 {
 	uint32 a, b, c;
 
-	a = read4(f);
-	b = read4(f);
-	c = read4(f);
+	a = read4(f, read4_ctl);
+	b = read4(f, read4_ctl);
+	c = read4(f, read4_ctl);
 
 	return (a << 8) | (b << 4) | c;
 }
@@ -173,6 +172,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	int num_ins, num_smp;
 	int smp_idx;
 	int tempo;
+	int read4_ctl;
 	
 	LOAD_INIT();
 
@@ -373,12 +373,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		for (j = 0; j < 32; j++, linemsk0 <<= 1, fxmsk0 <<= 1) {
 			if (linemsk0 & 0x80000000) {
-				chmsk = read4(f);
+				chmsk = read4(f, &read4_ctl);
 				for (k = 0; k < 4; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, j);
 
 					if (chmsk & 0x08) {
-						x = read12b(f);
+						x = read12b(f, &read4_ctl);
 						event->note = x >> 4;
 						if (event->note)
 							event->note += 48;
@@ -388,12 +388,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			}
 
 			if (fxmsk0 & 0x80000000) {
-				chmsk = read4(f);
+				chmsk = read4(f, &read4_ctl);
 				for (k = 0; k < 4; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, j);
 
 					if (chmsk & 0x08) {
-						x = read12b(f);
+						x = read12b(f, &read4_ctl);
 						event->fxt = x >> 8;
 						event->fxp = x & 0xff;
 						fix_effect(event);
@@ -418,12 +418,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		for (j = 32; j < 64; j++, linemsk1 <<= 1, fxmsk1 <<= 1) {
 			if (linemsk1 & 0x80000000) {
-				chmsk = read4(f);
+				chmsk = read4(f, &read4_ctl);
 				for (k = 0; k < 4; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, j);
 
 					if (chmsk & 0x08) {
-						x = read12b(f);
+						x = read12b(f, &read4_ctl);
 						event->note = x >> 4;
 						if (event->note)
 							event->note += 48;
@@ -433,12 +433,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			}
 
 			if (fxmsk1 & 0x80000000) {
-				chmsk = read4(f);
+				chmsk = read4(f, &read4_ctl);
 				for (k = 0; k < 4; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, j);
 
 					if (chmsk & 0x08) {
-						x = read12b(f);
+						x = read12b(f, &read4_ctl);
 						event->fxt = x >> 8;
 						event->fxp = x & 0xff;
 						fix_effect(event);

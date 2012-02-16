@@ -98,7 +98,7 @@ static int s3m_test(FILE *f, char *t, const int start)
 	} while (0)
 
 /* Effect conversion table */
-static uint8 fx[] =
+static const uint8 fx[] =
 {
 	NONE,
 	FX_S3M_TEMPO,		/* Axx  Set speed to xx (the default is 06) */

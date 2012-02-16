@@ -38,11 +38,12 @@ static int dbm_test(FILE * f, char *t, const int start)
 }
 
 
+struct local_data {
+	int have_song;
+};
 
-static int have_song;
 
-
-static void get_info(struct module_data *m, int size, FILE *f)
+static void get_info(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
@@ -57,16 +58,17 @@ static void get_info(struct module_data *m, int size, FILE *f)
 	INSTRUMENT_INIT();
 }
 
-static void get_song(struct module_data *m, int size, FILE *f)
+static void get_song(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	int i;
 	char buffer[50];
 
-	if (have_song)
+	if (data->have_song)
 		return;
 
-	have_song = 1;
+	data->have_song = 1;
 
 	fread(buffer, 44, 1, f);
 	_D(_D_INFO "Song name: %s", buffer);
@@ -78,7 +80,7 @@ static void get_song(struct module_data *m, int size, FILE *f)
 		mod->xxo[i] = read16b(f);
 }
 
-static void get_inst(struct module_data *m, int size, FILE *f)
+static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -116,7 +118,7 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, c, r, n, sz;
@@ -206,7 +208,7 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_smpl(struct module_data *m, int size, FILE *f)
+static void get_smpl(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, flags;
@@ -243,7 +245,7 @@ static void get_smpl(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_venv(struct module_data *m, int size, FILE *f)
+static void get_venv(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, nenv, ins;
@@ -276,12 +278,13 @@ static int dbm_load(struct module_data *m, FILE *f, const int start)
 	char name[44];
 	uint16 version;
 	int i;
+	struct local_data data;
 
 	LOAD_INIT();
 
 	read32b(f);		/* DBM0 */
 
-	have_song = 0;
+	data.have_song = 0;
 	version = read16b(f);
 
 	fseek(f, 10, SEEK_CUR);
@@ -305,8 +308,9 @@ static int dbm_load(struct module_data *m, FILE *f, const int start)
 	MODULE_INFO();
 
 	/* Load IFF chunks */
-	while (!feof(f))
-		iff_chunk(handle, m, f);
+	while (!feof(f)) {
+		iff_chunk(handle, m, f, &data);
+	}
 
 	iff_release(handle);
 

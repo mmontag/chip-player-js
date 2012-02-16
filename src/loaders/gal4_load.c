@@ -44,9 +44,11 @@ static int gal4_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int snum;
+struct local_data {
+    int snum;
+};
 
-static void get_main(struct module_data *m, int size, FILE *f)
+static void get_main(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	char buf[64];
@@ -67,7 +69,7 @@ static void get_main(struct module_data *m, int size, FILE *f)
 	read8(f);		/* unknown - 0x80 */
 }
 
-static void get_ordr(struct module_data *m, int size, FILE *f)
+static void get_ordr(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -78,7 +80,7 @@ static void get_ordr(struct module_data *m, int size, FILE *f)
 		mod->xxo[i] = read8(f);
 }
 
-static void get_patt_cnt(struct module_data *m, int size, FILE *f)
+static void get_patt_cnt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -89,7 +91,7 @@ static void get_patt_cnt(struct module_data *m, int size, FILE *f)
 		mod->pat = i;
 }
 
-static void get_inst_cnt(struct module_data *m, int size, FILE *f)
+static void get_inst_cnt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -105,7 +107,7 @@ static void get_inst_cnt(struct module_data *m, int size, FILE *f)
 	mod->smp += read8(f);
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f)
+static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy;
@@ -166,9 +168,10 @@ static void get_patt(struct module_data *m, int size, FILE *f)
 	}
 }
 
-static void get_inst(struct module_data *m, int size, FILE *f)
+static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	int i, j;
 	int srate, finetune, flags;
 	int val, vwf, vra, vde, vsw, fade;
@@ -253,12 +256,12 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 
 	mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), mod->xxi[i].nsm);
 
-	for (j = 0; j < mod->xxi[i].nsm; j++, snum++) {
+	for (j = 0; j < mod->xxi[i].nsm; j++, data->snum++) {
 		read32b(f);	/* SAMP */
 		read32b(f);	/* size */
 	
-		fread(&mod->xxs[snum].name, 1, 28, f);
-		str_adj((char *)mod->xxs[snum].name);
+		fread(&mod->xxs[data->snum].name, 1, 28, f);
+		str_adj((char *)mod->xxs[data->snum].name);
 	
 		mod->xxi[i].sub[j].pan = read8(f) * 4;
 		if (mod->xxi[i].sub[j].pan == 0)	/* not sure about this */
@@ -272,21 +275,21 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 		mod->xxi[i].sub[j].vde = vde;
 		mod->xxi[i].sub[j].vra = vra;
 		mod->xxi[i].sub[j].vsw = vsw;
-		mod->xxi[i].sub[j].sid = snum;
+		mod->xxi[i].sub[j].sid = data->snum;
 	
-		mod->xxs[snum].len = read32l(f);
-		mod->xxs[snum].lps = read32l(f);
-		mod->xxs[snum].lpe = read32l(f);
+		mod->xxs[data->snum].len = read32l(f);
+		mod->xxs[data->snum].lps = read32l(f);
+		mod->xxs[data->snum].lpe = read32l(f);
 	
-		mod->xxs[snum].flg = 0;
+		mod->xxs[data->snum].flg = 0;
 		if (flags & 0x04)
-			mod->xxs[snum].flg |= XMP_SAMPLE_16BIT;
+			mod->xxs[data->snum].flg |= XMP_SAMPLE_16BIT;
 		if (flags & 0x08)
-			mod->xxs[snum].flg |= XMP_SAMPLE_LOOP;
+			mod->xxs[data->snum].flg |= XMP_SAMPLE_LOOP;
 		if (flags & 0x10)
-			mod->xxs[snum].flg |= XMP_SAMPLE_LOOP_BIDIR;
+			mod->xxs[data->snum].flg |= XMP_SAMPLE_LOOP_BIDIR;
 		/* if (flags & 0x80)
-			mod->xxs[snum].flg |= ? */
+			mod->xxs[data->snum].flg |= ? */
 	
 		srate = read32l(f);
 		finetune = 0;
@@ -297,18 +300,18 @@ static void get_inst(struct module_data *m, int size, FILE *f)
 		read32l(f);			/* unknown */
 	
 		_D(_D_INFO, "  %X: %05x%c%05x %05x %c V%02x P%02x %5d",
-			j, mod->xxs[snum].len,
-			mod->xxs[snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-			mod->xxs[snum].lps,
-			mod->xxs[snum].lpe,
-			mod->xxs[snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
-			mod->xxs[snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+			j, mod->xxs[data->snum].len,
+			mod->xxs[data->snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+			mod->xxs[data->snum].lps,
+			mod->xxs[data->snum].lpe,
+			mod->xxs[data->snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
+			mod->xxs[data->snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[j].vol,
 			mod->xxi[i].sub[j].pan,
 			srate);
 	
-		if (mod->xxs[snum].len > 1) {
-			load_sample(f, snum, 0, &mod->xxs[snum], NULL);
+		if (mod->xxs[data->snum].len > 1) {
+			load_sample(f, data->snum, 0, &mod->xxs[data->snum], NULL);
 		}
 	}
 }
@@ -318,6 +321,7 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
 	int i, offset;
+	struct local_data data;
 
 	LOAD_INIT();
 
@@ -342,8 +346,9 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
-	while (!feof(f))
-		iff_chunk(handle, m, f);
+	while (!feof(f)) {
+		iff_chunk(handle, m, f, &data);
+	}
 
 	iff_release(handle);
 
@@ -357,7 +362,7 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 	_D(_D_INFO "Stored samples : %d ", mod->smp);
 
 	fseek(f, start + offset, SEEK_SET);
-	snum = 0;
+	data.snum = 0;
 
 	handle = iff_new();
 	if (handle == NULL)
@@ -370,8 +375,9 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
-	while (!feof (f))
-		iff_chunk(handle, m, f);
+	while (!feof (f)) {
+		iff_chunk(handle, m, f, &data);
+	}
 
 	iff_release(handle);
 

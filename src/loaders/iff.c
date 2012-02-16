@@ -36,7 +36,7 @@ iff_handle iff_new()
 	return (iff_handle) data;
 }
 
-void iff_chunk(iff_handle opaque, struct module_data *m, FILE *f)
+void iff_chunk(iff_handle opaque, struct module_data *m, FILE *f, void *parm)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	long size;
@@ -66,11 +66,11 @@ void iff_chunk(iff_handle opaque, struct module_data *m, FILE *f)
 	if (data->flags & IFF_FULL_CHUNK_SIZE)
 		size -= data->id_size + 4;
 
-	iff_process(opaque, m, id, size, f);
+	iff_process(opaque, m, id, size, f, parm);
 }
 
 void iff_register(iff_handle opaque, char *id,
-		  void (*loader) (struct module_data *, int, FILE *))
+		  void (*loader)(struct module_data *, int, FILE *, void *))
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct iff_info *f;
@@ -100,7 +100,7 @@ void iff_release(iff_handle opaque)
 }
 
 int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
-		FILE *f)
+		FILE *f, void *parm)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct list_head *tmp;
@@ -112,7 +112,7 @@ int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
 	list_for_each(tmp, &data->iff_list) {
 		i = list_entry(tmp, struct iff_info, list);
 		if (id && !strncmp(id, i->id, data->id_size)) {
-			i->loader(m, size, f);
+			i->loader(m, size, f, parm);
 			break;
 		}
 	}

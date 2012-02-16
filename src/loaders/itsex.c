@@ -150,39 +150,41 @@ typedef uint32 dword;
  * ----------------------------------------------------------------------
  */
 
-static uint8 *sourcebuffer = NULL;
-static uint8 *ibuf = NULL;	/* actual reading position */
-static uint32 bitlen;
-static uint8 bitnum;
+struct local_data {
+	uint8 *sourcebuffer;
+	uint8 *ibuf;		/* actual reading position */
+	uint32 bitlen;
+	uint8 bitnum;
+};
 
-static inline uint32 readbits(uint8 n)
+static inline uint32 readbits(uint8 n, struct local_data *data)
 {
 	uint32 retval = 0;
 	int offset = 0;
 	while (n) {
 		int m = n;
 
-		if (!bitlen) {
+		if (!data->bitlen) {
 			fprintf(stderr, "readbits: ran out of buffer\n");
 			return 0;
 		}
 
-		if (m > bitnum)
-			m = bitnum;
-		retval |= (*ibuf & ((1L << m) - 1)) << offset;
-		*ibuf >>= m;
+		if (m > data->bitnum)
+			m = data->bitnum;
+		retval |= (*data->ibuf & ((1L << m) - 1)) << offset;
+		*data->ibuf >>= m;
 		n -= m;
 		offset += m;
-		if (!(bitnum -= m)) {
-			bitlen--;
-			ibuf++;
-			bitnum = 8;
+		if (!(data->bitnum -= m)) {
+			data->bitlen--;
+			data->ibuf++;
+			data->bitnum = 8;
 		}
 	}
 	return retval;
 }
 
-static int readblock(FILE *f)
+static int readblock(FILE *f, struct local_data *data)
 {				/* gets block of compressed data from file */
 	uint16 size;
 
@@ -190,25 +192,25 @@ static int readblock(FILE *f)
 
 	if (!size)
 		return 0;
-	if (!(sourcebuffer = malloc(size)))
+	if (!(data->sourcebuffer = malloc(size)))
 		return 0;
 
-	if (fread(sourcebuffer, size, 1, f) != 1) {
-		free(sourcebuffer);
-		sourcebuffer = NULL;	/* Just looks better to have it present */
+	if (fread(data->sourcebuffer, size, 1, f) != 1) {
+		free(data->sourcebuffer);
+		data->sourcebuffer = NULL;	/* Just looks better to have it present */
 		return 0;
 	}
-	ibuf = sourcebuffer;
-	bitnum = 8;
-	bitlen = size;
+	data->ibuf = data->sourcebuffer;
+	data->bitnum = 8;
+	data->bitlen = size;
 	return 1;
 }
 
-static int freeblock(void)
+static int freeblock(struct local_data *data)
 {				/* frees that block again */
-	if (sourcebuffer)
-		free(sourcebuffer);
-	sourcebuffer = NULL;
+	if (data->sourcebuffer)
+		free(data->sourcebuffer);
+	data->sourcebuffer = NULL;
 	return 1;
 }
 
@@ -232,6 +234,7 @@ int itsex_decompress8(FILE *module, void *dst, int len, char it215)
 	word value;		/* value read from file to be processed */
 	sbyte d1, d2;		/* integrator buffers (d2 for it2.15) */
 	sbyte *destpos;
+	struct local_data data;
 
 	destbuf = (sbyte *) dst;
 	if (!destbuf)
@@ -244,7 +247,7 @@ int itsex_decompress8(FILE *module, void *dst, int len, char it215)
 	while (len) {
 		/* read a new block of compressed data and reset variables */
 
-		if (!readblock(module))
+		if (!readblock(module, &data))
 			return 0;
 		blklen = (len < 0x8000) ? len : 0x8000;
 		blkpos = 0;
@@ -256,11 +259,11 @@ int itsex_decompress8(FILE *module, void *dst, int len, char it215)
 		while (blkpos < blklen) {
 			sbyte v;
 
-			value = readbits(width);	/* read bits */
+			value = readbits(width, &data);	/* read bits */
 
 			if (width < 7) {	/* method 1 (1-6 bits) */
 				if (value == (1 << (width - 1))) {	/* check for "100..." */
-					value = readbits(3) + 1;	/* yes -> read new width; */
+					value = readbits(3, &data) + 1;	/* yes -> read new width; */
 					width = (value < width) ? value : value + 1;	/* and expand it */
 					continue;	/* ... next value */
 				}
@@ -278,7 +281,7 @@ int itsex_decompress8(FILE *module, void *dst, int len, char it215)
 					continue;	/* ... and next value */
 				}
 			} else {	/* illegal width, abort */
-				freeblock();
+				freeblock(&data);
 				return 0;
 			}
 
@@ -302,7 +305,7 @@ int itsex_decompress8(FILE *module, void *dst, int len, char it215)
 		}
 
 		/* now subtract block lenght from total length and go on */
-		freeblock();
+		freeblock(&data);
 		len -= blklen;
 	}
 
@@ -324,6 +327,7 @@ int itsex_decompress16(FILE *module, void *dst, int len, char it215)
 	dword value;		/* value read from file to be processed */
 	sword d1, d2;		/* integrator buffers (d2 for it2.15) */
 	sword *destpos;
+	struct local_data data;
 
 	destbuf = (sword *)dst;
 	if (!destbuf)
@@ -337,7 +341,7 @@ int itsex_decompress16(FILE *module, void *dst, int len, char it215)
 
 		/* read a new block of compressed data and reset variables */
 
-		if (!readblock(module))
+		if (!readblock(module, &data))
 			return 0;
 		blklen = (len < 0x4000) ? len : 0x4000;	/* 0x4000 samples => 0x8000 bytes again */
 		blkpos = 0;
@@ -349,11 +353,11 @@ int itsex_decompress16(FILE *module, void *dst, int len, char it215)
 		while (blkpos < blklen) {
 			sword v;
 
-			value = readbits(width);	/* read bits */
+			value = readbits(width, &data);	/* read bits */
 
 			if (width < 7) {	/* method 1 (1-6 bits) */
 				if (value == (1 << (width - 1))) {	/* check for "100..." */
-					value = readbits(4) + 1;	/* yes -> read new width; */
+					value = readbits(4, &data) + 1;	/* yes -> read new width; */
 					width = (value < width) ? value : value + 1;	/* and expand it */
 					continue;	/* ... next value */
 				}
@@ -371,7 +375,7 @@ int itsex_decompress16(FILE *module, void *dst, int len, char it215)
 					continue;	/* ... and next value */
 				}
 			} else {	/* illegal width, abort */
-				freeblock();
+				freeblock(&data);
 				return 0;
 			}
 
@@ -394,7 +398,7 @@ int itsex_decompress16(FILE *module, void *dst, int len, char it215)
 		}
 
 		/* now subtract block lenght from total length and go on */
-		freeblock();
+		freeblock(&data);
 		len -= blklen;
 	}
 
