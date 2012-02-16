@@ -14,7 +14,7 @@
 #include <math.h>
 
 /* Amiga periods */
-static int period_amiga[] = {
+static const int period_amiga[] = {
    /*  0       1       2       3       4       5       6       7   */
     0x1c56, 0x1c22, 0x1bee, 0x1bbb, 0x1b87, 0x1b55, 0x1b22, 0x1af0,  /* B  */
     0x1abf, 0x1a8e, 0x1a5d, 0x1a2c, 0x19fc, 0x19cc, 0x199c, 0x196d,  /* C  */
@@ -55,7 +55,8 @@ int note_to_period_mix(int n, int b)
 /* This function is used only by the MOD loader */
 int period_to_note(int p)
 {
-    int n, f, *t = period_amiga + MAX_NOTE;
+    int n, f;
+    const int *t = period_amiga + MAX_NOTE;
 
     if (!p)
 	return 0;
