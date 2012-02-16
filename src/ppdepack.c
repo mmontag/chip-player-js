@@ -49,9 +49,6 @@ int savefile(FILE *fo, void *mem, size_t length)
 }
 
 
-static uint32 key_start = 0;
-
-
 static
 inline void ppDecryptCopy(uint8 *src, uint8 *dest, uint32 len, uint32 key)
 {
@@ -255,7 +252,7 @@ static int ppcrack(FILE *fo, uint8 *data, uint32 len)
 #ifdef WANT_PP2X_DECRYPTING
     /* brute-force calculate the key */
 
-    uint32 key = key_start;
+    uint32 key = 0;	/* key_start */
 
     /* shortcut to halve keyspace:
      * PowerPacker alternates between two operations - literal and match.
@@ -327,7 +324,6 @@ return success;
 static int ppdepack(uint8 *src, size_t s, FILE *fo)
 {
   int success;
-  key_start = 0;
   success = ppcrack(fo, (uint8 *)src, s);
   return success;
 }
