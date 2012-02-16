@@ -24,7 +24,7 @@
 #define XPKERR_CHKSUM 1
 #define XPKERR_UNKNOWNTYPE 2
 
-static volatile int xpkerrno;
+/* static volatile int xpkerrno; */
 
 static int unpack(uint8 *src, uint8 *dst, int len);
 
@@ -159,6 +159,7 @@ static int unpack(uint8 *src, uint8 *dst, int len) {
   uint8  bc1, bc2, bc3;
   uint8 a3[] = { 2,3,4,5,6,7,8,0,3,2,4,5,6,7,8,0,4,3,5,2,6,7,8,0,5,4,
         6,2,3,7,8,0,6,5,7,2,3,4,8,0,7,6,8,2,3,4,5,0,8,7,6,2,3,4,5,0 };
+  int xpkerrno;
   
    
   xpkerrno=0;
