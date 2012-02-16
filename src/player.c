@@ -1110,7 +1110,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
 	info->total_time = m->time;
-	info->current_time = p->time;
+	info->frame_time = p->frame_time * 1000;
+	info->time = p->time;
 	info->buffer = s->buffer;
 
 	info->total_size = OUT_MAXLEN;

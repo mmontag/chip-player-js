@@ -200,8 +200,9 @@ struct xmp_module_info {
 	int frame;			/* Current frame */
 	int tempo;			/* Current replay speed */
 	int bpm;			/* Current bpm */
-	int total_time;			/* Estimated replay time */
-	int current_time;		/* Current replay time */
+	int time;			/* Current module time in ms */
+	int frame_time;			/* Frame replay time in us */
+	int total_time;			/* Estimated replay time in ms*/
 	void *buffer;			/* Pointer to sound buffer */
 	int buffer_size;		/* Used buffer size */
 	int total_size;			/* Total buffer size */
