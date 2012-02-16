@@ -272,9 +272,6 @@ struct player_data {
 		} *virt_channel;
 	
 		struct mixer_voice *voice_array;
-	
-		void *buffer;
-		int size;
 	} virt;
 
 	int loop_count;
