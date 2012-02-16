@@ -97,10 +97,6 @@ static int s3m_test(FILE *f, char *t, const int start)
 		if (*((uint8 *)&x + i) == 0x87) *((uint8 *)&x + i) = 0; } \
 	} while (0)
 
-static uint16 *pp_ins;		/* Parapointers to instruments */
-static uint16 *pp_pat;		/* Parapointers to patterns */
-static uint8 arpeggio_val[32];
-
 /* Effect conversion table */
 static uint8 fx[] =
 {
@@ -135,7 +131,7 @@ static uint8 fx[] =
 
 
 /* Effect translation */
-static void xlat_fx (int c, struct xmp_event *e)
+static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
 
@@ -202,6 +198,9 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
     uint8 n, b, x8;
     char tracker_name[40];
     int quirk87 = 0;
+    uint16 *pp_ins;		/* Parapointers to instruments */
+    uint16 *pp_pat;		/* Parapointers to patterns */
+    uint8 arpeggio_val[32];
 
     LOAD_INIT();
 
@@ -394,7 +393,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 	    if (b & S3M_FX_FOLLOWS) {
 		event->fxt = read8(f);
 		event->fxp = read8(f);
-		xlat_fx (c, event);
+		xlat_fx(c, event, arpeggio_val);
 		pat_len -= 2;
 	    }
 	}
