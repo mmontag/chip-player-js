@@ -18,8 +18,9 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 	index = (env->npt - 1) * 2;
 
 	x1 = data[index];		/* last node */
-	if (x > x1)
+	if (x > x1 || index == 0) { 
 		return data[index + 1];
+	}
 
 	do {
 		index -= 2;
