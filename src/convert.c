@@ -25,7 +25,7 @@
  * other machines, and it is unlikely that you'll ever encounter sound in
  * one of the Arc's own formats (there are several).
  */
-static int8 vdic_table[128] = {
+static const int8 vdic_table[128] = {
 	/*   0 */	  0,   0,   0,   0,   0,   0,   0,   0,
 	/*   8 */	  0,   0,   0,   0,   0,   0,   0,   0,
 	/*  16 */	  0,   0,   0,   0,   0,   0,   0,   0,
