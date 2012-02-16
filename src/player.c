@@ -340,6 +340,9 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 
 		note = key + mod->xxi[ins].sub[mapped].xpo + transp;
 		smp = mod->xxi[ins].sub[mapped].sid;
+		if (mod->xxs[smp].len == 0) {
+			smp = -1;
+		}
 
 		if (smp >= 0 && smp < mod->smp) {
 	            int mapped = mod->xxi[ins].map[key].ins;
