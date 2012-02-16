@@ -127,7 +127,6 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 
 
 	/* Format quirks */
-#define QUIRK_MEDBPM	(1 << 0)	/* Enable MED BPM timing */
 #define QUIRK_S3MLOOP	(1 << 1)	/* S3M loop mode */
 #define QUIRK_ENVFADE	(1 << 2)	/* Fade at end of envelope */
 #define QUIRK_IGNWINS	(1 << 4)	/* Ignore invalid instrument */
@@ -176,6 +175,9 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define DSP_EFFECT_FILTER_B1	0xb1
 #define DSP_EFFECT_FILTER_B2	0xb2
 
+/* Time factor */
+#define DEFAULT_TIME_FACTOR	10.0
+#define MED_TIME_FACTOR		2.64
 
 struct xmp_ord_info {
 	int bpm;
@@ -199,6 +201,7 @@ struct module_data {
 	char *comment;			/* Comments, if any */
 	int size;			/* File size */
 	double rrate;			/* Replay rate */
+	double time_factor;		/* Time conversion constant */
 	int c4rate;			/* C4 replay rate */
 	int volbase;			/* Volume base */
 	int *vol_table;			/* Volume translation table */
@@ -218,7 +221,6 @@ struct module_data {
 
 
 struct player_data {
-	double time;
 	int start;
 	int ord;
 	int pos;
@@ -228,7 +230,8 @@ struct player_data {
 	int volume;			/* Global volume */
 	int gvol_slide;
 	int gvol_flag;
-	double tick_time;
+	double time;
+	double frame_time;
 
 	struct flow_control {
 		int pbreak;

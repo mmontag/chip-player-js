@@ -124,10 +124,7 @@ void mixer_prepare(struct context_data *ctx)
 	struct mixer_data *s = &ctx->s;
 	int bytelen;
 
-	s->ticksize = m->quirk & QUIRK_MEDBPM ?
-	    s->freq * m->rrate * 33 / p->bpm / 12500 :
-	    s->freq * m->rrate / p->bpm / 100;
-
+	s->ticksize = s->freq * m->time_factor * m->rrate / p->bpm / 1000;
 	s->dtright = s->dtleft = 0;
 
 	bytelen = s->ticksize * sizeof(int);

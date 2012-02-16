@@ -504,6 +504,7 @@ int xmp_load_module(xmp_context handle, char *path)
     m->mod.chn = 4;
     m->synth = &synth_null;
     m->extra = NULL;
+    m->time_factor = DEFAULT_TIME_FACTOR;
 
     for (i = 0; i < 64; i++) {
 	m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;

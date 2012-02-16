@@ -141,7 +141,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 	med_8ch = song.flags & FLAG_8CHANNEL;
 	bpm_on = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
-	m->quirk |= QUIRK_MEDBPM;
+	m->time_factor = MED_TIME_FACTOR;
 
 	/* From the OctaMEDv4 documentation:
 	 *

@@ -40,7 +40,8 @@ int _xmp_scan_module(struct context_data *ctx)
     int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
     int gvl, bpm, tempo, base_time, chn;
-    int alltmp, clock, clock_rst, medbpm;
+    int alltmp;
+    double clock, clock_rst;
     int loop_chn, loop_flg;
     int pdelay, skip_fetch;
     int* loop_stk;
@@ -52,8 +53,6 @@ int _xmp_scan_module(struct context_data *ctx)
 
     if (m->mod.len == 0)
 	return 0;
-
-    medbpm = m->quirk & QUIRK_MEDBPM;
 
     tab_cnt = calloc (sizeof (char *), m->mod.len);
     for (ord = m->mod.len; ord--;)
@@ -86,7 +85,8 @@ int _xmp_scan_module(struct context_data *ctx)
     ord2 = -1;
     ord = ctx->p.start - 1;
 
-    gvol_slide = break_row = cnt_row = alltmp = clock_rst = clock = 0;
+    gvol_slide = break_row = cnt_row = alltmp = 0;
+    clock_rst = clock = 0.0;
     skip_fetch = 0;
 
     while (42) {
@@ -116,17 +116,11 @@ int _xmp_scan_module(struct context_data *ctx)
 	m->xxo_info[ord].bpm = bpm;
 	m->xxo_info[ord].tempo = tempo;
 
-	if (medbpm)
-	    m->xxo_info[ord].time = (clock + 132 * alltmp / 5 / bpm) / 10;
-	else
-	    m->xxo_info[ord].time = (clock + 100 * alltmp / bpm) / 10;
+	m->xxo_info[ord].time = clock + m->time_factor * alltmp / bpm;
 
 	if (!m->xxo_info[ord].start_row && ord) {
 	    if (ord == p->start) {
-		if (medbpm)
-	            clock_rst = clock + 132 * alltmp / 5 / bpm;
-		else
-		    clock_rst = clock + 100 * alltmp / bpm;
+		clock_rst = clock + m->time_factor * alltmp / bpm;
 	    }
 
 	    m->xxo_info[ord].start_row = break_row;
@@ -200,11 +194,7 @@ int _xmp_scan_module(struct context_data *ctx)
 			if (parm <= 0x20)
 			    tempo = parm;
 			else {
-			    if (medbpm)
-				clock += 132 * alltmp / 5 / bpm;
-			    else
-				clock += 100 * alltmp / bpm;
-
+			    clock += m->time_factor * alltmp / bpm;
 			    alltmp = 0;
 			    bpm = parm;
 			}
@@ -222,12 +212,7 @@ int _xmp_scan_module(struct context_data *ctx)
 		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
 		    alltmp += cnt_row * tempo * base_time;
 		    cnt_row = 0;
-
-		    if (medbpm)
-			clock += 132 * alltmp / 5 / bpm;
-		    else
-			clock += 100 * alltmp / bpm;
-
+		    clock += m->time_factor * alltmp / bpm;
 		    alltmp = 0;
 		    bpm = parm;
 		}
@@ -236,7 +221,7 @@ int _xmp_scan_module(struct context_data *ctx)
 		    parm = (f1 == FX_IT_BPM) ? p1 : p2;
 		    alltmp += cnt_row * tempo * base_time;
 		    cnt_row = 0;
-		    clock += 100 * alltmp / bpm;
+		    clock += m->time_factor * alltmp / bpm;
 		    alltmp = 0;
 
 		    if (MSN(parm) == 0) {
@@ -331,10 +316,6 @@ end_module:
     clock -= clock_rst;
     alltmp += cnt_row * tempo * base_time;
 
-    if (medbpm)
-	return (clock + 132 * alltmp / 5 / bpm) / 10;
-    else
-	return (clock + 100 * alltmp / bpm) / 10;
+    return (clock + m->time_factor * alltmp / bpm);
 }
-
 

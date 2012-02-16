@@ -847,6 +847,8 @@ static void next_order(struct context_data *ctx)
 		}
 	} while (mod->xxo[p->ord] >= mod->pat);
 
+	p->time = m->xxo_info[p->ord].time;
+
 	f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
 	if (f->jumpline >= f->num_rows)
 		f->jumpline = 0;
@@ -957,7 +959,7 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	p->volume = m->xxo_info[p->ord].gvl;
 	p->bpm = m->xxo_info[p->ord].bpm;
 	p->tempo = m->xxo_info[p->ord].tempo;
-	p->tick_time = m->rrate / p->bpm;
+	p->frame_time = m->time_factor * m->rrate / p->bpm;
 	f->jumpline = m->xxo_info[p->ord].start_row;
 	f->end_point = p->scan_num;
 
@@ -1019,10 +1021,10 @@ int xmp_player_frame(xmp_context opaque)
 		if (m->xxo_info[p->ord].tempo)
 			p->tempo = m->xxo_info[p->ord].tempo;
 		p->bpm = m->xxo_info[p->ord].bpm;
-		p->tick_time = m->rrate / p->bpm;
 		p->volume = m->xxo_info[p->ord].gvl;
 		f->jump = p->ord;
 		f->jumpline = m->xxo_info[p->ord].start_row;
+		p->time = m->xxo_info[p->ord].time;
 
 		virtch_reset(ctx);
 		reset_channel(ctx);
@@ -1059,13 +1061,8 @@ int xmp_player_frame(xmp_context opaque)
 		play_channel(ctx, i, p->frame);
 	}
 
-	if (HAS_QUIRK(QUIRK_MEDBPM)) {
-		double delta =  m->rrate * 1000 * 33 / (100 * p->bpm * 125);
-		p->time += delta;
-	} else {
-		double delta = m->rrate * 1000 / (100 * p->bpm);
-		p->time += delta;
-	}
+	p->frame_time = m->time_factor * m->rrate / p->bpm;
+	p->time += p->frame_time;
 
 	mixer_softmixer(ctx);
 

@@ -396,10 +396,12 @@ ex_f_vslide_dn:
 	break;
     case FX_TEMPO:				/* Set tempo */
 	if (fxp) {
-	    if (fxp < 0x20)	/* speedup.xm needs BPM = 20 */
+	    if (fxp < 0x20) {	/* speedup.xm needs BPM = 20 */
 		p->tempo = fxp;
-	    else
-		p->tick_time = m->rrate / (p->bpm = fxp);
+	    } else {
+		p->bpm = fxp;
+		p->frame_time = m->time_factor * m->rrate / p->bpm;
+	    }
 	}
 	break;
     case FX_S3M_TEMPO:				/* Set S3M tempo */
@@ -411,7 +413,7 @@ ex_f_vslide_dn:
 	    if (fxp < SMIX_MINBPM)
 		fxp = SMIX_MINBPM;
 	    p->bpm = fxp;
-	    p->tick_time = m->rrate / p->bpm;
+	    p->frame_time = m->time_factor * m->rrate / p->bpm;
 	}
 	break;
     case FX_IT_BPM:				/* Set IT BPM */
@@ -428,7 +430,7 @@ ex_f_vslide_dn:
 		fxp = SMIX_MINBPM;
 	    p->bpm = fxp;
 	}
-	p->tick_time = m->rrate / p->bpm;
+	p->frame_time = m->time_factor * m->rrate / p->bpm;
 	break;
     case FX_GLOBALVOL:				/* Set global volume */
 	p->volume = fxp > m->volbase ? m->volbase : fxp;
