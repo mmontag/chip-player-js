@@ -57,7 +57,7 @@ static const int *EnvWave[16] = {
 	Env1000, Env1001, Env1010, Env1011, Env1100, Env1101, Env1110, Env1111
 };
 
-static int ymVolumeTable[16] = {
+static const int ymVolumeTable[16] = {
 	62, 161, 265, 377, 580, 774, 1155, 1575, 2260, 3088, 4570, 6233, 9330,
 	13187, 21220, 32767
 };

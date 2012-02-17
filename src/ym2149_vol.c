@@ -1,4 +1,4 @@
-static uint16 ymout[16*16*16] = {
+static const uint16 ymout[16*16*16] = {
 
 /* 000 */
 

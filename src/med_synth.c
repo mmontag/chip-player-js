@@ -41,7 +41,7 @@ extern uint8 **med_wav_table;
 #define WT_SKIP xc->med.wp++
 
 
-static int sine[32] = {
+static const int sine[32] = {
        0,  49,  97, 141, 180, 212, 235, 250,
      255, 250, 235, 212, 180, 141,  97,  49,
        0, -49, -97,-141,-180,-212,-235,-250,
