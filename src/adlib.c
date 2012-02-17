@@ -6,26 +6,32 @@
  * for more information.
  */
 
+#include <stdlib.h>
 #include "xmp.h"
 #include "common.h"
-#include "virtual.h"
+//#include "virtual.h"
 #include "synth.h"
 #include "fmopl.h"
 
 /* Use the old GPL-compatible version */
 #define USE_OLD_FMOPL
 
+struct adlib {
 #ifdef USE_OLD_FMOPL
-static FM_OPL *ym3812;
-#define YM3812ResetChip(which)	OPLResetChip(ym3812)
-#define YM3812Write(which,a,v)	OPLWrite(ym3812, a, v)
-#define YM3812Read(which,a)	OPLRead(ym3812, a)
+	FM_OPL *ym3812;
+#define YM3812ResetChip(which)	OPLResetChip(a->ym3812)
+#define YM3812Write(which,addr,val)	OPLWrite(a->ym3812, addr, val)
+#define YM3812Read(which,addr)	OPLRead(a->ym3812, addr)
 #define YM3812Init(num,clock,rate) \
-		((ym3812 = OPLCreate(OPL_TYPE_IO, clock, rate)) != NULL)
-#define YM3812Shutdown()	OPLDestroy(ym3812)
+		((((struct adlib *)(SYNTH_CHIP(ctx)))->ym3812 = OPLCreate(OPL_TYPE_IO, clock, rate)) != NULL)
+#define YM3812Shutdown()	OPLDestroy(a->ym3812)
 #define YM3812UpdateOne(which,tmp_bk,count,vl,vr,stereo) \
-		YM3812UpdateOne(ym3812, tmp_bk, count, vl, vr, stereo)
+		YM3812UpdateOne(a->ym3812, tmp_bk, count, vl, vr, stereo)
 #endif
+
+#define NUM_SYNTH_CHANNEL 9
+	int voc2ch[NUM_SYNTH_CHANNEL];
+};
 
 /*
  * ------+-----------------------------------+-----------------------+
@@ -66,13 +72,13 @@ static FM_OPL *ym3812;
  * ------+-----------------------------------+-----------------------+
  */
 
-static int register_base[11] = {
+static const int register_base[11] = {
 	0x20, 0x20, 0x40, 0x40,
 	0x60, 0x60, 0x80, 0x80,
 	0xe0, 0xe0, 0xc0
 };
 
-static int register_offset[2][9] = {
+static const int register_offset[2][9] = {
 	/* Channel          1     2     3     4     5     6     7     8     9 */
 	/* Operator 1 */ {0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12},
 	/* Operator 2 */ {0x03, 0x04, 0x05, 0x0B, 0x0C, 0x0D, 0x13, 0x14, 0x15}
@@ -97,14 +103,12 @@ static int register_offset[2][9] = {
  *         2AE          523.3       C
  */
 
-static int ym3812_note[] = {
+static const int ym3812_note[] = {
 	0x157, 0x16b, 0x181, 0x198, 0x1b0, 0x1ca,
 	0x1e5, 0x202, 0x220, 0x241, 0x263, 0x287,
 	0x2ae
 };
 
-#define NUM_SYNTH_CHANNEL 9
-static int voc2ch[NUM_SYNTH_CHANNEL];
 
 #undef DEBUG_ADLIB
 
@@ -124,78 +128,104 @@ static int voc2ch[NUM_SYNTH_CHANNEL];
  *  port thirty-five times after writing to the data port.
  */
 
-static inline int opl_write(int a, int v)
+static inline int opl_write(struct adlib *a, int addr, int val)
 {
 #ifdef DEBUG_ADLIB
-	outb(a, 0x388);
+	outb(addr, 0x388);
 	DELAY(5);
-	outb(v, 0x389);
+	outb(val, 0x389);
 	DELAY(35);
 	return 0;
 #else
-	YM3812Write(0, 0, a);
-	return YM3812Write(0, 1, v);
+	YM3812Write(0, 0, addr);
+	return YM3812Write(0, 1, val);
 #endif
 }
 
-static inline uint8 opl_read(int a)
+static inline uint8 opl_read(struct adlib *a, int addr)
 {
 #ifdef DEBUG_ADLIB
 	int x;
 
-	outb(a, 0x388);
+	outb(addr, 0x388);
 	DELAY(5);
 	x = inb(0x389);
 	DELAY(35);
 	return x;
 #else
-	YM3812Write(0, 0, a);
+	YM3812Write(0, 0, addr);
 	return YM3812Read(0, 1);
 #endif
 }
 
-static int synth_getchannel(int c)
+static struct adlib *adlib_new()
 {
-	int i, free = -1;
+	struct adlib *a;
+	int i;
+
+	a = malloc(sizeof (struct adlib));
+	if (a == NULL)
+		return NULL;
+
+	for (i = 0; i < NUM_SYNTH_CHANNEL; i++) {
+		a->voc2ch[i] = -1;
+	}
+
+	return a;
+}
+
+static void adlib_destroy(struct adlib *a)
+{
+	free(a);
+}
+
+static int synth_getchannel(struct context_data *ctx, int c)
+{
+	struct adlib *a = SYNTH_CHIP(ctx);
+	int i, freech = -1;
 
 	for (c++, i = 0; i < NUM_SYNTH_CHANNEL; i++) {
-		if (voc2ch[i] == c) {
+		if (a->voc2ch[i] == c) {
 			return i;
 		}
 
-		if (voc2ch[i] == 0) {
-			free = i;
+		if (a->voc2ch[i] < 0) {
+			freech = i;
 			break;
 		}
 	}
-	if (free != -1)
-		voc2ch[free] = c;
+	if (freech != -1) {
+		a->voc2ch[freech] = c;
+	}
 
-	return free;
+	return freech;
 }
 
-static void synth_chreset()
+static void synth_chreset(struct context_data *ctx)
 {
+	struct adlib *a = SYNTH_CHIP(ctx);
 	int i;
 
-	for (i = NUM_SYNTH_CHANNEL; i--;)
-		voc2ch[i] = 0;
+	for (i = 0; i < NUM_SYNTH_CHANNEL; i++) {
+		a->voc2ch[i] = -1;
+	}
 }
 
 static void synth_setpatch(struct context_data *ctx, int c, uint8 * data)
 {
+	struct adlib *a = SYNTH_CHIP(ctx);
 	int i, x;
 
-	if ((c = synth_getchannel(c)) < 0)
+	if ((c = synth_getchannel(ctx, c)) < 0)
 		return;
 
 	for (i = 0; i < 10; i++)
-		opl_write(register_base[i] + register_offset[i % 2][c],
+		opl_write(a, register_base[i] + register_offset[i % 2][c],
 			  data[i]);
-	opl_write(register_base[10] + c, data[10]);
+	opl_write(a, register_base[10] + c, data[10]);
 
-	x = opl_read(0xb0 + c);
-	opl_write(0xb0 + c, x & ~0x20);
+	x = opl_read(a, 0xb0 + c);
+	opl_write(a, 0xb0 + c, x & ~0x20);
 }
 
 /*
@@ -220,9 +250,10 @@ static void synth_setpatch(struct context_data *ctx, int c, uint8 * data)
 
 static void synth_setnote(struct context_data *ctx, int c, int note, int bend)
 {
+	struct adlib *a = SYNTH_CHIP(ctx);
 	int n, f, o;
 
-	if ((c = synth_getchannel(c)) < 0)
+	if ((c = synth_getchannel(ctx, c)) < 0)
 		return;
 
 	n = note % 12;
@@ -232,30 +263,31 @@ static void synth_setnote(struct context_data *ctx, int c, int note, int bend)
 	if (o < 0)
 		o = 0;
 
-	opl_write(0xa0 + c, f & 0xff);
-	opl_write(0xb0 + c, 0x20 | ((o << 2) & 0x1c) | ((f >> 8) & 0x03));
+	opl_write(a, 0xa0 + c, f & 0xff);
+	opl_write(a, 0xb0 + c, 0x20 | ((o << 2) & 0x1c) | ((f >> 8) & 0x03));
 }
 
 static void synth_setvol(struct context_data *ctx, int c, int vol)
 {
+	struct adlib *a = SYNTH_CHIP(ctx);
 	int b, ofs;
 
-	if ((c = synth_getchannel(c)) < 0)
+	if ((c = synth_getchannel(ctx, c)) < 0)
 		return;
 
 	if (vol > 63)
 		vol = 63;
 
 	/* Check if operator 1 produces sound */
-	if (opl_read(0xc8 + c)) {
+	if (opl_read(a, 0xc8 + c)) {
 		ofs = register_offset[0][c];
-		b = opl_read(0x40 + ofs);
-		opl_write(0x40 + ofs, (b & 0xc0) | (63 - vol));
+		b = opl_read(a, 0x40 + ofs);
+		opl_write(a, 0x40 + ofs, (b & 0xc0) | (63 - vol));
 	}
 
 	ofs = register_offset[1][c];
-	b = opl_read(0x40 + ofs);
-	opl_write(0x40 + ofs, (b & 0xc0) | (63 - vol));
+	b = opl_read(a, 0x40 + ofs);
+	opl_write(a, 0x40 + ofs, (b & 0xc0) | (63 - vol));
 }
 
 static void synth_seteffect(struct context_data *ctx, int c, int type, int val)
@@ -264,39 +296,52 @@ static void synth_seteffect(struct context_data *ctx, int c, int type, int val)
 
 static int synth_init(struct context_data *ctx, int freq)
 {
+	SYNTH_CHIP(ctx) = adlib_new(freq);
+	if (SYNTH_CHIP(ctx) == NULL)
+		return -1;
+
 #ifdef DEBUG_ADLIB
 	ioperm(0x388, 2, 1);
 #endif
-	synth_chreset();
+	synth_chreset(ctx);
 
 	return YM3812Init(1, 3579545, freq);
 }
 
 static int synth_reset(struct context_data *ctx)
 {
+	struct adlib *a = SYNTH_CHIP(ctx);
+
 #ifdef DEBUG_ADLIB
 	int i;
 
-	for (i = 0; i < 9; i++)
-		opl_write(ym3812, 0xb0 + i, 0);
+	for (i = 0; i < 9; i++) {
+		opl_write(a, ym3812, 0xb0 + i, 0);
+	}
 #else
 	YM3812ResetChip(0);
 #endif
-	synth_chreset();
+	synth_chreset(ctx);
 
 	return 0;
 }
 
 static int synth_deinit(struct context_data *ctx)
 {
+	struct adlib *a = SYNTH_CHIP(ctx);
+
 	synth_reset(ctx);
 	YM3812Shutdown();
+
+	adlib_destroy(a);
 
 	return 0;
 }
 
 static void synth_mixer(struct context_data *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
 {
+	struct adlib *a = SYNTH_CHIP(ctx);
+
 	if (!tmp_bk)
 		return;
 

@@ -18,6 +18,6 @@ extern struct synth_info synth_null;
 extern struct synth_info synth_adlib;
 extern struct synth_info synth_spectrum;
 
-#define SYNTH_CHIP(x) ((x)->m.chip)
+#define SYNTH_CHIP(x) ((x)->m.synth_chip)
 
 #endif

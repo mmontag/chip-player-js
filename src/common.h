@@ -217,7 +217,7 @@ struct module_data {
 	void *extra;			/* format-specific extra fields */
 
 	struct synth_info *synth;
-	void *chip;
+	void *synth_chip;
 };
 
 
