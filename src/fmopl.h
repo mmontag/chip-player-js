@@ -82,6 +82,49 @@ typedef struct fm_opl_channel {
 } OPL_CH;
 
 /* OPL state */
+
+/* envelope output entries */
+#define EG_ENT   4096
+
+typedef struct fm_opl_state {
+#define TL_MAX (EG_ENT*2) /* limit(tl + ksr + envelope) + sinwave */
+	/* TotalLevel : 48 24 12  6  3 1.5 0.75 (dB) */
+	/* TL_TABLE[ 0      to TL_MAX          ] : plus  section */
+	/* TL_TABLE[ TL_MAX to TL_MAX+TL_MAX-1 ] : minus section */
+	INT32 *TL_TABLE;
+
+	/* pointers to TL_TABLE with sinwave output offset */
+	INT32 **SIN_TABLE;
+
+	/* LFO table */
+	INT32 *AMS_TABLE;
+	INT32 *VIB_TABLE;
+
+	/* envelope output curve table */
+	/* attack + decay + OFF */
+	INT32 ENV_CURVE[2*EG_ENT+1];
+
+	/* lock level of common table */
+	int num_lock;
+
+	/* work table */
+	void *cur_chip;	/* current chip point */
+	/* current chip state */
+	/* FMSAMPLE  *bufL,*bufR; */
+	OPL_CH *S_CH;
+	OPL_CH *E_CH;
+	OPL_SLOT *SLOT7_1,*SLOT7_2,*SLOT8_1,*SLOT8_2;
+
+	INT32 outd[1];
+	INT32 ams;
+	INT32 vib;
+	INT32  *ams_table;
+	INT32  *vib_table;
+	INT32 amsIncr;
+	INT32 vibIncr;
+	INT32 feedback2;		/* connect for SLOT 2 */
+} OPL_STATE;
+
 typedef struct fm_opl_f {
 	UINT8 type;			/* chip type                        */
 	int clock;			/* master clock  (Hz)                */
@@ -133,6 +176,8 @@ typedef struct fm_opl_f {
 	int IRQParam;				/* IRQ parameter  */
 	OPL_UPDATEHANDLER UpdateHandler;	/* stream update handler   */
 	int UpdateParam;			/* stream update parameter */
+
+	OPL_STATE state;
 } FM_OPL;
 
 /* ---------- Generic interface section ---------- */
