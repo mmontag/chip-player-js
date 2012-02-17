@@ -40,8 +40,6 @@ struct tmpfilename {
 	struct list_head list;
 };
 
-char *global_filename;
-
 int decrunch_arc	(FILE *, FILE *);
 int decrunch_arcfs	(FILE *, FILE *);
 int decrunch_sqsh	(FILE *, FILE *);
