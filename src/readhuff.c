@@ -23,7 +23,7 @@ struct huff_node_tag
   int kids[2];
   };
 
-#define READ_WORD(x) (x)=rawinput(),(x)|=(rawinput()<<8)
+#define READ_WORD(x,y) (x)=rawinput(y),(x)|=(rawinput(y)<<8)
 #define VALUE_CONV(x) ((x)^0xffff)
 
 #define HUFF_EOF	256
@@ -33,21 +33,18 @@ struct bits {
  int bitbox,bitsleft;
 };
 
-static unsigned char *data_in_point,*data_in_max;
-static unsigned char *data_out_point,*data_out_max;
 
-
-static int rawinput(void)
+static int rawinput(struct data_in_out *io)
 {
-if(data_in_point<data_in_max)
-  return(*data_in_point++);
+if(io->data_in_point<io->data_in_max)
+  return(*io->data_in_point++);
 return(-1);
 }
 
-static void rawoutput(int byte)
+static void rawoutput(int byte, struct data_in_out *io)
 {
-if(data_out_point<data_out_max)
-  *data_out_point++=byte;
+if(io->data_out_point<io->data_out_max)
+  *io->data_out_point++=byte;
 }
 
 
@@ -56,11 +53,11 @@ static void bit_init(struct bits *bits)
   bits->bitbox=0; bits->bitsleft=0;
 }
 
-static int bit_input(struct bits *bits)
+static int bit_input(struct bits *bits, struct data_in_out *io)
 {
   if(bits->bitsleft==0)
   {
-    bits->bitbox=rawinput();
+    bits->bitbox=rawinput(io);
     if(bits->bitbox==-1) return(-1);
     bits->bitsleft=8;
   }
@@ -79,14 +76,15 @@ struct huff_node_tag *nodearr;
 int nodes,f,b;
 struct bits bits;
 struct rledata rd;
+struct data_in_out io;
 
 if((data_out=malloc(orig_len))==NULL)
   fprintf(stderr,"nomarch: out of memory!\n"),exit(1);
 
-data_in_point=data_in; data_in_max=data_in+in_len;
-data_out_point=data_out; data_out_max=data_out+orig_len;
+io.data_in_point=data_in; io.data_in_max=data_in+in_len;
+io.data_out_point=data_out; io.data_out_max=data_out+orig_len;
 
-READ_WORD(nodes);
+READ_WORD(nodes,&io);
 
 if(!nodes)
   {
@@ -106,15 +104,15 @@ nodearr[0].kids[0]=nodearr[0].kids[1]=VALUE_CONV(HUFF_EOF);
 
 for(f=0;f<nodes;f++)
   {
-  READ_WORD(nodearr[f].kids[0]);
-  READ_WORD(nodearr[f].kids[1]);
+  READ_WORD(nodearr[f].kids[0],&io);
+  READ_WORD(nodearr[f].kids[1],&io);
   }
 
 /* after the table, we get the codes to interpret; this is
  * a bitstream, with EOF marked by the code HUFF_EOF.
  */
 bit_init(&bits);
-outputrle(-1,NULL,&rd);
+outputrle(-1,NULL,&rd,&io);
 
 do
   {
@@ -133,7 +131,7 @@ do
      * do >95% of the time!), so check for `real' EOF too.
      * (worth checking in case of corrupt file too, I guess.)
      */
-    if((b=bit_input(&bits))==-1)
+    if((b=bit_input(&bits,&io))==-1)
       {
       f=VALUE_CONV(HUFF_EOF);
       break;
@@ -144,7 +142,7 @@ do
   
   f=VALUE_CONV(f);
   if(f!=HUFF_EOF)
-    outputrle(f,rawoutput,&rd);
+    outputrle(f,rawoutput,&rd,&io);
   }
 while(f!=HUFF_EOF);
 

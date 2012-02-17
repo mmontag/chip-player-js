@@ -15,19 +15,15 @@
 #include "readrle.h"
 
 
-static unsigned char *data_in_point,*data_in_max;
-static unsigned char *data_out_point,*data_out_max;
-
-
-static void rawoutput(int byte)
+static void rawoutput(int byte, struct data_in_out *io)
 {
-if(data_out_point<data_out_max)
-  *data_out_point++=byte;
+if(io->data_out_point<io->data_out_max)
+  *io->data_out_point++=byte;
 }
 
 
 /* call with -1 before starting, to make sure state is initialised */
-void outputrle(int chr,void (*outputfunc)(int), struct rledata *rd)
+void outputrle(int chr,void (*outputfunc)(int, struct data_in_out *), struct rledata *rd, struct data_in_out *io)
 {
 int f;
 
@@ -40,10 +36,10 @@ if(chr==-1)
 if(rd->repeating)
   {
   if(chr==0)
-    (*outputfunc)(0x90);
+    (*outputfunc)(0x90, io);
   else
     for(f=1;f<chr;f++)
-      (*outputfunc)(rd->lastchr);
+      (*outputfunc)(rd->lastchr, io);
   rd->repeating=0;
   }
 else
@@ -52,7 +48,7 @@ else
     rd->repeating=1;
   else
     {
-    (*outputfunc)(chr);
+    (*outputfunc)(chr, io);
     rd->lastchr=chr;
     }
   }
@@ -65,16 +61,17 @@ unsigned char *convert_rle(unsigned char *data_in,
 {
 unsigned char *data_out;
 struct rledata rd;
+struct data_in_out io;
 
 if((data_out=malloc(orig_len))==NULL)
   fprintf(stderr,"nomarch: out of memory!\n"),exit(1);
 
-data_in_point=data_in; data_in_max=data_in+in_len;
-data_out_point=data_out; data_out_max=data_out+orig_len;
-outputrle(-1,NULL, &rd);
+io.data_in_point=data_in; io.data_in_max=data_in+in_len;
+io.data_out_point=data_out; io.data_out_max=data_out+orig_len;
+outputrle(-1,NULL, &rd, &io);
 
-while(data_in_point<data_in_max)
-  outputrle(*data_in_point++,rawoutput, &rd);
+while(io.data_in_point<io.data_in_max)
+  outputrle(*io.data_in_point++,rawoutput, &rd, &io);
 
 return(data_out);
 }

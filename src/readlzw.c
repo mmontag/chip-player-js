@@ -24,8 +24,6 @@
 #include "common.h"
 #include "readlzw.h"
 
-static unsigned char *data_in_point,*data_in_max;
-static unsigned char *data_out_point,*data_out_max;
 
 struct local_data {
   /* now this is for the string table.
@@ -49,6 +47,7 @@ struct local_data {
   int codeofs;
   int global_use_rle,oldver;
   struct rledata rd;
+  struct data_in_out io;
   uint32 quirk;
   
   int maxstr;
@@ -88,11 +87,11 @@ data->maxstr=(1<<max_bits);
 if((data_out=malloc(orig_len))==NULL)
   fprintf(stderr,"nomarch: out of memory!\n"),exit(1);
 
-data_in_point=data_in; data_in_max=data_in+in_len;
-data_out_point=data_out; data_out_max=data_out+orig_len;
+data->io.data_in_point=data_in; data->io.data_in_max=data_in+in_len;
+data->io.data_out_point=data_out; data->io.data_out_max=data_out+orig_len;
 data->dc_bitbox=data->dc_bitsleft=0;
 data->codeofs=0;
-outputrle(-1,NULL, &data->rd);	/* init RLE */
+outputrle(-1,NULL, &data->rd, &data->io);	/* init RLE */
 
 data->oldver=0;
 csize=9;		/* initial code size */
@@ -103,10 +102,10 @@ inittable(orgcsize, data);
 
 oldcode=newcode=0;
 if(data->quirk & NOMARCH_QUIRK_SKIPMAX)
-  data_in_point++;	/* skip type 8 max. code size, always 12 */
+  data->io.data_in_point++;	/* skip type 8 max. code size, always 12 */
 
 if(max_bits==16)
-  data->maxstr=(1<<*data_in_point++);	  /* but compress-type *may* change it (!) */
+  data->maxstr=(1<<*data->io.data_in_point++);	 /* but compress-type *may* change it (!) */
 
 data->nomarch_input_size = 0;
 
@@ -197,7 +196,7 @@ while(1)
 
 if (~data->quirk & NOMARCH_QUIRK_NOCHK) {
   /* junk it on error */
-  if(data_in_point!=data_in_max) {
+  if(data->io.data_in_point!=data->io.data_in_max) {
     free(data_out);
     return(NULL);
   }
@@ -398,11 +397,11 @@ while(bitsfilled<numbits)
   {
   if(data->dc_bitsleft==0)        /* have we run out of bits? */
     {
-    if(data_in_point>=data_in_max) {
+    if(data->io.data_in_point>=data->io.data_in_max) {
 //printf("data_in_point=%p >= data_in_max=%p\n", data_in_point, data_in_max);
       return(0);
     }
-    data->dc_bitbox=*data_in_point++;
+    data->dc_bitbox=*data->io.data_in_point++;
     data->dc_bitsleft=8;
     data->nomarch_input_size++;	/* hack for xmp/dsym */
     }
@@ -457,11 +456,11 @@ while(ptr>data->outputstring_buf)
 }
 
 
-static void rawoutput(int byte)
+static void rawoutput(int byte, struct data_in_out *io)
 {
 //static int i = 0;
-if(data_out_point<data_out_max)
-  *data_out_point++=byte;
+if(io->data_out_point<io->data_out_max)
+  *io->data_out_point++=byte;
 //printf(" output = %02x <================ %06x\n", byte, i++);
 }
 
@@ -469,9 +468,9 @@ if(data_out_point<data_out_max)
 void outputchr(int chr, struct local_data *data)
 {
 if(data->global_use_rle)
-  outputrle(chr,rawoutput,&data->rd);
+  outputrle(chr,rawoutput,&data->rd,&data->io);
 else
-  rawoutput(chr);
+  rawoutput(chr,&data->io);
 }
 
 
