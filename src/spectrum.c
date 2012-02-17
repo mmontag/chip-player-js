@@ -49,9 +49,9 @@ static struct spectrum *spectrum_new(int freq)
 
 	return sp;
 
-err2:
+  err2:
 	free(sp);
-err1:
+  err1:
 	return NULL;
 }
 

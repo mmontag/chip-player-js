@@ -266,7 +266,8 @@ static ymsample nextSample(struct ym2149 *ym)
 		}
 	}
 
-return vol;
+	return vol;
+
 	/*---------------------------------------------------
 	 * Normalize process
 	 *--------------------------------------------------- */
@@ -328,9 +329,9 @@ struct ym2149 *ym2149_new(int masterClock, int prediv, int playRate)
 
 	return ym;
 
-err2:
+  err2:
 	free(ym);
-err1:
+  err1:
 	return NULL;
 }
 

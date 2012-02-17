@@ -219,12 +219,12 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt, uint8 
 	    xc->offset_val = xc->offset;
 	break;
     case FX_VOLSLIDE:				/* Volume slide */
+    fx_volslide:
 	/* S3M file volume slide note:
 	 * DFy	Fine volume down by y (...) If y is 0, the command will be
 	 *	treated as a volume slide up with a value of f (15). If a
 	 *	DFF command is specified, the volume will be slid up.
 	 */
-fx_volslide:
 	if (m->quirk & QUIRK_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
@@ -483,7 +483,7 @@ ex_f_vslide_dn:
 	xc->tcnt_dn = -1;
 	break;
     case FX_XF_PORTA:				/* Extra fine portamento */
-fx_xf_porta:
+    fx_xf_porta:
 	SET(FINE_BEND);
 	switch (MSN(fxp)) {
 	case 1:
@@ -499,7 +499,7 @@ fx_xf_porta:
 	    xc->mastervol = fxp;
 	break;
     case FX_TRK_VSLIDE:				/* Track volume slide */
-fx_trk_vslide:
+    fx_trk_vslide:
 	if (m->quirk & QUIRK_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
@@ -529,13 +529,13 @@ fx_trk_vslide:
 	    xc->trk_val = MSN(fxp) - LSN(fxp);
 	break;
     case FX_TRK_FVSLIDE:			/* Track fine volume slide */
-fx_trk_fvslide:
+    fx_trk_fvslide:
 	SET(TRK_FVSLIDE);
 	if (fxp)
 	    xc->trk_fval = MSN(fxp) - LSN(fxp);
 	break;
     case FX_FINETUNE:
-fx_finetune:
+    fx_finetune:
 	SET(FINETUNE);
 	xc->finetune = (int16)(fxp - 0x80);
 	break;
