@@ -51,6 +51,7 @@ struct local_data {
   uint32 quirk;
   
   int maxstr;
+  int outputstring_buf[REALMAXSTR];
   
   int st_oldverhashlinks[4096];	/* only used for 12-bit types */
   
@@ -441,17 +442,16 @@ return(1);
 
 void outputstring(int code, struct local_data *data)
 {
-static int buf[REALMAXSTR];
-int *ptr=buf;
+int *ptr=data->outputstring_buf;
 
-while(data->st_ptr[code]!=UNUSED && ptr<buf+data->maxstr)
+while(data->st_ptr[code]!=UNUSED && ptr<data->outputstring_buf+data->maxstr)
   {
   *ptr++=data->st_chr[code];
   code=data->st_ptr[code];
   }
 
 outputchr(data->st_chr[code], data);
-while(ptr>buf)
+while(ptr>data->outputstring_buf)
   outputchr(*--ptr, data);
 }
 
