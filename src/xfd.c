@@ -10,21 +10,25 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-struct Library *xfdMasterBase;
+struct local_data {
+	struct Library *xfdMasterBase;
 #ifdef __amigaos4__
-struct xfdMasterIFace *IxfdMaster;
-struct ExecIFace *IExec;
-// = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
+	struct xfdMasterIFace *IxfdMaster;
+	struct ExecIFace *IExec;
+	// = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
+#endif
+};
+
+struct xfdBufferInfo *open_xfd(struct local_data *data)
+{
+#ifdef __amigaos4__
+	data->IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
 #endif
 
-struct xfdBufferInfo *open_xfd()
-{
-	IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
-
-	if(xfdMasterBase = OpenLibrary("xfdmaster.library",38))
+	if(data->xfdMasterBase = OpenLibrary("xfdmaster.library",38))
 	{
 #ifdef __amigaos4__
-		if(IxfdMaster = (struct xfdMasterIFace *)GetInterface(xfdMasterBase,"main",1,NULL))
+		if(data->IxfdMaster = (struct xfdMasterIFace *)GetInterface(data->xfdMasterBase,"main",1,NULL))
 		{
 #endif
 			return(struct xfdBufferInfo *)xfdAllocObject(XFDOBJ_BUFFERINFO);
@@ -36,7 +40,7 @@ struct xfdBufferInfo *open_xfd()
 	return NULL;
 }
 
-void close_xfd(struct xfdBufferInfo *xfdobj)
+void close_xfd(struct xfdBufferInfo *xfdobj, struct local_data *data)
 {
 	if(xfdobj)
 	{
@@ -44,16 +48,16 @@ void close_xfd(struct xfdBufferInfo *xfdobj)
 		xfdobj=NULL;
 	}
 #ifdef __amigaos4__
-	if(IxfdMaster)
+	if(data->IxfdMaster)
 	{
-		DropInterface((struct Interface *)IxfdMaster);
-		IxfdMaster=NULL;
+		DropInterface((struct Interface *)data->IxfdMaster);
+		data->IxfdMaster=NULL;
 	}
 #endif
-	if(xfdMasterBase)
+	if(data->xfdMasterBase)
 	{
-		CloseLibrary(xfdMasterBase);
-		xfdMasterBase=NULL;
+		CloseLibrary(data->xfdMasterBase);
+		data->xfdMasterBase=NULL;
 	}
 }
 
@@ -63,6 +67,7 @@ int decrunch_xfd (FILE *f1, FILE *f2)
     uint8 *packed;
     int plen,ret=-1;
     struct stat st;
+    struct local_data data;
 
     if (f2 == NULL)
 	return -1;
@@ -75,7 +80,7 @@ int decrunch_xfd (FILE *f1, FILE *f2)
 
     fread(packed,plen,1,f1);
 
-	if(xfdobj=open_xfd())
+	if(xfdobj=open_xfd(&data))
 	{
 		xfdobj->xfdbi_SourceBufLen = plen;
 		xfdobj->xfdbi_SourceBuffer = packed;
@@ -94,7 +99,7 @@ int decrunch_xfd (FILE *f1, FILE *f2)
 				ret=-1;
 			}
 		}
-		close_xfd(xfdobj);
+		close_xfd(xfdobj, &data);
 	}
 	FreeVec(packed);
 	return(ret);
@@ -103,10 +108,10 @@ int decrunch_xfd (FILE *f1, FILE *f2)
 char *test_xfd	(unsigned char *buffer, int length)
 {
 	char *ret = NULL;
-
 	struct xfdBufferInfo *xfdobj;
+	struct local_data data;
 
-	if(xfdobj=open_xfd())
+	if(xfdobj=open_xfd(&data))
 	{
 		xfdobj->xfdbi_SourceBuffer = buffer;
 		xfdobj->xfdbi_SourceBufLen = length;
@@ -116,7 +121,7 @@ char *test_xfd	(unsigned char *buffer, int length)
 		{
 			ret = xfdobj->xfdbi_PackerName;
 		}
-		close_xfd(xfdobj);
+		close_xfd(xfdobj, &data);
 	}
 	return(ret);
 }
