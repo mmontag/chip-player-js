@@ -45,7 +45,7 @@ static void synth_mixer(struct context_data *ctx, int *tmp_bk, int count, int vl
 {
 }
 
-struct xmp_synth_info synth_null = {
+struct synth_info synth_null = {
 	synth_init,
 	synth_deinit,
 	synth_reset,

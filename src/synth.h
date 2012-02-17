@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-struct xmp_synth_info {
+struct synth_info {
 	int (*init)(struct context_data *, int);
 	int (*deinit)(struct context_data *);
 	int (*reset)(struct context_data *);
@@ -14,9 +14,9 @@ struct xmp_synth_info {
 	void (*mixer)(struct context_data *, int *, int, int, int, int);
 };
 
-extern struct xmp_synth_info synth_null;
-extern struct xmp_synth_info synth_adlib;
-extern struct xmp_synth_info synth_spectrum;
+extern struct synth_info synth_null;
+extern struct synth_info synth_adlib;
+extern struct synth_info synth_spectrum;
 
 #define SYNTH_CHIP(x) ((x)->m.chip)
 

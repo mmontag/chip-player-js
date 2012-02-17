@@ -179,7 +179,8 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define DEFAULT_TIME_FACTOR	10.0
 #define MED_TIME_FACTOR		2.64
 
-struct xmp_ord_info {
+
+struct ord_data {
 	int bpm;
 	int tempo;
 	int gvl;
@@ -206,7 +207,7 @@ struct module_data {
 	int volbase;			/* Volume base */
 	int *vol_table;			/* Volume translation table */
 	int quirk;			/* player quirks */
-	struct xmp_ord_info xxo_info[XMP_MAX_MOD_LENGTH];
+	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
 	char *instrument_path;
 
@@ -215,7 +216,7 @@ struct module_data {
 
 	void *extra;			/* format-specific extra fields */
 
-	struct xmp_synth_info *synth;
+	struct synth_info *synth;
 	void *chip;
 };
 
