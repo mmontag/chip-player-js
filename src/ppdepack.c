@@ -49,8 +49,7 @@ int savefile(FILE *fo, void *mem, size_t length)
 }
 
 
-static
-inline void ppDecryptCopy(uint8 *src, uint8 *dest, uint32 len, uint32 key)
+static inline void ppDecryptCopy(uint8 *src, uint8 *dest, uint32 len, uint32 key)
 {
   uint8 a = (key>>24) & 0xFF;
   uint8 b = (key>>16) & 0xFF;
@@ -142,8 +141,7 @@ int ppDecrunch(uint8 *src, uint8 *dest, uint8 *offset_lens,
  * request match lengths that there isn't enough data for, or will
  * underrun or overrun the theoretical output buffer
  */
-static
-inline int ppValidate(uint8 *src, uint8 *offset_lens,
+static inline int ppValidate(uint8 *src, uint8 *offset_lens,
                       uint32 src_len, uint32 dest_len, uint8 skip_bits)
 {
   uint8 *buf_src, bits_left = 0, bit_cnt;
