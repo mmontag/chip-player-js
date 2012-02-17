@@ -133,11 +133,14 @@ struct format_loader *format_loader[] = {
 	NULL
 };
 
-static char **farray;
+static const char **farray = NULL;
 
 int format_init()
 {
 	int i;
+
+	if (farray != NULL)
+		return 0;
 
 	pw_init();
 
@@ -158,9 +161,10 @@ int format_init()
 void format_deinit()
 {
 	free(farray);
+	farray = NULL;
 }
 
 void format_list(char ***array)
 {
-	*array = farray;
+	*array = (char **)farray;
 }
