@@ -35,6 +35,7 @@ struct filename_node
  unsigned int length;
  unsigned int crc;
  char filename[256];
+
 };
 
 /* ---------------------------------------------------------------------- */
@@ -80,6 +81,8 @@ struct local_data {
  unsigned short literal_table[5120];
 
  unsigned int sum;
+
+ FILE *outfile;
 };
 
 /* ---------------------------------------------------------------------- */
@@ -639,9 +642,7 @@ static void decrunch(struct local_data *data)
 
 /* Opens a file for writing & creates the full path if required. */
 
-static FILE *_outfile;
-
-static FILE *open_output(char *filename)
+static FILE *open_output(char *filename, struct local_data *data)
 {
 #if 0
  unsigned int temp;
@@ -666,7 +667,7 @@ static FILE *open_output(char *filename)
  }
  return(file);
 #endif
-	return _outfile;
+	return data->outfile;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -701,7 +702,7 @@ static int extract_normal(FILE *in_file, struct local_data *data)
   /*printf("Extracting \"%s\"...", node->filename);
   fflush(stdout);*/
 
-  out_file = open_output(node->filename);
+  out_file = open_output(node->filename, data);
 
   data->sum = 0; /* reset CRC */
 
@@ -822,7 +823,7 @@ static int extract_store(FILE *in_file, struct local_data *data)
   /*printf("Storing \"%s\"...", node->filename);
   fflush(stdout);*/
 
-  out_file = open_output(node->filename);
+  out_file = open_output(node->filename, data);
 
   data->sum = 0; /* reset CRC */
 
@@ -1396,7 +1397,7 @@ int decrunch_lzx(FILE *f, FILE *fo)
 
 	fseek(f, 10, SEEK_CUR);		/* skip header */
 
-	_outfile = fo;
+	data->outfile = fo;
 	extract_archive(f, data);
 
 	free(data);
