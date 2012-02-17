@@ -162,7 +162,7 @@ load_patterns:
 		event = &EVENT(i, j % mod->chn, j / mod->chn);
 		if ((b = *pat++) & XM_EVENT_PACKING) {
 		    if (b & XM_EVENT_NOTE_FOLLOWS)
-			event->note = *pat++ + 12;
+			event->note = *pat++;
 		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS) {
 			if (*pat & XM_END_OF_SONG)
 			    break;
@@ -191,6 +191,8 @@ load_patterns:
 
 		if (event->note == 0x61)
 		    event->note = XMP_KEY_OFF;
+		else if (event->note > 0)
+		    event->note += 12;
 
 		if (!event->vol)
 		    continue;
