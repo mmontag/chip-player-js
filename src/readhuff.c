@@ -29,7 +29,9 @@ struct huff_node_tag
 #define HUFF_EOF	256
 
 
-static int bitbox,bitsleft;
+struct bits {
+ int bitbox,bitsleft;
+};
 
 static unsigned char *data_in_point,*data_in_max;
 static unsigned char *data_out_point,*data_out_max;
@@ -49,22 +51,22 @@ if(data_out_point<data_out_max)
 }
 
 
-static void bit_init(void)
+static void bit_init(struct bits *bits)
 {
-bitbox=0; bitsleft=0;
+  bits->bitbox=0; bits->bitsleft=0;
 }
 
-static int bit_input(void)
+static int bit_input(struct bits *bits)
 {
-if(bitsleft==0)
+  if(bits->bitsleft==0)
   {
-  bitbox=rawinput();
-  if(bitbox==-1) return(-1);
-  bitsleft=8;
+    bits->bitbox=rawinput();
+    if(bits->bitbox==-1) return(-1);
+    bits->bitsleft=8;
   }
 
-bitsleft--;
-return((bitbox&(1<<(7-bitsleft)))?1:0);
+  bits->bitsleft--;
+  return((bits->bitbox&(1<<(7-bits->bitsleft)))?1:0);
 }
 
 
@@ -75,6 +77,7 @@ unsigned char *convert_huff(unsigned char *data_in,
 unsigned char *data_out;
 struct huff_node_tag *nodearr;
 int nodes,f,b;
+struct bits bits;
 
 if((data_out=malloc(orig_len))==NULL)
   fprintf(stderr,"nomarch: out of memory!\n"),exit(1);
@@ -109,7 +112,7 @@ for(f=0;f<nodes;f++)
 /* after the table, we get the codes to interpret; this is
  * a bitstream, with EOF marked by the code HUFF_EOF.
  */
-bit_init();
+bit_init(&bits);
 outputrle(-1,NULL);
 
 do
@@ -129,7 +132,7 @@ do
      * do >95% of the time!), so check for `real' EOF too.
      * (worth checking in case of corrupt file too, I guess.)
      */
-    if((b=bit_input())==-1)
+    if((b=bit_input(&bits))==-1)
       {
       f=VALUE_CONV(HUFF_EOF);
       break;
