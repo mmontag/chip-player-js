@@ -259,6 +259,7 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
 		memcpy(xxs->data, buffer, size);
 
 		xxs->flg |= XMP_SAMPLE_SYNTH;
+		xxs->len = size;
 
 		return 0;
 	}
