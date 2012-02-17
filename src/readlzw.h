@@ -20,6 +20,8 @@
 #define NOMARCH_QUIRK_ALIGN4	(1L << 4)	/* input buffer size aligned */
 #define NOMARCH_QUIRK_SKIPMAX	(1L << 5)	/* skip max code size */
 
+struct local_data;
+
 unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                           int bits,int use_rle,
                                           unsigned long in_len,
