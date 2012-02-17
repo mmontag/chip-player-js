@@ -427,16 +427,17 @@ int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
 }
 
 
+/* FIXME: ugly code, check allocations */
 static void split_name(char *s, char **d, char **b)
 {
 	char tmp, *div;
 
 	_D("alloc dirname/basename");
 	if ((div = strrchr(s, '/'))) {
-		tmp = *(div + 1);
-		*(div + 1) = 0;
-		*d = strdup(s);
-		*(div + 1) = tmp;
+		tmp = div - s + 1;
+		*d = malloc(tmp + 1);
+		memcpy(*d, s, tmp);
+		(*d)[tmp + 1] = 0;
 		*b = strdup(div + 1);
 	} else {
 		*d = strdup("");
