@@ -78,6 +78,7 @@ unsigned char *data_out;
 struct huff_node_tag *nodearr;
 int nodes,f,b;
 struct bits bits;
+struct rledata rd;
 
 if((data_out=malloc(orig_len))==NULL)
   fprintf(stderr,"nomarch: out of memory!\n"),exit(1);
@@ -113,7 +114,7 @@ for(f=0;f<nodes;f++)
  * a bitstream, with EOF marked by the code HUFF_EOF.
  */
 bit_init(&bits);
-outputrle(-1,NULL);
+outputrle(-1,NULL,&rd);
 
 do
   {
@@ -143,7 +144,7 @@ do
   
   f=VALUE_CONV(f);
   if(f!=HUFF_EOF)
-    outputrle(f,rawoutput);
+    outputrle(f,rawoutput,&rd);
   }
 while(f!=HUFF_EOF);
 

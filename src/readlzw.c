@@ -48,6 +48,7 @@ struct local_data {
   
   int codeofs;
   int global_use_rle,oldver;
+  struct rledata rd;
   uint32 quirk;
   
   int maxstr;
@@ -91,7 +92,7 @@ data_in_point=data_in; data_in_max=data_in+in_len;
 data_out_point=data_out; data_out_max=data_out+orig_len;
 data->dc_bitbox=data->dc_bitsleft=0;
 data->codeofs=0;
-outputrle(-1,NULL);	/* init RLE */
+outputrle(-1,NULL, &data->rd);	/* init RLE */
 
 data->oldver=0;
 csize=9;		/* initial code size */
@@ -468,7 +469,7 @@ if(data_out_point<data_out_max)
 void outputchr(int chr, struct local_data *data)
 {
 if(data->global_use_rle)
-  outputrle(chr,rawoutput);
+  outputrle(chr,rawoutput,&data->rd);
 else
   rawoutput(chr);
 }

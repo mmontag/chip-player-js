@@ -4,7 +4,11 @@
  * readrle.h
  */
 
-extern void outputrle(int chr,void (*outputfunc)(int));
+struct rledata {
+  int lastchr,repeating;
+};
+
+extern void outputrle(int chr,void (*outputfunc)(int), struct rledata *);
 extern unsigned char *convert_rle(unsigned char *data_in,
                                   unsigned long in_len,
                                   unsigned long orig_len);
