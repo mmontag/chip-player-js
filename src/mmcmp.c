@@ -317,8 +317,9 @@ int decrunch_mmcmp (FILE *f, FILE *fo)
 	fread(buf, 1, s, f);
 	mmcmp_unpack(&buf, &s);
 	fwrite(buf, 1, s, fo);
+	if (b != buf)
+		free(buf);
 	free(b);
-	free(buf);
 
 	return 0;
 }
