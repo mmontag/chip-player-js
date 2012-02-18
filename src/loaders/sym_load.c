@@ -13,7 +13,7 @@
 static int sym_test(FILE *, char *, const int);
 static int sym_load (struct module_data *, FILE *, const int);
 
-struct format_loader sym_loader = {
+const struct format_loader sym_loader = {
 	"Digital Symphony",
 	sym_test,
 	sym_load

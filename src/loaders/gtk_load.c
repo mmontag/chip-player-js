@@ -13,7 +13,7 @@
 static int gtk_test(FILE *, char *, const int);
 static int gtk_load (struct module_data *, FILE *, const int);
 
-struct format_loader gtk_loader = {
+const struct format_loader gtk_loader = {
 	"Graoumf Tracker (GTK)",
 	gtk_test,
 	gtk_load

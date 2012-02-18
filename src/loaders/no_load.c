@@ -17,7 +17,7 @@
 static int no_test (FILE *, char *, const int);
 static int no_load (struct module_data *, FILE *, const int);
 
-struct format_loader no_loader = {
+const struct format_loader no_loader = {
 	"Liquid Tracker NO (LIQ)",
 	no_test,
 	no_load

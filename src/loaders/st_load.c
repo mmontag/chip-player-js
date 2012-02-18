@@ -21,7 +21,7 @@
 static int st_test (FILE *, char *, const int);
 static int st_load (struct module_data *, FILE *, const int);
 
-struct format_loader st_loader = {
+const struct format_loader st_loader = {
     "Soundtracker (MOD)",
     st_test,
     st_load

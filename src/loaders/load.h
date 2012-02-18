@@ -46,7 +46,7 @@ int load_sample(FILE *, int, int, struct xmp_sample *, void *);
 
 
 extern uint8 ord_xlat[];
-extern int arch_vol_table[];
+extern const int arch_vol_table[];
 
 static inline int is_big_endian() {
 	uint16 w = 0x00ff;

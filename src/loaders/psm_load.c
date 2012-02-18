@@ -15,7 +15,7 @@
 static int psm_test (FILE *, char *, const int);
 static int psm_load (struct module_data *, FILE *, const int);
 
-struct format_loader psm_loader = {
+const struct format_loader psm_loader = {
 	"Protracker Studio (PSM)",
 	psm_test,
 	psm_load

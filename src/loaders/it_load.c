@@ -18,7 +18,7 @@
 static int it_test (FILE *, char *, const int);
 static int it_load (struct module_data *, FILE *, const int);
 
-struct format_loader it_loader = {
+const struct format_loader it_loader = {
     "Impulse Tracker (IT)",
     it_test,
     it_load

@@ -13,7 +13,7 @@
 static int amd_test (FILE *, char *, const int);
 static int amd_load (struct module_data *, FILE *, const int);
 
-struct format_loader amd_loader = {
+const struct format_loader amd_loader = {
     "Amusic Adlib Tracker (AMD)",
     amd_test,
     amd_load

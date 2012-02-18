@@ -12,7 +12,7 @@
 static int ssn_test (FILE *, char *, const int);
 static int ssn_load (struct module_data *, FILE *, const int);
 
-struct format_loader ssn_loader = {
+const struct format_loader ssn_loader = {
     "Composer 669",
     ssn_test,
     ssn_load

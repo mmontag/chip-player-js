@@ -18,7 +18,7 @@
 static int polly_test(FILE *, char *, const int);
 static int polly_load(struct module_data *, FILE *, const int);
 
-struct format_loader polly_loader = {
+const struct format_loader polly_loader = {
 	"Polly Tracker",
 	polly_test,
 	polly_load

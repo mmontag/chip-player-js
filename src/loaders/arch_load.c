@@ -17,7 +17,7 @@ static int arch_test (FILE *, char *, const int);
 static int arch_load (struct module_data *, FILE *, const int);
 
 
-struct format_loader arch_loader = {
+const struct format_loader arch_loader = {
 	"Archimedes Tracker",
 	arch_test,
 	arch_load
@@ -324,7 +324,7 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].sub[0].pan = 0x80;
 
-	m->vol_table = arch_vol_table;
+	m->vol_table = (int *)arch_vol_table;
 	m->volbase = 0xff;
 
 	if (mod->xxs[i].lpe > 2) {

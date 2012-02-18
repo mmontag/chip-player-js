@@ -16,7 +16,7 @@
 static int fnk_test (FILE *, char *, const int);
 static int fnk_load (struct module_data *, FILE *, const int);
 
-struct format_loader fnk_loader = {
+const struct format_loader fnk_loader = {
     "Funktracker (FNK)",
     fnk_test,
     fnk_load

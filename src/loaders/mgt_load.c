@@ -16,7 +16,7 @@
 static int mgt_test (FILE *, char *, const int);
 static int mgt_load (struct module_data *, FILE *, const int);
 
-struct format_loader mgt_loader = {
+const struct format_loader mgt_loader = {
 	"Megatracker (MGT)",
 	mgt_test,
 	mgt_load

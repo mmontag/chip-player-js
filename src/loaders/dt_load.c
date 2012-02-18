@@ -18,7 +18,7 @@
 static int dt_test(FILE *, char *, const int);
 static int dt_load (struct module_data *, FILE *, const int);
 
-struct format_loader dt_loader = {
+const struct format_loader dt_loader = {
 	"Digital Tracker (DTM)",
 	dt_test,
 	dt_load

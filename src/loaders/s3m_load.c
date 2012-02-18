@@ -69,7 +69,7 @@
 static int s3m_test (FILE *, char *, const int);
 static int s3m_load (struct module_data *, FILE *, const int);
 
-struct format_loader s3m_loader = {
+const struct format_loader s3m_loader = {
     "Scream Tracker 3 (S3M)",
     s3m_test,
     s3m_load

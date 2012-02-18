@@ -20,7 +20,7 @@
 static int stim_test(FILE *, char *, const int);
 static int stim_load(struct module_data *, FILE *, const int);
 
-struct format_loader stim_loader = {
+const struct format_loader stim_loader = {
 	"Slamtilt",
 	stim_test,
 	stim_load

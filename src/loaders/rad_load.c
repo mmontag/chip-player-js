@@ -12,7 +12,7 @@
 static int rad_test(FILE *, char *, const int);
 static int rad_load(struct module_data *, FILE *, const int);
 
-struct format_loader rad_loader = {
+const struct format_loader rad_loader = {
 	"Reality Adlib Tracker (RAD)",
 	rad_test,
 	rad_load

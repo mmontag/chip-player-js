@@ -14,7 +14,7 @@
 static int rtm_test(FILE *, char *, const int);
 static int rtm_load (struct module_data *, FILE *, const int);
 
-struct format_loader rtm_loader = {
+const struct format_loader rtm_loader = {
 	"Real Tracker (RTM)",
 	rtm_test,
 	rtm_load

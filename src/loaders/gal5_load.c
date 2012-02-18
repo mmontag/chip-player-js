@@ -23,7 +23,7 @@
 static int gal5_test(FILE *, char *, const int);
 static int gal5_load(struct module_data *, FILE *, const int);
 
-struct format_loader gal5_loader = {
+const struct format_loader gal5_loader = {
 	"Galaxy Music System 5.0 (J2B)",
 	gal5_test,
 	gal5_load

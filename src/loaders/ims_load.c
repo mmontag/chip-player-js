@@ -54,7 +54,7 @@ struct ims_header {
 static int ims_test (FILE *, char *, const int);
 static int ims_load (struct module_data *, FILE *, const int);
 
-struct format_loader ims_loader = {
+const struct format_loader ims_loader = {
     "Images Music System (IMS)",
     ims_test,
     ims_load

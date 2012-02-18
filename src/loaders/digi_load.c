@@ -27,7 +27,7 @@
 static int digi_test (FILE *, char *, const int);
 static int digi_load (struct module_data *, FILE *, const int);
 
-struct format_loader digi_loader = {
+const struct format_loader digi_loader = {
     "DIGI Booster",
     digi_test,
     digi_load

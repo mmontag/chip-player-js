@@ -24,7 +24,7 @@
 static int alm_test (FILE *, char *, const int);
 static int alm_load (struct module_data *, FILE *, const int);
 
-struct format_loader alm_loader = {
+const struct format_loader alm_loader = {
     "Aley Keptr (ALM)",
     alm_test,
     alm_load

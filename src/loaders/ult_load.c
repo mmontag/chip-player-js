@@ -22,7 +22,7 @@
 static int ult_test (FILE *, char *, const int);
 static int ult_load (struct module_data *, FILE *, const int);
 
-struct format_loader ult_loader = {
+const struct format_loader ult_loader = {
     "Ultra Tracker (ULT)",
     ult_test,
     ult_load

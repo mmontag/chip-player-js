@@ -16,7 +16,7 @@
 static int ptm_test (FILE *, char *, const int);
 static int ptm_load (struct module_data *, FILE *, const int);
 
-struct format_loader ptm_loader = {
+const struct format_loader ptm_loader = {
     "Poly Tracker (PTM)",
     ptm_test,
     ptm_load

@@ -17,7 +17,7 @@
 static int ice_test (FILE *, char *, const int);
 static int ice_load (struct module_data *, FILE *, const int);
 
-struct format_loader ice_loader = {
+const struct format_loader ice_loader = {
     "Soundtracker 2.6/Ice Tracker (MTN)",
     ice_test,
     ice_load

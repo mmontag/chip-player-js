@@ -15,7 +15,7 @@
 static int dtt_test(FILE *, char *, const int);
 static int dtt_load (struct module_data *, FILE *, const int);
 
-struct format_loader dtt_loader = {
+const struct format_loader dtt_loader = {
 	"Desktop Tracker (DTT)",
 	dtt_test,
 	dtt_load

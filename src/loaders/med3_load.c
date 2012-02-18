@@ -22,7 +22,7 @@
 static int med3_test(FILE *, char *, const int);
 static int med3_load (struct module_data *, FILE *, const int);
 
-struct format_loader med3_loader = {
+const struct format_loader med3_loader = {
 	"MED 2.00 MED3 (MED)",
 	med3_test,
 	med3_load

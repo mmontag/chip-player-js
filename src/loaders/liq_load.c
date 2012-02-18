@@ -19,7 +19,7 @@
 static int liq_test (FILE *, char *, const int);
 static int liq_load (struct module_data *, FILE *, const int);
 
-struct format_loader liq_loader = {
+const struct format_loader liq_loader = {
     "Liquid Tracker (LIQ)",
     liq_test,
     liq_load

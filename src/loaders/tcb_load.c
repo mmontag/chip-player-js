@@ -20,7 +20,7 @@
 static int tcb_test(FILE *, char *, const int);
 static int tcb_load (struct module_data *, FILE *, const int);
 
-struct format_loader tcb_loader = {
+const struct format_loader tcb_loader = {
 	"TCB Tracker",
 	tcb_test,
 	tcb_load

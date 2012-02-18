@@ -62,7 +62,7 @@
 static int masi_test (FILE *, char *, const int);
 static int masi_load (struct module_data *, FILE *, const int);
 
-struct format_loader masi_loader = {
+const struct format_loader masi_loader = {
 	"Epic MegaGames MASI (PSM)",
 	masi_test,
 	masi_load

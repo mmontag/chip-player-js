@@ -29,7 +29,7 @@
 static int stx_test (FILE *, char *, const int);
 static int stx_load (struct module_data *, FILE *, const int);
 
-struct format_loader stx_loader = {
+const struct format_loader stx_loader = {
     "STMIK 0.2 (STX)",
     stx_test,
     stx_load

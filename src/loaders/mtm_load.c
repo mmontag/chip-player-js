@@ -12,7 +12,7 @@
 static int mtm_test (FILE *, char *, const int);
 static int mtm_load (struct module_data *, FILE *, const int);
 
-struct format_loader mtm_loader = {
+const struct format_loader mtm_loader = {
     "Multitracker (MTM)",
     mtm_test,
     mtm_load

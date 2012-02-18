@@ -14,7 +14,7 @@
 static int stm_test (FILE *, char *, const int);
 static int stm_load (struct module_data *, FILE *, const int);
 
-struct format_loader stm_loader = {
+const struct format_loader stm_loader = {
     "Scream Tracker 2 (STM)",
     stm_test,
     stm_load

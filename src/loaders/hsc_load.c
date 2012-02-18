@@ -21,7 +21,7 @@
 static int hsc_test (FILE *, char *, const int);
 static int hsc_load (struct module_data *, FILE *, const int);
 
-struct format_loader hsc_loader = {
+const struct format_loader hsc_loader = {
     "HSC-Tracker",
     hsc_test,
     hsc_load

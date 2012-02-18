@@ -23,7 +23,7 @@
 static int mdl_test (FILE *, char *, const int);
 static int mdl_load (struct module_data *, FILE *, const int);
 
-struct format_loader mdl_loader = {
+const struct format_loader mdl_loader = {
     "Digitrakker (MDL)",
     mdl_test,
     mdl_load

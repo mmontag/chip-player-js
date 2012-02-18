@@ -20,7 +20,7 @@
 static int dbm_test(FILE *, char *, const int);
 static int dbm_load (struct module_data *, FILE *, const int);
 
-struct format_loader dbm_loader = {
+const struct format_loader dbm_loader = {
 	"DigiBooster Pro (DBM)",
 	dbm_test,
 	dbm_load

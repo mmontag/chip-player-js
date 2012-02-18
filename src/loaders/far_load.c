@@ -22,7 +22,7 @@
 static int far_test (FILE *, char *, const int);
 static int far_load (struct module_data *, FILE *, const int);
 
-struct format_loader far_loader = {
+const struct format_loader far_loader = {
     "Farandole Composer (FAR)",
     far_test,
     far_load

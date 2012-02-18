@@ -16,7 +16,7 @@ static int hvl_test (FILE *, char *, const int);
 static int hvl_load (struct module_data *, FILE *, const int);
 
 
-struct format_loader hvl_loader = {
+const struct format_loader hvl_loader = {
 	"HVL",
 	"Hively Tracker",
 	hvl_test,

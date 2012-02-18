@@ -25,7 +25,7 @@
 static int sfx_test (FILE *, char *, const int);
 static int sfx_load (struct module_data *, FILE *, const int);
 
-struct format_loader sfx_loader = {
+const struct format_loader sfx_loader = {
     "SoundFX",
     sfx_test,
     sfx_load

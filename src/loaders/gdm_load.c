@@ -22,7 +22,7 @@
 static int gdm_test(FILE *, char *, const int);
 static int gdm_load (struct module_data *, FILE *, const int);
 
-struct format_loader gdm_loader = {
+const struct format_loader gdm_loader = {
 	"Generic Digital Music (GDM)",
 	gdm_test,
 	gdm_load

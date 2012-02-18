@@ -17,7 +17,7 @@
 static int emod_test (FILE *, char *, const int);
 static int emod_load (struct module_data *, FILE *, const int);
 
-struct format_loader emod_loader = {
+const struct format_loader emod_loader = {
     "Quadra Composer (EMOD)",
     emod_test,
     emod_load

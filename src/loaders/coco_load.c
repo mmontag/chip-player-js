@@ -11,7 +11,7 @@
 static int coco_test (FILE *, char *, const int);
 static int coco_load (struct module_data *, FILE *, const int);
 
-struct format_loader coco_loader = {
+const struct format_loader coco_loader = {
 	"Coconizer",
 	coco_test,
 	coco_load
@@ -190,7 +190,7 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 	MODULE_INFO();
 	INSTRUMENT_INIT();
 
-	m->vol_table = arch_vol_table;
+	m->vol_table = (int *)arch_vol_table;
 	m->volbase = 0xff;
 
 	for (i = 0; i < mod->ins; i++) {

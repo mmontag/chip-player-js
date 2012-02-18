@@ -20,7 +20,7 @@
 static int dmf_test(FILE *, char *, const int);
 static int dmf_load (struct module_data *, FILE *, const int);
 
-struct format_loader dmf_loader = {
+const struct format_loader dmf_loader = {
 	"X-Tracker (DMF)",
 	dmf_test,
 	dmf_load

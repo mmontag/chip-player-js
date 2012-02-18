@@ -20,7 +20,7 @@
 static int imf_test (FILE *, char *, const int);
 static int imf_load (struct module_data *, FILE *, const int);
 
-struct format_loader imf_loader = {
+const struct format_loader imf_loader = {
     "Imago Orpheus (IMF)",
     imf_test,
     imf_load

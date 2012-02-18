@@ -22,7 +22,7 @@
 static int amf_test(FILE *, char *, const int);
 static int amf_load (struct module_data *, FILE *, const int);
 
-struct format_loader amf_loader = {
+const struct format_loader amf_loader = {
 	"DSMI Advanced Module Format (AMF)",
 	amf_test,
 	amf_load

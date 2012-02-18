@@ -18,7 +18,7 @@ static int stc_test(FILE *, char *, const int);
 static int stc_load(struct module_data *, FILE *, const int);
 
 
-struct format_loader stc_loader = {
+const struct format_loader stc_loader = {
 	"ZX Spectrum Sound Tracker (STC)",
 	stc_test,
 	stc_load

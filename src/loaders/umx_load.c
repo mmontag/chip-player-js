@@ -15,15 +15,15 @@
 #define MAGIC_SCRM	MAGIC4('S','C','R','M')
 #define MAGIC_M_K_	MAGIC4('M','.','K','.')
 
-extern struct format_loader xm_loader;
-extern struct format_loader it_loader;
-extern struct format_loader s3m_loader;
-extern struct format_loader mod_loader;
+extern const struct format_loader xm_loader;
+extern const struct format_loader it_loader;
+extern const struct format_loader s3m_loader;
+extern const struct format_loader mod_loader;
 
 static int umx_test (FILE *, char *, const int);
 static int umx_load (struct module_data *, FILE *, const int);
 
-struct format_loader umx_loader = {
+const struct format_loader umx_loader = {
 	"Epic Games Unreal/UT (UMX)",
 	umx_test,
 	umx_load

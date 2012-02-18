@@ -21,7 +21,7 @@
 static int med4_test(FILE *, char *, const int);
 static int med4_load (struct module_data *, FILE *, const int);
 
-struct format_loader med4_loader = {
+const struct format_loader med4_loader = {
 	"MED 2.10 MED4 (MED)",
 	med4_test,
 	med4_load
