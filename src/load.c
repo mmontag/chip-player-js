@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 #ifdef __native_client__
 #include <sys/syslimits.h>
 #else
@@ -383,14 +384,15 @@ int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
 	char buf[XMP_NAME_SIZE];
 	int i;
 
+	if (stat(path, &st) < 0)
+		return -errno;
+
+	if (S_ISDIR(st.st_mode)) {
+		return -EISDIR;
+	}
+
 	if ((f = fopen(path, "rb")) == NULL)
-		return -1;
-
-	if (fstat(fileno(f), &st) < 0)
-		goto err;
-
-	if (S_ISDIR(st.st_mode))
-		goto err;
+		return -errno;
 
 	if (decrunch((struct context_data *)ctx, &f, &path, DECRUNCH_MAX) < 0)
 		goto err;
@@ -420,10 +422,10 @@ int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
 		}
 	}
 
-      err:
+    err:
 	fclose(f);
 	unlink_tempfiles();
-	return -1;
+	return -EINVAL;
 }
 
 
@@ -465,14 +467,15 @@ int xmp_load_module(xmp_context handle, char *path)
 
     _D(_D_WARN "path = %s", path);
 
+    if (stat(path, &st) < 0)
+	return -errno;
+
+    if (S_ISDIR(st.st_mode)) {
+	return -EISDIR;
+    }
+
     if ((f = fopen(path, "rb")) == NULL)
-	return -1;
-
-    if (fstat(fileno (f), &st) < 0)
-	goto err;
-
-    if (S_ISDIR(st.st_mode))
-	goto err;
+	return -errno;
 
     _D(_D_INFO "decrunch");
     if ((t = decrunch((struct context_data *)ctx, &f, &path, DECRUNCH_MAX)) < 0)
@@ -534,7 +537,7 @@ int xmp_load_module(xmp_context handle, char *path)
     if (val < 0) {
 	free(m->basename);
 	free(m->dirname);
-	return val;
+	return -EINVAL;
     }
 
     /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
@@ -554,7 +557,7 @@ int xmp_load_module(xmp_context handle, char *path)
 err:
     fclose(f);
     unlink_tempfiles();
-    return -1;
+    return -EINVAL;
 }
 
 
