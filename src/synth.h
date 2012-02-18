@@ -14,9 +14,9 @@ struct synth_info {
 	void (*mixer)(struct context_data *, int *, int, int, int, int);
 };
 
-extern struct synth_info synth_null;
-extern struct synth_info synth_adlib;
-extern struct synth_info synth_spectrum;
+extern const struct synth_info synth_null;
+extern const struct synth_info synth_adlib;
+extern const struct synth_info synth_spectrum;
 
 #define SYNTH_CHIP(x) ((x)->m.synth_chip)
 
