@@ -1,6 +1,18 @@
 Stable versions
 ---------------
 
+4.0.0 ():
+	- split library back-end and application
+	- remove OSS sequencer support
+	- remove platform-specific device drivers
+	- remove all global data, library is reentrant
+	- remove configuration files
+	- remove support to uLaw-encoded output
+	- extend note range to full 10-octave range
+	- extensive code refactoring
+	- fix interpolation and sample loop processing
+	- fix S404 depacker
+
 3.5.0 (20120127):
 	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe
 	  for sample loop size
