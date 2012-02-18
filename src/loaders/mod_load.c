@@ -30,13 +30,15 @@
 #include "load.h"
 #include "mod.h"
 
-struct {
+struct mod_magic {
     char *magic;
     int flag;
     int ptkloop;
     char *tracker;
     int ch;
-} mod_magic[] = {
+};
+
+const struct mod_magic mod_magic[] = {
     { "M.K.", 0, 1, "Protracker", 4 },
     { "M!K!", 1, 1, "Protracker", 4 },
     { "M&K!", 1, 1, "Noisetracker", 4 },
