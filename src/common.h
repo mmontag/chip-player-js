@@ -292,10 +292,13 @@ struct mixer_data {
 	int pbase;		/* period base */
 };
 
+#include "list.h"
+
 struct context_data {
 	struct player_data p;
 	struct mixer_data s;
 	struct module_data m;
+	struct list_head tmpfiles_list;
 };
 
 

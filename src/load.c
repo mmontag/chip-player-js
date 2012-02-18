@@ -34,8 +34,6 @@
 extern struct format_loader *format_loader[];
 
 
-LIST_HEAD(tmpfiles_list);
-
 struct tmpfilename {
 	char *name;
 	struct list_head list;
@@ -251,7 +249,7 @@ static int decrunch(struct context_data *ctx, FILE **f, char **s, int ttl)
 	return -1;
     }
 
-    list_add_tail(&temp->list, &tmpfiles_list);
+    list_add_tail(&temp->list, &ctx->tmpfiles_list);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	_D(_D_CRIT "failed");
@@ -359,15 +357,16 @@ static int decrunch(struct context_data *ctx, FILE **f, char **s, int ttl)
  * Windows doesn't allow you to unlink an open file, so we changed the
  * temp file cleanup system to remove temporary files after we close it
  */
-static void unlink_tempfiles(void)
+static void unlink_tempfiles(struct context_data *ctx)
 {
 	struct tmpfilename *li;
 	struct list_head *tmp;
 
 	/* can't use list_for_each when freeing the node! */
-	for (tmp = (&tmpfiles_list)->next; tmp != (&tmpfiles_list); ) {
+	for (tmp = (&ctx->tmpfiles_list)->next; tmp != (&ctx->tmpfiles_list); ) {
 		li = list_entry(tmp, struct tmpfilename, list);
 		_D(_D_INFO "unlink tmpfile %s", li->name);
+printf("unlink tmpfile %s\n", li->name);
 		unlink(li->name);
 		free(li->name);
 		list_del(&li->list);
@@ -377,8 +376,9 @@ static void unlink_tempfiles(void)
 }
 
 
-int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
+int xmp_test_module(xmp_context handle, char *path, struct xmp_test_info *info)
 {
+	struct context_data *ctx = (struct context_data *)handle;
 	FILE *f;
 	struct stat st;
 	char buf[XMP_NAME_SIZE];
@@ -394,7 +394,9 @@ int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
 	if ((f = fopen(path, "rb")) == NULL)
 		return -errno;
 
-	if (decrunch((struct context_data *)ctx, &f, &path, DECRUNCH_MAX) < 0)
+	INIT_LIST_HEAD(&ctx->tmpfiles_list);
+
+	if (decrunch(ctx, &f, &path, DECRUNCH_MAX) < 0)
 		goto err;
 
 	if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -412,7 +414,7 @@ int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
 		fseek(f, 0, SEEK_SET);
 		if (format_loader[i]->test(f, buf, 0) == 0) {
 			fclose(f);
-			unlink_tempfiles();
+			unlink_tempfiles(ctx);
 			if (info != NULL) {
 				strncpy(info->name, buf, XMP_NAME_SIZE);
 				strncpy(info->type, format_loader[i]->name,
@@ -424,7 +426,7 @@ int xmp_test_module(xmp_context ctx, char *path, struct xmp_test_info *info)
 
     err:
 	fclose(f);
-	unlink_tempfiles();
+	unlink_tempfiles(ctx);
 	return -EINVAL;
 }
 
@@ -478,8 +480,10 @@ int xmp_load_module(xmp_context handle, char *path)
     if ((f = fopen(path, "rb")) == NULL)
 	return -errno;
 
+    INIT_LIST_HEAD(&ctx->tmpfiles_list);
+
     _D(_D_INFO "decrunch");
-    if ((t = decrunch((struct context_data *)ctx, &f, &path, DECRUNCH_MAX)) < 0)
+    if ((t = decrunch(ctx, &f, &path, DECRUNCH_MAX)) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -533,7 +537,7 @@ int xmp_load_module(xmp_context handle, char *path)
     }
 
     fclose(f);
-    unlink_tempfiles();
+    unlink_tempfiles(ctx);
 
     if (val < 0) {
 	free(m->basename);
@@ -557,7 +561,7 @@ int xmp_load_module(xmp_context handle, char *path)
 
 err:
     fclose(f);
-    unlink_tempfiles();
+    unlink_tempfiles(ctx);
     return -EINVAL;
 }
 
