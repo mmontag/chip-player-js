@@ -33,6 +33,7 @@ include src/Makefile
 include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
 include src/win32/Makefile
+include test/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
