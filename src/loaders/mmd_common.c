@@ -6,7 +6,7 @@
 #include "med.h"
 #include "load.h"
 
-char *mmd_inst_type[] = {
+char *const mmd_inst_type[] = {
 	"HYB",			/* -2 */
 	"SYN",			/* -1 */
 	"SMP",			/*  0 */
