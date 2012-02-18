@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "common.h"
 
@@ -270,10 +272,20 @@ static void decompressS404(uint8 *src, uint8 *orgdst,
 }
 
 
-int decrunch_s404(uint8 *src, /* size_t s, */ FILE *out)
+int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
 {
   int32 oLen, sLen, pLen;
   uint8 *dst = NULL;
+  struct stat st;
+  uint8 *buf, *src;
+
+  if (fstat(fileno(in), &st))
+    return -1;
+        
+  src = buf = malloc(st.st_size);
+  if (src == NULL)
+    return -1;
+  fread(buf, 1, st.st_size, in);
 
   if (checkS404File((uint32 *) src, /*s,*/ &oLen, &pLen, &sLen)) {
     fprintf(stderr,"S404 Error: checkS404File() failed..\n");
@@ -290,14 +302,17 @@ int decrunch_s404(uint8 *src, /* size_t s, */ FILE *out)
 
   if (fwrite(dst, oLen, 1, out) == 0) {
       fprintf(stderr,"S404 Error: fwrite() failed..\n");
-      goto error;
+      goto error1;
   }
 
   free(dst);
+  free(src);
   return 0;
 
- error:
+ error1:
   free(dst);
+ error:
+  free(src);
   return -1;
 }
 
