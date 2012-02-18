@@ -14,7 +14,6 @@ static int test_zen (uint8 *, int);
 static int depack_zen (FILE *, FILE *);
 
 struct pw_format pw_zen = {
-	"ZEN",
 	"Zen Packer",
 	test_zen,
 	depack_zen

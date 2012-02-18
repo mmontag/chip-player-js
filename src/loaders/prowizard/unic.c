@@ -21,21 +21,18 @@ static int test_unic_emptyid (uint8 *, int);
 static int depack_unic (FILE *, FILE *);
 
 struct pw_format pw_unic_id = {
-	"UNIC",
 	"UNIC Tracker",
 	test_unic_id,
 	depack_unic
 };
 
 struct pw_format pw_unic_noid = {
-	"UNIC",
 	"UNIC Tracker noid",
 	test_unic_noid,
 	depack_unic
 };
 
 struct pw_format pw_unic_emptyid = {
-	"UNIC",
 	"UNIC Tracker id0",
 	test_unic_emptyid,
 	depack_unic

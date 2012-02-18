@@ -20,7 +20,6 @@ static int test_p60a (uint8 *, int);
 static int depack_p60a (FILE *, FILE *);
 
 struct pw_format pw_p60a = {
-	"P60A",
 	"The Player 6.0a",
 	test_p60a,
 	depack_p60a

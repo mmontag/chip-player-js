@@ -15,7 +15,6 @@ static int test_titanics (uint8 *, int);
 static int depack_titanics (FILE *, FILE *);
 
 struct pw_format pw_titanics = {
-	"TIT",
 	"Titanics Player",
 	test_titanics,
 	depack_titanics

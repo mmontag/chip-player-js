@@ -17,7 +17,6 @@ static int test_stim (uint8 *, int);
 static int depack_stim (uint8 *, FILE *);
 
 struct pw_format pw_stim = {
-	"STIM",
 	"Slamtilt",
 	test_stim,
 	depack_stim,

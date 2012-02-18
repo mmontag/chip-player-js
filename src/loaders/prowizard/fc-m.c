@@ -13,7 +13,6 @@ static int test_fcm (uint8 *, int);
 static int depack_fcm (FILE *, FILE *);
 
 struct pw_format pw_fcm = {
-	"FCM",
 	"FC-M Packer",
 	test_fcm,
 	depack_fcm

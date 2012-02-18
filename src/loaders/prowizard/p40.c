@@ -18,7 +18,6 @@ static int test_p4x(uint8 *, int);
 static int depack_p4x (FILE *, FILE *);
 
 struct pw_format pw_p4x = {
-	"P4x",
 	"The Player 4.x",
 	test_p4x,
 	depack_p4x
@@ -57,6 +56,7 @@ static int depack_p4x (FILE *in, FILE *out)
 	memset(SampleSize, 0, 31 * 4);
 
 	id = read32b(in);
+#if 0
 	if (id == MAGIC_P40A) {
 		pw_p4x.id = "P40A";
 		pw_p4x.name = "The Player 4.0A";
@@ -67,6 +67,7 @@ static int depack_p4x (FILE *in, FILE *out)
 		pw_p4x.id = "P41A";
 		pw_p4x.name = "The Player 4.1A";
 	}
+#endif
 
 	npat = read8(in);		/* read Real number of pattern */
 	len = read8(in);		/* read number of pattern in list */

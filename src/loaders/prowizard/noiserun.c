@@ -14,7 +14,6 @@ static int depack_nru (FILE *, FILE *);
 
 
 struct pw_format pw_nru = {
-	"NRU",
 	"NoiseRunner",
 	test_nru,
 	depack_nru

@@ -13,7 +13,6 @@ static int test_kris (uint8 *, int);
 static int depack_kris (FILE *, FILE *);
 
 struct pw_format pw_kris = {
-	"KRIS",
 	"ChipTracker",
 	test_kris,
 	depack_kris

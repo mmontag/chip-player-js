@@ -12,7 +12,6 @@ static int test_skyt (uint8 *, int);
 static int depack_skyt (FILE *, FILE *);
 
 struct pw_format pw_skyt = {
-	"SKYT",
 	"SKYT Packer",
 	test_skyt,
 	depack_skyt

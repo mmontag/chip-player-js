@@ -12,7 +12,6 @@ static int depack_xann (FILE *, FILE *);
 static int test_xann (uint8 *, int);
 
 struct pw_format pw_xann = {
-	"XANN",
 	"XANN Packer",
 	test_xann,
 	depack_xann

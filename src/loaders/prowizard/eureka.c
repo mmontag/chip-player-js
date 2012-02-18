@@ -13,7 +13,6 @@ static int test_eu (uint8 *, int);
 static int depack_eu (FILE *, FILE *);
 
 struct pw_format pw_eu = {
-	"EU",
 	"Eureka Packer",
 	test_eu,
 	depack_eu

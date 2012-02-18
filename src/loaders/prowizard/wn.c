@@ -14,7 +14,6 @@ static int test_wn (uint8 *, int);
 static int depack_wn (FILE *, FILE *);
 
 struct pw_format pw_wn = {
-	"WN",
 	"Wanton Packer",
 	test_wn,
 	depack_wn

@@ -13,7 +13,6 @@ static int test_emod (uint8 *, int);
 static int depack_emod (FILE *, FILE *);
 
 struct pw_format pw_emod = {
-	"EMOD",
 	"QuadraComposer",
 	test_emod,
 	depack_emod

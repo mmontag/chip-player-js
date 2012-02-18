@@ -22,7 +22,6 @@ static int test_fuzz (uint8 *, int);
 static int depack_fuzz (FILE *, FILE *);
 
 struct pw_format pw_fuzz = {
-	"FUZZ",
 	"Fuzzac Packer",
 	test_fuzz,
 	depack_fuzz

@@ -25,7 +25,6 @@
  */
 
 struct pw_format {
-	char *id;
 	char *name;
 	int (*test)(uint8 *, int);
 	int (*depack)(FILE *, FILE *);

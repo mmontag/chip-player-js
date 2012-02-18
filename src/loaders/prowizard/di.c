@@ -13,7 +13,6 @@ static int test_di (uint8 *, int);
 static int depack_di (FILE *, FILE *);
 
 struct pw_format pw_di = {
-	"DI",
 	"Digital Illusions",
 	test_di,
 	depack_di

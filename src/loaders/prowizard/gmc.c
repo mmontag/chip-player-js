@@ -13,7 +13,6 @@ static int depack_GMC(FILE *, FILE *);
 static int test_GMC(uint8 *, int);
 
 struct pw_format pw_gmc = {
-	"GMC",
 	"Game Music Creator",
 	test_GMC,
 	depack_GMC

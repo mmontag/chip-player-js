@@ -14,7 +14,6 @@ static int test_tdd (uint8 *, int);
 static int depack_tdd (FILE *, FILE *);
 
 struct pw_format pw_tdd = {
-	"TDD",
 	"The Dark Demon",
 	test_tdd,
 	depack_tdd

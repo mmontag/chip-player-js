@@ -13,7 +13,6 @@ static int test_fuchs (uint8 *, int);
 static int depack_fuchs (FILE *, FILE *);
 
 struct pw_format pw_fchs = {
-	"FCHS",
 	"Fuchs Tracker",
 	test_fuchs,
 	depack_fuchs
