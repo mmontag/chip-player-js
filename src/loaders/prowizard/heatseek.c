@@ -18,7 +18,6 @@ static int depack_crb (FILE *, FILE *);
 struct pw_format pw_crb = {
 	"CRB",
 	"Heatseeker 1.0",
-	0x00,
 	test_crb,
 	depack_crb
 };

@@ -22,7 +22,6 @@ static int depack_p61a (FILE *, FILE *);
 struct pw_format pw_p61a = {
     "P61A",
     "The Player 6.1a",
-    0x00,
     test_p61a,
     depack_p61a
 };
@@ -518,8 +517,8 @@ static int depack_p61a(FILE * in, FILE * out)
 	free(smp_buffer);
     }
 
-    if (use_delta == 1)
-	pw_p60a.flags |= PW_DELTA;
+    /* if (use_delta == 1)
+	pw_p60a.flags |= PW_DELTA; */
 
     return 0;
 }

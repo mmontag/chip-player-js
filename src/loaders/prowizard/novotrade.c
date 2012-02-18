@@ -14,7 +14,6 @@ static int depack_ntp (FILE *, FILE *);
 struct pw_format pw_ntp = {
 	"NTP",
 	"Novotrade Packer",
-	0x00,
 	test_ntp,
 	depack_ntp
 };

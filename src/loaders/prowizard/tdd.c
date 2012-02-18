@@ -16,7 +16,6 @@ static int depack_tdd (FILE *, FILE *);
 struct pw_format pw_tdd = {
 	"TDD",
 	"The Dark Demon",
-	0x00,
 	test_tdd,
 	depack_tdd
 };

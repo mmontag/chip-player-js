@@ -16,7 +16,6 @@ static int depack_pru2 (FILE *, FILE *);
 struct pw_format pw_pru2 = {
 	"PRU2",
 	"Prorunner 2.0",
-	0x00,
 	test_pru2,
 	depack_pru2
 };

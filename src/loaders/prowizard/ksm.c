@@ -16,7 +16,6 @@ static int depack_ksm (FILE *, FILE *);
 struct pw_format pw_ksm = {
 	"KSM",
 	"Kefrens Sound Machine",
-	0x00,
 	test_ksm,
 	depack_ksm
 };

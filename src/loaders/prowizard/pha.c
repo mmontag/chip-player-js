@@ -16,7 +16,6 @@ static int depack_pha (FILE *, FILE *);
 struct pw_format pw_pha = {
 	"PHA",
 	"Pha Packer",
-	0x00,
 	test_pha,
 	depack_pha
 };

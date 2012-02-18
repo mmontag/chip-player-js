@@ -15,7 +15,6 @@ static int depack_emod (FILE *, FILE *);
 struct pw_format pw_emod = {
 	"EMOD",
 	"QuadraComposer",
-	0x00,
 	test_emod,
 	depack_emod
 };

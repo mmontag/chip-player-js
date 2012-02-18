@@ -15,7 +15,6 @@ static int depack_unic2 (FILE *, FILE *);
 struct pw_format pw_unic2 = {
 	"UNIC2",
 	"Unic Tracker 2",
-	0x00,
 	test_unic2,
 	depack_unic2
 };

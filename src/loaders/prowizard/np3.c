@@ -19,7 +19,6 @@ static int depack_np3(FILE *, FILE *);
 struct pw_format pw_np3 = {
 	"NP3",
 	"Noisepacker v3",
-	0x00,
 	test_np3,
 	depack_np3
 };

@@ -15,7 +15,6 @@ static int depack_di (FILE *, FILE *);
 struct pw_format pw_di = {
 	"DI",
 	"Digital Illusions",
-	0x00,
 	test_di,
 	depack_di
 };

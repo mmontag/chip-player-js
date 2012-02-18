@@ -15,7 +15,6 @@ static int test_starpack (uint8 *, int);
 struct pw_format pw_starpack = {
 	"STAR",
 	"Startrekker Packer",
-	0x00,
 	test_starpack,
 	depack_starpack
 };

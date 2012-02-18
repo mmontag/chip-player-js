@@ -14,7 +14,6 @@ static int depack_skyt (FILE *, FILE *);
 struct pw_format pw_skyt = {
 	"SKYT",
 	"SKYT Packer",
-	0x00,
 	test_skyt,
 	depack_skyt
 };

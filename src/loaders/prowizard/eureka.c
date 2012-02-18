@@ -15,7 +15,6 @@ static int depack_eu (FILE *, FILE *);
 struct pw_format pw_eu = {
 	"EU",
 	"Eureka Packer",
-	0x00,
 	test_eu,
 	depack_eu
 };

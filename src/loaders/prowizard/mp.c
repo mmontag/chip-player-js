@@ -19,7 +19,6 @@ static int test_mp_noid (uint8 *, int);
 struct pw_format pw_mp_id = {
 	"MP",
 	"Module Protector",
-	0x00,
 	test_mp_id,
 	depack_mp
 };
@@ -27,7 +26,6 @@ struct pw_format pw_mp_id = {
 struct pw_format pw_mp_noid = {
 	"MP",
 	"Module Protector noID",
-	0x00,
 	test_mp_noid,
 	depack_mp
 };

@@ -15,7 +15,6 @@ static int depack_np1(FILE *, FILE *);
 struct pw_format pw_np1 = {
 	"NP1",
 	"NoisePacker v1",
-	0x00,
 	test_np1,
 	depack_np1
 };

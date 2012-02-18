@@ -17,7 +17,6 @@ static int depack_p10c(FILE *, FILE *);
 struct pw_format pw_p10c = {
 	"P10C",
 	"Promizer 1.0c",
-	0x00,
 	test_p10c,
 	depack_p10c
 };

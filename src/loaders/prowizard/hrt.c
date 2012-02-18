@@ -14,7 +14,6 @@ static int depack_hrt (FILE *, FILE *);
 struct pw_format pw_hrt = {
 	"HRT",
 	"Hornet Packer",
-	0x00,
 	test_hrt,
 	depack_hrt
 };

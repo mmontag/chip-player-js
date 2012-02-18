@@ -19,7 +19,6 @@ static int depack_p18a(FILE *, FILE *);
 struct pw_format pw_p18a = {
 	"P18A",
 	"Promizer 1.8a",
-	0x00,
 	test_p18a,
 	depack_p18a
 };

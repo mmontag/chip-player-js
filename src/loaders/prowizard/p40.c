@@ -20,7 +20,6 @@ static int depack_p4x (FILE *, FILE *);
 struct pw_format pw_p4x = {
 	"P4x",
 	"The Player 4.x",
-	0x00,
 	test_p4x,
 	depack_p4x
 };

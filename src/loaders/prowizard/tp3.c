@@ -14,11 +14,10 @@ static int depack_tp3 (FILE *, FILE *);
 static int test_tp3 (uint8 *, int);
 
 struct pw_format pw_tp3 = {
-        "TP3",
-        "Tracker Packer v3",
-        0x00,
-        test_tp3,
-        depack_tp3
+	"TP3",
+	"Tracker Packer v3",
+	test_tp3,
+	depack_tp3
 };
 
 

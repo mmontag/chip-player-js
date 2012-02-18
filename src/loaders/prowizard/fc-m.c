@@ -15,7 +15,6 @@ static int depack_fcm (FILE *, FILE *);
 struct pw_format pw_fcm = {
 	"FCM",
 	"FC-M Packer",
-	0x00,
 	test_fcm,
 	depack_fcm
 };

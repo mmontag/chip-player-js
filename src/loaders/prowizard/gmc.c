@@ -15,7 +15,6 @@ static int test_GMC(uint8 *, int);
 struct pw_format pw_gmc = {
 	"GMC",
 	"Game Music Creator",
-	0x00,
 	test_GMC,
 	depack_GMC
 };

@@ -17,7 +17,6 @@ static int test_pp21 (uint8 *, int);
 struct pw_format pw_pp21 = {
 	"PP21",
 	"ProPacker 2.1",
-	0x00,
 	test_pp21,
 	depack_pp21
 };

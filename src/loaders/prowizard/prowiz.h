@@ -13,9 +13,6 @@
 #define MAGIC4(a,b,c,d) \
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
-#define PW_DELTA	0x0002
-#define PW_PACKED	0x0004
-
 #define PW_MOD_MAGIC	MAGIC4('M','.','K','.')
 
 #define PW_REQUEST_DATA(s,n) \
@@ -30,7 +27,6 @@
 struct pw_format {
 	char *id;
 	char *name;
-	int flags;
 	int (*test)(uint8 *, int);
 	int (*depack)(FILE *, FILE *);
 	struct list_head list;
