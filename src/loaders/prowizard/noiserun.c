@@ -13,7 +13,7 @@ static int test_nru (uint8 *, int);
 static int depack_nru (FILE *, FILE *);
 
 
-struct pw_format pw_nru = {
+const struct pw_format pw_nru = {
 	"NoiseRunner",
 	test_nru,
 	depack_nru

@@ -16,7 +16,7 @@
 static int test_p18a(uint8 *, int);
 static int depack_p18a(FILE *, FILE *);
 
-struct pw_format pw_p18a = {
+const struct pw_format pw_p18a = {
 	"Promizer 1.8a",
 	test_p18a,
 	depack_p18a

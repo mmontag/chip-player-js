@@ -12,7 +12,7 @@
 static int test_unic2 (uint8 *, int);
 static int depack_unic2 (FILE *, FILE *);
 
-struct pw_format pw_unic2 = {
+const struct pw_format pw_unic2 = {
 	"Unic Tracker 2",
 	test_unic2,
 	depack_unic2

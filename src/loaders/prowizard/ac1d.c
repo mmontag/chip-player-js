@@ -14,7 +14,7 @@
 static int depack_AC1D (FILE *, FILE *);
 static int test_AC1D (uint8 *, int);
 
-struct pw_format pw_ac1d = {
+const struct pw_format pw_ac1d = {
 	"AC1D Packer",
 	test_AC1D,
 	depack_AC1D

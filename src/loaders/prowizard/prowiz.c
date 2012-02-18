@@ -39,10 +39,10 @@ int pw_enable(char *id, int enable)
 }
 #endif
 
-int pw_register(struct pw_format *f)
+int pw_register(const struct pw_format *f)
 {
 	/* f->enable = 1; */
-	list_add_tail(&f->list, &pw_format_list);
+	list_add_tail((struct list_head *)&f->list, &pw_format_list);
 	//register_format(f->id, f->name);
 	return 0;
 }

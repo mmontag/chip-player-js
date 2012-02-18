@@ -12,7 +12,7 @@
 static int depack_starpack (FILE *, FILE *);
 static int test_starpack (uint8 *, int);
 
-struct pw_format pw_starpack = {
+const struct pw_format pw_starpack = {
 	"Startrekker Packer",
 	test_starpack,
 	depack_starpack

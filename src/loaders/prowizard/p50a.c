@@ -19,7 +19,7 @@
 static int test_p50a (uint8 *, int);
 static int depack_p50a (FILE *, FILE *);
 
-struct pw_format pw_p50a = {
+const struct pw_format pw_p50a = {
 	"The Player 5.0a",
 	test_p50a,
 	depack_p50a

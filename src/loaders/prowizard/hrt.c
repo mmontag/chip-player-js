@@ -11,7 +11,7 @@
 static int test_hrt (uint8 *, int);
 static int depack_hrt (FILE *, FILE *);
 
-struct pw_format pw_hrt = {
+const struct pw_format pw_hrt = {
 	"Hornet Packer",
 	test_hrt,
 	depack_hrt

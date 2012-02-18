@@ -12,7 +12,7 @@
 static int depack_GMC(FILE *, FILE *);
 static int test_GMC(uint8 *, int);
 
-struct pw_format pw_gmc = {
+const struct pw_format pw_gmc = {
 	"Game Music Creator",
 	test_GMC,
 	depack_GMC

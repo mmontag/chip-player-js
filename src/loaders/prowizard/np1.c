@@ -12,7 +12,7 @@
 static int test_np1(uint8 *, int);
 static int depack_np1(FILE *, FILE *);
 
-struct pw_format pw_np1 = {
+const struct pw_format pw_np1 = {
 	"NoisePacker v1",
 	test_np1,
 	depack_np1

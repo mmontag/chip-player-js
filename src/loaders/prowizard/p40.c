@@ -17,7 +17,7 @@
 static int test_p4x(uint8 *, int);
 static int depack_p4x (FILE *, FILE *);
 
-struct pw_format pw_p4x = {
+const struct pw_format pw_p4x = {
 	"The Player 4.x",
 	test_p4x,
 	depack_p4x

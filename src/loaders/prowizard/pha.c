@@ -13,7 +13,7 @@
 static int test_pha (uint8 *, int);
 static int depack_pha (FILE *, FILE *);
 
-struct pw_format pw_pha = {
+const struct pw_format pw_pha = {
 	"Pha Packer",
 	test_pha,
 	depack_pha

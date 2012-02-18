@@ -13,7 +13,7 @@
 static int test_pru1 (uint8 *, int);
 static int depack_pru1 (FILE *, FILE *);
 
-struct pw_format pw_pru1 = {
+const struct pw_format pw_pru1 = {
 	"Prorunner 1.0",
 	test_pru1,
 	depack_pru1

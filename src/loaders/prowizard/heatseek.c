@@ -15,7 +15,7 @@
 static int test_crb (uint8 *, int);
 static int depack_crb (FILE *, FILE *);
 
-struct pw_format pw_crb = {
+const struct pw_format pw_crb = {
 	"Heatseeker 1.0",
 	test_crb,
 	depack_crb

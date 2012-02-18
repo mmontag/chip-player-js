@@ -13,7 +13,7 @@
 static int test_tdd (uint8 *, int);
 static int depack_tdd (FILE *, FILE *);
 
-struct pw_format pw_tdd = {
+const struct pw_format pw_tdd = {
 	"The Dark Demon",
 	test_tdd,
 	depack_tdd

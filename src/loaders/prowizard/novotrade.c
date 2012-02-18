@@ -11,7 +11,7 @@
 static int test_ntp (uint8 *, int);
 static int depack_ntp (FILE *, FILE *);
 
-struct pw_format pw_ntp = {
+const struct pw_format pw_ntp = {
 	"Novotrade Packer",
 	test_ntp,
 	depack_ntp
