@@ -21,6 +21,7 @@ static int check (unsigned char *, int);
 static LIST_HEAD(pw_format_list);
 
 
+#if 0
 int pw_enable(char *id, int enable)
 {
 	struct list_head *tmp;
@@ -36,10 +37,11 @@ int pw_enable(char *id, int enable)
 
 	return 1;
 }
+#endif
 
 int pw_register(struct pw_format *f)
 {
-	f->enable = 1;
+	/* f->enable = 1; */
 	list_add_tail(&f->list, &pw_format_list);
 	//register_format(f->id, f->name);
 	return 0;

@@ -39,14 +39,13 @@ struct pw_format {
 	int flags;
 	int (*test)(uint8 *, int);
 	int (*depack)(FILE *, FILE *);
-	int enable;
 	struct list_head list;
 };
 
 int pw_wizardry(int, int, struct pw_format **);
 int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);
-int pw_enable(char *, int);
+/* int pw_enable(char *, int); */
 int pw_check(unsigned char *, int);
 
 extern const uint8 ptk_table[37][2];

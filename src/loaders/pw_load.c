@@ -55,7 +55,7 @@ static int pw_test(FILE *f, char *t, const int start)
 	if (extra == 0) {
 		struct pw_format *format;
 		format = list_entry(checked_format, struct pw_format, list);
-		if (format->enable)
+		/* if (format->enable) */
 			return 0;
 	}
 
