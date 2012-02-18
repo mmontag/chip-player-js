@@ -13,12 +13,6 @@
 #define MAGIC4(a,b,c,d) \
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
-#ifndef __XMP_H
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned int uint32;
-#endif
-
 #define PW_DELTA	0x0002
 #define PW_PACKED	0x0004
 
