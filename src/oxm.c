@@ -197,7 +197,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	} else {
 		for (i = st.st_size / 2 - 1; i > 0; i--)
 			pcm16[i] -= pcm16[i - 1];
-		*newlen = st.st_size / 2;
+		*newlen = st.st_size;
 	}
 
 	return (char *)pcm;
