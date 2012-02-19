@@ -71,6 +71,7 @@ extern const struct format_loader stc_loader;
 extern const struct format_loader pw_loader;
 
 extern const struct pw_format *const pw_format[];
+extern const int _pw_format_size;
 
 const struct format_loader *const format_loader[] = {
 	&xm_loader,
@@ -133,44 +134,39 @@ const struct format_loader *const format_loader[] = {
 	&pw_loader,
 	NULL
 };
+static const int _format_loader_size = sizeof(format_loader) / sizeof(void *);
 
 static const char **farray = NULL;
 
-int format_init()
-{
-	int i;
-
-	if (farray != NULL)
-		return 0;
-
-	for (i = 0; format_loader[i] != NULL; i++);
-	for (; pw_format[i] != NULL; i++);
-
-	farray = malloc(i * sizeof(char *));
-	if (farray == NULL)
-		return -1;
-
-	for (i = 0; format_loader[i] != NULL; i++) {
-		if (strcmp(format_loader[i]->name, "prowizard") == 0) {
-			for (; pw_format[i] != NULL; i++) {
-				farray[i] = pw_format[i]->name;
-			}
-		} else {
-			farray[i] = format_loader[i]->name;
-		}
-	}
-	farray[i] = NULL;
-	
-	return 0;
-}
-
-void format_deinit()
+static void format_deinit()
 {
 	free(farray);
-	farray = NULL;
 }
 
-void format_list(char ***array)
+int format_list(char ***array)
 {
+	int count, i, j;
+
+	if (farray == NULL) {
+		count = _format_loader_size + _pw_format_size - 1;
+		farray = malloc(count * sizeof(char *));
+		atexit(format_deinit);
+		if (farray == NULL)
+			return -1;
+
+		for (count = i = 0; format_loader[i] != NULL; i++) {
+			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
+				for (j = 0; pw_format[j] != NULL; j++) {
+					farray[count++] = pw_format[j]->name;
+				}
+			} else {
+				farray[count++] = format_loader[i]->name;
+			}
+		}
+		farray[count] = NULL;
+	}
+
 	*array = (char **)farray;
+	
+	return 0;
 }

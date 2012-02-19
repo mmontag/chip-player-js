@@ -29,19 +29,11 @@
 xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
-	static int first = 1;
-
-	if (first) {
-		if (format_init() < 0)
-			return NULL;
-		first = 0;
-		atexit(format_deinit);
-	}
 
 	ctx = calloc(1, sizeof(struct context_data));
-
-	if (ctx == NULL)
+	if (ctx == NULL) {
 		return NULL;
+	}
 
 	return (xmp_context)ctx;
 }
@@ -127,10 +119,6 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 
 		virtch_mute(ctx, arg1, arg2);
 		break; }
-	case XMP_CTL_GET_FORMATS: {
-		char ***arg = va_arg(ap, char ***);
-		format_list(arg);
-		break; }
 	default:
 		ret = -1;
 	}
@@ -138,4 +126,9 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 	va_end(ap);
 
 	return 0;
+}
+
+int xmp_get_format_list(char ***list)
+{
+	return format_list(list);
 }

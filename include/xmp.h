@@ -34,7 +34,6 @@ extern "C" {
 #define XMP_CTL_GVOL_DEC	0x06
 #define XMP_CTL_SEEK_TIME	0x07
 #define XMP_CTL_CH_MUTE		0x08
-#define XMP_CTL_GET_FORMATS	0x09
 
 #define XMP_FORMAT_8BIT		(1 << 0)
 #define XMP_FORMAT_UNSIGNED	(1 << 1)
@@ -240,7 +239,6 @@ typedef char *xmp_context;
 #define xmp_gvol_dec(p)		_xmp_ctl((p), XMP_CTL_GVOL_DEC)
 #define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))
 #define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
-#define xmp_get_formats(p,x)	_xmp_ctl((p), XMP_CTL_GET_FORMATS, (x))
 
 xmp_context xmp_create_context(void);
 void xmp_free_context(xmp_context);
@@ -252,6 +250,7 @@ int xmp_player_start(xmp_context, int, int, int);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);
+int xmp_get_format_list(char ***);
 
 #ifdef __cplusplus
 }
