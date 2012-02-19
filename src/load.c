@@ -366,7 +366,6 @@ static void unlink_tempfiles(struct context_data *ctx)
 	for (tmp = (&ctx->tmpfiles_list)->next; tmp != (&ctx->tmpfiles_list); ) {
 		li = list_entry(tmp, struct tmpfilename, list);
 		_D(_D_INFO "unlink tmpfile %s", li->name);
-printf("unlink tmpfile %s\n", li->name);
 		unlink(li->name);
 		free(li->name);
 		list_del(&li->list);
