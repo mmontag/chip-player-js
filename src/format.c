@@ -7,6 +7,8 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
+#include "loaders/prowizard/prowiz.h"
 #include "format.h"
 
 extern const struct format_loader xm_loader;
@@ -68,6 +70,7 @@ extern const struct format_loader polly_loader;
 extern const struct format_loader stc_loader;
 extern const struct format_loader pw_loader;
 
+extern const struct pw_format *const pw_format[];
 
 const struct format_loader *const format_loader[] = {
 	&xm_loader,
@@ -141,13 +144,20 @@ int format_init()
 		return 0;
 
 	for (i = 0; format_loader[i] != NULL; i++);
+	for (; pw_format[i] != NULL; i++);
 
-	farray = malloc((i + 1) * sizeof(char *));
+	farray = malloc(i * sizeof(char *));
 	if (farray == NULL)
 		return -1;
 
 	for (i = 0; format_loader[i] != NULL; i++) {
-		farray[i] = format_loader[i]->name;
+		if (strcmp(format_loader[i]->name, "prowizard") == 0) {
+			for (; pw_format[i] != NULL; i++) {
+				farray[i] = pw_format[i]->name;
+			}
+		} else {
+			farray[i] = format_loader[i]->name;
+		}
 	}
 	farray[i] = NULL;
 	
