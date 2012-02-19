@@ -14,44 +14,54 @@
 
 #include "prowiz.h"
 
-void register_format (char *, char *);
 
-static int check (unsigned char *, int);
+const struct pw_format *const pw_format[] = {
+	/* With signature */
+	&pw_ac1d,
+	&pw_fchs,
+	&pw_fcm,
+	&pw_fuzz,
+	&pw_hrt,
+	&pw_kris,
+	&pw_ksm,
+	&pw_mp_id,
+	&pw_ntp,
+	&pw_p18a,
+	&pw_p10c,
+	&pw_pru1,
+	&pw_pru2,
+	&pw_pha,
+	&pw_wn,
+	&pw_unic_id,
+	&pw_tp3,
+	&pw_skyt,
 
-static LIST_HEAD(pw_format_list);
+	/* No signature */
+	&pw_xann,
+	&pw_mp_noid,	/* Must check before Heatseeker */
+	&pw_di,
+	&pw_eu,
+	&pw_p4x,
+	&pw_pp21,
+	&pw_p50a,
+	&pw_p60a,
+	&pw_p61a,
+	&pw_nru,
+	&pw_np2,
+	&pw_np1,
+	&pw_np3,
+	&pw_zen,
+	&pw_unic_emptyid,
+	&pw_unic_noid,
+	&pw_unic2,
+	&pw_crb,
+	&pw_tdd,
+	&pw_starpack,
+	&pw_gmc,
+	&pw_titanics,
+	NULL
+};
 
-
-#if 0
-int pw_enable(char *id, int enable)
-{
-	struct list_head *tmp;
-	struct pw_format *format;
-
-	list_for_each(tmp, &pw_format_list) {
-		format = list_entry(tmp, struct pw_format, list);
-		if (!strcmp(id, format->id)) {
-			format->enable = enable;
-			return 0;
-		}
-	}
-
-	return 1;
-}
-#endif
-
-int pw_register(const struct pw_format *f)
-{
-	/* f->enable = 1; */
-	list_add_tail((struct list_head *)&f->list, &pw_format_list);
-	//register_format(f->id, f->name);
-	return 0;
-}
-
-int pw_unregister(struct pw_format *f)
-{
-	list_del(&f->list);
-	return 0;
-}
 
 int pw_move_data(FILE *out, FILE *in, int len)
 {
@@ -82,66 +92,13 @@ int pw_write_zero(FILE *out, int len)
 	return 0;
 }
 
-int pw_init()
+int pw_wizardry(int in, int out, char **name)
 {
-	/* With signature */
-	pw_register(&pw_ac1d);
-	/* pw_register (&pw_emod); */
-	pw_register(&pw_fchs);
-	pw_register(&pw_fcm);
-	pw_register(&pw_fuzz);
-	pw_register(&pw_hrt);
-	pw_register(&pw_kris);
-	pw_register(&pw_ksm);
-	pw_register(&pw_mp_id);
-	pw_register(&pw_ntp);
-	pw_register(&pw_p18a);
-	pw_register(&pw_p10c);
-	pw_register(&pw_pru1);
-	pw_register(&pw_pru2);
-	pw_register(&pw_pha);
-	pw_register(&pw_wn);
-	pw_register(&pw_unic_id);
-	pw_register(&pw_tp3);
-	pw_register(&pw_skyt);
-
-	/* No signature */
-	pw_register(&pw_xann);
-	pw_register(&pw_mp_noid);	/* Must check before Heatseeker */
-	pw_register(&pw_di);
-	pw_register(&pw_eu);
-	pw_register(&pw_p4x);
-	pw_register(&pw_pp21);
-	pw_register(&pw_p50a);
-	pw_register(&pw_p60a);
-	pw_register(&pw_p61a);
-	pw_register(&pw_nru);
-	pw_register(&pw_np2);
-	pw_register(&pw_np1);
-	pw_register(&pw_np3);
-	pw_register(&pw_zen);
-	pw_register(&pw_unic_emptyid);
-	pw_register(&pw_unic_noid);
-	pw_register(&pw_unic2);
-	pw_register(&pw_crb);
-	pw_register(&pw_tdd);
-	pw_register(&pw_starpack);
-	pw_register(&pw_gmc);
-	pw_register(&pw_titanics);
-
-	return 0;
-}
-
-struct list_head *checked_format = &pw_format_list;
-
-int pw_wizardry(int in, int out, struct pw_format **fmt)
-{
-	struct list_head *tmp;
-	struct pw_format *format;
 	struct stat st;
 	int size = -1, in_size;
 	uint8 *data;
 	FILE *file_in, *file_out;
+	int i;
 
 	file_in = fdopen(dup(in), "rb");
 	if (file_in == NULL)
@@ -171,77 +128,49 @@ int pw_wizardry(int in, int out, struct pw_format **fmt)
   /**************************   SEARCH   ******************************/
   /********************************************************************/
 
-	if (checked_format != &pw_format_list)
-		goto checked;
-
-	list_for_each(tmp, &pw_format_list) {
-		format = list_entry(tmp, struct pw_format, list);
-		_D("checking format: %s", format->name);
-		if (format->test(data, in_size) >= 0)
-			goto done;
+	for (i = 0; pw_format[i] != NULL; i++) {
+		_D("checking format: %s", pw_format[i]->name);
+		if (pw_format[i]->test(data, in_size) >= 0)
+			break;
 	}
-	return -1;
 
-checked:
-	format = list_entry(checked_format, struct pw_format, list);
-	_D(_D_WARN "checked format: %s", format->name);
-	checked_format = &pw_format_list;
-
-done:
-	fseek(file_in, 0, SEEK_SET);
-	size = -1;	/* paranoia setting */
-	if (format->depack) 
-		size = format->depack(file_in, file_out);
-
-	if (size < 0)
+	if (pw_format[i] == NULL) {
 		return -1;
+	}
 
-	//pw_crap(format, file_out);
+	fseek(file_in, 0, SEEK_SET);
+	size = pw_format[i]->depack(file_in, file_out);
+
+	if (size < 0) {
+		return -1;
+	}
+
 	fclose(file_out);
 	fclose(file_in);
 
-	/*
-	 * ADD: Rip based on size
-	 */
-
 	free(data);
 
-	if (fmt)
-		*fmt = format;
+	if (name != NULL) {
+		*name = pw_format[i]->name;
+	}
 
 	return 0;
 }
 
-static struct list_head *shortcut = &pw_format_list;
-static int check(unsigned char *b, int s)
+int pw_check(unsigned char *b, int s)
 {
-	struct list_head *tmp;
-	struct pw_format *format;
-	int extra;
+	int i, res;
 
-	list_for_each(tmp, shortcut) {
-		if (tmp == &pw_format_list)
-			break;
-		format = list_entry(tmp, struct pw_format, list);
-		_D("checking format [%d]: %s", s, format->name);
-		if ((extra = format->test (b, s)) > 0) {
-			_D("format: %s, extra: %d", format->id, extra);
-			shortcut = tmp->prev;
-			return extra;
-		}
-		if (extra == 0) {
-			_D("format ok: %s", format->id);
-			checked_format = tmp;
-			shortcut = &pw_format_list;
+	for (i = 0; pw_format[i] != NULL; i++) {
+		_D("checking format [%d]: %s", s, pw_format[i]->name);
+		res = pw_format[i]->test(b, s);
+		if (res > 0) {
+			return res;
+		} else if (res == 0) {
+			_D("format ok: %s\n", pw_format[i]->name);
 			return 0;
 		}
 	}
 
-	shortcut = &pw_format_list;
 	return -1;
-}
-
-int pw_check(unsigned char *b, int s)
-{
-	return check(b, s);
 }

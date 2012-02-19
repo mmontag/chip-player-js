@@ -9,8 +9,6 @@
 #include <stdlib.h>
 #include "format.h"
 
-int pw_init(void);
-
 extern const struct format_loader xm_loader;
 extern const struct format_loader mod_loader;
 extern const struct format_loader flt_loader;
@@ -141,8 +139,6 @@ int format_init()
 
 	if (farray != NULL)
 		return 0;
-
-	pw_init();
 
 	for (i = 0; format_loader[i] != NULL; i++);
 

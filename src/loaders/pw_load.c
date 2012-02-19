@@ -52,14 +52,7 @@ static int pw_test(FILE *f, char *t, const int start)
 
 	free(b);
 
-	if (extra == 0) {
-		struct pw_format *format;
-		format = list_entry(checked_format, struct pw_format, list);
-		/* if (format->enable) */
-			return 0;
-	}
-
-	return -1;
+	return extra == 0 ? 0 : -1;
 }
 
 static int pw_load(struct module_data *m, FILE *f, const int start)
@@ -68,7 +61,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 	struct xmp_event *event;
 	struct mod_header mh;
 	uint8 mod_event[4];
-	struct pw_format *fmt;
+	char *name;
 	char tmp[PATH_MAX];
 	int i, j;
 	int fd;
@@ -83,7 +76,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 	if ((fd = mkstemp(tmp)) < 0)
 		return -1;
 
-	if (pw_wizardry(fileno(f), fd, &fmt) < 0) {
+	if (pw_wizardry(fileno(f), fd, &name) < 0) {
 		close(fd);
 		unlink(tmp);
 		return -1;
@@ -136,7 +129,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 	mod->trk = mod->chn * mod->pat;
 
 	snprintf(mod->name, XMP_NAME_SIZE, "%s", (char *)mh.name);
-	snprintf(mod->type, XMP_NAME_SIZE, "%s", fmt->name);
+	snprintf(mod->type, XMP_NAME_SIZE, "%s", name);
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();
