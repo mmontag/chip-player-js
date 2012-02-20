@@ -143,7 +143,7 @@ static void format_deinit()
 	free(farray);
 }
 
-int format_list(char ***array)
+int format_list(char **array[])
 {
 	int count, i, j;
 

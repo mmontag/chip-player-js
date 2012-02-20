@@ -6,12 +6,12 @@
 #include "common.h"
 
 struct format_loader {
-	char *name;
-	int (*test)(FILE *, char *, const int);
-	int (*loader)(struct module_data *, FILE *, const int);
+	const char *name;
+	int (*const test)(FILE *, char *, const int);
+	int (*const loader)(struct module_data *, FILE *, const int);
 };
 
-int format_list(char ***);
+int format_list(char **[]);
 
 #endif
 
