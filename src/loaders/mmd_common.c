@@ -6,7 +6,8 @@
 #include "med.h"
 #include "load.h"
 
-char *const mmd_inst_type[] = {
+#ifdef _DEBUG
+const char *const mmd_inst_type[] = {
 	"HYB",			/* -2 */
 	"SYN",			/* -1 */
 	"SMP",			/*  0 */
@@ -18,6 +19,7 @@ char *const mmd_inst_type[] = {
 	"I7O",			/*  6 */
 	"EXT",			/*  7 */
 };
+#endif
 
 int mmd_get_8ch_tempo(int tempo)
 {

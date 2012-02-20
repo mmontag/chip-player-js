@@ -10,10 +10,12 @@
 
 
 #define MMD_INST_TYPES 9
-extern char * const mmd_inst_type[];
 int mmd_get_8ch_tempo(int);
 void mmd_xlat_fx(struct xmp_event *, int, int, int);
 
+#ifdef _DEBUG
+extern const char *const mmd_inst_type[];
+#endif
 
 typedef int32 LONG;
 typedef uint32 ULONG;
