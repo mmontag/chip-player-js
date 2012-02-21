@@ -250,7 +250,7 @@ int xmp_player_start(xmp_context, int, int, int);
 int xmp_player_frame(xmp_context);
 void xmp_player_get_info(xmp_context, struct xmp_module_info *);
 void xmp_player_end(xmp_context);
-int xmp_get_format_list(char ***);
+char **xmp_get_format_list(void);
 
 #ifdef __cplusplus
 }

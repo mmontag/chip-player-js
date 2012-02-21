@@ -62,8 +62,6 @@ const struct pw_format *const pw_format[] = {
 	NULL
 };
 
-const int _pw_format_size = sizeof(pw_format) / sizeof(void *);
-
 int pw_move_data(FILE *out, FILE *in, int len)
 {
 	uint8 buf[1024];

@@ -128,7 +128,7 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 	return 0;
 }
 
-int xmp_get_format_list(char ***list)
+char **xmp_get_format_list()
 {
-	return format_list(list);
+	return format_list();
 }

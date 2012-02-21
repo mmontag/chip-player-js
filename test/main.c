@@ -51,6 +51,7 @@ int main()
 	add_test(test_sqsh);
 	add_test(test_s404);
 	add_test(test_mmcmp);
+	add_test(test_xmp_get_format_list);
 	run_tests();
 
 	return 0;

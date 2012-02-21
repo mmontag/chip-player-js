@@ -27,3 +27,4 @@ TEST_FUNC(test_pp);
 TEST_FUNC(test_sqsh);
 TEST_FUNC(test_s404);
 TEST_FUNC(test_mmcmp);
+TEST_FUNC(test_xmp_get_format_list);

@@ -1,6 +1,7 @@
 
 TEST_OBJS	= util.o md5.o main.o \
-		  test_pp.o test_sqsh.o test_s404.o test_mmcmp.o
+		  test_pp.o test_sqsh.o test_s404.o test_mmcmp.o \
+		  test_xmp_get_format_list
 
 TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h
 
