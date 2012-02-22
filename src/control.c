@@ -24,7 +24,7 @@
  *
  * Create and initialize a handle used to identify this player context.
  *
- * @return Player context handle.
+ * @return Player context handle, or NULL in case of error.
  */
 xmp_context xmp_create_context()
 {
@@ -127,6 +127,15 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 
 	return 0;
 }
+
+/**
+ * @brief Get the list of supported module formats
+ *
+ * Obtain a pointer to a NULL-terminated array of strings containing the
+ * names of all module formats supported by the player.
+ *
+ * @return Pointer to the format list.
+ */
 
 char **xmp_get_format_list()
 {
