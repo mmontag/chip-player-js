@@ -2,10 +2,10 @@ Stable versions
 ---------------
 
 4.0.0 ():
-	- split library back-end and application
+	- split library and application in different packages
 	- remove OSS sequencer support
 	- remove platform-specific device drivers
-	- remove all global data, library is reentrant
+	- remove all global data, make library code fully thread-safe
 	- remove configuration files
 	- remove support to uLaw-encoded output
 	- extend note range to full 10-octave range

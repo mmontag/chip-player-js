@@ -1,296 +1,31 @@
+libxmp version 3.9.0
 
+This is an experimental release of libxmp. The API can be modified until
+the 4.0 stable release.
 
+This is licensed under the GPL. The stable library will be licensed under
+the LGPLIf we can obtain permission from authors of third-party code such as
+the IT sample decompressor and the YM2149 emulator.
 
-                         ___  ___ ____________  
-                         \  \/  //      ____  \ 
-                          >    <|  Y Y  \ |_>  >
-                         /__/\   __|_|  /  ___/ 
-                              \_/     \/|_|    
-                E x t e n d e d   M o d u l e   P l a y e r
+Better documentation will be included in the stable relase. Until then,
+check the xmp.h header file and the xmp player front-end. A simple example
+on how to use this library:
 
-			       Version 3.5
 
+xmp_context ctx;		/* context handle */
+struct xmp_module_info info;	/* struct to hold module info */
 
-OVERVIEW
+ctx = xmp_create_context();
 
-This is the Extended Module Player, a module player for Unix-like systems
-that runs on Linux with ALSA and OSS, Free/Open/NetBSD, AIX, OS/2, HP-UX,
-MacOS X, SunOS, QNX and Solaris. Xmp plays over 90 mainstream and obscure
-module formats from Amiga, Atari, Acorn, Apple IIgs, C64 and PC.
+xmp_load_module(ctx, filename);		/* load the module file */
 
-Many compressed module formats are supported, including popular Unix, DOS
-and Amiga file packers including gzip, bzip2, SQSH, Powerpack, etc.
+xmp_player_start(ctx, 0, 44100, 0);	/* play the module file */
+while (xmp_player_frame(ctx) == 0) {
+	xmp_player_get_info(&info);
+	/* audio buffer in info.buffer and info.buffer_size */
+}
+xmp_player_end(ctx);			/* end the module player */
 
-
-SUPPORTED FORMATS
-
-Xmp tries to accurately emulate Protracker, FastTracker II, ScreamTracker
-3 and Impulse Tracker event handling algorithms to play M.K., XM, S3M and
-IT modules. By default, Noisetracker and Protracker modules are played in
-Protracker 3.15 style and multichannel mutations in Fast Tracker II style
-(see doc/README.trackers for details).  Multifile formats  must have  all
-files in the same directory (Startrekker AM, Soundsmith, ALM, etc).
-
-The current version recognizes the following module formats:
-
-  Type  Rating	Tracker/packer		Recognized variants
-
-  Protracker and variants:
-
-  CHN	*****	Fast/Taketracker	xCHN, xxCH
-  FLT	*** 	Startrekker/ADSC	FLT4/8/M, EXO4/8
-  ST	****	Soundtracker		2.2, UST
-  MOD	*****	Sound/Noise/Protracker	M.K., M!K!, M&K!, N.T., CD81
-  WOW	*****	Mod's Grave		M.K.
-
-  Amiga packed formats:
-
-  AC1D  *****	AC1D Packer		-
-  CRB	*****	Heatseeker		mc1.0
-  FC-M	*****	FC-M Packer		1.0
-  FCHS	*****	Fuchs Tracker		-
-  HRT	*****	Hornet Packer		HRT!
-  IMS	***	Images Music System	?
-  KSM	*****	Kefrens Sound Machine	-
-  MP	*****	Module Protector	-
-  NP	*****	NoisePacker		1.0, 2.0, 3.0
-  NRU	*****	NoiseRunner		-
-  Pxx	****	The Player		4.x, 5.0a, 6.0a, 6.1a
-  TP	***	Tracker Packer		3
-  PM	***	Power Music		-
-  PHA	***	Pha Packer		-
-  PP	*****	ProPacker		2.1
-  PROM	*****	Promizer		0.1, 1.0c, 1.8a, 2.0, 4.0
-  PRU	*****	ProRunner		1.0, 2.0
-  SKYT  *****	SKYT Packer		-
-  STP	*****	StarTrekker Packer	-
-  TIT	*****	Titanics Player		-
-  UNIC	*****	Unic Tracker		1.0, 2.0
-  WN	*****	Wanton Packer		-
-  XANN	*****	XANN Packer		-
-  ZEN	*****	Zen Packer		-
-
-  Other Amiga tracker formats:
-
-  DBM	***	DigiBooster Pro		DBM0
-  DIGI	***	DIGI Booster		1.4, 1.5, 1.6, 1.7
-  EMOD  ****	Quadra Composer		0001
-  KRIS	*****	ChipTracker		KRIS
-  MODL	*****	Protracker 3.59		PTDT
-  MED	** 	MED 1.12/2.10/3.00 	MED2, MED3, MED4
-  MED	***	MED 3.00/OctaMED	MMD0, MMD1, MMD2, MMD3
-  MTN	****	ST 2.6, Ice Tracker	MTN, IT10
-  OKT 	***	Oktalyzer		-
-  SFX	***	SoundFX			1.3, 2.0?
-
-  Atari tracker formats:
-
-  CDx1	*****	Octalyser		CD61, CD81
-  DTM	***	Digital Tracker		1.9
-  FA0x	*****	Digital Tracker		FA04, FA06, FA08
-  FLX	****	Flextrax		M.K., xCHN (no dsp effects)
-  GTK	**	Graoumf Tracker		GTK1, GTK4
-  MGT	***	Megatracker		1.1
-  TCB	***	TCB Tracker		'AN COOL.'
-
-  Acorn tracker formats:
-
-  MUSX	****	Archimedes Tracker	V1.0+++
-  DSYM  ****	Digital Symphony	0
-  DTT	**	Desktop Tracker		-
-  COCO	***	Coconizer		old
-
-  IIgs tracker formats:
-
-  MTP	**	SoundSmith		SONGOK, IAN92a
-
-  Commodore 64 formats:
-
-  POLLY	***	Polly Tracker		-
-
-  PC tracker formats:
-
-  669	***	Composer 669/UNIS 669	if, JN
-  ALM   *****	Aley Keptr		1.0, 1.1, 1.2
-  DMF	**	X-Tracker		7, 8
-  FAR	*** 	Farandole Composer	1.0
-  FNK	***	Funktracker		R0, R1, R2
-  IMF	**** 	Imago Orpheus		1.0
-  IT	**** 	Impulse Tracker		1.00, 2.00, 2.14, 2.15
-  LIQ	***	Liquid Tracker		0.0, 1.0
-  MDL	****	Digitrakker		0.0, 1.0, 1.1
-  MTM	*****	Multitracker		1.0
-  PTM	*** 	Poly Tracker		2.03
-  RTM	***	Real Tracker		1.00
-  S3M	**** 	Scream Tracker 3	3.00, 3.01+
-  STM	*****	Scream Tracker 2	!Scream!, BMOD2STM
-  ULT	***	Ultra Tracker		V0001, V0002, V0003, V0004
-  XM	**** 	Fast Tracker II		1.02, 1.03, 1.04
-
-  PC packed formats:
-
-  AMF	***	DSMI (DMP)		0.9, 1.0, 1.1, 1.2, 1.3, 1.4
-  GDM   ***	Generic Digital Music	1.0
-  STX	*****	ST Music Interface Kit	1.0, 1.1
-
-  Game formats:
-
-  DI	*****	Digital Illusions	-
-  GMC	*****	Game Music Creator	-
-  MASI	****	Epic Megagames MASI	epic, sinaria
-  GAL5	****	Galaxy Music System 5.0	-
-  GAL4	***	Galaxy Music System 4.0	-
-  MFP   *****	Magnetic Fields Packer	-
-  NTP	*****	Novotrade Packer	-
-  PSM	****	Protracker Studio	0.01, 1.00
-  STIM	*****	Slamtilt		-
-  UMX	****+	Epic Games Unreal/UT	IT, S3M, MOD, XM
-
-  YM3812 (Adlib) formats:
-
-  AMD	***	Amusic Adlib Tracker	-
-  RAD	***+	Reality Adlib Tracker	-
-  HSC	***	NEO soft/HSC-Tracker	1.5
-  S3M	***  	Scream Tracker 3	3.00, 3.01+
-
-Ratings:
-
-  *****	Accurate replaying
-  ****	Good quality
-  ***	Fair quality, shouldn't hurt your ears
-  **	Poor quality, lots of errors, bad or unimplemented effects
-  *	Broken or nonfunctional loader
-
-Format descriptions of packed modules sent by Sylvain "Asle" Chipaux. PTM
-specs and info by Kilian Hekhuis.  AMF specs by Miod Vallat. Soundtracker
-format details by Michael Schwendt and Sylvain Chipaux.
-
-
-SUPPORTED PACKERS
-
-The following compressed formats are recognized, some of them need helpers
-to be installed on the system:
-
-  Format	Helper		Native environment
-
-  bz2		bzip2		Unix
-  gz		gzip		Unix
-  lha		lha		Amiga, DOS
-  lzma		lzma		Unix
-  mo3		unmo3		DOS?
-  oxm		oggdec		Windows
-  rar		unrar		DOS
-  xz		xz		Unix
-  Z		compress	Unix
-  zip		unzip		DOS
-  zoo		zoo		Amiga?
-  ArcFS		built-in	Acorn
-  arc		built-in	Acorn, DOS
-  MMCMP		built-in	DOS?
-  PowerPack	built-in	Amiga
-  !Spark	built-in	Acorn
-  SQSH		built-in	Amiga
-  MUSE		built-in	Windows
-  LZX		built-in	Amiga
-  S404		built-in	Amiga
-
-
-FRONT-ENDS
-
-Xmp can be used as a stand-alone terminal-based (CLI) player, as a plugin
-for XMMS, BMP, Winamp or Audacious,  or as a back end for  GQmpeg, xhippo
-and others. Get the media players and front-ends in the following URLs:
-
-  Audacious: http://audacious-media-player.org
-  BeepMP:    http://beepmp.sourceforge.net
-  Winamp:    http://www.winamp.com
-  TuneNet:   http://www.tunenet.co.uk
-  GQmpeg:    http://gqmpeg.sourceforge.net
-  xhippo:    http://freshmeat.net/projects/gnuxhippo/homepage/
-
-
-OUTPUT DRIVERS
-
-xmp can play through a number of different output drivers.  Currently the
-follwing devices are supported:
-
-  Name		Description
-
-  ahi		Amiga AHI audio output
-  aix		AIX audio library (not tested, possibly broken)
-  alsa		Advanced Linux Sound Architecture (ALSA) PCM
-  alsa05	ALSA 0.5 / QNX Neutrino 6 sound system
-  arts		aRts (KDE sound server)
-  beos		BeOS BSoundPlayer (not tested)
-  bsd		BSD generic audio device
-  dart		OS/2 Direct Audio Real Time (DART)
-  esd		Enlightened Sound Daemon
-  file		File/stdout output
-  hpux		HP-UX audio device
-  irix		IRIX audio library
-  netbsd	NetBSD audio device
-  nas		Network Audio System (NAS)
-  openbsd	OpenBSD audio device
-  oss		Open Sound System (OSS) PCM
-  oss_seq	Open Sound System (OSS) sequencer
-  osx		MacOS X CoreAudio
-  pulseaudio	PulseAudio
-  qnx		QNX Neutrino 4 audio device
-  sndio		OpenBSD sndio
-  solaris	Solaris audio device (linear and ulaw)
-  wav		WAV file writer
-  win32		Windows WinMM audio
-
-
-INTERACTIVE COMMANDS
-
-The following single key commands can be used during the playback.  Click
-on the volume bars in xxmp to mute channels. (Please read the manual page
-for description of the command line arguments recognized by xmp.)
-
-	'q' 		=>	quit the player
-	'f'		=>	jump to next pattern
-	'b'		=>	jump to previous pattern
-	'n'		=>	jump to next module
-	'p'		=>	jump to previous module
-	'l'		=>	toggle loop mode
-	SPACE		=>	pause
-	'1' to '0'	=>	mute/unmute channels 1 to 10
-	'!'		=>	unmute all channels
-
-
-FEEDBACK
-
-Send your comments and bug reports to xmp-devel@lists.sourceforge.net, or
-directly to cmatsuoka@gmail.com.
-
-
-LICENSE
-
-Extended Module Player (C)1996-2011 Claudio Matsuoka, Hipolito Carraro Jr
-AWE-specific portions of oss_seq.c Copyright (C) 1996,1997 Takashi Iwai
-ulaw encoding function Copyright (C) 1989 Rich Gopstein and Harris Corp
-XPK-SQSH decruncher Copyright (C) 1997 Bert Jahn
-ProWizard-PC decruncher Copyright (C) 1998 Sylvain Chipaux
-IT sample decompression routine Copyright (C) 1998 Tammo Hinrichs
-MMCMP and IT lowpass filter routines Copyright (C) 1998 Olivier Lapicque
-OS/2-specific portions and DART driver Copyright (C) 1999 Kevin Langman
-Portions of NAS driver Copyright (C) 1999 Martin Denn
-LZW and Arc depacking Copyright (C) 2001-2006 Russell Marks
-Amiga AHI driver (C) 2007 Lorence Lombardo
-OpenBSD sndio driver (C) 2009 Thomas Pfaff
-Portions of WinAmp plugin (C) 2009 Mirko Buffoni
-Inflate decompression routine Copyright (C) 2005-2006 Michael Kohn
-
-This program is free software;  you can redistribute it  and/or modify it
-under  the terms of  the GNU General Public License  as published  by the
-Free Software Foundation;  either  version 2 of the License, or  (at your
-option) any later version. This program is distributed  in the  hope that
-it  will  be useful, but WITHOUT ANY WARRANTY;  without even the  implied
-warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You  should  have received a copy of the GNU General Public License along
-with this program;  if not, write to the  Free Software Foundation, Inc.,
-59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+xmp_release_module(ctx);		/* unload module */
+xmp_free_context(ctx);
 

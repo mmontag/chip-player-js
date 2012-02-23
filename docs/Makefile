@@ -1,7 +1,5 @@
 
-DOCS_DFILES	= Makefile COPYING.LIB CREDITS \
-		  README.unsqsh README.fixloop README.trackers ChangeLog \
-		  adlib_sb.txt ay-3-8912.txt formats
+DOCS_DFILES	= Makefile COPYING ChangeLog
 DOCS_PATH	= docs
 
 install-docs:
