@@ -10,3 +10,4 @@ Version: @VERSION@
 Requires:
 Libs: -L${libdir}
 Cflags: -I${includedir}
+Libs.private: -lm

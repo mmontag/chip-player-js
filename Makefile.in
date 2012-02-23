@@ -77,6 +77,8 @@ install: all
 	@mkdir -p $(DEST)$(LIBDIR) $(DEST)$(INCLUDEDIR)
 	$(INSTALL) lib/libxmp.* $(DEST)$(LIBDIR)
 	$(INSTALL) include/xmp.h $(DEST)$(INCLUDEDIR)
+	@mkdir -p $(DEST)$(LIBDIR)/pkgconfig
+	$(INSTALL) libxmp.pc $(DEST)$(LIBDIR)/pkgconfig/
 
 depend:
 	@echo Building dependencies...
