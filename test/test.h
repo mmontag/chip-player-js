@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -27,4 +28,8 @@ TEST_FUNC(test_pp);
 TEST_FUNC(test_sqsh);
 TEST_FUNC(test_s404);
 TEST_FUNC(test_mmcmp);
+TEST_FUNC(test_convert_delta);
+TEST_FUNC(test_convert_signal);
+TEST_FUNC(test_convert_endian);
 TEST_FUNC(test_xmp_get_format_list);
+TEST_FUNC(test_xmp_create_context);

@@ -51,7 +51,11 @@ int main()
 	add_test(test_sqsh);
 	add_test(test_s404);
 	add_test(test_mmcmp);
+	add_test(test_convert_delta);
+	add_test(test_convert_signal);
+	add_test(test_convert_endian);
 	add_test(test_xmp_get_format_list);
+	add_test(test_xmp_create_context);
 	run_tests();
 
 	return 0;
