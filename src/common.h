@@ -298,7 +298,6 @@ struct context_data {
 	struct player_data p;
 	struct mixer_data s;
 	struct module_data m;
-	struct list_head tmpfiles_list;
 };
 
 

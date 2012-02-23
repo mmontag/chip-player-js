@@ -74,7 +74,7 @@ char *test_xfd		(unsigned char *, int);
 
 #define DECRUNCH_MAX 5 /* don't recurse more than this */
 
-static int decrunch(struct context_data *ctx, FILE **f, char **s, int ttl)
+static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 {
     unsigned char b[1024];
     char *cmd;
@@ -249,7 +249,7 @@ static int decrunch(struct context_data *ctx, FILE **f, char **s, int ttl)
 	return -1;
     }
 
-    list_add_tail(&temp->list, &ctx->tmpfiles_list);
+    list_add_tail(&temp->list, head);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	_D(_D_CRIT "failed");
@@ -339,7 +339,7 @@ static int decrunch(struct context_data *ctx, FILE **f, char **s, int ttl)
     }
     
     temp2 = strdup(temp->name);
-    res = decrunch(ctx, f, &temp->name, ttl);
+    res = decrunch(head, f, &temp->name, ttl);
     unlink(temp2);
     free(temp2);
     /* Mirko: temp is now deallocated in unlink_tempfiles()
@@ -357,13 +357,13 @@ static int decrunch(struct context_data *ctx, FILE **f, char **s, int ttl)
  * Windows doesn't allow you to unlink an open file, so we changed the
  * temp file cleanup system to remove temporary files after we close it
  */
-static void unlink_tempfiles(struct context_data *ctx)
+static void unlink_tempfiles(struct list_head *head)
 {
 	struct tmpfilename *li;
 	struct list_head *tmp;
 
 	/* can't use list_for_each when freeing the node! */
-	for (tmp = (&ctx->tmpfiles_list)->next; tmp != (&ctx->tmpfiles_list); ) {
+	for (tmp = head->next; tmp != head; ) {
 		li = list_entry(tmp, struct tmpfilename, list);
 		_D(_D_INFO "unlink tmpfile %s", li->name);
 		unlink(li->name);
@@ -375,13 +375,13 @@ static void unlink_tempfiles(struct context_data *ctx)
 }
 
 
-int xmp_test_module(xmp_context handle, char *path, struct xmp_test_info *info)
+int xmp_test_module(char *path, struct xmp_test_info *info)
 {
-	struct context_data *ctx = (struct context_data *)handle;
 	FILE *f;
 	struct stat st;
 	char buf[XMP_NAME_SIZE];
 	int i;
+	struct list_head tmpfiles_list;
 
 	if (stat(path, &st) < 0)
 		return -errno;
@@ -393,9 +393,9 @@ int xmp_test_module(xmp_context handle, char *path, struct xmp_test_info *info)
 	if ((f = fopen(path, "rb")) == NULL)
 		return -errno;
 
-	INIT_LIST_HEAD(&ctx->tmpfiles_list);
+	INIT_LIST_HEAD(&tmpfiles_list);
 
-	if (decrunch(ctx, &f, &path, DECRUNCH_MAX) < 0)
+	if (decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX) < 0)
 		goto err;
 
 	if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -413,7 +413,7 @@ int xmp_test_module(xmp_context handle, char *path, struct xmp_test_info *info)
 		fseek(f, 0, SEEK_SET);
 		if (format_loader[i]->test(f, buf, 0) == 0) {
 			fclose(f);
-			unlink_tempfiles(ctx);
+			unlink_tempfiles(&tmpfiles_list);
 			if (info != NULL) {
 				strncpy(info->name, buf, XMP_NAME_SIZE);
 				strncpy(info->type, format_loader[i]->name,
@@ -425,7 +425,7 @@ int xmp_test_module(xmp_context handle, char *path, struct xmp_test_info *info)
 
     err:
 	fclose(f);
-	unlink_tempfiles(ctx);
+	unlink_tempfiles(&tmpfiles_list);
 	return -EINVAL;
 }
 
@@ -466,6 +466,7 @@ int xmp_load_module(xmp_context handle, char *path)
     int i, t, val;
     struct stat st;
     struct module_data *m = &ctx->m;
+    struct list_head tmpfiles_list;
 
     _D(_D_WARN "path = %s", path);
 
@@ -479,10 +480,10 @@ int xmp_load_module(xmp_context handle, char *path)
     if ((f = fopen(path, "rb")) == NULL)
 	return -errno;
 
-    INIT_LIST_HEAD(&ctx->tmpfiles_list);
+    INIT_LIST_HEAD(&tmpfiles_list);
 
     _D(_D_INFO "decrunch");
-    if ((t = decrunch(ctx, &f, &path, DECRUNCH_MAX)) < 0)
+    if ((t = decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX)) < 0)
 	goto err;
 
     if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
@@ -536,7 +537,7 @@ int xmp_load_module(xmp_context handle, char *path)
     }
 
     fclose(f);
-    unlink_tempfiles(ctx);
+    unlink_tempfiles(&tmpfiles_list);
 
     if (val < 0) {
 	free(m->basename);
@@ -560,7 +561,7 @@ int xmp_load_module(xmp_context handle, char *path)
 
 err:
     fclose(f);
-    unlink_tempfiles(ctx);
+    unlink_tempfiles(&tmpfiles_list);
     return -EINVAL;
 }
 

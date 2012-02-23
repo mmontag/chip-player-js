@@ -242,9 +242,9 @@ typedef char *xmp_context;
 #define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
 
 xmp_context xmp_create_context(void);
+int xmp_test_module(char *, struct xmp_test_info *);
 void xmp_free_context(xmp_context);
 int xmp_load_module(xmp_context, char *);
-int xmp_test_module(xmp_context, char *, struct xmp_test_info *);
 void xmp_release_module(xmp_context);
 int _xmp_ctl(xmp_context, int, ...);
 int xmp_player_start(xmp_context, int, int, int);
