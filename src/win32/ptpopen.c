@@ -4,10 +4,6 @@
  * comments translated by Steve Donovan
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #if !defined(HAVE_POPEN) && defined(WIN32)
 
 #include "ptpopen.h"

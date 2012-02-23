@@ -4,10 +4,6 @@
 
 #if defined WIN32 && defined _DEBUG
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <stdarg.h>
 void _D(const char *format, ...)
