@@ -25,7 +25,7 @@ TEST(test_pp)
 	fstat(fileno(f), &st);
 	fail_unless(st.st_size == 49798, "decompression size error");
 
-	ret = check_md5(TMP_FILE, "8919a05084ec684e52dd7bb1393e1089");
+	ret = check_md5(TMP_FILE, "80ba11ca20f7ffef184a58c1fc619c18");
 	fail_unless(ret == 0, "MD5 error");
 
 	fclose(f);

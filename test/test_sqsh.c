@@ -25,7 +25,7 @@ TEST(test_sqsh)
 	fstat(fileno(f), &st);
 	fail_unless(st.st_size == 16384, "decompression size error");
 
-	ret = check_md5(TMP_FILE, "33ce55f3778a2ddbb35bb364c400448e");
+	ret = check_md5(TMP_FILE, "5f7c2705f9257eb65e38edbc08028375");
 	fail_unless(ret == 0, "MD5 error");
 
 	fclose(f);
