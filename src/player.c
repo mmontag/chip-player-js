@@ -943,8 +943,6 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 		mod->bpm = 125;
 	}
 
-	m->time = _xmp_scan_module((struct context_data *)ctx);
-
 	if (mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
 		p->ord = p->scan_ord = 0;

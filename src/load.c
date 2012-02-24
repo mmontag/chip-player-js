@@ -557,6 +557,16 @@ int xmp_load_module(xmp_context handle, char *path)
 	strncpy(m->mod.name, m->basename, XMP_NAME_SIZE);
     }
 
+    /* Sanity check */
+    if (m->mod.tpo == 0) {
+        m->mod.tpo = 6;
+    }
+    if (m->mod.bpm == 0) {
+        m->mod.bpm = 125;
+    }
+
+    m->time = _xmp_scan_module((struct context_data *)ctx);
+
     return 0;
 
 err:
