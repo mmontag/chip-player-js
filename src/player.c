@@ -1089,6 +1089,9 @@ void xmp_player_end(xmp_context opaque)
 	free(p->xc_data);
 	free(f->loop);
 
+	p->xc_data = NULL;
+	f->loop = NULL;
+
 	mixer_off(ctx);
 }
 
@@ -1131,18 +1134,20 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->virt_channels = p->virt.virt_channels;
 	info->virt_used = p->virt.virt_used;
 
-	for (i = 0; i < chn; i++) {
-		struct channel_data *c = &p->xc_data[i];
-		struct xmp_channel_info *ci = &info->channel_info[i];
-
-		ci->note = c->key;
-		ci->pitchbend = c->pitchbend;
-		ci->period = c->final_period;
-		ci->instrument = c->ins;
-		ci->sample = c->smp;
-		ci->volume = c->volume;
-		ci->pan = c->pan;
-	}
-
 	info->mod = &m->mod;
+
+	if (p->xc_data != NULL) {
+		for (i = 0; i < chn; i++) {
+			struct channel_data *c = &p->xc_data[i];
+			struct xmp_channel_info *ci = &info->channel_info[i];
+	
+			ci->note = c->key;
+			ci->pitchbend = c->pitchbend;
+			ci->period = c->final_period;
+			ci->instrument = c->ins;
+			ci->sample = c->smp;
+			ci->volume = c->volume;
+			ci->pan = c->pan;
+		}
+	}
 }
