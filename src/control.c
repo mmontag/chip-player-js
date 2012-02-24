@@ -102,7 +102,6 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 		int arg = va_arg(ap, int);
 		int i, t;
 
-		arg *= 1000;
 		for (i = 0; i < m->mod.len; i++) {
 			t = m->xxo_info[i].time;
 			if (t > arg) {
