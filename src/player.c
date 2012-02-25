@@ -459,7 +459,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
     }
 
     if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL)) {
-	xc->volume = xc->volume * p->volume / m->volbase;
+	xc->volume = xc->volume * p->gvol.volume / m->volbase;
     }
 
     return 0;
@@ -627,8 +627,8 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 
     finalvol = (finalvol * xc->fadeout) >> 5;	/* 16 bit output */
 
-    finalvol = (uint32) (vol_envelope *
-	(HAS_QUIRK(QUIRK_ST3GVOL) ? 0x40 : p->volume) *
+    finalvol = (uint32)(vol_envelope *
+	(HAS_QUIRK(QUIRK_ST3GVOL) ? 0x40 : p->gvol.volume) *
 	xc->mastervol / 0x40 * ((int)finalvol * 0x40 / m->volbase)) >> 18;
 
     /* Volume translation table (for PTM, ARCH, COCO) */
@@ -701,12 +701,12 @@ static void play_channel(struct context_data *ctx, int chn, int t)
      * "volume slide on all frames" flag is set.
      */
     if (t % p->tempo || HAS_QUIRK(QUIRK_VSALL)) {
-	if (!chn && p->gvol_flag) {
-	    p->volume += p->gvol_slide;
-	    if (p->volume < 0)
-		p->volume = 0;
-	    else if (p->volume > m->volbase)
-		p->volume = m->volbase;
+	if (!chn && p->gvol.flag) {
+	    p->gvol.volume += p->gvol.slide;
+	    if (p->gvol.volume < 0)
+		p->gvol.volume = 0;
+	    else if (p->gvol.volume > m->volbase)
+		p->gvol.volume = m->volbase;
 	}
 	if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE))
 	    xc->volume += xc->v_val;
@@ -846,7 +846,7 @@ static void next_order(struct context_data *ctx)
     			p->ord = ((uint32)mod->rst > mod->len ||
 				(uint32)mod->xxo[mod->rst] >=
 				mod->pat) ?  0 : mod->rst;
-			p->volume = m->xxo_info[p->ord].gvl;
+			p->gvol.volume = m->xxo_info[p->ord].gvl;
 		}
 	} while (mod->xxo[p->ord] >= mod->pat);
 
@@ -922,8 +922,8 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 
 	mixer_on(ctx);
 
-	p->gvol_slide = 0;
-	p->volume = m->volbase;
+	p->gvol.slide = 0;
+	p->gvol.volume = m->volbase;
 	p->pos = p->ord = p->start = start;
 	p->frame = -1;
 	p->row = 0;
@@ -945,8 +945,8 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 
 	if (mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
-		p->ord = p->scan_ord = 0;
-		p->row = p->scan_row = 0;
+		p->ord = p->scan.ord = 0;
+		p->row = p->scan.row = 0;
 		f->end_point = 0;
 		return 0;
 	}
@@ -957,12 +957,12 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat)
 		p->ord++;
 
-	p->volume = m->xxo_info[p->ord].gvl;
+	p->gvol.volume = m->xxo_info[p->ord].gvl;
 	p->bpm = m->xxo_info[p->ord].bpm;
 	p->tempo = m->xxo_info[p->ord].tempo;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 	f->jumpline = m->xxo_info[p->ord].start_row;
-	f->end_point = p->scan_num;
+	f->end_point = p->scan.num;
 
 	if ((ret = virtch_on(ctx, mod->chn)) != 0)
 		return ret;
@@ -1013,7 +1013,7 @@ int xmp_player_frame(xmp_context opaque)
 		}
 
 		if (p->pos == 0) {
-			f->end_point = p->scan_num;
+			f->end_point = p->scan.num;
 		}
 
 		p->ord = p->pos - 1;
@@ -1022,7 +1022,7 @@ int xmp_player_frame(xmp_context opaque)
 		if (m->xxo_info[p->ord].tempo)
 			p->tempo = m->xxo_info[p->ord].tempo;
 		p->bpm = m->xxo_info[p->ord].bpm;
-		p->volume = m->xxo_info[p->ord].gvl;
+		p->gvol.volume = m->xxo_info[p->ord].gvl;
 		f->jump = p->ord;
 		f->jumpline = m->xxo_info[p->ord].start_row;
 		p->time = m->xxo_info[p->ord].time;
@@ -1040,16 +1040,16 @@ int xmp_player_frame(xmp_context opaque)
 
 	if (p->frame == 0) {			/* first frame in row */
 		/* check end of module */
-	    	if (p->ord == p->scan_ord && p->row == p->scan_row) {
+	    	if (p->ord == p->scan.ord && p->row == p->scan.row) {
 			if (f->end_point == 0) {
 				p->loop_count++;
-				f->end_point = p->scan_num;
+				f->end_point = p->scan.num;
 				/* return -1; */
 			}
 			f->end_point--;
 		}
 
-		p->gvol_flag = 0;
+		p->gvol.flag = 0;
 		if (f->skip_fetch) {
 			f->skip_fetch = 0;
 		} else {
@@ -1127,7 +1127,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 		info->buffer_size *= 2;
 	}
 
-	info->volume = p->volume;
+	info->volume = p->gvol.volume;
 	info->loop_count = p->loop_count;
 	info->virt_channels = p->virt.virt_channels;
 	info->virt_used = p->virt.virt_used;

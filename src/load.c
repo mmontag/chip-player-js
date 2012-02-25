@@ -565,7 +565,7 @@ int xmp_load_module(xmp_context handle, char *path)
 		m->mod.bpm = 125;
 	}
 
-	m->time = _xmp_scan_module((struct context_data *)ctx);
+	m->time = scan_module(ctx);
 
 	return 0;
 

@@ -228,11 +228,17 @@ struct player_data {
 	int row;
 	int frame;
 	int tempo;
-	int volume;			/* Global volume */
-	int gvol_slide;
-	int gvol_flag;
+	int bpm;
 	double time;
 	double frame_time;
+
+	int loop_count;
+
+	struct {			/* Global volume */
+		int volume;
+		int slide;
+		int flag;
+	} gvol;
 
 	struct flow_control {
 		int pbreak;
@@ -251,11 +257,14 @@ struct player_data {
 		int end_point;
 	} flow;
 
+	struct {
+		int ord;
+		int row;
+		int num;
+	} scan;
+
+
 	struct channel_data *xc_data;
-	int scan_ord;
-	int scan_row;
-	int scan_num;
-	int bpm;
 
 	char channel_mute[XMP_MAX_CHANNELS];
 
@@ -274,8 +283,6 @@ struct player_data {
 	
 		struct mixer_voice *voice_array;
 	} virt;
-
-	int loop_count;
 };
 
 struct mixer_data {
@@ -304,7 +311,7 @@ struct context_data {
 /* Prototypes */
 
 char	*str_adj		(char *);
-int	_xmp_scan_module	(struct context_data *);
+int	scan_module		(struct context_data *);
 
 int8	read8s			(FILE *);
 uint8	read8			(FILE *);

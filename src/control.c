@@ -89,14 +89,14 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 		p->pos = -1;
 		break;
 	case XMP_CTL_GVOL_DEC:
-		if (p->volume > 0)
-			p->volume--;
-		ret = p->volume;
+		if (p->gvol.volume > 0)
+			p->gvol.volume--;
+		ret = p->gvol.volume;
 		break;
 	case XMP_CTL_GVOL_INC:
-		if (p->volume < 64)
-			p->volume++;
-		ret = p->volume;
+		if (p->gvol.volume < 64)
+			p->gvol.volume++;
+		ret = p->gvol.volume;
 		break;
 	case XMP_CTL_SEEK_TIME: {
 		int arg = va_arg(ap, int);

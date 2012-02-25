@@ -433,10 +433,10 @@ ex_f_vslide_dn:
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 	break;
     case FX_GLOBALVOL:				/* Set global volume */
-	p->volume = fxp > m->volbase ? m->volbase : fxp;
+	p->gvol.volume = fxp > m->volbase ? m->volbase : fxp;
 	break;
     case FX_G_VOLSLIDE:				/* Global volume slide */
-	p->gvol_flag = 1;
+	p->gvol.flag = 1;
 	if (m->quirk & QUIRK_FINEFX) {
 	    h = MSN(fxp);
 	    l = LSN(fxp);
@@ -447,7 +447,7 @@ ex_f_vslide_dn:
 	    }
 	}
 	if (fxp)
-	    p->gvol_slide = MSN(fxp) - LSN(fxp);
+	    p->gvol.slide = MSN(fxp) - LSN(fxp);
 	break;
     case FX_KEYOFF:				/* Key off */
 	xc->keyoff = fxp;
