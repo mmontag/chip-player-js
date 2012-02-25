@@ -31,7 +31,7 @@
 #include "mixer.h"
 
 #define S3M_END		0xff
-#define S3M_SKIP	0xff
+#define S3M_SKIP	0xfe
 #define MAX_GVL		0x40
 
 
