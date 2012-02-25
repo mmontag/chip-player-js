@@ -461,118 +461,118 @@ static void split_name(char *s, char **d, char **b)
  */
 int xmp_load_module(xmp_context handle, char *path)
 {
-    struct context_data *ctx = (struct context_data *)handle;
-    FILE *f;
-    int i, t, val;
-    struct stat st;
-    struct module_data *m = &ctx->m;
-    struct list_head tmpfiles_list;
+	struct context_data *ctx = (struct context_data *)handle;
+	FILE *f;
+	int i, t, val;
+	struct stat st;
+	struct module_data *m = &ctx->m;
+	struct list_head tmpfiles_list;
 
-    _D(_D_WARN "path = %s", path);
+	_D(_D_WARN "path = %s", path);
 
-    if (stat(path, &st) < 0)
-	return -errno;
+	if (stat(path, &st) < 0)
+		return -errno;
 
-    if (S_ISDIR(st.st_mode)) {
-	return -EISDIR;
-    }
-
-    if ((f = fopen(path, "rb")) == NULL)
-	return -errno;
-
-    INIT_LIST_HEAD(&tmpfiles_list);
-
-    _D(_D_INFO "decrunch");
-    if ((t = decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX)) < 0)
-	goto err;
-
-    if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
-	goto err;
-
-    split_name(path, &m->dirname, &m->basename);
-
-    /* Reset variables */
-    memset(m->mod.name, 0, XMP_NAME_SIZE);
-    memset(m->mod.type, 0, XMP_NAME_SIZE);
-    /* memset(m->author, 0, XMP_NAME_SIZE); */
-    m->filename = path;		/* For ALM, SSMT, etc */
-    m->size = st.st_size;
-    m->rrate = PAL_RATE;
-    m->c4rate = C4_PAL_RATE;
-    m->volbase = 0x40;
-    m->vol_table = NULL;
-    /* Reset control for next module */
-    m->quirk = 0;
-    m->comment = NULL;
-
-    /* Set defaults */
-    m->mod.tpo = 6;
-    m->mod.bpm = 125;
-    m->mod.chn = 4;
-    m->synth = &synth_null;
-    m->extra = NULL;
-    m->time_factor = DEFAULT_TIME_FACTOR;
-
-    for (i = 0; i < 64; i++) {
-	m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
-	m->mod.xxc[i].vol = 0x40;
-	m->mod.xxc[i].flg = 0;
-    }
-
-    _D(_D_WARN "load");
-    val = 0;
-    for (i = 0; format_loader[i] != NULL; i++) {
-	fseek(f, 0, SEEK_SET);
-	val = format_loader[i]->test(f, NULL, 0);
-   	if (val == 0) {
-	    fseek(f, 0, SEEK_SET);
-	    _D(_D_WARN "load format: %s", format_loader[i]->name);
-
-	    val = format_loader[i]->loader(m, f, 0);
-	    if (val != 0) {
-		_D(_D_CRIT "can't load module, possibly corrupted file");
-	    }
-	    break;
+	if (S_ISDIR(st.st_mode)) {
+		return -EISDIR;
 	}
-    }
 
-    fclose(f);
-    unlink_tempfiles(&tmpfiles_list);
+	if ((f = fopen(path, "rb")) == NULL)
+		return -errno;
 
-    if (val < 0) {
-	free(m->basename);
-	free(m->dirname);
+	INIT_LIST_HEAD(&tmpfiles_list);
+
+	_D(_D_INFO "decrunch");
+	if ((t = decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX)) < 0)
+		goto err;
+
+	if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
+		goto err;
+
+	split_name(path, &m->dirname, &m->basename);
+
+	/* Reset variables */
+	memset(m->mod.name, 0, XMP_NAME_SIZE);
+	memset(m->mod.type, 0, XMP_NAME_SIZE);
+	/* memset(m->author, 0, XMP_NAME_SIZE); */
+	m->filename = path;	/* For ALM, SSMT, etc */
+	m->size = st.st_size;
+	m->rrate = PAL_RATE;
+	m->c4rate = C4_PAL_RATE;
+	m->volbase = 0x40;
+	m->vol_table = NULL;
+	/* Reset control for next module */
+	m->quirk = 0;
+	m->comment = NULL;
+
+	/* Set defaults */
+	m->mod.tpo = 6;
+	m->mod.bpm = 125;
+	m->mod.chn = 4;
+	m->synth = &synth_null;
+	m->extra = NULL;
+	m->time_factor = DEFAULT_TIME_FACTOR;
+
+	for (i = 0; i < 64; i++) {
+		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
+		m->mod.xxc[i].vol = 0x40;
+		m->mod.xxc[i].flg = 0;
+	}
+
+	_D(_D_WARN "load");
+	val = 0;
+	for (i = 0; format_loader[i] != NULL; i++) {
+		fseek(f, 0, SEEK_SET);
+		val = format_loader[i]->test(f, NULL, 0);
+		if (val == 0) {
+			fseek(f, 0, SEEK_SET);
+			_D(_D_WARN "load format: %s", format_loader[i]->name);
+
+			val = format_loader[i]->loader(m, f, 0);
+			if (val != 0) {
+				_D(_D_CRIT "can't load module");
+			}
+			break;
+		}
+	}
+
+	fclose(f);
+	unlink_tempfiles(&tmpfiles_list);
+
+	if (val < 0) {
+		free(m->basename);
+		free(m->dirname);
+		return -EINVAL;
+	}
+
+	/* Fix cases where the restart value is invalid e.g. kc_fall8.xm
+	 * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
+	 * Ralf Hoffmann <ralf@boomerangsworld.de>)
+	 */
+	if (m->mod.rst >= m->mod.len)
+		m->mod.rst = 0;
+
+	str_adj(m->mod.name);
+	if (!*m->mod.name) {
+		strncpy(m->mod.name, m->basename, XMP_NAME_SIZE);
+	}
+
+	/* Sanity check */
+	if (m->mod.tpo == 0) {
+		m->mod.tpo = 6;
+	}
+	if (m->mod.bpm == 0) {
+		m->mod.bpm = 125;
+	}
+
+	m->time = _xmp_scan_module((struct context_data *)ctx);
+
+	return 0;
+
+    err:
+	fclose(f);
+	unlink_tempfiles(&tmpfiles_list);
 	return -EINVAL;
-    }
-
-    /* Fix cases where the restart value is invalid e.g. kc_fall8.xm
-     * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
-     * Ralf Hoffmann <ralf@boomerangsworld.de>)
-     */
-    if (m->mod.rst >= m->mod.len)
-	m->mod.rst = 0;
-
-    str_adj(m->mod.name);
-    if (!*m->mod.name) {
-	strncpy(m->mod.name, m->basename, XMP_NAME_SIZE);
-    }
-
-    /* Sanity check */
-    if (m->mod.tpo == 0) {
-        m->mod.tpo = 6;
-    }
-    if (m->mod.bpm == 0) {
-        m->mod.bpm = 125;
-    }
-
-    m->time = _xmp_scan_module((struct context_data *)ctx);
-
-    return 0;
-
-err:
-    fclose(f);
-    unlink_tempfiles(&tmpfiles_list);
-    return -EINVAL;
 }
 
 
