@@ -456,7 +456,7 @@ skip_test:
 
     mod->trk = mod->chn * mod->pat;
 
-    snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
+    snprintf(mod->type, XMP_NAME_SIZE, "%s MOD (%s)", tracker, magic);
     MODULE_INFO();
 
     for (i = 0; i < mod->ins; i++) {

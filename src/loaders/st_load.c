@@ -288,10 +288,7 @@ static int st_load(struct module_data *m, FILE *f, const int start)
     else
 	modtype = "unknown tracker";
 
-    if (ust)
-	snprintf(mod->type, XMP_NAME_SIZE, "%s", modtype);
-    else
-	snprintf(mod->type, XMP_NAME_SIZE, "%s", modtype);
+    snprintf(mod->type, XMP_NAME_SIZE, "%s MOD", modtype);
 
     MODULE_INFO();
 
