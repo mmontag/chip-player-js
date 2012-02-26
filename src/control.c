@@ -19,6 +19,8 @@
 #include "virtual.h"
 #include "mixer.h"
 
+const char *const xmp_version = VERSION;
+
 /**
  * @brief Create player context
  *
@@ -135,7 +137,6 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
  *
  * @return Pointer to the format list.
  */
-
 char **xmp_get_format_list()
 {
 	return format_list();

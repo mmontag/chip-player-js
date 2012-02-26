@@ -221,6 +221,8 @@ struct xmp_module_info {		/**< Current module information */
 
 typedef char *xmp_context;
 
+extern const char *const xmp_version;
+
 /* Player control macros */
 
 /**
@@ -241,17 +243,17 @@ typedef char *xmp_context;
 #define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))
 #define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
 
-xmp_context xmp_create_context(void);
-int xmp_test_module(char *, struct xmp_test_info *);
-void xmp_free_context(xmp_context);
-int xmp_load_module(xmp_context, char *);
-void xmp_release_module(xmp_context);
-int _xmp_ctl(xmp_context, int, ...);
-int xmp_player_start(xmp_context, int, int, int);
-int xmp_player_frame(xmp_context);
-void xmp_player_get_info(xmp_context, struct xmp_module_info *);
-void xmp_player_end(xmp_context);
-char **xmp_get_format_list(void);
+xmp_context xmp_create_context  (void);
+int         xmp_test_module     (char *, struct xmp_test_info *);
+void        xmp_free_context    (xmp_context);
+int         xmp_load_module     (xmp_context, char *);
+void        xmp_release_module  (xmp_context);
+int         _xmp_ctl            (xmp_context, int, ...);
+int         xmp_player_start    (xmp_context, int, int, int);
+int         xmp_player_frame    (xmp_context);
+void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
+void        xmp_player_end      (xmp_context);
+char      **xmp_get_format_list (void);
 
 #ifdef __cplusplus
 }
