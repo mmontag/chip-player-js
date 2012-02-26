@@ -78,13 +78,15 @@ static int mod_test(FILE *f, char *t, const int start)
 
     if (!strncmp(buf + 2, "CH", 2) && isdigit(buf[0]) && isdigit(buf[1])) {
 	i = (buf[0] - '0') * 10 + buf[1] - '0';
-	if (i > 0 && i <= 32)
-	    return 0;
+	if (i > 0 && i <= 32) {
+	    goto found;
+	}
     }
 
     if (!strncmp(buf + 1, "CHN", 3) && isdigit(*buf)) {
-	if (*buf - '0')
-	    return 0;
+	if (*buf - '0') {
+	    goto found;
+	}
     }
 
     for (i = 0; mod_magic[i].ch; i++) {
@@ -150,6 +152,7 @@ static int mod_test(FILE *f, char *t, const int start)
     if (start + 1084 + num_pat * 0x300 + smp_size == st.st_size)
 	return -1;
 
+  found:
     fseek(f, start + 0, SEEK_SET);
     read_title(f, t, 20);
 
