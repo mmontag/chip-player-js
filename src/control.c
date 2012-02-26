@@ -19,7 +19,7 @@
 #include "virtual.h"
 #include "mixer.h"
 
-const char *const xmp_version = VERSION;
+const unsigned int xmp_version = VERSION;
 
 /**
  * @brief Create player context

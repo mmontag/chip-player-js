@@ -221,7 +221,7 @@ struct xmp_module_info {		/**< Current module information */
 
 typedef char *xmp_context;
 
-extern const char *const xmp_version;
+extern const unsigned int xmp_version;
 
 /* Player control macros */
 

@@ -17,13 +17,14 @@ SYSCONFDIR	= @sysconfdir@/xmp
 SHELL		= /bin/sh
 
 DIST		= libxmp-$(VERSION)
-DFILES		= README INSTALL configure configure.ac Makefile.in xmp.pc.in
+DFILES		= README INSTALL configure configure.ac Makefile.in libxmp.pc.in
 DDIRS		= docs include src loaders prowiz win32
 V		= 0
 LIB		= libxmp.a
 SOLIB		= libxmp.so
 SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).3
+VERCODE		= 0x00030900
 
 all: @STATIC@ @SHARED@
 
@@ -37,9 +38,9 @@ include test/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
-CFLAGS += -Iinclude -Isrc -DVERSION=\"$(VERSION)\"
+CFLAGS += -Iinclude -Isrc -DVERSION=$(VERCODE)
 
-.SUFFIXES: .c .o .lo .a .so .dll
+.SUFFIXES: .c .o .lo .a .so .dll .in
 
 .c.o:
 	@CMD='$(CC) $(CFLAGS) -o $*.o $<'; \
@@ -89,7 +90,7 @@ depend:
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 	    
-dist: dist-prepare dist-subdirs
+dist: version-prepare dist-prepare dist-subdirs
 
 dist-prepare:
 	rm -Rf $(DIST) $(DIST).tar.gz
@@ -105,6 +106,12 @@ dist-subdirs: $(addprefix dist-,$(DDIRS))
 $(OBJS): Makefile
 
 $(LOBJS): Makefile
+
+version-prepare:
+	version=`sed -ne 's/^VERSION\s*=\s*//p' Makefile.in`; \
+	vercode=`echo $$version | awk '{ split($$1,a,"."); printf "0x00%02x%02x%02x",a[1],a[2],a[3] }'`; \
+	sed -i -e "/^VERCODE\s*=/s/=.*/= $$vercode/" Makefile.in
+	./config.status
 
 sinclude depend
 
