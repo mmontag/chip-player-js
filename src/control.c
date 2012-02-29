@@ -104,11 +104,11 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 		int arg = va_arg(ap, int);
 		int i, t;
 
-		for (i = 0; i < m->mod.len; i++) {
+		for (i = m->mod.len - 1; i >= 0; i--) {
+			if (m->mod.xxo[i] >= m->mod.pat)
+				continue;
 			t = m->xxo_info[i].time;
-			if (t > arg) {
-				if (i > 0)
-					i--;
+			if (arg > t) {
 				xmp_ord_set(handle, i);
 				break;
 			}
