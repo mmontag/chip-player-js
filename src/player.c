@@ -961,12 +961,12 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	p->bpm = m->xxo_info[p->ord].bpm;
 	p->tempo = m->xxo_info[p->ord].tempo;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
-	f->jumpline = m->xxo_info[p->ord].start_row;
 	f->end_point = p->scan.num;
 
 	if ((ret = virtch_on(ctx, mod->chn)) != 0)
 		return ret;
 
+	f->jumpline = 0;
 	f->jump = -1;
 
 	f->loop = calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
@@ -1023,9 +1023,10 @@ int xmp_player_frame(xmp_context opaque)
 			p->tempo = m->xxo_info[p->ord].tempo;
 		p->bpm = m->xxo_info[p->ord].bpm;
 		p->gvol.volume = m->xxo_info[p->ord].gvl;
-		f->jump = p->ord;
-		f->jumpline = m->xxo_info[p->ord].start_row;
 		p->time = m->xxo_info[p->ord].time;
+
+		f->jumpline = 0;
+		f->jump = -1;
 
 		virtch_reset(ctx);
 		reset_channel(ctx);
