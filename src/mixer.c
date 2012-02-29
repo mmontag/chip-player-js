@@ -125,7 +125,6 @@ void mixer_prepare(struct context_data *ctx)
 	int bytelen;
 
 	s->ticksize = s->freq * m->time_factor * m->rrate / p->bpm / 1000;
-	s->dtright = s->dtleft = 0;
 
 	bytelen = s->ticksize * sizeof(int);
 	if (~s->format & XMP_FORMAT_MONO) {
@@ -151,8 +150,7 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 		struct mixer_voice *vi = &p->virt.voice_array[voc];
 		smp_r = vi->sright;
 		smp_l = vi->sleft;
-		vi->sright = 0;
-		vi->sleft = 0;
+		vi->sright = vi->sleft = 0;
 	}
 
 	if (smp_l == 0 && smp_r == 0) {
@@ -172,19 +170,19 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 	dec_l = smp_l / count;
 
 	while ((smp_r || smp_l) && count--) {
-		buf++;
-
 		if (dec_r > 0) {
 			*buf += smp_r > dec_r ? (smp_r -= dec_r) : (smp_r = 0);
 		} else {
 			*buf += smp_r < dec_r ? (smp_r -= dec_r) : (smp_r = 0);
 		}
+		buf++;
 
 		if (dec_l > 0) {
 			*buf += smp_l > dec_l ? (smp_l -= dec_l) : (smp_l = 0);
 		} else {
 			*buf += smp_l < dec_l ? (smp_l -= dec_l) : (smp_l = 0);
 		}
+		buf++;
 	}
 }
 
@@ -379,6 +377,8 @@ void mixer_softmixer(struct context_data *ctx)
 	} else {
 		out_su16norm((int16 *) s->buffer, s->buf32b, size, s->amplify);
 	}
+
+	s->dtright = s->dtleft = 0;
 }
 
 void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
@@ -552,12 +552,13 @@ int mixer_on(struct context_data *ctx)
 		goto err1;
 
 	s->numvoc = SMIX_NUMVOC;
+	s->dtright = s->dtleft = 0;
 
 	return 0;
 
-      err1:
+    err1:
 	free(s->buffer);
-      err:
+    err:
 	return -1;
 }
 

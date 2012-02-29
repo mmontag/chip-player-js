@@ -18,8 +18,8 @@
 #define FILTER_PRECISION (1 << 12)
 
 /* Anticlick ramps */
-#define SLOW_ATTACK	8
-#define SLOW_RELEASE	8
+#define SLOW_ATTACK	16
+#define SLOW_RELEASE	16
 
 
 struct mixer_voice {
