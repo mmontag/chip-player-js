@@ -1132,12 +1132,14 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->virt_channels = p->virt.virt_channels;
 	info->virt_used = p->virt.virt_used;
 
-	info->mod = &m->mod;
+	info->mod = mod;
 
 	if (p->xc_data != NULL) {
 		for (i = 0; i < chn; i++) {
 			struct channel_data *c = &p->xc_data[i];
 			struct xmp_channel_info *ci = &info->channel_info[i];
+			int track;
+			struct xmp_event *event;
 	
 			ci->note = c->key;
 			ci->pitchbend = c->pitchbend;
@@ -1146,6 +1148,12 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->sample = c->smp;
 			ci->volume = c->volume;
 			ci->pan = c->pan;
+	
+			track = mod->xxp[info->pattern]->index[i];
+			event = &mod->xxt[track]->event[info->row];
+			memcpy(&ci->event, event, sizeof(struct xmp_event));
 		}
 	}
+
+
 }
