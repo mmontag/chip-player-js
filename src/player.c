@@ -986,9 +986,9 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 
 	return 0;
 
-err2:
+    err2:
 	free(p->xc_data);
-err1:
+    err1:
 	free(f->loop);
 err:
 	return -1;
@@ -1154,6 +1154,4 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			memcpy(&ci->event, event, sizeof(struct xmp_event));
 		}
 	}
-
-
 }
