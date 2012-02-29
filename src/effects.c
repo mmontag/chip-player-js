@@ -19,7 +19,7 @@
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins]; \
 	int mapped = instrument->map[xc->key].ins; \
 	struct xmp_subinstrument *sub = &instrument->sub[mapped]; \
-	if (note-- && note < 0x60 && (uint32)xc->ins < m->mod.ins) { \
+	if (note-- && note < 0x80 && (uint32)xc->ins < m->mod.ins) { \
 	    xc->s_end = note_to_period(note + sub->xpo + \
 	    instrument->map[xc->key].xpo, sub->fin, HAS_QUIRK(QUIRK_LINEAR)); \
 	} \
