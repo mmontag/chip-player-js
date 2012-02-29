@@ -842,7 +842,7 @@ static void next_order(struct context_data *ctx)
     		p->ord++;
 
 		/* Restart module */
-		if (p->ord >= mod->len) {
+		if (p->ord >= mod->len || mod->xxo[p->ord] == 0xff) {
     			p->ord = ((uint32)mod->rst > mod->len ||
 				(uint32)mod->xxo[mod->rst] >=
 				mod->pat) ?  0 : mod->rst;
