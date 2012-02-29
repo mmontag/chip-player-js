@@ -365,7 +365,7 @@ load_instruments:
 		memcpy(mod->xxi[i].pei.data, xi.p_env, mod->xxi[i].pei.npt * 4);
 
 		for (j = 12; j < 108; j++) {
-		    mod->xxi[i].map[j].ins = xi.sample[j];
+		    mod->xxi[i].map[j].ins = xi.sample[j - 12];
 		    if (mod->xxi[i].map[j].ins >= mod->xxi[i].nsm)
 			mod->xxi[i].map[j].ins = -1;
 		}
