@@ -212,8 +212,8 @@ struct xmp_module_info {		/**< Current module information */
 		unsigned char sample;	/**< Current sample number */
 		unsigned char volume;	/**< Current volume */
 		unsigned char pan;	/**< Current stereo pan */
-		unsigned char reserved;
-		struct xmp_event event;
+		unsigned char reserved;	/**< Reserved */
+		struct xmp_event event;	/**< Current track event */
 	} channel_info[XMP_MAX_CHANNELS];
 
 	struct xmp_module *mod;		/**< Pointer to module data */
