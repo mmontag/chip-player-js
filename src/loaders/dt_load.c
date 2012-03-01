@@ -29,7 +29,15 @@ static int dt_test(FILE *f, char *t, const int start)
 	if (read32b(f) != MAGIC_D_T_)
 		return -1;
 
-	read_title(f, t, 0);
+	read32b(f);			/* chunk size */
+	read16b(f);			/* type */
+	read16b(f);			/* 0xff then mono */
+	read16b(f);			/* reserved */
+	read16b(f);			/* tempo */
+	read16b(f);			/* bpm */
+	read32b(f);			/* undocumented */
+
+	read_title(f, t, 32);
 
 	return 0;
 }
