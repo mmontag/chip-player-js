@@ -242,7 +242,7 @@ static int test_tp3(uint8 *data, char *t, int s)
 	/* l is the number of sample */
 	/* ssize is the sample data size */
 
-	pw_read_title(data, t, 20);
+	pw_read_title(data + 8, t, 20);
 
 	return 0;
 }

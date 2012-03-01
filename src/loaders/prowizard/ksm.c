@@ -245,7 +245,7 @@ static int test_ksm (uint8 *data, char *t, int s)
 
 	/* j is still the highest track number */
 
-	pw_read_title(data, t, 13);
+	pw_read_title(data + 2, t, 13);
 
 	return 0;
 }
