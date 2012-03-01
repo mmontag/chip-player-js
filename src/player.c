@@ -182,11 +182,6 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
     struct xmp_instrument *instrument;
     struct xmp_subinstrument *sub;
 
-    if (p->inject_event[chn].flag > 0) {
-	e = &p->inject_event[chn];
-	e->flag = 0;
-    }
-
     xc = &p->xc_data[chn];
 
     /* Tempo affects delay and must be computed first */
@@ -836,6 +831,24 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 }
 
+static void inject_event(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	int chn;
+	
+	for (chn = 0; chn < mod->chn; chn++) {
+		struct xmp_event *e = &p->inject_event[chn];
+		if (e->flag > 0) {
+			if (read_event(ctx, e, chn, 1) != 0) {
+				read_event(ctx, e, chn, 0);
+			}
+			e->flag = 0;
+		}
+	}
+}
+
 static void next_order(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
@@ -1062,6 +1075,8 @@ int xmp_player_frame(xmp_context opaque)
 			read_row(ctx, mod->xxo[p->ord], p->row);
 		}
 	}
+
+	inject_event(ctx);
 
 	/* play_frame */
 	for (i = 0; i < p->virt.virt_channels; i++) {
