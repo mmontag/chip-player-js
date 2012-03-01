@@ -11,14 +11,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_titanics (uint8 *, int);
-static int depack_titanics (FILE *, FILE *);
-
-const struct pw_format pw_titanics = {
-	"Titanics Player",
-	test_titanics,
-	depack_titanics
-};
 
 /* With the help of Xigh :) .. thx */
 static int cmplong(const void *a, const void *b)
@@ -140,8 +132,7 @@ static int depack_titanics(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_titanics(uint8 *data, int s)
+static int test_titanics(uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -200,5 +191,14 @@ static int test_titanics(uint8 *data, int s)
 		return -1;
 
 	/* l is the max addr of the pattern addrs */
+
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_titanics = {
+	"Titanics Player",
+	test_titanics,
+	depack_titanics
+};

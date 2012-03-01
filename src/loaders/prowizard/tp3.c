@@ -10,16 +10,6 @@
 #include "prowiz.h"
 
 
-static int depack_tp3 (FILE *, FILE *);
-static int test_tp3 (uint8 *, int);
-
-const struct pw_format pw_tp3 = {
-	"Tracker Packer v3",
-	test_tp3,
-	depack_tp3
-};
-
-
 static int depack_tp3(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
@@ -186,8 +176,7 @@ static int depack_tp3(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_tp3(uint8 *data, int s)
+static int test_tp3(uint8 *data, char *t, int s)
 {
 	int start = 0;
 	int j, k, l, m, n;
@@ -253,5 +242,13 @@ static int test_tp3(uint8 *data, int s)
 	/* l is the number of sample */
 	/* ssize is the sample data size */
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
+
+const struct pw_format pw_tp3 = {
+	"Tracker Packer v3",
+	test_tp3,
+	depack_tp3
+};

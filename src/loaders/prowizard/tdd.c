@@ -10,17 +10,7 @@
 #include "prowiz.h"
 
 
-static int test_tdd (uint8 *, int);
-static int depack_tdd (FILE *, FILE *);
-
-const struct pw_format pw_tdd = {
-	"The Dark Demon",
-	test_tdd,
-	depack_tdd
-};
-
-
-static int depack_tdd (FILE *in, FILE *out)
+static int depack_tdd(FILE *in, FILE *out)
 {
 	uint8 *tmp;
 	uint8 pat[1024];
@@ -43,9 +33,11 @@ static int depack_tdd (FILE *in, FILE *out)
 	fread(tmp, 130, 1, in);
 	fwrite(tmp, 130, 1, out);
 
-	for (pmax = i = 0; i < 128; i++)
-		if (tmp[i + 2] > pmax)
+	for (pmax = i = 0; i < 128; i++) {
+		if (tmp[i + 2] > pmax) {
 			pmax = tmp[i + 2];
+		}
+	}
 	free(tmp);
 
 	/* sample descriptions */
@@ -70,7 +62,7 @@ static int depack_tdd (FILE *in, FILE *out)
 	fseek(in, ssize, SEEK_CUR);
 
 	/* write ptk's ID string */
-	fseek (out, 0, 2);
+	fseek(out, 0, SEEK_END);
 	write32b(out, PW_MOD_MAGIC);
 
 	/* read/write pattern data */
@@ -113,8 +105,7 @@ static int depack_tdd (FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_tdd (uint8 *data, int s)
+static int test_tdd(uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n;
 	int start = 0, ssize;
@@ -222,5 +213,13 @@ static int test_tdd (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return -1;
 }
+
+const struct pw_format pw_tdd = {
+	"The Dark Demon",
+	test_tdd,
+	depack_tdd
+};

@@ -97,6 +97,7 @@ int pw_wizardry(int in, int out, char **name)
 	int size = -1, in_size;
 	uint8 *data;
 	FILE *file_in, *file_out;
+	char title[21];
 	int i;
 
 	file_in = fdopen(dup(in), "rb");
@@ -129,7 +130,7 @@ int pw_wizardry(int in, int out, char **name)
 
 	for (i = 0; pw_format[i] != NULL; i++) {
 		_D("checking format: %s", pw_format[i]->name);
-		if (pw_format[i]->test(data, in_size) >= 0)
+		if (pw_format[i]->test(data, title, in_size) >= 0)
 			break;
 	}
 
@@ -159,10 +160,11 @@ int pw_wizardry(int in, int out, char **name)
 int pw_check(unsigned char *b, int s, char **name)
 {
 	int i, res;
+	char title[21];
 
 	for (i = 0; pw_format[i] != NULL; i++) {
 		_D("checking format [%d]: %s", s, pw_format[i]->name);
-		res = pw_format[i]->test(b, s);
+		res = pw_format[i]->test(b, title, s);
 		if (res > 0) {
 			return res;
 		} else if (res == 0) {
@@ -175,4 +177,23 @@ int pw_check(unsigned char *b, int s, char **name)
 	}
 
 	return -1;
+}
+
+void pw_read_title(unsigned char *b, char *t, int s)
+{
+	if (t == NULL) {
+		return;
+	}
+
+	if (b == NULL) {
+		*t = 0;
+		return;
+	}
+
+	if (s > 20) {
+		s = 20;
+	}
+
+	memcpy(t, b, s);
+	t[s] = 0;
 }

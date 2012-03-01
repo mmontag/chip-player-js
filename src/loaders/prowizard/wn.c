@@ -10,16 +10,6 @@
 #include "prowiz.h"
 
 
-static int test_wn (uint8 *, int);
-static int depack_wn (FILE *, FILE *);
-
-const struct pw_format pw_wn = {
-	"Wanton Packer",
-	test_wn,
-	depack_wn
-};
-
-
 static int depack_wn(FILE *in, FILE * out)
 {
 	uint8 c1, c2, c3, c4;
@@ -76,7 +66,7 @@ static int depack_wn(FILE *in, FILE * out)
 	return 0;
 }
 
-static int test_wn(uint8 *data, int s)
+static int test_wn(uint8 *data, char *t, int s)
 {
 	int start = 0;
 
@@ -94,5 +84,13 @@ static int test_wn(uint8 *data, int s)
 	if (data[start + 950] > 0x7f)
 		return -1;
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
+
+const struct pw_format pw_wn = {
+	"Wanton Packer",
+	test_wn,
+	depack_wn
+};

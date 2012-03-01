@@ -14,16 +14,6 @@
 #define MAGIC_P41A	MAGIC4('P','4','1','A')
 
 
-static int test_p4x(uint8 *, int);
-static int depack_p4x (FILE *, FILE *);
-
-const struct pw_format pw_p4x = {
-	"The Player 4.x",
-	test_p4x,
-	depack_p4x
-};
-
-
 struct smp {
 	uint8 name[22];
 	int addr;
@@ -276,8 +266,7 @@ static int depack_p4x (FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_p4x(uint8 *data, int s)
+static int test_p4x(uint8 *data, char *t, int s)
 {
 	//int j, k, l, o, n;
 	//int start = 0, ssize;
@@ -285,10 +274,12 @@ static int test_p4x(uint8 *data, int s)
 
 	id = readmem32b(data);
 
-	if (id == MAGIC_P40A || id == MAGIC_P40B || id == MAGIC_P41A)
-		return 0;
+	if (id != MAGIC_P40A && id != MAGIC_P40B && id != MAGIC_P41A)
+		return -1;
 
-	return -1;
+	pw_read_title(NULL, t, 0);
+
+	return 0;
 
 #if 0
 	/* number of pattern (real) */
@@ -335,3 +326,10 @@ static int test_p4x(uint8 *data, int s)
 	return 0;
 #endif
 }
+
+const struct pw_format pw_p4x = {
+	"The Player 4.x",
+	test_p4x,
+	depack_p4x
+};
+

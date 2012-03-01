@@ -9,14 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_eu (uint8 *, int);
-static int depack_eu (FILE *, FILE *);
-
-const struct pw_format pw_eu = {
-	"Eureka Packer",
-	test_eu,
-	depack_eu
-};
 
 static int depack_eu(FILE *in, FILE *out)
 {
@@ -94,7 +86,7 @@ static int depack_eu(FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_eu (uint8 *data, int s)
+static int test_eu (uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0;
@@ -207,5 +199,13 @@ static int test_eu (uint8 *data, int s)
 		}
 	}
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
+
+const struct pw_format pw_eu = {
+	"Eureka Packer",
+	test_eu,
+	depack_eu
+};

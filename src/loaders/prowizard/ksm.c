@@ -9,17 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-
-static int test_ksm (uint8 *, int);
-static int depack_ksm (FILE *, FILE *);
-
-const struct pw_format pw_ksm = {
-	"Kefrens Sound Machine",
-	test_ksm,
-	depack_ksm
-};
-
-
 #define ON  1
 #define OFF 2
 
@@ -206,12 +195,12 @@ static int depack_ksm (FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_ksm (uint8 *data, int s)
+static int test_ksm (uint8 *data, char *t, int s)
 {
 	int j, k, l;
 	int start = 0;
 
-	PW_REQUEST_DATA (s, 1536);
+	PW_REQUEST_DATA(s, 1536);
 
 	if (data[start] != 'M' || data[start + 1] != '.')
 		return -1;
@@ -243,7 +232,7 @@ static int test_ksm (uint8 *data, int s)
 	if (j == 0)
 		return -1;
 
-	PW_REQUEST_DATA (s, start + 1536 + j * 192 + 63 * 3);
+	PW_REQUEST_DATA(s, start + 1536 + j * 192 + 63 * 3);
 
 	/* so, now, j is the highest track number (first is 00h !!) */
 	/* real test on tracks data starts now */
@@ -256,5 +245,13 @@ static int test_ksm (uint8 *data, int s)
 
 	/* j is still the highest track number */
 
+	pw_read_title(data, t, 13);
+
 	return 0;
 }
+
+const struct pw_format pw_ksm = {
+	"Kefrens Sound Machine",
+	test_ksm,
+	depack_ksm
+};

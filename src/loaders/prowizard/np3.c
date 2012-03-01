@@ -13,15 +13,6 @@
 #include "prowiz.h"
 
 
-static int test_np3(uint8 *, int);
-static int depack_np3(FILE *, FILE *);
-
-const struct pw_format pw_np3 = {
-	"Noisepacker v3",
-	test_np3,
-	depack_np3
-};
-
 static int depack_np3(FILE *in, FILE *out)
 {
 	uint8 tmp[1024];
@@ -157,7 +148,7 @@ static int depack_np3(FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_np3(uint8 *data, int s)
+static int test_np3(uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -261,5 +252,13 @@ static int test_np3(uint8 *data, int s)
 		m += 2;
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_np3 = {
+	"Noisepacker v3",
+	test_np3,
+	depack_np3
+};

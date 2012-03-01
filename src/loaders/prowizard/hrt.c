@@ -8,15 +8,6 @@
 #include "prowiz.h"
 
 
-static int test_hrt (uint8 *, int);
-static int depack_hrt (FILE *, FILE *);
-
-const struct pw_format pw_hrt = {
-	"Hornet Packer",
-	test_hrt,
-	depack_hrt
-};
-
 static int depack_hrt(FILE *in, FILE *out)
 {
 	uint8 buf[1024];
@@ -27,7 +18,7 @@ static int depack_hrt(FILE *in, FILE *out)
 
 	memset(buf, 0, 950);
 
-	fread (buf, 950, 1, in);		/* read header */
+	fread(buf, 950, 1, in);			/* read header */
 	for (i = 0; i < 31; i++)		/* erase addresses */
 		*(uint32 *)(buf + 38 + 30 * i) = 0;
 	fwrite(buf, 950, 1, out);		/* write header */
@@ -84,8 +75,7 @@ static int depack_hrt(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_hrt(uint8 *data, int s)
+static int test_hrt(uint8 *data, char *t, int s)
 {
 	int i;
 	int start = 0;
@@ -106,5 +96,13 @@ static int test_hrt(uint8 *data, int s)
 		
 	}
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
+
+const struct pw_format pw_hrt = {
+	"Hornet Packer",
+	test_hrt,
+	depack_hrt
+};

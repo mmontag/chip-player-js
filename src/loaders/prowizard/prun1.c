@@ -10,16 +10,6 @@
 #include "prowiz.h"
 
 
-static int test_pru1 (uint8 *, int);
-static int depack_pru1 (FILE *, FILE *);
-
-const struct pw_format pw_pru1 = {
-	"Prorunner 1.0",
-	test_pru1,
-	depack_pru1
-};
-
-
 static int depack_pru1 (FILE *in, FILE *out)
 {
 	uint8 header[2048];
@@ -37,8 +27,9 @@ static int depack_pru1 (FILE *in, FILE *out)
 	fwrite(header, 950, 1, out);
 
 	/* get whole sample size */
-	for (i = 0; i < 31; i++)
+	for (i = 0; i < 31; i++) {
 		ssize += readmem16b(header + i * 30 + 42) * 2;
+	}
 
 	/* read and write size of pattern list */
 	write8(out, npat = read8(in));
@@ -86,8 +77,7 @@ static int depack_pru1 (FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_pru1 (uint8 *data, int s)
+static int test_pru1(uint8 *data, char *t, int s)
 {
 	int start = 0;
 
@@ -105,6 +95,13 @@ static int test_pru1 (uint8 *data, int s)
 	if (data[start + 950] > 0x7f)
 		return -1;
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
 
+const struct pw_format pw_pru1 = {
+	"Prorunner 1.0",
+	test_pru1,
+	depack_pru1
+};

@@ -10,15 +10,6 @@
 #include "prowiz.h"
 
 
-static int test_zen (uint8 *, int);
-static int depack_zen (FILE *, FILE *);
-
-const struct pw_format pw_zen = {
-	"Zen Packer",
-	test_zen,
-	depack_zen
-};
-
 static int depack_zen(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
@@ -141,8 +132,7 @@ static int depack_zen(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_zen(uint8 *data, int s)
+static int test_zen(uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -211,5 +201,13 @@ static int test_zen(uint8 *data, int s)
 	/* n is the highest address of a sample data */
 	/* ssize is its size */
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_zen = {
+	"Zen Packer",
+	test_zen,
+	depack_zen
+};

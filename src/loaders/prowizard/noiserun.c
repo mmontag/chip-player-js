@@ -9,16 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_nru (uint8 *, int);
-static int depack_nru (FILE *, FILE *);
-
-
-const struct pw_format pw_nru = {
-	"NoiseRunner",
-	test_nru,
-	depack_nru
-};
-
 
 static int fine_table[] = {
 	0x0000, 0xffb8, 0xff70, 0xff28, 0xfee0, 0xfe98, 0xfe50, 0xfe08,
@@ -120,8 +110,7 @@ static int depack_nru(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_nru(uint8 *data, int s)
+static int test_nru(uint8 *data, char *t, int s)
 {
 	int i, j, k, l;
 	int start = 0;
@@ -195,5 +184,13 @@ static int test_nru(uint8 *data, int s)
 		}
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_nru = {
+	"NoiseRunner",
+	test_nru,
+	depack_nru
+};

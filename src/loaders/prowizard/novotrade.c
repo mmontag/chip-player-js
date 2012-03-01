@@ -8,16 +8,6 @@
 #include "prowiz.h"
 
 
-static int test_ntp (uint8 *, int);
-static int depack_ntp (FILE *, FILE *);
-
-const struct pw_format pw_ntp = {
-	"Novotrade Packer",
-	test_ntp,
-	depack_ntp
-};
-
-
 static int depack_ntp(FILE *in, FILE *out)
 {
 	uint8 buf[1024];
@@ -109,8 +99,7 @@ static int depack_ntp(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_ntp(uint8 *data, int s)
+static int test_ntp(uint8 *data, char *t, int s)
 {
 	int j, k;
 	int start = 0;
@@ -130,6 +119,13 @@ static int test_ntp(uint8 *data, int s)
 	if (readmem32b(data + start + k) != MAGIC4('S','A','M','P'))
 		return -1;
 
+	pw_read_title(data + 4, t, 16);
+
 	return 0;
 }
 
+const struct pw_format pw_ntp = {
+	"Novotrade Packer",
+	test_ntp,
+	depack_ntp
+};

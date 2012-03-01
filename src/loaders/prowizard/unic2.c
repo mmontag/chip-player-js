@@ -9,16 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_unic2 (uint8 *, int);
-static int depack_unic2 (FILE *, FILE *);
-
-const struct pw_format pw_unic2 = {
-	"Unic Tracker 2",
-	test_unic2,
-	depack_unic2
-};
-
-
 #define ON 1
 #define OFF 2
 
@@ -122,8 +112,7 @@ static int depack_unic2(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_unic2 (uint8 *data, int s)
+static int test_unic2 (uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -226,5 +215,13 @@ static int test_unic2 (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_unic2 = {
+	"Unic Tracker 2",
+	test_unic2,
+	depack_unic2
+};

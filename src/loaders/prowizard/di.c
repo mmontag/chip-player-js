@@ -9,15 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_di (uint8 *, int);
-static int depack_di (FILE *, FILE *);
-
-const struct pw_format pw_di = {
-	"Digital Illusions",
-	test_di,
-	depack_di
-};
-
 
 static int depack_di(FILE * in, FILE * out)
 {
@@ -132,7 +123,7 @@ static int depack_di(FILE * in, FILE * out)
 }
 
 
-static int test_di (uint8 *data, int s)
+static int test_di (uint8 *data, char *t, int s)
 {
 	int ssize, start = 0;
 	int j, k, l, m, n, o;
@@ -227,5 +218,14 @@ static int test_di (uint8 *data, int s)
 	if (l > 65535)
 		return -1;
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_di = {
+	"Digital Illusions",
+	test_di,
+	depack_di
+};
+

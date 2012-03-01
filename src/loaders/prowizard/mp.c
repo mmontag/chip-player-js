@@ -12,23 +12,6 @@
 #define MAGIC_TRK1	MAGIC4('T','R','K','1')
 
 
-static int depack_mp (FILE *, FILE *);
-static int test_mp_id (uint8 *, int);
-static int test_mp_noid (uint8 *, int);
-
-const struct pw_format pw_mp_id = {
-	"Module Protector",
-	test_mp_id,
-	depack_mp
-};
-
-const struct pw_format pw_mp_noid = {
-	"Module Protector noID",
-	test_mp_noid,
-	depack_mp
-};
-
-
 static int depack_mp(FILE *in, FILE *out)
 {
 	uint8 c1;
@@ -75,8 +58,7 @@ static int depack_mp(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_mp_noid(uint8 *data, int s)
+static int test_mp_noid(uint8 *data, char *t, int s)
 {
 	int start, ssize;
 	int j, k, l, m, n;
@@ -172,11 +154,12 @@ static int test_mp_noid(uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
 
-
-static int test_mp_id(uint8 *data, int s)
+static int test_mp_id(uint8 *data, char *t, int s)
 {
 	int j, l, k;
 	int start = 0;
@@ -214,5 +197,19 @@ static int test_mp_id(uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_mp_id = {
+	"Module Protector",
+	test_mp_id,
+	depack_mp
+};
+
+const struct pw_format pw_mp_noid = {
+	"Module Protector noID",
+	test_mp_noid,
+	depack_mp
+};

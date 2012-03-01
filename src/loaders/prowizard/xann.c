@@ -8,17 +8,9 @@
 #include <string.h>
 #include "prowiz.h"
 
-static int depack_xann (FILE *, FILE *);
-static int test_xann (uint8 *, int);
-
-const struct pw_format pw_xann = {
-	"XANN Packer",
-	test_xann,
-	depack_xann
-};
-
 #define SMP_DESC_ADDRESS 0x206
 #define PAT_DATA_ADDRESS 0x43C
+
 
 static int depack_xann(FILE *in, FILE *out)
 {
@@ -204,8 +196,7 @@ static int depack_xann(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_xann (uint8 *data, int s)
+static int test_xann(uint8 *data, char *t, int s)
 {
 	int i = 0, j, k, l, m;
 	int start = 0;
@@ -274,5 +265,13 @@ static int test_xann (uint8 *data, int s)
 	}
 #endif
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_xann = {
+	"XANN Packer",
+	test_xann,
+	depack_xann
+};

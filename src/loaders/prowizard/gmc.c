@@ -9,14 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int depack_GMC(FILE *, FILE *);
-static int test_GMC(uint8 *, int);
-
-const struct pw_format pw_gmc = {
-	"Game Music Creator",
-	test_GMC,
-	depack_GMC
-};
 
 static int depack_GMC(FILE *in, FILE *out)
 {
@@ -110,7 +102,7 @@ static int depack_GMC(FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_GMC(uint8 *data, int s)
+static int test_GMC(uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0;
@@ -209,5 +201,13 @@ static int test_GMC(uint8 *data, int s)
 		}
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_gmc = {
+	"Game Music Creator",
+	test_GMC,
+	depack_GMC
+};

@@ -9,15 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_kris (uint8 *, int);
-static int depack_kris (FILE *, FILE *);
-
-const struct pw_format pw_kris = {
-	"ChipTracker",
-	test_kris,
-	depack_kris
-};
-
 
 static int depack_kris(FILE *in, FILE *out)
 {
@@ -129,7 +120,7 @@ static int depack_kris(FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_kris (uint8 *data, int s)
+static int test_kris (uint8 *data, char *t, int s)
 {
 	int j;
 	int start = 0;
@@ -154,5 +145,13 @@ static int test_kris (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
+
+const struct pw_format pw_kris = {
+	"ChipTracker",
+	test_kris,
+	depack_kris
+};

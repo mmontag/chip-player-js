@@ -12,17 +12,7 @@
 #include "prowiz.h"
 
 
-static int test_crb (uint8 *, int);
-static int depack_crb (FILE *, FILE *);
-
-const struct pw_format pw_crb = {
-	"Heatseeker 1.0",
-	test_crb,
-	depack_crb
-};
-
-
-static int depack_crb (FILE *in, FILE *out)
+static int depack_crb(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 ptable[128];
@@ -121,8 +111,7 @@ static int depack_crb (FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_crb (uint8 *data, int s)
+static int test_crb(uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -217,5 +206,13 @@ static int test_crb (uint8 *data, int s)
 	/* k is the size of the pattern data */
 	/* ssize is the size of the sample data */
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_crb = {
+	"Heatseeker 1.0",
+	test_crb,
+	depack_crb
+};

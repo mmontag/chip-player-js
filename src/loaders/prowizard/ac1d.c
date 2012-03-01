@@ -11,17 +11,8 @@
 #include <string.h>
 #include "prowiz.h"
 
-static int depack_AC1D (FILE *, FILE *);
-static int test_AC1D (uint8 *, int);
 
-const struct pw_format pw_ac1d = {
-	"AC1D Packer",
-	test_AC1D,
-	depack_AC1D
-};
-
-
-static int depack_AC1D (FILE *in, FILE *out)
+static int depack_AC1D(FILE *in, FILE *out)
 {
 	uint8 NO_NOTE = 0xff;
 	uint8 c1, c2, c3, c4;
@@ -140,8 +131,7 @@ static int depack_AC1D (FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_AC1D(uint8 *data, int s)
+static int test_AC1D(uint8 *data, char *t, int s)
 {
 	int j, k;
 	int start = 0;
@@ -168,5 +158,14 @@ static int test_AC1D(uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_ac1d = {
+	"AC1D Packer",
+	test_AC1D,
+	depack_AC1D
+};
+

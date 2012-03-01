@@ -9,16 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_pru2 (uint8 *, int);
-static int depack_pru2 (FILE *, FILE *);
-
-
-const struct pw_format pw_pru2 = {
-	"Prorunner 2.0",
-	test_pru2,
-	depack_pru2
-};
-
 
 static int depack_pru2(FILE *in, FILE *out)
 {
@@ -120,8 +110,7 @@ static int depack_pru2(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_pru2 (uint8 *data, int s)
+static int test_pru2(uint8 *data, char *t, int s)
 {
 	int k;
 	int start = 0;
@@ -151,5 +140,13 @@ static int test_pru2 (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(NULL, t, 0);
+	
 	return 0;
 }
+
+const struct pw_format pw_pru2 = {
+	"Prorunner 2.0",
+	test_pru2,
+	depack_pru2
+};

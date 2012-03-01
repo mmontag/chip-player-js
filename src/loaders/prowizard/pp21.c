@@ -11,14 +11,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int depack_pp21 (FILE *, FILE *);
-static int test_pp21 (uint8 *, int);
-
-const struct pw_format pw_pp21 = {
-	"ProPacker 2.1",
-	test_pp21,
-	depack_pp21
-};
 
 static int depack_pp21(FILE *in, FILE *out)
 {
@@ -105,8 +97,7 @@ static int depack_pp21(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_pp21(uint8 *data, int s)
+static int test_pp21(uint8 *data, char *t, int s)
 {
 	int j, k, l;
 	int start = 0;
@@ -166,5 +157,13 @@ static int test_pp21(uint8 *data, int s)
 	if (l != ((ssize + 1) * 4))
 		return -1;
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_pp21 = {
+	"ProPacker 2.1",
+	test_pp21,
+	depack_pp21
+};

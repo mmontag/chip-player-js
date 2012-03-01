@@ -9,15 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_fuchs (uint8 *, int);
-static int depack_fuchs (FILE *, FILE *);
-
-const struct pw_format pw_fchs = {
-	"Fuchs Tracker",
-	test_fuchs,
-	depack_fuchs
-};
-
 
 static int depack_fuchs(FILE *in, FILE *out)
 {
@@ -158,8 +149,7 @@ static int depack_fuchs(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_fuchs (uint8 *data, int s)
+static int test_fuchs (uint8 *data, char *t, int s)
 {
 	int start = 0;
 	int j, k, m, n, o;
@@ -231,5 +221,14 @@ static int test_fuchs (uint8 *data, int s)
 	/* m is the size of all samples (in descriptions) */
 	/* k is the pattern data size */
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_fchs = {
+	"Fuchs Tracker",
+	test_fuchs,
+	depack_fuchs
+};
+

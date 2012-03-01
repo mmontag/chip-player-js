@@ -8,16 +8,6 @@
 #include "prowiz.h"
 
 
-static int test_skyt (uint8 *, int);
-static int depack_skyt (FILE *, FILE *);
-
-const struct pw_format pw_skyt = {
-	"SKYT Packer",
-	test_skyt,
-	depack_skyt
-};
-
-
 static int depack_skyt(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
@@ -97,8 +87,7 @@ static int depack_skyt(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_skyt(uint8 *data, int s)
+static int test_skyt(uint8 *data, char *t, int s)
 {
 	int start = 0;
 	int i;
@@ -114,5 +103,14 @@ static int test_skyt(uint8 *data, int s)
 	if (readmem32b(data + start + 256) != MAGIC4('S','K','Y','T'))
 		return -1;
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_skyt = {
+	"SKYT Packer",
+	test_skyt,
+	depack_skyt
+};
+

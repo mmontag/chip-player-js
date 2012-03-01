@@ -13,15 +13,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_p18a(uint8 *, int);
-static int depack_p18a(FILE *, FILE *);
-
-const struct pw_format pw_p18a = {
-	"Promizer 1.8a",
-	test_p18a,
-	depack_p18a
-};
-
 #define ON  0
 #define OFF 1
 
@@ -272,7 +263,7 @@ static int depack_p18a(FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_p18a(uint8 * data, int s)
+static int test_p18a(uint8 * data, char *t, int s)
 {
 	int i = 0, j, k;
 	int start = 0;
@@ -319,5 +310,13 @@ static int test_p18a(uint8 * data, int s)
 	if (data[start + 37] != 0x00)
 		return -1;
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_p18a = {
+	"Promizer 1.8a",
+	test_p18a,
+	depack_p18a
+};

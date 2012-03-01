@@ -26,7 +26,7 @@
 
 struct pw_format {
 	char *name;
-	int (*test)(uint8 *, int);
+	int (*test)(uint8 *, char *, int);
 	int (*depack)(FILE *, FILE *);
 	struct list_head list;
 };
@@ -36,6 +36,7 @@ int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);
 /* int pw_enable(char *, int); */
 int pw_check(unsigned char *, int, char **);
+void pw_read_title(unsigned char *, char *, int);
 
 extern const uint8 ptk_table[37][2];
 extern const short tun_table[16][36];

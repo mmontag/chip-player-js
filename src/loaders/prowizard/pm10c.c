@@ -11,15 +11,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_p10c(uint8 *, int);
-static int depack_p10c(FILE *, FILE *);
-
-const struct pw_format pw_p10c = {
-	"Promizer 1.0c",
-	test_p10c,
-	depack_p10c
-};
-
 #define ON  0
 #define OFF 1
 
@@ -337,7 +328,7 @@ restart:
 	return 0;
 }
 
-static int test_p10c(uint8 *data, int s)
+static int test_p10c(uint8 *data, char *t, int s)
 {
 	int start = 0;
 	uint8 magic[] = {
@@ -376,5 +367,14 @@ static int test_p10c(uint8 *data, int s)
 	if (data[start + 37] != 0xfc)
 		return -1;
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_p10c = {
+	"Promizer 1.0c",
+	test_p10c,
+	depack_p10c
+};
+

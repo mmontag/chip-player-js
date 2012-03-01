@@ -14,31 +14,6 @@
 #define MAGIC_M_K_	MAGIC4('M','.','K','.')
 #define MAGIC_0000	MAGIC4(0x0,0x0,0x0,0x0)
 
-
-static int test_unic_id (uint8 *, int);
-static int test_unic_noid (uint8 *, int);
-static int test_unic_emptyid (uint8 *, int);
-static int depack_unic (FILE *, FILE *);
-
-const struct pw_format pw_unic_id = {
-	"UNIC Tracker",
-	test_unic_id,
-	depack_unic
-};
-
-const struct pw_format pw_unic_noid = {
-	"UNIC Tracker noid",
-	test_unic_noid,
-	depack_unic
-};
-
-const struct pw_format pw_unic_emptyid = {
-	"UNIC Tracker id0",
-	test_unic_emptyid,
-	depack_unic
-};
-
-
 #define ON 1
 #define OFF 2
 
@@ -149,8 +124,7 @@ static int depack_unic (FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_unic_id (uint8 *data, int s)
+static int test_unic_id (uint8 *data, char *t, int s)
 {
 	int j, k, l, n;
 	int start = 0, ssize;
@@ -223,11 +197,12 @@ static int test_unic_id (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
 
-
-static int test_unic_emptyid (uint8 *data, int s)
+static int test_unic_emptyid (uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -340,11 +315,12 @@ static int test_unic_emptyid (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
 
-
-static int test_unic_noid (uint8 *data, int s)
+static int test_unic_noid (uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -464,5 +440,25 @@ static int test_unic_noid (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
+
+const struct pw_format pw_unic_id = {
+	"UNIC Tracker",
+	test_unic_id,
+	depack_unic
+};
+
+const struct pw_format pw_unic_noid = {
+	"UNIC Tracker noid",
+	test_unic_noid,
+	depack_unic
+};
+
+const struct pw_format pw_unic_emptyid = {
+	"UNIC Tracker id0",
+	test_unic_emptyid,
+	depack_unic
+};

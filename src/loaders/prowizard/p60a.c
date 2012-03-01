@@ -16,16 +16,6 @@
 #include "prowiz.h"
 
 
-static int test_p60a (uint8 *, int);
-static int depack_p60a (FILE *, FILE *);
-
-const struct pw_format pw_p60a = {
-	"The Player 6.0a",
-	test_p60a,
-	depack_p60a
-};
-
-
 static int depack_p60a(FILE *in, FILE *out)
 {
     uint8 c1, c2, c3, c4, c5, c6;
@@ -372,7 +362,7 @@ static int depack_p60a(FILE *in, FILE *out)
 }
 
 
-static int test_p60a(uint8 *data, int s)
+static int test_p60a(uint8 *data, char *t, int s)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -476,6 +466,8 @@ static int test_p60a(uint8 *data, int s)
 			n += 3;
 		}
 	}
+
+	pw_read_title(NULL, t, 0);
 
 	return 0;
 }
@@ -679,3 +671,10 @@ void testP60A_pack (void)
 	Test = GOOD;
 }
 #endif
+
+const struct pw_format pw_p60a = {
+	"The Player 6.0a",
+	test_p60a,
+	depack_p60a
+};
+

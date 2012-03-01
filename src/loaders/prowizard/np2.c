@@ -9,14 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_np2 (uint8 *, int);
-static int depack_np2 (FILE *, FILE *);
-
-const struct pw_format pw_np2 = {
-	"Noisepacker v2",
-	test_np2,
-	depack_np2
-};
 
 static int depack_np2(FILE *in, FILE *out)
 {
@@ -144,8 +136,7 @@ static int depack_np2(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_np2(uint8 *data, int s)
+static int test_np2(uint8 *data, char *t, int s)
 {
 	int j, k, l, o, m, n;
 	int start, ssize;
@@ -257,5 +248,13 @@ static int test_np2(uint8 *data, int s)
 	/* l is the size of the header 'til the track datas */
 	/* k is the size of the track datas */
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_np2 = {
+	"Noisepacker v2",
+	test_np2,
+	depack_np2
+};

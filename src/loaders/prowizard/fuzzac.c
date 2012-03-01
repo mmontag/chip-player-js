@@ -18,16 +18,6 @@
 #include "prowiz.h"
 
 
-static int test_fuzz (uint8 *, int);
-static int depack_fuzz (FILE *, FILE *);
-
-const struct pw_format pw_fuzz = {
-	"Fuzzac Packer",
-	test_fuzz,
-	depack_fuzz
-};
-
-
 static int depack_fuzz(FILE *in, FILE *out)
 {
 	uint8 c1;
@@ -176,8 +166,7 @@ static int depack_fuzz(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_fuzz (uint8 *data, int s)
+static int test_fuzz (uint8 *data, char *t, int s)
 {
 	int j, k;
 	int start = 0, ssize = 0;
@@ -209,5 +198,14 @@ static int test_fuzz (uint8 *data, int s)
 	if (data[start + 2114] == 0x00)
 		return -1;
 
+	pw_read_title(NULL, t, 0);
+
 	return 0;
 }
+
+const struct pw_format pw_fuzz = {
+	"Fuzzac Packer",
+	test_fuzz,
+	depack_fuzz
+};
+

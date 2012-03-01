@@ -9,14 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int depack_starpack (FILE *, FILE *);
-static int test_starpack (uint8 *, int);
-
-const struct pw_format pw_starpack = {
-	"Startrekker Packer",
-	test_starpack,
-	depack_starpack
-};
 
 int depack_starpack(FILE *in, FILE *out)
 {
@@ -186,8 +178,7 @@ int depack_starpack(FILE *in, FILE *out)
 	return 0;
 }
 
-
-int test_starpack(uint8 *data, int s)
+int test_starpack(uint8 *data, char *t, int s)
 {
 	int start = 0;
 	int j, k, l, m;
@@ -308,5 +299,13 @@ int test_starpack(uint8 *data, int s)
 		j += 4;
 	}
 
+	pw_read_title(data, t, 20);
+
 	return 0;
 }
+
+const struct pw_format pw_starpack = {
+	"Startrekker Packer",
+	test_starpack,
+	depack_starpack
+};

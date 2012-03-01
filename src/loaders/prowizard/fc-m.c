@@ -9,15 +9,6 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_fcm (uint8 *, int);
-static int depack_fcm (FILE *, FILE *);
-
-const struct pw_format pw_fcm = {
-	"FC-M Packer",
-	test_fcm,
-	depack_fcm
-};
-
 
 static int depack_fcm(FILE *in, FILE *out)
 {
@@ -76,8 +67,7 @@ static int depack_fcm(FILE *in, FILE *out)
 	return 0;
 }
 
-
-static int test_fcm (uint8 *data, int s)
+static int test_fcm(uint8 *data, char *t, int s)
 {
 	int start = 0;
 	int j;
@@ -103,5 +93,12 @@ static int test_fcm (uint8 *data, int s)
 			return -1;
 	}
 
+	pw_read_title(data + 10, t, 20);
 	return 0;
 }
+
+const struct pw_format pw_fcm = {
+	"FC-M Packer",
+	test_fcm,
+	depack_fcm
+};
