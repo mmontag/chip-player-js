@@ -156,7 +156,7 @@ int pw_wizardry(int in, int out, char **name)
 	return 0;
 }
 
-int pw_check(unsigned char *b, int s)
+int pw_check(unsigned char *b, int s, char **name)
 {
 	int i, res;
 
@@ -167,6 +167,9 @@ int pw_check(unsigned char *b, int s)
 			return res;
 		} else if (res == 0) {
 			_D("format ok: %s\n", pw_format[i]->name);
+			if (name != NULL) {
+				*name = pw_format[i]->name;
+			}
 			return 0;
 		}
 	}
