@@ -296,7 +296,7 @@ static void synth_seteffect(struct context_data *ctx, int c, int type, int val)
 
 static int synth_init(struct context_data *ctx, int freq)
 {
-	SYNTH_CHIP(ctx) = adlib_new(freq);
+	SYNTH_CHIP(ctx) = adlib_new();
 	if (SYNTH_CHIP(ctx) == NULL)
 		return -1;
 
