@@ -35,7 +35,7 @@ static int flt_test(FILE *f, char *t, const int start)
 	return -1;
 
     fseek(f, start + 0, SEEK_SET);
-    read_title(f, t, 28);
+    read_title(f, t, 20);
 
     return 0;
 }
