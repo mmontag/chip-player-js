@@ -77,6 +77,8 @@ static int mfp_test(FILE *f, char *t, const int start)
 	if (readmem16b(buf + 378) != readmem16b(buf + 380))
 		return -1;
 
+	read_title(f, t, 0);
+
 	return 0;
 }
 
