@@ -32,6 +32,7 @@ static int imf_test(FILE *f, char *t, const int start)
     if (read32b(f) != MAGIC_IM10)
 	return -1;
 
+    fseek(f, start, SEEK_SET);
     read_title(f, t, 32);
 
     return 0;
