@@ -30,7 +30,8 @@ const struct format_loader pw_loader = {
 
 #define BUF_SIZE 0x10000
 
-int pw_test_format(FILE *f, char *t, const int start, char **name)
+int pw_test_format(FILE *f, char *t, const int start,
+		   struct xmp_test_info *info)
 {
 	unsigned char *b;
 	int extra;
@@ -39,7 +40,7 @@ int pw_test_format(FILE *f, char *t, const int start, char **name)
 	b = calloc(1, BUF_SIZE);
 	fread(b, s, 1, f);
 
-	while ((extra = pw_check(b, s, name)) > 0) {
+	while ((extra = pw_check(b, s, info)) > 0) {
 		unsigned char *buf = realloc(b, s + extra);
 		if (buf == NULL) {
 			free(b);

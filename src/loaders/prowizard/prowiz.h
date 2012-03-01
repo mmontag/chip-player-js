@@ -35,7 +35,7 @@ int pw_wizardry(int, int, char **);
 int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);
 /* int pw_enable(char *, int); */
-int pw_check(unsigned char *, int, char **);
+int pw_check(unsigned char *, int, struct xmp_test_info *);
 void pw_read_title(unsigned char *, char *, int);
 
 extern const uint8 ptk_table[37][2];

@@ -412,28 +412,18 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	for (i = 0; format_loader[i] != NULL; i++) {
 		fseek(f, 0, SEEK_SET);
 		if (format_loader[i]->test(f, buf, 0) == 0) {
-			char *pwname = NULL;
+			int is_prowizard = 0;
 
 			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
 				fseek(f, 0, SEEK_SET);
-				pw_test_format(f, buf, 0, &pwname);
+				pw_test_format(f, buf, 0, info);
+				is_prowizard = 1;
 			}
 
 			fclose(f);
 
 			unlink_tempfiles(&tmpfiles_list);
-			if (info != NULL) {
-
-				/* Get prowizard type, but can't read
-				 * prowizard name until module is loaded
-				 */
-				if (pwname != NULL) {
-					info->name[0] = 0;
-					strncpy(info->type, pwname,
-							XMP_NAME_SIZE);
-					return 0;
-				} 
-
+			if (info != NULL && !is_prowizard) {
 				strncpy(info->name, buf, XMP_NAME_SIZE);
 				strncpy(info->type, format_loader[i]->name,
 							XMP_NAME_SIZE);

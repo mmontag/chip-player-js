@@ -157,7 +157,7 @@ int pw_wizardry(int in, int out, char **name)
 	return 0;
 }
 
-int pw_check(unsigned char *b, int s, char **name)
+int pw_check(unsigned char *b, int s, struct xmp_test_info *info)
 {
 	int i, res;
 	char title[21];
@@ -169,8 +169,10 @@ int pw_check(unsigned char *b, int s, char **name)
 			return res;
 		} else if (res == 0) {
 			_D("format ok: %s\n", pw_format[i]->name);
-			if (name != NULL) {
-				*name = pw_format[i]->name;
+			if (info != NULL) {
+				memcpy(info->name, title, 21);
+				strncpy(info->type, pw_format[i]->name,
+							XMP_NAME_SIZE);
 			}
 			return 0;
 		}

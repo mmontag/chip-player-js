@@ -14,7 +14,7 @@ struct format_loader {
 };
 
 char **format_list(void);
-int pw_test_format(FILE *, char *, const int, char **);
+int pw_test_format(FILE *, char *, const int, struct xmp_test_info *);
 
 #endif
 
