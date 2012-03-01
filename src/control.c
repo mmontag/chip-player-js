@@ -58,6 +58,7 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 	struct context_data *ctx = (struct context_data *)handle;
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+	struct mixer_data *s = &ctx->s;
 	int ret = 0;
 
 	va_start(ap, cmd);
@@ -117,8 +118,15 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 	case XMP_CTL_CH_MUTE: {
 		int arg1 = va_arg(ap, int);
 		int arg2 = va_arg(ap, int);
-
 		virtch_mute(ctx, arg1, arg2);
+		break; }
+	case XMP_CTL_MIXER_AMP: {
+		int arg = va_arg(ap, int);
+		s->amplify = arg;
+		break; }
+	case XMP_CTL_MIXER_PAN: {
+		int arg = va_arg(ap, int);
+		s->mix = arg;
 		break; }
 	default:
 		ret = -1;

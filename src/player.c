@@ -910,7 +910,7 @@ static void next_row(struct context_data *ctx)
 }
 
 
-int xmp_player_start(xmp_context opaque, int start, int freq, int format)
+int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -929,7 +929,7 @@ int xmp_player_start(xmp_context opaque, int start, int freq, int format)
 	p->row = 0;
 	p->time = 0;
 	p->loop_count = 0;
-	s->freq = freq;
+	s->freq = rate;
 	s->format = format;
 	s->amplify = DEFAULT_AMPLIFY;
 	s->mix = DEFAULT_MIX;

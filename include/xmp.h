@@ -34,7 +34,10 @@ extern "C" {
 #define XMP_CTL_GVOL_DEC	0x06
 #define XMP_CTL_SEEK_TIME	0x07
 #define XMP_CTL_CH_MUTE		0x08
+#define XMP_CTL_MIXER_AMP	0x09
+#define XMP_CTL_MIXER_PAN	0x0a
 
+/* mixer sample format */
 #define XMP_FORMAT_8BIT		(1 << 0) /**< Mix to 8-bit instead of 16 */
 #define XMP_FORMAT_UNSIGNED	(1 << 1) /**< Mix to unsigned samples */
 #define XMP_FORMAT_MONO		(1 << 2) /**< Mix to mono instead of stereo */
@@ -71,7 +74,6 @@ struct xmp_track {
 	int rows;			/**< Number of rows */
 	struct xmp_event event[1];	/**< Event data */
 };
-
 
 struct xmp_envelope {
 #define XMP_ENVELOPE_ON		(1 << 0)  /**< Envelope is enabled */
@@ -152,8 +154,6 @@ struct xmp_sample {
 	unsigned char *data;		/**< Sample data */
 };
 
-
-
 struct xmp_module {
 	char name[XMP_NAME_SIZE];	/**< Module name */
 	char type[XMP_NAME_SIZE];	/**< Module type */
@@ -175,7 +175,6 @@ struct xmp_module {
 	struct xmp_channel xxc[64];	/**< Channel info */
 	unsigned char xxo[XMP_MAX_MOD_LENGTH];		/**<*< Orders */
 };
-
 
 struct xmp_test_info {
 	char name[XMP_NAME_SIZE];
@@ -228,9 +227,7 @@ extern const unsigned int xmp_version;
 
 /**
  * @brief Jump to next order
- * 
  * Move to the next pattern in the pattern order sequence.
- *
  * @param p Player context handle
  */
 #define xmp_ord_next(p)		_xmp_ctl((p), XMP_CTL_ORD_NEXT)
@@ -243,6 +240,8 @@ extern const unsigned int xmp_version;
 #define xmp_gvol_dec(p)		_xmp_ctl((p), XMP_CTL_GVOL_DEC)
 #define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))
 #define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
+#define xmp_mixer_amp(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_AMP, (x))
+#define xmp_mixer_pan(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_PAN, (x))
 
 xmp_context xmp_create_context  (void);
 int         xmp_test_module     (char *, struct xmp_test_info *);
