@@ -39,7 +39,8 @@ static int gal4_test(FILE *f, char *t, const int start)
 	if (read32b(f) != MAGIC4('M', 'A', 'I', 'N'))
 		return -1;
 
-	read_title(f, t, 0);
+	read32b(f);		/* skip size */
+	read_title(f, t, 64);
 
 	return 0;
 }
