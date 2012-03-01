@@ -77,8 +77,17 @@ static int polly_test(FILE *f, char *t, const int start)
 		}
 	}
 
-	if (t)
+	if (t) {
 		memcpy(t, buf + ORD_OFS + 160, 16);
+		t[16] = 0;
+		for (i = 15; i >=0; i--) {
+			if (t[i] == ' ') {
+				t[i] = 0;
+			} else {
+				break;
+			}
+		}
+	}
 
 	free(buf);
 
