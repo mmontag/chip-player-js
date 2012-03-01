@@ -146,6 +146,9 @@ static int st_test(FILE *f, char *t, const int start)
 	}
     }
 
+    fseek(f, start, SEEK_SET);
+    read_title(f, t, 20);
+
     return 0;
 }
 
