@@ -12,6 +12,7 @@
 
 #define MAGIC_FORM	MAGIC4('F','O','R','M')
 #define MAGIC_EMOD	MAGIC4('E','M','O','D')
+#define MAGIC_EMIC	MAGIC4('E','M','I','C')
 
 
 static int emod_test (FILE *, char *, const int);
@@ -33,7 +34,13 @@ static int emod_test(FILE *f, char *t, const int start)
     if (read32b(f) != MAGIC_EMOD)
 	return -1;
 
-    read_title(f, t, 0);
+    if (read32b(f) == MAGIC_EMIC) {
+        read32b(f);		/* skip size */
+        read16b(f);		/* skip version */
+        read_title(f, t, 20);
+    } else {
+        read_title(f, t, 0);
+    }
 
     return 0;
 }
@@ -182,8 +189,9 @@ static int emod_load(struct module_data *m, FILE *f, const int start)
     iff_register(handle, "8SMP", get_8smp);
 
     /* Load IFF chunks */
-    while (!feof(f))
+    while (!feof(f)) {
 	iff_chunk(handle, m, f, NULL);
+    }
 
     iff_release(handle);
 
