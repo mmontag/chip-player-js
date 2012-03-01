@@ -29,7 +29,7 @@ static int liq_test(FILE *f, char *t, const int start)
 {
     char buf[15];
 
-    if (fread(buf, 1, 15, f) < 15)
+    if (fread(buf, 1, 14, f) < 14)
 	return -1;
 
     if (memcmp(buf, "Liquid Module:", 14))
