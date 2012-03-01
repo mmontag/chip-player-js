@@ -188,6 +188,12 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 	_D(_D_INFO "Loading samples: %d", mod->ins);
 
 	/* first check smp.filename */
+	if (strlen(m->basename) < 5 || m->basename[3] != '.') {
+		fprintf(stderr, "libxmp: warning: invalid filename %s\n",
+								m->basename);
+		goto err;
+	}
+
 	m->basename[0] = 's';
 	m->basename[1] = 'm';
 	m->basename[2] = 'p';
@@ -195,16 +201,20 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 	if (stat(smp_filename, &st) < 0) {
 		/* handle .set filenames like in Kid Chaos*/
 		char *x;
-		if ((x = strchr(smp_filename, '-')))
-			strcpy(x, ".set");
+		if (strchr(m->basename, '-')) {
+			if ((x = strrchr(smp_filename, '-')))
+				strcpy(x, ".set");
+		}
 		if (stat(smp_filename, &st) < 0) {
-			_D(_D_CRIT "sample file %s is missing!", smp_filename);
-			return 0;
+			fprintf(stderr, "libxmp: warning: missing file %s\n",
+								smp_filename);
+			goto err;
 		}
 	}
 	if ((s = fopen(smp_filename, "rb")) == NULL) {
-		_D(_D_CRIT "can't open sample file %s!", smp_filename);
-		return 0;
+		fprintf(stderr, "libxmp: warning: can't open sample file %s\n",
+								smp_filename);
+		goto err;
 	}
 
 	for (i = 0; i < mod->ins; i++) {
@@ -215,6 +225,14 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 	fclose(s);
 
 	m->quirk |= QUIRK_MODRNG;
+
+	return 0;
+
+    err:
+	for (i = 0; i < mod->ins; i++) {
+		mod->xxi[i].nsm = 0;
+		memset(&mod->xxs[i], 0, sizeof(struct xmp_sample));
+	}
 
 	return 0;
 }
