@@ -30,7 +30,7 @@ static int ssn_test(FILE *f, char *t, const int start)
     if (read8(f) != 0xff)
 	return -1;
 
-    fseek(f, 2, SEEK_CUR);
+    fseek(f, start + 2, SEEK_SET);
     read_title(f, t, 36);
 
     return 0;
