@@ -182,6 +182,11 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
     struct xmp_instrument *instrument;
     struct xmp_subinstrument *sub;
 
+    if (p->inject_event[chn].flag > 0) {
+	e = &p->inject_event[chn];
+	e->flag = 0;
+    }
+
     xc = &p->xc_data[chn];
 
     /* Tempo affects delay and must be computed first */

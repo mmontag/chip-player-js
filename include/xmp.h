@@ -68,6 +68,7 @@ struct xmp_event {
 	unsigned char fxp;		/**< Effect parameter */
 	unsigned char f2t;		/**< Secondary effect type */
 	unsigned char f2p;		/**< Secondary effect parameter */
+	unsigned char flag;
 };
 
 struct xmp_track {
@@ -253,6 +254,7 @@ int         xmp_player_start    (xmp_context, int, int, int);
 int         xmp_player_frame    (xmp_context);
 void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
 void        xmp_player_end      (xmp_context);
+void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
 char      **xmp_get_format_list (void);
 
 #ifdef __cplusplus

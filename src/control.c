@@ -149,3 +149,13 @@ char **xmp_get_format_list()
 {
 	return format_list();
 }
+
+void xmp_inject_event(xmp_context handle, int channel, struct xmp_event *e)
+{
+	struct context_data *ctx = (struct context_data *)handle;
+	struct player_data *p = &ctx->p;
+
+	memcpy(&p->inject_event[channel], e, sizeof(struct xmp_event));
+	p->inject_event[channel].flag = 1;
+}
+ 
