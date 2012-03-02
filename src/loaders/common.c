@@ -275,7 +275,7 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
 	if (xxs->lpe > xxs->len) {
 		xxs->lpe = xxs->len;
 	}
-	if (xxs->lps >= xxs->len || xxs->lps > xxs->lpe) {
+	if (xxs->lps >= xxs->len || xxs->lps >= xxs->lpe) {
 		xxs->lps = xxs->lpe = 0;
 		xxs->flg &= ~(XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
 	}
