@@ -341,6 +341,20 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
 		}
 	}
 
+	if (flags & SAMPLE_FLAG_7BIT) {
+		convert_7bit_to_8bit(xxs->len, xxs->data);
+	}
+
+	if (flags & SAMPLE_FLAG_DIFF) {
+		convert_delta(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
+	} else if (flags & SAMPLE_FLAG_8BDIFF) {
+		int len = xxs->len;
+		if (xxs->flg & XMP_SAMPLE_16BIT) {
+			len *= 2;
+		}
+		convert_delta(len, 0, xxs->data);
+	}
+
 	/* Convert samples to signed */
 	if (flags & SAMPLE_FLAG_UNS) {
 		convert_signal(xxs->len, xxs->flg & XMP_SAMPLE_16BIT,
@@ -360,17 +374,9 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
 		xxs->len /= 2;
 	}
 
-	if (flags & SAMPLE_FLAG_7BIT)
-		convert_7bit_to_8bit(xxs->len, xxs->data);
-
-	if (flags & SAMPLE_FLAG_DIFF)
-		convert_delta(xxs->len, xxs->flg & XMP_SAMPLE_16BIT,
-				 xxs->data);
-	else if (flags & SAMPLE_FLAG_8BDIFF)
-		convert_delta(xxs->len, 0, xxs->data);
-
-	if (flags & SAMPLE_FLAG_VIDC)
+	if (flags & SAMPLE_FLAG_VIDC) {
 		convert_vidc_to_linear(xxs->len, xxs->data);
+	}
 
 	/* Check for full loop samples */
 	if (flags & SAMPLE_FLAG_FULLREP) {

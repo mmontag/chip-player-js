@@ -133,9 +133,14 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 	mod->xxs[i].lpe = pih.loopend;
 	if (mod->xxs[i].lpe)
 		mod->xxs[i].lpe--;
-	mod->xxs[i].flg = pih.type & 0x04 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxs[i].flg |= pih.type & 0x08 ? XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR : 0;
 
+	mod->xxs[i].flg = 0;
+	if (pih.type & 0x04) {
+		mod->xxs[i].flg |= XMP_SAMPLE_LOOP;
+	}
+	if (pih.type & 0x08) {
+		mod->xxs[i].flg |= XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR;
+	}
 	if (pih.type & 0x10) {
 	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
 	    mod->xxs[i].len >>= 1;
@@ -250,11 +255,14 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	if (!mod->xxs[i].len)
+	int smpnum = mod->xxi[i].sub[0].sid;
+	struct xmp_sample *xxs = &mod->xxs[smpnum];
+
+	if (xxs->len == 0)
 	    continue;
-	fseek(f, start + smp_ofs[mod->xxi[i].sub[0].sid], SEEK_SET);
-	load_sample(f, mod->xxi[i].sub[0].sid,
-			SAMPLE_FLAG_8BDIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+
+	fseek(f, start + smp_ofs[smpnum], SEEK_SET);
+	load_sample(f, smpnum, SAMPLE_FLAG_8BDIFF, xxs, NULL);
     }
 
     m->vol_table = (int *)ptm_vol;
