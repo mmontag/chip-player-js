@@ -966,10 +966,10 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 		p->ord = p->scan.ord = 0;
 		p->row = p->scan.row = 0;
 		f->end_point = 0;
-		return 0;
+		f->num_rows = 0;
+	} else {
+		f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
 	}
-
-	f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
 
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
 	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat)
@@ -1008,7 +1008,7 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	free(p->xc_data);
     err1:
 	free(f->loop);
-err:
+    err:
 	return -1;
 }
 
@@ -1020,6 +1020,9 @@ int xmp_player_frame(xmp_context opaque)
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
 	int i;
+
+	if (mod->len <= 0)
+		return -1;
 
 	/* check reposition */
 	if (p->ord != p->pos) {
@@ -1102,9 +1105,6 @@ void xmp_player_end(xmp_context opaque)
 	virtch_off(ctx);
 	m->synth->deinit(ctx);
 
-	if (m->mod.len == 0 || m->mod.chn == 0)
-                return;
-
 	free(p->xc_data);
 	free(f->loop);
 
@@ -1130,7 +1130,13 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->order = p->pos;
 	info->pattern = mod->xxo[p->pos];
 	info->row = p->row;
-	info->num_rows = mod->xxp[info->pattern]->rows;
+
+	if (info->pattern < mod->pat) {
+		info->num_rows = mod->xxp[info->pattern]->rows;
+	} else {
+		info->num_rows = 0;
+	}
+
 	info->frame = p->frame;
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
@@ -1170,9 +1176,13 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->volume = c->volume;
 			ci->pan = c->pan;
 	
-			track = mod->xxp[info->pattern]->index[i];
-			event = &mod->xxt[track]->event[info->row];
-			memcpy(&ci->event, event, sizeof(struct xmp_event));
+			if (info->pattern < mod->pat) {
+				track = mod->xxp[info->pattern]->index[i];
+				event = &mod->xxt[track]->event[info->row];
+				memcpy(&ci->event, event, sizeof(*event));
+			} else {
+				memset(&ci->event, 0, sizeof(*event));
+			}
 		}
 	}
 }

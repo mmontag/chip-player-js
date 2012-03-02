@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include "xmp.h"
 #include "common.h"
-//#include "virtual.h"
 #include "synth.h"
 #include "fmopl.h"
 
