@@ -54,7 +54,7 @@ int scan_module(struct context_data *ctx)
     if (m->mod.len == 0)
 	return 0;
 
-    tab_cnt = calloc (sizeof (char *), m->mod.len);
+    tab_cnt = calloc(sizeof (char *), m->mod.len);
     for (ord = m->mod.len; ord--;)
 	tab_cnt[ord] = calloc(1, m->mod.xxo[ord] >= m->mod.pat ?  1 :
 		m->mod.xxp[m->mod.xxo[ord]]->rows ? m->mod.xxp[m->mod.xxo[ord]]->rows : 1);

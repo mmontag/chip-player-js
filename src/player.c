@@ -1026,11 +1026,12 @@ int xmp_player_frame(xmp_context opaque)
 
 	/* check reposition */
 	if (p->ord != p->pos) {
-		if (p->pos == -1)
-			p->pos++;		/* restart module */
-
 		if (p->pos == -2) {		/* set by xmp_module_stop */
 			return -1;		/* that's all folks */
+		}
+
+		if (p->pos == -1) {
+			p->pos++;		/* restart module */
 		}
 
 		if (p->pos == 0) {
