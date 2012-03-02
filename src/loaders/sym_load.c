@@ -395,8 +395,10 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 
 		a = read8(f);
 
-		if (a != 0 && a != 1)
-			return -1;
+		if (a != 0 && a != 1) {
+			fprintf(stderr, "libxmp: unsupported sample type\n");
+			//return -1;
+		}
 
 		if (a == 1) {
 			uint8 *b = malloc(mod->xxs[i].len);
@@ -407,9 +409,11 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);
 			free(b);
 		} else if (a == 4) {
+			mod->xxi[i].nsm = 0;
 			load_sample(f, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		} else {
+			mod->xxi[i].nsm = 0;
 			load_sample(f, mod->xxi[i].sub[0].sid,
 				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		}
