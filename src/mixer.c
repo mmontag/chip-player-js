@@ -290,6 +290,9 @@ void mixer_softmixer(struct context_data *ctx)
 			samples = (((int64)(vi->end - vi->pos + 1) <<
 					SMIX_SHIFT) - vi->frac) / step;
 
+			if (samples <= 0)
+				break;
+
 			if (step > 0) {
 				if (vi->pos > vi->end)
 					samples = 0;
