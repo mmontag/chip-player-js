@@ -56,6 +56,8 @@
 #include "period.h"
 
 #define MAGIC_PSM_	MAGIC4('P','S','M',' ')
+#define MAGIC_FILE	MAGIC4('F','I','L','E')
+#define MAGIC_TITL	MAGIC4('T','I','T','L')
 #define MAGIC_OPLH	MAGIC4('O','P','L','H')
 
 
@@ -70,10 +72,30 @@ const struct format_loader masi_loader = {
 
 static int masi_test(FILE *f, char *t, const int start)
 {
+	int val;
+
 	if (read32b(f) != MAGIC_PSM_)
 		return -1;
 
-	read_title(f, t, 0);
+	read8(f);
+	read8(f);
+	read8(f);
+	if (read8(f) != 0)
+		return -1;
+
+	if (read32b(f) != MAGIC_FILE) 
+		return -1;
+
+	read32b(f);
+	val = read32l(f);
+	fseek(f, val, SEEK_CUR);
+
+	if (read32b(f) == MAGIC_TITL) {
+		val = read32l(f);
+		read_title(f, t, val);
+	} else {
+		read_title(f, t, 0);
+	}
 
 	return 0;
 }
