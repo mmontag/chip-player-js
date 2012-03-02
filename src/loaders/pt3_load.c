@@ -13,6 +13,8 @@
 
 #define MAGIC_FORM	MAGIC4('F','O','R','M')
 #define MAGIC_MODL	MAGIC4('M','O','D','L')
+#define MAGIC_VERS	MAGIC4('V','E','R','S')
+#define MAGIC_INFO	MAGIC4('I','N','F','O')
 
 static int pt3_test(FILE *, char *, const int);
 static int pt3_load(struct module_data *, FILE *, const int);
@@ -26,16 +28,27 @@ const struct format_loader pt3_loader = {
 
 static int pt3_test(FILE *f, char *t, const int start)
 {
-	uint32 form, id;
-
-	form = read32b(f);
-	read32b(f);
-	id = read32b(f);
-
-	if (form != MAGIC_FORM || id != MAGIC_MODL)
+	if (read32b(f) != MAGIC_FORM)
 		return -1;
 
-	read_title(f, t, 0);
+	read32b(f);	/* skip size */
+
+	if (read32b(f) != MAGIC_MODL)
+		return -1;
+
+	if (read32b(f) != MAGIC_VERS)
+		return -1;
+
+	read32b(f);	/* skip size */
+
+	fseek(f, 10, SEEK_CUR);
+	
+	if (read32b(f) == MAGIC_INFO) {
+		read32b(f);	/* skip size */
+		read_title(f, t, 32);
+	} else {
+		read_title(f, t, 0);
+	}
 
 	return 0;
 }
