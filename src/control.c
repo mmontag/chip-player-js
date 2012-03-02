@@ -114,6 +114,9 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 				break;
 			}
 		}
+		if (i < 0) {
+			xmp_ord_set(handle, 0);
+		}
 		break; }
 	case XMP_CTL_CH_MUTE: {
 		int arg1 = va_arg(ap, int);
