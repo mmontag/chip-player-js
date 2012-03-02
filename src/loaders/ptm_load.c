@@ -253,8 +253,14 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
     _D(_D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	int smpnum = mod->xxi[i].sub[0].sid;
-	struct xmp_sample *xxs = &mod->xxs[smpnum];
+	struct xmp_sample *xxs;
+	int smpnum;
+
+	if (mod->xxi[i].nsm == 0)
+	    continue;
+
+	smpnum = mod->xxi[i].sub[0].sid;
+	xxs = &mod->xxs[smpnum];
 
 	if (xxs->len == 0)
 	    continue;
