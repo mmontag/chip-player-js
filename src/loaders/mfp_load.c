@@ -191,8 +191,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 
 	/* first check smp.filename */
 	if (strlen(m->basename) < 5 || m->basename[3] != '.') {
-		fprintf(stderr, "libxmp: warning: invalid filename %s\n",
-								m->basename);
+		fprintf(stderr, "libxmp: invalid filename %s\n", m->basename);
 		goto err;
 	}
 
@@ -208,13 +207,13 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 				strcpy(x, ".set");
 		}
 		if (stat(smp_filename, &st) < 0) {
-			fprintf(stderr, "libxmp: warning: missing file %s\n",
+			fprintf(stderr, "libxmp: missing file %s\n",
 								smp_filename);
 			goto err;
 		}
 	}
 	if ((s = fopen(smp_filename, "rb")) == NULL) {
-		fprintf(stderr, "libxmp: warning: can't open sample file %s\n",
+		fprintf(stderr, "libxmp: can't open sample file %s\n",
 								smp_filename);
 		goto err;
 	}
