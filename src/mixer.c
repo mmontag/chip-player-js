@@ -290,9 +290,6 @@ void mixer_softmixer(struct context_data *ctx)
 			samples = (((int64)(vi->end - vi->pos + 1) <<
 					SMIX_SHIFT) - vi->frac) / step;
 
-			if (samples <= 0)
-				break;
-
 			if (step > 0) {
 				if (vi->pos > vi->end)
 					samples = 0;
@@ -328,9 +325,11 @@ void mixer_softmixer(struct context_data *ctx)
 					mixer &= ~FLAG_FILTER;
 
 				/* Call the output handler */
-				mix_fn[mixer](vi, buf_pos, samples, vol_l,
-					      vol_r, step);
-				buf_pos += mix_size;
+				if (samples >= 0) {
+					mix_fn[mixer](vi, buf_pos, samples,
+						vol_l, vol_r, step);
+					buf_pos += mix_size;
+				}
 
 				/* For Hipolito's anticlick routine */
 				idx = 0;
