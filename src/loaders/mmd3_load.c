@@ -14,7 +14,7 @@ static int mmd3_test (FILE *, char *, const int);
 static int mmd3_load (struct module_data *, FILE *, const int);
 
 const struct format_loader mmd3_loader = {
-	"OctaMED v5/OctaMED SS MMD2/3 (MED)",
+	"OctaMED (MED)",
 	mmd3_test,
 	mmd3_load
 };
