@@ -355,7 +355,7 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
     }
 
     if (mod->chn != 4 && mh.restart == 0x7f) {
-	tracker = "Scream Tracker 3";
+	tracker = "Scream Tracker 3 MOD";
 	ptkloop = 0;
 	m->quirk &= ~QUIRK_MODRNG;
     }
@@ -459,7 +459,7 @@ skip_test:
 
     mod->trk = mod->chn * mod->pat;
 
-    snprintf(mod->type, XMP_NAME_SIZE, "%s MOD (%s)", tracker, magic);
+    snprintf(mod->type, XMP_NAME_SIZE, "%s (%s)", tracker, magic);
     MODULE_INFO();
 
     for (i = 0; i < mod->ins; i++) {
