@@ -242,7 +242,7 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 	fseek(f, 8, SEEK_CUR);			/* BASSTRAK */
 
 	ver = read8(f);
-	set_type(m, "Digital Symphony BASSTRAK v%d", ver);
+	set_type(m, "Digital Symphony");
 
 	mod->chn = read8(f);
 	mod->len = mod->pat = read16l(f);
