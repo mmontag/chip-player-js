@@ -515,7 +515,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	_D(_D_INFO "Instruments: %d", mod->ins);
 
 	smp_idx = 0;
-	for (i = 0; i < 32; i++, mask <<= 1) {
+	for (i = 0; i < num_ins; i++, mask <<= 1) {
 		int x1, length, type;
 		struct SynthInstr synth;
 
