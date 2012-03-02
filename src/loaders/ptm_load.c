@@ -131,8 +131,6 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 	mod->xxi[i].nsm = pih.length > 0 ? 1 : 0;
 	mod->xxs[i].lps = pih.loopbeg;
 	mod->xxs[i].lpe = pih.loopend;
-	if (mod->xxs[i].lpe)
-		mod->xxs[i].lpe--;
 
 	mod->xxs[i].flg = 0;
 	if (pih.type & 0x04) {
