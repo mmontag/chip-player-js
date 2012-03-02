@@ -91,7 +91,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
     mod->chn = 9;
     mod->bpm = 135;
     mod->tpo = 6;
-    mod->smp = 0;
+    mod->smp = mod->ins;
 
     m->quirk |= QUIRK_LINEAR;
 
@@ -116,7 +116,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
-	load_sample(f, i, SAMPLE_FLAG_ADLIB, NULL, (char *)sid);
+	load_sample(f, i, SAMPLE_FLAG_ADLIB, &mod->xxs[i], (char *)sid);
     }
 
     /* Read orders */
