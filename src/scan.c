@@ -50,6 +50,8 @@ int scan_module(struct context_data *ctx)
     struct xmp_event* event;
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
+    int pat;
+    struct ord_data *info;
 
     if (m->mod.len == 0)
 	return 0;
@@ -91,42 +93,41 @@ int scan_module(struct context_data *ctx)
 
     while (42) {
 	if ((uint32)++ord >= m->mod.len) {
-	    /*if ((uint32)++ord >= m->mod.len)*/
-		ord = ((uint32)m->mod.rst > m->mod.len ||
-			(uint32)m->mod.xxo[m->mod.rst] >= m->mod.pat) ?
+	    ord = ((uint32)m->mod.rst > m->mod.len ||
+		   (uint32)m->mod.xxo[m->mod.rst] >= m->mod.pat) ?
 			0 : m->mod.rst;
-		//if (m->mod.xxo[ord] == S3M_END)
-		 //   break;
 	} 
 
+	pat = m->mod.xxo[ord];
+	info = &m->xxo_info[ord];
+
 	/* All invalid patterns skipped, only S3M_END aborts replay */
-	if ((uint32)m->mod.xxo[ord] >= m->mod.pat) {
-	    /*if (m->mod.xxo[ord] == S3M_SKIP) ord++;*/
-	    if (m->mod.xxo[ord] == S3M_END) {
+	if (pat >= m->mod.pat) {
+	    if (pat == S3M_END) {
 		ord = m->mod.len;
 	        continue;
 	    }
 	    continue;
 	}
 
-	if (break_row < m->mod.xxp[m->mod.xxo[ord]]->rows && tab_cnt[ord][break_row])
+	if (break_row < m->mod.xxp[pat]->rows && tab_cnt[ord][break_row])
 	    break;
 
-	m->xxo_info[ord].gvl = gvl;
-	m->xxo_info[ord].bpm = bpm;
-	m->xxo_info[ord].tempo = tempo;
+	info->gvl = gvl;
+	info->bpm = bpm;
+	info->tempo = tempo;
 
-	m->xxo_info[ord].time = clock + m->time_factor * alltmp / bpm;
+	info->time = clock + m->time_factor * alltmp / bpm;
 
-	if (!m->xxo_info[ord].start_row && ord) {
+	if (info->start_row == 0 && ord != 0) {
 	    if (ord == p->start) {
 		clock_rst = clock + m->time_factor * alltmp / bpm;
 	    }
 
-	    m->xxo_info[ord].start_row = break_row;
+	    info->start_row = break_row;
 	}
 
-	last_row = m->mod.xxp[m->mod.xxo[ord]]->rows;
+	last_row = m->mod.xxp[pat]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
 	    /* Prevent crashes caused by large softmixer frames */
 	    if (bpm < SMIX_MINBPM)
@@ -157,7 +158,7 @@ int scan_module(struct context_data *ctx)
 	    pdelay = 0;
 
 	    for (chn = 0; chn < m->mod.chn; chn++) {
-		if (row >= m->mod.xxt[m->mod.xxp[m->mod.xxo[ord]]->index[chn]]->rows)
+		if (row >= m->mod.xxt[m->mod.xxp[pat]->index[chn]]->rows)
 		    continue;
 
 		event = &EVENT(m->mod.xxo[ord], chn, row);
@@ -292,7 +293,7 @@ int scan_module(struct context_data *ctx)
 	}
 
 	if (ord2 >= 0) {
-	    ord = --ord2;
+	    ord = ord2 - 1;
 	    ord2 = -1;
 	}
 
