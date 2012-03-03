@@ -880,6 +880,7 @@ static void next_order(struct context_data *ctx)
 	f->jumpline = 0;
 
 	p->pos = p->ord;
+	p->frame = 0;
 
 	/* Reset persistent effects at new pattern */
 	if (HAS_QUIRK(QUIRK_PERPAT)) {
@@ -1046,6 +1047,9 @@ int xmp_player_frame(xmp_context opaque)
 			f->end_point = 0;
 		}
 
+		f->jumpline = 0;
+		f->jump = -1;
+
 		p->ord = p->pos - 1;
 		next_order(ctx);
 
@@ -1054,9 +1058,6 @@ int xmp_player_frame(xmp_context opaque)
 		p->bpm = m->xxo_info[p->ord].bpm;
 		p->gvol.volume = m->xxo_info[p->ord].gvl;
 		p->time = m->xxo_info[p->ord].time;
-
-		f->jumpline = 0;
-		f->jump = -1;
 
 		virtch_reset(ctx);
 		reset_channel(ctx);
