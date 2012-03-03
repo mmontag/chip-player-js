@@ -116,7 +116,6 @@ int scan_module(struct context_data *ctx)
 	info->gvl = gvl;
 	info->bpm = bpm;
 	info->tempo = tempo;
-
 	info->time = clock + m->time_factor * alltmp / bpm;
 
 	if (info->start_row == 0 && ord != 0) {
@@ -130,8 +129,9 @@ int scan_module(struct context_data *ctx)
 	last_row = m->mod.xxp[pat]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
 	    /* Prevent crashes caused by large softmixer frames */
-	    if (bpm < SMIX_MINBPM)
-		bpm = SMIX_MINBPM;
+	    if (bpm < SMIX_MINBPM) {
+	        bpm = SMIX_MINBPM;
+	    }
 
 	    /* Date: Sat, 8 Sep 2007 04:01:06 +0200
 	     * Reported by Zbigniew Luszpinski <zbiggy@o2.pl>
@@ -200,6 +200,13 @@ int scan_module(struct context_data *ctx)
 			    bpm = parm;
 			}
 		    }
+		}
+
+		if (f1 == FX_TEMPO_CP) {
+		    f1 = FX_S3M_TEMPO;
+		}
+		if (f2 == FX_TEMPO_CP) {
+		    f2 = FX_S3M_TEMPO;
 		}
 
 		if ((f1 == FX_S3M_TEMPO && p1) || (f2 == FX_S3M_TEMPO && p2)) {
