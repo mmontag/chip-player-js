@@ -986,6 +986,7 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 
 	f->jumpline = 0;
 	f->jump = -1;
+	f->pbreak = 0;
 
 	f->loop = calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
 	if (f->loop == NULL)
