@@ -807,8 +807,11 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     med_arp = get_med_arp(m, xc);
 
     /* Adjust pitch and pan, then play the note */
-    finalpan = s->format & XMP_FORMAT_MONO ?
-	0 : (finalpan - 0x80) * s->mix / 100;
+    if (s->format & XMP_FORMAT_MONO) {
+	finalpan = 0;
+    } else {
+	finalpan = (finalpan - 0x80) * s->mix / 100;
+    }
 
     linear_bend += get_stepper(&xc->arpeggio) + med_arp;
     xc->pitchbend = linear_bend;
