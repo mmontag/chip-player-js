@@ -1038,6 +1038,10 @@ int xmp_player_frame(xmp_context opaque)
 			f->end_point = p->scan.num;
 		}
 
+		if (p->pos > p->scan.ord) {
+			f->end_point = 0;
+		}
+
 		p->ord = p->pos - 1;
 		next_order(ctx);
 
