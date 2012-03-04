@@ -127,8 +127,10 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 
 
 	/* Format quirks */
-#define QUIRK_S3MLOOP	(1 << 1)	/* S3M loop mode */
-#define QUIRK_ENVFADE	(1 << 2)	/* Fade at end of envelope */
+#define QUIRK_S3MLOOP	(1 << 0)	/* S3M loop mode */
+#define QUIRK_ENVFADE	(1 << 1)	/* Fade at end of envelope */
+#define QUIRK_INVLOOP	(1 << 2)	/* Enable effect EF invert loop */
+#define QUIRK_FUNKIT	(1 << 3)	/* Enable effect EF funk it */
 #define QUIRK_IGNWINS	(1 << 4)	/* Ignore invalid instrument */
 #define QUIRK_NCWINS	(1 << 5)	/* Don't cut invalid instrument */
 #define QUIRK_INSPRI	(1 << 6)	/* Reset note for every new != ins */

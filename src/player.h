@@ -59,6 +59,7 @@ struct retrig_control {
 #define IS_VALID	0x00008000
 #define NEW_INS		0x00010000
 #define NEW_VOL		0x00020000
+#define INVLOOP		0x00040000
 #define VOL_SLIDE_2	0x00080000
 #define NOTE_SLIDE	0x00100000
 #define FINE_NSLIDE	0x00200000

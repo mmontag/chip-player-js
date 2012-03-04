@@ -35,7 +35,11 @@ extern "C" {
 #define XMP_CTL_SEEK_TIME	0x07
 #define XMP_CTL_CH_MUTE		0x08
 #define XMP_CTL_MIXER_AMP	0x09
-#define XMP_CTL_MIXER_PAN	0x0a
+#define XMP_CTL_MIXER_MIX	0x10
+#define XMP_CTL_QUIRK_FX9	0x11
+#define XMP_CTL_QUIRK_FXEF	0x12
+
+/* mixer parameter macros */
 
 /* mixer sample format */
 #define XMP_FORMAT_8BIT		(1 << 0) /* Mix to 8-bit instead of 16 */
@@ -226,11 +230,6 @@ extern const unsigned int xmp_version;
 
 /* Player control macros */
 
-/**
- * @brief Jump to next order
- * Move to the next pattern in the pattern order sequence.
- * @param p Player context handle
- */
 #define xmp_ord_next(p)		_xmp_ctl((p), XMP_CTL_ORD_NEXT)
 #define xmp_ord_prev(p)		_xmp_ctl((p), XMP_CTL_ORD_PREV)
 #define xmp_ord_set(p,x)	_xmp_ctl((p), XMP_CTL_ORD_SET, (x))
@@ -242,7 +241,9 @@ extern const unsigned int xmp_version;
 #define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))
 #define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
 #define xmp_mixer_amp(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_AMP, (x))
-#define xmp_mixer_pan(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_PAN, (x))
+#define xmp_mixer_mix(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_MIX, (x))
+#define xmp_quirk_fx9(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FX9, (x))
+#define xmp_quirk_fxef(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FXEF, (x))
 
 xmp_context xmp_create_context  (void);
 int         xmp_test_module     (char *, struct xmp_test_info *);

@@ -127,10 +127,24 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 		int arg = va_arg(ap, int);
 		s->amplify = arg;
 		break; }
-	case XMP_CTL_MIXER_PAN: {
+	case XMP_CTL_MIXER_MIX: {
 		int arg = va_arg(ap, int);
 		s->mix = arg;
 		break; }
+	case XMP_CTL_QUIRK_FX9:
+		if (va_arg(ap, int)) {
+			m->quirk |= QUIRK_FX9BUG;
+		} else {
+			m->quirk &= ~QUIRK_FX9BUG;
+		}
+		break;
+	case XMP_CTL_QUIRK_FXEF:
+		if (va_arg(ap, int)) {
+			m->quirk |= QUIRK_FUNKIT;
+		} else {
+			m->quirk &= ~QUIRK_FUNKIT;
+		}
+		break;
 	default:
 		ret = -1;
 	}

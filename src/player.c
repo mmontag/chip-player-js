@@ -87,6 +87,32 @@ static int read_event (struct context_data *, struct xmp_event *, int, int);
 static void play_channel (struct context_data *, int, int);
 
 
+/* From http://www.un4seen.com/forum/?topic=7554.0
+ *
+ * "Invert loop" effect replaces (!) sample data bytes within loop with their
+ * bitwise complement (NOT). The parameter sets speed of altering the samples.
+ * This effectively trashes the sample data. Because of that this effect was
+ * supposed to be removed in the very next ProTracker versions, but it was
+ * never removed.
+ */
+
+static const int il_table[] = {
+	0, 5, 6, 7, 8, 10, 11, 13, 16, 19, 22, 26, 32, 43, 64, 128
+};
+
+static void sample_invloop(struct xmp_sample *xxs, int speed)
+{
+}
+
+/* Prior to [Protracker 1.1A] this effect is called "Funk Repeat" and it moves
+ * loop of the instrument (just the loop information - sample data is not
+ * altered). The parameter is the speed of moving the loop.
+ */
+static void sample_funkit(struct xmp_sample *xxs, int speed)
+{
+}
+
+
 /* Instrument vibrato */
 
 static inline int get_instrument_vibrato(struct module_data *m,

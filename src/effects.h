@@ -47,6 +47,7 @@
 #define EX_CUT		0x0c
 #define EX_DELAY	0x0d
 #define EX_PATT_DELAY	0x0e
+#define EX_INVLOOP	0x0f
 
 /* Oktalyzer effects */
 #define FX_OKT_ARP3	0x70

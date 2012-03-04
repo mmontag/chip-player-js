@@ -28,6 +28,7 @@
 
 #define HAS_QUIRK(x) (m->quirk & (x))
 
+
 void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		uint8 fxp, struct channel_data *xc, int fnum)
 {
@@ -395,6 +396,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			break;
 		case EX_PATT_DELAY:	/* Pattern delay */
 			p->flow.delay = fxp;
+			break;
+		case EX_INVLOOP:	/* Invert loop / funk repeat */
+			SET_PER(INVLOOP);
 			break;
 		}
 		break;
