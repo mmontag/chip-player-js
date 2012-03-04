@@ -89,7 +89,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		SET(PITCHBEND);
 		if ((xc->porta = fxp) != 0) {
 			xc->f_val = -fxp;
-			if (m->quirk & QUIRK_UNISLD)
+			if (HAS_QUIRK(QUIRK_UNISLD))
 				xc->s_val = -fxp;
 		} else if (xc->f_val > 0) {
 			xc->f_val *= -1;
@@ -116,7 +116,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		SET(PITCHBEND);
 		if ((xc->porta = fxp) != 0) {
 			xc->f_val = fxp;
-			if (m->quirk & QUIRK_UNISLD)
+			if (HAS_QUIRK(QUIRK_UNISLD))
 				xc->s_val = fxp;
 		} else if (xc->f_val < 0) {
 			xc->f_val *= -1;
@@ -128,7 +128,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		DO_TONEPORTA();
 		if (fxp) {
 			xc->s_val = fxp;
-			if (m->quirk & QUIRK_UNISLD) /* IT compatible Gxx off */
+			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
 				xc->porta = fxp;
 		}
 		SET(TONEPORTA);
@@ -230,7 +230,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		 *      If a DFF command is specified, the volume will be slid
 		 *      up.
 		 */
-		if (m->quirk & QUIRK_FINEFX) {
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			h = MSN(fxp);
 			l = LSN(fxp);
 			if (l == 0xf && h != 0) {
@@ -254,7 +254,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		 * see Guild of Sounds.xm
 		 */
 		if (fxp) {
-			if (m->quirk & QUIRK_VOLPDN) {
+			if (HAS_QUIRK(QUIRK_VOLPDN)) {
 				if ((xc->volslide = fxp))
 					xc->v_val =
 					    LSN(fxp) ? -LSN(fxp) : MSN(fxp);
@@ -267,7 +267,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		 * should process volume slides in all frames like ST300. I
 		 * suspect ST3/IT could be handling D0F effects like this.
 		 */
-		if (m->quirk & QUIRK_FINEFX) {
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			if (MSN(xc->volslide) == 0xf
 			    || LSN(xc->volslide) == 0xf) {
 				SET(FINE_VOLS);
@@ -348,7 +348,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 						/* **** H:FIXME **** */
 						f->loop_chn = ++chn;
 					} else {
-						if (m->quirk & QUIRK_S3MLOOP)
+						if (HAS_QUIRK(QUIRK_S3MLOOP))
 							f->loop[chn].start =
 							    p->row + 1;
 					}
@@ -446,7 +446,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_G_VOLSLIDE:	/* Global volume slide */
 		p->gvol.flag = 1;
-		if (m->quirk & QUIRK_FINEFX) {
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			h = MSN(fxp);
 			l = LSN(fxp);
 			if (h == 0xf && l != 0) {
@@ -510,7 +510,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_TRK_VSLIDE:	/* Track volume slide */
 	      fx_trk_vslide:
-		if (m->quirk & QUIRK_FINEFX) {
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			h = MSN(fxp);
 			l = LSN(fxp);
 			if (h == 0xf && l != 0) {
