@@ -92,8 +92,6 @@ struct channel_data {
 	int note;		/* Note number */
 	int key;		/* Key number */
 	double period;		/* Amiga or linear period */
-	int final_period;
-	int pitchbend;		/* Linear pitchbend */
 	int finetune;		/* Guess what */
 	int ins;		/* Instrument number */
 	int smp;		/* Sample number */
@@ -200,6 +198,9 @@ struct channel_data {
 
 	struct xmp_event *delayed_event;
 	int delayed_ins;	/* IT save instrument emulation */
+
+	int info_period;	/* Period */
+	int info_pitchbend;	/* Linear pitchbend */
 };
 
 

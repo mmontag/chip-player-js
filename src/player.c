@@ -654,22 +654,6 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	vibrato += get_lfo(&xc->vibrato) >> 10;
     }
 
-
-    /* IT pitch envelopes are always linear, even in Amiga period mode.
-     * Each unit in the envelope scale is 1/25 semitone.
-     */
-    linear_bend = period_to_bend(
-	xc->period + vibrato + med_vibrato,
-	xc->note,
-	/* xc->finetune, */
-	HAS_QUIRK(QUIRK_MODRNG),
-	xc->gliss,
-	HAS_QUIRK(QUIRK_LINEAR));
-
-    if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
-        linear_bend += frq_envelope;
-    }
-
     /* Pan */
 
     finalpan = xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32;
@@ -763,6 +747,16 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	    xc->volume = 0;
     }
 
+    if (xc->volume < 0)
+	xc->volume = 0;
+    else if (xc->volume > m->volbase)
+	xc->volume = m->volbase;
+
+    if (xc->mastervol < 0)
+	xc->mastervol = 0;
+    else if (xc->mastervol > m->volbase)
+	xc->mastervol = m->volbase;
+
     if (t % p->tempo == 0) {
 	/* Process "fine" effects */
 	if (TEST(FINE_VOLS))
@@ -778,16 +772,6 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	}
     }
 
-    if (xc->volume < 0)
-	xc->volume = 0;
-    else if (xc->volume > m->volbase)
-	xc->volume = m->volbase;
-
-    if (xc->mastervol < 0)
-	xc->mastervol = 0;
-    else if (xc->mastervol > m->volbase)
-	xc->mastervol = m->volbase;
-
     if (HAS_QUIRK(QUIRK_LINEAR)) {
 	if (xc->period < MIN_PERIOD_L)
 	    xc->period = MIN_PERIOD_L;
@@ -800,11 +784,20 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	    xc->period = MAX_PERIOD_A;
     }
 
-    /* Update vibrato, tremolo and arpeggio indexes */
-    update_instrument_vibrato(m, xc);
-    update_lfo(&xc->vibrato);
-    update_lfo(&xc->tremolo);
-    update_stepper(&xc->arpeggio);
+    /* IT pitch envelopes are always linear, even in Amiga period mode.
+     * Each unit in the envelope scale is 1/25 semitone.
+     */
+    linear_bend = period_to_bend(
+	xc->period + vibrato + med_vibrato,
+	xc->note,
+	/* xc->finetune, */
+	HAS_QUIRK(QUIRK_MODRNG),
+	xc->gliss,
+	HAS_QUIRK(QUIRK_LINEAR));
+
+    if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
+        linear_bend += frq_envelope;
+    }
 
     /* Process MED synth arpeggio */
     med_arp = get_med_arp(m, xc);
@@ -817,8 +810,10 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     }
 
     linear_bend += get_stepper(&xc->arpeggio) + med_arp;
-    xc->pitchbend = linear_bend;
-    xc->final_period = note_to_period_mix(xc->note, linear_bend);
+
+    /* For xmp_player_get_info() */
+    xc->info_pitchbend = linear_bend;
+    xc->info_period = note_to_period_mix(xc->note, linear_bend);
 
     virtch_setbend(ctx, chn, linear_bend);
     virtch_setpan(ctx, chn, finalpan);
@@ -836,7 +831,15 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     virtch_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
     virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 
-    update_invloop(m, xc);
+    if (HAS_QUIRK(QUIRK_INVLOOP)) {
+	update_invloop(m, xc);
+    }
+
+    /* Update vibrato, tremolo and arpeggio indexes */
+    update_instrument_vibrato(m, xc);
+    update_lfo(&xc->vibrato);
+    update_lfo(&xc->tremolo);
+    update_stepper(&xc->arpeggio);
 }
 
 static void inject_event(struct context_data *ctx)
@@ -1184,8 +1187,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			struct xmp_event *event;
 	
 			ci->note = c->key;
-			ci->pitchbend = c->pitchbend;
-			ci->period = c->final_period;
+			ci->pitchbend = c->info_pitchbend;
+			ci->period = c->info_period;
 			ci->instrument = c->ins;
 			ci->sample = c->smp;
 			ci->volume = c->volume;
