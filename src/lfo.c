@@ -50,15 +50,14 @@ void set_lfo_phase(struct lfo *lfo, int phase)
 	lfo->phase = phase;
 }
 
-void set_lfo_notzero(struct lfo *lfo, int depth, int rate)
+void set_lfo_depth(struct lfo *lfo, int depth)
 {
-	if (depth != 0) {
-		lfo->depth = depth;
-	}
+	lfo->depth = depth;
+}
 
-	if (rate != 0) {
-		lfo->rate = rate;
-	}
+void set_lfo_rate(struct lfo *lfo, int rate)
+{
+	lfo->rate = rate;
 }
 
 void set_lfo_waveform(struct lfo *lfo, int type)

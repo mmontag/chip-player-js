@@ -116,7 +116,11 @@ struct channel_data {
 	struct lfo vibrato;
 	struct lfo tremolo;
 	struct stepper arpeggio;
-	struct instrument_vibrato instrument_vibrato;
+
+	struct {
+		struct lfo lfo;
+		int sweep;
+	} insvib;
 
 	struct {
 		int type;	/* Retrig type */

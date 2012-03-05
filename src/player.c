@@ -42,39 +42,6 @@ static const struct retrig_control rval[] = {
     {   0,  0,  1 }	/* Note cut */
 };
 
-#define WAVEFORM_SIZE 64
-
-/* Vibrato/tremolo waveform tables */
-static const int waveform[4][WAVEFORM_SIZE] = {
-   {   0,  24,  49,  74,  97, 120, 141, 161, 180, 197, 212, 224,
-     235, 244, 250, 253, 255, 253, 250, 244, 235, 224, 212, 197,
-     180, 161, 141, 120,  97,  74,  49,  24,   0, -24, -49, -74,
-     -97,-120,-141,-161,-180,-197,-212,-224,-235,-244,-250,-253,
-    -255,-253,-250,-244,-235,-224,-212,-197,-180,-161,-141,-120,
-     -97, -74, -49, -24  },	/* Sine */
-
-   {   0,  -8, -16, -24, -32, -40, -48, -56, -64, -72, -80, -88,
-     -96,-104,-112,-120,-128,-136,-144,-152,-160,-168,-176,-184,
-    -192,-200,-208,-216,-224,-232,-240,-248, 255, 248, 240, 232,
-     224, 216, 208, 200, 192, 184, 176, 168, 160, 152, 144, 136,
-     128, 120, 112, 104,  96,  88,  80,  72,  64,  56,  48,  40,
-      32,  24,  16,   8  },	/* Ramp down */
-
-   { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-     255, 255, 255, 255, 255, 255, 255, 255,-255,-255,-255,-255,
-    -255,-255,-255,-255,-255,-255,-255,-255,-255,-255,-255,-255,
-    -255,-255,-255,-255,-255,-255,-255,-255,-255,-255,-255,-255,
-    -255,-255,-255,-255  },	/* Square */
-
-   {   0,   8,  16,  24,  32,  40,  48,  56,  64,  72,  80,  88,
-      96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184,
-     192, 200, 208, 216, 224, 232, 240, 248,-255,-248,-240,-232,
-    -224,-216,-208,-200,-192,-184,-176,-168,-160,-152,-144,-136,
-    -128,-120,-112,-104, -96, -88, -80, -72, -64, -56, -48, -40,
-     -32, -24, -16,  -8  }	/* Ramp up */
-};
-
 static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
 
 /*
@@ -86,55 +53,6 @@ static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
 static int read_event (struct context_data *, struct xmp_event *, int, int);
 static void play_channel (struct context_data *, int, int);
 
-
-/* Instrument vibrato */
-
-static inline int get_instrument_vibrato(struct module_data *m,
-					 struct channel_data *xc)
-{
-	int mapped, type, depth, phase, sweep;
-	struct xmp_instrument *instrument;
-	struct xmp_subinstrument *sub;
-
-	instrument = &m->mod.xxi[xc->ins];
-
-	mapped = instrument->map[xc->key].ins;
-	if (mapped == 0xff)
-		return 0;
-
-	sub = &instrument->sub[mapped];
-	type = sub->vwf;
-	depth = sub->vde;
-	phase = xc->instrument_vibrato.phase;
-	sweep = xc->instrument_vibrato.sweep;
-
-	return waveform[type][phase] * depth / (1024 * (1 + sweep));
-}
-
-static inline void update_instrument_vibrato(struct module_data *m,
-					     struct channel_data *xc)
-{
-	int mapped, rate;
-	struct xmp_instrument *instrument;
-	struct xmp_subinstrument *sub;
-
-	instrument = &m->mod.xxi[xc->ins];
-
-	mapped = instrument->map[xc->key].ins;
-	if (mapped == 0xff)
-		return;
-
-	sub = &instrument->sub[mapped];
-	rate = sub->vra;
-
-	xc->instrument_vibrato.phase += rate >> 2;
-	xc->instrument_vibrato.phase %= WAVEFORM_SIZE;
-
-	if (xc->instrument_vibrato.sweep > 1)
-		xc->instrument_vibrato.sweep -= 2;
-	else
-		xc->instrument_vibrato.sweep = 0;
-}
 
 
 static inline void copy_channel(struct player_data *p, int to, int from)
@@ -336,20 +254,19 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	    if (mod->xxi[ins].map[key].ins != 0xff) {
 		int mapped = mod->xxi[ins].map[key].ins;
 		int transp = mod->xxi[ins].map[key].xpo;
+		struct xmp_subinstrument *sub = &mod->xxi[ins].sub[mapped];
 		int smp;
 
-		note = key + mod->xxi[ins].sub[mapped].xpo + transp;
-		smp = mod->xxi[ins].sub[mapped].sid;
+		note = key + sub->xpo + transp;
+		smp = sub->sid;
+
 		if (mod->xxs[smp].len == 0) {
 			smp = -1;
 		}
 
 		if (smp >= 0 && smp < mod->smp) {
-	            int mapped = mod->xxi[ins].map[key].ins;
 	            int to = virtch_setpatch(ctx, chn, ins, smp, note,
-			mod->xxi[ins].sub[mapped].nna,
-			mod->xxi[ins].sub[mapped].dct,
-			mod->xxi[ins].sub[mapped].dca, ctl, cont_sample);
+			sub->nna, sub->dct, sub->dca, ctl, cont_sample);
 
 	            if (to < 0)
 		        return -1;
@@ -432,8 +349,11 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 					HAS_QUIRK(QUIRK_LINEAR));
 
 	xc->gvl = sub->gvl;
-	xc->instrument_vibrato.sweep = sub->vsw;
-	xc->instrument_vibrato.phase = 0;
+
+	set_lfo_depth(&xc->insvib.lfo, sub->vde);
+	set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
+	set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
+	xc->insvib.sweep = sub->vsw;
 
 	xc->v_idx = xc->p_idx = xc->f_idx = 0;
 	xc->filter.cutoff = sub->ifc & 0x80 ? (sub->ifc - 0x80) * 2 : 0xff;
@@ -648,8 +568,8 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     /* Vibrato */
 
     med_vibrato = get_med_vibrato(xc);
+    vibrato = get_lfo(&xc->insvib.lfo) / (1024 * (1 + xc->insvib.sweep));
 
-    vibrato = get_instrument_vibrato(m, xc);
     if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
 	vibrato += get_lfo(&xc->vibrato) >> 10;
     }
@@ -836,10 +756,19 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     }
 
     /* Update vibrato, tremolo and arpeggio indexes */
-    update_instrument_vibrato(m, xc);
+
+    update_stepper(&xc->arpeggio);
     update_lfo(&xc->vibrato);
     update_lfo(&xc->tremolo);
-    update_stepper(&xc->arpeggio);
+
+    /* Update instrument vibrato */
+
+    update_lfo(&xc->insvib.lfo);
+    if (xc->insvib.sweep > 1) {
+	xc->insvib.sweep -= 2;
+    } else {
+	xc->insvib.sweep = 0;
+    }
 }
 
 static void inject_event(struct context_data *ctx)

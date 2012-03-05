@@ -29,6 +29,17 @@
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 
+static inline void set_lfo_notzero(struct lfo *lfo, int depth, int rate)
+{
+	if (depth != 0) {
+		set_lfo_depth(lfo, depth);
+	}
+
+	if (rate != 0) {
+		set_lfo_rate(lfo, rate);
+	}
+}
+
 void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		uint8 fxp, struct channel_data *xc, int fnum)
 {
