@@ -59,7 +59,6 @@ struct retrig_control {
 #define IS_VALID	0x00008000
 #define NEW_INS		0x00010000
 #define NEW_VOL		0x00020000
-#define INVLOOP		0x00040000
 #define VOL_SLIDE_2	0x00080000
 #define NOTE_SLIDE	0x00100000
 #define FINE_NSLIDE	0x00200000
@@ -164,6 +163,12 @@ struct channel_data {
 	} noteslide;
 
 	struct {
+		int speed;
+		int count;
+		int pos;
+	} invloop;
+
+	struct {
 		int cutoff;	/* IT filter cutoff frequency */
 		int cutoff2;	/* IT filter cutoff frequency (with envelope) */
 		int resonance;	/* IT filter resonance */
@@ -203,5 +208,6 @@ void xmp_med_synth(struct context_data *, int, struct channel_data *, int);
 int get_med_arp(struct module_data *, struct channel_data *);
 int get_med_vibrato(struct channel_data *);
 void filter_setup(struct context_data *, struct channel_data *, int);
+void update_invloop(struct module_data *, struct channel_data *);
 
 #endif /* __XMP_PLAYER_H */
