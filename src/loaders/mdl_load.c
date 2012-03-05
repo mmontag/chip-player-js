@@ -676,8 +676,7 @@ static void get_chunk_sa(struct module_data *m, int size, FILE *f, void *parm)
 	    break;
 	}
 	
-	load_sample(NULL, i, SAMPLE_FLAG_NOLOAD, &mod->xxs[i],
-					(char *)smpbuf);
+	load_sample(NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)smpbuf);
 
 	free (smpbuf);
     }

@@ -318,8 +318,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 			
 		}
 
-		load_sample(f, i, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i],
-								(char *)&ss);
+		load_sample(f, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i], (char *)&ss);
 	}
 	
 	/* Read ornaments */

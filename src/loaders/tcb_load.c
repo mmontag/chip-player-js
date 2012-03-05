@@ -177,8 +177,7 @@ static int tcb_load(struct module_data *m, FILE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		fseek(f, start + base_offs + soffs[i], SEEK_SET);
-		load_sample(f, mod->xxi[i].sub[0].sid,
-				SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(f, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

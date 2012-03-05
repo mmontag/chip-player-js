@@ -324,7 +324,7 @@ static int ult_load(struct module_data *m, FILE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(f, i, 0, &mod->xxs[i], NULL);
+	load_sample(f, 0, &mod->xxs[i], NULL);
     }
 
     m->volbase = 0x100;

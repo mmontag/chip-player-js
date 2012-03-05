@@ -821,11 +821,10 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 					ish.convert & IT_CVT_DIFF);
 		}
 
-		load_sample(NULL, i,
-				SAMPLE_FLAG_NOLOAD | cvt, &mod->xxs[i], buf);
+		load_sample(NULL, SAMPLE_FLAG_NOLOAD | cvt, &mod->xxs[i], buf);
 		free (buf);
 	    } else {
-		load_sample(f, i, cvt, &mod->xxs[i], NULL);
+		load_sample(f, cvt, &mod->xxs[i], NULL);
 	    }
 	}
     }

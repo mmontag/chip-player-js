@@ -427,9 +427,10 @@ load_instruments:
 		    mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].fin,
 		    mod->xxi[i].sub[j].pan, mod->xxi[i].sub[j].xpo);
 
-		if (xfh.version > 0x0103)
-		    load_sample(f, mod->xxi[i].sub[j].sid,
-			SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
+		if (xfh.version > 0x0103) {
+		    load_sample(f, SAMPLE_FLAG_DIFF,
+				&mod->xxs[mod->xxi[i].sub[j].sid], NULL);
+		}
 	    }
 	} else {
 	    /* The sample size is a field of struct xm_instrument_header that
@@ -469,8 +470,8 @@ load_samples:
     if (xfh.version <= 0x0103) {
 	for (i = 0; i < mod->ins; i++) {
 	    for (j = 0; j < mod->xxi[i].nsm; j++) {
-		load_sample(f, mod->xxi[i].sub[j].sid,
-		    SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
+		load_sample(f, SAMPLE_FLAG_DIFF,
+				&mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 	    }
 	}
     }

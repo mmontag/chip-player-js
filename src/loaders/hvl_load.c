@@ -490,8 +490,7 @@ static int hvl_load(struct module_data *m, FILE *f, const int start)
 			break;
 		}
 
-		load_sample(NULL, i,
-				  SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)b);
+		load_sample(NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)b);
 	}
 
 

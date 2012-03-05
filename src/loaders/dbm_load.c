@@ -229,8 +229,7 @@ static void get_smpl(struct module_data *m, int size, FILE *f, void *parm)
 			continue;
 		}
 		
-		load_sample(f, i, SAMPLE_FLAG_BIGEND,
-							&mod->xxs[i], NULL);
+		load_sample(f, SAMPLE_FLAG_BIGEND, &mod->xxs[i], NULL);
 
 		if (mod->xxs[i].len == 0)
 			continue;

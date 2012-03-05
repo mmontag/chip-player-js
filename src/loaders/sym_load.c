@@ -404,18 +404,17 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 			uint8 *b = malloc(mod->xxs[i].len);
 			read_lzw_dynamic(f, b, 13, 0, mod->xxs[i].len,
 					mod->xxs[i].len, XMP_LZW_QUIRK_DSYM);
-			load_sample(NULL, mod->xxi[i].sub[0].sid,
-				SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
+			load_sample(NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);
 			free(b);
 		} else if (a == 4) {
 			mod->xxi[i].nsm = 0;
-			load_sample(f, mod->xxi[i].sub[0].sid,
-				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			load_sample(f, SAMPLE_FLAG_VIDC,
+				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		} else {
 			mod->xxi[i].nsm = 0;
-			load_sample(f, mod->xxi[i].sub[0].sid,
-				SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			load_sample(f, SAMPLE_FLAG_VIDC,
+				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		}
 	}
 

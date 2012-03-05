@@ -155,8 +155,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
 		filename, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	load_sample(s, mod->xxi[i].sub[0].sid,
-	    SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	load_sample(s, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 	fclose(s);
     }

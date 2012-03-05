@@ -389,8 +389,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 	    if (!mod->xxs[smp_num].len)
 		continue;
 
-	    load_sample(f, mod->xxi[i].sub[j].sid, 0,
-		&mod->xxs[mod->xxi[i].sub[j].sid], NULL);
+	    load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 	}
     }
     mod->smp = smp_num;

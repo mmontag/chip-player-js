@@ -284,8 +284,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
 	if (mod->xxs[i].len <= 2)
 	    continue;
 
-	load_sample(f, mod->xxi[i].sub[0].sid, 0,
-							&mod->xxs[i], NULL);
+	load_sample(f, 0, &mod->xxs[i], NULL);
 
     }
 

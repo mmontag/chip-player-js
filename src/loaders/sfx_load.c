@@ -205,7 +205,7 @@ static int sfx_13_20_load(struct module_data *m, FILE *f, const int nins, const 
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)
 	    continue;
-	load_sample(f, i, 0, &mod->xxs[i], NULL);
+	load_sample(f, 0, &mod->xxs[i], NULL);
     }
 
     return 0;

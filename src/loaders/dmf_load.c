@@ -332,14 +332,12 @@ static void get_smpd(struct module_data *m, int size, FILE *f, void *parm)
 
 		switch (data->packtype[i]) {
 		case 0:
-			load_sample(f, mod->xxi[i].sub[0].sid,
-				0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			break;
 		case 1:
 			fread(ibuf, smpsize, 1, f);
 			unpack(sbuf, ibuf, ibuf + smpsize, mod->xxs[i].len);
-			load_sample(NULL, i,
-				SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)sbuf);
+			load_sample(NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)sbuf);
 			break;
 		default:
 			fseek(f, smpsize, SEEK_CUR);

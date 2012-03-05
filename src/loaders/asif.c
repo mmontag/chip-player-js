@@ -51,7 +51,7 @@ int asif_load(struct module_data *m, FILE *f, int i)
 				read16l(f);		/* SampRate */
 			}
 		
-			load_sample(f, i, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
+			load_sample(f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
 
 			chunk++;
 			break;

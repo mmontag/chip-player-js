@@ -337,8 +337,7 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 		mod->xxs[i].lpe = mod->xxs[i].len;
 	}
 
-	load_sample(f, mod->xxi[i].sub[0].sid, SAMPLE_FLAG_VIDC,
-					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	load_sample(f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
 				i, mod->xxi[i].name,

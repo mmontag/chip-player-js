@@ -42,7 +42,7 @@ void clean_s3m_seq(struct xmp_module *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct module_data *, char *, char *, int);
 void set_type(struct module_data *, char *, ...);
-int load_sample(FILE *, int, int, struct xmp_sample *, void *);
+int load_sample(FILE *, int, struct xmp_sample *, void *);
 
 
 extern uint8 ord_xlat[];

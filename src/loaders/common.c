@@ -239,8 +239,7 @@ static void unroll_loop(struct xmp_sample *xxs)
 }
 
 
-int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
-                void *buffer)
+int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 {
 	int bytelen, extralen, unroll_extralen;
 

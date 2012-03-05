@@ -489,7 +489,7 @@ next_pattern:
 
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(f, mod->xxi[i].sub[0].sid, 0, &mod->xxs[i], NULL);
+	load_sample(f, 0, &mod->xxs[i], NULL);
     }
 
     return 0;

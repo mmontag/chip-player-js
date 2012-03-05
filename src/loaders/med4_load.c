@@ -578,8 +578,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 				       mod->xxi[i].sub[0].xpo /*,
 				       mod->xxi[i].sub[0].fin >> 4*/);
 
-			load_sample(f, smp_idx, 0,
-					&mod->xxs[smp_idx], NULL);
+			load_sample(f, 0, &mod->xxs[smp_idx], NULL);
 
 			smp_idx++;
 
@@ -643,7 +642,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 				mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
 				mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
-				load_sample(f, smp_idx,
+				load_sample(f,
 					0, &mod->xxs[smp_idx], NULL);
 
 				smp_idx++;
@@ -685,7 +684,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].xpo);
 
-		load_sample(f, mod->xxi[i].sub[0].sid, 0,
+		load_sample(f, 0,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
 		smp_idx++;
