@@ -487,9 +487,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_TREMOR:		/* Tremor */
-		xc->tremor = fxp;
-		xc->tcnt_up = MSN(fxp);
-		xc->tcnt_dn = -1;
+		xc->tremor.val = fxp;
+		xc->tremor.count_up = MSN(fxp);
+		xc->tremor.count_dn = -1;
 		break;
 	case FX_XF_PORTA:	/* Extra fine portamento */
 	      fx_xf_porta:

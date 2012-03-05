@@ -399,7 +399,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
     xc->flags = flg | (xc->flags & 0xff000000);	/* keep persistent flags */
 
     reset_stepper(&xc->arpeggio);
-    xc->tremor = 0;
+    xc->tremor.val = 0;
 
     if ((uint32)xins >= mod->ins || !mod->xxi[xins].nsm) {
 	RESET(IS_VALID);
@@ -707,14 +707,14 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     }
 
     /* Do tremor */
-    if (xc->tcnt_up || xc->tcnt_dn) {
-	if (xc->tcnt_up > 0) {
-	    if (xc->tcnt_up--)
-		xc->tcnt_dn = LSN(xc->tremor);
+    if (xc->tremor.count_up || xc->tremor.count_dn) {
+	if (xc->tremor.count_up > 0) {
+	    if (xc->tremor.count_up--)
+		xc->tremor.count_dn = LSN(xc->tremor.val);
 	} else {
 	    finalvol = 0;
-	    if (xc->tcnt_dn--)
-		xc->tcnt_up = MSN(xc->tremor);
+	    if (xc->tremor.count_dn--)
+		xc->tremor.count_up = MSN(xc->tremor.val);
 	}
     }
 

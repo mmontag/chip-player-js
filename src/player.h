@@ -103,6 +103,23 @@ struct channel_data {
 	int masterpan;		/* Master pan -- for S3M set pan effect */
 	int mastervol;		/* Master vol -- for IT track vol effect */
 	int delay;		/* Note delay in frames */
+	int keyoff;		/* Key off counter */
+	int fadeout;		/* Current fadeout (release) value */
+	int gliss;		/* Glissando active */
+	int volume;		/* Current volume */
+	int gvl;		/* Global volume for instrument for IT */
+	int p_val;		/* Current pan value */
+	int offset;		/* Sample offset memory */
+	int offset_val;		/* Sample offset */
+
+	uint16 v_idx;		/* Volume envelope index */
+	uint16 p_idx;		/* Pan envelope index */
+	uint16 f_idx;		/* Freq envelope index */
+
+	struct lfo vibrato;
+	struct lfo tremolo;
+	struct stepper arpeggio;
+	struct instrument_vibrato instrument_vibrato;
 
 	struct {
 		int type;	/* Retrig type */
@@ -111,12 +128,11 @@ struct channel_data {
 		int val;	/* Retrig parameters */
 	} retrig;
 
-	int tremor;		/* Tremor */
-	int tcnt_up;		/* Tremor counter (up cycle) */
-	int tcnt_dn;		/* Tremor counter (down cycle) */
-	int keyoff;		/* Key off counter */
-	int volume;		/* Current volume */
-	int gvl;		/* Global volume for instrument for IT */
+	struct {
+		int val;	/* Tremor */
+		int count_up;	/* Tremor counter (up cycle) */
+		int count_dn;	/* Tremor counter (down cycle) */
+	} tremor;
 
 	struct {
 		int slide;	/* Volume slide value */
@@ -125,19 +141,11 @@ struct channel_data {
 		int memory;	/* Volume slide effect memory */
 	} vol;
 
-	int p_val;		/* Current pan value */
-
 	struct {
 		int slide;	/* Track volume slide value */
 		int fslide;	/* Track fine volume slide value */
 		int memory;	/* Track volume slide effect memory */
 	} trackvol;
-
-	uint16 v_idx;		/* Volume envelope index */
-	uint16 p_idx;		/* Pan envelope index */
-	uint16 f_idx;		/* Freq envelope index */
-	struct lfo vibrato;
-	struct lfo tremolo;
 
 	struct {
 		int slide;	/* Frequency slide value */
@@ -147,13 +155,6 @@ struct channel_data {
 		int s_sgn;	/* Tone portamento up/down switch */
 		int s_val;	/* Delta for tone portamento */
 	} freq;
-
-	int fadeout;		/* Current fadeout (release) value */
-	int gliss;		/* Glissando active */
-	struct stepper arpeggio;
-	struct instrument_vibrato instrument_vibrato;
-	int offset;		/* Sample offset memory */
-	int offset_val;		/* Sample offset */
 
 	struct {
 		int slide;	/* PTM note slide amount */
