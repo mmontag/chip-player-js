@@ -20,10 +20,10 @@
 	int mapped = instrument->map[xc->key].ins; \
 	struct xmp_subinstrument *sub = &instrument->sub[mapped]; \
 	if (note-- && note < 0x80 && (uint32)xc->ins < m->mod.ins) { \
-	    xc->s_end = note_to_period(note + sub->xpo + \
+	    xc->freq.s_end = note_to_period(note + sub->xpo + \
 	    instrument->map[xc->key].xpo, sub->fin, HAS_QUIRK(QUIRK_LINEAR)); \
 	} \
-	xc->s_sgn = xc->period < xc->s_end ? 1 : -1; \
+	xc->freq.s_sgn = xc->period < xc->freq.s_end ? 1 : -1; \
 } while (0)
 
 #define HAS_QUIRK(x) (m->quirk & (x))
@@ -70,56 +70,56 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 
 	case FX_PORTA_UP:	/* Portamento up */
 		if (fxp == 0)
-			fxp = xc->porta;
+			fxp = xc->freq.porta;
 
 		if (HAS_QUIRK(QUIRK_FINEFX)
 		    && (fnum == 0 || !HAS_QUIRK(QUIRK_ITVPOR))) {
 			switch (MSN(fxp)) {
 			case 0xf:
-				xc->porta = fxp;
+				xc->freq.porta = fxp;
 				fxp &= 0x0f;
 				goto ex_f_porta_up;
 			case 0xe:
-				xc->porta = fxp;
+				xc->freq.porta = fxp;
 				fxp &= 0x0e;
 				fxp |= 0x10;
 				goto fx_xf_porta;
 			}
 		}
 		SET(PITCHBEND);
-		if ((xc->porta = fxp) != 0) {
-			xc->f_val = -fxp;
+		if ((xc->freq.porta = fxp) != 0) {
+			xc->freq.slide = -fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD))
-				xc->s_val = -fxp;
-		} else if (xc->f_val > 0) {
-			xc->f_val *= -1;
+				xc->freq.s_val = -fxp;
+		} else if (xc->freq.slide > 0) {
+			xc->freq.slide *= -1;
 		}
 		break;
 	case FX_PORTA_DN:	/* Portamento down */
 		if (fxp == 0)
-			fxp = xc->porta;
+			fxp = xc->freq.porta;
 
 		if (HAS_QUIRK(QUIRK_FINEFX)
 		    && (fnum == 0 || !HAS_QUIRK(QUIRK_ITVPOR))) {
 			switch (MSN(fxp)) {
 			case 0xf:
-				xc->porta = fxp;
+				xc->freq.porta = fxp;
 				fxp &= 0x0f;
 				goto ex_f_porta_dn;
 			case 0xe:
-				xc->porta = fxp;
+				xc->freq.porta = fxp;
 				fxp &= 0x0e;
 				fxp |= 0x20;
 				goto fx_xf_porta;
 			}
 		}
 		SET(PITCHBEND);
-		if ((xc->porta = fxp) != 0) {
-			xc->f_val = fxp;
+		if ((xc->freq.porta = fxp) != 0) {
+			xc->freq.slide = fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD))
-				xc->s_val = fxp;
-		} else if (xc->f_val < 0) {
-			xc->f_val *= -1;
+				xc->freq.s_val = fxp;
+		} else if (xc->freq.slide < 0) {
+			xc->freq.slide *= -1;
 		}
 		break;
 	case FX_TONEPORTA:	/* Tone portamento */
@@ -127,22 +127,22 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			break;
 		DO_TONEPORTA();
 		if (fxp) {
-			xc->s_val = fxp;
+			xc->freq.s_val = fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
-				xc->porta = fxp;
+				xc->freq.porta = fxp;
 		}
 		SET(TONEPORTA);
 		break;
 	case FX_PER_PORTA_UP:	/* Persistent portamento up */
 		SET_PER(PITCHBEND);
-		xc->f_val = -fxp;
-		if ((xc->porta = fxp) == 0)
+		xc->freq.slide = -fxp;
+		if ((xc->freq.porta = fxp) == 0)
 			RESET_PER(PITCHBEND);
 		break;
 	case FX_PER_PORTA_DN:	/* Persistent portamento down */
 		SET(PITCHBEND);
-		xc->f_val = fxp;
-		if ((xc->porta = fxp) == 0)
+		xc->freq.slide = fxp;
+		if ((xc->freq.porta = fxp) == 0)
 			RESET_PER(PITCHBEND);
 		break;
 	case FX_PER_TPORTA:	/* Persistent tone portamento */
@@ -150,19 +150,19 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			break;
 		SET_PER(TONEPORTA);
 		DO_TONEPORTA();
-		xc->s_val = fxp;
+		xc->freq.s_val = fxp;
 		if (fxp == 0)
 			RESET_PER(TONEPORTA);
 		break;
 	case FX_PER_VSLD_UP:	/* Persistent volslide up */
 		SET_PER(VOL_SLIDE);
-		xc->v_val = fxp;
+		xc->vol.slide = fxp;
 		if (fxp == 0)
 			RESET_PER(VOL_SLIDE);
 		break;
 	case FX_PER_VSLD_DN:	/* Persistent volslide down */
 		SET_PER(VOL_SLIDE);
-		xc->v_val = -fxp;
+		xc->vol.slide = -fxp;
 		if (fxp == 0)
 			RESET_PER(VOL_SLIDE);
 		break;
@@ -234,15 +234,15 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			h = MSN(fxp);
 			l = LSN(fxp);
 			if (l == 0xf && h != 0) {
-				xc->volslide = fxp;
+				xc->vol.memory = fxp;
 				fxp >>= 4;
 				goto ex_f_vslide_up;
 			} else if (h == 0xf && l != 0) {
-				xc->volslide = fxp;
+				xc->vol.memory = fxp;
 				fxp &= 0x0f;
 				goto ex_f_vslide_dn;
 			} else if (!fxp) {
-				if ((fxp = xc->volslide) != 0)
+				if ((fxp = xc->vol.memory) != 0)
 					goto fx_volslide;
 			}
 		}
@@ -250,16 +250,16 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 
 		/* Skaven's 2nd reality (S3M) has volslide parameter D7 => pri
 		 * down. Stargazer's Red Dream (MOD) uses volslide DF =>
-		 * compute both. Also don't assign xc->volslide if fxp is 0,
+		 * compute both. Also don't assign xc->vol.memory if fxp is 0,
 		 * see Guild of Sounds.xm
 		 */
 		if (fxp) {
 			if (HAS_QUIRK(QUIRK_VOLPDN)) {
-				if ((xc->volslide = fxp))
-					xc->v_val =
+				if ((xc->vol.memory = fxp))
+					xc->vol.slide =
 					    LSN(fxp) ? -LSN(fxp) : MSN(fxp);
 			} else {
-				xc->v_val = -LSN(fxp) + MSN(fxp);
+				xc->vol.slide = -LSN(fxp) + MSN(fxp);
 			}
 		}
 
@@ -268,32 +268,32 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		 * suspect ST3/IT could be handling D0F effects like this.
 		 */
 		if (HAS_QUIRK(QUIRK_FINEFX)) {
-			if (MSN(xc->volslide) == 0xf
-			    || LSN(xc->volslide) == 0xf) {
+			if (MSN(xc->vol.memory) == 0xf
+			    || LSN(xc->vol.memory) == 0xf) {
 				SET(FINE_VOLS);
-				xc->v_fval = xc->v_val;
+				xc->vol.fslide = xc->vol.slide;
 			}
 		}
 		break;
 	case FX_VOLSLIDE_2:	/* Secondary volume slide */
 		SET(VOL_SLIDE_2);
 		if (fxp)
-			xc->v_val2 = -LSN(fxp) + MSN(fxp);
+			xc->vol.slide2 = -LSN(fxp) + MSN(fxp);
 		break;
 	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
 		if (fxp)
-			xc->v_val = fxp;
+			xc->vol.slide = fxp;
 		SET(VOL_SLIDE);
 		break;
 	case FX_VOLSLIDE_DN:	/* Vol slide with uint8 arg */
 		if (fxp)
-			xc->v_val = -fxp;
+			xc->vol.slide = -fxp;
 		SET(VOL_SLIDE);
 		break;
 	case FX_F_VSLIDE:	/* Fine volume slide */
 		SET(FINE_VOLS);
-		if ((xc->fvolslide = fxp))
-			xc->v_fval = MSN(fxp) - LSN(fxp);
+		if ((xc->vol.fmemory = fxp))
+			xc->vol.fslide = MSN(fxp) - LSN(fxp);
 		break;
 	case FX_JUMP:		/* Order jump */
 		p->flow.pbreak = 1;
@@ -316,17 +316,17 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		      ex_f_porta_up:
 			SET(FINE_BEND);
 			if (fxp)
-				xc->f_fval = -fxp * 4;
-			else if (xc->f_val > 0)
-				xc->f_val *= -1;
+				xc->freq.fslide = -fxp * 4;
+			else if (xc->freq.slide > 0)
+				xc->freq.slide *= -1;
 			break;
 		case EX_F_PORTA_DN:	/* Fine portamento down */
 		      ex_f_porta_dn:
 			SET(FINE_BEND);
 			if (fxp)
-				xc->f_fval = fxp * 4;
-			else if (xc->f_val < 0)
-				xc->f_val *= -1;
+				xc->freq.fslide = fxp * 4;
+			else if (xc->freq.slide < 0)
+				xc->freq.slide *= -1;
 			break;
 		case EX_GLISS:		/* Glissando toggle */
 			xc->gliss = fxp;
@@ -377,13 +377,13 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		      ex_f_vslide_up:
 			SET(FINE_VOLS);
 			if (fxp)
-				xc->v_fval = fxp;
+				xc->vol.fslide = fxp;
 			break;
 		case EX_F_VSLIDE_DN:	/* Fine volume slide down */
 		      ex_f_vslide_dn:
 			SET(FINE_VOLS);
 			if (fxp)
-				xc->v_fval = -fxp;
+				xc->vol.fslide = -fxp;
 			break;
 		case EX_CUT:		/* Cut note */
 			xc->retrig.delay = fxp + 1;
@@ -496,10 +496,10 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		SET(FINE_BEND);
 		switch (MSN(fxp)) {
 		case 1:
-			xc->f_fval = -LSN(fxp);
+			xc->freq.fslide = -LSN(fxp);
 			break;
 		case 2:
-			xc->f_fval = LSN(fxp);
+			xc->freq.fslide = LSN(fxp);
 			break;
 		}
 		break;

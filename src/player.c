@@ -454,7 +454,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	if (!TEST(FINETUNE))
 	    xc->finetune = sub->fin;
 
-	xc->s_end = xc->period = note_to_period(note, xc->finetune,
+	xc->freq.s_end = xc->period = note_to_period(note, xc->finetune,
 					HAS_QUIRK(QUIRK_LINEAR));
 
 	xc->gvl = sub->gvl;
@@ -735,21 +735,21 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		p->gvol.volume = m->volbase;
 	}
 	if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE))
-	    xc->volume += xc->v_val;
+	    xc->volume += xc->vol.slide;
 
 	if (TEST_PER(VOL_SLIDE)) {
-	    if (xc->v_val > 0 && xc->volume > m->volbase) {
+	    if (xc->vol.slide > 0 && xc->volume > m->volbase) {
 		xc->volume = m->volbase;
 		RESET_PER(VOL_SLIDE);
 	    }
-	    if (xc->v_val < 0 && xc->volume < 0) {
+	    if (xc->vol.slide < 0 && xc->volume < 0) {
 		xc->volume = 0;
 		RESET_PER(VOL_SLIDE);
 	    }
 	}
 
 	if (TEST(VOL_SLIDE_2))
-	    xc->volume += xc->v_val2;
+	    xc->volume += xc->vol.slide2;
 
 	if (TEST(TRK_VSLIDE))
 	    xc->mastervol += xc->trk_val;
@@ -769,13 +769,13 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	}
 
 	if (TEST(PITCHBEND) || TEST_PER(PITCHBEND))
-	    xc->period += xc->f_val;
+	    xc->period += xc->freq.slide;
 
 	/* Do tone portamento */
 	if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
-	    xc->period += xc->s_sgn * xc->s_val;
-	    if ((xc->s_sgn * xc->s_end) < (xc->s_sgn * xc->period)) {
-		xc->period = xc->s_end;
+	    xc->period += xc->freq.s_sgn * xc->freq.s_val;
+	    if ((xc->freq.s_sgn * xc->freq.s_end) < (xc->freq.s_sgn * xc->period)) {
+		xc->period = xc->freq.s_end;
 		RESET(TONEPORTA);
 		RESET_PER(TONEPORTA);
    	    }
@@ -789,9 +789,9 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     if (t % p->tempo == 0) {
 	/* Process "fine" effects */
 	if (TEST(FINE_VOLS))
-	    xc->volume += xc->v_fval;
+	    xc->volume += xc->vol.fslide;
 	if (TEST(FINE_BEND))
-	    xc->period = (4 * xc->period + xc->f_fval) / 4;
+	    xc->period = (4 * xc->period + xc->freq.fslide) / 4;
 	if (TEST(TRK_FVSLIDE))
 	    xc->mastervol += xc->trk_fval;
 	if (TEST(FINE_NSLIDE)) {

@@ -117,11 +117,15 @@ struct channel_data {
 	int keyoff;		/* Key off counter */
 	int volume;		/* Current volume */
 	int gvl;		/* Global volume for instrument for IT */
-	int v_val;		/* Volume slide value */
-	int v_fval;		/* Fine volume slide value */
-	int v_val2;		/* Volume slide value */
-	int volslide;		/* Volume slide effect memory */
-	int fvolslide;		/* Fine volume slide effect memory */
+
+	struct {
+		int slide;	/* Volume slide value */
+		int fslide;	/* Fine volume slide value */
+		int slide2;	/* Volume slide value */
+		int memory;	/* Volume slide effect memory */
+		int fmemory;	/* Fine volume slide effect memory */
+	} vol;
+
 	int p_val;		/* Current pan value */
 	int trk_val;		/* Track volume slide value */
 	int trk_fval;		/* Track fine volume slide value */
@@ -131,14 +135,18 @@ struct channel_data {
 	uint16 f_idx;		/* Freq envelope index */
 	struct lfo vibrato;
 	struct lfo tremolo;
-	int f_val;		/* Frequency slide value */
-	int f_fval;		/* Fine frequency slide value */
-	int porta;		/* Portamento effect memory */
+
+	struct {
+		int slide;	/* Frequency slide value */
+		int fslide;	/* Fine frequency slide value */
+		int porta;	/* Portamento effect memory */
+		int s_end;	/* Target period for tone portamento */
+		int s_sgn;	/* Tone portamento up/down switch */
+		int s_val;	/* Delta for tone portamento */
+	} freq;
+
 	int fadeout;		/* Current fadeout (release) value */
 	int gliss;		/* Glissando active */
-	int s_end;		/* Target period for tone portamento */
-	int s_sgn;		/* Tone portamento up/down switch */
-	int s_val;		/* Delta for tone portamento */
 	struct stepper arpeggio;
 	struct instrument_vibrato instrument_vibrato;
 	int offset;		/* Sample offset memory */
