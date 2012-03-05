@@ -404,7 +404,7 @@ int load_sample(FILE *f, int id, int flags, struct xmp_sample *xxs,
 	/* Fix sample at loop */
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
 		if (xxs->flg & XMP_SAMPLE_16BIT) {
-			int lpe = xxs->lpe * 2;
+			int lpe = xxs->lpe * 2 + unroll_extralen;
 			int lps = xxs->lps * 2;
 			xxs->data[lpe] = xxs->data[lpe - 2];
 			xxs->data[lpe + 1] = xxs->data[lpe - 1];
