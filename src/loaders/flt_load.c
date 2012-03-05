@@ -349,7 +349,7 @@ static int flt_load(struct module_data *m, FILE *f, const int start)
     mod->trk = mod->chn * mod->pat;
 
     strncpy(mod->name, (char *) mh.name, 20);
-    set_type(m, "%s %4.4s", tracker, mh.magic);
+    set_type(m, "%s (%4.4s)", tracker, mh.magic);
     MODULE_INFO();
 
     INSTRUMENT_INIT();
