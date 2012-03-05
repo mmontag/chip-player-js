@@ -292,7 +292,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_F_VSLIDE:	/* Fine volume slide */
 		SET(FINE_VOLS);
-		if ((xc->vol.fmemory = fxp))
+		if (fxp)
 			xc->vol.fslide = MSN(fxp) - LSN(fxp);
 		break;
 	case FX_JUMP:		/* Order jump */
@@ -609,8 +609,8 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		/* fall through */
 	case FX_NSLIDE_DN:
 		SET(NOTE_SLIDE);
-		xc->ns_val = -LSN(fxp);
-		xc->ns_count = xc->ns_speed = MSN(fxp);
+		xc->noteslide.slide = -LSN(fxp);
+		xc->noteslide.count = xc->noteslide.speed = MSN(fxp);
 		break;
 	case FX_NSLIDE_R_UP:
 		if (MSN(fxp)) {
@@ -624,26 +624,26 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		/* fall through */
 	case FX_NSLIDE_UP:
 		SET(NOTE_SLIDE);
-		xc->ns_val = LSN(fxp);
-		xc->ns_count = xc->ns_speed = MSN(fxp);
+		xc->noteslide.slide = LSN(fxp);
+		xc->noteslide.count = xc->noteslide.speed = MSN(fxp);
 		break;
 	case FX_NSLIDE2_DN:
 		SET(NOTE_SLIDE);
-		xc->ns_val = -fxp;
-		xc->ns_count = xc->ns_speed = 1;
+		xc->noteslide.slide = -fxp;
+		xc->noteslide.count = xc->noteslide.speed = 1;
 		break;
 	case FX_NSLIDE2_UP:
 		SET(NOTE_SLIDE);
-		xc->ns_val = fxp;
-		xc->ns_count = xc->ns_speed = 1;
+		xc->noteslide.slide = fxp;
+		xc->noteslide.count = xc->noteslide.speed = 1;
 		break;
 	case FX_F_NSLIDE_DN:
 		SET(FINE_NSLIDE);
-		xc->ns_fval = -fxp;
+		xc->noteslide.fslide = -fxp;
 		break;
 	case FX_F_NSLIDE_UP:
 		SET(FINE_NSLIDE);
-		xc->ns_fval = fxp;
+		xc->noteslide.fslide = fxp;
 		break;
 	}
 }

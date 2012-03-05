@@ -123,7 +123,6 @@ struct channel_data {
 		int fslide;	/* Fine volume slide value */
 		int slide2;	/* Volume slide value */
 		int memory;	/* Volume slide effect memory */
-		int fmemory;	/* Fine volume slide effect memory */
 	} vol;
 
 	int p_val;		/* Current pan value */
@@ -155,10 +154,13 @@ struct channel_data {
 	struct instrument_vibrato instrument_vibrato;
 	int offset;		/* Sample offset memory */
 	int offset_val;		/* Sample offset */
-	int ns_val;		/* PTM note slide amount */
-	int ns_fval;		/* OKT fine note slide amount */
-	int ns_speed;		/* PTM note slide speed */
-	int ns_count;		/* PTM note slide counter */
+
+	struct {
+		int slide;	/* PTM note slide amount */
+		int fslide;	/* OKT fine note slide amount */
+		int speed;	/* PTM note slide speed */
+		int count;	/* PTM note slide counter */
+	} noteslide;
 
 	struct {
 		int cutoff;	/* IT filter cutoff frequency */

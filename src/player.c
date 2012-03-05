@@ -622,11 +622,12 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 
     /* Do note slide */
     if (TEST(NOTE_SLIDE)) {
-	if (!--xc->ns_count) {
-	    xc->note += xc->ns_val;
+	xc->noteslide.count--;
+	if (xc->noteslide.count == 0) {
+	    xc->note += xc->noteslide.slide;
 	    xc->period = note_to_period(xc->note, xc->finetune,
 					HAS_QUIRK(QUIRK_LINEAR));
-	    xc->ns_count = xc->ns_speed;
+	    xc->noteslide.count = xc->noteslide.speed;
 	}
     }
 
@@ -795,7 +796,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	if (TEST(TRK_FVSLIDE))
 	    xc->mastervol += xc->trackvol.fslide;
 	if (TEST(FINE_NSLIDE)) {
-	    xc->note += xc->ns_fval;
+	    xc->note += xc->noteslide.fslide;
 	    xc->period = note_to_period(xc->note, xc->finetune,
 					HAS_QUIRK(QUIRK_LINEAR));
 	}
