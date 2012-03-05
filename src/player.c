@@ -87,6 +87,9 @@ static inline void reset_channel(struct context_data *ctx)
     }
 }
 
+/*
+ * Read event
+ */
 
 static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
 {
@@ -284,7 +287,6 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	}
     }
 
-
     /* Reset flags */
     xc->delay = xc->retrig.delay = 0;
     xc->flags = flg | (xc->flags & 0xff000000);	/* keep persistent flags */
@@ -425,47 +427,20 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
     }
 }
 
+/*
+ * Update channel data
+ */
 
-static void play_channel(struct context_data *ctx, int chn, int t)
+static void process_volume(struct context_data *ctx, int chn, int t, int act)
 {
-    int finalvol, finalpan, cutoff, act;
-    int pan_envelope, frq_envelope;
-    int med_arp, vibrato, med_vibrato;
-    uint16 vol_envelope;
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
-    struct mixer_data *s = &ctx->s;
     struct channel_data *xc = &p->xc_data[chn];
-    struct xmp_instrument *instrument;
-    int linear_bend;
+    struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+    int finalvol;
+    uint16 vol_envelope;
 
-    /* Do delay */
-    if (xc->delay && !--xc->delay) {
-	if (read_event(ctx, xc->delayed_event, chn, 1) != 0)
-	    read_event(ctx, xc->delayed_event, chn, 0);
-    }
-
-    instrument = &m->mod.xxi[xc->ins];
-
-    act = virtch_cstat(ctx, chn);
-    if (act == VIRTCH_INVALID)
-	return;
-
-    if (!t && act != VIRTCH_ACTIVE) {
-	if (!TEST(IS_VALID) || act == VIRTCH_ACTION_CUT) {
-	    virtch_resetchannel(ctx, chn);
-	    return;
-	}
-	xc->delay = xc->retrig.delay = 0;
-	reset_stepper(&xc->arpeggio);
-	xc->flags &= (0xff000000 | IS_VALID);	/* keep persistent flags */
-    }
-
-    if (!TEST(IS_VALID))
-	return;
-
-    /* Process MED synth instruments */
-    xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
+    /* Fadeout */
 
     if (TEST(RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
 	xc->fadeout = 0;
@@ -495,15 +470,6 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	}
     }
 
-    vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
-    pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
-    frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
-
-    /* Update envelopes */
-    xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
-    xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
-    xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
-
     switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
     case -1:
 	virtch_resetchannel(ctx, chn);
@@ -512,32 +478,12 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	break;
     default:
 	if (HAS_QUIRK(QUIRK_ENVFADE)) {
-		SET(FADEOUT);
+	    SET(FADEOUT);
 	}
     }
 
-    /* Do note slide */
-    if (TEST(NOTE_SLIDE)) {
-	xc->noteslide.count--;
-	if (xc->noteslide.count == 0) {
-	    xc->note += xc->noteslide.slide;
-	    xc->period = note_to_period(xc->note, xc->finetune,
-					HAS_QUIRK(QUIRK_LINEAR));
-	    xc->noteslide.count = xc->noteslide.speed;
-	}
-    }
-
-    /* Do cut/retrig */
-    if (xc->retrig.delay) {
-	if (!--xc->retrig.count) {
-	    if (xc->retrig.type < 0x10)
-		virtch_voicepos(ctx, chn, 0);	/* don't retrig on cut */
-	    xc->volume += rval[xc->retrig.type].s;
-	    xc->volume *= rval[xc->retrig.type].m;
-	    xc->volume /= rval[xc->retrig.type].d;
-	    xc->retrig.count = xc->retrig.delay;
-	}
-    }
+    vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
+    xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
 
     finalvol = xc->volume;
 
@@ -564,28 +510,6 @@ static void play_channel(struct context_data *ctx, int chn, int t)
     if (HAS_QUIRK(QUIRK_INSVOL))
 	finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
 
-
-    /* Vibrato */
-
-    med_vibrato = get_med_vibrato(xc);
-    vibrato = get_lfo(&xc->insvib.lfo) / (1024 * (1 + xc->insvib.sweep));
-
-    if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
-	vibrato += get_lfo(&xc->vibrato) >> 10;
-    }
-
-    /* Pan */
-
-    finalpan = xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32;
-    finalpan = xc->masterpan + (finalpan - 128) *
-			(128 - abs (xc->masterpan - 128)) / 128;
-
-    if (instrument->fei.flg & XMP_ENVELOPE_FLT) {
-	cutoff = xc->filter.cutoff * frq_envelope / 0xff;
-    } else {
-	cutoff = 0xff;
-    }
-
     /* Do tremor */
     if (xc->tremor.count_up || xc->tremor.count_dn) {
 	if (xc->tremor.count_up > 0) {
@@ -598,16 +522,122 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	}
     }
 
-    /* Do keyoff */
-    if (xc->keyoff) {
-	if (!--xc->keyoff)
-	    SET(RELEASE);
+    virtch_setvol(ctx, chn, finalvol);
+}
+
+static void process_frequency(struct context_data *ctx, int chn, int t, int act)
+{
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+    struct channel_data *xc = &p->xc_data[chn];
+    struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+    int linear_bend;
+    int frq_envelope;
+    int vibrato, cutoff;
+
+    frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
+    xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
+
+    /* Do note slide */
+
+    if (TEST(NOTE_SLIDE)) {
+	xc->noteslide.count--;
+	if (xc->noteslide.count == 0) {
+	    xc->note += xc->noteslide.slide;
+	    xc->period = note_to_period(xc->note, xc->finetune,
+					HAS_QUIRK(QUIRK_LINEAR));
+	    xc->noteslide.count = xc->noteslide.speed;
+	}
     }
+
+    /* Vibrato */
+
+    vibrato = get_lfo(&xc->insvib.lfo) / (1024 * (1 + xc->insvib.sweep));
+
+    if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
+	vibrato += get_lfo(&xc->vibrato) >> 10;
+    }
+
+    /* IT pitch envelopes are always linear, even in Amiga period mode.
+     * Each unit in the envelope scale is 1/25 semitone.
+     */
+    linear_bend = period_to_bend(
+	xc->period + vibrato + get_med_vibrato(xc),
+	xc->note,
+	HAS_QUIRK(QUIRK_MODRNG),
+	xc->gliss,
+	HAS_QUIRK(QUIRK_LINEAR));
+
+    if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
+        linear_bend += frq_envelope;
+    }
+
+    linear_bend += get_stepper(&xc->arpeggio) + get_med_arp(m, xc);
+
+    /* For xmp_player_get_info() */
+    xc->info_pitchbend = linear_bend;
+    xc->info_period = note_to_period_mix(xc->note, linear_bend);
+
+    virtch_setbend(ctx, chn, linear_bend);
+
+
+    /* Process filter */
+
+    if (instrument->fei.flg & XMP_ENVELOPE_FLT) {
+	cutoff = xc->filter.cutoff * frq_envelope / 0xff;
+    } else {
+	cutoff = 0xff;
+    }
+
+    if (cutoff < 0xff && HAS_QUIRK(QUIRK_FILTER)) {
+	filter_setup(ctx, xc, cutoff);
+	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, xc->filter.B0);
+	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, xc->filter.B1);
+	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B2, xc->filter.B2);
+    } else {
+	cutoff = 0xff;
+    }
+
+    virtch_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
+    virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
+}
+
+static void process_pan(struct context_data *ctx, int chn, int t, int act)
+{
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+    struct mixer_data *s = &ctx->s;
+    struct channel_data *xc = &p->xc_data[chn];
+    struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+    int finalpan;
+    int pan_envelope;
+
+    pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
+    xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
+
+    finalpan = xc->pan + (pan_envelope - 32) * (128 - abs (xc->pan - 128)) / 32;
+    finalpan = xc->masterpan + (finalpan - 128) *
+			(128 - abs (xc->masterpan - 128)) / 128;
+
+    if (s->format & XMP_FORMAT_MONO) {
+	finalpan = 0;
+    } else {
+	finalpan = (finalpan - 0x80) * s->mix / 100;
+    }
+
+    virtch_setpan(ctx, chn, finalpan);
+}
+
+static void update_volume(struct context_data *ctx, int chn, int t)
+{
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+    struct channel_data *xc = &p->xc_data[chn];
 
     /* Volume slides happen in all frames but the first, except when the
      * "volume slide on all frames" flag is set.
      */
-    if (t % p->tempo || HAS_QUIRK(QUIRK_VSALL)) {
+    if (t % p->tempo != 0 || HAS_QUIRK(QUIRK_VSALL)) {
 	if (!chn && p->gvol.flag) {
 	    p->gvol.volume += p->gvol.slide;
 	    if (p->gvol.volume < 0)
@@ -636,19 +666,34 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	    xc->mastervol += xc->trackvol.slide;
     }
 
-    /* "Fine" sliding effects are processed in the first frame of each row,
-     * and standard slides in the rest of the frames.
-     */
-    if (t % p->tempo || HAS_QUIRK(QUIRK_PBALL)) {
-	/* Do pan and pitch sliding */
-	if (TEST(PAN_SLIDE)) {
-	    xc->pan += xc->p_val;
-	    if (xc->pan < 0)
-		xc->pan = 0;
-	    else if (xc->pan > 0xff)
-		xc->pan = 0xff;
-	}
+    if (t % p->tempo == 0) {
+	/* Process "fine" effects */
+	if (TEST(FINE_VOLS))
+	    xc->volume += xc->vol.fslide;
+	if (TEST(TRK_FVSLIDE))
+	    xc->mastervol += xc->trackvol.fslide;
+    }
 
+    if (xc->volume < 0)
+	xc->volume = 0;
+    else if (xc->volume > m->volbase)
+	xc->volume = m->volbase;
+
+    if (xc->mastervol < 0)
+	xc->mastervol = 0;
+    else if (xc->mastervol > m->volbase)
+	xc->mastervol = m->volbase;
+
+    update_lfo(&xc->tremolo);
+}
+
+static void update_frequency(struct context_data *ctx, int chn, int t)
+{
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+    struct channel_data *xc = &p->xc_data[chn];
+
+    if (t % p->tempo != 0 || HAS_QUIRK(QUIRK_PBALL)) {
 	if (TEST(PITCHBEND) || TEST_PER(PITCHBEND))
 	    xc->period += xc->freq.slide;
 
@@ -667,24 +712,9 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	    xc->volume = 0;
     }
 
-    if (xc->volume < 0)
-	xc->volume = 0;
-    else if (xc->volume > m->volbase)
-	xc->volume = m->volbase;
-
-    if (xc->mastervol < 0)
-	xc->mastervol = 0;
-    else if (xc->mastervol > m->volbase)
-	xc->mastervol = m->volbase;
-
     if (t % p->tempo == 0) {
-	/* Process "fine" effects */
-	if (TEST(FINE_VOLS))
-	    xc->volume += xc->vol.fslide;
 	if (TEST(FINE_BEND))
 	    xc->period = (4 * xc->period + xc->freq.fslide) / 4;
-	if (TEST(TRK_FVSLIDE))
-	    xc->mastervol += xc->trackvol.fslide;
 	if (TEST(FINE_NSLIDE)) {
 	    xc->note += xc->noteslide.fslide;
 	    xc->period = note_to_period(xc->note, xc->finetune,
@@ -704,62 +734,8 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	    xc->period = MAX_PERIOD_A;
     }
 
-    /* IT pitch envelopes are always linear, even in Amiga period mode.
-     * Each unit in the envelope scale is 1/25 semitone.
-     */
-    linear_bend = period_to_bend(
-	xc->period + vibrato + med_vibrato,
-	xc->note,
-	/* xc->finetune, */
-	HAS_QUIRK(QUIRK_MODRNG),
-	xc->gliss,
-	HAS_QUIRK(QUIRK_LINEAR));
-
-    if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
-        linear_bend += frq_envelope;
-    }
-
-    /* Process MED synth arpeggio */
-    med_arp = get_med_arp(m, xc);
-
-    /* Adjust pitch and pan, then play the note */
-    if (s->format & XMP_FORMAT_MONO) {
-	finalpan = 0;
-    } else {
-	finalpan = (finalpan - 0x80) * s->mix / 100;
-    }
-
-    linear_bend += get_stepper(&xc->arpeggio) + med_arp;
-
-    /* For xmp_player_get_info() */
-    xc->info_pitchbend = linear_bend;
-    xc->info_period = note_to_period_mix(xc->note, linear_bend);
-
-    virtch_setbend(ctx, chn, linear_bend);
-    virtch_setpan(ctx, chn, finalpan);
-    virtch_setvol(ctx, chn, finalvol);
-
-    if (cutoff < 0xff && HAS_QUIRK(QUIRK_FILTER)) {
-	filter_setup(ctx, xc, cutoff);
-	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, xc->filter.B0);
-	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, xc->filter.B1);
-	virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B2, xc->filter.B2);
-    } else {
-	cutoff = 0xff;
-    }
-
-    virtch_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
-    virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
-
-    if (HAS_QUIRK(QUIRK_INVLOOP)) {
-	update_invloop(m, xc);
-    }
-
-    /* Update vibrato, tremolo and arpeggio indexes */
-
     update_stepper(&xc->arpeggio);
     update_lfo(&xc->vibrato);
-    update_lfo(&xc->tremolo);
 
     /* Update instrument vibrato */
 
@@ -768,6 +744,86 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	xc->insvib.sweep -= 2;
     } else {
 	xc->insvib.sweep = 0;
+    }
+}
+
+static void update_pan(struct context_data *ctx, int chn, int t)
+{
+    struct player_data *p = &ctx->p;
+    struct channel_data *xc = &p->xc_data[chn];
+
+    if (t % p->tempo != 0) {
+	if (TEST(PAN_SLIDE)) {
+	    xc->pan += xc->p_val;
+	    if (xc->pan < 0)
+		xc->pan = 0;
+	    else if (xc->pan > 0xff)
+		xc->pan = 0xff;
+	}
+    }
+}
+
+static void play_channel(struct context_data *ctx, int chn, int t)
+{
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+    struct channel_data *xc = &p->xc_data[chn];
+    int act;
+
+    /* Do delay */
+    if (xc->delay && !--xc->delay) {
+	if (read_event(ctx, xc->delayed_event, chn, 1) != 0)
+	    read_event(ctx, xc->delayed_event, chn, 0);
+    }
+
+    act = virtch_cstat(ctx, chn);
+    if (act == VIRTCH_INVALID)
+	return;
+
+    if (!t && act != VIRTCH_ACTIVE) {
+	if (!TEST(IS_VALID) || act == VIRTCH_ACTION_CUT) {
+	    virtch_resetchannel(ctx, chn);
+	    return;
+	}
+	xc->delay = xc->retrig.delay = 0;
+	reset_stepper(&xc->arpeggio);
+	xc->flags &= (0xff000000 | IS_VALID);	/* keep persistent flags */
+    }
+
+    if (!TEST(IS_VALID))
+	return;
+
+    /* Process MED synth instruments */
+    xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
+
+    /* Do cut/retrig */
+    if (xc->retrig.delay) {
+	if (!--xc->retrig.count) {
+	    if (xc->retrig.type < 0x10)
+		virtch_voicepos(ctx, chn, 0);	/* don't retrig on cut */
+	    xc->volume += rval[xc->retrig.type].s;
+	    xc->volume *= rval[xc->retrig.type].m;
+	    xc->volume /= rval[xc->retrig.type].d;
+	    xc->retrig.count = xc->retrig.delay;
+	}
+    }
+
+    process_volume(ctx, chn, t, act);
+    process_frequency(ctx, chn, t, act);
+    process_pan(ctx, chn, t, act);
+
+    update_volume(ctx, chn, t);
+    update_frequency(ctx, chn, t);
+    update_pan(ctx, chn, t);
+
+    /* Do keyoff */
+    if (xc->keyoff) {
+	if (!--xc->keyoff)
+	    SET(RELEASE);
+    }
+
+    if (HAS_QUIRK(QUIRK_INVLOOP)) {
+	update_invloop(m, xc);
     }
 }
 
