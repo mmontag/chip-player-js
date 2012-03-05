@@ -514,35 +514,35 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			h = MSN(fxp);
 			l = LSN(fxp);
 			if (h == 0xf && l != 0) {
-				xc->trkvsld = fxp;
+				xc->trackvol.memory = fxp;
 				fxp &= 0x0f;
 				goto fx_trk_fvslide;
 			} else if (h == 0xe && l != 0) {
-				xc->trkvsld = fxp;
+				xc->trackvol.memory = fxp;
 				fxp &= 0x0f;
 				goto fx_trk_fvslide;	/* FIXME */
 			} else if (l == 0xf && h != 0) {
-				xc->trkvsld = fxp;
+				xc->trackvol.memory = fxp;
 				fxp &= 0xf0;
 				goto fx_trk_fvslide;
 			} else if (l == 0xe && h != 0) {
-				xc->trkvsld = fxp;
+				xc->trackvol.memory = fxp;
 				fxp &= 0xf0;
 				goto fx_trk_fvslide;	/* FIXME */
 			} else if (!fxp) {
-				if ((fxp = xc->trkvsld) != 0)
+				if ((fxp = xc->trackvol.memory) != 0)
 					goto fx_trk_vslide;
 			}
 		}
 		SET(TRK_VSLIDE);
-		if ((xc->trkvsld = fxp))
-			xc->trk_val = MSN(fxp) - LSN(fxp);
+		if ((xc->trackvol.memory = fxp))
+			xc->trackvol.slide = MSN(fxp) - LSN(fxp);
 		break;
 	case FX_TRK_FVSLIDE:	/* Track fine volume slide */
 	      fx_trk_fvslide:
 		SET(TRK_FVSLIDE);
 		if (fxp) {
-			xc->trk_fval = MSN(fxp) - LSN(fxp);
+			xc->trackvol.fslide = MSN(fxp) - LSN(fxp);
 		}
 		break;
 	case FX_FINETUNE:

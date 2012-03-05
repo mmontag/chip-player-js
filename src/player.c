@@ -752,7 +752,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	    xc->volume += xc->vol.slide2;
 
 	if (TEST(TRK_VSLIDE))
-	    xc->mastervol += xc->trk_val;
+	    xc->mastervol += xc->trackvol.slide;
     }
 
     /* "Fine" sliding effects are processed in the first frame of each row,
@@ -793,7 +793,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	if (TEST(FINE_BEND))
 	    xc->period = (4 * xc->period + xc->freq.fslide) / 4;
 	if (TEST(TRK_FVSLIDE))
-	    xc->mastervol += xc->trk_fval;
+	    xc->mastervol += xc->trackvol.fslide;
 	if (TEST(FINE_NSLIDE)) {
 	    xc->note += xc->ns_fval;
 	    xc->period = note_to_period(xc->note, xc->finetune,

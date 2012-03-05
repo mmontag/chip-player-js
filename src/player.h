@@ -127,9 +127,13 @@ struct channel_data {
 	} vol;
 
 	int p_val;		/* Current pan value */
-	int trk_val;		/* Track volume slide value */
-	int trk_fval;		/* Track fine volume slide value */
-	int trkvsld;		/* Track volume slide effect memory */
+
+	struct {
+		int slide;	/* Track volume slide value */
+		int fslide;	/* Track fine volume slide value */
+		int memory;	/* Track volume slide effect memory */
+	} trackvol;
+
 	uint16 v_idx;		/* Volume envelope index */
 	uint16 p_idx;		/* Pan envelope index */
 	uint16 f_idx;		/* Freq envelope index */
