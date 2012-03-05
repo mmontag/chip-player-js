@@ -462,6 +462,8 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn, in
 	xc->volume = xc->volume * p->gvol.volume / m->volbase;
     }
 
+    update_invloop(m, xc);
+
     return 0;
 }
 
