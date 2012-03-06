@@ -16,6 +16,7 @@ mod.*
 *.rar
 *.exe
 *.dll
+*.pyc
 .svn
 tags
 depend
