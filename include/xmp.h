@@ -221,6 +221,7 @@ struct xmp_module_info {		/* Current module information */
 	} channel_info[XMP_MAX_CHANNELS];
 
 	struct xmp_module *mod;		/* Pointer to module data */
+	char *comment;			/* Comment text, if any */
 };
 
 

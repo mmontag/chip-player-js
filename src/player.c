@@ -1172,9 +1172,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	struct xmp_module *mod = &m->mod;
 	int chn, i;
 
-	chn = m->mod.chn;
+	chn = mod->chn;
 
-	info->mod = &m->mod;
 	info->order = p->pos;
 	info->pattern = mod->xxo[p->pos];
 	info->row = p->row;
@@ -1208,6 +1207,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->virt_used = p->virt.virt_used;
 
 	info->mod = mod;
+	info->comment = m->comment;
 
 	if (p->xc_data != NULL) {
 		for (i = 0; i < chn; i++) {
