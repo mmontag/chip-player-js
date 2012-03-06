@@ -113,8 +113,8 @@ struct xmp_instrument {
 	} map[XMP_MAX_KEYS];
 
 	struct xmp_subinstrument {
-		int vol;		/* [default] Volume */
-		int gvl;		/* [global] Volume */
+		int vol;		/* Default volume */
+		int gvl;		/* Global volume */
 		int pan;		/* Pan */
 		int xpo;		/* Transpose */
 		int fin;		/* Finetune */
