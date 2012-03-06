@@ -462,7 +462,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	FILE *f;
-	int i, t, val;
+	int i, j, t, val;
 	struct stat st;
 	struct module_data *m = &ctx->m;
 	struct list_head tmpfiles_list;
@@ -565,6 +565,22 @@ int xmp_load_module(xmp_context opaque, char *path)
 	}
 
 	m->time = scan_module(ctx);
+
+	/* Set appropriate values for instrument volumes and subinstrument
+	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
+	 * consistent if the user inspects struct xmp_module. We can later
+	 * set vlumes in the loaders and eliminate the quirk.
+	 */
+	for (i = 0; i < m->mod.ins; i++) {
+		if (~m->quirk & QUIRK_INSVOL) {
+			m->mod.xxi[i].vol = m->volbase;
+		}
+		for (j = 0; j < m->mod.xxi[i].nsm; j++) {
+			if (~m->quirk & QUIRK_INSVOL) {
+				m->mod.xxi[i].sub[j].gvl = m->volbase;
+			}
+		}
+	}
 
 	return 0;
 
