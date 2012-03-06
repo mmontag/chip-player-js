@@ -1,3 +1,6 @@
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include "test.h"
 #include "../src/list.h"
 
@@ -27,15 +30,29 @@ void run_tests()
 {
 	struct list_head *tmp;
 	int total, fail;
+	pid_t pid;
+	int status;
 
 	total = fail = 0;
 
 	list_for_each(tmp, &test_list) {
 		struct test *t = list_entry(tmp, struct test, list);
+
 		printf("test %d: %s: ", total, t->name);
-		if (t->func() < 0) {
+		fflush(stdout);
+
+		if ((pid = fork()) == 0) {
+			exit(t->func());
+		}
+
+		waitpid(pid, &status, 0);
+
+		if (status != 0) {
 			fail++;
-			printf(": **fail**\n");
+			if (WIFSIGNALED(status)) {
+				printf("%s: ", sys_siglist[WTERMSIG(status)]);
+			}
+			printf("**fail**\n");
 		} else {
 			printf("pass\n");
 		}
@@ -47,15 +64,10 @@ void run_tests()
 
 int main()
 {
-	add_test(test_pp);
-	add_test(test_sqsh);
-	add_test(test_s404);
-	add_test(test_mmcmp);
-	add_test(test_convert_delta);
-	add_test(test_convert_signal);
-	add_test(test_convert_endian);
-	add_test(test_xmp_get_format_list);
-	add_test(test_xmp_create_context);
+#define declare_test(x) add_test(x)
+#include "all_tests.c"
+#undef declare_test
+
 	run_tests();
 
 	return 0;

@@ -18,18 +18,12 @@
 	return 0; }
 
 #define fail_unless(x, y) do { \
-	if (!(x)) { printf("%s", y); return -1; } \
+	if (!(x)) { printf("%d: %s: ", __LINE__, y); return -1; } \
 } while (0)
 
 
 int check_md5(char *, char *);
 
-TEST_FUNC(test_pp);
-TEST_FUNC(test_sqsh);
-TEST_FUNC(test_s404);
-TEST_FUNC(test_mmcmp);
-TEST_FUNC(test_convert_delta);
-TEST_FUNC(test_convert_signal);
-TEST_FUNC(test_convert_endian);
-TEST_FUNC(test_xmp_get_format_list);
-TEST_FUNC(test_xmp_create_context);
+#define declare_test(x) TEST_FUNC(x)
+#include "all_tests.c"
+#undef declare_test
