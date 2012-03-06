@@ -90,7 +90,7 @@ int get_med_arp(struct module_data *m, struct channel_data *xc)
 }
 
 
-void xmp_med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int rst)
+void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int rst)
 {
     struct module_data *m = &ctx->m;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;

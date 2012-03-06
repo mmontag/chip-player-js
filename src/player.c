@@ -829,7 +829,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 
 	/* Process MED synth instruments */
-	xmp_med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
+	med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
 
 	/* Do cut/retrig */
 	if (xc->retrig.delay) {
