@@ -411,7 +411,7 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
 
 		if (mod->chn == 4) {
 	    	    tracker = "Protracker";
-		    m->quirk |= QUIRK_INVLOOP;
+printf("asd\n");
 		} else if (mod->chn == 6 || mod->chn == 8) {
 	    	    tracker = "FastTracker 1.01?";
 		    ptkloop = 0;
@@ -522,6 +522,8 @@ skip_test:
     if (mod->chn > 4) {
 	m->quirk &= ~QUIRK_MODRNG;
 	m->quirk |= QUIRKS_FT2;
+    } else if (strcmp(tracker, "Protracker") == 0) {
+	m->quirk |= QUIRK_INVLOOP;
     }
 
     return 0;

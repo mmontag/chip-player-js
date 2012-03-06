@@ -410,7 +410,6 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			break;
 		case EX_INVLOOP:	/* Invert loop / funk repeat */
 			xc->invloop.speed = fxp;
-			update_invloop(m, xc);
 			break;
 		}
 		break;
