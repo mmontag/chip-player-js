@@ -21,13 +21,6 @@
 
 const unsigned int xmp_version = VERSION;
 
-/**
- * @brief Create player context
- *
- * Create and initialize a handle used to identify this player context.
- *
- * @return Player context handle, or NULL in case of error.
- */
 xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
@@ -40,22 +33,15 @@ xmp_context xmp_create_context()
 	return (xmp_context)ctx;
 }
 
-/**
- * @brief Destroy player context
- *
- * Release all context data referenced by the given handle.
- *
- * @param handle Player context handle.
- */
-void xmp_free_context(xmp_context handle)
+void xmp_free_context(xmp_context opaque)
 {
-	free(handle);
+	free(opaque);
 }
 
-int _xmp_ctl(xmp_context handle, int cmd, ...)
+int _xmp_ctl(xmp_context opaque, int cmd, ...)
 {
 	va_list ap;
-	struct context_data *ctx = (struct context_data *)handle;
+	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
@@ -110,12 +96,12 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 				continue;
 			t = m->xxo_info[i].time;
 			if (arg > t) {
-				xmp_ord_set(handle, i);
+				xmp_ord_set(opaque, i);
 				break;
 			}
 		}
 		if (i < 0) {
-			xmp_ord_set(handle, 0);
+			xmp_ord_set(opaque, 0);
 		}
 		break; }
 	case XMP_CTL_CH_MUTE: {
@@ -154,22 +140,14 @@ int _xmp_ctl(xmp_context handle, int cmd, ...)
 	return 0;
 }
 
-/**
- * @brief Get the list of supported module formats
- *
- * Obtain a pointer to a NULL-terminated array of strings containing the
- * names of all module formats supported by the player.
- *
- * @return Pointer to the format list.
- */
 char **xmp_get_format_list()
 {
 	return format_list();
 }
 
-void xmp_inject_event(xmp_context handle, int channel, struct xmp_event *e)
+void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 {
-	struct context_data *ctx = (struct context_data *)handle;
+	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 
 	memcpy(&p->inject_event[channel], e, sizeof(struct xmp_event));

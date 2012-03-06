@@ -1142,7 +1142,6 @@ int xmp_player_frame(xmp_context opaque)
 	return 0;
 }
     
-
 void xmp_player_end(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -1161,7 +1160,6 @@ void xmp_player_end(xmp_context opaque)
 
 	mixer_off(ctx);
 }
-
 
 void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 {

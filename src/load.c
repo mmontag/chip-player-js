@@ -265,7 +265,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	snprintf(line, 1024, cmd, *s);
 
 #ifdef WIN32
-	/* Note: The _popen function returns an invalid file handle, if
+	/* Note: The _popen function returns an invalid file opaque, if
 	 * used in a Windows program, that will cause the program to hang
 	 * indefinitely. _popen works properly in a Console application.
 	 * To create a Windows application that redirects input and output,
@@ -458,19 +458,9 @@ static void split_name(char *s, char **d, char **b)
 	}
 }
 
-/**
- * @brief Load module
- *
- * Load module into the player context referenced by handle.
- *
- * @param handle Player context handle.
- * @param path Module file name.
- *
- * @return 0 if the module is successfully loaded, -1 otherwise.
- */
-int xmp_load_module(xmp_context handle, char *path)
+int xmp_load_module(xmp_context opaque, char *path)
 {
-	struct context_data *ctx = (struct context_data *)handle;
+	struct context_data *ctx = (struct context_data *)opaque;
 	FILE *f;
 	int i, t, val;
 	struct stat st;
@@ -584,18 +574,9 @@ int xmp_load_module(xmp_context handle, char *path)
 	return -EINVAL;
 }
 
-
-/**
- * @brief Free current module data
- *
- * Release all data from the currently loaded module in the given player
- * context.
- *
- * @param handle Player context handle.
- */
-void xmp_release_module(xmp_context handle)
+void xmp_release_module(xmp_context opaque)
 {
-	struct context_data *ctx = (struct context_data *)handle;
+	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	int i;
 
