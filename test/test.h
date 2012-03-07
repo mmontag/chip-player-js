@@ -8,10 +8,13 @@
 #include <xmp.h>
 #include "md5.h"
 
+#include "../src/common.h"
+
 #define TMP_FILE ".test"
 
 #define TEST_FUNC(x) int _test_func_##x(void)
 
+#undef TEST
 #define TEST(x) TEST_FUNC(x) {
 
 #define END_TEST \
@@ -23,6 +26,8 @@
 
 
 int check_md5(char *, char *);
+void create_simple_module(struct context_data *);
+void new_event(struct context_data *, int, int, int, int, int, int, int, int, int, int);
 
 #define declare_test(x) TEST_FUNC(x)
 #include "all_tests.c"

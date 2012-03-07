@@ -2,6 +2,7 @@
 TESTS		= pp sqsh s404 mmcmp \
 		  convert_delta convert_signal convert_endian \
 		  load_sample_8bit load_sample_16bit \
+		  player_read_event \
 		  xmp_get_format_list xmp_create_context
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
