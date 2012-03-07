@@ -89,21 +89,9 @@ static inline void reset_channel(struct context_data *ctx)
  * Read event
  */
 
-static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
-		      int ctl)
+static int check_delay(struct xmp_event *e, struct channel_data *xc,
+		       struct player_data *p)
 {
-	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
-	int xins, ins, note, key, flg;
-	struct channel_data *xc;
-	int cont_sample;
-	int mapped;
-	struct xmp_instrument *instrument;
-	struct xmp_subinstrument *sub;
-
-	xc = &p->xc_data[chn];
-
 	/* Tempo affects delay and must be computed first */
 	if ((e->fxt == FX_TEMPO && e->fxp < 0x20) || e->fxt == FX_S3M_TEMPO) {
 		if (e->fxp) {
@@ -123,7 +111,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		if (e->ins)
 			xc->delayed_ins = e->ins;
 		e->fxt = e->fxp = 0;
-		return 0;
+		return 1;
 	}
 	if (e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY) {
 		xc->delay = LSN(e->f2p) + 1;
@@ -131,6 +119,28 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		if (e->ins)
 			xc->delayed_ins = e->ins;
 		e->f2t = e->f2p = 0;
+		return 1;
+	}
+
+	return 0;
+}
+
+static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
+		      int ctl)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	int xins, ins, note, key, flg;
+	struct channel_data *xc;
+	int cont_sample;
+	int mapped;
+	struct xmp_instrument *instrument;
+	struct xmp_subinstrument *sub;
+
+	xc = &p->xc_data[chn];
+
+	if (check_delay(e, xc, p)) {
 		return 0;
 	}
 
@@ -804,9 +814,11 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	int act;
 
 	/* Do delay */
-	if (xc->delay && !--xc->delay) {
-		if (read_event(ctx, xc->delayed_event, chn, 1) != 0)
-			read_event(ctx, xc->delayed_event, chn, 0);
+	if (xc->delay > 0) {
+		if (--xc->delay == 0) {
+			if (read_event(ctx, xc->delayed_event, chn, 1) != 0)
+				read_event(ctx, xc->delayed_event, chn, 0);
+		}
 	}
 
 	act = virtch_cstat(ctx, chn);

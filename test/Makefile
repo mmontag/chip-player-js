@@ -3,6 +3,7 @@ TESTS		= pp sqsh s404 mmcmp \
 		  convert_delta convert_signal convert_endian \
 		  load_sample_8bit load_sample_16bit \
 		  player_read_event \
+		  effect_delay \
 		  xmp_get_format_list xmp_create_context
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
@@ -33,7 +34,7 @@ $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 
 $(TEST_PATH)/main.o: $(TEST_PATH)/main.c $(TEST_PATH)/all_tests.c $(TEST_PATH)/test.h $(TEST_PATH)/all_tests.c
 
-$(TEST_PATH)/all_tests.c:
+$(TEST_PATH)/all_tests.c: $(TEST_PATH)/Makefile
 	@echo > $@; \
 	for i in $(TEST_NAMES); do \
 		echo "declare_test($$i);" >> $@; \
