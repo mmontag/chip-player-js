@@ -49,6 +49,7 @@ struct retrig_control {
 #define TREMOLO		0x00000020
 #define FINE_VOLS	0x00000040
 #define FINE_BEND	0x00000080
+#define NEW_PAN		0x00000100
 #define FINETUNE	0x00000200
 #define OFFSET		0x00000400
 #define TRK_VSLIDE	0x00000800

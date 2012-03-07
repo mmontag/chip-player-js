@@ -326,18 +326,53 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 	if (TEST(NEW_INS) || HAS_QUIRK(QUIRK_OFSRST))
 		xc->offset_val = 0;
 
+	/* Secondary effect is processed _first_ and can be overriden
+	 * by the primary effect.
+	 */
+	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
+	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+
+	if (!TEST(IS_VALID)) {
+		xc->volume = 0;
+		return 0;
+	}
+
 	instrument = &m->mod.xxi[xc->ins];
 	mapped = instrument->map[xc->key].ins;
 	if (mapped == 0xff) {
-		xc->volume = 0;
 		return 0;
 	}
 	sub = &instrument->sub[mapped];
 
 	if (note >= 0) {
-		xc->pan = sub->pan;
+		xc->note = note;
+
+		if (cont_sample == 0) {
+			virtch_voicepos(ctx, chn, xc->offset_val);
+			if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG)) {
+				xc->offset_val <<= 1;
+			}
+		}
+		RESET(OFFSET);
+
 		/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
-		xc->finetune = sub->fin;
+		if (!TEST(NEW_PAN)) {
+			xc->pan = sub->pan;
+		}
+		if (!TEST(FINETUNE)) {
+			xc->finetune = sub->fin;
+		}
+		xc->freq.s_end = xc->period = note_to_period(note,
+				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
+
+		xc->gvl = sub->gvl;
+
+		set_lfo_depth(&xc->insvib.lfo, sub->vde);
+		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
+		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
+		xc->insvib.sweep = sub->vsw;
+
+		xc->v_idx = xc->p_idx = xc->f_idx = 0;
 
 		if (sub->ifc & 0x80) {
 			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
@@ -351,49 +386,13 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 			xc->filter.resonance = 0;
 		}
 
-	}
-
-	/* Secondary effect is processed _first_ and can be overriden
-	 * by the primary effect.
-	 */
-	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
-	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
-
-	if (!TEST(IS_VALID)) {
-		xc->volume = 0;
-		return 0;
-	}
-
-	if (note >= 0) {
-		xc->note = note;
-
-		if (cont_sample == 0) {
-			virtch_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG)) {
-				xc->offset_val <<= 1;
-			}
-		}
-		RESET(OFFSET);
-
-		xc->freq.s_end = xc->period = note_to_period(note,
-				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
-
-		xc->gvl = sub->gvl;
-
-		set_lfo_depth(&xc->insvib.lfo, sub->vde);
-		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
-		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
-		xc->insvib.sweep = sub->vsw;
-
-		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
 	}
 
-	/*if (xc->key < 0) {
+	if (xc->key < 0) {
 		return 0;
-	}*/
+	}
 
 	if (TEST(RESET_ENV)) {
 		RESET(RELEASE | FADEOUT);

@@ -222,6 +222,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 
 	case FX_SETPAN:		/* Set pan */
+		SET(NEW_PAN);
 		xc->pan = fxp;
 		break;
 	case FX_OFFSET:		/* Set sample offset */
