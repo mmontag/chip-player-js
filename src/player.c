@@ -249,11 +249,11 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		ins = xins;
 	}
 
-	if ((uint32)ins < mod->ins && mod->xxi[ins].nsm) {
+	if ((uint32) ins < mod->ins && mod->xxi[ins].nsm) {
 		flg |= IS_VALID;
 	}
 
-	if ((uint32)key < XMP_KEY_OFF && key > 0) {
+	if ((uint32) key < XMP_KEY_OFF && key > 0) {
 		key--;
 
 		if (key < XMP_MAX_KEYS) {
@@ -263,12 +263,11 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		}
 
 		if (flg & IS_VALID) {
-			int mapped = mod->xxi[ins].map[key].ins;
-			int transp = mod->xxi[ins].map[key].xpo;
-
-			if (mapped != 0xff) {
+			if (mod->xxi[ins].map[key].ins != 0xff) {
+				int mapped = mod->xxi[ins].map[key].ins;
+				int transp = mod->xxi[ins].map[key].xpo;
 				struct xmp_subinstrument *sub =
-						&mod->xxi[ins].sub[mapped];
+				    &mod->xxi[ins].sub[mapped];
 				int smp;
 
 				note = key + sub->xpo + transp;
@@ -337,6 +336,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	if (note >= 0) {
 		xc->pan = sub->pan;
+		/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
 		xc->finetune = sub->fin;
 
 		if (sub->ifc & 0x80) {
@@ -351,9 +351,11 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 			xc->filter.resonance = 0;
 		}
 
-		xc->gvl = sub->gvl;
 	}
 
+	/* Secondary effect is processed _first_ and can be overriden
+	 * by the primary effect.
+	 */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
@@ -376,17 +378,22 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 
+		xc->gvl = sub->gvl;
+
 		set_lfo_depth(&xc->insvib.lfo, sub->vde);
 		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
 		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
 		xc->insvib.sweep = sub->vsw;
 
-		/* Reset envelopes */
 		xc->v_idx = xc->p_idx = xc->f_idx = 0;
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
 	}
+
+	/*if (xc->key < 0) {
+		return 0;
+	}*/
 
 	if (TEST(RESET_ENV)) {
 		RESET(RELEASE | FADEOUT);
