@@ -458,11 +458,61 @@ static void split_name(char *s, char **d, char **b)
 	}
 }
 
+void initialize_module_data(struct module_data *m)
+{
+	int i;
+
+	/* Reset variables */
+	memset(m->mod.name, 0, XMP_NAME_SIZE);
+	memset(m->mod.type, 0, XMP_NAME_SIZE);
+	m->rrate = PAL_RATE;
+	m->c4rate = C4_PAL_RATE;
+	m->volbase = 0x40;
+	m->vol_table = NULL;
+	m->quirk = 0;
+	m->comment = NULL;
+
+	/* Set defaults */
+	m->mod.tpo = 6;
+	m->mod.bpm = 125;
+	m->mod.chn = 4;
+	m->synth = &synth_null;
+	m->extra = NULL;
+	m->time_factor = DEFAULT_TIME_FACTOR;
+
+	for (i = 0; i < 64; i++) {
+		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
+		m->mod.xxc[i].vol = 0x40;
+		m->mod.xxc[i].flg = 0;
+	}
+}
+
+void fix_module_instruments(struct module_data *m)
+{
+	int i, j;
+
+	/* Set appropriate values for instrument volumes and subinstrument
+	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
+	 * consistent if the user inspects struct xmp_module. We can later
+	 * set vlumes in the loaders and eliminate the quirk.
+	 */
+	for (i = 0; i < m->mod.ins; i++) {
+		if (~m->quirk & QUIRK_INSVOL) {
+			m->mod.xxi[i].vol = m->volbase;
+		}
+		for (j = 0; j < m->mod.xxi[i].nsm; j++) {
+			if (~m->quirk & QUIRK_INSVOL) {
+				m->mod.xxi[i].sub[j].gvl = m->volbase;
+			}
+		}
+	}
+}
+
 int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	FILE *f;
-	int i, j, t, val;
+	int i, t, val;
 	struct stat st;
 	struct module_data *m = &ctx->m;
 	struct list_head tmpfiles_list;
@@ -489,34 +539,10 @@ int xmp_load_module(xmp_context opaque, char *path)
 		goto err;
 
 	split_name(path, &m->dirname, &m->basename);
-
-	/* Reset variables */
-	memset(m->mod.name, 0, XMP_NAME_SIZE);
-	memset(m->mod.type, 0, XMP_NAME_SIZE);
-	/* memset(m->author, 0, XMP_NAME_SIZE); */
 	m->filename = path;	/* For ALM, SSMT, etc */
 	m->size = st.st_size;
-	m->rrate = PAL_RATE;
-	m->c4rate = C4_PAL_RATE;
-	m->volbase = 0x40;
-	m->vol_table = NULL;
-	/* Reset control for next module */
-	m->quirk = 0;
-	m->comment = NULL;
 
-	/* Set defaults */
-	m->mod.tpo = 6;
-	m->mod.bpm = 125;
-	m->mod.chn = 4;
-	m->synth = &synth_null;
-	m->extra = NULL;
-	m->time_factor = DEFAULT_TIME_FACTOR;
-
-	for (i = 0; i < 64; i++) {
-		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
-		m->mod.xxc[i].vol = 0x40;
-		m->mod.xxc[i].flg = 0;
-	}
+	initialize_module_data(m);
 
 	_D(_D_WARN "load");
 	val = 0;
@@ -566,21 +592,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	m->time = scan_module(ctx);
 
-	/* Set appropriate values for instrument volumes and subinstrument
-	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
-	 * consistent if the user inspects struct xmp_module. We can later
-	 * set vlumes in the loaders and eliminate the quirk.
-	 */
-	for (i = 0; i < m->mod.ins; i++) {
-		if (~m->quirk & QUIRK_INSVOL) {
-			m->mod.xxi[i].vol = m->volbase;
-		}
-		for (j = 0; j < m->mod.xxi[i].nsm; j++) {
-			if (~m->quirk & QUIRK_INSVOL) {
-				m->mod.xxi[i].sub[j].gvl = m->volbase;
-			}
-		}
-	}
+	fix_module_instruments(m);
 
 	return 0;
 
