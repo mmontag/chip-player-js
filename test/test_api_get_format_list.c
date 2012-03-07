@@ -6,7 +6,7 @@
 extern const struct pw_format *const pw_format[];
 extern const struct format_loader *const format_loader[];
 
-TEST(test_xmp_get_format_list)
+TEST(test_api_get_format_list)
 {
 	char **list;
 	int count, i, j;

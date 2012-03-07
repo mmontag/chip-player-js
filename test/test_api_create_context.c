@@ -1,6 +1,6 @@
 #include "test.h"
 
-TEST(test_xmp_create_context)
+TEST(test_api_create_context)
 {
 	xmp_context ctx;
 

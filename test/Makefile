@@ -4,7 +4,7 @@ TESTS		= depack_pp depack_sqsh depack_s404 depack_mmcmp \
 		  load_sample_8bit load_sample_16bit \
 		  player_read_event \
 		  effect_delay \
-		  xmp_get_format_list xmp_create_context
+		  api_get_format_list api_create_context
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
 
