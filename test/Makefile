@@ -1,5 +1,5 @@
 
-TESTS		= pp sqsh s404 mmcmp \
+TESTS		= depack_pp depack_sqsh depack_s404 depack_mmcmp \
 		  convert_delta convert_signal convert_endian \
 		  load_sample_8bit load_sample_16bit \
 		  player_read_event \
@@ -33,6 +33,8 @@ $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 	eval $$CMD
 
 $(TEST_PATH)/main.o: $(TEST_PATH)/main.c $(TEST_PATH)/all_tests.c $(TEST_PATH)/test.h $(TEST_PATH)/all_tests.c
+
+$(T_OBJS): $(TEST_PATH)/all_tests.c
 
 $(TEST_PATH)/all_tests.c: $(TEST_PATH)/Makefile
 	@echo > $@; \

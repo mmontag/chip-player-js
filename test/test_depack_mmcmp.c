@@ -3,7 +3,7 @@
 int decrunch_mmcmp(FILE *f, FILE *fo);
 
 
-TEST(test_mmcmp)
+TEST(test_depack_mmcmp)
 {
 	FILE *f, *fo;
 	int ret;

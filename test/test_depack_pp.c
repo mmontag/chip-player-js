@@ -3,7 +3,7 @@
 int decrunch_pp(FILE *f, FILE *fo);
 
 
-TEST(test_pp)
+TEST(test_depack_pp)
 {
 	FILE *f, *fo;
 	int ret;
