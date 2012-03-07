@@ -58,8 +58,6 @@ static inline int is_big_endian() {
 
 #define LOAD_INIT() do { \
     fseek(f, start, SEEK_SET); \
-    m->med_vol_table = m->med_wav_table = NULL; \
-    set_xxh_defaults(&m->mod); \
 } while (0)
 
 #define MODULE_INFO() do { \

@@ -179,7 +179,7 @@ void virtch_mute(struct context_data *ctx, int chn, int status)
 	}
 }
 
-static inline int map_virt_channel(struct player_data *p, int chn)
+int map_virt_channel(struct player_data *p, int chn)
 {
 	int voc;
 

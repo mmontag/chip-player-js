@@ -68,20 +68,6 @@ void read_title(FILE *f, char *t, int s)
 	copy_adjust(t, buf, s);
 }
 
-void set_xxh_defaults(struct xmp_module *mod)
-{
-	mod->pat = 0;
-	mod->trk = 0;
-	mod->chn = 4;
-	mod->ins = 0;
-	mod->smp = 0;
-	mod->tpo = 6;
-	mod->bpm = 125;
-	mod->len = 0;
-	mod->rst = 0;
-	mod->gvl = 0x40;
-}
-
 void cvt_pt_event(struct xmp_event *event, uint8 *mod_event)
 {
 	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);

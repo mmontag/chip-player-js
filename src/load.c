@@ -473,12 +473,22 @@ void initialize_module_data(struct module_data *m)
 	m->comment = NULL;
 
 	/* Set defaults */
-	m->mod.tpo = 6;
-	m->mod.bpm = 125;
-	m->mod.chn = 4;
+    	m->mod.pat = 0;
+    	m->mod.trk = 0;
+    	m->mod.chn = 4;
+    	m->mod.ins = 0;
+    	m->mod.smp = 0;
+    	m->mod.tpo = 6;
+    	m->mod.bpm = 125;
+    	m->mod.len = 0;
+    	m->mod.rst = 0;
+    	m->mod.gvl = 0x40;
+
 	m->synth = &synth_null;
 	m->extra = NULL;
 	m->time_factor = DEFAULT_TIME_FACTOR;
+	m->med_vol_table = NULL;
+	m->med_wav_table = NULL;
 
 	for (i = 0; i < 64; i++) {
 		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
