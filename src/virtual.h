@@ -30,6 +30,4 @@ void	virtch_resetchannel	(struct context_data *, int);
 void	virtch_resetvoice	(struct context_data *, int, int);
 void	virtch_reset		(struct context_data *);
 
-int map_virt_channel(struct player_data *, int);
-
 #endif /* __XMP_VIRTUAL_H */

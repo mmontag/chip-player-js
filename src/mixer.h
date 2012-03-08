@@ -23,7 +23,7 @@
 
 
 struct mixer_voice {
-	int chn;		/* channel link */
+	int chn;		/* channel number */
 	int root;		/* */
 	unsigned int age;	/* */
 	int note;		/* */
@@ -31,6 +31,7 @@ struct mixer_voice {
 	int vol;		/* */
 	int period;		/* current period */
 	int pos;		/* position in sample */
+	int pos0;		/* position in sample before mixing */
 	int frac;		/* interpolation */
 	int fidx;		/* function index */
 	int ins;		/* instrument number */

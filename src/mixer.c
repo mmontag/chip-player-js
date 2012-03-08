@@ -260,6 +260,8 @@ void mixer_softmixer(struct context_data *ctx)
 			continue;
 		}
 
+		vi->pos0 = vi->pos;
+
 		buf_pos = s->buf32b;
 		vol_r = vi->vol * (0x80 - vi->pan);
 		vol_l = vi->vol * (0x80 + vi->pan);

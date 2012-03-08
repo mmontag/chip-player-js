@@ -205,6 +205,7 @@ struct channel_data {
 
 	int info_period;	/* Period */
 	int info_pitchbend;	/* Linear pitchbend */
+	int info_position;	/* Position before mixing */
 };
 
 

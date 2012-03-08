@@ -981,7 +981,6 @@ static void next_row(struct context_data *ctx)
 	}
 }
 
-
 int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -1229,6 +1228,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->note = c->key;
 			ci->pitchbend = c->info_pitchbend;
 			ci->period = c->info_period;
+			/* FIXME: info_position not implemented */
+			ci->position = c->info_position;
 			ci->instrument = c->ins;
 			ci->sample = c->smp;
 			ci->volume = c->volume;
