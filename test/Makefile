@@ -2,8 +2,8 @@
 TESTS		= depack_pp depack_sqsh depack_s404 depack_mmcmp \
 		  convert_delta convert_signal convert_endian \
 		  load_sample_8bit load_sample_16bit \
-		  player_read_event player_same_instrument \
-		  player_valid_instrument player_invalid_instrument \
+		  player_read_event no_note_same_instrument \
+		  no_note_valid_instrument no_note_invalid_instrument \
 		  effect_delay \
 		  api_get_format_list api_create_context
 
