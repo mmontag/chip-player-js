@@ -197,7 +197,12 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 			xins = ins;
 		} else {
 			/* invalid ins */
-			if (!HAS_QUIRK(QUIRK_NCWINS)) {
+
+			/* Also check for QUIRK_OINSVOL because FT2 doesn't
+			 * cut on invalid instruments (it keeps playing the
+			 * previous one)
+			 */
+			if (!HAS_QUIRK(QUIRK_NCWINS | QUIRK_OINSVOL)) {
 				virtch_resetchannel(ctx, chn);
 			}
 
@@ -265,13 +270,19 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	if (!key || key >= XMP_KEY_OFF) {
+		/* Player test case 2, valid instrument */
 		if (HAS_QUIRK(QUIRK_OINSVOL) && xc->ins >= 0 && xc->key >= 0) {
+			/* No note */
 			struct xmp_subinstrument *sub;
 			sub = get_subinstrument(ctx, xc->ins, xc->key);
 			if (sub != NULL) {
 				xc->volume = sub->vol;
 				flg |= NEW_VOL;
 				flg &= ~RESET_VOL;
+			}
+			if (!IS_VALID_INSTRUMENT(ins)) {
+				/* If instrument is invalid, make it valid */
+				xins = xc->ins;
 			}
 		}
 		ins = xins;		/* previous instrument */
@@ -281,7 +292,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		flg |= IS_VALID;
 	}
 
-	if ((uint32) key < XMP_KEY_OFF && key > 0) {
+	if ((uint32)key < XMP_KEY_OFF && key > 0) {
 		key--;
 
 		if (key < XMP_MAX_KEYS) {

@@ -93,6 +93,7 @@ TEST(test_no_note_valid_instrument)
 	xmp_player_frame(opaque);		/* row 1 frame 1 */
 
 	/* Row 2: setup new note event */
+	set_quirk(ctx, QUIRK_OINSVOL);
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  ==  0, "set instrument");
@@ -107,7 +108,6 @@ TEST(test_no_note_valid_instrument)
 	 * and no note is set, FT2 keeps playing the current sample but
 	 * sets the volume to the old instrument's default volume.
 	 */
-	set_quirk(ctx, QUIRK_OINSVOL);
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not original instrument");
 	fail_unless(vi->note == 59, "not same note");
