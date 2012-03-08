@@ -125,6 +125,21 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 	return 0;
 }
 
+static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
+						   int ins, int key)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	if (mod->xxi[ins].map[key].ins != 0xff) {
+		int mapped = mod->xxi[ins].map[key].ins;
+		return &mod->xxi[ins].sub[mapped];
+	}
+
+	return NULL;
+}
+
+
 #define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm)
 
 static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
@@ -136,10 +151,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct channel_data *xc = &p->xc_data[chn];
 	int xins, ins, note, key, flg;
 	int cont_sample;
-	int mapped;
-	struct xmp_instrument *instrument;
 	struct xmp_subinstrument *sub;
-
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
 	if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(QUIRK_SAVEINS)) {
@@ -270,11 +282,12 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		}
 
 		if (flg & IS_VALID) {
-			if (mod->xxi[ins].map[key].ins != 0xff) {
-				int mapped = mod->xxi[ins].map[key].ins;
+			struct xmp_subinstrument *sub;
+
+			sub = get_subinstrument(ctx, ins, key);
+
+			if (sub != NULL) {
 				int transp = mod->xxi[ins].map[key].xpo;
-				struct xmp_subinstrument *sub =
-				    &mod->xxi[ins].sub[mapped];
 				int smp;
 
 				note = key + sub->xpo + transp;
@@ -321,6 +334,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		RESET(IS_VALID);
 	}
 
+	/* update instrument */
 	xc->ins = xins;
 
 	/* Process new volume */
@@ -344,12 +358,10 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		return 0;
 	}
 
-	instrument = &m->mod.xxi[xc->ins];
-	mapped = instrument->map[xc->key].ins;
-	if (mapped == 0xff) {
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
+	if (sub == NULL) {
 		return 0;
 	}
-	sub = &instrument->sub[mapped];
 
 	if (note >= 0) {
 		xc->note = note;
