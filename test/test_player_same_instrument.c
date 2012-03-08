@@ -42,7 +42,7 @@ Cut     = Stop playing sample
 
 */
 
-TEST(test_player_valid_instrument)
+TEST(test_player_same_instrument)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -58,9 +58,9 @@ TEST(test_player_valid_instrument)
 	set_instrument_volume(ctx, 0, 0, 22);
 	set_instrument_volume(ctx, 1, 0, 33);
 	new_event(ctx, 0, 0, 0, 60, 1, 0, 0x0f, 2, 0, 0);
-	new_event(ctx, 0, 1, 0,  0, 2, 0, 0x00, 0, 0, 0);
+	new_event(ctx, 0, 1, 0,  0, 1, 0, 0x00, 0, 0, 0);
 	new_event(ctx, 0, 2, 0, 60, 1, 0, 0x00, 0, 0, 0);
-	new_event(ctx, 0, 3, 0,  0, 2, 0, 0x00, 0, 0, 0);
+	new_event(ctx, 0, 3, 0,  0, 1, 0, 0x00, 0, 0, 0);
 
 	xmp_player_start(opaque, 0, 44100, 0);
 
@@ -87,7 +87,7 @@ TEST(test_player_valid_instrument)
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not original instrument");
 	fail_unless(vi->note == 59, "not same note");
-	fail_unless(vi->vol  == 33 * 16, "not new volume");
+	fail_unless(vi->vol  == 22 * 16, "not new volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
 	xmp_player_frame(opaque);		/* row 1 frame 1 */
