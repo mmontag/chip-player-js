@@ -403,7 +403,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			break;
 
 		case EX_DELAY:		/* Note delay */
-			xc->delay = fxp + 1;
+			/* computed at frame loop */
 			break;
 		case EX_PATT_DELAY:	/* Pattern delay */
 			p->flow.delay = fxp;

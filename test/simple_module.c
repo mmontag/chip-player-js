@@ -47,7 +47,7 @@ void create_simple_module(struct context_data *ctx)
 		mod->xxs[i].lps = 0;
 		mod->xxs[i].lpe = 10000;
 		mod->xxs[i].flg = XMP_SAMPLE_LOOP;
-		mod->xxs[i].data = malloc(10000);
+		mod->xxs[i].data = calloc(1, 10000);
 	}
 		
 	/* End of module creation */

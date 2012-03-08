@@ -89,9 +89,11 @@ static inline void reset_channel(struct context_data *ctx)
  * Read event
  */
 
-static int check_delay(struct xmp_event *e, struct channel_data *xc,
-		       struct player_data *p)
+static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 {
+	struct player_data *p = &ctx->p;
+	struct channel_data *xc = &p->xc_data[chn];
+
 	/* Tempo affects delay and must be computed first */
 	if ((e->fxt == FX_TEMPO && e->fxp < 0x20) || e->fxt == FX_S3M_TEMPO) {
 		if (e->fxp) {
@@ -110,7 +112,6 @@ static int check_delay(struct xmp_event *e, struct channel_data *xc,
 		xc->delayed_event = e;
 		if (e->ins)
 			xc->delayed_ins = e->ins;
-		e->fxt = e->fxp = 0;
 		return 1;
 	}
 	if (e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY) {
@@ -118,7 +119,6 @@ static int check_delay(struct xmp_event *e, struct channel_data *xc,
 		xc->delayed_event = e;
 		if (e->ins)
 			xc->delayed_ins = e->ins;
-		e->f2t = e->f2p = 0;
 		return 1;
 	}
 
@@ -131,18 +131,13 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	struct channel_data *xc = &p->xc_data[chn];
 	int xins, ins, note, key, flg;
-	struct channel_data *xc;
 	int cont_sample;
 	int mapped;
 	struct xmp_instrument *instrument;
 	struct xmp_subinstrument *sub;
 
-	xc = &p->xc_data[chn];
-
-	if (check_delay(e, xc, p)) {
-		return 0;
-	}
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
 	if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(QUIRK_SAVEINS)) {
@@ -438,9 +433,11 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 			event = (struct xmp_event *)&empty_event;
 		}
 
-		if (read_event(ctx, event, chn, 1) != 0) {
-			control[chn]++;
-			count++;
+		if (check_delay(ctx, event, chn) == 0) {
+			if (read_event(ctx, event, chn, 1) != 0) {
+				control[chn]++;
+				count++;
+			}
 		}
 	}
 
@@ -451,8 +448,10 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 			} else {
 				event = (struct xmp_event *)&empty_event;
 			}
-			read_event(ctx, event, chn, 0);
-			count--;
+			if (check_delay(ctx, event, chn) == 0) {
+				read_event(ctx, event, chn, 0);
+				count--;
+			}
 		}
 	}
 }

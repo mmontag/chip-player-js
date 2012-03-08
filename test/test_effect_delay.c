@@ -16,8 +16,9 @@ TEST(test_effect_delay)
 
  	create_simple_module(ctx);
 	new_event(ctx, 0, 0, 0, 60, 2, 40, 0x0f, 0x02, 0, 0);
-	new_event(ctx, 0, 1, 0, 61, 1,  0, 0x00, 0x00, 0, 0);
-	new_event(ctx, 0, 2, 0, 62, 2,  0, 0x0e, 0xd0, 0, 0);
+	new_event(ctx, 0, 1, 0, 61, 1,  0, 0x0e, 0xd0, 0, 0);
+	new_event(ctx, 0, 2, 0, 62, 2,  0, 0x0e, 0xd1, 0, 0);
+	new_event(ctx, 0, 3, 0, 63, 2,  0, 0x0e, 0xd3, 0, 0);
 
 	xmp_player_start(opaque, 0, 44100, 0);
 
@@ -53,5 +54,23 @@ TEST(test_effect_delay)
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 61, "row 2 frame 1");
 	fail_unless(vi->pos0 ==  0, "sample position");
+
+	/* Row 3: delay larger than speed */
+	xmp_player_frame(opaque);
+	fail_unless(vi->note == 61, "row 3 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	xmp_player_frame(opaque);
+	fail_unless(vi->note == 61, "row 3 frame 1");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	/* Row 4: nothing should happen */
+	xmp_player_frame(opaque);
+	fail_unless(vi->note == 61, "row 4 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	xmp_player_frame(opaque);
+	fail_unless(vi->note == 61, "row 4 frame 1");
+	fail_unless(vi->pos0 !=  0, "sample position");
 }
 END_TEST

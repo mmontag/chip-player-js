@@ -10,8 +10,10 @@ Stable versions
 	- remove support to uLaw-encoded output
 	- extend note range to full 10-octave range
 	- extensive code refactoring
+	- add regression tests
 	- fix interpolation and sample loop processing
 	- fix S404 depacker
+	- fix note delay effect
 
 3.5.0 (20120127):
 	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe
