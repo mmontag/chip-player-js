@@ -42,7 +42,7 @@ Cut     = Stop playing sample
 
 */
 
-TEST(test_no_note_valid_instrument)
+TEST(test_no_note_valid_instrument_ft2)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -59,6 +59,7 @@ TEST(test_no_note_valid_instrument)
 	set_instrument_volume(ctx, 1, 0, 33);
 	new_event(ctx, 0, 0, 0, 60, 1, 0, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0,  0, 2, 0, 0x00, 0, 0, 0);
+	set_quirk(ctx, QUIRK_OINSVOL);
 
 	xmp_player_start(opaque, 0, 44100, 0);
 
@@ -76,16 +77,16 @@ TEST(test_no_note_valid_instrument)
 
 	xmp_player_frame(opaque);
 
-	/* Row 1: valid instrument with no note (PT 3.15)
+	/* Row 1: valid instrument with no note (FT2)
 	 *
 	 * When a new valid instrument, different from the current instrument
-	 * and no note is set, PT3.15 keeps playing the current sample but
-	 * sets the volume to the new instrument's default volume.
+	 * and no note is set, FT2 keeps playing the current sample but
+	 * sets the volume to the old instrument's default volume.
 	 */
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not original instrument");
 	fail_unless(vi->note == 59, "not same note");
-	fail_unless(vi->vol  == 33 * 16, "not new volume");
+	fail_unless(vi->vol  == 22 * 16, "not old volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 }
 END_TEST
