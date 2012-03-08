@@ -30,6 +30,8 @@ int play_frame(struct context_data *);
 
 int check_md5(char *, char *);
 void create_simple_module(struct context_data *);
+void set_instrument_volume(struct context_data *, int, int, int);
+void set_quirk(struct context_data *, int);
 void new_event(struct context_data *, int, int, int, int, int, int, int, int, int, int);
 
 #define declare_test(x) TEST_FUNC(x)

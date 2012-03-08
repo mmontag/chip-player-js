@@ -75,3 +75,18 @@ void new_event(struct context_data *ctx, int pat, int row, int chn, int note, in
 	e->f2t = fxt;
 	e->f2p = fxp;
 }
+
+void set_instrument_volume(struct context_data *ctx, int ins, int sub, int vol)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	mod->xxi[ins].sub[sub].vol = vol;
+}
+
+void set_quirk(struct context_data *ctx, int quirk)
+{
+	struct module_data *m = &ctx->m;
+
+	m->quirk |= quirk;
+}

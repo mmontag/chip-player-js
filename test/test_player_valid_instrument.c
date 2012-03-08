@@ -52,6 +52,8 @@ TEST(test_player_valid_instrument)
 	p = &ctx->p;
 
  	create_simple_module(ctx);
+	set_instrument_volume(ctx, 0, 0, 22);
+	set_instrument_volume(ctx, 1, 0, 33);
 	new_event(ctx, 0, 0, 0, 60, 2, 40, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0,  0, 1,  0, 0x00, 0, 0, 0);
 
@@ -71,12 +73,35 @@ TEST(test_player_valid_instrument)
 
 	xmp_player_frame(opaque);
 
-	/* Row 1: valid instrument with no note */
+	/* Row 1: valid instrument with no note (PT 3.15)
+	 *
+	 * When a new valid instrument, different from the current instrument
+	 * and no note is set, PT3.15 keeps playing the current sample but
+	 * sets the volume to the new instrument's default volume.
+	 */
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  1, "not original instrument");
 	fail_unless(vi->note == 59, "not same note");
-	fail_unless(vi->vol  == 64 * 16, "not new volume");
+	fail_unless(vi->vol  == 33 * 16, "not new volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
+	xmp_player_frame(opaque);
+
+	/* Row 2: valid instrument with no note (FT2)
+	 *
+	 * When a new valid instrument, different from the current instrument
+	 * and no note is set, FT2 keeps playing the current sample but
+	 * sets the volume to the old instrument's default volume.
+	 */
+	set_quirk(ctx, QUIRK_OINSVOL);
+
+	xmp_player_frame(opaque);
+	fail_unless(vi->ins  ==  1, "not original instrument");
+	fail_unless(vi->note == 59, "not same note");
+	fail_unless(vi->vol  == 22 * 16, "not old volume");
+	fail_unless(vi->pos0 !=  0, "sample reset");
+
+
+	
 }
 END_TEST
