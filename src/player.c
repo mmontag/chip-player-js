@@ -125,6 +125,8 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 	return 0;
 }
 
+#define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm)
+
 static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		      int ctl)
 {
@@ -171,7 +173,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 			}
 		} else */
 
-		if ((uint32)ins < mod->ins && mod->xxi[ins].nsm) {
+		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
 			if (!key && HAS_QUIRK(QUIRK_INSPRI)) {
 				if (xins == ins) {
@@ -254,7 +256,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		ins = xins;
 	}
 
-	if ((uint32) ins < mod->ins && mod->xxi[ins].nsm) {
+	if (IS_VALID_INSTRUMENT(ins)) {
 		flg |= IS_VALID;
 	}
 
@@ -313,10 +315,10 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if ((uint32) xins >= mod->ins || !mod->xxi[xins].nsm) {
-		RESET(IS_VALID);
-	} else {
+	if (IS_VALID_INSTRUMENT(xins)) {
 		SET(IS_VALID);
+	} else {
+		RESET(IS_VALID);
 	}
 
 	xc->ins = xins;

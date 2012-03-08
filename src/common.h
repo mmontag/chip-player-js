@@ -135,7 +135,7 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_NCWINS	(1 << 5)	/* Don't cut invalid instrument */
 #define QUIRK_INSPRI	(1 << 6)	/* Reset note for every new != ins */
 #define QUIRK_CUTNWI	(1 << 7)	/* Cut only when note + invalid ins */
-#define QUIRK_OINSMOD	(1 << 8)	/* XM old instrument mode */
+#define QUIRK_OINSVOL	(1 << 8)	/* XM old instrument mode */
 #define QUIRK_OFSRST	(1 << 9)	/* Always reset sample offset */
 #define QUIRK_FX9BUG	(1 << 10)	/* Protracker effect 9 bug emulation */
 #define QUIRK_ST3GVOL	(1 << 11)	/* ST 3 weird global volume effect */
@@ -161,7 +161,7 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRKS_ST3		(QUIRK_NCWINS | QUIRK_IGNWINS | \
 				 QUIRK_S3MLOOP | QUIRK_RTGINS | \
 				 QUIRK_VOLPDN)
-#define QUIRKS_FT2		(QUIRK_OINSMOD | QUIRK_CUTNWI | \
+#define QUIRKS_FT2		(QUIRK_OINSVOL | QUIRK_CUTNWI | \
 				 QUIRK_OFSRST)
 #define QUIRKS_IT		(QUIRK_NCWINS | QUIRK_INSPRI | \
 				 QUIRK_ENVFADE | QUIRK_S3MLOOP | \
