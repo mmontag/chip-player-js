@@ -14,6 +14,7 @@ Stable versions
 	- fix interpolation and sample loop processing
 	- fix S404 depacker
 	- fix note delay effect
+	- fix FT2 old instrument volume quirk
 
 3.5.0 (20120127):
 	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe

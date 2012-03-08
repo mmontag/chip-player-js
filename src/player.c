@@ -265,7 +265,16 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	if (!key || key >= XMP_KEY_OFF) {
-		ins = xins;
+		if (HAS_QUIRK(QUIRK_OINSVOL) && xc->ins >= 0 && xc->key >= 0) {
+			struct xmp_subinstrument *sub;
+			sub = get_subinstrument(ctx, xc->ins, xc->key);
+			if (sub != NULL) {
+				xc->volume = sub->vol;
+				flg |= NEW_VOL;
+				flg &= ~RESET_VOL;
+			}
+		}
+		ins = xins;		/* previous instrument */
 	}
 
 	if (IS_VALID_INSTRUMENT(ins)) {
