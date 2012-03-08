@@ -42,7 +42,7 @@ Cut     = Stop playing sample
 
 */
 
-TEST(test_no_note_valid_instrument_ft2)
+TEST(test_no_note_invalid_instrument_it)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -57,8 +57,8 @@ TEST(test_no_note_valid_instrument_ft2)
  	create_simple_module(ctx);
 	set_instrument_volume(ctx, 0, 0, 22);
 	set_instrument_volume(ctx, 1, 0, 33);
-	new_event(ctx, 0, 0, 0, 60, 1, 0, 0x0f, 2, 0, 0);
-	new_event(ctx, 0, 1, 0,  0, 2, 0, 0x00, 0, 0, 0);
+	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
+	new_event(ctx, 0, 1, 0,  0, 3,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_FT2);
 
 	xmp_player_start(opaque, 0, 44100, 0);
@@ -72,21 +72,20 @@ TEST(test_no_note_valid_instrument_ft2)
 
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  ==  0, "set instrument");
-	fail_unless(vi->vol  == 22 * 16, "set volume");
+	fail_unless(vi->vol  == 43 * 16, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
 	xmp_player_frame(opaque);
 
-	/* Row 1: valid instrument with no note (FT2)
+	/* Row 1: valid instrument with no note (IT)
 	 *
-	 * When a new valid instrument, different from the current instrument
-	 * and no note is set, FT2 keeps playing the current sample but
-	 * sets the volume to the old instrument's default volume.
+	 * When a new invalid instrument with no note is played, IT
+	 * keeps playing the old sample without changing the volume
 	 */
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not original instrument");
 	fail_unless(vi->note == 59, "not same note");
-	fail_unless(vi->vol  == 22 * 16, "not old volume");
+	fail_unless(vi->vol  == 43 * 16, "not current volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 }
 END_TEST
