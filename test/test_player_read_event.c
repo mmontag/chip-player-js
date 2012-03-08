@@ -16,34 +16,37 @@ TEST(test_player_read_event)
 
  	create_simple_module(ctx);
 	new_event(ctx, 0, 0, 0, 60, 2, 40, 0x0f, 3, 0, 0);
-	new_event(ctx, 0, 1, 0, 61, 1,  0, 0, 0, 0, 0);
+	new_event(ctx, 0, 1, 0, 61, 1,  0, 0x00, 0, 0, 0);
 
 	xmp_player_start(opaque, 0, 44100, 0);
 	xmp_player_frame(opaque);
 
 	voc = map_virt_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
-
 	vi = &p->virt.voice_array[voc];
 
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  == 1 , "set instrument");
 	fail_unless(vi->vol  == 39 * 16, "set volume");
-	fail_unless(p->tempo == 3, "set effect");
+	fail_unless(p->tempo == 3 , "set effect");
+	fail_unless(vi->pos0 == 0 , "sample position");
 
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  == 1 , "set instrument");
 	fail_unless(vi->vol  == 39 * 16, "set volume");
+	fail_unless(vi->pos0 != 0 , "sample position");
 
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  == 1 , "set instrument");
 	fail_unless(vi->vol  == 39 * 16, "set volume");
+	fail_unless(vi->pos0 != 0 , "sample position");
 
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 60, "set note");
 	fail_unless(vi->ins  == 0 , "set instrument");
 	fail_unless(vi->vol  == 64 * 16, "set volume");
+	fail_unless(vi->pos0 == 0 , "sample position");
 }
 END_TEST

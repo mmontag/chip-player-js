@@ -29,23 +29,29 @@ TEST(test_effect_delay)
 	vi = &p->virt.voice_array[voc];
 
 	fail_unless(vi->note == 59, "row 0 frame 0");
+	fail_unless(vi->pos0 ==  0, "sample position");
 
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 59, "row 0 frame 1");
+	fail_unless(vi->pos0 !=  0, "sample position");
 
 	/* Row 1 */
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 60, "row 1 frame 0");
+	fail_unless(vi->pos0 ==  0, "sample position");
 
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 60, "row 1 frame 1");
+	fail_unless(vi->pos0 !=  0, "sample position");
 
 	/* Row 2: delay this frame */
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 60, "row 2 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
 
 	/* note changes in the frame 1 */
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 61, "row 2 frame 1");
+	fail_unless(vi->pos0 ==  0, "sample position");
 }
 END_TEST

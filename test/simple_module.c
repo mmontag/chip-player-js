@@ -6,8 +6,6 @@
 void initialize_module_data(struct module_data *);
 void fix_module_instruments(struct module_data *);
 
-static char sample[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-
 void create_simple_module(struct context_data *ctx)
 {
 	struct module_data *m = &ctx->m;
@@ -45,11 +43,11 @@ void create_simple_module(struct context_data *ctx)
 		mod->xxi[i].sub[0].vol = 0x40;
 		mod->xxi[i].sub[0].sid = i;
 
-		mod->xxs[i].len = 10;
+		mod->xxs[i].len = 10000;
 		mod->xxs[i].lps = 0;
-		mod->xxs[i].lpe = 10;
+		mod->xxs[i].lpe = 10000;
 		mod->xxs[i].flg = XMP_SAMPLE_LOOP;
-		mod->xxs[i].data = (uint8 *)&sample;
+		mod->xxs[i].data = malloc(10000);
 	}
 		
 	/* End of module creation */
