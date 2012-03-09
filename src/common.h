@@ -132,7 +132,6 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_INVLOOP	(1 << 2)	/* Enable effect EF invert loop */
 #define QUIRK_FUNKIT	(1 << 3)	/* Enable effect EF funk it */
 #define QUIRK_IGNWINS	(1 << 4)	/* Ignore invalid instrument */
-#define QUIRK_NCWINS	(1 << 5)	/* Don't cut invalid instrument */
 #define QUIRK_INSPRI	(1 << 6)	/* Reset note for every new != ins */
 #define QUIRK_CUTNWI	(1 << 7)	/* Cut only when note + invalid ins */
 #define QUIRK_OINSVOL	(1 << 8)	/* XM old instrument mode */
@@ -158,17 +157,14 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 
 
 /* Format quirks */
-#define QUIRKS_ST3		(QUIRK_NCWINS | QUIRK_IGNWINS | \
-				 QUIRK_S3MLOOP | QUIRK_RTGINS | \
-				 QUIRK_VOLPDN)
-#define QUIRKS_FT2		(QUIRK_NCWINS | QUIRK_OINSVOL | \
-				 QUIRK_CUTNWI | QUIRK_OFSRST)
-#define QUIRKS_IT		(QUIRK_NCWINS | QUIRK_IGNWINS | \
-				 QUIRK_INSPRI | QUIRK_ENVFADE | \
-				 QUIRK_S3MLOOP | QUIRK_OFSRST | \
-				 QUIRK_VOLPDN | QUIRK_RTGINS | \
-				 QUIRK_SAVEINS | QUIRK_ITVPOR | \
-				 QUIRK_FILTER | QUIRK_VIRTUAL)
+#define QUIRKS_ST3		(QUIRK_IGNWINS | QUIRK_S3MLOOP | \
+				 QUIRK_RTGINS | QUIRK_VOLPDN)
+#define QUIRKS_FT2		(QUIRK_OINSVOL | QUIRK_CUTNWI | QUIRK_OFSRST)
+#define QUIRKS_IT		(QUIRK_IGNWINS | QUIRK_INSPRI | \
+				 QUIRK_ENVFADE | QUIRK_S3MLOOP | \
+				 QUIRK_OFSRST | QUIRK_VOLPDN | \
+				 QUIRK_RTGINS | QUIRK_SAVEINS | \
+				 QUIRK_ITVPOR | QUIRK_FILTER | QUIRK_VIRTUAL)
 
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02
