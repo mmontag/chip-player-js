@@ -501,7 +501,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (cont_sample == 0) {
 			virtch_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG)) {
+			if (TEST(OFFSET)) {
 				xc->offset_val <<= 1;
 			}
 		}
@@ -736,7 +736,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (cont_sample == 0) {
 			virtch_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG)) {
+			if (TEST(OFFSET)) {
 				xc->offset_val <<= 1;
 			}
 		}
@@ -826,18 +826,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		flg = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
-
-		/* Benjamin Shadwick <benshadwick@gmail.com> informs that
-		 * Vestiges.xm has sticky note issues around time 0:51.
-		 * Tested it with FT2 and a new note with invalid instrument
-		 * should always cut current note
-		 */
-		/*if (HAS_QUIRK(QUIRK_OINSMOD)) {
-			if (TEST(IS_READY)) {
-				xins = xc->insdef;
-				RESET(IS_READY);
-			}
-		} else */
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
@@ -997,7 +985,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 		if (cont_sample == 0) {
 			virtch_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG)) {
+			if (TEST(OFFSET)) {
 				xc->offset_val <<= 1;
 			}
 		}
