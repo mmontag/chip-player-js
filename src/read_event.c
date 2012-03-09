@@ -43,12 +43,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
-	/* Emulate Impulse Tracker "always read instrument" bug */
-	if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(QUIRK_SAVEINS)) {
-		e->ins = xc->delayed_ins;
-		xc->delayed_ins = 0;
-	}
-
 	flg = 0;
 	ins = note = -1;
 	xins = xc->ins;
@@ -374,12 +368,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
-	/* Emulate Impulse Tracker "always read instrument" bug */
-	if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(QUIRK_SAVEINS)) {
-		e->ins = xc->delayed_ins;
-		xc->delayed_ins = 0;
-	}
-
 	flg = 0;
 	ins = note = -1;
 	xins = xc->ins;
@@ -704,12 +692,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	int xins, ins, note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
-
-	/* Emulate Impulse Tracker "always read instrument" bug */
-	if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(QUIRK_SAVEINS)) {
-		e->ins = xc->delayed_ins;
-		xc->delayed_ins = 0;
-	}
 
 	flg = 0;
 	ins = note = -1;
@@ -1037,7 +1019,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct xmp_subinstrument *sub;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
-	if (e->note && !e->ins && xc->delayed_ins && HAS_QUIRK(QUIRK_SAVEINS)) {
+	if (e->note && !e->ins && xc->delayed_ins) {
 		e->ins = xc->delayed_ins;
 		xc->delayed_ins = 0;
 	}

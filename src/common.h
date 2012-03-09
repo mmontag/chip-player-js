@@ -145,7 +145,6 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_PERPAT	(1 << 16)	/* Cancel persistent fx at pat start */
 #define QUIRK_VOLPDN	(1 << 17)	/* Set priority to volume slide down */
 #define QUIRK_UNISLD	(1 << 18)	/* Unified pitch slide/portamento */
-#define QUIRK_SAVEINS	(1 << 19)	/* Always save instrument number */
 #define QUIRK_ITVPOR	(1 << 20)	/* Disable fine bends in IT vol fx */
 #define QUIRK_LINEAR	(1 << 21)	/* Linear periods */
 #define QUIRK_MODRNG	(1 << 22)	/* Limit periods to MOD range */
@@ -163,7 +162,7 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRKS_IT		(QUIRK_IGNWINS | QUIRK_INSPRI | \
 				 QUIRK_ENVFADE | QUIRK_S3MLOOP | \
 				 QUIRK_OFSRST | QUIRK_VOLPDN | \
-				 QUIRK_RTGINS | QUIRK_SAVEINS | \
+				 QUIRK_RTGINS | \
 				 QUIRK_ITVPOR | QUIRK_FILTER | QUIRK_VIRTUAL)
 
 /* DSP effects */
