@@ -325,5 +325,8 @@ static int gal5_load(struct module_data *m, FILE *f, const int start)
 		mod->xxc[i].pan = data.chn_pan[i] * 2;
 	}
 
+	m->quirk |= QUIRKS_FT2;
+	m->read_event_type = READ_EVENT_FT2;
+
 	return 0;
 }

@@ -385,5 +385,8 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = 0x80;
 
+	m->quirk |= QUIRKS_FT2;
+	m->read_event_type = READ_EVENT_FT2;
+
 	return 0;
 }

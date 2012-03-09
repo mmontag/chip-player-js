@@ -939,5 +939,8 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
 
     m->quirk |= QUIRK_FINEFX;
 
+    m->quirk |= QUIRKS_FT2;
+    m->read_event_type = READ_EVENT_FT2;
+
     return 0;
 }
