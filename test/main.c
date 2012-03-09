@@ -12,6 +12,11 @@ struct test {
 
 static LIST_HEAD(test_list);
 
+static char *color_fail = "";
+static char *color_pass = "";
+static char *color_test = "";
+static char *color_none = "";
+
 #define add_test(x) _add_test(#x, _test_func_##x)
 
 void _add_test(char *name, int (*func)(void))
@@ -26,24 +31,32 @@ void _add_test(char *name, int (*func)(void))
 	list_add_tail(&t->list, &test_list);
 }
 
+void init_colors()
+{
+	if (isatty(STDOUT_FILENO)) {
+		color_fail = "\x1b[1;31m";
+		color_pass = "\x1b[1;32m";
+		color_test = "\x1b[1m";
+		color_none = "\x1b[0m";
+	}
+}
+
 void run_tests()
 {
 	struct list_head *tmp;
 	int total, fail;
 	pid_t pid;
 	int status;
-	int color = 0;
 
 	total = fail = 0;
 
-	if (isatty(STDOUT_FILENO)) {
-		color = 1;
-	}
+	init_colors();
 
 	list_for_each(tmp, &test_list) {
 		struct test *t = list_entry(tmp, struct test, list);
 
-		printf("test %d: %s: ", total, t->name);
+		printf("%stest %d:%s %s: ",
+				color_test, total, color_none, t->name);
 		fflush(stdout);
 
 		if ((pid = fork()) == 0) {
@@ -57,22 +70,17 @@ void run_tests()
 			if (WIFSIGNALED(status)) {
 				printf("%s: ", sys_siglist[WTERMSIG(status)]);
 			}
-			if (color) {
-				printf("\x1b[1;31m**fail**\x1b[0m\n");
-			} else {
-				printf("**fail**\n");
-			}
+			printf("%s**fail**%s\n", color_fail, color_none);
 		} else {
-			if (color) {
-				printf("\x1b[1;32mpass\x1b[0m\n");
-			} else {
-				printf("pass\n");
-			}
+			printf("%spass%s\n", color_pass, color_none);
 		}
 		total++;
 	}
 
-	printf("total:%d  failed:%d\n", total, fail);
+	printf("%stotal:%d  passed:%d (%4.1f)  failed:%d (%4.1f)%s\n",
+		color_test, total,
+		(total - fail), 100.0 * (total - fail) / total,
+		fail, 100.0 * fail / total, color_none);
 }
 
 int main()
