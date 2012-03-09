@@ -67,8 +67,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
-	sub = get_subinstrument(ctx, xc->ins, key);
-
 	/* Check note */
 
 	if (key) {
@@ -112,6 +110,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
 
+		sub = get_subinstrument(ctx, xc->ins, key);
+
 		if (sub != NULL) {
 			int transp = mod->xxi[xc->ins].map[key].xpo;
 			int smp;
@@ -140,6 +140,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 		}
 	}
+
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
@@ -278,8 +280,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
-	sub = get_subinstrument(ctx, xc->ins, key);
-
 	/* Check note */
 
 	if (key) {
@@ -342,7 +342,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 */
 			if (e->ins) {
 				/* Current instrument */
-				sub = get_subinstrument(ctx, xc->ins, key);
+				sub = get_subinstrument(ctx, xc->ins, key - 1);
 				if (sub != NULL) {
 					xc->volume = sub->vol;
 				} else {
@@ -357,6 +357,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
+
+		sub = get_subinstrument(ctx, xc->ins, key);
 
 		if (sub != NULL) {
 			int transp = mod->xxi[xc->ins].map[key].xpo;
@@ -386,6 +388,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 		}
 	}
+
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
@@ -529,8 +533,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
-	sub = get_subinstrument(ctx, xc->ins, key);
-
 	/* Check note */
 
 	if (key) {
@@ -563,6 +565,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
 
+		sub = get_subinstrument(ctx, xc->ins, key);
+
 		if (sub != NULL) {
 			int transp = mod->xxi[xc->ins].map[key].xpo;
 			int smp;
@@ -590,6 +594,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 		}
 	}
+
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
