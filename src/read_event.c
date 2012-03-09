@@ -705,9 +705,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int ins, note, key, flg;
+	int note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
+	int not_same_ins;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
 	if (e->note && !e->ins && xc->delayed_ins) {
@@ -716,14 +717,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	flg = 0;
-	ins = note = -1;
+	note = -1;
 	key = e->note;
 	cont_sample = 0;
+	not_same_ins = 0;
 
 	/* Check instrument */
 
 	if (e->ins) {
-		ins = e->ins - 1;
+		int ins = e->ins - 1;
 		flg = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
@@ -739,7 +741,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 					key = xc->key + 1;
 				}
 			}
-			xc->ins = ins;
+			if (xc->ins != ins) {
+				not_same_ins = 1;
+				xc->ins = ins;
+			}
 		} else {
 			/* invalid ins */
 
@@ -771,63 +776,50 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			/* Always retrig on tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
-			if (e->ins && xc->ins != ins) {
+			if (not_same_ins) {
 				flg |= NEW_INS;
-				xc->ins = ins;
 			} else {
 				cont_sample = 1;
 				key = 0;
 			}
-		} else if (~flg & NEW_INS) {
-			ins = xc->ins;
-			flg |= IS_READY;
 		}
-	}
-
-	if (!key || key >= XMP_KEY_OFF) {
-		ins = xc->ins;
 	}
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
 
-		if (IS_VALID_INSTRUMENT(ins)) {
-			struct xmp_subinstrument *sub;
+		sub = get_subinstrument(ctx, xc->ins, key);
 
-			sub = get_subinstrument(ctx, ins, key);
+		if (sub != NULL) {
+			int transp = mod->xxi[xc->ins].map[key].xpo;
+			int smp;
 
-			if (sub != NULL) {
-				int transp = mod->xxi[ins].map[key].xpo;
-				int smp;
+			note = key + sub->xpo + transp;
+			smp = sub->sid;
 
-				note = key + sub->xpo + transp;
-				smp = sub->sid;
+			if (mod->xxs[smp].len == 0) {
+				smp = -1;
+			}
 
-				if (mod->xxs[smp].len == 0) {
-					smp = -1;
+			if (smp >= 0 && smp < mod->smp) {
+				int to = virtch_setpatch(ctx, chn, xc->ins,
+					smp, note, sub->nna, sub->dct,
+					sub->dca, ctl, cont_sample);
+
+				if (to < 0) {
+					return -1;
 				}
 
-				if (smp >= 0 && smp < mod->smp) {
-					int to = virtch_setpatch(ctx, chn, ins,
-						smp, note, sub->nna, sub->dct,
-						sub->dca, ctl, cont_sample);
+				copy_channel(p, to, chn);
 
-					if (to < 0) {
-						return -1;
-					}
-
-					copy_channel(p, to, chn);
-
-					xc->smp = smp;
-				}
-			} else {
-				flg &= ~(RESET_VOL | RESET_ENV | NEW_INS |
-				      NEW_NOTE);
+				xc->smp = smp;
 			}
 		} else {
-			virtch_resetchannel(ctx, chn);
+			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
 		}
 	}
+
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
@@ -860,7 +852,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		return 0;
 	}
 
-	sub = get_subinstrument(ctx, xc->ins, xc->key);
 	if (sub == NULL) {
 		return 0;
 	}
