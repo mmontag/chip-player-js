@@ -492,6 +492,9 @@ next_pattern:
 	load_sample(f, 0, &mod->xxs[i], NULL);
     }
 
+    m->quirk |= QUIRKS_ST3;
+    m->read_event_type = READ_EVENT_ST3;
+
     return 0;
 }
 
