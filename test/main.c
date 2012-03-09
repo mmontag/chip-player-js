@@ -77,7 +77,7 @@ void run_tests()
 		total++;
 	}
 
-	printf("%stotal:%d  passed:%d (%4.1f)  failed:%d (%4.1f)%s\n",
+	printf("%stotal:%d  passed:%d (%4.1f%%)  failed:%d (%4.1f%%)%s\n",
 		color_test, total,
 		(total - fail), 100.0 * (total - fail) / total,
 		fail, 100.0 * fail / total, color_none);
