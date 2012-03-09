@@ -192,8 +192,9 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
-	if (TEST(NEW_INS) || HAS_QUIRK(QUIRK_OFSRST))
+	if (TEST(NEW_INS)) {
 		xc->offset_val = 0;
+	}
 
 	/* Secondary effect is processed _first_ and can be overriden
 	 * by the primary effect.
@@ -476,8 +477,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
-	if (TEST(NEW_INS) || HAS_QUIRK(QUIRK_OFSRST))
-		xc->offset_val = 0;
+	/* FT2: always reset sample offset */
+	xc->offset_val = 0;
 
 	/* Secondary effect is processed _first_ and can be overriden
 	 * by the primary effect.
@@ -710,8 +711,9 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
-	if (TEST(NEW_INS) || HAS_QUIRK(QUIRK_OFSRST))
+	if (TEST(NEW_INS)) {
 		xc->offset_val = 0;
+	}
 
 	/* Secondary effect is processed _first_ and can be overriden
 	 * by the primary effect.
@@ -971,8 +973,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		SET(NEW_VOL);
 	}
 
-	if (TEST(NEW_INS) || HAS_QUIRK(QUIRK_OFSRST))
-		xc->offset_val = 0;
+	/* IT: always reset sample offset */
+	xc->offset_val = 0;
 
 	/* Secondary effect is processed _first_ and can be overriden
 	 * by the primary effect.
