@@ -131,9 +131,11 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
-	if (mod->xxi[ins].map[key].ins != 0xff) {
-		int mapped = mod->xxi[ins].map[key].ins;
-		return &mod->xxi[ins].sub[mapped];
+	if (ins >= 0 && key >= 0) {
+		if (mod->xxi[ins].map[key].ins != 0xff) {
+			int mapped = mod->xxi[ins].map[key].ins;
+			return &mod->xxi[ins].sub[mapped];
+		}
 	}
 
 	return NULL;
@@ -269,16 +271,17 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		}
 	}
 
-	if (!key || key >= XMP_KEY_OFF) {
-		/* Player test case 2, valid instrument */
-		if (HAS_QUIRK(QUIRK_OINSVOL) && xc->ins >= 0 && xc->key >= 0) {
+	/* Process QUIRK_OINSVOL */
+	if (HAS_QUIRK(QUIRK_OINSVOL) /*&& xc->ins >= 0 && xc->key >= 0*/) {
+		struct xmp_subinstrument *sub;
+
+		/* Previous instrument */
+
+		if (!key || key >= XMP_KEY_OFF) {
+			sub = get_subinstrument(ctx, xc->ins_oinsvol, xc->key);
 			/* No note */
-			struct xmp_subinstrument *sub;
-			sub = get_subinstrument(ctx, xc->ins, xc->key);
 			if (sub != NULL) {
-				if (IS_VALID_INSTRUMENT(ins)) {
-					xc->volume = sub->vol;
-				}
+				xc->volume = sub->vol;
 				flg |= NEW_VOL;
 				flg &= ~RESET_VOL;
 			}
@@ -286,8 +289,25 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 				/* If instrument is invalid, make it valid */
 				xins = xc->ins;
 			}
+			ins = xins;
+		} else {
+			/* Retrieve volume when we have note */
+
+			/* Current instrument */
+			sub = get_subinstrument(ctx, ins, key);
+			if (sub != NULL) {
+				xc->volume = sub->vol;
+			} else {
+				xc->volume = 0;
+			}
+			xc->ins_oinsvol = ins;
+			flg |= NEW_VOL;
+			flg &= ~RESET_VOL;
 		}
-		ins = xins;		/* previous instrument */
+	} else {
+		if (!key || key >= XMP_KEY_OFF) {
+			ins = xins;
+		}
 	}
 
 	if (IS_VALID_INSTRUMENT(ins)) {
