@@ -165,9 +165,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				      NEW_NOTE);
 			}
 		} else {
-			if (!HAS_QUIRK(QUIRK_CUTNWI)) {
-				virtch_resetchannel(ctx, chn);
-			}
+			virtch_resetchannel(ctx, chn);
 		}
 	}
 
@@ -451,11 +449,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 				flg &= ~(RESET_VOL | RESET_ENV | NEW_INS |
 				      NEW_NOTE);
 			}
-		} else {
-			if (!HAS_QUIRK(QUIRK_CUTNWI)) {
-				virtch_resetchannel(ctx, chn);
-			}
 		}
+		/* cut only when note + invalid ins */
 	}
 
 	/* Reset flags */
@@ -688,9 +683,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 				      NEW_NOTE);
 			}
 		} else {
-			if (!HAS_QUIRK(QUIRK_CUTNWI)) {
-				virtch_resetchannel(ctx, chn);
-			}
+			virtch_resetchannel(ctx, chn);
 		}
 	}
 
@@ -951,9 +944,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				      NEW_NOTE);
 			}
 		} else {
-			if (!HAS_QUIRK(QUIRK_CUTNWI)) {
-				virtch_resetchannel(ctx, chn);
-			}
+			virtch_resetchannel(ctx, chn);
 		}
 	}
 
