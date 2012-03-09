@@ -67,7 +67,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			 * cut on invalid instruments (it keeps playing the
 			 * previous one)
 			 */
-			if (!HAS_QUIRK(QUIRK_OINSVOL | QUIRK_IGNWINS)) {
+			if (!HAS_QUIRK(QUIRK_IGNWINS)) {
 				virtch_resetchannel(ctx, chn);
 			}
 
@@ -134,48 +134,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	/* Process QUIRK_OINSVOL */
-	if (HAS_QUIRK(QUIRK_OINSVOL)) {
-		struct xmp_subinstrument *sub;
-
-		/* Previous instrument */
-
-		if (!key || key >= XMP_KEY_OFF) {
-			sub = get_subinstrument(ctx, xc->ins_oinsvol, xc->key);
-			/* No note */
-			if (sub != NULL) {
-				xc->volume = sub->vol;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
-			}
-			if (!IS_VALID_INSTRUMENT(ins)) {
-				/* If instrument is invalid, make it valid */
-				xins = xc->ins;
-			}
-			ins = xins;
-		} else {
-			/* Retrieve volume when we have note */
-
-			/* and only if we have instrument, otherwise we're in
-			 * case 1: new note and no instrument
-			 */
-			if (e->ins) {
-				/* Current instrument */
-				sub = get_subinstrument(ctx, ins, key);
-				if (sub != NULL) {
-					xc->volume = sub->vol;
-				} else {
-					xc->volume = 0;
-				}
-				xc->ins_oinsvol = ins;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
-			}
-		}
-	} else {
-		if (!key || key >= XMP_KEY_OFF) {
-			ins = xins;
-		}
+	if (!key || key >= XMP_KEY_OFF) {
+		ins = xins;
 	}
 
 	if (IS_VALID_INSTRUMENT(ins)) {
@@ -369,14 +329,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		} else {
 			/* invalid ins */
 
-			/* Also check for QUIRK_OINSVOL because FT2 doesn't
-			 * cut on invalid instruments (it keeps playing the
-			 * previous one)
+			/* FT2 doesn't cut on invalid instruments (it keeps
+			 * playing the previous one)
 			 */
-			if (!HAS_QUIRK(QUIRK_OINSVOL | QUIRK_IGNWINS)) {
-				virtch_resetchannel(ctx, chn);
-			}
-
 			if (HAS_QUIRK(QUIRK_IGNWINS)) {
 				ins = -1;
 				flg = 0;
@@ -441,7 +396,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Process QUIRK_OINSVOL */
-	if (HAS_QUIRK(QUIRK_OINSVOL)) {
+	{
 		struct xmp_subinstrument *sub;
 
 		/* Previous instrument */
@@ -477,10 +432,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 				flg |= NEW_VOL;
 				flg &= ~RESET_VOL;
 			}
-		}
-	} else {
-		if (!key || key >= XMP_KEY_OFF) {
-			ins = xins;
 		}
 	}
 
@@ -679,7 +630,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			 * cut on invalid instruments (it keeps playing the
 			 * previous one)
 			 */
-			if (!HAS_QUIRK(QUIRK_OINSVOL | QUIRK_IGNWINS)) {
+			if (!HAS_QUIRK(QUIRK_IGNWINS)) {
 				virtch_resetchannel(ctx, chn);
 			}
 
@@ -746,48 +697,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	/* Process QUIRK_OINSVOL */
-	if (HAS_QUIRK(QUIRK_OINSVOL)) {
-		struct xmp_subinstrument *sub;
-
-		/* Previous instrument */
-
-		if (!key || key >= XMP_KEY_OFF) {
-			sub = get_subinstrument(ctx, xc->ins_oinsvol, xc->key);
-			/* No note */
-			if (sub != NULL) {
-				xc->volume = sub->vol;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
-			}
-			if (!IS_VALID_INSTRUMENT(ins)) {
-				/* If instrument is invalid, make it valid */
-				xins = xc->ins;
-			}
-			ins = xins;
-		} else {
-			/* Retrieve volume when we have note */
-
-			/* and only if we have instrument, otherwise we're in
-			 * case 1: new note and no instrument
-			 */
-			if (e->ins) {
-				/* Current instrument */
-				sub = get_subinstrument(ctx, ins, key);
-				if (sub != NULL) {
-					xc->volume = sub->vol;
-				} else {
-					xc->volume = 0;
-				}
-				xc->ins_oinsvol = ins;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
-			}
-		}
-	} else {
-		if (!key || key >= XMP_KEY_OFF) {
-			ins = xins;
-		}
+	if (!key || key >= XMP_KEY_OFF) {
+		ins = xins;
 	}
 
 	if (IS_VALID_INSTRUMENT(ins)) {
@@ -1008,11 +919,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else {
 			/* invalid ins */
 
-			/* Also check for QUIRK_OINSVOL because FT2 doesn't
-			 * cut on invalid instruments (it keeps playing the
-			 * previous one)
-			 */
-			if (!HAS_QUIRK(QUIRK_OINSVOL | QUIRK_IGNWINS)) {
+			if (!HAS_QUIRK(QUIRK_IGNWINS)) {
 				virtch_resetchannel(ctx, chn);
 			}
 
@@ -1079,48 +986,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		}
 	}
 
-	/* Process QUIRK_OINSVOL */
-	if (HAS_QUIRK(QUIRK_OINSVOL)) {
-		struct xmp_subinstrument *sub;
-
-		/* Previous instrument */
-
-		if (!key || key >= XMP_KEY_OFF) {
-			sub = get_subinstrument(ctx, xc->ins_oinsvol, xc->key);
-			/* No note */
-			if (sub != NULL) {
-				xc->volume = sub->vol;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
-			}
-			if (!IS_VALID_INSTRUMENT(ins)) {
-				/* If instrument is invalid, make it valid */
-				xins = xc->ins;
-			}
-			ins = xins;
-		} else {
-			/* Retrieve volume when we have note */
-
-			/* and only if we have instrument, otherwise we're in
-			 * case 1: new note and no instrument
-			 */
-			if (e->ins) {
-				/* Current instrument */
-				sub = get_subinstrument(ctx, ins, key);
-				if (sub != NULL) {
-					xc->volume = sub->vol;
-				} else {
-					xc->volume = 0;
-				}
-				xc->ins_oinsvol = ins;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
-			}
-		}
-	} else {
-		if (!key || key >= XMP_KEY_OFF) {
-			ins = xins;
-		}
+	if (!key || key >= XMP_KEY_OFF) {
+		ins = xins;
 	}
 
 	if (IS_VALID_INSTRUMENT(ins)) {
