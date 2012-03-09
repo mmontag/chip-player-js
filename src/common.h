@@ -137,7 +137,6 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_ST3GVOL	(1 << 11)	/* ST 3 weird global volume effect */
 #define QUIRK_FINEFX	(1 << 12)	/* Enable 0xf/0xe for fine effects */
 #define QUIRK_VSALL	(1 << 13)	/* Volume slides in all frames */
-#define QUIRK_RTGINS	(1 << 14)	/* Retrig instrument on toneporta */
 #define QUIRK_PBALL	(1 << 15)	/* Pitch bending in all frames */
 #define QUIRK_PERPAT	(1 << 16)	/* Cancel persistent fx at pat start */
 #define QUIRK_VOLPDN	(1 << 17)	/* Set priority to volume slide down */
@@ -154,11 +153,10 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 
 /* Format quirks */
 #define QUIRKS_ST3		(QUIRK_S3MLOOP | \
-				 QUIRK_RTGINS | QUIRK_VOLPDN)
+				 QUIRK_VOLPDN)
 #define QUIRKS_FT2		(QUIRK_CUTNWI | QUIRK_OFSRST)
 #define QUIRKS_IT		(QUIRK_ENVFADE | QUIRK_S3MLOOP | \
 				 QUIRK_OFSRST | QUIRK_VOLPDN | \
-				 QUIRK_RTGINS | \
 				 QUIRK_ITVPOR | QUIRK_FILTER | QUIRK_VIRTUAL)
 
 /* DSP effects */

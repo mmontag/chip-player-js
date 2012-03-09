@@ -85,35 +85,27 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
-			/* Fix portamento in 7spirits.s3m, mod.Biomechanoid */
-			if (HAS_QUIRK(QUIRK_RTGINS) && e->ins && xc->ins != ins) {
-				flg |= NEW_INS;
-				xins = ins;
-			} else {
-				/* When a toneporta is issued after a keyoff
-				 * event, retrigger the instrument (xr-nc.xm,
-				 * bug #586377)
-				 *
-				 *   flg |= NEW_INS;
-				 *   xins = ins;
-				 *
-				 * (From Decibelter - Cosmic 'Wegian Mamas.xm
-				 * p04 ch7) -- We don't retrigger the sample,
-				 * it simply continues. This is important to
-				 * play sweeps and loops correctly.
-				 */
-				cont_sample = 1;
 
-				/* set key to 0 so we can have the tone
-				 * portamento from the original note (see
-				 * funky_stars.xm pos 5 ch 9)
-				 */
-				key = 0;
+			/* When a toneporta is issued after a keyoff event,
+			 * retrigger the instrument (xr-nc.xm, bug #586377)
+			 *
+			 *   flg |= NEW_INS;
+			 *   xins = ins;
+			 *
+			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
+			 * We don't retrigger the sample, it simply continues.
+			 * This is important to play sweeps and loops correctly.
+			 */
+			cont_sample = 1;
 
-				/* And do the same if there's no keyoff (see
-				 * comic bakery remix.xm pos 1 ch 3)
-				 */
-			}
+			/* set key to 0 so we can have the tone portamento from
+			 * the original note (see funky_stars.xm pos 5 ch 9)
+			 */
+			key = 0;
+
+			/* And do the same if there's no keyoff (see
+			 * comic bakery remix.xm pos 1 ch 3)
+			 */
 		} else if (flg & NEW_INS) {
 			xins = ins;
 		} else {
@@ -344,35 +336,27 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
-			/* Fix portamento in 7spirits.s3m, mod.Biomechanoid */
-			if (HAS_QUIRK(QUIRK_RTGINS) && e->ins && xc->ins != ins) {
-				flg |= NEW_INS;
-				xins = ins;
-			} else {
-				/* When a toneporta is issued after a keyoff
-				 * event, retrigger the instrument (xr-nc.xm,
-				 * bug #586377)
-				 *
-				 *   flg |= NEW_INS;
-				 *   xins = ins;
-				 *
-				 * (From Decibelter - Cosmic 'Wegian Mamas.xm
-				 * p04 ch7) -- We don't retrigger the sample,
-				 * it simply continues. This is important to
-				 * play sweeps and loops correctly.
-				 */
-				cont_sample = 1;
 
-				/* set key to 0 so we can have the tone
-				 * portamento from the original note (see
-				 * funky_stars.xm pos 5 ch 9)
-				 */
-				key = 0;
+			/* When a toneporta is issued after a keyoff event,
+			 * retrigger the instrument (xr-nc.xm, bug #586377)
+			 *
+			 *   flg |= NEW_INS;
+			 *   xins = ins;
+			 *
+			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
+			 * We don't retrigger the sample, it simply continues.
+			 * This is important to play sweeps and loops correctly
+			 */
+			cont_sample = 1;
 
-				/* And do the same if there's no keyoff (see
-				 * comic bakery remix.xm pos 1 ch 3)
-				 */
-			}
+			/* set key to 0 so we can have the tone portamento from
+			 * the original note (see funky_stars.xm pos 5 ch 9)
+			 */
+			key = 0;
+
+			/* And do the same if there's no keyoff (see
+			 * comic bakery remix.xm pos 1 ch 3)
+			 */
 		} else if (flg & NEW_INS) {
 			xins = ins;
 		} else {
@@ -637,34 +621,13 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
-			/* Fix portamento in 7spirits.s3m, mod.Biomechanoid */
-			if (HAS_QUIRK(QUIRK_RTGINS) && e->ins && xc->ins != ins) {
+
+			/* Always retrig in tone portamento: Fix portamento in
+			 * 7spirits.s3m, mod.Biomechanoid
+			 */
+			if (e->ins && xc->ins != ins) {
 				flg |= NEW_INS;
 				xins = ins;
-			} else {
-				/* When a toneporta is issued after a keyoff
-				 * event, retrigger the instrument (xr-nc.xm,
-				 * bug #586377)
-				 *
-				 *   flg |= NEW_INS;
-				 *   xins = ins;
-				 *
-				 * (From Decibelter - Cosmic 'Wegian Mamas.xm
-				 * p04 ch7) -- We don't retrigger the sample,
-				 * it simply continues. This is important to
-				 * play sweeps and loops correctly.
-				 */
-				cont_sample = 1;
-
-				/* set key to 0 so we can have the tone
-				 * portamento from the original note (see
-				 * funky_stars.xm pos 5 ch 9)
-				 */
-				key = 0;
-
-				/* And do the same if there's no keyoff (see
-				 * comic bakery remix.xm pos 1 ch 3)
-				 */
 			}
 		} else if (flg & NEW_INS) {
 			xins = ins;
@@ -921,34 +884,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
-			/* Fix portamento in 7spirits.s3m, mod.Biomechanoid */
-			if (HAS_QUIRK(QUIRK_RTGINS) && e->ins && xc->ins != ins) {
+
+			/* Always retrig on tone portamento: Fix portamento in
+			 * 7spirits.s3m, mod.Biomechanoid
+			 */
+			if (e->ins && xc->ins != ins) {
 				flg |= NEW_INS;
 				xins = ins;
-			} else {
-				/* When a toneporta is issued after a keyoff
-				 * event, retrigger the instrument (xr-nc.xm,
-				 * bug #586377)
-				 *
-				 *   flg |= NEW_INS;
-				 *   xins = ins;
-				 *
-				 * (From Decibelter - Cosmic 'Wegian Mamas.xm
-				 * p04 ch7) -- We don't retrigger the sample,
-				 * it simply continues. This is important to
-				 * play sweeps and loops correctly.
-				 */
-				cont_sample = 1;
-
-				/* set key to 0 so we can have the tone
-				 * portamento from the original note (see
-				 * funky_stars.xm pos 5 ch 9)
-				 */
-				key = 0;
-
-				/* And do the same if there's no keyoff (see
-				 * comic bakery remix.xm pos 1 ch 3)
-				 */
 			}
 		} else if (flg & NEW_INS) {
 			xins = ins;
