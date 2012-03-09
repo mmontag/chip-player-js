@@ -66,7 +66,6 @@ struct retrig_control {
 #define FINE_TPORTA	0x00800000
 
 /* These need to be "persistent" between frames */
-#define IS_READY	0x01000000
 #define FADEOUT		0x02000000
 #define RELEASE		0x04000000
 
