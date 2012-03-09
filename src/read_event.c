@@ -550,6 +550,9 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			if (e->ins && xc->ins != ins) {
 				flg |= NEW_INS;
 				xc->ins = ins;
+			} else {
+				cont_sample = 1;
+				key = 0;
 			}
 		} else if (~flg & NEW_INS) {
 			ins = xc->ins;
@@ -780,6 +783,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			if (e->ins && xc->ins != ins) {
 				flg |= NEW_INS;
 				xc->ins = ins;
+			} else {
+				cont_sample = 1;
+				key = 0;
 			}
 		} else if (~flg & NEW_INS) {
 			ins = xc->ins;
