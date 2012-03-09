@@ -118,14 +118,10 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		ins = candidate_ins;
 	}
 
-	if ((uint32)key < XMP_KEY_OFF && key > 0) {
-		key--;
+	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+		xc->key = --key;
 
-		if (key < XMP_MAX_KEYS) {
-			xc->key = key;
-		}
-
-		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
+		if (IS_VALID_INSTRUMENT(ins)) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);
@@ -398,14 +394,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	if ((uint32)key < XMP_KEY_OFF && key > 0) {
-		key--;
+	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+		xc->key = --key;
 
-		if (key < XMP_MAX_KEYS) {
-			xc->key = key;
-		}
-
-		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
+		if (IS_VALID_INSTRUMENT(ins)) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);
@@ -625,14 +617,10 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		ins = candidate_ins;
 	}
 
-	if ((uint32)key < XMP_KEY_OFF && key > 0) {
-		key--;
+	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+		xc->key = --key;
 
-		if (key < XMP_MAX_KEYS) {
-			xc->key = key;
-		}
-
-		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
+		if (IS_VALID_INSTRUMENT(ins)) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);
@@ -869,14 +857,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		ins = candidate_ins;
 	}
 
-	if ((uint32)key < XMP_KEY_OFF && key > 0) {
-		key--;
+	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+		xc->key = --key;
 
-		if (key < XMP_MAX_KEYS) {
-			xc->key = key;
-		}
-
-		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
+		if (IS_VALID_INSTRUMENT(ins)) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);
