@@ -62,19 +62,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			xins = ins;
 		} else {
 			/* invalid ins */
-
-			/* Also check for QUIRK_OINSVOL because FT2 doesn't
-			 * cut on invalid instruments (it keeps playing the
-			 * previous one)
-			 */
-			if (!HAS_QUIRK(QUIRK_IGNWINS)) {
-				virtch_resetchannel(ctx, chn);
-			}
-
-			if (HAS_QUIRK(QUIRK_IGNWINS)) {
-				ins = -1;
-				flg = 0;
-			}
+			virtch_resetchannel(ctx, chn);
 		}
 
 		xc->insdef = ins;
@@ -332,10 +320,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* FT2 doesn't cut on invalid instruments (it keeps
 			 * playing the previous one)
 			 */
-			if (HAS_QUIRK(QUIRK_IGNWINS)) {
-				ins = -1;
-				flg = 0;
-			}
+			ins = -1;
+			flg = 0;
 		}
 
 		xc->insdef = ins;
@@ -626,18 +612,9 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		} else {
 			/* invalid ins */
 
-			/* Also check for QUIRK_OINSVOL because FT2 doesn't
-			 * cut on invalid instruments (it keeps playing the
-			 * previous one)
-			 */
-			if (!HAS_QUIRK(QUIRK_IGNWINS)) {
-				virtch_resetchannel(ctx, chn);
-			}
-
-			if (HAS_QUIRK(QUIRK_IGNWINS)) {
-				ins = -1;
-				flg = 0;
-			}
+			/* Ignore invalid instruments */
+			ins = -1;
+			flg = 0;
 		}
 
 		xc->insdef = ins;
@@ -919,14 +896,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else {
 			/* invalid ins */
 
-			if (!HAS_QUIRK(QUIRK_IGNWINS)) {
-				virtch_resetchannel(ctx, chn);
-			}
-
-			if (HAS_QUIRK(QUIRK_IGNWINS)) {
-				ins = -1;
-				flg = 0;
-			}
+			/* Ignore invalid instruments */
+			ins = -1;
+			flg = 0;
 		}
 
 		xc->insdef = ins;
