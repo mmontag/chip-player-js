@@ -64,7 +64,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			virtch_resetchannel(ctx, chn);
 		}
 
-		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -105,10 +104,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			/* And do the same if there's no keyoff (see
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
-		} else if (flg & NEW_INS) {
-			xc->ins = ins;
-		} else {
-			ins = xc->ins_lastread;
+		} else if (~flg & NEW_INS) {
+			ins = xc->ins;
 			flg |= IS_READY;
 		}
 	}
@@ -300,7 +297,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			flg = 0;
 		}
 
-		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -341,10 +337,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* And do the same if there's no keyoff (see
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
-		} else if (flg & NEW_INS) {
-			xc->ins = ins;
-		} else {
-			ins = xc->ins_lastread;
+		} else if (~flg & NEW_INS) {
+			ins = xc->ins;
 			flg |= IS_READY;
 		}
 	}
@@ -564,7 +558,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			flg = 0;
 		}
 
-		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -592,10 +585,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 				flg |= NEW_INS;
 				xc->ins = ins;
 			}
-		} else if (flg & NEW_INS) {
-			xc->ins = ins;
-		} else {
-			ins = xc->ins_lastread;
+		} else if (~flg & NEW_INS) {
+			ins = xc->ins;
 			flg |= IS_READY;
 		}
 	}
@@ -800,7 +791,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			flg = 0;
 		}
 
-		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -828,10 +818,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				flg |= NEW_INS;
 				xc->ins = ins;
 			}
-		} else if (flg & NEW_INS) {
-			xc->ins = ins;
-		} else {
-			ins = xc->ins_lastread;
+		} else if (~flg & NEW_INS) {
+			ins = xc->ins;
 			flg |= IS_READY;
 		}
 	}

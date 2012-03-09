@@ -84,7 +84,6 @@ struct channel_data {
 	int finetune;		/* Guess what */
 	int ins;		/* Instrument number */
 	int ins_oinsvol;	/* Last instrument that did set a note */
-	int ins_lastread;	/* Last instrument event read */
 	int smp;		/* Sample number */
 	int pan;		/* Current pan */
 	int masterpan;		/* Master pan -- for S3M set pan effect */
