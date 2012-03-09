@@ -5,7 +5,8 @@ TESTS		= depack_pp depack_sqsh depack_s404 depack_mmcmp \
 		  player_read_event \
 		  quirk_old_ins_vol no_quirk_old_ins_vol \
 		  quirk_ignore_invalid_ins no_quirk_ignore_invalid_ins \
-		  no_note_same_ins \
+		  no_note_same_ins_mod no_note_same_ins_ft2 \
+		  no_note_same_ins_st3 no_note_same_ins_it \
 		  no_note_valid_ins_mod no_note_valid_ins_ft2 \
 		  no_note_valid_ins_st3 no_note_valid_ins_it \
 		  no_note_invalid_ins_mod no_note_invalid_ins_ft2 \
