@@ -60,7 +60,7 @@ TEST(test_no_note_valid_ins_it)
 	set_instrument_volume(ctx, 1, 0, 33);
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0,  0, 2,  0, 0x00, 0, 0, 0);
-	set_quirk(ctx, QUIRKS_IT);
+	set_quirk(ctx, QUIRKS_IT, READ_EVENT_IT);
 
 	xmp_player_start(opaque, 0, 44100, 0);
 

@@ -84,9 +84,10 @@ void set_instrument_volume(struct context_data *ctx, int ins, int sub, int vol)
 	mod->xxi[ins].sub[sub].vol = vol;
 }
 
-void set_quirk(struct context_data *ctx, int quirk)
+void set_quirk(struct context_data *ctx, int quirk, int read_mode)
 {
 	struct module_data *m = &ctx->m;
 
 	m->quirk |= quirk;
+	m->read_event_type = read_mode;
 }

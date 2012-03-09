@@ -1,6 +1,6 @@
 
 MAIN_QUIRKS	= mod ft2 st3 it
-QUIRKS		= old_ins_vol ignore_invalid_ins
+QUIRKS		= ignore_invalid_ins
 DEPACKERS	= pp sqsh s404 mmcmp
 CONVERTERS	= delta signal endian
 EFFECTS		= delay
