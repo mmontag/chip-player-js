@@ -1,18 +1,37 @@
 
-TESTS		= depack_pp depack_sqsh depack_s404 depack_mmcmp \
-		  convert_delta convert_signal convert_endian \
+MAIN_QUIRKS	= mod ft2 st3 it
+QUIRKS		= old_ins_vol ignore_invalid_ins
+DEPACKERS	= pp sqsh s404 mmcmp
+CONVERTERS	= delta signal endian
+EFFECTS		= delay
+API_CALLS	= get_format_list create_context
+
+CASE1_TESTS	= $(addprefix new_note_same_ins_,$(MAIN_QUIRKS))
+
+CASE2_TESTS	= $(addprefix no_note_same_ins_,$(MAIN_QUIRKS)) \
+		  $(addprefix no_note_valid_ins_,$(MAIN_QUIRKS)) \
+		  $(addprefix no_note_invalid_ins_,$(MAIN_QUIRKS))
+
+QUIRK_TESTS	= $(addprefix quirk_,$(QUIRKS)) \
+		  $(addprefix no_quirk_,$(QUIRKS))
+
+DEPACK_TESTS	= $(addprefix depack_,$(DEPACKERS))
+
+CONVERT_TESTS	= $(addprefix convert_,$(CONVERTERS))
+
+EFFECT_TESTS	= $(addprefix effect_,$(EFFECTS))
+
+API_TESTS	= $(addprefix api_,$(API_CALLS))
+
+TESTS		= $(DEPACK_TESTS) \
+		  $(CONVERT_TESTS) \
 		  load_sample_8bit load_sample_16bit \
 		  player_read_event \
-		  quirk_old_ins_vol no_quirk_old_ins_vol \
-		  quirk_ignore_invalid_ins no_quirk_ignore_invalid_ins \
-		  no_note_same_ins_mod no_note_same_ins_ft2 \
-		  no_note_same_ins_st3 no_note_same_ins_it \
-		  no_note_valid_ins_mod no_note_valid_ins_ft2 \
-		  no_note_valid_ins_st3 no_note_valid_ins_it \
-		  no_note_invalid_ins_mod no_note_invalid_ins_ft2 \
-		  no_note_invalid_ins_st3 no_note_invalid_ins_it \
-		  effect_delay \
-		  api_get_format_list api_create_context
+		  $(QUIRK_TESTS) \
+		  $(CASE1_TESTS) \
+		  $(CASE2_TESTS) \
+		  $(EFFECTS_TESTS) \
+		  $(API_TESTS)
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
 
