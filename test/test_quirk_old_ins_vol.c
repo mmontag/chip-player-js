@@ -46,7 +46,7 @@ TEST(test_quirk_old_ins_vol)
 	fail_unless(vi->pos0 !=  0, "sample reset");
 	xmp_player_frame(opaque);
 
-	/* Row 2 */
+	/* Row 2 - play with original instrument volume, not previous ins */
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not original instrument");
 	fail_unless(vi->note == 59, "not same note");

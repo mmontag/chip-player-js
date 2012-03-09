@@ -276,7 +276,9 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 			struct xmp_subinstrument *sub;
 			sub = get_subinstrument(ctx, xc->ins, xc->key);
 			if (sub != NULL) {
-				xc->volume = sub->vol;
+				if (IS_VALID_INSTRUMENT(ins)) {
+					xc->volume = sub->vol;
+				}
 				flg |= NEW_VOL;
 				flg &= ~RESET_VOL;
 			}
