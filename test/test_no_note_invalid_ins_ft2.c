@@ -42,7 +42,7 @@ Cut     = Stop playing sample
 
 */
 
-TEST(test_no_note_invalid_instrument_ft2)
+TEST(test_no_note_invalid_ins_ft2)
 {
 	xmp_context opaque;
 	struct context_data *ctx;

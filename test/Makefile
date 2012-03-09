@@ -2,11 +2,13 @@
 TESTS		= depack_pp depack_sqsh depack_s404 depack_mmcmp \
 		  convert_delta convert_signal convert_endian \
 		  load_sample_8bit load_sample_16bit \
-		  player_read_event no_note_same_instrument \
-		  no_note_valid_instrument_mod no_note_valid_instrument_ft2 \
-		  no_note_valid_instrument_st3 no_note_valid_instrument_it \
-		  no_note_invalid_instrument_mod no_note_invalid_instrument_ft2\
-		  no_note_invalid_instrument_st3 no_note_invalid_instrument_it \
+		  player_read_event \
+		  quirk_old_ins_vol \
+		  no_note_same_ins \
+		  no_note_valid_ins_mod no_note_valid_ins_ft2 \
+		  no_note_valid_ins_st3 no_note_valid_ins_it \
+		  no_note_invalid_ins_mod no_note_invalid_ins_ft2 \
+		  no_note_invalid_ins_st3 no_note_invalid_ins_it \
 		  effect_delay \
 		  api_get_format_list api_create_context
 
