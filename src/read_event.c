@@ -166,9 +166,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->offset_val = 0;
 	}
 
-	/* Secondary effect is processed _first_ and can be overriden
-	 * by the primary effect.
-	 */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
@@ -415,18 +412,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* FT2: always reset sample offset */
 	xc->offset_val = 0;
 
-	/* Secondary effect is processed _first_ and can be overriden
-	 * by the primary effect.
-	 */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
-	if (!TEST(IS_VALID)) {
+	if (!IS_VALID_INSTRUMENT(xc->ins)) {
 		xc->volume = 0;
 		return 0;
 	}
 
-	sub = get_subinstrument(ctx, xc->ins, xc->key);
 	if (sub == NULL) {
 		return 0;
 	}
@@ -633,9 +626,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->offset_val = 0;
 	}
 
-	/* Secondary effect is processed _first_ and can be overriden
-	 * by the primary effect.
-	 */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
@@ -865,9 +855,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	/* IT: always reset sample offset */
 	xc->offset_val = 0;
 
-	/* Secondary effect is processed _first_ and can be overriden
-	 * by the primary effect.
-	 */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
