@@ -39,19 +39,19 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int ins, note, key, flg;
+	int note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
 	flg = 0;
-	ins = note = -1;
+	note = -1;
 	key = e->note;
 	cont_sample = 0;
 
 	/* Check instrument */
 
 	if (e->ins) {
-		ins = e->ins - 1;
+		int ins = e->ins - 1;
 		flg = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
@@ -66,6 +66,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 		xc->med.arp = xc->med.aidx = 0;
 	}
+
+	sub = get_subinstrument(ctx, xc->ins, key);
 
 	/* Check note */
 
@@ -104,54 +106,39 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			/* And do the same if there's no keyoff (see
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
-		} else if (~flg & NEW_INS) {
-			ins = xc->ins;
-			flg |= IS_READY;
 		}
-	}
-
-	if (!key || key >= XMP_KEY_OFF) {
-		ins = xc->ins;
 	}
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
 
-		if (IS_VALID_INSTRUMENT(ins)) {
-			struct xmp_subinstrument *sub;
+		if (sub != NULL) {
+			int transp = mod->xxi[xc->ins].map[key].xpo;
+			int smp;
 
-			sub = get_subinstrument(ctx, ins, key);
+			note = key + sub->xpo + transp;
+			smp = sub->sid;
 
-			if (sub != NULL) {
-				int transp = mod->xxi[ins].map[key].xpo;
-				int smp;
+			if (mod->xxs[smp].len == 0) {
+				smp = -1;
+			}
 
-				note = key + sub->xpo + transp;
-				smp = sub->sid;
+			if (smp >= 0 && smp < mod->smp) {
+				int to = virtch_setpatch(ctx, chn, xc->ins,
+					smp, note, sub->nna, sub->dct,
+					sub->dca, ctl, cont_sample);
 
-				if (mod->xxs[smp].len == 0) {
-					smp = -1;
+				if (to < 0) {
+					return -1;
 				}
 
-				if (smp >= 0 && smp < mod->smp) {
-					int to = virtch_setpatch(ctx, chn, ins,
-						smp, note, sub->nna, sub->dct,
-						sub->dca, ctl, cont_sample);
+				copy_channel(p, to, chn);
 
-					if (to < 0) {
-						return -1;
-					}
-
-					copy_channel(p, to, chn);
-
-					xc->smp = smp;
-				}
-			} else {
-				flg &= ~(RESET_VOL | RESET_ENV | NEW_INS |
-				      NEW_NOTE);
+				xc->smp = smp;
 			}
 		} else {
-			virtch_resetchannel(ctx, chn);
+			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS |
+			      NEW_NOTE);
 		}
 	}
 
@@ -185,12 +172,11 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
-	if (!TEST(IS_VALID)) {
+	if (!IS_VALID_INSTRUMENT(xc->ins)) {
 		xc->volume = 0;
 		return 0;
 	}
 
-	sub = get_subinstrument(ctx, xc->ins, xc->key);
 	if (sub == NULL) {
 		return 0;
 	}
