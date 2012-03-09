@@ -72,7 +72,7 @@ TEST(test_no_note_valid_ins_it)
 
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  ==  0, "set instrument");
-	fail_unless(vi->vol  == 44 * 16, "set volume");
+	fail_unless(vi->vol  == 43 * 16, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
 	xmp_player_frame(opaque);
