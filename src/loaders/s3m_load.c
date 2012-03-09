@@ -515,6 +515,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 
     m->synth = &synth_adlib;
     m->quirk |= QUIRKS_ST3;
+    m->read_event_type = READ_EVENT_ST3;
 
     return 0;
 }

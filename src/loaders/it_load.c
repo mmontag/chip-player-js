@@ -977,5 +977,11 @@ static int it_load(struct module_data *m, FILE *f, const int start)
     if (~ifh.flags & IT_LINK_GXX)
 	m->quirk |= QUIRK_UNISLD;
 
+    if (ifh.flags & IT_USE_INST) {
+	m->read_event_type = READ_EVENT_IT;
+    } else {
+	m->read_event_type = READ_EVENT_ST3;
+    }
+
     return 0;
 }

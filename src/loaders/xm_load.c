@@ -485,6 +485,7 @@ load_samples:
     }
 
     m->quirk |= QUIRKS_FT2;
+    m->read_event_type = READ_EVENT_FT2;
 
     return 0;
 }

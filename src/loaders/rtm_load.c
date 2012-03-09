@@ -375,6 +375,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 	mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
 
 	m->quirk |= QUIRKS_FT2;
+	m->read_event_type = READ_EVENT_FT2;
 
 	return 0;
 }

@@ -522,6 +522,7 @@ skip_test:
     if (mod->chn > 4) {
 	m->quirk &= ~QUIRK_MODRNG;
 	m->quirk |= QUIRKS_FT2;
+	m->read_event_type = READ_EVENT_FT2;
     } else if (strcmp(tracker, "Protracker") == 0) {
 	m->quirk |= QUIRK_INVLOOP;
     }

@@ -470,6 +470,7 @@ void initialize_module_data(struct module_data *m)
 	m->volbase = 0x40;
 	m->vol_table = NULL;
 	m->quirk = 0;
+	m->read_event_type = READ_EVENT_MOD;
 	m->comment = NULL;
 
 	/* Set defaults */

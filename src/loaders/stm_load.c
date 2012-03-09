@@ -219,6 +219,7 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
     }
 
     m->quirk |= QUIRK_VSALL | QUIRKS_ST3;
+    m->read_event_type = READ_EVENT_ST3;
 
     return 0;
 }

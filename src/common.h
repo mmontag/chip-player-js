@@ -205,6 +205,11 @@ struct module_data {
 	int volbase;			/* Volume base */
 	int *vol_table;			/* Volume translation table */
 	int quirk;			/* player quirks */
+#define READ_EVENT_MOD	0
+#define READ_EVENT_FT2	1
+#define READ_EVENT_ST3	2
+#define READ_EVENT_IT	3
+	int read_event_type;
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
 	char *instrument_path;
