@@ -366,13 +366,13 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Process QUIRK_OINSVOL */
-	{
+	if (e->ins) {
 		struct xmp_subinstrument *sub;
 
-		/* Previous instrument */
-
-		if (!key || key >= XMP_KEY_OFF) {
+		if (key == 0 || key >= XMP_KEY_OFF) {
+			/* Previous instrument */
 			sub = get_subinstrument(ctx, xc->ins_oinsvol, xc->key);
+
 			/* No note */
 			if (sub != NULL) {
 				xc->volume = sub->vol;
