@@ -39,13 +39,13 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int xins, ins, note, key, flg;
+	int candidate_ins, ins, note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
 	flg = 0;
 	ins = note = -1;
-	xins = xc->ins;
+	candidate_ins = xc->ins;
 	key = e->note;
 	cont_sample = 0;
 
@@ -59,7 +59,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			/* invalid ins */
 			virtch_resetchannel(ctx, chn);
@@ -90,7 +90,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			 * retrigger the instrument (xr-nc.xm, bug #586377)
 			 *
 			 *   flg |= NEW_INS;
-			 *   xins = ins;
+			 *   candidate_ins = ins;
 			 *
 			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
 			 * We don't retrigger the sample, it simply continues.
@@ -107,7 +107,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
 		} else if (flg & NEW_INS) {
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			ins = xc->ins_lastread;
 			flg |= IS_READY;
@@ -115,7 +115,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	if (!key || key >= XMP_KEY_OFF) {
-		ins = xins;
+		ins = candidate_ins;
 	}
 
 	if ((uint32)key < XMP_KEY_OFF && key > 0) {
@@ -170,14 +170,14 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if (IS_VALID_INSTRUMENT(xins)) {
+	if (IS_VALID_INSTRUMENT(candidate_ins)) {
 		SET(IS_VALID);
 	} else {
 		RESET(IS_VALID);
 	}
 
 	/* update instrument */
-	xc->ins = xins;
+	xc->ins = candidate_ins;
 
 	/* Process new volume */
 	if (e->vol) {
@@ -278,13 +278,13 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int xins, ins, note, key, flg;
+	int candidate_ins, ins, note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
 	flg = 0;
 	ins = note = -1;
-	xins = xc->ins;
+	candidate_ins = xc->ins;
 	key = e->note;
 	cont_sample = 0;
 
@@ -298,7 +298,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			/* invalid ins */
 
@@ -334,7 +334,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * retrigger the instrument (xr-nc.xm, bug #586377)
 			 *
 			 *   flg |= NEW_INS;
-			 *   xins = ins;
+			 *   candidate_ins = ins;
 			 *
 			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
 			 * We don't retrigger the sample, it simply continues.
@@ -351,7 +351,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
 		} else if (flg & NEW_INS) {
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			ins = xc->ins_lastread;
 			flg |= IS_READY;
@@ -374,9 +374,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 			if (!IS_VALID_INSTRUMENT(ins)) {
 				/* If instrument is invalid, make it valid */
-				xins = xc->ins;
+				candidate_ins = xc->ins;
 			}
-			ins = xins;
+			ins = candidate_ins;
 		} else {
 			/* Retrieve volume when we have note */
 
@@ -449,14 +449,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if (IS_VALID_INSTRUMENT(xins)) {
+	if (IS_VALID_INSTRUMENT(candidate_ins)) {
 		SET(IS_VALID);
 	} else {
 		RESET(IS_VALID);
 	}
 
 	/* update instrument */
-	xc->ins = xins;
+	xc->ins = candidate_ins;
 
 	/* Process new volume */
 	if (e->vol) {
@@ -556,13 +556,13 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int xins, ins, note, key, flg;
+	int candidate_ins, ins, note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
 	flg = 0;
 	ins = note = -1;
-	xins = xc->ins;
+	candidate_ins = xc->ins;
 	key = e->note;
 	cont_sample = 0;
 
@@ -576,7 +576,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			/* invalid ins */
 
@@ -611,10 +611,10 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			 */
 			if (e->ins && xc->ins != ins) {
 				flg |= NEW_INS;
-				xins = ins;
+				candidate_ins = ins;
 			}
 		} else if (flg & NEW_INS) {
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			ins = xc->ins_lastread;
 			flg |= IS_READY;
@@ -622,7 +622,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	if (!key || key >= XMP_KEY_OFF) {
-		ins = xins;
+		ins = candidate_ins;
 	}
 
 	if ((uint32)key < XMP_KEY_OFF && key > 0) {
@@ -677,14 +677,14 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if (IS_VALID_INSTRUMENT(xins)) {
+	if (IS_VALID_INSTRUMENT(candidate_ins)) {
 		SET(IS_VALID);
 	} else {
 		RESET(IS_VALID);
 	}
 
 	/* update instrument */
-	xc->ins = xins;
+	xc->ins = candidate_ins;
 
 	/* Process new volume */
 	if (e->vol) {
@@ -785,7 +785,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int xins, ins, note, key, flg;
+	int candidate_ins, ins, note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
@@ -797,7 +797,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	flg = 0;
 	ins = note = -1;
-	xins = xc->ins;
+	candidate_ins = xc->ins;
 	key = e->note;
 	cont_sample = 0;
 
@@ -814,13 +814,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 			if (!key) {
 				/* IT: Reset note for every new != ins */
-				if (xins == ins) {
+				if (candidate_ins == ins) {
 					flg = NEW_INS | RESET_VOL;
 				} else {
 					key = xc->key + 1;
 				}
 			}
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			/* invalid ins */
 
@@ -855,10 +855,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			 */
 			if (e->ins && xc->ins != ins) {
 				flg |= NEW_INS;
-				xins = ins;
+				candidate_ins = ins;
 			}
 		} else if (flg & NEW_INS) {
-			xins = ins;
+			candidate_ins = ins;
 		} else {
 			ins = xc->ins_lastread;
 			flg |= IS_READY;
@@ -866,7 +866,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	if (!key || key >= XMP_KEY_OFF) {
-		ins = xins;
+		ins = candidate_ins;
 	}
 
 	if ((uint32)key < XMP_KEY_OFF && key > 0) {
@@ -921,14 +921,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if (IS_VALID_INSTRUMENT(xins)) {
+	if (IS_VALID_INSTRUMENT(candidate_ins)) {
 		SET(IS_VALID);
 	} else {
 		RESET(IS_VALID);
 	}
 
 	/* update instrument */
-	xc->ins = xins;
+	xc->ins = candidate_ins;
 
 	/* Process new volume */
 	if (e->vol) {
