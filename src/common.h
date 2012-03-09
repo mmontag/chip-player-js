@@ -131,31 +131,30 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_ENVFADE	(1 << 1)	/* Fade at end of envelope */
 #define QUIRK_INVLOOP	(1 << 2)	/* Enable effect EF invert loop */
 #define QUIRK_FUNKIT	(1 << 3)	/* Enable effect EF funk it */
-#define QUIRK_FX9BUG	(1 << 10)	/* Protracker effect 9 bug emulation */
-#define QUIRK_ST3GVOL	(1 << 11)	/* ST 3 weird global volume effect */
-#define QUIRK_FINEFX	(1 << 12)	/* Enable 0xf/0xe for fine effects */
-#define QUIRK_VSALL	(1 << 13)	/* Volume slides in all frames */
-#define QUIRK_PBALL	(1 << 15)	/* Pitch bending in all frames */
-#define QUIRK_PERPAT	(1 << 16)	/* Cancel persistent fx at pat start */
-#define QUIRK_VOLPDN	(1 << 17)	/* Set priority to volume slide down */
-#define QUIRK_UNISLD	(1 << 18)	/* Unified pitch slide/portamento */
-#define QUIRK_ITVPOR	(1 << 20)	/* Disable fine bends in IT vol fx */
-#define QUIRK_LINEAR	(1 << 21)	/* Linear periods */
-#define QUIRK_MODRNG	(1 << 22)	/* Limit periods to MOD range */
-#define QUIRK_INSVOL	(1 << 23)	/* Use instrument volume */
-#define QUIRK_VIRTUAL	(1 << 24)	/* Enable virtual channels */
-#define QUIRK_FILTER	(1 << 25)	/* Enable filter */
+#define QUIRK_FX9BUG	(1 << 4)	/* Protracker effect 9 bug emulation */
+#define QUIRK_ST3GVOL	(1 << 5)	/* ST 3 weird global volume effect */
+#define QUIRK_FINEFX	(1 << 6)	/* Enable 0xf/0xe for fine effects */
+#define QUIRK_VSALL	(1 << 7)	/* Volume slides in all frames */
+#define QUIRK_PBALL	(1 << 8)	/* Pitch bending in all frames */
+#define QUIRK_PERPAT	(1 << 9)	/* Cancel persistent fx at pat start */
+#define QUIRK_VOLPDN	(1 << 10)	/* Set priority to volume slide down */
+#define QUIRK_UNISLD	(1 << 11)	/* Unified pitch slide/portamento */
+#define QUIRK_ITVPOR	(1 << 12)	/* Disable fine bends in IT vol fx */
+#define QUIRK_LINEAR	(1 << 13)	/* Linear periods */
+#define QUIRK_MODRNG	(1 << 14)	/* Limit periods to MOD range */
+#define QUIRK_INSVOL	(1 << 15)	/* Use instrument volume */
+#define QUIRK_VIRTUAL	(1 << 16)	/* Enable virtual channels */
+#define QUIRK_FILTER	(1 << 17)	/* Enable filter */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
 
 /* Format quirks */
-#define QUIRKS_ST3		(QUIRK_S3MLOOP | \
-				 QUIRK_VOLPDN)
+#define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN)
 #define QUIRKS_FT2		(0)
-#define QUIRKS_IT		(QUIRK_ENVFADE | QUIRK_S3MLOOP | \
-				 QUIRK_VOLPDN | \
-				 QUIRK_ITVPOR | QUIRK_FILTER | QUIRK_VIRTUAL)
+#define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_VOLPDN | \
+				 QUIRK_ENVFADE | QUIRK_ITVPOR | \
+				 QUIRK_VIRTUAL | QUIRK_FILTER)
 
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02
