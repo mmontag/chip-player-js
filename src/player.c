@@ -204,7 +204,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 			 * cut on invalid instruments (it keeps playing the
 			 * previous one)
 			 */
-			if (!HAS_QUIRK(QUIRK_NCWINS | QUIRK_OINSVOL)) {
+			if (!HAS_QUIRK(QUIRK_NCWINS | QUIRK_OINSVOL | QUIRK_IGNWINS)) {
 				virtch_resetchannel(ctx, chn);
 			}
 
