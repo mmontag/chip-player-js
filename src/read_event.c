@@ -57,27 +57,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
-		/* Benjamin Shadwick <benshadwick@gmail.com> informs that
-		 * Vestiges.xm has sticky note issues around time 0:51.
-		 * Tested it with FT2 and a new note with invalid instrument
-		 * should always cut current note
-		 */
-		/*if (HAS_QUIRK(QUIRK_OINSMOD)) {
-			if (TEST(IS_READY)) {
-				xins = xc->insdef;
-				RESET(IS_READY);
-			}
-		} else */
-
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
-			if (!key && HAS_QUIRK(QUIRK_INSPRI)) {
-				if (xins == ins) {
-					flg = NEW_INS | RESET_VOL;
-				} else {
-					key = xc->key + 1;
-				}
-			}
 			xins = ins;
 		} else {
 			/* invalid ins */
@@ -382,27 +363,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
-		/* Benjamin Shadwick <benshadwick@gmail.com> informs that
-		 * Vestiges.xm has sticky note issues around time 0:51.
-		 * Tested it with FT2 and a new note with invalid instrument
-		 * should always cut current note
-		 */
-		/*if (HAS_QUIRK(QUIRK_OINSMOD)) {
-			if (TEST(IS_READY)) {
-				xins = xc->insdef;
-				RESET(IS_READY);
-			}
-		} else */
-
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
-			if (!key && HAS_QUIRK(QUIRK_INSPRI)) {
-				if (xins == ins) {
-					flg = NEW_INS | RESET_VOL;
-				} else {
-					key = xc->key + 1;
-				}
-			}
 			xins = ins;
 		} else {
 			/* invalid ins */
@@ -707,27 +669,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
-		/* Benjamin Shadwick <benshadwick@gmail.com> informs that
-		 * Vestiges.xm has sticky note issues around time 0:51.
-		 * Tested it with FT2 and a new note with invalid instrument
-		 * should always cut current note
-		 */
-		/*if (HAS_QUIRK(QUIRK_OINSMOD)) {
-			if (TEST(IS_READY)) {
-				xins = xc->insdef;
-				RESET(IS_READY);
-			}
-		} else */
-
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
-			if (!key && HAS_QUIRK(QUIRK_INSPRI)) {
-				if (xins == ins) {
-					flg = NEW_INS | RESET_VOL;
-				} else {
-					key = xc->key + 1;
-				}
-			}
 			xins = ins;
 		} else {
 			/* invalid ins */
@@ -1052,7 +995,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
-			if (!key && HAS_QUIRK(QUIRK_INSPRI)) {
+
+			if (!key) {
+				/* IT: Reset note for every new != ins */
 				if (xins == ins) {
 					flg = NEW_INS | RESET_VOL;
 				} else {
