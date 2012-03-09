@@ -253,38 +253,36 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int ins, note, key, flg;
+	int note, key, flg;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
 	flg = 0;
-	ins = note = -1;
+	note = -1;
 	key = e->note;
 	cont_sample = 0;
 
 	/* Check instrument */
 
 	if (e->ins) {
-		ins = e->ins - 1;
+		int ins = e->ins - 1;
 		flg = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
 		if (IS_VALID_INSTRUMENT(ins)) {
-			/* valid ins */
 			xc->ins = ins;
 		} else {
-			/* invalid ins */
-
 			/* FT2 doesn't cut on invalid instruments (it keeps
 			 * playing the previous one)
 			 */
-			ins = -1;
 			flg = 0;
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
 	}
+
+	sub = get_subinstrument(ctx, xc->ins, key);
 
 	/* Check note */
 
@@ -323,9 +321,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* And do the same if there's no keyoff (see
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
-		} else if (~flg & NEW_INS) {
-			ins = xc->ins;
-			flg |= IS_READY;
 		}
 	}
 
@@ -343,7 +338,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 				flg |= NEW_VOL;
 				flg &= ~RESET_VOL;
 			}
-			ins = xc->ins;
 		} else {
 			/* Retrieve volume when we have note */
 
@@ -352,13 +346,13 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 */
 			if (e->ins) {
 				/* Current instrument */
-				sub = get_subinstrument(ctx, ins, key);
+				sub = get_subinstrument(ctx, xc->ins, key);
 				if (sub != NULL) {
 					xc->volume = sub->vol;
 				} else {
 					xc->volume = 0;
 				}
-				xc->ins_oinsvol = ins;
+				xc->ins_oinsvol = xc->ins;
 				flg |= NEW_VOL;
 				flg &= ~RESET_VOL;
 			}
@@ -368,41 +362,34 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
 
-		if (IS_VALID_INSTRUMENT(ins)) {
-			struct xmp_subinstrument *sub;
+		if (sub != NULL) {
+			int transp = mod->xxi[xc->ins].map[key].xpo;
+			int smp;
 
-			sub = get_subinstrument(ctx, ins, key);
+			note = key + sub->xpo + transp;
+			smp = sub->sid;
 
-			if (sub != NULL) {
-				int transp = mod->xxi[ins].map[key].xpo;
-				int smp;
-
-				note = key + sub->xpo + transp;
-				smp = sub->sid;
-
-				if (mod->xxs[smp].len == 0) {
-					smp = -1;
-				}
-
-				if (smp >= 0 && smp < mod->smp) {
-					int to = virtch_setpatch(ctx, chn, ins,
-						smp, note, sub->nna, sub->dct,
-						sub->dca, ctl, cont_sample);
-
-					if (to < 0) {
-						return -1;
-					}
-
-					copy_channel(p, to, chn);
-
-					xc->smp = smp;
-				}
-			} else {
-				flg &= ~(RESET_VOL | RESET_ENV | NEW_INS |
-				      NEW_NOTE);
+			if (mod->xxs[smp].len == 0) {
+				smp = -1;
 			}
+
+			if (smp >= 0 && smp < mod->smp) {
+				int to = virtch_setpatch(ctx, chn, xc->ins,
+					smp, note, sub->nna, sub->dct,
+					sub->dca, ctl, cont_sample);
+
+				if (to < 0) {
+					return -1;
+				}
+
+				copy_channel(p, to, chn);
+
+				xc->smp = smp;
+			}
+		} else {
+			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS |
+			      NEW_NOTE);
 		}
-		/* cut only when note + invalid ins */
 	}
 
 	/* Reset flags */
