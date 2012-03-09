@@ -22,6 +22,8 @@ TEST(test_quirk_old_ins_vol)
 	new_event(ctx, 0, 1, 0,  0, 2,  0, 0x00, 0, 0, 0);
 	new_event(ctx, 0, 2, 0,  0, 3,  0, 0x00, 0, 0, 0);
 	new_event(ctx, 0, 3, 0,  0, 4,  0, 0x00, 0, 0, 0);
+	new_event(ctx, 0, 4, 0, 60, 1, 44, 0x00, 0, 0, 0);
+	new_event(ctx, 0, 5, 0, 50, 0,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRK_OINSVOL);
 
 	xmp_player_start(opaque, 0, 44100, 0);
@@ -62,6 +64,22 @@ TEST(test_quirk_old_ins_vol)
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->vol  == 22 * 16, "not old volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
+	xmp_player_frame(opaque);
+
+	/* Row 4 - set note again */
+	xmp_player_frame(opaque);
+	fail_unless(vi->note == 59, "set note");
+	fail_unless(vi->ins  ==  0, "set instrument");
+	fail_unless(vi->vol  == 43 * 16, "set volume");
+	fail_unless(vi->pos0 ==  0, "sample position");
+	xmp_player_frame(opaque);
+
+	/* Row 5 - check new note, no instrument */
+	xmp_player_frame(opaque);
+	fail_unless(vi->ins  ==  0, "not original instrument");
+	fail_unless(vi->note == 49, "not new note");
+	fail_unless(vi->vol  == 43 * 16, "not current volume");
+	fail_unless(vi->pos0 ==  0, "sample reset");
 	xmp_player_frame(opaque);
 }
 END_TEST
