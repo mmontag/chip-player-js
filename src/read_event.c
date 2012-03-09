@@ -65,7 +65,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			virtch_resetchannel(ctx, chn);
 		}
 
-		xc->insdef = ins;
+		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -109,7 +109,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (flg & NEW_INS) {
 			xins = ins;
 		} else {
-			ins = xc->insdef;
+			ins = xc->ins_lastread;
 			flg |= IS_READY;
 		}
 	}
@@ -118,20 +118,14 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		ins = xins;
 	}
 
-	if (IS_VALID_INSTRUMENT(ins)) {
-		flg |= IS_VALID;
-	}
-
 	if ((uint32)key < XMP_KEY_OFF && key > 0) {
 		key--;
 
 		if (key < XMP_MAX_KEYS) {
 			xc->key = key;
-		} else {
-			flg &= ~IS_VALID;
 		}
 
-		if (flg & IS_VALID) {
+		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);
@@ -315,7 +309,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			flg = 0;
 		}
 
-		xc->insdef = ins;
+		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -359,7 +353,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (flg & NEW_INS) {
 			xins = ins;
 		} else {
-			ins = xc->insdef;
+			ins = xc->ins_lastread;
 			flg |= IS_READY;
 		}
 	}
@@ -404,20 +398,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	if (IS_VALID_INSTRUMENT(ins)) {
-		flg |= IS_VALID;
-	}
-
 	if ((uint32)key < XMP_KEY_OFF && key > 0) {
 		key--;
 
 		if (key < XMP_MAX_KEYS) {
 			xc->key = key;
-		} else {
-			flg &= ~IS_VALID;
 		}
 
-		if (flg & IS_VALID) {
+		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);
@@ -597,7 +585,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			flg = 0;
 		}
 
-		xc->insdef = ins;
+		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -628,7 +616,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (flg & NEW_INS) {
 			xins = ins;
 		} else {
-			ins = xc->insdef;
+			ins = xc->ins_lastread;
 			flg |= IS_READY;
 		}
 	}
@@ -637,20 +625,14 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		ins = xins;
 	}
 
-	if (IS_VALID_INSTRUMENT(ins)) {
-		flg |= IS_VALID;
-	}
-
 	if ((uint32)key < XMP_KEY_OFF && key > 0) {
 		key--;
 
 		if (key < XMP_MAX_KEYS) {
 			xc->key = key;
-		} else {
-			flg &= ~IS_VALID;
 		}
 
-		if (flg & IS_VALID) {
+		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);
@@ -847,7 +829,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			flg = 0;
 		}
 
-		xc->insdef = ins;
+		xc->ins_lastread = ins;
 		xc->med.arp = xc->med.aidx = 0;
 	}
 
@@ -878,7 +860,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else if (flg & NEW_INS) {
 			xins = ins;
 		} else {
-			ins = xc->insdef;
+			ins = xc->ins_lastread;
 			flg |= IS_READY;
 		}
 	}
@@ -887,20 +869,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		ins = xins;
 	}
 
-	if (IS_VALID_INSTRUMENT(ins)) {
-		flg |= IS_VALID;
-	}
-
 	if ((uint32)key < XMP_KEY_OFF && key > 0) {
 		key--;
 
 		if (key < XMP_MAX_KEYS) {
 			xc->key = key;
-		} else {
-			flg &= ~IS_VALID;
 		}
 
-		if (flg & IS_VALID) {
+		if (IS_VALID_INSTRUMENT(ins) && key < XMP_MAX_KEYS) {
 			struct xmp_subinstrument *sub;
 
 			sub = get_subinstrument(ctx, ins, key);

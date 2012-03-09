@@ -70,21 +70,10 @@ struct retrig_control {
 #define FADEOUT		0x02000000
 #define RELEASE		0x04000000
 
-/* Prefixes: 
- * a_ for arpeggio
- * v_ for volume slide
- * p_ for pan
- * f_ for frequency (period) slide
- * s_ for slide to note (tone portamento)
- */
-
 struct instrument_vibrato {
 	int phase;
 	int sweep;
 };
-
-
-/* MED support */
 
 struct channel_data {
 	int flags;		/* Channel flags */
@@ -95,8 +84,8 @@ struct channel_data {
 	int finetune;		/* Guess what */
 	int ins;		/* Instrument number */
 	int ins_oinsvol;	/* Last instrument that did set a note */
+	int ins_lastread;	/* Last instrument event read */
 	int smp;		/* Sample number */
-	int insdef;		/* Instrument default */
 	int pan;		/* Current pan */
 	int masterpan;		/* Master pan -- for S3M set pan effect */
 	int mastervol;		/* Master vol -- for IT track vol effect */

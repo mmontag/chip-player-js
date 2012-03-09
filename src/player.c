@@ -66,7 +66,7 @@ static inline void reset_channel(struct context_data *ctx)
 
 	for (i = p->virt.virt_channels; i--;) {
 		xc = &p->xc_data[i];
-		xc->insdef = xc->ins = xc->key = -1;
+		xc->ins_lastread = xc->ins = xc->key = -1;
 	}
 	for (i = p->virt.num_tracks; i--;) {
 		xc = &p->xc_data[i];
