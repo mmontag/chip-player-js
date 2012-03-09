@@ -14,7 +14,7 @@ TEST(test_player_read_event)
 	ctx = (struct context_data *)opaque;
 	p = &ctx->p;
 
- 	create_simple_module(ctx);
+ 	create_simple_module(ctx, 2, 2);
 	new_event(ctx, 0, 0, 0, 60, 2, 40, 0x0f, 3, 0, 0);
 	new_event(ctx, 0, 1, 0, 61, 1,  0, 0x00, 0, 0, 0);
 

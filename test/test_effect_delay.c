@@ -14,7 +14,7 @@ TEST(test_effect_delay)
 	ctx = (struct context_data *)opaque;
 	p = &ctx->p;
 
- 	create_simple_module(ctx);
+ 	create_simple_module(ctx, 2, 2);
 	new_event(ctx, 0, 0, 0, 60, 2, 40, 0x0f, 0x02, 0, 0);
 	new_event(ctx, 0, 1, 0, 61, 1,  0, 0x0e, 0xd0, 0, 0);
 	new_event(ctx, 0, 2, 0, 62, 2,  0, 0x0e, 0xd1, 0, 0);

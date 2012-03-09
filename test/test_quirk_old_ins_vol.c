@@ -14,12 +14,14 @@ TEST(test_quirk_old_ins_vol)
 	ctx = (struct context_data *)opaque;
 	p = &ctx->p;
 
- 	create_simple_module(ctx);
+ 	create_simple_module(ctx, 3, 2);
 	set_instrument_volume(ctx, 0, 0, 22);
 	set_instrument_volume(ctx, 1, 0, 33);
+	set_instrument_volume(ctx, 2, 0, 11);
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0,  0, 2,  0, 0x00, 0, 0, 0);
 	new_event(ctx, 0, 2, 0,  0, 3,  0, 0x00, 0, 0, 0);
+	new_event(ctx, 0, 3, 0,  0, 4,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRK_OINSVOL);
 
 	xmp_player_start(opaque, 0, 44100, 0);
@@ -46,7 +48,15 @@ TEST(test_quirk_old_ins_vol)
 	fail_unless(vi->pos0 !=  0, "sample reset");
 	xmp_player_frame(opaque);
 
-	/* Row 2 - play with original instrument volume, not previous ins */
+	/* Row 2 - valid ins, play with original volume, not previous */
+	xmp_player_frame(opaque);
+	fail_unless(vi->ins  ==  0, "not original instrument");
+	fail_unless(vi->note == 59, "not same note");
+	fail_unless(vi->vol  == 22 * 16, "not old volume");
+	fail_unless(vi->pos0 !=  0, "sample reset");
+	xmp_player_frame(opaque);
+
+	/* Row 3 - invalid ins, play with original volume, not previous */
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not original instrument");
 	fail_unless(vi->note == 59, "not same note");

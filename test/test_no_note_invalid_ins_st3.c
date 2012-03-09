@@ -54,7 +54,7 @@ TEST(test_no_note_invalid_ins_st3)
 	ctx = (struct context_data *)opaque;
 	p = &ctx->p;
 
- 	create_simple_module(ctx);
+ 	create_simple_module(ctx, 2, 2);
 	set_instrument_volume(ctx, 0, 0, 22);
 	set_instrument_volume(ctx, 1, 0, 33);
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);

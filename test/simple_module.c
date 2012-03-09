@@ -6,7 +6,7 @@
 void initialize_module_data(struct module_data *);
 void fix_module_instruments(struct module_data *);
 
-void create_simple_module(struct context_data *ctx)
+void create_simple_module(struct context_data *ctx, int ins, int pat)
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
@@ -17,8 +17,8 @@ void create_simple_module(struct context_data *ctx)
 	/* Create module */
 
 	mod->len = 2;
-	mod->pat = 2;
-	mod->ins = 2;
+	mod->pat = pat;
+	mod->ins = ins;
 	mod->chn = 4;
 	mod->trk = mod->pat * mod->chn;
 	mod->smp = mod->ins;
