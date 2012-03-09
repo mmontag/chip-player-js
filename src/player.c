@@ -272,7 +272,7 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	/* Process QUIRK_OINSVOL */
-	if (HAS_QUIRK(QUIRK_OINSVOL) /*&& xc->ins >= 0 && xc->key >= 0*/) {
+	if (HAS_QUIRK(QUIRK_OINSVOL)) {
 		struct xmp_subinstrument *sub;
 
 		/* Previous instrument */
@@ -293,16 +293,21 @@ static int read_event(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else {
 			/* Retrieve volume when we have note */
 
-			/* Current instrument */
-			sub = get_subinstrument(ctx, ins, key);
-			if (sub != NULL) {
-				xc->volume = sub->vol;
-			} else {
-				xc->volume = 0;
+			/* and if we have instrument, otherwise we're in
+			 * case 1: new note and no instrument
+			 */
+			if (e->ins) {
+				/* Current instrument */
+				sub = get_subinstrument(ctx, ins, key);
+				if (sub != NULL) {
+					xc->volume = sub->vol;
+				} else {
+					xc->volume = 0;
+				}
+				xc->ins_oinsvol = ins;
+				flg |= NEW_VOL;
+				flg &= ~RESET_VOL;
 			}
-			xc->ins_oinsvol = ins;
-			flg |= NEW_VOL;
-			flg &= ~RESET_VOL;
 		}
 	} else {
 		if (!key || key >= XMP_KEY_OFF) {
