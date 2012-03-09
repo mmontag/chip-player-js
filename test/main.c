@@ -32,8 +32,13 @@ void run_tests()
 	int total, fail;
 	pid_t pid;
 	int status;
+	int color = 0;
 
 	total = fail = 0;
+
+	if (isatty(STDOUT_FILENO)) {
+		color = 1;
+	}
 
 	list_for_each(tmp, &test_list) {
 		struct test *t = list_entry(tmp, struct test, list);
@@ -52,9 +57,17 @@ void run_tests()
 			if (WIFSIGNALED(status)) {
 				printf("%s: ", sys_siglist[WTERMSIG(status)]);
 			}
-			printf("**fail**\n");
+			if (color) {
+				printf("\x1b[1;31m**fail**\x1b[0m\n");
+			} else {
+				printf("**fail**\n");
+			}
 		} else {
-			printf("pass\n");
+			if (color) {
+				printf("\x1b[1;32mpass\x1b[0m\n");
+			} else {
+				printf("pass\n");
+			}
 		}
 		total++;
 	}
