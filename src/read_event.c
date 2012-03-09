@@ -364,7 +364,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	/* Process QUIRK_OINSVOL */
+	/* FT2: Retrieve old instrument volume */
 	if (e->ins) {
 		struct xmp_subinstrument *sub;
 
