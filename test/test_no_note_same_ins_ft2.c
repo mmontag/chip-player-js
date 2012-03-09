@@ -23,6 +23,7 @@ Play    = Play new note with new default volume
 Switch  = Play new note with current volume
 NewVol  = Don't play sample, set new default volume
 OldVol  = Don't play sample, set old default volume
+Cont    = Continue playing sample
 Cut     = Stop playing sample
 
   * Protracker 1.3/2.3 switches to new sample in the line after the new
