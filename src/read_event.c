@@ -39,11 +39,11 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flg;
+	int note, key, flags;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
-	flg = 0;
+	flags = 0;
 	note = -1;
 	key = e->note;
 	cont_sample = 0;
@@ -52,7 +52,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flg = NEW_INS | RESET_VOL | RESET_ENV;
+		flags = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
@@ -70,16 +70,16 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Check note */
 
 	if (key) {
-		flg |= NEW_NOTE;
+		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			virtch_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
@@ -87,7 +87,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			/* When a toneporta is issued after a keyoff event,
 			 * retrigger the instrument (xr-nc.xm, bug #586377)
 			 *
-			 *   flg |= NEW_INS;
+			 *   flags |= NEW_INS;
 			 *   xc->ins = ins;
 			 *
 			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
@@ -137,7 +137,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				xc->smp = smp;
 			}
 		} else {
-			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
+			flags = 0;
 		}
 	}
 
@@ -145,7 +145,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
-	xc->flags = flg | (xc->flags & 0xff000000); /* keep persistent flags */
+	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
@@ -251,11 +251,11 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flg;
+	int note, key, flags;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 
-	flg = 0;
+	flags = 0;
 	note = -1;
 	key = e->note;
 	cont_sample = 0;
@@ -264,7 +264,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flg = NEW_INS | RESET_VOL | RESET_ENV;
+		flags = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
@@ -274,7 +274,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* FT2 doesn't cut on invalid instruments (it keeps
 			 * playing the previous one)
 			 */
-			flg = 0;
+			flags = 0;
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
@@ -283,16 +283,16 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Check note */
 
 	if (key) {
-		flg |= NEW_NOTE;
+		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			virtch_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
@@ -300,7 +300,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* When a toneporta is issued after a keyoff event,
 			 * retrigger the instrument (xr-nc.xm, bug #586377)
 			 *
-			 *   flg |= NEW_INS;
+			 *   flags |= NEW_INS;
 			 *   xc->ins = ins;
 			 *
 			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
@@ -331,8 +331,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* No note */
 			if (sub != NULL) {
 				xc->volume = sub->vol;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
+				flags |= NEW_VOL;
+				flags &= ~RESET_VOL;
 			}
 		} else {
 			/* Retrieve volume when we have note */
@@ -349,8 +349,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 					xc->volume = 0;
 				}
 				xc->ins_oinsvol = xc->ins;
-				flg |= NEW_VOL;
-				flg &= ~RESET_VOL;
+				flags |= NEW_VOL;
+				flags &= ~RESET_VOL;
 			}
 		}
 	}
@@ -385,7 +385,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 				xc->smp = smp;
 			}
 		} else {
-			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
+			flags = 0;
 		}
 	}
 
@@ -393,7 +393,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
-	xc->flags = flg | (xc->flags & 0xff000000); /* keep persistent flags */
+	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
@@ -498,12 +498,12 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flg;
+	int note, key, flags;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 
-	flg = 0;
+	flags = 0;
 	note = -1;
 	key = e->note;
 	cont_sample = 0;
@@ -513,7 +513,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flg = NEW_INS | RESET_VOL | RESET_ENV;
+		flags = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
@@ -527,7 +527,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			/* invalid ins */
 
 			/* Ignore invalid instruments */
-			flg = 0;
+			flags = 0;
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
@@ -536,16 +536,16 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Check note */
 
 	if (key) {
-		flg |= NEW_NOTE;
+		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			virtch_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
@@ -554,7 +554,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
 			if (not_same_ins) {
-				flg |= NEW_INS;
+				flags |= NEW_INS;
 			} else {
 				cont_sample = 1;
 				key = 0;
@@ -591,7 +591,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 				xc->smp = smp;
 			}
 		} else {
-			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
+			flags = 0;
 		}
 	}
 
@@ -599,7 +599,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
-	xc->flags = flg | (xc->flags & 0xff000000); /* keep persistent flags */
+	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
@@ -705,7 +705,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flg;
+	int note, key, flags;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
@@ -716,7 +716,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		xc->delayed_ins = 0;
 	}
 
-	flg = 0;
+	flags = 0;
 	note = -1;
 	key = e->note;
 	cont_sample = 0;
@@ -726,7 +726,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flg = NEW_INS | RESET_VOL | RESET_ENV;
+		flags = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
@@ -736,7 +736,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			if (!key) {
 				/* IT: Reset note for every new != ins */
 				if (xc->ins == ins) {
-					flg = NEW_INS | RESET_VOL;
+					flags = NEW_INS | RESET_VOL;
 				} else {
 					key = xc->key + 1;
 				}
@@ -750,7 +750,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 			/* Ignore invalid instruments */
 			ins = -1;
-			flg = 0;
+			flags = 0;
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
@@ -759,16 +759,16 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	/* Check note */
 
 	if (key) {
-		flg |= NEW_NOTE;
+		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			virtch_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flg &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
@@ -777,7 +777,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
 			if (not_same_ins) {
-				flg |= NEW_INS;
+				flags |= NEW_INS;
 			} else {
 				cont_sample = 1;
 				key = 0;
@@ -815,7 +815,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				xc->smp = smp;
 			}
 		} else {
-			flg &= ~(RESET_VOL | RESET_ENV | NEW_INS | NEW_NOTE);
+			flags = 0;
 		}
 	}
 
@@ -823,7 +823,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
-	xc->flags = flg | (xc->flags & 0xff000000); /* keep persistent flags */
+	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
