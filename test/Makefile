@@ -39,7 +39,7 @@ TESTS		= $(DEPACK_TESTS) \
 		  $(CASE1_TESTS) \
 		  $(CASE2_TESTS) \
 		  $(CASE3_TESTS) \
-		  $(EFFECTS_TESTS) \
+		  $(EFFECT_TESTS) \
 		  $(API_TESTS)
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
