@@ -240,12 +240,19 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	int note, key, flags;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
-	int new_invalid_ins = 0;
+	int new_invalid_ins;
+	int is_toneporta;
 
 	flags = 0;
 	note = -1;
 	key = e->note;
 	cont_sample = 0;
+	new_invalid_ins = 0;
+	is_toneporta = 0;
+
+	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
+		is_toneporta = 1;
+	}
 
 	/* Check instrument */
 
@@ -265,6 +272,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * If a note is set it cuts the current sample.
 			 */
 			flags = 0;
+
+			if (is_toneporta) {
+				key = 0;
+			}
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
@@ -283,7 +294,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
+		} else if (is_toneporta) {
 
 			/* When a toneporta is issued after a keyoff event,
 			 * retrigger the instrument (xr-nc.xm, bug #586377)
