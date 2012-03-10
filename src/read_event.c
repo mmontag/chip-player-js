@@ -182,11 +182,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
-	if (!IS_VALID_INSTRUMENT(xc->ins)) {
-		xc->volume = 0;
-		return 0;
-	}
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -406,11 +401,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
-	if (!IS_VALID_INSTRUMENT(xc->ins)) {
-		xc->volume = 0;
-		return 0;
-	}
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -588,11 +578,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
-	if (!IS_VALID_INSTRUMENT(xc->ins)) {
-		xc->volume = 0;
-		return 0;
-	}
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -691,10 +676,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				xc->ins = ins;
 			}
 		} else {
-			/* invalid ins */
-
 			/* Ignore invalid instruments */
-			ins = -1;
 			flags = 0;
 		}
 
@@ -787,11 +769,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
-
-	if (!IS_VALID_INSTRUMENT(xc->ins)) {
-		xc->volume = 0;
-		return 0;
-	}
 
 	if (sub == NULL) {
 		return 0;
