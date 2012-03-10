@@ -56,7 +56,7 @@ TEST(test_porta_same_ins_st3)
 
 	xmp_player_frame(opaque);
 
-	/* Row 1: valid instrument with tone portamento (ST3)
+	/* Row 1: same instrument with tone portamento (ST3)
 	 *
 	 * When the same instrument as the current instrument is played
 	 * with tone portamento, ST3 keeps playing the current sample but

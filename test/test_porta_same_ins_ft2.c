@@ -56,7 +56,7 @@ TEST(test_porta_same_ins_ft2)
 
 	xmp_player_frame(opaque);
 
-	/* Row 1: valid instrument with tone portamento (FT2)
+	/* Row 1: same instrument with tone portamento (FT2)
 	 *
 	 * When the same instrument as the current instrument is played
 	 * with tone portamento, FT2 keeps playing the current sample but

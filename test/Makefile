@@ -16,7 +16,8 @@ CASE2_TESTS	= $(addprefix no_note_same_ins_,$(REPLAYERS)) \
 		  $(addprefix no_note_invalid_ins_,$(REPLAYERS))
 
 CASE3_TESTS	= $(addprefix porta_same_ins_,$(REPLAYERS)) \
-		  $(addprefix porta_valid_ins_,$(REPLAYERS))
+		  $(addprefix porta_valid_ins_,$(REPLAYERS)) \
+		  $(addprefix porta_invalid_ins_,$(REPLAYERS))
 
 QUIRK_TESTS	= $(addprefix quirk_,$(QUIRKS)) \
 		  $(addprefix no_quirk_,$(QUIRKS))

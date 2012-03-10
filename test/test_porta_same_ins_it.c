@@ -56,7 +56,7 @@ TEST(test_porta_same_ins_it)
 
 	xmp_player_frame(opaque);
 
-	/* Row 1: valid instrument with tone portamento (IT)
+	/* Row 1: same instrument with tone portamento (IT)
 	 *
 	 * When the same instrument as the current instrument is played
 	 * with tone portamento, IT keeps playing the current sample but
