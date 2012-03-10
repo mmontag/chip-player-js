@@ -619,6 +619,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
+	int new_invalid_ins;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
 	if (e->note && !e->ins && xc->delayed_ins) {
@@ -631,6 +632,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	key = e->note;
 	cont_sample = 0;
 	not_same_ins = 0;
+	new_invalid_ins = 0;
 
 	/* Check instrument */
 
@@ -657,6 +659,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			}
 		} else {
 			/* Ignore invalid instruments */
+			new_invalid_ins = 1;
 			flags = 0;
 		}
 
@@ -665,7 +668,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	/* Check note */
 
-	if (key) {
+	if (key && !new_invalid_ins) {
 		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_FADE) {
@@ -692,7 +695,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		}
 	}
 
-	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
 		xc->key = --key;
 
 		sub = get_subinstrument(ctx, xc->ins, key);
