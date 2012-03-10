@@ -54,7 +54,6 @@ struct retrig_control {
 #define TRK_FVSLIDE	0x00001000
 #define RESET_VOL	0x00002000
 #define RESET_ENV	0x00004000
-#define IS_VALID	0x00008000
 #define NEW_INS		0x00010000
 #define NEW_VOL		0x00020000
 #define VOL_SLIDE_2	0x00080000
@@ -66,6 +65,8 @@ struct retrig_control {
 /* These need to be "persistent" between frames */
 #define FADEOUT		0x02000000
 #define RELEASE		0x04000000
+
+#define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0)
 
 struct instrument_vibrato {
 	int phase;

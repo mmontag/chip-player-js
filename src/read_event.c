@@ -52,8 +52,6 @@ static void set_effect_defaults(int note, struct xmp_subinstrument *sub,
 }
 
 
-#define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm)
-
 static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
 {
 	struct player_data *p = &ctx->p;
@@ -172,12 +170,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
-
-	if (IS_VALID_INSTRUMENT(xc->ins)) {
-		SET(IS_VALID);
-	} else {
-		RESET(IS_VALID);
-	}
 
 	/* Process new volume */
 	if (e->vol) {
@@ -404,12 +396,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if (IS_VALID_INSTRUMENT(xc->ins)) {
-		SET(IS_VALID);
-	} else {
-		RESET(IS_VALID);
-	}
-
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
@@ -593,12 +579,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if (IS_VALID_INSTRUMENT(xc->ins)) {
-		SET(IS_VALID);
-	} else {
-		RESET(IS_VALID);
-	}
-
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
@@ -613,7 +593,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
-	if (!TEST(IS_VALID)) {
+	if (!IS_VALID_INSTRUMENT(xc->ins)) {
 		xc->volume = 0;
 		return 0;
 	}
@@ -800,12 +780,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	reset_stepper(&xc->arpeggio);
 	xc->tremor.val = 0;
 
-	if (IS_VALID_INSTRUMENT(xc->ins)) {
-		SET(IS_VALID);
-	} else {
-		RESET(IS_VALID);
-	}
-
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
@@ -819,7 +793,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
-	if (!TEST(IS_VALID)) {
+	if (!IS_VALID_INSTRUMENT(xc->ins)) {
 		xc->volume = 0;
 		return 0;
 	}

@@ -506,6 +506,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
 	int act;
 
@@ -522,7 +523,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 
 	if (!t && act != VIRTCH_ACTIVE) {
-		if (!TEST(IS_VALID) || act == VIRTCH_ACTION_CUT) {
+		if (!IS_VALID_INSTRUMENT(xc->ins) || act == VIRTCH_ACTION_CUT) {
 			virtch_resetchannel(ctx, chn);
 			return;
 		}
@@ -530,10 +531,10 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		reset_stepper(&xc->arpeggio);
 
 		/* keep persistent flags */
-		xc->flags &= (0xff000000 | IS_VALID);
+		xc->flags &= 0xff000000;
 	}
 
-	if (!TEST(IS_VALID))
+	if (!IS_VALID_INSTRUMENT(xc->ins))
 		return;
 
 	/* Process MED synth instruments */

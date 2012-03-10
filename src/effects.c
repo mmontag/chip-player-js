@@ -45,6 +45,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
 	int h, l;
 
@@ -134,7 +135,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_TONEPORTA:	/* Tone portamento */
-		if (!TEST(IS_VALID))
+		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 		DO_TONEPORTA();
 		if (fxp) {
@@ -157,7 +158,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			RESET_PER(PITCHBEND);
 		break;
 	case FX_PER_TPORTA:	/* Persistent tone portamento */
-		if (!TEST(IS_VALID))
+		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 		SET_PER(TONEPORTA);
 		DO_TONEPORTA();
@@ -207,7 +208,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */
-		if (!TEST(IS_VALID))
+		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 		DO_TONEPORTA();
 		SET(TONEPORTA);
