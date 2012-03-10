@@ -60,12 +60,12 @@ TEST(test_porta_same_ins_it)
 	 *
 	 * When the same instrument as the current instrument is played
 	 * with tone portamento, IT keeps playing the current sample but
-	 * sets the volume to the new instrument's default volume.
+	 * sets the volume to the instrument's default volume.
 	 */
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->note == 59, "not same note");
-	fail_unless(vi->vol  == 33 * 16, "not new volume");
+	fail_unless(vi->vol  == 22 * 16, "not new volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 }
 END_TEST

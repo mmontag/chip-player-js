@@ -64,7 +64,7 @@ TEST(test_porta_same_ins_mod)
 	xmp_player_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->note == 59, "not same note");
-	fail_unless(vi->vol  == 33 * 16, "not new volume");
+	fail_unless(vi->vol  == 22 * 16, "not instrument volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 }
 END_TEST

@@ -117,7 +117,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
+		}else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
 			   || e->fxt == FX_TONE_VSLIDE
 			   || e->f2t == FX_TONE_VSLIDE) {
 
@@ -131,7 +131,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			 * We don't retrigger the sample, it simply continues.
 			 * This is important to play sweeps and loops correctly.
 			 */
-			cont_sample = 1;
+			//cont_sample = 1;
 
 			/* set key to 0 so we can have the tone portamento from
 			 * the original note (see funky_stars.xm pos 5 ch 9)
