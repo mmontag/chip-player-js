@@ -69,6 +69,8 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 }
 
 
+#define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE)
+
 static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
 {
 	struct player_data *p = &ctx->p;
@@ -117,9 +119,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-		}else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
-			   || e->fxt == FX_TONE_VSLIDE
-			   || e->f2t == FX_TONE_VSLIDE) {
+		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 
 			/* When a toneporta is issued after a keyoff event,
 			 * retrigger the instrument (xr-nc.xm, bug #586377)
@@ -287,9 +287,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
-			   || e->fxt == FX_TONE_VSLIDE
-			   || e->f2t == FX_TONE_VSLIDE) {
+		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 
 			/* When a toneporta is issued after a keyoff event,
 			 * retrigger the instrument (xr-nc.xm, bug #586377)
@@ -457,12 +455,18 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
+	int is_toneporta;
 
 	flags = 0;
 	note = -1;
 	key = e->note;
 	cont_sample = 0;
 	not_same_ins = 0;
+	is_toneporta = 0;
+
+	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
+		is_toneporta = 1;
+	}
 
 	/* Check instrument */
 
@@ -477,7 +481,16 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			/* valid ins */
 			if (xc->ins != ins) {
 				not_same_ins = 1;
-				xc->ins = ins;
+				if (!is_toneporta) {
+					xc->ins = ins;
+				} else {
+					/* Get new instrument volume */
+					sub = get_subinstrument(ctx, ins, key);
+					if (sub != NULL) {
+						xc->volume = sub->vol;
+						flags &= ~RESET_VOL;
+					}
+				}
 			}
 		} else {
 			/* invalid ins */
@@ -502,20 +515,17 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
-			   || e->fxt == FX_TONE_VSLIDE
-			   || e->f2t == FX_TONE_VSLIDE) {
+		} else if (is_toneporta) {
 
 			/* Always retrig in tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
 			if (not_same_ins) {
-				flags |= NEW_INS;
 				xc->offset_val = 0;
 			} else {
 				cont_sample = 1;
-				key = 0;
 			}
+			key = 0;
 		}
 	}
 
@@ -620,6 +630,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int new_invalid_ins;
+	int is_toneporta;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
 	if (e->note && !e->ins && xc->delayed_ins) {
@@ -633,6 +644,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	cont_sample = 0;
 	not_same_ins = 0;
 	new_invalid_ins = 0;
+	is_toneporta = 0;
+
+	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
+		is_toneporta = 1;
+	}
 
 	/* Check instrument */
 
@@ -655,7 +671,16 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			}
 			if (xc->ins != ins) {
 				not_same_ins = 1;
-				xc->ins = ins;
+				if (!is_toneporta) {
+					xc->ins = ins;
+				} else {
+					/* Get new instrument volume */
+					sub = get_subinstrument(ctx, ins, key);
+					if (sub != NULL) {
+						xc->volume = sub->vol;
+						flags &= ~RESET_VOL;
+					}
+				}
 			}
 		} else {
 			/* Ignore invalid instruments */
@@ -679,9 +704,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-		} else if (e->fxt == FX_TONEPORTA || e->f2t == FX_TONEPORTA
-			   || e->fxt == FX_TONE_VSLIDE
-			   || e->f2t == FX_TONE_VSLIDE) {
+		} else if (is_toneporta) {
 
 			/* Always retrig on tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
@@ -690,8 +713,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				flags |= NEW_INS;
 			} else {
 				cont_sample = 1;
-				key = 0;
 			}
+			key = 0;
 		}
 	}
 
