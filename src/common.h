@@ -63,13 +63,6 @@ typedef signed long long int64;
 #define DEFAULT_AMPLIFY	1
 #define DEFAULT_MIX	70
 
-/* Global flags */
-#define PATTERN_BREAK	0x0001 
-#define PATTERN_LOOP	0x0002 
-#define MODULE_ABORT	0x0004 
-#define GLOBAL_VSLIDE	0x0010
-#define ROW_MAX		0x0100
-
 #define MSN(x)		(((x)&0xf0)>>4)
 #define LSN(x)		((x)&0x0f)
 #define SET_FLAG(a,b)	((a)|=(b))

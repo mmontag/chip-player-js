@@ -26,12 +26,6 @@
 #define RESET_PER(f)	RESET_FLAG(xc->per_flags,f)
 #define TEST_PER(f)	TEST_FLAG(xc->per_flags,f)
 
-/* Global flags */
-#define PATTERN_BREAK	0x0001 
-#define PATTERN_LOOP	0x0002 
-#define MODULE_ABORT	0x0004 
-#define MODULE_RESTART	0x0008 
-
 #define DOENV_RELEASE	((TEST (RELEASE) || act == VIRTCH_ACTION_OFF))
 
 struct retrig_control {
@@ -49,18 +43,18 @@ struct retrig_control {
 #define TREMOLO		0x00000020
 #define FINE_VOLS	0x00000040
 #define FINE_BEND	0x00000080
-#define OFFSET		0x00000400
-#define TRK_VSLIDE	0x00000800
-#define TRK_FVSLIDE	0x00001000
-#define RESET_VOL	0x00002000
-#define RESET_ENV	0x00004000
-#define NEW_INS		0x00010000
-#define NEW_VOL		0x00020000
-#define VOL_SLIDE_2	0x00080000
-#define NOTE_SLIDE	0x00100000
-#define FINE_NSLIDE	0x00200000
-#define NEW_NOTE	0x00400000
-#define FINE_TPORTA	0x00800000
+#define OFFSET		0x00000100
+#define TRK_VSLIDE	0x00000200
+#define TRK_FVSLIDE	0x00000400
+#define RESET_VOL	0x00000800
+#define RESET_ENV	0x00001000
+#define NEW_INS		0x00002000
+#define NEW_VOL		0x00004000
+#define VOL_SLIDE_2	0x00008000
+#define NOTE_SLIDE	0x00010000
+#define FINE_NSLIDE	0x00020000
+#define NEW_NOTE	0x00040000
+#define FINE_TPORTA	0x00080000
 
 /* These need to be "persistent" between frames */
 #define FADEOUT		0x02000000
