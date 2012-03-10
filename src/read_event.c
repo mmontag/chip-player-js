@@ -71,8 +71,10 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE)
 
+#define set_patch(ctx,chn,ins,smp,note,cont_sample) \
+	virtch_setpatch(ctx,chn,ins,smp,note,XMP_INST_NNA_CUT,XMP_INST_DCT_OFF,XMP_INST_DCA_CUT,1,cont_sample)
 
-static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
+static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -162,17 +164,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				int to = virtch_setpatch(ctx, chn, xc->ins,
-					smp, note, sub->nna, sub->dct,
-					sub->dca, ctl, cont_sample);
-
-				if (to < 0) {
-					return -1;
-				}
-printf("to=%d from=%d\n", to, chn);
-
-				copy_channel(p, to, chn);
-
+				set_patch(ctx, chn, xc->ins, smp, note,
+							cont_sample);
 				xc->smp = smp;
 			}
 		} else {
@@ -233,7 +226,7 @@ printf("to=%d from=%d\n", to, chn);
 	return 0;
 }
 
-static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
+static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -377,16 +370,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				int to = virtch_setpatch(ctx, chn, xc->ins,
-					smp, note, sub->nna, sub->dct,
-					sub->dca, ctl, cont_sample);
-
-				if (to < 0) {
-					return -1;
-				}
-
-				copy_channel(p, to, chn);
-
+				set_patch(ctx, chn, xc->ins, smp, note,
+							cont_sample);
 				xc->smp = smp;
 			}
 		} else {
@@ -450,7 +435,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	return 0;
 }
 
-static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
+static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -551,15 +536,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				int to = virtch_setpatch(ctx, chn, xc->ins,
-					smp, note, sub->nna, sub->dct,
-					sub->dca, ctl, cont_sample);
-
-				if (to < 0) {
-					return -1;
-				}
-
-				copy_channel(p, to, chn);
+				set_patch(ctx, chn, xc->ins, smp, note,
+							cont_sample);
 				xc->smp = smp;
 			}
 		} else {
@@ -827,14 +805,14 @@ int read_event(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
 
 	switch (m->read_event_type) {
 	case READ_EVENT_MOD:
-		return read_event_mod(ctx, e, chn, ctl);
+		return read_event_mod(ctx, e, chn);
 	case READ_EVENT_FT2:
-		return read_event_ft2(ctx, e, chn, ctl);
+		return read_event_ft2(ctx, e, chn);
 	case READ_EVENT_ST3:
-		return read_event_st3(ctx, e, chn, ctl);
+		return read_event_st3(ctx, e, chn);
 	case READ_EVENT_IT:
 		return read_event_it(ctx, e, chn, ctl);
 	default:
-		return read_event_mod(ctx, e, chn, ctl);
+		return read_event_mod(ctx, e, chn);
 	}
 }
