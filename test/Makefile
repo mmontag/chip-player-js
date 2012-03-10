@@ -1,19 +1,22 @@
 
-MAIN_QUIRKS	= mod ft2 st3 it
+REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
 DEPACKERS	= pp sqsh s404 mmcmp
 CONVERTERS	= delta signal endian
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
 
-CASE1_TESTS	= $(addprefix new_note_no_ins_,$(MAIN_QUIRKS)) \
-		  $(addprefix new_note_same_ins_,$(MAIN_QUIRKS)) \
-		  $(addprefix new_note_valid_ins_,$(MAIN_QUIRKS)) \
-		  $(addprefix new_note_invalid_ins_,$(MAIN_QUIRKS))
+CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
+		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
+		  $(addprefix new_note_valid_ins_,$(REPLAYERS)) \
+		  $(addprefix new_note_invalid_ins_,$(REPLAYERS))
 
-CASE2_TESTS	= $(addprefix no_note_same_ins_,$(MAIN_QUIRKS)) \
-		  $(addprefix no_note_valid_ins_,$(MAIN_QUIRKS)) \
-		  $(addprefix no_note_invalid_ins_,$(MAIN_QUIRKS))
+CASE2_TESTS	= $(addprefix no_note_same_ins_,$(REPLAYERS)) \
+		  $(addprefix no_note_valid_ins_,$(REPLAYERS)) \
+		  $(addprefix no_note_invalid_ins_,$(REPLAYERS))
+
+CASE3_TESTS	= $(addprefix porta_same_ins_,$(REPLAYERS)) \
+		  $(addprefix porta_valid_ins_,$(REPLAYERS))
 
 QUIRK_TESTS	= $(addprefix quirk_,$(QUIRKS)) \
 		  $(addprefix no_quirk_,$(QUIRKS))
@@ -33,6 +36,7 @@ TESTS		= $(DEPACK_TESTS) \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \
 		  $(CASE2_TESTS) \
+		  $(CASE3_TESTS) \
 		  $(EFFECTS_TESTS) \
 		  $(API_TESTS)
 
