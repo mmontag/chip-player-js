@@ -71,6 +71,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE)
 
+
 static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
 {
 	struct player_data *p = &ctx->p;
@@ -168,6 +169,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				if (to < 0) {
 					return -1;
 				}
+printf("to=%d from=%d\n", to, chn);
 
 				copy_channel(p, to, chn);
 
@@ -635,6 +637,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	int not_same_ins;
 	int new_invalid_ins;
 	int is_toneporta;
+	int candidate_ins;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
 	if (e->note && !e->ins && xc->delayed_ins) {
@@ -649,6 +652,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	not_same_ins = 0;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
+	candidate_ins = xc->ins;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 		is_toneporta = 1;
@@ -676,7 +680,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			if (xc->ins != ins) {
 				not_same_ins = 1;
 				if (!is_toneporta) {
-					xc->ins = ins;
+					candidate_ins = ins;
 				} else {
 					/* Get new instrument volume */
 					sub = get_subinstrument(ctx, ins, key);
@@ -725,10 +729,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
 		xc->key = --key;
 
-		sub = get_subinstrument(ctx, xc->ins, key);
+		sub = get_subinstrument(ctx, candidate_ins, key);
 
 		if (sub != NULL) {
-			int transp = mod->xxi[xc->ins].map[key].xpo;
+			int transp = mod->xxi[candidate_ins].map[key].xpo;
 			int smp;
 
 			note = key + sub->xpo + transp;
@@ -739,7 +743,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				int to = virtch_setpatch(ctx, chn, xc->ins,
+				int to = virtch_setpatch(ctx, chn, candidate_ins,
 					smp, note, sub->nna, sub->dct,
 					sub->dca, ctl, cont_sample);
 
@@ -754,6 +758,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else {
 			flags = 0;
 		}
+	}
+
+	if (IS_VALID_INSTRUMENT(candidate_ins)) {
+		xc->ins = candidate_ins;
 	}
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
