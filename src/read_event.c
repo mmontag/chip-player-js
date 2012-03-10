@@ -36,6 +36,7 @@ static void set_effect_defaults(int note, struct xmp_subinstrument *sub,
 	if (sub != NULL && note >= 0) {
 		xc->pan = sub->pan;
 		xc->finetune = sub->fin;
+		xc->gvl = sub->gvl;
 
 		if (sub->ifc & 0x80) {
 			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
@@ -48,6 +49,16 @@ static void set_effect_defaults(int note, struct xmp_subinstrument *sub,
 		} else {
 			xc->filter.resonance = 0;
 		}
+
+		set_lfo_depth(&xc->insvib.lfo, sub->vde);
+		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
+		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
+		xc->insvib.sweep = sub->vsw;
+
+		xc->v_idx = xc->p_idx = xc->f_idx = 0;
+
+		set_lfo_phase(&xc->vibrato, 0);
+		set_lfo_phase(&xc->tremolo, 0);
 	}
 }
 
@@ -199,18 +210,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
-
-		xc->gvl = sub->gvl;
-
-		set_lfo_depth(&xc->insvib.lfo, sub->vde);
-		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
-		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
-		xc->insvib.sweep = sub->vsw;
-
-		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		set_lfo_phase(&xc->vibrato, 0);
-		set_lfo_phase(&xc->tremolo, 0);
 	}
 
 	if (xc->key < 0) {
@@ -418,18 +417,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
-
-		xc->gvl = sub->gvl;
-
-		set_lfo_depth(&xc->insvib.lfo, sub->vde);
-		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
-		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
-		xc->insvib.sweep = sub->vsw;
-
-		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		set_lfo_phase(&xc->vibrato, 0);
-		set_lfo_phase(&xc->tremolo, 0);
 	}
 
 	if (xc->key < 0) {
@@ -595,18 +582,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
-
-		xc->gvl = sub->gvl;
-
-		set_lfo_depth(&xc->insvib.lfo, sub->vde);
-		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
-		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
-		xc->insvib.sweep = sub->vsw;
-
-		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		set_lfo_phase(&xc->vibrato, 0);
-		set_lfo_phase(&xc->tremolo, 0);
 	}
 
 	if (xc->key < 0) {
@@ -787,18 +762,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
-
-		xc->gvl = sub->gvl;
-
-		set_lfo_depth(&xc->insvib.lfo, sub->vde);
-		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
-		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
-		xc->insvib.sweep = sub->vsw;
-
-		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		set_lfo_phase(&xc->vibrato, 0);
-		set_lfo_phase(&xc->tremolo, 0);
 	}
 
 	if (xc->key < 0) {
