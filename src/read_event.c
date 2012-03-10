@@ -78,6 +78,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	int note, key, flags;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
+	int new_invalid_ins = 0;
 
 	flags = 0;
 	note = -1;
@@ -94,10 +95,9 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->offset_val = 0;
 
 		if (IS_VALID_INSTRUMENT(ins)) {
-			/* valid ins */
 			xc->ins = ins;
 		} else {
-			/* invalid ins */
+			new_invalid_ins = 1;
 			virtch_resetchannel(ctx, chn);
 		}
 
@@ -149,7 +149,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
-		if (sub != NULL) {
+		if (!new_invalid_ins && sub != NULL) {
 			int transp = mod->xxi[xc->ins].map[key].xpo;
 			int smp;
 
@@ -244,6 +244,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	int note, key, flags;
 	int cont_sample;
 	struct xmp_subinstrument *sub;
+	int new_invalid_ins = 0;
 
 	flags = 0;
 	note = -1;
@@ -261,8 +262,11 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		if (IS_VALID_INSTRUMENT(ins)) {
 			xc->ins = ins;
 		} else {
-			/* FT2 doesn't cut on invalid instruments (it keeps
-			 * playing the previous one)
+			new_invalid_ins = 1;
+
+			/* If no note is set FT2 doesn't cut on invalid
+			 * instruments (it keeps playing the previous one).
+			 * If a note is set it cuts the current sample.
 			 */
 			flags = 0;
 		}
@@ -308,6 +312,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
 		}
+
+		if (new_invalid_ins) {
+			virtch_resetchannel(ctx, chn);
+		}
 	}
 
 	/* FT2: Retrieve old instrument volume */
@@ -350,7 +358,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
-		if (sub != NULL) {
+		if (!new_invalid_ins && sub != NULL) {
 			int transp = mod->xxi[xc->ins].map[key].xpo;
 			int smp;
 
