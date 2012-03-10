@@ -74,6 +74,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		flags = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
+		xc->offset_val = 0;
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
@@ -176,10 +177,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->volume = e->vol - 1;
 		RESET(RESET_VOL);
 		SET(NEW_VOL);
-	}
-
-	if (TEST(NEW_INS)) {
-		xc->offset_val = 0;
 	}
 
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
@@ -489,6 +486,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		flags = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
+		xc->offset_val = 0;
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
@@ -528,6 +526,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			 */
 			if (not_same_ins) {
 				flags |= NEW_INS;
+				xc->offset_val = 0;
 			} else {
 				cont_sample = 1;
 				key = 0;
@@ -584,10 +583,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->volume = e->vol - 1;
 		RESET(RESET_VOL);
 		SET(NEW_VOL);
-	}
-
-	if (TEST(NEW_INS)) {
-		xc->offset_val = 0;
 	}
 
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
