@@ -310,6 +310,8 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		}
 	}
 
+	voc = p->virt.virt_channel[chn].map;
+
 	if (voc > FREE) {
 		if (p->virt.voice_array[voc].act && p->virt.chnvoc > 1) {
 			vfree = alloc_voice(ctx, chn);
