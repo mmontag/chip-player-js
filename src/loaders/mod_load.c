@@ -358,6 +358,7 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
 	tracker = "Scream Tracker 3 MOD";
 	ptkloop = 0;
 	m->quirk &= ~QUIRK_MODRNG;
+	m->read_event_type = READ_EVENT_ST3;
     }
 
     if (mod->chn == 4 && mh.restart == 0x7f) {
