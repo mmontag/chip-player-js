@@ -38,7 +38,7 @@ inline double note_to_period(int n, int f, int type)
     double d = (double)n + (double)f / 128;
 
     return type ?
-	(120.0 - d) * 16 :			/* Linear */
+	(240.0 - d) * 16 :			/* Linear */
         13694.0 / pow(2, d / 12);		/* Amiga */
 }
 
@@ -84,8 +84,7 @@ int period_to_bend(double p, int n, int limit, int gliss, int type)
     }
 
     if (type) {
-	/* b = (100 * (((120 - n) << 4) - p)) >> 4 + f * 100 / 128; */
-	b = 100 * (8 * (((120 - n) << 4) - p)) / 128;	/* Linear */
+	b = 100 * (8 * (((240 - n) << 4) - p)) / 128;	/* Linear */
 	return gliss ? b / 100 * 100 : b;
     }
 
