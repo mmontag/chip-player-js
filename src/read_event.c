@@ -30,6 +30,27 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	return NULL;
 }
 
+static void set_effect_defaults(int note, struct xmp_subinstrument *sub,
+				struct channel_data *xc)
+{
+	if (sub != NULL && note >= 0) {
+		xc->pan = sub->pan;
+		xc->finetune = sub->fin;
+
+		if (sub->ifc & 0x80) {
+			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
+		} else {
+			xc->filter.cutoff = 0xff;
+		}
+
+		if (sub->ifr & 0x80) {
+			xc->filter.resonance = (sub->ifr - 0x80) * 2;
+		} else {
+			xc->filter.resonance = 0;
+		}
+	}
+}
+
 
 #define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm)
 
@@ -143,6 +164,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
+	set_effect_defaults(note, sub, xc);
+
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
@@ -190,13 +213,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 		RESET(OFFSET);
 
-		/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
-		if (!TEST(NEW_PAN)) {
-			xc->pan = sub->pan;
-		}
-		if (!TEST(FINETUNE)) {
-			xc->finetune = sub->fin;
-		}
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 
@@ -208,18 +224,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->insvib.sweep = sub->vsw;
 
 		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		if (sub->ifc & 0x80) {
-			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
-		} else {
-			xc->filter.cutoff = 0xff;
-		}
-
-		if (sub->ifr & 0x80) {
-			xc->filter.resonance = (sub->ifr - 0x80) * 2;
-		} else {
-			xc->filter.resonance = 0;
-		}
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
@@ -391,6 +395,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
+	set_effect_defaults(note, sub, xc);
+
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
@@ -437,13 +443,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 		RESET(OFFSET);
 
-		/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
-		if (!TEST(NEW_PAN)) {
-			xc->pan = sub->pan;
-		}
-		if (!TEST(FINETUNE)) {
-			xc->finetune = sub->fin;
-		}
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 
@@ -455,18 +454,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->insvib.sweep = sub->vsw;
 
 		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		if (sub->ifc & 0x80) {
-			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
-		} else {
-			xc->filter.cutoff = 0xff;
-		}
-
-		if (sub->ifr & 0x80) {
-			xc->filter.resonance = (sub->ifr - 0x80) * 2;
-		} else {
-			xc->filter.resonance = 0;
-		}
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
@@ -597,6 +584,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
+	set_effect_defaults(note, sub, xc);
+
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
@@ -644,13 +633,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 		RESET(OFFSET);
 
-		/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
-		if (!TEST(NEW_PAN)) {
-			xc->pan = sub->pan;
-		}
-		if (!TEST(FINETUNE)) {
-			xc->finetune = sub->fin;
-		}
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 
@@ -662,18 +644,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->insvib.sweep = sub->vsw;
 
 		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		if (sub->ifc & 0x80) {
-			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
-		} else {
-			xc->filter.cutoff = 0xff;
-		}
-
-		if (sub->ifr & 0x80) {
-			xc->filter.resonance = (sub->ifr - 0x80) * 2;
-		} else {
-			xc->filter.resonance = 0;
-		}
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
@@ -821,6 +791,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
+	set_effect_defaults(note, sub, xc);
+	
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
@@ -867,13 +839,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		}
 		RESET(OFFSET);
 
-		/* Fixed by Frederic Bujon <lvdl@bigfoot.com> */
-		if (!TEST(NEW_PAN)) {
-			xc->pan = sub->pan;
-		}
-		if (!TEST(FINETUNE)) {
-			xc->finetune = sub->fin;
-		}
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 
@@ -885,18 +850,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		xc->insvib.sweep = sub->vsw;
 
 		xc->v_idx = xc->p_idx = xc->f_idx = 0;
-
-		if (sub->ifc & 0x80) {
-			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
-		} else {
-			xc->filter.cutoff = 0xff;
-		}
-
-		if (sub->ifr & 0x80) {
-			xc->filter.resonance = (sub->ifr - 0x80) * 2;
-		} else {
-			xc->filter.resonance = 0;
-		}
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);

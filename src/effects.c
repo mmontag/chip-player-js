@@ -222,7 +222,6 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 
 	case FX_SETPAN:		/* Set pan */
-		SET(NEW_PAN);
 		xc->pan = fxp;
 		break;
 	case FX_OFFSET:		/* Set sample offset */
@@ -558,7 +557,6 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_FINETUNE:
 	      fx_finetune:
-		SET(FINETUNE);
 		xc->finetune = (int16) (fxp - 0x80);
 		break;
 	case FX_IT_INSTFUNC:
