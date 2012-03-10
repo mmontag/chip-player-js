@@ -30,9 +30,12 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	return NULL;
 }
 
-static void set_effect_defaults(int note, struct xmp_subinstrument *sub,
+static void set_effect_defaults(struct context_data *ctx, int note,
+				struct xmp_subinstrument *sub,
 				struct channel_data *xc)
 {
+	struct module_data *m = &ctx->m;
+
 	if (sub != NULL && note >= 0) {
 		xc->pan = sub->pan;
 		xc->finetune = sub->fin;
@@ -59,6 +62,9 @@ static void set_effect_defaults(int note, struct xmp_subinstrument *sub,
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
+
+		xc->freq.s_end = xc->period = note_to_period(note,
+				xc->finetune, HAS_QUIRK(QUIRK_LINEAR));
 	}
 }
 
@@ -174,7 +180,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc);
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
@@ -207,9 +213,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		}
 		RESET(OFFSET);
-
-		xc->freq.s_end = xc->period = note_to_period(note,
-				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 	}
 
 	if (xc->key < 0) {
@@ -378,7 +381,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc);
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
@@ -414,9 +417,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		}
 		RESET(OFFSET);
-
-		xc->freq.s_end = xc->period = note_to_period(note,
-				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 	}
 
 	if (xc->key < 0) {
@@ -546,7 +546,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc);
 
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
@@ -579,9 +579,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		}
 		RESET(OFFSET);
-
-		xc->freq.s_end = xc->period = note_to_period(note,
-				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 	}
 
 	if (xc->key < 0) {
@@ -723,7 +720,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc);
 	
 	/* Reset flags */
 	xc->delay = xc->retrig.delay = 0;
@@ -759,9 +756,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			}
 		}
 		RESET(OFFSET);
-
-		xc->freq.s_end = xc->period = note_to_period(note,
-				xc->finetune, HAS_QUIRK (QUIRK_LINEAR));
 	}
 
 	if (xc->key < 0) {
