@@ -102,9 +102,12 @@ void filter_setup(struct context_data *ctx, struct channel_data *xc, int cutoff)
 	float fs = (float)s->freq;
 	float fg, fb0, fb1;
 	float d2, d, e;
+	int res = (xc->filter.resonance * 192) >> 8;
+
+	/* FIXME: recalculate filter */
 
 	fc *= 3.14159265358979 * 2 / fs;
-	d2 = (float)dmpfac[xc->filter.resonance] / 0x8000;
+	d2 = (float)dmpfac[res] / 0x8000;
 	d = (1.0 - d2) * fc;
 
 	if (d > 2.0)
