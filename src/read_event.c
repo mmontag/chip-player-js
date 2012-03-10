@@ -228,10 +228,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
-	if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL)) {
-		xc->volume = xc->volume * p->gvol.volume / m->volbase;
-	}
-
 	return 0;
 }
 
@@ -438,10 +434,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
-	if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL)) {
-		xc->volume = xc->volume * p->gvol.volume / m->volbase;
-	}
-
 	return 0;
 }
 
@@ -612,6 +604,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
+	/* ST3: check QUIRK_ST3GVOL only in ST3 event reader */
 	if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL)) {
 		xc->volume = xc->volume * p->gvol.volume / m->volbase;
 	}
@@ -803,10 +796,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	if (TEST(RESET_VOL)) {
 		xc->volume = sub->vol;
 		SET(NEW_VOL);
-	}
-
-	if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL)) {
-		xc->volume = xc->volume * p->gvol.volume / m->volbase;
 	}
 
 	return 0;
