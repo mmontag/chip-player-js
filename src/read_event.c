@@ -72,7 +72,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE)
 
 #define set_patch(ctx,chn,ins,smp,note,cont_sample) \
-	virtch_setpatch(ctx,chn,ins,smp,note,XMP_INST_NNA_CUT,XMP_INST_DCT_OFF,XMP_INST_DCA_CUT,1,cont_sample)
+	virt_setpatch(ctx,chn,ins,smp,note,XMP_INST_NNA_CUT,XMP_INST_DCT_OFF,XMP_INST_DCA_CUT,1,cont_sample)
 
 static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn)
 {
@@ -103,7 +103,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			xc->ins = ins;
 		} else {
 			new_invalid_ins = 1;
-			virtch_resetchannel(ctx, chn);
+			virt_resetchannel(ctx, chn);
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
@@ -118,7 +118,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			SET(FADEOUT);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
-			virtch_resetchannel(ctx, chn);
+			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
@@ -202,7 +202,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->note = note;
 
 		if (cont_sample == 0) {
-			virtch_voicepos(ctx, chn, xc->offset_val);
+			virt_voicepos(ctx, chn, xc->offset_val);
 			if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG)) {
 				xc->offset_val <<= 1;
 			}
@@ -285,7 +285,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			SET(FADEOUT);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
-			virtch_resetchannel(ctx, chn);
+			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
@@ -314,7 +314,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 
 		if (new_invalid_ins) {
-			virtch_resetchannel(ctx, chn);
+			virt_resetchannel(ctx, chn);
 		}
 	}
 
@@ -411,7 +411,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->note = note;
 
 		if (cont_sample == 0) {
-			virtch_voicepos(ctx, chn, xc->offset_val);
+			virt_voicepos(ctx, chn, xc->offset_val);
 			if (TEST(OFFSET)) {
 				xc->offset_val <<= 1;
 			}
@@ -501,7 +501,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			SET(FADEOUT);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
-			virtch_resetchannel(ctx, chn);
+			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
@@ -574,7 +574,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->note = note;
 
 		if (cont_sample == 0) {
-			virtch_voicepos(ctx, chn, xc->offset_val);
+			virt_voicepos(ctx, chn, xc->offset_val);
 			if (TEST(OFFSET)) {
 				xc->offset_val <<= 1;
 			}
@@ -686,7 +686,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			SET(FADEOUT);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
-			virtch_resetchannel(ctx, chn);
+			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
@@ -721,7 +721,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				int to = virtch_setpatch(ctx, chn, candidate_ins,
+				int to = virt_setpatch(ctx, chn, candidate_ins,
 					smp, note, sub->nna, sub->dct,
 					sub->dca, ctl, cont_sample);
 
@@ -774,7 +774,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		xc->note = note;
 
 		if (cont_sample == 0) {
-			virtch_voicepos(ctx, chn, xc->offset_val);
+			virt_voicepos(ctx, chn, xc->offset_val);
 			if (TEST(OFFSET)) {
 				xc->offset_val <<= 1;
 			}

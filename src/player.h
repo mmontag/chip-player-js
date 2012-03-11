@@ -26,7 +26,7 @@
 #define RESET_PER(f)	RESET_FLAG(xc->per_flags,f)
 #define TEST_PER(f)	TEST_FLAG(xc->per_flags,f)
 
-#define DOENV_RELEASE	((TEST (RELEASE) || act == VIRTCH_ACTION_OFF))
+#define DOENV_RELEASE	((TEST (RELEASE) || act == VIRT_ACTION_OFF))
 
 struct retrig_control {
 	int s;

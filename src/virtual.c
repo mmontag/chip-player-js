@@ -14,7 +14,7 @@
 #define	FREE	-1
 #define MAX_VOICES_CHANNEL 16
 
-void virtch_resetvoice(struct context_data *ctx, int voc, int mute)
+void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
@@ -33,8 +33,8 @@ void virtch_resetvoice(struct context_data *ctx, int voc, int mute)
 	vi->chn = vi->root = FREE;
 }
 
-/* virtch_on (number of tracks) */
-int virtch_on(struct context_data *ctx, int num)
+/* virt_on (number of tracks) */
+int virt_on(struct context_data *ctx, int num)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -84,7 +84,7 @@ int virtch_on(struct context_data *ctx, int num)
 	return -1;
 }
 
-void virtch_off(struct context_data *ctx)
+void virt_off(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 
@@ -98,7 +98,7 @@ void virtch_off(struct context_data *ctx)
 	free(p->virt.virt_channel);
 }
 
-void virtch_reset(struct context_data *ctx)
+void virt_reset(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	int i;
@@ -165,7 +165,7 @@ static int alloc_voice(struct context_data *ctx, int chn)
 	return num;
 }
 
-void virtch_mute(struct context_data *ctx, int chn, int status)
+void virt_mute(struct context_data *ctx, int chn, int status)
 {
 	struct player_data *p = &ctx->p;
 
@@ -194,7 +194,7 @@ int map_virt_channel(struct player_data *p, int chn)
 	return voc;
 }
 
-void virtch_resetchannel(struct context_data *ctx, int chn)
+void virt_resetchannel(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -211,7 +211,7 @@ void virtch_resetchannel(struct context_data *ctx, int chn)
 	p->virt.voice_array[voc].chn = p->virt.voice_array[voc].root = FREE;
 }
 
-void virtch_setvol(struct context_data *ctx, int chn, int vol)
+void virt_setvol(struct context_data *ctx, int chn, int vol)
 {
 	struct player_data *p = &ctx->p;
 	int voc, root;
@@ -226,10 +226,10 @@ void virtch_setvol(struct context_data *ctx, int chn, int vol)
 	mixer_setvol(ctx, voc, vol);
 
 	if (!(vol || chn < p->virt.num_tracks))
-		virtch_resetvoice(ctx, voc, 1);
+		virt_resetvoice(ctx, voc, 1);
 }
 
-void virtch_setpan(struct context_data *ctx, int chn, int pan)
+void virt_setpan(struct context_data *ctx, int chn, int pan)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -240,7 +240,7 @@ void virtch_setpan(struct context_data *ctx, int chn, int pan)
 	mixer_setpan(ctx, voc, pan);
 }
 
-void virtch_seteffect(struct context_data *ctx, int chn, int type, int val)
+void virt_seteffect(struct context_data *ctx, int chn, int type, int val)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -251,7 +251,7 @@ void virtch_seteffect(struct context_data *ctx, int chn, int type, int val)
 	mixer_seteffect(ctx, voc, type, val);
 }
 
-void virtch_setsmp(struct context_data *ctx, int chn, int smp)
+void virt_setsmp(struct context_data *ctx, int chn, int smp)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi;
@@ -271,7 +271,7 @@ void virtch_setsmp(struct context_data *ctx, int chn, int smp)
 	mixer_voicepos(ctx, voc, pos, frac);	/* Restore old position */
 }
 
-int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp,
+int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		    int note, int nna, int dct, int dca, int flg,
 		    int cont_sample)
 {
@@ -303,7 +303,7 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 							vi->act = dca;
 						}
 					} else {
-						virtch_resetvoice(ctx, i, 1);
+						virt_resetvoice(ctx, i, 1);
 					}
 				}
 			}
@@ -338,7 +338,7 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	}
 
 	if (smp < 0) {
-		virtch_resetvoice(ctx, voc, 1);
+		virt_resetvoice(ctx, voc, 1);
 		return chn;	/* was -1 */
 	}
 
@@ -354,7 +354,7 @@ int virtch_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	return chn;
 }
 
-void virtch_setnna(struct context_data *ctx, int chn, int nna)
+void virt_setnna(struct context_data *ctx, int chn, int nna)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -365,7 +365,7 @@ void virtch_setnna(struct context_data *ctx, int chn, int nna)
 	p->virt.voice_array[voc].act = nna;
 }
 
-void virtch_setbend(struct context_data *ctx, int chn, int bend)
+void virt_setbend(struct context_data *ctx, int chn, int bend)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -376,7 +376,7 @@ void virtch_setbend(struct context_data *ctx, int chn, int bend)
 	mixer_setbend(ctx, voc, bend);
 }
 
-void virtch_voicepos(struct context_data *ctx, int chn, int pos)
+void virt_voicepos(struct context_data *ctx, int chn, int pos)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -387,7 +387,7 @@ void virtch_voicepos(struct context_data *ctx, int chn, int pos)
 	mixer_voicepos(ctx, voc, pos, 0);
 }
 
-void virtch_pastnote(struct context_data *ctx, int chn, int act)
+void virt_pastnote(struct context_data *ctx, int chn, int act)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -395,8 +395,8 @@ void virtch_pastnote(struct context_data *ctx, int chn, int act)
 	for (voc = p->virt.maxvoc; voc--;) {
 		if (p->virt.voice_array[voc].root == chn
 		    && p->virt.voice_array[voc].chn >= p->virt.num_tracks) {
-			if (act == VIRTCH_ACTION_CUT) {
-				virtch_resetvoice(ctx, voc, 1);
+			if (act == VIRT_ACTION_CUT) {
+				virt_resetvoice(ctx, voc, 1);
 			} else {
 				p->virt.voice_array[voc].act = act;
 			}
@@ -404,16 +404,16 @@ void virtch_pastnote(struct context_data *ctx, int chn, int act)
 	}
 }
 
-int virtch_cstat(struct context_data *ctx, int chn)
+int virt_cstat(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
 
 	if ((voc = map_virt_channel(p, chn)) < 0)
-		return VIRTCH_INVALID;
+		return VIRT_INVALID;
 
 	if (chn < p->virt.num_tracks)
-		return VIRTCH_ACTIVE;
+		return VIRT_ACTIVE;
 
 	return p->virt.voice_array[voc].act;
 }

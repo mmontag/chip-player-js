@@ -171,8 +171,8 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	if (TEST(RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
 		xc->fadeout = 0;
 
-	if (TEST(FADEOUT | RELEASE) || act == VIRTCH_ACTION_FADE
-	    || act == VIRTCH_ACTION_OFF) {
+	if (TEST(FADEOUT | RELEASE) || act == VIRT_ACTION_FADE
+	    || act == VIRT_ACTION_OFF) {
 		if (xc->fadeout > instrument->rls) {
 			xc->fadeout -= instrument->rls;
 		} else {
@@ -188,7 +188,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 			 * can release it.
 			 */
 			if (HAS_QUIRK(QUIRK_VIRTUAL)) {
-				virtch_resetchannel(ctx, chn);
+				virt_resetchannel(ctx, chn);
 				return;
 			} else {
 				xc->volume = 0;
@@ -198,7 +198,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
 	case -1:
-		virtch_resetchannel(ctx, chn);
+		virt_resetchannel(ctx, chn);
 		break;
 	case 0:
 		break;
@@ -253,7 +253,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	virtch_setvol(ctx, chn, finalvol);
+	virt_setvol(ctx, chn, finalvol);
 }
 
 static void process_frequency(struct context_data *ctx, int chn, int t, int act)
@@ -306,7 +306,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	xc->info_pitchbend = linear_bend;
 	xc->info_period = note_to_period_mix(xc->note, linear_bend);
 
-	virtch_setbend(ctx, chn, linear_bend);
+	virt_setbend(ctx, chn, linear_bend);
 
 	/* Process filter */
 
@@ -318,15 +318,15 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	if (cutoff < 0xff && HAS_QUIRK(QUIRK_FILTER)) {
 		filter_setup(ctx, xc, cutoff);
-		virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, xc->filter.B0);
-		virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, xc->filter.B1);
-		virtch_seteffect(ctx, chn, DSP_EFFECT_FILTER_B2, xc->filter.B2);
+		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, xc->filter.B0);
+		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, xc->filter.B1);
+		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B2, xc->filter.B2);
 	} else {
 		cutoff = 0xff;
 	}
 
-	virtch_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
-	virtch_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
+	virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
+	virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 }
 
 static void process_pan(struct context_data *ctx, int chn, int t, int act)
@@ -353,7 +353,7 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 		finalpan = (finalpan - 0x80) * s->mix / 100;
 	}
 
-	virtch_setpan(ctx, chn, finalpan);
+	virt_setpan(ctx, chn, finalpan);
 }
 
 static void update_volume(struct context_data *ctx, int chn, int t)
@@ -517,13 +517,13 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		}
 	}
 
-	act = virtch_cstat(ctx, chn);
-	if (act == VIRTCH_INVALID)
+	act = virt_cstat(ctx, chn);
+	if (act == VIRT_INVALID)
 		return;
 
-	if (!t && act != VIRTCH_ACTIVE) {
-		if (!IS_VALID_INSTRUMENT(xc->ins) || act == VIRTCH_ACTION_CUT) {
-			virtch_resetchannel(ctx, chn);
+	if (!t && act != VIRT_ACTIVE) {
+		if (!IS_VALID_INSTRUMENT(xc->ins) || act == VIRT_ACTION_CUT) {
+			virt_resetchannel(ctx, chn);
 			return;
 		}
 		xc->delay = xc->retrig.delay = 0;
@@ -544,7 +544,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		if (!--xc->retrig.count) {
 			if (xc->retrig.type < 0x10) {
 				/* don't retrig on cut */
-				virtch_voicepos(ctx, chn, 0);
+				virt_voicepos(ctx, chn, 0);
 			}
 			xc->volume += rval[xc->retrig.type].s;
 			xc->volume *= rval[xc->retrig.type].m;
@@ -730,7 +730,7 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 	f->end_point = p->scan.num;
 
-	if ((ret = virtch_on(ctx, mod->chn)) != 0)
+	if ((ret = virt_on(ctx, mod->chn)) != 0)
 		return ret;
 
 	f->jumpline = 0;
@@ -804,7 +804,7 @@ int xmp_player_frame(xmp_context opaque)
 		p->gvol.volume = m->xxo_info[p->ord].gvl;
 		p->time = m->xxo_info[p->ord].time;
 
-		virtch_reset(ctx);
+		virt_reset(ctx);
 		reset_channel(ctx);
 	} else {
 		p->frame++;
@@ -856,7 +856,7 @@ void xmp_player_end(xmp_context opaque)
 	struct module_data *m = &ctx->m;
 	struct flow_control *f = &p->flow;
 
-	virtch_off(ctx);
+	virt_off(ctx);
 	m->synth->deinit(ctx);
 
 	free(p->xc_data);
