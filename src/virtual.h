@@ -11,7 +11,7 @@
 #define VIRT_ACTIVE		0x100
 #define VIRT_INVALID		-1
 
-int	virt_on		(struct context_data *, int);
+int	virt_on			(struct context_data *, int);
 void	virt_off		(struct context_data *);
 void	virt_mute		(struct context_data *, int, int);
 int	virt_setpatch		(struct context_data *, int, int, int, int,
@@ -24,10 +24,10 @@ void	virt_setvol		(struct context_data *, int, int);
 void	virt_voicepos		(struct context_data *, int, int);
 void	virt_setbend		(struct context_data *, int, int);
 void	virt_setpan		(struct context_data *, int, int);
-void	virt_seteffect	(struct context_data *, int, int, int);
+void	virt_seteffect		(struct context_data *, int, int, int);
 int	virt_cstat		(struct context_data *, int);
 void	virt_resetchannel	(struct context_data *, int);
-void	virt_resetvoice	(struct context_data *, int, int);
+void	virt_resetvoice		(struct context_data *, int, int);
 void	virt_reset		(struct context_data *);
 
 #endif /* __XMP_VIRTUAL_H */
