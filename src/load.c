@@ -522,11 +522,13 @@ void fix_module_instruments(struct module_data *m)
 int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 	FILE *f;
 	int i, t, val;
 	struct stat st;
-	struct module_data *m = &ctx->m;
 	struct list_head tmpfiles_list;
+	int ep;
 
 	_D(_D_WARN "path = %s", path);
 
@@ -601,7 +603,8 @@ int xmp_load_module(xmp_context opaque, char *path)
 		m->mod.bpm = 125;
 	}
 
-	m->time = scan_module(ctx);
+	ep = 0;
+	p->scan[ep].time = scan_module(ctx, ep);
 
 	fix_module_instruments(m);
 

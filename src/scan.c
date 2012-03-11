@@ -35,7 +35,7 @@
 #define MAX_GVL		0x40
 
 
-int scan_module(struct context_data *ctx)
+int scan_module(struct context_data *ctx, int ep)
 {
     int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
@@ -310,9 +310,9 @@ int scan_module(struct context_data *ctx)
     row = break_row;
 
 end_module:
-    p->scan.num = p->start > ord ? 0: tab_cnt[ord][row];
-    p->scan.row = row;
-    p->scan.ord = ord;
+    p->scan[ep].num = p->start > ord ? 0: tab_cnt[ord][row];
+    p->scan[ep].row = row;
+    p->scan[ep].ord = ord;
 
     free(loop_row);
     free(loop_stk);
@@ -327,3 +327,7 @@ end_module:
     return (clock + m->time_factor * alltmp / bpm);
 }
 
+int get_entry_point(int pat)
+{
+	return 0;
+}

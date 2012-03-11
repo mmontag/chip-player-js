@@ -160,6 +160,7 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define DEFAULT_TIME_FACTOR	10.0
 #define MED_TIME_FACTOR		2.64
 
+#define MAX_ENTRY_POINTS	10
 
 struct ord_data {
 	int bpm;
@@ -176,7 +177,6 @@ struct ord_data {
 struct module_data {
 	struct xmp_module mod;
 
-	int time;			/* replay time in ms */
 	char *dirname;			/* file dirname */
 	char *basename;			/* file basename */
 	char *filename;			/* Module file name */
@@ -219,6 +219,7 @@ struct player_data {
 	double frame_time;
 
 	int loop_count;
+	int entry_point;
 
 	struct {			/* Global volume */
 		int volume;
@@ -244,10 +245,11 @@ struct player_data {
 	} flow;
 
 	struct {
+		int time;		/* replay time in ms */
 		int ord;
 		int row;
 		int num;
-	} scan;
+	} scan[MAX_ENTRY_POINTS];
 
 	struct channel_data *xc_data;
 
@@ -298,7 +300,8 @@ struct context_data {
 /* Prototypes */
 
 char	*str_adj		(char *);
-int	scan_module		(struct context_data *);
+int	scan_module		(struct context_data *, int);
+int	get_entry_point		(int);
 
 int8	read8s			(FILE *);
 uint8	read8			(FILE *);

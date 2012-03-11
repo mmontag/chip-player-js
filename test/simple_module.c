@@ -8,6 +8,7 @@ void fix_module_instruments(struct module_data *);
 
 void create_simple_module(struct context_data *ctx, int ins, int pat)
 {
+	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -52,7 +53,7 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 		
 	/* End of module creation */
 
-	m->time = scan_module(ctx);
+	p->scan[0].time = scan_module(ctx, 0);
 
 	fix_module_instruments(m);
 }

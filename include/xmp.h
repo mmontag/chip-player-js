@@ -179,6 +179,8 @@ struct xmp_module {
 	struct xmp_sample *xxs;		/* Samples */
 	struct xmp_channel xxc[64];	/* Channel info */
 	unsigned char xxo[XMP_MAX_MOD_LENGTH];	/* Orders */
+
+	int *entry_points;
 };
 
 struct xmp_test_info {
