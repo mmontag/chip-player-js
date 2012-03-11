@@ -617,7 +617,7 @@ static void next_order(struct context_data *ctx)
 		}
 	} while (mod->xxo[p->ord] >= mod->pat);
 
-	p->time = m->xxo_info[p->ord].time;
+	p->current_time = m->xxo_info[p->ord].time;
 
 	f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
 	if (f->jumpline >= f->num_rows)
@@ -694,7 +694,7 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	p->pos = p->ord = p->start = start;
 	p->frame = -1;
 	p->row = 0;
-	p->time = 0;
+	p->current_time = 0;
 	p->loop_count = 0;
 	s->freq = rate;
 	s->format = format;
@@ -804,7 +804,7 @@ int xmp_player_frame(xmp_context opaque)
 			p->tempo = m->xxo_info[p->ord].tempo;
 		p->bpm = m->xxo_info[p->ord].bpm;
 		p->gvol.volume = m->xxo_info[p->ord].gvl;
-		p->time = m->xxo_info[p->ord].time;
+		p->current_time = m->xxo_info[p->ord].time;
 
 		virt_reset(ctx);
 		reset_channel(ctx);
@@ -845,7 +845,7 @@ int xmp_player_frame(xmp_context opaque)
 	}
 
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
-	p->time += p->frame_time;
+	p->current_time += p->frame_time;
 
 	mixer_softmixer(ctx);
 
@@ -897,7 +897,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->bpm = p->bpm;
 	info->total_time = p->scan[p->entry_point].time;
 	info->frame_time = p->frame_time * 1000;
-	info->time = p->time;
+	info->time = p->current_time;
 	info->buffer = s->buffer;
 
 	info->total_size = OUT_MAXLEN;

@@ -215,7 +215,7 @@ struct player_data {
 	int frame;
 	int tempo;
 	int bpm;
-	double time;
+	double current_time;
 	double frame_time;
 
 	int loop_count;
