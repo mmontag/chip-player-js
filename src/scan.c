@@ -372,7 +372,7 @@ int scan_subsongs(struct context_data *ctx)
 		}
 	}
 
-	mod->num_songs = song_chain + 1;
+	mod->num_songs = song_chain;
 
 	/* Now place entry points in the public accessible array */
 	mod->subsong = malloc(sizeof(struct xmp_subsong) * mod->num_songs);
