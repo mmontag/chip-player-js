@@ -29,6 +29,8 @@ CONVERT_TESTS	= $(addprefix convert_,$(CONVERTERS))
 
 EFFECT_TESTS	= $(addprefix effect_,$(EFFECTS))
 
+NNA_TESTS	= nna_cut nna_cont nna_off nna_fade
+
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
 TESTS		= $(DEPACK_TESTS) \
@@ -39,6 +41,7 @@ TESTS		= $(DEPACK_TESTS) \
 		  $(CASE1_TESTS) \
 		  $(CASE2_TESTS) \
 		  $(CASE3_TESTS) \
+		  $(NNA_TESTS) \
 		  $(EFFECT_TESTS) \
 		  $(API_TESTS)
 

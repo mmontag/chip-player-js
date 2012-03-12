@@ -85,6 +85,47 @@ void set_instrument_volume(struct context_data *ctx, int ins, int sub, int vol)
 	mod->xxi[ins].sub[sub].vol = vol;
 }
 
+void set_instrument_nna(struct context_data *ctx, int ins, int sub,
+			int nna, int dct, int dca)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	mod->xxi[ins].sub[sub].nna = nna;
+	mod->xxi[ins].sub[sub].dct = dct;
+	mod->xxi[ins].sub[sub].dca = dca;
+}
+
+void set_instrument_envelope(struct context_data *ctx, int ins, int node,
+			     int x, int y)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	mod->xxi[ins].aei.data[node * 2] = x;
+	mod->xxi[ins].aei.data[node * 2 + 1] = y;
+
+	mod->xxi[ins].aei.npt = node + 1;
+	mod->xxi[ins].aei.flg |= XMP_ENVELOPE_ON;
+}
+
+void set_instrument_envelope_sus(struct context_data *ctx, int ins, int sus)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	mod->xxi[ins].aei.sus = sus;
+	mod->xxi[ins].aei.flg |= XMP_ENVELOPE_SUS;
+}
+
+void set_instrument_fadeout(struct context_data *ctx, int ins, int fade)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	mod->xxi[ins].rls = fade;
+}
+
 void set_quirk(struct context_data *ctx, int quirk, int read_mode)
 {
 	struct module_data *m = &ctx->m;
