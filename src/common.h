@@ -219,7 +219,8 @@ struct player_data {
 	double frame_time;
 
 	int loop_count;
-	int entry_point;
+	int subsong;
+	unsigned char subsong_control[XMP_MAX_MOD_LENGTH];
 
 	struct {			/* Global volume */
 		int volume;
@@ -300,8 +301,9 @@ struct context_data {
 /* Prototypes */
 
 char	*str_adj		(char *);
-int	scan_module		(struct context_data *, int);
-int	get_entry_point		(int);
+int	scan_module		(struct context_data *, int, int);
+int	scan_subsongs		(struct context_data *);
+int	get_subsong		(struct context_data *, int);
 
 int8	read8s			(FILE *);
 uint8	read8			(FILE *);

@@ -522,13 +522,11 @@ void fix_module_instruments(struct module_data *m)
 int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
-	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	FILE *f;
 	int i, t, val;
 	struct stat st;
 	struct list_head tmpfiles_list;
-	int ep;
 
 	_D(_D_WARN "path = %s", path);
 
@@ -603,8 +601,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 		m->mod.bpm = 125;
 	}
 
-	ep = 0;
-	p->scan[ep].time = scan_module(ctx, ep);
+	scan_subsongs(ctx);
 
 	fix_module_instruments(m);
 
@@ -620,48 +617,56 @@ void xmp_release_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i;
 
 	_D(_D_INFO "Freeing memory");
 
-	if (m->extra)
+	free(mod->entry_points);
+
+	if (m->extra) {
 		free(m->extra);
+	}
 
 	if (m->med_vol_table) {
-		for (i = 0; i < m->mod.ins; i++)
+		for (i = 0; i < mod->ins; i++)
 			if (m->med_vol_table[i])
 				free(m->med_vol_table[i]);
 		free(m->med_vol_table);
 	}
 
 	if (m->med_wav_table) {
-		for (i = 0; i < m->mod.ins; i++)
+		for (i = 0; i < mod->ins; i++)
 			if (m->med_wav_table[i])
 				free(m->med_wav_table[i]);
 		free(m->med_wav_table);
 	}
 
-	for (i = 0; i < m->mod.trk; i++)
-		free(m->mod.xxt[i]);
-
-	for (i = 0; i < m->mod.pat; i++)
-		free(m->mod.xxp[i]);
-
-	for (i = 0; i < m->mod.ins; i++)
-		free(m->mod.xxi[i].sub);
-
-	free(m->mod.xxt);
-	free(m->mod.xxp);
-	if (m->mod.smp > 0) {
-		for (i = 0; i < m->mod.smp; i++) {
-			if (m->mod.xxs[i].data != NULL)
-				free(m->mod.xxs[i].data);
-		}
-		free(m->mod.xxs);
+	for (i = 0; i < mod->trk; i++) {
+		free(mod->xxt[i]);
 	}
-	free(m->mod.xxi);
-	if (m->comment)
+
+	for (i = 0; i < mod->pat; i++) {
+		free(mod->xxp[i]);
+	}
+
+	for (i = 0; i < mod->ins; i++) {
+		free(mod->xxi[i].sub);
+	}
+
+	free(mod->xxt);
+	free(mod->xxp);
+	if (mod->smp > 0) {
+		for (i = 0; i < mod->smp; i++) {
+			if (mod->xxs[i].data != NULL)
+				free(mod->xxs[i].data);
+		}
+		free(mod->xxs);
+	}
+	free(mod->xxi);
+	if (m->comment) {
 		free(m->comment);
+	}
 
 	_D("free dirname/basename");
 	free(m->dirname);

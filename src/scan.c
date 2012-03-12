@@ -35,7 +35,7 @@
 #define MAX_GVL		0x40
 
 
-int scan_module(struct context_data *ctx, int ep)
+int scan_module(struct context_data *ctx, int ep, int chain)
 {
     int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
@@ -85,7 +85,7 @@ int scan_module(struct context_data *ctx, int ep)
      * was: ord2 = ord = -1;
      */
     ord2 = -1;
-    ord = ctx->p.start - 1;
+    ord = ep - 1;
 
     gvol_slide = break_row = cnt_row = alltmp = 0;
     clock_rst = clock = 0.0;
@@ -100,6 +100,11 @@ int scan_module(struct context_data *ctx, int ep)
 
 	pat = m->mod.xxo[ord];
 	info = &m->xxo_info[ord];
+
+	if (ep != 0 && p->subsong_control[ord] != 0xff) {
+	    break;
+	}
+	p->subsong_control[ord] = chain;
 
 	/* All invalid patterns skipped, only S3M_END aborts replay */
 	if (pat >= m->mod.pat) {
@@ -310,9 +315,9 @@ int scan_module(struct context_data *ctx, int ep)
     row = break_row;
 
 end_module:
-    p->scan[ep].num = p->start > ord ? 0: tab_cnt[ord][row];
-    p->scan[ep].row = row;
-    p->scan[ep].ord = ord;
+    p->scan[chain].num = p->start > ord ? 0: tab_cnt[ord][row];
+    p->scan[chain].row = row;
+    p->scan[chain].ord = ord;
 
     free(loop_row);
     free(loop_stk);
@@ -327,7 +332,56 @@ end_module:
     return (clock + m->time_factor * alltmp / bpm);
 }
 
-int get_entry_point(int pat)
+int get_subsong(struct context_data *ctx, int ord)
 {
+	struct player_data *p = &ctx->p;
+	return p->subsong_control[ord];
+}
+
+int scan_subsongs(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	int i, ep;
+	int song_chain;
+	char temp_ep[XMP_MAX_MOD_LENGTH];
+
+	ep = 0;
+	memset(p->subsong_control, 0xff, XMP_MAX_MOD_LENGTH);
+	temp_ep[0] = 0;
+	p->scan[0].time = scan_module(ctx, ep, 0);
+	song_chain = 1;
+
+ 	while (1) { 
+		/* Scan song starting at given entry point */
+		/* Check if any patterns left */
+		for (i = 0; i < mod->len; i++) {
+			if (p->subsong_control[i] == 0xff) {
+				break;
+			}
+		}
+		if (i != mod->len) {
+			/* New entry point */
+			ep = i;
+			temp_ep[song_chain] = ep;
+			p->scan[song_chain].time = scan_module(ctx, ep, song_chain);
+			song_chain++;
+		} else {
+			break;
+		}
+	}
+
+	/* Now place entry points in the public accessible array */
+	mod->entry_points = malloc(sizeof(int) * (song_chain + 2));
+	if (mod->entry_points == NULL) {
+		return -1;
+	}
+
+	for (i = 0; i <= song_chain; i++) {
+		mod->entry_points[i] = temp_ep[i];
+	}
+	mod->entry_points[i] = -1;
+
 	return 0;
 }
