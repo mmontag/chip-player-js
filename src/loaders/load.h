@@ -38,7 +38,6 @@ void read_title(FILE *, char *, int);
 void set_xxh_defaults(struct xmp_module *);
 void cvt_pt_event(struct xmp_event *, uint8 *);
 void disable_continue_fx(struct xmp_event *);
-void clean_s3m_seq(struct xmp_module *, uint8 *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct module_data *, char *, char *, int);
 void set_type(struct module_data *, char *, ...);

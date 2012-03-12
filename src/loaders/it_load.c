@@ -96,9 +96,6 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
 	else
 	    e->fxp = arpeggio_val[c];
 	break;
-    case FX_JUMP:
-	e->fxp = ord_xlat[e->fxp];
-	break;
     case FX_VIBRATO:		/* Old or new vibrato */
 	if (new_fx)
 	    e->fxt = FX_FINE2_VIBRA;
@@ -336,7 +333,6 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	mod->xxc[i].vol = ifh.chvol[i];
     }
     fread(mod->xxo, 1, mod->len, f);
-    clean_s3m_seq(&m->mod, mod->xxo);
 
     new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 

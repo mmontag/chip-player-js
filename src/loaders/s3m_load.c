@@ -142,9 +142,6 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val)
 	else
 	    e->fxp = arpeggio_val[c];
 	break;
-    case FX_JUMP:
-	e->fxp = ord_xlat[e->fxp];
-	break;
     case FX_S3M_EXTENDED:		/* Extended effects */
 	e->fxt = FX_EXTENDED;
 	switch (h) {
@@ -274,7 +271,6 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
     mod->trk = mod->pat * mod->chn;
 
     fread(mod->xxo, 1, mod->len, f);
-    clean_s3m_seq(&m->mod, mod->xxo);
 
     for (i = 0; i < mod->ins; i++)
 	pp_ins[i] = read16l(f);

@@ -96,39 +96,6 @@ void disable_continue_fx(struct xmp_event *event)
 	}
 }
 
-
-uint8 ord_xlat[255];
-
-/* normalize pattern sequence */
-void clean_s3m_seq(struct xmp_module *mod, uint8 *xxo)
-{
-    int i, j;
-    
-    /*for (i = 0; i < len; i++) printf("%02x ", xxo[i]);
-    printf("\n");*/
-    for (i = j = 0; i < mod->len; i++, j++) {
-	while (xxo[i] == 0xfe) {
-	    mod->len--;
-	    ord_xlat[j] = i;
-            //printf("xlat %d -> %d\n", j, i);
-	    j++;
-	    //printf("move %d from %d to %d\n", len - i, i + 1, i);
-	    memmove(xxo + i, xxo + i + 1, mod->len - i);
-        }
-
-	ord_xlat[j] = i;
-        //printf("xlat %d -> %d\n", j, i);
-
-	if (xxo[i] == 0xff) {
-	    mod->len = i;
-	    break;
-	}
-    }
-    /*for (i = 0; i < len; i++) printf("%02x ", xxo[i]);
-    printf("\n");*/
-}
-
-
 int check_filename_case(char *dir, char *name, char *new_name, int size)
 {
 	int found = 0;
