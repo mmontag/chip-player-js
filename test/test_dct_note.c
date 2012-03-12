@@ -3,7 +3,7 @@
 #include "../src/virtual.h"
 
 
-TEST(test_nna_cont)
+TEST(test_dct_note)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -18,10 +18,11 @@ TEST(test_nna_cont)
  	create_simple_module(ctx, 2, 2);
 	set_instrument_volume(ctx, 0, 0, 22);
 	set_instrument_volume(ctx, 1, 0, 33);
-	set_instrument_nna(ctx, 0, 0, XMP_INST_NNA_CONT, XMP_INST_DCT_OFF,
+	set_instrument_nna(ctx, 0, 0, XMP_INST_NNA_CONT, XMP_INST_DCT_NOTE,
 							XMP_INST_DCA_CUT);
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0, 50, 2,  0, 0x00, 0, 0, 0);
+	new_event(ctx, 0, 2, 0, 60, 1,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_IT, READ_EVENT_IT);
 
 	xmp_player_start(opaque, 0, 44100, 0);
@@ -40,11 +41,11 @@ TEST(test_nna_cont)
 
 	xmp_player_frame(opaque);
 
-	/* Row 1: new event to test NNA */
+	/* Row 1 */
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
-	fail_unless(vi->vol  == 43 * 16, "not same volume");
+	fail_unless(vi->vol  == 43 * 16, "not new volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
 	/* Find virtual voice for channel 0 */
@@ -53,11 +54,11 @@ TEST(test_nna_cont)
 			break;
 		}
 	}
-	fail_unless(i != p->virt.maxvoc, "didn't find virtual voice");
+	fail_unless(i != p->virt.maxvoc, "didn't find voice");
 
-	/* New instrument in virtual channel. When NNA is set to CONT,
-	 * the new instrument plays in a new virtual voice and the previous
-	 * instrument stays playing in the original voice
+	/* New instrument in virtual channel. When DCT is set to NOTE,
+	 * the new instrument plays in a new virtual voice unless it's the
+	 * same instrument and note as the previous event
 	 */
 	vi2 = &p->virt.voice_array[i];
 	fail_unless(vi2->chn  ==  0, "not following channel");
@@ -67,13 +68,18 @@ TEST(test_nna_cont)
 	fail_unless(vi2->pos0 ==  0, "sample didn't reset");
 	xmp_player_frame(opaque);
 
-	/* Some rows later... check if volume still the same */
-	for (i = 0; i < 20; i++) {
-		xmp_player_frame(opaque);
-		fail_unless(vi->chn  == 4, "didn't copy channel");
-		fail_unless(vi->note == 59, "first note: not same note");
-		fail_unless(vi->ins  ==  0, "first note: not same instrument");
-		fail_unless(vi->vol  == 43 * 16, "first note: not same volume");
-	}
+	/* Row 2: this event should cut event in row 0 because it's the
+	 * same instrument and same note
+	 */
+	xmp_player_frame(opaque);
+	fail_unless(vi2->note == 59, "not same note");
+	fail_unless(vi2->ins  ==  0, "not same instrument");
+	fail_unless(vi2->vol  == 22 * 16, "not new volume");
+	fail_unless(vi2->pos0 ==  0, "sample didn't reset");
+
+	/* And also it should cut the sound playing in the virtual channel */
+	fail_unless(vi->chn  == -1, "didn't reset first channel");
+	fail_unless(vi->note ==  0, "didn't reset first channel");
+	fail_unless(vi->vol  ==  0, "didn't reset first channel");
 }
 END_TEST

@@ -29,7 +29,7 @@ CONVERT_TESTS	= $(addprefix convert_,$(CONVERTERS))
 
 EFFECT_TESTS	= $(addprefix effect_,$(EFFECTS))
 
-NNA_TESTS	= nna_cut nna_cont nna_off nna_fade
+NNA_TESTS	= nna_cut nna_cont nna_off nna_fade dct_note
 
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
