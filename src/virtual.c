@@ -278,7 +278,7 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	struct player_data *p = &ctx->p;
 	int i, voc, vfree;
 
-	if ((uint32) chn >= p->virt.virt_channels)
+	if ((uint32)chn >= p->virt.virt_channels)
 		return -1;
 
 	if (ins < 0) {
