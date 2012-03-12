@@ -372,16 +372,19 @@ int scan_subsongs(struct context_data *ctx)
 		}
 	}
 
+	mod->num_songs = song_chain + 1;
+
 	/* Now place entry points in the public accessible array */
-	mod->entry_points = malloc(sizeof(int) * (song_chain + 2));
-	if (mod->entry_points == NULL) {
+	mod->subsong = malloc(sizeof(struct xmp_subsong) * mod->num_songs);
+	if (mod->subsong == NULL) {
 		return -1;
 	}
 
-	for (i = 0; i <= song_chain; i++) {
-		mod->entry_points[i] = temp_ep[i];
+	for (i = 0; i < mod->num_songs; i++) {
+		mod->subsong[i].entry_point = temp_ep[i];
+		mod->subsong[i].duration = p->scan[i].time;
 	}
-	mod->entry_points[i] = -1;
+
 
 	return 0;
 }

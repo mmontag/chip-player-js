@@ -180,7 +180,12 @@ struct xmp_module {
 	struct xmp_channel xxc[64];	/* Channel info */
 	unsigned char xxo[XMP_MAX_MOD_LENGTH];	/* Orders */
 
-	int *entry_points;
+	/* Subsong data */
+	int num_songs;
+	struct xmp_subsong {
+		int entry_point;
+		int duration;
+	} *subsong;
 };
 
 struct xmp_test_info {
