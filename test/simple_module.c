@@ -52,7 +52,7 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 		
 	/* End of module creation */
 
-	scan_subsongs(ctx);
+	scan_sequences(ctx);
 
 	fix_module_instruments(m);
 }
