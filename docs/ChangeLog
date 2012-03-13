@@ -15,6 +15,7 @@ Stable versions
 	- fix S404 depacker
 	- fix note delay effect
 	- fix FT2 old instrument volume quirk
+	- fix envelope loops (reported by Henrik Pauli)
 
 3.5.0 (20120127):
 	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe

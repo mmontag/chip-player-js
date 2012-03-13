@@ -18,7 +18,7 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 	index = (env->npt - 1) * 2;
 
 	x1 = data[index];		/* last node */
-	if (x > x1 || index == 0) { 
+	if (x >= x1 || index == 0) { 
 		return data[index + 1];
 	}
 
@@ -30,6 +30,11 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 	/* interpolate */
 	y1 = data[index + 1];
 	x2 = data[index + 2];
+
+	if (env->flg & XMP_ENVELOPE_LOOP && index == (env->lpe << 1)) {
+		index = (env->lps - 1) * 2;
+	}
+
 	y2 = data[index + 3];
 
 	return ((y2 - y1) * (x - x1) / (x2 - x1)) + y1;
@@ -41,28 +46,32 @@ int update_envelope(struct xmp_envelope *ei, int x, int release)
 	int16 *env = ei->data;
 	int has_loop, has_sus;
 
-	if (x < 0xffff)		/* increment tick */
+	if (x < 0xffff)	{	/* increment tick */
 		x++;
+	}
 
-	if (~ei->flg & XMP_ENVELOPE_ON)
+	if (~ei->flg & XMP_ENVELOPE_ON) {
 		return x;
+	}
 
-	if (ei->npt <= 0)
+	if (ei->npt <= 0) {
 		return x;
+	}
 
-	if (ei->lps >= ei->npt || ei->lpe >= ei->npt)
+	if (ei->lps >= ei->npt || ei->lpe >= ei->npt) {
 		has_loop = 0;
-	else
+	} else {
 		has_loop = ei->flg & XMP_ENVELOPE_LOOP;
+	}
 
 	has_sus = ei->flg & XMP_ENVELOPE_SUS;
 
 	if (ei->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
-			if (x >= env[ei->sue << 1])
+			if (x > env[ei->sue << 1])
 				x = env[ei->sus << 1];
 		} else if (has_loop) {
-			if (x >= env[ei->lpe << 1])
+			if (x > env[ei->lpe << 1])
 				x = env[ei->lps << 1];
 		}
 	} else {
@@ -71,7 +80,7 @@ int update_envelope(struct xmp_envelope *ei, int x, int release)
 			x = env[ei->sus << 1];
 		}
 
-		if (has_loop && x >= env[ei->lpe << 1]) {
+		if (has_loop && x > env[ei->lpe << 1]) {
 	    		if (!(release && has_sus && ei->sus == ei->lpe))
 				x = env[ei->lps << 1];
 		}
