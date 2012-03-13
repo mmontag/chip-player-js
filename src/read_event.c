@@ -616,10 +616,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	int new_invalid_ins;
 	int is_toneporta;
 	int candidate_ins;
+	unsigned char e_ins;
+
+	e_ins = e->ins;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
-	if (e->note && !e->ins && xc->delayed_ins) {
-		e->ins = xc->delayed_ins;
+	if (e->note && !e_ins && xc->delayed_ins) {
+		e_ins = xc->delayed_ins;
 		xc->delayed_ins = 0;
 	}
 
@@ -638,8 +641,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	/* Check instrument */
 
-	if (e->ins) {
-		int ins = e->ins - 1;
+	if (e_ins) {
+		int ins = e_ins - 1;
 		flags = NEW_INS | RESET_VOL | RESET_ENV;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
