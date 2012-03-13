@@ -689,6 +689,10 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 
 	mixer_on(ctx);
 
+	if (start >= mod->len) {
+		start = 0;
+	}
+
 	p->gvol.slide = 0;
 	p->gvol.volume = m->volbase;
 	p->pos = p->ord = p->start = start;
@@ -712,7 +716,12 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 
 	p->sequence = get_sequence(ctx, start);
 
-	if (mod->len == 0 || mod->chn == 0) {
+	/* Skip invalid patterns at start (the seventh laboratory.it) */
+	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat) {
+		p->ord++;
+	}
+
+	if (p->sequence < 0 || mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
 		p->ord = p->scan[p->sequence].ord = 0;
 		p->row = p->scan[p->sequence].row = 0;
@@ -720,17 +729,13 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 		f->num_rows = 0;
 	} else {
 		f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
+		f->end_point = p->scan[p->sequence].num;
 	}
-
-	/* Skip invalid patterns at start (the seventh laboratory.it) */
-	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat)
-		p->ord++;
 
 	p->gvol.volume = m->xxo_info[p->ord].gvl;
 	p->bpm = m->xxo_info[p->ord].bpm;
 	p->speed = m->xxo_info[p->ord].speed;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
-	f->end_point = p->scan[p->sequence].num;
 
 	if ((ret = virt_on(ctx, mod->chn)) != 0)
 		return ret;
@@ -753,6 +758,9 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	m->synth->reset(ctx);
 
 	reset_channel(ctx);
+
+	p->ord = 0;			/* To enable reposition code */
+	xmp_ord_set(opaque, start);
 
 	return 0;
 
@@ -790,6 +798,7 @@ int xmp_player_frame(xmp_context opaque)
 			f->end_point = p->scan[p->sequence].num;
 		}
 
+		/* Check if lands after a loop point */
 		if (p->pos > p->scan[p->sequence].ord) {
 			f->end_point = 0;
 		}
@@ -798,6 +807,15 @@ int xmp_player_frame(xmp_context opaque)
 		f->jump = -1;
 
 		p->ord = p->pos - 1;
+
+		/* Stay inside our subsong */
+		if (p->ord < m->sequence[p->sequence].entry_point) {
+			p->ord = m->sequence[p->sequence].entry_point - 1;
+		}
+
+		while (m->mod.xxo[p->ord + 1] == 0xfe && p->ord >= 0) {
+			p->ord--;
+		}
 		next_order(ctx);
 
 		if (m->xxo_info[p->ord].speed)
