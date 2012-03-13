@@ -781,7 +781,7 @@ int xmp_player_frame(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int i;
 
-	if (mod->len <= 0)
+	if (mod->len <= 0 || mod->xxo[p->ord] == 0xff)
 		return -1;
 
 	/* check reposition */

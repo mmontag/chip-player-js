@@ -96,6 +96,10 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	    ord = ((uint32)m->mod.rst > m->mod.len ||
 		   (uint32)m->mod.xxo[m->mod.rst] >= m->mod.pat) ?
 			0 : m->mod.rst;
+	    pat = m->mod.xxo[ord];
+	    if (pat == S3M_END) {
+		break;
+	    }
 	} 
 
 	pat = m->mod.xxo[ord];
