@@ -159,6 +159,11 @@ struct xmp_sample {
 	unsigned char *data;		/* Sample data */
 };
 
+struct xmp_subsong {
+	int entry_point;
+	int duration;
+};
+
 struct xmp_module {
 	char name[XMP_NAME_SIZE];	/* Module name */
 	char type[XMP_NAME_SIZE];	/* Module type */
@@ -179,13 +184,6 @@ struct xmp_module {
 	struct xmp_sample *xxs;		/* Samples */
 	struct xmp_channel xxc[64];	/* Channel info */
 	unsigned char xxo[XMP_MAX_MOD_LENGTH];	/* Orders */
-
-	/* Subsong data */
-	int num_songs;
-	struct xmp_subsong {
-		int entry_point;
-		int duration;
-	} *subsong;
 };
 
 struct xmp_test_info {
@@ -229,6 +227,9 @@ struct xmp_module_info {		/* Current module information */
 
 	struct xmp_module *mod;		/* Pointer to module data */
 	char *comment;			/* Comment text, if any */
+
+	int num_songs;			/* Number of valid sequences */
+	struct xmp_subsong *subsong;	/* Pointer to subsong data */
 };
 
 

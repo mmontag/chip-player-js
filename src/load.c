@@ -622,7 +622,7 @@ void xmp_release_module(xmp_context opaque)
 
 	_D(_D_INFO "Freeing memory");
 
-	free(mod->subsong);
+	free(m->subsong);
 
 	if (m->extra) {
 		free(m->extra);

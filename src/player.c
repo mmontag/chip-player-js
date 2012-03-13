@@ -917,6 +917,9 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->mod = mod;
 	info->comment = m->comment;
 
+	info->num_songs = m->num_songs;
+	info->subsong = m->subsong;
+
 	if (p->xc_data != NULL) {
 		for (i = 0; i < chn; i++) {
 			struct channel_data *c = &p->xc_data[i];

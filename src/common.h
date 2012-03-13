@@ -195,6 +195,9 @@ struct module_data {
 	int read_event_type;
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
+	int num_songs;
+	struct xmp_subsong *subsong;
+
 	char *instrument_path;
 
 	uint8 **med_vol_table;		/* MED volume sequence table */
