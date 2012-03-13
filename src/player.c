@@ -720,6 +720,10 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat) {
 		p->ord++;
 	}
+	/* Check if all positions skipped */
+	if (p->ord >= mod->len) {
+		mod->len = 0;
+	}
 
 	if (p->sequence < 0 || mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
