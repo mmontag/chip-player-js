@@ -759,8 +759,10 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 
 	reset_channel(ctx);
 
-	p->ord = 0;			/* To enable reposition code */
-	xmp_ord_set(opaque, start);
+	if (start > m->sequence[p->sequence].entry_point) {
+		p->ord = 0;			/* To enable reposition code */
+		xmp_ord_set(opaque, start);
+	}
 
 	return 0;
 
@@ -781,8 +783,9 @@ int xmp_player_frame(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int i;
 
-	if (mod->len <= 0 || mod->xxo[p->ord] == 0xff)
+	if (mod->len <= 0 || mod->xxo[p->ord] == 0xff) {
 		return -1;
+	}
 
 	/* check reposition */
 	if (p->ord != p->pos) {
