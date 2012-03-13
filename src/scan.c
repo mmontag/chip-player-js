@@ -101,10 +101,10 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	pat = m->mod.xxo[ord];
 	info = &m->xxo_info[ord];
 
-	if (ep != 0 && p->subsong_control[ord] != 0xff) {
+	if (ep != 0 && p->sequence_control[ord] != 0xff) {
 	    break;
 	}
-	p->subsong_control[ord] = chain;
+	p->sequence_control[ord] = chain;
 
 	/* All invalid patterns skipped, only S3M_END aborts replay */
 	if (pat >= m->mod.pat) {
@@ -332,57 +332,57 @@ end_module:
     return (clock + m->time_factor * alltmp / bpm);
 }
 
-int get_subsong(struct context_data *ctx, int ord)
+int get_sequence(struct context_data *ctx, int ord)
 {
 	struct player_data *p = &ctx->p;
-	return p->subsong_control[ord];
+	return p->sequence_control[ord];
 }
 
-int scan_subsongs(struct context_data *ctx)
+int scan_sequences(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i, ep;
-	int song_chain;
+	int seq;
 	char temp_ep[XMP_MAX_MOD_LENGTH];
 
 	ep = 0;
-	memset(p->subsong_control, 0xff, XMP_MAX_MOD_LENGTH);
+	memset(p->sequence_control, 0xff, XMP_MAX_MOD_LENGTH);
 	temp_ep[0] = 0;
 	p->scan[0].time = scan_module(ctx, ep, 0);
-	song_chain = 1;
+	seq = 1;
 
  	while (1) { 
 		/* Scan song starting at given entry point */
 		/* Check if any patterns left */
 		for (i = 0; i < mod->len; i++) {
-			if (p->subsong_control[i] == 0xff) {
+			if (p->sequence_control[i] == 0xff) {
 				break;
 			}
 		}
 		if (i != mod->len) {
 			/* New entry point */
 			ep = i;
-			temp_ep[song_chain] = ep;
-			p->scan[song_chain].time = scan_module(ctx, ep, song_chain);
-			song_chain++;
+			temp_ep[seq] = ep;
+			p->scan[seq].time = scan_module(ctx, ep, seq);
+			seq++;
 		} else {
 			break;
 		}
 	}
 
-	m->num_songs = song_chain;
+	m->num_sequences = seq;
 
 	/* Now place entry points in the public accessible array */
-	m->subsong = malloc(sizeof(struct xmp_subsong) * m->num_songs);
-	if (m->subsong == NULL) {
+	m->sequence = malloc(sizeof(struct xmp_sequence) * m->num_sequences);
+	if (m->sequence == NULL) {
 		return -1;
 	}
 
-	for (i = 0; i < m->num_songs; i++) {
-		m->subsong[i].entry_point = temp_ep[i];
-		m->subsong[i].duration = p->scan[i].time;
+	for (i = 0; i < m->num_sequences; i++) {
+		m->sequence[i].entry_point = temp_ep[i];
+		m->sequence[i].duration = p->scan[i].time;
 	}
 
 

@@ -195,8 +195,8 @@ struct module_data {
 	int read_event_type;
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
-	int num_songs;
-	struct xmp_subsong *subsong;
+	int num_sequences;
+	struct xmp_sequence *sequence;
 
 	char *instrument_path;
 
@@ -222,8 +222,8 @@ struct player_data {
 	double frame_time;
 
 	int loop_count;
-	int subsong;
-	unsigned char subsong_control[XMP_MAX_MOD_LENGTH];
+	int sequence;
+	unsigned char sequence_control[XMP_MAX_MOD_LENGTH];
 
 	struct {			/* Global volume */
 		int volume;
@@ -305,8 +305,8 @@ struct context_data {
 
 char	*str_adj		(char *);
 int	scan_module		(struct context_data *, int, int);
-int	scan_subsongs		(struct context_data *);
-int	get_subsong		(struct context_data *, int);
+int	scan_sequences		(struct context_data *);
+int	get_sequence		(struct context_data *, int);
 
 int8	read8s			(FILE *);
 uint8	read8			(FILE *);

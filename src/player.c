@@ -710,12 +710,12 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 		mod->bpm = 125;
 	}
 
-	p->subsong = get_subsong(ctx, start);
+	p->sequence = get_sequence(ctx, start);
 
 	if (mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
-		p->ord = p->scan[p->subsong].ord = 0;
-		p->row = p->scan[p->subsong].row = 0;
+		p->ord = p->scan[p->sequence].ord = 0;
+		p->row = p->scan[p->sequence].row = 0;
 		f->end_point = 0;
 		f->num_rows = 0;
 	} else {
@@ -730,7 +730,7 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	p->bpm = m->xxo_info[p->ord].bpm;
 	p->tempo = m->xxo_info[p->ord].tempo;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
-	f->end_point = p->scan[p->subsong].num;
+	f->end_point = p->scan[p->sequence].num;
 
 	if ((ret = virt_on(ctx, mod->chn)) != 0)
 		return ret;
@@ -787,10 +787,10 @@ int xmp_player_frame(xmp_context opaque)
 		}
 
 		if (p->pos == 0) {
-			f->end_point = p->scan[p->subsong].num;
+			f->end_point = p->scan[p->sequence].num;
 		}
 
-		if (p->pos > p->scan[p->subsong].ord) {
+		if (p->pos > p->scan[p->sequence].ord) {
 			f->end_point = 0;
 		}
 
@@ -819,11 +819,11 @@ int xmp_player_frame(xmp_context opaque)
 
 	if (p->frame == 0) {			/* first frame in row */
 		/* check end of module */
-	    	if (p->ord == p->scan[p->subsong].ord &&
-				p->row == p->scan[p->subsong].row) {
+	    	if (p->ord == p->scan[p->sequence].ord &&
+				p->row == p->scan[p->sequence].row) {
 			if (f->end_point == 0) {
 				p->loop_count++;
-				f->end_point = p->scan[p->subsong].num;
+				f->end_point = p->scan[p->sequence].num;
 				/* return -1; */
 			}
 			f->end_point--;
@@ -895,7 +895,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->frame = p->frame;
 	info->tempo = p->tempo;
 	info->bpm = p->bpm;
-	info->total_time = p->scan[p->subsong].time;
+	info->total_time = p->scan[p->sequence].time;
 	info->frame_time = p->frame_time * 1000;
 	info->time = p->current_time;
 	info->buffer = s->buffer;
@@ -917,8 +917,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->mod = mod;
 	info->comment = m->comment;
 
-	info->num_songs = m->num_songs;
-	info->subsong = m->subsong;
+	info->num_sequences = m->num_sequences;
+	info->sequence = m->sequence;
 
 	if (p->xc_data != NULL) {
 		for (i = 0; i < chn; i++) {

@@ -601,7 +601,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 		m->mod.bpm = 125;
 	}
 
-	scan_subsongs(ctx);
+	scan_sequences(ctx);
 
 	fix_module_instruments(m);
 
@@ -622,7 +622,7 @@ void xmp_release_module(xmp_context opaque)
 
 	_D(_D_INFO "Freeing memory");
 
-	free(m->subsong);
+	free(m->sequence);
 
 	if (m->extra) {
 		free(m->extra);
