@@ -83,7 +83,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 	mod->len = read16b(f);
 	mod->rst = read16b(f);
 	mod->bpm = read8(f);
-	mod->tpo = read8(f);
+	mod->spd = read8(f);
 	read16b(f);			/* global volume */
 	read8(f);			/* master L */
 	read8(f);			/* master R */

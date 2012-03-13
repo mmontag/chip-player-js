@@ -178,9 +178,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		if (fxp == 0)
 			RESET_PER(VOL_SLIDE);
 		break;
-	case FX_TEMPO_CP:	/* Set tempo and ... */
+	case FX_SPEED_CP:	/* Set speed and ... */
 		if (fxp)
-			p->tempo = fxp;
+			p->speed = fxp;
 		/* fall through */
 	case FX_PER_CANCEL:	/* Cancel persistent effects */
 		xc->per_flags = 0;
@@ -413,10 +413,10 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			break;
 		}
 		break;
-	case FX_TEMPO:		/* Set tempo */
+	case FX_SPEED:		/* Set speed */
 		if (fxp) {
 			if (fxp < 0x20) {	/* speedup.xm needs BPM = 20 */
-				p->tempo = fxp;
+				p->speed = fxp;
 			} else {
 				p->bpm = fxp;
 				p->frame_time =
@@ -424,9 +424,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			}
 		}
 		break;
-	case FX_S3M_TEMPO:	/* Set S3M tempo */
+	case FX_S3M_SPEED:	/* Set S3M speed */
 		if (fxp)
-			p->tempo = fxp;
+			p->speed = fxp;
 		break;
 	case FX_S3M_BPM:	/* Set S3M BPM */
 		if (fxp) {

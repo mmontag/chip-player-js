@@ -84,7 +84,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 			mod->xxc->pan = 0x80 + 2 * (int8)buf[i];
 		}
 		mod->bpm = read8(f);
-		mod->tpo = read8(f);
+		mod->spd = read8(f);
 	} else if (ver >= 0x0b) {
 		fread(buf, 1, 16, f);
 	}
@@ -303,7 +303,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 
 				switch (t2) {
 				case 0x81:
-					fxt = FX_TEMPO;
+					fxt = FX_SPEED;
 					fxp = t3;
 					break;
 				case 0x82:
@@ -426,7 +426,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 					fxp = (EX_CUT << 4) | (t3 & 0x0f);
 					break;
 				case 0x95:
-					fxt = FX_TEMPO;
+					fxt = FX_SPEED;
 					if (t3 < 0x21)
 						t3 = 0x21;
 					fxp = t3;

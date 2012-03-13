@@ -260,10 +260,10 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 
 	mod->len = read16b(f);
 	fread(mod->xxo, 1, mod->len, f);
-	mod->tpo = read16b(f);
-	if (mod->tpo > 10) {
-		mod->bpm = 125 * mod->tpo / 33;
-		mod->tpo = 6;
+	mod->spd = read16b(f);
+	if (mod->spd > 10) {
+		mod->bpm = 125 * mod->spd / 33;
+		mod->spd = 6;
 	}
 	transp = read8s(f);
 	read8(f);			/* flags */

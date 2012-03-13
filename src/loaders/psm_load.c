@@ -60,7 +60,7 @@ static int psm_load(struct module_data *m, FILE *f, const int start)
 
 	set_type(m, "Protracker Studio PSM %d.%02d", MSN(ver), LSN(ver));
 
-	mod->tpo = read8(f);
+	mod->spd = read8(f);
 	mod->bpm = read8(f);
 	read8(f);		/* master volume */
 	read16l(f);		/* song length */

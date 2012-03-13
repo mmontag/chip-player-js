@@ -87,7 +87,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
     mod->chn = pfh.chnnum;
     mod->trk = mod->pat * mod->chn;
     mod->smp = mod->ins;
-    mod->tpo = 6;
+    mod->spd = 6;
     mod->bpm = 125;
     memcpy (mod->xxo, pfh.order, 256);
 

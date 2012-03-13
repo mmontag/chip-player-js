@@ -25,7 +25,7 @@
  * unlike the MOD format.  This becomes an issue in such songs as Skaven's
  * "Catch that Goblin", which uses speeds above 0x1f.
  *
- * Claudio's fix: FX_S3M_TEMPO added. S3M supports speeds from 0 to 255 and
+ * Claudio's fix: FX_S3M_SPEED added. S3M supports speeds from 0 to 255 and
  * tempos from 32 to 255 (S3M speed == xmp tempo, S3M tempo == xmp BPM).
  */
 
@@ -101,7 +101,7 @@ static int s3m_test(FILE *f, char *t, const int start)
 static const uint8 fx[] =
 {
 	NONE,
-	FX_S3M_TEMPO,		/* Axx  Set speed to xx (the default is 06) */
+	FX_S3M_SPEED,		/* Axx  Set speed to xx (the default is 06) */
 	FX_JUMP,		/* Bxx  Jump to order xx (hexadecimal) */
 	FX_BREAK,		/* Cxx  Break pattern to row xx (decimal) */
 	FX_VOLSLIDE,		/* Dxy  Volume slide down by y/up by x */
@@ -252,7 +252,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
     if (sfh.flags & S3M_ST300_VOLS)
 	m->quirk |= QUIRK_VSALL;
     /* m->volbase = 4096 / sfh.gv; */
-    mod->tpo = sfh.is;
+    mod->spd = sfh.is;
     mod->bpm = sfh.it;
 
     for (i = 0; i < 32; i++) {

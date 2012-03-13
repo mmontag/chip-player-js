@@ -75,7 +75,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
     fread(&afh.id, 7, 1, f);
 
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
-	mod->tpo = afh.speed / 2;
+	mod->spd = afh.speed / 2;
 
     strncpy(modulename, m->filename, NAME_SIZE);
     basename = strtok (modulename, ".");

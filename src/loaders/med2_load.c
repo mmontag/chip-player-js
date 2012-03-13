@@ -99,7 +99,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 	fread(mod->xxo, 1, 100, f);
 	mod->len = read16b(f);
 
-	mod->tpo = 192 / read16b(f);
+	mod->spd = 192 / read16b(f);
 
 	read16b(f);			/* flags */
 	sliding = read16b(f);		/* sliding */

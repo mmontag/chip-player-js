@@ -46,7 +46,7 @@ static int imf_test(FILE *f, char *t, const int start)
 /* Effect conversion table */
 static const uint8 fx[] = {
 	NONE,
-	FX_S3M_TEMPO,
+	FX_S3M_SPEED,
 	FX_S3M_BPM,
 	FX_TONEPORTA,
 	FX_TONE_VSLIDE,
@@ -202,7 +202,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
     if (ih.flg & 0x01)
 	m->quirk |= QUIRK_LINEAR;
 
-    mod->tpo = ih.tpo;
+    mod->spd = ih.tpo;
     mod->bpm = ih.bpm;
 
     set_type(m, "Imago Orpheus IM10");

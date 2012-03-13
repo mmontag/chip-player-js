@@ -59,11 +59,11 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 
 	mod->chn = 9;
 	mod->bpm = 125;
-	mod->tpo = flags & 0x1f;
+	mod->spd = flags & 0x1f;
 
 	/* FIXME: tempo setting in RAD modules */
-	if (mod->tpo <= 2)
-		mod->tpo = 6;
+	if (mod->spd <= 2)
+		mod->spd = 6;
 	mod->smp = 0;
 
 	set_type(m, "RAD %d.%d", MSN(version), LSN(version));

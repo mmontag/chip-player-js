@@ -112,7 +112,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 	mod->chn = rh.ntrack;
 	mod->trk = mod->chn * mod->pat + 1;
 	mod->ins = rh.ninstr;
-	mod->tpo = rh.speed;
+	mod->spd = rh.speed;
 	mod->bpm = rh.tempo;
 
 	m->quirk |= rh.flags & 0x01 ? QUIRK_LINEAR : 0;

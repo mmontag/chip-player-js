@@ -276,7 +276,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	 */
 	tempo = read16b(f);
 	if (tempo <= 10) {
-		mod->tpo = tempo;
+		mod->spd = tempo;
 		mod->bpm = 125;
 	} else {
 		mod->bpm = 125 * tempo / 33;
@@ -284,7 +284,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
         transp = read8s(f);
         read8s(f);
         flags = read8s(f);
-	mod->tpo = read8(f);
+	mod->spd = read8(f);
 
 	if (~flags & 0x20)	/* sliding */
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
@@ -294,7 +294,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 	/* This is just a guess... */
 	if (vermaj == 2)	/* Happy.med has tempo 5 but loads as 6 */
-		mod->tpo = flags & 0x20 ? 5 : 6;
+		mod->spd = flags & 0x20 ? 5 : 6;
 
 	fseek(f, 20, SEEK_CUR);
 

@@ -479,7 +479,7 @@ void initialize_module_data(struct module_data *m)
     	m->mod.chn = 4;
     	m->mod.ins = 0;
     	m->mod.smp = 0;
-    	m->mod.tpo = 6;
+    	m->mod.spd = 6;
     	m->mod.bpm = 125;
     	m->mod.len = 0;
     	m->mod.rst = 0;
@@ -594,8 +594,8 @@ int xmp_load_module(xmp_context opaque, char *path)
 	}
 
 	/* Sanity check */
-	if (m->mod.tpo == 0) {
-		m->mod.tpo = 6;
+	if (m->mod.spd == 0) {
+		m->mod.spd = 6;
 	}
 	if (m->mod.bpm == 0) {
 		m->mod.bpm = 125;

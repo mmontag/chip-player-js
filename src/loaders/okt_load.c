@@ -82,7 +82,7 @@ static const int fx[] = {
     FX_JUMP,		/* 25 */
     NONE,
     NONE, /* Release */	/* 27 */
-    FX_TEMPO,		/* 28 */
+    FX_SPEED,		/* 28 */
     NONE,
     FX_F_NSLIDE_UP,	/* 30 */
     FX_VOLSET		/* 31 */
@@ -154,7 +154,7 @@ static void get_spee(struct module_data *m, int size, FILE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
-    mod->tpo = read16b(f);
+    mod->spd = read16b(f);
     mod->bpm = 125;
 }
 

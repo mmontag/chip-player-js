@@ -70,7 +70,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
     mod->ins = mfh.samples;
     mod->smp = mod->ins;
     mod->chn = mfh.channels;
-    mod->tpo = 6;
+    mod->spd = 6;
     mod->bpm = 125;
 
     strncpy(mod->name, (char *)mfh.name, 20);
@@ -138,7 +138,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
 	    mod->xxt[i]->event[j].ins = ((mt[j * 3] & 0x3) << 4) + MSN (mt[j * 3 + 1]);
 	    mod->xxt[i]->event[j].fxt = LSN (mt[j * 3 + 1]);
 	    mod->xxt[i]->event[j].fxp = mt[j * 3 + 2];
-	    if (mod->xxt[i]->event[j].fxt > FX_TEMPO)
+	    if (mod->xxt[i]->event[j].fxt > FX_SPEED)
 		mod->xxt[i]->event[j].fxt = mod->xxt[i]->event[j].fxp = 0;
 	    /* Set pan effect translation */
 	    if ((mod->xxt[i]->event[j].fxt == FX_EXTENDED) &&

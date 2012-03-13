@@ -17,7 +17,7 @@
 #define FX_VOLSET	0x0c
 #define FX_BREAK	0x0d
 #define FX_EXTENDED	0x0e
-#define FX_TEMPO	0x0f
+#define FX_SPEED	0x0f
 
 /* Unofficial Protracker effects */
 #define FX_SETPAN	0x08
@@ -65,7 +65,7 @@
 #define FX_PER_VIBRATO	0x7b
 #define FX_PER_VSLD_UP	0x7c
 #define FX_PER_VSLD_DN	0x7d
-#define FX_TEMPO_CP	0x7e
+#define FX_SPEED_CP	0x7e
 #define FX_PER_CANCEL	0x7f
 
 /* IT effects */
@@ -91,7 +91,7 @@
 /* Extra effects */
 #define FX_VOLSLIDE_UP	0xa0	/* SFX, MDL */
 #define FX_VOLSLIDE_DN	0xa1
-#define FX_S3M_TEMPO	0xa3	/* S3M */
+#define FX_S3M_SPEED	0xa3	/* S3M */
 #define FX_VOLSLIDE_2	0xa4
 #define FX_F_VSLIDE	0xa5	/* IMF/MDL */
 #define FX_FINETUNE	0xa6

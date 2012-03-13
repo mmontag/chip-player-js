@@ -171,7 +171,7 @@ static void fix_effect (uint8 *fx, uint8 *param) {
 		}
 		break;
 	case 15:
-		*fx = FX_S3M_TEMPO;
+		*fx = FX_S3M_SPEED;
 		break;
 	}
 }

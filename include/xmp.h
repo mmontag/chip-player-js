@@ -172,7 +172,7 @@ struct xmp_module {
 	int chn;			/* Tracks per pattern */
 	int ins;			/* Number of instruments */
 	int smp;			/* Number of samples */
-	int tpo;			/* Initial tempo */
+	int spd;			/* Initial speed */
 	int bpm;			/* Initial BPM */
 	int len;			/* Module length in patterns */
 	int rst;			/* Restart position */
@@ -199,7 +199,7 @@ struct xmp_module_info {		/* Current module information */
 	int row;			/* Current row in pattern */
 	int num_rows;			/* Number of rows in current pattern */
 	int frame;			/* Current frame */
-	int tempo;			/* Current replay speed */
+	int speed;			/* Current replay speed */
 	int bpm;			/* Current bpm */
 	int time;			/* Current module time in ms */
 	int frame_time;			/* Frame replay time in us */

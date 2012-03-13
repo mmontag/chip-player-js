@@ -138,7 +138,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	mod->gvl = read8(f);
-	mod->tpo = read8(f);
+	mod->spd = read8(f);
 	mod->bpm = read8(f);
 	origfmt = read16l(f);
 	ord_ofs = read32l(f);

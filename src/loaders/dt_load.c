@@ -57,7 +57,7 @@ static void get_d_t_(struct module_data *m, int size, FILE *f, void *parm)
 	read16b(f);			/* type */
 	read16b(f);			/* 0xff then mono */
 	read16b(f);			/* reserved */
-	mod->tpo = read16b(f);
+	mod->spd = read16b(f);
 	if ((b = read16b(f)) > 0)	/* RAMBO.DTM has bpm 0 */
 		mod->bpm = b;
 	read32b(f);			/* undocumented */

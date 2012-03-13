@@ -330,10 +330,10 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					fxt = FX_BREAK;
 					break;
 				case 0x3D:		/* speed */
-					fxt = FX_TEMPO;
+					fxt = FX_SPEED;
 					break;
 				case 0x3E:		/* tempo */
-					fxt = FX_TEMPO;
+					fxt = FX_SPEED;
 					break;
 				default:
 printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
@@ -387,7 +387,7 @@ static void get_song_2(struct module_data *m, int size, FILE *f, void *parm)
 	for (i = 0; c != 0x01; c = read8(f)) {
 		switch (c) {
 		case 0x07:
-			mod->tpo = read8(f);
+			mod->spd = read8(f);
 			read8(f);		/* 08 */
 			mod->bpm = read8(f);
 			break;

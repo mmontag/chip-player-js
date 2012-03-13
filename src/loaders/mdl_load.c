@@ -123,7 +123,7 @@ static void xlat_fx_common(uint8 *t, uint8 *p)
 	}
 	break;
     case 0x0f:
-	*t = FX_S3M_TEMPO;
+	*t = FX_S3M_SPEED;
 	break;
     }
 }
@@ -303,7 +303,7 @@ static void get_chunk_in(struct module_data *m, int size, FILE *f, void *parm)
     mod->len = read16l(f);
     mod->rst = read16l(f);
     read8(f);			/* gvol */
-    mod->tpo = read8(f);
+    mod->spd = read8(f);
     mod->bpm = read8(f);
 
     for (i = 0; i < 32; i++) {

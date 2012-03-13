@@ -163,8 +163,8 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define MAX_ENTRY_POINTS	10
 
 struct ord_data {
+	int speed;
 	int bpm;
-	int tempo;
 	int gvl;
 	int time;
 	int start_row;
@@ -216,7 +216,7 @@ struct player_data {
 	int pos;
 	int row;
 	int frame;
-	int tempo;
+	int speed;
 	int bpm;
 	double current_time;
 	double frame_time;

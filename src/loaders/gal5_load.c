@@ -67,7 +67,7 @@ static void get_init(struct module_data *m, int size, FILE *f, void *parm)
 	if (~flags & 0x01)
 		m->quirk |= QUIRK_LINEAR;
 	mod->chn = read8(f);
-	mod->tpo = read8(f);
+	mod->spd = read8(f);
 	mod->bpm = read8(f);
 	read16l(f);		/* unknown - 0x01c5 */
 	read16l(f);		/* unknown - 0xff00 */
@@ -144,7 +144,7 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 
 			switch (fxt) {
 			case 0x14:		/* speed */
-				fxt = FX_S3M_TEMPO;
+				fxt = FX_S3M_SPEED;
 				break;
 			default:
 				if (fxt > 0x0f) {

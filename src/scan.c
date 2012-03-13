@@ -39,7 +39,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 {
     int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
-    int gvl, bpm, tempo, base_time, chn;
+    int gvl, bpm, speed, base_time, chn;
     int alltmp;
     double clock, clock_rst;
     int loop_chn, loop_flg;
@@ -68,7 +68,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     gvl = m->mod.gvl;
     bpm = m->mod.bpm;
 
-    tempo = m->mod.tpo;
+    speed = m->mod.spd;
     base_time = m->rrate;
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
@@ -120,7 +120,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 
 	info->gvl = gvl;
 	info->bpm = bpm;
-	info->tempo = tempo;
+	info->speed = speed;
 	info->time = clock + m->time_factor * alltmp / bpm;
 
 	if (info->start_row == 0 && ord != 0) {
@@ -189,16 +189,16 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 		    parm = (f1 == FX_G_VOLSLIDE) ? p1 : p2;
 		    if (parm)
 			gvol_slide = MSN(parm) - LSN(parm);
-		    gvl += gvol_slide * (tempo - !(m->quirk & QUIRK_VSALL));
+		    gvl += gvol_slide * (speed - !(m->quirk & QUIRK_VSALL));
 		}
 
-		if ((f1 == FX_TEMPO && p1) || (f2 == FX_TEMPO && p2)) {
-		    parm = (f1 == FX_TEMPO) ? p1 : p2;
-		    alltmp += cnt_row * tempo * base_time;
+		if ((f1 == FX_SPEED && p1) || (f2 == FX_SPEED && p2)) {
+		    parm = (f1 == FX_SPEED) ? p1 : p2;
+		    alltmp += cnt_row * speed * base_time;
 		    cnt_row = 0;
 		    if (parm) {
 			if (parm <= 0x20)
-			    tempo = parm;
+			    speed = parm;
 			else {
 			    clock += m->time_factor * alltmp / bpm;
 			    alltmp = 0;
@@ -207,23 +207,23 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 		    }
 		}
 
-		if (f1 == FX_TEMPO_CP) {
-		    f1 = FX_S3M_TEMPO;
+		if (f1 == FX_SPEED_CP) {
+		    f1 = FX_S3M_SPEED;
 		}
-		if (f2 == FX_TEMPO_CP) {
-		    f2 = FX_S3M_TEMPO;
+		if (f2 == FX_SPEED_CP) {
+		    f2 = FX_S3M_SPEED;
 		}
 
-		if ((f1 == FX_S3M_TEMPO && p1) || (f2 == FX_S3M_TEMPO && p2)) {
-		    parm = (f1 == FX_S3M_TEMPO) ? p1 : p2;
-		    alltmp += cnt_row * tempo * base_time;
+		if ((f1 == FX_S3M_SPEED && p1) || (f2 == FX_S3M_SPEED && p2)) {
+		    parm = (f1 == FX_S3M_SPEED) ? p1 : p2;
+		    alltmp += cnt_row * speed * base_time;
 		    cnt_row  = 0;
-		    tempo = parm;
+		    speed = parm;
 		}
 
 		if ((f1 == FX_S3M_BPM && p1) || (f2 == FX_S3M_BPM && p2)) {
 		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
-		    alltmp += cnt_row * tempo * base_time;
+		    alltmp += cnt_row * speed * base_time;
 		    cnt_row = 0;
 		    clock += m->time_factor * alltmp / bpm;
 		    alltmp = 0;
@@ -232,7 +232,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if ((f1 == FX_IT_BPM && p1) || (f2 == FX_IT_BPM && p2)) {
 		    parm = (f1 == FX_IT_BPM) ? p1 : p2;
-		    alltmp += cnt_row * tempo * base_time;
+		    alltmp += cnt_row * speed * base_time;
 		    cnt_row = 0;
 		    clock += m->time_factor * alltmp / bpm;
 		    alltmp = 0;
@@ -266,7 +266,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 
 		    if ((parm >> 4) == EX_PATT_DELAY) {
 			pdelay = parm & 0x0f;
-			alltmp += pdelay * tempo * base_time;
+			alltmp += pdelay * speed * base_time;
 		    }
 
 		    if ((parm >> 4) == EX_PATTERN_LOOP) {
@@ -309,7 +309,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	    ord2 = -1;
 	}
 
-	alltmp += cnt_row * tempo * base_time;
+	alltmp += cnt_row * speed * base_time;
 	cnt_row = 0;
     }
     row = break_row;
@@ -327,7 +327,7 @@ end_module:
     free(tab_cnt);
 
     clock -= clock_rst;
-    alltmp += cnt_row * tempo * base_time;
+    alltmp += cnt_row * speed * base_time;
 
     return (clock + m->time_factor * alltmp / bpm);
 }

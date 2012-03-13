@@ -90,7 +90,7 @@ static int xm_load(struct module_data *m, FILE *f, const int start)
     mod->pat = xfh.patterns;
     mod->trk = mod->chn * mod->pat + 1;
     mod->ins = xfh.instruments;
-    mod->tpo = xfh.tempo;
+    mod->spd = xfh.tempo;
     mod->bpm = xfh.bpm;
 
     m->quirk |= xfh.flags & XM_LINEAR_PERIOD_MODE ? QUIRK_LINEAR : 0;

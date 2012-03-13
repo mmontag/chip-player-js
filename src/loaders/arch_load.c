@@ -135,7 +135,7 @@ static void fix_effect(struct xmp_event *e)
 		/* Jump to line 10*x+y in same pattern. (10*x+y>63 ignored) */
 		break;
 	case 0x1c:			/* 1C xy Set Speed */
-		e->fxt = FX_TEMPO;
+		e->fxt = FX_SPEED;
 		break;
 	case 0x1f:			/* 1F xx Set Volume */
 		e->fxt = FX_VOLSET;

@@ -98,7 +98,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 
 	LOAD_INIT();
 
-	mod->tpo = read8(f);		/* Tempo */
+	mod->spd = read8(f);		/* Speed */
 	pos_ptr = read16l(f);		/* Positions pointer */
 	orn_ptr = read16l(f);		/* Ornaments pointer */
 	pat_ptr = read16l(f);		/* Patterns pointer */

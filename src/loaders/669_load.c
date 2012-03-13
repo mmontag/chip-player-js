@@ -45,7 +45,7 @@ struct ssn_file_header {
     uint8 nop;			/* Number of patterns (0-128) */
     uint8 loop;			/* Loop order number */
     uint8 order[128];		/* Order list */
-    uint8 tempo[128];		/* Tempo list for patterns */
+    uint8 speed[128];		/* Tempo list for patterns */
     uint8 pbrk[128];		/* Break list for patterns */
 };
 
@@ -67,7 +67,7 @@ static const uint8 fx[] = {
     FX_PER_TPORTA,
     FX_FINETUNE,
     FX_PER_VIBRATO,
-    FX_TEMPO_CP
+    FX_SPEED_CP
 };
 
 
@@ -88,7 +88,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
     sfh.nop = read8(f);			/* Number of patterns (0-128) */
     sfh.loop = read8(f);		/* Loop order number */
     fread(&sfh.order, 128, 1, f);	/* Order list */
-    fread(&sfh.tempo, 128, 1, f);	/* Tempo list for patterns */
+    fread(&sfh.speed, 128, 1, f);	/* Tempo list for patterns */
     fread(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
 
     mod->chn = 8;
@@ -100,7 +100,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 	    break;
     mod->len = i;
     memcpy (mod->xxo, sfh.order, mod->len);
-    mod->tpo = 6;
+    mod->spd = 6;
     mod->bpm = 76;		/* adjusted using Flux/sober.669 */
     mod->smp = mod->ins;
 
@@ -154,8 +154,8 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 	mod->xxp[i]->rows = 64;
 	TRACK_ALLOC (i);
 
-	EVENT(i, 0, 0).f2t = FX_TEMPO_CP;
-	EVENT(i, 0, 0).f2p = sfh.tempo[i];
+	EVENT(i, 0, 0).f2t = FX_SPEED_CP;
+	EVENT(i, 0, 0).f2p = sfh.speed[i];
 	EVENT(i, 1, sfh.pbrk[i]).f2t = FX_BREAK;
 	EVENT(i, 1, sfh.pbrk[i]).f2p = 0;
 
@@ -177,7 +177,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 
 		/* If no instrument is playing on the channel where the
 		 * command was encountered, there will be no effect (except
-		 * for command 'f', it always changes the tempo). 
+		 * for command 'f', it always changes the speed). 
 		 */
 		if (MSN(ev[2] < 5) && !event->ins)
 		    continue;
@@ -196,7 +196,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 		case FX_FINETUNE:
 		    event->fxp = 0x80 + (LSN(ev[2]) << 4);
 		    break;
-		case FX_TEMPO_CP:
+		case FX_SPEED_CP:
 		    event->fxp = LSN(ev[2]);
 		    event->f2t = FX_PER_CANCEL;
 		    break;

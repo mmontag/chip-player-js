@@ -60,7 +60,7 @@ static int stx_test(FILE *f, char *t, const int start)
 #define FX_NONE 0xff
 
 static const uint8 fx[] = {
-    FX_NONE,		FX_TEMPO,
+    FX_NONE,		FX_SPEED,
     FX_JUMP,		FX_BREAK,
     FX_VOLSLIDE,	FX_PORTA_DN,
     FX_PORTA_UP,	FX_TONEPORTA,
@@ -119,7 +119,7 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
     mod->pat = sfh.patnum;
     mod->trk = mod->pat * mod->chn;
     mod->len = sfh.ordnum;
-    mod->tpo = MSN (sfh.tempo);
+    mod->spd = MSN (sfh.tempo);
     mod->smp = mod->ins;
     m->c4rate = C4_NTSC_RATE;
 
@@ -265,7 +265,7 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 		event->fxt = fx[read8(f)];
 		event->fxp = read8(f);
 		switch (event->fxt) {
-		case FX_TEMPO:
+		case FX_SPEED:
 		    event->fxp = MSN (event->fxp);
 		    break;
 		case FX_NONE:

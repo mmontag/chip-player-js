@@ -140,7 +140,7 @@ static void fix_effect(struct xmp_event *e)
 		e->fxt = FX_JUMP;
 		break;
 	case 0x0f:
-		e->fxt = FX_TEMPO;
+		e->fxt = FX_SPEED;
 		break;
 	case 0x10:			/* unused */
 		e->fxt = e->fxp = 0;

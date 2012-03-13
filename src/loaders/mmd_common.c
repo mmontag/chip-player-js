@@ -52,7 +52,7 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 	case 0x08:		/* Set hold/decay */
 		break;
 	case 0x09:		/* Set secondary tempo */
-		event->fxt = FX_TEMPO;
+		event->fxt = FX_SPEED;
 		break;
 	case 0x0d:		/* Volume slide */
 		event->fxt = FX_VOLSLIDE;

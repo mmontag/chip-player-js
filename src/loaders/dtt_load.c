@@ -58,7 +58,7 @@ static int dtt_load(struct module_data *m, FILE *f, const int start)
 	mod->chn = read32l(f);
 	mod->len = read32l(f);
 	fread(buf, 1, 8, f);
-	mod->tpo = read32l(f);
+	mod->spd = read32l(f);
 	mod->rst = read32l(f);
 	mod->pat = read32l(f);
 	mod->ins = mod->smp = read32l(f);

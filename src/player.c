@@ -81,14 +81,14 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 	struct channel_data *xc = &p->xc_data[chn];
 
 	/* Tempo affects delay and must be computed first */
-	if ((e->fxt == FX_TEMPO && e->fxp < 0x20) || e->fxt == FX_S3M_TEMPO) {
+	if ((e->fxt == FX_SPEED && e->fxp < 0x20) || e->fxt == FX_S3M_SPEED) {
 		if (e->fxp) {
-			p->tempo = e->fxp;
+			p->speed = e->fxp;
 		}
 	}
-	if ((e->f2t == FX_TEMPO && e->f2p < 0x20) || e->f2t == FX_S3M_TEMPO) {
+	if ((e->f2t == FX_SPEED && e->f2p < 0x20) || e->f2t == FX_S3M_SPEED) {
 		if (e->f2p) {
-			p->tempo = e->f2p;
+			p->speed = e->f2p;
 		}
 	}
 
@@ -365,7 +365,7 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	/* Volume slides happen in all frames but the first, except when the
 	 * "volume slide on all frames" flag is set.
 	 */
-	if (t % p->tempo != 0 || HAS_QUIRK(QUIRK_VSALL)) {
+	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VSALL)) {
 		if (!chn && p->gvol.flag) {
 			p->gvol.volume += p->gvol.slide;
 			if (p->gvol.volume < 0)
@@ -397,7 +397,7 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 		}
 	}
 
-	if (t % p->tempo == 0) {
+	if (t % p->speed == 0) {
 		/* Process "fine" effects */
 		if (TEST(FINE_VOLS))
 			xc->volume += xc->vol.fslide;
@@ -426,7 +426,7 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (t % p->tempo != 0 || HAS_QUIRK(QUIRK_PBALL)) {
+	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_PBALL)) {
 		if (TEST(PITCHBEND) || TEST_PER(PITCHBEND))
 			xc->period += xc->freq.slide;
 
@@ -446,7 +446,7 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 			xc->volume = 0;
 	}
 
-	if (t % p->tempo == 0) {
+	if (t % p->speed == 0) {
 		if (TEST(FINE_BEND)) {
 			xc->period = (4 * xc->period + xc->freq.fslide) / 4;
 		}
@@ -489,7 +489,7 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (t % p->tempo != 0) {
+	if (t % p->speed != 0) {
 		if (TEST(PAN_SLIDE)) {
 			xc->pan += xc->p_val;
 			if (xc->pan < 0) {
@@ -703,8 +703,8 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	s->pbase = SMIX_C4NOTE * m->c4rate / s->freq;
 
 	/* Sanity check */
-	if (mod->tpo == 0) {
-		mod->tpo = 6;
+	if (mod->spd == 0) {
+		mod->spd = 6;
 	}
 	if (mod->bpm == 0) {
 		mod->bpm = 125;
@@ -728,7 +728,7 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 
 	p->gvol.volume = m->xxo_info[p->ord].gvl;
 	p->bpm = m->xxo_info[p->ord].bpm;
-	p->tempo = m->xxo_info[p->ord].tempo;
+	p->speed = m->xxo_info[p->ord].speed;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 	f->end_point = p->scan[p->sequence].num;
 
@@ -800,8 +800,8 @@ int xmp_player_frame(xmp_context opaque)
 		p->ord = p->pos - 1;
 		next_order(ctx);
 
-		if (m->xxo_info[p->ord].tempo)
-			p->tempo = m->xxo_info[p->ord].tempo;
+		if (m->xxo_info[p->ord].speed)
+			p->speed = m->xxo_info[p->ord].speed;
 		p->bpm = m->xxo_info[p->ord].bpm;
 		p->gvol.volume = m->xxo_info[p->ord].gvl;
 		p->current_time = m->xxo_info[p->ord].time;
@@ -810,7 +810,7 @@ int xmp_player_frame(xmp_context opaque)
 		reset_channel(ctx);
 	} else {
 		p->frame++;
-		if (p->frame >= (p->tempo * (1 + f->delay))) {
+		if (p->frame >= (p->speed * (1 + f->delay))) {
 			next_row(ctx);
 		}
 	}
@@ -893,7 +893,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	}
 
 	info->frame = p->frame;
-	info->tempo = p->tempo;
+	info->speed = p->speed;
 	info->bpm = p->bpm;
 	info->total_time = p->scan[p->sequence].time;
 	info->frame_time = p->frame_time * 1000;

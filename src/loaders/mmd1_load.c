@@ -151,7 +151,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 	 * lower, the faster). Values 11-240 are equivalent to 10.
 	 */
 
-        mod->tpo = song.tempo2;
+        mod->spd = song.tempo2;
         mod->bpm = med_8ch ?
 			mmd_get_8ch_tempo(song.deftempo) :
 			(bpm_on ? song.deftempo / bpmlen : song.deftempo);

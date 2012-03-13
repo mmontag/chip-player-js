@@ -84,7 +84,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 
     mod->chn = 9;
     mod->bpm = 125;
-    mod->tpo = 6;
+    mod->spd = 6;
     mod->len = afh.len;
     mod->pat = afh.pat + 1;
     mod->ins = 26;
@@ -189,7 +189,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 		    break;
 		}
 		event->fxp *= tmode;
-		b = FX_TEMPO;
+		b = FX_SPEED;
 		break;
 	    }
 	    event->fxt = b;

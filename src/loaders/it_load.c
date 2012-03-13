@@ -51,7 +51,7 @@ static int it_test(FILE *f, char *t, const int start)
 
 static const uint8 fx[] = {
 	/*   */ FX_NONE,
-	/* A */ FX_S3M_TEMPO,
+	/* A */ FX_S3M_SPEED,
 	/* B */ FX_JUMP,
 	/* C */ FX_BREAK,
 	/* D */ FX_VOLSLIDE,
@@ -300,7 +300,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
     pp_ins = mod->ins ? calloc(4, mod->ins) : NULL;
     pp_smp = calloc(4, mod->smp);
     pp_pat = calloc(4, mod->pat);
-    mod->tpo = ifh.is;
+    mod->spd = ifh.is;
     mod->bpm = ifh.it;
 
     if (ifh.flags & IT_LINEAR_FREQ) {

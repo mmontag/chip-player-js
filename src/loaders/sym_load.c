@@ -188,7 +188,7 @@ static void fix_effect(struct xmp_event *e, int parm)
 		break;
 	case 0x2f:	/* 2F xxx Set Tempo */
 		if (parm >= 0x100 && parm <= 0x800) {
-			e->fxt = FX_TEMPO;
+			e->fxt = FX_SPEED;
 			e->fxp = (parm+4) >> 3; /* round to nearest */
 		} else {
 			/* umm... */

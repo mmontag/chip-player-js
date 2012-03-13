@@ -63,7 +63,7 @@ static const uint8 fx[] = {
 	NONE,			/* FIXME: Pan */
 	NONE,
 	NONE, /*FX_MULTI_RETRIG,*/
-	FX_S3M_TEMPO,
+	FX_S3M_SPEED,
 	FX_TREMOLO,
 	FX_PORTA_UP,
 	FX_VIBRATO,
@@ -190,7 +190,7 @@ static int liq_load(struct module_data *m, FILE *f, const int start)
 	fseek(f, -2, SEEK_CUR);
     }
 
-    mod->tpo = lh.speed;
+    mod->spd = lh.speed;
     mod->bpm = lh.bpm;
     mod->chn = lh.chn;
     mod->pat = lh.pat;

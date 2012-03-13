@@ -124,7 +124,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
     mod->len = i;
     memcpy (mod->xxo, ffh.order, mod->len);
 
-    mod->tpo = 4;
+    mod->spd = 4;
     mod->bpm = 125;
     mod->chn = 0;
 
@@ -269,7 +269,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
 		    event->fxp = 8 + (LSN(ev[2]) << 4);	
 		    break;
 		case 0xf:
-		    event->fxt = FX_TEMPO;
+		    event->fxt = FX_SPEED;
 		    event->fxp = LSN(ev[2]);	
 		    break;
 		}

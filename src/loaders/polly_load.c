@@ -122,7 +122,7 @@ static int polly_load(struct module_data *m, FILE *f, const int start)
 	set_type(m, "Polly Tracker");
 	MODULE_INFO();
 
-	mod->tpo = 0x03;
+	mod->spd = 0x03;
 	mod->bpm = 0x7d * buf[ORD_OFS + 193] / 0x88;
 #if 0
 	for (i = 0; i < 1024; i++) {

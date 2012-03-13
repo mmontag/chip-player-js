@@ -64,7 +64,7 @@ static const uint8 fx[] = {
     FX_FAR_DELAY,		/* 0xc?  Note Offset */
     NONE,			/* 0xd?  Fine Tempo dn */
     NONE,			/* 0xe?  Fine Tempo up */
-    FX_TEMPO			/* 0xf?  Tempo */
+    FX_SPEED			/* 0xf?  Tempo */
 };
 
 
@@ -104,7 +104,7 @@ static int far_load(struct module_data *m, FILE *f, const int start)
     mod->chn = 16;
     /*mod->pat=ffh2.patterns; (Error in specs? --claudio) */
     mod->len = ffh2.songlen;
-    mod->tpo = 6;
+    mod->spd = 6;
     mod->bpm = 8 * 60 / ffh.tempo;
     memcpy (mod->xxo, ffh2.order, mod->len);
 
@@ -200,7 +200,7 @@ static int far_load(struct module_data *m, FILE *f, const int start)
 		event->fxt = FX_EXTENDED;
 		event->fxp |= (EX_F_VSLIDE_DN << 4);
 		break;
-	    case FX_TEMPO:
+	    case FX_SPEED:
 		event->fxp = 8 * 60 / event->fxp;
 		break;
 	    }

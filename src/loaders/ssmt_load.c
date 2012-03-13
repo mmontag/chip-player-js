@@ -76,7 +76,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 		return -1;
 
 	blocksize = read16l(f);
-	mod->tpo = read16l(f);
+	mod->spd = read16l(f);
 	fseek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
 	mod->ins = mod->smp = 15;
@@ -152,7 +152,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 					event->fxt = FX_VOLSLIDE_UP;
 					break;
 				case 0x0f:
-					event->fxt = FX_TEMPO;
+					event->fxt = FX_SPEED;
 					break;
 				}
 			}

@@ -213,7 +213,7 @@ static int ult_load(struct module_data *m, FILE *f, const int start)
     mod->len = i;
     mod->chn = ufh2.channels + 1;
     mod->pat = ufh2.patterns + 1;
-    mod->tpo = 6;
+    mod->spd = 6;
     mod->bpm = 125;
     mod->trk = mod->chn * mod->pat;
 
