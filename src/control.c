@@ -135,11 +135,16 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 		int i, t;
 
 		for (i = m->mod.len - 1; i >= 0; i--) {
-			if (m->mod.xxo[i] >= m->mod.pat)
+			int pat = m->mod.xxo[i];
+			if (pat >= m->mod.pat) {
 				continue;
+			}
+			if (get_sequence(ctx, pat) != p->sequence) {
+				continue;
+			}
 			t = m->xxo_info[i].time;
 			if (arg > t) {
-				xmp_ord_set(opaque, i);
+				set_position(ctx, i, 1);
 				break;
 			}
 		}
