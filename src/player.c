@@ -791,15 +791,18 @@ int xmp_player_frame(xmp_context opaque)
 
 	/* check reposition */
 	if (p->ord != p->pos) {
+		int start = m->sequence[p->sequence].entry_point;
+
 		if (p->pos == -2) {		/* set by xmp_module_stop */
 			return -1;		/* that's all folks */
 		}
 
 		if (p->pos == -1) {
-			p->pos++;		/* restart module */
+			/* restart sequence */
+			p->pos = start;
 		}
 
-		if (p->pos == 0) {
+		if (p->pos == start) {
 			f->end_point = p->scan[p->sequence].num;
 		}
 
@@ -814,8 +817,8 @@ int xmp_player_frame(xmp_context opaque)
 		p->ord = p->pos - 1;
 
 		/* Stay inside our subsong */
-		if (p->ord < m->sequence[p->sequence].entry_point) {
-			p->ord = m->sequence[p->sequence].entry_point - 1;
+		if (p->ord < start) {
+			p->ord = start - 1;
 		}
 
 #if 0
