@@ -20,7 +20,7 @@ TEST(test_effect_delay)
 	new_event(ctx, 0, 2, 0, 62, 2,  0, 0x0e, 0xd1, 0, 0);
 	new_event(ctx, 0, 3, 0, 63, 2,  0, 0x0e, 0xd3, 0, 0);
 
-	xmp_player_start(opaque, 0, 44100, 0);
+	xmp_player_start(opaque, 44100, 0);
 
 	/* Row 0 */
 	xmp_player_frame(opaque);

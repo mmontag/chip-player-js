@@ -40,7 +40,7 @@ TEST(test_porta_no_ins_st3)
 	new_event(ctx, 0, 1, 0, 50, 0,  0, 0x03, 4, 0, 0);
 	set_quirk(ctx, QUIRKS_ST3, READ_EVENT_ST3);
 
-	xmp_player_start(opaque, 0, 44100, 0);
+	xmp_player_start(opaque, 44100, 0);
 
 	/* Row 0 */
 	xmp_player_frame(opaque);

@@ -62,7 +62,7 @@ TEST(test_no_note_same_ins_it)
 	new_event(ctx, 0, 1, 0,  0, 1,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_IT, READ_EVENT_IT);
 
-	xmp_player_start(opaque, 0, 44100, 0);
+	xmp_player_start(opaque, 44100, 0);
 
 	/* Row 0 */
 	xmp_player_frame(opaque);

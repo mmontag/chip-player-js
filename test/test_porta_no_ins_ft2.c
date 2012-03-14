@@ -40,7 +40,7 @@ TEST(test_porta_no_ins_ft2)
 	new_event(ctx, 0, 1, 0, 50, 0,  0, 0x03, 4, 0, 0);
 	set_quirk(ctx, QUIRKS_FT2, READ_EVENT_FT2);
 
-	xmp_player_start(opaque, 0, 44100, 0);
+	xmp_player_start(opaque, 44100, 0);
 
 	/* Row 0 */
 	xmp_player_frame(opaque);
