@@ -243,7 +243,6 @@ extern const unsigned int xmp_version;
 #define xmp_ord_prev(p)		_xmp_ctl((p), XMP_CTL_ORD_PREV)
 #define xmp_ord_set(p,x)	_xmp_ctl((p), XMP_CTL_ORD_SET, (x))
 #define xmp_mod_stop(p)		_xmp_ctl((p), XMP_CTL_MOD_STOP)
-#define xmp_stop_module(p)	_xmp_ctl((p), XMP_CTL_MOD_STOP)
 #define xmp_mod_restart(p)	_xmp_ctl((p), XMP_CTL_MOD_RESTART)
 #define xmp_gvol_inc(p)		_xmp_ctl((p), XMP_CTL_GVOL_INC)
 #define xmp_gvol_dec(p)		_xmp_ctl((p), XMP_CTL_GVOL_DEC)
