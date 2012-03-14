@@ -160,7 +160,7 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define DEFAULT_TIME_FACTOR	10.0
 #define MED_TIME_FACTOR		2.64
 
-#define MAX_ENTRY_POINTS	10
+#define MAX_SEQUENCES		16
 
 struct ord_data {
 	int speed;
@@ -211,7 +211,6 @@ struct module_data {
 
 
 struct player_data {
-	int start;
 	int ord;
 	int pos;
 	int row;
@@ -253,7 +252,7 @@ struct player_data {
 		int ord;
 		int row;
 		int num;
-	} scan[MAX_ENTRY_POINTS];
+	} scan[MAX_SEQUENCES];
 
 	struct channel_data *xc_data;
 

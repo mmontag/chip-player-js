@@ -93,9 +93,17 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 
     while (42) {
 	if ((uint32)++ord >= m->mod.len) {
-	    ord = ((uint32)m->mod.rst > m->mod.len ||
-		   (uint32)m->mod.xxo[m->mod.rst] >= m->mod.pat) ?
-			0 : m->mod.rst;
+	    if (m->mod.rst > m->mod.len ||
+	      m->mod.xxo[m->mod.rst] >= m->mod.pat) {
+		ord = m->sequence[chain].entry_point;
+	    } else {
+		if (get_sequence(ctx, m->mod.rst) == chain) {
+	            ord = m->mod.rst;
+		} else {
+		    ord = ep;
+	        }
+	    }
+	   
 	    pat = m->mod.xxo[ord];
 	    if (pat == S3M_END) {
 		break;
@@ -128,7 +136,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	info->time = clock + m->time_factor * alltmp / bpm;
 
 	if (info->start_row == 0 && ord != 0) {
-	    if (ord == p->start) {
+	    if (ord == ep) {
 		clock_rst = clock + m->time_factor * alltmp / bpm;
 	    }
 
@@ -319,7 +327,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     row = break_row;
 
 end_module:
-    p->scan[chain].num = p->start > ord ? 0: tab_cnt[ord][row];
+    p->scan[chain].num = tab_cnt[ord][row];
     p->scan[chain].row = row;
     p->scan[chain].ord = ord;
 
@@ -365,7 +373,7 @@ int scan_sequences(struct context_data *ctx)
 				break;
 			}
 		}
-		if (i != mod->len) {
+		if (i != mod->len && seq < MAX_SEQUENCES) {
 			/* New entry point */
 			ep = i;
 			temp_ep[seq] = ep;

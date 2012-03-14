@@ -38,6 +38,47 @@ void xmp_free_context(xmp_context opaque)
 	free(opaque);
 }
 
+static void set_position(struct context_data *ctx, int pos, int dir)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	struct flow_control *f = &p->flow;
+	int seq = get_sequence(ctx, pos);
+	int start = m->sequence[seq].entry_point;
+
+	if (seq >= 0) {
+		p->sequence = seq;
+
+		if (mod->xxo[pos] == 0xff) {
+			return;
+		}
+
+		while (mod->xxo[pos] == 0xfe && pos > start) {
+			if (dir < 0) {
+				pos--;
+			} else {
+				pos++;
+			}
+		}
+
+		if (pos > p->scan[seq].ord) {
+			f->end_point = 0;
+		} else {
+			f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
+			f->end_point = p->scan[seq].num;
+		}
+
+		if (pos < m->mod.len && pos >= 0) {
+			if (p->pos == pos && pos == start) {
+				p->pos = start - 1; /* special case */
+			} else {
+				p->pos = pos;
+			}
+		}
+	}
+}
+
 int _xmp_ctl(xmp_context opaque, int cmd, ...)
 {
 	va_list ap;
@@ -51,24 +92,18 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 
 	switch (cmd) {
 	case XMP_CTL_ORD_PREV:
-		if (p->pos > 0)
-			p->pos--;
+		if (p->pos > m->sequence[p->sequence].entry_point)
+			set_position(ctx, p->pos - 1, -1);
 		ret = p->pos;
 		break;
 	case XMP_CTL_ORD_NEXT:
 		if (p->pos < m->mod.len)
-			p->pos++;
+			set_position(ctx, p->pos + 1, 1);
 		ret = p->pos;
 		break;
 	case XMP_CTL_ORD_SET: {
 		int arg = va_arg(ap, int);
-
-		if (arg < m->mod.len && arg >= 0) {
-			if (p->pos == arg && arg == 0)	/* special case */
-				p->pos = -1;
-			else
-				p->pos = arg;
-		}
+		set_position(ctx, arg, 1);
 		ret = p->pos;
 		break; }
 	case XMP_CTL_MOD_STOP:

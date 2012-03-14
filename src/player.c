@@ -610,9 +610,18 @@ static void next_order(struct context_data *ctx)
 
 		/* Restart module */
 		if (p->ord >= mod->len || mod->xxo[p->ord] == 0xff) {
-    			p->ord = ((uint32)mod->rst > mod->len ||
-				(uint32)mod->xxo[mod->rst] >=
-				mod->pat) ?  0 : mod->rst;
+			if (mod->rst > mod->len ||
+			    mod->xxo[mod->rst] >= mod->pat ||
+			    p->ord < m->sequence[p->sequence].entry_point) {
+				p->ord = m->sequence[p->sequence].entry_point;
+			} else {
+				if (get_sequence(ctx, mod->rst) == p->sequence) {
+					p->ord = mod->rst;
+				} else {
+					p->ord = m->sequence[p->sequence].entry_point;
+				}
+			}
+
 			p->gvol.volume = m->xxo_info[p->ord].gvl;
 		}
 	} while (mod->xxo[p->ord] >= mod->pat);
@@ -677,7 +686,7 @@ static void next_row(struct context_data *ctx)
 	}
 }
 
-int xmp_player_start(xmp_context opaque, int start, int rate, int format)
+int xmp_player_start(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -689,13 +698,9 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 
 	mixer_on(ctx);
 
-	if (start >= mod->len) {
-		start = 0;
-	}
-
 	p->gvol.slide = 0;
 	p->gvol.volume = m->volbase;
-	p->pos = p->ord = p->start = start;
+	p->pos = p->ord = 0;
 	p->frame = -1;
 	p->row = 0;
 	p->current_time = 0;
@@ -714,8 +719,6 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 		mod->bpm = 125;
 	}
 
-	p->sequence = get_sequence(ctx, start);
-
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
 	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat) {
 		p->ord++;
@@ -725,15 +728,15 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 		mod->len = 0;
 	}
 
-	if (p->sequence < 0 || mod->len == 0 || mod->chn == 0) {
+	if (mod->len == 0 || mod->chn == 0) {
 		/* set variables to sane state */
-		p->ord = p->scan[p->sequence].ord = 0;
-		p->row = p->scan[p->sequence].row = 0;
+		p->ord = p->scan[0].ord = 0;
+		p->row = p->scan[0].row = 0;
 		f->end_point = 0;
 		f->num_rows = 0;
 	} else {
 		f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
-		f->end_point = p->scan[p->sequence].num;
+		f->end_point = p->scan[0].num;
 	}
 
 	p->gvol.volume = m->xxo_info[p->ord].gvl;
@@ -762,11 +765,6 @@ int xmp_player_start(xmp_context opaque, int start, int rate, int format)
 	m->synth->reset(ctx);
 
 	reset_channel(ctx);
-
-	if (start > m->sequence[p->sequence].entry_point) {
-		p->ord = 0;			/* To enable reposition code */
-		xmp_ord_set(opaque, start);
-	}
 
 	return 0;
 
@@ -820,9 +818,11 @@ int xmp_player_frame(xmp_context opaque)
 			p->ord = m->sequence[p->sequence].entry_point - 1;
 		}
 
+#if 0
 		while (m->mod.xxo[p->ord + 1] == 0xfe && p->ord >= 0) {
 			p->ord--;
 		}
+#endif
 		next_order(ctx);
 
 		if (m->xxo_info[p->ord].speed)
