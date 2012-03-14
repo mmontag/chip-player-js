@@ -76,6 +76,15 @@ void new_event(struct context_data *ctx, int pat, int row, int chn, int note, in
 	e->f2p = fxp;
 }
 
+void set_order(struct context_data *ctx, int pos, int pat)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	mod->xxo[pos] = pat;
+	mod->len = pos + 1;
+}
+
 void set_instrument_volume(struct context_data *ctx, int ins, int sub, int vol)
 {
 	struct module_data *m = &ctx->m;
