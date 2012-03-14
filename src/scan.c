@@ -37,6 +37,9 @@
 
 int scan_module(struct context_data *ctx, int ep, int chain)
 {
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+    struct xmp_module *mod = &m->mod;
     int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
     int gvl, bpm, speed, base_time, chn;
@@ -48,27 +51,25 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     int* loop_row;
     char** tab_cnt;
     struct xmp_event* event;
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
     int pat;
     struct ord_data *info;
 
-    if (m->mod.len == 0)
+    if (mod->len == 0)
 	return 0;
 
-    tab_cnt = calloc(sizeof (char *), m->mod.len);
-    for (ord = m->mod.len; ord--;)
-	tab_cnt[ord] = calloc(1, m->mod.xxo[ord] >= m->mod.pat ?  1 :
-		m->mod.xxp[m->mod.xxo[ord]]->rows ? m->mod.xxp[m->mod.xxo[ord]]->rows : 1);
+    tab_cnt = calloc(sizeof (char *), mod->len);
+    for (ord = mod->len; ord--;)
+	tab_cnt[ord] = calloc(1, mod->xxo[ord] >= mod->pat ?  1 :
+		mod->xxp[mod->xxo[ord]]->rows ? mod->xxp[mod->xxo[ord]]->rows : 1);
 
-    loop_stk = calloc(sizeof (int), m->mod.chn);
-    loop_row = calloc(sizeof (int), m->mod.chn);
+    loop_stk = calloc(sizeof (int), mod->chn);
+    loop_row = calloc(sizeof (int), mod->chn);
     loop_chn = loop_flg = 0;
 
-    gvl = m->mod.gvl;
-    bpm = m->mod.bpm;
+    gvl = mod->gvl;
+    bpm = mod->bpm;
 
-    speed = m->mod.spd;
+    speed = mod->spd;
     base_time = m->rrate;
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
@@ -92,25 +93,25 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     skip_fetch = 0;
 
     while (42) {
-	if ((uint32)++ord >= m->mod.len) {
-	    if (m->mod.rst > m->mod.len ||
-	      m->mod.xxo[m->mod.rst] >= m->mod.pat) {
+	if ((uint32)++ord >= mod->len) {
+	    if (mod->rst > mod->len ||
+	      mod->xxo[mod->rst] >= mod->pat) {
 		ord = m->sequence[chain].entry_point;
 	    } else {
-		if (get_sequence(ctx, m->mod.rst) == chain) {
-	            ord = m->mod.rst;
+		if (get_sequence(ctx, mod->rst) == chain) {
+	            ord = mod->rst;
 		} else {
 		    ord = ep;
 	        }
 	    }
 	   
-	    pat = m->mod.xxo[ord];
+	    pat = mod->xxo[ord];
 	    if (pat == S3M_END) {
 		break;
 	    }
 	} 
 
-	pat = m->mod.xxo[ord];
+	pat = mod->xxo[ord];
 	info = &m->xxo_info[ord];
 
 	if (ep != 0 && p->sequence_control[ord] != 0xff) {
@@ -119,15 +120,15 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	p->sequence_control[ord] = chain;
 
 	/* All invalid patterns skipped, only S3M_END aborts replay */
-	if (pat >= m->mod.pat) {
+	if (pat >= mod->pat) {
 	    if (pat == S3M_END) {
-		ord = m->mod.len;
+		ord = mod->len;
 	        continue;
 	    }
 	    continue;
 	}
 
-	if (break_row < m->mod.xxp[pat]->rows && tab_cnt[ord][break_row])
+	if (break_row < mod->xxp[pat]->rows && tab_cnt[ord][break_row])
 	    break;
 
 	info->gvl = gvl;
@@ -143,7 +144,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	    info->start_row = break_row;
 	}
 
-	last_row = m->mod.xxp[pat]->rows;
+	last_row = mod->xxp[pat]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
 	    /* Prevent crashes caused by large softmixer frames */
 	    if (bpm < SMIX_MINBPM) {
@@ -174,11 +175,11 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 
 	    pdelay = 0;
 
-	    for (chn = 0; chn < m->mod.chn; chn++) {
-		if (row >= m->mod.xxt[m->mod.xxp[pat]->index[chn]]->rows)
+	    for (chn = 0; chn < mod->chn; chn++) {
+		if (row >= mod->xxt[mod->xxp[pat]->index[chn]]->rows)
 		    continue;
 
-		event = &EVENT(m->mod.xxo[ord], chn, row);
+		event = &EVENT(mod->xxo[ord], chn, row);
 
 		/* Pattern delay + pattern break cause target row events
 		 * to be ignored
@@ -334,7 +335,7 @@ end_module:
     free(loop_row);
     free(loop_stk);
 
-    for (ord = m->mod.len; ord--; )
+    for (ord = mod->len; ord--; )
 	free(tab_cnt[ord]);
     free(tab_cnt);
 
