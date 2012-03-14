@@ -196,7 +196,7 @@ struct module_data {
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
 	int num_sequences;
-	struct xmp_sequence *sequence;
+	struct xmp_sequence *seq_data;
 
 	char *instrument_path;
 

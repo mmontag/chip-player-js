@@ -228,8 +228,9 @@ struct xmp_module_info {		/* Current module information */
 	struct xmp_module *mod;		/* Pointer to module data */
 	char *comment;			/* Comment text, if any */
 
+	int sequence;			/* Current sequence */
 	int num_sequences;		/* Number of valid sequences */
-	struct xmp_sequence *sequence;	/* Pointer to sequence data */
+	struct xmp_sequence *seq_data;	/* Pointer to sequence data */
 };
 
 

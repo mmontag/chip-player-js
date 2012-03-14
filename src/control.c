@@ -52,7 +52,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 		seq = p->sequence;
 	}
 
-	start = m->sequence[seq].entry_point;
+	start = m->seq_data[seq].entry_point;
 
 	if (seq >= 0) {
 		p->sequence = seq;
@@ -97,9 +97,9 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 
 	switch (cmd) {
 	case XMP_CTL_ORD_PREV:
-		if (p->pos == m->sequence[p->sequence].entry_point) {
+		if (p->pos == m->seq_data[p->sequence].entry_point) {
 			set_position(ctx, -1, -1);
-		} else if (p->pos > m->sequence[p->sequence].entry_point) {
+		} else if (p->pos > m->seq_data[p->sequence].entry_point) {
 			set_position(ctx, p->pos - 1, -1);
 		}
 		ret = p->pos;

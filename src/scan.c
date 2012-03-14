@@ -96,7 +96,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	if ((uint32)++ord >= mod->len) {
 	    if (mod->rst > mod->len ||
 	      mod->xxo[mod->rst] >= mod->pat) {
-		ord = m->sequence[chain].entry_point;
+		ord = m->seq_data[chain].entry_point;
 	    } else {
 		if (get_sequence(ctx, mod->rst) == chain) {
 	            ord = mod->rst;
@@ -388,14 +388,14 @@ int scan_sequences(struct context_data *ctx)
 	m->num_sequences = seq;
 
 	/* Now place entry points in the public accessible array */
-	m->sequence = malloc(sizeof(struct xmp_sequence) * m->num_sequences);
-	if (m->sequence == NULL) {
+	m->seq_data = malloc(sizeof(struct xmp_sequence) * m->num_sequences);
+	if (m->seq_data == NULL) {
 		return -1;
 	}
 
 	for (i = 0; i < m->num_sequences; i++) {
-		m->sequence[i].entry_point = temp_ep[i];
-		m->sequence[i].duration = p->scan[i].time;
+		m->seq_data[i].entry_point = temp_ep[i];
+		m->seq_data[i].duration = p->scan[i].time;
 	}
 
 

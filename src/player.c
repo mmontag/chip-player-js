@@ -612,13 +612,13 @@ static void next_order(struct context_data *ctx)
 		if (p->ord >= mod->len || mod->xxo[p->ord] == 0xff) {
 			if (mod->rst > mod->len ||
 			    mod->xxo[mod->rst] >= mod->pat ||
-			    p->ord < m->sequence[p->sequence].entry_point) {
-				p->ord = m->sequence[p->sequence].entry_point;
+			    p->ord < m->seq_data[p->sequence].entry_point) {
+				p->ord = m->seq_data[p->sequence].entry_point;
 			} else {
 				if (get_sequence(ctx, mod->rst) == p->sequence) {
 					p->ord = mod->rst;
 				} else {
-					p->ord = m->sequence[p->sequence].entry_point;
+					p->ord = m->seq_data[p->sequence].entry_point;
 				}
 			}
 
@@ -791,7 +791,7 @@ int xmp_player_frame(xmp_context opaque)
 
 	/* check reposition */
 	if (p->ord != p->pos) {
-		int start = m->sequence[p->sequence].entry_point;
+		int start = m->seq_data[p->sequence].entry_point;
 
 		if (p->pos == -2) {		/* set by xmp_module_stop */
 			return -1;		/* that's all folks */
@@ -945,8 +945,9 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->mod = mod;
 	info->comment = m->comment;
 
+	info->sequence = p->sequence;
 	info->num_sequences = m->num_sequences;
-	info->sequence = m->sequence;
+	info->seq_data = m->seq_data;
 
 	if (p->xc_data != NULL) {
 		for (i = 0; i < chn; i++) {
