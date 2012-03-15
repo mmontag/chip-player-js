@@ -79,6 +79,7 @@ struct channel_data {
 	int smp;		/* Sample number */
 	int pan;		/* Current pan */
 	int masterpan;		/* Master pan -- for S3M set pan effect */
+	int finalpan;		/* Final pan including envelopes */
 	int mastervol;		/* Master vol -- for IT track vol effect */
 	int delay;		/* Note delay in frames */
 	int keyoff;		/* Key off counter */

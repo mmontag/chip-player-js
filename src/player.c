@@ -353,6 +353,8 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 		finalpan = (finalpan - 0x80) * s->mix / 100;
 	}
 
+	xc->finalpan = finalpan + 0x80;
+
 	virt_setpan(ctx, chn, finalpan);
 }
 
@@ -964,7 +966,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->instrument = c->ins;
 			ci->sample = c->smp;
 			ci->volume = c->volume;
-			ci->pan = c->pan;
+			ci->pan = c->finalpan;
 	
 			if (info->pattern < mod->pat) {
 				track = mod->xxp[info->pattern]->index[i];
