@@ -84,7 +84,7 @@ static inline int is_big_endian() {
     for (j = 0; j < mod->chn; j++) { \
 	mod->xxp[i]->index[j] = i * mod->chn + j; \
 	mod->xxt[i * mod->chn + j] = calloc (sizeof (struct xmp_track) + \
-	    sizeof (struct xmp_event) * mod->xxp[i]->rows, 1); \
+	    sizeof (struct xmp_event) * (mod->xxp[i]->rows - 1), 1); \
 	mod->xxt[i * mod->chn + j]->rows = mod->xxp[i]->rows; \
     } \
 } while (0)
