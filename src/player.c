@@ -941,6 +941,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	info->loop_count = p->loop_count;
 	info->virt_channels = p->virt.virt_channels;
 	info->virt_used = p->virt.virt_used;
+	info->vol_base = m->volbase;
 
 	info->mod = mod;
 	info->comment = m->comment;

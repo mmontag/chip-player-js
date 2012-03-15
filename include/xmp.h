@@ -211,6 +211,7 @@ struct xmp_module_info {		/* Current module information */
 	int loop_count;			/* Loop counter */
 	int virt_channels;		/* Number of virtual channels */
 	int virt_used;			/* Used virtual channels */
+	int vol_base;			/* Volume scale */
 
 	struct xmp_channel_info {	/* Current channel information */
 		unsigned int period;	/* Sample period */
