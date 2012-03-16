@@ -216,13 +216,13 @@ struct xmp_module_info {		/* Current module information */
 	struct xmp_channel_info {	/* Current channel information */
 		unsigned int period;	/* Sample period */
 		unsigned int position;	/* Sample position */
-		unsigned short pitchbend; /* Linear bend from base note*/
+		short pitchbend;	/* Linear bend from base note*/
 		unsigned char note;	/* Current base note number */
 		unsigned char instrument; /* Current instrument number */
 		unsigned char sample;	/* Current sample number */
 		unsigned char volume;	/* Current volume */
-		unsigned char pan;	/* Current stereo pan */
-		unsigned char reserved;	/* Reserved */
+		unsigned char finalvol;	/* Current volume after envelopes */
+		unsigned char finalpan;	/* Current stereo pan after envelopes */
 		struct xmp_event event;	/* Current track event */
 	} channel_info[XMP_MAX_CHANNELS];
 

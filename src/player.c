@@ -238,8 +238,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		    m->vol_table[finalvol >> 4] << 4;
 	}
 
-	if (HAS_QUIRK(QUIRK_INSVOL))
+	if (HAS_QUIRK(QUIRK_INSVOL)) {
 		finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
+	}
 
 	/* FIXME: Do tremor */
 	if (xc->tremor.count_up || xc->tremor.count_dn) {
@@ -252,6 +253,8 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 				xc->tremor.count_up = MSN(xc->tremor.val);
 		}
 	}
+
+	xc->info_finalvol = finalvol;
 
 	virt_setvol(ctx, chn, finalvol);
 }
@@ -353,7 +356,7 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 		finalpan = (finalpan - 0x80) * s->mix / 100;
 	}
 
-	xc->finalpan = finalpan + 0x80;
+	xc->info_finalpan = finalpan + 0x80;
 
 	virt_setpan(ctx, chn, finalpan);
 }
@@ -966,7 +969,8 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->instrument = c->ins;
 			ci->sample = c->smp;
 			ci->volume = c->volume;
-			ci->pan = c->finalpan;
+			ci->finalvol = c->info_finalvol >> 4;
+			ci->finalpan = c->info_finalpan;
 	
 			if (info->pattern < mod->pat) {
 				track = mod->xxp[info->pattern]->index[i];
