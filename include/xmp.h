@@ -211,16 +211,17 @@ struct xmp_module_info {		/* Current module information */
 	int loop_count;			/* Loop counter */
 	int virt_channels;		/* Number of virtual channels */
 	int virt_used;			/* Used virtual channels */
+	int vol_base;			/* Volume scale */
 
 	struct xmp_channel_info {	/* Current channel information */
 		unsigned int period;	/* Sample period */
 		unsigned int position;	/* Sample position */
-		unsigned short pitchbend; /* Linear bend from base note*/
+		short pitchbend;	/* Linear bend from base note*/
 		unsigned char note;	/* Current base note number */
 		unsigned char instrument; /* Current instrument number */
 		unsigned char sample;	/* Current sample number */
 		unsigned char volume;	/* Current volume */
-		unsigned char pan;	/* Current stereo pan */
+		signed char pan;	/* Current stereo pan */
 		unsigned char reserved;	/* Reserved */
 		struct xmp_event event;	/* Current track event */
 	} channel_info[XMP_MAX_CHANNELS];

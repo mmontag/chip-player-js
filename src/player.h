@@ -187,6 +187,8 @@ struct channel_data {
 	int info_period;	/* Period */
 	int info_pitchbend;	/* Linear pitchbend */
 	int info_position;	/* Position before mixing */
+	int info_finalvol;	/* Final volume including envelopes */
+	int info_finalpan;	/* Final pan including envelopes */
 };
 
 
