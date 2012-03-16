@@ -968,9 +968,9 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->position = c->info_position;
 			ci->instrument = c->ins;
 			ci->sample = c->smp;
-			ci->volume = c->volume;
-			ci->finalvol = c->info_finalvol >> 4;
-			ci->finalpan = c->info_finalpan;
+			ci->volume = c->info_finalvol >> 4;
+			ci->pan = c->info_finalpan - 0x80;
+			ci->reserved = 0;
 	
 			if (info->pattern < mod->pat) {
 				track = mod->xxp[info->pattern]->index[i];
