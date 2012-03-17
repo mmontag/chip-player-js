@@ -155,7 +155,7 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 	case XMP_CTL_CH_MUTE: {
 		int arg1 = va_arg(ap, int);
 		int arg2 = va_arg(ap, int);
-		virt_mute(ctx, arg1, arg2);
+		ret = virt_mute(ctx, arg1, arg2);
 		break; }
 	case XMP_CTL_MIXER_AMP: {
 		int arg = va_arg(ap, int);
@@ -185,7 +185,7 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 
 	va_end(ap);
 
-	return 0;
+	return ret;
 }
 
 char **xmp_get_format_list()

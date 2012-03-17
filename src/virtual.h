@@ -13,7 +13,7 @@
 
 int	virt_on			(struct context_data *, int);
 void	virt_off		(struct context_data *);
-void	virt_mute		(struct context_data *, int, int);
+int	virt_mute		(struct context_data *, int, int);
 int	virt_setpatch		(struct context_data *, int, int, int, int,
 				 int, int, int, int, int);
 int	virt_cvt8bit		(void);

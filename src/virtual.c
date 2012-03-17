@@ -165,18 +165,24 @@ static int alloc_voice(struct context_data *ctx, int chn)
 	return num;
 }
 
-void virt_mute(struct context_data *ctx, int chn, int status)
+int virt_mute(struct context_data *ctx, int chn, int status)
 {
 	struct player_data *p = &ctx->p;
+	int ret = 0;
 
-	if ((uint32) chn >= XMP_MAX_CHANNELS)
-		return;
+	if ((uint32) chn >= XMP_MAX_CHANNELS) {
+		return -1;
+	}
+	
+	ret = p->channel_mute[chn];
 
 	if (status < 0) {
 		p->channel_mute[chn] = !p->channel_mute[chn];
-	} else {
+	} else if (status <= 1) {
 		p->channel_mute[chn] = status;
 	}
+
+	return ret;
 }
 
 int map_virt_channel(struct player_data *p, int chn)
