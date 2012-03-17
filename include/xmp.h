@@ -221,7 +221,7 @@ struct xmp_module_info {		/* Current module information */
 		unsigned char instrument; /* Current instrument number */
 		unsigned char sample;	/* Current sample number */
 		unsigned char volume;	/* Current volume */
-		signed char pan;	/* Current stereo pan */
+		unsigned char pan;	/* Current stereo pan */
 		unsigned char reserved;	/* Reserved */
 		struct xmp_event event;	/* Current track event */
 	} channel_info[XMP_MAX_CHANNELS];
