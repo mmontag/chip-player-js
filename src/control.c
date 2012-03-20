@@ -46,6 +46,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	struct flow_control *f = &p->flow;
 	int seq, start;
 
+	/* If dir is 0, we can jump to a different sequence */
 	if (dir == 0) {
 		seq = get_sequence(ctx, pos);
 	} else {
@@ -79,7 +80,11 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 		}
 
 		if (pos < m->mod.len) {
-			p->pos = pos;
+			if (pos == 0) {
+				p->pos = -1;
+			} else {
+				p->pos = pos;
+			}
 		}
 	}
 }
@@ -143,7 +148,7 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 				continue;
 			}
 			t = m->xxo_info[i].time;
-			if (arg > t) {
+			if (arg >= t) {
 				set_position(ctx, i, 1);
 				break;
 			}
