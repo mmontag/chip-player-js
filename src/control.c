@@ -144,7 +144,7 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 			if (pat >= m->mod.pat) {
 				continue;
 			}
-			if (get_sequence(ctx, pat) != p->sequence) {
+			if (get_sequence(ctx, i) != p->sequence) {
 				continue;
 			}
 			t = m->xxo_info[i].time;
