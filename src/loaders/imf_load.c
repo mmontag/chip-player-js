@@ -205,7 +205,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
     mod->spd = ih.tpo;
     mod->bpm = ih.bpm;
 
-    set_type(m, "Imago Orpheus IM10");
+    set_type(m, "Imago Orpheus 1.0 IMF");
 
     MODULE_INFO();
 
