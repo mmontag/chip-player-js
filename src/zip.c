@@ -361,6 +361,8 @@ int print_zip_header(struct zip_local_file_header_t *local_file_header)
 }
 #endif
 
+#if 0
+
 int kunzip_file(FILE *in, char *base_dir)
 {
 char outname[1024];
@@ -754,6 +756,7 @@ int i;
   return date_time;
 }
 
+#endif
 
 /* For xmp:
  * pass an array of patterns containing files we want to exclude from
@@ -833,10 +836,10 @@ int kunzip_get_offset_excluding(FILE *in, char **exclude)
 {
 struct zip_local_file_header_t local_file_header;
 int i=0,curr,j;
-char *name=0;
-int name_size=0;
+int name_size;
 long marker;
 int found;
+char name[1024];
 
   while(1)
   {
@@ -848,15 +851,12 @@ int found;
     {
       marker=ftell(in);  /* nasty code.. please make it nice later */
 
-      if (name_size<local_file_header.file_name_length+1)
-      {
-        if (name_size!=0) free(name);
-        name_size=local_file_header.file_name_length+1;
-        name=malloc(name_size);
+      name_size = local_file_header.file_name_length;
+      if (name_size > 1023) {
+	name_size = 1023;
       }
-
-      read_chars(in,name,local_file_header.file_name_length);
-      name[local_file_header.file_name_length]=0;
+      read_chars(in,name,name_size);
+      name[name_size]=0;
 
       fseek(in,marker,SEEK_SET); /* and part 2 of nasty code */
 
@@ -876,8 +876,6 @@ int found;
              local_file_header.file_name_length+
              local_file_header.extra_field_length,SEEK_CUR);
   }
-
-  if (name_size!=0) free(name);
 
   if (i!=-1)
   { return curr; }
