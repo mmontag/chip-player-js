@@ -125,16 +125,19 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 	case XMP_CTL_MOD_RESTART:
 		p->pos = -1;
 		break;
-	case XMP_CTL_GVOL_DEC:
-		if (p->gvol.volume > 0)
-			p->gvol.volume--;
+	case XMP_CTL_GET_GVOL:
 		ret = p->gvol.volume;
 		break;
-	case XMP_CTL_GVOL_INC:
-		if (p->gvol.volume < 64)
-			p->gvol.volume++;
+	case XMP_CTL_SET_GVOL: {
+		int arg = va_arg(ap, int);
+		if (arg > 64) {
+			arg = 64;
+		} else if (arg < 0) {
+			arg = 0;
+		}
+		p->gvol.volume = arg;
 		ret = p->gvol.volume;
-		break;
+		break; }
 	case XMP_CTL_SEEK_TIME: {
 		int arg = va_arg(ap, int);
 		int i, t;

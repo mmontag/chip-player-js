@@ -30,8 +30,8 @@ extern "C" {
 #define XMP_CTL_ORD_SET		0x02
 #define XMP_CTL_MOD_STOP	0x03
 #define XMP_CTL_MOD_RESTART	0x04
-#define XMP_CTL_GVOL_INC	0x05
-#define XMP_CTL_GVOL_DEC	0x06
+#define XMP_CTL_GET_GVOL	0x05
+#define XMP_CTL_SET_GVOL	0x06
 #define XMP_CTL_SEEK_TIME	0x07
 #define XMP_CTL_CH_MUTE		0x08
 #define XMP_CTL_MIXER_AMP	0x09
@@ -246,8 +246,8 @@ extern const unsigned int xmp_version;
 #define xmp_ord_set(p,x)	_xmp_ctl((p), XMP_CTL_ORD_SET, (x))
 #define xmp_mod_stop(p)		_xmp_ctl((p), XMP_CTL_MOD_STOP)
 #define xmp_mod_restart(p)	_xmp_ctl((p), XMP_CTL_MOD_RESTART)
-#define xmp_gvol_inc(p)		_xmp_ctl((p), XMP_CTL_GVOL_INC)
-#define xmp_gvol_dec(p)		_xmp_ctl((p), XMP_CTL_GVOL_DEC)
+#define xmp_get_globalvol(p)	_xmp_ctl((p), XMP_CTL_GET_GVOL)
+#define xmp_set_globalvol(p,x)	_xmp_ctl((p), XMP_CTL_SET_GVOL, (x))
 #define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))
 #define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
 #define xmp_mixer_amp(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_AMP, (x))
