@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "common.h"
 
-int inflate(FILE *, FILE *, unsigned int *);
+int inflate(FILE *, FILE *, unsigned int *, int);
 
 
 int decrunch_muse(FILE *f, FILE *fo)                          
@@ -22,7 +22,7 @@ int decrunch_muse(FILE *f, FILE *fo)
 
 	fseek(f, 24, SEEK_SET);
 
-	inflate(f, fo, &checksum);
+	inflate(f, fo, &checksum, 0);
 
 	return 0;
 }

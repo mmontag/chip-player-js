@@ -49,6 +49,7 @@ int decrunch_lzx	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
 int decrunch_s404	(FILE *, FILE *);
+int decrunch_zip	(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -62,6 +63,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_XFD	0x09
 #define BUILTIN_MUSE	0x0a
 #define BUILTIN_LZX	0x0b
+#define BUILTIN_ZIP	0x0c
 
 
 #if defined __EMX__ || defined WIN32
@@ -107,6 +109,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	b[4] == 'P' && b[5] == 'K' && b[6] == 3 && b[7] == 4))) {
 
 	packer = "Zip";
+	builtin = BUILTIN_ZIP;
+#if 0
+	packer = "Zip";
 #if defined WIN32
 	cmd = "unzip -pqqC \"%s\" -x readme *.diz *.nfo *.txt *.exe *.com "
 		"README *.DIZ *.NFO *.TXT *.EXE *.COM " REDIR_STDERR;
@@ -114,6 +119,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	cmd = "unzip -pqqC \"%s\" -x readme '*.diz' '*.nfo' '*.txt' '*.exe' "
 		"'*.com' README '*.DIZ' '*.NFO' '*.TXT' '*.EXE' '*.COM' "
 		REDIR_STDERR;
+#endif
 #endif
     } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
 	packer = "LHa";
@@ -309,6 +315,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	    break;
 	case BUILTIN_S404:
 	    res = decrunch_s404(*f, t);
+	    break;
+	case BUILTIN_ZIP:
+	    res = decrunch_zip(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:

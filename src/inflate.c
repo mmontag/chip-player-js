@@ -7,9 +7,12 @@
 //#include "zipfile.h"
 
 #include "common.h"
+#include "zip.h"
 
 #define read_int_b(x) read32b(x)
 #define read_word(x) read16l(x)
+
+#define ZIP
 
 /*
 
@@ -90,12 +93,6 @@ static const unsigned char reverse[256] = {
 7, 135, 71, 199, 39, 167, 103, 231, 23, 151, 87, 215, 55, 183, 119, 247,
 15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95, 223, 63, 191, 127, 255 };
 
-struct local_data {
-  struct huffman_tree_t *huffman_tree_len_static;
-  /* int crc_built; */
-  unsigned int crc_table[256];
-};
-
 #ifdef DEBUG
 int print_binary(int b, int l)
 {
@@ -110,7 +107,7 @@ int print_binary(int b, int l)
 
 /* These CRC32 functions were taken from the gzip spec and kohninized */
 
-static int build_crc32(struct local_data *data)
+int build_crc32(struct zip_data *data)
 {
   unsigned int c;
   int n,k;
@@ -133,7 +130,7 @@ static int build_crc32(struct local_data *data)
   return 0;
 }
 
-static unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct local_data *data)
+unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct zip_data *data)
 {
   int t;
 
@@ -145,7 +142,7 @@ static unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, stru
   return crc;
 }
 
-int kunzip_inflate_init(struct local_data *data)
+int kunzip_inflate_init(struct zip_data *data)
 {
 /*
   int t,r,b,rev_code;
@@ -168,7 +165,7 @@ int kunzip_inflate_init(struct local_data *data)
   return 0;
 }
 
-int kunzip_inflate_free(struct local_data *data)
+int kunzip_inflate_free(struct zip_data *data)
 {
   if (data->huffman_tree_len_static!=0)
   { free(data->huffman_tree_len_static); }
@@ -703,7 +700,7 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
   return 0;
 }
 
-int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist, FILE *out, struct local_data *data)
+int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist, FILE *out, struct zip_data *data)
 {
   int code=0,len,dist;
   int t,r;
@@ -963,12 +960,12 @@ exit(0);
   return 0;
 }
 
-int inflate(FILE *in, FILE *out, unsigned int *checksum)
+int inflate(FILE *in, FILE *out, unsigned int *checksum, int zip)
 {
-#ifndef ZIP
+/* #ifndef ZIP */
   unsigned char CMF, FLG;
   unsigned int DICT;
-#endif
+/* #endif */
   struct bitstream_t bitstream;
   struct huffman_t huffman;
   int comp_method;
@@ -976,7 +973,7 @@ int inflate(FILE *in, FILE *out, unsigned int *checksum)
   int t;
   struct huffman_tree_t *huffman_tree_len;
   struct huffman_tree_t *huffman_tree_dist;
-  struct local_data data;
+  struct zip_data data;
 
   huffman.checksum=0xffffffff;
 
@@ -990,7 +987,7 @@ int inflate(FILE *in, FILE *out, unsigned int *checksum)
   printf("\nStarting at %d 0x%x\n",(int)ftell(in),(int)ftell(in));
 #endif
 
-#ifndef ZIP
+if (!zip) {
   CMF=getc(in);
   FLG=getc(in);
 
@@ -1021,7 +1018,7 @@ int inflate(FILE *in, FILE *out, unsigned int *checksum)
   {
     printf("FCHECK fails.\n");
   }
-#endif
+}
 
   kunzip_inflate_init(&data);
 
@@ -1079,7 +1076,7 @@ int inflate(FILE *in, FILE *out, unsigned int *checksum)
       }
     } 
       else
-    if (comp_method==2)
+    if (comp_method==2)	/* Reduced with compression factor 1 */
     {
       /* Fixed Huffman */
       if (data.huffman_tree_len_static==0)
@@ -1091,7 +1088,7 @@ int inflate(FILE *in, FILE *out, unsigned int *checksum)
 */
     }
       else
-    if (comp_method==1)
+    if (comp_method==1) /* Shrunk */
     {
 
       /* Dynamic Huffman */
