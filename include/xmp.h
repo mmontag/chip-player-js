@@ -25,9 +25,9 @@ extern "C" {
 #define XMP_KEY_FADE		0x83	/* Note number for fade event */
 
 /* _xmp_ctl arguments */
-#define XMP_CTL_ORD_NEXT	0x00
-#define XMP_CTL_ORD_PREV	0x01
-#define XMP_CTL_ORD_SET		0x02
+#define XMP_CTL_POS_NEXT	0x00
+#define XMP_CTL_POS_PREV	0x01
+#define XMP_CTL_POS_SET		0x02
 #define XMP_CTL_MOD_STOP	0x03
 #define XMP_CTL_MOD_RESTART	0x04
 #define XMP_CTL_GET_GVOL	0x05
@@ -241,11 +241,11 @@ extern const unsigned int xmp_version;
 
 /* Player control macros */
 
-#define xmp_ord_next(p)		_xmp_ctl((p), XMP_CTL_ORD_NEXT)
-#define xmp_ord_prev(p)		_xmp_ctl((p), XMP_CTL_ORD_PREV)
-#define xmp_ord_set(p,x)	_xmp_ctl((p), XMP_CTL_ORD_SET, (x))
-#define xmp_mod_stop(p)		_xmp_ctl((p), XMP_CTL_MOD_STOP)
-#define xmp_mod_restart(p)	_xmp_ctl((p), XMP_CTL_MOD_RESTART)
+#define xmp_next_position(p)	_xmp_ctl((p), XMP_CTL_POS_NEXT)
+#define xmp_prev_position(p)	_xmp_ctl((p), XMP_CTL_POS_PREV)
+#define xmp_set_position(p,x)	_xmp_ctl((p), XMP_CTL_POS_SET, (x))
+#define xmp_stop_module(p)	_xmp_ctl((p), XMP_CTL_MOD_STOP)
+#define xmp_restart_module(p)	_xmp_ctl((p), XMP_CTL_MOD_RESTART)
 #define xmp_get_globalvol(p)	_xmp_ctl((p), XMP_CTL_GET_GVOL)
 #define xmp_set_globalvol(p,x)	_xmp_ctl((p), XMP_CTL_SET_GVOL, (x))
 #define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))

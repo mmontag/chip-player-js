@@ -101,7 +101,7 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 	va_start(ap, cmd);
 
 	switch (cmd) {
-	case XMP_CTL_ORD_PREV:
+	case XMP_CTL_POS_PREV:
 		if (p->pos == m->seq_data[p->sequence].entry_point) {
 			set_position(ctx, -1, -1);
 		} else if (p->pos > m->seq_data[p->sequence].entry_point) {
@@ -109,12 +109,12 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 		}
 		ret = p->pos;
 		break;
-	case XMP_CTL_ORD_NEXT:
+	case XMP_CTL_POS_NEXT:
 		if (p->pos < m->mod.len)
 			set_position(ctx, p->pos + 1, 1);
 		ret = p->pos;
 		break;
-	case XMP_CTL_ORD_SET: {
+	case XMP_CTL_POS_SET: {
 		int arg = va_arg(ap, int);
 		set_position(ctx, arg, 0);
 		ret = p->pos;
@@ -157,7 +157,7 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 			}
 		}
 		if (i < 0) {
-			xmp_ord_set(opaque, 0);
+			xmp_set_position(opaque, 0);
 		}
 		break; }
 	case XMP_CTL_CH_MUTE: {
