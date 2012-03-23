@@ -41,7 +41,7 @@ void init_colors()
 	}
 }
 
-void run_tests()
+int run_tests()
 {
 	struct list_head *tmp;
 	int total, fail;
@@ -81,6 +81,8 @@ void run_tests()
 		color_test, total,
 		(total - fail), 100.0 * (total - fail) / total,
 		fail, 100.0 * fail / total, color_none);
+
+	return -fail;
 }
 
 int main()
@@ -89,7 +91,9 @@ int main()
 #include "all_tests.c"
 #undef declare_test
 
-	run_tests();
-
-	return 0;
+	if (run_tests() == 0) {
+		exit(EXIT_SUCCESS);
+	} else {
+		exit(EXIT_FAILURE);
+	}
 }
