@@ -27,7 +27,7 @@ TEST(test_next_order_skip)
 		xmp_player_frame(opaque);
 	}
 
-	xmp_ord_next(opaque);
+	xmp_next_position(opaque);
 	xmp_player_frame(opaque);
 	fail_unless(p->ord == 2, "incorrect pattern");
 	fail_unless(p->row == 0, "incorrect row");
