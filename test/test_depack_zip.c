@@ -9,7 +9,7 @@ TEST(test_depack_zip)
 	int ret;
 	struct stat st;
 
-	f = fopen("data/test-1.zip", "rb");
+	f = fopen("data/zipdata1", "rb");
 	fail_unless(f != NULL, "can't open data file");
 
 	fo = fopen(TMP_FILE, "wb");
