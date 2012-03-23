@@ -12,6 +12,7 @@ Stable versions
 	- extensive code refactoring
 	- add regression tests
 	- add built-in zip file decompressor
+	- add built-in gzip file decompressor
 	- fix interpolation and sample loop processing
 	- fix S404 depacker
 	- fix note delay effect

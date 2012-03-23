@@ -1107,6 +1107,7 @@ if (!is_zip) {
     if (bfinal==1) { break; }
   }
 
+
   if (huffman.window_ptr!=0)
   {
     fwrite(huffman.window,1,huffman.window_ptr,out);
@@ -1129,6 +1130,12 @@ if (!is_zip) {
 */
 
   kunzip_inflate_free(&data);
+
+  /* for gzip */
+  if (bitstream.bitptr == 8) {
+    reverse_bitstream(&bitstream);
+    ungetc(bitstream.holding, in);
+  }
 
   return 0;
 }

@@ -50,6 +50,7 @@ int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
 int decrunch_s404	(FILE *, FILE *);
 int decrunch_zip	(FILE *, FILE *);
+int decrunch_gzip	(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -64,6 +65,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_MUSE	0x0a
 #define BUILTIN_LZX	0x0b
 #define BUILTIN_ZIP	0x0c
+#define BUILTIN_GZIP	0x0d
 
 
 #if defined __EMX__ || defined WIN32
@@ -132,7 +134,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 #endif
     } else if (b[0] == 31 && b[1] == 139) {
 	packer = "gzip";
-	cmd = "gzip -dc \"%s\"";
+	builtin = BUILTIN_GZIP;
     } else if (b[0] == 'B' && b[1] == 'Z' && b[2] == 'h') {
 	packer = "bzip2";
 	cmd = "bzip2 -dc \"%s\"";
@@ -318,6 +320,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	    break;
 	case BUILTIN_ZIP:
 	    res = decrunch_zip(*f, t);
+	    break;
+	case BUILTIN_GZIP:
+	    res = decrunch_gzip(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:
