@@ -21,7 +21,7 @@
 #endif
 
 #if !defined(HAVE_POPEN) && defined(WIN32)
-#include "ptpopen.h"
+#include "../win32/ptpopen.h"
 #endif
 
 #include "convert.h"

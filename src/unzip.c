@@ -16,7 +16,7 @@ Michael Kohn <mike@mikekohn.net>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#ifndef DLL
+#ifndef WIN32
 #include <utime.h>
 #endif
 #include <time.h>
@@ -30,7 +30,6 @@ Michael Kohn <mike@mikekohn.net>
 
 #include <fnmatch.h>
 #include "inflate.h"
-
 
 struct zip_local_file_header_t
 {
@@ -101,7 +100,7 @@ int t;
 
 /*----------------------- end of fileio.c -----------------------*/
 
-#ifdef DLL
+#ifdef WIN32
 
 struct utimbuf
 {
@@ -237,7 +236,7 @@ printf("path=%s\n",path);
 #ifdef DEBUG
     printf("Creating directory: %s\n",path);
 #endif
-#ifndef DLL
+#ifndef WIN32
     if (mkdir(path,0777)!=0) return -1;
 #else
     if (mkdir(path)!=0) return -1;
@@ -587,7 +586,7 @@ long marker;
           if (strstr(name,compressed_filename)!=0) break;
         }
           else
-#ifdef DLL
+#ifdef WIN32
         { if (strcasestr_m(name,compressed_filename)!=0) break; }
 #else
         { if (strcasestr(compressed_filename,name)!=0) break; }
