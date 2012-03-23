@@ -51,6 +51,7 @@ int decrunch_xfd	(FILE *, FILE *);
 int decrunch_s404	(FILE *, FILE *);
 int decrunch_zip	(FILE *, FILE *);
 int decrunch_gzip	(FILE *, FILE *);
+int decrunch_compress	(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -66,6 +67,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_LZX	0x0b
 #define BUILTIN_ZIP	0x0c
 #define BUILTIN_GZIP	0x0d
+#define BUILTIN_COMPRESS 0x0e
 
 
 #if defined __EMX__ || defined WIN32
@@ -159,11 +161,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	cmd = "tar -xOf \"%s\"";
     } else if (b[0] == 31 && b[1] == 157) {
 	packer = "compress";
-#ifdef __EMX__
-	fprintf( stderr, "I was unable to find a OS/2 version of UnCompress...\n" );
-	fprintf( stderr, "I hope that the default command will work if a OS/2 version is found/created!\n" );
-#endif
-	cmd = "uncompress -c \"%s\"";
+	builtin = BUILTIN_COMPRESS;
     } else if (memcmp(b, "PP20", 4) == 0) {
 	packer = "PowerPack";
 	builtin = BUILTIN_PP;
@@ -323,6 +321,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	    break;
 	case BUILTIN_GZIP:
 	    res = decrunch_gzip(*f, t);
+	    break;
+	case BUILTIN_COMPRESS:
+	    res = decrunch_compress(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:
