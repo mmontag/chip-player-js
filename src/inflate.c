@@ -960,7 +960,7 @@ exit(0);
   return 0;
 }
 
-int inflate(FILE *in, FILE *out, unsigned int *checksum, int zip)
+int inflate(FILE *in, FILE *out, unsigned int *checksum, int is_zip)
 {
 /* #ifndef ZIP */
   unsigned char CMF, FLG;
@@ -987,7 +987,7 @@ int inflate(FILE *in, FILE *out, unsigned int *checksum, int zip)
   printf("\nStarting at %d 0x%x\n",(int)ftell(in),(int)ftell(in));
 #endif
 
-if (!zip) {
+if (!is_zip) {
   CMF=getc(in);
   FLG=getc(in);
 
