@@ -6,11 +6,6 @@
  * for more information.
  */
 
-/** 
- * @file xmp.h
- * @brief libxmp header file
- */
-
 #ifndef __XMP_H
 #define __XMP_H
 
