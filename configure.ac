@@ -12,6 +12,7 @@ fi
 if test "${enable_shared}" != no; then
   AC_SUBST(SHARED,shared)
 fi
+AC_CHECK_FUNCS(popen mkstemp fnmatch)
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp.pc])
 AC_OUTPUT

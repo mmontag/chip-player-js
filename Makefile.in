@@ -61,7 +61,7 @@ lib/$(LIB): $(OBJS)
 	@CMD='$(AR) r $@ $(OBJS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
 	eval $$CMD
-	ranlib $@
+	$(RANLIB) $@
 
 lib/$(SHLIB): $(LOBJS)
 	@mkdir -p lib
