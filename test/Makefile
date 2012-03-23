@@ -1,7 +1,7 @@
 
 REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
-DEPACKERS	= pp sqsh s404 mmcmp
+DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered
 CONVERTERS	= delta signal endian
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
