@@ -21,6 +21,7 @@ Michael Kohn <mike@mikekohn.net>
 #endif
 #include <time.h>
 #include <unistd.h>
+#include "common.h"
 
 /*#include "fileio.h"*/
 /*#include "zipfile.h"*/
@@ -50,51 +51,13 @@ struct zip_local_file_header_t
 
 #define QUIET
 
+#define read_int(x) read32l(x)
+#define read_word(x) read16l(x)
 
 /*-------------------------- fileio.c ---------------------------*/
 
 
-int write_int(FILE *out, int n)
-{
-  putc((n&255),out);
-  putc(((n>>8)&255),out);
-  putc(((n>>16)&255),out);
-  putc(((n>>24)&255),out);
-
-  return 0;
-}
-
-int write_word(FILE *out, int n)
-{
-  putc((n&255),out);
-  putc(((n>>8)&255),out);
-
-  return 0;
-}
-
-int read_int(FILE *in)
-{
-int c;
-
-  c=getc(in);
-  c=c|(getc(in)<<8);
-  c=c|(getc(in)<<16);
-  c=c|(getc(in)<<24);
-
-  return c;
-}
-
-int read_word(FILE *in)
-{
-int c;
-
-  c=getc(in);
-  c=c|(getc(in)<<8);
-
-  return c;
-}
-
-int read_chars(FILE *in, char *s, int count)
+static int read_chars(FILE *in, char *s, int count)
 {
 int t;
 
@@ -108,60 +71,7 @@ int t;
   return 0;
 }
 
-int write_chars(FILE *out, char *s)
-{
-int t;
-
-  t=0;
-  while(s[t]!=0 && t<255)
-  {
-    putc(s[t++],out);
-  }
-
-  return 0;
-}
-
-int write_int_b(FILE *out, int n)
-{
-  putc(((n>>24)&255),out);
-  putc(((n>>16)&255),out);
-  putc(((n>>8)&255),out);
-  putc((n&255),out);
-
-  return 0;
-}
-
-int write_word_b(FILE *out, int n)
-{
-  putc(((n>>8)&255),out);
-  putc((n&255),out);
-
-  return 0;
-}
-
-int read_int_b(FILE *in)
-{
-int c;
-
-  c=getc(in);
-  c=(c<<8)+getc(in);
-  c=(c<<8)+getc(in);
-  c=(c<<8)+getc(in);
-
-  return c;
-}
-
-int read_word_b(FILE *in)
-{
-int c;
-
-  c=getc(in);
-  c=(c<<8)+getc(in);
-
-  return c;
-}
-
-int read_buffer(FILE *in, unsigned char *buffer, int len)
+static int read_buffer(FILE *in, unsigned char *buffer, int len)
 {
 int t;
 
@@ -174,7 +84,7 @@ int t;
   return t;
 }
 
-int write_buffer(FILE *out, unsigned char *buffer, int len)
+static int write_buffer(FILE *out, unsigned char *buffer, int len)
 {
 int t;
 
