@@ -1,0 +1,15 @@
+#ifndef __INFLATE_H
+#define __INFLATE_H
+
+struct inflate_data {
+  struct huffman_tree_t *huffman_tree_len_static;
+  /* int crc_built; */
+  unsigned int crc_table[256];
+};
+
+
+int inflate(FILE *, FILE *, unsigned int *, int);
+int build_crc32(struct inflate_data *data);
+unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct inflate_data *data);
+
+#endif

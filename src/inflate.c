@@ -7,7 +7,7 @@
 //#include "zipfile.h"
 
 #include "common.h"
-#include "zip.h"
+#include "inflate.h"
 
 #define read_int_b(x) read32b(x)
 #define read_word(x) read16l(x)
@@ -107,7 +107,7 @@ int print_binary(int b, int l)
 
 /* These CRC32 functions were taken from the gzip spec and kohninized */
 
-int build_crc32(struct zip_data *data)
+int build_crc32(struct inflate_data *data)
 {
   unsigned int c;
   int n,k;
@@ -130,7 +130,7 @@ int build_crc32(struct zip_data *data)
   return 0;
 }
 
-unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct zip_data *data)
+unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct inflate_data *data)
 {
   int t;
 
@@ -142,7 +142,7 @@ unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct zip_
   return crc;
 }
 
-int kunzip_inflate_init(struct zip_data *data)
+int kunzip_inflate_init(struct inflate_data *data)
 {
 /*
   int t,r,b,rev_code;
@@ -165,7 +165,7 @@ int kunzip_inflate_init(struct zip_data *data)
   return 0;
 }
 
-int kunzip_inflate_free(struct zip_data *data)
+int kunzip_inflate_free(struct inflate_data *data)
 {
   if (data->huffman_tree_len_static!=0)
   { free(data->huffman_tree_len_static); }
@@ -700,7 +700,7 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
   return 0;
 }
 
-int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist, FILE *out, struct zip_data *data)
+int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstream, struct huffman_tree_t *huffman_tree_len, struct huffman_tree_t *huffman_tree_dist, FILE *out, struct inflate_data *data)
 {
   int code=0,len,dist;
   int t,r;
@@ -973,7 +973,7 @@ int inflate(FILE *in, FILE *out, unsigned int *checksum, int zip)
   int t;
   struct huffman_tree_t *huffman_tree_len;
   struct huffman_tree_t *huffman_tree_dist;
-  struct zip_data data;
+  struct inflate_data data;
 
   huffman.checksum=0xffffffff;
 

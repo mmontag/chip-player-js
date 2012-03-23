@@ -28,7 +28,28 @@ Michael Kohn <mike@mikekohn.net>
 /*#include "kunzip.h"*/
 
 #include <fnmatch.h>
-#include "zip.h"
+#include "inflate.h"
+
+
+struct zip_local_file_header_t
+{
+  unsigned int signature;
+  int version;
+  int general_purpose_bit_flag;
+  int compression_method;
+  int last_mod_file_time;
+  int last_mod_file_date;
+  unsigned int crc_32;
+  int compressed_size;
+  int uncompressed_size;
+  int file_name_length;
+  int extra_field_length;
+  char *file_name;
+  unsigned char *extra_field;
+};
+
+#define QUIET
+
 
 /*-------------------------- fileio.c ---------------------------*/
 
@@ -256,7 +277,7 @@ int ch;
 }
 */
 
-unsigned int copy_file(FILE *in, FILE *out, int len, struct zip_data *data)
+unsigned int copy_file(FILE *in, FILE *out, int len, struct inflate_data *data)
 {
 unsigned char buffer[BUFFER_SIZE];
 unsigned int checksum;
@@ -374,7 +395,7 @@ unsigned int checksum;
 long marker;
 struct utimbuf my_utimbuf;
 struct tm my_tm;
-struct zip_data data;
+struct inflate_data data;
 
   ret_code=0;
 
@@ -771,7 +792,7 @@ unsigned int checksum;
 long marker;
 /*struct utimbuf my_utimbuf;*/
 /*struct tm my_tm;*/
-struct zip_data data;
+struct inflate_data data;
 
   ret_code=0;
 

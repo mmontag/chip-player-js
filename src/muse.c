@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
-
-int inflate(FILE *, FILE *, unsigned int *, int);
+#include "inflate.h"
 
 
 int decrunch_muse(FILE *f, FILE *fo)                          
