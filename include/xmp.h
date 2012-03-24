@@ -49,6 +49,11 @@ extern "C" {
 #define XMP_MAX_MOD_LENGTH	256	/* Max number of patterns in module */
 #define XMP_MAX_CHANNELS	64	/* Max number of channels in module */
 
+/* error codes */
+#define XMP_ERROR_FORMAT	28837	/* Unsupported module format */
+#define XMP_ERROR_LOAD		28838	/* Error loading file */
+#define XMP_ERROR_DEPACK	28839	/* Error depacking file */
+
 struct xmp_channel {
 	int pan;			/* Channel pan (0x80 is center) */
 	int vol;			/* Channel volume */

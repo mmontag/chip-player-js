@@ -539,9 +539,10 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	FILE *f;
-	int i, t, val;
+	int i, t;
 	struct stat st;
 	struct list_head tmpfiles_list;
+	int test_result, load_result;
 
 	_D(_D_WARN "path = %s", path);
 
@@ -558,11 +559,13 @@ int xmp_load_module(xmp_context opaque, char *path)
 	INIT_LIST_HEAD(&tmpfiles_list);
 
 	_D(_D_INFO "decrunch");
-	if ((t = decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX)) < 0)
-		goto err;
+	if ((t = decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX)) < 0) {
+		goto err_depack;
+	}
 
-	if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
-		goto err;
+	if (fstat(fileno(f), &st) < 0) {	/* get size after decrunch */
+		goto err_depack;
+	}
 
 	split_name(path, &m->dirname, &m->basename);
 	m->filename = path;	/* For ALM, SSMT, etc */
@@ -571,18 +574,14 @@ int xmp_load_module(xmp_context opaque, char *path)
 	initialize_module_data(m);
 
 	_D(_D_WARN "load");
-	val = 0;
+	test_result = load_result = -1;
 	for (i = 0; format_loader[i] != NULL; i++) {
 		fseek(f, 0, SEEK_SET);
-		val = format_loader[i]->test(f, NULL, 0);
-		if (val == 0) {
+		test_result = format_loader[i]->test(f, NULL, 0);
+		if (test_result == 0) {
 			fseek(f, 0, SEEK_SET);
 			_D(_D_WARN "load format: %s", format_loader[i]->name);
-
-			val = format_loader[i]->loader(m, f, 0);
-			if (val != 0) {
-				_D(_D_CRIT "can't load module");
-			}
+			load_result = format_loader[i]->loader(m, f, 0);
 			break;
 		}
 	}
@@ -590,10 +589,16 @@ int xmp_load_module(xmp_context opaque, char *path)
 	fclose(f);
 	unlink_tempfiles(&tmpfiles_list);
 
-	if (val < 0) {
+	if (test_result < 0) {
 		free(m->basename);
 		free(m->dirname);
-		return -EINVAL;
+		return -XMP_ERROR_FORMAT;
+	}
+
+	if (load_result < 0) {
+		free(m->basename);
+		free(m->dirname);
+		return -XMP_ERROR_LOAD;
 	}
 
 	/* Fix cases where the restart value is invalid e.g. kc_fall8.xm
@@ -622,10 +627,10 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	return 0;
 
-    err:
+    err_depack:
 	fclose(f);
 	unlink_tempfiles(&tmpfiles_list);
-	return -EINVAL;
+	return -XMP_ERROR_DEPACK;
 }
 
 void xmp_release_module(xmp_context opaque)
