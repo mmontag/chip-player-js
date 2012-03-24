@@ -1,5 +1,11 @@
+#ifndef WIN32
+#define FORK_TEST
+#endif
+
+#ifdef FORK_TEST
 #include <sys/types.h>
 #include <sys/wait.h>
+#endif
 #include <unistd.h>
 #include "test.h"
 #include "../src/list.h"
@@ -17,6 +23,8 @@ static char *color_pass = "";
 static char *color_test = "";
 static char *color_none = "";
 
+static int num_tests = 0;
+
 #define add_test(x) _add_test(#x, _test_func_##x)
 
 void _add_test(char *name, int (*func)(void))
@@ -29,6 +37,7 @@ void _add_test(char *name, int (*func)(void))
 	t->name = name;
 	t->func = func;
 	list_add_tail(&t->list, &test_list);
+	num_tests++;
 }
 
 void init_colors()
@@ -40,6 +49,8 @@ void init_colors()
 		color_none = "\x1b[0m";
 	}
 }
+
+#ifdef FORK_TEST
 
 int run_tests()
 {
@@ -85,15 +96,79 @@ int run_tests()
 	return -fail;
 }
 
-int main()
+#else
+
+int run_test(int num)
+{
+	struct list_head *tmp;
+	int i;
+
+	i = 0;
+	list_for_each(tmp, &test_list) {
+		struct test *t = list_entry(tmp, struct test, list);
+		int res;
+
+		if (i == num) {
+			printf("test %d: %s: ", num, t->name);
+			res = t->func();
+			if (res != 0) {
+				printf("**fail**\n");
+				return -1;
+			} else {
+				printf("pass\n");
+				return 0;
+			}
+		}
+		
+		i++;
+	}
+
+	return -2;
+}
+
+#endif
+
+int main(int argc, char **argv)
 {
 #define declare_test(x) add_test(x)
 #include "all_tests.c"
 #undef declare_test
+
+#ifndef FORK_TEST
+	int i;
+	char cmd[512];
+	int total = 0, fail = 0;
+
+	/* Run specific tests */
+	if (argc > 1) {
+		int res = run_test(strtoul(argv[1], NULL, 0));
+		exit(-res);
+	}
+
+	for (i = 0; i < num_tests; i++) {
+		snprintf(cmd, 512, "%s %d", argv[0], i);
+		if (system(cmd) != 0) {
+			fail++;
+		}
+		total++;
+	}
+
+	printf("total:%d  passed:%d (%4.1f%%)  failed:%d (%4.1f%%)\n",
+		total, (total - fail), 100.0 * (total - fail) / total,
+		fail, 100.0 * fail / total);
+
+	if (fail == 0) {
+		exit(EXIT_SUCCESS);
+	} else {
+		exit(EXIT_FAILURE);
+	}
+
+#else
 
 	if (run_tests() == 0) {
 		exit(EXIT_SUCCESS);
 	} else {
 		exit(EXIT_FAILURE);
 	}
+#endif
 }
