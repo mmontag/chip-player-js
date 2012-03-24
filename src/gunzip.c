@@ -38,10 +38,13 @@ int decrunch_gzip(FILE *in, FILE *out)
 	int val, c;
 	uint32 crc;
 
-	val = fread(&member, 1, sizeof (struct member), in);
-	if (val != sizeof (struct member)) {
-		return -1;
-	}
+	member.id1 = read8(in);
+	member.id2 = read8(in);
+	member.cm  = read8(in);
+	member.flg = read8(in);
+	member.mtime = read32l(in);
+	member.xfl = read8(in);
+	member.os  = read8(in);
 
 	if (member.cm != 0x08) {
 		return -1;
