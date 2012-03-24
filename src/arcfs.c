@@ -143,7 +143,7 @@ static int arcfs_extract(FILE *in, FILE *out)
 	}
 
 	if ((data = read_file_data(in, &hdr)) == NULL) {
-		fprintf(stderr, "nomarch: error reading data (hit EOF)\n");
+		fprintf(stderr, "ArcFS: error reading data (hit EOF)\n");
 		return -1;
 	}
 
@@ -220,9 +220,8 @@ fclose(out);
 		break;
 	}
 
-
 	if (orig_data == NULL) {
-		fprintf(stderr, "error extracting file");
+		fprintf(stderr, "ArcFS: error extracting file\n");
 		exitval = 1;
 	} else {
 		char *ptr;
