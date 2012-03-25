@@ -218,7 +218,7 @@ struct stat buf;
 char path[1024];
 int s;
 
-  strcpy(path,filename);
+  strncpy(path,filename,1024);
 
   s=strlen(path);
   if (s==0) return -1;
