@@ -46,9 +46,9 @@ static const int8 vdic_table[128] = {
 
 
 /* Convert differential to absolute sample data */
-void convert_delta(int l, int r, uint8 * p)
+void convert_delta(int l, int r, uint8 *p)
 {
-	uint16 *w = (uint16 *) p;
+	uint16 *w = (uint16 *)p;
 	uint16 abs = 0;
 
 	if (r) {
@@ -65,9 +65,9 @@ void convert_delta(int l, int r, uint8 * p)
 }
 
 /* Convert signed to unsigned sample data */
-void convert_signal(int l, int r, uint8 * p)
+void convert_signal(int l, int r, uint8 *p)
 {
-	uint16 *w = (uint16 *) p;
+	uint16 *w = (uint16 *)p;
 
 	if (r) {
 		for (; l--; w++)
@@ -79,7 +79,7 @@ void convert_signal(int l, int r, uint8 * p)
 }
 
 /* Convert little-endian 16 bit samples to big-endian */
-void convert_endian(int l, uint8 * p)
+void convert_endian(int l, uint8 *p)
 {
 	uint8 b;
 	int i;
@@ -93,9 +93,9 @@ void convert_endian(int l, uint8 * p)
 }
 
 /* Downmix stereo samples to mono */
-void convert_stereo_to_mono(int l, int r, uint8 * p)
+void convert_stereo_to_mono(int l, int r, uint8 *p)
 {
-	int16 *b = (int16 *) p;
+	int16 *b = (int16 *)p;
 	int i;
 
 	if (r) {
