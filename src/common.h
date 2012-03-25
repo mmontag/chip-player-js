@@ -26,10 +26,6 @@
 #include <stdio.h>
 #include "xmp.h"
 
-#ifdef HAVE_STRLCPY
-#define strncpy strlcpy
-#endif
-
 /* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
  */
 #if defined B_BEOS_VERSION

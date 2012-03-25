@@ -31,6 +31,10 @@ Michael Kohn <mike@mikekohn.net>
 #include <fnmatch.h>
 #include "inflate.h"
 
+#ifdef HAVE_STRLCPY
+#define strncpy strlcpy
+#endif
+
 struct zip_local_file_header_t
 {
   unsigned int signature;
