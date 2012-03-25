@@ -1,7 +1,7 @@
 VERSION	= 3.9.0
 
 CC		= @CC@
-CFLAGS		= -c -Wall -Wno-unused-but-set-variable @CFLAGS@ @DEFS@ #-D_DEBUG
+CFLAGS		= -c -Wall @CFLAGS@ @DEFS@ #-D_DEBUG
 LD		= @CC@
 LDFLAGS		= @LDFLAGS@
 RANLIB		= @RANLIB@
