@@ -26,6 +26,9 @@
 #include <stdio.h>
 #include "xmp.h"
 
+#ifdef HAVE_STRLCPY
+#define strcpy strlcpy
+#endif
 
 /* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
  */
