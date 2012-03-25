@@ -21,7 +21,7 @@ define(XMP_TRY_COMPILE,[
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([[$4]])],[$2=yes],[$2=no],[true])
     CFLAGS="${oldcflags}"])
   if test "x$$2" = xyes; then
-    CFLAGS="${CFLAGS} $3"; $5
+    true; $5
   else
     true; $6
   fi])
@@ -29,13 +29,13 @@ define(XMP_TRY_COMPILE,[
 if test "${GCC-no}" = yes; then
   XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
     ac_cv_c_flag_w_no_unused_but_set_variable,
-    -Werror -Wno-unused-but-set-variable,[
+    -Wunused-but-set-variable,[
     int main(){}],
     CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
 
   XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
     ac_cv_c_flag_w_no_array_bounds,
-    -Werror -Wno-array-bounds,[
+    -Warray-bounds,[
     int main(){}],
     CFLAGS="${CFLAGS} -Wno-array-bounds")  
 fi
