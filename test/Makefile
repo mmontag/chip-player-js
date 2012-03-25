@@ -55,7 +55,7 @@ TEST_NAMES	= $(addprefix test_,$(TESTS))
 TEST_OBJS	= util.o md5.o main.o simple_module.o \
 		  $(TEST_NAMES:=.o)
 
-TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h
+TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
 TEST_PATH	= test
 

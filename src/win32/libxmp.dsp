@@ -114,6 +114,22 @@ SOURCE=..\player.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\read_event.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\fileio.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\mkstemp.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\fnmatch.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\stepper.c
 # End Source File
 # Begin Source File
@@ -174,6 +190,10 @@ SOURCE=..\spectrum.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\invloop.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\load.c
 # End Source File
 # Begin Source File
@@ -231,6 +251,18 @@ SOURCE=..\unlzx.c
 # Begin Source File
 
 SOURCE=..\s404_dec.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\unzip.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gunzip.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\uncompress.c
 # End Source File
 # Begin Source File
 
@@ -490,10 +522,6 @@ SOURCE=..\loaders\stc_load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\loaders\readdata.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\loaders\prowizard\prowiz.c
 # End Source File
 # Begin Source File
@@ -663,10 +691,6 @@ SOURCE=..\win32\debug.c
 # Begin Source File
 
 SOURCE=..\win32\usleep.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\win32\mkstemp.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
