@@ -10,6 +10,8 @@
 #include "test.h"
 #include "../src/list.h"
 
+extern const char *const sys_siglist[];
+
 struct test {
 	struct list_head list;
 	char *name;

@@ -319,6 +319,8 @@ void mixer_softmixer(struct context_data *ctx)
 				if (mix_size >= 2) {
 					prev_r = buf_pos[idx - 2];
 					prev_l = buf_pos[idx - 1];
+				} else {
+					prev_r = prev_l = 0;
 				}
 
 				/* "Beautiful Ones" apparently uses 0xfe as

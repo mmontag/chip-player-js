@@ -46,7 +46,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     int alltmp;
     double clock, clock_rst;
     int loop_chn, loop_flg;
-    int pdelay, skip_fetch;
+    int pdelay = 0, skip_fetch;
     int* loop_stk;
     int* loop_row;
     char** tab_cnt;
