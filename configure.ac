@@ -26,11 +26,19 @@ define(XMP_TRY_COMPILE,[
     true; $6
   fi])
 
-XMP_TRY_COMPILE(whether gcc understands -Wunused-but-set-variable,
-  ac_cv_c_flag_w_no_unused_but_set_variable,
-  -Wno-unused-but-set-variable,[
-  int main(){}],
-  CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
+if test "${GCC-no}" = yes; then
+  XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
+    ac_cv_c_flag_w_no_unused_but_set_variable,
+    -Werror -Wno-unused-but-set-variable,[
+    int main(){}],
+    CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
+
+  XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
+    ac_cv_c_flag_w_no_array_bounds,
+    -Werror -Wno-array-bounds,[
+    int main(){}],
+    CFLAGS="${CFLAGS} -Wno-array-bounds")  
+fi
 
 AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy)
 AC_CONFIG_FILES([Makefile])
