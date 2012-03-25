@@ -12,6 +12,26 @@ fi
 if test "${enable_shared}" != no; then
   AC_SUBST(SHARED,shared)
 fi
+
+dnl XMP_TRY_COMPILE(<message>,<cache-var>,<flags>,<program>,<ifyes>,<ifno>)
+define(XMP_TRY_COMPILE,[
+  AC_CACHE_CHECK([$1],[$2],[
+    oldcflags="${CFLAGS}"
+    CFLAGS="${CFLAGS} $3"
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[$4]])],[$2=yes],[$2=no],[true])
+    CFLAGS="${oldcflags}"])
+  if test "x$$2" = xyes; then
+    CFLAGS="${CFLAGS} $3"; $5
+  else
+    true; $6
+  fi])
+
+XMP_TRY_COMPILE(whether gcc understands -Wunused-but-set-variable,
+  ac_cv_c_flag_w_no_unused_but_set_variable,
+  -Wno-unused-but-set-variable,[
+  int main(){}],
+  CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
+
 AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy)
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp.pc])
