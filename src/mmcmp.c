@@ -97,6 +97,20 @@ static const uint32 fetch_16bit[16] = {
 
 
 
+static void block_copy(struct header *h, struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
+{
+	int i;
+
+	for (i = 0; i < block->sub_blk; i++, sub++) {
+		if (sub->unpk_pos > h->filesize ||
+		    sub->unpk_pos + sub->unpk_size > h->filesize) {
+			break;
+		}
+
+		fread(buffer + sub->unpk_pos, 1, sub->unpk_size, in);
+	}
+}
+
 static int mmcmp_unpack(FILE *in, FILE *out)
 {
 	uint8 *mem;
@@ -186,18 +200,12 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 		mempos += 20 + block.sub_blk*8;
 
 		if (~block.flags & MMCMP_COMP) {
+
+			block_copy(&h, &block, sub_block, in, buffer);
+
 			/* Data is not packed */
 			for (j = 0; j < block.sub_blk; j++) {
-				struct sub_block *sub = &sub_block[j];
-
-				if (sub->unpk_pos > h.filesize ||
-				    sub->unpk_pos + sub->unpk_size > h.filesize) {
-					break;
-				}
-
-				memcpy(buffer + sub->unpk_pos, mem + mempos,
-							sub->unpk_size);
-				mempos += sub->unpk_size;
+				mempos += sub_block[j].unpk_size;
 			}
 		} else if (block.flags & MMCMP_16BIT) {
 			/* Data is 16-bit packed */
