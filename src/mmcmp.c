@@ -103,7 +103,7 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 	uint8 *buffer;
 	struct header h;
 	uint32 *table;
-	uint32 block, i;
+	uint32 i, j;
 	struct stat st;
 	int len;
 
@@ -151,22 +151,45 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 		return -1;
 	}
 
-	table = (uint32 *)(mem + h.blktable);
+	/* Block table */
+	fseek(in, h.blktable, SEEK_SET);
+	table = malloc(h.nblocks * 4);
+	for (i = 0; i < h.nblocks; i++) {
+		table[i] = read32l(in);
+	}
 
-	for (block = 0; block < h.nblocks; block++) {
-		uint32 mempos = table[block];
-		struct block *block = (struct block *)(mem + mempos);
-		struct sub_block *sub = (struct sub_block *)(mem + mempos + 20);
+	for (i = 0; i < h.nblocks; i++) {
+		uint32 mempos = table[i];
+		struct block block;
+		struct sub_block *sub_block;
+
+		fseek(in, table[i], SEEK_SET);
+		block.unpk_size  = read32l(in);
+		block.pk_size    = read32l(in);
+		block.xor_chk    = read32l(in);
+		block.sub_blk    = read16l(in);
+		block.flags      = read16l(in);
+		block.tt_entries = read16l(in);
+		block.num_bits   = read16l(in);
+
+		sub_block = malloc(block.sub_blk * sizeof (struct sub_block));
+		for (j = 0; j < block.sub_blk; j++) {
+			sub_block[j].unpk_pos  = read32l(in);
+			sub_block[j].unpk_size = read32l(in);
+			
+		}
 
 		if (mempos + 20 >= len ||
-		    mempos + 20 + block->sub_blk*8 >= len) {
+		    mempos + 20 + block.sub_blk*8 >= len) {
 			 break;
 		}
-		mempos += 20 + block->sub_blk*8;
+		mempos += 20 + block.sub_blk*8;
 
-		if (~block->flags & MMCMP_COMP) {
+		if (~block.flags & MMCMP_COMP) {
 			/* Data is not packed */
-			for (i = 0; i < block->sub_blk; i++) {
+			for (j = 0; j < block.sub_blk; j++) {
+				struct sub_block *sub = &sub_block[j];
+
 				if (sub->unpk_pos > h.filesize ||
 				    sub->unpk_pos + sub->unpk_size > h.filesize) {
 					break;
@@ -175,23 +198,23 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 				memcpy(buffer + sub->unpk_pos, mem + mempos,
 							sub->unpk_size);
 				mempos += sub->unpk_size;
-				sub++;
 			}
-		} else if (block->flags & MMCMP_16BIT) {
+		} else if (block.flags & MMCMP_16BIT) {
 			/* Data is 16-bit packed */
 			struct bit_buffer bb;
-			uint16 * dest = (uint16 *)(buffer + sub->unpk_pos);
-			uint32 sz = sub->unpk_size >> 1;
 			uint32 pos = 0;
-			uint32 numbits = block->num_bits;
-			uint32 subblk = 0, oldval = 0;
+			uint32 numbits = block.num_bits;
+			uint32 j, oldval = 0;
 
 			bb.count = 0;
 			bb.buffer = 0;
-			bb.src = mem+mempos+block->tt_entries;
-			bb.end = mem+mempos+block->pk_size;
+			bb.src = mem+mempos+block.tt_entries;
+			bb.end = mem+mempos+block.pk_size;
 
-			while (subblk < block->sub_blk) {
+			for (j = 0; j < block.sub_blk; ) {
+				uint32 sz = sub_block[j].unpk_size >> 1;
+				uint16 *dest = (uint16 *)(buffer + sub_block[j].unpk_pos);
+
 				uint32 newval = 0x10000;
 				uint32 d = get_bits(&bb, numbits+1);
 
@@ -214,38 +237,36 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 
 				if (newval < 0x10000) {
 					newval = (newval & 1) ? (uint32)(-(int32)((newval+1) >> 1)) : (uint32)(newval >> 1);
-					if (block->flags & MMCMP_DELTA) {
+					if (block.flags & MMCMP_DELTA) {
 						newval += oldval;
 						oldval = newval;
-					} else if (!(block->flags & MMCMP_ABS16)) {
+					} else if (!(block.flags & MMCMP_ABS16)) {
 						newval ^= 0x8000;
 					}
 					dest[pos++] = (uint16)newval;
 				}
 
 				if (pos >= sz) {
-					subblk++;
+					j++;
 					pos = 0;
-					sz = sub[subblk].unpk_size >> 1;
-					dest = (uint16 *)(buffer + sub[subblk].unpk_pos);
 				}
 			}
 		} else {
 			/* Data is 8-bit packed */
 			struct bit_buffer bb;
-			uint8 * dest = buffer + sub->unpk_pos;
-			uint32 sz = sub->unpk_size;
 			uint32 pos = 0;
-			uint32 numbits = block->num_bits;
-			uint32 subblk = 0, oldval = 0;
-			uint8 * ptable = mem+mempos;
+			uint32 numbits = block.num_bits;
+			uint32 j, oldval = 0;
+			uint8 *ptable = mem+mempos;
 
 			bb.count = 0;
 			bb.buffer = 0;
-			bb.src = mem+mempos+block->tt_entries;
-			bb.end = mem+mempos+block->pk_size;
+			bb.src = mem+mempos+block.tt_entries;
+			bb.end = mem+mempos+block.pk_size;
 
-			while (subblk < block->sub_blk) {
+			for (j = 0; j < block.sub_blk; ) {
+				uint32 sz = sub_block[j].unpk_size;
+				uint8 *dest = buffer + sub_block[j].unpk_pos;
 				uint32 newval = 0x100;
 				uint32 d = get_bits(&bb,numbits+1);
 
@@ -269,7 +290,7 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 
 				if (newval < 0x100) {
 					int n = ptable[newval];
-					if (block->flags & MMCMP_DELTA) {
+					if (block.flags & MMCMP_DELTA) {
 						n += oldval;
 						oldval = n;
 					}
@@ -277,15 +298,16 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 				}
 
 				if (pos >= sz) {
-					subblk++;
+					j++;
 					pos = 0;
-					sz = sub[subblk].unpk_size;
-					dest = buffer + sub[subblk].unpk_pos;
 				}
 			}
 		}
+
+		free(sub_block);
 	}
 
+	free(table);
 	fwrite(buffer, 1, h.filesize, out);
 	free(mem);
 
