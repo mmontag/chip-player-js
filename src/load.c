@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fnmatch.h>
 #ifdef __native_client__
 #include <sys/syslimits.h>
 #else
@@ -471,6 +472,29 @@ static void split_name(char *s, char **d, char **b)
 		*d = strdup("");
 		*b = strdup(s);
 	}
+}
+
+int exclude_match(char *name)
+{
+	int i;
+
+	static const char *exclude[] = {
+		"README", "readme",
+		"*.DIZ", "*.diz",
+		"*.NFO", "*.nfo",
+		"*.TXT", "*.txt",
+		"*.EXE", "*.exe",
+		"*.COM", "*.com",
+		NULL
+	};
+
+	for (i = 0; exclude[i] != NULL; i++) {
+		if (fnmatch(exclude[i], name, 0) == 0) {
+			return 0;
+		}
+	}
+
+	return -1;
 }
 
 void initialize_module_data(struct module_data *m)

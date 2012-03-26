@@ -28,7 +28,6 @@ Michael Kohn <mike@mikekohn.net>
 /*#include "kinflate.h"*/
 /*#include "kunzip.h"*/
 
-#include <fnmatch.h>
 #include "inflate.h"
 
 #ifdef HAVE_STRLCPY
@@ -766,13 +765,12 @@ struct inflate_data data;
   return ret_code;
 }
 
-int kunzip_get_offset_excluding(FILE *in, char **exclude)
+int kunzip_get_offset_excluding(FILE *in)
 {
 struct zip_local_file_header_t local_file_header;
-int i=0,curr,j;
+int i=0,curr;
 int name_size;
 long marker;
-int found;
 char name[1024];
 
   while(1)
@@ -794,15 +792,8 @@ char name[1024];
 
       fseek(in,marker,SEEK_SET); /* and part 2 of nasty code */
 
-      found = 0;
-      for (j = 0; exclude[j] != NULL; j++) {
-        if (fnmatch(exclude[j], name, 0) == 0) {
-	   found = 1;
-           break;
-        }
-      }
-      if (found == 0) {
-	break;
+      if (exclude_match(name)) {
+        break;
       }
     }
 
@@ -820,17 +811,8 @@ char name[1024];
 int decrunch_zip(FILE *in, FILE *out)
 {
   int offset;
-  char *exclude[] = {
-	"README", "readme",
-	"*.DIZ", "*.diz",
-	"*.NFO", "*.nfo",
-	"*.TXT", "*.txt",
-	"*.EXE", "*.exe",
-	"*.COM", "*.com",
-	NULL
-  };
 
-  offset = kunzip_get_offset_excluding(in, exclude);
+  offset = kunzip_get_offset_excluding(in);
   if (offset < 0)
     return -1;
 
