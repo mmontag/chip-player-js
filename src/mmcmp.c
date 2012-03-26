@@ -17,27 +17,27 @@
 
 
 struct header {
-	uint16 version;
-	uint16 nblocks;
-	uint32 filesize;
-	uint32 blktable;
-	uint8 glb_comp;
-	uint8 fmt_comp;
+	int version;
+	int nblocks;
+	int filesize;
+	int blktable;
+	int glb_comp;
+	int fmt_comp;
 };
 
 struct block {
-	uint32 unpk_size;
-	uint32 pk_size;
-	uint32 xor_chk;
-	uint16 sub_blk;
-	uint16 flags;
-	uint16 tt_entries;
-	uint16 num_bits;
+	int unpk_size;
+	int pk_size;
+	int xor_chk;
+	int sub_blk;
+	int flags;
+	int tt_entries;
+	int num_bits;
 };
 
 struct sub_block {
-	uint32 unpk_pos;
-	uint32 unpk_size;
+	int unpk_pos;
+	int unpk_size;
 };
 
 #define MMCMP_COMP	0x0001
@@ -50,29 +50,27 @@ struct sub_block {
 struct bit_buffer {
 	uint32 count;
 	uint32 buffer;
-	uint8 *src;
-	uint8 *end;
 };
 
 
-static uint32 get_bits(struct bit_buffer *bb, uint32 bits)
+static uint32 get_bits(FILE *f, int n, struct bit_buffer *bb)
 {
-	uint32 d;
+	uint32 bits;
 
-	if (!bits)
+	if (n == 0) {
 		return 0;
+	}
 
 	while (bb->count < 24) {
-		bb->buffer |= ((bb->src < bb->end) ?
-			*bb->src++ : 0) << bb->count;
+		bb->buffer |= read8(f) << bb->count;
 		bb->count += 8;
 	}
 
-	d = bb->buffer & ((1 << bits) - 1);
-	bb->buffer >>= bits;
-	bb->count -= bits;
+	bits = bb->buffer & ((1 << n) - 1);
+	bb->buffer >>= n;
+	bb->count -= n;
 
-	return d;
+	return bits;
 }
 
 
@@ -97,17 +95,129 @@ static const uint32 fetch_16bit[16] = {
 
 
 
-static void block_copy(struct header *h, struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
+static void block_copy(struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
 {
 	int i;
 
 	for (i = 0; i < block->sub_blk; i++, sub++) {
-		if (sub->unpk_pos > h->filesize ||
-		    sub->unpk_pos + sub->unpk_size > h->filesize) {
-			break;
+		fread(buffer + sub->unpk_pos, 1, sub->unpk_size, in);
+	}
+}
+
+static void block_unpack_16bit(struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
+{
+	struct bit_buffer bb;
+	uint32 pos = 0;
+	uint32 numbits = block->num_bits;
+	uint32 j, oldval = 0;
+
+	bb.count = 0;
+	bb.buffer = 0;
+	fseek(in, block->tt_entries, SEEK_SET);
+
+	for (j = 0; j < block->sub_blk; ) {
+		uint32 size = sub[j].unpk_size >> 1;
+		uint16 *dest = (uint16 *)(buffer + sub[j].unpk_pos);
+
+		uint32 newval = 0x10000;
+		uint32 d = get_bits(in, numbits+1, &bb);
+
+		if (d >= cmd_16bit[numbits]) {
+			uint32 fetch = fetch_16bit[numbits];
+			uint32 newbits = get_bits(in, fetch, &bb) +
+					((d - cmd_16bit[numbits]) << fetch);
+
+			if (newbits != numbits) {
+				numbits = newbits & 0x0F;
+			} else {
+				if ((d = get_bits(in, 4, &bb)) == 0x0F) {
+					if (get_bits(in, 1, &bb)) break;
+					newval = 0xFFFF;
+				} else {
+					newval = 0xFFF0 + d;
+				}
+			}
+		} else {
+			newval = d;
 		}
 
-		fread(buffer + sub->unpk_pos, 1, sub->unpk_size, in);
+		if (newval < 0x10000) {
+			if (newval & 1) {
+				newval = (uint32)(-(int32)((newval+1) >> 1));
+			} else {
+				newval = (uint32)(newval >> 1);
+			}
+
+			if (block->flags & MMCMP_DELTA) {
+				newval += oldval;
+				oldval = newval;
+			} else if (!(block->flags & MMCMP_ABS16)) {
+				newval ^= 0x8000;
+			}
+
+			dest[pos++] = (uint16)newval;
+		}
+
+		if (pos >= size) {
+			j++;
+			pos = 0;
+		}
+	}
+}
+
+static void block_unpack_8bit(struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
+{
+	struct bit_buffer bb;
+	uint32 pos = 0;
+	uint32 numbits = block->num_bits;
+	uint32 j, oldval = 0;
+	uint8 ptable[0x100];
+
+	fread(ptable, 1, 0x100, in);
+
+	bb.count = 0;
+	bb.buffer = 0;
+
+	fseek(in, block->tt_entries, SEEK_SET);
+
+	for (j = 0; j < block->sub_blk; ) {
+		uint32 size = sub[j].unpk_size;
+		uint8 *dest = buffer + sub[j].unpk_pos;
+		uint32 newval = 0x100;
+		uint32 d = get_bits(in, numbits+1, &bb);
+
+		if (d >= cmd_8bits[numbits]) {
+			uint32 fetch = fetch_8bit[numbits];
+			uint32 newbits = get_bits(in, fetch, &bb) +
+					((d - cmd_8bits[numbits]) << fetch);
+
+			if (newbits != numbits) {
+				numbits = newbits & 0x07;
+			} else {
+				if ((d = get_bits(in, 3, &bb)) == 7) {
+					if (get_bits(in, 1, &bb)) break;
+					newval = 0xFF;
+				} else {
+					newval = 0xF8 + d;
+				}
+			}
+		} else {
+			newval = d;
+		}
+
+		if (newval < 0x100) {
+			int n = ptable[newval];
+			if (block->flags & MMCMP_DELTA) {
+				n += oldval;
+				oldval = n;
+			}
+			dest[pos++] = (uint8)n;
+		}
+
+		if (pos >= size) {
+			j++;
+			pos = 0;
+		}
 	}
 }
 
@@ -173,7 +283,6 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 	}
 
 	for (i = 0; i < h.nblocks; i++) {
-		uint32 mempos = table[i];
 		struct block block;
 		struct sub_block *sub_block;
 
@@ -190,126 +299,22 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 		for (j = 0; j < block.sub_blk; j++) {
 			sub_block[j].unpk_pos  = read32l(in);
 			sub_block[j].unpk_size = read32l(in);
-			
 		}
 
-		if (mempos + 20 >= len ||
-		    mempos + 20 + block.sub_blk*8 >= len) {
-			 break;
-		}
-		mempos += 20 + block.sub_blk*8;
+		block.tt_entries += ftell(in);
 
 		if (~block.flags & MMCMP_COMP) {
-
-			block_copy(&h, &block, sub_block, in, buffer);
-
 			/* Data is not packed */
-			for (j = 0; j < block.sub_blk; j++) {
-				mempos += sub_block[j].unpk_size;
-			}
+			block_copy(&block, sub_block, in, buffer);
+
 		} else if (block.flags & MMCMP_16BIT) {
 			/* Data is 16-bit packed */
-			struct bit_buffer bb;
-			uint32 pos = 0;
-			uint32 numbits = block.num_bits;
-			uint32 j, oldval = 0;
+			block_unpack_16bit(&block, sub_block, in, buffer);
 
-			bb.count = 0;
-			bb.buffer = 0;
-			bb.src = mem+mempos+block.tt_entries;
-			bb.end = mem+mempos+block.pk_size;
-
-			for (j = 0; j < block.sub_blk; ) {
-				uint32 sz = sub_block[j].unpk_size >> 1;
-				uint16 *dest = (uint16 *)(buffer + sub_block[j].unpk_pos);
-
-				uint32 newval = 0x10000;
-				uint32 d = get_bits(&bb, numbits+1);
-
-				if (d >= cmd_16bit[numbits]) {
-					uint32 nFetch = fetch_16bit[numbits];
-					uint32 newbits = get_bits(&bb, nFetch) + ((d - cmd_16bit[numbits]) << nFetch);
-					if (newbits != numbits) {
-						numbits = newbits & 0x0F;
-					} else {
-						if ((d = get_bits(&bb, 4)) == 0x0F) {
-							if (get_bits(&bb,1)) break;
-							newval = 0xFFFF;
-						} else {
-							newval = 0xFFF0 + d;
-						}
-					}
-				} else {
-					newval = d;
-				}
-
-				if (newval < 0x10000) {
-					newval = (newval & 1) ? (uint32)(-(int32)((newval+1) >> 1)) : (uint32)(newval >> 1);
-					if (block.flags & MMCMP_DELTA) {
-						newval += oldval;
-						oldval = newval;
-					} else if (!(block.flags & MMCMP_ABS16)) {
-						newval ^= 0x8000;
-					}
-					dest[pos++] = (uint16)newval;
-				}
-
-				if (pos >= sz) {
-					j++;
-					pos = 0;
-				}
-			}
 		} else {
 			/* Data is 8-bit packed */
-			struct bit_buffer bb;
-			uint32 pos = 0;
-			uint32 numbits = block.num_bits;
-			uint32 j, oldval = 0;
-			uint8 *ptable = mem+mempos;
+			block_unpack_8bit(&block, sub_block, in, buffer);
 
-			bb.count = 0;
-			bb.buffer = 0;
-			bb.src = mem+mempos+block.tt_entries;
-			bb.end = mem+mempos+block.pk_size;
-
-			for (j = 0; j < block.sub_blk; ) {
-				uint32 sz = sub_block[j].unpk_size;
-				uint8 *dest = buffer + sub_block[j].unpk_pos;
-				uint32 newval = 0x100;
-				uint32 d = get_bits(&bb,numbits+1);
-
-				if (d >= cmd_8bits[numbits]) {
-					uint32 nFetch = fetch_8bit[numbits];
-					uint32 newbits = get_bits(&bb,nFetch) + ((d - cmd_8bits[numbits]) << nFetch);
-					if (newbits != numbits) {
-						numbits = newbits & 0x07;
-					} else {
-						if ((d = get_bits(&bb,3)) == 7)
-						{
-							if (get_bits(&bb,1)) break;
-							newval = 0xFF;
-						} else {
-							newval = 0xF8 + d;
-						}
-					}
-				} else {
-					newval = d;
-				}
-
-				if (newval < 0x100) {
-					int n = ptable[newval];
-					if (block.flags & MMCMP_DELTA) {
-						n += oldval;
-						oldval = n;
-					}
-					dest[pos++] = (uint8)n;
-				}
-
-				if (pos >= sz) {
-					j++;
-					pos = 0;
-				}
-			}
 		}
 
 		free(sub_block);
