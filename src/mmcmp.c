@@ -265,6 +265,9 @@ int decrunch_mmcmp (FILE *in, FILE *out)
 		block.num_bits   = read16l(in);
 
 		sub_block = malloc(block.sub_blk * sizeof (struct sub_block));
+		if (sub_block == NULL)
+			goto err;
+
 		for (j = 0; j < block.sub_blk; j++) {
 			sub_block[j].unpk_pos  = read32l(in);
 			sub_block[j].unpk_size = read32l(in);
@@ -287,6 +290,9 @@ int decrunch_mmcmp (FILE *in, FILE *out)
 	}
 
 	free(table);
-
 	return 0;
+
+    err:
+	free(table);
+	return -1;
 }
