@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <string.h>
 
+int exclude_match(char *);
+
 /* ---------------------------------------------------------------------- */
 
 /* static const unsigned char VERSION[]="$VER: unlzx 1.0 (22.2.98)"; */
@@ -702,7 +704,11 @@ static int extract_normal(FILE *in_file, struct local_data *data)
   /*printf("Extracting \"%s\"...", node->filename);
   fflush(stdout);*/
 
-  out_file = open_output(node->filename, data);
+  if (exclude_match(node->filename) == 0) {
+    out_file = NULL;
+  } else {
+    out_file = open_output(node->filename, data);
+  }
 
   data->sum = 0; /* reset CRC */
 
@@ -782,6 +788,7 @@ static int extract_normal(FILE *in_file, struct local_data *data)
 
    if(out_file) /* Write the data to the file */
    {
+    abort = 1;
     if(fwrite(pos, 1, count, out_file) != count)
     {
 #if 0
@@ -823,7 +830,11 @@ static int extract_store(FILE *in_file, struct local_data *data)
   /*printf("Storing \"%s\"...", node->filename);
   fflush(stdout);*/
 
-  out_file = open_output(node->filename, data);
+  if (exclude_match(node->filename) == 0) {
+    out_file = NULL;
+  } else {
+    out_file = open_output(node->filename, data);
+  }
 
   data->sum = 0; /* reset CRC */
 
@@ -850,6 +861,7 @@ static int extract_store(FILE *in_file, struct local_data *data)
 
    if(out_file) /* Write the data to the file */
    {
+    abort = 1;
     if(fwrite(data->read_buffer, 1, count, out_file) != count)
     {
 #if 0
@@ -885,7 +897,7 @@ static int extract_unknown(FILE *in_file, struct local_data *data)
 
  for(node = data->filename_list; node; node = node->next)
  {
-  printf("Unknown \"%s\"\n", node->filename);
+  fprintf(stderr, "unlzx: unknown \"%s\"\n", node->filename);
  }
 
  return(abort);
@@ -957,11 +969,6 @@ static int extract_archive(FILE *in_file, struct local_data *data)
            node->length = data->unpack_size;
            node->crc = data->crc;
            for(temp = 0; (node->filename[temp] = data->header_filename[temp]); temp++);
-
-	
-	   /* xmp: skip some filenames we don't want */
-	   if (strstr(node->filename, ".txt"))
-		data->pack_mode = -1;
 
            if(data->pack_size)
            {
