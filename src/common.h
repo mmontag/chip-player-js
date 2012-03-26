@@ -314,12 +314,12 @@ uint32	read24l			(FILE *);
 uint32	read24b			(FILE *);
 uint32	read32l			(FILE *);
 uint32	read32b			(FILE *);
-
 void	write8			(FILE *, uint8);
 void	write16l		(FILE *, uint16);
 void	write16b		(FILE *, uint16);
 void	write32l		(FILE *, uint32);
 void	write32b		(FILE *, uint32);
+int	move_data		(FILE *, FILE *, int);
 
 uint16	readmem16l		(uint8 *);
 uint16	readmem16b		(uint8 *);

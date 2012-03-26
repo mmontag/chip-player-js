@@ -4,17 +4,21 @@
  * Free Software Foundation; either version 2  of the license or (at your
  * option) any later version.
  *
- * Author: Olivier Lapicque <olivierl@jps.net>
- * Modified by Claudio Matsuoka for xmp
+ * Based on the original version by  Olivier Lapicque
+ * Rewritten for xmp by Claudio Matsuoka
  */
 
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #include "common.h"
 
+#define MMCMP_COMP	0x0001
+#define MMCMP_DELTA	0x0002
+#define MMCMP_16BIT	0x0004
+#define MMCMP_STEREO	0x0100
+#define MMCMP_ABS16	0x0200
+#define MMCMP_ENDIAN	0x0400
 
 struct header {
 	int version;
@@ -40,18 +44,28 @@ struct sub_block {
 	int unpk_size;
 };
 
-#define MMCMP_COMP	0x0001
-#define MMCMP_DELTA	0x0002
-#define MMCMP_16BIT	0x0004
-#define MMCMP_STEREO	0x0100
-#define MMCMP_ABS16	0x0200
-#define MMCMP_ENDIAN	0x0400
+static const uint32 cmd_8bits[8] = {
+	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF8
+};
+
+static const uint32 fetch_8bit[8] = {
+	3, 3, 3, 3, 2, 1, 0, 0
+};
+
+static const uint32 cmd_16bit[16] = {
+	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF0,
+	0x1F0, 0x3F0, 0x7F0, 0xFF0, 0x1FF0, 0x3FF0, 0x7FF0, 0xFFF0
+};
+
+static const uint32 fetch_16bit[16] = {
+	4, 4, 4, 4, 3, 2, 1, 0,
+	0, 0, 0, 0, 0, 0, 0, 0
+};
 
 struct bit_buffer {
 	uint32 count;
 	uint32 buffer;
 };
-
 
 static uint32 get_bits(FILE *f, int n, struct bit_buffer *bb)
 {
@@ -73,38 +87,18 @@ static uint32 get_bits(FILE *f, int n, struct bit_buffer *bb)
 	return bits;
 }
 
-
-
-static const uint32 cmd_8bits[8] = {
-	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF8
-};
-
-static const uint32 fetch_8bit[8] = {
-	3, 3, 3, 3, 2, 1, 0, 0
-};
-
-static const uint32 cmd_16bit[16] = {
-	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF0,
-	0x1F0, 0x3F0, 0x7F0, 0xFF0, 0x1FF0, 0x3FF0, 0x7FF0, 0xFFF0
-};
-
-static const uint32 fetch_16bit[16] = {
-	4, 4, 4, 4, 3, 2, 1, 0,
-	0, 0, 0, 0, 0, 0, 0, 0
-};
-
-
-
-static void block_copy(struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
+static void block_copy(struct block *block, struct sub_block *sub,
+		       FILE *in, FILE *out)
 {
 	int i;
 
 	for (i = 0; i < block->sub_blk; i++, sub++) {
-		fread(buffer + sub->unpk_pos, 1, sub->unpk_size, in);
+		move_data(out, in, sub->unpk_size);
 	}
 }
 
-static void block_unpack_16bit(struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
+static void block_unpack_16bit(struct block *block, struct sub_block *sub,
+			       FILE *in, FILE *out)
 {
 	struct bit_buffer bb;
 	uint32 pos = 0;
@@ -117,8 +111,6 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub, FILE 
 
 	for (j = 0; j < block->sub_blk; ) {
 		uint32 size = sub[j].unpk_size >> 1;
-		uint16 *dest = (uint16 *)(buffer + sub[j].unpk_pos);
-
 		uint32 newval = 0x10000;
 		uint32 d = get_bits(in, numbits+1, &bb);
 
@@ -155,7 +147,8 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub, FILE 
 				newval ^= 0x8000;
 			}
 
-			dest[pos++] = (uint16)newval;
+			pos++;
+			write16l(out, newval);
 		}
 
 		if (pos >= size) {
@@ -165,7 +158,8 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub, FILE 
 	}
 }
 
-static void block_unpack_8bit(struct block *block, struct sub_block *sub, FILE *in, uint8 *buffer)
+static void block_unpack_8bit(struct block *block, struct sub_block *sub,
+			      FILE *in, FILE *out)
 {
 	struct bit_buffer bb;
 	uint32 pos = 0;
@@ -182,7 +176,6 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub, FILE *
 
 	for (j = 0; j < block->sub_blk; ) {
 		uint32 size = sub[j].unpk_size;
-		uint8 *dest = buffer + sub[j].unpk_pos;
 		uint32 newval = 0x100;
 		uint32 d = get_bits(in, numbits+1, &bb);
 
@@ -211,7 +204,9 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub, FILE *
 				n += oldval;
 				oldval = n;
 			}
-			dest[pos++] = (uint8)n;
+
+			pos++;
+			write8(out, n);
 		}
 
 		if (pos >= size) {
@@ -221,22 +216,11 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub, FILE *
 	}
 }
 
-static int mmcmp_unpack(FILE *in, FILE *out)
+int decrunch_mmcmp (FILE *in, FILE *out)                          
 {
-	uint8 *mem;
-	uint8 *buffer;
 	struct header h;
 	uint32 *table;
 	uint32 i, j;
-	struct stat st;
-	int len;
-
-	if (fstat(fileno(in), &st) < 0)
-		return -1;
-
-	len = st.st_size;
-	if (len < 256)
-		return -1;
 
 	/* Read file header */
 	if (read32l(in) != 0x4352697A)		/* ziRC */
@@ -254,30 +238,15 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 	h.glb_comp = read8(in);
 	h.fmt_comp = read8(in);
 
-	if (h.nblocks == 0 || h.filesize < 16 || h.filesize > 0x8000000)
+	if (h.nblocks == 0)
 		return -1;
-
-	if (h.blktable >= len || h.blktable + 4 * h.nblocks > len)
-		return -1;
-
-	mem = malloc(len);
-	if (mem == NULL)
-		return -1;
-
-	fseek(in, 0, SEEK_SET);
-	if (fread(mem, 1, len, in) != len)
-		return -1;
-
-
-	/* Destination buffer */
-	buffer = (uint8 *)calloc(1, (h.filesize + 31) & ~15);
-	if (buffer == NULL) {
-		return -1;
-	}
 
 	/* Block table */
 	fseek(in, h.blktable, SEEK_SET);
 	table = malloc(h.nblocks * 4);
+	if (table == NULL)
+		return -1;
+
 	for (i = 0; i < h.nblocks; i++) {
 		table[i] = read32l(in);
 	}
@@ -305,35 +274,19 @@ static int mmcmp_unpack(FILE *in, FILE *out)
 
 		if (~block.flags & MMCMP_COMP) {
 			/* Data is not packed */
-			block_copy(&block, sub_block, in, buffer);
-
+			block_copy(&block, sub_block, in, out);
 		} else if (block.flags & MMCMP_16BIT) {
 			/* Data is 16-bit packed */
-			block_unpack_16bit(&block, sub_block, in, buffer);
-
+			block_unpack_16bit(&block, sub_block, in, out);
 		} else {
 			/* Data is 8-bit packed */
-			block_unpack_8bit(&block, sub_block, in, buffer);
-
+			block_unpack_8bit(&block, sub_block, in, out);
 		}
 
 		free(sub_block);
 	}
 
 	free(table);
-	fwrite(buffer, 1, h.filesize, out);
-	free(mem);
-
-	return 0;
-}
-
-
-int decrunch_mmcmp (FILE *f, FILE *fo)                          
-{                                                          
-	if (fo == NULL) 
-		return -1; 
-
-	mmcmp_unpack(f, fo);
 
 	return 0;
 }

@@ -164,3 +164,17 @@ uint32 readmem32b(uint8 *m)
 	return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
+int move_data(FILE *out, FILE *in, int len)
+{
+	uint8 buf[1024];
+	int l;
+
+	do {
+		l = fread(buf, 1, len > 1024 ? 1024 : len, in);
+		fwrite(buf, 1, l, out);
+		len -= l;
+	} while (l > 0 && len > 0);
+
+	return 0;
+}
+

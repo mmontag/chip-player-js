@@ -64,16 +64,7 @@ const struct pw_format *const pw_format[] = {
 
 int pw_move_data(FILE *out, FILE *in, int len)
 {
-	uint8 buf[1024];
-	int l;
-
-	do {
-		l = fread(buf, 1, len > 1024 ? 1024 : len, in);
-		fwrite(buf, 1, l, out);
-		len -= l;
-	} while (l > 0 && len > 0);
-
-	return 0;
+	return move_data(out, in, len);
 }
 
 int pw_write_zero(FILE *out, int len)
