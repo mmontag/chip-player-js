@@ -21,6 +21,7 @@ TEST(test_storlek_arpeggio_no_value)
 	struct xmp_module_info info;
 	struct xmp_channel_info *ci = &info.channel_info[0];
 	int time, row, frame, period, volume;
+	char line[200];
 	FILE *f;
 
 	f = fopen("data/storlek_02.data", "r");
@@ -36,7 +37,10 @@ TEST(test_storlek_arpeggio_no_value)
 		if (info.loop_count > 0)
 			break;
 
-		fscanf(f, "%d %d %d %d %d", &time, &row, &frame, &period, &volume);
+		fgets(line, 200, f);
+		sscanf(line, "%d %d %d %d %d",
+				&time, &row, &frame, &period, &volume);
+
 		fail_unless(info.time  == time,   "time mismatch");
 		fail_unless(info.row   == row,    "row mismatch");
 		fail_unless(info.frame == frame,  "frame mismatch");

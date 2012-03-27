@@ -514,6 +514,8 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	struct channel_data *xc = &p->xc_data[chn];
 	int act;
 
+	xc->info_finalvol = 0;
+
 	/* Do delay */
 	if (xc->delay > 0) {
 		if (--xc->delay == 0) {
