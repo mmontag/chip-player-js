@@ -6,6 +6,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 CONVERTERS	= delta signal endian
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
+STORLEK		= arpeggio_pitch_slide
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
@@ -35,6 +36,8 @@ NNA_TESTS	= nna_cut nna_cont nna_off nna_fade dct_note
 SEQUENCER_TESTS	= prev_order_start prev_order_skip prev_order_start_seq \
 		  next_order_skip
 
+STORLEK_TESTS	= $(addprefix storlek_,$(STORLEK))
+
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
 TESTS		= $(DEPACK_TESTS) \
@@ -48,6 +51,7 @@ TESTS		= $(DEPACK_TESTS) \
 		  $(NNA_TESTS) \
 		  $(EFFECT_TESTS) \
 		  $(SEQUENCER_TESTS) \
+		  $(STORLEK_TESTS) \
 		  $(API_TESTS)
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
