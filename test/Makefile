@@ -46,6 +46,7 @@ API_TESTS	= $(addprefix api_,$(API_CALLS))
 TESTS		= $(DEPACK_TESTS) \
 		  $(CONVERT_TESTS) \
 		  load_sample_8bit load_sample_16bit \
+		  load_sample_it_8bit load_sample_it_16bit \
 		  player_read_event \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \
