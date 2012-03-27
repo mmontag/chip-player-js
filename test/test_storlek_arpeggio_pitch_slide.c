@@ -34,10 +34,10 @@ TEST(test_storlek_arpeggio_pitch_slide)
 	int time, row, frame, period, volume;
 	FILE *f;
 
-	f = fopen("data/storlek/01.data", "r");
+	f = fopen("data/storlek_01.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek/01.it");
+	xmp_load_module(opaque, "data/storlek_01.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {

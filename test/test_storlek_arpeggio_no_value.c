@@ -23,10 +23,10 @@ TEST(test_storlek_arpeggio_no_value)
 	int time, row, frame, period, volume;
 	FILE *f;
 
-	f = fopen("data/storlek/02.data", "r");
+	f = fopen("data/storlek_02.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek/02.it");
+	xmp_load_module(opaque, "data/storlek_02.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {
