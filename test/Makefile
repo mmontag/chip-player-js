@@ -7,7 +7,7 @@ CONVERTERS	= delta signal endian
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
 STORLEK		= arpeggio_pitch_slide arpeggio_no_value compatible_gxx_off \
-		  compatible_gxx_on
+		  compatible_gxx_on gxx_fine_slides_memory
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
