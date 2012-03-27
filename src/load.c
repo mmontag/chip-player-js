@@ -417,7 +417,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	if (fstat(fileno(f), &st) < 0)	/* get size after decrunch */
 		goto err;
 
-	if (st.st_size < 500)		/* set minimum valid module size */
+	if (st.st_size < 256)		/* set minimum valid module size */
 		goto err;
 
 	if (info != NULL) {
