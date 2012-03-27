@@ -42,5 +42,9 @@ TEST(test_storlek_volume_column_and_fine_slides)
 		fail_unless(ci->period == period, "period mismatch");
 		fail_unless(ci->volume == volume, "volume mismatch");
 	}
+
+	xmp_player_end(opaque);
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST
