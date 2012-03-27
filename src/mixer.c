@@ -79,7 +79,7 @@ static void (*mix_fn[])() = {
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
-static void out_su8norm(char *dest, int *src, int num, int amp)
+static void out_su8norm(char *dest, int *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT + 8 - amp;
@@ -91,14 +91,14 @@ static void out_su8norm(char *dest, int *src, int num, int amp)
 		} else if (smp < LIM8_LO) {
 			*dest = LIM8_LO;
 		} else {
-			*dest = smp;
+			*dest = smp + offs;
 		}
 	}
 }
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void out_su16norm(int16 *dest, int *src, int num, int amp)
+static void out_su16norm(int16 *dest, int *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT - amp;
@@ -110,7 +110,7 @@ static void out_su16norm(int16 *dest, int *src, int num, int amp)
 		} else if (smp < LIM16_LO) {
 			*dest = LIM16_LO;
 		} else {
-			*dest = smp;
+			*dest = smp + offs;
 		}
 	}
 }
@@ -379,9 +379,11 @@ void mixer_softmixer(struct context_data *ctx)
 	assert(size <= OUT_MAXLEN);
 
 	if (s->format & XMP_FORMAT_8BIT) {
-		out_su8norm(s->buffer, s->buf32b, size, s->amplify);
+		out_su8norm(s->buffer, s->buf32b, size, s->amplify,
+				s->format & XMP_FORMAT_UNSIGNED ? 0x80 : 0);
 	} else {
-		out_su16norm((int16 *) s->buffer, s->buf32b, size, s->amplify);
+		out_su16norm((int16 *)s->buffer, s->buf32b, size, s->amplify,
+				s->format & XMP_FORMAT_UNSIGNED ? 0x8000 : 0);
 	}
 
 	s->dtright = s->dtleft = 0;
