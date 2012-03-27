@@ -621,7 +621,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	e_ins = e->ins;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
-	if (e->note && !e_ins && xc->delayed_ins) {
+	if (e_ins) {
+		xc->delayed_ins = 0;
+	} else if (e->note && xc->delayed_ins) {
 		e_ins = xc->delayed_ins;
 		xc->delayed_ins = 0;
 	}
