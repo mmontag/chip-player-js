@@ -22,8 +22,10 @@ while x.playerFrame():
 	if info.loop_count > 0:
 		break
 
-	ci = info.channel_info[0]
-	print "%d %d %d %d %d %d" % (info.time, info.row, info.frame, ci.period, ci.volume, ci.instrument)
+	for i in range(info.mod[0].chn):
+		ci = info.channel_info[i]
+		print "%d %d %d %d %d %d %d" % (info.time, info.row,
+			info.frame, i, ci.period, ci.volume, ci.instrument)
 
 
 x.playerEnd()
