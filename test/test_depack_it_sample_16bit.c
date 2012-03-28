@@ -20,7 +20,7 @@ TEST(test_depack_it_sample_16bit)
 	fail_unless(ret == 1, "decompression fail");
 
 	if (is_big_endian()) {
-		convert_endian(4646, (unsigned char *)dest);
+		convert_endian((unsigned char *)dest, 4646);
 	}
 
 	fwrite(dest, 1, 9292, fo);

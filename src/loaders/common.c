@@ -294,40 +294,40 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 	}
 
 	if (flags & SAMPLE_FLAG_7BIT) {
-		convert_7bit_to_8bit(xxs->len, xxs->data);
+		convert_7bit_to_8bit(xxs->data, xxs->len);
 	}
 
 	if (flags & SAMPLE_FLAG_DIFF) {
-		convert_delta(xxs->len, xxs->flg & XMP_SAMPLE_16BIT, xxs->data);
+		convert_delta(xxs->data, xxs->len, xxs->flg & XMP_SAMPLE_16BIT);
 	} else if (flags & SAMPLE_FLAG_8BDIFF) {
 		int len = xxs->len;
 		if (xxs->flg & XMP_SAMPLE_16BIT) {
 			len *= 2;
 		}
-		convert_delta(len, 0, xxs->data);
+		convert_delta(xxs->data, len, 0);
 	}
 
 	/* Convert samples to signed */
 	if (flags & SAMPLE_FLAG_UNS) {
-		convert_signal(xxs->len, xxs->flg & XMP_SAMPLE_16BIT,
-				xxs->data);
+		convert_signal(xxs->data, xxs->len,
+				xxs->flg & XMP_SAMPLE_16BIT);
 	}
 
 	/* Fix endianism if needed */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		if (is_big_endian() ^ ((flags & SAMPLE_FLAG_BIGEND) != 0))
-			convert_endian(xxs->len, xxs->data);
+			convert_endian(xxs->data, xxs->len);
 	}
 
 	/* Downmix stereo samples */
 	if (flags & SAMPLE_FLAG_STEREO) {
-		convert_stereo_to_mono(xxs->len, xxs->flg & XMP_SAMPLE_16BIT,
-				  xxs->data);
+		convert_stereo_to_mono(xxs->data, xxs->len,
+					xxs->flg & XMP_SAMPLE_16BIT);
 		xxs->len /= 2;
 	}
 
 	if (flags & SAMPLE_FLAG_VIDC) {
-		convert_vidc_to_linear(xxs->len, xxs->data);
+		convert_vidc_to_linear(xxs->data, xxs->len);
 	}
 
 	/* Check for full loop samples */

@@ -46,7 +46,7 @@ static const int8 vdic_table[128] = {
 
 
 /* Convert differential to absolute sample data */
-void convert_delta(int l, int r, uint8 *p)
+void convert_delta(uint8 *p, int l, int r)
 {
 	uint16 *w = (uint16 *)p;
 	uint16 abs = 0;
@@ -65,7 +65,7 @@ void convert_delta(int l, int r, uint8 *p)
 }
 
 /* Convert signed to unsigned sample data */
-void convert_signal(int l, int r, uint8 *p)
+void convert_signal(uint8 *p, int l, int r)
 {
 	uint16 *w = (uint16 *)p;
 
@@ -79,7 +79,7 @@ void convert_signal(int l, int r, uint8 *p)
 }
 
 /* Convert little-endian 16 bit samples to big-endian */
-void convert_endian(int l, uint8 *p)
+void convert_endian(uint8 *p, int l)
 {
 	uint8 b;
 	int i;
@@ -93,7 +93,7 @@ void convert_endian(int l, uint8 *p)
 }
 
 /* Downmix stereo samples to mono */
-void convert_stereo_to_mono(int l, int r, uint8 *p)
+void convert_stereo_to_mono(uint8 *p, int l, int r)
 {
 	int16 *b = (int16 *)p;
 	int i;
@@ -109,7 +109,7 @@ void convert_stereo_to_mono(int l, int r, uint8 *p)
 }
 
 /* Convert 7 bit samples to 8 bit */
-void convert_7bit_to_8bit(int l, uint8 * p)
+void convert_7bit_to_8bit(uint8 *p, int l)
 {
 	for (; l--; p++) {
 		*p <<= 1;
@@ -117,7 +117,7 @@ void convert_7bit_to_8bit(int l, uint8 * p)
 }
 
 /* Convert Archimedes VIDC samples to linear */
-void convert_vidc_to_linear(int l, uint8 * p)
+void convert_vidc_to_linear(uint8 *p, int l)
 {
 	int i;
 	uint8 x;

@@ -14,11 +14,11 @@ TEST(test_convert_signal)
 		32773, 32774, 32761, 32776, 32739
 	};
 
-	convert_signal(10, 0, buffer0);
+	convert_signal(buffer0, 10, 0);
 	fail_unless(memcmp(buffer0, conv_r0, 10) == 0,
 				"Invalid 8-bit conversion");
 
-	convert_signal(10, 1, (uint8 *)buffer1);
+	convert_signal((uint8 *)buffer1, 10, 1);
 	fail_unless(memcmp(buffer1, conv_r1, 20) == 0,
 				"Invalid 16-bit conversion");
 }
