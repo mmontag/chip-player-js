@@ -1,9 +1,9 @@
 
 REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
+CONVERTERS	= delta signal endian
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 		  arc spark j2b lzx it_sample_8bit it_sample_16bit
-CONVERTERS	= delta signal endian
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
 STORLEK		= arpeggio_pitch_slide arpeggio_no_value compatible_gxx_off \
@@ -31,9 +31,9 @@ CASE3_TESTS	= $(addprefix porta_no_ins_,$(REPLAYERS)) \
 QUIRK_TESTS	= $(addprefix quirk_,$(QUIRKS)) \
 		  $(addprefix no_quirk_,$(QUIRKS))
 
-DEPACK_TESTS	= $(addprefix depack_,$(DEPACKERS))
-
 CONVERT_TESTS	= $(addprefix convert_,$(CONVERTERS))
+
+DEPACK_TESTS	= $(addprefix depack_,$(DEPACKERS))
 
 EFFECT_TESTS	= $(addprefix effect_,$(EFFECTS))
 
@@ -46,8 +46,8 @@ STORLEK_TESTS	= $(addprefix storlek_,$(STORLEK))
 
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
-TESTS		= $(DEPACK_TESTS) \
-		  $(CONVERT_TESTS) \
+TESTS		= $(CONVERT_TESTS) \
+		  $(DEPACK_TESTS) \
 		  load_sample_8bit load_sample_16bit \
 		  player_read_event \
 		  $(QUIRK_TESTS) \

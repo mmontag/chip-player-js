@@ -1,4 +1,5 @@
 #include "test.h"
+#include "../src/loaders/load.h"
 
 int itsex_decompress16(FILE *module, void *dst, int len, char it215);
 
@@ -17,6 +18,11 @@ TEST(test_depack_it_sample_16bit)
 
 	ret = itsex_decompress16(f, dest, 4646, 0);
 	fail_unless(ret == 1, "decompression fail");
+
+	if (is_big_endian()) {
+		convert_endian(dest, 4646);
+	}
+
 	fwrite(dest, 1, 9292, fo);
 
 	fclose(fo);
