@@ -28,13 +28,13 @@ define(XMP_TRY_COMPILE,[
 
 if test "${GCC-no}" = yes; then
   XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
-    ac_cv_c_flag_w_no_unused_but_set_variable,
+    ac_cv_c_flag_w_unused_but_set_variable,
     -Wunused-but-set-variable,[
     int main(){}],
     CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
 
   XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
-    ac_cv_c_flag_w_no_array_bounds,
+    ac_cv_c_flag_w_array_bounds,
     -Warray-bounds,[
     int main(){}],
     CFLAGS="${CFLAGS} -Wno-array-bounds")  
