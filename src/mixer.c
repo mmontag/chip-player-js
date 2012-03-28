@@ -79,7 +79,7 @@ static void (*mix_fn[])() = {
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
-static void out_su8norm(char *dest, int *src, int num, int amp, int offs)
+static void out_su8norm(char *dest, int32 *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT + 8 - amp;
@@ -98,7 +98,7 @@ static void out_su8norm(char *dest, int *src, int num, int amp, int offs)
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void out_su16norm(int16 *dest, int *src, int num, int amp, int offs)
+static void out_su16norm(int16 *dest, int32 *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT - amp;
@@ -189,7 +189,7 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 
 /* Ok, it's messy, but it works :-) Hipolito */
 static void anticlick(struct context_data *ctx, int voc, int vol, int pan,
-		      int *buf, int count)
+		      int32 *buf, int count)
 {
 	int oldvol, newvol, pan0;
 	struct player_data *p = &ctx->p;
@@ -243,7 +243,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int vol_l, vol_r, step, voc;
 	int prev_l, prev_r;
 	int synth = 1;
-	int *buf_pos;
+	int32 *buf_pos;
 
 	mixer_prepare(ctx);
 

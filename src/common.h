@@ -282,7 +282,7 @@ struct mixer_data {
 	int amplify;		/* amplification multiplier */
 	int mix;		/* percentage of channel separation */
 	char* buffer;		/* output buffer */
-	int* buf32b;		/* temp buffer for 32 bit samples */
+	int32* buf32b;		/* temp buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */

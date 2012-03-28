@@ -700,7 +700,7 @@ int kunzip_file_with_name(FILE *in, FILE *out)
 struct zip_local_file_header_t local_file_header;
 int ret_code;
 /*time_t date_time;*/
-unsigned int checksum;
+uint32 checksum;
 long marker;
 /*struct utimbuf my_utimbuf;*/
 /*struct tm my_tm;*/
@@ -745,7 +745,7 @@ struct inflate_data data;
 
     if (checksum!=local_file_header.crc_32)
     {
-      printf("Checksums don't match: %d %d\n",checksum,local_file_header.crc_32);
+      /* fprintf(stderr, "unzip: crc error: %d %d\n",checksum,local_file_header.crc_32); */
       ret_code=-4;
     }
   }

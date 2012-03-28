@@ -337,7 +337,7 @@ static int synth_deinit(struct context_data *ctx)
 	return 0;
 }
 
-static void synth_mixer(struct context_data *ctx, int *tmp_bk, int count, int vl, int vr, int stereo)
+static void synth_mixer(struct context_data *ctx, int32 *tmp_bk, int count, int vl, int vr, int stereo)
 {
 	struct adlib *a = SYNTH_CHIP(ctx);
 

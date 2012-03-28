@@ -8,8 +8,8 @@ struct inflate_data {
 };
 
 
-int inflate(FILE *, FILE *, unsigned int *, int);
+int inflate(FILE *, FILE *, uint32 *, int);
 int build_crc32(struct inflate_data *data);
-unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct inflate_data *data);
+unsigned int crc32(unsigned char *, int, unsigned int, struct inflate_data *);
 
 #endif

@@ -960,7 +960,7 @@ exit(0);
   return 0;
 }
 
-int inflate(FILE *in, FILE *out, unsigned int *checksum, int is_zip)
+int inflate(FILE *in, FILE *out, uint32 *checksum, int is_zip)
 {
 /* #ifndef ZIP */
   unsigned char CMF, FLG;
