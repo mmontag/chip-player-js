@@ -11,7 +11,8 @@ STORLEK		= arpeggio_pitch_slide arpeggio_no_value compatible_gxx_off \
 		  volume_column_and_fine_slides note_cut_with_sample \
 		  out_of_range_delays sample_change_no_note pattern_loop \
 		  infinite_pattern_loop \
-		  sample_number_new_note #18
+		  sample_number_new_note \
+		  zero_cut_and_delay
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
