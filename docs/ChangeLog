@@ -10,11 +10,12 @@ Stable versions
 	- remove support to uLaw-encoded output
 	- extend note range to full 10-octave range
 	- extensive code refactoring
+	- rewrite MMCMP decompressor to be endian-safe
 	- add regression tests
 	- add built-in zip file decompressor
 	- add built-in gzip file decompressor
 	- add built-in compress file decompressor
-	- rewrite MMCMP decompressor to be endian-safe
+	- add library regression tests
 	- fix interpolation and sample loop processing
 	- fix S404 depacker integration
 	- fix note delay effect
