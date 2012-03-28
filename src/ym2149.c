@@ -164,17 +164,22 @@ static uint8 *ym2149EnvInit(uint8 *pEnv, int a, int b)
 static uint32 toneStepCompute(struct ym2149 *ym, int rHigh, int rLow)
 {
 	int per = rHigh & 15;
+#ifdef YM_INTEGER_ONLY
+	int64 step;
+#else
+	float step;
+#endif
 
 	per = (per << 8) + rLow;
 	if (per <= 5)
 		return 0;
 
 #ifdef YM_INTEGER_ONLY
-	int64 step = ym->internalClock;
+	step = ym->internalClock;
 	step <<= (15 + 16 - 3);
 	step /= (per * ym->replayFrequency);
 #else
-	float step = ym->internalClock;
+	step = ym->internalClock;
 	step /= ((float) per * 8.0 * (float)ym->replayFrequency);
 	step *= 32768.0 * 65536.0;
 #endif
@@ -185,15 +190,21 @@ static uint32 toneStepCompute(struct ym2149 *ym, int rHigh, int rLow)
 static uint32 noiseStepCompute(struct ym2149 *ym, int rNoise)
 {
 	int per = (rNoise & 0x1f);
+#ifdef YM_INTEGER_ONLY
+	int64 step;
+#else
+	float step;
+#endif
+
 	if (per < 3)
 		return 0;
 
 #ifdef YM_INTEGER_ONLY
-	int64 step = ym->internalClock;
+	step = ym->internalClock;
 	step <<= (16 - 1 - 3);
 	step /= (per * ym->replayFrequency);
 #else
-	float step = ym->internalClock;
+	step = ym->internalClock;
 	step /= ((float) per * 8.0 * (float)ym->replayFrequency);
 	step *= 65536.0 / 2.0;
 #endif
@@ -211,17 +222,22 @@ static uint32 rndCompute(struct ym2149 *ym)
 static uint32 envStepCompute(struct ym2149 *ym, int rHigh, int rLow)
 {
 	int per = rHigh;
+#ifdef YM_INTEGER_ONLY
+	int64 step;
+#else
+	float step;
+#endif
 
 	per = (per << 8) + rLow;
 	if (per < 3)
 		return 0;
 
 #ifdef YM_INTEGER_ONLY
-	int64 step = ym->internalClock;
+	step = ym->internalClock;
 	step <<= (16 + 16 - 9);
 	step /= (per * ym->replayFrequency);
 #else
-	float step = ym->internalClock;
+	step = ym->internalClock;
 	step /= ((float) per * 512.0 * (float)ym->replayFrequency);
 	step *= 65536.0 * 65536.0;
 #endif

@@ -103,12 +103,13 @@ int check_filename_case(char *dir, char *name, char *new_name, int size)
 	struct dirent *d;
 
 	dirfd = opendir(dir);
-	if (dirfd) {
-		while ((d = readdir(dirfd))) {
-			if (!strcasecmp(d->d_name, name)) {
-				found = 1;
-				break;
-			}
+	if (dirfd == NULL)
+		return 0;
+ 
+	while ((d = readdir(dirfd))) {
+		if (!strcasecmp(d->d_name, name)) {
+			found = 1;
+			break;
 		}
 	}
 

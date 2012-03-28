@@ -4,6 +4,7 @@ CC		= @CC@
 CFLAGS		= -c -Wall @CFLAGS@ @DEFS@ #-D_DEBUG
 LD		= @CC@
 LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
 RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 DESTDIR		=
@@ -66,7 +67,7 @@ lib/$(LIB): $(OBJS)
 
 lib/$(SHLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -o $@ $(LOBJS) -lm'; \
+	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(SHLIB) lib/$(SONAME)

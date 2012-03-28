@@ -40,6 +40,7 @@ if test "${GCC-no}" = yes; then
     CFLAGS="${CFLAGS} -Wno-array-bounds")  
 fi
 
+AC_CHECK_LIB(m,pow)
 AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy)
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp.pc])

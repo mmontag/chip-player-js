@@ -488,13 +488,15 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	{
 		int _len, _type, _mask = mask;
 		for (i = 0; i < 32; i++, _mask <<= 1) {
+			int _pos;
+
 			if (~_mask & 0x80000000)
 				continue;
 			read16b(f);
 			_len = read16b(f);
 			_type = (int16)read16b(f);
 
-			int _pos = ftell(f);
+			_pos = ftell(f);
 
 			if (_type == 0 || _type == -2) {
 				num_smp++;
