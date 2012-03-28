@@ -9,7 +9,8 @@ API_CALLS	= get_format_list create_context
 STORLEK		= arpeggio_pitch_slide arpeggio_no_value compatible_gxx_off \
 		  compatible_gxx_on gxx_fine_slides_memory \
 		  volume_column_and_fine_slides note_cut_with_sample \
-		  out_of_range_delays sample_change_no_note pattern_loop
+		  out_of_range_delays sample_change_no_note pattern_loop \
+		  infinite_pattern_loop
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
@@ -85,7 +86,7 @@ $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 
 $(TEST_PATH)/main.o: $(TEST_PATH)/main.c $(TEST_PATH)/all_tests.c $(TEST_PATH)/test.h $(TEST_PATH)/all_tests.c
 
-$(T_OBJS): $(TEST_PATH)/all_tests.c
+$(TEST_PATH)/test.h $(TEST_PATH)/main.c: $(TEST_PATH)/all_tests.c
 
 $(TEST_PATH)/all_tests.c: $(TEST_PATH)/Makefile
 	@echo > $@; \
