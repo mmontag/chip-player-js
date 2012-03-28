@@ -16,10 +16,8 @@ TEST(test_load_sample_16bit)
 	f = fopen("data/sample-16bit.raw", "rb");
 	fail_unless(f != NULL, "can't open sample file");
 
-	/* read little-endian sample to native-endian buffer */
-	for (i = 0; i < 101; i++) {
-		buffer[i] = read16l(f);
-	}
+	/* read little-endian sample */
+	fread(buffer, 2, 101, f);
 	for (i = 0; i < 101; i++) {
 		buffer[101 + i] = buffer[101 - i - 1];
 	}
