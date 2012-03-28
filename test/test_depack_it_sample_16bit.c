@@ -3,7 +3,7 @@
 int itsex_decompress16(FILE *module, void *dst, int len, char it215);
 
 
-TEST(test_load_sample_it_16bit)
+TEST(test_depack_it_sample_16bit)
 {
 	FILE *f, *fo;
 	int ret;

@@ -2,7 +2,7 @@
 REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
-		  arc spark j2b lzx
+		  arc spark j2b lzx it_sample_8bit it_sample_16bit
 CONVERTERS	= delta signal endian
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
@@ -46,7 +46,6 @@ API_TESTS	= $(addprefix api_,$(API_CALLS))
 TESTS		= $(DEPACK_TESTS) \
 		  $(CONVERT_TESTS) \
 		  load_sample_8bit load_sample_16bit \
-		  load_sample_it_8bit load_sample_it_16bit \
 		  player_read_event \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \

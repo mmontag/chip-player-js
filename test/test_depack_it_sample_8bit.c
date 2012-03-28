@@ -3,7 +3,7 @@
 int itsex_decompress8(FILE *module, void *dst, int len, char it215);
 
 
-TEST(test_load_sample_it_8bit)
+TEST(test_depack_it_sample_8bit)
 {
 	FILE *f, *fo;
 	int ret;
