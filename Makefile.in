@@ -1,4 +1,5 @@
-VERSION	= 3.9.0
+VERSION		= 3.9.0
+VER_MAJOR	= 3
 
 CC		= @CC@
 CFLAGS		= -c -Wall @CFLAGS@ @DEFS@ #-D_DEBUG
@@ -25,7 +26,7 @@ V		= 0
 LIB		= libxmp.a
 SOLIB		= libxmp.so
 SHLIB		= $(SOLIB).$(VERSION)
-SONAME		= $(SOLIB).3
+SONAME		= $(SOLIB).$(VER_MAJOR)
 DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
 VERCODE		= 0x00030900
@@ -90,8 +91,8 @@ lib/$(DYLIB): $(LOBJS)
 	@CMD='$(CC) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,3.9.0,-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
-	ln -sf lib/$(DYLIB) lib/libxmp.3.dylib
-	ln -sf lib/libxmp.3.dylib lib/libxmp.dylib
+	ln -sf lib/$(DYLIB) lib/libxmp.$(VER_MAJOR).dylib
+	ln -sf lib/libxmp.$(VER_MAJOR).dylib lib/libxmp.dylib
 
 clean:
 	@rm -f $(OBJS) $(LOBJS) lib/lib*
