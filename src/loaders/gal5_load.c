@@ -8,7 +8,7 @@
 
 #include <unistd.h>
 #include <limits.h>
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 #include "period.h"
 

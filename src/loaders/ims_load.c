@@ -28,7 +28,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 
-#include "load.h"
+#include "loader.h"
 #include "period.h"
 
 struct ims_instrument {

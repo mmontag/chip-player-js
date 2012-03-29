@@ -15,7 +15,7 @@
  * from different files. Using *module into a global variable is a hack.
  */
 
-#include "load.h"
+#include "loader.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

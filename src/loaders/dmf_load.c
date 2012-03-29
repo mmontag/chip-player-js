@@ -10,7 +10,7 @@
 
 #include <assert.h>
 
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 #include "period.h"
 

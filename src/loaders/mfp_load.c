@@ -12,7 +12,7 @@
  * more information see http://www.exotica.org.uk/wiki/Magnetic_Fields_Packer
  */
 
-#include "load.h"
+#include "loader.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef __native_client__

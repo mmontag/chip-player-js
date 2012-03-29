@@ -14,7 +14,7 @@
 #include "xmp.h"
 #include "common.h"
 #include "period.h"
-#include "load.h"
+#include "loader.h"
 
 
 char *copy_adjust(char *s, uint8 *r, int n)

@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_DskT	MAGIC4('D','s','k','T')
 #define MAGIC_DskS	MAGIC4('D','s','k','S')

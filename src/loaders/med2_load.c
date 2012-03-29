@@ -18,7 +18,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "period.h"
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 

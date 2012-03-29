@@ -13,7 +13,7 @@
  * information.
  */
 
-#include "load.h"
+#include "loader.h"
 
 static int polly_test(FILE *, char *, const int);
 static int polly_load(struct module_data *, FILE *, const int);

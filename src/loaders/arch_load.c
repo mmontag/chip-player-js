@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 
 #define MAGIC_MUSX	MAGIC4('M','U','S','X')

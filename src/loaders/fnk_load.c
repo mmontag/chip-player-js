@@ -8,7 +8,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_Funk	MAGIC4('F','u','n','k')
 

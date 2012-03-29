@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 
 #define TEST_SIZE 1500
 

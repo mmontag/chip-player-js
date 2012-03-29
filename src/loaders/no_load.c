@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "period.h"
 
 /* Nir Oren's Liquid Tracker old "NO" format. I have only one NO module,

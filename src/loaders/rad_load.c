@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "synth.h"
 
 static int rad_test(FILE *, char *, const int);

@@ -1,7 +1,7 @@
 /* Creates a simple module */
 
 #include "../src/common.h"
-#include "../src/loaders/load.h"
+#include "../src/loaders/loader.h"
 
 void initialize_module_data(struct module_data *);
 void fix_module_instruments(struct module_data *);

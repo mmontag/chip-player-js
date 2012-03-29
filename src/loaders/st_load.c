@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "load.h"
+#include "loader.h"
 #include "mod.h"
 #include "period.h"
 

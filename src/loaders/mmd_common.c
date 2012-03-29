@@ -4,7 +4,7 @@
  */
 
 #include "med.h"
-#include "load.h"
+#include "loader.h"
 
 #ifdef _DEBUG
 const char *const mmd_inst_type[] = {

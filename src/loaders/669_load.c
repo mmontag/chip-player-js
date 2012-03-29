@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 
 
 static int ssn_test (FILE *, char *, const int);

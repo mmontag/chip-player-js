@@ -10,7 +10,7 @@
  * written by Lutz Roeder.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "imf.h"
 #include "period.h"
 

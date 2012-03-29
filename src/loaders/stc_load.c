@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "period.h"
 #include "spectrum.h"
 

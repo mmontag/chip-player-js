@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "period.h"
 
 #define MAGIC_MGT	MAGIC4(0x00,'M','G','T')

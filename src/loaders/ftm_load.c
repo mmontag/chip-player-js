@@ -12,7 +12,7 @@
  * for Maxon Computer GmbH. Face the Music delivers: 8 channels, line-based
  * editor with S.E.L. (Sound Effect Language).
  */
-#include "load.h"
+#include "loader.h"
 
 struct ftm_instrument {
 	uint8 name[30];		/* Instrument name */

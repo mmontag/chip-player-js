@@ -11,7 +11,7 @@
  * Innocenti's XModule 3.4 sources.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 
 

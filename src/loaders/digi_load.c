@@ -21,7 +21,7 @@
  * e9x retrace
  */
 
-#include "load.h"
+#include "loader.h"
 
 
 static int digi_test (FILE *, char *, const int);

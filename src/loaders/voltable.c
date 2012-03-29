@@ -1,4 +1,4 @@
-#include "load.h"
+#include "loader.h"
 
 /*
 from Tom Hargreaves <hex@freezone.co.uk>

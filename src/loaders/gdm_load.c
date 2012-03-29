@@ -12,7 +12,7 @@
  */
 
 #include <assert.h>
-#include "load.h"
+#include "loader.h"
 #include "period.h"
 
 #define MAGIC_GDM	MAGIC4('G','D','M',0xfe)

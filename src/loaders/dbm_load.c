@@ -10,7 +10,7 @@
  * DigiBooster Pro written by Tomasz & Waldemar Piasta
  */
 
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 #include "period.h"
 

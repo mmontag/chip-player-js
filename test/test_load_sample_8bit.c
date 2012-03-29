@@ -1,5 +1,5 @@
 #include "test.h"
-#include "../src/loaders/load.h"
+#include "../src/loaders/loader.h"
 
 #define SET(x,y,z,w) do { \
   s.len = (x); s.lps = (y); s.lpe = (z); s.flg = (w); s.data = NULL; \

@@ -17,7 +17,7 @@
  */
 
 #include "period.h"
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_SONG	MAGIC4('S','O','N','G')
 

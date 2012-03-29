@@ -13,7 +13,7 @@
  */
 
 #include <assert.h>
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
 #undef MED4_DEBUG

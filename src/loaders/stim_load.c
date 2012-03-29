@@ -13,7 +13,7 @@
 
 /* Tested with the Slamtilt modules sent by Sipos Attila */
 
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_STIM	MAGIC4('S','T','I','M')
 

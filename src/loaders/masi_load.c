@@ -51,7 +51,7 @@
 
 /* FIXME: TODO: sinaria effects */
 
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 #include "period.h"
 

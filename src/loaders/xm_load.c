@@ -19,7 +19,7 @@
  * samples recognized by the player.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "xm.h"
 
 #define MAX_SAMP 1024

@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
-#include "load.h"
+#include "loader.h"
 #include "mod.h"
 
 struct mod_magic {

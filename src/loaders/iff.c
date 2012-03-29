@@ -13,7 +13,7 @@
 #include "list.h"
 #include "iff.h"
 
-#include "load.h"
+#include "loader.h"
 
 struct iff_data {
 	struct list_head iff_list;

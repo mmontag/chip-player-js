@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "synth.h"
 
 /* Based on the HSC File Format Spec, by Simon Peter <dn.tlp@gmx.net>

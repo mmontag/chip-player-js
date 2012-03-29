@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 
 static int coco_test (FILE *, char *, const int);
 static int coco_load (struct module_data *, FILE *, const int);

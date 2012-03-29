@@ -11,7 +11,7 @@
  */
 
 #include "med.h"
-#include "load.h"
+#include "loader.h"
 
 
 static int mmd1_test(FILE *, char *, const int);

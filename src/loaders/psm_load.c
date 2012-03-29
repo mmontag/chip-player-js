@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "period.h"
 
 #define MAGIC_PSM_	MAGIC4('P','S','M',0xfe)

@@ -7,7 +7,7 @@
  */
 
 #include "med.h"
-#include "load.h"
+#include "loader.h"
 
 
 static int mmd3_test (FILE *, char *, const int);

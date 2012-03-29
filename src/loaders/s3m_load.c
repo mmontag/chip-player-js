@@ -57,7 +57,7 @@
  * to be able to load/play the module as is, see the fix87() macro below.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "s3m.h"
 #include "period.h"
 #include "synth.h"

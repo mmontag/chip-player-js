@@ -1,5 +1,5 @@
 #include "test.h"
-#include "../src/loaders/load.h"
+#include "../src/loaders/loader.h"
 
 int itsex_decompress16(FILE *module, void *dst, int len, char it215);
 

@@ -13,7 +13,7 @@
  */
 
 
-#include "load.h"
+#include "loader.h"
 #include "far.h"
 
 #define MAGIC_FAR	MAGIC4('F','A','R',0xfe)

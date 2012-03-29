@@ -7,7 +7,7 @@
  */
 
 #include <stdio.h>
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 
 #define MAGIC_FORM	MAGIC4('F','O','R','M')

@@ -1,7 +1,7 @@
 #include "common.h"
 #include "synth.h"
 #include "spectrum.h"
-#include "load.h"
+#include "loader.h"
 
 static void adpcm4_decoder(uint8 * inp, uint8 *outp, char *tab, int len)
 {

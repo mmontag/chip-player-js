@@ -8,7 +8,7 @@
 
 #define _DEBUG
 
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_HVL	MAGIC4('H','V','L', 0)
 

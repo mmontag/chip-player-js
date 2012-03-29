@@ -7,7 +7,7 @@
  */
 
 #include <stdio.h>
-#include "load.h"
+#include "loader.h"
 #include "mod.h"
 #include "iff.h"
 

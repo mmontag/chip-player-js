@@ -132,7 +132,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "load.h"
+#include "loader.h"
 
 /* ----------------------------------------------------------------------
  *  some helpful typedefs which are lame, but so am I :)

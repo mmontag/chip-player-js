@@ -14,7 +14,7 @@
  * We only support the old format --claudio
  */
 
-#include "load.h"
+#include "loader.h"
 
 
 static int tcb_test(FILE *, char *, const int);

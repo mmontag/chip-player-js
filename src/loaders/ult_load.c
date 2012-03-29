@@ -16,7 +16,7 @@
  */
 
 #include "period.h"
-#include "load.h"
+#include "loader.h"
 
 
 static int ult_test (FILE *, char *, const int);

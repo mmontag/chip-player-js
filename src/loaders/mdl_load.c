@@ -13,7 +13,7 @@
  * will be taken.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "iff.h"
 #include "period.h"
 

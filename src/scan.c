@@ -84,6 +84,9 @@ int scan_module(struct context_data *ctx, int ep, int chain)
      * we cannot play order 1, even with the supposed right option.
      *
      * was: ord2 = ord = -1;
+     *
+     * CM: Fixed by using different "sequences" for each loop or subsong.
+     *     Each sequence has its entry point. Sequences don't overlap.
      */
     ord2 = -1;
     ord = ep - 1;

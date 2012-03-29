@@ -20,7 +20,7 @@
  * STMs converted with STM2STX.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "stx.h"
 #include "s3m.h"
 #include "period.h"

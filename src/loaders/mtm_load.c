@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#include "load.h"
+#include "loader.h"
 #include "mtm.h"
 
 static int mtm_test (FILE *, char *, const int);

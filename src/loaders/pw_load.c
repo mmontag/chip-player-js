@@ -12,7 +12,7 @@
 #else
 #include <limits.h>
 #endif
-#include "load.h"
+#include "loader.h"
 #include "mod.h"
 #include "period.h"
 #include "prowizard/prowiz.h"

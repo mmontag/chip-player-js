@@ -8,7 +8,7 @@
 
 /* Loader for Soundtracker 2.6/Ice Tracker modules */
 
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_MTN_	MAGIC4('M','T','N',0)
 #define MAGIC_IT10	MAGIC4('I','T','1','0')

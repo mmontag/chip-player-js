@@ -14,7 +14,7 @@
  */
 
 #include <assert.h>
-#include "load.h"
+#include "loader.h"
 
 #define MAGIC_MED3	MAGIC4('M','E','D',3)
 
