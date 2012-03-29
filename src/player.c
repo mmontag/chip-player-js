@@ -912,9 +912,13 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 
 	chn = mod->chn;
 
-	info->order = p->pos;
-	info->pattern = mod->xxo[p->pos];
-	info->row = p->row;
+	if (p->pos >= 0 && p->pos < mod->len) {
+		info->order = p->pos;
+	} else {
+		info->order = 0;
+	}
+
+	info->pattern = mod->xxo[info->order];
 
 	if (info->pattern < mod->pat) {
 		info->num_rows = mod->xxp[info->pattern]->rows;
@@ -922,6 +926,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 		info->num_rows = 0;
 	}
 
+	info->row = p->row;
 	info->frame = p->frame;
 	info->speed = p->speed;
 	info->bpm = p->bpm;
