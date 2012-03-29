@@ -62,7 +62,7 @@ static void get_init(struct module_data *m, int size, FILE *f, void *parm)
 	
 	fread(buf, 1, 64, f);
 	strncpy(mod->name, buf, 64);
-	strcpy(mod->type, "Galaxy Music System 5.0");
+	set_type(m, "Galaxy Music System 5.0");
 	flags = read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
 		m->quirk |= QUIRK_LINEAR;

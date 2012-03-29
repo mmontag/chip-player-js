@@ -56,7 +56,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 	if (read32b(f) !=  MAGIC_MED2)
 		return -1;
 
-	strcpy(mod->type, "MED 1.12 MED2");
+	set_type(m, "MED 1.12 MED2");
 
 	mod->ins = mod->smp = 32;
 	INSTRUMENT_INIT();

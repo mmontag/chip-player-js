@@ -91,7 +91,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     mod->smp = 0;
     memcpy (mod->xxo, afh.order, mod->len);
 
-    strcpy(mod->type, "Amusic");
+    set_type(m, "Amusic");
     strncpy(mod->name, (char *)afh.name, 24);
 
     MODULE_INFO();

@@ -47,7 +47,7 @@ static int dtt_load(struct module_data *m, FILE *f, const int start)
 
 	read32b(f);
 
-	strcpy(mod->type, "Desktop Tracker");
+	set_type(m, "Desktop Tracker");
 
 	fread(buf, 1, 64, f);
 	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);

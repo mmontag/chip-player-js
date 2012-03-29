@@ -138,12 +138,12 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
 	else
 	    mod->bpm += (ffh.info[3] >> 1) & 0x3f;
 
-	strcpy(mod->type, "FunktrackerGOLD");
+	set_type(m, "FunktrackerGOLD");
     } else if (ffh.fmt[0] == 'F' && (ffh.fmt[1] == 'v' || ffh.fmt[1] == 'k')) {
-	strcpy(mod->type, "Funktracker");
+	set_type(m, "Funktracker");
     } else {
 	mod->chn = 8;
-	strcpy(mod->type, "Funktracker DOS32");
+	set_type(m, "Funktracker DOS32");
     }
 
     if (mod->chn == 0) {

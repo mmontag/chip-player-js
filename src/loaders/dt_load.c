@@ -63,7 +63,7 @@ static void get_d_t_(struct module_data *m, int size, FILE *f, void *parm)
 	read32b(f);			/* undocumented */
 
 	fread(mod->name, 32, 1, f);
-	strcpy(mod->type, "Digital Tracker DTM");
+	set_type(m, "Digital Tracker DTM");
 
 	MODULE_INFO();
 }

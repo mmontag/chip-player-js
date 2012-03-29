@@ -177,7 +177,7 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 			mod->name[i] = 0;
 	}
 
-	strcpy(mod->type, "Coconizer");
+	set_type(m, "Coconizer");
 
 	mod->ins = mod->smp = read8(f);
 	mod->len = read8(f);

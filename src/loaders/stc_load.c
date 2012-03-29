@@ -105,7 +105,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 
 	fread(buf, 18, 1, f);		/* Title */
 	copy_adjust(mod->name, (uint8 *)buf, 18);
-	strcpy(mod->type, "ZX Spectrum Sound Tracker");
+	set_type(m, "ZX Spectrum Sound Tracker");
 
 	read16l(f);			/* Size */
 

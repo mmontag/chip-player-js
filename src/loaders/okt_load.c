@@ -273,7 +273,6 @@ static void get_sbod(struct module_data *m, int size, FILE *f, void *parm)
 
 static int okt_load(struct module_data *m, FILE *f, const int start)
 {
-    struct xmp_module *mod = &m->mod;
     iff_handle handle;
     struct local_data data;
 
@@ -297,7 +296,7 @@ static int okt_load(struct module_data *m, FILE *f, const int start)
     iff_register(handle, "PBOD", get_pbod);
     iff_register(handle, "SBOD", get_sbod);
 
-    strcpy (mod->type, "Oktalyzer");
+    set_type(m, "Oktalyzer");
 
     MODULE_INFO();
 

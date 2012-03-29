@@ -83,9 +83,9 @@ static int ice_load(struct module_data *m, FILE *f, const int start)
     ih.magic = read32b(f);
 
     if (ih.magic == MAGIC_IT10)
-        strcpy(mod->type, "Ice Tracker IT10");
+        set_type(m, "Ice Tracker IT10");
     else if (ih.magic == MAGIC_MTN_)
-        strcpy(mod->type, "Soundtracker 2.6 MTN");
+        set_type(m, "Soundtracker 2.6 MTN");
     else
 	return -1;
 

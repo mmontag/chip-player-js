@@ -456,7 +456,7 @@ static int masi_load(struct module_data *m, FILE *f, const int start)
 	data.pnam = malloc(mod->pat * 8);	/* pattern names */
 	data.pord = malloc(255 * 8);		/* pattern orders */
 
-	strcpy(mod->type, data.sinaria ?
+	set_type(m, data.sinaria ?
 		"Sinaria PSM" : "Epic MegaGames MASI PSM");
 
 	MODULE_INFO();

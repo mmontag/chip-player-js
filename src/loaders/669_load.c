@@ -107,7 +107,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
     m->quirk |= QUIRK_LINEAR;
 
     copy_adjust(mod->name, sfh.message, 36);
-    strcpy(mod->type, strncmp((char *)sfh.marker, "if", 2) ?
+    set_type(m, strncmp((char *)sfh.marker, "if", 2) ?
 				"UNIS 669" : "Composer 669");
 
     MODULE_INFO();

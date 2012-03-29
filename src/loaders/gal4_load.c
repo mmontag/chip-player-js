@@ -57,7 +57,7 @@ static void get_main(struct module_data *m, int size, FILE *f, void *parm)
 	
 	fread(buf, 1, 64, f);
 	strncpy(mod->name, buf, 64);
-	strcpy(mod->type, "Galaxy Music System 4.0");
+	set_type(m, "Galaxy Music System 4.0");
 
 	flags = read8(f);
 	if (~flags & 0x01)

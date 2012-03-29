@@ -123,7 +123,11 @@ static int sfx_13_20_load(struct module_data *m, FILE *f, const int nins, const 
 
     mod->trk = mod->chn * mod->pat;
 
-    strcpy (mod->type, mod->ins == 15 ? "SoundFX 1.3" : "SoundFX 2.0");
+    if (mod->ins == 15) {
+        set_type(m, "SoundFX 1.3");
+    } else {
+        set_type(m, "SoundFX 2.0");
+    }
 
     MODULE_INFO();
 

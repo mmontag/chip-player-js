@@ -64,7 +64,7 @@ static int no_load(struct module_data *m, FILE *f, const int start)
 
 	read32b(f);			/* NO 0x00 0x00 */
 
-	strcpy(mod->type, "Liquid Tracker");
+	set_type(m, "Liquid Tracker");
 
 	nsize = read8(f);
 	for (i = 0; i < nsize; i++) {

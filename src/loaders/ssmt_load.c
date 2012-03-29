@@ -69,9 +69,9 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 	fread(buffer, 6, 1, f);
 
 	if (!memcmp(buffer, "SONGOK", 6))
-		strcpy(mod->type, "IIgs SoundSmith");
+		set_type(m, "IIgs SoundSmith");
 	else if (!memcmp(buffer, "IAN92a", 8))
-		strcpy(mod->type, "IIgs MegaTracker");
+		set_type(m, "IIgs MegaTracker");
 	else
 		return -1;
 

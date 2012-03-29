@@ -225,7 +225,7 @@ static void get_sequ(struct module_data *m, int size, FILE *f, void *parm)
 
 	fread(mod->xxo, 1, 128, f);
 
-	strcpy(mod->type, "Archimedes Tracker");
+	set_type(m, "Archimedes Tracker");
 
 	MODULE_INFO();
 	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);

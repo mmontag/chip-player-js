@@ -212,7 +212,7 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 
 	read32b(f);
 
-	strcpy(mod->type, "MED 2.00 MED3");
+	set_type(m, "MED 2.00 MED3");
 
 	mod->ins = mod->smp = 32;
 	INSTRUMENT_INIT();
