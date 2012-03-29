@@ -32,19 +32,17 @@ XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
     int main(){}],
     CFLAGS="${CFLAGS} -fvisibility=hidden")  
 
-if test "${GCC-no}" = yes; then
-  XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
-    ac_cv_c_flag_w_unused_but_set_variable,
-    -Wunused-but-set-variable,[
-    int main(){}],
-    CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
+XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
+  ac_cv_c_flag_w_unused_but_set_variable,
+  -Wunused-but-set-variable,[
+  int main(){}],
+  CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
 
-  XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
-    ac_cv_c_flag_w_array_bounds,
-    -Warray-bounds,[
-    int main(){}],
-    CFLAGS="${CFLAGS} -Wno-array-bounds")  
-fi
+XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
+  ac_cv_c_flag_w_array_bounds,
+  -Warray-bounds,[
+  int main(){}],
+  CFLAGS="${CFLAGS} -Wno-array-bounds")  
 
 AC_CHECK_LIB(m,pow)
 AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy)
