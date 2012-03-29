@@ -19,9 +19,9 @@
 #include "virtual.h"
 #include "mixer.h"
 
-const unsigned int xmp_version = VERSION;
+PUBLIC const unsigned int xmp_version = VERSION;
 
-xmp_context xmp_create_context()
+PUBLIC xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
 
@@ -33,7 +33,7 @@ xmp_context xmp_create_context()
 	return (xmp_context)ctx;
 }
 
-void xmp_free_context(xmp_context opaque)
+PUBLIC void xmp_free_context(xmp_context opaque)
 {
 	free(opaque);
 }
@@ -89,7 +89,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	}
 }
 
-int _xmp_ctl(xmp_context opaque, int cmd, ...)
+PUBLIC int _xmp_ctl(xmp_context opaque, int cmd, ...)
 {
 	va_list ap;
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -183,12 +183,12 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 	return ret;
 }
 
-char **xmp_get_format_list()
+PUBLIC char **xmp_get_format_list()
 {
 	return format_list();
 }
 
-void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
+PUBLIC void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;

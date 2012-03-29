@@ -14,7 +14,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
-#include <fnmatch.h>
 #ifdef __native_client__
 #include <sys/syslimits.h>
 #else
@@ -27,12 +26,14 @@
 
 #include "convert.h"
 #include "format.h"
-#include "synth.h"
 
 #include "list.h"
 
 
 extern struct format_loader *format_loader[];
+
+void initialize_module_data(struct module_data *);
+void fix_module_instruments(struct module_data *);
 
 
 struct tmpfilename {
@@ -391,7 +392,7 @@ static void unlink_tempfiles(struct list_head *head)
 }
 
 
-int xmp_test_module(char *path, struct xmp_test_info *info)
+PUBLIC int xmp_test_module(char *path, struct xmp_test_info *info)
 {
 	FILE *f;
 	struct stat st;
@@ -474,91 +475,7 @@ static void split_name(char *s, char **d, char **b)
 	}
 }
 
-int exclude_match(char *name)
-{
-	int i;
-
-	static const char *exclude[] = {
-		"README", "readme",
-		"*.DIZ", "*.diz",
-		"*.NFO", "*.nfo",
-		"*.TXT", "*.txt",
-		"*.EXE", "*.exe",
-		"*.COM", "*.com",
-		NULL
-	};
-
-	for (i = 0; exclude[i] != NULL; i++) {
-		if (fnmatch(exclude[i], name, 0) == 0) {
-			return 0;
-		}
-	}
-
-	return -1;
-}
-
-void initialize_module_data(struct module_data *m)
-{
-	int i;
-
-	/* Reset variables */
-	memset(m->mod.name, 0, XMP_NAME_SIZE);
-	memset(m->mod.type, 0, XMP_NAME_SIZE);
-	m->rrate = PAL_RATE;
-	m->c4rate = C4_PAL_RATE;
-	m->volbase = 0x40;
-	m->vol_table = NULL;
-	m->quirk = 0;
-	m->read_event_type = READ_EVENT_MOD;
-	m->comment = NULL;
-
-	/* Set defaults */
-    	m->mod.pat = 0;
-    	m->mod.trk = 0;
-    	m->mod.chn = 4;
-    	m->mod.ins = 0;
-    	m->mod.smp = 0;
-    	m->mod.spd = 6;
-    	m->mod.bpm = 125;
-    	m->mod.len = 0;
-    	m->mod.rst = 0;
-    	m->mod.gvl = 0x40;
-
-	m->synth = &synth_null;
-	m->extra = NULL;
-	m->time_factor = DEFAULT_TIME_FACTOR;
-	m->med_vol_table = NULL;
-	m->med_wav_table = NULL;
-
-	for (i = 0; i < 64; i++) {
-		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
-		m->mod.xxc[i].vol = 0x40;
-		m->mod.xxc[i].flg = 0;
-	}
-}
-
-void fix_module_instruments(struct module_data *m)
-{
-	int i, j;
-
-	/* Set appropriate values for instrument volumes and subinstrument
-	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
-	 * consistent if the user inspects struct xmp_module. We can later
-	 * set vlumes in the loaders and eliminate the quirk.
-	 */
-	for (i = 0; i < m->mod.ins; i++) {
-		if (~m->quirk & QUIRK_INSVOL) {
-			m->mod.xxi[i].vol = m->volbase;
-		}
-		for (j = 0; j < m->mod.xxi[i].nsm; j++) {
-			if (~m->quirk & QUIRK_INSVOL) {
-				m->mod.xxi[i].sub[j].gvl = m->volbase;
-			}
-		}
-	}
-}
-
-int xmp_load_module(xmp_context opaque, char *path)
+PUBLIC int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -657,7 +574,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	return -XMP_ERROR_DEPACK;
 }
 
-void xmp_release_module(xmp_context opaque)
+PUBLIC void xmp_release_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;

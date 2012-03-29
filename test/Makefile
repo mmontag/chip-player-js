@@ -69,7 +69,13 @@ TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
 TEST_PATH	= test
 
-T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS))
+TEST_HELPERS	= load_helpers.o convert.o unsqsh.o unlzx.o uncompress.o \
+		  gunzip.o unzip.o unarc.o s404_dec.o ppdepack.o arcfs.o \
+		  muse.o mmcmp.o loaders/itsex.o fileio.o readlzw.o readrle.o \
+		  readhuff.o inflate.o scan.o loaders/sample.o synth.o
+
+T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
+		  $(addprefix $(SRC_PATH)/,$(TEST_HELPERS))
 
 default-test:
 	$(MAKE) -C.. check

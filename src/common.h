@@ -6,6 +6,12 @@
 #define __AMIGA__
 #endif
 
+#if __GNUC__ >= 4
+#define PUBLIC __attribute__((visibility("default")))
+#else
+#define PUBLIC
+#endif
+
 /*
  * Sat, 15 Sep 2007 10:39:41 -0600
  * Reported by Jon Rafkind <workmin@ccs.neu.edu>

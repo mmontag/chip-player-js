@@ -693,7 +693,7 @@ static void next_row(struct context_data *ctx)
 	}
 }
 
-int xmp_player_start(xmp_context opaque, int rate, int format)
+PUBLIC int xmp_player_start(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -783,7 +783,7 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 	return -1;
 }
 
-int xmp_player_frame(xmp_context opaque)
+PUBLIC int xmp_player_frame(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -828,11 +828,6 @@ int xmp_player_frame(xmp_context opaque)
 			p->ord = start - 1;
 		}
 
-#if 0
-		while (m->mod.xxo[p->ord + 1] == 0xfe && p->ord >= 0) {
-			p->ord--;
-		}
-#endif
 		next_order(ctx);
 
 		if (m->xxo_info[p->ord].speed)
@@ -887,7 +882,7 @@ int xmp_player_frame(xmp_context opaque)
 	return 0;
 }
     
-void xmp_player_end(xmp_context opaque)
+PUBLIC void xmp_player_end(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -906,7 +901,7 @@ void xmp_player_end(xmp_context opaque)
 	mixer_off(ctx);
 }
 
-void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
+PUBLIC void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;

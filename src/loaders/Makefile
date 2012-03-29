@@ -11,8 +11,7 @@ LOADERS	= xm_load.o mod_load.o s3m_load.o stm_load.o 669_load.o far_load.o \
 	  coco_load.o pw_load.o gal5_load.o gal4_load.o mfp_load.o \
 	  polly_load.o stc_load.o
 
-
-LOADERS_OBJS	= common.o iff.o itsex.o asif.o voltable.o $(LOADERS)
+LOADERS_OBJS	= common.o iff.o itsex.o asif.o voltable.o sample.o $(LOADERS)
 LOADERS_DFILES	= Makefile $(LOADERS_OBJS:.o=.c) ftm_load.c \
 		  asif.h far.h iff.h imf.h it.h liq.h load.h med.h mod.h \
 		  mtm.h ptm.h rtm.h s3m.h stm.h stx.h xm.h
