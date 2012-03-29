@@ -391,11 +391,6 @@ int scan_sequences(struct context_data *ctx)
 	m->num_sequences = seq;
 
 	/* Now place entry points in the public accessible array */
-	m->seq_data = malloc(sizeof(struct xmp_sequence) * m->num_sequences);
-	if (m->seq_data == NULL) {
-		return -1;
-	}
-
 	for (i = 0; i < m->num_sequences; i++) {
 		m->seq_data[i].entry_point = temp_ep[i];
 		m->seq_data[i].duration = p->scan[i].time;
