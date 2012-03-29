@@ -13,6 +13,18 @@
 extern "C" {
 #endif
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+# ifdef BUILDING_DLL
+#  define _P  __declspec(dllexport)
+# else
+#  define _P  __declspec(dllimport)
+# endif
+#elif __GNUC__ >= 4
+# define _P  __attribute__ ((visibility ("default")))
+#else
+# define _P 
+#endif
+
 #define XMP_NAME_SIZE		64	/* Size of module name and type */
 
 #define XMP_KEY_OFF		0x81	/* Note number for key off event */
@@ -235,7 +247,7 @@ struct xmp_module_info {		/* Current module information */
 
 typedef char *xmp_context;
 
-extern const unsigned int xmp_version;
+_P extern const unsigned int xmp_version;
 
 /* Player control macros */
 
@@ -251,18 +263,18 @@ extern const unsigned int xmp_version;
 #define xmp_quirk_fx9(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FX9, (x))
 #define xmp_quirk_fxef(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FXEF, (x))
 
-xmp_context xmp_create_context  (void);
-int         xmp_test_module     (char *, struct xmp_test_info *);
-void        xmp_free_context    (xmp_context);
-int         xmp_load_module     (xmp_context, char *);
-void        xmp_release_module  (xmp_context);
-int         _xmp_ctl            (xmp_context, int, ...);
-int         xmp_player_start    (xmp_context, int, int);
-int         xmp_player_frame    (xmp_context);
-void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
-void        xmp_player_end      (xmp_context);
-void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
-char      **xmp_get_format_list (void);
+_P xmp_context xmp_create_context  (void);
+_P int         xmp_test_module     (char *, struct xmp_test_info *);
+_P void        xmp_free_context    (xmp_context);
+_P int         xmp_load_module     (xmp_context, char *);
+_P void        xmp_release_module  (xmp_context);
+_P int         _xmp_ctl            (xmp_context, int, ...);
+_P int         xmp_player_start    (xmp_context, int, int);
+_P int         xmp_player_frame    (xmp_context);
+_P void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
+_P void        xmp_player_end      (xmp_context);
+_P void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
+_P char      **xmp_get_format_list (void);
 
 #ifdef __cplusplus
 }

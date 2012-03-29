@@ -162,7 +162,7 @@ SOURCE=..\fmopl.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\synth.c
+SOURCE=..\synth_null.c
 # End Source File
 # Begin Source File
 
@@ -191,6 +191,10 @@ SOURCE=..\spectrum.c
 # Begin Source File
 
 SOURCE=..\invloop.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\load_helpers.c
 # End Source File
 # Begin Source File
 
@@ -283,6 +287,10 @@ SOURCE=..\loaders\asif.c
 # Begin Source File
 
 SOURCE=..\loaders\voltable.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\loaders\sample.c
 # End Source File
 # Begin Source File
 

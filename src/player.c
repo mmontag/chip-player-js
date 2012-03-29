@@ -693,7 +693,7 @@ static void next_row(struct context_data *ctx)
 	}
 }
 
-PUBLIC int xmp_player_start(xmp_context opaque, int rate, int format)
+int xmp_player_start(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -783,7 +783,7 @@ PUBLIC int xmp_player_start(xmp_context opaque, int rate, int format)
 	return -1;
 }
 
-PUBLIC int xmp_player_frame(xmp_context opaque)
+int xmp_player_frame(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -882,7 +882,7 @@ PUBLIC int xmp_player_frame(xmp_context opaque)
 	return 0;
 }
     
-PUBLIC void xmp_player_end(xmp_context opaque)
+void xmp_player_end(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -901,7 +901,7 @@ PUBLIC void xmp_player_end(xmp_context opaque)
 	mixer_off(ctx);
 }
 
-PUBLIC void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
+void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;

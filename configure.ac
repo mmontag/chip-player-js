@@ -6,25 +6,41 @@ AC_ARG_ENABLE(shared, [  --disable-shared        Don't build shared library])
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-if test "${enable_static}" != no; then
-  AC_SUBST(STATIC,static)
-fi
-if test "${enable_shared}" != no; then
-  AC_SUBST(SHARED,shared)
-fi
 
 dnl XMP_TRY_COMPILE(<message>,<cache-var>,<flags>,<program>,<ifyes>,<ifno>)
-define(XMP_TRY_COMPILE,[
+AC_DEFUN([XMP_TRY_COMPILE],[
   AC_CACHE_CHECK([$1],[$2],[
     oldcflags="${CFLAGS}"
     CFLAGS="${CFLAGS} $3"
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([[$4]])],[$2=yes],[$2=no],[true])
     CFLAGS="${oldcflags}"])
-  if test "x$$2" = xyes; then
-    true; $5
-  else
-    true; $6
-  fi])
+  AS_IF([test "x$$2" = xyes], [$5], [$6])])
+
+AC_DEFUN([AC_CHECK_DEFINED],[
+  AS_VAR_PUSHDEF([ac_var],[ac_cv_defined_$1])dnl
+  AC_CACHE_CHECK([for $1 defined], ac_var,
+  AC_TRY_COMPILE(,[
+    #ifdef $1
+    int ok;
+    #else
+    choke me
+    #endif
+  ],AS_VAR_SET(ac_var, yes),AS_VAR_SET(ac_var, no)))
+  AS_IF([test AS_VAR_GET(ac_var) != "no"], [$2], [$3])dnl
+  AS_VAR_POPDEF([ac_var])dnl
+])
+
+if test "${enable_static}" != no; then
+  AC_SUBST(STATIC,static)
+fi
+if test "${enable_shared}" != no; then
+  AC_CHECK_DEFINED(_WIN32,[
+    AC_SUBST(SHARED,dll)
+    CFLAGS="${CFLAGS} -DBUILDING_DLL"
+  ],[
+    AC_SUBST(SHARED,shared)
+  ])
+fi
 
 XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
     ac_cv_c_flag_f_visibility_hidden,

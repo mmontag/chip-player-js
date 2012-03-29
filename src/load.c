@@ -392,7 +392,7 @@ static void unlink_tempfiles(struct list_head *head)
 }
 
 
-PUBLIC int xmp_test_module(char *path, struct xmp_test_info *info)
+int xmp_test_module(char *path, struct xmp_test_info *info)
 {
 	FILE *f;
 	struct stat st;
@@ -475,7 +475,7 @@ static void split_name(char *s, char **d, char **b)
 	}
 }
 
-PUBLIC int xmp_load_module(xmp_context opaque, char *path)
+int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -574,7 +574,7 @@ PUBLIC int xmp_load_module(xmp_context opaque, char *path)
 	return -XMP_ERROR_DEPACK;
 }
 
-PUBLIC void xmp_release_module(xmp_context opaque)
+void xmp_release_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
