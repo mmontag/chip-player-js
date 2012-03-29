@@ -36,7 +36,7 @@ TEST(test_nna_fade)
 	/* Row 0 */
 	xmp_player_frame(opaque);
 
-	voc = map_virt_channel(p, 0);
+	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
 	vi = &p->virt.voice_array[voc];
 

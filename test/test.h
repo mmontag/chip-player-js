@@ -24,7 +24,7 @@
 	if (!(x)) { printf("%d: %s: ", __LINE__, y); return -1; } \
 } while (0)
 
-int map_virt_channel(struct player_data *, int);
+int map_channel(struct player_data *, int);
 int play_frame(struct context_data *);
 
 

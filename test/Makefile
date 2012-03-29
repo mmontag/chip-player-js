@@ -84,7 +84,7 @@ dist-test:
 	mkdir -p $(DIST)/$(TEST_PATH)
 	cp -RPp $(addprefix $(TEST_PATH)/,$(TEST_DFILES)) $(DIST)/$(TEST_PATH)
 
-check: $(TEST_PATH)/libxmp-tests
+check: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-tests
 	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-tests
 
 $(TEST_PATH)/libxmp-tests: $(T_OBJS)

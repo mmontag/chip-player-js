@@ -27,6 +27,7 @@ SOLIB		= libxmp.so
 SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).3
 DLL		= libxmp.dll
+DYLIB		= libxmp.3.dylib
 VERCODE		= 0x00030900
 
 all: @STATIC@ @SHARED@
@@ -61,6 +62,8 @@ shared: lib/$(SHLIB)
 
 dll: lib/$(DLL)
 
+dylib: lib/$(DYLIB)
+
 lib/$(LIB): $(OBJS)
 	@mkdir -p lib
 	@CMD='$(AR) r $@ $(OBJS)'; \
@@ -79,6 +82,12 @@ lib/$(SHLIB): $(LOBJS)
 lib/$(DLL): $(LOBJS)
 	@mkdir -p lib
 	@CMD='$(CC) -shared -Wl,--out-implib,libxmp_dll.a -o $@ $(LOBJS) $(LIBS)'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+lib/$(DYLIB): $(LOBJS)
+	@mkdir -p lib
+	@CMD='$(CC) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,3.9,-current_version,3.9,-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 

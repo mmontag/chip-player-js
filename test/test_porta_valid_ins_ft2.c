@@ -45,7 +45,7 @@ TEST(test_porta_valid_ins_ft2)
 	/* Row 0 */
 	xmp_player_frame(opaque);
 
-	voc = map_virt_channel(p, 0);
+	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
 	vi = &p->virt.voice_array[voc];
 

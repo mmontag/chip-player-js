@@ -38,7 +38,11 @@ if test "${enable_shared}" != no; then
     AC_SUBST(SHARED,dll)
     CFLAGS="${CFLAGS} -DBUILDING_DLL"
   ],[
-    AC_SUBST(SHARED,shared)
+    AC_CHECK_DEFINED(__APPLE__,[
+      AC_SUBST(SHARED,dylib)
+    ],[
+      AC_SUBST(SHARED,shared)
+    ])
   ])
 fi
 

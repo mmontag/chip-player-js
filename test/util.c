@@ -37,7 +37,7 @@ int check_md5(char *path, char *digest)
 	return 0;
 }
 
-int map_virt_channel(struct player_data *p, int chn)
+int map_channel(struct player_data *p, int chn)
 {
 	int voc;
 
