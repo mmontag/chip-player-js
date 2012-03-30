@@ -242,15 +242,19 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
 	}
 
-	/* FIXME: Do tremor */
-	if (xc->tremor.count_up || xc->tremor.count_dn) {
-		if (xc->tremor.count_up > 0) {
-			if (xc->tremor.count_up--)
-				xc->tremor.count_dn = LSN(xc->tremor.val);
-		} else {
+	if (xc->tremor.val) {
+		if (xc->tremor.count == 0) {
+			/* end of down cycle, set up counter for up  */
+			xc->tremor.count = MSN(xc->tremor.val) | 0x80;
+		} else if (xc->tremor.count == 0x80) {
+			/* end of up cycle, set up counter for down */
+			xc->tremor.count = LSN(xc->tremor.val);
+		}
+
+		xc->tremor.count--;
+
+		if (~xc->tremor.count & 0x80) {
 			finalvol = 0;
-			if (xc->tremor.count_dn--)
-				xc->tremor.count_up = MSN(xc->tremor.val);
 		}
 	}
 

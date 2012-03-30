@@ -111,9 +111,9 @@ struct channel_data {
 	} retrig;
 
 	struct {
-		int val;	/* Tremor */
-		int count_up;	/* Tremor counter (up cycle) */
-		int count_dn;	/* Tremor counter (down cycle) */
+		int val;	/* Tremor value */
+		int count;	/* Tremor counter */
+		int memory;	/* Tremor memory */
 	} tremor;
 
 	struct {

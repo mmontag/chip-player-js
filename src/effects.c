@@ -498,9 +498,16 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_TREMOR:		/* Tremor */
-		xc->tremor.val = fxp;
-		xc->tremor.count_up = MSN(fxp);
-		xc->tremor.count_dn = -1;
+		if (fxp != 0) {
+			xc->tremor.val = fxp;
+			xc->tremor.memory = xc->tremor.val;
+		} else {
+			xc->tremor.val = xc->tremor.memory;
+		}
+		if (MSN(xc->tremor.val) == 0)
+			xc->tremor.val |= 0x10;
+		if (LSN(xc->tremor.val) == 0)
+			xc->tremor.val |= 0x01;
 		break;
 	case FX_XF_PORTA:	/* Extra fine portamento */
 	      fx_xf_porta:
