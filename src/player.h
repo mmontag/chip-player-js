@@ -124,6 +124,10 @@ struct channel_data {
 	} vol;
 
 	struct {
+		int memory;	/* Global volume memory is saved per channel */
+	} gvol;
+
+	struct {
 		int slide;	/* Track volume slide value */
 		int fslide;	/* Track fine volume slide value */
 		int memory;	/* Track volume slide effect memory */

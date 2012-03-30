@@ -169,6 +169,11 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
 	   e->fxp = ((MSN(e->fxp) + 1) << 4) | (LSN(e->fxp) + 1);
 	}
 	break;
+    case FX_GLOBALVOL:
+	if (e->fxp > 0x80) {	/* See storlek test 16 */
+		e->fxt = e->fxp = 0;
+	}
+	break;
     case FX_NONE:		/* No effect */
 	e->fxt = e->fxp = 0;
 	break;

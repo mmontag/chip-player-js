@@ -468,6 +468,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		if (fxp) {
 			p->gvol.slide = MSN(fxp) - LSN(fxp);
+			xc->gvol.memory = p->gvol.slide;
+		} else {
+			p->gvol.slide = xc->gvol.memory;
 		}
 		break;
 	case FX_KEYOFF:		/* Key off */
