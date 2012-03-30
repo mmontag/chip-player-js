@@ -10,7 +10,7 @@ STORLEK		= arpeggio_pitch_slide arpeggio_no_value compatible_gxx_off \
 		  compatible_gxx_on gxx_fine_slides_memory \
 		  volume_column_and_fine_slides note_cut_with_sample \
 		  out_of_range_delays sample_change_no_note pattern_loop \
-		  infinite_pattern_loop \
+		  infinite_pattern_loop tremor \
 		  sample_number_new_note \
 		  zero_cut_and_delay
 
