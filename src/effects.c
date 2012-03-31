@@ -453,7 +453,11 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		p->frame_time = m->time_factor * m->rrate / p->bpm;
 		break;
 	case FX_GLOBALVOL:	/* Set global volume */
-		p->gvol.volume = fxp > m->volbase ? m->volbase : fxp;
+		if (fxp > m->gvolbase) {
+			p->gvol.volume = m->gvolbase;
+		} else {
+			p->gvol.volume = fxp;
+		}
 		break;
 	case FX_G_VOLSLIDE:	/* Global volume slide */
 		p->gvol.flag = 1;

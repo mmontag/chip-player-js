@@ -185,6 +185,7 @@ struct module_data {
 	double time_factor;		/* Time conversion constant */
 	int c4rate;			/* C4 replay rate */
 	int volbase;			/* Volume base */
+	int gvolbase;			/* Global volume base */
 	int *vol_table;			/* Volume translation table */
 	int quirk;			/* player quirks */
 #define READ_EVENT_MOD	0

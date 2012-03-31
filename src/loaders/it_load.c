@@ -977,6 +977,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
     if (~ifh.flags & IT_LINK_GXX)
 	m->quirk |= QUIRK_UNISLD;
 
+    m->gvolbase = 0x80;
     m->read_event_type = READ_EVENT_IT;
 
     return 0;

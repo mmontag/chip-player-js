@@ -228,7 +228,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		gvol = p->gvol.volume;
 	}
 
-	finalvol = (uint32)(vol_envelope * gvol * xc->mastervol / 0x40 *
+	finalvol = (uint32)(vol_envelope * gvol * xc->mastervol / m->gvolbase *
 				((int)finalvol * 0x40 / m->volbase)) >> 18;
 
 	/* Volume translation table (for PTM, ARCH, COCO) */
@@ -375,12 +375,12 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	 * "volume slide on all frames" flag is set.
 	 */
 	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VSALL)) {
-		if (!chn && p->gvol.flag) {
+		if (chn == 0 && p->gvol.flag) {
 			p->gvol.volume += p->gvol.slide;
 			if (p->gvol.volume < 0)
 				p->gvol.volume = 0;
-			else if (p->gvol.volume > m->volbase)
-				p->gvol.volume = m->volbase;
+			else if (p->gvol.volume > m->gvolbase)
+				p->gvol.volume = m->gvolbase;
 		}
 
 		if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE)) {
