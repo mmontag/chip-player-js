@@ -257,6 +257,17 @@ void virt_seteffect(struct context_data *ctx, int chn, int type, int val)
 	mixer_seteffect(ctx, voc, type, val);
 }
 
+int virt_getvoicepos(struct context_data *ctx, int chn)
+{
+	struct player_data *p = &ctx->p;
+	int voc;
+
+	if ((voc = map_virt_channel(p, chn)) < 0)
+		return -1;
+
+	return mixer_getvoicepos(ctx, voc);
+}
+
 void virt_setsmp(struct context_data *ctx, int chn, int smp)
 {
 	struct player_data *p = &ctx->p;

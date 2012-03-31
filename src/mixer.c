@@ -422,6 +422,20 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	}
 }
 
+int mixer_getvoicepos(struct context_data *ctx, int voc)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
+	struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
+
+	if (xxs->flg & XMP_SAMPLE_SYNTH) {
+		return 0;
+	}
+
+	return vi->pos;
+}
+
 void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 {
 	struct player_data *p = &ctx->p;

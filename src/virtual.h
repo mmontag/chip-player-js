@@ -22,6 +22,7 @@ void	virt_setnna		(struct context_data *, int, int);
 void	virt_pastnote		(struct context_data *, int, int);
 void	virt_setvol		(struct context_data *, int, int);
 void	virt_voicepos		(struct context_data *, int, int);
+int	virt_getvoicepos	(struct context_data *, int);
 void	virt_setbend		(struct context_data *, int, int);
 void	virt_setpan		(struct context_data *, int, int);
 void	virt_seteffect		(struct context_data *, int, int, int);

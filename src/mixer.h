@@ -66,6 +66,7 @@ void	mixer_softmixer		(struct context_data *);
 void	mixer_reset		(struct context_data *);
 void	mixer_setpatch		(struct context_data *, int, int);
 void	mixer_voicepos		(struct context_data *, int, int, int);
+int	mixer_getvoicepos	(struct context_data *, int);
 void	mixer_setnote		(struct context_data *, int, int);
 void	mixer_setbend		(struct context_data *, int, int);
 

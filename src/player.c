@@ -584,6 +584,8 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	if (HAS_QUIRK(QUIRK_INVLOOP)) {
 		update_invloop(m, xc);
 	}
+
+	xc->info_position = virt_getvoicepos(ctx, chn);
 }
 
 /*
@@ -974,7 +976,6 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->note = c->key;
 			ci->pitchbend = c->info_pitchbend;
 			ci->period = c->info_period;
-			/* FIXME: info_position not implemented */
 			ci->position = c->info_position;
 			ci->instrument = c->ins;
 			ci->sample = c->smp;
