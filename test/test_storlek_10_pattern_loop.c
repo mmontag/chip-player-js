@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 /*
-Pattern loop
+10 - Pattern loop
 
 The pattern loop effect is quite complicated to handle, especially when dealing
 with multiple channels. Possibly the most important fact to realize is that no
@@ -39,7 +39,7 @@ syncopated. The entire riff repeats four times, and should sound the same all
 four times.
 */
 
-TEST(test_storlek_pattern_loop)
+TEST(test_storlek_10_pattern_loop)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;

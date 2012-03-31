@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 /*
-Arpeggio and pitch slide
+01 - Arpeggio and pitch slide
 
 Some players handle arpeggio incorrectly, storing and manipulating the original
 pitch of the note instead of modifying the current pitch. While this has no
@@ -26,7 +26,7 @@ Certain players (notably, Modplug) erroneously ignore arpeggio values if no
 note is playing.
 */
 
-TEST(test_storlek_arpeggio_pitch_slide)
+TEST(test_storlek_01_arpeggio_pitch_slide)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;

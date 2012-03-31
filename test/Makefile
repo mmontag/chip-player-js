@@ -6,14 +6,22 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 		  arc spark j2b lzx it_sample_8bit it_sample_16bit
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
-STORLEK		= arpeggio_pitch_slide arpeggio_no_value compatible_gxx_off \
-		  compatible_gxx_on gxx_fine_slides_memory \
-		  volume_column_and_fine_slides note_cut_with_sample \
-		  out_of_range_delays sample_change_no_note pattern_loop \
-		  infinite_pattern_loop tremor tremor_with_old_effects \
-		  global_volume \
-		  sample_number_new_note \
-		  zero_cut_and_delay
+STORLEK		= 01_arpeggio_pitch_slide \
+		  02_arpeggio_no_value \
+		  03_compatible_gxx_off \
+		  04_compatible_gxx_on \
+		  05_gxx_fine_slides_memory \
+		  06_volume_column_and_fine_slides \
+		  07_note_cut_with_sample \
+		  08_out_of_range_delays \
+		  09_sample_change_no_note \
+		  10_pattern_loop \
+		  11_infinite_pattern_loop \
+		  12_tremor \
+		  13_tremor_with_old_effects \
+		  16_global_volume \
+		  18_sample_number_new_note \
+		  22_zero_cut_and_delay
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \

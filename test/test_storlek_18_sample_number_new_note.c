@@ -4,28 +4,29 @@
 #include <fcntl.h>
 
 /*
-Compatible Gxx on
+18 - Sample number causes new note
 
-If this test is played correctly, the first note will slide up and back down
-once, and the final series should play four distinct notes. If the first note
-slides up again, either (a) the player is testing the flag incorrectly (Gxx
-memory is only linked if the flag is not set), or (b) the effect memory values
-are not set to zero at start of playback.
+A sample number encountered when no note is playing should restart the last
+sample played, and at the same pitch. Additionally, a note cut should clear the
+channel's state, thereby disabling this behavior.
+
+This song should play six notes, with the last three an octave higher than the
+first three.
 */
 
-TEST(test_storlek_compatible_gxx_on)
+TEST(test_storlek_18_sample_number_new_note)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	struct xmp_channel_info *ci = &info.channel_info[0];
-	int time, row, frame, chan, period, volume;
+	int time, row, frame, chan, period, volume, ins;
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/storlek_04.data", "r");
+	f = fopen("data/storlek_18.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek_04.it");
+	xmp_load_module(opaque, "data/storlek_18.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {
@@ -35,14 +36,15 @@ TEST(test_storlek_compatible_gxx_on)
 			break;
 
 		fgets(line, 200, f);
-		sscanf(line, "%d %d %d %d %d %d",
-			&time, &row, &frame, &chan, &period, &volume);
+		sscanf(line, "%d %d %d %d %d %d %d",
+			&time, &row, &frame, &chan, &period, &volume, &ins);
 
 		fail_unless(info.time  == time,   "time mismatch");
 		fail_unless(info.row   == row,    "row mismatch");
 		fail_unless(info.frame == frame,  "frame mismatch");
 		fail_unless(ci->period == period, "period mismatch");
 		fail_unless(ci->volume == volume, "volume mismatch");
+		fail_unless(ci->instrument == ins, "instrument mismatch");
 	}
 
 	xmp_player_end(opaque);

@@ -1,7 +1,7 @@
 #include "test.h"
 
 /*
-Global volume
+16 - Global volume
 
 This test checks the overall handling of the global volume (Vxx) and global
 volume slide (Wxx) effects. If played properly, both notes should fade in from
@@ -28,7 +28,7 @@ almost certainly because separate global volume slide parameters are not stored
 for each channel.
 */
 
-TEST(test_storlek_global_volume)
+TEST(test_storlek_16_global_volume)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;

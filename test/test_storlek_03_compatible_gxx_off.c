@@ -4,18 +4,21 @@
 #include <fcntl.h>
 
 /*
-Arpeggio with no value
+03 - Compatible Gxx off
 
-If this test plays correctly, both notes will sound the same, bending downward
-smoothly. Incorrect (but perhaps acceptable, considering the unlikelihood of
-this combination of pitch bend and a meaningless arpeggio) handling of the
-arpeggio effect will result in a "stutter" on the second note, but the final
-pitch should be the same for both notes. Really broken players will mangle the
-pitch slide completely due to the arpeggio resetting the pitch on every third
-tick.
+Impulse Tracker links the effect memories for Exx, Fxx, and Gxx together if
+"Compatible Gxx" in NOT enabled in the file header. In other formats,
+portamento to note is entirely separate from pitch slide up/down. Several
+players that claim to be IT-compatible do not check this flag, and always store
+the last Gxx value separately.
+
+When this test is played correctly, the first note will bend up, down, and back
+up again, and the final set of notes should only slide partway down. Players
+which do not correctly handle the Compatible Gxx flag will not perform the
+final pitch slide in the first part, or will "snap" the final notes.
 */
 
-TEST(test_storlek_arpeggio_no_value)
+TEST(test_storlek_03_compatible_gxx_off)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
@@ -24,10 +27,10 @@ TEST(test_storlek_arpeggio_no_value)
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/storlek_02.data", "r");
+	f = fopen("data/storlek_03.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek_02.it");
+	xmp_load_module(opaque, "data/storlek_03.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {

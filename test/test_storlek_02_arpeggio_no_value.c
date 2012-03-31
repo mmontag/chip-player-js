@@ -4,17 +4,18 @@
 #include <fcntl.h>
 
 /*
-Volume column and fine slides
+02 - Arpeggio with no value
 
-Impulse Tracker's handling of volume column pitch slides along with its normal
-effect memory is rather odd. While the two do share their effect memory, fine
-slides are not handled in the volume column.
-
-When this test is played 100% correctly, the note will slide very slightly
-downward, way up, and then slightly back down.
+If this test plays correctly, both notes will sound the same, bending downward
+smoothly. Incorrect (but perhaps acceptable, considering the unlikelihood of
+this combination of pitch bend and a meaningless arpeggio) handling of the
+arpeggio effect will result in a "stutter" on the second note, but the final
+pitch should be the same for both notes. Really broken players will mangle the
+pitch slide completely due to the arpeggio resetting the pitch on every third
+tick.
 */
 
-TEST(test_storlek_volume_column_and_fine_slides)
+TEST(test_storlek_02_arpeggio_no_value)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
@@ -23,13 +24,14 @@ TEST(test_storlek_volume_column_and_fine_slides)
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/storlek_06.data", "r");
+	f = fopen("data/storlek_02.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek_06.it");
+	xmp_load_module(opaque, "data/storlek_02.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {
+
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
 		if (info.loop_count > 0)

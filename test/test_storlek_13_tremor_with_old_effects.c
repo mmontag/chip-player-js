@@ -1,7 +1,7 @@
 #include "test.h"
 
 /*
-Tremor with old effects
+13 - Tremor with old effects
 
 Just when you think you've figured out tremor, guess what – it's even more
 annoying. With Old Effects enabled, all non-zero values are incremented, so I40
@@ -12,7 +12,7 @@ When this test is played correctly, both notes should play at exactly the same
 intervals.
 */
 
-TEST(test_storlek_tremor_with_old_effects)
+TEST(test_storlek_13_tremor_with_old_effects)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;

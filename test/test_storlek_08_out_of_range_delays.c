@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 /*
-Out-of-range note delays
+08 - Out-of-range note delays
 
 This test is to make sure note delay is handled correctly if the delay value
 is out of range. The correct behavior is to act as if the entire row is empty.
@@ -19,7 +19,7 @@ wave sample, with equal time between the start and end of each note, and the
 last note should be played with the noise sample.
 */
 
-TEST(test_storlek_out_of_range_delays)
+TEST(test_storlek_08_out_of_range_delays)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;

@@ -4,21 +4,19 @@
 #include <fcntl.h>
 
 /*
-Compatible Gxx off
+05 - Gxx, fine slides, effect memory
 
-Impulse Tracker links the effect memories for Exx, Fxx, and Gxx together if
-"Compatible Gxx" in NOT enabled in the file header. In other formats,
-portamento to note is entirely separate from pitch slide up/down. Several
-players that claim to be IT-compatible do not check this flag, and always store
-the last Gxx value separately.
+(Note: make sure the Compatible Gxx flag is handled correctly before performing
+this test.)
 
-When this test is played correctly, the first note will bend up, down, and back
-up again, and the final set of notes should only slide partway down. Players
-which do not correctly handle the Compatible Gxx flag will not perform the
-final pitch slide in the first part, or will "snap" the final notes.
+EFx and FFx are handled as fine slides even if the effect value was set by a
+Gxx effect. If this test is played correctly, the pitch should bend downward a
+full octave, and then up almost one semitone. If the note is bent way upward
+(and possibly out of control, causing the note to stop), the player is not
+handling the effect correctly.
 */
 
-TEST(test_storlek_compatible_gxx_off)
+TEST(test_storlek_05_gxx_fine_slides_memory)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
@@ -27,10 +25,10 @@ TEST(test_storlek_compatible_gxx_off)
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/storlek_03.data", "r");
+	f = fopen("data/storlek_05.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek_03.it");
+	xmp_load_module(opaque, "data/storlek_05.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {

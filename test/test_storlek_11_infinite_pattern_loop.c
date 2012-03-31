@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 /*
-Infinite loop exploit
+11 - Infinite loop exploit
 
 (Note: on this test, "fail" status is given for players which deadlock while
 loading or calculating the duration, and is not based on actual playback
@@ -25,7 +25,7 @@ the second channel is done, but the first one needs to loop again — creating a
 infinite loop situation. Even Impulse Tracker gets snagged by this.
 */
 
-TEST(test_storlek_infinite_pattern_loop)
+TEST(test_storlek_11_infinite_pattern_loop)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;

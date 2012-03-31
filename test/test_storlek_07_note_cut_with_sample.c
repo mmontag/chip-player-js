@@ -4,17 +4,16 @@
 #include <fcntl.h>
 
 /*
-Sample number causes new note
+07 - Note cut with sample
 
-A sample number encountered when no note is playing should restart the last
-sample played, and at the same pitch. Additionally, a note cut should clear the
-channel's state, thereby disabling this behavior.
+Some players ignore sample numbers next to a note cut. When handled correctly,
+this test should play a square wave, cut it, and then play the noise sample.
 
-This song should play six notes, with the last three an octave higher than the
-first three.
+If this test is not handled correctly, make sure samples are checked regardless
+of the note's value.
 */
 
-TEST(test_storlek_sample_number_new_note)
+TEST(test_storlek_07_note_cut_with_sample)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
@@ -23,13 +22,14 @@ TEST(test_storlek_sample_number_new_note)
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/storlek_18.data", "r");
+	f = fopen("data/storlek_07.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek_18.it");
+	xmp_load_module(opaque, "data/storlek_07.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {
+
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
 		if (info.loop_count > 0)

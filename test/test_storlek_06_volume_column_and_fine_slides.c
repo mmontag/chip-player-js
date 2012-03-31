@@ -4,19 +4,17 @@
 #include <fcntl.h>
 
 /*
-Gxx, fine slides, effect memory
+06 - Volume column and fine slides
 
-(Note: make sure the Compatible Gxx flag is handled correctly before performing
-this test.)
+Impulse Tracker's handling of volume column pitch slides along with its normal
+effect memory is rather odd. While the two do share their effect memory, fine
+slides are not handled in the volume column.
 
-EFx and FFx are handled as fine slides even if the effect value was set by a
-Gxx effect. If this test is played correctly, the pitch should bend downward a
-full octave, and then up almost one semitone. If the note is bent way upward
-(and possibly out of control, causing the note to stop), the player is not
-handling the effect correctly.
+When this test is played 100% correctly, the note will slide very slightly
+downward, way up, and then slightly back down.
 */
 
-TEST(test_storlek_gxx_fine_slides_memory)
+TEST(test_storlek_06_volume_column_and_fine_slides)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
@@ -25,14 +23,13 @@ TEST(test_storlek_gxx_fine_slides_memory)
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/storlek_05.data", "r");
+	f = fopen("data/storlek_06.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek_05.it");
+	xmp_load_module(opaque, "data/storlek_06.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {
-
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
 		if (info.loop_count > 0)

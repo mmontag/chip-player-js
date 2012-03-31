@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 /*
-Sample change with no note
+09 - Sample change with no note
 
 If a sample number is given without a note, Impulse Tracker will play the old
 note with the new sample. This test should play the same beat twice, exactly
@@ -19,7 +19,7 @@ struct data {
 	int instrument;
 };
 
-TEST(test_storlek_sample_change_no_note)
+TEST(test_storlek_09_sample_change_no_note)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;

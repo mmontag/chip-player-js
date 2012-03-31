@@ -4,47 +4,45 @@
 #include <fcntl.h>
 
 /*
-Note cut with sample
+04 - Compatible Gxx on
 
-Some players ignore sample numbers next to a note cut. When handled correctly,
-this test should play a square wave, cut it, and then play the noise sample.
-
-If this test is not handled correctly, make sure samples are checked regardless
-of the note's value.
+If this test is played correctly, the first note will slide up and back down
+once, and the final series should play four distinct notes. If the first note
+slides up again, either (a) the player is testing the flag incorrectly (Gxx
+memory is only linked if the flag is not set), or (b) the effect memory values
+are not set to zero at start of playback.
 */
 
-TEST(test_storlek_note_cut_with_sample)
+TEST(test_storlek_04_compatible_gxx_on)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	struct xmp_channel_info *ci = &info.channel_info[0];
-	int time, row, frame, chan, period, volume, ins;
+	int time, row, frame, chan, period, volume;
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/storlek_07.data", "r");
+	f = fopen("data/storlek_04.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/storlek_07.it");
+	xmp_load_module(opaque, "data/storlek_04.it");
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {
-
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
 		if (info.loop_count > 0)
 			break;
 
 		fgets(line, 200, f);
-		sscanf(line, "%d %d %d %d %d %d %d",
-			&time, &row, &frame, &chan, &period, &volume, &ins);
+		sscanf(line, "%d %d %d %d %d %d",
+			&time, &row, &frame, &chan, &period, &volume);
 
 		fail_unless(info.time  == time,   "time mismatch");
 		fail_unless(info.row   == row,    "row mismatch");
 		fail_unless(info.frame == frame,  "frame mismatch");
 		fail_unless(ci->period == period, "period mismatch");
 		fail_unless(ci->volume == volume, "volume mismatch");
-		fail_unless(ci->instrument == ins, "instrument mismatch");
 	}
 
 	xmp_player_end(opaque);

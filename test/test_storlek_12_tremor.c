@@ -1,7 +1,7 @@
 #include "test.h"
 
 /*
-Tremor effect
+12 - Tremor effect
 
 Like many other effects, tremor has an effect memory. This memory stores both
 the "on" AND "off" values at once — they are not saved independently.
@@ -26,7 +26,7 @@ When this test is played correctly, both notes should play at exactly the same
 intervals.
 */
 
-TEST(test_storlek_tremor)
+TEST(test_storlek_12_tremor)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
