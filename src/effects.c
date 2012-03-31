@@ -82,24 +82,24 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 
 	case FX_PORTA_UP:	/* Portamento up */
 		if (fxp == 0)
-			fxp = xc->freq.porta;
+			fxp = xc->freq.memory;
 
 		if (HAS_QUIRK(QUIRK_FINEFX)
 		    && (fnum == 0 || !HAS_QUIRK(QUIRK_ITVPOR))) {
 			switch (MSN(fxp)) {
 			case 0xf:
-				xc->freq.porta = fxp;
+				xc->freq.memory = fxp;
 				fxp &= 0x0f;
 				goto ex_f_porta_up;
 			case 0xe:
-				xc->freq.porta = fxp;
+				xc->freq.memory = fxp;
 				fxp &= 0x0e;
 				fxp |= 0x10;
 				goto fx_xf_porta;
 			}
 		}
 		SET(PITCHBEND);
-		if ((xc->freq.porta = fxp) != 0) {
+		if ((xc->freq.memory = fxp) != 0) {
 			xc->freq.slide = -fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD))
 				xc->freq.s_val = -fxp;
@@ -109,24 +109,24 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_PORTA_DN:	/* Portamento down */
 		if (fxp == 0)
-			fxp = xc->freq.porta;
+			fxp = xc->freq.memory;
 
 		if (HAS_QUIRK(QUIRK_FINEFX)
 		    && (fnum == 0 || !HAS_QUIRK(QUIRK_ITVPOR))) {
 			switch (MSN(fxp)) {
 			case 0xf:
-				xc->freq.porta = fxp;
+				xc->freq.memory = fxp;
 				fxp &= 0x0f;
 				goto ex_f_porta_dn;
 			case 0xe:
-				xc->freq.porta = fxp;
+				xc->freq.memory = fxp;
 				fxp &= 0x0e;
 				fxp |= 0x20;
 				goto fx_xf_porta;
 			}
 		}
 		SET(PITCHBEND);
-		if ((xc->freq.porta = fxp) != 0) {
+		if ((xc->freq.memory = fxp) != 0) {
 			xc->freq.slide = fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD))
 				xc->freq.s_val = fxp;
@@ -145,20 +145,20 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		if (fxp) {
 			xc->freq.s_val = fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
-				xc->freq.porta = fxp;
+				xc->freq.memory = fxp;
 		}
 		SET(TONEPORTA);
 		break;
 	case FX_PER_PORTA_UP:	/* Persistent portamento up */
 		SET_PER(PITCHBEND);
 		xc->freq.slide = -fxp;
-		if ((xc->freq.porta = fxp) == 0)
+		if ((xc->freq.memory = fxp) == 0)
 			RESET_PER(PITCHBEND);
 		break;
 	case FX_PER_PORTA_DN:	/* Persistent portamento down */
 		SET(PITCHBEND);
 		xc->freq.slide = fxp;
-		if ((xc->freq.porta = fxp) == 0)
+		if ((xc->freq.memory = fxp) == 0)
 			RESET_PER(PITCHBEND);
 		break;
 	case FX_PER_TPORTA:	/* Persistent tone portamento */

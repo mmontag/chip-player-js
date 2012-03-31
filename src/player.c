@@ -450,7 +450,7 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 				RESET(TONEPORTA);
 				RESET_PER(TONEPORTA);
 			}
-		}
+		} 
 
 		/* Workaround for panic.s3m (from Toru Egashira's NSPmod) */
 		if (xc->period <= 8)
