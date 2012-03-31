@@ -22,7 +22,8 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  16_global_volume \
 		  18_sample_number_new_note \
 		  22_zero_cut_and_delay \
-		  23_portamento_with_no_note
+		  23_portamento_with_no_note \
+		  25_portamento_and_pitch_slide
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
