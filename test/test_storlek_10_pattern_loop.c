@@ -47,7 +47,6 @@ TEST(test_storlek_10_pattern_loop)
 	int time, row, frame, chan, period, volume, ins;
 	char line[200];
 	FILE *f;
-	int count = 0;
 
 	f = fopen("data/storlek_10.data", "r");
 
@@ -71,11 +70,10 @@ TEST(test_storlek_10_pattern_loop)
 		fail_unless(ci->period == period, "period mismatch");
 		fail_unless(ci->volume == volume, "volume mismatch");
 		fail_unless(ci->instrument == ins, "instrument mismatch");
-
-		count++;
 	}
 
-	fail_unless(count == 522, "short loop");
+	fgets(line, 200, f);
+	fail_unless(feof(f), "not end of data file");
 
 	xmp_player_end(opaque);
 	xmp_release_module(opaque);

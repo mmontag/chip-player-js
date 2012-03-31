@@ -45,6 +45,9 @@ TEST(test_storlek_04_compatible_gxx_on)
 		fail_unless(ci->volume == volume, "volume mismatch");
 	}
 
+	fgets(line, 200, f);
+	fail_unless(feof(f), "not end of data file");
+
 	xmp_player_end(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);

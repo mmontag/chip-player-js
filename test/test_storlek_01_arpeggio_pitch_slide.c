@@ -42,7 +42,6 @@ TEST(test_storlek_01_arpeggio_pitch_slide)
 	xmp_player_start(opaque, 44100, 0);
 
 	while (1) {
-
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
 		if (info.loop_count > 0)
@@ -58,6 +57,9 @@ TEST(test_storlek_01_arpeggio_pitch_slide)
 		fail_unless(ci->period == period, "period mismatch");
 		fail_unless(ci->volume == volume, "volume mismatch");
 	}
+
+	fgets(line, 200, f);
+	fail_unless(feof(f), "not end of data file");
 
 	xmp_player_end(opaque);
 	xmp_release_module(opaque);

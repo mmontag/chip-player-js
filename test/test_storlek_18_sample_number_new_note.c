@@ -47,6 +47,9 @@ TEST(test_storlek_18_sample_number_new_note)
 		fail_unless(ci->instrument == ins, "instrument mismatch");
 	}
 
+	fgets(line, 200, f);
+	fail_unless(feof(f), "not end of data file");
+
 	xmp_player_end(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
