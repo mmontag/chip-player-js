@@ -140,6 +140,7 @@ struct channel_data {
 		int s_end;	/* Target period for tone portamento */
 		int s_sgn;	/* Tone portamento up/down switch */
 		int s_val;	/* Delta for tone portamento */
+		int s_memory;	/* Tone portamento effect memory */
 	} freq;
 
 	struct {

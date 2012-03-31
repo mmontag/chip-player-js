@@ -191,6 +191,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
+	/* Secondary effect handled first */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
@@ -400,6 +401,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* FT2: always reset sample offset */
 	xc->offset_val = 0;
 
+	/* Secondary effect handled first */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
@@ -563,6 +565,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_VOL);
 	}
 
+	/* Secondary effect handled first */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 
@@ -768,8 +771,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	/* IT: always reset sample offset */
 	xc->offset_val = 0;
 
-	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
+	/* According to Storlek test 25, Impulse Tracker handles the volume
+	 * column effects last.
+	 */
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 
 	if (sub == NULL) {
 		return 0;
