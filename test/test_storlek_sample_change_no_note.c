@@ -13,16 +13,19 @@ will produce various interesting (but nonetheless incorrect!) results for the
 second measure.
 */
 
+struct data {
+	int period;
+	int volume;
+	int instrument;
+};
+
 TEST(test_storlek_sample_change_no_note)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	struct xmp_channel_info *ci = &info.channel_info[0];
-	int time, row, frame, chan, period, volume, ins;
-	char line[200];
-	FILE *f;
-
-	f = fopen("data/storlek_09.data", "r");
+	struct data data[100];
+	int i = 0, j = 0;
 
 	opaque = xmp_create_context();
 	xmp_load_module(opaque, "data/storlek_09.it");
@@ -34,16 +37,17 @@ TEST(test_storlek_sample_change_no_note)
 		if (info.loop_count > 0)
 			break;
 
-		fgets(line, 200, f);
-		sscanf(line, "%d %d %d %d %d %d %d",
-			&time, &row, &frame, &chan, &period, &volume, &ins);
-
-		fail_unless(info.time  == time,   "time mismatch");
-		fail_unless(info.row   == row,    "row mismatch");
-		fail_unless(info.frame == frame,  "frame mismatch");
-		fail_unless(ci->period == period, "period mismatch");
-		fail_unless(ci->volume == volume, "volume mismatch");
-		fail_unless(ci->instrument == ins, "instrument mismatch");
+		if (info.row < 16) {
+			data[i].period = ci->period;
+			data[i].volume = ci->volume;
+			data[i].instrument = ci->instrument;
+			i++;
+		} else {
+			fail_unless(ci->period == data[j].period, "period mismatch");
+			fail_unless(ci->volume == data[j].volume, "volume mismatch");
+			fail_unless(ci->instrument == data[j].instrument, "instrument mismatch");
+			j++;
+		}
 	}
 
 	xmp_player_end(opaque);
