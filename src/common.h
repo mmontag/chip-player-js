@@ -137,6 +137,7 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRK_INSVOL	(1 << 15)	/* Use instrument volume */
 #define QUIRK_VIRTUAL	(1 << 16)	/* Enable virtual channels */
 #define QUIRK_FILTER	(1 << 17)	/* Enable filter */
+#define QUIRK_IGSTPOR	(1 << 18)	/* Ignore stray tone portamento */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -146,7 +147,7 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 #define QUIRKS_FT2		(0)
 #define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_VOLPDN | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | \
-				 QUIRK_VIRTUAL | QUIRK_FILTER)
+				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_IGSTPOR)
 
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02

@@ -444,7 +444,9 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 			xc->period += xc->freq.s_sgn * xc->freq.s_val;
 			if ((xc->freq.s_sgn * xc->freq.s_end) <
 			    (xc->freq.s_sgn * xc->period)) {
+				/* reached end */
 				xc->period = xc->freq.s_end;
+				xc->freq.s_sgn = 0;
 				RESET(TONEPORTA);
 				RESET_PER(TONEPORTA);
 			}

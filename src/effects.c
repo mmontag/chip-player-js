@@ -135,6 +135,10 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_TONEPORTA:	/* Tone portamento */
+		if (HAS_QUIRK(QUIRK_IGSTPOR)) {
+			if (note == 0 && xc->freq.s_sgn == 0)
+				break;
+		}
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 		DO_TONEPORTA();
