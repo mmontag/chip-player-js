@@ -25,6 +25,7 @@ Stable versions
 	- fix IT global volume (Storlek test #16)
 	- fix IT stray tone portamento handling (Storlek test #23)
 	- fix IT unified pitch slide memory (Storlek test #25)
+	- fix IT retrigger effect (Storlek test #15)
 
 3.5.0 (20120127):
 	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe
