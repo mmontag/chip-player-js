@@ -178,7 +178,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	set_effect_defaults(ctx, note, sub, xc);
 
 	/* Reset flags */
-	xc->delay = xc->retrig.delay = 0;
+	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);
@@ -385,7 +385,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	set_effect_defaults(ctx, note, sub, xc);
 
 	/* Reset flags */
-	xc->delay = xc->retrig.delay = 0;
+	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);
@@ -552,7 +552,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	set_effect_defaults(ctx, note, sub, xc);
 
 	/* Reset flags */
-	xc->delay = xc->retrig.delay = 0;
+	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);
@@ -755,7 +755,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	set_effect_defaults(ctx, note, sub, xc);
 	
 	/* Reset flags */
-	xc->delay = xc->retrig.delay = 0;
+	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	reset_stepper(&xc->arpeggio);

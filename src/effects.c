@@ -391,13 +391,11 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			set_lfo_waveform(&xc->tremolo, fxp & 3);
 			break;
 		case EX_RETRIG:		/* Retrig note */
-			if (fxp > 0) {
-				xc->retrig.delay = fxp;
-			} else {
-				xc->retrig.delay = xc->retrig.val;
+			SET(RETRIG);
+			if (fxp != 0) {
+				xc->retrig.val = fxp;
 			}
-			xc->retrig.count = xc->retrig.delay;
-			xc->retrig.val = xc->retrig.delay;
+			xc->retrig.count = LSN(xc->retrig.val);
 			xc->retrig.type = 0;
 			break;
 		case EX_F_VSLIDE_UP:	/* Fine volume slide up */
@@ -413,11 +411,11 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 				xc->vol.fslide = -fxp;
 			break;
 		case EX_CUT:		/* Cut note */
-			xc->retrig.delay = fxp + 1;
-			xc->retrig.count = xc->retrig.delay;
+			SET(RETRIG);
+			xc->retrig.val = fxp + 1;
+			xc->retrig.count = xc->retrig.val;
 			xc->retrig.type = 0x10;
 			break;
-
 		case EX_DELAY:		/* Note delay */
 			/* computed at frame loop */
 			break;
@@ -509,15 +507,14 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_MULTI_RETRIG:	/* Multi retrig */
-		if (LSN(fxp)) {
-			xc->retrig.delay = LSN(fxp);
-			xc->retrig.val = xc->retrig.delay;
-		} else {
-			xc->retrig.delay = xc->retrig.val;
+		if (fxp) {
+			xc->retrig.val = fxp;
 		}
-		xc->retrig.count = xc->retrig.delay;
-		if (MSN(fxp)) {
-			xc->retrig.type = MSN(fxp);
+		if (note) {
+			xc->retrig.count = LSN(xc->retrig.val);
+			xc->retrig.type = MSN(xc->retrig.val);
+		} else {
+			SET(RETRIG);
 		}
 		break;
 	case FX_TREMOR:		/* Tremor */
@@ -638,13 +635,13 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 #endif
 		break;
 	case FX_NSLIDE_R_DN:
+		SET(RETRIG);
 		if (MSN(fxp)) {
-			xc->retrig.delay = MSN(fxp);
+			xc->retrig.count = MSN(fxp);
 		} else {
-			xc->retrig.delay = xc->retrig.val;
+			xc->retrig.count = xc->retrig.val;
 		}
-		xc->retrig.count = xc->retrig.delay;
-		xc->retrig.val = xc->retrig.delay;
+		xc->retrig.val = xc->retrig.count;
 		xc->retrig.type = 0;
 		/* fall through */
 	case FX_NSLIDE_DN:
@@ -653,13 +650,13 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		xc->noteslide.count = xc->noteslide.speed = MSN(fxp);
 		break;
 	case FX_NSLIDE_R_UP:
+		SET(RETRIG);
 		if (MSN(fxp)) {
-			xc->retrig.delay = MSN(fxp);
+			xc->retrig.count = MSN(fxp);
 		} else {
-			xc->retrig.delay = xc->retrig.val;
+			xc->retrig.count = xc->retrig.val;
 		}
-		xc->retrig.count = xc->retrig.delay;
-		xc->retrig.val = xc->retrig.delay;
+		xc->retrig.val = xc->retrig.count;
 		xc->retrig.type = 0;
 		/* fall through */
 	case FX_NSLIDE_UP:

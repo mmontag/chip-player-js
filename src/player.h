@@ -55,6 +55,7 @@ struct retrig_control {
 #define FINE_NSLIDE	0x00020000
 #define NEW_NOTE	0x00040000
 #define FINE_TPORTA	0x00080000
+#define RETRIG		0x00100000
 
 /* These need to be "persistent" between frames */
 #define FADEOUT		0x02000000
@@ -104,10 +105,9 @@ struct channel_data {
 	} insvib;
 
 	struct {
-		int type;	/* Retrig type */
+		int val;	/* Retrig value */
 		int count;	/* Retrig counter */
-		int delay;	/* Retrig delay in frames */
-		int val;	/* Retrig parameters */
+		int type;	/* Retrig type */
 	} retrig;
 
 	struct {

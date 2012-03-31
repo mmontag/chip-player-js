@@ -39,6 +39,7 @@ static const struct retrig_control rval[] = {
 	{   0,  1,  1 }, {   1,  1,  1 }, {   2,  1,  1 }, {   4,  1,  1 },
 	{   8,  1,  1 }, {  16,  1,  1 }, {   0,  3,  2 }, {   0,  2,  1 },
 	{   0,  0,  1 }		/* Note cut */
+	
 };
 
 static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
@@ -539,7 +540,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 			virt_resetchannel(ctx, chn);
 			return;
 		}
-		xc->delay = xc->retrig.delay = 0;
+		xc->delay = 0;
 		reset_stepper(&xc->arpeggio);
 
 		/* keep persistent flags */
@@ -553,8 +554,8 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
 
 	/* Do cut/retrig */
-	if (xc->retrig.delay) {
-		if (!--xc->retrig.count) {
+	if (TEST(RETRIG)) {
+		if (--xc->retrig.count <= 0) {
 			if (xc->retrig.type < 0x10) {
 				/* don't retrig on cut */
 				virt_voicepos(ctx, chn, 0);
@@ -562,10 +563,10 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 			xc->volume += rval[xc->retrig.type].s;
 			xc->volume *= rval[xc->retrig.type].m;
 			xc->volume /= rval[xc->retrig.type].d;
-			xc->retrig.count = xc->retrig.delay;
+                	xc->retrig.count = LSN(xc->retrig.val);
 		}
-	}
-
+        }
+   
 	process_volume(ctx, chn, t, act);
 	process_frequency(ctx, chn, t, act);
 	process_pan(ctx, chn, t, act);
