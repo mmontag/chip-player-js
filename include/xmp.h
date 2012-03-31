@@ -1,11 +1,3 @@
-/* Extended Module Player
- * Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- */
-
 #ifndef __XMP_H
 #define __XMP_H
 
@@ -15,14 +7,14 @@ extern "C" {
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 # ifdef BUILDING_DLL
-#  define _P  __declspec(dllexport)
+#  define EXPORT __declspec(dllexport)
 # else
-#  define _P  __declspec(dllimport)
+#  define EXPORT __declspec(dllimport)
 # endif
 #elif __GNUC__ >= 4
-# define _P  __attribute__ ((visibility ("default")))
+# define EXPORT __attribute__((visibility ("default")))
 #else
-# define _P 
+# define EXPORT 
 #endif
 
 #define XMP_NAME_SIZE		64	/* Size of module name and type */
@@ -247,7 +239,7 @@ struct xmp_module_info {		/* Current module information */
 
 typedef char *xmp_context;
 
-_P extern const unsigned int xmp_version;
+EXPORT extern const unsigned int xmp_version;
 
 /* Player control macros */
 
@@ -263,18 +255,18 @@ _P extern const unsigned int xmp_version;
 #define xmp_quirk_fx9(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FX9, (x))
 #define xmp_quirk_fxef(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FXEF, (x))
 
-_P xmp_context xmp_create_context  (void);
-_P int         xmp_test_module     (char *, struct xmp_test_info *);
-_P void        xmp_free_context    (xmp_context);
-_P int         xmp_load_module     (xmp_context, char *);
-_P void        xmp_release_module  (xmp_context);
-_P int         _xmp_ctl            (xmp_context, int, ...);
-_P int         xmp_player_start    (xmp_context, int, int);
-_P int         xmp_player_frame    (xmp_context);
-_P void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
-_P void        xmp_player_end      (xmp_context);
-_P void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
-_P char      **xmp_get_format_list (void);
+EXPORT xmp_context xmp_create_context  (void);
+EXPORT int         xmp_test_module     (char *, struct xmp_test_info *);
+EXPORT void        xmp_free_context    (xmp_context);
+EXPORT int         xmp_load_module     (xmp_context, char *);
+EXPORT void        xmp_release_module  (xmp_context);
+EXPORT int         _xmp_ctl            (xmp_context, int, ...);
+EXPORT int         xmp_player_start    (xmp_context, int, int);
+EXPORT int         xmp_player_frame    (xmp_context);
+EXPORT void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
+EXPORT void        xmp_player_end      (xmp_context);
+EXPORT void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
+EXPORT char      **xmp_get_format_list (void);
 
 #ifdef __cplusplus
 }
