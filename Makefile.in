@@ -107,7 +107,7 @@ install: all
 depend:
 	@echo Building dependencies...
 	@echo > $@
-	@for i in $(OBJS) $(M_OBJS); do \
+	@for i in $(OBJS) $(M_OBJS) $(T_OBJS); do \
 	    c="$${i%.o}.c"; l="$${i%.o}.lo"; \
 	    $(CC) $(CFLAGS) -MM $$c | \
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \

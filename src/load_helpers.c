@@ -26,8 +26,9 @@ int exclude_match(char *name)
 	return -1;
 }
 
-void initialize_module_data(struct module_data *m)
+void load_prologue(struct context_data *ctx)
 {
+	struct module_data *m = &ctx->m;
 	int i;
 
 	/* Reset variables */
@@ -52,7 +53,6 @@ void initialize_module_data(struct module_data *m)
     	m->mod.bpm = 125;
     	m->mod.len = 0;
     	m->mod.rst = 0;
-    	m->mod.gvl = 0x40;
 
 	m->synth = &synth_null;
 	m->extra = NULL;
@@ -67,9 +67,29 @@ void initialize_module_data(struct module_data *m)
 	}
 }
 
-void fix_module_instruments(struct module_data *m)
+void load_epilogue(struct context_data *ctx)
 {
+	struct module_data *m = &ctx->m;
 	int i, j;
+
+    	m->mod.gvl = m->gvolbase;
+
+	/* Fix cases where the restart value is invalid e.g. kc_fall8.xm
+	 * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
+	 * Ralf Hoffmann <ralf@boomerangsworld.de>)
+	 */
+	if (m->mod.rst >= m->mod.len) {
+		m->mod.rst = 0;
+	}
+
+	/* Sanity check */
+	if (m->mod.spd == 0) {
+		m->mod.spd = 6;
+	}
+	if (m->mod.bpm == 0) {
+		m->mod.bpm = 125;
+	}
+
 
 	/* Set appropriate values for instrument volumes and subinstrument
 	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
@@ -86,5 +106,7 @@ void fix_module_instruments(struct module_data *m)
 			}
 		}
 	}
+
+	scan_sequences(ctx);
 }
 

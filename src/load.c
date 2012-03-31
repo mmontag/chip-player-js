@@ -32,8 +32,8 @@
 
 extern struct format_loader *format_loader[];
 
-void initialize_module_data(struct module_data *);
-void fix_module_instruments(struct module_data *);
+void load_prologue(struct context_data *);
+void load_epilogue(struct context_data *);
 
 
 struct tmpfilename {
@@ -512,7 +512,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	m->filename = path;	/* For ALM, SSMT, etc */
 	m->size = st.st_size;
 
-	initialize_module_data(m);
+	load_prologue(ctx);
 
 	_D(_D_WARN "load");
 	test_result = load_result = -1;
@@ -542,29 +542,12 @@ int xmp_load_module(xmp_context opaque, char *path)
 		return -XMP_ERROR_LOAD;
 	}
 
-	/* Fix cases where the restart value is invalid e.g. kc_fall8.xm
-	 * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
-	 * Ralf Hoffmann <ralf@boomerangsworld.de>)
-	 */
-	if (m->mod.rst >= m->mod.len)
-		m->mod.rst = 0;
-
 	str_adj(m->mod.name);
 	if (!*m->mod.name) {
 		strncpy(m->mod.name, m->basename, XMP_NAME_SIZE);
 	}
 
-	/* Sanity check */
-	if (m->mod.spd == 0) {
-		m->mod.spd = 6;
-	}
-	if (m->mod.bpm == 0) {
-		m->mod.bpm = 125;
-	}
-
-	scan_sequences(ctx);
-
-	fix_module_instruments(m);
+	load_epilogue(ctx);
 
 	return 0;
 

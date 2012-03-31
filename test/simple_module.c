@@ -3,8 +3,8 @@
 #include "../src/common.h"
 #include "../src/loaders/loader.h"
 
-void initialize_module_data(struct module_data *);
-void fix_module_instruments(struct module_data *);
+void load_prologue(struct context_data *);
+void load_epilogue(struct context_data *);
 
 void create_simple_module(struct context_data *ctx, int ins, int pat)
 {
@@ -12,7 +12,7 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	initialize_module_data(m);
+	load_prologue(ctx);
 
 	/* Create module */
 
@@ -52,9 +52,7 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 		
 	/* End of module creation */
 
-	scan_sequences(ctx);
-
-	fix_module_instruments(m);
+	load_epilogue(ctx);
 }
 
 void new_event(struct context_data *ctx, int pat, int row, int chn, int note, int ins, int vol, int fxt, int fxp, int f2t, int f2p)
