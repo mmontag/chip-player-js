@@ -19,6 +19,7 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  11_infinite_pattern_loop \
 		  12_tremor \
 		  13_tremor_with_old_effects \
+		  15_retrigger \
 		  16_global_volume \
 		  18_sample_number_new_note \
 		  22_zero_cut_and_delay \
