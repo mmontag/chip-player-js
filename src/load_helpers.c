@@ -90,7 +90,6 @@ void load_epilogue(struct context_data *ctx)
 		m->mod.bpm = 125;
 	}
 
-
 	/* Set appropriate values for instrument volumes and subinstrument
 	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
 	 * consistent if the user inspects struct xmp_module. We can later

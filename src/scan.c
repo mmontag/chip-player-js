@@ -54,13 +54,21 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     int pat;
     struct ord_data *info;
 
+    ord = 0;
+    while (ord < mod->len && mod->xxo[p->ord] >= mod->pat) {
+	ord++;
+    }
+    if (ord >= mod->len)
+	mod->len = 0;
+
     if (mod->len == 0)
 	return 0;
 
     tab_cnt = calloc(sizeof (char *), mod->len);
-    for (ord = mod->len; ord--;)
+    for (ord = 0; ord < mod->len; ord++) {
 	tab_cnt[ord] = calloc(1, mod->xxo[ord] >= mod->pat ?  1 :
-		mod->xxp[mod->xxo[ord]]->rows ? mod->xxp[mod->xxo[ord]]->rows : 1);
+	    mod->xxp[mod->xxo[ord]]->rows ? mod->xxp[mod->xxo[ord]]->rows : 1);
+    }
 
     loop_stk = calloc(sizeof (int), mod->chn);
     loop_row = calloc(sizeof (int), mod->chn);

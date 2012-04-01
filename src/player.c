@@ -727,14 +727,6 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 	s->mix = DEFAULT_MIX;
 	s->pbase = SMIX_C4NOTE * m->c4rate / s->freq;
 
-	/* Sanity check */
-	if (mod->spd == 0) {
-		mod->spd = 6;
-	}
-	if (mod->bpm == 0) {
-		mod->bpm = 125;
-	}
-
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
 	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat) {
 		p->ord++;
