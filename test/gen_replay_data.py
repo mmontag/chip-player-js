@@ -36,8 +36,9 @@ while x.playerFrame():
 
 	for i in channels:
 		ci = info.channel_info[i]
-		print "%d %d %d %d %d %d %d" % (info.time, info.row,
-			info.frame, i, ci.period, ci.volume, ci.instrument)
+		print "%d %d %d %d %d %d %d %d" % (info.time, info.row,
+			info.frame, i, ci.period, ci.volume, ci.instrument,
+			ci.pan)
 
 
 x.playerEnd()
