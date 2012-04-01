@@ -443,8 +443,8 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
     }
       else
     {
-      printf("Error in bitstream reading in literal code length %d\n",t);
-      exit(0);
+      fprintf(stderr, "unzip: error in bitstream reading in literal code length %d\n",t);
+      return -1;
     }
   }
 
@@ -460,6 +460,12 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
   max_bits=0;
   for (t=0; t<count; t++)
   {
+    /* CM: workaround for crash with whacke.zip */
+    if (lengths[t] >= count) {
+      fprintf(stderr, "unzip: decompression error\n");
+      return -1;
+    }
+
     bl_count[lengths[t]]++;
     if (max_bits<lengths[t]) max_bits=lengths[t];
   }
@@ -541,6 +547,7 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
   int next_code[19];
   int code,bits;
   int t;
+  int res;
 
   while (bitstream->bitptr<14)
   {
@@ -664,7 +671,9 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
   memset(huffman->len,0,288*sizeof(int));
   /* memset(huffman->code,0,288*sizeof(int)); */
 
-  load_codes(in,bitstream,huffman->len,hlit,hclen_code_lengths,hclen_code,huffman_tree_len);
+  res = load_codes(in,bitstream,huffman->len,hlit,hclen_code_lengths,hclen_code,huffman_tree_len);
+  if (res < 0)
+    return -1;
 
 #ifdef DEBUG
   printf("\nLiteral Table\n");
@@ -693,7 +702,9 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
     memset(huffman->dist_len,0,33*sizeof(int));
     /* memset(huffman->dist_code,0,33*sizeof(int)); */
 
-    load_codes(in,bitstream,huffman->dist_len,hdist,hclen_code_lengths,hclen_code,huffman_tree_dist);
+    res = load_codes(in,bitstream,huffman->dist_len,hdist,hclen_code_lengths,hclen_code,huffman_tree_dist);
+    if (res < 0)
+      return -1;
 
   }
 
@@ -974,6 +985,7 @@ int inflate(FILE *in, FILE *out, uint32 *checksum, int is_zip)
   struct huffman_tree_t *huffman_tree_len;
   struct huffman_tree_t *huffman_tree_dist;
   struct inflate_data data;
+  int res;
 
   huffman.checksum=0xffffffff;
 
@@ -1004,9 +1016,7 @@ if (!is_zip) {
   if ((CMF&15)!=8)
   {
     printf("Unsupported compression used.\n");
-    free(huffman_tree_dist);
-    free(huffman_tree_len);
-    return -1;
+    goto err;
   }
 
   if ((FLG&32)!=0)
@@ -1092,7 +1102,10 @@ if (!is_zip) {
     {
 
       /* Dynamic Huffman */
-      load_dynamic_huffman(in,&huffman,&bitstream,huffman_tree_len,huffman_tree_dist);
+      res = load_dynamic_huffman(in,&huffman,&bitstream,huffman_tree_len,huffman_tree_dist);
+      if (res < 0) 
+        goto err1;
+
       decompress(in, &huffman, &bitstream, huffman_tree_len, huffman_tree_dist, out, &data);
 
     }
@@ -1138,4 +1151,11 @@ if (!is_zip) {
   }
 
   return 0;
+
+ err1:
+  kunzip_inflate_free(&data);
+ err:
+  free(huffman_tree_dist);
+  free(huffman_tree_len);
+  return -1;
 }
