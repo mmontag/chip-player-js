@@ -433,6 +433,12 @@ int mixer_getvoicepos(struct context_data *ctx, int voc)
 		return 0;
 	}
 
+	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		if (vi->pos >= xxs->lpe) {
+			return xxs->lpe - (vi->pos - xxs->lpe) - 1;
+		}
+	}
+
 	return vi->pos;
 }
 
