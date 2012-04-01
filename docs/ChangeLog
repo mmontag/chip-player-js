@@ -20,7 +20,7 @@ Stable versions
 	- fix S404 depacker integration
 	- fix note delay effect
 	- fix FT2 old instrument volume quirk
-	- fix instrument envelope loops
+	- fix instrument envelope loops (Storlek test #24)
 	- fix IT tremor effect (Storlek tests #12 and #13)
 	- fix IT global volume (Storlek test #16)
 	- fix IT stray tone portamento handling (Storlek test #23)
