@@ -35,6 +35,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 				struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 
 	if (sub != NULL && note >= 0) {
 		xc->pan = sub->pan;
@@ -58,7 +59,16 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
 		xc->insvib.sweep = sub->vsw;
 
-		xc->v_idx = xc->p_idx = xc->f_idx = 0;
+		/* Reset envelope positions */
+		if (~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_CARRY) {
+			xc->v_idx = 0;
+		}
+		if (~mod->xxi[xc->ins].pei.flg & XMP_ENVELOPE_CARRY) {
+			xc->p_idx = 0;
+		}
+		if (~mod->xxi[xc->ins].fei.flg & XMP_ENVELOPE_CARRY) {
+			xc->f_idx = 0;
+		}
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);

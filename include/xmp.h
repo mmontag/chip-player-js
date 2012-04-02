@@ -88,6 +88,7 @@ struct xmp_envelope {
 #define XMP_ENVELOPE_LOOP	(1 << 2)  /* Envelope has loop */
 #define XMP_ENVELOPE_FLT	(1 << 3)  /* Envelope is used for filter */
 #define XMP_ENVELOPE_SLOOP	(1 << 4)  /* Envelope has sustain loop */
+#define XMP_ENVELOPE_CARRY	(1 << 5)  /* Don't reset envelope position */
 	int flg;			/* Flags */
 	int npt;			/* Number of envelope points */
 	int scl;			/* Envelope scaling */

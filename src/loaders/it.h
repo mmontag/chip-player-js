@@ -48,6 +48,7 @@
 #define IT_ENV_ON	0x01
 #define IT_ENV_LOOP	0x02
 #define IT_ENV_SLOOP	0x04
+#define IT_ENV_CARRY	0x08
 #define IT_ENV_FILTER	0x80
 
 

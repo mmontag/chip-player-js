@@ -528,6 +528,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    xxi->X##ei.flg = env.flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0; \
 	    xxi->X##ei.flg |= env.flg & IT_ENV_LOOP ? XMP_ENVELOPE_LOOP : 0; \
 	    xxi->X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XMP_ENVELOPE_SUS|XMP_ENVELOPE_SLOOP) : 0; \
+	    xxi->X##ei.flg |= env.flg & IT_ENV_CARRY ? XMP_ENVELOPE_CARRY : 0; \
 	    xxi->X##ei.npt = env.num; \
 	    xxi->X##ei.sus = env.slb; \
 	    xxi->X##ei.sue = env.sle; \
@@ -658,6 +659,9 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    }
 	    if (i1h.flags & IT_ENV_SLOOP) {
 		xxi->aei.flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_SLOOP;
+	    }
+	    if (i1h.flags & IT_ENV_CARRY) {
+		xxi->aei.flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_CARRY;
 	    }
 	    xxi->aei.lps = i1h.vls;
 	    xxi->aei.lpe = i1h.vle;
