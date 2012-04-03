@@ -316,6 +316,10 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	virt_setbend(ctx, chn, linear_bend);
 
+	if (!HAS_QUIRK(QUIRK_FILTER)) {
+		return;
+	}
+
 	/* Process filter */
 
 	if (instrument->fei.flg & XMP_ENVELOPE_FLT) {
@@ -324,17 +328,15 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		cutoff = 0xff;
 	}
 
-	if (cutoff < 0xff && HAS_QUIRK(QUIRK_FILTER)) {
+	virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
+	virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
+
+	if (cutoff < 0xff) {
 		filter_setup(ctx, xc, cutoff);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, xc->filter.B0);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, xc->filter.B1);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B2, xc->filter.B2);
-	} else {
-		cutoff = 0xff;
 	}
-
-	virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, xc->filter.resonance);
-	virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 }
 
 static void process_pan(struct context_data *ctx, int chn, int t, int act)
