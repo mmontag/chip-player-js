@@ -152,9 +152,9 @@ void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02
 #define DSP_EFFECT_RESONANCE	0x03
-#define DSP_EFFECT_FILTER_B0	0xb0
-#define DSP_EFFECT_FILTER_B1	0xb1
-#define DSP_EFFECT_FILTER_B2	0xb2
+#define DSP_EFFECT_FILTER_A0	0xb0
+#define DSP_EFFECT_FILTER_B0	0xb1
+#define DSP_EFFECT_FILTER_B1	0xb2
 
 /* Time factor */
 #define DEFAULT_TIME_FACTOR	10.0

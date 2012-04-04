@@ -532,14 +532,14 @@ void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 	case DSP_EFFECT_RESONANCE:
 		vi->filter.resonance = val;
 		break;
+	case DSP_EFFECT_FILTER_A0:
+		vi->filter.a0 = val;
+		break;
 	case DSP_EFFECT_FILTER_B0:
-		vi->filter.B0 = val;
+		vi->filter.b0 = val;
 		break;
 	case DSP_EFFECT_FILTER_B1:
-		vi->filter.B1 = val;
-		break;
-	case DSP_EFFECT_FILTER_B2:
-		vi->filter.B2 = val;
+		vi->filter.b1 = val;
 		break;
 	}
 

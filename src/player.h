@@ -158,11 +158,7 @@ struct channel_data {
 
 	struct {
 		int cutoff;	/* IT filter cutoff frequency */
-		int cutoff2;	/* IT filter cutoff frequency (with envelope) */
 		int resonance;	/* IT filter resonance */
-		int B0;		/* IT filter variables */
-		int B1;
-		int B2;
 	} filter;
 
 	struct med_channel {
@@ -201,7 +197,7 @@ void process_fx(struct context_data *, int, uint8, uint8, uint8, struct channel_
 void med_synth(struct context_data *, int, struct channel_data *, int);
 int get_med_arp(struct module_data *, struct channel_data *);
 int get_med_vibrato(struct channel_data *);
-void filter_setup(struct context_data *, struct channel_data *, int);
+void filter_setup(struct context_data *, struct channel_data *, int, int*, int*, int *);
 void update_invloop(struct module_data *, struct channel_data *);
 int read_event(struct context_data *, struct xmp_event *, int, int);
 

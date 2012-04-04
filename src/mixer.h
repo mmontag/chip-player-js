@@ -43,11 +43,11 @@ struct mixer_voice {
 	void *sptr;		/* sample pointer */
 
 	struct {
-		int X1;		/* filter variables */
-		int X2;
-		int B0;
-		int B1;
-		int B2;
+		int x1;		/* filter variables */
+		int x2;
+		int a0;
+		int b0;
+		int b1;
 		int cutoff;
 		int resonance;
 	} filter;
