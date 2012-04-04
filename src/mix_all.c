@@ -32,13 +32,6 @@
     smp_in = sptr[pos]; \
 } while (0)
 
-#define SAVE_FILTER() do { \
-    vi->filter.l1 = fl1; \
-    vi->filter.l2 = fl2; \
-    vi->filter.r1 = fr1; \
-    vi->filter.r2 = fr2; \
-} while (0)
-
 #define MIX_STEREO() do { \
     *(buffer++) += smp_in * vr; \
     *(buffer++) += smp_in * vl; \
@@ -64,16 +57,14 @@
 } while (0)
 
 #define MIX_STEREO_AC_FILTER() do { \
-    sr = smp_in * vr; \
-    sl = smp_in * vl; \
-    sr = (a0 * sr + b0 * fr1 + b1 * fr2) / FILTER_PRECISION; \
-    sl = (a0 * sl + b0 * fr1 + b1 * fr2) / FILTER_PRECISION; \
+    sr = a0 * smp_in * vr + b0 * fr1 + b1 * fr2; \
+    sl = a0 * smp_in * vl + b0 * fl1 + b1 * fl2; \
     fr2 = fr1; fr1 = sr; \
     fl2 = fl1; fl1 = sl; \
     if (vi->attack) { \
 	int a = SLOW_ATTACK - vi->attack; \
-	*(buffer++) += (int)(sr * a / SLOW_ATTACK); \
-	*(buffer++) += (int)(sl * a / SLOW_ATTACK); \
+	*(buffer++) += (int)sr * a / SLOW_ATTACK; \
+	*(buffer++) += (int)sl * a / SLOW_ATTACK; \
 	vi->attack--; \
     } else { \
 	*(buffer++) += (int)sr; \
@@ -93,11 +84,10 @@
 } while (0)
 
 #define MIX_MONO_AC_FILTER() do { \
-    sl = smp_in * vl; \
-    sl = (a0 * sl + b0 * fr1 + b1 * fr2) / FILTER_PRECISION; \
+    sl = a0 * smp_in * vl + b0 * fl1 + b1 * fl2; \
     fl2 = fl1; fl1 = sl; \
     if (vi->attack) { \
-	*(buffer++) += (int)(sl * (SLOW_ATTACK - vi->attack) / SLOW_ATTACK); \
+	*(buffer++) += (int)sl * (SLOW_ATTACK - vi->attack) / SLOW_ATTACK; \
 	vi->attack--; \
     } else { \
 	*(buffer++) += (int)sl; \
@@ -115,13 +105,28 @@
     VAR_NORM(x); \
     int smp_l1, smp_dt
 
-#define VAR_FILT \
+#define VAR_FILTER_MONO \
     float fl1 = vi->filter.l1, fl2 = vi->filter.l2; \
+    float a0 = (float)vi->filter.a0 / FILTER_PRECISION; \
+    float b0 = (float)vi->filter.b0 / FILTER_PRECISION; \
+    float b1 = (float)vi->filter.b1 / FILTER_PRECISION; \
+    float sl
+
+#define VAR_FILTER_STEREO \
+    VAR_FILTER_MONO; \
     float fr1 = vi->filter.r1, fr2 = vi->filter.r2; \
-    float a0 = (float)vi->filter.a0; \
-    float b0 = (float)vi->filter.b0; \
-    float b1 = (float)vi->filter.b1; \
-    float sr, sl
+    float sr
+
+#define SAVE_FILTER_MONO() do { \
+    vi->filter.l1 = fl1; \
+    vi->filter.l2 = fl2; \
+} while (0)
+
+#define SAVE_FILTER_STEREO() do { \
+    SAVE_FILTER_MONO(); \
+    vi->filter.r1 = fr1; \
+    vi->filter.r2 = fr2; \
+} while (0)
 
 #define SMIX_MIXER(f) void f(struct mixer_voice *vi, int *buffer, \
     int count, int vl, int vr, int step)
@@ -221,10 +226,10 @@ SMIX_MIXER(smix_mn16norm)
 SMIX_MIXER(smix_st8itpt_flt)
 {
     VAR_ITPT(int8);
-    VAR_FILT;
+    VAR_FILTER_STEREO;
 
     while (count--) { INTERPOLATE(); MIX_STEREO_AC_FILTER(); }
-    SAVE_FILTER();
+    SAVE_FILTER_STEREO();
 }
 
 
@@ -233,12 +238,12 @@ SMIX_MIXER(smix_st8itpt_flt)
 SMIX_MIXER(smix_st16itpt_flt)
 {
     VAR_ITPT(int16);
-    VAR_FILT;
+    VAR_FILTER_STEREO;
 
     vl >>= 8;
     vr >>= 8;
     while (count--) { INTERPOLATE(); MIX_STEREO_AC_FILTER(); }
-    SAVE_FILTER();
+    SAVE_FILTER_STEREO();
 }
 
 
@@ -247,11 +252,11 @@ SMIX_MIXER(smix_st16itpt_flt)
 SMIX_MIXER(smix_mn8itpt_flt)
 {
     VAR_ITPT(int8);
-    VAR_FILT;
+    VAR_FILTER_MONO;
 
     vl <<= 1;
-    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO_AC_FILTER(); }
-    SAVE_FILTER();
+    while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); }
+    SAVE_FILTER_MONO();
 }
 
 
@@ -260,10 +265,10 @@ SMIX_MIXER(smix_mn8itpt_flt)
 SMIX_MIXER(smix_mn16itpt_flt)
 {
     VAR_ITPT(int16);
-    VAR_FILT;
+    VAR_FILTER_MONO;
 
     vl >>= 7;
-    while (count--) { INTERPOLATE(); DO_FILTER(); MIX_MONO_AC_FILTER(); }
-    SAVE_FILTER();
+    while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); }
+    SAVE_FILTER_MONO();
 }
 
