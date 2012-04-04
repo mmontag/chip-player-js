@@ -266,13 +266,14 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 {
+	struct mixer_data *s = &ctx->s;
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
 	int linear_bend;
 	int frq_envelope;
-	int vibrato, cutoff;
+	int vibrato, cutoff, resonance;
 
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
@@ -327,17 +328,17 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	} else {
 		cutoff = xc->filter.cutoff;
 	}
+	resonance = xc->filter.resonance;
 
 	if (cutoff > 0xff) {
 		cutoff = 0xff;
 	} else if (cutoff < 0xff) {
 		int a0, b0, b1;
-		filter_setup(ctx, xc, cutoff, &a0, &b0, &b1);
+		filter_setup(s->freq, cutoff, resonance, &a0, &b0, &b1);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_A0, a0);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, b0);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, b1);
-		virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE,
-							xc->filter.resonance);
+		virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, resonance);
 	}
 
 	/* Always set cutoff */
