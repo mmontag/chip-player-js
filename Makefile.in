@@ -91,16 +91,33 @@ lib/$(DYLIB): $(LOBJS)
 	@CMD='$(CC) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,3.9.0,-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
-	ln -sf lib/$(DYLIB) lib/libxmp.$(VER_MAJOR).dylib
-	ln -sf lib/libxmp.$(VER_MAJOR).dylib lib/libxmp.dylib
+	ln -sf $(DYLIB) lib/libxmp.$(VER_MAJOR).dylib
+	ln -sf libxmp.$(VER_MAJOR).dylib lib/libxmp.dylib
 
 clean:
 	@rm -f $(OBJS) $(LOBJS) lib/lib*
 
 install: all
 	@mkdir -p $(DEST)$(LIBDIR) $(DEST)$(INCLUDEDIR)
-	$(INSTALL) lib/libxmp.* $(DEST)$(LIBDIR)
-	$(INSTALL) include/xmp.h $(DEST)$(INCLUDEDIR)
+	@if [ -f lib/$(LIB) ]; then \
+		echo "Installing $(LIB)..."; \
+		$(INSTALL) lib/$(LIB) $(DEST)$(LIBDIR); \
+	fi
+	@if [ -f lib/$(DYLIB) ]; then \
+		echo "Installing $(DYLIB)..."; \
+		$(INSTALL) lib/$(DYLIB) $(DEST)$(LIBDIR); \
+		ln -sf $(DYLIB) $(DEST)$(LIBDIR)/libxmp.$(VER_MAJOR).dylib; \
+		ln -sf libxmp.$(VER_MAJOR).dylib $(DEST)$(LIBDIR)/libxmp.dylib;\
+	fi
+	@if [ -f lib/$(SHLIB) ]; then \
+		echo "Installing $(SHLIB)..."; \
+		$(INSTALL) lib/$(SHLIB) $(DEST)$(LIBDIR); \
+		ln -sf $(SHLIB) $(DEST)$(LIBDIR)/$(SONAME); \
+		ln -sf $(SONAME) $(DEST)$(LIBDIR)/$(SOLIB); \
+	fi
+	@echo "Installing xmp.h..."
+	@$(INSTALL) include/xmp.h $(DEST)$(INCLUDEDIR)
+	@echo "Installing libxmp.pc..."
 	@mkdir -p $(DEST)$(LIBDIR)/pkgconfig
 	$(INSTALL) libxmp.pc $(DEST)$(LIBDIR)/pkgconfig/
 
