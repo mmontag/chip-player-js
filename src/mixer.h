@@ -15,10 +15,11 @@
 /* frame size = (sampling rate * channels * size) / frame rate */
 #define OUT_MAXLEN	(5 * SMIX_MAXRATE * 2 / SMIX_MINBPM)
 
-#define FILTER_PRECISION (1 << 12)
+#define FILTER_SHIFT	16
 
 /* Anticlick ramps */
-#define SLOW_ATTACK	16
+#define SLOW_ATTACK_SHIFT 4
+#define SLOW_ATTACK	(1 << SLOW_ATTACK_SHIFT)
 #define SLOW_RELEASE	16
 
 

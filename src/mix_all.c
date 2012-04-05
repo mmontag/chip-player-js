@@ -46,8 +46,8 @@
 #define MIX_STEREO_AC() do { \
     if (vi->attack) { \
 	int a = SLOW_ATTACK - vi->attack; \
-	*(buffer++) += smp_in * vr * a / SLOW_ATTACK; \
-	*(buffer++) += smp_in * vl * a / SLOW_ATTACK; \
+	*(buffer++) += (smp_in * vr * a) >> SLOW_ATTACK_SHIFT; \
+	*(buffer++) += (smp_in * vl * a) >> SLOW_ATTACK_SHIFT; \
 	vi->attack--; \
     } else { \
 	*(buffer++) += smp_in * vr; \
@@ -57,25 +57,25 @@
 } while (0)
 
 #define MIX_STEREO_AC_FILTER() do { \
-    sr = a0 * smp_in * vr + b0 * fr1 + b1 * fr2; \
-    sl = a0 * smp_in * vl + b0 * fl1 + b1 * fl2; \
+    sr = (a0 * smp_in * vr + b0 * fr1 + b1 * fr2) >> FILTER_SHIFT; \
     fr2 = fr1; fr1 = sr; \
+    sl = (a0 * smp_in * vl + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
     fl2 = fl1; fl1 = sl; \
     if (vi->attack) { \
 	int a = SLOW_ATTACK - vi->attack; \
-	*(buffer++) += (int)sr * a / SLOW_ATTACK; \
-	*(buffer++) += (int)sl * a / SLOW_ATTACK; \
+	*(buffer++) += (sr * a) >> SLOW_ATTACK_SHIFT; \
+	*(buffer++) += (sl * a) >> SLOW_ATTACK_SHIFT; \
 	vi->attack--; \
     } else { \
-	*(buffer++) += (int)sr; \
-	*(buffer++) += (int)sl; \
+	*(buffer++) += sr; \
+	*(buffer++) += sl; \
     } \
     frac += step; \
 } while (0)
 
 #define MIX_MONO_AC() do { \
     if (vi->attack) { \
-	*(buffer++) += smp_in * vl * (SLOW_ATTACK - vi->attack) / SLOW_ATTACK; \
+	*(buffer++) += (smp_in * vl * (SLOW_ATTACK - vi->attack)) >> SLOW_ATTACK_SHIFT; \
 	vi->attack--; \
     } else { \
 	*(buffer++) += smp_in * vl; \
@@ -84,13 +84,13 @@
 } while (0)
 
 #define MIX_MONO_AC_FILTER() do { \
-    sl = a0 * smp_in * vl + b0 * fl1 + b1 * fl2; \
+    sl = (a0 * smp_in * vl + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
     fl2 = fl1; fl1 = sl; \
     if (vi->attack) { \
-	*(buffer++) += (int)sl * (SLOW_ATTACK - vi->attack) / SLOW_ATTACK; \
+	*(buffer++) += (sl * (SLOW_ATTACK - vi->attack)) >> SLOW_ATTACK_SHIFT; \
 	vi->attack--; \
     } else { \
-	*(buffer++) += (int)sl; \
+	*(buffer++) += sl; \
     } \
     frac += step; \
 } while (0)
@@ -106,16 +106,14 @@
     int smp_l1, smp_dt
 
 #define VAR_FILTER_MONO \
-    float fl1 = vi->filter.l1, fl2 = vi->filter.l2; \
-    float a0 = (float)vi->filter.a0 / FILTER_PRECISION; \
-    float b0 = (float)vi->filter.b0 / FILTER_PRECISION; \
-    float b1 = (float)vi->filter.b1 / FILTER_PRECISION; \
-    float sl
+    int fl1 = vi->filter.l1, fl2 = vi->filter.l2; \
+    int64 a0 = vi->filter.a0, b0 = vi->filter.b0, b1 = vi->filter.b1; \
+    int sl
 
 #define VAR_FILTER_STEREO \
     VAR_FILTER_MONO; \
-    float fr1 = vi->filter.r1, fr2 = vi->filter.r2; \
-    float sr
+    int fr1 = vi->filter.r1, fr2 = vi->filter.r2; \
+    int sr
 
 #define SAVE_FILTER_MONO() do { \
     vi->filter.l1 = fl1; \

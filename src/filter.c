@@ -147,12 +147,12 @@ void filter_setup(int srate, int cutoff, int res, int *a0, int *b0, int *b1)
 	d = (d2 - d) / fc;
 	e = 1.0 / (fc * fc);
 
-	fg = 1.0 / (1 + d + e);
+	fg  = 1.0 / (1 + d + e);
 	fb0 = (d + e + e) / (1 + d + e);
 	fb1 = -e / (1 + d + e);
 
-	*a0 = (int)(fg * FILTER_PRECISION);
-	*b0 = (int)(fb0 * FILTER_PRECISION);
-	*b1 = (int)(fb1 * FILTER_PRECISION);
+	*a0 = (int)(fg  * (1 << FILTER_SHIFT));
+	*b0 = (int)(fb0 * (1 << FILTER_SHIFT));
+	*b1 = (int)(fb1 * (1 << FILTER_SHIFT));
 }
 
