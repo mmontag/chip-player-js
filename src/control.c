@@ -89,7 +89,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	}
 }
 
-int _xmp_ctl(xmp_context opaque, int cmd, ...)
+int xmp_control(xmp_context opaque, int cmd, ...)
 {
 	va_list ap;
 	struct context_data *ctx = (struct context_data *)opaque;

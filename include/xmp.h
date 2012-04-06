@@ -23,7 +23,7 @@ extern "C" {
 #define XMP_KEY_CUT		0x82	/* Note number for key cut event */
 #define XMP_KEY_FADE		0x83	/* Note number for fade event */
 
-/* _xmp_ctl arguments */
+/* xmp_control arguments */
 #define XMP_CTL_POS_NEXT	0x00
 #define XMP_CTL_POS_PREV	0x01
 #define XMP_CTL_POS_SET		0x02
@@ -244,30 +244,30 @@ EXPORT extern const unsigned int xmp_version;
 
 /* Player control macros */
 
-#define xmp_next_position(p)	_xmp_ctl((p), XMP_CTL_POS_NEXT)
-#define xmp_prev_position(p)	_xmp_ctl((p), XMP_CTL_POS_PREV)
-#define xmp_set_position(p,x)	_xmp_ctl((p), XMP_CTL_POS_SET, (x))
-#define xmp_stop_module(p)	_xmp_ctl((p), XMP_CTL_MOD_STOP)
-#define xmp_restart_module(p)	_xmp_ctl((p), XMP_CTL_MOD_RESTART)
-#define xmp_seek_time(p,x)	_xmp_ctl((p), XMP_CTL_SEEK_TIME, (x))
-#define xmp_channel_mute(p,x,y)	_xmp_ctl((p), XMP_CTL_CH_MUTE, (x), (y))
-#define xmp_mixer_amp(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_AMP, (x))
-#define xmp_mixer_mix(p,x)	_xmp_ctl((p), XMP_CTL_MIXER_MIX, (x))
-#define xmp_quirk_fx9(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FX9, (x))
-#define xmp_quirk_fxef(p,x)	_xmp_ctl((p), XMP_CTL_QUIRK_FXEF, (x))
+#define xmp_next_position(p)	xmp_control((p), XMP_CTL_POS_NEXT)
+#define xmp_prev_position(p)	xmp_control((p), XMP_CTL_POS_PREV)
+#define xmp_set_position(p,x)	xmp_control((p), XMP_CTL_POS_SET, (x))
+#define xmp_stop_module(p)	xmp_control((p), XMP_CTL_MOD_STOP)
+#define xmp_restart_module(p)	xmp_control((p), XMP_CTL_MOD_RESTART)
+#define xmp_seek_time(p,x)	xmp_control((p), XMP_CTL_SEEK_TIME, (x))
+#define xmp_channel_mute(p,x,y)	xmp_control((p), XMP_CTL_CH_MUTE, (x), (y))
+#define xmp_mixer_amp(p,x)	xmp_control((p), XMP_CTL_MIXER_AMP, (x))
+#define xmp_mixer_mix(p,x)	xmp_control((p), XMP_CTL_MIXER_MIX, (x))
+#define xmp_quirk_fx9(p,x)	xmp_control((p), XMP_CTL_QUIRK_FX9, (x))
+#define xmp_quirk_fxef(p,x)	xmp_control((p), XMP_CTL_QUIRK_FXEF, (x))
 
 EXPORT xmp_context xmp_create_context  (void);
 EXPORT int         xmp_test_module     (char *, struct xmp_test_info *);
 EXPORT void        xmp_free_context    (xmp_context);
 EXPORT int         xmp_load_module     (xmp_context, char *);
 EXPORT void        xmp_release_module  (xmp_context);
-EXPORT int         _xmp_ctl            (xmp_context, int, ...);
 EXPORT int         xmp_player_start    (xmp_context, int, int);
 EXPORT int         xmp_player_frame    (xmp_context);
 EXPORT void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
 EXPORT void        xmp_player_end      (xmp_context);
 EXPORT void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
 EXPORT char      **xmp_get_format_list (void);
+EXPORT int         xmp_control         (xmp_context, int, ...);
 
 #ifdef __cplusplus
 }
