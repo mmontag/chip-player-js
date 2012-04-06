@@ -1,7 +1,9 @@
 #include "test.h"
-#include "convert.h"
+#include "../src/loaders/loader.h"
 
-TEST(test_convert_signal)
+struct xmp_sample xxs;
+
+TEST(test_sample_load_signal)
 {
 	uint8  buffer0[10] = { 0, 1, 2, 3,  4,  5,  6, -7,  8, -29 };
 	uint16 buffer1[10] = { 0, 1, 2, 3,  4,  5,  6, -7,  8, -29 };
@@ -14,12 +16,14 @@ TEST(test_convert_signal)
 		32773, 32774, 32761, 32776, 32739
 	};
 
-	convert_signal(buffer0, 10, 0);
-	fail_unless(memcmp(buffer0, conv_r0, 10) == 0,
+	xxs.len = 10;
+	load_sample(NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS, &xxs, buffer0);
+	fail_unless(memcmp(xxs.data, conv_r0, 10) == 0,
 				"Invalid 8-bit conversion");
 
-	convert_signal((uint8 *)buffer1, 10, 1);
-	fail_unless(memcmp(buffer1, conv_r1, 20) == 0,
+	xxs.flg = XMP_SAMPLE_16BIT;
+	load_sample(NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS, &xxs, buffer1);
+	fail_unless(memcmp(xxs.data, conv_r1, 20) == 0,
 				"Invalid 16-bit conversion");
 }
 END_TEST

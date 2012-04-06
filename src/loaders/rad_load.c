@@ -93,8 +93,8 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 
 	while ((b = read8(f)) != 0) {
 		fread(sid, 1, 11, f);
-		convert_hsc_to_sbi((char *)sid);
-		load_sample(f, SAMPLE_FLAG_ADLIB, &mod->xxs[b - 1], (char *)sid);
+		load_sample(f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
+					&mod->xxs[b - 1], (char *)sid);
 	}
 
 	for (i = 0; i < mod->ins; i++) {

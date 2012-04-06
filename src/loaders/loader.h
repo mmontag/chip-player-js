@@ -13,7 +13,6 @@
 #include <string.h>
 #include "common.h"
 #include "effects.h"
-#include "convert.h"
 #include "format.h"
 
 /* Sample flags */
@@ -27,7 +26,8 @@
 #define SAMPLE_FLAG_STEREO	0x0100	/* Interleaved stereo sample */
 #define SAMPLE_FLAG_FULLREP	0x0200	/* Play full sample before looping */
 #define SAMPLE_FLAG_ADLIB	0x1000	/* Adlib synth instrument */
-#define SAMPLE_FLAG_SPECTRUM	0x2000	/* Spectrum synth instrument */
+#define SAMPLE_FLAG_HSC		0x2000	/* HSC Adlib synth instrument */
+#define SAMPLE_FLAG_SPECTRUM	0x4000	/* Spectrum synth instrument */
 
 #define SAMPLE_FLAG_SYNTH	(SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_SPECTRUM)
 

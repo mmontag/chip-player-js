@@ -24,9 +24,7 @@
 #include "../win32/ptpopen.h"
 #endif
 
-#include "convert.h"
 #include "format.h"
-
 #include "list.h"
 
 
