@@ -293,7 +293,7 @@ else
 
 
 /* required for finding true table index in ver 1.x files */
-int oldver_getidx(int oldcode,int chr, struct local_data *data)
+static int oldver_getidx(int oldcode,int chr, struct local_data *data)
 {
 int lasthash,hashval;
 int a,f;

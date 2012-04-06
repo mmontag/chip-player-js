@@ -10,7 +10,7 @@
 #include "prowiz.h"
 
 
-int depack_starpack(FILE *in, FILE *out)
+static int depack_starpack(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4, c5;
 	uint8 pnum[128];
@@ -178,7 +178,7 @@ int depack_starpack(FILE *in, FILE *out)
 	return 0;
 }
 
-int test_starpack(uint8 *data, char *t, int s)
+static int test_starpack(uint8 *data, char *t, int s)
 {
 	int start = 0;
 	int j, k, l, m;

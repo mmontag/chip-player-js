@@ -42,7 +42,7 @@
 #define val(p) ((p)[0]<<16 | (p)[1] << 8 | (p)[2])
 
 
-int savefile(FILE *fo, void *mem, size_t length)
+static int savefile(FILE *fo, void *mem, size_t length)
 {
   int ok = fo && (fwrite(mem, 1, length, fo) == length);
   return ok;
@@ -86,7 +86,7 @@ static inline void ppDecryptCopy(uint8 *src, uint8 *dest, uint32 len, uint32 key
   written++;                                                   \
 } while (0)
 
-int ppDecrunch(uint8 *src, uint8 *dest, uint8 *offset_lens,
+static int ppDecrunch(uint8 *src, uint8 *dest, uint8 *offset_lens,
                uint32 src_len, uint32 dest_len, uint8 skip_bits)
 {
   uint8 *buf_src, *out, *dest_end, bits_left = 0, bit_cnt;

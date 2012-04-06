@@ -142,7 +142,7 @@ unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct infl
   return crc;
 }
 
-int kunzip_inflate_init(struct inflate_data *data)
+static int kunzip_inflate_init(struct inflate_data *data)
 {
 /*
   int t,r,b,rev_code;
@@ -165,7 +165,7 @@ int kunzip_inflate_init(struct inflate_data *data)
   return 0;
 }
 
-int kunzip_inflate_free(struct inflate_data *data)
+static int kunzip_inflate_free(struct inflate_data *data)
 {
   if (data->huffman_tree_len_static!=0)
   { free(data->huffman_tree_len_static); }
