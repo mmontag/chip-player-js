@@ -119,7 +119,7 @@ static int psm_load(struct module_data *m, FILE *f, const int start)
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].fin += finetune;
 
-		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %5d",
+		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %5d",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 			mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ?
 			'L' : ' ', mod->xxi[i].sub[0].vol, c2spd);
@@ -128,7 +128,7 @@ static int psm_load(struct module_data *m, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	fseek(f, start + p_pat, SEEK_SET);
 	for (i = 0; i < mod->pat; i++) {
@@ -180,7 +180,7 @@ static int psm_load(struct module_data *m, FILE *f, const int start)
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
 		fseek(f, start + p_smp[i], SEEK_SET);

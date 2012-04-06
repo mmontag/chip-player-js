@@ -1,6 +1,6 @@
 
-#ifndef __XMP_COMMON_H
-#define __XMP_COMMON_H
+#ifndef XMP_COMMON_H
+#define XMP_COMMON_H
 
 #ifdef __AROS__
 #define __AMIGA__
@@ -72,47 +72,47 @@ typedef signed long long int64;
 #define EVENT(a,c,r)	m->mod.xxt[TRACK_NUM((a),(c))]->event[r]
 
 #ifdef _MSC_VER
-#define _D_CRIT "  Error: "
-#define _D_WARN "Warning: "
-#define _D_INFO "   Info: "
+#define D_CRIT "  Error: "
+#define D_WARN "Warning: "
+#define D_INFO "   Info: "
 #ifndef CLIB_DECL
 #define CLIB_DECL
 #endif
-#ifdef _DEBUG
+#ifdef DEBUG
 #ifndef ATTR_PRINTF
 #define ATTR_PRINTF(x,y)
 #endif
-void CLIB_DECL _D(const char *text, ...) ATTR_PRINTF(1,2);
+void CLIB_DECL D_(const char *text, ...) ATTR_PRINTF(1,2);
 #else
-void __inline CLIB_DECL _D(const char *text, ...) { do {} while (0); }
+void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #endif
 
 #elif defined ANDROID
 
-#ifdef _DEBUG
+#ifdef DEBUG
 #include <android/log.h>
-#define _D_CRIT "  Error: "
-#define _D_WARN "Warning: "
-#define _D_INFO "   Info: "
-#define _D(args...) do { \
+#define D_CRIT "  Error: "
+#define D_WARN "Warning: "
+#define D_INFO "   Info: "
+#define D_(args...) do { \
 	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", args); \
 	} while (0)
 #else
-#define _D(args...) do {} while (0)
+#define D_(args...) do {} while (0)
 #endif
 
 #else
 
-#ifdef _DEBUG
-#define _D_INFO "\x1b[33m"
-#define _D_CRIT "\x1b[31m"
-#define _D_WARN "\x1b[36m"
-#define _D(args...) do { \
-	printf("\x1b[33m%s \x1b[37m[%s:%d] " _D_INFO, __PRETTY_FUNCTION__, \
+#ifdef DEBUG
+#define D_INFO "\x1b[33m"
+#define D_CRIT "\x1b[31m"
+#define D_WARN "\x1b[36m"
+#define D_(args...) do { \
+	printf("\x1b[33m%s \x1b[37m[%s:%d] " D_INFO, __PRETTY_FUNCTION__, \
 		__FILE__, __LINE__); printf (args); printf ("\x1b[0m\n"); \
 	} while (0)
 #else
-#define _D(args...) do {} while (0)
+#define D_(args...) do {} while (0)
 #endif
 
 #endif	/* !_MSC_VER */
@@ -334,4 +334,4 @@ int	get_temp_dir		(char *, int);
 int	mkstemp			(char *);
 #endif
 
-#endif /* __XMP_COMMON_H */
+#endif /* XMP_COMMON_H */

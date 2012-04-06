@@ -187,7 +187,7 @@ static void get_dsmp(struct module_data *m, int size, FILE *f, void *parm)
 	mod->xxi[i].sub[0].sid = i;
 	srate = read32l(f);
 
-	_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
+	D_(D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol,
 		finetune, srate);
@@ -369,7 +369,7 @@ static void get_song_2(struct module_data *m, int size, FILE *f, void *parm)
 	fread(buf, 1, 9, f);
 	read16l(f);
 
-	_D(_D_INFO "Subsong title: %-9.9s", buf);
+	D_(D_INFO "Subsong title: %-9.9s", buf);
 
 	magic = read32b(f);
 	while (magic != MAGIC_OPLH) {
@@ -463,8 +463,8 @@ static int masi_load(struct module_data *m, FILE *f, const int start)
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
-	_D(_D_INFO "Stored samples : %d", mod->smp);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored samples : %d", mod->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 

@@ -1,5 +1,5 @@
-#ifndef __XMP_STEPPER_H
-#define __XMP_STEPPER_H
+#ifndef XMP_STEPPER_H
+#define XMP_STEPPER_H
 
 #define STEPPER_SIZE 4
 

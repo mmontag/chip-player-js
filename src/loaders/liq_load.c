@@ -143,7 +143,7 @@ static void decode_event(uint8 x1, struct xmp_event *event, FILE *f)
     if (x1 & 0x10)
 	event->fxp = read8(f);
 
-    _D(_D_INFO "  event: %02x %02x %02x %02x %02x",
+    D_(D_INFO "  event: %02x %02x %02x %02x %02x",
 	event->note, event->ins, event->vol, event->fxt, event->fxp);
 
     assert (event->note <= 107 || event->note == XMP_KEY_OFF);
@@ -243,7 +243,7 @@ static int liq_load(struct module_data *m, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     x1 = x2 = 0;
     for (i = 0; i < mod->pat; i++) {
@@ -260,7 +260,7 @@ static int liq_load(struct module_data *m, FILE *f, const int start)
 	lp.size = read32l(f);
 	lp.reserved = read32l(f);
 
-	_D(_D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
+	D_(D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
 	mod->xxp[i]->rows = lp.rows;
 	TRACK_ALLOC (i);
 
@@ -290,40 +290,40 @@ read_event:
 
 test_event:
 	event = &EVENT(i, channel, row);
-	_D(_D_INFO "* count=%ld chan=%d row=%d event=%02x",
+	D_(D_INFO "* count=%ld chan=%d row=%d event=%02x",
 				ftell(f) - count, channel, row, x1);
 
 	switch (x1) {
 	case 0xc0:			/* end of pattern */
-	    _D(_D_WARN "- end of pattern");
+	    D_(D_WARN "- end of pattern");
 	    assert (ftell (f) - count == lp.size);
 	    goto next_pattern;
 	case 0xe1:			/* skip channels */
 	    x1 = read8(f);
 	    channel += x1;
-	    _D(_D_INFO "  [skip %d channels]", x1);
+	    D_(D_INFO "  [skip %d channels]", x1);
 	    /* fall thru */
 	case 0xa0:			/* next channel */
-	    _D(_D_INFO "  [next channel]");
+	    D_(D_INFO "  [next channel]");
 	    channel++;
 	    if (channel >= mod->chn) {
-		_D(_D_CRIT "uh-oh! bad channel number!");
+		D_(D_CRIT "uh-oh! bad channel number!");
 		channel--;
 	    }
 	    row = -1;
 	    goto next_row;
 	case 0xe0:			/* skip rows */
 	    x1 = read8(f);
-	    _D(_D_INFO "  [skip %d rows]", x1);
+	    D_(D_INFO "  [skip %d rows]", x1);
 	    row += x1;
 	    /* fall thru */
 	case 0x80:			/* next row */
-	    _D(_D_INFO "  [next row]");
+	    D_(D_INFO "  [next row]");
 	    goto next_row;
 	}
 
 	if (x1 > 0xc0 && x1 < 0xe0) {	/* packed data */
-	    _D(_D_INFO "  [packed data]");
+	    D_(D_INFO "  [packed data]");
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
 	    goto next_row;
@@ -331,7 +331,7 @@ test_event:
 
 	if (x1 > 0xa0 && x1 < 0xc0) {	/* packed data repeat */
 	    x2 = read8(f);
-	    _D(_D_INFO "  [packed data - repeat %d times]", x2);
+	    D_(D_INFO "  [packed data - repeat %d times]", x2);
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
 	    goto next_row;
@@ -339,7 +339,7 @@ test_event:
 
 	if (x1 > 0x80 && x1 < 0xa0) {	/* packed data repeat, keep note */
 	    x2 = read8(f);
-	    _D(_D_INFO "  [packed data - repeat %d times, keep note]", x2);
+	    D_(D_INFO "  [packed data - repeat %d times, keep note]", x2);
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
 	    while (x2) {
@@ -351,7 +351,7 @@ test_event:
 	}
 
 	/* unpacked data */
-	_D (_D_INFO "  [unpacked data]");
+	D_ (D_INFO "  [unpacked data]");
 	if (x1 != 0xff)
 	    event->note = 1 + 36 + x1;
 	else if (x1 == 0xfe)
@@ -380,7 +380,7 @@ test_event:
 
 	xlat_fx(channel, event); 
 
-	_D(_D_INFO "  event: %02x %02x %02x %02x %02x\n",
+	D_(D_INFO "  event: %02x %02x %02x %02x %02x\n",
 	    event->note, event->ins, event->vol, event->fxt, event->fxp);
 
 	assert (event->note <= 119 || event->note == XMP_KEY_OFF);
@@ -410,7 +410,7 @@ next_pattern:
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
 	unsigned char b[4];
@@ -421,7 +421,7 @@ next_pattern:
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
 	    continue;
 	assert (b[0] == 'L' && b[1] == 'D' && b[2] == 'S' && b[3] == 'S');
-	_D(_D_WARN "INS %d: %c %c %c %c", i, b[0], b[1], b[2], b[3]);
+	D_(D_WARN "INS %d: %c %c %c %c", i, b[0], b[1], b[2], b[3]);
 
 	li.version = read16l(f);
 	fread(&li.name, 30, 1, f);
@@ -476,7 +476,7 @@ next_pattern:
 
 	copy_adjust(mod->xxi[i].name, li.name, 31);
 
-	_D(_D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
+	D_(D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
 		i, mod->xxi[i].name, mod->xxs[i].len,
 		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps, mod->xxs[i].lpe,

@@ -1,6 +1,5 @@
-
-#ifndef __PERIOD_H
-#define __PERIOD_H
+#ifndef XMP_PERIOD_H
+#define XMP_PERIOD_H
 
 /* Macros for period conversion */
 #define NOTE_B0		11
@@ -22,4 +21,4 @@ int	period_to_note		(int);
 int	period_to_bend		(double, int, int, int, int);
 void	c2spd_to_note		(int, int *, int *);
 
-#endif /* __PERIOD_H */
+#endif /* XMP_PERIOD_H */

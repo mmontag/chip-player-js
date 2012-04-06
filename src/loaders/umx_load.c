@@ -78,7 +78,7 @@ static int umx_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	_D(_D_INFO "Container type : Epic Games UMX");
+	D_(D_INFO "Container type : Epic Games UMX");
 
 	fread(buf, 1, TEST_SIZE, f);
 

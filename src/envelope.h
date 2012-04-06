@@ -1,5 +1,5 @@
-#ifndef __XMP_ENVELOPE_H
-#define __XMP_ENVELOPE_H
+#ifndef XMP_ENVELOPE_H
+#define XMP_ENVELOPE_H
 
 /* Envelope */
 

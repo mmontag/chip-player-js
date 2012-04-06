@@ -1,6 +1,5 @@
-
-#ifndef __MIXER_H
-#define __MIXER_H
+#ifndef XMP_MIXER_H
+#define XMP_MIXER_H
 
 #define SMIX_C4NOTE	6864
 
@@ -73,4 +72,4 @@ int	mixer_getvoicepos	(struct context_data *, int);
 void	mixer_setnote		(struct context_data *, int, int);
 void	mixer_setbend		(struct context_data *, int, int);
 
-#endif /* __MIXER_H */
+#endif /* XMP_MIXER_H */

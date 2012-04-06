@@ -1,5 +1,5 @@
-#ifndef __FMOPL_H_
-#define __FMOPL_H_
+#ifndef FMOPL_H_
+#define FMOPL_H_
 
 #define BUILD_YM3812 (HAS_YM3812)
 #define BUILD_YM3526 (HAS_YM3526)

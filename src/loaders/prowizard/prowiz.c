@@ -120,7 +120,7 @@ int pw_wizardry(int in, int out, char **name)
   /********************************************************************/
 
 	for (i = 0; pw_format[i] != NULL; i++) {
-		_D("checking format: %s", pw_format[i]->name);
+		D_("checking format: %s", pw_format[i]->name);
 		if (pw_format[i]->test(data, title, in_size) >= 0)
 			break;
 	}
@@ -154,12 +154,12 @@ int pw_check(unsigned char *b, int s, struct xmp_test_info *info)
 	char title[21];
 
 	for (i = 0; pw_format[i] != NULL; i++) {
-		_D("checking format [%d]: %s", s, pw_format[i]->name);
+		D_("checking format [%d]: %s", s, pw_format[i]->name);
 		res = pw_format[i]->test(b, title, s);
 		if (res > 0) {
 			return res;
 		} else if (res == 0) {
-			_D("format ok: %s\n", pw_format[i]->name);
+			D_("format ok: %s\n", pw_format[i]->name);
 			if (info != NULL) {
 				memcpy(info->name, title, 21);
 				strncpy(info->type, pw_format[i]->name,

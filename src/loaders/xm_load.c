@@ -137,7 +137,7 @@ static int xm_load(struct module_data *m, FILE *f, const int start)
 load_patterns:
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     /* Endianism fixed by Miodrag Vallat <miodrag@multimania.com>
      * Mon, 04 Jan 1999 11:17:20 +0100
@@ -267,7 +267,7 @@ load_patterns:
     }
 
 load_instruments:
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     /* ESTIMATED value! We don't know the actual value at this point */
     mod->smp = MAX_SAMP;
@@ -304,7 +304,7 @@ load_instruments:
 	if (mod->xxi[i].nsm > 16)
 	    mod->xxi[i].nsm = 16;
 
-	_D(_D_INFO "[%2X] %-22.22s %2d", i, mod->xxi[i].name, mod->xxi[i].nsm);
+	D_(D_INFO "[%2X] %-22.22s %2d", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
 	if (mod->xxi[i].nsm) {
 	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
@@ -417,7 +417,7 @@ load_instruments:
 	    for (j = 0; j < mod->xxi[i].nsm; j++) {
 		if (sample_num >= MAX_SAMP)
 		    continue;
-		_D(_D_INFO " %1x: %06x%c%06x %06x %c V%02x F%+04d P%02x R%+03d",
+		D_(D_INFO " %1x: %06x%c%06x %06x %c V%02x F%+04d P%02x R%+03d",
 		    j, mod->xxs[mod->xxi[i].sub[j].sid].len,
 		    mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		    mod->xxs[mod->xxi[i].sub[j].sid].lps,
@@ -463,7 +463,7 @@ load_instruments:
     }
 
 load_samples:
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     /* XM 1.02 stores all samples after the patterns */
 

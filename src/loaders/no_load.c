@@ -137,7 +137,7 @@ static int no_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 
-		_D(_D_INFO "[%2X] %-22.22s  %04x %04x %04x %c V%02x %5d",
+		D_(D_INFO "[%2X] %-22.22s  %04x %04x %04x %c V%02x %5d",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -150,7 +150,7 @@ static int no_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d ", mod->pat);
+	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 //printf("%d  %x\n", i, ftell(f));
@@ -186,7 +186,7 @@ static int no_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)

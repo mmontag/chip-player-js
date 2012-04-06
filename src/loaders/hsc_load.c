@@ -131,9 +131,9 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
     mod->pat = pat + 1;
     mod->trk = mod->pat * mod->chn;
 
-    _D(_D_INFO "Module length: %d", mod->len);
-    _D(_D_INFO "Instruments: %d", mod->ins);
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Module length: %d", mod->len);
+    D_(D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     PATTERN_INIT();
 

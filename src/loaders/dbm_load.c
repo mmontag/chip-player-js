@@ -71,10 +71,10 @@ static void get_song(struct module_data *m, int size, FILE *f, void *parm)
 	data->have_song = 1;
 
 	fread(buffer, 44, 1, f);
-	_D(_D_INFO "Song name: %s", buffer);
+	D_(D_INFO "Song name: %s", buffer);
 
 	mod->len = read16b(f);
-	_D(_D_INFO "Song length: %d patterns", mod->len);
+	D_(D_INFO "Song length: %d patterns", mod->len);
 
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = read16b(f);
@@ -87,7 +87,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 	int c2spd, flags, snum;
 	uint8 buffer[50];
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -112,7 +112,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
-		_D(_D_INFO "[%2X] %-30.30s #%02X V%02x P%02x %5d",
+		D_(D_INFO "[%2X] %-30.30s #%02X V%02x P%02x %5d",
 			i, mod->xxi[i].name, snum,
 			mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].pan, c2spd);
 	}
@@ -127,7 +127,7 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d ", mod->pat);
+	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	/*
 	 * Note: channel and flag bytes are inverted in the format
@@ -213,7 +213,7 @@ static void get_smpl(struct module_data *m, int size, FILE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 	int i, flags;
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->smp; i++) {
 		flags = read32b(f);
@@ -234,7 +234,7 @@ static void get_smpl(struct module_data *m, int size, FILE *f, void *parm)
 		if (mod->xxs[i].len == 0)
 			continue;
 
-		_D(_D_INFO "[%2X] %08x %05x%c%05x %05x %c",
+		D_(D_INFO "[%2X] %08x %05x%c%05x %05x %c",
 			i, flags, mod->xxs[i].len,
 			mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -251,7 +251,7 @@ static void get_venv(struct module_data *m, int size, FILE *f, void *parm)
 
 	nenv = read16b(f);
 
-	_D(_D_INFO "Vol envelopes  : %d ", nenv);
+	D_(D_INFO "Vol envelopes  : %d ", nenv);
 
 	for (i = 0; i < nenv; i++) {
 		ins = read16b(f) - 1;

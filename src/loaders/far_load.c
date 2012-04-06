@@ -123,8 +123,8 @@ static int far_load(struct module_data *m, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Comment bytes  : %d", ffh.textlen);
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Comment bytes  : %d", ffh.textlen);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	uint8 brk, note, ins, vol, fxb;
@@ -258,7 +258,7 @@ static int far_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, fih.name, 32);
 
-	_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
+	D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, fih.loopmode ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 

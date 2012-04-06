@@ -143,7 +143,7 @@ static int polly_load(struct module_data *m, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -184,7 +184,7 @@ static int polly_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].rls = 0xfff;
 
-                _D(_D_INFO "[%2X] %04x %04x %04x %c V%02x",
+                D_(D_INFO "[%2X] %04x %04x %04x %c V%02x",
                        		i, mod->xxs[i].len, mod->xxs[i].lps,
                         	mod->xxs[i].lpe, ' ', mod->xxi[i].sub[0].vol);
 	}
@@ -194,7 +194,7 @@ static int polly_load(struct module_data *m, FILE *f, const int start)
 		buf[i] = buf[i] << 2;
 
 	/* Read samples */
-	_D(_D_INFO "Loading samples: %d", mod->ins);
+	D_(D_INFO "Loading samples: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)

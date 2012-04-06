@@ -95,7 +95,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     strncpy(mod->name, (char *)afh.name, 24);
 
     MODULE_INFO();
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     INSTRUMENT_INIT();
 
@@ -114,17 +114,17 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
 
-	_D(_D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
+	D_(D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
 	load_sample(f, SAMPLE_FLAG_ADLIB, NULL, regs);
     }
 
     if (!afh.version) {
-	_D(_D_CRIT "error: Unpacked module not supported");
+	D_(D_CRIT "error: Unpacked module not supported");
 	return -1;
     }
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     mod->xxp = calloc (sizeof (struct xmp_pattern *), mod->pat + 1);
 
@@ -142,7 +142,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 
     w = read16l(f);
 
-    _D(_D_INFO "Stored tracks: %d", w);
+    D_(D_INFO "Stored tracks: %d", w);
 
     mod->xxt = calloc (sizeof (struct xmp_track *), mod->trk);
     mod->trk = w;

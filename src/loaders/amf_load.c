@@ -106,7 +106,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = i;
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	mod->xxp = calloc(sizeof(struct xmp_pattern *), mod->pat + 1);
 
@@ -217,7 +217,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 							XMP_SAMPLE_LOOP : 0;
 		}
 
-		_D(_D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %5d",
+		D_(D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %5d",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 			mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ?
 			'L' : ' ', mod->xxi[i].sub[0].vol, c2spd);
@@ -254,7 +254,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 	mod->trk = newtrk;		/* + empty track */
 	free(trkmap);
 
-	_D(_D_INFO "Stored tracks: %d", mod->trk);
+	D_(D_INFO "Stored tracks: %d", mod->trk);
 
 	mod->trk++;
 	mod->xxt = calloc (sizeof (struct xmp_track *), mod->trk);
@@ -456,7 +456,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 
 	/* Samples */
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
 		load_sample(f, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);

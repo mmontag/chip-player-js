@@ -120,7 +120,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", mod->pat);
+    D_(D_INFO "Instruments: %d", mod->pat);
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -140,7 +140,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, sih.name, 13);
 
-	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
+	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
@@ -148,7 +148,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
 	mod->xxp[i]->rows = 64;
@@ -206,7 +206,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)

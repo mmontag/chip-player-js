@@ -76,7 +76,7 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* Read instruments */
-	_D(_D_INFO "Read instruments");
+	D_(D_INFO "Read instruments");
 
 	pos = ftell(f);
 
@@ -123,9 +123,9 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 	}
 	mod->trk = mod->pat * mod->chn;
 
-	_D(_D_INFO "Module length: %d", mod->len);
-	_D(_D_INFO "Instruments: %d", mod->ins);
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Module length: %d", mod->len);
+	D_(D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	PATTERN_INIT();
 
@@ -144,14 +144,14 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 			r = read8(f);		/* Row number */
 
 			if ((r & 0x7f) >= 64) {
-				_D(_D_CRIT "** Whoops! row = %d\n", r);
+				D_(D_CRIT "** Whoops! row = %d\n", r);
 			}
 
 			do {
 				c = read8(f);	/* Channel number */
 
 				if ((c & 0x7f) >= mod->chn) {
-					_D(_D_CRIT "** Whoops! channel = %d\n", c);
+					D_(D_CRIT "** Whoops! channel = %d\n", c);
 				}
 
 				event = &EVENT(i, c & 0x7f, r & 0x7f);

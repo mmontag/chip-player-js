@@ -149,7 +149,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 
 	fseek(f, pat_ptr, SEEK_SET);
 	decoded = calloc(mod->pat, sizeof(int));
-	_D(_D_INFO "Stored patterns: %d ", mod->pat);
+	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < MAX_PAT; i++) {
 		if (read8(f) == 0xff)
@@ -240,7 +240,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 
 	fseek(f, 27, SEEK_SET);
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 	for (i = 0; i < mod->ins; i++) {
 		struct spectrum_sample ss;
 
@@ -327,7 +327,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 	m->extra = calloc(1, sizeof (struct spectrum_extra));
 	se = m->extra;
 
-	_D(_D_INFO "Ornaments: %d", orn);
+	D_(D_INFO "Ornaments: %d", orn);
 	for (i = 0; i < orn; i++) {
 		int index;
 		struct spectrum_ornament *so;

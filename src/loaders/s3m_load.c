@@ -334,7 +334,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 
     /* Read patterns */
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     memset (arpeggio_val, 0, 32);
 
@@ -395,14 +395,14 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
-    _D(_D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
+    D_(D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
+    D_(D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
 
     INSTRUMENT_INIT();
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -427,7 +427,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 	    sah.magic = read32b(f);		/* 'SCRI' */
 
 	    if (sah.magic != MAGIC_SCRI) {
-		_D(_D_CRIT "error: FM instrument magic");
+		D_(D_CRIT "error: FM instrument magic");
 		return -2;
 	    }
 	    sah.magic = 0;
@@ -439,7 +439,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 	    c2spd_to_note(sah.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	    mod->xxi[i].sub[0].xpo += 12;
 	    load_sample(f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], (char *)&sah.reg);
-	    _D(_D_INFO "[%2X] %-28.28s", i, mod->xxi[i].name);
+	    D_(D_INFO "[%2X] %-28.28s", i, mod->xxi[i].name);
 
 	    continue;
 	}
@@ -463,7 +463,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 	sih.magic = read32b(f);			/* 'SCRS' */
 
 	if (x8 == 1 && sih.magic != MAGIC_SCRS) {
-	    _D(_D_CRIT "error: instrument magic");
+	    D_(D_CRIT "error: instrument magic");
 	    return -2;
 	}
 
@@ -493,7 +493,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, sih.name, 28);
 
-	_D(_D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
+	D_(D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
 			i, mod->xxi[i].name, mod->xxs[i].len,
 			mod->xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
 			mod->xxs[i].lps, mod->xxs[i].lpe,

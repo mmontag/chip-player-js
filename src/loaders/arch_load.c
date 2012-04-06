@@ -228,7 +228,7 @@ static void get_sequ(struct module_data *m, int size, FILE *f, void *parm)
 	set_type(m, "Archimedes Tracker");
 
 	MODULE_INFO();
-	_D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
+	D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 }
 
 static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
@@ -240,7 +240,7 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 	struct xmp_event *event;
 
 	if (!data->pflag) {
-		_D(_D_INFO "Stored patterns: %d", mod->pat);
+		D_(D_INFO "Stored patterns: %d", mod->pat);
 		data->pflag = 1;
 		i = 0;
 		mod->trk = mod->pat * mod->chn;
@@ -280,7 +280,7 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 		mod->smp = mod->ins = 36;
 		INSTRUMENT_INIT();
 
-		_D(_D_INFO "Instruments: %d", mod->ins);
+		D_(D_INFO "Instruments: %d", mod->ins);
 
 		data->sflag = 1;
 		data->max_ins = 0;
@@ -339,7 +339,7 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 
 	load_sample(f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
-	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
+	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len,
 				mod->xxs[i].lps,

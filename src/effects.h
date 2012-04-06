@@ -1,6 +1,5 @@
-
-#ifndef __EFFECTS_H
-#define __EFFECTS_H
+#ifndef XMP_EFFECTS_H
+#define XMP_EFFECTS_H
 
 /* Protracker effects */
 #define FX_ARPEGGIO	0x00
@@ -118,4 +117,4 @@
 #define FX_SYNTH_E	0xfe
 #define FX_SYNTH_F	0xff
 
-#endif /* __EFFECTS_H */
+#endif /* XMP_EFFECTS_H */

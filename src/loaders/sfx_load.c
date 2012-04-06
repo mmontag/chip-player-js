@@ -146,7 +146,7 @@ static int sfx_13_20_load(struct module_data *m, FILE *f, const int nins, const 
 
 	copy_adjust(mod->xxi[i].name, ins[i].name, 22);
 
-	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c  %02x %+d",
+	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c  %02x %+d",
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol,
 		mod->xxi[i].sub[0].fin >> 4);
@@ -154,7 +154,7 @@ static int sfx_13_20_load(struct module_data *m, FILE *f, const int nins, const 
 
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC(i);
@@ -204,7 +204,7 @@ static int sfx_13_20_load(struct module_data *m, FILE *f, const int nins, const 
 
     /* Read samples */
 
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)

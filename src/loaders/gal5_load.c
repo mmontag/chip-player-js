@@ -188,7 +188,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 	fseek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
 	mod->xxi[i].nsm = read16l(f);
 
-	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
+	D_(D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
 	if (mod->xxi[i].nsm == 0)
 		return;
@@ -239,7 +239,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 	read32l(f);			/* 0x00000000 */
 	read32l(f);			/* unknown */
 
-	_D(_D_INFO "  %x: %05x%c%05x %05x %c V%02x %04x %5d",
+	D_(D_INFO "  %x: %05x%c%05x %05x %c V%02x %04x %5d",
 		0, mod->xxs[i].len,
 		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps,
@@ -298,8 +298,8 @@ static int gal5_load(struct module_data *m, FILE *f, const int start)
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
-	_D(_D_INFO "Stored samples: %d ", mod->smp);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored samples: %d ", mod->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 

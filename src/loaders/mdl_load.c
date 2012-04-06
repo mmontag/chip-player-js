@@ -330,7 +330,7 @@ static void get_chunk_pa(struct module_data *m, int size, FILE *f, void *parm)
     mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
     PATTERN_INIT();
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -356,7 +356,7 @@ static void get_chunk_p0(struct module_data *m, int size, FILE *f, void *parm)
     mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
     PATTERN_INIT();
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -379,7 +379,7 @@ static void get_chunk_tr(struct module_data *m, int size, FILE *f, void *parm)
     mod->trk = read16l(f) + 1;
     mod->xxt = realloc(mod->xxt, sizeof (struct xmp_track *) * mod->trk);
 
-    _D(_D_INFO "Stored tracks: %d", mod->trk);
+    D_(D_INFO "Stored tracks: %d", mod->trk);
 
     track = calloc (1, sizeof (struct xmp_track) +
 	sizeof (struct xmp_event) * 256);
@@ -466,7 +466,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
     char buf[40];
 
     mod->ins = read8(f);
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     INSTRUMENT_INIT();
 
@@ -478,7 +478,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
 	str_adj(buf);
 	strncpy((char *)mod->xxi[i].name, buf, 32);
 
-	_D(_D_INFO "[%2X] %-32.32s %2d", i_index[i],
+	D_(D_INFO "[%2X] %-32.32s %2d", i_index[i],
 				mod->xxi[i].name, mod->xxi[i].nsm);
 
 	mod->xxi[i].sub = calloc (sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
@@ -526,7 +526,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
 	    if (j == 0)
 		data->f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
-	    _D(_D_INFO "  %2x: V%02x S%02x v%02x p%02x f%02x",
+	    D_(D_INFO "  %2x: V%02x S%02x v%02x p%02x f%02x",
 				j, mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].sid,
 				v_index[i], p_index[i], f_index[i]);
 	}
@@ -545,7 +545,7 @@ static void get_chunk_is(struct module_data *m, int size, FILE *f, void *parm)
     mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
     data->packinfo = calloc(sizeof (int), mod->smp);
 
-    _D(_D_INFO "Sample infos: %d", mod->smp);
+    D_(D_INFO "Sample infos: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
 	data->s_index[i] = read8(f);		/* Sample number */
@@ -577,7 +577,7 @@ static void get_chunk_is(struct module_data *m, int size, FILE *f, void *parm)
 	mod->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	data->packinfo[i] = (x & 0x0c) >> 2;
 
-	_D(_D_INFO "[%2X] %-32.32s %05x%c %05x %05x %c %6d %d",
+	D_(D_INFO "[%2X] %-32.32s %05x%c %05x %05x %c %6d %d",
 			s_index[i], buf,
 			mod->xxs[i].len,
 			mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
@@ -598,7 +598,7 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
 
     mod->ins = mod->smp = read8(f);
 
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     INSTRUMENT_INIT();
 
@@ -636,7 +636,7 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
 	mod->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	data->packinfo[i] = (x & 0x0c) >> 2;
 
-	_D(_D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
+	D_(D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
 		i_index[i], buf, c2spd[i],  mod->xxi[i].sub[0].vol,
 		mod->xxs[i].len,mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps, mod->xxs[i].lpe, packinfo[i]);
@@ -650,7 +650,7 @@ static void get_chunk_sa(struct module_data *m, int size, FILE *f, void *parm)
     int i, len;
     uint8 *smpbuf, *buf;
 
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
 	smpbuf = calloc (1, mod->xxs[i].flg & XMP_SAMPLE_16BIT ?
@@ -692,7 +692,7 @@ static void get_chunk_ve(struct module_data *m, int size, FILE *f, void *parm)
     if ((data->v_envnum = read8(f)) == 0)
 	return;
 
-    _D(_D_INFO "Vol envelopes: %d", data->v_envnum);
+    D_(D_INFO "Vol envelopes: %d", data->v_envnum);
 
     data->v_env = calloc(data->v_envnum, sizeof (struct mdl_envelope));
 
@@ -712,7 +712,7 @@ static void get_chunk_pe(struct module_data *m, int size, FILE *f, void *parm)
     if ((data->p_envnum = read8(f)) == 0)
 	return;
 
-    _D(_D_INFO "Pan envelopes: %d", data->p_envnum);
+    D_(D_INFO "Pan envelopes: %d", data->p_envnum);
 
     data->p_env = calloc(data->p_envnum, sizeof (struct mdl_envelope));
 
@@ -732,7 +732,7 @@ static void get_chunk_fe(struct module_data *m, int size, FILE *f, void *parm)
     if ((data->f_envnum = read8(f)) == 0)
 	return;
 
-    _D(_D_INFO "Pitch envelopes: %d", data->f_envnum);
+    D_(D_INFO "Pitch envelopes: %d", data->f_envnum);
 
     data->f_env = calloc(data->f_envnum, sizeof (struct mdl_envelope));
 

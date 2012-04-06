@@ -1,12 +1,5 @@
-/* Extended Module Player
- * Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- */
-
-#ifndef __XMP_LOAD_H
+#ifndef XMP_LOADER_H
+#define XMP_LOADER_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,8 +53,8 @@ static inline int is_big_endian() {
 } while (0)
 
 #define MODULE_INFO() do { \
-    _D(_D_WARN "Module title: \"%s\"", m->name); \
-    _D(_D_WARN "Module type: %s", m->type); \
+    D_(D_WARN "Module title: \"%s\"", m->name); \
+    D_(D_WARN "Module type: %s", m->type); \
 } while (0)
 
 #define INSTRUMENT_INIT() do { \

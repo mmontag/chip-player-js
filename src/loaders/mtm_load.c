@@ -111,7 +111,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, mih.name, 22);
 
-	_D(_D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
+	D_(D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
 		mod->xxi[i].name, mod->xxs[i].len,
 		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -123,7 +123,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
 
     PATTERN_INIT();
 
-    _D(_D_INFO "Stored tracks: %d", mod->trk - 1);
+    D_(D_INFO "Stored tracks: %d", mod->trk - 1);
 
     for (i = 0; i < mod->trk; i++) {
 	mod->xxt[i] = calloc (sizeof (struct xmp_track) +
@@ -150,7 +150,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
     }
 
     /* Read patterns */
-    _D(_D_INFO "Stored patterns: %d", mod->pat - 1);
+    D_(D_INFO "Stored patterns: %d", mod->pat - 1);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -165,7 +165,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
     fseek(f, mfh.extralen, SEEK_CUR);
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
 	load_sample(f, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);

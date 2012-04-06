@@ -1,5 +1,5 @@
-#ifndef __INFLATE_H
-#define __INFLATE_H
+#ifndef XMP_INFLATE_H
+#define XMP_INFLATE_H
 
 struct inflate_data {
   struct huffman_tree_t *huffman_tree_len_static;

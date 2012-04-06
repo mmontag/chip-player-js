@@ -95,7 +95,7 @@ static int tcb_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d ", mod->pat);
+	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -163,7 +163,7 @@ static int tcb_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 
-		_D(_D_INFO "[%2X] %-8.8s  %04x %04x %04x %c "
+		D_(D_INFO "[%2X] %-8.8s  %04x %04x %04x %c "
 						"V%02x  %02x %02x %02x\n",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -173,7 +173,7 @@ static int tcb_load(struct module_data *m, FILE *f, const int start)
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
 		fseek(f, start + base_offs + soffs[i], SEEK_SET);

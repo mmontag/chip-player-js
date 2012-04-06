@@ -120,7 +120,7 @@ static int ult_load(struct module_data *m, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -190,7 +190,7 @@ static int ult_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, uih.name, 24);
 
-	_D(_D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
+	D_(D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, mod->xxs[i].len,
 		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -230,7 +230,7 @@ static int ult_load(struct module_data *m, FILE *f, const int start)
 
     /* Read and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     /* Events are stored by channel */
     for (i = 0; i < mod->pat; i++) {
@@ -319,7 +319,7 @@ static int ult_load(struct module_data *m, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
 	if (!mod->xxs[i].len)

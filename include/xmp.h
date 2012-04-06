@@ -1,5 +1,5 @@
-#ifndef __XMP_H
-#define __XMP_H
+#ifndef XMP_H
+#define XMP_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -273,4 +273,4 @@ EXPORT char      **xmp_get_format_list (void);
 }
 #endif
 
-#endif	/* __XMP_H */
+#endif	/* XMP_H */

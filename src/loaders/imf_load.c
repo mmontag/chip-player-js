@@ -236,7 +236,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 
     /* Read patterns */
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     memset(arpeggio_val, 0, 32);
 
@@ -294,7 +294,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     for (smp_num = i = 0; i < mod->ins; i++) {
 	fread(&ii.name, 32, 1, f);
@@ -333,7 +333,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].map[j + 12].ins = ii.map[j];
 	}
 
-	_D(_D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,
+	D_(D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,
 		ii.fadeout, ii.env[0].flg & 0x01 ? 'V' : '-');
 
 	mod->xxi[i].aei.npt = ii.env[0].npt;
@@ -381,7 +381,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 	        mod->xxs[smp_num].lpe >>= 1;
 	    }
 
-	    _D(_D_INFO "  %02x: %05x %05x %05x %5d",
+	    D_(D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
 	    c2spd_to_note (is.rate, &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
