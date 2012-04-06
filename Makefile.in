@@ -21,7 +21,7 @@ SHELL		= /bin/sh
 
 DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL install-sh configure configure.ac Makefile.in \
-		  libxmp.pc.in
+		  libxmp.pc.in libxmp.map
 DDIRS		= docs include src loaders prowiz win32 test
 V		= 0
 LIB		= libxmp.a
@@ -30,6 +30,7 @@ SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).$(VER_MAJOR)
 DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
+MAPFILE		= libxmp.map
 VERCODE		= 0x00030900
 
 all: @STATIC@ @SHARED@
@@ -75,7 +76,7 @@ lib/$(LIB): $(OBJS)
 
 lib/$(SHLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -Wl,--version-script,$(MAPFILE) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(SHLIB) lib/$(SONAME)
