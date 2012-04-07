@@ -80,7 +80,7 @@ struct xmp_event {
 	unsigned char fxp;		/* Effect parameter */
 	unsigned char f2t;		/* Secondary effect type */
 	unsigned char f2p;		/* Secondary effect parameter */
-	unsigned char _flag;
+	unsigned char _flag;		/* Internal (reserved) flags */
 };
 
 struct xmp_track {
