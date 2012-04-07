@@ -195,6 +195,6 @@ void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 	struct player_data *p = &ctx->p;
 
 	memcpy(&p->inject_event[channel], e, sizeof(struct xmp_event));
-	p->inject_event[channel].flag = 1;
+	p->inject_event[channel]._flag = 1;
 }
  

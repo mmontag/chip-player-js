@@ -609,11 +609,11 @@ static void inject_event(struct context_data *ctx)
 	
 	for (chn = 0; chn < mod->chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
-		if (e->flag > 0) {
+		if (e->_flag > 0) {
 			if (read_event(ctx, e, chn, 1) != 0) {
 				read_event(ctx, e, chn, 0);
 			}
-			e->flag = 0;
+			e->_flag = 0;
 		}
 	}
 }
