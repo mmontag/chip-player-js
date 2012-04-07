@@ -805,9 +805,15 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	
 	for (j = 0; j < mod->ins; j++) {
 	    for (k = 0; k < mod->xxi[j].nsm; k++) {
-		if (mod->xxi[j].sub[k].sid == i) {
-		    mod->xxi[j].sub[k].vol = ish.vol;
-		    mod->xxi[j].sub[k].gvl = ish.gvl;
+		struct xmp_subinstrument *sub = &mod->xxi[j].sub[k];
+		if (sub->sid == i) {
+		    sub->vol = ish.vol;
+		    sub->gvl = ish.gvl;
+		    sub->vra = ish.vis;	/* sample to sub-instrument vibrato */
+		    sub->vde = ish.vid;
+		    sub->vwf = ish.vit;
+		    sub->vsw = ish.vir;
+
 		    c2spd_to_note(ish.c5spd, &mod->xxi[j].sub[k].xpo, &mod->xxi[j].sub[k].fin);
 		}
 	    }

@@ -17,6 +17,7 @@ Stable versions
 	- add built-in compress file decompressor
 	- add library regression tests
 	- add support to IT envelope carry
+	- add support to IT sample vibrato
 	- fix interpolation and sample loop processing
 	- fix S404 depacker integration
 	- fix note delay effect
