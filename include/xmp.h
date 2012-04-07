@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+#define XMP_VERSION "4.0.0"
+#define XMP_VERCODE 0x040000
+#define XMP_VER_MAJOR 4
+#define XMP_VER_MINOR 0
+#define XMP_VER_RELEASE 0
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 # ifdef BUILDING_DLL
 #  define EXPORT __declspec(dllexport)
@@ -240,7 +246,8 @@ struct xmp_module_info {		/* Current module information */
 
 typedef char *xmp_context;
 
-EXPORT extern const unsigned int xmp_version;
+EXPORT extern const char *xmp_version;
+EXPORT extern const unsigned int xmp_vercode;
 
 /* Player control macros */
 

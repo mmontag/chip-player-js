@@ -19,7 +19,8 @@
 #include "virtual.h"
 #include "mixer.h"
 
-const unsigned int xmp_version = VERSION;
+const char *xmp_version = XMP_VERSION;
+const unsigned int xmp_vercode = XMP_VERCODE;
 
 xmp_context xmp_create_context()
 {
