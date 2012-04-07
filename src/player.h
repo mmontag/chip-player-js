@@ -1,7 +1,6 @@
 #ifndef XMP_PLAYER_H
 #define XMP_PLAYER_H
 
-#include "stepper.h"
 #include "lfo.h"
 #include "envelope.h"
 
@@ -89,7 +88,12 @@ struct channel_data {
 
 	struct lfo vibrato;
 	struct lfo tremolo;
-	struct stepper arpeggio;
+
+	struct {
+        	int val[4];
+		int size;
+		int count;
+	} arpeggio;
 
 	struct {
 		struct lfo lfo;

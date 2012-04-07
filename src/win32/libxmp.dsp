@@ -126,10 +126,6 @@ SOURCE=..\fnmatch.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\stepper.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\lfo.c
 # End Source File
 # Begin Source File
@@ -183,10 +179,6 @@ SOURCE=..\adlib.c
 # Begin Source File
 
 SOURCE=..\spectrum.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\invloop.c
 # End Source File
 # Begin Source File
 

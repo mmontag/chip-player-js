@@ -315,7 +315,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
 	int linear_bend;
 	int frq_envelope;
-	int vibrato, cutoff, resonance;
+	int arp, vibrato, cutoff, resonance;
 
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
@@ -351,7 +351,8 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		linear_bend += frq_envelope;
 	}
 
-	linear_bend += get_stepper(&xc->arpeggio) + get_med_arp(m, xc);
+	arp = xc->arpeggio.val[xc->arpeggio.count];
+	linear_bend += arp + get_med_arp(m, xc);
 
 	/* For xmp_player_get_info() */
 	xc->info_pitchbend = linear_bend;
@@ -533,7 +534,9 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 		}
 	}
 
-	update_stepper(&xc->arpeggio);
+	xc->arpeggio.count++;
+	xc->arpeggio.count %= xc->arpeggio.size;
+
 	update_lfo(&xc->vibrato);
 
 	/* Update instrument vibrato */
@@ -590,11 +593,6 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 			virt_resetchannel(ctx, chn);
 			return;
 		}
-		xc->delay = 0;
-		reset_stepper(&xc->arpeggio);
-
-		/* keep persistent flags */
-		xc->flags &= 0xff000000;
 	}
 
 	if (!IS_VALID_INSTRUMENT(xc->ins))

@@ -76,6 +76,14 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		xc->freq.s_end = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK(QUIRK_LINEAR));
 	}
+
+	xc->delay = 0;
+	xc->tremor.val = 0;
+
+	/* Reset arpeggio */
+	xc->arpeggio.val[0] = 0;
+	xc->arpeggio.count = 0;
+	xc->arpeggio.size = 1;
 }
 
 
@@ -187,12 +195,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc);
 
-	/* Reset flags */
-	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
-
-	reset_stepper(&xc->arpeggio);
-	xc->tremor.val = 0;
 
 	/* Process new volume */
 	if (e->vol) {
@@ -394,12 +397,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc);
 
-	/* Reset flags */
-	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
-
-	reset_stepper(&xc->arpeggio);
-	xc->tremor.val = 0;
 
 	/* Process new volume */
 	if (e->vol) {
@@ -561,12 +559,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc);
 
-	/* Reset flags */
-	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
-
-	reset_stepper(&xc->arpeggio);
-	xc->tremor.val = 0;
 
 	/* Process new volume */
 	if (e->vol) {
@@ -764,13 +757,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	set_effect_defaults(ctx, note, sub, xc);
 	
-	/* Reset flags */
-	xc->delay = 0;
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
-
-	reset_stepper(&xc->arpeggio);
-	xc->tremor.val = 0;
-
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
