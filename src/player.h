@@ -190,7 +190,6 @@ void med_synth(struct context_data *, int, struct channel_data *, int);
 int get_med_arp(struct module_data *, struct channel_data *);
 int get_med_vibrato(struct channel_data *);
 void filter_setup(int, int, int, int*, int*, int *);
-void update_invloop(struct module_data *, struct channel_data *);
 int read_event(struct context_data *, struct xmp_event *, int, int);
 
 #endif /* XMP_PLAYER_H */
