@@ -203,7 +203,7 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 		if (flags & SAMPLE_FLAG_SPECTRUM) {
 			size = sizeof(struct spectrum_sample);
 		} else if (flags & SAMPLE_FLAG_HSC) {
-			convert_hsc_to_sbi(xxs->data);
+			convert_hsc_to_sbi(buffer);
 		}
 
 		if ((xxs->data = malloc(size)) == NULL)
