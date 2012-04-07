@@ -334,7 +334,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	/* Vibrato */
 
-	vibrato = get_lfo(&xc->insvib.lfo) / (2048 * (1 + xc->insvib.sweep));
+	vibrato = get_lfo(&xc->insvib.lfo) / (1024 * (1 + xc->insvib.sweep));
 
 	if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
 		vibrato += get_lfo(&xc->vibrato) >> 10;
