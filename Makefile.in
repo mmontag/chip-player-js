@@ -105,28 +105,28 @@ clean:
 	@rm -f $(OBJS) $(LOBJS) lib/lib*
 
 install: all
-	@mkdir -p $(DEST)$(LIBDIR) $(DEST)$(INCLUDEDIR)
+	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
 	@if [ -f lib/$(LIB) ]; then \
 		echo "Installing $(LIB)..."; \
-		$(INSTALL) lib/$(LIB) $(DEST)$(LIBDIR); \
+		$(INSTALL) lib/$(LIB) $(DESTDIR)$(LIBDIR); \
 	fi
 	@if [ -f lib/$(DYLIB) ]; then \
 		echo "Installing $(DYLIB)..."; \
-		$(INSTALL) lib/$(DYLIB) $(DEST)$(LIBDIR); \
-		ln -sf $(DYLIB) $(DEST)$(LIBDIR)/libxmp.$(VERSION_MAJOR).dylib; \
-		ln -sf libxmp.$(VERSION_MAJOR).dylib $(DEST)$(LIBDIR)/libxmp.dylib;\
+		$(INSTALL) lib/$(DYLIB) $(DESTDIR)$(LIBDIR); \
+		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp.$(VERSION_MAJOR).dylib; \
+		ln -sf libxmp.$(VERSION_MAJOR).dylib $(DESTDIR)$(LIBDIR)/libxmp.dylib;\
 	fi
 	@if [ -f lib/$(SHLIB) ]; then \
 		echo "Installing $(SHLIB)..."; \
-		$(INSTALL) lib/$(SHLIB) $(DEST)$(LIBDIR); \
-		ln -sf $(SHLIB) $(DEST)$(LIBDIR)/$(SONAME); \
-		ln -sf $(SONAME) $(DEST)$(LIBDIR)/$(SOLIB); \
+		$(INSTALL) lib/$(SHLIB) $(DESTDIR)$(LIBDIR); \
+		ln -sf $(SHLIB) $(DESTDIR)$(LIBDIR)/$(SONAME); \
+		ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/$(SOLIB); \
 	fi
 	@echo "Installing xmp.h..."
-	@$(INSTALL) include/xmp.h $(DEST)$(INCLUDEDIR)
+	@$(INSTALL) include/xmp.h $(DESTDIR)$(INCLUDEDIR)
 	@echo "Installing libxmp.pc..."
-	@mkdir -p $(DEST)$(LIBDIR)/pkgconfig
-	$(INSTALL) libxmp.pc $(DEST)$(LIBDIR)/pkgconfig/
+	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
+	$(INSTALL) libxmp.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
 
 depend: test/all_tests.c
 	@echo Building dependencies...
