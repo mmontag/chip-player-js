@@ -161,20 +161,6 @@ int xmp_control(xmp_context opaque, int cmd, ...)
 		int arg = va_arg(ap, int);
 		s->mix = arg;
 		break; }
-	case XMP_CTL_QUIRK_FX9:
-		if (va_arg(ap, int)) {
-			m->quirk |= QUIRK_FX9BUG;
-		} else {
-			m->quirk &= ~QUIRK_FX9BUG;
-		}
-		break;
-	case XMP_CTL_QUIRK_FXEF:
-		if (va_arg(ap, int)) {
-			m->quirk |= QUIRK_FUNKIT;
-		} else {
-			m->quirk &= ~QUIRK_FUNKIT;
-		}
-		break;
 	default:
 		ret = -1;
 	}

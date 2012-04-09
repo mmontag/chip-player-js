@@ -1,8 +1,8 @@
-VERSION_MAJOR	= 4
-VERSION_MINOR	= 0
+VERSION_MAJOR	= 3
+VERSION_MINOR	= 9
 VERSION_RELEASE	= 0
 
-COMPAT_MINOR	= 0
+COMPAT_MINOR	= 9
 
 VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 COMPAT_VERSION	= $(VERSION_MAJOR).$(COMPAT_MINOR).0
@@ -128,10 +128,10 @@ install: all
 	@mkdir -p $(DEST)$(LIBDIR)/pkgconfig
 	$(INSTALL) libxmp.pc $(DEST)$(LIBDIR)/pkgconfig/
 
-depend:
+depend: test/all_tests.c
 	@echo Building dependencies...
 	@echo > $@
-	@for i in $(OBJS) $(M_OBJS); do \
+	@for i in $(OBJS) $(T_OBJS); do \
 	    c="$${i%.o}.c"; l="$${i%.o}.lo"; \
 	    $(CC) $(CFLAGS) -MM $$c | \
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \

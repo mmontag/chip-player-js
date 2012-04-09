@@ -117,8 +117,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 #endif	/* !_MSC_VER */
 
-
-	/* Format quirks */
+/* Quirks */
 #define QUIRK_S3MLOOP	(1 << 0)	/* S3M loop mode */
 #define QUIRK_ENVFADE	(1 << 1)	/* Fade at end of envelope */
 #define QUIRK_INVLOOP	(1 << 2)	/* Enable effect EF invert loop */
