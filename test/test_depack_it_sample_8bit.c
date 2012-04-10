@@ -16,11 +16,12 @@ TEST(test_depack_it_sample_8bit)
 	fail_unless(fo != NULL, "can't open output file");
 
 	ret = itsex_decompress8(f, dest, 4879, 0);
-	fail_unless(ret == 1, "decompression fail");
+	fail_unless(ret == 0, "decompression fail");
 	fwrite(dest, 1, 4879, fo);
 
 	fclose(fo);
 	fclose(f);
+system("cp .test test8.raw");
 
 	f = fopen(TMP_FILE, "rb");
 	ret = check_md5(TMP_FILE, "299c9144ae2349b90b430aafde8d799a");

@@ -31,7 +31,7 @@ TEST(test_depack_it_sample_16bit)
 	fail_unless(fo != NULL, "can't open output file");
 
 	ret = itsex_decompress16(f, dest, 4646, 0);
-	fail_unless(ret == 1, "decompression fail");
+	fail_unless(ret == 0, "decompression fail");
 
 	if (is_big_endian()) {
 		convert_endian((unsigned char *)dest, 4646);

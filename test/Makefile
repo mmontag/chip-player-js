@@ -85,8 +85,9 @@ TEST_PATH	= test
 
 TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o \
 		  gunzip.o unzip.o unarc.o s404_dec.o ppdepack.o arcfs.o \
-		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o readrle.o \
-		  readhuff.o inflate.o scan.o loaders/sample.o synth_null.o
+		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o \
+		  readrle.o readhuff.o inflate.o scan.o loaders/sample.o \
+		  synth_null.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 		  $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))

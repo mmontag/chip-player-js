@@ -11,6 +11,7 @@ Stable versions
 	- extend note range to full 10-octave range
 	- extensive code refactoring
 	- rewrite MMCMP decompressor to be endian-safe
+	- replaced IT sample decompressor with public domain version
 	- add regression tests
 	- add built-in zip file decompressor
 	- add built-in gzip file decompressor
