@@ -1,7 +1,7 @@
 
 REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
-CONVERTERS	= delta signal endian
+SMPLOADERS	= delta signal endian
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 		  arc spark j2b lzx it_sample_8bit it_sample_16bit
 EFFECTS		= delay
@@ -45,7 +45,7 @@ CASE3_TESTS	= $(addprefix porta_no_ins_,$(REPLAYERS)) \
 QUIRK_TESTS	= $(addprefix quirk_,$(QUIRKS)) \
 		  $(addprefix no_quirk_,$(QUIRKS))
 
-CONVERT_TESTS	= $(addprefix convert_,$(CONVERTERS))
+SMPLOAD_TESTS	= $(addprefix sample_load_,$(SMPLOADERS))
 
 DEPACK_TESTS	= $(addprefix depack_,$(DEPACKERS))
 
@@ -60,7 +60,7 @@ STORLEK_TESTS	= $(addprefix storlek_,$(STORLEK))
 
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
-TESTS		= $(CONVERT_TESTS) \
+TESTS		= $(SMPLOAD_TESTS) \
 		  $(DEPACK_TESTS) \
 		  load_sample_8bit load_sample_16bit \
 		  player_read_event \
@@ -83,7 +83,7 @@ TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
 TEST_PATH	= test
 
-TEST_INTERNAL	= load_helpers.o convert.o unsqsh.o unlzx.o uncompress.o \
+TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o \
 		  gunzip.o unzip.o unarc.o s404_dec.o ppdepack.o arcfs.o \
 		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o readrle.o \
 		  readhuff.o inflate.o scan.o loaders/sample.o synth_null.o

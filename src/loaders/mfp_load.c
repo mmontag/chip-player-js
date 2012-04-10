@@ -123,7 +123,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].rls = 0xfff;
 
-               	_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
+               	D_(D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
                        	i, mod->xxs[i].len, mod->xxs[i].lps,
                        	mod->xxs[i].lpe,
 			loop_size > 1 ? 'L' : ' ',
@@ -160,7 +160,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 		}
 	}
 
-	_D(_D_INFO "Stored patterns: %d ", mod->pat);
+	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	pat_addr = ftell(f);
 
@@ -187,7 +187,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Loading samples: %d", mod->ins);
+	D_(D_INFO "Loading samples: %d", mod->ins);
 
 	/* first check smp.filename */
 	if (strlen(m->basename) < 5 || m->basename[3] != '.') {

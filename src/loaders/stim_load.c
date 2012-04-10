@@ -93,7 +93,7 @@ static int stim_load(struct module_data *m, FILE * f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -141,7 +141,7 @@ static int stim_load(struct module_data *m, FILE * f, const int start)
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	fseek(f, start + sh.smpaddr + mod->smp * 4, SEEK_SET);
 
@@ -164,7 +164,7 @@ static int stim_load(struct module_data *m, FILE * f, const int start)
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].rls = 0xfff;
 
-		_D(_D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
+		D_(D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
 			       i, mod->xxs[i].len, mod->xxs[i].lps,
 			       mod->xxs[i].lpe, si.loop_size > 1 ? 'L' : ' ',
 			       mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);

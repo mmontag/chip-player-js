@@ -197,7 +197,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[i].lpe >>= 1;
 		}
 
-		_D(_D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x P%02x %5d",
+		D_(D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x P%02x %5d",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len,
 				mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
@@ -215,7 +215,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		int len, c, r, k;
@@ -276,7 +276,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 
 	fseek(f, start + smp_ofs, SEEK_SET);
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
 		load_sample(f, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);

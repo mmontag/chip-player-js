@@ -13,7 +13,7 @@
 int mmd_get_8ch_tempo(int);
 void mmd_xlat_fx(struct xmp_event *, int, int, int);
 
-#ifdef _DEBUG
+#ifdef D_EBUG
 extern const char *const mmd_inst_type[];
 #endif
 

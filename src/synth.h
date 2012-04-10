@@ -1,5 +1,5 @@
-#ifndef __XMP_SYNTH_H
-#define __XMP_SYNTH_H
+#ifndef XMP_SYNTH_H
+#define XMP_SYNTH_H
 
 #include "common.h"
 

@@ -89,14 +89,14 @@ static void get_info(struct module_data *m, int size, FILE *f, void *parm)
 
 	MODULE_INFO();
 
-	_D(_D_INFO "Creation date: %02d/%02d/%02d %02d:%02d:%02d",
+	D_(D_INFO "Creation date: %02d/%02d/%02d %02d:%02d:%02d",
 		       day, month, year, hour, min, sec);
-	_D(_D_INFO "Playing time: %02d:%02d:%02d", dhour, dmin, dsec);
+	D_(D_INFO "Playing time: %02d:%02d:%02d", dhour, dmin, dsec);
 }
 
 static void get_cmnt(struct module_data *m, int size, FILE *f, void *parm)
 {
-	_D(_D_INFO "Comment size: %d", size);
+	D_(D_INFO "Comment size: %d", size);
 }
 
 static void get_ptdt(struct module_data *m, int size, FILE *f, void *parm)
@@ -195,7 +195,7 @@ static int ptdt_load(struct module_data *m, FILE *f, const int start)
 
 		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
-		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
+		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len, mod->xxs[i].lps,
 				mod->xxs[i].lpe,
@@ -207,7 +207,7 @@ static int ptdt_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -223,7 +223,7 @@ static int ptdt_load(struct module_data *m, FILE *f, const int start)
 	m->quirk |= QUIRK_MODRNG;
 
 	/* Load samples */
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->smp; i++) {
 		if (!mod->xxs[i].len)

@@ -153,7 +153,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, pih.name, 28);
 
-	_D(_D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
+	D_(D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
 		i, mod->xxi[i].name, mod->xxs[i].len,
 		pih.type & 0x10 ? '+' : ' ',
 		mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -167,7 +167,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read patterns */
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	if (!pfh.patseg[i])
@@ -250,7 +250,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
 	struct xmp_sample *xxs;

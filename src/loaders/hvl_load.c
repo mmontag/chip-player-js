@@ -6,7 +6,7 @@
  * for more information.
  */
 
-#define _DEBUG
+#define D_EBUG
 
 #include "loader.h"
 
@@ -159,7 +159,7 @@ static void fix_effect (uint8 *fx, uint8 *param) {
 //		printf ("pan %02x\n", *param);
 		break;
 	case 9:
-		_D(_D_INFO "square %02x", *param);
+		D_(D_INFO "square %02x", *param);
 		break;
 	case 12:
 		if (*param >= 0x50 && *param <= 0x90) {
@@ -202,7 +202,7 @@ static int hvl_load(struct module_data *m, FILE *f, const int start)
 	int gain = read8(f);
 	int stereo = read8(f);
 
-	_D(_D_WARN "pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x",
+	D_(D_WARN "pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x",
 		pattlen, mod->trk, mod->ins, mod->len, stereo);
 
 	set_type(m, "HVL (Hively Tracker)");
@@ -353,7 +353,7 @@ static int hvl_load(struct module_data *m, FILE *f, const int start)
 			pspd=1;
 		int poff = 0;
 
-		_D(_D_WARN "I: %02x plen %02x pspd %02x vibdep=%d vibspd=%d sqmin=%d sqmax=%d", i, plen, pspd, vibdep, vibspd, sqmin, sqmax);
+		D_(D_WARN "I: %02x plen %02x pspd %02x vibdep=%d vibspd=%d sqmin=%d sqmax=%d", i, plen, pspd, vibdep, vibspd, sqmin, sqmax);
 		int j;
 		int wave=0;
 
@@ -425,7 +425,7 @@ static int hvl_load(struct module_data *m, FILE *f, const int start)
 				mod->xxi[i].fei.lpe = j*2+1;
 			}
 
-			_D(_D_INFO "[%d W:%x 1:%x%02x 2:%x%02x n:%02x]", j, tmp[1] &7, tmp[0]&15, tmp[3], (tmp[1]>>3)&15, tmp[4], tmp[2]);
+			D_(D_INFO "[%d W:%x 1:%x%02x 2:%x%02x n:%02x]", j, tmp[1] &7, tmp[0]&15, tmp[3], (tmp[1]>>3)&15, tmp[4], tmp[2]);
 		}
 
 		if (!wave)
@@ -435,7 +435,7 @@ static int hvl_load(struct module_data *m, FILE *f, const int start)
 		else
 			wave--;
 
-		_D(_D_INFO "I: %02x V: %02x A: %02x %02x D: %02x %02x S:  %02x R: %02x %02x wave %02x",
+		D_(D_INFO "I: %02x V: %02x A: %02x %02x D: %02x %02x S:  %02x R: %02x %02x wave %02x",
 			i, vol, Alen, Avol, Dlen, Dvol, Slen, Rlen, Rvol, wave);
 		mod->xxi[i].aei.flg = XMP_ENVELOPE_ON;
 		mod->xxi[i].aei.npt = 5;

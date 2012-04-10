@@ -3,6 +3,20 @@
 
 int itsex_decompress16(FILE *module, void *dst, int len, char it215);
 
+/* Convert little-endian 16 bit samples to big-endian */
+static void convert_endian(uint8 *p, int l)
+{
+	uint8 b;
+	int i;
+
+	for (i = 0; i < l; i++) {
+		b = p[0];
+		p[0] = p[1];
+		p[1] = b;
+		p += 2;
+	}
+}
+
 
 TEST(test_depack_it_sample_16bit)
 {

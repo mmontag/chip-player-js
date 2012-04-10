@@ -61,7 +61,7 @@ struct SynthInstr {
 	ULONG wf[64];		/* offs: 278 */
 };
 
-#ifdef _DEBUG
+#ifdef D_EBUG
 static const char *inst_type[] = {
 	"HYB",		/* -2 */
 	"SYN",		/* -1 */
@@ -303,7 +303,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	_D(_D_INFO "Play transpose: %d", transp);
+	D_(D_INFO "Play transpose: %d", transp);
 
 	for (i = 0; i < 32; i++)
 		temp_inst[i].transpose += transp;
@@ -316,7 +316,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		int size, plen;
@@ -363,7 +363,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		/* check block end */
 		if (read8(f) != 0xff) {
-			_D(_D_CRIT "error: module is corrupted");
+			D_(D_CRIT "error: module is corrupted");
 			TRACK_DEALLOC_ALL(i);
 			PATTERN_DEALLOC_ALL(i);
 			return -1;
@@ -514,7 +514,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	smp_idx = 0;
 	for (i = 0; i < num_ins; i++, mask <<= 1) {
@@ -530,7 +530,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		strncpy((char *)mod->xxi[i].name, temp_inst[i].name, 32);
 
-		_D(_D_INFO "\n[%2X] %-32.32s %s",
+		D_(D_INFO "\n[%2X] %-32.32s %s",
 			i, mod->xxi[i].name, inst_type[type + 2]);
 
 		/* This is very similar to MMD1 synth/hybrid instruments,
@@ -574,7 +574,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
-			_D(_D_INFO "  %05x %05x %05x %02x %+03d",
+			D_(D_INFO "  %05x %05x %05x %02x %+03d",
 				       mod->xxs[smp_idx].len, mod->xxs[smp_idx].lps,
 				       mod->xxs[smp_idx].lpe, mod->xxi[i].sub[0].vol,
 				       mod->xxi[i].sub[0].xpo /*,
@@ -612,7 +612,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			for (j = 0; j < synth.wforms; j++)
 				synth.wf[j] = read32b(f);
 
-			_D(_D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+03d",
+			D_(D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+03d",
 					synth.volspeed, synth.wfspeed,
 					synth.wforms & 0xff,
 					temp_inst[i].volume,
@@ -680,7 +680,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		mod->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
-		_D(_D_INFO, "  %04x %04x %04x %c V%02x %+03d",
+		D_(D_INFO, "  %04x %04x %04x %c V%02x %+03d",
 			mod->xxs[smp_idx].len, mod->xxs[smp_idx].lps,
 			mod->xxs[smp_idx].lpe,
 			mod->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -709,7 +709,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		switch (id) {
 		case MAGIC4('M','E','D','V'):
 			ver = read32b(f);
-			_D(_D_INFO "MED Version: %d.%0d\n",
+			D_(D_INFO "MED Version: %d.%0d\n",
 					(ver & 0xff00) >> 8, ver & 0xff);
 			break;
 		case MAGIC4('A','N','N','O'):
@@ -717,7 +717,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			s2 = size < 1023 ? size : 1023;
 			fread(buf, 1, s2, f);
 			buf[s2] = 0;
-			_D(_D_INFO "Annotation: %s\n", buf);
+			D_(D_INFO "Annotation: %s\n", buf);
 			break;
 		case MAGIC4('H','L','D','C'):
 			/* hold & decay */

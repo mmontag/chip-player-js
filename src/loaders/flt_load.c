@@ -369,10 +369,10 @@ static int flt_load(struct module_data *m, FILE *f, const int start)
 	copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
 	if (am_synth && is_am_instrument(nt, i)) {
-	    _D(_D_INFO "[%2X] %-22.22s SYNT ---- ----   V40 %+d",
+	    D_(D_INFO "[%2X] %-22.22s SYNT ---- ----   V40 %+d",
 			i, mod->xxi[i].name, mod->xxi[i].sub[0].fin >> 4);
 	} else if (*mod->xxi[i].name || mod->xxs[i].len > 2) {
-	    _D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
+	    D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 			mod->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
@@ -382,7 +382,7 @@ static int flt_load(struct module_data *m, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Load and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     /* The format you are looking for is FLT8, and the ONLY two differences
      * are: It says FLT8 instead of FLT4 or M.K., AND, the patterns are PAIRED.
@@ -423,7 +423,7 @@ static int flt_load(struct module_data *m, FILE *f, const int start)
 
     /* Load samples */
 
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
 	if (mod->xxs[i].len == 0) {

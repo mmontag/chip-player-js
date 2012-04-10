@@ -51,6 +51,48 @@ static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
  */
 
 
+/* From http://www.un4seen.com/forum/?topic=7554.0
+ *
+ * "Invert loop" effect replaces (!) sample data bytes within loop with their
+ * bitwise complement (NOT). The parameter sets speed of altering the samples.
+ * This effectively trashes the sample data. Because of that this effect was
+ * supposed to be removed in the very next ProTracker versions, but it was
+ * never removed.
+ *
+ * Prior to [Protracker 1.1A] this effect is called "Funk Repeat" and it moves
+ * loop of the instrument (just the loop information - sample data is not
+ * altered). The parameter is the speed of moving the loop.
+ */
+
+static const int invloop_table[] = {
+	0, 5, 6, 7, 8, 10, 11, 13, 16, 19, 22, 26, 32, 43, 64, 128
+};
+
+static void update_invloop(struct module_data *m, struct channel_data *xc)
+{
+	struct xmp_sample *xxs = &m->mod.xxs[xc->smp];
+	int len;
+
+	xc->invloop.count += invloop_table[xc->invloop.speed];
+
+	if ((xxs->flg & XMP_SAMPLE_LOOP) && xc->invloop.count >= 128) {
+		xc->invloop.count = 0;
+		len = xxs->lpe - xxs->lps;	
+
+		if (HAS_QUIRK(QUIRK_FUNKIT)) {
+			/* FIXME: not implemented */
+		} else {
+			if (++xc->invloop.pos > len) {
+				xc->invloop.pos = 0;
+			}
+
+			if (~xxs->flg & XMP_SAMPLE_16BIT) {
+				xxs->data[xxs->lps + xc->invloop.pos] ^= 0xff;
+			}
+		}
+	}
+}
+
 
 static inline void reset_channel(struct context_data *ctx)
 {
@@ -273,7 +315,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
 	int linear_bend;
 	int frq_envelope;
-	int vibrato, cutoff, resonance;
+	int arp, vibrato, cutoff, resonance;
 
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
@@ -292,7 +334,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	/* Vibrato */
 
-	vibrato = get_lfo(&xc->insvib.lfo) / (2048 * (1 + xc->insvib.sweep));
+	vibrato = get_lfo(&xc->insvib.lfo) / (1024 * (1 + xc->insvib.sweep));
 
 	if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
 		vibrato += get_lfo(&xc->vibrato) >> 10;
@@ -309,7 +351,8 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		linear_bend += frq_envelope;
 	}
 
-	linear_bend += get_stepper(&xc->arpeggio) + get_med_arp(m, xc);
+	arp = xc->arpeggio.val[xc->arpeggio.count];
+	linear_bend += arp + get_med_arp(m, xc);
 
 	/* For xmp_player_get_info() */
 	xc->info_pitchbend = linear_bend;
@@ -491,7 +534,9 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 		}
 	}
 
-	update_stepper(&xc->arpeggio);
+	xc->arpeggio.count++;
+	xc->arpeggio.count %= xc->arpeggio.size;
+
 	update_lfo(&xc->vibrato);
 
 	/* Update instrument vibrato */
@@ -548,11 +593,6 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 			virt_resetchannel(ctx, chn);
 			return;
 		}
-		xc->delay = 0;
-		reset_stepper(&xc->arpeggio);
-
-		/* keep persistent flags */
-		xc->flags &= 0xff000000;
 	}
 
 	if (!IS_VALID_INSTRUMENT(xc->ins))
@@ -609,11 +649,11 @@ static void inject_event(struct context_data *ctx)
 	
 	for (chn = 0; chn < mod->chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
-		if (e->flag > 0) {
+		if (e->_flag > 0) {
 			if (read_event(ctx, e, chn, 1) != 0) {
 				read_event(ctx, e, chn, 0);
 			}
-			e->flag = 0;
+			e->_flag = 0;
 		}
 	}
 }

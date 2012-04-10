@@ -250,7 +250,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 	fade = read8(f);		/* fadeout - 0x80->0x02 0x310->0x0c */
 	read8(f);			/* unknown */
 
-	_D(_D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
+	D_(D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
 	if (mod->xxi[i].nsm == 0)
 		return;
@@ -300,7 +300,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 		read32l(f);			/* 0x00000000 */
 		read32l(f);			/* unknown */
 	
-		_D(_D_INFO, "  %X: %05x%c%05x %05x %c V%02x P%02x %5d",
+		D_(D_INFO, "  %X: %05x%c%05x %05x %c V%02x P%02x %5d",
 			j, mod->xxs[data->snum].len,
 			mod->xxs[data->snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			mod->xxs[data->snum].lps,
@@ -359,8 +359,8 @@ static int gal4_load(struct module_data *m, FILE *f, const int start)
 	INSTRUMENT_INIT();
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d\n", mod->pat);
-	_D(_D_INFO "Stored samples : %d ", mod->smp);
+	D_(D_INFO "Stored patterns: %d\n", mod->pat);
+	D_(D_INFO "Stored samples : %d ", mod->smp);
 
 	fseek(f, start + offset, SEEK_SET);
 	data.snum = 0;

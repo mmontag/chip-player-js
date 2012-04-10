@@ -24,9 +24,7 @@
 #include "../win32/ptpopen.h"
 #endif
 
-#include "convert.h"
 #include "format.h"
-
 #include "list.h"
 
 
@@ -243,24 +241,24 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	return 0;
 #endif
 
-    _D(_D_WARN "Depacking %s file... ", packer);
+    D_(D_WARN "Depacking %s file... ", packer);
 
     temp = calloc(sizeof (struct tmpfilename), 1);
     if (!temp) {
-	_D(_D_CRIT "calloc failed");
+	D_(D_CRIT "calloc failed");
 	return -1;
     }
 
     temp->name = strdup(tmp);
     if ((fd = mkstemp(temp->name)) < 0) {
-	_D(_D_CRIT "failed");
+	D_(D_CRIT "failed");
 	return -1;
     }
 
     list_add_tail(&temp->list, head);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
-	_D(_D_CRIT "failed");
+	D_(D_CRIT "failed");
 	return -1;
     }
 
@@ -285,7 +283,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	/* Linux popen fails with "rb" */
 	if ((p = popen(line, "r")) == NULL) {
 #endif
-	    _D(_D_CRIT "failed");
+	    D_(D_CRIT "failed");
 	    fclose(t);
 	    return -1;
 	}
@@ -341,12 +339,12 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     }
 
     if (res < 0) {
-	_D(_D_CRIT "failed");
+	D_(D_CRIT "failed");
 	fclose(t);
 	return -1;
     }
 
-    _D(_D_INFO "done");
+    D_(D_INFO "done");
 
     fclose(*f);
     *f = t;
@@ -382,7 +380,7 @@ static void unlink_tempfiles(struct list_head *head)
 	/* can't use list_for_each when freeing the node! */
 	for (tmp = head->next; tmp != head; ) {
 		li = list_entry(tmp, struct tmpfilename, list);
-		_D(_D_INFO "unlink tmpfile %s", li->name);
+		D_(D_INFO "unlink tmpfile %s", li->name);
 		unlink(li->name);
 		free(li->name);
 		list_del(&li->list);
@@ -462,7 +460,7 @@ static void split_name(char *s, char **d, char **b)
 	char *div;
 	int tmp;
 
-	_D("alloc dirname/basename");
+	D_("alloc dirname/basename");
 	if ((div = strrchr(s, '/'))) {
 		tmp = div - s + 1;
 		*d = malloc(tmp + 1);
@@ -485,7 +483,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct list_head tmpfiles_list;
 	int test_result, load_result;
 
-	_D(_D_WARN "path = %s", path);
+	D_(D_WARN "path = %s", path);
 
 	if (stat(path, &st) < 0)
 		return -errno;
@@ -499,7 +497,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	INIT_LIST_HEAD(&tmpfiles_list);
 
-	_D(_D_INFO "decrunch");
+	D_(D_INFO "decrunch");
 	if ((t = decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX)) < 0) {
 		goto err_depack;
 	}
@@ -514,14 +512,14 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	load_prologue(ctx);
 
-	_D(_D_WARN "load");
+	D_(D_WARN "load");
 	test_result = load_result = -1;
 	for (i = 0; format_loader[i] != NULL; i++) {
 		fseek(f, 0, SEEK_SET);
 		test_result = format_loader[i]->test(f, NULL, 0);
 		if (test_result == 0) {
 			fseek(f, 0, SEEK_SET);
-			_D(_D_WARN "load format: %s", format_loader[i]->name);
+			D_(D_WARN "load format: %s", format_loader[i]->name);
 			load_result = format_loader[i]->loader(m, f, 0);
 			break;
 		}
@@ -564,7 +562,7 @@ void xmp_release_module(xmp_context opaque)
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	_D(_D_INFO "Freeing memory");
+	D_(D_INFO "Freeing memory");
 
 	if (m->extra) {
 		free(m->extra);
@@ -610,7 +608,7 @@ void xmp_release_module(xmp_context opaque)
 		free(m->comment);
 	}
 
-	_D("free dirname/basename");
+	D_("free dirname/basename");
 	free(m->dirname);
 	free(m->basename);
 }

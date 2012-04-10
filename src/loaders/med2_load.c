@@ -108,7 +108,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	_D(_D_INFO, "Sliding: %d", sliding);
+	D_(D_INFO, "Sliding: %d", sliding);
 
 	if (sliding == 6)
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
@@ -116,7 +116,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -158,7 +158,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 
 	/* Load samples */
 
-	_D(_D_INFO "Instruments    : %d ", mod->ins);
+	D_(D_INFO "Instruments    : %d ", mod->ins);
 
 	for (i = 0; i < 31; i++) {
 		char path[PATH_MAX];
@@ -186,7 +186,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 		if (!strlen((char *)mod->xxi[i].name) && !mod->xxs[i].len)
 			continue;
 
-		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
+		D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 			mod->xxs[i].lpe,
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',

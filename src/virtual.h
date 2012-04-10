@@ -1,11 +1,11 @@
-#ifndef __XMP_VIRTUAL_H
-#define __XMP_VIRTUAL_H
+#ifndef XMP_VIRTUAL_H
+#define XMP_VIRTUAL_H
 
 #include "common.h"
 
-#define VIRT_ACTION_CUT	XMP_INST_NNA_CUT
+#define VIRT_ACTION_CUT		XMP_INST_NNA_CUT
 #define VIRT_ACTION_CONT	XMP_INST_NNA_CONT
-#define VIRT_ACTION_OFF	XMP_INST_NNA_OFF
+#define VIRT_ACTION_OFF		XMP_INST_NNA_OFF
 #define VIRT_ACTION_FADE	XMP_INST_NNA_FADE
 
 #define VIRT_ACTIVE		0x100
@@ -31,4 +31,4 @@ void	virt_resetchannel	(struct context_data *, int);
 void	virt_resetvoice		(struct context_data *, int, int);
 void	virt_reset		(struct context_data *);
 
-#endif /* __XMP_VIRTUAL_H */
+#endif /* XMP_VIRTUAL_H */

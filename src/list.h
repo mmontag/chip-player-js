@@ -1,4 +1,3 @@
-
 /* This is list.h from the Linux kernel */
 
 #ifndef __LINUX_LIST_H

@@ -278,7 +278,7 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 	if (a != 0 && a != 1)
 		return -1;
 
-	_D(_D_INFO "Packed sequence: %s", a ? "yes" : "no");
+	D_(D_INFO "Packed sequence: %s", a ? "yes" : "no");
 
 	size = mod->len * mod->chn * 2;
 	buf = malloc(size);
@@ -311,8 +311,8 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 	if (a != 0 && a != 1)
 		return -1;
 
-	_D(_D_INFO "Packed tracks: %s", a ? "yes" : "no");
-	_D(_D_INFO "Stored tracks: %d", mod->trk - 1);
+	D_(D_INFO "Packed tracks: %s", a ? "yes" : "no");
+	D_(D_INFO "Stored tracks: %d", mod->trk - 1);
 
 	size = 64 * (mod->trk - 1) * 4;
 	buf = malloc(size);
@@ -358,7 +358,7 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 
 	/* Load and convert instruments */
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		uint8 buf[128];
@@ -384,7 +384,7 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 			mod->xxi[i].sub[0].sid = i;
 		}
 
-		_D(_D_INFO "[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d",
+		D_(D_INFO "[%2X] %-22.22s %05x %05x %05x %c V%02x %+03d",
 				i, mod->xxi[i].name, mod->xxs[i].len,
 				mod->xxs[i].lps, mod->xxs[i].lpe,
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',

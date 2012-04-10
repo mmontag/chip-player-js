@@ -139,7 +139,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxi[i].sub[0].sid = i;
 		
-		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
+		D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
@@ -150,7 +150,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 	/* PATTERN_INIT - alloc extra track*/
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored tracks: %d", mod->trk);
+	D_(D_INFO "Stored tracks: %d", mod->trk);
 
 	/* Tracks */
 
@@ -278,7 +278,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 	mod->xxt[0]->rows = 64;
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	fseek(f, start + pat_ptr, SEEK_SET);
 
@@ -293,7 +293,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 
 	/* Read samples */
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxi[i].nsm == 0)

@@ -1,5 +1,5 @@
-#ifndef __SPECTRUM_H
-#define __SPECTRUM_H
+#ifndef XMP_SPECTRUM_H
+#define XMP_SPECTRUM_H
 
 #include <synth.h>
 

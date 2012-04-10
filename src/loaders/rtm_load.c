@@ -43,7 +43,7 @@ static int rtm_test(FILE *f, char *t, const int start)
 static int read_object_header(FILE *f, struct ObjectHeader *h, char *id)
 {
 	fread(&h->id, 4, 1, f);
-	_D(_D_WARN "object id: %02x %02x %02x %02x", h->id[0],
+	D_(D_WARN "object id: %02x %02x %02x %02x", h->id[0],
 					h->id[1], h->id[2], h->id[3]);
 
 	if (memcmp(id, h->id, 4))
@@ -56,7 +56,7 @@ static int read_object_header(FILE *f, struct ObjectHeader *h, char *id)
 	h->eof = read8(f);
 	h->version = read16l(f);
 	h->headerSize = read16l(f);
-	_D(_D_INFO "object %-4.4s (%d)", h->id, h->headerSize);
+	D_(D_INFO "object %-4.4s (%d)", h->id, h->headerSize);
 	
 	return 0;
 }
@@ -124,7 +124,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	offset = 42 + oh.headerSize + rh.extraDataSize;
 
@@ -134,7 +134,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 		fseek(f, start + offset, SEEK_SET);
 
 		if (read_object_header(f, &oh, "RTND") < 0) {
-			_D(_D_CRIT "Error reading pattern %d", i);
+			D_(D_CRIT "Error reading pattern %d", i);
 			return -1;
 		}
 	
@@ -158,7 +158,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 
 				/* should never happen! */
 				if (j >= rp.ntrack) {
-					_D(_D_CRIT "error: decoding "
+					D_(D_CRIT "error: decoding "
 						"pattern %d row %d", i, r);
 					break;
 				}
@@ -195,7 +195,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 	 * load instruments
 	 */
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	fseek(f, start + offset, SEEK_SET);
 
@@ -207,14 +207,14 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 	smpnum = 0;
 	for (i = 0; i < mod->ins; i++) {
 		if (read_object_header(f, &oh, "RTIN") < 0) {
-			_D(_D_CRIT "Error reading instrument %d", i);
+			D_(D_CRIT "Error reading instrument %d", i);
 			return -1;
 		}
 
 		copy_adjust(mod->xxi[i].name, (uint8 *)&oh.name, 32);
 
 		if (oh.headerSize == 0) {
-			_D(_D_INFO "[%2X] %-26.26s %2d ", i,
+			D_(D_INFO "[%2X] %-26.26s %2d ", i,
 					mod->xxi[i].name, mod->xxi[i].nsm);
 			ri.nsample = 0;
 			continue;
@@ -265,7 +265,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 
 		mod->xxi[i].nsm = ri.nsample;
 
-		_D(_D_INFO "[%2X] %-26.26s %2d", i, mod->xxi[i].name,
+		D_(D_INFO "[%2X] %-26.26s %2d", i, mod->xxi[i].name,
 							mod->xxi[i].nsm);
 
 		if (mod->xxi[i].nsm > 16)
@@ -306,7 +306,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 		/* For each sample */
 		for (j = 0; j < mod->xxi[i].nsm; j++, smpnum++) {
 			if (read_object_header(f, &oh, "RTSM") < 0) {
-				_D(_D_CRIT "Error reading sample %d", j);
+				D_(D_CRIT "Error reading sample %d", j);
 				return -1;
 			}
 
@@ -355,7 +355,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[smpnum].flg |= rs.loop & 0x03 ?  XMP_SAMPLE_LOOP : 0;
 			mod->xxs[smpnum].flg |= rs.loop == 2 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
-			_D(_D_INFO "  [%1x] %05x%c%05x %05x %c "
+			D_(D_INFO "  [%1x] %05x%c%05x %05x %c "
 						"V%02x F%+04d P%02x R%+03d",
 				j, mod->xxs[mod->xxi[i].sub[j].sid].len,
 				mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',

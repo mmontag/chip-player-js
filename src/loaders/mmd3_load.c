@@ -82,20 +82,20 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 
 	ver = *((char *)&header.id + 3) - '1' + 1;
 
-	_D(_D_WARN "load header");
+	D_(D_WARN "load header");
 	header.modlen = read32b(f);
 	song_offset = read32b(f);
-	_D(_D_INFO "song_offset = 0x%08x", song_offset);
+	D_(D_INFO "song_offset = 0x%08x", song_offset);
 	read16b(f);
 	read16b(f);
 	blockarr_offset = read32b(f);
-	_D(_D_INFO "blockarr_offset = 0x%08x", blockarr_offset);
+	D_(D_INFO "blockarr_offset = 0x%08x", blockarr_offset);
 	read32b(f);
 	smplarr_offset = read32b(f);
-	_D(_D_INFO "smplarr_offset = 0x%08x", smplarr_offset);
+	D_(D_INFO "smplarr_offset = 0x%08x", smplarr_offset);
 	read32b(f);
 	expdata_offset = read32b(f);
-	_D(_D_INFO "expdata_offset = 0x%08x", expdata_offset);
+	D_(D_INFO "expdata_offset = 0x%08x", expdata_offset);
 	read32b(f);
 	header.pstate = read16b(f);
 	header.pblock = read16b(f);
@@ -108,7 +108,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 	/*
 	 * song structure
 	 */
-	_D(_D_WARN "load song");
+	D_(D_WARN "load song");
 	fseek(f, start + song_offset, SEEK_SET);
 	for (i = 0; i < 63; i++) {
 		song.sample[i].rep = read16b(f);
@@ -120,7 +120,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 	}
 	song.numblocks = read16b(f);
 	song.songlen = read16b(f);
-	_D(_D_INFO "song.songlen = %d", song.songlen);
+	D_(D_INFO "song.songlen = %d", song.songlen);
 	seqtable_offset = read32b(f);
 	read32b(f);
 	trackvols_offset = read32b(f);
@@ -215,7 +215,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 	/*
 	 * expdata
 	 */
-	_D(_D_WARN "load expdata");
+	D_(D_WARN "load expdata");
 	expdata.s_ext_entries = 0;
 	expdata.s_ext_entrsz = 0;
 	expdata.i_ext_entries = 0;
@@ -226,13 +226,13 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 		fseek(f, start + expdata_offset, SEEK_SET);
 		read32b(f);
 		expsmp_offset = read32b(f);
-		_D(_D_INFO "expsmp_offset = 0x%08x", expsmp_offset);
+		D_(D_INFO "expsmp_offset = 0x%08x", expsmp_offset);
 		expdata.s_ext_entries = read16b(f);
 		expdata.s_ext_entrsz = read16b(f);
 		read32b(f);
 		read32b(f);
 		iinfo_offset = read32b(f);
-		_D(_D_INFO "iinfo_offset = 0x%08x", iinfo_offset);
+		D_(D_INFO "iinfo_offset = 0x%08x", iinfo_offset);
 		expdata.i_ext_entries = read16b(f);
 		expdata.i_ext_entrsz = read16b(f);
 		read32b(f);
@@ -240,10 +240,10 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 		read32b(f);
 		read32b(f);
 		songname_offset = read32b(f);
-		_D(_D_INFO "songname_offset = 0x%08x", songname_offset);
+		D_(D_INFO "songname_offset = 0x%08x", songname_offset);
 		expdata.songnamelen = read32b(f);
 		fseek(f, start + songname_offset, SEEK_SET);
-		_D(_D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
+		D_(D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_NAME_SIZE)
 				break;
@@ -254,14 +254,14 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 	/*
 	 * Quickly scan patterns to check the number of channels
 	 */
-	_D(_D_WARN "find number of channels");
+	D_(D_WARN "find number of channels");
 
 	for (i = 0; i < mod->pat; i++) {
 		int block_offset;
 
 		fseek(f, start + blockarr_offset + i * 4, SEEK_SET);
 		block_offset = read32b(f);
-		_D(_D_INFO "block %d block_offset = 0x%08x", i, block_offset);
+		D_(D_INFO "block %d block_offset = 0x%08x", i, block_offset);
 		if (block_offset == 0)
 			continue;
 		fseek(f, start + block_offset, SEEK_SET);
@@ -282,14 +282,14 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	_D(_D_INFO "BPM mode: %s (length = %d)", bpm_on ? "on" : "off", bpmlen);
-	_D(_D_INFO "Song transpose : %d", song.playtransp);
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "BPM mode: %s (length = %d)", bpm_on ? "on" : "off", bpmlen);
+	D_(D_INFO "Song transpose : %d", song.playtransp);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	/*
 	 * Read and convert patterns
 	 */
-	_D(_D_WARN "read patterns");
+	D_(D_WARN "read patterns");
 	PATTERN_INIT();
 
 	for (i = 0; i < mod->pat; i++) {
@@ -335,10 +335,10 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 	/*
 	 * Read and convert instruments and samples
 	 */
-	_D(_D_WARN "read instruments");
+	D_(D_WARN "read instruments");
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
@@ -348,7 +348,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 		fseek(f, start + smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = read32b(f);
 
-		_D(_D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
+		D_(D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
 
 		if (smpl_offset == 0)
 			continue;
@@ -364,7 +364,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 			fread(name, 40, 1, f);
 
 			t = (instr.type + 2) & ~(S_16 | STEREO);
-			_D(_D_INFO "[%2x] %-40.40s %s", i, name,
+			D_(D_INFO "[%2x] %-40.40s %s", i, name,
 				t <= MMD_INST_TYPES ? mmd_inst_type[t] : "???");
 		}
 
@@ -421,7 +421,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[smp_idx].flg = song.sample[i].replen > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
-			_D(_D_INFO "  %05x %05x %05x %02x %+3d %+1d",
+			D_(D_INFO "  %05x %05x %05x %02x %+3d %+1d",
 				       mod->xxs[smp_idx].len,
 				       mod->xxs[smp_idx].lps,
 				       mod->xxs[smp_idx].lpe,
@@ -459,7 +459,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 			for (j = 0; j < 64; j++)
 				synth.wf[j] = read32b(f);
 
-			_D(_D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+3d %+1d",
+			D_(D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+3d %+1d",
 					synth.volspeed, synth.wfspeed,
 					synth.wforms & 0xff,
 					song.sample[i].svol,
@@ -538,7 +538,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 		 * usage for both samples is length * 2 bytes.
 		 */
 
-		_D(_D_INFO "  %05x%c%05x %05x %02x %+3d %+1d ",
+		D_(D_INFO "  %05x%c%05x %05x %02x %+3d %+1d ",
 				mod->xxs[smp_idx].len,
 				mod->xxs[smp_idx].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 				mod->xxs[smp_idx].lps,

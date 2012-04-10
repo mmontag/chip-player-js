@@ -296,7 +296,7 @@ static int st_load(struct module_data *m, FILE *f, const int start)
     MODULE_INFO();
 
     if (serr) {
-	_D(_D_CRIT "File size error: %d", serr);
+	D_(D_CRIT "File size error: %d", serr);
     }
 
     fseek(f, start + pos, SEEK_SET);
@@ -305,7 +305,7 @@ static int st_load(struct module_data *m, FILE *f, const int start)
 
     /* Load and convert patterns */
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -320,7 +320,7 @@ static int st_load(struct module_data *m, FILE *f, const int start)
     }
 
     for (i = 0; i < mod->ins; i++) {
-	_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
+	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, mh.ins[i].loop_size > 1 ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
@@ -358,7 +358,7 @@ static int st_load(struct module_data *m, FILE *f, const int start)
 
     /* Load samples */
 
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)

@@ -90,10 +90,6 @@ LINK32=link.exe
 
 # Begin Source File
 
-SOURCE=..\convert.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\virtual.c
 # End Source File
 # Begin Source File
@@ -127,10 +123,6 @@ SOURCE=..\mkstemp.c
 # Begin Source File
 
 SOURCE=..\fnmatch.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\stepper.c
 # End Source File
 # Begin Source File
 
@@ -187,10 +179,6 @@ SOURCE=..\adlib.c
 # Begin Source File
 
 SOURCE=..\spectrum.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\invloop.c
 # End Source File
 # Begin Source File
 

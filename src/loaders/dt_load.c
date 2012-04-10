@@ -103,7 +103,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 
 	mod->ins = mod->smp = read16b(f);
 
-	_D(_D_INFO "Instruments    : %d ", mod->ins);
+	D_(D_INFO "Instruments    : %d ", mod->ins);
 
 	INSTRUMENT_INIT();
 
@@ -143,7 +143,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 
 		mod->xxi[i].sub[0].sid = i;
 
-		_D(_D_INFO "[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
+		D_(D_INFO "[%2X] %-22.22s %05x%c%05x %05x %c%c %2db V%02x F%+03d %5d",
 			i, mod->xxi[i].name,
 			mod->xxs[i].len,
 			mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
@@ -168,7 +168,7 @@ static void get_dapt(struct module_data *m, int size, FILE *f, void *parm)
 	int rows;
 
 	if (!data->pflag) {
-		_D(_D_INFO "Stored patterns: %d", mod->pat);
+		D_(D_INFO "Stored patterns: %d", mod->pat);
 		data->pflag = 1;
 		last_pat = 0;
 		PATTERN_INIT();
@@ -213,7 +213,7 @@ static void get_dait(struct module_data *m, int size, FILE *f, void *parm)
 	static int i = 0;
 
 	if (!data->sflag) {
-		_D(_D_INFO "Stored samples : %d ", mod->smp);
+		D_(D_INFO "Stored samples : %d ", mod->smp);
 		data->sflag = 1;
 		i = 0;
 	}

@@ -31,8 +31,8 @@
 
 /* Modified for xmp by Claudio Matsuoka, 30-Aug-2011 */
 
-#ifndef __YM2149_H
-#define __YM2149_H
+#ifndef YM2149_H
+#define YM2149_H
 
 #define	AMSTRAD_CLOCK	1000000L
 #define	ATARI_CLOCK	2000000L

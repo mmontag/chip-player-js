@@ -3,10 +3,6 @@ libxmp version 3.9.0
 This is an experimental release of libxmp. The API can be modified until
 the 4.0 stable release.
 
-This is licensed under the GPL. The stable library will be licensed under
-the LGPLIf we can obtain permission from authors of third-party code such as
-the IT sample decompressor and the YM2149 emulator.
-
 Better documentation will be included in the stable relase. Until then,
 check the xmp.h header file and the xmp player front-end. A simple example
 on how to use this library:

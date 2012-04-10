@@ -287,8 +287,8 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 	
 	MODULE_INFO();
 
-	_D(_D_INFO "Sliding: %d", sliding);
-	_D(_D_INFO "Play transpose: %d", transp);
+	D_(D_INFO "Sliding: %d", sliding);
+	D_(D_INFO "Play transpose: %d", transp);
 
 	if (sliding == 6)
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
@@ -299,7 +299,7 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		uint32 *conv;
@@ -354,7 +354,7 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 
 	/* Load samples */
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	mask = read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
@@ -367,7 +367,7 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 
-		_D(_D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x ",
+		D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 			mod->xxs[i].lpe,
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',

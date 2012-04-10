@@ -105,8 +105,6 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
     fread (buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < mod->ins; i++, sid += 12) {
-	convert_hsc_to_sbi((char *)sid);
-
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].vol = 0x40;
@@ -116,7 +114,8 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
-	load_sample(f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], (char *)sid);
+	load_sample(f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
+					&mod->xxs[i], (char *)sid);
     }
 
     /* Read orders */
@@ -132,9 +131,9 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
     mod->pat = pat + 1;
     mod->trk = mod->pat * mod->chn;
 
-    _D(_D_INFO "Module length: %d", mod->len);
-    _D(_D_INFO "Instruments: %d", mod->ins);
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Module length: %d", mod->len);
+    D_(D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     PATTERN_INIT();
 

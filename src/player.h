@@ -1,15 +1,6 @@
-/* Extended Module Player
- * Copyright (C) 1996-2012 Claudio Matsuoka and Hipolito Carraro Jr
- *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
- * for more information.
- */
+#ifndef XMP_PLAYER_H
+#define XMP_PLAYER_H
 
-#ifndef __XMP_PLAYER_H
-#define __XMP_PLAYER_H
-
-#include "stepper.h"
 #include "lfo.h"
 #include "envelope.h"
 
@@ -97,7 +88,12 @@ struct channel_data {
 
 	struct lfo vibrato;
 	struct lfo tremolo;
-	struct stepper arpeggio;
+
+	struct {
+        	int val[4];
+		int size;
+		int count;
+	} arpeggio;
 
 	struct {
 		struct lfo lfo;
@@ -198,7 +194,6 @@ void med_synth(struct context_data *, int, struct channel_data *, int);
 int get_med_arp(struct module_data *, struct channel_data *);
 int get_med_vibrato(struct channel_data *);
 void filter_setup(int, int, int, int*, int*, int *);
-void update_invloop(struct module_data *, struct channel_data *);
 int read_event(struct context_data *, struct xmp_event *, int, int);
 
-#endif /* __XMP_PLAYER_H */
+#endif /* XMP_PLAYER_H */

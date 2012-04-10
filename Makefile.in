@@ -1,8 +1,14 @@
-VERSION		= 3.9.0
-VER_MAJOR	= 3
+VERSION_MAJOR	= 3
+VERSION_MINOR	= 9
+VERSION_RELEASE	= 0
+
+COMPAT_MINOR	= 9
+
+VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
+COMPAT_VERSION	= $(VERSION_MAJOR).$(COMPAT_MINOR).0
 
 CC		= @CC@
-CFLAGS		= -c -Wall @CFLAGS@ @DEFS@ #-D_DEBUG
+CFLAGS		= -c -Wall @CFLAGS@ @DEFS@
 LD		= @CC@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
@@ -20,15 +26,16 @@ SHELL		= /bin/sh
 
 DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL install-sh configure configure.ac Makefile.in \
-		  libxmp.pc.in
+		  libxmp.pc.in libxmp.map
 DDIRS		= docs include src loaders prowiz win32 test
 V		= 0
 LIB		= libxmp.a
 SOLIB		= libxmp.so
 SHLIB		= $(SOLIB).$(VERSION)
-SONAME		= $(SOLIB).$(VER_MAJOR)
+SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
+MAPFILE		= libxmp.map
 VERCODE		= 0x00030900
 
 all: @STATIC@ @SHARED@
@@ -43,7 +50,7 @@ include test/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
-CFLAGS += -Iinclude -Isrc -DVERSION=$(VERCODE)
+CFLAGS += -Iinclude -Isrc
 
 .SUFFIXES: .c .o .lo .a .so .dll .in
 
@@ -74,7 +81,7 @@ lib/$(LIB): $(OBJS)
 
 lib/$(SHLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -Wl,--version-script,$(MAPFILE) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(SHLIB) lib/$(SONAME)
@@ -88,43 +95,43 @@ lib/$(DLL): $(LOBJS)
 
 lib/$(DYLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,3.9.0,-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(CC) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,$(COMPAT_VERSION),-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
-	ln -sf $(DYLIB) lib/libxmp.$(VER_MAJOR).dylib
-	ln -sf libxmp.$(VER_MAJOR).dylib lib/libxmp.dylib
+	ln -sf $(DYLIB) lib/libxmp.$(VERSION_MAJOR).dylib
+	ln -sf libxmp.$(VERSION_MAJOR).dylib lib/libxmp.dylib
 
 clean:
 	@rm -f $(OBJS) $(LOBJS) lib/lib*
 
 install: all
-	@mkdir -p $(DEST)$(LIBDIR) $(DEST)$(INCLUDEDIR)
+	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
 	@if [ -f lib/$(LIB) ]; then \
 		echo "Installing $(LIB)..."; \
-		$(INSTALL) lib/$(LIB) $(DEST)$(LIBDIR); \
+		$(INSTALL) lib/$(LIB) $(DESTDIR)$(LIBDIR); \
 	fi
 	@if [ -f lib/$(DYLIB) ]; then \
 		echo "Installing $(DYLIB)..."; \
-		$(INSTALL) lib/$(DYLIB) $(DEST)$(LIBDIR); \
-		ln -sf $(DYLIB) $(DEST)$(LIBDIR)/libxmp.$(VER_MAJOR).dylib; \
-		ln -sf libxmp.$(VER_MAJOR).dylib $(DEST)$(LIBDIR)/libxmp.dylib;\
+		$(INSTALL) lib/$(DYLIB) $(DESTDIR)$(LIBDIR); \
+		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp.$(VERSION_MAJOR).dylib; \
+		ln -sf libxmp.$(VERSION_MAJOR).dylib $(DESTDIR)$(LIBDIR)/libxmp.dylib;\
 	fi
 	@if [ -f lib/$(SHLIB) ]; then \
 		echo "Installing $(SHLIB)..."; \
-		$(INSTALL) lib/$(SHLIB) $(DEST)$(LIBDIR); \
-		ln -sf $(SHLIB) $(DEST)$(LIBDIR)/$(SONAME); \
-		ln -sf $(SONAME) $(DEST)$(LIBDIR)/$(SOLIB); \
+		$(INSTALL) lib/$(SHLIB) $(DESTDIR)$(LIBDIR); \
+		ln -sf $(SHLIB) $(DESTDIR)$(LIBDIR)/$(SONAME); \
+		ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/$(SOLIB); \
 	fi
 	@echo "Installing xmp.h..."
-	@$(INSTALL) include/xmp.h $(DEST)$(INCLUDEDIR)
+	@$(INSTALL) include/xmp.h $(DESTDIR)$(INCLUDEDIR)
 	@echo "Installing libxmp.pc..."
-	@mkdir -p $(DEST)$(LIBDIR)/pkgconfig
-	$(INSTALL) libxmp.pc $(DEST)$(LIBDIR)/pkgconfig/
+	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
+	$(INSTALL) libxmp.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
 
-depend:
+depend: test/all_tests.c
 	@echo Building dependencies...
 	@echo > $@
-	@for i in $(OBJS) $(M_OBJS); do \
+	@for i in $(OBJS) $(T_OBJS); do \
 	    c="$${i%.o}.c"; l="$${i%.o}.lo"; \
 	    $(CC) $(CFLAGS) -MM $$c | \
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
@@ -148,9 +155,9 @@ $(OBJS): Makefile
 $(LOBJS): Makefile
 
 version-prepare:
-	version=`sed -ne 's/^VERSION\s*=\s*//p' Makefile.in`; \
-	vercode=`echo $$version | awk '{ split($$1,a,"."); printf "0x00%02x%02x%02x",a[1],a[2],a[3] }'`; \
-	sed -i -e "/^VERCODE\s*=/s/=.*/= $$vercode/" Makefile.in
+	sed -i -e '/^Version: /s/:.*/: $(VERSION)/g' libxmp.pc.in
+	vercode=`printf "0x%02x%02x%02x" $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_RELEASE)`; \
+	sed -i -e "s/\(^#define XMP_VERSION\).*/\1 \"$(VERSION)\"/;s/\(^#define XMP_VERCODE\).*/\1 $$vercode/;s/\(^#define XMP_VER_MAJOR\).*/\1 $(VERSION_MAJOR)/;s/\(^#define XMP_VER_MINOR\).*/\1 $(VERSION_MINOR)/;s/\(^#define XMP_VER_RELEASE\).*/\1 $(VERSION_RELEASE)/" include/xmp.h
 	./config.status
 
 sinclude depend

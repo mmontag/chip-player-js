@@ -1,0 +1,20 @@
+XMP_3.9.0 {
+  global:
+    xmp_version;
+    xmp_vercode;
+    xmp_create_context;
+    xmp_free_context;
+    xmp_test_module;
+    xmp_load_module;
+    xmp_release_module;
+    xmp_player_start;
+    xmp_player_frame;
+    xmp_player_get_info;
+    xmp_player_end;
+    xmp_inject_event;
+    xmp_get_format_list;
+    xmp_control;
+  local:
+    *;
+};
+

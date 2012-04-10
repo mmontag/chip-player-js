@@ -60,7 +60,7 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	_D(_D_INFO "Instruments    : %d ", mod->ins);
+	D_(D_INFO "Instruments    : %d ", mod->ins);
 
 	INSTRUMENT_INIT();
 	for (i = 0; i < mod->ins; i++) {
@@ -106,7 +106,7 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[i].lpe >>= 1;
 		}
 
-		_D(_D_INFO "[%2X] %-28.28s  %05x%c%05x %05x %c "
+		D_(D_INFO "[%2X] %-28.28s  %05x%c%05x %05x %c "
 						"V%02x F%+03d %5d", i,
 			 	mod->xxi[i].name,
 				mod->xxs[i].len,
@@ -132,7 +132,7 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -165,7 +165,7 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* Read samples */
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)

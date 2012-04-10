@@ -143,7 +143,7 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, sfh.ins[i].name, 12);
 
-	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
+	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, sfh.ins[i].c2spd);
@@ -160,12 +160,12 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
 
     mod->len = i;
 
-    _D(_D_INFO "Module length: %d", mod->len);
+    D_(D_INFO "Module length: %d", mod->len);
 
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -208,7 +208,7 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len > 1) {

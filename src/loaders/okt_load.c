@@ -139,7 +139,7 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 
 	data->idx[j] = i;
 
-	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
+	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, mode[i]);
@@ -173,7 +173,7 @@ static void get_plen(struct module_data *m, int size, FILE *f, void *parm)
     struct xmp_module *mod = &m->mod;
 
     mod->len = read16b(f);
-    _D(_D_INFO "Module length: %d", mod->len);
+    D_(D_INFO "Module length: %d", mod->len);
 }
 
 
@@ -199,7 +199,7 @@ static void get_pbod(struct module_data *m, int size, FILE *f, void *parm)
 
     if (!data->pattern) {
 	PATTERN_INIT();
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
     }
 
     rows = read16b(f);
@@ -259,7 +259,7 @@ static void get_sbod(struct module_data *m, int size, FILE *f, void *parm)
     if (data->sample >= mod->ins)
 	return;
 
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     i = data->idx[data->sample];
     if (data->mode[i] == OKT_MODE8 || data->mode[i] == OKT_MODEB)

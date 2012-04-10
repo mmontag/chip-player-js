@@ -19,7 +19,8 @@
 #include "virtual.h"
 #include "mixer.h"
 
-const unsigned int xmp_version = VERSION;
+const char *xmp_version = XMP_VERSION;
+const unsigned int xmp_vercode = XMP_VERCODE;
 
 xmp_context xmp_create_context()
 {
@@ -89,7 +90,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	}
 }
 
-int _xmp_ctl(xmp_context opaque, int cmd, ...)
+int xmp_control(xmp_context opaque, int cmd, ...)
 {
 	va_list ap;
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -160,20 +161,6 @@ int _xmp_ctl(xmp_context opaque, int cmd, ...)
 		int arg = va_arg(ap, int);
 		s->mix = arg;
 		break; }
-	case XMP_CTL_QUIRK_FX9:
-		if (va_arg(ap, int)) {
-			m->quirk |= QUIRK_FX9BUG;
-		} else {
-			m->quirk &= ~QUIRK_FX9BUG;
-		}
-		break;
-	case XMP_CTL_QUIRK_FXEF:
-		if (va_arg(ap, int)) {
-			m->quirk |= QUIRK_FUNKIT;
-		} else {
-			m->quirk &= ~QUIRK_FUNKIT;
-		}
-		break;
 	default:
 		ret = -1;
 	}
@@ -194,6 +181,6 @@ void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 	struct player_data *p = &ctx->p;
 
 	memcpy(&p->inject_event[channel], e, sizeof(struct xmp_event));
-	p->inject_event[channel].flag = 1;
+	p->inject_event[channel]._flag = 1;
 }
  

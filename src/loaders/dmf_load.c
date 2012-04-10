@@ -187,7 +187,7 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 
 	PATTERN_INIT();
 
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -264,7 +264,7 @@ static void get_smpi(struct module_data *m, int size, FILE *f, void *parm)
 
 	INSTRUMENT_INIT();
 
-	_D(_D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "Instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		int x;
@@ -295,7 +295,7 @@ static void get_smpi(struct module_data *m, int size, FILE *f, void *parm)
 		read32l(f);	/* sampledata crc32 */
 
 		data->packtype[i] = (flag & 0x0c) >> 2;
-		_D(_D_INFO "[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x",
+		D_(D_INFO "[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x",
 				i, name, mod->xxs[i].len, mod->xxs[i].lps & 0xfffff,
 				mod->xxs[i].lpe & 0xfffff,
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -312,7 +312,7 @@ static void get_smpd(struct module_data *m, int size, FILE *f, void *parm)
 	int smpsize;
 	uint8 *sbuf, *ibuf;
 
-	_D(_D_INFO "Stored samples: %d", mod->ins);
+	D_(D_INFO "Stored samples: %d", mod->ins);
 
 	for (smpsize = i = 0; i < mod->smp; i++) {
 		if (mod->xxs[i].len > smpsize)
@@ -371,7 +371,7 @@ static int dmf_load(struct module_data *m, FILE *f, const int start)
 	fread(date, 3, 1, f);
 	
 	MODULE_INFO();
-	_D(_D_INFO "Creation date: %02d/%02d/%04d", date[0],
+	D_(D_INFO "Creation date: %02d/%02d/%04d", date[0],
 						date[1], 1900 + date[2]);
 	
 	handle = iff_new();

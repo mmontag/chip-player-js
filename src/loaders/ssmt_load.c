@@ -111,7 +111,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Read and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	/* Load notes */
 	for (i = 0; i < mod->pat; i++) {
@@ -177,7 +177,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* Read instrument data */
-	_D(_D_INFO "Instruments    : %d ", mod->ins);
+	D_(D_INFO "Instruments    : %d ", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		char filename[1024];
@@ -203,7 +203,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].sub[0].pan = 0x80;
 #endif
 
-		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
+		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x", i,
 				mod->xxi[i].name,
 				mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',

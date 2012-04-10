@@ -59,13 +59,13 @@ struct local_data {
 };
 
 /* prototypes */
-void code_resync(int old, struct local_data *);
-void inittable(int orgcsize, struct local_data *);
-int addstring(int oldcode,int chr, struct local_data *);
-int readcode(int *newcode,int numbits, struct local_data *);
-void outputstring(int code, struct local_data *);
-void outputchr(int chr, struct local_data *);
-int findfirstchr(int code, struct local_data *);
+static void code_resync(int old, struct local_data *);
+static void inittable(int orgcsize, struct local_data *);
+static int addstring(int oldcode,int chr, struct local_data *);
+static int readcode(int *newcode,int numbits, struct local_data *);
+static void outputstring(int code, struct local_data *);
+static void outputchr(int chr, struct local_data *);
+static int findfirstchr(int code, struct local_data *);
 
 
 static unsigned char *_convert_lzw_dynamic(unsigned char *data_in,
@@ -245,7 +245,7 @@ unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
  * (and ghod, was this ever a complete bastard to track down.)
  * mmm, nice, tell me again why this format is dead?
  */
-void code_resync(int old, struct local_data *data)
+static void code_resync(int old, struct local_data *data)
 {
 int tmp;
 
@@ -258,7 +258,7 @@ while(data->codeofs)
 }
 
 
-void inittable(int orgcsize, struct local_data *data)
+static void inittable(int orgcsize, struct local_data *data)
 {
 int f;
 int numcols=(1<<(orgcsize-1));
@@ -293,7 +293,7 @@ else
 
 
 /* required for finding true table index in ver 1.x files */
-int oldver_getidx(int oldcode,int chr, struct local_data *data)
+static int oldver_getidx(int oldcode,int chr, struct local_data *data)
 {
 int lasthash,hashval;
 int a,f;
@@ -386,7 +386,7 @@ return(1);
 
 
 /* read a code of bitlength numbits */
-int readcode(int *newcode,int numbits, struct local_data *data)
+static int readcode(int *newcode,int numbits, struct local_data *data)
 {
 int bitsfilled,got;
 
@@ -440,7 +440,7 @@ return(1);
 }
 
 
-void outputstring(int code, struct local_data *data)
+static void outputstring(int code, struct local_data *data)
 {
 int *ptr=data->outputstring_buf;
 
@@ -465,7 +465,7 @@ if(io->data_out_point<io->data_out_max)
 }
 
 
-void outputchr(int chr, struct local_data *data)
+static void outputchr(int chr, struct local_data *data)
 {
 if(data->global_use_rle)
   outputrle(chr,rawoutput,&data->rd,&data->io);
@@ -474,7 +474,7 @@ else
 }
 
 
-int findfirstchr(int code, struct local_data *data)
+static int findfirstchr(int code, struct local_data *data)
 {
 if(data->st_ptr[code]!=UNUSED)   /* not first? then use brand new st_ptr1st! */
   code=data->st_ptr1st[code];    /* now with no artificial colouring */

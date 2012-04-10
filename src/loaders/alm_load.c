@@ -106,7 +106,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -125,7 +125,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    _D(_D_INFO "Loading samples: %d", mod->ins);
+    D_(D_INFO "Loading samples: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -151,7 +151,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
 	mod->xxi[i].sub[0].vol = 0x40;
 	mod->xxi[i].sub[0].sid = i;
 
-	_D(_D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x", i,
+	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x", i,
 		filename, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 

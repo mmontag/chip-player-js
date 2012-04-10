@@ -155,7 +155,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 
 		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
-		_D(_D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
+		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 			     i, mod->xxi[i].name, mod->xxs[i].len,
 			     mod->xxs[i].lps, mod->xxs[i].lpe,
 			     mh.ins[i].loop_size > 1 ? 'L' : ' ',
@@ -166,7 +166,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 	PATTERN_INIT();
 
 	/* Load and convert patterns */
-	_D(_D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -183,7 +183,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 
 	/* Load samples */
 
-	_D(_D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->smp; i++) {
 		load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}

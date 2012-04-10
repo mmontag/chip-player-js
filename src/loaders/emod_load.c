@@ -83,7 +83,7 @@ static void get_emic(struct module_data *m, int size, FILE *f, void *parm)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	_D(_D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x %+d",
+	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x %+d",
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
@@ -109,7 +109,7 @@ static void get_emic(struct module_data *m, int size, FILE *f, void *parm)
 
     mod->len = read8(f);
 
-    _D(_D_INFO "Module length: %d", mod->len);
+    D_(D_INFO "Module length: %d", mod->len);
 
     for (i = 0; i < mod->len; i++)
 	mod->xxo[i] = reorder[read8(f)];
@@ -123,7 +123,7 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
     struct xmp_event *event;
     uint8 x;
 
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	for (j = 0; j < mod->xxp[i]->rows; j++) {
@@ -161,7 +161,7 @@ static void get_8smp(struct module_data *m, int size, FILE *f, void *parm)
     struct xmp_module *mod = &m->mod;
     int i;
 
-    _D(_D_INFO, "Stored samples : %d ", mod->smp);
+    D_(D_INFO, "Stored samples : %d ", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
 	load_sample(f, 0, &mod->xxs[i], NULL);

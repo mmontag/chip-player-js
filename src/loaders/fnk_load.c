@@ -159,7 +159,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
     m->quirk |= QUIRK_LINEAR;
 
     MODULE_INFO();
-    _D(_D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
+    D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 
     INSTRUMENT_INIT();
 
@@ -178,7 +178,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, ffh.fih[i].name, 19);
 
-	_D(_D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x", i,
+	D_(D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x", i,
 		mod->xxi[i].name,
 		mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -188,7 +188,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
     PATTERN_INIT();
 
     /* Read and convert patterns */
-    _D(_D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -278,7 +278,7 @@ static int fnk_load(struct module_data *m, FILE *f, const int start)
     }
 
     /* Read samples */
-    _D(_D_INFO "Stored samples: %d", mod->smp);
+    D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)

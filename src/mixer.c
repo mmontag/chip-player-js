@@ -511,7 +511,9 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-	anticlick(ctx, voc, vol, vi->pan, NULL, 0);
+	if (~vi->fidx & FLAG_FILTER)
+		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
+
 	vi->vol = vol;
 
 	if (vi->fidx & FLAG_SYNTH) {

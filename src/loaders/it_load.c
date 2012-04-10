@@ -433,7 +433,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 
     MODULE_INFO();
 
-    _D(_D_INFO "Instrument/FX mode: %s/%s",
+    D_(D_INFO "Instrument/FX mode: %s/%s",
 			ifh.flags & IT_USE_INST ? ifh.cmwt >= 0x200 ?
 			"new" : "old" : "sample",
 			ifh.flags & IT_OLD_FX ? "old" : "IT");
@@ -447,7 +447,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	i = ftell(f);
 	fseek(f, start + ifh.msgofs, SEEK_SET);
 
-	_D(_D_INFO "Message length : %d", ifh.msglen);
+	D_(D_INFO "Message length : %d", ifh.msglen);
 
 	for (j = 0; j < ifh.msglen; j++) {
 	    b = read8(f);
@@ -464,7 +464,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 
     INSTRUMENT_INIT();
 
-    _D(_D_INFO "Instruments: %d", mod->ins);
+    D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
 	/*
@@ -596,7 +596,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	        }
 	    }
 
-	    _D(_D_INFO
+	    D_(D_INFO
 			"[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
 			"%02x %c%c%c %3d %02x %02x",
 		i, i2h.name,
@@ -708,7 +708,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	        }
 	    }
 
-	    _D(_D_INFO "[%2X] %-26.26s %-4.4s %-4.4s %4d %2d %c%c%c %3d",
+	    D_(D_INFO "[%2X] %-26.26s %-4.4s %-4.4s %4d %2d %c%c%c %3d",
 		i, i1h.name,
 		i1h.nna < 4 ? nna[i1h.nna] : "none",
 		i1h.dnc ? "on" : "off",
@@ -722,7 +722,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored Samples: %d", mod->smp);
+    D_(D_INFO "Stored Samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
 	struct xmp_sample *xxs = &mod->xxs[i];
@@ -785,7 +785,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 
 #define MAX(x) ((x) > 0xfffff ? 0xfffff : (x))
 
-	_D(_D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
+	D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 		    "%02x%02x %02x%02x %5d ",
 		    i, ifh.flags & IT_USE_INST ?
 				mod->xxi[i].name : xxs->name,
@@ -805,9 +805,15 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	
 	for (j = 0; j < mod->ins; j++) {
 	    for (k = 0; k < mod->xxi[j].nsm; k++) {
-		if (mod->xxi[j].sub[k].sid == i) {
-		    mod->xxi[j].sub[k].vol = ish.vol;
-		    mod->xxi[j].sub[k].gvl = ish.gvl;
+		struct xmp_subinstrument *sub = &mod->xxi[j].sub[k];
+		if (sub->sid == i) {
+		    sub->vol = ish.vol;
+		    sub->gvl = ish.gvl;
+		    sub->vra = ish.vis;	/* sample to sub-instrument vibrato */
+		    sub->vde = ish.vid;
+		    sub->vwf = ish.vit;
+		    sub->vsw = ish.vir;
+
 		    c2spd_to_note(ish.c5spd, &mod->xxi[j].sub[k].xpo, &mod->xxi[j].sub[k].fin);
 		}
 	    }
@@ -848,7 +854,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	}
     }
 
-    _D(_D_INFO "Stored Patterns: %d", mod->pat);
+    D_(D_INFO "Stored Patterns: %d", mod->pat);
 
     mod->trk = mod->pat * mod->chn;
     memset(arpeggio_val, 0, 64);
