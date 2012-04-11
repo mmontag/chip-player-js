@@ -28,3 +28,6 @@ autom4te.cache
 players/xmp/Makefile
 players/xmp/src/xmp
 xmp.pc
+Makefile
+lib/
+libxmp.pc
