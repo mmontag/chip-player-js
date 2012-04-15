@@ -189,7 +189,7 @@ int ch;
 }
 */
 
-unsigned int copy_file(FILE *in, FILE *out, int len, struct inflate_data *data)
+static unsigned int copy_file(FILE *in, FILE *out, int len, struct inflate_data *data)
 {
 unsigned char buffer[BUFFER_SIZE];
 unsigned int checksum;
@@ -215,7 +215,8 @@ int t,r;
   return checksum^0xffffffff;
 }
 
-int create_dirs(char *filename)
+#if 0
+static int create_dirs(char *filename)
 {
 struct stat buf;
 char path[1024];
@@ -248,6 +249,7 @@ printf("path=%s\n",path);
 
   return 0;
 }
+#endif
 
 int read_zip_header(FILE *in, struct zip_local_file_header_t *local_file_header)
 {
