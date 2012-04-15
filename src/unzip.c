@@ -34,6 +34,10 @@ Michael Kohn <mike@mikekohn.net>
 #define strncpy strlcpy
 #endif
 
+#ifdef WIN32
+#define strncasecmp strnicmp
+#endif
+
 struct zip_local_file_header_t
 {
   unsigned int signature;
