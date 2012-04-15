@@ -228,7 +228,6 @@ static void get_sequ(struct module_data *m, int size, FILE *f, void *parm)
 	set_type(m, "Archimedes Tracker");
 
 	MODULE_INFO();
-	D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 }
 
 static void get_patt(struct module_data *m, int size, FILE *f, void *parm)

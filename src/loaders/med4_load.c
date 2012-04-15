@@ -530,8 +530,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		strncpy((char *)mod->xxi[i].name, temp_inst[i].name, 32);
 
-		D_(D_INFO "\n[%2X] %-32.32s %s",
-			i, mod->xxi[i].name, inst_type[type + 2]);
+		D_(D_INFO "\n[%2X] %-32.32s %d", i, mod->xxi[i].name, type);
 
 		/* This is very similar to MMD1 synth/hybrid instruments,
 		 * but just different enough to be reimplemented here.
@@ -680,7 +679,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		mod->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
 						XMP_SAMPLE_LOOP : 0;
 
-		D_(D_INFO, "  %04x %04x %04x %c V%02x %+03d",
+		D_(D_INFO "  %04x %04x %04x %c V%02x %+03d",
 			mod->xxs[smp_idx].len, mod->xxs[smp_idx].lps,
 			mod->xxs[smp_idx].lpe,
 			mod->xxs[smp_idx].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',

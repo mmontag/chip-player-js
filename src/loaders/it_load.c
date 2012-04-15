@@ -596,13 +596,10 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	        }
 	    }
 
-	    D_(D_INFO
-			"[%2X] %-26.26s %-4.4s %-4.4s %-4.4s %4d %4d  %2x "
+	    D_(D_INFO "[%2X] %-26.26s %d %d %d %4d %4d  %2x "
 			"%02x %c%c%c %3d %02x %02x",
 		i, i2h.name,
-		i2h.nna < 4 ? nna[i2h.nna] : "none",
-		i2h.dct < 4 ? dct[i2h.dct] : "none",
-		i2h.dca < 3 ? nna[dca2nna[i2h.dca]] : "none",
+		i2h.nna, i2h.dct, i2h.dca,
 		i2h.fadeout,
 		i2h.gbv,
 		i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4,
@@ -708,9 +705,9 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	        }
 	    }
 
-	    D_(D_INFO "[%2X] %-26.26s %-4.4s %-4.4s %4d %2d %c%c%c %3d",
+	    D_(D_INFO "[%2X] %-26.26s %d %-4.4s %4d %2d %c%c%c %3d",
 		i, i1h.name,
-		i1h.nna < 4 ? nna[i1h.nna] : "none",
+		i1h.nna,
 		i1h.dnc ? "on" : "off",
 		i1h.fadeout,
 		xxi->aei.npt,

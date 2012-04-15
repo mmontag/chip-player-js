@@ -299,7 +299,7 @@ static void get_smpi(struct module_data *m, int size, FILE *f, void *parm)
 				i, name, mod->xxs[i].len, mod->xxs[i].lps & 0xfffff,
 				mod->xxs[i].lpe & 0xfffff,
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				'0' + packtype[i],
+				'0' + data->packtype[i],
 				c3spd, mod->xxi[i].sub[0].vol);
 	}
 }

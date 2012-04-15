@@ -300,7 +300,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 		read32l(f);			/* 0x00000000 */
 		read32l(f);			/* unknown */
 	
-		D_(D_INFO, "  %X: %05x%c%05x %05x %c V%02x P%02x %5d",
+		D_(D_INFO "  %X: %05x%c%05x %05x %c V%02x P%02x %5d",
 			j, mod->xxs[data->snum].len,
 			mod->xxs[data->snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			mod->xxs[data->snum].lps,

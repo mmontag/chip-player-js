@@ -13,6 +13,7 @@
 #define read_word(x) read16l(x)
 
 #define ZIP
+#undef DEBUG
 
 /*
 

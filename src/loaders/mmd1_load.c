@@ -370,9 +370,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 		    fread(name, 40, 1, f);
 		}
 
-		D_(D_INFO "\n[%2x] %-40.40s %s", i, name,
-				instr.type + 2 <= MMD_INST_TYPES ?
-					mmd_inst_type[instr.type + 2] : "???");
+		D_(D_INFO "\n[%2x] %-40.40s %d", i, name, instr.type);
 
 		exp_smp.finetune = 0;
 		if (expdata_offset && i < expdata.s_ext_entries) {

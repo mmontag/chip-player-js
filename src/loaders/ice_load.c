@@ -111,10 +111,10 @@ static int ice_load(struct module_data *m, FILE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c %02x %+01x",
-		i, ih.ins[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol,
-		mod->xxi[i].sub[0].fin >> 4);
+	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c %02x %01x",
+		i, ih.ins[i].name, mod->xxs[i].len, mod->xxs[i].lps,
+		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
     }
 
     PATTERN_INIT();

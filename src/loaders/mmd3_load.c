@@ -342,7 +342,6 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
-		int t;
 		char name[40] = "";
 
 		fseek(f, start + smplarr_offset + i * 4, SEEK_SET);
@@ -360,12 +359,10 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 		pos = ftell(f);
 
 		if (expdata_offset && i < expdata.i_ext_entries) {
-			fseek(f, iinfo_offset + i * expdata.i_ext_entrsz, SEEK_SET);
+			fseek(f, iinfo_offset + i * expdata.i_ext_entrsz,
+								SEEK_SET);
 			fread(name, 40, 1, f);
-
-			t = (instr.type + 2) & ~(S_16 | STEREO);
-			D_(D_INFO "[%2x] %-40.40s %s", i, name,
-				t <= MMD_INST_TYPES ? mmd_inst_type[t] : "???");
+			D_(D_INFO "[%2x] %-40.40s %d", i, name, instr.type);
 		}
 
 		exp_smp.finetune = 0;
