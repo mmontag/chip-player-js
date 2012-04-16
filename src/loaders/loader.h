@@ -53,8 +53,8 @@ static inline int is_big_endian() {
 } while (0)
 
 #define MODULE_INFO() do { \
-    D_(D_WARN "Module title: \"%s\"", m->name); \
-    D_(D_WARN "Module type: %s", m->type); \
+    D_(D_WARN "Module title: \"%s\"", m->mod.name); \
+    D_(D_WARN "Module type: %s", m->mod.type); \
 } while (0)
 
 #define INSTRUMENT_INIT() do { \

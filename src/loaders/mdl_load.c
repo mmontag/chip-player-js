@@ -478,7 +478,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
 	str_adj(buf);
 	strncpy((char *)mod->xxi[i].name, buf, 32);
 
-	D_(D_INFO "[%2X] %-32.32s %2d", i_index[i],
+	D_(D_INFO "[%2X] %-32.32s %2d", data->i_index[i],
 				mod->xxi[i].name, mod->xxi[i].nsm);
 
 	mod->xxi[i].sub = calloc (sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
@@ -527,8 +527,8 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
 		data->f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
 	    D_(D_INFO "  %2x: V%02x S%02x v%02x p%02x f%02x",
-				j, mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].sid,
-				v_index[i], p_index[i], f_index[i]);
+			j, mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].sid,
+			data->v_index[i], data->p_index[i], data->f_index[i]);
 	}
     }
 }
@@ -578,7 +578,7 @@ static void get_chunk_is(struct module_data *m, int size, FILE *f, void *parm)
 	data->packinfo[i] = (x & 0x0c) >> 2;
 
 	D_(D_INFO "[%2X] %-32.32s %05x%c %05x %05x %c %6d %d",
-			s_index[i], buf,
+			data->s_index[i], buf,
 			mod->xxs[i].len,
 			mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			mod->xxs[i].lps,
@@ -637,9 +637,9 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
 	data->packinfo[i] = (x & 0x0c) >> 2;
 
 	D_(D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
-		i_index[i], buf, c2spd[i],  mod->xxi[i].sub[0].vol,
+		data->i_index[i], buf, data->c2spd[i],  mod->xxi[i].sub[0].vol,
 		mod->xxs[i].len,mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		mod->xxs[i].lps, mod->xxs[i].lpe, packinfo[i]);
+		mod->xxs[i].lps, mod->xxs[i].lpe, data->packinfo[i]);
     }
 }
 

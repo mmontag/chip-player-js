@@ -108,7 +108,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 
 	MODULE_INFO();
 
-	D_(D_INFO, "Sliding: %d", sliding);
+	D_(D_INFO "Sliding: %d", sliding);
 
 	if (sliding == 6)
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;

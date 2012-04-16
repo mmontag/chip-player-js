@@ -108,7 +108,7 @@ static int dtt_load(struct module_data *m, FILE *f, const int start)
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].sub[0].sid = i;
 
-		D_(D_INFO "[%2X] %-32.32s  %04x %04x %04x %c V%02x\n",
+		D_(D_INFO "[%2X] %-32.32s  %04x %04x %04x %c V%02x %d\n",
 				i, mod->xxi[i].name, mod->xxs[i].len,
 				mod->xxs[i].lps, mod->xxs[i].lpe,
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',

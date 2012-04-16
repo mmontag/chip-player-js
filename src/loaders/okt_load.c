@@ -142,7 +142,7 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		mod->xxi[i].sub[0].vol, mode[i]);
+		mod->xxi[i].sub[0].vol, data->mode[i]);
 
 	if (mod->xxi[i].nsm)
 	    j++;

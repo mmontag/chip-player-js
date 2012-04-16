@@ -8,8 +8,10 @@
 
 #include <ctype.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <stdarg.h>
+#ifndef WIN32
+#include <dirent.h>
+#endif
 
 #include "xmp.h"
 #include "common.h"
@@ -94,6 +96,10 @@ void disable_continue_fx(struct xmp_event *event)
 	}
 }
 
+#ifndef WIN32
+
+/* Given a directory, see if file exists there, ignoring case */
+
 int check_filename_case(char *dir, char *name, char *new_name, int size)
 {
 	int found = 0;
@@ -119,6 +125,17 @@ int check_filename_case(char *dir, char *name, char *new_name, int size)
 	return found;
 }
 
+#else
+
+/* FIXME: implement functionality for Win32 */
+
+int check_filename_case(char *dir, char *name, char *new_name, int size)
+{
+	return 0;
+}
+
+#endif
+
 void get_instrument_path(struct module_data *m, char *var, char *path, int size)
 {
 	if (m->instrument_path) {
@@ -126,6 +143,7 @@ void get_instrument_path(struct module_data *m, char *var, char *path, int size)
 	} else if (var && getenv(var)) {
 		strncpy(path, getenv(var), size);
 	} else if (getenv("XMP_INSTRUMENT_PATH")) {
+
 		strncpy(path, getenv("XMP_INSTRUMENT_PATH"), size);
 	} else {
 		strncpy(path, ".", size);
