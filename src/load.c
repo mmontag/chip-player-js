@@ -140,9 +140,6 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     } else if (b[0] == 'B' && b[1] == 'Z' && b[2] == 'h') {
 	packer = "bzip2";
 	cmd = "bzip2 -dc \"%s\"";
-    } else if (b[0] == 0x5d && b[1] == 0 && b[2] == 0 && b[3] == 0x80) {
-	packer = "lzma";
-	cmd = "lzma -dc \"%s\"";
     } else if (b[0] == 0xfd && b[3] == 'X' && b[4] == 'Z' && b[5] == 0x00) {
 	packer = "xz";
 	cmd = "xz -dc \"%s\"";

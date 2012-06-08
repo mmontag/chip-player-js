@@ -8,6 +8,7 @@ Stable versions
 	- remove all global data, make library code fully thread-safe
 	- remove configuration files
 	- remove support to uLaw-encoded output
+	- remove bogus lzma file detection (by Bodo Thiesen)
 	- extend note range to full 10-octave range
 	- extensive code refactoring
 	- rewrite MMCMP decompressor to be endian-safe
