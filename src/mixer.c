@@ -341,11 +341,11 @@ void mixer_softmixer(struct context_data *ctx)
 					vi->sright = buf_pos[idx - 2] - prev_r;
 					vi->sleft = buf_pos[idx - 1] - prev_l;
 				}
+			} else {
+				vi->frac += step * samples;
+				vi->pos += vi->frac >> SMIX_SHIFT;
+				vi->frac &= SMIX_MASK;
 			}
-
-			vi->frac += step * samples;
-			vi->pos += vi->frac >> SMIX_SHIFT;
-			vi->frac &= SMIX_MASK;
 
 			/* No more samples in this tick */
 			size -= samples;
