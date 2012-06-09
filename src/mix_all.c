@@ -126,11 +126,6 @@
     vi->filter.r2 = fr2; \
 } while (0)
 
-#define SAVE_VARS() do { \
-    vi->pos = pos; \
-    vi->frac = frac; \
-} while (0)
-
 #define SMIX_MIXER(f) void f(struct mixer_voice *vi, int *buffer, \
     int count, int vl, int vr, int step)
 
@@ -141,7 +136,6 @@ SMIX_MIXER(smix_st8itpt)
 {
     VAR_ITPT(int8);
     while (count--) { INTERPOLATE(); MIX_STEREO_AC(); }
-    SAVE_VARS();
 }
 
 
@@ -154,7 +148,6 @@ SMIX_MIXER(smix_st16itpt)
     vl >>= 8;
     vr >>= 8;
     while (count--) { INTERPOLATE(); MIX_STEREO_AC(); }
-    SAVE_VARS();
 }
 
 
@@ -164,7 +157,6 @@ SMIX_MIXER(smix_st8norm)
 {
     VAR_NORM(int8);
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
-    SAVE_VARS();
 }
 
 
@@ -177,7 +169,6 @@ SMIX_MIXER(smix_st16norm)
     vl >>= 8;
     vr >>= 8;
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); }
-    SAVE_VARS();
 }
 
 
@@ -189,7 +180,6 @@ SMIX_MIXER(smix_mn8itpt)
 
     vl <<= 1;
     while (count--) { INTERPOLATE(); MIX_MONO_AC(); }
-    SAVE_VARS();
 }
 
 
@@ -201,7 +191,6 @@ SMIX_MIXER(smix_mn16itpt)
 
     vl >>= 7;
     while (count--) { INTERPOLATE(); MIX_MONO_AC(); }
-    SAVE_VARS();
 }
 
 
@@ -213,7 +202,6 @@ SMIX_MIXER(smix_mn8norm)
 
     vl <<= 1;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
-    SAVE_VARS();
 }
 
 
@@ -225,7 +213,6 @@ SMIX_MIXER(smix_mn16norm)
 
     vl >>= 7;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); }
-    SAVE_VARS();
 }
 
 /*
@@ -241,7 +228,6 @@ SMIX_MIXER(smix_st8itpt_flt)
 
     while (count--) { INTERPOLATE(); MIX_STEREO_AC_FILTER(); }
     SAVE_FILTER_STEREO();
-    SAVE_VARS();
 }
 
 
@@ -256,7 +242,6 @@ SMIX_MIXER(smix_st16itpt_flt)
     vr >>= 8;
     while (count--) { INTERPOLATE(); MIX_STEREO_AC_FILTER(); }
     SAVE_FILTER_STEREO();
-    SAVE_VARS();
 }
 
 
@@ -270,7 +255,6 @@ SMIX_MIXER(smix_mn8itpt_flt)
     vl <<= 1;
     while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); }
     SAVE_FILTER_MONO();
-    SAVE_VARS();
 }
 
 
@@ -284,6 +268,5 @@ SMIX_MIXER(smix_mn16itpt_flt)
     vl >>= 7;
     while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); }
     SAVE_FILTER_MONO();
-    SAVE_VARS();
 }
 
