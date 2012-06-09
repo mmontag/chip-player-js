@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-import sys, os, xmp
+import sys
+import os
+import libxmp
 
 argc = len(sys.argv)
 argv = sys.argv
@@ -9,9 +11,9 @@ if argc < 2:
 	print "Usage: %s <module> [channels]" % (os.path.basename(argv[0]))
 	sys.exit(1)
 
-info = xmp.struct_xmp_module_info()
+info = libxmp.struct_xmp_module_info()
 
-x = xmp.Xmp()
+x = libxmp.Xmp()
 try:
 	x.loadModule(argv[1])
 except IOError as (errno, strerror):

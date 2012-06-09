@@ -104,8 +104,8 @@ PT4b2		Cont	NewVol	NewVol	Cut	<=
 MED		Cont	NewVol	NewVol	Cut	<=
 FT2		Cont	OldVol	OldVol	OldVol
 ST3		Cont	NewVol	NewVol	Cont
-IT(s)		Cont	NewVol	NewVol	Cont
-IT(i) @		Cont	NewVol	NewVol	Cont
+IT(s)		Cont	Play+	Play+	Cont
+IT(i) @		Cont	Play+	Play+	Cont
 DT32		Cont	NewVol	NewVol	Cut
 
 
@@ -144,6 +144,9 @@ DT32		Cont	NewVol	NewVol	Cut
     03 --- 00 000
     04 --- 00 000  <=  End of instrument 01
     05 C-2 01 G0F  <=  Play instrument 01 again (yuck!)
+
+  + Was NewVol in this document, but Mirko Buffoni reports that this should
+    be Play instead (see commit c230825c)
 
 
 2. XM and IT envelopes
