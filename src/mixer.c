@@ -289,7 +289,7 @@ void mixer_softmixer(struct context_data *ctx)
 		while (size > 0) {
 			/* How many samples we can write before the loop break
 			 * or sample end... */
-			samples = (((int64)(vi->end - vi->pos) <<
+			samples = (((int64)(vi->end - vi->pos + 1) <<
 					SMIX_SHIFT) - vi->frac) / step;
 
 			if (step > 0) {
