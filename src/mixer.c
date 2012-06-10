@@ -276,28 +276,21 @@ void mixer_softmixer(struct context_data *ctx)
 			continue;
 		}
 
-		step = ((int64)s->pbase << (8 + SMIX_SHIFT)) / vi->period;
-
+		step = ((int64)s->pbase << 24) / vi->period;
 		if (step == 0) {	/* otherwise m5v-nwlf.it crashes */
 			continue;
 		}
 
 		xxs = &m->mod.xxs[vi->smp];
 
-		size = s->ticksize;
-
-		while (size > 0) {
+		for (size = s->ticksize; size > 0; ) {
 			/* How many samples we can write before the loop break
 			 * or sample end... */
-			samples = (((int64)(vi->end - vi->pos + 1) <<
-					SMIX_SHIFT) - vi->frac) / step;
-
-			if (step > 0) {
-				if (vi->pos > vi->end)
-					samples = 0;
+			if (vi->pos > vi->end) {
+				samples = 0;
 			} else {
-				if (vi->pos < vi->end)
-					samples = 0;
+				samples = (((int64)(vi->end - vi->pos + 1) <<
+					SMIX_SHIFT) - vi->frac) / step;
 			}
 
 			/* ...inside the tick boundaries */
