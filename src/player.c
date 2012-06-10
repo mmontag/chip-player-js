@@ -356,7 +356,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	/* For xmp_player_get_info() */
 	xc->info_pitchbend = linear_bend;
-	xc->info_period = note_to_period_mix(xc->note, linear_bend) >> 8;
+	xc->info_period = note_to_period_mix(xc->note, linear_bend);
 
 	virt_setbend(ctx, chn, linear_bend);
 
