@@ -242,6 +242,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int samples, size;
 	int vol_l, vol_r, step, voc;
 	int prev_l, prev_r;
+	int lps, lpe;
 	int synth = 1;
 	int32 *buf_pos;
 
@@ -276,28 +277,24 @@ void mixer_softmixer(struct context_data *ctx)
 			continue;
 		}
 
-		step = ((int64)s->pbase << SMIX_SHIFT) / vi->period;
+		step = ((int64)s->pbase << 24) / vi->period;
 
 		if (step == 0) {	/* otherwise m5v-nwlf.it crashes */
 			continue;
 		}
 
 		xxs = &m->mod.xxs[vi->smp];
+		lps = xxs->lps;
+		lpe = xxs->lpe;
 
-		size = s->ticksize;
-
-		while (size > 0) {
+		for (size = s->ticksize; size > 0; ) {
 			/* How many samples we can write before the loop break
 			 * or sample end... */
-			samples = (((int64)(vi->end - vi->pos + 1) <<
-					SMIX_SHIFT) - vi->frac) / step;
-
-			if (step > 0) {
-				if (vi->pos > vi->end)
-					samples = 0;
+			if (vi->pos >= vi->end) {
+				samples = 0;
 			} else {
-				if (vi->pos < vi->end)
-					samples = 0;
+				samples = 1 + (((int64)(vi->end - vi->pos) <<
+					SMIX_SHIFT) - vi->frac) / step;
 			}
 
 			/* ...inside the tick boundaries */
@@ -360,12 +357,12 @@ void mixer_softmixer(struct context_data *ctx)
 				continue;
 			}
 
-			vi->pos = xxs->lps;	/* forward loop */
-			vi->end = xxs->lpe;
+			vi->pos -= lpe - lps;	/* forward loop */
+			vi->end = lpe;
 			vi->sample_loop = 1;
 
 			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-				vi->end += (xxs->lpe - xxs->lps);
+				vi->end += lpe - lps;
 			}
 		}
 	}

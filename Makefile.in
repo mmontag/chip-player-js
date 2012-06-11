@@ -1,6 +1,6 @@
 VERSION_MAJOR	= 3
 VERSION_MINOR	= 9
-VERSION_RELEASE	= 2
+VERSION_RELEASE	= 3
 
 COMPAT_MINOR	= 9
 
@@ -126,7 +126,7 @@ install: all
 	@$(INSTALL) include/xmp.h $(DESTDIR)$(INCLUDEDIR)
 	@echo "Installing libxmp.pc..."
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
-	$(INSTALL) libxmp.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
+	@$(INSTALL) libxmp.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
 
 depend: test/all_tests.c
 	@echo Building dependencies...

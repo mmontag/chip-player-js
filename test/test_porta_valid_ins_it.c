@@ -63,9 +63,9 @@ TEST(test_porta_valid_ins_it)
 	 * sample but sets the volume to the new instrument's default volume.
 	 */
 	xmp_player_frame(opaque);
-	fail_unless(vi->ins  ==  0, "not original instrument");
-	fail_unless(vi->note == 59, "not same note");
+	fail_unless(vi->ins  ==  1, "not new instrument");
+	fail_unless(vi->note == 49, "not new note");
 	fail_unless(vi->vol  == 33 * 16, "not new volume");
-	fail_unless(vi->pos0 !=  0, "sample reset");
+	fail_unless(vi->pos0 ==  0, "sample didn't reset");
 }
 END_TEST

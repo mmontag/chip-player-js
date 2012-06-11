@@ -668,9 +668,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			}
 			if (xc->ins != ins) {
 				not_same_ins = 1;
-				if (!is_toneporta) {
-					candidate_ins = ins;
-				} else {
+				candidate_ins = ins;
+				if (is_toneporta) {
 					/* Get new instrument volume */
 					sub = get_subinstrument(ctx, ins, key);
 					if (sub != NULL) {
@@ -710,8 +709,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				flags |= NEW_INS;
 			} else {
 				cont_sample = 1;
+				key = 0;
 			}
-			key = 0;
 		}
 	}
 
