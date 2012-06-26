@@ -1023,7 +1023,7 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->pan = c->info_finalpan;
 			ci->reserved = 0;
 	
-			if (info->pattern < mod->pat) {
+			if (info->pattern < mod->pat && info->row < info->num_rows) {
 				track = mod->xxp[info->pattern]->index[i];
 				event = &mod->xxt[track]->event[info->row];
 				memcpy(&ci->event, event, sizeof(*event));
