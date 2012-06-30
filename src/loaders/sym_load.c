@@ -281,10 +281,16 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 	D_(D_INFO "Packed sequence: %s", a ? "yes" : "no");
 
 	size = mod->len * mod->chn * 2;
-	buf = malloc(size);
+	if ((buf = malloc(size)) == NULL)
+		return -1;
 
 	if (a) {
-		read_lzw_dynamic(f, buf, 13, 0, size, size, XMP_LZW_QUIRK_DSYM);
+		unsigned char *x = read_lzw_dynamic(f, buf, 13, 0, size,
+						size, XMP_LZW_QUIRK_DSYM);
+		if (x == NULL) {
+			free(buf);
+			return -1;
+		}
 	} else {
 		fread(buf, 1, size, f);
 	}
@@ -315,10 +321,16 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 	D_(D_INFO "Stored tracks: %d", mod->trk - 1);
 
 	size = 64 * (mod->trk - 1) * 4;
-	buf = malloc(size);
+	if ((buf = malloc(size)) == NULL)
+		return -1;
 
 	if (a) {
-		read_lzw_dynamic(f, buf, 13, 0, size, size, XMP_LZW_QUIRK_DSYM);
+		unsigned char *x = read_lzw_dynamic(f, buf, 13, 0, size,
+						size, XMP_LZW_QUIRK_DSYM);
+		if (x = NULL) {
+			free(buf);
+			return -1;
+		}
 	} else {
 		fread(buf, 1, size, f);
 	}

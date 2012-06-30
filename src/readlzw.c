@@ -84,8 +84,10 @@ data->quirk = q;
 data->global_use_rle=use_rle;
 data->maxstr=(1<<max_bits);
 
-if((data_out=malloc(orig_len))==NULL)
-  fprintf(stderr,"nomarch: out of memory!\n"),exit(1);
+if((data_out=malloc(orig_len))==NULL) {
+  fprintf(stderr,"nomarch: out of memory!\n");
+  return NULL;
+}
 
 data->io.data_in_point=data_in; data->io.data_in_max=data_in+in_len;
 data->io.data_out_point=data_out; data->io.data_out_max=data_out+orig_len;
@@ -222,19 +224,27 @@ unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
 	uint8 *buf2, *b;
 	int pos;
 	int size;
-	struct local_data data;
+	struct local_data *data;
 
-	if ((buf2 = malloc(in_len)) == NULL)
-		perror("read_lzw_dynamic"), exit(1);
+	if ((data = malloc(sizeof (struct local_data))) == NULL) {
+		return NULL;
+	}
+
+	if ((buf2 = malloc(in_len)) == NULL) {
+		perror("read_lzw_dynamic");
+		return NULL;
+	}
+
 	pos = ftell(f);
 	fread(buf2, 1, in_len, f);
-	b = _convert_lzw_dynamic(buf2, max_bits, use_rle, in_len, orig_len, q, &data);
+	b = _convert_lzw_dynamic(buf2, max_bits, use_rle, in_len, orig_len, q, data);
 	memcpy(buf, b, orig_len);
-	size = q & NOMARCH_QUIRK_ALIGN4 ? ALIGN4(data.nomarch_input_size) :
-						data.nomarch_input_size;
+	size = q & NOMARCH_QUIRK_ALIGN4 ? ALIGN4(data->nomarch_input_size) :
+						data->nomarch_input_size;
 	fseek(f, pos + size, SEEK_SET);
 	free(b);
 	free(buf2);
+	free(data);
 
 	return buf;
 }
