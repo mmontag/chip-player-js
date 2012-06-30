@@ -327,7 +327,7 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 	if (a) {
 		unsigned char *x = read_lzw_dynamic(f, buf, 13, 0, size,
 						size, XMP_LZW_QUIRK_DSYM);
-		if (x = NULL) {
+		if (x == NULL) {
 			free(buf);
 			return -1;
 		}
