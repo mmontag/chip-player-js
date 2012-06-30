@@ -419,12 +419,10 @@ static int sym_load(struct module_data *m, FILE *f, const int start)
 			load_sample(NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);
 			free(b);
-		} else if (a == 4) {
-			mod->xxi[i].nsm = 0;
+		/*} else if (a == 4) {
 			load_sample(f, SAMPLE_FLAG_VIDC,
-				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);*/
 		} else {
-			mod->xxi[i].nsm = 0;
 			load_sample(f, SAMPLE_FLAG_VIDC,
 				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 		}
