@@ -32,6 +32,7 @@ extern const struct format_loader gal5_loader;
 extern const struct format_loader gal4_loader;
 extern const struct format_loader psm_loader;
 extern const struct format_loader amf_loader;
+extern const struct format_loader asylum_loader;
 extern const struct format_loader gdm_loader;
 extern const struct format_loader mmd1_loader;
 extern const struct format_loader mmd3_loader;
@@ -94,6 +95,7 @@ const struct format_loader *const format_loader[] = {
 	&gal4_loader,
 	&psm_loader,
 	&amf_loader,
+	&asylum_loader,
 	&gdm_loader,
 	&mmd1_loader,
 	&mmd3_loader,
