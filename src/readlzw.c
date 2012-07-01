@@ -212,10 +212,18 @@ unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                    unsigned long in_len,
                                    unsigned long orig_len, int q)
 {
-	struct local_data data;
+	struct local_data *data;
+	unsigned char *d;
 
-	return _convert_lzw_dynamic(data_in, max_bits, use_rle, in_len,
-						orig_len, q, &data);
+	if ((data = malloc(sizeof (struct local_data))) == NULL) {
+		return NULL;
+	}
+
+	d = _convert_lzw_dynamic(data_in, max_bits, use_rle, in_len,
+						orig_len, q, data);
+
+	free(data);
+	return d;
 }
 
 unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
