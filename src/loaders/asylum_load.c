@@ -76,6 +76,7 @@ static int asylum_load(struct module_data *m, FILE *f, const int start)
 		copy_adjust(mod->xxi[i].name, insbuf, 22);
 		mod->xxi[i].sub[0].fin = (int8)(insbuf[22] << 4);
 		mod->xxi[i].sub[0].vol = insbuf[23];
+		mod->xxi[i].sub[0].xpo = insbuf[24];
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 
