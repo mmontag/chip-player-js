@@ -467,9 +467,13 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	mixer_setvol(ctx, voc, 0);
 
 	vi->sptr = xxs->data;
-	vi->fidx |= FLAG_ITPT | FLAG_ACTIVE;
+	vi->fidx |= FLAG_ACTIVE;
 
-	if (HAS_QUIRK(QUIRK_FILTER)) {
+	if (~s->format & XMP_FORMAT_NEAREST) {
+		vi->fidx |= FLAG_ITPT;
+	}
+
+	if (HAS_QUIRK(QUIRK_FILTER) && ~s->format & XMP_FORMAT_NOFILTER) {
 		vi->fidx |= FLAG_FILTER;
 	}
 
