@@ -55,7 +55,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     struct ord_data *info;
 
     ord = 0;
-    while (ord < mod->len && mod->xxo[p->ord] >= mod->pat) {
+    while (ord < mod->len && mod->xxo[ord] >= mod->pat) {
 	ord++;
     }
     if (ord >= mod->len)
