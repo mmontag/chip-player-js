@@ -47,16 +47,22 @@ if test "${enable_shared}" != no; then
 fi
 
 XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
-    ac_cv_c_flag_f_visibility_hidden,
-    -fvisibility=hidden,[
-    int main(){}],
-    CFLAGS="${CFLAGS} -fvisibility=hidden")  
+  ac_cv_c_flag_f_visibility_hidden,
+  -fvisibility=hidden,[
+  int main(){}],
+  CFLAGS="${CFLAGS} -fvisibility=hidden")  
 
 XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
   ac_cv_c_flag_w_unused_but_set_variable,
   -Wunused-but-set-variable,[
   int main(){}],
   CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
+
+XMP_TRY_COMPILE(whether compiler understands -Wunused-result,
+  ac_cv_c_flag_w_unused_result,
+  -Wunused-result,[
+  int main(){}],
+  CFLAGS="${CFLAGS} -Wno-unused-result")  
 
 XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
   ac_cv_c_flag_w_array_bounds,
