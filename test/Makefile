@@ -3,7 +3,7 @@ REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
 SMPLOADERS	= delta signal endian
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
-		  arc spark j2b lzx it_sample_8bit it_sample_16bit
+		  arc spark j2b lzx bzip2 it_sample_8bit it_sample_16bit
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
 STORLEK		= 01_arpeggio_pitch_slide \
@@ -83,7 +83,7 @@ TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
 TEST_PATH	= test
 
-TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o \
+TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o bunzip2.o \
 		  gunzip.o unzip.o unarc.o s404_dec.o ppdepack.o arcfs.o \
 		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o \
 		  readrle.o readhuff.o inflate.o scan.o loaders/sample.o \
