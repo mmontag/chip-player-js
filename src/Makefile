@@ -6,7 +6,7 @@ SRC_OBJS	= virtual.o format.o misc.o period.o player.o \
 		  ym2149.o adlib.o spectrum.o load_helpers.o \
 		  load.o ppdepack.o unsqsh.o mmcmp.o readrle.o readhuff.o \
 		  readlzw.o unarc.o arcfs.o oxm.o xfd.o inflate.o muse.o \
-		  unlzx.o s404_dec.o unzip.o gunzip.o uncompress.o
+		  unlzx.o s404_dec.o unzip.o gunzip.o uncompress.o bunzip2.o
 
 SRC_DFILES	= Makefile $(SRC_OBJS:.o=.c) common.h effects.h envelope.h \
 		  fmopl.h format.h lfo.h list.h mixer.h period.h player.h \

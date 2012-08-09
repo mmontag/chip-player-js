@@ -52,6 +52,7 @@ int decrunch_s404	(FILE *, FILE *);
 int decrunch_zip	(FILE *, FILE *);
 int decrunch_gzip	(FILE *, FILE *);
 int decrunch_compress	(FILE *, FILE *);
+int decrunch_bzip2	(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -68,6 +69,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_ZIP	0x0c
 #define BUILTIN_GZIP	0x0d
 #define BUILTIN_COMPRESS 0x0e
+#define BUILTIN_BZIP2	0x0f
 
 
 #if defined __EMX__ || defined WIN32
@@ -114,17 +116,6 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 
 	packer = "Zip";
 	builtin = BUILTIN_ZIP;
-#if 0
-	packer = "Zip";
-#if defined WIN32
-	cmd = "unzip -pqqC \"%s\" -x readme *.diz *.nfo *.txt *.exe *.com "
-		"README *.DIZ *.NFO *.TXT *.EXE *.COM " REDIR_STDERR;
-#else
-	cmd = "unzip -pqqC \"%s\" -x readme '*.diz' '*.nfo' '*.txt' '*.exe' "
-		"'*.com' README '*.DIZ' '*.NFO' '*.TXT' '*.EXE' '*.COM' "
-		REDIR_STDERR;
-#endif
-#endif
     } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
 	packer = "LHa";
 #if defined __EMX__
@@ -139,7 +130,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	builtin = BUILTIN_GZIP;
     } else if (b[0] == 'B' && b[1] == 'Z' && b[2] == 'h') {
 	packer = "bzip2";
-	cmd = "bzip2 -dc \"%s\"";
+	builtin = BUILTIN_BZIP2;
     } else if (b[0] == 0xfd && b[3] == 'X' && b[4] == 'Z' && b[5] == 0x00) {
 	packer = "xz";
 	cmd = "xz -dc \"%s\"";
@@ -321,6 +312,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	    break;
 	case BUILTIN_COMPRESS:
 	    res = decrunch_compress(*f, t);
+	    break;
+	case BUILTIN_BZIP2:
+	    res = decrunch_bzip2(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:

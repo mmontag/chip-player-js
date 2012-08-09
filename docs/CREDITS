@@ -163,6 +163,9 @@ Reused code
 * Jouni "Spiv" Korhonen
 - StoneCracker S404 depacker
 
+* Rob Landley <rob@landley.net>
+- bzip2 decompression routine
+
 * Olivier Lapicque <olivierl@jps.net>
 - 4-bit ADPCM decruncher
 - MMCMP decruncher
