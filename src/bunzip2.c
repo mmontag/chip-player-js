@@ -29,6 +29,10 @@
 	Manuel
  */
 
+/*
+	Modified for xmp by Claudio Matsuoka, 20120809
+ */
+
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
