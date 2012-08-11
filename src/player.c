@@ -758,7 +758,7 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
-	int ret;
+	int ret = XMP_OK;
 
 	mixer_on(ctx);
 
@@ -800,36 +800,44 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 	p->speed = m->xxo_info[p->ord].speed;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 
-	if ((ret = virt_on(ctx, mod->chn)) != 0)
-		return ret;
+	if (virt_on(ctx, mod->chn) != 0) {
+		ret = -XMP_ERROR_INTERNAL;
+		goto err;
+	}
 
 	f->jumpline = 0;
 	f->jump = -1;
 	f->pbreak = 0;
 
 	f->loop = calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
-	if (f->loop == NULL)
+	if (f->loop == NULL) {
+		ret = -XMP_ERROR_SYSTEM;
 		goto err;
+	}
 
 	p->xc_data = calloc(p->virt.virt_channels, sizeof(struct channel_data));
-	if (p->xc_data == NULL)
+	if (p->xc_data == NULL) {
+		ret = -XMP_ERROR_SYSTEM;
 		goto err1;
+	}
 
-	if (m->synth->init(ctx, s->freq) < 0)
+	if (m->synth->init(ctx, s->freq) < 0) {
+		ret = -XMP_ERROR_INTERNAL;
 		goto err2;
+	}
 
 	m->synth->reset(ctx);
 
 	reset_channel(ctx);
 
-	return 0;
+	return XMP_OK;
 
     err2:
 	free(p->xc_data);
     err1:
 	free(f->loop);
     err:
-	return -1;
+	return ret;
 }
 
 int xmp_player_frame(xmp_context opaque)
@@ -842,7 +850,7 @@ int xmp_player_frame(xmp_context opaque)
 	int i;
 
 	if (mod->len <= 0 || mod->xxo[p->ord] == 0xff) {
-		return -1;
+		return -XMP_END;
 	}
 
 	/* check reposition */
@@ -850,7 +858,7 @@ int xmp_player_frame(xmp_context opaque)
 		int start = m->seq_data[p->sequence].entry_point;
 
 		if (p->pos == -2) {		/* set by xmp_module_stop */
-			return -1;		/* that's all folks */
+			return -XMP_END;	/* that's all folks */
 		}
 
 		if (p->pos == -1) {
@@ -928,7 +936,7 @@ int xmp_player_frame(xmp_context opaque)
 
 	mixer_softmixer(ctx);
 
-	return 0;
+	return XMP_OK;
 }
     
 void xmp_player_end(xmp_context opaque)

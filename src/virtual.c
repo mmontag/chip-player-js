@@ -19,7 +19,7 @@ void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-	if ((uint32) voc >= p->virt.maxvoc)
+	if ((uint32)voc >= p->virt.maxvoc)
 		return;
 
 	if (mute) {

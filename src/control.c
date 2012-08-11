@@ -100,7 +100,7 @@ int xmp_control(xmp_context opaque, int cmd, ...)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
-	int ret = 0;
+	int ret = XMP_OK;
 
 	va_start(ap, cmd);
 
@@ -165,7 +165,7 @@ int xmp_control(xmp_context opaque, int cmd, ...)
 		s->mix = arg;
 		break; }
 	default:
-		ret = -1;
+		ret = -XMP_ERROR_INTERNAL;
 	}
 
 	va_end(ap);

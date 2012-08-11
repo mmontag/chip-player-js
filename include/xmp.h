@@ -56,9 +56,15 @@ extern "C" {
 #define XMP_MAX_CHANNELS	64	/* Max number of channels in module */
 
 /* error codes */
-#define XMP_ERROR_FORMAT	28837	/* Unsupported module format */
-#define XMP_ERROR_LOAD		28838	/* Error loading file */
-#define XMP_ERROR_DEPACK	28839	/* Error depacking file */
+#define XMP_OK			0	/* No error */
+#define XMP_END			1	/* End of module */
+#define XMP_ERROR_INTERNAL	2	/* Internal error */
+#define XMP_ERROR_FORMAT	3	/* Unsupported module format */
+#define XMP_ERROR_LOAD		4	/* Error loading file */
+#define XMP_ERROR_DEPACK	5	/* Error depacking file */
+#define XMP_ERROR_SYSTEM	6	/* System error */
+
+#define xmp_system_error(x)	((x) >> 8)
 
 struct xmp_channel {
 	int pan;			/* Channel pan (0x80 is center) */
