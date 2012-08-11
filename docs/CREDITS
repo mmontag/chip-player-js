@@ -134,7 +134,7 @@ The Authors
 - TuneNet plugin
 
 
-Reused code
+Third-party code
 
 * Sylvain Chipaux
 - P60A loader
@@ -145,14 +145,14 @@ Reused code
 * Arnaud Carré <arnaud.carre@freesurf.fr>
 - YM2149 emulator
 
+* Lasse Collin <lasse.collin@tukaani.org>
+- Embedded XZ decompressor
+
 * Martin Denn <mdenn@unix-ag.uni-kl.de>
 - portions of the NAS driver
 
 * Bert Jahn <jah@fh-zwickau.de>
 - SQSH decruncher
-
-* Tammo Hinrichs <kb@nwn.de>
-- IT sample decruncher
 
 * Kurt Keller
 - Win32 popen/pclose implementation
@@ -171,6 +171,7 @@ Reused code
 - MMCMP decruncher
 - DMF sample decompressor
 - IT resonant filters
+- IT sample decompressor
 
 * Russell Marks
 - Decompression routines from nomarch

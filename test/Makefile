@@ -3,7 +3,7 @@ REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
 SMPLOADERS	= delta signal endian
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
-		  arc spark j2b lzx bzip2 it_sample_8bit it_sample_16bit
+		  arc spark j2b lzx bzip2 xz it_sample_8bit it_sample_16bit
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
 STORLEK		= 01_arpeggio_pitch_slide \
@@ -85,7 +85,8 @@ TEST_PATH	= test
 
 TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o bunzip2.o \
 		  gunzip.o unzip.o unarc.o s404_dec.o ppdepack.o arcfs.o \
-		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o \
+		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o unxz.o \
+		  unxz/xz_crc32.o unxz/xz_dec_lzma2.o unxz/xz_dec_stream.o \
 		  readrle.o readhuff.o inflate.o scan.o loaders/sample.o \
 		  synth_null.o
 

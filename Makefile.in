@@ -1,6 +1,6 @@
 VERSION_MAJOR	= 3
 VERSION_MINOR	= 9
-VERSION_RELEASE	= 3
+VERSION_RELEASE	= 4
 
 COMPAT_MINOR	= 9
 
@@ -27,7 +27,7 @@ SHELL		= /bin/sh
 DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL install-sh configure configure.ac Makefile.in \
 		  libxmp.pc.in libxmp.map
-DDIRS		= docs include src loaders prowiz win32 test
+DDIRS		= docs include src loaders prowiz unxz win32 test
 V		= 0
 LIB		= libxmp.a
 SOLIB		= libxmp.so
@@ -45,6 +45,7 @@ include include/Makefile
 include src/Makefile
 include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
+include src/unxz/Makefile
 include src/win32/Makefile
 include test/Makefile
 
@@ -140,6 +141,7 @@ depend: test/all_tests.c
 dist: version-prepare dist-prepare dist-subdirs
 
 dist-prepare:
+	./config.status
 	rm -Rf $(DIST) $(DIST).tar.gz
 	mkdir -p $(DIST)
 	cp -RPp $(DFILES) $(DIST)/

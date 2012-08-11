@@ -53,6 +53,7 @@ int decrunch_zip	(FILE *, FILE *);
 int decrunch_gzip	(FILE *, FILE *);
 int decrunch_compress	(FILE *, FILE *);
 int decrunch_bzip2	(FILE *, FILE *);
+int decrunch_xz		(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -70,6 +71,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_GZIP	0x0d
 #define BUILTIN_COMPRESS 0x0e
 #define BUILTIN_BZIP2	0x0f
+#define BUILTIN_XZ	0x10
 
 
 #if defined __EMX__ || defined WIN32
@@ -133,7 +135,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	builtin = BUILTIN_BZIP2;
     } else if (b[0] == 0xfd && b[3] == 'X' && b[4] == 'Z' && b[5] == 0x00) {
 	packer = "xz";
-	cmd = "xz -dc \"%s\"";
+	builtin = BUILTIN_XZ;
     } else if (b[0] == 'Z' && b[1] == 'O' && b[2] == 'O' && b[3] == ' ') {
 	packer = "zoo";
 	cmd = "zoo xpq \"%s\"";
@@ -315,6 +317,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	    break;
 	case BUILTIN_BZIP2:
 	    res = decrunch_bzip2(*f, t);
+	    break;
+	case BUILTIN_XZ:
+	    res = decrunch_xz(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:

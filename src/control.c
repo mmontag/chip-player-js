@@ -18,6 +18,7 @@
 #include "format.h"
 #include "virtual.h"
 #include "mixer.h"
+#include "unxz/xz.h"
 
 const char *xmp_version = XMP_VERSION;
 const unsigned int xmp_vercode = XMP_VERCODE;
@@ -30,6 +31,8 @@ xmp_context xmp_create_context()
 	if (ctx == NULL) {
 		return NULL;
 	}
+
+	xz_crc32_init();
 
 	return (xmp_context)ctx;
 }
