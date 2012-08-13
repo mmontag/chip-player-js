@@ -19,11 +19,11 @@ int exclude_match(char *name)
 
 	for (i = 0; exclude[i] != NULL; i++) {
 		if (fnmatch(exclude[i], name, 0) == 0) {
-			return 0;
+			return 1;
 		}
 	}
 
-	return -1;
+	return 0;
 }
 
 void load_prologue(struct context_data *ctx)

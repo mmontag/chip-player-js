@@ -704,7 +704,7 @@ static int extract_normal(FILE *in_file, struct local_data *data)
   /*printf("Extracting \"%s\"...", node->filename);
   fflush(stdout);*/
 
-  if (exclude_match(node->filename) == 0) {
+  if (exclude_match(node->filename)) {
     out_file = NULL;
   } else {
     out_file = open_output(node->filename, data);
@@ -830,7 +830,7 @@ static int extract_store(FILE *in_file, struct local_data *data)
   /*printf("Storing \"%s\"...", node->filename);
   fflush(stdout);*/
 
-  if (exclude_match(node->filename) == 0) {
+  if (exclude_match(node->filename)) {
     out_file = NULL;
   } else {
     out_file = open_output(node->filename, data);

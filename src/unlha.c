@@ -1650,7 +1650,7 @@ printf("original size = %d\n", data.original_size);
 printf("position = %lx\n", ftell(in));
 #endif
 
-		if (exclude_match(data.name) == 0) {
+		if (exclude_match(data.name)) {
 			fseek(in, data.packed_size, SEEK_CUR);
 			continue;
 		}

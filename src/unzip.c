@@ -798,7 +798,7 @@ char name[1024];
 
       fseek(in,marker,SEEK_SET); /* and part 2 of nasty code */
 
-      if (exclude_match(name)) {
+      if (!exclude_match(name)) {
         break;
       }
     }
