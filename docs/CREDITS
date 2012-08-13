@@ -179,6 +179,9 @@ Third-party code
 * Tatsuyuki Satoh
 - YM3812 emulator
 
+* Dirk Stoecker <soft@dstoecker.de>
+- LHA decompressor
+
 * Timothy J. Wood
 - OSX CoreAudio helpers from libao
 

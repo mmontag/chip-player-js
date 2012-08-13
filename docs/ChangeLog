@@ -19,6 +19,7 @@ Stable versions
 	- add built-in compress file decompressor
 	- add built-in bzip2 file decompressor
 	- add built-in xz file decompressor
+	- add built-in lha file decompressor
 	- add library regression tests
 	- add support to IT envelope carry
 	- add support to IT sample vibrato

@@ -54,6 +54,7 @@ int decrunch_gzip	(FILE *, FILE *);
 int decrunch_compress	(FILE *, FILE *);
 int decrunch_bzip2	(FILE *, FILE *);
 int decrunch_xz		(FILE *, FILE *);
+int decrunch_lha	(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -72,6 +73,7 @@ char *test_xfd		(unsigned char *, int);
 #define BUILTIN_COMPRESS 0x0e
 #define BUILTIN_BZIP2	0x0f
 #define BUILTIN_XZ	0x10
+#define BUILTIN_LHA	0x11
 
 
 #if defined __EMX__ || defined WIN32
@@ -120,13 +122,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	builtin = BUILTIN_ZIP;
     } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
 	packer = "LHa";
-#if defined __EMX__
-	fprintf( stderr, "LHA for OS/2 does NOT support output to stdout.\n" );
-#elif defined __AMIGA__
-	cmd = "lha p -q \"%s\"";
-#else
-	cmd = "lha -pq \"%s\"";
-#endif
+	builtin = BUILTIN_LHA;
     } else if (b[0] == 31 && b[1] == 139) {
 	packer = "gzip";
 	builtin = BUILTIN_GZIP;
@@ -320,6 +316,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	    break;
 	case BUILTIN_XZ:
 	    res = decrunch_xz(*f, t);
+	    break;
+	case BUILTIN_LHA:
+	    res = decrunch_lha(*f, t);
 	    break;
 #if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:
