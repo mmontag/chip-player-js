@@ -1,215 +1,174 @@
 The Authors
 
-* Rob Adamson <R.Adamson@fitz.cam.ac.uk>
-- ALSA 0.5 driver fixes
+- Mirko Buffoni <mirbuf@gmail.com>
+  * Windows port fixes
+  * random hacks and improvements
 
-* Tijs van Bakel <smoke@casema.net>
-- ALSA 0.5 driver fixes
+- Frederic Bujon <lvdl@bigfoot.com>
+  * XM pan fix
 
-* Marc R. Boyns <boyns@sdsu.edu>
-- --nocmd command line option
+- Hipolito Carraro Jr <hipolito.carraro@gmail.com>
+  * main player coding
+  * software mixer
+  * virtual channel system design and implementation
 
-* Mirko Buffoni <mirbuf@gmail.com>
-- Winamp plugin fixes
-- Windows port fixes
-- random hacks and improvements
+- Rudolf Cejka <cejkar@dcse.fee.vutbr.cz>
+  * MED loader alignment and endianism fixes
+  * XM loader endianism fixes
+  * S3M loader fixes
 
-* Frederic Bujon <lvdl@bigfoot.com>
-- XM pan fix
+- Sylvain Chipaux
+  * Prowizard loaders
 
-* Douglas Carmichael <dcarmich@dcarmichael.net>
-- RT priority in FreeBSD
-- OSX portability fixes
+- Chris Cox <cox.christopher@gmail.com>
+  * S3M loader fixes
 
-* Hipolito Carraro Jr <hipolito.carraro@gmail.com>
-- main player coding
-- software mixer
-- virtual channel system design and implementation
+- Michael Doering <mldoering@gmx.net>
+  * RAR unpacking support
+  * PP20 decrunching fixes
 
-* Rudolf Cejka <cejkar@dcse.fee.vutbr.cz>
-- MED loader alignment and endianism fixes
-- XM loader endianism fixes
-- S3M loader fixes
+- Rune Elvemo <relvemo@grm.hia.no>
+  * fixes for endianism problems in Linux/PPC
 
-* Chris Cox <cox.christopher@gmail.com>
-- fixes for OpenBSD 2.8
-- S3M loader fixes
-- option parsing fixes
+- Mike Gorchak <mike@malva.ua>
+  * misc hacks
 
-* Michael Doering <mldoering@gmx.net>
-- RAR unpacking support
-- PP20 decrunching fixes
+- Tom Hargreaves <hex@freezone.co.uk>
+  * Digital Symphony and Archimedes Tracker loader fixes
 
-* Brian Downing <bdowning@wolfram.com>
-- SGI and endianism fixes
+- Kevin Langman <langman@earthling.net>
+  * OS/2 port
 
-* Rune Elvemo <relvemo@grm.hia.no>
-- fixes for endianism problems in Linux/PPC
+- Claudio Matsuoka <cmatsuoka@gmail.com>
+  * main player coding
+  * module loaders
 
-* Nils Faerber <Nils.Faerber@unix-ag.org>
-- fixed OSS sequencer timing in Alpha
+- Dominik Mierzejewski <dmierzej@elka.pw.edu.pl>
+  * fixes for gcc 2.96/glibc 2.2
 
-* Terry Glass <tglass@bigfoot.com>
-- esd driver fixes
+- Francis Russell <francis@unchartedbackwaters.co.uk>
+  * OctaMED tempo fixes
 
-* Mike Gorchak <mike@malva.ua>
-- QNX6 portability fix
-- updated OPL emulation
-- misc hacks
+- Adam Sampson <ats@offog.org>
+  * buildsystem and configuration file location fixes
 
-* Tom Hargreaves <hex@freezone.co.uk>
-- Digital Symphony and Archimedes Tracker loader fixes
-- Hively Tracker loader
+- Johan Samuelsson <spot@triad.se>
+  * Amiga port and fixes
 
-* Keith Hargrove <Keith.Hargrove@Eng.Sun.COM>
-- Solaris driver fixes
+- Attila Sipos <h430827@stud.u-szeged.hu>
+  * SQSH decruncher checksum
 
-* Takashi Iwai <iwai@ww.uni-erlangen.de>
-- AWE sequencer support
+- Miodrag Vallat <miod@mikmod.darkorb.net>
+  * 669 loader fixes
+  * XM loader endianism fixes
 
-* Dirk Jagdmann <doj@users.sourceforge.net>
-- devfs sound device support
-
-* Priit Jarv
-- FreeBSD port of xmp 1.0.1
-
-* Lorence Lombardo <lombi@iprimus.com.au>
-- Amiga AHI driver
-
-* John v/d Kamp <blade_@dds.nl>
-- 15 bpp support for xxmp
-
-* Kevin Langman <langman@earthling.net>
-- OS/2 port and OS/2 DART drivers
-
-* Andrew "Alf" Leahy <a.leahy@cit.nepean.uws.edu.au>
-- fixes for Digital UNIX
-
-* Claudio Matsuoka <cmatsuoka@gmail.com>
-- main player coding
-- module loaders
-- sound drivers
-
-* Michael <skumle@grin.dk>
-- NetBSD port fixes
-- NetBSD and OpenBSD enhanced drivers
-
-* Dominik Mierzejewski <dmierzej@elka.pw.edu.pl>
-- fixes for gcc 2.96/glibc 2.2
-- package maintenance
-
-* Griff Miller II <griff.miller@positron.com>
-- fix for XMMS plugin in big-endian machines
-
-* Pavel Pavlov <Simon.Says@iname.com>
-- esd driver fixes
-
-* Thomas Pfaff <tpfaff@tp76.info>
-- OpenBSD sndio driver
-
-* Geoff Reedy <vader21@imsa.edu>
-- xxmp window title patch
-
-* Francis Russell <francis@unchartedbackwaters.co.uk>
-- OctaMED tempo fixes
-
-* Adam Sampson <ats@offog.org>
-- buildsystem and configuration file location fixes
-
-* Johan Samuelsson <spot@triad.se>
-- Amiga port and fixes
-
-* Michael Schwendt <mschwendt@gmail.com>
-- Audacious 3.0 plugin
-
-* Attila Sipos <h430827@stud.u-szeged.hu>
-- SQSH decruncher checksum
-
-* Miodrag Vallat <miod@mikmod.darkorb.net>
-- 669 loader fixes
-- XM loader endianism fixes
-
-* Chris Young <cdyoung@ntlworld.com>
-- Amiga port and fixes
-- TuneNet plugin
+- Chris Young <cdyoung@ntlworld.com>
+  * Amiga port and fixes
 
 
-Third-party code
+Third-party code licenses:
 
-* Sylvain Chipaux
-- P60A loader
+Powerpack depacker
 
-* Stuart Caie <kyzer@4u.net>
-- PowerPack decruncher
-
-* Arnaud Carré <arnaud.carre@freesurf.fr>
-- YM2149 emulator
-
-* Lasse Collin <lasse.collin@tukaani.org>
-- Embedded XZ decompressor
-
-* Martin Denn <mdenn@unix-ag.uni-kl.de>
-- portions of the NAS driver
-
-* Bert Jahn <jah@fh-zwickau.de>
-- SQSH decruncher
-
-* Kurt Keller
-- Win32 popen/pclose implementation
-
-* Michael Kohn
-- Inflate data decompression routine
-
-* Jouni "Spiv" Korhonen
-- StoneCracker S404 depacker
-
-* Rob Landley <rob@landley.net>
-- bzip2 decompression routine
-
-* Olivier Lapicque <olivierl@jps.net>
-- 4-bit ADPCM decruncher
-- MMCMP decruncher
-- DMF sample decompressor
-- IT resonant filters
-- IT sample decompressor
-
-* Russell Marks
-- Decompression routines from nomarch
-
-* Tatsuyuki Satoh
-- YM3812 emulator
-
-* Dirk Stoecker <soft@dstoecker.de>
-- LHA decompressor
-
-* Timothy J. Wood
-- OSX CoreAudio helpers from libao
+ ppcrack 0.1 - decrypts PowerPacker encrypted data files with brute force
+ by Stuart Caie <kyzer@4u.net>, this software is in the Public Domain
 
 
-Other contributors
+YM2149 emulator
 
-* Testing and bug reports:
-  Antti Huovilainen, Michael Janson, Matthias Leonhardt, Andy Eltsov,
-  Davi Lima, Geoff Reedy, Sipos Attila, Bjoern Fisher, Matus Telgarsky,
-  Bernhard März, Cyke O'Path, Rudolf Cejka, Igor Krpanic, Chris Cox,
-  Rudá Moura, Paul Wise, Henrik Pauli, Zbigniew Luszpinski, Jon Rafkind,
-  Reynir Stefansson, Ralf Hoffmann, Douglas Carmichael, Adric Riedel,
-  Gürkan Sengün, Lorence Lombardo, Mirko Buffoni
+ ST-Sound ( YM files player library )
+ Copyright (C) 1995-1999 Arnaud Carre ( http://leonard.oxg.free.fr )
 
-* Module format specs and information:
-  Kilian Hekhuis (PTM), Arnaud Hasenfratz (RTM), Aley Keptr (ALM),
-  Adi Sapir (LIQ), Sylvain "Asle" Chipaux (packed modules), Michael
-  Schwendt (UST), Bjorn Wesen (Startrekker), Martin Willers (MOD tricks),
-  Miodrag Vallat (IMF, AMF, MMD2, MMCMP), Louise Heimann (DIGIBooster),
-  Bernhard März (DPP), Laurent Clevy (Sound/Noise/Protracker details),
-  Michael Doering (MED3/MED4)
+ ST-Sound is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
 
-* Module samples
-  Sylvain Chipaux, Bert Jahn, Miod Vallat, Adi Sapir, Jools "BuZz" Smyth,
-  Martin Jeppesen, Stuart Caie, Bernhard März, Matthias Arndt,
-  Tom Hargreaves
 
-* Hardware
-  Davi Lima (AWE32 card with 2Mb RAM), Miod "Pitr" Vallat (Mach 3 rasoir,
-  lames, baume après-rasage, pansements antiseptiques).
+YM3812 emulator
+
+ fmopl.c -- software implementation of FM sound generator
+ This version of fmopl.c is a fork of the MAME one, relicensed under the LGPL.
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+
+XZ decompressor
+
+ XZ Embedded is a relatively small, limited implementation of the .xz
+ file format. Currently only decoding is implemented.
+
+ Authors: Lasse Collin <lasse.collin@tukaani.org>
+          Igor Pavlov <http://7-zip.org/>
+ This file has been put into the public domain.
+ You can do whatever you want with this file.
+
+
+Zip decompressor
+
+ This code is Copyright 2005-2006 by Michael Kohn
+
+ This package is licensed under the LGPL. You are free to use this library
+ in both commercial and non-commercial applications as long as you dynamically
+ link to it. If you statically link this library you must also release your
+ software under the LGPL. If you need more flexibility in the license email
+ and we can work something out. 
+
+
+Stonecracker decompressor
+
+ StoneCracker S404 algorithm data decompression routine
+ (c) 2006 Jouni 'Mr.Spiv' Korhonen. The code is in public domain.
+
+
+Bzip2 decompressor
+
+ Small bzip2 deflate implementation, by Rob Landley (rob@landley.net).
+
+ Based on bzip2 decompression code by Julian R Seward (jseward@acm.org),
+ which also acknowledges contributions by Mike Burrows, David Wheeler,
+ Peter Fenwick, Alistair Moffat, Radford Neal, Ian H. Witten,
+ Robert Sedgewick, and Jon L. Bentley.
+
+ This code is licensed under the LGPLv2:
+     LGPL (http://www.gnu.org/copyleft/lgpl.html
+
+ Size and speed optimizations by Manuel Novoa III  (mjn3@codepoet.org)
+
+
+Arc decompressor
+
+ nomarch 1.4 - extract old `.arc' archives.
+ Copyright (C) 2001-2006 Russell Marks.
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or (at
+ your option) any later version.
+
+
+LHA decompressor
+
+ LhA file archiver client
+ XAD library system for archive handling
+ Copyright (C) 1998 and later by Dirk Stoecker <soft@dstoecker.de>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+
+DMF sample decompressor
+IT resonant filters
+IT sample decompressor
+
+Modplug Plugin for XMMS v2.0 / libmodplug v0.8.5
+ Based on the ModPlug sound engine by Olivier Lapicque <olivierl@jps.net>
+
+ This source code is public domain.
+ Authors: Olivier Lapicque <olivierl@jps.net>
 
