@@ -1,5 +1,5 @@
 /* nomarch 1.0 - extract old `.arc' archives.
- * Copyright (C) 2001 Russell Marks. See main.c for license details.
+ * Copyright (C) 2001 Russell Marks. See unarc.c for license details.
  *
  * readrle.c - read RLE-compressed files.
  *

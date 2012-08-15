@@ -1,5 +1,5 @@
 /* nomarch 1.0 - extract old `.arc' archives.
- * Copyright (C) 2001 Russell Marks. See main.c for license details.
+ * Copyright (C) 2001 Russell Marks. See unarc.c for license details.
  *
  * readhuff.c - read RLE+Huffman-compressed files (the CP/M `SQ' scheme).
  */

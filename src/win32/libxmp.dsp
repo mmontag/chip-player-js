@@ -266,6 +266,10 @@ SOURCE=..\bunzip2.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\unlha.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\common.c
 # End Source File
 # Begin Source File

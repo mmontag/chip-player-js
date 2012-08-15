@@ -1,5 +1,5 @@
 /* nomarch 1.4 - extract old `.arc' archives.
- * Copyright (C) 2001-2006 Russell Marks. See main.c for license details.
+ * Copyright (C) 2001-2006 Russell Marks. See unarc.c for license details.
  *
  * Modified for xmp by Claudio Matsuoka, Aug 2007
  * - add quirks for Digital Symphony LZW packing

@@ -134,7 +134,7 @@ Bzip2 decompressor
  Robert Sedgewick, and Jon L. Bentley.
 
  This code is licensed under the LGPLv2:
-     LGPL (http://www.gnu.org/copyleft/lgpl.html
+     LGPL (http://www.gnu.org/copyleft/lgpl.html)
 
  Size and speed optimizations by Manuel Novoa III  (mjn3@codepoet.org)
 
@@ -144,10 +144,10 @@ Arc decompressor
  nomarch 1.4 - extract old `.arc' archives.
  Copyright (C) 2001-2006 Russell Marks.
 
- This program is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or (at
- your option) any later version.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
 
 
 LHA decompressor
