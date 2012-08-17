@@ -4,6 +4,7 @@ Run:
 
 ./configure
 make
+make check
 make install
 
 Use ./configure --disable-static or --disable-shared if you don't want
