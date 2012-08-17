@@ -46,8 +46,8 @@ inline double note_to_period(int n, int f, int type)
 /* For the software mixer */
 int note_to_period_mix(int n, int b)
 {
-    float d = (float)n + (float)b / 100;
-    return (int)(8192.0F * XMP_PERIOD_BASE / powf(2, d / 12));
+    double d = (double)n + (double)b / 100;
+    return (int)(8192.0 * XMP_PERIOD_BASE / pow(2, d / 12));
 }
 
 
