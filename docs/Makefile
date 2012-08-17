@@ -1,5 +1,5 @@
 
-DOCS_DFILES	= Makefile COPYING ChangeLog
+DOCS_DFILES	= Makefile COPYING.LIB ChangeLog
 DOCS_PATH	= docs
 
 install-docs:
