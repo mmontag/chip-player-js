@@ -2,7 +2,7 @@
  * Copyright (C) 1997-2010 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
+ * under the terms of the GNU Lesser General Public License. See COPYING.LIB
  * for more information.
  */
 

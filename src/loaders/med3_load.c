@@ -4,7 +4,7 @@
  * Pattern unpacking code by Teijo Kinnunen, 1990
  *
  * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU General Public License. See doc/COPYING
+ * under the terms of the GNU Lesser General Public License. See COPYING.LIB
  * for more information.
  */
 

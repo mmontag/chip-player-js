@@ -172,3 +172,10 @@ Modplug Plugin for XMMS v2.0 / libmodplug v0.8.5
  This source code is public domain.
  Authors: Olivier Lapicque <olivierl@jps.net>
 
+
+MED2 module loading code
+
+  V2.00 file loading/saving routines by T. Kinnunen 1990
+  MED2.00 by Teijo Kinnunen, 1990
+  MED is in Public Domain
+
