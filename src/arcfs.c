@@ -114,7 +114,7 @@ static unsigned char *read_file_data(FILE *in,
 	int siz = hdrp->compressed_size;
 
 	if ((data = malloc(siz)) == NULL)
-		fprintf(stderr, "nomarch: out of memory!\n"), exit(1);
+		return NULL;
 
 	fseek(in, hdrp->offset, SEEK_SET);
 	if (fread(data, 1, siz, in) != siz) {
