@@ -127,7 +127,7 @@ void mixer_prepare(struct context_data *ctx)
 	s->ticksize = s->freq * m->time_factor * m->rrate / p->bpm / 1000;
 
 	bytelen = s->ticksize * sizeof(int);
-	if (~s->format & XMP_FORMAT_MONO) {
+	if (~s->format & XMP_MIX_MONO) {
 		bytelen *= 2;
 	}
 	memset(s->buf32b, 0, bytelen);
@@ -307,7 +307,7 @@ void mixer_softmixer(struct context_data *ctx)
 				int mix_size = samples;
 				int mixer = vi->fidx & FIDX_FLAGMASK;
 
-				if (~s->format & XMP_FORMAT_MONO) {
+				if (~s->format & XMP_MIX_MONO) {
 					mix_size *= 2;
 				}
 
@@ -370,17 +370,17 @@ void mixer_softmixer(struct context_data *ctx)
 	/* Render final frame */
 
 	size = s->ticksize;
-	if (~s->format & XMP_FORMAT_MONO) {
+	if (~s->format & XMP_MIX_MONO) {
 		size *= 2;
 	}
 	assert(size <= OUT_MAXLEN);
 
-	if (s->format & XMP_FORMAT_8BIT) {
+	if (s->format & XMP_MIX_8BIT) {
 		out_su8norm(s->buffer, s->buf32b, size, s->amplify,
-				s->format & XMP_FORMAT_UNSIGNED ? 0x80 : 0);
+				s->format & XMP_MIX_UNSIGNED ? 0x80 : 0);
 	} else {
 		out_su16norm((int16 *)s->buffer, s->buf32b, size, s->amplify,
-				s->format & XMP_FORMAT_UNSIGNED ? 0x8000 : 0);
+				s->format & XMP_MIX_UNSIGNED ? 0x8000 : 0);
 	}
 
 	s->dtright = s->dtleft = 0;
@@ -454,7 +454,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	vi->fidx = 0;
 
-	if (~s->format & XMP_FORMAT_MONO) {
+	if (~s->format & XMP_MIX_MONO) {
 		vi->fidx |= FLAG_STEREO;
 	}
 
@@ -469,11 +469,11 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
 
-	if (~s->format & XMP_FORMAT_NEAREST) {
+	if (~s->format & XMP_MIX_NEAREST) {
 		vi->fidx |= FLAG_ITPT;
 	}
 
-	if (HAS_QUIRK(QUIRK_FILTER) && ~s->format & XMP_FORMAT_NOFILTER) {
+	if (HAS_QUIRK(QUIRK_FILTER) && ~s->format & XMP_MIX_NOFILTER) {
 		vi->fidx |= FLAG_FILTER;
 	}
 

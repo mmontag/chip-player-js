@@ -406,7 +406,7 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	finalpan = xc->masterpan + (finalpan - 128) *
 				(128 - abs(xc->masterpan - 128)) / 128;
 
-	if (s->format & XMP_FORMAT_MONO) {
+	if (s->format & XMP_MIX_MONO) {
 		finalpan = 0;
 	} else {
 		finalpan = (finalpan - 0x80) * s->mix / 100;
@@ -994,10 +994,10 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 
 	info->total_size = OUT_MAXLEN;
 	info->buffer_size = s->ticksize;
-	if (~s->format & XMP_FORMAT_MONO) {
+	if (~s->format & XMP_MIX_MONO) {
 		info->buffer_size *= 2;
 	}
-	if (~s->format & XMP_FORMAT_8BIT) {
+	if (~s->format & XMP_MIX_8BIT) {
 		info->buffer_size *= 2;
 	}
 
