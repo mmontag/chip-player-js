@@ -7,26 +7,53 @@ Check http://xmp.sf.net/api.html for the current API reference. Better
 documentation will be included in the stable relase. Also check the xmp.h
 header file and the xmp player front-end.
 
-A simple example on how to use this library:
+This example loads a module, plays it at 44.1kHz and writes it to a raw
+sound file:
 
------
-
-xmp_context ctx;		/* context handle */
-struct xmp_module_info info;	/* struct to hold module info */
-
-ctx = xmp_create_context();
-
-xmp_load_module(ctx, filename);		/* load the module file */
-
-xmp_player_start(ctx, 44100, 0);	/* play the module file */
-while (xmp_player_frame(ctx) == 0) {
-	xmp_player_get_info(&info);
-	/* audio buffer in info.buffer and info.buffer_size */
-}
-xmp_player_end(ctx);			/* end the module player */
-
-xmp_release_module(ctx);		/* unload module */
-xmp_free_context(ctx);
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <xmp.h>
+    
+    int main(int argc, char **argv)
+    {
+        xmp_context c;
+        struct xmp_module_info mi;
+        FILE *f;
+    
+        /* The output raw file */
+        f = fopen("out.raw", "wb");
+        if (f == NULL) {
+            fprintf(stderr, "can't open output file\n");
+            exit(EXIT_FAILURE);
+        }
+    
+        /* Create the player context */
+        c = xmp_create_context();
+    
+        /* Load our module */
+        if (xmp_load_module(c, argv[1]) != 0) {
+            fprintf(stderr, "can't load module\n");
+            exit(EXIT_FAILURE);
+        }
+    
+        /* Play the module */
+        xmp_player_start(c, 44100, 0);
+        while (xmp_player_frame(c) == 0) {
+            xmp_player_get_info(c, &mi);
+    
+            if (mi.loop_count > 0)    /* exit before looping */
+                break;
+    
+            fwrite(mi.buffer, mi.buffer_size, 1, f);  /* write audio data */
+        }
+        xmp_player_end(c);
+        xmp_release_module(c);        /* unload module */
+        xmp_free_context(c);          /* destroy the player context */
+    
+        fclose(f);
+    
+        exit(EXIT_SUCCESS);
+    }
 
 -----
 
