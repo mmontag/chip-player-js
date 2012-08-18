@@ -100,7 +100,7 @@ int xmp_control(xmp_context opaque, int cmd, ...)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
-	int ret = XMP_OK;
+	int ret = 0;
 
 	va_start(ap, cmd);
 

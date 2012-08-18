@@ -758,7 +758,7 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
-	int ret = XMP_OK;
+	int ret = 0;
 
 	mixer_on(ctx);
 
@@ -830,7 +830,7 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 
 	reset_channel(ctx);
 
-	return XMP_OK;
+	return 0;
 
     err2:
 	free(p->xc_data);
@@ -936,7 +936,7 @@ int xmp_player_frame(xmp_context opaque)
 
 	mixer_softmixer(ctx);
 
-	return XMP_OK;
+	return 0;
 }
     
 void xmp_player_end(xmp_context opaque)
