@@ -1,5 +1,5 @@
 
-DOCS_DFILES	= Makefile COPYING.LIB ChangeLog
+DOCS_DFILES	= Makefile COPYING.LIB CREDITS ChangeLog tracker_notes.txt
 DOCS_PATH	= docs
 
 install-docs:
