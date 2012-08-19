@@ -36,7 +36,6 @@ SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
 MAPFILE		= libxmp.map
-VERCODE		= 0x00030900
 
 all: @STATIC@ @SHARED@
 
