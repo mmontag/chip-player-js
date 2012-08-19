@@ -2,7 +2,7 @@
 
 import sys
 import os
-import libxmp
+import pyxmp
 
 argc = len(sys.argv)
 argv = sys.argv
