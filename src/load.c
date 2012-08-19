@@ -391,7 +391,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	char buf[XMP_NAME_SIZE];
 	int i;
 	struct list_head tmpfiles_list;
-	int ret = XMP_OK;
+	int ret = 0;
 
 	if (stat(path, &st) < 0)
 		return -XMP_ERROR_SYSTEM;
@@ -445,7 +445,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 				strncpy(info->type, format_loader[i]->name,
 							XMP_NAME_SIZE);
 			}
-			return XMP_OK;
+			return 0;
 		}
 	}
 
@@ -554,7 +554,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	load_epilogue(ctx);
 
-	return XMP_OK;
+	return 0;
 
     err_depack:
 	fclose(f);

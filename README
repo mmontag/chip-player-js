@@ -1,27 +1,92 @@
-libxmp version 3.9.0
+libxmp version 3.9.4
 
 This is an experimental release of libxmp. The API can be modified until
 the 4.0 stable release.
 
-Better documentation will be included in the stable relase. Until then,
-check the xmp.h header file and the xmp player front-end. A simple example
-on how to use this library:
+Check http://xmp.sf.net/api.html for the current API reference. Better
+documentation will be included in the stable relase. Also check the xmp.h
+header file and the xmp player front-end.
 
+This example loads a module, plays it at 44.1kHz and writes it to a raw
+sound file:
 
-xmp_context ctx;		/* context handle */
-struct xmp_module_info info;	/* struct to hold module info */
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <xmp.h>
+    
+    int main(int argc, char **argv)
+    {
+        xmp_context c;
+        struct xmp_module_info mi;
+        FILE *f;
+    
+        /* The output raw file */
+        f = fopen("out.raw", "wb");
+        if (f == NULL) {
+            fprintf(stderr, "can't open output file\n");
+            exit(EXIT_FAILURE);
+        }
+    
+        /* Create the player context */
+        c = xmp_create_context();
+    
+        /* Load our module */
+        if (xmp_load_module(c, argv[1]) != 0) {
+            fprintf(stderr, "can't load module\n");
+            exit(EXIT_FAILURE);
+        }
+    
+        /* Play the module */
+        xmp_player_start(c, 44100, 0);
+        while (xmp_player_frame(c) == 0) {
+            xmp_player_get_info(c, &mi);
+    
+            if (mi.loop_count > 0)    /* exit before looping */
+                break;
+    
+            fwrite(mi.buffer, mi.buffer_size, 1, f);  /* write audio data */
+        }
+        xmp_player_end(c);
+        xmp_release_module(c);        /* unload module */
+        xmp_free_context(c);          /* destroy the player context */
+    
+        fclose(f);
+    
+        exit(EXIT_SUCCESS);
+    }
 
-ctx = xmp_create_context();
+-----
 
-xmp_load_module(ctx, filename);		/* load the module file */
+A player context can load and play a single module at a time. Multiple
+contexts can be defined if needed.
 
-xmp_player_start(ctx, 0, 44100, 0);	/* play the module file */
-while (xmp_player_frame(ctx) == 0) {
-	xmp_player_get_info(&info);
-	/* audio buffer in info.buffer and info.buffer_size */
-}
-xmp_player_end(ctx);			/* end the module player */
+Use xmp_test_module() to check if the file is a valid module and retrieve 
+the module name and type. Use xmp_load_module() to fully load the module
+to memory. These two calls return 0 on success or <0 in case of error. Error
+codes are:
 
-xmp_release_module(ctx);		/* unload module */
-xmp_free_context(ctx);
+  -XMP_ERROR_INTERNAL   /* Internal error */
+  -XMP_ERROR_FORMAT     /* Unsupported module format */
+  -XMP_ERROR_LOAD       /* Error loading file */
+  -XMP_ERROR_DEPACK     /* Error depacking file */
+  -XMP_ERROR_SYSTEM     /* System error */
+
+If a system error occurs, the specific error is set in errno.
+
+Parameters to xmp_player_start() are the sampling rate (up to 48kHz)
+and a bitmapped integer holding one or more of the following mixer flags:
+
+  XMP_MIX_8BIT          /* Mix to 8-bit instead of 16 */
+  XMP_MIX_UNSIGNED      /* Mix to unsigned samples */
+  XMP_MIX_MONO          /* Mix to mono instead of stereo */
+  XMP_MIX_NEAREST       /* Mix using nearest neighbor interpolation */
+  XMP_MIX_NOFILTER      /* Disable lowpass filter */
+
+After xmp_player_start() is called, each call to xmp_player_frame() will
+render an audio frame.  Call xmp_player_get_info() to retrieve the buffer
+address and size. xmp_player_frame() returns 0 on success or -1 if replay
+should stop.
+
+Use xmp_player_end(), xmp_release_module() and xmp_free_context() to
+release memory and end replay.
 

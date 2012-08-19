@@ -42,13 +42,13 @@ extern "C" {
 
 /* mixer parameter macros */
 
-/* mixer sample format */
-#define XMP_FORMAT_8BIT		(1 << 0) /* Mix to 8-bit instead of 16 */
-#define XMP_FORMAT_UNSIGNED	(1 << 1) /* Mix to unsigned samples */
-#define XMP_FORMAT_MONO		(1 << 2) /* Mix to mono instead of stereo */
-#define XMP_FORMAT_NEAREST	(1 << 3) /* Mix using nearest neighbor
+/* mixer flags */
+#define XMP_MIX_8BIT		(1 << 0) /* Mix to 8-bit instead of 16 */
+#define XMP_MIX_UNSIGNED	(1 << 1) /* Mix to unsigned samples */
+#define XMP_MIX_MONO		(1 << 2) /* Mix to mono instead of stereo */
+#define XMP_MIX_NEAREST		(1 << 3) /* Mix using nearest neighbor
 					    interpolation */
-#define XMP_FORMAT_NOFILTER	(1 << 4) /* Disable lowpass filter */
+#define XMP_MIX_NOFILTER	(1 << 4) /* Disable lowpass filter */
 
 #define XMP_MAX_KEYS		121	/* Number of valid keys */
 #define XMP_MAX_ENV_POINTS	32	/* Max number of envelope points */
@@ -56,15 +56,12 @@ extern "C" {
 #define XMP_MAX_CHANNELS	64	/* Max number of channels in module */
 
 /* error codes */
-#define XMP_OK			0	/* No error */
 #define XMP_END			1	/* End of module */
 #define XMP_ERROR_INTERNAL	2	/* Internal error */
 #define XMP_ERROR_FORMAT	3	/* Unsupported module format */
 #define XMP_ERROR_LOAD		4	/* Error loading file */
 #define XMP_ERROR_DEPACK	5	/* Error depacking file */
 #define XMP_ERROR_SYSTEM	6	/* System error */
-
-#define xmp_system_error(x)	((x) >> 8)
 
 struct xmp_channel {
 	int pan;			/* Channel pan (0x80 is center) */

@@ -508,7 +508,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    i2h.mbnk = read16l(f);
 	    fread(&i2h.keys, 240, 1, f);
 
-	    copy_adjust(xxi->name, i2h.name, 24);
+	    copy_adjust(xxi->name, i2h.name, 25);
 	    xxi->rls = i2h.fadeout << 6;
 
 	    /* Envelopes */
@@ -643,7 +643,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    fread(&i1h.epoint, 200, 1, f);
 	    fread(&i1h.enode, 50, 1, f);
 
-	    copy_adjust(xxi->name, i1h.name, 24);
+	    copy_adjust(xxi->name, i1h.name, 25);
 
 	    xxi->rls = i1h.fadeout << 7;
 
@@ -775,9 +775,9 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    mod->xxi[i].sub[0].pan = 0x80;
 	    mod->xxi[i].sub[0].sid = i;
 	    mod->xxi[i].nsm = !!(xxs->len);
-	    copy_adjust(mod->xxi[i].name, ish.name, 24);
+	    copy_adjust(mod->xxi[i].name, ish.name, 25);
 	} else {
-	    copy_adjust(xxs->name, ish.name, 24);
+	    copy_adjust(xxs->name, ish.name, 25);
 	}
 
 #define MAX(x) ((x) > 0xfffff ? 0xfffff : (x))

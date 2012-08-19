@@ -11,8 +11,6 @@
 
 /*-----------------------------------------------------------------------------
 
-	Copyright (C) 1995-2012 Arnaud Carre
-
 	The YM2149 emulator is free software; you can redistribute it and/or
 	modify it under the terms of the GNU Lesser General Public
 	License as published by the Free Software Foundation; either
