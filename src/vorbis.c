@@ -900,7 +900,7 @@ typedef struct
    uint16 x,y;
 } Point;
 
-int point_compare(const void *p, const void *q)
+static int point_compare(const void *p, const void *q)
 {
    Point *a = (Point *) p;
    Point *b = (Point *) q;
@@ -2027,7 +2027,8 @@ void inverse_mdct_slow(float *buffer, int n, vorb *f, int blocktype)
 #else
 // transform to use a slow dct-iv; this is STILL basically trivial,
 // but only requires half as many ops
-void dct_iv_slow(float *buffer, int n)
+#if 0
+static void dct_iv_slow(float *buffer, int n)
 {
    float mcos[16384];
    float x[2048];
@@ -2046,8 +2047,10 @@ void dct_iv_slow(float *buffer, int n)
    }
    //free(x);
 }
+#endif
 
-void inverse_mdct_slow(float *buffer, int n, vorb *f, int blocktype)
+#if 0
+static void inverse_mdct_slow(float *buffer, int n, vorb *f, int blocktype)
 {
    int i, n4 = n >> 2, n2 = n >> 1, n3_4 = n - n4;
    float temp[4096];
@@ -2059,6 +2062,7 @@ void inverse_mdct_slow(float *buffer, int n, vorb *f, int blocktype)
    for (   ; i < n3_4; ++i) buffer[i] = -temp[n3_4 - i - 1];   // b-a', c+d'
    for (   ; i < n   ; ++i) buffer[i] = -temp[i - n3_4];       // c'+d
 }
+#endif
 #endif
 
 #ifndef LIBVORBIS_MDCT
@@ -2085,7 +2089,7 @@ extern void mdct_backward(mdct_lookup *init, float *in, float *out);
 
 mdct_lookup M1,M2;
 
-void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
+static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
 {
    mdct_lookup *M;
    if (M1.n == n) M = &M1;
@@ -3857,6 +3861,7 @@ static void vorbis_init(stb_vorbis *p, stb_vorbis_alloc *z)
    #endif
 }
 
+#if 0
 int stb_vorbis_get_sample_offset(stb_vorbis *f)
 {
    if (f->current_loc_valid)
@@ -3883,6 +3888,7 @@ int stb_vorbis_get_error(stb_vorbis *f)
    f->error = VORBIS__no_error;
    return e;
 }
+#endif
 
 static stb_vorbis * vorbis_alloc(stb_vorbis *f)
 {
@@ -4189,6 +4195,7 @@ static uint32 vorbis_find_page(stb_vorbis *f, uint32 *end, uint32 *last)
 #define SAMPLE_unknown  0xffffffff
 
 
+#if 0
 // ogg vorbis, in its insane infinite wisdom, only provides
 // information about the sample at the END of the page.
 // therefore we COULD have the data we need in the current
@@ -4515,7 +4522,9 @@ static int vorbis_seek_base(stb_vorbis *f, unsigned int sample_number, int fine)
       return error(f, VORBIS_seek_failed);
    }
 }
+#endif
 
+#if 0
 int stb_vorbis_seek_frame(stb_vorbis *f, unsigned int sample_number)
 {
    return vorbis_seek_base(f, sample_number, FALSE);
@@ -4535,6 +4544,7 @@ void stb_vorbis_seek_start(stb_vorbis *f)
    f->next_seg = -1;
    vorbis_pump_first_frame(f);
 }
+#endif
 
 unsigned int stb_vorbis_stream_length_in_samples(stb_vorbis *f)
 {
@@ -4619,7 +4629,6 @@ float stb_vorbis_stream_length_in_seconds(stb_vorbis *f)
 }
 
 
-
 int stb_vorbis_get_frame_float(stb_vorbis *f, int *channels, float ***output)
 {
    int len, right,left,i;
@@ -4665,6 +4674,7 @@ stb_vorbis * stb_vorbis_open_file_section(FILE *file, int close_on_free, int *er
    return NULL;
 }
 
+#if 0
 stb_vorbis * stb_vorbis_open_file(FILE *file, int close_on_free, int *error, stb_vorbis_alloc *alloc)
 {
    unsigned int len, start;
@@ -4683,6 +4693,7 @@ stb_vorbis * stb_vorbis_open_filename(char *filename, int *error, stb_vorbis_all
    if (error) *error = VORBIS_file_open_failure;
    return NULL;
 }
+#endif
 #endif // STB_VORBIS_NO_STDIO
 
 stb_vorbis * stb_vorbis_open_memory(unsigned char *data, int len, int *error, stb_vorbis_alloc *alloc)

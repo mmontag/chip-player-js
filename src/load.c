@@ -348,7 +348,6 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     
     temp2 = strdup(temp->name);
     res = decrunch(head, f, &temp->name, ttl);
-printf("ooo3 res=%d\n", res);
     free(temp2);
     /* Mirko: temp is now deallocated in unlink_tempfiles()
      * not a problem, since unlink_tempfiles() is called after decrunch
