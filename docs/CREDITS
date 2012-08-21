@@ -178,7 +178,7 @@ DMF sample decompressor
 IT resonant filters
 IT sample decompressor
 
-Modplug Plugin for XMMS v2.0 / libmodplug v0.8.5
+ Modplug Plugin for XMMS v2.0 / libmodplug v0.8.5
  Based on the ModPlug sound engine by Olivier Lapicque <olivierl@jps.net>
 
  This source code is public domain.
@@ -190,4 +190,13 @@ MED2 module loading code
   V2.00 file loading/saving routines by T. Kinnunen 1990
   MED2.00 by Teijo Kinnunen, 1990
   MED is in Public Domain
+
+
+Vorbis decoder
+
+ Ogg Vorbis I audio decoder  -- version 0.99996
+ Written in April 2007 by Sean Barrett, sponsored by RAD Game Tools.
+
+ Placed in the public domain April 2007 by the author: no copyright is
+ claimed, and you may use it for any purpose you like.
 

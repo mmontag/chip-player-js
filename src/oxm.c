@@ -6,8 +6,6 @@
  * for more information.
  */
 
-#if !defined WIN32 && !defined __AMIGA__ && !defined __AROS__
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +13,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
+#include "vorbis.h"
 #include "common.h"
 
 #define MAGIC_OGGS	0x4f676753
@@ -81,7 +79,7 @@ int test_oxm(FILE *f)
 		/* Read samples */
 		for (j = 0; j < nsmp; j++) {
 			read32b(f);
-			if (read32b(f) == 0x4f676753)
+			if (read32b(f) == MAGIC_OGGS)
 				return 0;
 			fseek(f, slen[j] - 8, SEEK_CUR);
 		}
@@ -90,102 +88,48 @@ int test_oxm(FILE *f)
 	return -1;
 }
 
-/*
- * Invoke oggdec to decode our vorbis file to a temporary file,
- * then read that back when writing to our depacked XM file
- */
 static char *oggdec(FILE *f, int len, int res, int *newlen)
 {
-	char buf[1024];
-	FILE *t;
-	int i, l;
-	struct stat st;
-	int8 *pcm;
+	int i, n, ch;
+	int size;
+	uint8 *data, *pcm;
 	int16 *pcm16;
 	uint32 id;
-	int status, p[2];
 
-	read32b(f);
+	size = read32l(f);
 	id = read32b(f);
 	fseek(f, -8, SEEK_CUR);
 
+	if ((data = malloc(len)) == NULL)
+		return NULL;
+
+	read32b(f);
+	fread(data, 1, len - 4, f);
+
 	if (id != MAGIC_OGGS) {		/* copy input data if not Ogg file */
-		if ((pcm = malloc(len)) == NULL)
-			return NULL;
-		fread(pcm, 1, len, f);
 		*newlen = len;
-		return (char *)pcm;
+		return (char *)data;
 	}
 	
-	if ((t = tmpfile()) == NULL)
+	n = stb_vorbis_decode_memory(data, len, &ch, &pcm16);
+	free(data);
+
+	if (n < 0)
 		return NULL;
 
-	if (pipe(p) < 0) {
-		fclose(t);
-		return NULL;
-	}
-
-	if (fork() == 0) {		/* child process runs oggdec */
-		char b[10];
-		int l;
-
-		close(p[1]);
-		dup2(p[0], STDIN_FILENO);
-		dup2(fileno(t), STDOUT_FILENO);
-
-		snprintf(b, 10, "-b%d", res);
-		execlp("oggdec", "oggdec", "-Q", b, "-e0", "-R", "-s1",
-							"-o-", "-", NULL);
-
-		do {			/* drain input data */
-			l = read(STDIN_FILENO, buf, 1024);
-		} while (l == 1024);
-
-		exit(1);
-	}
-
-	close(p[0]);
-
-	do {				/* write vorbis data to oggdec */
-		l = len > 1024 ? 1024 : len;
-		fread(buf, 1, l, f);
-		write(p[1], buf, l);
-		len -= l;
-	} while (l > 0 && len > 0);
-
-	close(p[1]);
-	wait(&status);
-
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		fclose(t);
-		return NULL;
-	}
-
-	if (fstat(fileno(t), &st) < 0) {
-		fclose(t);
-		return NULL;
-	}
-
-	if ((pcm = malloc(st.st_size)) == NULL) {
-		fclose(t);
-		return NULL;
-	}
-
-	pcm16 = (int16 *)pcm;
-	fseek(t, 0, SEEK_SET);
-	fread(pcm, 1, st.st_size, t);
-	fclose(t);
+	pcm = (uint8 *)pcm16;
 
 	/* Convert to delta */
 	if (res == 8) {
-		for (i = st.st_size - 1; i > 0; i--)
+		for (i = n - 1; i > 0; i--)
 			pcm[i] -= pcm[i - 1];
-		*newlen = st.st_size;
+		*newlen = n;
 	} else {
-		for (i = st.st_size / 2 - 1; i > 0; i--)
+		for (i = n - 1; i > 0; i--)
 			pcm16[i] -= pcm16[i - 1];
-		*newlen = st.st_size;
+		*newlen = n * 2;
 	}
+
 
 	return (char *)pcm;
 }
@@ -270,5 +214,3 @@ int decrunch_oxm(FILE *f, FILE *fo)
 
 	return 0;
 }
-
-#endif /* !WIN32 && !__AMIGA__ && !__AROS__ */

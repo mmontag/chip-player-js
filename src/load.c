@@ -58,22 +58,24 @@ int decrunch_lha	(FILE *, FILE *);
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
-#define BUILTIN_PP	0x01
-#define BUILTIN_SQSH	0x02
-#define BUILTIN_MMCMP	0x03
-#define BUILTIN_ARC	0x05
-#define BUILTIN_ARCFS	0x06
-#define BUILTIN_S404	0x07
-#define BUILTIN_OXM	0x08
-#define BUILTIN_XFD	0x09
-#define BUILTIN_MUSE	0x0a
-#define BUILTIN_LZX	0x0b
-#define BUILTIN_ZIP	0x0c
-#define BUILTIN_GZIP	0x0d
-#define BUILTIN_COMPRESS 0x0e
-#define BUILTIN_BZIP2	0x0f
-#define BUILTIN_XZ	0x10
-#define BUILTIN_LHA	0x11
+enum {
+	BUILTIN_PP = 0x01,
+	BUILTIN_SQSH,
+	BUILTIN_MMCMP,
+	BUILTIN_ARC,
+	BUILTIN_ARCFS,
+	BUILTIN_S404,
+	BUILTIN_OXM,
+	BUILTIN_XFD,
+	BUILTIN_MUSE,
+	BUILTIN_LZX,
+	BUILTIN_ZIP,
+	BUILTIN_GZIP,
+	BUILTIN_COMPRESS,
+	BUILTIN_BZIP2,
+	BUILTIN_XZ,
+	BUILTIN_LHA,
+};
 
 
 #if defined __EMX__ || defined WIN32
@@ -176,11 +178,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     } else if (memcmp(b, "S404", 4) == 0) {
 	packer = "Stonecracker";
 	builtin = BUILTIN_S404;
-#if !defined WIN32 && !defined __AMIGA__ && !defined __native_client__
     } else if (test_oxm(*f) == 0) {
 	packer = "oggmod";
 	builtin = BUILTIN_OXM;
-#endif
     }
 
     if (packer == NULL && b[0] == 0x1a) {
@@ -320,11 +320,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	case BUILTIN_LHA:
 	    res = decrunch_lha(*f, t);
 	    break;
-#if !defined WIN32 && !defined __MINGW32__ && !defined __AMIGA__ && !defined __native_client__
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);
 	    break;
-#endif
 #ifdef AMIGA
 	case BUILTIN_XFD:
 	    res = decrunch_xfd(*f, t);
@@ -350,6 +348,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     
     temp2 = strdup(temp->name);
     res = decrunch(head, f, &temp->name, ttl);
+printf("ooo3 res=%d\n", res);
     free(temp2);
     /* Mirko: temp is now deallocated in unlink_tempfiles()
      * not a problem, since unlink_tempfiles() is called after decrunch

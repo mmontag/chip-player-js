@@ -3,7 +3,6 @@
 #include "spectrum.h"
 #include "loader.h"
 
-
 /*
  * From the Audio File Formats (version 2.5)
  * Submitted-by: Guido van Rossum <guido@cwi.nl>
@@ -140,7 +139,7 @@ static void convert_hsc_to_sbi(uint8 *a)
 }
 
 
-static void adpcm4_decoder(uint8 * inp, uint8 *outp, char *tab, int len)
+static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 {
 	char delta = 0;
 	uint8 b0, b1;
@@ -157,6 +156,7 @@ static void adpcm4_decoder(uint8 * inp, uint8 *outp, char *tab, int len)
 		*outp++ = delta;
 	}
 }
+
 
 static void unroll_loop(struct xmp_sample *xxs)
 {
@@ -282,8 +282,8 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 			fseek(f, 5, SEEK_CUR);	/* Skip "ADPCM" */
 			fread(table, 1, 16, f);
 			fread(xxs->data + x2, 1, x2, f);
-			adpcm4_decoder((uint8 *) xxs->data + x2,
-				       (uint8 *) xxs->data, table, bytelen);
+			adpcm4_decoder((uint8 *)xxs->data + x2,
+				       (uint8 *)xxs->data, table, bytelen);
 		} else {
 			int x = fread(xxs->data, 1, bytelen, f);
 			if (x != bytelen) {
