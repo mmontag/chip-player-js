@@ -100,7 +100,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	id = read32b(f);
 	fseek(f, -8, SEEK_CUR);
 
-	if ((data = malloc(len)) == NULL)
+	if ((data = calloc(1, len)) == NULL)
 		return NULL;
 
 	read32b(f);

@@ -3824,9 +3824,6 @@ static void vorbis_deinit(stb_vorbis *p)
       setup_free(p, p->finalY[i]);
    }
    for (i=0; i < 2; ++i) {
-      setup_free(p, p->A[i]);
-      setup_free(p, p->B[i]);
-      setup_free(p, p->C[i]);
       setup_free(p, p->window[i]);
    }
    #ifndef STB_VORBIS_NO_STDIO
