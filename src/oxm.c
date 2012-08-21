@@ -119,6 +119,18 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 
 	pcm = (uint8 *)pcm16;
 
+	if (res == 8) {
+		for (i = 0; i < n; i++) {
+			pcm[i] = pcm16[i] >> 8;
+		}
+		pcm = realloc(pcm16, n);
+		if (pcm == NULL) {
+			free(pcm16);
+			return NULL;
+		}
+		pcm16 = (int16 *)pcm;
+	}
+
 	/* Convert to delta */
 	if (res == 8) {
 		for (i = n - 1; i > 0; i--)
