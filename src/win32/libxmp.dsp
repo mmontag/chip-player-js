@@ -270,6 +270,10 @@ SOURCE=..\unlha.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\vorbis.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\loaders\common.c
 # End Source File
 # Begin Source File
