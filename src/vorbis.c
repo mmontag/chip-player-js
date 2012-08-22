@@ -4922,6 +4922,7 @@ int stb_vorbis_get_samples_short_interleaved(stb_vorbis *f, int channels, short 
    return n;
 }
 
+#if 0
 int stb_vorbis_get_samples_short(stb_vorbis *f, int channels, short **buffer, int len)
 {
    float **outputs;
@@ -4940,6 +4941,7 @@ int stb_vorbis_get_samples_short(stb_vorbis *f, int channels, short **buffer, in
    }
    return n;
 }
+#endif
 
 #ifndef STB_VORBIS_NO_STDIO
 int stb_vorbis_decode_filename(char *filename, int *channels, short **output)
@@ -5017,6 +5019,7 @@ int stb_vorbis_decode_memory(uint8 *mem, int len, int *channels, short **output)
 }
 #endif
 
+#if 0
 int stb_vorbis_get_samples_float_interleaved(stb_vorbis *f, int channels, float *buffer, int num_floats)
 {
    float **outputs;
@@ -5065,6 +5068,7 @@ int stb_vorbis_get_samples_float(stb_vorbis *f, int channels, float **buffer, in
    }
    return n;
 }
+#endif
 #endif // STB_VORBIS_NO_PULLDATA_API
 
 #endif // STB_VORBIS_HEADER_ONLY
