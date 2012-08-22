@@ -57,7 +57,6 @@ int main(int argc, char **argv)
 				sound_play(mi[current].buffer,
 					   mi[current].buffer_size);
 			
-
 				if (mi[current].row != mi[prev].row) {
 					display_data(&mi[current]);
 				}

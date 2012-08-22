@@ -1,26 +1,23 @@
-EXAMPLES_PATH	= examples
 
-include examples/xmdp/Makefile
+CC = gcc
+CFLAGS = -O3 -Wall -I../include
+LD = gcc
+LDFLAGS =
+LIBS = -L../lib -lxmp -lm
 
-examples: $(EXAMPLES_PATH)/test1 $(EXAMPLES_PATH)/test2 $(EXAMPLES_PATH)/test3 $(EXAMPLES_PATH)/test4 $(EXAMPLES_PATH)/xmdp/xmdp
+all: examples
 
-$(EXAMPLES_PATH)/test1: $(EXAMPLES_PATH)/test1.o $(EXAMPLES_PATH)/alsa.o
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(EXAMPLES_PATH)/test1.o $(EXAMPLES_PATH)/alsa.o -lasound -Llib -lxmp -lm'; \
-	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
-	eval $$CMD
+examples: test1 test2 test3 test4
 
-$(EXAMPLES_PATH)/test2: $(EXAMPLES_PATH)/test2.o $(EXAMPLES_PATH)/alsa.o
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(EXAMPLES_PATH)/test2.o $(EXAMPLES_PATH)/alsa.o -lasound -Llib -lxmp -lm'; \
-	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
-	eval $$CMD
+test1: test1.o alsa.o
+	$(LD) -o $@ $(LDFLAGS) test1.o alsa.o -lasound $(LIBS)
 
-$(EXAMPLES_PATH)/test3: $(EXAMPLES_PATH)/test3.o
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(EXAMPLES_PATH)/test3.o -Llib -lxmp -lm'; \
-	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
-	eval $$CMD
+test2: test2.o alsa.o
+	$(LD) -o $@ $(LDFLAGS) test2.o alsa.o -lasound $(LIBS)
 
-$(EXAMPLES_PATH)/test4: $(EXAMPLES_PATH)/test4.o
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(EXAMPLES_PATH)/test4.o -Llib -lxmp -lm'; \
-	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
-	eval $$CMD
+test3: test3.o
+	$(LD) -o $@ $(LDFLAGS) test3.o $(LIBS)
+
+test4: test4.o
+	$(LD) -o $@ $(LDFLAGS) test4.o $(LIBS)
 

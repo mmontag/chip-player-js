@@ -1,10 +1,11 @@
 
-MDP_OBJS	= mdp.o font1.o font2.o
-MDP_PATH	= examples/xmdp
+CC = gcc
+CFLAGS = -O3 -Wall -I../../include
+LD = gcc
+LDFLAGS =
+LIBS = -L../../lib -lxmp -lm
 
-xmdp: $(MDP_PATH)/xmdp
+all: xmdp
 
-$(MDP_PATH)/xmdp: $(addprefix $(MDP_PATH)/,$(MDP_OBJS)) $(EXAMPLES_PATH)/alsa.o
-	@CMD='$(LD) -o $@ $(LDFLAGS) $+ -lSDL -lasound -Llib -lxmp -lm'; \
-	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
-	eval $$CMD
+xmdp: mdp.o font1.o font2.o ../alsa.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lSDL -lasound $(LIBS)
