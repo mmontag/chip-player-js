@@ -1,6 +1,7 @@
 /* xmdp Copyright (C) 1997-2009 Claudio Matsuoka and Hipolito Carraro Jr
  * Original MDP.EXE for DOS by Future Crew
  *
+ * 1.3.0: Ported to libxmp 4.0
  * 1.2.0: Ported to xmp 3.0 and sdl
  * 1.1.0: Raw keys handled by Russel Marks' rawkey functions
  *        Links to libxmp 1.1.0, shm stuff removed
@@ -19,7 +20,9 @@
 #include "font.h"
 #include "../sound.h"
 
+#define VERSION "1.3.0"
 #define MAX_TIMER 1600		/* Expire time */
+#define SRATE 44100		/* Sampling rate */
 
 struct channel_info {
     int timer;
@@ -366,19 +369,19 @@ void process_events ()
 		paused ^= 1;
 		break;
 	    case SDLK_LEFT:
-		xmp_ord_prev(ctx);
+		xmp_prev_position(ctx);
 		paused = 0;
 		break;
 	    case SDLK_RIGHT:
-		xmp_ord_next(ctx);
+		xmp_next_position(ctx);
 		paused = 0;
 		break;
 	    case SDLK_MINUS:
-		xmp_gvol_dec(ctx);
+		//xmp_gvol_dec(ctx);
 		paused = 0;
 		break;
 	    case SDLK_PLUS:
-		xmp_gvol_inc(ctx);
+		//xmp_gvol_inc(ctx);
 		paused = 0;
 		break;
 	    }
@@ -460,7 +463,7 @@ int main (int argc, char **argv)
 	goto err1;
     }
 
-    sound_init(44100, 2);
+    sound_init(SRATE, 2);
 
     init_video();
     prepare_screen ();
@@ -482,7 +485,7 @@ int main (int argc, char **argv)
     SDL_UpdateRect(screen, 0, 0, 640, 480);
 
     paused = 0;
-    xmp_player_start(ctx);
+    xmp_player_start(ctx, SRATE, 0);
     xmp_player_get_info(ctx, &mi);
     shadowmsg(&font1, 10, 26, mi.mod->name, 15, -1);
 

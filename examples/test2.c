@@ -1,16 +1,40 @@
-/* A simple frontend for xmp */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "xmp.h"
 #include "sound.h"
 
+static char *note_name[] = {
+	"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "
+};
+
 static void display_data(struct xmp_module_info *mi)
 {
-	printf("%3d/%3d %3d/%3d\r",
-	       mi->order, mi->mod->len, mi->row, mi->num_rows);
+	int i;
 
-	fflush(stdout);
+	printf("%02x| ", mi->row);
+	for (i = 0; i < mi->mod->chn; i++) {
+		int track = mi->mod->xxp[mi->pattern]->index[i];
+		struct xmp_event *event = &mi->mod->xxt[track]->event[mi->row];
+
+		if (event->note > 0x80) {
+			printf("=== ");
+		} else if (event->note > 0) {
+			int note = event->note - 1;
+			printf("%s%d ", note_name[note % 12], note / 12);
+		} else {
+			printf("--- ");
+		}
+
+		if (event->ins > 0) {
+			printf("%02X", event->ins);
+		} else {
+			printf("--");
+		}
+
+		printf("|");
+	}
+	printf("\n");
 }
 
 int main(int argc, char **argv)
@@ -19,13 +43,8 @@ int main(int argc, char **argv)
 	static struct xmp_module_info mi[2];
 	int current, prev;
 	int i;
-	int silent = 0;
 
-	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 's') {
-		silent = 1;
-	}
-
-	if (!silent && sound_init(44100, 2) < 0) {
+	if (sound_init(44100, 2) < 0) {
 		fprintf(stderr, "%s: can't initialize sound\n", argv[0]);
 		exit(1);
 	}
@@ -39,7 +58,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		if (xmp_player_start(ctx, 0, 44100, 0) == 0) {
+		if (xmp_player_start(ctx, 44100, 0) == 0) {
 
 			/* Show module data */
 
@@ -59,11 +78,14 @@ int main(int argc, char **argv)
 				if (mi[current].loop_count > 0)
 					break;
 
-				if (!silent) {
-					sound_play(mi[current].buffer,
-						   mi[current].buffer_size);
-				}
+				sound_play(mi[current].buffer,
+						mi[current].buffer_size);
 
+				if (mi[current].order != mi[prev].order) {
+					printf("\n%02x:%02x\n",
+					       mi[current].order,
+					       mi[current].pattern);
+				}
 				if (mi[current].row != mi[prev].row) {
 					display_data(&mi[current]);
 				}
@@ -76,10 +98,7 @@ int main(int argc, char **argv)
 	}
 
 	xmp_free_context(ctx);
-
-	if (!silent) {
-		sound_deinit();
-	}
+	sound_deinit();
 
 	return 0;
 }

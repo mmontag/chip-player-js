@@ -17,7 +17,7 @@ static void display_info(struct xmp_module_info *mi)
 	printf("Number of channels: %d\n", mod->chn);
 	printf("Number of instruments: %d\n", mod->ins);
 	printf("Number of samples: %d\n", mod->smp);
-	printf("Initial tempo: %d\n", mod->tpo);
+	printf("Initial speed: %d\n", mod->spd);
 	printf("Initial BPM: %d\n", mod->bpm);
 	printf("Length in patterns: %d\n", mod->len);
 
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		if (xmp_player_start(ctx, 0, 44100, 0) == 0) {
+		if (xmp_player_start(ctx, 44100, 0) == 0) {
 			xmp_player_get_info(ctx, &mi);
 			display_info(&mi);
 			xmp_player_end(ctx);
