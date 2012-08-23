@@ -298,6 +298,13 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 		convert_7bit_to_8bit(xxs->data, xxs->len);
 	}
 
+	/* Fix endianism if needed */
+	if (xxs->flg & XMP_SAMPLE_16BIT) {
+		if (is_big_endian() ^ ((flags & SAMPLE_FLAG_BIGEND) != 0))
+			convert_endian(xxs->data, xxs->len);
+	}
+
+	/* Convert delta samples */
 	if (flags & SAMPLE_FLAG_DIFF) {
 		convert_delta(xxs->data, xxs->len, xxs->flg & XMP_SAMPLE_16BIT);
 	} else if (flags & SAMPLE_FLAG_8BDIFF) {
@@ -312,12 +319,6 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 	if (flags & SAMPLE_FLAG_UNS) {
 		convert_signal(xxs->data, xxs->len,
 				xxs->flg & XMP_SAMPLE_16BIT);
-	}
-
-	/* Fix endianism if needed */
-	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		if (is_big_endian() ^ ((flags & SAMPLE_FLAG_BIGEND) != 0))
-			convert_endian(xxs->data, xxs->len);
 	}
 
 	/* Downmix stereo samples */
