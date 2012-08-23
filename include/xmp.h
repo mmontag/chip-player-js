@@ -29,17 +29,6 @@ extern "C" {
 #define XMP_KEY_CUT		0x82	/* Note number for key cut event */
 #define XMP_KEY_FADE		0x83	/* Note number for fade event */
 
-/* xmp_control arguments */
-#define XMP_CTL_POS_NEXT	0x00
-#define XMP_CTL_POS_PREV	0x01
-#define XMP_CTL_POS_SET		0x02
-#define XMP_CTL_MOD_STOP	0x03
-#define XMP_CTL_MOD_RESTART	0x04
-#define XMP_CTL_SEEK_TIME	0x07
-#define XMP_CTL_CH_MUTE		0x08
-#define XMP_CTL_MIXER_AMP	0x09
-#define XMP_CTL_MIXER_MIX	0x10
-
 /* mixer parameter macros */
 
 /* mixer flags */
@@ -253,18 +242,6 @@ typedef char *xmp_context;
 EXPORT extern const char *xmp_version;
 EXPORT extern const unsigned int xmp_vercode;
 
-/* Player control macros */
-
-#define xmp_next_position(p)	xmp_control((p), XMP_CTL_POS_NEXT)
-#define xmp_prev_position(p)	xmp_control((p), XMP_CTL_POS_PREV)
-#define xmp_set_position(p,x)	xmp_control((p), XMP_CTL_POS_SET, (x))
-#define xmp_stop_module(p)	xmp_control((p), XMP_CTL_MOD_STOP)
-#define xmp_restart_module(p)	xmp_control((p), XMP_CTL_MOD_RESTART)
-#define xmp_seek_time(p,x)	xmp_control((p), XMP_CTL_SEEK_TIME, (x))
-#define xmp_channel_mute(p,x,y)	xmp_control((p), XMP_CTL_CH_MUTE, (x), (y))
-#define xmp_mixer_amp(p,x)	xmp_control((p), XMP_CTL_MIXER_AMP, (x))
-#define xmp_mixer_mix(p,x)	xmp_control((p), XMP_CTL_MIXER_MIX, (x))
-
 EXPORT xmp_context xmp_create_context  (void);
 EXPORT int         xmp_test_module     (char *, struct xmp_test_info *);
 EXPORT void        xmp_free_context    (xmp_context);
@@ -276,7 +253,15 @@ EXPORT void        xmp_player_get_info (xmp_context, struct xmp_module_info *);
 EXPORT void        xmp_player_end      (xmp_context);
 EXPORT void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
 EXPORT char      **xmp_get_format_list (void);
-EXPORT int         xmp_control         (xmp_context, int, ...);
+EXPORT int         xmp_next_position   (xmp_context);
+EXPORT int         xmp_prev_position   (xmp_context);
+EXPORT int         xmp_set_position    (xmp_context, int);
+EXPORT void        xmp_stop_module     (xmp_context);
+EXPORT void        xmp_restart_module  (xmp_context);
+EXPORT int         xmp_seek_time       (xmp_context, int);
+EXPORT int         xmp_channel_mute    (xmp_context, int, int);
+EXPORT int         xmp_mixer_amp       (xmp_context, int);
+EXPORT int         xmp_mixer_mix       (xmp_context, int);
 
 #ifdef __cplusplus
 }

@@ -93,84 +93,113 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	}
 }
 
-int xmp_control(xmp_context opaque, int cmd, ...)
+int xmp_next_position(xmp_context opaque)
 {
-	va_list ap;
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
-	struct mixer_data *s = &ctx->s;
-	int ret = 0;
 
-	va_start(ap, cmd);
+	if (p->pos < m->mod.len)
+		set_position(ctx, p->pos + 1, 1);
+	return p->pos;
+}
 
-	switch (cmd) {
-	case XMP_CTL_POS_PREV:
-		if (p->pos == m->seq_data[p->sequence].entry_point) {
-			set_position(ctx, -1, -1);
-		} else if (p->pos > m->seq_data[p->sequence].entry_point) {
-			set_position(ctx, p->pos - 1, -1);
-		}
-		ret = p->pos;
-		break;
-	case XMP_CTL_POS_NEXT:
-		if (p->pos < m->mod.len)
-			set_position(ctx, p->pos + 1, 1);
-		ret = p->pos;
-		break;
-	case XMP_CTL_POS_SET: {
-		int arg = va_arg(ap, int);
-		set_position(ctx, arg, 0);
-		ret = p->pos;
-		break; }
-	case XMP_CTL_MOD_STOP:
-		p->pos = -2;
-		break;
-	case XMP_CTL_MOD_RESTART:
-		p->pos = -1;
-		break;
-	case XMP_CTL_SEEK_TIME: {
-		int arg = va_arg(ap, int);
-		int i, t;
+int xmp_prev_position(xmp_context opaque)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 
-		for (i = m->mod.len - 1; i >= 0; i--) {
-			int pat = m->mod.xxo[i];
-			if (pat >= m->mod.pat) {
-				continue;
-			}
-			if (get_sequence(ctx, i) != p->sequence) {
-				continue;
-			}
-			t = m->xxo_info[i].time;
-			if (arg >= t) {
-				set_position(ctx, i, 1);
-				break;
-			}
+	if (p->pos == m->seq_data[p->sequence].entry_point) {
+		set_position(ctx, -1, -1);
+	} else if (p->pos > m->seq_data[p->sequence].entry_point) {
+		set_position(ctx, p->pos - 1, -1);
+	}
+	return p->pos;
+}
+
+int xmp_set_position(xmp_context opaque, int pos)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+
+	set_position(ctx, pos, 0);
+	return p->pos;
+}
+
+void xmp_stop_module(xmp_context opaque)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+
+	p->pos = -2;
+}
+
+void xmp_restart_module(xmp_context opaque)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+
+	p->pos = -1;
+}
+
+int xmp_seek_time(xmp_context opaque, int time)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	int i, t;
+
+	for (i = m->mod.len - 1; i >= 0; i--) {
+		int pat = m->mod.xxo[i];
+		if (pat >= m->mod.pat) {
+			continue;
 		}
-		if (i < 0) {
-			xmp_set_position(opaque, 0);
+		if (get_sequence(ctx, i) != p->sequence) {
+			continue;
 		}
-		break; }
-	case XMP_CTL_CH_MUTE: {
-		int arg1 = va_arg(ap, int);
-		int arg2 = va_arg(ap, int);
-		ret = virt_mute(ctx, arg1, arg2);
-		break; }
-	case XMP_CTL_MIXER_AMP: {
-		int arg = va_arg(ap, int);
-		s->amplify = arg;
-		break; }
-	case XMP_CTL_MIXER_MIX: {
-		int arg = va_arg(ap, int);
-		s->mix = arg;
-		break; }
-	default:
-		ret = -XMP_ERROR_INTERNAL;
+		t = m->xxo_info[i].time;
+		if (time >= t) {
+			set_position(ctx, i, 1);
+			break;
+		}
+	}
+	if (i < 0) {
+		xmp_set_position(opaque, 0);
 	}
 
-	va_end(ap);
+	return p->pos;
+}
 
-	return ret;
+int xmp_channel_mute(xmp_context opaque, int num, int status)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+
+	return virt_mute(ctx, num, status);
+}
+
+int xmp_mixer_amp(xmp_context opaque, int val)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct mixer_data *s = &ctx->s;
+	int old = s->amplify;
+	
+	if (val >= 0)
+		s->amplify = val;
+
+	return old;
+}
+
+int xmp_mixer_mix(xmp_context opaque, int val)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct mixer_data *s = &ctx->s;
+	int old = s->mix;
+
+	if (val >= 0)
+		s->mix = val;
+
+	return old;
 }
 
 char **xmp_get_format_list()
@@ -186,4 +215,3 @@ void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 	memcpy(&p->inject_event[channel], e, sizeof(struct xmp_event));
 	p->inject_event[channel]._flag = 1;
 }
- 
