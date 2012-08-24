@@ -1,5 +1,5 @@
-Libxmp API documentation
-========================
+Libxmp 4.0 API documentation
+============================
 
 Introduction
 ------------
@@ -137,6 +137,11 @@ API reference
 
 **`char **xmp_get_format_list()`**
 
+> Query the list of supported module formats.
+
+> **Returns:** a NULL-terminated array of strings containing the names
+  of all supported module formats.
+
 
 ### Context creation ###
 
@@ -161,6 +166,21 @@ API reference
 
 **`int xmp_test_module(char *path, struct xmp_test_info *test_info)`**
 
+> Test if a file is a valid module.
+>
+> **Parameters:**
+>
+> _path_: pathname of the module to test.
+>
+> _test_info_: a pointer to a structure used to retrieve the module title
+> and format, if the file is a valid module.
+>
+> **Returns:** 0 if the file is a valid module, or a negative error code
+  in case of error. Error codes can be `XMP_ERROR_FORMAT` in case of an
+  unrecognized file format, `XMP_ERROR_DEPACK` if the file is compressed
+  and uncompression failed, or `XMP_ERROR_SYSTEM` in case of a system error
+  (the system error code is set in `errno`).
+
 **`int xmp_load_module(xmp_context c, char *path)`**
 
 > Load a module into the specified player context.
@@ -180,37 +200,223 @@ API reference
 
 **`void xmp_release_module(xmp_context c)`**
 
+> Release memory allocated by a module from the specified player context.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+
 
 ### Module playing ###
 
-**`int xmp_player_start(xmp_context c, int rate, int format)`**
+**`int xmp_player_start(xmp_context c, int rate, int flags)`**
 
-**`int xmp_player_frame(xmp_context)`**
+> Start playing the currently loaded module.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> _rate_: the sampling rate to use, in Hz (tipically 44100).
+>
+> _flags_: bitmapped configurable player flags, one or more of the
+> following:
+<blockquote>
+<blockquote>
+<pre>
+XMP_MIX_8BIT         /* Mix to 8-bit instead of 16 */
+XMP_MIX_UNSIGNED     /* Mix to unsigned samples */
+XMP_MIX_MONO         /* Mix to mono instead of stereo */
+XMP_MIX_NEAREST      /* Mix using nearest neighbor interpolation */
+XMP_MIX_NOFILTER     /* Disable lowpass filter */
+</pre>
+</blockquote>
+</blockquote>
+> **Returns:** 0 if sucessful, or a negative error code in case of error.
+  Error codes can be `XMP_ERROR_INTERNAL` in case of a internal player
+  error, or `XMP_ERROR_SYSTEM` in case of a system error (the system error
+  code is set in `errno`).
+
+**`int xmp_player_frame(xmp_context c)`**
+
+> Play one frame of the module. Modules usually play at 50 frames per second.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> **Returns:** 0 if sucessful or -1 if the module was stopped.
 
 **`void xmp_player_get_info(xmp_context c, struct xmp_module_info *info)`**
 
+> Retrieve current module and replay data.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> _info_: pointer to structure containing current data. `struct
+> xmp_module_info` is defined as follows::
+>
+<blockquote>
+<blockquote>
+<pre>
+struct xmp_module_info {          /* Current module information */
+    int order;                    /* Current position */
+    int pattern;                  /* Current pattern */
+    int row;                      /* Current row in pattern */
+    int num_rows;                 /* Number of rows in current pattern */
+    int frame;                    /* Current frame */
+    int speed;                    /* Current replay speed */
+    int bpm;                      /* Current bpm */
+    int time;                     /* Current module time in ms */
+    int frame_time;               /* Frame replay time in us */
+    int total_time;               /* Estimated replay time in ms*/
+    void *buffer;                 /* Pointer to sound buffer */
+    int buffer_size;              /* Used buffer size */
+    int total_size;               /* Total buffer size */
+    int volume;                   /* Current master volume */
+    int loop_count;               /* Loop counter */
+    int virt_channels;            /* Number of virtual channels */
+    int virt_used;                /* Used virtual channels */
+    int vol_base;                 /* Volume scale */
+
+    struct xmp_channel_info {     /* Current channel information */
+        unsigned int period;      /* Sample period */
+        unsigned int position;    /* Sample position */
+        short pitchbend;          /* Linear bend from base note*/
+        unsigned char note;       /* Current base note number */
+        unsigned char instrument; /* Current instrument number */
+        unsigned char sample;     /* Current sample number */
+        unsigned char volume;     /* Current volume */
+        unsigned char pan;        /* Current stereo pan */
+        unsigned char reserved;   /* Reserved */
+        struct xmp_event event;   /* Current track event */
+    } channel_info[XMP_MAX_CHANNELS];
+
+    struct xmp_module *mod;       /* Pointer to module data */
+    char *comment;                /* Comment text, if any */
+
+    int sequence;                 /* Current sequence */
+    int num_sequences;            /* Number of valid sequences */
+    struct xmp_sequence *seq_data; /* Pointer to sequence data */
+};
+</pre>
+</blockquote>
+</blockquote>
+> `xmp_player_get_info()` should be used to retrieve sound buffer data
+> after `xmp_player_frame()` is called. Fields `buffer` and `buffer_size`
+> contain the pointer to the sound buffer PCM data and its size.
+>
+> **Returns:** 0 if sucessful or -1 if the module was stopped.
+
 **`void xmp_player_end(xmp_context c)`**
 
-**`void xmp_inject_event(xmp_context, int, struct xmp_event *)`**
+> End module replay and releases player memory.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
 
-**`int xmp_next_position(p)`**
+**`void xmp_inject_event(xmp_context c, int channel, struct xmp_event *event)`**
 
-**`int xmp_prev_position(p)`**
+**`int xmp_next_position(xmp_context c)`**
 
-**`int xmp_set_position(p,x)`**
+> Skip replay to the start of the next position.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> **Returns:** The new position index.
 
-**`int xmp_stop_module(p)`**
+**`int xmp_prev_position(xmp_context c)`**
 
-**`int xmp_restart_module(p)`**
+> Skip replay to the start of the previous position.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> **Returns:** The new position index.
 
-**`int xmp_seek_time(p,x)`**
+**`int xmp_set_position(xmp_context c, int pos)`**
 
-**`int xmp_channel_mute(p,x,y)`**
+> Skip replay to the start of the given position.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> _pos_: the position index to set.
+>
+> **Returns:** The new position index.
 
+**`void xmp_stop_module(xmp_context c)`**
+
+> Stop the currently playing module.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+
+**`void xmp_restart_module(xmp_context c)`**
+
+> Restart the currently playing module.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+
+**`int xmp_seek_time(xmp_context c, int time)`**
+
+> Skip replay to the specified time.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> _time_: time to seek in milliseconds.
+>
+> **Returns:** The new position index.
+
+**`int xmp_channel_mute(xmp_context c, int channel, int status)`**
+
+> Mute or unmute the specified channel.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> _channel_: the channel to act on.
+>
+> _status_: Set to 0 to mute channel, 1 to unmute or -1 to query the current channel status.
+>
+> **Returns:** The previous channel status.
 
 ### Mixer parameter setting ###
 
-**`int xmp_mixer_amp(p,x)`**
+**`int xmp_mixer_amp(xmp_context c, int val)`**
 
-**`int xmp_mixer_mix(p,x)`**
+> Set mixer amplification factor.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> _val_: amplification factor. Valid values are 0 to 3, default is 1.
+>
+> **Returns:** The previous amplification factor value.
+
+**`int xmp_mixer_mix(xmp_context c, int val)`**
+
+> Skip replay to the specified time.
+>
+> **Parameters:**
+>
+> _c_: the player context handle.
+>
+> _val_: Left/right channel mixing. Valid values are 0 to 100, default is 70.
+>
+> **Returns:** The previous mixing value.
 
