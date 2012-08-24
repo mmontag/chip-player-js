@@ -87,10 +87,10 @@ sound file:
 A player context can load and play a single module at a time. Multiple
 contexts can be defined if needed.
 
-Use `xmp_test_module()` to check if the file is a valid module and retrieve
-the module name and type. Use `xmp_load_module()` to fully load the module
-to memory. These two calls return 0 on success or <0 in case of error. Error
-codes are:
+Use [`xmp_test_module()`](#xmp_test_module) to check if the file is a valid
+module and retrieve the module name and type. Use
+[`xmp_load_module()`](#xmp_load_module) to load the module to memory.
+These two calls return 0 on success or <0 in case of error. Error codes are:
 
     -XMP_ERROR_INTERNAL   /* Internal error */
     -XMP_ERROR_FORMAT     /* Unsupported module format */
@@ -100,8 +100,9 @@ codes are:
 
 If a system error occurs, the specific error is set in errno.
 
-Parameters to `xmp_player_start()` are the sampling rate (up to 48kHz)
-and a bitmapped integer holding one or more of the following mixer flags:
+Parameters to [`xmp_player_start()`](#xmp_player_start) are the sampling
+rate (up to 48kHz) and a bitmapped integer holding one or more of the
+following mixer flags:
 
     XMP_MIX_8BIT          /* Mix to 8-bit instead of 16 */
     XMP_MIX_UNSIGNED      /* Mix to unsigned samples */
@@ -109,13 +110,15 @@ and a bitmapped integer holding one or more of the following mixer flags:
     XMP_MIX_NEAREST       /* Mix using nearest neighbor interpolation */
     XMP_MIX_NOFILTER      /* Disable lowpass filter */
 
-After `xmp_player_start()` is called, each call to `xmp_player_frame()` will
-render an audio frame.  Call `xmp_player_get_info()` to retrieve the buffer
-address and size. `xmp_player_frame()` returns 0 on success or -1 if replay
-should stop.
+After [`xmp_player_start()`](#xmp_player_start) is called, each call to
+[`xmp_player_frame()`](#xmp_player_frame) will render an audio frame.
+Call [`xmp_player_get_info()`](#xmp_player_get_info) to retrieve the buffer
+address and size. [`xmp_player_frame()`](#xmp_player_frame) returns 0 on
+success or -1 if replay should stop.
 
-Use  `xmp_player_end()`, `xmp_release_module()` and `xmp_free_context()` to
-release memory and end replay.
+Use [`xmp_player_end()`](#xmp_player_end),
+[`xmp_release_module()`](#xmp_release_module) and
+[`xmp_free_context()`](#xmp_free_context) to release memory and end replay.
 
 
 API reference
@@ -123,11 +126,11 @@ API reference
 
 ### Version and player information ###
 
-**`const char *xmp_version`**
+**<a id="xmp_version"></a>`const char *xmp_version`**
 
 > A string containing the library version, such as "4.0.0".
 
-
+<a id="xmp_vercode"></a>
 **`const unsigned int xmp_vercode`**
 
 > The library version encoded in a integer value. Bits 23-16 contain the
@@ -135,6 +138,7 @@ API reference
   bits 7-0 contain the release number.
 
 
+<a id="xmp_get_format_list"></a>
 **`char **xmp_get_format_list()`**
 
 > Query the list of supported module formats.
@@ -145,6 +149,7 @@ API reference
 
 ### Context creation ###
 
+<a id="xmp_create_context"></a>
 **`xmp_context xmp_create_context()`**
 
 > Create a new player context and return an opaque handle to be used in
@@ -152,10 +157,11 @@ API reference
 
 > **Returns:** the player context handle.
 
-
+<a id="xmp_free_context"></a>
 **`void xmp_free_context(xmp_context c)`**
 
-> Destroy a player context previously created using `xmp_create_context()`
+> Destroy a player context previously created using
+> [`xmp_create_context()`](#xmp_create_context).
 >
 > **Parameters:**
 >
@@ -164,6 +170,7 @@ API reference
 
 ### Module loading ###
 
+<a id="xmp_test_module"></a>
 **`int xmp_test_module(char *path, struct xmp_test_info *test_info)`**
 
 > Test if a file is a valid module.
@@ -181,6 +188,7 @@ API reference
   and uncompression failed, or `XMP_ERROR_SYSTEM` in case of a system error
   (the system error code is set in `errno`).
 
+<a id="xmp_load_module"></a>
 **`int xmp_load_module(xmp_context c, char *path)`**
 
 > Load a module into the specified player context.
@@ -198,6 +206,7 @@ API reference
   file loading failed, or `XMP_ERROR_SYSTEM` in case of a system error
   (the system error code is set in `errno`).
 
+<a id="xmp_release_module"></a>
 **`void xmp_release_module(xmp_context c)`**
 
 > Release memory allocated by a module from the specified player context.
@@ -209,6 +218,7 @@ API reference
 
 ### Module playing ###
 
+<a id="xmp_player_start"></a>
 **`int xmp_player_start(xmp_context c, int rate, int flags)`**
 
 > Start playing the currently loaded module.
@@ -217,7 +227,8 @@ API reference
 >
 > _c_: the player context handle.
 >
-> _rate_: the sampling rate to use, in Hz (tipically 44100).
+> _rate_: the sampling rate to use, in Hz (tipically 44100). Valid values
+> range from 8kHz to 48kHz.
 >
 > _flags_: bitmapped configurable player flags, one or more of the
 > following:
@@ -237,6 +248,7 @@ XMP_MIX_NOFILTER     /* Disable lowpass filter */
   error, or `XMP_ERROR_SYSTEM` in case of a system error (the system error
   code is set in `errno`).
 
+<a id="xmp_player_frame"></a>
 **`int xmp_player_frame(xmp_context c)`**
 
 > Play one frame of the module. Modules usually play at 50 frames per second.
@@ -247,6 +259,7 @@ XMP_MIX_NOFILTER     /* Disable lowpass filter */
 >
 > **Returns:** 0 if sucessful or -1 if the module was stopped.
 
+<a id="xmp_player_get_info"></a>
 **`void xmp_player_get_info(xmp_context c, struct xmp_module_info *info)`**
 
 > Retrieve current module and replay data.
@@ -304,12 +317,14 @@ struct xmp_module_info {          /* Current module information */
 </pre>
 </blockquote>
 </blockquote>
-> `xmp_player_get_info()` should be used to retrieve sound buffer data
-> after `xmp_player_frame()` is called. Fields `buffer` and `buffer_size`
-> contain the pointer to the sound buffer PCM data and its size.
+> This function should be used to retrieve sound buffer data
+> after [`xmp_player_frame()`](#xmp_player_frame) is called. Fields
+> `buffer` and `buffer_size` > contain the pointer to the sound buffer
+> PCM data and its size.
 >
 > **Returns:** 0 if sucessful or -1 if the module was stopped.
 
+<a id="xmp_player_end"></a>
 **`void xmp_player_end(xmp_context c)`**
 
 > End module replay and releases player memory.
@@ -318,8 +333,10 @@ struct xmp_module_info {          /* Current module information */
 >
 > _c_: the player context handle.
 
+<a id="xmp_inject_event"></a>
 **`void xmp_inject_event(xmp_context c, int channel, struct xmp_event *event)`**
 
+<a id="xmp_next_position"></a>
 **`int xmp_next_position(xmp_context c)`**
 
 > Skip replay to the start of the next position.
@@ -330,6 +347,7 @@ struct xmp_module_info {          /* Current module information */
 >
 > **Returns:** The new position index.
 
+<a id="xmp_prev_position"></a>
 **`int xmp_prev_position(xmp_context c)`**
 
 > Skip replay to the start of the previous position.
@@ -340,6 +358,7 @@ struct xmp_module_info {          /* Current module information */
 >
 > **Returns:** The new position index.
 
+<a id="xmp_set_position"></a>
 **`int xmp_set_position(xmp_context c, int pos)`**
 
 > Skip replay to the start of the given position.
@@ -352,6 +371,7 @@ struct xmp_module_info {          /* Current module information */
 >
 > **Returns:** The new position index.
 
+<a id="xmp_stop_module"></a>
 **`void xmp_stop_module(xmp_context c)`**
 
 > Stop the currently playing module.
@@ -360,6 +380,7 @@ struct xmp_module_info {          /* Current module information */
 >
 > _c_: the player context handle.
 
+<a id="xmp_restart_module"></a>
 **`void xmp_restart_module(xmp_context c)`**
 
 > Restart the currently playing module.
@@ -368,6 +389,7 @@ struct xmp_module_info {          /* Current module information */
 >
 > _c_: the player context handle.
 
+<a id="xmp_seek_time"></a>
 **`int xmp_seek_time(xmp_context c, int time)`**
 
 > Skip replay to the specified time.
@@ -380,6 +402,7 @@ struct xmp_module_info {          /* Current module information */
 >
 > **Returns:** The new position index.
 
+<a id="xmp_channel_mute"></a>
 **`int xmp_channel_mute(xmp_context c, int channel, int status)`**
 
 > Mute or unmute the specified channel.
@@ -390,12 +413,14 @@ struct xmp_module_info {          /* Current module information */
 >
 > _channel_: the channel to act on.
 >
-> _status_: Set to 0 to mute channel, 1 to unmute or -1 to query the current channel status.
+> _status_: Set to 0 to mute channel, 1 to unmute or -1 to query the
+> current channel status.
 >
 > **Returns:** The previous channel status.
 
 ### Mixer parameter setting ###
 
+<a id="xmp_mixer_amp"></a>
 **`int xmp_mixer_amp(xmp_context c, int val)`**
 
 > Set mixer amplification factor.
@@ -408,6 +433,7 @@ struct xmp_module_info {          /* Current module information */
 >
 > **Returns:** The previous amplification factor value.
 
+<a id="xmp_mixer_mix"></a>
 **`int xmp_mixer_mix(xmp_context c, int val)`**
 
 > Skip replay to the specified time.
