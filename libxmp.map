@@ -20,8 +20,8 @@ XMP_4.0.0 {
     xmp_restart_module;
     xmp_seek_time;
     xmp_channel_mute;
-    xmp_mixer_amp;
-    xmp_mixer_mix;
+    xmp_mixer_set;
+    xmp_mixer_get;
   local:
     *;
 };

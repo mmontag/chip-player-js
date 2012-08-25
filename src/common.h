@@ -282,6 +282,7 @@ struct mixer_data {
 	int format;		/* sample format */
 	int amplify;		/* amplification multiplier */
 	int mix;		/* percentage of channel separation */
+	int interp;		/* interpolation type */
 	char* buffer;		/* output buffer */
 	int32* buf32b;		/* temp buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
