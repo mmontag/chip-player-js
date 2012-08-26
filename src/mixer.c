@@ -33,19 +33,20 @@
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
+#define MIX_FN(x) void x (struct mixer_voice *, int *, int, int, int, int)
 
-void smix_mn8norm      (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn8itpt      (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn16norm     (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn16itpt     (struct mixer_voice *, int *, int, int, int, int);
-void smix_st8norm      (struct mixer_voice *, int *, int, int, int, int);
-void smix_st8itpt      (struct mixer_voice *, int *, int, int, int, int);
-void smix_st16norm     (struct mixer_voice *, int *, int, int, int, int);
-void smix_st16itpt     (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
-void smix_st8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
-void smix_st16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
+MIX_FN(smix_mono_8bit_nearest);
+MIX_FN(smix_mono_8bit_linear);
+MIX_FN(smix_mono_16bit_nearest);
+MIX_FN(smix_mono_16bit_linear);
+MIX_FN(smix_stereo_8bit_nearest);
+MIX_FN(smix_stereo_8bit_linear);
+MIX_FN(smix_stereo_16bit_nearest);
+MIX_FN(smix_stereo_16bit_linear);
+MIX_FN(smix_mono_8bit_linear_filter);
+MIX_FN(smix_mono_16bit_linear_filter);
+MIX_FN(smix_stereo_8bit_linear_filter);
+MIX_FN(smix_stereo_16bit_linear_filter);
 
 
 /* Array index:
@@ -55,26 +56,26 @@ void smix_st16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
  * bit 2: 0=mono, 1=stereo
  */
 
-static void (*mix_fn[])() = {
+static void (*mixer_array[])() = {
 	/* unfiltered */
-	smix_mn8norm,
-	smix_mn8itpt,
-	smix_mn16norm,
-	smix_mn16itpt,
-	smix_st8norm,
-	smix_st8itpt,
-	smix_st16norm,
-	smix_st16itpt,
+	smix_mono_8bit_nearest,
+	smix_mono_8bit_linear,
+	smix_mono_16bit_nearest,
+	smix_mono_16bit_linear,
+	smix_stereo_8bit_nearest,
+	smix_stereo_8bit_linear,
+	smix_stereo_16bit_nearest,
+	smix_stereo_16bit_linear,
 
 	/* filtered */
-	smix_mn8norm,
-	smix_mn8itpt_flt,
-	smix_mn16norm,
-	smix_mn16itpt_flt,
-	smix_st8norm,
-	smix_st8itpt_flt,
-	smix_st16norm,
-	smix_st16itpt_flt
+	smix_mono_8bit_nearest,
+	smix_mono_8bit_linear_filter,
+	smix_mono_16bit_nearest,
+	smix_mono_16bit_linear_filter,
+	smix_stereo_8bit_nearest,
+	smix_stereo_8bit_linear_filter,
+	smix_stereo_16bit_nearest,
+	smix_stereo_16bit_linear_filter
 };
 
 
@@ -245,6 +246,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int lps, lpe;
 	int synth = 1;
 	int32 *buf_pos;
+	void (*mix_fn)();
 
 	mixer_prepare(ctx);
 
@@ -325,10 +327,12 @@ void mixer_softmixer(struct context_data *ctx)
 				if (vi->filter.cutoff >= 0xfe)
 					mixer &= ~FLAG_FILTER;
 
+				mix_fn = mixer_array[mixer];
+
 				/* Call the output handler */
 				if (samples >= 0) {
-					mix_fn[mixer](vi, buf_pos, samples,
-						vol_l, vol_r, step);
+					mix_fn(vi, buf_pos, samples, vol_l,
+								vol_r, step);
 					buf_pos += mix_size;
 				}
 
