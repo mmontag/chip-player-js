@@ -40,14 +40,14 @@ extern "C" {
 #define XMP_MIXER_AMP		0	/* Amplification factor */
 #define XMP_MIXER_MIX		1	/* Stereo mixing */
 #define XMP_MIXER_INTERP	2	/* Interpolation type */
-#define XMP_MIXER_FILTER	3	/* Filter type */
+#define XMP_MIXER_DSP		3	/* DSP effect flags */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
 #define XMP_INTERP_LINEAR	1	/* Linear (default) */
 
-/* filter types */
-#define XMP_FILTER_LP_FX	0	/* Lowpass filter effect */
+/* dsp effect types */
+#define XMP_DSP_LOWPASS		(1 << 0) /* Lowpass filter effect */
 
 /* limits */
 #define XMP_MAX_KEYS		121	/* Number of valid keys */

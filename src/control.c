@@ -193,7 +193,8 @@ void xmp_mixer_set(xmp_context opaque, int parm, int val)
 	case XMP_MIXER_INTERP:
 		s->interp = val;
 		break;
-	case XMP_MIXER_FILTER:
+	case XMP_MIXER_DSP:
+		s->dsp = val;
 		break;
 	}
 }
@@ -214,7 +215,8 @@ int xmp_mixer_get(xmp_context opaque, int parm)
 	case XMP_MIXER_INTERP:
 		ret = s->interp;
 		break;
-	case XMP_MIXER_FILTER:
+	case XMP_MIXER_DSP:
+		ret = s->dsp;
 		break;
 	}
 

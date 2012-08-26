@@ -478,12 +478,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 		vi->fidx |= FLAG_ITPT;
 	}
 
-#if 0
-	if (HAS_QUIRK(QUIRK_FILTER) && ~s->format & XMP_FORMAT_NOFILTER) {
-		vi->fidx |= FLAG_FILTER;
-	}
-#endif
-	if (HAS_QUIRK(QUIRK_FILTER)) {
+	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
 		vi->fidx |= FLAG_FILTER;
 	}
 
@@ -593,6 +588,7 @@ int mixer_on(struct context_data *ctx)
 		goto err1;
 
 	s->interp = XMP_INTERP_LINEAR;	/* default interpolation type */
+	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	s->numvoc = SMIX_NUMVOC;
 	s->dtright = s->dtleft = 0;
 

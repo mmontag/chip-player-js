@@ -283,6 +283,7 @@ struct mixer_data {
 	int amplify;		/* amplification multiplier */
 	int mix;		/* percentage of channel separation */
 	int interp;		/* interpolation type */
+	int dsp;		/* dsp effect flags */
 	char* buffer;		/* output buffer */
 	int32* buf32b;		/* temp buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
