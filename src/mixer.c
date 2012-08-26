@@ -129,7 +129,7 @@ void mixer_prepare(struct context_data *ctx)
 	if (~s->format & XMP_FORMAT_MONO) {
 		bytelen *= 2;
 	}
-	memset(s->buf32b, 0, bytelen);
+	memset(s->buf32, 0, bytelen);
 }
 
 
@@ -157,7 +157,7 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 	}
 
 	if (buf == NULL) {
-		buf = s->buf32b;
+		buf = s->buf32;
 		count = SLOW_RELEASE;
 	}
 
@@ -263,7 +263,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 		vi->pos0 = vi->pos;
 
-		buf_pos = s->buf32b;
+		buf_pos = s->buf32;
 		vol_r = vi->vol * (0x80 - vi->pan);
 		vol_l = vi->vol * (0x80 + vi->pan);
 
@@ -378,10 +378,10 @@ void mixer_softmixer(struct context_data *ctx)
 	assert(size <= OUT_MAXLEN);
 
 	if (s->format & XMP_FORMAT_8BIT) {
-		downmix_int_8bit(s->buffer, s->buf32b, size, s->amplify,
+		downmix_int_8bit(s->buffer, s->buf32, size, s->amplify,
 				s->format & XMP_FORMAT_UNSIGNED ? 0x80 : 0);
 	} else {
-		downmix_int_16bit((int16 *)s->buffer, s->buf32b, size,s->amplify,
+		downmix_int_16bit((int16 *)s->buffer, s->buf32, size,s->amplify,
 				s->format & XMP_FORMAT_UNSIGNED ? 0x8000 : 0);
 	}
 
@@ -581,8 +581,8 @@ int mixer_on(struct context_data *ctx)
 	if (s->buffer == NULL)
 		goto err;
 
-	s->buf32b = calloc(sizeof(int), OUT_MAXLEN);
-	if (s->buf32b == NULL)
+	s->buf32 = calloc(sizeof(int), OUT_MAXLEN);
+	if (s->buf32 == NULL)
 		goto err1;
 
 	s->interp = XMP_INTERP_LINEAR;	/* default interpolation type */
@@ -603,7 +603,7 @@ void mixer_off(struct context_data *ctx)
 	struct mixer_data *s = &ctx->s;
 
 	free(s->buffer);
-	free(s->buf32b);
-	s->buf32b = NULL;
+	free(s->buf32);
+	s->buf32 = NULL;
 	s->buffer = NULL;
 }
