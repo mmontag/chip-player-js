@@ -17,19 +17,17 @@
 #include "period.h"
 
 
-#define FLAG_ITPT	0x01
+#define FLAG_INTERP	0x01
 #define FLAG_16_BITS	0x02
 #define FLAG_STEREO	0x04
 #define FLAG_FILTER	0x08
 #define FLAG_ACTIVE	0x10
 #define FLAG_SYNTH	0x20
-#define FIDX_FLAGMASK	(FLAG_ITPT | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
+#define FIDX_FLAGMASK	(FLAG_INTERP | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
 
 #define DOWNMIX_SHIFT	 12
 #define LIM8_HI		 127
-#define LIM8_LO		-127
-#define LIM12_HI	 4095
-#define LIM12_LO	-4096
+#define LIM8_LO		-128
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
@@ -49,14 +47,14 @@ MIX_FN(smix_stereo_8bit_linear_filter);
 MIX_FN(smix_stereo_16bit_linear_filter);
 
 
-/* Array index:
+/* Fast mixers array index:
  *
- * bit 0: 0=non-interpolated, 1=interpolated
- * bit 1: 0=8 bit, 1=16 bit
- * bit 2: 0=mono, 1=stereo
+ * bit 0: 0=nearest neighbor, 1=linear interpolation
+ * bit 1: 0=8 bit sample, 1=16 bit sample
+ * bit 2: 0=mono output, 1=stereo output
  */
 
-static void (*mixer_array[])() = {
+static void (*fast_mixers[])() = {
 	/* unfiltered */
 	smix_mono_8bit_nearest,
 	smix_mono_8bit_linear,
@@ -80,7 +78,7 @@ static void (*mixer_array[])() = {
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
-static void out_su8norm(char *dest, int32 *src, int num, int amp, int offs)
+static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT + 8 - amp;
@@ -99,7 +97,7 @@ static void out_su8norm(char *dest, int32 *src, int num, int amp, int offs)
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void out_su16norm(int16 *dest, int32 *src, int num, int amp, int offs)
+static void downmix_int_16bit(int16 *dest, int32 *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT - amp;
@@ -327,7 +325,7 @@ void mixer_softmixer(struct context_data *ctx)
 				if (vi->filter.cutoff >= 0xfe)
 					mixer &= ~FLAG_FILTER;
 
-				mix_fn = mixer_array[mixer];
+				mix_fn = fast_mixers[mixer];
 
 				/* Call the output handler */
 				if (samples >= 0) {
@@ -380,10 +378,10 @@ void mixer_softmixer(struct context_data *ctx)
 	assert(size <= OUT_MAXLEN);
 
 	if (s->format & XMP_FORMAT_8BIT) {
-		out_su8norm(s->buffer, s->buf32b, size, s->amplify,
+		downmix_int_8bit(s->buffer, s->buf32b, size, s->amplify,
 				s->format & XMP_FORMAT_UNSIGNED ? 0x80 : 0);
 	} else {
-		out_su16norm((int16 *)s->buffer, s->buf32b, size, s->amplify,
+		downmix_int_16bit((int16 *)s->buffer, s->buf32b, size,s->amplify,
 				s->format & XMP_FORMAT_UNSIGNED ? 0x8000 : 0);
 	}
 
@@ -475,7 +473,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	/* FIXME */
 	if (s->interp != XMP_INTERP_NEAREST) {
-		vi->fidx |= FLAG_ITPT;
+		vi->fidx |= FLAG_INTERP;
 	}
 
 	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
