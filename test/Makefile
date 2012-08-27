@@ -100,6 +100,8 @@ TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o bunzip2.o \
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 		  $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))
 
+GCT_OBJS 	= $(addprefix $(TEST_PATH)/,$(TEST_OBJS))
+
 default-test:
 	$(MAKE) -C.. check
 
@@ -107,11 +109,30 @@ dist-test:
 	mkdir -p $(DIST)/$(TEST_PATH)
 	cp -RPp $(addprefix $(TEST_PATH)/,$(TEST_DFILES)) $(DIST)/$(TEST_PATH)
 
+#
+# Run standard tests
+#
+
 check: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-tests
 	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-tests
 
 $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 	@CMD='$(LD) -o $@ $(LDFLAGS) $(T_OBJS) -Llib -lxmp'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+#
+# Run coverage test
+#
+
+covercheck: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-covertest
+	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-covertest
+	lcov -c -b . -d . -k src -k include -o libxmp.cov
+	rm -Rf coverage
+	genhtml -o coverage libxmp.cov
+
+$(TEST_PATH)/libxmp-covertest: $(GCT_OBJS) lib/$(GCLIB)
+	@CMD='$(LD) -o $@ $(LDFLAGS) $(GCT_OBJS) lib/$(GCLIB) -lgcov -lm'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 

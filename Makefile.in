@@ -36,6 +36,7 @@ SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
 MAPFILE		= libxmp.map
+GCLIB		= libxmp-gc.a
 
 all: @STATIC@ @SHARED@
 
@@ -50,9 +51,11 @@ include test/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
+GCOBJS = $(OBJS:.o=.gco)
+
 CFLAGS += -Iinclude -Isrc
 
-.SUFFIXES: .c .o .lo .a .so .dll .in
+.SUFFIXES: .c .o .lo .a .so .dll .in .gco .gcda .gcno
 
 .c.o:
 	@CMD='$(CC) $(CFLAGS) -o $*.o $<'; \
@@ -64,9 +67,16 @@ CFLAGS += -Iinclude -Isrc
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
 	eval $$CMD
 
+.c.gco:
+	@CMD='$(CC) $(CFLAGS) -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.gco ; fi; \
+	eval $$CMD
+
 static: lib/$(LIB)
 
 shared: lib/$(SHLIB)
+
+coverage: lib/$(GCLIB)
 
 dll: lib/$(DLL)
 
@@ -101,8 +111,16 @@ lib/$(DYLIB): $(LOBJS)
 	ln -sf $(DYLIB) lib/libxmp.$(VERSION_MAJOR).dylib
 	ln -sf libxmp.$(VERSION_MAJOR).dylib lib/libxmp.dylib
 
+lib/$(GCLIB): $(GCOBJS)
+	@mkdir -p lib
+	@CMD='$(AR) r $@ $(GCOBJS)'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
+	eval $$CMD
+	$(RANLIB) $@
+
 clean:
 	@rm -f $(OBJS) $(LOBJS) lib/lib*
+	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
 
 install: all
 	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
