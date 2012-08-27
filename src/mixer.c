@@ -512,10 +512,11 @@ void mixer_setbend(struct context_data *ctx, int voc, int bend)
 void mixer_setvol(struct context_data *ctx, int voc, int vol)
 {
 	struct player_data *p = &ctx->p;
+	struct mixer_data *s = &ctx->s;
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-	if (~vi->fidx & FLAG_FILTER)
+	if (s->interp == XMP_INTERP_LINEAR)
 		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
 
 	vi->vol = vol;
