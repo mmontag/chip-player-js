@@ -29,7 +29,8 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  24_short_envelope_loops \
 		  25_portamento_and_pitch_slide
 
-MIXER		= interpolation_default 8bit_nearest 16bit_nearest
+MIXER		= interpolation_default \
+		  8bit_nearest 16bit_nearest 8bit_linear 16bit_linear
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
