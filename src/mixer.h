@@ -17,7 +17,7 @@
 #define FILTER_SHIFT	16
 
 /* Anticlick ramps */
-#define SLOW_ATTACK_SHIFT 4
+#define SLOW_ATTACK_SHIFT 5
 #define SLOW_ATTACK	(1 << SLOW_ATTACK_SHIFT)
 #define SLOW_RELEASE	16
 
