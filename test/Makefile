@@ -29,6 +29,8 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  24_short_envelope_loops \
 		  25_portamento_and_pitch_slide
 
+MIXER		= 8bit_nearest 16bit_nearest
+
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_valid_ins_,$(REPLAYERS)) \
@@ -59,6 +61,8 @@ SEQUENCER_TESTS	= prev_order_start prev_order_skip prev_order_start_seq \
 
 STORLEK_TESTS	= $(addprefix storlek_,$(STORLEK))
 
+MIXER_TESTS	= $(addprefix mixer_,$(MIXER))
+
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
 TESTS		= $(SMPLOAD_TESTS) \
@@ -73,6 +77,7 @@ TESTS		= $(SMPLOAD_TESTS) \
 		  $(EFFECT_TESTS) \
 		  $(SEQUENCER_TESTS) \
 		  $(STORLEK_TESTS) \
+		  $(MIXER_TESTS) \
 		  $(API_TESTS)
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
