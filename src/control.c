@@ -178,28 +178,49 @@ int xmp_channel_mute(xmp_context opaque, int num, int status)
 	return virt_mute(ctx, num, status);
 }
 
-int xmp_mixer_amp(xmp_context opaque, int val)
+void xmp_mixer_set(xmp_context opaque, int parm, int val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct mixer_data *s = &ctx->s;
-	int old = s->amplify;
-	
-	if (val >= 0)
-		s->amplify = val;
 
-	return old;
+	switch (parm) {
+	case XMP_MIXER_AMP:
+		s->amplify = val;
+		break;
+	case XMP_MIXER_MIX:
+		s->mix = val;
+		break;
+	case XMP_MIXER_INTERP:
+		s->interp = val;
+		break;
+	case XMP_MIXER_DSP:
+		s->dsp = val;
+		break;
+	}
 }
 
-int xmp_mixer_mix(xmp_context opaque, int val)
+int xmp_mixer_get(xmp_context opaque, int parm)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct mixer_data *s = &ctx->s;
-	int old = s->mix;
+	int ret = -1;
 
-	if (val >= 0)
-		s->mix = val;
+	switch (parm) {
+	case XMP_MIXER_AMP:
+		ret = s->amplify;
+		break;
+	case XMP_MIXER_MIX:
+		ret = s->mix;
+		break;
+	case XMP_MIXER_INTERP:
+		ret = s->interp;
+		break;
+	case XMP_MIXER_DSP:
+		ret = s->dsp;
+		break;
+	}
 
-	return old;
+	return ret;
 }
 
 char **xmp_get_format_list()
@@ -215,3 +236,4 @@ void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 	memcpy(&p->inject_event[channel], e, sizeof(struct xmp_event));
 	p->inject_event[channel]._flag = 1;
 }
+

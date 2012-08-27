@@ -17,69 +17,68 @@
 #include "period.h"
 
 
-#define FLAG_ITPT	0x01
+#define FLAG_INTERP	0x01
 #define FLAG_16_BITS	0x02
 #define FLAG_STEREO	0x04
 #define FLAG_FILTER	0x08
 #define FLAG_ACTIVE	0x10
 #define FLAG_SYNTH	0x20
-#define FIDX_FLAGMASK	(FLAG_ITPT | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
+#define FIDX_FLAGMASK	(FLAG_INTERP | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
 
 #define DOWNMIX_SHIFT	 12
 #define LIM8_HI		 127
-#define LIM8_LO		-127
-#define LIM12_HI	 4095
-#define LIM12_LO	-4096
+#define LIM8_LO		-128
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
+#define MIX_FN(x) void x (struct mixer_voice *, int *, int, int, int, int)
 
-void smix_mn8norm      (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn8itpt      (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn16norm     (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn16itpt     (struct mixer_voice *, int *, int, int, int, int);
-void smix_st8norm      (struct mixer_voice *, int *, int, int, int, int);
-void smix_st8itpt      (struct mixer_voice *, int *, int, int, int, int);
-void smix_st16norm     (struct mixer_voice *, int *, int, int, int, int);
-void smix_st16itpt     (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
-void smix_mn16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
-void smix_st8itpt_flt  (struct mixer_voice *, int *, int, int, int, int);
-void smix_st16itpt_flt (struct mixer_voice *, int *, int, int, int, int);
+MIX_FN(smix_mono_8bit_nearest);
+MIX_FN(smix_mono_8bit_linear);
+MIX_FN(smix_mono_16bit_nearest);
+MIX_FN(smix_mono_16bit_linear);
+MIX_FN(smix_stereo_8bit_nearest);
+MIX_FN(smix_stereo_8bit_linear);
+MIX_FN(smix_stereo_16bit_nearest);
+MIX_FN(smix_stereo_16bit_linear);
+MIX_FN(smix_mono_8bit_linear_filter);
+MIX_FN(smix_mono_16bit_linear_filter);
+MIX_FN(smix_stereo_8bit_linear_filter);
+MIX_FN(smix_stereo_16bit_linear_filter);
 
 
-/* Array index:
+/* Fast mixers array index:
  *
- * bit 0: 0=non-interpolated, 1=interpolated
- * bit 1: 0=8 bit, 1=16 bit
- * bit 2: 0=mono, 1=stereo
+ * bit 0: 0=nearest neighbor, 1=linear interpolation
+ * bit 1: 0=8 bit sample, 1=16 bit sample
+ * bit 2: 0=mono output, 1=stereo output
  */
 
-static void (*mix_fn[])() = {
+static void (*fast_mixers[])() = {
 	/* unfiltered */
-	smix_mn8norm,
-	smix_mn8itpt,
-	smix_mn16norm,
-	smix_mn16itpt,
-	smix_st8norm,
-	smix_st8itpt,
-	smix_st16norm,
-	smix_st16itpt,
+	smix_mono_8bit_nearest,
+	smix_mono_8bit_linear,
+	smix_mono_16bit_nearest,
+	smix_mono_16bit_linear,
+	smix_stereo_8bit_nearest,
+	smix_stereo_8bit_linear,
+	smix_stereo_16bit_nearest,
+	smix_stereo_16bit_linear,
 
 	/* filtered */
-	smix_mn8norm,
-	smix_mn8itpt_flt,
-	smix_mn16norm,
-	smix_mn16itpt_flt,
-	smix_st8norm,
-	smix_st8itpt_flt,
-	smix_st16norm,
-	smix_st16itpt_flt
+	smix_mono_8bit_nearest,
+	smix_mono_8bit_linear_filter,
+	smix_mono_16bit_nearest,
+	smix_mono_16bit_linear_filter,
+	smix_stereo_8bit_nearest,
+	smix_stereo_8bit_linear_filter,
+	smix_stereo_16bit_nearest,
+	smix_stereo_16bit_linear_filter
 };
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
-static void out_su8norm(char *dest, int32 *src, int num, int amp, int offs)
+static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT + 8 - amp;
@@ -98,7 +97,7 @@ static void out_su8norm(char *dest, int32 *src, int num, int amp, int offs)
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void out_su16norm(int16 *dest, int32 *src, int num, int amp, int offs)
+static void downmix_int_16bit(int16 *dest, int32 *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT - amp;
@@ -127,10 +126,10 @@ void mixer_prepare(struct context_data *ctx)
 	s->ticksize = s->freq * m->time_factor * m->rrate / p->bpm / 1000;
 
 	bytelen = s->ticksize * sizeof(int);
-	if (~s->format & XMP_MIX_MONO) {
+	if (~s->format & XMP_FORMAT_MONO) {
 		bytelen *= 2;
 	}
-	memset(s->buf32b, 0, bytelen);
+	memset(s->buf32, 0, bytelen);
 }
 
 
@@ -158,7 +157,7 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 	}
 
 	if (buf == NULL) {
-		buf = s->buf32b;
+		buf = s->buf32;
 		count = SLOW_RELEASE;
 	}
 
@@ -245,6 +244,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int lps, lpe;
 	int synth = 1;
 	int32 *buf_pos;
+	void (*mix_fn)();
 
 	mixer_prepare(ctx);
 
@@ -263,7 +263,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 		vi->pos0 = vi->pos;
 
-		buf_pos = s->buf32b;
+		buf_pos = s->buf32;
 		vol_r = vi->vol * (0x80 - vi->pan);
 		vol_l = vi->vol * (0x80 + vi->pan);
 
@@ -307,7 +307,7 @@ void mixer_softmixer(struct context_data *ctx)
 				int mix_size = samples;
 				int mixer = vi->fidx & FIDX_FLAGMASK;
 
-				if (~s->format & XMP_MIX_MONO) {
+				if (~s->format & XMP_FORMAT_MONO) {
 					mix_size *= 2;
 				}
 
@@ -325,10 +325,12 @@ void mixer_softmixer(struct context_data *ctx)
 				if (vi->filter.cutoff >= 0xfe)
 					mixer &= ~FLAG_FILTER;
 
+				mix_fn = fast_mixers[mixer];
+
 				/* Call the output handler */
 				if (samples >= 0) {
-					mix_fn[mixer](vi, buf_pos, samples,
-						vol_l, vol_r, step);
+					mix_fn(vi, buf_pos, samples, vol_l,
+								vol_r, step);
 					buf_pos += mix_size;
 				}
 
@@ -370,17 +372,17 @@ void mixer_softmixer(struct context_data *ctx)
 	/* Render final frame */
 
 	size = s->ticksize;
-	if (~s->format & XMP_MIX_MONO) {
+	if (~s->format & XMP_FORMAT_MONO) {
 		size *= 2;
 	}
 	assert(size <= OUT_MAXLEN);
 
-	if (s->format & XMP_MIX_8BIT) {
-		out_su8norm(s->buffer, s->buf32b, size, s->amplify,
-				s->format & XMP_MIX_UNSIGNED ? 0x80 : 0);
+	if (s->format & XMP_FORMAT_8BIT) {
+		downmix_int_8bit(s->buffer, s->buf32, size, s->amplify,
+				s->format & XMP_FORMAT_UNSIGNED ? 0x80 : 0);
 	} else {
-		out_su16norm((int16 *)s->buffer, s->buf32b, size, s->amplify,
-				s->format & XMP_MIX_UNSIGNED ? 0x8000 : 0);
+		downmix_int_16bit((int16 *)s->buffer, s->buf32, size,s->amplify,
+				s->format & XMP_FORMAT_UNSIGNED ? 0x8000 : 0);
 	}
 
 	s->dtright = s->dtleft = 0;
@@ -454,7 +456,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	vi->fidx = 0;
 
-	if (~s->format & XMP_MIX_MONO) {
+	if (~s->format & XMP_FORMAT_MONO) {
 		vi->fidx |= FLAG_STEREO;
 	}
 
@@ -469,11 +471,12 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
 
-	if (~s->format & XMP_MIX_NEAREST) {
-		vi->fidx |= FLAG_ITPT;
+	/* FIXME */
+	if (s->interp != XMP_INTERP_NEAREST) {
+		vi->fidx |= FLAG_INTERP;
 	}
 
-	if (HAS_QUIRK(QUIRK_FILTER) && ~s->format & XMP_MIX_NOFILTER) {
+	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
 		vi->fidx |= FLAG_FILTER;
 	}
 
@@ -578,10 +581,12 @@ int mixer_on(struct context_data *ctx)
 	if (s->buffer == NULL)
 		goto err;
 
-	s->buf32b = calloc(sizeof(int), OUT_MAXLEN);
-	if (s->buf32b == NULL)
+	s->buf32 = calloc(sizeof(int), OUT_MAXLEN);
+	if (s->buf32 == NULL)
 		goto err1;
 
+	s->interp = XMP_INTERP_LINEAR;	/* default interpolation type */
+	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	s->numvoc = SMIX_NUMVOC;
 	s->dtright = s->dtleft = 0;
 
@@ -598,7 +603,7 @@ void mixer_off(struct context_data *ctx)
 	struct mixer_data *s = &ctx->s;
 
 	free(s->buffer);
-	free(s->buf32b);
-	s->buf32b = NULL;
+	free(s->buf32);
+	s->buf32 = NULL;
 	s->buffer = NULL;
 }

@@ -31,14 +31,25 @@ extern "C" {
 
 /* mixer parameter macros */
 
-/* mixer flags */
-#define XMP_MIX_8BIT		(1 << 0) /* Mix to 8-bit instead of 16 */
-#define XMP_MIX_UNSIGNED	(1 << 1) /* Mix to unsigned samples */
-#define XMP_MIX_MONO		(1 << 2) /* Mix to mono instead of stereo */
-#define XMP_MIX_NEAREST		(1 << 3) /* Mix using nearest neighbor
-					    interpolation */
-#define XMP_MIX_NOFILTER	(1 << 4) /* Disable lowpass filter */
+/* sample format flags */
+#define XMP_FORMAT_8BIT		(1 << 0) /* Mix to 8-bit instead of 16 */
+#define XMP_FORMAT_UNSIGNED	(1 << 1) /* Mix to unsigned samples */
+#define XMP_FORMAT_MONO		(1 << 2) /* Mix to mono instead of stereo */
 
+/* mixer paramters for xmp_mixer_set() */
+#define XMP_MIXER_AMP		0	/* Amplification factor */
+#define XMP_MIXER_MIX		1	/* Stereo mixing */
+#define XMP_MIXER_INTERP	2	/* Interpolation type */
+#define XMP_MIXER_DSP		3	/* DSP effect flags */
+
+/* interpolation types */
+#define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
+#define XMP_INTERP_LINEAR	1	/* Linear (default) */
+
+/* dsp effect types */
+#define XMP_DSP_LOWPASS		(1 << 0) /* Lowpass filter effect */
+
+/* limits */
 #define XMP_MAX_KEYS		121	/* Number of valid keys */
 #define XMP_MAX_ENV_POINTS	32	/* Max number of envelope points */
 #define XMP_MAX_MOD_LENGTH	256	/* Max number of patterns in module */
@@ -260,8 +271,8 @@ EXPORT void        xmp_stop_module     (xmp_context);
 EXPORT void        xmp_restart_module  (xmp_context);
 EXPORT int         xmp_seek_time       (xmp_context, int);
 EXPORT int         xmp_channel_mute    (xmp_context, int, int);
-EXPORT int         xmp_mixer_amp       (xmp_context, int);
-EXPORT int         xmp_mixer_mix       (xmp_context, int);
+EXPORT void        xmp_mixer_set       (xmp_context, int, int);
+EXPORT int         xmp_mixer_get       (xmp_context, int);
 
 #ifdef __cplusplus
 }

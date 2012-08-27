@@ -128,7 +128,7 @@
 
 /* Handler for 8 bit samples, interpolated stereo output
  */
-SMIX_MIXER(smix_st8itpt)
+SMIX_MIXER(smix_stereo_8bit_linear)
 {
     VAR_ITPT(int8);
     while (count--) { INTERPOLATE(); MIX_STEREO_AC(); UPDATE_POS(); }
@@ -137,7 +137,7 @@ SMIX_MIXER(smix_st8itpt)
 
 /* Handler for 16 bit samples, interpolated stereo output
  */
-SMIX_MIXER(smix_st16itpt)
+SMIX_MIXER(smix_stereo_16bit_linear)
 {
     VAR_ITPT(int16);
 
@@ -149,7 +149,7 @@ SMIX_MIXER(smix_st16itpt)
 
 /* Handler for 8 bit samples, non-interpolated stereo output
  */
-SMIX_MIXER(smix_st8norm)
+SMIX_MIXER(smix_stereo_8bit_nearest)
 {
     VAR_NORM(int8);
     while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); UPDATE_POS(); }
@@ -158,7 +158,7 @@ SMIX_MIXER(smix_st8norm)
 
 /* Handler for 16 bit samples, non-interpolated stereo output
  */
-SMIX_MIXER(smix_st16norm)
+SMIX_MIXER(smix_stereo_16bit_nearest)
 {
     VAR_NORM(int16);
 
@@ -170,7 +170,7 @@ SMIX_MIXER(smix_st16norm)
 
 /* Handler for 8 bit samples, interpolated mono output
  */
-SMIX_MIXER(smix_mn8itpt)
+SMIX_MIXER(smix_mono_8bit_linear)
 {
     VAR_ITPT(int8);
 
@@ -181,7 +181,7 @@ SMIX_MIXER(smix_mn8itpt)
 
 /* Handler for 16 bit samples, interpolated mono output
  */
-SMIX_MIXER(smix_mn16itpt)
+SMIX_MIXER(smix_mono_16bit_linear)
 {
     VAR_ITPT(int16);
 
@@ -192,7 +192,7 @@ SMIX_MIXER(smix_mn16itpt)
 
 /* Handler for 8 bit samples, non-interpolated mono output
  */
-SMIX_MIXER(smix_mn8norm)
+SMIX_MIXER(smix_mono_8bit_nearest)
 {
     VAR_NORM(int8);
 
@@ -203,7 +203,7 @@ SMIX_MIXER(smix_mn8norm)
 
 /* Handler for 16 bit samples, non-interpolated mono output
  */
-SMIX_MIXER(smix_mn16norm)
+SMIX_MIXER(smix_mono_16bit_nearest)
 {
     VAR_NORM(int16);
 
@@ -217,7 +217,7 @@ SMIX_MIXER(smix_mn16norm)
 
 /* Handler for 8 bit samples, interpolated stereo output
  */
-SMIX_MIXER(smix_st8itpt_flt)
+SMIX_MIXER(smix_stereo_8bit_linear_filter)
 {
     VAR_ITPT(int8);
     VAR_FILTER_STEREO;
@@ -229,7 +229,7 @@ SMIX_MIXER(smix_st8itpt_flt)
 
 /* Handler for 16 bit samples, interpolated stereo output
  */
-SMIX_MIXER(smix_st16itpt_flt)
+SMIX_MIXER(smix_stereo_16bit_linear_filter)
 {
     VAR_ITPT(int16);
     VAR_FILTER_STEREO;
@@ -243,7 +243,7 @@ SMIX_MIXER(smix_st16itpt_flt)
 
 /* Handler for 8 bit samples, interpolated mono output
  */
-SMIX_MIXER(smix_mn8itpt_flt)
+SMIX_MIXER(smix_mono_8bit_linear_filter)
 {
     VAR_ITPT(int8);
     VAR_FILTER_MONO;
@@ -256,7 +256,7 @@ SMIX_MIXER(smix_mn8itpt_flt)
 
 /* Handler for 16 bit samples, interpolated mono output
  */
-SMIX_MIXER(smix_mn16itpt_flt)
+SMIX_MIXER(smix_mono_16bit_linear_filter)
 {
     VAR_ITPT(int16);
     VAR_FILTER_MONO;
