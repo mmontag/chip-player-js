@@ -37,7 +37,7 @@
 
 #include "common.h"
 
-#define WANT_PP2X_DECRYPTING
+#undef WANT_PP2X_DECRYPTING
 
 #define val(p) ((p)[0]<<16 | (p)[1] << 8 | (p)[2])
 
