@@ -84,6 +84,7 @@ TESTS		= $(READ_TESTS) \
 		  $(DEPACK_TESTS) \
 		  load_sample_8bit load_sample_16bit \
 		  player_read_event \
+		  string_adjustment \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \
 		  $(CASE2_TESTS) \
@@ -108,7 +109,7 @@ TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o bunzip2.o \
 		  gunzip.o unzip.o unarc.o s404_dec.o ppdepack.o arcfs.o \
 		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o unxz.o \
 		  unxz/xz_crc32.o unxz/xz_dec_lzma2.o unxz/xz_dec_stream.o \
-		  unlha.o readrle.o readhuff.o inflate.o scan.o \
+		  unlha.o readrle.o readhuff.o inflate.o scan.o misc.o \
 		  loaders/sample.o synth_null.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
