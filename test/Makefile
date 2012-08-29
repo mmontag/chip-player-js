@@ -33,7 +33,9 @@ MIXER		= interpolation_default \
 READ		= file_32bit_little_endian file_32bit_big_endian \
 		  file_24bit_little_endian file_24bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
-		  file_8bit
+		  file_8bit \
+		  mem_32bit_little_endian mem_32bit_big_endian \
+		  mem_16bit_little_endian mem_16bit_big_endian
 WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
 		  file_8bit
