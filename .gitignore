@@ -17,6 +17,9 @@ mod.*
 *.exe
 *.dll
 *.pyc
+*.gco
+*.gcno
+*.gcda
 .svn
 tags
 depend
