@@ -29,7 +29,9 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  24_short_envelope_loops \
 		  25_portamento_and_pitch_slide
 MIXER		= interpolation_default \
-		  8bit_nearest 16bit_nearest 8bit_linear 16bit_linear
+		  mono_8bit_nearest mono_16bit_nearest \
+		  mono_8bit_linear mono_16bit_linear \
+		  stereo_8bit_nearest stereo_16bit_nearest
 READ		= file_32bit_little_endian file_32bit_big_endian \
 		  file_24bit_little_endian file_24bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \

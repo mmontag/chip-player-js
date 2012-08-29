@@ -1,6 +1,6 @@
 #include "test.h"
 
-TEST(test_mixer_8bit_linear)
+TEST(test_mixer_mono_8bit_nearest)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -9,7 +9,7 @@ TEST(test_mixer_8bit_linear)
 	FILE *f;
 	int i, j, val;
 
-	f = fopen("data/mixer_8bit_linear.data", "r");
+	f = fopen("data/mixer_8bit_nearest.data", "r");
 
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
@@ -22,7 +22,7 @@ TEST(test_mixer_8bit_linear)
 	}
 
 	xmp_player_start(opaque, 8000, XMP_FORMAT_MONO);
-	xmp_mixer_set(opaque, XMP_MIXER_INTERP, XMP_INTERP_LINEAR);
+	xmp_mixer_set(opaque, XMP_MIXER_INTERP, XMP_INTERP_NEAREST);
 
 	for (i = 0; i < 10; i++) {
 		xmp_player_frame(opaque);
