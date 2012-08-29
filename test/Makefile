@@ -31,7 +31,8 @@ STORLEK		= 01_arpeggio_pitch_slide \
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
 		  mono_8bit_linear mono_16bit_linear \
-		  stereo_8bit_nearest stereo_16bit_nearest
+		  stereo_8bit_nearest stereo_16bit_nearest \
+		  stereo_8bit_linear stereo_16bit_linear
 READ		= file_32bit_little_endian file_32bit_big_endian \
 		  file_24bit_little_endian file_24bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
@@ -143,7 +144,7 @@ $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 #
 
 covercheck: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-covertest
-	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-covertest
+	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-covertest ||:
 	lcov -c -b . -d . -k src -k include -o libxmp.cov
 	rm -Rf coverage
 	genhtml -o coverage libxmp.cov
