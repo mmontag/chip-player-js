@@ -169,17 +169,39 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 	dec_l = smp_l / count;
 
 	while ((smp_r || smp_l) && count--) {
-		if (dec_r > 0) {
-			*buf += smp_r > dec_r ? (smp_r -= dec_r) : (smp_r = 0);
-		} else {
-			*buf += smp_r < dec_r ? (smp_r -= dec_r) : (smp_r = 0);
+		if (~s->format & XMP_FORMAT_MONO) {
+			if (dec_r > 0) {
+				if (smp_r > dec_r) {
+					smp_r -= dec_r;
+					*buf += smp_r;
+				} else {
+					smp_r = 0;
+				}
+			} else {
+				if (smp_r < dec_r) {
+					smp_r -= dec_r;
+					*buf += smp_r;
+				} else {
+					smp_r = 0;
+				}
+			}
+			buf++;
 		}
-		buf++;
 
 		if (dec_l > 0) {
-			*buf += smp_l > dec_l ? (smp_l -= dec_l) : (smp_l = 0);
+			if (smp_l > dec_l) {
+				smp_l -= dec_l;
+				*buf += smp_l;
+			} else {
+				smp_l = 0;
+			}
 		} else {
-			*buf += smp_l < dec_l ? (smp_l -= dec_l) : (smp_l = 0);
+			if (smp_l < dec_l) {
+				smp_l -= dec_l;
+				*buf += smp_l;
+			} else {
+				smp_l = 0;
+			}
 		}
 		buf++;
 	}
