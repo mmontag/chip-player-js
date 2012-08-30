@@ -233,11 +233,11 @@ static void anticlick(struct context_data *ctx, int voc, int vol, int pan,
 	if (vi->vol) {
 		oldvol = vi->vol * (0x80 - pan0);
 		newvol = vol * (0x80 - pan);
-		vi->sright -= vi->sright / oldvol * newvol;
+		vi->sright -= (int64)vi->sright * newvol / oldvol;
 
 		oldvol = vi->vol * (0x80 + pan0);
 		newvol = vol * (0x80 + pan);
-		vi->sleft -= vi->sleft / oldvol * newvol;
+		vi->sleft -= (int64)vi->sleft * newvol / oldvol;
 	}
 
 	if (!buf) {
