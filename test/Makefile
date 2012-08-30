@@ -3,7 +3,7 @@ REPLAYERS	= mod ft2 st3 it
 QUIRKS		= 
 SMPLOADERS	= delta signal endian
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
-		  arc spark j2b lzx bzip2 xz lha_l0 lha_l1 \
+		  arc spark j2b lzx bzip2 xz lha_l0 lha_l1 vorbis \
 		  it_sample_8bit it_sample_16bit
 EFFECTS		= delay
 API_CALLS	= get_format_list create_context
@@ -113,7 +113,7 @@ TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o bunzip2.o \
 		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o unxz.o \
 		  unxz/xz_crc32.o unxz/xz_dec_lzma2.o unxz/xz_dec_stream.o \
 		  unlha.o readrle.o readhuff.o inflate.o scan.o misc.o \
-		  loaders/sample.o synth_null.o
+		  loaders/sample.o synth_null.o vorbis.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 		  $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))
