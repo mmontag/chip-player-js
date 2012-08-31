@@ -2,6 +2,10 @@
 
 import sys
 import os
+
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT_PATH + "/python")
+
 import pyxmp
 
 argc = len(sys.argv)
@@ -11,16 +15,16 @@ if argc < 2:
 	print "Usage: %s <module> [channels]" % (os.path.basename(argv[0]))
 	sys.exit(1)
 
-info = libxmp.struct_xmp_module_info()
+info = pyxmp.struct_xmp_module_info()
 
-x = libxmp.Xmp()
+x = pyxmp.Xmp()
 try:
 	x.loadModule(argv[1])
 except IOError as (errno, strerror):
 	sys.stderr.write("%s: %s\n" % (argv[1], strerror))
 	sys.exit(1)
 
-x.playerStart(44100, 0)
+x.playerStart(8000, 0)
 x.getInfo(info)
 
 channels = []

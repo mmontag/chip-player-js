@@ -42,6 +42,7 @@ READ		= file_32bit_little_endian file_32bit_big_endian \
 WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
 		  file_8bit file_move_data
+PLAYER		= read_event scan
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
@@ -79,6 +80,8 @@ READ_TESTS	= $(addprefix read_,$(READ))
 
 WRITE_TESTS	= $(addprefix write_,$(WRITE))
 
+PLAYER_TESTS	= $(addprefix player_,$(PLAYER))
+
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
 TESTS		= $(READ_TESTS) \
@@ -86,7 +89,6 @@ TESTS		= $(READ_TESTS) \
 		  $(SMPLOAD_TESTS) \
 		  $(DEPACK_TESTS) \
 		  load_sample_8bit load_sample_16bit \
-		  player_read_event \
 		  string_adjustment \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \
@@ -96,6 +98,7 @@ TESTS		= $(READ_TESTS) \
 		  $(EFFECT_TESTS) \
 		  $(SEQUENCER_TESTS) \
 		  $(STORLEK_TESTS) \
+		  $(PLAYER_TESTS) \
 		  $(MIXER_TESTS) \
 		  $(API_TESTS)
 
