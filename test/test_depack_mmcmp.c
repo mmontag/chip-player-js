@@ -9,7 +9,7 @@ TEST(test_depack_mmcmp)
 	int ret;
 	struct stat st;
 
-	f = fopen("data/mod.chip.mmcmp", "rb");
+	f = fopen("data/test.mmcmp", "rb");
 	fail_unless(f != NULL, "can't open data file");
 
 	fo = fopen(TMP_FILE, "wb");
@@ -23,9 +23,9 @@ TEST(test_depack_mmcmp)
 
 	f = fopen(TMP_FILE, "rb");
 	fstat(fileno(f), &st);
-	fail_unless(st.st_size == 10432, "decompression size error");
+	fail_unless(st.st_size == 24456, "decompression size error");
 
-	ret = check_md5(TMP_FILE, "a94b233e18dcf26e0c6170c79ef90d16");
+	ret = check_md5(TMP_FILE, "2d8b03b2bce0563dfdf89613c7976fe4");
 	fail_unless(ret == 0, "MD5 error");
 
 	fclose(f);

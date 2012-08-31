@@ -60,7 +60,7 @@ struct sub_block {
 };
 
 static const uint32 cmd_8bits[8] = {
-	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF8
+	0x01, 0x03, 0x07, 0x0f, 0x1e, 0x3c, 0x78, 0xf8
 };
 
 static const uint32 fetch_8bit[8] = {
@@ -68,8 +68,8 @@ static const uint32 fetch_8bit[8] = {
 };
 
 static const uint32 cmd_16bit[16] = {
-	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF0,
-	0x1F0, 0x3F0, 0x7F0, 0xFF0, 0x1FF0, 0x3FF0, 0x7FF0, 0xFFF0
+	0x0001, 0x0003, 0x0007, 0x000f, 0x001e, 0x003c, 0x0078, 0x00f0,
+	0x01f0, 0x03f0, 0x07f0, 0x0ff0, 0x1ff0, 0x3ff0, 0x7ff0, 0xfff0
 };
 
 static const uint32 fetch_16bit[16] = {
@@ -122,12 +122,14 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub,
 
 	bb.count = 0;
 	bb.buffer = 0;
+
+	fseek(out, sub->unpk_pos, SEEK_SET);
 	fseek(in, block->tt_entries, SEEK_SET);
 
 	for (j = 0; j < block->sub_blk; ) {
 		uint32 size = sub[j].unpk_size >> 1;
 		uint32 newval = 0x10000;
-		uint32 d = get_bits(in, numbits+1, &bb);
+		uint32 d = get_bits(in, numbits + 1, &bb);
 
 		if (d >= cmd_16bit[numbits]) {
 			uint32 fetch = fetch_16bit[numbits];
@@ -138,10 +140,11 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub,
 				numbits = newbits & 0x0F;
 			} else {
 				if ((d = get_bits(in, 4, &bb)) == 0x0F) {
-					if (get_bits(in, 1, &bb)) break;
-					newval = 0xFFFF;
+					if (get_bits(in, 1, &bb))
+						break;
+					newval = 0xffff;
 				} else {
-					newval = 0xFFF0 + d;
+					newval = 0xfff0 + d;
 				}
 			}
 		} else {
@@ -150,7 +153,7 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub,
 
 		if (newval < 0x10000) {
 			if (newval & 1) {
-				newval = (uint32)(-(int32)((newval+1) >> 1));
+				newval = (uint32)(-(int32)((newval + 1) >> 1));
 			} else {
 				newval = (uint32)(newval >> 1);
 			}
@@ -169,6 +172,7 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub,
 		if (pos >= size) {
 			j++;
 			pos = 0;
+			fseek(out, sub[j].unpk_pos, SEEK_SET);
 		}
 	}
 }
@@ -187,6 +191,7 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub,
 	bb.count = 0;
 	bb.buffer = 0;
 
+	fseek(out, sub->unpk_pos, SEEK_SET);
 	fseek(in, block->tt_entries, SEEK_SET);
 
 	for (j = 0; j < block->sub_blk; ) {
@@ -203,10 +208,11 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub,
 				numbits = newbits & 0x07;
 			} else {
 				if ((d = get_bits(in, 3, &bb)) == 7) {
-					if (get_bits(in, 1, &bb)) break;
-					newval = 0xFF;
+					if (get_bits(in, 1, &bb))
+						break;
+					newval = 0xff;
 				} else {
-					newval = 0xF8 + d;
+					newval = 0xf8 + d;
 				}
 			}
 		} else {
@@ -227,11 +233,12 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub,
 		if (pos >= size) {
 			j++;
 			pos = 0;
+			fseek(out, sub[j].unpk_pos, SEEK_SET);
 		}
 	}
 }
 
-int decrunch_mmcmp (FILE *in, FILE *out)                          
+int decrunch_mmcmp(FILE *in, FILE *out)
 {
 	struct header h;
 	uint32 *table;

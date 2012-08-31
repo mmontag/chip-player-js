@@ -5,7 +5,7 @@ TEST(test_read_file_16bit_little_endian)
 	FILE *f;
 	int x;
 
-	f = fopen("data/mod.chip.mmcmp", "rb");
+	f = fopen("data/test.mmcmp", "rb");
 	fail_unless(f != NULL, "can't open data file");
 
 	x = read16l(f);
