@@ -113,7 +113,7 @@ TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o bunzip2.o \
 		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o unxz.o \
 		  unxz/xz_crc32.o unxz/xz_dec_lzma2.o unxz/xz_dec_stream.o \
 		  unlha.o readrle.o readhuff.o inflate.o scan.o misc.o \
-		  loaders/sample.o synth_null.o vorbis.o
+		  loaders/sample.o synth_null.o vorbis.o fnmatch.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 		  $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))
@@ -132,7 +132,7 @@ dist-test:
 #
 
 check: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-tests
-	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-tests
+	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH PATH=$$PATH:../lib ./libxmp-tests
 
 $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 	@CMD='$(LD) -o $@ $(LDFLAGS) $(T_OBJS) -Llib -lxmp'; \
