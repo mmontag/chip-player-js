@@ -478,7 +478,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	FILE *f;
-	int i, t;
+	int i;
 	struct stat st;
 	struct list_head tmpfiles_list;
 	int test_result, load_result;
@@ -499,7 +499,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	INIT_LIST_HEAD(&tmpfiles_list);
 
 	D_(D_INFO "decrunch");
-	if ((t = decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX)) < 0)
+	if (decrunch(&tmpfiles_list, &f, &path, DECRUNCH_MAX) < 0)
 		goto err_depack;
 
 	if (fstat(fileno(f), &st) < 0)
