@@ -169,6 +169,11 @@ dist-subdirs: $(addprefix dist-,$(DDIRS))
 	rm -Rf $(DIST)
 	ls -l $(DIST).tar.gz
 
+distcheck:
+	rm -Rf $(DIST)
+	tar xf $(DIST).tar.gz
+	(cd $(DIST); ./configure; make; make check)
+
 $(OBJS): Makefile
 
 $(LOBJS): Makefile
