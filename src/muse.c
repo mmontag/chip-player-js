@@ -16,11 +16,7 @@ int decrunch_muse(FILE *f, FILE *fo)
 {                                                          
 	uint32 checksum;
   
-	if (fo == NULL) 
-		return -1; 
-
 	fseek(f, 24, SEEK_SET);
-
 	inflate(f, fo, &checksum, 0);
 
 	return 0;
