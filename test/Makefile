@@ -54,7 +54,7 @@ WRITE		= file_32bit_little_endian file_32bit_big_endian \
 
 PLAYER		= read_event scan
 
-SYNTH		= adlib
+SYNTH		= adlib spectrum
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
