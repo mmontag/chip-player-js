@@ -29,7 +29,6 @@ TEST(test_mixer_stereo_16bit_nearest)
 		xmp_player_get_info(opaque, &info);
 		for (k = j = 0; j < info.buffer_size / 4; j++) {
 			fscanf(f, "%d", &val);
-			val >>= 1;
 			fail_unless(s->buf32[k++] == val, "mixing error");
 			fail_unless(s->buf32[k++] == val, "mixing error");
 		}

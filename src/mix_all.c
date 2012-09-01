@@ -174,7 +174,6 @@ SMIX_MIXER(smix_mono_8bit_linear)
 {
     VAR_ITPT(int8);
 
-    vl <<= 1;
     while (count--) { INTERPOLATE(); MIX_MONO_AC(); UPDATE_POS(); }
 }
 
@@ -185,7 +184,7 @@ SMIX_MIXER(smix_mono_16bit_linear)
 {
     VAR_ITPT(int16);
 
-    vl >>= 7;
+    vl >>= 8;
     while (count--) { INTERPOLATE(); MIX_MONO_AC(); UPDATE_POS(); }
 }
 
@@ -196,7 +195,6 @@ SMIX_MIXER(smix_mono_8bit_nearest)
 {
     VAR_NORM(int8);
 
-    vl <<= 1;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); UPDATE_POS(); }
 }
 
@@ -207,7 +205,7 @@ SMIX_MIXER(smix_mono_16bit_nearest)
 {
     VAR_NORM(int16);
 
-    vl >>= 7;
+    vl >>= 8;
     while (count--) { DONT_INTERPOLATE(); MIX_MONO(); UPDATE_POS(); }
 }
 
@@ -248,7 +246,6 @@ SMIX_MIXER(smix_mono_8bit_linear_filter)
     VAR_ITPT(int8);
     VAR_FILTER_MONO;
 
-    vl <<= 1;
     while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
     SAVE_FILTER_MONO();
 }
@@ -261,7 +258,7 @@ SMIX_MIXER(smix_mono_16bit_linear_filter)
     VAR_ITPT(int16);
     VAR_FILTER_MONO;
 
-    vl >>= 7;
+    vl >>= 8;
     while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
     SAVE_FILTER_MONO();
 }
