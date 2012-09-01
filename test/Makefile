@@ -138,7 +138,7 @@ check: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-tests
 	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH PATH=$$PATH:../lib ./libxmp-tests
 
 $(TEST_PATH)/libxmp-tests: $(T_OBJS)
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(T_OBJS) -Llib -lxmp'; \
+	@CMD='$(LD) -o $@ $(LDFLAGS) $(T_OBJS) -lm -Llib -lxmp'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
