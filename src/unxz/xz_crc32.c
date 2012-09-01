@@ -29,12 +29,16 @@ STATIC_RW_DATA uint32_t xz_crc32_table[256];
 
 XZ_EXTERN void xz_crc32_init(void)
 {
+	static int once = 0;
 	const uint32_t poly = 0xEDB88320;
-
 	uint32_t i;
 	uint32_t j;
 	uint32_t r;
 
+	if (once)
+		return;
+	once = 1;
+	
 	for (i = 0; i < 256; ++i) {
 		r = i;
 		for (j = 0; j < 8; ++j)

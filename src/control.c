@@ -32,8 +32,6 @@ xmp_context xmp_create_context()
 		return NULL;
 	}
 
-	xz_crc32_init();
-
 	return (xmp_context)ctx;
 }
 
