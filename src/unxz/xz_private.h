@@ -40,7 +40,7 @@
 #		define memeq(a, b, size) (memcmp(a, b, size) == 0)
 #		define memzero(buf, size) memset(buf, 0, size)
 #	endif
-#	define get_le32(p) le32_to_cpup((const uint32_t *)(p))
+#	define get_le32(p) le32_to_cpup((const uint32 *)(p))
 #else
 	/*
 	 * For userspace builds, use a separate header to define the required
@@ -107,7 +107,7 @@
  * before calling xz_dec_lzma2_run().
  */
 XZ_EXTERN struct xz_dec_lzma2 *xz_dec_lzma2_create(enum xz_mode mode,
-						   uint32_t dict_max);
+						   uint32 dict_max);
 
 /*
  * Decode the LZMA2 properties (one byte) and reset the decoder. Return
@@ -116,7 +116,7 @@ XZ_EXTERN struct xz_dec_lzma2 *xz_dec_lzma2_create(enum xz_mode mode,
  * decoder doesn't support.
  */
 XZ_EXTERN enum xz_ret xz_dec_lzma2_reset(struct xz_dec_lzma2 *s,
-					 uint8_t props);
+					 uint8 props);
 
 /* Decode raw LZMA2 stream from b->in to b->out. */
 XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
@@ -138,7 +138,7 @@ XZ_EXTERN struct xz_dec_bcj *xz_dec_bcj_create(bool single_call);
  * is needed. Returns XZ_OK if the given Filter ID is supported.
  * Otherwise XZ_OPTIONS_ERROR is returned.
  */
-XZ_EXTERN enum xz_ret xz_dec_bcj_reset(struct xz_dec_bcj *s, uint8_t id);
+XZ_EXTERN enum xz_ret xz_dec_bcj_reset(struct xz_dec_bcj *s, uint8 id);
 
 /*
  * Decode raw BCJ + LZMA2 stream. This must be used only if there actually is

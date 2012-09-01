@@ -25,15 +25,15 @@
 #	define STATIC_RW_DATA static
 #endif
 
-STATIC_RW_DATA uint32_t xz_crc32_table[256];
+STATIC_RW_DATA uint32 xz_crc32_table[256];
 
 XZ_EXTERN void xz_crc32_init(void)
 {
 	static int once = 0;
-	const uint32_t poly = 0xEDB88320;
-	uint32_t i;
-	uint32_t j;
-	uint32_t r;
+	const uint32 poly = 0xEDB88320;
+	uint32 i;
+	uint32 j;
+	uint32 r;
 
 	if (once)
 		return;
@@ -50,7 +50,7 @@ XZ_EXTERN void xz_crc32_init(void)
 	return;
 }
 
-XZ_EXTERN uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
+XZ_EXTERN uint32 xz_crc32(const uint8 *buf, size_t size, uint32 crc)
 {
 	crc = ~crc;
 

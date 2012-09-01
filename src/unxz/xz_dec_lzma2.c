@@ -43,7 +43,7 @@
  */
 struct dictionary {
 	/* Beginning of the history buffer */
-	uint8_t *buf;
+	uint8 *buf;
 
 	/* Old position in buf (before decoding more data) */
 	size_t start;
@@ -72,20 +72,20 @@ struct dictionary {
 	 * together with "full" to detect corrupt input that would make us
 	 * read beyond the beginning of the uncompressed stream.
 	 */
-	uint32_t size;
+	uint32 size;
 
 	/*
 	 * Maximum allowed dictionary size in multi-call mode.
 	 * This is ignored in single-call mode.
 	 */
-	uint32_t size_max;
+	uint32 size_max;
 
 	/*
 	 * Amount of memory currently allocated for the dictionary.
 	 * This is used only with XZ_DYNALLOC. (With XZ_PREALLOC,
 	 * size_max is always the same as the allocated size.)
 	 */
-	uint32_t allocated;
+	uint32 allocated;
 
 	/* Operation mode */
 	enum xz_mode mode;
@@ -93,20 +93,20 @@ struct dictionary {
 
 /* Range decoder */
 struct rc_dec {
-	uint32_t range;
-	uint32_t code;
+	uint32 range;
+	uint32 code;
 
 	/*
 	 * Number of initializing bytes remaining to be read
 	 * by rc_read_init().
 	 */
-	uint32_t init_bytes_left;
+	uint32 init_bytes_left;
 
 	/*
 	 * Buffer from which we read our input. It can be either
 	 * temp.buf or the caller-provided input buffer.
 	 */
-	const uint8_t *in;
+	const uint8 *in;
 	size_t in_pos;
 	size_t in_limit;
 };
@@ -114,27 +114,27 @@ struct rc_dec {
 /* Probabilities for a length decoder. */
 struct lzma_len_dec {
 	/* Probability of match length being at least 10 */
-	uint16_t choice;
+	uint16 choice;
 
 	/* Probability of match length being at least 18 */
-	uint16_t choice2;
+	uint16 choice2;
 
 	/* Probabilities for match lengths 2-9 */
-	uint16_t low[POS_STATES_MAX][LEN_LOW_SYMBOLS];
+	uint16 low[POS_STATES_MAX][LEN_LOW_SYMBOLS];
 
 	/* Probabilities for match lengths 10-17 */
-	uint16_t mid[POS_STATES_MAX][LEN_MID_SYMBOLS];
+	uint16 mid[POS_STATES_MAX][LEN_MID_SYMBOLS];
 
 	/* Probabilities for match lengths 18-273 */
-	uint16_t high[LEN_HIGH_SYMBOLS];
+	uint16 high[LEN_HIGH_SYMBOLS];
 };
 
 struct lzma_dec {
 	/* Distances of latest four matches */
-	uint32_t rep0;
-	uint32_t rep1;
-	uint32_t rep2;
-	uint32_t rep3;
+	uint32 rep0;
+	uint32 rep1;
+	uint32 rep2;
+	uint32 rep3;
 
 	/* Types of the most recently seen LZMA symbols */
 	enum lzma_state state;
@@ -143,7 +143,7 @@ struct lzma_dec {
 	 * Length of a match. This is updated so that dict_repeat can
 	 * be called again to finish repeating the whole match.
 	 */
-	uint32_t len;
+	uint32 len;
 
 	/*
 	 * LZMA properties or related bit masks (number of literal
@@ -151,55 +151,55 @@ struct lzma_dec {
 	 * position bits, and a mask dervied from the number
 	 * position bits)
 	 */
-	uint32_t lc;
-	uint32_t literal_pos_mask; /* (1 << lp) - 1 */
-	uint32_t pos_mask;         /* (1 << pb) - 1 */
+	uint32 lc;
+	uint32 literal_pos_mask; /* (1 << lp) - 1 */
+	uint32 pos_mask;         /* (1 << pb) - 1 */
 
 	/* If 1, it's a match. Otherwise it's a single 8-bit literal. */
-	uint16_t is_match[STATES][POS_STATES_MAX];
+	uint16 is_match[STATES][POS_STATES_MAX];
 
 	/* If 1, it's a repeated match. The distance is one of rep0 .. rep3. */
-	uint16_t is_rep[STATES];
+	uint16 is_rep[STATES];
 
 	/*
 	 * If 0, distance of a repeated match is rep0.
 	 * Otherwise check is_rep1.
 	 */
-	uint16_t is_rep0[STATES];
+	uint16 is_rep0[STATES];
 
 	/*
 	 * If 0, distance of a repeated match is rep1.
 	 * Otherwise check is_rep2.
 	 */
-	uint16_t is_rep1[STATES];
+	uint16 is_rep1[STATES];
 
 	/* If 0, distance of a repeated match is rep2. Otherwise it is rep3. */
-	uint16_t is_rep2[STATES];
+	uint16 is_rep2[STATES];
 
 	/*
 	 * If 1, the repeated match has length of one byte. Otherwise
 	 * the length is decoded from rep_len_decoder.
 	 */
-	uint16_t is_rep0_long[STATES][POS_STATES_MAX];
+	uint16 is_rep0_long[STATES][POS_STATES_MAX];
 
 	/*
 	 * Probability tree for the highest two bits of the match
 	 * distance. There is a separate probability tree for match
 	 * lengths of 2 (i.e. MATCH_LEN_MIN), 3, 4, and [5, 273].
 	 */
-	uint16_t dist_slot[DIST_STATES][DIST_SLOTS];
+	uint16 dist_slot[DIST_STATES][DIST_SLOTS];
 
 	/*
 	 * Probility trees for additional bits for match distance
 	 * when the distance is in the range [4, 127].
 	 */
-	uint16_t dist_special[FULL_DISTANCES - DIST_MODEL_END];
+	uint16 dist_special[FULL_DISTANCES - DIST_MODEL_END];
 
 	/*
 	 * Probability tree for the lowest four bits of a match
 	 * distance that is equal to or greater than 128.
 	 */
-	uint16_t dist_align[ALIGN_SIZE];
+	uint16 dist_align[ALIGN_SIZE];
 
 	/* Length of a normal match */
 	struct lzma_len_dec match_len_dec;
@@ -208,7 +208,7 @@ struct lzma_dec {
 	struct lzma_len_dec rep_len_dec;
 
 	/* Probabilities of literals */
-	uint16_t literal[LITERAL_CODERS_MAX][LITERAL_CODER_SIZE];
+	uint16 literal[LITERAL_CODERS_MAX][LITERAL_CODER_SIZE];
 };
 
 struct lzma2_dec {
@@ -229,13 +229,13 @@ struct lzma2_dec {
 	enum lzma2_seq next_sequence;
 
 	/* Uncompressed size of LZMA chunk (2 MiB at maximum) */
-	uint32_t uncompressed;
+	uint32 uncompressed;
 
 	/*
 	 * Compressed size of LZMA chunk or compressed/uncompressed
 	 * size of uncompressed chunk (64 KiB at maximum)
 	 */
-	uint32_t compressed;
+	uint32 compressed;
 
 	/*
 	 * True if dictionary reset is needed. This is false before
@@ -270,8 +270,8 @@ struct xz_dec_lzma2 {
 	 * decoder calls. See lzma2_lzma() for details.
 	 */
 	struct {
-		uint32_t size;
-		uint8_t buf[3 * LZMA_IN_REQUIRED];
+		uint32 size;
+		uint8 buf[3 * LZMA_IN_REQUIRED];
 	} temp;
 };
 
@@ -317,7 +317,7 @@ static inline bool dict_has_space(const struct dictionary *dict)
  * still empty. This special case is needed for single-call decoding to
  * avoid writing a '\0' to the end of the destination buffer.
  */
-static inline uint32_t dict_get(const struct dictionary *dict, uint32_t dist)
+static inline uint32 dict_get(const struct dictionary *dict, uint32 dist)
 {
 	size_t offset = dict->pos - dist - 1;
 
@@ -330,7 +330,7 @@ static inline uint32_t dict_get(const struct dictionary *dict, uint32_t dist)
 /*
  * Put one byte into the dictionary. It is assumed that there is space for it.
  */
-static inline void dict_put(struct dictionary *dict, uint8_t byte)
+static inline void dict_put(struct dictionary *dict, uint8 byte)
 {
 	dict->buf[dict->pos++] = byte;
 
@@ -343,10 +343,10 @@ static inline void dict_put(struct dictionary *dict, uint8_t byte)
  * invalid, false is returned. On success, true is returned and *len is
  * updated to indicate how many bytes were left to be repeated.
  */
-static bool dict_repeat(struct dictionary *dict, uint32_t *len, uint32_t dist)
+static bool dict_repeat(struct dictionary *dict, uint32 *len, uint32 dist)
 {
 	size_t back;
-	uint32_t left;
+	uint32 left;
 
 	if (dist >= dict->full || dist >= dict->size)
 		return false;
@@ -372,7 +372,7 @@ static bool dict_repeat(struct dictionary *dict, uint32_t *len, uint32_t dist)
 
 /* Copy uncompressed data as is from input to dictionary and output buffers. */
 static void dict_uncompressed(struct dictionary *dict, struct xz_buf *b,
-			      uint32_t *left)
+			      uint32 *left)
 {
 	size_t copy_size;
 
@@ -413,7 +413,7 @@ static void dict_uncompressed(struct dictionary *dict, struct xz_buf *b,
  * enough space in b->out. This is guaranteed because caller uses dict_limit()
  * before decoding data into the dictionary.
  */
-static uint32_t dict_flush(struct dictionary *dict, struct xz_buf *b)
+static uint32 dict_flush(struct dictionary *dict, struct xz_buf *b)
 {
 	size_t copy_size = dict->pos - dict->start;
 
@@ -437,7 +437,7 @@ static uint32_t dict_flush(struct dictionary *dict, struct xz_buf *b)
 /* Reset the range decoder. */
 static void rc_reset(struct rc_dec *rc)
 {
-	rc->range = (uint32_t)-1;
+	rc->range = (uint32)-1;
 	rc->code = 0;
 	rc->init_bytes_left = RC_INIT_BYTES;
 }
@@ -494,9 +494,9 @@ static __always_inline void rc_normalize(struct rc_dec *rc)
  * of the code generated by GCC 3.x decreases 10-15 %. (GCC 4.3 doesn't care,
  * and it generates 10-20 % faster code than GCC 3.x from this file anyway.)
  */
-static __always_inline int rc_bit(struct rc_dec *rc, uint16_t *prob)
+static __always_inline int rc_bit(struct rc_dec *rc, uint16 *prob)
 {
-	uint32_t bound;
+	uint32 bound;
 	int bit;
 
 	rc_normalize(rc);
@@ -516,10 +516,10 @@ static __always_inline int rc_bit(struct rc_dec *rc, uint16_t *prob)
 }
 
 /* Decode a bittree starting from the most significant bit. */
-static __always_inline uint32_t rc_bittree(struct rc_dec *rc,
-					   uint16_t *probs, uint32_t limit)
+static __always_inline uint32 rc_bittree(struct rc_dec *rc,
+					   uint16 *probs, uint32 limit)
 {
-	uint32_t symbol = 1;
+	uint32 symbol = 1;
 
 	do {
 		if (rc_bit(rc, &probs[symbol]))
@@ -533,11 +533,11 @@ static __always_inline uint32_t rc_bittree(struct rc_dec *rc,
 
 /* Decode a bittree starting from the least significant bit. */
 static __always_inline void rc_bittree_reverse(struct rc_dec *rc,
-					       uint16_t *probs,
-					       uint32_t *dest, uint32_t limit)
+					       uint16 *probs,
+					       uint32 *dest, uint32 limit)
 {
-	uint32_t symbol = 1;
-	uint32_t i = 0;
+	uint32 symbol = 1;
+	uint32 i = 0;
 
 	do {
 		if (rc_bit(rc, &probs[symbol])) {
@@ -550,15 +550,15 @@ static __always_inline void rc_bittree_reverse(struct rc_dec *rc,
 }
 
 /* Decode direct bits (fixed fifty-fifty probability) */
-static inline void rc_direct(struct rc_dec *rc, uint32_t *dest, uint32_t limit)
+static inline void rc_direct(struct rc_dec *rc, uint32 *dest, uint32 limit)
 {
-	uint32_t mask;
+	uint32 mask;
 
 	do {
 		rc_normalize(rc);
 		rc->range >>= 1;
 		rc->code -= rc->range;
-		mask = (uint32_t)0 - (rc->code >> 31);
+		mask = (uint32)0 - (rc->code >> 31);
 		rc->code += rc->range & mask;
 		*dest = (*dest << 1) + (mask + 1);
 	} while (--limit > 0);
@@ -569,23 +569,23 @@ static inline void rc_direct(struct rc_dec *rc, uint32_t *dest, uint32_t limit)
  ********/
 
 /* Get pointer to literal coder probability array. */
-static uint16_t *lzma_literal_probs(struct xz_dec_lzma2 *s)
+static uint16 *lzma_literal_probs(struct xz_dec_lzma2 *s)
 {
-	uint32_t prev_byte = dict_get(&s->dict, 0);
-	uint32_t low = prev_byte >> (8 - s->lzma.lc);
-	uint32_t high = (s->dict.pos & s->lzma.literal_pos_mask) << s->lzma.lc;
+	uint32 prev_byte = dict_get(&s->dict, 0);
+	uint32 low = prev_byte >> (8 - s->lzma.lc);
+	uint32 high = (s->dict.pos & s->lzma.literal_pos_mask) << s->lzma.lc;
 	return s->lzma.literal[low + high];
 }
 
 /* Decode a literal (one 8-bit byte) */
 static void lzma_literal(struct xz_dec_lzma2 *s)
 {
-	uint16_t *probs;
-	uint32_t symbol;
-	uint32_t match_byte;
-	uint32_t match_bit;
-	uint32_t offset;
-	uint32_t i;
+	uint16 *probs;
+	uint32 symbol;
+	uint32 match_byte;
+	uint32 match_bit;
+	uint32 offset;
+	uint32 i;
 
 	probs = lzma_literal_probs(s);
 
@@ -611,16 +611,16 @@ static void lzma_literal(struct xz_dec_lzma2 *s)
 		} while (symbol < 0x100);
 	}
 
-	dict_put(&s->dict, (uint8_t)symbol);
+	dict_put(&s->dict, (uint8)symbol);
 	lzma_state_literal(&s->lzma.state);
 }
 
 /* Decode the length of the match into s->lzma.len. */
 static void lzma_len(struct xz_dec_lzma2 *s, struct lzma_len_dec *l,
-		     uint32_t pos_state)
+		     uint32 pos_state)
 {
-	uint16_t *probs;
-	uint32_t limit;
+	uint16 *probs;
+	uint32 limit;
 
 	if (!rc_bit(&s->rc, &l->choice)) {
 		probs = l->low[pos_state];
@@ -643,11 +643,11 @@ static void lzma_len(struct xz_dec_lzma2 *s, struct lzma_len_dec *l,
 }
 
 /* Decode a match. The distance will be stored in s->lzma.rep0. */
-static void lzma_match(struct xz_dec_lzma2 *s, uint32_t pos_state)
+static void lzma_match(struct xz_dec_lzma2 *s, uint32 pos_state)
 {
-	uint16_t *probs;
-	uint32_t dist_slot;
-	uint32_t limit;
+	uint16 *probs;
+	uint32 dist_slot;
+	uint32 limit;
 
 	lzma_state_match(&s->lzma.state);
 
@@ -685,9 +685,9 @@ static void lzma_match(struct xz_dec_lzma2 *s, uint32_t pos_state)
  * Decode a repeated match. The distance is one of the four most recently
  * seen matches. The distance will be stored in s->lzma.rep0.
  */
-static void lzma_rep_match(struct xz_dec_lzma2 *s, uint32_t pos_state)
+static void lzma_rep_match(struct xz_dec_lzma2 *s, uint32 pos_state)
 {
-	uint32_t tmp;
+	uint32 tmp;
 
 	if (!rc_bit(&s->rc, &s->lzma.is_rep0[s->lzma.state])) {
 		if (!rc_bit(&s->rc, &s->lzma.is_rep0_long[
@@ -721,7 +721,7 @@ static void lzma_rep_match(struct xz_dec_lzma2 *s, uint32_t pos_state)
 /* LZMA decoder core */
 static bool lzma_main(struct xz_dec_lzma2 *s)
 {
-	uint32_t pos_state;
+	uint32 pos_state;
 
 	/*
 	 * If the dictionary was reached during the previous call, try to
@@ -766,7 +766,7 @@ static bool lzma_main(struct xz_dec_lzma2 *s)
  */
 static void lzma_reset(struct xz_dec_lzma2 *s)
 {
-	uint16_t *probs;
+	uint16 *probs;
 	size_t i;
 
 	s->lzma.state = STATE_LIT_LIT;
@@ -796,7 +796,7 @@ static void lzma_reset(struct xz_dec_lzma2 *s)
  * from the decoded lp and pb values. On success, the LZMA decoder state is
  * reset and true is returned.
  */
-static bool lzma_props(struct xz_dec_lzma2 *s, uint8_t props)
+static bool lzma_props(struct xz_dec_lzma2 *s, uint8 props)
 {
 	if (props > (4 * 5 + 4) * 9 + 8)
 		return false;
@@ -846,7 +846,7 @@ static bool lzma_props(struct xz_dec_lzma2 *s, uint8_t props)
 static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 {
 	size_t in_avail;
-	uint32_t tmp;
+	uint32 tmp;
 
 	in_avail = b->in_size - b->in_pos;
 	if (s->temp.size > 0 || s->lzma2.compressed == 0) {
@@ -931,7 +931,7 @@ static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 				       struct xz_buf *b)
 {
-	uint32_t tmp;
+	uint32 tmp;
 
 	while (b->in_pos < b->in_size || s->lzma2.sequence == SEQ_LZMA_RUN) {
 		switch (s->lzma2.sequence) {
@@ -1015,25 +1015,25 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 
 		case SEQ_UNCOMPRESSED_1:
 			s->lzma2.uncompressed
-					+= (uint32_t)b->in[b->in_pos++] << 8;
+					+= (uint32)b->in[b->in_pos++] << 8;
 			s->lzma2.sequence = SEQ_UNCOMPRESSED_2;
 			break;
 
 		case SEQ_UNCOMPRESSED_2:
 			s->lzma2.uncompressed
-					+= (uint32_t)b->in[b->in_pos++] + 1;
+					+= (uint32)b->in[b->in_pos++] + 1;
 			s->lzma2.sequence = SEQ_COMPRESSED_0;
 			break;
 
 		case SEQ_COMPRESSED_0:
 			s->lzma2.compressed
-					= (uint32_t)b->in[b->in_pos++] << 8;
+					= (uint32)b->in[b->in_pos++] << 8;
 			s->lzma2.sequence = SEQ_COMPRESSED_1;
 			break;
 
 		case SEQ_COMPRESSED_1:
 			s->lzma2.compressed
-					+= (uint32_t)b->in[b->in_pos++] + 1;
+					+= (uint32)b->in[b->in_pos++] + 1;
 			s->lzma2.sequence = s->lzma2.next_sequence;
 			break;
 
@@ -1102,7 +1102,7 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 }
 
 XZ_EXTERN struct xz_dec_lzma2 *xz_dec_lzma2_create(enum xz_mode mode,
-						   uint32_t dict_max)
+						   uint32 dict_max)
 {
 	struct xz_dec_lzma2 *s = kmalloc(sizeof(*s), GFP_KERNEL);
 	if (s == NULL)
@@ -1125,7 +1125,7 @@ XZ_EXTERN struct xz_dec_lzma2 *xz_dec_lzma2_create(enum xz_mode mode,
 	return s;
 }
 
-XZ_EXTERN enum xz_ret xz_dec_lzma2_reset(struct xz_dec_lzma2 *s, uint8_t props)
+XZ_EXTERN enum xz_ret xz_dec_lzma2_reset(struct xz_dec_lzma2 *s, uint8 props)
 {
 	/* This limits dictionary size to 3 GiB to keep parsing simpler. */
 	if (props > 39)

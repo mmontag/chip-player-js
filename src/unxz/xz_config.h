@@ -20,7 +20,6 @@
 
 #define XZ_DEC_ANY_CHECK 1
 
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -60,48 +59,48 @@
 
 /* Inline functions to access unaligned unsigned 32-bit integers */
 #ifndef get_unaligned_le32
-static inline uint32_t get_unaligned_le32(const uint8_t *buf)
+static inline uint32 get_unaligned_le32(const uint8 *buf)
 {
-	return (uint32_t)buf[0]
-			| ((uint32_t)buf[1] << 8)
-			| ((uint32_t)buf[2] << 16)
-			| ((uint32_t)buf[3] << 24);
+	return (uint32)buf[0]
+			| ((uint32)buf[1] << 8)
+			| ((uint32)buf[2] << 16)
+			| ((uint32)buf[3] << 24);
 }
 #endif
 
 #ifndef get_unaligned_be32
-static inline uint32_t get_unaligned_be32(const uint8_t *buf)
+static inline uint32 get_unaligned_be32(const uint8 *buf)
 {
-	return (uint32_t)(buf[0] << 24)
-			| ((uint32_t)buf[1] << 16)
-			| ((uint32_t)buf[2] << 8)
-			| (uint32_t)buf[3];
+	return (uint32)(buf[0] << 24)
+			| ((uint32)buf[1] << 16)
+			| ((uint32)buf[2] << 8)
+			| (uint32)buf[3];
 }
 #endif
 
 #ifndef put_unaligned_le32
-static inline void put_unaligned_le32(uint32_t val, uint8_t *buf)
+static inline void put_unaligned_le32(uint32 val, uint8 *buf)
 {
-	buf[0] = (uint8_t)val;
-	buf[1] = (uint8_t)(val >> 8);
-	buf[2] = (uint8_t)(val >> 16);
-	buf[3] = (uint8_t)(val >> 24);
+	buf[0] = (uint8)val;
+	buf[1] = (uint8)(val >> 8);
+	buf[2] = (uint8)(val >> 16);
+	buf[3] = (uint8)(val >> 24);
 }
 #endif
 
 #ifndef put_unaligned_be32
-static inline void put_unaligned_be32(uint32_t val, uint8_t *buf)
+static inline void put_unaligned_be32(uint32 val, uint8 *buf)
 {
-	buf[0] = (uint8_t)(val >> 24);
-	buf[1] = (uint8_t)(val >> 16);
-	buf[2] = (uint8_t)(val >> 8);
-	buf[3] = (uint8_t)val;
+	buf[0] = (uint8)(val >> 24);
+	buf[1] = (uint8)(val >> 16);
+	buf[2] = (uint8)(val >> 8);
+	buf[3] = (uint8)val;
 }
 #endif
 
 /*
  * Use get_unaligned_le32() also for aligned access for simplicity. On
- * little endian systems, #define get_le32(ptr) (*(const uint32_t *)(ptr))
+ * little endian systems, #define get_le32(ptr) (*(const uint32 *)(ptr))
  * could save a few bytes in code size.
  */
 #ifndef get_le32

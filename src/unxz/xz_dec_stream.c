@@ -14,7 +14,7 @@
 struct xz_dec_hash {
 	vli_type unpadded;
 	vli_type uncompressed;
-	uint32_t crc32;
+	uint32 crc32;
 };
 
 struct xz_dec {
@@ -33,7 +33,7 @@ struct xz_dec {
 	} sequence;
 
 	/* Position in variable-length integers and Check fields */
-	uint32_t pos;
+	uint32 pos;
 
 	/* Variable-length integer decoded by dec_vli() */
 	vli_type vli;
@@ -43,7 +43,7 @@ struct xz_dec {
 	size_t out_start;
 
 	/* CRC32 value in Block or Index */
-	uint32_t crc32;
+	uint32 crc32;
 
 	/* Type of the integrity check calculated from uncompressed data */
 	enum xz_check check_type;
@@ -72,7 +72,7 @@ struct xz_dec {
 		vli_type uncompressed;
 
 		/* Size of the Block Header field */
-		uint32_t size;
+		uint32 size;
 	} block_header;
 
 	/* Information collected when decoding Blocks */
@@ -125,7 +125,7 @@ struct xz_dec {
 	struct {
 		size_t pos;
 		size_t size;
-		uint8_t buf[1024];
+		uint8 buf[1024];
 	} temp;
 
 	struct xz_dec_lzma2 *lzma2;
@@ -138,7 +138,7 @@ struct xz_dec {
 
 #ifdef XZ_DEC_ANY_CHECK
 /* Sizes of the Check field with different Check IDs */
-static const uint8_t check_sizes[16] = {
+static const uint8 check_sizes[16] = {
 	0,
 	4, 4, 4,
 	8, 8, 8,
@@ -172,10 +172,10 @@ static bool fill_temp(struct xz_dec *s, struct xz_buf *b)
 }
 
 /* Decode a variable-length integer (little-endian base-128 encoding) */
-static enum xz_ret dec_vli(struct xz_dec *s, const uint8_t *in,
+static enum xz_ret dec_vli(struct xz_dec *s, const uint8 *in,
 			   size_t *in_pos, size_t in_size)
 {
-	uint8_t byte;
+	uint8 byte;
 
 	if (s->pos == 0)
 		s->vli = 0;
@@ -208,7 +208,7 @@ static enum xz_ret dec_vli(struct xz_dec *s, const uint8_t *in,
  * the observed compressed and uncompressed sizes of the Block so that
  * they don't exceed the values possibly stored in the Block Header
  * (validation assumes that no integer overflow occurs, since vli_type
- * is normally uint64_t). Update the CRC32 if presence of the CRC32
+ * is normally uint64). Update the CRC32 if presence of the CRC32
  * field was indicated in Stream Header.
  *
  * Once the decoding is finished, validate that the observed sizes match
@@ -268,7 +268,7 @@ static enum xz_ret dec_block(struct xz_dec *s, struct xz_buf *b)
 
 		s->block.hash.uncompressed += s->block.uncompressed;
 		s->block.hash.crc32 = xz_crc32(
-				(const uint8_t *)&s->block.hash,
+				(const uint8 *)&s->block.hash,
 				sizeof(s->block.hash), s->block.hash.crc32);
 
 		++s->block.count;
@@ -327,7 +327,7 @@ static enum xz_ret dec_index(struct xz_dec *s, struct xz_buf *b)
 		case SEQ_INDEX_UNCOMPRESSED:
 			s->index.hash.uncompressed += s->vli;
 			s->index.hash.crc32 = xz_crc32(
-					(const uint8_t *)&s->index.hash,
+					(const uint8 *)&s->index.hash,
 					sizeof(s->index.hash),
 					s->index.hash.crc32);
 			--s->index.count;
@@ -600,7 +600,7 @@ static enum xz_ret dec_main(struct xz_dec *s, struct xz_buf *b)
 			 * prepare to decode it.
 			 */
 			s->block_header.size
-				= ((uint32_t)b->in[b->in_pos] + 1) * 4;
+				= ((uint32)b->in[b->in_pos] + 1) * 4;
 
 			s->temp.size = s->block_header.size;
 			s->temp.pos = 0;
@@ -767,7 +767,7 @@ XZ_EXTERN enum xz_ret xz_dec_run(struct xz_dec *s, struct xz_buf *b)
 	return ret;
 }
 
-XZ_EXTERN struct xz_dec *xz_dec_init(enum xz_mode mode, uint32_t dict_max)
+XZ_EXTERN struct xz_dec *xz_dec_init(enum xz_mode mode, uint32 dict_max)
 {
 	struct xz_dec *s = kmalloc(sizeof(*s), GFP_KERNEL);
 	if (s == NULL)
