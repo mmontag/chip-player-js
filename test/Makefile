@@ -1,12 +1,18 @@
 
 REPLAYERS	= mod ft2 st3 it
+
 QUIRKS		= 
+
 SMPLOADERS	= delta signal endian
+
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 		  arc spark j2b lzx bzip2 xz lha_l0 lha_l1 vorbis \
 		  it_sample_8bit it_sample_16bit
+
 EFFECTS		= delay
+
 API_CALLS	= get_format_list create_context
+
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
 		  03_compatible_gxx_off \
@@ -28,21 +34,26 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  23_portamento_with_no_note \
 		  24_short_envelope_loops \
 		  25_portamento_and_pitch_slide
+
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
 		  mono_8bit_linear mono_16bit_linear \
 		  stereo_8bit_nearest stereo_16bit_nearest \
 		  stereo_8bit_linear stereo_16bit_linear
+
 READ		= file_32bit_little_endian file_32bit_big_endian \
 		  file_24bit_little_endian file_24bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
 		  file_8bit \
 		  mem_32bit_little_endian mem_32bit_big_endian \
 		  mem_16bit_little_endian mem_16bit_big_endian
+
 WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
 		  file_8bit file_move_data
 PLAYER		= read_event scan
+
+SYNTH		= adlib
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
@@ -82,6 +93,8 @@ WRITE_TESTS	= $(addprefix write_,$(WRITE))
 
 PLAYER_TESTS	= $(addprefix player_,$(PLAYER))
 
+SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
+
 API_TESTS	= $(addprefix api_,$(API_CALLS))
 
 TESTS		= $(READ_TESTS) \
@@ -90,6 +103,7 @@ TESTS		= $(READ_TESTS) \
 		  $(DEPACK_TESTS) \
 		  load_sample_8bit load_sample_16bit \
 		  string_adjustment \
+		  $(API_TESTS) \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \
 		  $(CASE2_TESTS) \
@@ -100,7 +114,7 @@ TESTS		= $(READ_TESTS) \
 		  $(STORLEK_TESTS) \
 		  $(PLAYER_TESTS) \
 		  $(MIXER_TESTS) \
-		  $(API_TESTS)
+		  $(SYNTH_TESTS)
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
 
