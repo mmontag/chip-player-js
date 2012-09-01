@@ -137,9 +137,9 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub,
 					((d - cmd_16bit[numbits]) << fetch);
 
 			if (newbits != numbits) {
-				numbits = newbits & 0x0F;
+				numbits = newbits & 0x0f;
 			} else {
-				if ((d = get_bits(in, 4, &bb)) == 0x0F) {
+				if ((d = get_bits(in, 4, &bb)) == 0x0f) {
 					if (get_bits(in, 1, &bb))
 						break;
 					newval = 0xffff;
