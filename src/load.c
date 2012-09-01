@@ -389,7 +389,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	char buf[XMP_NAME_SIZE];
 	int i;
 	struct list_head tmpfiles_list;
-	int ret = 0;
+	int ret = -XMP_ERROR_FORMAT;;
 
 	if (stat(path, &st) < 0)
 		return -XMP_ERROR_SYSTEM;

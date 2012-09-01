@@ -8,8 +8,11 @@ TEST(test_api_test_module)
 
 	ret = xmp_test_module("data", &tinfo);
 	err = errno;
-	fail_unless(ret == -XMP_ERROR_SYSTEM, "dir error test module fail");
+	fail_unless(ret == -XMP_ERROR_SYSTEM, "directory fail");
 	fail_unless(err == EISDIR, "errno test module fail");
+
+	ret = xmp_test_module("data/storlek_01.data", &tinfo);
+	fail_unless(ret == -XMP_ERROR_FORMAT, "unsupported format fail");
 
 	ret = xmp_test_module("data/test.mmcmp", &tinfo);
 	fail_unless(ret == 0, "XM test module fail");
