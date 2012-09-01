@@ -11,7 +11,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 
 EFFECTS		= delay
 
-API_CALLS	= get_format_list create_context
+API		= get_format_list create_context test_module
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
@@ -51,6 +51,7 @@ READ		= file_32bit_little_endian file_32bit_big_endian \
 WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
 		  file_8bit file_move_data
+
 PLAYER		= read_event scan
 
 SYNTH		= adlib
@@ -95,7 +96,7 @@ PLAYER_TESTS	= $(addprefix player_,$(PLAYER))
 
 SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
 
-API_TESTS	= $(addprefix api_,$(API_CALLS))
+API_TESTS	= $(addprefix api_,$(API))
 
 TESTS		= $(READ_TESTS) \
 		  $(WRITE_TESTS) \

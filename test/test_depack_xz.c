@@ -26,9 +26,9 @@ TEST(test_depack_xz)
 
 	f = fopen(TMP_FILE, "rb");
 	fstat(fileno(f), &st);
-	fail_unless(st.st_size == 17968, "decompression size error");
+	fail_unless(st.st_size == 14176, "decompression size error");
 
-	ret = check_md5(TMP_FILE, "0350baf25b96d6d125f537c63f03e3db");
+	ret = check_md5(TMP_FILE, "37b8afe62ec42a47b1237b794193e785");
 	fail_unless(ret == 0, "MD5 error");
 
 	fclose(f);
