@@ -58,7 +58,7 @@ struct mixer_voice {
 	int sample_loop;	/* set if sample has looped */
 };
 
-int	mixer_on		(struct context_data *);
+int	mixer_on		(struct context_data *, int, int, int);
 void	mixer_off		(struct context_data *);
 void    mixer_setvol		(struct context_data *, int, int);
 void    mixer_seteffect		(struct context_data *, int, int, int);

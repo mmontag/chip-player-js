@@ -273,6 +273,7 @@ EXPORT void        xmp_stop_module     (xmp_context);
 EXPORT void        xmp_restart_module  (xmp_context);
 EXPORT int         xmp_seek_time       (xmp_context, int);
 EXPORT int         xmp_channel_mute    (xmp_context, int, int);
+EXPORT int         xmp_channel_vol     (xmp_context, int, int);
 EXPORT int         xmp_mixer_set       (xmp_context, int, int);
 EXPORT int         xmp_mixer_get       (xmp_context, int);
 

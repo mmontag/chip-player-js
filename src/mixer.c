@@ -596,7 +596,7 @@ int mixer_numvoices(struct context_data *ctx, int num)
 	}
 }
 
-int mixer_on(struct context_data *ctx)
+int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 {
 	struct mixer_data *s = &ctx->s;
 
@@ -608,6 +608,11 @@ int mixer_on(struct context_data *ctx)
 	if (s->buf32 == NULL)
 		goto err1;
 
+	s->freq = rate;
+	s->format = format;
+	s->amplify = DEFAULT_AMPLIFY;
+	s->mix = DEFAULT_MIX;
+	s->pbase = SMIX_C4NOTE * c4rate / s->freq;
 	s->interp = XMP_INTERP_LINEAR;	/* default interpolation type */
 	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	s->numvoc = SMIX_NUMVOC;

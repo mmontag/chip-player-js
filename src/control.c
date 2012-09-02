@@ -169,14 +169,44 @@ int xmp_seek_time(xmp_context opaque, int time)
 	return p->pos < 0 ? 0 : p->pos;
 }
 
-int xmp_channel_mute(xmp_context opaque, int num, int status)
+int xmp_channel_mute(xmp_context opaque, int chn, int status)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
 	int ret;
 
-	ret = virt_mute(ctx, num, status);
+	if (chn < 0 || chn >= XMP_MAX_CHANNELS) {
+		return -XMP_ERROR_INVALID;
+	}
+	
+	ret = p->channel_mute[chn];
 
-	return ret < 0 ? XMP_ERROR_INVALID : ret;
+	if (status >= 2) {
+		p->channel_mute[chn] = !p->channel_mute[chn];
+	} else if (status >= 0) {
+		p->channel_mute[chn] = status;
+	}
+
+	return ret;
+}
+
+int xmp_channel_vol(xmp_context opaque, int chn, int val)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	int ret;
+
+	if (chn < 0 || chn >= XMP_MAX_CHANNELS) {
+		return -XMP_ERROR_INVALID;
+	}
+	
+	ret = p->channel_vol[chn];
+
+	if (val >= 0 || val <= 100) {
+		p->channel_vol[chn] = val;
+	}
+
+	return ret;
 }
 
 int xmp_mixer_set(xmp_context opaque, int parm, int val)

@@ -256,6 +256,7 @@ struct player_data {
 
 	struct channel_data *xc_data;
 
+	int channel_vol[XMP_MAX_CHANNELS];
 	char channel_mute[XMP_MAX_CHANNELS];
 
 	struct virt_control {

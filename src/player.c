@@ -274,6 +274,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	finalvol = (uint32)(vol_envelope * gvol * xc->mastervol / m->gvolbase *
 				((int)finalvol * 0x40 / m->volbase)) >> 18;
 
+	/* Apply channel volume */
+	finalvol = finalvol * 100 / p->channel_vol[chn];
+
 	/* Volume translation table (for PTM, ARCH, COCO) */
 	if (m->vol_table) {
 		finalvol = m->volbase == 0xff ?
@@ -758,9 +761,11 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
+	int i;
 	int ret = 0;
 
-	mixer_on(ctx);
+	if (mixer_on(ctx, rate, format, m->c4rate) < 0)
+		return -XMP_ERROR_INTERNAL;
 
 	p->gvol.slide = 0;
 	p->gvol.volume = m->volbase;
@@ -769,11 +774,12 @@ int xmp_player_start(xmp_context opaque, int rate, int format)
 	p->row = 0;
 	p->current_time = 0;
 	p->loop_count = 0;
-	s->freq = rate;
-	s->format = format;
-	s->amplify = DEFAULT_AMPLIFY;
-	s->mix = DEFAULT_MIX;
-	s->pbase = SMIX_C4NOTE * m->c4rate / s->freq;
+
+	/* Unmute all channels and set default volume */
+	for (i = 0; i < XMP_MAX_CHANNELS; i++) {
+		p->channel_mute[i] = 0;
+		p->channel_vol[i] = 100;
+	}
 
 	/* Skip invalid patterns at start (the seventh laboratory.it) */
 	while (p->ord < mod->len && mod->xxo[p->ord] >= mod->pat) {
