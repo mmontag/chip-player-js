@@ -190,7 +190,7 @@ int xmp_channel_mute(xmp_context opaque, int chn, int status)
 	return ret;
 }
 
-int xmp_channel_vol(xmp_context opaque, int chn, int val)
+int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -202,8 +202,8 @@ int xmp_channel_vol(xmp_context opaque, int chn, int val)
 	
 	ret = p->channel_vol[chn];
 
-	if (val >= 0 || val <= 100) {
-		p->channel_vol[chn] = val;
+	if (vol >= 0 && vol <= 100) {
+		p->channel_vol[chn] = vol;
 	}
 
 	return ret;
