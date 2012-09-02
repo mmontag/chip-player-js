@@ -166,7 +166,7 @@ int xmp_seek_time(xmp_context opaque, int time)
 		xmp_set_position(opaque, 0);
 	}
 
-	return p->pos;
+	return p->pos < 0 ? 0 : p->pos;
 }
 
 int xmp_channel_mute(xmp_context opaque, int num, int status)
