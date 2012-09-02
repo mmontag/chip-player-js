@@ -48,6 +48,7 @@ extern "C" {
 
 /* dsp effect types */
 #define XMP_DSP_LOWPASS		(1 << 0) /* Lowpass filter effect */
+#define XMP_DSP_ALL		(XMP_DSP_LOWPASS)
 
 /* limits */
 #define XMP_MAX_KEYS		121	/* Number of valid keys */
@@ -56,12 +57,13 @@ extern "C" {
 #define XMP_MAX_CHANNELS	64	/* Max number of channels in module */
 
 /* error codes */
-#define XMP_END			1	/* End of module */
+#define XMP_END			1
 #define XMP_ERROR_INTERNAL	2	/* Internal error */
 #define XMP_ERROR_FORMAT	3	/* Unsupported module format */
 #define XMP_ERROR_LOAD		4	/* Error loading file */
 #define XMP_ERROR_DEPACK	5	/* Error depacking file */
 #define XMP_ERROR_SYSTEM	6	/* System error */
+#define XMP_ERROR_INVALID	7	/* Invalid parameter */
 
 struct xmp_channel {
 	int pan;			/* Channel pan (0x80 is center) */
@@ -271,7 +273,7 @@ EXPORT void        xmp_stop_module     (xmp_context);
 EXPORT void        xmp_restart_module  (xmp_context);
 EXPORT int         xmp_seek_time       (xmp_context, int);
 EXPORT int         xmp_channel_mute    (xmp_context, int, int);
-EXPORT void        xmp_mixer_set       (xmp_context, int, int);
+EXPORT int         xmp_mixer_set       (xmp_context, int, int);
 EXPORT int         xmp_mixer_get       (xmp_context, int);
 
 #ifdef __cplusplus

@@ -176,32 +176,45 @@ int xmp_channel_mute(xmp_context opaque, int num, int status)
 	return virt_mute(ctx, num, status);
 }
 
-void xmp_mixer_set(xmp_context opaque, int parm, int val)
+int xmp_mixer_set(xmp_context opaque, int parm, int val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct mixer_data *s = &ctx->s;
+	int ret = -XMP_ERROR_INVALID;
 
 	switch (parm) {
 	case XMP_MIXER_AMP:
-		s->amplify = val;
+		if (val >= 0 && val <= 3) {
+			s->amplify = val;
+			ret = 0;
+		}
 		break;
 	case XMP_MIXER_MIX:
-		s->mix = val;
+		if (val >= 0 && val <= 100) {
+			s->mix = val;
+			ret = 0;
+		}
 		break;
 	case XMP_MIXER_INTERP:
-		s->interp = val;
+		if (val >= XMP_INTERP_NEAREST && val <= XMP_INTERP_LINEAR) {
+			s->interp = val;
+			ret = 0;
+		}
 		break;
 	case XMP_MIXER_DSP:
 		s->dsp = val;
+		ret = 0;
 		break;
 	}
+
+	return ret;
 }
 
 int xmp_mixer_get(xmp_context opaque, int parm)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct mixer_data *s = &ctx->s;
-	int ret = -1;
+	int ret = -XMP_ERROR_INVALID;
 
 	switch (parm) {
 	case XMP_MIXER_AMP:

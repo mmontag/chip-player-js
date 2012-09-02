@@ -11,7 +11,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 
 EFFECTS		= delay
 
-API		= get_format_list create_context test_module
+API		= get_format_list create_context test_module mixer_set
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
