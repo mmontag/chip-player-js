@@ -3,13 +3,13 @@
 int decrunch_lha(FILE *f, FILE *fo);
 
 
-TEST(test_depack_lha_l1)
+TEST(test_depack_lha_l0_lzhuff5)
 {
 	FILE *f, *fo;
 	int ret;
 	struct stat st;
 
-	f = fopen("data/l1_lzhuff7", "rb");
+	f = fopen("data/l0_lzhuff5", "rb");
 	fail_unless(f != NULL, "can't open data file");
 
 	fo = fopen(TMP_FILE, "wb");
@@ -23,11 +23,13 @@ TEST(test_depack_lha_l1)
 
 	f = fopen(TMP_FILE, "rb");
 	fstat(fileno(f), &st);
-	fail_unless(st.st_size == 8378, "decompression size error");
+	fail_unless(st.st_size == 46056, "decompression size error");
 
-	ret = check_md5(TMP_FILE, "c993a848f57227660f8b10db1d4d874f");
+	ret = check_md5(TMP_FILE, "d62117b9d24b152b225bdb7be24d5c5c");
 	fail_unless(ret == 0, "MD5 error");
 
 	fclose(f);
 }
 END_TEST
+
+

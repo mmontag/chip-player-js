@@ -6,8 +6,9 @@ QUIRKS		=
 SMPLOADERS	= delta signal endian
 
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
-		  arc spark j2b lzx bzip2 xz lha_l0 lha_l1 vorbis \
-		  it_sample_8bit it_sample_16bit
+		  arc spark j2b lzx bzip2 xz lha_l0_lzhuff5 lha_l1_lzhuff5 \
+		  lha_l1_lzhuff6 lha_l1_lzhuff7 \
+		  vorbis it_sample_8bit it_sample_16bit
 
 EFFECTS		= delay
 
