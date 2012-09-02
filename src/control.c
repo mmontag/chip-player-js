@@ -172,8 +172,11 @@ int xmp_seek_time(xmp_context opaque, int time)
 int xmp_channel_mute(xmp_context opaque, int num, int status)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	int ret;
 
-	return virt_mute(ctx, num, status);
+	ret = virt_mute(ctx, num, status);
+
+	return ret < 0 ? XMP_ERROR_INVALID : ret;
 }
 
 int xmp_mixer_set(xmp_context opaque, int parm, int val)

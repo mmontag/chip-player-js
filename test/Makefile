@@ -12,7 +12,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 EFFECTS		= delay
 
 API		= get_format_list create_context test_module mixer_set \
-		  stop_module restart_module seek_time
+		  stop_module restart_module seek_time channel_mute
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
