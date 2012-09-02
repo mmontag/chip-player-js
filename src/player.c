@@ -970,12 +970,12 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 	chn = mod->chn;
 
 	if (p->pos >= 0 && p->pos < mod->len) {
-		info->order = p->pos;
+		info->pos = p->pos;
 	} else {
-		info->order = 0;
+		info->pos = 0;
 	}
 
-	info->pattern = mod->xxo[info->order];
+	info->pattern = mod->xxo[info->pos];
 
 	if (info->pattern < mod->pat) {
 		info->num_rows = mod->xxp[info->pattern]->rows;

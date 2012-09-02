@@ -209,7 +209,7 @@ struct xmp_test_info {
 #define XMP_PERIOD_BASE	6847		/* C4 period */
 
 struct xmp_module_info {		/* Current module information */
-	int order;			/* Current position */
+	int pos;			/* Current position */
 	int pattern;			/* Current pattern */
 	int row;			/* Current row in pattern */
 	int num_rows;			/* Number of rows in current pattern */
