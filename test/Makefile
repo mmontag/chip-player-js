@@ -44,7 +44,8 @@ MIXER		= interpolation_default \
 		  stereo_8bit_nearest stereo_16bit_nearest \
 		  stereo_8bit_linear stereo_16bit_linear \
 		  mono_8bit_filter mono_16bit_filter \
-		  stereo_8bit_filter stereo_16bit_filter
+		  stereo_8bit_filter stereo_16bit_filter \
+		  downmix_8bit downmix_16bit
 
 READ		= file_32bit_little_endian file_32bit_big_endian \
 		  file_24bit_little_endian file_24bit_big_endian \
