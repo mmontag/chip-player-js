@@ -68,7 +68,7 @@ CFLAGS += -Iinclude -Isrc
 	eval $$CMD
 
 .c.gco:
-	@CMD='$(CC) $(CFLAGS) -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
+	@CMD='$(CC) $(CFLAGS) -fno-inline -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.gco ; fi; \
 	eval $$CMD
 
