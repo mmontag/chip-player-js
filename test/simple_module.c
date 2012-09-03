@@ -70,8 +70,8 @@ void new_event(struct context_data *ctx, int pat, int row, int chn, int note, in
 	e->vol = vol;
 	e->fxt = fxt;
 	e->fxp = fxp;
-	e->f2t = fxt;
-	e->f2p = fxp;
+	e->f2t = f2t;
+	e->f2p = f2p;
 }
 
 void set_order(struct context_data *ctx, int pos, int pat)
