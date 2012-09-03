@@ -54,5 +54,10 @@ TEST(test_api_test_module)
 	fail_unless(strcmp(tinfo.name, "Inspiration") == 0, "S3M module name fail");
 	fail_unless(strcmp(tinfo.type, "Scream Tracker 3 (S3M)") == 0, "S3M module type fail");
 
+	/* Prowizard */
+	ret = xmp_test_module("data/PRU1.intro-electro", &tinfo);
+	fail_unless(ret == 0, "Prowizard test module fail");
+	fail_unless(strcmp(tinfo.name, "intro-electro") == 0, "Prowizard module name fail");
+	fail_unless(strcmp(tinfo.type, "Prorunner 1.0") == 0, "Prowizard module type fail");
 }
 END_TEST
