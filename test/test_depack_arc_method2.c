@@ -3,13 +3,13 @@
 int decrunch_arc(FILE *f, FILE *fo);
 
 
-TEST(test_depack_arc)
+TEST(test_depack_arc_method2)
 {
 	FILE *f, *fo;
 	int ret;
 	struct stat st;
 
-	f = fopen("data/040810", "rb");
+	f = fopen("data/arc-method2", "rb");
 	fail_unless(f != NULL, "can't open data file");
 
 	fo = fopen(TMP_FILE, "wb");
