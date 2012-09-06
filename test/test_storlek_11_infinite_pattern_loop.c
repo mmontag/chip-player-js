@@ -43,6 +43,7 @@ TEST(test_storlek_11_infinite_pattern_loop)
 	while (1) {
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
+printf("%d\n", info.loop_count);
 		if (info.loop_count > 0)
 			break;
 

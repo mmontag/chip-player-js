@@ -24,7 +24,7 @@ TEST(test_storlek_09_sample_change_no_note)
 	xmp_context opaque;
 	struct xmp_module_info info;
 	struct xmp_channel_info *ci = &info.channel_info[0];
-	struct data data[100];
+	struct data data[200];
 	int i = 0, j = 0;
 
 	opaque = xmp_create_context();
