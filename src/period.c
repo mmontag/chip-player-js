@@ -92,7 +92,7 @@ int period_to_bend(double p, int n, int limit, int gliss, int type)
 	p = MIN_PERIOD_A;
 
     d = note_to_period(n, 0, 0);
-    b = 100.0 * ((1536.0 * log(d / p) / M_LN2));
+    b = round(100.0 * ((1536.0 * log(d / p) / M_LN2)));
 
     return gliss ? b / 12800 * 12800 : b;	/* Amiga */
 }
