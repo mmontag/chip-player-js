@@ -26,6 +26,7 @@
 
 #include "format.h"
 #include "list.h"
+#include "md5.h"
 
 
 extern struct format_loader *format_loader[];
@@ -87,6 +88,25 @@ enum {
 #endif
 
 #define DECRUNCH_MAX 5 /* don't recurse more than this */
+
+#define BUFLEN 16384
+
+static void set_md5sum(FILE *f, unsigned char *digest)
+{
+	unsigned char buf[BUFLEN];
+	MD5_CTX ctx;
+	int bytes_read;
+
+	fseek(f, 0, SEEK_SET);
+
+	MD5Init(&ctx);
+	while ((bytes_read = fread(buf, 1, BUFLEN, f)) > 0) {
+		MD5Update(&ctx, buf, bytes_read);
+	}
+	MD5Final(&ctx);
+
+	memcpy(digest, ctx.digest, 16);
+}
 
 static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 {
@@ -421,7 +441,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 
 	if (info != NULL) {
 		*info->name = 0;	/* reset name prior to testing */
-		*info->type = 0;	/* reset name prior to testing */
+		*info->type = 0;	/* reset type prior to testing */
 	}
 
 	for (i = 0; format_loader[i] != NULL; i++) {
@@ -529,6 +549,8 @@ int xmp_load_module(xmp_context opaque, char *path)
 			break;
 		}
 	}
+
+	set_md5sum(f, m->mod.digest);
 
 	fclose(f);
 	unlink_tempfiles(&tmpfiles_list);

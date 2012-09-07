@@ -182,6 +182,7 @@ struct xmp_sequence {
 struct xmp_module {
 	char name[XMP_NAME_SIZE];	/* Module name */
 	char type[XMP_NAME_SIZE];	/* Module type */
+	unsigned char digest[16];	/* MD5 message digest */
 	int pat;			/* Number of patterns */
 	int trk;			/* Number of tracks */
 	int chn;			/* Tracks per pattern */
