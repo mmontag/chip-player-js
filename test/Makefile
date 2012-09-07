@@ -59,7 +59,7 @@ WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
 		  file_8bit file_move_data
 
-PLAYER		= read_event scan med_synth
+PLAYER		= read_event scan med_synth period_amiga period_mod_range
 
 SYNTH		= adlib spectrum
 
