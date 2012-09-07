@@ -109,6 +109,10 @@ if(data->quirk & NOMARCH_QUIRK_SKIPMAX)
 if(max_bits==16)
   data->maxstr=(1<<*data->io.data_in_point++);	 /* but compress-type *may* change it (!) */
 
+/* XXX */
+if (data->maxstr > (1 << max_bits))
+  return NULL;
+
 data->nomarch_input_size = 0;
 
 while(1)
