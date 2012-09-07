@@ -1024,8 +1024,9 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 		for (i = 0; i < chn; i++) {
 			struct channel_data *c = &p->xc_data[i];
 			struct xmp_channel_info *ci = &info->channel_info[i];
-			int track;
+			struct xmp_track *track;
 			struct xmp_event *event;
+			int trk;
 	
 			ci->note = c->key;
 			ci->pitchbend = c->info_pitchbend;
@@ -1036,13 +1037,15 @@ void xmp_player_get_info(xmp_context opaque, struct xmp_module_info *info)
 			ci->volume = c->info_finalvol >> 4;
 			ci->pan = c->info_finalpan;
 			ci->reserved = 0;
+			memset(&ci->event, 0, sizeof(*event));
 	
 			if (info->pattern < mod->pat && info->row < info->num_rows) {
-				track = mod->xxp[info->pattern]->index[i];
-				event = &mod->xxt[track]->event[info->row];
-				memcpy(&ci->event, event, sizeof(*event));
-			} else {
-				memset(&ci->event, 0, sizeof(*event));
+				trk = mod->xxp[info->pattern]->index[i];
+				track = mod->xxt[trk];
+				if (info->row < track->rows) {
+					event = &track->event[info->row];
+					memcpy(&ci->event, event, sizeof(*event));
+				}
 			}
 		}
 	}
