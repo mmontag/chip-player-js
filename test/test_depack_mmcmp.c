@@ -1,33 +1,21 @@
 #include "test.h"
 
-int decrunch_mmcmp(FILE *f, FILE *fo);
-
 
 TEST(test_depack_mmcmp)
 {
-	FILE *f, *fo;
+	xmp_context c;
+	struct xmp_module_info info;
 	int ret;
-	struct stat st;
 
-	f = fopen("data/test.mmcmp", "rb");
-	fail_unless(f != NULL, "can't open data file");
+	c = xmp_create_context();
+	fail_unless(c != NULL, "can't create context");
+	ret = xmp_load_module(c, "data/test.mmcmp");
+	fail_unless(ret == 0, "can't load module");
 
-	fo = fopen(TMP_FILE, "wb");
-	fail_unless(fo != NULL, "can't open output file");
+	xmp_player_start(c, 44100, 0);
+	xmp_player_get_info(c, &info);
 
-	ret = decrunch_mmcmp(f, fo);
-	fail_unless(ret == 0, "decompression fail");
-
-	fclose(fo);
-	fclose(f);
-
-	f = fopen(TMP_FILE, "rb");
-	fstat(fileno(f), &st);
-	fail_unless(st.st_size == 24456, "decompression size error");
-
-	ret = check_md5(TMP_FILE, "2d8b03b2bce0563dfdf89613c7976fe4");
+	ret = compare_md5(info.mod->digest, "2d8b03b2bce0563dfdf89613c7976fe4");
 	fail_unless(ret == 0, "MD5 error");
-
-	fclose(f);
 }
 END_TEST
