@@ -28,6 +28,7 @@ int map_channel(struct player_data *, int);
 int play_frame(struct context_data *);
 
 
+int compare_md5(unsigned char *, char *);
 int check_md5(char *, char *);
 void create_simple_module(struct context_data *, int, int);
 void set_order(struct context_data *, int, int);
