@@ -49,7 +49,7 @@ TEST(test_storlek_15_retrigger)
 		count++;
 	}
 
-	fail_unless(count == 352, "short end");
+	fail_unless(count == 176, "short end");
 
 	xmp_player_end(opaque);
 	xmp_release_module(opaque);
