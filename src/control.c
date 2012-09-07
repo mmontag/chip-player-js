@@ -55,6 +55,9 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 		seq = p->sequence;
 	}
 
+	if (seq == 0xff)
+		return;
+
 	start = m->seq_data[seq].entry_point;
 
 	if (seq >= 0) {
@@ -122,6 +125,7 @@ int xmp_set_position(xmp_context opaque, int pos)
 	struct player_data *p = &ctx->p;
 
 	set_position(ctx, pos, 0);
+
 	return p->pos;
 }
 
