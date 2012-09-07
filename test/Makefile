@@ -135,8 +135,7 @@ TEST_PATH	= test
 
 TEST_INTERNAL	= load_helpers.o unsqsh.o unlzx.o uncompress.o bunzip2.o \
 		  gunzip.o unzip.o unarc.o s404_dec.o ppdepack.o arcfs.o \
-		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o unxz.o \
-		  unxz/xz_crc32.o unxz/xz_dec_lzma2.o unxz/xz_dec_stream.o \
+		  muse.o mmcmp.o loaders/itsex.o dataio.o readlzw.o \
 		  unlha.o readrle.o readhuff.o inflate.o scan.o misc.o \
 		  loaders/sample.o synth_null.o vorbis.o fnmatch.o
 
