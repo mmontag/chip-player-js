@@ -46,7 +46,7 @@ inline double note_to_period(int n, int f, int type)
 /* For the software mixer */
 int note_to_period_mix(int n, int b)
 {
-    double d = (double)n + (double)b / 100;
+    double d = (double)n + (double)b / 12800;
     return (int)(8192.0 * XMP_PERIOD_BASE / pow(2, d / 12));
 }
 
@@ -84,17 +84,17 @@ int period_to_bend(double p, int n, int limit, int gliss, int type)
     }
 
     if (type) {
-	b = 100 * (8 * (((240 - n) << 4) - p)) / 128;	/* Linear */
-	return gliss ? b / 100 * 100 : b;
+	b = 100 * (8 * (((240 - n) << 4) - p));	/* Linear */
+	return gliss ? b / 12800 * 12800 : b;
     }
 
     if (p < MIN_PERIOD_A)
 	p = MIN_PERIOD_A;
 
     d = note_to_period(n, 0, 0);
-    b = 100.0 * ((1536.0 * log(d / p) / M_LN2)) / 128;
+    b = 100.0 * ((1536.0 * log(d / p) / M_LN2));
 
-    return gliss ? b / 100 * 100 : b;	/* Amiga */
+    return gliss ? b / 12800 * 12800 : b;	/* Amiga */
 }
 
 

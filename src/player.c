@@ -351,14 +351,14 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 				xc->gliss, HAS_QUIRK(QUIRK_LINEAR));
 
 	if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
-		linear_bend += frq_envelope;
+		linear_bend += frq_envelope << 7;
 	}
 
 	arp = xc->arpeggio.val[xc->arpeggio.count];
-	linear_bend += arp + get_med_arp(m, xc);
+	linear_bend += (arp + get_med_arp(m, xc)) << 7;
 
 	/* For xmp_player_get_info() */
-	xc->info_pitchbend = linear_bend;
+	xc->info_pitchbend = linear_bend >> 7;
 	xc->info_period = note_to_period_mix(xc->note, linear_bend);
 
 	virt_setbend(ctx, chn, linear_bend);
@@ -370,7 +370,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	}
 
 	if (instrument->fei.flg & XMP_ENVELOPE_FLT) {
-		cutoff = xc->filter.cutoff * frq_envelope / 256;
+		cutoff = xc->filter.cutoff * frq_envelope >> 8;
 	} else {
 		cutoff = xc->filter.cutoff;
 	}
