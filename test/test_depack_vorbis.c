@@ -1,29 +1,23 @@
 #include "test.h"
-#include "../src/vorbis.h"
 
 
 TEST(test_depack_vorbis)
 {
 	FILE *f;
 	struct stat st;
-	int i, ch, ret;
+	int i, ret;
 	int16 *buf, *pcm16;
+	xmp_context c;
+	struct xmp_module_info info;
 
-	stat("data/beep.ogg", &st);
+	c = xmp_create_context();
+	fail_unless(c != NULL, "can't create context");
 
-	f = fopen("data/beep.ogg", "rb");
-	fail_unless(f != NULL, "can't open data file");
+	ret = xmp_load_module(c, "data/beep.oxm");
+	fail_unless(ret == 0, "can't load module");
 
-	buf = malloc(st.st_size);
-	fail_unless(buf != NULL, "can't alloc buffer");
-
-	fread(buf, 1, st.st_size, f);
-	ret = stb_vorbis_decode_memory((uint8 *)buf, st.st_size, &ch, &pcm16);
-	fail_unless(ret == 9376, "decompression fail");
-	fail_unless(ch == 1, "invalid number of channels");
-	fail_unless(pcm16 != NULL, "invalid buffer");
-
-	free(buf);
+	xmp_player_start(c, 44100, 0);
+	xmp_player_get_info(c, &info);
 
 	stat("data/beep.raw", &st);
 	f = fopen("data/beep.raw", "rb");
@@ -32,6 +26,8 @@ TEST(test_depack_vorbis)
 	buf = malloc(st.st_size);
 	fail_unless(buf != NULL, "can't alloc raw buffer");
 	fread(buf, 1, st.st_size, f);
+
+	pcm16 = (int16 *)info.mod->xxs[0].data;
 
 	for (i = 0; i < 9376; i++) {
 		if (pcm16[i] != buf[i])
