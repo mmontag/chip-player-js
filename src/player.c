@@ -361,7 +361,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	xc->info_pitchbend = linear_bend >> 7;
 	xc->info_period = note_to_period_mix(xc->note, linear_bend);
 
-	virt_setbend(ctx, chn, linear_bend);
+	virt_setbend(ctx, chn, linear_bend >> 7);
 
 	/* Process filter */
 
