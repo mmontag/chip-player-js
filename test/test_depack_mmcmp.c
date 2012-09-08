@@ -15,7 +15,7 @@ TEST(test_depack_mmcmp)
 	xmp_player_start(c, 44100, 0);
 	xmp_player_get_info(c, &info);
 
-	ret = compare_md5(info.mod->digest, "2d8b03b2bce0563dfdf89613c7976fe4");
+	ret = compare_md5(info.mod->md5, "2d8b03b2bce0563dfdf89613c7976fe4");
 	fail_unless(ret == 0, "MD5 error");
 }
 END_TEST

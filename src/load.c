@@ -550,7 +550,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 		}
 	}
 
-	set_md5sum(f, m->mod.digest);
+	set_md5sum(f, m->mod.md5);
 
 	fclose(f);
 	unlink_tempfiles(&tmpfiles_list);
