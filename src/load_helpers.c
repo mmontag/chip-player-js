@@ -14,6 +14,7 @@ int exclude_match(char *name)
 		"*.TXT", "*.txt",
 		"*.EXE", "*.exe",
 		"*.COM", "*.com",
+		"*.README", "*.readme", "*.Readme",
 		NULL
 	};
 
