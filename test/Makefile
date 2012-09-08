@@ -133,7 +133,7 @@ TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
 TEST_PATH	= test
 
-TEST_INTERNAL	= load_helpers.o unlzx.o s404_dec.o loaders/itsex.o dataio.o \
+TEST_INTERNAL	= load_helpers.o s404_dec.o loaders/itsex.o dataio.o \
 		  scan.o misc.o loaders/sample.o synth_null.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \

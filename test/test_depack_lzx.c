@@ -1,33 +1,21 @@
 #include "test.h"
 
-int decrunch_lzx(FILE *f, FILE *fo);
-
 
 TEST(test_depack_lzx)
 {
-	FILE *f, *fo;
+	xmp_context c;
+	struct xmp_module_info info;
 	int ret;
-	struct stat st;
 
-	f = fopen("data/lzx_data", "rb");
-	fail_unless(f != NULL, "can't open data file");
+	c = xmp_create_context();
+	fail_unless(c != NULL, "can't create context");
+	ret = xmp_load_module(c, "data/lzxdata");
+	fail_unless(ret == 0, "can't load module");
 
-	fo = fopen(TMP_FILE, "wb");
-	fail_unless(fo != NULL, "can't open output file");
+	xmp_player_start(c, 44100, 0);
+	xmp_player_get_info(c, &info);
 
-	ret = decrunch_lzx(f, fo);
-	fail_unless(ret == 0, "decompression fail");
-
-	fclose(fo);
-	fclose(f);
-
-	f = fopen(TMP_FILE, "rb");
-	fstat(fileno(f), &st);
-	fail_unless(st.st_size == 46259, "decompression size error");
-
-	ret = check_md5(TMP_FILE, "8f67503c6b9084422caefe1a50090d88");
+	ret = compare_md5(info.mod->md5, "6e4226be5a72fe3770550ced7a2022de");
 	fail_unless(ret == 0, "MD5 error");
-
-	fclose(f);
 }
 END_TEST
