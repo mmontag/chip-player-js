@@ -527,7 +527,7 @@ void mixer_setbend(struct context_data *ctx, int voc, int bend)
 	vi->period = note_to_period_mix(vi->note, bend);
 
 	if (vi->fidx & FLAG_SYNTH) {
-		m->synth->setnote(ctx, voc, vi->note, bend);
+		m->synth->setnote(ctx, voc, vi->note, bend >> 7);
 	}
 }
 
