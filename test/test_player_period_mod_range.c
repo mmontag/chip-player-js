@@ -10,7 +10,7 @@ Periodtable for Tuning 0, Normal
 Amiga limits: 907 to 108
 */
 
-#define PERIOD (round(1.0 * info.channel_info[0].period / 4096))
+#define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
 TEST(test_player_period_mod_range)
 {
@@ -97,7 +97,7 @@ TEST(test_player_period_mod_range)
 	for (i = 0; i < 20 * 6; i++) {
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
-		fail_unless(info.channel_info[0].period >> 12 <= 907, "Bad lower limit");
+		fail_unless(PERIOD <= 907, "Bad lower limit");
 	}
 
 	xmp_restart_module(opaque);
@@ -110,7 +110,7 @@ TEST(test_player_period_mod_range)
 	for (i = 0; i < 20 * 6; i++) {
 		xmp_player_frame(opaque);
 		xmp_player_get_info(opaque, &info);
-		fail_unless(info.channel_info[0].period >> 12 >= 108, "Bad upper limit");
+		fail_unless(PERIOD >= 108, "Bad upper limit");
 	}
 }
 END_TEST
