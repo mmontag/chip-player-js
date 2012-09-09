@@ -2,7 +2,7 @@
 #include "../src/mixer.h"
 #include "../src/virtual.h"
 
-TEST(test_effect_delay)
+TEST(test_effect_ed_delay)
 {
 	xmp_context opaque;
 	struct context_data *ctx;

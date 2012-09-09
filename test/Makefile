@@ -11,7 +11,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 		  lha_l1_lzhuff6 lha_l1_lzhuff7 \
 		  vorbis it_sample_8bit it_sample_16bit
 
-EFFECTS		= delay
+EFFECTS		= ed_delay
 
 API		= get_format_list create_context test_module mixer_set \
 		  stop_module restart_module seek_time channel_mute \
