@@ -20,11 +20,12 @@ TEST(test_nna_fade)
 	set_instrument_volume(ctx, 1, 0, 33);
 	set_instrument_nna(ctx, 0, 0, XMP_INST_NNA_FADE, XMP_INST_DCT_OFF,
 							XMP_INST_DCA_CUT);
-	set_instrument_envelope(ctx, 0, 0, 0, 32);
+	/*set_instrument_envelope(ctx, 0, 0, 0, 32);
 	set_instrument_envelope(ctx, 0, 1, 1, 32);
 	set_instrument_envelope(ctx, 0, 2, 2, 64);
 	set_instrument_envelope(ctx, 0, 3, 4, 0);
-	set_instrument_envelope_sus(ctx, 0, 1);
+	set_instrument_envelope_sus(ctx, 0, 1);*/
+
 	set_instrument_fadeout(ctx, 0, 5000);
 
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
@@ -42,7 +43,7 @@ TEST(test_nna_fade)
 
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  ==  0, "set instrument");
-	fail_unless(vi->vol / 16 == 21, "set volume");	/* with envelope */
+	fail_unless(vi->vol / 16 == 43, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
 	xmp_player_frame(opaque);
@@ -51,7 +52,7 @@ TEST(test_nna_fade)
 	xmp_player_frame(opaque);
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
-	fail_unless(vi->vol / 16 == 18, "not fading out");
+	fail_unless(vi->vol / 16 == 36, "not fading out");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
 	/* Find virtual voice for channel 0 */
@@ -78,22 +79,21 @@ TEST(test_nna_fade)
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
-	fail_unless(vi->vol / 16 == 14, "not fading out");
+	fail_unless(vi->vol / 16 == 29, "not fading out");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
 	xmp_player_frame(opaque);
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
-	fail_unless(vi->vol / 16 == 11, "not fading out");
+	fail_unless(vi->vol / 16 == 23, "not fading out");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
 	xmp_player_frame(opaque);
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
-	fail_unless(vi->vol / 16 == 8, "not fading out");
+	fail_unless(vi->vol / 16 == 16, "not fading out");
 	fail_unless(vi->pos0 !=  0, "sample reset");
-
 }
 END_TEST
