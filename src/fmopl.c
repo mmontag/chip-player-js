@@ -52,6 +52,11 @@
 #define PI 3.14159265358979323846
 #endif
 
+/* xmp doesn't use rhythm, speech or timer capabilities */
+#undef XMP_OPL_RHYTHM
+#undef XMP_OPL_CSM
+#undef XMP_OPL_TIMER
+
 /* -------------------- for debug --------------------- */
 /* #define OPL_OUTPUT_LOG */
 #ifdef OPL_OUTPUT_LOG
@@ -480,6 +485,7 @@ INLINE void OPL_CALC_CH( OPL_CH *CH, OPL_STATE *ST )
 }
 
 /* ---------- calcrate rythm block ---------- */
+#ifdef XMP_OPL_RHYTHM
 #define WHITE_NOISE_db 6.0
 INLINE void OPL_CALC_RH( OPL_CH *CH, OPL_STATE *ST )
 {
@@ -563,6 +569,7 @@ INLINE void OPL_CALC_RH( OPL_CH *CH, OPL_STATE *ST )
 	if( env_hh  < EG_ENT-1 )
 		ST->outd[0] += OP_OUT(ST->SLOT7_2,env_hh,tone8)*2;
 }
+#endif /* XMP_OPL_RHYTHM */
 
 /* ----------- initialize time tabls ----------- */
 static void init_timetables( FM_OPL *OPL , int ARRATE , int DRRATE )
@@ -696,6 +703,7 @@ static void OPLCloseTable( OPL_STATE *ST )
 	free(ST->VIB_TABLE);
 }
 
+#ifndef XMP_OPL_CSM
 /* CSM Key Controll */
 INLINE void CSMKeyControll(OPL_CH *CH)
 {
@@ -712,6 +720,7 @@ INLINE void CSMKeyControll(OPL_CH *CH)
 	OPL_KEYON(slot1);
 	OPL_KEYON(slot2);
 }
+#endif /* XMP_OPL_CSM */
 
 /* ---------- opl initialize ---------- */
 static void OPL_initalize(FM_OPL *OPL)
@@ -877,10 +886,14 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v)
 		case 0xbd:
 			/* amsep,vibdep,r,bd,sd,tom,tc,hh */
 			{
+#ifdef XMP_OPL_RHYTHM
 			UINT8 rkey = OPL->rythm^v;
+#endif
 			OPL->ams_table = &ST->AMS_TABLE[v&0x80 ? AMS_ENT : 0];
 			OPL->vib_table = &ST->VIB_TABLE[v&0x40 ? VIB_ENT : 0];
 			OPL->rythm  = v&0x3f;
+
+#ifdef XMP_OPL_RHYTHM
 			if(OPL->rythm&0x20)
 			{
 #if 0
@@ -925,6 +938,7 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v)
 					else       OPL_KEYOFF(&OPL->P_CH[7].SLOT[SLOT1]);
 				}
 			}
+#endif /* XMP_OPL_RHYTHM */
 			}
 			return;
 		}
@@ -1060,9 +1074,11 @@ void YM3812UpdateOne(FM_OPL *OPL, FMSAMPLE *bk, int len, int vl, int vr, int st)
 		/* FM part */
 		for(CH=ST->S_CH ; CH < R_CH ; CH++)
 			OPL_CALC_CH(CH, ST);
+#ifdef XMP_OPL_RHYTHM
 		/* Rythm part */
 		if(rythm)
 			OPL_CALC_RH(ST->S_CH, ST);
+#endif
 		/* limit check */
 		data = Limit(ST->outd[0] , OPL_MAXOUT, OPL_MINOUT) >> OPL_OUTSB;
 
@@ -1268,6 +1284,7 @@ void OPLDestroy(FM_OPL *OPL)
 
 /* ----------  Option handlers ----------       */
 
+#ifdef XMP_OPL_TIMER
 void OPLSetTimerHandler(FM_OPL *OPL,OPL_TIMERHANDLER TimerHandler,int channelOffset)
 {
 	OPL->TimerHandler   = TimerHandler;
@@ -1283,6 +1300,8 @@ void OPLSetUpdateHandler(FM_OPL *OPL,OPL_UPDATEHANDLER UpdateHandler,int param)
 	OPL->UpdateHandler = UpdateHandler;
 	OPL->UpdateParam = param;
 }
+#endif
+
 #if BUILD_Y8950
 void OPLSetPortHandler(FM_OPL *OPL,OPL_PORTHANDLER_W PortHandler_w,OPL_PORTHANDLER_R PortHandler_r,int param)
 {
@@ -1358,6 +1377,7 @@ unsigned char OPLRead(FM_OPL *OPL,int a)
 	return 0;
 }
 
+#ifdef XMP_OPL_TIMER
 int OPLTimerOver(FM_OPL *OPL,int c)
 {
 	if( c )
@@ -1380,3 +1400,4 @@ int OPLTimerOver(FM_OPL *OPL,int c)
 	if (OPL->TimerHandler) (OPL->TimerHandler)(OPL->TimerParam+c,(double)OPL->T[c]*OPL->TimerBase);
 	return OPL->status>>7;
 }
+#endif

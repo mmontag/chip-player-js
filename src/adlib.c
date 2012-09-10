@@ -210,7 +210,7 @@ static void synth_chreset(struct context_data *ctx)
 	}
 }
 
-static void synth_setpatch(struct context_data *ctx, int c, uint8 * data)
+static void synth_setpatch(struct context_data *ctx, int c, uint8 *data)
 {
 	struct adlib *a = SYNTH_CHIP(ctx);
 	int i, x;
