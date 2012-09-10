@@ -164,11 +164,14 @@ $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 # Run coverage test
 #
 
-covercheck: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-covertest
+covercheck: coverclean $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-covertest
 	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-covertest ||:
 	lcov -c -b . -d . -k src -k include -o libxmp.cov
 	rm -Rf coverage
 	genhtml -o coverage libxmp.cov
+
+coverclean:
+	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
 
 $(TEST_PATH)/libxmp-covertest: $(GCT_OBJS) lib/$(GCLIB)
 	@CMD='$(LD) -o $@ $(LDFLAGS) $(GCT_OBJS) lib/$(GCLIB) -lgcov -lm'; \
