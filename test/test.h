@@ -21,7 +21,7 @@
 	return 0; }
 
 #define fail_unless(x, y) do { \
-	if (!(x)) { printf("%d: %s: ", __LINE__, y); return -1; } \
+	if (!(x)) { printf("%d: %s: ", __LINE__, y); exit(1); } \
 } while (0)
 
 int map_channel(struct player_data *, int);
