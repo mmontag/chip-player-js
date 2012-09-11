@@ -85,20 +85,22 @@ struct dc_adjuster *dc_adjuster_new()
 	return dc;
 }
 
+#if 0
 static int dc_adjuster_get_dc_level(struct dc_adjuster *dc)
 {
 	return dc->m_sum / DC_ADJUST_BUFFERLEN;
 }
 
-void dc_adjuster_addsample(struct dc_adjuster *dc, int sample)
+static void dc_adjuster_addsample(struct dc_adjuster *dc, int sample)
 {
 	dc->m_sum -= dc->m_buffer[dc->m_pos];
 	dc->m_sum += sample;
 	dc->m_buffer[dc->m_pos] = sample;
 	dc->m_pos = (dc->m_pos + 1) & (DC_ADJUST_BUFFERLEN - 1);
 }
+#endif
 
-void dc_adjuster_destroy(struct dc_adjuster *dc)
+static void dc_adjuster_destroy(struct dc_adjuster *dc)
 {
 	free(dc);
 }
@@ -107,7 +109,7 @@ void dc_adjuster_destroy(struct dc_adjuster *dc)
 // Very simple low pass filter.
 // Filter coefs are 0.25,0.5,0.25
 //----------------------------------------------------------------------*/
-inline ymsample *getBufferCopy(struct ym2149 *ym, ymsample *in, int len)
+static inline ymsample *getBufferCopy(struct ym2149 *ym, ymsample *in, int len)
 {
 	if (len > ym->internalInputLen) {
 		ym->internalInput = (ymsample *)malloc(len * sizeof(ymsample));
@@ -122,7 +124,7 @@ inline ymsample *getBufferCopy(struct ym2149 *ym, ymsample *in, int len)
 /* Cheap but efficient low pass filter ( 0.25,0.5,0.25 )
  * filter: out -> out
  */
-void lowpFilterProcess(struct ym2149 *ym, ymsample *out, int len)
+static void lowpFilterProcess(struct ym2149 *ym, ymsample *out, int len)
 {
 	ymsample *in;
 	int i;
@@ -283,12 +285,14 @@ static ymsample nextSample(struct ym2149 *ym)
 
 	return vol;
 
+#if 0
 	/*---------------------------------------------------
 	 * Normalize process
 	 *--------------------------------------------------- */
 	dc_adjuster_addsample(ym->dc, vol);
 
 	return (vol - dc_adjuster_get_dc_level(ym->dc));
+#endif
 }
 
 struct ym2149 *ym2149_new(int masterClock, int prediv, int playRate)
