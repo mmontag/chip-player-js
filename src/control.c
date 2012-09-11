@@ -18,7 +18,6 @@
 #include "format.h"
 #include "virtual.h"
 #include "mixer.h"
-#include "unxz/xz.h"
 
 const char *xmp_version = XMP_VERSION;
 const unsigned int xmp_vercode = XMP_VERCODE;

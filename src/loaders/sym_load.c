@@ -7,7 +7,7 @@
  */
 
 #include "loader.h"
-#include "readlzw.h"
+#include "depackers/readlzw.h"
 
 
 static int sym_test(FILE *, char *, const int);

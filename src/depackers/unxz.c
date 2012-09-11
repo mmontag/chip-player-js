@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "unxz/xz.h"
+#include "xz.h"
 
 #define BUFFER_SIZE 4096
 

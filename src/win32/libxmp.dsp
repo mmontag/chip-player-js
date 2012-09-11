@@ -138,11 +138,11 @@ SOURCE=..\envelope.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\control.c
+SOURCE=..\scan.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scan.c
+SOURCE=..\control.c
 # End Source File
 # Begin Source File
 
@@ -158,19 +158,19 @@ SOURCE=..\fmopl.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\synth_null.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\mix_all.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\effects.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\mixer.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\synth_null.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\mix_all.c
 # End Source File
 # Begin Source File
 
@@ -194,83 +194,7 @@ SOURCE=..\load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\ppdepack.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\unsqsh.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\mmcmp.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\readrle.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\readhuff.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\readlzw.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\unarc.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\arcfs.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\oxm.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\xfd.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\inflate.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\muse.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\unlzx.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\s404_dec.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\unzip.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\gunzip.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\uncompress.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\unxz.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\bunzip2.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\unlha.c
 # End Source File
 # Begin Source File
 
@@ -702,15 +626,91 @@ SOURCE=..\loaders\prowizard\noiserun.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\unxz\xz_crc32.c
+SOURCE=..\depackers\ppdepack.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\unxz\xz_dec_lzma2.c
+SOURCE=..\depackers\unsqsh.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\unxz\xz_dec_stream.c
+SOURCE=..\depackers\mmcmp.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\readrle.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\readhuff.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\readlzw.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\unarc.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\arcfs.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\xfd.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\inflate.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\muse.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\unlzx.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\s404_dec.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\unzip.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\gunzip.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\uncompress.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\unxz.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\bunzip2.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\unlha.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\xz_crc32.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\xz_dec_lzma2.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\depackers\xz_dec_stream.c
 # End Source File
 # Begin Source File
 
