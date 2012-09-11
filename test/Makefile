@@ -11,7 +11,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 		  lha_l1_lzhuff6 lha_l1_lzhuff7 \
 		  vorbis it_sample_8bit it_sample_16bit
 
-EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down ed_delay \
+EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down ed_delay ef_invert_loop \
 		  okt_arpeggio
 
 API		= get_format_list create_context test_module mixer_set \
