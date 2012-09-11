@@ -59,7 +59,8 @@ WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
 		  file_8bit file_move_data
 
-PLAYER		= read_event scan med_synth period_amiga period_mod_range
+PLAYER		= read_event scan med_synth period_amiga period_mod_range \
+		  nna_cut nna_cont nna_off nna_fade dct_note
 
 SYNTH		= adlib spectrum
 
@@ -85,8 +86,6 @@ SMPLOAD_TESTS	= $(addprefix sample_load_,$(SMPLOADERS))
 DEPACK_TESTS	= $(addprefix depack_,$(DEPACKERS))
 
 EFFECT_TESTS	= $(addprefix effect_,$(EFFECTS))
-
-NNA_TESTS	= nna_cut nna_cont nna_off nna_fade dct_note
 
 SEQUENCER_TESTS	= prev_order_start prev_order_skip prev_order_start_seq \
 		  next_order_skip

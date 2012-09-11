@@ -3,7 +3,7 @@
 #include "../src/virtual.h"
 
 
-TEST(test_dct_note)
+TEST(test_player_dct_note)
 {
 	xmp_context opaque;
 	struct context_data *ctx;

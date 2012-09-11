@@ -3,7 +3,7 @@
 #include "../src/virtual.h"
 
 
-TEST(test_nna_cont)
+TEST(test_player_nna_cont)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
