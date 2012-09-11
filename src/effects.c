@@ -28,17 +28,10 @@
 
 #define HAS_QUIRK(x) (m->quirk & (x))
 
-
-static inline void set_lfo_notzero(struct lfo *lfo, int depth, int rate)
-{
-	if (depth != 0) {
-		set_lfo_depth(lfo, depth);
-	}
-
-	if (rate != 0) {
-		set_lfo_rate(lfo, rate);
-	}
-}
+#define SET_LFO_NOTZERO(lfo, depth, rate) do { \
+	if ((depth) != 0) set_lfo_depth(lfo, depth); \
+	if ((rate) != 0) set_lfo_rate(lfo, rate); \
+} while (0)
 
 void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		uint8 fxp, struct channel_data *xc, int fnum)
@@ -212,15 +205,15 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 
 	case FX_VIBRATO:	/* Vibrato */
 		SET(VIBRATO);
-		set_lfo_notzero(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
 		break;
 	case FX_FINE2_VIBRA:	/* Fine vibrato (2x) */
 		SET(VIBRATO);
-		set_lfo_notzero(&xc->vibrato, LSN(fxp) * 2, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) * 2, MSN(fxp));
 		break;
 	case FX_FINE4_VIBRA:	/* Fine vibrato (4x) */
 		SET(VIBRATO);
-		set_lfo_notzero(&xc->vibrato, LSN(fxp), MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp), MSN(fxp));
 		break;
 	case FX_PER_VIBRATO:	/* Persistent vibrato */
 		if (LSN(fxp) != 0) {
@@ -228,7 +221,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		} else {
 			RESET_PER(VIBRATO);
 		}
-		set_lfo_notzero(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
 		break;
 
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */
@@ -243,7 +236,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 
 	case FX_TREMOLO:	/* Tremolo */
 		SET(TREMOLO);
-		set_lfo_notzero(&xc->tremolo, LSN(fxp), MSN(fxp));
+		SET_LFO_NOTZERO(&xc->tremolo, LSN(fxp), MSN(fxp));
 		break;
 
 	case FX_SETPAN:		/* Set pan */
