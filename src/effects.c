@@ -169,7 +169,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			RESET_PER(PITCHBEND);
 		break;
 	case FX_PER_PORTA_DN:	/* Persistent portamento down */
-		SET(PITCHBEND);
+		SET_PER(PITCHBEND);
 		xc->freq.slide = fxp;
 		if ((xc->freq.memory = fxp) == 0)
 			RESET_PER(PITCHBEND);
