@@ -10,6 +10,7 @@
 #include "virtual.h"
 #include "mixer.h"
 #include "synth.h"
+#include "precomp_lut.h"
 
 
 /* Mixers
@@ -18,14 +19,39 @@
  * combination of the following parameters: interpolation, resolution
  * and number of channels.
  */
-#define INTERPOLATE() do { \
+#define NEAREST_NEIGHBOR() do { \
+    smp_in = sptr[pos]; \
+} while (0)
+
+#define LINEAR_INTERP() do { \
     smp_l1 = sptr[pos]; \
     smp_dt = sptr[pos + 1] - smp_l1; \
     smp_in = smp_l1 + ((frac * smp_dt) >> SMIX_SHIFT); \
 } while (0)
 
-#define DONT_INTERPOLATE() do { \
-    smp_in = sptr[pos]; \
+
+/* The following lut settings are PRECOMPUTED. If you plan on changing these
+ * settings, you MUST also regenerate the arrays.
+ */
+/* number of bits used to scale spline coefs */
+#define SPLINE_QUANTBITS  14
+#define SPLINE_QUANTSCALE (1L << SPLINE_QUANTBITS)
+#define SPLINE_8SHIFT     (SPLINE_QUANTBITS - 8)
+#define SPLINE_16SHIFT    (SPLINE_QUANTBITS)
+
+/* log2(number) of precalculated splines (range is [4..14]) */
+#define SPLINE_FRACBITS 10
+#define SPLINE_LUTLEN (1L<<SPLINE_FRACBITS)
+
+#define SPLINE_FRACSHIFT ((16 - SPLINE_FRACBITS) - 2)
+#define SPLINE_FRACMASK  (((1L << (16 - SPLINE_FRACSHIFT)) - 1) & ~3)
+
+#define SPLINE_INTERP() do { \
+    int f = (frac >> 4) & ~3; \
+    smp_in = (cubic_spline_lut[f    ] * sptr[pos - 0] + \
+              cubic_spline_lut[f + 1] * sptr[pos + 1] + \
+              cubic_spline_lut[f + 3] * sptr[pos + 3] + \
+              cubic_spline_lut[f + 2] * sptr[pos + 2]) >> SPLINE_16SHIFT; \
 } while (0)
 
 #define UPDATE_POS() do { \
@@ -97,9 +123,12 @@
     int pos = vi->pos; \
     int frac = vi->frac
 
-#define VAR_ITPT(x) \
+#define VAR_LINEAR(x) \
     VAR_NORM(x); \
     int smp_l1, smp_dt
+
+#define VAR_SPLINE(x) \
+    VAR_NORM(x)
 
 #define VAR_FILTER_MONO \
     int fl1 = vi->filter.l1, fl2 = vi->filter.l2; \
@@ -126,37 +155,41 @@
     int count, int vl, int vr, int step)
 
 
-/* Handler for 8 bit samples, interpolated stereo output
+/*
+ * Nearest neighbor mixers
+ */
+
+/* Handler for 8 bit samples, linear interpolated stereo output
  */
 SMIX_MIXER(smix_stereo_8bit_linear)
 {
-    VAR_ITPT(int8);
-    while (count--) { INTERPOLATE(); MIX_STEREO_AC(); UPDATE_POS(); }
+    VAR_LINEAR(int8);
+    while (count--) { LINEAR_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
 }
 
 
-/* Handler for 16 bit samples, interpolated stereo output
+/* Handler for 16 bit samples, linear interpolated stereo output
  */
 SMIX_MIXER(smix_stereo_16bit_linear)
 {
-    VAR_ITPT(int16);
+    VAR_LINEAR(int16);
 
     vl >>= 8;
     vr >>= 8;
-    while (count--) { INTERPOLATE(); MIX_STEREO_AC(); UPDATE_POS(); }
+    while (count--) { LINEAR_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
 }
 
 
-/* Handler for 8 bit samples, non-interpolated stereo output
+/* Handler for 8 bit samples, nearest neighbor stereo output
  */
 SMIX_MIXER(smix_stereo_8bit_nearest)
 {
     VAR_NORM(int8);
-    while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); UPDATE_POS(); }
+    while (count--) { NEAREST_NEIGHBOR(); MIX_STEREO(); UPDATE_POS(); }
 }
 
 
-/* Handler for 16 bit samples, non-interpolated stereo output
+/* Handler for 16 bit samples, nearest neighbor stereo output
  */
 SMIX_MIXER(smix_stereo_16bit_nearest)
 {
@@ -164,102 +197,196 @@ SMIX_MIXER(smix_stereo_16bit_nearest)
 
     vl >>= 8;
     vr >>= 8;
-    while (count--) { DONT_INTERPOLATE(); MIX_STEREO(); UPDATE_POS(); }
+    while (count--) { NEAREST_NEIGHBOR(); MIX_STEREO(); UPDATE_POS(); }
 }
 
 
-/* Handler for 8 bit samples, interpolated mono output
+/*
+ * Linear mixers
+ */
+
+/* Handler for 8 bit samples, linear interpolated mono output
  */
 SMIX_MIXER(smix_mono_8bit_linear)
 {
-    VAR_ITPT(int8);
+    VAR_LINEAR(int8);
 
-    while (count--) { INTERPOLATE(); MIX_MONO_AC(); UPDATE_POS(); }
+    while (count--) { LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
 }
 
 
-/* Handler for 16 bit samples, interpolated mono output
+/* Handler for 16 bit samples, linear interpolated mono output
  */
 SMIX_MIXER(smix_mono_16bit_linear)
 {
-    VAR_ITPT(int16);
+    VAR_LINEAR(int16);
 
     vl >>= 8;
-    while (count--) { INTERPOLATE(); MIX_MONO_AC(); UPDATE_POS(); }
+    while (count--) { LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
 }
 
 
-/* Handler for 8 bit samples, non-interpolated mono output
+/* Handler for 8 bit samples, nearest neighbor mono output
  */
 SMIX_MIXER(smix_mono_8bit_nearest)
 {
     VAR_NORM(int8);
 
-    while (count--) { DONT_INTERPOLATE(); MIX_MONO(); UPDATE_POS(); }
+    while (count--) { NEAREST_NEIGHBOR(); MIX_MONO(); UPDATE_POS(); }
 }
 
 
-/* Handler for 16 bit samples, non-interpolated mono output
+/* Handler for 16 bit samples, nearest neighbor mono output
  */
 SMIX_MIXER(smix_mono_16bit_nearest)
 {
     VAR_NORM(int16);
 
     vl >>= 8;
-    while (count--) { DONT_INTERPOLATE(); MIX_MONO(); UPDATE_POS(); }
+    while (count--) { NEAREST_NEIGHBOR(); MIX_MONO(); UPDATE_POS(); }
 }
 
-/*
- * Filtering mixers
- */
-
-/* Handler for 8 bit samples, interpolated stereo output
+/* Handler for 8 bit samples, linear interpolated stereo output
  */
 SMIX_MIXER(smix_stereo_8bit_linear_filter)
 {
-    VAR_ITPT(int8);
+    VAR_LINEAR(int8);
     VAR_FILTER_STEREO;
 
-    while (count--) { INTERPOLATE(); MIX_STEREO_AC_FILTER(); UPDATE_POS(); }
+    while (count--) { LINEAR_INTERP(); MIX_STEREO_AC_FILTER(); UPDATE_POS(); }
     SAVE_FILTER_STEREO();
 }
 
-
-/* Handler for 16 bit samples, interpolated stereo output
+/* Handler for 16 bit samples, linear interpolated stereo output
  */
 SMIX_MIXER(smix_stereo_16bit_linear_filter)
 {
-    VAR_ITPT(int16);
+    VAR_LINEAR(int16);
     VAR_FILTER_STEREO;
 
     vl >>= 8;
     vr >>= 8;
-    while (count--) { INTERPOLATE(); MIX_STEREO_AC_FILTER(); UPDATE_POS(); }
+    while (count--) { LINEAR_INTERP(); MIX_STEREO_AC_FILTER(); UPDATE_POS(); }
     SAVE_FILTER_STEREO();
 }
 
-
-/* Handler for 8 bit samples, interpolated mono output
+/* Handler for 8 bit samples, linear interpolated mono output
  */
 SMIX_MIXER(smix_mono_8bit_linear_filter)
 {
-    VAR_ITPT(int8);
+    VAR_LINEAR(int8);
     VAR_FILTER_MONO;
 
-    while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
+    while (count--) { LINEAR_INTERP(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
+    SAVE_FILTER_MONO();
+}
+
+/* Handler for 16 bit samples, linear interpolated mono output
+ */
+SMIX_MIXER(smix_mono_16bit_linear_filter)
+{
+    VAR_LINEAR(int16);
+    VAR_FILTER_MONO;
+
+    vl >>= 8;
+    while (count--) { LINEAR_INTERP(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
     SAVE_FILTER_MONO();
 }
 
 
-/* Handler for 16 bit samples, interpolated mono output
+/*
+ * Spline mixers
  */
-SMIX_MIXER(smix_mono_16bit_linear_filter)
+
+/* Handler for 8 bit samples, spline interpolated stereo output
+ */
+SMIX_MIXER(smix_stereo_8bit_spline)
 {
-    VAR_ITPT(int16);
+    VAR_SPLINE(int8);
+
+    while (count--) { SPLINE_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
+}
+
+
+/* Handler for 16 bit samples, spline interpolated stereo output
+ */
+SMIX_MIXER(smix_stereo_16bit_spline)
+{
+    VAR_SPLINE(int16);
+
+    vl >>= 8;
+    vr >>= 8;
+    while (count--) { SPLINE_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
+}
+
+
+/* Handler for 8 bit samples, spline interpolated mono output
+ */
+SMIX_MIXER(smix_mono_8bit_spline)
+{
+    VAR_SPLINE(int8);
+
+    while (count--) { SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
+}
+
+
+/* Handler for 16 bit samples, spline interpolated mono output
+ */
+SMIX_MIXER(smix_mono_16bit_spline)
+{
+    VAR_SPLINE(int16);
+
+    vl >>= 8;
+    while (count--) { SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
+}
+
+/* Handler for 8 bit samples, spline interpolated stereo output
+ */
+SMIX_MIXER(smix_stereo_8bit_spline_filter)
+{
+    VAR_SPLINE(int8);
+    VAR_FILTER_STEREO;
+
+    while (count--) { SPLINE_INTERP(); MIX_STEREO_AC_FILTER(); UPDATE_POS(); }
+    SAVE_FILTER_STEREO();
+}
+
+
+/* Handler for 16 bit samples, spline interpolated stereo output
+ */
+SMIX_MIXER(smix_stereo_16bit_spline_filter)
+{
+    VAR_SPLINE(int16);
+    VAR_FILTER_STEREO;
+
+    vl >>= 8;
+    vr >>= 8;
+    while (count--) { SPLINE_INTERP(); MIX_STEREO_AC_FILTER(); UPDATE_POS(); }
+    SAVE_FILTER_STEREO();
+}
+
+
+/* Handler for 8 bit samples, spline interpolated mono output
+ */
+SMIX_MIXER(smix_mono_8bit_spline_filter)
+{
+    VAR_SPLINE(int8);
+    VAR_FILTER_MONO;
+
+    while (count--) { SPLINE_INTERP(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
+    SAVE_FILTER_MONO();
+}
+
+
+/* Handler for 16 bit samples, spline interpolated mono output
+ */
+SMIX_MIXER(smix_mono_16bit_spline_filter)
+{
+    VAR_SPLINE(int16);
     VAR_FILTER_MONO;
 
     vl >>= 8;
-    while (count--) { INTERPOLATE(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
+    while (count--) { SPLINE_INTERP(); MIX_MONO_AC_FILTER(); UPDATE_POS(); }
     SAVE_FILTER_MONO();
 }
 

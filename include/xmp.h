@@ -45,6 +45,7 @@ extern "C" {
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
 #define XMP_INTERP_LINEAR	1	/* Linear (default) */
+#define XMP_INTERP_SPLINE	2	/* Cubic spline */
 
 /* dsp effect types */
 #define XMP_DSP_LOWPASS		(1 << 0) /* Lowpass filter effect */

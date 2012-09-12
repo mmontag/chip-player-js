@@ -192,7 +192,7 @@ static void unroll_loop(struct xmp_sample *xxs)
 
 int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 {
-	int bytelen, extralen, unroll_extralen;
+	int bytelen, extralen, unroll_extralen, i;
 
 	/* Synth patches
 	 * Default is YM3128 for historical reasons
@@ -237,7 +237,7 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 	 * Allocate extra sample for interpolation.
 	 */
 	bytelen = xxs->len;
-	extralen = 2;
+	extralen = 4;
 	unroll_extralen = 0;
 
 	/* Disable birectional loop flag if sample is not looped
@@ -346,13 +346,13 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 	
 	/* Add extra samples at end */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		xxs->data[bytelen] = xxs->data[bytelen - 2];
-		xxs->data[bytelen + 1] = xxs->data[bytelen - 1];
-		xxs->data[bytelen + 2] = xxs->data[bytelen];
-		xxs->data[bytelen + 3] = xxs->data[bytelen + 1];
+		for (i = 0; i < 8; i++) {
+			xxs->data[bytelen + i] = xxs->data[bytelen - 2 + i];
+		}
 	} else {
-		xxs->data[bytelen] = xxs->data[bytelen - 1];
-		xxs->data[bytelen + 1] = xxs->data[bytelen];
+		for (i = 0; i < 4; i++) {
+			xxs->data[bytelen + i] = xxs->data[bytelen - 1 + i];
+		}
 	}
 
 	/* Fix sample at loop */
@@ -362,11 +362,15 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 			int lps = xxs->lps * 2;
 			xxs->data[lpe] = xxs->data[lpe - 2];
 			xxs->data[lpe + 1] = xxs->data[lpe - 1];
-			xxs->data[lpe + 2] = xxs->data[lps];
-			xxs->data[lpe + 3] = xxs->data[lps + 1];
+			for (i = 0; i < 6; i++) {
+				xxs->data[lpe + 2 + i] = xxs->data[lps + i];
+			}
 		} else {
 			xxs->data[xxs->lpe] = xxs->data[xxs->lpe - 1];
-			xxs->data[xxs->lpe + 1] = xxs->data[xxs->lps];
+			for (i = 0; i < 3; i++) {
+				xxs->data[xxs->lpe + 1 + i] =
+						xxs->data[xxs->lps + i];
+			}
 		}
 	}
 

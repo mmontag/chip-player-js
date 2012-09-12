@@ -17,13 +17,12 @@
 #include "period.h"
 
 
-#define FLAG_INTERP	0x01
-#define FLAG_16_BITS	0x02
-#define FLAG_STEREO	0x04
-#define FLAG_FILTER	0x08
+#define FLAG_16_BITS	0x01
+#define FLAG_STEREO	0x02
+#define FLAG_FILTER	0x04
 #define FLAG_ACTIVE	0x10
 #define FLAG_SYNTH	0x20
-#define FIDX_FLAGMASK	(FLAG_INTERP | FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
+#define FIDX_FLAGMASK	(FLAG_16_BITS | FLAG_STEREO | FLAG_FILTER)
 
 #define DOWNMIX_SHIFT	 12
 #define LIM8_HI		 127
@@ -45,37 +44,60 @@ MIX_FN(smix_mono_8bit_linear_filter);
 MIX_FN(smix_mono_16bit_linear_filter);
 MIX_FN(smix_stereo_8bit_linear_filter);
 MIX_FN(smix_stereo_16bit_linear_filter);
+MIX_FN(smix_mono_8bit_spline);
+MIX_FN(smix_mono_16bit_spline);
+MIX_FN(smix_stereo_8bit_spline);
+MIX_FN(smix_stereo_16bit_spline);
+MIX_FN(smix_mono_8bit_spline_filter);
+MIX_FN(smix_mono_16bit_spline_filter);
+MIX_FN(smix_stereo_8bit_spline_filter);
+MIX_FN(smix_stereo_16bit_spline_filter);
 
 
-/* Fast mixers array index:
+/* Mixers array index:
  *
- * bit 0: 0=nearest neighbor, 1=linear interpolation
- * bit 1: 0=8 bit sample, 1=16 bit sample
- * bit 2: 0=mono output, 1=stereo output
+ * bit 0: 0=8 bit sample, 1=16 bit sample
+ * bit 1: 0=mono output, 1=stereo output
+ * bit 2: 0=unfiltered, 1=filtered
  */
 
-static void (*fast_mixers[])() = {
-	/* unfiltered */
+typedef void (*mixer_set[])();
+
+static mixer_set nearest_mixers = {
 	smix_mono_8bit_nearest,
-	smix_mono_8bit_linear,
 	smix_mono_16bit_nearest,
-	smix_mono_16bit_linear,
 	smix_stereo_8bit_nearest,
-	smix_stereo_8bit_linear,
 	smix_stereo_16bit_nearest,
+
+	smix_mono_8bit_nearest,
+	smix_mono_16bit_nearest,
+	smix_stereo_8bit_nearest,
+	smix_stereo_16bit_nearest,
+};
+
+static mixer_set linear_mixers = {
+	smix_mono_8bit_linear,
+	smix_mono_16bit_linear,
+	smix_stereo_8bit_linear,
 	smix_stereo_16bit_linear,
 
-	/* filtered */
-	smix_mono_8bit_nearest,
 	smix_mono_8bit_linear_filter,
-	smix_mono_16bit_nearest,
 	smix_mono_16bit_linear_filter,
-	smix_stereo_8bit_nearest,
 	smix_stereo_8bit_linear_filter,
-	smix_stereo_16bit_nearest,
 	smix_stereo_16bit_linear_filter
 };
 
+static mixer_set spline_mixers = {
+	smix_mono_8bit_spline,
+	smix_mono_16bit_spline,
+	smix_stereo_8bit_spline,
+	smix_stereo_16bit_spline,
+
+	smix_mono_8bit_spline_filter,
+	smix_mono_16bit_spline_filter,
+	smix_stereo_8bit_spline_filter,
+	smix_stereo_16bit_spline_filter
+};
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
 static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
@@ -267,6 +289,21 @@ void mixer_softmixer(struct context_data *ctx)
 	int synth = 1;
 	int32 *buf_pos;
 	void (*mix_fn)();
+	mixer_set *mixers;
+
+	switch (s->interp) {
+	case XMP_INTERP_NEAREST:
+		mixers = &nearest_mixers;
+		break;
+	case XMP_INTERP_LINEAR:
+		mixers = &linear_mixers;
+		break;
+	case XMP_INTERP_SPLINE:
+		mixers = &spline_mixers;
+		break;
+	default:
+		mixers = &linear_mixers;
+	}
 
 	mixer_prepare(ctx);
 
@@ -347,7 +384,7 @@ void mixer_softmixer(struct context_data *ctx)
 				if (vi->filter.cutoff >= 0xfe)
 					mixer &= ~FLAG_FILTER;
 
-				mix_fn = fast_mixers[mixer];
+				mix_fn = (*mixers)[mixer];
 
 				/* Call the output handler */
 				if (samples >= 0) {
@@ -492,11 +529,6 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
-
-	/* FIXME */
-	if (s->interp != XMP_INTERP_NEAREST) {
-		vi->fidx |= FLAG_INTERP;
-	}
 
 	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
 		vi->fidx |= FLAG_FILTER;

@@ -232,7 +232,7 @@ int xmp_mixer_set(xmp_context opaque, int parm, int val)
 		}
 		break;
 	case XMP_MIXER_INTERP:
-		if (val >= XMP_INTERP_NEAREST && val <= XMP_INTERP_LINEAR) {
+		if (val >= XMP_INTERP_NEAREST && val <= XMP_INTERP_SPLINE) {
 			s->interp = val;
 			ret = 0;
 		}
