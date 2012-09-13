@@ -35,9 +35,7 @@
  */
 /* number of bits used to scale spline coefs */
 #define SPLINE_QUANTBITS  14
-#define SPLINE_QUANTSCALE (1L << SPLINE_QUANTBITS)
-#define SPLINE_8SHIFT     (SPLINE_QUANTBITS - 8)
-#define SPLINE_16SHIFT    (SPLINE_QUANTBITS)
+#define SPLINE_SHIFT    (SPLINE_QUANTBITS)
 
 /* log2(number) of precalculated splines (range is [4..14]) */
 #define SPLINE_FRACBITS 10
@@ -47,11 +45,11 @@
 #define SPLINE_FRACMASK  (((1L << (16 - SPLINE_FRACSHIFT)) - 1) & ~3)
 
 #define SPLINE_INTERP() do { \
-    int f = (frac >> 4) & ~3; \
-    smp_in = (cubic_spline_lut[f    ] * sptr[pos - 1] + \
-              cubic_spline_lut[f + 1] * sptr[pos    ] + \
-              cubic_spline_lut[f + 3] * sptr[pos + 2] + \
-              cubic_spline_lut[f + 2] * sptr[pos + 1]) >> SPLINE_16SHIFT; \
+    int f = frac >> 6; \
+    smp_in = (cubic_spline_lut0[f] * sptr[pos - 1] + \
+              cubic_spline_lut1[f] * sptr[pos    ] + \
+              cubic_spline_lut3[f] * sptr[pos + 2] + \
+              cubic_spline_lut2[f] * sptr[pos + 1]) >> SPLINE_SHIFT; \
 } while (0)
 
 #define UPDATE_POS() do { \
