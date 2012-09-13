@@ -1,7 +1,7 @@
 #include "test.h"
 #include "../src/effects.h"
 
-TEST(test_mixer_mono_16bit_filter)
+TEST(test_mixer_mono_8bit_linear_filter)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -10,7 +10,7 @@ TEST(test_mixer_mono_16bit_filter)
 	FILE *f;
 	int i, j, val;
 
-	f = fopen("data/mixer_16bit_filter.data", "r");
+	f = fopen("data/mixer_8bit_linear_filter.data", "r");
 
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
@@ -18,8 +18,8 @@ TEST(test_mixer_mono_16bit_filter)
 
 	xmp_load_module(opaque, "data/test.it");
 
-	new_event(ctx, 0, 0, 0, 30, 2, 0, 0x0f, 2, FX_FLT_CUTOFF, 50);
-	new_event(ctx, 0, 1, 0, 30, 2, 0, 0x0f, 2, FX_FLT_CUTOFF, 120);
+	new_event(ctx, 0, 0, 0, 30, 1, 0, 0x0f, 2, FX_FLT_CUTOFF, 50);
+	new_event(ctx, 0, 1, 0, 30, 1, 0, 0x0f, 2, FX_FLT_CUTOFF, 120);
 
 	xmp_player_start(opaque, 22050, XMP_FORMAT_MONO);
 

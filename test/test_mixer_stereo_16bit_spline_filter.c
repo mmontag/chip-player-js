@@ -1,7 +1,7 @@
 #include "test.h"
 #include "../src/effects.h"
 
-TEST(test_mixer_stereo_16bit_filter)
+TEST(test_mixer_stereo_16bit_spline_filter)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -10,7 +10,7 @@ TEST(test_mixer_stereo_16bit_filter)
 	FILE *f;
 	int i, j, k, val;
 
-	f = fopen("data/mixer_16bit_filter.data", "r");
+	f = fopen("data/mixer_16bit_spline_filter.data", "r");
 
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
@@ -22,6 +22,7 @@ TEST(test_mixer_stereo_16bit_filter)
 	new_event(ctx, 0, 1, 0, 30, 2, 0, 0x0f, 2, FX_FLT_CUTOFF, 120);
 
 	xmp_player_start(opaque, 22050, 0);
+	xmp_mixer_set(opaque, XMP_MIXER_INTERP, XMP_INTERP_SPLINE);
 
 	for (i = 0; i < 4; i++) {
 		xmp_player_frame(opaque);

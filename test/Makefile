@@ -45,10 +45,12 @@ MIXER		= interpolation_default \
 		  stereo_8bit_nearest stereo_16bit_nearest \
 		  mono_8bit_linear mono_16bit_linear \
 		  stereo_8bit_linear stereo_16bit_linear \
-		  mono_8bit_filter mono_16bit_filter \
-		  stereo_8bit_filter stereo_16bit_filter \
+		  mono_8bit_linear_filter mono_16bit_linear_filter \
+		  stereo_8bit_linear_filter stereo_16bit_linear_filter \
 		  mono_8bit_spline mono_16bit_spline \
 		  stereo_8bit_spline stereo_16bit_spline \
+		  mono_8bit_spline_filter mono_16bit_spline_filter \
+		  stereo_8bit_spline_filter stereo_16bit_spline_filter \
 		  downmix_8bit downmix_16bit
 
 READ		= file_32bit_little_endian file_32bit_big_endian \
