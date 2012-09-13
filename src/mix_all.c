@@ -48,10 +48,10 @@
 
 #define SPLINE_INTERP() do { \
     int f = (frac >> 4) & ~3; \
-    smp_in = (cubic_spline_lut[f    ] * sptr[pos - 0] + \
-              cubic_spline_lut[f + 1] * sptr[pos + 1] + \
-              cubic_spline_lut[f + 3] * sptr[pos + 3] + \
-              cubic_spline_lut[f + 2] * sptr[pos + 2]) >> SPLINE_16SHIFT; \
+    smp_in = (cubic_spline_lut[f    ] * sptr[pos - 1] + \
+              cubic_spline_lut[f + 1] * sptr[pos    ] + \
+              cubic_spline_lut[f + 3] * sptr[pos + 2] + \
+              cubic_spline_lut[f + 2] * sptr[pos + 1]) >> SPLINE_16SHIFT; \
 } while (0)
 
 #define UPDATE_POS() do { \
