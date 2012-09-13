@@ -206,8 +206,10 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 			convert_hsc_to_sbi(buffer);
 		}
 
-		if ((xxs->data = malloc(size)) == NULL)
+		if ((xxs->data = malloc(size + 4)) == NULL)
 			return -1;
+		*(uint32 *)xxs->data++ = 0;
+		xxs->data += 4;
 
 		memcpy(xxs->data, buffer, size);
 
@@ -263,8 +265,11 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 		unroll_extralen *= 2;
 	}
 
-	if ((xxs->data = malloc(bytelen + extralen + unroll_extralen)) == NULL)
+	/* add guard bytes before the buffer for higher order interpolation */
+	if ((xxs->data = malloc(bytelen + extralen + unroll_extralen + 4)) == NULL)
 		return -1;
+	*(uint32 *)xxs->data = 0;
+	xxs->data += 4;
 
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);

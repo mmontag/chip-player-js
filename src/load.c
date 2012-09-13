@@ -626,7 +626,7 @@ void xmp_release_module(xmp_context opaque)
 	if (mod->smp > 0) {
 		for (i = 0; i < mod->smp; i++) {
 			if (mod->xxs[i].data != NULL)
-				free(mod->xxs[i].data);
+				free(mod->xxs[i].data - 4);
 		}
 		free(mod->xxs);
 	}
