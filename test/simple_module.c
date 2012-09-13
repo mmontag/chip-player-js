@@ -48,8 +48,9 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 		mod->xxs[i].lpe = 10000;
 		mod->xxs[i].flg = XMP_SAMPLE_LOOP;
 		mod->xxs[i].data = calloc(1, 10000);
+		mod->xxs[i].data += 4;
 	}
-		
+
 	/* End of module creation */
 
 	load_epilogue(ctx);

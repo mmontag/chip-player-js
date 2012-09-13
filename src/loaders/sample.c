@@ -208,7 +208,7 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 
 		if ((xxs->data = malloc(size + 4)) == NULL)
 			return -1;
-		*(uint32 *)xxs->data++ = 0;
+		*(uint32 *)xxs->data = 0;
 		xxs->data += 4;
 
 		memcpy(xxs->data, buffer, size);
