@@ -6,14 +6,14 @@ Stable versions
 	- remove OSS sequencer support
 	- remove platform-specific device drivers
 	- remove all global data, make library code fully thread-safe
-	- remove configuration files
+	- remove configuration files (moved to front-end)
 	- remove support to uLaw-encoded output
 	- remove bogus lzma file detection (by Bodo Thiesen)
 	- extend note range to full 10-octave range
 	- extensive code refactoring
 	- rewrite MMCMP decompressor to be endian-safe
 	- replaced IT sample decompressor with public domain version
-	- add regression tests
+	- add cubic spline sample interpolation
 	- add built-in zip file decompressor
 	- add built-in gzip file decompressor
 	- add built-in compress file decompressor
@@ -21,10 +21,10 @@ Stable versions
 	- add built-in xz file decompressor
 	- add built-in lha file decompressor
 	- add built-in vorbis sample decoder
-	- add library regression tests
 	- add support to IT envelope carry
 	- add support to IT sample vibrato
 	- add ASYLUM Music Format V1.0 loader
+	- add regression tests
 	- fix interpolation and sample loop processing
 	- fix S404 depacker integration
 	- fix note delay effect
@@ -36,6 +36,8 @@ Stable versions
 	- fix IT unified pitch slide memory (Storlek test #25)
 	- fix IT retrigger effect (Storlek test #15)
 	- fix IT filters
+	- fix IT fadeout event handling
+	- fix persistent slide down effect
 
 3.5.0 (20120127):
 	- fix AMF 1.0 module loading (reported by Andre Timmermans), probe
