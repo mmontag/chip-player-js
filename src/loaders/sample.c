@@ -366,10 +366,11 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 				xxs->data[lpe + 2 + i] = xxs->data[lps + i];
 			}
 		} else {
-			xxs->data[xxs->lpe] = xxs->data[xxs->lpe - 1];
+			int lpe = xxs->lpe + unroll_extralen;
+			int lps = xxs->lps;
+			xxs->data[lpe] = xxs->data[lpe - 1];
 			for (i = 0; i < 3; i++) {
-				xxs->data[xxs->lpe + 1 + i] =
-						xxs->data[xxs->lps + i];
+				xxs->data[lpe + 1 + i] = xxs->data[lps + i];
 			}
 		}
 	}
