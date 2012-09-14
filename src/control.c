@@ -226,7 +226,7 @@ int xmp_mixer_set(xmp_context opaque, int parm, int val)
 		}
 		break;
 	case XMP_MIXER_MIX:
-		if (val >= 0 && val <= 100) {
+		if (val >= -100 && val <= 100) {
 			s->mix = val;
 			ret = 0;
 		}
