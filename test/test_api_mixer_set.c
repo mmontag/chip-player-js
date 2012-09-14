@@ -47,6 +47,11 @@ TEST(test_api_mixer_set)
 	ret = xmp_mixer_get(opaque, XMP_MIXER_MIX);
 	fail_unless(ret == 100, "can't get XMP_MIXER_MIX");
 
+	ret = xmp_mixer_set(opaque, XMP_MIXER_MIX, -100);
+	fail_unless(ret == 0, "error setting mix");
+	ret = xmp_mixer_get(opaque, XMP_MIXER_MIX);
+	fail_unless(ret == -100, "can't get XMP_MIXER_MIX");
+
 	ret = xmp_mixer_set(opaque, XMP_MIXER_MIX, 50);
 	fail_unless(ret == 0, "error setting mix");
 	ret = xmp_mixer_get(opaque, XMP_MIXER_MIX);
@@ -54,7 +59,7 @@ TEST(test_api_mixer_set)
 
 	ret = xmp_mixer_set(opaque, XMP_MIXER_MIX, 101);
 	fail_unless(ret < 0, "error setting invalid mix");
-	ret = xmp_mixer_set(opaque, XMP_MIXER_MIX, -1);
+	ret = xmp_mixer_set(opaque, XMP_MIXER_MIX, -101);
 	fail_unless(ret < 0, "error setting invalid mix");
 
 	ret = xmp_mixer_get(opaque, XMP_MIXER_MIX);
