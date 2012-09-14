@@ -65,7 +65,7 @@ WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_8bit file_move_data
 
 PLAYER		= read_event scan med_synth period_amiga period_mod_range \
-		  nna_cut nna_cont nna_off nna_fade dct_note
+		  keyoff nna_cut nna_cont nna_off nna_fade dct_note
 
 SYNTH		= adlib spectrum
 

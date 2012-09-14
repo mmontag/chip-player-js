@@ -211,9 +211,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	/* Fadeout */
 
-	/* Fadeout is not related to envelope (see jeff93.it)
-	if (TEST(RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
-		xc->fadeout = 0;*/
+	/* Fadeout is not related to envelope (see jeff93.it) */
+	if (TEST(RELEASE) /*&& !(instrument->aei.flg & XMP_ENVELOPE_ON)*/)
+		xc->fadeout = 0;
 
 	if (TEST(FADEOUT | RELEASE) || act == VIRT_ACTION_FADE
 	    || act == VIRT_ACTION_OFF) {
