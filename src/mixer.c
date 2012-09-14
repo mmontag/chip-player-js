@@ -570,7 +570,7 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-	if (s->interp == XMP_INTERP_LINEAR)
+	if (s->interp > XMP_INTERP_NEAREST)
 		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
 
 	vi->vol = vol;
