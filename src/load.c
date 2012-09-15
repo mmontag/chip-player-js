@@ -619,6 +619,8 @@ void xmp_release_module(xmp_context opaque)
 
 	for (i = 0; i < mod->ins; i++) {
 		free(mod->xxi[i].sub);
+		if (mod->xxi[i].extra)
+			free(mod->xxi[i].extra);
 	}
 
 	free(mod->xxt);

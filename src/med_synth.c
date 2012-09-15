@@ -9,6 +9,7 @@
 #include "common.h"
 #include "player.h"
 #include "virtual.h"
+#include "med_extras.h"
 
 /* Commands in the volume and waveform sequence table:
  *
@@ -107,8 +108,8 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int r
 	xc->med.period = xc->period;
 	xc->med.vp = xc->med.vc = xc->med.vw = 0;
 	xc->med.wp = xc->med.wc = xc->med.ww = 0;
-	xc->med.vs = m->mod.xxi[xc->ins].vts;
-	xc->med.ws = m->mod.xxi[xc->ins].wts;
+	xc->med.vs = MED_EXTRA(m->mod.xxi[xc->ins])->vts;
+	xc->med.ws = MED_EXTRA(m->mod.xxi[xc->ins])->wts;
     }
 
     if (xc->med.vs > 0 && xc->med.vc-- == 0) {

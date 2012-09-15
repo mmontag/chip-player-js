@@ -120,8 +120,6 @@ struct xmp_instrument {
 	struct xmp_envelope aei;	/* Amplitude envelope info */
 	struct xmp_envelope pei;	/* Pan envelope info */
 	struct xmp_envelope fei;	/* Frequency envelope info */
-	int vts;			/* Volume table speed -- for MED */
-	int wts;			/* Waveform table speed -- for MED */
 
 	struct {
 		unsigned char ins;	/* Instrument number for each key */
@@ -138,26 +136,27 @@ struct xmp_instrument {
 		int vde;		/* Vibrato depth */
 		int vra;		/* Vibrato rate */
 		int vsw;		/* Vibrato sweep */
-		int rvv;		/* Random volume var -- for IT */
+		int rvv;		/* Random volume variation (IT) */
 		int sid;		/* Sample number */
 #define XMP_INST_NNA_CUT	0x00
 #define XMP_INST_NNA_CONT	0x01
 #define XMP_INST_NNA_OFF	0x02
 #define XMP_INST_NNA_FADE	0x03
-		int nna;		/* New note action -- for IT */
+		int nna;		/* New note action */
 #define XMP_INST_DCT_OFF	0x00
 #define XMP_INST_DCT_NOTE	0x01
 #define XMP_INST_DCT_SMP	0x02
 #define XMP_INST_DCT_INST	0x03
-		int dct;		/* Duplicate check type -- for IT */
+		int dct;		/* Duplicate check type */
 #define XMP_INST_DCA_CUT	XMP_INST_NNA_CUT
 #define XMP_INST_DCA_OFF	XMP_INST_NNA_OFF
 #define XMP_INST_DCA_FADE	XMP_INST_NNA_FADE
-		int dca;		/* Duplicate check action -- for IT */
-		int ifc;		/* Initial filter cutoff -- for IT */
-		int ifr;		/* Initial filter resonance -- for IT */
-		int hld;		/* Hold -- for MED */
+		int dca;		/* Duplicate check action */
+		int ifc;		/* Initial filter cutoff */
+		int ifr;		/* Initial filter resonance */
 	} *sub;
+
+	void *extra;			/* Extra fields */
 };
 
 struct xmp_sample {
