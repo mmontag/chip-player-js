@@ -209,11 +209,16 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	uint16 vol_envelope;
 	int gvol;
 
-	/* Fadeout */
+	/* Keyoff and fadeout */
 
-	/* Fadeout is not related to envelope (see jeff93.it) */
-	if (TEST(RELEASE) /*&& !(instrument->aei.flg & XMP_ENVELOPE_ON)*/)
-		xc->fadeout = 0;
+	/* Keyoff event in IT doesn't reset fadeout (see jeff93.it)
+	 * In XM it depends on envelope (see graff-strange_land.xm vs
+	 * Decibelter - Cosmic 'Wegian Mamas.xm)
+	 */
+	if (!HAS_QUIRK(QUIRK_KEYOFF)) {
+		if (TEST(RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
+			xc->fadeout = 0;
+	}
 
 	if (TEST(FADEOUT | RELEASE) || act == VIRT_ACTION_FADE
 	    || act == VIRT_ACTION_OFF) {

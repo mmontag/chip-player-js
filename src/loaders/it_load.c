@@ -355,7 +355,6 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	pp_pat[i] = read32l(f);
 
     m->c4rate = C4_NTSC_RATE;
-    m->quirk |= QUIRK_FINEFX | QUIRK_ENVFADE;
 
     /* Identify tracker */
 

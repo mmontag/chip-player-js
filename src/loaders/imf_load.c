@@ -301,7 +301,6 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 	    mod->xxo[i]--;
 
     m->c4rate = C4_NTSC_RATE;
-    m->quirk |= QUIRK_FINEFX;
 
     PATTERN_INIT();
 

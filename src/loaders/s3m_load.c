@@ -289,7 +289,6 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
     }
 
     m->c4rate = C4_NTSC_RATE;
-    m->quirk |= QUIRK_FINEFX;
 
     if (sfh.version == 0x1300)
 	m->quirk |= QUIRK_VSALL;

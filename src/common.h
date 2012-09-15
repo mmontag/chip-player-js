@@ -137,15 +137,16 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_VIRTUAL	(1 << 16)	/* Enable virtual channels */
 #define QUIRK_FILTER	(1 << 17)	/* Enable filter */
 #define QUIRK_IGSTPOR	(1 << 18)	/* Ignore stray tone portamento */
+#define QUIRK_KEYOFF	(1 << 19)	/* Keyoff doesn't reset fadeout */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
 
 /* Format quirks */
-#define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN)
-#define QUIRKS_FT2		(0)
-#define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_VOLPDN | \
-				 QUIRK_ENVFADE | QUIRK_ITVPOR | \
+#define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX)
+#define QUIRKS_FT2		(QUIRK_FINEFX)
+#define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX | \
+				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
 				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_IGSTPOR)
 
 /* DSP effects */
