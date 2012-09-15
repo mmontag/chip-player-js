@@ -360,6 +360,14 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 		}
 	}
 
+	/* Add extra samples at start */
+	if (xxs->flg & XMP_SAMPLE_16BIT) {
+		xxs->data[-2] = xxs->data[0];
+		xxs->data[-1] = xxs->data[1];
+	} else {
+		xxs->data[-1] = xxs->data[0];
+	}
+
 	/* Fix sample at loop */
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
 		if (xxs->flg & XMP_SAMPLE_16BIT) {
