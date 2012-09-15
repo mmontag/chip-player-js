@@ -94,7 +94,7 @@ void load_epilogue(struct context_data *ctx)
 	/* Set appropriate values for instrument volumes and subinstrument
 	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
 	 * consistent if the user inspects struct xmp_module. We can later
-	 * set vlumes in the loaders and eliminate the quirk.
+	 * set volumes in the loaders and eliminate the quirk.
 	 */
 	for (i = 0; i < m->mod.ins; i++) {
 		if (~m->quirk & QUIRK_INSVOL) {

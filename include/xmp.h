@@ -114,7 +114,7 @@ struct xmp_envelope {
 
 struct xmp_instrument {
 	char name[32];			/* Instrument name */
-	int vol;			/* Volume if QUIRK_INSVOL enabled */
+	int vol;			/* Instrument volume */
 	int nsm;			/* Number of samples */
 	int rls;			/* Release (fadeout) */
 	struct xmp_envelope aei;	/* Amplitude envelope info */
@@ -182,7 +182,7 @@ struct xmp_sequence {
 struct xmp_module {
 	char name[XMP_NAME_SIZE];	/* Module name */
 	char type[XMP_NAME_SIZE];	/* Module type */
-	unsigned char md5[16];	/* MD5 message digest */
+	unsigned char md5[16];		/* MD5 message digest */
 	int pat;			/* Number of patterns */
 	int trk;			/* Number of tracks */
 	int chn;			/* Tracks per pattern */
