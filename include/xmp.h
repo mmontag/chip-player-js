@@ -235,6 +235,7 @@ struct xmp_frame_info {			/* Current frame information */
 	int loop_count;			/* Loop counter */
 	int virt_channels;		/* Number of virtual channels */
 	int virt_used;			/* Used virtual channels */
+	int sequence;			/* Current sequence */
 
 	struct xmp_channel_info {	/* Current channel information */
 		unsigned int period;	/* Sample period */
@@ -248,8 +249,6 @@ struct xmp_frame_info {			/* Current frame information */
 		unsigned char reserved;	/* Reserved */
 		struct xmp_event event;	/* Current track event */
 	} channel_info[XMP_MAX_CHANNELS];
-
-	int sequence;			/* Current sequence */
 };
 
 
