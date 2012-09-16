@@ -40,7 +40,6 @@ static int stc_test(FILE * f, char *t, const int start)
 {
 	int pos_ptr, orn_ptr, pat_ptr;
 	int i, len, max_pat;
-	//char buf[8];
 
 	fseek(f, start, SEEK_SET);
 
@@ -79,6 +78,9 @@ static int stc_test(FILE * f, char *t, const int start)
 
 	if (read8(f) != 0xff)
 		return -1;
+
+	fseek(f, start + 7, SEEK_SET);
+	read_title(f, t, 18);
 
 	return 0;
 }
