@@ -12,10 +12,10 @@ TEST(test_depack_arc_method2)
 	ret = xmp_load_module(c, "data/arc-method2");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_player_start(c, 44100, 0);
-	xmp_player_get_info(c, &info);
+	xmp_start_player(c, 44100, 0);
+	xmp_get_module_info(c, &info);
 
-	ret = compare_md5(info.mod->md5, "b868aef5b8843c0754284561cda5aba9");
+	ret = compare_md5(info.md5, "b868aef5b8843c0754284561cda5aba9");
 	fail_unless(ret == 0, "MD5 error");
 }
 END_TEST

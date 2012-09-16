@@ -3,7 +3,7 @@
 TEST(test_synth_adlib)
 {
 	xmp_context opaque;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	int i, j, k, val, ret;
 	FILE *f;
 
@@ -15,12 +15,12 @@ TEST(test_synth_adlib)
 	ret = xmp_load_module(opaque, "data/adlibsp.rad.gz");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	for (j = 0; j < 2; j++) {
-		xmp_player_frame(opaque);
+		xmp_play_frame(opaque);
 
-		xmp_player_get_info(opaque, &info);
+		xmp_get_frame_info(opaque, &info);
 		int16 *b = info.buffer;
 
 		for (k = i = 0; i < info.buffer_size / 4; i++) {
@@ -30,7 +30,7 @@ TEST(test_synth_adlib)
 		}
 	}
 	
-	xmp_player_end(opaque);
+	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
 }

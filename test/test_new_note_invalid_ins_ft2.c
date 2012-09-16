@@ -47,10 +47,10 @@ TEST(test_new_note_invalid_ins_ft2)
 	new_event(ctx, 0, 1, 0, 50, 3,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_FT2, READ_EVENT_FT2);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -61,15 +61,15 @@ TEST(test_new_note_invalid_ins_ft2)
 	fail_unless(vi->vol  == 43 * 16, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: invalid instrument with new note (FT2)
 	 *
 	 * When a new invalid instrument and a new note is set, FT2 cuts
 	 * the currently playing sample.
 	 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->vol  ==  0, "didn't cut sample");
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 }
 END_TEST

@@ -16,8 +16,8 @@ TEST(test_depack_vorbis)
 	ret = xmp_load_module(c, "data/beep.oxm");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_player_start(c, 44100, 0);
-	xmp_player_get_info(c, &info);
+	xmp_start_player(c, 44100, 0);
+	xmp_get_module_info(c, &info);
 
 	stat("data/beep.raw", &st);
 	f = fopen("data/beep.raw", "rb");

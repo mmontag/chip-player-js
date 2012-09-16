@@ -3,7 +3,7 @@
 TEST(test_synth_spectrum)
 {
 	xmp_context opaque;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	int i, j, val, ret;
 	FILE *f;
 
@@ -15,13 +15,13 @@ TEST(test_synth_spectrum)
 	ret = xmp_load_module(opaque, "data/again.stc");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_player_start(opaque, 22050, 0);
+	xmp_start_player(opaque, 22050, 0);
 	xmp_set_position(opaque, 2);
 
 	for (j = 0; j < 2; j++) {
-		xmp_player_frame(opaque);
+		xmp_play_frame(opaque);
 
-		xmp_player_get_info(opaque, &info);
+		xmp_get_frame_info(opaque, &info);
 		int16 *b = info.buffer;
 
 		for (i = 0; i < info.buffer_size / 2; i++) {
@@ -30,7 +30,7 @@ TEST(test_synth_spectrum)
 		}
 	}
 	
-	xmp_player_end(opaque);
+	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
 }

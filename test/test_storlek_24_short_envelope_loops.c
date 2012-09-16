@@ -14,7 +14,7 @@ rapid left/right pan shift, and finally an arpeggio effect.
 TEST(test_storlek_24_short_envelope_loops)
 {
 	xmp_context opaque;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	struct xmp_channel_info *ci = &info.channel_info[0];
 	int time, row, frame, chan, period, volume, ins, pan;
 	char line[200];
@@ -24,11 +24,11 @@ TEST(test_storlek_24_short_envelope_loops)
 
 	opaque = xmp_create_context();
 	xmp_load_module(opaque, "data/storlek_24.it");
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	while (1) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		if (info.loop_count > 0)
 			break;
 
@@ -47,7 +47,7 @@ TEST(test_storlek_24_short_envelope_loops)
 	fgets(line, 200, f);
 	fail_unless(feof(f), "not end of data file");
 
-	xmp_player_end(opaque);
+	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
 }

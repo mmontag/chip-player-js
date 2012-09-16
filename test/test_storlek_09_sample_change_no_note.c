@@ -22,18 +22,18 @@ struct data {
 TEST(test_storlek_09_sample_change_no_note)
 {
 	xmp_context opaque;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	struct xmp_channel_info *ci = &info.channel_info[0];
 	struct data data[100];
 	int i = 0, j = 0;
 
 	opaque = xmp_create_context();
 	xmp_load_module(opaque, "data/storlek_09.it");
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	while (1) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		if (info.loop_count > 0)
 			break;
 
@@ -50,7 +50,7 @@ TEST(test_storlek_09_sample_change_no_note)
 		}
 	}
 
-	xmp_player_end(opaque);
+	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
 }

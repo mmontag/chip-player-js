@@ -5,7 +5,7 @@ TEST(test_mixer_mono_16bit_nearest)
 	xmp_context opaque;
 	struct context_data *ctx;
 	struct mixer_data *s;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	FILE *f;
 	int i, j, val;
 
@@ -21,19 +21,19 @@ TEST(test_mixer_mono_16bit_nearest)
 		new_event(ctx, 0, i, 0, 20 + i * 20, 2, 0, 0x0f, 2, 0, 0);
 	}
 
-	xmp_player_start(opaque, 8000, XMP_FORMAT_MONO);
-	xmp_mixer_set(opaque, XMP_MIXER_INTERP, XMP_INTERP_NEAREST);
+	xmp_start_player(opaque, 8000, XMP_FORMAT_MONO);
+	xmp_set_mixer(opaque, XMP_MIXER_INTERP, XMP_INTERP_NEAREST);
 
 	for (i = 0; i < 10; i++) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		for (j = 0; j < info.buffer_size / 2; j++) {
 			fscanf(f, "%d", &val);
 			fail_unless(s->buf32[j] == val, "mixing error");
 		}
 	}
 
-	xmp_player_end(opaque);
+	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
 }

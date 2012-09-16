@@ -19,7 +19,7 @@ TEST(test_api_seek_time)
 
 	ctx = xmp_create_context();
 	xmp_load_module(ctx, "data/ode2ptk.mod");
-	xmp_player_start(ctx, 8000, 0);
+	xmp_start_player(ctx, 8000, 0);
 
 	for (i = 0; i < 100; i++) {
 		ret = xmp_seek_time(ctx, i * 1000);

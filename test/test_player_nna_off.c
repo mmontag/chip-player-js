@@ -30,10 +30,10 @@ TEST(test_player_nna_off)
 	new_event(ctx, 0, 1, 0, 50, 2,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_IT, READ_EVENT_IT);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -44,10 +44,10 @@ TEST(test_player_nna_off)
 	fail_unless(vi->vol / 16 == 21, "set volume");	/* with envelope */
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: new event to test NNA */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 21, "not same volume");
@@ -76,21 +76,21 @@ TEST(test_player_nna_off)
 	/* TODO: Check if envelope follows noteoff immediately or only
 	 *       in the next update!
 	 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 43, "not following envelope");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 21, "not following envelope");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->vol / 16 == 0, "not following envelope");
 	fail_unless(vi->chn == -1, "didn't reset channel");
 

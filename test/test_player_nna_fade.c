@@ -32,10 +32,10 @@ TEST(test_player_nna_fade)
 	new_event(ctx, 0, 1, 0, 50, 2,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_IT, READ_EVENT_IT);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -46,10 +46,10 @@ TEST(test_player_nna_fade)
 	fail_unless(vi->vol / 16 == 43, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: new event to test NNA */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 36, "not fading out");
@@ -75,21 +75,21 @@ TEST(test_player_nna_fade)
 	fail_unless(vi2->pos0 ==  0, "sample didn't reset");
 
 	/* Fadeout */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 29, "not fading out");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 23, "not fading out");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->chn == 4, "didn't copy channel");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");

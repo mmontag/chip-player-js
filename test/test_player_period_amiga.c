@@ -4,7 +4,7 @@ TEST(test_player_period_amiga)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	int i, p0, p1;
 	FILE *f;
 
@@ -16,7 +16,7 @@ TEST(test_player_period_amiga)
 
  	create_simple_module(ctx, 2, 2);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* test note periods */
 	for (i = 0; i < 60; i++) {
@@ -25,8 +25,8 @@ TEST(test_player_period_amiga)
 	}
 
 	for (i = 0; i < 60; i++) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		fscanf(f, "%d %d", &p0, &p1);
 		fail_unless(info.channel_info[0].period == p0, "Bad period");
 		fail_unless(info.channel_info[1].period == p1, "Bad period");

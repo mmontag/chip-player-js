@@ -25,17 +25,17 @@ infinite loop situation. Even Impulse Tracker gets snagged by this.
 TEST(test_storlek_11_infinite_pattern_loop)
 {
 	xmp_context opaque;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 
 	opaque = xmp_create_context();
 	xmp_load_module(opaque, "data/storlek_11.it");
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
-	xmp_player_frame(opaque);
-	xmp_player_get_info(opaque, &info);
+	xmp_play_frame(opaque);
+	xmp_get_frame_info(opaque, &info);
 	fail_unless(info.loop_count > 0, "loop not detected");
 
-	xmp_player_end(opaque);
+	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
 }

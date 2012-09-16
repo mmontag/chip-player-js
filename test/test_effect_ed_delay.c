@@ -20,10 +20,10 @@ TEST(test_effect_ed_delay)
 	new_event(ctx, 0, 2, 0, 62, 2,  0, 0x0e, 0xd1, 0, 0);
 	new_event(ctx, 0, 3, 0, 63, 2,  0, 0x0e, 0xd3, 0, 0);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -32,44 +32,44 @@ TEST(test_effect_ed_delay)
 	fail_unless(vi->note == 59, "row 0 frame 0");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "row 0 frame 1");
 	fail_unless(vi->pos0 !=  0, "sample position");
 
 	/* Row 1 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 60, "row 1 frame 0");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 60, "row 1 frame 1");
 	fail_unless(vi->pos0 !=  0, "sample position");
 
 	/* Row 2: delay this frame */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 60, "row 2 frame 0");
 	fail_unless(vi->pos0 !=  0, "sample position");
 
 	/* note changes in the frame 1 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 2 frame 1");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
 	/* Row 3: delay larger than speed */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 3 frame 0");
 	fail_unless(vi->pos0 !=  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 3 frame 1");
 	fail_unless(vi->pos0 !=  0, "sample position");
 
 	/* Row 4: nothing should happen */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 4 frame 0");
 	fail_unless(vi->pos0 !=  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 4 frame 1");
 	fail_unless(vi->pos0 !=  0, "sample position");
 }

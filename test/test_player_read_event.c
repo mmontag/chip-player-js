@@ -18,8 +18,8 @@ TEST(test_player_read_event)
 	new_event(ctx, 0, 0, 0, 60, 2, 40, 0x0f, 3, 0, 0);
 	new_event(ctx, 0, 1, 0, 61, 1,  0, 0x00, 0, 0, 0);
 
-	xmp_player_start(opaque, 44100, 0);
-	xmp_player_frame(opaque);
+	xmp_start_player(opaque, 44100, 0);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -31,19 +31,19 @@ TEST(test_player_read_event)
 	fail_unless(p->speed == 3 , "set effect");
 	fail_unless(vi->pos0 == 0 , "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  == 1 , "set instrument");
 	fail_unless(vi->vol  == 39 * 16, "set volume");
 	fail_unless(vi->pos0 != 0 , "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  == 1 , "set instrument");
 	fail_unless(vi->vol  == 39 * 16, "set volume");
 	fail_unless(vi->pos0 != 0 , "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 60, "set note");
 	fail_unless(vi->ins  == 0 , "set instrument");
 	fail_unless(vi->vol  == 64 * 16, "set volume");

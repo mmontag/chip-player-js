@@ -19,18 +19,18 @@ TEST(test_prev_order_start_seq)
 	set_order(ctx, 4, 1);
 	scan_sequences(ctx);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 	xmp_set_position(opaque, 4);
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(p->ord == 4, "didn't start at pattern 4");
 	fail_unless(p->sequence == 1, "wrong sequence");
 
 	for (i = 0; i < 30; i++) {
-		xmp_player_frame(opaque);
+		xmp_play_frame(opaque);
 	}
 
 	xmp_prev_position(opaque);
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(p->ord == 4, "incorrect pattern");
 	fail_unless(p->row == 0, "incorrect row");
 	fail_unless(p->frame == 0, "incorrect frame");

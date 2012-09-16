@@ -17,7 +17,7 @@ TEST(test_effect_per_slide)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	int i, j, k;
 
 	opaque = xmp_create_context();
@@ -30,22 +30,22 @@ TEST(test_effect_per_slide)
 	new_event(ctx, 0, 0, 0, 49, 1, 0, FX_PER_PORTA_UP, 2, 0, 0);
 	new_event(ctx, 0, 60, 0, 0, 0, 0, FX_PER_PORTA_UP, 0, 0, 0);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	for (i = 0; i < 60; i++) {
 		k = 856 - i * 10;
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		fail_unless(PERIOD == k, "slide up error (frame 0)");
 		for (j = 0; j < 5; j++) {
-			xmp_player_frame(opaque);
-			xmp_player_get_info(opaque, &info);
+			xmp_play_frame(opaque);
+			xmp_get_frame_info(opaque, &info);
 			fail_unless(PERIOD == k - j * 2, "slide up error");
 		}
 	}
 
 	j--;
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(PERIOD == k - j * 2, "slide up error");
 
 	/* Persistent portamento down */
@@ -57,18 +57,18 @@ TEST(test_effect_per_slide)
 
 	for (i = 0; i < 60; i++) {
 		k = 113 + i * 10;
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		fail_unless(PERIOD == k, "slide down error (frame 0)");
 		for (j = 0; j < 5; j++) {
-			xmp_player_frame(opaque);
-			xmp_player_get_info(opaque, &info);
+			xmp_play_frame(opaque);
+			xmp_get_frame_info(opaque, &info);
 			fail_unless(PERIOD == k + j * 2, "slide down error");
 		}
 	}
 
 	j--;
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(PERIOD == k + j * 2, "slide down error");
 }
 END_TEST

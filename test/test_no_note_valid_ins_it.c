@@ -62,10 +62,10 @@ TEST(test_no_note_valid_ins_it)
 	new_event(ctx, 0, 1, 0,  0, 2,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_IT, READ_EVENT_IT);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -76,7 +76,7 @@ TEST(test_no_note_valid_ins_it)
 	fail_unless(vi->vol  == 43 * 16, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: valid instrument with no note (IT)
 	 *
@@ -84,7 +84,7 @@ TEST(test_no_note_valid_ins_it)
 	 * and no note is set, IT plays the note again with the instrument's
 	 * instrument's default volume.
 	 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->ins  ==  1, "not new instrument");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->vol  == 33 * 16, "not new volume");

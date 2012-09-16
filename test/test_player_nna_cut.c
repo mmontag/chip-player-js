@@ -24,10 +24,10 @@ TEST(test_player_nna_cut)
 	new_event(ctx, 0, 1, 0, 50, 2,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_IT, READ_EVENT_IT);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -38,10 +38,10 @@ TEST(test_player_nna_cut)
 	fail_unless(vi->vol  == 43 * 16, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: new event to test NNA */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->ins  ==  1, "not new instrument");
 	fail_unless(vi->note == 49, "not new note");
 	fail_unless(vi->vol  == 33 * 16, "not new instrument volume");
@@ -55,6 +55,6 @@ TEST(test_player_nna_cut)
 	}
 	fail_unless(i == p->virt.maxvoc, "used virtual voice");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 }
 END_TEST

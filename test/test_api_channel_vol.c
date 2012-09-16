@@ -8,7 +8,7 @@ TEST(test_api_channel_vol)
 
 	ctx = xmp_create_context();
 	xmp_load_module(ctx, "data/ode2ptk.mod");
-	xmp_player_start(ctx, 8000, 0);
+	xmp_start_player(ctx, 8000, 0);
 
 	/* invalid channel */
 	ret = xmp_channel_vol(ctx, XMP_MAX_CHANNELS, 2);

@@ -47,10 +47,10 @@ TEST(test_new_note_invalid_ins_st3)
 	new_event(ctx, 0, 1, 0, 50, 3,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_ST3, READ_EVENT_ST3);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -61,18 +61,18 @@ TEST(test_new_note_invalid_ins_st3)
 	fail_unless(vi->vol  == 43 * 16, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: invalid instrument with new note (ST3)
 	 *
 	 * When a new invalid instrument and a new note is set, ST3 plays
 	 * the old sample with current volume and new note
 	 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 49, "didn't set new note");
 	fail_unless(vi->ins  ==  0, "didn't use old instrument");
 	fail_unless(vi->vol  == 43 * 16, "didn't use current volume");
 	fail_unless(vi->pos0 ==  0, "didn't reset sample");
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 }
 END_TEST

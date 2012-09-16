@@ -22,7 +22,7 @@ static int note_to_period(int n)
 
 static void check_arpeggio_okt3(xmp_context opaque, int note, int val, int spd)
 {
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	int i;
 	int a1 = val >> 4;
 	int a2 = val & 0x0f;
@@ -36,8 +36,8 @@ static void check_arpeggio_okt3(xmp_context opaque, int note, int val, int spd)
 	}
 
 	for (i = 0; i < spd; i++) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		snprintf(error, 60, "Oktalyzer arp3 0x%02x error", val);
 		fail_unless(PERIOD == arp[i], error);
 	}
@@ -45,7 +45,7 @@ static void check_arpeggio_okt3(xmp_context opaque, int note, int val, int spd)
 
 static void check_arpeggio_okt4(xmp_context opaque, int note, int val, int spd)
 {
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	int i;
 	int a1 = val >> 4;
 	int a2 = val & 0x0f;
@@ -60,8 +60,8 @@ static void check_arpeggio_okt4(xmp_context opaque, int note, int val, int spd)
 	}
 
 	for (i = 0; i < spd; i++) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		snprintf(error, 60, "Oktalyzer arp4 0x%02x error", val);
 		fail_unless(PERIOD == arp[i], error);
 	}
@@ -69,7 +69,7 @@ static void check_arpeggio_okt4(xmp_context opaque, int note, int val, int spd)
 
 static void check_arpeggio_okt5(xmp_context opaque, int note, int val, int spd)
 {
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	int i;
 	int a2 = val & 0x0f;
 	int arp[20];
@@ -82,8 +82,8 @@ static void check_arpeggio_okt5(xmp_context opaque, int note, int val, int spd)
 	}
 
 	for (i = 0; i < spd; i++) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		snprintf(error, 60, "Oktalyzer arp5 0x%02x error", val);
 		fail_unless(PERIOD == arp[i], error);
 	}
@@ -107,7 +107,7 @@ TEST(test_effect_okt_arpeggio)
 	new_event(ctx, 0, 3, 0, 61, 1, 0, FX_OKT_ARP3, 0x50, 0, 0);
 	new_event(ctx, 0, 4, 0, 61, 1, 0, FX_OKT_ARP3, 0x35, 0, 0);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	check_arpeggio_okt3(opaque, 60, 0x00, 6);
 	check_arpeggio_okt3(opaque, 60, 0x01, 6);

@@ -7,7 +7,7 @@ TEST(test_effect_ef_invert_loop)
 	struct context_data *ctx;
 	struct mixer_data *s;
 	struct module_data *m;
-	struct xmp_module_info info;
+	struct xmp_frame_info info;
 	FILE *f;
 	int i, j, val;
 
@@ -31,19 +31,19 @@ TEST(test_effect_ef_invert_loop)
 
 	f = fopen("data/invloop.data", "r");
 
-	xmp_player_start(opaque, 16000, XMP_FORMAT_MONO);
-	xmp_mixer_set(opaque, XMP_MIXER_INTERP, XMP_INTERP_NEAREST);
+	xmp_start_player(opaque, 16000, XMP_FORMAT_MONO);
+	xmp_set_mixer(opaque, XMP_MIXER_INTERP, XMP_INTERP_NEAREST);
 
 	for (i = 0; i < 6; i++) {
-		xmp_player_frame(opaque);
-		xmp_player_get_info(opaque, &info);
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
 		for (j = 0; j < info.buffer_size / 2; j++) {
 			fscanf(f, "%d", &val);
 			fail_unless(s->buf32[j] == val, "invloop error");
 		}
 	}
 
-	xmp_player_end(opaque);
+	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
 }

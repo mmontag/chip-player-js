@@ -23,8 +23,8 @@ TEST(test_player_note_off_ft2)
 	set_instrument_fadeout(ctx, 0, 8000);
 
 	/* Test: Without envelope in FT2 mode */
-	xmp_player_start(opaque, 44100, 0);
-	xmp_player_frame(opaque);
+	xmp_start_player(opaque, 44100, 0);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -35,10 +35,10 @@ TEST(test_player_note_off_ft2)
 	fail_unless(vi->vol / 16 == 43, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: test keyoff */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 0, "didn't cut note");
@@ -51,22 +51,22 @@ TEST(test_player_note_off_ft2)
 	set_instrument_envelope_sus(ctx, 0, 1);
 
 	xmp_restart_module(opaque);
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	fail_unless(vi->note == 59, "set note");
 	fail_unless(vi->ins  ==  0, "set instrument");
 	fail_unless(vi->vol / 16 == 21, "envelope volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: test keyoff */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->vol / 16 == 16, "didn't follow envelope + fadeout");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->vol / 16 == 22, "didn't follow envelope");
 }
 	

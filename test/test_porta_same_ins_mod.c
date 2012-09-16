@@ -39,10 +39,10 @@ TEST(test_porta_same_ins_mod)
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0, 50, 1,  0, 0x03, 4, 0, 0);
 
-	xmp_player_start(opaque, 44100, 0);
+	xmp_start_player(opaque, 44100, 0);
 
 	/* Row 0 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 0);
 	fail_unless(voc >= 0, "virtual map");
@@ -53,7 +53,7 @@ TEST(test_porta_same_ins_mod)
 	fail_unless(vi->vol  == 43 * 16, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 
 	/* Row 1: same instrument with tone portamento (PT 3.15)
 	 *
@@ -61,7 +61,7 @@ TEST(test_porta_same_ins_mod)
 	 * with tone portamento, PT3.15 keeps playing the current sample but
 	 * sets the volume to the new instrument's default volume.
 	 */
-	xmp_player_frame(opaque);
+	xmp_play_frame(opaque);
 	fail_unless(vi->ins  ==  0, "not same instrument");
 	fail_unless(vi->note == 59, "not same note");
 	fail_unless(vi->vol  == 22 * 16, "not instrument volume");
