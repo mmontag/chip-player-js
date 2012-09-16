@@ -102,11 +102,17 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins = 0;
+	int is_toneporta;
 
 	flags = 0;
 	note = -1;
 	key = e->note;
 	cont_sample = 0;
+	is_toneporta = 0;
+
+	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
+		is_toneporta = 1;
+	}
 
 	/* Check instrument */
 
@@ -118,7 +124,16 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->offset_val = 0;
 
 		if (IS_VALID_INSTRUMENT(ins)) {
-			xc->ins = ins;
+			if (!is_toneporta) {
+				xc->ins = ins;
+			} else {
+				/* Get new instrument volume */
+				sub = get_subinstrument(ctx, ins, key);
+				if (sub != NULL) {
+					xc->volume = sub->vol;
+					flags &= ~RESET_VOL;
+				}
+			}
 		} else {
 			new_invalid_ins = 1;
 			virt_resetchannel(ctx, chn);
@@ -272,7 +287,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->per_flags = 0;
 
 		if (IS_VALID_INSTRUMENT(ins)) {
-			xc->ins = ins;
+			if (!is_toneporta)
+				xc->ins = ins;
 		} else {
 			new_invalid_ins = 1;
 
