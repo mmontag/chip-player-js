@@ -970,6 +970,20 @@ void xmp_end_player(xmp_context opaque)
 	mixer_off(ctx);
 }
 
+void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	memcpy(info->md5, m->md5, 16);
+	info->mod = mod;
+	info->comment = m->comment;
+	info->num_sequences = m->num_sequences;
+	info->seq_data = m->seq_data;
+	info->vol_base = m->volbase;
+}
+
 void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -1017,14 +1031,8 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 	info->loop_count = p->loop_count;
 	info->virt_channels = p->virt.virt_channels;
 	info->virt_used = p->virt.virt_used;
-	info->vol_base = m->volbase;
-
-	info->mod = mod;
-	info->comment = m->comment;
 
 	info->sequence = p->sequence;
-	info->num_sequences = m->num_sequences;
-	info->seq_data = m->seq_data;
 
 	if (p->xc_data != NULL) {
 		for (i = 0; i < chn; i++) {

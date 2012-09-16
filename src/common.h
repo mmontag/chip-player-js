@@ -181,6 +181,7 @@ struct module_data {
 	char *basename;			/* file basename */
 	char *filename;			/* Module file name */
 	char *comment;			/* Comments, if any */
+	uint8 md5[16];			/* MD5 message digest */
 	int size;			/* File size */
 	double rrate;			/* Replay rate */
 	double time_factor;		/* Time conversion constant */

@@ -182,7 +182,6 @@ struct xmp_sequence {
 struct xmp_module {
 	char name[XMP_NAME_SIZE];	/* Module name */
 	char type[XMP_NAME_SIZE];	/* Module type */
-	unsigned char md5[16];		/* MD5 message digest */
 	int pat;			/* Number of patterns */
 	int trk;			/* Number of tracks */
 	int chn;			/* Tracks per pattern */
@@ -209,6 +208,15 @@ struct xmp_test_info {
 
 #define XMP_PERIOD_BASE	6847		/* C4 period */
 
+struct xmp_module_info {
+	unsigned char md5[16];		/* MD5 message digest */
+	int vol_base;			/* Volume scale */
+	struct xmp_module *mod;		/* Pointer to module data */
+	char *comment;			/* Comment text, if any */
+	int num_sequences;		/* Number of valid sequences */
+	struct xmp_sequence *seq_data;	/* Pointer to sequence data */
+};
+
 struct xmp_frame_info {			/* Current frame information */
 	int pos;			/* Current position */
 	int pattern;			/* Current pattern */
@@ -218,8 +226,8 @@ struct xmp_frame_info {			/* Current frame information */
 	int speed;			/* Current replay speed */
 	int bpm;			/* Current bpm */
 	int time;			/* Current module time in ms */
-	int frame_time;			/* Frame replay time in us */
 	int total_time;			/* Estimated replay time in ms*/
+	int frame_time;			/* Frame replay time in us */
 	void *buffer;			/* Pointer to sound buffer */
 	int buffer_size;		/* Used buffer size */
 	int total_size;			/* Total buffer size */
@@ -227,7 +235,6 @@ struct xmp_frame_info {			/* Current frame information */
 	int loop_count;			/* Loop counter */
 	int virt_channels;		/* Number of virtual channels */
 	int virt_used;			/* Used virtual channels */
-	int vol_base;			/* Volume scale */
 
 	struct xmp_channel_info {	/* Current channel information */
 		unsigned int period;	/* Sample period */
@@ -242,12 +249,7 @@ struct xmp_frame_info {			/* Current frame information */
 		struct xmp_event event;	/* Current track event */
 	} channel_info[XMP_MAX_CHANNELS];
 
-	struct xmp_module *mod;		/* Pointer to module data */
-	char *comment;			/* Comment text, if any */
-
 	int sequence;			/* Current sequence */
-	int num_sequences;		/* Number of valid sequences */
-	struct xmp_sequence *seq_data;	/* Pointer to sequence data */
 };
 
 
@@ -266,6 +268,7 @@ EXPORT int         xmp_play_frame      (xmp_context);
 EXPORT void        xmp_get_frame_info  (xmp_context, struct xmp_frame_info *);
 EXPORT void        xmp_end_player      (xmp_context);
 EXPORT void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
+EXPORT void        xmp_get_module_info  (xmp_context, struct xmp_module_info *);
 EXPORT char      **xmp_get_format_list (void);
 EXPORT int         xmp_next_position   (xmp_context);
 EXPORT int         xmp_prev_position   (xmp_context);
