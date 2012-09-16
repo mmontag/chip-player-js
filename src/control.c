@@ -212,7 +212,7 @@ int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 	return ret;
 }
 
-int xmp_mixer_set(xmp_context opaque, int parm, int val)
+int xmp_set_mixer(xmp_context opaque, int parm, int val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct mixer_data *s = &ctx->s;
@@ -246,7 +246,7 @@ int xmp_mixer_set(xmp_context opaque, int parm, int val)
 	return ret;
 }
 
-int xmp_mixer_get(xmp_context opaque, int parm)
+int xmp_get_mixer(xmp_context opaque, int parm)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct mixer_data *s = &ctx->s;

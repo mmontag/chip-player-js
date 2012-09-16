@@ -7,10 +7,10 @@ XMP_4.0.0 {
     xmp_test_module;
     xmp_load_module;
     xmp_release_module;
-    xmp_player_start;
-    xmp_player_frame;
-    xmp_player_get_info;
-    xmp_player_end;
+    xmp_start_player;
+    xmp_play_frame;
+    xmp_get_frame_info;
+    xmp_end_player;
     xmp_inject_event;
     xmp_get_format_list;
     xmp_next_position;
@@ -21,8 +21,8 @@ XMP_4.0.0 {
     xmp_seek_time;
     xmp_channel_mute;
     xmp_channel_vol;
-    xmp_mixer_set;
-    xmp_mixer_get;
+    xmp_set_mixer;
+    xmp_get_mixer;
   local:
     *;
 };
