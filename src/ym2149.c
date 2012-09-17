@@ -380,37 +380,37 @@ void ym2149_write_register(struct ym2149 *ym, int reg, int data)
 		ym->regs[0] = data & 255;
 		ym->stepA = toneStepCompute(ym, ym->regs[1], ym->regs[0]);
 		if (!ym->stepA)
-			ym->posA = (1 << 31);
+			ym->posA = (1U << 31);
 		break;
 	case 2:
 		ym->regs[2] = data & 255;
 		ym->stepB = toneStepCompute(ym, ym->regs[3], ym->regs[2]);
 		if (!ym->stepB)
-			ym->posB = (1 << 31);
+			ym->posB = (1U << 31);
 		break;
 	case 4:
 		ym->regs[4] = data & 255;
 		ym->stepC = toneStepCompute(ym, ym->regs[5], ym->regs[4]);
 		if (!ym->stepC)
-			ym->posC = (1 << 31);
+			ym->posC = (1U << 31);
 		break;
 	case 1:
 		ym->regs[1] = data & 15;
 		ym->stepA = toneStepCompute(ym, ym->regs[1], ym->regs[0]);
 		if (!ym->stepA)
-			ym->posA = (1 << 31);
+			ym->posA = (1U << 31);
 		break;
 	case 3:
 		ym->regs[3] = data & 15;
 		ym->stepB = toneStepCompute(ym, ym->regs[3], ym->regs[2]);
 		if (!ym->stepB)
-			ym->posB = (1 << 31);
+			ym->posB = (1U << 31);
 		break;
 	case 5:
 		ym->regs[5] = data & 15;
 		ym->stepC = toneStepCompute(ym, ym->regs[5], ym->regs[4]);
 		if (!ym->stepC)
-			ym->posC = (1 << 31);
+			ym->posC = (1U << 31);
 		break;
 	case 6:
 		ym->regs[6] = data & 0x1f;
@@ -422,12 +422,12 @@ void ym2149_write_register(struct ym2149 *ym, int reg, int data)
 		break;
 	case 7:
 		ym->regs[7] = data & 255;
-		ym->mixerTA = (data & (1 << 0)) ? 0xffff : 0;
-		ym->mixerTB = (data & (1 << 1)) ? 0xffff : 0;
-		ym->mixerTC = (data & (1 << 2)) ? 0xffff : 0;
-		ym->mixerNA = (data & (1 << 3)) ? 0xffff : 0;
-		ym->mixerNB = (data & (1 << 4)) ? 0xffff : 0;
-		ym->mixerNC = (data & (1 << 5)) ? 0xffff : 0;
+		ym->mixerTA = (data & (1U << 0)) ? 0xffff : 0;
+		ym->mixerTB = (data & (1U << 1)) ? 0xffff : 0;
+		ym->mixerTC = (data & (1U << 2)) ? 0xffff : 0;
+		ym->mixerNA = (data & (1U << 3)) ? 0xffff : 0;
+		ym->mixerNB = (data & (1U << 4)) ? 0xffff : 0;
+		ym->mixerNC = (data & (1U << 5)) ? 0xffff : 0;
 		break;
 	case 8:
 		ym->regs[8] = data & 31;
