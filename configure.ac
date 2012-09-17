@@ -46,6 +46,12 @@ if test "${enable_shared}" != no; then
   ])
 fi
 
+XMP_TRY_COMPILE(whether compiler understands -Wall,
+  ac_cv_c_flag_w_all,
+  -Wall,[
+  int main(){}],
+  CFLAGS="${CFLAGS} -Wall")  
+
 XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
   ac_cv_c_flag_f_visibility_hidden,
   -fvisibility=hidden,[
