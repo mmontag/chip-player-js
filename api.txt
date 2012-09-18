@@ -45,7 +45,7 @@ sound file:
     int main(int argc, char **argv)
     {
         xmp_context c;
-        struct xmp_module_info mi;
+        struct xmp_frame_info mi;
         FILE *f;
     
         /* The output raw file */
@@ -65,16 +65,16 @@ sound file:
         }
     
         /* Play the module */
-        xmp_player_start(c, 44100, 0);
-        while (xmp_player_frame(c) == 0) {
-            xmp_player_get_info(c, &mi);
+        g(c, 44100, 0);
+        while (xmp_play_frame(c) == 0) {
+            xmp_get_frame_info(c, &mi);
     
             if (mi.loop_count > 0)    /* exit before looping */
                 break;
     
             fwrite(mi.buffer, mi.buffer_size, 1, f);  /* write audio data */
         }
-        xmp_player_end(c);
+        xmp_end_player(c);
         xmp_release_module(c);        /* unload module */
         xmp_free_context(c);          /* destroy the player context */
     
@@ -100,7 +100,7 @@ These two calls return 0 on success or <0 in case of error. Error codes are:
 
 If a system error occurs, the specific error is set in errno.
 
-Parameters to [`xmp_player_start()`](#xmp_player_start) are the sampling
+Parameters to [`g()`](#xmp_start_player) are the sampling
 rate (up to 48kHz) and a bitmapped integer holding one or more of the
 following mixer flags:
 
@@ -110,13 +110,13 @@ following mixer flags:
     XMP_MIX_NEAREST       /* Mix using nearest neighbor interpolation */
     XMP_MIX_NOFILTER      /* Disable lowpass filter */
 
-After [`xmp_player_start()`](#xmp_player_start) is called, each call to
-[`xmp_player_frame()`](#xmp_player_frame) will render an audio frame.
-Call [`xmp_player_get_info()`](#xmp_player_get_info) to retrieve the buffer
-address and size. [`xmp_player_frame()`](#xmp_player_frame) returns 0 on
+After [`g()`](#xmp_start_player) is called, each call to
+[`xmp_play_frame()`](#xmp_play_frame) will render an audio frame.
+Call [`xmp_get_frame_info()`](#xmp_get_frame_info) to retrieve the buffer
+address and size. [`xmp_play_frame()`](#xmp_play_frame) returns 0 on
 success or -1 if replay should stop.
 
-Use [`xmp_player_end()`](#xmp_player_end),
+Use [`xmp_end_player()`](#xmp_end_player),
 [`xmp_release_module()`](#xmp_release_module) and
 [`xmp_free_context()`](#xmp_free_context) to release memory and end replay.
 
@@ -218,8 +218,8 @@ API reference
 
 ### Module playing ###
 
-<a id="xmp_player_start"></a>
-**`int xmp_player_start(xmp_context c, int rate, int flags)`**
+<a id="g"></a>
+**`int g(xmp_context c, int rate, int flags)`**
 
 > Start playing the currently loaded module.
 >
@@ -248,8 +248,8 @@ XMP_MIX_NOFILTER     /* Disable lowpass filter */
   error, or `XMP_ERROR_SYSTEM` in case of a system error (the system error
   code is set in `errno`).
 
-<a id="xmp_player_frame"></a>
-**`int xmp_player_frame(xmp_context c)`**
+<a id="xmp_play_frame"></a>
+**`int xmp_play_frame(xmp_context c)`**
 
 > Play one frame of the module. Modules usually play at 50 frames per second.
 >
@@ -259,8 +259,8 @@ XMP_MIX_NOFILTER     /* Disable lowpass filter */
 >
 > **Returns:** 0 if sucessful or -1 if the module was stopped.
 
-<a id="xmp_player_get_info"></a>
-**`void xmp_player_get_info(xmp_context c, struct xmp_module_info *info)`**
+<a id="xmp_get_frame_info"></a>
+**`void xmp_get_frame_info(xmp_context c, struct xmp_frame_info *info)`**
 
 > Retrieve current module and replay data.
 >
@@ -268,64 +268,57 @@ XMP_MIX_NOFILTER     /* Disable lowpass filter */
 >
 > _c_: the player context handle.
 >
-> _info_: pointer to structure containing current data. `struct
-> xmp_module_info` is defined as follows::
+> _info_: pointer to structure containing current frame data. `struct
+> xmp_frame_info` is defined as follows::
 >
 <blockquote>
 <blockquote>
 <pre>
-struct xmp_module_info {          /* Current module information */
-    int order;                    /* Current position */
-    int pattern;                  /* Current pattern */
-    int row;                      /* Current row in pattern */
-    int num_rows;                 /* Number of rows in current pattern */
-    int frame;                    /* Current frame */
-    int speed;                    /* Current replay speed */
-    int bpm;                      /* Current bpm */
-    int time;                     /* Current module time in ms */
-    int frame_time;               /* Frame replay time in us */
-    int total_time;               /* Estimated replay time in ms*/
-    void *buffer;                 /* Pointer to sound buffer */
-    int buffer_size;              /* Used buffer size */
-    int total_size;               /* Total buffer size */
-    int volume;                   /* Current master volume */
-    int loop_count;               /* Loop counter */
-    int virt_channels;            /* Number of virtual channels */
-    int virt_used;                /* Used virtual channels */
-    int vol_base;                 /* Volume scale */
+struct xmp_frame_info {			/* Current frame information */
+	int pos;			/* Current position */
+	int pattern;			/* Current pattern */
+	int row;			/* Current row in pattern */
+	int num_rows;			/* Number of rows in current pattern */
+	int frame;			/* Current frame */
+	int speed;			/* Current replay speed */
+	int bpm;			/* Current bpm */
+	int time;			/* Current module time in ms */
+	int total_time;			/* Estimated replay time in ms*/
+	int frame_time;			/* Frame replay time in us */
+	void *buffer;			/* Pointer to sound buffer */
+	int buffer_size;		/* Used buffer size */
+	int total_size;			/* Total buffer size */
+	int volume;			/* Current master volume */
+	int loop_count;			/* Loop counter */
+	int virt_channels;		/* Number of virtual channels */
+	int virt_used;			/* Used virtual channels */
+	int sequence;			/* Current sequence */
 
-    struct xmp_channel_info {     /* Current channel information */
-        unsigned int period;      /* Sample period */
-        unsigned int position;    /* Sample position */
-        short pitchbend;          /* Linear bend from base note*/
-        unsigned char note;       /* Current base note number */
-        unsigned char instrument; /* Current instrument number */
-        unsigned char sample;     /* Current sample number */
-        unsigned char volume;     /* Current volume */
-        unsigned char pan;        /* Current stereo pan */
-        unsigned char reserved;   /* Reserved */
-        struct xmp_event event;   /* Current track event */
-    } channel_info[XMP_MAX_CHANNELS];
-
-    struct xmp_module *mod;       /* Pointer to module data */
-    char *comment;                /* Comment text, if any */
-
-    int sequence;                 /* Current sequence */
-    int num_sequences;            /* Number of valid sequences */
-    struct xmp_sequence *seq_data; /* Pointer to sequence data */
+	struct xmp_channel_info {	/* Current channel information */
+		unsigned int period;	/* Sample period */
+		unsigned int position;	/* Sample position */
+		short pitchbend;	/* Linear bend from base note*/
+		unsigned char note;	/* Current base note number */
+		unsigned char instrument; /* Current instrument number */
+		unsigned char sample;	/* Current sample number */
+		unsigned char volume;	/* Current volume */
+		unsigned char pan;	/* Current stereo pan */
+		unsigned char reserved;	/* Reserved */
+		struct xmp_event event;	/* Current track event */
+	} channel_info[XMP_MAX_CHANNELS];
 };
 </pre>
 </blockquote>
 </blockquote>
 > This function should be used to retrieve sound buffer data
-> after [`xmp_player_frame()`](#xmp_player_frame) is called. Fields
+> after [`xmp_play_frame()`](#xmp_play_frame) is called. Fields
 > `buffer` and `buffer_size` > contain the pointer to the sound buffer
 > PCM data and its size.
 >
 > **Returns:** 0 if sucessful or -1 if the module was stopped.
 
-<a id="xmp_player_end"></a>
-**`void xmp_player_end(xmp_context c)`**
+<a id="xmp_end_player"></a>
+**`void xmp_end_player(xmp_context c)`**
 
 > End module replay and releases player memory.
 >
@@ -420,29 +413,31 @@ struct xmp_module_info {          /* Current module information */
 
 ### Mixer parameter setting ###
 
-<a id="xmp_mixer_amp"></a>
-**`int xmp_mixer_amp(xmp_context c, int val)`**
+<a id="xmp_set_mixer"></a>
+**`int xmp_set_mixer(xmp_context c, int param, int val)`**
 
-> Set mixer amplification factor.
+> Set mixer parameter with the specified value.
+>
+> **Parameters:**
+>
+> _param_: mixer parameter. Valid parameters are XMP_MIXER_AMP for
+> the amplification factor, XMP_MIXER_MIX for the mixing factor,
+> XMP_MIXER_INTERP for the interpolation type, and XMP_MIXER_DSP for
+> DSP effect flags.
+>
+> **Returns:** 0 if parameter was correctly set, or -XMP_ERROR_INVALID
+  if parameter or values are out of the valid ranges.
+
+<a id="xmp_get_mixer"></a>
+**`int xmp_get_mixer(xmp_context c, int param)`**
+
+> Retrieve current value of the specified mixer parameter.
 >
 > **Parameters:**
 >
 > _c_: the player context handle.
 >
-> _val_: amplification factor. Valid values are 0 to 3, default is 1.
+> _val_:
 >
-> **Returns:** The previous amplification factor value.
-
-<a id="xmp_mixer_mix"></a>
-**`int xmp_mixer_mix(xmp_context c, int val)`**
-
-> Skip replay to the specified time.
->
-> **Parameters:**
->
-> _c_: the player context handle.
->
-> _val_: Left/right channel mixing. Valid values are 0 to 100, default is 70.
->
-> **Returns:** The previous mixing value.
+> **Returns:**
 

@@ -1,11 +1,11 @@
-libxmp version 3.9.4
+Libxmp version 4.0
 
-This is an experimental release of libxmp. The API can be modified until
-the 4.0 stable release.
+Libxmp is a library that renders module file to PCM data. It supports
+many module formats including Protracker (MOD), Scream Tracker 3 (S3M),
+Fast Tracker II (XM), and Impulse Tracker (IT).
 
-Check http://xmp.sf.net/api.html for the current API reference. Better
-documentation will be included in the stable relase. Also check the xmp.h
-header file and the xmp player front-end.
+
+Usage example:
 
 This example loads a module, plays it at 44.1kHz and writes it to a raw
 sound file:
@@ -17,7 +17,7 @@ sound file:
     int main(int argc, char **argv)
     {
         xmp_context c;
-        struct xmp_module_info mi;
+        struct xmp_frame_info fi;
         FILE *f;
     
         /* The output raw file */
@@ -37,16 +37,16 @@ sound file:
         }
     
         /* Play the module */
-        xmp_player_start(c, 44100, 0);
-        while (xmp_player_frame(c) == 0) {
-            xmp_player_get_info(c, &mi);
+        xmp_start_player(c, 44100, 0);
+        while (xmp_play_frame(c) == 0) {
+            xmp_get_frame_info(c, &fi);
     
-            if (mi.loop_count > 0)    /* exit before looping */
+            if (fi.loop_count > 0)    /* exit before looping */
                 break;
     
-            fwrite(mi.buffer, mi.buffer_size, 1, f);  /* write audio data */
+            fwrite(fi.buffer, fi.buffer_size, 1, f);  /* write audio data */
         }
-        xmp_player_end(c);
+        xmp_end_player(c);
         xmp_release_module(c);        /* unload module */
         xmp_free_context(c);          /* destroy the player context */
     
@@ -73,7 +73,7 @@ codes are:
 
 If a system error occurs, the specific error is set in errno.
 
-Parameters to xmp_player_start() are the sampling rate (up to 48kHz)
+Parameters to xmp_start_player() are the sampling rate (up to 48kHz)
 and a bitmapped integer holding one or more of the following mixer flags:
 
   XMP_MIX_8BIT          /* Mix to 8-bit instead of 16 */
@@ -82,11 +82,11 @@ and a bitmapped integer holding one or more of the following mixer flags:
   XMP_MIX_NEAREST       /* Mix using nearest neighbor interpolation */
   XMP_MIX_NOFILTER      /* Disable lowpass filter */
 
-After xmp_player_start() is called, each call to xmp_player_frame() will
-render an audio frame.  Call xmp_player_get_info() to retrieve the buffer
-address and size. xmp_player_frame() returns 0 on success or -1 if replay
+After xmp_start_player() is called, each call to xmp_play_frame() will
+render an audio frame.  Call xmp_get_frame_info() to retrieve the buffer
+address and size. xmp_play_frame() returns 0 on success or -1 if replay
 should stop.
 
-Use xmp_player_end(), xmp_release_module() and xmp_free_context() to
+Use xmp_end_player(), xmp_release_module() and xmp_free_context() to
 release memory and end replay.
 
