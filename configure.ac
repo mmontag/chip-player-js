@@ -3,6 +3,7 @@ AC_INIT
 0>confdefs.h
 AC_ARG_ENABLE(static, [  --enable-static         Build static library])
 AC_ARG_ENABLE(shared, [  --disable-shared        Don't build shared library])
+AC_SUBST(LD_VERSCRIPT)
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
@@ -30,6 +31,7 @@ AC_DEFUN([AC_CHECK_DEFINED],[
   AS_VAR_POPDEF([ac_var])dnl
 ])
 
+
 if test "${enable_static}" = yes; then
   AC_SUBST(STATIC,static)
 fi
@@ -56,7 +58,8 @@ XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
   ac_cv_c_flag_f_visibility_hidden,
   -fvisibility=hidden,[
   int main(){}],
-  CFLAGS="${CFLAGS} -fvisibility=hidden")  
+  [CFLAGS="${CFLAGS} -fvisibility=hidden"
+  LD_VERSCRIPT="-Wl,--version-script,libxmp.map"]) 
 
 XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
   ac_cv_c_flag_w_unused_but_set_variable,

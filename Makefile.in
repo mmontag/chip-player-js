@@ -22,6 +22,7 @@ BINDIR		= @bindir@
 LIBDIR		= @libdir@
 INCLUDEDIR	= @includedir@
 SYSCONFDIR	= @sysconfdir@/xmp
+LD_VERSCRIPT	= @LD_VERSCRIPT@
 SHELL		= /bin/sh
 
 DIST		= libxmp-$(VERSION)
@@ -35,7 +36,6 @@ SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
-MAPFILE		= libxmp.map
 GCLIB		= libxmp-gc.a
 
 all: @STATIC@ @SHARED@
@@ -91,7 +91,7 @@ lib/$(LIB): $(OBJS)
 
 lib/$(SHLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) -Wl,--version-script,$(MAPFILE) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) $(LD_VERSCRIPT) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(SHLIB) lib/$(SONAME)
