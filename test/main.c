@@ -10,7 +10,6 @@
 #include "test.h"
 #include "../src/list.h"
 
-extern const char *const sys_siglist[];
 
 struct test {
 	struct list_head list;
@@ -81,7 +80,7 @@ int run_tests()
 		if (status != 0) {
 			fail++;
 			if (WIFSIGNALED(status)) {
-				printf("%s: ", sys_siglist[WTERMSIG(status)]);
+				printf("%s: ", strsignal(WTERMSIG(status)));
 			}
 			printf("%s**fail**%s\n", color_fail, color_none);
 		} else {
