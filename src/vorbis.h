@@ -42,6 +42,10 @@ extern "C" {
 // will occur from it as described above. Otherwise just pass NULL
 // to use malloc()/alloca()
 
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+
 typedef struct
 {
    char *alloc_buffer;
