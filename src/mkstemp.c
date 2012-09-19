@@ -28,8 +28,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
-#include <process.h>
+/* #include <process.h> */
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 /* We need to provide a type for gcc_uint64_t.  */
 #ifdef __GNUC__
