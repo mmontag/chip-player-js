@@ -54,12 +54,18 @@ XMP_TRY_COMPILE(whether compiler understands -Wall,
   int main(){}],
   CFLAGS="${CFLAGS} -Wall")  
 
-XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
-  ac_cv_c_flag_f_visibility_hidden,
-  -fvisibility=hidden,[
+XMP_TRY_COMPILE(whether compiler understands -xldscope=hidden,
+  ac_cv_c_flag_xldscope_hidden,
+  -xldscope=hidden,[
   int main(){}],
-  [LDFLAGS="${LDFLAGS} -fvisibility=hidden"
-  LD_VERSCRIPT="-Wl,--version-script,libxmp.map"]) 
+  [LDFLAGS="${LDFLAGS} -xldscope=hidden"],
+  [XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
+    ac_cv_c_flag_f_visibility_hidden,
+    -fvisibility=hidden,[
+    int main(){}],
+    [LDFLAGS="${LDFLAGS} -fvisibility=hidden"
+    LD_VERSCRIPT="-Wl,--version-script,libxmp.map"])]
+  )
 
 XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
   ac_cv_c_flag_w_unused_but_set_variable,

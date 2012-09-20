@@ -19,6 +19,8 @@ extern "C" {
 # endif
 #elif __GNUC__ >= 4
 # define EXPORT __attribute__((visibility ("default")))
+#elif defined(__SUNPRO_C)
+# define EXPORT __global
 #else
 # define EXPORT 
 #endif
