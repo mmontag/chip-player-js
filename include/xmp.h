@@ -17,7 +17,7 @@ extern "C" {
 # else
 #  define EXPORT __declspec(dllimport)
 # endif
-#elif __GNUC__ >= 4
+#elif __GNUC__ >= 4 || defined(__HP_cc)
 # define EXPORT __attribute__((visibility ("default")))
 #elif defined(__SUNPRO_C)
 # define EXPORT __global
