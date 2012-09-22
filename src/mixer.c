@@ -424,6 +424,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 				vi->end += lpe - lps;
+				vi->pos -= lpe - lps;	/* forward loop */
 			}
 		}
 	}
