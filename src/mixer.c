@@ -231,7 +231,7 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 
 
 /* Ok, it's messy, but it works :-) Hipolito */
-static void anticlick(struct context_data *ctx, int voc, int vol0, int vol, int pan,
+static void anticlick(struct context_data *ctx, int voc, int vol, int pan,
 		      int32 *buf, int count)
 {
 	int oldvol, newvol, pan0;
@@ -252,12 +252,12 @@ static void anticlick(struct context_data *ctx, int voc, int vol0, int vol, int 
 		pan0 = -127;
 	}
 
-	if (vol0) {
-		oldvol = vol0 * (0x80 - pan0);
+	if (vi->vol) {
+		oldvol = vi->vol * (0x80 - pan0);
 		newvol = vol * (0x80 - pan);
 		vi->sright -= (int64)vi->sright * newvol / oldvol;
 
-		oldvol = vol0 * (0x80 + pan0);
+		oldvol = vi->vol * (0x80 + pan0);
 		newvol = vol * (0x80 + pan);
 		vi->sleft -= (int64)vi->sleft * newvol / oldvol;
 	}
@@ -346,10 +346,6 @@ void mixer_softmixer(struct context_data *ctx)
 		lps = xxs->lps;
 		lpe = xxs->lpe;
 
-		/* Run anticlick if sample is cut by setting volume to 0 */
-		if (vi->oldvol != 0 && vi->vol < vi->oldvol / 2)
-			anticlick(ctx, voc, vi->oldvol, vi->vol, 0, buf_pos, s->ticksize);
-
 		for (size = s->ticksize; size > 0; ) {
 			/* How many samples we can write before the loop break
 			 * or sample end... */
@@ -360,7 +356,7 @@ void mixer_softmixer(struct context_data *ctx)
 					SMIX_SHIFT) - vi->frac) / step;
 			}
 
-			/* ...inside the frame boundaries */
+			/* ...inside the tick boundaries */
 			if (samples > size) {
 				samples = size;
 			}
@@ -409,14 +405,14 @@ void mixer_softmixer(struct context_data *ctx)
 			vi->pos += vi->frac >> SMIX_SHIFT;
 			vi->frac &= SMIX_MASK;
 
-			/* No more samples in this frame */
+			/* No more samples in this tick */
 			size -= samples;
 			if (size <= 0)
 				continue;
 
 			/* First sample loop run */
 			if (~xxs->flg & XMP_SAMPLE_LOOP) {
-				anticlick(ctx, voc, vi->vol, 0, 0, buf_pos, size);
+				anticlick(ctx, voc, 0, 0, buf_pos, size);
 				virt_resetvoice(ctx, voc, 0);
 				size = 0;
 				continue;
@@ -576,9 +572,8 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
 	if (s->interp > XMP_INTERP_NEAREST)
-		anticlick(ctx, voc, vi->vol, vol, vi->pan, NULL, 0);
+		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
 
-	vi->oldvol = vi->vol;
 	vi->vol = vol;
 
 	if (vi->fidx & FLAG_SYNTH) {
