@@ -25,8 +25,8 @@
 /* ------------------------------------------------------------------ */
 /* export symbols */
 
-int mdx_parse_mml_ym2151( MDX_DATA *, PDX_DATA * );
-int mdx_init_track_work_area_ym2151( void );
+int mdx_parse_mml_ym2151( MDX_DATA *, PDX_DATA *, songdata * );
+int mdx_init_track_work_area_ym2151( songdata * );
 
 /* ------------------------------------------------------------------ */
 /* local valiables */
@@ -55,47 +55,47 @@ typedef struct _mdxmml_ym2151_instances {
 /* ------------------------------------------------------------------ */
 /* local functions */
 
-static int  set_new_event( int );
-static void set_tempo( int );
-static void note_off( int );
-static void note_on( int, int );
-static void set_volume( int, int );
-static void inc_volume( int );
-static void dec_volume( int );
-static void set_phase( int, int );
-static void set_keyoff( int );
-static void set_voice( int, int );
-static void set_quantize( int, int );
-static void set_detune( int, int, int );
-static void set_portament( int, int, int );
-static void set_freq( int, int );
-static void set_opm_reg( int, int, int );
-static void set_fade_out( int );
-static void send_sync( int );
-static void recv_sync( int );
+static int  set_new_event( int, songdata * );
+static void set_tempo( int, songdata * );
+static void note_off( int, songdata * );
+static void note_on( int, int, songdata * );
+static void set_volume( int, int, songdata * );
+static void inc_volume( int, songdata * );
+static void dec_volume( int, songdata * );
+static void set_phase( int, int, songdata * );
+static void set_keyoff( int, songdata * );
+static void set_voice( int, int, songdata * );
+static void set_quantize( int, int, songdata * );
+static void set_detune( int, int, int, songdata * );
+static void set_portament( int, int, int, songdata * );
+static void set_freq( int, int, songdata * );
+static void set_opm_reg( int, int, int, songdata * );
+static void set_fade_out( int, songdata * );
+static void send_sync( int, songdata * );
+static void recv_sync( int, songdata * );
 
-static void set_plfo_onoff( int, int );
-static void set_plfo( int, int, int, int, int, int );
-static void set_alfo_onoff( int, int );
-static void set_alfo( int, int, int, int, int, int );
-static void set_hlfo_onoff( int, int );
-static void set_hlfo( int, int, int, int, int, int );
-static void set_lfo_delay( int, int );
+static void set_plfo_onoff( int, int, songdata * );
+static void set_plfo( int, int, int, int, int, int, songdata * );
+static void set_alfo_onoff( int, int, songdata * );
+static void set_alfo( int, int, int, int, int, int, songdata * );
+static void set_hlfo_onoff( int, int, songdata * );
+static void set_hlfo( int, int, int, int, int, int, songdata * );
+static void set_lfo_delay( int, int, songdata * );
 
-static void do_quantize( int, int );
+static void do_quantize( int, int, songdata * );
 
 /* ------------------------------------------------------------------ */
 /* class interface */
 
-extern void* _get_mdxmml_ym2151(void);
+extern void* _get_mdxmml_ym2151(songdata *data);
 
 static mdxmml_ym2151_instances*
-__get_instances(void)
+__get_instances(songdata *data)
 {
-  return (mdxmml_ym2151_instances*)_get_mdxmml_ym2151();
+  return (mdxmml_ym2151_instances*)_get_mdxmml_ym2151(data);
 }
 
-#define __GETSELF  mdxmml_ym2151_instances* self = __get_instances();
+#define __GETSELF(data)  mdxmml_ym2151_instances* self = __get_instances(data);
 
 void*
 _mdxmml_ym2151_initialize(void)
@@ -130,7 +130,7 @@ _mdxmml_ym2151_finalize(void* in_self)
 /* implementations */
 
 int
-mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx )
+mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx, songdata *data )
 {
   int i;
   long count;
@@ -139,19 +139,19 @@ mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx )
   int master_volume;
   int infinite_loops;
 
-  __GETSELF;
+  __GETSELF(data);
 
   self->mdx = orig_mdx;
   self->pdx = orig_pdx;
 
-  mdx_init_track_work_area_ym2151();
+  mdx_init_track_work_area_ym2151(data);
 
   self->pcm8_disable=FLAG_TRUE;
-  if ( pcm8_open(self->mdx)==0 ) {
+  if ( pcm8_open(self->mdx, data)==0 ) {
     self->pcm8_disable=FLAG_FALSE;
   }
 
-  if (!ym2151_reg_init( self->mdx )) {
+  if (!ym2151_reg_init( self->mdx, data )) {
     /* failed to initialize opm! */
     return 1;
   }
@@ -170,8 +170,8 @@ mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx )
       if ( fade_out_wait==0 ) { master_volume--; }
       if ( master_volume==0 ) { break; }
     }
-    ym2151_set_master_volume( master_volume * self->mdx->fm_volume / 127 );
-    pcm8_set_master_volume( master_volume * self->mdx->pcm_volume / 127 );
+    ym2151_set_master_volume( master_volume * self->mdx->fm_volume / 127, data );
+    pcm8_set_master_volume( master_volume * self->mdx->pcm_volume / 127, data );
 
     all_track_finished=FLAG_TRUE;
     infinite_loops = 32767; /* large enough */
@@ -185,15 +185,15 @@ mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx )
       all_track_finished=FLAG_FALSE;
 
       self->mdx->track[i].gate--;
-      if ( self->mdx->track[i].gate == 0 ) { note_off( i ); }
+      if ( self->mdx->track[i].gate == 0 ) { note_off( i, data ); }
 
       if ( i<8 ) {
-	ym2151_set_freq_volume( i ); /* do portament, lfo, detune */
+	ym2151_set_freq_volume( i, data ); /* do portament, lfo, detune */
       }
 
       count--;
       while ( count == 0 ) {
-	count=set_new_event( i );
+	count=set_new_event( i, data );
       }
 
       self->mdx->track[i].counter = count;
@@ -213,13 +213,13 @@ mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx )
     self->mdx->total_count++;
     self->mdx->elapsed_time += 1000*1024*(256 - self->mdx->tempo)/4000;
 
-	do_pcm8(NULL,-1);
+	do_pcm8(NULL,-1, data);
     
 	}
 
-  ym2151_all_note_off();
-  pcm8_close();
-  ym2151_shutdown();
+  ym2151_all_note_off(data);
+  pcm8_close(data);
+  ym2151_shutdown(data);
 
   return 0;
 }
@@ -228,21 +228,21 @@ mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx )
 
 
 void*
-mdx_parse_mml_ym2151_async_initialize(MDX_DATA *orig_mdx, PDX_DATA *orig_pdx)
+mdx_parse_mml_ym2151_async_initialize(MDX_DATA *orig_mdx, PDX_DATA *orig_pdx, songdata *data)
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->mdx = orig_mdx;
   self->pdx = orig_pdx;
 
-  mdx_init_track_work_area_ym2151();
+  mdx_init_track_work_area_ym2151(data);
 
   self->pcm8_disable=FLAG_TRUE;
-  if ( pcm8_open(self->mdx)==0 ) {
+  if ( pcm8_open(self->mdx, data)==0 ) {
     self->pcm8_disable=FLAG_FALSE;
   }
 
-  if (!ym2151_reg_init( self->mdx )) {
+  if (!ym2151_reg_init( self->mdx, data )) {
     /* failed to initialize opm! */
     return NULL;
   }
@@ -257,22 +257,22 @@ mdx_parse_mml_ym2151_async_initialize(MDX_DATA *orig_mdx, PDX_DATA *orig_pdx)
 }
 
 void
-mdx_parse_mml_ym2151_async_finalize(void* self)
+mdx_parse_mml_ym2151_async_finalize(songdata *data)
 {
-  ym2151_all_note_off();
-  pcm8_close();
-  ym2151_shutdown();
+  ym2151_all_note_off(data);
+  pcm8_close(data);
+  ym2151_shutdown(data);
 }
 
 int
-mdx_parse_mml_ym2151_async(void* in_self)
+mdx_parse_mml_ym2151_async(songdata *data)
 {
   int i;
   long count;
   int infinite_loops;
-  mdxmml_ym2151_instances* self = (mdxmml_ym2151_instances *)in_self;
+  __GETSELF(data)
 
-  pcm8_clear_buffer_flush_flag();
+  pcm8_clear_buffer_flush_flag(data);
  loop:
   if (self->all_track_finished==FLAG_TRUE) {
     return FLAG_FALSE;
@@ -284,8 +284,8 @@ mdx_parse_mml_ym2151_async(void* in_self)
     if ( self->fade_out_wait==0 ) { self->master_volume--; }
     if ( self->master_volume==0 ) { return FLAG_FALSE; }
   }
-  ym2151_set_master_volume( self->master_volume * self->mdx->fm_volume / 127 );
-  pcm8_set_master_volume( self->master_volume * self->mdx->pcm_volume / 127 );
+  ym2151_set_master_volume( self->master_volume * self->mdx->fm_volume / 127, data );
+  pcm8_set_master_volume( self->master_volume * self->mdx->pcm_volume / 127, data );
 
   self->all_track_finished=FLAG_TRUE;
   infinite_loops = 32767; /* large enough */
@@ -300,15 +300,15 @@ mdx_parse_mml_ym2151_async(void* in_self)
     self->all_track_finished=FLAG_FALSE;
     
     self->mdx->track[i].gate--;
-    if ( self->mdx->track[i].gate == 0 ) { note_off( i ); }
+    if ( self->mdx->track[i].gate == 0 ) { note_off( i, data ); }
     
     if ( i<8 ) {
-      ym2151_set_freq_volume( i ); /* do portament, lfo, detune */
+      ym2151_set_freq_volume( i, data ); /* do portament, lfo, detune */
     }
 
     count--;
     while ( count == 0 ) {
-      count=set_new_event( i );
+      count=set_new_event( i, data );
     }
 
     self->mdx->track[i].counter = count;
@@ -331,29 +331,28 @@ mdx_parse_mml_ym2151_async(void* in_self)
   return FLAG_TRUE;
 }
 
-int mdx_parse_mml_ym2151_async_get_length(void* in_self)
+int mdx_parse_mml_ym2151_async_get_length(songdata *data)
 {
   int next,sec;
   
-  mdxmml_ym2151_instances* self = (mdxmml_ym2151_instances *)in_self;
-
+  __GETSELF(data)
   
   next = 1;
   while(next && self->mdx->elapsed_time < (1200 * 1000000))
   {
-	next = mdx_parse_mml_ym2151_async(self);
+	next = mdx_parse_mml_ym2151_async(data);
   }
   
   sec = (int)self->mdx->elapsed_time / 1000000;
 
   /* stop */
-  ym2151_all_note_off();
+  ym2151_all_note_off(data);
 
   /* reinitialize */ 
-  mdx_init_track_work_area_ym2151();
-  pcm8_init();
+  mdx_init_track_work_area_ym2151(data);
+  pcm8_init(data);
   
-  if (!ym2151_reg_init( self->mdx )) {
+  if (!ym2151_reg_init( self->mdx, data )) {
     /* failed to initialize opm! */
     return 0;
   }
@@ -369,9 +368,9 @@ int mdx_parse_mml_ym2151_async_get_length(void* in_self)
 }
 
 int
-mdx_parse_mml_ym2151_make_samples(short *buffer,int buffer_size)
+mdx_parse_mml_ym2151_make_samples(short *buffer,int buffer_size, songdata *data)
 {
-   do_pcm8(buffer,buffer_size);
+   do_pcm8(buffer,buffer_size, data);
    return 0;
 }
 
@@ -389,17 +388,17 @@ mdx_parse_mml_get_tempo(void* in_self)
 
 /* ------------------------------------------------------------------ */
 
-#define __GETMDX \
+#define __GETMDX(data) \
 MDX_DATA* mdx; \
-__GETSELF; \
+__GETSELF(data); \
 mdx = self->mdx;
 
 int
-mdx_init_track_work_area_ym2151( void )
+mdx_init_track_work_area_ym2151( songdata *data )
 {
   int i;
 
-  __GETMDX;
+  __GETMDX(data);
 
   self->fade_out = 0;
 
@@ -424,10 +423,10 @@ mdx_init_track_work_area_ym2151( void )
     mdx->track[i].quantize2     = 0;
     mdx->track[i].detune        = 0;
     if ( i<8 )
-      ym2151_set_detune(i,0);
+      ym2151_set_detune(i,0, data);
     mdx->track[i].portament     = 0;
     if ( i<8 )
-      ym2151_set_portament(i,0);
+      ym2151_set_portament(i,0, data);
 
     mdx->track[i].loop_depth = 0;
     mdx->track[i].infinite_loop_times = 0;
@@ -454,13 +453,13 @@ mdx_init_track_work_area_ym2151( void )
 }
 
 static int
-set_new_event( int t )
+set_new_event( int t, songdata *songdata )
 {
   int ptr;
   unsigned char *data;
   int count;
   int follower;
-  __GETMDX;
+  __GETMDX(songdata);
 
   data = mdx->data;
   ptr = mdx->track[t].current_mml_ptr;
@@ -474,62 +473,62 @@ set_new_event( int t )
 #endif
 
   if ( data[ptr] <= MDX_MAX_REST ) {  /* rest */
-    note_off(t);
+    note_off(t, songdata);
     count = data[ptr]+1;
     mdx->track[t].gate = count+1;
     follower=0;
 
   } else if ( data[ptr] <= MDX_MAX_NOTE ) { /* note */
-    note_on( t, data[ptr]);
+    note_on( t, data[ptr], songdata);
     count = data[ptr+1]+1;
-    do_quantize( t, count );
+    do_quantize( t, count, songdata );
     follower = 1;
 
   } else {
     switch ( data[ptr] ) {
 
     case MDX_SET_TEMPO:
-      set_tempo( data[ptr+1] );
+      set_tempo( data[ptr+1], songdata );
       follower = 1;
       break;
 
     case MDX_SET_OPM_REG:
-      set_opm_reg( t, data[ptr+1], data[ptr+2] );
+      set_opm_reg( t, data[ptr+1], data[ptr+2], songdata );
       follower = 2;
       break;
 
     case MDX_SET_VOICE:
-      set_voice( t, data[ptr+1] );
+      set_voice( t, data[ptr+1], songdata );
       follower = 1;
       break;
 
     case MDX_SET_PHASE:
-      set_phase( t, data[ptr+1] );
+      set_phase( t, data[ptr+1], songdata );
       follower = 1;
       break;
 
     case MDX_SET_VOLUME:
-      set_volume( t, data[ptr+1] );
+      set_volume( t, data[ptr+1], songdata );
       follower = 1;
       break;
 
     case MDX_VOLUME_DEC:
-      dec_volume( t );
+      dec_volume( t, songdata );
       follower = 0;
       break;
 
     case MDX_VOLUME_INC:
-      inc_volume( t );
+      inc_volume( t, songdata );
       follower = 0;
       break;
 
     case MDX_SET_QUANTIZE:
-      set_quantize( t, data[ptr+1] );
+      set_quantize( t, data[ptr+1], songdata );
       follower = 1;
       break;
 
     case MDX_SET_KEYOFF:
-      set_keyoff( t );
+      set_keyoff( t, songdata );
       follower = 0;
       break;
 
@@ -562,19 +561,19 @@ set_new_event( int t )
       break;
 
     case MDX_SET_DETUNE:
-      set_detune( t, data[ptr+1], data[ptr+2] );
+      set_detune( t, data[ptr+1], data[ptr+2], songdata );
       follower = 2;
       break;
 
     case MDX_SET_PORTAMENT:
-      set_portament( t, data[ptr+1], data[ptr+2] );
+      set_portament( t, data[ptr+1], data[ptr+2], songdata );
       follower = 2;
       break;
 
     case MDX_DATA_END:
       if ( data[ptr+1] == 0x00 ) {
 	count = -1;
-	note_off(t);
+	note_off(t, songdata);
 	follower = 1;
       } else {
 	ptr = ptr+2 - (0x10000-(data[ptr+1]*256 + data[ptr+2])) - 2;
@@ -588,59 +587,59 @@ set_new_event( int t )
       break;
 
     case MDX_SEND_SYNC:
-      send_sync( data[ptr+1] );
+      send_sync( data[ptr+1], songdata );
       follower = 1;
       break;
 
     case MDX_RECV_SYNC:
-      recv_sync( t );
+      recv_sync( t, songdata );
       follower = 0;
       count = 1;
       break;
 
     case MDX_SET_FREQ:
-      set_freq( t, data[ptr+1] );
+      set_freq( t, data[ptr+1], songdata );
       follower = 1;
       break;
 
     case MDX_SET_PLFO:
       if ( data[ptr+1] == 0x80 || data[ptr+1] == 0x81 ) {
-	set_plfo_onoff( t, data[ptr+1]-0x80 );
+	set_plfo_onoff( t, data[ptr+1]-0x80, songdata );
 	follower = 1;
       } else {
 	set_plfo( t,
 		  data[ptr+1], data[ptr+2], data[ptr+3],
-		  data[ptr+4], data[ptr+5] );
+		  data[ptr+4], data[ptr+5], songdata );
 	follower = 5;
       }
       break;
 
     case MDX_SET_ALFO:
       if ( data[ptr+1] == 0x80 || data[ptr+1] == 0x81 ) {
-	set_alfo_onoff( t, data[ptr+1]-0x80 );
+	set_alfo_onoff( t, data[ptr+1]-0x80, songdata );
 	follower = 1;
       } else {
 	set_alfo( t,
 		  data[ptr+1], data[ptr+2], data[ptr+3],
-		  data[ptr+4], data[ptr+5] );
+		  data[ptr+4], data[ptr+5], songdata );
 	follower = 5;
       }
       break;
 
     case MDX_SET_OPMLFO:
       if ( data[ptr+1] == 0x80 || data[ptr+1] == 0x81 ) {
-	set_hlfo_onoff( t, data[ptr+1]-0x80 );
+	set_hlfo_onoff( t, data[ptr+1]-0x80, songdata );
 	follower = 1;
       } else {
 	set_hlfo( t,
 		  data[ptr+1], data[ptr+2], data[ptr+3],
-		  data[ptr+4], data[ptr+5] );
+		  data[ptr+4], data[ptr+5], songdata );
 	follower = 5;
       }
       break;
 
     case MDX_SET_LFO_DELAY:
-      set_lfo_delay( t, data[ptr+1] );
+      set_lfo_delay( t, data[ptr+1], songdata );
       follower = 1;
       break;
 
@@ -651,10 +650,10 @@ set_new_event( int t )
     case MDX_FADE_OUT:
       if ( data[ptr+1]==0x00 ) {
 	follower = 1;
-	set_fade_out( 5 );
+	set_fade_out( 5, songdata );
       } else {
 	follower = 2;
-	set_fade_out( data[ptr+2] );
+	set_fade_out( data[ptr+2], songdata );
       }
       break;
 
@@ -672,9 +671,9 @@ set_new_event( int t )
 
 
 static void
-set_tempo( int val )
+set_tempo( int val, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if (val<2) return; /* workaround!!! */
   mdx->tempo = val;
@@ -682,16 +681,16 @@ set_tempo( int val )
 }
 
 static void
-note_off( int track )
+note_off( int track, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( mdx->track[track].keyoff_disable == FLAG_FALSE ) {
     mdx->track[track].note=-1;
     if ( track<8 )
-      ym2151_note_off(track);
+      ym2151_note_off(track, data);
     else
-      pcm8_note_off(track-8);
+      pcm8_note_off(track-8, data);
   }
   mdx->track[track].keyoff_disable = FLAG_FALSE;
 
@@ -699,11 +698,11 @@ note_off( int track )
 }
 
 static void
-note_on( int track, int note )
+note_on( int track, int note, songdata *data )
 {
   int last_note;
   PDX_DATA* pdx;
-  __GETMDX;
+  __GETMDX(data);
 
   pdx = self->pdx;
 
@@ -713,7 +712,7 @@ note_on( int track, int note )
 
   if ( mdx->track[track].phase != MDX_PAN_N ) {
     if ( track<8 ){
-      ym2151_note_on(track, mdx->track[track].note);
+      ym2151_note_on(track, mdx->track[track].note, data);
     }
     else {
       if ( note<MDX_MAX_PDX_TONE_NUMBER && self->pcm8_disable == FLAG_FALSE && pdx != NULL ) {
@@ -722,7 +721,7 @@ note_on( int track, int note )
 		      pdx->tone[n].data,
 		      (int)pdx->tone[n].size, 
 		      pdx->tone[n].orig_data,
-		      (int)pdx->tone[n].orig_size ); 
+		      (int)pdx->tone[n].orig_size, data ); 
       }
     }
   }
@@ -731,11 +730,11 @@ note_on( int track, int note )
 }
 
 static void
-do_quantize( int t, int count )
+do_quantize( int t, int count, songdata *data )
 {
   int gate;
 
-  __GETMDX;
+  __GETMDX(data);
 
   if ( mdx->track[t].keyoff_disable == FLAG_TRUE ) {
     gate = count+2;
@@ -761,33 +760,33 @@ do_quantize( int t, int count )
 }
 
 static void
-set_phase( int track, int val )
+set_phase( int track, int val, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   mdx->track[track].phase = val;
 
   if ( track<8 )
-    ym2151_set_pan(track, val);
+    ym2151_set_pan(track, val, data);
   else
-    pcm8_set_pan(val);
+    pcm8_set_pan(val, data);
 
   if ( val == MDX_PAN_N ) {
     if ( track<8 )
-      ym2151_note_off(track);
+      ym2151_note_off(track, data);
     else
-      pcm8_note_off(track-8);
+      pcm8_note_off(track-8, data);
   }
 
   return;
 }
 
 static void
-set_volume( int track, int val )
+set_volume( int track, int val, songdata * data )
 {
   int v;
   int m;
-  __GETMDX;
+  __GETMDX(data);
 
   if ( val < 0x10 ) {
     mdx->track[track].volume_normal = val;
@@ -806,17 +805,17 @@ set_volume( int track, int val )
   mdx->track[track].last_volume_normal = m;
 
   if ( track<8 )
-    ym2151_set_volume( track, v );
+    ym2151_set_volume( track, v, data );
   else
-    pcm8_set_volume( track-8, v );
+    pcm8_set_volume( track-8, v, data );
 
   return;
 }
 
 static void
-inc_volume( int track )
+inc_volume( int track, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( mdx->track[track].last_volume_normal == FLAG_TRUE ) {
     if ( ++mdx->track[track].volume_normal > 0x0f ) {
@@ -831,17 +830,17 @@ inc_volume( int track )
   }
 
   if ( track<8 )
-    ym2151_set_volume( track, mdx->track[track].volume );
+    ym2151_set_volume( track, mdx->track[track].volume, data );
   else
-    pcm8_set_volume( track-8, mdx->track[track].volume );
+    pcm8_set_volume( track-8, mdx->track[track].volume, data );
 
   return;
 }
 
 static void
-dec_volume( int track )
+dec_volume( int track, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( mdx->track[track].last_volume_normal == FLAG_TRUE) {
     if ( --mdx->track[track].volume_normal < 0 ) {
@@ -856,17 +855,17 @@ dec_volume( int track )
   }
 
   if ( track<8 )
-    ym2151_set_volume( track, mdx->track[track].volume );
+    ym2151_set_volume( track, mdx->track[track].volume, data );
   else
-    pcm8_set_volume( track-8, mdx->track[track].volume );
+    pcm8_set_volume( track-8, mdx->track[track].volume, data );
 
   return;
 }
 
 static void
-set_keyoff( int track )
+set_keyoff( int track, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   mdx->track[track].keyoff_disable = FLAG_TRUE;
 
@@ -874,24 +873,24 @@ set_keyoff( int track )
 }
 
 static void
-set_voice( int track, int val )
+set_voice( int track, int val, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( track<8 && val >= MDX_MAX_VOICE_NUMBER ) return;
   if ( track>7 && val >= MDX_MAX_PDX_BANK_NUMBER ) return;
   mdx->track[track].voice = val;
   if ( track<8 ) {
-    ym2151_set_voice( track, &mdx->voice[val] );
+    ym2151_set_voice( track, &mdx->voice[val], data );
   }
 
   return;
 }
 
 static void
-set_quantize( int track, int val )
+set_quantize( int track, int val, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( val < 9 ) {
     mdx->track[track].quantize1 = val;
@@ -906,67 +905,67 @@ set_quantize( int track, int val )
 }
 
 static void
-set_detune( int track, int v1, int v2 )
+set_detune( int track, int v1, int v2, songdata *data )
 {
   int v;
-  __GETMDX;
+  __GETMDX(data);
 
   if ( track<8 ) {
     v = v1*256 + v2;
     if ( v1 >= 0x80 ) v = v-0x10000;
     mdx->track[track].detune = v;
-    ym2151_set_detune( track, v );
+    ym2151_set_detune( track, v, data );
   }
 
   return;
 }
 
 static void
-set_portament( int track, int v1, int v2 )
+set_portament( int track, int v1, int v2, songdata *data )
 {
   int v;
-  __GETMDX;
+  __GETMDX(data);
 
   if ( track<8 ) {
     v = v1*256 + v2;
     if ( v1 >= 0x80 ) v = v - 0x10000;
     mdx->track[track].portament = v;
-    ym2151_set_portament( track, v );
+    ym2151_set_portament( track, v, data );
   }
 
   return;
 }
 
 static void
-set_freq( int track, int val )
+set_freq( int track, int val, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( track >= 8 ) {
-    pcm8_set_pcm_freq( track-8, val );
+    pcm8_set_pcm_freq( track-8, val, data );
   }
   else {
-    ym2151_set_noise_freq( val );
+    ym2151_set_noise_freq( val, data );
   }
   return;
 }
 
 static void
-set_fade_out( int speed )
+set_fade_out( int speed, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->fade_out = speed+1;
   return;
 }
 
 static void
-set_opm_reg( int track, int v1, int v2 )
+set_opm_reg( int track, int v1, int v2, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( track<8 ) {
-    ym2151_set_reg( v1, v2 );
+    ym2151_set_reg( v1, v2, data );
   }
   if ( v1 == 0x12 ) {
     mdx->tempo = v2;
@@ -976,27 +975,27 @@ set_opm_reg( int track, int v1, int v2 )
 }
 
 static void
-send_sync( int track )
+send_sync( int track, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   mdx->track[track].waiting_sync = FLAG_FALSE;
   return;
 }
 
 static void
-recv_sync( int track )
+recv_sync( int track, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   mdx->track[track].waiting_sync = FLAG_TRUE;
   return;
 }
 
 static void
-set_plfo_onoff( int track, int onoff )
+set_plfo_onoff( int track, int onoff, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( onoff == 0 ) {
     mdx->track[track].p_lfo_flag = FLAG_FALSE;
@@ -1010,17 +1009,18 @@ set_plfo_onoff( int track, int onoff )
 		     mdx->track[track].p_lfo_flag,
 		     mdx->track[track].p_lfo_form,
 		     mdx->track[track].p_lfo_clock,
-		     mdx->track[track].p_lfo_depth );
+		     mdx->track[track].p_lfo_depth,
+         data );
   }
 
   return;
 }
 
 static void
-set_plfo( int track, int v1, int v2, int v3, int v4, int v5 )
+set_plfo( int track, int v1, int v2, int v3, int v4, int v5, songdata *data )
 {
   int t,d;
-  __GETMDX;
+  __GETMDX(data);
 
   t = v2*256+v3;
   d = v4*256+v5;
@@ -1039,16 +1039,17 @@ set_plfo( int track, int v1, int v2, int v3, int v4, int v5 )
 		     mdx->track[track].p_lfo_flag,
 		     mdx->track[track].p_lfo_form,
 		     mdx->track[track].p_lfo_clock,
-		     mdx->track[track].p_lfo_depth );
+		     mdx->track[track].p_lfo_depth,
+         data );
   }
 
   return;
 }
 
 static void
-set_alfo_onoff( int track, int onoff )
+set_alfo_onoff( int track, int onoff, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( onoff == 0 ) {
     mdx->track[track].a_lfo_flag = FLAG_FALSE;
@@ -1062,16 +1063,17 @@ set_alfo_onoff( int track, int onoff )
 		     mdx->track[track].a_lfo_flag,
 		     mdx->track[track].a_lfo_form,
 		     mdx->track[track].a_lfo_clock,
-		     mdx->track[track].a_lfo_depth );
+		     mdx->track[track].a_lfo_depth,
+         data );
   }
   return;
 }
 
 static void
-set_alfo( int track, int v1, int v2, int v3, int v4, int v5 )
+set_alfo( int track, int v1, int v2, int v3, int v4, int v5, songdata *data )
 {
   int t,d;
-  __GETMDX;
+  __GETMDX(data);
 
   t = v2*256+v3;
   d = v4*256+v5;
@@ -1088,16 +1090,17 @@ set_alfo( int track, int v1, int v2, int v3, int v4, int v5 )
 		     mdx->track[track].a_lfo_flag,
 		     mdx->track[track].a_lfo_form,
 		     mdx->track[track].a_lfo_clock,
-		     mdx->track[track].a_lfo_depth );
+		     mdx->track[track].a_lfo_depth,
+         data );
   }
 
   return;
 }
 
 static void
-set_hlfo_onoff( int track, int onoff )
+set_hlfo_onoff( int track, int onoff, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   if ( onoff == 0 ) {
     mdx->track[track].h_lfo_flag = FLAG_FALSE;
@@ -1107,17 +1110,17 @@ set_hlfo_onoff( int track, int onoff )
   }
 
   if ( track < 8 ) {
-    ym2151_set_hlfo_onoff( track, mdx->track[track].h_lfo_flag );
+    ym2151_set_hlfo_onoff( track, mdx->track[track].h_lfo_flag, data );
   }
 
   return;
 }
 
 static void
-set_hlfo( int track, int v1, int v2, int v3, int v4, int v5 )
+set_hlfo( int track, int v1, int v2, int v3, int v4, int v5, songdata *data )
 {
   int wa, sp, pd, ad, ps, as, sy;
-  __GETMDX;
+  __GETMDX(data);
 
   wa = v1&0x03;
   sp = v2;
@@ -1129,21 +1132,21 @@ set_hlfo( int track, int v1, int v2, int v3, int v4, int v5 )
 
   /*fprintf(stderr,"%d %d %d %d\n", track, v1, v2, v3);fflush(stderr);*/
   if ( track < 8 ) {
-    ym2151_set_hlfo( track, v1, v2, v3, v4, v5 );
+    ym2151_set_hlfo( track, v1, v2, v3, v4, v5, data );
   }
 
   return;
 }
 
 static void
-set_lfo_delay( int track, int delay )
+set_lfo_delay( int track, int delay, songdata *data )
 {
-  __GETMDX;
+  __GETMDX(data);
 
   mdx->track[track].lfo_delay = delay;
 
   if ( track < 8 ) {
-    ym2151_set_lfo_delay( track, delay );
+    ym2151_set_lfo_delay( track, delay, data );
   }
   return;
 }

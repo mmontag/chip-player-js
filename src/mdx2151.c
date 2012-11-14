@@ -113,22 +113,22 @@ typedef struct _mdx2151_instances {
 /* ------------------------------------------------------------------ */
 /* local functions */
 
-static void freq_write( int );
-static void volume_write( int );
+static void freq_write( int, songdata * );
+static void volume_write( int, songdata * );
 
-static void reg_write( int, int );
-static int  reg_read( int );
+static void reg_write( int, int, songdata * );
+static int  reg_read( int, songdata * );
 
 /* ------------------------------------------------------------------ */
 /* class interface */
 
 static mdx2151_instances*
-__get_instances(void)
+__get_instances(songdata *data)
 {
-  return (mdx2151_instances*)_get_mdx2151();
+  return (mdx2151_instances*)_get_mdx2151(data);
 }
 
-#define __GETSELF  mdx2151_instances* self = __get_instances();
+#define __GETSELF(data)  mdx2151_instances* self = __get_instances(data);
 
 void*
 _mdx2151_initialize(void)
@@ -161,17 +161,17 @@ _mdx2151_finalize(void* in_self)
 /* implementations */
 
 void*
-ym2151_instance(void)
+ym2151_instance(songdata *data)
 {
-  __GETSELF;
+  __GETSELF(data);
   return self->YM2151_Instance;
 }
 
 int
-ym2151_reg_init( MDX_DATA *mdx )
+ym2151_reg_init( MDX_DATA *mdx, songdata *data )
 {
   int i;
-  __GETSELF;
+  __GETSELF(data);
 
   if ( mdx->is_use_fm == FLAG_FALSE ) {
     self->ym2151_enable = FLAG_FALSE;
@@ -190,33 +190,33 @@ ym2151_reg_init( MDX_DATA *mdx )
   if (!self->YM2151_Instance) {
     return FLAG_FALSE;
   }
-  YM2151ResetChip( ym2151_instance() );
+  YM2151ResetChip( ym2151_instance(data) );
 
   self->ym2151_enable = FLAG_TRUE;
   self->master_volume = 127;
 
   for ( i=0 ; i<8 ; i++ ) {
-    reg_write( 0x08, 0*8 + i );    /* KON */
+    reg_write( 0x08, 0*8 + i, data );    /* KON */
   }
-  reg_write( 0x0f, 0 );            /* NE, NFREQ */
-  reg_write( 0x18, 0 );            /* LFRQ */
-  reg_write( 0x19, 0*128 + 0 );    /* AMD */
-  reg_write( 0x19, 1*128 + 0 );    /* AMD */
-  reg_write( 0x1b, 0*64  + 0 );    /* CT, W */
+  reg_write( 0x0f, 0, data );            /* NE, NFREQ */
+  reg_write( 0x18, 0, data );            /* LFRQ */
+  reg_write( 0x19, 0*128 + 0, data );    /* AMD */
+  reg_write( 0x19, 1*128 + 0, data );    /* AMD */
+  reg_write( 0x1b, 0*64  + 0, data );    /* CT, W */
 
   for ( i=0 ; i<8 ; i++ ) {
-    reg_write( 0x20+i, 3*64 + 0*8 +0 ); /* LR, FL, CON */
-    reg_write( 0x28+i, 0*16 + 0 );      /* OCT, NOTE */
-    reg_write( 0x30+i, 0 );             /* KF */
-    reg_write( 0x38+i, 0*16 + 0 );      /* PMS, AMS */
+    reg_write( 0x20+i, 3*64 + 0*8 +0, data ); /* LR, FL, CON */
+    reg_write( 0x28+i, 0*16 + 0, data );      /* OCT, NOTE */
+    reg_write( 0x30+i, 0, data );             /* KF */
+    reg_write( 0x38+i, 0*16 + 0, data );      /* PMS, AMS */
   }
   for ( i=0 ; i<0x20 ; i++ ) {
-    reg_write( 0x40+i, 0*16 + 0 );      /* DT1, MUL */
-    reg_write( 0x60+i, 0 );             /* TL */
-    reg_write( 0x80+i, 0*64 + 0 );      /* KS, AR */
-    reg_write( 0xa0+i, 0*128 + 0 );     /* AMS, D1R */
-    reg_write( 0xc0+i, 0*64 + 0 );      /* DT2, D2R */
-    reg_write( 0xe0+i, 0*16 + 0 );      /* D1L, RR */
+    reg_write( 0x40+i, 0*16 + 0, data );      /* DT1, MUL */
+    reg_write( 0x60+i, 0, data );             /* TL */
+    reg_write( 0x80+i, 0*64 + 0, data );      /* KS, AR */
+    reg_write( 0xa0+i, 0*128 + 0, data );     /* AMS, D1R */
+    reg_write( 0xc0+i, 0*64 + 0, data );      /* DT2, D2R */
+    reg_write( 0xe0+i, 0*16 + 0, data );      /* D1L, RR */
   }
 
   for ( i=0 ; i<MDX_MAX_FM_TRACKS ; i++ ) {
@@ -269,39 +269,39 @@ ym2151_reg_init( MDX_DATA *mdx )
 }
 
 void
-ym2151_shutdown(void)
+ym2151_shutdown( songdata* data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if (self->YM2151_Instance) {
-    YM2151Shutdown(ym2151_instance());
+    YM2151Shutdown(ym2151_instance(data));
   }
   self->YM2151_Instance = NULL;
 }
 
 void
-ym2151_all_note_off( void )
+ym2151_all_note_off( songdata *data )
 {
   int i,j;
 
   for ( i=0 ; i<MDX_MAX_FM_TRACKS ; i++ ) {
-    ym2151_note_off(i);
+    ym2151_note_off(i, data);
   }
   for ( i=0 ; i<MDX_MAX_FM_TRACKS ; i++ ) {
-    reg_write( 0x08, 0+i );          /* KON */
+    reg_write( 0x08, 0+i, data );          /* KON */
 
-    j=reg_read( 0x20+i );
-    reg_write( 0x20+i, j&0x3f );     /* LR, FL, CON */
+    j=reg_read( 0x20+i, data );
+    reg_write( 0x20+i, j&0x3f, data );     /* LR, FL, CON */
   }
 
   return;
 }
 
 void
-ym2151_note_on( int track, int n )
+ym2151_note_on( int track, int n, songdata *data )
 {
   OPM_WORK *o;
-  __GETSELF;
+  __GETSELF(data);
 
   o = &(self->opm[track]);
 
@@ -318,26 +318,26 @@ ym2151_note_on( int track, int n )
   o->freq_reg[1] = -1;
   o->freq_reg[2] = -1;
 
-  reg_write( 0x1b, self->hlfo.form );
-  reg_write( 0x18, self->hlfo.clock );
-  reg_write( 0x19, self->hlfo.depth );
-  reg_write( 0x19, self->hlfo.depth2 );
+  reg_write( 0x1b, self->hlfo.form, data );
+  reg_write( 0x18, self->hlfo.clock, data );
+  reg_write( 0x19, self->hlfo.depth, data );
+  reg_write( 0x19, self->hlfo.depth2, data );
 
   if ( o->hlfo_flag == FLAG_TRUE && self->hlfo_sync == FLAG_TRUE ) {
-    reg_write( 0x01, 0x02 ); /* LFO SYNC */
-    reg_write( 0x01, 0x00 );
+    reg_write( 0x01, 0x02, data ); /* LFO SYNC */
+    reg_write( 0x01, 0x00, data );
   }
 
-  freq_write(track);
-  volume_write(track);
+  freq_write(track, data);
+  volume_write(track, data);
 
   return;
 }
 
 void
-ym2151_note_off(int track)
+ym2151_note_off(int track, songdata *data)
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->opm[track].note_on   = 0;
   self->opm[track].portament = 0;
@@ -346,18 +346,18 @@ ym2151_note_off(int track)
 }
 
 void
-ym2151_set_pan( int track, int val )
+ym2151_set_pan( int track, int val, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( val < 0 ) { val = 0; }
   if ( val > 3 ) { val = 3; }
 
   if ( self->opm[track].pan != val ) {
     int i,v;
-    i = reg_read( 0x20 + track );
+    i = reg_read( 0x20 + track, data );
     v = i&0x3f;
-    reg_write( 0x20 + track, v+(val<<6) );  /* LR */
+    reg_write( 0x20 + track, v+(val<<6), data );  /* LR */
   }
   self->opm[track].pan = val;
 
@@ -365,9 +365,9 @@ ym2151_set_pan( int track, int val )
 }
 
 void
-ym2151_set_volume( int track, int val )
+ym2151_set_volume( int track, int val, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( val < 0 ) { val = 0; }
   if ( val > 127 ) { val = 127; }
@@ -377,9 +377,9 @@ ym2151_set_volume( int track, int val )
 }
 
 void
-ym2151_set_master_volume( int val )
+ym2151_set_master_volume( int val, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( val < 0 ) { val = 0; }
   if ( val > 127 ) { val = 127; }
@@ -389,9 +389,9 @@ ym2151_set_master_volume( int val )
 }
 
 void
-ym2151_set_detune( int track, int val )
+ym2151_set_detune( int track, int val, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->opm[track].detune.octave = val/(64*12);
   self->opm[track].detune.scale  = (val/64)%12;
@@ -401,9 +401,9 @@ ym2151_set_detune( int track, int val )
 }
 
 void
-ym2151_set_portament( int track, int val )
+ym2151_set_portament( int track, int val, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->opm[track].portament = val;
   self->opm[track].step      = 0;
@@ -412,17 +412,17 @@ ym2151_set_portament( int track, int val )
 }
 
 void
-ym2151_set_noise_freq( int val )
+ym2151_set_noise_freq( int val, songdata *data )
 {
-  reg_write( 0x0f, val );
+  reg_write( 0x0f, val, data );
 
   return;
 }
 
 void
-ym2151_set_lfo_delay( int track, int delay )
+ym2151_set_lfo_delay( int track, int delay, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->opm[track].lfo_delay = delay;
 
@@ -430,9 +430,9 @@ ym2151_set_lfo_delay( int track, int delay )
 }
 
 void
-ym2151_set_plfo( int track, int flag, int form, int clock, int depth )
+ym2151_set_plfo( int track, int flag, int form, int clock, int depth, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->opm[track].plfo.flag  = flag;
   self->opm[track].plfo.form  = form;
@@ -445,9 +445,9 @@ ym2151_set_plfo( int track, int flag, int form, int clock, int depth )
 }
 
 void
-ym2151_set_alfo( int track, int flag, int form, int clock, int depth )
+ym2151_set_alfo( int track, int flag, int form, int clock, int depth, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->opm[track].alfo.flag  = flag;
   self->opm[track].alfo.form  = form;
@@ -458,19 +458,19 @@ ym2151_set_alfo( int track, int flag, int form, int clock, int depth )
 }
 
 void
-ym2151_set_hlfo( int track, int v1, int v2, int v3, int v4, int v5 )
+ym2151_set_hlfo( int track, int v1, int v2, int v3, int v4, int v5, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->hlfo.form   = v1&0x03;
   self->hlfo.clock  = v2;
   self->hlfo.depth  = v3|0x80;
   self->hlfo.depth2 = v4&0x7f;
 
-  reg_write( 0x1b, self->hlfo.form   ); /* WAVE FORM */
-  reg_write( 0x18, self->hlfo.clock  ); /* LFRQ */
-  reg_write( 0x19, self->hlfo.depth  ); /* PMD */
-  reg_write( 0x19, self->hlfo.depth2 ); /* AMD */
+  reg_write( 0x1b, self->hlfo.form, data   ); /* WAVE FORM */
+  reg_write( 0x18, self->hlfo.clock, data  ); /* LFRQ */
+  reg_write( 0x19, self->hlfo.depth, data  ); /* PMD */
+  reg_write( 0x19, self->hlfo.depth2, data ); /* AMD */
 
   if ( (v1&0x40) == 0 ) {
     self->hlfo_sync = FLAG_FALSE;
@@ -480,70 +480,70 @@ ym2151_set_hlfo( int track, int v1, int v2, int v3, int v4, int v5 )
 
   self->opm[track].hlfo_flag = FLAG_TRUE;
   self->opm[track].hlfo_val  = v5;
-  reg_write( 0x38 + track, self->opm[track].hlfo_val );   /* PMS, AMS */
+  reg_write( 0x38 + track, self->opm[track].hlfo_val, data );   /* PMS, AMS */
 
   return;
 }
 
 void
-ym2151_set_hlfo_onoff( int track, int flag )
+ym2151_set_hlfo_onoff( int track, int flag, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
   self->opm[track].hlfo_flag = flag;
 
   if ( self->opm[track].hlfo_flag == FLAG_TRUE ) {
-    reg_write( 0x38 + track, self->opm[track].hlfo_val );   /* PMS, AMS */
+    reg_write( 0x38 + track, self->opm[track].hlfo_val, data );   /* PMS, AMS */
   } else {
-    reg_write( 0x38 + track, 0 );
+    reg_write( 0x38 + track, 0, data );
   }
 
   return;
 }
 
 void
-ym2151_set_voice( int track, VOICE_DATA *v )
+ym2151_set_voice( int track, VOICE_DATA *v, songdata *data )
 {
   OPM_WORK *o;
   int i,j,r;
-  __GETSELF;
+  __GETSELF(data);
 
   o = &(self->opm[track]);
 
-  j = reg_read( 0x20+track );                               /* LR, FL, CON */
-  reg_write( 0x20+track, (j&0xc0) + v->v0 );
+  j = reg_read( 0x20+track, data );                               /* LR, FL, CON */
+  reg_write( 0x20+track, (j&0xc0) + v->v0, data );
   o->algorithm = v->con;
   o->slot_mask = v->slot_mask;
 
   for ( i=0 ; i<4 ; i++ ) {
     r = track + i*8;
 
-    reg_write( 0x40+r, v->v1[i] );    /* DT1, MUL */
-    reg_write( 0x80+r, v->v3[i] );    /* KS, AR */
-    reg_write( 0xa0+r, v->v4[i] );    /* AME, D1R */
-    reg_write( 0xc0+r, v->v5[i] );    /* DT2, D2R */
-    reg_write( 0xe0+r, v->v6[i] );    /* SL, RR */
+    reg_write( 0x40+r, v->v1[i], data );    /* DT1, MUL */
+    reg_write( 0x80+r, v->v3[i], data );    /* KS, AR */
+    reg_write( 0xa0+r, v->v4[i], data );    /* AME, D1R */
+    reg_write( 0xc0+r, v->v5[i], data );    /* DT2, D2R */
+    reg_write( 0xe0+r, v->v6[i], data );    /* SL, RR */
 
     o->total_level[i] = 127 - v->v2[i];
     if ( is_vol_set[o->algorithm][i] == 0 )
-      reg_write( 0x60+r, v->v2[i]&0x7f );   /* TL */
+      reg_write( 0x60+r, v->v2[i]&0x7f, data );   /* TL */
     else
-      reg_write( 0x60+r, 127 );             /* TL */
+      reg_write( 0x60+r, 127, data );             /* TL */
   }
 
   return;
 }
 
 void
-ym2151_set_reg( int adr, int val )
+ym2151_set_reg( int adr, int val, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( adr < 0 || adr > 0xff ) { return; }
 
   if ( val < 0 ) { val = 0; }
   if ( val > 0xff ) { val = 0xff; }
 
-  reg_write( adr, val );
+  reg_write( adr, val, data );
 
   /* Total level */
 
@@ -565,20 +565,20 @@ ym2151_set_reg( int adr, int val )
 /* ------------------------------------------------------------------ */
 
 void
-ym2151_set_freq_volume( int track )
+ym2151_set_freq_volume( int track, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->opm[track].step++;
   self->opm[track].lfo_step++;
-  freq_write( track );
-  volume_write( track );
+  freq_write( track, data );
+  volume_write( track, data );
 
   return;
 }
 
 static
-void freq_write( int track )
+void freq_write( int track, songdata *data )
 {
   OPM_WORK *o;
   int oct, scale, kf;
@@ -586,7 +586,7 @@ void freq_write( int track )
   long long f;
   int c,d;
   int key;
-  __GETSELF;
+  __GETSELF(data);
 
   o = &(self->opm[track]);
 
@@ -709,29 +709,29 @@ void freq_write( int track )
 
   if ( o->freq_reg[0] != oct*16+scale ) {
     o->freq_reg[0] = oct*16+scale;
-    reg_write( 0x28 + track, o->freq_reg[0] );  /* OCT, NOTE */
+    reg_write( 0x28 + track, o->freq_reg[0], data );  /* OCT, NOTE */
   }
 
   if ( o->freq_reg[1] != kf*4 ) {
     o->freq_reg[1] = kf*4;
-    reg_write( 0x30 + track, o->freq_reg[1] );  /* KF */
+    reg_write( 0x30 + track, o->freq_reg[1], data );  /* KF */
   }
 
   if ( o->freq_reg[2] != key+track ) {
     o->freq_reg[2] = key+track;
-    reg_write( 0x08, o->freq_reg[2] );          /* KEY ON */
+    reg_write( 0x08, o->freq_reg[2], data );          /* KEY ON */
   }
 
   return;
 }
 
 static
-void volume_write( int track )
+void volume_write( int track, songdata *data )
 {
   OPM_WORK *o;
   int i,r;
   int vol;
-  __GETSELF;
+  __GETSELF(data);
 
   o = &(self->opm[track]);
 
@@ -746,7 +746,7 @@ void volume_write( int track )
     if ( vol < 0 ) vol = 0;
     vol = 127-vol;
     
-    reg_write( 0x60+r, vol );                  /* TL */
+    reg_write( 0x60+r, vol, data );                  /* TL */
   }
 
   return;
@@ -757,24 +757,24 @@ void volume_write( int track )
 /* register actions */
 
 static void
-reg_write( int adr, int val )
+reg_write( int adr, int val, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( adr > 0x0ff ) { return; }
   self->ym2151_register_map[adr] = val;
 
   if ( self->ym2151_enable == FLAG_TRUE ) {
-    YM2151WriteReg( ym2151_instance(), adr, val );
+    YM2151WriteReg( ym2151_instance(data), adr, val );
   }
 
   return;
 }
 
 static int
-reg_read( int adr )
+reg_read( int adr, songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( adr > 0xff ) { return 0; }
   return self->ym2151_register_map[adr];

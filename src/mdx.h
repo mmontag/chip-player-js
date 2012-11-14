@@ -6,6 +6,8 @@
 
  */
 
+#include "mdxmini.h"
+
 #ifndef _MDX_H_
 #define _MDX_H_
 
@@ -207,21 +209,21 @@ extern PDX_DATA *mdx_open_pdx( unsigned char *, long length );
 extern int mdx_close_mdx( MDX_DATA * );
 extern int mdx_close_pdx( PDX_DATA * );
 extern int mdx_get_voice_parameter( MDX_DATA * );
-extern int mdx_parse_mml_ym2151( MDX_DATA *, PDX_DATA * );
-extern int mdx_init_track_work_area_ym2151( void );
+extern int mdx_parse_mml_ym2151( MDX_DATA *, PDX_DATA *, songdata * );
+extern int mdx_init_track_work_area_ym2151( songdata * );
 extern int mdx_parse_mml_opl3( MDX_DATA *, PDX_DATA * );
 extern int mdx_init_track_work_area_opl3( void );
 extern void error_end( char * );
 
-extern void* mdx_parse_mml_ym2151_async_initialize(MDX_DATA* in_mdx, PDX_DATA* in_pdx);
-extern int mdx_parse_mml_ym2151_async(void* in_self);
-extern int mdx_parse_mml_ym2151_make_samples(short *buffer,int buffer_size);
+extern void* mdx_parse_mml_ym2151_async_initialize(MDX_DATA* in_mdx, PDX_DATA* in_pdx, songdata *data);
+extern int mdx_parse_mml_ym2151_async(songdata *data);
+extern int mdx_parse_mml_ym2151_make_samples(short *buffer,int buffer_size, songdata *);
 extern int mdx_parse_mml_get_tempo(void* in_self);
 
-extern int mdx_parse_mml_ym2151_async_get_length(void* in_self);
+extern int mdx_parse_mml_ym2151_async_get_length(songdata *data);
 
 
-extern void mdx_parse_mml_ym2151_async_finalize(void* self);
+extern void mdx_parse_mml_ym2151_async_finalize(songdata *);
 
 extern int mdx_output_titles( MDX_DATA * );
 

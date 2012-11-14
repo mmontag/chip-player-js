@@ -34,8 +34,8 @@
 #define PATH_BUF_SIZE 1024
 
 static PDX_DATA* _get_pdx(MDX_DATA* mdx, char* mdxpath);
-static int self_construct(void);
-static void self_destroy(void);
+static int self_construct(songdata* songdata);
+static void self_destroy(songdata* songdata);
 
 static void usage( void );
 static void display_version( void );
@@ -80,6 +80,8 @@ static float reverb_wet;
 int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 {
 
+  data->songdata = malloc(sizeof(songdata));
+
   MDX_DATA *mdx = NULL;
   PDX_DATA *pdx = NULL;
 
@@ -112,7 +114,7 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
   is_output_to_stdout_in_wav = FLAG_TRUE;
 
 
-  if (!self_construct()) {
+  if (!self_construct(data->songdata)) {
     /* failed to create class instances */
     return -1;
   }
@@ -165,13 +167,13 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
     /* load pdx data */
     pdx = data->pdx = _get_pdx( mdx, filename );
 
-	data->self = mdx_parse_mml_ym2151_async_initialize(mdx, pdx);
+	data->self = mdx_parse_mml_ym2151_async_initialize(mdx, pdx, data->songdata);
 
 	if (!data->self)
 			return -1;
 			
 	data->samples = 0;
-	data->channels = pcm8_get_output_channels();
+	data->channels = pcm8_get_output_channels(data->songdata);
 
 	return 0;
 
@@ -206,7 +208,7 @@ int mdx_next_frame ( t_mdxmini *data )
 {
 	if (data->self)
 	{
-		return mdx_parse_mml_ym2151_async(data->self);
+		return mdx_parse_mml_ym2151_async(data->songdata);
 	}
 	return 0;
 }
@@ -220,9 +222,9 @@ int mdx_frame_length ( t_mdxmini *data )
 	return 0;
 }
 
-void mdx_make_buffer( short *buf , int buffer_size )
+void mdx_make_buffer( t_mdxmini *data, short *buf , int buffer_size )
 {
-	mdx_parse_mml_ym2151_make_samples(buf , buffer_size);
+	mdx_parse_mml_ym2151_make_samples(buf , buffer_size, data->songdata);
 }
 
 int mdx_calc_sample( t_mdxmini *data, short *buf , int buffer_size )
@@ -243,14 +245,14 @@ int mdx_calc_sample( t_mdxmini *data, short *buf , int buffer_size )
 		}
 		if (data->samples + s_pos >= buffer_size)
 		{
-			mdx_parse_mml_ym2151_make_samples(buf + (s_pos * data->channels) , buffer_size - s_pos);
+			mdx_parse_mml_ym2151_make_samples(buf + (s_pos * data->channels) , buffer_size - s_pos, data->songdata);
 			
 			data->samples -= (buffer_size - s_pos);
 			s_pos = buffer_size;
 		}
 		else
 		{
-			mdx_parse_mml_ym2151_make_samples(buf + (s_pos * data->channels) , data->samples);
+			mdx_parse_mml_ym2151_make_samples(buf + (s_pos * data->channels) , data->samples, data->songdata);
 			s_pos += data->samples;
 			data->samples = 0;
 		}
@@ -267,7 +269,7 @@ void mdx_get_title( t_mdxmini *data, char *title )
 
 int  mdx_get_length( t_mdxmini *data )
 {
-	return mdx_parse_mml_ym2151_async_get_length(data->self);
+	return mdx_parse_mml_ym2151_async_get_length(data->songdata);
 }
 
 int  mdx_get_tracks ( t_mdxmini *data )
@@ -290,22 +292,22 @@ void mdx_stop( t_mdxmini *data )
     /* one playing finished */
 	
 	if (data->self)
-		mdx_parse_mml_ym2151_async_finalize(data->self);
+		mdx_parse_mml_ym2151_async_finalize(data->songdata);
     
     mdx_close_pdx( data->pdx );
     mdx_close_mdx( data->mdx );
 
-    self_destroy();
+    self_destroy(data->songdata);
 }
 
-int  mdx_get_sample_size ( void )
+int  mdx_get_sample_size ( t_mdxmini *data )
 {
-	return pcm8_get_sample_size();
+	return pcm8_get_sample_size(data->songdata);
 }
 
-int  mdx_get_buffer_size ( void )
+int  mdx_get_buffer_size ( t_mdxmini *data )
 {
-	return pcm8_get_buffer_size();
+	return pcm8_get_buffer_size(data->songdata);
 }
 
 /* pdx loading */
@@ -420,48 +422,43 @@ get_pdx_file:
   return pdx;
 }
 
-static void* self_mdx2151 = NULL;
-static void* self_mdxmml_ym2151 = NULL;
-static void* self_pcm8 = NULL;
-static void* self_ym2151_c = NULL;
-
 void*
-_get_mdx2151(void)
+_get_mdx2151(songdata *data)
 {
-  return self_mdx2151;
+  return data->mdx2151;
 }
 
 void*
-_get_mdxmml_ym2151(void)
+_get_mdxmml_ym2151(songdata *data)
 {
-  return self_mdxmml_ym2151;
+  return data->mdxmml_ym2151;
 }
 
 void*
-_get_pcm8(void)
+_get_pcm8(songdata *data)
 {
-  return self_pcm8;
+  return data->pcm8;
 }
 
 void*
-_get_ym2151_c(void)
+_get_ym2151_c(songdata *data)
 {
-  return self_ym2151_c;
+  return data->ym2151_c;
 }
 
 static int
-self_construct(void)
+self_construct(songdata *songdata)
 {
-  self_mdx2151 = _mdx2151_initialize();
-  if (!self_mdx2151) {
+  songdata->mdx2151 = _mdx2151_initialize();
+  if (!songdata->mdx2151) {
     goto error_end;
   }
-  self_mdxmml_ym2151 = _mdxmml_ym2151_initialize();
-  if (!self_mdxmml_ym2151) {
+  songdata->mdxmml_ym2151 = _mdxmml_ym2151_initialize();
+  if (!songdata->mdxmml_ym2151) {
     goto error_end;
   }
-  self_pcm8 = _pcm8_initialize();
-  if (!self_pcm8) {
+  songdata->pcm8 = _pcm8_initialize();
+  if (!songdata->pcm8) {
     goto error_end;
   }
 #if 0
@@ -480,23 +477,23 @@ error_end:
     self_ym2151_c = NULL;
   }
 #endif
-  if (self_pcm8) {
-    _pcm8_finalize(self_pcm8);
-    self_pcm8 = NULL;
+  if (songdata->pcm8) {
+    _pcm8_finalize(songdata->pcm8);
+    songdata->pcm8 = NULL;
   }
-  if (self_mdxmml_ym2151) {
-    _mdxmml_ym2151_finalize(self_mdxmml_ym2151);
-    self_mdxmml_ym2151 = NULL;
+  if (songdata->mdxmml_ym2151) {
+    _mdxmml_ym2151_finalize(songdata->mdxmml_ym2151);
+    songdata->mdxmml_ym2151 = NULL;
   }
-  if (self_mdx2151) {
-    _mdx2151_finalize(self_mdx2151);
-    self_mdx2151 = NULL;
+  if (songdata->mdx2151) {
+    _mdx2151_finalize(songdata->mdx2151);
+    songdata->mdx2151 = NULL;
   }
   return FLAG_FALSE;
 }
 
 static void
-self_destroy(void)
+self_destroy(songdata *songdata)
 {
 #if 0
   if (self_ym2151_c) {
@@ -504,16 +501,16 @@ self_destroy(void)
     self_ym2151_c = NULL;
   }
 #endif
-  if (self_pcm8) {
-    _pcm8_finalize(self_pcm8);
-    self_pcm8 = NULL;
+  if (songdata->pcm8) {
+    _pcm8_finalize(songdata->pcm8);
+    songdata->pcm8 = NULL;
   }
-  if (self_mdxmml_ym2151) {
-    _mdxmml_ym2151_finalize(self_mdxmml_ym2151);
-    self_mdxmml_ym2151 = NULL;
+  if (songdata->mdxmml_ym2151) {
+    _mdxmml_ym2151_finalize(songdata->mdxmml_ym2151);
+    songdata->mdxmml_ym2151 = NULL;
   }
-  if (self_mdx2151) {
-    _mdx2151_finalize(self_mdx2151);
-    self_mdx2151 = NULL;
+  if (songdata->mdx2151) {
+    _mdx2151_finalize(songdata->mdx2151);
+    songdata->mdx2151 = NULL;
   }
 }

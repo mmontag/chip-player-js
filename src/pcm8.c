@@ -17,6 +17,7 @@
 #include "pcm8.h"
 #include "ym2151.h"
 
+#include "mdxmini.h"
 #include "class.h"
 
 
@@ -83,15 +84,9 @@ static const unsigned char riff[]={
 /* ------------------------------------------------------------------ */
 /* class interface */
 
-extern void* _get_pcm8(void);
+extern void* _get_pcm8(songdata *songdata);
 
-static pcm8_instances*
-__get_instances(void)
-{
-  return (pcm8_instances*)_get_pcm8();
-}
-
-#define __GETSELF  pcm8_instances* self = __get_instances();
+#define __GETSELF(data) pcm8_instances* self = data->pcm8
 
 void*
 _pcm8_initialize(void)
@@ -148,10 +143,10 @@ _pcm8_finalize(void* in_self)
 /* implementations */
 
 static int
-stdout_open(MDX_DATA* mdx) 
+stdout_open(MDX_DATA* mdx, songdata *data)
 {
   int i=0;
-  __GETSELF;
+  __GETSELF(data);
 
   self->is_encoding_16bit = FLAG_TRUE;
   self->is_encoding_stereo = FLAG_TRUE;
@@ -179,13 +174,11 @@ pcm8_write_dev(unsigned char* data, int len)
 //  __GETSELF;
 }
 
-int pcm8_open( MDX_DATA *mdx )
+int pcm8_open( MDX_DATA *mdx, songdata *data )
 {
   int i;
+  __GETSELF(data);
 //  unsigned char* dummy = NULL;
-  __GETSELF;
-
-
   self->is_encoding_16bit = FLAG_TRUE;
   self->is_encoding_stereo = FLAG_TRUE;
 //  self->dsp_speed = PCM8_MASTER_PCM_RATE;
@@ -241,16 +234,16 @@ int pcm8_open( MDX_DATA *mdx )
   self->pcm8_opened = FLAG_TRUE;
   self->emdx->dsp_speed = self->dsp_speed;
 
-  pcm8_init();
+  pcm8_init(data);
 
   return 0;
 }
 
-int pcm8_close( void )
+int pcm8_close( songdata *data )
 {
   int i;
   int free_all = FLAG_FALSE;
-  __GETSELF;
+  __GETSELF(data);
 
   self->pcm8_opened = FLAG_FALSE;
 
@@ -279,10 +272,10 @@ int pcm8_close( void )
   return 0;
 }
 
-void pcm8_init( void )
+void pcm8_init( songdata *data )
 {
   int i;
-  __GETSELF;
+  __GETSELF(data);
 
   for ( i=0; i<PCM8_MAX_NOTE ; i++ ) {
     self->work[i].ptr     = NULL;
@@ -305,9 +298,9 @@ void pcm8_init( void )
 
 /* ------------------------------------------------------------------ */
 
-int pcm8_set_pcm_freq( int ch, int hz ) {
+int pcm8_set_pcm_freq( int ch, int hz, songdata *data ) {
 
-  __GETSELF;
+  __GETSELF(data);
 
   if ( self->pcm8_opened == FLAG_FALSE ) return 1;
   if ( ch >= PCM8_MAX_NOTE || ch < 0 ) return 1;
@@ -323,9 +316,9 @@ int pcm8_set_pcm_freq( int ch, int hz ) {
   return 0;
 }
 
-int pcm8_note_on( int ch, int *ptr, int size, int* orig_ptr, int orig_size ) {
+int pcm8_note_on( int ch, int *ptr, int size, int* orig_ptr, int orig_size, songdata *data ) {
 
-  __GETSELF;
+  __GETSELF(data);
 
   if ( self->emdx->is_use_ym2151==FLAG_TRUE &&
       self->emdx->is_use_pcm8==FLAG_FALSE) {
@@ -352,9 +345,9 @@ int pcm8_note_on( int ch, int *ptr, int size, int* orig_ptr, int orig_size ) {
   return 0;
 }
 
-int pcm8_note_off( int ch ) {
+int pcm8_note_off( int ch, songdata *data ) {
 
-  __GETSELF;
+  __GETSELF(data);
 
   if ( self->pcm8_opened == FLAG_FALSE ) return 1;
   if ( ch >= PCM8_MAX_NOTE || ch < 0 ) return 1;
@@ -368,9 +361,9 @@ int pcm8_note_off( int ch ) {
   return 0;
 }
 
-int pcm8_set_volume( int ch, int val ) {
+int pcm8_set_volume( int ch, int val, songdata *data ) {
 
-  __GETSELF;
+  __GETSELF(data);
 
   if ( self->pcm8_opened == FLAG_FALSE ) return 1;
   if ( ch >= PCM8_MAX_NOTE ) return 1;
@@ -382,9 +375,9 @@ int pcm8_set_volume( int ch, int val ) {
   return 0;
 }
 
-int pcm8_set_master_volume( int val ) {
+int pcm8_set_master_volume( int val, songdata *data ) {
 
-  __GETSELF;
+  __GETSELF(data);
 
   if ( val > PCM8_MAX_VOLUME ) { return 1; }
   if ( val < 0 ) { return 1; }
@@ -394,9 +387,9 @@ int pcm8_set_master_volume( int val ) {
   return 0;
 }
 
-int pcm8_set_pan( int val ) {
+int pcm8_set_pan( int val, songdata *data ) {
 
-  __GETSELF;
+  __GETSELF(data);
 
   if ( self->pcm8_opened == FLAG_FALSE ) { return 1; }
   self->master_pan = val;
@@ -425,7 +418,7 @@ __make_noise(pcm8_instances* self)
 
 /* PCM8 main function: mixes all of PCM sound and OPM emulator */
 
-static inline void pcm8( short *buffer , int buffer_size )
+static inline void pcm8( short *buffer , int buffer_size, songdata *data )
 {
   int ch, i;
   int s=0;
@@ -440,7 +433,7 @@ static inline void pcm8( short *buffer , int buffer_size )
   unsigned char l1, l2, r1, r2, v1,v2;
   SAMP *ptr = NULL;
 
-  __GETSELF;
+  __GETSELF(data);
   
   if (buffer_size < 0)
 	buffer_size = self->sample_buffer_size;
@@ -455,7 +448,7 @@ static inline void pcm8( short *buffer , int buffer_size )
 
   if ( self->emdx->is_use_ym2151 == FLAG_TRUE &&
       self->emdx->is_use_fm_voice == FLAG_TRUE ) {
-    YM2151UpdateOne( ym2151_instance(), self->ym2151_voice, buffer_size );
+    YM2151UpdateOne( ym2151_instance(data), self->ym2151_voice, buffer_size );
   }
 
   /* reset buffer */
@@ -633,24 +626,24 @@ static inline void pcm8( short *buffer , int buffer_size )
   return;
 }
 
-void do_pcm8( short *buffer , int buffer_size ) 
+void do_pcm8( short *buffer , int buffer_size, songdata *data ) 
 {
   if (buffer)
-    pcm8(buffer,buffer_size);
+    pcm8(buffer,buffer_size,data);
  
    return;
 }
 
-int pcm8_get_buffer_size(void)
+int pcm8_get_buffer_size( songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   return self->dest_buffer_size;
 }
 
-int pcm8_get_sample_size(void)
+int pcm8_get_sample_size( songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( self->is_encoding_stereo == FLAG_TRUE ) 
     return 4;
@@ -659,9 +652,9 @@ int pcm8_get_sample_size(void)
 }
 
 
-int pcm8_get_output_channels(void)
+int pcm8_get_output_channels( songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   if ( self->is_encoding_stereo == FLAG_TRUE ) 
     return 2;
@@ -679,17 +672,17 @@ pcm8_wait_for_pcm_write(void)
 }*/
 
 void
-pcm8_clear_buffer_flush_flag(void)
+pcm8_clear_buffer_flush_flag( songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   self->is_pcm_buffer_flushed = FLAG_FALSE;
 }
 
 int
-pcm8_buffer_flush_flag(void)
+pcm8_buffer_flush_flag( songdata *data )
 {
-  __GETSELF;
+  __GETSELF(data);
 
   return self->is_pcm_buffer_flushed;
 }

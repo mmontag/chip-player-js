@@ -5,6 +5,8 @@
   Jan.21.1999
  */
 
+#include "mdxmini.h"
+
 #ifndef _PCM8_H_
 #define _PCM8_H_
 
@@ -43,26 +45,26 @@ typedef struct _PCM8_WORK {
 /* ------------------------------------------------------------------ */
 /* functions */
 
-extern int  pcm8_open( MDX_DATA * );
-extern int  pcm8_close( void );
-extern void pcm8_init( void );
+extern int  pcm8_open( MDX_DATA *, songdata* );
+extern int  pcm8_close( songdata * );
+extern void pcm8_init( songdata * );
 extern void pcm8_start( void );
 extern void pcm8_stop( void );
 
-extern void do_pcm8( short *buffer,int buffer_size );
-extern int  pcm8_get_buffer_size( void );
-extern int  pcm8_get_sample_size( void );
-extern int  pcm8_get_output_channels( void );
+extern void do_pcm8( short *buffer,int buffer_size, songdata * );
+extern int  pcm8_get_buffer_size( songdata * );
+extern int  pcm8_get_sample_size( songdata * );
+extern int  pcm8_get_output_channels( songdata * );
 
 
-extern int  pcm8_set_pcm_freq( int, int );
-extern int  pcm8_set_volume( int, int );
-extern int  pcm8_set_pan( int );
+extern int  pcm8_set_pcm_freq( int, int, songdata* );
+extern int  pcm8_set_volume( int, int, songdata * );
+extern int  pcm8_set_pan( int, songdata * );
 
-extern int  pcm8_note_on( int, int *, int, int *, int );
-extern int  pcm8_note_off( int );
+extern int  pcm8_note_on( int, int *, int, int *, int, songdata * );
+extern int  pcm8_note_off( int, songdata * );
 
-extern int  pcm8_set_master_volume( int );
+extern int  pcm8_set_master_volume( int, songdata * );
 
 // extern void pcm8_wait_for_pcm_write();
 
