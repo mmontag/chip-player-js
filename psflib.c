@@ -5,6 +5,11 @@
 
 #include <zlib.h>
 
+#ifdef _MSC_VER
+#define snprintf sprintf_s
+#define strcasecmp _stricmp
+#endif
+
 const char * strrpbrk( const char * s, const char * accept)
 {
     const char * start;
@@ -26,7 +31,7 @@ const char * strrpbrk( const char * s, const char * accept)
     return NULL;
 }
 
-enum { max_recursion_depth = 30 };
+enum { max_recursion_depth = 10 };
 
 typedef struct psf_load_state
 {

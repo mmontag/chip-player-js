@@ -1,6 +1,7 @@
 #include "psf2fs.h"
 
 #include <ctype.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include <zlib.h>
@@ -354,9 +355,9 @@ error:
 //
 int psf2fs_load_callback(void * psf2fs, const uint8_t * exe, size_t exe_size,
                                   const uint8_t * reserved, size_t reserved_size) {
+  struct PSF2FS *fs = (struct PSF2FS*)psf2fs;
   (void)exe;
   (void)exe_size;
-  struct PSF2FS *fs = (struct PSF2FS*)psf2fs;
   return addarchive(fs, reserved, reserved_size, &(fs->sources), &(fs->dir));
 }
 
