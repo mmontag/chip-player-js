@@ -11,9 +11,11 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 SOURCES += \
-    psflib.c
+    psflib.c \
+    psf2fs.c
 
-HEADERS += psflib.h
+HEADERS += psflib.h \
+    psf2fs.h
 unix:!symbian {
     maemo5 {
         target.path = /opt/usr/lib
