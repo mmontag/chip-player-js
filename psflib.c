@@ -420,6 +420,9 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
     if ( state->file_callbacks->fseek( file, 16, SEEK_SET ) ) goto error_free_tags;
     if ( reserved_size && state->file_callbacks->fread( reserved_buffer, 1, reserved_size, file ) < reserved_size ) goto error_free_tags;
     if ( exe_compressed_size && state->file_callbacks->fread( exe_compressed_buffer, 1, exe_compressed_size, file ) < exe_compressed_size ) goto error_free_tags;
+    state->file_callbacks->fclose( file );
+    file = NULL;
+
     if ( exe_crc32 != crc32(crc32(0L, Z_NULL, 0), exe_compressed_buffer, exe_compressed_size) ) goto error_free_tags;
 
     exe_decompressed_size = 16 * 1024 * 1024;
@@ -453,6 +456,8 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
     }
 
 done:
+    if ( file ) state->file_callbacks->fclose( file );
+
     free_tags( tags );
 
     --state->depth;
@@ -467,6 +472,6 @@ error_free_buffers:
     if ( reserved_buffer ) free( reserved_buffer );
     if ( tag_buffer ) free( tag_buffer );
 error_close_file:
-    state->file_callbacks->fclose( file );
+    if ( file ) state->file_callbacks->fclose( file );
     return -1;
 }
