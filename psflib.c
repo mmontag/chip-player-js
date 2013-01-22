@@ -81,6 +81,7 @@ int psf_load( const char * uri, const psf_file_callbacks * file_callbacks, uint8
     else
     {
         state.base_path[ 0 ] = '\0';
+        file_name = uri;
     }
 
     rval = psf_load_internal( &state, file_name );
@@ -345,7 +346,9 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
     char * tag_buffer = NULL;
 
     uint32_t exe_compressed_size, exe_crc32, reserved_size;
-    uLong exe_decompressed_size;
+    uLong exe_decompressed_size, try_exe_decompressed_size;
+
+    int zerr;
 
     if ( ++state->depth > max_recursion_depth ) return -1;
 
@@ -417,11 +420,24 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
     if ( exe_compressed_size && state->file_callbacks->fread( exe_compressed_buffer, 1, exe_compressed_size, file ) < exe_compressed_size ) goto error_free_tags;
     if ( exe_crc32 != crc32(crc32(0L, Z_NULL, 0), exe_compressed_buffer, exe_compressed_size) ) goto error_free_tags;
 
-    exe_decompressed_size = 16 * 1024 * 1024;
+    exe_decompressed_size = try_exe_decompressed_size = 1 * 1024 * 1024;
     exe_decompressed_buffer = (uint8_t *) malloc( exe_decompressed_size );
     if ( !exe_decompressed_buffer ) goto error_free_tags;
 
-    uncompress( exe_decompressed_buffer, &exe_decompressed_size, exe_compressed_buffer, exe_compressed_size );
+    while ( Z_OK != ( zerr = uncompress( exe_decompressed_buffer, &exe_decompressed_size, exe_compressed_buffer, exe_compressed_size ) ) )
+    {
+        void * try_exe_decompressed_buffer;
+
+        if ( Z_MEM_ERROR != zerr && Z_BUF_ERROR != zerr ) goto error_free_tags;
+
+        try_exe_decompressed_size += 1 * 1024 * 1024;
+        exe_decompressed_size = try_exe_decompressed_size;
+
+        try_exe_decompressed_buffer = realloc( exe_decompressed_buffer, exe_decompressed_size );
+        if ( !try_exe_decompressed_buffer ) goto error_free_tags;
+
+        exe_decompressed_buffer = try_exe_decompressed_buffer;
+    }
 
     free( exe_compressed_buffer );
     exe_compressed_buffer = NULL;
