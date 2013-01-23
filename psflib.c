@@ -8,7 +8,23 @@
 #ifdef _MSC_VER
 #define snprintf sprintf_s
 #define strcasecmp _stricmp
+#else
+#include <strings.h>
 #endif
+
+#define strdup(s) my_strdup(s)
+
+static char * my_strdup(const char * s)
+{
+    size_t l;
+    char * r;
+    if (!s) return NULL;
+    l = strlen(s) + 1;
+    r = (char *) malloc(l);
+    if (!r) return NULL;
+    memcpy(r, s, l);
+    return r;
+}
 
 const char * strrpbrk( const char * s, const char * accept)
 {
