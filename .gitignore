@@ -1,3 +1,4 @@
 *.user
+*.o
 Debug
 Release
