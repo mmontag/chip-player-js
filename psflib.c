@@ -428,7 +428,7 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
 
     if ( exe_crc32 != crc32(crc32(0L, Z_NULL, 0), exe_compressed_buffer, exe_compressed_size) ) goto error_free_tags;
 
-    exe_decompressed_size = try_exe_decompressed_size = 1 * 1024 * 1024;
+    exe_decompressed_size = try_exe_decompressed_size = exe_compressed_size * 3;
     exe_decompressed_buffer = (uint8_t *) malloc( exe_decompressed_size );
     if ( !exe_decompressed_buffer ) goto error_free_tags;
 
