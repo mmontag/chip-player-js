@@ -8,6 +8,10 @@ int compare_md5(unsigned char *d, char *digest)
 {
 	int i;
 
+	/*for (i = 0; i < 16 ; i++)
+		printf("%02x", d[i]);
+	printf("\n");*/
+
 	for (i = 0; i < 16 && *digest; i++, digest += 2) {
 		char hex[3];
 		hex[0] = digest[0];
