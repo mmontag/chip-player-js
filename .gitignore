@@ -40,6 +40,7 @@ AS.*
 *.lzx
 *.tar.gz
 *.rar
+*.bz2
 
 # Configuration
 config.log
@@ -53,7 +54,11 @@ players/xmp/Makefile
 libxmp.pc
 Makefile
 test/all_tests.c
+test/.test
+test/libxmp-covertest
+test/libxmp-tests
 *.cov
+coverage/
 
 # Other stuff and leftovers
 xmp.out
