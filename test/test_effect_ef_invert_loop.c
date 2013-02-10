@@ -32,7 +32,7 @@ TEST(test_effect_ef_invert_loop)
 	f = fopen("data/invloop.data", "r");
 
 	xmp_start_player(opaque, 16000, XMP_FORMAT_MONO);
-	xmp_set_mixer(opaque, XMP_MIXER_INTERP, XMP_INTERP_NEAREST);
+	xmp_set_player(opaque, XMP_PLAYER_INTERP, XMP_INTERP_NEAREST);
 
 	for (i = 0; i < 6; i++) {
 		xmp_play_frame(opaque);

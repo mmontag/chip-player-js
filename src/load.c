@@ -641,3 +641,10 @@ void xmp_release_module(xmp_context opaque)
 	free(m->dirname);
 	free(m->basename);
 }
+
+void xmp_scan_module(xmp_context opaque)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+
+	scan_sequences(ctx);
+}

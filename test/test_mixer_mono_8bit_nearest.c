@@ -22,7 +22,7 @@ TEST(test_mixer_mono_8bit_nearest)
 	}
 
 	xmp_start_player(opaque, 8000, XMP_FORMAT_MONO);
-	xmp_set_mixer(opaque, XMP_MIXER_INTERP, XMP_INTERP_NEAREST);
+	xmp_set_player(opaque, XMP_PLAYER_INTERP, XMP_INTERP_NEAREST);
 
 	for (i = 0; i < 10; i++) {
 		xmp_play_frame(opaque);

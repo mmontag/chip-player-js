@@ -212,33 +212,38 @@ int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 	return ret;
 }
 
-int xmp_set_mixer(xmp_context opaque, int parm, int val)
+int xmp_set_player(xmp_context opaque, int parm, int val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
 	switch (parm) {
-	case XMP_MIXER_AMP:
+	case XMP_PLAYER_AMP:
 		if (val >= 0 && val <= 3) {
 			s->amplify = val;
 			ret = 0;
 		}
 		break;
-	case XMP_MIXER_MIX:
+	case XMP_PLAYER_MIX:
 		if (val >= -100 && val <= 100) {
 			s->mix = val;
 			ret = 0;
 		}
 		break;
-	case XMP_MIXER_INTERP:
+	case XMP_PLAYER_INTERP:
 		if (val >= XMP_INTERP_NEAREST && val <= XMP_INTERP_SPLINE) {
 			s->interp = val;
 			ret = 0;
 		}
 		break;
-	case XMP_MIXER_DSP:
+	case XMP_PLAYER_DSP:
 		s->dsp = val;
+		ret = 0;
+		break;
+	case XMP_PLAYER_TIMING:
+		p->timing = val;
 		ret = 0;
 		break;
 	}
@@ -246,24 +251,28 @@ int xmp_set_mixer(xmp_context opaque, int parm, int val)
 	return ret;
 }
 
-int xmp_get_mixer(xmp_context opaque, int parm)
+int xmp_get_player(xmp_context opaque, int parm)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
 	switch (parm) {
-	case XMP_MIXER_AMP:
+	case XMP_PLAYER_AMP:
 		ret = s->amplify;
 		break;
-	case XMP_MIXER_MIX:
+	case XMP_PLAYER_MIX:
 		ret = s->mix;
 		break;
-	case XMP_MIXER_INTERP:
+	case XMP_PLAYER_INTERP:
 		ret = s->interp;
 		break;
-	case XMP_MIXER_DSP:
+	case XMP_PLAYER_DSP:
 		ret = s->dsp;
+		break;
+	case XMP_PLAYER_TIMING:
+		ret = p->timing;
 		break;
 	}
 

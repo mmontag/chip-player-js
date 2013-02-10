@@ -22,7 +22,7 @@ TEST(test_mixer_mono_16bit_spline_filter)
 	new_event(ctx, 0, 1, 0, 30, 2, 0, 0x0f, 2, FX_FLT_CUTOFF, 120);
 
 	xmp_start_player(opaque, 22050, XMP_FORMAT_MONO);
-	xmp_set_mixer(opaque, XMP_MIXER_INTERP, XMP_INTERP_SPLINE);
+	xmp_set_player(opaque, XMP_PLAYER_INTERP, XMP_INTERP_SPLINE);
 
 	for (i = 0; i < 4; i++) {
 		xmp_play_frame(opaque);

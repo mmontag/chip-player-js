@@ -6,6 +6,7 @@ XMP_4.0.0 {
     xmp_free_context;
     xmp_test_module;
     xmp_load_module;
+    xmp_scan_module;
     xmp_get_module_info;
     xmp_release_module;
     xmp_start_player;
@@ -22,8 +23,8 @@ XMP_4.0.0 {
     xmp_seek_time;
     xmp_channel_mute;
     xmp_channel_vol;
-    xmp_set_mixer;
-    xmp_get_mixer;
+    xmp_set_player;
+    xmp_get_player;
   local:
     *;
 };

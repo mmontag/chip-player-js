@@ -38,11 +38,12 @@ extern "C" {
 #define XMP_FORMAT_UNSIGNED	(1 << 1) /* Mix to unsigned samples */
 #define XMP_FORMAT_MONO		(1 << 2) /* Mix to mono instead of stereo */
 
-/* mixer paramters for xmp_mixer_set() */
-#define XMP_MIXER_AMP		0	/* Amplification factor */
-#define XMP_MIXER_MIX		1	/* Stereo mixing */
-#define XMP_MIXER_INTERP	2	/* Interpolation type */
-#define XMP_MIXER_DSP		3	/* DSP effect flags */
+/* mixer paramters for xmp_set_player() */
+#define XMP_PLAYER_AMP		0	/* Amplification factor */
+#define XMP_PLAYER_MIX		1	/* Stereo mixing */
+#define XMP_PLAYER_INTERP	2	/* Interpolation type */
+#define XMP_PLAYER_DSP		3	/* DSP effect flags */
+#define XMP_PLAYER_TIMING	4	/* Timing flags */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -52,6 +53,9 @@ extern "C" {
 /* dsp effect types */
 #define XMP_DSP_LOWPASS		(1 << 0) /* Lowpass filter effect */
 #define XMP_DSP_ALL		(XMP_DSP_LOWPASS)
+
+/* timing flags */
+#define XMP_TIMING_VBLANK	(1 << 0) /* Use vblank timing */
 
 /* limits */
 #define XMP_MAX_KEYS		121	/* Number of valid keys */
@@ -263,13 +267,14 @@ EXPORT xmp_context xmp_create_context  (void);
 EXPORT void        xmp_free_context    (xmp_context);
 EXPORT int         xmp_test_module     (char *, struct xmp_test_info *);
 EXPORT int         xmp_load_module     (xmp_context, char *);
+EXPORT void        xmp_scan_module     (xmp_context);
 EXPORT void        xmp_release_module  (xmp_context);
 EXPORT int         xmp_start_player    (xmp_context, int, int);
 EXPORT int         xmp_play_frame      (xmp_context);
 EXPORT void        xmp_get_frame_info  (xmp_context, struct xmp_frame_info *);
 EXPORT void        xmp_end_player      (xmp_context);
 EXPORT void        xmp_inject_event    (xmp_context, int, struct xmp_event *);
-EXPORT void        xmp_get_module_info  (xmp_context, struct xmp_module_info *);
+EXPORT void        xmp_get_module_info (xmp_context, struct xmp_module_info *);
 EXPORT char      **xmp_get_format_list (void);
 EXPORT int         xmp_next_position   (xmp_context);
 EXPORT int         xmp_prev_position   (xmp_context);
@@ -279,8 +284,8 @@ EXPORT void        xmp_restart_module  (xmp_context);
 EXPORT int         xmp_seek_time       (xmp_context, int);
 EXPORT int         xmp_channel_mute    (xmp_context, int, int);
 EXPORT int         xmp_channel_vol     (xmp_context, int, int);
-EXPORT int         xmp_set_mixer       (xmp_context, int, int);
-EXPORT int         xmp_get_mixer       (xmp_context, int);
+EXPORT int         xmp_set_player      (xmp_context, int, int);
+EXPORT int         xmp_get_player      (xmp_context, int);
 
 #ifdef __cplusplus
 }

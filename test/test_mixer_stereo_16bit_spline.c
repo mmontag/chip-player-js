@@ -22,7 +22,7 @@ TEST(test_mixer_stereo_16bit_spline)
 	}
 
 	xmp_start_player(opaque, 8000, 0);
-	xmp_set_mixer(opaque, XMP_MIXER_INTERP, XMP_INTERP_SPLINE);
+	xmp_set_player(opaque, XMP_PLAYER_INTERP, XMP_INTERP_SPLINE);
 
 	for (i = 0; i < 10; i++) {
 		xmp_play_frame(opaque);

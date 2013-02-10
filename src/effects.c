@@ -429,21 +429,20 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_SPEED:		/* Set speed */
-		if (fxp) {
-			if (fxp < 0x20) {	/* speedup.xm needs BPM = 20 */
-				p->speed = fxp;
-			} else {
-				p->bpm = fxp;
-				p->frame_time =
-				    m->time_factor * m->rrate / p->bpm;
-			}
+		/* speedup.xm needs BPM = 20 */
+		if (p->timing & XMP_TIMING_VBLANK || fxp < 0x20) {
+			goto fx_s3m_speed;
+		} else {
+			goto fx_s3m_bpm;
 		}
 		break;
 	case FX_S3M_SPEED:	/* Set S3M speed */
+	fx_s3m_speed:
 		if (fxp)
 			p->speed = fxp;
 		break;
 	case FX_S3M_BPM:	/* Set S3M BPM */
+        fx_s3m_bpm:
 		if (fxp) {
 			if (fxp < SMIX_MINBPM)
 				fxp = SMIX_MINBPM;
