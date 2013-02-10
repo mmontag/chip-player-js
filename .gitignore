@@ -1,36 +1,66 @@
-.gitignore
+# Binaries
 *.o
 *.lo
 *.so
 *.a
 *.obj
-*.mod
-*.xm
-*.s3m
-*.it
-*.med
-*.mod.nt
-mod.*
-*.zip
-*.tar.gz
-*.rar
 *.exe
 *.dll
 *.pyc
 *.gco
 *.gcno
 *.gcda
-.svn
-tags
-depend
-*~
+a.out
+players/xmp/src/xmp
+lib/
+
+# Module formats
+*.mod
+*.MOD
+*.xm
+*.XM
+*.s3m
+*.it
+*.IT
+*.itz
+*.med
+*.mod.nt
+mod.*
+AS.*
+*.NT
+*.xz
+
+# Other media
+*.wav
+*.mp3
+
+# Compressed formats
+*.zip
+*.lha
+*.lzx
+*.tar.gz
+*.rar
+
+# Configuration
 config.log
 config.status
 configure
 autom4te.cache
+
+# Generated files
+depend
 players/xmp/Makefile
-players/xmp/src/xmp
-xmp.pc
-Makefile
-lib/
 libxmp.pc
+Makefile
+test/all_tests.c
+*.cov
+
+# Other stuff and leftovers
+xmp.out
+.svn
+*.orig
+*.rej
+tags
+*~
+commit-*
+*.swp
