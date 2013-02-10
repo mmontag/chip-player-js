@@ -1,6 +1,6 @@
 /*
- * StarTrekker _Packer.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
- *                         Copyright (C) 2006-2009 Claudio Matsuoka
+ * StarTrekker_Packer.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
+ *                        Copyright (C) 2006-2009 Claudio Matsuoka
  *
  * Converts back to ptk StarTrekker packed MODs
  */
