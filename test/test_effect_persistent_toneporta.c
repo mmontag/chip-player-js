@@ -18,7 +18,7 @@ TEST(test_effect_persistent_toneporta)
 	xmp_context opaque;
 	struct context_data *ctx;
 	struct xmp_frame_info info;
-	int i, j, k;
+	int i;
 
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
@@ -32,7 +32,6 @@ TEST(test_effect_persistent_toneporta)
 	xmp_start_player(opaque, 44100, 0);
 
 	for (i = 0; i < 60 * 6; i++) {
-		k = 856 - i * 10;
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 	}
