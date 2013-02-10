@@ -87,7 +87,8 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 }
 
 
-#define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE)
+#define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE \
+		|| (x) == FX_PER_TPORTA)
 
 #define set_patch(ctx,chn,ins,smp,note,cont_sample) \
 	virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0, 1, cont_sample)

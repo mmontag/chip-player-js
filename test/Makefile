@@ -12,7 +12,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered arcfs gzip compress \
 		  vorbis it_sample_8bit it_sample_16bit
 
 EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down ed_delay ef_invert_loop \
-		  okt_arpeggio per_slide
+		  okt_arpeggio per_slide persistent_toneporta
 
 API		= get_format_list create_context test_module set_player \
 		  stop_module restart_module seek_time channel_mute \
