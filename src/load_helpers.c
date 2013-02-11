@@ -3,6 +3,10 @@
 #include "common.h"
 #include "synth.h"
 
+/* 
+ * Check whether the given string matches one of the blacklisted glob
+ * patterns. Used to filter file names stored in archive files.
+ */
 int exclude_match(char *name)
 {
 	int i;
@@ -11,6 +15,8 @@ int exclude_match(char *name)
 		"README", "readme",
 		"*.DIZ", "*.diz",
 		"*.NFO", "*.nfo",
+		"*.DOC", "*.Doc", "*.doc",
+		"*.INFO", "*.info", "*.Info",
 		"*.TXT", "*.txt",
 		"*.EXE", "*.exe",
 		"*.COM", "*.com",
