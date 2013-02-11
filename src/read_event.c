@@ -233,7 +233,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (cont_sample == 0) {
 			virt_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET) && HAS_QUIRK(QUIRK_FX9BUG)) {
+			if (TEST(OFFSET) && p->flags & XMP_FLAGS_FX9BUG) {
 				xc->offset_val <<= 1;
 			}
 		}

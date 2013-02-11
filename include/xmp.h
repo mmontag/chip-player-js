@@ -43,7 +43,7 @@ extern "C" {
 #define XMP_PLAYER_MIX		1	/* Stereo mixing */
 #define XMP_PLAYER_INTERP	2	/* Interpolation type */
 #define XMP_PLAYER_DSP		3	/* DSP effect flags */
-#define XMP_PLAYER_TIMING	4	/* Timing flags */
+#define XMP_PLAYER_FLAGS	4	/* Player flags */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -54,8 +54,10 @@ extern "C" {
 #define XMP_DSP_LOWPASS		(1 << 0) /* Lowpass filter effect */
 #define XMP_DSP_ALL		(XMP_DSP_LOWPASS)
 
-/* timing flags */
-#define XMP_TIMING_VBLANK	(1 << 0) /* Use vblank timing */
+/* player flags */
+#define XMP_FLAGS_VBLANK	(1 << 0) /* Use vblank timing */
+#define XMP_FLAGS_FX9BUG	(1 << 1) /* Emulate FX9 bug */
+#define XMP_FLAGS_FIXLOOP	(1 << 2) /* Emulate sample loop bug */
 
 /* limits */
 #define XMP_MAX_KEYS		121	/* Number of valid keys */

@@ -430,7 +430,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_SPEED:		/* Set speed */
 		/* speedup.xm needs BPM = 20 */
-		if (p->timing & XMP_TIMING_VBLANK || fxp < 0x20) {
+		if (p->flags & XMP_FLAGS_VBLANK || fxp < 0x20) {
 			goto fx_s3m_speed;
 		} else {
 			goto fx_s3m_bpm;

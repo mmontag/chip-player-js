@@ -242,8 +242,8 @@ int xmp_set_player(xmp_context opaque, int parm, int val)
 		s->dsp = val;
 		ret = 0;
 		break;
-	case XMP_PLAYER_TIMING:
-		p->timing = val;
+	case XMP_PLAYER_FLAGS:
+		p->flags = val;
 		ret = 0;
 		break;
 	}
@@ -271,8 +271,8 @@ int xmp_get_player(xmp_context opaque, int parm)
 	case XMP_PLAYER_DSP:
 		ret = s->dsp;
 		break;
-	case XMP_PLAYER_TIMING:
-		ret = p->timing;
+	case XMP_PLAYER_FLAGS:
+		ret = p->flags;
 		break;
 	}
 

@@ -89,15 +89,15 @@ TEST(test_api_set_player)
 	ret = xmp_get_player(opaque, XMP_PLAYER_AMP);
 	fail_unless(ret == 2, "invalid amp values set");
 
-	/* vblank */
-	ret = xmp_set_player(opaque, XMP_PLAYER_TIMING, 0);
-	fail_unless(ret == 0, "error setting timing");
-	ret = xmp_get_player(opaque, XMP_PLAYER_TIMING);
-	fail_unless(ret == 0, "can't get XMP_PLAYER_TIMING");
+	/* flags */
+	ret = xmp_set_player(opaque, XMP_PLAYER_FLAGS, 0);
+	fail_unless(ret == 0, "error setting flags");
+	ret = xmp_get_player(opaque, XMP_PLAYER_FLAGS);
+	fail_unless(ret == 0, "can't get XMP_PLAYER_FLAGS");
 
-	ret = xmp_set_player(opaque, XMP_PLAYER_TIMING, XMP_TIMING_VBLANK);
-	fail_unless(ret == 0, "error setting timing");
-	ret = xmp_get_player(opaque, XMP_PLAYER_TIMING);
-	fail_unless(ret == XMP_TIMING_VBLANK, "can't get XMP_PLAYER_TIMING");
+	ret = xmp_set_player(opaque, XMP_PLAYER_FLAGS, XMP_FLAGS_VBLANK | XMP_FLAGS_FX9BUG | XMP_FLAGS_FIXLOOP);
+	fail_unless(ret == 0, "error setting flags");
+	ret = xmp_get_player(opaque, XMP_PLAYER_FLAGS);
+	fail_unless(ret == (XMP_FLAGS_VBLANK | XMP_FLAGS_FX9BUG | XMP_FLAGS_FIXLOOP), "can't get XMP_PLAYER_FLAGS");
 }
 END_TEST

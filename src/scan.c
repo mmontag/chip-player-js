@@ -221,7 +221,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 		    alltmp += cnt_row * speed * base_time;
 		    cnt_row = 0;
 		    if (parm) {
-			if (p->timing & XMP_TIMING_VBLANK || parm < 0x20)
+			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20)
 			    speed = parm;
 			else {
 			    clock += m->time_factor * alltmp / bpm;

@@ -346,6 +346,10 @@ void mixer_softmixer(struct context_data *ctx)
 		lps = xxs->lps;
 		lpe = xxs->lpe;
 
+		if (p->flags & XMP_FLAGS_FIXLOOP) {
+			lps >>= 1;
+		}
+
 		for (size = s->ticksize; size > 0; ) {
 			/* How many samples we can write before the loop break
 			 * or sample end... */
@@ -454,6 +458,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
+	int lps;
 
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		return;
@@ -475,6 +480,11 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 
 	vi->pos = pos;
 	vi->frac = frac;
+
+	lps = xxs->lps;
+	if (p->flags & XMP_FLAGS_FIXLOOP) {
+		lps >>= 1;
+	}
 
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 		vi->end += (xxs->lpe - xxs->lps);

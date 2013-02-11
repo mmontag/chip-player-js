@@ -122,22 +122,21 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_ENVFADE	(1 << 1)	/* Fade at end of envelope */
 #define QUIRK_INVLOOP	(1 << 2)	/* Enable effect EF invert loop */
 #define QUIRK_FUNKIT	(1 << 3)	/* Enable effect EF funk it */
-#define QUIRK_FX9BUG	(1 << 4)	/* Protracker effect 9 bug emulation */
-#define QUIRK_ST3GVOL	(1 << 5)	/* ST 3 weird global volume effect */
-#define QUIRK_FINEFX	(1 << 6)	/* Enable 0xf/0xe for fine effects */
-#define QUIRK_VSALL	(1 << 7)	/* Volume slides in all frames */
-#define QUIRK_PBALL	(1 << 8)	/* Pitch bending in all frames */
-#define QUIRK_PERPAT	(1 << 9)	/* Cancel persistent fx at pat start */
-#define QUIRK_VOLPDN	(1 << 10)	/* Set priority to volume slide down */
-#define QUIRK_UNISLD	(1 << 11)	/* Unified pitch slide/portamento */
-#define QUIRK_ITVPOR	(1 << 12)	/* Disable fine bends in IT vol fx */
-#define QUIRK_LINEAR	(1 << 13)	/* Linear periods */
-#define QUIRK_MODRNG	(1 << 14)	/* Limit periods to MOD range */
-#define QUIRK_INSVOL	(1 << 15)	/* Use instrument volume */
-#define QUIRK_VIRTUAL	(1 << 16)	/* Enable virtual channels */
-#define QUIRK_FILTER	(1 << 17)	/* Enable filter */
-#define QUIRK_IGSTPOR	(1 << 18)	/* Ignore stray tone portamento */
-#define QUIRK_KEYOFF	(1 << 19)	/* Keyoff doesn't reset fadeout */
+#define QUIRK_ST3GVOL	(1 << 4)	/* ST 3 weird global volume effect */
+#define QUIRK_FINEFX	(1 << 5)	/* Enable 0xf/0xe for fine effects */
+#define QUIRK_VSALL	(1 << 6)	/* Volume slides in all frames */
+#define QUIRK_PBALL	(1 << 7)	/* Pitch bending in all frames */
+#define QUIRK_PERPAT	(1 << 8)	/* Cancel persistent fx at pat start */
+#define QUIRK_VOLPDN	(1 << 9)	/* Set priority to volume slide down */
+#define QUIRK_UNISLD	(1 << 10)	/* Unified pitch slide/portamento */
+#define QUIRK_ITVPOR	(1 << 11)	/* Disable fine bends in IT vol fx */
+#define QUIRK_LINEAR	(1 << 12)	/* Linear periods */
+#define QUIRK_MODRNG	(1 << 13)	/* Limit periods to MOD range */
+#define QUIRK_INSVOL	(1 << 14)	/* Use instrument volume */
+#define QUIRK_VIRTUAL	(1 << 15)	/* Enable virtual channels */
+#define QUIRK_FILTER	(1 << 16)	/* Enable filter */
+#define QUIRK_IGSTPOR	(1 << 17)	/* Ignore stray tone portamento */
+#define QUIRK_KEYOFF	(1 << 18)	/* Keyoff doesn't reset fadeout */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -219,7 +218,7 @@ struct player_data {
 	int frame;
 	int speed;
 	int bpm;
-	int timing;
+	int flags;
 	double current_time;
 	double frame_time;
 
