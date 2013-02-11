@@ -1,7 +1,7 @@
 
-The option --fix-sample-loop forces some module loaders to use bytes
-instead of 16 bit words. You may need to use it with modules where
-autodetection is either impossible or unreliable.
+The flag XMP_FLAGS_FIXLOOP halves sample loop start values. You may
+need to use it with modules where autodetection is either impossible
+or unreliable.
 
 Case 1: Bad conversion from Soundtracker to M.K.
 
@@ -9,7 +9,7 @@ In Soundtracker and derivatives using 15 instrument modules the loop
 start is given in bytes instead of 16 bit words [1]. Many modules
 have been converted from 15 instrument to 31 instrument format assuming
 that the loop start was in 16 bit words instead of bytes, resulting in
-broken loops [2]. In this case, use --fix-sample-loop to play the module
+broken loops [2]. In this case, use XMP_FLAGS_FIXLOOP to play the module
 correctly.
 
 An example of damaged module is "mod.souvenir of china"
@@ -19,14 +19,14 @@ Case 2: NoisePacker v1 modules
 
 According to Asle [3], the only difference between NoisePacker 1.0
 and 2.0 is the loop start value. This situation is very hard to
-detect, and --fix-sample-loop is needed to play NoisePacker 2.0 modules
+detect, and XMP_FLAGS_FIXLOOP is needed to play NoisePacker 2.0 modules
 correctly.
 
 
 Case 3: Laxity/UNIC modules
 
 UNIC modules can have loop start specified in 16 bit words or in 32 bit
-words [4]. Use --fix-sample-loop to set this value to 16 bit words.
+words [4]. Use XMP_FLAGS_FIXLOOP to set this value to 16 bit words.
 
 
 
