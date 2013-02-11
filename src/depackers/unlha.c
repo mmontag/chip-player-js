@@ -39,11 +39,8 @@
 #define LARC_METHOD             0x2D6C7A73      /* -lzs- */
 #define LARC5_METHOD            0x2D6C7A35      /* -lz5- */
 #define LARC4_METHOD            0x2D6C7A34      /* -lz4- */
-
-#ifdef ENABLE_PMARC
 #define PMARC0_METHOD           0x2D706D30      /* -pm0- */
 #define PMARC2_METHOD           0x2D706D32      /* -pm2- */
-#endif
 
 
 #define UCHAR_MAX       ((1<<(sizeof(uint8)*8))-1)
@@ -134,11 +131,13 @@ struct LhADecrPM {
 };
 #endif
 
+#ifdef ENABLE_LARC
 struct LhADecrLZ {
   int32      matchpos;               /* LARC */
   int32      flag;                   /* LARC */
   int32      flagcnt;                /* LARC */
 };
+#endif
 
 struct LhADecrData {
   int        error;
@@ -158,7 +157,9 @@ struct LhADecrData {
 #ifdef ENABLE_PMARC
     struct LhADecrPM pm;
 #endif
+#ifdef ENABLE_LARC
     struct LhADecrLZ lz;
+#endif
   } d;
 };
 
@@ -1242,6 +1243,8 @@ static uint16 decode_p_pm2(struct LhADecrData *dat)
 
 /* ------------------------------------------------------------------------ */
 
+#ifdef ENABLE_LARC
+
 static uint16 decode_c_lzs(struct LhADecrData *dat)
 {
   if(getbits(dat, 1))
@@ -1315,6 +1318,8 @@ static void decode_start_lz5(struct LhADecrData *dat)
   memset(text + 256 * 13 + 512 + 128 + 18, ' ', 128-18);
 }
 
+#endif
+
 static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
 {
   struct LhADecrData *dd;
@@ -1373,6 +1378,8 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
     case LZHUFF8_METHOD:
       dd->DicBit = 17;
       break;
+
+#ifdef ENABLE_LARC
     case LARC_METHOD:
       dd->DicBit = 11;
       DecodeStart = decode_start_lzs;
@@ -1385,6 +1392,8 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
       DecodeC = decode_c_lz5;
       DecodeP = decode_p_lz5;
       break;
+#endif
+
     default:
       err = 1; break;
     }
@@ -1396,11 +1405,7 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
 
       dicsiz = 1 << dd->DicBit;
 
-#ifdef ENABLE_PMARC
       offset = (Method == LARC_METHOD || Method == PMARC2_METHOD) ? 0x100 - 2 : 0x100 - 3;
-#else
-      offset = (Method == LARC_METHOD) ? 0x100 - 2 : 0x100 - 3;
-#endif
 
       if((text = dd->text = calloc(dicsiz, 1)))
       {
