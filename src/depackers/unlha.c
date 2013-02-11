@@ -39,8 +39,11 @@
 #define LARC_METHOD             0x2D6C7A73      /* -lzs- */
 #define LARC5_METHOD            0x2D6C7A35      /* -lz5- */
 #define LARC4_METHOD            0x2D6C7A34      /* -lz4- */
+
+#ifdef ENABLE_PMARC
 #define PMARC0_METHOD           0x2D706D30      /* -pm0- */
 #define PMARC2_METHOD           0x2D706D32      /* -pm2- */
+#endif
 
 
 #define UCHAR_MAX       ((1<<(sizeof(uint8)*8))-1)
@@ -68,12 +71,14 @@
 #define MAGIC0          18
 #define MAGIC5          19
 
+#ifdef ENABLE_PMARC
 #define PMARC2_OFFSET (0x100 - 2)
 struct PMARC2_Tree {
   uint8 *leftarr;
   uint8 *rightarr;
   uint8 root;
 };
+#endif
 
 struct LhADecrST {
   int32      pbit;
@@ -102,6 +107,7 @@ struct LhADecrST {
   uint8      pt_len[NPT];
 };
 
+#ifdef ENABLE_PMARC
 struct LhADecrPM {
   struct PMARC2_Tree tree1;
   struct PMARC2_Tree tree2;
@@ -126,6 +132,7 @@ struct LhADecrPM {
   uint8      parentarr[0x100];
   uint8      lastbyte;
 };
+#endif
 
 struct LhADecrLZ {
   int32      matchpos;               /* LARC */
@@ -148,7 +155,9 @@ struct LhADecrData {
 
   union {
     struct LhADecrST st;
+#ifdef ENABLE_PMARC
     struct LhADecrPM pm;
+#endif
     struct LhADecrLZ lz;
   } d;
 };
@@ -915,6 +924,8 @@ static uint16 decode_c_st0(struct LhADecrData *dat)
 
 /* ------------------------------------------------------------------------ */
 
+#ifdef ENABLE_PMARC
+
 static const int32 PMARC2_historyBits[8] = { 3,  3,  4,  5,  5,  5,  6,  6};
 static const int32 PMARC2_historyBase[8] = { 0,  8, 16, 32, 64, 96,128,192};
 static const int32 PMARC2_repeatBits[6]  = { 3,  3,  5,  6,  7,  0};
@@ -1227,6 +1238,8 @@ static uint16 decode_p_pm2(struct LhADecrData *dat)
   return (uint16) (delta + getbits(dat, nbits));
 }
 
+#endif
+
 /* ------------------------------------------------------------------------ */
 
 static uint16 decode_c_lzs(struct LhADecrData *dat)
@@ -1337,11 +1350,15 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
       DecodeP = decode_p_st0;
       DecodeC = decode_c_st0;
       break;
+
+#ifdef ENABLE_PMARC
     case PMARC2_METHOD:
       DecodeStart = decode_start_pm2;
       DecodeP = decode_p_pm2;
       DecodeC = decode_c_pm2;
       break;
+#endif
+
     case LZHUFF4_METHOD:
       dd->DicBit = 12;
 //      break;
@@ -1378,7 +1395,12 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
       uint32 dicsiz;
 
       dicsiz = 1 << dd->DicBit;
+
+#ifdef ENABLE_PMARC
       offset = (Method == LARC_METHOD || Method == PMARC2_METHOD) ? 0x100 - 2 : 0x100 - 3;
+#else
+      offset = (Method == LARC_METHOD) ? 0x100 - 2 : 0x100 - 3;
+#endif
 
       if((text = dd->text = calloc(dicsiz, 1)))
       {
