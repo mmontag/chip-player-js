@@ -102,7 +102,7 @@ error. Error codes are::
   -XMP_ERROR_DEPACK     /* Error depacking file */
   -XMP_ERROR_SYSTEM     /* System error */
 
-If a system error occurs, the specific error is set in errno.
+If a system error occurs, the specific error is set in ``errno``.
 
 Parameters to `xmp_start_player()`_ are the sampling
 rate (up to 48kHz) and a bitmapped integer holding one or more of the
@@ -361,7 +361,7 @@ void xmp_get_frame_info(xmp_context c, struct xmp_frame_info \*info)
     :info: pointer to structure containing current frame data.
       ``struct xmp_frame_info`` is defined as follows::
 
-        struct xmp_frame_info {			/* Current frame information */
+        struct xmp_frame_info {           /* Current frame information */
             int pos;            /* Current position */
             int pattern;        /* Current pattern */
             int row;            /* Current row in pattern */

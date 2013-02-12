@@ -1,10 +1,10 @@
 
 DOCS_DFILES	= Makefile COPYING.LIB CREDITS ChangeLog tracker_notes.txt \
-		  $(DOCS_FILES)
+		  libxmp.rst custom.style $(DOCS_FILES)
 
 DOCS_PATH	= docs
 
-DOCS_FILES	= libxmp.rst libxmp.html libxmp.3 libxmp.pdf
+DOCS_FILES	= libxmp.html libxmp.3 libxmp.pdf
 
 DOCS += $(addprefix $(DOCS_PATH)/,$(DOCS_FILES))
 
@@ -31,6 +31,6 @@ docs/libxmp.man.rst: docs/libxmp.rst docs/manpage-header.rst docs/Makefile
 docs/libxmp.html: docs/libxmp.rst
 	rst2html docs/libxmp.rst > $@
 
-docs/libxmp.pdf: docs/libxmp.rst
-	rst2pdf docs/libxmp.rst -s sphinx --footer="###Page###" -o $@
+docs/libxmp.pdf: docs/libxmp.rst docs/custom.style
+	rst2pdf docs/libxmp.rst --smart-quotes=1 -s docs/custom.style --footer="###Page###" -o $@
 

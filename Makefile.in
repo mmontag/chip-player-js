@@ -39,7 +39,7 @@ DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
 GCLIB		= libxmp-gc.a
 
-all: @STATIC@ @SHARED@
+all: @STATIC@ @SHARED@ all-docs
 
 include docs/Makefile
 include include/Makefile
