@@ -20,6 +20,7 @@ exec_prefix	= @prefix@
 datarootdir	= @datarootdir@
 BINDIR		= @bindir@
 LIBDIR		= @libdir@
+MANDIR		= @mandir@/man3
 INCLUDEDIR	= @includedir@
 SYSCONFDIR	= @sysconfdir@/xmp
 LD_VERSCRIPT	= @LD_VERSCRIPT@
