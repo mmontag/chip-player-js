@@ -2,19 +2,18 @@ XMP_4.0.0 {
   global:
     xmp_version;
     xmp_vercode;
+    xmp_get_format_list;
     xmp_create_context;
     xmp_free_context;
     xmp_test_module;
     xmp_load_module;
+    xmp_release_module;
     xmp_scan_module;
     xmp_get_module_info;
-    xmp_release_module;
     xmp_start_player;
     xmp_play_frame;
     xmp_get_frame_info;
     xmp_end_player;
-    xmp_inject_event;
-    xmp_get_format_list;
     xmp_next_position;
     xmp_prev_position;
     xmp_set_position;
@@ -23,6 +22,7 @@ XMP_4.0.0 {
     xmp_seek_time;
     xmp_channel_mute;
     xmp_channel_vol;
+    xmp_inject_event;
     xmp_set_player;
     xmp_get_player;
   local:
