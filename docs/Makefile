@@ -10,7 +10,7 @@ DOCS += $(addprefix $(DOCS_PATH)/,$(DOCS_FILES))
 
 all-docs: $(DOCS)
 
-$(DOCS): Makefile
+$(DOCS): docs/Makefile
 
 install-docs: $(DOCS)
 	@echo "Installing manpages in $(DESTDIR)$(MANDIR)"
@@ -32,5 +32,5 @@ docs/libxmp.html: docs/libxmp.rst
 	rst2html docs/libxmp.rst > $@
 
 docs/libxmp.pdf: docs/libxmp.rst
-	rst2pdf docs/libxmp.rst
+	rst2pdf docs/libxmp.rst -s sphinx --footer="###Page###" -o $@
 

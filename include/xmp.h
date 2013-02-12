@@ -188,8 +188,8 @@ struct xmp_sequence {
 };
 
 struct xmp_module {
-	char name[XMP_NAME_SIZE];	/* Module name */
-	char type[XMP_NAME_SIZE];	/* Module type */
+	char name[XMP_NAME_SIZE];	/* Module title */
+	char type[XMP_NAME_SIZE];	/* Module format */
 	int pat;			/* Number of patterns */
 	int trk;			/* Number of tracks */
 	int chn;			/* Tracks per pattern */
@@ -210,8 +210,8 @@ struct xmp_module {
 };
 
 struct xmp_test_info {
-	char name[XMP_NAME_SIZE];
-	char type[XMP_NAME_SIZE];
+	char name[XMP_NAME_SIZE];	/* Module title */
+	char type[XMP_NAME_SIZE];	/* Module format */
 };
 
 #define XMP_PERIOD_BASE	6847		/* C4 period */

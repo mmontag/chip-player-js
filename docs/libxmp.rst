@@ -198,7 +198,13 @@ int xmp_test_module(char \*path, struct xmp_test_info \*test_info)
     :path: pathname of the module to test.
  
     :test_info: a pointer to a structure used to retrieve the module title
-      and format, if the file is a valid module.
+      and format, if the file is a valid module. ``struct xmp_test_info``
+      is defined as::
+
+        struct xmp_test_info {
+            char name[XMP_NAME_SIZE];      /* Module title */
+            char type[XMP_NAME_SIZE];      /* Module format */
+        };
  
   **Returns:**
     0 if the file is a valid module, or a negative error code
@@ -250,6 +256,56 @@ void xmp_scan_module(xmp_context c)
   **Parameters:**
     :c: the player context handle.
  
+.. _xmp_get_module_info():
+
+void xmp_get_module_info(xmp_context c, struct xmp_module_info \*info)
+``````````````````````````````````````````````````````````````````````
+
+  Retrieve current module data.
+ 
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :info: pointer to structure containing the module data.
+      ``struct xmp_module_info`` is defined as follows::
+
+        struct xmp_module_info {
+            unsigned char md5[16];          /* MD5 message digest */
+            int vol_base;                   /* Volume scale */
+            struct xmp_module *mod;         /* Pointer to module data */
+            char *comment;                  /* Comment text, if any */
+            int num_sequences;              /* Number of valid sequences */
+            struct xmp_sequence *seq_data;  /* Pointer to sequence data */
+        };
+
+      Detailed module data is exposed in the ``mod`` field::
+
+        struct xmp_module {
+            char name[XMP_NAME_SIZE];       /* Module title */
+            char type[XMP_NAME_SIZE];       /* Module format */
+            int pat;                        /* Number of patterns */
+            int trk;                        /* Number of tracks */
+            int chn;                        /* Tracks per pattern */
+            int ins;                        /* Number of instruments */
+            int smp;                        /* Number of samples */
+            int spd;                        /* Initial speed */
+            int bpm;                        /* Initial BPM */
+            int len;                        /* Module length in patterns */
+            int rst;                        /* Restart position */
+            int gvl;                        /* Global volume */
+
+            struct xmp_pattern **xxp;       /* Patterns */
+            struct xmp_track **xxt;         /* Tracks */
+            struct xmp_instrument *xxi;     /* Instruments */
+            struct xmp_sample *xxs;         /* Samples */
+            struct xmp_channel xxc[64];     /* Channel info */
+            unsigned char xxo[XMP_MAX_MOD_LENGTH];  /* Orders */
+        };
+
+      See the header file for more information about pattern and instrument
+      data.
+
+
 Module playing
 ~~~~~~~~~~~~~~
 
@@ -297,7 +353,7 @@ int xmp_play_frame(xmp_context c)
 void xmp_get_frame_info(xmp_context c, struct xmp_frame_info \*info)
 ````````````````````````````````````````````````````````````````````
 
-  Retrieve current module and replay data.
+  Retrieve current frame data.
  
   **Parameters:**
     :c: the player context handle.
@@ -355,6 +411,7 @@ void xmp_end_player(xmp_context c)
  
   **Parameters:**
     :c: the player context handle.
+
 
 Player control
 ~~~~~~~~~~~~~~
@@ -447,11 +504,29 @@ int xmp_channel_mute(xmp_context c, int channel, int status)
  
     :channel: the channel to mute or unmute.
  
-    :status: Set to 0 to mute channel, 1 to unmute or -1 to query the
+    :status: 0 to mute channel, 1 to unmute or -1 to query the
       current channel status.
  
   **Returns:**
     The previous channel status.
+
+.. _xmp_channel_vol():
+
+int xmp_channel_vol(xmp_context c, int channel, int vol)
+````````````````````````````````````````````````````````
+
+  Set or retrieve the volume of the specified channel.
+ 
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :channel: the channel to set or get volume.
+ 
+    :vol: a value from 0-100 to set the channel volume, or -1 to retrieve
+      the current volume.
+ 
+  **Returns:**
+    The previous channel volume.
 
 .. _xmp_inject_event():
 
