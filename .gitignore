@@ -25,6 +25,7 @@ lib/
 *.itz
 *.med
 *.mod.nt
+*.amf
 mod.*
 AS.*
 *.NT
@@ -59,6 +60,10 @@ test/libxmp-covertest
 test/libxmp-tests
 *.cov
 coverage/
+docs/libxmp.3
+docs/libxmp.html
+docs/libxmp.man.rst
+docs/libxmp.pdf
 
 # Other stuff and leftovers
 xmp.out
