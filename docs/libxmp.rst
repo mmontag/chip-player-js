@@ -1,9 +1,9 @@
-======
-libxmp 
-======
--------------------------------
-A tracker module player library
--------------------------------
+
+Libxmp 4.0 API documentation
+============================
+
+.. contents:: `Contents`
+   :depth: 3
 
 Introduction
 ------------
@@ -237,7 +237,19 @@ void xmp_release_module(xmp_context c)
   **Parameters:**
     :c: the player context handle.
 
+.. _xmp_scan_module():
 
+void xmp_scan_module(xmp_context c)
+```````````````````````````````````
+
+  Scan the loaded module for sequences and timing. Scanning is automatically
+  performed by `xmp_load_module()`_ and this function should be called only
+  if `xmp_set_player()`_ is used to change player timing (with parameter
+  ``XMP_PLAYER_VBLANK``).
+
+  **Parameters:**
+    :c: the player context handle.
+ 
 Module playing
 ~~~~~~~~~~~~~~
 
@@ -344,14 +356,8 @@ void xmp_end_player(xmp_context c)
   **Parameters:**
     :c: the player context handle.
 
-.. _xmp_inject_event():
-
-void xmp_inject_event(xmp_context c, int channel, struct xmp_event \*event)
-```````````````````````````````````````````````````````````````````````````
-
-  Dynamically insert a new event into a playing module.
-
-  **Parameters:**
+Player control
+~~~~~~~~~~~~~~
 
 .. _xmp_next_position():
 
@@ -439,7 +445,7 @@ int xmp_channel_mute(xmp_context c, int channel, int status)
   **Parameters:**
     :c: the player context handle.
  
-    :channel: the channel to act on.
+    :channel: the channel to mute or unmute.
  
     :status: Set to 0 to mute channel, 1 to unmute or -1 to query the
       current channel status.
@@ -447,8 +453,35 @@ int xmp_channel_mute(xmp_context c, int channel, int status)
   **Returns:**
     The previous channel status.
 
-Replayer parameter setting
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _xmp_inject_event():
+
+void xmp_inject_event(xmp_context c, int channel, struct xmp_event \*event)
+```````````````````````````````````````````````````````````````````````````
+
+  Dynamically insert a new event into a playing module.
+
+  **Parameters:**
+    :c: the player context handle.
+
+    :channel: the channel to insert the new event.
+
+    :event: the event to insert.
+      ``struct xmp_event`` is defined as::
+
+        struct xmp_event {
+            unsigned char note;   /* Note number (0 means no note) */
+            unsigned char ins;    /* Patch number */
+            unsigned char vol;    /* Volume (0 to basevol) */
+            unsigned char fxt;    /* Effect type */
+            unsigned char fxp;    /* Effect parameter */
+            unsigned char f2t;    /* Secondary effect type */
+            unsigned char f2p;    /* Secondary effect parameter */
+            unsigned char _flag;  /* Internal (reserved) flags */
+        };
+
+
+Player parameter setting
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _xmp_set_player():
 
@@ -461,11 +494,11 @@ int xmp_set_player(xmp_context c, int param, int val)
     :param: player parameter to set.
       Valid parameters are::
 
-        XMP_PLAYER_AMP          /* Amplification factor */
-        XMP_PLAYER_MIX          /* Stereo mixing */
-        XMP_PLAYER_INTERP       /* Interpolation type */
-        XMP_PLAYER_DSP          /* DSP effect flags */
-        XMP_PLAYER_FLAGS        /* Player flags */
+        XMP_PLAYER_AMP      /* Amplification factor */
+        XMP_PLAYER_MIX      /* Stereo mixing */
+        XMP_PLAYER_INTERP   /* Interpolation type */
+        XMP_PLAYER_DSP      /* DSP effect flags */
+        XMP_PLAYER_FLAGS    /* Player flags */
 
     :val: the value to set. Valid values are:
 
@@ -475,20 +508,20 @@ int xmp_set_player(xmp_context c, int param, int val)
 
       * Interpolation type: can be one of the following values::
 
-          XMP_INTERP_NEAREST      /* Nearest neighbor */
-          XMP_INTERP_LINEAR       /* Linear (default) */
-          XMP_INTERP_SPLINE       /* Cubic spline */
+          XMP_INTERP_NEAREST  /* Nearest neighbor */
+          XMP_INTERP_LINEAR   /* Linear (default) */
+          XMP_INTERP_SPLINE   /* Cubic spline */
 
       * DSP effects flags: enable or disable DSP effects. Valid effects are::
 
-          XMP_DSP_LOWPASS         /* Lowpass filter effect */
-          XMP_DSP_ALL             /* All effects */
+          XMP_DSP_LOWPASS     /* Lowpass filter effect */
+          XMP_DSP_ALL         /* All effects */
 
       * Player flags: tweakable player parameters. Valid flags are::
 
-          XMP_FLAGS_VBLANK        /* Use vblank timing */
-          XMP_FLAGS_FX9BUG        /* Emulate Protracker 2.x FX9 bug */
-          XMP_FLAGS_FIXLOOP       /* Make sample loop value / 2 */
+          XMP_FLAGS_VBLANK    /* Use vblank timing */
+          XMP_FLAGS_FX9BUG    /* Emulate Protracker 2.x FX9 bug */
+          XMP_FLAGS_FIXLOOP   /* Make sample loop value / 2 */
  
   **Returns:**
     0 if parameter was correctly set, or ``-XMP_ERROR_INVALID`` if

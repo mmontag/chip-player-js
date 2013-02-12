@@ -10,6 +10,8 @@ DOCS += $(addprefix $(DOCS_PATH)/,$(DOCS_FILES))
 
 all-docs: $(DOCS)
 
+$(DOCS): Makefile
+
 install-docs: $(DOCS)
 	@echo "Installing manpages in $(DESTDIR)$(MANDIR)"
 	@[ -d $(DESTDIR)$(MANDIR) ] || mkdir -p $(DESTDIR)$(MANDIR)
@@ -19,13 +21,16 @@ dist-docs:
 	mkdir -p $(DIST)/$(DOCS_PATH)
 	cp -RPp $(addprefix $(DOCS_PATH)/,$(DOCS_DFILES)) $(DIST)/$(DOCS_PATH)
 
-docs/libxmp.3: docs/libxmp.rst
-	rst2man $+ > $@
-	sed -i 's/^\.TH/.TH "LIBXMP" "3" "Version 4.0" "Feb 2013" "Extended Module Player"/' $@
+docs/libxmp.3: docs/libxmp.man.rst
+	rst2man docs/libxmp.man.rst > $@
+
+docs/libxmp.man.rst: docs/libxmp.rst docs/manpage-header.rst docs/Makefile
+	cp docs/manpage-header.rst $@
+	sed -n '/^Introduction/,$$p' docs/libxmp.rst >> $@
 
 docs/libxmp.html: docs/libxmp.rst
-	rst2html $+ > $@
+	rst2html docs/libxmp.rst > $@
 
 docs/libxmp.pdf: docs/libxmp.rst
-	rst2pdf $+
+	rst2pdf docs/libxmp.rst
 
