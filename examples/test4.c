@@ -1,4 +1,3 @@
-/* A simple frontend for xmp */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,10 +79,10 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		if (xmp_player_start(ctx, 44100, 0) == 0) {
-			xmp_player_get_info(ctx, &mi);
+		if (xmp_start_player(ctx, 44100, 0) == 0) {
+			xmp_get_module_info(ctx, &mi);
 			display_info(&mi);
-			xmp_player_end(ctx);
+			xmp_end_player(ctx);
 		}
 
 		xmp_release_module(ctx);

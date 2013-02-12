@@ -8,14 +8,14 @@ static char *note_name[] = {
 	"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "
 };
 
-static void display_data(struct xmp_module_info *mi)
+static void display_data(struct xmp_module_info *mi, struct xmp_frame_info *fi)
 {
 	int i;
 
-	printf("%02x| ", mi->row);
+	printf("%02x| ", fi->row);
 	for (i = 0; i < mi->mod->chn; i++) {
-		int track = mi->mod->xxp[mi->pattern]->index[i];
-		struct xmp_event *event = &mi->mod->xxt[track]->event[mi->row];
+		int track = mi->mod->xxp[fi->pattern]->index[i];
+		struct xmp_event *event = &mi->mod->xxt[track]->event[fi->row];
 
 		if (event->note > 0x80) {
 			printf("=== ");
@@ -39,10 +39,10 @@ static void display_data(struct xmp_module_info *mi)
 
 int main(int argc, char **argv)
 {
-	static xmp_context ctx;
-	static struct xmp_module_info mi[2];
-	int current, prev;
-	int i;
+	xmp_context ctx;
+	struct xmp_module_info mi;
+	struct xmp_frame_info fi;
+	int row, pos, i;
 
 	if (sound_init(44100, 2) < 0) {
 		fprintf(stderr, "%s: can't initialize sound\n", argv[0]);
@@ -58,39 +58,35 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		if (xmp_player_start(ctx, 44100, 0) == 0) {
+		if (xmp_start_player(ctx, 44100, 0) == 0) {
 
 			/* Show module data */
 
-			xmp_player_get_info(ctx, &mi[0]);
-			printf("%s (%s)\n", mi[0].mod->name, mi[0].mod->type);
-			mi[0].order = -1;
-			mi[0].row = -1;
-			current = 0;
+			xmp_get_module_info(ctx, &mi);
+			printf("%s (%s)\n", mi.mod->name, mi.mod->type);
 
 			/* Play module */
 
-			while (xmp_player_frame(ctx) == 0) {
-				prev = current;
-				current ^= 1;
-
-				xmp_player_get_info(ctx, &mi[current]);
-				if (mi[current].loop_count > 0)
+			row = pos = -1;
+			while (xmp_play_frame(ctx) == 0) {
+				xmp_get_frame_info(ctx, &fi);
+				if (fi.loop_count > 0)
 					break;
 
-				sound_play(mi[current].buffer,
-						mi[current].buffer_size);
+				sound_play(fi.buffer, fi.buffer_size);
 
-				if (mi[current].order != mi[prev].order) {
+				if (fi.pos != pos) {
 					printf("\n%02x:%02x\n",
-					       mi[current].order,
-					       mi[current].pattern);
+					       fi.pos, fi.pattern);
+					pos = fi.pos;
+					row = -1;
 				}
-				if (mi[current].row != mi[prev].row) {
-					display_data(&mi[current]);
+				if (fi.row != row) {
+					display_data(&mi, &fi);
+					row = fi.row;
 				}
 			}
-			xmp_player_end(ctx);
+			xmp_end_player(ctx);
 		}
 
 		xmp_release_module(ctx);

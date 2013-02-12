@@ -37,12 +37,12 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s: error loading %s\n", argv[0], argv[1]);
 		exit(1);
 	}
-	xmp_player_start(ctx1, 44100, 0);
-	xmp_player_get_info(ctx1, &mi1);
+	xmp_start_player(ctx1, 44100, 0);
+	xmp_get_module_info(ctx1, &mi1);
 	printf("1: %s (%s)\n", mi1.mod->name, mi1.mod->type);
 
 	/* play a bit of file 1 */
-	res1 = xmp_player_frame(ctx1);
+	res1 = xmp_play_frame(ctx1);
 
 	/* create player 2 */
 	ctx2 = xmp_create_context();
@@ -51,24 +51,24 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s: error loading %s\n", argv[0], argv[2]);
 		exit(1);
 	}
-	xmp_player_start(ctx2, 44100, 0);
-	xmp_player_get_info(ctx2, &mi2);
+	xmp_start_player(ctx2, 44100, 0);
+	xmp_get_module_info(ctx2, &mi2);
 	printf("2: %s (%s)\n", mi2.mod->name, mi2.mod->type);
 
 	/* play file 2 */
-	res2 = xmp_player_frame(ctx2);
+	res2 = xmp_play_frame(ctx2);
 
 	/* play file 1 again */
-	res1 = xmp_player_frame(ctx1);
+	res1 = xmp_play_frame(ctx1);
 	
 	/* close player 1 */
-	xmp_player_end(ctx1);
+	xmp_end_player(ctx1);
 
 	/* play file 2 again */
-	res1 = xmp_player_frame(ctx2);
+	res1 = xmp_play_frame(ctx2);
 
 	/* close player 2 */
-	xmp_player_end(ctx2);
+	xmp_end_player(ctx2);
 
 	xmp_release_module(ctx1);
 	xmp_release_module(ctx2);

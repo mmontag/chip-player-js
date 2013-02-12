@@ -410,25 +410,24 @@ void process_events ()
 }
 
 
-static void draw_screen(struct xmp_module_info
-					   *mi)
+static void draw_screen(struct xmp_module_info *mi, struct xmp_frame_info *fi)
 {
-	static int ord = -1, pat = -1, row = -1, gvl = -1;
+	static int pos = -1, pat = -1, row = -1, gvl = -1;
 	char buf[80];
 	int i;
 
-	update_counter(mi->order, ord, 20);
-	update_counter(mi->pattern, pat, 36);
-	update_counter(mi->volume, gvl, 68);
+	update_counter(fi->pos, pos, 20);
+	update_counter(fi->pattern, pat, 36);
+	update_counter(fi->volume, gvl, 68);
 
-	if (mi->row != row) {
-		draw_progress(ord * 126 / mi->mod->len +
-			      mi->row * 126 / mi->mod->len / mi->num_rows);
+	if (fi->row != row) {
+		draw_progress(pos * 126 / mi->mod->len +
+			      fi->row * 126 / mi->mod->len / fi->num_rows);
 	}
-	update_counter(mi->row, row, 52);
+	update_counter(fi->row, row, 52);
 
 	for (i = 0; i < mi->mod->chn; i++) {
-		struct xmp_channel_info *info = &mi->channel_info[i];
+		struct xmp_channel_info *info = &fi->channel_info[i];
 		struct channel_info *ci = &channel_info[info->instrument];
 
 		if (info->instrument < 40) {
@@ -460,6 +459,7 @@ int main (int argc, char **argv)
 {
     int o;
     struct xmp_module_info mi;
+    struct xmp_frame_info fi;
 
     while ((o = getopt (argc, argv, "v")) != -1) {
 	switch (o) {
@@ -505,8 +505,8 @@ int main (int argc, char **argv)
     SDL_UpdateRect(screen, 0, 0, 640, 480);
 
     paused = 0;
-    xmp_player_start(ctx, SRATE, 0);
-    xmp_player_get_info(ctx, &mi);
+    xmp_start_player(ctx, SRATE, 0);
+    xmp_get_module_info(ctx, &mi);
     shadowmsg(&font1, 10, 26, mi.mod->name, 15, -1);
 
     for (;;) {
@@ -514,16 +514,16 @@ int main (int argc, char **argv)
 	if (paused) {
 	    usleep(100000);
 	} else {
-	    if (xmp_player_frame(ctx) != 0)
+	    if (xmp_play_frame(ctx) != 0)
 		break;
-	    xmp_player_get_info(ctx, &mi);
-	    if (mi.loop_count > 0)
+	    xmp_get_frame_info(ctx, &fi);
+	    if (fi.loop_count > 0)
 		break;
-	    sound_play(mi.buffer, mi.buffer_size);
-	    draw_screen(&mi);
+	    sound_play(fi.buffer, fi.buffer_size);
+	    draw_screen(&mi, &fi);
 	}
     }
-    xmp_player_end(ctx);
+    xmp_end_player(ctx);
 
     sound_deinit();
     xmp_free_context(ctx);
