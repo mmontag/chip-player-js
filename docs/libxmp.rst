@@ -227,10 +227,10 @@ int xmp_load_module(xmp_context c, char \*path)
  
   **Returns:**
     0 if sucessful, or a negative error code in case of error.
-    Error codes can be ``XMP_ERROR_FORMAT`` in case of an unrecognized file
-    format, ``XMP_ERROR_DEPACK`` if the file is compressed and uncompression
-    failed, ``XMP_ERROR_LOAD`` if the file format was recognized but the
-    file loading failed, or ``XMP_ERROR_SYSTEM`` in case of a system error
+    Error codes can be ``-XMP_ERROR_FORMAT`` in case of an unrecognized file
+    format, ``-XMP_ERROR_DEPACK`` if the file is compressed and uncompression
+    failed, ``-XMP_ERROR_LOAD`` if the file format was recognized but the
+    file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of a system error
     (the system error code is set in ``errno``).
 
 .. _xmp_release_module():
@@ -331,8 +331,8 @@ int xmp_start_player(xmp_context c, int rate, int format)
 
   **Returns:**
     0 if sucessful, or a negative error code in case of error.
-    Error codes can be ``XMP_ERROR_INTERNAL`` in case of a internal player
-    error, or ``XMP_ERROR_SYSTEM`` in case of a system error (the system error
+    Error codes can be ``-XMP_ERROR_INTERNAL`` in case of a internal player
+    error, or ``-XMP_ERROR_SYSTEM`` in case of a system error (the system error
     code is set in ``errno``).
 
 .. _xmp_play_frame():

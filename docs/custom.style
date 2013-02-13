@@ -80,7 +80,7 @@ fontsAlias:
   stdMonoBoldItalic: Courier-BoldOblique
   stdSerif: Times-Roman
 
-linkColor: navy
+linkColor: darkgreen
 
 styles:
   base:
@@ -104,8 +104,8 @@ styles:
     borderPadding: 0
     borderColor: null
     borderRadius: null
-    allowWidows: false
-    allowOrphans: false
+    allowWidows: 3
+    allowOrphans: 3
     hyphenation: false
     kerning: false
     underline: false
@@ -116,12 +116,12 @@ styles:
     parent: base
 
   title-reference:
-    parent: normal
-    fontName: stdItalic
+    parent: heading
+    fontName: stdBold
 
   bodytext:
     parent: normal
-    spaceBefore: 6
+    spaceBefore: 8
     alignment: TA_JUSTIFY
     hyphenation: true
 
@@ -311,16 +311,19 @@ styles:
     parent: heading
     fontName: stdBold
     fontSize: 175%
+    spaceBefore: 24
 
   heading2:
     parent: heading
     fontName: stdBold
     fontSize: 150%
+    spaceBefore: 20
 
   heading3:
     parent: heading
     fontName: stdBold
     fontSize: 125%
+    spaceBefore: 16
 
   heading4:
     parent: heading
