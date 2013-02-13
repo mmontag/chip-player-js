@@ -156,7 +156,7 @@ depend: test/all_tests.c
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 	    
-dist: version-prepare dist-prepare dist-subdirs all-docs
+dist: version-prepare all-docs dist-prepare dist-subdirs
 
 dist-prepare:
 	./config.status
