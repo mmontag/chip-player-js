@@ -39,7 +39,7 @@ DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION).dylib
 GCLIB		= libxmp-gc.a
 
-all: @STATIC@ @SHARED@ all-docs
+all: @STATIC@ @SHARED@
 
 include docs/Makefile
 include include/Makefile
@@ -156,7 +156,7 @@ depend: test/all_tests.c
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 	    
-dist: version-prepare dist-prepare dist-subdirs
+dist: version-prepare dist-prepare dist-subdirs all-docs
 
 dist-prepare:
 	./config.status
@@ -173,7 +173,7 @@ dist-subdirs: $(addprefix dist-,$(DDIRS))
 distcheck:
 	rm -Rf $(DIST)
 	tar xf $(DIST).tar.gz
-	(cd $(DIST); ./configure; make; make check)
+	(cd $(DIST); ./configure --enable-static --prefix=`pwd`/test-install; make; make check; make install; find test-install)
 
 $(OBJS): Makefile
 
