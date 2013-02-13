@@ -614,7 +614,7 @@ int xmp_get_player(xmp_context c, int param)
   **Parameters:**
     :c: the player context handle.
  
-    :param: player parameter to get. See xmp_set_player()_ for a list
+    :param: player parameter to get. See `xmp_set_player()`_ for a list
       of valid parameters.
  
   **Returns:**
