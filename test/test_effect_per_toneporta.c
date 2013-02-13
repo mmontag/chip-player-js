@@ -13,7 +13,7 @@ Amiga limits: 907 to 108
 
 #define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
-TEST(test_effect_persistent_toneporta)
+TEST(test_effect_per_toneporta)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
