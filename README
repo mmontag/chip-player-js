@@ -1,92 +1,23 @@
 Libxmp version 4.0
+==================
 
 Libxmp is a library that renders module file to PCM data. It supports
 many module formats including Protracker (MOD), Scream Tracker 3 (S3M),
 Fast Tracker II (XM), and Impulse Tracker (IT).
 
+See docs/libxmp.html for the library API reference. The documentation
+is also available in man page and PDF formats.
 
-Usage example:
 
-This example loads a module, plays it at 44.1kHz and writes it to a raw
-sound file:
+License
+-------
 
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <xmp.h>
-    
-    int main(int argc, char **argv)
-    {
-        xmp_context c;
-        struct xmp_frame_info fi;
-        FILE *f;
-    
-        /* The output raw file */
-        f = fopen("out.raw", "wb");
-        if (f == NULL) {
-            fprintf(stderr, "can't open output file\n");
-            exit(EXIT_FAILURE);
-        }
-    
-        /* Create the player context */
-        c = xmp_create_context();
-    
-        /* Load our module */
-        if (xmp_load_module(c, argv[1]) != 0) {
-            fprintf(stderr, "can't load module\n");
-            exit(EXIT_FAILURE);
-        }
-    
-        /* Play the module */
-        xmp_start_player(c, 44100, 0);
-        while (xmp_play_frame(c) == 0) {
-            xmp_get_frame_info(c, &fi);
-    
-            if (fi.loop_count > 0)    /* exit before looping */
-                break;
-    
-            fwrite(fi.buffer, fi.buffer_size, 1, f);  /* write audio data */
-        }
-        xmp_end_player(c);
-        xmp_release_module(c);        /* unload module */
-        xmp_free_context(c);          /* destroy the player context */
-    
-        fclose(f);
-    
-        exit(EXIT_SUCCESS);
-    }
+This library is free software; you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 2.1 of the License, or (at
+your option) any later version.
 
------
-
-A player context can load and play a single module at a time. Multiple
-contexts can be defined if needed.
-
-Use xmp_test_module() to check if the file is a valid module and retrieve 
-the module name and type. Use xmp_load_module() to fully load the module
-to memory. These two calls return 0 on success or <0 in case of error. Error
-codes are:
-
-  -XMP_ERROR_INTERNAL   /* Internal error */
-  -XMP_ERROR_FORMAT     /* Unsupported module format */
-  -XMP_ERROR_LOAD       /* Error loading file */
-  -XMP_ERROR_DEPACK     /* Error depacking file */
-  -XMP_ERROR_SYSTEM     /* System error */
-
-If a system error occurs, the specific error is set in errno.
-
-Parameters to xmp_start_player() are the sampling rate (up to 48kHz)
-and a bitmapped integer holding one or more of the following mixer flags:
-
-  XMP_MIX_8BIT          /* Mix to 8-bit instead of 16 */
-  XMP_MIX_UNSIGNED      /* Mix to unsigned samples */
-  XMP_MIX_MONO          /* Mix to mono instead of stereo */
-  XMP_MIX_NEAREST       /* Mix using nearest neighbor interpolation */
-  XMP_MIX_NOFILTER      /* Disable lowpass filter */
-
-After xmp_start_player() is called, each call to xmp_play_frame() will
-render an audio frame.  Call xmp_get_frame_info() to retrieve the buffer
-address and size. xmp_play_frame() returns 0 on success or -1 if replay
-should stop.
-
-Use xmp_end_player(), xmp_release_module() and xmp_free_context() to
-release memory and end replay.
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See docs/COPYING.LIB for more details.
 

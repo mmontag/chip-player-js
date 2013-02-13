@@ -5,19 +5,21 @@ Requirements
   gmake instead of make.
 
 
-Building libxmp
----------------
+Building the library
+--------------------
 
 In most systems just execute:
 
-$ ./configure
-$ make
+  $ ./configure
+  $ make
 
-Use ./configure --disable-static or --disable-shared if you don't want
-to build static or shared libraries. To check if the library was correctly
-built, run:
+We'll build the shared library by default. Use ./configure --enable-static
+to build the static library. To check if the library was correctly built,
+run:
 
-$ make check
+  $ make check
+
+Use ./configure --help to see more options.
 
 
 Installation
