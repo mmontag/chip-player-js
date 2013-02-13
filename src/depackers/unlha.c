@@ -43,8 +43,10 @@
 #define PMARC2_METHOD           0x2D706D32      /* -pm2- */
 
 
+#undef UCHAR_MAX
 #define UCHAR_MAX       ((1<<(sizeof(uint8)*8))-1)
 #define MAX_DICBIT      16
+#undef CHAR_BIT
 #define CHAR_BIT        8
 #define USHRT_BIT       16              /* (CHAR_BIT * sizeof(ushort)) */
 #define MAXMATCH        256             /* not more than UCHAR_MAX + 1 */
