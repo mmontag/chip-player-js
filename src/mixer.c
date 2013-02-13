@@ -439,7 +439,7 @@ void mixer_softmixer(struct context_data *ctx)
 	if (~s->format & XMP_FORMAT_MONO) {
 		size *= 2;
 	}
-	assert(size <= OUT_MAXLEN);
+	assert(size <= XMP_MAX_FRAMESIZE);
 
 	if (s->format & XMP_FORMAT_8BIT) {
 		downmix_int_8bit(s->buffer, s->buf32, size, s->amplify,
@@ -643,11 +643,11 @@ int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 {
 	struct mixer_data *s = &ctx->s;
 
-	s->buffer = calloc(2, OUT_MAXLEN);
+	s->buffer = calloc(2, XMP_MAX_FRAMESIZE);
 	if (s->buffer == NULL)
 		goto err;
 
-	s->buf32 = calloc(sizeof(int), OUT_MAXLEN);
+	s->buf32 = calloc(sizeof(int), XMP_MAX_FRAMESIZE);
 	if (s->buf32 == NULL)
 		goto err1;
 

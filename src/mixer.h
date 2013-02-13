@@ -4,15 +4,8 @@
 #define SMIX_C4NOTE	6864
 
 #define SMIX_NUMVOC	64	/* default number of softmixer voices */
-#define SMIX_MAXRATE	48000	/* max sampling rate (Hz) */
-#define SMIX_MINBPM	20	/* min BPM */
-
 #define SMIX_SHIFT	16
 #define SMIX_MASK	0xffff
-
-/* frame rate = (50 * bpm / 125) Hz */
-/* frame size = (sampling rate * channels * size) / frame rate */
-#define OUT_MAXLEN	(5 * SMIX_MAXRATE * 2 / SMIX_MINBPM)
 
 #define FILTER_SHIFT	16
 

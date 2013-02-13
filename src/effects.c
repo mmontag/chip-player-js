@@ -444,8 +444,8 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 	case FX_S3M_BPM:	/* Set S3M BPM */
         fx_s3m_bpm:
 		if (fxp) {
-			if (fxp < SMIX_MINBPM)
-				fxp = SMIX_MINBPM;
+			if (fxp < XMP_MIN_BPM)
+				fxp = XMP_MIN_BPM;
 			p->bpm = fxp;
 			p->frame_time = m->time_factor * m->rrate / p->bpm;
 		}
@@ -460,8 +460,8 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			if ((int32) p->bpm > 0xff)
 				p->bpm = 0xff;
 		} else {
-			if (fxp < SMIX_MINBPM)
-				fxp = SMIX_MINBPM;
+			if (fxp < XMP_MIN_BPM)
+				fxp = XMP_MIN_BPM;
 			p->bpm = fxp;
 		}
 		p->frame_time = m->time_factor * m->rrate / p->bpm;

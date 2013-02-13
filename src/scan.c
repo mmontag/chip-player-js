@@ -158,8 +158,8 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 	last_row = mod->xxp[pat]->rows;
 	for (row = break_row, break_row = 0; row < last_row; row++, cnt_row++) {
 	    /* Prevent crashes caused by large softmixer frames */
-	    if (bpm < SMIX_MINBPM) {
-	        bpm = SMIX_MINBPM;
+	    if (bpm < XMP_MIN_BPM) {
+	        bpm = XMP_MIN_BPM;
 	    }
 
 	    /* Date: Sat, 8 Sep 2007 04:01:06 +0200

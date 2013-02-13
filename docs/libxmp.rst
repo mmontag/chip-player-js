@@ -341,6 +341,7 @@ int xmp_play_frame(xmp_context c)
 `````````````````````````````````
 
   Play one frame of the module. Modules usually play at 50 frames per second.
+  Use `xmp_get_frame_info()`_ to retrieve the buffer containing audio data.
  
   **Parameters:**
     :c: the player context handle.
@@ -397,7 +398,8 @@ void xmp_get_frame_info(xmp_context c, struct xmp_frame_info \*info)
 
       This function should be used to retrieve sound buffer data after
       `xmp_play_frame()`_ is called. Fields ``buffer`` and ``buffer_size``
-      contain the pointer to the sound buffer PCM data and its size.
+      contain the pointer to the sound buffer PCM data and its size. The
+      buffer size will be no larger than ``XMP_MAX_FRAMESIZE``.
  
   **Returns:**
     0 if sucessful or -1 if the module was stopped.

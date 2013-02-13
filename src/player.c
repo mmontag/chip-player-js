@@ -1018,7 +1018,7 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 	info->time = p->current_time;
 	info->buffer = s->buffer;
 
-	info->total_size = OUT_MAXLEN;
+	info->total_size = XMP_MAX_FRAMESIZE;
 	info->buffer_size = s->ticksize;
 	if (~s->format & XMP_FORMAT_MONO) {
 		info->buffer_size *= 2;
