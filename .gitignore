@@ -10,6 +10,7 @@
 *.gco
 *.gcno
 *.gcda
+*.cov
 a.out
 players/xmp/src/xmp
 lib/
@@ -58,7 +59,8 @@ test/all_tests.c
 test/.test
 test/libxmp-covertest
 test/libxmp-tests
-*.cov
+test/test8.raw
+test/write_test
 coverage/
 docs/libxmp.3
 docs/libxmp.html
