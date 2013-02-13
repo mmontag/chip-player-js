@@ -136,14 +136,11 @@ int check_filename_case(char *dir, char *name, char *new_name, int size)
 
 #endif
 
-void get_instrument_path(struct module_data *m, char *var, char *path, int size)
+void get_instrument_path(struct module_data *m, char *path, int size)
 {
 	if (m->instrument_path) {
 		strncpy(path, m->instrument_path, size);
-	} else if (var && getenv(var)) {
-		strncpy(path, getenv(var), size);
 	} else if (getenv("XMP_INSTRUMENT_PATH")) {
-
 		strncpy(path, getenv("XMP_INSTRUMENT_PATH"), size);
 	} else {
 		strncpy(path, ".", size);

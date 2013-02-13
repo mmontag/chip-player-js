@@ -25,6 +25,7 @@ XMP_4.0.0 {
     xmp_inject_event;
     xmp_set_player;
     xmp_get_player;
+    xmp_set_instrument_path;
   local:
     *;
 };

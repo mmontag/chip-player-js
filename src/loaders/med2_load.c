@@ -168,8 +168,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 		struct stat stat;
 		int found;
 
-		get_instrument_path(m, "XMP_MED2_INSTRUMENT_PATH",
-				ins_path, 256);
+		get_instrument_path(m, ins_path, 256);
 		found = check_filename_case(ins_path,
 				(char *)mod->xxi[i].name, name, 256);
 

@@ -618,3 +618,20 @@ int xmp_get_player(xmp_context c, int param)
   **Returns:**
     The parameter value.
 
+.. _xmp_set_instrument_path():
+
+int xmp_set_instrument_path(xmp_context c, char \*path)
+```````````````````````````````````````````````````````
+
+  Set the path to retrieve external instruments or samples. Used by some
+  formats (such as MED2) to read sample files from a different directory
+  in the filesystem.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :path: the path to retrieve instrument files.
+ 
+  **Returns:**
+    0 if the instrument path was correctly set, or ``-XMP_ERROR_SYSTEM``
+    in case of error (the system error code is set in ``errno``).

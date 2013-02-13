@@ -32,7 +32,7 @@ void set_xxh_defaults(struct xmp_module *);
 void cvt_pt_event(struct xmp_event *, uint8 *);
 void disable_continue_fx(struct xmp_event *);
 int check_filename_case(char *, char *, char *, int);
-void get_instrument_path(struct module_data *, char *, char *, int);
+void get_instrument_path(struct module_data *, char *, int);
 void set_type(struct module_data *, char *, ...);
 int load_sample(FILE *, int, struct xmp_sample *, void *);
 
