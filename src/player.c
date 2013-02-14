@@ -205,7 +205,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
-	int finalvol;
+	int finalvol, root;
 	uint16 vol_envelope;
 	int gvol;
 
@@ -281,7 +281,10 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 				((int)finalvol * 0x40 / m->volbase)) >> 18;
 
 	/* Apply channel volume */
-	finalvol = finalvol * 100 / p->channel_vol[chn];
+	root = p->virt.voice_array[chn].root;
+	if (root >= 0) {
+		finalvol = finalvol * 100 / p->channel_vol[root];
+	}
 
 	/* Volume translation table (for PTM, ARCH, COCO) */
 	if (m->vol_table) {
@@ -623,7 +626,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
                 	xc->retrig.count = LSN(xc->retrig.val);
 		}
         }
-   
+
 	process_volume(ctx, chn, t, act);
 	process_frequency(ctx, chn, t, act);
 	process_pan(ctx, chn, t, act);
