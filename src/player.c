@@ -352,16 +352,20 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		vibrato += get_lfo(&xc->vibrato) >> 10;
 	}
 
-	/* IT pitch envelopes are always linear, even in Amiga period mode.
-	 * Each unit in the envelope scale is 1/25 semitone.
-	 */
 	linear_bend = period_to_bend(xc->period + vibrato + get_med_vibrato(xc),
 				xc->note, HAS_QUIRK(QUIRK_MODRNG),
 				xc->gliss, HAS_QUIRK(QUIRK_LINEAR));
 
+	/* Envelope */
+
 	if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
+		/* IT pitch envelopes are always linear, even in Amiga period
+		 * mode. Each unit in the envelope scale is 1/25 semitone.
+		 */
 		linear_bend += frq_envelope << 7;
 	}
+
+	/* Arpeggio */
 
 	arp = xc->arpeggio.val[xc->arpeggio.count];
 	linear_bend += (arp + get_med_arp(m, xc)) << 7;
