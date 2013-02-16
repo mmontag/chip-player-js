@@ -6,6 +6,10 @@
  * for more information.
  */
 
+/*
+ * Based on the public domain lowpass filter code by Olivier Lapicque
+ */
+
 #include "xmp.h"
 #include "common.h"
 #include "mixer.h"

@@ -1,3 +1,5 @@
+/* public domain decompress code */
+
 #include <stdio.h>
 #include <string.h>
 

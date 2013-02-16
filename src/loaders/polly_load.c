@@ -6,7 +6,6 @@
  * for more information.
  */
 
-
 /*
  * Polly Tracker is a tracker for the Commodore 64 written by Aleksi Eeben.
  * See http://aleksieeben.blogspot.com/2007/05/polly-tracker.html for more

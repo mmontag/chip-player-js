@@ -1,5 +1,9 @@
 /* xfdmaster.library decruncher for XMP
  * Copyright (C) 2007 Chris Young
+ *
+ * This file is part of the Extended Module Player and is distributed
+ * under the terms of the GNU Lesser General Public License. See COPYING.LIB
+ * for more information.
  */
 
 #ifdef AMIGA
