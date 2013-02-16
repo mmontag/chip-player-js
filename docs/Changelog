@@ -2,7 +2,7 @@ Stable versions
 ---------------
 
 4.0.2 ():
-	-
+	- fix IT instrument vibrato depth and sweep
 
 4.0.1 (20130216):
 	- fix license issues reported by Jan Engelhardt

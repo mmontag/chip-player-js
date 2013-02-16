@@ -806,9 +806,9 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		    sub->vol = ish.vol;
 		    sub->gvl = ish.gvl;
 		    sub->vra = ish.vis;	/* sample to sub-instrument vibrato */
-		    sub->vde = ish.vid;
+		    sub->vde = ish.vid >> 1;
 		    sub->vwf = ish.vit;
-		    sub->vsw = ish.vir;
+		    sub->vsw = (0xff - ish.vir) >> 1;
 
 		    c2spd_to_note(ish.c5spd, &mod->xxi[j].sub[k].xpo, &mod->xxi[j].sub[k].fin);
 		}
