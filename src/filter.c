@@ -1,22 +1,13 @@
-/*
- * This program is  free software; you can redistribute it  and modify it
- * under the terms of the GNU  General Public License as published by the
- * Free Software Foundation; either version 2  of the license or (at your
- * option) any later version.
+/* Extended Module Player
+ * Copyright (C) 1996-2013 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * Authors: Olivier Lapicque <olivierl@jps.net>
- */
-
-/*
- * Modified for xmp 2.0 by Claudio Matsuoka
- * (optimized, removed all math functions, added precalculated tables)
- * Mon Dec 25 10:49:19 BRST 2000
+ * This file is part of the Extended Module Player and is distributed
+ * under the terms of the GNU Lesser General Public License. See COPYING.LIB
+ * for more information.
  */
 
 #include "xmp.h"
 #include "common.h"
-#include "player.h"
-#include "virtual.h"
 #include "mixer.h"
 
 static const int filter_cutoff[] = {
@@ -144,12 +135,12 @@ void filter_setup(int srate, int cutoff, int res, int *a0, int *b0, int *b1)
 	if (d > 2.0)
 		d = 2.0;
 
-	d = (d2 - d) / fc;
 	e = 1.0 / (fc * fc);
+	d = (d2 - d) / fc + e;
 
-	fg  = 1.0 / (1 + d + e);
-	fb0 = (d + e + e) / (1 + d + e);
-	fb1 = -e / (1 + d + e);
+	fg  = 1.0 / (1 + d);
+	fb0 = (d + e) / (1 + d);
+	fb1 = -e / (1 + d);
 
 	*a0 = (int)(fg  * (1 << FILTER_SHIFT));
 	*b0 = (int)(fb0 * (1 << FILTER_SHIFT));
