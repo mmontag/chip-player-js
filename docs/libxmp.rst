@@ -208,9 +208,9 @@ int xmp_test_module(char \*path, struct xmp_test_info \*test_info)
  
   **Returns:**
     0 if the file is a valid module, or a negative error code
-    in case of error. Error codes can be ``XMP_ERROR_FORMAT`` in case of an
-    unrecognized file format, ``XMP_ERROR_DEPACK`` if the file is compressed
-    and uncompression failed, or ``XMP_ERROR_SYSTEM`` in case of a system error
+    in case of error. Error codes can be ``-XMP_ERROR_FORMAT`` in case of an
+    unrecognized file format, ``-XMP_ERROR_DEPACK`` if the file is compressed
+    and uncompression failed, or ``-XMP_ERROR_SYSTEM`` in case of a system error
     (the system error code is set in ``errno``).
 
 .. _xmp_load_module():
