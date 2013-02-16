@@ -44,7 +44,10 @@ static const int waveform[4][WAVEFORM_SIZE] = {
 
 int get_lfo(struct lfo *lfo)
 {
-	return waveform[lfo->type][lfo->phase] * lfo->depth;
+	if (lfo->rate == 0)
+		return 0;
+	else
+		return waveform[lfo->type][lfo->phase] * lfo->depth;
 }
 
 void update_lfo(struct lfo *lfo)
