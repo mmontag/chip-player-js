@@ -1,6 +1,10 @@
 Stable versions
 ---------------
 
+4.0.1 (20130216):
+	- fix license issues
+	- minor documentation updates
+
 4.0.0 (20130213):
 	- split library and application in different packages
 	- remove OSS sequencer support
