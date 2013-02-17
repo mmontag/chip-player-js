@@ -5,8 +5,9 @@ Stable versions
 	- add IT volume column vibrato
 	- add fine global volume slide effect
 	- fix IT instrument vibrato depth and sweep
-	- fix global volume slides
 	- fix period range for values lower than 8
+	- fix global volume slides
+	- fix channel volume setting
 
 4.0.1 (20130216):
 	- fix license issues reported by Jan Engelhardt
