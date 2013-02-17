@@ -3,6 +3,7 @@ Stable versions
 
 4.0.2 ():
 	- fix IT instrument vibrato depth and sweep
+	- allow period values lower than 8
 
 4.0.1 (20130216):
 	- fix license issues reported by Jan Engelhardt
