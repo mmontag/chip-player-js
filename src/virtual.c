@@ -14,6 +14,11 @@
 #define	FREE	-1
 #define MAX_VOICES_CHANNEL 16
 
+/* For virt_pastnote() */
+void player_set_release(struct context_data *, int);
+void player_set_fadeout(struct context_data *, int);
+
+
 void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 {
 	struct player_data *p = &ctx->p;
@@ -387,15 +392,23 @@ void virt_voicepos(struct context_data *ctx, int chn, int pos)
 void virt_pastnote(struct context_data *ctx, int chn, int act)
 {
 	struct player_data *p = &ctx->p;
-	int voc;
+	int c, voc;
 
-	for (voc = p->virt.maxvoc; voc--;) {
-		if (p->virt.voice_array[voc].root == chn
-		    && p->virt.voice_array[voc].chn >= p->virt.num_tracks) {
-			if (act == VIRT_ACTION_CUT) {
+	for (c = p->virt.num_tracks; c < p->virt.virt_channels; c++) {
+		if ((voc = map_virt_channel(p, c)) < 0)
+			continue;
+
+		if (p->virt.voice_array[voc].root == chn) {
+			switch (act) {
+			case VIRT_ACTION_CUT:
 				virt_resetvoice(ctx, voc, 1);
-			} else {
-				p->virt.voice_array[voc].act = act;
+				break;
+			case VIRT_ACTION_OFF:
+				player_set_release(ctx, c);
+				break;
+			case VIRT_ACTION_FADE:
+				player_set_fadeout(ctx, c);
+				break;
 			}
 		}
 	}

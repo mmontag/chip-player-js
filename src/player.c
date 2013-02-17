@@ -106,11 +106,11 @@ static inline void reset_channel(struct context_data *ctx)
 	memset(p->xc_data, 0,
 	       sizeof(struct channel_data) * p->virt.virt_channels);
 
-	for (i = p->virt.virt_channels; i--;) {
+	for (i = 0; i < p->virt.virt_channels; i++) {
 		xc = &p->xc_data[i];
 		xc->ins = xc->key = -1;
 	}
-	for (i = p->virt.num_tracks; i--;) {
+	for (i = 0; i < p->virt.num_tracks; i++) {
 		xc = &p->xc_data[i];
 		xc->masterpan = mod->xxc[i].pan;
 		xc->mastervol = mod->xxc[i].vol;
@@ -775,6 +775,26 @@ static void next_row(struct context_data *ctx)
 		}
 	}
 }
+
+/*
+ * Set note action for virt_pastnote
+ */
+void player_set_release(struct context_data *ctx, int chn)
+{
+	struct player_data *p = &ctx->p;
+	struct channel_data *xc = &p->xc_data[chn];
+
+	SET(RELEASE);
+}
+
+void player_set_fadeout(struct context_data *ctx, int chn)
+{
+	struct player_data *p = &ctx->p;
+	struct channel_data *xc = &p->xc_data[chn];
+
+	SET(FADEOUT);
+}
+
 
 int xmp_start_player(xmp_context opaque, int rate, int format)
 {

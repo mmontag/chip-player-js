@@ -601,13 +601,13 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 	case FX_IT_INSTFUNC:
 		switch (fxp) {
 		case 0:	/* Past note cut */
-			virt_pastnote(ctx, chn, XMP_INST_NNA_CUT);
+			virt_pastnote(ctx, chn, VIRT_ACTION_CUT);
 			break;
 		case 1:	/* Past note off */
-			virt_pastnote(ctx, chn, XMP_INST_NNA_OFF);
+			virt_pastnote(ctx, chn, VIRT_ACTION_OFF);
 			break;
 		case 2:	/* Past note fade */
-			virt_pastnote(ctx, chn, XMP_INST_NNA_FADE);
+			virt_pastnote(ctx, chn, VIRT_ACTION_FADE);
 			break;
 		case 3:	/* Set NNA to note cut */
 			virt_setnna(ctx, chn, XMP_INST_NNA_CUT);
