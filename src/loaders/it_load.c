@@ -208,19 +208,17 @@ static void xlat_volfx(struct xmp_event *event)
     } else if (b >= 115 && b <= 124) {	/* F */
 	event->f2t = FX_PORTA_UP;
 	event->f2p = (b - 115) << 2;
-    } else if (b >= 128 && b <= 192) {	/* G */
+    } else if (b >= 128 && b <= 192) {	/* pan */
 	if (b == 192)
 	    b = 191;
 	event->f2t = FX_SETPAN;
 	event->f2p = (b - 128) << 2;
-    } else if (b >= 193 && b <= 202) {	/* H */
+    } else if (b >= 193 && b <= 202) {	/* G */
 	event->f2t = FX_TONEPORTA;
 	event->f2p = 1 << (b - 193);
-#if 0
-    } else if (b >= 193 && b <= 202) {
+    } else if (b >= 203 && b <= 212) {	/* H */
 	event->f2t = FX_VIBRATO;
-	event->f2p = ???;
-#endif
+	event->f2p = b - 203;
     }
 }
 
