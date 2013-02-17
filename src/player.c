@@ -443,12 +443,8 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	 * "volume slide on all frames" flag is set.
 	 */
 	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VSALL)) {
-		if (chn == 0 && p->gvol.flag) {
+		if (p->gvol.flag) {
 			p->gvol.volume += p->gvol.slide;
-			if (p->gvol.volume < 0)
-				p->gvol.volume = 0;
-			else if (p->gvol.volume > m->gvolbase)
-				p->gvol.volume = m->gvolbase;
 		}
 
 		if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE)) {
@@ -478,16 +474,29 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 		/* Process "fine" effects */
 		if (TEST(FINE_VOLS))
 			xc->volume += xc->vol.fslide;
+
 		if (TEST(TRK_FVSLIDE))
 			xc->mastervol += xc->trackvol.fslide;
+
+		if (p->gvol.flag)
+			p->gvol.volume += p->gvol.fslide;
 	}
 
+	/* Clamp volume */
 	if (xc->volume < 0) {
 		xc->volume = 0;
 	} else if (xc->volume > m->volbase) {
 		xc->volume = m->volbase;
 	}
 
+	/* Clamp global volume */
+	if (p->gvol.volume < 0) {
+		p->gvol.volume = 0;
+	} else if (p->gvol.volume > m->gvolbase) {
+		p->gvol.volume = m->gvolbase;
+	}
+
+	/* Clamp track volume */
 	if (xc->mastervol < 0) {
 		xc->mastervol = 0;
 	} else if (xc->mastervol > m->volbase) {

@@ -40,7 +40,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
     struct xmp_module *mod = &m->mod;
-    int parm, gvol_slide, f1, f2, p1, p2, ord, ord2;
+    int parm, gvol_memory, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
     int gvl, bpm, speed, base_time, chn;
     int alltmp;
@@ -99,7 +99,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
     ord2 = -1;
     ord = ep - 1;
 
-    gvol_slide = break_row = cnt_row = alltmp = 0;
+    gvol_memory = break_row = cnt_row = alltmp = 0;
     clock_rst = clock = 0.0;
     skip_fetch = 0;
 
@@ -209,11 +209,38 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 		    gvl = gvl > MAX_GVL ? MAX_GVL : gvl < 0 ? 0 : gvl;
 		}
 
+		/* Process fine global volume slide */
 		if (f1 == FX_G_VOLSLIDE || f2 == FX_G_VOLSLIDE) {
+		    int h, l;
 		    parm = (f1 == FX_G_VOLSLIDE) ? p1 : p2;
-		    if (parm)
-			gvol_slide = MSN(parm) - LSN(parm);
-		    gvl += gvol_slide * (speed - !(m->quirk & QUIRK_VSALL));
+
+		process_gvol:
+                    if (parm) {
+			gvol_memory = parm;
+                        h = MSN(parm);
+                        l = LSN(parm);
+
+		        if (HAS_QUIRK(QUIRK_FINEFX)) {
+                            if (l == 0xf && h != 0) {
+				gvl += h;
+			    } else if (h == 0xf && l != 0) {
+				gvl -= l;
+			    } else {
+		                if (m->quirk & QUIRK_VSALL)
+                                    gvl += (h - l) * speed;
+				else
+                                    gvl += (h - l) * (speed - 1);
+			    }
+			} else {
+		            if (m->quirk & QUIRK_VSALL)
+                                gvl += (h - l) * speed;
+			   else
+                                gvl += (h - l) * (speed - 1);
+			}
+		    } else {
+                        if ((parm = gvol_memory) != 0)
+			    goto process_gvol;
+		    }
 		}
 
 		if ((f1 == FX_SPEED && p1) || (f2 == FX_SPEED && p2)) {

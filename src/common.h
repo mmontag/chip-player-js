@@ -229,6 +229,7 @@ struct player_data {
 	struct {			/* Global volume */
 		int volume;
 		int slide;
+		int fslide;
 		int flag;
 	} gvol;
 

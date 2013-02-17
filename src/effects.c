@@ -474,21 +474,32 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_G_VOLSLIDE:	/* Global volume slide */
-		p->gvol.flag = 1;
-		if (HAS_QUIRK(QUIRK_FINEFX)) {
+              fx_gvolslide:
+		if (fxp) {
+			p->gvol.flag = 1;
+			xc->gvol.memory = fxp;
 			h = MSN(fxp);
 			l = LSN(fxp);
-			if (h == 0xf && l != 0) {
-				fxp = 0x01;	/* FIXME: file global vslide */
-			} else if (l == 0xf && h != 0) {
-				fxp = 0x10;	/* FIXME: file global vslide */
+
+			if (HAS_QUIRK(QUIRK_FINEFX)) {
+				if (l == 0xf && h != 0) {
+					p->gvol.slide = 0;
+					p->gvol.fslide = h;
+				} else if (h == 0xf && l != 0) {
+					p->gvol.slide = 0;
+					p->gvol.fslide = -l;
+				} else {
+					p->gvol.slide = h - l;
+					p->gvol.fslide = 0;
+				}
+			} else {
+				p->gvol.slide = h - l;
+				p->gvol.fslide = 0;
 			}
-		}
-		if (fxp) {
-			p->gvol.slide = MSN(fxp) - LSN(fxp);
-			xc->gvol.memory = p->gvol.slide;
 		} else {
-			p->gvol.slide = xc->gvol.memory;
+			if ((fxp = xc->gvol.memory) != 0) {
+				goto fx_gvolslide;
+			}
 		}
 		break;
 	case FX_KEYOFF:		/* Key off */
