@@ -15,17 +15,18 @@ if argc < 2:
 	print "Usage: %s <module> [channels]" % (os.path.basename(argv[0]))
 	sys.exit(1)
 
-info = pyxmp.struct_xmp_module_info()
+mi = pyxmp.struct_xmp_module_info()
+fi = pyxmp.struct_xmp_frame_info()
 
-x = pyxmp.Xmp()
+xmp = pyxmp.Xmp()
 try:
-	x.loadModule(argv[1])
+	xmp.load_module(argv[1])
 except IOError as (errno, strerror):
 	sys.stderr.write("%s: %s\n" % (argv[1], strerror))
 	sys.exit(1)
 
-x.playerStart(8000, 0)
-x.getInfo(info)
+xmp.start_player(8000, 0)
+xmp.get_module_info(mi)
 
 channels = []
 
@@ -33,19 +34,19 @@ if argc > 2:
 	for i in range(argc - 2):
 		channels.append(int(argv[i + 2]))
 else:
-	channels = range(info.mod[0].chn)
+	channels = range(mi.mod[0].chn)
 
-while x.playerFrame():
-	x.getInfo(info)
-	if info.loop_count > 0:
+while xmp.play_frame():
+	xmp.get_frame_info(fi)
+	if fi.loop_count > 0:
 		break
 
 	for i in channels:
-		ci = info.channel_info[i]
-		print "%d %d %d %d %d %d %d %d %d" % (info.time, info.row,
-			info.frame, i, ci.period, ci.volume, ci.instrument,
+		ci = fi.channel_info[i]
+		print "%d %d %d %d %d %d %d %d %d" % (fi.time, fi.row,
+			fi.frame, i, ci.period, ci.volume, ci.instrument,
 			ci.pan, ci.sample)
 
 
-x.playerEnd()
-x.releaseModule()
+xmp.end_player()
+xmp.release_module()
