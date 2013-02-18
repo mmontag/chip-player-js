@@ -95,7 +95,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 				fxp &= 0x0f;
 				goto ex_f_porta_up;
 			case 0xe:
-				fxp &= 0x0e;
+				fxp &= 0x0f;
 				fxp |= 0x10;
 				goto fx_xf_porta;
 			}
@@ -125,7 +125,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 				fxp &= 0x0f;
 				goto ex_f_porta_dn;
 			case 0xe:
-				fxp &= 0x0e;
+				fxp &= 0x0f;
 				fxp |= 0x20;
 				goto fx_xf_porta;
 			}
