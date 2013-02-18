@@ -159,6 +159,8 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	int count, chn;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	struct player_data *p = &ctx->p;
+	struct flow_control *f = &p->flow;
 	struct xmp_event *event;
 	int control[XMP_MAX_CHANNELS];
 
@@ -173,9 +175,11 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 		}
 
 		if (check_delay(ctx, event, chn) == 0) {
-			if (read_event(ctx, event, chn, 1) != 0) {
-				control[chn]++;
-				count++;
+			if (!f->rowdelay_set || f->rowdelay > 0) {
+				if (read_event(ctx, event, chn, 1) != 0) {
+					control[chn]++;
+					count++;
+				}
 			}
 		}
 	}
@@ -767,7 +771,12 @@ static void next_row(struct context_data *ctx)
 			f->loop_chn = 0;
 		}
 	
-		p->row++;
+		if (f->rowdelay == 0) {
+			p->row++;
+			f->rowdelay_set = 0;
+		} else {
+			f->rowdelay--;
+		}
 	
 		/* check end of pattern */
 		if (p->row >= f->num_rows) {
@@ -857,6 +866,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	f->jumpline = 0;
 	f->jump = -1;
 	f->pbreak = 0;
+	f->rowdelay_set = 0;
 
 	f->loop = calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
 	if (f->loop == NULL) {

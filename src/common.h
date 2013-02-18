@@ -248,6 +248,8 @@ struct player_data {
 	
 		int num_rows;
 		int end_point;
+		int rowdelay;		/* For IT pattern row delay */
+		int rowdelay_set;
 	} flow;
 
 	struct {

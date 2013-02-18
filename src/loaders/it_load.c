@@ -150,7 +150,9 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
 		e->fxp++;	/* SD0 and SC0 becomes SD1 and SC1 */
 	    e->fxp |= h << 4;
 	    break;
-	case 0xe:		/* Pattern delay */
+	case 0xe:		/* Pattern row delay */
+	    e->fxt = FX_IT_ROWDELAY;
+	    e->fxp = l;
 	    break;
 	default:
 	    e->fxt = e->fxp = 0;

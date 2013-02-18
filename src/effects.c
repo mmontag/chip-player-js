@@ -466,6 +466,12 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		p->frame_time = m->time_factor * m->rrate / p->bpm;
 		break;
+	case FX_IT_ROWDELAY:
+		if (!f->rowdelay_set) {
+			f->rowdelay = fxp;
+			f->rowdelay_set = 1;
+		}
+		break;
 	case FX_GLOBALVOL:	/* Set global volume */
 		if (fxp > m->gvolbase) {
 			p->gvol.volume = m->gvolbase;
@@ -522,11 +528,10 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			xc->retrig.val = fxp;
 		}
 		if (note) {
-			xc->retrig.count = LSN(xc->retrig.val);
+			xc->retrig.count = LSN(xc->retrig.val) + 1;
 			xc->retrig.type = MSN(xc->retrig.val);
-		} else {
-			SET(RETRIG);
 		}
+		SET(RETRIG);
 		break;
 	case FX_TREMOR:		/* Tremor */
 		if (fxp != 0) {
