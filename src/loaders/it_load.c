@@ -85,7 +85,7 @@ int itsex_decompress16 (FILE *, void *, int, int);
 
 
 static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
-                    uint8 *last_h, uint8 *last_fxp, int new_fx)
+                    uint8 *last_fxp, int new_fx)
 {
     uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
@@ -104,10 +104,10 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
 	e->fxt = FX_EXTENDED;
 
 	if (h == 0 && e->fxp == 0) {
-	    h = last_h[c];
 	    e->fxp = last_fxp[c];
+	    h = MSN(e->fxp);
+	    l = LSN(e->fxp);
 	} else {
-	    last_h[c] = h;
 	    last_fxp[c] = e->fxp;
 	}
 
@@ -259,7 +259,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
     uint32 *pp_smp;		/* Pointers to samples */
     uint32 *pp_pat;		/* Pointers to patterns */
     uint8 arpeggio_val[64];
-    uint8 last_h[64], last_fxp[64];
+    uint8 last_fxp[64];
     int dca2nna[] = { 0, 2, 3 };
     int new_fx;
 
@@ -854,7 +854,6 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 
     mod->trk = mod->pat * mod->chn;
     memset(arpeggio_val, 0, 64);
-    memset(last_h, 0, 64);
     memset(last_fxp, 0, 64);
 
     PATTERN_INIT();
@@ -937,7 +936,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		b = read8(f);
 		event->fxt = b;
 		event->fxp = read8(f);
-		xlat_fx(c, event, arpeggio_val, last_h, last_fxp, new_fx);
+		xlat_fx(c, event, arpeggio_val, last_fxp, new_fx);
 		lastevent[c].fxt = event->fxt;
 		lastevent[c].fxp = event->fxp;
 		pat_len -= 2;
