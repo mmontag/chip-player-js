@@ -508,7 +508,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    fread(&i2h.keys, 240, 1, f);
 
 	    copy_adjust(xxi->name, i2h.name, 25);
-	    xxi->rls = i2h.fadeout << 6;
+	    xxi->rls = i2h.fadeout << 5;
 
 	    /* Envelopes */
 
@@ -644,7 +644,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 
 	    copy_adjust(xxi->name, i1h.name, 25);
 
-	    xxi->rls = i1h.fadeout << 7;
+	    xxi->rls = i1h.fadeout << 6;
 
 	    xxi->aei.flg = 0;
 	    if (i1h.flags & IT_ENV_ON) {
