@@ -36,6 +36,7 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  14_pingpong_loop_and_sample_number \
 		  15_retrigger \
 		  16_global_volume \
+		  17_pattern_row_delay \
 		  18_sample_number_new_note \
 		  22_zero_cut_and_delay \
 		  23_portamento_with_no_note \
