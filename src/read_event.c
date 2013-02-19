@@ -764,7 +764,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				}
 
 				copy_channel(p, to, chn);
-				p->xc_data[to].flags &= 0xff000000;
+				if (to > 0 && to != chn)
+					p->xc_data[to].flags &= 0xff000000;
 
 				xc->smp = smp;
 			}
