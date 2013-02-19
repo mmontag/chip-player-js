@@ -750,8 +750,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 			note = key + sub->xpo + transp;
 			smp = sub->sid;
-
-			if (mod->xxs[smp].len == 0) {
+			if (smp >= mod->smp || mod->xxs[smp].len == 0) {
 				smp = -1;
 			}
 

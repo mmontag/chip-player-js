@@ -12,6 +12,7 @@ Stable versions
 	- fix global volume slides
 	- fix channel volume setting
 	- fix multi-retrig effect counter
+	- fix invalid sample number access
 
 4.0.1 (20130216):
 	- fix license issues reported by Jan Engelhardt
