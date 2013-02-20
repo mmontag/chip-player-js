@@ -3,7 +3,7 @@
 
 #define SMIX_C4NOTE	6864
 
-#define SMIX_NUMVOC	64	/* default number of softmixer voices */
+#define SMIX_NUMVOC	128	/* default number of softmixer voices */
 #define SMIX_SHIFT	16
 #define SMIX_MASK	0xffff
 
