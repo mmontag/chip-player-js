@@ -199,6 +199,28 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	}
 }
 
+static inline int get_channel_vol(struct context_data *ctx, int chn)
+{
+	struct player_data *p = &ctx->p;
+	int root;
+
+	/* channel is a root channel */
+	if (chn < p->virt.num_tracks)
+		return p->channel_vol[chn];
+
+	/* channel is invalid */
+	if (chn >= p->virt.virt_channels)
+		return 0;
+
+	/* root is invalid */
+	root = virt_getroot(ctx, chn);
+	if (root < 0)
+		return 0;
+
+	return p->channel_vol[root];
+}
+
+
 /*
  * Update channel data
  */
@@ -285,7 +307,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 				((int)finalvol * 0x40 / m->volbase)) >> 18;
 
 	/* Apply channel volume */
-	finalvol = finalvol * p->channel_vol[chn] / 100;
+	finalvol = finalvol * get_channel_vol(ctx, chn) / 100;
 
 	/* Volume translation table (for PTM, ARCH, COCO) */
 	if (m->vol_table) {

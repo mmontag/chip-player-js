@@ -19,6 +19,22 @@ void player_set_release(struct context_data *, int);
 void player_set_fadeout(struct context_data *, int);
 
 
+/* Get parent channel */
+int virt_getroot(struct context_data *ctx, int chn)
+{
+	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi;
+	int voc;
+
+	voc = p->virt.virt_channel[chn].map;
+	if (voc < 0)
+		return -1;
+
+	vi = &p->virt.voice_array[voc];
+
+	return vi->root;
+}
+
 void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 {
 	struct player_data *p = &ctx->p;

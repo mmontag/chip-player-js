@@ -30,5 +30,7 @@ int	virt_cstat		(struct context_data *, int);
 void	virt_resetchannel	(struct context_data *, int);
 void	virt_resetvoice		(struct context_data *, int, int);
 void	virt_reset		(struct context_data *);
+int	virt_getroot		(struct context_data *, int);
+
 
 #endif /* XMP_VIRTUAL_H */
