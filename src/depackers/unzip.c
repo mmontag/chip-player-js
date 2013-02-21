@@ -706,7 +706,7 @@ int kunzip_file_with_name(FILE *in, FILE *out)
 struct zip_local_file_header_t local_file_header;
 int ret_code;
 /*time_t date_time;*/
-uint32 checksum;
+uint32 checksum=0;
 long marker;
 /*struct utimbuf my_utimbuf;*/
 /*struct tm my_tm;*/
