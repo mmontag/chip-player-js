@@ -32,7 +32,6 @@
 
 #define S3M_END		0xff
 #define S3M_SKIP	0xfe
-#define MAX_GVL		0x40
 
 
 int scan_module(struct context_data *ctx, int ep, int chain)
@@ -206,7 +205,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if (f1 == FX_GLOBALVOL || f2 == FX_GLOBALVOL) {
 		    gvl = (f1 == FX_GLOBALVOL) ? p1 : p2;
-		    gvl = gvl > MAX_GVL ? MAX_GVL : gvl < 0 ? 0 : gvl;
+		    gvl = gvl > m->gvolbase ? m->gvolbase : gvl < 0 ? 0 : gvl;
 		}
 
 		/* Process fine global volume slide */
@@ -234,7 +233,7 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 			} else {
 		            if (m->quirk & QUIRK_VSALL)
                                 gvl += (h - l) * speed;
-			   else
+			    else
                                 gvl += (h - l) * (speed - 1);
 			}
 		    } else {

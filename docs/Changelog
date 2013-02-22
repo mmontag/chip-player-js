@@ -14,6 +14,7 @@ Stable versions
 	- fix multi-retrig effect counter
 	- fix invalid sample number access
 	- fix memory access violation in MMCMP depacker
+	- fix global volume setting in module scan
 	- reset virtual channel flags on creation
 	- change maximum number of mixer voices to 128
 
