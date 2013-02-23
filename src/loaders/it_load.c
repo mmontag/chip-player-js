@@ -902,9 +902,12 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    if (mask[c] & 0x01) {
 		b = read8(f);
 
-		if (b > 0x7f && b < 0xfd)
-			b = 0;
-
+		/* From ittech.txt:
+		 * Note ranges from 0->119 (C-0 -> B-9)
+		 * 255 = note off, 254 = notecut
+		 * Others = note fade (already programmed into IT's player
+		 *                     but not available in the editor)
+		 */
 		switch (b) {
 		case 0xff:	/* key off */
 		    b = XMP_KEY_OFF;
@@ -912,11 +915,11 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		case 0xfe:	/* cut */
 		    b = XMP_KEY_CUT;
 		    break;
-		case 0xfd:	/* fade */
-		    b = XMP_KEY_FADE;
-		    break;
 		default:
-		    b++;
+		    if (b > 119)	/* fade */
+			b = XMP_KEY_FADE;
+		    else
+                        b++;	/* note */
 		}
 		lastevent[c].note = event->note = b;
 		pat_len--;

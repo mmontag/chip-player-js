@@ -8,6 +8,7 @@ Stable versions
 	- fix IT instrument vibrato depth and sweep
 	- fix IT past note effects
 	- fix IT fadeout values
+	- fix IT fadeout event loading
 	- fix period range for values lower than 8
 	- fix global volume slides
 	- fix channel volume setting
