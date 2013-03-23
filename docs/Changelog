@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.0.3 ():
+	- fix IT pan setting effect (reported by Jan Engelhardt)
+
 4.0.2 (20130223):
 	- add IT volume column vibrato
 	- add IT pattern row delay effect
