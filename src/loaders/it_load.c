@@ -75,7 +75,7 @@ static const uint8 fx[] = {
 	/* V */ FX_GLOBALVOL,
 	/* W */ FX_G_VOLSLIDE,
 	/* X */ FX_SETPAN,
-	/* Y */ FX_NONE,
+	/* Y */ FX_PANBRELLO,
 	/* Z */ FX_FLT_CUTOFF
 };
 

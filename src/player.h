@@ -48,6 +48,7 @@ struct retrig_control {
 #define FINE_TPORTA	0x00080000
 #define RETRIG		0x00100000
 #define FINE_PANS	0x00200000
+#define PANBRELLO	0x00400000
 
 /* These need to be "persistent" between frames */
 #define FADEOUT		0x02000000
@@ -87,6 +88,7 @@ struct channel_data {
 
 	struct lfo vibrato;
 	struct lfo tremolo;
+	struct lfo panbrello;
 
 	struct {
         	int val[4];

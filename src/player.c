@@ -434,13 +434,16 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	struct mixer_data *s = &ctx->s;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
-	int finalpan;
+	int finalpan, panbrello = 0;
 	int pan_envelope;
 
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
 
-	finalpan = xc->pan.val + (pan_envelope - 32) *
+	if (TEST(PANBRELLO))
+		panbrello = get_lfo(&xc->panbrello) / 512;
+
+	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
 	finalpan = xc->masterpan + (finalpan - 128) *
 				(128 - abs(xc->masterpan - 128)) / 128;
@@ -621,6 +624,8 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 	} else if (xc->pan.val > 0xff) {
 		xc->pan.val = 0xff;
 	}
+
+	update_lfo(&xc->panbrello);
 }
 
 static void play_channel(struct context_data *ctx, int chn, int t)

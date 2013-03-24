@@ -3,6 +3,7 @@ Stable versions
 
 4.0.3 ():
 	- add IT pan slide effect 
+	- add IT panbrello effect
 	- fix IT pan setting effect (reported by Jan Engelhardt)
 	- fix MED BPM mode tempo setting
 

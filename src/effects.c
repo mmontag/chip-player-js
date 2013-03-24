@@ -713,5 +713,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		SET(FINE_NSLIDE);
 		xc->noteslide.fslide = fxp;
 		break;
+	case FX_PANBRELLO:	/* Panbrello */
+		SET(PANBRELLO);
+		SET_LFO_NOTZERO(&xc->panbrello, LSN(fxp) << 4, MSN(fxp));
+		break;
 	}
 }
