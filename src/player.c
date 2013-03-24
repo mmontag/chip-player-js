@@ -471,6 +471,7 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VSALL)) {
 		if (p->gvol.flag) {
 			p->gvol.volume += p->gvol.slide;
+			p->gvol.flag = 0;
 		}
 
 		if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE)) {
@@ -504,8 +505,10 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 		if (TEST(TRK_FVSLIDE))
 			xc->mastervol += xc->trackvol.fslide;
 
-		if (p->gvol.flag)
+		if (p->gvol.flag) {
 			p->gvol.volume += p->gvol.fslide;
+			p->gvol.flag = 0;
+		}
 	}
 
 	/* Clamp volumes */

@@ -6,6 +6,7 @@ Stable versions
 	- add IT panbrello effect
 	- fix IT pan setting effect (reported by Jan Engelhardt)
 	- fix IT fine vibrato effect
+	- fix IT global volume slide effect
 	- fix MED BPM mode tempo setting
 
 4.0.2 (20130223):
