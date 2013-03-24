@@ -585,20 +585,18 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (t % p->speed == 0) {
-		if (TEST(FINE_PANS)) {
+	if (TEST(PAN_SLIDE)) {
+		if (t % p->speed == 0) {
 			xc->pan.val += xc->pan.fslide;
-		}
-	} else {
-		if (TEST(PAN_SLIDE)) {
+		} else {
 			xc->pan.val += xc->pan.slide;
 		}
-	}
 
-	if (xc->pan.val < 0) {
-		xc->pan.val = 0;
-	} else if (xc->pan.val > 0xff) {
-		xc->pan.val = 0xff;
+		if (xc->pan.val < 0) {
+			xc->pan.val = 0;
+		} else if (xc->pan.val > 0xff) {
+			xc->pan.val = 0xff;
+		}
 	}
 
 	update_lfo(&xc->panbrello);

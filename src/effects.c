@@ -525,16 +525,18 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_IT_PANSLIDE:	/* Pan slide w/ fine pan (IT) */
+		SET(PAN_SLIDE);
 		if (fxp) {
 			if (MSN(fxp) == 0xf) {
-				SET(FINE_PANS);
+				xc->pan.slide = 0;
 				xc->pan.fslide = LSN(fxp);
 			} else if (LSN(fxp) == 0xf) {
-				SET(FINE_PANS);
+				xc->pan.slide = 0;
 				xc->pan.fslide = -MSN(fxp);
 			} else {
 				SET(PAN_SLIDE);
 				xc->pan.slide = LSN(fxp) - MSN(fxp);
+				xc->pan.fslide = 0;
 			}
 		}
 		break;

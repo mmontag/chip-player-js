@@ -47,8 +47,7 @@ struct retrig_control {
 #define NEW_NOTE	0x00040000
 #define FINE_TPORTA	0x00080000
 #define RETRIG		0x00100000
-#define FINE_PANS	0x00200000
-#define PANBRELLO	0x00400000
+#define PANBRELLO	0x00200000
 
 /* These need to be "persistent" between frames */
 #define FADEOUT		0x02000000
