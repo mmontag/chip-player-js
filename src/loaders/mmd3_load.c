@@ -181,7 +181,7 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 	mod->spd = song.tempo2;
 	mod->bpm = med_8ch ?
 			mmd_get_8ch_tempo(song.deftempo) :
-			(bpm_on ? song.deftempo / bpmlen : song.deftempo);
+			(bpm_on ? song.deftempo * bpmlen / 16 : song.deftempo);
 
 	mod->pat = song.numblocks;
 	mod->ins = song.numsamples;
