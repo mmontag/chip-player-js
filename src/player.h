@@ -47,6 +47,7 @@ struct retrig_control {
 #define NEW_NOTE	0x00040000
 #define FINE_TPORTA	0x00080000
 #define RETRIG		0x00100000
+#define FINE_PANS	0x00200000
 
 /* These need to be "persistent" between frames */
 #define FADEOUT		0x02000000
@@ -69,7 +70,6 @@ struct channel_data {
 	int ins;		/* Instrument number */
 	int ins_oinsvol;	/* Last instrument that did set a note */
 	int smp;		/* Sample number */
-	int pan;		/* Current pan */
 	int masterpan;		/* Master pan -- for S3M set pan effect */
 	int mastervol;		/* Master vol -- for IT track vol effect */
 	int delay;		/* Note delay in frames */
@@ -78,7 +78,6 @@ struct channel_data {
 	int gliss;		/* Glissando active */
 	int volume;		/* Current volume */
 	int gvl;		/* Global volume for instrument for IT */
-	int p_val;		/* Current pan value */
 	int offset;		/* Sample offset memory */
 	int offset_val;		/* Sample offset */
 
@@ -138,6 +137,13 @@ struct channel_data {
 		int s_val;	/* Delta for tone portamento */
 		int s_memory;	/* Tone portamento effect memory */
 	} freq;
+
+	struct {
+		int val;	/* Current pan value */
+		int slide;	/* Pan slide value */
+		int fslide;	/* Pan fine slide value */
+		int memory;	/* Pan slide effect memory */
+	} pan;	
 
 	struct {
 		int slide;	/* PTM note slide amount */

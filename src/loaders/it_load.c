@@ -66,7 +66,7 @@ static const uint8 fx[] = {
 	/* M */ FX_TRK_VOL,
 	/* N */ FX_TRK_VSLIDE,
 	/* O */ FX_OFFSET,
-	/* P */ FX_NONE,
+	/* P */ FX_IT_PANSLIDE,
 	/* Q */ FX_MULTI_RETRIG,
 	/* R */ FX_TREMOLO,
 	/* S */ FX_XTND,

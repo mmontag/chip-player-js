@@ -77,6 +77,7 @@
 #define FX_FINE2_VIBRA	0x86
 #define FX_IT_BPM	0x87
 #define FX_IT_ROWDELAY	0x88
+#define FX_IT_PANSLIDE	0x89
 
 /* MED effects */
 #define FX_HOLD_DECAY	0x90

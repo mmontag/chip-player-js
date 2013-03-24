@@ -440,8 +440,8 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
 
-	finalpan = xc->pan + (pan_envelope - 32) *
-				(128 - abs(xc->pan - 128)) / 32;
+	finalpan = xc->pan.val + (pan_envelope - 32) *
+				(128 - abs(xc->pan.val - 128)) / 32;
 	finalpan = xc->masterpan + (finalpan - 128) *
 				(128 - abs(xc->masterpan - 128)) / 128;
 
@@ -606,15 +606,20 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (t % p->speed != 0) {
-		if (TEST(PAN_SLIDE)) {
-			xc->pan += xc->p_val;
-			if (xc->pan < 0) {
-				xc->pan = 0;
-			} else if (xc->pan > 0xff) {
-				xc->pan = 0xff;
-			}
+	if (t % p->speed == 0) {
+		if (TEST(FINE_PANS)) {
+			xc->pan.val += xc->pan.fslide;
 		}
+	} else {
+		if (TEST(PAN_SLIDE)) {
+			xc->pan.val += xc->pan.slide;
+		}
+	}
+
+	if (xc->pan.val < 0) {
+		xc->pan.val = 0;
+	} else if (xc->pan.val > 0xff) {
+		xc->pan.val = 0xff;
 	}
 }
 

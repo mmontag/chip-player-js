@@ -46,7 +46,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 	struct xmp_module *mod = &m->mod;
 
 	if (sub != NULL && note >= 0) {
-		xc->pan = sub->pan;
+		xc->pan.val = sub->pan;
 		xc->finetune = sub->fin;
 		xc->gvl = sub->gvl;
 

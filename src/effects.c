@@ -240,7 +240,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 
 	case FX_SETPAN:		/* Set pan */
-		xc->pan = fxp;
+		xc->pan.val = fxp;
 		break;
 	case FX_OFFSET:		/* Set sample offset */
 		SET(OFFSET);
@@ -517,10 +517,25 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 	case FX_MASTER_PAN:	/* Set master pan */
 		xc->masterpan = fxp;
 		break;
-	case FX_PANSLIDE:	/* Pan slide */
+	case FX_PANSLIDE:	/* Pan slide (XM) */
+		/* TODO: add memory */
 		SET(PAN_SLIDE);
 		if (fxp) {
-			xc->p_val = MSN(fxp) - LSN(fxp);
+			xc->pan.slide = LSN(fxp) - MSN(fxp);
+		}
+		break;
+	case FX_IT_PANSLIDE:	/* Pan slide w/ fine pan (IT) */
+		if (fxp) {
+			if (MSN(fxp) == 0xf) {
+				SET(FINE_PANS);
+				xc->pan.fslide = LSN(fxp);
+			} else if (LSN(fxp) == 0xf) {
+				SET(FINE_PANS);
+				xc->pan.fslide = -MSN(fxp);
+			} else {
+				SET(PAN_SLIDE);
+				xc->pan.slide = LSN(fxp) - MSN(fxp);
+			}
 		}
 		break;
 	case FX_MULTI_RETRIG:	/* Multi retrig */
