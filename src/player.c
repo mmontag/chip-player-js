@@ -290,10 +290,8 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	if (TEST(TREMOLO))
 		finalvol += get_lfo(&xc->tremolo) / 512;
-	if (finalvol > m->volbase)
-		finalvol = m->volbase;
-	if (finalvol < 0)
-		finalvol = 0;
+
+	CLAMP(finalvol, 0, m->volbase);
 
 	finalvol = (finalvol * xc->fadeout) >> 5;	/* 16 bit output */
 
@@ -454,6 +452,8 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 		finalpan = (finalpan - 0x80) * s->mix / 100;
 	}
 
+	CLAMP(finalpan, -128, 127);
+
 	xc->info_finalpan = finalpan + 0x80;
 
 	virt_setpan(ctx, chn, finalpan);
@@ -508,26 +508,10 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 			p->gvol.volume += p->gvol.fslide;
 	}
 
-	/* Clamp volume */
-	if (xc->volume < 0) {
-		xc->volume = 0;
-	} else if (xc->volume > m->volbase) {
-		xc->volume = m->volbase;
-	}
-
-	/* Clamp global volume */
-	if (p->gvol.volume < 0) {
-		p->gvol.volume = 0;
-	} else if (p->gvol.volume > m->gvolbase) {
-		p->gvol.volume = m->gvolbase;
-	}
-
-	/* Clamp track volume */
-	if (xc->mastervol < 0) {
-		xc->mastervol = 0;
-	} else if (xc->mastervol > m->volbase) {
-		xc->mastervol = m->volbase;
-	}
+	/* Clamp volumes */
+	CLAMP(xc->volume, 0, m->volbase);
+	CLAMP(p->gvol.volume, 0, m->gvolbase);
+	CLAMP(xc->mastervol, 0, m->volbase);
 
 	update_lfo(&xc->tremolo);
 }
@@ -576,17 +560,9 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	}
 
 	if (HAS_QUIRK(QUIRK_LINEAR)) {
-		if (xc->period < MIN_PERIOD_L) {
-			xc->period = MIN_PERIOD_L;
-		} else if (xc->period > MAX_PERIOD_L) {
-			xc->period = MAX_PERIOD_L;
-		}
+		CLAMP(xc->period, MIN_PERIOD_L, MAX_PERIOD_L);
 	} else {
-		if (xc->period < MIN_PERIOD_A) {
-			xc->period = MIN_PERIOD_A;
-		} else if (xc->period > MAX_PERIOD_A) {
-			xc->period = MAX_PERIOD_A;
-		}
+		CLAMP(xc->period, MIN_PERIOD_A, MAX_PERIOD_A);
 	}
 
 	xc->arpeggio.count++;

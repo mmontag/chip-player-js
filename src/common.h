@@ -68,6 +68,11 @@ typedef signed long long int64;
 #define RESET_FLAG(a,b)	((a)&=~(b))
 #define TEST_FLAG(a,b)	!!((a)&(b))
 
+#define CLAMP(x,a,b) do { \
+    if ((x) < (a)) (x) = (a); \
+    else if ((x) > (b)) (x) = (b); \
+} while (0)
+
 #define TRACK_NUM(a,c)	m->mod.xxp[a]->index[c]
 #define EVENT(a,c,r)	m->mod.xxt[TRACK_NUM((a),(c))]->event[r]
 
