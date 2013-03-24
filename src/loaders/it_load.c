@@ -71,7 +71,7 @@ static const uint8 fx[] = {
 	/* R */ FX_TREMOLO,
 	/* S */ FX_XTND,
 	/* T */ FX_IT_BPM,
-	/* U */ FX_NONE,
+	/* U */ FX_FINE4_VIBRA,
 	/* V */ FX_GLOBALVOL,
 	/* W */ FX_G_VOLSLIDE,
 	/* X */ FX_SETPAN,
