@@ -231,12 +231,7 @@ struct player_data {
 	int sequence;
 	unsigned char sequence_control[XMP_MAX_MOD_LENGTH];
 
-	struct {			/* Global volume */
-		int volume;
-		int slide;
-		int fslide;
-		int flag;
-	} gvol;
+	int gvol;
 
 	struct flow_control {
 		int pbreak;

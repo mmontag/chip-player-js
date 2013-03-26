@@ -298,7 +298,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	if (HAS_QUIRK(QUIRK_ST3GVOL)) {
 		gvol = 0x40;
 	} else {
-		gvol = p->gvol.volume;
+		gvol = p->gvol;
 	}
 
 	finalvol = (uint32)(vol_envelope * gvol * xc->mastervol / m->gvolbase *
@@ -469,9 +469,8 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	 * "volume slide on all frames" flag is set.
 	 */
 	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VSALL)) {
-		if (p->gvol.flag) {
-			p->gvol.volume += p->gvol.slide;
-			p->gvol.flag = 0;
+		if (TEST(GVOL_SLIDE)) {
+			p->gvol += xc->gvol.slide;
 		}
 
 		if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE)) {
@@ -505,15 +504,13 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 		if (TEST(TRK_FVSLIDE))
 			xc->mastervol += xc->trackvol.fslide;
 
-		if (p->gvol.flag) {
-			p->gvol.volume += p->gvol.fslide;
-			p->gvol.flag = 0;
-		}
+		if (TEST(GVOL_SLIDE))
+			p->gvol += xc->gvol.fslide;
 	}
 
 	/* Clamp volumes */
 	CLAMP(xc->volume, 0, m->volbase);
-	CLAMP(p->gvol.volume, 0, m->gvolbase);
+	CLAMP(p->gvol, 0, m->gvolbase);
 	CLAMP(xc->mastervol, 0, m->volbase);
 
 	update_lfo(&xc->tremolo);
@@ -624,8 +621,11 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	}
 
 	act = virt_cstat(ctx, chn);
-	if (act == VIRT_INVALID)
+	if (act == VIRT_INVALID) {
+		/* We need this to keep processing global volume slides */
+		update_volume(ctx, chn, t);
 		return;
+	}
 
 	if (!t && act != VIRT_ACTIVE) {
 		if (!IS_VALID_INSTRUMENT(xc->ins) || act == VIRT_ACTION_CUT) {
@@ -725,7 +725,7 @@ static void next_order(struct context_data *ctx)
 				}
 			}
 
-			p->gvol.volume = m->xxo_info[p->ord].gvl;
+			p->gvol = m->xxo_info[p->ord].gvl;
 		}
 	} while (mod->xxo[p->ord] >= mod->pat);
 
@@ -828,8 +828,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	if (mixer_on(ctx, rate, format, m->c4rate) < 0)
 		return -XMP_ERROR_INTERNAL;
 
-	p->gvol.slide = 0;
-	p->gvol.volume = m->volbase;
+	p->gvol = m->volbase;
 	p->pos = p->ord = 0;
 	p->frame = -1;
 	p->row = 0;
@@ -862,7 +861,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 		f->end_point = p->scan[0].num;
 	}
 
-	p->gvol.volume = m->xxo_info[p->ord].gvl;
+	p->gvol = m->xxo_info[p->ord].gvl;
 	p->bpm = m->xxo_info[p->ord].bpm;
 	p->speed = m->xxo_info[p->ord].speed;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
@@ -958,7 +957,7 @@ int xmp_play_frame(xmp_context opaque)
 		if (m->xxo_info[p->ord].speed)
 			p->speed = m->xxo_info[p->ord].speed;
 		p->bpm = m->xxo_info[p->ord].bpm;
-		p->gvol.volume = m->xxo_info[p->ord].gvl;
+		p->gvol = m->xxo_info[p->ord].gvl;
 		p->current_time = m->xxo_info[p->ord].time;
 
 		virt_reset(ctx);
@@ -984,7 +983,6 @@ int xmp_play_frame(xmp_context opaque)
 			f->end_point--;
 		}
 
-		p->gvol.flag = 0;
 		if (f->skip_fetch) {
 			f->skip_fetch = 0;
 		} else {
@@ -1083,7 +1081,7 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 		info->buffer_size *= 2;
 	}
 
-	info->volume = p->gvol.volume;
+	info->volume = p->gvol;
 	info->loop_count = p->loop_count;
 	info->virt_channels = p->virt.virt_channels;
 	info->virt_used = p->virt.virt_used;

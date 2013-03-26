@@ -628,7 +628,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* ST3: check QUIRK_ST3GVOL only in ST3 event reader */
 	if (HAS_QUIRK(QUIRK_ST3GVOL) && TEST(NEW_VOL)) {
-		xc->volume = xc->volume * p->gvol.volume / m->volbase;
+		xc->volume = xc->volume * p->gvol / m->volbase;
 	}
 
 	return 0;

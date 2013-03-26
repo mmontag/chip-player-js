@@ -474,33 +474,33 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_GLOBALVOL:	/* Set global volume */
 		if (fxp > m->gvolbase) {
-			p->gvol.volume = m->gvolbase;
+			p->gvol = m->gvolbase;
 		} else {
-			p->gvol.volume = fxp;
+			p->gvol = fxp;
 		}
 		break;
 	case FX_G_VOLSLIDE:	/* Global volume slide */
               fx_gvolslide:
 		if (fxp) {
-			p->gvol.flag = 1;
+			SET(GVOL_SLIDE);
 			xc->gvol.memory = fxp;
 			h = MSN(fxp);
 			l = LSN(fxp);
 
 			if (HAS_QUIRK(QUIRK_FINEFX)) {
 				if (l == 0xf && h != 0) {
-					p->gvol.slide = 0;
-					p->gvol.fslide = h;
+					xc->gvol.slide = 0;
+					xc->gvol.fslide = h;
 				} else if (h == 0xf && l != 0) {
-					p->gvol.slide = 0;
-					p->gvol.fslide = -l;
+					xc->gvol.slide = 0;
+					xc->gvol.fslide = -l;
 				} else {
-					p->gvol.slide = h - l;
-					p->gvol.fslide = 0;
+					xc->gvol.slide = h - l;
+					xc->gvol.fslide = 0;
 				}
 			} else {
-				p->gvol.slide = h - l;
-				p->gvol.fslide = 0;
+				xc->gvol.slide = h - l;
+				xc->gvol.fslide = 0;
 			}
 		} else {
 			if ((fxp = xc->gvol.memory) != 0) {
