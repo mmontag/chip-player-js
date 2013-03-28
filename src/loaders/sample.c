@@ -379,8 +379,12 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 	/* Fix sample at loop */
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
 		if (xxs->flg & XMP_SAMPLE_16BIT) {
-			int lpe = xxs->lpe * 2 + unroll_extralen;
+			int lpe = xxs->lpe * 2;
 			int lps = xxs->lps * 2;
+
+			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+				lpe += (xxs->lpe - xxs->lps) * 2;
+			}
 			xxs->data[lpe] = xxs->data[lpe - 2];
 			xxs->data[lpe + 1] = xxs->data[lpe - 1];
 			for (i = 0; i < 6; i++) {

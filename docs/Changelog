@@ -8,6 +8,7 @@ Stable versions
 	- fix IT fine vibrato effect
 	- fix MED BPM mode tempo setting
 	- fix global volume slides
+	- fix bidirectional sample loops
 
 4.0.2 (20130223):
 	- add IT volume column vibrato
