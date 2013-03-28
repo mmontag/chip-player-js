@@ -395,7 +395,7 @@ int scan_sequences(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	int i, ep;
 	int seq;
-	char temp_ep[XMP_MAX_MOD_LENGTH];
+	unsigned char temp_ep[XMP_MAX_MOD_LENGTH];
 
 	ep = 0;
 	memset(p->sequence_control, 0xff, XMP_MAX_MOD_LENGTH);
