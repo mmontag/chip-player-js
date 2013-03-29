@@ -15,7 +15,7 @@ PROWIZARD	= zen fuchs starpack
 
 EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down ed_delay ef_invert_loop \
 		  okt_arpeggio per_slide per_toneporta setpan it_panslide \
-		  panbrello gvol_slide
+		  panbrello gvol_slide it_bpm
 
 API		= get_format_list create_context test_module set_player \
 		  stop_module restart_module seek_time channel_mute \
