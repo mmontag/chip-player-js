@@ -1,5 +1,4 @@
 #include "test.h"
-#include <math.h>
 #include "../src/effects.h"
 
 
