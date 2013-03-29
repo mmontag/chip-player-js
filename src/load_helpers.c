@@ -11,6 +11,71 @@
 #include "common.h"
 #include "synth.h"
 
+
+/*
+ * Handle special "module quirks" that can't be detected automatically
+ * such as Protracker 2.x compatibility, vblank timing, etc.
+ */
+
+struct module_quirk {
+	uint8 md5[16];
+	int flags;
+};
+
+const struct module_quirk mq[] = {
+	/* "No Mercy" by Alf/VTL (added by Martin Willers) */
+	{
+		{ 0x36, 0x6e, 0xc0, 0xfa, 0x96, 0x2a, 0xeb, 0xee,
+	  	  0x03, 0x4a, 0xa2, 0xdb, 0xaa, 0x49, 0xaa, 0xea },
+		XMP_FLAGS_FX9BUG
+	},
+
+	/* mod.souvenir of china */
+	{
+		{ 0x93, 0xf1, 0x46, 0xae, 0xb7, 0x58, 0xc3, 0x9d,
+		  0x8b, 0x5f, 0xbc, 0x98, 0xbf, 0x23, 0x7a, 0x43 },
+		XMP_FLAGS_FIXLOOP
+	},
+
+	/* "siedler ii" (added by Daniel Åkerud) */
+	{
+		{ 0x70, 0xaa, 0x03, 0x4d, 0xfb, 0x2f, 0x1f, 0x73,
+		  0xd9, 0xfd, 0xba, 0xfe, 0x13, 0x1b, 0xb7, 0x01 },
+		XMP_FLAGS_VBLANK
+	},
+
+	/* "Klisje paa klisje" (added by Kjetil Torgrim Homme) */
+	{
+		{ 0xe9, 0x98, 0x01, 0x2c, 0x70, 0x0e, 0xb4, 0x3a,
+		  0xf0, 0x32, 0x17, 0x11, 0x30, 0x58, 0x29, 0xb2 },
+		XMP_FLAGS_VBLANK
+	},
+
+	{
+		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+		0
+	}
+};
+
+static void module_quirks(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	int i;
+
+	for (i = 0; mq[i].flags != 0; i++) {
+		if (!memcmp(m->md5, mq[i].md5, 16)) {
+			p->flags |= mq[i].flags;
+
+			if (mq[i].flags & XMP_FLAGS_VBLANK)
+				scan_sequences(ctx);
+			return;
+		}
+	}
+}
+
+
 /* 
  * Check whether the given string matches one of the blacklisted glob
  * patterns. Used to filter file names stored in archive files.
@@ -84,6 +149,7 @@ void load_prologue(struct context_data *ctx)
 
 void load_epilogue(struct context_data *ctx)
 {
+	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	int i, j;
 
@@ -120,6 +186,9 @@ void load_epilogue(struct context_data *ctx)
 			}
 		}
 	}
+
+	p->flags = p->player_flags;
+	module_quirks(ctx);
 
 	scan_sequences(ctx);
 }

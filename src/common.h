@@ -223,6 +223,7 @@ struct player_data {
 	int frame;
 	int speed;
 	int bpm;
+	int player_flags;
 	int flags;
 	double current_time;
 	double frame_time;

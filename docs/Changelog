@@ -2,6 +2,7 @@ Stable versions
 ---------------
 
 4.0.3 ():
+	- add module quirks for well-known cases
 	- add IT pan slide effect 
 	- add IT panbrello effect
 	- fix IT pan setting effect (reported by Jan Engelhardt)
@@ -10,6 +11,7 @@ Stable versions
 	- fix global volume slides
 	- fix bidirectional sample loops
 	- fix sequence entry points
+	- rescan sequences if timing flag is changed
 
 4.0.2 (20130223):
 	- add IT volume column vibrato

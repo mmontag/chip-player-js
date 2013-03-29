@@ -251,7 +251,7 @@ void xmp_scan_module(xmp_context c)
   Scan the loaded module for sequences and timing. Scanning is automatically
   performed by `xmp_load_module()`_ and this function should be called only
   if `xmp_set_player()`_ is used to change player timing (with parameter
-  ``XMP_PLAYER_VBLANK``).
+  ``XMP_PLAYER_VBLANK``) in libxmp 4.0.2 or older.
 
   **Parameters:**
     :c: the player context handle.
