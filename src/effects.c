@@ -479,7 +479,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			p->gvol = fxp;
 		}
 		break;
-	case FX_G_VOLSLIDE:	/* Global volume slide */
+	case FX_GVOL_SLIDE:	/* Global volume slide */
               fx_gvolslide:
 		if (fxp) {
 			SET(GVOL_SLIDE);

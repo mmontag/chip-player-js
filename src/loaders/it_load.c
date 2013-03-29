@@ -73,7 +73,7 @@ static const uint8 fx[] = {
 	/* T */ FX_IT_BPM,
 	/* U */ FX_FINE4_VIBRA,
 	/* V */ FX_GLOBALVOL,
-	/* W */ FX_G_VOLSLIDE,
+	/* W */ FX_GVOL_SLIDE,
 	/* X */ FX_SETPAN,
 	/* Y */ FX_PANBRELLO,
 	/* Z */ FX_FLT_CUTOFF

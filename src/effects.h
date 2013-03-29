@@ -23,7 +23,7 @@
 
 /* Fast Tracker II effects */
 #define FX_GLOBALVOL	0x10
-#define FX_G_VOLSLIDE	0x11
+#define FX_GVOL_SLIDE	0x11
 #define FX_KEYOFF	0x14
 #define FX_ENVPOS	0x15
 #define FX_MASTER_PAN	0x16

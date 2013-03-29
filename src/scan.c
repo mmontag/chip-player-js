@@ -209,9 +209,9 @@ int scan_module(struct context_data *ctx, int ep, int chain)
 		}
 
 		/* Process fine global volume slide */
-		if (f1 == FX_G_VOLSLIDE || f2 == FX_G_VOLSLIDE) {
+		if (f1 == FX_GVOL_SLIDE || f2 == FX_GVOL_SLIDE) {
 		    int h, l;
-		    parm = (f1 == FX_G_VOLSLIDE) ? p1 : p2;
+		    parm = (f1 == FX_GVOL_SLIDE) ? p1 : p2;
 
 		process_gvol:
                     if (parm) {
