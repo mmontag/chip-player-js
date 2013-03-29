@@ -244,7 +244,7 @@ int xmp_set_player(xmp_context opaque, int parm, int val)
 		break;
 	case XMP_PLAYER_FLAGS: {
 		int vblank = p->flags & XMP_FLAGS_VBLANK;
-		p->player_flags = p->flags = val;
+		p->flags = p->player_flags = val;
 		if (vblank != (p->flags & XMP_FLAGS_VBLANK))
 			scan_sequences(ctx);
 		ret = 0;
@@ -275,8 +275,7 @@ int xmp_get_player(xmp_context opaque, int parm)
 		ret = s->dsp;
 		break;
 	case XMP_PLAYER_FLAGS:
-		/* get current module flags */
-		ret = p->flags;
+		ret = p->player_flags;
 		break;
 	}
 
