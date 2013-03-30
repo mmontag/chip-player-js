@@ -37,11 +37,14 @@ TEST(test_effect_f_set_speed)
 	new_event(ctx, 0, 3, 0, 0, 0, 0, FX_SPEED, 0x20, 0, 0);
 	new_event(ctx, 0, 4, 0, 0, 0, 0, FX_SPEED, 0x80, 0, 0);
 
+	scan_sequences(ctx);
+
 	xmp_start_player(opaque, 44100, 0);
 
 	for (i = 0; i < (3 + 0x1f + 3 * 2); i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
+		fail_unless(info.total_time == 5720, "total time error");
 		fail_unless(info.bpm == vals[i * 2], "tempo setting error");
 		fail_unless(info.speed == vals[i * 2 + 1], "speed setting error");
 	}

@@ -32,11 +32,14 @@ TEST(test_effect_it_bpm)
 	new_event(ctx, 0, 6, 0, 0, 0, 0, FX_IT_BPM, 0xff, 0, 0);
 	new_event(ctx, 0, 7, 0, 0, 0, 0, FX_IT_BPM, 0x11, 0, 0);
 
+	scan_sequences(ctx);
+
 	xmp_start_player(opaque, 44100, 0);
 
 	for (i = 0; i < 8 * 3; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
+		fail_unless(info.total_time == 4436, "total time error");
 		fail_unless(info.bpm == vals[i], "tempo setting error");
 	}
 }
