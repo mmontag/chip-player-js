@@ -34,7 +34,7 @@
 #define S3M_SKIP	0xfe
 
 
-int scan_module(struct context_data *ctx, int ep, int chain)
+static int scan_module(struct context_data *ctx, int ep, int chain)
 {
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;

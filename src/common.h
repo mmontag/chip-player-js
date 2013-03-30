@@ -313,7 +313,6 @@ struct context_data {
 
 char	*str_adj		(char *);
 int	exclude_match		(char *);
-int	scan_module		(struct context_data *, int, int);
 int	scan_sequences		(struct context_data *);
 int	get_sequence		(struct context_data *, int);
 
