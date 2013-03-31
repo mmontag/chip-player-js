@@ -7,7 +7,6 @@
 TEST(test_api_load_module)
 {
 	xmp_context ctx;
-	struct xmp_frame_info info;
 	int ret;
 
 	ctx = xmp_create_context();
