@@ -14,6 +14,7 @@ DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered zip_store arcfs \
 PROWIZARD	= zen fuchs starpack
 
 EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down a_volslide \
+		  c_volset \
 		  ed_delay ef_invert_loop \
 		  f_set_speed \
 		  okt_arpeggio per_slide per_toneporta setpan it_panslide \
