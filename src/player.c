@@ -356,13 +356,13 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	/* Do note slide */
 
 	if (TEST(NOTE_SLIDE)) {
-		xc->noteslide.count--;
 		if (xc->noteslide.count == 0) {
 			xc->note += xc->noteslide.slide;
 			xc->period = note_to_period(xc->note, xc->finetune,
 						    HAS_QUIRK(QUIRK_LINEAR));
 			xc->noteslide.count = xc->noteslide.speed;
 		}
+		xc->noteslide.count--;
 	}
 
 	/* Vibrato */
