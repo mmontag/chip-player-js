@@ -71,7 +71,7 @@ TEST(test_effect_a_volslide)
 	}
 
 	/* again with fine effects */
-	set_quirk(ctx, QUIRKS_ST3, READ_EVENT_ST3);
+	set_quirk(ctx, QUIRK_FINEFX, READ_EVENT_MOD);
 	xmp_restart_module(opaque);
 
 	for (i = 0; i < 11 * 4; i++) {
