@@ -19,7 +19,8 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down a_volslide \
 		  f_set_speed \
 		  okt_arpeggio per_slide per_toneporta setpan it_panslide \
 		  panbrello globalvol gvol_slide s3m_bpm it_bpm \
-		  note_slide_up
+		  note_slide_up \
+		  persistent_slide
 
 API		= get_format_list create_context test_module load_module \
 		  set_player stop_module restart_module seek_time \
