@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.0.4 ():
+	- fix IT volume column slide to note
+
 4.0.3 (20130331):
 	- add module quirks for well-known cases
 	- add built-in zoo depacker
