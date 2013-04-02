@@ -74,7 +74,7 @@ static const uint8 fx[] = {
 	/* U */ FX_FINE4_VIBRA,
 	/* V */ FX_GLOBALVOL,
 	/* W */ FX_GVOL_SLIDE,
-	/* X */ FX_SETPAN,
+	/* X */ FX_MASTER_PAN,
 	/* Y */ FX_PANBRELLO,
 	/* Z */ FX_FLT_CUTOFF
 };
@@ -135,7 +135,7 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
 	    e->fxp &= 0x0f;
 	    break;
 	case 0x8:		/* Set pan position */
-	    e->fxt = FX_SETPAN;
+	    e->fxt = FX_MASTER_PAN;
 	    e->fxp = l << 4;
 	    break;
 	case 0x9:		/* 0x91 = set surround -- NOT IMPLEMENTED */
@@ -213,7 +213,7 @@ static void xlat_volfx(struct xmp_event *event)
     } else if (b >= 128 && b <= 192) {	/* pan */
 	if (b == 192)
 	    b = 191;
-	event->f2t = FX_SETPAN;
+	event->f2t = FX_MASTER_PAN;
 	event->f2p = (b - 128) << 2;
     } else if (b >= 193 && b <= 202) {	/* G */
 	event->f2t = FX_TONEPORTA;
