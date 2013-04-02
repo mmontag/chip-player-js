@@ -268,7 +268,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 		    event->fxt = FX_MULTI_RETRIG;
 		    break;
 		case 0x12:	/* Fine vibrato */
-		    event->fxt = FX_FINE4_VIBRA;
+		    event->fxt = FX_FINE_VIBRATO;
 		    break;
 		case 0x13:	/* Note slide down */
 		    event->fxt = FX_NSLIDE_DN;

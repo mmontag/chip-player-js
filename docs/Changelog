@@ -4,6 +4,7 @@ Stable versions
 4.0.4 ():
 	- fix IT volume column slide to note
 	- fix IT pan setting effect
+	- fix IT vibrato effect depth
 
 4.0.3 (20130331):
 	- add module quirks for well-known cases

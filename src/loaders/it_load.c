@@ -71,7 +71,7 @@ static const uint8 fx[] = {
 	/* R */ FX_TREMOLO,
 	/* S */ FX_XTND,
 	/* T */ FX_IT_BPM,
-	/* U */ FX_FINE4_VIBRA,
+	/* U */ FX_FINE_VIBRATO,
 	/* V */ FX_GLOBALVOL,
 	/* W */ FX_GVOL_SLIDE,
 	/* X */ FX_MASTER_PAN,
@@ -95,10 +95,6 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
 	    arpeggio_val[c] = e->fxp;
 	else
 	    e->fxp = arpeggio_val[c];
-	break;
-    case FX_VIBRATO:		/* Old or new vibrato */
-	if (new_fx)
-	    e->fxt = FX_FINE2_VIBRA;
 	break;
     case FX_XTND:		/* Extended effect */
 	e->fxt = FX_EXTENDED;
@@ -984,6 +980,8 @@ static int it_load(struct module_data *m, FILE *f, const int start)
     m->quirk |= QUIRKS_IT;
     if (~ifh.flags & IT_LINK_GXX)
 	m->quirk |= QUIRK_UNISLD;
+    if (!new_fx)
+	m->quirk |= QUIRK_DEEPVIB;
 
     m->gvolbase = 0x80;
     m->read_event_type = READ_EVENT_IT;

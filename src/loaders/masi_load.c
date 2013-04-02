@@ -312,7 +312,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					break;
 				case 0x15:		/* vibrato */
 					fxt = data->sinaria ?
-						FX_VIBRATO : FX_FINE4_VIBRA;
+						FX_VIBRATO : FX_FINE_VIBRATO;
 					/* fxp remains the same */
 					break;
 				case 0x2a:		/* retrig note */

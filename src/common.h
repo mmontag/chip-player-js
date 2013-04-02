@@ -142,6 +142,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_FILTER	(1 << 16)	/* Enable filter */
 #define QUIRK_IGSTPOR	(1 << 17)	/* Ignore stray tone portamento */
 #define QUIRK_KEYOFF	(1 << 18)	/* Keyoff doesn't reset fadeout */
+#define QUIRK_DEEPVIB	(1 << 19)	/* Vibrato is twice as deep */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 

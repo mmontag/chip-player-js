@@ -83,7 +83,7 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 		*fxt = FX_GLOBALVOL;
 		break;
 	case 0x14:
-		*fxt = FX_FINE4_VIBRA;
+		*fxt = FX_FINE_VIBRATO;
 		break;
 	case 0x1e:			/* special misc */
 		*fxt = *fxp = 0;

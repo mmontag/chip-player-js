@@ -121,7 +121,7 @@ static const uint8 fx[] =
 	FX_TREMOLO,		/* Rxy  Tremolo with speed x and depth y */
 	FX_S3M_EXTENDED,	/* Sxx  (misc effects) */
 	FX_S3M_BPM,		/* Txx  Tempo = xx (hex) */
-	FX_FINE4_VIBRA,		/* Uxx  Fine vibrato */
+	FX_FINE_VIBRATO,	/* Uxx  Fine vibrato */
 	FX_GLOBALVOL,		/* Vxx  Set global volume */
 	NONE,
 	NONE,

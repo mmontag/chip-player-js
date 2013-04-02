@@ -106,7 +106,7 @@ static const uint8 fx[] = {
 	FX_BREAK,
 	FX_PORTA_DN,
 	NONE,
-	FX_FINE4_VIBRA,
+	FX_FINE_VIBRATO,
 	NONE,
 	NONE,
 	NONE,

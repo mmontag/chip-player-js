@@ -100,7 +100,7 @@
 #define FX_CHORUS	0xa9	/* IMF */
 #define FX_REVERB	0xaa	/* IMF */
 #define FX_S3M_BPM	0xab	/* S3M */
-#define FX_FINE4_VIBRA	0xac	/* S3M/PTM/IMF/LIQ */
+#define FX_FINE_VIBRATO	0xac	/* S3M/PTM/IMF/LIQ */
 
 /* Reserved synth effects */
 #define FX_SYNTH_0	0xf0

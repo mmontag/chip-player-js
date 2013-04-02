@@ -370,7 +370,11 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	vibrato = get_lfo(&xc->insvib.lfo) / (1024 * (1 + xc->insvib.sweep));
 
 	if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
-		vibrato += get_lfo(&xc->vibrato) >> 10;
+		if (HAS_QUIRK(QUIRK_DEEPVIB)) {
+			vibrato += get_lfo(&xc->vibrato) >> 9;
+		} else {
+			vibrato += get_lfo(&xc->vibrato) >> 10;
+		}
 	}
 
 	linear_bend = period_to_bend(xc->period + vibrato + get_med_vibrato(xc),

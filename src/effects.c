@@ -207,11 +207,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		SET(VIBRATO);
 		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
 		break;
-	case FX_FINE2_VIBRA:	/* Fine vibrato (2x) */
-		SET(VIBRATO);
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) * 2, MSN(fxp));
-		break;
-	case FX_FINE4_VIBRA:	/* Fine vibrato (4x) */
+	case FX_FINE_VIBRATO:	/* Fine vibrato (4x) */
 		SET(VIBRATO);
 		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp), MSN(fxp));
 		break;
