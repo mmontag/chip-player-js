@@ -91,13 +91,14 @@ TEST(test_effect_it_vcol_g)
 	struct player_data *p;
 	struct mixer_voice *vi;
 	struct xmp_frame_info info;
-	int i, voc;
+	int i, voc, ret;
 
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
 	p = &ctx->p;
 
-	xmp_load_module(opaque, "data/vcol_g.it");
+	ret = xmp_load_module(opaque, "data/vcol_g.it");
+	fail_unless(ret == 0, "can't load module");
 
 	xmp_start_player(opaque, 44100, 0);
 
