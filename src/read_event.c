@@ -645,7 +645,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int new_invalid_ins;
-	int is_toneporta;
+	int is_toneporta, is_release;
 	int candidate_ins;
 	unsigned char e_ins;
 
@@ -666,18 +666,26 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	not_same_ins = 0;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
+	is_release = 0;
 	candidate_ins = xc->ins;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 		is_toneporta = 1;
 	}
 
+	if (TEST(RELEASE|FADEOUT)) {
+		is_release = 1;
+	}
+
 	/* Check instrument */
 
 	if (e_ins) {
 		int ins = e_ins - 1;
-		flags = NEW_INS | RESET_VOL | RESET_ENV;
-		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+
+		if (!is_release || (!is_toneporta || xc->ins != ins)) {
+			flags = NEW_INS | RESET_VOL | RESET_ENV;
+			xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+		}
 		xc->per_flags = 0;
 
 		if (IS_VALID_INSTRUMENT(ins)) {

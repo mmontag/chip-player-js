@@ -5,6 +5,7 @@ Stable versions
 	- fix IT volume column slide to note
 	- fix IT pan setting effect
 	- fix IT vibrato effect depth
+	- fix IT portamento after fadeout
 
 4.0.3 (20130331):
 	- add module quirks for well-known cases
