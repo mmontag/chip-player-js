@@ -141,6 +141,8 @@ static void xlat_fx(int c, struct xmp_event *e)
 	    e->fxp = l | (EX_GLISS << 4);
 	    break;
 	case 0x4:			/* Vibrato wave */
+	    if (l == 3)
+		l++;
 	    e->fxp = l | (EX_VIBRATO_WF << 4);
 	    break;
 	case 0x5:			/* Finetune */
@@ -150,6 +152,8 @@ static void xlat_fx(int c, struct xmp_event *e)
 	    e->fxp = l | (EX_PATTERN_LOOP << 4);
 	    break;
 	case 0x7:			/* Tremolo wave */
+	    if (l == 3)
+		l++;
 	    e->fxp = l | (EX_TREMOLO_WF << 4);
 	    break;
 	case 0xc:			/* Cut */

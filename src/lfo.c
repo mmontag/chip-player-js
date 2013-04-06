@@ -6,6 +6,7 @@
  * for more information.
  */
 
+#include <stdlib.h>
 #include "lfo.h"
 
 #define WAVEFORM_SIZE 64
@@ -46,8 +47,19 @@ int get_lfo(struct lfo *lfo)
 {
 	if (lfo->rate == 0)
 		return 0;
-	else
+
+	switch (lfo->type) {
+	case 0:
+	case 1:
+	case 2:
+	case 4:
 		return waveform[lfo->type][lfo->phase] * lfo->depth;
+	case 3:
+		return ((rand() & 0x1ff) - 256) * lfo->depth;
+	default:
+		return 0;
+	}
+	
 }
 
 void update_lfo(struct lfo *lfo)
