@@ -543,13 +543,6 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 			}
 		} 
 
-		/* Check for invalid periods (from Toru Egashira's NSPmod)
-	         * panic.s3m has negative periods
-		 * ambio.it uses low (~8) period values
-		 */
-		if (xc->period < 1) {
-			xc->volume = 0;
-		}
 	}
 
 	if (t % p->speed == 0) {
@@ -561,6 +554,14 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 			xc->period = note_to_period(xc->note, xc->finetune,
 						    HAS_QUIRK(QUIRK_LINEAR));
 		}
+	}
+
+	/* Check for invalid periods (from Toru Egashira's NSPmod)
+	 * panic.s3m has negative periods
+	 * ambio.it uses low (~8) period values
+	 */
+	if (xc->period < 1) {
+		xc->volume = 0;
 	}
 
 	if (HAS_QUIRK(QUIRK_LINEAR)) {
