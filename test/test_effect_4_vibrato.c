@@ -26,6 +26,19 @@ static int vals[] = {
 	1449, 1450, 1430, 1425, 1444, 1453
 };
 
+static int vals2[] = {
+	143, 144, 146, 147, 148, 149,
+	150, 150, 150, 150, 148, 146,
+	254, 257, 259, 261, 261, 261,
+	262, 258, 254, 249, 245, 242,
+	453, 459, 464, 467, 468, 467,
+	464, 459, 453, 446, 441, 438,
+	808, 819, 823, 819, 808, 796,
+	784, 791, 808, 824, 831, 824,
+	1439, 1461, 1455, 1429, 1415, 1429,
+	1460, 1462, 1422, 1412, 1450, 1467
+};
+
 TEST(test_effect_4_vibrato)
 {
 	xmp_context opaque;
@@ -55,6 +68,17 @@ TEST(test_effect_4_vibrato)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(PERIOD == vals[i], "vibrato error");
+	}
+
+	/* check deep vibrato flag */
+
+	xmp_restart_module(opaque);
+	set_quirk(ctx, QUIRK_DEEPVIB, READ_EVENT_MOD);
+
+	for (i = 0; i < 10 * 6; i++) {
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
+		fail_unless(PERIOD == vals2[i], "deep vibrato error");
 	}
 }
 END_TEST
