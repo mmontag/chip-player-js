@@ -21,6 +21,7 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  okt_arpeggio per_slide per_toneporta setpan masterpan \
 		  panbrello globalvol gvol_slide s3m_bpm it_bpm fine_vibrato \
 		  it_panslide it_vcol_g \
+		  pastnote_cut pastnote_off pastnote_fade \
 		  set_nna_cut set_nna_cont set_nna_off set_nna_fade \
 		  note_slide_up \
 		  persistent_slide persistent_vslide
