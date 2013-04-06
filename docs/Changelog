@@ -2,10 +2,13 @@ Stable versions
 ---------------
 
 4.0.4 ():
+	- add random waveform generator
+	- fix tremolo effect depth
 	- fix IT volume column slide to note
 	- fix IT pan setting effect
 	- fix IT vibrato effect depth
 	- fix IT portamento after fadeout
+	- fix IT panbrello waveform setting
 
 4.0.3 (20130331):
 	- add module quirks for well-known cases
