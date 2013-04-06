@@ -4,7 +4,7 @@
 #include "../src/virtual.h"
 
 
-TEST(test_effect_set_nna_continue)
+TEST(test_effect_set_nna_cont)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
