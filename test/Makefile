@@ -81,7 +81,7 @@ PLAYER		= read_event scan med_synth period_amiga period_mod_range \
 		  note_off_ft2 note_off_it \
 		  nna_cut nna_cont nna_off nna_fade dct_note \
 		  it_keyoff \
-		  invalid_period
+		  invalid_period invalid_mod_length invalid_mod_channels
 
 SYNTH		= adlib spectrum
 
