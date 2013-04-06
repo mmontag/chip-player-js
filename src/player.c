@@ -289,7 +289,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	finalvol = xc->volume;
 
 	if (TEST(TREMOLO))
-		finalvol += get_lfo(&xc->tremolo) / 512;
+		finalvol += get_lfo(&xc->tremolo) / 128;
 
 	CLAMP(finalvol, 0, m->volbase);
 
