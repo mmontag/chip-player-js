@@ -715,5 +715,8 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		SET(PANBRELLO);
 		SET_LFO_NOTZERO(&xc->panbrello, LSN(fxp) << 4, MSN(fxp));
 		break;
+	case FX_PANBRELLO_WF:	/* Panbrello waveform */
+		set_lfo_waveform(&xc->panbrello, fxp & 3);
+		break;
 	}
 }

@@ -79,6 +79,7 @@
 #define FX_IT_ROWDELAY	0x88
 #define FX_IT_PANSLIDE	0x89
 #define FX_PANBRELLO	0x8a
+#define FX_PANBRELLO_WF	0x8b
 
 /* MED effects */
 #define FX_HOLD_DECAY	0x90

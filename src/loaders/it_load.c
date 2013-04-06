@@ -120,8 +120,13 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
 	case 0x4:		/* Tremolo wave */
 	    e->fxp = 0x70 | l;
 	    break;
-	case 0x5:		/* Panbrello wave -- NOT IMPLEMENTED */
-	    e->fxt = e->fxp = 0;
+	case 0x5:		/* Panbrello wave */
+	    if (l <= 3) {
+	    	e->fxt = FX_PANBRELLO_WF;
+	    	e->fxp = l;
+	    } else {
+		e->fxt = e->fxp = 0;
+	    }
 	    break;
 	case 0x6:		/* Pattern delay */
 	    e->fxp = 0xe0 | l;
