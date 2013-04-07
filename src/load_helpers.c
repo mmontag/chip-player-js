@@ -67,10 +67,6 @@ static void module_quirks(struct context_data *ctx)
 	for (i = 0; mq[i].flags != 0; i++) {
 		if (!memcmp(m->md5, mq[i].md5, 16)) {
 			p->flags |= mq[i].flags;
-
-			if (mq[i].flags & XMP_FLAGS_VBLANK)
-				scan_sequences(ctx);
-			return;
 		}
 	}
 }
