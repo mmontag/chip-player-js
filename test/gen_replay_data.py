@@ -4,7 +4,7 @@ import sys
 import os
 
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(ROOT_PATH + "/python")
+sys.path.append(ROOT_PATH + "/../libxmp-python")
 
 import pyxmp
 

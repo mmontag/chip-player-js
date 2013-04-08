@@ -140,3 +140,10 @@ void set_quirk(struct context_data *ctx, int quirk, int read_mode)
 	m->quirk |= quirk;
 	m->read_event_type = read_mode;
 }
+
+void reset_quirk(struct context_data *ctx, int quirk)
+{
+	struct module_data *m = &ctx->m;
+
+	m->quirk &= ~quirk;
+}

@@ -38,6 +38,7 @@ void set_instrument_envelope(struct context_data *, int, int, int, int);
 void set_instrument_envelope_sus(struct context_data *, int, int);
 void set_instrument_fadeout(struct context_data *, int, int);
 void set_quirk(struct context_data *, int, int);
+void reset_quirk(struct context_data *, int);
 void new_event(struct context_data *, int, int, int, int, int, int, int, int, int, int);
 
 #define declare_test(x) TEST_FUNC(x)

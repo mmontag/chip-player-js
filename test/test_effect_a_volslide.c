@@ -12,8 +12,8 @@ static int vals[] = {
 	1, 1, 1, 1,		/* set 1 */
 	1, 1, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 10, 23, 36,		/* slide 0xf2 */
-	49, 49, 35, 21		/* slide 0x1f */
+	10, 10, 10, 10,		/* slide 0xf2 */
+	10, 10, 10, 10		/* slide 0x1f */
 };
 
 static int vals_fine[] = {
@@ -28,6 +28,20 @@ static int vals_fine[] = {
 	10, 10, 10, 10,		/* set 10 */
 	10, 8, 8, 8,		/* fine slide down 2 */
 	8, 9, 9, 9		/* fine slide up 1 */
+};
+
+static int vals_pdn[] = {
+	64, 64, 62, 60,		/* down 2 */
+	58, 58, 56, 54,		/* memory */
+	52, 52, 53, 54,		/* up 1 */
+	55, 55, 56, 57,		/* memory */
+	63, 63, 63, 63,		/* set 63 */
+	63, 63, 64, 64,		/* up 1 */
+	1, 1, 1, 1,		/* set 1 */
+	1, 1, 0, 0,		/* down 1 */
+	10, 10, 10, 10,		/* set 10 */
+	10, 10, 8, 6,		/* slide 0xf2 */
+	4, 4, 0, 0		/* slide 0x1f */
 };
 
 TEST(test_effect_a_volslide)
@@ -78,6 +92,17 @@ TEST(test_effect_a_volslide)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].volume == vals_fine[i], "volume slide error");
+	}
+
+	/* again with volume priority down */
+	reset_quirk(ctx, QUIRK_FINEFX);
+	set_quirk(ctx, QUIRK_VOLPDN, READ_EVENT_MOD);
+	xmp_restart_module(opaque);
+
+	for (i = 0; i < 11 * 4; i++) {
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
+		fail_unless(info.channel_info[0].volume == vals_pdn[i], "volume slide error");
 	}
 }
 END_TEST

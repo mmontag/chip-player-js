@@ -265,7 +265,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 				xc->vol.memory = fxp;
 				fxp &= 0x0f;
 				goto ex_f_vslide_dn;
-			} else if (!fxp) {
+			} else if (fxp == 0x00) {
 				if ((fxp = xc->vol.memory) != 0)
 					goto fx_volslide;
 			}
@@ -273,17 +273,24 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		SET(VOL_SLIDE);
 
 		/* Skaven's 2nd reality (S3M) has volslide parameter D7 => pri
-		 * down. Stargazer's Red Dream (MOD) uses volslide DF =>
-		 * compute both. Also don't assign xc->vol.memory if fxp is 0,
-		 * see Guild of Sounds.xm
+		 * down. Other trackers only compute volumes if the other
+		 * parameter is 0, Fall from sky.xm has 2C => do nothing.
+		 * Also don't assign xc->vol.memory if fxp is 0, see Guild
+		 * of Sounds.xm
 		 */
 		if (fxp) {
+			h = MSN(fxp);
+			l = LSN(fxp);
 			if (HAS_QUIRK(QUIRK_VOLPDN)) {
 				if ((xc->vol.memory = fxp))
-					xc->vol.slide =
-					    LSN(fxp) ? -LSN(fxp) : MSN(fxp);
+					xc->vol.slide = l ? -l : h;
 			} else {
-				xc->vol.slide = -LSN(fxp) + MSN(fxp);
+				if (l == 0)
+					xc->vol.slide = h;
+				else if (h == 0)
+					xc->vol.slide = -l;
+				else
+					RESET(VOL_SLIDE);
 			}
 		}
 
