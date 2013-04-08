@@ -14,6 +14,19 @@ Amiga limits: 907 to 108
 #define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
 static int vals[] = {
+	143, 143, 143, 144, 145, 145,
+	146, 146, 146, 146, 146, 146,
+	254, 254, 255, 256, 257, 257,
+	259, 259, 258, 256, 254, 251,
+	453, 453, 456, 458, 460, 460,
+	460, 460, 458, 456, 453, 449,
+	808, 808, 813, 815, 813, 808,
+	799, 799, 796, 799, 808, 816,
+	1439, 1439, 1450, 1447, 1434, 1427,
+	1433, 1433, 1452, 1447, 1427, 1428,
+};
+
+static int vals2[] = {
 	143, 143, 144, 145, 145, 146,
 	146, 146, 146, 146, 145, 144,
 	254, 255, 256, 257, 257, 257,
@@ -26,7 +39,7 @@ static int vals[] = {
 	1449, 1450, 1430, 1425, 1444, 1453
 };
 
-static int vals2[] = {
+static int vals3[] = {
 	143, 144, 146, 147, 148, 149,
 	150, 150, 150, 150, 148, 146,
 	254, 257, 259, 261, 261, 261,
@@ -70,6 +83,17 @@ TEST(test_effect_4_vibrato)
 		fail_unless(PERIOD == vals[i], "vibrato error");
 	}
 
+	/* check vibrato in all frames flag */
+
+	xmp_restart_module(opaque);
+	set_quirk(ctx, QUIRK_VIBALL, READ_EVENT_MOD);
+
+	for (i = 0; i < 10 * 6; i++) {
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
+		fail_unless(PERIOD == vals2[i], "vibrato error");
+	}
+
 	/* check deep vibrato flag */
 
 	xmp_restart_module(opaque);
@@ -78,7 +102,7 @@ TEST(test_effect_4_vibrato)
 	for (i = 0; i < 10 * 6; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		fail_unless(PERIOD == vals2[i], "deep vibrato error");
+		fail_unless(PERIOD == vals3[i], "deep vibrato error");
 	}
 }
 END_TEST

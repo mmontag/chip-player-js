@@ -982,11 +982,19 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	free(pp_ins);
 
     mod->chn = max_ch + 1;
+
+    /* Format quirks */
+
     m->quirk |= QUIRKS_IT;
-    if (~ifh.flags & IT_LINK_GXX)
+
+    if (~ifh.flags & IT_LINK_GXX) {
 	m->quirk |= QUIRK_UNISLD;
-    if (!new_fx)
+    }
+
+    if (!new_fx) {
 	m->quirk |= QUIRK_DEEPVIB;
+	m->quirk &= ~QUIRK_VIBALL;
+    }
 
     m->gvolbase = 0x80;
     m->read_event_type = READ_EVENT_IT;

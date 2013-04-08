@@ -3,6 +3,7 @@ Stable versions
 
 4.0.5 ():
 	- fix simultaneous volume slide up and down
+	- fix IT vs XM vibrato rate using quirk
 
 4.0.4 (20130406):
 	- fix IT volume column slide to note

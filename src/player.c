@@ -573,15 +573,17 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	xc->arpeggio.count++;
 	xc->arpeggio.count %= xc->arpeggio.size;
 
-	update_lfo(&xc->vibrato);
+	/* Update vibrato */
+	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
+		update_lfo(&xc->vibrato);
 
-	/* Update instrument vibrato */
-
-	update_lfo(&xc->insvib.lfo);
-	if (xc->insvib.sweep > 1) {
-		xc->insvib.sweep -= 2;
-	} else {
-		xc->insvib.sweep = 0;
+		/* Update instrument vibrato */
+		update_lfo(&xc->insvib.lfo);
+		if (xc->insvib.sweep > 1) {
+			xc->insvib.sweep -= 2;
+		} else {
+			xc->insvib.sweep = 0;
+		}
 	}
 }
 

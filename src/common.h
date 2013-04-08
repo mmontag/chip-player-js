@@ -143,6 +143,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_IGSTPOR	(1 << 17)	/* Ignore stray tone portamento */
 #define QUIRK_KEYOFF	(1 << 18)	/* Keyoff doesn't reset fadeout */
 #define QUIRK_DEEPVIB	(1 << 19)	/* Vibrato is twice as deep */
+#define QUIRK_VIBALL	(1 << 20)	/* Vibrato in all frames */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -150,7 +151,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 /* Format quirks */
 #define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX)
 #define QUIRKS_FT2		(QUIRK_FINEFX)
-#define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | \
+#define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | QUIRK_VIBALL | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
 				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_IGSTPOR)
 
