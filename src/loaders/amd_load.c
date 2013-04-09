@@ -88,10 +88,10 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     mod->len = afh.len;
     mod->pat = afh.pat + 1;
     mod->ins = 26;
-    mod->smp = 0;
+    mod->smp = mod->ins;
     memcpy (mod->xxo, afh.order, mod->len);
 
-    set_type(m, "Amusic");
+    set_type(m, "Amusic Adlib Tracker");
     strncpy(mod->name, (char *)afh.name, 24);
 
     MODULE_INFO();
@@ -116,7 +116,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 
 	D_(D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
-	load_sample(f, SAMPLE_FLAG_ADLIB, NULL, regs);
+	load_sample(f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], regs);
     }
 
     if (!afh.version) {
