@@ -109,7 +109,6 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 	mod->xxi[i].sub[0].vol = 0x40;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
-	mod->xxi[i].sub[0].xpo = -1;
 
 	for (j = 0; j < 11; j++)
 	    regs[j] = afh.ins[i].reg[reg_xlat[j]];
@@ -164,14 +163,16 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 	    event->ins = MSN (b);
 	    switch (b = LSN (b)) {
 	    case 0:		/* Arpeggio */
+	    case 1:		/* Slide up */
+	    case 2:		/* Slide down */
+		break;
+	    case 8:		/* Tone portamento */
+		b = FX_TONEPORTA;
 		break;
 	    case 4:		/* Set volume */
 		b = FX_VOLSET;
 		break;
-	    case 1:		/* Slide up */
-	    case 2:		/* Slide down */
 	    case 3:		/* Modulator/carrier intensity */
-	    case 8:		/* Tone portamento */
 	    case 9:		/* Tremolo/vibrato */
 		event->fxp = b = 0;
 		break;
