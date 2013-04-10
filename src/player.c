@@ -255,6 +255,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 
 		if (xc->fadeout == 0) {
+			xc->note_cut = 1;
 			/* Setting volume to 0 instead of resetting the channel
 			 * will use more CPU but allows portamento after keyoff
 			 * to continue the sample instead of resetting it.
