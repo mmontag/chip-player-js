@@ -734,6 +734,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
+			xc->note_cut = 1;
 		} else if (is_toneporta) {
 
 			/* Always retrig on tone portamento: Fix portamento in
@@ -741,6 +742,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			 */
 			if (not_same_ins || xc->note_cut) {
 				flags |= NEW_INS;
+				RESET(RELEASE);
 			} else {
 				cont_sample = 1;
 				key = 0;
