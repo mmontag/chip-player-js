@@ -3,7 +3,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-TEST(test_player_it_note_after_fade_cg_on)
+TEST(test_player_it_portamento_after_keyoff_cg)
 {
 	xmp_context opaque;
 	struct xmp_frame_info info;
@@ -12,10 +12,10 @@ TEST(test_player_it_note_after_fade_cg_on)
 	char line[200];
 	FILE *f;
 
-	f = fopen("data/note_after_fade_cg_on.data", "r");
+	f = fopen("data/portamento_after_keyoff_cg.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/note_after_fade_cg_on.it");
+	xmp_load_module(opaque, "data/portamento_after_keyoff_cg.it");
 	xmp_start_player(opaque, 44100, 0);
 
 	while (1) {
