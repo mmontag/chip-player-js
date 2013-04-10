@@ -81,6 +81,7 @@ struct channel_data {
 	int gvl;		/* Global volume for instrument for IT */
 	int offset;		/* Sample offset memory */
 	int offset_val;		/* Sample offset */
+	int note_cut;		/* FIXME: workaround for IT note cut */
 
 	uint16 v_idx;		/* Volume envelope index */
 	uint16 p_idx;		/* Pan envelope index */

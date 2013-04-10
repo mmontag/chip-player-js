@@ -730,6 +730,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			virt_resetchannel(ctx, chn);
+			xc->note_cut = 1;
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
@@ -738,7 +739,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			/* Always retrig on tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
-			if (not_same_ins) {
+			if (not_same_ins || xc->note_cut) {
 				flags |= NEW_INS;
 			} else {
 				cont_sample = 1;
@@ -780,6 +781,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else {
 			flags = 0;
 		}
+	}
+
+	if (TEST(NEW_NOTE) && key != XMP_KEY_CUT) {
+		xc->note_cut = 0;
 	}
 
 	if (IS_VALID_INSTRUMENT(candidate_ins)) {
