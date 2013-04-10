@@ -144,6 +144,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_KEYOFF	(1 << 18)	/* Keyoff doesn't reset fadeout */
 #define QUIRK_DEEPVIB	(1 << 19)	/* Vibrato is twice as deep */
 #define QUIRK_VIBALL	(1 << 20)	/* Vibrato in all frames */
+#define QUIRK_PRFADE	(1 << 21)	/* Portamento resets fade */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 

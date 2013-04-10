@@ -734,7 +734,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-			xc->note_cut = 1;
+			if (HAS_QUIRK(QUIRK_PRFADE))
+				xc->note_cut = 1;
 		} else if (is_toneporta) {
 
 			/* Always retrig on tone portamento: Fix portamento in
