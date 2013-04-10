@@ -273,6 +273,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
 	case -1:
+		xc->note_cut = 1;
 		virt_resetchannel(ctx, chn);
 		break;
 	case 0:
