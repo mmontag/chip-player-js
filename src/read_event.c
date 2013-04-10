@@ -749,6 +749,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
+		xc->note_cut = 0;
 		xc->key = --key;
 
 		sub = get_subinstrument(ctx, candidate_ins, key);
@@ -781,10 +782,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else {
 			flags = 0;
 		}
-	}
-
-	if (TEST(NEW_NOTE) && key != XMP_KEY_CUT) {
-		xc->note_cut = 0;
 	}
 
 	if (IS_VALID_INSTRUMENT(candidate_ins)) {
