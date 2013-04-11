@@ -729,19 +729,19 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			SET(FADEOUT);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
+			SET(NOTE_END);
 			virt_resetchannel(ctx, chn);
-			xc->note_cut = 1;
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
 			if (HAS_QUIRK(QUIRK_PRFADE))
-				xc->note_cut = 1;
+				SET(NOTE_END);
 		} else if (is_toneporta) {
 
 			/* Always retrig on tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
-			if (not_same_ins || xc->note_cut) {
+			if (not_same_ins || TEST(NOTE_END)) {
 				flags |= NEW_INS;
 				RESET(RELEASE);
 			} else {
@@ -752,7 +752,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
-		xc->note_cut = 0;
+		RESET(NOTE_END);
 		xc->key = --key;
 
 		sub = get_subinstrument(ctx, candidate_ins, key);

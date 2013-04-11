@@ -53,6 +53,7 @@ struct retrig_control {
 /* These need to be "persistent" between frames */
 #define FADEOUT		0x02000000
 #define RELEASE		0x04000000
+#define NOTE_END	0x08000000
 
 #define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0)
 
@@ -81,7 +82,6 @@ struct channel_data {
 	int gvl;		/* Global volume for instrument for IT */
 	int offset;		/* Sample offset memory */
 	int offset_val;		/* Sample offset */
-	int note_cut;		/* FIXME: workaround for IT note cut */
 
 	uint16 v_idx;		/* Volume envelope index */
 	uint16 p_idx;		/* Pan envelope index */

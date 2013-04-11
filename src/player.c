@@ -255,7 +255,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 
 		if (xc->fadeout == 0) {
-			xc->note_cut = 1;
+			SET(NOTE_END);
 			/* Setting volume to 0 instead of resetting the channel
 			 * will use more CPU but allows portamento after keyoff
 			 * to continue the sample instead of resetting it.
@@ -274,7 +274,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
 	case -1:
-		xc->note_cut = 1;
+		SET(NOTE_END);
 		virt_resetchannel(ctx, chn);
 		break;
 	case 0:
