@@ -416,7 +416,8 @@ int scan_sequences(struct context_data *ctx)
 			ep = i;
 			temp_ep[seq] = ep;
 			p->scan[seq].time = scan_module(ctx, ep, seq);
-			seq++;
+			if (p->scan[seq].time > 0)
+				seq++;
 		} else {
 			break;
 		}
