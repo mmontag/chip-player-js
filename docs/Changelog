@@ -6,6 +6,7 @@ Stable versions
 	- fix IT vs XM vibrato rate using quirk
 	- fix IT portamento after note cut (reported by Benjamin Shadwick)
 	- fix segfault in AMD module loader (reported by Jacques Philippe)
+	- fix sequence scanner to prevent listing empty sequences
 
 4.0.4 (20130406):
 	- fix IT volume column slide to note
