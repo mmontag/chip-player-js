@@ -4,6 +4,7 @@ AC_INIT
 AC_ARG_ENABLE(static, [  --enable-static         Build static library])
 AC_ARG_ENABLE(shared, [  --disable-shared        Don't build shared library])
 AC_SUBST(LD_VERSCRIPT)
+AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
@@ -31,6 +32,19 @@ AC_DEFUN([AC_CHECK_DEFINED],[
   AS_VAR_POPDEF([ac_var])dnl
 ])
 
+case "$host_cpu" in
+powerpc64)
+  CFLAGS="${CFLAGS} -m64"
+  LDFLAGS="${LDFLAGS} -m64"
+  ;;
+esac
+
+case "${host_os}" in
+cygwin*)
+  enable_static=yes
+  enable_shared=no
+  ;;
+esac
 
 if test "${enable_static}" = yes; then
   AC_SUBST(STATIC,static)
