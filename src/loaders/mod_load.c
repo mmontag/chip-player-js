@@ -76,14 +76,14 @@ static int mod_test(FILE *f, char *t, const int start)
     if (fread(buf, 1, 4, f) < 4)
 	return -1;
 
-    if (!strncmp(buf + 2, "CH", 2) && isdigit(buf[0]) && isdigit(buf[1])) {
+    if (!strncmp(buf + 2, "CH", 2) && isdigit((int)buf[0]) && isdigit((int)buf[1])) {
 	i = (buf[0] - '0') * 10 + buf[1] - '0';
 	if (i > 0 && i <= 32) {
 	    goto found;
 	}
     }
 
-    if (!strncmp(buf + 1, "CHN", 3) && isdigit(*buf)) {
+    if (!strncmp(buf + 1, "CHN", 3) && isdigit((int)*buf)) {
 	if (*buf - '0') {
 	    goto found;
 	}
@@ -168,7 +168,7 @@ static int is_st_ins (char *s)
 	return 0;
     if (s[2] != '-' || s[5] != ':')
 	return 0;
-    if (!isdigit(s[3]) || !isdigit(s[4]))
+    if (!isdigit((int)s[3]) || !isdigit((int)s[4]))
 	return 0;
 
     return 1;
@@ -227,12 +227,12 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
 
     if (!mod->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
-	    isdigit(magic[0]) && isdigit(magic[1])) {
+	    isdigit((int)magic[0]) && isdigit((int)magic[1])) {
 	    if ((mod->chn = (*magic - '0') *
 		10 + magic[1] - '0') > 32)
 		return -1;
 	} else if (!strncmp(magic + 1, "CHN", 3) &&
-	    isdigit(*magic)) {
+	    isdigit((int)*magic)) {
 	    if (!(mod->chn = (*magic - '0')))
 		return -1;
 	} else

@@ -23,7 +23,7 @@ char *str_adj(char *s)
 	int i;
 
 	for (i = 0; i < strlen(s); i++)
-		if (!isprint(s[i]) || ((uint8) s[i] > 127))
+		if (!isprint((int)s[i]) || ((uint8) s[i] > 127))
 			s[i] = ' ';
 
 	while (*s && (s[strlen(s) - 1] == ' '))
