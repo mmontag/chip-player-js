@@ -21,12 +21,14 @@ TEST(test_api_load_module)
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "try to load directory");
 	fail_unless(errno == EISDIR, "errno code");
 
+#if !defined(WIN32) && !defined(__CYGWIN__)
 	/* no read permission */
 	creat(".read_test", 0111);
 	ret = xmp_load_module(ctx, ".read_test");
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "no read permission");
 	fail_unless(errno == EACCES, "errno code");
 	unlink(".read_test");
+#endif
 
 	/* small file */
 	creat(".read_test", 0644);
