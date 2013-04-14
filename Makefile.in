@@ -2,7 +2,7 @@ VERSION_MAJOR	= 4
 VERSION_MINOR	= 1
 VERSION_RELEASE	= 0
 
-COMPAT_MINOR	= 0
+COMPAT_MINOR	= 1
 
 VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 COMPAT_VERSION	= $(VERSION_MAJOR).$(COMPAT_MINOR).0
@@ -103,6 +103,11 @@ lib/$(DLL): $(OBJS)
 	@CMD='$(CC) -shared -Wl,--out-implib,libxmp_dll.a -o $@ $(OBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
+
+# From http://stackoverflow.com/questions/15905310:
+# The version number checks that dyld performs are limited to ensuring that
+# the compatibility version of the library being loaded is higher than the
+# compatibility version of the library that was used at build time.
 
 lib/$(DYLIB): $(LOBJS)
 	@mkdir -p lib
