@@ -35,7 +35,7 @@ char *str_adj(char *s)
 int get_temp_dir(char *buf, int size)
 {
 #if defined WIN32
-	char *def = "C:\\WINDOWS\\TEMP";
+	const char def[] = "C:\\WINDOWS\\TEMP";
 	char *tmp = getenv("TEMP");
 
 	strncpy(buf, tmp ? tmp : def, size);
@@ -55,7 +55,7 @@ int get_temp_dir(char *buf, int size)
 	}
 	strncpy(buf, APPDIR "/tmp/", size);
 #else
-	char *def = "/tmp";
+	const char def[] = "/tmp";
 	char *tmp = getenv("TMPDIR");
 
 	strncpy(buf, tmp ? tmp : def, size);

@@ -80,7 +80,7 @@ int exclude_match(char *name)
 {
 	int i;
 
-	static const char *exclude[] = {
+	static const char *const exclude[] = {
 		"README", "readme",
 		"*.DIZ", "*.diz",
 		"*.NFO", "*.nfo",
