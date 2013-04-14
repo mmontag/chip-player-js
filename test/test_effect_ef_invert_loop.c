@@ -24,7 +24,7 @@ TEST(test_effect_ef_invert_loop)
 	m->mod.xxs[0].len = 40;
 	m->mod.xxs[0].lps = 0;
 	m->mod.xxs[0].lpe = 40;
-	load_sample(f, 0, &m->mod.xxs[0], NULL);
+	load_sample(m, f, 0, &m->mod.xxs[0], NULL);
 	fclose(f);
 
 	new_event(ctx, 0, 0, 0, 49, 1, 0, 0x0e, 0xfe, 0x0f, 1);

@@ -7,6 +7,9 @@ TEST(test_sample_load_delta)
 {
 	uint8  buffer0[10] = { 0, 1, 2, 3,  4,  5,  6, -7,  8, -29 };
 	uint8  conv_r0[10] = { 0, 1, 3, 6, 10, 15, 21, 14, 22,  -7 };
+	struct module_data m;
+
+	memset(&m, 0, sizeof(struct module_data));
 
 	/* 16-bit input buffer is little-endian */
 	uint8  buffer1[20] = { 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0,
@@ -15,12 +18,12 @@ TEST(test_sample_load_delta)
 	uint16 conv_r1[10] = { 0, 1, 3, 6, 10, 15, 21, 14, 22, 65529 };
 
 	xxs.len = 10;
-	load_sample(NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer0);
+	load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer0);
 	fail_unless(memcmp(xxs.data, conv_r0, 10) == 0,
 				"Invalid 8-bit conversion");
 
 	xxs.flg = XMP_SAMPLE_16BIT;
-	load_sample(NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer1);
+	load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer1);
 	fail_unless(memcmp(xxs.data, conv_r1, 20) == 0,
 				"Invalid 16-bit conversion");
 }

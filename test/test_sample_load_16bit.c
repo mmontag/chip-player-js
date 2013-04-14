@@ -6,12 +6,15 @@
 } while (0)
 
 
-TEST(test_load_sample_16bit)
+TEST(test_sample_load_16bit)
 {
 	struct xmp_sample s;
 	FILE *f;
 	short buffer[202];
 	int i;
+	struct module_data m;
+
+	memset(&m, 0, sizeof(struct module_data));
 
 	f = fopen("data/sample-16bit.raw", "rb");
 	fail_unless(f != NULL, "can't open sample file");
@@ -26,12 +29,12 @@ TEST(test_load_sample_16bit)
 
 	/* load zero-length sample */
 	SET(0, 0, 101, XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP);
-	load_sample(NULL, 0, &s, NULL);
+	load_sample(&m, NULL, 0, &s, NULL);
 
 	/* load sample with invalid loop */
 	SET(101, 150, 180, XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
 	fseek(f, 0, SEEK_SET);
-	load_sample(f, 0, &s, NULL);
+	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lps == 0, "didn't fix invalid loop start");
 	fail_unless(s.lpe == 0, "didn't fix invalid loop end");
@@ -40,7 +43,7 @@ TEST(test_load_sample_16bit)
 	/* load sample with invalid loop */
 	SET(101, 50, 40, XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
 	fseek(f, 0, SEEK_SET);
-	load_sample(f, 0, &s, NULL);
+	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lps == 0, "didn't fix invalid loop start");
 	fail_unless(s.lpe == 0, "didn't fix invalid loop end");
@@ -49,7 +52,7 @@ TEST(test_load_sample_16bit)
 	/* load sample from file */
 	SET(101, 0, 102, XMP_SAMPLE_16BIT);
 	fseek(f, 0, SEEK_SET);
-	load_sample(f, 0, &s, NULL);
+	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lpe == 101, "didn't fix invalid loop end");
 	fail_unless(memcmp(s.data, buffer, 202) == 0, "sample data error");
@@ -61,7 +64,7 @@ TEST(test_load_sample_16bit)
 	/* load sample from file w/ loop */
 	SET(101, 20, 80, XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP);
 	fseek(f, 0, SEEK_SET);
-	load_sample(f, 0, &s, NULL);
+	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.data[160] == s.data[158], "sample adjust error");
 	fail_unless(s.data[161] == s.data[159], "sample adjust error");
@@ -71,7 +74,7 @@ TEST(test_load_sample_16bit)
 	/* load sample from w/ bidirectional loop */
 	SET(101, 0, 102, XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
 	fseek(f, 0, SEEK_SET);
-	load_sample(f, 0, &s, NULL);
+	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lpe == 101, "didn't fix invalid loop end");
 	fail_unless(memcmp(s.data, buffer, 404) == 0, "sample unroll error");

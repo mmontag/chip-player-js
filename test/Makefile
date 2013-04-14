@@ -3,7 +3,7 @@ REPLAYERS	= mod ft2 st3 it
 
 QUIRKS		= 
 
-SMPLOADERS	= delta signal endian
+SMPLOADERS	= 8bit 16bit delta signal endian
 
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered zip_store arcfs \
 		  gzip compress arc_method2 arc_method8 \
@@ -134,7 +134,6 @@ TESTS		= $(READ_TESTS) \
 		  $(SMPLOAD_TESTS) \
 		  $(DEPACK_TESTS) \
 		  $(PROWIZARD_TESTS) \
-		  load_sample_8bit load_sample_16bit \
 		  string_adjustment \
 		  $(API_TESTS) \
 		  $(QUIRK_TESTS) \
