@@ -8,6 +8,6 @@ Description: Xmp module player library
 Version: 4.0.5
 
 Requires:
-Libs: -L${libdir}
+Libs: -L${libdir} -lxmp
 Cflags: -I${includedir}
 Libs.private: -lm

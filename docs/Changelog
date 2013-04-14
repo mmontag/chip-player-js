@@ -8,6 +8,7 @@ Stable versions
 	- fix segfault in AMD module loader (reported by Jacques Philippe)
 	- fix sequence scanner to prevent listing empty sequences
 	- fix build issues in Cygwin (reported by Benjamin Shadwick)
+	- fix pkg-config library definition
 
 4.0.4 (20130406):
 	- fix IT volume column slide to note
