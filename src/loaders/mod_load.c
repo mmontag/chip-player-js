@@ -513,10 +513,10 @@ skip_test:
 	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
 	    if ((s = fopen (sn, "rb"))) {
-	        load_sample(s, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	        load_sample(m, s, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	    }
 	} else {
-	    load_sample(f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	    load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
     }
 

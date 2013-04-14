@@ -363,7 +363,7 @@ static int st_load(struct module_data *m, FILE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(f, SAMPLE_FLAG_FULLREP,
+	load_sample(m, f, SAMPLE_FLAG_FULLREP,
 			&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 

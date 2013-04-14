@@ -219,7 +219,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		load_sample(s, SAMPLE_FLAG_FULLREP,
+		load_sample(m, s, SAMPLE_FLAG_FULLREP,
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

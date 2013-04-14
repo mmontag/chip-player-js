@@ -549,7 +549,7 @@ next_pattern:
 
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(f, 0, &mod->xxs[i], NULL);
+	load_sample(m, f, 0, &mod->xxs[i], NULL);
     }
 
     m->quirk |= QUIRKS_ST3;

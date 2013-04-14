@@ -219,7 +219,7 @@ static void get_dait(struct module_data *m, int size, FILE *f, void *parm)
 	}
 
 	if (size > 2) {
-		load_sample(f, SAMPLE_FLAG_BIGEND,
+		load_sample(m, f, SAMPLE_FLAG_BIGEND,
 				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

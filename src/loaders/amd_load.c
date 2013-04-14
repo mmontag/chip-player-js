@@ -115,7 +115,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 
 	D_(D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
-	load_sample(f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], regs);
+	load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], regs);
     }
 
     if (!afh.version) {

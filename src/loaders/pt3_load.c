@@ -228,7 +228,7 @@ static int ptdt_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < mod->smp; i++) {
 		if (!mod->xxs[i].len)
 			continue;
-		load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

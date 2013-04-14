@@ -309,7 +309,7 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
 	    continue;
 
 	fseek(f, start + smp_ofs[smpnum], SEEK_SET);
-	load_sample(f, SAMPLE_FLAG_8BDIFF, xxs, NULL);
+	load_sample(m, f, SAMPLE_FLAG_8BDIFF, xxs, NULL);
     }
 
     m->vol_table = (int *)ptm_vol;

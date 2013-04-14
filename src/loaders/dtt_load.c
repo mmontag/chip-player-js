@@ -158,7 +158,7 @@ static int dtt_load(struct module_data *m, FILE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->ins; i++) {
 		fseek(f, start + sdata[i], SEEK_SET);
-		load_sample(f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

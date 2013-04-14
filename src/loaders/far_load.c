@@ -303,7 +303,7 @@ static int far_load(struct module_data *m, FILE *f, const int start)
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, fih.loopmode ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	load_sample(f, 0, &mod->xxs[i], NULL);
+	load_sample(m, f, 0, &mod->xxs[i], NULL);
     }
 
     m->volbase = 0xff;

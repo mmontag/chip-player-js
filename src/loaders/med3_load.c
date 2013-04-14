@@ -373,7 +373,7 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol);
 
-		load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

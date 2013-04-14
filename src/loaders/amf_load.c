@@ -459,7 +459,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		load_sample(f, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	m->quirk |= QUIRK_FINEFX;

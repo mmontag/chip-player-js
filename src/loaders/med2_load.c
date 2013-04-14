@@ -192,7 +192,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 			mod->xxi[i].sub[0].vol);
 
 		if (found) {
-			load_sample(s, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			load_sample(m, s, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			fclose(s);
 		}
 	}

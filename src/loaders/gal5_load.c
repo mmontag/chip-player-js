@@ -249,7 +249,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 		mod->xxi[i].sub[0].vol, flags, srate);
 
 	if (mod->xxs[i].len > 1) {
-		load_sample(f, has_unsigned_sample ?
+		load_sample(m, f, has_unsigned_sample ?
 			SAMPLE_FLAG_UNS : 0, &mod->xxs[i], NULL);
 	}
 }

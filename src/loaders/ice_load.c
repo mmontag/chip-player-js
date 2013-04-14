@@ -152,7 +152,7 @@ static int ice_load(struct module_data *m, FILE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 4)
 	    continue;
-	load_sample(f, 0, &mod->xxs[i], NULL);
+	load_sample(m, f, 0, &mod->xxs[i], NULL);
     }
 
     return 0;

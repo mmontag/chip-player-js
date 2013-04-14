@@ -197,7 +197,7 @@ static void get_dsmp(struct module_data *m, int size, FILE *f, void *parm)
 	mod->xxi[i].sub[0].fin += finetune;
 
 	fseek(f, 16, SEEK_CUR);
-	load_sample(f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL);
+	load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL);
 
 	data->cur_ins++;
 }

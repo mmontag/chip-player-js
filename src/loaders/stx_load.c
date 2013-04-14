@@ -328,7 +328,7 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
     D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
-	load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 
     m->quirk |= QUIRK_VSALL | QUIRKS_ST3;

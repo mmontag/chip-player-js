@@ -300,7 +300,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 			continue;
 
 		fseek(f, start + sdata[i], SEEK_SET);
-		load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;

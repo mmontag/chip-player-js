@@ -366,7 +366,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 				mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].fin,
 				mod->xxi[i].sub[j].pan, mod->xxi[i].sub[j].xpo);
 
-			load_sample(f, SAMPLE_FLAG_DIFF,
+			load_sample(m, f, SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 		}
 	}

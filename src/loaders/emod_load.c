@@ -164,7 +164,7 @@ static void get_8smp(struct module_data *m, int size, FILE *f, void *parm)
     D_(D_INFO "Stored samples : %d ", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	load_sample(f, 0, &mod->xxs[i], NULL);
+	load_sample(m, f, 0, &mod->xxs[i], NULL);
     }
 }
 

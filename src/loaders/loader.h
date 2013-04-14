@@ -34,8 +34,7 @@ void disable_continue_fx(struct xmp_event *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct module_data *, char *, int);
 void set_type(struct module_data *, char *, ...);
-int load_sample(FILE *, int, struct xmp_sample *, void *);
-
+int load_sample(struct module_data *, FILE *, int, struct xmp_sample *, void *);
 
 extern uint8 ord_xlat[];
 extern const int arch_vol_table[];

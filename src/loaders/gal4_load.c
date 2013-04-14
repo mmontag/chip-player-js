@@ -312,7 +312,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 			srate);
 	
 		if (mod->xxs[data->snum].len > 1) {
-			load_sample(f, 0, &mod->xxs[data->snum], NULL);
+			load_sample(m, f, 0, &mod->xxs[data->snum], NULL);
 		}
 	}
 }

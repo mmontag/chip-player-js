@@ -428,7 +428,7 @@ load_instruments:
 		    mod->xxi[i].sub[j].pan, mod->xxi[i].sub[j].xpo);
 
 		if (xfh.version > 0x0103) {
-		    load_sample(f, SAMPLE_FLAG_DIFF,
+		    load_sample(m, f, SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 		}
 	    }
@@ -470,7 +470,7 @@ load_samples:
     if (xfh.version <= 0x0103) {
 	for (i = 0; i < mod->ins; i++) {
 	    for (j = 0; j < mod->xxi[i].nsm; j++) {
-		load_sample(f, SAMPLE_FLAG_DIFF,
+		load_sample(m, f, SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[j].sid], NULL);
 	    }
 	}

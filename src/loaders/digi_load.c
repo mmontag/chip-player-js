@@ -205,7 +205,7 @@ static int digi_load(struct module_data *m, FILE *f, const int start)
     /* Read samples */
     D_(D_INFO "Stored samples: %d", mod->smp);
     for (i = 0; i < mod->ins; i++) {
-	load_sample(f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
     }
 
     return 0;

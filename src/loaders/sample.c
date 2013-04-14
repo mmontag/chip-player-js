@@ -198,7 +198,7 @@ static void unroll_loop(struct xmp_sample *xxs)
 }
 
 
-int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
+int load_sample(struct module_data *m, FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 {
 	int bytelen, extralen, unroll_extralen, i;
 
@@ -230,6 +230,15 @@ int load_sample(FILE *f, int flags, struct xmp_sample *xxs, void *buffer)
 	/* Empty samples
 	 */
 	if (xxs->len == 0) {
+		return 0;
+	}
+
+	/* Skip sample loading
+	 * FIXME: fails for ADPCM samples
+	 */
+	if (m->flags & MODULE_FLAG_SKIPSMP) {
+		if (~flags & SAMPLE_FLAG_NOLOAD)
+			fseek(f, xxs->len, SEEK_CUR);
 		return 0;
 	}
 
