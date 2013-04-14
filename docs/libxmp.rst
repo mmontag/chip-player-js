@@ -1,5 +1,5 @@
 
-Libxmp 4.0 API documentation
+Libxmp 4.1 API documentation
 ============================
 
 .. contents:: `Contents`
@@ -197,9 +197,9 @@ int xmp_test_module(char \*path, struct xmp_test_info \*test_info)
   **Parameters:**
     :path: pathname of the module to test.
  
-    :test_info: a pointer to a structure used to retrieve the module title
-      and format, if the file is a valid module. ``struct xmp_test_info``
-      is defined as::
+    :test_info: NULL, or a pointer to a structure used to retrieve the
+      module title and format if the file is a valid module.
+      ``struct xmp_test_info`` is defined as::
 
         struct xmp_test_info {
             char name[XMP_NAME_SIZE];      /* Module title */
@@ -348,6 +348,27 @@ int xmp_play_frame(xmp_context c)
 
   **Returns:**
     0 if sucessful or -1 if the module was stopped.
+
+.. _xmp_play_buffer():
+
+int xmp_play_buffer(xmp_context c, void \*buffer, int size)
+```````````````````````````````````````````````````````````
+
+  *[Added in libxmp 4.1]* Fill the buffer with PCM data up to the specified
+  size. This is a convenience function that calls `xmp_play_frame()`_
+  internally to fill the user-supplied buffer -- don't call both functions
+  in the same replay loop, choose one of them. If you don't need equally
+  sized data chunks, `xmp_play_frame()`_ will result in better performance.
+
+  **Parameters:**
+    :c: the player context handle.
+
+    :buffer: the buffer to fill with PCM data.
+
+    :size: buffer size in bytes.
+
+  **Returns:**
+    0 if sucessful or -1 if this is the last buffer of the module.
 
 .. _xmp_get_frame_info():
 
