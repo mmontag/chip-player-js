@@ -3,6 +3,7 @@ Stable versions
 
 4.1.0 ():
 	- add API call to fill equally-sized data chunks with PCM data
+	- add API call to disable sample loading
 	- fix simultaneous volume slide up and down
 	- fix IT vs XM vibrato rate using quirk
 	- fix IT portamento after note cut (reported by Benjamin Shadwick)

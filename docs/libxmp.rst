@@ -658,3 +658,19 @@ int xmp_set_instrument_path(xmp_context c, char \*path)
   **Returns:**
     0 if the instrument path was correctly set, or ``-XMP_ERROR_SYSTEM``
     in case of error (the system error code is set in ``errno``).
+
+.. _xmp_enable_sample_load():
+
+int xmp_enable_sample_load(xmp_context c, int status)
+`````````````````````````````````````````````````````
+
+  *[Added in libxmp 4.1]*
+  Enable or disable sample loading when loading a module. This function
+  allows computation of module duration without decompressing and
+  loading large sample data, and is useful when duration information
+  is needed for a module that won't be played immediately.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :status: 0 to disable sample loading, or 1 to enable it.

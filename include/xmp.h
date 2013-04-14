@@ -295,6 +295,7 @@ EXPORT int         xmp_channel_vol     (xmp_context, int, int);
 EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
+EXPORT void        xmp_enable_sample_load (xmp_context, int);
 
 #ifdef __cplusplus
 }
