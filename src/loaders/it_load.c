@@ -780,16 +780,14 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    copy_adjust(xxs->name, ish.name, 25);
 	}
 
-#define MAX(x) ((x) > 0xfffff ? 0xfffff : (x))
-
 	D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 		    "%02x%02x %02x%02x %5d ",
 		    i, ifh.flags & IT_USE_INST ?
 				mod->xxi[i].name : xxs->name,
 		    xxs->len,
 		    ish.flags & IT_SMP_16BIT ? '+' : ' ',
-		    MAX(xxs->lps), MAX(xxs->lpe),
-		    MAX(ish.sloopbeg), MAX(ish.sloopend),
+		    MIN(xxs->lps, 0xfffff), MIN(xxs->lpe, 0xfffff),
+		    MIN(ish.sloopbeg, 0xfffff), MIN(ish.sloopend, 0xfffff),
 		    ish.flags, ish.convert,
 		    ish.vol, ish.gvl, ish.c5spd);
 

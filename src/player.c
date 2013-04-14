@@ -1013,6 +1013,35 @@ int xmp_play_frame(xmp_context opaque)
 
 	return 0;
 }
+
+int xmp_play_buffer(xmp_context opaque, void *buffer, int size)
+{
+	int ret = 0, filled = 0, copy_size;
+	static int consumed = 0;
+	static int buffer_size = 0;
+	struct xmp_frame_info fi;
+
+	while (filled < size) {
+		if (consumed == buffer_size) {
+			ret = xmp_play_frame(opaque);
+			if (ret < 0) {
+				memset(buffer + filled, 0, size - filled);
+				return -1;
+			}
+			xmp_get_frame_info(opaque, &fi);
+			consumed = 0;
+			buffer_size = fi.buffer_size;
+		}
+
+		copy_size = MIN(size - filled, buffer_size - consumed);
+		memcpy((char *)buffer + filled, (char *)fi.buffer + consumed,
+								copy_size);
+		consumed += copy_size;
+		filled += copy_size;
+	}
+
+	return ret;
+}
     
 void xmp_end_player(xmp_context opaque)
 {
