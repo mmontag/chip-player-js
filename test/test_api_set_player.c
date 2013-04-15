@@ -100,6 +100,17 @@ TEST(test_api_set_player)
 	ret = xmp_get_player(opaque, XMP_PLAYER_FLAGS);
 	fail_unless(ret == (XMP_FLAGS_VBLANK | XMP_FLAGS_FX9BUG | XMP_FLAGS_FIXLOOP), "can't get XMP_PLAYER_FLAGS");
 
+	/* cflags */
+	ret = xmp_set_player(opaque, XMP_PLAYER_CFLAGS, 0);
+	fail_unless(ret == 0, "error setting flags");
+	ret = xmp_get_player(opaque, XMP_PLAYER_CFLAGS);
+	fail_unless(ret == 0, "can't get XMP_PLAYER_CFLAGS");
+
+	ret = xmp_set_player(opaque, XMP_PLAYER_CFLAGS, XMP_FLAGS_VBLANK | XMP_FLAGS_FX9BUG | XMP_FLAGS_FIXLOOP);
+	fail_unless(ret == 0, "error setting cflags");
+	ret = xmp_get_player(opaque, XMP_PLAYER_CFLAGS);
+	fail_unless(ret == (XMP_FLAGS_VBLANK | XMP_FLAGS_FX9BUG | XMP_FLAGS_FIXLOOP), "can't get XMP_PLAYER_CFLAGS");
+
 	/* sample */
 	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
 	fail_unless((ret & XMP_SMPCTL_SKIP) == 0, "default sample ctl");
