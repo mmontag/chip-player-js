@@ -38,7 +38,7 @@ TEST(test_sample_load_skip)
 	/* disable sample load */
 	SET(101, 0, 102, XMP_SAMPLE_16BIT);
 	fseek(f, 0, SEEK_SET);
-	m.flags |= MODULE_FLAG_SKIPSMP;
+	m.smpctl |= XMP_SMPCTL_SKIP;
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data == NULL, "didn't skip sample load");
 }

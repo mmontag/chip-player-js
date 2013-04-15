@@ -99,5 +99,13 @@ TEST(test_api_set_player)
 	fail_unless(ret == 0, "error setting flags");
 	ret = xmp_get_player(opaque, XMP_PLAYER_FLAGS);
 	fail_unless(ret == (XMP_FLAGS_VBLANK | XMP_FLAGS_FX9BUG | XMP_FLAGS_FIXLOOP), "can't get XMP_PLAYER_FLAGS");
+
+	/* sample */
+	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
+	fail_unless((ret & XMP_SMPCTL_SKIP) == 0, "default sample ctl");
+	ret = xmp_set_player(opaque, XMP_PLAYER_SMPCTL, XMP_SMPCTL_SKIP);
+	fail_unless(ret == 0, "error setting flags");
+	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
+	fail_unless((ret & XMP_SMPCTL_SKIP) != 0, "skip sample ctl");
 }
 END_TEST
