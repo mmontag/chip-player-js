@@ -442,26 +442,35 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
     state->file_callbacks->fclose( file );
     file = NULL;
 
-    if ( exe_crc32 != crc32(crc32(0L, Z_NULL, 0), exe_compressed_buffer, exe_compressed_size) ) goto error_free_tags;
+	if ( exe_compressed_size )
+	{
+		if ( exe_crc32 != crc32(crc32(0L, Z_NULL, 0), exe_compressed_buffer, exe_compressed_size) ) goto error_free_tags;
 
-    exe_decompressed_size = try_exe_decompressed_size = exe_compressed_size * 3;
-    exe_decompressed_buffer = (uint8_t *) malloc( exe_decompressed_size );
-    if ( !exe_decompressed_buffer ) goto error_free_tags;
+		exe_decompressed_size = try_exe_decompressed_size = exe_compressed_size * 3;
+		exe_decompressed_buffer = (uint8_t *) malloc( exe_decompressed_size );
+		if ( !exe_decompressed_buffer ) goto error_free_tags;
 
-    while ( Z_OK != ( zerr = uncompress( exe_decompressed_buffer, &exe_decompressed_size, exe_compressed_buffer, exe_compressed_size ) ) )
-    {
-        void * try_exe_decompressed_buffer;
+		while ( Z_OK != ( zerr = uncompress( exe_decompressed_buffer, &exe_decompressed_size, exe_compressed_buffer, exe_compressed_size ) ) )
+		{
+			void * try_exe_decompressed_buffer;
 
-        if ( Z_MEM_ERROR != zerr && Z_BUF_ERROR != zerr ) goto error_free_tags;
+			if ( Z_MEM_ERROR != zerr && Z_BUF_ERROR != zerr ) goto error_free_tags;
 
-        try_exe_decompressed_size += 1 * 1024 * 1024;
-        exe_decompressed_size = try_exe_decompressed_size;
+			try_exe_decompressed_size += 1 * 1024 * 1024;
+			exe_decompressed_size = try_exe_decompressed_size;
 
-        try_exe_decompressed_buffer = realloc( exe_decompressed_buffer, exe_decompressed_size );
-        if ( !try_exe_decompressed_buffer ) goto error_free_tags;
+			try_exe_decompressed_buffer = realloc( exe_decompressed_buffer, exe_decompressed_size );
+			if ( !try_exe_decompressed_buffer ) goto error_free_tags;
 
-        exe_decompressed_buffer = try_exe_decompressed_buffer;
-    }
+			exe_decompressed_buffer = (uint8_t *) try_exe_decompressed_buffer;
+		}
+	}
+	else
+	{
+		exe_decompressed_size = 0;
+		exe_decompressed_buffer = (uint8_t *) malloc( exe_decompressed_size );
+		if ( !exe_decompressed_buffer ) goto error_free_tags;
+	}
 
     free( exe_compressed_buffer );
     exe_compressed_buffer = NULL;
