@@ -3,7 +3,7 @@ REPLAYERS	= mod ft2 st3 it
 
 QUIRKS		= 
 
-SMPLOADERS	= 8bit 16bit delta signal endian
+SMPLOADERS	= 8bit 16bit delta signal endian skip
 
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered zip_store arcfs \
 		  gzip compress arc_method2 arc_method8 \
