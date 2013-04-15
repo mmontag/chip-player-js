@@ -597,6 +597,7 @@ int xmp_set_player(xmp_context c, int param, int val)
         XMP_PLAYER_INTERP   /* Interpolation type */
         XMP_PLAYER_DSP      /* DSP effect flags */
         XMP_PLAYER_FLAGS    /* Player flags */
+        XMP_PLAYER_CFLAGS   /* Player flags for current module*/
         XMP_PLAYER_SMPCTL   /* Control sample loading */
 
     :val: the value to set. Valid values are:
@@ -621,6 +622,9 @@ int xmp_set_player(xmp_context c, int param, int val)
           XMP_FLAGS_VBLANK    /* Use vblank timing */
           XMP_FLAGS_FX9BUG    /* Emulate Protracker 2.x FX9 bug */
           XMP_FLAGS_FIXLOOP   /* Make sample loop value / 2 */
+
+      * *[Added in libxmp 4.1]* Player flags for current module: same flags
+        as above but after applying module-specific quirks (if any).
 
       * *[Added in libxmp 4.1]* Control sample load. Valid values are::
 

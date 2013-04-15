@@ -44,7 +44,8 @@ extern "C" {
 #define XMP_PLAYER_INTERP	2	/* Interpolation type */
 #define XMP_PLAYER_DSP		3	/* DSP effect flags */
 #define XMP_PLAYER_FLAGS	4	/* Player flags */
-#define XMP_PLAYER_SMPCTL	5	/* Sample control flags */
+#define XMP_PLAYER_CFLAGS	5	/* Player flags for current module */
+#define XMP_PLAYER_SMPCTL	6	/* Sample control flags */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
