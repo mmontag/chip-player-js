@@ -31,7 +31,8 @@ XMP_4.0 {
 };
 
 XMP_4.1 {
+  global:
+    xmp_set_player;
     xmp_play_buffer;
-    xmp_enable_sample_load;
 } XMP_4.0;
 

@@ -586,7 +586,7 @@ Player parameter setting
 int xmp_set_player(xmp_context c, int param, int val)
 `````````````````````````````````````````````````````
 
-  Set mixer parameter with the specified value.
+  Set player parameter with the specified value.
  
   **Parameters:**
     :param: player parameter to set.
@@ -597,6 +597,7 @@ int xmp_set_player(xmp_context c, int param, int val)
         XMP_PLAYER_INTERP   /* Interpolation type */
         XMP_PLAYER_DSP      /* DSP effect flags */
         XMP_PLAYER_FLAGS    /* Player flags */
+        XMP_PLAYER_SMPCTL   /* Control sample loading */
 
     :val: the value to set. Valid values are:
 
@@ -620,7 +621,16 @@ int xmp_set_player(xmp_context c, int param, int val)
           XMP_FLAGS_VBLANK    /* Use vblank timing */
           XMP_FLAGS_FX9BUG    /* Emulate Protracker 2.x FX9 bug */
           XMP_FLAGS_FIXLOOP   /* Make sample loop value / 2 */
+
+      * *[Added in libxmp 4.1]* Control sample load. Valid values are::
+
+          XMP_SMPCTL_SKIP     /* Don't load samples */
  
+        Disabling sample loading when loading a module allows allows
+        computation of module duration without decompressing and
+        loading large sample data, and is useful when duration information
+        is needed for a module that won't be played immediately.
+
   **Returns:**
     0 if parameter was correctly set, or ``-XMP_ERROR_INVALID`` if
     parameter or values are out of the valid ranges.
@@ -664,11 +674,6 @@ int xmp_set_instrument_path(xmp_context c, char \*path)
 int xmp_enable_sample_load(xmp_context c, int status)
 `````````````````````````````````````````````````````
 
-  *[Added in libxmp 4.1]*
-  Enable or disable sample loading when loading a module. This function
-  allows computation of module duration without decompressing and
-  loading large sample data, and is useful when duration information
-  is needed for a module that won't be played immediately.
 
   **Parameters:**
     :c: the player context handle.

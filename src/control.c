@@ -212,10 +212,23 @@ int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 	return ret;
 }
 
-int xmp_set_player(xmp_context opaque, int parm, int val)
+#if __GNUC__
+extern int xmp_set_player_v41__(xmp_context, int, int)
+	__attribute__((alias("xmp_set_player_v40__")));
+
+asm(".symver xmp_set_player_v40__, xmp_set_player@XMP_4.0");
+asm(".symver xmp_set_player_v41__, xmp_set_player@@XMP_4.1");
+
+#define xmp_set_player__ xmp_set_player_v40__
+#else
+#define xmp_set_player__ xmp_set_player
+#endif
+
+int xmp_set_player__(xmp_context opaque, int parm, int val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
@@ -250,15 +263,32 @@ int xmp_set_player(xmp_context opaque, int parm, int val)
 			scan_sequences(ctx);
 		ret = 0;
 		break; }
+	case XMP_PLAYER_SMPCTL:
+		m->smpctl = val;
+		ret = 0;
+		break;
 	}
 
 	return ret;
 }
 
-int xmp_get_player(xmp_context opaque, int parm)
+#if __GNUC__
+extern int xmp_get_player_v41__(xmp_context, int)
+	__attribute__((alias("xmp_get_player_v40__")));
+
+asm(".symver xmp_get_player_v40__, xmp_get_player@XMP_4.0");
+asm(".symver xmp_get_player_v41__, xmp_get_player@@XMP_4.1");
+
+#define xmp_get_player__ xmp_get_player_v40__
+#else
+#define xmp_get_player__ xmp_get_player
+#endif
+
+int xmp_get_player__(xmp_context opaque, int parm)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
@@ -277,6 +307,9 @@ int xmp_get_player(xmp_context opaque, int parm)
 		break;
 	case XMP_PLAYER_FLAGS:
 		ret = p->player_flags;
+		break;
+	case XMP_PLAYER_SMPCTL:
+		ret = m->smpctl;
 		break;
 	}
 

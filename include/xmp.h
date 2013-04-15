@@ -44,6 +44,7 @@ extern "C" {
 #define XMP_PLAYER_INTERP	2	/* Interpolation type */
 #define XMP_PLAYER_DSP		3	/* DSP effect flags */
 #define XMP_PLAYER_FLAGS	4	/* Player flags */
+#define XMP_PLAYER_SMPCTL	5	/* Sample control flags */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -58,6 +59,9 @@ extern "C" {
 #define XMP_FLAGS_VBLANK	(1 << 0) /* Use vblank timing */
 #define XMP_FLAGS_FX9BUG	(1 << 1) /* Emulate FX9 bug */
 #define XMP_FLAGS_FIXLOOP	(1 << 2) /* Emulate sample loop bug */
+
+/* sample flags */
+#define XMP_SMPCTL_SKIP		(1 << 0) /* Don't load samples */
 
 /* limits */
 #define XMP_MAX_KEYS		121	/* Number of valid keys */
@@ -295,7 +299,6 @@ EXPORT int         xmp_channel_vol     (xmp_context, int, int);
 EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
-EXPORT void        xmp_enable_sample_load (xmp_context, int);
 
 #ifdef __cplusplus
 }

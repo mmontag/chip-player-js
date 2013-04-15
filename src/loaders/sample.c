@@ -236,7 +236,7 @@ int load_sample(struct module_data *m, FILE *f, int flags, struct xmp_sample *xx
 	/* Skip sample loading
 	 * FIXME: fails for ADPCM samples
 	 */
-	if (m->flags & MODULE_FLAG_SKIPSMP) {
+	if (m->smpctl & XMP_SMPCTL_SKIP) {
 		if (~flags & SAMPLE_FLAG_NOLOAD)
 			fseek(f, xxs->len, SEEK_CUR);
 		return 0;

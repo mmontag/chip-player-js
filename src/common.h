@@ -204,8 +204,7 @@ struct module_data {
 #define READ_EVENT_ST3	2
 #define READ_EVENT_IT	3
 	int read_event_type;
-#define MODULE_FLAG_SKIPSMP (1 << 0)	/* Don't load samples */
-	int flags;
+	int smpctl;			/* sample control flags */
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
 	int num_sequences;

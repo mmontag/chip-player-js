@@ -653,15 +653,3 @@ void xmp_scan_module(xmp_context opaque)
 
 	scan_sequences(ctx);
 }
-
-void xmp_enable_sample_load(xmp_context opaque, int status)
-{
-	struct context_data *ctx = (struct context_data *)opaque;
-	struct module_data *m = &ctx->m;
-
-	if (status) {
-		m->flags &= ~MODULE_FLAG_SKIPSMP;
-	} else {
-		m->flags |= MODULE_FLAG_SKIPSMP;
-	}
-}
