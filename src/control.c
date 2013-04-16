@@ -141,6 +141,7 @@ void xmp_restart_module(xmp_context opaque)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 
+	p->loop_count = 0;
 	p->pos = -1;
 }
 
