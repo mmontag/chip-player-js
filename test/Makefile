@@ -27,6 +27,7 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  persistent_slide persistent_vslide
 
 API		= get_format_list create_context test_module load_module \
+		  start_player \
 		  set_player stop_module restart_module seek_time \
 		  channel_mute channel_vol inject_event scan_module
 
