@@ -5,6 +5,7 @@ Stable versions
 	- add API call to fill equally-sized data chunks with PCM data
 	- add configurable player parameter to disable sample loading
 	- add configurable player parameter to set/get current module flags
+	- changed maximum sampling rate to 49170Hz
 	- fix simultaneous volume slide up and down
 	- fix IT vs XM vibrato rate using quirk
 	- fix IT portamento after note cut (reported by Benjamin Shadwick)
