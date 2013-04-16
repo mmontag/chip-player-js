@@ -116,11 +116,11 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     char *cmd;
     FILE *t;
     int fd, builtin, res;
-    char *packer, *temp2, tmp[PATH_MAX];
+    char *temp2, tmp[PATH_MAX];
     struct tmpfilename *temp;
     int headersize;
 
-    packer = cmd = NULL;
+    cmd = NULL;
     builtin = res = 0;
 
     if (get_temp_dir(tmp, PATH_MAX) < 0)
@@ -133,7 +133,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	return 0;
 
 #if defined __AMIGA__ && !defined __AROS__
-    if (packer = test_xfd(b, 1024)) {
+    if (test_xfd(b, 1024)) {
 	builtin = BUILTIN_XFD;
     } else
 #endif
@@ -142,70 +142,70 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	((b[2] == 3 && b[3] == 4) || (b[2] == '0' && b[3] == '0' &&
 	b[4] == 'P' && b[5] == 'K' && b[6] == 3 && b[7] == 4))) {
 
-	packer = "Zip";
+	/* Zip */
 	builtin = BUILTIN_ZIP;
     } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
-	packer = "LHa";
+	/* LHa */
 	builtin = BUILTIN_LHA;
     } else if (b[0] == 31 && b[1] == 139) {
-	packer = "gzip";
+	/* gzip */
 	builtin = BUILTIN_GZIP;
     } else if (b[0] == 'B' && b[1] == 'Z' && b[2] == 'h') {
-	packer = "bzip2";
+	/* bzip2 */
 	builtin = BUILTIN_BZIP2;
     } else if (b[0] == 0xfd && b[3] == 'X' && b[4] == 'Z' && b[5] == 0x00) {
-	packer = "xz";
+	/* xz */
 	builtin = BUILTIN_XZ;
     } else if (b[0] == 'Z' && b[1] == 'O' && b[2] == 'O' && b[3] == ' ') {
-	packer = "zoo";
+	/* zoo */
 	builtin = BUILTIN_ZOO;
     } else if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
-	packer = "MO3";
+	/* MO3 */
 	cmd = "unmo3 -s \"%s\" STDOUT";
     } else if (headersize > 300 &&
 	       b[257] == 'u' && b[258] == 's' && b[259] == 't' &&
 	       b[260] == 'a' && b[261] == 'r' &&
 	       ((b[262] == 0) || (b[262] == ' ' && b[263] == ' ' &&
 				  b[264] == 0))) {
-	packer = "tar";
+	/* tar */
 	cmd = "tar -xOf \"%s\"";
     } else if (b[0] == 31 && b[1] == 157) {
-	packer = "compress";
+	/* compress */
 	builtin = BUILTIN_COMPRESS;
     } else if (memcmp(b, "PP20", 4) == 0) {
-	packer = "PowerPack";
+	/* PowerPack */
 	builtin = BUILTIN_PP;
     } else if (memcmp(b, "XPKF", 4) == 0 && memcmp(b + 8, "SQSH", 4) == 0) {
-	packer = "SQSH";
+	/* SQSH */
 	builtin = BUILTIN_SQSH;
     } else if (!memcmp(b, "Archive\0", 8)) {
-	packer = "ArcFS";
+	/* ArcFS */
 	builtin = BUILTIN_ARCFS;
     } else if (memcmp(b, "ziRCONia", 8) == 0) {
-	packer = "MMCMP";
+	/* MMCMP */
 	builtin = BUILTIN_MMCMP;
     } else if (memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbeaf) {
-	packer = "J2B MUSE";
+	/* J2B MUSE */
 	builtin = BUILTIN_MUSE;
     } else if (memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbabe) {
-	packer = "MOD2J2B MUSE";
+	/* MOD2J2B MUSE */
 	builtin = BUILTIN_MUSE;
     } else if (memcmp(b, "LZX", 3) == 0) {
-	packer = "LZX";
+	/* LZX */
 	builtin = BUILTIN_LZX;
     } else if (memcmp(b, "Rar", 3) == 0) {
-	packer = "rar";
+	/* rar */
 	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 	    "-x*.exe -x*.com \"%s\"";
     } else if (memcmp(b, "S404", 4) == 0) {
-	packer = "Stonecracker";
+	/* Stonecracker */
 	builtin = BUILTIN_S404;
     } else if (test_oxm(*f) == 0) {
-	packer = "oggmod";
+	/* oggmod */
 	builtin = BUILTIN_OXM;
     }
 
-    if (packer == NULL && b[0] == 0x1a) {
+    if (builtin == 0 && cmd == NULL && b[0] == 0x1a) {
 	int x = b[1] & 0x7f;
 	int i, flag = 0;
 	long size;
@@ -229,10 +229,10 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 
         if (flag == 0) {
 	    if (x >= 1 && x <= 9 && x != 7) {
-		packer = "Arc";
+		/* Arc */
 		builtin = BUILTIN_ARC;
 	    } else if (x == 0x7f) {
-		packer = "!Spark";
+		/* !Spark */
 		builtin = BUILTIN_ARC;
 	    }
 	}
@@ -240,7 +240,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 
     fseek(*f, 0, SEEK_SET);
 
-    if (packer == NULL)
+    if (builtin == 0 && cmd == NULL)
 	return 0;
 
 #if defined ANDROID || defined __native_client__
@@ -249,7 +249,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	return 0;
 #endif
 
-    D_(D_WARN "Depacking %s file... ", packer);
+    D_(D_WARN "Depacking file... ");
 
     temp = calloc(sizeof (struct tmpfilename), 1);
     if (!temp) {
