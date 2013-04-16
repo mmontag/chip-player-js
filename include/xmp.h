@@ -284,7 +284,7 @@ EXPORT void        xmp_scan_module     (xmp_context);
 EXPORT void        xmp_release_module  (xmp_context);
 EXPORT int         xmp_start_player    (xmp_context, int, int);
 EXPORT int         xmp_play_frame      (xmp_context);
-EXPORT int         xmp_play_buffer     (xmp_context, void *, int);
+EXPORT int         xmp_play_buffer     (xmp_context, void *, int, int);
 EXPORT void        xmp_get_frame_info  (xmp_context, struct xmp_frame_info *);
 EXPORT void        xmp_end_player      (xmp_context);
 EXPORT void        xmp_inject_event    (xmp_context, int, struct xmp_event *);

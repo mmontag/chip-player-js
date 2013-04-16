@@ -1017,7 +1017,7 @@ int xmp_play_frame(xmp_context opaque)
 	return 0;
 }
 
-int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size)
+int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 {
 	int ret = 0, filled = 0, copy_size;
 	static int consumed = 0;
@@ -1033,7 +1033,9 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size)
 	while (filled < size) {
 		if (consumed == in_buffer_size) {
 			ret = xmp_play_frame(opaque);
-			if (ret < 0) {
+			xmp_get_frame_info(opaque, &fi);
+
+			if (ret < 0 || (fi.loop_count > 0 && fi.loop_count >= loop)) {
 				if (filled == 0) {
 					consumed = 0;
 					in_buffer_size = 0;
@@ -1042,7 +1044,7 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size)
 				memset(out_buffer + filled, 0, size - filled);
 				return 0;
 			}
-			xmp_get_frame_info(opaque, &fi);
+
 			consumed = 0;
 			in_buffer = fi.buffer;
 			in_buffer_size = fi.buffer_size;
