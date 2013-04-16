@@ -352,8 +352,8 @@ int xmp_play_frame(xmp_context c)
 
 .. _xmp_play_buffer():
 
-int xmp_play_buffer(xmp_context c, void \*buffer, int size)
-```````````````````````````````````````````````````````````
+int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
+`````````````````````````````````````````````````````````````````````
 
   *[Added in libxmp 4.1]* Fill the buffer with PCM data up to the specified
   size. This is a convenience function that calls `xmp_play_frame()`_
@@ -368,8 +368,12 @@ int xmp_play_buffer(xmp_context c, void \*buffer, int size)
 
     :size: buffer size in bytes.
 
+    :loop: stop replay when the loop counter reaches the specified
+     value, or 0 to disable loop checking.
+
   **Returns:**
-    0 if sucessful or -1 if this is the last buffer of the module.
+    0 if sucessful or -1 if module was stopped or the loop counter was
+    reached.
 
 .. _xmp_get_frame_info():
 
