@@ -332,7 +332,8 @@ int xmp_start_player(xmp_context c, int rate, int format)
   **Returns:**
     0 if sucessful, or a negative error code in case of error.
     Error codes can be ``-XMP_ERROR_INTERNAL`` in case of a internal player
-    error, or ``-XMP_ERROR_SYSTEM`` in case of a system error (the system error
+    error, ``-XMP_ERROR_INVALID`` if the sampling rate is invalid, or
+    ``-XMP_ERROR_SYSTEM`` in case of a system error (the system error
     code is set in ``errno``).
 
 .. _xmp_play_frame():

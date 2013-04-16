@@ -834,6 +834,9 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	int i;
 	int ret = 0;
 
+	if (rate < XMP_MIN_SRATE || rate > XMP_MAX_SRATE)
+		return -XMP_ERROR_INVALID;
+
 	if (mixer_on(ctx, rate, format, m->c4rate) < 0)
 		return -XMP_ERROR_INTERNAL;
 
