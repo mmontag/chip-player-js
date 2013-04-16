@@ -135,15 +135,16 @@ static const float dmpfac[] = {
  */
 void filter_setup(int srate, int cutoff, int res, int *a0, int *b0, int *b1)
 {
-	/* [0-255] => [100Hz-8000Hz] */
-	float fc = filter_cutoff[cutoff];
-	float fs = (float)srate;
+	float fc, fs = (float)srate;
 	float fg, fb0, fb1;
 	float d2, d, e;
 
-	if (res > 0xff) {
-		res = 0xff;
-	}
+	/* [0-255] => [100Hz-8000Hz] */
+	CLAMP(cutoff, 0, 255);
+
+	CLAMP(res, 0, 255);
+
+	fc = filter_cutoff[cutoff];
 
 	fc *= 3.14159265358979 * 2 / fs;
 	d2 = dmpfac[res >> 1];
