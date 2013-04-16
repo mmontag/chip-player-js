@@ -1025,11 +1025,17 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size)
 	static char *in_buffer;
 	struct xmp_frame_info fi;
 
+	if (out_buffer == NULL) {
+		consumed = 0;
+		in_buffer_size = 0;
+	}
+
 	while (filled < size) {
 		if (consumed == in_buffer_size) {
 			ret = xmp_play_frame(opaque);
 			if (ret < 0) {
 				if (filled == 0) {
+					consumed = 0;
 					in_buffer_size = 0;
 					return -1;
 				}

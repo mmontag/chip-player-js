@@ -364,7 +364,8 @@ int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
   **Parameters:**
     :c: the player context handle.
 
-    :buffer: the buffer to fill with PCM data.
+    :buffer: the buffer to fill with PCM data, or NULL to reset the
+     internal state.
 
     :size: buffer size in bytes.
 
