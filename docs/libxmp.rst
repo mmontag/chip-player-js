@@ -673,14 +673,3 @@ int xmp_set_instrument_path(xmp_context c, char \*path)
   **Returns:**
     0 if the instrument path was correctly set, or ``-XMP_ERROR_SYSTEM``
     in case of error (the system error code is set in ``errno``).
-
-.. _xmp_enable_sample_load():
-
-int xmp_enable_sample_load(xmp_context c, int status)
-`````````````````````````````````````````````````````
-
-
-  **Parameters:**
-    :c: the player context handle.
- 
-    :status: 0 to disable sample loading, or 1 to enable it.
