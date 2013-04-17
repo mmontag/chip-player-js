@@ -1,15 +1,15 @@
 #include "test.h"
 
-static int vals[] = { 11, 117, 313, 701, 1111, 3999, 7071, 11037, -1 };
+static int vals[] = { 11, 117, 313, 701, 1111, 3999, 7071, 10037, -1 };
 static char buffer[20000];
 
-#define REFBUF_SIZE 59520
+#define REFBUF_SIZE 72000
 
 TEST(test_api_play_buffer)
 {
 	xmp_context opaque;
 	FILE *f;
-	int i, ret, size, buffer_size;
+	int i, ret, cmp, size, buffer_size;
 	char *ref_buffer;
 
 	f = fopen("data/pcm_buffer.raw", "rb");
@@ -34,9 +34,9 @@ TEST(test_api_play_buffer)
 
 		xmp_play_buffer(opaque, NULL, 0, 0);
 
-		while (xmp_play_buffer(opaque, buffer, buffer_size, 1) == 0) {
-			ret = memcmp(buffer, ref_buffer + size, buffer_size);
-			fail_unless(ret == 0, "buffer comparison failed");
+		while ((ret = xmp_play_buffer(opaque, buffer, buffer_size, 1)) == 0) {
+			cmp = memcmp(buffer, ref_buffer + size, buffer_size);
+			fail_unless(cmp == 0, "buffer comparison failed");
 
 			size += buffer_size;
 			if ((size + buffer_size) >= REFBUF_SIZE)
@@ -44,14 +44,10 @@ TEST(test_api_play_buffer)
 		}
 
 		/* check end of module */
-		xmp_play_buffer(opaque, buffer, buffer_size, 1);
-		ret = xmp_play_buffer(opaque, buffer, buffer_size, 1);
 		fail_unless(ret == -1, "end of module");
 	}
 
 	fail_unless(vals[i] == -1, "didn't test all buffer sizes");
-
-
 
 #else
 
