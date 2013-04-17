@@ -584,6 +584,13 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_TRK_VSLIDE:	/* Track volume slide */
 	      fx_trk_vslide:
+
+		if (fxp == 0) {
+			if ((fxp = xc->trackvol.memory) != 0)
+				goto fx_trk_vslide;
+			break;
+		}
+
 		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			h = MSN(fxp);
 			l = LSN(fxp);
@@ -603,14 +610,23 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 				xc->trackvol.memory = fxp;
 				fxp &= 0xf0;
 				goto fx_trk_fvslide;	/* FIXME */
-			} else if (!fxp) {
-				if ((fxp = xc->trackvol.memory) != 0)
-					goto fx_trk_vslide;
 			}
 		}
 		SET(TRK_VSLIDE);
-		if ((xc->trackvol.memory = fxp))
-			xc->trackvol.slide = MSN(fxp) - LSN(fxp);
+
+		if (fxp) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+
+			xc->trackvol.memory = fxp;
+			if (l == 0)
+				xc->trackvol.slide = h;
+			else if (h == 0)
+				xc->trackvol.slide = -l;
+			else
+				RESET(TRK_VSLIDE);
+		}
+
 		break;
 	case FX_TRK_FVSLIDE:	/* Track fine volume slide */
 	      fx_trk_fvslide:
