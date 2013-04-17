@@ -7,20 +7,20 @@ LIBS = -L../lib -lxmp -lm
 
 all: examples
 
-examples: test1 test2 test3 test4 test5
+examples: player-simple player-showpatterns showinfo player-getbuffer test3
 
-test1: test1.o alsa.o
-	$(LD) -o $@ $(LDFLAGS) test1.o alsa.o -lasound $(LIBS)
+player-simple: player-simple.o alsa.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
 
-test2: test2.o alsa.o
-	$(LD) -o $@ $(LDFLAGS) test2.o alsa.o -lasound $(LIBS)
+player-showpatterns: player-showpatterns.o alsa.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
 
 test3: test3.o
-	$(LD) -o $@ $(LDFLAGS) test3.o $(LIBS)
+	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
-test4: test4.o
-	$(LD) -o $@ $(LDFLAGS) test4.o $(LIBS)
+showinfo: showinfo.o
+	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
-test5: test5.o alsa.o
-	$(LD) -o $@ $(LDFLAGS) test5.o alsa.o -lasound $(LIBS)
+player-getbuffer: player-getbuffer.o alsa.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
 
