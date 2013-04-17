@@ -81,6 +81,13 @@ XMP_TRY_COMPILE(whether compiler understands -xldscope=hidden,
     LD_VERSCRIPT="-Wl,--version-script,libxmp.map"])]
   )
 
+dnl for clang
+XMP_TRY_COMPILE(whether compiler understands -Wno-unknown-warning-option,
+  ac_cv_c_flag_w_no_unknown_warning_option,
+  -Wunused-but-set-variable,[
+  int main(){}],
+  CFLAGS="${CFLAGS} -Wno-unknown-warning-option")  
+
 XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
   ac_cv_c_flag_w_unused_but_set_variable,
   -Wunused-but-set-variable,[
