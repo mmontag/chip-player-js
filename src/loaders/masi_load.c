@@ -156,9 +156,9 @@ static void get_dsmp(struct module_data *m, int size, FILE *f, void *parm)
 	i = data->cur_ins;
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	fread(&mod->xxi[i].name, 1, 34, f);
+	fread(&mod->xxi[i].name, 1, 31, f);
 	str_adj((char *)mod->xxi[i].name);
-	fseek(f, 5, SEEK_CUR);
+	fseek(f, 8, SEEK_CUR);
 	read8(f);		/* insno */
 	read8(f);
 	mod->xxs[i].len = read32l(f);
