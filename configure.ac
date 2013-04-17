@@ -113,7 +113,7 @@ XMP_TRY_COMPILE(whether alloca() needs alloca.h,
   AC_DEFINE(HAVE_ALLOCA_H))  
 
 AC_CHECK_LIB(m,pow)
-AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy)
+AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy strlcat)
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp.pc])
 AC_OUTPUT

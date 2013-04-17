@@ -124,6 +124,14 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 #endif	/* !_MSC_VER */
 
+#ifdef HAVE_STRLCPY
+#define strncpy strlcpy
+#endif
+
+#ifdef HAVE_STRLCAT
+#define strncpy strlcat
+#endif
+
 /* Quirks */
 #define QUIRK_S3MLOOP	(1 << 0)	/* S3M loop mode */
 #define QUIRK_ENVFADE	(1 << 1)	/* Fade at end of envelope */

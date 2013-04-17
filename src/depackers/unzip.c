@@ -30,10 +30,6 @@ Michael Kohn <mike@mikekohn.net>
 
 #include "inflate.h"
 
-#ifdef HAVE_STRLCPY
-#define strncpy strlcpy
-#endif
-
 #ifdef WIN32
 #define strncasecmp strnicmp
 #endif
