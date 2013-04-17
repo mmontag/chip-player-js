@@ -1025,22 +1025,30 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 	static char *in_buffer;
 	struct xmp_frame_info fi;
 
+	/* Reset internal state
+	 * Syncs buffer start with frame start */
 	if (out_buffer == NULL) {
 		consumed = 0;
 		in_buffer_size = 0;
 	}
 
+	/* Fill buffer */
 	while (filled < size) {
+		/* Check if buffer full */
 		if (consumed == in_buffer_size) {
 			ret = xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &fi);
 
+			/* Check end of module */
 			if (ret < 0 || (fi.loop_count > 0 && fi.loop_count >= loop)) {
+				/* Start of frame, return end of replay */
 				if (filled == 0) {
 					consumed = 0;
 					in_buffer_size = 0;
 					return -1;
 				}
+
+				/* Fill remaining of this buffer */
 				memset(out_buffer + filled, 0, size - filled);
 				return 0;
 			}
@@ -1050,6 +1058,7 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 			in_buffer_size = fi.buffer_size;
 		}
 
+		/* Copy frame data to user buffer */
 		copy_size = MIN(size - filled, in_buffer_size - consumed);
 		memcpy((char *)out_buffer + filled, in_buffer + consumed,
 								copy_size);
