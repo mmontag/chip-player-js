@@ -6,6 +6,7 @@ Stable versions
 	- add configurable player parameter to disable sample loading
 	- add configurable player parameter to set/get current module flags
 	- changed maximum sampling rate to 49170Hz
+	- fix floating point values in lowpass filter
 	- fix simultaneous volume slide up and down
 	- fix IT vs XM vibrato rate using quirk
 	- fix IT portamento after note cut (reported by Benjamin Shadwick)
