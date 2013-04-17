@@ -18,6 +18,7 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  c_volset \
 		  ed_delay ef_invert_loop \
 		  f_set_speed \
+		  track_volslide \
 		  okt_arpeggio per_slide per_toneporta setpan masterpan \
 		  panbrello globalvol gvol_slide s3m_bpm it_bpm fine_vibrato \
 		  it_panslide it_vcol_g \
