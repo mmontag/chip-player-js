@@ -159,9 +159,8 @@ TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
 TEST_PATH	= test
 
-TEST_INTERNAL	= load_helpers.o depackers/s404_dec.o loaders/itsex.o \
-		  dataio.o scan.o misc.o loaders/sample.o synth_null.o \
-		  fnmatch.o
+TEST_INTERNAL	= load_helpers.o loaders/itsex.o dataio.o scan.o misc.o \
+		  loaders/sample.o synth_null.o fnmatch.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 		  $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))
