@@ -160,10 +160,7 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int r
 	}
 
 	xc->volume += xc->med.vv;
-	if (xc->volume < 0)
-	    xc->volume = 0;
-	if (xc->volume > 64)
-	    xc->volume = 64;
+	CLAMP(xc->volume, 0, 64);
 
 skip_vol:
 
