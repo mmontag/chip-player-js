@@ -16,6 +16,7 @@ Stable versions
 	- fix build issues in Cygwin (reported by Benjamin Shadwick)
 	- fix pkg-config library definition
 	- fix loop count reset when restarting module
+	- fix MED MMD0-3 Soundtracker mode slides (reported by Simon Spiers)
 
 4.0.4 (20130406):
 	- fix IT volume column slide to note
