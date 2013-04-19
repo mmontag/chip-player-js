@@ -47,8 +47,8 @@ static int initGetb(struct bitstream *bs, uint8 *src, uint32 src_length)
   bs->orgsrc = src;
 
   bs->left = readmem16b((uint8 *)bs->src); /* bit counter */
-  if (bs->left & (~0xf))
-    fprintf(stderr, "Workarounded an ancient stc bug\n");
+  /*if (bs->left & (~0xf))
+    fprintf(stderr, "Workarounded an ancient stc bug\n");*/
   /* mask off any corrupt bits */
   bs->left &= 0x000f;
   bs->src--;
@@ -72,7 +72,7 @@ static uint16 getb(struct bitstream *bs, int nbits)
   /* If not enough bits in the bit buffer, get more */
   if (bs->left < nbits) {
     bs->word <<= bs->left;
-    assert((bs->word & 0x0000ffffU) == 0);
+    /* assert((bs->word & 0x0000ffffU) == 0); */
 
     /* Check that we don't go out of bounds */
     assert((uint8 *)bs->src >= bs->orgsrc);
@@ -288,12 +288,12 @@ int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
   fread(buf, 1, st.st_size, in);
 
   if (checkS404File((uint32 *) src, /*s,*/ &oLen, &pLen, &sLen)) {
-    fprintf(stderr,"S404 Error: checkS404File() failed..\n");
+    /*fprintf(stderr,"S404 Error: checkS404File() failed..\n");*/
     goto error;
   }
 
   if ((dst = malloc(oLen)) == NULL) {
-    fprintf(stderr,"S404 Error: malloc(%d) failed..\n", oLen);
+    /*fprintf(stderr,"S404 Error: malloc(%d) failed..\n", oLen);*/
     goto error;
   }
 
@@ -301,7 +301,7 @@ int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
   decompressS404(src + 16, dst, oLen, pLen);
 
   if (fwrite(dst, oLen, 1, out) == 0) {
-      fprintf(stderr,"S404 Error: fwrite() failed..\n");
+      /*fprintf(stderr,"S404 Error: fwrite() failed..\n");*/
       goto error1;
   }
 

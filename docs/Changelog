@@ -17,6 +17,7 @@ Stable versions
 	- fix pkg-config library definition
 	- fix loop count reset when restarting module
 	- fix MED MMD0-3 pitch slides (reported by Simon Spiers)
+	- fix Stonecracker depacker
 
 4.0.4 (20130406):
 	- fix IT volume column slide to note
