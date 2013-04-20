@@ -139,11 +139,10 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 				case 0x00:		/* arpeggio */
 				case 0x01:		/* slide up */
 				case 0x02:		/* slide down */
+				case 0x03:		/* portamento */
+				case 0x04:		/* vibrato? */
 				case 0x0c:		/* volume */
 					break;		/* ...like protracker */
-				case 0x03:
-					event->fxt = FX_VIBRATO;
-					break;
 				case 0x0d:		/* volslide */
 				case 0x0e:		/* volslide */
 					event->fxt = FX_VOLSLIDE;

@@ -84,9 +84,8 @@ static void fix_effect(struct xmp_event *event)
 	case 0x00:	/* arpeggio */
 	case 0x01:	/* slide up */
 	case 0x02:	/* slide down */
-		break;
-	case 0x03:	/* vibrato */
-		event->fxt = FX_VIBRATO;
+	case 0x03:	/* portamento */
+	case 0x04:	/* vibrato? */
 		break;
 	case 0x0c:	/* set volume (BCD) */
 		event->fxp = MSN(event->fxp) * 10 +
