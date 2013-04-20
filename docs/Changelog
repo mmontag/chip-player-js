@@ -21,6 +21,7 @@ Stable versions
 	- fix MED2/3/4 portamento effect
 	- fix Stonecracker depacker
 	- fix IT envelopes with no envelope points
+	- fix XM invalid instrument event (reported by Banjamin Shadwick)
 
 4.0.4 (20130406):
 	- fix IT volume column slide to note

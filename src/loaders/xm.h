@@ -23,7 +23,6 @@
 #define XM_ENVELOPE_ON 0x01
 #define XM_ENVELOPE_SUSTAIN 0x02
 #define XM_ENVELOPE_LOOP 0x04
-#define XM_END_OF_SONG 0x80	/* Undocumented */
 #define XM_LINEAR_PERIOD_MODE 0x01
 
 

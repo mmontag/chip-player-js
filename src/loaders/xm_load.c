@@ -163,11 +163,8 @@ load_patterns:
 		if ((b = *pat++) & XM_EVENT_PACKING) {
 		    if (b & XM_EVENT_NOTE_FOLLOWS)
 			event->note = *pat++;
-		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS) {
-			if (*pat & XM_END_OF_SONG)
-			    break;
+		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS)
 			event->ins = *pat++;
-		    }
 		    if (b & XM_EVENT_VOLUME_FOLLOWS)
 			event->vol = *pat++;
 		    if (b & XM_EVENT_FXTYPE_FOLLOWS) {
