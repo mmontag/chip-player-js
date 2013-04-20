@@ -163,7 +163,7 @@ struct temp_inst temp_inst[32];
 static int med4_load(struct module_data *m, FILE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
-	int i, j, k;
+	int i, j, k, y;
 	uint32 m0, mask;
 	int transp, masksz;
 	int pos, vermaj, vermin;
@@ -320,9 +320,10 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		int size, plen;
-		uint8 ctl, chmsk, chn, rows;
-		uint32 linemsk0, fxmsk0, linemsk1, fxmsk1, x;
+		int size, plen, rows;
+		uint8 ctl[4], chmsk, chn;
+		uint32 linemask[8], fxmask[8], x;
+		int num_masks;
 
 #ifdef MED4_DEBUG
 		printf("\n===== PATTERN %d =====\n", i);
@@ -331,36 +332,57 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		size = read8(f);	/* pattern control block */
 		chn = read8(f);
-		rows = read8(f) + 1;
+		rows = (int)read8(f) + 1;
 		plen = read16b(f);
-		ctl = read8(f);
-
-		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = rows;
-		TRACK_ALLOC(i);
-
-		linemsk0 = ctl & 0x80 ? ~0 : ctl & 0x40 ? 0 : read32b(f);
-		fxmsk0   = ctl & 0x20 ? ~0 : ctl & 0x10 ? 0 : read32b(f);
-
-		if (rows > 32) {
-			linemsk1=ctl & 0x08 ? ~0 : ctl & 0x04 ? 0 : read32b(f);
-			fxmsk1 = ctl & 0x02 ? ~0 : ctl & 0x01 ? 0 : read32b(f);
-		} else {
-			linemsk1 = 0;
-			fxmsk1 = 0;
-		}
 
 #ifdef MED4_DEBUG
 		printf("size = %02x\n", size);
 		printf("chn  = %01x\n", chn);
 		printf("rows = %01x\n", rows);
 		printf("plen = %04x\n", plen);
-		printf("ctl  = %02x\n", ctl);
-		printf("linemsk0 = %08x\n", linemsk0);
-		printf("fxmsk0   = %08x\n", fxmsk0);
-		printf("linemsk1 = %08x\n", linemsk1);
-		printf("fxmsk1   = %08x\n", fxmsk1);
 #endif
+		/* read control byte */
+		for (j = 0; j < 4; j++) {
+			if (rows > j * 64)
+				ctl[j] = read8(f);
+			else
+				break;
+#ifdef MED4_DEBUG
+			printf("ctl[%d] = %02x\n", j, ctl[j]);
+
+#endif
+		}
+
+		PATTERN_ALLOC(i);
+		mod->xxp[i]->rows = rows;
+		TRACK_ALLOC(i);
+
+		/* initialize masks */
+		for (y = 0; y < 8; y++) {
+			linemask[y] = 0;
+			fxmask[y] = 0;
+		}
+
+		/* read masks */
+		num_masks = 0;
+		for (y = 0; y < 8; y++) {
+			if (rows > y * 32) {
+				int c = ctl[y / 2];
+				int s = 4 * (y % 2);
+				linemask[y] = c & (0x80 >> s) ? ~0 :
+					      c & (0x40 >> s) ? 0 : read32b(f);
+				fxmask[y]   = c & (0x20 >> s) ? ~0 :
+					      c & (0x10 >> s) ? 0 : read32b(f);
+				num_masks++;
+#ifdef MED4_DEBUG
+				printf("linemask[%d] = %08x\n", y, linemask[y]);
+				printf("fxmask[%d]   = %08x\n", y, fxmask[y]);
+#endif
+			} else {
+				break;
+			}
+		}
+
 
 		/* check block end */
 		if (read8(f) != 0xff) {
@@ -372,11 +394,15 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		read4_ctl = 0;
 
-		for (j = 0; j < 32; j++, linemsk0 <<= 1, fxmsk0 <<= 1) {
-			if (linemsk0 & 0x80000000) {
+		for (y = 0; y < num_masks; y++) {
+
+		for (j = 0; j < 32; j++) {
+			int line = y * 32 + j;
+
+			if (linemask[y] & 0x80000000) {
 				chmsk = read4(f, &read4_ctl);
 				for (k = 0; k < 4; k++, chmsk <<= 1) {
-					event = &EVENT(i, k, j);
+					event = &EVENT(i, k, line);
 
 					if (chmsk & 0x08) {
 						x = read12b(f, &read4_ctl);
@@ -388,10 +414,10 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 				}
 			}
 
-			if (fxmsk0 & 0x80000000) {
+			if (fxmask[y] & 0x80000000) {
 				chmsk = read4(f, &read4_ctl);
 				for (k = 0; k < 4; k++, chmsk <<= 1) {
-					event = &EVENT(i, k, j);
+					event = &EVENT(i, k, line);
 
 					if (chmsk & 0x08) {
 						x = read12b(f, &read4_ctl);
@@ -403,9 +429,9 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			}
 
 #ifdef MED4_DEBUG
-			printf("%03d ", j);
+			printf("%03d ", line);
 			for (k = 0; k < 4; k++) {
-				event = &EVENT(i, k, j);
+				event = &EVENT(i, k, line);
 				if (event->note)
 					printf("%03d", event->note);
 				else
@@ -415,53 +441,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			}
 			printf("\n");
 #endif
+
+			linemask[y] <<= 1;
+			fxmask[y] <<= 1;
 		}
 
-		for (j = 32; j < 64; j++, linemsk1 <<= 1, fxmsk1 <<= 1) {
-			if (linemsk1 & 0x80000000) {
-				chmsk = read4(f, &read4_ctl);
-				for (k = 0; k < 4; k++, chmsk <<= 1) {
-					event = &EVENT(i, k, j);
-
-					if (chmsk & 0x08) {
-						x = read12b(f, &read4_ctl);
-						event->note = x >> 4;
-						if (event->note)
-							event->note += 48;
-						event->ins  = x & 0x0f;
-					}
-				}
-			}
-
-			if (fxmsk1 & 0x80000000) {
-				chmsk = read4(f, &read4_ctl);
-				for (k = 0; k < 4; k++, chmsk <<= 1) {
-					event = &EVENT(i, k, j);
-
-					if (chmsk & 0x08) {
-						x = read12b(f, &read4_ctl);
-						event->fxt = x >> 8;
-						event->fxp = x & 0xff;
-						fix_effect(event);
-					}
-				}
-			}
-
-#ifdef MED4_DEBUG
-			printf("%03d ", j);
-			for (k = 0; k < 4; k++) {
-				event = &EVENT(i, k, j);
-				if (event->note)
-					printf("%03d", event->note);
-				else
-					printf("---");
-				printf(" %1x%1x%02x ",
-					event->ins, event->fxt, event->fxp);
-			}
-			printf("\n");
-#endif
 		}
-
 	}
 
 	mod->ins =  num_ins;
