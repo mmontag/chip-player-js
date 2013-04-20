@@ -12,6 +12,7 @@ Stable versions
 	- fix IT vs XM vibrato rate using quirk
 	- fix IT portamento after note cut (reported by Benjamin Shadwick)
 	- fix segfault in AMD module loader (reported by Jacques Philippe)
+	- fix memory leak in AMD module loader
 	- fix sequence scanner to prevent listing empty sequences
 	- fix build issues in Cygwin (reported by Benjamin Shadwick)
 	- fix pkg-config library definition

@@ -65,6 +65,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     struct xmp_event *event;
     char regs[11];
     const int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
+    int stored_tracks;
     uint16 w;
     uint8 b;
 
@@ -139,14 +140,13 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     }
     mod->trk++;
 
-    w = read16l(f);
+    stored_tracks = read16l(f);
 
     D_(D_INFO "Stored tracks: %d", w);
 
     mod->xxt = calloc (sizeof (struct xmp_track *), mod->trk);
-    mod->trk = w;
 
-    for (i = 0; i < mod->trk; i++) {
+    for (i = 0; i < stored_tracks; i++) {
 	w = read16l(f);
 	mod->xxt[w] = calloc (sizeof (struct xmp_track) +
 	    sizeof (struct xmp_event) * 64, 1);
