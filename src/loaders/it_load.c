@@ -544,9 +544,17 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    BUILD_ENV(p);
 	    BUILD_ENV(f);
 	    
-	    if (xxi->pei.flg & XMP_ENVELOPE_ON)
+	    if (xxi->pei.flg & XMP_ENVELOPE_ON) {
 		for (j = 0; j < xxi->pei.npt; j++)
 		    xxi->pei.data[j * 2 + 1] += 32;
+	    }
+
+	    if (xxi->aei.flg & XMP_ENVELOPE_ON && xxi->aei.npt == 0)
+		xxi->aei.npt = 1;
+	    if (xxi->pei.flg & XMP_ENVELOPE_ON && xxi->pei.npt == 0)
+		xxi->pei.npt = 1;
+	    if (xxi->fei.flg & XMP_ENVELOPE_ON && xxi->fei.npt == 0)
+		xxi->fei.npt = 1;
 
 	    if (env.flg & IT_ENV_FILTER) {
 		xxi->fei.flg |= XMP_ENVELOPE_FLT;

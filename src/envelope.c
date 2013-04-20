@@ -21,7 +21,7 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 		return def;
 
 	if (env->npt <= 0)
-		return 64;
+		return def;
 
 	index = (env->npt - 1) * 2;
 
