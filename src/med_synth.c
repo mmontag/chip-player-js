@@ -171,6 +171,8 @@ skip_vol:
 
 	jump = loop = jvs = 0;
 	switch (b = WT) {
+	    struct xmp_instrument *xxi;
+
 	    while (jump--) {
 	    case 0xff:		/* END */
 	    case 0xfb:		/* HLT */
@@ -217,8 +219,9 @@ skip_vol:
 		xc->med.ws = WT;
 		break;
 	    default:
-		if (b < m->mod.xxi[xc->ins].nsm && m->mod.xxi[xc->ins].sub[b].sid != xc->smp) {
-		    xc->smp = m->mod.xxi[xc->ins].sub[b].sid;
+		xxi = & m->mod.xxi[xc->ins];
+		if (b < xxi->nsm && xxi->sub[b].sid != xc->smp) {
+		    xc->smp = xxi->sub[b].sid;
 		    virt_setsmp(ctx, chn, xc->smp);
 		}
 	    }
