@@ -56,6 +56,7 @@
 #undef XMP_OPL_RHYTHM
 #undef XMP_OPL_CSM
 #undef XMP_OPL_TIMER
+#undef XMP_OPL_IRQ
 
 /* -------------------- for debug --------------------- */
 /* #define OPL_OUTPUT_LOG */
@@ -242,6 +243,7 @@ INLINE int Limit( int val, int max, int min ) {
 	return val;
 }
 
+#ifdef XMP_OPL_IRQ
 /* status set and IRQ handling */
 INLINE void OPL_STATUS_SET(FM_OPL *OPL,int flag)
 {
@@ -282,6 +284,7 @@ INLINE void OPL_STATUSMASK_SET(FM_OPL *OPL,int flag)
 	OPL_STATUS_SET(OPL,0);
 	OPL_STATUS_RESET(OPL,0);
 }
+#endif
 
 /* ----- key on  ----- */
 INLINE void OPL_KEYON(OPL_SLOT *SLOT)
@@ -780,6 +783,7 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v)
 			OPL->T[1] = (256-v)*16;
 			return;
 		case 0x04:	/* IRQ clear / mask and Timer enable */
+#ifdef XMP_OPL_IRQ
 			if(v&0x80)
 			{	/* IRQ flag clear */
 				OPL_STATUS_RESET(OPL,0x7f);
@@ -806,6 +810,7 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v)
 					if (OPL->TimerHandler) (OPL->TimerHandler)(OPL->TimerParam+0,interval);
 				}
 			}
+#endif
 			return;
 #if BUILD_Y8950
 		case 0x06:		/* Key Board OUT */
@@ -1172,7 +1177,9 @@ void OPLResetChip(FM_OPL *OPL)
 
 	/* reset chip */
 	OPL->mode   = 0;	/* normal mode */
+#ifdef XMP_OPL_IRQ
 	OPL_STATUS_RESET(OPL,0x7f);
+#endif
 	/* reset with register write */
 	OPLWriteReg(OPL,0x01,0); /* wabesel disable */
 	OPLWriteReg(OPL,0x02,0); /* Timer1 */
