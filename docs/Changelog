@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.1.0 ():
+4.1.0 (20130420):
 	- add API call to fill equally-sized data chunks with PCM data
 	- add configurable player parameter to disable sample loading
 	- add configurable player parameter to set/get current module flags
