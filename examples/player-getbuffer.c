@@ -1,4 +1,5 @@
-/* A simple frontend for xmp */
+/* A simple frontend for libxmp using fixed-size buffers */
+/* This file is in public domain */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,3 +1,5 @@
+/* A front-end for libxmp that displays pattern data */
+/* This file is in public domain */
 
 #include <stdio.h>
 #include <stdlib.h>

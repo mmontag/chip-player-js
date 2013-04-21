@@ -1,3 +1,5 @@
+/* Display module info using libxmp */
+/* This file is in public domain */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,3 +1,5 @@
+/* Alsa driver for libxmp examples */
+/* This file is in public domain */
 
 #include <alsa/asoundlib.h>
 #include <alsa/pcm.h>
