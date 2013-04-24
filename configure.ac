@@ -82,9 +82,9 @@ XMP_TRY_COMPILE(whether compiler understands -xldscope=hidden,
   )
 
 dnl for clang
-XMP_TRY_COMPILE(whether compiler understands -Wno-unknown-warning-option,
-  ac_cv_c_flag_w_no_unknown_warning_option,
-  -Wunused-but-set-variable,[
+XMP_TRY_COMPILE(whether compiler understands -Wunknown-warning-option,
+  ac_cv_c_flag_w_unknown_warning_option,
+  -Wunknown-warning-option,[
   int main(){}],
   CFLAGS="${CFLAGS} -Wno-unknown-warning-option")  
 
