@@ -137,7 +137,7 @@ struct channel_data {
 		int slide;	/* Frequency slide value */
 		int fslide;	/* Fine frequency slide value */
 		int memory;	/* Portamento effect memory */
-		int s_end;	/* Target period for tone portamento */
+		double s_end;	/* Target period for tone portamento */
 		int s_sgn;	/* Tone portamento up/down switch */
 		int s_val;	/* Delta for tone portamento */
 		int s_memory;	/* Tone portamento effect memory */
