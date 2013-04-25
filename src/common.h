@@ -24,6 +24,7 @@
 #define XMP_MAXVOC	64		/* max physical voices */
 
 #include <stdio.h>
+#include <string.h>
 #include "xmp.h"
 
 /* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
