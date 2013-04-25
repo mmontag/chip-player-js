@@ -129,7 +129,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #endif
 
 #ifdef HAVE_STRLCAT
-#define strncpy strlcat
+#define strncat strlcat
 #endif
 
 /* Quirks */
