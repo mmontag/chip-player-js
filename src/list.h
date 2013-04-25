@@ -1,7 +1,5 @@
-/* This is list.h from the Linux kernel */
-
-#ifndef __LINUX_LIST_H
-#define __LINUX_LIST_H
+#ifndef XMP_LIST_H
+#define XMP_LIST_H
 
 #ifdef _MSC_VER
 #define __inline__ __inline
