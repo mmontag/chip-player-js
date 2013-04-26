@@ -323,8 +323,16 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_F_VSLIDE:	/* Fine volume slide */
 		SET(FINE_VOLS);
-		if (fxp)
-			xc->vol.fslide = MSN(fxp) - LSN(fxp);
+		if (fxp) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+			if (l == 0)
+				xc->vol.fslide = h;
+			else if (h == 0)
+				xc->vol.fslide = -l;
+			else
+				RESET(FINE_VOLS);
+		}		
 		break;
 	case FX_JUMP:		/* Order jump */
 		p->flow.pbreak = 1;
