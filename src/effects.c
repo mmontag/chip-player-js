@@ -543,7 +543,8 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		xc->keyoff = fxp;
 		break;
 	case FX_ENVPOS:		/* Set envelope position */
-		NOT_IMPLEMENTED;
+		/* FIXME: Add OpenMPT quirk */
+		xc->v_idx = fxp;
 		break;
 	case FX_MASTER_PAN:	/* Set master pan */
 		xc->masterpan = fxp;
