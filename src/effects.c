@@ -598,18 +598,10 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 				xc->trackvol.memory = fxp;
 				fxp &= 0x0f;
 				goto fx_trk_fvslide;
-			} else if (h == 0xe && l != 0) {
-				xc->trackvol.memory = fxp;
-				fxp &= 0x0f;
-				goto fx_trk_fvslide;	/* FIXME */
 			} else if (l == 0xf && h != 0) {
 				xc->trackvol.memory = fxp;
 				fxp &= 0xf0;
 				goto fx_trk_fvslide;
-			} else if (l == 0xe && h != 0) {
-				xc->trackvol.memory = fxp;
-				fxp &= 0xf0;
-				goto fx_trk_fvslide;	/* FIXME */
 			}
 		}
 		SET(TRK_VSLIDE);
