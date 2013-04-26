@@ -14,24 +14,30 @@
 #include "mixer.h"
 
 #define NOT_IMPLEMENTED
-
-#define DO_TONEPORTA() do { \
-	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins]; \
-	int mapped = instrument->map[xc->key].ins; \
-	struct xmp_subinstrument *sub = &instrument->sub[mapped]; \
-	if (note-- && note < 0x80 && (uint32)xc->ins < m->mod.ins) { \
-	    xc->freq.s_end = note_to_period(note + sub->xpo + \
-	    instrument->map[xc->key].xpo, sub->fin, HAS_QUIRK(QUIRK_LINEAR)); \
-	} \
-	xc->freq.s_sgn = xc->period < xc->freq.s_end ? 1 : -1; \
-} while (0)
-
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 #define SET_LFO_NOTZERO(lfo, depth, rate) do { \
 	if ((depth) != 0) set_lfo_depth(lfo, depth); \
 	if ((rate) != 0) set_lfo_rate(lfo, rate); \
 } while (0)
+
+
+static inline void do_toneporta(struct module_data *m,
+                                struct channel_data *xc, int note)
+{
+	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+	int mapped = instrument->map[xc->key].ins;
+	struct xmp_subinstrument *sub = &instrument->sub[mapped];
+
+	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
+		note--;
+		xc->freq.s_end = note_to_period(note + sub->xpo +
+			instrument->map[xc->key].xpo, sub->fin,
+			HAS_QUIRK(QUIRK_LINEAR));
+	}
+	xc->freq.s_sgn = xc->period < xc->freq.s_end ? 1 : -1;
+}
+
 
 void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		uint8 fxp, struct channel_data *xc, int fnum)
@@ -148,7 +154,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
-		DO_TONEPORTA();
+
+		do_toneporta(m, xc, note);
+
 		if (fxp) {
 			xc->freq.s_memory = fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
@@ -178,7 +186,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 		SET_PER(TONEPORTA);
-		DO_TONEPORTA();
+
+		do_toneporta(m, xc, note);
+
 		xc->freq.s_val = fxp;
 		if (fxp == 0)
 			RESET_PER(TONEPORTA);
@@ -223,7 +233,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
-		DO_TONEPORTA();
+
+		do_toneporta(m, xc, note);
+
 		SET(TONEPORTA);
 		goto fx_volslide;
 	case FX_VIBRA_VSLIDE:	/* Vibrato + vol slide */
