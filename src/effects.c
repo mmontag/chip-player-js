@@ -308,8 +308,16 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		break;
 	case FX_VOLSLIDE_2:	/* Secondary volume slide */
 		SET(VOL_SLIDE_2);
-		if (fxp)
-			xc->vol.slide2 = -LSN(fxp) + MSN(fxp);
+		if (fxp) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+			if (l == 0)
+				xc->vol.slide2 = h;
+			else if (h == 0)
+				xc->vol.slide2 = -l;
+			else
+				RESET(VOL_SLIDE_2);
+		}		
 		break;
 	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
 		if (fxp)
