@@ -18,10 +18,11 @@ TEST(test_synth_adlib)
 	xmp_start_player(opaque, 44100, 0);
 
 	for (j = 0; j < 2; j++) {
-		xmp_play_frame(opaque);
+		int16 *b;
 
+		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		int16 *b = info.buffer;
+		b = info.buffer;
 
 		for (k = i = 0; i < info.buffer_size / 4; i++) {
 			fscanf(f, "%d", &val);

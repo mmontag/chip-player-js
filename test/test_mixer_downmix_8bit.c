@@ -21,9 +21,10 @@ TEST(test_mixer_downmix_8bit)
 	xmp_start_player(opaque, 22050, XMP_FORMAT_MONO | XMP_FORMAT_8BIT);
 
 	for (i = 0; i < 2; i++) {
+		int8 *b;
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		int8 *b = info.buffer;
+		b = info.buffer;
 		for (j = 0; j < info.buffer_size; j++) {
 			fscanf(f, "%d", &val);
 			val >>= 8;

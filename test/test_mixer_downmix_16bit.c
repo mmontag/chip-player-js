@@ -21,9 +21,10 @@ TEST(test_mixer_downmix_16bit)
 	xmp_start_player(opaque, 22050, XMP_FORMAT_MONO);
 
 	for (i = 0; i < 2; i++) {
+		int16 *b;
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		int16 *b = info.buffer;
+		b = info.buffer;
 		for (j = 0; j < info.buffer_size / 2; j++) {
 			fscanf(f, "%d", &val);
 			fail_unless(b[j] == val, "downmix error");

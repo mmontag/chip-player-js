@@ -19,10 +19,11 @@ TEST(test_synth_spectrum)
 	xmp_set_position(opaque, 2);
 
 	for (j = 0; j < 2; j++) {
-		xmp_play_frame(opaque);
+		int16 *b;
 
+		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		int16 *b = info.buffer;
+		b = info.buffer;
 
 		for (i = 0; i < info.buffer_size / 2; i++) {
 			fscanf(f, "%d", &val);

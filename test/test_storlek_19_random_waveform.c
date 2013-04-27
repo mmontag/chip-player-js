@@ -18,7 +18,7 @@ TEST(test_storlek_19_random_waveform)
 {
 	xmp_context opaque;
 	struct xmp_frame_info info;
-	struct xmp_channel_info *c0, *c1;;
+	struct xmp_channel_info *c0, *c1;
 	int i, flag;
 
 	opaque = xmp_create_context();
