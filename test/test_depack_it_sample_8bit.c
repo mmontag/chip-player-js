@@ -21,7 +21,6 @@ TEST(test_depack_it_sample_8bit)
 
 	fclose(fo);
 	fclose(f);
-system("cp .test test8.raw");
 
 	f = fopen(TMP_FILE, "rb");
 	ret = check_md5(TMP_FILE, "299c9144ae2349b90b430aafde8d799a");

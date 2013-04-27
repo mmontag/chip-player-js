@@ -135,7 +135,15 @@ int main(int argc, char **argv)
 #include "all_tests.c"
 #undef declare_test
 
-#ifndef FORK_TEST
+#ifdef FORK_TEST
+
+	if (run_tests() == 0) {
+		exit(EXIT_SUCCESS);
+	} else {
+		exit(EXIT_FAILURE);
+	}
+
+#else
 	int i;
 	char cmd[512];
 	int total = 0, fail = 0;
@@ -159,14 +167,6 @@ int main(int argc, char **argv)
 		fail, 100.0 * fail / total);
 
 	if (fail == 0) {
-		exit(EXIT_SUCCESS);
-	} else {
-		exit(EXIT_FAILURE);
-	}
-
-#else
-
-	if (run_tests() == 0) {
 		exit(EXIT_SUCCESS);
 	} else {
 		exit(EXIT_FAILURE);

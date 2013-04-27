@@ -17,7 +17,7 @@ TEST(test_api_load_module)
 	fail_unless(errno == ENOENT, "errno code");
 
 	/* is directory */
-	ret = xmp_load_module(ctx, "/");
+	ret = xmp_load_module(ctx, "data");
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "try to load directory");
 	fail_unless(errno == EISDIR, "errno code");
 
