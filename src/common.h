@@ -1,21 +1,9 @@
-
 #ifndef XMP_COMMON_H
 #define XMP_COMMON_H
 
 #ifdef __AROS__
 #define __AMIGA__
 #endif
-
-/*
- * Sat, 15 Sep 2007 10:39:41 -0600
- * Reported by Jon Rafkind <workmin@ccs.neu.edu>
- * In megaman.xm there should be a tempo change at position 1 but in
- * xmp tempo and bpm remain the same.
- *
- * Claudio's fix: megaman has many (unused) samples, raise XMP_MAXPAT
- * from 256 to 1024. Otherwise, xmp ignores any event containing a sample
- * number above the limit.
- */
 
 #define XMP_MAXROW	256		/* pattern loop stack size */
 #define XMP_MAXVOL	(0x400 * 0x7fff)
@@ -26,6 +14,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "xmp.h"
+
+#if defined(__GNUC__) || defined(__clang__)
+#if !defined(WIN32) && !defined(ANDROID) && !defined(__APPLE__) && !defined(__AMIGA__) && !defined(B_BEOS_VERSION)
+#define USE_VERSIONED_SYMBOLS
+#endif
+#endif
 
 /* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
  */

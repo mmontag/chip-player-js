@@ -213,7 +213,7 @@ int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 	return ret;
 }
 
-#if defined(__GNUC__) && !defined(WIN32) && !defined(ANDROID) && !defined(__APPLE__)
+#ifdef USE_VERSIONED_SYMBOLS
 extern int xmp_set_player_v41__(xmp_context, int, int)
 	__attribute__((alias("xmp_set_player_v40__")));
 
@@ -280,7 +280,7 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 	return ret;
 }
 
-#if defined(__GNUC__) && !defined(WIN32) && !defined(ANDROID) && !defined(__APPLE__)
+#ifdef USE_VERSIONED_SYMBOLS
 extern int xmp_get_player_v41__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
 
