@@ -204,26 +204,26 @@ static int ppcrack(FILE *fo, uint8 *data, uint32 len)
   uint32 outlen;
 
   if (len < 16) {
-    fprintf(stderr, "File is too short to be a PP file (%u bytes)\n", len);
+    /*fprintf(stderr, "File is too short to be a PP file (%u bytes)\n", len);*/
     return -1;
   }
 
   if (data[0]=='P' && data[1]=='P' && data[2]=='2' && data[3]=='0') {
     if (len & 0x03) {
-      fprintf(stderr, "File length is not a multiple of 4\n");
+      /*fprintf(stderr, "File length is not a multiple of 4\n");*/
       return -1;
     }
     crypted = 0;
   }
   else if (data[0]=='P' && data[1]=='X' && data[2]=='2' && data[3]=='0') {
     if ((len-2) & 0x03) {
-      fprintf(stderr, "(file length - 2) is not a multiple of 4\n");
+      /*fprintf(stderr, "(file length - 2) is not a multiple of 4\n");*/
       return -1;
     }
     crypted = 1;
   }
   else {
-    fprintf(stderr, "File does not have the PP signature\n");
+    /*fprintf(stderr, "File does not have the PP signature\n");*/
     return -1;
   }
 
@@ -233,7 +233,7 @@ static int ppcrack(FILE *fo, uint8 *data, uint32 len)
 
   output = (uint8 *) malloc(outlen);
   if (output == NULL) {
-    fprintf(stderr, "out of memory!\n");
+    /*fprintf(stderr, "out of memory!\n");*/
     return -1;
   }
 
@@ -308,7 +308,7 @@ static int ppcrack(FILE *fo, uint8 *data, uint32 len)
       }
     } while (key++ != 0xFFFFFFFF);
     free(temp);
-    fprintf(stderr, "All keys done!\n");
+    /*fprintf(stderr, "All keys done!\n");*/
 #else
      fprintf(stderr, "\nWarning: support for encrypted powerpacker files not compiled in.\n");
      success=-1;
@@ -348,13 +348,13 @@ int decrunch_pp(FILE *f, FILE *fo)
      */
 
     if ((plen != (plen / 2) * 2)) {    
-	 fprintf(stderr, "filesize not even\n");
+	 /*fprintf(stderr, "filesize not even\n");*/
          goto err;
     }
 
     packed = malloc(plen);
     if (packed == NULL) {
-	 fprintf(stderr, "can't allocate memory for packed data\n");
+	 /*fprintf(stderr, "can't allocate memory for packed data\n");*/
 	 goto err;
     }
 
@@ -371,24 +371,24 @@ int decrunch_pp(FILE *f, FILE *fo)
      */	 
 
     if (((packed[4] < 9) || (packed[5] < 9) || (packed[6] < 9) || (packed[7] < 9))) {
-	 fprintf(stderr, "invalid efficiency\n");
+	 /*fprintf(stderr, "invalid efficiency\n");*/
          goto err1;
     }
 
 
     if (((((val (packed +4) ) * 256 ) + packed[7] ) & 0xf0f0f0f0) != 0 ) {
-	 fprintf(stderr, "invalid efficiency(?)\n");
+	 /*fprintf(stderr, "invalid efficiency(?)\n");*/
          goto err1;
     }
 
     unplen = val (packed + plen - 4);
     if (!unplen) {
-	 fprintf(stderr, "not a powerpacked file\n");
+	 /*fprintf(stderr, "not a powerpacked file\n");*/
          goto err1;
     }
     
     if (ppdepack (packed, plen, fo) == -1) {
-	 fprintf(stderr, "error while decrunching data...");
+	 /*fprintf(stderr, "error while decrunching data...");*/
          goto err1;
     }
      
