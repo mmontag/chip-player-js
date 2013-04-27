@@ -6,6 +6,10 @@
  * for more information.
  */
 
+#ifdef __SUNPRO_CC
+#pragma error_messages (off,E_EMPTY_TRANSLATION_UNIT)
+#endif
+
 #ifdef AMIGA
 #define __USE_INLINE__
 #include <proto/exec.h>

@@ -1,3 +1,7 @@
+#ifdef __SUNPRO_CC
+#pragma error_messages (off,E_EMPTY_TRANSLATION_UNIT)
+#endif
+
 #ifndef HAVE_FNMATCH
 
 /*

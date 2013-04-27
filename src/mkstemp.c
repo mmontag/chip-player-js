@@ -1,3 +1,7 @@
+#ifdef __SUNPRO_CC
+#pragma error_messages (off,E_EMPTY_TRANSLATION_UNIT)
+#endif
+
 #ifndef HAVE_MKSTEMP
 
 /* Copyright (C) 1991, 1992, 1996, 1998, 2001 Free Software Foundation, Inc.

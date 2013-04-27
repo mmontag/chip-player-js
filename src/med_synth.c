@@ -11,6 +11,10 @@
 #include "virtual.h"
 #include "med_extras.h"
 
+#ifdef __SUNPRO_CC
+#pragma error_messages (off,E_STATEMENT_NOT_REACHED)
+#endif
+
 /* Commands in the volume and waveform sequence table:
  *
  *	Cmd	Vol	Wave	Action
