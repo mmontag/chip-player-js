@@ -6,7 +6,7 @@ Stable versions
 	- fix detection of compiler flags
 	- fix library symbol versioning in OS X (by Douglas Carmichael)
 	- fix loss of precision in portamento (reported by Misty De Meo)
-	- fix OS X and Solaris build issues
+	- fix OS X, Solaris and BeOS/Haiku build issues
 
 4.1.0 (20130420):
 	- add API call to fill equally-sized data chunks with PCM data
