@@ -2,6 +2,7 @@ Stable versions
 ---------------
 
 4.1.1 ():
+	- add XM set envelope position effect
 	- fix detection of compiler flags
 	- fix library symbol versioning in OS X (by Douglas Carmichael)
 	- fix loss of precision in portamento (reported by Misty De Meo)
