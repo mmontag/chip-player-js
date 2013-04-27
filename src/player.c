@@ -1049,7 +1049,7 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 				}
 
 				/* Fill remaining of this buffer */
-				memset(out_buffer + filled, 0, size - filled);
+				memset((char *)out_buffer + filled, 0, size - filled);
 				return 0;
 			}
 
