@@ -40,6 +40,10 @@ TEST(test_api_load_module)
 	ret = xmp_load_module(ctx, "Makefile");
 	fail_unless(ret == -XMP_ERROR_FORMAT, "invalid format");
 
+	/* corrupted compressed file */
+	ret = xmp_load_module(ctx, "data/corrupted.gz");
+	fail_unless(ret == -XMP_ERROR_DEPACK, "depack error fail");
+
 	/* valid file */
 	ret = xmp_load_module(ctx, "data/test.xm");
 	fail_unless(ret == 0, "load file");
