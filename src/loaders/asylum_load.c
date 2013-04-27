@@ -109,9 +109,11 @@ static int asylum_load(struct module_data *m, FILE *f, const int start)
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < 64 * mod->chn; j++) {
+			uint8 note;
+
 			event = &EVENT(i, j % mod->chn, j / mod->chn);
 			memset(event, 0, sizeof(struct xmp_event));
-			uint8 note = read8(f);
+			note = read8(f);
 
 			if (note != 0) {
 				event->note = note + 13;
