@@ -5,13 +5,10 @@ struct xmp_sample xxs;
 
 TEST(test_sample_load_signal)
 {
-	uint8  buffer0[10] = { 0, 1, 2, 3,  4,  5,  6, -7,  8, -29 };
-	uint8  conv_r0[10] = {
+	int8  buffer0[10] = { 0, 1, 2, 3,  4,  5,  6, -7,  8, -29 };
+	uint8 conv_r0[10] = {
 		128, 129, 130, 131, 132, 133, 134, 121, 136, 99
 	};
-	struct module_data m;
-
-	memset(&m, 0, sizeof (struct module_data));
 
 	/* 16-bit input buffer is little-endian */
 	uint8  buffer1[20] = {
@@ -23,6 +20,9 @@ TEST(test_sample_load_signal)
 		32768, 32769, 32770, 32771, 32772, 
 		32773, 32774, 32761, 32776, 32739
 	};
+	struct module_data m;
+
+	memset(&m, 0, sizeof (struct module_data));
 
 	xxs.len = 10;
 	load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS, &xxs, buffer0);

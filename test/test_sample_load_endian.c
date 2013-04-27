@@ -5,8 +5,8 @@ struct xmp_sample xxs;
 
 TEST(test_sample_load_endian)
 {
-	uint8 conv_r0[10] = { 1, 0, 3, 2, 5, 4, -7,  6, -29,   8 };
-	uint8 conv_r1[10] = { 0, 1, 2, 3, 4, 5,  6, -7,   8, -29 };
+	int8 conv_r0[10] = { 1, 0, 3, 2, 5, 4, -7,  6, -29,   8 };
+	int8 conv_r1[10] = { 0, 1, 2, 3, 4, 5,  6, -7,   8, -29 };
 	struct module_data m;
 
 	memset(&m, 0, sizeof (struct module_data));
