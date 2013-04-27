@@ -31,11 +31,11 @@ static inline void do_toneporta(struct module_data *m,
 
 	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
 		note--;
-		xc->freq.s_end = note_to_period(note + sub->xpo +
+		xc->porta.target = note_to_period(note + sub->xpo +
 			instrument->map[xc->key].xpo, sub->fin,
 			HAS_QUIRK(QUIRK_LINEAR));
 	}
-	xc->freq.s_sgn = xc->period < xc->freq.s_end ? 1 : -1;
+	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
 }
 
 
@@ -112,7 +112,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		if (fxp != 0) {
 			xc->freq.slide = -fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD))
-				xc->freq.s_memory = fxp;
+				xc->porta.memory = fxp;
 		} else if (xc->freq.slide > 0) {
 			xc->freq.slide *= -1;
 		}
@@ -142,14 +142,14 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		if (fxp != 0) {
 			xc->freq.slide = fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD))
-				xc->freq.s_memory = fxp;
+				xc->porta.memory = fxp;
 		} else if (xc->freq.slide < 0) {
 			xc->freq.slide *= -1;
 		}
 		break;
 	case FX_TONEPORTA:	/* Tone portamento */
 		if (HAS_QUIRK(QUIRK_IGSTPOR)) {
-			if (note == 0 && xc->freq.s_sgn == 0)
+			if (note == 0 && xc->porta.dir == 0)
 				break;
 		}
 		if (!IS_VALID_INSTRUMENT(xc->ins))
@@ -158,15 +158,15 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		do_toneporta(m, xc, note);
 
 		if (fxp) {
-			xc->freq.s_memory = fxp;
+			xc->porta.memory = fxp;
 			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
 				xc->freq.memory = fxp;
 		} else {
-			fxp = xc->freq.s_memory;
+			fxp = xc->porta.memory;
 		}
 
 		if (fxp) {
-			xc->freq.s_val = fxp;
+			xc->porta.slide = fxp;
 		}
 		SET(TONEPORTA);
 		break;
@@ -186,10 +186,8 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 		SET_PER(TONEPORTA);
-
 		do_toneporta(m, xc, note);
-
-		xc->freq.s_val = fxp;
+		xc->porta.slide = fxp;
 		if (fxp == 0)
 			RESET_PER(TONEPORTA);
 		break;
@@ -233,9 +231,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
-
 		do_toneporta(m, xc, note);
-
 		SET(TONEPORTA);
 		goto fx_volslide;
 	case FX_VIBRA_VSLIDE:	/* Vibrato + vol slide */

@@ -81,7 +81,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
 
-		xc->freq.s_end = xc->period = note_to_period(note,
+		xc->porta.target = xc->period = note_to_period(note,
 				xc->finetune, HAS_QUIRK(QUIRK_LINEAR));
 	}
 
