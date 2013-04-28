@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.1.1 ():
+4.1.1 (20130428):
 	- add XM set envelope position effect
 	- fix XM note with no instrument after keyoff
 	- fix detection of compiler flags
