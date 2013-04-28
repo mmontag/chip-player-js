@@ -394,6 +394,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
+		xc->fadeout = 0x8000;		/* for Last Battle.xm */
+		RESET(RELEASE);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
