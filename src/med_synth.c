@@ -11,7 +11,7 @@
 #include "virtual.h"
 #include "med_extras.h"
 
-#ifdef __SUNPRO_CC
+#ifdef __SUNPRO_C
 #pragma error_messages (off,E_STATEMENT_NOT_REACHED)
 #endif
 
