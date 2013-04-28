@@ -3,6 +3,7 @@ Stable versions
 
 4.1.1 ():
 	- add XM set envelope position effect
+	- fix XM note with no instrument after keyoff
 	- fix detection of compiler flags
 	- fix library symbol versioning in OS X (by Douglas Carmichael)
 	- fix loss of precision in portamento (reported by Misty De Meo)
