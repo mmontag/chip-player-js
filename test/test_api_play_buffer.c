@@ -1,4 +1,5 @@
 #include "test.h"
+#include "../src/loaders/loader.h"
 
 static int vals[] = { 11, 117, 313, 701, 1111, 3999, 7071, 10037, -1 };
 static char buffer[20000];
@@ -13,10 +14,13 @@ TEST(test_api_play_buffer)
 	char *ref_buffer;
 
 	f = fopen("data/pcm_buffer.raw", "rb");
-	ref_buffer = malloc(REFBUF_SIZE);
+	ref_buffer = calloc(1, REFBUF_SIZE);
 	fail_unless(ref_buffer != NULL, "buffer allocation error");
 
 	fread(ref_buffer, 1, REFBUF_SIZE, f);
+	if (is_big_endian()) {
+		convert_endian((unsigned char *)ref_buffer, REFBUF_SIZE / 2);
+	}
 
 	opaque = xmp_create_context();
 

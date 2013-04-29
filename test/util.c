@@ -63,3 +63,17 @@ int map_channel(struct player_data *p, int chn)
 	return voc;
 }
 
+/* Convert little-endian 16 bit samples to big-endian */
+void convert_endian(unsigned char *p, int l)
+{
+        uint8 b;
+        int i;
+
+        for (i = 0; i < l; i++) {
+                b = p[0];
+                p[0] = p[1];
+                p[1] = b;
+                p += 2;
+        }
+}
+
