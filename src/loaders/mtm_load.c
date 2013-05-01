@@ -131,7 +131,7 @@ static int mtm_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	mod->xxi[i].sub[0].vol = mih.volume;
-	mod->xxi[i].sub[0].fin = 0x80 + (int8)(mih.finetune << 4);
+	mod->xxi[i].sub[0].fin = mih.finetune;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
