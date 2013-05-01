@@ -34,6 +34,37 @@ static int gtk_test(FILE * f, char *t, const int start)
 	return 0;
 }
 
+static void translate_effects(struct xmp_event *event)
+{
+	/* Ignore extended effects */
+	if (event->fxt == 0x0e || event->fxt == 0x0c) {
+		event->fxt = 0;
+		event->fxp = 0;
+	}
+
+	/* handle high-numbered effects */
+	if (event->fxt > 0x0f) {
+		switch (event->fxt) {
+		case 0x10:	/* arpeggio */
+			event->fxt = FX_ARPEGGIO;
+			break;
+		case 0x20:
+			event->fxt = FX_VOLSET;
+			break;
+		case 0x21:
+			event->fxt = FX_VOLSET;
+			event->fxp = 0xff;
+			break;
+		case 0xa8:	/* set number of frames */
+			event->fxt = FX_S3M_SPEED;
+			break;
+		default:
+			event->fxt = event->fxp = 0;
+		}
+	
+	}
+}
+
 static int gtk_load(struct module_data *m, FILE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
@@ -57,6 +88,7 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 	mod->chn = read16b(f);
 	mod->len = read16b(f);
 	mod->rst = read16b(f);
+	m->volbase = 0x100;
 
 	MODULE_INFO();
 
@@ -76,7 +108,7 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[i].lpe = mod->xxs[i].lps + size - 1;
 			read16b(f);
 			read16b(f);
-			mod->xxi[i].sub[0].vol = 0x40;
+			mod->xxi[i].sub[0].vol = 0xff;
 			mod->xxi[i].sub[0].pan = 0x80;
 			bits = 1;
 			c2spd = 8363;
@@ -90,7 +122,7 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 			mod->xxs[i].lps = read32b(f);
 			size = read32b(f);
 			mod->xxs[i].lpe = mod->xxs[i].lps + size - 1;
-			mod->xxi[i].sub[0].vol = read16b(f) / 4;
+			mod->xxi[i].sub[0].vol = read16b(f);
 			read8(f);
 			mod->xxi[i].sub[0].fin = read8s(f);
 		}
@@ -145,21 +177,18 @@ static int gtk_load(struct module_data *m, FILE *f, const int start)
 
 				event->note = read8(f);
 				if (event->note) {
-					event->note += 12;
+					event->note += 13;
 				}
 				event->ins = read8(f);
+
 				event->fxt = read8(f);
 				event->fxp = read8(f);
 				if (ver >= 4) {
 					event->vol = read8(f);
 				}
 
-				/* Ignore extended effects */
-				if (event->fxt > 0x0f || event->fxt == 0x0e ||
-						event->fxt == 0x0c) {
-					event->fxt = 0;
-					event->fxp = 0;
-				}
+				translate_effects(event);
+
 			}
 		}
 	}
