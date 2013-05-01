@@ -1,6 +1,11 @@
 Stable versions
 ---------------
 
+4.1.2 ():
+	- fix Graoumf Tracker arpeggio, set linear volume and set number
+	  of frames effects (reported by Misty De Meo)
+	- fix MTM sample fine tuning
+
 4.1.1 (20130428):
 	- add XM set envelope position effect
 	- fix XM note with no instrument after keyoff
