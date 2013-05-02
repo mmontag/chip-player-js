@@ -608,12 +608,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_TRK_VSLIDE:	/* Track volume slide */
-	      fx_trk_vslide:
-
 		if (fxp == 0) {
-			if ((fxp = xc->trackvol.memory) != 0)
-				goto fx_trk_vslide;
-			break;
+			if ((fxp = xc->trackvol.memory) == 0)
+				break;
 		}
 
 		if (HAS_QUIRK(QUIRK_FINEFX)) {
@@ -703,35 +700,27 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		m->mod.xxc[chn].rvb = fxp;
 #endif
 		break;
-	case FX_NSLIDE_R_DN:
-		SET(RETRIG);
-		if (MSN(fxp)) {
-			xc->retrig.count = MSN(fxp);
-		} else {
-			xc->retrig.count = xc->retrig.val;
-		}
-		xc->retrig.val = xc->retrig.count;
-		xc->retrig.type = 0;
-		/* fall through */
 	case FX_NSLIDE_DN:
-		SET(NOTE_SLIDE);
-		xc->noteslide.slide = -LSN(fxp);
-		xc->noteslide.count = xc->noteslide.speed = MSN(fxp);
-		break;
-	case FX_NSLIDE_R_UP:
-		SET(RETRIG);
-		if (MSN(fxp)) {
-			xc->retrig.count = MSN(fxp);
-		} else {
-			xc->retrig.count = xc->retrig.val;
-		}
-		xc->retrig.val = xc->retrig.count;
-		xc->retrig.type = 0;
-		/* fall through */
 	case FX_NSLIDE_UP:
+	case FX_NSLIDE_R_DN:
+	case FX_NSLIDE_R_UP:
+		if (fxp != 0) {
+			if (fxt == FX_NSLIDE_R_DN || fxt == FX_NSLIDE_R_UP) {
+				xc->retrig.val = MSN(fxp);
+				xc->retrig.count = MSN(fxp) + 1;
+				xc->retrig.type = 0;
+			}
+
+			if (fxt == FX_NSLIDE_UP || fxt == FX_NSLIDE_R_UP)
+				xc->noteslide.slide = LSN(fxp);
+			else
+				xc->noteslide.slide = -LSN(fxp);
+
+			xc->noteslide.count = xc->noteslide.speed = MSN(fxp);
+		}
+		if (fxt == FX_NSLIDE_R_DN || fxt == FX_NSLIDE_R_UP)
+			SET(RETRIG);
 		SET(NOTE_SLIDE);
-		xc->noteslide.slide = LSN(fxp);
-		xc->noteslide.count = xc->noteslide.speed = MSN(fxp);
 		break;
 	case FX_NSLIDE2_DN:
 		SET(NOTE_SLIDE);
