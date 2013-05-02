@@ -31,7 +31,23 @@ static int vals[] = {
 	303, 360, 428, 509, 605, 720, 856
 };
 
-TEST(test_effect_note_slide)
+static int vals2[] = {
+	1, 0, 0, 1, 0, 0, 1,
+	0, 0, 1, 0, 0, 1, 0,
+	0, 0, 0, 1, 0, 0, 1,
+	0, 0, 0, 1, 0, 0, 1,
+	0, 0, 1, 0, 1, 0, 1,
+	0, 1, 1, 1, 1, 1, 1,
+
+	0, 0, 0, 1, 0, 0, 1,
+	0, 0, 1, 0, 0, 1, 0,
+	0, 0, 0, 1, 0, 0, 1,
+	0, 0, 0, 1, 0, 0, 1,
+	0, 0, 1, 0, 1, 0, 1,
+	0, 1, 1, 1, 1, 1, 1
+};
+
+TEST(test_effect_note_slide_retrig)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -46,19 +62,19 @@ TEST(test_effect_note_slide)
 
  	create_simple_module(ctx, 2, 2);
 
-	new_event(ctx, 0, 0, 0, 49, 1, 0, FX_NSLIDE_UP, 0x31, FX_SPEED, 7);
-	new_event(ctx, 0, 1, 0, 0, 0, 0, FX_NSLIDE_UP, 0x00, 0, 0);
-	new_event(ctx, 0, 2, 0, 0, 0, 0, FX_NSLIDE_UP, 0x31, 0, 0);
-	new_event(ctx, 0, 3, 0, 0, 0, 0, FX_NSLIDE_UP, 0x32, 0, 0);
-	new_event(ctx, 0, 4, 0, 0, 0, 0, FX_NSLIDE_UP, 0x22, 0, 0);
-	new_event(ctx, 0, 5, 0, 0, 0, 0, FX_NSLIDE2_UP, 0x03, 0, 0);
+	new_event(ctx, 0, 0, 0, 49, 1, 0, FX_NSLIDE_R_UP, 0x31, FX_SPEED, 7);
+	new_event(ctx, 0, 1, 0, 0, 0, 0, FX_NSLIDE_R_UP, 0x00, 0, 0);
+	new_event(ctx, 0, 2, 0, 0, 0, 0, FX_NSLIDE_R_UP, 0x31, 0, 0);
+	new_event(ctx, 0, 3, 0, 0, 0, 0, FX_NSLIDE_R_UP, 0x32, 0, 0);
+	new_event(ctx, 0, 4, 0, 0, 0, 0, FX_NSLIDE_R_UP, 0x22, 0, 0);
+	new_event(ctx, 0, 5, 0, 0, 0, 0, FX_NSLIDE_R_UP, 0x13, 0, 0);
 
-	new_event(ctx, 0, 6, 0, 0, 0, 0, FX_NSLIDE_DN, 0x31, 0, 0);
-	new_event(ctx, 0, 7, 0, 0, 0, 0, FX_NSLIDE_DN, 0x00, 0, 0);
-	new_event(ctx, 0, 8, 0, 0, 0, 0, FX_NSLIDE_DN, 0x31, 0, 0);
-	new_event(ctx, 0, 9, 0, 0, 0, 0, FX_NSLIDE_DN, 0x32, 0, 0);
-	new_event(ctx, 0, 10, 0, 0, 0, 0, FX_NSLIDE_DN, 0x22, 0, 0);
-	new_event(ctx, 0, 11, 0, 0, 0, 0, FX_NSLIDE2_DN, 0x03, 0, 0);
+	new_event(ctx, 0, 6, 0, 0, 0, 0, FX_NSLIDE_R_DN, 0x31, 0, 0);
+	new_event(ctx, 0, 7, 0, 0, 0, 0, FX_NSLIDE_R_DN, 0x00, 0, 0);
+	new_event(ctx, 0, 8, 0, 0, 0, 0, FX_NSLIDE_R_DN, 0x31, 0, 0);
+	new_event(ctx, 0, 9, 0, 0, 0, 0, FX_NSLIDE_R_DN, 0x32, 0, 0);
+	new_event(ctx, 0, 10, 0, 0, 0, 0, FX_NSLIDE_R_DN, 0x22, 0, 0);
+	new_event(ctx, 0, 11, 0, 0, 0, 0, FX_NSLIDE_R_DN, 0x13, 0, 0);
 
 	xmp_start_player(opaque, 44100, 0);
 
@@ -72,7 +88,7 @@ TEST(test_effect_note_slide)
        		 	vi = &p->virt.voice_array[voc];
 		
 			fail_unless(PERIOD == vals[i * 7 + j], "note slide error");
-			if (j == 0 && i == 0)
+			if (vals2[i * 7 + j])
 				fail_unless(vi->pos0 == 0, "sample position");
 			else
 				fail_unless(vi->pos0 != 0, "sample position");

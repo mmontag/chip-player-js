@@ -24,7 +24,7 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  it_panslide it_vcol_g \
 		  pastnote_cut pastnote_off pastnote_fade \
 		  set_nna_cut set_nna_cont set_nna_off set_nna_fade \
-		  note_slide \
+		  note_slide note_slide_retrig \
 		  persistent_slide persistent_vslide persistent_vibrato
 
 API		= get_format_list create_context test_module load_module \
