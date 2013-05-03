@@ -94,7 +94,7 @@ static void update_invloop(struct module_data *m, struct channel_data *xc)
 }
 
 
-static inline void reset_channel(struct context_data *ctx)
+static void reset_channel(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;

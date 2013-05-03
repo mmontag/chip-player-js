@@ -22,7 +22,7 @@
 } while (0)
 
 
-static inline void do_toneporta(struct module_data *m,
+static void do_toneporta(struct module_data *m,
                                 struct channel_data *xc, int note)
 {
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
