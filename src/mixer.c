@@ -112,8 +112,10 @@ static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
 		} else if (smp < LIM8_LO) {
 			*dest = LIM8_LO;
 		} else {
-			*dest = smp + offs;
+			*dest = smp;
 		}
+
+		if (offs) *dest += offs;
 	}
 }
 
@@ -131,8 +133,10 @@ static void downmix_int_16bit(int16 *dest, int32 *src, int num, int amp, int off
 		} else if (smp < LIM16_LO) {
 			*dest = LIM16_LO;
 		} else {
-			*dest = smp + offs;
+			*dest = smp;
 		}
+
+		if (offs) *dest += offs;
 	}
 }
 
