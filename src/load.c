@@ -162,13 +162,6 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     } else if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
 	/* MO3 */
 	cmd = "unmo3 -s \"%s\" STDOUT";
-    } else if (headersize > 300 &&
-	       b[257] == 'u' && b[258] == 's' && b[259] == 't' &&
-	       b[260] == 'a' && b[261] == 'r' &&
-	       ((b[262] == 0) || (b[262] == ' ' && b[263] == ' ' &&
-				  b[264] == 0))) {
-	/* tar */
-	cmd = "tar -xOf \"%s\"";
     } else if (b[0] == 31 && b[1] == 157) {
 	/* compress */
 	builtin = BUILTIN_COMPRESS;
