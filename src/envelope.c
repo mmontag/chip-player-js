@@ -49,48 +49,49 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 }
 
 
-int update_envelope(struct xmp_envelope *ei, int x, int release)
+int update_envelope(struct xmp_envelope *env, int x, int release)
 {
-	int16 *env = ei->data;
+	int16 *data = env->data;
 	int has_loop, has_sus;
+	int lpe, lps, sus, sue;
 
 	if (x < 0xffff)	{	/* increment tick */
 		x++;
 	}
 
-	if (~ei->flg & XMP_ENVELOPE_ON) {
+	if (~env->flg & XMP_ENVELOPE_ON) {
 		return x;
 	}
 
-	if (ei->npt <= 0) {
+	if (env->npt <= 0) {
 		return x;
 	}
 
-	if (ei->lps >= ei->npt || ei->lpe >= ei->npt) {
-		has_loop = 0;
-	} else {
-		has_loop = ei->flg & XMP_ENVELOPE_LOOP;
-	}
+	has_loop = env->flg & XMP_ENVELOPE_LOOP;
+	has_sus = env->flg & XMP_ENVELOPE_SUS;
 
-	has_sus = ei->flg & XMP_ENVELOPE_SUS;
+	lps = env->lps << 1;
+	lpe = env->lpe << 1;
+	sus = env->sus << 1;
+	sue = env->sue << 1;
 
-	if (ei->flg & XMP_ENVELOPE_SLOOP) {
+	if (env->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
-			if (x > env[ei->sue << 1])
-				x = env[ei->sus << 1];
+			if (x > data[sue])
+				x = data[sus];
 		} else if (has_loop) {
-			if (x > env[ei->lpe << 1])
-				x = env[ei->lps << 1];
+			if (x > data[lpe])
+				x = data[lps];
 		}
 	} else {
-		if (!release && has_sus && x > env[ei->sus << 1]) {
+		if (!release && has_sus && x > data[sus]) {
 			/* stay in the sustain point */
-			x = env[ei->sus << 1];
+			x = data[sus];
 		}
 
-		if (has_loop && x > env[ei->lpe << 1]) {
-	    		if (!(release && has_sus && ei->sus == ei->lpe))
-				x = env[ei->lps << 1];
+		if (has_loop && x > data[lpe]) {
+	    		if (!(release && has_sus && sus == lpe))
+				x = data[lps];
 		}
 	}
 
@@ -99,17 +100,17 @@ int update_envelope(struct xmp_envelope *ei, int x, int release)
 
 
 /* Returns: 0 if do nothing, <0 to reset channel, >0 if has fade */
-int check_envelope_fade(struct xmp_envelope *ei, int x)
+int check_envelope_fade(struct xmp_envelope *env, int x)
 {
-	int16 *env = ei->data;
+	int16 *data = env->data;
 	int index;
 
-	if (~ei->flg & XMP_ENVELOPE_ON)
+	if (~env->flg & XMP_ENVELOPE_ON)
 		return 0;
 
-	index = (ei->npt - 1) * 2;		/* last node */
-	if (x > env[index]) {
-		if (env[index + 1] == 0)
+	index = (env->npt - 1) * 2;		/* last node */
+	if (x > data[index]) {
+		if (data[index + 1] == 0)
 			return -1;
 		else
 			return 1;

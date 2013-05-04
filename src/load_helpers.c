@@ -71,6 +71,11 @@ static void module_quirks(struct context_data *ctx)
 	}
 }
 
+static void check_envelope(struct xmp_envelope *env)
+{
+	if (env->lps >= env->npt || env->lpe >= env->npt)
+		env->flg &= ~XMP_ENVELOPE_LOOP;
+}
 
 /* 
  * Check whether the given string matches one of the blacklisted glob
@@ -181,6 +186,14 @@ void load_epilogue(struct context_data *ctx)
 				m->mod.xxi[i].sub[j].gvl = m->volbase;
 			}
 		}
+	}
+
+	/* Sanity check for envelopes
+	 */
+	for (i = 0; i < m->mod.ins; i++) {
+		check_envelope(&m->mod.xxi[i].aei);
+		check_envelope(&m->mod.xxi[i].fei);
+		check_envelope(&m->mod.xxi[i].pei);
 	}
 
 	p->flags = p->player_flags;
