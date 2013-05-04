@@ -48,12 +48,29 @@ static void translate_effects(struct xmp_event *event)
 		case 0x10:	/* arpeggio */
 			event->fxt = FX_ARPEGGIO;
 			break;
-		case 0x20:
+		case 0x15:	/* linear volume slide down */
+			event->fxt = FX_VOLSLIDE_DN;
+			break;
+		case 0x16:	/* linear volume slide up */
+			event->fxt = FX_VOLSLIDE_UP;
+			break;
+		case 0x20:	/* set volume */
 			event->fxt = FX_VOLSET;
 			break;
-		case 0x21:
+		case 0x21:	/* set volume to 0x100 */
 			event->fxt = FX_VOLSET;
 			event->fxp = 0xff;
+			break;
+		case 0xa4:	/* fine volume slide up */
+			event->fxt = FX_F_VSLIDE;
+			if (event->fxp > 0x0f)
+				event->fxp = 0x0f;
+			event->fxp <<= 4;
+			break;
+		case 0xa5:	/* fine volume slide down */
+			event->fxt = FX_F_VSLIDE;
+			if (event->fxp > 0x0f)
+				event->fxp = 0x0f;
 			break;
 		case 0xa8:	/* set number of frames */
 			event->fxt = FX_S3M_SPEED;
