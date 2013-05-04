@@ -66,46 +66,20 @@ static inline int is_big_endian() {
     mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat + 1); \
 } while (0)
 
-#define PATTERN_ALLOC(x) do { \
-    mod->xxp[x] = calloc(1, sizeof (struct xmp_pattern) + \
+#define PATTERN_ALLOC(x_) do { \
+    mod->xxp[x_] = calloc(1, sizeof (struct xmp_pattern) + \
 	sizeof (int) * (mod->chn - 1)); \
 } while (0)
 
-#define TRACK_ALLOC(i) do { \
-    int j; \
-    for (j = 0; j < mod->chn; j++) { \
-	mod->xxp[i]->index[j] = i * mod->chn + j; \
-	mod->xxt[i * mod->chn + j] = calloc (sizeof (struct xmp_track) + \
-	    sizeof (struct xmp_event) * (mod->xxp[i]->rows - 1), 1); \
-	mod->xxt[i * mod->chn + j]->rows = mod->xxp[i]->rows; \
+#define TRACK_ALLOC(x_) do { \
+    int i_; \
+    for (i_ = 0; i_ < mod->chn; i_++) { \
+	int t_ = (x_) * mod->chn + i_; \
+	mod->xxp[x_]->index[i_] = t_; \
+	mod->xxt[t_] = calloc (sizeof (struct xmp_track) + \
+	    sizeof (struct xmp_event) * (mod->xxp[x_]->rows - 1), 1); \
+	mod->xxt[t_]->rows = mod->xxp[x_]->rows; \
     } \
-} while (0)
-
-#define INSTRUMENT_DEALLOC_ALL(i) do { \
-    int k; \
-    for (k = (i) - 1; k >= 0; k--) free(mod->xxi[k]); \
-    free(mod->xxfe); \
-    free(mod->xxpe); \
-    free(mod->xxae); \
-    if (mod->smp) free(mod->xxs); \
-    free(mod->xxi); \
-    free(mod->xxim); \
-    free(mod->xxi); \
-} while (0)
-
-#define PATTERN_DEALLOC_ALL(x) do { \
-    int k; \
-    for (k = x; k >= 0; k--) free(mod->xxp[k]); \
-    free(mod->xxp); \
-} while (0)
-
-#define TRACK_DEALLOC_ALL(i) do { \
-    int j, k; \
-    for (k = i; k >= 0; k--) { \
-	for (j = 0; j < mod->chn; j++) \
-	    free(mod->xxt[k * mod->chn + j]); \
-    } \
-    free(mod->xxt); \
 } while (0)
 
 #endif

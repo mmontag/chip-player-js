@@ -560,8 +560,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	}
 
 	if (load_result < 0) {
-		free(m->basename);
-		free(m->dirname);
+		xmp_release_module(opaque);
 		return -XMP_ERROR_LOAD;
 	}
 

@@ -427,7 +427,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 
 	    if (sah.magic != MAGIC_SCRI) {
 		D_(D_CRIT "error: FM instrument magic");
-		return -2;
+		goto err;
 	    }
 	    sah.magic = 0;
 
@@ -463,7 +463,7 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 
 	if (x8 == 1 && sih.magic != MAGIC_SCRS) {
 	    D_(D_CRIT "error: instrument magic");
-	    return -2;
+	    goto err;
 	}
 
 	if (quirk87) {
@@ -513,5 +513,10 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
     m->read_event_type = READ_EVENT_ST3;
 
     return 0;
+
+  err:
+    free(pp_pat);
+    free(pp_ins);
+    return -1;
 }
 

@@ -386,8 +386,6 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		/* check block end */
 		if (read8(f) != 0xff) {
 			D_(D_CRIT "error: module is corrupted");
-			TRACK_DEALLOC_ALL(i);
-			PATTERN_DEALLOC_ALL(i);
 			return -1;
 		}
 
