@@ -228,15 +228,12 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
     if (!mod->chn) {
 	if (!strncmp(magic + 2, "CH", 2) &&
 	    isdigit((int)magic[0]) && isdigit((int)magic[1])) {
-	    if ((mod->chn = (*magic - '0') *
-		10 + magic[1] - '0') > 32)
-		return -1;
-	} else if (!strncmp(magic + 1, "CHN", 3) &&
-	    isdigit((int)*magic)) {
-	    if (!(mod->chn = (*magic - '0')))
-		return -1;
-	} else
+	    mod->chn = (*magic - '0') * 10 + magic[1] - '0';
+	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((int)*magic)) {
+	    mod->chn = *magic - '0';
+	} else {
 	    return -1;
+	}
 	tracker = "TakeTracker/FastTracker II";
 	detected = 1;
 	m->quirk &= ~QUIRK_MODRNG;
@@ -412,7 +409,6 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
 
 		if (mod->chn == 4) {
 	    	    tracker = "Protracker";
-printf("asd\n");
 		} else if (mod->chn == 6 || mod->chn == 8) {
 	    	    tracker = "FastTracker 1.01?";
 		    ptkloop = 0;
@@ -457,7 +453,6 @@ printf("asd\n");
     }
 
 skip_test:
-
 
     mod->trk = mod->chn * mod->pat;
 
