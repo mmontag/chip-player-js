@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.1.2 ():
+4.1.2 (20130504):
 	- fix Graoumf Tracker arpeggio, set linear volume and set number
 	  of frames effects (reported by Misty De Meo)
 	- fix MTM sample fine tuning
