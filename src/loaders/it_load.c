@@ -423,6 +423,10 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    if (memcmp(&ifh.rsvd, "OMPT", 4))
 		strncat(tracker_name, " (compat.)", 40);
 	    break;
+	case 0x06:
+	    snprintf(tracker_name, 40, "BeRoTracker %d.%02x",
+			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+	    break;
 	default:
 	    snprintf(tracker_name, 40, "unknown (%04x)", ifh.cwt);
 	}

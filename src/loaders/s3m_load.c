@@ -313,12 +313,19 @@ static int s3m_load(struct module_data *m, FILE *f, const int start)
 			(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	}
 	break;
-    case 4:
-	snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
-		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-	break;
     case 5:
 	snprintf(tracker_name, 40, "OpenMPT %d.%02x",
+		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+	break;
+    case 4:
+	if (sfh.version != 0x4100) {
+		snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
+			(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+		break;
+	}
+	/* fall through */
+    case 6:
+	snprintf(tracker_name, 40, "BeRoTracker %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	break;
     default:

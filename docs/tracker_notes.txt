@@ -454,8 +454,9 @@ S3M tracker codes:
   1 = Scream Tracker 3
   2 = Imago Orpheus
   3 = Impulse Tracker
-  4 = Schism Tracker
+  4 = Schism Tracker (0x4100 = BeRoTracker)
   5 = OpenMPT (starting in 1.17)
+  6 = BeRoTracker
 
 IT version codes:
   0214, format 0214, rsvd at 0x3c CHBI, -DEPRECATED- filenames = Chibi Tracker
