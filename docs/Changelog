@@ -6,6 +6,7 @@ Stable versions
 	  of frames effects (reported by Misty De Meo)
 	- fix MTM sample fine tuning
 	- fix unsigned conversion sample range when downmixing
+	- fix memory leaks when attempting to load corrupted modules
 	- refactor note slide effect code
 
 4.1.1 (20130428):
