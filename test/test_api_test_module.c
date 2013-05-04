@@ -21,7 +21,7 @@ TEST(test_api_test_module)
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "nonexistent file fail");
 	fail_unless(err == ENOENT, "errno test module fail");
 
-#if defined(__unix__) && !defined(__CYGWIN__)
+#if 0
 	/* no read permission */
 	creat(".read_test", 0111);
 	ret = xmp_test_module(".read_test", &tinfo);

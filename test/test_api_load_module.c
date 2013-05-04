@@ -21,7 +21,7 @@ TEST(test_api_load_module)
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "try to load directory");
 	fail_unless(errno == EISDIR, "errno code");
 
-#if defined(__unix__) && !defined(__CYGWIN__)
+#if 0
 	/* no read permission */
 	creat(".read_test", 0111);
 	ret = xmp_load_module(ctx, ".read_test");
