@@ -355,6 +355,11 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* And do the same if there's no keyoff (see
 			 * comic bakery remix.xm pos 1 ch 3)
 			 */
+
+			/* Reset envelopes on new instrument, see olympic.xm
+			 * pos 10
+			 */
+			reset_envelopes(mod, xc);
 		}
 
 		if (new_invalid_ins) {
@@ -466,9 +471,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (TEST(RESET_ENV)) {
 		RESET(RELEASE | FADEOUT);
-
-		/* Reset envelopes on new instrument, see olympic.xm pos 10 */
-		reset_envelopes(mod, xc);
 	}
 
 	if (TEST(RESET_VOL)) {
@@ -743,7 +745,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
-			if (HAS_QUIRK(QUIRK_PRFADE))
+			if (HAS_QUIRK(QUIRK_PRENV))
 				SET(NOTE_END);
 		} else if (is_toneporta) {
 
@@ -757,7 +759,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 				cont_sample = 1;
 				key = 0;
 			}
-		}
+
+			if (HAS_QUIRK(QUIRK_PRENV))
+				reset_envelopes(mod, xc);
+			}
 	}
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
@@ -843,9 +848,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	if (TEST(RESET_ENV)) {
 		RESET(RELEASE | FADEOUT);
-
-		if (HAS_QUIRK(QUIRK_PRFADE))
-			reset_envelopes(mod, xc);
 	}
 
 	if (TEST(RESET_VOL)) {

@@ -998,7 +998,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
     m->quirk |= QUIRKS_IT;
 
     if (ifh.flags & IT_LINK_GXX) {
-	m->quirk |= QUIRK_PRFADE;
+	m->quirk |= QUIRK_PRENV;
     } else {
 	m->quirk |= QUIRK_UNISLD;
     } 
