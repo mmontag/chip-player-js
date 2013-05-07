@@ -233,7 +233,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
 	int finalvol;
 	uint16 vol_envelope;
-	int gvol;
+	int gvol, end;
 
 	/* Keyoff and fadeout */
 
@@ -285,8 +285,10 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	vol_envelope = get_envelope(&instrument->aei, xc, xc->v_idx, 64);
+	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64, &end);
 	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
+	if (end)
+		SET(NOTE_END);
 
 	finalvol = xc->volume;
 
@@ -351,8 +353,9 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	int linear_bend;
 	int frq_envelope;
 	int arp, vibrato, cutoff, resonance;
+	int end;
 
-	frq_envelope = get_envelope(&instrument->fei, NULL, xc->f_idx, 0);
+	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0, &end);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
 
 	/* Do note slide */
@@ -440,8 +443,9 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
 	int finalpan, panbrello = 0;
 	int pan_envelope;
+	int end;
 
-	pan_envelope = get_envelope(&instrument->pei, NULL, xc->p_idx, 32);
+	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32, &end);
 	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
 
 	if (TEST(PANBRELLO))
