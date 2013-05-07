@@ -38,6 +38,20 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	return NULL;
 }
 
+static void reset_envelopes(struct xmp_module *mod, struct channel_data *xc)
+{
+	/* Reset envelope positions */
+	if (~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_CARRY) {
+		xc->v_idx = 0;
+	}
+	if (~mod->xxi[xc->ins].pei.flg & XMP_ENVELOPE_CARRY) {
+		xc->p_idx = 0;
+	}
+	if (~mod->xxi[xc->ins].fei.flg & XMP_ENVELOPE_CARRY) {
+		xc->f_idx = 0;
+	}
+}
+
 static void set_effect_defaults(struct context_data *ctx, int note,
 				struct xmp_subinstrument *sub,
 				struct channel_data *xc)
@@ -67,16 +81,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
 		xc->insvib.sweep = sub->vsw;
 
-		/* Reset envelope positions */
-		if (~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_CARRY) {
-			xc->v_idx = 0;
-		}
-		if (~mod->xxi[xc->ins].pei.flg & XMP_ENVELOPE_CARRY) {
-			xc->p_idx = 0;
-		}
-		if (~mod->xxi[xc->ins].fei.flg & XMP_ENVELOPE_CARRY) {
-			xc->f_idx = 0;
-		}
+		reset_envelopes(mod, xc);
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
@@ -377,18 +382,17 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* and only if we have instrument, otherwise we're in
 			 * case 1: new note and no instrument
 			 */
-			if (e->ins) {
-				/* Current instrument */
-				sub = get_subinstrument(ctx, xc->ins, key - 1);
-				if (sub != NULL) {
-					xc->volume = sub->vol;
-				} else {
-					xc->volume = 0;
-				}
-				xc->ins_oinsvol = xc->ins;
-				flags |= NEW_VOL;
-				flags &= ~RESET_VOL;
+
+			/* Current instrument */
+			sub = get_subinstrument(ctx, xc->ins, key - 1);
+			if (sub != NULL) {
+				xc->volume = sub->vol;
+			} else {
+				xc->volume = 0;
 			}
+			xc->ins_oinsvol = xc->ins;
+			flags |= NEW_VOL;
+			flags &= ~RESET_VOL;
 		}
 	}
 
@@ -462,6 +466,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (TEST(RESET_ENV)) {
 		RESET(RELEASE | FADEOUT);
+
+		/* Reset envelopes on new instrument, see olympic.xm pos 10 */
+		reset_envelopes(mod, xc);
 	}
 
 	if (TEST(RESET_VOL)) {
@@ -836,6 +843,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	if (TEST(RESET_ENV)) {
 		RESET(RELEASE | FADEOUT);
+
+		if (HAS_QUIRK(QUIRK_PRFADE))
+			reset_envelopes(mod, xc);
 	}
 
 	if (TEST(RESET_VOL)) {
