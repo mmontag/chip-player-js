@@ -285,7 +285,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
+	vol_envelope = get_envelope(&instrument->aei, xc, xc->v_idx, 64);
 	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
 
 	finalvol = xc->volume;
@@ -352,7 +352,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	int frq_envelope;
 	int arp, vibrato, cutoff, resonance;
 
-	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
+	frq_envelope = get_envelope(&instrument->fei, NULL, xc->f_idx, 0);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
 
 	/* Do note slide */
@@ -441,7 +441,7 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	int finalpan, panbrello = 0;
 	int pan_envelope;
 
-	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
+	pan_envelope = get_envelope(&instrument->pei, NULL, xc->p_idx, 32);
 	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
 
 	if (TEST(PANBRELLO))

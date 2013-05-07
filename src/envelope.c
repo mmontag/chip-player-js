@@ -8,10 +8,11 @@
 
 #include "common.h"
 #include "envelope.h"
+#include "player.h"
 
 /* Envelope */
 
-int get_envelope(struct xmp_envelope *env, int x, int def)
+int get_envelope(struct xmp_envelope *env, struct channel_data *xc, int x, int def)
 {
 	int x1, x2, y1, y2;
 	int16 *data = env->data;
@@ -27,6 +28,8 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 
 	x1 = data[index];		/* last node */
 	if (x >= x1 || index == 0) { 
+		if (xc != NULL)
+			SET(NOTE_END);
 		return data[index + 1];
 	}
 
