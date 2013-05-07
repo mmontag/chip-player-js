@@ -54,7 +54,7 @@ static void reset_envelopes(struct xmp_module *mod, struct channel_data *xc)
 
 static void set_effect_defaults(struct context_data *ctx, int note,
 				struct xmp_subinstrument *sub,
-				struct channel_data *xc)
+				struct channel_data *xc, int is_toneporta)
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
@@ -86,8 +86,10 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
 
-		xc->porta.target = xc->period = note_to_period(note,
+		xc->porta.target = note_to_period(note,
 				xc->finetune, HAS_QUIRK(QUIRK_LINEAR));
+		if (xc->period < 1 || !is_toneporta)
+			xc->period = xc->porta.target;
 	}
 
 	xc->delay = 0;
@@ -222,7 +224,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(ctx, note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
@@ -435,7 +437,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(ctx, note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
@@ -597,7 +599,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(ctx, note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
@@ -811,7 +813,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
-	set_effect_defaults(ctx, note, sub, xc);
+	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 	/* Process new volume */
