@@ -186,6 +186,10 @@ skip_vol:
 		if (loop)	/* avoid infinite loop */
 		    break;
 		temp = WT;
+		if (temp == 0xff) {	/* handle JMP END case */
+		    xc->med.wp--;	/* see lepeltheme ins 0x02 */
+		    break;
+		}
 		xc->med.wp = temp;
 		loop = jump = 1;
 		break;
