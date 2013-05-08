@@ -252,10 +252,10 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 			xc->fadeout -= instrument->rls;
 		} else {
 			xc->fadeout = 0;
+			SET(NOTE_END);
 		}
 
 		if (xc->fadeout == 0) {
-			/* SET(NOTE_END); -- Breaks Cosmic 'Wegian Mamas.xm */
 			/* Setting volume to 0 instead of resetting the channel
 			 * will use more CPU but allows portamento after keyoff
 			 * to continue the sample instead of resetting it.
@@ -275,7 +275,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
 	case -1:
 		SET(NOTE_END);
-		virt_resetchannel(ctx, chn);
+		/* Don't reset channel, we may have a tone portamento later
+		 * virt_resetchannel(ctx, chn);
+		 */
 		break;
 	case 0:
 		break;

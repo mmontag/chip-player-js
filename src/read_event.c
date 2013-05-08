@@ -337,31 +337,26 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (is_toneporta) {
-			if (!TEST(NOTE_END)) {
-				/* When a toneporta is issued after a keyoff
-				 * event, retrigger the instrument (xr-nc.xm,
-				 * bug #586377)
-			 	 *
-			 	 *   flags |= NEW_INS;
-				 *   xc->ins = ins;
-				 *
-				 * (From Decibelter - Cosmic 'Wegian Mamas.xm
-				 * p04 ch7) We don't retrigger the sample, it
-				 * simply continues. This is important to play
-				 * sweeps and loops correctly
-			 	 */
-				cont_sample = 1;
+			/* When a toneporta is issued after a keyoff event,
+			 * retrigger the instrument (xr-nc.xm, bug #586377)
+			 *
+			 *   flags |= NEW_INS;
+			 *   xc->ins = ins;
+			 *
+			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
+			 * We don't retrigger the sample, it simply continues.
+			 * This is important to play sweeps and loops correctly
+			 */
+			cont_sample = 1;
 
-				/* set key to 0 so we can have the tone
-				 * portamento from the original note (see
-				 * funky_stars.xm pos 5 ch 9)
-				 */
-				key = 0;
+			/* set key to 0 so we can have the tone portamento from
+			 * the original note (see funky_stars.xm pos 5 ch 9)
+			 */
+			key = 0;
 
-				/* And do the same if there's no keyoff (see
-				 * comic bakery remix.xm pos 1 ch 3)
-				 */
-			}
+			/* And do the same if there's no keyoff (see comic
+			 * bakery remix.xm pos 1 ch 3)
+			 */
 
 			/* Reset envelopes on new instrument, see olympic.xm
 			 * pos 10
