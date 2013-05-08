@@ -198,6 +198,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
+		RESET(NOTE_END);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
@@ -411,6 +412,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->key = --key;
 		xc->fadeout = 0x8000;		/* for Last Battle.xm */
 		RESET(RELEASE);
+		RESET(NOTE_END);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
@@ -573,6 +575,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
+		RESET(NOTE_END);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
@@ -772,8 +775,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 	}
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
-		RESET(NOTE_END);
 		xc->key = --key;
+		RESET(NOTE_END);
 
 		sub = get_subinstrument(ctx, candidate_ins, key);
 
