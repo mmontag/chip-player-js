@@ -106,7 +106,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		|| (x) == FX_PER_TPORTA)
 
 #define set_patch(ctx,chn,ins,smp,note,cont_sample) \
-	virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0, 1, cont_sample)
+	virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0, cont_sample)
 
 static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn)
 {
@@ -649,7 +649,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	return 0;
 }
 
-static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
+static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -789,7 +789,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			if (smp >= 0 && smp < mod->smp) {
 				int to = virt_setpatch(ctx, chn, candidate_ins,
 					smp, note, sub->nna, sub->dct,
-					sub->dca, ctl, cont_sample);
+					sub->dca, cont_sample);
 
 				if (to < 0) {
 					return -1;
@@ -864,7 +864,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 }
 
 
-int read_event(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
+int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct module_data *m = &ctx->m;
 
@@ -876,7 +876,7 @@ int read_event(struct context_data *ctx, struct xmp_event *e, int chn, int ctl)
 	case READ_EVENT_ST3:
 		return read_event_st3(ctx, e, chn);
 	case READ_EVENT_IT:
-		return read_event_it(ctx, e, chn, ctl);
+		return read_event_it(ctx, e, chn);
 	default:
 		return read_event_mod(ctx, e, chn);
 	}

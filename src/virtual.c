@@ -12,7 +12,6 @@
 #include "mixer.h"
 
 #define	FREE	-1
-#define MAX_VOICES_CHANNEL 16
 
 /* For virt_pastnote() */
 void player_set_release(struct context_data *, int);
@@ -65,9 +64,9 @@ int virt_on(struct context_data *ctx, int num)
 	num = mixer_numvoices(ctx, -1);
 
 	p->virt.virt_channels = p->virt.num_tracks;
-	p->virt.chnvoc = HAS_QUIRK(QUIRK_VIRTUAL) ? MAX_VOICES_CHANNEL : 1;
 
-	if (p->virt.chnvoc > 1) {
+	if (HAS_QUIRK(QUIRK_VIRTUAL)) {
+		p->virt.enabled = 1;
 		p->virt.virt_channels += num;
 	} else if (num > p->virt.virt_channels) {
 		num = p->virt.virt_channels;
@@ -112,6 +111,7 @@ void virt_off(struct context_data *ctx)
 	if (p->virt.virt_channels < 1)
 		return;
 
+	p->virt.enabled = 0;
 	p->virt.virt_used = p->virt.maxvoc = 0;
 	p->virt.virt_channels = 0;
 	p->virt.num_tracks = 0;
@@ -144,46 +144,51 @@ void virt_reset(struct context_data *ctx)
 	p->virt.virt_used = p->virt.age = 0;
 }
 
-static int alloc_voice(struct context_data *ctx, int chn)
+static int free_voice(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	int i, num;
 	uint32 age;
 
-	if (p->virt.virt_channel[chn].count < p->virt.chnvoc) {
-
-		/* Find free voice */
-		for (i = 0; i < p->virt.maxvoc; i++) {
-			if (p->virt.voice_array[i].chn == FREE)
-				break;
-		}
-
-		/* not found */
-		if (i == p->virt.maxvoc)
-			return -1;
-
-		p->virt.voice_array[i].age = p->virt.age;
-		p->virt.virt_channel[chn].count++;
-		p->virt.virt_used++;
-
-		return i;
-	}
-
 	/* Find oldest voice */
 	num = age = FREE;
 	for (i = 0; i < p->virt.maxvoc; i++) {
 		struct mixer_voice *vi = &p->virt.voice_array[i];
-		if (vi->root == chn && vi->age < age) {
+		if (vi->age < age) {
 			num = i;
 			age = p->virt.voice_array[num].age;
 		}
 	}
 
 	/* Free oldest voice */
-	p->virt.virt_channel[p->virt.voice_array[num].chn].map = FREE;
 	p->virt.voice_array[num].age = p->virt.age;
+	p->virt.virt_channel[p->virt.voice_array[num].chn].map = FREE;
+	p->virt.virt_channel[p->virt.voice_array[num].root].count--;
+	p->virt.virt_used--;
 
 	return num;
+}
+
+static int alloc_voice(struct context_data *ctx, int chn)
+{
+	struct player_data *p = &ctx->p;
+	int i;
+
+	/* Find free voice */
+	for (i = 0; i < p->virt.maxvoc; i++) {
+		if (p->virt.voice_array[i].chn == FREE)
+			break;
+	}
+
+	/* not found */
+	if (i == p->virt.maxvoc)
+		i = free_voice(ctx);
+
+	p->virt.voice_array[i].age = p->virt.age;
+	p->virt.virt_channel[chn].count++;
+	p->virt.virt_used++;
+
+	return i;
 }
 
 static int map_virt_channel(struct player_data *p, int chn)
@@ -290,8 +295,7 @@ void virt_setsmp(struct context_data *ctx, int chn, int smp)
 }
 
 int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
-		    int note, int nna, int dct, int dca, int flg,
-		    int cont_sample)
+		    int note, int nna, int dct, int dca, int cont_sample)
 {
 	struct player_data *p = &ctx->p;
 	int i, voc, vfree;
@@ -331,7 +335,7 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	voc = p->virt.virt_channel[chn].map;
 
 	if (voc > FREE) {
-		if (p->virt.voice_array[voc].act && p->virt.chnvoc > 1) {
+		if (p->virt.voice_array[voc].act && p->virt.enabled) {
 			vfree = alloc_voice(ctx, chn);
 			if (vfree > FREE) {
 				p->virt.voice_array[vfree].root = chn;
@@ -342,7 +346,7 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 				p->virt.voice_array[voc].chn = --chn;
 				p->virt.virt_channel[chn].map = voc;
 				voc = vfree;
-			} else if (flg) {
+			} else {
 				return -1;
 			}
 		}

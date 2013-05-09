@@ -156,18 +156,14 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 
 static inline void read_row(struct context_data *ctx, int pat, int row)
 {
-	int count, chn;
+	int chn;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct player_data *p = &ctx->p;
 	struct flow_control *f = &p->flow;
 	struct xmp_event *event;
-	int control[XMP_MAX_CHANNELS];
 
-	count = 0;
 	for (chn = 0; chn < mod->chn; chn++) {
-		control[chn] = 0;
-
 		if (row < mod->xxt[TRACK_NUM(pat, chn)]->rows) {
 			event = &EVENT(pat, chn, row);
 		} else {
@@ -176,24 +172,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 
 		if (check_delay(ctx, event, chn) == 0) {
 			if (!f->rowdelay_set || f->rowdelay > 0) {
-				if (read_event(ctx, event, chn, 1) != 0) {
-					control[chn]++;
-					count++;
-				}
-			}
-		}
-	}
-
-	for (chn = 0; count > 0; chn++) {
-		if (control[chn]) {
-			if (row < mod->xxt[TRACK_NUM(pat, chn)]->rows) {
-				event = &EVENT(pat, chn, row);
-			} else {
-				event = (struct xmp_event *)&empty_event;
-			}
-			if (check_delay(ctx, event, chn) == 0) {
-				read_event(ctx, event, chn, 0);
-				count--;
+				read_event(ctx, event, chn);
 			}
 		}
 	}
@@ -638,8 +617,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	/* Do delay */
 	if (xc->delay > 0) {
 		if (--xc->delay == 0) {
-			if (read_event(ctx, xc->delayed_event, chn, 1) != 0)
-				read_event(ctx, xc->delayed_event, chn, 0);
+			read_event(ctx, xc->delayed_event, chn);
 		}
 	}
 
@@ -712,9 +690,7 @@ static void inject_event(struct context_data *ctx)
 	for (chn = 0; chn < mod->chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
 		if (e->_flag > 0) {
-			if (read_event(ctx, e, chn, 1) != 0) {
-				read_event(ctx, e, chn, 0);
-			}
+			read_event(ctx, e, chn);
 			e->_flag = 0;
 		}
 	}
