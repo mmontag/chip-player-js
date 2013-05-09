@@ -1353,6 +1353,7 @@ unsigned char OPLRead(FM_OPL *OPL,int a)
 	{	/* status port */
 		return OPL->status & (OPL->statusmask|0x80);
 	}
+#if 0
 	/* data port */
 	switch(OPL->address)
 	{
@@ -1365,10 +1366,8 @@ unsigned char OPLRead(FM_OPL *OPL,int a)
 				LOG(LOG_WAR,("OPL:read unmapped KEYBOARD port\n"));
 		}
 		return 0;
-#if 0
 	case 0x0f: /* ADPCM-DATA  */
 		return 0;
-#endif
 	case 0x19: /* I/O DATA    */
 		if(OPL->type&OPL_TYPE_IO)
 		{
@@ -1381,6 +1380,7 @@ unsigned char OPLRead(FM_OPL *OPL,int a)
 	case 0x1a: /* PCM-DATA    */
 		return 0;
 	}
+#endif
 	return 0;
 }
 
