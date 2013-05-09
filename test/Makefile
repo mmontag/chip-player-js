@@ -86,6 +86,7 @@ PLAYER		= read_event scan period_amiga period_mod_range \
 		  nna_cut nna_cont nna_off nna_fade dct_note \
 		  it_keyoff it_note_after_cut \
 		  it_portamento_after_keyoff it_portamento_after_keyoff_cg \
+		  it_portamento_after_cut_fade it_portamento_after_cut_fade_cg \
 		  it_portamento_envelope_reset it_portamento_envelope_reset_cg \
 		  xm_portamento_envelope_reset \
 		  ft2_note_noins_after_keyoff \
