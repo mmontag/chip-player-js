@@ -268,8 +268,14 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64, &end);
 	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
-	if (end)
+	if (end && vol_envelope == 0)
 		SET(NOTE_END);
+
+	/* If note ended in background channel, we can safely reset it */
+	if (TEST(NOTE_END) && chn >= p->virt.num_tracks) {
+		virt_resetchannel(ctx, chn);
+		return;
+	}
 
 	finalvol = xc->volume;
 
