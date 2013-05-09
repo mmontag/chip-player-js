@@ -41,10 +41,11 @@ int test_name(uint8 *s, int n)
 {
 	int i;
 
+	/* ACS_Team2.mod has a backspace in instrument name */
 	for (i = 0; i < n; i++) {
 		if (s[i] > 0x7f)
 			return -1;
-		if (s[i] > 0 && s[i] < 32)
+		if (s[i] > 0 && s[i] < 32 && s[i] != 0x08)
 			return -1;
 	}
 
