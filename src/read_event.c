@@ -745,6 +745,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn,
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			SET(NOTE_END);
+			xc->period = 0;
 			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
