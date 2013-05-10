@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "virtual.h"
 #include "mixer.h"
 
@@ -93,7 +94,7 @@ int virt_on(struct context_data *ctx, int num)
 		p->virt.virt_channel[i].count = 0;
 	}
 
-	p->virt.virt_used = p->virt.age = 0;
+	p->virt.virt_used = 0;
 
 	return 0;
 
@@ -139,27 +140,27 @@ void virt_reset(struct context_data *ctx)
 		p->virt.virt_channel[i].count = 0;
 	}
 
-	p->virt.virt_used = p->virt.age = 0;
+	p->virt.virt_used = 0;
 }
 
 static int free_voice(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
-	int i, num;
-	uint32 age;
+	int i, num, vol;
 
-	/* Find oldest voice */
-	num = age = FREE;
+	/* Find background voice with lowest volume*/
+	num = FREE;
+	vol = INT_MAX;
 	for (i = 0; i < p->virt.maxvoc; i++) {
 		struct mixer_voice *vi = &p->virt.voice_array[i];
-		if (vi->age < age) {
+
+		if (vi->chn >= p->virt.num_tracks && vi->vol < vol) {
 			num = i;
-			age = p->virt.voice_array[num].age;
+			vol = vi->vol;
 		}
 	}
 
-	/* Free oldest voice */
-	p->virt.voice_array[num].age = p->virt.age;
+	/* Free voice */
 	p->virt.virt_channel[p->virt.voice_array[num].chn].map = FREE;
 	p->virt.virt_channel[p->virt.voice_array[num].root].count--;
 	p->virt.virt_used--;
@@ -182,7 +183,6 @@ static int alloc_voice(struct context_data *ctx, int chn)
 	if (i == p->virt.maxvoc)
 		i = free_voice(ctx);
 
-	p->virt.voice_array[i].age = p->virt.age;
 	p->virt.virt_channel[chn].count++;
 	p->virt.virt_used++;
 
@@ -362,7 +362,6 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	mixer_setnote(ctx, voc, note);
 	p->virt.voice_array[voc].ins = ins;
 	p->virt.voice_array[voc].act = nna;
-	p->virt.age++;
 
 	return chn;
 }

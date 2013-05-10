@@ -279,7 +279,6 @@ struct player_data {
 		int virt_channels;	/* Number of virtual channels */
 		int virt_used;		/* Number of voices currently in use */
 		int maxvoc;		/* Number of sound card voices */
-		int age;		/* Voice age control (?) */
 	
 		struct virt_channel {
 			int count;
