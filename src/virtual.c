@@ -296,6 +296,30 @@ void virt_setsmp(struct context_data *ctx, int chn, int smp)
 	mixer_voicepos(ctx, voc, pos, frac);	/* Restore old position */
 }
 
+static inline void check_dct(struct context_data *ctx, int i, int chn, int ins,
+			int smp, int note, int dct, int dca)
+{
+	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi = &p->virt.voice_array[i];
+	int voc;
+
+	voc = p->virt.virt_channel[chn].map;
+
+	if (vi->root == chn && vi->ins == ins) {
+		if (dct == XMP_INST_DCT_INST ||
+			(dct == XMP_INST_DCT_SMP && vi->smp == smp) ||
+			(dct == XMP_INST_DCT_NOTE && vi->note == note)) {
+
+			if (dca) {
+				if (i != voc || vi->act)
+					vi->act = dca;
+			} else {
+				virt_resetvoice(ctx, i, 1);
+			}
+		}
+	}
+}
+
 int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		    int note, int nna, int dct, int dca, int cont_sample)
 {
@@ -308,29 +332,9 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	if (ins < 0)
 		smp = -1;
 
-	voc = p->virt.virt_channel[chn].map;
-
 	if (dct) {
-		for (i = 0; i < p->virt.maxvoc; i++) {
-			struct mixer_voice *vi = &p->virt.voice_array[i];
-			if (vi->root == chn && vi->ins == ins) {
-				int cond1 = (dct == XMP_INST_DCT_INST);
-				int cond2 = (dct == XMP_INST_DCT_SMP
-					     && vi->smp == smp);
-				int cond3 = (dct == XMP_INST_DCT_NOTE
-					     && vi->note == note);
-
-				if (cond1 || cond2 || cond3) {
-					if (dca) {
-						if (i != voc || vi->act) {
-							vi->act = dca;
-						}
-					} else {
-						virt_resetvoice(ctx, i, 1);
-					}
-				}
-			}
-		}
+		for (i = 0; i < p->virt.maxvoc; i++)
+			check_dct(ctx, i, chn, ins, smp, note, dct, dca);
 	}
 
 	voc = p->virt.virt_channel[chn].map;
