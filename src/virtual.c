@@ -66,7 +66,6 @@ int virt_on(struct context_data *ctx, int num)
 	p->virt.virt_channels = p->virt.num_tracks;
 
 	if (HAS_QUIRK(QUIRK_VIRTUAL)) {
-		p->virt.enabled = 1;
 		p->virt.virt_channels += num;
 	} else if (num > p->virt.virt_channels) {
 		num = p->virt.virt_channels;
@@ -111,7 +110,6 @@ void virt_off(struct context_data *ctx)
 	if (p->virt.virt_channels < 1)
 		return;
 
-	p->virt.enabled = 0;
 	p->virt.virt_used = p->virt.maxvoc = 0;
 	p->virt.virt_channels = 0;
 	p->virt.num_tracks = 0;
@@ -187,6 +185,10 @@ static int alloc_voice(struct context_data *ctx, int chn)
 	p->virt.voice_array[i].age = p->virt.age;
 	p->virt.virt_channel[chn].count++;
 	p->virt.virt_used++;
+
+	p->virt.voice_array[i].chn = chn;
+	p->virt.voice_array[i].root = chn;
+	p->virt.virt_channel[chn].map = i;
 
 	return i;
 }
@@ -303,9 +305,8 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	if ((uint32)chn >= p->virt.virt_channels)
 		return -1;
 
-	if (ins < 0) {
+	if (ins < 0)
 		smp = -1;
-	}
 
 	voc = p->virt.virt_channel[chn].map;
 
@@ -335,28 +336,18 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	voc = p->virt.virt_channel[chn].map;
 
 	if (voc > FREE) {
-		if (p->virt.voice_array[voc].act && p->virt.enabled) {
+		if (p->virt.voice_array[voc].act) {
 			vfree = alloc_voice(ctx, chn);
-			if (vfree > FREE) {
-				p->virt.voice_array[vfree].root = chn;
-				p->virt.virt_channel[chn].map = vfree;
-				p->virt.voice_array[vfree].chn = chn;
-				for (chn = p->virt.num_tracks;
-				     p->virt.virt_channel[chn++].map > FREE;) ;
-				p->virt.voice_array[voc].chn = --chn;
-				p->virt.virt_channel[chn].map = voc;
-				voc = vfree;
-			} else {
-				return -1;
-			}
+
+			for (chn = p->virt.num_tracks;
+			     p->virt.virt_channel[chn++].map > FREE;) ;
+
+			p->virt.voice_array[voc].chn = --chn;
+			p->virt.virt_channel[chn].map = voc;
+			voc = vfree;
 		}
 	} else {
 		voc = alloc_voice(ctx, chn);
-		if (voc < 0)
-			return -1;
-		p->virt.virt_channel[chn].map = voc;
-		p->virt.voice_array[voc].chn = chn;
-		p->virt.voice_array[voc].root = chn;
 	}
 
 	if (smp < 0) {

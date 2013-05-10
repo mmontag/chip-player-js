@@ -791,13 +791,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					smp, note, sub->nna, sub->dct,
 					sub->dca, cont_sample);
 
-				if (to < 0) {
+				if (to < 0)
 					return -1;
-				}
 
-				copy_channel(p, to, chn);
-				if (to > 0 && to != chn)
+				if (to != chn) {
+					copy_channel(p, to, chn);
 					p->xc_data[to].flags &= 0xff000000;
+				}
 
 				xc->smp = smp;
 			}
