@@ -163,12 +163,15 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	if (key) {
 		flags |= NEW_NOTE;
 
+#if 0
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			virt_resetchannel(ctx, chn);
-		} else if (key == XMP_KEY_OFF) {
+		} else
+#endif
+		if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
@@ -546,12 +549,15 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	if (key) {
 		flags |= NEW_NOTE;
 
+#if 0
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (key == XMP_KEY_CUT) {
 			virt_resetchannel(ctx, chn);
-		} else if (key == XMP_KEY_OFF) {
+		} else
+#endif
+		if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (is_toneporta) {
