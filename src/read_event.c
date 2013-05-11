@@ -57,7 +57,6 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 				struct channel_data *xc, int is_toneporta)
 {
 	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
 
 	if (sub != NULL && note >= 0) {
 		xc->pan.val = sub->pan;
@@ -80,8 +79,6 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
 		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
 		xc->insvib.sweep = sub->vsw;
-
-		reset_envelopes(mod, xc);
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
@@ -202,6 +199,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
+	if (e->ins && sub != NULL)
+		reset_envelopes(mod, xc);
 
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
@@ -300,12 +299,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	if (key) {
 		flags |= NEW_NOTE;
 
-		if (key == XMP_KEY_FADE) {
-			SET(FADEOUT);
-			flags &= ~(RESET_VOL | RESET_ENV);
-		} else if (key == XMP_KEY_CUT) {
-			virt_resetchannel(ctx, chn);
-		} else if (key == XMP_KEY_OFF) {
+		if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (is_toneporta) {
@@ -332,8 +326,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 			/* Reset envelopes on new instrument, see olympic.xm
 			 * pos 10
+			 *
+			 * But only if we have instrument, see Letting go
+			 * pos 4 chn 20
 			 */
-			reset_envelopes(mod, xc);
 		}
 
 		if (new_invalid_ins) {
@@ -407,6 +403,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
+	if (e->ins && sub != NULL)
+		reset_envelopes(mod, xc);
 
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
@@ -561,6 +559,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
+	if (e->ins && sub != NULL)
+		reset_envelopes(mod, xc);
 
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
@@ -724,9 +724,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				key = 0;
 			}
 
-			if (HAS_QUIRK(QUIRK_PRENV))
+			if (HAS_QUIRK(QUIRK_PRENV) && e->ins)
 				reset_envelopes(mod, xc);
-			}
+		}
 	}
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
@@ -772,6 +772,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
+	if (note >= 0 && sub != NULL)
+		reset_envelopes(mod, xc);
 	
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 	/* Process new volume */
