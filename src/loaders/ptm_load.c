@@ -317,5 +317,8 @@ static int ptm_load(struct module_data *m, FILE *f, const int start)
     for (i = 0; i < mod->chn; i++)
 	mod->xxc[i].pan = pfh.chset[i] << 4;
 
+    m->quirk |= QUIRKS_ST3;
+    m->read_event_type = READ_EVENT_ST3;
+
     return 0;
 }
