@@ -988,6 +988,7 @@ int inflate(FILE *in, FILE *out, uint32 *checksum, int is_zip)
   struct inflate_data data;
   int res;
 
+  memset(&huffman, 0, sizeof(struct huffman_t));
   huffman.checksum=0xffffffff;
 
   data.huffman_tree_len_static=0;
