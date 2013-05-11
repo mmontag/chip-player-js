@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.1.3 ():
+4.1.3 (20130511):
 	- fix envelope reset on new instrument (reported by ArtRemix)
 	- fix JMP END sequences in MED synth wave table
 	- fix IT portamento after note cut
