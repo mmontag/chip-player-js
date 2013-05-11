@@ -5,7 +5,9 @@ Stable versions
 	- fix envelope reset on new instrument (reported by ArtRemix)
 	- fix JMP END sequences in MED synth wave table
 	- fix IT portamento after note cut
+	- fix IT and XM envelope resets
 	- refactor virtual channel code
+	- code cleanup
 
 4.1.2 (20130504):
 	- fix Graoumf Tracker arpeggio, set linear volume and set number
