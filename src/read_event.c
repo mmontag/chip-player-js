@@ -115,11 +115,13 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins = 0;
 	int is_toneporta;
+	int use_ins_vol;
 
 	flags = 0;
 	note = -1;
 	key = e->note;
 	is_toneporta = 0;
+	use_ins_vol = 0;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 		is_toneporta = 1;
@@ -129,7 +131,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flags = NEW_INS | RESET_VOL;
+		flags = NEW_INS;
+		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
@@ -140,7 +143,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				sub = get_subinstrument(ctx, ins, key);
 				if (sub != NULL) {
 					xc->volume = sub->vol;
-					flags &= ~RESET_VOL;
+					use_ins_vol = 0;
 				}
 			} else {
 				xc->ins = ins;
@@ -160,7 +163,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flags &= ~RESET_VOL;
+			use_ins_vol = 0;
 		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 			key = 0;
 		}
@@ -189,6 +192,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		} else {
 			flags = 0;
+			use_ins_vol = 0;
 		}
 	}
 
@@ -203,13 +207,15 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
-		RESET(RESET_VOL);
 		SET(NEW_VOL);
 	}
 
 	/* Secondary effect handled first */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+
+	if (TEST(NEW_VOL))
+		use_ins_vol = 0;
 
 	if (sub == NULL) {
 		return 0;
@@ -224,7 +230,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		RESET(OFFSET);
 	}
 
-	if (TEST(RESET_VOL)) {
+	if (use_ins_vol) {
 		xc->volume = sub->vol;
 		SET(NEW_VOL);
 	}
@@ -242,12 +248,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins;
 	int is_toneporta;
+	int use_ins_vol;
 
 	flags = 0;
 	note = -1;
 	key = e->note;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
+	use_ins_vol = 0;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 		is_toneporta = 1;
@@ -257,7 +265,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flags = NEW_INS | RESET_VOL;
+		flags = NEW_INS;
+		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 
@@ -288,7 +297,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flags &= ~RESET_VOL;
+			use_ins_vol = 0;
 		} else if (is_toneporta) {
 			/* set key to 0 so we can have the tone portamento from
 			 * the original note (see funky_stars.xm pos 5 ch 9)
@@ -324,7 +333,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			if (sub != NULL) {
 				xc->volume = sub->vol;
 				flags |= NEW_VOL;
-				flags &= ~RESET_VOL;
 			}
 		} else {
 			/* Retrieve volume when we have note */
@@ -342,7 +350,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 			xc->ins_oinsvol = xc->ins;
 			flags |= NEW_VOL;
-			flags &= ~RESET_VOL;
 		}
 	}
 
@@ -371,6 +378,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		} else {
 			flags = 0;
+			use_ins_vol = 0;
 		}
 	}
 
@@ -385,7 +393,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
-		RESET(RESET_VOL);
 		SET(NEW_VOL);
 	}
 
@@ -395,6 +402,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Secondary effect handled first */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+
+	if (TEST(NEW_VOL))
+		use_ins_vol = 0;
 
 	if (sub == NULL) {
 		return 0;
@@ -414,7 +424,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		RESET(OFFSET);
 	}
 
-	if (TEST(RESET_VOL)) {
+	if (use_ins_vol) {
 		xc->volume = sub->vol;
 		SET(NEW_VOL);
 	}
@@ -432,12 +442,14 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int is_toneporta;
+	int use_ins_vol;
 
 	flags = 0;
 	note = -1;
 	key = e->note;
 	not_same_ins = 0;
 	is_toneporta = 0;
+	use_ins_vol = 0;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 		is_toneporta = 1;
@@ -447,7 +459,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flags = NEW_INS | RESET_VOL;
+		flags = NEW_INS;
+		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
@@ -463,7 +476,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 					sub = get_subinstrument(ctx, ins, key);
 					if (sub != NULL) {
 						xc->volume = sub->vol;
-						flags &= ~RESET_VOL;
+						use_ins_vol = 0;
 					}
 				}
 			}
@@ -472,6 +485,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 			/* Ignore invalid instruments */
 			flags = 0;
+			use_ins_vol = 0;
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
@@ -484,7 +498,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flags &= ~RESET_VOL;
+			use_ins_vol = 0;
 		} else if (is_toneporta) {
 
 			/* Always retrig in tone portamento: Fix portamento in
@@ -520,6 +534,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		} else {
 			flags = 0;
+			use_ins_vol = 0;
 		}
 	}
 
@@ -534,13 +549,15 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
-		RESET(RESET_VOL);
 		SET(NEW_VOL);
 	}
 
 	/* Secondary effect handled first */
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+
+	if (TEST(NEW_VOL))
+		use_ins_vol = 0;
 
 	if (sub == NULL) {
 		return 0;
@@ -554,7 +571,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		RESET(OFFSET);
 	}
 
-	if (TEST(RESET_VOL)) {
+	if (use_ins_vol) {
 		xc->volume = sub->vol;
 		SET(NEW_VOL);
 	}
@@ -580,6 +597,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	int is_toneporta, is_release;
 	int candidate_ins;
 	int reset_env;
+	int use_ins_vol;
 	unsigned char e_ins;
 
 	e_ins = e->ins;
@@ -600,6 +618,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	is_toneporta = 0;
 	is_release = 0;
 	reset_env = 0;
+	use_ins_vol = 0;
 	candidate_ins = xc->ins;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
@@ -616,7 +635,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		int ins = e_ins - 1;
 
 		if (!is_release || (!is_toneporta || xc->ins != ins)) {
-			flags = NEW_INS | RESET_VOL;
+			flags = NEW_INS;
+			use_ins_vol = 1;
 			reset_env = 1;
 			xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		}
@@ -628,7 +648,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			if (!key) {
 				/* IT: Reset note for every new != ins */
 				if (xc->ins == ins) {
-					flags = NEW_INS | RESET_VOL;
+					flags = NEW_INS;
+					use_ins_vol = 1;
 				} else {
 					key = xc->key + 1;
 				}
@@ -641,7 +662,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					sub = get_subinstrument(ctx, ins, key);
 					if (sub != NULL) {
 						xc->volume = sub->vol;
-						flags &= ~RESET_VOL;
+						use_ins_vol = 0;
 					}
 				}
 			}
@@ -649,6 +670,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			/* Ignore invalid instruments */
 			new_invalid_ins = 1;
 			flags = 0;
+			use_ins_vol = 0;
 		}
 
 		xc->med.arp = xc->med.aidx = 0;
@@ -661,16 +683,16 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
-			flags &= ~RESET_VOL;
 			reset_env = 0;
+			use_ins_vol = 0;
 		} else if (key == XMP_KEY_CUT) {
 			SET(NOTE_END);
 			xc->period = 0;
 			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flags &= ~RESET_VOL;
 			reset_env = 0;
+			use_ins_vol = 0;
 			if (HAS_QUIRK(QUIRK_PRENV))
 				SET(NOTE_END);
 		} else if (is_toneporta) {
@@ -723,6 +745,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 		} else {
 			flags = 0;
+			use_ins_vol = 0;
 		}
 	}
 
@@ -740,7 +763,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
-		RESET(RESET_VOL);
 		SET(NEW_VOL);
 	}
 
@@ -752,6 +774,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	 */
 	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
 	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
+
+	if (TEST(NEW_VOL))
+		use_ins_vol = 0;
 
 	if (sub == NULL) {
 		return 0;
@@ -769,7 +794,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		RESET(RELEASE | FADEOUT);
 	}
 
-	if (TEST(RESET_VOL)) {
+	if (use_ins_vol) {
 		xc->volume = sub->vol;
 		SET(NEW_VOL);
 	}

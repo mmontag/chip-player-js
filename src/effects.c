@@ -355,7 +355,6 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		p->flow.jump = fxp;
 		break;
 	case FX_VOLSET:		/* Volume set */
-		RESET(RESET_VOL);
 		SET(NEW_VOL);
 		xc->volume = fxp;
 		break;
