@@ -447,7 +447,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flags = NEW_INS | RESET_VOL | RESET_ENV;
+		flags = NEW_INS | RESET_VOL;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
@@ -484,7 +484,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flags &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~RESET_VOL;
 		} else if (is_toneporta) {
 
 			/* Always retrig in tone portamento: Fix portamento in
@@ -552,10 +552,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		if (TEST(OFFSET))
 			xc->offset_val <<= 1;
 		RESET(OFFSET);
-	}
-
-	if (TEST(RESET_ENV)) {
-		RESET(RELEASE | FADEOUT);
 	}
 
 	if (TEST(RESET_VOL)) {
