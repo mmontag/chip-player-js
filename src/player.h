@@ -38,7 +38,7 @@ struct retrig_control {
 #define TRK_VSLIDE	0x00000200
 #define TRK_FVSLIDE	0x00000400
 #define RESET_VOL	0x00000800
-#define RESET_ENV	0x00001000
+/* #define RESET_ENV	0x00001000 */
 #define NEW_INS		0x00002000
 #define NEW_VOL		0x00004000
 #define VOL_SLIDE_2	0x00008000

@@ -579,6 +579,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	int new_invalid_ins;
 	int is_toneporta, is_release;
 	int candidate_ins;
+	int reset_env;
 	unsigned char e_ins;
 
 	e_ins = e->ins;
@@ -598,6 +599,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	new_invalid_ins = 0;
 	is_toneporta = 0;
 	is_release = 0;
+	reset_env = 0;
 	candidate_ins = xc->ins;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
@@ -614,7 +616,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		int ins = e_ins - 1;
 
 		if (!is_release || (!is_toneporta || xc->ins != ins)) {
-			flags = NEW_INS | RESET_VOL | RESET_ENV;
+			flags = NEW_INS | RESET_VOL;
+			reset_env = 1;
 			xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		}
 		xc->per_flags = 0;
@@ -658,14 +661,16 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 		if (key == XMP_KEY_FADE) {
 			SET(FADEOUT);
-			flags &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~RESET_VOL;
+			reset_env = 0;
 		} else if (key == XMP_KEY_CUT) {
 			SET(NOTE_END);
 			xc->period = 0;
 			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			SET(RELEASE);
-			flags &= ~(RESET_VOL | RESET_ENV);
+			flags &= ~RESET_VOL;
+			reset_env = 0;
 			if (HAS_QUIRK(QUIRK_PRENV))
 				SET(NOTE_END);
 		} else if (is_toneporta) {
@@ -760,7 +765,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		RESET(OFFSET);
 	}
 
-	if (TEST(RESET_ENV)) {
+	if (reset_env) {
 		RESET(RELEASE | FADEOUT);
 	}
 
