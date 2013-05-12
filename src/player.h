@@ -8,16 +8,19 @@
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
 /* Channel flag control */
-#define SET(f)		SET_FLAG(xc->flags,f)
-#define RESET(f) 	RESET_FLAG(xc->flags,f)
-#define TEST(f)		TEST_FLAG(xc->flags,f)
+#define SET(f)		SET_FLAG(xc->flags,(f))
+#define RESET(f) 	RESET_FLAG(xc->flags,(f))
+#define TEST(f)		TEST_FLAG(xc->flags,(f))
 
 /* Persistent effect flag control */
-#define SET_PER(f)	SET_FLAG(xc->per_flags,f)
-#define RESET_PER(f)	RESET_FLAG(xc->per_flags,f)
-#define TEST_PER(f)	TEST_FLAG(xc->per_flags,f)
+#define SET_PER(f)	SET_FLAG(xc->per_flags,(f))
+#define RESET_PER(f)	RESET_FLAG(xc->per_flags,(f))
+#define TEST_PER(f)	TEST_FLAG(xc->per_flags,(f))
 
-#define DOENV_RELEASE	((TEST (RELEASE) || act == VIRT_ACTION_OFF))
+/* Note flag control */
+#define SET_NOTE(f)	SET_FLAG(xc->note_flags,(f))
+#define RESET_NOTE(f)	RESET_FLAG(xc->note_flags,(f))
+#define TEST_NOTE(f)	TEST_FLAG(xc->note_flags,(f))
 
 struct retrig_control {
 	int s;
@@ -26,34 +29,31 @@ struct retrig_control {
 };
 
 /* The following macros are used to set the flags for each channel */
-#define VOL_SLIDE	0x00000001
-#define PAN_SLIDE	0x00000002
-#define TONEPORTA	0x00000004
-#define PITCHBEND	0x00000008
-#define VIBRATO		0x00000010
-#define TREMOLO		0x00000020
-#define FINE_VOLS	0x00000040
-#define FINE_BEND	0x00000080
-#define OFFSET		0x00000100
-#define TRK_VSLIDE	0x00000200
-#define TRK_FVSLIDE	0x00000400
-/* #define RESET_VOL	0x00000800 */
-/* #define RESET_ENV	0x00001000 */
-#define NEW_INS		0x00002000
-#define NEW_VOL		0x00004000
-#define VOL_SLIDE_2	0x00008000
-#define NOTE_SLIDE	0x00010000
-#define FINE_NSLIDE	0x00020000
-#define NEW_NOTE	0x00040000
-#define FINE_TPORTA	0x00080000
-#define RETRIG		0x00100000
-#define PANBRELLO	0x00200000
-#define GVOL_SLIDE	0x00400000
+#define VOL_SLIDE	(1 << 0)
+#define PAN_SLIDE	(1 << 1)
+#define TONEPORTA	(1 << 2)
+#define PITCHBEND	(1 << 3)
+#define VIBRATO		(1 << 4)
+#define TREMOLO		(1 << 5)
+#define FINE_VOLS	(1 << 6)
+#define FINE_BEND	(1 << 7)
+#define OFFSET		(1 << 8)
+#define TRK_VSLIDE	(1 << 9)
+#define TRK_FVSLIDE	(1 << 10)
+#define NEW_INS		(1 << 11)
+#define NEW_VOL		(1 << 12)
+#define VOL_SLIDE_2	(1 << 13)
+#define NOTE_SLIDE	(1 << 14)
+#define FINE_NSLIDE	(1 << 15)
+#define NEW_NOTE	(1 << 16)
+#define FINE_TPORTA	(1 << 17)
+#define RETRIG		(1 << 18)
+#define PANBRELLO	(1 << 19)
+#define GVOL_SLIDE	(1 << 20)
 
-/* These need to be "persistent" between frames */
-#define FADEOUT		0x02000000
-#define RELEASE		0x04000000
-#define NOTE_END	0x08000000
+#define NOTE_FADEOUT	(1 << 0)
+#define NOTE_RELEASE	(1 << 1)
+#define NOTE_END	(1 << 2)
 
 #define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0)
 
@@ -65,6 +65,7 @@ struct instrument_vibrato {
 struct channel_data {
 	int flags;		/* Channel flags */
 	int per_flags;		/* Persistent effect channel flags */
+	int note_flags;		/* Note release, fadeout or end */
 	int note;		/* Note number */
 	int key;		/* Key number */
 	double period;		/* Amiga or linear period */

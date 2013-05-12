@@ -136,7 +136,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
-		RESET(RELEASE);
+		RESET_NOTE(NOTE_RELEASE);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			if (is_toneporta) {
@@ -163,7 +163,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_OFF) {
-			SET(RELEASE);
+			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
 		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 			key = 0;
@@ -172,7 +172,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
-		RESET(NOTE_END);
+		RESET_NOTE(NOTE_END);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
@@ -270,7 +270,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
-		RESET(RELEASE);
+		RESET_NOTE(NOTE_RELEASE);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			if (!is_toneporta)
@@ -298,7 +298,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_OFF) {
-			SET(RELEASE);
+			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
 		} else if (is_toneporta) {
 			/* set key to 0 so we can have the tone portamento from
@@ -351,8 +351,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
 		xc->fadeout = 0x8000;		/* for Last Battle.xm */
-		RESET(RELEASE);
-		RESET(NOTE_END);
+		RESET_NOTE(NOTE_RELEASE | NOTE_END);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
@@ -464,7 +463,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
-		RESET(RELEASE);
+		RESET_NOTE(NOTE_RELEASE);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
@@ -498,7 +497,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_OFF) {
-			SET(RELEASE);
+			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
 		} else if (is_toneporta) {
 
@@ -514,7 +513,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
-		RESET(NOTE_END);
+		RESET_NOTE(NOTE_END);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
@@ -626,7 +625,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		is_toneporta = 1;
 	}
 
-	if (TEST(RELEASE|FADEOUT)) {
+	if (TEST_NOTE(NOTE_RELEASE | NOTE_FADEOUT)) {
 		is_release = 1;
 	}
 
@@ -683,27 +682,27 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		flags |= NEW_NOTE;
 
 		if (key == XMP_KEY_FADE) {
-			SET(FADEOUT);
+			SET_NOTE(NOTE_FADEOUT);
 			reset_env = 0;
 			use_ins_vol = 0;
 		} else if (key == XMP_KEY_CUT) {
-			SET(NOTE_END);
+			SET_NOTE(NOTE_END);
 			xc->period = 0;
 			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
-			SET(RELEASE);
+			SET_NOTE(NOTE_RELEASE);
 			reset_env = 0;
 			use_ins_vol = 0;
 			if (HAS_QUIRK(QUIRK_PRENV))
-				SET(NOTE_END);
+				SET_NOTE(NOTE_END);
 		} else if (is_toneporta) {
 
 			/* Always retrig on tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
-			if (not_same_ins || TEST(NOTE_END)) {
+			if (not_same_ins || TEST_NOTE(NOTE_END)) {
 				flags |= NEW_INS;
-				RESET(RELEASE);
+				RESET_NOTE(NOTE_RELEASE);
 			} else {
 				key = 0;
 			}
@@ -715,7 +714,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
 		xc->key = --key;
-		RESET(NOTE_END);
+		RESET_NOTE(NOTE_END);
 
 		sub = get_subinstrument(ctx, candidate_ins, key);
 
@@ -792,7 +791,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	if (reset_env) {
-		RESET(RELEASE | FADEOUT);
+		RESET_NOTE(NOTE_RELEASE | NOTE_FADEOUT);
 	}
 
 	if (use_ins_vol) {

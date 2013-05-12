@@ -204,6 +204,8 @@ static inline int get_channel_vol(struct context_data *ctx, int chn)
  * Update channel data
  */
 
+#define DOENV_RELEASE ((TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF))
+
 static void process_volume(struct context_data *ctx, int chn, int t, int act)
 {
 	struct player_data *p = &ctx->p;
@@ -221,17 +223,17 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	 * Decibelter - Cosmic 'Wegian Mamas.xm)
 	 */
 	if (!HAS_QUIRK(QUIRK_KEYOFF)) {
-		if (TEST(RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
+		if (TEST_NOTE(NOTE_RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
 			xc->fadeout = 0;
 	}
 
-	if (TEST(FADEOUT | RELEASE) || act == VIRT_ACTION_FADE
+	if (TEST_NOTE(NOTE_FADEOUT | NOTE_RELEASE) || act == VIRT_ACTION_FADE
 	    || act == VIRT_ACTION_OFF) {
 		if (xc->fadeout > instrument->rls) {
 			xc->fadeout -= instrument->rls;
 		} else {
 			xc->fadeout = 0;
-			SET(NOTE_END);
+			SET_NOTE(NOTE_END);
 		}
 
 		if (xc->fadeout == 0) {
@@ -253,7 +255,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
 	case -1:
-		SET(NOTE_END);
+		SET_NOTE(NOTE_END);
 		/* Don't reset channel, we may have a tone portamento later
 		 * virt_resetchannel(ctx, chn);
 		 */
@@ -262,17 +264,17 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		break;
 	default:
 		if (HAS_QUIRK(QUIRK_ENVFADE)) {
-			SET(FADEOUT);
+			SET_NOTE(NOTE_FADEOUT);
 		}
 	}
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64, &end);
 	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
 	if (end && vol_envelope == 0)
-		SET(NOTE_END);
+		SET_NOTE(NOTE_END);
 
 	/* If note ended in background channel, we can safely reset it */
-	if (TEST(NOTE_END) && chn >= p->virt.num_tracks) {
+	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
 		virt_resetchannel(ctx, chn);
 		return;
 	}
@@ -672,7 +674,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	/* Do keyoff */
 	if (xc->keyoff) {
 		if (!--xc->keyoff)
-			SET(RELEASE);
+			SET_NOTE(NOTE_RELEASE);
 	}
 
 	if (HAS_QUIRK(QUIRK_INVLOOP)) {
@@ -807,7 +809,7 @@ void player_set_release(struct context_data *ctx, int chn)
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	SET(RELEASE);
+	SET_NOTE(NOTE_RELEASE);
 }
 
 void player_set_fadeout(struct context_data *ctx, int chn)
@@ -815,7 +817,7 @@ void player_set_fadeout(struct context_data *ctx, int chn)
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	SET(FADEOUT);
+	SET_NOTE(NOTE_FADEOUT);
 }
 
 
