@@ -112,7 +112,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
 	int note, key, flags;
-	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins = 0;
 	int is_toneporta;
@@ -120,7 +119,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	flags = 0;
 	note = -1;
 	key = e->note;
-	cont_sample = 0;
 	is_toneporta = 0;
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
@@ -164,7 +162,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
-			cont_sample = 1;
 			key = 0;
 		}
 	}
@@ -221,12 +218,9 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	if (note >= 0) {
 		xc->note = note;
 
-		if (cont_sample == 0) {
-			virt_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET) && p->flags & XMP_FLAGS_FX9BUG) {
-				xc->offset_val <<= 1;
-			}
-		}
+		virt_voicepos(ctx, chn, xc->offset_val);
+		if (TEST(OFFSET) && p->flags & XMP_FLAGS_FX9BUG)
+			xc->offset_val <<= 1;
 		RESET(OFFSET);
 	}
 
@@ -249,7 +243,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
 	int note, key, flags;
-	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins;
 	int is_toneporta;
@@ -257,7 +250,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	flags = 0;
 	note = -1;
 	key = e->note;
-	cont_sample = 0;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
 
@@ -302,18 +294,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			SET(RELEASE);
 			flags &= ~(RESET_VOL | RESET_ENV);
 		} else if (is_toneporta) {
-			/* When a toneporta is issued after a keyoff event,
-			 * retrigger the instrument (xr-nc.xm, bug #586377)
-			 *
-			 *   flags |= NEW_INS;
-			 *   xc->ins = ins;
-			 *
-			 * (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
-			 * We don't retrigger the sample, it simply continues.
-			 * This is important to play sweeps and loops correctly
-			 */
-			cont_sample = 1;
-
 			/* set key to 0 so we can have the tone portamento from
 			 * the original note (see funky_stars.xm pos 5 ch 9)
 			 */
@@ -427,12 +407,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	if (note >= 0) {
 		xc->note = note;
 
-		if (cont_sample == 0) {
-			virt_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET)) {
-				xc->offset_val <<= 1;
-			}
-		}
+		/* (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
+		 * We retrigger the sample only if we have a new note without
+		 * tone portamento, otherwise we won't play sweeps and loops
+		 * correctly.
+		 */
+		virt_voicepos(ctx, chn, xc->offset_val);
+		if (TEST(OFFSET))
+			xc->offset_val <<= 1;
 		RESET(OFFSET);
 	}
 
@@ -455,7 +437,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
 	int note, key, flags;
-	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int is_toneporta;
@@ -463,7 +444,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	flags = 0;
 	note = -1;
 	key = e->note;
-	cont_sample = 0;
 	not_same_ins = 0;
 	is_toneporta = 0;
 
@@ -520,8 +500,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			 */
 			if (not_same_ins) {
 				xc->offset_val = 0;
-			} else {
-				cont_sample = 1;
 			}
 			key = 0;
 		}
@@ -578,13 +556,9 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (note >= 0) {
 		xc->note = note;
-
-		if (cont_sample == 0) {
-			virt_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET)) {
-				xc->offset_val <<= 1;
-			}
-		}
+		virt_voicepos(ctx, chn, xc->offset_val);
+		if (TEST(OFFSET))
+			xc->offset_val <<= 1;
 		RESET(OFFSET);
 	}
 
@@ -612,7 +586,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
 	int note, key, flags;
-	int cont_sample;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int new_invalid_ins;
@@ -633,7 +606,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	flags = 0;
 	note = -1;
 	key = e->note;
-	cont_sample = 0;
 	not_same_ins = 0;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
@@ -717,7 +689,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				flags |= NEW_INS;
 				RESET(RELEASE);
 			} else {
-				cont_sample = 1;
 				key = 0;
 			}
 
@@ -795,13 +766,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (note >= 0) {
 		xc->note = note;
-
-		if (cont_sample == 0) {
-			virt_voicepos(ctx, chn, xc->offset_val);
-			if (TEST(OFFSET)) {
-				xc->offset_val <<= 1;
-			}
-		}
+		virt_voicepos(ctx, chn, xc->offset_val);
+		if (TEST(OFFSET))
+			xc->offset_val <<= 1;
 		RESET(OFFSET);
 	}
 
