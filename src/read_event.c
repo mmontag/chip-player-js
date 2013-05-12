@@ -111,13 +111,13 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flags;
+	int note, key;
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins = 0;
 	int is_toneporta;
 	int use_ins_vol;
 
-	flags = 0;
+	xc->flags = 0;
 	note = -1;
 	key = e->note;
 	is_toneporta = 0;
@@ -131,7 +131,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flags = NEW_INS;
+		SET(NEW_INS);
 		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
@@ -160,7 +160,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Check note */
 
 	if (key) {
-		flags |= NEW_NOTE;
+		SET(NEW_NOTE);
 
 		if (key == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
@@ -192,7 +192,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				xc->smp = smp;
 			}
 		} else {
-			flags = 0;
+			xc->flags = 0;
 			use_ins_vol = 0;
 		}
 	}
@@ -202,8 +202,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL)
 		reset_envelopes(mod, xc);
-
-	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	/* Process new volume */
 	if (e->vol) {
@@ -245,13 +243,13 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flags;
+	int note, key;
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins;
 	int is_toneporta;
 	int use_ins_vol;
 
-	flags = 0;
+	xc->flags = 0;
 	note = -1;
 	key = e->note;
 	new_invalid_ins = 0;
@@ -266,7 +264,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flags = NEW_INS;
+		SET(NEW_INS);
 		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
@@ -282,7 +280,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * instruments (it keeps playing the previous one).
 			 * If a note is set it cuts the current sample.
 			 */
-			flags = 0;
+			xc->flags = 0;
 
 			if (is_toneporta) {
 				key = 0;
@@ -295,7 +293,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Check note */
 
 	if (key) {
-		flags |= NEW_NOTE;
+		SET(NEW_NOTE);
 
 		if (key == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
@@ -327,7 +325,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* No note */
 			if (sub != NULL) {
 				xc->volume = sub->vol;
-				flags |= NEW_VOL;
+				SET(NEW_VOL);
 			}
 		} else {
 			/* Retrieve volume when we have note */
@@ -344,7 +342,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 				xc->volume = 0;
 			}
 			xc->ins_oinsvol = xc->ins;
-			flags |= NEW_VOL;
+			SET(NEW_VOL);
 		}
 	}
 
@@ -371,7 +369,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 				xc->smp = smp;
 			}
 		} else {
-			flags = 0;
+			xc->flags = 0;
 			use_ins_vol = 0;
 		}
 	}
@@ -386,8 +384,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		 */
 		reset_envelopes(mod, xc);
 	}
-
-	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	/* Process new volume */
 	if (e->vol) {
@@ -437,13 +433,13 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flags;
+	int note, key;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int is_toneporta;
 	int use_ins_vol;
 
-	flags = 0;
+	xc->flags = 0;
 	note = -1;
 	key = e->note;
 	not_same_ins = 0;
@@ -458,7 +454,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		flags = NEW_INS;
+		SET(NEW_INS);
 		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
@@ -484,7 +480,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			/* invalid ins */
 
 			/* Ignore invalid instruments */
-			flags = 0;
+			xc->flags = 0;
 			use_ins_vol = 0;
 		}
 
@@ -494,7 +490,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Check note */
 
 	if (key) {
-		flags |= NEW_NOTE;
+		SET(NEW_NOTE);
 
 		if (key == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
@@ -533,7 +529,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 				xc->smp = smp;
 			}
 		} else {
-			flags = 0;
+			xc->flags = 0;
 			use_ins_vol = 0;
 		}
 	}
@@ -543,8 +539,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL)
 		reset_envelopes(mod, xc);
-
-	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
 	/* Process new volume */
 	if (e->vol) {
@@ -590,7 +584,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key, flags;
+	int note, key;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int new_invalid_ins;
@@ -610,7 +604,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->delayed_ins = 0;
 	}
 
-	flags = 0;
+	xc->flags = 0;
 	note = -1;
 	key = e->note;
 	not_same_ins = 0;
@@ -635,7 +629,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		int ins = e_ins - 1;
 
 		if (!is_release || (!is_toneporta || xc->ins != ins)) {
-			flags = NEW_INS;
+			SET(NEW_INS);
 			use_ins_vol = 1;
 			reset_env = 1;
 			xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
@@ -648,7 +642,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			if (!key) {
 				/* IT: Reset note for every new != ins */
 				if (xc->ins == ins) {
-					flags = NEW_INS;
+					SET(NEW_INS);
 					use_ins_vol = 1;
 				} else {
 					key = xc->key + 1;
@@ -669,7 +663,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		} else {
 			/* Ignore invalid instruments */
 			new_invalid_ins = 1;
-			flags = 0;
+			xc->flags = 0;
 			use_ins_vol = 0;
 		}
 
@@ -679,7 +673,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* Check note */
 
 	if (key && !new_invalid_ins) {
-		flags |= NEW_NOTE;
+		SET(NEW_NOTE);
 
 		if (key == XMP_KEY_FADE) {
 			SET_NOTE(NOTE_FADEOUT);
@@ -701,7 +695,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
 			if (not_same_ins || TEST_NOTE(NOTE_END)) {
-				flags |= NEW_INS;
+				SET(NEW_INS);
 				RESET_NOTE(NOTE_RELEASE);
 			} else {
 				key = 0;
@@ -738,13 +732,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 				if (to != chn) {
 					copy_channel(p, to, chn);
-					p->xc_data[to].flags &= 0xff000000;
+					p->xc_data[to].flags = 0;
 				}
 
 				xc->smp = smp;
 			}
 		} else {
-			flags = 0;
+			xc->flags = 0;
 			use_ins_vol = 0;
 		}
 	}
@@ -759,7 +753,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	if (note >= 0 && sub != NULL)
 		reset_envelopes(mod, xc);
 	
-	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
