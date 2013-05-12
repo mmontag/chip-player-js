@@ -102,8 +102,8 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE \
 		|| (x) == FX_PER_TPORTA)
 
-#define set_patch(ctx,chn,ins,smp,note,cont_sample) \
-	virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0, cont_sample)
+#define set_patch(ctx,chn,ins,smp,note) \
+	virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0)
 
 static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn)
 {
@@ -187,8 +187,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				set_patch(ctx, chn, xc->ins, smp, note,
-							cont_sample);
+				set_patch(ctx, chn, xc->ins, smp, note);
 				xc->smp = smp;
 			}
 		} else {
@@ -391,8 +390,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				set_patch(ctx, chn, xc->ins, smp, note,
-							cont_sample);
+				set_patch(ctx, chn, xc->ins, smp, note);
 				xc->smp = smp;
 			}
 		} else {
@@ -547,8 +545,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 
 			if (smp >= 0 && smp < mod->smp) {
-				set_patch(ctx, chn, xc->ins, smp, note,
-							cont_sample);
+				set_patch(ctx, chn, xc->ins, smp, note);
 				xc->smp = smp;
 			}
 		} else {
@@ -748,7 +745,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			if (smp >= 0 && smp < mod->smp) {
 				int to = virt_setpatch(ctx, chn, candidate_ins,
 					smp, note, sub->nna, sub->dct,
-					sub->dca, cont_sample);
+					sub->dca);
 
 				if (to < 0)
 					return -1;

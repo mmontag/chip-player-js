@@ -321,7 +321,7 @@ static inline void check_dct(struct context_data *ctx, int i, int chn, int ins,
 }
 
 int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
-		    int note, int nna, int dct, int dca, int cont_sample)
+		    int note, int nna, int dct, int dca)
 {
 	struct player_data *p = &ctx->p;
 	int i, voc, vfree;
@@ -359,10 +359,7 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		return chn;	/* was -1 */
 	}
 
-	if (!cont_sample) {
-		mixer_setpatch(ctx, voc, smp);
-	}
-
+	mixer_setpatch(ctx, voc, smp);
 	mixer_setnote(ctx, voc, note);
 	p->virt.voice_array[voc].ins = ins;
 	p->virt.voice_array[voc].act = nna;
