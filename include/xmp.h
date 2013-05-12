@@ -5,11 +5,11 @@
 extern "C" {
 #endif
 
-#define XMP_VERSION "4.1.3"
-#define XMP_VERCODE 0x040103
+#define XMP_VERSION "4.1.4"
+#define XMP_VERCODE 0x040104
 #define XMP_VER_MAJOR 4
 #define XMP_VER_MINOR 1
-#define XMP_VER_RELEASE 3
+#define XMP_VER_RELEASE 4
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
 # ifdef BUILDING_DLL
