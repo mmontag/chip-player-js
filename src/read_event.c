@@ -136,6 +136,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
+		RESET(RELEASE);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			if (is_toneporta) {
@@ -269,6 +270,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		use_ins_vol = 1;
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
+		RESET(RELEASE);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			if (!is_toneporta)
@@ -462,6 +464,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
+		RESET(RELEASE);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
