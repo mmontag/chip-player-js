@@ -307,13 +307,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* And do the same if there's no keyoff (see comic
 			 * bakery remix.xm pos 1 ch 3)
 			 */
-
-			/* Reset envelopes on new instrument, see olympic.xm
-			 * pos 10
-			 *
-			 * But only if we have instrument, see Letting go
-			 * pos 4 chn 20
-			 */
 		}
 
 		if (new_invalid_ins) {
@@ -385,8 +378,13 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (e->ins && sub != NULL)
+	if (e->ins && sub != NULL) {
+		/* Reset envelopes on new instrument, see olympic.xm pos 10
+		 * But make sure we have an instrument set, see Letting go
+		 * pos 4 chn 20
+		 */
 		reset_envelopes(mod, xc);
+	}
 
 	xc->flags = flags | (xc->flags & 0xff000000); /* keep persistent flags */
 
