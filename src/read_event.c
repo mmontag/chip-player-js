@@ -111,7 +111,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key;
+	int note;
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins = 0;
 	int is_toneporta;
@@ -119,7 +119,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	xc->flags = 0;
 	note = -1;
-	key = e->note;
 	is_toneporta = 0;
 	use_ins_vol = 0;
 
@@ -141,7 +140,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		if (IS_VALID_INSTRUMENT(ins)) {
 			if (is_toneporta) {
 				/* Get new instrument volume */
-				sub = get_subinstrument(ctx, ins, key);
+				sub = get_subinstrument(ctx, ins, e->note);
 				if (sub != NULL) {
 					xc->volume = sub->vol;
 					use_ins_vol = 0;
@@ -159,41 +158,37 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Check note */
 
-	if (key) {
+	if (e->note) {
 		SET(NEW_NOTE);
 
-		if (key == XMP_KEY_OFF) {
+		if (e->note == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
-		} else if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
-			key = 0;
-		}
-	}
-
-	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
-		xc->key = --key;
-		RESET_NOTE(NOTE_END);
-
-		sub = get_subinstrument(ctx, xc->ins, key);
-
-		if (!new_invalid_ins && sub != NULL) {
-			int transp = mod->xxi[xc->ins].map[key].xpo;
-			int smp;
-
-			note = key + sub->xpo + transp;
-			smp = sub->sid;
-
-			if (mod->xxs[smp].len == 0) {
-				smp = -1;
+		} else if (!is_toneporta) {
+			xc->key = e->note - 1;
+			RESET_NOTE(NOTE_END);
+	
+			sub = get_subinstrument(ctx, xc->ins, xc->key);
+	
+			if (!new_invalid_ins && sub != NULL) {
+				int transp = mod->xxi[xc->ins].map[xc->key].xpo;
+				int smp;
+	
+				note = xc->key + sub->xpo + transp;
+				smp = sub->sid;
+	
+				if (mod->xxs[smp].len == 0) {
+					smp = -1;
+				}
+	
+				if (smp >= 0 && smp < mod->smp) {
+					set_patch(ctx, chn, xc->ins, smp, note);
+					xc->smp = smp;
+				}
+			} else {
+				xc->flags = 0;
+				use_ins_vol = 0;
 			}
-
-			if (smp >= 0 && smp < mod->smp) {
-				set_patch(ctx, chn, xc->ins, smp, note);
-				xc->smp = smp;
-			}
-		} else {
-			xc->flags = 0;
-			use_ins_vol = 0;
 		}
 	}
 
@@ -433,7 +428,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key;
+	int note;
 	struct xmp_subinstrument *sub;
 	int not_same_ins;
 	int is_toneporta;
@@ -441,7 +436,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	xc->flags = 0;
 	note = -1;
-	key = e->note;
 	not_same_ins = 0;
 	is_toneporta = 0;
 	use_ins_vol = 0;
@@ -469,7 +463,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 					xc->ins = ins;
 				} else {
 					/* Get new instrument volume */
-					sub = get_subinstrument(ctx, ins, key);
+					sub = get_subinstrument(ctx, ins, e->note);
 					if (sub != NULL) {
 						xc->volume = sub->vol;
 						use_ins_vol = 0;
@@ -489,48 +483,44 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Check note */
 
-	if (key) {
+	if (e->note) {
 		SET(NEW_NOTE);
 
-		if (key == XMP_KEY_OFF) {
+		if (e->note == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
 		} else if (is_toneporta) {
-
 			/* Always retrig in tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
 			if (not_same_ins) {
 				xc->offset_val = 0;
 			}
-			key = 0;
-		}
-	}
-
-	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
-		xc->key = --key;
-		RESET_NOTE(NOTE_END);
-
-		sub = get_subinstrument(ctx, xc->ins, key);
-
-		if (sub != NULL) {
-			int transp = mod->xxi[xc->ins].map[key].xpo;
-			int smp;
-
-			note = key + sub->xpo + transp;
-			smp = sub->sid;
-
-			if (mod->xxs[smp].len == 0) {
-				smp = -1;
-			}
-
-			if (smp >= 0 && smp < mod->smp) {
-				set_patch(ctx, chn, xc->ins, smp, note);
-				xc->smp = smp;
-			}
 		} else {
-			xc->flags = 0;
-			use_ins_vol = 0;
+			xc->key = e->note - 1;
+			RESET_NOTE(NOTE_END);
+	
+			sub = get_subinstrument(ctx, xc->ins, xc->key);
+	
+			if (sub != NULL) {
+				int transp = mod->xxi[xc->ins].map[xc->key].xpo;
+				int smp;
+	
+				note = xc->key + sub->xpo + transp;
+				smp = sub->sid;
+	
+				if (mod->xxs[smp].len == 0) {
+					smp = -1;
+				}
+	
+				if (smp >= 0 && smp < mod->smp) {
+					set_patch(ctx, chn, xc->ins, smp, note);
+					xc->smp = smp;
+				}
+			} else {
+				xc->flags = 0;
+				use_ins_vol = 0;
+			}
 		}
 	}
 
