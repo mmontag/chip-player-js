@@ -690,7 +690,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			/* Always retrig on tone portamento: Fix portamento in
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
-			if (not_same_ins || TEST_NOTE(NOTE_END)) {
+			if (not_same_ins || (e_ins && TEST_NOTE(NOTE_END))) {
 				SET(NEW_INS);
 				RESET_NOTE(NOTE_RELEASE);
 			} else {
@@ -699,6 +699,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 			if (HAS_QUIRK(QUIRK_PRENV) && e->ins)
 				reset_envelopes(mod, xc);
+		} else {
+			xc->fadeout = 0x8000;
+			RESET_NOTE(NOTE_RELEASE);
 		}
 	}
 
