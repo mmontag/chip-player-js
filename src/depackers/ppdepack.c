@@ -1,24 +1,10 @@
-/* ppcrack 0.1 - decrypts PowerPacker encrypted data files with brute force
- * by Stuart Caie <kyzer@4u.net>, this software is in the Public Domain
- *
- * The whole keyspace is scanned, unless you supply the -key argument, where
- * that key (in hexadecimal) to key FFFFFFFF is scanned.
- *
- * Anything which decrypts then decrunches to valid data is saved to disk
- * as <original filename>.<decryption key>
- *
- * As a bonus, if any file is a PowerPacker data file, but not encrypted,
- * it will be decrunched anyway, and saved as <original filename>.decrunched
- *
- * - changed to work with UADE (mld) 
- *   Thanks to Kyzer for help and support.
+/* PowerPacker decrunch
+ * Based on code by Stuart Caie <kyzer@4u.net>
+ * This software is in the Public Domain
  */
 
 /* Code from Heikki Orsila's amigadepack 0.02 to replace previous
  * PowerPack depacker with license issues.
- *
- * You'll probably want to use ppcrack stand-alone to crack encrypted
- * powerpack files once instead of using brute force at each replay.
  *
  * Modified for xmp by Claudio Matsuoka, 08/2007
  * - merged mld's checks from the old depack sources. Original credits:
@@ -26,6 +12,9 @@
  *     (thanks to Don Adan and Dirk Stoecker for help and infos)
  *   - implemeted "efficiency" checks
  *   - further detection based on code by Georg Hoermann
+ *
+ * Modified for xmp by Claudio Matsuoka, 05/2013
+ * - decryption code removed
  */
  
 #include <stdlib.h>
@@ -37,8 +26,6 @@
 
 #include "common.h"
 
-#undef WANT_PP2X_DECRYPTING
-
 #define val(p) ((p)[0]<<16 | (p)[1] << 8 | (p)[2])
 
 
@@ -48,22 +35,6 @@ static int savefile(FILE *fo, void *mem, size_t length)
   return ok;
 }
 
-
-static inline void ppDecryptCopy(uint8 *src, uint8 *dest, uint32 len, uint32 key)
-{
-  uint8 a = (key>>24) & 0xFF;
-  uint8 b = (key>>16) & 0xFF;
-  uint8 c = (key>> 8) & 0xFF;
-  uint8 d = (key    ) & 0xFF;
-
-  len = (len + 3) >> 2;
-  while (len--) {
-    *dest++ = *src++ ^ a;
-    *dest++ = *src++ ^ b;
-    *dest++ = *src++ ^ c;
-    *dest++ = *src++ ^ d;
-  }
-}
 
 #define PP_READ_BITS(nbits, var) do {                          \
   bit_cnt = (nbits);                                           \
@@ -135,62 +106,7 @@ static int ppDecrunch(uint8 *src, uint8 *dest, uint8 *offset_lens,
   /* return (src == buf_src) ? 1 : 0; */
 }                     
 
-#ifdef WANT_PP2X_DECRYPTING
-/* this pretends to decrunch a data stream. If it wasn't decrypted
- * exactly right, it will access match offsets that don't exist, or
- * request match lengths that there isn't enough data for, or will
- * underrun or overrun the theoretical output buffer
- */
-static inline int ppValidate(uint8 *src, uint8 *offset_lens,
-                      uint32 src_len, uint32 dest_len, uint8 skip_bits)
-{
-  uint8 *buf_src, bits_left = 0, bit_cnt;
-  uint32 bit_buffer = 0, x, todo, offbits, offset, written=0;
-
-  if (src == NULL || offset_lens == NULL) return 0;
-
-  /* set up input pointer */
-  buf_src = src + src_len;
-
-  /* skip the first few bits */
-  PP_READ_BITS(skip_bits, x);
-
-  /* while there are input bits left */
-  while (written < dest_len) {
-    PP_READ_BITS(1, x);
-    if (x == 0) {
-      /* 1bit==0: literal, then match. 1bit==1: just match */
-      todo = 1; do { PP_READ_BITS(2, x); todo += x; } while (x == 3);
-      written += todo; if (written > dest_len) return 0;
-      while (todo--) PP_READ_BITS(8, x);
-
-      /* should we end decoding on a literal, break out of the main loop */
-      if (written == dest_len) break;
-    }
-
-    /* match: read 2 bits for initial offset bitlength / match length */
-    PP_READ_BITS(2, x);
-    offbits = offset_lens[x];
-    todo = x+2;
-    if (x == 3) {
-      PP_READ_BITS(1, x);
-      if (x==0) offbits = 7;
-      PP_READ_BITS(offbits, offset);
-      do { PP_READ_BITS(3, x); todo += x; } while (x == 7);
-    }
-    else {
-      PP_READ_BITS(offbits, offset);
-    }
-    if (offset >= written) return 0; /* match overflow */
-    written += todo; if (written > dest_len) return 0;
-  }
-
-  /* all output bytes written without error */
-  return 1;
-}                     
-#endif
-
-static int ppcrack(FILE *fo, uint8 *data, uint32 len)
+static int ppdepack(uint8 *data, size_t len, FILE *fo)
 {
   /* PP FORMAT:
    *      1 longword identifier           'PP20' or 'PX20'
@@ -246,86 +162,11 @@ static int ppcrack(FILE *fo, uint8 *data, uint32 len)
       success=-1;
     } 
   } else {
-
-#ifdef WANT_PP2X_DECRYPTING
-    /* brute-force calculate the key */
-
-    uint32 key = 0;	/* key_start */
-
-    /* shortcut to halve keyspace:
-     * PowerPacker alternates between two operations - literal and match.
-     * The FIRST operation must be literal, as there's no data been output
-     * to match yet, so the first BIT in the compressed stream must be set
-     * to 0. The '8 bits other info' is actually the number of bits unused
-     * in the first longword. We must ignore these.
-     *
-     * So we know which bit is the first one in the compressed stream, and
-     * that is matched a bit in the decryption XOR key.
-     *
-     * We know the encrypted value of the first bit, and we know it must
-     * actually be 0 when decrypted. So, if the value is 1, then that bit
-     * of the decryption key must be 1, to invert that bit to a 0. If the
-     * value is 0, then that bit of the decryption key must be 0, to leave
-     * that bit set at 0.
-     *
-     * Given the knowledge of exactly one of the bits in the keys, we can
-     * reject all keys that do not have the appropriate value for this bit.
-     */
-    uint32 drop_mask = 1 << data[len-1];
-    uint32 drop_value = ( (data[len-8]<<24) | (data[len-7]<<16)
-                       | (data[len-6]<<8)  |  data[len-5] ) & drop_mask;
-
-    uint8 *temp = (uint8 *) malloc(len-14);
-
-
-    
-    fprintf(stderr, "\nEncrypted. Hang on, while trying to find the right key...\n");
-    if (temp == NULL) {
-      fprintf(stderr, "out of memory!\n");
-      return -1;
-    }
-
-    do {
-      if ((key & 0xFFF) == 0) {
-        fprintf(stderr, "key %08x\r", key);
-        fflush(stdout);
-      }
-
-      if ((key & drop_mask) != drop_value) continue;
-
-      /* decrypt with this key */
-      ppDecryptCopy(&data[10], temp, len-14, key);
-
-      if (ppValidate(temp, &data[6], len-14, outlen, data[len-1])) {
-        fprintf(stderr, "key %08x success!\n", key);
-	ppDecrunch(temp, output, &data[6], len-14, outlen, data[len-1]);
-
-	/* key_match = key */
-        /* sprintf(output_name, "%s.%08x", name, key); */
-	
-        savefile(fo, output, outlen);
-	break;
-      }
-    } while (key++ != 0xFFFFFFFF);
-    free(temp);
-    /*fprintf(stderr, "All keys done!\n");*/
-#else
-     fprintf(stderr, "\nWarning: support for encrypted powerpacker files not compiled in.\n");
-     success=-1;
-#endif
-    }
+    success=-1;
+  }
   free(output);
-return success;
-}
-
-
-static int ppdepack(uint8 *src, size_t s, FILE *fo)
-{
-  int success;
-  success = ppcrack(fo, (uint8 *)src, s);
   return success;
 }
-
 
 int decrunch_pp(FILE *f, FILE *fo)
 {

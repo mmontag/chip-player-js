@@ -95,9 +95,10 @@ MD5 digest
 
 Powerpack depacker
 
- ppcrack 0.1 - decrypts PowerPacker encrypted data files with brute force
- by Stuart Caie <kyzer@4u.net>, this software is in the Public Domain
-
+ Based on code by Stuart Caie <kyzer@4u.net>
+ Modified by Michael Doering and Claudio Matsuoka
+ This software is in the Public Domain
+ 
 
 YM2149 emulator
 
