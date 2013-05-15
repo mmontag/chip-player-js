@@ -843,11 +843,11 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 		    itsex_decompress16(f, buf, xxs->len, 
 					ish.convert & IT_CVT_DIFF);
 
+#ifdef WORDS_BIGENDIAN
 		    /* decompression generates native-endian samples, but
 		     * we want little-endian */
-		    if (is_big_endian()) {
-			cvt |= SAMPLE_FLAG_BIGEND;
-		    }
+		    cvt |= SAMPLE_FLAG_BIGEND;
+#endif
 		} else {
 		    itsex_decompress8(f, buf, xxs->len, 
 					ish.convert & IT_CVT_DIFF);

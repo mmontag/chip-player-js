@@ -24,6 +24,11 @@
 	if (!(x)) { printf("%d: %s: ", __LINE__, y); exit(1); } \
 } while (0)
 
+static inline int is_big_endian() {
+	uint16 w = 0x00ff;
+	return (*(char *)&w == 0x00);
+}
+
 int map_channel(struct player_data *, int);
 int play_frame(struct context_data *);
 

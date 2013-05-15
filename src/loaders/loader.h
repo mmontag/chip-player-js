@@ -39,11 +39,6 @@ int load_sample(struct module_data *, FILE *, int, struct xmp_sample *, void *);
 extern uint8 ord_xlat[];
 extern const int arch_vol_table[];
 
-static inline int is_big_endian() {
-	uint16 w = 0x00ff;
-	return (*(char *)&w == 0x00);
-}
-
 #define MAGIC4(a,b,c,d) \
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 

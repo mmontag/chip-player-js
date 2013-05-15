@@ -322,8 +322,13 @@ int load_sample(struct module_data *m, FILE *f, int flags, struct xmp_sample *xx
 
 	/* Fix endianism if needed */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
-		if (is_big_endian() ^ ((flags & SAMPLE_FLAG_BIGEND) != 0))
+#ifdef WORDS_BIGENDIAN
+		if (~flags & SAMPLE_FLAG_BIGEND)
 			convert_endian(xxs->data, xxs->len);
+#else
+		if (flags & SAMPLE_FLAG_BIGEND)
+			convert_endian(xxs->data, xxs->len);
+#endif
 	}
 
 	/* Convert delta samples */

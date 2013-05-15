@@ -63,7 +63,7 @@ static void MD5Transform(uint32 state[4], const uint8 block[MD5_BLOCK_LENGTH])
 {
 	uint32 a, b, c, d, in[MD5_BLOCK_LENGTH / 4];
 
-#if BYTE_ORDER == LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	memcpy(in, block, sizeof(in));
 #else
 	for (a = 0; a < MD5_BLOCK_LENGTH / 4; a++) {
