@@ -1,60 +1,43 @@
 /*
- **********************************************************************
- ** md5.h -- Header file for implementation of MD5                   **
- ** RSA Data Security, Inc. MD5 Message Digest Algorithm             **
- ** Created: 2/17/90 RLR                                             **
- ** Revised: 12/27/90 SRD,AJ,BSK,JT Reference C version              **
- ** Revised (for MD5): RLR 4/27/91                                   **
- **   -- G modified to have y&~z instead of y&z                      **
- **   -- FF, GG, HH modified to add in last register done            **
- **   -- Access pattern: round 2 works mod 5, round 3 works mod 3    **
- **   -- distinct additive constant for each step                    **
- **   -- round 4 added, working mod 7                                **
- **********************************************************************
+ * This code implements the MD5 message-digest algorithm.
+ * The algorithm is due to Ron Rivest.  This code was
+ * written by Colin Plumb in 1993, no copyright is claimed.
+ * This code is in the public domain; do with it what you wish.
+ *
+ * Equivalent code is available from RSA Data Security, Inc.
+ * This code has been tested against that, and is equivalent,
+ * except that you don't need to include two pages of legalese
+ * with every copy.
  */
 
-/*
- **********************************************************************
- ** Copyright (C) 1990, RSA Data Security, Inc. All rights reserved. **
- **                                                                  **
- ** License to copy and use this software is granted provided that   **
- ** it is identified as the "RSA Data Security, Inc. MD5 Message     **
- ** Digest Algorithm" in all material mentioning or referencing this **
- ** software or this function.                                       **
- **                                                                  **
- ** License is also granted to make and use derivative works         **
- ** provided that such works are identified as "derived from the RSA **
- ** Data Security, Inc. MD5 Message Digest Algorithm" in all         **
- ** material mentioning or referencing the derived work.             **
- **                                                                  **
- ** RSA Data Security, Inc. makes no representations concerning      **
- ** either the merchantability of this software or the suitability   **
- ** of this software for any particular purpose.  It is provided "as **
- ** is" without express or implied warranty of any kind.             **
- **                                                                  **
- ** These notices must be retained in any copies of any part of this **
- ** documentation and/or software.                                   **
- **********************************************************************
- */
+#ifndef XMP_MD5_H_
+#define XMP_MD5_H_
 
-/* typedef a 32 bit type */
-typedef unsigned int UINT4;
+#include "common.h"
 
-/* Data structure for MD5 (Message Digest) computation */
-typedef struct {
-  UINT4 i[2];                   /* number of _bits_ handled mod 2^64 */
-  UINT4 buf[4];                                    /* scratch buffer */
-  unsigned char in[64];                              /* input buffer */
-  unsigned char digest[16];     /* actual digest after MD5Final call */
+#define	MD5_BLOCK_LENGTH		64
+#define	MD5_DIGEST_LENGTH		16
+#define	MD5_DIGEST_STRING_LENGTH	(MD5_DIGEST_LENGTH * 2 + 1)
+
+typedef struct MD5Context {
+	uint32 state[4];		/* state */
+	uint64 count;			/* number of bits, mod 2^64 */
+	uint8 buffer[MD5_BLOCK_LENGTH];	/* input buffer */
 } MD5_CTX;
 
-void MD5Init (MD5_CTX *);
-void MD5Update (MD5_CTX *, unsigned char *, int);
-void MD5Final (MD5_CTX *);
+#ifndef __sun
+#include <sys/cdefs.h>
+#endif
 
-/*
- **********************************************************************
- ** End of md5.h                                                     **
- ******************************* (cut) ********************************
- */
+#ifndef __sun
+__BEGIN_DECLS
+#endif
+void	 MD5Init(MD5_CTX *);
+void	 MD5Update(MD5_CTX *, const unsigned char *, size_t);
+void	 MD5Final(uint8[MD5_DIGEST_LENGTH], MD5_CTX *);
+#ifndef __sun
+__END_DECLS
+#endif
+
+#endif /* XMP_MD5_H_ */
 

@@ -28,6 +28,7 @@ int compare_md5(unsigned char *d, char *digest)
 int check_md5(char *path, char *digest)
 {
 	unsigned char buf[BUFLEN];
+	unsigned char d[16];
 	MD5_CTX ctx;
 	FILE *f;
 	int bytes_read;
@@ -40,12 +41,11 @@ int check_md5(char *path, char *digest)
 	while ((bytes_read = fread(buf, 1, BUFLEN, f)) > 0) {
 		MD5Update(&ctx, buf, bytes_read);
 	}
-	MD5Final(&ctx);
+	MD5Final(d, &ctx);
 
 	fclose(f);
 
-	return compare_md5(ctx.digest, digest);
-
+	return compare_md5(d, digest);
 }
 
 int map_channel(struct player_data *p, int chn)

@@ -105,9 +105,7 @@ static void set_md5sum(FILE *f, unsigned char *digest)
 	while ((bytes_read = fread(buf, 1, BUFLEN, f)) > 0) {
 		MD5Update(&ctx, buf, bytes_read);
 	}
-	MD5Final(&ctx);
-
-	memcpy(digest, ctx.digest, 16);
+	MD5Final(digest, &ctx);
 }
 
 static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
