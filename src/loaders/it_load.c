@@ -573,7 +573,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    }
 
 	    /* See how many different instruments we have */
-	    for (j = 0; j < XMP_MAX_KEYS; j++)
+	    for (j = 0; j < 120; j++)
 		inst_map[j] = -1;
 
 	    for (k = j = 0; j < 120; j++) {
@@ -684,7 +684,7 @@ static int it_load(struct module_data *m, FILE *f, const int start)
 	    }
 	    
 	    /* See how many different instruments we have */
-	    for (j = 0; j < XMP_MAX_KEYS; j++)
+	    for (j = 0; j < 120; j++)
 		inst_map[j] = -1;
 
 	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
