@@ -1,9 +1,14 @@
-CC	= gcc
-CFLAGS	= -Wall -I$(SRC_PATH)
-LD	= gcc
-LDFLAGS	=
-LIBS	= -lm
-GCLIB	= libxmp-gc.a
+CC		= @CC@
+CFLAGS		= -c @CFLAGS@ @DEFS@
+LD		= @CC@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+
+GCLIB		= libxmp-gc.a
+
+#
+# Tests
+#
 
 REPLAYERS	= mod ft2 st3 it
 
