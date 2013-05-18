@@ -718,6 +718,10 @@ SOURCE=..\depackers\unzoo.c
 # End Source File
 # Begin Source File
 
+test\test.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\win32\ptpopen.c
 # End Source File
 # Begin Source File
