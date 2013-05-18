@@ -1,3 +1,9 @@
+CC	= gcc
+CFLAGS	= -Wall -I$(SRC_PATH)
+LD	= gcc
+LDFLAGS	=
+LIBS	= -lm
+GCLIB	= libxmp-gc.a
 
 REPLAYERS	= mod ft2 st3 it
 
@@ -162,7 +168,8 @@ TEST_OBJS	= util.o md5.o main.o simple_module.o \
 
 TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
-TEST_PATH	= test
+TEST_PATH	= .
+SRC_PATH	= ../src
 
 TEST_INTERNAL	= load_helpers.o loaders/itsex.o dataio.o scan.o misc.o \
 		  loaders/sample.o synth_null.o fnmatch.o
@@ -172,8 +179,7 @@ T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 
 GCT_OBJS 	= $(addprefix $(TEST_PATH)/,$(TEST_OBJS))
 
-default-test:
-	$(MAKE) -C.. check
+default-test: check
 
 dist-test:
 	mkdir -p $(DIST)/$(TEST_PATH)
@@ -197,17 +203,20 @@ $(TEST_PATH)/libxmp-tests: $(T_OBJS)
 
 covercheck: coverclean $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-covertest
 	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH ./libxmp-covertest ||:
-	lcov -c -b . -d . -k src -k include -o libxmp.cov
+	lcov -c -b .. -d .. -k src -k ../include -o libxmp.cov
 	rm -Rf coverage
 	genhtml -o coverage libxmp.cov
 
 coverclean:
 	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
 
-$(TEST_PATH)/libxmp-covertest: $(GCT_OBJS) lib/$(GCLIB)
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(GCT_OBJS) lib/$(GCLIB) -lgcov $(LIBS)'; \
+$(TEST_PATH)/libxmp-covertest: $(GCT_OBJS) ../lib/$(GCLIB)
+	@CMD='$(LD) -o $@ $(LDFLAGS) $(GCT_OBJS) ../lib/$(GCLIB) -lgcov $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
+
+../lib/$(GCLIB):
+	make -C .. coverage
 
 $(TEST_PATH)/main.o: $(TEST_PATH)/main.c $(TEST_PATH)/all_tests.c $(TEST_PATH)/test.h $(TEST_PATH)/all_tests.c
 
