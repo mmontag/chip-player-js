@@ -29,6 +29,9 @@
 
 #include "vorbis.h"
 
+#ifdef _MSC_VER
+#define alloca _alloca
+#endif
 
 #ifndef STB_VORBIS_HEADER_ONLY
 

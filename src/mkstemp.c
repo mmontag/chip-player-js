@@ -38,6 +38,10 @@
 #define O_BINARY 0
 #endif
 
+#ifdef _MSC_VER
+#define open _open
+#endif
+
 /* We need to provide a type for gcc_uint64_t.  */
 #ifdef __GNUC__
 typedef unsigned long long gcc_uint64_t;

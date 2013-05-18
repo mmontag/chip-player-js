@@ -5,6 +5,7 @@ Stable versions
 	- fix array initialization in IT loader (reported by Jacques Philippe)
 	- remove the complete set of regression tests from the distribution
 	  package
+	- address Visual C++ portability issues
 	- code cleanup
 
 4.1.3 (20130511):

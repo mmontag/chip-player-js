@@ -31,6 +31,12 @@ static const int period_amiga[] = {
     0x0e2b, 0x0e11, 0x0df7, 0x0ddd, 0x0dc3, 0x0daa, 0x0d91, 0x0d78,  /* B  */
 };
 
+#ifdef _MSC_VER
+static inline double round(double val)
+{    
+	return floor(val + 0.5);
+}
+#endif
 
 /* Get period from note */
 inline double note_to_period(int n, int f, int type)

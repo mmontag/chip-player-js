@@ -15,6 +15,10 @@ a.out
 players/xmp/src/xmp
 lib/
 
+# VC++ files
+*.suo
+*.ncb
+
 # Module formats
 *.mod
 *.MOD
