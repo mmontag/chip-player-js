@@ -3,6 +3,26 @@
 #include <string.h>
 #include "xmp.h"
 
+static inline int is_big_endian() {
+	unsigned short w = 0x00ff;
+	return (*(char *)&w == 0x00);
+}
+
+/* Convert little-endian 16 bit samples to big-endian */
+static void convert_endian(unsigned char *p, int l)
+{
+	unsigned char b;
+	int i;
+
+	for (i = 0; i < l; i++) {
+		b = p[0];
+		p[0] = p[1];
+		p[1] = b;
+		p += 2;
+	}
+}
+
+
 int main()
 {
 	FILE *f;
@@ -57,6 +77,10 @@ int main()
 		time += info.frame_time;
 
 		ret = fread(buf, 1, info.buffer_size, f);
+
+		if (is_big_endian())
+			convert_endian(buf, info.buffer_size >> 1);
+
 		if (ret != info.buffer_size) {
 			printf("error reading raw buffer\n");
 			goto err;
