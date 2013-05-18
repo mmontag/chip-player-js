@@ -1,0 +1,7 @@
+AC_INIT
+0>confdefs.h
+AC_PROG_CC
+AC_C_BIGENDIAN
+AC_CHECK_LIB(m,pow)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
