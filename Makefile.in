@@ -29,7 +29,7 @@ SHELL		= /bin/sh
 DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL install-sh configure configure.ac config.sub \
 		  config.guess Makefile.in libxmp.pc.in libxmp.map
-DDIRS		= docs include src loaders prowiz depackers win32 test
+DDIRS		= docs include src loaders prowiz depackers win32 test vc
 V		= 0
 LIB		= libxmp.a
 SOLIB		= libxmp.so
@@ -49,6 +49,7 @@ include src/loaders/prowizard/Makefile
 include src/depackers/Makefile
 include src/win32/Makefile
 include test/Makefile
+include vc/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
