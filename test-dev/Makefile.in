@@ -1,10 +1,16 @@
 CC		= @CC@
-CFLAGS		= -c @CFLAGS@ @DEFS@
+CFLAGS		= -c @CFLAGS@ @DEFS@ -I../include -I../src
 LD		= @CC@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
+V		= 0
 
 GCLIB		= libxmp-gc.a
+
+.c.o:
+	@CMD='$(CC) $(CFLAGS) -o $*.o $<'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.o ; fi; \
+	eval $$CMD
 
 #
 # Tests
@@ -189,6 +195,9 @@ default-test: check
 dist-test:
 	mkdir -p $(DIST)/$(TEST_PATH)
 	cp -RPp $(addprefix $(TEST_PATH)/,$(TEST_DFILES)) $(DIST)/$(TEST_PATH)
+
+clean:
+	rm -f *.o core *~
 
 #
 # Run standard tests
