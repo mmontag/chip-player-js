@@ -32,7 +32,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
-/* #include <process.h> */
+
+#ifdef _MSC_VER
+#include <process.h>
+#define getpid _getpid
+#endif
 
 #ifndef O_BINARY
 #define O_BINARY 0
