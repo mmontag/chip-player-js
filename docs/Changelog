@@ -1,10 +1,10 @@
 Stable versions
 ---------------
 
-4.1.4 ():
+4.1.4 (20130519):
 	- fix array initialization in IT loader (reported by Jacques Philippe)
-	- remove the complete set of regression tests from the distribution
-	  package
+	- remove regression tests from the distribution package
+	- address license issues in  md5 digest code
 	- address Visual C++ portability issues
 	- code cleanup
 
