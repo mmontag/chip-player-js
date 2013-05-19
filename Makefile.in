@@ -181,6 +181,13 @@ distcheck:
 	tar xf $(DIST).tar.gz
 	(cd $(DIST); ./configure --enable-static --prefix=`pwd`/test-install; make; make check; make install; find test-install)
 
+
+devcheck:
+	$(MAKE) -C test-dev
+
+covercheck:
+	$(MAKE) -C test-dev covercheck
+
 $(OBJS): Makefile
 
 $(LOBJS): Makefile
