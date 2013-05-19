@@ -7,5 +7,6 @@ compiler:
 matrix:
   include:
     - compiler: i586-mingw32msvc-gcc
+      script: autoconf && ./configure --host=i586-mingw32msvc && make
 
 script: autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make)
