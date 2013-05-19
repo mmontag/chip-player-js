@@ -107,12 +107,7 @@ XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
   int main(){}],
   CFLAGS="${CFLAGS} -Wno-array-bounds")  
 
-XMP_TRY_COMPILE(whether alloca() needs alloca.h,
-  ac_cv_c_flag_w_have_alloca_h,,[
-  #include <alloca.h>
-  int main(){}],
-  AC_DEFINE(HAVE_ALLOCA_H))  
-
+AC_CHECK_HEADERS(alloca.h)
 AC_CHECK_LIB(m,pow)
 AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy strlcat)
 AC_CONFIG_FILES([Makefile])
