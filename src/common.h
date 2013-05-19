@@ -5,12 +5,6 @@
 #define __AMIGA__
 #endif
 
-#define XMP_MAXROW	256		/* pattern loop stack size */
-#define XMP_MAXVOL	(0x400 * 0x7fff)
-#define XMP_EXTDRV	0xffff
-#define XMP_MINLEN	0x1000
-#define XMP_MAXVOC	64		/* max physical voices */
-
 #include <stdio.h>
 #include <string.h>
 #include "xmp.h"
