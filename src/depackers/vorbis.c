@@ -26,9 +26,6 @@
 // 
 // All of these limitations may be removed in future versions.
 
-#ifdef HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
 
 #include "vorbis.h"
 
