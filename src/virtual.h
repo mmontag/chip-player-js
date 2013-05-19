@@ -1,5 +1,5 @@
-#ifndef XMP_VIRTUAL_H
-#define XMP_VIRTUAL_H
+#ifndef LIBXMP_VIRTUAL_H
+#define LIBXMP_VIRTUAL_H
 
 #include "common.h"
 
@@ -33,4 +33,4 @@ void	virt_reset		(struct context_data *);
 int	virt_getroot		(struct context_data *, int);
 
 
-#endif /* XMP_VIRTUAL_H */
+#endif /* LIBXMP_VIRTUAL_H */

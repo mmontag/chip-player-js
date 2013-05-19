@@ -1,5 +1,5 @@
-#ifndef XMP_ENVELOPE_H
-#define XMP_ENVELOPE_H
+#ifndef LIBXMP_ENVELOPE_H
+#define LIBXMP_ENVELOPE_H
 
 /* Envelope */
 

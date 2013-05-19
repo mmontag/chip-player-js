@@ -1,5 +1,5 @@
-#ifndef XMP_PLAYER_H
-#define XMP_PLAYER_H
+#ifndef LIBXMP_PLAYER_H
+#define LIBXMP_PLAYER_H
 
 #include "lfo.h"
 #include "envelope.h"
@@ -211,4 +211,4 @@ int get_med_vibrato(struct channel_data *);
 void filter_setup(int, int, int, int*, int*, int *);
 int read_event(struct context_data *, struct xmp_event *, int);
 
-#endif /* XMP_PLAYER_H */
+#endif /* LIBXMP_PLAYER_H */

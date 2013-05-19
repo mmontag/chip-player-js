@@ -1,5 +1,5 @@
-#ifndef XMP_MED_EXTRAS_H
-#define XMP_MED_EXTRAS_H
+#ifndef LIBXMP_MED_EXTRAS_H
+#define LIBXMP_MED_EXTRAS_H
 
 struct med_extras {
 	int vts;		/* Volume table speed */

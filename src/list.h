@@ -1,5 +1,5 @@
-#ifndef XMP_LIST_H
-#define XMP_LIST_H
+#ifndef LIBXMP_LIST_H
+#define LIBXMP_LIST_H
 
 #ifdef _MSC_VER
 #define __inline__ __inline

@@ -1,5 +1,5 @@
-#ifndef XMP_LFO_H
-#define XMP_LFO_H
+#ifndef LIBXMP_LFO_H
+#define LIBXMP_LFO_H
 
 struct lfo {
 	int type;

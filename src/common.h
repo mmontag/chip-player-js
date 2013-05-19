@@ -1,5 +1,5 @@
-#ifndef XMP_COMMON_H
-#define XMP_COMMON_H
+#ifndef LIBXMP_COMMON_H
+#define LIBXMP_COMMON_H
 
 #ifdef __AROS__
 #define __AMIGA__
@@ -358,4 +358,4 @@ int	get_temp_dir		(char *, int);
 int	mkstemp			(char *);
 #endif
 
-#endif /* XMP_COMMON_H */
+#endif /* LIBXMP_COMMON_H */

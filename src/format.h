@@ -1,5 +1,5 @@
-#ifndef XMP_FORMAT_H
-#define XMP_FORMAT_H
+#ifndef LIBXMP_FORMAT_H
+#define LIBXMP_FORMAT_H
 
 #include <stdio.h>
 #include "common.h"
